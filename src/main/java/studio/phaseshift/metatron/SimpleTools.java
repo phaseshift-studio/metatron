@@ -11,9 +11,13 @@ class SimpleTools {
         return format("test tool ('%s') executed with result 'OK'", message);
     }
 
-
     @Tool("return current number of system thread allocated by application")
     int threadCount() {
         return Thread.getAllStackTraces().size();
+    }
+
+    @Tool("current time in milliseconds since the last epoch")
+    long currentTime() {
+        return System.currentTimeMillis();
     }
 }

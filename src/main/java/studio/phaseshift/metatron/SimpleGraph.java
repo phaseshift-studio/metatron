@@ -26,8 +26,8 @@ public class SimpleGraph {
                 .addEdge(START, "greeter") // Start with the greeter node
                 .addEdge("greeter", "chat")
                 .addEdge("chat", "responder")
-                .addEdge("responder", END)   // End after the responder node
-                ;
+                .addEdge("responder", END);   // End after the responder node
+
         // Compile the graph
         return stateGraph.compile();
     }

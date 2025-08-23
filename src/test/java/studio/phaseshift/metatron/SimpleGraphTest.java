@@ -1,13 +1,26 @@
 package studio.phaseshift.metatron;
 
+import com.google.gson.Gson;
+import com.google.gson.internal.LinkedTreeMap;
+import dev.langchain4j.memory.chat.MessageWindowChatMemory;
 import dev.langchain4j.model.chat.Capability;
+import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.model.ollama.OllamaChatModel;
+import dev.langchain4j.model.ollama.OllamaStreamingChatModel;
+import dev.langchain4j.service.AiServices;
+import dev.langchain4j.service.TokenStream;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
 import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.apache.tinkerpop.gremlin.tinkergraph.structure.TinkerGraph;
 import org.junit.jupiter.api.Test;
 
+import java.time.Duration;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+
+import static java.util.concurrent.TimeUnit.MINUTES;
 
 /**
  * Unit test for simple App.
@@ -29,34 +42,98 @@ public class SimpleGraphTest {
         System.out.println(answer);
     }
 
+    @Test
+    public void testTinkerGraph() {
+              /*
+
+               Graph graph = TinkerGraph.open();
+        GraphTraversalSource g = graph.traversal();
+
+              g.addV("greet").property("node", new GreeterNode()).as("greet")
+                .addV("chat").property("node", new ChatNode(model)).as("chat")
+                .addE("next").from("greet")
+                .addV("responder").property("node", new ResponderNode()).as("responder")
+                .addE("next").from("chat").iterate();
+        System.out.println(graph);*/
+    }
+
+    interface Assistant {
+        TokenStream chat(String message);
+    }
+
+
     /**
      * Rigorous Test :-)
      */
     @Test
     public void shouldAnswerWithTrue() throws Exception {
-        Graph graph = TinkerGraph.open();
-        GraphTraversalSource g = graph.traversal();
 
-
-        var model = OllamaChatModel.builder()
+        var flatModel = OllamaChatModel.builder()
                 .modelName("qwen3:4b")
                 .baseUrl("http://localhost:11434")
                 .supportedCapabilities(Capability.RESPONSE_FORMAT_JSON_SCHEMA)
                 .logRequests(true)
                 .logResponses(true)
-                .maxRetries(2)
+                .think(true)
+                .returnThinking(false)
+                //.maxRetries(2)
+                .temperature(0.0)
+                .timeout(Duration.ofMinutes(20))
+                .build();
+        var streamingModel = OllamaStreamingChatModel.builder()
+                .modelName("qwen3:4b")
+                .baseUrl("http://localhost:11434")
+                .supportedCapabilities(Capability.RESPONSE_FORMAT_JSON_SCHEMA)
+                .logRequests(true)
+                .logResponses(true)
+                .think(true)
+                .returnThinking(false)
+                //.maxRetries(2)
                 .temperature(0.0)
                 .build();
 
-        g.addV("greet").property("node", new GreeterNode()).as("greet")
-                .addV("chat").property("node", new ChatNode(model)).as("chat")
-                .addE("next").from("greet")
-                .addV("responder").property("node", new ResponderNode()).as("responder")
-                .addE("next").from("chat").iterate();
-        System.out.println(graph);
+        Assistant assistant = AiServices.builder(Assistant.class)
+                .streamingChatModel(streamingModel)
+                // .tools(new SimpleTools())
+                .chatMemory(MessageWindowChatMemory.withMaxMessages(10))
+                .build();
+        TokenStream tokenStream = assistant.chat("""
+                Breakdown the problem of determining the age of the universe into distinct parallel steps.
+                Each step must be able to be operated on by independent agents working concurrently and autonomously.
+                The result of each step, must then be able to be aggregated by a 'reducing agent' to yield the final solution.
+                For each distinct step, generate a prompt that can be fed to an agent for evaluation.
+                The final output should be a json array with each element of the array being a json object with two keys: 
+                    1.) summary (the summary of the prompt) and 
+                    2.) prompt (the prompt to feed the agent).
+                """);
+        CompletableFuture<ChatResponse> futureResponse = new CompletableFuture<>();
+        tokenStream.onPartialResponse(System.out::print)
+                .onCompleteResponse(futureResponse::complete)
+                .onError(futureResponse::completeExceptionally)
+                .start();
 
-      //  for (var item : SimpleGraph.generate(model).stream(Map.of(SimpleState.MESSAGES_KEY, "Let's begin!"))) {
-      //      System.out.println(item);
-      //  }
+        ChatResponse chatResponse = futureResponse.get(5, MINUTES);
+        System.out.println("\nRESPONSE:\n" + chatResponse);
+        Gson gson = new Gson();
+        List<LinkedTreeMap<?, ?>> list = gson.fromJson(chatResponse.aiMessage().text(), List.class);
+        System.out.println("\n\n\n-----\n" + list);
+
+        Map<String, String> parts = new HashMap<>();
+        for (LinkedTreeMap<?, ?> todo : list) {
+            System.out.println("SOLVING: " + todo.get("summary").toString());
+            var r = flatModel.chat(todo.get("prompt").toString());
+            parts.put(todo.get("summary").toString(), r);
+            System.out.println("RESULT: " + r + "\n---\n");
+        }
+        var finalQuestion = "What is the age of the universe (in years) given the following information\n: " + parts + ".\nReturn your answer as a  single number.";
+        System.out.println(finalQuestion);
+        TokenStream tokenStream2 = assistant.chat(finalQuestion);
+        CompletableFuture<ChatResponse> futureResponse2 = new CompletableFuture<>();
+        tokenStream2.onPartialResponse(System.out::print)
+                .onCompleteResponse(futureResponse2::complete)
+                .onError(futureResponse2::completeExceptionally)
+                .start();
+        ChatResponse x = futureResponse2.get(30, MINUTES);
+        System.out.println("\n\n---THE UNIVERSE IF THIS OLD: " + x.aiMessage());
     }
 }
