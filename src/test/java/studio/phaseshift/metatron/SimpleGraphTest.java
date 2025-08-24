@@ -31,6 +31,7 @@ import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSo
 import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.apache.tinkerpop.gremlin.tinkergraph.structure.TinkerGraph;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Assertions.*;
 
 import java.time.Duration;
 import java.util.HashMap;
@@ -43,6 +44,7 @@ import static java.util.concurrent.TimeUnit.MINUTES;
 /**
  * Unit test for simple App.
  */
+
 public class SimpleGraphTest {
 
     @Test

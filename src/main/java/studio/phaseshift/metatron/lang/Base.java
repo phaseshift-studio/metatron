@@ -36,6 +36,88 @@ public interface Base {
         default Obj apply(final Obj other) {
             return this;
         }
+
+        default <O extends Obj> O as() {
+            return (O) this;
+        }
+
+        default boolean isBool() {
+            return this instanceof Bool;
+        }
+
+        default boolean isInt() {
+            return this instanceof Int;
+        }
+
+        default boolean isReal() {
+            return this instanceof Real;
+        }
+
+        default boolean isStr() {
+            return this instanceof Str;
+        }
+
+        default boolean isUri() {
+            return this instanceof Uri;
+        }
+
+        default boolean isLst() {
+            return this instanceof Lst;
+        }
+
+        default boolean isRec() {
+            return this instanceof Rec;
+        }
+
+        default boolean isInst() {
+            return this instanceof Inst;
+        }
+
+        default boolean boolValue() {
+            if (this.isBool())
+                return ((S.Bool) this).value();
+            throw new IllegalStateException("obj is not an bool");
+        }
+
+        default int intValue() {
+            if (this.isInt())
+                return ((S.Int) this).value();
+            throw new IllegalStateException("obj is not an int");
+        }
+
+        default double realValue() {
+            if (this.isReal())
+                return ((S.Real) this).value();
+            throw new IllegalStateException("obj is not an real");
+        }
+
+        default String strValue() {
+            if (this.isStr())
+                return ((S.Str) this).value();
+            throw new IllegalStateException("obj is not an str");
+        }
+    }
+
+
+    final class NoObj implements Obj {
+        private final static NoObj NOOBJ = new NoObj();
+
+        private NoObj() {
+        }
+
+        @Override
+        public Object value() {
+            return null;
+        }
+
+        @Override
+        public Obj apply(final Obj other) {
+            return other;
+        }
+
+        public static NoObj of() {
+            return NOOBJ;
+        }
     }
 
     interface Mono extends Obj {
