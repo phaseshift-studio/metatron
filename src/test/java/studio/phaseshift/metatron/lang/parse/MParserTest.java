@@ -19,26 +19,52 @@
 package studio.phaseshift.metatron.lang.parse;
 
 import org.junit.jupiter.api.Test;
-import org.parboiled.parserunners.BasicParseRunner;
-import org.parboiled.parserunners.RecoveringParseRunner;
-import studio.phaseshift.metatron.lang.obj.BObj;
 import studio.phaseshift.metatron.lang.obj.SObj;
+
+import static studio.phaseshift.metatron.lang.obj.SObj.Bool;
+import static studio.phaseshift.metatron.lang.obj.SObj.Str;
+import static studio.phaseshift.metatron.lang.obj.SObj.Real;
+import static studio.phaseshift.metatron.lang.obj.SObj.Int;
+import static studio.phaseshift.metatron.lang.obj.SObj.NoObj;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 public class MParserTest {
 
     @Test
+    public void testCommentParse() {
+        assertFalse(MParser.parse("# a comment").matched);
+        assertEquals(NoObj.of(), MParser.parse("# a comment").resultValue);
+    }
+
+    @Test
+    public void testBoolParse() {
+        assertTrue(MParser.parse("true").matched);
+        assertFalse(MParser.parse("233true").matched);
+        assertEquals(Bool.of(true), MParser.parse("true").resultValue);
+        assertEquals(Bool.of(false), MParser.parse("false").resultValue);
+    }
+
+    @Test
     public void testIntParse() {
-        assertTrue(new BasicParseRunner<BObj.Obj>(MParser.generate().Start()).run("1234").matched);
-        assertEquals(SObj.Int.of(1234), new BasicParseRunner<>(MParser.generate().Start()).run("1234").resultValue);
-        assertEquals(SObj.NoObj.of(), new BasicParseRunner<BObj.Obj>(MParser.generate().Int()).run("abc").resultValue);
+        assertTrue(MParser.parse("1234").matched);
+        assertEquals(Int.of(1234), MParser.parse("1234").resultValue);
+        assertEquals(NoObj.of(), MParser.parse("abc").resultValue);
+    }
+
+    @Test
+    public void testRealParse() {
+        assertTrue(MParser.parse("1234.23").matched);
+        //assertFalse(MParser.parse("1235").matched);
+        assertEquals(Real.of(1234.23), MParser.parse("1234.23").resultValue);
+        assertEquals(NoObj.of(), MParser.parse("abc").resultValue);
     }
 
     @Test
     public void testStrParse() {
-        assertTrue(new BasicParseRunner<BObj.Obj>(MParser.generate().Start()).run("'abc'").matched);
-        assertEquals(SObj.Str.of("abc"), new BasicParseRunner<BObj.Obj>(MParser.generate().Start()).run("'abc'").resultValue);
-        assertFalse(new BasicParseRunner<BObj.Obj>(MParser.generate().Start()).run("\"abc\"").matched);
+        assertTrue(MParser.parse("'abc'").matched);
+        assertEquals(Str.of("abc"), MParser.parse("'abc'").resultValue);
+        assertEquals(Str.of("aBc35 4e6"), MParser.parse("'aBc35 4e6'").resultValue);
+        assertFalse(MParser.parse("\"abc\"").matched);
     }
 }

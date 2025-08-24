@@ -115,6 +115,14 @@ public class SObj implements BObj {
             return new Bool(bool);
         }
 
+        public static Bool btrue() {
+            return new Bool(true);
+        }
+
+        public static Bool bfalse() {
+            return new Bool(false);
+        }
+
     }
 
     public static class Int extends Obj implements BObj.Int {
