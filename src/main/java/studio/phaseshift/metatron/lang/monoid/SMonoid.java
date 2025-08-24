@@ -16,17 +16,7 @@
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.traversal;
+package studio.phaseshift.metatron.lang.monoid;
 
-import java.util.function.Function;
-
-public interface Source {
-
-    public interface Modulator extends Function<Source, Source> {
-
-    }
-
-    <S, E> Traversal<S, E> traversal();
-
-    Source using(final Modulator modulator);
+public class SMonoid {
 }

@@ -16,7 +16,7 @@
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.lang;
+package studio.phaseshift.metatron.lang.obj;
 
 import org.javatuples.Quartet;
 
@@ -27,7 +27,7 @@ import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
-public interface Base {
+public interface BObj {
 
     interface Obj extends Function<Obj, Obj> {
         Object value();
@@ -75,25 +75,25 @@ public interface Base {
 
         default boolean boolValue() {
             if (this.isBool())
-                return ((S.Bool) this).value();
+                return ((SObj.Bool) this).value();
             throw new IllegalStateException("obj is not an bool");
         }
 
         default int intValue() {
             if (this.isInt())
-                return ((S.Int) this).value();
+                return ((SObj.Int) this).value();
             throw new IllegalStateException("obj is not an int");
         }
 
         default double realValue() {
             if (this.isReal())
-                return ((S.Real) this).value();
+                return ((SObj.Real) this).value();
             throw new IllegalStateException("obj is not an real");
         }
 
         default String strValue() {
             if (this.isStr())
-                return ((S.Str) this).value();
+                return ((SObj.Str) this).value();
             throw new IllegalStateException("obj is not an str");
         }
     }

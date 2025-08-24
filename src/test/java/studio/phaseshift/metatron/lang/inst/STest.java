@@ -21,12 +21,12 @@ package studio.phaseshift.metatron.lang.inst;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static studio.phaseshift.metatron.lang.S.Int;
+import static studio.phaseshift.metatron.lang.obj.SObj.Int;
 
-public class CoreTest {
+public class STest {
 
     @Test
     public void testPlusInst() {
-        assertEquals(Int.of(35), new Core.PlusInst(Int.of(25)).apply(Int.of(10)));
+        assertEquals(Int.of(35), new SInst.PlusInst(Int.of(25)).apply(Int.of(10)));
     }
 }

@@ -16,7 +16,7 @@
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.lang;
+package studio.phaseshift.metatron.lang.obj;
 
 import org.javatuples.Quartet;
 
@@ -27,9 +27,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.BiFunction;
 
-public class S implements Base {
+public class SObj implements BObj {
 
-    public static class Obj implements Base.Obj {
+    public static class Obj implements BObj.Obj {
         final Object value;
 
         public Obj(final Object value) {
@@ -54,7 +54,7 @@ public class S implements Base {
             if (value instanceof Obj)
                 return (Obj) value;
             else if (null == value)
-                return S.NoObj.of();
+                return NoObj.of();
             else if (value instanceof Boolean)
                 return new Bool((Boolean) value);
             else if (value instanceof Integer)
@@ -70,15 +70,15 @@ public class S implements Base {
             else if (value instanceof Map)
                 return new Rec((Map) value);
             else if (value instanceof Quartet<?, ?, ?, ?>)
-                return new Inst((Quartet<Base.Uri, Base.Lst, BiFunction<Base.Obj, Base.Lst, Base.Obj>, Base.Obj>) value);
+                return new Inst((Quartet<BObj.Uri, BObj.Lst, BiFunction<BObj.Obj, BObj.Lst, BObj.Obj>, BObj.Obj>) value);
             else
                 throw new RuntimeException("unknown object type: " + value.toString());
         }
     }
 
 
-    final public static class NoObj extends S.Obj {
-        private static final S.NoObj NOOBJ = new S.NoObj();
+    final public static class NoObj extends Obj {
+        private static final NoObj NOOBJ = new NoObj();
 
         private NoObj() {
             super(null);
@@ -89,7 +89,7 @@ public class S implements Base {
         }
     }
 
-    public static class Bool extends Obj implements Base.Bool {
+    public static class Bool extends Obj implements BObj.Bool {
 
         public Bool(final Boolean value) {
             super(value);
@@ -105,7 +105,7 @@ public class S implements Base {
 
     }
 
-    public static class Int extends Obj implements Base.Int {
+    public static class Int extends Obj implements BObj.Int {
         public Int(final Integer value) {
             super(value);
         }
@@ -119,7 +119,7 @@ public class S implements Base {
         }
     }
 
-    public static class Real extends Obj implements Base.Real {
+    public static class Real extends Obj implements BObj.Real {
 
         public Real(final Double value) {
             super(value);
@@ -131,7 +131,7 @@ public class S implements Base {
 
     }
 
-    public static class Str extends Obj implements Base.Str {
+    public static class Str extends Obj implements BObj.Str {
 
         public Str(final String value) {
             super(value);
@@ -143,7 +143,7 @@ public class S implements Base {
 
     }
 
-    public static class Uri extends Obj implements Base.Uri {
+    public static class Uri extends Obj implements BObj.Uri {
 
         public Uri(final URI value) {
             super(value);
@@ -153,41 +153,41 @@ public class S implements Base {
             return (URI) this.value;
         }
 
-        public static Base.Uri of(final String uri) {
+        public static BObj.Uri of(final String uri) {
             return new Uri(URI.create(uri));
         }
     }
 
-    public static class Lst extends Obj implements Base.Lst {
+    public static class Lst extends Obj implements BObj.Lst {
 
-        public Lst(final List<Base.Obj> value) {
+        public Lst(final List<BObj.Obj> value) {
             super(value);
         }
 
         @Override
-        public List<Base.Obj> value() {
-            return (List<Base.Obj>) this.value;
+        public List<BObj.Obj> value() {
+            return (List<BObj.Obj>) this.value;
         }
 
         @Override
-        public Lst apply(final Base.Obj other) {
-            List<Base.Obj> list = new ArrayList<>();
+        public Lst apply(final BObj.Obj other) {
+            List<BObj.Obj> list = new ArrayList<>();
             for (int i = 0; i < this.value().size(); i++) {
                 list.set(i, this.value().get(i).apply(other));
             }
-            return new S.Lst(list);
+            return new Lst(list);
         }
 
-        public static Base.Lst of() {
+        public static BObj.Lst of() {
             return new Lst(List.of());
         }
 
-        public static Base.Lst single(final Object arg0) {
+        public static BObj.Lst single(final Object arg0) {
             return new Lst(List.of(Obj.of(arg0)));
         }
 
-        public static Base.Lst of(final Object arg0, final Object... args) {
-            List<Base.Obj> list = new ArrayList<>();
+        public static BObj.Lst of(final Object arg0, final Object... args) {
+            List<BObj.Obj> list = new ArrayList<>();
             list.add(Obj.of(arg0));
             for (final Object arg : args) {
                 list.add(Obj.of(arg));
@@ -197,44 +197,44 @@ public class S implements Base {
 
     }
 
-    public static class Rec extends Obj implements Base.Rec {
+    public static class Rec extends Obj implements BObj.Rec {
 
-        public Rec(final Map<Base.Obj, Base.Obj> value) {
+        public Rec(final Map<BObj.Obj, BObj.Obj> value) {
             super(value);
         }
 
         @Override
-        public Map<Base.Obj, Base.Obj> value() {
-            return (Map<Base.Obj, Base.Obj>) this.value;
+        public Map<BObj.Obj, BObj.Obj> value() {
+            return (Map<BObj.Obj, BObj.Obj>) this.value;
         }
 
         @Override
-        public Rec apply(final Base.Obj other) {
-            Map<Base.Obj, Base.Obj> map = new HashMap<>();
-            return new S.Rec(map);
+        public Rec apply(final BObj.Obj other) {
+            Map<BObj.Obj, BObj.Obj> map = new HashMap<>();
+            return new Rec(map);
         }
 
     }
 
-    public static class Inst extends Obj implements Base.Inst {
+    public static class Inst extends Obj implements BObj.Inst {
 
-        public Inst(final Quartet<Base.Uri, Base.Lst, BiFunction<Base.Obj, Base.Lst, Base.Obj>, Base.Obj> value) {
+        public Inst(final Quartet<BObj.Uri, BObj.Lst, BiFunction<BObj.Obj, BObj.Lst, BObj.Obj>, BObj.Obj> value) {
             super(value);
         }
 
-        public Inst(final Base.Uri opcode, final Base.Lst args, BiFunction<Base.Obj, Base.Lst, Base.Obj> func, final Base.Obj seed) {
+        public Inst(final BObj.Uri opcode, final BObj.Lst args, BiFunction<BObj.Obj, BObj.Lst, BObj.Obj> func, final BObj.Obj seed) {
             this(new Quartet<>(opcode, args, func, seed));
         }
 
         @Override
-        public Quartet<Base.Uri, Base.Lst, BiFunction<Base.Obj, Base.Lst, Base.Obj>, Base.Obj> value() {
-            return (Quartet<Base.Uri, Base.Lst, BiFunction<Base.Obj, Base.Lst, Base.Obj>, Base.Obj>) this.value;
+        public Quartet<BObj.Uri, BObj.Lst, BiFunction<BObj.Obj, BObj.Lst, BObj.Obj>, BObj.Obj> value() {
+            return (Quartet<BObj.Uri, BObj.Lst, BiFunction<BObj.Obj, BObj.Lst, BObj.Obj>, BObj.Obj>) this.value;
         }
 
         @Override
-        public S.Obj apply(final Base.Obj other) {
-            List<Base.Obj> computedArgs = new ArrayList<>(this.value().getValue1().value().size());
-            for (final Base.Obj arg : this.value().getValue1().value()) {
+        public Obj apply(final BObj.Obj other) {
+            List<BObj.Obj> computedArgs = new ArrayList<>(this.value().getValue1().value().size());
+            for (final BObj.Obj arg : this.value().getValue1().value()) {
                 computedArgs.add(arg.apply(other));
             }
             return Obj.of(this.value().getValue2().apply(other, new Lst(computedArgs)));

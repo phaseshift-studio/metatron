@@ -16,10 +16,22 @@
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.traversal;
+package studio.phaseshift.metatron.lang.inst;
 
-public interface Traversal<S, E> {
+import studio.phaseshift.metatron.lang.obj.BObj;
+import studio.phaseshift.metatron.lang.obj.SObj;
 
-    Traversal<S, E> V();
+public class SInst {
+    public static class PlusInst extends SObj.Inst implements BInst.PlusInst {
 
+        PlusInst(final BObj.Obj arg) {
+            super(SObj.Uri.of("plus"), SObj.Lst.single(arg), (lhs, args) -> {
+                if (lhs.isInt() && args.value().get(0).isInt())
+                    return SObj.Int.of(lhs.intValue() + args.value().get(0).intValue());
+                else
+                    throw new IllegalStateException("the operands do not support plus");
+
+            }, BObj.NoObj.of());
+        }
+    }
 }

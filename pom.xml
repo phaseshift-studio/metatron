@@ -37,6 +37,7 @@
         <os.detected.arch>x86_64</os.detected.arch>
         <os.detected.classifier>linux-x86_64</os.detected.classifier>
         <gson.version>2.10.1</gson.version>
+        <parboiled.version>1.4.1</parboiled.version>
     </properties>
     <dependencyManagement>
         <dependencies>
@@ -122,6 +123,12 @@
             <groupId>com.google.code.gson</groupId>
             <artifactId>gson</artifactId>
             <version>${gson.version}</version>
+        </dependency>
+        <!-- PARSING -->
+        <dependency>
+            <groupId>org.parboiled</groupId>
+            <artifactId>parboiled-java</artifactId>
+            <version>${parboiled.version}</version>
         </dependency>
         <!-- TESTING -->
         <dependency>

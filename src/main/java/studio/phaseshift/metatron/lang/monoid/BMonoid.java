@@ -16,24 +16,17 @@
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.lang.inst;
-
-import studio.phaseshift.metatron.lang.Base;
-import studio.phaseshift.metatron.lang.S;
-
-public class Core {
+package studio.phaseshift.metatron.lang.monoid;
 
 
-    public static class PlusInst extends S.Inst {
+public interface BMonoid {
 
-        PlusInst(final Base.Obj arg) {
-            super(S.Uri.of("plus"), S.Lst.single(arg), (lhs, args) -> {
-                if (lhs.isInt() && args.value().get(0).isInt())
-                    return S.Int.of(lhs.intValue() + args.value().get(0).intValue());
-                else
-                    throw new IllegalStateException("the operands do not support plus");
+    public interface Monoid {
 
-            }, Base.NoObj.of());
-        }
     }
+
+    public interface Monad {
+
+    }
+
 }
