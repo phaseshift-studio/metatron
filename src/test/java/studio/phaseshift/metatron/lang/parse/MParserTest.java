@@ -19,7 +19,8 @@
 package studio.phaseshift.metatron.lang.parse;
 
 import org.junit.jupiter.api.Test;
-import studio.phaseshift.metatron.lang.obj.SObj;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 import static studio.phaseshift.metatron.lang.obj.SObj.Bool;
 import static studio.phaseshift.metatron.lang.obj.SObj.Str;
@@ -27,7 +28,6 @@ import static studio.phaseshift.metatron.lang.obj.SObj.Real;
 import static studio.phaseshift.metatron.lang.obj.SObj.Int;
 import static studio.phaseshift.metatron.lang.obj.SObj.NoObj;
 
-import static org.junit.jupiter.api.Assertions.*;
 
 public class MParserTest {
 
@@ -39,6 +39,7 @@ public class MParserTest {
 
     @Test
     public void testBoolParse() {
+        assertEquals("m:bool", MParser.parse("true").resultValue.type().toString());
         assertTrue(MParser.parse("true").matched);
         assertFalse(MParser.parse("233true").matched);
         assertEquals(Bool.of(true), MParser.parse("true").resultValue);

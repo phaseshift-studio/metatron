@@ -18,28 +18,32 @@
 
 package studio.phaseshift.metatron.lang.obj;
 
-import org.javatuples.Quartet;
+import org.javatuples.*;
 
-import java.net.URI;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.function.BiFunction;
+import java.net.*;
+import java.util.*;
+import java.util.function.*;
 
 public class SObj implements BObj {
 
     public static class Obj implements BObj.Obj {
         final Object value;
+        final URI type;
 
-        public Obj(final Object value) {
+        public Obj(final Object value, final URI type) {
             if (value instanceof Obj)
                 throw new IllegalArgumentException("an obj can not have an obj as a base value");
             this.value = value;
+            this.type = type;
         }
 
-        public Object value() {
+        @Override
+        public URI type() {
+            return this.type;
+        }
 
+        @Override
+        public Object value() {
             return this.value;
         }
 
@@ -49,12 +53,12 @@ public class SObj implements BObj {
                 return null == other || Obj.of(other).isNoObj();
             if (null == other)
                 return false;
-            return Obj.of(other).value.equals(this.value);
+            return Obj.of(other).value.equals(this.value) && Obj.of(other).type.equals(this.type);
         }
 
         @Override
         public int hashCode() {
-            return null == this.value ? -13435467 : this.value.hashCode();
+            return Objects.hashCode(this.value) + Objects.hashCode(this.type);
         }
 
         @Override
@@ -93,7 +97,7 @@ public class SObj implements BObj {
         private static final NoObj NOOBJ = new NoObj();
 
         private NoObj() {
-            super(null);
+            super(null, NOOBJ_URI);
         }
 
         public static NoObj of() {
@@ -104,7 +108,11 @@ public class SObj implements BObj {
     public static class Bool extends Obj implements BObj.Bool {
 
         public Bool(final Boolean value) {
-            super(value);
+            super(value, BOOL_URI);
+        }
+
+        public Bool(final Boolean value, final URI type) {
+            super(value, type);
         }
 
         public Boolean value() {
@@ -114,20 +122,15 @@ public class SObj implements BObj {
         public static Bool of(final boolean bool) {
             return new Bool(bool);
         }
-
-        public static Bool btrue() {
-            return new Bool(true);
-        }
-
-        public static Bool bfalse() {
-            return new Bool(false);
-        }
-
     }
 
     public static class Int extends Obj implements BObj.Int {
         public Int(final Integer value) {
-            super(value);
+            super(value, INT_URI);
+        }
+
+        public Int(final Integer value, final URI type) {
+            super(value, type);
         }
 
         public Integer value() {
@@ -142,7 +145,7 @@ public class SObj implements BObj {
     public static class Real extends Obj implements BObj.Real {
 
         public Real(final Double value) {
-            super(value);
+            super(value, REAL_URI);
         }
 
         public Double value() {
@@ -154,7 +157,7 @@ public class SObj implements BObj {
     public static class Str extends Obj implements BObj.Str {
 
         public Str(final String value) {
-            super(value);
+            super(value, STR_URI);
         }
 
         public String value() {
@@ -166,7 +169,7 @@ public class SObj implements BObj {
     public static class Uri extends Obj implements BObj.Uri {
 
         public Uri(final URI value) {
-            super(value);
+            super(value, URI_URI);
         }
 
         public URI value() {
@@ -181,7 +184,7 @@ public class SObj implements BObj {
     public static class Lst extends Obj implements BObj.Lst {
 
         public Lst(final List<BObj.Obj> value) {
-            super(value);
+            super(value, LST_URI);
         }
 
         @Override
@@ -220,7 +223,7 @@ public class SObj implements BObj {
     public static class Rec extends Obj implements BObj.Rec {
 
         public Rec(final Map<BObj.Obj, BObj.Obj> value) {
-            super(value);
+            super(value, REC_URI);
         }
 
         @Override
@@ -239,7 +242,7 @@ public class SObj implements BObj {
     public static class Inst extends Obj implements BObj.Inst {
 
         public Inst(final Quartet<BObj.Uri, BObj.Lst, BiFunction<BObj.Obj, BObj.Lst, BObj.Obj>, BObj.Obj> value) {
-            super(value);
+            super(value, value.getValue0().value());
         }
 
         public Inst(final BObj.Uri opcode, final BObj.Lst args, BiFunction<BObj.Obj, BObj.Lst, BObj.Obj> func, final BObj.Obj seed) {

@@ -18,19 +18,30 @@
 
 package studio.phaseshift.metatron.lang.obj;
 
-import org.javatuples.Quartet;
+import org.javatuples.*;
 
-import java.net.URI;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.function.BiFunction;
-import java.util.function.Function;
+import java.net.*;
+import java.util.*;
+import java.util.function.*;
 
 public interface BObj {
 
+    public static final URI OBJ_URI = URI.create("m:obj");
+    public static final URI NOOBJ_URI = URI.create("m:noobj");
+    public static final URI BOOL_URI = URI.create("m:bool");
+    public static final URI INT_URI = URI.create("m:int");
+    public static final URI REAL_URI = URI.create("m:real");
+    public static final URI STR_URI = URI.create("m:str");
+    public static final URI URI_URI = URI.create("m:uri");
+    public static final URI LST_URI = URI.create("m:lst");
+    public static final URI REC_URI = URI.create("m:rec");
+    public static final URI INST_URI = URI.create("m:inst");
+
+
     interface Obj extends Function<Obj, Obj> {
         Object value();
+
+        URI type();
 
         @Override
         default Obj apply(final Obj other) {
@@ -107,6 +118,10 @@ public interface BObj {
         private final static NoObj NOOBJ = new NoObj();
 
         private NoObj() {
+        }
+
+        public URI type() {
+            return NOOBJ_URI;
         }
 
         @Override
@@ -208,6 +223,14 @@ public interface BObj {
                 args.set(i, this.value().getValue1().value().get(i).apply(other));
             }
             return this.value().getValue2().apply(other, this.value().getValue1());
+        }
+
+        default URI type() {
+            return this.value().getValue0().value();
+        }
+
+        default String opcode() {
+            return this.type().getPath().split("/")[0];
         }
 
     }
