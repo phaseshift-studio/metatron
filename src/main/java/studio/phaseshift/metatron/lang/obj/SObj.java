@@ -33,21 +33,33 @@ public class SObj implements BObj {
         final Object value;
 
         public Obj(final Object value) {
+            if (value instanceof Obj)
+                throw new IllegalArgumentException("an obj can not have an obj as a base value");
             this.value = value;
         }
 
         public Object value() {
+
             return this.value;
         }
 
         @Override
         public boolean equals(final Object other) {
-            return (null == this.value && null == Obj.of(other).value) || Obj.of(other).value().equals(this.value);
+            if (this.isNoObj())
+                return null == other || Obj.of(other).isNoObj();
+            if (null == other)
+                return false;
+            return Obj.of(other).value.equals(this.value);
         }
 
         @Override
         public int hashCode() {
             return null == this.value ? -13435467 : this.value.hashCode();
+        }
+
+        @Override
+        public String toString() {
+            return null == this.value ? "noobj" : this.value.toString();
         }
 
         public static Obj of(final Object value) {

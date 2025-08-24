@@ -41,6 +41,10 @@ public interface BObj {
             return (O) this;
         }
 
+        default boolean isNoObj() {
+            return null == this.value();
+        }
+
         default boolean isBool() {
             return this instanceof Bool;
         }
