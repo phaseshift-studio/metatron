@@ -19,19 +19,26 @@
 package studio.phaseshift.metatron.lang.parse;
 
 import org.junit.jupiter.api.Test;
+import org.parboiled.parserunners.BasicParseRunner;
 import org.parboiled.parserunners.RecoveringParseRunner;
 import studio.phaseshift.metatron.lang.obj.BObj;
 import studio.phaseshift.metatron.lang.obj.SObj;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class MParserTest {
 
     @Test
     public void testIntParse() {
-        assertTrue(new RecoveringParseRunner<BObj.Obj>(MParser.generate().Start()).run("1234").matched);
-        assertEquals(SObj.Int.of(1234), new RecoveringParseRunner<BObj.Obj>(MParser.generate().Start()).run("1234").resultValue);
-        assertEquals(SObj.NoObj.of(), new RecoveringParseRunner<BObj.Obj>(MParser.generate().Int()).run("abc").resultValue);
+        assertTrue(new BasicParseRunner<BObj.Obj>(MParser.generate().Start()).run("1234").matched);
+        assertEquals(SObj.Int.of(1234), new BasicParseRunner<>(MParser.generate().Start()).run("1234").resultValue);
+        assertEquals(SObj.NoObj.of(), new BasicParseRunner<BObj.Obj>(MParser.generate().Int()).run("abc").resultValue);
+    }
+
+    @Test
+    public void testStrParse() {
+        assertTrue(new BasicParseRunner<BObj.Obj>(MParser.generate().Start()).run("'abc'").matched);
+        assertEquals(SObj.Str.of("abc"), new BasicParseRunner<BObj.Obj>(MParser.generate().Start()).run("'abc'").resultValue);
+        assertFalse(new BasicParseRunner<BObj.Obj>(MParser.generate().Start()).run("\"abc\"").matched);
     }
 }

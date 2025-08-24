@@ -21,6 +21,7 @@ package studio.phaseshift.metatron.lang.parse;
 import org.parboiled.BaseParser;
 import org.parboiled.Parboiled;
 import org.parboiled.Rule;
+import org.parboiled.matchers.CharMatcher;
 import studio.phaseshift.metatron.lang.obj.BObj;
 import studio.phaseshift.metatron.lang.obj.SObj;
 
@@ -32,11 +33,15 @@ public class MParser extends BaseParser<BObj.Obj> {
     }
 
     Rule Start() {
-        return Sequence(Int(),push(SObj.Int.of(Integer.parseInt(matchOrDefault("0")))), EOI);
+        return Sequence(FirstOf(Int(), Str()), EOI);
     }
 
     Rule Int() {
-        return OneOrMore(Digit());
+        return Sequence(OneOrMore(Digit()), push(SObj.Int.of(Integer.parseInt(match()))));
+    }
+
+    Rule Str() {
+        return Sequence(Sequence(new CharMatcher('\''), ZeroOrMore(CharRange('a', 'z')), new CharMatcher('\'')), push(SObj.Str.of(match().replace("\'", ""))));
     }
 
     Rule Digit() {
