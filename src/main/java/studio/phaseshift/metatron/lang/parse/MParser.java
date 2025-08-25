@@ -25,24 +25,28 @@ import org.parboiled.matchers.*;
 import org.parboiled.parserunners.*;
 import org.parboiled.support.*;
 import studio.phaseshift.metatron.lang.obj.*;
+import studio.phaseshift.metatron.lang.obj.SObj.*;
 
+import java.net.*;
 import java.util.*;
+import java.util.regex.*;
 
 public class MParser extends BaseParser<BObj.Obj> implements ParseRunner<BObj.Obj> {
 
     final BasicParseRunner<BObj.Obj> runner;
 
     public MParser() {
-        this.runner = new BasicParseRunner<>(this.Start());
+        this.runner = new BasicParseRunner<>(Start());
     }
 
-    public static ParsingResult<BObj.Obj> parse(final String code) {
-        return Parboiled.createParser(MParser.class).run(code);
+    public static BObj.Obj parse(final String code) {
+        ParsingResult<BObj.Obj> result = Parboiled.createParser(MParser.class).run(code);
+        return null == result || result.resultValue == null ? NoObj.of() : result.resultValue;
     }
 
 
     Rule Start() {
-        return Obj();
+        return Sequence(Obj(), WS(), EOI);
     }
 
     /// ////////////////////////////////////////////////////////////
@@ -50,13 +54,32 @@ public class MParser extends BaseParser<BObj.Obj> implements ParseRunner<BObj.Ob
     /// ////////////////////////////////////////////////////////////
 
     Rule Obj() {
-        return Sequence(FirstOf(Bool(), Real(), Int(), Str()), WS(), EOI);
+        final StringVar typeVariable = new StringVar("");
+        return Sequence(Optional(Sequence(Type(), '['), typeVariable.append(match().replace("[", ""))),
+                FirstOf(Bool(), Real(), Int(), Str(), Uri()), Optional(']'), WS(),
+                push(typeVariable.isEmpty() ? pop() : SObj.Obj.of(pop().value(), URI.create(typeVariable.get()))));
+    }
+
+    Rule Type() {
+        return Sequence(Letter(), ZeroOrMore(UriCharacter()));
+    }
+
+    /*Rule Code() {
+        return Sequence(ZeroOrMore(Inst()))
+    }*/
+
+    Rule Inst() {
+        return Sequence('(', ZeroOrMore(Sequence(Obj(), WS(), ',', WS())), ')');
+    }
+
+    Rule Lst() {
+        return Sequence('[', ZeroOrMore(Sequence(Obj(), WS(), ',', WS())), ']');
     }
 
     Rule Bool() {
         return Sequence(Sequence(FirstOf(
-                        "true",
-                        "false"), WS()),
+                        Sequence("true", TestNot(LetterOrDigit())),
+                        Sequence("false", TestNot(LetterOrDigit()))), WS()),
                 push(match().trim().equals("true") ?
                         SObj.Bool.of(true) :
                         SObj.Bool.of(false)));
@@ -82,13 +105,40 @@ public class MParser extends BaseParser<BObj.Obj> implements ParseRunner<BObj.Ob
                 push(SObj.Str.of(match().replace("'", ""))));
     }
 
-    Rule Digit() {
-        return CharRange('0', '9');
+    Rule Uri() {
+        return Sequence(FirstOf(Sequence('<', Type(), '>'), Type()),
+                push(SObj.Uri.of(URI.create(match().replace("<", "").replace(">", "")))));
     }
+
 
     /// ////////////////////////////////////////////////////////////
     /// ////////////////////// UTILITIES ///////////////////////////
     /// ////////////////////////////////////////////////////////////
+
+
+    Rule Digit() {
+        return CharRange('0', '9');
+    }
+
+    Rule Letter() {
+        return FirstOf(Sequence('\\', UnicodeEscape()), CharRange('a', 'z'), CharRange('A', 'Z'));
+    }
+
+    Rule UriCharacter() {
+        return FirstOf(Letter(), Digit(), '/', '.', ':', '@', '?', '=', '-', '+', '!', '%', ';', '~', '&');
+    }
+
+    Rule LetterOrDigit() {
+        return FirstOf(Digit(), Letter());
+    }
+
+    Rule HexDigit() {
+        return FirstOf(CharRange('a', 'f'), CharRange('A', 'F'), CharRange('0', '9'));
+    }
+
+    Rule UnicodeEscape() {
+        return Sequence(OneOrMore('u'), HexDigit(), HexDigit(), HexDigit(), HexDigit());
+    }
 
     public Rule ECHAR() {
         return Sequence('\\', AnyOf("tbnrf\\\"\'"));

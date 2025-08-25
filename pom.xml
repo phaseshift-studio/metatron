@@ -38,6 +38,8 @@
         <os.detected.classifier>linux-x86_64</os.detected.classifier>
         <gson.version>2.10.1</gson.version>
         <parboiled.version>1.4.1</parboiled.version>
+        <jline.version>3.30.0</jline.version>
+        <logback.version>1.5.18</logback.version>
     </properties>
     <dependencyManagement>
         <dependencies>
@@ -124,6 +126,21 @@
             <artifactId>gson</artifactId>
             <version>${gson.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.jline</groupId>
+            <artifactId>jline</artifactId>
+            <version>${jline.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.jline</groupId>
+            <artifactId>jline-terminal-jansi</artifactId>
+            <version>${jline.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+            <version>${logback.version}</version>
+        </dependency>
         <!-- PARSING -->
         <dependency>
             <groupId>org.parboiled</groupId>
@@ -160,6 +177,27 @@
                 <version>1.7.0</version>
             </extension>
         </extensions>
+        <plugins>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>3.5.1</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>java</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <mainClass>studio.phaseshift.metatron.lang.parse.Console</mainClass>
+                    <arguments>
+                        <argument>foo</argument>
+                        <argument>bar</argument>
+                    </arguments>
+                </configuration>
+            </plugin>
+        </plugins>
         <pluginManagement>
             <plugins>
                 <plugin>
@@ -174,11 +212,13 @@
                     <artifactId>maven-compiler-plugin</artifactId>
                     <version>3.13.0</version>
                     <configuration>
-                        <source>24</source>
-                        <target>24</target>
+                        <source>${maven.compiler.release}</source>
+                        <target>${maven.compiler.release}</target>
                         <compilerArgs>
                             <arg>--add-modules</arg>
                             <arg>jdk.incubator.vector</arg>
+                            <arg>-XDsun-misc-unsafe-memory-access=allow</arg>
+                            <arg>-XDenable-native-access=ALL-UNNAMED</arg>
                         </compilerArgs>
                     </configuration>
                 </plugin>

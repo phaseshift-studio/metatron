@@ -19,6 +19,7 @@
 package studio.phaseshift.metatron.lang.obj;
 
 import org.javatuples.*;
+import studio.phaseshift.metatron.util.*;
 
 import java.net.*;
 import java.util.*;
@@ -28,7 +29,7 @@ public class SObj implements BObj {
 
     public static class Obj implements BObj.Obj {
         final Object value;
-        final URI type;
+        URI type;
 
         public Obj(final Object value, final URI type) {
             if (value instanceof Obj)
@@ -63,14 +64,23 @@ public class SObj implements BObj {
 
         @Override
         public String toString() {
-            return null == this.value ? "noobj" : this.value.toString();
+            if (null == this.value)
+                return "noobj";
+            else
+                return this.type.toString() + "[" + this.value + "]";
+        }
+
+        public static Obj of(final Object value, final URI type) {
+            Obj o = Obj.of(value);
+            o.type = type;
+            return o;
         }
 
         public static Obj of(final Object value) {
-            if (value instanceof Obj)
-                return (Obj) value;
-            else if (null == value)
+            if (null == value)
                 return NoObj.of();
+            else if (value instanceof Obj)
+                return (Obj) value;
             else if (value instanceof Boolean)
                 return new Bool((Boolean) value);
             else if (value instanceof Integer)
@@ -85,10 +95,17 @@ public class SObj implements BObj {
                 return new Lst((List) value);
             else if (value instanceof Map)
                 return new Rec((Map) value);
-            else if (value instanceof Quartet<?, ?, ?, ?>)
-                return new Inst((Quartet<BObj.Uri, BObj.Lst, BiFunction<BObj.Obj, BObj.Lst, BObj.Obj>, BObj.Obj>) value);
-            else
-                throw new RuntimeException("unknown object type: " + value.toString());
+            else if (value instanceof Triplet<?, ?, ?>)
+                return new Inst((Triplet<BObj.Lst, BiFunction<BObj.Obj, BObj.Lst, BObj.Obj>, BObj.Obj>) value, INST_URI);
+            else {
+                try {
+                    System.out.println(value);
+                    return new Uri(URI.create(value.toString()));
+                } catch (final IllegalArgumentException e) {
+                    throw new RuntimeException("unknown object type: " + value.toString());
+                }
+            }
+
         }
     }
 
@@ -137,12 +154,24 @@ public class SObj implements BObj {
             return (Integer) this.value;
         }
 
+        public static Int of(final String type, final int i) {
+            return new Int(i, URI.create(type));
+        }
+
+        public static Int of(final URI type, final int i) {
+            return new Int(i, type);
+        }
+
         public static Int of(final int i) {
             return new Int(i);
         }
     }
 
     public static class Real extends Obj implements BObj.Real {
+
+        public Real(final Double value, final URI type) {
+            super(value, type);
+        }
 
         public Real(final Double value) {
             super(value, REAL_URI);
@@ -156,6 +185,10 @@ public class SObj implements BObj {
 
     public static class Str extends Obj implements BObj.Str {
 
+        public Str(final String value, final URI type) {
+            super(value, type);
+        }
+
         public Str(final String value) {
             super(value, STR_URI);
         }
@@ -167,6 +200,10 @@ public class SObj implements BObj {
     }
 
     public static class Uri extends Obj implements BObj.Uri {
+
+        public Uri(final URI value, final URI type) {
+            super(value, type);
+        }
 
         public Uri(final URI value) {
             super(value, URI_URI);
@@ -182,6 +219,9 @@ public class SObj implements BObj {
     }
 
     public static class Lst extends Obj implements BObj.Lst {
+        public Lst(final List<BObj.Obj> value, final URI type) {
+            super(value, type);
+        }
 
         public Lst(final List<BObj.Obj> value) {
             super(value, LST_URI);
@@ -222,6 +262,10 @@ public class SObj implements BObj {
 
     public static class Rec extends Obj implements BObj.Rec {
 
+        public Rec(final Map<BObj.Obj, BObj.Obj> value, final URI type) {
+            super(value, type);
+        }
+
         public Rec(final Map<BObj.Obj, BObj.Obj> value) {
             super(value, REC_URI);
         }
@@ -239,28 +283,50 @@ public class SObj implements BObj {
 
     }
 
+    public static class Objs extends Obj implements BObj.Objs {
+
+        public Objs(final Iterator<BObj.Obj> value) {
+            super(value, OBJS_URI);
+        }
+
+        @Override
+        public Iterator<BObj.Obj> value() {
+            return (Iterator<BObj.Obj>) this.value;
+        }
+
+        @Override
+        public BObj.Objs apply(final BObj.Obj other) {
+            return SObj.Objs.of(IteratorUtil.map(this.value(), o -> o.apply(other)));
+        }
+
+        public static BObj.Objs of(final Iterator<BObj.Obj> objs) {
+            return new Objs(objs);
+        }
+
+        public static BObj.Objs single(final BObj.Obj obj) {
+            return new Objs(IteratorUtil.of(obj));
+        }
+
+    }
+
     public static class Inst extends Obj implements BObj.Inst {
 
-        public Inst(final Quartet<BObj.Uri, BObj.Lst, BiFunction<BObj.Obj, BObj.Lst, BObj.Obj>, BObj.Obj> value) {
-            super(value, value.getValue0().value());
-        }
-
-        public Inst(final BObj.Uri opcode, final BObj.Lst args, BiFunction<BObj.Obj, BObj.Lst, BObj.Obj> func, final BObj.Obj seed) {
-            this(new Quartet<>(opcode, args, func, seed));
+        public Inst(final Triplet<BObj.Lst, BiFunction<BObj.Obj, BObj.Lst, BObj.Obj>, BObj.Obj> value, final URI type) {
+            super(value, type);
         }
 
         @Override
-        public Quartet<BObj.Uri, BObj.Lst, BiFunction<BObj.Obj, BObj.Lst, BObj.Obj>, BObj.Obj> value() {
-            return (Quartet<BObj.Uri, BObj.Lst, BiFunction<BObj.Obj, BObj.Lst, BObj.Obj>, BObj.Obj>) this.value;
+        public Triplet<BObj.Lst, BiFunction<BObj.Obj, BObj.Lst, BObj.Obj>, BObj.Obj> value() {
+            return (Triplet<BObj.Lst, BiFunction<BObj.Obj, BObj.Lst, BObj.Obj>, BObj.Obj>) this.value;
         }
 
         @Override
-        public Obj apply(final BObj.Obj other) {
-            List<BObj.Obj> computedArgs = new ArrayList<>(this.value().getValue1().value().size());
-            for (final BObj.Obj arg : this.value().getValue1().value()) {
-                computedArgs.add(arg.apply(other));
+        public Obj apply(final BObj.Obj lhs) {
+            List<BObj.Obj> computedArgs = new ArrayList<>(this.value().getValue0().value().size());
+            for (final BObj.Obj arg : this.value().getValue0().value()) {
+                computedArgs.add(arg.apply(lhs));
             }
-            return Obj.of(this.value().getValue2().apply(other, new Lst(computedArgs)));
+            return Obj.of(this.value().getValue1().apply(lhs, new Lst(computedArgs)));
         }
     }
 }

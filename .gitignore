@@ -2,6 +2,7 @@
 /target/
 /.mvn/
 /metatron/
+.metatron.history
 
 # Compiled class file
 *.class

@@ -26,6 +26,7 @@ import static studio.phaseshift.metatron.lang.obj.SObj.Bool;
 import static studio.phaseshift.metatron.lang.obj.SObj.Str;
 import static studio.phaseshift.metatron.lang.obj.SObj.Real;
 import static studio.phaseshift.metatron.lang.obj.SObj.Int;
+import static studio.phaseshift.metatron.lang.obj.SObj.Uri;
 import static studio.phaseshift.metatron.lang.obj.SObj.NoObj;
 
 
@@ -33,39 +34,35 @@ public class MParserTest {
 
     @Test
     public void testCommentParse() {
-        assertFalse(MParser.parse("# a comment").matched);
-        assertEquals(NoObj.of(), MParser.parse("# a comment").resultValue);
+        assertEquals(NoObj.of(), MParser.parse("# a comment"));
     }
 
     @Test
     public void testBoolParse() {
-        assertEquals("m:bool", MParser.parse("true").resultValue.type().toString());
-        assertTrue(MParser.parse("true").matched);
-        assertFalse(MParser.parse("233true").matched);
-        assertEquals(Bool.of(true), MParser.parse("true").resultValue);
-        assertEquals(Bool.of(false), MParser.parse("false").resultValue);
+        assertEquals("m:bool", MParser.parse("true").type().toString());
+        assertEquals(Bool.of(true), MParser.parse("true"));
+        assertEquals(Bool.of(false), MParser.parse("false"));
     }
 
     @Test
     public void testIntParse() {
-        assertTrue(MParser.parse("1234  ").matched);
-        assertEquals(Int.of(1234), MParser.parse("1234 ").resultValue);
-        assertEquals(NoObj.of(), MParser.parse("abc").resultValue);
+        assertEquals(Int.of(1234), MParser.parse("1234 "));
+        assertEquals(Int.of("m:nat", 1234), MParser.parse("m:nat[1234] "));
     }
 
     @Test
     public void testRealParse() {
-        assertTrue(MParser.parse("1234.23").matched);
-        //assertFalse(MParser.parse("1235").matched);
-        assertEquals(Real.of(1234.23), MParser.parse("1234.23").resultValue);
-        assertEquals(NoObj.of(), MParser.parse("abc").resultValue);
+        assertEquals(Real.of(1234.23), MParser.parse("1234.23"));
     }
 
     @Test
     public void testStrParse() {
-        assertTrue(MParser.parse("'abc'").matched);
-        assertEquals(Str.of("abc"), MParser.parse("'abc'").resultValue);
-        assertEquals(Str.of("aBc35 4e6"), MParser.parse("'aBc35 4e6'").resultValue);
-        assertFalse(MParser.parse("\"abc\"").matched);
+        assertEquals(Str.of("abc"), MParser.parse("'abc'"));
+        assertEquals(Str.of("aBc35 4e6"), MParser.parse("'aBc35 4e6'"));
+    }
+
+    @Test
+    public void testUriParse() {
+        assertEquals(Uri.of("http://metatron.com?a=2&b=3"), MParser.parse("http://metatron.com?a=2&b=3"));
     }
 }
