@@ -25,6 +25,13 @@
     <version>0.1-SNAPSHOT</version>
     <name>metatron</name>
     <url>http://metatron.phaseshift.studio</url>
+    <contributors>
+        <contributor>
+            <name>Dr. Stynx</name>
+            <email>dogturdstynx@phaseshift.studio</email>
+            <organization>PhaseShift Studio</organization>
+        </contributor>
+    </contributors>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.release>17</maven.compiler.release>
@@ -33,9 +40,6 @@
         <junit.version>5.11.0</junit.version>
         <tinkerpop.version>3.7.4</tinkerpop.version>
         <jlama.version>0.8.4</jlama.version>
-        <os.detected.name>linux</os.detected.name>
-        <os.detected.arch>x86_64</os.detected.arch>
-        <os.detected.classifier>linux-x86_64</os.detected.classifier>
         <gson.version>2.10.1</gson.version>
         <parboiled.version>1.4.1</parboiled.version>
         <jline.version>3.30.0</jline.version>
@@ -179,6 +183,19 @@
         </extensions>
         <plugins>
             <plugin>
+                <groupId>kr.motd.maven</groupId>
+                <artifactId>os-maven-plugin</artifactId>
+                <version>1.7.0</version>
+                <executions>
+                    <execution>
+                        <phase>initialize</phase>
+                        <goals>
+                            <goal>detect</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>exec-maven-plugin</artifactId>
                 <version>3.5.1</version>
@@ -251,19 +268,6 @@
                     <configuration>
                         <classifier>${os.detected.classifier}</classifier>
                     </configuration>
-                </plugin>
-                <plugin>
-                    <groupId>kr.motd.maven</groupId>
-                    <artifactId>os-maven-plugin</artifactId>
-                    <version>1.7.0</version>
-                    <executions>
-                        <execution>
-                            <phase>initialize</phase>
-                            <goals>
-                                <goal>detect</goal>
-                            </goals>
-                        </execution>
-                    </executions>
                 </plugin>
             </plugins>
         </pluginManagement>

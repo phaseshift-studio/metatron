@@ -25,16 +25,19 @@ import org.jline.terminal.*;
 import org.jline.utils.*;
 import org.slf4j.*;
 import studio.phaseshift.metatron.lang.obj.*;
+import studio.phaseshift.metatron.lang.obj.SObj.*;
 
 import java.io.*;
 import java.nio.file.*;
+import java.util.*;
 
 public class Console {
     private static final Logger LOG = LoggerFactory.getLogger(Console.class);
+    public static String HEADER_FILE = "conf/ansi_headers.txt";
+    public static String HEADER_SEPARATOR = "####################";
 
     public void run() throws IOException {
         final Terminal terminal = TerminalBuilder.builder().system(true).build();
-
         Highlighter highlighter = new DefaultHighlighter() {
             @Override
             public AttributedString highlight(LineReader reader, String buffer) {
@@ -81,8 +84,7 @@ public class Console {
                 .variable(LineReader.HISTORY_FILE, Paths.get(".metatron.history"))
                 .option(LineReader.Option.AUTO_FRESH_LINE, true)
                 .build();
-        boolean done = false;
-
+        this.outputHeader();
         String line = "";
         while (true) {
             try {
@@ -105,6 +107,41 @@ public class Console {
         }
         terminal.close();
         System.exit(0);
+    }
+
+    protected void outputHeader() {
+        try {
+            final Map<String, String> headers = new HashMap<>();
+            StringBuilder current = new StringBuilder();
+            final BufferedReader input = new BufferedReader(new FileReader(HEADER_FILE));
+            String headerTitle = null;
+            while (input.ready()) {
+                final String line = input.readLine().stripTrailing();
+                if (line.startsWith(HEADER_SEPARATOR) && line.endsWith(HEADER_SEPARATOR)) {
+                    if (null != headerTitle && !current.isEmpty()) {
+                        headers.put(headerTitle, current.toString());
+                    }
+                    current = new StringBuilder();
+                    headerTitle = line.replace(HEADER_SEPARATOR, "").trim();
+                } else {
+                    current.append(line).append("\n");
+                }
+            }
+            if (!current.isEmpty())
+                headers.put(headerTitle, current.toString());
+            final String randomHeaderTitle = new ArrayList<>(headers.keySet()).get(new Random().nextInt(headers.size()));
+            final String randomHeader = headers.get(randomHeaderTitle);
+            if (null == randomHeader) throw new IllegalArgumentException("<unknown header: " + randomHeaderTitle + ">");
+            System.out.print(randomHeader);
+        } catch (final Exception e) {
+            System.out.println("...an exception has occurred.");
+            System.out.println("      ...this doesn't bode well for your time in the meTaRon: " + e);
+            System.out.println(" __  __  ____  ____   __   ____  ____  _____  _  _ \n" +
+                    "(  \\/  )( ___)(_  _) /__\\ (_  _)(  _ \\(  _  )( \\( )\n" +
+                    " )    (  )__)   )(  /(__)\\  )(   )   / )(_)(  )  ( \n" +
+                    "(_/\\/\\_)(____) (__)(__)(__)(__) (_)\\_)(_____)(_)\\_)");
+            System.out.printf("\t\t\tby PhaseShift Studio (%s)\n", Calendar.getInstance().get(Calendar.YEAR));
+        }
     }
 
     public static void main(final String[] args) throws Exception {
