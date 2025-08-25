@@ -50,7 +50,7 @@ public class MParser extends BaseParser<BObj.Obj> implements ParseRunner<BObj.Ob
     /// ////////////////////////////////////////////////////////////
 
     Rule Obj() {
-        return Sequence(FirstOf(Bool(), Real(), Int(), Str()), EOI);
+        return Sequence(FirstOf(Bool(), Real(), Int(), Str()), WS(), EOI);
     }
 
     Rule Bool() {
@@ -63,7 +63,7 @@ public class MParser extends BaseParser<BObj.Obj> implements ParseRunner<BObj.Ob
     }
 
     Rule Int() {
-        return Sequence(Sequence(OneOrMore(Digit()), WS()), push(SObj.Int.of(Integer.parseInt(match()))));
+        return Sequence(Sequence(OneOrMore(Digit()), WS()), push(SObj.Int.of(Integer.parseInt(match().trim()))));
     }
 
     Rule Real() {
@@ -71,7 +71,7 @@ public class MParser extends BaseParser<BObj.Obj> implements ParseRunner<BObj.Ob
                         OneOrMore(Digit()),
                         new CharMatcher('.'),
                         OneOrMore(Digit()), WS()),
-                push(SObj.Real.of(Double.parseDouble(match()))));
+                push(SObj.Real.of(Double.parseDouble(match().trim()))));
     }
 
 

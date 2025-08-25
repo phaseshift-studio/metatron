@@ -48,8 +48,8 @@ public class MParserTest {
 
     @Test
     public void testIntParse() {
-        assertTrue(MParser.parse("1234").matched);
-        assertEquals(Int.of(1234), MParser.parse("1234").resultValue);
+        assertTrue(MParser.parse("1234  ").matched);
+        assertEquals(Int.of(1234), MParser.parse("1234 ").resultValue);
         assertEquals(NoObj.of(), MParser.parse("abc").resultValue);
     }
 
