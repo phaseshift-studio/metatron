@@ -18,18 +18,22 @@
 
 package studio.phaseshift.metatron.lang.parse;
 
+import org.javatuples.*;
 import org.parboiled.*;
 import org.parboiled.buffers.*;
 import org.parboiled.errors.*;
 import org.parboiled.matchers.*;
 import org.parboiled.parserunners.*;
 import org.parboiled.support.*;
+import org.parboiled.transform.*;
 import studio.phaseshift.metatron.lang.obj.*;
-import studio.phaseshift.metatron.lang.obj.SObj.*;
+import studio.phaseshift.metatron.lang.obj.SObj.Lst;
+import studio.phaseshift.metatron.lang.obj.SObj.NoObj;
 
 import java.net.*;
 import java.util.*;
-import java.util.regex.*;
+
+import static studio.phaseshift.metatron.lang.obj.BObj.*;
 
 public class MParser extends BaseParser<BObj.Obj> implements ParseRunner<BObj.Obj> {
 
@@ -56,7 +60,7 @@ public class MParser extends BaseParser<BObj.Obj> implements ParseRunner<BObj.Ob
     Rule Obj() {
         final StringVar typeVariable = new StringVar("");
         return Sequence(Optional(Sequence(Type(), '['), typeVariable.append(match().replace("[", ""))),
-                FirstOf(Bool(), Real(), Int(), Str(), Uri()), Optional(']'), WS(),
+                FirstOf(Bool(), Real(), Int(), Str(), Code(), Inst(), Lst(), Uri()), Optional(']'), WS(),
                 push(typeVariable.isEmpty() ? pop() : SObj.Obj.of(pop().value(), URI.create(typeVariable.get()))));
     }
 
@@ -68,12 +72,104 @@ public class MParser extends BaseParser<BObj.Obj> implements ParseRunner<BObj.Ob
         return Sequence(ZeroOrMore(Inst()))
     }*/
 
-    Rule Inst() {
-        return Sequence('(', ZeroOrMore(Sequence(Obj(), WS(), ',', WS())), ')');
+    Rule Lst() {
+        return Sequence('[', push(Lst.of()), ZeroOrMore(Sequence(Obj(), WS(), ',', WS(), new BaseAction("LstStack") {
+            @Override
+            public boolean run(Context context) {
+                final Context<BObj.Obj> typedContext = (Context<BObj.Obj>) context;
+                final BObj.Obj lstElement = typedContext.getValueStack().pop();
+                final BObj.Lst lstObj = typedContext.getValueStack().pop().<BObj.Lst>as();
+                final List<BObj.Obj> list = new ArrayList<>(lstObj.value());
+                list.add(lstElement);
+                typedContext.getValueStack().push(Lst.of(list));
+                return true;
+            }
+        })), ']');
     }
 
-    Rule Lst() {
-        return Sequence('[', ZeroOrMore(Sequence(Obj(), WS(), ',', WS())), ']');
+    static class InstArgAction extends BaseAction {
+        final List<BObj.Obj> instArgs = new ArrayList<>();
+
+        public InstArgAction() {
+            super("InstArgsAction");
+        }
+
+        @Override
+        public boolean run(Context context) {
+            this.instArgs.add(((Context<BObj.Obj>) context).getValueStack().pop());
+            return true;
+        }
+
+        public List<BObj.Obj> getArgs() {
+            return this.instArgs;
+        }
+    }
+
+    static class InstCompleteAction extends BaseAction {
+        final List<BObj.Obj> instArgs;
+
+        public InstCompleteAction(List<BObj.Obj> instArgs) {
+            super("InstCompleteAction");
+            this.instArgs = instArgs;
+        }
+
+        @Override
+        public boolean run(Context context) {
+            context.getValueStack().push(
+                    new SObj.Inst(new Triplet<>(new SObj.Lst(this.instArgs), (a, b) -> a, NoObj.of()), INST_URI));
+            return true;
+        }
+    }
+
+    Rule Inst() {
+        final InstArgAction argPushAction = new InstArgAction();
+        return Sequence(Sequence('(',
+                        Optional(Obj(), argPushAction),
+                        WS(),
+                        ZeroOrMore(Sequence(',', Obj(), argPushAction, WS())),
+                        ')'),
+                new InstCompleteAction(argPushAction.getArgs()));
+    }
+
+    /// ///////////////////////////////////////////////////////////////////////////
+
+    static class CodeInstAction extends BaseAction {
+        final List<BObj.Inst> instArgs = new ArrayList<>();
+
+        public CodeInstAction() {
+            super("CodeInstAction");
+        }
+
+        @Override
+        public boolean run(Context context) {
+            this.instArgs.add(((Context<BObj.Inst>) context).getValueStack().pop());
+            return true;
+        }
+
+        public List<BObj.Inst> getArgs() {
+            return this.instArgs;
+        }
+    }
+
+    static class CodeCompleteAction extends BaseAction {
+        final List<BObj.Inst> instArgs;
+
+        public CodeCompleteAction(List<BObj.Inst> instArgs) {
+            super("CodeCompleteAction");
+            this.instArgs = instArgs;
+        }
+
+        @Override
+        public boolean run(Context context) {
+            context.getValueStack().push(new SObj.Code(this.instArgs));
+            return true;
+        }
+    }
+
+    Rule Code() {
+        final CodeInstAction instPushAction = new CodeInstAction();
+        return Sequence(Inst(), instPushAction, ZeroOrMore(Sequence('.', Inst(), instPushAction)),
+                new CodeCompleteAction(instPushAction.getArgs()));
     }
 
     Rule Bool() {

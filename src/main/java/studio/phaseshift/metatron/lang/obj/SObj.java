@@ -309,6 +309,25 @@ public class SObj implements BObj {
 
     }
 
+    public static class Code extends Obj implements BObj.Code {
+        public Code(final List<BObj.Inst> value) {
+            super(value, CODE_URI);
+        }
+
+        @Override
+        public List<BObj.Inst> value() {
+            return (List<BObj.Inst>) this.value;
+        }
+
+        public static BObj.Code of(final BObj.Inst inst0, final BObj.Inst... insts) {
+            List<BObj.Inst> list = new ArrayList<>();
+            list.add(inst0);
+            Collections.addAll(list, insts);
+            return new Code(list);
+        }
+
+    }
+
     public static class Inst extends Obj implements BObj.Inst {
 
         public Inst(final Triplet<BObj.Lst, BiFunction<BObj.Obj, BObj.Lst, BObj.Obj>, BObj.Obj> value, final URI type) {

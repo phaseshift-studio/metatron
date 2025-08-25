@@ -37,7 +37,7 @@ public interface BObj {
     public static final URI LST_URI = URI.create("m:lst");
     public static final URI REC_URI = URI.create("m:rec");
     public static final URI INST_URI = URI.create("m:inst");
-    public static final URI COSE_URI = URI.create("m:code");
+    public static final URI CODE_URI = URI.create("m:code");
     public static final URI OBJS_URI = URI.create("m:objs");
 
 
