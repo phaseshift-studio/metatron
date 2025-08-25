@@ -54,23 +54,23 @@ public class MParser extends BaseParser<BObj.Obj> implements ParseRunner<BObj.Ob
     }
 
     Rule Bool() {
-        return Sequence(FirstOf(
+        return Sequence(Sequence(FirstOf(
                         "true",
-                        "false"),
+                        "false"), WS()),
                 push(match().trim().equals("true") ?
                         SObj.Bool.of(true) :
                         SObj.Bool.of(false)));
     }
 
     Rule Int() {
-        return Sequence(OneOrMore(Digit()), push(SObj.Int.of(Integer.parseInt(match()))));
+        return Sequence(Sequence(OneOrMore(Digit()), WS()), push(SObj.Int.of(Integer.parseInt(match()))));
     }
 
     Rule Real() {
         return Sequence(Sequence(
                         OneOrMore(Digit()),
                         new CharMatcher('.'),
-                        OneOrMore(Digit())),
+                        OneOrMore(Digit()), WS()),
                 push(SObj.Real.of(Double.parseDouble(match()))));
     }
 
