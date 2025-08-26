@@ -36,14 +36,18 @@ public class fURI {
         try {
             int colon = uri.indexOf(':');
             int slash = uri.indexOf('/');
-            if (colon < slash) {
+            if (colon != -1 && colon < slash) {
                 this.urin = Scheme.scheme(uri.substring(0, colon)).parseUrin(uri);
             } else {
-                this.urin = Scheme.scheme("").parseUrinReference(uri);
+                this.urin = Scheme.scheme("m").parseUrinReference(uri);
             }
         } catch (final ParseException e) {
             throw new IllegalArgumentException(e.getMessage(), e);
         }
+    }
+
+    public boolean isAbsolute() {
+        return this.urin.hasAuthority() || this.urin.asUri().toString().startsWith("/");
     }
 
     public fURI extend(final String segment) {
@@ -59,6 +63,31 @@ public class fURI {
             path.add(Segment.segment(segment));
         }
         return new fURI(this.urin.withPath(AbsolutePath.path(path)));
+    }
+
+    private fURI rePreTract(boolean retract, final int steps) {
+        final List<Segment<String>> path = this.urin.path().segments();
+        if (path.size() < steps)
+            return new fURI(this.urin.withPath(Path.path()));
+        for (int i = 0; i < steps; i++) {
+            if (retract)
+                path.removeLast();
+            else
+                path.removeFirst();
+        }
+
+        return new fURI(this.isAbsolute() ?
+                this.urin.withPath(AbsolutePath.path(path)) :
+                Scheme.scheme("m").relativeReference(Path.rootlessPath(path)));
+
+    }
+
+    public fURI retract(final int steps) {
+        return this.rePreTract(true, steps);
+    }
+
+    public fURI pretract(final int steps) {
+        return this.rePreTract(false, steps);
     }
 
     public boolean hasPattern() {
@@ -82,21 +111,26 @@ public class fURI {
     }
 
     public boolean matches(final fURI other) {
+        if (other.urin.asString().equals("#"))
+            return true;
         if (!other.hasPattern())
             return this.urin.equals(other.urin);
+        if (this.isAbsolute() != other.isAbsolute())
+            return false;
         if ((this.urin.hasAuthority() && other.urin.hasAuthority()) &&
                 (!(this.urin.authority().equals(other.urin.authority()) ||
                         other.urin.authority().host().equals(Host.registeredName("+")) ||
                         other.urin.authority().host().equals(Host.registeredName(""))))) {
             return false;
         }
-        if (other.urin.authority().host().equals(Host.registeredName("")))
+        if (!other.urin.hasAuthority() || (other.urin.path().segments().isEmpty() && other.urin.toString().contains("#")))
             return true;
         final List<Segment<String>> as = this.urin.path().segments();
         final List<Segment<String>> bs = other.urin.path().segments();
-        for (
-                int i = 0; i < bs.size(); i++) {
+        for (int i = 0; i < bs.size(); i++) {
             if (!bs.get(i).hasValue() || (bs.get(i).value().equals("+") && i == bs.size() - 1))
+                return true;
+            if (bs.get(i).value().equals("#"))
                 return true;
             if (bs.get(i).value().equals("+"))
                 continue;

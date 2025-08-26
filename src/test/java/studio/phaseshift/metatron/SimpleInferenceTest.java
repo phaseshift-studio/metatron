@@ -24,7 +24,7 @@ import com.github.tjake.jlama.model.functions.Generator;
 import com.github.tjake.jlama.safetensors.DType;
 import com.github.tjake.jlama.safetensors.prompt.PromptContext;
 import com.github.tjake.jlama.util.Downloader;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 
 import java.io.File;
 import java.util.UUID;
@@ -32,6 +32,7 @@ import java.util.UUID;
 public class SimpleInferenceTest {
 
     @Test
+    @Disabled("Requires internet access")
     void testInference() throws Exception {
         String model = "TinyLlama/TinyLlama-1.1B-Chat-v1.0";
         String workingDirectory = "/srv/huggingface";

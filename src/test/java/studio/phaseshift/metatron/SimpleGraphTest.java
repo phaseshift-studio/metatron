@@ -30,7 +30,7 @@ import dev.langchain4j.service.TokenStream;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
 import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.apache.tinkerpop.gremlin.tinkergraph.structure.TinkerGraph;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.Assertions.*;
 
 import java.time.Duration;
@@ -48,6 +48,7 @@ import static java.util.concurrent.TimeUnit.MINUTES;
 public class SimpleGraphTest {
 
     @Test
+    @Disabled("Requires internet access")
     public void testOllamaToolUse() {
         var model = OllamaChatModel.builder()
                 .modelName("qwen3:4b")
@@ -63,6 +64,7 @@ public class SimpleGraphTest {
     }
 
     @Test
+    @Disabled("Requires internet access")
     public void testTinkerGraph() {
               /*
 
@@ -82,10 +84,8 @@ public class SimpleGraphTest {
     }
 
 
-    /**
-     * Rigorous Test :-)
-     */
     @Test
+    @Disabled("Requires internet access")
     public void shouldAnswerWithTrue() throws Exception {
 
         var flatModel = OllamaChatModel.builder()

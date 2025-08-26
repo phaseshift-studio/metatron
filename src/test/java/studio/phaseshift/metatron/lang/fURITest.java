@@ -32,6 +32,51 @@ public class fURITest {
     }
 
     @Test
+    public void testIsAbsolute() {
+        assertTrue(new fURI("http://fhatos.org/a").isAbsolute());
+        assertTrue(new fURI("http://fhatos.org").isAbsolute());
+        assertFalse(new fURI("a/b").isAbsolute());
+        assertTrue(new fURI("/a/b").isAbsolute());
+        assertTrue(new fURI("/a/+/b").isAbsolute());
+        assertTrue(new fURI("/a/+/#").isAbsolute());
+        assertFalse(new fURI("a/+/b").isAbsolute());
+        assertFalse(new fURI("a/+/#").isAbsolute());
+    }
+
+    @Test
+    public void testRetract() {
+        assertEquals(new fURI("http://fhatos.org/"), new fURI("http://fhatos.org/a").retract(1));
+        assertEquals(new fURI("http://fhatos.org/a"), new fURI("http://fhatos.org/a/b").retract(1));
+        assertEquals(new fURI("http://fhatos.org/"), new fURI("http://fhatos.org/a/b").retract(2));
+        assertEquals(new fURI("http://fhatos.org/"), new fURI("http://fhatos.org/a/b").retract(3));
+        ///
+        assertEquals(new fURI("http://fhatos.org:4500/"), new fURI("http://fhatos.org:4500/a").retract(1));
+        assertEquals(new fURI("http://fhatos.org:4500/a"), new fURI("http://fhatos.org:4500/a/b").retract(1));
+        assertEquals(new fURI("http://fhatos.org:4500/"), new fURI("http://fhatos.org:4500/a/b").retract(2));
+        assertEquals(new fURI("http://fhatos.org:4500/"), new fURI("http://fhatos.org:4500/a/b").retract(3));
+        ///
+        assertEquals(new fURI("/fhatos.org/a"), new fURI("/fhatos.org/a/b").retract(1));
+        assertEquals(new fURI("/fhatos.org/a"), new fURI("/fhatos.org/a/b").retract(1));
+        assertEquals(new fURI("fhatos.org/a"), new fURI("fhatos.org/a/b").retract(1));
+    }
+
+    @Test
+    public void testPretract() {
+        assertEquals(new fURI("http://fhatos.org/"), new fURI("http://fhatos.org/a").pretract(1));
+        assertEquals(new fURI("http://fhatos.org/b"), new fURI("http://fhatos.org/a/b").pretract(1));
+        assertEquals(new fURI("http://fhatos.org/"), new fURI("http://fhatos.org/a/b").pretract(2));
+        assertEquals(new fURI("http://fhatos.org/"), new fURI("http://fhatos.org/a/b").pretract(3));
+        ///
+        assertEquals(new fURI("http://fhatos.org:4500/"), new fURI("http://fhatos.org:4500/a").pretract(1));
+        assertEquals(new fURI("http://fhatos.org:4500/b"), new fURI("http://fhatos.org:4500/a/b").pretract(1));
+        assertEquals(new fURI("http://fhatos.org:4500/"), new fURI("http://fhatos.org:4500/a/b").pretract(2));
+        assertEquals(new fURI("http://fhatos.org:4500/"), new fURI("http://fhatos.org:4500/a/b").pretract(3));
+        ///
+        assertEquals(new fURI("/a/b"), new fURI("/fhatos.org/a/b").pretract(1));
+        assertEquals(new fURI("a/b"), new fURI("fhatos.org/a/b").pretract(1));
+    }
+
+    @Test
     public void testMatches() {
         assertTrue(new fURI("http://fhatos.org/a").matches(new fURI("http://fhatos.org/a")));
         assertFalse(new fURI("http://fhatos.org/a").matches(new fURI("http://fhatos.org/a/b")));
@@ -50,7 +95,26 @@ public class fURITest {
         ///
         assertTrue(new fURI("http://fhatos.org/a/b/c").matches(new fURI("http://+/a/b/c")));
         assertTrue(new fURI("http://fhatos.org/a/b/c").matches(new fURI("http://#")));
-
+        assertTrue(new fURI("http://fhatos.org/a/b/c").matches(new fURI("http://fhatos.org/#")));
+        assertFalse(new fURI("http://fhatos.org/a/b/c").matches(new fURI("http://fhatos.org/b/#")));
+        ///
+        assertTrue(new fURI("/a/b/c").matches(new fURI("/a/b/+")));
+        assertTrue(new fURI("/a/b/c").matches(new fURI("/a/+/c")));
+        assertTrue(new fURI("/a/b/c").matches(new fURI("/a/b/#")));
+        assertTrue(new fURI("/a/b/c").matches(new fURI("/a/#")));
+        assertTrue(new fURI("/a/b/c").matches(new fURI("#")));
+        ///
+        assertTrue(new fURI("a/b/c").matches(new fURI("a/b/+")));
+        assertTrue(new fURI("a/b/c").matches(new fURI("a/+/c")));
+        assertTrue(new fURI("a/b/c").matches(new fURI("a/b/#")));
+        assertTrue(new fURI("a/b/c").matches(new fURI("a/#")));
+        assertTrue(new fURI("a/b/c").matches(new fURI("#")));
+        ///
+        assertFalse(new fURI("a/b/c").matches(new fURI("/a/b/+")));
+        assertFalse(new fURI("a/b/c").matches(new fURI("/a/+/c")));
+        assertFalse(new fURI("a/b/c").matches(new fURI("/a/b/#")));
+        assertFalse(new fURI("a/b/c").matches(new fURI("/a/#")));
+        assertFalse(new fURI("a/b/c").matches(new fURI("/#")));
 
     }
 }
