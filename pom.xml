@@ -42,8 +42,10 @@
         <jlama.version>0.8.4</jlama.version>
         <gson.version>2.10.1</gson.version>
         <parboiled.version>1.4.1</parboiled.version>
+        <jparsec.version>3.1</jparsec.version>
         <jline.version>3.30.0</jline.version>
         <logback.version>1.5.18</logback.version>
+        <urin.version>5.2</urin.version>
     </properties>
     <dependencyManagement>
         <dependencies>
@@ -126,6 +128,11 @@
         </dependency>-->
         <!-- UTILITIES -->
         <dependency>
+            <groupId>net.sourceforge.urin</groupId>
+            <artifactId>urin</artifactId>
+            <version>${urin.version}</version>
+        </dependency>
+        <dependency>
             <groupId>com.google.code.gson</groupId>
             <artifactId>gson</artifactId>
             <version>${gson.version}</version>
@@ -146,6 +153,11 @@
             <version>${logback.version}</version>
         </dependency>
         <!-- PARSING -->
+        <dependency>
+            <groupId>org.jparsec</groupId>
+            <artifactId>jparsec</artifactId>
+            <version>${jparsec.version}</version>
+        </dependency>
         <dependency>
             <groupId>org.parboiled</groupId>
             <artifactId>parboiled-java</artifactId>
@@ -268,6 +280,28 @@
                     <configuration>
                         <classifier>${os.detected.classifier}</classifier>
                     </configuration>
+                </plugin>
+                <plugin>
+                    <artifactId>maven-assembly-plugin</artifactId>
+                    <configuration>
+                        <archive>
+                            <manifest>
+                                <mainClass>studio.phaseshift.metatron.lang.parse.Console</mainClass>
+                            </manifest>
+                        </archive>
+                        <descriptorRefs>
+                            <descriptorRef>jar-with-dependencies</descriptorRef>
+                        </descriptorRefs>
+                    </configuration>
+                    <executions>
+                        <execution>
+                            <id>make-assembly</id>
+                            <phase>package</phase>
+                            <goals>
+                                <goal>single</goal>
+                            </goals>
+                        </execution>
+                    </executions>
                 </plugin>
             </plugins>
         </pluginManagement>

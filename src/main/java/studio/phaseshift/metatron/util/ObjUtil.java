@@ -16,7 +16,18 @@
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.proc;
+package studio.phaseshift.metatron.util;
 
-public interface Scheduler {
+import studio.phaseshift.metatron.lang.obj.*;
+import studio.phaseshift.metatron.lang.obj.BObj.*;
+
+public final class ObjUtil {
+
+    private ObjUtil() {
+
+    }
+
+    public static BObj.Obj orNoObj(final BObj.Obj obj) {
+        return null == obj ? NoObj.of() : obj;
+    }
 }

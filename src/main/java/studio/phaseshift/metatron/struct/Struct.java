@@ -18,5 +18,14 @@
 
 package studio.phaseshift.metatron.struct;
 
+import studio.phaseshift.metatron.lang.obj.*;
+
+import java.net.*;
+
 public interface Struct {
+
+    public BObj.Obj read(final URI addr);
+
+    public void write(final URI addr, final BObj.Obj obj);
+
 }
