@@ -71,9 +71,9 @@ public class fURI {
             return new fURI(this.urin.withPath(Path.path()));
         for (int i = 0; i < steps; i++) {
             if (retract)
-                path.removeLast();
+                path.remove(path.size() - 1);
             else
-                path.removeFirst();
+                path.remove(0);
         }
 
         return new fURI(this.isAbsolute() ?
