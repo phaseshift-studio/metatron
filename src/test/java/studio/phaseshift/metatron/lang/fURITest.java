@@ -25,9 +25,17 @@ import static org.junit.jupiter.api.Assertions.*;
 public class fURITest {
 
     @Test
+    public void testPretend() {
+        assertEquals(new fURI("http://fhatos.org/a/b"), new fURI("http://fhatos.org/b").pretend("a"));
+        assertEquals(new fURI("http://fhatos.org/a/b/c/d"), new fURI("http://fhatos.org/d").pretend("a/b/c"));
+
+    }
+
+    @Test
     public void testExtend() {
         assertEquals(new fURI("http://fhatos.org/a/b"), new fURI("http://fhatos.org/a").extend("b"));
         assertEquals(new fURI("http://fhatos.org/a/b/c/d"), new fURI("http://fhatos.org/a").extend("b/c/d"));
+        assertEquals(new fURI("http://fhatos.org/a/b/d"), new fURI("http://fhatos.org/a").extend("b/./d"));
 
     }
 

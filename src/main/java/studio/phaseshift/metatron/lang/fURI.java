@@ -22,6 +22,7 @@ import net.sourceforge.urin.*;
 import org.slf4j.*;
 
 import java.util.*;
+import java.util.stream.*;
 
 public class fURI {
     private Logger LOG = LoggerFactory.getLogger(fURI.class);
@@ -50,6 +51,26 @@ public class fURI {
         return this.urin.hasAuthority() || this.urin.asUri().toString().startsWith("/");
     }
 
+    public fURI pretend(final String segment) {
+        if (segment.isEmpty() || segment.equals("."))
+            return this;
+
+        final List<Segment<String>> path;
+        if (segment.contains("/")) {
+            path = new ArrayList<>(this.urin.path().segments());
+            final List<Segment<String>> segments = Arrays.stream(segment.split("/"))
+                    .filter(s -> !s.equals("."))
+                    .map(Segment::segment)
+                    .collect(Collectors.toList());
+            Collections.reverse(segments);
+            segments.forEach(s -> path.add(0, s));
+        } else {
+            path = new ArrayList<>(this.urin.path().segments());
+            path.add(0, Segment.segment(segment));
+        }
+        return new fURI(this.urin.withPath(AbsolutePath.path(path)));
+    }
+
     public fURI extend(final String segment) {
         if (segment.isEmpty() || segment.equals("."))
             return this;
@@ -57,7 +78,10 @@ public class fURI {
         final List<Segment<String>> path;
         if (segment.contains("/")) {
             path = new ArrayList<>(this.urin.path().segments());
-            path.addAll(Arrays.stream(segment.split("/")).map(Segment::segment).toList());
+            path.addAll(Arrays.stream(segment.split("/"))
+                    .filter(s -> !s.equals("."))
+                    .map(Segment::segment)
+                    .toList());
         } else {
             path = new ArrayList<>(this.urin.path().segments());
             path.add(Segment.segment(segment));
@@ -100,7 +124,7 @@ public class fURI {
         for (int i = 0; i < bs.length; i++) {
             if (bs[i].equals("#") || (bs[i].equals("+") && i == bs.length - 1))
                 return true;
-            if (bs[i].equals("+") || bs[i].equals("#"))
+            if (bs[i].equals("+"))
                 continue;
             if (as.length > i) {
                 if (!as[i].equals(bs[i]))

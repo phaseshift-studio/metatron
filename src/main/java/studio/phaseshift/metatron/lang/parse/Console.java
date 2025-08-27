@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.lang.parse;
 
+import org.jline.jansi.Ansi.*;
 import org.jline.reader.*;
 import org.jline.reader.impl.*;
 import org.jline.reader.impl.history.*;
@@ -25,18 +26,30 @@ import org.jline.terminal.*;
 import org.jline.utils.*;
 import org.slf4j.*;
 import studio.phaseshift.metatron.lang.obj.*;
-import studio.phaseshift.metatron.lang.obj.SObj.*;
 
 import java.io.*;
 import java.nio.file.*;
 import java.util.*;
+
+import static org.jline.jansi.Ansi.ansi;
 
 public class Console {
     private static final Logger LOG = LoggerFactory.getLogger(Console.class);
     public static String HEADER_FILE = "conf/ansi_headers.txt";
     public static String HEADER_SEPARATOR = "####################";
 
+    public static void OUTPUT(final Object output) {
+        OUTPUT(output,true);
+    }
+    public static void OUTPUT(final Object output, final boolean newLine) {
+        if (newLine)
+            System.out.println(output);
+        else
+            System.out.print(output);
+    }
+
     public void run() throws IOException {
+
         final Terminal terminal = TerminalBuilder.builder().system(true).build();
         Highlighter highlighter = new DefaultHighlighter() {
             @Override
@@ -88,13 +101,13 @@ public class Console {
         String line = "";
         while (true) {
             try {
-                line = reader.readLine("mtron> ");
+                line = reader.readLine(ansi().fg(Color.MAGENTA).a("mtron").fg(Color.GREEN).a("> ").reset().toString());
                 if (line.trim().equals(":quit"))
                     break;
                 else {
-                    final BObj.Obj result = MParser.parse(line);
+                    final BObj.Obj result = ObjParser.parse(line);
                     if (!result.isNoObj())
-                        System.out.println("==>" + result);
+                        OUTPUT(ansi().fg(Color.GREEN).a("==>").reset().a(result),true);
                 }
             } catch (UserInterruptException e) {
                 terminal.writer().println("process interrupted");
@@ -132,11 +145,11 @@ public class Console {
             final String randomHeaderTitle = new ArrayList<>(headers.keySet()).get(new Random().nextInt(headers.size()));
             final String randomHeader = headers.get(randomHeaderTitle);
             if (null == randomHeader) throw new IllegalArgumentException("<unknown header: " + randomHeaderTitle + ">");
-            System.out.print(randomHeader);
+            OUTPUT(randomHeader,false);
         } catch (final Exception e) {
-            System.out.println("...an exception has occurred.");
-            System.out.println("      ...this doesn't bode well for your time in the meTaRon: " + e);
-            System.out.println(" __  __  ____  ____   __   ____  ____  _____  _  _ \n" +
+            OUTPUT("...an exception has occurred.");
+            OUTPUT("      ...this doesn't bode well for your time in the meTaRon: " + e);
+            OUTPUT(" __  __  ____  ____   __   ____  ____  _____  _  _ \n" +
                     "(  \\/  )( ___)(_  _) /__\\ (_  _)(  _ \\(  _  )( \\( )\n" +
                     " )    (  )__)   )(  /(__)\\  )(   )   / )(_)(  )  ( \n" +
                     "(_/\\/\\_)(____) (__)(__)(__)(__) (_)\\_)(_____)(_)\\_)");

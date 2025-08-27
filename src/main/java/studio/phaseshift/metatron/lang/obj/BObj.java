@@ -19,7 +19,6 @@
 package studio.phaseshift.metatron.lang.obj;
 
 import org.javatuples.*;
-import studio.phaseshift.metatron.util.*;
 
 import java.net.*;
 import java.util.*;
@@ -89,6 +88,10 @@ public interface BObj {
 
         default boolean isInst() {
             return this instanceof Inst;
+        }
+
+        default boolean isObjs() {
+            return this instanceof Objs;
         }
 
         default boolean boolValue() {

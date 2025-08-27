@@ -18,6 +18,10 @@
 
 package studio.phaseshift.metatron.lang.parse;
 
+public class MParser {
+
+}
+/*
 import org.javatuples.*;
 import org.parboiled.*;
 import org.parboiled.buffers.*;
@@ -68,9 +72,9 @@ public class MParser extends BaseParser<BObj.Obj> implements ParseRunner<BObj.Ob
         return Sequence(Letter(), ZeroOrMore(UriCharacter()));
     }
 
-    /*Rule Code() {
+    Rule Code() {
         return Sequence(ZeroOrMore(Inst()))
-    }*/
+    }
 
     Rule Lst() {
         return Sequence('[', push(Lst.of()), ZeroOrMore(Sequence(Obj(), WS(), ',', WS(), new BaseAction("LstStack") {
@@ -288,6 +292,6 @@ public class MParser extends BaseParser<BObj.Obj> implements ParseRunner<BObj.Ob
     public ParsingResult<BObj.Obj> run(final InputBuffer inputBuffer) {
         return this.run(inputBuffer.toString());
     }
-}
+}*/
 
 
