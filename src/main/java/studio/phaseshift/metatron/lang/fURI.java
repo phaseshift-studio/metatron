@@ -33,6 +33,10 @@ public class fURI {
         this.urin = urin;
     }
 
+    public static fURI create(final String uri) {
+        return new fURI(uri);
+    }
+
     public fURI(final String uri) throws IllegalArgumentException {
         try {
             int colon = uri.indexOf(':');
@@ -45,6 +49,14 @@ public class fURI {
         } catch (final ParseException e) {
             throw new IllegalArgumentException(e.getMessage(), e);
         }
+    }
+
+    public String scheme() {
+        return this.urin.asUri().getAuthority();
+    }
+
+    public String hostOrSegment() {
+        return this.urin.hasAuthority() ? this.urin.asUri().getAuthority() : this.urin.path().segments().get(0).value();
     }
 
     public boolean isAbsolute() {

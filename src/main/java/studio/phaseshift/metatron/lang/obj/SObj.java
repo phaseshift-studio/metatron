@@ -19,9 +19,9 @@
 package studio.phaseshift.metatron.lang.obj;
 
 import org.javatuples.*;
+import studio.phaseshift.metatron.lang.*;
 import studio.phaseshift.metatron.util.*;
 
-import java.net.*;
 import java.util.*;
 import java.util.function.*;
 
@@ -29,9 +29,9 @@ public class SObj implements BObj {
 
     public static class Obj implements BObj.Obj {
         final Object value;
-        URI type;
+        fURI type;
 
-        public Obj(final Object value, final URI type) {
+        public Obj(final Object value, final fURI type) {
             if (value instanceof Obj)
                 throw new IllegalArgumentException("an obj can not have an obj as a base value");
             this.value = value;
@@ -39,7 +39,7 @@ public class SObj implements BObj {
         }
 
         @Override
-        public URI type() {
+        public fURI type() {
             return this.type;
         }
 
@@ -64,13 +64,10 @@ public class SObj implements BObj {
 
         @Override
         public String toString() {
-            if (null == this.value)
-                return "noobj";
-            else
-                return this.type.toString() + "[" + this.value + "]";
+            return this.toString(Palette.STANDARD);
         }
 
-        public static Obj of(final Object value, final URI type) {
+        public static Obj of(final Object value, final fURI type) {
             Obj o = Obj.of(value);
             o.type = type;
             return o;
@@ -89,8 +86,8 @@ public class SObj implements BObj {
                 return new Real((Double) value);
             else if (value instanceof String)
                 return new Str((String) value);
-            else if (value instanceof URI)
-                return new Uri((URI) value);
+            else if (value instanceof fURI)
+                return new Uri((fURI) value);
             else if (value instanceof List)
                 return new Lst((List) value);
             else if (value instanceof Map)
@@ -99,8 +96,7 @@ public class SObj implements BObj {
                 return new Inst((Triplet<BObj.Lst, BiFunction<BObj.Obj, BObj.Lst, BObj.Obj>, BObj.Obj>) value, INST_URI);
             else {
                 try {
-                    System.out.println(value);
-                    return new Uri(URI.create(value.toString()));
+                    return new Uri(fURI.create(value.toString()));
                 } catch (final IllegalArgumentException e) {
                     throw new RuntimeException("unknown object type: " + value.toString());
                 }
@@ -128,7 +124,7 @@ public class SObj implements BObj {
             super(value, BOOL_URI);
         }
 
-        public Bool(final Boolean value, final URI type) {
+        public Bool(final Boolean value, final fURI type) {
             super(value, type);
         }
 
@@ -146,7 +142,7 @@ public class SObj implements BObj {
             super(value, INT_URI);
         }
 
-        public Int(final Integer value, final URI type) {
+        public Int(final Integer value, final fURI type) {
             super(value, type);
         }
 
@@ -155,10 +151,10 @@ public class SObj implements BObj {
         }
 
         public static Int of(final String type, final int i) {
-            return new Int(i, URI.create(type));
+            return new Int(i, fURI.create(type));
         }
 
-        public static Int of(final URI type, final int i) {
+        public static Int of(final fURI type, final int i) {
             return new Int(i, type);
         }
 
@@ -169,7 +165,7 @@ public class SObj implements BObj {
 
     public static class Real extends Obj implements BObj.Real {
 
-        public Real(final Double value, final URI type) {
+        public Real(final Double value, final fURI type) {
             super(value, type);
         }
 
@@ -185,7 +181,7 @@ public class SObj implements BObj {
 
     public static class Str extends Obj implements BObj.Str {
 
-        public Str(final String value, final URI type) {
+        public Str(final String value, final fURI type) {
             super(value, type);
         }
 
@@ -201,25 +197,25 @@ public class SObj implements BObj {
 
     public static class Uri extends Obj implements BObj.Uri {
 
-        public Uri(final URI value, final URI type) {
+        public Uri(final fURI value, final fURI type) {
             super(value, type);
         }
 
-        public Uri(final URI value) {
+        public Uri(final fURI value) {
             super(value, URI_URI);
         }
-
-        public URI value() {
-            return (URI) this.value;
+        
+        public fURI value() {
+            return (fURI) this.value;
         }
 
         public static BObj.Uri of(final String uri) {
-            return new Uri(URI.create(uri));
+            return new Uri(new fURI(uri));
         }
     }
 
     public static class Lst extends Obj implements BObj.Lst {
-        public Lst(final List<BObj.Obj> value, final URI type) {
+        public Lst(final List<BObj.Obj> value, final fURI type) {
             super(value, type);
         }
 
@@ -262,7 +258,7 @@ public class SObj implements BObj {
 
     public static class Rec extends Obj implements BObj.Rec {
 
-        public Rec(final Map<BObj.Obj, BObj.Obj> value, final URI type) {
+        public Rec(final Map<BObj.Obj, BObj.Obj> value, final fURI type) {
             super(value, type);
         }
 
@@ -330,7 +326,7 @@ public class SObj implements BObj {
 
     public static class Inst extends Obj implements BObj.Inst {
 
-        public Inst(final Triplet<BObj.Lst, BiFunction<BObj.Obj, BObj.Lst, BObj.Obj>, BObj.Obj> value, final URI type) {
+        public Inst(final Triplet<BObj.Lst, BiFunction<BObj.Obj, BObj.Lst, BObj.Obj>, BObj.Obj> value, final fURI type) {
             super(value, type);
         }
 

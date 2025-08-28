@@ -18,10 +18,13 @@
 
 package studio.phaseshift.metatron.lang.parse;
 
+import org.javatuples.*;
 import org.petitparser.context.*;
 import org.petitparser.parser.*;
 import org.petitparser.parser.combinators.*;
 import org.slf4j.*;
+import studio.phaseshift.metatron.lang.*;
+import studio.phaseshift.metatron.lang.obj.*;
 import studio.phaseshift.metatron.lang.obj.SObj.*;
 
 import java.util.*;
@@ -33,40 +36,31 @@ import static org.petitparser.parser.primitive.StringParser.of;
 public class ObjParser {
 
     private static final Logger LOG = LoggerFactory.getLogger(ObjParser.class);
+    private static SettableParser obj_parser = SettableParser.undefined();
+    private static SettableParser lst_parser = SettableParser.undefined();
 
-
-    public static void main(final String[] args) {
-        System.out.println(m_bool().parse("true"));
-        System.out.println(m_int().accept("20010"));
-        System.out.println(m_real().accept("122.023451"));
-        System.out.println(m_str().accept("'ab34dsf   3656c'"));
-        System.out.println(m_obj().accept("'f   3656c'"));
-    }
-
-    private static String foldCharacters(final Object p) {
-        if (p instanceof List)
-            return ((List) p).stream().map(Object::toString).reduce("", (a, b) -> a.toString() + b).toString();
-        else
-            return p.toString();
+    static {
+        obj_parser.set(new ChoiceParser(m_noobj(), m_bool(), m_real(), m_int(), m_str(), lst_parser, m_code(), m_inst(), m_uri()));
+        lst_parser.set(new SequenceParser(of('['), obj_parser.separatedBy(of(',')), of(']'))
+                .map(t -> new Lst(((List) t).stream()
+                        .filter(o -> o instanceof List)
+                        .flatMap(o -> ((List) o).stream())
+                        .filter(o -> o instanceof Obj)
+                        .toList())));
     }
 
     public static Obj parse(final String code) {
-        Result result = m_obj().parse(code);
+        Result result = m_obj().end().parse(code);
         //LOG.info("{}==to==>{}", code, result.get().toString());
         return Obj.of(result.get());
     }
 
-    public static Parser m_obj() {
-        return new ChoiceParser(m_noobj(), m_bool(), m_real(), m_int(), m_str()).star().map(o -> {
-            if (o instanceof List && ((List<?>) o).size() == 1)
-                return ((List<?>) o).get(0);
-            else if (o instanceof List) {
-                return Objs.of(((List<?>) o).iterator());
-            } else {
-                throw new RuntimeException("wrong type: " + o);
-            }
+    public static Parser m_furi() {
+        return new SequenceParser(letter(), word().or(anyOf(":?@=+/.&")).star()).flatten().map(t -> new fURI(t.toString()));
+    }
 
-        }).end();
+    public static Parser m_obj() {
+        return obj_parser;
     }
 
     public static Parser m_noobj() {
@@ -78,26 +72,50 @@ public class ObjParser {
     }
 
     public static Parser m_int() {
-        return new SequenceParser(new OptionalParser(of('-'), '+'), new ChoiceParser(of('0'), digit().plus())).map(t -> {
-            final List<?> components = (List) t;
-            final int i = Integer.parseInt(foldCharacters(components.get(1)));
-            return Int.of('+' == (Character) components.get(0) ? i : i * -1);
-        });
+        return new SequenceParser(new OptionalParser(of('-'), '+'), new ChoiceParser(of('0'), digit().plus()))
+                .flatten()
+                .map(t -> new Int(Integer.parseInt(t.toString())));
     }
 
     public static Parser m_real() {
-        return new SequenceParser(new OptionalParser(of('-'), '+'), new ChoiceParser(of('0'), digit().plus()), of('.'), digit().plus()).map(t -> {
-            final List<?> components = (List) t;
-            final double r = Double.parseDouble(foldCharacters(components.get(1)) + "." + foldCharacters(components.get(3)));
-            return Real.of('+' == (Character) components.get(0) ? r : r * -1.0);
-        });
+        return new SequenceParser(new OptionalParser(of('-'), '+'), new ChoiceParser(of('0'), digit().plus()), of('.'), digit().plus())
+                .flatten()
+                .map(t -> new Real(Double.parseDouble(t.toString())));
     }
 
     public static Parser m_str() {
-        return of('\'').seq(any().starLazy(of('\'')), of('\'')).map(a -> Str.of(foldCharacters(((List) a).get(1))));
+        return of('\'').seq(any().starLazy(of('\'')), of('\'')).pick(1).flatten();
+    }
+
+    public static Parser m_uri() {
+        return new SequenceParser(new OptionalParser(of('<'), '<'), m_furi(), new OptionalParser(of('>'), '>'))
+                .map(t -> new Uri(fURI.create(((List) t).get(1).toString())));
     }
 
     public static Parser m_lst() {
-        return of('.');
+        return lst_parser;
+    }
+
+    public static Parser m_inst() {
+        return new SequenceParser(m_furi(), of('('), m_int().separatedBy(of(',')), of(')'))
+                .map(t -> {
+                    return new Inst(new Triplet<>(
+                            new Lst((List<BObj.Obj>) ((List) ((List) t).get(2)).stream().filter(x -> !x.equals(',')).toList()),
+                            (a, b) -> a,
+                            NoObj.of()),
+                            (fURI) ((List) t).get(0));
+                });
+    }
+
+    public static Parser m_code() {
+        return new SequenceParser(m_inst(), of('.'), m_inst().separatedBy(of('.'))).map(t -> {
+            final List<Object> objs = (List<Object>) t;
+            final List<BObj.Inst> insts = new ArrayList<>();
+            insts.add((Inst) objs.get(0));
+            for (int i = 0; i < ((List) objs.get(2)).size(); i = i + 2) {
+                insts.add((Inst) ((List) objs.get(2)).get(i));
+            }
+            return new Code(insts);
+        });
     }
 }

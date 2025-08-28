@@ -19,31 +19,80 @@
 package studio.phaseshift.metatron.lang.obj;
 
 import org.javatuples.*;
+import org.jline.jansi.*;
+import studio.phaseshift.metatron.lang.*;
+import studio.phaseshift.metatron.util.*;
 
-import java.net.*;
 import java.util.*;
 import java.util.function.*;
 
+import static org.jline.jansi.Ansi.*;
+
 public interface BObj {
 
-    public static final URI OBJ_URI = URI.create("m:obj");
-    public static final URI NOOBJ_URI = URI.create("m:noobj");
-    public static final URI BOOL_URI = URI.create("m:bool");
-    public static final URI INT_URI = URI.create("m:int");
-    public static final URI REAL_URI = URI.create("m:real");
-    public static final URI STR_URI = URI.create("m:str");
-    public static final URI URI_URI = URI.create("m:uri");
-    public static final URI LST_URI = URI.create("m:lst");
-    public static final URI REC_URI = URI.create("m:rec");
-    public static final URI INST_URI = URI.create("m:inst");
-    public static final URI CODE_URI = URI.create("m:code");
-    public static final URI OBJS_URI = URI.create("m:objs");
+    public static final fURI OBJ_URI = fURI.create("m:obj");
+    public static final fURI NOOBJ_URI = fURI.create("m:noobj");
+    public static final fURI BOOL_URI = fURI.create("m:bool");
+    public static final fURI INT_URI = fURI.create("m:int");
+    public static final fURI REAL_URI = fURI.create("m:real");
+    public static final fURI STR_URI = fURI.create("m:str");
+    public static final fURI URI_URI = fURI.create("m:uri");
+    public static final fURI LST_URI = fURI.create("m:lst");
+    public static final fURI REC_URI = fURI.create("m:rec");
+    public static final fURI INST_URI = fURI.create("m:inst");
+    public static final fURI CODE_URI = fURI.create("m:code");
+    public static final fURI OBJS_URI = fURI.create("m:objs");
 
 
     interface Obj extends Function<Obj, Obj> {
         Object value();
 
-        URI type();
+        fURI type();
+
+        default String toString(final Palette palette) {
+            if (this.isNoObj())
+                return ansi().fg(palette.typeC()).a("noobj").reset().toString();
+            else if (this instanceof final Inst inst)
+                return ansi()
+                        .fg(palette.typeC()).
+                        a(this.type())
+                        .fg(palette.formC())
+                        .a("(")
+                        .fg(palette.valueC())
+                        .a(inst.value().getValue0())
+                        .fg(palette.formC())
+                        .a(")[")
+                        .fg(palette.valueC())
+                        .a(ObjUtil.isLambda(inst.value().getValue1()) ? "λ" : inst.value().getValue1())
+                        .fg(palette.formC())
+                        .a(']')
+                        .reset()
+                        .toString();
+            else if (this.isLst()) {
+                Ansi s = ansi()
+                        .fg(palette.typeC())
+                        .a(this.type())
+                        .fg(palette.formC())
+                        .a('[');
+                for (int i = 0; i < this.<Lst>as().value().size(); i++) {
+                    s = s.a(this.<Lst>as().value().get(i));
+                    if (i != this.<Lst>as().value().size() - 1)
+                        s = s.fg(palette.formC()).a(',');
+                }
+                return s.fg(palette.formC()).a(']').toString();
+            } else
+                return ansi()
+                        .fg(palette.typeC())
+                        .a(this.type())
+                        .fg(palette.formC())
+                        .a('[')
+                        .fg(palette.valueC())
+                        .a(this.value())
+                        .fg(palette.formC())
+                        .a(']')
+                        .reset()
+                        .toString();
+        }
 
         @Override
         default Obj apply(final Obj other) {
@@ -126,7 +175,7 @@ public interface BObj {
         private NoObj() {
         }
 
-        public URI type() {
+        public fURI type() {
             return NOOBJ_URI;
         }
 
@@ -193,7 +242,7 @@ public interface BObj {
 
     interface Uri extends Mono {
         @Override
-        URI value();
+        fURI value();
 
         @Override
         default Uri apply(final Obj other) {
@@ -232,9 +281,8 @@ public interface BObj {
         }
 
         default String opcode() {
-            return this.type().getPath().split("/")[0];
+            return this.type().hostOrSegment();
         }
-
     }
 
     interface Code extends Poly {

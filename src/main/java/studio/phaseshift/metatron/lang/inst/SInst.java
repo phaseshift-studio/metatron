@@ -19,13 +19,14 @@
 package studio.phaseshift.metatron.lang.inst;
 
 import org.javatuples.*;
+import studio.phaseshift.metatron.lang.*;
 import studio.phaseshift.metatron.lang.obj.*;
 
 import java.net.*;
 
 public final class SInst {
 
-    public static final URI PLUS_URI = URI.create("m:plus");
+    public static final fURI PLUS_URI = fURI.create("m:plus");
 
     public static class PlusInst extends SObj.Inst implements BInst.PlusInst {
 

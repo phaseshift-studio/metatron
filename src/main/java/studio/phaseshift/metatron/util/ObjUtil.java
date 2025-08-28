@@ -30,4 +30,8 @@ public final class ObjUtil {
     public static BObj.Obj orNoObj(final BObj.Obj obj) {
         return null == obj ? NoObj.of() : obj;
     }
+
+    public static boolean isLambda(final Object o) {
+        return o.toString().contains("$$Lambda");
+    }
 }
