@@ -52,7 +52,7 @@ public class fURI {
     }
 
     public String scheme() {
-        return this.urin.asUri().getAuthority();
+        return this.urin.asUri().getScheme();
     }
 
     public String hostOrSegment() {

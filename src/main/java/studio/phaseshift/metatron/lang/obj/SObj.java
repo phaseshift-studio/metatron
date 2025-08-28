@@ -204,6 +204,10 @@ public class SObj implements BObj {
         public Uri(final fURI value) {
             super(value, URI_URI);
         }
+
+        public Uri(final String value) {
+            super(fURI.create(value), URI_URI);
+        }
         
         public fURI value() {
             return (fURI) this.value;

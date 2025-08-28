@@ -38,21 +38,32 @@ public class ObjParser {
     private static final Logger LOG = LoggerFactory.getLogger(ObjParser.class);
     private static SettableParser obj_parser = SettableParser.undefined();
     private static SettableParser lst_parser = SettableParser.undefined();
+    private static SettableParser inst_parser = SettableParser.undefined();
 
     static {
-        obj_parser.set(new ChoiceParser(m_noobj(), m_bool(), m_real(), m_int(), m_str(), lst_parser, m_code(), m_inst(), m_uri()));
+        obj_parser.set(new ChoiceParser(m_comment(), m_noobj(), m_bool(), m_real(), m_int(), m_str(), lst_parser, m_code(), m_inst(), m_uri()));
         lst_parser.set(new SequenceParser(of('['), obj_parser.separatedBy(of(',')), of(']'))
                 .map(t -> new Lst(((List) t).stream()
                         .filter(o -> o instanceof List)
                         .flatMap(o -> ((List) o).stream())
                         .filter(o -> o instanceof Obj)
                         .toList())));
+        inst_parser.set(new SequenceParser(m_furi(), of('('), obj_parser.separatedBy(of(',')), of(')'))
+                .map(t -> new Inst(new Triplet<>(
+                        new Lst((List<BObj.Obj>) ((List) ((List) t).get(2)).stream().filter(x -> !x.equals(',')).toList()),
+                        (a, b) -> a,
+                        NoObj.of()),
+                        (fURI) ((List) t).get(0))));
     }
 
     public static Obj parse(final String code) {
         Result result = m_obj().end().parse(code);
         //LOG.info("{}==to==>{}", code, result.get().toString());
         return Obj.of(result.get());
+    }
+
+    public static Parser m_comment() {
+        return new SequenceParser(of('#'), any().starGreedy(anyOf("\n\r"))).map(t -> NoObj.of());
     }
 
     public static Parser m_furi() {
@@ -97,14 +108,7 @@ public class ObjParser {
     }
 
     public static Parser m_inst() {
-        return new SequenceParser(m_furi(), of('('), m_int().separatedBy(of(',')), of(')'))
-                .map(t -> {
-                    return new Inst(new Triplet<>(
-                            new Lst((List<BObj.Obj>) ((List) ((List) t).get(2)).stream().filter(x -> !x.equals(',')).toList()),
-                            (a, b) -> a,
-                            NoObj.of()),
-                            (fURI) ((List) t).get(0));
-                });
+        return inst_parser;
     }
 
     public static Parser m_code() {

@@ -25,6 +25,18 @@ import static org.junit.jupiter.api.Assertions.*;
 public class fURITest {
 
     @Test
+    public void testScheme() {
+        assertEquals("http", new fURI("http://fhatos.org/b").scheme());
+        assertNull(new fURI("a/b/c/d").scheme());
+    }
+
+    @Test
+    public void testHostOrSegment() {
+        assertEquals("fhatos.org", new fURI("http://fhatos.org/b").hostOrSegment());
+        assertEquals("a", new fURI("a/b/c/d").hostOrSegment());
+    }
+
+    @Test
     public void testPretend() {
         assertEquals(new fURI("http://fhatos.org/a/b"), new fURI("http://fhatos.org/b").pretend("a"));
         assertEquals(new fURI("http://fhatos.org/a/b/c/d"), new fURI("http://fhatos.org/d").pretend("a/b/c"));
