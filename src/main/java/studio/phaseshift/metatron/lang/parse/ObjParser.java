@@ -71,7 +71,7 @@ public class ObjParser {
     }
 
     public static Parser m_obj() {
-        return obj_parser;
+        return obj_parser.trim();
     }
 
     public static Parser m_noobj() {
