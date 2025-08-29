@@ -18,18 +18,36 @@
 
 package studio.phaseshift.metatron.lang.parse;
 
-import org.jline.jansi.Ansi.*;
-import org.jline.reader.*;
-import org.jline.reader.impl.*;
-import org.jline.reader.impl.history.*;
-import org.jline.terminal.*;
-import org.jline.utils.*;
-import org.slf4j.*;
-import studio.phaseshift.metatron.lang.obj.*;
+import org.jline.jansi.Ansi.Color;
+import org.jline.reader.EndOfFileException;
+import org.jline.reader.Highlighter;
+import org.jline.reader.History;
+import org.jline.reader.LineReader;
+import org.jline.reader.LineReaderBuilder;
+import org.jline.reader.UserInterruptException;
+import org.jline.reader.impl.DefaultHighlighter;
+import org.jline.reader.impl.history.DefaultHistory;
+import org.jline.terminal.Terminal;
+import org.jline.terminal.TerminalBuilder;
+import org.jline.utils.AttributedString;
+import org.jline.utils.AttributedStringBuilder;
+import org.jline.utils.AttributedStyle;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import studio.phaseshift.metatron.lang.monoid.SMonoid.Monoid;
+import studio.phaseshift.metatron.lang.obj.BObj;
+import studio.phaseshift.metatron.lang.obj.SObj.NoObj;
+import studio.phaseshift.metatron.util.IteratorUtil;
 
-import java.io.*;
-import java.nio.file.*;
-import java.util.*;
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Random;
 
 import static org.jline.jansi.Ansi.ansi;
 
@@ -39,8 +57,9 @@ public class Console {
     public static String HEADER_SEPARATOR = "####################";
 
     public static void OUTPUT(final Object output) {
-        OUTPUT(output,true);
+        OUTPUT(output, true);
     }
+
     public static void OUTPUT(final Object output, final boolean newLine) {
         if (newLine)
             System.out.println(output);
@@ -105,9 +124,13 @@ public class Console {
                 if (line.trim().equals(":quit"))
                     break;
                 else {
-                    final BObj.Obj result = ObjParser.parse(line);
-                    if (!result.isNoObj())
-                        OUTPUT(ansi().fg(Color.GREEN).a("==>").reset().a(result),true);
+                    final Object result = ObjParser.parse(line);
+                    if(result instanceof Monoid) {
+                        // OUTPUT(ansi().fg(Color.YELLOW).a("running ").a(result).fg(Color.YELLOW).a(" ...").reset(), true);
+                        IteratorUtil.iterate(IteratorUtil.consume(((Monoid)result).iterator(), n -> OUTPUT(ansi().fg(Color.GREEN).a("==>").reset().a(n), true)));
+                    } else if(!(result instanceof NoObj)) {
+                        OUTPUT(ansi().fg(Color.GREEN).a("==>").reset().a(result), true);
+                    }
                 }
             } catch (UserInterruptException e) {
                 terminal.writer().println("process interrupted");
@@ -115,6 +138,7 @@ public class Console {
                 terminal.writer().println("shutting down");
                 break;
             } catch (final Exception e) {
+                e.printStackTrace();
                 LOG.error(e.getMessage());
             }
         }
@@ -145,7 +169,7 @@ public class Console {
             final String randomHeaderTitle = new ArrayList<>(headers.keySet()).get(new Random().nextInt(headers.size()));
             final String randomHeader = headers.get(randomHeaderTitle);
             if (null == randomHeader) throw new IllegalArgumentException("<unknown header: " + randomHeaderTitle + ">");
-            OUTPUT(randomHeader,false);
+            OUTPUT(randomHeader, false);
         } catch (final Exception e) {
             OUTPUT("...an exception has occurred.");
             OUTPUT("      ...this doesn't bode well for your time in the meTaRon: " + e);

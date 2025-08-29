@@ -18,19 +18,30 @@
 
 package studio.phaseshift.metatron.lang.inst;
 
-import org.javatuples.*;
-import studio.phaseshift.metatron.lang.*;
-import studio.phaseshift.metatron.lang.obj.*;
+import org.javatuples.Triplet;
+import studio.phaseshift.metatron.lang.fURI;
+import studio.phaseshift.metatron.lang.obj.BObj;
+import studio.phaseshift.metatron.lang.obj.BObj.Inst;
+import studio.phaseshift.metatron.lang.obj.BObj.Obj;
+import studio.phaseshift.metatron.lang.obj.SObj;
 
-import java.net.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.function.Function;
 
 public final class SInst {
 
-    public static final fURI PLUS_URI = fURI.create("m:plus");
+    public static final fURI PLUS_URI = fURI.create("plus");
+    public static final fURI START_URI = fURI.create("start");
+
+    public static Map<fURI, Function<Obj, Inst>> SYMBOL_TABLE = new HashMap<>() {{
+        put(START_URI, StartInst::new);
+        put(PLUS_URI, PlusInst::new);
+    }};
 
     public static class PlusInst extends SObj.Inst implements BInst.PlusInst {
 
-        PlusInst(final BObj.Obj arg) {
+        public PlusInst(final BObj.Obj arg) {
             super(new Triplet<>(SObj.Lst.single(arg), (lhs, args) -> {
                 if (lhs.isInt() && args.value().get(0).isInt())
                     return SObj.Int.of(lhs.intValue() + args.value().get(0).intValue());
@@ -38,6 +49,13 @@ public final class SInst {
                     throw new IllegalStateException("the operands do not support plus");
 
             }, BObj.NoObj.of()), PLUS_URI);
+        }
+    }
+
+    public static class StartInst extends SObj.Inst implements BInst.StartInst {
+
+        public StartInst(final BObj.Obj arg) {
+            super(new Triplet<>(SObj.Lst.single(arg), (lhs, args) -> args.value().get(0), BObj.NoObj.of()), START_URI);
         }
     }
 }

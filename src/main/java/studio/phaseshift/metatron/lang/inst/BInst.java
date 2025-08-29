@@ -18,11 +18,33 @@
 
 package studio.phaseshift.metatron.lang.inst;
 
-import studio.phaseshift.metatron.lang.obj.BObj;
+import static studio.phaseshift.metatron.lang.obj.BObj.Inst;
 
 public interface BInst {
 
-    public interface PlusInst extends BObj.Inst {
+    public interface Initial extends Inst {
+    }
+
+    public interface Terminal extends Inst {
+    }
+
+    public interface Barrier extends Inst {
+    }
+
+
+    public interface Gather extends Barrier {
+    }
+
+    public interface Scatter extends Barrier {
+    }
+
+
+    /// ///////////////////////////////////////////
+
+    public interface StartInst extends Inst {
+    }
+
+    public interface PlusInst extends Inst {
     }
 
 }

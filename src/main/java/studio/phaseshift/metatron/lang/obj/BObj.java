@@ -18,33 +18,42 @@
 
 package studio.phaseshift.metatron.lang.obj;
 
-import org.javatuples.*;
-import org.jline.jansi.*;
-import studio.phaseshift.metatron.lang.*;
-import studio.phaseshift.metatron.util.*;
+import org.javatuples.Triplet;
+import org.jline.jansi.Ansi;
+import studio.phaseshift.metatron.lang.fURI;
+import studio.phaseshift.metatron.lang.inst.BInst.Gather;
+import studio.phaseshift.metatron.lang.inst.BInst.Initial;
+import studio.phaseshift.metatron.lang.inst.BInst.Scatter;
+import studio.phaseshift.metatron.lang.inst.BInst.Terminal;
+import studio.phaseshift.metatron.util.IteratorUtil;
+import studio.phaseshift.metatron.util.ObjUtil;
 
-import java.util.*;
-import java.util.function.*;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.function.BiFunction;
+import java.util.function.Function;
 
-import static org.jline.jansi.Ansi.*;
+import static org.jline.jansi.Ansi.ansi;
 
 public interface BObj {
 
-    public static final fURI OBJ_URI = fURI.create("m:obj");
-    public static final fURI NOOBJ_URI = fURI.create("m:noobj");
-    public static final fURI BOOL_URI = fURI.create("m:bool");
-    public static final fURI INT_URI = fURI.create("m:int");
-    public static final fURI REAL_URI = fURI.create("m:real");
-    public static final fURI STR_URI = fURI.create("m:str");
-    public static final fURI URI_URI = fURI.create("m:uri");
-    public static final fURI LST_URI = fURI.create("m:lst");
-    public static final fURI REC_URI = fURI.create("m:rec");
-    public static final fURI INST_URI = fURI.create("m:inst");
-    public static final fURI CODE_URI = fURI.create("m:code");
-    public static final fURI OBJS_URI = fURI.create("m:objs");
+    public static final fURI OBJ_URI = fURI.create("obj");
+    public static final fURI NOOBJ_URI = fURI.create("noobj");
+    public static final fURI BOOL_URI = fURI.create("bool");
+    public static final fURI INT_URI = fURI.create("int");
+    public static final fURI REAL_URI = fURI.create("real");
+    public static final fURI STR_URI = fURI.create("str");
+    public static final fURI URI_URI = fURI.create("uri");
+    public static final fURI LST_URI = fURI.create("lst");
+    public static final fURI REC_URI = fURI.create("rec");
+    public static final fURI INST_URI = fURI.create("inst");
+    public static final fURI CODE_URI = fURI.create("code");
+    public static final fURI OBJS_URI = fURI.create("objs");
 
 
-    interface Obj extends Function<Obj, Obj> {
+    interface Obj extends Function<Obj, Obj>, Iterable<Obj> {
         Object value();
 
         fURI type();
@@ -80,6 +89,19 @@ public interface BObj {
                         s = s.fg(palette.formC()).a(',');
                 }
                 return s.fg(palette.formC()).a(']').toString();
+            } else if (this.isRec()) {
+                Ansi s = ansi()
+                        .fg(palette.typeC())
+                        .a(this.type())
+                        .fg(palette.formC())
+                        .a('[');
+                List<Map.Entry<Obj, Obj>> kv = new ArrayList<>(this.<Rec>as().value().entrySet());
+                for (int i = 0; i < kv.size(); i++) {
+                    s = s.a(kv.get(i).getKey()).fg(palette.formC()).a("=>").a(kv.get(i).getValue());
+                    if (i != kv.size() - 1)
+                        s = s.fg(palette.formC()).a(',');
+                }
+                return s.fg(palette.formC()).a(']').toString();
             } else
                 return ansi()
                         .fg(palette.typeC())
@@ -97,6 +119,11 @@ public interface BObj {
         @Override
         default Obj apply(final Obj other) {
             return this;
+        }
+
+        @Override
+        default Iterator<Obj> iterator() {
+            return this.isObjs() ? ((Iterable<Obj>) this.value()).iterator() : IteratorUtil.of(this);
         }
 
         default <O extends Obj> O as() {
@@ -143,6 +170,10 @@ public interface BObj {
             return this instanceof Objs;
         }
 
+        default boolean isCode() {
+            return this instanceof Code;
+        }
+
         default boolean boolValue() {
             if (this.isBool())
                 return ((SObj.Bool) this).value();
@@ -169,7 +200,7 @@ public interface BObj {
     }
 
 
-    final class NoObj implements Obj {
+    final class NoObj implements Obj, Inst {
         private final static NoObj NOOBJ = new NoObj();
 
         private NoObj() {
@@ -180,7 +211,7 @@ public interface BObj {
         }
 
         @Override
-        public Object value() {
+        public Triplet value() {
             return null;
         }
 
@@ -192,12 +223,26 @@ public interface BObj {
         public static NoObj of() {
             return NOOBJ;
         }
+
+        @Override
+        public String toString() {
+            return this.toString(Palette.STANDARD);
+        }
+
+        @Override
+        public Iterator<Obj> iterator() {
+            return IteratorUtil.of(this);
+        }
     }
 
     interface Mono extends Obj {
     }
 
-    interface Poly extends Obj {
+    interface Poly extends Obj, Iterable<Obj> {
+        long length();
+
+        @Override
+        Iterator<Obj> iterator();
     }
 
     interface Bool extends Mono {
@@ -256,6 +301,16 @@ public interface BObj {
 
         @Override
         Lst apply(final Obj other);
+
+        @Override
+        default long length() {
+            return this.value().size();
+        }
+
+        @Override
+        default Iterator<Obj> iterator() {
+            return this.value().iterator();
+        }
     }
 
     interface Rec extends Poly {
@@ -264,13 +319,23 @@ public interface BObj {
 
         @Override
         Rec apply(final Obj other);
+
+        @Override
+        default long length() {
+            return this.value().size();
+        }
+
+        @Override
+        default Iterator<Obj> iterator() {
+            return this.value().entrySet().stream().map(kv -> (Obj) new SObj.Lst(List.of(kv.getKey(), kv.getValue()))).iterator();
+        }
     }
 
     interface Inst extends Poly {
         @Override
-        Triplet<Lst, BiFunction<Obj, Lst, Obj>, Obj> value();
+        Triplet<Poly, BiFunction<Obj, Lst, Obj>, Obj> value();
 
-        @Override
+       /* @Override
         default Obj apply(final Obj lhs) {
             final int size = this.value().getValue0().value().size();
             final List<Obj> args = new ArrayList<>(size);
@@ -278,10 +343,42 @@ public interface BObj {
                 args.set(i, this.value().getValue0().value().get(i).apply(lhs));
             }
             return this.value().getValue1().apply(lhs, this.value().getValue0());
-        }
+        }*/
+
+        //Inst nextInst();
 
         default String opcode() {
             return this.type().hostOrSegment();
+        }
+
+        @Override
+        default long length() {
+            return this.value().getSize();
+        }
+
+        @Override
+        default Iterator<Obj> iterator() {
+            return this.isNoObj() ? IteratorUtil.of() : (Iterator) this.value().iterator();
+        }
+
+        default boolean isInitial() {
+            return this instanceof Initial;
+        }
+
+        default boolean isGather() {
+            return this instanceof Gather;
+        }
+
+        default boolean isScatter() {
+            return this instanceof Scatter;
+        }
+
+        default boolean isBarrier() {
+            return this.isInitial() || this.isGather();
+        }
+
+        default boolean isTerminal() {
+            return this instanceof Terminal;
         }
     }
 
@@ -290,20 +387,39 @@ public interface BObj {
         List<Inst> value();
 
         @Override
-        default Obj apply(final Obj lhs) {
-            List<Obj> a = List.of(lhs);
-            List<Obj> b = new ArrayList<>();
-            for (final Obj o : a) {
-                for (final Inst i : this.value()) {
-                    b.add(i.apply(o));
-                }
+        Obj apply(final Obj lhs);
+
+        default Inst nextInst(final Inst current) {
+            for (int i = 0; i < this.value().size(); i++) {
+                if (this.value().get(i).equals(current) && i < (this.value().size() - 1))
+                    return this.value().get(i + 1);
             }
-            return SObj.Lst.of(b);
+            return NoObj.of();
+        }
+
+        @Override
+        default long length() {
+            return this.value().size();
+        }
+
+        @Override
+        default Iterator<Obj> iterator() {
+            return (Iterator) this.value().iterator();
         }
     }
 
     interface Objs extends Poly {
         @Override
-        Iterator<Obj> value();
+        Iterable<Obj> value();
+
+        @Override
+        default Iterator<Obj> iterator() {
+            return this.value().iterator();
+        }
+
+        @Override
+        default long length() {
+            return IteratorUtil.count(this.value());
+        }
     }
 }

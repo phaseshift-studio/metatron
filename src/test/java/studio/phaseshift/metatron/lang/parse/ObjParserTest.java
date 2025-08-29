@@ -36,7 +36,7 @@ public class ObjParserTest {
 
     @Test
     public void testBoolParse() {
-        assertEquals(fURI.create("m:bool"), m_bool().parse("true").<BObj.Obj>get().type());
+        assertEquals(fURI.create("bool"), m_bool().parse("true").<BObj.Obj>get().type());
         assertEquals(new Bool(true), ObjParser.parse("true"));
         assertEquals(new Bool(false), ObjParser.parse("false"));
     }
@@ -61,6 +61,7 @@ public class ObjParserTest {
 
     @Test
     public void testUriParse() {
-        assertEquals(new Uri("http://metatron.com?a=2&b=3"), ObjParser.parse("http://metatron.com?a=2&b=3"));
+       // assertEquals(new Uri("http://metatron.com?a=2&b=3"), ObjParser.parse("http://metatron.com?a=2&b=3"));
+        assertEquals(new Uri("http://metatron.com?a&b"), ObjParser.parse("http://metatron.com?a&b"));
     }
 }

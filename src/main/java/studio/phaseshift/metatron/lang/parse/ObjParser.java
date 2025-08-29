@@ -18,68 +18,157 @@
 
 package studio.phaseshift.metatron.lang.parse;
 
-import org.javatuples.*;
-import org.petitparser.context.*;
-import org.petitparser.parser.*;
-import org.petitparser.parser.combinators.*;
-import org.slf4j.*;
-import studio.phaseshift.metatron.lang.*;
-import studio.phaseshift.metatron.lang.obj.*;
-import studio.phaseshift.metatron.lang.obj.SObj.*;
+import org.javatuples.Triplet;
+import org.petitparser.context.Result;
+import org.petitparser.parser.Parser;
+import org.petitparser.parser.combinators.ChoiceParser;
+import org.petitparser.parser.combinators.EndOfInputParser;
+import org.petitparser.parser.combinators.OptionalParser;
+import org.petitparser.parser.combinators.SequenceParser;
+import org.petitparser.parser.combinators.SettableParser;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import studio.phaseshift.metatron.lang.fURI;
+import studio.phaseshift.metatron.lang.inst.SInst.StartInst;
+import studio.phaseshift.metatron.lang.monoid.SMonoid.Monoid;
+import studio.phaseshift.metatron.lang.obj.BObj;
+import studio.phaseshift.metatron.lang.obj.SObj;
+import studio.phaseshift.metatron.lang.obj.SObj.Code;
+import studio.phaseshift.metatron.lang.obj.SObj.Inst;
+import studio.phaseshift.metatron.lang.obj.SObj.Int;
+import studio.phaseshift.metatron.lang.obj.SObj.Lst;
+import studio.phaseshift.metatron.lang.obj.SObj.NoObj;
+import studio.phaseshift.metatron.lang.obj.SObj.Obj;
+import studio.phaseshift.metatron.lang.obj.SObj.Objs;
+import studio.phaseshift.metatron.lang.obj.SObj.Real;
+import studio.phaseshift.metatron.lang.obj.SObj.Rec;
+import studio.phaseshift.metatron.lang.obj.SObj.Uri;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Stream;
 
-import static org.petitparser.parser.primitive.CharacterParser.*;
+import static org.petitparser.parser.primitive.CharacterParser.any;
+import static org.petitparser.parser.primitive.CharacterParser.anyOf;
+import static org.petitparser.parser.primitive.CharacterParser.digit;
+import static org.petitparser.parser.primitive.CharacterParser.letter;
 import static org.petitparser.parser.primitive.CharacterParser.of;
+import static org.petitparser.parser.primitive.CharacterParser.word;
 import static org.petitparser.parser.primitive.StringParser.of;
 
 public class ObjParser {
 
     private static final Logger LOG = LoggerFactory.getLogger(ObjParser.class);
-    private static SettableParser obj_parser = SettableParser.undefined();
-    private static SettableParser lst_parser = SettableParser.undefined();
-    private static SettableParser inst_parser = SettableParser.undefined();
+    private static final SettableParser obj_parser = SettableParser.undefined();
+    private static final SettableParser obj_no_code_parser = SettableParser.undefined();
+    private static final SettableParser func_parser = SettableParser.undefined();
+    private static final SettableParser lst_parser = SettableParser.undefined();
+    private static final SettableParser rec_parser = SettableParser.undefined();
+    private static final SettableParser inst_parser = SettableParser.undefined();
 
     static {
-        obj_parser.set(new ChoiceParser(m_comment(), m_noobj(), m_bool(), m_real(), m_int(), m_str(), lst_parser, m_code(), m_inst(), m_uri()));
-        lst_parser.set(new SequenceParser(of('['), obj_parser.separatedBy(of(',')), of(']'))
-                .map(t -> new Lst(((List) t).stream()
+        obj_parser.set(new ChoiceParser(
+                m_comment(),
+                m_code(),
+                m_objs(),
+                m_noobj(),
+                // m_rec(),
+                m_typed(m_bool()),
+                m_typed(m_real()),
+                m_typed(m_int()),
+                m_typed(m_str()),
+                m_inst(),
+                //m_typed(m_func()),
+                m_typed(m_uri()),
+                m_typed(m_lst())));
+        obj_no_code_parser.set(new ChoiceParser(
+                m_comment(),
+                m_noobj(),
+                m_objs(),
+                // m_rec(),
+                m_typed(m_bool()),
+                m_typed(m_real()),
+                m_typed(m_int()),
+                m_typed(m_str()),
+                //m_inst(),
+                //m_typed(m_func()),
+                m_typed(m_uri()),
+                m_typed(m_lst())));
+        func_parser.set(new SequenceParser(m_obj(), of("=>").trim(), m_obj())
+                .map(t -> {
+                    System.out.println(t);
+                    return new Rec((Map) ((List) t).stream()
+                            .filter(o -> o instanceof List)
+                            .flatMap(o -> ((List) o).stream())
+                            .filter(o -> o instanceof List)
+                            .reduce(new LinkedHashMap<>(), (a, b) -> {
+                                ((Map) a).put(((List) b).get(0), ((List) b).get(2));
+                                return a;
+                            }));
+                }));
+        lst_parser.set(new SequenceParser(of('[').trim(), m_obj().separatedBy(of(',').trim()), of(']')).pick(1)
+                .map(t -> new Lst(((List) t).stream().filter(o -> o instanceof Obj).toList())));
+        rec_parser.set(new SequenceParser(of('[').trim(), new SequenceParser(m_obj(), of("=>").trim(), m_obj()).separatedBy(of(',').trim()), of(']').trim())
+                .map(t -> new Rec((Map) ((List) t).stream()
                         .filter(o -> o instanceof List)
                         .flatMap(o -> ((List) o).stream())
-                        .filter(o -> o instanceof Obj)
-                        .toList())));
-        inst_parser.set(new SequenceParser(m_furi(), of('('), obj_parser.separatedBy(of(',')), of(')'))
+                        .filter(o -> o instanceof List)
+                        .reduce(new LinkedHashMap<>(), (a, b) -> {
+                            ((Map) a).put(((List) b).get(0), ((List) b).get(2));
+                            return a;
+                        }))));
+        inst_parser.set(new SequenceParser(m_furi(), of('(').trim(), m_obj().separatedBy(of(',').trim()), of(')').trim())
                 .map(t -> new Inst(new Triplet<>(
-                        new Lst((List<BObj.Obj>) ((List) ((List) t).get(2)).stream().filter(x -> !x.equals(',')).toList()),
+                        new Lst(((List) ((List) t).get(2)).stream().filter(x -> x instanceof Obj).toList()),
                         (a, b) -> a,
                         NoObj.of()),
                         (fURI) ((List) t).get(0))));
     }
 
-    public static Obj parse(final String code) {
-        Result result = m_obj().end().parse(code);
+    public static Object parse(final String code) {
+        if (code.trim().isEmpty())
+            return NoObj.of();
+        Result result = m_eval().or(m_obj()).end().parse(code);
         //LOG.info("{}==to==>{}", code, result.get().toString());
-        return Obj.of(result.get());
+        return result.get();
+    }
+
+    public static Parser m_typed(final Parser an_obj_parser) {
+        return new SequenceParser(new OptionalParser(new SequenceParser(m_furi(), of('[').trim()).pick(0), null), an_obj_parser, new OptionalParser(of(']'), ']').trim()).map(t -> {
+            final List<Object> list = (List) t;
+            fURI type = (fURI) list.get(0);
+            return SObj.Obj.of(list.get(1), type);
+        });
     }
 
     public static Parser m_comment() {
-        return new SequenceParser(of('#'), any().starGreedy(anyOf("\n\r"))).map(t -> NoObj.of());
+        return new SequenceParser(of('#').trim(), any().starGreedy(anyOf("\n\r").or(new EndOfInputParser("end of input")))).map(t -> NoObj.of());
     }
 
     public static Parser m_furi() {
-        return new SequenceParser(letter(), word().or(anyOf(":?@=+/.&")).star()).flatten().map(t -> new fURI(t.toString()));
+        return new SequenceParser(letter(), word().or(anyOf(":?@+/.&")).star()).flatten().map(t -> new fURI(t.toString()));
+    }
+
+    public static Parser m_func() {
+        return func_parser;
     }
 
     public static Parser m_obj() {
-        return obj_parser.trim();
+        return obj_parser;
     }
 
     public static Parser m_noobj() {
-        return of("noobj").map(t -> NoObj.of());
+        return of("noobj").trim().map(t -> NoObj.of());
+    }
+
+    public static Parser m_objs() {
+        return new SequenceParser(of('{').trim(), m_obj().separatedBy(of(',').trim()), of('}').trim()).pick(1).map(t -> new Objs(((List) t).stream().filter(x -> x instanceof Obj).toList()));
     }
 
     public static Parser m_bool() {
-        return of("true").or(of("false")).map(t -> t.equals("true") ? Obj.of(true) : Obj.of(false));
+        return of("true").or(of("false")).trim().map(t -> t.equals("true") ? Obj.of(true) : Obj.of(false));
     }
 
     public static Parser m_int() {
@@ -107,19 +196,29 @@ public class ObjParser {
         return lst_parser;
     }
 
+    public static Parser m_rec() {
+        return rec_parser;
+    }
+
     public static Parser m_inst() {
         return inst_parser;
     }
 
+    public static Parser m_eval() {
+        return new SequenceParser(obj_no_code_parser, of("=>").trim(), m_code()).map(t -> {
+            Obj start = (Obj) ((List) t).get(0);
+            Code code = (Code) ((List) t).get(2);
+            List<BObj.Inst> newCode = new ArrayList<>();
+            newCode.add(new StartInst(start));
+            newCode.addAll(code.value());
+            return new Monoid(new Code(newCode));
+        });
+    }
+
     public static Parser m_code() {
-        return new SequenceParser(m_inst(), of('.'), m_inst().separatedBy(of('.'))).map(t -> {
-            final List<Object> objs = (List<Object>) t;
-            final List<BObj.Inst> insts = new ArrayList<>();
-            insts.add((Inst) objs.get(0));
-            for (int i = 0; i < ((List) objs.get(2)).size(); i = i + 2) {
-                insts.add((Inst) ((List) objs.get(2)).get(i));
-            }
-            return new Code(insts);
+        return new SequenceParser(/*new OptionalParser(obj_no_code_parser,NoObj.of()),*/ m_inst().separatedBy(of('.').trim())).map(t -> {
+            //Obj start = (Obj)((List)t).get(0);
+            return new Code((List) ((List<Object>) t).stream().flatMap(x -> x instanceof List ? ((List<?>) x).stream() : Stream.of(x)).filter(x -> x instanceof Inst).toList());
         });
     }
 }

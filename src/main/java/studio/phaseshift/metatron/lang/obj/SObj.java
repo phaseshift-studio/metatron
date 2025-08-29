@@ -18,12 +18,19 @@
 
 package studio.phaseshift.metatron.lang.obj;
 
-import org.javatuples.*;
-import studio.phaseshift.metatron.lang.*;
-import studio.phaseshift.metatron.util.*;
+import org.javatuples.Triplet;
+import studio.phaseshift.metatron.lang.fURI;
+import studio.phaseshift.metatron.lang.monoid.SMonoid.Monoid;
+import studio.phaseshift.metatron.util.IteratorUtil;
 
-import java.util.*;
-import java.util.function.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.function.BiFunction;
 
 public class SObj implements BObj {
 
@@ -69,7 +76,8 @@ public class SObj implements BObj {
 
         public static Obj of(final Object value, final fURI type) {
             Obj o = Obj.of(value);
-            o.type = type;
+            if (type != null)
+                o.type = type;
             return o;
         }
 
@@ -93,7 +101,7 @@ public class SObj implements BObj {
             else if (value instanceof Map)
                 return new Rec((Map) value);
             else if (value instanceof Triplet<?, ?, ?>)
-                return new Inst((Triplet<BObj.Lst, BiFunction<BObj.Obj, BObj.Lst, BObj.Obj>, BObj.Obj>) value, INST_URI);
+                return new Inst((Triplet<BObj.Poly, BiFunction<BObj.Obj, BObj.Lst, BObj.Obj>, BObj.Obj>) value, INST_URI);
             else {
                 try {
                     return new Uri(fURI.create(value.toString()));
@@ -208,7 +216,7 @@ public class SObj implements BObj {
         public Uri(final String value) {
             super(fURI.create(value), URI_URI);
         }
-        
+
         public fURI value() {
             return (fURI) this.value;
         }
@@ -239,6 +247,11 @@ public class SObj implements BObj {
                 list.set(i, this.value().get(i).apply(other));
             }
             return new Lst(list);
+        }
+
+        @Override
+        public Iterator<BObj.Obj> iterator() {
+            return this.value().iterator();
         }
 
         public static BObj.Lst of() {
@@ -276,6 +289,11 @@ public class SObj implements BObj {
         }
 
         @Override
+        public Iterator<BObj.Obj> iterator() {
+            return this.value().entrySet().stream().map(kv -> (BObj.Obj) new Lst(List.of(kv.getKey(), kv.getValue()))).iterator();
+        }
+
+        @Override
         public Rec apply(final BObj.Obj other) {
             Map<BObj.Obj, BObj.Obj> map = new HashMap<>();
             return new Rec(map);
@@ -285,13 +303,13 @@ public class SObj implements BObj {
 
     public static class Objs extends Obj implements BObj.Objs {
 
-        public Objs(final Iterator<BObj.Obj> value) {
+        public Objs(final Iterable<BObj.Obj> value) {
             super(value, OBJS_URI);
         }
 
         @Override
-        public Iterator<BObj.Obj> value() {
-            return (Iterator<BObj.Obj>) this.value;
+        public Iterable<BObj.Obj> value() {
+            return (Iterable<BObj.Obj>) this.value;
         }
 
         @Override
@@ -299,24 +317,29 @@ public class SObj implements BObj {
             return SObj.Objs.of(IteratorUtil.map(this.value(), o -> o.apply(other)));
         }
 
-        public static BObj.Objs of(final Iterator<BObj.Obj> objs) {
+        public static BObj.Objs of(final Iterable<BObj.Obj> objs) {
             return new Objs(objs);
         }
 
         public static BObj.Objs single(final BObj.Obj obj) {
-            return new Objs(IteratorUtil.of(obj));
+            return new Objs(List.of(obj));
         }
-
     }
 
     public static class Code extends Obj implements BObj.Code {
         public Code(final List<BObj.Inst> value) {
             super(value, CODE_URI);
+
         }
 
         @Override
         public List<BObj.Inst> value() {
             return (List<BObj.Inst>) this.value;
+        }
+
+        @Override
+        public BObj.Obj apply(BObj.Obj lhs) {
+            return new Monoid(this).next();
         }
 
         public static BObj.Code of(final BObj.Inst inst0, final BObj.Inst... insts) {
@@ -325,27 +348,33 @@ public class SObj implements BObj {
             Collections.addAll(list, insts);
             return new Code(list);
         }
-
     }
 
     public static class Inst extends Obj implements BObj.Inst {
 
-        public Inst(final Triplet<BObj.Lst, BiFunction<BObj.Obj, BObj.Lst, BObj.Obj>, BObj.Obj> value, final fURI type) {
+        public Inst(final Triplet<BObj.Poly, BiFunction<BObj.Obj, BObj.Lst, BObj.Obj>, BObj.Obj> value, final fURI type) {
             super(value, type);
         }
 
         @Override
-        public Triplet<BObj.Lst, BiFunction<BObj.Obj, BObj.Lst, BObj.Obj>, BObj.Obj> value() {
-            return (Triplet<BObj.Lst, BiFunction<BObj.Obj, BObj.Lst, BObj.Obj>, BObj.Obj>) this.value;
+        public Triplet<BObj.Poly, BiFunction<BObj.Obj, BObj.Lst, BObj.Obj>, BObj.Obj> value() {
+            return (Triplet<BObj.Poly, BiFunction<BObj.Obj, BObj.Lst, BObj.Obj>, BObj.Obj>) this.value;
         }
 
         @Override
         public Obj apply(final BObj.Obj lhs) {
-            List<BObj.Obj> computedArgs = new ArrayList<>(this.value().getValue0().value().size());
-            for (final BObj.Obj arg : this.value().getValue0().value()) {
+            List<BObj.Obj> computedArgs = new ArrayList<>((int) this.value().getValue0().length());
+            for (final BObj.Obj arg : this.value().getValue0()) {
                 computedArgs.add(arg.apply(lhs));
             }
             return Obj.of(this.value().getValue1().apply(lhs, new Lst(computedArgs)));
+        }
+
+        @Override
+        public boolean equals(final Object other) {
+            if (!(other instanceof Inst otherInst))
+                return false;
+            return this.type().equals(otherInst.type()) && this.value().getValue0().equals(otherInst.value().getValue0());
         }
     }
 }

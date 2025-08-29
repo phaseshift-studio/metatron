@@ -18,12 +18,32 @@
 
 package studio.phaseshift.metatron.util;
 
-import java.util.*;
-import java.util.function.*;
-import java.util.stream.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.Spliterators;
+import java.util.function.BiFunction;
+import java.util.function.BinaryOperator;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 public final class IteratorUtil {
     private IteratorUtil() {
+    }
+
+    public static <S> Iterator<S> of() {
+        return Collections.emptyIterator();
     }
 
     public static <S> Iterator<S> of(final S a) {

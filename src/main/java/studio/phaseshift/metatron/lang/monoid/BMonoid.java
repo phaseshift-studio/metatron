@@ -18,15 +18,30 @@
 
 package studio.phaseshift.metatron.lang.monoid;
 
+import static studio.phaseshift.metatron.lang.obj.BObj.*;
 
 public interface BMonoid {
 
-    public interface Monoid {
+    interface Monoid extends Iterable<Obj> {
 
     }
 
-    public interface Monad {
+    interface Monad {
+        void halt();
 
+        boolean halted();
+
+        boolean dead();
+
+        Inst inst();
+
+        Obj obj();
+
+        long bulk();
+
+        //long loops();
+
+        void run();
     }
 
 }
