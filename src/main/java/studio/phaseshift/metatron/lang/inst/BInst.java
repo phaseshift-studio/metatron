@@ -18,9 +18,57 @@
 
 package studio.phaseshift.metatron.lang.inst;
 
+import org.javatuples.Triplet;
+import studio.phaseshift.metatron.lang.fURI;
+import studio.phaseshift.metatron.lang.obj.BObj.Obj;
+import studio.phaseshift.metatron.lang.obj.SObj;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import static studio.phaseshift.metatron.lang.obj.BObj.Inst;
+import static studio.phaseshift.metatron.lang.obj.BObj.InstF;
 
 public interface BInst {
+    class SymbolTable {
+        private static final Map<fURI, InstF> TABLE = new HashMap<>();
+
+        public static void load(final fURI type, InstF instF) {
+            TABLE.put(type, instF);
+        }
+
+        public static Inst resolve(final Obj source, final Inst inst) {
+            if(null != inst.function())
+                return inst;
+            final InstF resolvedFunction = TABLE.get(inst.type());
+            if (null == resolvedFunction)
+                throw new IllegalArgumentException("unable to resolve %s".formatted(inst));
+            final List<Obj> resolvedArgs = new ArrayList<>();
+            for (Obj arg : inst.args()) {
+                resolvedArgs.add(arg.apply(source));
+            }
+            return inst.clone(new Triplet<>(new SObj.Lst(resolvedArgs),
+                    resolvedFunction,
+                    inst.value().getValue2()));
+        }
+
+    }
+
+    public interface Contract {
+        boolean isInitial();
+
+        boolean isTerminal();
+
+        boolean isGather();
+
+        boolean isScatter();
+
+        InstF function();
+
+        Obj seed();
+    }
 
     public interface Initial extends Inst {
     }
@@ -40,11 +88,5 @@ public interface BInst {
 
 
     /// ///////////////////////////////////////////
-
-    public interface StartInst extends Inst {
-    }
-
-    public interface PlusInst extends Inst {
-    }
 
 }

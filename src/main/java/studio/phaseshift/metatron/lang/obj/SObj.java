@@ -20,22 +20,23 @@ package studio.phaseshift.metatron.lang.obj;
 
 import org.javatuples.Triplet;
 import studio.phaseshift.metatron.lang.fURI;
+import studio.phaseshift.metatron.lang.inst.BInst;
 import studio.phaseshift.metatron.lang.monoid.SMonoid.Monoid;
 import studio.phaseshift.metatron.util.IteratorUtil;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.function.BiFunction;
 
 public class SObj implements BObj {
 
-    public static class Obj implements BObj.Obj {
-        final Object value;
+    public static class Obj implements BObj.Obj, Cloneable {
+        Object value;
         fURI type;
 
         public Obj(final Object value, final fURI type) {
@@ -43,6 +44,23 @@ public class SObj implements BObj {
                 throw new IllegalArgumentException("an obj can not have an obj as a base value");
             this.value = value;
             this.type = type;
+        }
+
+        @Override
+        public Obj clone() {
+            try {
+                Object clone = super.clone();
+                return (Obj) clone;
+            } catch (final CloneNotSupportedException e) {
+                throw new IllegalStateException(e);
+            }
+        }
+
+        @Override
+        public <O extends BObj.Obj> O clone(final Object value) {
+            O clone = (O) this.clone();
+            ((SObj.Obj) clone).value = value;
+            return clone;
         }
 
         @Override
@@ -101,7 +119,7 @@ public class SObj implements BObj {
             else if (value instanceof Map)
                 return new Rec((Map) value);
             else if (value instanceof Triplet<?, ?, ?>)
-                return new Inst((Triplet<BObj.Poly, BiFunction<BObj.Obj, BObj.Lst, BObj.Obj>, BObj.Obj>) value, INST_URI);
+                return new Inst((Triplet<BObj.Poly, InstF, BObj.Obj>) value, INST_URI);
             else {
                 try {
                     return new Uri(fURI.create(value.toString()));
@@ -352,22 +370,17 @@ public class SObj implements BObj {
 
     public static class Inst extends Obj implements BObj.Inst {
 
-        public Inst(final Triplet<BObj.Poly, BiFunction<BObj.Obj, BObj.Lst, BObj.Obj>, BObj.Obj> value, final fURI type) {
+        public Inst(final Triplet<BObj.Poly, InstF, BObj.Obj> value, final fURI type) {
             super(value, type);
         }
 
-        @Override
-        public Triplet<BObj.Poly, BiFunction<BObj.Obj, BObj.Lst, BObj.Obj>, BObj.Obj> value() {
-            return (Triplet<BObj.Poly, BiFunction<BObj.Obj, BObj.Lst, BObj.Obj>, BObj.Obj>) this.value;
+        public Inst(final fURI type, final Obj... args) {
+            super(new Triplet<>(Lst.of(Arrays.asList(args)), null, NoObj.of()), type);
         }
 
         @Override
-        public Obj apply(final BObj.Obj lhs) {
-            List<BObj.Obj> computedArgs = new ArrayList<>((int) this.value().getValue0().length());
-            for (final BObj.Obj arg : this.value().getValue0()) {
-                computedArgs.add(arg.apply(lhs));
-            }
-            return Obj.of(this.value().getValue1().apply(lhs, new Lst(computedArgs)));
+        public Triplet<BObj.Poly, InstF, BObj.Obj> value() {
+            return (Triplet<BObj.Poly, InstF, BObj.Obj>) this.value;
         }
 
         @Override
@@ -376,5 +389,12 @@ public class SObj implements BObj {
                 return false;
             return this.type().equals(otherInst.type()) && this.value().getValue0().equals(otherInst.value().getValue0());
         }
+
+       /* @Override
+        public Inst clone(final Poly arguments) {
+            Inst clone = (Inst) super.clone();
+            clone.value = new Triplet<>(arguments, this.value().getValue1(), this.value().getValue2());
+            return clone;
+        } */
     }
 }

@@ -19,7 +19,6 @@
 package studio.phaseshift.metatron.lang.monoid;
 
 import org.jline.jansi.Ansi.Color;
-import studio.phaseshift.metatron.lang.inst.SInst;
 import studio.phaseshift.metatron.lang.obj.BObj;
 import studio.phaseshift.metatron.lang.obj.BObj.Code;
 import studio.phaseshift.metatron.lang.obj.BObj.Inst;
@@ -69,18 +68,12 @@ public class SMonoid {
 
         @Override
         public void run() {
-            // System.out.println(this);
+           // System.out.println(this);
             if (this.halted()) {
                 if (!this.dead()) {
-                    //LOG_WRITE(TRACE, this->processor_, L("monad {} halting\n", this->toString()));
                     this.halt();
                 }
             } else {
-                // const Inst_p current_inst_resolved = TYPE_INST_RESOLVER(this->obj, this->inst);
-                //final Inst currentInst = this->processor_ -> compiler_ -> resolve_inst(this->obj, this->inst);
-                // LOG_WRITE(TRACE, this->processor_,
-                //        L("monad {} applying to resolved inst {} !m=>!! {} [!m{}!!]\n", this->toString(),
-                //       this->inst -> toString(), current_inst_resolved -> toString(), "SIGNATURE HERE"));
                 if (!this.inst.isGather()) {
                     IteratorUtil.iterate(IteratorUtil.consume(this.obj.iterator(), o -> {
                         final Monad m = new Monad(this.monoid, o, this.inst, this.bulk);
@@ -112,10 +105,8 @@ public class SMonoid {
                             this->processor_ -> barriers_ -> front()->obj -> objs_value()->size(), "SIGNATURE HERE"));
                 }
             } else {*/
-            //  this->obj->CHECK_OBJ_TO_INST_SIGNATURE(current_inst_resolved, true);
-            final Obj application = inst.apply(this.obj);
-            //  System.out.println("=>" + application);
-            this.range_loop(application, inst);
+            //System.out.println("evaluating " + this + "---" + inst);
+            this.range_loop(inst.apply(this.obj), inst);
             //}
         }
 
@@ -128,11 +119,7 @@ public class SMonoid {
                 "SIGNATURE HERE"));
             //    next_obj->CHECK_OBJ_TO_INST_SIGNATURE(current_inst_resolved, false);*/
             //   System.out.println("..." + inst);
-            final Inst temp = this.monoid.code.nextInst(inst);
-            //  System.out.println(":::" + nextInst);
-            final Inst nextInst = temp.isNoObj() ? temp : SInst.SYMBOL_TABLE.get(temp.type()).apply(temp.value().getValue0().iterator().next());
-
-
+            final Inst nextInst = this.monoid.code.nextInst(inst);
           /*  if (next_inst -> is_generative()) {
                 LOG_WRITE(TRACE, this->processor_, L("monad {} dying [{}]\n", this->toString().c_str(), "SIGNATURE HERE"))
                 ;
@@ -158,7 +145,7 @@ public class SMonoid {
             }
         }
 
-        public boolean equals(final Obj other) {
+        public boolean equals(final Object other) {
             return other instanceof Monad &&
                     this.obj.equals(((Monad) other).obj()) &&
                     this.inst.equals(((Monad) other).inst());
@@ -186,13 +173,25 @@ public class SMonoid {
         }
 
         public String toString() {
-            return ansi().fg(Color.RED).a("M").fg(Color.GREEN).a("[").a(this.obj).fg(Color.RED).a("@").a(this.inst).fg(Color.GREEN).a("]").reset().toString();
+            return ansi()
+                    .fg(Color.RED)
+                    .a("M")
+                    .fg(Color.GREEN)
+                    .a("[")
+                    .a(this.obj)
+                    .fg(Color.RED)
+                    .a("@")
+                    .a(this.inst)
+                    .fg(Color.GREEN)
+                    .a("]")
+                    .reset()
+                    .toString();
         }
     }
 
     public static class Monoid implements BMonoid.Monoid {
         protected Code code;
-        // unique_ptr<MonadSet> running_ = make_unique<MonadSet>();
+        // todo: barrier and running to use monad set
         Queue<Monad> running = new LinkedList<>();
         Queue<Monad> barriers = new LinkedList<>();
         Queue<Obj> halted = new LinkedList<>();

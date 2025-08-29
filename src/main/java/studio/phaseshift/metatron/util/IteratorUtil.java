@@ -54,6 +54,16 @@ public final class IteratorUtil {
         return List.of(a, b).iterator();
     }
 
+    public static <S> S index(final Iterator<S> iterator, final int index, final S noneDefault) {
+        int i = 0;
+        while (iterator.hasNext()) {
+            S s = iterator.next();
+            if (index == i++)
+                return s;
+        }
+        return noneDefault;
+    }
+
     public static <S extends Collection<T>, T> S fill(final Iterator<T> iterator, final S collection) {
         while (iterator.hasNext()) {
             collection.add(iterator.next());

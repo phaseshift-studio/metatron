@@ -18,7 +18,7 @@
 
 package studio.phaseshift.metatron.lang.obj;
 
-import org.jline.jansi.Ansi.*;
+import org.jline.jansi.Ansi.Color;
 
 public class Palette {
 
@@ -32,7 +32,27 @@ public class Palette {
         return Color.YELLOW;
     }
 
-    Color formC() {
+    public Color formC() {
         return Color.GREEN;
+    }
+
+    public Color form2C() {
+        return Color.MAGENTA;
+    }
+
+    public  Color warnC() {
+        return Color.YELLOW;
+    }
+
+    public  Color infoC() {
+        return Color.GREEN;
+    }
+
+    public   Color debugC() {
+        return Color.MAGENTA;
+    }
+
+    public  Color errorC() {
+        return Color.RED;
     }
 }

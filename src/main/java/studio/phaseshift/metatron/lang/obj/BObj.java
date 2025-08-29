@@ -21,10 +21,13 @@ package studio.phaseshift.metatron.lang.obj;
 import org.javatuples.Triplet;
 import org.jline.jansi.Ansi;
 import studio.phaseshift.metatron.lang.fURI;
+import studio.phaseshift.metatron.lang.inst.BInst;
 import studio.phaseshift.metatron.lang.inst.BInst.Gather;
 import studio.phaseshift.metatron.lang.inst.BInst.Initial;
 import studio.phaseshift.metatron.lang.inst.BInst.Scatter;
 import studio.phaseshift.metatron.lang.inst.BInst.Terminal;
+import studio.phaseshift.metatron.lang.obj.SObj.Int;
+import studio.phaseshift.metatron.lang.obj.SObj.Lst;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.ObjUtil;
 
@@ -37,7 +40,7 @@ import java.util.function.Function;
 
 import static org.jline.jansi.Ansi.ansi;
 
-public interface BObj {
+public interface BObj extends Cloneable {
 
     public static final fURI OBJ_URI = fURI.create("obj");
     public static final fURI NOOBJ_URI = fURI.create("noobj");
@@ -57,6 +60,8 @@ public interface BObj {
         Object value();
 
         fURI type();
+
+        Obj clone();
 
         default String toString(final Palette palette) {
             if (this.isNoObj())
@@ -120,6 +125,9 @@ public interface BObj {
         default Obj apply(final Obj other) {
             return this;
         }
+
+
+        <O extends Obj> O clone(final Object value);
 
         @Override
         default Iterator<Obj> iterator() {
@@ -220,6 +228,11 @@ public interface BObj {
             return other;
         }
 
+        @Override
+        public <O extends Obj> O clone(Object value) {
+            return (O) NOOBJ;
+        }
+
         public static NoObj of() {
             return NOOBJ;
         }
@@ -232,6 +245,11 @@ public interface BObj {
         @Override
         public Iterator<Obj> iterator() {
             return IteratorUtil.of(this);
+        }
+
+        @Override
+        public NoObj clone() {
+            return NOOBJ;
         }
     }
 
@@ -331,25 +349,40 @@ public interface BObj {
         }
     }
 
+    interface InstF extends BiFunction<Obj, Lst, Obj> {
+    }
+
     interface Inst extends Poly {
         @Override
-        Triplet<Poly, BiFunction<Obj, Lst, Obj>, Obj> value();
+        Triplet<Poly, InstF, Obj> value();
 
-       /* @Override
+        default Poly args() {
+            return this.value().getValue0();
+        }
+
+        default Obj args(int index) {
+            return IteratorUtil.index(this.args().iterator(), index, NoObj.of());
+        }
+
+        default Obj seed() {
+            return this.value().getValue2();
+        }
+
+        default InstF function() {
+            return this.value().getValue1();
+        }
+
+        @Override
         default Obj apply(final Obj lhs) {
-            final int size = this.value().getValue0().value().size();
-            final List<Obj> args = new ArrayList<>(size);
-            for (int i = 0; i < size; i++) {
-                args.set(i, this.value().getValue0().value().get(i).apply(lhs));
+            final List<Obj> computedArgs = new ArrayList<>((int) this.args().length());
+            for (final Obj arg : this.args()) {
+                computedArgs.add(arg.apply(lhs));
             }
-            return this.value().getValue1().apply(lhs, this.value().getValue0());
-        }*/
+            final InstF instF = null == this.function() ? BInst.SymbolTable.resolve(lhs, this).function() : this.function();
+            return SObj.Obj.of(instF.apply(lhs, new SObj.Lst(computedArgs)));
+        }
 
         //Inst nextInst();
-
-        default String opcode() {
-            return this.type().hostOrSegment();
-        }
 
         @Override
         default long length() {

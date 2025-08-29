@@ -19,14 +19,16 @@
 package studio.phaseshift.metatron.lang.inst;
 
 import org.junit.jupiter.api.Test;
+import studio.phaseshift.metatron.lang.obj.SObj.Inst;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static studio.phaseshift.metatron.lang.inst.SInst.PLUS_URI;
 import static studio.phaseshift.metatron.lang.obj.SObj.Int;
 
 public class STest {
 
     @Test
     public void testPlusInst() {
-        assertEquals(Int.of(35), new SInst.PlusInst(Int.of(25)).apply(Int.of(10)));
+        assertEquals(Int.of(35), new Inst(PLUS_URI, Int.of(25)).apply(Int.of(10)));
     }
 }

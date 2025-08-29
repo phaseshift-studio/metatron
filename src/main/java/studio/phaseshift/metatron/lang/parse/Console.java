@@ -18,7 +18,6 @@
 
 package studio.phaseshift.metatron.lang.parse;
 
-import org.jline.jansi.Ansi.Color;
 import org.jline.reader.EndOfFileException;
 import org.jline.reader.Highlighter;
 import org.jline.reader.History;
@@ -35,7 +34,7 @@ import org.jline.utils.AttributedStyle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import studio.phaseshift.metatron.lang.monoid.SMonoid.Monoid;
-import studio.phaseshift.metatron.lang.obj.BObj;
+import studio.phaseshift.metatron.lang.obj.Palette;
 import studio.phaseshift.metatron.lang.obj.SObj.NoObj;
 import studio.phaseshift.metatron.util.IteratorUtil;
 
@@ -55,6 +54,7 @@ public class Console {
     private static final Logger LOG = LoggerFactory.getLogger(Console.class);
     public static String HEADER_FILE = "conf/ansi_headers.txt";
     public static String HEADER_SEPARATOR = "####################";
+    public static Palette PALETTE = Palette.STANDARD;
 
     public static void OUTPUT(final Object output) {
         OUTPUT(output, true);
@@ -120,16 +120,16 @@ public class Console {
         String line = "";
         while (true) {
             try {
-                line = reader.readLine(ansi().fg(Color.MAGENTA).a("mtron").fg(Color.GREEN).a("> ").reset().toString());
+                line = reader.readLine(ansi().fg(PALETTE.form2C()).a("mtron").fg(PALETTE.formC()).a("> ").reset().toString());
                 if (line.trim().equals(":quit"))
                     break;
                 else {
                     final Object result = ObjParser.parse(line);
-                    if(result instanceof Monoid) {
+                    if (result instanceof Monoid) {
                         // OUTPUT(ansi().fg(Color.YELLOW).a("running ").a(result).fg(Color.YELLOW).a(" ...").reset(), true);
-                        IteratorUtil.iterate(IteratorUtil.consume(((Monoid)result).iterator(), n -> OUTPUT(ansi().fg(Color.GREEN).a("==>").reset().a(n), true)));
-                    } else if(!(result instanceof NoObj)) {
-                        OUTPUT(ansi().fg(Color.GREEN).a("==>").reset().a(result), true);
+                        IteratorUtil.iterate(IteratorUtil.consume(((Monoid) result).iterator(), n -> OUTPUT(ansi().fg(PALETTE.form2C()).a("==").fg(PALETTE.formC()).a(">").reset().a(n), true)));
+                    } else if (!(result instanceof NoObj)) {
+                        OUTPUT(ansi().fg(PALETTE.form2C()).a("==").fg(PALETTE.formC()).a(">").reset().a(result), true);
                     }
                 }
             } catch (UserInterruptException e) {
@@ -138,8 +138,10 @@ public class Console {
                 terminal.writer().println("shutting down");
                 break;
             } catch (final Exception e) {
-                e.printStackTrace();
-                LOG.error(e.getMessage());
+                LOG.error(ansi().fg(PALETTE.errorC()).a(e.getMessage()).reset().toString());
+                final String stackTrace = reader.readLine(ansi().fg(PALETTE.warnC()).a("display stack trace ").fg(PALETTE.formC()).a("[Y/n]").fg(PALETTE.warnC()).a("?").reset().toString());
+                if (!stackTrace.trim().equalsIgnoreCase("n"))
+                    e.printStackTrace();
             }
         }
         terminal.close();

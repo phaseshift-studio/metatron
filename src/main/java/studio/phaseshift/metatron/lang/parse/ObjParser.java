@@ -29,7 +29,6 @@ import org.petitparser.parser.combinators.SettableParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import studio.phaseshift.metatron.lang.fURI;
-import studio.phaseshift.metatron.lang.inst.SInst.StartInst;
 import studio.phaseshift.metatron.lang.monoid.SMonoid.Monoid;
 import studio.phaseshift.metatron.lang.obj.BObj;
 import studio.phaseshift.metatron.lang.obj.SObj;
@@ -57,6 +56,7 @@ import static org.petitparser.parser.primitive.CharacterParser.letter;
 import static org.petitparser.parser.primitive.CharacterParser.of;
 import static org.petitparser.parser.primitive.CharacterParser.word;
 import static org.petitparser.parser.primitive.StringParser.of;
+import static studio.phaseshift.metatron.lang.inst.SInst.START_URI;
 
 public class ObjParser {
 
@@ -122,7 +122,7 @@ public class ObjParser {
         inst_parser.set(new SequenceParser(m_furi(), of('(').trim(), m_obj().separatedBy(of(',').trim()), of(')').trim())
                 .map(t -> new Inst(new Triplet<>(
                         new Lst(((List) ((List) t).get(2)).stream().filter(x -> x instanceof Obj).toList()),
-                        (a, b) -> a,
+                        null,
                         NoObj.of()),
                         (fURI) ((List) t).get(0))));
     }
@@ -209,7 +209,7 @@ public class ObjParser {
             Obj start = (Obj) ((List) t).get(0);
             Code code = (Code) ((List) t).get(2);
             List<BObj.Inst> newCode = new ArrayList<>();
-            newCode.add(new StartInst(start));
+            newCode.add(new Inst(START_URI, start));
             newCode.addAll(code.value());
             return new Monoid(new Code(newCode));
         });
