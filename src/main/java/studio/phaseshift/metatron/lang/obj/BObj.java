@@ -26,8 +26,6 @@ import studio.phaseshift.metatron.lang.inst.BInst.Gather;
 import studio.phaseshift.metatron.lang.inst.BInst.Initial;
 import studio.phaseshift.metatron.lang.inst.BInst.Scatter;
 import studio.phaseshift.metatron.lang.inst.BInst.Terminal;
-import studio.phaseshift.metatron.lang.obj.SObj.Int;
-import studio.phaseshift.metatron.lang.obj.SObj.Lst;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.ObjUtil;
 
@@ -61,7 +59,12 @@ public interface BObj extends Cloneable {
 
         fURI type();
 
+        fURI id();
+
+        Obj id(final fURI furi);
+
         Obj clone();
+
 
         default String toString(final Palette palette) {
             if (this.isNoObj())
@@ -117,6 +120,10 @@ public interface BObj extends Cloneable {
                         .a(this.value())
                         .fg(palette.formC())
                         .a(']')
+                        .fg(palette.form2C())
+                        .a(null == this.id() ? "" : "@")
+                        .fg(palette.typeC())
+                        .a(null == this.id() ? "" : this.id())
                         .reset()
                         .toString();
         }
@@ -212,6 +219,14 @@ public interface BObj extends Cloneable {
         private final static NoObj NOOBJ = new NoObj();
 
         private NoObj() {
+        }
+
+        public fURI id() {
+            return null;
+        }
+
+        public NoObj id(final fURI id) {
+            return NOOBJ;
         }
 
         public fURI type() {

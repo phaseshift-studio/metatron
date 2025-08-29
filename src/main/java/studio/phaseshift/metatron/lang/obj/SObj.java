@@ -20,7 +20,6 @@ package studio.phaseshift.metatron.lang.obj;
 
 import org.javatuples.Triplet;
 import studio.phaseshift.metatron.lang.fURI;
-import studio.phaseshift.metatron.lang.inst.BInst;
 import studio.phaseshift.metatron.lang.monoid.SMonoid.Monoid;
 import studio.phaseshift.metatron.util.IteratorUtil;
 
@@ -38,12 +37,28 @@ public class SObj implements BObj {
     public static class Obj implements BObj.Obj, Cloneable {
         Object value;
         fURI type;
+        fURI id;
 
         public Obj(final Object value, final fURI type) {
             if (value instanceof Obj)
                 throw new IllegalArgumentException("an obj can not have an obj as a base value");
             this.value = value;
             this.type = type;
+            this.id = null;
+        }
+
+        @Override
+        public fURI id() {
+            return this.id;
+        }
+
+        @Override
+        public Obj id(final fURI id) {
+            if (this.id == id)
+                return this;
+            Obj clone = this.clone();
+            clone.id = id;
+            return clone;
         }
 
         @Override

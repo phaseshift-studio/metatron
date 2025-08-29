@@ -18,6 +18,8 @@
 
 package studio.phaseshift.metatron.lang.parse;
 
+import org.jline.jansi.Ansi.Color;
+import org.jline.jansi.AnsiConsole;
 import org.jline.reader.EndOfFileException;
 import org.jline.reader.Highlighter;
 import org.jline.reader.History;
@@ -68,7 +70,7 @@ public class Console {
     }
 
     public void run() throws IOException {
-
+       // AnsiConsole.systemInstall();
         final Terminal terminal = TerminalBuilder.builder().system(true).build();
         Highlighter highlighter = new DefaultHighlighter() {
             @Override
@@ -91,7 +93,19 @@ public class Console {
                     builder.styled(
                             AttributedStyle.BOLD.foreground(AttributedStyle.MAGENTA), buffer.substring(index, index + 2));
                     builder.append(buffer.substring(index + 2));
-                } else if (buffer.contains("warning")) {
+                } /*else if (buffer.contains("(")) {
+                    // Highlight "error" in red
+                    int index = buffer.lastIndexOf("(");
+                    int dotIndex = buffer.lastIndexOf(".");
+                    if(dotIndex < index) {
+                        builder.append(buffer.substring(0, dotIndex));
+                        builder.styled(
+                                AttributedStyle.BOLD.foreground(AttributedStyle.BLUE), buffer.substring(dotIndex, index));
+                        //builder.append(buffer.substring(dotIndex,index));
+                    } else {
+                        builder.append(buffer);
+                    }
+                } */else if (buffer.contains("warning")) {
                     // Highlight "warning" in yellow
                     int index = buffer.indexOf("warning");
                     builder.append(buffer.substring(0, index));
@@ -139,8 +153,8 @@ public class Console {
                 break;
             } catch (final Exception e) {
                 LOG.error(ansi().fg(PALETTE.errorC()).a(e.getMessage()).reset().toString());
-                final String stackTrace = reader.readLine(ansi().fg(PALETTE.warnC()).a("display stack trace ").fg(PALETTE.formC()).a("[Y/n]").fg(PALETTE.warnC()).a("?").reset().toString());
-                if (!stackTrace.trim().equalsIgnoreCase("n"))
+                final String stackTrace = reader.readLine(ansi().fg(PALETTE.warnC()).a("display stack trace ").fg(PALETTE.formC()).a("[y/N]").fg(PALETTE.warnC()).a("?").reset().toString());
+                if (stackTrace.trim().equalsIgnoreCase("y"))
                     e.printStackTrace();
             }
         }

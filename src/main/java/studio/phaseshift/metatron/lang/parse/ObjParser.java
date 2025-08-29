@@ -77,7 +77,7 @@ public class ObjParser {
                 // m_rec(),
                 m_typed(m_bool()),
                 m_typed(m_real()),
-                m_typed(m_int()),
+                m_ref(m_typed(m_int())),
                 m_typed(m_str()),
                 m_inst(),
                 //m_typed(m_func()),
@@ -87,13 +87,11 @@ public class ObjParser {
                 m_comment(),
                 m_noobj(),
                 m_objs(),
-                // m_rec(),
+                m_typed(m_rec()),
                 m_typed(m_bool()),
                 m_typed(m_real()),
                 m_typed(m_int()),
                 m_typed(m_str()),
-                //m_inst(),
-                //m_typed(m_func()),
                 m_typed(m_uri()),
                 m_typed(m_lst())));
         func_parser.set(new SequenceParser(m_obj(), of("=>").trim(), m_obj())
@@ -108,7 +106,7 @@ public class ObjParser {
                                 return a;
                             }));
                 }));
-        lst_parser.set(new SequenceParser(of('[').trim(), m_obj().separatedBy(of(',').trim()), of(']')).pick(1)
+        lst_parser.set(new SequenceParser(of('[').trim(), m_obj().separatedBy(of(',').trim()), of(']').trim()).pick(1)
                 .map(t -> new Lst(((List) t).stream().filter(o -> o instanceof Obj).toList())));
         rec_parser.set(new SequenceParser(of('[').trim(), new SequenceParser(m_obj(), of("=>").trim(), m_obj()).separatedBy(of(',').trim()), of(']').trim())
                 .map(t -> new Rec((Map) ((List) t).stream()
@@ -133,6 +131,17 @@ public class ObjParser {
         Result result = m_eval().or(m_obj()).end().parse(code);
         //LOG.info("{}==to==>{}", code, result.get().toString());
         return result.get();
+    }
+
+    public static Parser m_ref(final Parser an_obj_parser) {
+        return new SequenceParser(an_obj_parser, new OptionalParser(new SequenceParser(of('@'), m_furi()), null).trim()).map(t -> {
+            List list = (List) t;
+            System.out.println(t);
+            if (null == list.get(1))
+                return list.get(0);
+            else
+                return ((Obj) list.get(0)).id((fURI) ((List)list.get(1)).get(1));
+        });
     }
 
     public static Parser m_typed(final Parser an_obj_parser) {
@@ -205,7 +214,7 @@ public class ObjParser {
     }
 
     public static Parser m_eval() {
-        return new SequenceParser(obj_no_code_parser, of("=>").trim(), m_code()).map(t -> {
+        return new SequenceParser(obj_no_code_parser, of(".").trim(), m_code()).map(t -> {
             Obj start = (Obj) ((List) t).get(0);
             Code code = (Code) ((List) t).get(2);
             List<BObj.Inst> newCode = new ArrayList<>();
