@@ -39,8 +39,8 @@ import studio.phaseshift.metatron.lang.obj.SObj.NoObj;
 import studio.phaseshift.metatron.util.IteratorUtil;
 
 import java.io.BufferedReader;
-import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -52,7 +52,7 @@ import static org.jline.jansi.Ansi.ansi;
 
 public class Console {
     private static final Logger LOG = LoggerFactory.getLogger(Console.class);
-    public static String HEADER_FILE = "conf/ansi_headers.txt";
+    public static String HEADER_FILE = "/ansi_headers.txt";
     public static String HEADER_SEPARATOR = "####################";
     public static Palette PALETTE = Palette.STANDARD;
 
@@ -152,7 +152,7 @@ public class Console {
         try {
             final Map<String, String> headers = new HashMap<>();
             StringBuilder current = new StringBuilder();
-            final BufferedReader input = new BufferedReader(new FileReader(HEADER_FILE));
+            final BufferedReader input = new BufferedReader(new InputStreamReader(Console.class.getResourceAsStream(HEADER_FILE)));
             String headerTitle = null;
             while (input.ready()) {
                 final String line = input.readLine().stripTrailing();
