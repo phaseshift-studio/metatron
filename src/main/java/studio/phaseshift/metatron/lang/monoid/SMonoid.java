@@ -68,7 +68,7 @@ public class SMonoid {
 
         @Override
         public void run() {
-           // System.out.println(this);
+            // System.out.println(this);
             if (this.halted()) {
                 if (!this.dead()) {
                     this.halt();
@@ -105,7 +105,7 @@ public class SMonoid {
                             this->processor_ -> barriers_ -> front()->obj -> objs_value()->size(), "SIGNATURE HERE"));
                 }
             } else {*/
-            //System.out.println("evaluating " + this + "---" + inst);
+          //  System.out.println("evaluating " + this + "---" + inst);
             this.range_loop(inst.apply(this.obj), inst);
             //}
         }
@@ -119,7 +119,7 @@ public class SMonoid {
                 "SIGNATURE HERE"));
             //    next_obj->CHECK_OBJ_TO_INST_SIGNATURE(current_inst_resolved, false);*/
             //   System.out.println("..." + inst);
-            final Inst nextInst = this.monoid.code.nextInst(inst);
+
           /*  if (next_inst -> is_generative()) {
                 LOG_WRITE(TRACE, this->processor_, L("monad {} dying [{}]\n", this->toString().c_str(), "SIGNATURE HERE"))
                 ;
@@ -135,6 +135,7 @@ public class SMonoid {
                     this->processor_ -> running_ -> push_back(m);
                 }
             } else {*/
+            final Inst nextInst = this.monoid.code.nextInst(inst);
             if (!nextInst.isGather()) {
                 IteratorUtil.iterate(IteratorUtil.consume(nextObj.iterator(), o -> {
                     final Monad m = new Monad(this.monoid, o, nextInst, this.bulk);
@@ -197,6 +198,10 @@ public class SMonoid {
         Queue<Obj> halted = new LinkedList<>();
 
         public Monoid(final Obj code) {
+            this(code, null);
+        }
+
+        public Monoid(final Obj code, final Obj runner) {
             if (!code.isCode()) {
                 if (!code.isNoObj()) {
                     this.halted.add(code);
@@ -227,10 +232,9 @@ public class SMonoid {
                     }
                     first = false;
                 }
-                // start inst forced initial TODO: remove this as it's not sound
-                if (this.running.isEmpty()) {
-                    // const Obj_p seed_copy = Objs::to_objs();
-                    // final BObj.Obj seed_copy = this.code.value().get(0); //.inst_seed(this.code.codevalue().front());
+                if (runner != null) {
+                    this.running.add(new Monad(this, runner, this.code.value().get(0), 1));
+                } else if (this.running.isEmpty()) {
                     this.running.add(new Monad(this, NoObj.of(), this.code.value().get(0), 1));
                 }
             }

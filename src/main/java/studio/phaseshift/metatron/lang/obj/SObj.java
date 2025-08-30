@@ -21,16 +21,10 @@ package studio.phaseshift.metatron.lang.obj;
 import org.javatuples.Triplet;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.monoid.SMonoid.Monoid;
+import studio.phaseshift.metatron.lang.parse.ObjParser;
 import studio.phaseshift.metatron.util.IteratorUtil;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 public class SObj implements BObj {
 
@@ -137,7 +131,7 @@ public class SObj implements BObj {
                 return new Inst((Triplet<BObj.Poly, InstF, BObj.Obj>) value, INST_URI);
             else {
                 try {
-                    return new Uri(fURI.create(value.toString()));
+                    return new Uri(new fURI(value.toString()));
                 } catch (final IllegalArgumentException e) {
                     throw new RuntimeException("unknown object type: " + value.toString());
                 }
@@ -192,7 +186,7 @@ public class SObj implements BObj {
         }
 
         public static Int of(final String type, final int i) {
-            return new Int(i, fURI.create(type));
+            return new Int(i, new fURI(type));
         }
 
         public static Int of(final fURI type, final int i) {
@@ -247,7 +241,7 @@ public class SObj implements BObj {
         }
 
         public Uri(final String value) {
-            super(fURI.create(value), URI_URI);
+            super(new fURI(value), URI_URI);
         }
 
         public fURI value() {
@@ -256,6 +250,21 @@ public class SObj implements BObj {
 
         public static BObj.Uri of(final String uri) {
             return new Uri(new fURI(uri));
+        }
+
+        public Obj apply(final Obj lhs) {
+            if (!this.value().toString().contains("{{"))
+                return this;
+            else {
+                final List<String> segs = new ArrayList<>(this.value().segments().size());
+                for (final String segment : this.value().segments()) {
+                    if (segment.startsWith("{{") && segment.endsWith("}}"))
+                        segs.add(ObjParser.compute(segment.substring(2, segment.length() - 2), lhs).toString());
+                    else
+                        segs.add(segment);
+                }
+                return new Uri(this.value().path(segs.toString()));
+            }
         }
     }
 
@@ -371,8 +380,8 @@ public class SObj implements BObj {
         }
 
         @Override
-        public BObj.Obj apply(BObj.Obj lhs) {
-            return new Monoid(this).next();
+        public BObj.Obj apply(final BObj.Obj lhs) {
+            return new Monoid(this, lhs).next();
         }
 
         public static BObj.Code of(final BObj.Inst inst0, final BObj.Inst... insts) {

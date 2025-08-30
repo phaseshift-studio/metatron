@@ -35,9 +35,11 @@ import org.jline.utils.AttributedStringBuilder;
 import org.jline.utils.AttributedStyle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.lang.monoid.SMonoid.Monoid;
 import studio.phaseshift.metatron.lang.obj.Palette;
 import studio.phaseshift.metatron.lang.obj.SObj.NoObj;
+import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.util.IteratorUtil;
 
 import java.io.BufferedReader;
@@ -131,6 +133,9 @@ public class Console {
                 .option(LineReader.Option.AUTO_FRESH_LINE, true)
                 .build();
         this.outputHeader();
+        BootLoader.load();
+        Graphitty g = Graphitty.singleton();
+        g.print("!gYO YO!bMTV !rRAPS !bHERHEHEHasdfsadf!yer!!");
         String line = "";
         while (true) {
             try {

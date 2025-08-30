@@ -47,7 +47,6 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Stream;
 
 import static org.petitparser.parser.primitive.CharacterParser.any;
 import static org.petitparser.parser.primitive.CharacterParser.anyOf;
@@ -81,8 +80,8 @@ public class ObjParser {
                 m_typed(m_str()),
                 m_inst(),
                 //m_typed(m_func()),
-                m_typed(m_uri()),
-                m_typed(m_lst())));
+                m_typed(m_lst()),
+                m_typed(m_uri())));
         obj_no_code_parser.set(new ChoiceParser(
                 m_comment(),
                 m_noobj(),
@@ -96,7 +95,7 @@ public class ObjParser {
                 m_typed(m_lst())));
         func_parser.set(new SequenceParser(m_obj(), of("=>").trim(), m_obj())
                 .map(t -> {
-                    System.out.println(t);
+                    //System.out.println(t);
                     return new Rec((Map) ((List) t).stream()
                             .filter(o -> o instanceof List)
                             .flatMap(o -> ((List) o).stream())
@@ -123,6 +122,7 @@ public class ObjParser {
                         null,
                         NoObj.of()),
                         (fURI) ((List) t).get(0))));
+
     }
 
     public static Object parse(final String code) {
@@ -133,14 +133,20 @@ public class ObjParser {
         return result.get();
     }
 
+    public static BObj.Obj compute(final String code, final BObj.Obj lhs) {
+        if (code.trim().isEmpty())
+            return lhs;
+        Result result = m_code().end().parse(code);
+        return result.<Code>get().apply(lhs);
+    }
+
     public static Parser m_ref(final Parser an_obj_parser) {
         return new SequenceParser(an_obj_parser, new OptionalParser(new SequenceParser(of('@'), m_furi()), null).trim()).map(t -> {
             List list = (List) t;
-            System.out.println(t);
             if (null == list.get(1))
                 return list.get(0);
             else
-                return ((Obj) list.get(0)).id((fURI) ((List)list.get(1)).get(1));
+                return ((Obj) list.get(0)).id((fURI) ((List) list.get(1)).get(1));
         });
     }
 
@@ -157,7 +163,11 @@ public class ObjParser {
     }
 
     public static Parser m_furi() {
-        return new SequenceParser(letter(), word().or(anyOf(":?@+/.&")).star()).flatten().map(t -> new fURI(t.toString()));
+        return m_furi("");
+    }
+
+    public static Parser m_furi(final String moreChars) {
+        return new SequenceParser(letter().or(anyOf("/:%!" + moreChars)), word().or(anyOf(":?@+/.&%!" + moreChars)).star()).flatten().map(t -> new fURI(t.toString()));
     }
 
     public static Parser m_func() {
@@ -197,8 +207,8 @@ public class ObjParser {
     }
 
     public static Parser m_uri() {
-        return new SequenceParser(new OptionalParser(of('<'), '<'), m_furi(), new OptionalParser(of('>'), '>'))
-                .map(t -> new Uri(fURI.create(((List) t).get(1).toString())));
+        return new SequenceParser(new OptionalParser(of('<'), '<'), m_furi("{}"), new OptionalParser(of('>'), '>'))
+                .map(t -> new Uri(new fURI(((List) t).get(1).toString())));
     }
 
     public static Parser m_lst() {
@@ -225,9 +235,6 @@ public class ObjParser {
     }
 
     public static Parser m_code() {
-        return new SequenceParser(/*new OptionalParser(obj_no_code_parser,NoObj.of()),*/ m_inst().separatedBy(of('.').trim())).map(t -> {
-            //Obj start = (Obj)((List)t).get(0);
-            return new Code((List) ((List<Object>) t).stream().flatMap(x -> x instanceof List ? ((List<?>) x).stream() : Stream.of(x)).filter(x -> x instanceof Inst).toList());
-        });
+        return m_inst().separatedBy(of('.').trim()).map(t -> new Code((List) ((List<Object>) t).stream().filter(x -> x instanceof Inst).toList()));
     }
 }

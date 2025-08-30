@@ -19,17 +19,21 @@
 package studio.phaseshift.metatron.lang;
 
 import net.sourceforge.urin.*;
-import org.slf4j.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.util.*;
-import java.util.stream.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class fURI {
     private Logger LOG = LoggerFactory.getLogger(fURI.class);
 
     protected final UrinReference<String, Query<String>, Fragment<String>> urin;
 
-    protected fURI(final UrinReference<String, Query<String>, Fragment<String>> urin) {
+    private fURI(final UrinReference<String, Query<String>, Fragment<String>> urin) {
         this.urin = urin;
     }
 
@@ -49,6 +53,18 @@ public class fURI {
         } catch (final ParseException e) {
             throw new IllegalArgumentException(e.getMessage(), e);
         }
+    }
+
+    public List<String> segments() {
+        final List<String> segs = new ArrayList<>(this.urin.path().segments().size());
+        for (var s : this.urin.path().segments()) {
+            segs.add(s.value());
+        }
+        return segs;
+    }
+
+    public fURI path(final String path) {
+        return new fURI(this.urin.withPath(Path.path(path)));
     }
 
     public String scheme() {
@@ -81,6 +97,10 @@ public class fURI {
             path.add(0, Segment.segment(segment));
         }
         return new fURI(this.urin.withPath(AbsolutePath.path(path)));
+    }
+
+    public fURI extend(final fURI extension) {
+        return this.extend(extension.toString());
     }
 
     public fURI extend(final String segment) {

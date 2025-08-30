@@ -40,18 +40,18 @@ import static org.jline.jansi.Ansi.ansi;
 
 public interface BObj extends Cloneable {
 
-    public static final fURI OBJ_URI = fURI.create("obj");
-    public static final fURI NOOBJ_URI = fURI.create("noobj");
-    public static final fURI BOOL_URI = fURI.create("bool");
-    public static final fURI INT_URI = fURI.create("int");
-    public static final fURI REAL_URI = fURI.create("real");
-    public static final fURI STR_URI = fURI.create("str");
-    public static final fURI URI_URI = fURI.create("uri");
-    public static final fURI LST_URI = fURI.create("lst");
-    public static final fURI REC_URI = fURI.create("rec");
-    public static final fURI INST_URI = fURI.create("inst");
-    public static final fURI CODE_URI = fURI.create("code");
-    public static final fURI OBJS_URI = fURI.create("objs");
+    public static final fURI OBJ_URI = new fURI("obj");
+    public static final fURI NOOBJ_URI = new fURI("noobj");
+    public static final fURI BOOL_URI = new fURI("bool");
+    public static final fURI INT_URI = new fURI("int");
+    public static final fURI REAL_URI = new fURI("real");
+    public static final fURI STR_URI = new fURI("str");
+    public static final fURI URI_URI = new fURI("uri");
+    public static final fURI LST_URI = new fURI("lst");
+    public static final fURI REC_URI = new fURI("rec");
+    public static final fURI INST_URI = new fURI("inst");
+    public static final fURI CODE_URI = new fURI("code");
+    public static final fURI OBJS_URI = new fURI("objs");
 
 
     interface Obj extends Function<Obj, Obj>, Iterable<Obj> {
@@ -211,6 +211,12 @@ public interface BObj extends Cloneable {
             if (this.isStr())
                 return ((SObj.Str) this).value();
             throw new IllegalStateException("obj is not an str");
+        }
+
+        default fURI uriValue() {
+            if (this.isUri())
+                return ((SObj.Uri) this).value();
+            throw new IllegalStateException("obj is not an uri");
         }
     }
 

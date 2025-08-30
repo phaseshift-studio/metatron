@@ -18,16 +18,23 @@
 
 package studio.phaseshift.metatron.lang.parse;
 
-import org.junit.jupiter.api.*;
-import studio.phaseshift.metatron.lang.*;
-import studio.phaseshift.metatron.lang.obj.*;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
+import studio.phaseshift.metatron.lang.fURI;
+import studio.phaseshift.metatron.lang.inst.SInst;
+import studio.phaseshift.metatron.lang.obj.BObj;
 import studio.phaseshift.metatron.lang.obj.SObj.*;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static studio.phaseshift.metatron.lang.parse.ObjParser.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static studio.phaseshift.metatron.MetatronTest.assertMEquals;
+import static studio.phaseshift.metatron.lang.parse.ObjParser.m_bool;
 
 
 public class ObjParserTest {
+    static {
+        SInst.load();
+    }
+
     @Test
     @Disabled
     public void testCommentParse() {
@@ -44,7 +51,8 @@ public class ObjParserTest {
     @Test
     public void testIntParse() {
         assertEquals(Int.of(1234), ObjParser.parse("1234 "));
-      //  assertEquals(Int.of("m:nat", 1234), ObjParser.parse("m:nat[1234] "));
+        assertMEquals(4, ObjParser.compute("plus(plus(2))", Int.of(1)));
+        //  assertEquals(Int.of("m:nat", 1234), ObjParser.parse("m:nat[1234] "));
     }
 
     @Test
@@ -61,7 +69,7 @@ public class ObjParserTest {
 
     @Test
     public void testUriParse() {
-       // assertEquals(new Uri("http://metatron.com?a=2&b=3"), ObjParser.parse("http://metatron.com?a=2&b=3"));
+        // assertEquals(new Uri("http://metatron.com?a=2&b=3"), ObjParser.parse("http://metatron.com?a=2&b=3"));
         assertEquals(new Uri("http://metatron.com?a&b"), ObjParser.parse("http://metatron.com?a&b"));
     }
 }
