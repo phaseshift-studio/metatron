@@ -33,7 +33,7 @@ public class fURI {
         this.urin = urin;
     }
 
-    public static fURI create(final String uri) {
+    public static fURI of(final String uri) {
         return new fURI(uri);
     }
 
@@ -75,7 +75,7 @@ public class fURI {
         return this.urin.hasAuthority() || this.urin.asUri().toString().startsWith("/");
     }
 
-    public fURI pretend(final String segment) {
+    public fURI prepend(final String segment) {
         if (segment.isEmpty() || segment.equals("."))
             return this;
 

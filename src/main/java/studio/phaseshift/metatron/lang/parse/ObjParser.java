@@ -21,27 +21,14 @@ package studio.phaseshift.metatron.lang.parse;
 import org.javatuples.Triplet;
 import org.petitparser.context.Result;
 import org.petitparser.parser.Parser;
-import org.petitparser.parser.combinators.ChoiceParser;
-import org.petitparser.parser.combinators.EndOfInputParser;
-import org.petitparser.parser.combinators.OptionalParser;
-import org.petitparser.parser.combinators.SequenceParser;
-import org.petitparser.parser.combinators.SettableParser;
+import org.petitparser.parser.combinators.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.monoid.SMonoid.Monoid;
 import studio.phaseshift.metatron.lang.obj.BObj;
 import studio.phaseshift.metatron.lang.obj.SObj;
-import studio.phaseshift.metatron.lang.obj.SObj.Code;
-import studio.phaseshift.metatron.lang.obj.SObj.Inst;
-import studio.phaseshift.metatron.lang.obj.SObj.Int;
-import studio.phaseshift.metatron.lang.obj.SObj.Lst;
-import studio.phaseshift.metatron.lang.obj.SObj.NoObj;
-import studio.phaseshift.metatron.lang.obj.SObj.Obj;
-import studio.phaseshift.metatron.lang.obj.SObj.Objs;
-import studio.phaseshift.metatron.lang.obj.SObj.Real;
-import studio.phaseshift.metatron.lang.obj.SObj.Rec;
-import studio.phaseshift.metatron.lang.obj.SObj.Uri;
+import studio.phaseshift.metatron.lang.obj.SObj.*;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -129,6 +116,7 @@ public class ObjParser {
         if (code.trim().isEmpty())
             return NoObj.of();
         Result result = m_eval().or(m_obj()).end().parse(code);
+        ///System.out.println(result.<Monoid>get());
         //LOG.info("{}==to==>{}", code, result.get().toString());
         return result.get();
     }
@@ -146,7 +134,7 @@ public class ObjParser {
             if (null == list.get(1))
                 return list.get(0);
             else
-                return ((Obj) list.get(0)).id((fURI) ((List) list.get(1)).get(1));
+                return ((Obj) list.get(0)).vid((fURI) ((List) list.get(1)).get(1));
         });
     }
 

@@ -18,7 +18,9 @@
 
 package studio.phaseshift.metatron.lang.inst;
 
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.lang.obj.SObj.Inst;
 
 import static studio.phaseshift.metatron.MetatronTest.assertMEquals;
@@ -26,6 +28,11 @@ import static studio.phaseshift.metatron.lang.inst.SInst.PLUS_URI;
 import static studio.phaseshift.metatron.lang.obj.SObj.Int;
 
 public class STest {
+
+    @BeforeAll
+    public static void setUp() {
+        BootLoader.load();
+    }
 
     @Test
     public void testPlusInst() {

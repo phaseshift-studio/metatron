@@ -42,12 +42,12 @@ public class SObj implements BObj {
         }
 
         @Override
-        public fURI id() {
+        public fURI vid() {
             return this.id;
         }
 
         @Override
-        public Obj id(final fURI id) {
+        public Obj vid(final fURI id) {
             if (this.id == id)
                 return this;
             Obj clone = this.clone();
@@ -73,7 +73,7 @@ public class SObj implements BObj {
         }
 
         @Override
-        public fURI type() {
+        public fURI tid() {
             return this.type;
         }
 
@@ -411,7 +411,7 @@ public class SObj implements BObj {
         public boolean equals(final Object other) {
             if (!(other instanceof Inst otherInst))
                 return false;
-            return this.type().equals(otherInst.type()) && this.value().getValue0().equals(otherInst.value().getValue0());
+            return this.tid().equals(otherInst.tid()) && this.value().getValue0().equals(otherInst.value().getValue0());
         }
 
        /* @Override

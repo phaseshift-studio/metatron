@@ -18,14 +18,7 @@
 
 package studio.phaseshift.metatron.lang.parse;
 
-import org.jline.jansi.Ansi.Color;
-import org.jline.jansi.AnsiConsole;
-import org.jline.reader.EndOfFileException;
-import org.jline.reader.Highlighter;
-import org.jline.reader.History;
-import org.jline.reader.LineReader;
-import org.jline.reader.LineReaderBuilder;
-import org.jline.reader.UserInterruptException;
+import org.jline.reader.*;
 import org.jline.reader.impl.DefaultHighlighter;
 import org.jline.reader.impl.history.DefaultHistory;
 import org.jline.terminal.Terminal;
@@ -39,18 +32,13 @@ import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.lang.monoid.SMonoid.Monoid;
 import studio.phaseshift.metatron.lang.obj.Palette;
 import studio.phaseshift.metatron.lang.obj.SObj.NoObj;
-import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.util.IteratorUtil;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Random;
+import java.util.*;
 
 import static org.jline.jansi.Ansi.ansi;
 
@@ -72,7 +60,7 @@ public class Console {
     }
 
     public void run() throws IOException {
-       // AnsiConsole.systemInstall();
+        // AnsiConsole.systemInstall();
         final Terminal terminal = TerminalBuilder.builder().system(true).build();
         Highlighter highlighter = new DefaultHighlighter() {
             @Override
@@ -107,7 +95,7 @@ public class Console {
                     } else {
                         builder.append(buffer);
                     }
-                } */else if (buffer.contains("warning")) {
+                } */ else if (buffer.contains("warning")) {
                     // Highlight "warning" in yellow
                     int index = buffer.indexOf("warning");
                     builder.append(buffer.substring(0, index));
@@ -134,8 +122,6 @@ public class Console {
                 .build();
         this.outputHeader();
         BootLoader.load();
-        Graphitty g = Graphitty.singleton();
-        g.print("!gYO YO!bMTV !rRAPS !bHERHEHEHasdfsadf!yer!!");
         String line = "";
         while (true) {
             try {

@@ -24,6 +24,8 @@ public class Palette {
 
     public static final Palette STANDARD = new Palette();
 
+    public static Palette GLOBAL = STANDARD;
+
     Color typeC() {
         return Color.BLUE;
     }

@@ -18,14 +18,32 @@
 
 package studio.phaseshift.metatron.struct;
 
-import studio.phaseshift.metatron.lang.obj.*;
+import studio.phaseshift.metatron.lang.fURI;
 
-import java.net.*;
+import java.util.Iterator;
+import java.util.Map;
 
-public interface Struct {
+import static studio.phaseshift.metatron.lang.obj.BObj.*;
 
-    public BObj.Obj read(final URI addr);
+public interface Struct extends Poly {
 
-    public void write(final URI addr, final BObj.Obj obj);
+    @Override
+    Map<fURI, Obj> value();
 
+    Obj read(final fURI addr);
+
+    void write(final fURI addr, final Obj obj);
+
+    void append(final fURI addr, final Obj... obj);
+
+
+    @Override
+    default long length() {
+        return this.value().size();
+    }
+
+    @Override
+    default Iterator<Obj> iterator() {
+        return this.value().entrySet().stream().map(kv -> kv.getValue().vid(kv.getKey())).iterator();
+    }
 }

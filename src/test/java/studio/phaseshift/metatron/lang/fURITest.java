@@ -37,9 +37,9 @@ public class fURITest {
     }
 
     @Test
-    public void testPretend() {
-        assertEquals(new fURI("http://fhatos.org/a/b"), new fURI("http://fhatos.org/b").pretend("a"));
-        assertEquals(new fURI("http://fhatos.org/a/b/c/d"), new fURI("http://fhatos.org/d").pretend("a/b/c"));
+    public void testPrepend() {
+        assertEquals(new fURI("http://fhatos.org/a/b"), new fURI("http://fhatos.org/b").prepend("a"));
+        assertEquals(new fURI("http://fhatos.org/a/b/c/d"), new fURI("http://fhatos.org/d").prepend("a/b/c"));
 
     }
 

@@ -43,7 +43,7 @@ public class ObjParserTest {
 
     @Test
     public void testBoolParse() {
-        assertEquals(fURI.create("bool"), m_bool().parse("true").<BObj.Obj>get().type());
+        assertEquals(fURI.of("bool"), m_bool().parse("true").<BObj.Obj>get().tid());
         assertEquals(new Bool(true), ObjParser.parse("true"));
         assertEquals(new Bool(false), ObjParser.parse("false"));
     }

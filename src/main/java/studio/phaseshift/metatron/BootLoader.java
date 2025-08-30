@@ -20,14 +20,26 @@ package studio.phaseshift.metatron;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.inst.SInst;
+import studio.phaseshift.metatron.struct.Router;
+import studio.phaseshift.metatron.struct.mem.MemRouter;
+import studio.phaseshift.metatron.struct.mem.MemStruct;
+import studio.phaseshift.metatron.ui.Graphitty;
 
 public class BootLoader {
 
     private static final Logger LOG = LoggerFactory.getLogger(BootLoader.class);
 
+    public static Router GLOBAL_ROUTER;
+
     public static void load() {
         LOG.info("booting metatron");
+        MemRouter router = new MemRouter(new fURI("mem:router"));
+        Graphitty.singleton().println("global router at !bmem:router!!");
+        GLOBAL_ROUTER = router;
+        router.registerStruct(new MemStruct(fURI.of("/mtron/#")));
+        router.registerStruct(new MemStruct(fURI.of("+")));
         SInst.load();
     }
 }

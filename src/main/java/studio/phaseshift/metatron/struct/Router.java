@@ -18,5 +18,18 @@
 
 package studio.phaseshift.metatron.struct;
 
-public interface Router {
+import studio.phaseshift.metatron.BootLoader;
+import studio.phaseshift.metatron.lang.fURI;
+import studio.phaseshift.metatron.lang.obj.BObj;
+
+import static studio.phaseshift.metatron.lang.obj.BObj.Rec;
+
+public interface Router extends Rec {
+    public static Router global() {
+        return BootLoader.GLOBAL_ROUTER;
+    }
+
+    public BObj.Obj read(final fURI vid);
+
+    public void write(final fURI vid, BObj.Obj obj);
 }

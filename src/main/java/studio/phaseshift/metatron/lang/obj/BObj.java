@@ -29,10 +29,7 @@ import studio.phaseshift.metatron.lang.inst.BInst.Terminal;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.ObjUtil;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
@@ -54,17 +51,16 @@ public interface BObj extends Cloneable {
     public static final fURI OBJS_URI = new fURI("objs");
 
 
-    interface Obj extends Function<Obj, Obj>, Iterable<Obj> {
+    interface Obj extends Function<Obj, Obj>, Iterable<Obj>, Cloneable {
         Object value();
 
-        fURI type();
+        fURI tid();
 
-        fURI id();
+        fURI vid();
 
-        Obj id(final fURI furi);
+        Obj vid(final fURI furi);
 
         Obj clone();
-
 
         default String toString(final Palette palette) {
             if (this.isNoObj())
@@ -72,7 +68,7 @@ public interface BObj extends Cloneable {
             else if (this instanceof final Inst inst)
                 return ansi()
                         .fg(palette.typeC()).
-                        a(this.type())
+                        a(this.tid())
                         .fg(palette.formC())
                         .a("(")
                         .fg(palette.valueC())
@@ -88,7 +84,7 @@ public interface BObj extends Cloneable {
             else if (this.isLst()) {
                 Ansi s = ansi()
                         .fg(palette.typeC())
-                        .a(this.type())
+                        .a(this.tid())
                         .fg(palette.formC())
                         .a('[');
                 for (int i = 0; i < this.<Lst>as().value().size(); i++) {
@@ -100,7 +96,7 @@ public interface BObj extends Cloneable {
             } else if (this.isRec()) {
                 Ansi s = ansi()
                         .fg(palette.typeC())
-                        .a(this.type())
+                        .a(this.tid())
                         .fg(palette.formC())
                         .a('[');
                 List<Map.Entry<Obj, Obj>> kv = new ArrayList<>(this.<Rec>as().value().entrySet());
@@ -113,7 +109,7 @@ public interface BObj extends Cloneable {
             } else
                 return ansi()
                         .fg(palette.typeC())
-                        .a(this.type())
+                        .a(this.tid())
                         .fg(palette.formC())
                         .a('[')
                         .fg(palette.valueC())
@@ -121,9 +117,9 @@ public interface BObj extends Cloneable {
                         .fg(palette.formC())
                         .a(']')
                         .fg(palette.form2C())
-                        .a(null == this.id() ? "" : "@")
+                        .a(null == this.vid() ? "" : "@")
                         .fg(palette.typeC())
-                        .a(null == this.id() ? "" : this.id())
+                        .a(null == this.vid() ? "" : this.vid())
                         .reset()
                         .toString();
         }
@@ -189,34 +185,54 @@ public interface BObj extends Cloneable {
             return this instanceof Code;
         }
 
+        default boolean isPoly() {
+            return this instanceof Poly;
+        }
+
+        default boolean isMono() {
+            return this instanceof Mono;
+        }
+
         default boolean boolValue() {
             if (this.isBool())
-                return ((SObj.Bool) this).value();
+                return ((Bool) this).value();
             throw new IllegalStateException("obj is not an bool");
         }
 
         default int intValue() {
             if (this.isInt())
-                return ((SObj.Int) this).value();
+                return ((Int) this).value();
             throw new IllegalStateException("obj is not an int");
         }
 
         default double realValue() {
             if (this.isReal())
-                return ((SObj.Real) this).value();
+                return ((Real) this).value();
             throw new IllegalStateException("obj is not an real");
         }
 
         default String strValue() {
             if (this.isStr())
-                return ((SObj.Str) this).value();
+                return ((Str) this).value();
             throw new IllegalStateException("obj is not an str");
         }
 
         default fURI uriValue() {
             if (this.isUri())
-                return ((SObj.Uri) this).value();
+                return ((Uri) this).value();
             throw new IllegalStateException("obj is not an uri");
+        }
+
+        default List<Obj> lstValue() {
+            if (this.isLst())
+                return ((Lst) this).value();
+            throw new IllegalStateException("obj is not an lst");
+        }
+
+        default Map<Obj, Obj> recValue() {
+            if (this.isRec())
+                return ((Rec) this).value();
+            throw new IllegalStateException("obj is not an rec");
         }
     }
 
@@ -227,15 +243,15 @@ public interface BObj extends Cloneable {
         private NoObj() {
         }
 
-        public fURI id() {
+        public fURI vid() {
             return null;
         }
 
-        public NoObj id(final fURI id) {
+        public NoObj vid(final fURI id) {
             return NOOBJ;
         }
 
-        public fURI type() {
+        public fURI tid() {
             return NOOBJ_URI;
         }
 
@@ -260,7 +276,7 @@ public interface BObj extends Cloneable {
 
         @Override
         public String toString() {
-            return this.toString(Palette.STANDARD);
+            return this.toString(Palette.GLOBAL);
         }
 
         @Override
@@ -279,6 +295,10 @@ public interface BObj extends Cloneable {
 
     interface Poly extends Obj, Iterable<Obj> {
         long length();
+
+        default Poly append(final Obj... obj) {
+            return this; // TODO: this is cause I'm too lazy to implement it for every poly right now
+        }
 
         @Override
         Iterator<Obj> iterator();
@@ -347,6 +367,13 @@ public interface BObj extends Cloneable {
         }
 
         @Override
+        default Lst append(final Obj... obj) {
+            final List<Obj> l = new ArrayList<>(this.value());
+            Collections.addAll(l, obj);
+            return new SObj.Lst(l, this.tid());
+        }
+
+        @Override
         default Iterator<Obj> iterator() {
             return this.value().iterator();
         }
@@ -362,6 +389,15 @@ public interface BObj extends Cloneable {
         @Override
         default long length() {
             return this.value().size();
+        }
+
+        @Override
+        default Rec append(final Obj... obj) {
+            final Map<Obj, Obj> l = new HashMap<>(this.value());
+            for (int i = 0; i < obj.length; i = i + 2) {
+                l.put(obj[i], obj[i + 1]);
+            }
+            return new SObj.Rec(l, this.tid());
         }
 
         @Override

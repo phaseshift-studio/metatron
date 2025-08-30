@@ -18,10 +18,10 @@
 
 package studio.phaseshift.metatron.lang.inst;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import studio.phaseshift.metatron.lang.fURI;
+import studio.phaseshift.metatron.lang.obj.BObj;
 import studio.phaseshift.metatron.lang.obj.SObj;
+import studio.phaseshift.metatron.struct.Router;
 import studio.phaseshift.metatron.ui.ProgressBar;
 
 public final class SInst {
@@ -29,16 +29,19 @@ public final class SInst {
     public static final fURI APPLY_URI = new fURI("apply");
     public static final fURI PLUS_URI = new fURI("plus");
     public static final fURI MULT_URI = new fURI("mult");
+    //public static final fURI SPLIT_URI = new fURI("split");
+    public static final fURI TO_URI = new fURI("to");
+    public static final fURI FROM_URI = new fURI("from");
 
     public static void load() {
-        ProgressBar pg = new ProgressBar(3);
+        ProgressBar pg = new ProgressBar(6);
         BInst.SymbolTable.load(pg.incr(START_URI), (lhs, args) -> args.value().get(0));
         BInst.SymbolTable.load(pg.incr(APPLY_URI), (lhs, args) -> args.value().get(0).apply(lhs));
         BInst.SymbolTable.load(pg.incr(PLUS_URI), (lhs, args) -> {
             if (lhs.isInt() && args.value().get(0).isInt())
-                return new SObj.Int(lhs.intValue() + args.value().get(0).intValue(), lhs.type());
+                return new SObj.Int(lhs.intValue() + args.value().get(0).intValue(), lhs.tid());
             else if (lhs.isUri() && args.value().get(0).isUri())
-                return new SObj.Uri(lhs.uriValue().extend(args.value().get(0).uriValue()), lhs.type());
+                return new SObj.Uri(lhs.uriValue().extend(args.value().get(0).uriValue()), lhs.tid());
             else
                 throw new IllegalStateException("the operands do not support addition: %s + %s".formatted(lhs, args.value().get(0)));
 
@@ -49,6 +52,14 @@ public final class SInst {
             else
                 throw new IllegalStateException("the operands do not support multiplication");
 
+        });
+        BInst.SymbolTable.load(pg.incr(TO_URI), (lhs, args) -> {
+            Router.global().write(args.value().get(0).uriValue(), lhs);
+            return lhs;
+        });
+        BInst.SymbolTable.load(pg.incr(FROM_URI), (lhs, args) -> {
+            final BObj.Obj read = Router.global().read(args.value().get(0).uriValue());
+            return read;
         });
     }
 }
