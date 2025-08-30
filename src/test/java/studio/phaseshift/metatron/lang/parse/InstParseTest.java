@@ -28,7 +28,7 @@ public class InstParseTest {
 
     @Test
     public void testPlusInst() {
-        assertMEquals(3, parse("1 => plus(2)"));
+        assertMEquals(3, parse("1.plus(2)"));
     }
 
 }
