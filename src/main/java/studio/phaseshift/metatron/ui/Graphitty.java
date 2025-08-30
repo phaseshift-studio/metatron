@@ -19,6 +19,7 @@
 package studio.phaseshift.metatron.ui;
 
 import java.io.BufferedOutputStream;
+import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 
@@ -27,15 +28,20 @@ import static org.jline.jansi.Ansi.ansi;
 
 public class Graphitty {
 
-
-    public static Graphitty singleton() {
-        return new Graphitty();
-    }
-
     private String buffer = "";
-    private final BufferedOutputStream printer = new BufferedOutputStream(System.out);
+    private final BufferedOutputStream printer;
     private boolean ansiOn = true;
     private boolean printerOn = true;
+
+    private static final Graphitty STANDARD = new Graphitty(System.out);
+
+    public static Graphitty singleton() {
+        return STANDARD;
+    }
+
+    public Graphitty(final OutputStream output) {
+        this.printer = new BufferedOutputStream(output);
+    }
 
     private void parse(final String buffer) {
         try {
@@ -295,20 +301,6 @@ public class Graphitty {
 
 
     /// /////// COLORING
-    /*
-        //  COLOR
-        enum {
-        BLACK = 0, // !b
-        RED = 1, // !r
-        GREEN = 2, // !g
-        YELLOW = 3, // !y
-        BLUE = 4, // !b
-        MAGENTA = 5, // !m
-        CYAN = 6, // !c
-        WHITE = 7, // !w
-        BRIGHT = 8, //  Add this to any of the previous 8 to get a bright color
-        };
-        */
     public void black() {
         this.print(ansi().fg(BLACK).toString());
     }

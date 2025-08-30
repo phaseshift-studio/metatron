@@ -42,7 +42,6 @@ public interface BInst {
         public static Inst resolve(final Obj source, final Inst inst) {
             if (null != inst.function())
                 return inst;
-            System.out.println(inst.type() + "+++" + TABLE.keySet());
             final InstF resolvedFunction = TABLE.get(inst.type());
             if (null == resolvedFunction)
                 throw new IllegalArgumentException("unable to resolve %s".formatted(inst));

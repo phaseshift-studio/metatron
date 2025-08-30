@@ -18,33 +18,16 @@
 
 package studio.phaseshift.metatron.ui;
 
-import static org.jline.jansi.Ansi.ansi;
-
 public class ProgressBar {
 
     final int totalCount;
     int currentCount;
 
-    public ProgressBar(int total_counts) {
-        this.totalCount = total_counts;
+    public ProgressBar(int totalCount) {
+        this.totalCount = totalCount;
     }
 
-    public static ProgressBar start(final int total_counts) {
-        // ansi().hide
-        return new ProgressBar(total_counts);
-    }
-
-
-    public boolean done() {
-        return this.currentCount >= this.totalCount;
-    }
-
-    public void end(final String end_message) {
-        this.currentCount = this.totalCount;
-        this.incr(end_message);
-    }
-
-    public void incr(final String message) {
+    public <T> T incr(final T message) {
         float percentage =
                 0 == this.currentCount
                         ? 0
@@ -52,23 +35,25 @@ public class ProgressBar {
         ++this.currentCount;
         if (percentage >= 100) {
             percentage = 100;
-           // System.out.print(ansi().eraseLine());
+            Graphitty.singleton().clearLine();
+            Graphitty.singleton().println(message.toString());
         }
 
 
-        System.out.print("!g[INFO]  [!b");
+        Graphitty.singleton().print("!g[INFO]  [!b");
         for (int j = 0; j < (int) percentage; j = j + 2) {
             // + 2 to make bar half as long
-            System.out.print("#");
+            Graphitty.singleton().print("#");
         }
         for (int j = (int) percentage; j < 99; j = j + 2) {
-            System.out.print(' ');
+            Graphitty.singleton().print(' ');
         }
-        System.out.print("!g] !y%d%%!! %-25s\r".formatted((int) percentage, message));
+        Graphitty.singleton().print("!g] !y%d%%!! %-25s\r".formatted((int) percentage, message));
         try {
             Thread.sleep(250);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+        return message;
     }
 }

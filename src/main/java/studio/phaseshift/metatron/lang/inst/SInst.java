@@ -25,19 +25,16 @@ import studio.phaseshift.metatron.lang.obj.SObj;
 import studio.phaseshift.metatron.ui.ProgressBar;
 
 public final class SInst {
-    private static final Logger LOG = LoggerFactory.getLogger(SInst.class);
     public static final fURI START_URI = new fURI("start");
     public static final fURI APPLY_URI = new fURI("apply");
     public static final fURI PLUS_URI = new fURI("plus");
     public static final fURI MULT_URI = new fURI("mult");
 
     public static void load() {
-        ProgressBar pg = new ProgressBar(4);
-        BInst.SymbolTable.load(START_URI, (lhs, args) -> args.value().get(0));
-        pg.incr(START_URI.toString());
-        BInst.SymbolTable.load(APPLY_URI, (lhs, args) -> args.value().get(0).apply(lhs));
-        pg.incr(APPLY_URI.toString());
-        BInst.SymbolTable.load(PLUS_URI, (lhs, args) -> {
+        ProgressBar pg = new ProgressBar(3);
+        BInst.SymbolTable.load(pg.incr(START_URI), (lhs, args) -> args.value().get(0));
+        BInst.SymbolTable.load(pg.incr(APPLY_URI), (lhs, args) -> args.value().get(0).apply(lhs));
+        BInst.SymbolTable.load(pg.incr(PLUS_URI), (lhs, args) -> {
             if (lhs.isInt() && args.value().get(0).isInt())
                 return new SObj.Int(lhs.intValue() + args.value().get(0).intValue(), lhs.type());
             else if (lhs.isUri() && args.value().get(0).isUri())
@@ -46,14 +43,12 @@ public final class SInst {
                 throw new IllegalStateException("the operands do not support addition: %s + %s".formatted(lhs, args.value().get(0)));
 
         });
-        pg.incr(PLUS_URI.toString());
-        BInst.SymbolTable.load(MULT_URI, (lhs, args) -> {
+        BInst.SymbolTable.load(pg.incr(MULT_URI), (lhs, args) -> {
             if (lhs.isInt() && args.value().get(0).isInt())
                 return SObj.Int.of(lhs.intValue() * args.value().get(0).intValue());
             else
                 throw new IllegalStateException("the operands do not support multiplication");
 
         });
-        pg.incr(MULT_URI.toString());
     }
 }

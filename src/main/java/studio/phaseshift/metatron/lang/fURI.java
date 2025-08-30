@@ -19,8 +19,6 @@
 package studio.phaseshift.metatron.lang;
 
 import net.sourceforge.urin.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -29,8 +27,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class fURI {
-    private Logger LOG = LoggerFactory.getLogger(fURI.class);
-
     protected final UrinReference<String, Query<String>, Fragment<String>> urin;
 
     private fURI(final UrinReference<String, Query<String>, Fragment<String>> urin) {
