@@ -23,6 +23,7 @@ import org.javatuples.Triplet;
 import org.petitparser.context.Result;
 import org.petitparser.parser.Parser;
 import org.petitparser.parser.combinators.*;
+import org.petitparser.parser.primitive.CharacterParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import studio.phaseshift.metatron.lang.fURI;
@@ -97,7 +98,7 @@ public class ObjParser {
                         }))));
         inst_parser.set(seq(
                 m_type_prefix_opt_colon(INST_URI),
-                seq(of('(').trim(), m_obj().separatedBy(of(',').trim()), of(')').trim()).pick(1),
+                seq(of('(').trim(), opt(m_obj().separatedBy(of(',').trim()), List.of()), of(')').trim()).pick(1),
                 opt(seq(of('[').trim(), m_code(), of(']').trim()).pick(1), null))
                 .map(t -> new SObj.Inst(new Triplet<>(
                         new SObj.Lst(((List) pick(t, 1)).stream().filter(x -> x instanceof BObj.Obj).toList()),
@@ -188,7 +189,7 @@ public class ObjParser {
     }
 
     public static Parser m_uri() {
-        return seq(m_type_prefix(URI_URI), seq(opt(of('<'), '<'), m_furi(":{}"), opt(of('>'), '>')).pick(1))
+        return seq(m_type_prefix(URI_URI), choice(seq(of('<'), m_furi(":{}"), of('>')).pick(1), m_furi(":{}")))
                 .map(t -> new SObj.Uri(pick(t, 1), pick(t, 0)));
     }
 
@@ -205,7 +206,7 @@ public class ObjParser {
     }
 
     public static Parser m_inst() {
-        return sugar_identity().or(inst_parser);
+        return sugar_identity().or(sugar_plus(), sugar_from(), inst_parser);
     }
 
     public static Parser m_eval() {
@@ -230,8 +231,12 @@ public class ObjParser {
         return of('_').map(t -> IDENTITY_INST);
     }
 
+    public static Parser sugar_from() {
+        return seq(of('*').trim(), m_obj()).map(t -> new SObj.Inst(FROM_URI, ObjParser.<BObj.Obj>pick(t, 1)));
+    }
+
     public static Parser sugar_plus() {
-        return seq(of('+').trim(), m_obj()).map(t -> new SObj.Inst(PLUS_URI, pick(t, 1)));
+        return seq(of('+').trim(), m_obj()).map(t -> new SObj.Inst(PLUS_URI, ObjParser.<BObj.Obj>pick(t, 1)));
     }
 
     /// //////////////////////////////////////////////////////////////////////////////////////////
@@ -248,6 +253,10 @@ public class ObjParser {
 
     public static ChoiceParser choice(final Parser... parsers) {
         return new ChoiceParser(parsers);
+    }
+
+    public static CharacterParser none() {
+        return CharacterParser.none();
     }
 
     public static <O> O pick(final Object list, int index) {

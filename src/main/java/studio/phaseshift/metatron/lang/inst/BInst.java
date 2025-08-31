@@ -28,6 +28,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static studio.phaseshift.metatron.lang.inst.SInst.BLOCK_URI;
 import static studio.phaseshift.metatron.lang.obj.BObj.Inst;
 import static studio.phaseshift.metatron.lang.obj.BObj.InstF;
 
@@ -46,8 +47,9 @@ public interface BInst {
             if (null == resolvedFunction)
                 throw new IllegalArgumentException("unable to resolve %s".formatted(inst));
             final List<Obj> resolvedArgs = new ArrayList<>();
+            final boolean blocking = inst.tid().equals(BLOCK_URI);
             for (final Obj arg : inst.args()) {
-                resolvedArgs.add(arg.apply(lhs));
+                resolvedArgs.add(blocking ? arg : arg.apply(lhs));
             }
             return inst.clone(new Triplet<>(new SObj.Lst(resolvedArgs),
                     resolvedFunction,

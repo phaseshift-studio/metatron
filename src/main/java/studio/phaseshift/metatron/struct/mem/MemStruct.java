@@ -18,25 +18,50 @@
 
 package studio.phaseshift.metatron.struct.mem;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import studio.phaseshift.metatron.lang.fURI;
+import studio.phaseshift.metatron.lang.obj.Palette;
 import studio.phaseshift.metatron.lang.obj.SObj;
 import studio.phaseshift.metatron.struct.Struct;
+import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.util.ObjUtil;
 
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 import static studio.phaseshift.metatron.lang.obj.BObj.Obj;
 import static studio.phaseshift.metatron.lang.obj.BObj.Poly;
 
 public class MemStruct implements Struct {
+    private static final Logger LOG = LoggerFactory.getLogger(MemStruct.class);
+    public static final fURI MEMSTRUCT_TID = fURI.of("struct:/mtron/mem");
+    private final fURI pattern;
 
     fURI vid;
     final Map<fURI, Obj> store = new HashMap<>();
 
-    public MemStruct(final fURI vid) {
+    public MemStruct(final fURI pattern, final fURI vid) {
+        this.pattern = pattern;
         this.vid = vid;
+        LOG.info(Graphitty.parse("%s loaded at %s !g[!yaddr!g=>!!%s!g]!!".formatted(tid().toUri(true), SObj.Uri.of(this.vid), SObj.Uri.of(this.pattern))));
+    }
+
+    @Override
+    public String toString() {
+        return this.toString(Palette.GLOBAL);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(this.vid, this.pattern, this.tid());
+    }
+
+    @Override
+    public boolean equals(final Object other) {
+        return other instanceof MemStruct && this.hashCode() == other.hashCode();
     }
 
     @Override
@@ -45,8 +70,13 @@ public class MemStruct implements Struct {
     }
 
     @Override
+    public fURI pattern() {
+        return this.pattern;
+    }
+
+    @Override
     public fURI tid() {
-        return new fURI("mem:struct");
+        return MEMSTRUCT_TID;
     }
 
     @Override
@@ -67,7 +97,7 @@ public class MemStruct implements Struct {
 
     @Override
     public <O extends Obj> O clone(Object value) {
-        return (O)this;
+        return (O) this;
     }
 
     @Override
@@ -76,8 +106,16 @@ public class MemStruct implements Struct {
     }
 
     @Override
-    public void write(final fURI addr, Obj obj) {
-        this.store.put(addr, obj);
+    public Obj write(final fURI addr, Obj obj) {
+        final Obj current = this.store.get(addr);
+        if (null == current) {
+            this.store.put(addr, obj);
+            return obj;
+        } else {
+            final Obj next = current.apply(obj);
+            this.store.put(addr, next);
+            return next;
+        }
     }
 
     @Override

@@ -16,7 +16,7 @@
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.lang.parse;
+package studio.phaseshift.metatron.ui;
 
 import org.jline.reader.*;
 import org.jline.reader.impl.DefaultHighlighter;
@@ -32,7 +32,7 @@ import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.lang.monoid.SMonoid.Monoid;
 import studio.phaseshift.metatron.lang.obj.BObj;
 import studio.phaseshift.metatron.lang.obj.Palette;
-import studio.phaseshift.metatron.ui.Graphitty;
+import studio.phaseshift.metatron.lang.parse.ObjParser;
 import studio.phaseshift.metatron.util.IteratorUtil;
 
 import java.io.BufferedReader;

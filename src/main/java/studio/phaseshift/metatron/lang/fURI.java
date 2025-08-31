@@ -19,7 +19,10 @@
 package studio.phaseshift.metatron.lang;
 
 import net.sourceforge.urin.*;
+import studio.phaseshift.metatron.lang.obj.BObj;
+import studio.phaseshift.metatron.lang.obj.SObj;
 
+import java.net.URI;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -32,6 +35,11 @@ public class fURI {
 
     public static fURI of(final String uri) {
         return new fURI(uri);
+    }
+
+    public BObj.Uri toUri(final boolean schemaType) {
+        final String scheme = this.scheme();
+        return schemaType && null != scheme ? new SObj.Uri(this.scheme(null), fURI.of(scheme)) : new SObj.Uri(this);
     }
 
     public fURI(final String uri) throws IllegalArgumentException {
@@ -54,6 +62,36 @@ public class fURI {
             segs.add(s.value());
         }
         return segs;
+    }
+
+    public fURI scheme(final String scheme) {
+        if (null == this.urin.asUri().getScheme())
+            return this;
+        else {
+            URI u = this.urin.asUri();
+            String authority = u.getAuthority();
+            String path = u.getPath();
+            String query = u.getQuery();
+            String newURI = "";
+            if (null != scheme) {
+                newURI += scheme;
+                newURI += ":";
+            }
+            if (authority != null) {
+                if (scheme != null)
+                    newURI += "/";
+                newURI += "/" + authority;
+            }
+            if (path != null) {
+                if (authority != null)
+                    newURI += "/";
+                newURI += path;
+            }
+            if (query != null) {
+                newURI += "?" + query;
+            }
+            return new fURI(newURI);
+        }
     }
 
     public fURI path(final String path) {
@@ -192,21 +230,19 @@ public class fURI {
                         other.urin.authority().host().equals(Host.registeredName(""))))) {
             return false;
         }
-        if (!other.urin.hasAuthority() || (other.urin.path().segments().isEmpty() && other.urin.toString().contains("#")))
+        if (other.urin.path().segments().isEmpty() && other.urin.toString().contains("#"))
             return true;
         final List<Segment<String>> as = this.urin.path().segments();
         final List<Segment<String>> bs = other.urin.path().segments();
         for (int i = 0; i < bs.size(); i++) {
-            if (!bs.get(i).hasValue() || (bs.get(i).value().equals("+") && i == bs.size() - 1))
+            if (!bs.get(i).hasValue()) // #
                 return true;
-            if (bs.get(i).value().equals("#"))
-                return true;
-            if (bs.get(i).value().equals("+"))
+            if (bs.get(i).value().equals("+")) // +
                 continue;
-            if (as.size() > i) {
-                if (!as.get(i).equals(bs.get(i)))
-                    return false;
-            }
+            if (as.size() <= i) // a/b a/b/c
+                return false;
+            if (!as.get(i).equals(bs.get(i))) // a a
+                return false;
         }
         return as.size() == bs.size();
     }

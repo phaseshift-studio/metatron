@@ -22,7 +22,6 @@ import org.javatuples.Pair;
 import org.javatuples.Triplet;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.monoid.SMonoid.Monoid;
-import studio.phaseshift.metatron.lang.parse.ObjParser;
 import studio.phaseshift.metatron.util.IteratorUtil;
 
 import java.util.*;
@@ -242,7 +241,7 @@ public class SObj implements BObj {
             return new Uri(new fURI(uri));
         }
 
-        public Obj apply(final Obj lhs) {
+        /*public Obj apply(final Obj lhs) {
             if (!this.value().toString().contains("{{"))
                 return this;
             else {
@@ -255,7 +254,7 @@ public class SObj implements BObj {
                 }
                 return new Uri(this.value().path(segs.toString()));
             }
-        }
+        }*/
     }
 
     public static class Rel extends Obj implements BObj.Rel {
@@ -270,6 +269,13 @@ public class SObj implements BObj {
         @Override
         public Pair<BObj.Obj, BObj.Obj> value() {
             return (Pair) this.value;
+        }
+
+        @Override
+        public boolean equals(final Object other) {
+            if (other instanceof final BObj.Rel rel)
+                return this.type.equals(rel.tid()) && this.domain().equals(rel.domain()) && this.range().equals(rel.range());
+            return false;
         }
     }
 

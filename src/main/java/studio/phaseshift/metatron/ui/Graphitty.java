@@ -18,6 +18,8 @@
 
 package studio.phaseshift.metatron.ui;
 
+import studio.phaseshift.metatron.lang.obj.Palette;
+
 import java.io.BufferedOutputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.OutputStream;
@@ -35,6 +37,11 @@ public class Graphitty {
     private boolean printerOn = true;
 
     private static final Graphitty STANDARD = new Graphitty(System.out);
+    private static Palette PALETTE = Palette.STANDARD;
+
+    public static void palette(final Palette palette) {
+        Graphitty.PALETTE = palette;
+    }
 
     public static Graphitty singleton() {
         return STANDARD;

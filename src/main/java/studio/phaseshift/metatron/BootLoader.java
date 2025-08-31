@@ -22,24 +22,37 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.inst.SInst;
+import studio.phaseshift.metatron.lang.obj.SObj;
 import studio.phaseshift.metatron.struct.Router;
+import studio.phaseshift.metatron.struct.Struct;
 import studio.phaseshift.metatron.struct.mem.MemRouter;
 import studio.phaseshift.metatron.struct.mem.MemStruct;
 import studio.phaseshift.metatron.ui.Graphitty;
+
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 
 public class BootLoader {
 
     private static final Logger LOG = LoggerFactory.getLogger(BootLoader.class);
 
-    public static Router GLOBAL_ROUTER;
+    public static Router ROUTER;
 
     public static void load() {
-        LOG.info("booting metatron");
-        MemRouter router = new MemRouter(new fURI("/sys/router"));
-        LOG.info(Graphitty.parse("!brouter!! located at !y%s!!".formatted(router.tid())));
-        GLOBAL_ROUTER = router;
-        router.registerStruct(new MemStruct(fURI.of("/mtron/#")));
-        router.registerStruct(new MemStruct(fURI.of("+")));
+        try {
+            LOG.info(Graphitty.parse("booting metatron on %s !g[%s!g]!!".formatted(
+                    SObj.Uri.of(InetAddress.getLocalHost().getHostName(), fURI.of("host")),
+                    SObj.Uri.of(InetAddress.getLocalHost().getHostAddress(), fURI.of("ipv4")))));
+        } catch (final UnknownHostException e) {
+            LOG.warn(Graphitty.parse("booting metatron on a non-networked jvm"));
+        }
+        final Struct mnt = new MemStruct(fURI.of("/mnt/#"), fURI.of("/mnt"));
+        final Struct sys = new MemStruct(fURI.of("/sys/#"), fURI.of("/mnt/sys"));
+        final Router router = (ROUTER = new MemRouter(fURI.of("/sys/router")));
+        router.registerStruct(mnt);
+        router.registerStruct(sys);
+        router.registerStruct(new MemStruct(fURI.of("/mtron/#"), fURI.of("/mnt/lang/mtron")));
+        router.registerStruct(new MemStruct(fURI.of("+"), fURI.of("/sys/stack")));
         SInst.load();
     }
 }

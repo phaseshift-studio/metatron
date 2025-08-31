@@ -119,6 +119,15 @@ public class fURITest {
         assertTrue(new fURI("http://fhatos.org/a/b/c").matches(new fURI("http://#")));
         assertTrue(new fURI("http://fhatos.org/a/b/c").matches(new fURI("http://fhatos.org/#")));
         assertFalse(new fURI("http://fhatos.org/a/b/c").matches(new fURI("http://fhatos.org/b/#")));
+        assertFalse(new fURI("b").matches(new fURI("/sys/#")));
+        assertFalse(new fURI("/sys/#").matches(new fURI("b")));
+        assertTrue(new fURI("b").matches(new fURI("b/#")));
+        assertFalse(new fURI("b").matches(new fURI("b/c")));
+        assertFalse(new fURI("b").matches(new fURI("b/c/+")));
+        assertFalse(new fURI("b").matches(new fURI("b/c/#")));
+        assertFalse(new fURI("b").matches(new fURI("b/+")));
+        assertFalse(new fURI("a").matches(new fURI("b/c/+")));
+        assertFalse(new fURI("a").matches(new fURI("b/c/#")));
         ///
         assertTrue(new fURI("/a/b/c").matches(new fURI("/a/b/+")));
         assertTrue(new fURI("/a/b/c").matches(new fURI("/a/+/c")));

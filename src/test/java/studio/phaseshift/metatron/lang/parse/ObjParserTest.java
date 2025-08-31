@@ -68,5 +68,7 @@ public class ObjParserTest {
     public void testUriParse() {
         assertEquals(new Uri("http://metatron.com?a=2&b=3"), ObjParser.parse("<http://metatron.com?a=2&b=3>"));
         assertEquals(new Uri("http://metatron.com?a&b"), ObjParser.parse("<http://metatron.com?a&b>"));
+        assertEquals(new Uri("/metatron.com?a&b"), ObjParser.parse("/metatron.com?a&b"));
+        assertEquals(new Uri("//metatron.com?a&b"), ObjParser.parse("//metatron.com?a&b"));
     }
 }

@@ -38,20 +38,21 @@ import static org.jline.jansi.Ansi.ansi;
 
 public interface BObj extends Cloneable {
 
-    public static final fURI OBJ_URI = new fURI("obj");
-    public static final fURI NOOBJ_URI = new fURI("noobj");
-    public static final fURI BOOL_URI = new fURI("bool");
-    public static final fURI INT_URI = new fURI("int");
-    public static final fURI REAL_URI = new fURI("real");
-    public static final fURI STR_URI = new fURI("str");
-    public static final fURI URI_URI = new fURI("uri");
-    public static final fURI LST_URI = new fURI("lst");
-    public static final fURI REC_URI = new fURI("rec");
-    public static final fURI INST_URI = new fURI("inst");
-    public static final fURI CODE_URI = new fURI("code");
-    public static final fURI OBJS_URI = new fURI("objs");
-    public static final fURI REL_URI = new fURI("rel");
+    fURI OBJ_URI = new fURI("obj");
+    fURI NOOBJ_URI = new fURI("noobj");
+    fURI BOOL_URI = new fURI("bool");
+    fURI INT_URI = new fURI("int");
+    fURI REAL_URI = new fURI("real");
+    fURI STR_URI = new fURI("str");
+    fURI URI_URI = new fURI("uri");
+    fURI LST_URI = new fURI("lst");
+    fURI REC_URI = new fURI("rec");
+    fURI INST_URI = new fURI("inst");
+    fURI CODE_URI = new fURI("code");
+    fURI OBJS_URI = new fURI("objs");
+    fURI REL_URI = new fURI("rel");
 
+    Set<fURI> MTRON_CORE_TYPES = Set.of(OBJ_URI, NOOBJ_URI, BOOL_URI, INT_URI, REAL_URI, STR_URI, URI_URI, LST_URI, REC_URI, INST_URI, CODE_URI, OBJS_URI, REL_URI);
 
     interface Obj extends Function<Obj, Obj>, Iterable<Obj>, Cloneable {
         Object value();
@@ -70,9 +71,10 @@ public interface BObj extends Cloneable {
             else if (this instanceof final Inst inst)
                 return ansi()
                         .fg(palette.typeC()).
-                        a(inst.tid())
+                        a(MTRON_CORE_TYPES.contains(inst.tid()) ? "" : inst.tid())
                         .fg(palette.formC())
-                        .a(":(")
+                        .a(MTRON_CORE_TYPES.contains(inst.tid()) ? "" : ':')
+                        .a("(")
                         .a(inst.args())
                         .fg(palette.formC())
                         .a(")[")
@@ -85,9 +87,10 @@ public interface BObj extends Cloneable {
             else if (this instanceof final Rel rel) {
                 return ansi()
                         .fg(palette.typeC())
-                        .a(rel.tid())
+                        .a(MTRON_CORE_TYPES.contains(rel.tid()) ? "" : rel.tid())
                         .fg(palette.formC())
-                        .a(":[")
+                        .a(MTRON_CORE_TYPES.contains(rel.tid()) ? "" : ':')
+                        .a("[")
                         .a(rel.domain())
                         .fg(palette.formC())
                         .a("=>")
@@ -97,9 +100,10 @@ public interface BObj extends Cloneable {
             } else if (this.isLst()) {
                 Ansi s = ansi()
                         .fg(palette.typeC())
-                        .a(this.tid())
+                        .a(MTRON_CORE_TYPES.contains(this.tid()) ? "" : this.tid())
                         .fg(palette.formC())
-                        .a(":[");
+                        .a(MTRON_CORE_TYPES.contains(this.tid()) ? "" : ':')
+                        .a("[");
                 for (int i = 0; i < this.<Lst>as().value().size(); i++) {
                     s = s.a(this.<Lst>as().value().get(i));
                     if (i != this.<Lst>as().value().size() - 1)
@@ -109,7 +113,7 @@ public interface BObj extends Cloneable {
             } else if (this.isRec()) {
                 Ansi s = ansi()
                         .fg(palette.typeC())
-                        .a(this.tid())
+                        .a(MTRON_CORE_TYPES.contains(this.tid()) ? "" : this.tid())
                         .fg(palette.formC())
                         .a('[');
                 List<Map.Entry<Obj, Obj>> kv = new ArrayList<>(this.<Rec>as().value().entrySet());
@@ -122,9 +126,9 @@ public interface BObj extends Cloneable {
             } else
                 return ansi()
                         .fg(palette.typeC())
-                        .a(this.tid())
+                        .a(MTRON_CORE_TYPES.contains(this.tid()) ? "" : this.tid())
                         .fg(palette.formC())
-                        .a(':')
+                        .a(MTRON_CORE_TYPES.contains(this.tid()) ? "" : ':')
                         .fg(palette.valueC())
                         .a(this.value())
                         .fg(palette.form2C())
@@ -140,6 +144,10 @@ public interface BObj extends Cloneable {
             return this;
         }
 
+
+        default boolean matches(final Obj rhs) {
+            return this.equals(rhs);
+        }
 
         <O extends Obj> O clone(final Object value);
 
@@ -282,8 +290,13 @@ public interface BObj extends Cloneable {
         }
 
         @Override
-        public Obj apply(final Obj other) {
-            return other;
+        public Obj apply(final Obj lhs) {
+            return NOOBJ;
+        }
+
+        @Override
+        public boolean matches(final Obj rhs) {
+            return false;
         }
 
         @Override
@@ -370,8 +383,20 @@ public interface BObj extends Cloneable {
         fURI value();
 
         @Override
-        default Uri apply(final Obj other) {
-            return this;
+        default boolean matches(final Obj rhs) {
+            return rhs.isUri() ? this.value().matches(rhs.uriValue()) : this.equals(rhs);
+        }
+
+        @Override
+        default Obj apply(final Obj lhs) {
+            if (lhs instanceof final Rel rel)
+                return rel.apply(this);
+            else if (lhs instanceof final Lst l) {
+                return new SObj.Lst(l.value().stream().map(this::apply).toList(), lhs.tid());
+            } else {
+                return this;
+                //return lhs.matches(this) ? lhs : NoObj.of();
+            }
         }
     }
 
@@ -380,12 +405,13 @@ public interface BObj extends Cloneable {
         Pair<Obj, Obj> value();
 
         @Override
-        default Obj apply(final Obj other) {
-            Obj key = this.value().getValue0();
-            if (key.equals(other))
-                return this.value().getValue1();
-            else
-                return NoObj.of();
+        default Obj apply(final Obj lhs) {
+            return this.matches(lhs) ? this.range() : NoObj.of();
+        }
+
+        @Override
+        default boolean matches(final Obj rhs) {
+            return rhs.matches(this.domain()) || this.equals(rhs);
         }
 
         @Override
@@ -489,6 +515,11 @@ public interface BObj extends Cloneable {
 
         public static InstF of(final Function<Obj, Obj> func) {
             return null == func ? null : new InstF(func);
+        }
+
+        @Override
+        public String toString() {
+            return ObjUtil.isLambda(this.func) ? "λ" : this.func.toString();
         }
 
     }

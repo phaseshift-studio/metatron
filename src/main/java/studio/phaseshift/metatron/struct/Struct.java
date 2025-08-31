@@ -19,23 +19,27 @@
 package studio.phaseshift.metatron.struct;
 
 import studio.phaseshift.metatron.lang.fURI;
+import studio.phaseshift.metatron.lang.obj.Palette;
+import studio.phaseshift.metatron.ui.Graphitty;
 
 import java.util.Iterator;
 import java.util.Map;
 
-import static studio.phaseshift.metatron.lang.obj.BObj.*;
+import static studio.phaseshift.metatron.lang.obj.BObj.Obj;
+import static studio.phaseshift.metatron.lang.obj.BObj.Poly;
 
 public interface Struct extends Poly {
 
     @Override
     Map<fURI, Obj> value();
 
+    fURI pattern();
+
     Obj read(final fURI addr);
 
-    void write(final fURI addr, final Obj obj);
+    Obj write(final fURI addr, final Obj obj);
 
     void append(final fURI addr, final Obj... obj);
-
 
     @Override
     default long length() {
@@ -45,5 +49,9 @@ public interface Struct extends Poly {
     @Override
     default Iterator<Obj> iterator() {
         return this.value().entrySet().stream().map(kv -> kv.getValue().vid(kv.getKey())).iterator();
+    }
+
+    default String toString(final Palette palette) {
+        return Graphitty.parse("!b%s!g:[!ypattern!g=>!y%s!g]!!".formatted(this.tid().toString(), this.pattern().toString()));
     }
 }

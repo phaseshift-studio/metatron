@@ -250,7 +250,7 @@
                     </execution>
                 </executions>
                 <configuration>
-                    <mainClass>studio.phaseshift.metatron.lang.parse.Console</mainClass>
+                    <mainClass>studio.phaseshift.metatron.ui.Console</mainClass>
                     <addResourcesToClasspath>true</addResourcesToClasspath>
                 </configuration>
             </plugin>
@@ -261,7 +261,7 @@
                     <archive>
                         <manifest>
                             <addClasspath>true</addClasspath>
-                            <mainClass>studio.phaseshift.metatron.lang.parse.Console</mainClass>
+                            <mainClass>studio.phaseshift.metatron.ui.Console</mainClass>
                             <classpathPrefix>lib/</classpathPrefix>
                         </manifest>
                     </archive>
@@ -286,7 +286,7 @@
                             <archive>
                                 <manifest>
                                     <addClasspath>true</addClasspath>
-                                    <mainClass>studio.phaseshift.metatron.lang.parse.Console</mainClass>
+                                    <mainClass>studio.phaseshift.metatron.ui.Console</mainClass>
                                 </manifest>
                                 <manifestEntries>
                                     <Build-Timestamp>${maven.build.timestamp}</Build-Timestamp>

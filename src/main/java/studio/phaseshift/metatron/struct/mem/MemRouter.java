@@ -18,11 +18,14 @@
 
 package studio.phaseshift.metatron.struct.mem;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.BObj;
 import studio.phaseshift.metatron.lang.obj.SObj;
 import studio.phaseshift.metatron.struct.Router;
 import studio.phaseshift.metatron.struct.Struct;
+import studio.phaseshift.metatron.ui.Graphitty;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -31,12 +34,16 @@ import static studio.phaseshift.metatron.lang.obj.BObj.Obj;
 
 public class MemRouter implements Router {
 
+    private static final Logger LOG = LoggerFactory.getLogger(MemRouter.class);
+    public static final fURI MEMROUTER_TID = fURI.of("router:/mtron/mem");
+
     private fURI vid;
     private final Map<fURI, Struct> routes = new HashMap<>();
 
 
     public MemRouter(final fURI vid) {
         this.vid = vid;
+        LOG.info(Graphitty.parse("%s loaded at %s".formatted(this.tid().toUri(true), this.vid.toUri(true))));
     }
 
     public void registerStruct(final Struct struct) {
@@ -71,8 +78,8 @@ public class MemRouter implements Router {
     }
 
     @Override
-    public void write(final fURI vid, final Obj obj) {
-        this.getStruct(vid).write(vid, obj);
+    public Obj write(final fURI vid, final Obj obj) {
+        return this.getStruct(vid).write(vid, obj);
     }
 
     @Override
@@ -87,7 +94,7 @@ public class MemRouter implements Router {
 
     @Override
     public fURI tid() {
-        return new fURI("mem:router");
+        return MEMROUTER_TID;
     }
 
     @Override
