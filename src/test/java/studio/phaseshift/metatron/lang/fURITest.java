@@ -18,7 +18,9 @@
 
 package studio.phaseshift.metatron.lang;
 
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.Test;
+
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -136,5 +138,14 @@ public class fURITest {
         assertFalse(new fURI("a/b/c").matches(new fURI("/a/#")));
         assertFalse(new fURI("a/b/c").matches(new fURI("/#")));
 
+    }
+
+    @Test
+    public void testQuery() {
+        assertEquals(Map.of("a", "1", "b", "2"), fURI.of("http://meta.tron/query?a=1&b=2").query());
+        assertEquals(Map.of("a", "", "b", "2"), fURI.of("http://meta.tron/query?a&b=2").query());
+        assertEquals(Map.of(), fURI.of("http://meta.tron/query").query());
+        assertEquals(Map.of("sub", ""), fURI.of("http://meta.tron/query?sub").query());
+        //  assertEquals(fURI.of("http://meta.tron/query?a=1&b=2"), fURI.of("http://meta.tron/query").query(Map.of("a", "", "b", "2")));
     }
 }

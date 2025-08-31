@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.lang.obj;
 
+import org.javatuples.Pair;
 import org.javatuples.Triplet;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.monoid.SMonoid.Monoid;
@@ -86,9 +87,9 @@ public class SObj implements BObj {
         public boolean equals(final Object other) {
             if (this.isNoObj())
                 return null == other || Obj.of(other).isNoObj();
-            if (null == other)
+            if (null == other || Obj.of(other).isNoObj())
                 return false;
-            return Obj.of(other).value.equals(this.value) && Obj.of(other).type.equals(this.type);
+            return Obj.of(other).value().equals(this.value) && Obj.of(other).tid().equals(this.type);
         }
 
         @Override
@@ -101,18 +102,18 @@ public class SObj implements BObj {
             return this.toString(Palette.STANDARD);
         }
 
-        public static Obj of(final Object value, final fURI type) {
-            Obj o = Obj.of(value);
-            if (type != null)
-                o.type = type;
+        public static BObj.Obj of(final Object value, final fURI type) {
+            BObj.Obj o = SObj.Obj.of(value);
+            if (type != null && o instanceof SObj.Obj) // cause NoObj is a BObj
+                ((Obj) o).type = type;
             return o;
         }
 
-        public static Obj of(final Object value) {
+        public static BObj.Obj of(final Object value) {
             if (null == value)
-                return NoObj.of();
-            else if (value instanceof Obj)
-                return (Obj) value;
+                return BObj.NoObj.of();
+            else if (value instanceof BObj.Obj)
+                return (BObj.Obj) value;
             else if (value instanceof Boolean)
                 return new Bool((Boolean) value);
             else if (value instanceof Integer)
@@ -123,6 +124,8 @@ public class SObj implements BObj {
                 return new Str((String) value);
             else if (value instanceof fURI)
                 return new Uri((fURI) value);
+            else if (value instanceof Pair)
+                return new Rel((Pair<BObj.Obj, BObj.Obj>) value);
             else if (value instanceof List)
                 return new Lst((List) value);
             else if (value instanceof Map)
@@ -137,19 +140,6 @@ public class SObj implements BObj {
                 }
             }
 
-        }
-    }
-
-
-    final public static class NoObj extends Obj {
-        private static final NoObj NOOBJ = new NoObj();
-
-        private NoObj() {
-            super(null, NOOBJ_URI);
-        }
-
-        public static NoObj of() {
-            return NOOBJ;
         }
     }
 
@@ -268,6 +258,21 @@ public class SObj implements BObj {
         }
     }
 
+    public static class Rel extends Obj implements BObj.Rel {
+        public Rel(final Pair<BObj.Obj, BObj.Obj> value) {
+            super(value, fURI.of("rel"));
+        }
+
+        public Rel(final Pair<BObj.Obj, BObj.Obj> value, final fURI type) {
+            super(value, type);
+        }
+
+        @Override
+        public Pair<BObj.Obj, BObj.Obj> value() {
+            return (Pair) this.value;
+        }
+    }
+
     public static class Lst extends Obj implements BObj.Lst {
         public Lst(final List<BObj.Obj> value, final fURI type) {
             super(value, type);
@@ -283,10 +288,11 @@ public class SObj implements BObj {
         }
 
         @Override
-        public Lst apply(final BObj.Obj other) {
-            List<BObj.Obj> list = new ArrayList<>();
-            for (int i = 0; i < this.value().size(); i++) {
-                list.set(i, this.value().get(i).apply(other));
+        public Lst apply(final BObj.Obj lhs) {
+            final int size = this.value().size();
+            List<BObj.Obj> list = new ArrayList<>(size);
+            for (int i = 0; i < size; i++) {
+                list.add(this.value().get(i).apply(lhs));
             }
             return new Lst(list);
         }
@@ -398,7 +404,7 @@ public class SObj implements BObj {
             super(value, type);
         }
 
-        public Inst(final fURI type, final Obj... args) {
+        public Inst(final fURI type, final BObj.Obj... args) {
             super(new Triplet<>(Lst.of(Arrays.asList(args)), null, NoObj.of()), type);
         }
 

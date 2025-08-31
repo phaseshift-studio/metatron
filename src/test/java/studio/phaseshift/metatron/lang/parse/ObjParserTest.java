@@ -18,7 +18,6 @@
 
 package studio.phaseshift.metatron.lang.parse;
 
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.inst.SInst;
@@ -36,9 +35,8 @@ public class ObjParserTest {
     }
 
     @Test
-    @Disabled
     public void testCommentParse() {
-        assertEquals(NoObj.of(), ObjParser.parse("# a comment"));
+        assertEquals(BObj.NoObj.of(), ObjParser.parse("--- a comment"));
     }
 
     @Test
@@ -61,15 +59,14 @@ public class ObjParserTest {
     }
 
     @Test
-    @Disabled
     public void testStrParse() {
-        assertEquals(Str.of("abc"), ObjParser.parse("'abc'"));
-        assertEquals(Str.of("aBc35 4e6"), ObjParser.parse("'aBc35 4e6'"));
+        assertEquals(Str.of("abc").value(), ObjParser.<Obj>parse("'abc'").value());
+        assertEquals(Str.of("aBc35 4e6").value(), ObjParser.<Obj>parse("'aBc35 4e6'").value());
     }
 
     @Test
     public void testUriParse() {
-        // assertEquals(new Uri("http://metatron.com?a=2&b=3"), ObjParser.parse("http://metatron.com?a=2&b=3"));
-        assertEquals(new Uri("http://metatron.com?a&b"), ObjParser.parse("http://metatron.com?a&b"));
+        assertEquals(new Uri("http://metatron.com?a=2&b=3"), ObjParser.parse("<http://metatron.com?a=2&b=3>"));
+        assertEquals(new Uri("http://metatron.com?a&b"), ObjParser.parse("<http://metatron.com?a&b>"));
     }
 }

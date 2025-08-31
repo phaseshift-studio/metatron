@@ -35,8 +35,8 @@ public class BootLoader {
 
     public static void load() {
         LOG.info("booting metatron");
-        MemRouter router = new MemRouter(new fURI("mem:router"));
-        Graphitty.singleton().println("global router at !bmem:router!!");
+        MemRouter router = new MemRouter(new fURI("/sys/router"));
+        LOG.info(Graphitty.parse("!brouter!! located at !y%s!!".formatted(router.tid())));
         GLOBAL_ROUTER = router;
         router.registerStruct(new MemStruct(fURI.of("/mtron/#")));
         router.registerStruct(new MemStruct(fURI.of("+")));

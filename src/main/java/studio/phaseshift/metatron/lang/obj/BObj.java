@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.lang.obj;
 
+import org.javatuples.Pair;
 import org.javatuples.Triplet;
 import org.jline.jansi.Ansi;
 import studio.phaseshift.metatron.lang.fURI;
@@ -49,6 +50,7 @@ public interface BObj extends Cloneable {
     public static final fURI INST_URI = new fURI("inst");
     public static final fURI CODE_URI = new fURI("code");
     public static final fURI OBJS_URI = new fURI("objs");
+    public static final fURI REL_URI = new fURI("rel");
 
 
     interface Obj extends Function<Obj, Obj>, Iterable<Obj>, Cloneable {
@@ -68,11 +70,10 @@ public interface BObj extends Cloneable {
             else if (this instanceof final Inst inst)
                 return ansi()
                         .fg(palette.typeC()).
-                        a(this.tid())
+                        a(inst.tid())
                         .fg(palette.formC())
-                        .a("(")
-                        .fg(palette.valueC())
-                        .a(inst.value().getValue0())
+                        .a(":(")
+                        .a(inst.args())
                         .fg(palette.formC())
                         .a(")[")
                         .fg(palette.valueC())
@@ -81,18 +82,30 @@ public interface BObj extends Cloneable {
                         .a(']')
                         .reset()
                         .toString();
-            else if (this.isLst()) {
+            else if (this instanceof final Rel rel) {
+                return ansi()
+                        .fg(palette.typeC())
+                        .a(rel.tid())
+                        .fg(palette.formC())
+                        .a(":[")
+                        .a(rel.domain())
+                        .fg(palette.formC())
+                        .a("=>")
+                        .a(rel.range())
+                        .fg(palette.formC())
+                        .a(']').reset().toString();
+            } else if (this.isLst()) {
                 Ansi s = ansi()
                         .fg(palette.typeC())
                         .a(this.tid())
                         .fg(palette.formC())
-                        .a('[');
+                        .a(":[");
                 for (int i = 0; i < this.<Lst>as().value().size(); i++) {
                     s = s.a(this.<Lst>as().value().get(i));
                     if (i != this.<Lst>as().value().size() - 1)
                         s = s.fg(palette.formC()).a(',');
                 }
-                return s.fg(palette.formC()).a(']').toString();
+                return s.fg(palette.formC()).a(']').reset().toString();
             } else if (this.isRec()) {
                 Ansi s = ansi()
                         .fg(palette.typeC())
@@ -105,17 +118,15 @@ public interface BObj extends Cloneable {
                     if (i != kv.size() - 1)
                         s = s.fg(palette.formC()).a(',');
                 }
-                return s.fg(palette.formC()).a(']').toString();
+                return s.fg(palette.formC()).a(']').reset().toString();
             } else
                 return ansi()
                         .fg(palette.typeC())
                         .a(this.tid())
                         .fg(palette.formC())
-                        .a('[')
+                        .a(':')
                         .fg(palette.valueC())
                         .a(this.value())
-                        .fg(palette.formC())
-                        .a(']')
                         .fg(palette.form2C())
                         .a(null == this.vid() ? "" : "@")
                         .fg(palette.typeC())
@@ -163,6 +174,10 @@ public interface BObj extends Cloneable {
 
         default boolean isUri() {
             return this instanceof Uri;
+        }
+
+        default boolean isRel() {
+            return this instanceof Rel;
         }
 
         default boolean isLst() {
@@ -233,6 +248,12 @@ public interface BObj extends Cloneable {
             if (this.isRec())
                 return ((Rec) this).value();
             throw new IllegalStateException("obj is not an rec");
+        }
+
+        default Pair<Obj, Obj> relValue() {
+            if (this.isRel())
+                return ((Rel) this).value();
+            throw new IllegalStateException("obj is not an rel");
         }
     }
 
@@ -354,6 +375,39 @@ public interface BObj extends Cloneable {
         }
     }
 
+    interface Rel extends Poly {
+        @Override
+        Pair<Obj, Obj> value();
+
+        @Override
+        default Obj apply(final Obj other) {
+            Obj key = this.value().getValue0();
+            if (key.equals(other))
+                return this.value().getValue1();
+            else
+                return NoObj.of();
+        }
+
+        @Override
+        default long length() {
+            return 2;
+        }
+
+        @Override
+        default Iterator<Obj> iterator() {
+            return (Iterator) this.value().iterator();
+        }
+
+        default Obj domain() {
+            return this.value().getValue0();
+        }
+
+        default Obj range() {
+            return this.value().getValue1();
+        }
+
+    }
+
     interface Lst extends Poly {
         @Override
         List<Obj> value();
@@ -406,7 +460,37 @@ public interface BObj extends Cloneable {
         }
     }
 
-    interface InstF extends BiFunction<Obj, Lst, Obj> {
+    class InstF {
+
+        private final boolean bi;
+        final Object func;
+
+        public InstF(final BiFunction<Obj, Lst, Obj> func) {
+            this.bi = true;
+            this.func = func;
+        }
+
+        public InstF(final Function<Obj, Obj> func) {
+            this.bi = false;
+            this.func = func;
+        }
+
+        public Obj apply(final Obj lhs, final Lst args) {
+            return this.bi ? ((BiFunction<Obj, Lst, Obj>) this.func).apply(lhs, args) : ((Function<Obj, Obj>) this.func).apply(lhs);
+        }
+
+        public Obj apply(final Obj lhs) {
+            return this.bi ? ((BiFunction<Obj, Lst, Obj>) this.func).apply(lhs, new SObj.Lst(List.of())) : ((Function<Obj, Obj>) this.func).apply(lhs);
+        }
+
+        public static InstF of(final BiFunction<Obj, Lst, Obj> func) {
+            return null == func ? null : new InstF(func);
+        }
+
+        public static InstF of(final Function<Obj, Obj> func) {
+            return null == func ? null : new InstF(func);
+        }
+
     }
 
     interface Inst extends Poly {

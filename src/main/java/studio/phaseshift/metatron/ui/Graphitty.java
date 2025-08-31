@@ -19,6 +19,7 @@
 package studio.phaseshift.metatron.ui;
 
 import java.io.BufferedOutputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Objects;
@@ -39,11 +40,20 @@ public class Graphitty {
         return STANDARD;
     }
 
+    public static String parse(final String s) {
+        try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+            new Graphitty(out).parseDSL(s);
+            return out.toString();
+        } catch (final Exception e) {
+            throw new IllegalArgumentException(e);
+        }
+    }
+
     public Graphitty(final OutputStream output) {
         this.printer = new BufferedOutputStream(output);
     }
 
-    private void parse(final String buffer) {
+    private void parseDSL(final String buffer) {
         try {
             final int bufferLength = buffer.length();
             for (int i = 0; i < bufferLength; i++) {
@@ -179,12 +189,12 @@ public class Graphitty {
 
     public void print(final char c) {
         if (this.printerOn)
-            this.parse(Objects.toString(c));
+            this.parseDSL(Objects.toString(c));
     }
 
     public void print(final String c) {
         if (this.printerOn)
-            this.parse(c);
+            this.parseDSL(c);
     }
 
     public void println(final String c) {

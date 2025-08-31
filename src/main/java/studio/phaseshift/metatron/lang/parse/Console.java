@@ -30,8 +30,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.lang.monoid.SMonoid.Monoid;
+import studio.phaseshift.metatron.lang.obj.BObj;
 import studio.phaseshift.metatron.lang.obj.Palette;
-import studio.phaseshift.metatron.lang.obj.SObj.NoObj;
+import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.util.IteratorUtil;
 
 import java.io.BufferedReader;
@@ -47,24 +48,14 @@ public class Console {
     public static String HEADER_FILE = "/ansi_headers.txt";
     public static String HEADER_SEPARATOR = "####################";
     public static Palette PALETTE = Palette.STANDARD;
+    private final Terminal terminal;
+    private final LineReader reader;
 
-    public static void OUTPUT(final Object output) {
-        OUTPUT(output, true);
-    }
-
-    public static void OUTPUT(final Object output, final boolean newLine) {
-        if (newLine)
-            System.out.println(output);
-        else
-            System.out.print(output);
-    }
-
-    public void run() throws IOException {
-        // AnsiConsole.systemInstall();
-        final Terminal terminal = TerminalBuilder.builder().system(true).build();
+    public Console() throws IOException {
+        this.terminal = TerminalBuilder.builder().system(true).build();
         Highlighter highlighter = new DefaultHighlighter() {
             @Override
-            public AttributedString highlight(LineReader reader, String buffer) {
+            public AttributedString highlight(final LineReader reader, final String buffer) {
                 // Create a builder for the highlighted text
                 AttributedStringBuilder builder = new AttributedStringBuilder();
 
@@ -112,7 +103,7 @@ public class Console {
             }
         };
         final History history = new DefaultHistory();
-        final LineReader reader = LineReaderBuilder.builder()
+        this.reader = LineReaderBuilder.builder()
                 .terminal(terminal)
                 .appName("metatron")
                 .history(history)
@@ -120,36 +111,41 @@ public class Console {
                 .variable(LineReader.HISTORY_FILE, Paths.get(".metatron.history"))
                 .option(LineReader.Option.AUTO_FRESH_LINE, true)
                 .build();
+    }
+
+    public void run() throws IOException {
+        // AnsiConsole.systemInstall();
         this.outputHeader();
         BootLoader.load();
         String line = "";
         while (true) {
             try {
-                line = reader.readLine(ansi().fg(PALETTE.form2C()).a("mtron").fg(PALETTE.formC()).a("> ").reset().toString());
+                line = this.reader.readLine(ansi().fg(PALETTE.form2C()).a("mtron").fg(PALETTE.formC()).a("> ").reset().toString());
                 if (line.trim().equals(":quit"))
                     break;
                 else {
                     final Object result = ObjParser.parse(line);
                     if (result instanceof Monoid) {
-                        // OUTPUT(ansi().fg(Color.YELLOW).a("running ").a(result).fg(Color.YELLOW).a(" ...").reset(), true);
-                        IteratorUtil.iterate(IteratorUtil.consume(((Monoid) result).iterator(), n -> OUTPUT(ansi().fg(PALETTE.form2C()).a("==").fg(PALETTE.formC()).a(">").reset().a(n), true)));
-                    } else if (!(result instanceof NoObj)) {
-                        OUTPUT(ansi().fg(PALETTE.form2C()).a("==").fg(PALETTE.formC()).a(">").reset().a(result), true);
+                        IteratorUtil.iterate(IteratorUtil.consume(
+                                ((Monoid) result).iterator(),
+                                n -> this.terminal.writer().println(ansi().fg(PALETTE.form2C()).a("==").fg(PALETTE.formC()).a(">").reset().a(n).toString())));
+                    } else if (!(result instanceof BObj.NoObj)) {
+                        this.terminal.writer().println(ansi().fg(PALETTE.form2C()).a("==").fg(PALETTE.formC()).a(">").reset().a(result).toString());
                     }
                 }
-            } catch (UserInterruptException e) {
-                terminal.writer().println("process interrupted");
-            } catch (EndOfFileException e) {
-                terminal.writer().println("shutting down");
+            } catch (final UserInterruptException e) {
+                this.terminal.writer().println("process interrupted");
+            } catch (final EndOfFileException e) {
+                this.terminal.writer().println("shutting down");
                 break;
             } catch (final Exception e) {
-                LOG.error(ansi().fg(PALETTE.errorC()).a(e.getMessage()).reset().toString());
-                final String stackTrace = reader.readLine(ansi().fg(PALETTE.warnC()).a("display stack trace ").fg(PALETTE.formC()).a("[y/N]").fg(PALETTE.warnC()).a("?").reset().toString());
+                LOG.error(ansi().a(Graphitty.parse(e.getMessage())).reset().toString());
+                final String stackTrace = this.reader.readLine(ansi().fg(PALETTE.warnC()).a("display stack trace ").fg(PALETTE.formC()).a("[y/N]").fg(PALETTE.warnC()).a("? ").reset().toString());
                 if (stackTrace.trim().equalsIgnoreCase("y"))
                     e.printStackTrace();
             }
         }
-        terminal.close();
+        this.terminal.close();
         System.exit(0);
     }
 
@@ -176,15 +172,15 @@ public class Console {
             final String randomHeaderTitle = new ArrayList<>(headers.keySet()).get(new Random().nextInt(headers.size()));
             final String randomHeader = headers.get(randomHeaderTitle);
             if (null == randomHeader) throw new IllegalArgumentException("<unknown header: " + randomHeaderTitle + ">");
-            OUTPUT(randomHeader, false);
+            this.terminal.writer().print(randomHeader);
         } catch (final Exception e) {
-            OUTPUT("...an exception has occurred.");
-            OUTPUT("      ...this doesn't bode well for your time in the meTaRon: " + e);
-            OUTPUT(" __  __  ____  ____   __   ____  ____  _____  _  _ \n" +
+            this.terminal.writer().println("...an exception has occurred.");
+            this.terminal.writer().println("      ...this doesn't bode well for your time in the meTaRon: " + e);
+            this.terminal.writer().println(" __  __  ____  ____   __   ____  ____  _____  _  _ \n" +
                     "(  \\/  )( ___)(_  _) /__\\ (_  _)(  _ \\(  _  )( \\( )\n" +
                     " )    (  )__)   )(  /(__)\\  )(   )   / )(_)(  )  ( \n" +
                     "(_/\\/\\_)(____) (__)(__)(__)(__) (_)\\_)(_____)(_)\\_)");
-            System.out.printf("\t\t\tby PhaseShift Studio (%s)\n", Calendar.getInstance().get(Calendar.YEAR));
+            this.terminal.writer().printf("\t\t\tby PhaseShift Studio (%s)\n", Calendar.getInstance().get(Calendar.YEAR));
         }
     }
 

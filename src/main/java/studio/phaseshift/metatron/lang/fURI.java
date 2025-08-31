@@ -20,10 +20,7 @@ package studio.phaseshift.metatron.lang;
 
 import net.sourceforge.urin.*;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class fURI {
@@ -160,6 +157,26 @@ public class fURI {
             }
         }
         return true;
+    }
+
+    public boolean hasQuery() {
+        return this.urin.hasQuery();
+    }
+
+    public Map<String, String> query() {
+        if (!this.hasQuery())
+            return Map.of();
+        final Map<String, String> q = new HashMap<>();
+        Arrays.stream(this.urin.query().value().split("&")).forEach(kv -> {
+            String[] pairs = kv.split("=");
+            q.put(pairs[0], pairs.length > 1 ? pairs[1] : "");
+        });
+        return q;
+    }
+
+    public fURI query(final Map<String, String> map) {
+        final String queryString = map.entrySet().stream().map(kv -> kv.getValue().isEmpty() ? kv.getKey().toString() : kv.getKey() + "=" + kv.getValue()).reduce("", (a, b) -> a + "&" + b);
+        return new fURI(Scheme.GenericScheme.scheme(this.urin.asUri().getScheme()).relativeReference(this.urin.authority(), AbsolutePath.path(this.urin.path()), Query.query(queryString)));
     }
 
     public boolean matches(final fURI other) {

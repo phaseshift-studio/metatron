@@ -39,20 +39,19 @@ public interface BInst {
             TABLE.put(type, instF);
         }
 
-        public static Inst resolve(final Obj source, final Inst inst) {
-            if (null != inst.function())
-                return inst;
-            final InstF resolvedFunction = TABLE.get(inst.tid());
+        public static Inst resolve(final Obj lhs, final Inst inst) {
+            final InstF resolvedFunction = null == inst.function() ?
+                    TABLE.get(inst.tid()) :
+                    inst.function();
             if (null == resolvedFunction)
                 throw new IllegalArgumentException("unable to resolve %s".formatted(inst));
             final List<Obj> resolvedArgs = new ArrayList<>();
-            // System.out.println(source + "=>" + inst.args());
-            for (Obj arg : inst.args()) {
-                resolvedArgs.add(arg.apply(source));
+            for (final Obj arg : inst.args()) {
+                resolvedArgs.add(arg.apply(lhs));
             }
             return inst.clone(new Triplet<>(new SObj.Lst(resolvedArgs),
                     resolvedFunction,
-                    inst.value().getValue2()));
+                    inst.seed()));
         }
 
     }

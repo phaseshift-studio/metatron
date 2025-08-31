@@ -20,12 +20,14 @@ package studio.phaseshift.metatron.lang.inst;
 
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.BObj;
+import studio.phaseshift.metatron.lang.obj.BObj.InstF;
 import studio.phaseshift.metatron.lang.obj.SObj;
 import studio.phaseshift.metatron.struct.Router;
 import studio.phaseshift.metatron.ui.ProgressBar;
 
 public final class SInst {
     public static final fURI START_URI = new fURI("start");
+    public static final fURI IDENTITY_URI = new fURI("identity");
     public static final fURI APPLY_URI = new fURI("apply");
     public static final fURI PLUS_URI = new fURI("plus");
     public static final fURI MULT_URI = new fURI("mult");
@@ -34,10 +36,11 @@ public final class SInst {
     public static final fURI FROM_URI = new fURI("from");
 
     public static void load() {
-        ProgressBar pg = new ProgressBar(6);
-        BInst.SymbolTable.load(pg.incr(START_URI), (lhs, args) -> args.value().get(0));
-        BInst.SymbolTable.load(pg.incr(APPLY_URI), (lhs, args) -> args.value().get(0).apply(lhs));
-        BInst.SymbolTable.load(pg.incr(PLUS_URI), (lhs, args) -> {
+        ProgressBar pg = new ProgressBar(7);
+        BInst.SymbolTable.load(pg.incr(START_URI), InstF.of((lhs, args) -> args.value().get(0)));
+        BInst.SymbolTable.load(pg.incr(IDENTITY_URI), InstF.of(lhs -> lhs));
+        BInst.SymbolTable.load(pg.incr(APPLY_URI), InstF.of((lhs, args) -> args.value().get(0).apply(lhs)));
+        BInst.SymbolTable.load(pg.incr(PLUS_URI), InstF.of((lhs, args) -> {
             if (lhs.isInt() && args.value().get(0).isInt())
                 return new SObj.Int(lhs.intValue() + args.value().get(0).intValue(), lhs.tid());
             else if (lhs.isUri() && args.value().get(0).isUri())
@@ -45,21 +48,21 @@ public final class SInst {
             else
                 throw new IllegalStateException("the operands do not support addition: %s + %s".formatted(lhs, args.value().get(0)));
 
-        });
-        BInst.SymbolTable.load(pg.incr(MULT_URI), (lhs, args) -> {
+        }));
+        BInst.SymbolTable.load(pg.incr(MULT_URI), InstF.of((lhs, args) -> {
             if (lhs.isInt() && args.value().get(0).isInt())
                 return SObj.Int.of(lhs.intValue() * args.value().get(0).intValue());
             else
                 throw new IllegalStateException("the operands do not support multiplication");
 
-        });
-        BInst.SymbolTable.load(pg.incr(TO_URI), (lhs, args) -> {
+        }));
+        BInst.SymbolTable.load(pg.incr(TO_URI), InstF.of((lhs, args) -> {
             Router.global().write(args.value().get(0).uriValue(), lhs);
             return lhs;
-        });
-        BInst.SymbolTable.load(pg.incr(FROM_URI), (lhs, args) -> {
+        }));
+        BInst.SymbolTable.load(pg.incr(FROM_URI), InstF.of((lhs, args) -> {
             final BObj.Obj read = Router.global().read(args.value().get(0).uriValue());
             return read;
-        });
+        }));
     }
 }
