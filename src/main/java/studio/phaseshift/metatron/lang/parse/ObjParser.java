@@ -42,8 +42,7 @@ import static org.petitparser.parser.primitive.CharacterParser.letter;
 import static org.petitparser.parser.primitive.CharacterParser.of;
 import static org.petitparser.parser.primitive.CharacterParser.word;
 import static org.petitparser.parser.primitive.StringParser.of;
-import static studio.phaseshift.metatron.lang.inst.SInst.IDENTITY_URI;
-import static studio.phaseshift.metatron.lang.inst.SInst.START_URI;
+import static studio.phaseshift.metatron.lang.inst.SInst.*;
 import static studio.phaseshift.metatron.lang.obj.SObj.*;
 
 public class ObjParser {
@@ -70,9 +69,7 @@ public class ObjParser {
                 m_code(),
                 m_objs(),
                 // m_rec(),
-
                 m_inst(),
-                //m_typed(m_func()),
                 m_lst(),
                 m_uri()));
         obj_no_code_parser.set(new ChoiceParser(
@@ -87,19 +84,6 @@ public class ObjParser {
                 // m_rec(),
                 m_lst(),
                 m_uri()));
-        func_parser.set(new SequenceParser(m_obj(), of("=>").trim(), m_obj())
-                .map(t -> {
-                    //System.out.println(t);
-
-                    return new SObj.Rec((Map) ((List) t).stream()
-                            .filter(o -> o instanceof List)
-                            .flatMap(o -> ((List) o).stream())
-                            .filter(o -> o instanceof List)
-                            .reduce(new LinkedHashMap<>(), (a, b) -> {
-                                ((Map) a).put(((List) b).get(0), ((List) b).get(2));
-                                return a;
-                            }));
-                }));
         lst_parser.set(seq(m_type_prefix_opt_colon(LST_URI), seq(of('[').trim(), m_obj().separatedBy(of(',').trim()), of(']').trim()).pick(1))
                 .map(t -> new SObj.Lst(ObjParser.<List>pick(t, 1).stream().filter(o -> o instanceof BObj.Obj).toList(), pick(t, 0))));
         rec_parser.set(new SequenceParser(of('[').trim(), new SequenceParser(m_obj(), of("=>").trim(), m_obj()).separatedBy(of(',').trim()), of(']').trim())
@@ -154,11 +138,7 @@ public class ObjParser {
     }
 
     public static Parser m_furi(final String moreChars) {
-        return new SequenceParser(letter().or(anyOf("/%!#" + moreChars)), word().or(anyOf("=?@+/.&%!#" + moreChars)).star()).flatten().map(t -> new fURI(t.toString()));
-    }
-
-    public static Parser m_func() {
-        return func_parser;
+        return seq(letter().or(anyOf("/%!#" + moreChars)), word().or(anyOf("=?@+/.&%!#" + moreChars)).star()).flatten().map(t -> new fURI(t.toString()));
     }
 
     public static Parser m_obj() {
@@ -248,6 +228,10 @@ public class ObjParser {
 
     public static Parser sugar_identity() {
         return of('_').map(t -> IDENTITY_INST);
+    }
+
+    public static Parser sugar_plus() {
+        return seq(of('+').trim(), m_obj()).map(t -> new SObj.Inst(PLUS_URI, pick(t, 1)));
     }
 
     /// //////////////////////////////////////////////////////////////////////////////////////////
