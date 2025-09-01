@@ -41,13 +41,13 @@ public interface BInst {
         }
 
         public static Inst resolve(final Obj lhs, final Inst inst) {
-            final InstF resolvedFunction = null == inst.function() ?
+            final InstF resolvedFunction = null == inst.f() ?
                     TABLE.get(inst.tid()) :
-                    inst.function();
+                    inst.f();
             if (null == resolvedFunction)
                 throw new IllegalArgumentException("unable to resolve %s".formatted(inst));
             final List<Obj> resolvedArgs = new ArrayList<>();
-            final boolean blocking = inst.tid().equals(BLOCK_URI);
+            final boolean blocking = inst.isBlocking();
             for (final Obj arg : inst.args()) {
                 resolvedArgs.add(blocking ? arg : arg.apply(lhs));
             }

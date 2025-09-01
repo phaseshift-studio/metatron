@@ -27,6 +27,7 @@ import studio.phaseshift.metatron.ui.ProgressBar;
 
 public final class SInst {
     public static final fURI START_URI = new fURI("start");
+    public static final fURI EXPLAIN_URI = new fURI("explain");
     public static final fURI BLOCK_URI = new fURI("block");
     public static final fURI IDENTITY_URI = new fURI("identity");
     public static final fURI APPLY_URI = new fURI("apply");
@@ -36,11 +37,13 @@ public final class SInst {
     //public static final fURI SPLIT_URI = new fURI("split");
     public static final fURI TO_URI = new fURI("to");
     public static final fURI FROM_URI = new fURI("from");
+    public static final fURI REF_URI = new fURI("ref");
     public static final fURI TYPE_URI = new fURI("type");
 
     public static void load() {
         ProgressBar pg = new ProgressBar(7);
         BInst.SymbolTable.load(pg.incr(START_URI), InstF.of((lhs, args) -> args.value().get(0)));
+        BInst.SymbolTable.load(pg.incr(EXPLAIN_URI), InstF.of((lhs,args) -> BObj.NoObj.of()));
         BInst.SymbolTable.load(pg.incr(BLOCK_URI), InstF.of((lhs, args) -> args.value().get(0)));
         BInst.SymbolTable.load(pg.incr(IDENTITY_URI), InstF.of(lhs -> lhs));
         BInst.SymbolTable.load(pg.incr(APPLY_URI), InstF.of((lhs, args) -> args.value().get(0).apply(lhs)));
@@ -60,6 +63,10 @@ public final class SInst {
             else
                 throw new IllegalStateException("the operands do not support multiplication");
 
+        }));
+        BInst.SymbolTable.load(pg.incr(REF_URI), InstF.of((lhs, args) -> {
+            Router.global().write(lhs.uriValue(), args.value().get(0));
+            return lhs;
         }));
         BInst.SymbolTable.load(pg.incr(TO_URI), InstF.of((lhs, args) -> {
             Router.global().write(args.value().get(0).uriValue(), lhs);

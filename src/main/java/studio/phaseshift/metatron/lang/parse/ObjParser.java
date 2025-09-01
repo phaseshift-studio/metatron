@@ -206,7 +206,7 @@ public class ObjParser {
     }
 
     public static Parser m_inst() {
-        return sugar_identity().or(sugar_plus(), sugar_from(), inst_parser);
+        return sugar_identity().or(sugar_block(), sugar_plus(), sugar_from(), inst_parser);
     }
 
     public static Parser m_eval() {
@@ -237,6 +237,10 @@ public class ObjParser {
 
     public static Parser sugar_plus() {
         return seq(of('+').trim(), m_obj()).map(t -> new SObj.Inst(PLUS_URI, ObjParser.<BObj.Obj>pick(t, 1)));
+    }
+
+    public static Parser sugar_block() {
+        return seq(of('|').trim(), m_obj()).map(t -> new SObj.Inst(BLOCK_URI, ObjParser.<BObj.Obj>pick(t, 1)));
     }
 
     /// //////////////////////////////////////////////////////////////////////////////////////////

@@ -48,12 +48,12 @@ public class MemRouter implements Router {
 
     public void registerStruct(final Struct struct) {
         this.routes.entrySet().stream()
-                .filter(kv -> struct.vid().matches(kv.getKey()))
+                .filter(kv -> struct.pattern().matches(kv.getKey()))
                 .findAny()
                 .ifPresent(x -> {
                     throw new IllegalStateException("existing pattern for: " + x.getValue());
                 });
-        this.routes.put(struct.vid(), struct);
+        this.routes.put(struct.pattern(), struct);
     }
 
     public Struct getStruct(final fURI pattern) {
@@ -61,7 +61,7 @@ public class MemRouter implements Router {
                 .filter(kv -> pattern.matches(kv.getKey()))
                 .findAny()
                 .map(Map.Entry::getValue)
-                .orElseThrow(() -> new IllegalStateException("unknown"));
+                .orElseThrow(() -> new IllegalStateException("no structure supports pattern %s".formatted(pattern.toUri(true))));
     }
 
     @Override

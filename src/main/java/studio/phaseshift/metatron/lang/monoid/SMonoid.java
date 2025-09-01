@@ -19,6 +19,7 @@
 package studio.phaseshift.metatron.lang.monoid;
 
 import org.jline.jansi.Ansi.Color;
+import studio.phaseshift.metatron.lang.monoid.rewrite.decoration.ExplainRewrite;
 import studio.phaseshift.metatron.lang.obj.BObj;
 import studio.phaseshift.metatron.lang.obj.BObj.Code;
 import studio.phaseshift.metatron.lang.obj.BObj.Inst;
@@ -26,12 +27,7 @@ import studio.phaseshift.metatron.lang.obj.BObj.NoObj;
 import studio.phaseshift.metatron.lang.obj.BObj.Obj;
 import studio.phaseshift.metatron.util.IteratorUtil;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Queue;
+import java.util.*;
 
 import static org.jline.jansi.Ansi.ansi;
 
@@ -105,7 +101,7 @@ public class SMonoid {
                             this->processor_ -> barriers_ -> front()->obj -> objs_value()->size(), "SIGNATURE HERE"));
                 }
             } else {*/
-          //  System.out.println("evaluating " + this + "---" + inst);
+            //  System.out.println("evaluating " + this + "---" + inst);
             this.range_loop(inst.apply(this.obj), inst);
             //}
         }
@@ -207,7 +203,7 @@ public class SMonoid {
                     this.halted.add(code);
                 }
             } else {
-                this.code = code.<Code>as();
+                this.code = new ExplainRewrite().rewrite(code.<Code>as());
                 // process bcode inst pipeline
                 //this.code = Rewriter({Rewriter::by(), Rewriter::explain()}).apply(this.code);
                 // setup global behavior around barriers, initials, and terminals

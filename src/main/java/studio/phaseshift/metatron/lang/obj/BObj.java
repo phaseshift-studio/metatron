@@ -35,6 +35,7 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 
 import static org.jline.jansi.Ansi.ansi;
+import static studio.phaseshift.metatron.lang.inst.SInst.BLOCK_URI;
 
 public interface BObj extends Cloneable {
 
@@ -68,23 +69,27 @@ public interface BObj extends Cloneable {
         default String toString(final Palette palette) {
             if (this.isNoObj())
                 return ansi().fg(palette.typeC()).a("noobj").reset().toString();
-            else if (this instanceof final Inst inst)
-                return ansi()
+            else if (this instanceof final Inst inst) {
+                Ansi s = ansi()
                         .fg(palette.typeC()).
                         a(MTRON_CORE_TYPES.contains(inst.tid()) ? "" : inst.tid())
                         .fg(palette.formC())
                         .a(MTRON_CORE_TYPES.contains(inst.tid()) ? "" : ':')
-                        .a("(")
-                        .a(inst.args())
-                        .fg(palette.formC())
+                        .a("(");
+                for (int i = 0; i < inst.args().length(); i++) {
+                    s = s.a(inst.args().lstValue().get(i));
+                    if (i != inst.args().length() - 1)
+                        s = s.fg(palette.formC()).a(',');
+                }
+                return s.fg(palette.formC())
                         .a(")[")
                         .fg(palette.valueC())
-                        .a(ObjUtil.isLambda(inst.value().getValue1()) ? "λ" : inst.value().getValue1())
+                        .a(inst.resolved() ? ObjUtil.isLambda(inst.f()) ? "λ" : inst.f() : "?")
                         .fg(palette.formC())
                         .a(']')
                         .reset()
                         .toString();
-            else if (this instanceof final Rel rel) {
+            } else if (this instanceof final Rel rel) {
                 return ansi()
                         .fg(palette.typeC())
                         .a(MTRON_CORE_TYPES.contains(rel.tid()) ? "" : rel.tid())
@@ -446,6 +451,10 @@ public interface BObj extends Cloneable {
             return this.value().size();
         }
 
+        default Obj get(final int index) {
+            return this.value().get(index);
+        }
+
         @Override
         default Lst append(final Obj... obj) {
             final List<Obj> l = new ArrayList<>(this.value());
@@ -540,18 +549,27 @@ public interface BObj extends Cloneable {
             return this.value().getValue2();
         }
 
-        default InstF function() {
+        default InstF f() {
             return this.value().getValue1();
+        }
+
+        default boolean resolved() {
+            return null != this.f();
         }
 
         @Override
         default Obj apply(final Obj lhs) {
-            final List<Obj> computedArgs = new ArrayList<>((int) this.args().length());
+            /*final List<Obj> computedArgs = new ArrayList<>((int) this.args().length());
             for (final Obj arg : this.args()) {
                 computedArgs.add(arg.apply(lhs));
+            }*/
+            final Inst resolvedInst = BInst.SymbolTable.resolve(lhs, this);
+            if (resolvedInst.isBlocking())
+                return resolvedInst.args(0);
+            else {
+                final InstF instF = null == this.f() ? resolvedInst.f() : this.f();
+                return SObj.Obj.of(instF.apply(lhs, (Lst) resolvedInst.args()));
             }
-            final InstF instF = null == this.function() ? BInst.SymbolTable.resolve(lhs, this).function() : this.function();
-            return SObj.Obj.of(instF.apply(lhs, new SObj.Lst(computedArgs)));
         }
 
         //Inst nextInst();
@@ -564,6 +582,10 @@ public interface BObj extends Cloneable {
         @Override
         default Iterator<Obj> iterator() {
             return this.isNoObj() ? IteratorUtil.of() : (Iterator) this.value().iterator();
+        }
+
+        default boolean isBlocking() {
+            return this.tid().equals(BLOCK_URI);
         }
 
         default boolean isInitial() {
