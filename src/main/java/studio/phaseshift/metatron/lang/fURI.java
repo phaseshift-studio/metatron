@@ -52,7 +52,7 @@ public class fURI {
                 this.urin = Scheme.scheme("m").parseUrinReference(uri);
             }
         } catch (final ParseException e) {
-            throw new IllegalArgumentException(e.getMessage(), e);
+            throw new IllegalArgumentException("%s problem".formatted(uri), e);
         }
     }
 
@@ -104,6 +104,15 @@ public class fURI {
 
     public String hostOrSegment() {
         return this.urin.hasAuthority() ? this.urin.asUri().getAuthority() : this.urin.path().segments().get(0).value();
+    }
+
+    public String host() {
+        return this.urin.asUri().getHost();
+    }
+
+    public int port(final int orElse) {
+        final int port = this.urin.asUri().getPort();
+        return -1 == port ? orElse : port;
     }
 
     public boolean isAbsolute() {

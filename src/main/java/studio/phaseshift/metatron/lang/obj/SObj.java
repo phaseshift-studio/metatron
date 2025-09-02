@@ -29,29 +29,35 @@ import java.util.*;
 public class SObj implements BObj {
 
     public static class Obj implements BObj.Obj, Cloneable {
-        Object value;
-        fURI type;
-        fURI id;
+        protected Object value;
+        protected fURI tid;
+        protected fURI vid;
 
-        public Obj(final Object value, final fURI type) {
+        public Obj(final Object value, final fURI tid, final fURI vid) {
+            if (null == tid)
+                throw new IllegalArgumentException("every obj must have a type id (tid)");
             if (value instanceof Obj)
                 throw new IllegalArgumentException("an obj can not have an obj as a base value");
+            this.tid = tid;
             this.value = value;
-            this.type = type;
-            this.id = null;
+            this.vid = vid;
+        }
+
+        public Obj(final Object value, final fURI tid) {
+            this(value, tid, null);
         }
 
         @Override
         public fURI vid() {
-            return this.id;
+            return this.vid;
         }
 
         @Override
         public Obj vid(final fURI id) {
-            if (this.id == id)
+            if (this.vid == id)
                 return this;
             Obj clone = this.clone();
-            clone.id = id;
+            clone.vid = id;
             return clone;
         }
 
@@ -74,7 +80,7 @@ public class SObj implements BObj {
 
         @Override
         public fURI tid() {
-            return this.type;
+            return this.tid;
         }
 
         @Override
@@ -88,12 +94,12 @@ public class SObj implements BObj {
                 return null == other || Obj.of(other).isNoObj();
             if (null == other || Obj.of(other).isNoObj())
                 return false;
-            return Obj.of(other).value().equals(this.value) && Obj.of(other).tid().equals(this.type);
+            return Obj.of(other).value().equals(this.value) && Obj.of(other).tid().equals(this.tid);
         }
 
         @Override
         public int hashCode() {
-            return Objects.hashCode(this.value) + Objects.hashCode(this.type);
+            return Objects.hashCode(this.value) + Objects.hashCode(this.tid);
         }
 
         @Override
@@ -104,7 +110,7 @@ public class SObj implements BObj {
         public static BObj.Obj of(final Object value, final fURI type) {
             BObj.Obj o = SObj.Obj.of(value);
             if (type != null && o instanceof SObj.Obj) // cause NoObj is a BObj
-                ((Obj) o).type = type;
+                ((Obj) o).tid = type;
             return o;
         }
 
@@ -205,12 +211,16 @@ public class SObj implements BObj {
 
     public static class Str extends Obj implements BObj.Str {
 
-        public Str(final String value, final fURI type) {
-            super(value, type);
+        public Str(final String value, final fURI tid, final fURI vid) {
+            super(value, tid, vid);
+        }
+
+        public Str(final String value, final fURI tid) {
+            super(value, tid, null);
         }
 
         public Str(final String value) {
-            super(value, STR_URI);
+            super(value, STR_URI, null);
         }
 
         public String value() {
@@ -274,7 +284,7 @@ public class SObj implements BObj {
         @Override
         public boolean equals(final Object other) {
             if (other instanceof final BObj.Rel rel)
-                return this.type.equals(rel.tid()) && this.domain().equals(rel.domain()) && this.range().equals(rel.range());
+                return this.tid.equals(rel.tid()) && this.domain().equals(rel.domain()) && this.range().equals(rel.range());
             return false;
         }
     }
@@ -328,6 +338,10 @@ public class SObj implements BObj {
     }
 
     public static class Rec extends Obj implements BObj.Rec {
+
+        public Rec(final Map<BObj.Obj, BObj.Obj> value, final fURI type, final fURI vid) {
+            super(value, type, vid);
+        }
 
         public Rec(final Map<BObj.Obj, BObj.Obj> value, final fURI type) {
             super(value, type);

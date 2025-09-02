@@ -139,7 +139,7 @@ public class ObjParser {
     }
 
     public static Parser m_furi(final String moreChars) {
-        return seq(letter().or(anyOf("/%!#" + moreChars)), word().or(seq(of("=>").not(), anyOf("=?@+/.&%!#" + moreChars))).star()).flatten().map(t -> new fURI(t.toString()));
+        return seq(letter().or(anyOf("/%!#_" + moreChars)), word().or(seq(of("=>").not(), anyOf("=?@+/.&%!#_" + moreChars))).star()).flatten().map(t -> new fURI(t.toString()));
     }
 
     public static Parser m_obj() {

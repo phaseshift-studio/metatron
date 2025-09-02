@@ -27,10 +27,12 @@ import studio.phaseshift.metatron.struct.Router;
 import studio.phaseshift.metatron.struct.Struct;
 import studio.phaseshift.metatron.struct.mem.MemRouter;
 import studio.phaseshift.metatron.struct.mem.MemStruct;
+import studio.phaseshift.metatron.struct.mqtt.MqttStruct;
 import studio.phaseshift.metatron.ui.Graphitty;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.Map;
 
 public class BootLoader {
 
@@ -53,6 +55,7 @@ public class BootLoader {
         router.registerStruct(sys);
         router.registerStruct(new MemStruct(fURI.of("/mtron/#"), fURI.of("/mnt/lang/mtron")));
         router.registerStruct(new MemStruct(fURI.of("+"), fURI.of("/sys/stack")));
+        router.registerStruct(new MqttStruct(new SObj.Rec(Map.of(SObj.Uri.of("broker"), SObj.Uri.of("ip://192.168.66.2:1883"), SObj.Uri.of("pattern"), SObj.Uri.of("homeassistant/#"))), fURI.of("/mnt/mqtt")));
         SInst.load();
     }
 }

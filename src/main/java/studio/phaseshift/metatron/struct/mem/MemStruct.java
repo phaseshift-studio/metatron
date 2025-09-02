@@ -21,6 +21,7 @@ package studio.phaseshift.metatron.struct.mem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import studio.phaseshift.metatron.lang.fURI;
+import studio.phaseshift.metatron.lang.obj.BObj;
 import studio.phaseshift.metatron.lang.obj.Palette;
 import studio.phaseshift.metatron.lang.obj.SObj;
 import studio.phaseshift.metatron.struct.Struct;
@@ -35,17 +36,17 @@ import java.util.Objects;
 import static studio.phaseshift.metatron.lang.obj.BObj.Obj;
 import static studio.phaseshift.metatron.lang.obj.BObj.Poly;
 
-public class MemStruct implements Struct {
+public class MemStruct extends SObj.Rec implements Struct {
     private static final Logger LOG = LoggerFactory.getLogger(MemStruct.class);
     public static final fURI MEMSTRUCT_TID = fURI.of("struct:/mtron/mem");
     private final fURI pattern;
 
-    fURI vid;
     final Map<fURI, Obj> store = new HashMap<>();
 
     public MemStruct(final fURI pattern, final fURI vid) {
+        super(Map.of(), MEMSTRUCT_TID, vid);
         this.pattern = pattern;
-        this.vid = vid;
+        // this.config = config;
         LOG.info(Graphitty.parse("%s loaded at %s !g[!yaddr!g=>!!%s!g]!!".formatted(tid().toUri(true), SObj.Uri.of(this.vid), SObj.Uri.of(this.pattern))));
     }
 
@@ -65,8 +66,8 @@ public class MemStruct implements Struct {
     }
 
     @Override
-    public Map<fURI, Obj> value() {
-        return this.store;
+    public Map<Obj, Obj> value() {
+        return Map.of();
     }
 
     @Override
@@ -74,31 +75,6 @@ public class MemStruct implements Struct {
         return this.pattern;
     }
 
-    @Override
-    public fURI tid() {
-        return MEMSTRUCT_TID;
-    }
-
-    @Override
-    public fURI vid() {
-        return this.vid;
-    }
-
-    @Override
-    public Obj vid(fURI furi) {
-        this.vid = furi;
-        return this;
-    }
-
-    @Override
-    public MemStruct clone() {
-        return this;
-    }
-
-    @Override
-    public <O extends Obj> O clone(Object value) {
-        return (O) this;
-    }
 
     @Override
     public Obj read(final fURI addr) {

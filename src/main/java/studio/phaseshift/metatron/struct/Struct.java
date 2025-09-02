@@ -31,7 +31,7 @@ import static studio.phaseshift.metatron.lang.obj.BObj.Poly;
 public interface Struct extends Poly {
 
     @Override
-    Map<fURI, Obj> value();
+    Map<Obj, Obj> value();
 
     fURI pattern();
 
@@ -42,16 +42,16 @@ public interface Struct extends Poly {
     void append(final fURI addr, final Obj... obj);
 
     @Override
-    default long length() {
-        return this.value().size();
-    }
-
-    @Override
-    default Iterator<Obj> iterator() {
-        return this.value().entrySet().stream().map(kv -> kv.getValue().vid(kv.getKey())).iterator();
+    default Obj vid(final fURI vid) {
+        throw new IllegalStateException("structs must umount to change value id (vid)");
     }
 
     default String toString(final Palette palette) {
         return Graphitty.parse("!b%s!g:[!ypattern!g=>!y%s!g]!!".formatted(this.tid().toString(), this.pattern().toString()));
+    }
+
+    @Override
+    default Obj clone() {
+        throw new IllegalStateException(new CloneNotSupportedException("structs can not be cloned"));
     }
 }

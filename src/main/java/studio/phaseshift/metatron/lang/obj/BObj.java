@@ -161,6 +161,16 @@ public interface BObj extends Cloneable {
             return this.isObjs() ? ((Iterable<Obj>) this.value()).iterator() : IteratorUtil.of(this);
         }
 
+        default <O extends Obj> O orElse(final O other) {
+            return this.isNoObj() ? other : (O) this;
+        }
+
+        default <O extends Obj> O orElseThrow(final RuntimeException e) {
+            if (this.isNoObj())
+                throw e;
+            return (O) this;
+        }
+
         default <O extends Obj> O as() {
             return (O) this;
         }
@@ -474,6 +484,10 @@ public interface BObj extends Cloneable {
 
         @Override
         Rec apply(final Obj other);
+
+        default <O extends Obj> O get(final Obj key) {
+            return (O) this.value().getOrDefault(key, NoObj.of());
+        }
 
         @Override
         default long length() {
