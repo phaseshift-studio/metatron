@@ -132,9 +132,9 @@ public interface BObj extends Cloneable {
             return this instanceof Lst;
         }
 
-        default boolean isRec() {
+      /*  default boolean isRec() {
             return this instanceof Rec;
-        }
+        }*/
 
         default boolean isInst() {
             return this instanceof Inst;
@@ -192,11 +192,11 @@ public interface BObj extends Cloneable {
             throw new IllegalStateException("obj is not an lst");
         }
 
-        default Map<Obj, Obj> recValue() {
+    /*    default Map<Obj, Obj> recValue() {
             if (this.isRec())
                 return ((Rec) this).value();
             throw new IllegalStateException("obj is not an rec");
-        }
+        }*/
 
         default Pair<Obj, Obj> relValue() {
             if (this.isRel())
@@ -332,7 +332,7 @@ public interface BObj extends Cloneable {
             if (lhs instanceof final Rel rel)
                 return rel.apply(this);
             else if (lhs instanceof final Lst l) {
-                return new SObj.Lst(l.value().stream().map(this::apply).toList(), lhs.tid());
+                return new SObj.Lst(l.value().stream().map(this::apply).toList(), lhs.tid(), null);
             } else {
                 return this;
                 //return lhs.matches(this) ? lhs : NoObj.of();
@@ -394,7 +394,7 @@ public interface BObj extends Cloneable {
         default Lst append(final Obj... obj) {
             final List<Obj> l = new ArrayList<>(this.value());
             Collections.addAll(l, obj);
-            return new SObj.Lst(l, this.tid());
+            return new SObj.Lst(l, this.tid(), null);
         }
 
         @Override
@@ -403,7 +403,7 @@ public interface BObj extends Cloneable {
         }
     }
 
-    interface Rec extends Poly {
+   /* interface Rec extends Poly {
         @Override
         Map<Obj, Obj> value();
 
@@ -430,9 +430,9 @@ public interface BObj extends Cloneable {
 
         @Override
         default Iterator<Obj> iterator() {
-            return this.value().entrySet().stream().map(kv -> (Obj) new SObj.Lst(List.of(kv.getKey(), kv.getValue()))).iterator();
+            return this.value().entrySet().stream().map(kv -> SObj.Lst.of(List.of(kv.getKey(), kv.getValue()))).iterator();
         }
-    }
+    }*/
 
     class InstF {
 
@@ -454,7 +454,7 @@ public interface BObj extends Cloneable {
         }
 
         public Obj apply(final Obj lhs) {
-            return this.bi ? ((BiFunction<Obj, Lst, Obj>) this.func).apply(lhs, new SObj.Lst(List.of())) : ((Function<Obj, Obj>) this.func).apply(lhs);
+            return this.bi ? ((BiFunction<Obj, Lst, Obj>) this.func).apply(lhs, new SObj.Lst(List.of(), LST_URI, null)) : ((Function<Obj, Obj>) this.func).apply(lhs);
         }
 
         public static InstF of(final BiFunction<Obj, Lst, Obj> func) {

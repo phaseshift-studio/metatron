@@ -23,6 +23,8 @@ import studio.phaseshift.metatron.lang.obj.SObj;
 
 import java.util.*;
 
+import static studio.phaseshift.metatron.lang.obj.BObj.URI_URI;
+
 public class fURI {
 
     private final String host;
@@ -100,7 +102,9 @@ public class fURI {
 
     public BObj.Uri toUri(final boolean schemaType) {
         final String scheme = this.scheme();
-        return schemaType && null != scheme ? new SObj.Uri(this.scheme(null), fURI.of(scheme)) : new SObj.Uri(this);
+        return schemaType && null != scheme ?
+                new SObj.Uri(this.scheme(null), fURI.of(scheme), null) :
+                new SObj.Uri(this, URI_URI, null);
     }
 
     public fURI scheme(final String scheme) {

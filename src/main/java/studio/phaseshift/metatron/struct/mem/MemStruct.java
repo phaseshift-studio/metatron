@@ -21,22 +21,17 @@ package studio.phaseshift.metatron.struct.mem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import studio.phaseshift.metatron.lang.fURI;
-import studio.phaseshift.metatron.lang.obj.BObj;
 import studio.phaseshift.metatron.lang.obj.Palette;
 import studio.phaseshift.metatron.lang.obj.SObj;
 import studio.phaseshift.metatron.struct.Struct;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.util.ObjUtil;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
-import static studio.phaseshift.metatron.lang.obj.BObj.Obj;
-import static studio.phaseshift.metatron.lang.obj.BObj.Poly;
+import static studio.phaseshift.metatron.lang.obj.BObj.*;
 
-public class MemStruct extends SObj.Rec implements Struct {
+public class MemStruct extends SObj.Obj implements Struct {
     private static final Logger LOG = LoggerFactory.getLogger(MemStruct.class);
     public static final fURI MEMSTRUCT_TID = fURI.of("struct:/mtron/mem");
     private final fURI pattern;
@@ -47,7 +42,7 @@ public class MemStruct extends SObj.Rec implements Struct {
         super(Map.of(), MEMSTRUCT_TID, vid);
         this.pattern = pattern;
         // this.config = config;
-        LOG.info(Graphitty.global().parse("%s loaded at %s !g[!yaddr!g=>!!%s!g]!!\n".formatted(tid().toUri(true), SObj.Uri.of(this.vid), SObj.Uri.of(this.pattern))));
+        LOG.info(Graphitty.string("%s loaded at %s !g[!yaddr!g=>!!%s!g]!!\n".formatted(tid().toUri(true), SObj.Uri.of(this.vid), SObj.Uri.of(this.pattern))));
     }
 
     @Override
@@ -98,7 +93,7 @@ public class MemStruct extends SObj.Rec implements Struct {
     public void append(final fURI addr, final Obj... obj) {
         Obj poly = this.store.get(addr);
         if (null == poly || poly.isMono())
-            this.store.put(addr, new SObj.Objs(Arrays.asList(obj)));
+            this.store.put(addr, new SObj.Objs(Arrays.asList(obj), OBJS_URI, null));
         else {
             Poly ppoly = (Poly) poly;
             ppoly.append(obj);
@@ -106,4 +101,13 @@ public class MemStruct extends SObj.Rec implements Struct {
     }
 
 
+    @Override
+    public long length() {
+        return 0;
+    }
+
+    @Override
+    public Iterator<Obj> iterator() {
+        return null;
+    }
 }

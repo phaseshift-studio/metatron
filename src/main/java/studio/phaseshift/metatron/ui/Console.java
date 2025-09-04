@@ -139,8 +139,7 @@ public class Console {
                 this.terminal.writer().println("shutting down");
                 break;
             } catch (final Exception e) {
-                e.printStackTrace();
-                LOG.error(ansi().a(Graphitty.global().parse(e.getMessage())).reset().toString());
+                LOG.error("{}", ansi().a(e.getMessage()).reset().toString());
                 final String stackTrace = this.reader.readLine(ansi().fg(PALETTE.warnC()).a("display stack trace ").fg(PALETTE.formC()).a("[y/N]").fg(PALETTE.warnC()).a("? ").reset().toString());
                 if (stackTrace.trim().equalsIgnoreCase("y"))
                     e.printStackTrace();

@@ -24,9 +24,7 @@ import studio.phaseshift.metatron.lang.obj.BObj;
 import studio.phaseshift.metatron.lang.obj.Palette;
 import studio.phaseshift.metatron.ui.Graphitty;
 
-import static studio.phaseshift.metatron.lang.obj.BObj.Rec;
-
-public interface Router extends Rec {
+public interface Router extends BObj.Obj {
 
     fURI ROUTER_TID = fURI.of("router");
 
@@ -46,6 +44,6 @@ public interface Router extends Rec {
     void registerStruct(final Struct struct);
 
     default String toString(final Palette palette) {
-        return Graphitty.global().parse("!b%s!g:[!yrouter!g]!!".formatted(this.tid().toString()));
+        return Graphitty.string("!b%s!g:[!yrouter!g]!!".formatted(this.tid().toString()));
     }
 }

@@ -21,10 +21,8 @@ package studio.phaseshift.metatron.ui;
 import studio.phaseshift.metatron.lang.obj.BObj;
 import studio.phaseshift.metatron.lang.obj.Palette;
 
-import java.io.BufferedOutputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.OutputStream;
-import java.nio.charset.StandardCharsets;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.Random;
@@ -35,41 +33,43 @@ import static studio.phaseshift.metatron.lang.obj.BObj.MTRON_CORE_TYPES;
 
 public class Graphitty implements ObjSerializer<String> {
 
-    private String buffer = "";
-    private final BufferedOutputStream printer;
     private OutputStream out;
     private final ObjSerializer<String> serializer;
     private boolean ansiOn = true;
     private boolean printerOn = true;
 
-    private static final Graphitty DEFAULT = new Graphitty(
+    private static final Graphitty GRAPHITTY_STDOUT = new Graphitty(
             ObjStringSerializer
                     .build()
                     .palette(Palette.STANDARD)
                     .hideTypesMatching(MTRON_CORE_TYPES)
                     .simpleColon(true)
                     .create(), System.out);
-    private static Graphitty GRAPHITTY = DEFAULT;
 
-    public static void init(final ObjSerializer<String> serializer, final OutputStream out) {
-        GRAPHITTY = new Graphitty(serializer, out);
+    public static Graphitty stdout(final String s) {
+        GRAPHITTY_STDOUT.parseDSL(s);
+        return GRAPHITTY_STDOUT;
     }
 
-
-    public static Graphitty global() {
-        return GRAPHITTY;
+    public static Graphitty stdout() {
+        return GRAPHITTY_STDOUT;
     }
 
-    public String parse(final String s) {
-        this.out = new ByteArrayOutputStream();
-        this.parseDSL(s);
-        return this.out.toString();
+    public static String string(final String s) {
+        final ByteArrayOutputStream out = new ByteArrayOutputStream();
+        final Graphitty temp = new Graphitty(ObjStringSerializer
+                .build()
+                .palette(Palette.STANDARD)
+                .hideTypesMatching(MTRON_CORE_TYPES)
+                .simpleColon(true)
+                .create(), out);
+        temp.parseDSL(s);
+        return out.toString();
     }
 
     public Graphitty(final ObjSerializer<String> serializer, final OutputStream out) {
         this.serializer = serializer;
         this.out = out;
-        this.printer = new BufferedOutputStream(out);
     }
 
     private void parseDSL(final String buffer) {
@@ -87,7 +87,7 @@ public class Graphitty implements ObjSerializer<String> {
                         this.htab();
                         i++;
                     } else {
-                        this.printer.write(buffer.charAt(i));
+                        this.out.write(buffer.charAt(i));
                     }
                 } else if (buffer.charAt(i) == '!') {
                     boolean decr = false;
@@ -148,7 +148,7 @@ public class Graphitty implements ObjSerializer<String> {
                     else if ('H' == j)
                         this.home();
                     else if (!Character.isAlphabetic(j)) {
-                        this.printer.write(buffer.charAt(i));
+                        this.out.write(buffer.charAt(i));
                         decr = true;
                     } else {
                         ////////////////////////////// COLOR
@@ -172,18 +172,16 @@ public class Graphitty implements ObjSerializer<String> {
                         else if ('d' == jj)
                             this.black();
                         else {
-                            this.printer.write(buffer.charAt(i));
+                            this.out.write(buffer.charAt(i));
                             decr = true;
                         }
                     }
                     if (!decr)
                         i++;
                 } else {
-                    this.printer.write(buffer.charAt(i));
+                    this.out.write(buffer.charAt(i));
                 }
             }
-
-            this.printer.write(this.buffer.getBytes(StandardCharsets.UTF_8));
             this.flush();
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -226,8 +224,7 @@ public class Graphitty implements ObjSerializer<String> {
 
     public void flush() {
         try {
-            this.printer.flush();
-            this.buffer = new String();
+            this.out.flush();
         } catch (final Exception e) {
             throw new RuntimeException(e);
         }

@@ -62,12 +62,12 @@ public final class SInst {
         BInst.SymbolTable.load(pg.incr(BLOCK_URI), InstF.of((lhs, args) -> args.value().get(0)));
         BInst.SymbolTable.load(pg.incr(IDENTITY_URI), InstF.of(lhs -> lhs));
         BInst.SymbolTable.load(pg.incr(MAP_URI), InstF.of((lhs, args) -> args.value().get(0).apply(lhs)));
-        BInst.SymbolTable.load(pg.incr(MATCH_URI), InstF.of((lhs, args) -> new SObj.Bool(lhs.matches(args.value().get(0)))));
+        BInst.SymbolTable.load(pg.incr(MATCH_URI), InstF.of((lhs, args) ->  SObj.Bool.of(lhs.matches(args.value().get(0)))));
         BInst.SymbolTable.load(pg.incr(PLUS_URI), InstF.of((lhs, args) -> {
             if (lhs.isInt() && args.value().get(0).isInt())
-                return new SObj.Int(lhs.intValue() + args.value().get(0).intValue(), lhs.tid());
+                return new SObj.Int(lhs.intValue() + args.value().get(0).intValue(), lhs.tid(),null);
             else if (lhs.isUri() && args.value().get(0).isUri())
-                return new SObj.Uri(lhs.uriValue().extend(args.value().get(0).uriValue()), lhs.tid());
+                return new SObj.Uri(lhs.uriValue().extend(args.value().get(0).uriValue()), lhs.tid(),null);
             else
                 throw new IllegalStateException("the operands do not support addition: %s + %s".formatted(lhs, args.value().get(0)));
 
@@ -87,39 +87,39 @@ public final class SInst {
             return lhs;
         }));
         BInst.SymbolTable.load(pg.incr(FROM_URI), InstF.of((lhs, args) -> Router.global().read(args.value().get(0).uriValue())));
-        BInst.SymbolTable.load(pg.incr(TYPE_URI), InstF.of((lhs, args) -> null == lhs.tid() ? BObj.NoObj.of() : SObj.Uri.of(lhs.tid())));
+        BInst.SymbolTable.load(pg.incr(TYPE_URI), InstF.of((lhs, args) -> null == lhs.value() ? BObj.NoObj.of() : SObj.Uri.of(lhs.tid())));
         BInst.SymbolTable.load(pg.incr(IS_URI), InstF.of((lhs, args) -> args.get(0).boolValue() ? lhs : BObj.NoObj.of()));
-        BInst.SymbolTable.load(pg.incr(EQ_URI), InstF.of((lhs, args) -> new SObj.Bool(lhs.equals(args.get(0)))));
-        BInst.SymbolTable.load(pg.incr(NEQ_URI), InstF.of((lhs, args) -> new SObj.Bool(!lhs.equals(args.get(0)))));
+        BInst.SymbolTable.load(pg.incr(EQ_URI), InstF.of((lhs, args) ->  SObj.Bool.of(lhs.equals(args.get(0)))));
+        BInst.SymbolTable.load(pg.incr(NEQ_URI), InstF.of((lhs, args) ->  SObj.Bool.of(!lhs.equals(args.get(0)))));
         BInst.SymbolTable.load(pg.incr(GT_URI), InstF.of((lhs, args) -> {
             if (lhs.isInt() && args.value().get(0).isInt())
-                return new SObj.Bool(lhs.intValue() > args.value().get(0).intValue(), lhs.tid());
+                return new SObj.Bool(lhs.intValue() > args.value().get(0).intValue(), lhs.tid(),null);
             else
                 throw new IllegalStateException("the operands do not support gt: %s + %s".formatted(lhs, args.value().get(0)));
         }));
         BInst.SymbolTable.load(pg.incr(LT_URI), InstF.of((lhs, args) -> {
             if (lhs.isInt() && args.value().get(0).isInt())
-                return new SObj.Bool(lhs.intValue() < args.value().get(0).intValue(), lhs.tid());
+                return new SObj.Bool(lhs.intValue() < args.value().get(0).intValue(), lhs.tid(),null);
             else
                 throw new IllegalStateException("the operands do not support lt: %s + %s".formatted(lhs, args.value().get(0)));
         }));
         BInst.SymbolTable.load(pg.incr(GTE_URI), InstF.of((lhs, args) -> {
             if (lhs.isInt() && args.value().get(0).isInt())
-                return new SObj.Bool(lhs.intValue() >= args.value().get(0).intValue(), lhs.tid());
+                return new SObj.Bool(lhs.intValue() >= args.value().get(0).intValue(), lhs.tid(),null);
             else
                 throw new IllegalStateException("the operands do not support gte: %s + %s".formatted(lhs, args.value().get(0)));
         }));
         BInst.SymbolTable.load(pg.incr(LTE_URI), InstF.of((lhs, args) -> {
             if (lhs.isInt() && args.value().get(0).isInt())
-                return new SObj.Bool(lhs.intValue() <= args.value().get(0).intValue(), lhs.tid());
+                return new SObj.Bool(lhs.intValue() <= args.value().get(0).intValue(), lhs.tid(),null);
             else
                 throw new IllegalStateException("the operands do not support lte: %s + %s".formatted(lhs, args.value().get(0)));
         }));
         BInst.SymbolTable.load(pg.incr(GET_URI), InstF.of((lhs, args) -> {
             if (lhs.isLst())
                 return lhs.lstValue().get(args.get(0).intValue().intValue());
-            else if (lhs.isRec())
-                return lhs.recValue().get(args.get(0));
+            //else if (lhs.isRec())
+            //    return lhs.recValue().get(args.get(0));
             else
                 return BObj.NoObj.of();
         }));

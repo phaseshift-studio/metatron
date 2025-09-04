@@ -21,8 +21,6 @@ package studio.phaseshift.metatron.struct.mem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import studio.phaseshift.metatron.lang.fURI;
-import studio.phaseshift.metatron.lang.obj.BObj;
-import studio.phaseshift.metatron.lang.obj.SObj;
 import studio.phaseshift.metatron.struct.Router;
 import studio.phaseshift.metatron.struct.Struct;
 import studio.phaseshift.metatron.ui.Graphitty;
@@ -43,7 +41,7 @@ public class MemRouter implements Router {
 
     public MemRouter(final fURI vid) {
         this.vid = vid;
-        LOG.info(Graphitty.global().parse("%s loaded at %s\n".formatted(this.tid().toUri(true), this.vid.toUri(true))));
+        LOG.info(Graphitty.string("%s loaded at %s\n".formatted(this.tid().toUri(true), this.vid.toUri(true))));
     }
 
     public void registerStruct(final Struct struct) {
@@ -66,14 +64,15 @@ public class MemRouter implements Router {
 
     @Override
     public Obj read(final fURI vid) {
-        if (vid.equals(this.vid))
+        /*if (vid.equals(this.vid))
             return new SObj.Rec((Map) this.routes.entrySet().stream()
                     .map(kv -> Map.of(new SObj.Uri(kv.getKey()), kv.getValue()))
                     .reduce(new HashMap<>(), (a, b) -> {
                         a.putAll(b);
                         return a;
                     }));
-        return this.getStruct(vid).read(vid);
+        return this.getStruct(vid).read(vid);*/
+        return null;
 
     }
 
@@ -88,7 +87,7 @@ public class MemRouter implements Router {
     }
 
     @Override
-    public BObj.Rec apply(Obj other) {
+    public MemRouter apply(Obj other) {
         return null;
     }
 

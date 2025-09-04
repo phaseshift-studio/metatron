@@ -38,7 +38,10 @@ import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
-public class MqttStruct extends SObj.Rec implements Struct {
+import static studio.phaseshift.metatron.lang.obj.BObj.OBJS_URI;
+import static studio.phaseshift.metatron.lang.obj.BObj.URI_URI;
+
+public class MqttStruct extends SObj.Obj implements Struct {
 
     public static fURI MQTT_TID = fURI.of("mqtt/broker");
 
@@ -48,11 +51,12 @@ public class MqttStruct extends SObj.Rec implements Struct {
     Mqtt5Client client;
     Mqtt5BlockingClient.Mqtt5Publishes incomingMessages;
 
-    public MqttStruct(final BObj.Rec config, final fURI vid) {
-        super(config.value(), MQTT_TID, vid);
-        this.broker = config.<BObj.Uri>get(new SObj.Uri("broker")).orElseThrow(new IllegalArgumentException("supplied config has not broker key")).uriValue();
-        this.pattern = config.<BObj.Uri>get(new SObj.Uri("pattern")).orElseThrow(new IllegalArgumentException("supplied config has not broker key")).uriValue();
+    public MqttStruct(final Map<BObj.Uri, BObj.Obj> config, final fURI tid, final fURI vid) {
+        super(config, tid, vid);
+        this.broker = config.<BObj.Uri>get(new SObj.Uri(fURI.of("broker"), URI_URI, null)).orElseThrow(new IllegalArgumentException("supplied config has not broker key")).uriValue();
+        this.pattern = config.<BObj.Uri>get(new SObj.Uri(fURI.of("pattern"), URI_URI, null)).orElseThrow(new IllegalArgumentException("supplied config has not broker key")).uriValue();
         this.init();
+
     }
 
     public void init() {
@@ -97,17 +101,17 @@ public class MqttStruct extends SObj.Rec implements Struct {
     }
 
     public static void main(final String[] args) {
-        new MqttStruct(new SObj.Rec(Map.of(
+        new MqttStruct(Map.of(
                 SObj.Uri.of("broker"),
                 SObj.Uri.of("ip://192.168.66.2:1883"),
                 SObj.Uri.of("pattern"),
-                SObj.Uri.of("homeassistant/#"))), fURI.of("/mnt/mqtt"));
+                SObj.Uri.of("homeassistant/#")), fURI.of("mtron:/struct/mqtt"), fURI.of("/mnt/mqtt"));
     }
 
 
     @Override
     public fURI pattern() {
-        return this.value().get(new SObj.Uri("pattern")).uriValue();
+        return ((Map<BObj.Obj, BObj.Obj>) this.value()).get(new SObj.Uri(fURI.of("pattern"), URI_URI, null)).uriValue();
     }
 
     @Override
@@ -143,7 +147,7 @@ public class MqttStruct extends SObj.Rec implements Struct {
         else if (results.size() == 1)
             return results.iterator().next();
         else
-            return new SObj.Objs(results);
+            return new SObj.Objs(results, OBJS_URI, null);
     }
 
     @Override
@@ -165,5 +169,15 @@ public class MqttStruct extends SObj.Rec implements Struct {
     @Override
     public void append(fURI addr, BObj.Obj... obj) {
 
+    }
+
+    @Override
+    public long length() {
+        return 0;
+    }
+
+    @Override
+    public Iterator<BObj.Obj> iterator() {
+        return null;
     }
 }

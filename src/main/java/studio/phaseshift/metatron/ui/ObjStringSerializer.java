@@ -46,7 +46,7 @@ public class ObjStringSerializer implements ObjSerializer<String> {
     public String write(final BObj.Obj obj) throws IllegalStateException {
         if (obj.isNoObj())
             return ansi().fg(this.builder.palette.errorC()).a("noobj").reset().toString();
-        else if (this instanceof final BObj.Inst inst) {
+        else if (obj instanceof final BObj.Inst inst) {
             Ansi s = ansi()
                     .fg(this.builder.palette.typeC()).
                     a(this.builder.hideTypes.contains(inst.tid()) ? "" : inst.tid())
@@ -66,7 +66,7 @@ public class ObjStringSerializer implements ObjSerializer<String> {
                     .a(']')
                     .reset()
                     .toString();
-        } else if (this instanceof final BObj.Rel rel) {
+        } else if (obj instanceof final BObj.Rel rel) {
             return ansi()
                     .fg(this.builder.palette.typeC())
                     .a(this.builder.hideTypes.contains(rel.tid()) ? "" : rel.tid())
@@ -92,7 +92,7 @@ public class ObjStringSerializer implements ObjSerializer<String> {
                     s = s.fg(this.builder.palette.formC()).a(',');
             }
             return s.fg(this.builder.palette.formC()).a(']').reset().toString();
-        } else if (obj instanceof final BObj.Rec rec) {
+        } /*else if (obj instanceof final BObj.Rec rec) {
             Ansi s = ansi()
                     .fg(this.builder.palette.typeC())
                     .a(this.builder.hideTypes.contains(rec.tid()) ? "" : rec.tid())
@@ -105,7 +105,7 @@ public class ObjStringSerializer implements ObjSerializer<String> {
                     s = s.fg(this.builder.palette.formC()).a(',');
             }
             return s.fg(this.builder.palette.formC()).a(']').reset().toString();
-        } else
+        }*/ else
             return ansi()
                     .fg(this.builder.palette.typeC())
                     .a(this.builder.hideTypes.contains(obj.tid()) ? "" : obj.tid())

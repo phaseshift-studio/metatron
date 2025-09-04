@@ -31,7 +31,7 @@ import static studio.phaseshift.metatron.lang.obj.BObj.Poly;
 public interface Struct extends Poly {
 
     @Override
-    Map<Obj, Obj> value();
+    Object value();
 
     fURI pattern();
 
@@ -47,7 +47,7 @@ public interface Struct extends Poly {
     }
 
     default String toString(final Palette palette) {
-        return Graphitty.global().parse("!b%s!g:[!ypattern!g=>!y%s!g]!!".formatted(this.tid().toString(), this.pattern().toString()));
+        return Graphitty.string("!b%s!g:[!ypattern!g=>!y%s!g]!!".formatted(this.tid().toString(), this.pattern().toString()));
     }
 
     @Override

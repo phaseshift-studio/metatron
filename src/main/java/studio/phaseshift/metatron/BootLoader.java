@@ -22,7 +22,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.inst.SInst;
-import studio.phaseshift.metatron.lang.obj.Palette;
 import studio.phaseshift.metatron.lang.obj.SObj;
 import studio.phaseshift.metatron.struct.Router;
 import studio.phaseshift.metatron.struct.Struct;
@@ -30,13 +29,12 @@ import studio.phaseshift.metatron.struct.mem.MemRouter;
 import studio.phaseshift.metatron.struct.mem.MemStruct;
 import studio.phaseshift.metatron.struct.mqtt.MqttStruct;
 import studio.phaseshift.metatron.ui.Graphitty;
-import studio.phaseshift.metatron.ui.ObjStringSerializer;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Map;
 
-import static studio.phaseshift.metatron.lang.obj.BObj.MTRON_CORE_TYPES;
+import static studio.phaseshift.metatron.struct.mqtt.MqttStruct.MQTT_TID;
 
 public class BootLoader {
 
@@ -46,18 +44,11 @@ public class BootLoader {
 
     public static void load() {
         try {
-            Graphitty.init(
-                    ObjStringSerializer
-                            .build()
-                            .palette(Palette.STANDARD)
-                            .hideTypesMatching(MTRON_CORE_TYPES)
-                            .simpleColon(true)
-                            .create(), System.out);
-            LOG.info(Graphitty.global().parse("booting metatron on %s !g[%s!g]!!\n".formatted(
-                    SObj.Uri.of(InetAddress.getLocalHost().getHostName(), fURI.of("host")),
-                    SObj.Uri.of(InetAddress.getLocalHost().getHostAddress(), fURI.of("ipv4")))));
+            LOG.info(Graphitty.string("booting metatron on %s !g[%s!g]!!\n".formatted(
+                    SObj.Uri.of(InetAddress.getLocalHost().getHostName(), fURI.of("host"), null),
+                    SObj.Uri.of(InetAddress.getLocalHost().getHostAddress(), fURI.of("ipv4"), null))));
         } catch (final UnknownHostException e) {
-            LOG.warn(Graphitty.global().parse("booting metatron on a non-networked jvm\n"));
+            LOG.warn(Graphitty.string("booting metatron on a non-networked jvm\n"));
         }
         final Struct mnt = new MemStruct(fURI.of("/mnt/#"), fURI.of("/mnt"));
         final Struct sys = new MemStruct(fURI.of("/sys/#"), fURI.of("/mnt/sys"));
@@ -66,7 +57,7 @@ public class BootLoader {
         router.registerStruct(sys);
         router.registerStruct(new MemStruct(fURI.of("/mtron/#"), fURI.of("/mnt/lang/mtron")));
         router.registerStruct(new MemStruct(fURI.of("+"), fURI.of("/sys/stack")));
-        router.registerStruct(new MqttStruct(new SObj.Rec(Map.of(SObj.Uri.of("broker"), SObj.Uri.of("ip://192.168.66.2:1883"), SObj.Uri.of("pattern"), SObj.Uri.of("homeassistant/#"))), fURI.of("/mnt/mqtt")));
+        router.registerStruct(new MqttStruct(Map.of(SObj.Uri.of("broker"), SObj.Uri.of("ip://192.168.66.2:1883"), SObj.Uri.of("pattern"), SObj.Uri.of("homeassistant/#")), MQTT_TID, fURI.of("/mnt/mqtt")));
         SInst.load();
         SInst.ext();
     }

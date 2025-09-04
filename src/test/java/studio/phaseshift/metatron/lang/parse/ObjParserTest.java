@@ -42,8 +42,8 @@ public class ObjParserTest {
     @Test
     public void testBoolParse() {
         assertEquals(fURI.of("bool"), m_bool().parse("true").<BObj.Obj>get().tid());
-        assertEquals(new Bool(true), ObjParser.parse("true"));
-        assertEquals(new Bool(false), ObjParser.parse("false"));
+        assertEquals(Bool.of(true), ObjParser.parse("true"));
+        assertEquals(Bool.of(false), ObjParser.parse("false"));
     }
 
     @Test
@@ -66,9 +66,9 @@ public class ObjParserTest {
 
     @Test
     public void testUriParse() {
-        assertEquals(new Uri("http://metatron.com?a=2&b=3"), ObjParser.parse("<http://metatron.com?a=2&b=3>"));
-        assertEquals(new Uri("http://metatron.com?a&b"), ObjParser.parse("<http://metatron.com?a&b>"));
-        assertEquals(new Uri("/metatron.com?a&b"), ObjParser.parse("/metatron.com?a&b"));
-        assertEquals(new Uri("//metatron.com?a&b"), ObjParser.parse("//metatron.com?a&b"));
+        assertEquals(Uri.of("http://metatron.com?a=2&b=3"), ObjParser.parse("<http://metatron.com?a=2&b=3>"));
+        assertEquals(Uri.of("http://metatron.com?a&b"), ObjParser.parse("<http://metatron.com?a&b>"));
+        assertEquals(Uri.of("/metatron.com?a&b"), ObjParser.parse("/metatron.com?a&b"));
+        assertEquals(Uri.of("//metatron.com?a&b"), ObjParser.parse("//metatron.com?a&b"));
     }
 }

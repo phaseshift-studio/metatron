@@ -35,20 +35,20 @@ public class ProgressBar {
         ++this.currentCount;
         if (percentage >= 100) {
             percentage = 100;
-            Graphitty.global().clearLine();
-            Graphitty.global().println(message.toString());
+            Graphitty.stdout().clearLine();
+            Graphitty.stdout().println(message.toString());
         }
 
 
-        Graphitty.global().print("!g[INFO]  [!b");
+        Graphitty.stdout().print("!g[INFO]  [!b");
         for (int j = 0; j < (int) percentage; j = j + 2) {
             // + 2 to make bar half as long
-            Graphitty.global().print("#");
+            Graphitty.stdout().print("#");
         }
         for (int j = (int) percentage; j < 99; j = j + 2) {
-            Graphitty.global().print(' ');
+            Graphitty.stdout().print(' ');
         }
-        Graphitty.global().print("!g] !y%d%%!! %-25s\r".formatted((int) percentage, message));
+        Graphitty.stdout().print("!g] !y%d%%!! %-25s\r".formatted((int) percentage, message));
         try {
             Thread.sleep(25);
         } catch (Exception e) {

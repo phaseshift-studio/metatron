@@ -61,7 +61,7 @@ public interface BInst {
             for (final Obj arg : inst.args()) {
                 resolvedArgs.add(blocking ? arg : arg.apply(lhs));
             }
-            return inst.clone(new Triplet<>(new SObj.Lst(resolvedArgs),
+            return inst.clone(new Triplet<>(new SObj.Lst(resolvedArgs, inst.tid(), null),
                     resolvedFunction,
                     entry.getValue1()));
         }

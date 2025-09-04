@@ -36,30 +36,30 @@ public class JSONTranslator implements Translator<BObj.Obj, JsonElement> {
             final JsonPrimitive jp = (JsonPrimitive) json;
 
             if (jp.isBoolean())
-                return new SObj.Bool(jp.getAsBoolean());
+                return  SObj.Bool.of(jp.getAsBoolean());
             else if (jp.isNumber()) {
-                return new SObj.Int(jp.getAsLong());
+                return  SObj.Int.of(jp.getAsLong());
                 /* if (jp.getAsNumber() instanceof Float)
                     return new SObj.Real(jp.getAsFloat());
                 else if (jp.getAsNumber() instanceof Double)
                     return new SObj.Real(jp.getAsDouble());*/
             } else if (jp.isString())
-                return new SObj.Str(jp.getAsString());
+                return  SObj.Str.of(jp.getAsString());
         } else if (json.isJsonArray()) {
             final JsonArray jp = (JsonArray) json;
             final List<BObj.Obj> list = new ArrayList<>();
             for (var j : jp.getAsJsonArray()) {
                 list.add(translate(j));
             }
-            return new SObj.Lst(list);
-        } else if (json.isJsonObject()) {
+            return  SObj.Lst.of(list);
+        } /*else if (json.isJsonObject()) {
             final JsonObject jp = (JsonObject) json;
             final Map<BObj.Obj, BObj.Obj> map = new LinkedHashMap<>();
             for (var kv : jp.getAsJsonObject().asMap().entrySet()) {
-                map.put(new SObj.Uri(kv.getKey()), translate(kv.getValue()));
+                map.put( SObj.Uri.of(kv.getKey()), translate(kv.getValue()));
             }
             return new SObj.Rec(map);
-        }
+        }*/
         throw new IllegalStateException("unknown type: " + json + "::" + json.getAsInt());
     }
 

@@ -30,8 +30,7 @@ import studio.phaseshift.metatron.ui.Graphitty;
 import java.util.List;
 
 import static studio.phaseshift.metatron.lang.inst.SInst.EXPLAIN_URI;
-import static studio.phaseshift.metatron.lang.obj.BObj.Code;
-import static studio.phaseshift.metatron.lang.obj.BObj.InstF;
+import static studio.phaseshift.metatron.lang.obj.BObj.*;
 
 public class ExplainRewrite extends SObj.Inst implements Rewrite {
 
@@ -42,7 +41,7 @@ public class ExplainRewrite extends SObj.Inst implements Rewrite {
     @Override
     public Code rewrite(final Code code) {
         return code.value().stream().anyMatch(i -> i.tid().equals(EXPLAIN_URI)) ?
-                new SObj.Code(List.of(new ExplainMetaInst(code))) : code;
+                new SObj.Code(List.of(new ExplainMetaInst(code)), CODE_URI, null) : code;
     }
 
     public static class ExplainMetaInst extends SObj.Inst {
@@ -51,14 +50,14 @@ public class ExplainRewrite extends SObj.Inst implements Rewrite {
 
 
         public ExplainMetaInst(final Code code) {
-            super(fURI.of("explain/engine"), new SObj.Code(code.value().stream().filter(i -> !i.tid().equals(EXPLAIN_URI)).toList()));
+            super(fURI.of("explain/engine"), new SObj.Code(code.value().stream().filter(i -> !i.tid().equals(EXPLAIN_URI)).toList(), CODE_URI, null));
         }
 
         @Override
         public InstF f() {
             return new InstF(o -> {
                 BMonoid.Monoid monoid = new SMonoid.Monoid(this.args(0));
-                LOG.info(Graphitty.global().parse("introspecting\n\t%s".formatted(this)));
+                LOG.info(Graphitty.string("introspecting\n\t%s".formatted(this)));
                 return o;
             });
         }

@@ -28,7 +28,7 @@ import java.util.*;
 
 public class SObj implements BObj {
 
-    public static class Obj implements BObj.Obj, Cloneable {
+    public abstract static class Obj implements BObj.Obj, Cloneable {
         protected Object value;
         protected fURI tid;
         protected fURI vid;
@@ -41,10 +41,6 @@ public class SObj implements BObj {
             this.tid = tid;
             this.value = value;
             this.vid = vid;
-        }
-
-        public Obj(final Object value, final fURI tid) {
-            this(value, tid, null);
         }
 
         @Override
@@ -107,39 +103,36 @@ public class SObj implements BObj {
             return this.toString(Palette.STANDARD);
         }
 
-        public static BObj.Obj of(final Object value, final fURI type) {
-            BObj.Obj o = SObj.Obj.of(value);
-            if (type != null && o instanceof SObj.Obj) // cause NoObj is a BObj
-                ((Obj) o).tid = type;
-            return o;
+        public static BObj.Obj of(final Object value) {
+            return SObj.Obj.of(value, null, null);
         }
 
-        public static BObj.Obj of(final Object value) {
+        public static BObj.Obj of(final Object value, final fURI tid, final fURI vid) {
             if (null == value)
                 return BObj.NoObj.of();
             else if (value instanceof BObj.Obj)
                 return (BObj.Obj) value;
             else if (value instanceof Boolean)
-                return new Bool((Boolean) value);
+                return new Bool((Boolean) value, null == tid ? BOOL_URI : tid, vid);
             else if (value instanceof Integer)
-                return new Int((Integer) value);
+                return new Int((Integer) value, null == tid ? INT_URI : tid, vid);
             else if (value instanceof Double)
-                return new Real((Double) value);
+                return new Real((Double) value, null == tid ? REAL_URI : tid, vid);
             else if (value instanceof String)
-                return new Str((String) value);
+                return new Str((String) value, null == tid ? STR_URI : tid, vid);
             else if (value instanceof fURI)
-                return new Uri((fURI) value);
+                return new Uri((fURI) value, null == tid ? URI_URI : tid, vid);
             else if (value instanceof Pair)
-                return new Rel((Pair<BObj.Obj, BObj.Obj>) value);
+                return new Rel((Pair<BObj.Obj, BObj.Obj>) value, null == tid ? REL_URI : tid, vid);
             else if (value instanceof List)
-                return new Lst((List) value);
-            else if (value instanceof Map)
-                return new Rec((Map) value);
+                return new Lst((List) value, null == tid ? LST_URI : tid, vid);
+                //    else if (value instanceof Map)
+                //         return new Rec((Map) value, );
             else if (value instanceof Triplet<?, ?, ?>)
-                return new Inst((Triplet<BObj.Poly, InstF, BObj.Obj>) value, INST_URI);
+                return new Inst((Triplet<BObj.Poly, InstF, BObj.Obj>) value, null == tid ? INST_URI : tid, vid);
             else {
                 try {
-                    return new Uri(new fURI(value.toString()));
+                    return new Uri(new fURI(value.toString()), null == tid ? URI_URI : tid, vid);
                 } catch (final IllegalArgumentException e) {
                     throw new RuntimeException("unknown object type: " + value.toString());
                 }
@@ -150,77 +143,46 @@ public class SObj implements BObj {
 
     public static class Bool extends Obj implements BObj.Bool {
 
-        public Bool(final Boolean value) {
-            super(value, BOOL_URI);
-        }
-
-        public Bool(final Boolean value, final fURI type) {
-            super(value, type);
+        public Bool(final boolean value, final fURI tid, final fURI vid) {
+            super(value, tid, vid);
         }
 
         public Boolean value() {
             return (Boolean) this.value;
         }
 
-        public static Bool of(final boolean bool) {
-            return new Bool(bool);
+        public static BObj.Bool of(final boolean bool) {
+            return new Bool(bool, BOOL_URI, null);
         }
+
     }
 
     public static class Int extends Obj implements BObj.Int {
-        public Int(final Integer value) {
-            super(value.longValue(), INT_URI);
-        }
-
-        public Int(final Long value) {
-            super(value, INT_URI);
-        }
-
-        public Int(final Integer value, final fURI type) {
-            super(value.longValue(), type);
-        }
-
-        public Int(final Long value, final fURI type) {
-            super(value, type);
+        public Int(final long value, final fURI tid, final fURI vid) {
+            super(value, tid, vid);
         }
 
         public Long value() {
             return (Long) this.value;
         }
 
-        public static Int of(final String type, final int i) {
-            return new Int(i, new fURI(type));
-        }
-
-        public static Int of(final fURI type, final int i) {
-            return new Int(i, type);
-        }
-
-        public static Int of(final int i) {
-            return new Int(Long.valueOf(i));
-        }
-
-        public static Int of(final long i) {
-            return new Int(i);
+        public static BObj.Int of(final long value) {
+            return new Int(value, INT_URI, null);
         }
     }
 
     public static class Real extends Obj implements BObj.Real {
 
-        public Real(final Double value, final fURI type) {
-            super(value, type);
-        }
-
-        public Real(final Float value) {
-            super(value, REAL_URI);
-        }
-
-        public Real(final Double value) {
-            super(value, REAL_URI);
+        public Real(final Double value, final fURI tid, final fURI vid) {
+            super(value, tid, vid);
         }
 
         public Double value() {
             return (Double) this.value;
+        }
+
+        public static BObj.Real of(final double value) {
+            return new Real(value, REAL_URI, null);
         }
 
     }
@@ -231,32 +193,20 @@ public class SObj implements BObj {
             super(value, tid, vid);
         }
 
-        public Str(final String value, final fURI tid) {
-            super(value, tid, null);
-        }
-
-        public Str(final String value) {
-            super(value, STR_URI, null);
-        }
-
         public String value() {
             return (String) this.value;
+        }
+
+        public static BObj.Str of(final String value) {
+            return new Str(value, STR_URI, null);
         }
 
     }
 
     public static class Uri extends Obj implements BObj.Uri {
 
-        public Uri(final fURI value, final fURI type) {
-            super(value, type);
-        }
-
-        public Uri(final fURI value) {
-            super(value, URI_URI);
-        }
-
-        public Uri(final String value) {
-            super(new fURI(value), URI_URI);
+        public Uri(final fURI value, final fURI tid, final fURI vid) {
+            super(value, tid, vid);
         }
 
         public fURI value() {
@@ -264,7 +214,7 @@ public class SObj implements BObj {
         }
 
         public static BObj.Uri of(final String uri) {
-            return new Uri(new fURI(uri));
+            return new Uri(new fURI(uri), URI_URI, null);
         }
 
         /*public Obj apply(final Obj lhs) {
@@ -284,12 +234,8 @@ public class SObj implements BObj {
     }
 
     public static class Rel extends Obj implements BObj.Rel {
-        public Rel(final Pair<BObj.Obj, BObj.Obj> value) {
-            super(value, fURI.of("rel"));
-        }
-
-        public Rel(final Pair<BObj.Obj, BObj.Obj> value, final fURI type) {
-            super(value, type);
+        public Rel(final Pair<BObj.Obj, BObj.Obj> value, final fURI tid, final fURI vid) {
+            super(value, tid, vid);
         }
 
         @Override
@@ -297,21 +243,16 @@ public class SObj implements BObj {
             return (Pair) this.value;
         }
 
-        @Override
-        public boolean equals(final Object other) {
-            if (other instanceof final BObj.Rel rel)
-                return this.tid.equals(rel.tid()) && this.domain().equals(rel.domain()) && this.range().equals(rel.range());
-            return false;
+        public static BObj.Rel of(final BObj.Obj domain, final BObj.Obj range) {
+            return new Rel(Pair.with(domain, range), REL_URI, null);
         }
+
+
     }
 
     public static class Lst extends Obj implements BObj.Lst {
-        public Lst(final List<BObj.Obj> value, final fURI type) {
-            super(value, type);
-        }
-
-        public Lst(final List<BObj.Obj> value) {
-            super(value, LST_URI);
+        public Lst(final List<BObj.Obj> value, final fURI tid, final fURI vid) {
+            super(value, tid, vid);
         }
 
         @Override
@@ -326,7 +267,7 @@ public class SObj implements BObj {
             for (int i = 0; i < size; i++) {
                 list.add(this.value().get(i).apply(lhs));
             }
-            return new Lst(list);
+            return new Lst(list, this.tid, this.vid);
         }
 
         @Override
@@ -334,26 +275,13 @@ public class SObj implements BObj {
             return this.value().iterator();
         }
 
-        public static BObj.Lst of() {
-            return new Lst(List.of());
-        }
-
-        public static BObj.Lst single(final Object arg0) {
-            return new Lst(List.of(Obj.of(arg0)));
-        }
-
-        public static BObj.Lst of(final Object arg0, final Object... args) {
-            List<BObj.Obj> list = new ArrayList<>();
-            list.add(Obj.of(arg0));
-            for (final Object arg : args) {
-                list.add(Obj.of(arg));
-            }
-            return new Lst(list);
+        public static BObj.Lst of(final Object... args) {
+            return new Lst(Arrays.stream(args).map(Obj::of).toList(), LST_URI, null);
         }
 
     }
 
-    public static class Rec extends Obj implements BObj.Rec {
+   /* public static class Rec extends Obj implements BObj.Rec {
 
         public Rec(final Map<BObj.Obj, BObj.Obj> value, final fURI type, final fURI vid) {
             super(value, type, vid);
@@ -383,17 +311,12 @@ public class SObj implements BObj {
             return new Rec(map);
         }
 
-    }
+    }*/
 
     public static class Objs extends Obj implements BObj.Objs {
 
-
-        public Objs(final Iterable<BObj.Obj> value, final fURI tid) {
-            super(value, tid);
-        }
-
-        public Objs(final Iterable<BObj.Obj> value) {
-            super(value, OBJS_URI);
+        public Objs(final Iterable<BObj.Obj> value, final fURI tid, final fURI vid) {
+            super(value, tid, vid);
         }
 
         @Override
@@ -403,7 +326,7 @@ public class SObj implements BObj {
                 list.add(a);
             }
             list.add(obj);
-            return new Objs(list, this.tid);
+            return new Objs(list, this.tid, this.vid);
         }
 
         @Override
@@ -413,21 +336,17 @@ public class SObj implements BObj {
 
         @Override
         public BObj.Objs apply(final BObj.Obj other) {
-            return SObj.Objs.of(IteratorUtil.map(this.value(), o -> o.apply(other)));
+            return new Objs(IteratorUtil.map(this.value(), o -> o.apply(other)), this.tid, this.vid);
         }
 
         public static BObj.Objs of(final Iterable<BObj.Obj> objs) {
-            return new Objs(objs);
-        }
-
-        public static BObj.Objs single(final BObj.Obj obj) {
-            return new Objs(List.of(obj));
+            return new Objs(objs, OBJS_URI, null);
         }
     }
 
     public static class Code extends Obj implements BObj.Code {
-        public Code(final List<BObj.Inst> value) {
-            super(value, CODE_URI);
+        public Code(final List<BObj.Inst> value, final fURI tid, final fURI vid) {
+            super(value, tid, vid);
 
         }
 
@@ -441,22 +360,19 @@ public class SObj implements BObj {
             return new Monoid(this, lhs).next();
         }
 
-        public static BObj.Code of(final BObj.Inst inst0, final BObj.Inst... insts) {
-            List<BObj.Inst> list = new ArrayList<>();
-            list.add(inst0);
-            Collections.addAll(list, insts);
-            return new Code(list);
+        public static BObj.Code of(final BObj.Inst... insts) {
+            return new Code(Arrays.asList(insts), CODE_URI, null);
         }
     }
 
     public static class Inst extends Obj implements BObj.Inst {
 
-        public Inst(final Triplet<BObj.Poly, InstF, BObj.Obj> value, final fURI type) {
-            super(value, type);
+        public Inst(final Triplet<BObj.Poly, InstF, BObj.Obj> value, final fURI tid, final fURI vid) {
+            super(value, tid, vid);
         }
 
-        public Inst(final fURI type, final BObj.Obj... args) {
-            super(new Triplet<>(Lst.of(Arrays.asList(args)), null, NoObj.of()), type);
+        public Inst(final fURI tid, final BObj.Obj... args) {
+            super(new Triplet<>(Lst.of(Arrays.asList(args)), null, NoObj.of()), tid, null);
         }
 
         @Override
