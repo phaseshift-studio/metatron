@@ -19,6 +19,7 @@
 package studio.phaseshift.metatron.ui;
 
 import studio.phaseshift.metatron.lang.obj.BObj;
+import studio.phaseshift.metatron.lang.obj.Palette;
 
 import java.io.BufferedOutputStream;
 import java.io.ByteArrayOutputStream;
@@ -30,6 +31,7 @@ import java.util.Random;
 
 import static org.jline.jansi.Ansi.Color.*;
 import static org.jline.jansi.Ansi.ansi;
+import static studio.phaseshift.metatron.lang.obj.BObj.MTRON_CORE_TYPES;
 
 public class Graphitty implements ObjSerializer<String> {
 
@@ -40,11 +42,18 @@ public class Graphitty implements ObjSerializer<String> {
     private boolean ansiOn = true;
     private boolean printerOn = true;
 
-    private static Graphitty GRAPHITTY;
-
+    private static final Graphitty DEFAULT = new Graphitty(
+            ObjStringSerializer
+                    .build()
+                    .palette(Palette.STANDARD)
+                    .hideTypesMatching(MTRON_CORE_TYPES)
+                    .simpleColon(true)
+                    .create(), System.out);
+    private static Graphitty GRAPHITTY = DEFAULT;
     public static void init(final ObjSerializer<String> serializer, final OutputStream out) {
         GRAPHITTY = new Graphitty(serializer, out);
     }
+
 
     public static Graphitty global() {
         return GRAPHITTY;
@@ -53,7 +62,7 @@ public class Graphitty implements ObjSerializer<String> {
     public String parse(final String s) {
         this.out = new ByteArrayOutputStream();
         this.parseDSL(s);
-        return ((ByteArrayOutputStream) this.out).toString();
+        return this.out.toString();
     }
 
     public Graphitty(final ObjSerializer<String> serializer, final OutputStream out) {
