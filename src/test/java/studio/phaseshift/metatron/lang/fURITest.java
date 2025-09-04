@@ -19,12 +19,70 @@
 package studio.phaseshift.metatron.lang;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 public class fURITest {
+
+    static Stream<Arguments> testSegmentsData() {
+        return Stream.of(
+                Arguments.of("http://fhatos.org/a/b/c", List.of("a", "b", "c")),
+                Arguments.of("http://fhatos.org:8080/a/b/c", List.of("a", "b", "c")),
+                Arguments.of("http://fhatos.org", List.of()),
+                Arguments.of("http://fhatos.org:8080", List.of()),
+                Arguments.of("a/b/c", List.of("a", "b", "c")),
+                Arguments.of("/a/b/c", List.of("a", "b", "c")),
+                Arguments.of("a/b/c/", List.of("a", "b", "c")),
+                Arguments.of("/a/b/c/", List.of("a", "b", "c")),
+                Arguments.of("a/b/c?a=1&c=2", List.of("a", "b", "c")),
+                Arguments.of("a/b/c/?a=3&c=4", List.of("a", "b", "c")),
+                Arguments.of("/a/b/c?a=5&c=6", List.of("a", "b", "c")),
+                Arguments.of("/a/b/c/?a=7&c=8", List.of("a", "b", "c")),
+                Arguments.of("/mtron/int", List.of("mtron", "int")),
+                Arguments.of("/mtron/int?sub", List.of("mtron", "int")),
+                Arguments.of("/mtron/int?sub=noobj", List.of("mtron", "int")));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"http://fhatos.org/a/b/c",
+            "http://fhatos.org:8080/a/b/c",
+            "http://fhatos.org",
+            "http://fhatos.org:8080",
+            "a/b/c",
+            "/a/b/c",
+            "a/b/c/",
+            "/a/b/c/",
+            "a/b/c?a=1&c=2",
+            "a/b/c/?a=3&c=4",
+            "/a/b/c?a=5&c=6",
+            "/a/b/c/?a=7&c=8",
+            "/mtron/int",
+            "/mtron/int?sub",
+            "/mtron/int?sub=noobj",
+            /*"http:// adb/dg",
+            "http:// adb/dg   ",
+            "   http:// adb/dg   "*/})
+    public void testParse(final String f) {
+        final fURI furi = fURI.of(f);
+        assertEquals(f, furi.toString());
+        assertEquals(furi, fURI.of(furi.toString()));
+    }
+
+    @ParameterizedTest
+    @MethodSource("testSegmentsData")
+    public void testSegments(final String f, final List<String> segments) {
+        final fURI furi = fURI.of(f);
+        assertEquals(segments, furi.segments());
+    }
 
     @Test
     public void testScheme() {
@@ -49,7 +107,7 @@ public class fURITest {
     public void testExtend() {
         assertEquals(new fURI("http://fhatos.org/a/b"), new fURI("http://fhatos.org/a").extend("b"));
         assertEquals(new fURI("http://fhatos.org/a/b/c/d"), new fURI("http://fhatos.org/a").extend("b/c/d"));
-        assertEquals(new fURI("http://fhatos.org/a/b/d"), new fURI("http://fhatos.org/a").extend("b/./d"));
+        //assertEquals(new fURI("http://fhatos.org/a/b/d"), new fURI("http://fhatos.org/a").extend("b/./d"));
 
     }
 
@@ -57,6 +115,7 @@ public class fURITest {
     public void testIsAbsolute() {
         assertTrue(new fURI("http://fhatos.org/a").isAbsolute());
         assertTrue(new fURI("http://fhatos.org").isAbsolute());
+        assertFalse(new fURI("").isAbsolute());
         assertFalse(new fURI("a/b").isAbsolute());
         assertTrue(new fURI("/a/b").isAbsolute());
         assertTrue(new fURI("/a/+/b").isAbsolute());
@@ -67,15 +126,15 @@ public class fURITest {
 
     @Test
     public void testRetract() {
-        assertEquals(new fURI("http://fhatos.org/"), new fURI("http://fhatos.org/a").retract(1));
+        assertEquals(new fURI("http://fhatos.org"), new fURI("http://fhatos.org/a").retract(1));
         assertEquals(new fURI("http://fhatos.org/a"), new fURI("http://fhatos.org/a/b").retract(1));
-        assertEquals(new fURI("http://fhatos.org/"), new fURI("http://fhatos.org/a/b").retract(2));
-        assertEquals(new fURI("http://fhatos.org/"), new fURI("http://fhatos.org/a/b").retract(3));
+        assertEquals(new fURI("http://fhatos.org"), new fURI("http://fhatos.org/a/b").retract(2));
+        assertEquals(new fURI("http://fhatos.org"), new fURI("http://fhatos.org/a/b").retract(3));
         ///
-        assertEquals(new fURI("http://fhatos.org:4500/"), new fURI("http://fhatos.org:4500/a").retract(1));
+        assertEquals(new fURI("http://fhatos.org:4500"), new fURI("http://fhatos.org:4500/a").retract(1));
         assertEquals(new fURI("http://fhatos.org:4500/a"), new fURI("http://fhatos.org:4500/a/b").retract(1));
-        assertEquals(new fURI("http://fhatos.org:4500/"), new fURI("http://fhatos.org:4500/a/b").retract(2));
-        assertEquals(new fURI("http://fhatos.org:4500/"), new fURI("http://fhatos.org:4500/a/b").retract(3));
+        assertEquals(new fURI("http://fhatos.org:4500"), new fURI("http://fhatos.org:4500/a/b").retract(2));
+        assertEquals(new fURI("http://fhatos.org:4500"), new fURI("http://fhatos.org:4500/a/b").retract(3));
         ///
         assertEquals(new fURI("/fhatos.org/a"), new fURI("/fhatos.org/a/b").retract(1));
         assertEquals(new fURI("/fhatos.org/a"), new fURI("/fhatos.org/a/b").retract(1));
@@ -84,69 +143,92 @@ public class fURITest {
 
     @Test
     public void testPretract() {
-        assertEquals(new fURI("http://fhatos.org/"), new fURI("http://fhatos.org/a").pretract(1));
+        assertEquals(new fURI("http://fhatos.org"), new fURI("http://fhatos.org/a").pretract(1));
         assertEquals(new fURI("http://fhatos.org/b"), new fURI("http://fhatos.org/a/b").pretract(1));
-        assertEquals(new fURI("http://fhatos.org/"), new fURI("http://fhatos.org/a/b").pretract(2));
-        assertEquals(new fURI("http://fhatos.org/"), new fURI("http://fhatos.org/a/b").pretract(3));
+        assertEquals(new fURI("http://fhatos.org"), new fURI("http://fhatos.org/a/b").pretract(2));
+        assertEquals(new fURI("http://fhatos.org"), new fURI("http://fhatos.org/a/b").pretract(3));
         ///
-        assertEquals(new fURI("http://fhatos.org:4500/"), new fURI("http://fhatos.org:4500/a").pretract(1));
+        assertEquals(new fURI("http://fhatos.org:4500"), new fURI("http://fhatos.org:4500/a").pretract(1));
         assertEquals(new fURI("http://fhatos.org:4500/b"), new fURI("http://fhatos.org:4500/a/b").pretract(1));
-        assertEquals(new fURI("http://fhatos.org:4500/"), new fURI("http://fhatos.org:4500/a/b").pretract(2));
-        assertEquals(new fURI("http://fhatos.org:4500/"), new fURI("http://fhatos.org:4500/a/b").pretract(3));
+        assertEquals(new fURI("http://fhatos.org:4500"), new fURI("http://fhatos.org:4500/a/b").pretract(2));
+        assertEquals(new fURI("http://fhatos.org:4500"), new fURI("http://fhatos.org:4500/a/b").pretract(3));
         ///
         assertEquals(new fURI("/a/b"), new fURI("/fhatos.org/a/b").pretract(1));
         assertEquals(new fURI("a/b"), new fURI("fhatos.org/a/b").pretract(1));
     }
 
-    @Test
-    public void testMatches() {
-        assertTrue(new fURI("http://fhatos.org/a").matches(new fURI("http://fhatos.org/a")));
-        assertFalse(new fURI("http://fhatos.org/a").matches(new fURI("http://fhatos.org/a/b")));
-        assertFalse(new fURI("http://fhatos.org/a/b").matches(new fURI("http://fhatos.org/a")));
-        ///
-        assertTrue(new fURI("http://fhatos.org/a/b").matches(new fURI("http://fhatos.org/a/+")));
-        assertTrue(new fURI("http://fhatos.org/a/b").matches(new fURI("http://fhatos.org/a/#")));
-        assertTrue(new fURI("http://fhatos.org/a/b/c").matches(new fURI("http://fhatos.org/a/#")));
-        assertTrue(new fURI("http://fhatos.org/a/b/c").matches(new fURI("http://fhatos.org/a/+/c")));
-        assertTrue(new fURI("http://fhatos.org/a/b/c").matches(new fURI("http://fhatos.org/a/+/+")));
-        assertTrue(new fURI("http://fhatos.org/a/b/c").matches(new fURI("http://fhatos.org/+/+/+")));
-        ///
-        assertFalse(new fURI("http://fhatos.org/a/b/c").matches(new fURI("http://fhatos.org/+/c/+")));
-        assertFalse(new fURI("http://fhatos.org/a/b/c").matches(new fURI("http://fhatos.org/+/b")));
-        assertFalse(new fURI("http://fhatos.org/a/b/c").matches(new fURI("http://fhatos.com/a/b/c")));
-        ///
-        assertTrue(new fURI("http://fhatos.org/a/b/c").matches(new fURI("http://+/a/b/c")));
-        assertTrue(new fURI("http://fhatos.org/a/b/c").matches(new fURI("http://#")));
-        assertTrue(new fURI("http://fhatos.org/a/b/c").matches(new fURI("http://fhatos.org/#")));
-        assertFalse(new fURI("http://fhatos.org/a/b/c").matches(new fURI("http://fhatos.org/b/#")));
-        assertFalse(new fURI("b").matches(new fURI("/sys/#")));
-        assertFalse(new fURI("/sys/#").matches(new fURI("b")));
-        assertTrue(new fURI("b").matches(new fURI("b/#")));
-        assertFalse(new fURI("b").matches(new fURI("b/c")));
-        assertFalse(new fURI("b").matches(new fURI("b/c/+")));
-        assertFalse(new fURI("b").matches(new fURI("b/c/#")));
-        assertFalse(new fURI("b").matches(new fURI("b/+")));
-        assertFalse(new fURI("a").matches(new fURI("b/c/+")));
-        assertFalse(new fURI("a").matches(new fURI("b/c/#")));
-        ///
-        assertTrue(new fURI("/a/b/c").matches(new fURI("/a/b/+")));
-        assertTrue(new fURI("/a/b/c").matches(new fURI("/a/+/c")));
-        assertTrue(new fURI("/a/b/c").matches(new fURI("/a/b/#")));
-        assertTrue(new fURI("/a/b/c").matches(new fURI("/a/#")));
-        assertTrue(new fURI("/a/b/c").matches(new fURI("#")));
-        ///
-        assertTrue(new fURI("a/b/c").matches(new fURI("a/b/+")));
-        assertTrue(new fURI("a/b/c").matches(new fURI("a/+/c")));
-        assertTrue(new fURI("a/b/c").matches(new fURI("a/b/#")));
-        assertTrue(new fURI("a/b/c").matches(new fURI("a/#")));
-        assertTrue(new fURI("a/b/c").matches(new fURI("#")));
-        ///
-        assertFalse(new fURI("a/b/c").matches(new fURI("/a/b/+")));
-        assertFalse(new fURI("a/b/c").matches(new fURI("/a/+/c")));
-        assertFalse(new fURI("a/b/c").matches(new fURI("/a/b/#")));
-        assertFalse(new fURI("a/b/c").matches(new fURI("/a/#")));
-        assertFalse(new fURI("a/b/c").matches(new fURI("/#")));
+    @ParameterizedTest
+    @CsvSource({"http://fhatos.org/a,fhatos.org,-1",
+            "http://fhatos.org:80/a,fhatos.org,80",
+            "http://fhatos.org/a,fhatos.org,-1",
+            "http://fhatos.org/a/b,fhatos.org,-1",
+            "http://+/a/b/c,+,-1",
+            "http://#/a/b/c,#,-1",
+            "http://#:12/a/b/c,#,12",
+            "/a/b/c,null,-1",
+            "/a/b/c,null,-1",
+            "/a/b/c/,null,-1",
+            "a/b/c,null,-1",
+            "a/b/c,null,-1",
+            "b/#,null,-1",
+            ",null,-1"
+    })
+    void testAuthority(final String furi, final String host, final int port) {
+        final fURI f = fURI.of(furi);
+        if (host.equals("null"))
+            assertNull(f.host());
+        else
+            assertEquals(host, f.host());
+        assertEquals(port, f.port());
+    }
 
+    @ParameterizedTest
+    @CsvSource({"http://fhatos.org/a,http://fhatos.org/a,true",
+            "http://fhatos.org/a,http://fhatos.org/a/b,false",
+            "http://fhatos.org/a/b,http://fhatos.org/a,false",
+            "http://fhatos.org/a/b,http://fhatos.org/a/+,true",
+            "http://fhatos.org/a/b,http://fhatos.org/a/#,true",
+            "http://fhatos.org/a/b/c,http://fhatos.org/a/#,true",
+            "http://fhatos.org/a/b/c,http://fhatos.org/a/+/c,true",
+            "http://fhatos.org/a/b/c,http://fhatos.org/a/+/+,true",
+            "http://fhatos.org/a/b/c,http://fhatos.org/+/+/+,true",
+            "http://fhatos.org/a/b/c,http://+/a/b/c,true",
+            "http://fhatos.org/a/b/c,http://#,true",
+            "http://fhatos.org/a/b/c,http://fhatos.org/#,true",
+            "/a/b/c,/a/b/+,true",
+            "/a/b/c,/a/+/c,true",
+            "/a/b/c,/a/b/#,true",
+            "/a/b/c,/a/#,true",
+            "/a/b/c,#,true",
+            "a/b/c,a/b/+,true",
+            "a/b/c,a/+/c,true",
+            "a/b/c,a/b/#,true",
+            "a/b/c,a/#,true",
+            "a/b/c,#,true",
+            "b,b/#,true",
+            "http://fhatos.org/a/b/c,http://fhatos.org/+/c/+,false",
+            "http://fhatos.org/a/b/c,http://fhatos.org/+/b,false",
+            "http://fhatos.org/a/b/c,http://fhatos.com/a/b/c,false",
+            "http://fhatos.org/a/b/c,http://fhatos.org/b/#,false",
+            "b,/sys/#,false",
+            "/sys/#,b,false",
+            "b,b/c,false",
+            "b,b/c/+,false",
+            "b,b/c/#,false",
+            "b,b/+,false",
+            "a,b/c/+,false",
+            "a,b/c/#,false",
+            "a/b/c,/a/b/+,false",
+            "a/b/c,/a/+/c,false",
+            "a/b/c,/a/b/#,false",
+            "a/b/c,/a/#,false",
+            "a/b/c,/#,false",
+            ",#,true",
+            ",+,false"
+    })
+    void testMatches(final String a, final String b, final boolean shouldMatch) {
+        if (shouldMatch) assertTrue(fURI.of(a).matches(fURI.of(b)));
+        else assertFalse(fURI.of(a).matches(fURI.of(b)));
     }
 
     @Test

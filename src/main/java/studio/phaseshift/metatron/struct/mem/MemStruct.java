@@ -47,7 +47,7 @@ public class MemStruct extends SObj.Rec implements Struct {
         super(Map.of(), MEMSTRUCT_TID, vid);
         this.pattern = pattern;
         // this.config = config;
-        LOG.info(Graphitty.parse("%s loaded at %s !g[!yaddr!g=>!!%s!g]!!".formatted(tid().toUri(true), SObj.Uri.of(this.vid), SObj.Uri.of(this.pattern))));
+        LOG.info(Graphitty.global().parse("%s loaded at %s !g[!yaddr!g=>!!%s!g]!!\n".formatted(tid().toUri(true), SObj.Uri.of(this.vid), SObj.Uri.of(this.pattern))));
     }
 
     @Override

@@ -20,13 +20,13 @@ package studio.phaseshift.metatron.lang.obj;
 
 import org.javatuples.Pair;
 import org.javatuples.Triplet;
-import org.jline.jansi.Ansi;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.inst.BInst;
 import studio.phaseshift.metatron.lang.inst.BInst.Gather;
 import studio.phaseshift.metatron.lang.inst.BInst.Initial;
 import studio.phaseshift.metatron.lang.inst.BInst.Scatter;
 import studio.phaseshift.metatron.lang.inst.BInst.Terminal;
+import studio.phaseshift.metatron.ui.ObjStringSerializer;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.ObjUtil;
 
@@ -34,7 +34,6 @@ import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
-import static org.jline.jansi.Ansi.ansi;
 import static studio.phaseshift.metatron.lang.inst.SInst.BLOCK_URI;
 
 public interface BObj extends Cloneable {
@@ -67,81 +66,7 @@ public interface BObj extends Cloneable {
         Obj clone();
 
         default String toString(final Palette palette) {
-            if (this.isNoObj())
-                return ansi().fg(palette.typeC()).a("noobj").reset().toString();
-            else if (this instanceof final Inst inst) {
-                Ansi s = ansi()
-                        .fg(palette.typeC()).
-                        a(MTRON_CORE_TYPES.contains(inst.tid()) ? "" : inst.tid())
-                        .fg(palette.formC())
-                        .a(MTRON_CORE_TYPES.contains(inst.tid()) ? "" : ':')
-                        .a("(");
-                for (int i = 0; i < inst.args().length(); i++) {
-                    s = s.a(inst.args().lstValue().get(i));
-                    if (i != inst.args().length() - 1)
-                        s = s.fg(palette.formC()).a(',');
-                }
-                return s.fg(palette.formC())
-                        .a(")[")
-                        .fg(palette.valueC())
-                        .a(inst.resolved() ? ObjUtil.isLambda(inst.f()) ? "λ" : inst.f() : "?")
-                        .fg(palette.formC())
-                        .a(']')
-                        .reset()
-                        .toString();
-            } else if (this instanceof final Rel rel) {
-                return ansi()
-                        .fg(palette.typeC())
-                        .a(MTRON_CORE_TYPES.contains(rel.tid()) ? "" : rel.tid())
-                        .fg(palette.formC())
-                        .a(MTRON_CORE_TYPES.contains(rel.tid()) ? "" : ':')
-                        .a("[")
-                        .a(rel.domain())
-                        .fg(palette.formC())
-                        .a("=>")
-                        .a(rel.range())
-                        .fg(palette.formC())
-                        .a(']').reset().toString();
-            } else if (this.isLst()) {
-                Ansi s = ansi()
-                        .fg(palette.typeC())
-                        .a(MTRON_CORE_TYPES.contains(this.tid()) ? "" : this.tid())
-                        .fg(palette.formC())
-                        .a(MTRON_CORE_TYPES.contains(this.tid()) ? "" : ':')
-                        .a("[");
-                for (int i = 0; i < this.<Lst>as().value().size(); i++) {
-                    s = s.a(this.<Lst>as().value().get(i));
-                    if (i != this.<Lst>as().value().size() - 1)
-                        s = s.fg(palette.formC()).a(',');
-                }
-                return s.fg(palette.formC()).a(']').reset().toString();
-            } else if (this.isRec()) {
-                Ansi s = ansi()
-                        .fg(palette.typeC())
-                        .a(MTRON_CORE_TYPES.contains(this.tid()) ? "" : this.tid())
-                        .fg(palette.formC())
-                        .a('[');
-                List<Map.Entry<Obj, Obj>> kv = new ArrayList<>(this.<Rec>as().value().entrySet());
-                for (int i = 0; i < kv.size(); i++) {
-                    s = s.a(kv.get(i).getKey()).fg(palette.formC()).a("=>").a(kv.get(i).getValue());
-                    if (i != kv.size() - 1)
-                        s = s.fg(palette.formC()).a(',');
-                }
-                return s.fg(palette.formC()).a(']').reset().toString();
-            } else
-                return ansi()
-                        .fg(palette.typeC())
-                        .a(MTRON_CORE_TYPES.contains(this.tid()) ? "" : this.tid())
-                        .fg(palette.formC())
-                        .a(MTRON_CORE_TYPES.contains(this.tid()) ? "" : ':')
-                        .fg(palette.valueC())
-                        .a(this.value())
-                        .fg(palette.form2C())
-                        .a(null == this.vid() ? "" : "@")
-                        .fg(palette.typeC())
-                        .a(null == this.vid() ? "" : this.vid())
-                        .reset()
-                        .toString();
+            return ObjStringSerializer.build().palette(palette).hideTypesMatching(MTRON_CORE_TYPES).simpleColon(true).create().write(this);
         }
 
         @Override
@@ -237,7 +162,7 @@ public interface BObj extends Cloneable {
             throw new IllegalStateException("obj is not an bool");
         }
 
-        default int intValue() {
+        default Long intValue() {
             if (this.isInt())
                 return ((Int) this).value();
             throw new IllegalStateException("obj is not an int");
@@ -365,7 +290,7 @@ public interface BObj extends Cloneable {
 
     interface Int extends Mono {
         @Override
-        Integer value();
+        Long value();
 
         @Override
         default Int apply(final Obj other) {

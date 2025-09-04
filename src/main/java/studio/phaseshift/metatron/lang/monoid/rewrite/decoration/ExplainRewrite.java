@@ -58,7 +58,7 @@ public class ExplainRewrite extends SObj.Inst implements Rewrite {
         public InstF f() {
             return new InstF(o -> {
                 BMonoid.Monoid monoid = new SMonoid.Monoid(this.args(0));
-                LOG.info(Graphitty.parse("introspecting\n\t%s".formatted(this)));
+                LOG.info(Graphitty.global().parse("introspecting\n\t%s".formatted(this)));
                 return o;
             });
         }

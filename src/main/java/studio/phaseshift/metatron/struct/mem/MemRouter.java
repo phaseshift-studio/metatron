@@ -43,7 +43,7 @@ public class MemRouter implements Router {
 
     public MemRouter(final fURI vid) {
         this.vid = vid;
-        LOG.info(Graphitty.parse("%s loaded at %s".formatted(this.tid().toUri(true), this.vid.toUri(true))));
+        LOG.info(Graphitty.global().parse("%s loaded at %s\n".formatted(this.tid().toUri(true), this.vid.toUri(true))));
     }
 
     public void registerStruct(final Struct struct) {

@@ -49,7 +49,6 @@
         <petitparser.version>2.4.0</petitparser.version>
         <jline.version>3.30.0</jline.version>
         <logback.version>1.5.18</logback.version>
-        <urin.version>5.2</urin.version>
         <slf4j.version>2.0.17</slf4j.version>
         <hive.version>1.3.8</hive.version>
     </properties>
@@ -133,11 +132,6 @@
             <version>1.6.0</version>
         </dependency>-->
         <!-- UTILITIES -->
-        <dependency>
-            <groupId>net.sourceforge.urin</groupId>
-            <artifactId>urin</artifactId>
-            <version>${urin.version}</version>
-        </dependency>
         <dependency>
             <groupId>com.google.code.gson</groupId>
             <artifactId>gson</artifactId>

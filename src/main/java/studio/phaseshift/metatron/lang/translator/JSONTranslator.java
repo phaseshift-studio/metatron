@@ -18,5 +18,57 @@
 
 package studio.phaseshift.metatron.lang.translator;
 
-public class JSONTranslator {
+import com.google.gson.*;
+import studio.phaseshift.metatron.lang.obj.BObj;
+import studio.phaseshift.metatron.lang.obj.SObj;
+
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
+public class JSONTranslator implements Translator<BObj.Obj, JsonElement> {
+    @Override
+    public BObj.Obj translate(final JsonElement json) {
+        if (json.isJsonNull())
+            return BObj.NoObj.of();
+        else if (json.isJsonPrimitive()) {
+            final JsonPrimitive jp = (JsonPrimitive) json;
+
+            if (jp.isBoolean())
+                return new SObj.Bool(jp.getAsBoolean());
+            else if (jp.isNumber()) {
+                return new SObj.Int(jp.getAsLong());
+                /* if (jp.getAsNumber() instanceof Float)
+                    return new SObj.Real(jp.getAsFloat());
+                else if (jp.getAsNumber() instanceof Double)
+                    return new SObj.Real(jp.getAsDouble());*/
+            } else if (jp.isString())
+                return new SObj.Str(jp.getAsString());
+        } else if (json.isJsonArray()) {
+            final JsonArray jp = (JsonArray) json;
+            final List<BObj.Obj> list = new ArrayList<>();
+            for (var j : jp.getAsJsonArray()) {
+                list.add(translate(j));
+            }
+            return new SObj.Lst(list);
+        } else if (json.isJsonObject()) {
+            final JsonObject jp = (JsonObject) json;
+            final Map<BObj.Obj, BObj.Obj> map = new LinkedHashMap<>();
+            for (var kv : jp.getAsJsonObject().asMap().entrySet()) {
+                map.put(new SObj.Uri(kv.getKey()), translate(kv.getValue()));
+            }
+            return new SObj.Rec(map);
+        }
+        throw new IllegalStateException("unknown type: " + json + "::" + json.getAsInt());
+    }
+
+    @Override
+    public JsonElement translate(final BObj.Obj obj) {
+        return null;
+    }
+
+    public BObj.Obj translateString(final String json) {
+        return this.translate(JsonParser.parseString(json));
+    }
 }

@@ -26,11 +26,11 @@ public class Palette {
 
     public static Palette GLOBAL = STANDARD;
 
-    Color typeC() {
+    public Color typeC() {
         return Color.BLUE;
     }
 
-    Color valueC() {
+    public Color valueC() {
         return Color.YELLOW;
     }
 

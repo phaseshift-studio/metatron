@@ -18,46 +18,48 @@
 
 package studio.phaseshift.metatron.ui;
 
-import studio.phaseshift.metatron.lang.obj.Palette;
+import studio.phaseshift.metatron.lang.obj.BObj;
 
 import java.io.BufferedOutputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.Locale;
 import java.util.Objects;
+import java.util.Random;
 
 import static org.jline.jansi.Ansi.Color.*;
 import static org.jline.jansi.Ansi.ansi;
 
-public class Graphitty {
+public class Graphitty implements ObjSerializer<String> {
 
     private String buffer = "";
     private final BufferedOutputStream printer;
+    private OutputStream out;
+    private final ObjSerializer<String> serializer;
     private boolean ansiOn = true;
     private boolean printerOn = true;
 
-    private static final Graphitty STANDARD = new Graphitty(System.out);
-    private static Palette PALETTE = Palette.STANDARD;
+    private static Graphitty GRAPHITTY;
 
-    public static void palette(final Palette palette) {
-        Graphitty.PALETTE = palette;
+    public static void init(final ObjSerializer<String> serializer, final OutputStream out) {
+        GRAPHITTY = new Graphitty(serializer, out);
     }
 
-    public static Graphitty singleton() {
-        return STANDARD;
+    public static Graphitty global() {
+        return GRAPHITTY;
     }
 
-    public static String parse(final String s) {
-        try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
-            new Graphitty(out).parseDSL(s);
-            return out.toString();
-        } catch (final Exception e) {
-            throw new IllegalArgumentException(e);
-        }
+    public String parse(final String s) {
+        this.out = new ByteArrayOutputStream();
+        this.parseDSL(s);
+        return ((ByteArrayOutputStream) this.out).toString();
     }
 
-    public Graphitty(final OutputStream output) {
-        this.printer = new BufferedOutputStream(output);
+    public Graphitty(final ObjSerializer<String> serializer, final OutputStream out) {
+        this.serializer = serializer;
+        this.out = out;
+        this.printer = new BufferedOutputStream(out);
     }
 
     private void parseDSL(final String buffer) {
@@ -211,11 +213,6 @@ public class Graphitty {
             this.print('\n');
         }
     }
-
-    public BufferedOutputStream get_printer() {
-        return this.printer;
-    }
-
 
     public void flush() {
         try {
@@ -453,27 +450,32 @@ public class Graphitty {
     ESC 7	save cursor position (DEC)
     ESC 8	restores the cursor to the last saved position (DEC)
     ESC[s	save cursor position (SCO)
-    ESC[u	restores the cursor to the last saved position (SCO)
-    
+    ESC[u	restores the cursor to the last saved position (SCO)*/
 
-            static String silly_print(final char *text, final boolean rainbow = true, final boolean rollercoaster = true) {
-                srand(time(nullptr));
-      final String colors = "rgbmcy";
-                String ret;
-                for(size_t i = 0; i < strlen(text); i++) {
-                    if(rainbow)
-                        ret = ret.append("!").append(String("") + colors[rand() % colors.length()]);
-                    ret =
-                            ret.append(String("") +
-                                    static_cast<char>(rollercoaster ? (rand() % 2 ? tolower(text.charAt(i)) : toupper(text.charAt(i))) : text.charAt(i)));
-                }
-                if(rainbow)
-                    ret = ret.append("!!");
-                return ret;
-            }
-        };
 
-   
+    static String sillyPrint(final String text, final boolean rainbow, final boolean rollercoaster) {
+        final Random random = new Random();
+        final String colors = "rgbmcy";
+        final StringBuilder ret = new StringBuilder();
+        for (int i = 0; i < text.length(); i++) {
+            if (rainbow)
+                ret.append("!").append(colors.charAt(random.nextInt() % colors.length()));
+            ret.append((rollercoaster ? (random.nextBoolean() ?
+                    ("" + text.charAt(i)).toLowerCase(Locale.ROOT) :
+                    ("" + text.charAt(i)).toUpperCase(Locale.ROOT)) : text.charAt(i)));
+        }
+        if (rainbow)
+            ret.append("!!");
+        return ret.toString();
+    }
 
- */
+    @Override
+    public String write(final BObj.Obj obj) throws IllegalStateException {
+        return this.serializer.write(obj);
+    }
+
+    @Override
+    public BObj.Obj read(final String data) throws IllegalStateException {
+        return this.serializer.read(data);
+    }
 }

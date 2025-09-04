@@ -18,9 +18,9 @@
 
 package studio.phaseshift.metatron.struct.mqtt;
 
+import com.google.gson.JsonParser;
 import com.hivemq.client.mqtt.MqttClient;
 import com.hivemq.client.mqtt.MqttGlobalPublishFilter;
-import com.hivemq.client.mqtt.datatypes.MqttTopic;
 import com.hivemq.client.mqtt.datatypes.MqttTopicFilter;
 import com.hivemq.client.mqtt.mqtt5.Mqtt5BlockingClient;
 import com.hivemq.client.mqtt.mqtt5.Mqtt5Client;
@@ -30,7 +30,7 @@ import org.slf4j.LoggerFactory;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.BObj;
 import studio.phaseshift.metatron.lang.obj.SObj;
-import studio.phaseshift.metatron.lang.parse.ObjParser;
+import studio.phaseshift.metatron.lang.translator.JSONTranslator;
 import studio.phaseshift.metatron.struct.Struct;
 
 import java.nio.charset.StandardCharsets;
@@ -114,19 +114,24 @@ public class MqttStruct extends SObj.Rec implements Struct {
     public BObj.Obj read(final fURI addr) {
         final Set<BObj.Obj> results = new HashSet<>();
         this.client.toBlocking().unsubscribeWith().topicFilter(addr.toString()).send();
-        LOG.info("unsubscribed from %s".formatted(SObj.Uri.of(addr)));
+        LOG.info("unsubscribed from %s\n".formatted(SObj.Uri.of(addr)));
         this.client
                 .toBlocking()
                 .subscribeWith()
                 .topicFilter(addr.toString())
                 .send();
         try {
+            final JSONTranslator jsonTranslator = new JSONTranslator();
             final long start = System.currentTimeMillis();
             while (System.currentTimeMillis() - start < 1000) {
                 Optional<Mqtt5Publish> o = this.incomingMessages.receive(1000, TimeUnit.MILLISECONDS);
                 o.filter(p -> MqttTopicFilter.of(addr.toString()).matches(p.getTopic().filter()))
-                        .ifPresent(p -> results.add(ObjParser.parse("'" + p.getPayload()
-                                .map(b -> StandardCharsets.UTF_8.decode(b).toString().replaceAll("'", "") + "'").orElse("noobj"))));
+                        .filter(p -> p.getPayload().isPresent())
+                        .ifPresent(p -> results.add(
+                                jsonTranslator.translate(JsonParser.parseString(StandardCharsets.UTF_8.decode(p.getPayload().get()).toString()))));
+
+                //ObjParser.parse("'" + p.getPayload()
+                //.map(b -> StandardCharsets.UTF_8.decode(b).toString().replaceAll("'", "") + "'").orElse("noobj"))));
                 // TODO: convert JSON to records
             }
         } catch (InterruptedException e) {

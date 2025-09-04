@@ -59,7 +59,7 @@ public class ObjParser {
 
     static {
         rel_parser.set(seq(m_type_prefix_opt_colon(REL_URI), seq(of('[').trim(), m_obj(), of("=>").trim(), m_obj(), of(']').trim())).map(t -> new SObj.Rel(Pair.with(pick(pick(t, 1), 1), pick(pick(t, 1), 3)), pick(t, 0))));
-        obj_parser.set(new ChoiceParser(
+        obj_parser.set(choice(
                 m_comment(),
                 m_noobj(),
                 m_bool(),
@@ -73,7 +73,7 @@ public class ObjParser {
                 m_inst(),
                 m_lst(),
                 m_uri()));
-        obj_no_code_parser.set(new ChoiceParser(
+        obj_no_code_parser.set(choice(
                 m_comment(),
                 m_noobj(),
                 m_bool(),
@@ -87,7 +87,7 @@ public class ObjParser {
                 m_uri()));
         lst_parser.set(seq(m_type_prefix_opt_colon(LST_URI), seq(of('[').trim(), m_obj().separatedBy(of(',').trim()), of(']').trim()).pick(1))
                 .map(t -> new SObj.Lst(ObjParser.<List>pick(t, 1).stream().filter(o -> o instanceof BObj.Obj).toList(), pick(t, 0))));
-        rec_parser.set(new SequenceParser(of('[').trim(), new SequenceParser(m_obj(), of("=>").trim(), m_obj()).separatedBy(of(',').trim()), of(']').trim())
+        rec_parser.set(seq(of('[').trim(), seq(m_obj(), of("=>").trim(), m_obj()).separatedBy(of(',').trim()), of(']').trim())
                 .map(t -> new SObj.Rec((Map) ((List) t).stream()
                         .filter(o -> o instanceof List)
                         .flatMap(o -> ((List) o).stream())
@@ -108,6 +108,7 @@ public class ObjParser {
 
     }
 
+
     public static <O> O parse(final String code) {
         if (code.trim().isEmpty())
             return (O) BObj.NoObj.of();
@@ -119,7 +120,7 @@ public class ObjParser {
                     result.getBuffer() + "\n" +
                             String.format("%" + (result.getPosition() + "[ERROR] ".length()) + "s", "") +
                             "!b^ !r" +
-                            result.getMessage() + "!!");
+                            result.getMessage() + "!!\n");
         return result.get();
     }
 

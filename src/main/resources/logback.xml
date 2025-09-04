@@ -19,10 +19,10 @@
 <configuration>
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
-            <pattern>%highlight([%-5level]) %msg%n</pattern>
+            <pattern>%highlight([%-5level]) %msg</pattern>
         </encoder>
     </appender>
-    <root level="debug">
+    <root level="info">
         <appender-ref ref="CONSOLE"/>
     </root>
 </configuration>

@@ -46,6 +46,6 @@ public interface Router extends Rec {
     void registerStruct(final Struct struct);
 
     default String toString(final Palette palette) {
-        return Graphitty.parse("!b%s!g:[!yrouter!g]!!".formatted(this.tid().toString()));
+        return Graphitty.global().parse("!b%s!g:[!yrouter!g]!!".formatted(this.tid().toString()));
     }
 }

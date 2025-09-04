@@ -169,15 +169,23 @@ public class SObj implements BObj {
 
     public static class Int extends Obj implements BObj.Int {
         public Int(final Integer value) {
+            super(value.longValue(), INT_URI);
+        }
+
+        public Int(final Long value) {
             super(value, INT_URI);
         }
 
         public Int(final Integer value, final fURI type) {
+            super(value.longValue(), type);
+        }
+
+        public Int(final Long value, final fURI type) {
             super(value, type);
         }
 
-        public Integer value() {
-            return (Integer) this.value;
+        public Long value() {
+            return (Long) this.value;
         }
 
         public static Int of(final String type, final int i) {
@@ -189,6 +197,10 @@ public class SObj implements BObj {
         }
 
         public static Int of(final int i) {
+            return new Int(Long.valueOf(i));
+        }
+
+        public static Int of(final long i) {
             return new Int(i);
         }
     }
@@ -197,6 +209,10 @@ public class SObj implements BObj {
 
         public Real(final Double value, final fURI type) {
             super(value, type);
+        }
+
+        public Real(final Float value) {
+            super(value, REAL_URI);
         }
 
         public Real(final Double value) {

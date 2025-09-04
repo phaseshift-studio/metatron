@@ -47,7 +47,7 @@ public interface Struct extends Poly {
     }
 
     default String toString(final Palette palette) {
-        return Graphitty.parse("!b%s!g:[!ypattern!g=>!y%s!g]!!".formatted(this.tid().toString(), this.pattern().toString()));
+        return Graphitty.global().parse("!b%s!g:[!ypattern!g=>!y%s!g]!!".formatted(this.tid().toString(), this.pattern().toString()));
     }
 
     @Override

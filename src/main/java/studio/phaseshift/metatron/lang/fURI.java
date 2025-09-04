@@ -18,19 +18,80 @@
 
 package studio.phaseshift.metatron.lang;
 
-import net.sourceforge.urin.*;
 import studio.phaseshift.metatron.lang.obj.BObj;
 import studio.phaseshift.metatron.lang.obj.SObj;
 
-import java.net.URI;
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class fURI {
-    protected final UrinReference<String, Query<String>, Fragment<String>> urin;
 
-    private fURI(final UrinReference<String, Query<String>, Fragment<String>> urin) {
-        this.urin = urin;
+    private final String host;
+    private final String scheme;
+    private final int port;
+    private final List<String> path;
+    private final String query;
+    private final boolean sstart;
+    private final boolean send;
+    // private final boolean wildcard;
+
+    private fURI(final String scheme, final String host, final int port, final boolean sstart, final List<String> path, final boolean send, final String query) {
+        this.host = host;
+        this.scheme = scheme;
+        this.port = port;
+        this.path = path;
+        this.query = query;
+        this.sstart = sstart;
+        this.send = send;
+    }
+
+    public fURI(final String uri) {
+        if (null == uri || uri.isEmpty()) {
+            this.scheme = null;
+            this.host = null;
+            this.port = -1;
+            this.path = Collections.emptyList();
+            this.sstart = false;
+            this.send = false;
+            this.query = null;
+            return;
+        }
+        int position = 0;
+        int i = uri.indexOf(":");
+        int temp = uri.indexOf("//");
+        if (i != -1 && i < temp) {
+            this.scheme = uri.substring(0, i);
+            position = i + 3;
+        } else {
+            i = 0;
+            this.scheme = null;
+        }
+        if (temp != -1) {
+            temp = uri.indexOf("/", position + 1);
+            final String[] authority = uri.substring(position, -1 == temp ? uri.length() : temp).split(":");
+            if (temp == -1)
+                temp = uri.length() - 1;
+            this.host = authority[0];
+            this.port = authority.length == 2 ? Integer.parseInt(authority[1]) : -1;
+        } else {
+            temp = uri.charAt(0) == '/' ? i + 1 : i;
+            this.host = null;
+            this.port = -1;
+        }
+        this.sstart = (this.host != null && null != this.scheme && uri.charAt(temp) == '/') || uri.charAt(0) == '/';
+        position = null != this.scheme ? temp + 1 : temp;
+        if (position == uri.length()) {
+            this.path = Collections.emptyList();
+            this.query = null;
+            this.send = false;
+            return;
+        }
+        temp = uri.indexOf("?");
+        if (temp == -1)
+            temp = uri.length();
+        this.path = Arrays.asList(uri.substring(position, temp).split("/"));
+        position = temp + 1;
+        this.query = position < uri.length() - 1 ? uri.substring(position) : null;
+        this.send = uri.charAt(position - 2) == '/';
     }
 
     public static fURI of(final String uri) {
@@ -42,101 +103,51 @@ public class fURI {
         return schemaType && null != scheme ? new SObj.Uri(this.scheme(null), fURI.of(scheme)) : new SObj.Uri(this);
     }
 
-    public fURI(final String uri) throws IllegalArgumentException {
-        try {
-            int colon = uri.indexOf(':');
-            int slash = uri.indexOf('/');
-            if (colon != -1 && colon < slash) {
-                this.urin = Scheme.scheme(uri.substring(0, colon)).parseUrin(uri);
-            } else {
-                this.urin = Scheme.scheme("m").parseUrinReference(uri);
-            }
-        } catch (final ParseException e) {
-            throw new IllegalArgumentException("%s problem".formatted(uri), e);
-        }
-    }
-
-    public List<String> segments() {
-        final List<String> segs = new ArrayList<>(this.urin.path().segments().size());
-        for (var s : this.urin.path().segments()) {
-            segs.add(s.value());
-        }
-        return segs;
-    }
-
     public fURI scheme(final String scheme) {
-        if (null == this.urin.asUri().getScheme())
-            return this;
-        else {
-            URI u = this.urin.asUri();
-            String authority = u.getAuthority();
-            String path = u.getPath();
-            String query = u.getQuery();
-            String newURI = "";
-            if (null != scheme) {
-                newURI += scheme;
-                newURI += ":";
-            }
-            if (authority != null) {
-                if (scheme != null)
-                    newURI += "/";
-                newURI += "/" + authority;
-            }
-            if (path != null) {
-                if (authority != null)
-                    newURI += "/";
-                newURI += path;
-            }
-            if (query != null) {
-                newURI += "?" + query;
-            }
-            return new fURI(newURI);
-        }
+        return new fURI(scheme, this.host, this.port, this.sstart, this.path, this.send, this.query);
     }
 
     public fURI path(final String path) {
-        return new fURI(this.urin.withPath(Path.path(path)));
+        return new fURI(this.scheme, this.host, this.port, path.charAt(0) == '/', Arrays.asList(path.split("/")), path.charAt(path.length() - 1) == '/', this.query);
+    }
+
+    public List<String> segments() {
+        return Collections.unmodifiableList(this.path);
     }
 
     public String scheme() {
-        return this.urin.asUri().getScheme();
+        return this.scheme;
     }
 
     public String hostOrSegment() {
-        return this.urin.hasAuthority() ? this.urin.asUri().getAuthority() : this.urin.path().segments().get(0).value();
+        return null != this.authority() ? this.host : this.path.get(0);
+    }
+
+    public String authority() {
+        return null == this.host ? null : this.host + (this.port == -1 ? "" : ":" + this.port);
     }
 
     public String host() {
-        return this.urin.asUri().getHost();
+        return this.host;
     }
 
     public int port(final int orElse) {
-        final int port = this.urin.asUri().getPort();
-        return -1 == port ? orElse : port;
+        return -1 == this.port ? orElse : this.port;
+    }
+
+    public int port() {
+        return this.port;
     }
 
     public boolean isAbsolute() {
-        return this.urin.hasAuthority() || this.urin.asUri().toString().startsWith("/");
+        return this.host != null || this.sstart;
     }
 
     public fURI prepend(final String segment) {
-        if (segment.isEmpty() || segment.equals("."))
-            return this;
-
-        final List<Segment<String>> path;
-        if (segment.contains("/")) {
-            path = new ArrayList<>(this.urin.path().segments());
-            final List<Segment<String>> segments = Arrays.stream(segment.split("/"))
-                    .filter(s -> !s.equals("."))
-                    .map(Segment::segment)
-                    .collect(Collectors.toList());
-            Collections.reverse(segments);
-            segments.forEach(s -> path.add(0, s));
-        } else {
-            path = new ArrayList<>(this.urin.path().segments());
-            path.add(0, Segment.segment(segment));
-        }
-        return new fURI(this.urin.withPath(AbsolutePath.path(path)));
+        final List<String> newPath = new ArrayList<>();
+        newPath.addAll(Arrays.asList(segment.split("/")));
+        newPath.addAll(this.path);
+        return new fURI(this.scheme, this.host, this.port, !newPath.isEmpty() && null != this.host || segment.charAt(0) == '/', newPath, this.path.isEmpty() ? false : this.send, this.query);
     }
 
     public fURI extend(final fURI extension) {
@@ -144,37 +155,17 @@ public class fURI {
     }
 
     public fURI extend(final String segment) {
-        if (segment.isEmpty() || segment.equals("."))
-            return this;
-
-        final List<Segment<String>> path;
-        if (segment.contains("/")) {
-            path = new ArrayList<>(this.urin.path().segments());
-            path.addAll(Arrays.stream(segment.split("/"))
-                    .filter(s -> !s.equals("."))
-                    .map(Segment::segment)
-                    .toList());
-        } else {
-            path = new ArrayList<>(this.urin.path().segments());
-            path.add(Segment.segment(segment));
-        }
-        return new fURI(this.urin.withPath(AbsolutePath.path(path)));
+        final List<String> newPath = new ArrayList<>(this.path.size() + 1);
+        newPath.addAll(this.path);
+        newPath.addAll(Arrays.asList(segment.split("/")));
+        return new fURI(this.scheme, this.host, this.port, this.sstart, newPath, segment.charAt(segment.length() - 1) == '/', this.query);
     }
 
     private fURI rePreTract(boolean retract, final int steps) {
-        final List<Segment<String>> path = this.urin.path().segments();
-        if (path.size() < steps)
-            return new fURI(this.urin.withPath(Path.path()));
-        for (int i = 0; i < steps; i++) {
-            if (retract)
-                path.remove(path.size() - 1);
-            else
-                path.remove(0);
-        }
-
-        return new fURI(this.isAbsolute() ?
-                this.urin.withPath(AbsolutePath.path(path)) :
-                Scheme.scheme("m").relativeReference(Path.rootlessPath(path)));
+        if (this.path.size() < steps)
+            return new fURI(this.scheme, this.host, this.port, false, Collections.emptyList(), false, this.query);
+        final List<String> newPath = retract ? this.path.subList(0, this.path.size() - steps) : this.path.subList(steps, this.path.size());
+        return new fURI(this.scheme, this.host, this.port, this.sstart && !newPath.isEmpty(), newPath, this.send && !newPath.isEmpty(), this.query);
 
     }
 
@@ -187,12 +178,15 @@ public class fURI {
     }
 
     public boolean hasPattern() {
-        return this.urin.toString().contains("#") || this.urin.toString().contains("+");
+        return (null != this.host && this.host.contains("#")) ||
+                this.path.toString().contains("#") ||
+                (null != this.host && this.host.contains("+")) ||
+                this.path.toString().contains("+");
     }
 
     private static boolean matchString(final String a, final String b) {
-        String[] as = a.split("/");
-        String[] bs = b.split("/");
+        final String[] as = a.split("/");
+        final String[] bs = b.split("/");
         for (int i = 0; i < bs.length; i++) {
             if (bs[i].equals("#") || (bs[i].equals("+") && i == bs.length - 1))
                 return true;
@@ -206,66 +200,78 @@ public class fURI {
         return true;
     }
 
-    public boolean hasQuery() {
-        return this.urin.hasQuery();
-    }
 
     public Map<String, String> query() {
-        if (!this.hasQuery())
+        if (null == this.query)
             return Map.of();
         final Map<String, String> q = new HashMap<>();
-        Arrays.stream(this.urin.query().value().split("&")).forEach(kv -> {
+        Arrays.stream(this.query.split("&")).forEach(kv -> {
             String[] pairs = kv.split("=");
             q.put(pairs[0], pairs.length > 1 ? pairs[1] : "");
         });
         return q;
     }
 
-    public fURI query(final Map<String, String> map) {
+    /*public fURI query(final Map<String, String> map) {
         final String queryString = map.entrySet().stream().map(kv -> kv.getValue().isEmpty() ? kv.getKey().toString() : kv.getKey() + "=" + kv.getValue()).reduce("", (a, b) -> a + "&" + b);
         return new fURI(Scheme.GenericScheme.scheme(this.urin.asUri().getScheme()).relativeReference(this.urin.authority(), AbsolutePath.path(this.urin.path()), Query.query(queryString)));
-    }
+    }*/
 
     public boolean matches(final fURI other) {
-        if (other.urin.asString().equals("#"))
+        if (other.toString().equals("#"))
             return true;
         if (!other.hasPattern())
-            return this.urin.equals(other.urin);
+            return this.equals(other);
         if (this.isAbsolute() != other.isAbsolute())
             return false;
-        if ((this.urin.hasAuthority() && other.urin.hasAuthority()) &&
-                (!(this.urin.authority().equals(other.urin.authority()) ||
-                        other.urin.authority().host().equals(Host.registeredName("+")) ||
-                        other.urin.authority().host().equals(Host.registeredName(""))))) {
-            return false;
-        }
-        if (other.urin.path().segments().isEmpty() && other.urin.toString().contains("#"))
+        if (Objects.equals(other.host, "#"))
             return true;
-        final List<Segment<String>> as = this.urin.path().segments();
-        final List<Segment<String>> bs = other.urin.path().segments();
-        for (int i = 0; i < bs.size(); i++) {
-            if (!bs.get(i).hasValue()) // #
+        if (!Objects.equals(this.host, other.host) && !Objects.equals(other.host, "+"))
+            return false;
+        if (this.path.isEmpty() && other.toString().contains("#"))
+            return true;
+        for (int i = 0; i < other.path.size(); i++) {
+            if (other.path.get(i).equals("#")) // #
                 return true;
-            if (bs.get(i).value().equals("+")) // +
+            if (other.path.get(i).equals("+")) // +
                 continue;
-            if (as.size() <= i) // a/b a/b/c
+            else if (this.path.size() <= i) // a/b a/b/c
                 return false;
-            if (!as.get(i).equals(bs.get(i))) // a a
+            else if (!this.path.get(i).equals(other.path.get(i))) // a a
                 return false;
         }
-        return as.size() == bs.size();
+        return this.path.size() == other.path.size();
     }
 
     public boolean equals(final Object other) {
-        return other instanceof fURI && this.urin.equals(((fURI) other).urin);
+        return other instanceof fURI &&
+                Objects.equals(this.scheme, ((fURI) other).scheme) &&
+                Objects.equals(this.host, ((fURI) other).host) &&
+                Objects.equals(this.port, ((fURI) other).port) &&
+                this.sstart == ((fURI) other).sstart &&
+                Objects.equals(this.path, ((fURI) other).path) &&
+                this.send == ((fURI) other).send &&
+                Objects.equals(this.query, ((fURI) other).query);
     }
 
     public int hashCode() {
-        return this.urin.hashCode();
+        return Objects.hash(this.scheme, this.host, this.port, this.sstart, this.path, this.send, this.query);
     }
 
     public String toString() {
-        return this.urin.toString();
+        final StringBuilder b = new StringBuilder(null == this.scheme ? "" : this.scheme + ":");
+        if (null != this.host)
+            b.append("//").append(this.authority());
+        if (this.sstart)
+            b.append("/");
+        for (final String path : this.path) {
+            b.append(path).append("/");
+        }
+        if (!this.send && !this.path.isEmpty())
+            b.delete(b.length() - 1, b.length());
+        if (null != this.query)
+            b.append("?").append(this.query);
+        return b.toString();
     }
 
 }
