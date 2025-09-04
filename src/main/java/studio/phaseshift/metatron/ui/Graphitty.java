@@ -50,6 +50,7 @@ public class Graphitty implements ObjSerializer<String> {
                     .simpleColon(true)
                     .create(), System.out);
     private static Graphitty GRAPHITTY = DEFAULT;
+
     public static void init(final ObjSerializer<String> serializer, final OutputStream out) {
         GRAPHITTY = new Graphitty(serializer, out);
     }

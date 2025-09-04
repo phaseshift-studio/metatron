@@ -578,6 +578,8 @@ public interface BObj extends Cloneable {
         @Override
         Iterable<Obj> value();
 
+        Objs append(final SObj.Obj obj);
+
         @Override
         default Iterator<Obj> iterator() {
             return this.value().iterator();

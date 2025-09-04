@@ -387,8 +387,23 @@ public class SObj implements BObj {
 
     public static class Objs extends Obj implements BObj.Objs {
 
+
+        public Objs(final Iterable<BObj.Obj> value, final fURI tid) {
+            super(value, tid);
+        }
+
         public Objs(final Iterable<BObj.Obj> value) {
             super(value, OBJS_URI);
+        }
+
+        @Override
+        public BObj.Objs append(final Obj obj) {
+            final List<BObj.Obj> list = new ArrayList<>();
+            for (final BObj.Obj a : this.value()) {
+                list.add(a);
+            }
+            list.add(obj);
+            return new Objs(list, this.tid);
         }
 
         @Override

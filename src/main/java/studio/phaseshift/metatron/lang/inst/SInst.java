@@ -25,31 +25,35 @@ import studio.phaseshift.metatron.lang.obj.SObj;
 import studio.phaseshift.metatron.lang.translator.JSONTranslator;
 import studio.phaseshift.metatron.struct.Router;
 import studio.phaseshift.metatron.ui.ProgressBar;
+import studio.phaseshift.metatron.util.IteratorUtil;
+
+import java.util.Iterator;
 
 public final class SInst {
-    public static final fURI START_URI = new fURI("start");
-    public static final fURI EXPLAIN_URI = new fURI("explain");
-    public static final fURI BLOCK_URI = new fURI("block");
-    public static final fURI IDENTITY_URI = new fURI("identity");
-    public static final fURI MATCH_URI = new fURI("match");
-    public static final fURI PLUS_URI = new fURI("plus");
-    public static final fURI MULT_URI = new fURI("mult");
-    public static final fURI MAP_URI = new fURI("map");
-    //public static final fURI SPLIT_URI = new fURI("split");
-    public static final fURI TO_URI = new fURI("to");
-    public static final fURI FROM_URI = new fURI("from");
-    public static final fURI REF_URI = new fURI("ref");
-    public static final fURI TYPE_URI = new fURI("type");
-    public static final fURI IS_URI = new fURI("is");
-    public static final fURI EQ_URI = new fURI("eq");
-    public static final fURI NEQ_URI = new fURI("neq");
-    public static final fURI GT_URI = new fURI("gt");
-    public static final fURI GTE_URI = new fURI("gte");
-    public static final fURI LT_URI = new fURI("lt");
-    public static final fURI LTE_URI = new fURI("lte");
-    public static final fURI GET_URI = new fURI("get");
+    public static final fURI START_URI = fURI.of("start");
+    public static final fURI EXPLAIN_URI = fURI.of("explain");
+    public static final fURI BLOCK_URI = fURI.of("block");
+    public static final fURI IDENTITY_URI = fURI.of("identity");
+    public static final fURI MATCH_URI = fURI.of("match");
+    public static final fURI PLUS_URI = fURI.of("plus");
+    public static final fURI MULT_URI = fURI.of("mult");
+    public static final fURI MAP_URI = fURI.of("map");
+    //public static final fURI SPLIT_URI = fURI.of("split");
+    public static final fURI TO_URI = fURI.of("to");
+    public static final fURI FROM_URI = fURI.of("from");
+    public static final fURI REF_URI = fURI.of("ref");
+    public static final fURI TYPE_URI = fURI.of("type");
+    public static final fURI IS_URI = fURI.of("is");
+    public static final fURI EQ_URI = fURI.of("eq");
+    public static final fURI NEQ_URI = fURI.of("neq");
+    public static final fURI GT_URI = fURI.of("gt");
+    public static final fURI GTE_URI = fURI.of("gte");
+    public static final fURI LT_URI = fURI.of("lt");
+    public static final fURI LTE_URI = fURI.of("lte");
+    public static final fURI GET_URI = fURI.of("get");
+    public static final fURI COUNT_URI = fURI.of("count");
     /// //////////////////////////////////////////////////////////
-    public static final fURI JSON_URI = new fURI("json");
+    public static final fURI JSON_URI = fURI.of("json");
 
     public static void load() {
         ProgressBar pg = new ProgressBar(20);
@@ -119,6 +123,12 @@ public final class SInst {
             else
                 return BObj.NoObj.of();
         }));
+        BInst.SymbolTable.load(pg.incr(COUNT_URI),
+                InstF.of((lhs, args) -> IteratorUtil.reduce(
+                        (Iterator) lhs.lstValue().get(1).iterator(),
+                        (BObj.Int) lhs.lstValue().get(0),
+                        (BObj.Int a, BObj.Int b) -> SObj.Int.of(a.value() + b.value()))), SObj.Int.of(0));
+
     }
 
     public static void ext() {

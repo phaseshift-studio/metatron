@@ -18,8 +18,10 @@
 
 package studio.phaseshift.metatron.lang.inst;
 
+import org.javatuples.Pair;
 import org.javatuples.Triplet;
 import studio.phaseshift.metatron.lang.fURI;
+import studio.phaseshift.metatron.lang.obj.BObj;
 import studio.phaseshift.metatron.lang.obj.BObj.Obj;
 import studio.phaseshift.metatron.lang.obj.SObj;
 
@@ -28,21 +30,29 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static studio.phaseshift.metatron.lang.inst.SInst.BLOCK_URI;
 import static studio.phaseshift.metatron.lang.obj.BObj.Inst;
 import static studio.phaseshift.metatron.lang.obj.BObj.InstF;
 
 public interface BInst {
     class SymbolTable {
-        private static final Map<fURI, InstF> TABLE = new HashMap<>();
+        private static final Map<fURI, Pair<InstF, Obj>> TABLE = new HashMap<>();
 
-        public static void load(final fURI type, InstF instF) {
-            TABLE.put(type, instF);
+        public static void load(final fURI type, final InstF instF) {
+            TABLE.put(type, Pair.with(instF, BObj.NoObj.of()));
+        }
+
+        public static void load(final fURI type, final InstF instF, final Obj seed) {
+            TABLE.put(type, Pair.with(instF, seed));
+        }
+
+        public static Inst resolve(final Obj lhs, final fURI instTID) {
+            return BInst.SymbolTable.resolve(lhs, new SObj.Inst(instTID));
         }
 
         public static Inst resolve(final Obj lhs, final Inst inst) {
+            final Pair<InstF, Obj> entry = TABLE.get(inst.tid());
             final InstF resolvedFunction = null == inst.f() ?
-                    TABLE.get(inst.tid()) :
+                    entry == null ? null : entry.getValue0() :
                     inst.f();
             if (null == resolvedFunction)
                 throw new IllegalArgumentException("unable to resolve %s".formatted(inst));
@@ -53,7 +63,7 @@ public interface BInst {
             }
             return inst.clone(new Triplet<>(new SObj.Lst(resolvedArgs),
                     resolvedFunction,
-                    inst.seed()));
+                    entry.getValue1()));
         }
 
     }

@@ -31,4 +31,9 @@ public class InstParseTest {
         assertMEquals(3, parse("1.plus(2)"));
     }
 
+    @Test
+    public void testCountInst() {
+      //  assertMEquals(3, parse("{1,2,3}.count()"));
+    }
+
 }

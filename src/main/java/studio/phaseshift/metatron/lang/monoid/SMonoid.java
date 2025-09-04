@@ -19,17 +19,20 @@
 package studio.phaseshift.metatron.lang.monoid;
 
 import org.jline.jansi.Ansi.Color;
+import studio.phaseshift.metatron.lang.inst.BInst;
 import studio.phaseshift.metatron.lang.monoid.rewrite.decoration.ExplainRewrite;
 import studio.phaseshift.metatron.lang.obj.BObj;
 import studio.phaseshift.metatron.lang.obj.BObj.Code;
 import studio.phaseshift.metatron.lang.obj.BObj.Inst;
 import studio.phaseshift.metatron.lang.obj.BObj.NoObj;
 import studio.phaseshift.metatron.lang.obj.BObj.Obj;
+import studio.phaseshift.metatron.lang.obj.SObj;
 import studio.phaseshift.metatron.util.IteratorUtil;
 
 import java.util.*;
 
 import static org.jline.jansi.Ansi.ansi;
+import static studio.phaseshift.metatron.lang.inst.SInst.COUNT_URI;
 
 public class SMonoid {
 
@@ -70,7 +73,7 @@ public class SMonoid {
                     this.halt();
                 }
             } else {
-                if (!this.inst.isGather()) {
+                if (this.inst.isGather() || this.inst.tid().equals(COUNT_URI)) {
                     IteratorUtil.iterate(IteratorUtil.consume(this.obj.iterator(), o -> {
                         final Monad m = new Monad(this.monoid, o, this.inst, this.bulk);
                         m.domain_loop(m.inst);
@@ -87,6 +90,24 @@ public class SMonoid {
             // LOG_WRITE(TRACE, this->processor_,
             //     L(FOS_TAB_2"monad at !gdomain!! of {} !m=>!! {} [!m{}!!]\n", this->toString(),
             //      current_inst_resolved -> toString(), "SIGNATURE HERE"));
+
+            if (inst.tid().equals(COUNT_URI)) {
+                if (this.obj.isObjs()) {
+                  /*  LOG_WRITE(TRACE, this->processor_,
+                            L("barrier monad [size: {}] fetch for processing by {} [!m{}!m]\n",
+                                    this->obj->objs_value()->size(), current_inst_resolved->toString(), "SIGNATURE HERE"));*/
+                    this.range_loop(inst.apply(this.obj), inst);
+                } else {
+                    Monad barrier = this.monoid.barriers.isEmpty() ? new Monad(this.monoid, SObj.Objs.of(List.of()), inst, 1) : this.monoid.barriers.remove();
+                    this.monoid.barriers.add(new Monad(this.monoid, barrier.obj.<BObj.Objs>as().append(this.obj), this.inst, this.bulk));
+                  /*  LOG_WRITE(TRACE, this->processor_,
+                            L("monad {} stored in barrier [size: {}] [!m{}!m]\n", this->toString(),
+                            this->processor_ -> barriers_ -> front()->obj -> objs_value()->size(), "SIGNATURE HERE"));*/
+                }
+            } else {
+                this.range_loop(inst.apply(this.obj), inst);
+            }
+
           /*  if (inst.is_gather() ) {
                 if (this->obj -> is_objs()){
                     LOG_WRITE(TRACE, this->processor_,
@@ -102,7 +123,7 @@ public class SMonoid {
                 }
             } else {*/
             //  System.out.println("evaluating " + this + "---" + inst);
-            this.range_loop(inst.apply(this.obj), inst);
+
             //}
         }
 
@@ -132,7 +153,7 @@ public class SMonoid {
                 }
             } else {*/
             final Inst nextInst = this.monoid.code.nextInst(inst);
-            if (!nextInst.isGather()) {
+            if (!nextInst.isGather() && !nextInst.tid().equals(COUNT_URI)) {
                 IteratorUtil.iterate(IteratorUtil.consume(nextObj.iterator(), o -> {
                     final Monad m = new Monad(this.monoid, o, nextInst, this.bulk);
                     this.monoid.running.add(m);
@@ -208,25 +229,25 @@ public class SMonoid {
                 //this.code = Rewriter({Rewriter::by(), Rewriter::explain()}).apply(this.code);
                 // setup global behavior around barriers, initials, and terminals
                 boolean first = true;
-                for (var obj : this.code.value()) {
+                for (final Inst inst : this.code.value()) {
                     try {
-           /* const Inst_p resolved = TYPE_INST_RESOLVER(Obj::to_type(OBJ_FURI), inst);
-            const Obj_p seed_copy = resolved.inst_seed(resolved);
-                    if(resolved.is_gather()) {
-                        // MANY_TO_??
-              const Monad_p m = M(seed_copy, inst);
-                        this.barriers_.push_back(m);
-                        LOG_WRITE(DEBUG, this, L(FOS_TAB_2 "!ybarrier!! monad created: {}\n", m.toString()));
-                    } else if(resolved.is_initial() || (first && resolved.is_map())) {
-                        // ZERO/MAYBE*-TO_??
+                        final Inst resolved = BInst.SymbolTable.resolve(NoObj.of(), inst.tid());
+                        final Obj seed_copy = resolved.seed();
+                        if (inst.tid().equals(COUNT_URI) || resolved.isGather()) {
+                            // MANY_TO_??
+                            final Monad m = new Monad(this, seed_copy, inst, 1);
+                            this.barriers.add(m);
+                            //  LOG_WRITE(DEBUG, this, L(FOS_TAB_2"!ybarrier!! monad created: {}\n", m.toString()));
+                        }/* else if (resolved.isInitial() || (first && resolved.isM())) {
+                            // ZERO/MAYBE*-TO_??
               const Monad_p m = M(noobj(), inst); // TODO: use seed
-                        this.running_.push_back(m);
-                        LOG_WRITE(DEBUG, this, L(FOS_TAB_2 "!ginitial!! monad created: {}\n", m.toString()));
-                    }*/
+                            this.running_.push_back(m);
+                            LOG_WRITE(DEBUG, this, L(FOS_TAB_2"!ginitial!! monad created: {}\n", m.toString()));
+                        }*/
                     } catch (final Exception e) {
                         // throw e;
                     }
-                    first = false;
+                    // first = false;
                 }
                 if (runner != null) {
                     this.running.add(new Monad(this, runner, this.code.value().get(0), 1));
