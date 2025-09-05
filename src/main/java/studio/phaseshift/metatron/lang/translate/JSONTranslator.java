@@ -16,16 +16,15 @@
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.lang.translator;
+package studio.phaseshift.metatron.lang.translate;
 
 import com.google.gson.*;
 import studio.phaseshift.metatron.lang.obj.BObj;
 import studio.phaseshift.metatron.lang.obj.SObj;
 
+import java.net.URI;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
 public class JSONTranslator implements Translator<BObj.Obj, JsonElement> {
     @Override
@@ -34,32 +33,36 @@ public class JSONTranslator implements Translator<BObj.Obj, JsonElement> {
             return BObj.NoObj.of();
         else if (json.isJsonPrimitive()) {
             final JsonPrimitive jp = (JsonPrimitive) json;
-
             if (jp.isBoolean())
-                return  SObj.Bool.of(jp.getAsBoolean());
+                return SObj.Bool.of(jp.getAsBoolean());
             else if (jp.isNumber()) {
-                return  SObj.Int.of(jp.getAsLong());
-                /* if (jp.getAsNumber() instanceof Float)
-                    return new SObj.Real(jp.getAsFloat());
-                else if (jp.getAsNumber() instanceof Double)
-                    return new SObj.Real(jp.getAsDouble());*/
-            } else if (jp.isString())
-                return  SObj.Str.of(jp.getAsString());
+                if (jp.getAsString().contains("."))
+                    return SObj.Real.of(jp.getAsDouble());
+                else
+                    return SObj.Int.of(jp.getAsLong());
+            } else if (jp.isString()) {
+                final String jpstr = jp.getAsString();
+                try {
+                    return SObj.Uri.of(URI.create(jpstr).toString());
+                } catch (Exception e) {
+                    return SObj.Str.of(jpstr);
+                }
+            }
         } else if (json.isJsonArray()) {
             final JsonArray jp = (JsonArray) json;
             final List<BObj.Obj> list = new ArrayList<>();
             for (var j : jp.getAsJsonArray()) {
                 list.add(translate(j));
             }
-            return  SObj.Lst.of(list);
-        } /*else if (json.isJsonObject()) {
+            return SObj.Lst.of(list);
+        } else if (json.isJsonObject()) {
             final JsonObject jp = (JsonObject) json;
-            final Map<BObj.Obj, BObj.Obj> map = new LinkedHashMap<>();
+            final List<BObj.Rel> map = new ArrayList<>();
             for (var kv : jp.getAsJsonObject().asMap().entrySet()) {
-                map.put( SObj.Uri.of(kv.getKey()), translate(kv.getValue()));
+                map.add(SObj.Rel.of(SObj.Uri.of(kv.getKey()), translate(kv.getValue())));
             }
-            return new SObj.Rec(map);
-        }*/
+            return SObj.Lst.of(map);
+        }
         throw new IllegalStateException("unknown type: " + json + "::" + json.getAsInt());
     }
 

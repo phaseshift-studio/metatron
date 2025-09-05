@@ -184,7 +184,8 @@ public class ObjParser {
     }
 
     public static Parser m_str() {
-        return seq(m_type_prefix(STR_URI), seq(of('\''), any().starLazy(of('\'')), of('\''))
+        return seq(m_type_prefix(STR_URI), seq(choice(of('\''), of('"')), any().starLazy(choice(of('\''), of('"'))),
+                choice(of('\''), of('"')))
                 .pick(1)
                 .flatten())
                 .map(t -> new SObj.Str(ObjParser.<String>pick(t, 1).substring(1, ObjParser.<String>pick(t, 1).length() - 1), pick(t, 0), null));

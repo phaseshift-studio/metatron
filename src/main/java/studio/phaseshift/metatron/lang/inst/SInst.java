@@ -22,7 +22,7 @@ import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.BObj;
 import studio.phaseshift.metatron.lang.obj.BObj.InstF;
 import studio.phaseshift.metatron.lang.obj.SObj;
-import studio.phaseshift.metatron.lang.translator.JSONTranslator;
+import studio.phaseshift.metatron.lang.translate.JSONTranslator;
 import studio.phaseshift.metatron.struct.Router;
 import studio.phaseshift.metatron.ui.ProgressBar;
 import studio.phaseshift.metatron.util.IteratorUtil;

@@ -30,7 +30,7 @@ import org.slf4j.LoggerFactory;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.BObj;
 import studio.phaseshift.metatron.lang.obj.SObj;
-import studio.phaseshift.metatron.lang.translator.JSONTranslator;
+import studio.phaseshift.metatron.lang.translate.JSONTranslator;
 import studio.phaseshift.metatron.struct.Struct;
 
 import java.nio.charset.StandardCharsets;

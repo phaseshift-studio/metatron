@@ -50,7 +50,7 @@ public class ProgressBar {
         }
         Graphitty.stdout().print("!g] !y%d%%!! %-25s\r".formatted((int) percentage, message));
         try {
-            Thread.sleep(25);
+            Thread.sleep(10);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
