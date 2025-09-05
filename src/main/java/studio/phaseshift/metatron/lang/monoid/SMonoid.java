@@ -18,7 +18,10 @@
 
 package studio.phaseshift.metatron.lang.monoid;
 
+import org.apache.commons.collections.IteratorUtils;
 import org.jline.jansi.Ansi.Color;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import studio.phaseshift.metatron.lang.inst.BInst;
 import studio.phaseshift.metatron.lang.monoid.rewrite.decoration.ExplainRewrite;
 import studio.phaseshift.metatron.lang.obj.BObj;
@@ -33,10 +36,12 @@ import java.util.*;
 
 import static org.jline.jansi.Ansi.ansi;
 import static studio.phaseshift.metatron.lang.inst.SInst.COUNT_URI;
+import static studio.phaseshift.metatron.lang.inst.SInst.SUM_URI;
 
 public class SMonoid {
 
     public static class Monad implements BMonoid.Monad {
+        private static final Logger LOG = LoggerFactory.getLogger(Monad.class);
         BObj.Obj obj;
         Inst inst;
         long bulk = 1;
@@ -73,12 +78,14 @@ public class SMonoid {
                     this.halt();
                 }
             } else {
-                if (this.inst.isGather() || this.inst.tid().equals(COUNT_URI)) {
+                if (!Set.of(COUNT_URI, SUM_URI).contains(inst.tid())) {
+                    LOG.debug("processing inst {} with {}", this.inst, IteratorUtils.toList(this.obj.iterator()));
                     IteratorUtil.iterate(IteratorUtil.consume(this.obj.iterator(), o -> {
                         final Monad m = new Monad(this.monoid, o, this.inst, this.bulk);
                         m.domain_loop(m.inst);
                     }));
                 } else {
+                    LOG.debug("processing barrier {} with {}", this.inst, IteratorUtils.toList(this.obj.iterator()));
                     this.domain_loop(this.inst);
                 }
             }
@@ -91,7 +98,7 @@ public class SMonoid {
             //     L(FOS_TAB_2"monad at !gdomain!! of {} !m=>!! {} [!m{}!!]\n", this->toString(),
             //      current_inst_resolved -> toString(), "SIGNATURE HERE"));
 
-            if (inst.tid().equals(COUNT_URI)) {
+            if (Set.of(COUNT_URI, SUM_URI).contains(inst.tid())) {
                 if (this.obj.isObjs()) {
                   /*  LOG_WRITE(TRACE, this->processor_,
                             L("barrier monad [size: {}] fetch for processing by {} [!m{}!m]\n",
@@ -99,6 +106,10 @@ public class SMonoid {
                     this.range_loop(inst.apply(this.obj), inst);
                 } else {
                     Monad barrier = this.monoid.barriers.isEmpty() ? new Monad(this.monoid, SObj.Objs.of(List.of()), inst, 1) : this.monoid.barriers.remove();
+                    if (!barrier.obj.isObjs()) {
+                        LOG.warn("barrier does not contain and objs: {}", barrier.obj);
+                        barrier.obj = SObj.Objs.of(List.of(barrier.obj));
+                    }
                     this.monoid.barriers.add(new Monad(this.monoid, barrier.obj.<BObj.Objs>as().append(this.obj), this.inst, this.bulk));
                   /*  LOG_WRITE(TRACE, this->processor_,
                             L("monad {} stored in barrier [size: {}] [!m{}!m]\n", this->toString(),
@@ -153,7 +164,8 @@ public class SMonoid {
                 }
             } else {*/
             final Inst nextInst = this.monoid.code.nextInst(inst);
-            if (!nextInst.isGather() && !nextInst.tid().equals(COUNT_URI)) {
+            if (Set.of(COUNT_URI, SUM_URI).contains(inst.tid())) {
+                LOG.debug("scattering monad obj: {} (over {})", this.obj, nextInst);
                 IteratorUtil.iterate(IteratorUtil.consume(nextObj.iterator(), o -> {
                     final Monad m = new Monad(this.monoid, o, nextInst, this.bulk);
                     this.monoid.running.add(m);
@@ -208,7 +220,9 @@ public class SMonoid {
     }
 
     public static class Monoid implements BMonoid.Monoid {
+        private static final Logger LOG = LoggerFactory.getLogger(Monoid.class);
         protected Code code;
+
         // todo: barrier and running to use monad set
         Queue<Monad> running = new LinkedList<>();
         Queue<Monad> barriers = new LinkedList<>();
@@ -232,10 +246,11 @@ public class SMonoid {
                 for (final Inst inst : this.code.value()) {
                     try {
                         final Inst resolved = BInst.SymbolTable.resolve(NoObj.of(), inst.tid());
-                        final Obj seed_copy = resolved.seed();
-                        if (inst.tid().equals(COUNT_URI) || resolved.isGather()) {
+
+                        if (Set.of(COUNT_URI, SUM_URI).contains(inst.tid())) {
                             // MANY_TO_??
-                            final Monad m = new Monad(this, seed_copy, inst, 1);
+                            LOG.debug("barrier inst found: {} (w/ seed {})", resolved, resolved.seed());
+                            final Monad m = new Monad(this, resolved.seed(), inst, 1);
                             this.barriers.add(m);
                             //  LOG_WRITE(DEBUG, this, L(FOS_TAB_2"!ybarrier!! monad created: {}\n", m.toString()));
                         }/* else if (resolved.isInitial() || (first && resolved.isM())) {
@@ -245,7 +260,7 @@ public class SMonoid {
                             LOG_WRITE(DEBUG, this, L(FOS_TAB_2"!ginitial!! monad created: {}\n", m.toString()));
                         }*/
                     } catch (final Exception e) {
-                        // throw e;
+                        throw new RuntimeException(e);
                     }
                     // first = false;
                 }

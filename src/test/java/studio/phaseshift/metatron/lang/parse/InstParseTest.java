@@ -18,13 +18,21 @@
 
 package studio.phaseshift.metatron.lang.parse;
 
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import studio.phaseshift.metatron.lang.inst.BInst;
+import studio.phaseshift.metatron.lang.inst.SInst;
 import studio.phaseshift.metatron.lang.obj.SObj.Obj;
 
 import static studio.phaseshift.metatron.MetatronTest.assertMEquals;
 import static studio.phaseshift.metatron.lang.parse.ObjParser.parse;
 
 public class InstParseTest {
+
+    @BeforeAll
+    public static void begin() {
+        SInst.load();
+    }
 
     @Test
     public void testPlusInst() {
@@ -33,7 +41,12 @@ public class InstParseTest {
 
     @Test
     public void testCountInst() {
-      //  assertMEquals(3, parse("{1,2,3}.count()"));
+       assertMEquals(3, parse("{1,2,3}.count()"));
+    }
+
+    @Test
+    public void testSumInst() {
+        assertMEquals(6, parse("{1,2,3}.sum()"));
     }
 
 }

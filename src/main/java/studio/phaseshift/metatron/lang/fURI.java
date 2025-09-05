@@ -249,17 +249,19 @@ public class fURI {
 
     public boolean equals(final Object other) {
         return other instanceof fURI &&
+                this.toString().equals(other.toString());/*
                 Objects.equals(this.scheme, ((fURI) other).scheme) &&
                 Objects.equals(this.host, ((fURI) other).host) &&
                 Objects.equals(this.port, ((fURI) other).port) &&
                 this.sstart == ((fURI) other).sstart &&
                 Objects.equals(this.path, ((fURI) other).path) &&
                 this.send == ((fURI) other).send &&
-                Objects.equals(this.query, ((fURI) other).query);
+                Objects.equals(this.query, ((fURI) other).query);*/
     }
 
     public int hashCode() {
-        return Objects.hash(this.scheme, this.host, this.port, this.sstart, this.path, this.send, this.query);
+      //  return Objects.hash(this.scheme, this.host, this.port, this.sstart, this.path, this.send, this.query);
+        return this.toString().hashCode();
     }
 
     public String toString() {

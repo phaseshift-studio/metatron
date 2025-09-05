@@ -45,8 +45,8 @@ public interface BInst {
             TABLE.put(type, Pair.with(instF, seed));
         }
 
-        public static Inst resolve(final Obj lhs, final fURI instTID) {
-            return BInst.SymbolTable.resolve(lhs, new SObj.Inst(instTID));
+        public static Inst resolve(final Obj lhs, final fURI insttid) {
+            return BInst.SymbolTable.resolve(lhs, new SObj.Inst(insttid));
         }
 
         public static Inst resolve(final Obj lhs, final Inst inst) {
@@ -55,7 +55,7 @@ public interface BInst {
                     entry == null ? null : entry.getValue0() :
                     inst.f();
             if (null == resolvedFunction)
-                throw new IllegalArgumentException("unable to resolve %s".formatted(inst));
+                throw new IllegalArgumentException("unable to resolve %s\n%s".formatted(inst,TABLE.entrySet()));
             final List<Obj> resolvedArgs = new ArrayList<>();
             final boolean blocking = inst.isBlocking();
             for (final Obj arg : inst.args()) {

@@ -52,6 +52,7 @@ public final class SInst {
     public static final fURI LTE_URI = fURI.of("lte");
     public static final fURI GET_URI = fURI.of("get");
     public static final fURI COUNT_URI = fURI.of("count");
+    public static final fURI SUM_URI = fURI.of("sum");
     /// //////////////////////////////////////////////////////////
     public static final fURI JSON_URI = fURI.of("json");
 
@@ -125,8 +126,14 @@ public final class SInst {
         }));
         BInst.SymbolTable.load(pg.incr(COUNT_URI),
                 InstF.of((lhs, args) -> IteratorUtil.reduce(
-                        (Iterator) lhs.lstValue().get(1).iterator(),
-                        (BObj.Int) lhs.lstValue().get(0),
+                        (Iterator) lhs.objsValue().iterator(),
+                        (BObj.Int) SObj.Inst.of(0),
+                        (BObj.Int a, BObj.Int b) -> SObj.Int.of(a.value() + 1))), SObj.Int.of(0));
+
+        BInst.SymbolTable.load(pg.incr(SUM_URI),
+                InstF.of((lhs, args) -> IteratorUtil.reduce(
+                        (Iterator) lhs.objsValue().iterator(),
+                        (BObj.Int) SObj.Inst.of(0),
                         (BObj.Int a, BObj.Int b) -> SObj.Int.of(a.value() + b.value()))), SObj.Int.of(0));
 
     }

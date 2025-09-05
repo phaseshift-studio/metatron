@@ -189,7 +189,13 @@ public interface BObj extends Cloneable {
         default List<Obj> lstValue() {
             if (this.isLst())
                 return ((Lst) this).value();
-            throw new IllegalStateException("obj is not an lst");
+            throw new IllegalStateException("%s is not an lst".formatted(this));
+        }
+
+        default Iterable<Obj> objsValue() {
+            if (this.isObjs())
+                return ((Objs) this).value();
+            throw new IllegalStateException("%s is not an objs".formatted(this));
         }
 
     /*    default Map<Obj, Obj> recValue() {

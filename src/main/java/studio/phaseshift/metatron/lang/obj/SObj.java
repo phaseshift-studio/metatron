@@ -60,8 +60,11 @@ public class SObj implements BObj {
         @Override
         public Obj clone() {
             try {
-                Object clone = super.clone();
-                return (Obj) clone;
+                Obj clone = (Obj) super.clone();
+                clone.tid = this.tid;
+                clone.vid = this.vid;
+                clone.value = this.value;
+                return clone;
             } catch (final CloneNotSupportedException e) {
                 throw new IllegalStateException(e);
             }
@@ -86,16 +89,19 @@ public class SObj implements BObj {
 
         @Override
         public boolean equals(final Object other) {
-            if (this.isNoObj())
-                return null == other || Obj.of(other).isNoObj();
-            if (null == other || Obj.of(other).isNoObj())
+            if (!(other instanceof BObj.Obj))
                 return false;
-            return Obj.of(other).value().equals(this.value) && Obj.of(other).tid().equals(this.tid);
+            final BObj.Obj otherObj = (BObj.Obj) other;
+            if (this.isNoObj())
+                return otherObj.isNoObj();
+            if (otherObj.isNoObj())
+                return false;
+            return otherObj.value().equals(this.value) && otherObj.tid().equals(this.tid);
         }
 
         @Override
         public int hashCode() {
-            return Objects.hashCode(this.value) + Objects.hashCode(this.tid);
+            return Objects.hash(this.value, this.tid);
         }
 
         @Override
