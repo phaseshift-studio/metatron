@@ -26,7 +26,8 @@ import studio.phaseshift.metatron.lang.obj.Palette;
 import studio.phaseshift.metatron.lang.parse.ObjParser;
 import studio.phaseshift.metatron.util.ObjUtil;
 
-import java.util.*;
+import java.util.HashSet;
+import java.util.Set;
 
 import static org.jline.jansi.Ansi.ansi;
 
@@ -80,19 +81,22 @@ public class ObjStringSerializer implements ObjSerializer<String> {
                     .fg(this.builder.palette.formC())
                     .a(']').reset().toString();
         } else if (obj instanceof final BObj.Lst lst) {
-            Ansi s = ansi()
-                    .fg(this.builder.palette.typeC())
-                    .a(this.builder.hideTypes.contains(lst.tid()) ? "" : lst.tid())
-                    .fg(this.builder.palette.formC())
-                    .a(this.builder.hideTypes.contains(lst.tid()) ? "" : ':')
-                    .a("[");
-            for (int i = 0; i < lst.value().size(); i++) {
-                s = s.a(lst.value().get(i));
-                if (i != lst.<BObj.Lst>as().value().size() - 1)
-                    s = s.fg(this.builder.palette.formC()).a(',');
+            Ansi s = generateTID(ansi(), obj)
+                    .a('[').fg(this.builder.palette.valueC());
+            for (final BObj.Obj o : lst.value()) {
+                s = s.a(o).fg(this.builder.palette.formC()).a(',');
             }
-            return s.fg(this.builder.palette.formC()).a(']').reset().toString();
-        } /*else if (obj instanceof final BObj.Rec rec) {
+            s = s.cursorLeft(1).fg(this.builder.palette.formC()).a(']');
+            return generateVID(s, lst).reset().toString();
+        } else if (obj instanceof final BObj.Objs objs) {
+            Ansi s = generateTID(ansi(), obj)
+                    .a('{').fg(this.builder.palette.valueC());
+            for (final BObj.Obj o : objs.value()) {
+                s = s.a(o).fg(this.builder.palette.formC()).a(',');
+            }
+            s = s.cursorLeft(1).fg(this.builder.palette.formC()).a('}');
+            return generateVID(s, objs).reset().toString();
+        }/*else if (obj instanceof final BObj.Rec rec) {
             Ansi s = ansi()
                     .fg(this.builder.palette.typeC())
                     .a(this.builder.hideTypes.contains(rec.tid()) ? "" : rec.tid())
@@ -106,19 +110,27 @@ public class ObjStringSerializer implements ObjSerializer<String> {
             }
             return s.fg(this.builder.palette.formC()).a(']').reset().toString();
         }*/ else
-            return ansi()
-                    .fg(this.builder.palette.typeC())
-                    .a(this.builder.hideTypes.contains(obj.tid()) ? "" : obj.tid())
-                    .fg(this.builder.palette.formC())
-                    .a(this.builder.hideTypes.contains(obj.tid()) ? "" : ':')
+            return generateVID(generateTID(ansi(), obj)
                     .fg(this.builder.palette.valueC())
                     .a(obj.value())
-                    .fg(this.builder.palette.form2C())
-                    .a(null == obj.vid() ? "" : "@")
-                    .fg(this.builder.palette.typeC())
-                    .a(null == obj.vid() ? "" : obj.vid())
+                    .fg(this.builder.palette.form2C()), obj)
                     .reset()
                     .toString();
+    }
+
+    private Ansi generateVID(final Ansi ansi, final BObj.Obj obj) {
+        return null == obj.vid() ? ansi : ansi.fg(this.builder.palette.typeC())
+                .fg(this.builder.palette.formC())
+                .a('@')
+                .fg(this.builder.palette.typeC())
+                .a(obj.vid());
+    }
+
+    private Ansi generateTID(final Ansi ansi, final BObj.Obj obj) {
+        return this.builder.hideTypes.contains(obj.tid()) ? ansi : ansi.fg(this.builder.palette.typeC())
+                .a(obj.tid())
+                .fg(this.builder.palette.formC())
+                .a(':');
     }
 
     @Override

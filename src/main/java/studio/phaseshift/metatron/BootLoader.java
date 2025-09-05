@@ -40,7 +40,7 @@ public class BootLoader {
 
     private static final Logger LOG = LoggerFactory.getLogger(BootLoader.class);
 
-    public static Router ROUTER;
+    public static Router ROUTER = new MemRouter(fURI.of("/sys/router"));
 
     public static void load() {
         try {
@@ -52,12 +52,12 @@ public class BootLoader {
         }
         final Struct mnt = new MemStruct(fURI.of("/mnt/#"), fURI.of("/mnt"));
         final Struct sys = new MemStruct(fURI.of("/sys/#"), fURI.of("/mnt/sys"));
-        final Router router = (ROUTER = new MemRouter(fURI.of("/sys/router")));
-        router.registerStruct(mnt);
-        router.registerStruct(sys);
-        router.registerStruct(new MemStruct(fURI.of("/mtron/#"), fURI.of("/mnt/lang/mtron")));
-        router.registerStruct(new MemStruct(fURI.of("+"), fURI.of("/sys/stack")));
-        router.registerStruct(new MqttStruct(Map.of(SObj.Uri.of("broker"), SObj.Uri.of("ip://192.168.66.2:1883"), SObj.Uri.of("pattern"), SObj.Uri.of("homeassistant/#")), MQTT_TID, fURI.of("/mnt/mqtt")));
+       // final Router router = (ROUTER = new MemRouter(fURI.of("/sys/router")));
+        Router.global().registerStruct(mnt);
+        Router.global().registerStruct(sys);
+        Router.global().registerStruct(new MemStruct(fURI.of("/mtron/#"), fURI.of("/mnt/lang/mtron")));
+        Router.global().registerStruct(new MemStruct(fURI.of("+"), fURI.of("/sys/stack")));
+        Router.global().registerStruct(new MqttStruct(Map.of(SObj.Uri.of("broker"), SObj.Uri.of("ip://192.168.66.2:1883"), SObj.Uri.of("pattern"), SObj.Uri.of("homeassistant/#")), MQTT_TID, fURI.of("/mnt/mqtt")));
         SInst.load();
         SInst.ext();
     }

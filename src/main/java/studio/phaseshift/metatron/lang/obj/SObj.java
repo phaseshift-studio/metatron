@@ -22,6 +22,7 @@ import org.javatuples.Pair;
 import org.javatuples.Triplet;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.monoid.SMonoid.Monoid;
+import studio.phaseshift.metatron.struct.Router;
 import studio.phaseshift.metatron.util.IteratorUtil;
 
 import java.util.*;
@@ -41,6 +42,8 @@ public class SObj implements BObj {
             this.tid = tid;
             this.value = value;
             this.vid = vid;
+            if (null != this.vid && Router.global().hasStruct(this.vid))
+                Router.global().write(this.vid, this);
         }
 
         @Override

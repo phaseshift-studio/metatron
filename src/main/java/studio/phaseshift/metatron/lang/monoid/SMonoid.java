@@ -264,10 +264,12 @@ public class SMonoid {
                     }
                     // first = false;
                 }
-                if (runner != null) {
-                    this.running.add(new Monad(this, runner, this.code.value().get(0), 1));
-                } else if (this.running.isEmpty()) {
+                if (runner == null || runner.isNoObj()) {
                     this.running.add(new Monad(this, NoObj.of(), this.code.value().get(0), 1));
+                } else if (this.running.isEmpty()) {
+                    for (final Obj o : runner) {
+                        this.running.add(new Monad(this, o, this.code.value().get(0), 1));
+                    }
                 }
             }
         }

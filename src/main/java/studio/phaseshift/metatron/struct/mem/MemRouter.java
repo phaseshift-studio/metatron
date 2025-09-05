@@ -64,21 +64,25 @@ public class MemRouter implements Router {
 
     @Override
     public Obj read(final fURI vid) {
-        /*if (vid.equals(this.vid))
-            return new SObj.Rec((Map) this.routes.entrySet().stream()
-                    .map(kv -> Map.of(new SObj.Uri(kv.getKey()), kv.getValue()))
-                    .reduce(new HashMap<>(), (a, b) -> {
-                        a.putAll(b);
-                        return a;
-                    }));
-        return this.getStruct(vid).read(vid);*/
-        return null;
-
+        if (vid.equals(this.vid))
+            return this;
+        final Struct struct = this.getStruct(vid);
+        LOG.trace("reading {} at {}", struct, vid);
+        return struct.read(vid);
     }
 
     @Override
     public Obj write(final fURI vid, final Obj obj) {
-        return this.getStruct(vid).write(vid, obj);
+        final Struct struct = this.getStruct(vid);
+        LOG.trace("writing {} to {} at {}", obj, struct, vid);
+        return struct.write(vid, obj);
+    }
+
+    @Override
+    public boolean hasStruct(final fURI vid) {
+        return this.routes.entrySet().stream()
+                .filter(kv -> vid.matches(kv.getKey()))
+                .findAny().isPresent();
     }
 
     @Override

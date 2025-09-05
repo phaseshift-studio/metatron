@@ -52,7 +52,11 @@ public interface BObj extends Cloneable {
     fURI OBJS_URI = new fURI("objs");
     fURI REL_URI = new fURI("rel");
 
-    Set<fURI> MTRON_CORE_TYPES = Set.of(OBJ_URI, NOOBJ_URI, BOOL_URI, INT_URI, REAL_URI, STR_URI, URI_URI, LST_URI, REC_URI, INST_URI, CODE_URI, OBJS_URI, REL_URI);
+    Set<fURI> MTRON_CORE_TYPES = Set.of(
+            OBJ_URI, NOOBJ_URI, BOOL_URI,
+            INT_URI, REAL_URI, STR_URI, URI_URI,
+            LST_URI, REC_URI, INST_URI, CODE_URI,
+            OBJS_URI, REL_URI);
 
     interface Obj extends Function<Obj, Obj>, Iterable<Obj>, Cloneable {
         Object value();

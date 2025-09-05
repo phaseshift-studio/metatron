@@ -50,7 +50,6 @@ public class ObjParser {
     private static final Logger LOG = LoggerFactory.getLogger(ObjParser.class);
     private static final SettableParser obj_parser = SettableParser.undefined();
     private static final SettableParser obj_no_code_parser = SettableParser.undefined();
-    private static final SettableParser func_parser = SettableParser.undefined();
     private static final SettableParser lst_parser = SettableParser.undefined();
     private static final SettableParser rec_parser = SettableParser.undefined();
     private static final SettableParser inst_parser = SettableParser.undefined();
@@ -184,8 +183,10 @@ public class ObjParser {
     }
 
     public static Parser m_str() {
-        return seq(m_type_prefix(STR_URI), seq(choice(of('\''), of('"')), any().starLazy(choice(of('\''), of('"'))),
-                choice(of('\''), of('"')))
+        Parser singleQuote = seq(of('\''), (of("\\'").or(any())).starLazy(of('\'')), of('\''));
+        Parser doubleQuote = seq(of('"'), (of("\\\"").or(any())).starLazy(of('"')), of('"'));
+        Parser tripleQuote = seq(of('"').repeatLazy(of('"').not(), 3, 3), any().starLazy(of('"').repeatLazy(of('"').not(), 3, 3)), of('"').repeatLazy(of('"').not(), 3, 3));
+        return seq(m_type_prefix(STR_URI), choice(tripleQuote, singleQuote, doubleQuote)
                 .pick(1)
                 .flatten())
                 .map(t -> new SObj.Str(ObjParser.<String>pick(t, 1).substring(1, ObjParser.<String>pick(t, 1).length() - 1), pick(t, 0), null));
@@ -209,11 +210,11 @@ public class ObjParser {
     }
 
     public static Parser m_inst() {
-        return sugar_identity().or(sugar_block(), sugar_plus(), sugar_from(), inst_parser);
+        return sugar_identity().or(sugar_block(), sugar_plus(), sugar_from(), sugar_merge(), inst_parser);
     }
 
     public static Parser m_eval() {
-        return seq(opt(obj_no_code_parser, BObj.NoObj.of()), of(".").trim(), m_code()).map(t -> {
+        return seq(opt(obj_no_code_parser, BObj.NoObj.of()), opt(of(".").trim(), '.'), m_code()).map(t -> {
             final List<BObj.Inst> newCode = new ArrayList<>();
             newCode.add(new SObj.Inst(START_URI, ObjParser.<BObj.Obj>pick(t, 0)));
             newCode.addAll(ObjParser.<BObj.Code>pick(t, 2).value());
@@ -222,13 +223,13 @@ public class ObjParser {
     }
 
     public static Parser m_code() {
-        return m_inst().separatedBy(of('.').trim()).map(t -> new SObj.Code((List) ((List<Object>) t).stream().filter(x -> x instanceof BObj.Inst).toList(), CODE_URI, null));
+        return m_inst().separatedBy(opt(of('.').trim(), '.')).map(t -> new SObj.Code((List) ((List<Object>) t).stream().filter(x -> x instanceof BObj.Inst).toList(), CODE_URI, null));
     }
 
     /// //////////////////////////////////////////////////////////////////////////////////////////
     /// ///////////////////////////////////// SUGAR PARSERS //////////////////////////////////////
     /// //////////////////////////////////////////////////////////////////////////////////////////
-    private static BObj.Inst IDENTITY_INST = new SObj.Inst(IDENTITY_URI);
+    private static final BObj.Inst IDENTITY_INST = new SObj.Inst(IDENTITY_URI);
 
     public static Parser sugar_identity() {
         return of('_').map(t -> IDENTITY_INST);
@@ -244,6 +245,10 @@ public class ObjParser {
 
     public static Parser sugar_block() {
         return seq(of('|').trim(), m_obj()).map(t -> new SObj.Inst(BLOCK_URI, ObjParser.<BObj.Obj>pick(t, 1)));
+    }
+
+    public static Parser sugar_merge() {
+        return of(">-").trim().map(t -> new SObj.Inst(MERGE_URI));
     }
 
     /// //////////////////////////////////////////////////////////////////////////////////////////

@@ -41,6 +41,8 @@ public interface Router extends BObj.Obj {
 
     BObj.Obj write(final fURI vid, final BObj.Obj obj);
 
+    boolean hasStruct(final fURI vid);
+
     void registerStruct(final Struct struct);
 
     default String toString(final Palette palette) {

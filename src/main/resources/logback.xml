@@ -22,7 +22,7 @@
             <pattern>%highlight([%-5level]) %msg%n</pattern>
         </encoder>
     </appender>
-    <root level="info">
+    <root level="trace">
         <appender-ref ref="CONSOLE"/>
     </root>
     <root level="error">
