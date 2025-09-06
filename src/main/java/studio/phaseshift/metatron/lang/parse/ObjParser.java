@@ -27,12 +27,13 @@ import org.petitparser.parser.primitive.CharacterParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import studio.phaseshift.metatron.lang.fURI;
-import studio.phaseshift.metatron.lang.monoid.SMonoid.Monoid;
+import studio.phaseshift.metatron.lang.monoid.SMonoid;
 import studio.phaseshift.metatron.lang.obj.BObj;
 import studio.phaseshift.metatron.lang.obj.SObj;
 import studio.phaseshift.metatron.ui.Graphitty;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import static org.petitparser.parser.primitive.CharacterParser.any;
@@ -109,12 +110,14 @@ public class ObjParser {
     }
 
 
-    public static <O> O parse(final String code) {
+    public static <O extends BObj.Obj> Iterator<O> eval(final String code) {
+        return (Iterator) new SMonoid.Monoid(parse(code)).iterator();
+    }
+
+    public static <O extends BObj.Obj> O parse(final String code) {
         if (code.trim().isEmpty())
             return (O) BObj.NoObj.of();
-        final Result result = m_eval().or(m_obj()).end().parse(code);
-        ///System.out.println(result.<Monoid>get());
-        //LOG.info("{}==to==>{}", code, result.get().toString());
+        final Result result = sugar_code().or(m_obj()).end().parse(code);
         if (result.isFailure())
             throw new IllegalStateException(
                     Graphitty.string(result.getBuffer() + "\n" +
@@ -124,23 +127,20 @@ public class ObjParser {
         return result.get();
     }
 
-    public static BObj.Obj compute(final String code, final BObj.Obj lhs) {
-        if (code.trim().isEmpty())
-            return lhs;
-        Result result = m_code().end().parse(code);
-        return result.<BObj.Code>get().apply(lhs);
-    }
-
     public static Parser m_comment() {
         return new SequenceParser(of("---").trim(), any().starGreedy(anyOf("\n\r").or(new EndOfInputParser("end of input")))).map(t -> BObj.NoObj.of());
     }
 
-    public static Parser m_furi() {
-        return m_furi("");
+    private static final String FULL_FURI_CHARS = "/%!#_=?@+.&:";
+    private static final String REDUCED_FURI_CHARS = "/%!#_=?@+&";
+
+    public static Parser m_furi(final String furiCharacterSet) {
+        final Parser internal = seq(letter(), word().or(seq(of("=>").not(), anyOf(furiCharacterSet))).star()).flatten().map(t -> new fURI(t.toString()));
+        return choice(seq(of('<'), internal, of('>')).pick(1), internal);
     }
 
-    public static Parser m_furi(final String moreChars) {
-        return seq(letter().or(anyOf("/%!#_" + moreChars)), word().or(seq(of("=>").not(), anyOf("=?@+/.&%!#_" + moreChars))).star()).flatten().map(t -> new fURI(t.toString()));
+    public static Parser m_furi() {
+        return m_furi(FULL_FURI_CHARS);
     }
 
     public static Parser m_obj() {
@@ -152,7 +152,8 @@ public class ObjParser {
     }
 
     public static Parser m_objs() {
-        return new SequenceParser(of('{').trim(), m_obj().separatedBy(of(',').trim()), of('}').trim()).pick(1).map(t -> new SObj.Objs(((List) t).stream().filter(x -> x instanceof BObj.Obj).toList(), OBJS_URI, null));
+        return seq(of('{').trim(), m_obj().separatedBy(of(',').trim()), of('}').trim()).pick(1)
+                .map(t -> SObj.Objs.of(((List) t).stream().filter(x -> x instanceof BObj.Obj).toList(), OBJS_URI, null));
     }
 
     public static Parser m_type_prefix(final fURI baseType) {
@@ -160,7 +161,7 @@ public class ObjParser {
     }
 
     public static Parser m_type_prefix_opt_colon(final fURI baseType) {
-        return opt(seq(m_furi(), opt(of(':'), ':')).pick(0), baseType);
+        return opt(seq(m_furi(REDUCED_FURI_CHARS), opt(of(':'), ':')).pick(0), baseType);
     }
 
     public static Parser m_bool() {
@@ -183,18 +184,20 @@ public class ObjParser {
     }
 
     public static Parser m_str() {
-        Parser singleQuote = seq(of('\''), (of("\\'").or(any())).starLazy(of('\'')), of('\''));
-        Parser doubleQuote = seq(of('"'), (of("\\\"").or(any())).starLazy(of('"')), of('"'));
-        Parser tripleQuote = seq(of('"').repeatLazy(of('"').not(), 3, 3), any().starLazy(of('"').repeatLazy(of('"').not(), 3, 3)), of('"').repeatLazy(of('"').not(), 3, 3));
+        final Parser singleQuote = seq(of('\''), (of("\\'").or(any())).starLazy(of('\'')), of('\''));
+        final Parser doubleQuote = seq(of('"'), (of("\\\"").or(any())).starLazy(of('"')), of('"'));
+        final Parser tripleQuote = seq(
+                of('"').repeatLazy(of('"').not(), 3, 3),
+                any().starLazy(of('"').repeatLazy(of('"').not(), 3, 3)),
+                of('"').repeatLazy(of('"').not(), 3, 3));
         return seq(m_type_prefix(STR_URI), choice(tripleQuote, singleQuote, doubleQuote)
                 .pick(1)
                 .flatten())
-                .map(t -> new SObj.Str(ObjParser.<String>pick(t, 1).substring(1, ObjParser.<String>pick(t, 1).length() - 1), pick(t, 0), null));
+                .map(t -> SObj.Str.of(ObjParser.<String>pick(t, 1).substring(1, ObjParser.<String>pick(t, 1).length() - 1), pick(t, 0), null));
     }
 
     public static Parser m_uri() {
-        return seq(m_type_prefix(URI_URI), choice(seq(of('<'), m_furi(":{}"), of('>')).pick(1), m_furi(":{}")))
-                .map(t -> new SObj.Uri(pick(t, 1), pick(t, 0), null));
+        return seq(m_type_prefix(URI_URI), m_furi()).map(t -> SObj.Uri.of(pick(t, 1), pick(t, 0), null));
     }
 
     public static Parser m_rel() {
@@ -213,17 +216,21 @@ public class ObjParser {
         return sugar_identity().or(sugar_block(), sugar_plus(), sugar_from(), sugar_merge(), inst_parser);
     }
 
-    public static Parser m_eval() {
-        return seq(opt(obj_no_code_parser, BObj.NoObj.of()), opt(of(".").trim(), '.'), m_code()).map(t -> {
+    public static Parser sugar_code() {
+        return seq(opt(obj_no_code_parser, BObj.NoObj.of()), seq(of(".").trim()), m_code()).map(t -> {
             final List<BObj.Inst> newCode = new ArrayList<>();
             newCode.add(new SObj.Inst(START_URI, ObjParser.<BObj.Obj>pick(t, 0)));
             newCode.addAll(ObjParser.<BObj.Code>pick(t, 2).value());
-            return new Monoid(new SObj.Code(newCode, CODE_URI, null));
+            return new SObj.Code(newCode, CODE_URI, null);
         });
     }
 
     public static Parser m_code() {
-        return m_inst().separatedBy(opt(of('.').trim(), '.')).map(t -> new SObj.Code((List) ((List<Object>) t).stream().filter(x -> x instanceof BObj.Inst).toList(), CODE_URI, null));
+        return m_inst().separatedBy(opt(of('.').trim(), '.'))
+                .map(t -> new SObj.Code((List) ((List<Object>) t)
+                        .stream()
+                        .filter(x -> x instanceof BObj.Inst)
+                        .toList(), CODE_URI, null));
     }
 
     /// //////////////////////////////////////////////////////////////////////////////////////////

@@ -68,7 +68,10 @@ public class ObjStringSerializer implements ObjSerializer<String> {
                     .reset()
                     .toString();
         } else if (obj instanceof final BObj.Rel rel) {
-            return ansi()
+            return generateTID(ansi(),rel) .a(rel.domain()) .fg(this.builder.palette.formC())
+                    .a("=>")
+                    .a(rel.range()).reset().toString();
+          /*  return ansi()
                     .fg(this.builder.palette.typeC())
                     .a(this.builder.hideTypes.contains(rel.tid()) ? "" : rel.tid())
                     .fg(this.builder.palette.formC())
@@ -79,7 +82,7 @@ public class ObjStringSerializer implements ObjSerializer<String> {
                     .a("=>")
                     .a(rel.range())
                     .fg(this.builder.palette.formC())
-                    .a(']').reset().toString();
+                    .a(']').reset().toString();*/
         } else if (obj instanceof final BObj.Lst lst) {
             Ansi s = generateTID(ansi(), obj)
                     .a('[').fg(this.builder.palette.valueC());

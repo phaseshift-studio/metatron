@@ -370,7 +370,11 @@ public class SObj implements BObj {
         }
 
         public static BObj.Code of(final BObj.Inst... insts) {
-            return new Code(Arrays.asList(insts), CODE_URI, null);
+            return Code.of(Arrays.asList(insts));
+        }
+
+        public static BObj.Code of(final List<BObj.Inst> insts) {
+            return new Code(insts, CODE_URI, null);
         }
     }
 

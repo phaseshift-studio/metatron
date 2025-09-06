@@ -124,14 +124,13 @@ public class Console {
                 if (line.trim().equals(":quit"))
                     break;
                 else {
-                    final Object result = ObjParser.parse(line);
-                    if (result instanceof Monoid) {
-                        IteratorUtil.iterate(IteratorUtil.consume(
-                                ((Monoid) result).iterator(),
-                                n -> this.terminal.writer().println(ansi().fg(PALETTE.form2C()).a("==").fg(PALETTE.formC()).a(">").reset().a(n).toString())));
-                    } else if (!(result instanceof BObj.NoObj)) {
-                        this.terminal.writer().println(ansi().fg(PALETTE.form2C()).a("==").fg(PALETTE.formC()).a(">").reset().a(result).toString());
-                    }
+                    final BObj.Obj result = ObjParser.parse(line);
+                    IteratorUtil.iterate(IteratorUtil.consume(result.isNoObj() ?
+                                    Collections.emptyIterator() :
+                                    result.isCode() ?
+                                            new Monoid(result).iterator() :
+                                            result.iterator(),
+                            o -> this.terminal.writer().println(ansi().fg(PALETTE.form2C()).a("==").fg(PALETTE.formC()).a(">").reset().a(o).toString())));
                 }
             } catch (final UserInterruptException e) {
                 this.terminal.writer().println("process interrupted");

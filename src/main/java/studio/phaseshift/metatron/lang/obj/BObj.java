@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.lang.obj;
 
+import org.apache.commons.collections.IteratorUtils;
 import org.javatuples.Pair;
 import org.javatuples.Triplet;
 import studio.phaseshift.metatron.lang.fURI;
@@ -371,7 +372,7 @@ public interface BObj extends Cloneable {
 
         @Override
         default Iterator<Obj> iterator() {
-            return (Iterator) this.value().iterator();
+            return IteratorUtils.<Obj>singletonIterator(this);
         }
 
         default Obj domain() {
