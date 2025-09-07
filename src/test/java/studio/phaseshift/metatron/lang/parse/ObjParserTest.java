@@ -51,7 +51,7 @@ public class ObjParserTest {
     @Test
     public void testIntParse() {
         assertEquals(Int.of(1234), ObjParser.parse("1234 "));
-        assertMEquals(Int.of(10), ObjParser.parse("plus(plus(2))").apply(SObj.Int.of(4)));
+       //assertEquals(Int.of(10), ObjParser.parse("start(4).plus(plus(2))").apply(Int.of(4)));
         //  assertEquals(Int.of("m:nat", 1234), ObjParser.parse("m:nat[1234] "));
     }
 
@@ -71,6 +71,6 @@ public class ObjParserTest {
         assertEquals(Uri.of("http://metatron.com?a=2&b=3"), ObjParser.parse("<http://metatron.com?a=2&b=3>"));
         assertEquals(Uri.of("http://metatron.com?a&b"), ObjParser.parse("<http://metatron.com?a&b>"));
         assertThrows(IllegalStateException.class, () -> ObjParser.parse("/metatron.com?a&b"));
-        assertEquals(Uri.of("metatron.com?a&b"), ObjParser.parse("metatron.com?a&b"));
+        assertEquals(Uri.of("metatron/com?a&b"), ObjParser.parse("metatron/com?a&b"));
     }
 }

@@ -18,43 +18,52 @@
 
 package studio.phaseshift.metatron.lang.obj;
 
-import org.jline.jansi.Ansi.Color;
-
 public class Palette {
 
     public static final Palette STANDARD = new Palette();
+    public static final Palette NO_COLOR = new Palette(false);
 
     public static Palette GLOBAL = STANDARD;
 
-    public Color typeC() {
-        return Color.BLUE;
+    boolean inColor = true;
+
+    public Palette() {
+
     }
 
-    public Color valueC() {
-        return Color.YELLOW;
+    public Palette(final boolean inColor) {
+        this.inColor = inColor;
     }
 
-    public Color formC() {
-        return Color.GREEN;
+    public String typeC() {
+        return inColor ? "{{b}}" : "";
     }
 
-    public Color form2C() {
-        return Color.MAGENTA;
+    public String valueC() {
+        return inColor ? "{{y}}" : "";
     }
 
-    public  Color warnC() {
-        return Color.YELLOW;
+    public String formC() {
+        return inColor ? "{{g}}" : "";
     }
 
-    public  Color infoC() {
-        return Color.GREEN;
+    public String form2C() {
+        return inColor ? "{{m}}" : "";
     }
 
-    public   Color debugC() {
-        return Color.MAGENTA;
+    public String warnC() {
+        return inColor ? "{{y}}" : "";
     }
 
-    public  Color errorC() {
-        return Color.RED;
+    public String infoC() {
+        return inColor ? "{{g}}" : "";
+    }
+
+    public String debugC() {
+        return inColor ? "{{m}}" : "";
+    }
+
+    public String errorC() {
+        return inColor ? "{{r}}" : "";
     }
 }

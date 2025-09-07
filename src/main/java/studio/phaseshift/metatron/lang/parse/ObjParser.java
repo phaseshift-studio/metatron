@@ -32,14 +32,12 @@ import studio.phaseshift.metatron.lang.obj.BObj;
 import studio.phaseshift.metatron.lang.obj.SObj;
 import studio.phaseshift.metatron.ui.Graphitty;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
+import java.util.function.Supplier;
 
 import static org.petitparser.parser.primitive.CharacterParser.any;
 import static org.petitparser.parser.primitive.CharacterParser.anyOf;
 import static org.petitparser.parser.primitive.CharacterParser.digit;
-import static org.petitparser.parser.primitive.CharacterParser.letter;
 import static org.petitparser.parser.primitive.CharacterParser.of;
 import static org.petitparser.parser.primitive.CharacterParser.word;
 import static org.petitparser.parser.primitive.StringParser.of;
@@ -63,32 +61,46 @@ public class ObjParser {
         obj_parser.set(choice(
                 m_comment(),
                 m_noobj(),
-                m_rel(),
+                //  m_rel(),
                 m_bool(),
                 m_real(),
                 m_int(),
                 m_str(),
                 m_code(),
                 m_objs(),
-                // m_rec(),
+                m_rec(),
                 m_inst(),
                 m_lst(),
                 m_uri()));
         obj_no_code_parser.set(choice(
                 m_comment(),
                 m_noobj(),
-                m_rel(),
+                //  m_rel(),
                 m_bool(),
                 m_real(),
                 m_int(),
                 m_str(),
                 m_objs(),
-                // m_rec(),
+                m_rec(),
                 m_lst(),
                 m_uri()));
         lst_parser.set(seq(m_type_prefix_opt_colon(LST_URI), seq(of('[').trim(), m_obj().separatedBy(of(',').trim()), of(']').trim()).pick(1))
                 .map(t -> new SObj.Lst(ObjParser.<List>pick(t, 1).stream().filter(o -> o instanceof BObj.Obj).toList(), pick(t, 0), null)));
-      /*  rec_parser.set(seq(of('[').trim(), seq(m_obj(), of("=>").trim(), m_obj()).separatedBy(of(',').trim()), of(']').trim())
+
+        rec_parser.set(seq(m_type_prefix_opt_colon(REC_URI), seq(of('[').trim(), seq(m_obj(), of("=>").trim(), m_obj()).separatedBy(of(',').trim()), of(']').trim()).pick(1))
+                .map(t -> {
+                    System.out.println(t);
+                    final Map<BObj.Obj, BObj.Obj> map = new LinkedHashMap<>();
+                    ObjParser.<List>pick(t, 1).stream()
+                            .filter(o -> o instanceof List)
+                            .forEach(o -> {
+                                List kv = (List) o;
+                                map.put(pick(kv, 0), pick(kv, 2));
+                            });
+                    //System.out.println(map);
+                    return new SObj.Rec(map, pick(t, 0), null);
+                }));
+        /*  rec_parser.set(seq(of('[').trim(), seq(m_obj(), of("=>").trim(), m_obj()).separatedBy(of(',').trim()), of(']').trim())
                 .map(t -> new SObj.Rec((Map) ((List) t).stream()
                         .filter(o -> o instanceof List)
                         .flatMap(o -> ((List) o).stream())
@@ -101,11 +113,11 @@ public class ObjParser {
                 m_type_prefix_opt_colon(INST_URI),
                 seq(of('(').trim(), opt(m_obj().separatedBy(of(',').trim()), List.of()), of(')').trim()).pick(1),
                 opt(seq(of('[').trim(), m_code(), of(']').trim()).pick(1), null))
-                .map(t -> new SObj.Inst(new Triplet<>(
-                        new SObj.Lst(((List) pick(t, 1)).stream().filter(x -> x instanceof BObj.Obj).toList(), LST_URI, null),
+                .map(t -> (BObj.Inst) new SObj.Inst(new Triplet<>(
+                        new SObj.Lst(ObjParser.<List>pick(t, 1), BObj.LST_URI, null),
                         InstF.of(ObjParser.<BObj.Obj>pick(t, 2)),
-                        BObj.NoObj.of()),
-                        pick(t, 0), null)));
+                        NoObj.of()),
+                        pick(pick(t, 0),0), null))); // this is weird -- why is the list nested?
 
     }
 
@@ -117,7 +129,7 @@ public class ObjParser {
     public static <O extends BObj.Obj> O parse(final String code) {
         if (code.trim().isEmpty())
             return (O) BObj.NoObj.of();
-        final Result result = sugar_code().or(m_obj()).end().parse(code);
+        final Result result = sugar_code().or(m_obj()).end().parse(code.trim());
         if (result.isFailure())
             throw new IllegalStateException(
                     Graphitty.string(result.getBuffer() + "\n" +
@@ -132,11 +144,12 @@ public class ObjParser {
     }
 
     private static final String FULL_FURI_CHARS = "/%!#_=?@+.&:";
-    private static final String REDUCED_FURI_CHARS = "/%!#_=?@+&";
+    private static final String REDUCED_FURI_CHARS = "/%!#_=?@+&:";
 
     public static Parser m_furi(final String furiCharacterSet) {
-        final Parser internal = seq(letter(), word().or(seq(of("=>").not(), anyOf(furiCharacterSet))).star()).flatten().map(t -> new fURI(t.toString()));
-        return choice(seq(of('<'), internal, of('>')).pick(1), internal);
+        final Supplier<Parser> internal = () -> word().or(seq(of("=>").not(), anyOf(furiCharacterSet))).plus().flatten().map(t -> new fURI(t.toString()));
+        final Supplier<Parser> internal2 = () -> word().or(seq(of("=>").not(), anyOf(FULL_FURI_CHARS))).plus().flatten().map(t -> new fURI(t.toString()));
+        return choice(seq(of('<'), internal2.get(), of('>')).pick(1), internal.get());
     }
 
     public static Parser m_furi() {
@@ -161,7 +174,7 @@ public class ObjParser {
     }
 
     public static Parser m_type_prefix_opt_colon(final fURI baseType) {
-        return opt(seq(m_furi(REDUCED_FURI_CHARS), opt(of(':'), ':')).pick(0), baseType);
+        return opt(seq(m_furi(REDUCED_FURI_CHARS), opt(of(':').trim(), ':')), baseType);
     }
 
     public static Parser m_bool() {
@@ -197,7 +210,7 @@ public class ObjParser {
     }
 
     public static Parser m_uri() {
-        return seq(m_type_prefix(URI_URI), m_furi()).map(t -> SObj.Uri.of(pick(t, 1), pick(t, 0), null));
+        return seq(m_type_prefix(URI_URI), m_furi(REDUCED_FURI_CHARS)).map(t -> SObj.Uri.of(pick(t, 1), pick(t, 0), null));
     }
 
     public static Parser m_rel() {
@@ -279,6 +292,10 @@ public class ObjParser {
     }
 
     public static <O> O pick(final Object list, int index) {
-        return (O) ((List) list).get(index);
+        try {
+            return (O) ((List) list).get(index);
+        } catch (final Exception e) {
+            throw new IllegalArgumentException("%s - unexpected %s[%d]".formatted(e, list, index));
+        }
     }
 }

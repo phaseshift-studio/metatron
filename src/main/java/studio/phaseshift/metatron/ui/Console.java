@@ -120,7 +120,7 @@ public class Console {
         String line = "";
         while (true) {
             try {
-                line = this.reader.readLine(ansi().fg(PALETTE.form2C()).a("mtron").fg(PALETTE.formC()).a("> ").reset().toString());
+                line = this.reader.readLine(Graphitty.string(PALETTE.form2C() + "mtron" + PALETTE.formC() + "> ").toString());
                 if (line.trim().equals(":quit"))
                     break;
                 else {
@@ -130,16 +130,20 @@ public class Console {
                                     result.isCode() ?
                                             new Monoid(result).iterator() :
                                             result.iterator(),
-                            o -> this.terminal.writer().println(ansi().fg(PALETTE.form2C()).a("==").fg(PALETTE.formC()).a(">").reset().a(o).toString())));
+                            o -> this.terminal.writer().println(Graphitty.string(PALETTE.form2C() + "==" + PALETTE.formC() + ">" + o).toString())));
                 }
             } catch (final UserInterruptException e) {
                 this.terminal.writer().println("process interrupted");
             } catch (final EndOfFileException e) {
-                this.terminal.writer().println("shutting down");
-                break;
+                try {
+                    this.terminal.writer().println("shutting down");
+                    break;
+                } catch (final Exception e1) {
+                    System.exit(0);
+                }
             } catch (final Exception e) {
                 LOG.error("{}", ansi().a(e.getMessage()).reset().toString());
-                final String stackTrace = this.reader.readLine(ansi().fg(PALETTE.warnC()).a("display stack trace ").fg(PALETTE.formC()).a("[y/N]").fg(PALETTE.warnC()).a("? ").reset().toString());
+                final String stackTrace = this.reader.readLine(Graphitty.string(PALETTE.warnC() + "display stack trace " + PALETTE.formC() + "[y/N]" + PALETTE.warnC() + "? "));
                 if (stackTrace.trim().equalsIgnoreCase("y"))
                     e.printStackTrace();
             }

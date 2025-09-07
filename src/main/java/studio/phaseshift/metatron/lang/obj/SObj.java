@@ -109,7 +109,7 @@ public class SObj implements BObj {
 
         @Override
         public String toString() {
-            return this.toString(Palette.STANDARD);
+            return this.toString(Palette.GLOBAL);
         }
 
         public static BObj.Obj of(final Object value) {
@@ -135,8 +135,8 @@ public class SObj implements BObj {
                 return new Rel((Pair<BObj.Obj, BObj.Obj>) value, null == tid ? REL_URI : tid, vid);
             else if (value instanceof List)
                 return new Lst((List) value, null == tid ? LST_URI : tid, vid);
-                //    else if (value instanceof Map)
-                //         return new Rec((Map) value, );
+            else if (value instanceof Map)
+                return new Rec((Map) value, null == tid ? REC_URI : tid, vid);
             else if (value instanceof Triplet<?, ?, ?>)
                 return new Inst((Triplet<BObj.Poly, InstF, BObj.Obj>) value, null == tid ? INST_URI : tid, vid);
             else {
@@ -226,20 +226,16 @@ public class SObj implements BObj {
             return new Uri(new fURI(uri), URI_URI, null);
         }
 
-        /*public Obj apply(final Obj lhs) {
-            if (!this.value().toString().contains("{{"))
+        public BObj.Obj apply(final BObj.Obj lhs) {
+            if (lhs.isRec()) {
+                return new Objs(lhs.recValue().entrySet().stream().filter(kv -> kv.getKey().matches(lhs)).map(kv -> {
+                    System.out.println(kv.getValue());
+                    return kv.getValue();
+                }).toList(), OBJS_URI, null);
+            } else {
                 return this;
-            else {
-                final List<String> segs = new ArrayList<>(this.value().segments().size());
-                for (final String segment : this.value().segments()) {
-                    if (segment.startsWith("{{") && segment.endsWith("}}"))
-                        segs.add(ObjParser.compute(segment.substring(2, segment.length() - 2), lhs).toString());
-                    else
-                        segs.add(segment);
-                }
-                return new Uri(this.value().path(segs.toString()));
             }
-        }*/
+        }
     }
 
     public static class Rel extends Obj implements BObj.Rel {
@@ -279,29 +275,16 @@ public class SObj implements BObj {
             return new Lst(list, this.tid, this.vid);
         }
 
-        @Override
-        public Iterator<BObj.Obj> iterator() {
-            return this.value().iterator();
-        }
-
         public static BObj.Lst of(final Object... args) {
             return new Lst(Arrays.stream(args).map(Obj::of).toList(), LST_URI, null);
         }
 
     }
 
-   /* public static class Rec extends Obj implements BObj.Rec {
+    public static class Rec extends Obj implements BObj.Rec {
 
-        public Rec(final Map<BObj.Obj, BObj.Obj> value, final fURI type, final fURI vid) {
-            super(value, type, vid);
-        }
-
-        public Rec(final Map<BObj.Obj, BObj.Obj> value, final fURI type) {
-            super(value, type);
-        }
-
-        public Rec(final Map<BObj.Obj, BObj.Obj> value) {
-            super(value, REC_URI);
+        public Rec(final Map<BObj.Obj, BObj.Obj> value, final fURI tid, final fURI vid) {
+            super(value, tid, vid);
         }
 
         @Override
@@ -310,17 +293,50 @@ public class SObj implements BObj {
         }
 
         @Override
-        public Iterator<BObj.Obj> iterator() {
-            return this.value().entrySet().stream().map(kv -> (BObj.Obj) new Lst(List.of(kv.getKey(), kv.getValue()))).iterator();
+        public Rec apply(final BObj.Obj other) {
+            final Map<BObj.Obj, BObj.Obj> map = new LinkedHashMap<>();
+            for (final Map.Entry<BObj.Obj, BObj.Obj> entry : this.value().entrySet()) {
+                final BObj.Obj keyApply = entry.getKey().apply(other);
+                // if (!keyApply.isNoObj()) {
+                if (entry.getKey().matches(other)) {
+                    final BObj.Obj valueApply = entry.getValue().apply(other);
+                    if (!valueApply.isNoObj()) {
+                        final BObj.Obj current = map.get(other);
+                        if (null == current)
+                            map.put(other, valueApply);
+                        else if (current.isObjs())
+                            map.put(other, ((Objs) current).append(valueApply));
+                        else
+                            map.put(other, Objs.of(List.of(current, valueApply)));
+                    }
+                }
+            }
+            return new SObj.Rec(map, this.tid, this.vid);
+        }
+
+        public static BObj.Rec of(final BObj.Obj... kvs) {
+            final Map<BObj.Obj, BObj.Obj> l = new LinkedHashMap<>();
+            for (int i = 0; i < kvs.length; i = i + 2) {
+                l.put(kvs[i], kvs[i + 1]);
+            }
+            return new SObj.Rec(l, REC_URI, null);
         }
 
         @Override
-        public Rec apply(final BObj.Obj other) {
-            Map<BObj.Obj, BObj.Obj> map = new HashMap<>();
-            return new Rec(map);
+        public boolean equals(final Object other) {
+            if (!(other instanceof BObj.Rec))
+                return false;
+            final BObj.Rec r = (BObj.Rec) other;
+            if (this.length() != ((BObj.Rec) other).length() || !r.tid().equals(this.tid()))
+                return false;
+            for (final Map.Entry<BObj.Obj, BObj.Obj> e : r.value().entrySet()) {
+                if (!this.get(e.getKey()).equals(e.getValue()))
+                    return false;
+            }
+            return true;
         }
 
-    }*/
+    }
 
     public static class Objs extends Obj implements BObj.Objs {
 
@@ -376,6 +392,11 @@ public class SObj implements BObj {
         public static BObj.Code of(final List<BObj.Inst> insts) {
             return new Code(insts, CODE_URI, null);
         }
+
+        @Override
+        public boolean matches(final BObj.Obj lhs) {
+            return !this.apply(lhs).isNoObj();
+        }
     }
 
     public static class Inst extends Obj implements BObj.Inst {
@@ -385,7 +406,7 @@ public class SObj implements BObj {
         }
 
         public Inst(final fURI tid, final BObj.Obj... args) {
-            super(new Triplet<>(Lst.of(Arrays.asList(args)), null, NoObj.of()), tid, null);
+            this(new Triplet<>(new SObj.Lst(Arrays.asList(args), LST_URI, null), null, NoObj.of()), tid, null);
         }
 
         @Override
@@ -397,14 +418,14 @@ public class SObj implements BObj {
         public boolean equals(final Object other) {
             if (!(other instanceof Inst otherInst))
                 return false;
-            return this.tid().equals(otherInst.tid()) && this.value().getValue0().equals(otherInst.value().getValue0());
+            return this.tid().equals(otherInst.tid()) && this.args().equals(otherInst.args());
         }
 
-       /* @Override
-        public Inst clone(final Poly arguments) {
+        @Override
+        public Inst clone(final Object triplet) {
             Inst clone = (Inst) super.clone();
-            clone.value = new Triplet<>(arguments, this.value().getValue1(), this.value().getValue2());
+            clone.value = triplet;
             return clone;
-        } */
+        }
     }
 }

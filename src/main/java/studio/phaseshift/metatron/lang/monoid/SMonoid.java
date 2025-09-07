@@ -245,7 +245,7 @@ public class SMonoid {
                 boolean first = true;
                 for (final Inst inst : this.code.value()) {
                     try {
-                        final Inst resolved = BInst.SymbolTable.resolve(NoObj.of(), inst.tid());
+                        final Inst resolved = BInst.SymbolTable.resolve(NoObj.of(), inst);
 
                         if (Set.of(COUNT_URI, SUM_URI).contains(inst.tid())) {
                             // MANY_TO_??
@@ -279,7 +279,6 @@ public class SMonoid {
             List<Obj> results = new ArrayList<>();
             Obj m = null;
             while (null != (m = this.next())) {
-                // System.out.println("packaging result: " + m);
                 results.add(m);
             }
             return results.iterator();

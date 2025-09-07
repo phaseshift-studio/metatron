@@ -20,21 +20,26 @@ package studio.phaseshift.metatron.lang.inst;
 
 import org.javatuples.Pair;
 import org.javatuples.Triplet;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.BObj;
+import studio.phaseshift.metatron.lang.obj.BObj.Inst;
+import studio.phaseshift.metatron.lang.obj.BObj.InstF;
 import studio.phaseshift.metatron.lang.obj.BObj.Obj;
 import studio.phaseshift.metatron.lang.obj.SObj;
+import studio.phaseshift.metatron.ui.Graphitty;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static studio.phaseshift.metatron.lang.obj.BObj.Inst;
-import static studio.phaseshift.metatron.lang.obj.BObj.InstF;
+import static studio.phaseshift.metatron.lang.obj.BObj.LST_URI;
 
 public interface BInst {
     class SymbolTable {
+        private static final Logger LOG = LoggerFactory.getLogger(SymbolTable.class);
         private static final Map<fURI, Pair<InstF, Obj>> TABLE = new HashMap<>();
 
         public static void load(final fURI type, final InstF instF) {
@@ -52,18 +57,22 @@ public interface BInst {
         public static Inst resolve(final Obj lhs, final Inst inst) {
             final Pair<InstF, Obj> entry = TABLE.get(inst.tid());
             final InstF resolvedFunction = null == inst.f() ?
-                    entry == null ? null : entry.getValue0() :
+                    (entry == null ? null : entry.getValue0()) :
                     inst.f();
             if (null == resolvedFunction)
-                throw new IllegalArgumentException("unable to resolve %s\n%s".formatted(inst,TABLE.entrySet()));
+                throw new IllegalArgumentException("unable to resolve %s\n%s".formatted(inst, TABLE.entrySet()));
+            if (null == entry) {
+                LOG.debug("{} defined\n", inst);
+                TABLE.put(inst.tid(), Pair.with(inst.f(), inst.seed()));
+            }
             final List<Obj> resolvedArgs = new ArrayList<>();
             final boolean blocking = inst.isBlocking();
-            for (final Obj arg : inst.args()) {
+            for (final Obj arg : inst.args().lstValue()) { // wow -- took me 2 hours to realize .lstValue() was needed
                 resolvedArgs.add(blocking ? arg : arg.apply(lhs));
             }
-            return inst.clone(new Triplet<>(new SObj.Lst(resolvedArgs, inst.tid(), null),
+            return inst.clone(new Triplet<>(new SObj.Lst(resolvedArgs, LST_URI, null),
                     resolvedFunction,
-                    entry.getValue1()));
+                    null == entry ? BObj.NoObj.of() : entry.getValue1()));
         }
 
     }

@@ -24,7 +24,9 @@ import studio.phaseshift.metatron.lang.obj.SObj;
 
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 public class JSONTranslator implements Translator<BObj.Obj, JsonElement> {
     @Override
@@ -57,11 +59,11 @@ public class JSONTranslator implements Translator<BObj.Obj, JsonElement> {
             return SObj.Lst.of(list);
         } else if (json.isJsonObject()) {
             final JsonObject jp = (JsonObject) json;
-            final List<BObj.Rel> map = new ArrayList<>();
+            final Map<BObj.Obj, BObj.Obj> map = new LinkedHashMap<>();
             for (var kv : jp.getAsJsonObject().asMap().entrySet()) {
-                map.add(SObj.Rel.of(SObj.Uri.of(kv.getKey()), translate(kv.getValue())));
+                map.put(SObj.Uri.of(kv.getKey()), translate(kv.getValue()));
             }
-            return SObj.Lst.of(map);
+            return SObj.Rec.of(map);
         }
         throw new IllegalStateException("unknown type: " + json + "::" + json.getAsInt());
     }

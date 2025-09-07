@@ -18,7 +18,6 @@
 
 package studio.phaseshift.metatron.lang.obj;
 
-import org.apache.commons.collections.IteratorUtils;
 import org.javatuples.Pair;
 import org.javatuples.Triplet;
 import studio.phaseshift.metatron.lang.fURI;
@@ -137,9 +136,9 @@ public interface BObj extends Cloneable {
             return this instanceof Lst;
         }
 
-      /*  default boolean isRec() {
+        default boolean isRec() {
             return this instanceof Rec;
-        }*/
+        }
 
         default boolean isInst() {
             return this instanceof Inst;
@@ -164,37 +163,37 @@ public interface BObj extends Cloneable {
         default boolean boolValue() {
             if (this.isBool())
                 return ((Bool) this).value();
-            throw new IllegalStateException("obj is not an bool");
+            throw new IllegalStateException("%s is not a bool".formatted(this));
         }
 
         default Long intValue() {
             if (this.isInt())
                 return ((Int) this).value();
-            throw new IllegalStateException("obj is not an int");
+            throw new IllegalStateException("%s is not an int".formatted(this));
         }
 
         default double realValue() {
             if (this.isReal())
                 return ((Real) this).value();
-            throw new IllegalStateException("obj is not an real");
+            throw new IllegalStateException("%s is not a real".formatted(this));
         }
 
         default String strValue() {
             if (this.isStr())
                 return ((Str) this).value();
-            throw new IllegalStateException("obj is not an str");
+            throw new IllegalStateException("%s is not a str".formatted(this));
         }
 
         default fURI uriValue() {
             if (this.isUri())
                 return ((Uri) this).value();
-            throw new IllegalStateException("obj is not an uri");
+            throw new IllegalStateException("%s is not a uri".formatted(this));
         }
 
         default List<Obj> lstValue() {
             if (this.isLst())
                 return ((Lst) this).value();
-            throw new IllegalStateException("%s is not an lst".formatted(this));
+            throw new IllegalStateException("%s is not a lst".formatted(this));
         }
 
         default Iterable<Obj> objsValue() {
@@ -203,16 +202,16 @@ public interface BObj extends Cloneable {
             throw new IllegalStateException("%s is not an objs".formatted(this));
         }
 
-    /*    default Map<Obj, Obj> recValue() {
+        default Map<Obj, Obj> recValue() {
             if (this.isRec())
                 return ((Rec) this).value();
-            throw new IllegalStateException("obj is not an rec");
-        }*/
+            throw new IllegalStateException("%s is not a rec".formatted(this));
+        }
 
         default Pair<Obj, Obj> relValue() {
             if (this.isRel())
                 return ((Rel) this).value();
-            throw new IllegalStateException("obj is not an rel");
+            throw new IllegalStateException("%s is not a rel".formatted(this));
         }
     }
 
@@ -223,14 +222,22 @@ public interface BObj extends Cloneable {
         private NoObj() {
         }
 
+        @Override
+        public BObj.Obj get(final int index) {
+            return NoObj.of();
+        }
+
+        @Override
         public fURI vid() {
             return null;
         }
 
+        @Override
         public NoObj vid(final fURI id) {
             return NOOBJ;
         }
 
+        @Override
         public fURI tid() {
             return NOOBJ_URI;
         }
@@ -265,11 +272,6 @@ public interface BObj extends Cloneable {
         }
 
         @Override
-        public Iterator<Obj> iterator() {
-            return IteratorUtil.of(this);
-        }
-
-        @Override
         public NoObj clone() {
             return NOOBJ;
         }
@@ -285,8 +287,7 @@ public interface BObj extends Cloneable {
             return this; // TODO: this is cause I'm too lazy to implement it for every poly right now
         }
 
-        @Override
-        Iterator<Obj> iterator();
+        BObj.Obj get(final int index);
     }
 
     interface Bool extends Mono {
@@ -361,6 +362,11 @@ public interface BObj extends Cloneable {
         }
 
         @Override
+        default Obj get(final int index) {
+            return index == 0 ? this.value().getValue0() : index == 1 ? this.value().getValue1() : NoObj.of();
+        }
+
+        @Override
         default boolean matches(final Obj rhs) {
             return rhs.matches(this.domain()) || this.equals(rhs);
         }
@@ -368,11 +374,6 @@ public interface BObj extends Cloneable {
         @Override
         default long length() {
             return 2;
-        }
-
-        @Override
-        default Iterator<Obj> iterator() {
-            return IteratorUtils.<Obj>singletonIterator(this);
         }
 
         default Obj domain() {
@@ -407,14 +408,9 @@ public interface BObj extends Cloneable {
             Collections.addAll(l, obj);
             return new SObj.Lst(l, this.tid(), null);
         }
-
-        @Override
-        default Iterator<Obj> iterator() {
-            return this.value().iterator();
-        }
     }
 
-   /* interface Rec extends Poly {
+    interface Rec extends Poly {
         @Override
         Map<Obj, Obj> value();
 
@@ -423,6 +419,12 @@ public interface BObj extends Cloneable {
 
         default <O extends Obj> O get(final Obj key) {
             return (O) this.value().getOrDefault(key, NoObj.of());
+        }
+
+        @Override
+        default BObj.Obj get(final int index) {
+            final Map.Entry<BObj.Obj, BObj.Obj> entry = this.value().entrySet().stream().skip(index).iterator().next();
+            return SObj.Lst.of(List.of(entry.getKey(), entry.getValue()));
         }
 
         @Override
@@ -436,21 +438,16 @@ public interface BObj extends Cloneable {
             for (int i = 0; i < obj.length; i = i + 2) {
                 l.put(obj[i], obj[i + 1]);
             }
-            return new SObj.Rec(l, this.tid());
+            return new SObj.Rec(l, this.tid(), this.vid());
         }
-
-        @Override
-        default Iterator<Obj> iterator() {
-            return this.value().entrySet().stream().map(kv -> SObj.Lst.of(List.of(kv.getKey(), kv.getValue()))).iterator();
-        }
-    }*/
+    }
 
     class InstF {
 
         private final boolean bi;
         final Object func;
 
-        public InstF(final BiFunction<Obj, Lst, Obj> func) {
+        public InstF(final BiFunction<Obj, Inst, Obj> func) {
             this.bi = true;
             this.func = func;
         }
@@ -460,15 +457,11 @@ public interface BObj extends Cloneable {
             this.func = func;
         }
 
-        public Obj apply(final Obj lhs, final Lst args) {
-            return this.bi ? ((BiFunction<Obj, Lst, Obj>) this.func).apply(lhs, args) : ((Function<Obj, Obj>) this.func).apply(lhs);
+        public Obj apply(final Obj lhs, final Inst inst) {
+            return this.bi ? ((BiFunction<Obj, Inst, Obj>) this.func).apply(lhs, inst) : ((Function<Obj, Obj>) this.func).apply(lhs);
         }
 
-        public Obj apply(final Obj lhs) {
-            return this.bi ? ((BiFunction<Obj, Lst, Obj>) this.func).apply(lhs, new SObj.Lst(List.of(), LST_URI, null)) : ((Function<Obj, Obj>) this.func).apply(lhs);
-        }
-
-        public static InstF of(final BiFunction<Obj, Lst, Obj> func) {
+        public static InstF of(final BiFunction<Obj, Inst, Obj> func) {
             return null == func ? null : new InstF(func);
         }
 
@@ -492,7 +485,7 @@ public interface BObj extends Cloneable {
         }
 
         default Obj args(int index) {
-            return IteratorUtil.index(this.args().iterator(), index, NoObj.of());
+            return this.args() instanceof Lst ? ((Lst) this.args()).get(index) : NoObj.of();
         }
 
         default Obj seed() {
@@ -508,6 +501,11 @@ public interface BObj extends Cloneable {
         }
 
         @Override
+        default BObj.Obj get(final int index) {
+            return this.args(index);
+        }
+
+        @Override
         default Obj apply(final Obj lhs) {
             /*final List<Obj> computedArgs = new ArrayList<>((int) this.args().length());
             for (final Obj arg : this.args()) {
@@ -517,9 +515,14 @@ public interface BObj extends Cloneable {
             if (resolvedInst.isBlocking())
                 return resolvedInst.args(0);
             else {
-                final InstF instF = null == this.f() ? resolvedInst.f() : this.f();
-                return SObj.Obj.of(instF.apply(lhs, (Lst) resolvedInst.args()));
+                final InstF instF = !this.resolved() ? resolvedInst.f() : this.f();
+                return SObj.Obj.of(instF.apply(lhs, resolvedInst));
             }
+        }
+
+        @Override
+        default boolean matches(final BObj.Obj lhs) {
+            return !this.apply(lhs).isNoObj();
         }
 
         //Inst nextInst();
@@ -527,11 +530,6 @@ public interface BObj extends Cloneable {
         @Override
         default long length() {
             return this.value().getSize();
-        }
-
-        @Override
-        default Iterator<Obj> iterator() {
-            return this.isNoObj() ? IteratorUtil.of() : (Iterator) this.value().iterator();
         }
 
         default boolean isBlocking() {
@@ -579,9 +577,8 @@ public interface BObj extends Cloneable {
             return this.value().size();
         }
 
-        @Override
-        default Iterator<Obj> iterator() {
-            return (Iterator) this.value().iterator();
+        default Inst get(final int index) {
+            return this.value().get(index);
         }
     }
 
@@ -592,13 +589,13 @@ public interface BObj extends Cloneable {
         Objs append(final SObj.Obj obj);
 
         @Override
-        default Iterator<Obj> iterator() {
-            return this.value().iterator();
+        default long length() {
+            return IteratorUtil.count(this.value());
         }
 
         @Override
-        default long length() {
-            return IteratorUtil.count(this.value());
+        default Obj get(final int index) {
+            return IteratorUtil.index(this.value().iterator(), index, NoObj.of());
         }
     }
 }

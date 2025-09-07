@@ -18,7 +18,6 @@
 
 package studio.phaseshift.metatron.ui;
 
-import org.jline.jansi.Ansi;
 import org.petitparser.context.Result;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.BObj;
@@ -27,9 +26,8 @@ import studio.phaseshift.metatron.lang.parse.ObjParser;
 import studio.phaseshift.metatron.util.ObjUtil;
 
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
-
-import static org.jline.jansi.Ansi.ansi;
 
 public class ObjStringSerializer implements ObjSerializer<String> {
 
@@ -45,95 +43,80 @@ public class ObjStringSerializer implements ObjSerializer<String> {
 
     @Override
     public String write(final BObj.Obj obj) throws IllegalStateException {
+        final StringBuilder sb = new StringBuilder();
         if (obj.isNoObj())
-            return ansi().fg(this.builder.palette.errorC()).a("noobj").reset().toString();
+            return sb.append(this.builder.palette.errorC()).append("noobj")/*.reset()*/.toString();
         else if (obj instanceof final BObj.Inst inst) {
-            Ansi s = ansi()
-                    .fg(this.builder.palette.typeC()).
-                    a(this.builder.hideTypes.contains(inst.tid()) ? "" : inst.tid())
-                    .fg(this.builder.palette.formC())
-                    .a(this.builder.hideTypes.contains(inst.tid()) ? "" : ':')
-                    .a("(");
+            sb.append(this.builder.palette.typeC())
+                    .append(this.builder.hideTypes.contains(inst.tid()) ? "" : inst.tid())
+                    .append(this.builder.palette.formC())
+                    .append(this.builder.hideTypes.contains(inst.tid()) ? "" : ':')
+                    .append("(");
             for (int i = 0; i < inst.args().length(); i++) {
-                s = s.a(inst.args().lstValue().get(i));
+                sb.append(inst.args().lstValue().get(i));
                 if (i != inst.args().length() - 1)
-                    s = s.fg(this.builder.palette.formC()).a(',');
+                    sb.append(this.builder.palette.formC()).append(',');
             }
-            return s.fg(this.builder.palette.formC())
-                    .a(")[")
-                    .fg(this.builder.palette.valueC())
-                    .a(inst.resolved() ? ObjUtil.isLambda(inst.f()) ? "λ" : inst.f() : "?")
-                    .fg(this.builder.palette.formC())
-                    .a(']')
-                    .reset()
+            return sb.append(this.builder.palette.formC())
+                    .append(")[")
+                    .append(this.builder.palette.valueC())
+                    .append(inst.resolved() ? ObjUtil.isLambda(inst.f()) ? "λ" : inst.f() : "?")
+                    .append(this.builder.palette.formC())
+                    .append(']')
+                    /*.reset()*/
                     .toString();
         } else if (obj instanceof final BObj.Rel rel) {
-            return generateTID(ansi(),rel) .a(rel.domain()) .fg(this.builder.palette.formC())
-                    .a("=>")
-                    .a(rel.range()).reset().toString();
-          /*  return ansi()
-                    .fg(this.builder.palette.typeC())
-                    .a(this.builder.hideTypes.contains(rel.tid()) ? "" : rel.tid())
-                    .fg(this.builder.palette.formC())
-                    .a(this.builder.hideTypes.contains(rel.tid()) ? "" : ':')
-                    .a("[")
-                    .a(rel.domain())
-                    .fg(this.builder.palette.formC())
-                    .a("=>")
-                    .a(rel.range())
-                    .fg(this.builder.palette.formC())
-                    .a(']').reset().toString();*/
+            return generateTID(sb, rel).append(rel.domain()).append(this.builder.palette.formC())
+                    .append("=>")
+                    .append(rel.range())/*.reset()*/.toString();
         } else if (obj instanceof final BObj.Lst lst) {
-            Ansi s = generateTID(ansi(), obj)
-                    .a('[').fg(this.builder.palette.valueC());
+            generateTID(sb, obj).append(this.builder.palette.formC()).append('[').append(this.builder.palette.valueC());
             for (final BObj.Obj o : lst.value()) {
-                s = s.a(o).fg(this.builder.palette.formC()).a(',');
+                sb.append(o).append(this.builder.palette.formC()).append(',');
             }
-            s = s.cursorLeft(1).fg(this.builder.palette.formC()).a(']');
-            return generateVID(s, lst).reset().toString();
+            if (!lst.value().isEmpty())
+                sb/*.cursorLeft(1)*/.append(this.builder.palette.formC()).append(']');
+            return generateVID(sb, lst)/*.reset()*/.toString();
         } else if (obj instanceof final BObj.Objs objs) {
-            Ansi s = generateTID(ansi(), obj)
-                    .a('{').fg(this.builder.palette.valueC());
+            generateTID(sb, obj).append(this.builder.palette.formC()).append('{').append(this.builder.palette.valueC());
+            boolean found = false;
             for (final BObj.Obj o : objs.value()) {
-                s = s.a(o).fg(this.builder.palette.formC()).a(',');
+                found = true;
+                sb.append(o).append(this.builder.palette.formC()).append(',');
             }
-            s = s.cursorLeft(1).fg(this.builder.palette.formC()).a('}');
-            return generateVID(s, objs).reset().toString();
-        }/*else if (obj instanceof final BObj.Rec rec) {
-            Ansi s = ansi()
-                    .fg(this.builder.palette.typeC())
-                    .a(this.builder.hideTypes.contains(rec.tid()) ? "" : rec.tid())
-                    .fg(this.builder.palette.formC())
-                    .a('[');
-            final List<Map.Entry<BObj.Obj, BObj.Obj>> kv = new ArrayList<>(rec.value().entrySet());
-            for (int i = 0; i < kv.size(); i++) {
-                s = s.a(kv.get(i).getKey()).fg(this.builder.palette.formC()).a("=>").a(kv.get(i).getValue());
-                if (i != kv.size() - 1)
-                    s = s.fg(this.builder.palette.formC()).a(',');
+            if (found)
+                sb/*.cursorLeft(1)*/.append(this.builder.palette.formC()).append('}');
+            return generateVID(sb, objs)/*.reset()*/.toString();
+        } else if (obj instanceof final BObj.Rec rec) {
+            generateTID(sb, obj).append(this.builder.palette.formC()).append('[').append(this.builder.palette.valueC());
+            for (final Map.Entry<BObj.Obj, BObj.Obj> o : rec.value().entrySet()) {
+                sb.append(o.getKey()).append(this.builder.palette.formC()).append("=>").append(o.getValue()).append(this.builder.palette.formC()).append(',');
             }
-            return s.fg(this.builder.palette.formC()).a(']').reset().toString();
-        }*/ else
-            return generateVID(generateTID(ansi(), obj)
-                    .fg(this.builder.palette.valueC())
-                    .a(obj.value())
-                    .fg(this.builder.palette.form2C()), obj)
-                    .reset()
+           if(!rec.value().isEmpty())
+               sb/*.cursorLeft(1)*/.append(this.builder.palette.formC()).append(']');
+            return generateVID(sb, rec)/*.reset()*/.toString();
+        } else
+            return generateVID(generateTID(sb, obj)
+                    .append(this.builder.palette.valueC())
+                    .append(obj.value())
+                    .append(this.builder.palette.form2C()), obj)
+                    /*.reset()*/
                     .toString();
     }
 
-    private Ansi generateVID(final Ansi ansi, final BObj.Obj obj) {
-        return null == obj.vid() ? ansi : ansi.fg(this.builder.palette.typeC())
-                .fg(this.builder.palette.formC())
-                .a('@')
-                .fg(this.builder.palette.typeC())
-                .a(obj.vid());
+    private StringBuilder generateVID(final StringBuilder sb, final BObj.Obj obj) {
+        return null == obj.vid() ? sb : sb.append(this.builder.palette.typeC())
+                .append(this.builder.palette.formC())
+                .append('@')
+                .append(this.builder.palette.typeC())
+                .append(obj.vid());
     }
 
-    private Ansi generateTID(final Ansi ansi, final BObj.Obj obj) {
-        return this.builder.hideTypes.contains(obj.tid()) ? ansi : ansi.fg(this.builder.palette.typeC())
-                .a(obj.tid())
-                .fg(this.builder.palette.formC())
-                .a(':');
+    private StringBuilder generateTID(final StringBuilder sb, final BObj.Obj obj) {
+        return this.builder.hideTypes.contains(obj.tid()) ? sb : sb.append(this.builder.palette.typeC())
+                .append(obj.tid())
+                .append(this.builder.palette.formC())
+                .append(':');
     }
 
     @Override

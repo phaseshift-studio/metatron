@@ -19,10 +19,13 @@
 package studio.phaseshift.metatron.lang.translate;
 
 import com.google.gson.JsonParser;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.lang.obj.BObj;
+import studio.phaseshift.metatron.lang.obj.Palette;
 import studio.phaseshift.metatron.lang.parse.ObjParser;
+import studio.phaseshift.metatron.ui.Graphitty;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -37,9 +40,9 @@ public class JSONTranslatorTest {
                     0.01 | 0.01
                     12.34 | 12.34
                     "hello world" | "hello world"
-                    "http://fhat.org" | <http://fhat.org>
+                    "a/b/c" | <a/b/c>
                     [1,2,3] | [1,2,3]
-                    {a:1,b:2,c:3} | [[a=>1],[b=>2],[c=>3]]
+                    {a:1,b:2,c:3} | [a=>1,b=>2,c=>3]
             """)
     public void testJSONTranslation(final String json, final String mtron) {
         final JSONTranslator translator = new JSONTranslator();

@@ -19,11 +19,9 @@
 package studio.phaseshift.metatron.struct;
 
 import studio.phaseshift.metatron.lang.fURI;
+import studio.phaseshift.metatron.lang.obj.BObj;
 import studio.phaseshift.metatron.lang.obj.Palette;
 import studio.phaseshift.metatron.ui.Graphitty;
-
-import java.util.Iterator;
-import java.util.Map;
 
 import static studio.phaseshift.metatron.lang.obj.BObj.Obj;
 import static studio.phaseshift.metatron.lang.obj.BObj.Poly;
@@ -53,5 +51,10 @@ public interface Struct extends Poly {
     @Override
     default Obj clone() {
         throw new IllegalStateException(new CloneNotSupportedException("structs can not be cloned"));
+    }
+
+    @Override
+    default Obj get(final int index) {
+        return BObj.NoObj.of();
     }
 }
