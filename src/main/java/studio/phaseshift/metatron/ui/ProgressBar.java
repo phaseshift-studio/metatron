@@ -40,7 +40,7 @@ public class ProgressBar {
         }
 
 
-        Graphitty.stdout().print("!g[INFO]  [!b");
+        Graphitty.stdout().print("!g[INFO]  [{{b}}");
         for (int j = 0; j < (int) percentage; j = j + 2) {
             // + 2 to make bar half as long
             Graphitty.stdout().print("#");
@@ -48,7 +48,7 @@ public class ProgressBar {
         for (int j = (int) percentage; j < 99; j = j + 2) {
             Graphitty.stdout().print(' ');
         }
-        Graphitty.stdout().print("!g] !y%d%%!! %-25s\r".formatted((int) percentage, message));
+        Graphitty.stdout().print("{{g}}] {{y}}%d%%{{X}} %-25s\r".formatted((int) percentage, message));
         try {
             Thread.sleep(10);
         } catch (Exception e) {

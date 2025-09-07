@@ -33,28 +33,40 @@ public class Graphitty implements ObjSerializer<String> {
     public static final Map<String, String> COLOR_REWRITES = new LinkedHashMap<>();
 
     static {
-        COLOR_REWRITES.put("!", "\033[m");
-        COLOR_REWRITES.put("r", "\033[31m");
-        COLOR_REWRITES.put("g", "\033[32m");
-        COLOR_REWRITES.put("y", "\033[33m");
-        COLOR_REWRITES.put("b", "\033[34m");
-        COLOR_REWRITES.put("m", "\033[35m");
-        COLOR_REWRITES.put("c", "\033[36m");
-        COLOR_REWRITES.put("w", "\033[37m");
-        COLOR_REWRITES.put("R", "\033[1;31m");
-        COLOR_REWRITES.put("G", "\033[1;32m");
-        COLOR_REWRITES.put("Y", "\033[1;33m");
-        COLOR_REWRITES.put("B", "\033[1;34m");
-        COLOR_REWRITES.put("M", "\033[1;35m");
-        COLOR_REWRITES.put("C", "\033[1;36m");
-        COLOR_REWRITES.put("W", "\033[1;37m");
-        COLOR_REWRITES.put("<", "\033[{{<}}D");
+        COLOR_REWRITES.put("X", "\033[m");  // reset
+        COLOR_REWRITES.put("r", "\033[31m"); // red
+        COLOR_REWRITES.put("g", "\033[32m"); // green
+        COLOR_REWRITES.put("y", "\033[33m");  // yellow
+        COLOR_REWRITES.put("b", "\033[34m"); // blue
+        COLOR_REWRITES.put("m", "\033[35m"); // magenta
+        COLOR_REWRITES.put("c", "\033[36m"); // cyan
+        COLOR_REWRITES.put("w", "\033[37m"); // white
+        COLOR_REWRITES.put("R", "\033[1;31m"); // bold red
+        COLOR_REWRITES.put("G", "\033[1;32m"); // bold green
+        COLOR_REWRITES.put("Y", "\033[1;33m"); // bold yellow
+        COLOR_REWRITES.put("B", "\033[1;34m"); // bold blue
+        COLOR_REWRITES.put("M", "\033[1;35m"); // bold magenta
+        COLOR_REWRITES.put("C", "\033[1;36m"); // bold cyan
+        COLOR_REWRITES.put("W", "\033[1;37m"); // bold white
+        COLOR_REWRITES.put("~", "\033[3m"); // italics
+        COLOR_REWRITES.put("_", "\033[4m"); // underline
+        COLOR_REWRITES.put("-", "\033[9m"); // strikethrough
     }
 
-    public static final Map<String, String> CONTROL_REWRITES = new LinkedHashMap<>();
+    public static final Map<String, String> CURSOR_REWRITES = new LinkedHashMap<>();
 
     static {
-        CONTROL_REWRITES.put("<", "\033[{{<}}D");
+        CURSOR_REWRITES.put("@", "\033[H"); // home
+        CURSOR_REWRITES.put("^", "\033[{{^}}A"); // up X
+        CURSOR_REWRITES.put("v", "\033[{{v}}B"); // down X
+        CURSOR_REWRITES.put(">", "\033[{{>}}C"); // right X
+        CURSOR_REWRITES.put("<", "\033[{{<}}D"); // left X
+        CURSOR_REWRITES.put("|", "\033[{{|}}G"); // column X
+        CURSOR_REWRITES.put("-", "\033[{{-}}H"); // row X
+        CURSOR_REWRITES.put("-X", "\033[2K");  // clear line
+        CURSOR_REWRITES.put("*", "\0331b[?25h"); // show cursor
+        CURSOR_REWRITES.put(".", "\0331b[?25l"); // hide cursor
+        // CURSOR_REWRITES.put("X", "\033[{{<}}D");
     }
 
     private OutputStream out;
@@ -98,7 +110,9 @@ public class Graphitty implements ObjSerializer<String> {
     public Graphitty(final ObjSerializer<String> serializer, final Map<String, String> rewrites, final OutputStream out) {
         this.serializer = serializer;
         this.out = out;
-        this.rewrites = new HashMap<>(Graphitty.COLOR_REWRITES);
+        this.rewrites = new HashMap<>();
+        this.rewrites.putAll(Graphitty.COLOR_REWRITES);
+        this.rewrites.putAll(Graphitty.CURSOR_REWRITES);
         this.rewrites.putAll(rewrites);
     }
 
@@ -159,15 +173,16 @@ public class Graphitty implements ObjSerializer<String> {
                             throw new IllegalStateException("closing rule isn't correct");
                         else {
                             String reset = this.rewriteStack.isEmpty() ? null : this.rewrites.get(this.rewriteStack.peek());
-                            reset = null == reset ? this.rewrites.get("!") : reset.replace("\033[", "\033[0;");
+                            reset = null == reset ? this.rewrites.get("X") : reset.replace("\033[", "\033[0;");
                             if (null != reset)
                                 this.parseDSL(reset);
                         }
                     } else {
                         this.rewriteStack.push(rule.toString());
                         String r = this.rewrites.get(rule.toString());
-                        if (rule.charAt(0) == '<') {
-                            r = this.rewrites.get("<").replace("{{<}}", rule.substring(1));
+                        if (Set.of('^', 'v', '<', '>').contains(rule.charAt(0))) {
+                            if (!rule.substring(1).equals("0"))
+                                r = this.rewrites.get("" + rule.charAt(0)).replace("{{" + rule.charAt(0) + "}}", rule.substring(1));
                         }
                         if (null == r)
                             throw new IllegalStateException("unknown rule: %s\n\t%s".formatted(rule, buffer));

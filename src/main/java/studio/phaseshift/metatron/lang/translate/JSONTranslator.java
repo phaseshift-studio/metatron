@@ -82,18 +82,22 @@ public class JSONTranslator implements Translator<BObj.Obj, JsonElement> {
 
     @Override
     public JsonElement translate(final BObj.Obj obj) {
-        if (obj.isMono()) {
-            return JsonParser.parseString(SERIALIZER.write(obj));
-        } else if (obj.isLst()) {
-            JsonArray array = new JsonArray();
-            obj.lstValue().forEach(o -> array.add(translate(o)));
-            return array;
-        } else if (obj.isRec()) {
-            JsonObject object = new JsonObject();
-            obj.recValue().forEach((key, value) -> object.add(translate(key).toString(), translate(value)));
-            return object;
-        } else {
-            throw new IllegalArgumentException("unable to jsonify " + obj);
+        try {
+            if (obj.isMono()) {
+                return JsonParser.parseString(SERIALIZER.write(obj));
+            } else if (obj.isLst()) {
+                JsonArray array = new JsonArray();
+                obj.lstValue().forEach(o -> array.add(translate(o)));
+                return array;
+            } else if (obj.isRec()) {
+                JsonObject object = new JsonObject();
+                obj.recValue().forEach((key, value) -> object.add(translate(key).toString(), translate(value)));
+                return object;
+            } else {
+                throw new IllegalArgumentException("unable to jsonify " + obj);
+            }
+        } catch (final Exception e) {
+            throw new IllegalArgumentException("could not parse %s to json".formatted(SERIALIZER.write(obj)));
         }
     }
 

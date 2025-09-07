@@ -25,10 +25,10 @@ public class Palette {
 
     public static Palette GLOBAL = STANDARD;
 
-    boolean inColor = true;
+    boolean inColor;
 
     public Palette() {
-
+        this(true);
     }
 
     public Palette(final boolean inColor) {

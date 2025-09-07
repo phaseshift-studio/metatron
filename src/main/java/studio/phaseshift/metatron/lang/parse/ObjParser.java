@@ -53,15 +53,15 @@ public class ObjParser {
     private static final SettableParser rec_parser = SettableParser.undefined();
     private static final SettableParser inst_parser = SettableParser.undefined();
     private static final SettableParser rel_parser = SettableParser.undefined();
+    private static final SettableParser obj_rel_back_parser = SettableParser.undefined();
 
     static {
-        rel_parser.set(seq(m_type_prefix_opt_colon(REL_URI),
-                seq(of('[').trim(), m_obj(), of("=>").trim(), m_obj(), of(']').trim()))
+        rel_parser.set(seq(m_type_prefix_opt_colon(REL_URI), obj_rel_back_parser, of("=>").trim(), m_obj())
                 .map(t -> new SObj.Rel(Pair.with(pick(pick(t, 1), 1), pick(pick(t, 1), 3)), pick(t, 0), null)));
         obj_parser.set(choice(
                 m_comment(),
                 m_noobj(),
-                //  m_rel(),
+                m_rel(),
                 m_bool(),
                 m_real(),
                 m_int(),
@@ -75,7 +75,7 @@ public class ObjParser {
         obj_no_code_parser.set(choice(
                 m_comment(),
                 m_noobj(),
-                //  m_rel(),
+                m_rel(),
                 m_bool(),
                 m_real(),
                 m_int(),
@@ -84,31 +84,48 @@ public class ObjParser {
                 m_rec(),
                 m_lst(),
                 m_uri()));
-        lst_parser.set(seq(m_type_prefix_opt_colon(LST_URI), seq(of('[').trim(), m_obj().separatedBy(of(',').trim()), of(']').trim()).pick(1))
-                .map(t -> new SObj.Lst(ObjParser.<List>pick(t, 1).stream().filter(o -> o instanceof BObj.Obj).toList(), pick(t, 0), null)));
+        obj_rel_back_parser.set(choice(
+                m_comment(),
+                m_noobj(),
+                m_bool(),
+                m_real(),
+                m_int(),
+                m_str(),
+                m_code(),
+                m_objs(),
+                m_rec(),
+                m_inst(),
+                m_lst(),
+                m_uri()));
+        lst_parser.set(seq(m_type_prefix_opt_colon(LST_URI), seq(
+                of('[').trim(),
+                choice(of(','), m_obj().separatedBy(of(',').trim())),
+                of(']').trim()).pick(1))
+                .map(t -> SObj.Lst.of(
+                        (ObjParser.pick(t, 1).equals(',') ?
+                                List.of() : ObjParser.<List>pick(t, 1))
+                                .stream()
+                                .filter(o -> o instanceof BObj.Obj)
+                                .toList(), pick(t, 0),
+                        fURI.NONE)));
 
-        rec_parser.set(seq(m_type_prefix_opt_colon(REC_URI), seq(of('[').trim(), seq(m_obj(), of("=>").trim(), m_obj()).separatedBy(of(',').trim()), of(']').trim()).pick(1))
-                .map(t -> {
-                    System.out.println(t);
+        rec_parser.set(seq(seq(m_type_prefix_opt_colon(REC_URI), of('[').trim()).pick(0),
+                choice(of("=>").trim(),
+                        seq(m_obj(), of("=>").trim(), m_obj()).separatedBy(of(',').trim())),
+                of(']')).trim().map(t -> {
                     final Map<BObj.Obj, BObj.Obj> map = new LinkedHashMap<>();
-                    ObjParser.<List>pick(t, 1).stream()
+                    (ObjParser.pick(t, 1) instanceof String ?
+                            List.of() :
+                            ObjParser.<List>pick(t, 1))
+                            .stream()
                             .filter(o -> o instanceof List)
                             .forEach(o -> {
                                 List kv = (List) o;
                                 map.put(pick(kv, 0), pick(kv, 2));
                             });
-                    //System.out.println(map);
                     return new SObj.Rec(map, pick(t, 0), null);
                 }));
-        /*  rec_parser.set(seq(of('[').trim(), seq(m_obj(), of("=>").trim(), m_obj()).separatedBy(of(',').trim()), of(']').trim())
-                .map(t -> new SObj.Rec((Map) ((List) t).stream()
-                        .filter(o -> o instanceof List)
-                        .flatMap(o -> ((List) o).stream())
-                        .filter(o -> o instanceof List)
-                        .reduce(new LinkedHashMap<>(), (a, b) -> {
-                            ((Map) a).put(((List) b).get(0), ((List) b).get(2));
-                            return a;
-                        }))));*/
+
         inst_parser.set(seq(
                 m_type_prefix_opt_colon(INST_URI),
                 seq(of('(').trim(), opt(m_obj().separatedBy(of(',').trim()), List.of()), of(')').trim()).pick(1),
@@ -117,7 +134,7 @@ public class ObjParser {
                         new SObj.Lst(ObjParser.<List>pick(t, 1), BObj.LST_URI, null),
                         InstF.of(ObjParser.<BObj.Obj>pick(t, 2)),
                         NoObj.of()),
-                        pick(pick(t, 0),0), null))); // this is weird -- why is the list nested?
+                        pick(pick(t, 0), 0), null))); // this is weird -- why is the list nested?
 
     }
 

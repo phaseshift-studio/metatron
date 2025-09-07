@@ -30,6 +30,7 @@ import studio.phaseshift.metatron.util.IteratorUtil;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Iterator;
 
 public final class SInst {
@@ -59,12 +60,15 @@ public final class SInst {
     public static final fURI COUNT_URI = fURI.of("count");
     public static final fURI SUM_URI = fURI.of("sum");
     public static final fURI WITHIN_URI = fURI.of("within");
+    public static final fURI DOM_URI = fURI.of("dom");
+    public static final fURI RNG_URI = fURI.of("rng");
+    /// //////////////////////////////////////////////////////////
     public static final fURI OS_URI = fURI.of("os");
     /// //////////////////////////////////////////////////////////
     public static final fURI JSON_URI = fURI.of("json");
 
     public static void load() {
-        ProgressBar pg = new ProgressBar(20);
+        ProgressBar pg = new ProgressBar(30);
         BInst.SymbolTable.load(pg.incr(START_URI), InstF.of((lhs, inst) -> inst.args(0)));
         BInst.SymbolTable.load(pg.incr(OS_URI), InstF.of((lhs, inst) -> {
             try {
@@ -105,6 +109,22 @@ public final class SInst {
         BInst.SymbolTable.load(pg.incr(TO_URI), InstF.of((lhs, inst) -> {
             Router.global().write(inst.args(0).uriValue(), lhs);
             return lhs;
+        }));
+        BInst.SymbolTable.load(pg.incr(DOM_URI), InstF.of((lhs, inst) -> {
+            if (lhs.isRec()) {
+                return SObj.Lst.of(new ArrayList<BObj.Obj>(lhs.recValue().keySet()));
+            } else if (lhs.isRel()) {
+                return lhs.relValue().getValue0();
+            } else
+                return lhs;
+        }));
+        BInst.SymbolTable.load(pg.incr(RNG_URI), InstF.of((lhs, inst) -> {
+            if (lhs.isRec()) {
+                return SObj.Lst.of(new ArrayList<BObj.Obj>(lhs.recValue().values()));
+            } else if (lhs.isRel()) {
+                return lhs.relValue().getValue1();
+            } else
+                return lhs;
         }));
         BInst.SymbolTable.load(pg.incr(FROM_URI), InstF.of((lhs, inst) -> Router.global().read(inst.args(0).uriValue())));
         BInst.SymbolTable.load(pg.incr(TYPE_URI), InstF.of((lhs, inst) -> null == lhs.value() ? BObj.NoObj.of() : SObj.Uri.of(lhs.tid())));
