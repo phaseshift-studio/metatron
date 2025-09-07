@@ -279,7 +279,7 @@ public class SMonoid {
             List<Obj> results = new ArrayList<>();
             Obj m = null;
             while (null != (m = this.next())) {
-                results.add(m);
+                m.iterator().forEachRemaining(results::add);
             }
             return results.iterator();
         }

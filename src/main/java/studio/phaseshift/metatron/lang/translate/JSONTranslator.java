@@ -20,7 +20,10 @@ package studio.phaseshift.metatron.lang.translate;
 
 import com.google.gson.*;
 import studio.phaseshift.metatron.lang.obj.BObj;
+import studio.phaseshift.metatron.lang.obj.Palette;
 import studio.phaseshift.metatron.lang.obj.SObj;
+import studio.phaseshift.metatron.ui.ObjSerializer;
+import studio.phaseshift.metatron.ui.ObjStringSerializer;
 
 import java.net.URI;
 import java.util.ArrayList;
@@ -28,7 +31,16 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import static studio.phaseshift.metatron.lang.obj.BObj.MTRON_CORE_TYPES;
+
 public class JSONTranslator implements Translator<BObj.Obj, JsonElement> {
+    private static final ObjSerializer<String> SERIALIZER = ObjStringSerializer
+            .build()
+            .simpleColon(true)
+            .hideTypesMatching(MTRON_CORE_TYPES)
+            .palette(Palette.NO_COLOR)
+            .create();
+
     @Override
     public BObj.Obj translate(final JsonElement json) {
         if (json.isJsonNull())
@@ -70,10 +82,26 @@ public class JSONTranslator implements Translator<BObj.Obj, JsonElement> {
 
     @Override
     public JsonElement translate(final BObj.Obj obj) {
-        return null;
+        if (obj.isMono()) {
+            return JsonParser.parseString(SERIALIZER.write(obj));
+        } else if (obj.isLst()) {
+            JsonArray array = new JsonArray();
+            obj.lstValue().forEach(o -> array.add(translate(o)));
+            return array;
+        } else if (obj.isRec()) {
+            JsonObject object = new JsonObject();
+            obj.recValue().forEach((key, value) -> object.add(translate(key).toString(), translate(value)));
+            return object;
+        } else {
+            throw new IllegalArgumentException("unable to jsonify " + obj);
+        }
     }
 
     public BObj.Obj translateString(final String json) {
-        return this.translate(JsonParser.parseString(json));
+        try {
+            return this.translate(JsonParser.parseString(json));
+        } catch (final Exception e) {
+            throw new IllegalArgumentException(json, e);
+        }
     }
 }

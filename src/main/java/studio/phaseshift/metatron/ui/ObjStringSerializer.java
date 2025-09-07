@@ -75,17 +75,17 @@ public class ObjStringSerializer implements ObjSerializer<String> {
                 sb.append(o).append(this.builder.palette.formC()).append(',');
             }
             if (!lst.value().isEmpty())
-                sb/*.cursorLeft(1)*/.append(this.builder.palette.formC()).append(']');
+                sb.append("{{<1}}").append(this.builder.palette.formC()).append(']');
             return generateVID(sb, lst)/*.reset()*/.toString();
         } else if (obj instanceof final BObj.Objs objs) {
-            generateTID(sb, obj).append(this.builder.palette.formC()).append('{').append(this.builder.palette.valueC());
+            generateTID(sb, obj).append(this.builder.palette.formC()).append("{").append(this.builder.palette.valueC());
             boolean found = false;
             for (final BObj.Obj o : objs.value()) {
                 found = true;
                 sb.append(o).append(this.builder.palette.formC()).append(',');
             }
             if (found)
-                sb/*.cursorLeft(1)*/.append(this.builder.palette.formC()).append('}');
+                sb.append("{{<1}}").append(this.builder.palette.formC()).append('}');
             return generateVID(sb, objs)/*.reset()*/.toString();
         } else if (obj instanceof final BObj.Rec rec) {
             generateTID(sb, obj).append(this.builder.palette.formC()).append('[').append(this.builder.palette.valueC());
@@ -93,7 +93,7 @@ public class ObjStringSerializer implements ObjSerializer<String> {
                 sb.append(o.getKey()).append(this.builder.palette.formC()).append("=>").append(o.getValue()).append(this.builder.palette.formC()).append(',');
             }
            if(!rec.value().isEmpty())
-               sb/*.cursorLeft(1)*/.append(this.builder.palette.formC()).append(']');
+               sb.append("{{<1}}").append(this.builder.palette.formC()).append(']');
             return generateVID(sb, rec)/*.reset()*/.toString();
         } else
             return generateVID(generateTID(sb, obj)

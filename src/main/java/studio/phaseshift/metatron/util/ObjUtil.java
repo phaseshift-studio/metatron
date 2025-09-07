@@ -20,6 +20,9 @@ package studio.phaseshift.metatron.util;
 
 import studio.phaseshift.metatron.lang.obj.BObj;
 import studio.phaseshift.metatron.lang.obj.BObj.NoObj;
+import studio.phaseshift.metatron.lang.obj.SObj;
+
+import java.util.List;
 
 public final class ObjUtil {
 
@@ -33,5 +36,14 @@ public final class ObjUtil {
 
     public static boolean isLambda(final Object o) {
         return o == null || o.toString().contains("$$Lambda");
+    }
+
+    public static BObj.Obj oneNoneOrAll(final List<BObj.Obj> objs) {
+        if (objs.isEmpty())
+            return NoObj.of();
+        else if (objs.size() == 1)
+            return objs.get(0);
+        else
+            return SObj.Objs.of(objs);
     }
 }

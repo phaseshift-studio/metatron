@@ -18,45 +18,59 @@
 
 package studio.phaseshift.metatron.struct.mqtt;
 
-import com.google.gson.JsonParser;
 import com.hivemq.client.mqtt.MqttClient;
-import com.hivemq.client.mqtt.MqttGlobalPublishFilter;
-import com.hivemq.client.mqtt.datatypes.MqttTopicFilter;
 import com.hivemq.client.mqtt.mqtt5.Mqtt5BlockingClient;
 import com.hivemq.client.mqtt.mqtt5.Mqtt5Client;
-import com.hivemq.client.mqtt.mqtt5.message.publish.Mqtt5Publish;
+import com.hivemq.client.mqtt.mqtt5.message.subscribe.Mqtt5RetainHandling;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.BObj;
+import studio.phaseshift.metatron.lang.obj.Palette;
 import studio.phaseshift.metatron.lang.obj.SObj;
 import studio.phaseshift.metatron.lang.translate.JSONTranslator;
 import studio.phaseshift.metatron.struct.Struct;
+import studio.phaseshift.metatron.struct.mem.MemStruct;
+import studio.phaseshift.metatron.ui.ObjSerializer;
+import studio.phaseshift.metatron.ui.ObjStringSerializer;
 
 import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 
-import static studio.phaseshift.metatron.lang.obj.BObj.OBJS_URI;
 import static studio.phaseshift.metatron.lang.obj.BObj.URI_URI;
 
 public class MqttStruct extends SObj.Obj implements Struct {
 
     public static fURI MQTT_TID = fURI.of("mqtt/broker");
-
     private static final Logger LOG = LoggerFactory.getLogger(MqttStruct.class);
     protected final fURI broker;
     protected final fURI pattern;
     Mqtt5Client client;
     Mqtt5BlockingClient.Mqtt5Publishes incomingMessages;
 
+    MemStruct cache;
+
+    private static final ObjSerializer<String> SERIALIZER = ObjStringSerializer.build()
+            .simpleColon(false)
+            .hideTypesMatching(Set.of())
+            .palette(Palette.NO_COLOR)
+            .create();
+    final JSONTranslator jsonTranslator = new JSONTranslator();
+
     public MqttStruct(final Map<BObj.Uri, BObj.Obj> config, final fURI tid, final fURI vid) {
         super(config, tid, vid);
-        this.broker = config.<BObj.Uri>get(new SObj.Uri(fURI.of("broker"), URI_URI, null)).orElseThrow(new IllegalArgumentException("supplied config has not broker key")).uriValue();
-        this.pattern = config.<BObj.Uri>get(new SObj.Uri(fURI.of("pattern"), URI_URI, null)).orElseThrow(new IllegalArgumentException("supplied config has not broker key")).uriValue();
+        this.broker = config
+                .get(new SObj.Uri(fURI.of("broker"), URI_URI, null))
+                .orElseThrow(new IllegalArgumentException("config must have a broker key")).uriValue();
+        this.pattern = config
+                .get(new SObj.Uri(fURI.of("pattern"), URI_URI, null))
+                .orElseThrow(new IllegalArgumentException("config nust have a pattern key")).uriValue();
+        this.cache = new MemStruct(this.pattern, fURI.NONE);
         this.init();
-
     }
 
     public void init() {
@@ -69,106 +83,74 @@ public class MqttStruct extends SObj.Obj implements Struct {
                     .build();
             this.client.toAsync()
                     .connect()
-                    .whenComplete((a, b) -> System.out.println("connected " + a))
+                    .whenComplete((a, b) -> LOG.info("connected {}", a))
                     .get();
-            this.incomingMessages = this.client.toBlocking().publishes(MqttGlobalPublishFilter.ALL);
-           /* client.toAsync().subscribeWith()
-                    .topicFilter("fhatos/#")
-                    .qos(MqttQos.AT_LEAST_ONCE)
-                    .callback(a -> LOG.info(Graphitty.parse("!r---!!%s".formatted(ObjParser.parse(a.getPayload().map(b -> StandardCharsets.UTF_8.decode(b).toString()).orElse("noobj")).toString()))))
+            this.client.toAsync()
+                    .subscribeWith()
+                    .topicFilter(this.pattern.toString())
+                    .retainHandling(Mqtt5RetainHandling.SEND)
+                    .callback(p -> {
+                        LOG.info("received {}", p);
+                        if (p.getPayload().isPresent()) {
+                            final String json = StandardCharsets.UTF_8.decode(p.getPayload().get()).toString();
+                            this.cache.write(
+                                    fURI.of(p.getTopic().toString()),
+                                    this.jsonTranslator.translateString(json));
+                        } else {
+                            this.cache.write(
+                                    fURI.of(p.getTopic().toString()),
+                                    BObj.NoObj.of());
+                        }
+                    })
                     .send()
-                    .whenComplete((a, b) -> System.out.println("subscribed " + a))
-                    .get();*/
-           /* client.toAsync().subscribeWith()
-                    .topicFilter("fhatos/#")
-                    .topicFilter("homeassistant/#")
-                    .qos(MqttQos.AT_LEAST_ONCE)
-                    .callback(a -> LOG.info(a.getPayload().map(b -> StandardCharsets.UTF_8.decode(b).toString()).orElse("noobj")))
-                    .send()
-                    .whenComplete((a, b) -> System.out.println("subscribed " + a))
                     .get();
-            client.toAsync().publishWith()
-                    .topic("fhatos")
-                    .contentType("mtron")
-                    .retain(true)
-                    .payload("1.plus(2)".getBytes())
-                    .send()
-                    .whenComplete((a, b) -> System.out.println("published " + a))
-                    .get();*/
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (final Exception e) {
+            throw new IllegalStateException(e);
         }
     }
 
-    public static void main(final String[] args) {
-        new MqttStruct(Map.of(
-                SObj.Uri.of("broker"),
-                SObj.Uri.of("ip://192.168.66.2:1883"),
-                SObj.Uri.of("pattern"),
-                SObj.Uri.of("homeassistant/#")), fURI.of("mtron:/struct/mqtt"), fURI.of("/mnt/mqtt"));
-    }
-
-
     @Override
     public fURI pattern() {
-        return ((Map<BObj.Obj, BObj.Obj>) this.value()).get(new SObj.Uri(fURI.of("pattern"), URI_URI, null)).uriValue();
+        return this.pattern;
     }
 
     @Override
     public BObj.Obj read(final fURI addr) {
-        final Set<BObj.Obj> results = new HashSet<>();
-        this.client.toBlocking().unsubscribeWith().topicFilter(addr.toString()).send();
-        LOG.info("unsubscribed from %s\n".formatted(SObj.Uri.of(addr)));
-        this.client
-                .toBlocking()
-                .subscribeWith()
-                .topicFilter(addr.toString())
-                .send();
-        try {
-            final JSONTranslator jsonTranslator = new JSONTranslator();
-            final long start = System.currentTimeMillis();
-            while (System.currentTimeMillis() - start < 1000) {
-                Optional<Mqtt5Publish> o = this.incomingMessages.receive(1000, TimeUnit.MILLISECONDS);
-                o.filter(p -> MqttTopicFilter.of(addr.toString()).matches(p.getTopic().filter()))
-                        .filter(p -> p.getPayload().isPresent())
-                        .ifPresent(p -> results.add(
-                                jsonTranslator.translate(JsonParser.parseString(StandardCharsets.UTF_8.decode(p.getPayload().get()).toString()))));
-
-                //ObjParser.parse("'" + p.getPayload()
-                //.map(b -> StandardCharsets.UTF_8.decode(b).toString().replaceAll("'", "") + "'").orElse("noobj"))));
-                // TODO: convert JSON to records
-            }
-        } catch (InterruptedException e) {
-            LOG.error(e.getMessage());
-        }
-
-        if (results.isEmpty())
-            return BObj.NoObj.of();
-        else if (results.size() == 1)
-            return results.iterator().next();
-        else
-            return new SObj.Objs(results, OBJS_URI, null);
+        return this.cache.read(addr);
     }
 
     @Override
-    public BObj.Obj write(fURI addr, BObj.Obj obj) {
+    public BObj.Obj write(final fURI addr, final BObj.Obj obj) {
         try {
             this.client
                     .toAsync()
                     .publishWith()
                     .topic(addr.toString())
-                    .payload(obj.toString().getBytes())
+                    .payload(obj.isNoObj() ? new byte[0] : this.jsonTranslator.translate(obj).toString().getBytes())
+                    .retain(true)
                     .send()
-                    .get();
+                    .whenComplete((p, t) -> {
+                        LOG.info("caching {}", p.getPublish());
+                        if (p.getPublish().getPayload().isPresent()) {
+                            final String json = StandardCharsets.UTF_8.decode(p.getPublish().getPayload().get()).toString();
+                            this.cache.write(
+                                    fURI.of(p.getPublish().getTopic().toString()),
+                                    this.jsonTranslator.translateString(json));
+                        } else {
+                            this.cache.write(
+                                    fURI.of(p.getPublish().getTopic().toString()),
+                                    BObj.NoObj.of());
+                        }
+                    }).get();
             return BObj.NoObj.of();
         } catch (InterruptedException | ExecutionException e) {
-            throw new RuntimeException(e);
+            throw new IllegalArgumentException(e);
         }
     }
 
     @Override
     public void append(fURI addr, BObj.Obj... obj) {
-
+        LOG.error("append currently not implemented");
     }
 
     @Override

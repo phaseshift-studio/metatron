@@ -21,10 +21,12 @@ package studio.phaseshift.metatron.struct.mem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import studio.phaseshift.metatron.lang.fURI;
+import studio.phaseshift.metatron.lang.obj.BObj;
 import studio.phaseshift.metatron.lang.obj.Palette;
 import studio.phaseshift.metatron.lang.obj.SObj;
 import studio.phaseshift.metatron.struct.Struct;
 import studio.phaseshift.metatron.ui.Graphitty;
+import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.ObjUtil;
 
 import java.util.*;
@@ -73,7 +75,28 @@ public class MemStruct extends SObj.Obj implements Struct {
 
     @Override
     public Obj read(final fURI addr) {
-        return ObjUtil.orNoObj(store.get(addr));
+        if (addr.isBranch()) {
+            final List<BObj.Obj> map = new ArrayList<>();
+            if (addr.hasPattern()) {
+                this.store.entrySet()
+                        .stream()
+                        .filter(kv -> kv.getKey().matches(addr))
+                        .forEach(kv -> map.add(SObj.Rel.of(SObj.Uri.of(kv.getKey()), kv.getValue())));
+                return new SObj.Objs(map, OBJS_URI, fURI.NONE);
+            } else {
+                return SObj.Objs.of(SObj.Rel.of(SObj.Uri.of(addr), this.store.getOrDefault(addr, NoObj.of())));
+            }
+        } else {
+            return addr.hasPattern() ?
+                    ObjUtil.oneNoneOrAll(
+                            this.store.entrySet()
+                                    .stream()
+                                    .filter(kv -> kv.getKey().matches(addr))
+                                    .map(Map.Entry::getValue)
+                                    .flatMap(o -> IteratorUtil.stream(o.iterator()))
+                                    .toList()) :
+                    this.store.get(addr);
+        }
     }
 
     @Override
@@ -98,6 +121,11 @@ public class MemStruct extends SObj.Obj implements Struct {
             Poly ppoly = (Poly) poly;
             ppoly.append(obj);
         }
+    }
+
+    @Override
+    public Obj get(int index) {
+        return NoObj.of();
     }
 
 

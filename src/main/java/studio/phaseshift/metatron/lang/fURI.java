@@ -27,6 +27,8 @@ import static studio.phaseshift.metatron.lang.obj.BObj.URI_URI;
 
 public class fURI {
 
+    public static final fURI NONE = null;
+
     private final String host;
     private final String scheme;
     private final int port;
@@ -105,6 +107,14 @@ public class fURI {
         return schemaType && null != scheme ?
                 new SObj.Uri(this.scheme(null), fURI.of(scheme), null) :
                 new SObj.Uri(this, URI_URI, null);
+    }
+
+    public boolean isBranch() {
+        return this.send;
+    }
+
+    public boolean isNode() {
+        return !this.send;
     }
 
     public fURI scheme(final String scheme) {
@@ -260,7 +270,7 @@ public class fURI {
     }
 
     public int hashCode() {
-      //  return Objects.hash(this.scheme, this.host, this.port, this.sstart, this.path, this.send, this.query);
+        //  return Objects.hash(this.scheme, this.host, this.port, this.sstart, this.path, this.send, this.query);
         return this.toString().hashCode();
     }
 

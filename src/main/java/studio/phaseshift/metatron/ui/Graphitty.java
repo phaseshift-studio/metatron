@@ -31,6 +31,7 @@ import static studio.phaseshift.metatron.lang.obj.BObj.MTRON_CORE_TYPES;
 
 public class Graphitty implements ObjSerializer<String> {
     public static final Map<String, String> COLOR_REWRITES = new LinkedHashMap<>();
+
     static {
         COLOR_REWRITES.put("!", "\033[m");
         COLOR_REWRITES.put("r", "\033[31m");
@@ -47,6 +48,13 @@ public class Graphitty implements ObjSerializer<String> {
         COLOR_REWRITES.put("M", "\033[1;35m");
         COLOR_REWRITES.put("C", "\033[1;36m");
         COLOR_REWRITES.put("W", "\033[1;37m");
+        COLOR_REWRITES.put("<", "\033[{{<}}D");
+    }
+
+    public static final Map<String, String> CONTROL_REWRITES = new LinkedHashMap<>();
+
+    static {
+        CONTROL_REWRITES.put("<", "\033[{{<}}D");
     }
 
     private OutputStream out;
@@ -131,7 +139,8 @@ public class Graphitty implements ObjSerializer<String> {
                     }
                 } else if (i + 4 < buffer.length() &&
                         buffer.charAt(i) == '{' &&
-                        buffer.charAt(i + 1) == '{') {
+                        buffer.charAt(i + 1) == '{' &&
+                        buffer.charAt(i + 2) != '{') {
                     i = i + 2;
                     final StringBuilder rule = new StringBuilder();
                     final boolean end = buffer.charAt(i) == '/';
@@ -156,9 +165,12 @@ public class Graphitty implements ObjSerializer<String> {
                         }
                     } else {
                         this.rewriteStack.push(rule.toString());
-                        final String r = this.rewrites.get(rule.toString());
+                        String r = this.rewrites.get(rule.toString());
+                        if (rule.charAt(0) == '<') {
+                            r = this.rewrites.get("<").replace("{{<}}", rule.substring(1));
+                        }
                         if (null == r)
-                            throw new IllegalStateException("unknown rule: " + rule);
+                            throw new IllegalStateException("unknown rule: %s\n\t%s".formatted(rule, buffer));
                         this.parseDSL(r);
                     }
 

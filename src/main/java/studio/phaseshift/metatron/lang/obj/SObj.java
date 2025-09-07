@@ -26,6 +26,7 @@ import studio.phaseshift.metatron.struct.Router;
 import studio.phaseshift.metatron.util.IteratorUtil;
 
 import java.util.*;
+import java.util.stream.Stream;
 
 public class SObj implements BObj {
 

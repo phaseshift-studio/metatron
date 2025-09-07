@@ -57,4 +57,6 @@ public interface Struct extends Poly {
     default Obj get(final int index) {
         return BObj.NoObj.of();
     }
+
+    //public static void log_write(final fURI source, final fURI target, final BObj.Obj obj) {
 }
