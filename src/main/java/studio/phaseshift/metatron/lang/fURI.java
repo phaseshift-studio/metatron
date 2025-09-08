@@ -109,6 +109,10 @@ public class fURI implements Cloneable {
                 new SObj.Uri(this, URI_URI, null);
     }
 
+    public BObj.Uri toUri() {
+        return this.toUri(true);
+    }
+
     public boolean isBranch() {
         return this.send;
     }
@@ -131,6 +135,20 @@ public class fURI implements Cloneable {
 
     public String scheme() {
         return this.scheme;
+    }
+
+    public fURI retractPattern() {
+        if (!this.hasPattern())
+            return this;
+        fURI r = this;
+        while (!r.segments().isEmpty()) {
+            final String end = r.segments().get(r.segments().size() - 1);
+            if (end.length() == 1 && (end.equals("#") || end.equals("+")))
+                r = r.retract();
+            else
+                break;
+        }
+        return r;
     }
 
     public String hostOrSegment() {
@@ -185,7 +203,7 @@ public class fURI implements Cloneable {
 
     public fURI removeSubpath(final fURI subpath) {
         String newPath = this.toString();
-        return new fURI(newPath.replace(subpath.toString(),""));
+        return new fURI(newPath.replace(subpath.asBranch().toString(), ""));
     }
 
 

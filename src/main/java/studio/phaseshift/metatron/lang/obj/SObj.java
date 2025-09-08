@@ -230,16 +230,16 @@ public class SObj implements BObj {
             return new Uri(new fURI(uri), URI_URI, null);
         }
 
-        public BObj.Obj apply(final BObj.Obj lhs) {
+        /*public BObj.Obj apply(final BObj.Obj lhs) {
             if (lhs.isRec()) {
-                return new Objs(lhs.recValue().entrySet().stream().filter(kv -> kv.getKey().matches(lhs)).map(kv -> {
-                    System.out.println(kv.getValue());
-                    return kv.getValue();
-                }).toList(), OBJS_URI, null);
+                //System.out.println(kv.getValue());
+                return new Objs(lhs.recValue().entrySet().stream().filter(kv -> !kv.getKey().apply(lhs).isNoObj()).map(Map.Entry::getValue).toList(), OBJS_URI, null);
+            } else if (lhs.isUri()) {
+                return lhs.uriValue().matches(this.uriValue()) ? this : NoObj.of();
             } else {
                 return this;
             }
-        }
+        }*/
     }
 
     public static class Rel extends Obj implements BObj.Rel {
@@ -308,18 +308,24 @@ public class SObj implements BObj {
         public Rec apply(final BObj.Obj other) {
             final Map<BObj.Obj, BObj.Obj> map = new LinkedHashMap<>();
             for (final Map.Entry<BObj.Obj, BObj.Obj> entry : this.value().entrySet()) {
-                final BObj.Obj keyApply = entry.getKey().apply(other);
-                // if (!keyApply.isNoObj()) {
-                if (entry.getKey().matches(other)) {
-                    final BObj.Obj valueApply = entry.getValue().apply(other);
-                    if (!valueApply.isNoObj()) {
-                        final BObj.Obj current = map.get(other);
-                        if (null == current)
-                            map.put(other, valueApply);
-                        else if (current.isObjs())
-                            map.put(other, ((Objs) current).append(valueApply));
-                        else
-                            map.put(other, Objs.of(List.of(current, valueApply)));
+                if (other.isUri() && entry.getKey().isUri()) {
+                    if (other.matches(entry.getKey()) || entry.getKey().matches(other))
+                        map.put(other, entry.getValue().apply(other));
+                } else {
+                    final BObj.Obj keyApply = entry.getKey().apply(other);
+                    // if (!keyApply.isNoObj()) {
+                    if (!keyApply.isNoObj()) {
+                        final BObj.Obj valueApply = entry.getValue().apply(other);
+                        if (!valueApply.isNoObj()) {
+                            final BObj.Obj current = map.get(other);
+                            if (null == current)
+                                map.put(keyApply, valueApply);
+                            else if (current.isObjs())
+                                map.put(keyApply, ((Objs) current).append(valueApply));
+                            else
+                                map.put(keyApply, Objs.of(List.of(current, valueApply)));
+                        }
+                        // System.out.println(other + ";;;" + map);
                     }
                 }
             }
@@ -352,7 +358,7 @@ public class SObj implements BObj {
             return IteratorUtil.index(this.value().values().iterator(), index, NoObj.of());
         }
 
-        public BObj.Obj get(final fURI key) {
+      /*  public BObj.Obj get(final fURI key) {
             final BObj.Uri uriKey = new SObj.Uri(key, URI_URI, fURI.NONE);
             final Map<BObj.Obj, BObj.Obj> map = new LinkedHashMap<>();
             for (final Map.Entry<BObj.Obj, BObj.Obj> entry : this.value().entrySet()) {
@@ -369,7 +375,7 @@ public class SObj implements BObj {
                 }
             }
             return new SObj.Rec(map, REC_URI, fURI.NONE);
-        }
+        }*/
 
     }
 
@@ -442,7 +448,7 @@ public class SObj implements BObj {
         }
 
         @Override
-        public BObj.Obj get(final fURI key) {
+        public BObj.NoObj get(final fURI key) {
             return NoObj.of();
         }
     }
@@ -474,16 +480,6 @@ public class SObj implements BObj {
             Inst clone = (Inst) super.clone();
             clone.value = triplet;
             return clone;
-        }
-
-        @Override
-        public BObj.Obj get(final fURI key) {
-            return this.args().get(key);
-        }
-
-        @Override
-        public BObj.Obj get(final int index) {
-            return this.args().get(index);
         }
     }
 }

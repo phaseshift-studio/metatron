@@ -229,10 +229,10 @@ public class SMonoid {
         Queue<Obj> halted = new LinkedList<>();
 
         public Monoid(final Obj code) {
-            this(code, null);
+            this(code, NoObj.of());
         }
 
-        public Monoid(final Obj code, final Obj runner) {
+        public Monoid(final Obj code, final Obj start) {
             if (!code.isCode()) {
                 if (!code.isNoObj()) {
                     this.halted.add(code);
@@ -264,12 +264,8 @@ public class SMonoid {
                     }
                     // first = false;
                 }
-                if (runner == null || runner.isNoObj()) {
-                    this.running.add(new Monad(this, NoObj.of(), this.code.value().get(0), 1));
-                } else if (this.running.isEmpty()) {
-                    for (final Obj o : runner) {
-                        this.running.add(new Monad(this, o, this.code.value().get(0), 1));
-                    }
+                for (final Obj o : start) {
+                    this.running.add(new Monad(this, o, this.code.get(0), 1));
                 }
             }
         }

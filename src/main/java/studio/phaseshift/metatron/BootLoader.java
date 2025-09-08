@@ -60,6 +60,7 @@ public class BootLoader {
         Router.global().registerStruct(sys);
         Router.global().registerStruct(new MemStruct(fURI.of("/mtron/#"), fURI.of("/mnt/lang/mtron")));
         Router.global().registerStruct(new MemStruct(fURI.of("+"), fURI.of("/sys/stack")));
+        Router.global().registerStruct(new MemStruct(fURI.of("/test/#"), fURI.of("/sys/test")));
         Router.global().registerStruct(new MqttStruct(Map.of(SObj.Uri.of("broker"), SObj.Uri.of("ip://192.168.66.2:1883"), SObj.Uri.of("pattern"), SObj.Uri.of("test/#")), MQTT_TID, fURI.of("/mnt/mqtt")));
         SInst.load();
         SInst.ext();

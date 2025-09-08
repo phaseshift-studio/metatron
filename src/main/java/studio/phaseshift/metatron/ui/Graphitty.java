@@ -18,6 +18,8 @@
 
 package studio.phaseshift.metatron.ui;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import studio.phaseshift.metatron.lang.obj.BObj;
 
 import java.io.ByteArrayOutputStream;
@@ -97,6 +99,32 @@ public class Graphitty implements ObjSerializer<String> {
                     .hideTypesMatching(MTRON_CORE_TYPES)
                     .simpleColon(true)
                     .create(), System.out);
+
+    public static class GraphittyLogger {
+
+        Object source;
+
+        private GraphittyLogger(final Object source) {
+            this.source = source;
+        }
+
+        public GraphittyLogger info(final Object f, final Object... args) {
+           // this.logger().info(Graphitty.string(args.length == 0 ? f.toString() : f.toString().formatted(args)));
+           Graphitty.stdout(args.length == 0 ? f.toString() : f.toString().formatted(args));
+            return this;
+        }
+
+        private final Logger logger() {
+            if (!(this.source instanceof Logger))
+                this.source = LoggerFactory.getLogger(this.source.getClass());
+            return (Logger) this.source;
+        }
+
+    }
+
+    public static GraphittyLogger log(final Object source) {
+        return new GraphittyLogger(source);
+    }
 
     public static Graphitty stdout(final Object s) {
         GRAPHITTY_STDOUT.parseDSL(s.toString() + "\n");

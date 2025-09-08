@@ -20,6 +20,7 @@ package studio.phaseshift.metatron.ui;
 
 import org.jline.reader.*;
 import org.jline.reader.impl.DefaultHighlighter;
+import org.jline.reader.impl.DefaultParser;
 import org.jline.reader.impl.history.DefaultHistory;
 import org.jline.terminal.Terminal;
 import org.jline.terminal.TerminalBuilder;
@@ -50,6 +51,10 @@ public class Console {
     private final LineReader reader;
 
     public Console() throws IOException {
+        final DefaultParser parser = new DefaultParser();
+        parser.setEofOnUnclosedBracket(DefaultParser.Bracket.CURLY, DefaultParser.Bracket.ROUND, DefaultParser.Bracket.SQUARE);
+
+
         this.terminal = TerminalBuilder.builder().system(true)/*.signalHandler(Terminal.SignalHandler.SIG_IGN)*/.build();
         // this.terminal.handle(Terminal.Signal.WINCH) // TODO: signal handling on some CNTRL-?? to resolve (not evaluate) current expression
         Highlighter highlighter = new DefaultHighlighter() {
@@ -58,19 +63,15 @@ public class Console {
                 AttributedStringBuilder builder = new AttributedStringBuilder();
                 try {
                     if (!buffer.isEmpty()) {
-                        //System.out.print(buffer.charAt(buffer.length()-1) == '\177');
-                        //if(buffer.charAt(buffer.length()-1) == '\177')
-                        //    Graphitty.stdout().print(Graphitty.string("{{v1}}{{-X}}{{^v1}}"));
                         final BObj.Obj o = ObjParser.parse(buffer);
                         final int xLocation = terminal.getCursorPosition(System.out::print).getX() + 1;
-                        final String p1 = o.toString(Palette.STANDARD);
-                        final int promptLength = "mtron> ".length() + 1;
+                        // final int promptLength = 8; //"mtron> ".length() + 1;
                         builder.append(buffer);
-                        Graphitty.stdout().print(Graphitty.string("{{v1}}{{|" + promptLength + "}}" + p1));
-                        Graphitty.stdout().print(Graphitty.string("{{^1}}{{|" + xLocation + "}}"));
+                        Graphitty.stdout().print(Graphitty.string("{{v1}}{{|%d}}%s".formatted(8, o)));
+                        Graphitty.stdout().print(Graphitty.string("{{^1}}{{|%d}}".formatted(xLocation)));
                     }
                 } catch (final Exception e) {
-                    // do nothing
+                    // console expression doesn't compile yet
                     builder.append(buffer);
                 }
                 return builder.toAttributedString();
@@ -82,8 +83,11 @@ public class Console {
                 .appName("metatron")
                 .history(history)
                 .highlighter(highlighter)
+                .parser(parser)
                 .variable(LineReader.HISTORY_FILE, Paths.get(".metatron.history"))
                 .option(LineReader.Option.AUTO_FRESH_LINE, true)
+                .variable(LineReader.SECONDARY_PROMPT_PATTERN, Graphitty.string("\n{{-X}}{{v1}}{{^1}}{{FORM1}}%P >{{X}}"))
+                .variable(LineReader.INDENTATION, 2)   // indentation size
                 .build();
     }
 

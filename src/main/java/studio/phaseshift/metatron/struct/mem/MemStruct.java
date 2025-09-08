@@ -27,10 +27,9 @@ import studio.phaseshift.metatron.lang.obj.SObj;
 import studio.phaseshift.metatron.struct.Struct;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.Palette;
-import studio.phaseshift.metatron.util.IteratorUtil;
-import studio.phaseshift.metatron.util.ObjUtil;
 
 import java.util.*;
+import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.lang.obj.BObj.*;
 
@@ -77,55 +76,92 @@ public class MemStruct extends SObj.Obj implements Struct {
     @Override
     public Obj read(final fURI addr) {
         if (addr.isBranch()) {
-            final List<BObj.Obj> map = new ArrayList<>();
+            // pattern/branch
+            if (addr.hasPattern()) {
+                Graphitty.log(this).info("processing pattern %s", addr.toUri());
+                return SObj.Objs.of(this.store.entrySet()
+                        .stream()
+                        .flatMap(kv -> kv.getValue().isRec() ? kv
+                                .getValue()
+                                .recValue()
+                                .entrySet()
+                                .stream()
+                                .flatMap(kv2 -> Map.of(kv.getKey().extend(kv2.getKey().uriValue()), kv2.getValue()).entrySet().stream()) : Stream.of(kv))
+                        .flatMap(kv -> Map.of(kv.getKey().toUri(), kv.getValue()).entrySet().stream())
+                        .filter(kv -> {
+                            final boolean check = kv.getKey().matches(addr.toUri()) || kv.getKey().matches(addr.retractPattern().asNode().toUri());
+                            Graphitty.log(this).info("checking %s against %s at %s [%s]", addr.asNode(), kv.getValue(), kv.getKey(), check ? "{{g}}OK{{X}}" : "{{r}}X{{X}}");
+                            return check;
+                        })
+                        .map(kv -> new SObj.Rel(Pair.with(kv.getKey(), kv.getValue()), REL_URI, fURI.NONE)).toList());
+            } else {
+                // resolved/branch
+                Graphitty.log(this).info("searching %s", addr.extend("+").toUri());
+                return this.read(addr.extend("+").asBranch());// new SObj.Objs(List.of(new SObj.Rel(Pair.with(SObj.Uri.of(addr), this.store.getOrDefault(addr, NoObj.of())), REL_URI, fURI.NONE)), OBJS_URI, fURI.NONE);
+            }
+        } else {
+            Map<BObj.Uri, BObj.Obj> map = new LinkedHashMap<>();
             if (addr.hasPattern()) {
                 this.store.entrySet()
                         .stream()
                         .filter(kv -> kv.getKey().matches(addr))
-                        .forEach(kv -> map.add(SObj.Rel.of(SObj.Uri.of(kv.getKey()), kv.getValue())));
-                return new SObj.Objs(map, OBJS_URI, fURI.NONE);
-            } else {
-                return SObj.Objs.of(SObj.Rel.of(SObj.Uri.of(addr), this.store.getOrDefault(addr, NoObj.of())));
-            }
-        } else {
-            BObj.Obj result = addr.hasPattern() ?
-                    ObjUtil.oneNoneOrAll(
-                            this.store.entrySet()
-                                    .stream()
-                                    .filter(kv -> kv.getKey().matches(addr))
-                                    .map(Map.Entry::getValue)
-                                    .flatMap(o -> IteratorUtil.stream(o.iterator()))
-                                    .toList()) :
-                    this.store.getOrDefault(addr, NoObj.of());
-            if (result.isNoObj()) {
+                        .forEach(kv ->
+                                map.put(kv.getKey().toUri(), kv.getValue()));
+            } else if (this.store.containsKey(addr))
+                map.put(addr.toUri(), this.store.get(addr));
+            if (map.isEmpty()) {
                 final Optional<Pair<fURI, Poly>> pair = this.locateBasePoly(addr.retract(), null);
                 if (pair.isPresent()) {
-            /*LOG_WRITE(TRACE, this, L("base poly found at {}: {}\n",
-                                     pair->first.toString(),
-                                     pair->second->toString())                  );*/
-                    final fURI furiSubpath = addr.removeSubpath(pair.get().getValue0().asBranch());
                     final Poly poly = pair.get().getValue1();
+                    Graphitty.stdout().print("base poly found at %s: %s\n".formatted(pair.get().getValue0(), poly));
+                    final fURI furiSubpath = addr.removeSubpath(pair.get().getValue0()).asNode();
+                    Graphitty.stdout().print("searching base poly %s for %s\n".formatted(poly, furiSubpath.toUri()));
                     final BObj.Obj readObj = poly.get(furiSubpath);
-                    result = SObj.Objs.of(result).append(readObj);
+                    Graphitty.stdout().print("located poly obj %s in %s\n".formatted(readObj, poly));
+                    map.put(addr.retractPattern().toUri(), readObj);
                 } /*(else if (result.isNoObj()) {
                     result. (NoObj.of());
                 }*/
             }
-            return result;
+            if (map.isEmpty())
+                return NoObj.of();
+            else {
+                return SObj.Rec.of(map);
+                //   new SObj.Rec((Map) map, REC_URI, fURI.NONE);
+            }
         }
+
+        /*
+
+        SObj.Objs.of(map.entrySet().stream()
+                        .flatMap(kv ->
+                                IteratorUtil.asList(nodeBranchProcess(addr.retractPattern().asBranch(), new SObj.Rec((Map) map, REC_URI, fURI.NONE)))
+                                        .stream()
+                                        .map(z -> new SObj.Rel(Pair.with(((Pair<fURI, BObj.Obj>) z).getValue0().toUri(), ((Pair<fURI, BObj.Obj>) z).getValue1()), REL_URI, fURI.NONE))
+                                        .toList()
+                                        .stream()).toList());
+         */
     }
 
     @Override
     public Obj write(final fURI addr, Obj obj) {
-        final Obj current = this.store.get(addr);
-        if (null == current) {
-            this.store.put(addr, obj);
-            return obj;
-        } else {
-            final Obj next = current.apply(obj);
-            this.store.put(addr, next);
-            return next;
+        /*for (var pair : this.generateWritePairs(addr, obj)) {
+            final Obj current = this.store.get(pair.getValue0());
+            if (null == current) {
+                this.store.put(pair.getValue0(), pair.getValue1());
+            } else {
+                final Obj next = current.apply(pair.getValue1());
+                this.store.put(pair.getValue0(), next);
+                return next;
+            }
         }
+
+        return this.read(addr);*/
+        for (var pair : this.generateWritePairs(addr, obj)) {
+            this.store.put(pair.getValue0(), pair.getValue1());
+        }
+        return obj;
+
     }
 
     @Override

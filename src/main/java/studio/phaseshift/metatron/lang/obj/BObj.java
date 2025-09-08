@@ -29,6 +29,7 @@ import studio.phaseshift.metatron.lang.inst.BInst.Terminal;
 import studio.phaseshift.metatron.ui.ObjStringSerializer;
 import studio.phaseshift.metatron.ui.Palette;
 import studio.phaseshift.metatron.util.IteratorUtil;
+import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.ObjUtil;
 
 import java.util.*;
@@ -164,55 +165,55 @@ public interface BObj extends Cloneable {
         default boolean boolValue() {
             if (this.isBool())
                 return ((Bool) this).value();
-            throw new IllegalStateException("%s is not a bool".formatted(this));
+            throw MTronException.of("%s is a %s is not a %s", this, tid().toUri(), BOOL_URI.toUri());
         }
 
         default Long intValue() {
             if (this.isInt())
                 return ((Int) this).value();
-            throw new IllegalStateException("%s is not an int".formatted(this));
+            throw MTronException.of("%s is a %s is not an %s", this, tid().toUri(), INT_URI.toUri());
         }
 
         default double realValue() {
             if (this.isReal())
                 return ((Real) this).value();
-            throw new IllegalStateException("%s is not a real".formatted(this));
+            throw MTronException.of("%s is a %s is not a %s", this, tid().toUri(), REAL_URI.toUri());
         }
 
         default String strValue() {
             if (this.isStr())
                 return ((Str) this).value();
-            throw new IllegalStateException("%s is not a str".formatted(this));
+            throw MTronException.of("%s is a %s is not a %s", this, tid().toUri(), STR_URI.toUri());
         }
 
         default fURI uriValue() {
             if (this.isUri())
                 return ((Uri) this).value();
-            throw new IllegalStateException("%s is not a uri".formatted(this));
+            throw MTronException.of("%s is a %s is not a %s", this, tid().toUri(), URI_URI.toUri());
         }
 
         default List<Obj> lstValue() {
             if (this.isLst())
                 return ((Lst) this).value();
-            throw new IllegalStateException("%s is not a lst".formatted(this));
+            throw MTronException.of("%s is a %s is not a %s", this, tid().toUri(), LST_URI.toUri());
         }
 
         default Iterable<Obj> objsValue() {
             if (this.isObjs())
                 return ((Objs) this).value();
-            throw new IllegalStateException("%s is not an objs".formatted(this));
+            throw MTronException.of("%s is a %s is not an %s", this, tid().toUri(), OBJS_URI.toUri());
         }
 
         default Map<Obj, Obj> recValue() {
             if (this.isRec())
                 return ((Rec) this).value();
-            throw new IllegalStateException("%s is not a rec".formatted(this));
+            throw MTronException.of("%s is a %s is not a %s", this, tid().toUri(), REC_URI.toUri());
         }
 
         default Pair<Obj, Obj> relValue() {
             if (this.isRel())
                 return ((Rel) this).value();
-            throw new IllegalStateException("%s is not a rel".formatted(this));
+            throw MTronException.of("%s is a %s is not a %s", this, tid().toUri(), REL_URI.toUri());
         }
     }
 
@@ -250,7 +251,7 @@ public interface BObj extends Cloneable {
 
         @Override
         public Obj apply(final Obj lhs) {
-            return NOOBJ;
+            return lhs;
         }
 
         @Override
@@ -295,17 +296,12 @@ public interface BObj extends Cloneable {
 
         BObj.Obj get(final int index);
 
-        BObj.Obj get(final fURI key);
+        <O extends BObj.Obj> O get(final fURI key);
     }
 
     interface Bool extends Mono {
         @Override
         Boolean value();
-
-        @Override
-        default Bool apply(final Obj other) {
-            return this;
-        }
     }
 
     interface Int extends Mono {
@@ -331,11 +327,6 @@ public interface BObj extends Cloneable {
     interface Str extends Mono {
         @Override
         String value();
-
-        @Override
-        default Str apply(final Obj other) {
-            return this;
-        }
     }
 
     interface Uri extends Mono {
@@ -349,14 +340,10 @@ public interface BObj extends Cloneable {
 
         @Override
         default Obj apply(final Obj lhs) {
-            if (lhs instanceof final Rel rel)
-                return rel.apply(this);
-            else if (lhs instanceof final Lst l) {
-                return new SObj.Lst(l.value().stream().map(this::apply).toList(), lhs.tid(), null);
-            } else {
+            if (lhs.isRec() || lhs.isRel())
+                return lhs.apply(this);
+            else
                 return this;
-                //return lhs.matches(this) ? lhs : NoObj.of();
-            }
         }
     }
 
@@ -428,6 +415,18 @@ public interface BObj extends Cloneable {
         default <O extends Obj> O get(final Obj key) {
             return (O) this.value().getOrDefault(key, NoObj.of());
         }
+
+        @Override
+        default Obj get(final fURI key) {
+            if (!key.hasPattern())
+                return this.value().getOrDefault(key.toUri(), NoObj.of());
+            else {
+                final Map<BObj.Obj, BObj.Obj> map = new LinkedHashMap<>();
+                this.value().entrySet().stream().filter(kv -> kv.getKey().matches(key.toUri())).forEach(kv -> map.put(kv.getKey(), kv.getValue()));
+                return map.isEmpty() ? NoObj.of() : new SObj.Rec(map, REC_URI, fURI.NONE);
+            }
+        }
+
 
         @Override
         default BObj.Obj get(final int index) {
@@ -526,6 +525,11 @@ public interface BObj extends Cloneable {
                 final InstF instF = !this.resolved() ? resolvedInst.f() : this.f();
                 return SObj.Obj.of(instF.apply(lhs, resolvedInst));
             }
+        }
+
+        @Override
+        default <O extends BObj.Obj> O get(final fURI key) {
+            return this.args().get(key);
         }
 
         @Override
