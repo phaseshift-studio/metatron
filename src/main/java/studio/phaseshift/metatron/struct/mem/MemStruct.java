@@ -23,10 +23,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.BObj;
-import studio.phaseshift.metatron.ui.Palette;
 import studio.phaseshift.metatron.lang.obj.SObj;
 import studio.phaseshift.metatron.struct.Struct;
 import studio.phaseshift.metatron.ui.Graphitty;
+import studio.phaseshift.metatron.ui.Palette;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.ObjUtil;
 
@@ -96,7 +96,7 @@ public class MemStruct extends SObj.Obj implements Struct {
                                     .map(Map.Entry::getValue)
                                     .flatMap(o -> IteratorUtil.stream(o.iterator()))
                                     .toList()) :
-                    this.store.get(addr);
+                    this.store.getOrDefault(addr, NoObj.of());
             if (result.isNoObj()) {
                 final Optional<Pair<fURI, Poly>> pair = this.locateBasePoly(addr.retract(), null);
                 if (pair.isPresent()) {

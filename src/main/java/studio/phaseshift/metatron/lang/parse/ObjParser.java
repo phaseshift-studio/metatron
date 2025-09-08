@@ -113,18 +113,18 @@ public class ObjParser {
                 choice(of("=>").trim(),
                         seq(m_obj(), of("=>").trim(), m_obj()).separatedBy(of(',').trim())),
                 of(']')).trim().map(t -> {
-                    final Map<BObj.Obj, BObj.Obj> map = new LinkedHashMap<>();
-                    (ObjParser.pick(t, 1) instanceof String ?
-                            List.of() :
-                            ObjParser.<List>pick(t, 1))
-                            .stream()
-                            .filter(o -> o instanceof List)
-                            .forEach(o -> {
-                                List kv = (List) o;
-                                map.put(pick(kv, 0), pick(kv, 2));
-                            });
-                    return new SObj.Rec(map, pick(t, 0), null);
-                }));
+            final Map<BObj.Obj, BObj.Obj> map = new LinkedHashMap<>();
+            (ObjParser.pick(t, 1) instanceof String ?
+                    List.of() :
+                    ObjParser.<List>pick(t, 1))
+                    .stream()
+                    .filter(o -> o instanceof List)
+                    .forEach(o -> {
+                        List kv = (List) o;
+                        map.put(pick(kv, 0), pick(kv, 2));
+                    });
+            return new SObj.Rec(map, pick(t, 0), null);
+        }));
 
         inst_parser.set(seq(
                 m_type_prefix_opt_colon(INST_URI),
@@ -134,8 +134,7 @@ public class ObjParser {
                         new SObj.Lst(ObjParser.<List>pick(t, 1), BObj.LST_URI, null),
                         InstF.of(ObjParser.<BObj.Obj>pick(t, 2)),
                         NoObj.of()),
-                        pick(pick(t, 0), 0), null))); // this is weird -- why is the list nested?
-
+                        pick(t, 0), null)));
     }
 
 
@@ -151,7 +150,7 @@ public class ObjParser {
             throw new IllegalStateException(
                     Graphitty.string(result.getBuffer() + "\n" +
                             String.format("%" + (result.getPosition() + "[ERROR] ".length() + 5) + "s", "") +
-                            "!b^ !r" +
+                            "{{b}}^ {{r}}" +
                             result.getMessage() + "!!\n"));
         return result.get();
     }
@@ -191,7 +190,7 @@ public class ObjParser {
     }
 
     public static Parser m_type_prefix_opt_colon(final fURI baseType) {
-        return opt(seq(m_furi(REDUCED_FURI_CHARS), opt(of(':').trim(), ':')), baseType);
+        return opt(seq(m_furi(REDUCED_FURI_CHARS), opt(of(':').trim(), ':')).pick(0), baseType);
     }
 
     public static Parser m_bool() {

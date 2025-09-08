@@ -50,7 +50,8 @@ public class Console {
     private final LineReader reader;
 
     public Console() throws IOException {
-        this.terminal = TerminalBuilder.builder().system(true).build();
+        this.terminal = TerminalBuilder.builder().system(true)/*.signalHandler(Terminal.SignalHandler.SIG_IGN)*/.build();
+        // this.terminal.handle(Terminal.Signal.WINCH) // TODO: signal handling on some CNTRL-?? to resolve (not evaluate) current expression
         Highlighter highlighter = new DefaultHighlighter() {
             @Override
             public AttributedString highlight(final LineReader reader, final String buffer) {

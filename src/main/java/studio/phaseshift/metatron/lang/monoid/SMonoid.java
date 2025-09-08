@@ -246,7 +246,6 @@ public class SMonoid {
                 for (final Inst inst : this.code.value()) {
                     try {
                         final Inst resolved = BInst.SymbolTable.resolve(NoObj.of(), inst);
-
                         if (Set.of(COUNT_URI, SUM_URI).contains(inst.tid())) {
                             // MANY_TO_??
                             LOG.debug("barrier inst found: {} (w/ seed {})", resolved, resolved.seed());
@@ -260,7 +259,8 @@ public class SMonoid {
                             LOG_WRITE(DEBUG, this, L(FOS_TAB_2"!ginitial!! monad created: {}\n", m.toString()));
                         }*/
                     } catch (final Exception e) {
-                        throw new RuntimeException(e);
+                        //do nothing
+                        //throw new RuntimeException(e);
                     }
                     // first = false;
                 }
