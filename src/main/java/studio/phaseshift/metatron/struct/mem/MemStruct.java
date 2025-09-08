@@ -18,11 +18,12 @@
 
 package studio.phaseshift.metatron.struct.mem;
 
+import org.javatuples.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.BObj;
-import studio.phaseshift.metatron.lang.obj.Palette;
+import studio.phaseshift.metatron.ui.Palette;
 import studio.phaseshift.metatron.lang.obj.SObj;
 import studio.phaseshift.metatron.struct.Struct;
 import studio.phaseshift.metatron.ui.Graphitty;
@@ -87,7 +88,7 @@ public class MemStruct extends SObj.Obj implements Struct {
                 return SObj.Objs.of(SObj.Rel.of(SObj.Uri.of(addr), this.store.getOrDefault(addr, NoObj.of())));
             }
         } else {
-            return addr.hasPattern() ?
+            BObj.Obj result = addr.hasPattern() ?
                     ObjUtil.oneNoneOrAll(
                             this.store.entrySet()
                                     .stream()
@@ -96,6 +97,21 @@ public class MemStruct extends SObj.Obj implements Struct {
                                     .flatMap(o -> IteratorUtil.stream(o.iterator()))
                                     .toList()) :
                     this.store.get(addr);
+            if (result.isNoObj()) {
+                final Optional<Pair<fURI, Poly>> pair = this.locateBasePoly(addr.retract(), null);
+                if (pair.isPresent()) {
+            /*LOG_WRITE(TRACE, this, L("base poly found at {}: {}\n",
+                                     pair->first.toString(),
+                                     pair->second->toString())                  );*/
+                    final fURI furiSubpath = addr.removeSubpath(pair.get().getValue0().asBranch());
+                    final Poly poly = pair.get().getValue1();
+                    final BObj.Obj readObj = poly.get(furiSubpath);
+                    result = SObj.Objs.of(result).append(readObj);
+                } /*(else if (result.isNoObj()) {
+                    result. (NoObj.of());
+                }*/
+            }
+            return result;
         }
     }
 
@@ -126,6 +142,11 @@ public class MemStruct extends SObj.Obj implements Struct {
     @Override
     public Obj get(int index) {
         return NoObj.of();
+    }
+
+    @Override
+    public Obj get(final fURI key) {
+        return this.read(key);
     }
 
 

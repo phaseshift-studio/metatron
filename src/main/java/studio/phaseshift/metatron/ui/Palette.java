@@ -16,7 +16,7 @@
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.lang.obj;
+package studio.phaseshift.metatron.ui;
 
 public class Palette {
 

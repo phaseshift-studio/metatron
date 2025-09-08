@@ -20,7 +20,7 @@ package studio.phaseshift.metatron.lang.translate;
 
 import com.google.gson.*;
 import studio.phaseshift.metatron.lang.obj.BObj;
-import studio.phaseshift.metatron.lang.obj.Palette;
+import studio.phaseshift.metatron.ui.Palette;
 import studio.phaseshift.metatron.lang.obj.SObj;
 import studio.phaseshift.metatron.ui.ObjSerializer;
 import studio.phaseshift.metatron.ui.ObjStringSerializer;
@@ -39,6 +39,7 @@ public class JSONTranslator implements Translator<BObj.Obj, JsonElement> {
             .simpleColon(true)
             .hideTypesMatching(MTRON_CORE_TYPES)
             .palette(Palette.NO_COLOR)
+            .ignoreRewrites(true)
             .create();
 
     @Override

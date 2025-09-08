@@ -129,7 +129,7 @@ public class ObjParser {
         inst_parser.set(seq(
                 m_type_prefix_opt_colon(INST_URI),
                 seq(of('(').trim(), opt(m_obj().separatedBy(of(',').trim()), List.of()), of(')').trim()).pick(1),
-                opt(seq(of('[').trim(), m_code(), of(']').trim()).pick(1), null))
+                opt(seq(of('{').trim(), m_code(), of('}').trim()).pick(1), null))
                 .map(t -> (BObj.Inst) new SObj.Inst(new Triplet<>(
                         new SObj.Lst(ObjParser.<List>pick(t, 1), BObj.LST_URI, null),
                         InstF.of(ObjParser.<BObj.Obj>pick(t, 2)),

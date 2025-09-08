@@ -19,7 +19,6 @@
 package studio.phaseshift.metatron.ui;
 
 import studio.phaseshift.metatron.lang.obj.BObj;
-import studio.phaseshift.metatron.lang.obj.Palette;
 
 import java.io.ByteArrayOutputStream;
 import java.io.OutputStream;
@@ -31,6 +30,8 @@ import static studio.phaseshift.metatron.lang.obj.BObj.MTRON_CORE_TYPES;
 
 public class Graphitty implements ObjSerializer<String> {
     public static final Map<String, String> COLOR_REWRITES = new LinkedHashMap<>();
+
+    // TODO: cherry pick from: https://gist.github.com/jonlabelle/7a76ecd29976aeb30877be326c683979
 
     static {
         COLOR_REWRITES.put("X", "\033[m");  // reset
@@ -69,6 +70,19 @@ public class Graphitty implements ObjSerializer<String> {
         // CURSOR_REWRITES.put("X", "\033[{{<}}D");
     }
 
+    public static final Map<String, String> OBJ_REWRITES = new LinkedHashMap<>();
+
+    static {
+        OBJ_REWRITES.put("DEBUG", "{{y}}");
+        OBJ_REWRITES.put("INFO", "{{g}}");
+        OBJ_REWRITES.put("WARN", "{{y}}");
+        OBJ_REWRITES.put("ERROR", "{{r}}");
+        OBJ_REWRITES.put("TYPE", "{{b}}");
+        OBJ_REWRITES.put("VALUE", "{{y}}");
+        OBJ_REWRITES.put("FORM1", "{{g}}");
+        OBJ_REWRITES.put("FORM2", "{{m}}");
+    }
+
     private OutputStream out;
     private final Map<String, String> rewrites;
     private final ObjSerializer<String> serializer;
@@ -89,6 +103,10 @@ public class Graphitty implements ObjSerializer<String> {
         return GRAPHITTY_STDOUT;
     }
 
+    public static void out(final OutputStream out, final String s) {
+        final Graphitty g = new Graphitty(ObjStringSerializer.build().palette(Palette.STANDARD).hideTypesMatching(MTRON_CORE_TYPES).simpleColon(true).create(), out);
+        g.print(s);
+    }
 
     public static Graphitty stdout() {
         return GRAPHITTY_STDOUT;
@@ -113,6 +131,7 @@ public class Graphitty implements ObjSerializer<String> {
         this.rewrites = new HashMap<>();
         this.rewrites.putAll(Graphitty.COLOR_REWRITES);
         this.rewrites.putAll(Graphitty.CURSOR_REWRITES);
+        this.rewrites.putAll(Graphitty.OBJ_REWRITES);
         this.rewrites.putAll(rewrites);
     }
 
@@ -180,7 +199,9 @@ public class Graphitty implements ObjSerializer<String> {
                     } else {
                         this.rewriteStack.push(rule.toString());
                         String r = this.rewrites.get(rule.toString());
-                        if (Set.of('^', 'v', '<', '>').contains(rule.charAt(0))) {
+                        while (null != r && r.startsWith("{{") && r.endsWith("}}"))
+                            r = this.rewrites.get(r.substring(2, r.length() - 2));
+                        if (Set.of('^', 'v', '<', '>', '|').contains(rule.charAt(0))) {
                             if (!rule.substring(1).equals("0"))
                                 r = this.rewrites.get("" + rule.charAt(0)).replace("{{" + rule.charAt(0) + "}}", rule.substring(1));
                         }
@@ -569,13 +590,13 @@ public class Graphitty implements ObjSerializer<String> {
         final StringBuilder ret = new StringBuilder();
         for (int i = 0; i < text.length(); i++) {
             if (rainbow)
-                ret.append("!").append(colors.charAt(random.nextInt() % colors.length()));
+                ret.append("{{").append(colors.charAt(random.nextInt(colors.length()))).append("}}");
             ret.append((rollercoaster ? (random.nextBoolean() ?
                     ("" + text.charAt(i)).toLowerCase(Locale.ROOT) :
                     ("" + text.charAt(i)).toUpperCase(Locale.ROOT)) : text.charAt(i)));
         }
         if (rainbow)
-            ret.append("!!");
+            ret.append("{{X}}");
         return ret.toString();
     }
 

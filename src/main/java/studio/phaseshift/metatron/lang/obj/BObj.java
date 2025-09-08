@@ -27,6 +27,7 @@ import studio.phaseshift.metatron.lang.inst.BInst.Initial;
 import studio.phaseshift.metatron.lang.inst.BInst.Scatter;
 import studio.phaseshift.metatron.lang.inst.BInst.Terminal;
 import studio.phaseshift.metatron.ui.ObjStringSerializer;
+import studio.phaseshift.metatron.ui.Palette;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.ObjUtil;
 
@@ -275,6 +276,11 @@ public interface BObj extends Cloneable {
         public NoObj clone() {
             return NOOBJ;
         }
+
+        @Override
+        public NoObj get(final fURI key) {
+            return NOOBJ;
+        }
     }
 
     interface Mono extends Obj {
@@ -288,6 +294,8 @@ public interface BObj extends Cloneable {
         }
 
         BObj.Obj get(final int index);
+
+        BObj.Obj get(final fURI key);
     }
 
     interface Bool extends Mono {

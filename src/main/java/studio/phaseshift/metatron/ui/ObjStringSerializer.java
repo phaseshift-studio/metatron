@@ -21,7 +21,6 @@ package studio.phaseshift.metatron.ui;
 import org.petitparser.context.Result;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.BObj;
-import studio.phaseshift.metatron.lang.obj.Palette;
 import studio.phaseshift.metatron.lang.parse.ObjParser;
 import studio.phaseshift.metatron.util.ObjUtil;
 
@@ -61,11 +60,12 @@ public class ObjStringSerializer implements ObjSerializer<String> {
                     sb.append(this.builder.palette.formC()).append(',');
             }
             return sb.append(this.builder.palette.formC())
-                    .append(")[")
+                    .append("){")
                     .append(this.builder.palette.valueC())
                     .append(inst.resolved() ? ObjUtil.isLambda(inst.f()) ? "λ" : inst.f() : "?")
                     .append(this.builder.palette.formC())
-                    .append("]{{X}}")
+                    .append("}")
+                    .append(this.builder.ignoreRewrites ? "" : "{{X}}")
                     .toString();
         } else if (obj instanceof final BObj.Rel rel) {
             return generateTID(sb, rel).append(rel.domain()).append(this.builder.palette.formC())

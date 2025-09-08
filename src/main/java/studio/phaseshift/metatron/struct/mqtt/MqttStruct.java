@@ -26,7 +26,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.BObj;
-import studio.phaseshift.metatron.lang.obj.Palette;
+import studio.phaseshift.metatron.ui.Palette;
 import studio.phaseshift.metatron.lang.obj.SObj;
 import studio.phaseshift.metatron.lang.translate.JSONTranslator;
 import studio.phaseshift.metatron.struct.Struct;
@@ -150,7 +150,7 @@ public class MqttStruct extends SObj.Obj implements Struct {
 
     @Override
     public void append(fURI addr, BObj.Obj... obj) {
-        LOG.error("append currently not implemented");
+        throw new RuntimeException("append currently not implemented");
     }
 
     @Override
@@ -159,7 +159,12 @@ public class MqttStruct extends SObj.Obj implements Struct {
     }
 
     @Override
+    public BObj.Obj get(final fURI key) {
+        return this.read(key);
+    }
+
+    @Override
     public Iterator<BObj.Obj> iterator() {
-        return null;
+        return this.cache.iterator();
     }
 }

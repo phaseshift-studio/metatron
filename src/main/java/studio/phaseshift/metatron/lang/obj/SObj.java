@@ -23,9 +23,13 @@ import org.javatuples.Triplet;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.monoid.SMonoid.Monoid;
 import studio.phaseshift.metatron.struct.Router;
+import studio.phaseshift.metatron.ui.Palette;
 import studio.phaseshift.metatron.util.IteratorUtil;
 
 import java.util.*;
+
+import static studio.phaseshift.metatron.lang.inst.SInst.DOM_URI;
+import static studio.phaseshift.metatron.lang.inst.SInst.RNG_URI;
 
 public class SObj implements BObj {
 
@@ -248,11 +252,15 @@ public class SObj implements BObj {
             return (Pair) this.value;
         }
 
+
         public static BObj.Rel of(final BObj.Obj domain, final BObj.Obj range) {
             return new Rel(Pair.with(domain, range), REL_URI, null);
         }
 
-
+        @Override
+        public BObj.Obj get(final fURI key) {
+            return key.equals(DOM_URI) ? this.domain() : (key.equals(RNG_URI) ? this.range() : NoObj.of());
+        }
     }
 
     public static class Lst extends Obj implements BObj.Lst {
@@ -279,6 +287,10 @@ public class SObj implements BObj {
             return new Lst(Arrays.stream(args).map(Obj::of).toList(), LST_URI, null);
         }
 
+        @Override
+        public BObj.Obj get(final fURI key) {
+            return NoObj.of();
+        }
     }
 
     public static class Rec extends Obj implements BObj.Rec {
@@ -336,6 +348,29 @@ public class SObj implements BObj {
             return true;
         }
 
+        public BObj.Obj get(final int index) {
+            return IteratorUtil.index(this.value().values().iterator(), index, NoObj.of());
+        }
+
+        public BObj.Obj get(final fURI key) {
+            final BObj.Uri uriKey = new SObj.Uri(key, URI_URI, fURI.NONE);
+            final Map<BObj.Obj, BObj.Obj> map = new LinkedHashMap<>();
+            for (final Map.Entry<BObj.Obj, BObj.Obj> entry : this.value().entrySet()) {
+                if (entry.getKey().matches(uriKey)) {
+                    if (!entry.getValue().isNoObj()) {
+                        final BObj.Obj current = map.get(uriKey);
+                        if (null == current)
+                            map.put(uriKey, entry.getValue());
+                        else if (current.isObjs())
+                            map.put(uriKey, ((Objs) current).append(entry.getValue()));
+                        else
+                            map.put(uriKey, Objs.of(List.of(current, entry.getValue())));
+                    }
+                }
+            }
+            return new SObj.Rec(map, REC_URI, fURI.NONE);
+        }
+
     }
 
     public static class Objs extends Obj implements BObj.Objs {
@@ -367,6 +402,14 @@ public class SObj implements BObj {
         public static BObj.Objs of(final Iterable<BObj.Obj> objs) {
             return new Objs(objs, OBJS_URI, null);
         }
+
+        public BObj.Obj get(final int index) {
+            return IteratorUtil.index(this.iterator(), index, NoObj.of());
+        }
+
+        public BObj.Obj get(final fURI key) {
+            return NoObj.of();
+        }
     }
 
     public static class Code extends Obj implements BObj.Code {
@@ -397,6 +440,11 @@ public class SObj implements BObj {
         public boolean matches(final BObj.Obj lhs) {
             return !this.apply(lhs).isNoObj();
         }
+
+        @Override
+        public BObj.Obj get(final fURI key) {
+            return NoObj.of();
+        }
     }
 
     public static class Inst extends Obj implements BObj.Inst {
@@ -426,6 +474,16 @@ public class SObj implements BObj {
             Inst clone = (Inst) super.clone();
             clone.value = triplet;
             return clone;
+        }
+
+        @Override
+        public BObj.Obj get(final fURI key) {
+            return this.args().get(key);
+        }
+
+        @Override
+        public BObj.Obj get(final int index) {
+            return this.args().get(index);
         }
     }
 }

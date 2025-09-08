@@ -25,13 +25,11 @@ import org.jline.terminal.Terminal;
 import org.jline.terminal.TerminalBuilder;
 import org.jline.utils.AttributedString;
 import org.jline.utils.AttributedStringBuilder;
-import org.jline.utils.AttributedStyle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.lang.monoid.SMonoid.Monoid;
 import studio.phaseshift.metatron.lang.obj.BObj;
-import studio.phaseshift.metatron.lang.obj.Palette;
 import studio.phaseshift.metatron.lang.parse.ObjParser;
 import studio.phaseshift.metatron.util.IteratorUtil;
 
@@ -56,47 +54,22 @@ public class Console {
         Highlighter highlighter = new DefaultHighlighter() {
             @Override
             public AttributedString highlight(final LineReader reader, final String buffer) {
-                // Create a builder for the highlighted text
                 AttributedStringBuilder builder = new AttributedStringBuilder();
-
-                // Apply different styles based on content
-                if (buffer.contains("error")) {
-                    // Highlight "error" in red
-                    int index = buffer.indexOf("error");
-                    builder.append(buffer.substring(0, index));
-                    builder.styled(
-                            AttributedStyle.BOLD.foreground(AttributedStyle.RED), buffer.substring(index, index + 5));
-                    builder.append(buffer.substring(index + 5));
-                } else if (buffer.contains("m:")) {
-                    // Highlight "error" in red
-                    int index = buffer.indexOf("m:");
-                    builder.append(buffer.substring(0, index));
-                    builder.styled(
-                            AttributedStyle.BOLD.foreground(AttributedStyle.MAGENTA), buffer.substring(index, index + 2));
-                    builder.append(buffer.substring(index + 2));
-                } /*else if (buffer.contains("(")) {
-                    // Highlight "error" in red
-                    int index = buffer.lastIndexOf("(");
-                    int dotIndex = buffer.lastIndexOf(".");
-                    if(dotIndex < index) {
-                        builder.append(buffer.substring(0, dotIndex));
-                        builder.styled(
-                                AttributedStyle.BOLD.foreground(AttributedStyle.BLUE), buffer.substring(dotIndex, index));
-                        //builder.append(buffer.substring(dotIndex,index));
-                    } else {
+                try {
+                    if (!buffer.isEmpty()) {
+                        //System.out.print(buffer.charAt(buffer.length()-1) == '\177');
+                        //if(buffer.charAt(buffer.length()-1) == '\177')
+                        //    Graphitty.stdout().print(Graphitty.string("{{v1}}{{-X}}{{^v1}}"));
+                        final BObj.Obj o = ObjParser.parse(buffer);
+                        final int xLocation = terminal.getCursorPosition(System.out::print).getX() + 1;
+                        final String p1 = o.toString(Palette.STANDARD);
+                        final int promptLength = "mtron> ".length() + 1;
                         builder.append(buffer);
+                        Graphitty.stdout().print(Graphitty.string("{{v1}}{{|" + promptLength + "}}" + p1));
+                        Graphitty.stdout().print(Graphitty.string("{{^1}}{{|" + xLocation + "}}"));
                     }
-                } */ else if (buffer.contains("warning")) {
-                    // Highlight "warning" in yellow
-                    int index = buffer.indexOf("warning");
-                    builder.append(buffer.substring(0, index));
-                    builder.styled(
-                            AttributedStyle.BOLD.foreground(AttributedStyle.YELLOW),
-                            buffer.substring(index, index + 7));
-                    builder.append(buffer.substring(index + 7));
-                } else if (buffer.startsWith("#")) {
-                    builder.styled(AttributedStyle.BOLD_OFF.foreground(AttributedStyle.WHITE), buffer);
-                } else {
+                } catch (final Exception e) {
+                    // do nothing
                     builder.append(buffer);
                 }
                 return builder.toAttributedString();
@@ -120,30 +93,34 @@ public class Console {
         String line = "";
         while (true) {
             try {
-                line = this.reader.readLine(Graphitty.string(PALETTE.form2C() + "mtron" + PALETTE.formC() + "> ").toString());
-                if (line.trim().equals(":quit"))
+                this.terminal.writer().print(Graphitty.string("\n{{v1}}{{^1}}"));
+                line = this.reader.readLine(Graphitty.string("{{FORM2}}mtron{{FORM1}}>{{X}} "));
+                if (line.trim().equals(":header"))
+                    this.outputHeader();
+                else if (line.trim().equals(":quit"))
                     break;
                 else {
+                    Graphitty.out(this.terminal.output(), "{{-X}}");
                     final BObj.Obj result = ObjParser.parse(line);
                     IteratorUtil.iterate(IteratorUtil.consume(result.isNoObj() ?
                                     Collections.emptyIterator() :
                                     result.isCode() ?
                                             new Monoid(result).iterator() :
                                             result.iterator(),
-                            o -> this.terminal.writer().println(Graphitty.string(PALETTE.form2C() + "==" + PALETTE.formC() + ">" + o).toString())));
+                            o -> Graphitty.out(this.terminal.output(), "{{FORM2}}=={{FORM1}}>{{X}}%s\n".formatted(o))));
                 }
             } catch (final UserInterruptException e) {
-                this.terminal.writer().println("process interrupted");
+                Graphitty.out(this.terminal.output(), Graphitty.sillyPrint("process interrupted", true, true));
             } catch (final EndOfFileException e) {
                 try {
-                    this.terminal.writer().println("shutting down");
+                    Graphitty.out(this.terminal.output(), Graphitty.sillyPrint("shutting down\n", true, true));
                     break;
                 } catch (final Exception e1) {
                     System.exit(0);
                 }
             } catch (final Exception e) {
                 LOG.error("{}", ansi().a(e.getMessage()).reset().toString());
-                final String stackTrace = this.reader.readLine(Graphitty.string(PALETTE.warnC() + "display stack trace " + PALETTE.formC() + "[y/N]" + PALETTE.warnC() + "? "));
+                final String stackTrace = this.reader.readLine(Graphitty.string("{{WARN}}display stack trace {{FORM1}}[y/N]{{WARN}}?{{X}} "));
                 if (stackTrace.trim().equalsIgnoreCase("y"))
                     e.printStackTrace();
             }
@@ -175,7 +152,7 @@ public class Console {
             final String randomHeaderTitle = new ArrayList<>(headers.keySet()).get(new Random().nextInt(headers.size()));
             final String randomHeader = headers.get(randomHeaderTitle);
             if (null == randomHeader) throw new IllegalArgumentException("<unknown header: " + randomHeaderTitle + ">");
-            this.terminal.writer().print(randomHeader);
+            this.terminal.writer().print(Graphitty.string(randomHeader));
         } catch (final Exception e) {
             this.terminal.writer().println("...an exception has occurred.");
             this.terminal.writer().println("      ...this doesn't bode well for your time in the meTaRon: " + e);

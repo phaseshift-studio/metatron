@@ -21,7 +21,7 @@ package studio.phaseshift.metatron.struct;
 import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.BObj;
-import studio.phaseshift.metatron.lang.obj.Palette;
+import studio.phaseshift.metatron.ui.Palette;
 import studio.phaseshift.metatron.ui.Graphitty;
 
 public interface Router extends BObj.Obj {

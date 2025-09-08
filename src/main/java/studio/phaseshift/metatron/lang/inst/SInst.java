@@ -27,6 +27,7 @@ import studio.phaseshift.metatron.lang.translate.JSONTranslator;
 import studio.phaseshift.metatron.struct.Router;
 import studio.phaseshift.metatron.ui.ProgressBar;
 import studio.phaseshift.metatron.util.IteratorUtil;
+import studio.phaseshift.metatron.util.MTronException;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;
@@ -93,13 +94,14 @@ public final class SInst {
             else if (lhs.isUri() && inst.args(0).isUri())
                 return new SObj.Uri(lhs.uriValue().extend(inst.args(0).uriValue()), lhs.tid(), lhs.vid());
             else
-                throw new IllegalStateException("the operands do not support addition: %s + %s".formatted(lhs, inst.args(0)));
+                throw MTronException.of("the operands do not support addition: %s + %s", lhs, inst.args(0));
 
         }));
         BInst.SymbolTable.load(pg.incr(MULT_URI), InstF.of((lhs, inst) -> {
             if (lhs.isInt() && inst.args(0).isInt())
                 return SObj.Int.of(lhs.intValue() * inst.args(0).intValue());
-            else throw new IllegalStateException("the operands do not support multiplication");
+            else
+                throw MTronException.of("the operands do not support multiplication: %s * %s", lhs, inst.args(0));
 
         }));
         BInst.SymbolTable.load(pg.incr(REF_URI), InstF.of((lhs, inst) -> {
@@ -135,25 +137,25 @@ public final class SInst {
             if (lhs.isInt() && inst.args(0).isInt())
                 return new SObj.Bool(lhs.intValue() > inst.args(0).intValue(), lhs.tid(), null);
             else
-                throw new IllegalStateException("the operands do not support gt: %s + %s".formatted(lhs, inst.args(0)));
+                throw MTronException.of("the operands do not support gt: %s > %s", lhs, inst.args(0));
         }));
         BInst.SymbolTable.load(pg.incr(LT_URI), InstF.of((lhs, inst) -> {
             if (lhs.isInt() && inst.args(0).isInt())
                 return new SObj.Bool(lhs.intValue() < inst.args(0).intValue(), lhs.tid(), null);
             else
-                throw new IllegalStateException("the operands do not support lt: %s + %s".formatted(lhs, inst.args(0)));
+                throw MTronException.of("the operands do not support lt: %s < %s", lhs, inst.args(0));
         }));
         BInst.SymbolTable.load(pg.incr(GTE_URI), InstF.of((lhs, inst) -> {
             if (lhs.isInt() && inst.args(0).isInt())
                 return new SObj.Bool(lhs.intValue() >= inst.args(0).intValue(), lhs.tid(), null);
             else
-                throw new IllegalStateException("the operands do not support gte: %s + %s".formatted(lhs, inst.args(0)));
+                throw MTronException.of("the operands do not support gte: %s >= %s", lhs, inst.args(0));
         }));
         BInst.SymbolTable.load(pg.incr(LTE_URI), InstF.of((lhs, inst) -> {
             if (lhs.isInt() && inst.args(0).isInt())
                 return new SObj.Bool(lhs.intValue() <= inst.args(0).intValue(), lhs.tid(), null);
             else
-                throw new IllegalStateException("the operands do not support lte: %s + %s".formatted(lhs, inst.args(0)));
+                throw MTronException.of("the operands do not support lte: %s <= %s", lhs, inst.args(0));
         }));
         BInst.SymbolTable.load(pg.incr(GET_URI), InstF.of((lhs, inst) -> {
             if (lhs.isPoly())
@@ -182,7 +184,7 @@ public final class SInst {
                         return SObj.Objs.of(lhs.lstValue());
                     else if (lhs.isRel())
                         return SObj.Objs.of(lhs.relValue());
-                    else throw new IllegalStateException("unknown obj type to merge: %s".formatted(lhs));
+                    else throw MTronException.of("%s does not support merge: %s", lhs.tid().toUri(true), lhs);
                 }));
         BInst.SymbolTable.load(pg.incr(WITHIN_URI),
                 InstF.of((lhs, inst) -> {

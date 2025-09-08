@@ -25,7 +25,7 @@ import java.util.*;
 
 import static studio.phaseshift.metatron.lang.obj.BObj.URI_URI;
 
-public class fURI {
+public class fURI implements Cloneable {
 
     public static final fURI NONE = null;
 
@@ -34,8 +34,8 @@ public class fURI {
     private final int port;
     private final List<String> path;
     private final String query;
-    private final boolean sstart;
-    private final boolean send;
+    private boolean sstart;
+    private boolean send;
     // private final boolean wildcard;
 
     private fURI(final String scheme, final String host, final int port, final boolean sstart, final List<String> path, final boolean send, final String query) {
@@ -183,8 +183,34 @@ public class fURI {
 
     }
 
+    public fURI removeSubpath(final fURI subpath) {
+        String newPath = this.toString();
+        return new fURI(newPath.replace(subpath.toString(),""));
+    }
+
+
+    public fURI asNode() {
+        fURI clone = this.clone();
+        clone.send = false;
+        return clone;
+    }
+
+    public fURI asBranch() {
+        fURI clone = this.clone();
+        clone.send = true;
+        return clone;
+    }
+
+    public fURI retract() {
+        return this.retract(1);
+    }
+
     public fURI retract(final int steps) {
         return this.rePreTract(true, steps);
+    }
+
+    public fURI pretract() {
+        return this.pretract(1);
     }
 
     public fURI pretract(final int steps) {
@@ -288,6 +314,16 @@ public class fURI {
         if (null != this.query)
             b.append("?").append(this.query);
         return b.toString();
+    }
+
+    public fURI clone() {
+        try {
+            fURI clone = (fURI) super.clone();
+            return clone;
+        } catch (CloneNotSupportedException e) {
+            throw new IllegalStateException(e);
+        }
+
     }
 
 }

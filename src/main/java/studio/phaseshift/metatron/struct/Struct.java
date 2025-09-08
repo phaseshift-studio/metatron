@@ -18,10 +18,14 @@
 
 package studio.phaseshift.metatron.struct;
 
+import org.javatuples.Pair;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.BObj;
-import studio.phaseshift.metatron.lang.obj.Palette;
+import studio.phaseshift.metatron.ui.Palette;
 import studio.phaseshift.metatron.ui.Graphitty;
+
+import java.util.Optional;
+import java.util.function.Predicate;
 
 import static studio.phaseshift.metatron.lang.obj.BObj.Obj;
 import static studio.phaseshift.metatron.lang.obj.BObj.Poly;
@@ -45,7 +49,7 @@ public interface Struct extends Poly {
     }
 
     default String toString(final Palette palette) {
-        return Graphitty.string("!b%s!g:[!ypattern!g=>!y%s!g]!!".formatted(this.tid().toString(), this.pattern().toString()));
+        return Graphitty.string("{{b}}%s{{g}}:[{{y}}pattern{{g}}=>{{y}}%s{{g}}]{{X}}".formatted(this.tid().toString(), this.pattern().toString()));
     }
 
     @Override
@@ -58,5 +62,17 @@ public interface Struct extends Poly {
         return BObj.NoObj.of();
     }
 
-    //public static void log_write(final fURI source, final fURI target, final BObj.Obj obj) {
+    default Optional<Pair<fURI, Poly>> locateBasePoly(final fURI furi, Predicate<Obj> polyFilter) {
+        if (null == polyFilter)
+            polyFilter = o -> true;
+        fURI newFuri = furi.clone();
+        BObj.Obj obj = BObj.NoObj.of();
+        while (!newFuri.segments().isEmpty()) {
+            obj = this.read(newFuri);
+            if (!obj.isNoObj() && polyFilter.test(obj)) // obj->is_poly() || obj->is_objs() || obj->is_code())
+                break;
+            newFuri = newFuri.retract();
+        }
+        return obj.isPoly() || obj.isObjs() ? Optional.of(Pair.with(newFuri, obj.<Poly>as())) : Optional.empty();
+    }
 }

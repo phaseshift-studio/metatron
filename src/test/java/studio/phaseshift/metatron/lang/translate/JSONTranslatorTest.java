@@ -19,13 +19,10 @@
 package studio.phaseshift.metatron.lang.translate;
 
 import com.google.gson.JsonParser;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.lang.obj.BObj;
-import studio.phaseshift.metatron.lang.obj.Palette;
 import studio.phaseshift.metatron.lang.parse.ObjParser;
-import studio.phaseshift.metatron.ui.Graphitty;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
