@@ -18,6 +18,8 @@
 
 package studio.phaseshift.metatron.ui;
 
+import studio.phaseshift.metatron.util.MTronException;
+
 import java.io.ByteArrayOutputStream;
 import java.io.OutputStream;
 import java.util.*;
@@ -81,23 +83,16 @@ public class Graphitty {
 
     private OutputStream out;
     private final Map<String, String> rewrites;
-    private final ObjSerializer<String> serializer;
     private boolean ansiOn = true;
     private final Stack<String> rewriteStack = new Stack<>();
-    private static final Graphitty GRAPHITTY_STDOUT = new Graphitty(
-            ObjStringSerializer
-                    .build()
-                    .palette(Palette.STANDARD)
-                    .hideTypesMatching(MTRON_CORE_TYPES)
-                    .simpleColon(true)
-                    .create(), System.out);
+    private static final Graphitty GRAPHITTY_STDOUT = new Graphitty(System.out);
 
     public static GraphittyLogger log(final Object source) {
         return new GraphittyLogger(source);
     }
 
     public static void out(final OutputStream out, final String s) {
-        final Graphitty g = new Graphitty(ObjStringSerializer.build().palette(Palette.STANDARD).hideTypesMatching(MTRON_CORE_TYPES).simpleColon(true).create(), out);
+        final Graphitty g = new Graphitty(out);
         g.print(s);
     }
 
@@ -107,19 +102,13 @@ public class Graphitty {
 
     public static String string(final String s) {
         final ByteArrayOutputStream out = new ByteArrayOutputStream();
-        final Graphitty temp = new Graphitty(ObjStringSerializer
-                .build()
-                .palette(Palette.STANDARD)
-                .hideTypesMatching(MTRON_CORE_TYPES)
-                .simpleColon(true)
-                .create(), out);
+        final Graphitty temp = new Graphitty(out);
         temp.parseDSL(s);
         return out.toString();
     }
 
 
-    public Graphitty(final ObjSerializer<String> serializer, final Map<String, String> rewrites, final OutputStream out) {
-        this.serializer = serializer;
+    public Graphitty(final Map<String, String> rewrites, final OutputStream out) {
         this.out = out;
         this.rewrites = new HashMap<>();
         this.rewrites.putAll(Graphitty.COLOR_REWRITES);
@@ -128,8 +117,8 @@ public class Graphitty {
         this.rewrites.putAll(rewrites);
     }
 
-    public Graphitty(final ObjSerializer<String> serializer, final OutputStream out) {
-        this(serializer, Map.of(), out);
+    public Graphitty(final OutputStream out) {
+        this(Map.of(), out);
     }
 
     public void removeRewrites(final Map<String, String> deadRewrites) {
@@ -182,7 +171,7 @@ public class Graphitty {
                     if (end) {
                         final String openRule = this.rewriteStack.pop();
                         if (!openRule.contentEquals(rule))
-                            throw new IllegalStateException("closing rule isn't correct");
+                            throw MTronException.of("closing doesn't match opening rule: %s != %s", openRule, rule.toString());
                         else {
                             String reset = this.rewriteStack.isEmpty() ? null : this.rewrites.get(this.rewriteStack.peek());
                             reset = null == reset ? this.rewrites.get("X") : reset.replace("\033[", "\033[0;");

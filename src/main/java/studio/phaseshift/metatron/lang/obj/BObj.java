@@ -215,6 +215,12 @@ public interface BObj extends Cloneable {
                 return ((Rel) this).value();
             throw MTronException.of("%s is a %s is not a %s", this, tid().toUri(), REL_URI.toUri());
         }
+
+        default List<Inst> codeValue() {
+            if (this.isCode())
+                return ((Code) this).value();
+            throw MTronException.of("%s is a %s is not a %s", this, tid().toUri(), CODE_URI.toUri());
+        }
     }
 
 
@@ -478,7 +484,7 @@ public interface BObj extends Cloneable {
 
         @Override
         public String toString() {
-            return ObjUtil.isLambda(this.func) ? "λ" : this.func.toString();
+            return ObjUtil.isLambda(this.func) ? "<j>" : this.func.toString();
         }
 
     }
@@ -505,6 +511,10 @@ public interface BObj extends Cloneable {
 
         default boolean resolved() {
             return null != this.f();
+        }
+
+        default Inst resolve() {
+            return BInst.SymbolTable.resolve(NoObj.of(), this);
         }
 
         @Override

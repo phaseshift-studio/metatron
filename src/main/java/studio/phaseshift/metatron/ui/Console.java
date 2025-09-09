@@ -19,16 +19,17 @@
 package studio.phaseshift.metatron.ui;
 
 import org.jline.reader.*;
-import org.jline.reader.impl.DefaultHighlighter;
 import org.jline.reader.impl.DefaultParser;
 import org.jline.reader.impl.history.DefaultHistory;
 import org.jline.terminal.Terminal;
 import org.jline.terminal.TerminalBuilder;
 import org.jline.utils.AttributedString;
 import org.jline.utils.AttributedStringBuilder;
+import org.jline.widget.Widgets;
 import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.lang.monoid.SMonoid.Monoid;
 import studio.phaseshift.metatron.lang.obj.BObj;
+import studio.phaseshift.metatron.lang.obj.SObj;
 import studio.phaseshift.metatron.lang.parse.ObjParser;
 import studio.phaseshift.metatron.util.IteratorUtil;
 
@@ -39,6 +40,9 @@ import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.function.BiConsumer;
+
+import static org.jline.keymap.KeyMap.ctrl;
 
 public class Console {
     private static final String METATRON_VERSION = "0.1-alpha";
@@ -49,6 +53,77 @@ public class Console {
     private final Terminal terminal;
     private final LineReader reader;
 
+    private static boolean RESOLVE_MODE = false;
+
+    static class CustomWidgets extends Widgets {
+
+        private CustomWidgets(final LineReader reader) {
+            super(reader);
+            this.addWidget("quit-widget", this::quitWidget);
+            this.addWidget("resolve-widget", this::resolveWidget);
+            getKeyMap().bind(new Reference("quit-widget"), ctrl('q'));
+            getKeyMap().bind(new Reference("resolve-widget"), ctrl('r'));
+        }
+
+        public static void of(final LineReader reader) {
+            new CustomWidgets(reader);
+        }
+
+        private boolean quitWidget() {
+            LOG.none(Graphitty.sillyPrint("\nshutting down the metatron\n", true, true));
+            System.exit(0);
+            return true;
+        }
+
+        private boolean resolveWidget() {
+            RESOLVE_MODE = !RESOLVE_MODE;
+            //LOG.none("{{@}}{{v1}}{{-X}}switched %s auto-resolution mode{{^1}}{{/@}}", RESOLVE_MODE ? "{{g}}on{{/g}}" : "{{y}}off{{/y}}");
+            return true;
+        }
+    }
+
+    static class CustomHighlighters implements Highlighter {
+        private final Terminal terminal;
+        private final List<BiConsumer<AttributedStringBuilder, String>> highlighters = new ArrayList<>();
+
+        private CustomHighlighters(final Terminal terminal) {
+            this.terminal = terminal;
+            // auto compilation
+            this.highlighters.add((builder, buffer) -> {
+                try {
+                    if (!buffer.isEmpty()) {
+                        final BObj.Obj o = ObjParser.parse(buffer);
+                        final int xLocation = this.terminal.getCursorPosition(System.out::print).getX() + 1;
+                        // final int promptLength = 8; //"mtron> ".length() + 1;
+                        builder.append(buffer);
+                        if (o.isCode() && Console.RESOLVE_MODE) {
+                            final BObj.Code rCode = SObj.Code.of(o.codeValue().stream().map(BObj.Inst::resolve).toList());
+                            Graphitty.stdout().print(Graphitty.string("{{v1}}{{|%d}}%s".formatted(8, rCode)));
+                            Graphitty.stdout().print(Graphitty.string("{{^1}}{{|%d}}".formatted(xLocation)));
+                        } else {
+                            Graphitty.stdout().print(Graphitty.string("{{v1}}{{|%d}}%s".formatted(8, o)));
+                            Graphitty.stdout().print(Graphitty.string("{{^1}}{{|%d}}".formatted(xLocation)));
+                        }
+                    }
+                } catch (final Exception e) {
+                    // console expression doesn't compile yet
+                    builder.append(buffer);
+                }
+            });
+        }
+
+        public static Highlighter of(final Terminal terminal) {
+            return new CustomHighlighters(terminal);
+        }
+
+        @Override
+        public AttributedString highlight(final LineReader reader, final String buffer) {
+            final AttributedStringBuilder builder = new AttributedStringBuilder();
+            this.highlighters.forEach(highlighter -> highlighter.accept(builder, buffer));
+            return builder.toAttributedString();
+        }
+    }
+
     public Console() throws IOException {
         final DefaultParser parser = new DefaultParser().quoteChars(new char[]{'\'', '"'}).lineCommentDelims(new String[]{"---"});
         parser.setEofOnUnclosedBracket(DefaultParser.Bracket.CURLY, DefaultParser.Bracket.ROUND, DefaultParser.Bracket.SQUARE);
@@ -56,38 +131,19 @@ public class Console {
         this.outputHeader();
         LOG.none("\t{{b}}ve{{y}}rs{{m}}ion {{y}}%s{{X}}\n\n", METATRON_VERSION);
         // this.terminal.handle(Terminal.Signal.WINCH) // TODO: signal handling on some CNTRL-?? to resolve (not evaluate) current expression
-        Highlighter highlighter = new DefaultHighlighter() {
-            @Override
-            public AttributedString highlight(final LineReader reader, final String buffer) {
-                AttributedStringBuilder builder = new AttributedStringBuilder();
-                try {
-                    if (!buffer.isEmpty()) {
-                        final BObj.Obj o = ObjParser.parse(buffer);
-                        final int xLocation = terminal.getCursorPosition(System.out::print).getX() + 1;
-                        // final int promptLength = 8; //"mtron> ".length() + 1;
-                        builder.append(buffer);
-                        Graphitty.stdout().print(Graphitty.string("{{v1}}{{|%d}}%s".formatted(8, o)));
-                        Graphitty.stdout().print(Graphitty.string("{{^1}}{{|%d}}".formatted(xLocation)));
-                    }
-                } catch (final Exception e) {
-                    // console expression doesn't compile yet
-                    builder.append(buffer);
-                }
-                return builder.toAttributedString();
-            }
-        };
         final History history = new DefaultHistory();
         this.reader = LineReaderBuilder.builder()
                 .terminal(terminal)
                 .appName("metatron")
                 .history(history)
-                .highlighter(highlighter)
+                .highlighter(CustomHighlighters.of(this.terminal))
                 .parser(parser)
                 .variable(LineReader.HISTORY_FILE, Paths.get(".metatron.history"))
                 .option(LineReader.Option.AUTO_FRESH_LINE, true)
                 .variable(LineReader.SECONDARY_PROMPT_PATTERN, Graphitty.string("\n{{-X}}{{v1}}{{^1}}{{FORM1}}%P >{{X}}"))
                 .variable(LineReader.INDENTATION, 2)
                 .build();
+        CustomWidgets.of(this.reader);
     }
 
     public void run() throws IOException {

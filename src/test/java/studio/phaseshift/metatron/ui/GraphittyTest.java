@@ -32,7 +32,7 @@ public class GraphittyTest {
     @Test
     public void testRewrites() {
         final ByteArrayOutputStream out = new ByteArrayOutputStream();
-        final Graphitty g = new Graphitty(ObjStringSerializer.build().create(), Map.of("abc", "hello"), out);
+        final Graphitty g = new Graphitty(Map.of("abc", "hello"), out);
         /*g.print("{{abc}} here");
         assertEquals("hello here", out.toString());
         out.reset();
