@@ -24,6 +24,7 @@ import studio.phaseshift.metatron.lang.inst.SInst;
 import studio.phaseshift.metatron.lang.obj.BObj;
 import studio.phaseshift.metatron.lang.obj.SObj;
 import studio.phaseshift.metatron.lang.obj.SObj.*;
+import studio.phaseshift.metatron.util.MTronException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -70,7 +71,7 @@ public class ObjParserTest {
     public void testUriParse() {
         assertEquals(Uri.of("http://metatron.com?a=2&b=3"), ObjParser.parse("<http://metatron.com?a=2&b=3>"));
         assertEquals(Uri.of("http://metatron.com?a&b"), ObjParser.parse("<http://metatron.com?a&b>"));
-        assertThrows(IllegalStateException.class, () -> ObjParser.parse("/metatron.com?a&b"));
+        assertThrows(MTronException.class, () -> ObjParser.parse("/metatron.com?a&b"));
         assertEquals(Uri.of("metatron/com?a&b"), ObjParser.parse("metatron/com?a&b"));
     }
 }

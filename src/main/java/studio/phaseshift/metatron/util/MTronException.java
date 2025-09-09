@@ -20,6 +20,8 @@ package studio.phaseshift.metatron.util;
 
 import studio.phaseshift.metatron.ui.Graphitty;
 
+import java.util.Arrays;
+
 public class MTronException extends RuntimeException {
 
     private MTronException(final String message) {
@@ -46,5 +48,10 @@ public class MTronException extends RuntimeException {
         return new MTronException(Graphitty.string(format.formatted(args)));
     }
 
-
+    public static MTronException of(final Object throwableOrformat, final Object... args) {
+        return throwableOrformat instanceof Throwable ?
+                new MTronException(Graphitty.string(((String) args[0]).formatted(Arrays.copyOfRange(args, 1, args.length))),
+                        (Throwable) throwableOrformat) :
+                new MTronException(Graphitty.string(throwableOrformat.toString().formatted(args)));
+    }
 }

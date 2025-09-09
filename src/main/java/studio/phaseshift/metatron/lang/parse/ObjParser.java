@@ -61,7 +61,7 @@ public class ObjParser {
         obj_parser.set(choice(
                 m_comment(),
                 m_noobj(),
-               // m_rel(),
+                // m_rel(),
                 m_bool(),
                 m_real(),
                 m_int(),
@@ -75,7 +75,7 @@ public class ObjParser {
         obj_no_code_parser.set(choice(
                 m_comment(),
                 m_noobj(),
-              //  m_rel(),
+                //  m_rel(),
                 m_bool(),
                 m_real(),
                 m_int(),
@@ -147,11 +147,10 @@ public class ObjParser {
             return (O) BObj.NoObj.of();
         final Result result = sugar_code().or(m_obj()).end().parse(code.trim());
         if (result.isFailure())
-            throw new IllegalStateException(
-                    Graphitty.string(result.getBuffer() + "\n" +
-                            String.format("%" + (result.getPosition() + "[ERROR] ".length() + 5) + "s", "") +
-                            "{{b}}^ {{r}}" +
-                            result.getMessage() + "!!\n"));
+            Graphitty.log(ObjParser.class).except(result.getBuffer() + "\n" +
+                    String.format("%" + (result.getPosition() + "[ERROR] ".length() + 3) + "s", "") +
+                    "{{b}}^ {{r}}" +
+                    result.getMessage() + "{{X}}\n");
         return result.get();
     }
 

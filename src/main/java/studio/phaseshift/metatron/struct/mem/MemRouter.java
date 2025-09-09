@@ -24,6 +24,7 @@ import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.struct.Router;
 import studio.phaseshift.metatron.struct.Struct;
 import studio.phaseshift.metatron.ui.Graphitty;
+import studio.phaseshift.metatron.ui.GraphittyLogger;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -32,7 +33,7 @@ import static studio.phaseshift.metatron.lang.obj.BObj.Obj;
 
 public class MemRouter implements Router {
 
-    private static final Logger LOG = LoggerFactory.getLogger(MemRouter.class);
+    private static final GraphittyLogger LOG = Graphitty.log(MemRouter.class);
     public static final fURI MEMROUTER_TID = fURI.of("router:/mtron/mem");
 
     private fURI vid;
@@ -41,7 +42,7 @@ public class MemRouter implements Router {
 
     public MemRouter(final fURI vid) {
         this.vid = vid;
-        LOG.info(Graphitty.string("%s loaded at %s\n".formatted(this.tid().toUri(true), this.vid.toUri(true))));
+        LOG.info("%s loaded at %s", this.tid().toUri(true), this.vid.toUri(true));
     }
 
     public void registerStruct(final Struct struct) {
@@ -59,7 +60,7 @@ public class MemRouter implements Router {
                 .filter(kv -> pattern.matches(kv.getKey()))
                 .findAny()
                 .map(Map.Entry::getValue)
-                .orElseThrow(() -> new IllegalStateException("no structure supports pattern %s".formatted(pattern.toUri(true))));
+                .orElseThrow(() -> LOG.except("no structure supports pattern %s",pattern.toUri(true)));
     }
 
     @Override
@@ -67,14 +68,14 @@ public class MemRouter implements Router {
         if (vid.equals(this.vid))
             return this;
         final Struct struct = this.getStruct(vid);
-        LOG.trace("reading {} at {}", struct, vid);
+        LOG.trace("reading %s at %s", struct, vid);
         return struct.read(vid);
     }
 
     @Override
     public Obj write(final fURI vid, final Obj obj) {
         final Struct struct = this.getStruct(vid);
-        LOG.trace("writing {} to {} at {}", obj, struct, vid);
+        LOG.trace("writing to %s at %s", struct, vid);
         return struct.write(vid, obj);
     }
 

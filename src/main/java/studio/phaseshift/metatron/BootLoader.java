@@ -18,11 +18,8 @@
 
 package studio.phaseshift.metatron;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.inst.SInst;
-import studio.phaseshift.metatron.lang.obj.BObj;
 import studio.phaseshift.metatron.lang.obj.SObj;
 import studio.phaseshift.metatron.struct.Router;
 import studio.phaseshift.metatron.struct.Struct;
@@ -30,8 +27,7 @@ import studio.phaseshift.metatron.struct.mem.MemRouter;
 import studio.phaseshift.metatron.struct.mem.MemStruct;
 import studio.phaseshift.metatron.struct.mqtt.MqttStruct;
 import studio.phaseshift.metatron.ui.Graphitty;
-import studio.phaseshift.metatron.ui.ObjSerializer;
-import studio.phaseshift.metatron.ui.ObjStringSerializer;
+import studio.phaseshift.metatron.ui.GraphittyLogger;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -41,21 +37,21 @@ import static studio.phaseshift.metatron.struct.mqtt.MqttStruct.MQTT_TID;
 
 public class BootLoader {
 
-    private static final Logger LOG = LoggerFactory.getLogger(BootLoader.class);
+    private static final GraphittyLogger LOG = Graphitty.log(BootLoader.class);
 
     public static Router ROUTER = new MemRouter(fURI.of("/sys/router"));
 
     public static void load() {
         try {
-            LOG.info(Graphitty.string("booting metatron on %s !g[%s!g]!!\n".formatted(
+            LOG.info("booting metatron on %s {{g}}[%s{{g}}]{{X}}",
                     SObj.Uri.of(InetAddress.getLocalHost().getHostName(), fURI.of("host"), null),
-                    SObj.Uri.of(InetAddress.getLocalHost().getHostAddress(), fURI.of("ipv4"), null))));
+                    SObj.Uri.of(InetAddress.getLocalHost().getHostAddress(), fURI.of("ipv4"), null));
         } catch (final UnknownHostException e) {
-            LOG.warn(Graphitty.string("booting metatron on a non-networked jvm\n"));
+            LOG.warn("booting metatron on a non-networked jvm");
         }
         final Struct mnt = new MemStruct(fURI.of("/mnt/#"), fURI.of("/mnt"));
         final Struct sys = new MemStruct(fURI.of("/sys/#"), fURI.of("/mnt/sys"));
-       // final Router router = (ROUTER = new MemRouter(fURI.of("/sys/router")));
+        // final Router router = (ROUTER = new MemRouter(fURI.of("/sys/router")));
         Router.global().registerStruct(mnt);
         Router.global().registerStruct(sys);
         Router.global().registerStruct(new MemStruct(fURI.of("/mtron/#"), fURI.of("/mnt/lang/mtron")));

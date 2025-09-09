@@ -26,8 +26,6 @@ import org.jline.terminal.Terminal;
 import org.jline.terminal.TerminalBuilder;
 import org.jline.utils.AttributedString;
 import org.jline.utils.AttributedStringBuilder;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.lang.monoid.SMonoid.Monoid;
 import studio.phaseshift.metatron.lang.obj.BObj;
@@ -35,27 +33,28 @@ import studio.phaseshift.metatron.lang.parse.ObjParser;
 import studio.phaseshift.metatron.util.IteratorUtil;
 
 import java.io.BufferedReader;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
 import java.util.*;
 
-import static org.jline.jansi.Ansi.ansi;
-
 public class Console {
-    private static final Logger LOG = LoggerFactory.getLogger(Console.class);
-    public static String HEADER_FILE = "/ansi_headers.txt";
+    private static final String METATRON_VERSION = "0.1-alpha";
+
+    private static final GraphittyLogger LOG = Graphitty.log(Console.class);
+    public static String HEADER_FILE = "./conf/ansi_headers.txt";
     public static String HEADER_SEPARATOR = "####################";
-    public static Palette PALETTE = Palette.STANDARD;
     private final Terminal terminal;
     private final LineReader reader;
 
     public Console() throws IOException {
-        final DefaultParser parser = new DefaultParser();
+        final DefaultParser parser = new DefaultParser().quoteChars(new char[]{'\'', '"'}).lineCommentDelims(new String[]{"---"});
         parser.setEofOnUnclosedBracket(DefaultParser.Bracket.CURLY, DefaultParser.Bracket.ROUND, DefaultParser.Bracket.SQUARE);
-
-
-        this.terminal = TerminalBuilder.builder().system(true)/*.signalHandler(Terminal.SignalHandler.SIG_IGN)*/.build();
+        this.terminal = TerminalBuilder.builder().encoding(StandardCharsets.UTF_8).system(true)/*.signalHandler(Terminal.SignalHandler.SIG_IGN)*/.build();
+        this.outputHeader();
+        LOG.none("\t{{b}}ve{{y}}rs{{m}}ion {{y}}%s{{X}}\n\n", METATRON_VERSION);
         // this.terminal.handle(Terminal.Signal.WINCH) // TODO: signal handling on some CNTRL-?? to resolve (not evaluate) current expression
         Highlighter highlighter = new DefaultHighlighter() {
             @Override
@@ -87,13 +86,11 @@ public class Console {
                 .variable(LineReader.HISTORY_FILE, Paths.get(".metatron.history"))
                 .option(LineReader.Option.AUTO_FRESH_LINE, true)
                 .variable(LineReader.SECONDARY_PROMPT_PATTERN, Graphitty.string("\n{{-X}}{{v1}}{{^1}}{{FORM1}}%P >{{X}}"))
-                .variable(LineReader.INDENTATION, 2)   // indentation size
+                .variable(LineReader.INDENTATION, 2)
                 .build();
     }
 
     public void run() throws IOException {
-        // AnsiConsole.systemInstall();
-        this.outputHeader();
         BootLoader.load();
         String line = "";
         while (true) {
@@ -115,16 +112,16 @@ public class Console {
                             o -> Graphitty.out(this.terminal.output(), "{{FORM2}}=={{FORM1}}>{{X}}%s\n".formatted(o))));
                 }
             } catch (final UserInterruptException e) {
-                Graphitty.out(this.terminal.output(), Graphitty.sillyPrint("process interrupted", true, true));
+                LOG.warn(Graphitty.sillyPrint("process interrupted", true, true));
             } catch (final EndOfFileException e) {
                 try {
-                    Graphitty.out(this.terminal.output(), Graphitty.sillyPrint("shutting down\n", true, true));
+                    LOG.none(Graphitty.sillyPrint("the metatron is now offline\n", true, true));
                     break;
                 } catch (final Exception e1) {
                     System.exit(0);
                 }
             } catch (final Exception e) {
-                LOG.error("{}", ansi().a(e.getMessage()).reset().toString());
+                LOG.error(e.getMessage());
                 final String stackTrace = this.reader.readLine(Graphitty.string("{{WARN}}display stack trace {{FORM1}}[y/N]{{WARN}}?{{X}} "));
                 if (stackTrace.trim().equalsIgnoreCase("y"))
                     e.printStackTrace();
@@ -138,7 +135,7 @@ public class Console {
         try {
             final Map<String, String> headers = new HashMap<>();
             StringBuilder current = new StringBuilder();
-            final BufferedReader input = new BufferedReader(new InputStreamReader(Console.class.getResourceAsStream(HEADER_FILE)));
+            final BufferedReader input = new BufferedReader(new InputStreamReader(new FileInputStream(HEADER_FILE)));
             String headerTitle = null;
             while (input.ready()) {
                 final String line = input.readLine().stripTrailing();
@@ -158,6 +155,7 @@ public class Console {
             final String randomHeader = headers.get(randomHeaderTitle);
             if (null == randomHeader) throw new IllegalArgumentException("<unknown header: " + randomHeaderTitle + ">");
             this.terminal.writer().print(Graphitty.string(randomHeader));
+            this.terminal.writer().flush();
         } catch (final Exception e) {
             this.terminal.writer().println("...an exception has occurred.");
             this.terminal.writer().println("      ...this doesn't bode well for your time in the meTaRon: " + e);
@@ -166,6 +164,7 @@ public class Console {
                     " )    (  )__)   )(  /(__)\\  )(   )   / )(_)(  )  ( \n" +
                     "(_/\\/\\_)(____) (__)(__)(__)(__) (_)\\_)(_____)(_)\\_)");
             this.terminal.writer().printf("\t\t\tby PhaseShift Studio (%s)\n", Calendar.getInstance().get(Calendar.YEAR));
+            this.terminal.flush();
         }
     }
 

@@ -19,14 +19,12 @@
 package studio.phaseshift.metatron.struct.mem;
 
 import org.javatuples.Pair;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.BObj;
 import studio.phaseshift.metatron.lang.obj.SObj;
 import studio.phaseshift.metatron.struct.Struct;
 import studio.phaseshift.metatron.ui.Graphitty;
-import studio.phaseshift.metatron.ui.Palette;
+import studio.phaseshift.metatron.ui.GraphittyLogger;
 
 import java.util.*;
 import java.util.stream.Stream;
@@ -34,7 +32,7 @@ import java.util.stream.Stream;
 import static studio.phaseshift.metatron.lang.obj.BObj.*;
 
 public class MemStruct extends SObj.Obj implements Struct {
-    private static final Logger LOG = LoggerFactory.getLogger(MemStruct.class);
+    private static final GraphittyLogger LOG = Graphitty.log(MemStruct.class);
     public static final fURI MEMSTRUCT_TID = fURI.of("struct:/mtron/mem");
     private final fURI pattern;
 
@@ -44,12 +42,12 @@ public class MemStruct extends SObj.Obj implements Struct {
         super(Map.of(), MEMSTRUCT_TID, vid);
         this.pattern = pattern;
         // this.config = config;
-        LOG.info(Graphitty.string("%s loaded at %s !g[!yaddr!g=>!!%s!g]!!\n".formatted(tid().toUri(true), SObj.Uri.of(this.vid), SObj.Uri.of(this.pattern))));
+        LOG.info("%s loaded at %s {{g}}[{{y}}addr{{g}}=>{{X}}%s{{g}}]{{X}}", tid().toUri(true), SObj.Uri.of(this.vid), SObj.Uri.of(this.pattern));
     }
 
     @Override
     public String toString() {
-        return this.toString(Palette.GLOBAL);
+        return "memstruct";
     }
 
     @Override
@@ -69,7 +67,7 @@ public class MemStruct extends SObj.Obj implements Struct {
 
     @Override
     public fURI pattern() {
-        return this.pattern;
+        return null == this.pattern ? fURI.of("#") : this.pattern;
     }
 
 
@@ -193,6 +191,6 @@ public class MemStruct extends SObj.Obj implements Struct {
 
     @Override
     public Iterator<Obj> iterator() {
-        return null;
+        return Collections.emptyIterator();
     }
 }

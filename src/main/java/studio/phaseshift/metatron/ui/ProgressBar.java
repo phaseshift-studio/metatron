@@ -22,6 +22,7 @@ public class ProgressBar {
 
     final int totalCount;
     int currentCount;
+    private static final GraphittyLogger LOG = Graphitty.log(ProgressBar.class);
 
     public ProgressBar(int totalCount) {
         this.totalCount = totalCount;
@@ -40,17 +41,17 @@ public class ProgressBar {
         }
 
 
-        Graphitty.stdout().print("!g[INFO]  [{{b}}");
+        LOG.none("{{g}}[");
         for (int j = 0; j < (int) percentage; j = j + 2) {
             // + 2 to make bar half as long
-            Graphitty.stdout().print("#");
+            LOG.none("{{b}}#");
         }
         for (int j = (int) percentage; j < 99; j = j + 2) {
-            Graphitty.stdout().print(' ');
+            LOG.none(' ');
         }
-        Graphitty.stdout().print("{{g}}] {{y}}%d%%{{X}} %-25s\r".formatted((int) percentage, message));
+        LOG.none("{{g}}] {{y}}%d%%{{X}} %-25s\r", (int) percentage, message);
         try {
-            Thread.sleep(10);
+            Thread.sleep(20);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

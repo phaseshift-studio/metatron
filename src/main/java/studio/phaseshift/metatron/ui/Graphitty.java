@@ -18,19 +18,13 @@
 
 package studio.phaseshift.metatron.ui;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import studio.phaseshift.metatron.lang.obj.BObj;
-
 import java.io.ByteArrayOutputStream;
 import java.io.OutputStream;
 import java.util.*;
 
-import static org.jline.jansi.Ansi.Color.*;
-import static org.jline.jansi.Ansi.ansi;
 import static studio.phaseshift.metatron.lang.obj.BObj.MTRON_CORE_TYPES;
 
-public class Graphitty implements ObjSerializer<String> {
+public class Graphitty {
     public static final Map<String, String> COLOR_REWRITES = new LinkedHashMap<>();
 
     // TODO: cherry pick from: https://gist.github.com/jonlabelle/7a76ecd29976aeb30877be326c683979
@@ -90,8 +84,6 @@ public class Graphitty implements ObjSerializer<String> {
     private final ObjSerializer<String> serializer;
     private boolean ansiOn = true;
     private final Stack<String> rewriteStack = new Stack<>();
-
-    private boolean printerOn = true;
     private static final Graphitty GRAPHITTY_STDOUT = new Graphitty(
             ObjStringSerializer
                     .build()
@@ -100,35 +92,8 @@ public class Graphitty implements ObjSerializer<String> {
                     .simpleColon(true)
                     .create(), System.out);
 
-    public static class GraphittyLogger {
-
-        Object source;
-
-        private GraphittyLogger(final Object source) {
-            this.source = source;
-        }
-
-        public GraphittyLogger info(final Object f, final Object... args) {
-           // this.logger().info(Graphitty.string(args.length == 0 ? f.toString() : f.toString().formatted(args)));
-           Graphitty.stdout(args.length == 0 ? f.toString() : f.toString().formatted(args));
-            return this;
-        }
-
-        private final Logger logger() {
-            if (!(this.source instanceof Logger))
-                this.source = LoggerFactory.getLogger(this.source.getClass());
-            return (Logger) this.source;
-        }
-
-    }
-
     public static GraphittyLogger log(final Object source) {
         return new GraphittyLogger(source);
-    }
-
-    public static Graphitty stdout(final Object s) {
-        GRAPHITTY_STDOUT.parseDSL(s.toString() + "\n");
-        return GRAPHITTY_STDOUT;
     }
 
     public static void out(final OutputStream out, final String s) {
@@ -340,36 +305,24 @@ public class Graphitty implements ObjSerializer<String> {
         this.ansiOn = turn_on;
     }
 
-    public void printer_switch(boolean turn_on) {
-        this.printerOn = turn_on;
-    }
-
     public boolean is_ansi_on() {
         return this.ansiOn;
     }
 
-    public boolean is_printer_on() {
-        return this.printerOn;
-    }
-
     public Graphitty print(final char c) {
-        if (this.printerOn)
-            this.parseDSL(Objects.toString(c));
+        this.parseDSL(Objects.toString(c));
         return this;
     }
 
     public Graphitty print(final String c) {
-        if (this.printerOn)
-            this.parseDSL(c);
+        this.parseDSL(c);
         return this;
     }
 
     public Graphitty println(final String c) {
-        if (this.printerOn) {
-            if (c.length() > 0)
-                this.print(c);
-            this.print('\n');
-        }
+        if (c.length() > 0)
+            this.print(c);
+        this.print('\n');
         return this;
     }
 
@@ -395,11 +348,6 @@ public class Graphitty implements ObjSerializer<String> {
 
 
     /// ///////////////////////
-
-    public void normal() {
-        if (this.ansiOn)
-            this.print(ansi().reset().toString());
-    }
 
     public void clear() {
         if (this.ansiOn)
@@ -473,57 +421,7 @@ public class Graphitty implements ObjSerializer<String> {
     }
 
 
-    /// /////// COLORING
-    public void black() {
-        this.print(ansi().fg(BLACK).toString());
-    }
-
-    public void red() {
-        this.print(ansi().fg(RED).toString());
-    }
-
-    public void green() {
-        this.print(ansi().fg(GREEN).toString());
-    }
-
-    public void yellow() {
-        this.print(ansi().fg(YELLOW).toString());
-    }
-
-    public void blue() {
-        this.print(ansi().fg(BLUE).toString());
-    }
-
-
-    public void magenta() {
-        this.print(ansi().fg(MAGENTA).toString());
-    }
-
-    public void cyan() {
-        this.print(ansi().fg(CYAN).toString());
-    }
-
-    public void white() {
-        this.print(ansi().fg(WHITE).toString());
-    }
-
     /// //////////// CURSOR MOVEMENT ///////////////
-
-    public void left(final int columns) {
-        this.move('D', columns);
-    }
-
-    public void right(final int columns) {
-        this.move('C', columns);
-    }
-
-    public void down(final int rows) {
-        this.move('B', rows);
-    }
-
-    public void up(final int rows) {
-        this.move('A', rows);
-    }
 
     public void teleport(final int row, final int column) {
         if (this.ansiOn) {
@@ -539,10 +437,6 @@ public class Graphitty implements ObjSerializer<String> {
         if (this.ansiOn) {
             this.print("\033[H");
         }
-    }
-
-    public void to_column(final int column) {
-        this.move('G', column);
     }
 
     public void move(final char direction, final int columns_or_rows) {
@@ -626,15 +520,5 @@ public class Graphitty implements ObjSerializer<String> {
         if (rainbow)
             ret.append("{{X}}");
         return ret.toString();
-    }
-
-    @Override
-    public String write(final BObj.Obj obj) throws IllegalStateException {
-        return this.serializer.write(obj);
-    }
-
-    @Override
-    public BObj.Obj read(final String data) throws IllegalStateException {
-        return this.serializer.read(data);
     }
 }
