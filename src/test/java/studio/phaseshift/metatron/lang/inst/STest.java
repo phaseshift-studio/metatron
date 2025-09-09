@@ -31,7 +31,7 @@ public class STest {
 
     @BeforeAll
     public static void setUp() {
-        BootLoader.load();
+        SInst.load();
     }
 
     @Test
