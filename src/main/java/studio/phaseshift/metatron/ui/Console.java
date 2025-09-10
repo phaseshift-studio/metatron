@@ -27,9 +27,12 @@ import org.jline.utils.AttributedString;
 import org.jline.utils.AttributedStringBuilder;
 import org.jline.widget.Widgets;
 import studio.phaseshift.metatron.BootLoader;
-import studio.phaseshift.metatron.lang.monoid.MMonoid.Monoid;
-import studio.phaseshift.metatron.lang.obj.BObj;
-import studio.phaseshift.metatron.lang.obj.SObj;
+import studio.phaseshift.metatron.lang.monoid.MMonoid;
+import studio.phaseshift.metatron.lang.obj.base.Code;
+import studio.phaseshift.metatron.lang.obj.base.Inst;
+import studio.phaseshift.metatron.lang.obj.base.NoObj;
+import studio.phaseshift.metatron.lang.obj.base.Obj;
+import studio.phaseshift.metatron.lang.obj.mtron.MCode;
 import studio.phaseshift.metatron.lang.parse.ObjParser;
 import studio.phaseshift.metatron.util.IteratorUtil;
 
@@ -92,12 +95,12 @@ public class Console {
             this.highlighters.add((builder, buffer) -> {
                 try {
                     if (!buffer.isEmpty()) {
-                        final BObj.Obj o = ObjParser.parse(buffer);
+                        final Obj o = ObjParser.parse(buffer);
                         final int xLocation = this.terminal.getCursorPosition(System.out::print).getX() + 1;
                         // final int promptLength = 8; //"mtron> ".length() + 1;
                         builder.append(buffer);
                         if (o.isCode() && Console.RESOLVE_MODE) {
-                            final BObj.Code rCode = SObj.Code.of(o.codeValue().stream().map(BObj.Inst::resolve).toList());
+                            final Code rCode = new MCode(o.codeValue().stream().map(i -> i.resolve(Inst.Resolve.B, NoObj.single())).toList());
                             Graphitty.stdout().print(Graphitty.string("{{v1}}{{|%d}}%s".formatted(8, rCode)));
                             Graphitty.stdout().print(Graphitty.string("{{^1}}{{|%d}}".formatted(xLocation)));
                         } else {
@@ -159,11 +162,11 @@ public class Console {
                     break;
                 else {
                     Graphitty.out(this.terminal.output(), "{{-X}}");
-                    final BObj.Obj result = ObjParser.parse(line);
+                    final Obj result = ObjParser.parse(line);
                     IteratorUtil.iterate(IteratorUtil.consume(result.isNoObj() ?
                                     Collections.emptyIterator() :
                                     result.isCode() ?
-                                            new Monoid(result).iterator() :
+                                            new MMonoid(result).iterator() :
                                             result.iterator(),
                             o -> Graphitty.out(this.terminal.output(), "{{FORM2}}=={{FORM1}}>{{X}}%s\n".formatted(o))));
                 }

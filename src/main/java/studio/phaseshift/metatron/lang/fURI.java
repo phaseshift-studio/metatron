@@ -35,7 +35,7 @@ public class fURI implements Cloneable {
     private final List<String> path;
     private final String query;
     private final boolean sstart;
-    private final boolean send;
+    private boolean send;
     // private final boolean wildcard;
 
     private fURI(final String scheme, final String host, final int port, final boolean sstart, final List<String> path, final boolean send, final String query) {

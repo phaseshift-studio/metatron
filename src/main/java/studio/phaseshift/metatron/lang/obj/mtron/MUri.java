@@ -30,6 +30,10 @@ public class MUri extends MObj implements Uri {
         this(value, Uri.TID, fURI.NONE);
     }
 
+    public MUri(final String value) {
+        this(fURI.of(value));
+    }
+
     @Override
     public Uri clone(final Object value, final fURI tid, final fURI vid) {
         return new MUri((fURI) value, tid, vid);

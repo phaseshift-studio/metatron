@@ -22,6 +22,11 @@ import org.javatuples.Pair;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.BObj;
 import studio.phaseshift.metatron.lang.obj.SObj;
+import studio.phaseshift.metatron.lang.obj.base.*;
+import studio.phaseshift.metatron.lang.obj.mtron.MObj;
+import studio.phaseshift.metatron.lang.obj.mtron.MObjs;
+import studio.phaseshift.metatron.lang.obj.mtron.MRec;
+import studio.phaseshift.metatron.lang.obj.mtron.MRel;
 import studio.phaseshift.metatron.space.Space;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
@@ -29,9 +34,9 @@ import studio.phaseshift.metatron.ui.GraphittyLogger;
 import java.util.*;
 import java.util.stream.Stream;
 
-import static studio.phaseshift.metatron.lang.obj.BObj.*;
 
-public class MemSpace extends SObj.Obj implements Space {
+public class MemSpace extends MObj implements Space {
+
     private static final GraphittyLogger LOG = Graphitty.log(MemSpace.class);
     public static final fURI MEMSTRUCT_TID = fURI.of("struct:/mtron/mem");
     private final fURI pattern;
@@ -65,6 +70,11 @@ public class MemSpace extends SObj.Obj implements Space {
         return Map.of();
     }
 
+  /*  @Override
+    public <O extends Obj> O clone(Object value) {
+        return this;
+    }*/
+
     @Override
     public fURI pattern() {
         return null == this.pattern ? fURI.of("#") : this.pattern;
@@ -77,7 +87,7 @@ public class MemSpace extends SObj.Obj implements Space {
             // pattern/branch
             if (addr.hasPattern()) {
                 Graphitty.log(this).info("processing pattern %s", addr.toUri());
-                return SObj.Objs.of(this.store.entrySet()
+                return new MObjs((Iterable)this.store.entrySet()
                         .stream()
                         .flatMap(kv -> kv.getValue().isRec() ? kv
                                 .getValue()
@@ -92,14 +102,14 @@ public class MemSpace extends SObj.Obj implements Space {
                             Graphitty.log(this).info("checking %s against %s at %s [%s]", addr.asNode(), kv.getValue(), kv.getKey(), check ? "{{g}}OK{{X}}" : "{{r}}X{{X}}");
                             return check;
                         })
-                        .map(kv -> new SObj.Rel(Pair.with(kv.getKey(), kv.getValue()), REL_URI, fURI.NONE)).toList());
+                        .map(kv -> new MRel(Pair.with(kv.getKey(), kv.getValue()), Rel.TID, fURI.NONE)).toList());
             } else {
                 // resolved/branch
                 Graphitty.log(this).info("searching %s", addr.extend("+").toUri());
                 return this.read(addr.extend("+").asBranch());// new SObj.Objs(List.of(new SObj.Rel(Pair.with(SObj.Uri.of(addr), this.store.getOrDefault(addr, NoObj.of())), REL_URI, fURI.NONE)), OBJS_URI, fURI.NONE);
             }
         } else {
-            Map<BObj.Uri, BObj.Obj> map = new LinkedHashMap<>();
+            Map<Uri, Obj> map = new LinkedHashMap<>();
             if (addr.hasPattern()) {
                 this.store.entrySet()
                         .stream()
@@ -115,7 +125,7 @@ public class MemSpace extends SObj.Obj implements Space {
                     Graphitty.stdout().print("base poly found at %s: %s\n".formatted(pair.get().getValue0(), poly));
                     final fURI furiSubpath = addr.removeSubpath(pair.get().getValue0()).asNode();
                     Graphitty.stdout().print("searching base poly %s for %s\n".formatted(poly, furiSubpath.toUri()));
-                    final BObj.Obj readObj = poly.get(furiSubpath);
+                    final Obj readObj = null; //poly.get(furiSubpath);
                     Graphitty.stdout().print("located poly obj %s in %s\n".formatted(readObj, poly));
                     if (!readObj.isNoObj())
                         map.put(addr.retractPattern().toUri(), readObj);
@@ -124,9 +134,9 @@ public class MemSpace extends SObj.Obj implements Space {
                 }*/
             }
             if (map.isEmpty())
-                return NoObj.of();
+                return NoObj.single();
             else {
-                return SObj.Rec.of(map);
+                return new MRec((Map)map);
                 //   new SObj.Rec((Map) map, REC_URI, fURI.NONE);
             }
         }
@@ -137,14 +147,20 @@ public class MemSpace extends SObj.Obj implements Space {
                         .flatMap(kv ->
                                 IteratorUtil.asList(nodeBranchProcess(addr.retractPattern().asBranch(), new SObj.Rec((Map) map, REC_URI, fURI.NONE)))
                                         .stream()
-                                        .map(z -> new SObj.Rel(Pair.with(((Pair<fURI, BObj.Obj>) z).getValue0().toUri(), ((Pair<fURI, BObj.Obj>) z).getValue1()), REL_URI, fURI.NONE))
+                                        .map(z -> new SObj.Rel(Pair.with(((Pair<fURI, Obj>) z).getValue0().toUri(), ((Pair<fURI, Obj>) z).getValue1()), REL_URI, fURI.NONE))
                                         .toList()
                                         .stream()).toList());
          */
     }
 
+
     @Override
-    public Obj write(final fURI addr, BObj.Obj obj) {
+    public void append(fURI addr, Obj... obj) {
+
+    }
+
+    @Override
+    public Obj write(final fURI addr, Obj obj) {
         this.resolveWrite(addr, addr.retractPattern(), obj, (resolvedAddr, resolvedObj) -> {
             if (resolvedObj.isNoObj())
                 this.store.remove(resolvedAddr);
@@ -154,7 +170,7 @@ public class MemSpace extends SObj.Obj implements Space {
         return obj;
     }
 
-    @Override
+   /* @Override
     public void append(final fURI addr, final Obj... obj) {
         Obj poly = this.store.get(addr);
         if (null == poly || poly.isMono())
@@ -163,9 +179,9 @@ public class MemSpace extends SObj.Obj implements Space {
             Poly ppoly = (Poly) poly;
             ppoly.append(obj);
         }
-    }
+    }*/
 
-    @Override
+    /*@Override
     public Obj get(int index) {
         return NoObj.of();
     }
@@ -179,6 +195,11 @@ public class MemSpace extends SObj.Obj implements Space {
     @Override
     public long length() {
         return 0;
+    }*/
+
+    @Override
+    public <O extends Obj> O clone(Object value, fURI tid, fURI vid) {
+        return null;
     }
 
     @Override

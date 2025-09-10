@@ -427,9 +427,10 @@ public interface BObj extends Cloneable {
             if (!key.hasPattern())
                 return this.value().getOrDefault(key.toUri(), NoObj.of());
             else {
-                final Map<BObj.Obj, BObj.Obj> map = new LinkedHashMap<>();
+               /* final Map<BObj.Obj, BObj.Obj> map = new LinkedHashMap<>();
                 this.value().entrySet().stream().filter(kv -> kv.getKey().matches(key.toUri())).forEach(kv -> map.put(kv.getKey(), kv.getValue()));
-                return map.isEmpty() ? NoObj.of() : new SObj.Rec(map, REC_URI, fURI.NONE);
+                return map.isEmpty() ? NoObj.of() : new SObj.Rec(map, REC_URI, fURI.NONE);*/
+                return null;
             }
         }
 

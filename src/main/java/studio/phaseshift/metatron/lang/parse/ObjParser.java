@@ -24,13 +24,12 @@ import org.petitparser.context.Result;
 import org.petitparser.parser.Parser;
 import org.petitparser.parser.combinators.*;
 import org.petitparser.parser.primitive.CharacterParser;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.monoid.MMonoid;
 import studio.phaseshift.metatron.lang.obj.base.*;
 import studio.phaseshift.metatron.lang.obj.mtron.*;
 import studio.phaseshift.metatron.ui.Graphitty;
+import studio.phaseshift.metatron.ui.GraphittyLogger;
 
 import java.util.*;
 import java.util.function.Supplier;
@@ -45,7 +44,7 @@ import static studio.phaseshift.metatron.lang.inst.SInst.*;
 
 public class ObjParser {
 
-    private static final Logger LOG = LoggerFactory.getLogger(ObjParser.class);
+    private static final GraphittyLogger LOG = Graphitty.log(ObjParser.class);
     private static final SettableParser obj_parser = SettableParser.undefined();
     private static final SettableParser obj_no_code_parser = SettableParser.undefined();
     private static final SettableParser lst_parser = SettableParser.undefined();
@@ -101,11 +100,12 @@ public class ObjParser {
                 choice(of(','), m_obj().separatedBy(of(',').trim())),
                 of(']').trim()).pick(1))
                 .map(t -> new MLst(
-                        (ObjParser.pick(t, 1).equals(',') ?
+                        (List) ((ObjParser.pick(t, 1).equals(',') ?
                                 List.of() : ObjParser.<List>pick(t, 1))
                                 .stream()
                                 .filter(o -> o instanceof Obj)
-                                .toList(), pick(t, 0),
+                                .toList()),
+                        pick(t, 0),
                         fURI.NONE)));
 
         rec_parser.set(seq(seq(m_type_prefix_opt_colon(Rec.TID), of('[').trim()).pick(0),
@@ -138,7 +138,7 @@ public class ObjParser {
 
 
     public static <O extends Obj> Iterator<O> eval(final String code) {
-        return (Iterator) new MMonoid.Monoid(parse(code)).iterator();
+        return (Iterator) new MMonoid(parse(code)).iterator();
     }
 
     public static <O extends Obj> O parse(final String code) {

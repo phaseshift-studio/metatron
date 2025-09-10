@@ -25,7 +25,11 @@ import com.hivemq.client.mqtt.mqtt5.message.subscribe.Mqtt5RetainHandling;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import studio.phaseshift.metatron.lang.fURI;
-import studio.phaseshift.metatron.lang.obj.BObj;
+import studio.phaseshift.metatron.lang.obj.base.NoObj;
+import studio.phaseshift.metatron.lang.obj.base.Obj;
+import studio.phaseshift.metatron.lang.obj.base.Uri;
+import studio.phaseshift.metatron.lang.obj.mtron.MObj;
+import studio.phaseshift.metatron.lang.obj.mtron.MUri;
 import studio.phaseshift.metatron.ui.Palette;
 import studio.phaseshift.metatron.lang.obj.SObj;
 import studio.phaseshift.metatron.lang.translate.JSONTranslator;
@@ -41,9 +45,8 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 
-import static studio.phaseshift.metatron.lang.obj.BObj.URI_URI;
 
-public class MqttSpace extends SObj.Obj implements Space {
+public class MqttSpace extends MObj implements Space {
 
     public static fURI MQTT_TID = fURI.of("mqtt/broker");
     private static final Logger LOG = LoggerFactory.getLogger(MqttSpace.class);
@@ -61,13 +64,13 @@ public class MqttSpace extends SObj.Obj implements Space {
             .create();
     final JSONTranslator jsonTranslator = new JSONTranslator();
 
-    public MqttSpace(final Map<BObj.Uri, BObj.Obj> config, final fURI tid, final fURI vid) {
+    public MqttSpace(final Map<Uri, Obj> config, final fURI tid, final fURI vid) {
         super(config, tid, vid);
         this.broker = config
-                .get(new SObj.Uri(fURI.of("broker"), URI_URI, null))
+                .get(new MUri(fURI.of("broker")))
                 .orElseThrow(new IllegalArgumentException("config must have a broker key")).uriValue();
         this.pattern = config
-                .get(new SObj.Uri(fURI.of("pattern"), URI_URI, null))
+                .get(new MUri(fURI.of("pattern")))
                 .orElseThrow(new IllegalArgumentException("config nust have a pattern key")).uriValue();
         this.cache = new MemSpace(this.pattern, fURI.NONE);
         this.init();
@@ -93,13 +96,13 @@ public class MqttSpace extends SObj.Obj implements Space {
                         LOG.info("received {}", p);
                         if (p.getPayload().isPresent()) {
                             final String json = StandardCharsets.UTF_8.decode(p.getPayload().get()).toString();
-                            this.cache.write(
+                            /*this.cache.write(
                                     fURI.of(p.getTopic().toString()),
-                                    this.jsonTranslator.translateString(json));
+                                    this.jsonTranslator.translateString(json));*/
                         } else {
-                            this.cache.write(
+                       /*     this.cache.write(
                                     fURI.of(p.getTopic().toString()),
-                                    BObj.NoObj.of());
+                                    NoObj.of());*/
                         }
                     })
                     .send()
@@ -115,56 +118,61 @@ public class MqttSpace extends SObj.Obj implements Space {
     }
 
     @Override
-    public BObj.Obj read(final fURI addr) {
+    public Obj read(final fURI addr) {
         return this.cache.read(addr);
     }
 
     @Override
-    public BObj.Obj write(final fURI addr, final BObj.Obj obj) {
+    public Obj write(final fURI addr, final Obj obj) {
         try {
             this.client
                     .toAsync()
                     .publishWith()
                     .topic(addr.toString())
-                    .payload(obj.isNoObj() ? new byte[0] : this.jsonTranslator.translate(obj).toString().getBytes())
+                    //.payload(obj.isNoObj() ? new byte[0] : this.jsonTranslator.translate(obj).toString().getBytes())
                     .retain(true)
                     .send()
                     .whenComplete((p, t) -> {
                         LOG.info("caching {}", p.getPublish());
                         if (p.getPublish().getPayload().isPresent()) {
                             final String json = StandardCharsets.UTF_8.decode(p.getPublish().getPayload().get()).toString();
-                            this.cache.write(
+                        /*    this.cache.write(
                                     fURI.of(p.getPublish().getTopic().toString()),
-                                    this.jsonTranslator.translateString(json));
+                                    this.jsonTranslator.translateString(json));*/
                         } else {
-                            this.cache.write(
+                          /*  this.cache.write(
                                     fURI.of(p.getPublish().getTopic().toString()),
-                                    BObj.NoObj.of());
+                                    NoObj.of());*/
                         }
                     }).get();
-            return BObj.NoObj.of();
+            return NoObj.single();
         } catch (InterruptedException | ExecutionException e) {
             throw new IllegalArgumentException(e);
         }
     }
 
     @Override
-    public void append(fURI addr, BObj.Obj... obj) {
+    public void append(fURI addr, Obj... obj) {
         throw new RuntimeException("append currently not implemented");
     }
 
-    @Override
+   /* @Override
     public long length() {
         return 0;
     }
 
     @Override
-    public BObj.Obj get(final fURI key) {
+    public Obj get(final fURI key) {
         return this.read(key);
+    }*/
+
+    @Override
+    public <O extends Obj> O clone(Object value, fURI tid, fURI vid) {
+        return (O) this;
     }
 
     @Override
-    public Iterator<BObj.Obj> iterator() {
+    public Iterator<Obj> iterator() {
         return this.cache.iterator();
     }
 }

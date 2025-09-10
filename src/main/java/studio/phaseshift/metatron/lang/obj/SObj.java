@@ -45,8 +45,8 @@ public class SObj implements BObj {
             this.tid = tid;
             this.value = value;
             this.vid = vid;
-            if (null != this.vid && Router.global().hasStruct(this.vid))
-                Router.global().write(this.vid, this);
+           // if (null != this.vid && Router.global().hasStruct(this.vid))
+          //      Router.global().write(this.vid, this);
         }
 
         @Override

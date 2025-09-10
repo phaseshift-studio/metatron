@@ -18,20 +18,15 @@
 
 package studio.phaseshift.metatron.lang.monoid.rewrite;
 
-import studio.phaseshift.metatron.lang.obj.BObj;
+import studio.phaseshift.metatron.lang.obj.base.Code;
+import studio.phaseshift.metatron.lang.obj.base.Inst;
 
-public interface Rewrite extends BObj.Inst {
+public interface Rewrite extends Inst {
 
-    BObj.Code rewrite(final BObj.Code code);
+    Code rewrite(final Code code);
 
-    @Override
-    default BObj.InstF f() {
-        return new BObj.InstF(code -> this.rewrite((BObj.Code) code));
-    }
-
-    @Override
-    default BObj.Obj clone() {
-        return this;
+    default Inst.f f() {
+        return Inst.f.of(code -> this.rewrite((Code) code));
     }
 
 }

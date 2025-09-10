@@ -24,7 +24,7 @@ import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.monoid.Monoid;
 import studio.phaseshift.metatron.lang.monoid.MMonoid;
 import studio.phaseshift.metatron.lang.monoid.rewrite.Rewrite;
-import studio.phaseshift.metatron.lang.obj.SObj;
+import studio.phaseshift.metatron.lang.obj.mtron.MInst;
 import studio.phaseshift.metatron.ui.Graphitty;
 
 import java.util.List;
@@ -32,34 +32,35 @@ import java.util.List;
 import static studio.phaseshift.metatron.lang.inst.SInst.EXPLAIN_URI;
 import static studio.phaseshift.metatron.lang.obj.BObj.*;
 
-public class ExplainRewrite extends SObj.Inst implements Rewrite {
+public abstract class ExplainRewrite extends MInst implements Rewrite {
 
     public ExplainRewrite() {
-        super(fURI.of("explain/rewrite"));
+      super(null,null,null);
+        //  super(fURI.of("explain/rewrite"));
     }
 
-    @Override
+  /*  @Override
     public Code rewrite(final Code code) {
         return code.value().stream().anyMatch(i -> i.tid().equals(EXPLAIN_URI)) ?
-                new SObj.Code(List.of(new ExplainMetaInst(code)), CODE_URI, null) : code;
+                new Code(List.of(new ExplainMetaInst(code)), CODE_URI, null) : code;
     }
 
-    public static class ExplainMetaInst extends SObj.Inst {
+    public static class ExplainMetaInst extends Inst {
 
         private static final Logger LOG = LoggerFactory.getLogger(ExplainMetaInst.class);
 
 
         public ExplainMetaInst(final Code code) {
-            super(fURI.of("explain/engine"), new SObj.Code(code.value().stream().filter(i -> !i.tid().equals(EXPLAIN_URI)).toList(), CODE_URI, null));
+            super(fURI.of("explain/engine"), new Code(code.value().stream().filter(i -> !i.tid().equals(EXPLAIN_URI)).toList(), CODE_URI, null));
         }
 
         @Override
         public InstF f() {
             return new InstF(o -> {
-                Monoid.Monoid monoid = new MMonoid.Monoid(this.args(0));
+                Monoid monoid = new MMonoid(this.args(0));
                 LOG.info(Graphitty.string("introspecting\n\t%s".formatted(this)));
                 return o;
             });
         }
-    }
+    }*/
 }

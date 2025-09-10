@@ -20,8 +20,10 @@ package studio.phaseshift.metatron.space;
 
 import org.javatuples.Pair;
 import studio.phaseshift.metatron.lang.fURI;
-import studio.phaseshift.metatron.lang.obj.BObj;
-import studio.phaseshift.metatron.lang.obj.SObj;
+import studio.phaseshift.metatron.lang.obj.base.NoObj;
+import studio.phaseshift.metatron.lang.obj.base.Obj;
+import studio.phaseshift.metatron.lang.obj.base.Poly;
+import studio.phaseshift.metatron.lang.obj.mtron.MRec;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.Palette;
 import studio.phaseshift.metatron.util.IteratorUtil;
@@ -32,9 +34,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.Predicate;
-
-import static studio.phaseshift.metatron.lang.obj.BObj.Obj;
-import static studio.phaseshift.metatron.lang.obj.BObj.Poly;
 
 public interface Space extends Poly {
 
@@ -66,17 +65,12 @@ public interface Space extends Poly {
         return Graphitty.string("{{b}}%s{{g}}:[{{y}}pattern{{g}}=>{{y}}%s{{g}}]{{X}}".formatted(this.tid().toString(), this.pattern().toString()));
     }
 
-    @Override
-    default Obj clone() {
-        throw new IllegalStateException(new CloneNotSupportedException("structs can not be cloned"));
-    }
+    // @Override
+    // default Obj get(final int index) {
+    //    return NoObj.of();
+    // }
 
-    @Override
-    default Obj get(final int index) {
-        return BObj.NoObj.of();
-    }
-
-    default void resolveWrite(final fURI addr, final fURI stepAddr, final BObj.Obj obj, final BiConsumer<fURI, BObj.Obj> resolveWriter) {
+    default void resolveWrite(final fURI addr, final fURI stepAddr, final Obj obj, final BiConsumer<fURI, Obj> resolveWriter) {
         if (obj.isRec()) {
             obj.recValue().forEach((key, value) -> {
                 final fURI nextStepAddr = stepAddr.extend(key.uriValue());
@@ -90,7 +84,7 @@ public interface Space extends Poly {
                             .stream()
                             .filter(kv -> nextStepAddr.extend(kv.getKey().uriValue()).matches(addr))
                             .forEach(kv -> submap.put(kv.getKey(), kv.getValue()));
-                    resolveWriter.accept(nextStepAddr, new SObj.Rec(submap, value.tid(), fURI.NONE));
+                    resolveWriter.accept(nextStepAddr, new MRec(submap, value.tid(), fURI.NONE));
                 } else if (nextStepAddr.matches(addr)) {
                     resolveWriter.accept(nextStepAddr, value);
                 }
@@ -107,7 +101,7 @@ public interface Space extends Poly {
         if (null == polyFilter)
             polyFilter = o -> true;
         fURI newFuri = furi.asNode();
-        BObj.Obj obj = BObj.NoObj.of();
+        Obj obj = NoObj.single();
         while (!newFuri.segments().isEmpty()) {
             obj = this.read(newFuri);
             if (!obj.isNoObj() && polyFilter.test(obj)) // obj->is_poly() || obj->is_objs() || obj->is_code())
@@ -115,15 +109,15 @@ public interface Space extends Poly {
             newFuri = newFuri.retract().asNode();
         }
         if (obj.isPoly()) {
-            final BObj.Obj x = obj.<Poly>as().get(newFuri);
+            final Obj x = null; //obj.<Poly>as().get(newFuri);
             return x.isPoly() ? Optional.of(Pair.with(newFuri.retractPattern(), x.<Poly>as())) : Optional.empty();
         } else return Optional.empty();
     }
 
-    default Iterator<Pair<fURI, Obj>> nodeBranchProcess(final fURI query, final BObj.Obj obj) {
+    default Iterator<Pair<fURI, Obj>> nodeBranchProcess(final fURI query, final Obj obj) {
         try {
             if (query.isBranch() && obj.isRec())
-                return obj.<BObj.Rec>as().get(query.retractPattern().asNode()).recValue().entrySet().stream().map(kv -> Pair.with(query.asNode().extend(kv.getKey().uriValue()), kv.getValue())).iterator();
+                return null;// obj.<Rec>as().get(query.retractPattern().asNode()).recValue().entrySet().stream().map(kv -> Pair.with(query.asNode().extend(kv.getKey().uriValue()), kv.getValue())).iterator();
         } catch (final Exception e) {
             Graphitty.log(this).info("%s is not valid for %s", query, obj);
         }

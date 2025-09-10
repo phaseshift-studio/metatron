@@ -23,8 +23,6 @@ import org.jline.jansi.Ansi.Color;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import studio.phaseshift.metatron.lang.fURI;
-import studio.phaseshift.metatron.lang.monoid.Monoid.Monad;
-import studio.phaseshift.metatron.lang.monoid.rewrite.decoration.ExplainRewrite;
 import studio.phaseshift.metatron.lang.obj.base.*;
 import studio.phaseshift.metatron.lang.obj.mtron.MObjs;
 import studio.phaseshift.metatron.ui.Graphitty;
@@ -37,7 +35,7 @@ import static org.jline.jansi.Ansi.ansi;
 import static studio.phaseshift.metatron.lang.inst.SInst.COUNT_URI;
 import static studio.phaseshift.metatron.lang.inst.SInst.SUM_URI;
 
-public class MMonoid {
+public class MMonoid implements Monoid {
 
     public static class MMonad implements Monad {
         private static final GraphittyLogger LOG = Graphitty.log(MMonad.class);
@@ -265,9 +263,9 @@ public class MMonoid {
                 }
                 // first = false;
             }
-            for (final Obj o : start) {
+            /*for (final Obj o : start) {
                 this.running.add(new MMonad(this, o, this.code.get(0), 1));
-            }
+            }*/
         }
     }
 

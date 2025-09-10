@@ -104,14 +104,14 @@ public final class SInst {
                 throw MTronException.of("the operands do not support multiplication: %s * %s", lhs, inst.args(0));
 
         }));
-        BInst.SymbolTable.load(pg.incr(REF_URI), InstF.of((lhs, inst) -> {
+     /*   BInst.SymbolTable.load(pg.incr(REF_URI), InstF.of((lhs, inst) -> {
             Router.global().write(lhs.uriValue(), inst.args(0));
             return lhs;
         }));
         BInst.SymbolTable.load(pg.incr(TO_URI), InstF.of((lhs, inst) -> {
             Router.global().write(inst.args(0).uriValue(), lhs);
             return lhs;
-        }));
+        }));*/
         BInst.SymbolTable.load(pg.incr(DOM_URI), InstF.of((lhs, inst) -> {
             if (lhs.isRec()) {
                 return SObj.Lst.of(new ArrayList<BObj.Obj>(lhs.recValue().keySet()));
@@ -128,8 +128,8 @@ public final class SInst {
             } else
                 return lhs;
         }));
-        BInst.SymbolTable.load(pg.incr(FROM_URI), InstF.of((lhs, inst) -> Router.global().read(inst.args(0).uriValue())));
-        BInst.SymbolTable.load(pg.incr(TYPE_URI), InstF.of((lhs, inst) -> null == lhs.value() ? BObj.NoObj.of() : SObj.Uri.of(lhs.tid())));
+    //    BInst.SymbolTable.load(pg.incr(FROM_URI), InstF.of((lhs, inst) -> Router.global().read(inst.args(0).uriValue())));
+    //    BInst.SymbolTable.load(pg.incr(TYPE_URI), InstF.of((lhs, inst) -> null == lhs.value() ? BObj.NoObj.of() : SObj.Uri.of(lhs.tid())));
         BInst.SymbolTable.load(pg.incr(IS_URI), InstF.of((lhs, inst) -> inst.args(0).boolValue() ? lhs : BObj.NoObj.of()));
         BInst.SymbolTable.load(pg.incr(EQ_URI), InstF.of((lhs, inst) -> SObj.Bool.of(lhs.equals(inst.args(0)))));
         BInst.SymbolTable.load(pg.incr(NEQ_URI), InstF.of((lhs, inst) -> SObj.Bool.of(!lhs.equals(inst.args(0)))));
@@ -186,10 +186,10 @@ public final class SInst {
                         return SObj.Objs.of(lhs.relValue());
                     else throw MTronException.of("%s does not support merge: %s", lhs.tid().toUri(true), lhs);
                 }));
-        BInst.SymbolTable.load(pg.incr(WITHIN_URI),
+   /*     BInst.SymbolTable.load(pg.incr(WITHIN_URI),
                 InstF.of((lhs, inst) -> {
                     return SObj.Objs.of(new MMonoid.Monoid(inst.args(0), lhs));
-                }));
+                }));*/
 
     }
 

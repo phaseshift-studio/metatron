@@ -20,11 +20,11 @@ package studio.phaseshift.metatron.space;
 
 import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.lang.fURI;
-import studio.phaseshift.metatron.lang.obj.BObj;
-import studio.phaseshift.metatron.ui.Palette;
+import studio.phaseshift.metatron.lang.obj.base.Obj;
 import studio.phaseshift.metatron.ui.Graphitty;
+import studio.phaseshift.metatron.ui.Palette;
 
-public interface Router extends BObj.Obj {
+public interface Router extends Obj {
 
     fURI ROUTER_TID = fURI.of("router");
 
@@ -37,9 +37,11 @@ public interface Router extends BObj.Obj {
         return ROUTER_TID;
     }
 
-    BObj.Obj read(final fURI vid);
 
-    BObj.Obj write(final fURI vid, final BObj.Obj obj);
+    Obj read(final fURI vid);
+
+
+    Obj write(final fURI vid, final Obj obj);
 
     boolean hasStruct(final fURI vid);
 

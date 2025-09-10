@@ -19,6 +19,7 @@
 package studio.phaseshift.metatron.space.mem;
 
 import studio.phaseshift.metatron.lang.fURI;
+import studio.phaseshift.metatron.lang.obj.base.Obj;
 import studio.phaseshift.metatron.space.Router;
 import studio.phaseshift.metatron.space.Space;
 import studio.phaseshift.metatron.ui.Graphitty;
@@ -26,8 +27,6 @@ import studio.phaseshift.metatron.ui.GraphittyLogger;
 
 import java.util.HashMap;
 import java.util.Map;
-
-import static studio.phaseshift.metatron.lang.obj.BObj.Obj;
 
 public class MemRouter implements Router {
 
@@ -105,18 +104,14 @@ public class MemRouter implements Router {
     }
 
     @Override
+    public <O extends Obj> O clone(Object value, fURI tid, fURI vid) {
+        return (O) this;
+    }
+
+    @Override
     public Obj vid(final fURI furi) {
         this.vid = furi;
         return this;
     }
 
-    @Override
-    public MemRouter clone() {
-        return this;
-    }
-
-    @Override
-    public <O extends Obj> O clone(Object value) {
-        return (O) this;
-    }
 }
