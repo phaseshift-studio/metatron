@@ -18,12 +18,11 @@
 
 package studio.phaseshift.metatron.lang;
 
-import studio.phaseshift.metatron.lang.obj.BObj;
-import studio.phaseshift.metatron.lang.obj.SObj;
+import studio.phaseshift.metatron.lang.obj.base.Uri;
+import studio.phaseshift.metatron.lang.obj.mtron.MUri;
 
 import java.util.*;
 
-import static studio.phaseshift.metatron.lang.obj.BObj.URI_URI;
 
 public class fURI implements Cloneable {
 
@@ -102,14 +101,14 @@ public class fURI implements Cloneable {
         return new fURI(uri);
     }
 
-    public BObj.Uri toUri(final boolean schemaType) {
+    public Uri toUri(final boolean schemaType) {
         final String scheme = this.scheme();
         return schemaType && null != scheme ?
-                new SObj.Uri(this.scheme(null), fURI.of(scheme), null) :
-                new SObj.Uri(this, URI_URI, null);
+                new MUri(this.scheme(null), fURI.of(scheme), null) :
+                new MUri(this, Uri.TID, null);
     }
 
-    public BObj.Uri toUri() {
+    public Uri toUri() {
         return this.toUri(true);
     }
 
@@ -281,6 +280,8 @@ public class fURI implements Cloneable {
         if (!other.hasPattern())
             return this.equals(other);
         if (this.isAbsolute() != other.isAbsolute())
+            return false;
+        if (this.sstart != other.sstart)
             return false;
         if (Objects.equals(other.host, "#"))
             return true;

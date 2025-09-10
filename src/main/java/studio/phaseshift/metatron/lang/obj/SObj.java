@@ -21,8 +21,8 @@ package studio.phaseshift.metatron.lang.obj;
 import org.javatuples.Pair;
 import org.javatuples.Triplet;
 import studio.phaseshift.metatron.lang.fURI;
-import studio.phaseshift.metatron.lang.monoid.SMonoid.Monoid;
-import studio.phaseshift.metatron.struct.Router;
+import studio.phaseshift.metatron.lang.monoid.MMonoid.Monoid;
+import studio.phaseshift.metatron.space.Router;
 import studio.phaseshift.metatron.ui.Palette;
 import studio.phaseshift.metatron.util.IteratorUtil;
 

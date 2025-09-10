@@ -16,36 +16,28 @@
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.struct;
+package studio.phaseshift.metatron.lang.obj.mtron;
 
-import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.lang.fURI;
-import studio.phaseshift.metatron.lang.obj.BObj;
-import studio.phaseshift.metatron.ui.Palette;
-import studio.phaseshift.metatron.ui.Graphitty;
+import studio.phaseshift.metatron.lang.obj.base.Bool;
+import studio.phaseshift.metatron.lang.obj.base.Real;
 
-public interface Router extends BObj.Obj {
+public class MReal extends MObj implements Real {
+    public MReal(final Double value, final fURI tid, final fURI vid) {
+        super(value, tid, vid);
+    }
 
-    fURI ROUTER_TID = fURI.of("router");
-
-    static Router global() {
-        return BootLoader.ROUTER;
+    public MReal(final Double value) {
+        this(value, Real.TID, fURI.NONE);
     }
 
     @Override
-    default fURI tid() {
-        return ROUTER_TID;
+    public Real clone(final Object value, final fURI tid, final fURI vid) {
+        return new MReal((Double) value, tid, vid);
     }
 
-    BObj.Obj read(final fURI vid);
-
-    BObj.Obj write(final fURI vid, final BObj.Obj obj);
-
-    boolean hasStruct(final fURI vid);
-
-    void registerStruct(final Struct struct);
-
-    default String toString(final Palette palette) {
-        return Graphitty.string("!b%s!g:[!yrouter!g]!!".formatted(this.tid().toString()));
+    @Override
+    public Double value() {
+        return (Double) this.value;
     }
 }

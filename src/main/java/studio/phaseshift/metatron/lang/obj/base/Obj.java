@@ -18,42 +18,52 @@
 
 package studio.phaseshift.metatron.lang.obj.base;
 
+import org.javatuples.Pair;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.util.IteratorUtil;
+import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
 
-interface Obj extends Function<Obj, Obj>, Iterable<Obj>, Cloneable {
-    Object value();
+public interface Obj extends Function<Obj, Obj>, Iterable<Obj> {
+
+    public static final fURI TID = fURI.of("obj");
+
+    <O extends Object> O value();
 
     fURI tid();
 
     fURI vid();
 
-    Obj vid(final fURI furi);
+    <O extends Obj> O clone(final Object value, final fURI tid, final fURI vid);
 
-    Obj clone();
+    default Obj value(final Object newValue) {
+        return this.clone(newValue, this.tid(), this.vid());
+    }
 
-    /*default String toString(final Palette palette) {
-        Graphitty.global().write(this);
-    }*/
+    default Obj tid(final fURI newTid) {
+        return this.clone(this.value(), newTid, this.vid());
+    }
 
-    // @Override
+    default Obj vid(final fURI newVid) {
+        return this.clone(this.value(), this.tid(), newVid);
+    }
+
+    @Override
     default Obj apply(final Obj other) {
         return this;
     }
-
 
     default boolean matches(final Obj rhs) {
         return this.equals(rhs);
     }
 
-    <O extends Obj> O clone(final Object value);
-
-    /*@Override
+    @Override
     default Iterator<Obj> iterator() {
-        return this.isObjs() ? ((Iterable<Obj>) this.value()).iterator() : IteratorUtil.of(this);
+        return this.isNoObj() ? IteratorUtil.of() : (this.isObjs() ? this.objsValue().iterator() : IteratorUtil.of(this));
     }
 
     default <O extends Obj> O orElse(final O other) {
@@ -61,17 +71,17 @@ interface Obj extends Function<Obj, Obj>, Iterable<Obj>, Cloneable {
     }
 
     default <O extends Obj> O orElseThrow(final RuntimeException e) {
-      //  if (this.isNoObj())
-       //     throw e;
+        if (this.isNoObj())
+            throw e;
         return (O) this;
-    }*/
+    }
 
     default <O extends Obj> O as() {
         return (O) this;
     }
-/*
+
     default boolean isNoObj() {
-        return null == this.value();
+        return this == NoObj.single();
     }
 
     default boolean isBool() {
@@ -122,59 +132,63 @@ interface Obj extends Function<Obj, Obj>, Iterable<Obj>, Cloneable {
         return this instanceof Poly;
     }
 
-    default boolean isMono() {
-        return this instanceof Mono;
-    }
-
-
-
     default boolean boolValue() {
         if (this.isBool())
-            return ((Bool) this).value();
-        throw new IllegalStateException("obj is not an bool");
+            return this.value();
+        throw MTronException.of("%s is a %s is not a %s", this, tid().toUri(), Bool.TID.toUri());
     }
 
-    default int intValue() {
+    default Long intValue() {
         if (this.isInt())
-            return ((Int) this).value();
-        throw new IllegalStateException("obj is not an int");
+            return this.value();
+        throw MTronException.of("%s is a %s is not an %s", this, tid().toUri(), Int.TID.toUri());
     }
 
-    default double realValue() {
+    default Double realValue() {
         if (this.isReal())
-            return ((Real) this).value();
-        throw new IllegalStateException("obj is not an real");
+            return this.value();
+        throw MTronException.of("%s is a %s is not a %s", this, tid().toUri(), Real.TID.toUri());
     }
 
     default String strValue() {
         if (this.isStr())
-            return ((Str) this).value();
-        throw new IllegalStateException("obj is not an str");
+            return this.value();
+        throw MTronException.of("%s is a %s is not a %s", this, tid().toUri(), Str.TID.toUri());
     }
 
     default fURI uriValue() {
         if (this.isUri())
-            return ((Uri) this).value();
-        throw new IllegalStateException("obj is not an uri");
+            return this.value();
+        throw MTronException.of("%s is a %s is not a %s", this, tid().toUri(), Uri.TID.toUri());
     }
 
     default List<Obj> lstValue() {
         if (this.isLst())
-            return ((Lst) this).value();
-        throw new IllegalStateException("obj is not an lst");
+            return this.value();
+        throw MTronException.of("%s is a %s is not a %s", this, tid().toUri(), Lst.TID.toUri());
+    }
+
+    default Iterable<Obj> objsValue() {
+        if (this.isObjs())
+            return this.value();
+        throw MTronException.of("%s is a %s is not an %s", this, tid().toUri(), Objs.TID.toUri());
     }
 
     default Map<Obj, Obj> recValue() {
         if (this.isRec())
-            return ((Rec) this).value();
-        throw new IllegalStateException("obj is not an rec");
+            return this.value();
+        throw MTronException.of("%s is a %s is not a %s", this, tid().toUri(), Rec.TID.toUri());
     }
 
     default Pair<Obj, Obj> relValue() {
         if (this.isRel())
-            return ((Rel) this).value();
-        throw new IllegalStateException("obj is not an rel");
+            return this.value();
+        throw MTronException.of("%s is a %s is not a %s", this, tid().toUri(), Rel.TID.toUri());
     }
 
- */
+    default List<Inst> codeValue() {
+        if (this.isCode())
+            return this.value();
+        throw MTronException.of("%s is a %s is not a %s", this, tid().toUri(), Code.TID.toUri());
+    }
 }

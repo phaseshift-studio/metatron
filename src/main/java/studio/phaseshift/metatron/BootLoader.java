@@ -21,11 +21,11 @@ package studio.phaseshift.metatron;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.inst.SInst;
 import studio.phaseshift.metatron.lang.obj.SObj;
-import studio.phaseshift.metatron.struct.Router;
-import studio.phaseshift.metatron.struct.Struct;
-import studio.phaseshift.metatron.struct.mem.MemRouter;
-import studio.phaseshift.metatron.struct.mem.MemStruct;
-import studio.phaseshift.metatron.struct.mqtt.MqttStruct;
+import studio.phaseshift.metatron.space.Router;
+import studio.phaseshift.metatron.space.Space;
+import studio.phaseshift.metatron.space.mem.MemRouter;
+import studio.phaseshift.metatron.space.mem.MemSpace;
+import studio.phaseshift.metatron.space.mqtt.MqttSpace;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
 
@@ -33,7 +33,7 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Map;
 
-import static studio.phaseshift.metatron.struct.mqtt.MqttStruct.MQTT_TID;
+import static studio.phaseshift.metatron.space.mqtt.MqttSpace.MQTT_TID;
 
 public class BootLoader {
 
@@ -49,15 +49,15 @@ public class BootLoader {
         } catch (final UnknownHostException e) {
             LOG.warn("booting metatron on a non-networked jvm");
         }
-        final Struct mnt = new MemStruct(fURI.of("/mnt/#"), fURI.of("/mnt"));
-        final Struct sys = new MemStruct(fURI.of("/sys/#"), fURI.of("/mnt/sys"));
+        final Space mnt = new MemSpace(fURI.of("/mnt/#"), fURI.of("/mnt"));
+        final Space sys = new MemSpace(fURI.of("/sys/#"), fURI.of("/mnt/sys"));
         // final Router router = (ROUTER = new MemRouter(fURI.of("/sys/router")));
         Router.global().registerStruct(mnt);
         Router.global().registerStruct(sys);
-        Router.global().registerStruct(new MemStruct(fURI.of("/mtron/#"), fURI.of("/mnt/lang/mtron")));
-        Router.global().registerStruct(new MemStruct(fURI.of("+"), fURI.of("/sys/stack")));
-        Router.global().registerStruct(new MemStruct(fURI.of("/test/#"), fURI.of("/sys/test")));
-        Router.global().registerStruct(new MqttStruct(Map.of(SObj.Uri.of("broker"), SObj.Uri.of("ip://192.168.66.2:1883"), SObj.Uri.of("pattern"), SObj.Uri.of("test/#")), MQTT_TID, fURI.of("/mnt/mqtt")));
+        Router.global().registerStruct(new MemSpace(fURI.of("/mtron/#"), fURI.of("/mnt/lang/mtron")));
+        Router.global().registerStruct(new MemSpace(fURI.of("+/#"), fURI.of("/sys/stack")));
+        Router.global().registerStruct(new MemSpace(fURI.of("/test/#"), fURI.of("/sys/test")));
+        Router.global().registerStruct(new MqttSpace(Map.of(SObj.Uri.of("broker"), SObj.Uri.of("ip://192.168.66.2:1883"), SObj.Uri.of("pattern"), SObj.Uri.of("/mqtt/#")), MQTT_TID, fURI.of("/mnt/mqtt")));
         SInst.load();
         SInst.ext();
     }

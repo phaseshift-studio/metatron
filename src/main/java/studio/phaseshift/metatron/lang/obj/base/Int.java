@@ -18,5 +18,15 @@
 
 package studio.phaseshift.metatron.lang.obj.base;
 
-public interface Int {
+import studio.phaseshift.metatron.lang.fURI;
+
+public interface Int extends Obj {
+    public static final fURI TID = fURI.of("int");
+
+    @Override
+    Int clone(final Object value, final fURI tid, final fURI vid);
+
+    @Override
+    Long value();
+
 }

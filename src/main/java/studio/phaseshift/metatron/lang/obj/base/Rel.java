@@ -18,5 +18,16 @@
 
 package studio.phaseshift.metatron.lang.obj.base;
 
-public interface Rel {
+import org.javatuples.Pair;
+import studio.phaseshift.metatron.lang.fURI;
+
+public interface Rel extends Obj {
+    public static final fURI TID = fURI.of("rel");
+
+    @Override
+    Rel clone(final Object value, final fURI tid, final fURI vid);
+
+    @Override
+    Pair<Obj, Obj> value();
+
 }

@@ -22,14 +22,11 @@ import org.apache.commons.collections.IteratorUtils;
 import org.jline.jansi.Ansi.Color;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import studio.phaseshift.metatron.lang.inst.BInst;
+import studio.phaseshift.metatron.lang.fURI;
+import studio.phaseshift.metatron.lang.monoid.Monoid.Monad;
 import studio.phaseshift.metatron.lang.monoid.rewrite.decoration.ExplainRewrite;
-import studio.phaseshift.metatron.lang.obj.BObj;
-import studio.phaseshift.metatron.lang.obj.BObj.Code;
-import studio.phaseshift.metatron.lang.obj.BObj.Inst;
-import studio.phaseshift.metatron.lang.obj.BObj.NoObj;
-import studio.phaseshift.metatron.lang.obj.BObj.Obj;
-import studio.phaseshift.metatron.lang.obj.SObj;
+import studio.phaseshift.metatron.lang.obj.base.*;
+import studio.phaseshift.metatron.lang.obj.mtron.MObjs;
 import studio.phaseshift.metatron.util.IteratorUtil;
 
 import java.util.*;
@@ -38,17 +35,17 @@ import static org.jline.jansi.Ansi.ansi;
 import static studio.phaseshift.metatron.lang.inst.SInst.COUNT_URI;
 import static studio.phaseshift.metatron.lang.inst.SInst.SUM_URI;
 
-public class SMonoid {
+public class MMonoid {
 
-    public static class Monad implements BMonoid.Monad {
-        private static final Logger LOG = LoggerFactory.getLogger(Monad.class);
-        BObj.Obj obj;
+    public static class MMonad implements Monad {
+        private static final Logger LOG = LoggerFactory.getLogger(MMonad.class);
+        Obj obj;
         Inst inst;
         long bulk = 1;
         long loops = 0;
-        Monoid monoid;
+        MMonoid monoid;
 
-        public Monad(final Monoid monoid, final BObj.Obj obj, final Inst inst, final long bulk) {
+        public MMonad(final MMonoid monoid, final Obj obj, final Inst inst, final long bulk) {
             this.monoid = monoid;
             this.obj = obj;
             this.inst = inst;
@@ -81,7 +78,7 @@ public class SMonoid {
                 if (!Set.of(COUNT_URI, SUM_URI).contains(inst.tid())) {
                     LOG.debug("processing inst {} with {}", this.inst, IteratorUtils.toList(this.obj.iterator()));
                     IteratorUtil.iterate(IteratorUtil.consume(this.obj.iterator(), o -> {
-                        final Monad m = new Monad(this.monoid, o, this.inst, this.bulk);
+                        final MMonad m = new MMonad(this.monoid, o, this.inst, this.bulk);
                         m.domain_loop(m.inst);
                     }));
                 } else {
@@ -105,12 +102,14 @@ public class SMonoid {
                                     this->obj->objs_value()->size(), current_inst_resolved->toString(), "SIGNATURE HERE"));*/
                     this.range_loop(inst.apply(this.obj), inst);
                 } else {
-                    Monad barrier = this.monoid.barriers.isEmpty() ? new Monad(this.monoid, SObj.Objs.of(List.of()), inst, 1) : this.monoid.barriers.remove();
+                    MMonad barrier = this.monoid.barriers.isEmpty() ? new MMonad(this.monoid, new MObjs(List.of()), inst, 1) : this.monoid.barriers.remove();
                     if (!barrier.obj.isObjs()) {
                         LOG.warn("barrier does not contain and objs: {}", barrier.obj);
-                        barrier.obj = SObj.Objs.of(List.of(barrier.obj));
+                        barrier.obj = new MObjs(List.of(barrier.obj), Objs.TID, fURI.NONE);
                     }
-                    this.monoid.barriers.add(new Monad(this.monoid, barrier.obj.<BObj.Objs>as().append(this.obj), this.inst, this.bulk));
+
+                    // TODO:!!! APPEND  this.monoid.barriers.add(new MMonad(this.monoid, barrier.obj.<Objs>as().append(this.obj), this.inst, this.bulk));
+
                   /*  LOG_WRITE(TRACE, this->processor_,
                             L("monad {} stored in barrier [size: {}] [!m{}!m]\n", this->toString(),
                             this->processor_ -> barriers_ -> front()->obj -> objs_value()->size(), "SIGNATURE HERE"));*/
@@ -163,22 +162,22 @@ public class SMonoid {
                     this->processor_ -> running_ -> push_back(m);
                 }
             } else {*/
-            final Inst nextInst = this.monoid.code.nextInst(inst);
+            final Inst nextInst = null; // TODO !!!!! this.monoid.code.nextInst(inst);
             if (Set.of(COUNT_URI, SUM_URI).contains(inst.tid())) {
                 LOG.debug("scattering monad obj: {} (over {})", this.obj, nextInst);
                 IteratorUtil.iterate(IteratorUtil.consume(nextObj.iterator(), o -> {
-                    final Monad m = new Monad(this.monoid, o, nextInst, this.bulk);
+                    final MMonad m = new MMonad(this.monoid, o, nextInst, this.bulk);
                     this.monoid.running.add(m);
                 }));
             } else {
-                this.monoid.running.add(new Monad(this.monoid, nextObj, nextInst, this.bulk));
+                this.monoid.running.add(new MMonad(this.monoid, nextObj, nextInst, this.bulk));
             }
         }
 
         public boolean equals(final Object other) {
-            return other instanceof Monad &&
-                    this.obj.equals(((Monad) other).obj()) &&
-                    this.inst.equals(((Monad) other).inst());
+            return other instanceof MMonad &&
+                    this.obj.equals(((MMonad) other).obj()) &&
+                    this.inst.equals(((MMonad) other).inst());
         }
 
         public int hashCode() {
@@ -187,7 +186,7 @@ public class SMonoid {
 
         public void halt() {
             //   System.out.println("halting..." + this);
-            this.inst = NoObj.of();
+            this.inst = NoObj.single();
             this.monoid.halted.add(this.obj);
         /*for(int i = 0; i < this->bulk_; i++) {
           this->processor_->halted_->push_back(std::move(this->obj_->clone()));
@@ -219,97 +218,94 @@ public class SMonoid {
         }
     }
 
-    public static class Monoid implements BMonoid.Monoid {
-        private static final Logger LOG = LoggerFactory.getLogger(Monoid.class);
-        protected Code code;
+    private static final Logger LOG = LoggerFactory.getLogger(Monoid.class);
+    protected Code code;
 
-        // todo: barrier and running to use monad set
-        Queue<Monad> running = new LinkedList<>();
-        Queue<Monad> barriers = new LinkedList<>();
-        Queue<Obj> halted = new LinkedList<>();
+    // todo: barrier and running to use monad set
+    Queue<MMonad> running = new LinkedList<>();
+    Queue<MMonad> barriers = new LinkedList<>();
+    Queue<Obj> halted = new LinkedList<>();
 
-        public Monoid(final Obj code) {
-            this(code, NoObj.of());
-        }
+    public MMonoid(final Obj code) {
+        this(code, NoObj.single());
+    }
 
-        public Monoid(final Obj code, final Obj start) {
-            if (!code.isCode()) {
-                if (!code.isNoObj()) {
-                    this.halted.add(code);
-                }
-            } else {
-                this.code = new ExplainRewrite().rewrite(code.<Code>as());
-                // process bcode inst pipeline
-                //this.code = Rewriter({Rewriter::by(), Rewriter::explain()}).apply(this.code);
-                // setup global behavior around barriers, initials, and terminals
-                boolean first = true;
-                for (final Inst inst : this.code.value()) {
-                    try {
-                        final Inst resolved = BInst.SymbolTable.resolve(NoObj.of(), inst);
-                        if (Set.of(COUNT_URI, SUM_URI).contains(inst.tid())) {
-                            // MANY_TO_??
-                            LOG.debug("barrier inst found: {} (w/ seed {})", resolved, resolved.seed());
-                            final Monad m = new Monad(this, resolved.seed(), inst, 1);
-                            this.barriers.add(m);
-                            //  LOG_WRITE(DEBUG, this, L(FOS_TAB_2"!ybarrier!! monad created: {}\n", m.toString()));
-                        }/* else if (resolved.isInitial() || (first && resolved.isM())) {
+    public MMonoid(final Obj code, final Obj start) {
+        if (!code.isCode()) {
+            if (!code.isNoObj()) {
+                this.halted.add(code);
+            }
+        } else {
+            this.code = new ExplainRewrite().rewrite(code.<Code>as());
+            // process bcode inst pipeline
+            //this.code = Rewriter({Rewriter::by(), Rewriter::explain()}).apply(this.code);
+            // setup global behavior around barriers, initials, and terminals
+            boolean first = true;
+            for (final Inst inst : this.code.value()) {
+                try {
+                    final Inst resolved = BInst.SymbolTable.resolve(NoObj.of(), inst);
+                    if (Set.of(COUNT_URI, SUM_URI).contains(inst.tid())) {
+                        // MANY_TO_??
+                        LOG.debug("barrier inst found: {} (w/ seed {})", resolved, resolved.seed());
+                        final MMonad m = new MMonad(this, resolved.seed(), inst, 1);
+                        this.barriers.add(m);
+                        //  LOG_WRITE(DEBUG, this, L(FOS_TAB_2"!ybarrier!! monad created: {}\n", m.toString()));
+                    }/* else if (resolved.isInitial() || (first && resolved.isM())) {
                             // ZERO/MAYBE*-TO_??
               const Monad_p m = M(noobj(), inst); // TODO: use seed
                             this.running_.push_back(m);
                             LOG_WRITE(DEBUG, this, L(FOS_TAB_2"!ginitial!! monad created: {}\n", m.toString()));
                         }*/
-                    } catch (final Exception e) {
-                        //do nothing
-                        //throw new RuntimeException(e);
-                    }
-                    // first = false;
+                } catch (final Exception e) {
+                    //do nothing
+                    //throw new RuntimeException(e);
                 }
-                for (final Obj o : start) {
-                    this.running.add(new Monad(this, o, this.code.get(0), 1));
-                }
+                // first = false;
             }
-        }
-
-        @Override
-        public Iterator<Obj> iterator() {
-            List<Obj> results = new ArrayList<>();
-            Obj m = null;
-            while (null != (m = this.next())) {
-                m.iterator().forEachRemaining(results::add);
+            for (final Obj o : start) {
+                this.running.add(new MMonad(this, o, this.code.get(0), 1));
             }
-            return results.iterator();
-        }
-
-        public Obj next() {
-            while (true) {
-                if (this.halted.isEmpty()) {
-                    if (this.running.isEmpty())
-                        return null;
-                    this.execute();
-                } else {
-                    final Obj end = this.halted.poll();
-                    if (!end.isNoObj())
-                        return end;
-                }
-            }
-        }
-
-        public void execute() {
-            if ((!this.running.isEmpty() || !this.barriers.isEmpty())) {
-                if (!this.running.isEmpty()) {
-                    final Monad m = this.running.poll();
-                    m.run();
-                } else if (!this.barriers.isEmpty()) { // TODO
-                    final Monad barrier = this.barriers.poll();
-                    barrier.run();
-                }
-            }
-        }
-
-        @Override
-        public String toString() {
-            return "MONOID[" + this.code + "]";
         }
     }
 
+    @Override
+    public Iterator<Obj> iterator() {
+        List<Obj> results = new ArrayList<>();
+        Obj m = null;
+        while (null != (m = this.next())) {
+            m.iterator().forEachRemaining(results::add);
+        }
+        return results.iterator();
+    }
+
+    public Obj next() {
+        while (true) {
+            if (this.halted.isEmpty()) {
+                if (this.running.isEmpty())
+                    return null;
+                this.execute();
+            } else {
+                final Obj end = this.halted.poll();
+                if (!end.isNoObj())
+                    return end;
+            }
+        }
+    }
+
+    public void execute() {
+        if ((!this.running.isEmpty() || !this.barriers.isEmpty())) {
+            if (!this.running.isEmpty()) {
+                final MMonad m = this.running.poll();
+                m.run();
+            } else if (!this.barriers.isEmpty()) { // TODO
+                final MMonad barrier = this.barriers.poll();
+                barrier.run();
+            }
+        }
+    }
+
+    @Override
+    public String toString() {
+        return "MONOID[" + this.code + "]";
+    }
 }

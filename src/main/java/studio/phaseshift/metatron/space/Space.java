@@ -16,32 +16,42 @@
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.struct;
+package studio.phaseshift.metatron.space;
 
 import org.javatuples.Pair;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.BObj;
+import studio.phaseshift.metatron.lang.obj.SObj;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.Palette;
 import studio.phaseshift.metatron.util.IteratorUtil;
 
-import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.List;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Optional;
+import java.util.function.BiConsumer;
 import java.util.function.Predicate;
 
 import static studio.phaseshift.metatron.lang.obj.BObj.Obj;
 import static studio.phaseshift.metatron.lang.obj.BObj.Poly;
 
-public interface Struct extends Poly {
+public interface Space extends Poly {
 
     @Override
     Object value();
 
     fURI pattern();
 
+    default Obj read(final String addr) {
+        return this.read(fURI.of(addr));
+    }
+
     Obj read(final fURI addr);
+
+    default Obj write(final String addr, final Obj obj) {
+        return this.write(fURI.of(addr), obj);
+    }
 
     Obj write(final fURI addr, final Obj obj);
 
@@ -66,20 +76,28 @@ public interface Struct extends Poly {
         return BObj.NoObj.of();
     }
 
-    default List<Pair<fURI, Obj>> generateWritePairs(final fURI addr, final BObj.Obj obj) {
-        final List<Pair<fURI, Obj>> writes = new ArrayList<>();
-        if (obj.isRec() && addr.isBranch()) {
+    default void resolveWrite(final fURI addr, final fURI stepAddr, final BObj.Obj obj, final BiConsumer<fURI, BObj.Obj> resolveWriter) {
+        if (obj.isRec()) {
             obj.recValue().forEach((key, value) -> {
-                final fURI key2 = addr.extend(key.uriValue());
-                if (value.isRec() && key2.isBranch()) {
-                    writes.addAll(this.generateWritePairs(key2, value));
-                } else
-                    writes.add(Pair.with(key2, value));
+                final fURI nextStepAddr = stepAddr.extend(key.uriValue());
+                // final fURI resolvedKey = addr.hasPattern() ? addr.extend(resolvedAddr) : extendedKey;
+                if (value.isRec() && nextStepAddr.isBranch()) {
+                    this.resolveWrite(addr, nextStepAddr, value, resolveWriter);
+                } else if (value.isRec()) {
+                    final Map<Obj, Obj> submap = new LinkedHashMap<>();
+                    value.recValue()
+                            .entrySet()
+                            .stream()
+                            .filter(kv -> nextStepAddr.extend(kv.getKey().uriValue()).matches(addr))
+                            .forEach(kv -> submap.put(kv.getKey(), kv.getValue()));
+                    resolveWriter.accept(nextStepAddr, new SObj.Rec(submap, value.tid(), fURI.NONE));
+                } else if (nextStepAddr.matches(addr)) {
+                    resolveWriter.accept(nextStepAddr, value);
+                }
             });
-        } else {
-            writes.add(Pair.with(addr, obj));
+        } else if (stepAddr.matches(addr)) {
+            resolveWriter.accept(stepAddr, obj);
         }
-        return writes;
     }
 
 

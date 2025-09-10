@@ -1,0 +1,70 @@
+/*
+ *   Metatron: A Distributed Virtual Machine
+ *   Copyright (c) 2024 PhaseShift Studio, LLC
+ *
+ *   This program is free software: you can redistribute it and/or modify
+ *   it under the terms of the GNU Affero General Public License as published by
+ *   the Free Software Foundation, either version 3 of the License, or
+ *   (at your option) any later version.
+ *
+ *   This program is distributed in the hope that it will be useful,
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *   GNU Affero General Public License for more details.
+ *
+ *   You should have received a copy of the GNU Affero General Public License
+ *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package studio.phaseshift.metatron.lang.obj.mtron;
+
+import studio.phaseshift.metatron.lang.fURI;
+import studio.phaseshift.metatron.lang.obj.base.Obj;
+import studio.phaseshift.metatron.ui.Graphitty;
+
+import java.util.Objects;
+
+public abstract class MObj implements Obj {
+
+    protected final Object value;
+    protected final fURI tid;
+    protected final fURI vid;
+
+    protected MObj(final Object value, final fURI tid, final fURI vid) {
+        this.value = value;
+        this.tid = tid;
+        this.vid = vid;
+    }
+
+    @Override
+    public Object value() {
+        return this.value;
+    }
+
+    @Override
+    public fURI tid() {
+        return this.tid;
+    }
+
+    @Override
+    public fURI vid() {
+        return this.vid;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(this.value, this.tid, this.vid);
+    }
+
+    @Override
+    public boolean equals(final Object other) {
+        return this.getClass().isAssignableFrom(other.getClass()) &&
+                this.tid.equals(((Obj) other).tid()) &&
+                this.value.equals(((Obj) other).value());
+    }
+
+    @Override
+    public String toString() {
+        return Graphitty.string(this);
+    }
+}

@@ -16,13 +16,13 @@
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.struct.mem;
+package studio.phaseshift.metatron.space.mem;
 
 import org.javatuples.Pair;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.BObj;
 import studio.phaseshift.metatron.lang.obj.SObj;
-import studio.phaseshift.metatron.struct.Struct;
+import studio.phaseshift.metatron.space.Space;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
 
@@ -31,14 +31,14 @@ import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.lang.obj.BObj.*;
 
-public class MemStruct extends SObj.Obj implements Struct {
-    private static final GraphittyLogger LOG = Graphitty.log(MemStruct.class);
+public class MemSpace extends SObj.Obj implements Space {
+    private static final GraphittyLogger LOG = Graphitty.log(MemSpace.class);
     public static final fURI MEMSTRUCT_TID = fURI.of("struct:/mtron/mem");
     private final fURI pattern;
 
     final Map<fURI, Obj> store = new HashMap<>();
 
-    public MemStruct(final fURI pattern, final fURI vid) {
+    public MemSpace(final fURI pattern, final fURI vid) {
         super(Map.of(), MEMSTRUCT_TID, vid);
         this.pattern = pattern;
         // this.config = config;
@@ -57,7 +57,7 @@ public class MemStruct extends SObj.Obj implements Struct {
 
     @Override
     public boolean equals(final Object other) {
-        return other instanceof MemStruct && this.hashCode() == other.hashCode();
+        return other instanceof MemSpace && this.hashCode() == other.hashCode();
     }
 
     @Override
@@ -84,6 +84,7 @@ public class MemStruct extends SObj.Obj implements Struct {
                                 .recValue()
                                 .entrySet()
                                 .stream()
+                                .filter(kv2 -> !kv2.getValue().isNoObj())
                                 .flatMap(kv2 -> Map.of(kv.getKey().extend(kv2.getKey().uriValue()), kv2.getValue()).entrySet().stream()) : Stream.of(kv))
                         .flatMap(kv -> Map.of(kv.getKey().toUri(), kv.getValue()).entrySet().stream())
                         .filter(kv -> {
@@ -116,7 +117,8 @@ public class MemStruct extends SObj.Obj implements Struct {
                     Graphitty.stdout().print("searching base poly %s for %s\n".formatted(poly, furiSubpath.toUri()));
                     final BObj.Obj readObj = poly.get(furiSubpath);
                     Graphitty.stdout().print("located poly obj %s in %s\n".formatted(readObj, poly));
-                    map.put(addr.retractPattern().toUri(), readObj);
+                    if (!readObj.isNoObj())
+                        map.put(addr.retractPattern().toUri(), readObj);
                 } /*(else if (result.isNoObj()) {
                     result. (NoObj.of());
                 }*/
@@ -142,24 +144,14 @@ public class MemStruct extends SObj.Obj implements Struct {
     }
 
     @Override
-    public Obj write(final fURI addr, Obj obj) {
-        /*for (var pair : this.generateWritePairs(addr, obj)) {
-            final Obj current = this.store.get(pair.getValue0());
-            if (null == current) {
-                this.store.put(pair.getValue0(), pair.getValue1());
-            } else {
-                final Obj next = current.apply(pair.getValue1());
-                this.store.put(pair.getValue0(), next);
-                return next;
-            }
-        }
-
-        return this.read(addr);*/
-        for (var pair : this.generateWritePairs(addr, obj)) {
-            this.store.put(pair.getValue0(), pair.getValue1());
-        }
+    public Obj write(final fURI addr, BObj.Obj obj) {
+        this.resolveWrite(addr, addr.retractPattern(), obj, (resolvedAddr, resolvedObj) -> {
+            if (resolvedObj.isNoObj())
+                this.store.remove(resolvedAddr);
+            else
+                this.store.put(resolvedAddr, resolvedObj);
+        });
         return obj;
-
     }
 
     @Override

@@ -16,33 +16,36 @@
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.struct.q;
+package studio.phaseshift.metatron.lang.obj.mtron;
 
 import studio.phaseshift.metatron.lang.fURI;
+import studio.phaseshift.metatron.lang.obj.base.Lst;
+import studio.phaseshift.metatron.lang.obj.base.Obj;
 
-import static studio.phaseshift.metatron.lang.obj.BObj.Obj;
+import java.util.List;
 
-public interface Q {
-
-    String query();
-
-    default void onPreWrite(final fURI source, final fURI target, final Obj obj) {
-
+public class MLst extends MObj implements Lst {
+    public MLst(final List<Obj> value, final fURI tid, final fURI vid) {
+        super(value, tid, vid);
     }
 
-    default void onPostWrite(final fURI source, final fURI target, final Obj original, final Obj replacement) {
-
+    public MLst(final List<Obj> value) {
+        this(value, Lst.TID, fURI.NONE);
     }
 
-    default public void onQLessWrite(final fURI source, final fURI target, final Obj original) {
-
+    @Override
+    public Lst clone(final Object value, final fURI tid, final fURI vid) {
+        return new MLst((List<Obj>) value, tid, vid);
     }
 
-    default Obj onPreRead(final fURI source, final fURI target) {
-        return null;
+    @Override
+    public List<Obj> value() {
+        return (List<Obj>) this.value;
     }
 
-    default Obj onPostRead(final fURI source, final fURI target) {
-        return null;
+    private static final Lst EMPTY_LST = new MLst(List.of(), Lst.TID, fURI.NONE);
+
+    public static Lst empty() {
+        return EMPTY_LST;
     }
 }

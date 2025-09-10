@@ -21,8 +21,8 @@ package studio.phaseshift.metatron.lang.monoid.rewrite.decoration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import studio.phaseshift.metatron.lang.fURI;
-import studio.phaseshift.metatron.lang.monoid.BMonoid;
-import studio.phaseshift.metatron.lang.monoid.SMonoid;
+import studio.phaseshift.metatron.lang.monoid.Monoid;
+import studio.phaseshift.metatron.lang.monoid.MMonoid;
 import studio.phaseshift.metatron.lang.monoid.rewrite.Rewrite;
 import studio.phaseshift.metatron.lang.obj.SObj;
 import studio.phaseshift.metatron.ui.Graphitty;
@@ -56,7 +56,7 @@ public class ExplainRewrite extends SObj.Inst implements Rewrite {
         @Override
         public InstF f() {
             return new InstF(o -> {
-                BMonoid.Monoid monoid = new SMonoid.Monoid(this.args(0));
+                Monoid.Monoid monoid = new MMonoid.Monoid(this.args(0));
                 LOG.info(Graphitty.string("introspecting\n\t%s".formatted(this)));
                 return o;
             });

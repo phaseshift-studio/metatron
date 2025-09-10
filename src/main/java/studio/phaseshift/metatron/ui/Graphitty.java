@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.ui;
 
+import studio.phaseshift.metatron.lang.obj.base.Obj;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.io.ByteArrayOutputStream;
@@ -105,6 +106,10 @@ public class Graphitty {
         final Graphitty temp = new Graphitty(out);
         temp.parseDSL(s);
         return out.toString();
+    }
+
+    public static String string(final Obj obj) {
+        return "hello";
     }
 
 

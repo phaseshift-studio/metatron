@@ -18,5 +18,18 @@
 
 package studio.phaseshift.metatron.lang.obj.base;
 
-public interface Lst {
+import studio.phaseshift.metatron.lang.fURI;
+
+import java.util.List;
+
+public interface Lst extends Poly {
+
+    public static final fURI TID = fURI.of("lst");
+
+    @Override
+    Lst clone(final Object value, final fURI tid, final fURI vid);
+
+    @Override
+    List<Obj> value();
+
 }

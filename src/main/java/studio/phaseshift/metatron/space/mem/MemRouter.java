@@ -16,13 +16,11 @@
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.struct.mem;
+package studio.phaseshift.metatron.space.mem;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import studio.phaseshift.metatron.lang.fURI;
-import studio.phaseshift.metatron.struct.Router;
-import studio.phaseshift.metatron.struct.Struct;
+import studio.phaseshift.metatron.space.Router;
+import studio.phaseshift.metatron.space.Space;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
 
@@ -37,7 +35,7 @@ public class MemRouter implements Router {
     public static final fURI MEMROUTER_TID = fURI.of("router:/mtron/mem");
 
     private fURI vid;
-    private final Map<fURI, Struct> routes = new HashMap<>();
+    private final Map<fURI, Space> routes = new HashMap<>();
 
 
     public MemRouter(final fURI vid) {
@@ -45,38 +43,38 @@ public class MemRouter implements Router {
         LOG.info("%s loaded at %s", this.tid().toUri(true), this.vid.toUri(true));
     }
 
-    public void registerStruct(final Struct struct) {
+    public void registerStruct(final Space space) {
         this.routes.entrySet().stream()
-                .filter(kv -> struct.pattern().matches(kv.getKey()))
+                .filter(kv -> space.pattern().matches(kv.getKey()))
                 .findAny()
-                .ifPresent(x -> {
-                    throw new IllegalStateException("existing pattern for: " + x.getValue());
+                .ifPresent(kv -> {
+                    LOG.except("%s and %s have overlapping address spaces", space.pattern(), kv.getKey());
                 });
-        this.routes.put(struct.pattern(), struct);
+        this.routes.put(space.pattern(), space);
     }
 
-    public Struct getStruct(final fURI pattern) {
+    public Space getStruct(final fURI pattern) {
         return this.routes.entrySet().stream()
                 .filter(kv -> pattern.matches(kv.getKey()))
                 .findAny()
                 .map(Map.Entry::getValue)
-                .orElseThrow(() -> LOG.except("no structure supports pattern %s",pattern.toUri(true)));
+                .orElseThrow(() -> LOG.except("no structure supports pattern %s", pattern.toUri(true)));
     }
 
     @Override
     public Obj read(final fURI vid) {
         if (vid.equals(this.vid))
             return this;
-        final Struct struct = this.getStruct(vid);
-        LOG.trace("reading %s at %s", struct, vid);
-        return struct.read(vid);
+        final Space space = this.getStruct(vid);
+        LOG.trace("reading %s at %s", space, vid);
+        return space.read(vid);
     }
 
     @Override
     public Obj write(final fURI vid, final Obj obj) {
-        final Struct struct = this.getStruct(vid);
-        LOG.trace("writing to %s at %s", struct, vid);
-        return struct.write(vid, obj);
+        final Space space = this.getStruct(vid);
+        LOG.trace("writing to %s at %s", space, vid);
+        return space.write(vid, obj);
     }
 
     @Override

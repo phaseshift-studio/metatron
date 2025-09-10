@@ -19,7 +19,7 @@
 package studio.phaseshift.metatron;
 
 import studio.phaseshift.metatron.lang.inst.SInst;
-import studio.phaseshift.metatron.lang.monoid.BMonoid.Monoid;
+import studio.phaseshift.metatron.lang.monoid.Monoid.Monoid;
 import studio.phaseshift.metatron.lang.obj.BObj.Obj;
 import studio.phaseshift.metatron.lang.obj.SObj;
 

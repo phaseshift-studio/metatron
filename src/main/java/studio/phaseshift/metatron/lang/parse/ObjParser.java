@@ -27,9 +27,9 @@ import org.petitparser.parser.primitive.CharacterParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import studio.phaseshift.metatron.lang.fURI;
-import studio.phaseshift.metatron.lang.monoid.SMonoid;
-import studio.phaseshift.metatron.lang.obj.BObj;
-import studio.phaseshift.metatron.lang.obj.SObj;
+import studio.phaseshift.metatron.lang.monoid.MMonoid;
+import studio.phaseshift.metatron.lang.obj.base.*;
+import studio.phaseshift.metatron.lang.obj.mtron.*;
 import studio.phaseshift.metatron.ui.Graphitty;
 
 import java.util.*;
@@ -42,7 +42,6 @@ import static org.petitparser.parser.primitive.CharacterParser.of;
 import static org.petitparser.parser.primitive.CharacterParser.word;
 import static org.petitparser.parser.primitive.StringParser.of;
 import static studio.phaseshift.metatron.lang.inst.SInst.*;
-import static studio.phaseshift.metatron.lang.obj.SObj.*;
 
 public class ObjParser {
 
@@ -56,8 +55,8 @@ public class ObjParser {
     private static final SettableParser obj_rel_back_parser = SettableParser.undefined();
 
     static {
-        rel_parser.set(seq(m_type_prefix_opt_colon(REL_URI), obj_rel_back_parser, of("=>").trim(), m_obj())
-                .map(t -> new SObj.Rel(Pair.with(pick(pick(t, 1), 1), pick(pick(t, 1), 3)), pick(t, 0), null)));
+        rel_parser.set(seq(m_type_prefix_opt_colon(Rel.TID), obj_rel_back_parser, of("=>").trim(), m_obj())
+                .map(t -> new MRel(Pair.with(pick(pick(t, 1), 1), pick(pick(t, 1), 3)), pick(t, 0), fURI.NONE)));
         obj_parser.set(choice(
                 m_comment(),
                 m_noobj(),
@@ -97,23 +96,23 @@ public class ObjParser {
                 m_inst(),
                 m_lst(),
                 m_uri()));
-        lst_parser.set(seq(m_type_prefix_opt_colon(LST_URI), seq(
+        lst_parser.set(seq(m_type_prefix_opt_colon(Lst.TID), seq(
                 of('[').trim(),
                 choice(of(','), m_obj().separatedBy(of(',').trim())),
                 of(']').trim()).pick(1))
-                .map(t -> SObj.Lst.of(
+                .map(t -> new MLst(
                         (ObjParser.pick(t, 1).equals(',') ?
                                 List.of() : ObjParser.<List>pick(t, 1))
                                 .stream()
-                                .filter(o -> o instanceof BObj.Obj)
+                                .filter(o -> o instanceof Obj)
                                 .toList(), pick(t, 0),
                         fURI.NONE)));
 
-        rec_parser.set(seq(seq(m_type_prefix_opt_colon(REC_URI), of('[').trim()).pick(0),
+        rec_parser.set(seq(seq(m_type_prefix_opt_colon(Rec.TID), of('[').trim()).pick(0),
                 choice(of("=>").trim(),
                         seq(m_obj(), of("=>").trim(), m_obj()).separatedBy(of(',').trim())),
                 of(']')).trim().map(t -> {
-            final Map<BObj.Obj, BObj.Obj> map = new LinkedHashMap<>();
+            final Map<Obj, Obj> map = new LinkedHashMap<>();
             (ObjParser.pick(t, 1) instanceof String ?
                     List.of() :
                     ObjParser.<List>pick(t, 1))
@@ -123,28 +122,28 @@ public class ObjParser {
                         List kv = (List) o;
                         map.put(pick(kv, 0), pick(kv, 2));
                     });
-            return new SObj.Rec(map, pick(t, 0), null);
+            return new MRec(map, pick(t, 0), fURI.NONE);
         }));
 
         inst_parser.set(seq(
-                m_type_prefix_opt_colon(INST_URI),
+                m_type_prefix_opt_colon(Inst.TID),
                 seq(of('(').trim(), opt(m_obj().separatedBy(of(',').trim()), List.of()), of(')').trim()).pick(1),
                 opt(seq(of('{').trim(), m_code(), of('}').trim()).pick(1), null))
-                .map(t -> (BObj.Inst) new SObj.Inst(new Triplet<>(
-                        new SObj.Lst(ObjParser.<List>pick(t, 1), BObj.LST_URI, null),
-                        InstF.of(ObjParser.<BObj.Obj>pick(t, 2)),
-                        NoObj.of()),
-                        pick(t, 0), null)));
+                .map(t -> (Inst) new MInst(new Triplet<>(
+                        new MLst(ObjParser.<List>pick(t, 1), Lst.TID, fURI.NONE),
+                        Inst.f.of(ObjParser.<Obj>pick(t, 2)),
+                        NoObj.single()),
+                        pick(t, 0), fURI.NONE)));
     }
 
 
-    public static <O extends BObj.Obj> Iterator<O> eval(final String code) {
-        return (Iterator) new SMonoid.Monoid(parse(code)).iterator();
+    public static <O extends Obj> Iterator<O> eval(final String code) {
+        return (Iterator) new MMonoid.Monoid(parse(code)).iterator();
     }
 
-    public static <O extends BObj.Obj> O parse(final String code) {
+    public static <O extends Obj> O parse(final String code) {
         if (code.trim().isEmpty())
-            return (O) BObj.NoObj.of();
+            return (O) NoObj.single();
         final Result result = sugar_code().or(m_obj()).end().parse(code.trim());
         if (result.isFailure())
             Graphitty.log(ObjParser.class).except(result.getBuffer() + "\n" +
@@ -155,7 +154,7 @@ public class ObjParser {
     }
 
     public static Parser m_comment() {
-        return new SequenceParser(of("---").trim(), any().starGreedy(anyOf("\n\r").or(new EndOfInputParser("end of input")))).map(t -> BObj.NoObj.of());
+        return new SequenceParser(of("---").trim(), any().starGreedy(anyOf("\n\r").or(new EndOfInputParser("end of input")))).map(t -> NoObj.single());
     }
 
     private static final String FULL_FURI_CHARS = "/%!#_=?@+.&:";
@@ -176,12 +175,12 @@ public class ObjParser {
     }
 
     public static Parser m_noobj() {
-        return of("noobj").trim().map(t -> BObj.NoObj.of());
+        return of("noobj").trim().map(t -> NoObj.single());
     }
 
     public static Parser m_objs() {
         return seq(of('{').trim(), m_obj().separatedBy(of(',').trim()), of('}').trim()).pick(1)
-                .map(t -> SObj.Objs.of(((List) t).stream().filter(x -> x instanceof BObj.Obj).toList(), OBJS_URI, null));
+                .map(t -> new MObjs(((List) t).stream().filter(x -> x instanceof Obj).toList(), Objs.TID, fURI.NONE));
     }
 
     public static Parser m_type_prefix(final fURI baseType) {
@@ -193,22 +192,22 @@ public class ObjParser {
     }
 
     public static Parser m_bool() {
-        return seq(m_type_prefix(BOOL_URI), of("true").trim().or(of("false").trim()))
+        return seq(m_type_prefix(Bool.TID), of("true").trim().or(of("false").trim()))
                 .map(t -> pick(t, 1).equals("true") ?
-                        new SObj.Bool(true, pick(t, 0), null) :
-                        new SObj.Bool(false, pick(t, 0), null));
+                        new MBool(true, pick(t, 0), fURI.NONE) :
+                        new MBool(false, pick(t, 0), fURI.NONE));
     }
 
     public static Parser m_int() {
-        return seq(m_type_prefix(INT_URI), seq(opt(of('-'), '+'), choice(of('0'), digit().plus()))
+        return seq(m_type_prefix(Int.TID), seq(opt(of('-'), '+'), choice(of('0'), digit().plus()))
                 .flatten().trim())
-                .map(t -> new SObj.Int(Integer.parseInt(pick(t, 1).toString()), pick(t, 0), null));
+                .map(t -> new MInt(Long.parseLong(pick(t, 1).toString()), pick(t, 0), fURI.NONE));
     }
 
     public static Parser m_real() {
-        return seq(m_type_prefix(REAL_URI), seq(opt(of('-'), '+'), choice(of('0'), digit().plus()), of('.'), digit().plus())
+        return seq(m_type_prefix(Real.TID), seq(opt(of('-'), '+'), choice(of('0'), digit().plus()), of('.'), digit().plus())
                 .flatten().trim())
-                .map(t -> new SObj.Real(Double.parseDouble(pick(t, 1).toString()), pick(t, 0), null));
+                .map(t -> new MReal(Double.parseDouble(pick(t, 1).toString()), pick(t, 0), fURI.NONE));
     }
 
     public static Parser m_str() {
@@ -218,14 +217,14 @@ public class ObjParser {
                 of('"').repeatLazy(of('"').not(), 3, 3),
                 any().starLazy(of('"').repeatLazy(of('"').not(), 3, 3)),
                 of('"').repeatLazy(of('"').not(), 3, 3));
-        return seq(m_type_prefix(STR_URI), choice(tripleQuote, singleQuote, doubleQuote)
+        return seq(m_type_prefix(Str.TID), choice(tripleQuote, singleQuote, doubleQuote)
                 .pick(1)
                 .flatten())
-                .map(t -> SObj.Str.of(ObjParser.<String>pick(t, 1).substring(1, ObjParser.<String>pick(t, 1).length() - 1), pick(t, 0), null));
+                .map(t -> new MStr(ObjParser.<String>pick(t, 1).substring(1, ObjParser.<String>pick(t, 1).length() - 1), pick(t, 0), fURI.NONE));
     }
 
     public static Parser m_uri() {
-        return seq(m_type_prefix(URI_URI), m_furi(REDUCED_FURI_CHARS)).map(t -> SObj.Uri.of(pick(t, 1), pick(t, 0), null));
+        return seq(m_type_prefix(Uri.TID), m_furi(REDUCED_FURI_CHARS)).map(t -> new MUri(pick(t, 1), pick(t, 0), fURI.NONE));
     }
 
     public static Parser m_rel() {
@@ -245,45 +244,50 @@ public class ObjParser {
     }
 
     public static Parser sugar_code() {
-        return seq(opt(obj_no_code_parser, BObj.NoObj.of()), seq(of(".").trim()), m_code()).map(t -> {
-            final List<BObj.Inst> newCode = new ArrayList<>();
-            newCode.add(new SObj.Inst(START_URI, ObjParser.<BObj.Obj>pick(t, 0)));
-            newCode.addAll(ObjParser.<BObj.Code>pick(t, 2).value());
-            return new SObj.Code(newCode, CODE_URI, null);
+        return seq(opt(obj_no_code_parser, NoObj.single()), seq(of(".").trim()), m_code()).map(t -> {
+            final List<Inst> newCode = new ArrayList<>();
+            newCode.add(new MInst(Triplet.with(ObjParser.pick(t, 0), null, NoObj.single()), START_URI, fURI.NONE));
+            newCode.addAll(ObjParser.<Code>pick(t, 2).value());
+            return new MCode(newCode, Code.TID, fURI.NONE);
         });
     }
 
     public static Parser m_code() {
         return m_inst().separatedBy(opt(of('.').trim(), '.'))
-                .map(t -> new SObj.Code((List) ((List<Object>) t)
+                .map(t -> new MCode((List) ((List<Object>) t)
                         .stream()
-                        .filter(x -> x instanceof BObj.Inst)
-                        .toList(), CODE_URI, null));
+                        .filter(x -> x instanceof Inst)
+                        .toList(), Code.TID, fURI.NONE));
     }
 
     /// //////////////////////////////////////////////////////////////////////////////////////////
     /// ///////////////////////////////////// SUGAR PARSERS //////////////////////////////////////
     /// //////////////////////////////////////////////////////////////////////////////////////////
-    private static final BObj.Inst IDENTITY_INST = new SObj.Inst(IDENTITY_URI);
+    private static final Inst IDENTITY_INST = new MInst(Triplet.with(
+            MLst.empty(),  // args
+            Inst.f.of(new MCode(List.of(), fURI.of("identity/code"), fURI.NONE)),  // function
+            NoObj.single()), // seed
+            IDENTITY_URI,  // type
+            fURI.NONE); // addr
 
     public static Parser sugar_identity() {
         return of('_').map(t -> IDENTITY_INST);
     }
 
     public static Parser sugar_from() {
-        return seq(of('*').trim(), m_obj()).map(t -> new SObj.Inst(FROM_URI, ObjParser.<BObj.Obj>pick(t, 1)));
+        return seq(of('*').trim(), m_obj()).map(t -> MInst.fragment(ObjParser.pick(t, 1), FROM_URI));
     }
 
     public static Parser sugar_plus() {
-        return seq(of('+').trim(), m_obj()).map(t -> new SObj.Inst(PLUS_URI, ObjParser.<BObj.Obj>pick(t, 1)));
+        return seq(of('+').trim(), m_obj()).map(t -> MInst.fragment(ObjParser.pick(t, 1), PLUS_URI));
     }
 
     public static Parser sugar_block() {
-        return seq(of('|').trim(), m_obj()).map(t -> new SObj.Inst(BLOCK_URI, ObjParser.<BObj.Obj>pick(t, 1)));
+        return seq(of('|').trim(), m_obj()).map(t -> MInst.fragment(ObjParser.pick(t, 1), BLOCK_URI));
     }
 
     public static Parser sugar_merge() {
-        return of(">-").trim().map(t -> new SObj.Inst(MERGE_URI));
+        return of(">-").trim().map(t -> MInst.fragment(FROM_URI));
     }
 
     /// //////////////////////////////////////////////////////////////////////////////////////////

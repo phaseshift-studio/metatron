@@ -19,12 +19,12 @@
 package studio.phaseshift.metatron.lang.inst;
 
 import studio.phaseshift.metatron.lang.fURI;
-import studio.phaseshift.metatron.lang.monoid.SMonoid;
+import studio.phaseshift.metatron.lang.monoid.MMonoid;
 import studio.phaseshift.metatron.lang.obj.BObj;
 import studio.phaseshift.metatron.lang.obj.BObj.InstF;
 import studio.phaseshift.metatron.lang.obj.SObj;
 import studio.phaseshift.metatron.lang.translate.JSONTranslator;
-import studio.phaseshift.metatron.struct.Router;
+import studio.phaseshift.metatron.space.Router;
 import studio.phaseshift.metatron.ui.ProgressBar;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
@@ -188,7 +188,7 @@ public final class SInst {
                 }));
         BInst.SymbolTable.load(pg.incr(WITHIN_URI),
                 InstF.of((lhs, inst) -> {
-                    return SObj.Objs.of(new SMonoid.Monoid(inst.args(0), lhs));
+                    return SObj.Objs.of(new MMonoid.Monoid(inst.args(0), lhs));
                 }));
 
     }

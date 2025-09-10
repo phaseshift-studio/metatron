@@ -16,7 +16,7 @@
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.struct.mqtt;
+package studio.phaseshift.metatron.space.mqtt;
 
 import com.hivemq.client.mqtt.MqttClient;
 import com.hivemq.client.mqtt.mqtt5.Mqtt5BlockingClient;
@@ -29,8 +29,8 @@ import studio.phaseshift.metatron.lang.obj.BObj;
 import studio.phaseshift.metatron.ui.Palette;
 import studio.phaseshift.metatron.lang.obj.SObj;
 import studio.phaseshift.metatron.lang.translate.JSONTranslator;
-import studio.phaseshift.metatron.struct.Struct;
-import studio.phaseshift.metatron.struct.mem.MemStruct;
+import studio.phaseshift.metatron.space.Space;
+import studio.phaseshift.metatron.space.mem.MemSpace;
 import studio.phaseshift.metatron.ui.ObjSerializer;
 import studio.phaseshift.metatron.ui.ObjStringSerializer;
 
@@ -43,16 +43,16 @@ import java.util.concurrent.ExecutionException;
 
 import static studio.phaseshift.metatron.lang.obj.BObj.URI_URI;
 
-public class MqttStruct extends SObj.Obj implements Struct {
+public class MqttSpace extends SObj.Obj implements Space {
 
     public static fURI MQTT_TID = fURI.of("mqtt/broker");
-    private static final Logger LOG = LoggerFactory.getLogger(MqttStruct.class);
+    private static final Logger LOG = LoggerFactory.getLogger(MqttSpace.class);
     protected final fURI broker;
     protected final fURI pattern;
     Mqtt5Client client;
     Mqtt5BlockingClient.Mqtt5Publishes incomingMessages;
 
-    MemStruct cache;
+    MemSpace cache;
 
     private static final ObjSerializer<String> SERIALIZER = ObjStringSerializer.build()
             .simpleColon(false)
@@ -61,7 +61,7 @@ public class MqttStruct extends SObj.Obj implements Struct {
             .create();
     final JSONTranslator jsonTranslator = new JSONTranslator();
 
-    public MqttStruct(final Map<BObj.Uri, BObj.Obj> config, final fURI tid, final fURI vid) {
+    public MqttSpace(final Map<BObj.Uri, BObj.Obj> config, final fURI tid, final fURI vid) {
         super(config, tid, vid);
         this.broker = config
                 .get(new SObj.Uri(fURI.of("broker"), URI_URI, null))
@@ -69,7 +69,7 @@ public class MqttStruct extends SObj.Obj implements Struct {
         this.pattern = config
                 .get(new SObj.Uri(fURI.of("pattern"), URI_URI, null))
                 .orElseThrow(new IllegalArgumentException("config nust have a pattern key")).uriValue();
-        this.cache = new MemStruct(this.pattern, fURI.NONE);
+        this.cache = new MemSpace(this.pattern, fURI.NONE);
         this.init();
     }
 

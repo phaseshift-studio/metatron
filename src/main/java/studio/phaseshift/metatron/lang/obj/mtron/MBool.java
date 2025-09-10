@@ -16,32 +16,29 @@
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.lang.monoid;
+package studio.phaseshift.metatron.lang.obj.mtron;
 
-import static studio.phaseshift.metatron.lang.obj.BObj.*;
+import studio.phaseshift.metatron.lang.fURI;
+import studio.phaseshift.metatron.lang.obj.base.Bool;
+import studio.phaseshift.metatron.lang.obj.base.Obj;
 
-public interface BMonoid {
+public class MBool extends MObj implements Bool {
 
-    interface Monoid extends Iterable<Obj> {
-
+    public MBool(final Boolean value, final fURI tid, final fURI vid) {
+        super(value, tid, vid);
     }
 
-    interface Monad {
-        void halt();
-
-        boolean halted();
-
-        boolean dead();
-
-        Inst inst();
-
-        Obj obj();
-
-        long bulk();
-
-        //long loops();
-
-        void run();
+    public MBool(final Boolean value) {
+        this(value, Bool.TID, fURI.NONE);
     }
 
+    @Override
+    public Bool clone(final Object value, final fURI tid, final fURI vid) {
+        return new MBool((Boolean) value, tid, vid);
+    }
+
+    @Override
+    public Boolean value() {
+        return (Boolean) this.value;
+    }
 }

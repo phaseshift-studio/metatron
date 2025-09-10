@@ -16,7 +16,7 @@
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.struct.q;
+package studio.phaseshift.metatron.space.q;
 
 import org.javatuples.Triplet;
 import studio.phaseshift.metatron.lang.fURI;
