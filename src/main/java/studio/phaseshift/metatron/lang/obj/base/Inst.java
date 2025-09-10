@@ -85,10 +85,10 @@ public interface Inst extends Obj {
 
     default Inst resolve(final Resolve desiredResolution, final Obj lhs) {
         final Resolve currentResolution = this.resolution();
-        if (currentResolution.equals(desiredResolution))
+        if (currentResolution == desiredResolution)
             return this;
         else if (currentResolution.compareTo(desiredResolution) < 0) {
-            if (currentResolution.equals(Resolve.A))
+            if (currentResolution == Resolve.A)
                 return new MCoreInstSet().resolve(lhs, this).resolve(desiredResolution, lhs);
             else {
                 if (!lhs.matches(this.domRng().dom()))
@@ -127,31 +127,31 @@ public interface Inst extends Obj {
 
             //  manys
             public boolean isGather() {
-                return this.equals(MANY_TO_MANY) || this.equals(MANY_TO_ONE) || this.equals(MANY_TO_ZERO);
+                return this == MANY_TO_MANY || this == MANY_TO_ONE || this == MANY_TO_ZERO;
             }
 
             public boolean isScatter() {
-                return this.equals(MANY_TO_MANY) || this.equals(ZERO_TO_MANY) || this.equals(ONE_TO_MANY);
+                return this == MANY_TO_MANY || this == ZERO_TO_MANY || this == ONE_TO_MANY;
             }
 
 
             // zeros
             public boolean isInitial() {
-                return this.equals(ZERO_TO_ONE) || this.equals(ZERO_TO_MANY) || this.equals(ZERO_TO_ZERO);
+                return this == ZERO_TO_ONE || this == ZERO_TO_MANY || this == ZERO_TO_ZERO;
             }
 
             public boolean isTerminal() {
-                return this.equals(ONE_TO_ZERO) || this.equals(MANY_TO_ZERO) || this.equals(ZERO_TO_ZERO);
+                return this == ONE_TO_ZERO || this == MANY_TO_ZERO || this == ZERO_TO_ZERO;
             }
 
 
             // ones
             public boolean isMapping() {
-                return this.equals(ONE_TO_ONE) || this.equals(ONE_TO_ZERO) || this.equals(ONE_TO_MANY);
+                return this == ONE_TO_ONE || this == ONE_TO_ZERO || this == ONE_TO_MANY;
             }
 
             public boolean isReducing() {
-                return this.equals(MANY_TO_ONE) || this.equals(ZERO_TO_ONE) || this.equals(ONE_TO_ONE);
+                return this == MANY_TO_ONE || this == ZERO_TO_ONE || this == ONE_TO_ONE;
             }
 
         }
