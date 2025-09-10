@@ -27,6 +27,8 @@ import studio.phaseshift.metatron.lang.monoid.Monoid.Monad;
 import studio.phaseshift.metatron.lang.monoid.rewrite.decoration.ExplainRewrite;
 import studio.phaseshift.metatron.lang.obj.base.*;
 import studio.phaseshift.metatron.lang.obj.mtron.MObjs;
+import studio.phaseshift.metatron.ui.Graphitty;
+import studio.phaseshift.metatron.ui.GraphittyLogger;
 import studio.phaseshift.metatron.util.IteratorUtil;
 
 import java.util.*;
@@ -38,7 +40,7 @@ import static studio.phaseshift.metatron.lang.inst.SInst.SUM_URI;
 public class MMonoid {
 
     public static class MMonad implements Monad {
-        private static final Logger LOG = LoggerFactory.getLogger(MMonad.class);
+        private static final GraphittyLogger LOG = Graphitty.log(MMonad.class);
         Obj obj;
         Inst inst;
         long bulk = 1;
@@ -95,7 +97,7 @@ public class MMonoid {
             //     L(FOS_TAB_2"monad at !gdomain!! of {} !m=>!! {} [!m{}!!]\n", this->toString(),
             //      current_inst_resolved -> toString(), "SIGNATURE HERE"));
 
-            if (Set.of(COUNT_URI, SUM_URI).contains(inst.tid())) {
+            if (inst.f().form().isGather()) {
                 if (this.obj.isObjs()) {
                   /*  LOG_WRITE(TRACE, this->processor_,
                             L("barrier monad [size: {}] fetch for processing by {} [!m{}!m]\n",
@@ -163,7 +165,7 @@ public class MMonoid {
                 }
             } else {*/
             final Inst nextInst = null; // TODO !!!!! this.monoid.code.nextInst(inst);
-            if (Set.of(COUNT_URI, SUM_URI).contains(inst.tid())) {
+            if (inst.f().form().isScatter()) {
                 LOG.debug("scattering monad obj: {} (over {})", this.obj, nextInst);
                 IteratorUtil.iterate(IteratorUtil.consume(nextObj.iterator(), o -> {
                     final MMonad m = new MMonad(this.monoid, o, nextInst, this.bulk);
@@ -236,26 +238,27 @@ public class MMonoid {
                 this.halted.add(code);
             }
         } else {
-            this.code = new ExplainRewrite().rewrite(code.<Code>as());
+            // this.code = new ExplainRewrite().rewrite(code.<Code>as());
             // process bcode inst pipeline
             //this.code = Rewriter({Rewriter::by(), Rewriter::explain()}).apply(this.code);
             // setup global behavior around barriers, initials, and terminals
             boolean first = true;
+            Obj token = start;
             for (final Inst inst : this.code.value()) {
                 try {
-                    final Inst resolved = BInst.SymbolTable.resolve(NoObj.of(), inst);
-                    if (Set.of(COUNT_URI, SUM_URI).contains(inst.tid())) {
+                    final Inst instB = inst.resolve(Inst.Resolve.B, token);
+                    token = instB.domRng().rng();
+                    if (instB.f().form().isGather()) {
                         // MANY_TO_??
-                        LOG.debug("barrier inst found: {} (w/ seed {})", resolved, resolved.seed());
-                        final MMonad m = new MMonad(this, resolved.seed(), inst, 1);
+                        final MMonad m = new MMonad(this, instB.seed(), instB, 1);
                         this.barriers.add(m);
                         //  LOG_WRITE(DEBUG, this, L(FOS_TAB_2"!ybarrier!! monad created: {}\n", m.toString()));
-                    }/* else if (resolved.isInitial() || (first && resolved.isM())) {
-                            // ZERO/MAYBE*-TO_??
-              const Monad_p m = M(noobj(), inst); // TODO: use seed
-                            this.running_.push_back(m);
-                            LOG_WRITE(DEBUG, this, L(FOS_TAB_2"!ginitial!! monad created: {}\n", m.toString()));
-                        }*/
+                    } else if (instB.f().form().isInitial()) {
+                        // ZERO-TO_??
+                        LOG.debug("initial inst found: %s", instB);
+                        final MMonad m = new MMonad(this, NoObj.single(), instB, 1); // TODO: use seed
+                        this.running.add(m);
+                    }
                 } catch (final Exception e) {
                     //do nothing
                     //throw new RuntimeException(e);

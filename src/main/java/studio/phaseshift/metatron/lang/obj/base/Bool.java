@@ -21,7 +21,7 @@ package studio.phaseshift.metatron.lang.obj.base;
 import studio.phaseshift.metatron.lang.fURI;
 
 public interface Bool extends Obj {
-    public static final fURI TID = fURI.of("bool");
+    public static final fURI TID = fURI.of("/mtron/bool");
 
     @Override
     Bool clone(final Object value, final fURI tid, final fURI vid);

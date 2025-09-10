@@ -23,7 +23,7 @@ import studio.phaseshift.metatron.lang.fURI;
 import java.util.List;
 
 public interface Code extends Obj {
-    public static final fURI TID = fURI.of("code");
+    public static final fURI TID = fURI.of("/mtron/code");
 
     @Override
     Code clone(final Object value, final fURI tid, final fURI vid);

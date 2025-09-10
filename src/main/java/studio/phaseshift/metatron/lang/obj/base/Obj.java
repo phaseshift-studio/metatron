@@ -30,7 +30,7 @@ import java.util.function.Function;
 
 public interface Obj extends Function<Obj, Obj>, Iterable<Obj> {
 
-    public static final fURI TID = fURI.of("obj");
+    public static final fURI TID = fURI.of("/mtron/obj");
 
     <O extends Object> O value();
 

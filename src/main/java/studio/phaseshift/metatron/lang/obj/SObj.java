@@ -21,7 +21,6 @@ package studio.phaseshift.metatron.lang.obj;
 import org.javatuples.Pair;
 import org.javatuples.Triplet;
 import studio.phaseshift.metatron.lang.fURI;
-import studio.phaseshift.metatron.lang.monoid.MMonoid.Monoid;
 import studio.phaseshift.metatron.space.Router;
 import studio.phaseshift.metatron.ui.Palette;
 import studio.phaseshift.metatron.util.IteratorUtil;
@@ -431,7 +430,7 @@ public class SObj implements BObj {
 
         @Override
         public BObj.Obj apply(final BObj.Obj lhs) {
-            return new Monoid(this, lhs).next();
+            return null; // return new Monoid(this, lhs).next();
         }
 
         public static BObj.Code of(final BObj.Inst... insts) {

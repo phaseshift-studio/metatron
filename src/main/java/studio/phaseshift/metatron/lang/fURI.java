@@ -20,6 +20,7 @@ package studio.phaseshift.metatron.lang;
 
 import studio.phaseshift.metatron.lang.obj.base.Uri;
 import studio.phaseshift.metatron.lang.obj.mtron.MUri;
+import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.*;
 
@@ -33,8 +34,8 @@ public class fURI implements Cloneable {
     private final int port;
     private final List<String> path;
     private final String query;
-    private boolean sstart;
-    private boolean send;
+    private final boolean sstart;
+    private final boolean send;
     // private final boolean wildcard;
 
     private fURI(final String scheme, final String host, final int port, final boolean sstart, final List<String> path, final boolean send, final String query) {
@@ -106,6 +107,10 @@ public class fURI implements Cloneable {
         return schemaType && null != scheme ?
                 new MUri(this.scheme(null), fURI.of(scheme), null) :
                 new MUri(this, Uri.TID, null);
+    }
+
+    public String name() {
+        return this.segments().get(this.segments().size() - 1);
     }
 
     public Uri toUri() {
@@ -267,6 +272,23 @@ public class fURI implements Cloneable {
             q.put(pairs[0], pairs.length > 1 ? pairs[1] : "");
         });
         return q;
+    }
+
+    public <T> T queryValue(final fURI key, final Class<T> conversion, final T defaultValue) {
+        return Optional.ofNullable(queryValue(key, conversion)).orElse(defaultValue);
+    }
+
+    public <T> T queryValue(final fURI key, final Class<T> conversion) {
+        final String value = this.query().get(key.toString());
+        if (null == value)
+            return (T) null;
+        if (String.class.isAssignableFrom(conversion))
+            return (T) value;
+        else if (fURI.class.isAssignableFrom(conversion))
+            return (T) fURI.of(value);
+        else if (Long.class.isAssignableFrom(conversion))
+            return (T) Long.valueOf(value);
+        else throw MTronException.of("no known conversion of %s to %s", value, conversion);
     }
 
     /*public fURI query(final Map<String, String> map) {

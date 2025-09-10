@@ -22,12 +22,23 @@ import org.javatuples.Pair;
 import studio.phaseshift.metatron.lang.fURI;
 
 public interface Rel extends Obj {
-    public static final fURI TID = fURI.of("rel");
+    public static final fURI TID = fURI.of("/mtron/rel");
 
     @Override
     Rel clone(final Object value, final fURI tid, final fURI vid);
 
     @Override
     Pair<Obj, Obj> value();
+
+    /// /////////////////////////////////////////////////////////
+    /// /////////////////////////////////////////////////////////
+
+    default Obj dom() {
+        return this.value().getValue0();
+    }
+
+    default Obj rng() {
+        return this.value().getValue1();
+    }
 
 }

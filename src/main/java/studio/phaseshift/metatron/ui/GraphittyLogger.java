@@ -74,6 +74,10 @@ public class GraphittyLogger extends LayoutBase<ILoggingEvent> {
         return this.logLevel(Level.INFO, f, args);
     }
 
+    public GraphittyLogger debug(final Object f, final Object... args) {
+        return this.logLevel(Level.DEBUG, f, args);
+    }
+
     public GraphittyLogger warn(final Object f, final Object... args) {
         return this.logLevel(Level.WARN, f, args);
     }

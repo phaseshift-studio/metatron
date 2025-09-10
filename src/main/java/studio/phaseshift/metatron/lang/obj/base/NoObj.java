@@ -27,7 +27,7 @@ import java.util.Iterator;
 public class NoObj implements Obj, Inst {
 
     private static final NoObj SINGLE = new NoObj();
-    public static final fURI TID = fURI.of("noobj");
+    public static final fURI TID = fURI.of("/mtron/noobj");
 
     private NoObj() {
         // singleton

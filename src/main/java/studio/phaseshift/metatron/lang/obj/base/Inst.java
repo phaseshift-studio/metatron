@@ -18,15 +18,28 @@
 
 package studio.phaseshift.metatron.lang.obj.base;
 
+import org.javatuples.Pair;
 import org.javatuples.Triplet;
 import studio.phaseshift.metatron.lang.fURI;
-import studio.phaseshift.metatron.util.ObjUtil;
+import studio.phaseshift.metatron.lang.obj.mtron.MRel;
+import studio.phaseshift.metatron.lang.obj.mtron.core.MCoreInstSet;
+import studio.phaseshift.metatron.util.IteratorUtil;
+import studio.phaseshift.metatron.util.MTronException;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
 public interface Inst extends Obj {
-    public static final fURI TID = fURI.of("inst");
+    public static final fURI TID = fURI.of("/mtron/inst");
+    public static final fURI DOM = fURI.of("dom");
+    public static final fURI RNG = fURI.of("rng");
+    // /mtron/plus?dom=/mtron/int,rng=/mtron/int
+
+    public enum Resolve implements Comparable<Resolve> {
+        A, B, C
+    }
 
     @Override
     Inst clone(final Object value, final fURI tid, final fURI vid);
@@ -34,8 +47,21 @@ public interface Inst extends Obj {
     @Override
     Triplet<Poly, f, Obj> value();
 
+    /// ////////////////////////////////////////////////////////////
+    /// ////////////////////////////////////////////////////////////
+
+    default Rel domRng() {
+        //  final Obj dom = ((Router) new Object()).read(this.tid().queryValue(DOM, fURI.class, Obj.TID));
+        //  final Obj rng = ((Router) new Object()).read(this.tid().queryValue(RNG, fURI.class, Obj.TID));
+        return new MRel(Pair.with(NoObj.single(), NoObj.single()));
+    }
+
     default Poly args() {
         return this.value().getValue0();
+    }
+
+    default Obj arg(final int index) {
+        return IteratorUtil.index(this.args().iterator(), index, NoObj.single());
     }
 
     default Inst.f f() {
@@ -46,23 +72,113 @@ public interface Inst extends Obj {
         return this.value().getValue2();
     }
 
-    public static class f {
+    default Resolve resolution() {
+        if (null == this.f())
+            return Resolve.A;
+        for (Obj arg : this.args()) {
+            if (arg.tid().equals(arg.vid())) {
+                return Resolve.B;
+            }
+        }
+        return Resolve.C;
+    }
+
+    default Inst resolve(final Resolve desiredResolution, final Obj lhs) {
+        final Resolve currentResolution = this.resolution();
+        if (currentResolution.equals(desiredResolution))
+            return this;
+        else if (currentResolution.compareTo(desiredResolution) < 0) {
+            if (currentResolution.equals(Resolve.A))
+                return new MCoreInstSet().resolve(lhs, this).resolve(desiredResolution, lhs);
+            else {
+                if (!lhs.matches(this.domRng().dom()))
+                    throw MTronException.of("lhs obj does not match inst domain: %s -> %s", lhs, this.domRng().dom());
+                final List<Obj> cargs = new ArrayList<>();
+                for (final Obj arg : args()) {
+                    cargs.add(arg.apply(lhs));
+                }
+                return this.clone(Triplet.with(this.args().clone(cargs, Lst.TID, fURI.NONE), this.f(), this.seed()), this.tid(), fURI.NONE);
+            }
+        } else {
+            throw MTronException.of("current inst is further resolved than desired: %s > %s", currentResolution, desiredResolution);
+        }
+    }
+
+    @Override
+    default Obj apply(final Obj lhs) {
+        final Inst cinst = this.resolve(Resolve.C, lhs);
+        final Obj rhs = cinst.f().apply(lhs, cinst);
+        if (!rhs.matches(cinst.domRng().rng()))
+            throw MTronException.of("rhs obj does not match inst range: %s -> %s", lhs, cinst.domRng().rng());
+        return rhs;
+    }
+
+    final class f {
+        public enum Form {
+            ZERO_TO_ZERO,
+            ZERO_TO_ONE,
+            ZERO_TO_MANY,
+            ONE_TO_ZERO,
+            ONE_TO_ONE,
+            ONE_TO_MANY,
+            MANY_TO_ZERO,
+            MANY_TO_ONE,
+            MANY_TO_MANY;
+
+            //  manys
+            public boolean isGather() {
+                return this.equals(MANY_TO_MANY) || this.equals(MANY_TO_ONE) || this.equals(MANY_TO_ZERO);
+            }
+
+            public boolean isScatter() {
+                return this.equals(MANY_TO_MANY) || this.equals(ZERO_TO_MANY) || this.equals(ONE_TO_MANY);
+            }
+
+
+            // zeros
+            public boolean isInitial() {
+                return this.equals(ZERO_TO_ONE) || this.equals(ZERO_TO_MANY) || this.equals(ZERO_TO_ZERO);
+            }
+
+            public boolean isTerminal() {
+                return this.equals(ONE_TO_ZERO) || this.equals(MANY_TO_ZERO) || this.equals(ZERO_TO_ZERO);
+            }
+
+
+            // ones
+            public boolean isMapping() {
+                return this.equals(ONE_TO_ONE) || this.equals(ONE_TO_ZERO) || this.equals(ONE_TO_MANY);
+            }
+
+            public boolean isReducing() {
+                return this.equals(MANY_TO_ONE) || this.equals(ZERO_TO_ONE) || this.equals(ONE_TO_ONE);
+            }
+
+        }
 
         private final boolean bi;
         final Object func;
+        final Form form = Form.ONE_TO_ONE;
 
-        public f(final BiFunction<Obj, Inst, Obj> func) {
+
+        private f(final BiFunction<Obj, Inst, Obj> func) {
             this.bi = true;
             this.func = func;
         }
 
-        public f(final Function<Obj, Obj> func) {
+        private f(final Function<Obj, Obj> func) {
             this.bi = false;
             this.func = func;
         }
 
-        public Obj apply(final Obj lhs, final Inst inst) {
-            return this.bi ? ((BiFunction<Obj, Inst, Obj>) this.func).apply(lhs, inst) : ((Function<Obj, Obj>) this.func).apply(lhs);
+        public Form form() {
+            return this.form;
+        }
+
+        public Obj apply(final Obj lhs, final Inst cinst) {
+            return this.bi ?
+                    ((BiFunction<Obj, Inst, Obj>) this.func).apply(lhs, cinst) :
+                    ((Function<Obj, Obj>) this.func).apply(lhs);
         }
 
         public static f of(final BiFunction<Obj, Inst, Obj> func) {
@@ -75,8 +191,7 @@ public interface Inst extends Obj {
 
         @Override
         public String toString() {
-            return ObjUtil.isLambda(this.func) ? "<j>" : this.func.toString();
+            return this.func instanceof Obj ? this.func.toString() : "<j>";
         }
-
     }
 }
