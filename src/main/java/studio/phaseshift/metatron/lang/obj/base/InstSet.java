@@ -21,12 +21,10 @@ package studio.phaseshift.metatron.lang.obj.base;
 import org.javatuples.Triplet;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.mtron.MLst;
+import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.util.MTronException;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 
 public interface InstSet extends Obj {
@@ -37,20 +35,26 @@ public interface InstSet extends Obj {
     InstSet clone(final Object value, final fURI tid, final fURI vid);
 
     @Override
-
-    Map<fURI, Map<fURI,Set<Inst>>> value();
-
+    Map<fURI, Map<fURI, Set<Inst>>> value();
 
 
-    default Inst resolve(final Obj lhs, final Inst symInst) {
-        return this.value().get(symInst.tid()).get(lhs.tid()).stream().filter(i -> symInst.tid().matches(i.tid())).findFirst().map(i -> {
-            final List<Obj> resolvedArgs = new ArrayList<>();
-            final boolean blocking = false; // i.isBlocking();
-            for (final Obj arg : i.args().lstValue()) { // wow -- took me 2 hours to realize .lstValue() was needed
-                resolvedArgs.add(blocking ? arg : arg.apply(lhs));
-            }
-            return i.clone(new Triplet<>(new MLst(resolvedArgs),
-                    i.f(), i.seed()), i.tid(), symInst.vid());
-        }).orElseThrow(() -> MTronException.of("unable to resolve %s in instruction set %s", symInst, this));
+    default Inst resolve(final Obj lhs, final Inst instA) {
+        return this.value().entrySet().stream().filter(kv -> instA.tid().matches(kv.getKey()))
+                .map(Map.Entry::getValue)
+                .flatMap(m -> m.entrySet().stream())
+                .filter(kv -> lhs.tid().matches(kv.getKey()))
+                .map(Map.Entry::getValue)
+                .flatMap(Collection::stream)
+                .findFirst().map(i -> {
+                    final List<Obj> resolvedArgs = new ArrayList<>();
+                    final boolean blocking = false; // i.isBlocking();
+                    for (final Obj arg : i.args().lstValue()) { // wow -- took me 2 hours to realize .lstValue() was needed
+                        resolvedArgs.add(blocking ? arg : arg.apply(lhs));
+                    }
+                    final Inst resolved = i.clone(new Triplet<>(MLst.of(resolvedArgs),
+                            i.f(), i.seed()), i.tid(), instA.vid());
+                    Graphitty.log(this).info("resolved %s", resolved);
+                    return resolved;
+                }).orElseThrow(() -> MTronException.of("unable to resolve %s in instruction set %s", instA, this));
     }
 }

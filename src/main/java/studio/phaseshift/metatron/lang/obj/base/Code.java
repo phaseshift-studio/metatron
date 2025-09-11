@@ -31,4 +31,8 @@ public interface Code extends Obj {
     @Override
     List<Inst> value();
 
+    default Inst inst(final int index) {
+        return index < this.value().size() ? this.value().get(index) : NoObj.single();
+    }
+
 }

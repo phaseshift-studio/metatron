@@ -195,6 +195,6 @@ public final class SInst {
 
     public static void ext() {
         ProgressBar pg = new ProgressBar(20);
-        BInst.SymbolTable.load(pg.incr(JSON_URI), InstF.of((lhs, args) -> new JSONTranslator().translateString(lhs.strValue())));
+      //  BInst.SymbolTable.load(pg.incr(JSON_URI), InstF.of((lhs, args) -> new JSONTranslator().translateString(lhs.strValue())));
     }
 }

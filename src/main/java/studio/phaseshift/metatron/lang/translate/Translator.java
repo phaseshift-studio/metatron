@@ -18,9 +18,9 @@
 
 package studio.phaseshift.metatron.lang.translate;
 
-import studio.phaseshift.metatron.lang.obj.BObj;
+import studio.phaseshift.metatron.lang.obj.base.Obj;
 
-public interface Translator<OBJ extends BObj.Obj, OTHER> {
+public interface Translator<OBJ extends Obj, OTHER> {
 
     OBJ translate(final OTHER other);
 

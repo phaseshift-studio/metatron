@@ -22,6 +22,8 @@ import org.javatuples.Triplet;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.base.*;
 import studio.phaseshift.metatron.lang.obj.mtron.MInst;
+import studio.phaseshift.metatron.lang.obj.mtron.MInt;
+import studio.phaseshift.metatron.lang.obj.mtron.MLst;
 import studio.phaseshift.metatron.lang.obj.mtron.MObj;
 
 import java.util.LinkedHashMap;
@@ -31,18 +33,19 @@ import java.util.Set;
 public class MCoreInstSet extends MObj implements InstSet {
 
     public static final fURI TID = fURI.of("/mtron/core");
-    public static final fURI START_TID = fURI.of("/mtron/core/start");
+    public static final fURI START_TID = fURI.of("start");
     public static final fURI MULT_TID = fURI.of("/mtron/core/mult");
     public static final fURI PLUS_TID = fURI.of("/mtron/core/plus");
 
     private static final Map<fURI, Map<fURI, Set<Inst>>> SYMBOL_TABLE = new LinkedHashMap<>() {{
-        put(START_TID, Map.of(Obj.TID, Set.of(new MInst(Triplet.with(Lst.empty(), Inst.f.of((lhs, inst) -> inst.arg(0)), NoObj.single()), START_TID, Inst.TID))));
+        put(START_TID, Map.of(fURI.of("#"), Set.of(new MInst(Triplet.with(MLst.of(MInt.of(1)), Inst.f.of((lhs, inst) -> inst.arg(0)), NoObj.single()), START_TID,  fURI.NONE))));
+        put(PLUS_TID, Map.of(fURI.of("#"), Set.of(new MInst(Triplet.with(MLst.of(MInt.of(1)), Inst.f.of((lhs, inst) -> inst.arg(0)), NoObj.single()), PLUS_TID, fURI.NONE))));
 
     }};
 
 
     public MCoreInstSet() {
-        super(new LinkedHashMap<>(), TID, fURI.NONE);
+        super(SYMBOL_TABLE, TID, fURI.NONE);
     }
 
     @Override

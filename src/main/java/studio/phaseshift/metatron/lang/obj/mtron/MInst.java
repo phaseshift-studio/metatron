@@ -45,11 +45,11 @@ public class MInst extends MObj implements Inst {
         return null != this.value().getValue1();
     }
 
-    public static Inst fragment(final Poly args, final fURI tid) {
+    public static Inst instB(final Poly args, final fURI tid) {
         return new MInst(Triplet.with(args, null, NoObj.single()), tid, fURI.NONE);
     }
 
-    public static Inst fragment(final fURI tid) {
-        return new MInst(Triplet.with(MLst.empty(), null, NoObj.single()), tid, fURI.NONE);
+    public static Inst instA(final fURI tid) {
+        return new MInst(Triplet.with(MLst.of(), null, NoObj.single()), tid, fURI.NONE);
     }
 }

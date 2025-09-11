@@ -43,6 +43,14 @@ public class MUri extends MObj implements Uri {
     public fURI value() {
         return (fURI) this.value;
     }
+
+    public static Uri of(final fURI value) {
+        return new MUri(value);
+    }
+
+    public static Uri of(final String value) {
+        return MUri.of(fURI.of(value));
+    }
 }
 
 

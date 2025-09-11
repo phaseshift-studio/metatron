@@ -40,4 +40,8 @@ public class MInt extends MObj implements Int {
     public Long value() {
         return (Long) this.value;
     }
+
+    public static Int of(final long value) {
+        return new MInt(value);
+    }
 }

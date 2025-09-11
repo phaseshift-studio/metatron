@@ -21,6 +21,7 @@ package studio.phaseshift.metatron.lang.obj.base;
 import org.javatuples.Triplet;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.util.IteratorUtil;
+import studio.phaseshift.metatron.util.ObjUtil;
 
 import java.util.Iterator;
 
@@ -65,5 +66,20 @@ public class NoObj implements Obj, Inst {
     @Override
     public Iterator<Obj> iterator() {
         return IteratorUtil.of();
+    }
+
+    @Override
+    public int hashCode() {
+        return ObjUtil.objHashCode(this);
+    }
+
+    @Override
+    public boolean equals(final Object other) {
+        return ObjUtil.objEquals(this, other);
+    }
+
+    @Override
+    public String toString() {
+        return ObjUtil.objToString(this);
     }
 }

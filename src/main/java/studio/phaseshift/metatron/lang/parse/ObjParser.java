@@ -246,7 +246,7 @@ public class ObjParser {
     public static Parser sugar_code() {
         return seq(opt(obj_no_code_parser, NoObj.single()), seq(of(".").trim()), m_code()).map(t -> {
             final List<Inst> newCode = new ArrayList<>();
-            newCode.add(new MInst(Triplet.with(ObjParser.pick(t, 0), null, NoObj.single()), START_URI, fURI.NONE));
+            newCode.add(new MInst(Triplet.with(MLst.of(ObjParser.<Obj>pick(t, 0)), null, NoObj.single()), START_URI, fURI.NONE));
             newCode.addAll(ObjParser.<Code>pick(t, 2).value());
             return new MCode(newCode, Code.TID, fURI.NONE);
         });
@@ -264,7 +264,7 @@ public class ObjParser {
     /// ///////////////////////////////////// SUGAR PARSERS //////////////////////////////////////
     /// //////////////////////////////////////////////////////////////////////////////////////////
     private static final Inst IDENTITY_INST = new MInst(Triplet.with(
-            MLst.empty(),  // args
+            MLst.of(),  // args
             Inst.f.of(new MCode(List.of(), fURI.of("identity/code"), fURI.NONE)),  // function
             NoObj.single()), // seed
             IDENTITY_URI,  // type
@@ -275,19 +275,19 @@ public class ObjParser {
     }
 
     public static Parser sugar_from() {
-        return seq(of('*').trim(), m_obj()).map(t -> MInst.fragment(ObjParser.pick(t, 1), FROM_URI));
+        return seq(of('*').trim(), m_obj()).map(t -> MInst.instB(ObjParser.pick(t, 1), FROM_URI));
     }
 
     public static Parser sugar_plus() {
-        return seq(of('+').trim(), m_obj()).map(t -> MInst.fragment(ObjParser.pick(t, 1), PLUS_URI));
+        return seq(of('+').trim(), m_obj()).map(t -> MInst.instB(ObjParser.pick(t, 1), PLUS_URI));
     }
 
     public static Parser sugar_block() {
-        return seq(of('|').trim(), m_obj()).map(t -> MInst.fragment(ObjParser.pick(t, 1), BLOCK_URI));
+        return seq(of('|').trim(), m_obj()).map(t -> MInst.instB(ObjParser.pick(t, 1), BLOCK_URI));
     }
 
     public static Parser sugar_merge() {
-        return of(">-").trim().map(t -> MInst.fragment(FROM_URI));
+        return of(">-").trim().map(t -> MInst.instA(MERGE_URI));
     }
 
     /// //////////////////////////////////////////////////////////////////////////////////////////

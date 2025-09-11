@@ -21,12 +21,12 @@ package studio.phaseshift.metatron.lang.obj.base;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.mtron.MLst;
 
+import java.util.Collections;
 import java.util.List;
 
 public interface Lst extends Poly {
 
     public static final fURI TID = fURI.of("/mtron/lst");
-    static final Lst EMPTY_LST = new MLst(List.of(), TID, fURI.NONE);
 
     @Override
     Lst clone(final Object value, final fURI tid, final fURI vid);
@@ -34,11 +34,14 @@ public interface Lst extends Poly {
     @Override
     List<Obj> value();
 
-    /// ////////////////////////////////////////////////////////////
-    /// ////////////////////////////////////////////////////////////
+    @Override
+    default int count() {
+        return this.value().size();
+    }
 
-    static Lst empty() {
-        return EMPTY_LST;
+    @Override
+    default Iterable<Obj> elements() {
+        return this.value();
     }
 
 }

@@ -19,11 +19,12 @@
 package studio.phaseshift.metatron.lang.translate;
 
 import com.google.gson.*;
-import studio.phaseshift.metatron.lang.obj.BObj;
-import studio.phaseshift.metatron.ui.Palette;
-import studio.phaseshift.metatron.lang.obj.SObj;
+import studio.phaseshift.metatron.lang.obj.base.NoObj;
+import studio.phaseshift.metatron.lang.obj.base.Obj;
+import studio.phaseshift.metatron.lang.obj.mtron.*;
 import studio.phaseshift.metatron.ui.ObjSerializer;
 import studio.phaseshift.metatron.ui.ObjStringSerializer;
+import studio.phaseshift.metatron.ui.Palette;
 
 import java.net.URI;
 import java.util.ArrayList;
@@ -33,7 +34,7 @@ import java.util.Map;
 
 import static studio.phaseshift.metatron.lang.obj.BObj.MTRON_CORE_TYPES;
 
-public class JSONTranslator implements Translator<BObj.Obj, JsonElement> {
+public class JSONTranslator implements Translator<Obj, JsonElement> {
     private static final ObjSerializer<String> SERIALIZER = ObjStringSerializer
             .build()
             .simpleColon(true)
@@ -43,48 +44,49 @@ public class JSONTranslator implements Translator<BObj.Obj, JsonElement> {
             .create();
 
     @Override
-    public BObj.Obj translate(final JsonElement json) {
+    public Obj translate(final JsonElement json) {
         if (json.isJsonNull())
-            return BObj.NoObj.of();
+            return NoObj.single();
         else if (json.isJsonPrimitive()) {
             final JsonPrimitive jp = (JsonPrimitive) json;
             if (jp.isBoolean())
-                return SObj.Bool.of(jp.getAsBoolean());
+                return new MBool(jp.getAsBoolean());
             else if (jp.isNumber()) {
                 if (jp.getAsString().contains("."))
-                    return SObj.Real.of(jp.getAsDouble());
+                    return new MReal(jp.getAsDouble());
                 else
-                    return SObj.Int.of(jp.getAsLong());
+
+                    return new MInt(jp.getAsLong());
             } else if (jp.isString()) {
                 final String jpstr = jp.getAsString();
                 try {
-                    return SObj.Uri.of(URI.create(jpstr).toString());
+                    return new MUri(URI.create(jpstr).toString());
                 } catch (Exception e) {
-                    return SObj.Str.of(jpstr);
+                    return new MStr(jpstr);
                 }
             }
         } else if (json.isJsonArray()) {
             final JsonArray jp = (JsonArray) json;
-            final List<BObj.Obj> list = new ArrayList<>();
+            final List<Obj> list = new ArrayList<>();
             for (var j : jp.getAsJsonArray()) {
                 list.add(translate(j));
             }
-            return SObj.Lst.of(list);
+            return new MLst(list);
         } else if (json.isJsonObject()) {
             final JsonObject jp = (JsonObject) json;
-            final Map<BObj.Obj, BObj.Obj> map = new LinkedHashMap<>();
+            final Map<Obj, Obj> map = new LinkedHashMap<>();
             for (var kv : jp.getAsJsonObject().asMap().entrySet()) {
-                map.put(SObj.Uri.of(kv.getKey()), translate(kv.getValue()));
+                map.put(new MUri(kv.getKey()), translate(kv.getValue()));
             }
-            return SObj.Rec.of(map);
+            return new MRec(map);
         }
         throw new IllegalStateException("unknown type: " + json + "::" + json.getAsInt());
     }
 
     @Override
-    public JsonElement translate(final BObj.Obj obj) {
+    public JsonElement translate(final Obj obj) {
         try {
-            if (obj.isMono()) {
+            if (!obj.isPoly()) {
                 return JsonParser.parseString(SERIALIZER.write(obj));
             } else if (obj.isLst()) {
                 JsonArray array = new JsonArray();
@@ -102,7 +104,7 @@ public class JSONTranslator implements Translator<BObj.Obj, JsonElement> {
         }
     }
 
-    public BObj.Obj translateString(final String json) {
+    public Obj translateString(final String json) {
         try {
             return this.translate(JsonParser.parseString(json));
         } catch (final Exception e) {

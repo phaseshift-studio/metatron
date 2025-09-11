@@ -23,6 +23,8 @@ import org.javatuples.Triplet;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.mtron.MRel;
 import studio.phaseshift.metatron.lang.obj.mtron.core.MCoreInstSet;
+import studio.phaseshift.metatron.ui.Graphitty;
+import studio.phaseshift.metatron.ui.GraphittyLogger;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
@@ -37,8 +39,18 @@ public interface Inst extends Obj {
     public static final fURI RNG = fURI.of("rng");
     // /mtron/plus?dom=/mtron/int,rng=/mtron/int
 
-    public enum Resolve implements Comparable<Resolve> {
-        A, B, C
+    public enum Resolve {
+        A("f"), B("f(a)"), C("f(a)->b");
+
+        final String value;
+
+        Resolve(final String value) {
+            this.value = value;
+        }
+
+        public String value() {
+            return this.value;
+        }
     }
 
     @Override
@@ -84,23 +96,33 @@ public interface Inst extends Obj {
     }
 
     default Inst resolve(final Resolve desiredResolution, final Obj lhs) {
+        final GraphittyLogger LOG = Graphitty.log(lhs);
         final Resolve currentResolution = this.resolution();
-        if (currentResolution == desiredResolution)
+        LOG.debug(currentResolution);
+        if (currentResolution.compareTo(desiredResolution) > 0) {
+            LOG.debug(currentResolution + "==" + desiredResolution);
             return this;
-        else if (currentResolution.compareTo(desiredResolution) < 0) {
-            if (currentResolution == Resolve.A)
-                return new MCoreInstSet().resolve(lhs, this).resolve(desiredResolution, lhs);
-            else {
+        } else if (currentResolution.compareTo(desiredResolution) < 0) {
+            LOG.debug(currentResolution + "<" + desiredResolution);
+            if (currentResolution == Resolve.A) {
+                LOG.debug("resolving %s", this);
+                final Inst resolved = new MCoreInstSet().resolve(lhs, this);
+                LOG.debug(currentResolution + "=B=>" + resolved);
+                return resolved.resolve(desiredResolution, lhs);
+            } else {
                 if (!lhs.matches(this.domRng().dom()))
                     throw MTronException.of("lhs obj does not match inst domain: %s -> %s", lhs, this.domRng().dom());
                 final List<Obj> cargs = new ArrayList<>();
                 for (final Obj arg : args()) {
                     cargs.add(arg.apply(lhs));
                 }
-                return this.clone(Triplet.with(this.args().clone(cargs, Lst.TID, fURI.NONE), this.f(), this.seed()), this.tid(), fURI.NONE);
+                final Inst resolved = this.clone(Triplet.with(this.args().clone(cargs, Lst.TID, fURI.NONE), this.f(), this.seed()), this.tid(), fURI.NONE);
+                LOG.debug(currentResolution + "=C=>" + resolved);
+                return resolved;
             }
         } else {
-            throw MTronException.of("current inst is further resolved than desired: %s > %s", currentResolution, desiredResolution);
+            return this;
+            //throw MTronException.of("current inst is further resolved than desired: %s > %s", currentResolution, desiredResolution);
         }
     }
 
@@ -108,8 +130,8 @@ public interface Inst extends Obj {
     default Obj apply(final Obj lhs) {
         final Inst cinst = this.resolve(Resolve.C, lhs);
         final Obj rhs = cinst.f().apply(lhs, cinst);
-        if (!rhs.matches(cinst.domRng().rng()))
-            throw MTronException.of("rhs obj does not match inst range: %s -> %s", lhs, cinst.domRng().rng());
+       // if (!rhs.matches(cinst.domRng().rng()))
+         //   throw MTronException.of("rhs obj does not match inst range: %s -> %s", lhs, cinst.domRng().rng());
         return rhs;
     }
 
@@ -173,6 +195,10 @@ public interface Inst extends Obj {
 
         public Form form() {
             return this.form;
+        }
+
+        public boolean isLambda() {
+            return !(this.func instanceof Obj);
         }
 
         public Obj apply(final Obj lhs, final Inst cinst) {

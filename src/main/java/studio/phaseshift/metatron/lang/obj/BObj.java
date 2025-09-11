@@ -72,7 +72,8 @@ public interface BObj extends Cloneable {
         Obj clone();
 
         default String toString(final Palette palette) {
-            return ObjStringSerializer.build().palette(palette).hideTypesMatching(MTRON_CORE_TYPES).simpleColon(true).create().write(this);
+           return "hello";
+            // return ObjStringSerializer.build().palette(palette).hideTypesMatching(MTRON_CORE_TYPES).simpleColon(true).create().write(this);
         }
 
         @Override

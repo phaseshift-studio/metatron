@@ -19,8 +19,7 @@
 package studio.phaseshift.metatron;
 
 import studio.phaseshift.metatron.lang.fURI;
-import studio.phaseshift.metatron.lang.inst.SInst;
-import studio.phaseshift.metatron.lang.obj.SObj;
+import studio.phaseshift.metatron.lang.obj.base.Uri;
 import studio.phaseshift.metatron.lang.obj.mtron.MUri;
 import studio.phaseshift.metatron.space.Router;
 import studio.phaseshift.metatron.space.Space;
@@ -45,8 +44,8 @@ public class BootLoader {
     public static void load() {
         try {
             LOG.info("booting metatron on %s {{g}}[%s{{g}}]{{X}}",
-                    SObj.Uri.of(InetAddress.getLocalHost().getHostName(), fURI.of("host"), null),
-                    SObj.Uri.of(InetAddress.getLocalHost().getHostAddress(), fURI.of("ipv4"), null));
+                    MUri.of(InetAddress.getLocalHost().getHostName()).tid("host"),
+                    MUri.of(InetAddress.getLocalHost().getHostAddress()).tid("ipv4"));
         } catch (final UnknownHostException e) {
             LOG.warn("booting metatron on a non-networked jvm");
         }
@@ -59,7 +58,7 @@ public class BootLoader {
         Router.global().registerStruct(new MemSpace(fURI.of("+/#"), fURI.of("/sys/stack")));
         Router.global().registerStruct(new MemSpace(fURI.of("/test/#"), fURI.of("/sys/test")));
         Router.global().registerStruct(new MqttSpace(Map.of(new MUri("broker"), new MUri("ip://192.168.66.2:1883"), new MUri("pattern"), new MUri("/mqtt/#")), MQTT_TID, fURI.of("/mnt/mqtt")));
-        SInst.load();
-        SInst.ext();
+        //SInst.load();
+        //SInst.ext();
     }
 }

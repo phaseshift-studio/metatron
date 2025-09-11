@@ -94,20 +94,24 @@ public class Console {
             // auto compilation
             this.highlighters.add((builder, buffer) -> {
                 try {
-                    if (!buffer.isEmpty()) {
+                    if (buffer.isEmpty()) {
+                        //builder.append(buffer);
+                       // Graphitty.stdout().print(Graphitty.string("{{v1}}{{-X}}{{^1}}{{|%d}}".formatted(9)));
+                    } else {
                         final Obj o = ObjParser.parse(buffer);
                         final int xLocation = this.terminal.getCursorPosition(System.out::print).getX() + 1;
                         // final int promptLength = 8; //"mtron> ".length() + 1;
                         builder.append(buffer);
-                        if (o.isCode() && Console.RESOLVE_MODE) {
+                       /* if (o.isCode() && Console.RESOLVE_MODE) {
                             final Code rCode = new MCode(o.codeValue().stream().map(i -> i.resolve(Inst.Resolve.B, NoObj.single())).toList());
-                            Graphitty.stdout().print(Graphitty.string("{{v1}}{{|%d}}%s".formatted(8, rCode)));
+                            Graphitty.stdout().print(Graphitty.string("{{v1}}{{-X}}{{|%d}}%s".formatted(8, rCode)));
                             Graphitty.stdout().print(Graphitty.string("{{^1}}{{|%d}}".formatted(xLocation)));
                         } else {
-                            Graphitty.stdout().print(Graphitty.string("{{v1}}{{|%d}}%s".formatted(8, o)));
+                            Graphitty.stdout().print(Graphitty.string("{{v1}}{{-X}}{{|%d}}%s".formatted(8, o)));
                             Graphitty.stdout().print(Graphitty.string("{{^1}}{{|%d}}".formatted(xLocation)));
-                        }
+                        }*/
                     }
+
                 } catch (final Exception e) {
                     // console expression doesn't compile yet
                     builder.append(buffer);

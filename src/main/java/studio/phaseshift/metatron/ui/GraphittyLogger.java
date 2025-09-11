@@ -42,29 +42,35 @@ public class GraphittyLogger extends LayoutBase<ILoggingEvent> {
     Object source;
 
     public GraphittyLogger() { // required by logback
-        source = null;
+        this.source = null;
     }
 
     GraphittyLogger(final Object source) {
         this.source = source;
     }
 
-    private String toStringOrNull(final Object o) {
+    private static String toStringOrNull(final Object o) {
         return null == o ? "null" : o.toString();
     }
 
-    private String makeMessage(final Object f, final Object... args) {
-        return Graphitty.string(args.length == 0 ? toStringOrNull(f) : toStringOrNull(f).formatted(args));
+    private String toSourceString() {
+        return this.source instanceof Class ? ((Class<?>) this.source).getSimpleName() : this.source.getClass().getSimpleName();
+    }
+
+    private String makeMessage(final boolean metadata, final Object f, final Object... args) {
+        return metadata ?
+                Graphitty.string("[{{y}}%s{{/y}}] %s".formatted(toSourceString(), args.length == 0 ? toStringOrNull(f) : toStringOrNull(f).formatted(args))) :
+                Graphitty.string(args.length == 0 ? toStringOrNull(f) : toStringOrNull(f).formatted(args));
     }
 
     private GraphittyLogger logLevel(final Level level, final Object f, final Object... args) {
-        this.logger().makeLoggingEventBuilder(level).log(() -> this.makeMessage(f, args));
+        this.logger().makeLoggingEventBuilder(level).log(() -> this.makeMessage(true, f, args));
         return this;
     }
 
     private GraphittyLogger otherLevel(final OtherLevel level, final Object f, final Object... args) {
         if (OtherLevel.NONE == level)
-            System.out.print(this.makeMessage(f, args));
+            System.out.print(this.makeMessage(false, f, args));
         else if (OtherLevel.EXCEPT == level)
             throw MTronException.of(f, args);
         return this;
@@ -106,7 +112,7 @@ public class GraphittyLogger extends LayoutBase<ILoggingEvent> {
         if (null == this.source)
             return LoggerFactory.getLogger(GraphittyLogger.class);
         else if (!(this.source instanceof Logger))
-            this.source = LoggerFactory.getLogger(this.source.getClass());
+           return LoggerFactory.getLogger(this.source.getClass());
         return (Logger) this.source;
     }
 

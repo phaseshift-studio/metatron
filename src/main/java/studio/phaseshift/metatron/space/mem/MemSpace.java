@@ -20,13 +20,8 @@ package studio.phaseshift.metatron.space.mem;
 
 import org.javatuples.Pair;
 import studio.phaseshift.metatron.lang.fURI;
-import studio.phaseshift.metatron.lang.obj.BObj;
-import studio.phaseshift.metatron.lang.obj.SObj;
 import studio.phaseshift.metatron.lang.obj.base.*;
-import studio.phaseshift.metatron.lang.obj.mtron.MObj;
-import studio.phaseshift.metatron.lang.obj.mtron.MObjs;
-import studio.phaseshift.metatron.lang.obj.mtron.MRec;
-import studio.phaseshift.metatron.lang.obj.mtron.MRel;
+import studio.phaseshift.metatron.lang.obj.mtron.*;
 import studio.phaseshift.metatron.space.Space;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
@@ -47,7 +42,7 @@ public class MemSpace extends MObj implements Space {
         super(Map.of(), MEMSTRUCT_TID, vid);
         this.pattern = pattern;
         // this.config = config;
-        LOG.info("%s loaded at %s {{g}}[{{y}}addr{{g}}=>{{X}}%s{{g}}]{{X}}", tid().toUri(true), SObj.Uri.of(this.vid), SObj.Uri.of(this.pattern));
+        LOG.info("%s loaded at %s {{g}}[{{y}}addr{{g}}=>{{X}}%s{{g}}]{{X}}", tid().toUri(true), MUri.of(this.vid), MUri.of(this.pattern));
     }
 
     @Override

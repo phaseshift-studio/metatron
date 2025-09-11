@@ -48,6 +48,10 @@ public interface Obj extends Function<Obj, Obj>, Iterable<Obj> {
         return this.clone(this.value(), newTid, this.vid());
     }
 
+    default Obj tid(final String newTid) {
+        return this.clone(this.value(), fURI.of(newTid), this.vid());
+    }
+
     default Obj vid(final fURI newVid) {
         return this.clone(this.value(), this.tid(), newVid);
     }

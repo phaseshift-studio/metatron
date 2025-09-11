@@ -22,6 +22,7 @@ import com.google.gson.JsonParser;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.lang.obj.BObj;
+import studio.phaseshift.metatron.lang.obj.base.Obj;
 import studio.phaseshift.metatron.lang.parse.ObjParser;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -43,8 +44,8 @@ public class JSONTranslatorTest {
             """)
     public void testJSONTranslation(final String json, final String mtron) {
         final JSONTranslator translator = new JSONTranslator();
-        final BObj.Obj j_obj = translator.translate(JsonParser.parseString(json));
-        final BObj.Obj m_obj = ObjParser.parse(mtron);
+        final Obj j_obj = translator.translate(JsonParser.parseString(json));
+        final Obj m_obj = ObjParser.parse(mtron);
         assertEquals(m_obj, j_obj);
 
     }

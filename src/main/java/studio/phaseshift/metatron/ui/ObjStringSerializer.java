@@ -20,9 +20,8 @@ package studio.phaseshift.metatron.ui;
 
 import org.petitparser.context.Result;
 import studio.phaseshift.metatron.lang.fURI;
-import studio.phaseshift.metatron.lang.obj.BObj;
+import studio.phaseshift.metatron.lang.obj.base.*;
 import studio.phaseshift.metatron.lang.parse.ObjParser;
-import studio.phaseshift.metatron.util.ObjUtil;
 
 import java.util.HashSet;
 import java.util.Map;
@@ -41,59 +40,59 @@ public class ObjStringSerializer implements ObjSerializer<String> {
     }
 
     @Override
-    public String write(final BObj.Obj obj) throws IllegalStateException {
+    public String write(final Obj obj) throws IllegalStateException {
         final StringBuilder sb = new StringBuilder();
         if (obj.isNoObj())
             return sb.append(this.builder.palette.errorC())
                     .append("noobj")
                     .append(this.builder.ignoreRewrites ? "" : "{{X}}")
                     .toString();
-        else if (obj instanceof final BObj.Inst inst) {
+        else if (obj instanceof final Inst inst) {
             sb.append(this.builder.palette.typeC())
                     .append(this.builder.hideTypes.contains(inst.tid()) ? "" : inst.tid())
                     .append(this.builder.palette.formC())
                     .append(this.builder.hideTypes.contains(inst.tid()) ? "" : ':')
                     .append("(");
-            for (int i = 0; i < inst.args().length(); i++) {
+            for (int i = 0; i < inst.args().count(); i++) {
                 sb.append(inst.args().lstValue().get(i));
-                if (i != inst.args().length() - 1)
+                if (i != inst.args().count() - 1)
                     sb.append(this.builder.palette.formC()).append(',');
             }
             return sb.append(this.builder.palette.formC())
                     .append("){")
                     .append(this.builder.palette.valueC())
-                    .append(inst.resolved() ? ObjUtil.isLambda(inst.f()) ? "λ" : inst.f() : "?")
+                    .append(inst.resolution() == Inst.Resolve.A ? "" : inst.f().toString())
                     .append(this.builder.palette.formC())
                     .append("}")
                     .append(this.builder.ignoreRewrites ? "" : "{{X}}")
                     .toString();
-        } else if (obj instanceof final BObj.Rel rel) {
-            return generateTID(sb, rel).append(rel.domain()).append(this.builder.palette.formC())
+        } else if (obj instanceof final Rel rel) {
+            return generateTID(sb, rel).append(rel.dom()).append(this.builder.palette.formC())
                     .append("=>")
-                    .append(rel.range())
+                    .append(rel.rng())
                     .append(this.builder.ignoreRewrites ? "" : "{{X}}")
                     .toString();
-        } else if (obj instanceof final BObj.Lst lst) {
+        } else if (obj instanceof final Lst lst) {
             generateTID(sb, obj).append(this.builder.palette.formC()).append('[').append(this.builder.palette.valueC());
-            for (final BObj.Obj o : lst.value()) {
+            for (final Obj o : lst.value()) {
                 sb.append(o).append(this.builder.palette.formC()).append(',');
             }
             if (!lst.value().isEmpty()) sb.append("{{<1}}").append(this.builder.palette.formC());
             else sb.append(this.builder.palette.formC()).append(",");
             return generateVID(sb.append(']'), lst).append(this.builder.ignoreRewrites ? "" : "{{X}}").toString();
-        } else if (obj instanceof final BObj.Objs objs) {
+        } else if (obj instanceof final Objs objs) {
             generateTID(sb, obj).append(this.builder.palette.formC()).append("{").append(this.builder.palette.valueC());
             boolean found = false;
-            for (final BObj.Obj o : objs.value()) {
+            for (final Obj o : objs.value()) {
                 found = true;
                 sb.append(o).append(this.builder.palette.formC()).append(',');
             }
             if (found) sb.append("{{<1}}");
             else sb.append(this.builder.palette.formC()).append('}');
             return generateVID(sb, objs).append(this.builder.ignoreRewrites ? "" : "{{X}}").toString();
-        } else if (obj instanceof final BObj.Rec rec) {
+        } else if (obj instanceof final Rec rec) {
             generateTID(sb, obj).append(this.builder.palette.formC()).append('[').append(this.builder.palette.valueC());
-            for (final Map.Entry<BObj.Obj, BObj.Obj> o : rec.value().entrySet()) {
+            for (final Map.Entry<Obj, Obj> o : rec.value().entrySet()) {
                 sb.append(o.getKey())
                         .append(this.builder.palette.formC())
                         .append("=>").append(o.getValue())
@@ -106,13 +105,13 @@ public class ObjStringSerializer implements ObjSerializer<String> {
         } else
             return generateVID(generateTID(sb, obj)
                     .append(this.builder.palette.valueC())
-                    .append(obj.value())
+                    .append(null == obj.value() ? "" : obj.value().toString())
                     .append(this.builder.palette.form2C()), obj)
                     .append(this.builder.ignoreRewrites ? "" : "{{X}}")
                     .toString();
     }
 
-    private StringBuilder generateVID(final StringBuilder sb, final BObj.Obj obj) {
+    private StringBuilder generateVID(final StringBuilder sb, final Obj obj) {
         return null == obj.vid() ? sb : sb.append(this.builder.palette.typeC())
                 .append(this.builder.palette.formC())
                 .append('@')
@@ -120,7 +119,7 @@ public class ObjStringSerializer implements ObjSerializer<String> {
                 .append(obj.vid());
     }
 
-    private StringBuilder generateTID(final StringBuilder sb, final BObj.Obj obj) {
+    private StringBuilder generateTID(final StringBuilder sb, final Obj obj) {
         return this.builder.hideTypes.contains(obj.tid()) ? sb : sb.append(this.builder.palette.typeC())
                 .append(obj.tid())
                 .append(this.builder.palette.formC())
@@ -128,7 +127,7 @@ public class ObjStringSerializer implements ObjSerializer<String> {
     }
 
     @Override
-    public BObj.Obj read(final String data) throws IllegalStateException {
+    public Obj read(final String data) throws IllegalStateException {
         Result result = ObjParser.m_obj().end().parse(data);
         if (result.isFailure())
             throw new IllegalStateException(result.getMessage());
@@ -137,7 +136,7 @@ public class ObjStringSerializer implements ObjSerializer<String> {
 
     public static final class Builder {
 
-        private Palette palette;
+        private Palette palette = Palette.STANDARD;
         private boolean withColonSugar;
         private boolean ignoreRewrites;
         private Set<fURI> hideTypes = new HashSet<>();

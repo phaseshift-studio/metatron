@@ -20,8 +20,6 @@ package studio.phaseshift.metatron.lang.monoid;
 
 import org.apache.commons.collections.IteratorUtils;
 import org.jline.jansi.Ansi.Color;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.base.*;
 import studio.phaseshift.metatron.lang.obj.mtron.MObjs;
@@ -37,8 +35,10 @@ import static studio.phaseshift.metatron.lang.inst.SInst.SUM_URI;
 
 public class MMonoid implements Monoid {
 
+    private static final GraphittyLogger LOG = Graphitty.log(MMonoid.class);
+
     public static class MMonad implements Monad {
-        private static final GraphittyLogger LOG = Graphitty.log(MMonad.class);
+        // private static final GraphittyLogger LOG = Graphitty.log(MMonad.class);
         Obj obj;
         Inst inst;
         long bulk = 1;
@@ -162,7 +162,7 @@ public class MMonoid implements Monoid {
                     this->processor_ -> running_ -> push_back(m);
                 }
             } else {*/
-            final Inst nextInst = null; // TODO !!!!! this.monoid.code.nextInst(inst);
+            final Inst nextInst = NoObj.single(); // TODO !!!!! this.monoid.code.nextInst(inst);
             if (inst.f().form().isScatter()) {
                 LOG.debug("scattering monad obj: {} (over {})", this.obj, nextInst);
                 IteratorUtil.iterate(IteratorUtil.consume(nextObj.iterator(), o -> {
@@ -218,7 +218,6 @@ public class MMonoid implements Monoid {
         }
     }
 
-    private static final Logger LOG = LoggerFactory.getLogger(Monoid.class);
     protected Code code;
 
     // todo: barrier and running to use monad set
@@ -240,6 +239,7 @@ public class MMonoid implements Monoid {
             // process bcode inst pipeline
             //this.code = Rewriter({Rewriter::by(), Rewriter::explain()}).apply(this.code);
             // setup global behavior around barriers, initials, and terminals
+            this.code = code.as();
             boolean first = true;
             Obj token = start;
             for (final Inst inst : this.code.value()) {
@@ -251,28 +251,31 @@ public class MMonoid implements Monoid {
                         final MMonad m = new MMonad(this, instB.seed(), instB, 1);
                         this.barriers.add(m);
                         //  LOG_WRITE(DEBUG, this, L(FOS_TAB_2"!ybarrier!! monad created: {}\n", m.toString()));
-                    } else if (instB.f().form().isInitial()) {
+                    } else if (instB.f().form().isInitial() || instB.tid().equals(fURI.of("start"))) {
                         // ZERO-TO_??
                         LOG.debug("initial inst found: %s", instB);
-                        final MMonad m = new MMonad(this, NoObj.single(), instB, 1); // TODO: use seed
+                        final MMonad m = new MMonad(this, instB.arg(0), instB, 1); // TODO: use seed
                         this.running.add(m);
                     }
                 } catch (final Exception e) {
-                    //do nothing
+                    LOG.warn(e);
+e.printStackTrace();                  //do nothing
                     //throw new RuntimeException(e);
                 }
                 // first = false;
             }
-            /*for (final Obj o : start) {
-                this.running.add(new MMonad(this, o, this.code.get(0), 1));
-            }*/
+            for (final Obj o : start) {
+                this.running.add(new MMonad(this, o, this.code.inst(0), 1));
+            }
+            LOG.info(this.running + "=>" + this.code);
+
         }
     }
 
     @Override
     public Iterator<Obj> iterator() {
         List<Obj> results = new ArrayList<>();
-        Obj m = null;
+        Obj m;
         while (null != (m = this.next())) {
             m.iterator().forEachRemaining(results::add);
         }

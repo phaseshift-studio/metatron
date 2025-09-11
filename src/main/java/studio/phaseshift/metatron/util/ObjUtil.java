@@ -21,8 +21,11 @@ package studio.phaseshift.metatron.util;
 import studio.phaseshift.metatron.lang.obj.BObj;
 import studio.phaseshift.metatron.lang.obj.BObj.NoObj;
 import studio.phaseshift.metatron.lang.obj.SObj;
+import studio.phaseshift.metatron.lang.obj.base.Obj;
+import studio.phaseshift.metatron.ui.Graphitty;
 
 import java.util.List;
+import java.util.Objects;
 
 public final class ObjUtil {
 
@@ -45,5 +48,17 @@ public final class ObjUtil {
             return objs.get(0);
         else
             return SObj.Objs.of(objs);
+    }
+
+    public static int objHashCode(final Obj obj) {
+        return Objects.hash(obj.value(), obj.tid());
+    }
+
+    public static boolean objEquals(final Obj obj, final Object other) {
+        return other instanceof Obj && ((Obj) other).tid().equals(obj.tid()) && ((Obj) other).vid().equals(obj.vid()) && ((Obj) other).value().equals(obj.value());
+    }
+
+    public static String objToString(final Obj obj) {
+        return Graphitty.string(obj);
     }
 }

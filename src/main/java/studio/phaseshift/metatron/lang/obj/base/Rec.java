@@ -18,7 +18,10 @@
 
 package studio.phaseshift.metatron.lang.obj.base;
 
+
+import org.javatuples.Pair;
 import studio.phaseshift.metatron.lang.fURI;
+import studio.phaseshift.metatron.lang.obj.mtron.MRel;
 
 import java.util.Map;
 
@@ -30,5 +33,15 @@ public interface Rec extends Poly {
 
     @Override
     Map<Obj, Obj> value();
+
+    @Override
+    default int count() {
+        return this.value().size();
+    }
+
+    @Override
+    default Iterable<Rel> elements() {
+        return () -> this.value().entrySet().stream().map(kv -> (Rel) new MRel(Pair.with(kv.getKey(), kv.getValue()))).iterator();
+    }
 
 }

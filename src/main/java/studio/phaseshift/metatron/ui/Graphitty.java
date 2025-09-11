@@ -18,14 +18,13 @@
 
 package studio.phaseshift.metatron.ui;
 
+import org.jline.jansi.Ansi;
 import studio.phaseshift.metatron.lang.obj.base.Obj;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.io.ByteArrayOutputStream;
 import java.io.OutputStream;
 import java.util.*;
-
-import static studio.phaseshift.metatron.lang.obj.BObj.MTRON_CORE_TYPES;
 
 public class Graphitty {
     public static final Map<String, String> COLOR_REWRITES = new LinkedHashMap<>();
@@ -64,6 +63,7 @@ public class Graphitty {
         CURSOR_REWRITES.put("|", "\033[{{|}}G"); // column X
         CURSOR_REWRITES.put("-", "\033[{{-}}H"); // row X
         CURSOR_REWRITES.put("-X", "\033[2K");  // clear line
+        CURSOR_REWRITES.put("XX", "\033[2J"); // clear screen
         CURSOR_REWRITES.put("*", "\0331b[?25h"); // show cursor
         CURSOR_REWRITES.put(".", "\0331b[?25l"); // hide cursor
         // CURSOR_REWRITES.put("X", "\033[{{<}}D");
@@ -109,7 +109,7 @@ public class Graphitty {
     }
 
     public static String string(final Obj obj) {
-        return "hello";
+        return ObjStringSerializer.build().create().write(obj).toString();
     }
 
 

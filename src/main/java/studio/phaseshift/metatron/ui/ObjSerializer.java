@@ -18,11 +18,11 @@
 
 package studio.phaseshift.metatron.ui;
 
-import studio.phaseshift.metatron.lang.obj.BObj;
+import studio.phaseshift.metatron.lang.obj.base.Obj;
 
 public interface ObjSerializer<T> {
 
-    T write(final BObj.Obj obj) throws IllegalStateException;
+    T write(final Obj obj) throws IllegalStateException;
 
-    BObj.Obj read(final T data) throws IllegalStateException;
+    Obj read(final T data) throws IllegalStateException;
 }

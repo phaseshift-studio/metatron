@@ -28,10 +28,7 @@ import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.Palette;
 import studio.phaseshift.metatron.util.IteratorUtil;
 
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.function.Predicate;
 
@@ -55,6 +52,17 @@ public interface Space extends Poly {
     Obj write(final fURI addr, final Obj obj);
 
     void append(final fURI addr, final Obj... obj);
+
+    @Override
+    default int count() {
+        return 0;
+    }
+
+    @Override
+    default List<Obj> elements() {
+        return List.of();
+
+    }
 
     @Override
     default Obj vid(final fURI vid) {
