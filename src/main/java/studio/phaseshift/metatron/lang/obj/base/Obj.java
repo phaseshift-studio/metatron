@@ -62,7 +62,7 @@ public interface Obj extends Function<Obj, Obj>, Iterable<Obj> {
     }
 
     default boolean matches(final Obj rhs) {
-        return this.equals(rhs);
+        return rhs.tid().equals(fURI.of("#")) || this.equals(rhs);
     }
 
     @Override

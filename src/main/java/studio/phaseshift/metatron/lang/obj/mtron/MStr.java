@@ -39,4 +39,8 @@ public class MStr extends MObj implements Str {
     public String value() {
         return (String) this.value;
     }
+
+    public static Str of(final String value) {
+        return new MStr(value);
+    }
 }

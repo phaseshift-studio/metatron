@@ -21,7 +21,6 @@ package studio.phaseshift.metatron.lang.obj.base;
 import org.javatuples.Triplet;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.mtron.MLst;
-import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.*;
@@ -45,16 +44,16 @@ public interface InstSet extends Obj {
                 .filter(kv -> lhs.tid().matches(kv.getKey()))
                 .map(Map.Entry::getValue)
                 .flatMap(Collection::stream)
-                .findFirst().map(i -> {
+                .filter(i -> i.args().count() == instA.args().count())
+                .map(i -> {
                     final List<Obj> resolvedArgs = new ArrayList<>();
-                    final boolean blocking = false; // i.isBlocking();
-                    for (final Obj arg : i.args().lstValue()) { // wow -- took me 2 hours to realize .lstValue() was needed
-                        resolvedArgs.add(blocking ? arg : arg.apply(lhs));
+                    //final boolean blocking = false; // i.isBlocking();
+                    for (int j = 0; j < i.args().count(); j++) {
+                        //  resolvedArgs.add(i.arg(j).apply(instA.arg(j)));
+                        resolvedArgs.add(instA.arg(j));
                     }
-                    final Inst resolved = i.clone(new Triplet<>(MLst.of(resolvedArgs),
+                    return i.clone(new Triplet<>(MLst.of(resolvedArgs),
                             i.f(), i.seed()), i.tid(), instA.vid());
-                    Graphitty.log(this).info("resolved %s", resolved);
-                    return resolved;
-                }).orElseThrow(() -> MTronException.of("unable to resolve %s in instruction set %s", instA, this));
+                }).findFirst().orElseThrow(() -> MTronException.of("unable to resolve %s in instruction set %s", instA, this));
     }
 }

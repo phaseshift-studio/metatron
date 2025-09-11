@@ -18,9 +18,10 @@
 
 package studio.phaseshift.metatron.lang.obj.mtron.core;
 
-import org.javatuples.Triplet;
 import studio.phaseshift.metatron.lang.fURI;
-import studio.phaseshift.metatron.lang.obj.base.*;
+import studio.phaseshift.metatron.lang.obj.base.Inst;
+import studio.phaseshift.metatron.lang.obj.base.InstSet;
+import studio.phaseshift.metatron.lang.obj.base.Int;
 import studio.phaseshift.metatron.lang.obj.mtron.MInst;
 import studio.phaseshift.metatron.lang.obj.mtron.MInt;
 import studio.phaseshift.metatron.lang.obj.mtron.MLst;
@@ -33,14 +34,22 @@ import java.util.Set;
 public class MCoreInstSet extends MObj implements InstSet {
 
     public static final fURI TID = fURI.of("/mtron/core");
+    public static final fURI ID_TID = fURI.of("id");
     public static final fURI START_TID = fURI.of("start");
-    public static final fURI MULT_TID = fURI.of("/mtron/core/mult");
-    public static final fURI PLUS_TID = fURI.of("/mtron/core/plus");
+    public static final fURI MULT_TID = fURI.of("mult");
+    public static final fURI PLUS_TID = fURI.of("plus");
 
     private static final Map<fURI, Map<fURI, Set<Inst>>> SYMBOL_TABLE = new LinkedHashMap<>() {{
-        put(START_TID, Map.of(fURI.of("#"), Set.of(new MInst(Triplet.with(MLst.of(MInt.of(1)), Inst.f.of((lhs, inst) -> inst.arg(0)), NoObj.single()), START_TID,  fURI.NONE))));
-        put(PLUS_TID, Map.of(fURI.of("#"), Set.of(new MInst(Triplet.with(MLst.of(MInt.of(1)), Inst.f.of((lhs, inst) -> inst.arg(0)), NoObj.single()), PLUS_TID, fURI.NONE))));
-
+        put(ID_TID, Map.of(fURI.of("#"), Set.of(MInst.instC(ID_TID, MLst.of(), (lhs, inst) -> lhs))));
+        put(START_TID,
+                Map.of(
+                        fURI.of("#"),
+                        Set.of(MInst.instC(START_TID, MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> inst.arg(0)))));
+        put(PLUS_TID,
+                Map.of(
+                        fURI.of("#"),
+                        Set.of(MInst.instC(PLUS_TID, MLst.of(MInst.instA(ID_TID)),
+                                (lhs, inst) -> MInt.of(lhs.<Int>as().value() + inst.arg(0).<Int>as().value())))));
     }};
 
 

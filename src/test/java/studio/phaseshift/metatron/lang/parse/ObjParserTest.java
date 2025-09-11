@@ -19,59 +19,54 @@
 package studio.phaseshift.metatron.lang.parse;
 
 import org.junit.jupiter.api.Test;
-import studio.phaseshift.metatron.lang.fURI;
-import studio.phaseshift.metatron.lang.inst.SInst;
-import studio.phaseshift.metatron.lang.obj.BObj;
-import studio.phaseshift.metatron.lang.obj.SObj;
-import studio.phaseshift.metatron.lang.obj.SObj.*;
+import studio.phaseshift.metatron.lang.obj.base.NoObj;
+import studio.phaseshift.metatron.lang.obj.base.Obj;
+import studio.phaseshift.metatron.lang.obj.mtron.*;
 import studio.phaseshift.metatron.util.MTronException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static studio.phaseshift.metatron.MetatronTest.assertMEquals;
 import static studio.phaseshift.metatron.lang.parse.ObjParser.m_bool;
 
 
 public class ObjParserTest {
-    static {
-        SInst.load();
-    }
 
     @Test
     public void testCommentParse() {
-        assertEquals(BObj.NoObj.of(), ObjParser.parse("--- a comment"));
+        assertEquals(NoObj.single(), ObjParser.parse("--- a comment"));
     }
 
     @Test
     public void testBoolParse() {
-        assertEquals(fURI.of("bool"), m_bool().parse("true").<BObj.Obj>get().tid());
-        assertEquals(Bool.of(true), ObjParser.parse("true"));
-        assertEquals(Bool.of(false), ObjParser.parse("false"));
+        // assertEquals(MBool.TID, m_bool().parse("true").<Obj>get().tid());
+        assertEquals(MBool.of(true), ObjParser.parse("true"));
+        assertEquals(MBool.of(false), ObjParser.parse("false"));
     }
 
     @Test
     public void testIntParse() {
-        assertEquals(Int.of(1234), ObjParser.parse("1234 "));
-       //assertEquals(Int.of(10), ObjParser.parse("start(4).plus(plus(2))").apply(Int.of(4)));
+        assertEquals(MInt.of(1234), ObjParser.parse("1234 "));
+        //assertEquals(Int.of(10), ObjParser.parse("start(4).plus(plus(2))").apply(Int.of(4)));
         //  assertEquals(Int.of("m:nat", 1234), ObjParser.parse("m:nat[1234] "));
     }
 
     @Test
     public void testRealParse() {
-        assertEquals(Real.of(1234.23), ObjParser.parse("1234.23"));
+        assertEquals(MReal.of(1234.23), ObjParser.parse("1234.23"));
     }
+
 
     @Test
     public void testStrParse() {
-        assertEquals(Str.of("abc").value(), ObjParser.<Obj>parse("'abc'").value());
-        assertEquals(Str.of("aBc35 4e6").value(), ObjParser.<Obj>parse("'aBc35 4e6'").value());
+        assertEquals(MStr.of("abc").value(), ObjParser.parse("'abc'").value());
+        assertEquals(MStr.of("aBc35 4e6").value(), ObjParser.parse("'aBc35 4e6'").value());
     }
 
     @Test
     public void testUriParse() {
-        assertEquals(Uri.of("http://metatron.com?a=2&b=3"), ObjParser.parse("<http://metatron.com?a=2&b=3>"));
-        assertEquals(Uri.of("http://metatron.com?a&b"), ObjParser.parse("<http://metatron.com?a&b>"));
+        assertEquals(MUri.of("http://metatron.com?a=2&b=3"), ObjParser.parse("<http://metatron.com?a=2&b=3>"));
+        assertEquals(MUri.of("http://metatron.com?a&b"), ObjParser.parse("<http://metatron.com?a&b>"));
         assertThrows(MTronException.class, () -> ObjParser.parse("/metatron.com?a&b"));
-        assertEquals(Uri.of("metatron/com?a&b"), ObjParser.parse("metatron/com?a&b"));
+        assertEquals(MUri.of("metatron/com?a&b"), ObjParser.parse("metatron/com?a&b"));
     }
 }

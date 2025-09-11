@@ -20,7 +20,6 @@ package studio.phaseshift.metatron.lang.obj.mtron;
 
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.base.Bool;
-import studio.phaseshift.metatron.lang.obj.base.Obj;
 
 public class MBool extends MObj implements Bool {
 
@@ -40,5 +39,9 @@ public class MBool extends MObj implements Bool {
     @Override
     public Boolean value() {
         return (Boolean) this.value;
+    }
+
+    public static Bool of(final boolean value) {
+        return new MBool(value);
     }
 }

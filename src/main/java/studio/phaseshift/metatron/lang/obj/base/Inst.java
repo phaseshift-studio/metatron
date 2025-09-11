@@ -21,6 +21,7 @@ package studio.phaseshift.metatron.lang.obj.base;
 import org.javatuples.Pair;
 import org.javatuples.Triplet;
 import studio.phaseshift.metatron.lang.fURI;
+import studio.phaseshift.metatron.lang.obj.mtron.MObj;
 import studio.phaseshift.metatron.lang.obj.mtron.MRel;
 import studio.phaseshift.metatron.lang.obj.mtron.core.MCoreInstSet;
 import studio.phaseshift.metatron.ui.Graphitty;
@@ -65,7 +66,7 @@ public interface Inst extends Obj {
     default Rel domRng() {
         //  final Obj dom = ((Router) new Object()).read(this.tid().queryValue(DOM, fURI.class, Obj.TID));
         //  final Obj rng = ((Router) new Object()).read(this.tid().queryValue(RNG, fURI.class, Obj.TID));
-        return new MRel(Pair.with(NoObj.single(), NoObj.single()));
+        return new MRel(Pair.with(MObj.single(), MObj.single()));
     }
 
     default Poly args() {
@@ -73,7 +74,7 @@ public interface Inst extends Obj {
     }
 
     default Obj arg(final int index) {
-        return IteratorUtil.index(this.args().iterator(), index, NoObj.single());
+        return IteratorUtil.index(this.args().elements().iterator(), index, NoObj.single());
     }
 
     default Inst.f f() {
@@ -88,7 +89,7 @@ public interface Inst extends Obj {
         if (null == this.f())
             return Resolve.A;
         for (Obj arg : this.args()) {
-            if (arg.tid().equals(arg.vid())) {
+            if (!arg.tid().equals(arg.vid())) {
                 return Resolve.B;
             }
         }
@@ -99,30 +100,28 @@ public interface Inst extends Obj {
         final GraphittyLogger LOG = Graphitty.log(lhs);
         final Resolve currentResolution = this.resolution();
         LOG.debug(currentResolution);
-        if (currentResolution.compareTo(desiredResolution) > 0) {
+        if (currentResolution.compareTo(desiredResolution) == 0 ||
+                currentResolution.compareTo(desiredResolution) > 0) {
             LOG.debug(currentResolution + "==" + desiredResolution);
             return this;
-        } else if (currentResolution.compareTo(desiredResolution) < 0) {
-            LOG.debug(currentResolution + "<" + desiredResolution);
+        } else {
             if (currentResolution == Resolve.A) {
-                LOG.debug("resolving %s", this);
+                LOG.debug("resolving [A] %s", this);
                 final Inst resolved = new MCoreInstSet().resolve(lhs, this);
-                LOG.debug(currentResolution + "=B=>" + resolved);
+                LOG.debug("%s=>%s resolved: %s", currentResolution, resolved.resolution(), resolved);
                 return resolved.resolve(desiredResolution, lhs);
             } else {
+                LOG.debug("resolving [B] %s", this);
                 if (!lhs.matches(this.domRng().dom()))
                     throw MTronException.of("lhs obj does not match inst domain: %s -> %s", lhs, this.domRng().dom());
                 final List<Obj> cargs = new ArrayList<>();
-                for (final Obj arg : args()) {
+                for (final Obj arg : args().elements()) {
                     cargs.add(arg.apply(lhs));
                 }
-                final Inst resolved = this.clone(Triplet.with(this.args().clone(cargs, Lst.TID, fURI.NONE), this.f(), this.seed()), this.tid(), fURI.NONE);
-                LOG.debug(currentResolution + "=C=>" + resolved);
+                final Inst resolved = (Inst) this.value(Triplet.with(this.args().clone(cargs, Lst.TID, fURI.NONE), this.f(), this.seed()));
+                LOG.debug("%s=>%s resolved: %s", currentResolution, resolved.resolution(), resolved);
                 return resolved;
             }
-        } else {
-            return this;
-            //throw MTronException.of("current inst is further resolved than desired: %s > %s", currentResolution, desiredResolution);
         }
     }
 
@@ -130,8 +129,8 @@ public interface Inst extends Obj {
     default Obj apply(final Obj lhs) {
         final Inst cinst = this.resolve(Resolve.C, lhs);
         final Obj rhs = cinst.f().apply(lhs, cinst);
-       // if (!rhs.matches(cinst.domRng().rng()))
-         //   throw MTronException.of("rhs obj does not match inst range: %s -> %s", lhs, cinst.domRng().rng());
+        if (!rhs.matches(cinst.domRng().rng()))
+            throw MTronException.of("rhs obj does not match inst range: %s -> %s", lhs, cinst.domRng().rng());
         return rhs;
     }
 

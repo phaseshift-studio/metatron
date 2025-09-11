@@ -19,7 +19,6 @@
 package studio.phaseshift.metatron.lang.obj.mtron;
 
 import studio.phaseshift.metatron.lang.fURI;
-import studio.phaseshift.metatron.lang.obj.base.Bool;
 import studio.phaseshift.metatron.lang.obj.base.Code;
 import studio.phaseshift.metatron.lang.obj.base.Inst;
 
@@ -44,4 +43,13 @@ public class MCode extends MObj implements Code {
     public List<Inst> value() {
         return (List<Inst>) this.value;
     }
+
+    public static Code of(final List<Inst> insts) {
+        return new MCode(insts, Code.TID, fURI.NONE);
+    }
+
+    /*@Override
+    public Obj apply(final Obj lhs) {
+        return lhs;
+    }*/
 }

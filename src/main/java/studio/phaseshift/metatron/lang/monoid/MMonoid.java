@@ -22,6 +22,7 @@ import org.apache.commons.collections.IteratorUtils;
 import org.jline.jansi.Ansi.Color;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.base.*;
+import studio.phaseshift.metatron.lang.obj.mtron.MCode;
 import studio.phaseshift.metatron.lang.obj.mtron.MObjs;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
@@ -30,8 +31,6 @@ import studio.phaseshift.metatron.util.IteratorUtil;
 import java.util.*;
 
 import static org.jline.jansi.Ansi.ansi;
-import static studio.phaseshift.metatron.lang.inst.SInst.COUNT_URI;
-import static studio.phaseshift.metatron.lang.inst.SInst.SUM_URI;
 
 public class MMonoid implements Monoid {
 
@@ -75,8 +74,8 @@ public class MMonoid implements Monoid {
                     this.halt();
                 }
             } else {
-                if (!Set.of(COUNT_URI, SUM_URI).contains(inst.tid())) {
-                    LOG.debug("processing inst {} with {}", this.inst, IteratorUtils.toList(this.obj.iterator()));
+                if (true) {
+                    LOG.debug("processing inst %s with %s", this.inst, IteratorUtils.toList(this.obj.iterator()));
                     IteratorUtil.iterate(IteratorUtil.consume(this.obj.iterator(), o -> {
                         final MMonad m = new MMonad(this.monoid, o, this.inst, this.bulk);
                         m.domain_loop(m.inst);
@@ -91,15 +90,15 @@ public class MMonoid implements Monoid {
         /// ////////////////////////////////////////////////////////////////////////
 
         public void domain_loop(final Inst inst) {
+
             // LOG_WRITE(TRACE, this->processor_,
             //     L(FOS_TAB_2"monad at !gdomain!! of {} !m=>!! {} [!m{}!!]\n", this->toString(),
             //      current_inst_resolved -> toString(), "SIGNATURE HERE"));
 
             if (inst.f().form().isGather()) {
+                LOG.debug("processing monadic domain: %s => %s", this.obj, inst);
                 if (this.obj.isObjs()) {
-                  /*  LOG_WRITE(TRACE, this->processor_,
-                            L("barrier monad [size: {}] fetch for processing by {} [!m{}!m]\n",
-                                    this->obj->objs_value()->size(), current_inst_resolved->toString(), "SIGNATURE HERE"));*/
+                    LOG.warn("evaluating barrier: %s", this.obj);
                     this.range_loop(inst.apply(this.obj), inst);
                 } else {
                     MMonad barrier = this.monoid.barriers.isEmpty() ? new MMonad(this.monoid, new MObjs(List.of()), inst, 1) : this.monoid.barriers.remove();
@@ -107,15 +106,12 @@ public class MMonoid implements Monoid {
                         LOG.warn("barrier does not contain and objs: {}", barrier.obj);
                         barrier.obj = new MObjs(List.of(barrier.obj), Objs.TID, fURI.NONE);
                     }
-
                     // TODO:!!! APPEND  this.monoid.barriers.add(new MMonad(this.monoid, barrier.obj.<Objs>as().append(this.obj), this.inst, this.bulk));
-
-                  /*  LOG_WRITE(TRACE, this->processor_,
-                            L("monad {} stored in barrier [size: {}] [!m{}!m]\n", this->toString(),
-                            this->processor_ -> barriers_ -> front()->obj -> objs_value()->size(), "SIGNATURE HERE"));*/
                 }
             } else {
-                this.range_loop(inst.apply(this.obj), inst);
+                final Obj result = inst.apply(this.obj);
+                LOG.debug("applying %s to %s to yield %s", this.obj, inst, result);
+                this.range_loop(result, inst);
             }
 
           /*  if (inst.is_gather() ) {
@@ -140,7 +136,8 @@ public class MMonoid implements Monoid {
         /// ////////////////////////////////////////////////////////////////////////
 
         public void range_loop(final Obj nextObj, final Inst inst) {
-           /* LOG_WRITE(TRACE, this->processor_,
+
+            /* LOG_WRITE(TRACE, this->processor_,
                 L(FOS_TAB_2"monad at !grange!! of %s !m=>!! %s [%s]\n",
                         this->processor_ -> M(next_obj, this->inst)->toString(), current_inst_resolved -> toString(),
                 "SIGNATURE HERE"));
@@ -162,7 +159,9 @@ public class MMonoid implements Monoid {
                     this->processor_ -> running_ -> push_back(m);
                 }
             } else {*/
-            final Inst nextInst = NoObj.single(); // TODO !!!!! this.monoid.code.nextInst(inst);
+
+            final Inst nextInst = this.monoid.code.next(this.inst); // TODO !!!!! this.monoid.code.nextInst(inst);
+            LOG.debug("processing monadic range: %s => %s", nextObj, nextInst);
             if (inst.f().form().isScatter()) {
                 LOG.debug("scattering monad obj: {} (over {})", this.obj, nextInst);
                 IteratorUtil.iterate(IteratorUtil.consume(nextObj.iterator(), o -> {
@@ -242,6 +241,7 @@ public class MMonoid implements Monoid {
             this.code = code.as();
             boolean first = true;
             Obj token = start;
+            final List<Inst> resolvedCode = new ArrayList<>();
             for (final Inst inst : this.code.value()) {
                 try {
                     final Inst instB = inst.resolve(Inst.Resolve.B, token);
@@ -257,13 +257,15 @@ public class MMonoid implements Monoid {
                         final MMonad m = new MMonad(this, instB.arg(0), instB, 1); // TODO: use seed
                         this.running.add(m);
                     }
+                    resolvedCode.add(instB);
                 } catch (final Exception e) {
                     LOG.warn(e);
-e.printStackTrace();                  //do nothing
+                    e.printStackTrace();                  //do nothing
                     //throw new RuntimeException(e);
                 }
                 // first = false;
             }
+            this.code = MCode.of(resolvedCode);
             for (final Obj o : start) {
                 this.running.add(new MMonad(this, o, this.code.inst(0), 1));
             }

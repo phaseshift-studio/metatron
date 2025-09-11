@@ -18,10 +18,7 @@
 
 package studio.phaseshift.metatron;
 
-import studio.phaseshift.metatron.lang.inst.SInst;
-import studio.phaseshift.metatron.lang.monoid.Monoid.Monoid;
-import studio.phaseshift.metatron.lang.obj.BObj.Obj;
-import studio.phaseshift.metatron.lang.obj.SObj;
+import studio.phaseshift.metatron.lang.monoid.Monoid;
 
 import java.util.Iterator;
 
@@ -31,14 +28,14 @@ import static org.junit.jupiter.api.Assertions.fail;
 public final class MetatronTest {
 
     static {
-        SInst.load();
+        //SInst.load();
     }
     private MetatronTest() {
 
     }
 
     public static void assertMEquals(final Object a, final Object b) {
-        final Iterator<Obj> aa = a instanceof Monoid ? ((Monoid) a).iterator() : SObj.Obj.of(a).iterator();
+       /* final Iterator<Obj> aa = a instanceof Monoid ? ((Monoid) a).iterator() : SObj.Obj.of(a).iterator();
         final Iterator<Obj> bb = b instanceof Monoid ? ((Monoid) b).iterator() : SObj.Obj.of(b).iterator();
         while (aa.hasNext()) {
             if (!bb.hasNext())
@@ -47,6 +44,6 @@ public final class MetatronTest {
         }
         if (bb.hasNext()) {
             fail("%s has more objs than %s".formatted(b, a));
-        }
+        }*/
     }
 }

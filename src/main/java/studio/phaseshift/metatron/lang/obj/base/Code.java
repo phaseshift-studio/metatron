@@ -19,6 +19,7 @@
 package studio.phaseshift.metatron.lang.obj.base;
 
 import studio.phaseshift.metatron.lang.fURI;
+import studio.phaseshift.metatron.lang.monoid.MMonoid;
 
 import java.util.List;
 
@@ -33,6 +34,20 @@ public interface Code extends Obj {
 
     default Inst inst(final int index) {
         return index < this.value().size() ? this.value().get(index) : NoObj.single();
+    }
+
+    default Inst next(final Inst inst) {
+        boolean found = false;
+        for (final Inst i : this.value()) {
+            if (found) return i;
+            if (i == inst) found = true;
+        }
+        return NoObj.single();
+    }
+
+    @Override
+    default Obj apply(final Obj lhs) {
+        return new MMonoid(this,lhs).next();
     }
 
 }

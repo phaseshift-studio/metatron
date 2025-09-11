@@ -28,8 +28,10 @@ import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.monoid.MMonoid;
 import studio.phaseshift.metatron.lang.obj.base.*;
 import studio.phaseshift.metatron.lang.obj.mtron.*;
+import studio.phaseshift.metatron.lang.obj.mtron.core.MCoreInstSet;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
+import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.*;
 import java.util.function.Supplier;
@@ -263,15 +265,8 @@ public class ObjParser {
     /// //////////////////////////////////////////////////////////////////////////////////////////
     /// ///////////////////////////////////// SUGAR PARSERS //////////////////////////////////////
     /// //////////////////////////////////////////////////////////////////////////////////////////
-    private static final Inst IDENTITY_INST = new MInst(Triplet.with(
-            MLst.of(),  // args
-            Inst.f.of(new MCode(List.of(), fURI.of("identity/code"), fURI.NONE)),  // function
-            NoObj.single()), // seed
-            IDENTITY_URI,  // type
-            fURI.NONE); // addr
-
     public static Parser sugar_identity() {
-        return of('_').map(t -> IDENTITY_INST);
+        return of('_').map(t -> MInst.instB(MLst.of(), MCoreInstSet.ID_TID));
     }
 
     public static Parser sugar_from() {
@@ -314,7 +309,7 @@ public class ObjParser {
         try {
             return (O) ((List) list).get(index);
         } catch (final Exception e) {
-            throw new IllegalArgumentException("%s - unexpected %s[%d]".formatted(e, list, index));
+            throw MTronException.of("%s - unexpected %s[%d]", e, list, index);
         }
     }
 }

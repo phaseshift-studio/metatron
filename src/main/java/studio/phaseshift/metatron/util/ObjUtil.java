@@ -55,7 +55,10 @@ public final class ObjUtil {
     }
 
     public static boolean objEquals(final Obj obj, final Object other) {
-        return other instanceof Obj && ((Obj) other).tid().equals(obj.tid()) && ((Obj) other).vid().equals(obj.vid()) && ((Obj) other).value().equals(obj.value());
+        return other instanceof Obj &&
+                Objects.equals(obj.tid(), ((Obj) other).tid()) &&
+                Objects.equals(obj.vid(), ((Obj) other).vid()) &&
+                Objects.equals(obj.value(), ((Obj) other).value());
     }
 
     public static String objToString(final Obj obj) {

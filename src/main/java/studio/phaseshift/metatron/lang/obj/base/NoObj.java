@@ -82,4 +82,9 @@ public class NoObj implements Obj, Inst {
     public String toString() {
         return ObjUtil.objToString(this);
     }
+
+    @Override
+    public Obj apply(final Obj lhs) {
+        return lhs;
+    }
 }

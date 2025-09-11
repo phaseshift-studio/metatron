@@ -19,6 +19,7 @@
 package studio.phaseshift.metatron.space;
 
 import org.junit.jupiter.api.BeforeEach;
+import studio.phaseshift.metatron.lang.obj.base.NoObj;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
@@ -29,11 +30,11 @@ public class SpaceTest {
     @BeforeEach
     public void beforeEach() {
         assertNotNull(this.space);
-        this.space.write("#",noobj)
+        this.space.write("#", NoObj.single());
     }
 
-    public void testMonoSpace() {
+  /*  public void testMonoSpace() {
         space.
     }
-
+*/
 }

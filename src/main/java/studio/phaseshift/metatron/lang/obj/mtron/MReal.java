@@ -19,7 +19,6 @@
 package studio.phaseshift.metatron.lang.obj.mtron;
 
 import studio.phaseshift.metatron.lang.fURI;
-import studio.phaseshift.metatron.lang.obj.base.Bool;
 import studio.phaseshift.metatron.lang.obj.base.Real;
 
 public class MReal extends MObj implements Real {
@@ -39,5 +38,9 @@ public class MReal extends MObj implements Real {
     @Override
     public Double value() {
         return (Double) this.value;
+    }
+
+    public static Real of(final double value) {
+        return new MReal(value);
     }
 }

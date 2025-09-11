@@ -24,7 +24,7 @@ import studio.phaseshift.metatron.ui.Graphitty;
 
 import java.util.Objects;
 
-public abstract class MObj implements Obj {
+public class MObj implements Obj {
 
     protected final Object value;
     protected final fURI tid;
@@ -52,6 +52,11 @@ public abstract class MObj implements Obj {
     }
 
     @Override
+    public <O extends Obj> O clone(Object value, fURI tid, fURI vid) {
+        return (O) this;
+    }
+
+    @Override
     public int hashCode() {
         return Objects.hash(this.value, this.tid, this.vid);
     }
@@ -66,5 +71,11 @@ public abstract class MObj implements Obj {
     @Override
     public String toString() {
         return Graphitty.string(this);
+    }
+
+    private static final Obj SINGLE = new MObj(new Object(), fURI.of("#"), fURI.NONE);
+
+    public static Obj single() {
+        return SINGLE;
     }
 }

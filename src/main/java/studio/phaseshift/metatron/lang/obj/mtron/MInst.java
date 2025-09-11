@@ -25,6 +25,9 @@ import studio.phaseshift.metatron.lang.obj.base.NoObj;
 import studio.phaseshift.metatron.lang.obj.base.Obj;
 import studio.phaseshift.metatron.lang.obj.base.Poly;
 
+import java.util.List;
+import java.util.function.BiFunction;
+
 public class MInst extends MObj implements Inst {
     public MInst(final Triplet<Poly, Inst.f, Obj> value, final fURI tid, final fURI vid) {
         super(value, tid, vid);
@@ -45,11 +48,15 @@ public class MInst extends MObj implements Inst {
         return null != this.value().getValue1();
     }
 
+    public static Inst instA(final fURI tid) {
+        return new MInst(Triplet.with(MLst.of(), null, NoObj.single()), tid, fURI.NONE);
+    }
+
     public static Inst instB(final Poly args, final fURI tid) {
         return new MInst(Triplet.with(args, null, NoObj.single()), tid, fURI.NONE);
     }
 
-    public static Inst instA(final fURI tid) {
-        return new MInst(Triplet.with(MLst.of(), null, NoObj.single()), tid, fURI.NONE);
+    public static Inst instC(final fURI tid, final Poly args, final BiFunction<Obj, Inst, Obj> f) {
+        return new MInst(Triplet.with(args, Inst.f.of(f), NoObj.single()), tid, fURI.NONE);
     }
 }

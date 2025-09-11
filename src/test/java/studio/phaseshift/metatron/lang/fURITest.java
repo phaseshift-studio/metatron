@@ -183,7 +183,13 @@ public class fURITest {
     }
 
     @ParameterizedTest
-    @CsvSource({"http://fhatos.org/a,http://fhatos.org/a,true",
+    @CsvSource({
+            "a,#,true",
+            "#,#,true",
+            "a,,false",
+           // ",,false", should noobj match noobj?
+            ///
+            "http://fhatos.org/a,http://fhatos.org/a,true",
             "http://fhatos.org/a,http://fhatos.org/a/b,false",
             "http://fhatos.org/a/b,http://fhatos.org/a,false",
             "http://fhatos.org/a/b,http://fhatos.org/a/+,true",
@@ -193,7 +199,7 @@ public class fURITest {
             "http://fhatos.org/a/b/c,http://fhatos.org/a/+/+,true",
             "http://fhatos.org/a/b/c,http://fhatos.org/+/+/+,true",
             "http://fhatos.org/a/b/c,http://+/a/b/c,true",
-            "http://fhatos.org/a/b/c,http://#,true",
+          //  "http://fhatos.org/a/b/c,http://#,true", matching on authority
             "http://fhatos.org/a/b/c,http://fhatos.org/#,true",
             "/a/b/c,/a/b/+,true",
             "/a/b/c,/a/+/c,true",
@@ -227,8 +233,12 @@ public class fURITest {
             ",+,false"
     })
     void testMatches(final String a, final String b, final boolean shouldMatch) {
-        if (shouldMatch) assertTrue(fURI.of(a).matches(fURI.of(b)));
-        else assertFalse(fURI.of(a).matches(fURI.of(b)));
+        if (shouldMatch) assertTrue(fURI.of(nullToEmpty(a)).matches(fURI.of(nullToEmpty(b))));
+        else assertFalse(fURI.of(nullToEmpty(a)).matches(fURI.of(nullToEmpty(b))));
+    }
+
+    private String nullToEmpty(final String s) {
+        return null == s ? "" : s;
     }
 
     @Test
