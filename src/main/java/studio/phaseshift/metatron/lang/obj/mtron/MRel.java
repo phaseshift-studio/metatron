@@ -41,4 +41,8 @@ public class MRel extends MObj implements Rel {
     public Pair<Obj, Obj> value() {
         return (Pair<Obj, Obj>) this.value;
     }
+
+    public static Rel of(final Obj dom, final Obj rng) {
+        return new MRel(Pair.with(dom,rng));
+    }
 }

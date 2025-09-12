@@ -241,12 +241,8 @@ public class ObjParser {
         return rec_parser;
     }
 
-    public static Parser m_inst() {
-        return sugar_identity().or(sugar_block(), sugar_plus(), sugar_from(), sugar_merge(), inst_parser);
-    }
-
     public static Parser sugar_code() {
-        return seq(opt(obj_no_code_parser, NoObj.single()), seq(of(".").trim()), m_code()).map(t -> {
+        return seq(opt(obj_no_code_parser, NoObj.single()), seq(opt(of(".").trim(),'.')), m_code()).map(t -> {
             final List<Inst> newCode = new ArrayList<>();
             newCode.add(new MInst(Triplet.with(MLst.of(ObjParser.<Obj>pick(t, 0)), null, NoObj.single()), START_URI, fURI.NONE));
             newCode.addAll(ObjParser.<Code>pick(t, 2).value());
@@ -262,27 +258,60 @@ public class ObjParser {
                         .toList(), Code.TID, fURI.NONE));
     }
 
+    public static Parser m_inst() {
+        return  choice(ordered_sugar_parsers()).or(inst_parser);
+    }
     /// //////////////////////////////////////////////////////////////////////////////////////////
     /// ///////////////////////////////////// SUGAR PARSERS //////////////////////////////////////
     /// //////////////////////////////////////////////////////////////////////////////////////////
+    private static Parser[] ordered_sugar_parsers() {
+        return new Parser[]{
+                sugar_block(),
+                sugar_within(),
+                sugar_identity(),
+                sugar_from(),
+                sugar_merge(),
+                sugar_split(),
+                sugar_ref(),
+                sugar_plus() };
+    }
+
+    private static Parser generate_sugar_parser(final fURI tid, final String sugarOp, final int argCount) {
+        return argCount == 0 ?
+                of(sugarOp).trim().map(t -> MInst.instA(tid)) :
+                seq(of(sugarOp).trim(), m_obj()).map(t -> MInst.instB(tid,MLst.of(ObjParser.<Obj>pick(t, 1))));
+    }
+
     public static Parser sugar_identity() {
-        return of('_').map(t -> MInst.instB(MLst.of(), MCoreInstSet.ID_TID));
+        return generate_sugar_parser(MCoreInstSet.ID_TID,"_",0);
     }
 
     public static Parser sugar_from() {
-        return seq(of('*').trim(), m_obj()).map(t -> MInst.instB(ObjParser.pick(t, 1), FROM_URI));
+       return generate_sugar_parser(MCoreInstSet.FROM_TID,"*",1);
     }
 
     public static Parser sugar_plus() {
-        return seq(of('+').trim(), m_obj()).map(t -> MInst.instB(ObjParser.pick(t, 1), PLUS_URI));
+        return generate_sugar_parser(MCoreInstSet.PLUS_TID,"+",1);
     }
 
     public static Parser sugar_block() {
-        return seq(of('|').trim(), m_obj()).map(t -> MInst.instB(ObjParser.pick(t, 1), BLOCK_URI));
+        return generate_sugar_parser(MCoreInstSet.BLOCK_TID,"|",1);
+    }
+
+    public static Parser sugar_ref() {
+        return generate_sugar_parser(MCoreInstSet.REF_TID,"->",1);
     }
 
     public static Parser sugar_merge() {
-        return of(">-").trim().map(t -> MInst.instA(MERGE_URI));
+        return generate_sugar_parser(MCoreInstSet.MERGE_TID, ">-", 0);
+    }
+
+    public static Parser sugar_split() {
+        return generate_sugar_parser(MCoreInstSet.SPLIT_TID,"-<",1);
+    }
+
+    public static Parser sugar_within() {
+        return generate_sugar_parser(MCoreInstSet.WITHIN_TID,"_/",1);
     }
 
     /// //////////////////////////////////////////////////////////////////////////////////////////

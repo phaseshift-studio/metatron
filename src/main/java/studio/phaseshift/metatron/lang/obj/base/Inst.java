@@ -85,6 +85,12 @@ public interface Inst extends Obj {
         return this.value().getValue2();
     }
 
+    default Rel signature() {
+        final fURI domain = this.tid().queryValue(fURI.DOM,fURI.class,fURI.NONE);
+        final fURI range = this.tid().queryValue(fURI.RNG,fURI.class,fURI.NONE);
+        return MRel.of(domain.toUri(),range.toUri());
+    }
+
     default Resolve resolution() {
         if (null == this.f())
             return Resolve.A;
@@ -99,27 +105,25 @@ public interface Inst extends Obj {
     default Inst resolve(final Resolve desiredResolution, final Obj lhs) {
         final GraphittyLogger LOG = Graphitty.log(lhs);
         final Resolve currentResolution = this.resolution();
-        LOG.debug(currentResolution);
         if (currentResolution.compareTo(desiredResolution) == 0 ||
                 currentResolution.compareTo(desiredResolution) > 0) {
-            LOG.debug(currentResolution + "==" + desiredResolution);
+            LOG.debug("resolution ({{m}}%s {{g}}<=>{{/g}} %s{{/m}}): %s", currentResolution, desiredResolution, lhs);
             return this;
         } else {
             if (currentResolution == Resolve.A) {
-                LOG.debug("resolving [A] %s", this);
                 final Inst resolved = new MCoreInstSet().resolve(lhs, this);
-                LOG.debug("%s=>%s resolved: %s", currentResolution, resolved.resolution(), resolved);
+                LOG.debug("resolution ({{m}}%s {{g}}=>{{/g}} %s{{/m}}): %s", currentResolution, resolved.resolution(), resolved);
                 return resolved.resolve(desiredResolution, lhs);
-            } else {
-                LOG.debug("resolving [B] %s", this);
+            } else { // Resolve.B
                 if (!lhs.matches(this.domRng().dom()))
-                    throw MTronException.of("lhs obj does not match inst domain: %s -> %s", lhs, this.domRng().dom());
+                    throw MTronException.of("lhs obj does not match inst domain: %s {{r}}-/>{{/r}} %s", lhs, this.domRng().dom());
+                final boolean blocking = this.tid().equals(MCoreInstSet.BLOCK_TID) || this.tid().equals(MCoreInstSet.WITHIN_TID);
                 final List<Obj> cargs = new ArrayList<>();
                 for (final Obj arg : args().elements()) {
-                    cargs.add(arg.apply(lhs));
+                    cargs.add(blocking ? arg : arg.apply(lhs));
                 }
                 final Inst resolved = (Inst) this.value(Triplet.with(this.args().clone(cargs, Lst.TID, fURI.NONE), this.f(), this.seed()));
-                LOG.debug("%s=>%s resolved: %s", currentResolution, resolved.resolution(), resolved);
+                LOG.debug("resolution ({{m}}%s {{g}}=>{{/g}} %s{{/m}}): %s", currentResolution, resolved.resolution(), resolved);
                 return resolved;
             }
         }
@@ -130,7 +134,7 @@ public interface Inst extends Obj {
         final Inst cinst = this.resolve(Resolve.C, lhs);
         final Obj rhs = cinst.f().apply(lhs, cinst);
         if (!rhs.matches(cinst.domRng().rng()))
-            throw MTronException.of("rhs obj does not match inst range: %s -> %s", lhs, cinst.domRng().rng());
+            throw MTronException.of("rhs obj does not match inst range: %s {{r}}-/>{{/r}} %s", rhs, cinst.domRng().rng());
         return rhs;
     }
 
@@ -185,6 +189,7 @@ public interface Inst extends Obj {
         private f(final BiFunction<Obj, Inst, Obj> func) {
             this.bi = true;
             this.func = func;
+
         }
 
         private f(final Function<Obj, Obj> func) {
@@ -194,10 +199,6 @@ public interface Inst extends Obj {
 
         public Form form() {
             return this.form;
-        }
-
-        public boolean isLambda() {
-            return !(this.func instanceof Obj);
         }
 
         public Obj apply(final Obj lhs, final Inst cinst) {

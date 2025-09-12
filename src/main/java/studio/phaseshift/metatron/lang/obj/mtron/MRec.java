@@ -42,4 +42,8 @@ public class MRec extends MObj implements Rec {
     public Map<Obj, Obj> value() {
         return (Map<Obj, Obj>) this.value;
     }
+
+    public static Rec of(final Map<Obj,Obj> value) {
+        return new MRec(value);
+    }
 }

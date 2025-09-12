@@ -96,12 +96,15 @@ public class fURITest {
             "/test.com?a=a:url&b=2&c=metatron.org|{a=a:url, b=2, c=metatron.org}",
             "/test.com?a=a/b/c&b=aaa&c=0.2|{a=a/b/c, b=aaa, c=0.2}",
             "/test.com?a=a/b/c&b=http://aaa&c=0.2|{a=a/b/c, b=http://aaa, c=0.2}",
-            "http://test.com?a=a/b/c&b=sss.com&c=0.2|{a=a/b/c, b=sss.com, c=0.2}" },
+            "http://test.com?a=a/b/c&b=sss.com&c=0.2|{a=a/b/c, b=sss.com, c=0.2}",
+            "/mtron/an_inst?dom=#&rng=+|{dom=#, rng=+}" },
             delimiter = '|')
     public void testQuery(final String f, final String queryMap) {
         final fURI furi = fURI.of(f);
         assertEquals(queryMap, furi.query().toString());
     }
+
+
 
     @Test
     public void testScheme() {

@@ -21,11 +21,17 @@ package studio.phaseshift.metatron.lang.obj.mtron;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.base.Obj;
 import studio.phaseshift.metatron.lang.obj.base.Objs;
+import studio.phaseshift.metatron.ui.Graphitty;
+import studio.phaseshift.metatron.ui.GraphittyLogger;
 
 public class MObjs extends MObj implements Objs {
 
+    private static final GraphittyLogger LOG = Graphitty.log(MObjs.class);
+
     public MObjs(final Iterable<Obj> value, final fURI tid, final fURI vid) {
         super(value, tid, vid);
+        if(value instanceof Obj)
+            LOG.error("objs can not directly nest: %s",value);
     }
 
     public MObjs(final Iterable<Obj> value) {
@@ -40,5 +46,9 @@ public class MObjs extends MObj implements Objs {
     @Override
     public Iterable<Obj> value() {
         return (Iterable<Obj>) this.value;
+    }
+
+    public static Objs of(final Iterable<Obj> iterable) {
+        return new MObjs(iterable);
     }
 }

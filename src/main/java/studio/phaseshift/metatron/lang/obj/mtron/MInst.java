@@ -52,7 +52,7 @@ public class MInst extends MObj implements Inst {
         return new MInst(Triplet.with(MLst.of(), null, NoObj.single()), tid, fURI.NONE);
     }
 
-    public static Inst instB(final Poly args, final fURI tid) {
+    public static Inst instB(final fURI tid, final Poly args) {
         return new MInst(Triplet.with(args, null, NoObj.single()), tid, fURI.NONE);
     }
 

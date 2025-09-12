@@ -80,7 +80,7 @@ public class Console {
 
         private boolean resolveWidget() {
             RESOLVE_MODE = !RESOLVE_MODE;
-            //LOG.none("{{@}}{{v1}}{{-X}}switched %s auto-resolution mode{{^1}}{{/@}}", RESOLVE_MODE ? "{{g}}on{{/g}}" : "{{y}}off{{/y}}");
+            //LOG.none("{{@&v1&-X}}switched %s auto-resolution mode{{^1&/@}}", RESOLVE_MODE ? "{{g}}on{{/g}}" : "{{y}}off{{/y}}");
             return true;
         }
     }
@@ -93,29 +93,33 @@ public class Console {
             this.terminal = terminal;
             // auto compilation
             this.highlighters.add((builder, buffer) -> {
-                try {
-                    if (buffer.isEmpty()) {
-                        //builder.append(buffer);
-                       // Graphitty.stdout().print(Graphitty.string("{{v1}}{{-X}}{{^1}}{{|%d}}".formatted(9)));
-                    } else {
-                        final Obj o = ObjParser.parse(buffer);
-                        final int xLocation = this.terminal.getCursorPosition(System.out::print).getX() + 1;
-                        // final int promptLength = 8; //"mtron> ".length() + 1;
-                        builder.append(buffer);
-                       /* if (o.isCode() && Console.RESOLVE_MODE) {
-                            final Code rCode = new MCode(o.codeValue().stream().map(i -> i.resolve(Inst.Resolve.B, NoObj.single())).toList());
-                            Graphitty.stdout().print(Graphitty.string("{{v1}}{{-X}}{{|%d}}%s".formatted(8, rCode)));
-                            Graphitty.stdout().print(Graphitty.string("{{^1}}{{|%d}}".formatted(xLocation)));
-                        } else {
-                            Graphitty.stdout().print(Graphitty.string("{{v1}}{{-X}}{{|%d}}%s".formatted(8, o)));
-                            Graphitty.stdout().print(Graphitty.string("{{^1}}{{|%d}}".formatted(xLocation)));
-                        }*/
-                    }
+               if(RESOLVE_MODE) {
+                   try {
+                       if (buffer.isEmpty()) {
+                           //builder.append(buffer);
+                           //Graphitty.stdout().print(Graphitty.string("{{v1&-X&^1&|%d}}".formatted(9)));
+                       } else {
+                           final Obj o = ObjParser.parse(buffer);
+                           final int xLocation = this.terminal.getCursorPosition(System.out::print).getX() + 1;
+                           // final int promptLength = 8; //"mtron> ".length() + 1;
+                           builder.append(buffer);
+                           if (o.isCode() && Console.RESOLVE_MODE) {
+                               final Code rCode = new MCode(o.codeValue().stream().map(i -> i.resolve(Inst.Resolve.B, NoObj.single())).toList());
+                               Graphitty.stdout().print(Graphitty.string("{{v1&-X&|%d}}%s".formatted(8, rCode)));
+                               Graphitty.stdout().print(Graphitty.string("{{^1&|%d}}".formatted(xLocation)));
+                           } else {
+                               Graphitty.stdout().print(Graphitty.string("{{v1&-X&|%d}}%s".formatted(8, o)));
+                               Graphitty.stdout().print(Graphitty.string("{{^1&|%d}}".formatted(xLocation)));
+                           }
+                       }
 
-                } catch (final Exception e) {
-                    // console expression doesn't compile yet
-                    builder.append(buffer);
-                }
+                   } catch (final Exception e) {
+                       // console expression doesn't compile yet
+                       builder.append(buffer);
+                   }
+               } else {
+                   builder.append(buffer);
+               }
             });
         }
 
@@ -147,7 +151,7 @@ public class Console {
                 .parser(parser)
                 .variable(LineReader.HISTORY_FILE, Paths.get(".metatron.history"))
                 .option(LineReader.Option.AUTO_FRESH_LINE, true)
-                .variable(LineReader.SECONDARY_PROMPT_PATTERN, Graphitty.string("\n{{-X}}{{v1}}{{^1}}{{FORM1}}%P >{{X}}"))
+                .variable(LineReader.SECONDARY_PROMPT_PATTERN, Graphitty.string("\n{{-X&v1&^1&FORM1}}%P >{{X}}"))
                 .variable(LineReader.INDENTATION, 2)
                 .build();
         CustomWidgets.of(this.reader);
@@ -158,7 +162,7 @@ public class Console {
         String line = "";
         while (true) {
             try {
-                this.terminal.writer().print(Graphitty.string("\n{{v1}}{{^1}}"));
+                this.terminal.writer().print(Graphitty.string("\n{{v1&^1}}"));
                 line = this.reader.readLine(Graphitty.string("{{FORM2}}mtron{{FORM1}}>{{X}} "));
                 if (line.trim().equals(":header"))
                     this.outputHeader();

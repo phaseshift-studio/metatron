@@ -28,6 +28,9 @@ import java.util.*;
 public class fURI implements Cloneable {
 
     public static final fURI NONE = null;
+    public static final fURI DOM = fURI.of("dom");
+    public static final fURI RNG = fURI.of("rng");
+
 
     private final String host;
     private final String scheme;
@@ -105,7 +108,7 @@ public class fURI implements Cloneable {
     public Uri toUri(final boolean schemaType) {
         final String scheme = this.scheme();
         return schemaType && null != scheme ?
-                new MUri(this.scjheme(null), fURI.of(scheme), null) :
+                new MUri(this.scheme(null), fURI.of(scheme), null) :
                 new MUri(this, Uri.TID, null);
     }
 
@@ -266,7 +269,7 @@ public class fURI implements Cloneable {
     public Map<String, String> query() {
         if (null == this.query)
             return Map.of();
-        final Map<String, String> q = new HashMap<>();
+        final Map<String, String> q = new LinkedHashMap<>();
         Arrays.stream(this.query.split("&")).forEach(kv -> {
             String[] pairs = kv.split("=");
             q.put(pairs[0], pairs.length > 1 ? pairs[1] : "");

@@ -31,6 +31,8 @@ import studio.phaseshift.metatron.util.IteratorUtil;
 import java.util.*;
 
 import static org.jline.jansi.Ansi.ansi;
+import static studio.phaseshift.metatron.lang.obj.mtron.core.MCoreInstSet.FROM_TID;
+import static studio.phaseshift.metatron.lang.obj.mtron.core.MCoreInstSet.START_TID;
 
 public class MMonoid implements Monoid {
 
@@ -184,7 +186,7 @@ public class MMonoid implements Monoid {
         }
 
         public void halt() {
-            //   System.out.println("halting..." + this);
+            LOG.trace("halting monad %s", this);
             this.inst = NoObj.single();
             this.monoid.halted.add(this.obj);
         /*for(int i = 0; i < this->bulk_; i++) {
@@ -201,19 +203,7 @@ public class MMonoid implements Monoid {
         }
 
         public String toString() {
-            return ansi()
-                    .fg(Color.RED)
-                    .a("M")
-                    .fg(Color.GREEN)
-                    .a("[")
-                    .a(this.obj)
-                    .fg(Color.RED)
-                    .a("@")
-                    .a(this.inst)
-                    .fg(Color.GREEN)
-                    .a("]")
-                    .reset()
-                    .toString();
+            return Graphitty.string("{{b}}M{{g}}[%s{{g}}]{{r}}@%s{{X}}".formatted(this.obj,this.inst));
         }
     }
 
@@ -239,7 +229,7 @@ public class MMonoid implements Monoid {
             //this.code = Rewriter({Rewriter::by(), Rewriter::explain()}).apply(this.code);
             // setup global behavior around barriers, initials, and terminals
             this.code = code.as();
-            boolean first = true;
+            LOG.debug("resolving code and generating structural monads: %s",this.code);
             Obj token = start;
             final List<Inst> resolvedCode = new ArrayList<>();
             for (final Inst inst : this.code.value()) {
@@ -247,30 +237,24 @@ public class MMonoid implements Monoid {
                     final Inst instB = inst.resolve(Inst.Resolve.B, token);
                     token = instB.domRng().rng();
                     if (instB.f().form().isGather()) {
-                        // MANY_TO_??
+                        // many-to-?
+                        LOG.debug("creating barrier monad at %s",instB);
                         final MMonad m = new MMonad(this, instB.seed(), instB, 1);
                         this.barriers.add(m);
-                        //  LOG_WRITE(DEBUG, this, L(FOS_TAB_2"!ybarrier!! monad created: {}\n", m.toString()));
-                    } else if (instB.f().form().isInitial() || instB.tid().equals(fURI.of("start"))) {
-                        // ZERO-TO_??
-                        LOG.debug("initial inst found: %s", instB);
+                    } else if (instB.f().form().isInitial() || instB.tid().equals(START_TID) || instB.tid().equals(FROM_TID)) {
+                        LOG.debug("creating initial monad at %s",instB);
                         final MMonad m = new MMonad(this, instB.arg(0), instB, 1); // TODO: use seed
                         this.running.add(m);
                     }
                     resolvedCode.add(instB);
                 } catch (final Exception e) {
-                    LOG.warn(e);
-                    e.printStackTrace();                  //do nothing
-                    //throw new RuntimeException(e);
+                    LOG.warn(e.getMessage());
                 }
-                // first = false;
             }
             this.code = MCode.of(resolvedCode);
             for (final Obj o : start) {
                 this.running.add(new MMonad(this, o, this.code.inst(0), 1));
             }
-            LOG.info(this.running + "=>" + this.code);
-
         }
     }
 

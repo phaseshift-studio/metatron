@@ -25,6 +25,7 @@ import studio.phaseshift.metatron.util.MTronException;
 import java.io.ByteArrayOutputStream;
 import java.io.OutputStream;
 import java.util.*;
+import java.util.stream.Stream;
 
 public class Graphitty {
     public static final Map<String, String> COLOR_REWRITES = new LinkedHashMap<>();
@@ -163,8 +164,8 @@ public class Graphitty {
                         buffer.charAt(i + 2) != '{') {
                     i = i + 2;
                     final StringBuilder rule = new StringBuilder();
-                    final boolean end = buffer.charAt(i) == '/';
-                    if (end) i++;
+                   // final boolean end = buffer.charAt(i) == '/';
+                   // if (end) i++;
                     for (int m = i; m < bufferLength; m++) {
                         if (buffer.charAt(m) == '}' && buffer.charAt(m + 1) == '}') {
                             i += 2;
@@ -173,29 +174,32 @@ public class Graphitty {
                         rule.append(buffer.charAt(m));
                         i = m;
                     }
-                    if (end) {
-                        final String openRule = this.rewriteStack.pop();
-                        if (!openRule.contentEquals(rule))
-                            throw MTronException.of("closing doesn't match opening rule: %s != %s", openRule, rule.toString());
-                        else {
-                            String reset = this.rewriteStack.isEmpty() ? null : this.rewrites.get(this.rewriteStack.peek());
-                            reset = null == reset ? this.rewrites.get("X") : reset.replace("\033[", "\033[0;");
-                            if (null != reset)
-                                this.parseDSL(reset);
+                    Stream.of(rule.toString().split("&")).forEach(rulePiece -> {
+                        if (rulePiece.charAt(0) == '/') {
+                            final String closeRule = rulePiece.substring(1);
+                            final String openRule = this.rewriteStack.pop();
+                            if (!openRule.equals(closeRule))
+                                throw MTronException.of("closing doesn't match opening rule: %s != %s", openRule, closeRule);
+                            else {
+                                String reset = this.rewriteStack.isEmpty() ? null : this.rewrites.get(this.rewriteStack.peek());
+                                reset = null == reset ? this.rewrites.get("X") : reset.replace("\033[", "\033[0;");
+                                if (null != reset)
+                                    this.parseDSL(reset);
+                            }
+                        } else {
+                            this.rewriteStack.push(rulePiece);
+                            String r = this.rewrites.get(rulePiece);
+                            while (null != r && r.startsWith("{{") && r.endsWith("}}"))
+                                r = this.rewrites.get(r.substring(2, r.length() - 2));
+                            if (Set.of('^', 'v', '<', '>', '|').contains(rulePiece.charAt(0))) {
+                                if (!rulePiece.substring(1).equals("0"))
+                                    r = this.rewrites.get("" + rulePiece.charAt(0)).replace("{{" + rulePiece.charAt(0) + "}}", rulePiece.substring(1));
+                            }
+                            if (null == r)
+                                throw new IllegalStateException("unknown rule: %s\n\t%s".formatted(rulePiece, buffer));
+                            this.parseDSL(r);
                         }
-                    } else {
-                        this.rewriteStack.push(rule.toString());
-                        String r = this.rewrites.get(rule.toString());
-                        while (null != r && r.startsWith("{{") && r.endsWith("}}"))
-                            r = this.rewrites.get(r.substring(2, r.length() - 2));
-                        if (Set.of('^', 'v', '<', '>', '|').contains(rule.charAt(0))) {
-                            if (!rule.substring(1).equals("0"))
-                                r = this.rewrites.get("" + rule.charAt(0)).replace("{{" + rule.charAt(0) + "}}", rule.substring(1));
-                        }
-                        if (null == r)
-                            throw new IllegalStateException("unknown rule: %s\n\t%s".formatted(rule, buffer));
-                        this.parseDSL(r);
-                    }
+                    });
 
                 } else {
                     this.out.write(buffer.charAt(i));
