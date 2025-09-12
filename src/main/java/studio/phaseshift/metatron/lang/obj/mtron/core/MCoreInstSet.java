@@ -50,6 +50,7 @@ public class MCoreInstSet extends MObj implements InstSet {
     public static final fURI TID_TID = fURI.of("tid");
     public static final fURI VID_TID = fURI.of("vid");
     public static final fURI TYPE_TID = fURI.of("type");
+    public static final fURI AT_TID = fURI.of("at");
 
     // inst_tid -> <inst_tid_dom -> set<inst>>
     private static final Map<fURI, Map<fURI, Set<Inst>>> SYMBOL_TABLE = new LinkedHashMap<>() {{
@@ -62,13 +63,13 @@ public class MCoreInstSet extends MObj implements InstSet {
                 Map.of(
                         fURI.of("#"),
                         Set.of(MInst.instC(PLUS_TID, MLst.of(MInst.instA(ID_TID)),
-                                (lhs, inst) -> MInt.of(lhs.<Int>as().value() + inst.arg(0).<Int>as().value())))));
+                                (lhs, inst) -> lhs.value(lhs.<Int>as().value() + inst.arg(0).<Int>as().value())))));
 
         put(MULT_TID,
                 Map.of(
                         fURI.of("#"),
                         Set.of(MInst.instC(MULT_TID, MLst.of(MInst.instA(ID_TID)),
-                                (lhs, inst) -> MInt.of(lhs.<Int>as().value() * inst.arg(0).<Int>as().value())))));
+                                (lhs, inst) -> lhs.value(lhs.<Int>as().value() * inst.arg(0).<Int>as().value())))));
 
         put(DOM_TID,
                 Map.of(
@@ -163,6 +164,12 @@ public class MCoreInstSet extends MObj implements InstSet {
                         fURI.of("#"),
                         Set.of(MInst.instC(MERGE_TID, MLst.of(),
                                 (lhs, inst) -> MObjs.of(lhs.<Poly>as().elements())))));
+
+        put(AT_TID,
+                Map.of(
+                        fURI.of("#"),
+                        Set.of(MInst.instC(AT_TID, MLst.of(MInst.instA(ID_TID)),
+                                (lhs, inst) -> lhs.vid(inst.arg(0).uriValue())))));
 
         put(SPLIT_TID,
                 Map.of(

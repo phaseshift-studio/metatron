@@ -44,10 +44,11 @@ import static studio.phaseshift.metatron.space.mqtt.MqttSpace.MQTT_TID;
 public class BootLoader {
 
     private static final GraphittyLogger LOG = Graphitty.log(BootLoader.class);
-
+    public static boolean BOOTING = true;
     public static Router ROUTER = new MemRouter(fURI.of("/sys/router"));
 
     public static void load() {
+
         try {
             LOG.info("booting metatron on %s {{g}}[%s{{g}}]{{X}}",
                     MUri.of(InetAddress.getLocalHost().getHostName()).tid("host"),
@@ -69,6 +70,7 @@ public class BootLoader {
             kv1.getValue().forEach((key, value) -> map.put(key.toUri(), MLst.of(new ArrayList<>(value))));
             Router.global().write(kv1.getKey(), MRec.of(map));
         });
+        BOOTING = false;
                         //SInst.load();
         //SInst.ext();
     }

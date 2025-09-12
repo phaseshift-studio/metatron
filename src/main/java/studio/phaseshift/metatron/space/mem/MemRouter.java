@@ -19,7 +19,9 @@
 package studio.phaseshift.metatron.space.mem;
 
 import studio.phaseshift.metatron.lang.fURI;
+import studio.phaseshift.metatron.lang.obj.base.NoObj;
 import studio.phaseshift.metatron.lang.obj.base.Obj;
+import studio.phaseshift.metatron.space.NullSpace;
 import studio.phaseshift.metatron.space.Router;
 import studio.phaseshift.metatron.space.Space;
 import studio.phaseshift.metatron.ui.Graphitty;
@@ -27,6 +29,9 @@ import studio.phaseshift.metatron.ui.GraphittyLogger;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
+
+import static studio.phaseshift.metatron.BootLoader.BOOTING;
 
 public class MemRouter implements Router {
 
@@ -53,11 +58,16 @@ public class MemRouter implements Router {
     }
 
     public Space getStruct(final fURI pattern) {
-        return this.routes.entrySet().stream()
+        Optional<Space> space = this.routes.entrySet().stream()
                 .filter(kv -> pattern.matches(kv.getKey()))
                 .findAny()
-                .map(Map.Entry::getValue)
-                .orElseThrow(() -> LOG.except("no structure supports pattern %s", pattern.toUri(true)));
+                .map(Map.Entry::getValue);
+        if(space.isPresent())
+            return space.get();
+        else if(!BOOTING)
+           throw LOG.except("no structure supports pattern %s", pattern.toUri(true));
+        else
+            return new NullSpace(pattern);
     }
 
     @Override

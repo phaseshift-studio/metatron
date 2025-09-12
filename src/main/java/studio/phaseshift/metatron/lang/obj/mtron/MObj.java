@@ -20,6 +20,7 @@ package studio.phaseshift.metatron.lang.obj.mtron;
 
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.base.Obj;
+import studio.phaseshift.metatron.space.Router;
 import studio.phaseshift.metatron.ui.Graphitty;
 
 import java.util.Objects;
@@ -34,6 +35,8 @@ public class MObj implements Obj {
         this.value = value;
         this.tid = tid;
         this.vid = vid;
+        if(null != this.vid)
+            Router.global().write(this.vid,this);
     }
 
     @Override
