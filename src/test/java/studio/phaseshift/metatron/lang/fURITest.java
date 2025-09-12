@@ -84,6 +84,25 @@ public class fURITest {
         assertEquals(segments, furi.segments());
     }
 
+    @ParameterizedTest
+    @CsvSource(value = {
+            "/test.com?a=1&b=2&c=3|{a=1, b=2, c=3}",
+            "/test.com|{}",
+            "/test.com?|{}",
+            "/test.com?a|{a=}",
+            "/test.com?a=|{a=}",
+            "/test.com?a=&b=&c=|{a=, b=, c=}",
+            "/test.com?a&b&c|{a=, b=, c=}",
+            "/test.com?a=a:url&b=2&c=metatron.org|{a=a:url, b=2, c=metatron.org}",
+            "/test.com?a=a/b/c&b=aaa&c=0.2|{a=a/b/c, b=aaa, c=0.2}",
+            "/test.com?a=a/b/c&b=http://aaa&c=0.2|{a=a/b/c, b=http://aaa, c=0.2}",
+            "http://test.com?a=a/b/c&b=sss.com&c=0.2|{a=a/b/c, b=sss.com, c=0.2}" },
+            delimiter = '|')
+    public void testQuery(final String f, final String queryMap) {
+        final fURI furi = fURI.of(f);
+        assertEquals(queryMap, furi.query().toString());
+    }
+
     @Test
     public void testScheme() {
         assertEquals("http", new fURI("http://fhatos.org/b").scheme());
@@ -187,7 +206,7 @@ public class fURITest {
             "a,#,true",
             "#,#,true",
             "a,,false",
-           // ",,false", should noobj match noobj?
+            // ",,false", should noobj match noobj?
             ///
             "http://fhatos.org/a,http://fhatos.org/a,true",
             "http://fhatos.org/a,http://fhatos.org/a/b,false",
@@ -199,7 +218,7 @@ public class fURITest {
             "http://fhatos.org/a/b/c,http://fhatos.org/a/+/+,true",
             "http://fhatos.org/a/b/c,http://fhatos.org/+/+/+,true",
             "http://fhatos.org/a/b/c,http://+/a/b/c,true",
-          //  "http://fhatos.org/a/b/c,http://#,true", matching on authority
+            //  "http://fhatos.org/a/b/c,http://#,true", matching on authority
             "http://fhatos.org/a/b/c,http://fhatos.org/#,true",
             "/a/b/c,/a/b/+,true",
             "/a/b/c,/a/+/c,true",

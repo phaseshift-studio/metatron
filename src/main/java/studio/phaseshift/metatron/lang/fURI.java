@@ -48,7 +48,7 @@ public class fURI implements Cloneable {
         this.send = send;
     }
 
-    public fURI(final String uri) {
+    public fURI(String uri) {
         if (null == uri || uri.isEmpty()) {
             this.scheme = null;
             this.host = null;
@@ -59,6 +59,13 @@ public class fURI implements Cloneable {
             this.query = null;
             return;
         }
+        int queryPosition = uri.indexOf('?');
+        final String tempQuery = queryPosition == -1 ? null : uri.substring(queryPosition + 1);
+        this.query = null == tempQuery ? null : (tempQuery.isBlank() ? null : tempQuery);
+        if (null != this.query)
+            uri = uri.substring(0, queryPosition);
+        this.send = uri.charAt(uri.length() - 1) == '/';
+
         int position = 0;
         int i = uri.indexOf(":");
         int temp = uri.indexOf("//");
@@ -85,17 +92,10 @@ public class fURI implements Cloneable {
         position = null != this.scheme ? temp + 1 : temp;
         if (position == uri.length()) {
             this.path = Collections.emptyList();
-            this.query = null;
             this.send = false;
             return;
         }
-        temp = uri.indexOf("?");
-        if (temp == -1)
-            temp = uri.length();
-        this.path = Arrays.asList(uri.substring(position, temp).split("/"));
-        position = temp + 1;
-        this.query = position < uri.length() - 1 ? uri.substring(position) : null;
-        this.send = uri.charAt(position - 2) == '/';
+        this.path = Arrays.asList(uri.substring(position).split("/"));
     }
 
     public static fURI of(final String uri) {
@@ -105,7 +105,7 @@ public class fURI implements Cloneable {
     public Uri toUri(final boolean schemaType) {
         final String scheme = this.scheme();
         return schemaType && null != scheme ?
-                new MUri(this.scheme(null), fURI.of(scheme), null) :
+                new MUri(this.scjheme(null), fURI.of(scheme), null) :
                 new MUri(this, Uri.TID, null);
     }
 

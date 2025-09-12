@@ -17,8 +17,7 @@
  */
 
 package studio.phaseshift.metatron;
-
-import com.github.tjake.jlama.model.AbstractModel;
+/*import com.github.tjake.jlama.model.AbstractModel;
 import com.github.tjake.jlama.model.ModelSupport;
 import com.github.tjake.jlama.model.functions.Generator;
 import com.github.tjake.jlama.safetensors.DType;
@@ -28,10 +27,10 @@ import org.junit.jupiter.api.*;
 
 import java.io.File;
 import java.util.UUID;
-
+*/
 public class SimpleInferenceTest {
 
-    @Test
+  /*  @Test
     @Disabled("Requires internet access")
     void testInference() throws Exception {
         String model = "TinyLlama/TinyLlama-1.1B-Chat-v1.0";
@@ -59,5 +58,5 @@ public class SimpleInferenceTest {
                 .generate();
 
         System.out.println(r.responseText);
-    }
+    }*/
 }
