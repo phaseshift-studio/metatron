@@ -28,6 +28,8 @@ import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.*;
 
+import static studio.phaseshift.metatron.lang.obj.BObj.NOOBJ_URI;
+
 public class MCoreInstSet extends MObj implements InstSet {
 
     public static final fURI TID = fURI.of("/mtron/core");
@@ -45,6 +47,9 @@ public class MCoreInstSet extends MObj implements InstSet {
     public static final fURI BLOCK_TID = fURI.of("block");
     public static final fURI RNG_TID = fURI.of("rng");
     public static final fURI DOM_TID = fURI.of("dom");
+    public static final fURI TID_TID = fURI.of("tid");
+    public static final fURI VID_TID = fURI.of("vid");
+    public static final fURI TYPE_TID = fURI.of("type");
 
     // inst_tid -> <inst_tid_dom -> set<inst>>
     private static final Map<fURI, Map<fURI, Set<Inst>>> SYMBOL_TABLE = new LinkedHashMap<>() {{
@@ -117,6 +122,30 @@ public class MCoreInstSet extends MObj implements InstSet {
                         fURI.of("#"),
                         Set.of(MInst.instC(BLOCK_TID, MLst.of(MInst.instA(ID_TID)),
                                 (lhs, inst) -> inst.arg(0)))));
+
+
+        put(TID_TID,
+                Map.of(
+                        fURI.of("#"),
+                        Set.of(MInst.instC(TID_TID, MLst.of(),
+                                (lhs, inst) -> lhs.tid().toUri()))));
+
+
+        put(VID_TID,
+                Map.of(
+                        fURI.of("#"),
+                        Set.of(MInst.instC(VID_TID, MLst.of(),
+                                (lhs, inst) -> Optional.ofNullable(lhs.vid()).orElse(NOOBJ_URI).toUri()))));
+
+
+        put(TYPE_TID,
+                Map.of(
+                        fURI.of("#"),
+                        Set.of(MInst.instC(TYPE_TID, MLst.of(),
+                                (lhs, inst) -> {
+                            final Obj type = Router.global().read(inst.arg(0).tid());
+                            return type.isNoObj() ? new MObj(null,lhs.tid(),lhs.tid()) : type;
+                        }))));
 
         put(WITHIN_TID,
                 Map.of(

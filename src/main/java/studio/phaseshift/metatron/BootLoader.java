@@ -19,8 +19,12 @@
 package studio.phaseshift.metatron;
 
 import studio.phaseshift.metatron.lang.fURI;
+import studio.phaseshift.metatron.lang.obj.base.Obj;
 import studio.phaseshift.metatron.lang.obj.base.Uri;
+import studio.phaseshift.metatron.lang.obj.mtron.MLst;
+import studio.phaseshift.metatron.lang.obj.mtron.MRec;
 import studio.phaseshift.metatron.lang.obj.mtron.MUri;
+import studio.phaseshift.metatron.lang.obj.mtron.core.MCoreInstSet;
 import studio.phaseshift.metatron.space.Router;
 import studio.phaseshift.metatron.space.Space;
 import studio.phaseshift.metatron.space.mem.MemRouter;
@@ -31,6 +35,8 @@ import studio.phaseshift.metatron.ui.GraphittyLogger;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import static studio.phaseshift.metatron.space.mqtt.MqttSpace.MQTT_TID;
@@ -58,7 +64,12 @@ public class BootLoader {
         Router.global().registerStruct(new MemSpace(fURI.of("+/#"), fURI.of("/sys/stack")));
         Router.global().registerStruct(new MemSpace(fURI.of("/test/#"), fURI.of("/sys/test")));
         Router.global().registerStruct(new MqttSpace(Map.of(new MUri("broker"), new MUri("ip://192.168.66.2:1883"), new MUri("pattern"), new MUri("/mqtt/#")), MQTT_TID, fURI.of("/mnt/mqtt")));
-        //SInst.load();
+        new MCoreInstSet().value().entrySet().forEach(kv1 -> {
+            Map<Obj,Obj> map = new LinkedHashMap<>();
+            kv1.getValue().forEach((key, value) -> map.put(key.toUri(), MLst.of(new ArrayList<>(value))));
+            Router.global().write(kv1.getKey(), MRec.of(map));
+        });
+                        //SInst.load();
         //SInst.ext();
     }
 }

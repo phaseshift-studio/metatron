@@ -30,7 +30,7 @@ public class MObj implements Obj {
     protected final fURI tid;
     protected final fURI vid;
 
-    protected MObj(final Object value, final fURI tid, final fURI vid) {
+    public MObj(final Object value, final fURI tid, final fURI vid) {
         this.value = value;
         this.tid = tid;
         this.vid = vid;
