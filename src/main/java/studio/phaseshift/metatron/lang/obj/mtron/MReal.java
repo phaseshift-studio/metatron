@@ -21,13 +21,15 @@ package studio.phaseshift.metatron.lang.obj.mtron;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.base.Real;
 
+import static studio.phaseshift.metatron.lang.obj.mtron.core.MCoreInstSet.REAL_TID;
+
 public class MReal extends MObj implements Real {
     public MReal(final Double value, final fURI tid, final fURI vid) {
         super(value, tid, vid);
     }
 
     public MReal(final Double value) {
-        this(value, Real.TID, fURI.NONE);
+        this(value, REAL_TID, fURI.NONE);
     }
 
     @Override

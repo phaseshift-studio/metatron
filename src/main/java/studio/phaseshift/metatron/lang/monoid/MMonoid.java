@@ -106,7 +106,7 @@ public class MMonoid implements Monoid {
                     MMonad barrier = this.monoid.barriers.isEmpty() ? new MMonad(this.monoid, new MObjs(List.of()), inst, 1) : this.monoid.barriers.remove();
                     if (!barrier.obj.isObjs()) {
                         LOG.warn("barrier does not contain and objs: {}", barrier.obj);
-                        barrier.obj = new MObjs(List.of(barrier.obj), Objs.TID, fURI.NONE);
+                        barrier.obj = MObjs.of(List.of(barrier.obj));
                     }
                     // TODO:!!! APPEND  this.monoid.barriers.add(new MMonad(this.monoid, barrier.obj.<Objs>as().append(this.obj), this.inst, this.bulk));
                 }

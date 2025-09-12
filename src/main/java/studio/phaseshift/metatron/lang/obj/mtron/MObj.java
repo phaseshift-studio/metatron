@@ -67,8 +67,9 @@ public class MObj implements Obj {
     @Override
     public boolean equals(final Object other) {
         return this.getClass().isAssignableFrom(other.getClass()) &&
-                this.tid.equals(((Obj) other).tid()) &&
-                this.value.equals(((Obj) other).value());
+                Objects.equals(this.tid, ((Obj) other).tid()) &&
+                Objects.equals(this.vid, ((Obj) other).vid()) &&
+                Objects.equals(this.value,((Obj) other).value());
     }
 
     @Override
@@ -76,7 +77,7 @@ public class MObj implements Obj {
         return Graphitty.string(this);
     }
 
-    private static final Obj SINGLE = new MObj(new Object(), fURI.of("#"), fURI.NONE);
+    private static final Obj SINGLE = new MObj(new Object(), fURI.of("obj"), fURI.NONE);
 
     public static Obj single() {
         return SINGLE;

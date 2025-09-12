@@ -25,12 +25,12 @@ public class NullSpace implements Space {
     }
 
     @Override
-    public Obj read(fURI addr) {
+    public Obj read(fURI vid) {
         return NoObj.single();
     }
 
     @Override
-    public Obj write(fURI addr, Obj obj) {
+    public Obj write(fURI vid, Obj obj) {
         return NoObj.single();
     }
 

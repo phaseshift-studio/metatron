@@ -20,6 +20,6 @@ package studio.phaseshift.metatron.lang.obj.base;
 
 public interface Poly extends Obj {
 
-    public int count();
+    public long count();
     public <O extends Obj> Iterable<O> elements();
 }

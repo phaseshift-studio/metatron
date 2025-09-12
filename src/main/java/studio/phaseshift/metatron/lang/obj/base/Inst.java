@@ -35,7 +35,6 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 
 public interface Inst extends Obj {
-    public static final fURI TID = fURI.of("/mtron/inst");
     public static final fURI DOM = fURI.of("dom");
     public static final fURI RNG = fURI.of("rng");
     // /mtron/plus?dom=/mtron/int,rng=/mtron/int
@@ -66,7 +65,7 @@ public interface Inst extends Obj {
     default Rel domRng() {
         //  final Obj dom = ((Router) new Object()).read(this.tid().queryValue(DOM, fURI.class, Obj.TID));
         //  final Obj rng = ((Router) new Object()).read(this.tid().queryValue(RNG, fURI.class, Obj.TID));
-        return new MRel(Pair.with(MObj.single(), MObj.single()));
+        return new MRel(Pair.with(NoObj.single(), NoObj.single()));
     }
 
     default Poly args() {

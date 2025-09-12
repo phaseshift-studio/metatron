@@ -24,13 +24,25 @@ import studio.phaseshift.metatron.lang.obj.base.*;
 import studio.phaseshift.metatron.lang.obj.mtron.*;
 import studio.phaseshift.metatron.space.Router;
 import studio.phaseshift.metatron.util.IteratorUtil;
-import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.*;
-
-import static studio.phaseshift.metatron.lang.obj.BObj.NOOBJ_URI;
+import java.util.function.BiFunction;
+import java.util.stream.Collectors;
 
 public class MCoreInstSet extends MObj implements InstSet {
+
+    public static final fURI BOOL_TID = fURI.of("/mtron/bool");
+    public static final fURI INT_TID = fURI.of("/mtron/int");
+    public static final fURI REAL_TID = fURI.of("/mtron/real");
+    public static final fURI STR_TID = fURI.of("/mtron/str");
+    public static final fURI URI_TID = fURI.of("/mtron/uri");
+    public static final fURI REL_TID = fURI.of("/mtron/rel");
+    public static final fURI LST_TID = fURI.of("/mtron/lst");
+    public static final fURI REC_TID = fURI.of("/mtron/rec");
+    public static final fURI INST_TID = fURI.of("/mtron/inst");
+    public static final fURI CODE_TID = fURI.of("/mtron/code");
+    public static final fURI OBJS_TID = fURI.of("/mtron/objs");
+    public static final fURI NOOBJ_TID = fURI.of("/mtron/noobj");
 
     public static final fURI TID = fURI.of("/mtron/core");
     public static final fURI ID_TID = fURI.of("id");
@@ -51,154 +63,63 @@ public class MCoreInstSet extends MObj implements InstSet {
     public static final fURI VID_TID = fURI.of("vid");
     public static final fURI TYPE_TID = fURI.of("type");
     public static final fURI AT_TID = fURI.of("at");
+    public static final fURI IS_TID = fURI.of("is");
+    public static final fURI EQ_TID = fURI.of("eq");
+    public static final fURI NEQ_TID = fURI.of("neq");
+    public static final fURI GT_TID = fURI.of("gt");
+    public static final fURI LT_TID = fURI.of("lt");
+    public static final fURI GTE_TID = fURI.of("gte");
+    public static final fURI LTE_TID = fURI.of("lte");
 
     // inst_tid -> <inst_tid_dom -> set<inst>>
-    private static final Map<fURI, Map<fURI, Set<Inst>>> SYMBOL_TABLE = new LinkedHashMap<>() {{
-        put(ID_TID, Map.of(fURI.of("#"), Set.of(MInst.instC(ID_TID, MLst.of(), (lhs, inst) -> lhs))));
-        put(START_TID,
-                Map.of(
-                        fURI.of("#"), // should be '' (noobj)
-                        Set.of(MInst.instC(START_TID, MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> inst.arg(0)))));
-        put(PLUS_TID,
-                Map.of(
-                        fURI.of("#"),
-                        Set.of(MInst.instC(PLUS_TID, MLst.of(MInst.instA(ID_TID)),
-                                (lhs, inst) -> lhs.value(lhs.<Int>as().value() + inst.arg(0).<Int>as().value())))));
+    private static final Map<fURI, Map<fURI, Set<Inst>>> SYMBOL_TABLE = new LinkedHashMap<>();
 
-        put(MULT_TID,
-                Map.of(
-                        fURI.of("#"),
-                        Set.of(MInst.instC(MULT_TID, MLst.of(MInst.instA(ID_TID)),
-                                (lhs, inst) -> lhs.value(lhs.<Int>as().value() * inst.arg(0).<Int>as().value())))));
-
-        put(DOM_TID,
-                Map.of(
-                        fURI.of("#"),
-                        Set.of(MInst.instC(DOM_TID, MLst.of(),
-                                (lhs, inst) -> {
-                                    if (lhs.isRel())
-                                        return lhs.relValue().getValue0();
-                                    else if (lhs.isRec())
-                                        return MObjs.of(lhs.recValue().keySet());
-                                    else
-                                        return lhs;
-                                }))));
-
-        put(RNG_TID,
-                Map.of(
-                        fURI.of("#"),
-                        Set.of(MInst.instC(RNG_TID, MLst.of(),
-                                (lhs, inst) -> {
-                                    if (lhs.isRel())
-                                        return lhs.relValue().getValue1();
-                                    else if (lhs.isRec())
-                                        return MObjs.of(lhs.recValue().values());
-                                    else
-                                        return lhs;
-                                }))));
-
-        put(MAP_TID,
-                Map.of(
-                        fURI.of("#"),
-                        Set.of(MInst.instC(MAP_TID, MLst.of(MInst.instA(ID_TID)),
-                                (lhs, inst) -> inst.arg(0)))));
-        put(TO_TID,
-                Map.of(
-                        fURI.of("#"),
-                        Set.of(MInst.instC(TO_TID, MLst.of(MInst.instA(ID_TID)),
-                                (lhs, inst) -> Router.global().write(inst.arg(0).uriValue(), lhs)))));
-        put(FROM_TID,
-                Map.of(
-                        fURI.of("#"),
-                        Set.of(MInst.instC(FROM_TID, MLst.of(MInst.instA(ID_TID)),
-                                (lhs, inst) -> Router.global().read(inst.arg(0).uriValue())))));
-        put(REF_TID,
-                Map.of(
-                        fURI.of("#"),
-                        Set.of(MInst.instC(REF_TID, MLst.of(MInst.instA(ID_TID)),
-                                (lhs, inst) -> Router.global().write(lhs.uriValue(), inst.arg(0))))));
-
-        put(BLOCK_TID,
-                Map.of(
-                        fURI.of("#"),
-                        Set.of(MInst.instC(BLOCK_TID, MLst.of(MInst.instA(ID_TID)),
-                                (lhs, inst) -> inst.arg(0)))));
+    public void load() {
+        this.define(MERGE_TID, fURI.ALL, MLst.of(), (lhs, inst) -> lhs.isPoly() ? MObjs.of(lhs.<Poly>as().elements()) : lhs);
+        this.define(AT_TID, fURI.ALL, MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> lhs.vid(inst.arg(0).uriValue()));
+        this.define(TYPE_TID, fURI.ALL, MLst.of(), (lhs, inst) -> Router.global().read(inst.arg(0).tid()).orElse(new MObj(null, lhs.tid(), lhs.tid())));
+        this.define(TID_TID, fURI.ALL, MLst.of(), (lhs, inst) -> lhs.tid().toUri());
+        this.define(VID_TID, fURI.ALL, MLst.of(), (lhs, inst) -> lhs.vid().toUri());
+        this.define(MAP_TID, fURI.ALL, MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> inst.arg(0));
+        this.define(BLOCK_TID, fURI.ALL, MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> inst.arg(0));
+        this.define(DOM_TID, REC_TID, MLst.of(), (lhs, inst) -> MObjs.of(lhs.recValue().keySet()));
+        this.define(DOM_TID, REL_TID, MLst.of(), (lhs, inst) -> MObjs.of(lhs.relValue().getValue0()));
+        this.define(DOM_TID, fURI.ALL, MLst.of(), (lhs, inst) -> lhs);
+        this.define(RNG_TID, REC_TID, MLst.of(), (lhs, inst) -> MObjs.of(lhs.recValue().values()));
+        this.define(RNG_TID, REL_TID, MLst.of(), (lhs, inst) -> MObjs.of(lhs.relValue().getValue1()));
+        this.define(RNG_TID, fURI.ALL, MLst.of(), (lhs, inst) -> lhs);
+        this.define(TO_TID, fURI.ALL, MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> Router.global().write(inst.arg(0).uriValue(), lhs));
+        this.define(FROM_TID, fURI.ALL, MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> Router.global().read(inst.arg(0).uriValue()));
+        this.define(REF_TID, fURI.ALL, MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> Router.global().write(lhs.uriValue(), inst.arg(0)));
+        this.define(ID_TID, fURI.ALL, MLst.of(), (lhs, inst) -> lhs);
+        this.define(START_TID, fURI.ALL, MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> inst.arg(0));
+        this.define(PLUS_TID, INT_TID, MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> lhs.value(lhs.intValue() + inst.arg(0).intValue()));
+        this.define(PLUS_TID, REAL_TID, MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> lhs.value(lhs.realValue() + inst.arg(0).realValue()));
+        this.define(PLUS_TID, URI_TID, MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> lhs.value(lhs.uriValue().extend(inst.arg(0).uriValue())));
+        this.define(MULT_TID, INT_TID, MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> lhs.value(lhs.intValue() * inst.arg(0).intValue()));
+        this.define(MULT_TID, REAL_TID, MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> lhs.value(lhs.realValue() * inst.arg(0).realValue()));
+        this.define(MULT_TID, URI_TID, MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> lhs.value(lhs.uriValue().retractPattern().extend(inst.arg(0).uriValue())));
+        this.define(IS_TID, fURI.ALL, MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> inst.arg(0).boolValue() ? lhs : NoObj.single());
+        this.define(EQ_TID, fURI.ALL, MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> MBool.of(lhs.equals(inst.arg(0))));
+        this.define(NEQ_TID, fURI.ALL, MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> MBool.of(!lhs.equals(inst.arg(0))));
+        this.define(GT_TID, INT_TID, MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> MBool.of(lhs.intValue() > inst.arg(0).intValue()));
+        this.define(GT_TID, REAL_TID, MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> MBool.of(lhs.realValue() > inst.arg(0).realValue()));
+        this.define(GT_TID, STR_TID, MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> MBool.of(lhs.strValue().compareTo(inst.arg(0).strValue()) > 0));
+        this.define(WITHIN_TID, fURI.ALL, MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> MLst.of(IteratorUtil.asList(new MMonoid(inst.arg(0), MObjs.of(lhs.<Poly>as().elements())).iterator())));
+        this.define(SPLIT_TID, LST_TID, MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> MLst.of(inst.arg(0).lstValue().stream().map(e -> e.apply(lhs)).toList()));
+        this.define(SPLIT_TID, REC_TID, MLst.of(MInst.instA(ID_TID)), (lhs, inst) ->  MRec.of( inst.arg(0).recValue().entrySet().stream().map(kv -> List.of(kv.getKey(),kv.getValue().apply(lhs))).collect(Collectors.toMap(kv -> kv.get(0),kv -> kv.get(1), (a,b) -> b))));
+        this.define(SPLIT_TID, fURI.ALL, MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> inst.arg(0));
+    }
 
 
-        put(TID_TID,
-                Map.of(
-                        fURI.of("#"),
-                        Set.of(MInst.instC(TID_TID, MLst.of(),
-                                (lhs, inst) -> lhs.tid().toUri()))));
-
-
-        put(VID_TID,
-                Map.of(
-                        fURI.of("#"),
-                        Set.of(MInst.instC(VID_TID, MLst.of(),
-                                (lhs, inst) -> Optional.ofNullable(lhs.vid()).orElse(NOOBJ_URI).toUri()))));
-
-
-        put(TYPE_TID,
-                Map.of(
-                        fURI.of("#"),
-                        Set.of(MInst.instC(TYPE_TID, MLst.of(),
-                                (lhs, inst) -> {
-                            final Obj type = Router.global().read(inst.arg(0).tid());
-                            return type.isNoObj() ? new MObj(null,lhs.tid(),lhs.tid()) : type;
-                        }))));
-
-        put(WITHIN_TID,
-                Map.of(
-                        fURI.of("#"),
-                        Set.of(MInst.instC(WITHIN_TID, MLst.of(MInst.instA(ID_TID)),
-                                (lhs, inst) -> {
-                                    final List<Obj> map = new ArrayList<>();
-                                    final MMonoid monoid = new MMonoid(inst.arg(0),MObjs.of(lhs.<Poly>as().elements()));
-                                    IteratorUtil.iterate(IteratorUtil.consume(monoid.iterator(), map::add));
-                                    return MLst.of(map);
-                                }))));
-
-        put(MERGE_TID,
-                Map.of(
-                        fURI.of("#"),
-                        Set.of(MInst.instC(MERGE_TID, MLst.of(),
-                                (lhs, inst) -> MObjs.of(lhs.<Poly>as().elements())))));
-
-        put(AT_TID,
-                Map.of(
-                        fURI.of("#"),
-                        Set.of(MInst.instC(AT_TID, MLst.of(MInst.instA(ID_TID)),
-                                (lhs, inst) -> lhs.vid(inst.arg(0).uriValue())))));
-
-        put(SPLIT_TID,
-                Map.of(
-                        fURI.of("#"),
-                        Set.of(MInst.instC(SPLIT_TID, MLst.of(MInst.instA(ID_TID)),
-                                (lhs, inst) -> {
-                                    if (inst.arg(0).isLst()) {
-                                        final List<Obj> split_lst = new ArrayList<>();
-                                        for (final Obj a : inst.arg(0).lstValue()) {
-                                            split_lst.add(a.apply(lhs));
-                                        }
-                                        return MLst.of(split_lst);
-                                    } else if (inst.arg(0).isRec()) {
-                                        final Map<Obj,Obj> split_rec = new LinkedHashMap<>();
-                                        for(final Map.Entry<Obj,Obj> entry : inst.arg(0).recValue().entrySet()) {
-                                            final Obj key = entry.getKey().apply(lhs);
-                                            if(!key.isNoObj())
-                                                split_rec.put(key,entry.getValue().apply(lhs));
-                                        }
-                                        return MRec.of(split_rec);
-                                    } else {
-                                        return inst.arg(0);
-                                    }
-                                }))));
-    }};
-
+    protected MCoreInstSet define(final fURI tid, final fURI domMatch, final Poly args, final BiFunction<Obj, Inst, Obj> f) {
+        SYMBOL_TABLE.computeIfAbsent(tid, k -> new LinkedHashMap<>()).computeIfAbsent(domMatch, k -> new LinkedHashSet<>()).add(MInst.instC(tid, args, f));
+        return this;
+    }
 
     public MCoreInstSet() {
         super(SYMBOL_TABLE, TID, fURI.NONE);
+        this.load();
     }
 
     @Override
@@ -208,6 +129,6 @@ public class MCoreInstSet extends MObj implements InstSet {
 
     @Override
     public Map<fURI, Map<fURI, Set<Inst>>> value() {
-        return (Map<fURI, Map<fURI, Set<Inst>>>) this.value;
+        return SYMBOL_TABLE;
     }
 }

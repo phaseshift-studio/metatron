@@ -22,8 +22,6 @@ import studio.phaseshift.metatron.lang.fURI;
 
 public interface Str extends Obj {
 
-    public static final fURI TID = fURI.of("/mtron/str");
-
     @Override
     Str clone(final Object value, final fURI tid, final fURI vid);
 

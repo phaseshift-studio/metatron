@@ -35,6 +35,7 @@ import studio.phaseshift.metatron.lang.obj.base.Obj;
 import studio.phaseshift.metatron.lang.obj.mtron.MCode;
 import studio.phaseshift.metatron.lang.parse.ObjParser;
 import studio.phaseshift.metatron.util.IteratorUtil;
+import studio.phaseshift.metatron.util.StringUtil;
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;
@@ -105,11 +106,15 @@ public class Console {
                            builder.append(buffer);
                            if (o.isCode() && Console.RESOLVE_MODE) {
                                final Code rCode = new MCode(o.codeValue().stream().map(i -> i.resolve(Inst.Resolve.B, NoObj.single())).toList());
-                               Graphitty.stdout().print(Graphitty.string("{{v1&-X&|%d}}%s".formatted(8, rCode)));
-                               Graphitty.stdout().print(Graphitty.string("{{^1&|%d}}".formatted(xLocation)));
+                               final String rCodeString = rCode.toString();
+                               final int yDistance = StringUtil.countLines(rCodeString);
+                               Graphitty.stdout().print(Graphitty.string("{{v1&Xv&|%d}}%s".formatted(8, rCodeString)));
+                               Graphitty.stdout().print(Graphitty.string("{{^%d&|%d}}".formatted(yDistance, xLocation)));
                            } else {
-                               Graphitty.stdout().print(Graphitty.string("{{v1&-X&|%d}}%s".formatted(8, o)));
-                               Graphitty.stdout().print(Graphitty.string("{{^1&|%d}}".formatted(xLocation)));
+                               final String oString = o.toString();
+                               final int yDistance = StringUtil.countLines(oString);
+                               Graphitty.stdout().print(Graphitty.string("{{v1&Xv&|%d}}%s".formatted(8, oString)));
+                               Graphitty.stdout().print(Graphitty.string("{{^%d&|%d}}".formatted(yDistance, xLocation)));
                            }
                        }
 

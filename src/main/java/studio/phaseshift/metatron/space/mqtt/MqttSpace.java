@@ -31,7 +31,6 @@ import studio.phaseshift.metatron.lang.obj.base.Uri;
 import studio.phaseshift.metatron.lang.obj.mtron.MObj;
 import studio.phaseshift.metatron.lang.obj.mtron.MUri;
 import studio.phaseshift.metatron.ui.Palette;
-import studio.phaseshift.metatron.lang.obj.SObj;
 import studio.phaseshift.metatron.lang.translate.JSONTranslator;
 import studio.phaseshift.metatron.space.Space;
 import studio.phaseshift.metatron.space.mem.MemSpace;
@@ -85,7 +84,9 @@ public class MqttSpace extends MObj implements Space {
                     .useMqttVersion5()
                     .build();
             this.client.toAsync()
-                    .connect()
+                    .connectWith()
+                    .cleanStart(false)
+                    .send()
                     .whenComplete((a, b) -> LOG.info("connected {}", a))
                     .get();
             this.client.toAsync()
@@ -96,13 +97,13 @@ public class MqttSpace extends MObj implements Space {
                         LOG.info("received {}", p);
                         if (p.getPayload().isPresent()) {
                             final String json = StandardCharsets.UTF_8.decode(p.getPayload().get()).toString();
-                            /*this.cache.write(
+                            this.cache.write(
                                     fURI.of(p.getTopic().toString()),
-                                    this.jsonTranslator.translateString(json));*/
+                                    this.jsonTranslator.translateString(json));
                         } else {
-                       /*     this.cache.write(
+                          this.cache.write(
                                     fURI.of(p.getTopic().toString()),
-                                    NoObj.of());*/
+                                    NoObj.single());
                         }
                     })
                     .send()
@@ -118,31 +119,31 @@ public class MqttSpace extends MObj implements Space {
     }
 
     @Override
-    public Obj read(final fURI addr) {
-        return this.cache.read(addr);
+    public Obj read(final fURI vid) {
+        return this.cache.read(vid);
     }
 
     @Override
-    public Obj write(final fURI addr, final Obj obj) {
+    public Obj write(final fURI vid, final Obj obj) {
         try {
             this.client
                     .toAsync()
                     .publishWith()
-                    .topic(addr.toString())
-                    //.payload(obj.isNoObj() ? new byte[0] : this.jsonTranslator.translate(obj).toString().getBytes())
+                    .topic(vid.toString())
+                    .payload(obj.isNoObj() ? new byte[0] : this.jsonTranslator.translate(obj).toString().getBytes())
                     .retain(true)
                     .send()
                     .whenComplete((p, t) -> {
                         LOG.info("caching {}", p.getPublish());
                         if (p.getPublish().getPayload().isPresent()) {
                             final String json = StandardCharsets.UTF_8.decode(p.getPublish().getPayload().get()).toString();
-                        /*    this.cache.write(
+                            this.cache.write(
                                     fURI.of(p.getPublish().getTopic().toString()),
-                                    this.jsonTranslator.translateString(json));*/
+                                    this.jsonTranslator.translateString(json));
                         } else {
-                          /*  this.cache.write(
+                            this.cache.write(
                                     fURI.of(p.getPublish().getTopic().toString()),
-                                    NoObj.of());*/
+                                    NoObj.single());
                         }
                     }).get();
             return NoObj.single();

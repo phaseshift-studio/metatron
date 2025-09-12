@@ -21,13 +21,15 @@ package studio.phaseshift.metatron.lang.obj.mtron;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.base.Str;
 
+import static studio.phaseshift.metatron.lang.obj.mtron.core.MCoreInstSet.STR_TID;
+
 public class MStr extends MObj implements Str {
     public MStr(final String value, final fURI tid, final fURI vid) {
         super(value, tid, vid);
     }
 
     public MStr(final String value) {
-        this(value, Str.TID, fURI.NONE);
+        this(value, STR_TID, fURI.NONE);
     }
 
     @Override

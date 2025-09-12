@@ -25,10 +25,11 @@ import studio.phaseshift.metatron.util.ObjUtil;
 
 import java.util.Iterator;
 
+import static studio.phaseshift.metatron.lang.obj.mtron.core.MCoreInstSet.NOOBJ_TID;
+
 public class NoObj implements Obj, Inst {
 
     private static final NoObj SINGLE = new NoObj();
-    public static final fURI TID = fURI.of("/mtron/noobj");
 
     private NoObj() {
         // singleton
@@ -45,7 +46,7 @@ public class NoObj implements Obj, Inst {
 
     @Override
     public fURI tid() {
-        return TID;
+        return NOOBJ_TID;
     }
 
     @Override

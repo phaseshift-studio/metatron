@@ -77,11 +77,11 @@ public class MemSpace extends MObj implements Space {
 
 
     @Override
-    public Obj read(final fURI addr) {
-        if (addr.isBranch()) {
+    public Obj read(final fURI vid) {
+        if (vid.isBranch()) {
             // pattern/branch
-            if (addr.hasPattern()) {
-                Graphitty.log(this).info("processing pattern %s", addr.toUri());
+            if (vid.hasPattern()) {
+                Graphitty.log(this).info("processing pattern %s", vid.toUri());
                 return new MObjs((Iterable)this.store.entrySet()
                         .stream()
                         .flatMap(kv -> kv.getValue().isRec() ? kv
@@ -93,37 +93,37 @@ public class MemSpace extends MObj implements Space {
                                 .flatMap(kv2 -> Map.of(kv.getKey().extend(kv2.getKey().uriValue()), kv2.getValue()).entrySet().stream()) : Stream.of(kv))
                         .flatMap(kv -> Map.of(kv.getKey().toUri(), kv.getValue()).entrySet().stream())
                         .filter(kv -> {
-                            final boolean check = kv.getKey().matches(addr.toUri()) || kv.getKey().matches(addr.retractPattern().asNode().toUri());
-                            Graphitty.log(this).info("checking %s against %s at %s [%s]", addr.asNode(), kv.getValue(), kv.getKey(), check ? "{{g}}OK{{X}}" : "{{r}}X{{X}}");
+                            final boolean check = kv.getKey().matches(vid.toUri()) || kv.getKey().matches(vid.retractPattern().asNode().toUri());
+                            Graphitty.log(this).info("checking %s against %s at %s [%s]", vid.asNode(), kv.getValue(), kv.getKey(), check ? "{{g}}OK{{X}}" : "{{r}}X{{X}}");
                             return check;
                         })
-                        .map(kv -> new MRel(Pair.with(kv.getKey(), kv.getValue()), Rel.TID, fURI.NONE)).toList());
+                        .map(kv -> MRel.of(kv.getKey(), kv.getValue())).toList());
             } else {
                 // resolved/branch
-                Graphitty.log(this).info("searching %s", addr.extend("+").toUri());
-                return this.read(addr.extend("+").asBranch());// new SObj.Objs(List.of(new SObj.Rel(Pair.with(SObj.Uri.of(addr), this.store.getOrDefault(addr, NoObj.of())), REL_URI, fURI.NONE)), OBJS_URI, fURI.NONE);
+                Graphitty.log(this).info("searching %s", vid.extend("+").toUri());
+                return this.read(vid.extend("+").asBranch());// new SObj.Objs(List.of(new SObj.Rel(Pair.with(SObj.Uri.of(addr), this.store.getOrDefault(addr, NoObj.of())), REL_URI, fURI.NONE)), OBJS_URI, fURI.NONE);
             }
         } else {
             Map<Uri, Obj> map = new LinkedHashMap<>();
-            if (addr.hasPattern()) {
+            if (vid.hasPattern()) {
                 this.store.entrySet()
                         .stream()
-                        .filter(kv -> kv.getKey().matches(addr))
+                        .filter(kv -> kv.getKey().matches(vid))
                         .forEach(kv ->
                                 map.put(kv.getKey().toUri(), kv.getValue()));
-            } else if (this.store.containsKey(addr))
-                map.put(addr.toUri(), this.store.get(addr));
+            } else if (this.store.containsKey(vid))
+                map.put(vid.toUri(), this.store.get(vid));
             if (map.isEmpty()) {
-                final Optional<Pair<fURI, Poly>> pair = this.locateBasePoly(addr.retract(), null);
+                final Optional<Pair<fURI, Poly>> pair = this.locateBasePoly(vid.retract(), null);
                 if (pair.isPresent()) {
                     final Poly poly = pair.get().getValue1();
                     Graphitty.stdout().print("base poly found at %s: %s\n".formatted(pair.get().getValue0(), poly));
-                    final fURI furiSubpath = addr.removeSubpath(pair.get().getValue0()).asNode();
+                    final fURI furiSubpath = vid.removeSubpath(pair.get().getValue0()).asNode();
                     Graphitty.stdout().print("searching base poly %s for %s\n".formatted(poly, furiSubpath.toUri()));
                     final Obj readObj = null; //poly.get(furiSubpath);
                     Graphitty.stdout().print("located poly obj %s in %s\n".formatted(readObj, poly));
                     if (!readObj.isNoObj())
-                        map.put(addr.retractPattern().toUri(), readObj);
+                        map.put(vid.retractPattern().toUri(), readObj);
                 } /*(else if (result.isNoObj()) {
                     result. (NoObj.of());
                 }*/
@@ -155,8 +155,8 @@ public class MemSpace extends MObj implements Space {
     }
 
     @Override
-    public Obj write(final fURI addr, Obj obj) {
-        this.resolveWrite(addr, addr.retractPattern(), obj, (resolvedAddr, resolvedObj) -> {
+    public Obj write(final fURI vid, Obj obj) {
+        this.resolveWrite(vid, vid.retractPattern(), obj, (resolvedAddr, resolvedObj) -> {
             if (resolvedObj.isNoObj())
                 this.store.remove(resolvedAddr);
             else

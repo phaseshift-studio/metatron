@@ -21,6 +21,8 @@ package studio.phaseshift.metatron.lang.obj.mtron;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.base.Int;
 
+import static studio.phaseshift.metatron.lang.obj.mtron.core.MCoreInstSet.INT_TID;
+
 public class MInt extends MObj implements Int {
 
     public MInt(final Long value, final fURI tid, final fURI vid) {
@@ -28,7 +30,7 @@ public class MInt extends MObj implements Int {
     }
 
     public MInt(final Long value) {
-        this(value, Int.TID, fURI.NONE);
+        this(value, INT_TID, fURI.NONE);
     }
 
     @Override

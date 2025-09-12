@@ -24,6 +24,8 @@ import studio.phaseshift.metatron.lang.obj.base.Inst;
 
 import java.util.List;
 
+import static studio.phaseshift.metatron.lang.obj.mtron.core.MCoreInstSet.CODE_TID;
+
 public class MCode extends MObj implements Code {
 
     public MCode(final List<Inst> value, final fURI tid, final fURI vid) {
@@ -31,7 +33,7 @@ public class MCode extends MObj implements Code {
     }
 
     public MCode(final List<Inst> value) {
-        this(value, Code.TID, fURI.NONE);
+        this(value, CODE_TID, fURI.NONE);
     }
 
     @Override
@@ -45,7 +47,7 @@ public class MCode extends MObj implements Code {
     }
 
     public static Code of(final List<Inst> insts) {
-        return new MCode(insts, Code.TID, fURI.NONE);
+        return new MCode(insts, CODE_TID, fURI.NONE);
     }
 
     /*@Override

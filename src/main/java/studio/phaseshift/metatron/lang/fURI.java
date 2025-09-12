@@ -27,6 +27,8 @@ import java.util.*;
 
 public class fURI implements Cloneable {
 
+    public static final fURI ALL = fURI.of("#");
+    public static final fURI ONE = fURI.of("+");
     public static final fURI NONE = null;
     public static final fURI DOM = fURI.of("dom");
     public static final fURI RNG = fURI.of("rng");
@@ -109,7 +111,7 @@ public class fURI implements Cloneable {
         final String scheme = this.scheme();
         return schemaType && null != scheme ?
                 new MUri(this.scheme(null), fURI.of(scheme), null) :
-                new MUri(this, Uri.TID, null);
+                MUri.of(this);
     }
 
     public String name() {

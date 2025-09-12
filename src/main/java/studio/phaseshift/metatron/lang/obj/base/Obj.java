@@ -28,9 +28,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
-public interface Obj extends Function<Obj, Obj>, Iterable<Obj> {
+import static studio.phaseshift.metatron.lang.obj.mtron.core.MCoreInstSet.*;
 
-    public static final fURI TID = fURI.of("/mtron/obj");
+public interface Obj extends Function<Obj, Obj>, Iterable<Obj> {
 
     <O extends Object> O value();
 
@@ -139,60 +139,60 @@ public interface Obj extends Function<Obj, Obj>, Iterable<Obj> {
     default boolean boolValue() {
         if (this.isBool())
             return this.value();
-        throw MTronException.of("%s is a %s is not a %s", this, tid().toUri(), Bool.TID.toUri());
+        throw MTronException.of("%s is a %s is not a %s", this, tid().toUri(), BOOL_TID.toUri());
     }
 
     default Long intValue() {
         if (this.isInt())
             return this.value();
-        throw MTronException.of("%s is a %s is not an %s", this, tid().toUri(), Int.TID.toUri());
+        throw MTronException.of("%s is a %s is not an %s", this, tid().toUri(), INT_TID.toUri());
     }
 
     default Double realValue() {
         if (this.isReal())
             return this.value();
-        throw MTronException.of("%s is a %s is not a %s", this, tid().toUri(), Real.TID.toUri());
+        throw MTronException.of("%s is a %s is not a %s", this, tid().toUri(), REAL_TID.toUri());
     }
 
     default String strValue() {
         if (this.isStr())
             return this.value();
-        throw MTronException.of("%s is a %s is not a %s", this, tid().toUri(), Str.TID.toUri());
+        throw MTronException.of("%s is a %s is not a %s", this, tid().toUri(), STR_TID.toUri());
     }
 
     default fURI uriValue() {
         if (this.isUri())
             return this.value();
-        throw MTronException.of("%s is a %s is not a %s", this, tid().toUri(), Uri.TID.toUri());
+        throw MTronException.of("%s is a %s is not a %s", this, tid().toUri(), URI_TID.toUri());
     }
 
     default List<Obj> lstValue() {
         if (this.isLst())
             return this.value();
-        throw MTronException.of("%s is a %s is not a %s", this, tid().toUri(), Lst.TID.toUri());
+        throw MTronException.of("%s is a %s is not a %s", this, tid().toUri(), LST_TID.toUri());
     }
 
     default Iterable<Obj> objsValue() {
         if (this.isObjs())
             return this.value();
-        throw MTronException.of("%s is a %s is not an %s", this, tid().toUri(), Objs.TID.toUri());
+        throw MTronException.of("%s is a %s is not an %s", this, tid().toUri(), OBJS_TID.toUri());
     }
 
     default Map<Obj, Obj> recValue() {
         if (this.isRec())
             return this.value();
-        throw MTronException.of("%s is a %s is not a %s", this, tid().toUri(), Rec.TID.toUri());
+        throw MTronException.of("%s is a %s is not a %s", this, tid().toUri(), REC_TID.toUri());
     }
 
     default Pair<Obj, Obj> relValue() {
         if (this.isRel())
             return this.value();
-        throw MTronException.of("%s is a %s is not a %s", this, tid().toUri(), Rel.TID.toUri());
+        throw MTronException.of("%s is a %s is not a %s", this, tid().toUri(), REL_TID.toUri());
     }
 
     default List<Inst> codeValue() {
         if (this.isCode())
             return this.value();
-        throw MTronException.of("%s is a %s is not a %s", this, tid().toUri(), Code.TID.toUri());
+        throw MTronException.of("%s is a %s is not a %s", this, tid().toUri(), CODE_TID.toUri());
     }
 }

@@ -26,7 +26,6 @@ import studio.phaseshift.metatron.lang.obj.mtron.MRel;
 import java.util.Map;
 
 public interface Rec extends Poly {
-    public static final fURI TID = fURI.of("/mtron/rec");
 
     @Override
     Rec clone(final Object value, final fURI tid, final fURI vid);
@@ -35,13 +34,17 @@ public interface Rec extends Poly {
     Map<Obj, Obj> value();
 
     @Override
-    default int count() {
+    default long count() {
         return this.value().size();
     }
 
     @Override
     default Iterable<Rel> elements() {
-        return () -> this.value().entrySet().stream().map(kv -> (Rel) new MRel(Pair.with(kv.getKey(), kv.getValue()))).iterator();
+        return () -> this
+                .value()
+                .entrySet()
+                .stream()
+                .map(kv -> (Rel) new MRel(Pair.with(kv.getKey(), kv.getValue()))).iterator();
     }
 
 }

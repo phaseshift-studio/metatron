@@ -39,22 +39,22 @@ public interface Space extends Poly {
 
     fURI pattern();
 
-    default Obj read(final String addr) {
-        return this.read(fURI.of(addr));
+    default Obj read(final String vid) {
+        return this.read(fURI.of(vid));
     }
 
-    Obj read(final fURI addr);
+    Obj read(final fURI vid);
 
-    default Obj write(final String addr, final Obj obj) {
-        return this.write(fURI.of(addr), obj);
+    default Obj write(final String vid, final Obj obj) {
+        return this.write(fURI.of(vid), obj);
     }
 
-    Obj write(final fURI addr, final Obj obj);
+    Obj write(final fURI vid, final Obj obj);
 
     void append(final fURI addr, final Obj... obj);
 
     @Override
-    default int count() {
+    default long count() {
         return 0;
     }
 

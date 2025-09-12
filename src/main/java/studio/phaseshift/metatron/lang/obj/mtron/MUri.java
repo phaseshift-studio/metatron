@@ -21,13 +21,15 @@ package studio.phaseshift.metatron.lang.obj.mtron;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.base.Uri;
 
+import static studio.phaseshift.metatron.lang.obj.mtron.core.MCoreInstSet.URI_TID;
+
 public class MUri extends MObj implements Uri {
     public MUri(final fURI value, final fURI tid, final fURI vid) {
         super(value, tid, vid);
     }
 
     public MUri(final fURI value) {
-        this(value, Uri.TID, fURI.NONE);
+        this(value, URI_TID, fURI.NONE);
     }
 
     public MUri(final String value) {

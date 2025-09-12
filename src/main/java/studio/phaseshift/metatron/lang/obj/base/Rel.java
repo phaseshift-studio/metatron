@@ -20,15 +20,27 @@ package studio.phaseshift.metatron.lang.obj.base;
 
 import org.javatuples.Pair;
 import studio.phaseshift.metatron.lang.fURI;
+import studio.phaseshift.metatron.util.IteratorUtil;
 
-public interface Rel extends Obj {
-    public static final fURI TID = fURI.of("/mtron/rel");
+import java.util.Iterator;
+
+public interface Rel extends Poly {
 
     @Override
     Rel clone(final Object value, final fURI tid, final fURI vid);
 
     @Override
     Pair<Obj, Obj> value();
+
+    @Override
+    default long count() {
+        return 2;
+    }
+
+    @Override
+    default Iterable<Obj> elements() {
+        return (Iterable) this.value();
+    }
 
     /// /////////////////////////////////////////////////////////
     /// /////////////////////////////////////////////////////////

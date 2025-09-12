@@ -29,10 +29,10 @@ import java.util.Set;
 
 public class ObjStringSerializer implements ObjSerializer<String> {
 
-    private final Builder builder;
+    private final Builder b;
 
     private ObjStringSerializer(final Builder builder) {
-        this.builder = builder;
+        this.b = builder;
     }
 
     public static Builder build() {
@@ -43,86 +43,106 @@ public class ObjStringSerializer implements ObjSerializer<String> {
     public String write(final Obj obj) throws IllegalStateException {
         final StringBuilder sb = new StringBuilder();
         if (obj.isNoObj())
-            return sb.append(this.builder.palette.errorC())
+            return sb.append(this.b.palette.errorC())
                     .append("noobj")
-                    .append(this.builder.ignoreRewrites ? "" : "{{X}}")
+                    .append(this.b.ignoreRewrites ? "" : "{{X}}")
                     .toString();
         else if (obj instanceof final Inst inst) {
-            sb.append(this.builder.palette.typeC())
-                    .append(this.builder.hideTypes.contains(inst.tid()) ? "" : inst.tid())
-                    .append(this.builder.palette.formC())
-                    .append(this.builder.hideTypes.contains(inst.tid()) ? "" : ':')
+            sb.append(this.b.palette.typeC())
+                    .append(this.b.hideTypes.contains(inst.tid()) ? "" : inst.tid())
+                    .append(this.b.palette.formC())
+                    .append(this.b.hideTypes.contains(inst.tid()) ? "" : ':')
                     .append("(");
             for (int i = 0; i < inst.args().count(); i++) {
                 sb.append(inst.args().lstValue().get(i));
                 if (i != inst.args().count() - 1)
-                    sb.append(this.builder.palette.formC()).append(',');
+                    sb.append(this.b.palette.formC()).append(',');
             }
-            return sb.append(this.builder.palette.formC())
+            return sb.append(this.b.palette.formC())
                     .append("){")
-                    .append(this.builder.palette.valueC())
+                    .append(this.b.palette.valueC())
                     .append(inst.resolution() == Inst.Resolve.A ? "?" : inst.f().toString())
-                    .append(this.builder.palette.formC())
+                    .append(this.b.palette.formC())
                     .append("}")
-                    .append(this.builder.ignoreRewrites ? "" : "{{X}}")
+                    .append(this.b.ignoreRewrites ? "" : "{{X}}")
                     .toString();
         } else if (obj instanceof final Rel rel) {
-            return generateTID(sb, rel).append(rel.dom()).append(this.builder.palette.formC())
+            return generateTID(sb, rel).append(rel.dom()).append(this.b.palette.formC())
                     .append("=>")
                     .append(rel.rng())
-                    .append(this.builder.ignoreRewrites ? "" : "{{X}}")
+                    .append(this.b.ignoreRewrites ? "" : "{{X}}")
                     .toString();
         } else if (obj instanceof final Lst lst) {
-            generateTID(sb, obj).append(this.builder.palette.formC()).append('[').append(this.builder.palette.valueC());
+            generateTID(sb, obj).append(this.b.palette.formC()).append('[').append(this.b.palette.valueC());
             for (final Obj o : lst.value()) {
-                sb.append(o).append(this.builder.palette.formC()).append(',');
+                sb.append(o).append(this.b.palette.formC()).append(',');
             }
-            if (!lst.value().isEmpty()) sb.append("{{<1}}").append(this.builder.palette.formC());
-            else sb.append(this.builder.palette.formC()).append(",");
-            return generateVID(sb.append(']'), lst).append(this.builder.ignoreRewrites ? "" : "{{X}}").toString();
+            if (!lst.value().isEmpty()) sb.append("{{<1}}").append(this.b.palette.formC());
+            else sb.append(this.b.palette.formC()).append(",");
+            return generateVID(sb.append(']'), lst).append(this.b.ignoreRewrites ? "" : "{{X}}").toString();
         } else if (obj instanceof final Objs objs) {
-            generateTID(sb, obj).append(this.builder.palette.formC()).append("{").append(this.builder.palette.valueC());
+            generateTID(sb, obj).append(this.b.palette.formC()).append("{").append(this.b.palette.valueC());
             boolean found = false;
             for (final Obj o : objs.value()) {
                 found = true;
-                sb.append(o).append(this.builder.palette.formC()).append(',');
+                sb.append(o).append(this.b.palette.formC()).append(',');
             }
             if (found) sb.append("{{<1}}");
-            else sb.append(this.builder.palette.formC()).append('}');
-            return generateVID(sb, objs).append(this.builder.ignoreRewrites ? "" : "{{X}}").toString();
+            else sb.append(this.b.palette.formC()).append('}');
+            return generateVID(sb, objs).append(this.b.ignoreRewrites ? "" : "{{X}}").toString();
         } else if (obj instanceof final Rec rec) {
-            generateTID(sb, obj).append(this.builder.palette.formC()).append('[').append(this.builder.palette.valueC());
-            for (final Map.Entry<Obj, Obj> o : rec.value().entrySet()) {
-                sb.append(o.getKey())
-                        .append(this.builder.palette.formC())
-                        .append("=>").append(o.getValue())
-                        .append(this.builder.palette.formC())
-                        .append(',');
+            if(this.b.prettyPrint) {
+                this.generateRec(sb,obj.<Rec>as(),0);
+            } else {
+                generateTID(sb, obj).append(this.b.palette.formC()).append('[').append(this.b.palette.valueC());
+                for (final Map.Entry<Obj, Obj> o : rec.value().entrySet()) {
+                    sb.append(o.getKey())
+                            .append(this.b.palette.formC())
+                            .append("=>").append(o.getValue())
+                            .append(this.b.palette.formC())
+                            .append(',');
+                }
             }
-            if (!rec.value().isEmpty()) sb.append("{{<1}}").append(this.builder.palette.formC());
-            else sb.append(this.builder.palette.formC()).append("=>");
-            return generateVID(sb.append(']'), rec).append(this.builder.ignoreRewrites ? "" : "{{X}}").toString();
+            if (!rec.value().isEmpty()) sb.append("{{<1}}").append(this.b.palette.formC());
+            else sb.append(this.b.palette.formC()).append("=>");
+            return generateVID(sb.append(']'), rec).append(this.b.ignoreRewrites ? "" : "{{X}}").toString();
         } else
             return generateVID(generateTID(sb, obj)
-                    .append(this.builder.palette.valueC())
+                    .append(this.b.palette.valueC())
                     .append(null == obj.value() ? "" : obj.value().toString())
-                    .append(this.builder.palette.form2C()), obj)
-                    .append(this.builder.ignoreRewrites ? "" : "{{X}}")
+                    .append(this.b.palette.form2C()), obj)
+                    .append(this.b.ignoreRewrites ? "" : "{{X}}")
                     .toString();
     }
 
+    private StringBuilder generateRec(final StringBuilder sb, final Rec rec, final int depth) {
+        sb.append("{{FORM1}}[{{/FORM1}}").append("\n");
+        rec.recValue().forEach((k,v) -> {
+            if(depth > 0)
+                sb.append(" ".repeat(depth * 2));
+            sb.append(write(k)).append("{{FORM1}}=>{{/FORM1}}");
+            if(v.isRec()) {
+                this.generateRec(sb,v.as(),depth+1);
+            } else
+                sb.append(write(v));
+            sb.append("\n");
+        }); // {{FORM{sdfsdf}}}
+        sb.append(" ".repeat(depth)).append("{{FORM1}}]{{FORM1}}");
+        return sb;
+    }
+
     private StringBuilder generateVID(final StringBuilder sb, final Obj obj) {
-        return null == obj.vid() ? sb : sb.append(this.builder.palette.typeC())
-                .append(this.builder.palette.formC())
+        return null == obj.vid() ? sb : sb.append(this.b.palette.typeC())
+                .append(this.b.palette.formC())
                 .append('@')
-                .append(this.builder.palette.typeC())
+                .append(this.b.palette.typeC())
                 .append(obj.vid());
     }
 
     private StringBuilder generateTID(final StringBuilder sb, final Obj obj) {
-        return this.builder.hideTypes.contains(obj.tid()) ? sb : sb.append(this.builder.palette.typeC())
+        return this.b.hideTypes.contains(obj.tid()) ? sb : sb.append(this.b.palette.typeC())
                 .append(obj.tid())
-                .append(this.builder.palette.formC())
+                .append(this.b.palette.formC())
                 .append(':');
     }
 
@@ -139,6 +159,7 @@ public class ObjStringSerializer implements ObjSerializer<String> {
         private Palette palette = Palette.STANDARD;
         private boolean withColonSugar;
         private boolean ignoreRewrites;
+        private boolean prettyPrint = true;
         private Set<fURI> hideTypes = new HashSet<>();
 
         private Builder() {
@@ -151,6 +172,11 @@ public class ObjStringSerializer implements ObjSerializer<String> {
 
         public Builder hideTypeMatching(final fURI pattern) {
             this.hideTypes.add(pattern);
+            return this;
+        }
+
+        public Builder prettyPrint(final boolean prettyPrint) {
+            this.prettyPrint = prettyPrint;
             return this;
         }
 

@@ -35,7 +35,7 @@ public interface Lst extends Poly {
     List<Obj> value();
 
     @Override
-    default int count() {
+    default long count() {
         return this.value().size();
     }
 

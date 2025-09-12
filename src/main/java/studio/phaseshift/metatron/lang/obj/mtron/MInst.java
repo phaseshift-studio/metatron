@@ -26,6 +26,7 @@ import studio.phaseshift.metatron.lang.obj.base.Obj;
 import studio.phaseshift.metatron.lang.obj.base.Poly;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.function.BiFunction;
 
 public class MInst extends MObj implements Inst {
@@ -58,5 +59,19 @@ public class MInst extends MObj implements Inst {
 
     public static Inst instC(final fURI tid, final Poly args, final BiFunction<Obj, Inst, Obj> f) {
         return new MInst(Triplet.with(args, Inst.f.of(f), NoObj.single()), tid, fURI.NONE);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(this.tid, this.vid);
+    }
+
+
+    @Override
+    public boolean equals(final Object other) {
+        return this.getClass().isAssignableFrom(other.getClass()) &&
+                Objects.equals(this.tid, ((Obj) other).tid()) &&
+                Objects.equals(this.vid, ((Obj) other).vid());
+                /*Objects.equals(this.value,((Obj) other).value())*/
     }
 }

@@ -32,6 +32,11 @@ public final class StringUtil {
 
     }
 
+    public static int countLines(final String str){
+        final String[] lines = str.split("\r\n|\r|\n");
+        return  lines.length;
+    }
+
     public static String replaceGroups(String s, final String leftDelim, final String rightDelim,
                                        final Function<String, String> replaceFunction) {
         String ss = s;

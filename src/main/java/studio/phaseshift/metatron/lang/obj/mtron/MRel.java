@@ -23,13 +23,15 @@ import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.base.Obj;
 import studio.phaseshift.metatron.lang.obj.base.Rel;
 
+import static studio.phaseshift.metatron.lang.obj.mtron.core.MCoreInstSet.REL_TID;
+
 public class MRel extends MObj implements Rel {
     public MRel(final Pair<Obj, Obj> value, final fURI tid, final fURI vid) {
         super(value, tid, vid);
     }
 
     public MRel(final Pair<Obj, Obj> value) {
-        this(value, Rel.TID, fURI.NONE);
+        this(value, REL_TID , fURI.NONE);
     }
 
     @Override

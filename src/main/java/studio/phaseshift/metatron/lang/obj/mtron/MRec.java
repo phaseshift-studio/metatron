@@ -24,13 +24,15 @@ import studio.phaseshift.metatron.lang.obj.base.Rec;
 
 import java.util.Map;
 
+import static studio.phaseshift.metatron.lang.obj.mtron.core.MCoreInstSet.REC_TID;
+
 public class MRec extends MObj implements Rec {
     public MRec(final Map<Obj, Obj> value, final fURI tid, final fURI vid) {
         super(value, tid, vid);
     }
 
     public MRec(final Map<Obj, Obj> value) {
-        this(value, Rec.TID, fURI.NONE);
+        this(value, REC_TID, fURI.NONE);
     }
 
     @Override

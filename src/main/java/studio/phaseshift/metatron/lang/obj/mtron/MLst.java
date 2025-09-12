@@ -24,13 +24,15 @@ import studio.phaseshift.metatron.lang.obj.base.Obj;
 
 import java.util.List;
 
+import static studio.phaseshift.metatron.lang.obj.mtron.core.MCoreInstSet.LST_TID;
+
 public class MLst extends MObj implements Lst {
     public MLst(final List<Obj> value, final fURI tid, final fURI vid) {
         super(value, tid, vid);
     }
 
     public MLst(final List<Obj> value) {
-        this(value, Lst.TID, fURI.NONE);
+        this(value, LST_TID, fURI.NONE);
     }
 
     @Override

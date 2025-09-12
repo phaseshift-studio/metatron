@@ -62,9 +62,10 @@ public class BootLoader {
         Router.global().registerStruct(mnt);
         Router.global().registerStruct(sys);
         Router.global().registerStruct(new MemSpace(fURI.of("/mtron/#"), fURI.of("/mnt/lang/mtron")));
-        Router.global().registerStruct(new MemSpace(fURI.of("+/#"), fURI.of("/sys/stack")));
+        Router.global().registerStruct(new MemSpace(fURI.of("+"), fURI.of("/sys/stack")));
         Router.global().registerStruct(new MemSpace(fURI.of("/test/#"), fURI.of("/sys/test")));
         Router.global().registerStruct(new MqttSpace(Map.of(new MUri("broker"), new MUri("ip://192.168.66.2:1883"), new MUri("pattern"), new MUri("/mqtt/#")), MQTT_TID, fURI.of("/mnt/mqtt")));
+        // Router.global().registerStruct(new MqttSpace(Map.of(new MUri("broker"), new MUri("ip://192.168.66.2:1883"), new MUri("pattern"), new MUri("zigbee2mqtt/#")), MQTT_TID, fURI.of("/mnt/zigbee2mqtt")));
         new MCoreInstSet().value().entrySet().forEach(kv1 -> {
             Map<Obj,Obj> map = new LinkedHashMap<>();
             kv1.getValue().forEach((key, value) -> map.put(key.toUri(), MLst.of(new ArrayList<>(value))));

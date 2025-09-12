@@ -24,6 +24,8 @@ import studio.phaseshift.metatron.lang.obj.base.Objs;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
 
+import static studio.phaseshift.metatron.lang.obj.mtron.core.MCoreInstSet.OBJS_TID;
+
 public class MObjs extends MObj implements Objs {
 
     private static final GraphittyLogger LOG = Graphitty.log(MObjs.class);
@@ -35,7 +37,7 @@ public class MObjs extends MObj implements Objs {
     }
 
     public MObjs(final Iterable<Obj> value) {
-        this(value, Objs.TID, fURI.NONE);
+        this(value, OBJS_TID, fURI.NONE);
     }
 
     @Override

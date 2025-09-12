@@ -17,7 +17,7 @@
   -->
 
 <configuration>
-    <variable name="ROOT_LEVEL" value="TRACE" />
+    <variable name="ROOT_LEVEL" value="INFO" />
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
         <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
             <level>${ROOT_LEVEL}</level>
