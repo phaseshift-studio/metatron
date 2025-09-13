@@ -45,12 +45,12 @@ public interface Rel extends Poly {
     /// /////////////////////////////////////////////////////////
     /// /////////////////////////////////////////////////////////
 
-    default Obj dom() {
-        return this.value().getValue0();
+    default Type dom() {
+        return this.value().getValue0().dom();
     }
 
-    default Obj rng() {
-        return this.value().getValue1();
+    default Type rng() {
+        return this.value().getValue1().rng();
     }
 
 }

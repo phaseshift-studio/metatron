@@ -21,6 +21,7 @@ package studio.phaseshift.metatron;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.base.Obj;
 import studio.phaseshift.metatron.lang.obj.base.Uri;
+import studio.phaseshift.metatron.lang.obj.base.furi.TypefURI;
 import studio.phaseshift.metatron.lang.obj.mtron.MLst;
 import studio.phaseshift.metatron.lang.obj.mtron.MRec;
 import studio.phaseshift.metatron.lang.obj.mtron.MUri;
@@ -61,17 +62,15 @@ public class BootLoader {
         // final Router router = (ROUTER = new MemRouter(fURI.of("/sys/router")));
         Router.global().registerStruct(mnt);
         Router.global().registerStruct(sys);
-        Router.global().registerStruct(new MemSpace(fURI.of("/mtron/#"), fURI.of("/mnt/lang/mtron")));
-        Router.global().registerStruct(new MemSpace(fURI.of("+"), fURI.of("/sys/stack")));
-        Router.global().registerStruct(new MemSpace(fURI.of("/test/#"), fURI.of("/sys/test")));
-        Router.global().registerStruct(new MqttSpace(Map.of(new MUri("broker"), new MUri("ip://192.168.66.2:1883"), new MUri("pattern"), new MUri("/mqtt/#")), MQTT_TID, fURI.of("/mnt/mqtt")));
+      //  Router.global().registerStruct(new MemSpace(fURI.of("/mtron/#"), fURI.of("/mnt/lang/mtron")));
+        Router.global().registerStruct(new MemSpace(fURI.of("#"), fURI.of("/sys/stack")));
+      //  Router.global().registerStruct(new MemSpace(fURI.of("/test/#"), fURI.of("/sys/test")));
+        //Router.global().registerStruct(new MqttSpace(Map.of(new MUri("broker"), new MUri("ip://192.168.66.2:1883"), new MUri("pattern"), new MUri("/mqtt/#")), MQTT_TID, fURI.of("/mnt/mqtt")));
         // Router.global().registerStruct(new MqttSpace(Map.of(new MUri("broker"), new MUri("ip://192.168.66.2:1883"), new MUri("pattern"), new MUri("zigbee2mqtt/#")), MQTT_TID, fURI.of("/mnt/zigbee2mqtt")));
-        new MCoreInstSet().value().entrySet().forEach(kv1 -> {
-            Map<Obj,Obj> map = new LinkedHashMap<>();
-            kv1.getValue().forEach((key, value) -> map.put(key.toUri(), MLst.of(new ArrayList<>(value))));
-            Router.global().write(kv1.getKey(), MRec.of(map));
-        });
-        BOOTING = false;
+        new MCoreInstSet().load();
+
+
+                        BOOTING = false;
                         //SInst.load();
         //SInst.ext();
     }

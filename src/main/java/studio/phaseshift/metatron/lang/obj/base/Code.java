@@ -49,4 +49,6 @@ public interface Code extends Obj {
         return new MMonoid(this,lhs).next();
     }
 
+    Code resolve(final Obj start);
+
 }

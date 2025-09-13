@@ -45,7 +45,7 @@ public class MLst extends MObj implements Lst {
         return (List<Obj>) this.value;
     }
 
-    private static final Lst EMPTY_LST = new MLst(List.of(), Lst.TID, fURI.NONE);
+    private static final Lst EMPTY_LST = new MLst(List.of(), LST_TID, fURI.NONE);
 
     public static Lst of(final Obj... args) {
         return args.length == 0 ? EMPTY_LST : new MLst(List.of(args));

@@ -19,9 +19,10 @@
 package studio.phaseshift.metatron.lang.monoid;
 
 import org.apache.commons.collections.IteratorUtils;
-import org.jline.jansi.Ansi.Color;
-import studio.phaseshift.metatron.lang.fURI;
-import studio.phaseshift.metatron.lang.obj.base.*;
+import studio.phaseshift.metatron.lang.obj.base.Code;
+import studio.phaseshift.metatron.lang.obj.base.Inst;
+import studio.phaseshift.metatron.lang.obj.base.NoObj;
+import studio.phaseshift.metatron.lang.obj.base.Obj;
 import studio.phaseshift.metatron.lang.obj.mtron.MCode;
 import studio.phaseshift.metatron.lang.obj.mtron.MObjs;
 import studio.phaseshift.metatron.ui.Graphitty;
@@ -30,7 +31,6 @@ import studio.phaseshift.metatron.util.IteratorUtil;
 
 import java.util.*;
 
-import static org.jline.jansi.Ansi.ansi;
 import static studio.phaseshift.metatron.lang.obj.mtron.core.MCoreInstSet.FROM_TID;
 import static studio.phaseshift.metatron.lang.obj.mtron.core.MCoreInstSet.START_TID;
 
@@ -77,11 +77,16 @@ public class MMonoid implements Monoid {
                 }
             } else {
                 if (true) {
-                    LOG.debug("processing inst %s with %s", this.inst, IteratorUtils.toList(this.obj.iterator()));
-                    IteratorUtil.iterate(IteratorUtil.consume(this.obj.iterator(), o -> {
-                        final MMonad m = new MMonad(this.monoid, o, this.inst, this.bulk);
+                    LOG.trace("processing inst %s with %s", this.inst, IteratorUtils.toList(this.obj.iterator()));
+                    if (this.inst.tid().queryless().equals(START_TID) && this.obj.isNoObj()) {
+                        final MMonad m = new MMonad(this.monoid, NoObj.single(), this.inst, this.bulk);
                         m.domain_loop(m.inst);
-                    }));
+                    } else {
+                        IteratorUtil.iterate(IteratorUtil.consume(this.obj.iterator(), o -> {
+                            final MMonad m = new MMonad(this.monoid, o, this.inst, this.bulk);
+                            m.domain_loop(m.inst);
+                        }));
+                    }
                 } else {
                     LOG.debug("processing barrier {} with {}", this.inst, IteratorUtils.toList(this.obj.iterator()));
                     this.domain_loop(this.inst);
@@ -98,9 +103,9 @@ public class MMonoid implements Monoid {
             //      current_inst_resolved -> toString(), "SIGNATURE HERE"));
 
             if (inst.f().form().isGather()) {
-                LOG.debug("processing monadic domain: %s => %s", this.obj, inst);
+                LOG.trace("processing monadic domain: %s => %s", this.obj, inst);
                 if (this.obj.isObjs()) {
-                    LOG.warn("evaluating barrier: %s", this.obj);
+                    LOG.trace("evaluating barrier: %s", this.obj);
                     this.range_loop(inst.apply(this.obj), inst);
                 } else {
                     MMonad barrier = this.monoid.barriers.isEmpty() ? new MMonad(this.monoid, new MObjs(List.of()), inst, 1) : this.monoid.barriers.remove();
@@ -112,7 +117,7 @@ public class MMonoid implements Monoid {
                 }
             } else {
                 final Obj result = inst.apply(this.obj);
-                LOG.debug("applying %s to %s to yield %s", this.obj, inst, result);
+                LOG.trace("applying %s to %s to yield %s", this.obj, inst, result);
                 this.range_loop(result, inst);
             }
 
@@ -163,9 +168,9 @@ public class MMonoid implements Monoid {
             } else {*/
 
             final Inst nextInst = this.monoid.code.next(this.inst); // TODO !!!!! this.monoid.code.nextInst(inst);
-            LOG.debug("processing monadic range: %s => %s", nextObj, nextInst);
+            LOG.trace("processing monadic range: %s => %s", nextObj, nextInst);
             if (inst.f().form().isScatter()) {
-                LOG.debug("scattering monad obj: {} (over {})", this.obj, nextInst);
+                LOG.trace("scattering monad obj: {} (over {})", this.obj, nextInst);
                 IteratorUtil.iterate(IteratorUtil.consume(nextObj.iterator(), o -> {
                     final MMonad m = new MMonad(this.monoid, o, nextInst, this.bulk);
                     this.monoid.running.add(m);
@@ -203,7 +208,7 @@ public class MMonoid implements Monoid {
         }
 
         public String toString() {
-            return Graphitty.string("{{b}}M{{g}}[%s{{g}}]{{r}}@%s{{X}}".formatted(this.obj,this.inst));
+            return Graphitty.string("{{b}}M{{g}}[%s{{g}}]{{r}}@%s{{X}}".formatted(this.obj, this.inst));
         }
     }
 
@@ -229,24 +234,28 @@ public class MMonoid implements Monoid {
             //this.code = Rewriter({Rewriter::by(), Rewriter::explain()}).apply(this.code);
             // setup global behavior around barriers, initials, and terminals
             this.code = code.as();
-            LOG.debug("resolving code and generating structural monads: %s",this.code);
+            LOG.debug("resolving code and generating structural monads: %s", this.code);
             Obj token = start;
+            //LOG.none("%s", token.rng());
             final List<Inst> resolvedCode = new ArrayList<>();
             for (final Inst inst : this.code.value()) {
                 try {
+                    //LOG.none("=> %s", inst.dom().tid());
                     final Inst instB = inst.resolve(Inst.Resolve.B, token);
-                    token = instB.domRng().rng();
+                    token = instB.rng();
                     if (instB.f().form().isGather()) {
                         // many-to-?
-                        LOG.debug("creating barrier monad at %s",instB);
+                        LOG.debug("creating barrier monad at %s", instB);
                         final MMonad m = new MMonad(this, instB.seed(), instB, 1);
                         this.barriers.add(m);
-                    } else if (instB.f().form().isInitial() || instB.tid().equals(START_TID) || instB.tid().equals(FROM_TID)) {
-                        LOG.debug("creating initial monad at %s",instB);
-                        final MMonad m = new MMonad(this, instB.arg(0), instB, 1); // TODO: use seed
+                    } else if (instB.f().form().isInitial() || instB.tid().queryless().equals(START_TID) || instB.tid().queryless().equals(FROM_TID)) {
+                        LOG.debug("creating initial monad at %s", instB);
+                        final MMonad m = new MMonad(this, NoObj.single(), instB, 1); // TODO: use seed
                         this.running.add(m);
+                        token = instB.arg(0);
                     }
                     resolvedCode.add(instB);
+                   // LOG.none("%s", instB.rng().tid());
                 } catch (final Exception e) {
                     LOG.warn(e.getMessage());
                 }

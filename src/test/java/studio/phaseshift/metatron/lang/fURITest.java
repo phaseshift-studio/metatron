@@ -99,9 +99,19 @@ public class fURITest {
             "http://test.com?a=a/b/c&b=sss.com&c=0.2|{a=a/b/c, b=sss.com, c=0.2}",
             "/mtron/an_inst?dom=#&rng=+|{dom=#, rng=+}" },
             delimiter = '|')
-    public void testQuery(final String f, final String queryMap) {
+    public void testQueryRead(final String f, final String queryMap) {
         final fURI furi = fURI.of(f);
         assertEquals(queryMap, furi.query().toString());
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "/test.com?a=1&b=2|/test.com|a|1|b|2" },
+            delimiter = '|')
+    public void testQueryWrite(final String expected, final String base, final String k1, final String v1, final String k2, final String v2) {
+        final fURI expectedfURI = fURI.of(expected);
+        final fURI resultfURI = fURI.of(base).query(k1,v1).query(k2,v2);
+        assertEquals(expectedfURI,resultfURI);
     }
 
 
@@ -264,7 +274,7 @@ public class fURITest {
     }
 
     @Test
-    public void testQuery() {
+    public void testQueryRead() {
         assertEquals(Map.of("a", "1", "b", "2"), fURI.of("http://meta.tron/query?a=1&b=2").query());
         assertEquals(Map.of("a", "", "b", "2"), fURI.of("http://meta.tron/query?a&b=2").query());
         assertEquals(Map.of(), fURI.of("http://meta.tron/query").query());

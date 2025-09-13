@@ -75,6 +75,10 @@ public class MemSpace extends MObj implements Space {
         return null == this.pattern ? fURI.of("#") : this.pattern;
     }
 
+    @Override
+    public long count() {
+        return this.store.size();
+    }
 
     @Override
     public Obj read(final fURI vid) {

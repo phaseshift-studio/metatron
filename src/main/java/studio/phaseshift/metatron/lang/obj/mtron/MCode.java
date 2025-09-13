@@ -19,12 +19,16 @@
 package studio.phaseshift.metatron.lang.obj.mtron;
 
 import studio.phaseshift.metatron.lang.fURI;
+import studio.phaseshift.metatron.lang.monoid.MMonoid;
 import studio.phaseshift.metatron.lang.obj.base.Code;
 import studio.phaseshift.metatron.lang.obj.base.Inst;
+import studio.phaseshift.metatron.lang.obj.base.NoObj;
+import studio.phaseshift.metatron.lang.obj.base.Obj;
 
+import java.util.ArrayList;
 import java.util.List;
 
-import static studio.phaseshift.metatron.lang.obj.mtron.core.MCoreInstSet.CODE_TID;
+import static studio.phaseshift.metatron.lang.obj.mtron.core.MCoreInstSet.*;
 
 public class MCode extends MObj implements Code {
 
@@ -48,6 +52,21 @@ public class MCode extends MObj implements Code {
 
     public static Code of(final List<Inst> insts) {
         return new MCode(insts, CODE_TID, fURI.NONE);
+    }
+
+    @Override
+    public Code resolve(final Obj start) { // support callbacks on resolution so monoids can generate appropriate monads on the first scan of the code
+        Obj running_obj = start;
+        final List<Inst> resolvedCode = new ArrayList<>();
+        for (final Inst inst : this.value()) {
+                final Inst instB = inst.resolve(Inst.Resolve.B, running_obj);
+                running_obj = (instB.f().form().isInitial() ||
+                        instB.tid().queryless().equals(START_TID) || // once the forms are working, gut these direct references
+                        instB.tid().queryless().equals(FROM_TID)) ?
+                     instB.arg(0) : instB.rng();
+                resolvedCode.add(instB);
+        }
+       return MCode.of(resolvedCode);
     }
 
     /*@Override

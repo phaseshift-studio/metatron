@@ -21,9 +21,12 @@ package studio.phaseshift.metatron.lang.obj.base;
 import org.javatuples.Pair;
 import org.javatuples.Triplet;
 import studio.phaseshift.metatron.lang.fURI;
+import studio.phaseshift.metatron.lang.obj.base.furi.TypefURI;
 import studio.phaseshift.metatron.lang.obj.mtron.MObj;
 import studio.phaseshift.metatron.lang.obj.mtron.MRel;
+import studio.phaseshift.metatron.lang.obj.mtron.MType;
 import studio.phaseshift.metatron.lang.obj.mtron.core.MCoreInstSet;
+import studio.phaseshift.metatron.space.Router;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
 import studio.phaseshift.metatron.util.IteratorUtil;
@@ -34,9 +37,10 @@ import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
+import static studio.phaseshift.metatron.lang.obj.mtron.core.MCoreInstSet.LST_TID;
+
 public interface Inst extends Obj {
-    public static final fURI DOM = fURI.of("dom");
-    public static final fURI RNG = fURI.of("rng");
+
     // /mtron/plus?dom=/mtron/int,rng=/mtron/int
 
     public enum Resolve {
@@ -62,11 +66,17 @@ public interface Inst extends Obj {
     /// ////////////////////////////////////////////////////////////
     /// ////////////////////////////////////////////////////////////
 
-    default Rel domRng() {
-        //  final Obj dom = ((Router) new Object()).read(this.tid().queryValue(DOM, fURI.class, Obj.TID));
-        //  final Obj rng = ((Router) new Object()).read(this.tid().queryValue(RNG, fURI.class, Obj.TID));
-        return new MRel(Pair.with(NoObj.single(), NoObj.single()));
+    @Override
+    default Type dom() {
+        return MType.of(Router.global().read(TypefURI.dom(this.tid())),TypefURI.dom(this.tid())).orElseGet(() -> MType.of(TypefURI.dom(this.tid())));
     }
+
+    @Override
+    default Type rng() {
+        final fURI range = TypefURI.rng(this.tid());
+        return range.equals(fURI.MANY) ? MType.of(range) : MType.of(Router.global().read(range),TypefURI.dom(this.tid())).orElseGet(() -> MType.of(TypefURI.rng(this.tid())));
+    }
+
 
     default Poly args() {
         return this.value().getValue0();
@@ -106,23 +116,23 @@ public interface Inst extends Obj {
         final Resolve currentResolution = this.resolution();
         if (currentResolution.compareTo(desiredResolution) == 0 ||
                 currentResolution.compareTo(desiredResolution) > 0) {
-            LOG.debug("resolution ({{m}}%s {{g}}<=>{{/g}} %s{{/m}}): %s", currentResolution, desiredResolution, lhs);
+            LOG.trace("resolution ({{m}}%s {{g}}<=>{{/g}} %s{{/m}}): %s", currentResolution, desiredResolution, lhs);
             return this;
         } else {
             if (currentResolution == Resolve.A) {
                 final Inst resolved = new MCoreInstSet().resolve(lhs, this);
-                LOG.debug("resolution ({{m}}%s {{g}}=>{{/g}} %s{{/m}}): %s", currentResolution, resolved.resolution(), resolved);
+                LOG.trace("resolution ({{m}}%s {{g}}=>{{/g}} %s{{/m}}): %s", currentResolution, resolved.resolution(), resolved);
                 return resolved.resolve(desiredResolution, lhs);
             } else { // Resolve.B
-                if (!lhs.matches(this.domRng().dom()))
-                    throw MTronException.of("lhs obj does not match inst domain: %s {{r}}-/>{{/r}} %s", lhs, this.domRng().dom());
+                if (!lhs.matches(this.dom()))
+                    throw MTronException.of("lhs obj does not match inst domain: %s: %s {{r}}-/>{{/r}} %s", this, lhs, this.dom());
                 final boolean blocking = this.tid().equals(MCoreInstSet.BLOCK_TID) || this.tid().equals(MCoreInstSet.WITHIN_TID);
                 final List<Obj> cargs = new ArrayList<>();
                 for (final Obj arg : args().elements()) {
                     cargs.add(blocking ? arg : arg.apply(lhs));
                 }
-                final Inst resolved = (Inst) this.value(Triplet.with(this.args().clone(cargs, Lst.TID, fURI.NONE), this.f(), this.seed()));
-                LOG.debug("resolution ({{m}}%s {{g}}=>{{/g}} %s{{/m}}): %s", currentResolution, resolved.resolution(), resolved);
+                final Inst resolved = (Inst) this.value(Triplet.with(this.args().clone(cargs, LST_TID, fURI.NONE), this.f(), this.seed()));
+                LOG.trace("resolution ({{m}}%s {{g}}=>{{/g}} %s{{/m}}): %s", currentResolution, resolved.resolution(), resolved);
                 return resolved;
             }
         }
@@ -132,8 +142,8 @@ public interface Inst extends Obj {
     default Obj apply(final Obj lhs) {
         final Inst cinst = this.resolve(Resolve.C, lhs);
         final Obj rhs = cinst.f().apply(lhs, cinst);
-        if (!rhs.matches(cinst.domRng().rng()))
-            throw MTronException.of("rhs obj does not match inst range: %s {{r}}-/>{{/r}} %s", rhs, cinst.domRng().rng());
+        if (!rhs.matches(cinst.rng()))
+            throw MTronException.of("rhs obj does not match inst range: %s: %s {{r}}-/>{{/r}} %s",this, rhs, cinst.rng());
         return rhs;
     }
 

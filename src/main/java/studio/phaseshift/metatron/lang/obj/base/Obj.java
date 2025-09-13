@@ -20,6 +20,8 @@ package studio.phaseshift.metatron.lang.obj.base;
 
 import org.javatuples.Pair;
 import studio.phaseshift.metatron.lang.fURI;
+import studio.phaseshift.metatron.lang.obj.mtron.MObj;
+import studio.phaseshift.metatron.lang.obj.mtron.MType;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
@@ -27,6 +29,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 import static studio.phaseshift.metatron.lang.obj.mtron.core.MCoreInstSet.*;
 
@@ -62,7 +65,10 @@ public interface Obj extends Function<Obj, Obj>, Iterable<Obj> {
     }
 
     default boolean matches(final Obj rhs) {
-        return rhs.tid().equals(fURI.of("#")) || this.equals(rhs);
+        if(rhs.isType() && this.tid().queryless().matches(rhs.tid()))
+                return true;
+        return this.equals(rhs);
+
     }
 
     @Override
@@ -70,8 +76,20 @@ public interface Obj extends Function<Obj, Obj>, Iterable<Obj> {
         return this.isNoObj() ? IteratorUtil.of() : (this.isObjs() ? this.objsValue().iterator() : IteratorUtil.of(this));
     }
 
+     default Type dom() {
+        return MType.of(fURI.ONE);
+     }
+
+     default Type rng() {
+        return MType.of(this.tid());
+     }
+
     default <O extends Obj> O orElse(final O other) {
         return this.isNoObj() ? other : (O) this;
+    }
+
+    default <O extends Obj> O orElseGet(final Supplier<O> other) {
+        return this.isNoObj() ? other.get() : (O) this;
     }
 
     default <O extends Obj> O orElseThrow(final RuntimeException e) {
@@ -136,6 +154,8 @@ public interface Obj extends Function<Obj, Obj>, Iterable<Obj> {
         return this instanceof Poly;
     }
 
+    default boolean isType() { return this instanceof Type; }
+
     default boolean boolValue() {
         if (this.isBool())
             return this.value();
@@ -194,5 +214,11 @@ public interface Obj extends Function<Obj, Obj>, Iterable<Obj> {
         if (this.isCode())
             return this.value();
         throw MTronException.of("%s is a %s is not a %s", this, tid().toUri(), CODE_TID.toUri());
+    }
+
+    default Obj typeValue() {
+        if (this.isType())
+                return  this.value();
+        throw MTronException.of("%s is a %s is not a %s", this, tid().toUri(), fURI.of("<type>").toUri());
     }
 }

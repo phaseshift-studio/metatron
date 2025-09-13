@@ -23,6 +23,7 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import studio.phaseshift.metatron.lang.inst.SInst;
 import studio.phaseshift.metatron.lang.obj.SObj;
+import studio.phaseshift.metatron.lang.obj.mtron.MInt;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static studio.phaseshift.metatron.MetatronTest.assertMEquals;
@@ -37,7 +38,7 @@ public class InstParseTest {
 
     @Test
     public void testPlusInst() {
-        assertEquals(SObj.Int.of(3), eval("1.plus(2)").next());
+        assertEquals(MInt.of(3), eval("1.plus(2)").next());
     }
 
     @Test

@@ -27,7 +27,7 @@ import java.util.*;
 
 public class fURI implements Cloneable {
 
-    public static final fURI ALL = fURI.of("#");
+    public static final fURI MANY = fURI.of("#");
     public static final fURI ONE = fURI.of("+");
     public static final fURI NONE = null;
     public static final fURI DOM = fURI.of("dom");
@@ -138,6 +138,12 @@ public class fURI implements Cloneable {
         return new fURI(this.scheme, this.host, this.port, path.charAt(0) == '/', Arrays.asList(path.split("/")), path.charAt(path.length() - 1) == '/', this.query);
     }
 
+    public String path() {
+        final String p = this.path.stream().reduce(this.sstart ? "/" : "",(a,b) -> a + b + "/");
+        return this.send ? p  : p.substring(0,p.length()-1);
+    }
+
+
     public List<String> segments() {
         return Collections.unmodifiableList(this.path);
     }
@@ -199,7 +205,7 @@ public class fURI implements Cloneable {
         final List<String> newPath = new ArrayList<>(this.path.size() + 1);
         newPath.addAll(this.path);
         newPath.addAll(Arrays.asList(segment.split("/")));
-        return new fURI(this.scheme, this.host, this.port, this.sstart, newPath, segment.charAt(segment.length() - 1) == '/', this.query);
+        return new fURI(this.scheme, this.host, this.port, this.sstart, newPath, !segment.isEmpty() && (segment.charAt(segment.length() - 1) == '/'), this.query);
     }
 
     private fURI rePreTract(boolean retract, final int steps) {
@@ -267,6 +273,16 @@ public class fURI implements Cloneable {
         return true;
     }
 
+    public fURI query(final String key, final String value) {
+        String appended = (null == this.query ? "" : (this.query + "&")) + key + "=" + value;
+        return new fURI(this.scheme,this.host,this.port,this.sstart,this.path,this.send,appended);
+    }
+
+    public fURI query(final Object key, final Object value) {
+        String appended = (null == this.query ? "" : (this.query + "&")) + key + "=" + value;
+        return new fURI(this.scheme,this.host,this.port,this.sstart,this.path,this.send,appended);
+    }
+
 
     public Map<String, String> query() {
         if (null == this.query)
@@ -277,6 +293,10 @@ public class fURI implements Cloneable {
             q.put(pairs[0], pairs.length > 1 ? pairs[1] : "");
         });
         return q;
+    }
+
+    public fURI queryless() {
+        return null == this.query ?this : new fURI(this.scheme,this.host,this.port,this.sstart,this.path,this.send,null);
     }
 
     public <T> T queryValue(final fURI key, final Class<T> conversion, final T defaultValue) {

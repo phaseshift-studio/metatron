@@ -36,27 +36,26 @@ public interface InstSet extends Obj {
     Map<fURI, Map<fURI, Set<Inst>>> value();
 
 
-    default Inst resolve(final Obj lhs, final Inst instA) {
-        return this.value().entrySet().stream().filter(kv -> instA.tid().matches(kv.getKey()))
+    default Inst resolve(final Obj lhs, final Inst instAorB) {
+        return this.value().entrySet().stream().filter(kv -> instAorB.tid().queryless().matches(kv.getKey().queryless()))
                 .map(Map.Entry::getValue)
                 .flatMap(m -> m.entrySet().stream())
                 .filter(kv -> {
-                    Graphitty.stdout().println("%s matches %s = %s".formatted(lhs.tid(),kv.getKey(),lhs.tid().matches(kv.getKey())));
-                    return lhs.tid().matches(kv.getKey());
+                    // Graphitty.stdout().println("%s matches %s = %s".formatted(lhs.tid().queryless(),kv.getKey().queryless(),lhs.tid().queryless().matches(kv.getKey().queryless())));
+                    return lhs.tid().queryless().matches(kv.getKey().queryless());
                 })
                 .map(Map.Entry::getValue)
                 .flatMap(Collection::stream)
-                .filter(i -> i.args().count() == instA.args().count())
+                .filter(i -> (instAorB.resolution() == Inst.Resolve.A) || (i.args().count() == instAorB.args().count()))
                 .map(i -> {
-                    Graphitty.stdout().println("here you go %s".formatted(i));
                     final List<Obj> resolvedArgs = new ArrayList<>();
                     //final boolean blocking = false; // i.isBlocking();
                     for (int j = 0; j < i.args().count(); j++) {
                         //  resolvedArgs.add(i.arg(j).apply(instA.arg(j)));
-                        resolvedArgs.add(instA.arg(j));
+                        resolvedArgs.add(instAorB.arg(j));
                     }
                     return i.clone(new Triplet<>(MLst.of(resolvedArgs),
-                            i.f(), i.seed()), i.tid(), instA.vid());
-                }).findFirst().orElseThrow(() -> MTronException.of("unable to resolve %s in instruction set %s", instA, this.value().get(instA.tid())));
+                            i.f(), i.seed()), i.tid(), instAorB.vid());
+                }).findFirst().orElseThrow(() -> MTronException.of("unable to resolve %s => %s in instruction set %s", lhs, instAorB, this.value().get(instAorB.tid())));
     }
 }

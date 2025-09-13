@@ -26,8 +26,6 @@ import java.util.List;
 
 public interface Lst extends Poly {
 
-    public static final fURI TID = fURI.of("/mtron/lst");
-
     @Override
     Lst clone(final Object value, final fURI tid, final fURI vid);
 
