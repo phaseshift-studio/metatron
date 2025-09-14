@@ -19,9 +19,9 @@
 package studio.phaseshift.metatron.lang.obj.mtron;
 
 import studio.phaseshift.metatron.lang.fURI;
-import studio.phaseshift.metatron.lang.obj.base.Str;
+import studio.phaseshift.metatron.lang.obj.Str;
 
-import static studio.phaseshift.metatron.lang.obj.mtron.core.MCoreInstSet.STR_TID;
+import static studio.phaseshift.metatron.lang.obj.mtron.MInstSet.STR_TID;
 
 public class MStr extends MObj implements Str {
     public MStr(final String value, final fURI tid, final fURI vid) {

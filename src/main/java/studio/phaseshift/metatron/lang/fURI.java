@@ -18,7 +18,7 @@
 
 package studio.phaseshift.metatron.lang;
 
-import studio.phaseshift.metatron.lang.obj.base.Uri;
+import studio.phaseshift.metatron.lang.obj.Uri;
 import studio.phaseshift.metatron.lang.obj.mtron.MUri;
 import studio.phaseshift.metatron.util.MTronException;
 

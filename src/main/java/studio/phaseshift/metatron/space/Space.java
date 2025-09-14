@@ -20,9 +20,9 @@ package studio.phaseshift.metatron.space;
 
 import org.javatuples.Pair;
 import studio.phaseshift.metatron.lang.fURI;
-import studio.phaseshift.metatron.lang.obj.base.NoObj;
-import studio.phaseshift.metatron.lang.obj.base.Obj;
-import studio.phaseshift.metatron.lang.obj.base.Poly;
+import studio.phaseshift.metatron.lang.obj.NoObj;
+import studio.phaseshift.metatron.lang.obj.Obj;
+import studio.phaseshift.metatron.lang.obj.Poly;
 import studio.phaseshift.metatron.lang.obj.mtron.MRec;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.Palette;

@@ -16,35 +16,9 @@
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.lang.obj.base;
+package studio.phaseshift.metatron.lang.obj;
 
+public interface ObjFactory {
 
-import org.javatuples.Pair;
-import studio.phaseshift.metatron.lang.fURI;
-import studio.phaseshift.metatron.lang.obj.mtron.MRel;
-
-import java.util.Map;
-
-public interface Rec extends Poly {
-
-    @Override
-    Rec clone(final Object value, final fURI tid, final fURI vid);
-
-    @Override
-    Map<Obj, Obj> value();
-
-    @Override
-    default long count() {
-        return this.value().size();
-    }
-
-    @Override
-    default Iterable<Rel> elements() {
-        return () -> this
-                .value()
-                .entrySet()
-                .stream()
-                .map(kv -> (Rel) new MRel(Pair.with(kv.getKey(), kv.getValue()))).iterator();
-    }
-
+    <O extends Obj> O create(final O obj);
 }

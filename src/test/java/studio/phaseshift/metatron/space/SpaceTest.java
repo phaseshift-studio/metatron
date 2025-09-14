@@ -19,7 +19,7 @@
 package studio.phaseshift.metatron.space;
 
 import org.junit.jupiter.api.BeforeEach;
-import studio.phaseshift.metatron.lang.obj.base.NoObj;
+import studio.phaseshift.metatron.lang.obj.NoObj;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 

@@ -19,8 +19,7 @@
 package studio.phaseshift.metatron.space.mem;
 
 import studio.phaseshift.metatron.lang.fURI;
-import studio.phaseshift.metatron.lang.obj.base.NoObj;
-import studio.phaseshift.metatron.lang.obj.base.Obj;
+import studio.phaseshift.metatron.lang.obj.Obj;
 import studio.phaseshift.metatron.space.NullSpace;
 import studio.phaseshift.metatron.space.Router;
 import studio.phaseshift.metatron.space.Space;

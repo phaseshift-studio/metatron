@@ -19,8 +19,8 @@
 package studio.phaseshift.metatron.lang.translate;
 
 import com.google.gson.*;
-import studio.phaseshift.metatron.lang.obj.base.NoObj;
-import studio.phaseshift.metatron.lang.obj.base.Obj;
+import studio.phaseshift.metatron.lang.obj.NoObj;
+import studio.phaseshift.metatron.lang.obj.Obj;
 import studio.phaseshift.metatron.lang.obj.mtron.*;
 import studio.phaseshift.metatron.ui.ObjSerializer;
 import studio.phaseshift.metatron.ui.ObjStringSerializer;
@@ -32,13 +32,11 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import static studio.phaseshift.metatron.lang.obj.BObj.MTRON_CORE_TYPES;
-
 public class JSONTranslator implements Translator<Obj, JsonElement> {
     private static final ObjSerializer<String> SERIALIZER = ObjStringSerializer
             .build()
             .simpleColon(true)
-            .hideTypesMatching(MTRON_CORE_TYPES)
+           // .hideTypesMatching(MTRON_CORE_TYPES)
             .palette(Palette.NO_COLOR)
             .ignoreRewrites(true)
             .create();

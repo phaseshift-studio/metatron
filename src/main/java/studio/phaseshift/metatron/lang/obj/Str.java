@@ -16,41 +16,16 @@
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.lang.obj.base;
+package studio.phaseshift.metatron.lang.obj;
 
-import org.javatuples.Pair;
 import studio.phaseshift.metatron.lang.fURI;
-import studio.phaseshift.metatron.util.IteratorUtil;
 
-import java.util.Iterator;
-
-public interface Rel extends Poly {
+public interface Str extends Obj {
 
     @Override
-    Rel clone(final Object value, final fURI tid, final fURI vid);
+    Str clone(final Object value, final fURI tid, final fURI vid);
 
     @Override
-    Pair<Obj, Obj> value();
-
-    @Override
-    default long count() {
-        return 2;
-    }
-
-    @Override
-    default Iterable<Obj> elements() {
-        return (Iterable) this.value();
-    }
-
-    /// /////////////////////////////////////////////////////////
-    /// /////////////////////////////////////////////////////////
-
-    default Type dom() {
-        return this.value().getValue0().dom();
-    }
-
-    default Type rng() {
-        return this.value().getValue1().rng();
-    }
+    String value();
 
 }

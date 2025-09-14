@@ -18,19 +18,8 @@
 
 package studio.phaseshift.metatron.lang.monoid.rewrite.decoration;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import studio.phaseshift.metatron.lang.fURI;
-import studio.phaseshift.metatron.lang.monoid.Monoid;
-import studio.phaseshift.metatron.lang.monoid.MMonoid;
 import studio.phaseshift.metatron.lang.monoid.rewrite.Rewrite;
 import studio.phaseshift.metatron.lang.obj.mtron.MInst;
-import studio.phaseshift.metatron.ui.Graphitty;
-
-import java.util.List;
-
-import static studio.phaseshift.metatron.lang.inst.SInst.EXPLAIN_URI;
-import static studio.phaseshift.metatron.lang.obj.BObj.*;
 
 public abstract class ExplainRewrite extends MInst implements Rewrite {
 

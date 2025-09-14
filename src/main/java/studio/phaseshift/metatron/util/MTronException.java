@@ -49,6 +49,8 @@ public class MTronException extends RuntimeException {
     }
 
     public static MTronException of(final Object throwableOrformat, final Object... args) {
+       if(throwableOrformat instanceof Throwable)
+            ((Throwable)throwableOrformat).printStackTrace();
         return throwableOrformat instanceof Throwable ?
                 new MTronException(Graphitty.string(((String) args[0]).formatted(Arrays.copyOfRange(args, 1, args.length))),
                         (Throwable) throwableOrformat) :

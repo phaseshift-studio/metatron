@@ -19,12 +19,12 @@
 package studio.phaseshift.metatron.lang.obj.mtron;
 
 import studio.phaseshift.metatron.lang.fURI;
-import studio.phaseshift.metatron.lang.obj.base.Obj;
-import studio.phaseshift.metatron.lang.obj.base.Objs;
+import studio.phaseshift.metatron.lang.obj.Obj;
+import studio.phaseshift.metatron.lang.obj.Objs;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
 
-import static studio.phaseshift.metatron.lang.obj.mtron.core.MCoreInstSet.OBJS_TID;
+import static studio.phaseshift.metatron.lang.obj.mtron.MInstSet.OBJS_TID;
 
 public class MObjs extends MObj implements Objs {
 
@@ -53,4 +53,6 @@ public class MObjs extends MObj implements Objs {
     public static Objs of(final Iterable<Obj> iterable) {
         return new MObjs(iterable);
     }
+
+
 }

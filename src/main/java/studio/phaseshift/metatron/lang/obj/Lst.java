@@ -16,16 +16,28 @@
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.lang.obj.base;
+package studio.phaseshift.metatron.lang.obj;
 
 import studio.phaseshift.metatron.lang.fURI;
 
-public interface Uri extends Obj {
+import java.util.List;
+
+public interface Lst extends Poly {
 
     @Override
-    Uri clone(final Object value, final fURI tid, final fURI vid);
+    Lst clone(final Object value, final fURI tid, final fURI vid);
 
     @Override
-    fURI value();
+    List<Obj> value();
+
+    @Override
+    default long count() {
+        return this.value().size();
+    }
+
+    @Override
+    default Iterable<Obj> elements() {
+        return this.value();
+    }
 
 }

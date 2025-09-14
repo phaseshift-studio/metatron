@@ -20,7 +20,7 @@ package studio.phaseshift.metatron.ui;
 
 import org.petitparser.context.Result;
 import studio.phaseshift.metatron.lang.fURI;
-import studio.phaseshift.metatron.lang.obj.base.*;
+import studio.phaseshift.metatron.lang.obj.*;
 import studio.phaseshift.metatron.lang.parse.ObjParser;
 
 import java.util.HashSet;

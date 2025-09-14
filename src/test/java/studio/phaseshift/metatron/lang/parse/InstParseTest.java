@@ -21,19 +21,17 @@ package studio.phaseshift.metatron.lang.parse;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
-import studio.phaseshift.metatron.lang.inst.SInst;
-import studio.phaseshift.metatron.lang.obj.SObj;
 import studio.phaseshift.metatron.lang.obj.mtron.MInt;
+import studio.phaseshift.metatron.lang.obj.mtron.MInstSet;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static studio.phaseshift.metatron.MetatronTest.assertMEquals;
 import static studio.phaseshift.metatron.lang.parse.ObjParser.eval;
 
 public class InstParseTest {
 
     @BeforeAll
     public static void begin() {
-        SInst.load();
+        MInstSet.of();
     }
 
     @Test
@@ -44,13 +42,13 @@ public class InstParseTest {
     @Test
     @Disabled
     public void testCountInst() {
-        assertEquals(SObj.Int.of(3), eval("{1,2,3}.count()").next());
+        assertEquals(MInt.of(3), eval("{1,2,3}.count()").next());
     }
 
     @Test
     @Disabled
     public void testSumInst() {
-        assertEquals(SObj.Int.of(6), eval("{1,2,3}.sum()").next());
+        assertEquals(MInt.of(6), eval("{1,2,3}.sum()").next());
     }
 
 }

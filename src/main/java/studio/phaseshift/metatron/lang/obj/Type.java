@@ -1,6 +1,5 @@
-package studio.phaseshift.metatron.lang.obj.base;
+package studio.phaseshift.metatron.lang.obj;
 
-import org.javatuples.Pair;
 import studio.phaseshift.metatron.lang.fURI;
 
 public interface Type extends Obj {

@@ -1,8 +1,8 @@
 package studio.phaseshift.metatron.space;
 
 import studio.phaseshift.metatron.lang.fURI;
-import studio.phaseshift.metatron.lang.obj.base.NoObj;
-import studio.phaseshift.metatron.lang.obj.base.Obj;
+import studio.phaseshift.metatron.lang.obj.NoObj;
+import studio.phaseshift.metatron.lang.obj.Obj;
 
 import java.util.LinkedHashMap;
 
@@ -52,5 +52,10 @@ public class NullSpace implements Space {
     @Override
     public <O extends Obj> O clone(Object value, fURI tid, fURI vid) {
         return (O)this;
+    }
+
+    @Override
+    public String toString() {
+        return "nullspace";
     }
 }

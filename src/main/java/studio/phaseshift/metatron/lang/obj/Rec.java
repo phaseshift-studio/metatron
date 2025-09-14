@@ -16,26 +16,35 @@
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.lang.inst;
+package studio.phaseshift.metatron.lang.obj;
 
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
-import studio.phaseshift.metatron.BootLoader;
-import studio.phaseshift.metatron.lang.obj.SObj.Inst;
 
-import static studio.phaseshift.metatron.MetatronTest.assertMEquals;
-import static studio.phaseshift.metatron.lang.inst.SInst.PLUS_URI;
-import static studio.phaseshift.metatron.lang.obj.SObj.Int;
+import org.javatuples.Pair;
+import studio.phaseshift.metatron.lang.fURI;
+import studio.phaseshift.metatron.lang.obj.mtron.MRel;
 
-public class STest {
+import java.util.Map;
 
-    @BeforeAll
-    public static void setUp() {
-        SInst.load();
+public interface Rec extends Poly {
+
+    @Override
+    Rec clone(final Object value, final fURI tid, final fURI vid);
+
+    @Override
+    Map<Obj, Obj> value();
+
+    @Override
+    default long count() {
+        return this.value().size();
     }
 
-    @Test
-    public void testPlusInst() {
-        assertMEquals(35, new Inst(PLUS_URI, Int.of(25)).apply(Int.of(10)));
+    @Override
+    default Iterable<Rel> elements() {
+        return () -> this
+                .value()
+                .entrySet()
+                .stream()
+                .map(kv -> (Rel) new MRel(Pair.with(kv.getKey(), kv.getValue()))).iterator();
     }
+
 }

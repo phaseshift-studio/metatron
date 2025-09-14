@@ -1,15 +1,12 @@
 package studio.phaseshift.metatron.lang.obj;
 
 import org.junit.jupiter.api.Test;
-import studio.phaseshift.metatron.lang.fURI;
-import studio.phaseshift.metatron.lang.obj.base.Type;
 import studio.phaseshift.metatron.lang.obj.mtron.MInt;
 import studio.phaseshift.metatron.lang.obj.mtron.MType;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static studio.phaseshift.metatron.lang.obj.mtron.core.MCoreInstSet.INT_TID;
-import static studio.phaseshift.metatron.lang.obj.mtron.core.MCoreInstSet.LST_TID;
+import static studio.phaseshift.metatron.lang.obj.mtron.MInstSet.INT_TID;
 
 public class TypeTest {
 

@@ -16,30 +16,39 @@
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.lang.obj.base;
+package studio.phaseshift.metatron.lang.obj;
 
 import studio.phaseshift.metatron.lang.fURI;
-import studio.phaseshift.metatron.lang.obj.mtron.MLst;
+import studio.phaseshift.metatron.lang.monoid.mtron.MMonoid;
 
-import java.util.Collections;
 import java.util.List;
 
-public interface Lst extends Poly {
+public interface Code extends Obj {
 
     @Override
-    Lst clone(final Object value, final fURI tid, final fURI vid);
+    Code clone(final Object value, final fURI tid, final fURI vid);
 
     @Override
-    List<Obj> value();
+    List<Inst> value();
 
-    @Override
-    default long count() {
-        return this.value().size();
+    default Inst inst(final int index) {
+        return index < this.value().size() ? this.value().get(index) : NoObj.single();
+    }
+
+    default Inst next(final Inst inst) {
+        boolean found = false;
+        for (final Inst i : this.value()) {
+            if (found) return i;
+            if (i == inst) found = true;
+        }
+        return NoObj.single();
     }
 
     @Override
-    default Iterable<Obj> elements() {
-        return this.value();
+    default Obj apply(final Obj lhs) {
+        return MMonoid.of(lhs,this).iterator().next();
     }
+
+    Code resolve(final Obj start);
 
 }

@@ -20,7 +20,8 @@ package studio.phaseshift.metatron.space.q;
 
 import org.javatuples.Triplet;
 import studio.phaseshift.metatron.lang.fURI;
-import studio.phaseshift.metatron.lang.obj.BObj;
+import studio.phaseshift.metatron.lang.obj.Code;
+import studio.phaseshift.metatron.lang.obj.Obj;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -28,7 +29,7 @@ import java.util.List;
 public class PubSubQ implements Q {
 
     // <source,pattern,callback>
-    final List<Triplet<fURI, fURI, BObj.Code>> subscriptions = new ArrayList<>();
+    final List<Triplet<fURI, fURI, Code>> subscriptions = new ArrayList<>();
 
     @Override
     public String query() {
@@ -36,7 +37,7 @@ public class PubSubQ implements Q {
     }
 
     @Override
-    public void onQLessWrite(final fURI source, final fURI target, final BObj.Obj original) {
+    public void onQLessWrite(final fURI source, final fURI target, final Obj original) {
         this.subscriptions.stream().filter(t -> target.matches(t.getValue1())).forEach(t -> {
             t.getValue2().apply(original);
         });
@@ -48,12 +49,12 @@ public class PubSubQ implements Q {
     }*/
 
     @Override
-    public BObj.Obj onPreRead(fURI source, fURI target) {
+    public Obj onPreRead(fURI source, fURI target) {
         return Q.super.onPreRead(source, target);
     }
 
     @Override
-    public BObj.Obj onPostRead(fURI source, fURI target) {
+    public Obj onPostRead(fURI source, fURI target) {
         return Q.super.onPostRead(source, target);
     }
 

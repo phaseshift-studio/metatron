@@ -18,26 +18,46 @@
 
 package studio.phaseshift.metatron.lang.monoid;
 
-import studio.phaseshift.metatron.lang.obj.base.Inst;
-import studio.phaseshift.metatron.lang.obj.base.Obj;
+import org.javatuples.Pair;
+import org.javatuples.Quartet;
+import studio.phaseshift.metatron.lang.fURI;
+import studio.phaseshift.metatron.lang.obj.*;
 
-public interface Monoid extends Iterable<Obj> {
+public interface Monoid extends Obj {
 
-    interface Monad {
-        void halt();
+    @Override
+    Monoid clone(final Object value, final fURI tid, final fURI vid);
 
-        boolean halted();
 
-        boolean dead();
+    // code, running, barrier, halted
+    @Override
+    Quartet<Code,Objs,Lst,Objs> value();
 
-        Inst inst();
 
-        Obj obj();
-
-        long bulk();
-
-        //long loops();
-
-        void run();
+    default Objs halted() {
+        return this.value().getValue3();
     }
+
+    default Lst barriers() {
+        return this.value().getValue2();
+    }
+
+    default Objs running() {
+        return this.value().getValue1();
+    }
+
+    default Code code() {
+        return this.value().getValue0();
+    }
+
+    @Override
+    default Type dom() {
+        return this.value().getValue0().dom();
+    }
+
+    @Override
+    default Type rng() {
+        return this.value().getValue0().rng();
+    }
+
 }

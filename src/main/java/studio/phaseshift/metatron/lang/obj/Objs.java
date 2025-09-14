@@ -16,15 +16,16 @@
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.lang.obj.base;
+package studio.phaseshift.metatron.lang.obj;
 
 import studio.phaseshift.metatron.lang.fURI;
 
-public interface Bool extends Obj {
-    @Override
-    Bool clone(final Object value, final fURI tid, final fURI vid);
+public interface Objs extends Obj {
 
     @Override
-    Boolean value();
+    Objs clone(final Object value, final fURI tid, final fURI vid);
+
+    @Override
+    Iterable<Obj> value();
 
 }

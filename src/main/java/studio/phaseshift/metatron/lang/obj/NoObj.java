@@ -16,7 +16,7 @@
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.lang.obj.base;
+package studio.phaseshift.metatron.lang.obj;
 
 import org.javatuples.Triplet;
 import studio.phaseshift.metatron.lang.fURI;
@@ -25,7 +25,7 @@ import studio.phaseshift.metatron.util.ObjUtil;
 
 import java.util.Iterator;
 
-import static studio.phaseshift.metatron.lang.obj.mtron.core.MCoreInstSet.NOOBJ_TID;
+import static studio.phaseshift.metatron.lang.obj.mtron.MInstSet.NOOBJ_TID;
 
 public class NoObj implements Obj, Inst {
 

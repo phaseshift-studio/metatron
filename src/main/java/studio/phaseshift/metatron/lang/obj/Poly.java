@@ -16,9 +16,13 @@
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.lang.obj.base;
+package studio.phaseshift.metatron.lang.obj;
 
-public interface ObjFactory {
+public interface Poly extends Obj {
 
-    <O extends Obj> O create(final O obj);
+     long count();
+    default boolean isEmpty() {
+        return  0 == this.count();
+    }
+     <O extends Obj> Iterable<O> elements();
 }

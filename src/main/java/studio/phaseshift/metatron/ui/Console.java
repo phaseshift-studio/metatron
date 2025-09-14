@@ -27,11 +27,11 @@ import org.jline.utils.AttributedString;
 import org.jline.utils.AttributedStringBuilder;
 import org.jline.widget.Widgets;
 import studio.phaseshift.metatron.BootLoader;
-import studio.phaseshift.metatron.lang.monoid.MMonoid;
-import studio.phaseshift.metatron.lang.obj.base.Code;
-import studio.phaseshift.metatron.lang.obj.base.Inst;
-import studio.phaseshift.metatron.lang.obj.base.NoObj;
-import studio.phaseshift.metatron.lang.obj.base.Obj;
+import studio.phaseshift.metatron.lang.monoid.mtron.MMonoid;
+import studio.phaseshift.metatron.lang.obj.Code;
+import studio.phaseshift.metatron.lang.obj.Inst;
+import studio.phaseshift.metatron.lang.obj.NoObj;
+import studio.phaseshift.metatron.lang.obj.Obj;
 import studio.phaseshift.metatron.lang.obj.mtron.MCode;
 import studio.phaseshift.metatron.lang.parse.ObjParser;
 import studio.phaseshift.metatron.util.IteratorUtil;
@@ -179,7 +179,7 @@ public class Console {
                     IteratorUtil.iterate(IteratorUtil.consume(result.isNoObj() ?
                                     Collections.emptyIterator() :
                                     result.isCode() ?
-                                            new MMonoid(result).iterator() :
+                                            MMonoid.of(result.as()).iterator() :
                                             result.iterator(),
                             o -> Graphitty.out(this.terminal.output(), "{{FORM2}}=={{FORM1}}>{{X}}%s\n".formatted(o))));
                 }

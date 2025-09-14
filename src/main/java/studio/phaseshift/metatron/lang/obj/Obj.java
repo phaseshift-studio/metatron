@@ -16,11 +16,10 @@
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.lang.obj.base;
+package studio.phaseshift.metatron.lang.obj;
 
 import org.javatuples.Pair;
 import studio.phaseshift.metatron.lang.fURI;
-import studio.phaseshift.metatron.lang.obj.mtron.MObj;
 import studio.phaseshift.metatron.lang.obj.mtron.MType;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
@@ -31,7 +30,7 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-import static studio.phaseshift.metatron.lang.obj.mtron.core.MCoreInstSet.*;
+import static studio.phaseshift.metatron.lang.obj.mtron.MInstSet.*;
 
 public interface Obj extends Function<Obj, Obj>, Iterable<Obj> {
 
@@ -45,6 +44,10 @@ public interface Obj extends Function<Obj, Obj>, Iterable<Obj> {
 
     default Obj value(final Object newValue) {
         return this.clone(newValue, this.tid(), this.vid());
+    }
+
+    default <O> O valueAs() {
+        return this.value();
     }
 
     default Obj tid(final fURI newTid) {

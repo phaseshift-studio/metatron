@@ -19,12 +19,13 @@
 package studio.phaseshift.metatron.lang.obj.mtron;
 
 import studio.phaseshift.metatron.lang.fURI;
-import studio.phaseshift.metatron.lang.obj.base.Obj;
-import studio.phaseshift.metatron.lang.obj.base.Rec;
+import studio.phaseshift.metatron.lang.obj.Obj;
+import studio.phaseshift.metatron.lang.obj.Rec;
 
+import java.util.LinkedHashMap;
 import java.util.Map;
 
-import static studio.phaseshift.metatron.lang.obj.mtron.core.MCoreInstSet.REC_TID;
+import static studio.phaseshift.metatron.lang.obj.mtron.MInstSet.REC_TID;
 
 public class MRec extends MObj implements Rec {
     public MRec(final Map<Obj, Obj> value, final fURI tid, final fURI vid) {
@@ -47,5 +48,9 @@ public class MRec extends MObj implements Rec {
 
     public static Rec of(final Map<Obj,Obj> value) {
         return new MRec(value);
+    }
+
+    public static Rec of() {
+        return new MRec(new LinkedHashMap<>());
     }
 }

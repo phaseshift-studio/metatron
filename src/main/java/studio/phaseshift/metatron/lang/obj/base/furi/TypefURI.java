@@ -1,11 +1,11 @@
 package studio.phaseshift.metatron.lang.obj.base.furi;
 
 import studio.phaseshift.metatron.lang.fURI;
-import studio.phaseshift.metatron.lang.obj.base.Inst;
-import studio.phaseshift.metatron.lang.obj.base.Obj;
+import studio.phaseshift.metatron.lang.obj.Inst;
+import studio.phaseshift.metatron.lang.obj.Obj;
 import studio.phaseshift.metatron.space.Router;
 
-import static studio.phaseshift.metatron.lang.obj.mtron.core.MCoreInstSet.NOOBJ_TID;
+import static studio.phaseshift.metatron.lang.obj.mtron.MInstSet.NOOBJ_TID;
 
 public final class TypefURI {
 

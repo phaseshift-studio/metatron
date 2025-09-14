@@ -18,8 +18,7 @@
 
 package studio.phaseshift.metatron.ui;
 
-import org.jline.jansi.Ansi;
-import studio.phaseshift.metatron.lang.obj.base.Obj;
+import studio.phaseshift.metatron.lang.obj.Obj;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.io.ByteArrayOutputStream;

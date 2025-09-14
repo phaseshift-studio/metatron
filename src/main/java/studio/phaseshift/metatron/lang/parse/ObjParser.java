@@ -25,10 +25,13 @@ import org.petitparser.parser.Parser;
 import org.petitparser.parser.combinators.*;
 import org.petitparser.parser.primitive.CharacterParser;
 import studio.phaseshift.metatron.lang.fURI;
-import studio.phaseshift.metatron.lang.monoid.MMonoid;
-import studio.phaseshift.metatron.lang.obj.base.*;
+import studio.phaseshift.metatron.lang.monoid.mtron.MMonoid;
+import studio.phaseshift.metatron.lang.obj.Code;
+import studio.phaseshift.metatron.lang.obj.Inst;
+import studio.phaseshift.metatron.lang.obj.NoObj;
+import studio.phaseshift.metatron.lang.obj.Obj;
 import studio.phaseshift.metatron.lang.obj.mtron.*;
-import studio.phaseshift.metatron.lang.obj.mtron.core.MCoreInstSet;
+import studio.phaseshift.metatron.lang.obj.mtron.MInstSet;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
 import studio.phaseshift.metatron.util.MTronException;
@@ -42,8 +45,7 @@ import static org.petitparser.parser.primitive.CharacterParser.digit;
 import static org.petitparser.parser.primitive.CharacterParser.of;
 import static org.petitparser.parser.primitive.CharacterParser.word;
 import static org.petitparser.parser.primitive.StringParser.of;
-import static studio.phaseshift.metatron.lang.inst.SInst.*;
-import static studio.phaseshift.metatron.lang.obj.mtron.core.MCoreInstSet.*;
+import static studio.phaseshift.metatron.lang.obj.mtron.MInstSet.*;
 
 public class ObjParser {
 
@@ -141,7 +143,7 @@ public class ObjParser {
 
 
     public static <O extends Obj> Iterator<O> eval(final String code) {
-        return (Iterator) new MMonoid(parse(code)).iterator();
+        return (Iterator) MMonoid.of(parse(code)).iterator();
     }
 
     public static <O extends Obj> O parse(final String code) {
@@ -245,7 +247,7 @@ public class ObjParser {
     public static Parser sugar_code() {
         return seq(opt(obj_no_code_parser, NoObj.single()), seq(opt(of(".").trim(),'.')), m_code()).map(t -> {
             final List<Inst> newCode = new ArrayList<>();
-            newCode.add(new MInst(Triplet.with(MLst.of(ObjParser.<Obj>pick(t, 0)), null, NoObj.single()), START_URI, fURI.NONE));
+            newCode.add(new MInst(Triplet.with(MLst.of(ObjParser.<Obj>pick(t, 0)), null, NoObj.single()), START_TID, fURI.NONE));
             newCode.addAll(ObjParser.<Code>pick(t, 2).value());
             return new MCode(newCode, CODE_TID, fURI.NONE);
         });
@@ -284,35 +286,35 @@ public class ObjParser {
     }
 
     public static Parser sugar_identity() {
-        return generate_sugar_parser(MCoreInstSet.ID_TID,"_",0);
+        return generate_sugar_parser(MInstSet.ID_TID,"_",0);
     }
 
     public static Parser sugar_from() {
-       return generate_sugar_parser(MCoreInstSet.FROM_TID,"*",1);
+       return generate_sugar_parser(MInstSet.FROM_TID,"*",1);
     }
 
     public static Parser sugar_plus() {
-        return generate_sugar_parser(MCoreInstSet.PLUS_TID,"+",1);
+        return generate_sugar_parser(MInstSet.PLUS_TID,"+",1);
     }
 
     public static Parser sugar_block() {
-        return generate_sugar_parser(MCoreInstSet.BLOCK_TID,"|",1);
+        return generate_sugar_parser(MInstSet.BLOCK_TID,"|",1);
     }
 
     public static Parser sugar_ref() {
-        return generate_sugar_parser(MCoreInstSet.REF_TID,"->",1);
+        return generate_sugar_parser(MInstSet.REF_TID,"->",1);
     }
 
     public static Parser sugar_merge() {
-        return generate_sugar_parser(MCoreInstSet.MERGE_TID, ">-", 0);
+        return generate_sugar_parser(MInstSet.MERGE_TID, ">-", 0);
     }
 
     public static Parser sugar_split() {
-        return generate_sugar_parser(MCoreInstSet.SPLIT_TID,"-<",1);
+        return generate_sugar_parser(MInstSet.SPLIT_TID,"-<",1);
     }
 
     public static Parser sugar_within() {
-        return generate_sugar_parser(MCoreInstSet.WITHIN_TID,"_/",1);
+        return generate_sugar_parser(MInstSet.WITHIN_TID,"_/",1);
     }
 
     /// //////////////////////////////////////////////////////////////////////////////////////////

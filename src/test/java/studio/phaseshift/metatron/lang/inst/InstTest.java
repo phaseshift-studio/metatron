@@ -5,18 +5,18 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.lang.fURI;
-import studio.phaseshift.metatron.lang.obj.base.Inst;
-import studio.phaseshift.metatron.lang.obj.base.NoObj;
+import studio.phaseshift.metatron.lang.obj.Inst;
+import studio.phaseshift.metatron.lang.obj.NoObj;
 import studio.phaseshift.metatron.lang.obj.mtron.MInst;
 import studio.phaseshift.metatron.lang.obj.mtron.MInt;
-import studio.phaseshift.metatron.lang.obj.mtron.core.MCoreInstSet;
+import studio.phaseshift.metatron.lang.obj.mtron.MInstSet;
 import studio.phaseshift.metatron.space.Router;
 import studio.phaseshift.metatron.space.Space;
 import studio.phaseshift.metatron.space.mem.MemSpace;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static studio.phaseshift.metatron.lang.fURI.*;
-import static studio.phaseshift.metatron.lang.obj.mtron.core.MCoreInstSet.*;
+import static studio.phaseshift.metatron.lang.obj.mtron.MInstSet.*;
 
 public class InstTest {
 
@@ -24,7 +24,7 @@ public class InstTest {
     public static void loadInstructionSets() {
         final Space space = new MemSpace(fURI.MANY,fURI.NONE);
         Router.global().registerStruct(space);
-        new MCoreInstSet().load();
+        new MInstSet().load();
        //if(true) {
        //     System.out.println(space.read("/mtron/int"));
         //    throw new RuntimeException();
@@ -47,8 +47,8 @@ public class InstTest {
 
     @Test
     public void testInstObj() {
-       assertEquals(PLUS_TID.query(DOM,INT_TID).query(RNG,INT_TID),  new MCoreInstSet().resolve(MInt.of(2),MInst.instA(fURI.of("plus"))).tid());
-        assertEquals(START_TID.query(DOM,NOOBJ_TID).query(RNG,MANY),  new MCoreInstSet().resolve(NoObj.single(),MInst.instA(fURI.of("start"))).tid());
+       assertEquals(PLUS_TID.query(DOM,INT_TID).query(RNG,INT_TID),  new MInstSet().resolve(MInt.of(2),MInst.instA(fURI.of("plus"))).tid());
+        assertEquals(START_TID.query(DOM,NOOBJ_TID).query(RNG,MANY),  new MInstSet().resolve(NoObj.single(),MInst.instA(fURI.of("start"))).tid());
        //System.out.println(i);
     }
 }

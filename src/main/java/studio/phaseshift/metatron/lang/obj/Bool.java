@@ -16,39 +16,15 @@
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.lang.obj.base;
+package studio.phaseshift.metatron.lang.obj;
 
 import studio.phaseshift.metatron.lang.fURI;
-import studio.phaseshift.metatron.lang.monoid.MMonoid;
 
-import java.util.List;
-
-public interface Code extends Obj {
+public interface Bool extends Obj {
+    @Override
+    Bool clone(final Object value, final fURI tid, final fURI vid);
 
     @Override
-    Code clone(final Object value, final fURI tid, final fURI vid);
-
-    @Override
-    List<Inst> value();
-
-    default Inst inst(final int index) {
-        return index < this.value().size() ? this.value().get(index) : NoObj.single();
-    }
-
-    default Inst next(final Inst inst) {
-        boolean found = false;
-        for (final Inst i : this.value()) {
-            if (found) return i;
-            if (i == inst) found = true;
-        }
-        return NoObj.single();
-    }
-
-    @Override
-    default Obj apply(final Obj lhs) {
-        return new MMonoid(this,lhs).next();
-    }
-
-    Code resolve(final Obj start);
+    Boolean value();
 
 }

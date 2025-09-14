@@ -19,12 +19,12 @@
 package studio.phaseshift.metatron.lang.obj.mtron;
 
 import studio.phaseshift.metatron.lang.fURI;
-import studio.phaseshift.metatron.lang.obj.base.Lst;
-import studio.phaseshift.metatron.lang.obj.base.Obj;
+import studio.phaseshift.metatron.lang.obj.Lst;
+import studio.phaseshift.metatron.lang.obj.Obj;
 
 import java.util.List;
 
-import static studio.phaseshift.metatron.lang.obj.mtron.core.MCoreInstSet.LST_TID;
+import static studio.phaseshift.metatron.lang.obj.mtron.MInstSet.LST_TID;
 
 public class MLst extends MObj implements Lst {
     public MLst(final List<Obj> value, final fURI tid, final fURI vid) {

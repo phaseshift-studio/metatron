@@ -19,9 +19,9 @@
 package studio.phaseshift.metatron.lang.obj.mtron;
 
 import studio.phaseshift.metatron.lang.fURI;
-import studio.phaseshift.metatron.lang.obj.base.Int;
+import studio.phaseshift.metatron.lang.obj.Int;
 
-import static studio.phaseshift.metatron.lang.obj.mtron.core.MCoreInstSet.INT_TID;
+import static studio.phaseshift.metatron.lang.obj.mtron.MInstSet.INT_TID;
 
 public class MInt extends MObj implements Int {
 

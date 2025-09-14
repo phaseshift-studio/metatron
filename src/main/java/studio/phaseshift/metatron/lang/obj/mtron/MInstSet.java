@@ -16,13 +16,12 @@
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.lang.obj.mtron.core;
+package studio.phaseshift.metatron.lang.obj.mtron;
 
 import studio.phaseshift.metatron.lang.fURI;
-import studio.phaseshift.metatron.lang.monoid.MMonoid;
-import studio.phaseshift.metatron.lang.obj.base.*;
+import studio.phaseshift.metatron.lang.monoid.mtron.MMonoid;
+import studio.phaseshift.metatron.lang.obj.*;
 import studio.phaseshift.metatron.lang.obj.base.furi.TypefURI;
-import studio.phaseshift.metatron.lang.obj.mtron.*;
 import studio.phaseshift.metatron.space.Router;
 import studio.phaseshift.metatron.util.IteratorUtil;
 
@@ -30,7 +29,7 @@ import java.util.*;
 import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 
-public class MCoreInstSet extends MObj implements InstSet {
+public class MInstSet extends MObj implements InstSet {
 
     public static final fURI BOOL_TID = fURI.of("/mtron/bool");
     public static final fURI INT_TID = fURI.of("/mtron/int");
@@ -107,7 +106,7 @@ public class MCoreInstSet extends MObj implements InstSet {
         this.define(GT_TID, INT_TID, BOOL_TID,MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> MBool.of(lhs.intValue() > inst.arg(0).intValue()));
         this.define(GT_TID, REAL_TID,BOOL_TID, MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> MBool.of(lhs.realValue() > inst.arg(0).realValue()));
         this.define(GT_TID, STR_TID, BOOL_TID,MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> MBool.of(lhs.strValue().compareTo(inst.arg(0).strValue()) > 0));
-        this.define(WITHIN_TID, fURI.ONE, fURI.ONE, MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> MLst.of(IteratorUtil.asList(new MMonoid(inst.arg(0), MObjs.of(lhs.<Poly>as().elements())).iterator())));
+        this.define(WITHIN_TID, fURI.ONE, fURI.ONE, MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> MLst.of(IteratorUtil.asList( MMonoid.of(MObjs.of(lhs.<Poly>as().elements()),inst.arg(0).as()).iterator())));
         this.define(SPLIT_TID, LST_TID, LST_TID, MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> MLst.of(inst.arg(0).lstValue().stream().map(e -> e.apply(lhs)).toList()));
         this.define(SPLIT_TID, REC_TID, REC_TID, MLst.of(MInst.instA(ID_TID)), (lhs, inst) ->  MRec.of( inst.arg(0).recValue().entrySet().stream().map(kv -> List.of(kv.getKey(),kv.getValue().apply(lhs))).collect(Collectors.toMap(kv -> kv.get(0),kv -> kv.get(1), (a,b) -> b))));
         this.define(SPLIT_TID, fURI.ONE, fURI.ONE, MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> inst.arg(0));
@@ -129,7 +128,7 @@ public class MCoreInstSet extends MObj implements InstSet {
     }
 
 
-    protected MCoreInstSet define(final fURI tid, final fURI domain, final fURI range, final Poly args, final BiFunction<Obj, Inst, Obj> f) {
+    protected MInstSet define(final fURI tid, final fURI domain, final fURI range, final Poly args, final BiFunction<Obj, Inst, Obj> f) {
         SYMBOL_TABLE
                 .computeIfAbsent(tid, k -> new LinkedHashMap<>())
                 .computeIfAbsent(domain, k -> new LinkedHashSet<>())
@@ -139,9 +138,13 @@ public class MCoreInstSet extends MObj implements InstSet {
         return this;
     }
 
-    public MCoreInstSet() {
+    public MInstSet() {
         super(SYMBOL_TABLE, TID, fURI.NONE);
         this.load();
+    }
+
+    public static InstSet of() {
+        return new MInstSet();
     }
 
     @Override

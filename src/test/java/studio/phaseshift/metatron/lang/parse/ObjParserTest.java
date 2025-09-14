@@ -19,14 +19,12 @@
 package studio.phaseshift.metatron.lang.parse;
 
 import org.junit.jupiter.api.Test;
-import studio.phaseshift.metatron.lang.obj.base.NoObj;
-import studio.phaseshift.metatron.lang.obj.base.Obj;
+import studio.phaseshift.metatron.lang.obj.NoObj;
 import studio.phaseshift.metatron.lang.obj.mtron.*;
 import studio.phaseshift.metatron.util.MTronException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static studio.phaseshift.metatron.lang.parse.ObjParser.m_bool;
 
 
 public class ObjParserTest {

@@ -20,12 +20,11 @@ package studio.phaseshift.metatron.lang.obj.mtron;
 
 import org.javatuples.Triplet;
 import studio.phaseshift.metatron.lang.fURI;
-import studio.phaseshift.metatron.lang.obj.base.Inst;
-import studio.phaseshift.metatron.lang.obj.base.NoObj;
-import studio.phaseshift.metatron.lang.obj.base.Obj;
-import studio.phaseshift.metatron.lang.obj.base.Poly;
+import studio.phaseshift.metatron.lang.obj.Inst;
+import studio.phaseshift.metatron.lang.obj.NoObj;
+import studio.phaseshift.metatron.lang.obj.Obj;
+import studio.phaseshift.metatron.lang.obj.Poly;
 
-import java.util.List;
 import java.util.Objects;
 import java.util.function.BiFunction;
 

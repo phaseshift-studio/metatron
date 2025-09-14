@@ -16,16 +16,16 @@
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.lang.obj.base;
+package studio.phaseshift.metatron.lang.obj;
 
 import studio.phaseshift.metatron.lang.fURI;
 
-public interface Str extends Obj {
+public interface Int extends Obj {
 
     @Override
-    Str clone(final Object value, final fURI tid, final fURI vid);
+    Int clone(final Object value, final fURI tid, final fURI vid);
 
     @Override
-    String value();
+    Long value();
 
 }

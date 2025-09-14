@@ -18,7 +18,7 @@
 
 package studio.phaseshift.metatron.ui;
 
-import studio.phaseshift.metatron.lang.obj.base.Obj;
+import studio.phaseshift.metatron.lang.obj.Obj;
 
 public interface ObjSerializer<T> {
 

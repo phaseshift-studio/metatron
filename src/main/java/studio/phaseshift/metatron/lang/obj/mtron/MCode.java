@@ -19,16 +19,14 @@
 package studio.phaseshift.metatron.lang.obj.mtron;
 
 import studio.phaseshift.metatron.lang.fURI;
-import studio.phaseshift.metatron.lang.monoid.MMonoid;
-import studio.phaseshift.metatron.lang.obj.base.Code;
-import studio.phaseshift.metatron.lang.obj.base.Inst;
-import studio.phaseshift.metatron.lang.obj.base.NoObj;
-import studio.phaseshift.metatron.lang.obj.base.Obj;
+import studio.phaseshift.metatron.lang.obj.Code;
+import studio.phaseshift.metatron.lang.obj.Inst;
+import studio.phaseshift.metatron.lang.obj.Obj;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import static studio.phaseshift.metatron.lang.obj.mtron.core.MCoreInstSet.*;
+import static studio.phaseshift.metatron.lang.obj.mtron.MInstSet.*;
 
 public class MCode extends MObj implements Code {
 

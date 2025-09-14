@@ -16,16 +16,14 @@
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.lang.obj.base;
+package studio.phaseshift.metatron.lang.obj;
 
-import org.javatuples.Pair;
 import org.javatuples.Triplet;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.base.furi.TypefURI;
-import studio.phaseshift.metatron.lang.obj.mtron.MObj;
 import studio.phaseshift.metatron.lang.obj.mtron.MRel;
 import studio.phaseshift.metatron.lang.obj.mtron.MType;
-import studio.phaseshift.metatron.lang.obj.mtron.core.MCoreInstSet;
+import studio.phaseshift.metatron.lang.obj.mtron.MInstSet;
 import studio.phaseshift.metatron.space.Router;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
@@ -37,7 +35,7 @@ import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
-import static studio.phaseshift.metatron.lang.obj.mtron.core.MCoreInstSet.LST_TID;
+import static studio.phaseshift.metatron.lang.obj.mtron.MInstSet.LST_TID;
 
 public interface Inst extends Obj {
 
@@ -120,13 +118,13 @@ public interface Inst extends Obj {
             return this;
         } else {
             if (currentResolution == Resolve.A) {
-                final Inst resolved = new MCoreInstSet().resolve(lhs, this);
+                final Inst resolved = new MInstSet().resolve(lhs, this);
                 LOG.trace("resolution ({{m}}%s {{g}}=>{{/g}} %s{{/m}}): %s", currentResolution, resolved.resolution(), resolved);
                 return resolved.resolve(desiredResolution, lhs);
             } else { // Resolve.B
                 if (!lhs.matches(this.dom()))
                     throw MTronException.of("lhs obj does not match inst domain: %s: %s {{r}}-/>{{/r}} %s", this, lhs, this.dom());
-                final boolean blocking = this.tid().equals(MCoreInstSet.BLOCK_TID) || this.tid().equals(MCoreInstSet.WITHIN_TID);
+                final boolean blocking = this.tid().equals(MInstSet.BLOCK_TID) || this.tid().equals(MInstSet.WITHIN_TID);
                 final List<Obj> cargs = new ArrayList<>();
                 for (final Obj arg : args().elements()) {
                     cargs.add(blocking ? arg : arg.apply(lhs));

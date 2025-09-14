@@ -19,9 +19,9 @@
 package studio.phaseshift.metatron.lang.obj.mtron;
 
 import studio.phaseshift.metatron.lang.fURI;
-import studio.phaseshift.metatron.lang.obj.base.Uri;
+import studio.phaseshift.metatron.lang.obj.Uri;
 
-import static studio.phaseshift.metatron.lang.obj.mtron.core.MCoreInstSet.URI_TID;
+import static studio.phaseshift.metatron.lang.obj.mtron.MInstSet.URI_TID;
 
 public class MUri extends MObj implements Uri {
     public MUri(final fURI value, final fURI tid, final fURI vid) {

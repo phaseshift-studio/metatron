@@ -18,8 +18,8 @@
 
 package studio.phaseshift.metatron.lang.monoid.rewrite;
 
-import studio.phaseshift.metatron.lang.obj.base.Code;
-import studio.phaseshift.metatron.lang.obj.base.Inst;
+import studio.phaseshift.metatron.lang.obj.Code;
+import studio.phaseshift.metatron.lang.obj.Inst;
 
 public interface Rewrite extends Inst {
 

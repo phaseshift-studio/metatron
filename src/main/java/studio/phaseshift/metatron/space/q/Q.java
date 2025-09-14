@@ -20,7 +20,7 @@ package studio.phaseshift.metatron.space.q;
 
 import studio.phaseshift.metatron.lang.fURI;
 
-import static studio.phaseshift.metatron.lang.obj.BObj.Obj;
+import studio.phaseshift.metatron.lang.obj.Obj;
 
 public interface Q {
 

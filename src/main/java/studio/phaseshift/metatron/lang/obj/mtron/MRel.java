@@ -20,10 +20,10 @@ package studio.phaseshift.metatron.lang.obj.mtron;
 
 import org.javatuples.Pair;
 import studio.phaseshift.metatron.lang.fURI;
-import studio.phaseshift.metatron.lang.obj.base.Obj;
-import studio.phaseshift.metatron.lang.obj.base.Rel;
+import studio.phaseshift.metatron.lang.obj.Obj;
+import studio.phaseshift.metatron.lang.obj.Rel;
 
-import static studio.phaseshift.metatron.lang.obj.mtron.core.MCoreInstSet.REL_TID;
+import static studio.phaseshift.metatron.lang.obj.mtron.MInstSet.REL_TID;
 
 public class MRel extends MObj implements Rel {
     public MRel(final Pair<Obj, Obj> value, final fURI tid, final fURI vid) {
