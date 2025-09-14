@@ -27,7 +27,7 @@ import java.util.*;
 
 public class fURI implements Cloneable {
 
-    public static final fURI MANY = fURI.of("#");
+    public static final fURI ANY = fURI.of("#");
     public static final fURI ONE = fURI.of("+");
     public static final fURI NONE = fURI.of("");
     public static final fURI NULL = null;

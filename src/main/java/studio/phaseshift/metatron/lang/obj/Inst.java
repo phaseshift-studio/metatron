@@ -72,7 +72,7 @@ public interface Inst extends Obj {
     @Override
     default Type rng() {
         final fURI range = TypefURI.rng(this.tid());
-        return range.equals(fURI.MANY) ? MType.of(range) : MType.of(Router.global().read(range),TypefURI.rng(this.tid())).orElseGet(() -> MType.of(TypefURI.rng(this.tid())));
+        return range.equals(fURI.ANY) ? MType.of(range) : MType.of(Router.global().read(range),TypefURI.rng(this.tid())).orElseGet(() -> MType.of(TypefURI.rng(this.tid())));
     }
 
 

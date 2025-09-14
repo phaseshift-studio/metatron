@@ -31,7 +31,6 @@ import studio.phaseshift.metatron.lang.obj.Inst;
 import studio.phaseshift.metatron.lang.obj.NoObj;
 import studio.phaseshift.metatron.lang.obj.Obj;
 import studio.phaseshift.metatron.lang.obj.mtron.*;
-import studio.phaseshift.metatron.lang.obj.mtron.MInstSet;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
 import studio.phaseshift.metatron.util.MTronException;
@@ -131,7 +130,7 @@ public class ObjParser {
         }));
 
         inst_parser.set(seq(
-                m_type_prefix_opt_colon(INST_TID),
+                choice(m_inst_furi(), m_type_prefix_opt_colon(INST_TID)),
                 seq(of('(').trim(), opt(m_obj().separatedBy(of(',').trim()), List.of()), of(')').trim()).pick(1),
                 opt(seq(of('{').trim(), m_code(), of('}').trim()).pick(1), null))
                 .map(t -> (Inst) new MInst(new Triplet<>(
@@ -164,6 +163,7 @@ public class ObjParser {
 
     private static final String FULL_FURI_CHARS = "/%!#_=?@+.&: ";
     private static final String REDUCED_FURI_CHARS = "/%!#_=?@+&:";
+    private static final String QUERYLESS_FURI_CHARS = "/%!#_=@+&:";
 
     public static Parser m_furi(final String furiCharacterSet) {
         final Supplier<Parser> internal = () -> word().or(seq(of("=>").not(), anyOf(furiCharacterSet))).plus().flatten().map(t -> new fURI(t.toString()));
@@ -174,6 +174,13 @@ public class ObjParser {
     public static Parser m_furi() {
         return m_furi(FULL_FURI_CHARS);
     }
+
+    public static Parser m_inst_furi() {
+        return seq(m_furi(QUERYLESS_FURI_CHARS), of('?'),
+                m_furi(QUERYLESS_FURI_CHARS), of("<=").trim(), m_furi(QUERYLESS_FURI_CHARS),opt(of(':').trim(), ':'))
+                .map(t -> ObjParser.<fURI>pick(t, 0).query("dom", pick(t, 4).toString()).query("rng", pick(t, 2).toString()));
+    }
+
 
     public static Parser m_obj() {
         return obj_parser;
@@ -245,7 +252,7 @@ public class ObjParser {
     }
 
     public static Parser sugar_code() {
-        return seq(opt(obj_no_code_parser, NoObj.single()), seq(opt(of(".").trim(),'.')), m_code()).map(t -> {
+        return seq(opt(obj_no_code_parser, NoObj.single()), seq(opt(of(".").trim(), '.')), m_code()).map(t -> {
             final List<Inst> newCode = new ArrayList<>();
             newCode.add(new MInst(Triplet.with(MLst.of(ObjParser.<Obj>pick(t, 0)), null, NoObj.single()), START_TID, fURI.NULL));
             newCode.addAll(ObjParser.<Code>pick(t, 2).value());
@@ -262,8 +269,9 @@ public class ObjParser {
     }
 
     public static Parser m_inst() {
-        return  choice(ordered_sugar_parsers()).or(inst_parser);
+        return choice(ordered_sugar_parsers()).or(inst_parser);
     }
+
     /// //////////////////////////////////////////////////////////////////////////////////////////
     /// ///////////////////////////////////// SUGAR PARSERS //////////////////////////////////////
     /// //////////////////////////////////////////////////////////////////////////////////////////
@@ -276,33 +284,33 @@ public class ObjParser {
                 sugar_merge(),
                 sugar_split(),
                 sugar_ref(),
-                sugar_plus() };
+                sugar_plus()};
     }
 
     private static Parser generate_sugar_parser(final fURI tid, final String sugarOp, final int argCount) {
         return argCount == 0 ?
                 of(sugarOp).trim().map(t -> MInst.instA(tid)) :
-                seq(of(sugarOp).trim(), m_obj()).map(t -> MInst.instB(tid,MLst.of(ObjParser.<Obj>pick(t, 1))));
+                seq(of(sugarOp).trim(), m_obj()).map(t -> MInst.instB(tid, MLst.of(ObjParser.<Obj>pick(t, 1))));
     }
 
     public static Parser sugar_identity() {
-        return generate_sugar_parser(MInstSet.ID_TID,"_",0);
+        return generate_sugar_parser(MInstSet.ID_TID, "_", 0);
     }
 
     public static Parser sugar_from() {
-       return generate_sugar_parser(MInstSet.FROM_TID,"*",1);
+        return generate_sugar_parser(MInstSet.FROM_TID, "*", 1);
     }
 
     public static Parser sugar_plus() {
-        return generate_sugar_parser(MInstSet.PLUS_TID,"+",1);
+        return generate_sugar_parser(MInstSet.PLUS_TID, "+", 1);
     }
 
     public static Parser sugar_block() {
-        return generate_sugar_parser(MInstSet.BLOCK_TID,"|",1);
+        return generate_sugar_parser(MInstSet.BLOCK_TID, "|", 1);
     }
 
     public static Parser sugar_ref() {
-        return generate_sugar_parser(MInstSet.REF_TID,"->",1);
+        return generate_sugar_parser(MInstSet.REF_TID, "->", 1);
     }
 
     public static Parser sugar_merge() {
@@ -310,11 +318,11 @@ public class ObjParser {
     }
 
     public static Parser sugar_split() {
-        return generate_sugar_parser(MInstSet.SPLIT_TID,"-<",1);
+        return generate_sugar_parser(MInstSet.SPLIT_TID, "-<", 1);
     }
 
     public static Parser sugar_within() {
-        return generate_sugar_parser(MInstSet.WITHIN_TID,"_/",1);
+        return generate_sugar_parser(MInstSet.WITHIN_TID, "_/", 1);
     }
 
     /// //////////////////////////////////////////////////////////////////////////////////////////
