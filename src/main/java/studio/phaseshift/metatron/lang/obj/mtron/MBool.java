@@ -30,7 +30,7 @@ public class MBool extends MObj implements Bool {
     }
 
     public MBool(final Boolean value) {
-        this(value, BOOL_TID, fURI.NONE);
+        this(value, BOOL_TID, fURI.NULL);
     }
 
     @Override

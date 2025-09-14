@@ -40,6 +40,10 @@ public interface Obj extends Function<Obj, Obj>, Iterable<Obj> {
 
     fURI vid();
 
+    default Type type() {
+        return MType.of(this,this.tid());
+    }
+
     <O extends Obj> O clone(final Object value, final fURI tid, final fURI vid);
 
     default Obj value(final Object newValue) {
@@ -68,7 +72,7 @@ public interface Obj extends Function<Obj, Obj>, Iterable<Obj> {
     }
 
     default boolean matches(final Obj rhs) {
-        if(rhs.isType() && this.tid().queryless().matches(rhs.tid()))
+        if(rhs.isType() && this.tid().matches(rhs.tid()))
                 return true;
         return this.equals(rhs);
 

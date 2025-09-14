@@ -55,7 +55,7 @@ public class MObj implements Obj {
     }
 
     @Override
-    public <O extends Obj> O clone(Object value, fURI tid, fURI vid) {
+    public <O extends Obj> O clone(final Object value, final fURI tid, final fURI vid) {
         return (O) this;
     }
 
@@ -77,7 +77,7 @@ public class MObj implements Obj {
         return Graphitty.string(this);
     }
 
-    private static final Obj SINGLE = new MObj(new Object(), fURI.of("obj"), fURI.NONE);
+    private static final Obj SINGLE = new MObj(new Object(), fURI.of("obj"), fURI.NULL);
 
     public static Obj single() {
         return SINGLE;

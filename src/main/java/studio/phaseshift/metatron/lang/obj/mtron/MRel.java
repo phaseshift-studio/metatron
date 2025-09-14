@@ -31,7 +31,7 @@ public class MRel extends MObj implements Rel {
     }
 
     public MRel(final Pair<Obj, Obj> value) {
-        this(value, REL_TID , fURI.NONE);
+        this(value, REL_TID , fURI.NULL);
     }
 
     @Override

@@ -71,7 +71,7 @@ public class MqttSpace extends MObj implements Space {
         this.pattern = config
                 .get(new MUri(fURI.of("pattern")))
                 .orElseThrow(new IllegalArgumentException("config nust have a pattern key")).uriValue();
-        this.cache = new MemSpace(this.pattern, fURI.NONE);
+        this.cache = new MemSpace(this.pattern, fURI.NULL);
         this.init();
     }
 

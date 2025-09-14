@@ -92,7 +92,7 @@ public interface Space extends Poly {
                             .stream()
                             .filter(kv -> nextStepAddr.extend(kv.getKey().uriValue()).matches(addr))
                             .forEach(kv -> submap.put(kv.getKey(), kv.getValue()));
-                    resolveWriter.accept(nextStepAddr, new MRec(submap, value.tid(), fURI.NONE));
+                    resolveWriter.accept(nextStepAddr, new MRec(submap, value.tid(), fURI.NULL));
                 } else if (nextStepAddr.matches(addr)) {
                     resolveWriter.accept(nextStepAddr, value);
                 }

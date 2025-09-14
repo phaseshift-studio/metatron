@@ -29,7 +29,7 @@ public class MUri extends MObj implements Uri {
     }
 
     public MUri(final fURI value) {
-        this(value, URI_TID, fURI.NONE);
+        this(value, URI_TID, fURI.NULL);
     }
 
     public MUri(final String value) {

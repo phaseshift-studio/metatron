@@ -29,7 +29,7 @@ public class MStr extends MObj implements Str {
     }
 
     public MStr(final String value) {
-        this(value, STR_TID, fURI.NONE);
+        this(value, STR_TID, fURI.NULL);
     }
 
     @Override

@@ -37,7 +37,7 @@ public class MObjs extends MObj implements Objs {
     }
 
     public MObjs(final Iterable<Obj> value) {
-        this(value, OBJS_TID, fURI.NONE);
+        this(value, OBJS_TID, fURI.NULL);
     }
 
     @Override

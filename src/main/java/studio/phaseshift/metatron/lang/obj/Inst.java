@@ -72,7 +72,7 @@ public interface Inst extends Obj {
     @Override
     default Type rng() {
         final fURI range = TypefURI.rng(this.tid());
-        return range.equals(fURI.MANY) ? MType.of(range) : MType.of(Router.global().read(range),TypefURI.dom(this.tid())).orElseGet(() -> MType.of(TypefURI.rng(this.tid())));
+        return range.equals(fURI.MANY) ? MType.of(range) : MType.of(Router.global().read(range),TypefURI.rng(this.tid())).orElseGet(() -> MType.of(TypefURI.rng(this.tid())));
     }
 
 
@@ -93,8 +93,8 @@ public interface Inst extends Obj {
     }
 
     default Rel signature() {
-        final fURI domain = this.tid().queryValue(fURI.DOM,fURI.class,fURI.NONE);
-        final fURI range = this.tid().queryValue(fURI.RNG,fURI.class,fURI.NONE);
+        final fURI domain = this.tid().queryValue(fURI.DOM,fURI.class,fURI.NULL);
+        final fURI range = this.tid().queryValue(fURI.RNG,fURI.class,fURI.NULL);
         return MRel.of(domain.toUri(),range.toUri());
     }
 
@@ -129,7 +129,7 @@ public interface Inst extends Obj {
                 for (final Obj arg : args().elements()) {
                     cargs.add(blocking ? arg : arg.apply(lhs));
                 }
-                final Inst resolved = (Inst) this.value(Triplet.with(this.args().clone(cargs, LST_TID, fURI.NONE), this.f(), this.seed()));
+                final Inst resolved = (Inst) this.value(Triplet.with(this.args().clone(cargs, LST_TID, fURI.NULL), this.f(), this.seed()));
                 LOG.trace("resolution ({{m}}%s {{g}}=>{{/g}} %s{{/m}}): %s", currentResolution, resolved.resolution(), resolved);
                 return resolved;
             }

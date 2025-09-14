@@ -177,6 +177,6 @@ public class MMonad extends MObj implements Monad {
     }
 
     public static Monad of(final Monoid monoid, final Obj obj, final Inst inst) {
-        return new MMonad(Quartet.with(monoid, obj, inst, MRec.of()), fURI.of("monad:abc"), fURI.NONE);
+        return new MMonad(Quartet.with(monoid, obj, inst, MRec.of()), fURI.of("monad:abc"), fURI.NULL);
     }
 }

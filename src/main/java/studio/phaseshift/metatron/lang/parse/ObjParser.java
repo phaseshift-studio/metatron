@@ -60,7 +60,7 @@ public class ObjParser {
 
     static {
         rel_parser.set(seq(m_type_prefix_opt_colon(REL_TID), obj_rel_back_parser, of("=>").trim(), m_obj())
-                .map(t -> new MRel(Pair.with(pick(pick(t, 1), 1), pick(pick(t, 1), 3)), pick(t, 0), fURI.NONE)));
+                .map(t -> new MRel(Pair.with(pick(pick(t, 1), 1), pick(pick(t, 1), 3)), pick(t, 0), fURI.NULL)));
         obj_parser.set(choice(
                 m_comment(),
                 m_noobj(),
@@ -111,7 +111,7 @@ public class ObjParser {
                                 .filter(o -> o instanceof Obj)
                                 .toList()),
                         pick(t, 0),
-                        fURI.NONE)));
+                        fURI.NULL)));
 
         rec_parser.set(seq(seq(m_type_prefix_opt_colon(REC_TID), of('[').trim()).pick(0),
                 choice(of("=>").trim(),
@@ -127,7 +127,7 @@ public class ObjParser {
                         List kv = (List) o;
                         map.put(pick(kv, 0), pick(kv, 2));
                     });
-            return new MRec(map, pick(t, 0), fURI.NONE);
+            return new MRec(map, pick(t, 0), fURI.NULL);
         }));
 
         inst_parser.set(seq(
@@ -135,10 +135,10 @@ public class ObjParser {
                 seq(of('(').trim(), opt(m_obj().separatedBy(of(',').trim()), List.of()), of(')').trim()).pick(1),
                 opt(seq(of('{').trim(), m_code(), of('}').trim()).pick(1), null))
                 .map(t -> (Inst) new MInst(new Triplet<>(
-                        new MLst(ObjParser.<List>pick(t, 1), LST_TID, fURI.NONE),
+                        new MLst(ObjParser.<List>pick(t, 1), LST_TID, fURI.NULL),
                         Inst.f.of(ObjParser.<Obj>pick(t, 2)),
                         NoObj.single()),
-                        pick(t, 0), fURI.NONE)));
+                        pick(t, 0), fURI.NULL)));
     }
 
 
@@ -185,7 +185,7 @@ public class ObjParser {
 
     public static Parser m_objs() {
         return seq(of('{').trim(), m_obj().separatedBy(of(',').trim()), of('}').trim()).pick(1)
-                .map(t -> new MObjs(((List) t).stream().filter(x -> x instanceof Obj).toList(), OBJS_TID, fURI.NONE));
+                .map(t -> new MObjs(((List) t).stream().filter(x -> x instanceof Obj).toList(), OBJS_TID, fURI.NULL));
     }
 
     public static Parser m_type_prefix(final fURI baseType) {
@@ -199,20 +199,20 @@ public class ObjParser {
     public static Parser m_bool() {
         return seq(m_type_prefix(BOOL_TID), of("true").trim().or(of("false").trim()))
                 .map(t -> pick(t, 1).equals("true") ?
-                        new MBool(true, pick(t, 0), fURI.NONE) :
-                        new MBool(false, pick(t, 0), fURI.NONE));
+                        new MBool(true, pick(t, 0), fURI.NULL) :
+                        new MBool(false, pick(t, 0), fURI.NULL));
     }
 
     public static Parser m_int() {
         return seq(m_type_prefix(INT_TID), seq(opt(of('-'), '+'), choice(of('0'), digit().plus()))
                 .flatten().trim())
-                .map(t -> new MInt(Long.parseLong(pick(t, 1).toString()), pick(t, 0), fURI.NONE));
+                .map(t -> new MInt(Long.parseLong(pick(t, 1).toString()), pick(t, 0), fURI.NULL));
     }
 
     public static Parser m_real() {
         return seq(m_type_prefix(REAL_TID), seq(opt(of('-'), '+'), choice(of('0'), digit().plus()), of('.'), digit().plus())
                 .flatten().trim())
-                .map(t -> new MReal(Double.parseDouble(pick(t, 1).toString()), pick(t, 0), fURI.NONE));
+                .map(t -> new MReal(Double.parseDouble(pick(t, 1).toString()), pick(t, 0), fURI.NULL));
     }
 
     public static Parser m_str() {
@@ -225,11 +225,11 @@ public class ObjParser {
         return seq(m_type_prefix(STR_TID), choice(tripleQuote, singleQuote, doubleQuote)
                 .pick(1)
                 .flatten())
-                .map(t -> new MStr(ObjParser.<String>pick(t, 1).substring(1, ObjParser.<String>pick(t, 1).length() - 1), pick(t, 0), fURI.NONE));
+                .map(t -> new MStr(ObjParser.<String>pick(t, 1).substring(1, ObjParser.<String>pick(t, 1).length() - 1), pick(t, 0), fURI.NULL));
     }
 
     public static Parser m_uri() {
-        return seq(m_type_prefix(URI_TID), m_furi(REDUCED_FURI_CHARS)).map(t -> new MUri(pick(t, 1), pick(t, 0), fURI.NONE));
+        return seq(m_type_prefix(URI_TID), m_furi(REDUCED_FURI_CHARS)).map(t -> new MUri(pick(t, 1), pick(t, 0), fURI.NULL));
     }
 
     public static Parser m_rel() {
@@ -247,9 +247,9 @@ public class ObjParser {
     public static Parser sugar_code() {
         return seq(opt(obj_no_code_parser, NoObj.single()), seq(opt(of(".").trim(),'.')), m_code()).map(t -> {
             final List<Inst> newCode = new ArrayList<>();
-            newCode.add(new MInst(Triplet.with(MLst.of(ObjParser.<Obj>pick(t, 0)), null, NoObj.single()), START_TID, fURI.NONE));
+            newCode.add(new MInst(Triplet.with(MLst.of(ObjParser.<Obj>pick(t, 0)), null, NoObj.single()), START_TID, fURI.NULL));
             newCode.addAll(ObjParser.<Code>pick(t, 2).value());
-            return new MCode(newCode, CODE_TID, fURI.NONE);
+            return new MCode(newCode, CODE_TID, fURI.NULL);
         });
     }
 
@@ -258,7 +258,7 @@ public class ObjParser {
                 .map(t -> new MCode((List) ((List<Object>) t)
                         .stream()
                         .filter(x -> x instanceof Inst)
-                        .toList(), CODE_TID, fURI.NONE));
+                        .toList(), CODE_TID, fURI.NULL));
     }
 
     public static Parser m_inst() {

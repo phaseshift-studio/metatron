@@ -29,7 +29,8 @@ public class fURI implements Cloneable {
 
     public static final fURI MANY = fURI.of("#");
     public static final fURI ONE = fURI.of("+");
-    public static final fURI NONE = null;
+    public static final fURI NONE = fURI.of("");
+    public static final fURI NULL = null;
     public static final fURI DOM = fURI.of("dom");
     public static final fURI RNG = fURI.of("rng");
 

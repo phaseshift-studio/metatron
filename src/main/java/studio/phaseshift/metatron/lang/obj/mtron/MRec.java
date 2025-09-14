@@ -33,7 +33,7 @@ public class MRec extends MObj implements Rec {
     }
 
     public MRec(final Map<Obj, Obj> value) {
-        this(value, REC_TID, fURI.NONE);
+        this(value, REC_TID, fURI.NULL);
     }
 
     @Override

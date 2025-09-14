@@ -22,7 +22,7 @@ public class InstTest {
 
     @BeforeAll
     public static void loadInstructionSets() {
-        final Space space = new MemSpace(fURI.MANY,fURI.NONE);
+        final Space space = new MemSpace(fURI.MANY,fURI.NULL);
         Router.global().registerStruct(space);
         new MInstSet().load();
        //if(true) {

@@ -29,7 +29,7 @@ public class MReal extends MObj implements Real {
     }
 
     public MReal(final Double value) {
-        this(value, REAL_TID, fURI.NONE);
+        this(value, REAL_TID, fURI.NULL);
     }
 
     @Override

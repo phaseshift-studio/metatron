@@ -262,7 +262,14 @@ public class fURITest {
             "a/b/c,/a/#,false",
             "a/b/c,/#,false",
             ",#,true",
-            ",+,false"
+            ",+,false",
+            "abc,+,true",
+            "abc/a,+,false",
+            "abc/a,+/+,true",
+            "abc/a/c,+/+,false",
+            "abc/a/c,+/+/#,true",
+            "abc/a/c,abc/+/c,true",
+            "abc/a,#,true"
     })
     void testMatches(final String a, final String b, final boolean shouldMatch) {
         if (shouldMatch) assertTrue(fURI.of(nullToEmpty(a)).matches(fURI.of(nullToEmpty(b))));

@@ -30,7 +30,7 @@ public class MInt extends MObj implements Int {
     }
 
     public MInt(final Long value) {
-        this(value, INT_TID, fURI.NONE);
+        this(value, INT_TID, fURI.NULL);
     }
 
     @Override

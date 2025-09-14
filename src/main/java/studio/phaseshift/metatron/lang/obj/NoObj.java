@@ -51,7 +51,7 @@ public class NoObj implements Obj, Inst {
 
     @Override
     public fURI vid() {
-        return fURI.NONE;
+        return fURI.NULL;
     }
 
     @Override

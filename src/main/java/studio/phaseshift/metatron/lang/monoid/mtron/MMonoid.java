@@ -130,14 +130,14 @@ public class MMonoid extends MObj implements Monoid {
     }
 
     public static MMonoid of(final Code code) {
-        return new MMonoid(Quartet.with(code, MObjs.of(new LinkedList<>()), MLst.of(), MObjs.of(new LinkedList<>())), fURI.of("monoid:tid"), fURI.NONE);
+        return new MMonoid(Quartet.with(code, MObjs.of(new LinkedList<>()), MLst.of(), MObjs.of(new LinkedList<>())), fURI.of("monoid:tid"), fURI.NULL);
     }
 
     public static MMonoid of(final Obj start, final Code code) {
         final List<Inst> prepended = new ArrayList<>();
         prepended.add(MInst.instB(START_TID, MLst.of(start)));
         prepended.addAll(code.codeValue());
-        return new MMonoid(Quartet.with(MCode.of(prepended), MObjs.of(new LinkedList<>()), MLst.of(), MObjs.of(new LinkedList<>())), fURI.of("monoid:tid"), fURI.NONE);
+        return new MMonoid(Quartet.with(MCode.of(prepended), MObjs.of(new LinkedList<>()), MLst.of(), MObjs.of(new LinkedList<>())), fURI.of("monoid:tid"), fURI.NULL);
     }
 
 }

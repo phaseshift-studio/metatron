@@ -25,9 +25,11 @@ import studio.phaseshift.metatron.lang.obj.base.furi.TypefURI;
 import studio.phaseshift.metatron.space.Router;
 import studio.phaseshift.metatron.util.IteratorUtil;
 
-import java.util.*;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.Map;
+import java.util.Set;
 import java.util.function.BiFunction;
-import java.util.stream.Collectors;
 
 public class MInstSet extends MObj implements InstSet {
 
@@ -84,10 +86,10 @@ public class MInstSet extends MObj implements InstSet {
         this.define(MAP_TID, fURI.ONE, fURI.ONE, MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> inst.arg(0));
         this.define(BLOCK_TID, fURI.ONE, fURI.ONE, MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> inst.arg(0));
         this.define(DOM_TID, REC_TID, URI_TID, MLst.of(), (lhs, inst) -> MObjs.of(lhs.recValue().keySet()));
-        this.define(DOM_TID, REL_TID,URI_TID,  MLst.of(), (lhs, inst) -> MObjs.of(lhs.relValue().getValue0()));
-        this.define(DOM_TID, fURI.ONE,URI_TID,  MLst.of(), (lhs, inst) -> lhs);
+        this.define(DOM_TID, REL_TID, URI_TID, MLst.of(), (lhs, inst) -> MObjs.of(lhs.relValue().getValue0()));
+        this.define(DOM_TID, fURI.ONE, URI_TID, MLst.of(), (lhs, inst) -> lhs);
         this.define(RNG_TID, REC_TID, URI_TID, MLst.of(), (lhs, inst) -> MObjs.of(lhs.recValue().values()));
-        this.define(RNG_TID, REL_TID,URI_TID,  MLst.of(), (lhs, inst) -> MObjs.of(lhs.relValue().getValue1()));
+        this.define(RNG_TID, REL_TID, URI_TID, MLst.of(), (lhs, inst) -> MObjs.of(lhs.relValue().getValue1()));
         this.define(RNG_TID, fURI.ONE, URI_TID, MLst.of(), (lhs, inst) -> lhs);
         this.define(TO_TID, fURI.ONE, fURI.ONE, MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> Router.global().write(inst.arg(0).uriValue(), lhs));
         this.define(FROM_TID, fURI.ONE, fURI.MANY, MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> Router.global().read(inst.arg(0).uriValue()));
@@ -96,20 +98,18 @@ public class MInstSet extends MObj implements InstSet {
         this.define(START_TID, fURI.of(""), fURI.MANY, MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> inst.arg(0));
         this.define(PLUS_TID, INT_TID, INT_TID, MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> lhs.value(lhs.intValue() + inst.arg(0).intValue()));
         this.define(PLUS_TID, REAL_TID, REAL_TID, MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> lhs.value(lhs.realValue() + inst.arg(0).realValue()));
-        this.define(PLUS_TID, URI_TID,URI_TID, MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> lhs.value(lhs.uriValue().extend(inst.arg(0).uriValue())));
+        this.define(PLUS_TID, URI_TID, URI_TID, MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> lhs.value(lhs.uriValue().extend(inst.arg(0).uriValue())));
         this.define(MULT_TID, INT_TID, INT_TID, MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> lhs.value(lhs.intValue() * inst.arg(0).intValue()));
         this.define(MULT_TID, REAL_TID, REAL_TID, MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> lhs.value(lhs.realValue() * inst.arg(0).realValue()));
-        this.define(MULT_TID, URI_TID,  URI_TID, MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> lhs.value(lhs.uriValue().retractPattern().extend(inst.arg(0).uriValue())));
+        this.define(MULT_TID, URI_TID, URI_TID, MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> lhs.value(lhs.uriValue().retractPattern().extend(inst.arg(0).uriValue())));
         this.define(IS_TID, fURI.ONE, fURI.ONE, MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> inst.arg(0).boolValue() ? lhs : NoObj.single());
         this.define(EQ_TID, fURI.ONE, BOOL_TID, MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> MBool.of(lhs.equals(inst.arg(0))));
         this.define(NEQ_TID, fURI.ONE, BOOL_TID, MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> MBool.of(!lhs.equals(inst.arg(0))));
-        this.define(GT_TID, INT_TID, BOOL_TID,MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> MBool.of(lhs.intValue() > inst.arg(0).intValue()));
-        this.define(GT_TID, REAL_TID,BOOL_TID, MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> MBool.of(lhs.realValue() > inst.arg(0).realValue()));
-        this.define(GT_TID, STR_TID, BOOL_TID,MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> MBool.of(lhs.strValue().compareTo(inst.arg(0).strValue()) > 0));
-        this.define(WITHIN_TID, fURI.ONE, fURI.ONE, MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> MLst.of(IteratorUtil.asList( MMonoid.of(MObjs.of(lhs.<Poly>as().elements()),inst.arg(0).as()).iterator())));
-        this.define(SPLIT_TID, LST_TID, LST_TID, MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> MLst.of(inst.arg(0).lstValue().stream().map(e -> e.apply(lhs)).toList()));
-        this.define(SPLIT_TID, REC_TID, REC_TID, MLst.of(MInst.instA(ID_TID)), (lhs, inst) ->  MRec.of( inst.arg(0).recValue().entrySet().stream().map(kv -> List.of(kv.getKey(),kv.getValue().apply(lhs))).collect(Collectors.toMap(kv -> kv.get(0),kv -> kv.get(1), (a,b) -> b))));
-        this.define(SPLIT_TID, fURI.ONE, fURI.ONE, MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> inst.arg(0));
+        this.define(GT_TID, INT_TID, BOOL_TID, MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> MBool.of(lhs.intValue() > inst.arg(0).intValue()));
+        this.define(GT_TID, REAL_TID, BOOL_TID, MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> MBool.of(lhs.realValue() > inst.arg(0).realValue()));
+        this.define(GT_TID, STR_TID, BOOL_TID, MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> MBool.of(lhs.strValue().compareTo(inst.arg(0).strValue()) > 0));
+        this.define(WITHIN_TID, fURI.ONE, fURI.ONE, MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> MLst.of(IteratorUtil.asList(MMonoid.of(MObjs.of(lhs.<Poly>as().elements()), inst.arg(0).as()).iterator())));
+        this.define(SPLIT_TID, fURI.MANY, fURI.ONE, MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> MLst.of(inst.arg(0).lstValue().stream().map(e -> e.apply(lhs)).toList()));
         this.store();
     }
 
@@ -133,13 +133,13 @@ public class MInstSet extends MObj implements InstSet {
                 .computeIfAbsent(tid, k -> new LinkedHashMap<>())
                 .computeIfAbsent(domain, k -> new LinkedHashSet<>())
                 .add(MInst.instC(tid
-                        .query(fURI.DOM,TypefURI.orNone(domain))
-                        .query(fURI.RNG,TypefURI.orNone(range)), args, f));
+                        .query(fURI.DOM, TypefURI.orNone(domain))
+                        .query(fURI.RNG, TypefURI.orNone(range)), args, f));
         return this;
     }
 
     public MInstSet() {
-        super(SYMBOL_TABLE, TID, fURI.NONE);
+        super(SYMBOL_TABLE, TID, fURI.NULL);
         this.load();
     }
 
