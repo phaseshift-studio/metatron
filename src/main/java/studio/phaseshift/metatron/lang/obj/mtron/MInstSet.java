@@ -51,6 +51,9 @@ public class MInstSet extends MObj implements InstSet {
     public static final fURI ID_TID = fURI.of("id");
     public static final fURI START_TID = fURI.of("start");
     public static final fURI COUNT_TID = fURI.of("count");
+    public static final fURI SUM_TID = fURI.of("sum");
+    public static final fURI PROD_TID = fURI.of("prod");
+    public static final fURI REDUCE_TID = fURI.of("reduce");
     public static final fURI MULT_TID = fURI.of("mult");
     public static final fURI PLUS_TID = fURI.of("plus");
     public static final fURI MAP_TID = fURI.of("map");
@@ -117,7 +120,8 @@ public class MInstSet extends MObj implements InstSet {
         this.define(LTE_TID, INT_TID, BOOL_TID, MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> MBool.of(lhs.intValue() <= inst.arg(0).intValue()));
         this.define(WITHIN_TID, fURI.ANY, fURI.ANY, MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> MLst.of(lhs.<Poly>as().stream().map(o -> MMonoid.of(inst.arg(0).as()).apply(o)).toList()));
         this.define(SPLIT_TID, fURI.ANY, fURI.ANY, MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> MLst.of(inst.arg(0).lstValue().stream().map(e -> e.apply(lhs)).toList()));
-        this.define(COUNT_TID,fURI.ANY,INT_TID,MLst.of(),(lhs, inst)-> MInt.of(IteratorUtil.count(lhs.iterator())));
+        this.define(COUNT_TID,fURI.ANY,INT_TID,MLst.of(),(lhs, inst)-> MInt.of(IteratorUtil.count(lhs.iterator())), MInt.of(0));
+        this.define(SUM_TID,OBJS_TID.query("type",INT_TID),INT_TID,MLst.of(),(lhs, inst)-> MInt.of(IteratorUtil.count(lhs.iterator())), MInt.of(0));
         this.store();
     }
 
@@ -137,12 +141,16 @@ public class MInstSet extends MObj implements InstSet {
 
 
     protected MInstSet define(final fURI tid, final fURI domain, final fURI range, final Poly args, final BiFunction<Obj, Inst, Obj> f) {
+        return this.define(tid,domain,range,args,f,NoObj.single());
+    }
+
+    protected MInstSet define(final fURI tid, final fURI domain, final fURI range, final Poly args, final BiFunction<Obj, Inst, Obj> f, final Obj seed) {
         SYMBOL_TABLE
                 .computeIfAbsent(tid, k -> new LinkedHashMap<>())
                 .computeIfAbsent(domain, k -> new LinkedHashSet<>())
                 .add(MInst.instC(tid
                         .query(fURI.DOM, TypefURI.orNone(domain))
-                        .query(fURI.RNG, TypefURI.orNone(range)), args, f));
+                        .query(fURI.RNG, TypefURI.orNone(range)), args, f,seed));
         return this;
     }
 

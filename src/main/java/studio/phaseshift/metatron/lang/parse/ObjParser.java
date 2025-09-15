@@ -37,6 +37,8 @@ import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.*;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static org.petitparser.parser.primitive.CharacterParser.any;
 import static org.petitparser.parser.primitive.CharacterParser.anyOf;
@@ -175,10 +177,34 @@ public class ObjParser {
         return m_furi(FULL_FURI_CHARS);
     }
 
+
+    public static Parser m_furi_cardinality_sugar() {
+        return seq(of('['), choice(
+                        of('*').map(t -> "0,"),
+                        of('+').map(t -> "1,"),
+                        of('?').map(t -> "0,1"),
+                        seq(digit().plus(), of(','), digit().plus()).flatten()),
+                of(']')).map(t -> "[" + pick(t, 1) + "]");
+    }
+
+    public static Parser m_furi_dom_rng_sugar() {
+        return seq(
+                m_furi(QUERYLESS_FURI_CHARS),
+                opt(m_furi_cardinality_sugar(), "[1,1]"),
+                of("<=").trim(),
+                m_furi(QUERYLESS_FURI_CHARS),
+                opt(m_furi_cardinality_sugar(), "[1,1]"))
+                .map(t -> Stream.of(
+                        List.of("rng", pick(t, 0).toString()),
+                        List.of("r", pick(t, 1)),
+                        List.of("dom", pick(t, 3).toString()),
+                        List.of("d", pick(t, 4))).collect(Collectors.toMap( k->k.get(0),v->v.get(1),(v1,v2)->v1,LinkedHashMap::new)));
+    }
+
+
     public static Parser m_inst_furi() {
-        return seq(m_furi(QUERYLESS_FURI_CHARS), of('?'),
-                m_furi(QUERYLESS_FURI_CHARS), of("<=").trim(), m_furi(QUERYLESS_FURI_CHARS),opt(of(':').trim(), ':'))
-                .map(t -> ObjParser.<fURI>pick(t, 0).query("dom", pick(t, 4).toString()).query("rng", pick(t, 2).toString()));
+        return seq(m_furi(QUERYLESS_FURI_CHARS), of('?'), m_furi_dom_rng_sugar(), opt(of(':').trim(), ':'))
+                .map(t -> ObjParser.<fURI>pick(t, 0).query(pick(t, 2)));
     }
 
 

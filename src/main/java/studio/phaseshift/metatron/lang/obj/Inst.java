@@ -32,6 +32,7 @@ import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
@@ -74,7 +75,6 @@ public interface Inst extends Obj {
         final fURI range = TypefURI.rng(this.tid());
         return range.equals(fURI.ANY) ? MType.of(range) : MType.of(Router.global().read(range),TypefURI.rng(this.tid())).orElseGet(() -> MType.of(TypefURI.rng(this.tid())));
     }
-
 
     default Poly args() {
         return this.value().getValue0();

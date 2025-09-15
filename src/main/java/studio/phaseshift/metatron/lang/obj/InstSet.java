@@ -36,9 +36,9 @@ public interface InstSet extends Obj {
 
 
     default Inst resolve(final Obj lhs, final Inst instAorB) {
-        return this.value().entrySet().stream().filter(kv -> instAorB.tid().queryless().matches(kv.getKey().queryless()))
-                .map(Map.Entry::getValue)
-                .flatMap(m -> m.entrySet().stream())
+        return this.value().getOrDefault(instAorB.tid().queryless(),Map.of())
+                .entrySet()
+                .stream()
                 .filter(kv -> {
                     // Graphitty.stdout().println("%s matches %s = %s".formatted(lhs.tid().queryless(),kv.getKey().queryless(),lhs.tid().queryless().matches(kv.getKey().queryless())));
                     return lhs.tid().queryless().matches(kv.getKey().queryless());

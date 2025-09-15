@@ -284,6 +284,14 @@ public class fURI implements Cloneable {
         return new fURI(this.scheme,this.host,this.port,this.sstart,this.path,this.send,appended);
     }
 
+    public fURI query(final Map<Object,Object> kv) {
+        StringBuilder q = new StringBuilder();
+        kv.forEach((k,v)-> {
+            q.append(k).append("=").append(v).append("&");
+        });
+        return new fURI(this.scheme,this.host,this.port,this.sstart,this.path,this.send,q.isEmpty() ? "" : q.substring(0,q.length()-1));
+    }
+
 
     public Map<String, String> query() {
         if (null == this.query)
