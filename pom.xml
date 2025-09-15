@@ -329,7 +329,7 @@
                             <arg>jdk.incubator.vector</arg>
                             <arg>-XDsun-misc-unsafe-memory-access=allow</arg>
                             <arg>-XDenable-native-access=ALL-UNNAMED</arg>
-                            <arg>-XDlogback.configurationFile=file:./conf/logback.xml</arg>
+                            <!--<arg>-XDlogback.configurationFile=file:./conf/logback.xml</arg>-->
                         </compilerArgs>
                     </configuration>
                 </plugin>
@@ -339,7 +339,7 @@
                     <version>3.3.0</version>
                     <configuration>
                         <systemPropertyVariables>
-                            <logback.configurationFile>${basedir}/conf/logback.xml
+                           <logback.configurationFile>${basedir}/src/test/resources/logback-testing.xml
                             </logback.configurationFile>
                         </systemPropertyVariables>
                     </configuration>
