@@ -34,7 +34,7 @@ public class MObjs extends MObj implements Objs {
     private static final GraphittyLogger LOG = Graphitty.log(MObjs.class);
 
     public MObjs(final Iterable<Obj> value, final fURI tid, final fURI vid) {
-        super(value, tid, vid);
+        super(value, value.iterator().hasNext() ? value.iterator().next().tid().coefficient("*") : fURI.of("/mtron/int[*]"), vid);
         if(value instanceof Obj)
             LOG.error("objs can not directly nest: %s",value);
     }
@@ -50,7 +50,7 @@ public class MObjs extends MObj implements Objs {
 
     @Override
     public Objs append(final Obj obj){
-       return Objs.super.append(obj);
+       return (Objs) Objs.super.append(obj);//.tid(obj.tid().coefficient("*"));
     }
 
     @Override

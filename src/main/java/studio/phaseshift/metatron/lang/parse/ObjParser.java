@@ -168,8 +168,8 @@ public class ObjParser {
     private static final String QUERYLESS_FURI_CHARS = "/%!#_=@+&:";
 
     public static Parser m_furi(final String furiCharacterSet) {
-        final Supplier<Parser> internal = () -> word().or(seq(of("=>").not(), anyOf(furiCharacterSet))).plus().flatten().map(t -> new fURI(t.toString()));
-        final Supplier<Parser> internal2 = () -> word().or(seq(of("=>").not(), anyOf(FULL_FURI_CHARS))).plus().flatten().map(t -> new fURI(t.toString()));
+        final Supplier<Parser> internal = () -> seq(word().or(seq(of("=>").not(), anyOf(furiCharacterSet))).plus().flatten(),m_furi_coefficient()).map(t -> new fURI(pick(t,0)).coefficient(pick(t,1)));
+        final Supplier<Parser> internal2 = () -> seq(word().or(seq(of("=>").not(), anyOf(FULL_FURI_CHARS))).plus().flatten(),m_furi_coefficient()).map(t -> new fURI(pick(t,0)).coefficient(pick(t,1)));
         return choice(seq(of('<'), internal2.get(), of('>')).pick(1), internal.get());
     }
 
@@ -178,33 +178,30 @@ public class ObjParser {
     }
 
 
-    public static Parser m_furi_cardinality_sugar() {
-        return seq(of('['), choice(
+    public static Parser m_furi_coefficient() {
+        return opt(seq(of('['), choice(
                         of('*').map(t -> "0,"),
                         of('+').map(t -> "1,"),
                         of('?').map(t -> "0,1"),
-                        seq(digit().plus(), of(','), digit().plus()).flatten()),
-                of(']')).map(t -> "[" + pick(t, 1) + "]");
+                        seq(digit().plus(), of(','), digit().plus()).flatten(),
+                        digit().plus().flatten().map(t -> t + "," + t)),
+                of(']')).map(t -> pick(t, 1)),null);
     }
 
-    public static Parser m_furi_dom_rng_sugar() {
+    public static Parser m_furi_inst_dom_rng() {
         return seq(
                 m_furi(QUERYLESS_FURI_CHARS),
-                opt(m_furi_cardinality_sugar(), "[1,1]"),
                 of("<=").trim(),
-                m_furi(QUERYLESS_FURI_CHARS),
-                opt(m_furi_cardinality_sugar(), "[1,1]"))
+                m_furi(QUERYLESS_FURI_CHARS)
                 .map(t -> Stream.of(
                         List.of("rng", pick(t, 0).toString()),
-                        List.of("r", pick(t, 1)),
-                        List.of("dom", pick(t, 3).toString()),
-                        List.of("d", pick(t, 4))).collect(Collectors.toMap( k->k.get(0),v->v.get(1),(v1,v2)->v1,LinkedHashMap::new)));
+                        List.of("dom", pick(t, 2).toString())).collect(Collectors.toMap( k->k.get(0),v->v.get(1),(v1,v2)->v1,LinkedHashMap::new))));
     }
 
 
     public static Parser m_inst_furi() {
-        return seq(m_furi(QUERYLESS_FURI_CHARS), of('?'), m_furi_dom_rng_sugar(), opt(of(':').trim(), ':'))
-                .map(t -> ObjParser.<fURI>pick(t, 0).query(pick(t, 2)));
+        return seq(m_furi(QUERYLESS_FURI_CHARS), of('?'), m_furi_inst_dom_rng(), opt(of(':').trim(), ':'))
+                .map(t -> ObjParser.<fURI>pick(t, 0).coefficient(pick(t,1)).queryValue(pick(t, 3)));
     }
 
 

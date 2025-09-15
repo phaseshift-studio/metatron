@@ -86,7 +86,7 @@ public class MMonoid extends MObj implements Monoid {
                 if (instB.f().form().isInitial() || instB.tid().queryless().equals(START_TID) || instB.tid().queryless().equals(FROM_TID)) {
                     LOG.debug("{{g}}==>{{/g}} creating initial monad at %s", instB);
                     token = instB.arg(0);
-                } else if (instB.tid().queryless().equals(COUNT_TID)) {
+                } else if (instB.tid().queryValue(fURI.DOM,fURI.class).coefficientValue().isStar()) {
                     // many-to-?
                     LOG.debug("{{g}}==>{{/g}} creating barrier monad at %s", instB);
                     final Monad m = MMonad.of(this, MObjs.of(new LinkedList<>()), instB);
@@ -121,7 +121,7 @@ public class MMonoid extends MObj implements Monoid {
                         if (n.halted()) {
                             LOG.trace("{{g}}====>{{/g}} halting monad %s", n);
                             n.obj().stream().forEach(p -> this.halted().<Queue<Obj>>valueAs().add(p));
-                        } else if (n.inst().tid().queryless().equals(COUNT_TID)) {
+                        } else if (n.inst().tid().query(fURI.DOM,fURI.class).coefficientValue().isStar()) {
                             final Monad barrier = this.barriers().<List<Monad>>valueAs().get(0);
                             LOG.trace("{{g}}====>{{/g}} adding to barrier %s", n);
                             if (null == barrier)

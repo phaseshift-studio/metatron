@@ -36,12 +36,12 @@ public interface InstSet extends Obj {
 
 
     default Inst resolve(final Obj lhs, final Inst instAorB) {
-        return this.value().getOrDefault(instAorB.tid().queryless(),Map.of())
+        return this.value().getOrDefault(instAorB.tid().basePath(),Map.of())
                 .entrySet()
                 .stream()
                 .filter(kv -> {
                     // Graphitty.stdout().println("%s matches %s = %s".formatted(lhs.tid().queryless(),kv.getKey().queryless(),lhs.tid().queryless().matches(kv.getKey().queryless())));
-                    return lhs.tid().queryless().matches(kv.getKey().queryless());
+                    return lhs.tid().basePath().matches(kv.getKey().basePath());
                 })
                 .map(Map.Entry::getValue)
                 .flatMap(Collection::stream)
@@ -53,8 +53,10 @@ public interface InstSet extends Obj {
                         //  resolvedArgs.add(i.arg(j).apply(instA.arg(j)));
                         resolvedArgs.add(instAorB.arg(j));
                     }
-                    return i.clone(new Triplet<>(MLst.of(resolvedArgs),
+                    final Inst resolvedInst = i.clone(new Triplet<>(MLst.of(resolvedArgs),
                             i.f(), i.seed()), i.tid(), instAorB.vid());
+                    System.out.println(resolvedInst + "!!!");
+                            return resolvedInst;
                 }).findFirst().orElseThrow(() -> MTronException.of("unable to resolve %s => %s in instruction set %s", lhs, instAorB, this.value().get(instAorB.tid())));
     }
 }

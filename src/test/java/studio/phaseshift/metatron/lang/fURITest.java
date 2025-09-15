@@ -101,7 +101,7 @@ public class fURITest {
             delimiter = '|')
     public void testQueryRead(final String f, final String queryMap) {
         final fURI furi = fURI.of(f);
-        assertEquals(queryMap, furi.query().toString());
+        assertEquals(queryMap, furi.queryValue().toString());
     }
 
     @ParameterizedTest
@@ -215,6 +215,17 @@ public class fURITest {
     }
 
     @ParameterizedTest
+    @CsvSource(value = {
+            "http://a/b/c[1]|1",
+            "/mtron/int[1,5]|1,5",
+            "http://a/b/c[*]|*",
+            "/mtron/int[0]?rng=/mtron/int[23]|0"
+    }, delimiter = '|')
+    void testCoefficients(final String furi, final String coefficient) {
+      assertEquals(coefficient, fURI.of(furi).coefficient());
+    }
+
+    @ParameterizedTest
     @CsvSource({
             "a,#,true",
             "#,#,true",
@@ -282,10 +293,10 @@ public class fURITest {
 
     @Test
     public void testQueryRead() {
-        assertEquals(Map.of("a", "1", "b", "2"), fURI.of("http://meta.tron/query?a=1&b=2").query());
-        assertEquals(Map.of("a", "", "b", "2"), fURI.of("http://meta.tron/query?a&b=2").query());
-        assertEquals(Map.of(), fURI.of("http://meta.tron/query").query());
-        assertEquals(Map.of("sub", ""), fURI.of("http://meta.tron/query?sub").query());
+        assertEquals(Map.of("a", "1", "b", "2"), fURI.of("http://meta.tron/query?a=1&b=2").queryValue());
+        assertEquals(Map.of("a", "", "b", "2"), fURI.of("http://meta.tron/query?a&b=2").queryValue());
+        assertEquals(Map.of(), fURI.of("http://meta.tron/query").queryValue());
+        assertEquals(Map.of("sub", ""), fURI.of("http://meta.tron/query?sub").queryValue());
         //  assertEquals(fURI.of("http://meta.tron/query?a=1&b=2"), fURI.of("http://meta.tron/query").query(Map.of("a", "", "b", "2")));
     }
 }

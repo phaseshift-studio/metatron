@@ -99,7 +99,7 @@ public class MInstSet extends MObj implements InstSet {
         this.define(FROM_TID, fURI.ANY, fURI.ANY, MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> Router.global().read(inst.arg(0).uriValue()));
         this.define(REF_TID, fURI.ANY, fURI.ANY, MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> Router.global().write(lhs.uriValue(), inst.arg(0)));
         this.define(ID_TID, fURI.ANY, fURI.ANY, MLst.of(), (lhs, inst) -> lhs);
-        this.define(START_TID, fURI.of(""), fURI.ANY, MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> inst.arg(0));
+        this.define(START_TID, fURI.of(""), fURI.ANY.coefficient("*"), MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> inst.arg(0));
         this.define(PLUS_TID, INT_TID, INT_TID, MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> lhs.value(lhs.intValue() + inst.arg(0).intValue()));
         this.define(PLUS_TID, REAL_TID, REAL_TID, MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> lhs.value(lhs.realValue() + inst.arg(0).realValue()));
         this.define(PLUS_TID, URI_TID, URI_TID, MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> lhs.value(lhs.uriValue().extend(inst.arg(0).uriValue())));
@@ -120,8 +120,8 @@ public class MInstSet extends MObj implements InstSet {
         this.define(LTE_TID, INT_TID, BOOL_TID, MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> MBool.of(lhs.intValue() <= inst.arg(0).intValue()));
         this.define(WITHIN_TID, fURI.ANY, fURI.ANY, MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> MLst.of(lhs.<Poly>as().stream().map(o -> MMonoid.of(inst.arg(0).as()).apply(o)).toList()));
         this.define(SPLIT_TID, fURI.ANY, fURI.ANY, MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> MLst.of(inst.arg(0).lstValue().stream().map(e -> e.apply(lhs)).toList()));
-        this.define(COUNT_TID,fURI.ANY,INT_TID,MLst.of(),(lhs, inst)-> MInt.of(IteratorUtil.count(lhs.iterator())), MInt.of(0));
-        this.define(SUM_TID,OBJS_TID.query("type",INT_TID),INT_TID,MLst.of(),(lhs, inst)-> MInt.of(IteratorUtil.count(lhs.iterator())), MInt.of(0));
+        this.define(COUNT_TID,fURI.ANY.coefficient("*"),INT_TID,MLst.of(),(lhs, inst)-> MInt.of(IteratorUtil.count(lhs.iterator())), MInt.of(0));
+        this.define(SUM_TID,INT_TID.coefficient("*"),INT_TID,MLst.of(),(lhs, inst)-> MInt.of(IteratorUtil.count(lhs.iterator())), MInt.of(0));
         this.store();
     }
 

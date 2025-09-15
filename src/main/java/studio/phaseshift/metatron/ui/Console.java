@@ -18,7 +18,6 @@
 
 package studio.phaseshift.metatron.ui;
 
-import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.jline.reader.*;
 import org.jline.reader.impl.DefaultParser;
 import org.jline.reader.impl.history.DefaultHistory;
@@ -57,18 +56,17 @@ public class Console {
 
     private static boolean RESOLVE_MODE = false;
 
-    static class CustomWidgets extends Widgets {
+    class CustomWidgets extends Widgets {
 
         private CustomWidgets(final LineReader reader) {
             super(reader);
             this.addWidget("quit-widget", this::quitWidget);
             this.addWidget("resolve-widget", this::resolveWidget);
+            this.addWidget("define-widget", this::defineWidget);
             getKeyMap().bind(new Reference("quit-widget"), ctrl('q'));
             getKeyMap().bind(new Reference("resolve-widget"), ctrl('r'));
-        }
-
-        public static void of(final LineReader reader) {
-            new CustomWidgets(reader);
+            getKeyMap().bind(new Reference("define-widget"), ctrl('e'));
+            //   getKeyMap().bind(new Reference("detach-widget"), alt(key_down.name()));
         }
 
         private boolean quitWidget() {
@@ -82,6 +80,19 @@ public class Console {
             //LOG.none("{{@&v1&-X}}switched %s auto-resolution mode{{^1&/@}}", RESOLVE_MODE ? "{{g}}on{{/g}}" : "{{y}}off{{/y}}");
             return true;
         }
+
+        private boolean defineWidget() {
+            String sourceCode = reader.getBuffer().toString();
+            reader.getBuffer().clear();
+            String sourceName = "stuff"; // reader.readLine(/*Graphitty.string("{{-X-}}\r{{m}}name{{g}}:{{X}} "*/);
+            String sourceKey = "B"; //reader.readLine(Graphitty.string("{{-X-}}\r{{m}}hotkey{{g}}:{{X}} "));
+            getKeyMap().bind(new Reference(sourceName), ctrl(sourceKey.charAt(0)));
+            this.addWidget(sourceName, () -> {
+                ObjParser.eval(sourceCode).forEachRemaining(System.out::println);
+                return true;
+            });
+            return true;
+        }
     }
 
     static class CustomHighlighters implements Highlighter {
@@ -92,29 +103,29 @@ public class Console {
             this.terminal = terminal;
             // auto compilation
             this.highlighters.add((builder, buffer) -> {
-               if(RESOLVE_MODE) {
-                   try {
-                       if (buffer.isEmpty()) {
-                           //builder.append(buffer);
-                           //Graphitty.out(this.terminal.output(), "{{v1&-X&^1&|%d}}".formatted(9));
-                       } else {
-                           final Obj o = ObjParser.parse(buffer);
-                           final int xLocation = this.terminal.getCursorPosition(System.out::print).getX() + 1;
-                           // final int promptLength = 8; //"mtron> ".length() + 1;
-                           builder.append(buffer);
-                               final String oString = o.toString();
-                               final int yDistance = StringUtil.countLines(oString);
-                               Graphitty.out(this.terminal.output(),"{{v1&Xv&|%d}}%s".formatted(8, oString));
-                               Graphitty.out(this.terminal.output(), "{{^%d&|%d}}".formatted(yDistance, xLocation));
-                       }
+                if (RESOLVE_MODE) {
+                    try {
+                        if (buffer.isEmpty()) {
+                            //builder.append(buffer);
+                            //Graphitty.out(this.terminal.output(), "{{v1&-X&^1&|%d}}".formatted(9));
+                        } else {
+                            final Obj o = ObjParser.parse(buffer);
+                            final int xLocation = this.terminal.getCursorPosition(System.out::print).getX() + 1;
+                            // final int promptLength = 8; //"mtron> ".length() + 1;
+                            builder.append(buffer);
+                            final String oString = o.toString();
+                            final int yDistance = StringUtil.countLines(oString);
+                            Graphitty.out(this.terminal.output(), "{{v1&Xv&|%d}}%s".formatted(8, oString));
+                            Graphitty.out(this.terminal.output(), "{{^%d&|%d}}".formatted(yDistance, xLocation));
+                        }
 
-                   } catch (final Exception e) {
-                       // console expression doesn't compile yet
-                       builder.append(buffer);
-                   }
-               } else {
-                   builder.append(buffer);
-               }
+                    } catch (final Exception e) {
+                        // console expression doesn't compile yet
+                        builder.append(buffer);
+                    }
+                } else {
+                    builder.append(buffer);
+                }
             });
         }
 
@@ -148,15 +159,15 @@ public class Console {
                 .variable(LineReader.SECONDARY_PROMPT_PATTERN, Graphitty.string("\n{{-X&v1&^1&FORM1}}%P >{{X}}"))
                 .variable(LineReader.INDENTATION, 2)
                 .build();
-        CustomWidgets.of(this.reader);
     }
 
     public void run() throws IOException {
+        new CustomWidgets(this.reader);
         BootLoader.load();
         String line = "";
         while (true) {
             try {
-                Graphitty.out(this.terminal.output(),"\n{{v1&^1}}");
+                Graphitty.out(this.terminal.output(), "\n{{v1&^1}}");
                 line = this.reader.readLine(Graphitty.string("{{FORM2}}mt%son{{FORM1}}> ".formatted(RESOLVE_MODE ? "{{[r]&y}}r{{X&FORM2}}" : "r")));
                 if (line.trim().equals(":header"))
                     this.outputHeader();
@@ -226,8 +237,10 @@ public class Console {
             this.terminal.writer().printf("\t\t\tby PhaseShift Studio (%s)\n", Calendar.getInstance().get(Calendar.YEAR));
             this.terminal.flush();
         }
-        LOG.none("\t{{b}}ve{{y}}rs{{m}}ion {{y}}%s{{X}}\n", METATRON_VERSION);
-        Graphitty.out(this.terminal.output(),"\t{{[r]&y}}r{{[d]}}esolve {{m}}[{{y}}ctrl-r{{m}}]{{X}}\n\n");
+        LOG.none("\t{{b}}ve{{y}}rs{{m}}ion {{y}}%s{{X}}\n\n", METATRON_VERSION);
+        Graphitty.out(this.terminal.output(), """
+                . {{[r]&y}}r{{[d]}}esolve {{m}}[{{y}}ctrl-r{{m}}]{{X}} . {{[r]&y}}q{{[d]}}uit    {{m}}[{{y}}ctrl-q{{m}}]{{X}}
+                """);
     }
 
     public static void main(final String[] args) throws Exception {

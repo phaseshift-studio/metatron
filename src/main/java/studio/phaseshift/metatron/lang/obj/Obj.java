@@ -92,7 +92,7 @@ public interface Obj extends Function<Obj, Obj>, Iterable<Obj> {
     }
 
     default boolean matches(final Obj rhs) {
-        if(rhs.isType() && this.tid().matches(rhs.tid()))
+        if(rhs.isType() && this.tid().basePath().matches(rhs.tid().basePath()) && this.tid().coefficientValue().within(rhs.tid().coefficientValue()))
                 return true;
         return this.equals(rhs);
 

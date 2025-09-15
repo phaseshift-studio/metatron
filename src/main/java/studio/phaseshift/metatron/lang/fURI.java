@@ -19,6 +19,7 @@
 package studio.phaseshift.metatron.lang;
 
 import studio.phaseshift.metatron.lang.obj.Uri;
+import studio.phaseshift.metatron.lang.obj.mtron.MCoeff;
 import studio.phaseshift.metatron.lang.obj.mtron.MUri;
 import studio.phaseshift.metatron.util.MTronException;
 
@@ -140,8 +141,8 @@ public class fURI implements Cloneable {
     }
 
     public String path() {
-        final String p = this.path.stream().reduce(this.sstart ? "/" : "",(a,b) -> a + b + "/");
-        return this.send ? p  : p.substring(0,p.length()-1);
+        final String p = this.path.stream().reduce(this.sstart ? "/" : "", (a, b) -> a + b + "/");
+        return this.send ? p : p.substring(0, p.length() - 1);
     }
 
 
@@ -276,24 +277,66 @@ public class fURI implements Cloneable {
 
     public fURI query(final String key, final String value) {
         String appended = (null == this.query ? "" : (this.query + "&")) + key + "=" + value;
-        return new fURI(this.scheme,this.host,this.port,this.sstart,this.path,this.send,appended);
+        return new fURI(this.scheme, this.host, this.port, this.sstart, this.path, this.send, appended);
     }
 
     public fURI query(final Object key, final Object value) {
         String appended = (null == this.query ? "" : (this.query + "&")) + key + "=" + value;
-        return new fURI(this.scheme,this.host,this.port,this.sstart,this.path,this.send,appended);
+        return new fURI(this.scheme, this.host, this.port, this.sstart, this.path, this.send, appended);
     }
 
-    public fURI query(final Map<Object,Object> kv) {
+    public fURI queryValue(final Map<Object, Object> kv) {
         StringBuilder q = new StringBuilder();
-        kv.forEach((k,v)-> {
+        kv.forEach((k, v) -> {
             q.append(k).append("=").append(v).append("&");
         });
-        return new fURI(this.scheme,this.host,this.port,this.sstart,this.path,this.send,q.isEmpty() ? "" : q.substring(0,q.length()-1));
+        return new fURI(this.scheme, this.host, this.port, this.sstart, this.path, this.send, q.isEmpty() ? "" : q.substring(0, q.length() - 1));
     }
 
+    public fURI coefficient(final String coefficient) {
+        if (null == coefficient) {
+            if (this.path.isEmpty())
+                return this;
+            if (this.path.get(this.path.size() - 1).indexOf('[') == -1)
+                return this;
+            final List<String> segments = new ArrayList<>(this.path);
+            String last = segments.remove(segments.size() - 1);
+            segments.add(last.substring(0, last.indexOf("[")));
+            return new fURI(this.scheme, this.host, this.port, this.sstart, segments, this.send, this.query);
+        }
 
-    public Map<String, String> query() {
+        if (this.path.isEmpty())
+            throw MTronException.of("coefficient must be attached to a path");
+        final List<String> segments = new ArrayList<String>(this.path);
+        String last = segments.remove(segments.size() - 1);
+        segments.add(last + "[" + coefficient + "]");
+        return new fURI(this.scheme, this.host, this.port, this.sstart, segments, this.send, this.query);
+    }
+
+    public MCoeff.Int coefficientValue() {
+        if (this.coefficient() == null)
+            return MCoeff.Int.one();
+        return MCoeff.Int.of(this.coefficient());
+    }
+
+    public String coefficient() {
+        if (this.path.isEmpty())
+            return null;
+        final String last = this.path.get(this.path.size() - 1);
+        final int left = last.indexOf('[');
+        final int right = last.indexOf(']');
+        if (left == -1 && right == -1)
+            return null;
+        else if(left > right)
+            throw MTronException.of("malformed coefficient: %s", last);
+        return last.substring(left+1, right);
+    }
+
+    public String query() {
+        return this.query;
+    }
+
+    public Map<String, String> queryValue() {
         if (null == this.query)
             return Map.of();
         final Map<String, String> q = new LinkedHashMap<>();
@@ -304,8 +347,16 @@ public class fURI implements Cloneable {
         return q;
     }
 
+    public fURI basePath() {
+        return this.coefficientless().queryless();
+    }
+
+    public fURI coefficientless() {
+        return this.coefficient(null);
+    }
+
     public fURI queryless() {
-        return null == this.query ?this : new fURI(this.scheme,this.host,this.port,this.sstart,this.path,this.send,null);
+        return null == this.query ? this : new fURI(this.scheme, this.host, this.port, this.sstart, this.path, this.send, null);
     }
 
     public <T> T queryValue(final fURI key, final Class<T> conversion, final T defaultValue) {
@@ -313,7 +364,7 @@ public class fURI implements Cloneable {
     }
 
     public <T> T queryValue(final fURI key, final Class<T> conversion) {
-        final String value = this.query().get(key.toString());
+        final String value = this.queryValue().get(key.toString());
         if (null == value)
             return (T) null;
         if (String.class.isAssignableFrom(conversion))
