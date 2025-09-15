@@ -20,10 +20,12 @@ package studio.phaseshift.metatron.lang.obj;
 
 import org.javatuples.Triplet;
 import studio.phaseshift.metatron.lang.fURI;
+import studio.phaseshift.metatron.lang.obj.mtron.MObjs;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.ObjUtil;
 
 import java.util.Iterator;
+import java.util.List;
 
 import static studio.phaseshift.metatron.lang.obj.mtron.MInstSet.NOOBJ_TID;
 
@@ -63,6 +65,11 @@ public class NoObj implements Obj, Inst {
     @Override
     public NoObj vid(final fURI furi) {
         return this;
+    }
+
+    @Override
+    public Objs append(Obj obj) {
+        return MObjs.of(List.of());
     }
 
     @Override

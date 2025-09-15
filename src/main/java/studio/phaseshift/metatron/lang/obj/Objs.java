@@ -19,6 +19,9 @@
 package studio.phaseshift.metatron.lang.obj;
 
 import studio.phaseshift.metatron.lang.fURI;
+import studio.phaseshift.metatron.util.MTronException;
+
+import java.util.Collection;
 
 public interface Objs extends Obj {
 
@@ -27,5 +30,17 @@ public interface Objs extends Obj {
 
     @Override
     Iterable<Obj> value();
+
+    @Override
+    default Objs append(final Obj obj){
+        if(obj.isNoObj())
+            return this;
+        if(this.value() instanceof Collection<?>) {
+            obj.iterator().forEachRemaining(o -> this.<Collection<Obj>>valueAs().add(o));
+            return this;
+        } else {
+            throw MTronException.of("unable to add to underlying iterable: %s", this.value().getClass());
+        }
+    }
 
 }

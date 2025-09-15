@@ -18,7 +18,50 @@
 
 package studio.phaseshift.metatron.lang.obj;
 
+import studio.phaseshift.metatron.lang.fURI;
+import studio.phaseshift.metatron.util.MTronException;
+
+import static studio.phaseshift.metatron.lang.obj.mtron.MInstSet.*;
+
 public interface ObjFactory {
 
-    <O extends Obj> O create(final O obj);
+    <O extends Obj> O create(final Object value, final fURI tid, final fURI vid, final Class<O> objClass);
+
+    default <O extends Obj> O create(final Object value, final fURI tid, final Class<O> objClass) {
+        return this.create(value, tid, fURI.NULL, objClass);
+    }
+
+    default <O extends Obj> O create(final Object value, final Class<O> objClass) {
+        fURI tid;
+        if (Bool.class.isAssignableFrom(objClass))
+            tid = BOOL_TID;
+        else if (Int.class.isAssignableFrom(objClass))
+            tid = INT_TID;
+        else if (Real.class.isAssignableFrom(objClass))
+            tid = REAL_TID;
+        else if (Str.class.isAssignableFrom(objClass))
+            tid = STR_TID;
+        else if (Uri.class.isAssignableFrom(objClass))
+            tid = URI_TID;
+        else if (Lst.class.isAssignableFrom(objClass))
+            tid = LST_TID;
+        else if (Rel.class.isAssignableFrom(objClass))
+            tid = REL_TID;
+        else if (Rec.class.isAssignableFrom(objClass))
+            tid = REC_TID;
+        else if (Inst.class.isAssignableFrom(objClass))
+            tid = INST_TID;
+        else if (Code.class.isAssignableFrom(objClass))
+            tid = CODE_TID;
+        else if (Objs.class.isAssignableFrom(objClass))
+            tid = OBJS_TID;
+        else if (Type.class.isAssignableFrom(objClass))
+            tid = TYPE_TID;
+        else if (NoObj.class.isAssignableFrom(objClass))
+            tid = fURI.NONE;
+        else
+            throw MTronException.of("unable to convert to requested obj class: %s", objClass);
+        return this.create(value, tid, fURI.NULL, objClass);
+    }
+
 }

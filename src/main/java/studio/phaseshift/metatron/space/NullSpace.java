@@ -3,8 +3,11 @@ package studio.phaseshift.metatron.space;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.NoObj;
 import studio.phaseshift.metatron.lang.obj.Obj;
+import studio.phaseshift.metatron.lang.obj.Objs;
+import studio.phaseshift.metatron.lang.obj.mtron.MObjs;
 
 import java.util.LinkedHashMap;
+import java.util.List;
 
 public class NullSpace implements Space {
 

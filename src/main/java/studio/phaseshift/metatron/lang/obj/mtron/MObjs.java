@@ -23,6 +23,9 @@ import studio.phaseshift.metatron.lang.obj.Obj;
 import studio.phaseshift.metatron.lang.obj.Objs;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
+import studio.phaseshift.metatron.util.MTronException;
+
+import java.util.Collection;
 
 import static studio.phaseshift.metatron.lang.obj.mtron.MInstSet.OBJS_TID;
 
@@ -43,6 +46,11 @@ public class MObjs extends MObj implements Objs {
     @Override
     public Objs clone(final Object value, final fURI tid, final fURI vid) {
         return new MObjs((Iterable<Obj>) value, tid, vid);
+    }
+
+    @Override
+    public Objs append(final Obj obj){
+       return Objs.super.append(obj);
     }
 
     @Override

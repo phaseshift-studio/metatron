@@ -20,10 +20,12 @@ package studio.phaseshift.metatron.lang.obj;
 
 import org.javatuples.Pair;
 import studio.phaseshift.metatron.lang.fURI;
+import studio.phaseshift.metatron.lang.obj.mtron.MObjs;
 import studio.phaseshift.metatron.lang.obj.mtron.MType;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -69,6 +71,19 @@ public interface Obj extends Function<Obj, Obj>, Iterable<Obj> {
 
     default Obj vid(final fURI newVid) {
         return this.clone(this.value(), this.tid(), newVid);
+    }
+
+    default Objs append(final Obj obj) {
+        if (this.isObjs())
+            return this.<Objs>as().append(obj);
+        else {
+            final List<Obj> objs = new ArrayList<>();
+            if (!this.isNoObj())
+                objs.add(this);
+            if (!obj.isNoObj())
+                objs.add(obj);
+            return MObjs.of(objs);
+        }
     }
 
     @Override
