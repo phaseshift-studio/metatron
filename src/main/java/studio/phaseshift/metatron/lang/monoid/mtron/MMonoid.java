@@ -26,11 +26,14 @@ import studio.phaseshift.metatron.lang.obj.*;
 import studio.phaseshift.metatron.lang.obj.mtron.*;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
+import studio.phaseshift.metatron.util.MTronException;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Queue;
 
-import static studio.phaseshift.metatron.lang.obj.mtron.MInstSet.FROM_TID;
-import static studio.phaseshift.metatron.lang.obj.mtron.MInstSet.START_TID;
+import static studio.phaseshift.metatron.lang.obj.mtron.MInstSet.*;
 
 public class MMonoid extends MObj implements Monoid {
 
@@ -38,44 +41,9 @@ public class MMonoid extends MObj implements Monoid {
 
     public MMonoid(final Quartet<Code, Objs, Lst, Objs> value, final fURI tid, final fURI vid) {
         super(value, tid, vid);
-
-        // this.code = new ExplainRewrite().rewrite(code.<Code>as());
-        // process bcode inst pipeline
-        //this.code = Rewriter({Rewriter::by(), Rewriter::explain()}).apply(this.code);
-        // setup global behavior around barriers, initials, and terminals
-        LOG.debug("resolving code and generating structural monads: %s", this.code());
-        Obj token = NoObj.single();
-        //LOG.none("%s", token.rng());
-        final List<Inst> resolvedCode = new ArrayList<>();
-        for (final Inst inst : this.code().value()) {
-            try {
-                //LOG.none("=> %s", inst.dom().tid());
-                final Inst instB = inst.resolve(Inst.Resolve.B, token);
-                token = instB.rng();
-                if (instB.f().form().isInitial() || instB.tid().queryless().equals(START_TID) || instB.tid().queryless().equals(FROM_TID)) {
-                    LOG.debug("creating initial monad at %s", instB);
-                    final Monad m = MMonad.of(this, NoObj.single(), instB); // TODO: use seed
-                    this.running().<LinkedList<Obj>>valueAs().add(m);
-                    token = instB.arg(0);
-                } else if (instB.f().form().isGather()) {
-                    // many-to-?
-                    LOG.debug("creating barrier monad at %s", instB);
-                    final Monad m = MMonad.of(this, instB.seed(), instB);
-                    this.barriers().<List<Obj>>valueAs().add(m);
-                }
-                resolvedCode.add(instB);
-                // LOG.none("%s", instB.rng().tid());
-            } catch (final Exception e) {
-                LOG.warn(e.getMessage());
-            }
-        }
-        this.code().value().clear();
-        this.code().value().addAll(resolvedCode);
-        this.running().<LinkedList<Obj>>valueAs().add(MMonad.of(this, NoObj.single(), this.code().inst(0)));
-
     }
 
-    @Override
+  /*  @Override
     public Iterator<Obj> iterator() {
         List<Obj> results = new ArrayList<>();
         Obj m;
@@ -97,21 +65,90 @@ public class MMonoid extends MObj implements Monoid {
                     return end;
             }
         }
-    }
+    }*/
 
+
+    Code resolve(final Obj start) {
+        // this.code = new ExplainRewrite().rewrite(code.<Code>as());
+        // process bcode inst pipeline
+        //this.code = Rewriter({Rewriter::by(), Rewriter::explain()}).apply(this.code);
+        // setup global behavior around barriers, initials, and terminals
+        LOG.debug("resolving code and generating structural monads:\n\t%s {{g}}=>{{/g}} %s", start, this.code());
+        Obj token = start;
+        //LOG.none("%s", token.rng());
+        final List<Inst> resolvedCode = new ArrayList<>();
+        for (final Inst inst : this.code().value()) {
+            try {
+                LOG.debug("{{g}}=>{{/g}} resolving inst %s", inst);
+                final Inst instB = inst.resolve(Inst.Resolve.B, token);
+                resolvedCode.add(instB);
+                token = instB.rng();
+                if (instB.f().form().isInitial() || instB.tid().queryless().equals(START_TID) || instB.tid().queryless().equals(FROM_TID)) {
+                    LOG.debug("{{g}}==>{{/g}} creating initial monad at %s", instB);
+                    token = instB.arg(0);
+                } else if (instB.tid().queryless().equals(COUNT_TID)) {
+                    // many-to-?
+                    LOG.debug("{{g}}==>{{/g}} creating barrier monad at %s", instB);
+                    final Monad m = MMonad.of(this, MObjs.of(new LinkedList<>()), instB);
+                    this.barriers().<LinkedList<Obj>>valueAs().add(m);
+                }
+                // LOG.none("%s", instB.rng().tid());
+            } catch (final Exception e) {
+                resolvedCode.add(inst);
+                LOG.warn("runtime resolution of %s required: %s",inst,e.getMessage());
+            }
+        }
+        final Code resolved = MCode.of(resolvedCode);
+        LOG.debug("resolved monoidal code: %s", resolved);
+        return resolved;
+    }
 
     @Override
     public Obj apply(final Obj lhs) {
-        if ((!this.running().<LinkedList<Monad>>valueAs().isEmpty() || !this.barriers().isEmpty())) {
-            if (!this.running().<LinkedList<Monad>>valueAs().isEmpty()) {
-                final Monad m = this.running().<LinkedList<Monad>>valueAs().poll();
-                 m.apply(NoObj.single());
-            } else if (!this.barriers().isEmpty()) { // TODO
+        final Code code = this.resolve(lhs);
+        lhs.stream().forEach(o -> {
+            this.running().<Queue<Monad>>valueAs().add(MMonad.of(this, o, code.inst(0)));
+        });
+        while (true) {
+            final Monad m = this.running().<LinkedList<Monad>>valueAs().poll();
+            if (null != m) {
+                LOG.trace("{{g}}=>{{/g}} processing monad %s", m);
+                m.obj().stream().forEach(o -> {
+                    LOG.trace("{{g}}==>{{/g}} processing obj %s", o);
+                    final Monad n = m.obj(o).apply(code.next(m.inst()));
+                    LOG.trace("{{g}}===>{{/g}} post-processing monad %s", n);
+                    if (!n.dead()) {
+                        if (n.halted()) {
+                            LOG.trace("{{g}}====>{{/g}} halting monad %s", n);
+                            n.obj().stream().forEach(p -> this.halted().<Queue<Obj>>valueAs().add(p));
+                        } else if (n.inst().tid().queryless().equals(COUNT_TID)) {
+                            final Monad barrier = this.barriers().<List<Monad>>valueAs().get(0);
+                            LOG.trace("{{g}}====>{{/g}} adding to barrier %s", n);
+                            if (null == barrier)
+                                throw MTronException.of("barrier should exist: %s", n.inst());
+                            barrier.obj().<List<Obj>>valueAs().add(n.obj());
+                        } else {
+                            LOG.trace("{{g}}====>{{/g}} propagating monad %s", n);
+                            this.running().<LinkedList<Monad>>valueAs().add(n);
+                        }
+                    }
+                });
+            } else if (!this.barriers().isEmpty()) {
                 final Monad barrier = this.barriers().<LinkedList<Monad>>valueAs().poll();
-                barrier.apply(lhs);
+                if (null != barrier) {
+                    LOG.trace("{{m}}=>{{/m}} processing barrier monad %s", barrier);
+                    final Inst nextInst = code.next(barrier.inst());
+                    barrier.inst().apply(barrier.obj()).forEach(o -> {
+                        LOG.trace("{{m}}==>{{/m}} draining barrier obj %s", o);
+                        this.running().<LinkedList<Monad>>valueAs().add(MMonad.of(this, o, nextInst));
+                    });
+                }
+            } else {
+                LOG.trace("{{b}}monad {{g}}processing completed{{X}}");
+                break;
             }
         }
-        return NoObj.single();
+        return this.halted();
     }
 
     @Override
@@ -130,14 +167,14 @@ public class MMonoid extends MObj implements Monoid {
     }
 
     public static MMonoid of(final Code code) {
-        return new MMonoid(Quartet.with(code, MObjs.of(new LinkedList<>()), MLst.of(), MObjs.of(new LinkedList<>())), fURI.of("monoid:tid"), fURI.NULL);
+        return new MMonoid(Quartet.with(code, MObjs.of(new LinkedList<>()), MLst.of(new LinkedList<>()), MObjs.of(new LinkedList<>())), fURI.of("monoid:tid"), fURI.NULL);
     }
 
     public static MMonoid of(final Obj start, final Code code) {
         final List<Inst> prepended = new ArrayList<>();
         prepended.add(MInst.instB(START_TID, MLst.of(start)));
         prepended.addAll(code.codeValue());
-        return new MMonoid(Quartet.with(MCode.of(prepended), MObjs.of(new LinkedList<>()), MLst.of(), MObjs.of(new LinkedList<>())), fURI.of("monoid:tid"), fURI.NULL);
+        return new MMonoid(Quartet.with(MCode.of(prepended), MObjs.of(new LinkedList<>()), MLst.of(new LinkedList<>()), MObjs.of(new LinkedList<>())), fURI.of("monoid:tid"), fURI.NULL);
     }
 
 }

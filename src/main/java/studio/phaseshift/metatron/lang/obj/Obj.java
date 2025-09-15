@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.lang.obj.mtron.MInstSet.*;
 
@@ -52,6 +53,10 @@ public interface Obj extends Function<Obj, Obj>, Iterable<Obj> {
 
     default <O> O valueAs() {
         return this.value();
+    }
+
+    default Stream<Obj> stream() {
+        return this.isNoObj() ? Stream.of(NoObj.single()) : IteratorUtil.stream(this);
     }
 
     default Obj tid(final fURI newTid) {

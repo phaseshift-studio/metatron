@@ -30,6 +30,7 @@ import static studio.phaseshift.metatron.lang.obj.mtron.MInstSet.NOOBJ_TID;
 public class NoObj implements Obj, Inst {
 
     private static final NoObj SINGLE = new NoObj();
+    private static final int HASHCODE = 632862684;
 
     private NoObj() {
         // singleton
@@ -71,12 +72,12 @@ public class NoObj implements Obj, Inst {
 
     @Override
     public int hashCode() {
-        return ObjUtil.objHashCode(this);
+        return HASHCODE;
     }
 
     @Override
     public boolean equals(final Object other) {
-        return ObjUtil.objEquals(this, other);
+        return other instanceof NoObj;
     }
 
     @Override

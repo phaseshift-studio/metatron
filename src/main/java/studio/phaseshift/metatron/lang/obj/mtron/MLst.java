@@ -52,6 +52,7 @@ public class MLst extends MObj implements Lst {
     }
 
     public static Lst of(final List<Obj> args) {
-        return args.isEmpty() ? EMPTY_LST : new MLst(args);
+       // return args.isEmpty() ? EMPTY_LST : new MLst(args);
+        return new MLst(args);
     }
 }

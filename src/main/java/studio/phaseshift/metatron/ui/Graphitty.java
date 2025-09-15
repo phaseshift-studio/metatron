@@ -33,6 +33,7 @@ public class Graphitty {
 
     static {
         COLOR_REWRITES.put("X", "\033[m");  // reset
+        COLOR_REWRITES.put("k", "\033[30m"); // red
         COLOR_REWRITES.put("r", "\033[31m"); // red
         COLOR_REWRITES.put("g", "\033[32m"); // green
         COLOR_REWRITES.put("y", "\033[33m");  // yellow
@@ -40,6 +41,18 @@ public class Graphitty {
         COLOR_REWRITES.put("m", "\033[35m"); // magenta
         COLOR_REWRITES.put("c", "\033[36m"); // cyan
         COLOR_REWRITES.put("w", "\033[37m"); // white
+        COLOR_REWRITES.put("d", "\033[39m"); // default
+        /// //
+        COLOR_REWRITES.put("[k]", "\033[40m"); // red
+        COLOR_REWRITES.put("[r]", "\033[41m"); // red
+        COLOR_REWRITES.put("[g]", "\033[42m"); // green
+        COLOR_REWRITES.put("[y]", "\033[43m");  // yellow
+        COLOR_REWRITES.put("[b]", "\033[44m"); // blue
+        COLOR_REWRITES.put("[m]", "\033[45m"); // magenta
+        COLOR_REWRITES.put("[c]", "\033[46m"); // cyan
+        COLOR_REWRITES.put("[w]", "\033[47m"); // white
+        COLOR_REWRITES.put("[d]", "\033[49m"); // default
+        /// //
         COLOR_REWRITES.put("R", "\033[1;31m"); // bold red
         COLOR_REWRITES.put("G", "\033[1;32m"); // bold green
         COLOR_REWRITES.put("Y", "\033[1;33m"); // bold yellow
@@ -62,7 +75,9 @@ public class Graphitty {
         CURSOR_REWRITES.put("<", "\033[{{<}}D"); // left X
         CURSOR_REWRITES.put("|", "\033[{{|}}G"); // column X
         CURSOR_REWRITES.put("-", "\033[{{-}}H"); // row X
-        CURSOR_REWRITES.put("-X", "\033[2K");  // clear line
+        CURSOR_REWRITES.put("X-", "\033[0K");  // clear line right
+        CURSOR_REWRITES.put("-X", "\033[1K");  // clear line left
+        CURSOR_REWRITES.put("-X-", "\033[2K");  // clear line
         CURSOR_REWRITES.put("Xv", "\033[0J"); // clear to bottom of screen
         CURSOR_REWRITES.put("X^","\033[1J"); // clear to top of screen
         CURSOR_REWRITES.put("XX", "\033[2J"); // clear screen

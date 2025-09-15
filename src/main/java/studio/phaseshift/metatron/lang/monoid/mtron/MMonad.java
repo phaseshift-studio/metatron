@@ -18,6 +18,7 @@ import studio.phaseshift.metatron.util.IteratorUtil;
 import java.util.LinkedList;
 import java.util.List;
 
+import static studio.phaseshift.metatron.lang.obj.mtron.MInstSet.COUNT_TID;
 import static studio.phaseshift.metatron.lang.obj.mtron.MInstSet.START_TID;
 
 // monoid, obj, inst, state
@@ -46,8 +47,15 @@ public class MMonad extends MObj implements Monad {
     }
 
     @Override
-    public Monad apply(final Obj inst) {
-        if (this.halted()) {
+    public Monad apply(final Obj nextInst) {
+        if(this.halted())
+           return this;
+       return this.obj(this.inst().apply(this.obj())).inst(nextInst.as());
+       // return this.obj(nextObj).inst(nextInst.<Inst>as());
+
+
+
+       /* if (this.halted()) {
             if (!this.dead())
                 return this.halt();
         } else {
@@ -66,7 +74,7 @@ public class MMonad extends MObj implements Monad {
                 this.domain_loop();
             }
         }
-        return this;
+        return this;*/
     }
 
     /// ////////////////////////////////////////////////////////////////////////
@@ -178,5 +186,9 @@ public class MMonad extends MObj implements Monad {
 
     public static Monad of(final Monoid monoid, final Obj obj, final Inst inst) {
         return new MMonad(Quartet.with(monoid, obj, inst, MRec.of()), fURI.of("monad:abc"), fURI.NULL);
+    }
+
+    public static Monad of(final Monoid monoid, final Obj obj) {
+        return new MMonad(Quartet.with(monoid, obj, monoid.code().inst(0), MRec.of()), fURI.of("monad:abc"), fURI.NULL);
     }
 }

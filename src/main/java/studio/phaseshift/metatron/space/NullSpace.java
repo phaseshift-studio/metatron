@@ -31,7 +31,7 @@ public class NullSpace implements Space {
 
     @Override
     public Obj write(fURI vid, Obj obj) {
-        return NoObj.single();
+        return obj;
     }
 
     @Override

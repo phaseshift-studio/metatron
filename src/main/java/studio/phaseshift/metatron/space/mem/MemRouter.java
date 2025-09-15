@@ -81,7 +81,7 @@ public class MemRouter implements Router {
     @Override
     public Obj write(final fURI vid, final Obj obj) {
         final Space space = this.getStruct(vid);
-        LOG.trace("writing to %s: %s => %s", space, obj, vid);
+        //LOG.trace("writing to %s: %s => %s", space, obj, vid);
         return space.write(vid, obj);
     }
 

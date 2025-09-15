@@ -99,7 +99,7 @@ public interface Inst extends Obj {
     }
 
     default Resolve resolution() {
-        if (null == this.f())
+        if (null == this.value() || null == this.f())
             return Resolve.A;
         for (Obj arg : this.args()) {
             if (!arg.tid().equals(arg.vid())) {
@@ -122,9 +122,9 @@ public interface Inst extends Obj {
                 LOG.trace("resolution ({{m}}%s {{g}}=>{{/g}} %s{{/m}}): %s", currentResolution, resolved.resolution(), resolved);
                 return resolved.resolve(desiredResolution, lhs);
             } else { // Resolve.B
-                if (!lhs.matches(this.dom()))
-                    throw MTronException.of("lhs obj does not match inst domain: %s: %s {{r}}-/>{{/r}} %s", this, lhs, this.dom());
                 final boolean blocking = this.tid().equals(MInstSet.BLOCK_TID) || this.tid().equals(MInstSet.WITHIN_TID);
+                if (!blocking && !lhs.matches(this.dom()))
+                    throw MTronException.of("lhs obj does not match inst domain: %s: %s {{r}}-/>{{/r}} %s", this, lhs, this.dom());
                 final List<Obj> cargs = new ArrayList<>();
                 for (final Obj arg : args().elements()) {
                     cargs.add(blocking ? arg : arg.apply(lhs));

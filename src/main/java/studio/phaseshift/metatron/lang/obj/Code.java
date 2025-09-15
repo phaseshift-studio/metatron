@@ -36,6 +36,8 @@ public interface Code extends Obj {
     }
 
     default Inst next(final Inst inst) {
+        if(inst.isNoObj())
+            return NoObj.single();
         boolean found = false;
         for (final Inst i : this.value()) {
             if (found) return i;
@@ -46,7 +48,7 @@ public interface Code extends Obj {
 
     @Override
     default Obj apply(final Obj lhs) {
-        return MMonoid.of(lhs,this).iterator().next();
+        return MMonoid.of(this).apply(lhs).iterator().next();
     }
 
     Code resolve(final Obj start);

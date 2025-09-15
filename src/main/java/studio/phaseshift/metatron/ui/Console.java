@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.ui;
 
+import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.jline.reader.*;
 import org.jline.reader.impl.DefaultParser;
 import org.jline.reader.impl.history.DefaultHistory;
@@ -28,11 +29,8 @@ import org.jline.utils.AttributedStringBuilder;
 import org.jline.widget.Widgets;
 import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.lang.monoid.mtron.MMonoid;
-import studio.phaseshift.metatron.lang.obj.Code;
-import studio.phaseshift.metatron.lang.obj.Inst;
 import studio.phaseshift.metatron.lang.obj.NoObj;
 import studio.phaseshift.metatron.lang.obj.Obj;
-import studio.phaseshift.metatron.lang.obj.mtron.MCode;
 import studio.phaseshift.metatron.lang.parse.ObjParser;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.StringUtil;
@@ -98,24 +96,16 @@ public class Console {
                    try {
                        if (buffer.isEmpty()) {
                            //builder.append(buffer);
-                           //Graphitty.stdout().print(Graphitty.string("{{v1&-X&^1&|%d}}".formatted(9)));
+                           //Graphitty.out(this.terminal.output(), "{{v1&-X&^1&|%d}}".formatted(9));
                        } else {
                            final Obj o = ObjParser.parse(buffer);
                            final int xLocation = this.terminal.getCursorPosition(System.out::print).getX() + 1;
                            // final int promptLength = 8; //"mtron> ".length() + 1;
                            builder.append(buffer);
-                           if (o.isCode() && Console.RESOLVE_MODE) {
-                               final Code rCode = new MCode(o.codeValue().stream().map(i -> i.resolve(Inst.Resolve.B, NoObj.single())).toList());
-                               final String rCodeString = rCode.toString();
-                               final int yDistance = StringUtil.countLines(rCodeString);
-                               Graphitty.stdout().print(Graphitty.string("{{v1&Xv&|%d}}%s".formatted(8, rCodeString)));
-                               Graphitty.stdout().print(Graphitty.string("{{^%d&|%d}}".formatted(yDistance, xLocation)));
-                           } else {
                                final String oString = o.toString();
                                final int yDistance = StringUtil.countLines(oString);
-                               Graphitty.stdout().print(Graphitty.string("{{v1&Xv&|%d}}%s".formatted(8, oString)));
-                               Graphitty.stdout().print(Graphitty.string("{{^%d&|%d}}".formatted(yDistance, xLocation)));
-                           }
+                               Graphitty.out(this.terminal.output(),"{{v1&Xv&|%d}}%s".formatted(8, oString));
+                               Graphitty.out(this.terminal.output(), "{{^%d&|%d}}".formatted(yDistance, xLocation));
                        }
 
                    } catch (final Exception e) {
@@ -145,7 +135,6 @@ public class Console {
         parser.setEofOnUnclosedBracket(DefaultParser.Bracket.CURLY, DefaultParser.Bracket.ROUND, DefaultParser.Bracket.SQUARE);
         this.terminal = TerminalBuilder.builder().encoding(StandardCharsets.UTF_8).system(true)/*.signalHandler(Terminal.SignalHandler.SIG_IGN)*/.build();
         this.outputHeader();
-        LOG.none("\t{{b}}ve{{y}}rs{{m}}ion {{y}}%s{{X}}\n\n", METATRON_VERSION);
         // this.terminal.handle(Terminal.Signal.WINCH) // TODO: signal handling on some CNTRL-?? to resolve (not evaluate) current expression
         final History history = new DefaultHistory();
         this.reader = LineReaderBuilder.builder()
@@ -167,21 +156,20 @@ public class Console {
         String line = "";
         while (true) {
             try {
-                this.terminal.writer().print(Graphitty.string("\n{{v1&^1}}"));
-                line = this.reader.readLine(Graphitty.string("{{FORM2}}mtron{{FORM1}}>{{X}} "));
+                Graphitty.out(this.terminal.output(),"\n{{v1&^1}}");
+                line = this.reader.readLine(Graphitty.string("{{FORM2}}mt%son{{FORM1}}> ".formatted(RESOLVE_MODE ? "{{[r]&y}}r{{X&FORM2}}" : "r")));
                 if (line.trim().equals(":header"))
                     this.outputHeader();
                 else if (line.trim().equals(":quit"))
                     break;
                 else {
-                    Graphitty.out(this.terminal.output(), "{{-X}}");
                     final Obj result = ObjParser.parse(line);
                     IteratorUtil.iterate(IteratorUtil.consume(result.isNoObj() ?
                                     Collections.emptyIterator() :
                                     result.isCode() ?
-                                            MMonoid.of(result.as()).iterator() :
+                                            MMonoid.of(result.as()).apply(NoObj.single()).iterator() :
                                             result.iterator(),
-                            o -> Graphitty.out(this.terminal.output(), "{{FORM2}}=={{FORM1}}>{{X}}%s\n".formatted(o))));
+                            o -> Graphitty.out(this.terminal.output(), "{{-X-}}{{FORM2}}=={{FORM1}}>{{X}}%s\n".formatted(o))));
                 }
             } catch (final UserInterruptException e) {
                 LOG.warn(Graphitty.sillyPrint("process interrupted", true, true));
@@ -238,6 +226,8 @@ public class Console {
             this.terminal.writer().printf("\t\t\tby PhaseShift Studio (%s)\n", Calendar.getInstance().get(Calendar.YEAR));
             this.terminal.flush();
         }
+        LOG.none("\t{{b}}ve{{y}}rs{{m}}ion {{y}}%s{{X}}\n", METATRON_VERSION);
+        Graphitty.out(this.terminal.output(),"\t{{[r]&y}}r{{[d]}}esolve {{m}}[{{y}}ctrl-r{{m}}]{{X}}\n\n");
     }
 
     public static void main(final String[] args) throws Exception {
