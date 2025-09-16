@@ -53,10 +53,8 @@ public interface InstSet extends Obj {
                         //  resolvedArgs.add(i.arg(j).apply(instA.arg(j)));
                         resolvedArgs.add(instAorB.arg(j));
                     }
-                    final Inst resolvedInst = i.clone(new Triplet<>(MLst.of(resolvedArgs),
+                    return i.clone(new Triplet<>(MLst.of(resolvedArgs),
                             i.f(), i.seed()), i.tid(), instAorB.vid());
-                    System.out.println(resolvedInst + "!!!");
-                            return resolvedInst;
                 }).findFirst().orElseThrow(() -> MTronException.of("unable to resolve %s => %s in instruction set %s", lhs, instAorB, this.value().get(instAorB.tid())));
     }
 }

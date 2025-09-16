@@ -49,7 +49,7 @@ public class NoObj implements Obj, Inst {
 
     @Override
     public fURI tid() {
-        return NOOBJ_TID;
+        return NOOBJ_TID.coefficient("0");
     }
 
     @Override

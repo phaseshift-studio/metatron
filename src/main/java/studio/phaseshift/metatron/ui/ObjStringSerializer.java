@@ -51,7 +51,7 @@ public class ObjStringSerializer implements ObjSerializer<String> {
             sb.append(this.b.palette.typeC())
                     .append(this.b.hideTypes.contains(inst.tid()) ? "" : inst.tid())
                     .append(this.b.palette.formC())
-                    .append(this.b.hideTypes.contains(inst.tid()) ? "" : ':')
+                    .append(this.b.hideTypes.contains(inst.tid()) ? "" : "::")
                     .append("(");
             for (int i = 0; i < inst.args().count(); i++) {
                 sb.append(inst.args().lstValue().get(i));
@@ -143,7 +143,7 @@ public class ObjStringSerializer implements ObjSerializer<String> {
         return this.b.hideTypes.contains(obj.tid()) ? sb : sb.append(this.b.palette.typeC())
                 .append(obj.tid())
                 .append(this.b.palette.formC())
-                .append(':');
+                .append("::");
     }
 
     @Override

@@ -24,5 +24,7 @@ public interface Coeff<T extends Comparable<T>, C extends Coeff<T,C>> {
 
     boolean isQuestion();
 
+    boolean isZero();
+
     boolean within(final C rhs);
 }

@@ -21,6 +21,8 @@ package studio.phaseshift.metatron.lang.parse;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.lang.obj.mtron.MInt;
 import studio.phaseshift.metatron.lang.obj.mtron.MInstSet;
 
@@ -34,9 +36,20 @@ public class InstParseTest {
         MInstSet.of();
     }
 
-    @Test
-    public void testPlusInst() {
-        assertEquals(MInt.of(3), eval("1.plus(2)").next());
+    @ParameterizedTest
+    @CsvSource(value = {
+            "true.plus(false)% true",
+            "false.plus(false)% false",
+            "0.plus(0)% 0",
+            "1.plus(2)% 3",
+            "3.plus(-3)% 0",
+            "\"abc\".plus(\"def\")% \"abcdef\"",
+            "abc.plus(def)% abc/def",
+            "[a,b,c].plus([d,e,f])% [a,b,c,d,e,f]",
+            //"/mtron/code[plus(1).plus(2)].plus([d,e,f])% [a,b,c,d,e,f]" (requires union())
+    }, delimiter = '%')
+    void testPlusInst(final String expression, final String expectedResult) {
+        assertEquals(ObjParser.m_obj().parse(expectedResult).get(), ObjParser.eval(expression).next());
     }
 
     @Test

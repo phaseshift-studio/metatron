@@ -58,7 +58,7 @@ public class MemRouter implements Router {
 
     public Space getStruct(final fURI pattern) {
         Optional<Space> space = this.routes.entrySet().stream()
-                .filter(kv -> pattern.matches(kv.getKey()))
+                .filter(kv -> pattern.basePath().matches(kv.getKey()))
                 .findAny()
                 .map(Map.Entry::getValue);
         if(space.isPresent())

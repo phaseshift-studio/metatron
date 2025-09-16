@@ -35,9 +35,13 @@ public interface MCoeff {
             return new Int(this.min() * rhs.min(), this.max() * rhs.max());
         }
 
+        public boolean isZero() {
+            return (this.max != null && this.max == 0) && (this.min != null && this.min == 0);
+        }
+
         @Override
         public boolean isOne() {
-            return this.max() == 1 && this.min() == 1;
+            return this.max == 1 && this.min == 1;
         }
 
         @Override
@@ -47,12 +51,12 @@ public interface MCoeff {
 
         @Override
         public boolean isPlus() {
-            return this.min() == 1 && this.max() == null;
+            return this.min == 1 && this.max == null;
         }
 
         @Override
         public boolean isQuestion() {
-            return this.min() == 0 && this.max() == 1;
+            return this.min == 0 && this.max == 1;
         }
 
         @Override
@@ -74,6 +78,10 @@ public interface MCoeff {
             return Int.of(1L,null);
         }
 
+        public static Int zero() {
+            return Int.of(0L,0L);
+        }
+
        // @Override
         public static Int question() {
             return Int.of(0L,1L);
@@ -86,6 +94,8 @@ public interface MCoeff {
 
         @Override
         public String toString() {
+            if(null != this.min && null != this.max && this.min.equals(this.max))
+                return this.min.toString();
             return (null == this.min ? "" : this.min) + "," + (null == this.max ? "" : this.max);
         }
 
@@ -99,14 +109,16 @@ public interface MCoeff {
             return other instanceof Int && Objects.equals(this.min,((Int) other).min) && Objects.equals(this.max,((Int) other).max);
         }
 
-
-
         public static Int of(final Long min, final Long max) {
             return new Int(min,max);
         }
 
         public static Int of(final String parse) {
-            if(parse.equals("*"))
+            if(parse.isEmpty())
+                return Int.one();
+            else if(parse.equals("0"))
+                return Int.zero();
+            else if(parse.equals("*"))
                 return Int.star();
             else if(parse.equals("?"))
                 return Int.question();
@@ -118,7 +130,9 @@ public interface MCoeff {
                 return Int.of(Long.valueOf(parse),Long.valueOf(parse));
             else {
                 final String[] split = parse.split(",");
-                return Int.of(Long.valueOf(split[0]),Long.valueOf(split[1]));
+                return split.length == 1 ?
+                        (parse.charAt(0) == ',' ? Int.of(null,Long.valueOf(split[0])) : Int.of(Long.valueOf(split[0]),null)):
+                        Int.of(Long.valueOf(split[0]),Long.valueOf(split[1]));
             }
 
         }

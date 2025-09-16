@@ -92,12 +92,6 @@ public interface Inst extends Obj {
         return this.value().getValue2();
     }
 
-    default Rel signature() {
-        final fURI domain = this.tid().queryValue(fURI.DOM,fURI.class,fURI.NULL);
-        final fURI range = this.tid().queryValue(fURI.RNG,fURI.class,fURI.NULL);
-        return MRel.of(domain.toUri(),range.toUri());
-    }
-
     default Resolve resolution() {
         if (null == this.value() || null == this.f())
             return Resolve.A;
@@ -143,6 +137,18 @@ public interface Inst extends Obj {
         if (!rhs.matches(cinst.rng()))
             throw MTronException.of("rhs obj does not match inst range: %s: %s {{r}}-/>{{/r}} %s",this, rhs, cinst.rng());
         return rhs;
+    }
+
+    default boolean isGather() {
+        return this.dom().tid().coefficientValue().isStar();
+    }
+
+    default boolean isScatter() {
+        return this.rng().tid().coefficientValue().isOne();
+    }
+
+    default boolean isInitial() {
+        return this.dom().tid().coefficientValue().isZero();
     }
 
     final class f {

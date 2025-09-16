@@ -168,8 +168,8 @@ public class ObjParser {
     private static final String QUERYLESS_FURI_CHARS = "/%!#_=@+&:";
 
     public static Parser m_furi(final String furiCharacterSet) {
-        final Supplier<Parser> internal = () -> seq(word().or(seq(of("=>").not(), anyOf(furiCharacterSet))).plus().flatten(),m_furi_coefficient()).map(t -> new fURI(pick(t,0)).coefficient(pick(t,1)));
-        final Supplier<Parser> internal2 = () -> seq(word().or(seq(of("=>").not(), anyOf(FULL_FURI_CHARS))).plus().flatten(),m_furi_coefficient()).map(t -> new fURI(pick(t,0)).coefficient(pick(t,1)));
+        final Supplier<Parser> internal = () -> seq(word().or(seq(of("=>").not(), of("::").not(), anyOf(furiCharacterSet))).plus().flatten(),m_furi_coefficient()).map(t -> new fURI(pick(t,0)).coefficient(pick(t,1)));
+        final Supplier<Parser> internal2 = () -> seq(word().or(seq(of("=>").not(), of("::").not(), anyOf(FULL_FURI_CHARS))).plus().flatten(),m_furi_coefficient()).map(t -> new fURI(pick(t,0)).coefficient(pick(t,1)));
         return choice(seq(of('<'), internal2.get(), of('>')).pick(1), internal.get());
     }
 
@@ -180,6 +180,7 @@ public class ObjParser {
 
     public static Parser m_furi_coefficient() {
         return opt(seq(of('['), choice(
+                        of('0').map(t -> "0,0"),
                         of('*').map(t -> "0,"),
                         of('+').map(t -> "1,"),
                         of('?').map(t -> "0,1"),
@@ -200,7 +201,7 @@ public class ObjParser {
 
 
     public static Parser m_inst_furi() {
-        return seq(m_furi(QUERYLESS_FURI_CHARS), of('?'), m_furi_inst_dom_rng(), opt(of(':').trim(), ':'))
+        return seq(m_furi(QUERYLESS_FURI_CHARS), of('?'), m_furi_inst_dom_rng(), opt(of("::").trim(), "::"))
                 .map(t -> ObjParser.<fURI>pick(t, 0).coefficient(pick(t,1)).queryValue(pick(t, 3)));
     }
 
@@ -219,11 +220,11 @@ public class ObjParser {
     }
 
     public static Parser m_type_prefix(final fURI baseType) {
-        return opt(seq(m_furi(), of(':')).pick(0), baseType);
+        return opt(seq(m_furi(), of("::")).pick(0), baseType);
     }
 
     public static Parser m_type_prefix_opt_colon(final fURI baseType) {
-        return opt(seq(m_furi(REDUCED_FURI_CHARS), opt(of(':').trim(), ':')).pick(0), baseType);
+        return opt(seq(m_furi(REDUCED_FURI_CHARS), opt(of("::").trim(), "::")).pick(0), baseType);
     }
 
     public static Parser m_bool() {

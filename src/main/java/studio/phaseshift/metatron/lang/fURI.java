@@ -66,7 +66,9 @@ public class fURI implements Cloneable {
             this.query = null;
             return;
         }
-        int queryPosition = uri.indexOf('?');
+        int queryPosition = uri.lastIndexOf('?');
+        if(queryPosition == -1 || uri.charAt(queryPosition-1) == '[')
+            queryPosition = -1;
         final String tempQuery = queryPosition == -1 ? null : uri.substring(queryPosition + 1);
         this.query = null == tempQuery ? null : (tempQuery.isBlank() ? null : tempQuery);
         if (null != this.query)
@@ -304,12 +306,9 @@ public class fURI implements Cloneable {
             segments.add(last.substring(0, last.indexOf("[")));
             return new fURI(this.scheme, this.host, this.port, this.sstart, segments, this.send, this.query);
         }
-
-        if (this.path.isEmpty())
-            throw MTronException.of("coefficient must be attached to a path");
         final List<String> segments = new ArrayList<String>(this.path);
-        String last = segments.remove(segments.size() - 1);
-        segments.add(last + "[" + coefficient + "]");
+        String last = segments.isEmpty() ? "" : segments.remove(segments.size() - 1);
+        segments.add(last + "[" + MCoeff.Int.of(coefficient) + "]");
         return new fURI(this.scheme, this.host, this.port, this.sstart, segments, this.send, this.query);
     }
 
@@ -327,9 +326,9 @@ public class fURI implements Cloneable {
         final int right = last.indexOf(']');
         if (left == -1 && right == -1)
             return null;
-        else if(left > right)
+        else if (left > right)
             throw MTronException.of("malformed coefficient: %s", last);
-        return last.substring(left+1, right);
+        return last.substring(left + 1, right);
     }
 
     public String query() {
@@ -381,11 +380,15 @@ public class fURI implements Cloneable {
         return new fURI(Scheme.GenericScheme.scheme(this.urin.asUri().getScheme()).relativeReference(this.urin.authority(), AbsolutePath.path(this.urin.path()), Query.query(queryString)));
     }*/
 
-    public boolean matches(final fURI other) {
+    public boolean matches(final fURI rhs) {
+        if (!this.coefficientValue().within(rhs.coefficientValue()))
+            return false;
+        final fURI lhs = this.basePath();
+        final fURI other = rhs.basePath();
         if (other.toString().equals("#"))
             return true;
         if (!other.hasPattern())
-            return this.equals(other);
+            return lhs.equals(other);
         if (this.isAbsolute() != other.isAbsolute())
             return false;
         if (this.sstart != other.sstart)

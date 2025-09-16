@@ -24,6 +24,7 @@ import studio.phaseshift.metatron.lang.obj.Obj;
 import studio.phaseshift.metatron.lang.obj.mtron.MObjs;
 import studio.phaseshift.metatron.ui.Graphitty;
 
+import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 
@@ -48,6 +49,16 @@ public final class ObjUtil {
             return objs.get(0);
         else
             return MObjs.of(objs);
+    }
+
+    public static Obj oneNoneOrAll(final Iterator<Obj> objs) {
+        if (!objs.hasNext())
+            return NoObj.single();
+        List<Obj> o = IteratorUtil.list(objs);
+         if (o.size() == 1)
+            return o.get(0);
+        else
+            return MObjs.of(o);
     }
 
     public static int objHashCode(final Obj obj) {

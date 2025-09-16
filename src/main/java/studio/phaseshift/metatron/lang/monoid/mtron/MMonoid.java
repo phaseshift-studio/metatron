@@ -33,7 +33,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
 
-import static studio.phaseshift.metatron.lang.obj.mtron.MInstSet.*;
+import static studio.phaseshift.metatron.lang.obj.mtron.MInstSet.START_TID;
 
 public class MMonoid extends MObj implements Monoid {
 
@@ -83,10 +83,10 @@ public class MMonoid extends MObj implements Monoid {
                 final Inst instB = inst.resolve(Inst.Resolve.B, token);
                 resolvedCode.add(instB);
                 token = instB.rng();
-                if (instB.f().form().isInitial() || instB.tid().queryless().equals(START_TID) || instB.tid().queryless().equals(FROM_TID)) {
+                if (instB.isInitial()) {
                     LOG.debug("{{g}}==>{{/g}} creating initial monad at %s", instB);
                     token = instB.arg(0);
-                } else if (instB.tid().queryValue(fURI.DOM,fURI.class).coefficientValue().isStar()) {
+                } else if (instB.isGather()) {
                     // many-to-?
                     LOG.debug("{{g}}==>{{/g}} creating barrier monad at %s", instB);
                     final Monad m = MMonad.of(this, MObjs.of(new LinkedList<>()), instB);
@@ -95,7 +95,8 @@ public class MMonoid extends MObj implements Monoid {
                 // LOG.none("%s", instB.rng().tid());
             } catch (final Exception e) {
                 resolvedCode.add(inst);
-                LOG.warn("runtime resolution of %s required: %s",inst,e.getMessage());
+                LOG.warn("runtime resolution of %s required: %s", inst, e.getMessage());
+                e.printStackTrace();
             }
         }
         final Code resolved = MCode.of(resolvedCode);
@@ -113,20 +114,24 @@ public class MMonoid extends MObj implements Monoid {
             final Monad m = this.running().<LinkedList<Monad>>valueAs().poll();
             if (null != m) {
                 LOG.trace("{{g}}=>{{/g}} processing monad %s", m);
-                m.obj().stream().forEach(o -> {
-                    LOG.trace("{{g}}==>{{/g}} processing obj %s", o);
+                if (m.inst().isInitial()) {
+
+                }
+                // no need to check isGather -- simply determine whether to flatten the monad or not and everything should consequence from that
+                (m.inst().isInitial() ? NoObj.single() : m.obj()).stream().forEach(o -> {
+                    LOG.trace("{{g}}==>{{/g}} processing obj %s at %s [%s]", o, m.inst(), m.inst().isInitial() ? "initial" : "midway");
                     final Monad n = m.obj(o).apply(code.next(m.inst()));
                     LOG.trace("{{g}}===>{{/g}} post-processing monad %s", n);
                     if (!n.dead()) {
                         if (n.halted()) {
                             LOG.trace("{{g}}====>{{/g}} halting monad %s", n);
                             n.obj().stream().forEach(p -> this.halted().<Queue<Obj>>valueAs().add(p));
-                        } else if (n.inst().tid().query(fURI.DOM,fURI.class).coefficientValue().isStar()) {
+                        } else if (n.inst().isGather()) {
                             final Monad barrier = this.barriers().<List<Monad>>valueAs().get(0);
-                            LOG.trace("{{g}}====>{{/g}} adding to barrier %s", n);
+                            LOG.trace("{{g}}====>{{/g}} appending to barrier %s", n);
                             if (null == barrier)
                                 throw MTronException.of("barrier should exist: %s", n.inst());
-                            barrier.obj().<List<Obj>>valueAs().add(n.obj());
+                            barrier.obj().append(n.obj());
                         } else {
                             LOG.trace("{{g}}====>{{/g}} propagating monad %s", n);
                             this.running().<LinkedList<Monad>>valueAs().add(n);
@@ -138,10 +143,14 @@ public class MMonoid extends MObj implements Monoid {
                 if (null != barrier) {
                     LOG.trace("{{m}}=>{{/m}} processing barrier monad %s", barrier);
                     final Inst nextInst = code.next(barrier.inst());
-                    barrier.inst().apply(barrier.obj()).forEach(o -> {
-                        LOG.trace("{{m}}==>{{/m}} draining barrier obj %s", o);
-                        this.running().<LinkedList<Monad>>valueAs().add(MMonad.of(this, o, nextInst));
-                    });
+                    final Obj result = barrier.inst().apply(barrier.obj());
+                    if (barrier.inst().isScatter())
+                        result.forEach(o -> {
+                            LOG.trace("{{m}}==>{{/m}} scattering output barrier obj %s", o);
+                            this.running().<LinkedList<Monad>>valueAs().add(MMonad.of(this, o, nextInst));
+                        });
+                    else
+                        this.running().<LinkedList<Monad>>valueAs().add(MMonad.of(this, result, nextInst));
                 }
             } else {
                 LOG.trace("{{b}}monad {{g}}processing completed{{X}}");
