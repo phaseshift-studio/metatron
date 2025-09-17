@@ -54,13 +54,11 @@ public class InstParseTest {
     }
 
     @Test
-    @Disabled
     public void testCountInst() {
         assertEquals(MInt.of(3), eval("{1,2,3}.count()").next());
     }
 
     @Test
-    @Disabled
     public void testSumInst() {
         assertEquals(MInt.of(6), eval("{1,2,3}.sum()").next());
     }

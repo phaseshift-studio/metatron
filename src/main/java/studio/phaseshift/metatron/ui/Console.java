@@ -26,6 +26,7 @@ import org.jline.terminal.Terminal;
 import org.jline.terminal.TerminalBuilder;
 import org.jline.utils.AttributedString;
 import org.jline.utils.AttributedStringBuilder;
+import org.jline.widget.AutosuggestionWidgets;
 import org.jline.widget.Widgets;
 import org.slf4j.LoggerFactory;
 import studio.phaseshift.metatron.BootLoader;
@@ -107,6 +108,10 @@ public class Console {
         private CustomHighlighters(final Terminal terminal) {
             this.terminal = terminal;
             // auto compilation
+            /*this.highlighters.add((builder,buffer) -> {
+               if(!buffer.isEmpty())
+                  builder.append(buffer.replaceAll("\\(",Graphitty.string("{{g}}({{/g}}")).replaceAll("\\)",Graphitty.string("{{g}}){{/g}}")));
+            })*/;
             this.highlighters.add((builder, buffer) -> {
                 if (RESOLVE_MODE) {
                     try {
@@ -164,6 +169,8 @@ public class Console {
                 .variable(LineReader.SECONDARY_PROMPT_PATTERN, Graphitty.string("\n{{-X&v1&^1&FORM1}}%P >{{X}}"))
                 .variable(LineReader.INDENTATION, 2)
                 .build();
+       // final AutosuggestionWidgets autosuggestionWidgets = new AutosuggestionWidgets(this.reader);
+       // autosuggestionWidgets.enable();
     }
 
     public void run() throws IOException {

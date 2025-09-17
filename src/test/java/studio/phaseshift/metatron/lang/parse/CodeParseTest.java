@@ -33,7 +33,6 @@ public class CodeParseTest {
         assertEquals(ObjParser.m_obj().parse(expectedResult).<Obj>get(), ObjUtil.oneNoneOrAll(ObjParser.eval(expression)));
     }
 
-    @Disabled
     @ParameterizedTest
     @CsvSource(value = {
             "1-<[_,plus(1),3]% [1,2,3]",

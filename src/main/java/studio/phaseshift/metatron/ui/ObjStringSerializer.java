@@ -98,7 +98,7 @@ public class ObjStringSerializer implements ObjSerializer<String> {
             return generateVID(sb, objs).append(this.b.ignoreRewrites ? "" : "{{X}}").toString();
         } else if (obj instanceof final Rec rec) {
             if (this.b.prettyPrint && rec.count() > 1) {
-                this.generateRec(sb, obj.<Rec>as(), 0);
+                this.generateRec(sb, rec, 0);
             } else {
                 generateTID(sb, obj).append(this.b.palette.formC()).append('[').append(this.b.palette.valueC());
                 for (final Map.Entry<Obj, Obj> o : rec.value().entrySet()) {
@@ -109,9 +109,8 @@ public class ObjStringSerializer implements ObjSerializer<String> {
                             .append(',');
                 }
             }
-            if (!rec.value().isEmpty()) sb.deleteCharAt(sb.length() - 1).append(this.b.palette.formC());
-            else sb.append(this.b.palette.formC()).append("=>");
-            return generateVID(sb.append(']'), rec).append(this.b.ignoreRewrites ? "" : "{{X}}").toString();
+            if (rec.count() == 1) sb.deleteCharAt(sb.length() - 1).append(this.b.palette.formC()).append(']');
+            return generateVID(sb,rec).append(this.b.ignoreRewrites ? "" : "{{X}}").toString();
         } else if (obj instanceof final Type type) {
             return generateTID(sb, obj)
                     .append("{{r}}T")
@@ -140,8 +139,9 @@ public class ObjStringSerializer implements ObjSerializer<String> {
                 this.generateRec(sb, v.as(), depth + 1);
             } else
                 sb.append(write(v));
-            sb.append("\n");
+            sb.append("{{FORM1}},\n");
         }); // {{FORM{sdfsdf}}}
+        sb.deleteCharAt(sb.length()-2);
         sb.append(" ".repeat(depth)).append("{{FORM1}}]{{FORM1}}");
         return sb;
     }

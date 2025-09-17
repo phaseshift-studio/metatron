@@ -129,12 +129,12 @@ public class MInstSet extends MObj implements InstSet {
         this.define(WITHIN_TID, fURI.ANY, fURI.ANY, MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> MLst.of(lhs.<Poly>as().stream().map(o -> MMonoid.of(inst.arg(0).as()).apply(o)).toList()));
         this.define(SPLIT_TID, fURI.ANY, fURI.ANY, MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> {
             if (inst.arg(0).isLst()) {
-                return MLst.of(inst.arg(0).<Poly>as().stream().map(e -> e.apply(lhs)).toList());
+                return MLst.of(inst.arg(0).lstValue().stream().map(e -> e.apply(lhs)).toList());
             } else if (inst.arg(0).isRec()) {
-                return MRec.of(inst.arg(0).<Rec>as().stream()
-                        .map(e -> e.first().apply(lhs).<Rel>choose(Obj::isNoObj, null, x -> MRel.of(x, e.second().apply(x))))
+                return MRec.of(inst.arg(0).recValue().entrySet().stream()
+                        .map(e -> e.getKey().apply(lhs).choose(Obj::isNoObj, null, x -> MRel.of(x, e.getValue().apply(x))))
                         .filter(x -> !Objects.isNull(x))
-                        .collect(Collectors.toMap(a -> a.<Rel>as().first(), b -> b.<Rel>as().second())));
+                        .collect(Collectors.toMap(a -> a.<Rel>as().first(), b -> b.<Rel>as().second(), (a,b) -> b, LinkedHashMap<Obj,Obj>::new)));
             } else if (inst.arg(0).isRel()) {
                 return MRel.of(inst.arg(0).<Rel>as().first().apply(lhs), inst.arg(0).<Rel>as().second().apply(lhs));
             } else {

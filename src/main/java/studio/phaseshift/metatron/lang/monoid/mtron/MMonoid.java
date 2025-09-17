@@ -125,7 +125,7 @@ public class MMonoid extends MObj implements Monoid {
                     if (!n.dead()) {
                         if (n.halted()) {
                             LOG.trace("{{g}}====>{{/g}} halting monad %s", n);
-                            n.obj().stream().forEach(p -> this.halted().<Queue<Obj>>valueAs().add(p));
+                            n.obj().iterator().forEachRemaining(p -> this.halted().<Queue<Obj>>valueAs().add(p));
                         } else if (n.inst().isGather()) {
                             final Monad barrier = this.barriers().<List<Monad>>valueAs().get(0);
                             LOG.trace("{{g}}====>{{/g}} appending to barrier %s", n);
