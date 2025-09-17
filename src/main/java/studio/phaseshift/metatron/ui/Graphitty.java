@@ -126,7 +126,7 @@ public class Graphitty {
     }
 
     public static String string(final Obj obj) {
-        return ObjStringSerializer.build().create().write(obj).toString();
+        return ObjStringSerializer.build().create().write(obj);
     }
 
 

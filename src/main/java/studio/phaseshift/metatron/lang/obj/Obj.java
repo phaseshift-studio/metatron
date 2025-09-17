@@ -98,7 +98,7 @@ public interface Obj extends Function<Obj, Obj>, Iterable<Obj> {
     }
 
     default boolean matches(final Obj rhs) {
-        if((rhs.tid().coefficientValue().isZero() && this.tid().coefficientValue().isZero()) ||
+        if((rhs.isNoObj() && this.isNoObj()) ||
                 (rhs.isType() && this.tid().basePath().matches(rhs.tid().basePath())) &&
                         this.tid().coefficientValue().within(rhs.tid().coefficientValue()))
                 return true;
@@ -142,7 +142,7 @@ public interface Obj extends Function<Obj, Obj>, Iterable<Obj> {
     }
 
     default boolean isNoObj() {
-        return this == NoObj.single();
+        return this == NoObj.single() || this.tid().coefficientValue().isZero();
     }
 
     default boolean isBool() {

@@ -65,6 +65,26 @@ public class fURI implements Cloneable {
         return  null == Router.global() ? this : Router.global().rewrite(this,false);
     }
 
+    public fURI commonRoot(final fURI other) {
+        if(this.sstart != other.sstart)
+            return fURI.of("");
+        final List<String> common = new ArrayList<>();
+        final int maxLength = Math.min(this.path.size(),other.path.size());
+        for(int i=0;i<Math.min(this.path.size(),other.path.size());i++) {
+            if(this.path.get(i).equals(other.path.get(i)))
+                common.add(this.path.get(i));
+            else
+                break;
+        }
+        fURI base = fURI.of(common.stream().reduce(this.sstart ? "/" : "",(a,b)->a + b + "/"));
+        if(other.path.size() != this.path.size())
+            return base.extend("#");
+        final int extensionCount = maxLength - common.size();
+        for(int i=0;i<extensionCount;i++) {
+            base = base.extend("+");
+        }
+        return base;
+    }
 
 
     private fURI(final String scheme, final String host, final int port, final boolean sstart, final List<String> path, final boolean send, final String query) {
@@ -245,6 +265,7 @@ public class fURI implements Cloneable {
         return new fURI(this.scheme, this.host, this.port, this.sstart && !newPath.isEmpty(), newPath, this.send && !newPath.isEmpty(),queryToString(this.query));
 
     }
+
 
     public fURI removeSubpath(final fURI subpath) {
         String newPath = this.toString();

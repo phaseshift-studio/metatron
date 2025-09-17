@@ -89,7 +89,7 @@ public class MInstSet extends MObj implements InstSet {
         this.define(MERGE_TID, LST_TID, fURI.ANY.coefficient("*"), MLst.of(), (lhs, inst) -> lhs.isPoly() ? MObjs.of(lhs.<Poly>as().elements()) : lhs);
         this.define(MERGE_TID, REC_TID, REL_TID.coefficient("*"), MLst.of(), (lhs, inst) -> lhs.isPoly() ? MObjs.of(lhs.<Poly>as().elements()) : lhs);
         this.define(AT_TID, fURI.ANY, fURI.ANY, MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> lhs.vid(inst.arg(0).uriValue()));
-        this.define(TYPE_TID, fURI.ANY, fURI.ANY, MLst.of(), (lhs, inst) -> Router.global().read(inst.arg(0).tid()).orElse(MType.of(lhs.tid())));
+        this.define(TYPE_TID, fURI.ANY, fURI.ANY, MLst.of(), (lhs, inst) -> MType.of(lhs.tid()));
         this.define(TID_TID, fURI.ANY, URI_TID, MLst.of(), (lhs, inst) -> lhs.tid().toUri());
         this.define(VID_TID, fURI.ANY, URI_TID, MLst.of(), (lhs, inst) -> lhs.vid().toUri());
         this.define(MAP_TID, fURI.ANY, fURI.ANY, MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> inst.arg(0));

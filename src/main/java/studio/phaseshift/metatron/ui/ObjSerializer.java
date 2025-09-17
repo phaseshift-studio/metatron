@@ -18,11 +18,96 @@
 
 package studio.phaseshift.metatron.ui;
 
-import studio.phaseshift.metatron.lang.obj.Obj;
+import studio.phaseshift.metatron.lang.obj.*;
+import studio.phaseshift.metatron.util.MTronException;
 
 public interface ObjSerializer<T> {
 
-    T write(final Obj obj) throws IllegalStateException;
+    T write(final Obj obj) throws MTronException;
 
-    Obj read(final T data) throws IllegalStateException;
+    Obj read(final T data) throws MTronException;
+
+    /// //////////////////////////////
+
+    default T writeBool(final Bool b) {
+        return this.write(b);
+    }
+    
+    default T writeInt(final Int i) {
+        return this.write(i);
+    }
+
+    default T writeReal(final Real r) {
+        return this.write(r);
+    }
+
+    default T writeStr(final Str s) {
+        return this.write(s);
+    }
+
+    default T writeUri(final Uri u) {
+        return this.write(u);
+    }
+
+    default T writeRel(final Rel r) {
+        return this.write(r);
+    }
+
+    default T writeLst(final Lst l) {
+        return this.write(l);
+    }
+
+    default T writeRec(final Rec r) {
+        return this.write(r);
+    }
+    
+    default T writeInst(final Inst i) {
+        return this.write(i);
+    }
+
+    default T writeCode(final Code c) {
+        return this.write(c);
+    }
+
+    /// ////////////////////////////////
+
+    default Bool readBool(final T t) {
+        return (Bool) this.read(t);
+    }
+
+    default Int writeInt(final T t) {
+        return (Int) this.read(t);
+    }
+
+    default Real writeReal(final T t) {
+        return (Real) this.read(t);
+    }
+
+    default Str writeStr(final T t) {
+        return (Str) this.read(t);
+    }
+
+    default Uri writeUri(final T t) {
+        return (Uri) this.read(t);
+    }
+
+    default Rel writeRel(final T t) {
+        return (Rel) this.read(t);
+    }
+
+    default Lst writeLst(final T t) {
+        return (Lst) this.read(t);
+    }
+
+    default Rec writeRec(final T t) {
+        return (Rec) this.read(t);
+    }
+
+    default Inst writeInst(final T t) {
+        return (Inst) this.read(t);
+    }
+
+    default Code writeCode(final T t) {
+        return (Code) this.read(t);
+    }
 }

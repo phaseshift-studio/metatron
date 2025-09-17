@@ -23,9 +23,13 @@ import studio.phaseshift.metatron.lang.obj.Obj;
 import studio.phaseshift.metatron.lang.obj.Objs;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
+import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.Collection;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import static studio.phaseshift.metatron.lang.obj.mtron.MInstSet.OBJS_TID;
 
@@ -42,6 +46,26 @@ public class MObjs extends MObj implements Objs {
     public MObjs(final Iterable<Obj> value) {
         this(value, OBJS_TID, fURI.NULL);
     }
+
+    @Override
+    public fURI tid() {
+        Set<fURI> types = IteratorUtil.stream(this.value()).map(Obj::tid).map(fURI::basePath).collect(Collectors.toSet());
+        final long count = IteratorUtil.count(this.value());
+        if(types.isEmpty() || 0 == count) return super.tid.coefficient("0");
+        if(types.size() == 1) return types.iterator().next().coefficient(Long.toString(count));
+        final fURI temp = types.stream().reduce(fURI::commonRoot).get();
+        return temp.coefficient(""+count);
+    }
+
+    @Override
+    public boolean equals(final Object other) {
+        return this.toString().equals(other.toString()); // TODO: VERY BAD -- something is weird about the tid string encoding (hidden characters??)
+        /*this.getClass().isAssignableFrom(other.getClass()) &&
+                Objects.equals(this.tid, ((Obj) other).tid()) &&
+                Objects.equals(this.vid, ((Obj) other).vid()) &&
+                Objects.equals(this.value, ((Obj) other).value());*/
+    }
+
 
     @Override
     public Objs clone(final Object value, final fURI tid, final fURI vid) {

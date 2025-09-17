@@ -16,53 +16,70 @@ public class TypeTest {
 
     @ParameterizedTest
     @CsvSource(value = {
-            // obj              | type        | matches?
-            "1                  | /mtron/int  | true",
-            "'a_string'         | /mtron/int  | false",
-            "213.0              | /mtron/int  | false",
-            "1                  | #           | true",
-            "1                  | /+/+        | true",
-            "1                  | +           | false",
-            "/mtron/int[0]::1   | [0]         | true",
-            "/mtron/int[0]::1   | +[+]        | false",
-            "1                  | /+/#        | true",
-            "int:1              | /+/#        | true",
-            "</mtron/int>::1    | /mtron/int  | true",
-            "</mtron/int>::1    | /mtron/+    | true",
-            "</mtron/int>::1    | /mtron/+/+  | false",
-            "</mtron/int>::1    | /mtron/+/#  | true",
-            "/mtron/int::1      | /mtron/int  | true",
-            "/mtron/int::1      | /mtron/+    | true",
-            "/mtron/int[2]::1   | /mtron/+    | false",
-            "/mtron/int[2]::1   | /mtron/+[*] | true",
-            "/mtron/int::1      | /mtron/+[?] | true",
-            "/mtron/int::1      | /mtron/+/+  | false",
-            "/mtron/int::1      | /mtron/+/#  | true",
-            "str::\"abc\"       | /+/+/#      | true",
-            "/abc/str::\"abc\"  | /+/+/+      | false",
-            "/mtron/int::1      | /+/+        | true",
-            "/mtron/str::'abc'  | /+/int      | false",
-            "str::'abc'         | /+/int      | false",
-            "1                  | /+/int      | true",
-            "1                  | /+/str      | false",
-            "1                  | /mtron/+    | true",
-            "1                  | /mtron/+/+  | false" },
-            delimiter = '|')
+            // obj                | type                 | matches?
+            "1                    | /mtron/int           | true",
+            "\"a_string\"         | /mtron/int           | false",
+            "213.0                | /mtron/int           | false",
+            "1                    | #                    | true",
+            "1                    | /+/+                 | true",
+            "1                    | +                    | false",
+            "/mtron/int[0]::1     | [0]                  | true",
+            "/mtron/int[0]::1     | [0,0]                | true",
+            "/mtron/int[0]::1     | +[+]                 | false",
+            "/mtron/int[0]::1     | /+/+[?]              | true",
+            "/mtron/int[0]::1     | /+/+[0,1]            | true",
+            "/mtron/int[0]::1     | /+/+[0,99]           | true",
+            "/mtron/int[0]::1     | /+/+[*]              | true",
+            "1                    | /+/#                 | true",
+            "int:1                | /+/#                 | true",
+            "</mtron/int>::1      | /mtron/int           | true",
+            "</mtron/int>::1      | /mtron/+             | true",
+            "</mtron/int>::1      | /mtron/+/+           | false",
+            "</mtron/int>::1      | /mtron/+/#           | true",
+            "/mtron/int::1        | /mtron/int           | true",
+            "/mtron/int::1        | /mtron/+             | true",
+            "/mtron/int[2]::1     | /mtron/+             | false",
+            "/mtron/int[2]::1     | /mtron/+[*]          | true",
+            "/mtron/int::1        | /mtron/+[?]          | true",
+            "/mtron/int::1        | /mtron/+/+           | false",
+            "/mtron/int::1        | /mtron/+/#           | true",
+            // NOT CONVERTING ?       "str::\"abc\"         | /+/+/#        | true",
+            "/abc/str::\"abc\"    | /+/+/+               | false",
+            "/mtron/int::1        | /+/+                 | true",
+            "/mtron/str::'abc'    | /+/int               | false",
+            "str::'abc'           | /+/int               | false",
+            "1                    | /+/int               | true",
+            "1                    | /+/str               | false",
+            "1                    | /mtron/+             | true",
+            "1                    | /mtron/+/+           | false",
+            "{1,2,3,4}            | /mtron/int[4]        | true",
+            "{1,2,3,4}            | /mtron/int[3]        | false",
+            "{1,2,3,4}            | /mtron/int[0,3]      | false",
+            "{1,2,3,4}            | /mtron/int[3]        | false",
+            "{1,2,3,4}            | /mtron/int[0,5]      | true",
+            "{1,2,3,4}            | /mtron/int[*]        | true",
+            "{1,2,3,'abc'}        | /mtron/int[*]        | false",
+            "{1,2,3,'abc'}        | /mtron/+[*]          | true",
+            "{1,2,3,4}            | /mtron/str[*]        | false"
+    }, delimiter = '|')
     public void testType(final String obj, final String typefURI, final boolean matches) {
         Obj o = ObjParser.m_obj().parse(obj).get();
         Type t = MType.of(fURI.of(typefURI.trim()));
-        LOG.debug("testing %s == %s",o,t);
+        LOG.debug("testing %s %s %s", o, matches ? "{{c}}in{{/c}}" : "{{c}}not in{{/c}}", t);
         assertEquals(matches, o.matches(t));
+        if (!typefURI.startsWith("#") && !o.isNoObj())
+            this.testType(obj, fURI.of("#[" + o.tid().coefficientValue() + "]").toString(), !o.isNoObj());
+
     }
 
     @ParameterizedTest
     @CsvSource(value = {
-            // obj      | type             | matches?
-            "1          | 1                | true",
-            "'a_string' | 1                | false",
-            "213.0      | 1                | false",
-            "1          | 1                | true" },
-          //  "1          | int^:is(gt(0))   | false"},
+            // obj        | type               | matches?
+            "1            | 1                  | true",
+            "'a_string'   | 1                  | false",
+            "213.0        | 1                  | false",
+            "1            | 1                  | true"},
+            //  "1            | int^:is(gt(0))     | false"},
             delimiter = '|')
     public void testTypeObj(final String obj, final String type, final boolean matches) {
         Obj o = ObjParser.m_obj().parse(obj).get();

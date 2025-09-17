@@ -19,6 +19,7 @@
 package studio.phaseshift.metatron.lang.obj;
 
 import studio.phaseshift.metatron.lang.fURI;
+import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.Collection;
@@ -30,6 +31,9 @@ public interface Objs extends Obj {
 
     @Override
     Iterable<Obj> value();
+
+    @Override
+    fURI tid();
 
     @Override
     default Objs append(final Obj obj){

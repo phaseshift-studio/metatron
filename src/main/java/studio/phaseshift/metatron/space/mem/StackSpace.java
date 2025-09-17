@@ -10,6 +10,7 @@ import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
 import studio.phaseshift.metatron.util.ObjUtil;
 
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.Map;
@@ -18,10 +19,12 @@ public class StackSpace extends MObj implements Space {
 
     private static final GraphittyLogger LOG = Graphitty.log(StackSpace.class);
     private final fURI pattern;
+    private final MemSpace root;
 
     public StackSpace(final fURI pattern, final fURI vid) {
         super(new LinkedList<>(), fURI.of("/mtron/space/stack"), vid);
         this.pattern = pattern;
+        this.root = new MemSpace(this.pattern,fURI.of("/mtron/space/stack/root"));
     }
 
 
@@ -37,20 +40,19 @@ public class StackSpace extends MObj implements Space {
 
     @Override
     public Obj read(final fURI vid) {
-        LOG.trace("searching for %s in %s", vid, this.value);
-        if (this.value().isEmpty())
-            return NoObj.single();
+        LOG.trace("searching for %s in %s [%s]", vid, this.value, this.root.store);
         for (final Map<fURI, Obj> layer : this.value()) {
             final Obj o = layer.get(vid.basePath());
             if (null != o)
                 return o;
         }
-        return NoObj.single();
+        return this.root.read(vid);
     }
 
     @Override
     public Obj write(final fURI vid, final Obj obj) {
         this.value().get(0).put(vid, obj);
+        this.root.write(vid,obj);
         return obj;
     }
 

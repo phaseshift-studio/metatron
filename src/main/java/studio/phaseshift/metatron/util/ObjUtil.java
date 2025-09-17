@@ -75,4 +75,8 @@ public final class ObjUtil {
     public static String objToString(final Obj obj) {
         return Graphitty.string(obj);
     }
+
+    public static boolean isNoObj(final Object object) {
+        return null == object || object instanceof NoObj;
+    }
 }

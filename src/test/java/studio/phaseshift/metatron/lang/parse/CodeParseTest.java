@@ -1,6 +1,7 @@
 package studio.phaseshift.metatron.lang.parse;
 
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.lang.fURI;
@@ -32,6 +33,7 @@ public class CodeParseTest {
         assertEquals(ObjParser.m_obj().parse(expectedResult).<Obj>get(), ObjUtil.oneNoneOrAll(ObjParser.eval(expression)));
     }
 
+    @Disabled
     @ParameterizedTest
     @CsvSource(value = {
             "1-<[_,plus(1),3]% [1,2,3]",

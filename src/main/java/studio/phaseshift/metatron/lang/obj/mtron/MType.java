@@ -29,6 +29,6 @@ public class MType extends MObj implements Type {
     }
 
     public static MType of(final fURI tid) {
-        return new MType(NoObj.single(), tid);
+        return new MType(null, tid);
     }
 }
