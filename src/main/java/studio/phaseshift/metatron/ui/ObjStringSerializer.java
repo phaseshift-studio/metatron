@@ -93,7 +93,7 @@ public class ObjStringSerializer implements ObjSerializer<String> {
                 sb.append(o).append(this.b.palette.formC()).append(',');
             }
             if (found) sb.deleteCharAt(sb.length()-1);
-            else sb.append(this.b.palette.formC()).append('}');
+            sb.append(this.b.palette.formC()).append('}');
             return generateVID(sb, objs).append(this.b.ignoreRewrites ? "" : "{{X}}").toString();
         } else if (obj instanceof final Rec rec) {
             if(this.b.prettyPrint && rec.count() > 1) {

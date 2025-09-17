@@ -111,12 +111,12 @@ public class ObjParser {
 
         inst_parser.set(seq(
                 choice(m_inst_furi(), m_type_prefix_opt_colon(INST_TID)), // 0 inst_tid
-                seq(of('(').trim(), rec_internal().or(lst_internal()), of(')').trim()).pick(1), // 1 inst_args
+                seq(of('(').trim(), choice(rec_internal(), lst_internal(), of("")), of(')').trim()).pick(1), // 1 inst_args
                 opt(seq(of('{').trim(), m_code(), of('}').trim()).pick(1), null)) //  inst_code
                 // inst_seed []
                 .map(t -> {
                     return (Inst) new MInst(new Triplet<>(
-                            pick(t, 1) instanceof List ?
+                            pick(t, 1).equals("") ? MLst.of() : pick(t, 1) instanceof List ?
                                     MLst.of(ObjParser.<List<Obj>>pick(t, 1)) :
                                     MRec.of(ObjParser.<Map<Obj, Obj>>pick(t, 1)),
                             Inst.f.of(ObjParser.<Obj>pick(t, 2)),
