@@ -144,13 +144,17 @@ public class MMonoid extends MObj implements Monoid {
                     LOG.trace("{{m}}=>{{/m}} processing barrier monad %s", barrier);
                     final Inst nextInst = code.next(barrier.inst());
                     final Obj result = barrier.inst().apply(barrier.obj());
-                    if (barrier.inst().isScatter())
+                    if (nextInst.dom().tid().coefficientValue().isOne())
                         result.forEach(o -> {
                             LOG.trace("{{m}}==>{{/m}} scattering output barrier obj %s", o);
                             this.running().<LinkedList<Monad>>valueAs().add(MMonad.of(this, o, nextInst));
                         });
-                    else
+                    else if (nextInst.dom().tid().coefficientValue().isZero()) {
+                        this.running().<LinkedList<Monad>>valueAs().add(MMonad.of(this, NoObj.single(), nextInst));
+                    } else {
+                        LOG.trace("{{m}}==>{{/m}} passing output barrier obj %s", result);
                         this.running().<LinkedList<Monad>>valueAs().add(MMonad.of(this, result, nextInst));
+                    }
                 }
             } else {
                 LOG.trace("{{b}}monad {{g}}processing completed{{X}}");

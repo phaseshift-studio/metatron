@@ -46,11 +46,19 @@ public class MRec extends MObj implements Rec {
         return (Map<Obj, Obj>) this.value;
     }
 
-    public static Rec of(final Map<Obj,Obj> value) {
+    public static Rec of(final Map<Obj, Obj> value) {
         return new MRec(value);
     }
 
-    public static Rec of() {
-        return new MRec(new LinkedHashMap<>());
+    public static Rec of(final Map<Obj, Obj> value, final fURI tid) {
+        return new MRec(value, tid, fURI.NULL);
+    }
+
+    public static Rec of(final Obj... kv) {
+        final Map<Obj, Obj> map = new LinkedHashMap<>();
+        for (int i = 0; i < kv.length; i = i + 2) {
+            map.put(kv[i], kv[i + 1]);
+        }
+        return MRec.of(map);
     }
 }

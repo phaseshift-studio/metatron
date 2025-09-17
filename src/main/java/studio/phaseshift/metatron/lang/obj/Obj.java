@@ -30,6 +30,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
@@ -57,8 +58,8 @@ public interface Obj extends Function<Obj, Obj>, Iterable<Obj> {
         return this.value();
     }
 
-    default Stream<Obj> stream() {
-        return this.isNoObj() ? Stream.of(NoObj.single()) : IteratorUtil.stream(this);
+    default <O extends Obj> Stream<O> stream() {
+        return this.isNoObj() ? Stream.of((O)NoObj.single()) : (Stream<O>) IteratorUtil.stream(this);
     }
 
     default Obj tid(final fURI newTid) {
@@ -71,6 +72,10 @@ public interface Obj extends Function<Obj, Obj>, Iterable<Obj> {
 
     default Obj vid(final fURI newVid) {
         return this.clone(this.value(), this.tid(), newVid);
+    }
+
+    default boolean inSpace() {
+        return null != this.vid();
     }
 
     default Objs append(final Obj obj) {
@@ -125,6 +130,10 @@ public interface Obj extends Function<Obj, Obj>, Iterable<Obj> {
         if (this.isNoObj())
             throw e;
         return (O) this;
+    }
+
+    default <O extends Obj> O choose(final Predicate<Obj> predicate, final Function<Obj,O> trueBranch, final Function<Obj,O> falseBranch) {
+        return predicate.test(this) ? trueBranch.apply(this) : falseBranch.apply(this);
     }
 
     default <O extends Obj> O as() {

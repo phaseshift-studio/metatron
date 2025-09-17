@@ -25,11 +25,13 @@ import studio.phaseshift.metatron.space.Router;
 import studio.phaseshift.metatron.space.Space;
 import studio.phaseshift.metatron.space.mem.MemRouter;
 import studio.phaseshift.metatron.space.mem.MemSpace;
+import studio.phaseshift.metatron.space.mem.StackSpace;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.Stack;
 
 public class BootLoader {
 
@@ -48,11 +50,16 @@ public class BootLoader {
         }
         final Space mnt = new MemSpace(fURI.of("/mnt/#"), fURI.of("/mnt"));
         final Space sys = new MemSpace(fURI.of("/sys/#"), fURI.of("/mnt/sys"));
+        final Space stk = Router.stack();
+        final Space mtron = new MemSpace(fURI.of("/mtron/#"), fURI.of("/mnt/lang/mtron"));
         // final Router router = (ROUTER = new MemRouter(fURI.of("/sys/router")));
-        Router.global().registerStruct(mnt);
-        Router.global().registerStruct(sys);
+        Router.global().registerSpace(mnt);
+        Router.global().registerSpace(sys);
+        Router.global().registerSpace(stk);
+        Router.global().registerSpace(mtron);
+
       //  Router.global().registerStruct(new MemSpace(fURI.of("/mtron/#"), fURI.of("/mnt/lang/mtron")));
-        Router.global().registerStruct(new MemSpace(fURI.of("#"), fURI.of("/sys/stack")));
+      //  Router.global().registerSpace(new MemSpace(fURI.of("#"), fURI.of("/sys/stack")));
       //  Router.global().registerStruct(new MemSpace(fURI.of("/test/#"), fURI.of("/sys/test")));
         //Router.global().registerStruct(new MqttSpace(Map.of(new MUri("broker"), new MUri("ip://192.168.66.2:1883"), new MUri("pattern"), new MUri("/mqtt/#")), MQTT_TID, fURI.of("/mnt/mqtt")));
         // Router.global().registerStruct(new MqttSpace(Map.of(new MUri("broker"), new MUri("ip://192.168.66.2:1883"), new MUri("pattern"), new MUri("zigbee2mqtt/#")), MQTT_TID, fURI.of("/mnt/zigbee2mqtt")));

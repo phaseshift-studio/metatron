@@ -107,6 +107,10 @@ public class fURI implements Cloneable {
         this.path = Arrays.asList(uri.substring(position).split("/"));
     }
 
+    public static fURI dotPath(final String uri) {
+        return fURI.of(uri.replace('.','/'));
+    }
+
     public static fURI of(final String uri) {
         return new fURI(uri);
     }
@@ -305,11 +309,12 @@ public class fURI implements Cloneable {
             String last = segments.remove(segments.size() - 1);
             segments.add(last.substring(0, last.indexOf("[")));
             return new fURI(this.scheme, this.host, this.port, this.sstart, segments, this.send, this.query);
+        } else {
+            final List<String> segments = new ArrayList<String>(this.coefficient(null).path);
+            String last = segments.isEmpty() ? "" : segments.remove(segments.size() - 1);
+            segments.add(last + "[" + MCoeff.Int.of(coefficient) + "]");
+            return new fURI(this.scheme, this.host, this.port, this.sstart, segments, this.send, this.query);
         }
-        final List<String> segments = new ArrayList<String>(this.path);
-        String last = segments.isEmpty() ? "" : segments.remove(segments.size() - 1);
-        segments.add(last + "[" + MCoeff.Int.of(coefficient) + "]");
-        return new fURI(this.scheme, this.host, this.port, this.sstart, segments, this.send, this.query);
     }
 
     public MCoeff.Int coefficientValue() {

@@ -21,22 +21,20 @@ package studio.phaseshift.metatron.lang.obj;
 import org.javatuples.Triplet;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.base.furi.TypefURI;
-import studio.phaseshift.metatron.lang.obj.mtron.MRel;
-import studio.phaseshift.metatron.lang.obj.mtron.MType;
 import studio.phaseshift.metatron.lang.obj.mtron.MInstSet;
+import studio.phaseshift.metatron.lang.obj.mtron.MLst;
+import studio.phaseshift.metatron.lang.obj.mtron.MRec;
+import studio.phaseshift.metatron.lang.obj.mtron.MType;
 import studio.phaseshift.metatron.space.Router;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.function.Function;
-
-import static studio.phaseshift.metatron.lang.obj.mtron.MInstSet.LST_TID;
+import java.util.stream.Collectors;
 
 public interface Inst extends Obj {
 
@@ -67,13 +65,13 @@ public interface Inst extends Obj {
 
     @Override
     default Type dom() {
-        return MType.of(Router.global().read(TypefURI.dom(this.tid())),TypefURI.dom(this.tid())).orElseGet(() -> MType.of(TypefURI.dom(this.tid())));
+        return MType.of(Router.global().read(TypefURI.dom(this.tid())), TypefURI.dom(this.tid())).orElseGet(() -> MType.of(TypefURI.dom(this.tid())));
     }
 
     @Override
     default Type rng() {
         final fURI range = TypefURI.rng(this.tid());
-        return range.equals(fURI.ANY) ? MType.of(range) : MType.of(Router.global().read(range),TypefURI.rng(this.tid())).orElseGet(() -> MType.of(TypefURI.rng(this.tid())));
+        return range.equals(fURI.ANY) ? MType.of(range) : MType.of(Router.global().read(range), TypefURI.rng(this.tid())).orElseGet(() -> MType.of(TypefURI.rng(this.tid())));
     }
 
     default Poly args() {
@@ -119,11 +117,10 @@ public interface Inst extends Obj {
                 final boolean blocking = this.tid().equals(MInstSet.BLOCK_TID) || this.tid().equals(MInstSet.WITHIN_TID);
                 if (!blocking && !lhs.matches(this.dom()))
                     throw MTronException.of("lhs obj does not match inst domain: %s: %s {{r}}-/>{{/r}} %s", this, lhs, this.dom());
-                final List<Obj> cargs = new ArrayList<>();
-                for (final Obj arg : args().elements()) {
-                    cargs.add(blocking ? arg : arg.apply(lhs));
-                }
-                final Inst resolved = (Inst) this.value(Triplet.with(this.args().clone(cargs, LST_TID, fURI.NULL), this.f(), this.seed()));
+                final Poly cargs = this.args().isLst() ?
+                        MLst.of(this.args().lstValue().stream().map(arg -> blocking ? arg : arg.apply(lhs)).toList()) :
+                        MRec.of(this.args().recValue().entrySet().stream().map(kv -> List.of(kv.getKey(), blocking ? kv.getValue() : kv.getValue().apply(lhs))).collect(Collectors.toMap(kv -> kv.get(0), kv -> kv.get(1))));
+                final Inst resolved = (Inst) this.value(Triplet.with(cargs, this.f(), this.seed()));
                 LOG.trace("resolution ({{m}}%s {{g}}=>{{/g}} %s{{/m}}): %s", currentResolution, resolved.resolution(), resolved);
                 return resolved;
             }
@@ -133,9 +130,11 @@ public interface Inst extends Obj {
     @Override
     default Obj apply(final Obj lhs) {
         final Inst cinst = this.resolve(Resolve.C, lhs);
+        Router.stack().push(cinst.args());
         final Obj rhs = cinst.f().apply(lhs, cinst);
+        Router.stack().pop();
         if (!rhs.matches(cinst.rng()))
-            throw MTronException.of("rhs obj does not match inst range: %s: %s {{r}}-/>{{/r}} %s",this, rhs, cinst.rng());
+            throw MTronException.of("{{m}}rhs obj{{/m}} (%s) does not match {{m}}inst range{{/m}} (%s): %s", rhs, cinst.rng(), this);
         return rhs;
     }
 
@@ -150,6 +149,11 @@ public interface Inst extends Obj {
     default boolean isInitial() {
         return this.dom().tid().coefficientValue().isZero();
     }
+
+    default boolean isTerminal() {
+        return this.rng().tid().coefficientValue().isZero();
+    }
+
 
     final class f {
         public enum Form {

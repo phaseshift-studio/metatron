@@ -24,15 +24,17 @@ import studio.phaseshift.metatron.lang.obj.*;
 import studio.phaseshift.metatron.lang.obj.base.furi.TypefURI;
 import studio.phaseshift.metatron.space.Router;
 import studio.phaseshift.metatron.util.IteratorUtil;
+import studio.phaseshift.metatron.util.MTronException;
 
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.function.BiFunction;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class MInstSet extends MObj implements InstSet {
+
+    public static final fURI MTRON_TID = fURI.of("/mtron");
+
 
     public static final fURI BOOL_TID = fURI.of("/mtron/bool");
     public static final fURI INT_TID = fURI.of("/mtron/int");
@@ -46,46 +48,49 @@ public class MInstSet extends MObj implements InstSet {
     public static final fURI CODE_TID = fURI.of("/mtron/code");
     public static final fURI OBJS_TID = fURI.of("/mtron/objs");
     public static final fURI NOOBJ_REF_TID = fURI.of("/mtron/noobj");
-    public static final fURI NOOBJ_TID = fURI.of("");
+    public static final fURI NOOBJ_TID = fURI.of("/mtron/noobj");
 
     public static final fURI TID = fURI.of("/mtron/core");
-    public static final fURI ID_TID = fURI.of("id");
-    public static final fURI START_TID = fURI.of("start");
-    public static final fURI COUNT_TID = fURI.of("count");
-    public static final fURI SUM_TID = fURI.of("sum");
-    public static final fURI PROD_TID = fURI.of("prod");
-    public static final fURI REDUCE_TID = fURI.of("reduce");
-    public static final fURI MULT_TID = fURI.of("mult");
-    public static final fURI PLUS_TID = fURI.of("plus");
-    public static final fURI MAP_TID = fURI.of("map");
-    public static final fURI TO_TID = fURI.of("to");
-    public static final fURI FROM_TID = fURI.of("from");
-    public static final fURI REF_TID = fURI.of("ref");
-    public static final fURI SPLIT_TID = fURI.of("split");
-    public static final fURI MERGE_TID = fURI.of("merge");
-    public static final fURI WITHIN_TID = fURI.of("within");
-    public static final fURI BLOCK_TID = fURI.of("block");
-    public static final fURI RNG_TID = fURI.of("rng");
-    public static final fURI DOM_TID = fURI.of("dom");
-    public static final fURI TID_TID = fURI.of("tid");
-    public static final fURI VID_TID = fURI.of("vid");
-    public static final fURI TYPE_TID = fURI.of("type");
-    public static final fURI AT_TID = fURI.of("at");
-    public static final fURI IS_TID = fURI.of("is");
-    public static final fURI EQ_TID = fURI.of("eq");
-    public static final fURI NEQ_TID = fURI.of("neq");
-    public static final fURI GT_TID = fURI.of("gt");
-    public static final fURI LT_TID = fURI.of("lt");
-    public static final fURI GTE_TID = fURI.of("gte");
-    public static final fURI LTE_TID = fURI.of("lte");
+    public static final fURI ID_TID = INST_TID.extend("id");
+    public static final fURI START_TID = INST_TID.extend("start");
+    public static final fURI COUNT_TID = INST_TID.extend("count");
+    public static final fURI SUM_TID = INST_TID.extend("sum");
+    public static final fURI PROD_TID = INST_TID.extend("prod");
+    public static final fURI REDUCE_TID = INST_TID.extend("reduce");
+    public static final fURI MULT_TID = INST_TID.extend("mult");
+    public static final fURI PLUS_TID = INST_TID.extend("plus");
+    public static final fURI MAP_TID = INST_TID.extend("map");
+    public static final fURI TO_TID = INST_TID.extend("to");
+    public static final fURI FROM_TID = INST_TID.extend("from");
+    public static final fURI REF_TID = INST_TID.extend("ref");
+    public static final fURI SPLIT_TID = INST_TID.extend("split");
+    public static final fURI MERGE_TID = INST_TID.extend("merge");
+    public static final fURI WITHIN_TID = INST_TID.extend("within");
+    public static final fURI BLOCK_TID = INST_TID.extend("block");
+    public static final fURI RNG_TID = INST_TID.extend("rng");
+    public static final fURI DOM_TID = INST_TID.extend("dom");
+    public static final fURI TID_TID = INST_TID.extend("tid");
+    public static final fURI VID_TID = INST_TID.extend("vid");
+    public static final fURI TYPE_TID = INST_TID.extend("type");
+    public static final fURI AT_TID = INST_TID.extend("at");
+    public static final fURI IS_TID = INST_TID.extend("is");
+    public static final fURI EQ_TID = INST_TID.extend("eq");
+    public static final fURI NEQ_TID = INST_TID.extend("neq");
+    public static final fURI GT_TID = INST_TID.extend("gt");
+    public static final fURI LT_TID = INST_TID.extend("lt");
+    public static final fURI GTE_TID = INST_TID.extend("gte");
+    public static final fURI LTE_TID = INST_TID.extend("lte");
+    public static final fURI BARRIER_TID = INST_TID.extend("barrier");
 
     // inst_tid -> <inst_tid_dom -> set<inst>>
     private static final Map<fURI, Map<fURI, Set<Inst>>> SYMBOL_TABLE = new LinkedHashMap<>();
 
     public void load() {
+        this.define(BARRIER_TID, fURI.ANY.coefficient("*"), fURI.ANY.coefficient("*"), MRec.of(MType.of(CODE_TID), MInst.instA(ID_TID)), (lhs, inst) -> inst.arg(0).apply(lhs), MObjs.of(List.of()));
         this.define(MERGE_TID, LST_TID, fURI.ANY.coefficient("*"), MLst.of(), (lhs, inst) -> lhs.isPoly() ? MObjs.of(lhs.<Poly>as().elements()) : lhs);
+        this.define(MERGE_TID, REC_TID, REL_TID.coefficient("*"), MLst.of(), (lhs, inst) -> lhs.isPoly() ? MObjs.of(lhs.<Poly>as().elements()) : lhs);
         this.define(AT_TID, fURI.ANY, fURI.ANY, MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> lhs.vid(inst.arg(0).uriValue()));
-        this.define(TYPE_TID, fURI.ANY, URI_TID, MLst.of(), (lhs, inst) -> Router.global().read(inst.arg(0).tid()).orElse(new MObj(null, lhs.tid(), lhs.tid())));
+        this.define(TYPE_TID, fURI.ANY, fURI.ANY, MLst.of(), (lhs, inst) -> Router.global().read(inst.arg(0).tid()).orElse(MType.of(lhs.tid())));
         this.define(TID_TID, fURI.ANY, URI_TID, MLst.of(), (lhs, inst) -> lhs.tid().toUri());
         this.define(VID_TID, fURI.ANY, URI_TID, MLst.of(), (lhs, inst) -> lhs.vid().toUri());
         this.define(MAP_TID, fURI.ANY, fURI.ANY, MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> inst.arg(0));
@@ -100,13 +105,13 @@ public class MInstSet extends MObj implements InstSet {
         this.define(FROM_TID, fURI.ANY, fURI.ANY, MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> Router.global().read(inst.arg(0).uriValue()));
         this.define(REF_TID, fURI.ANY, fURI.ANY, MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> Router.global().write(lhs.uriValue(), inst.arg(0)));
         this.define(ID_TID, fURI.ANY, fURI.ANY, MLst.of(), (lhs, inst) -> lhs);
-        this.define(START_TID, fURI.of("").coefficient("0"), fURI.ANY.coefficient("*"), MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> inst.arg(0));
+        this.define(START_TID, NOOBJ_TID.coefficient("0"), fURI.ANY.coefficient("*"), MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> inst.arg(0));
         this.define(PLUS_TID, BOOL_TID, BOOL_TID, MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> lhs.value(lhs.boolValue() || inst.arg(0).boolValue()));
         this.define(PLUS_TID, INT_TID, INT_TID, MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> lhs.value(lhs.intValue() + inst.arg(0).intValue()));
         this.define(PLUS_TID, REAL_TID, REAL_TID, MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> lhs.value(lhs.realValue() + inst.arg(0).realValue()));
         this.define(PLUS_TID, STR_TID, STR_TID, MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> lhs.value(lhs.strValue() + inst.arg(0).strValue()));
         this.define(PLUS_TID, URI_TID, URI_TID, MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> lhs.value(lhs.uriValue().extend(inst.arg(0).uriValue())));
-        this.define(PLUS_TID, LST_TID, LST_TID, MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> lhs.value(Stream.concat(lhs.lstValue().stream(),inst.arg(0).lstValue().stream()).toList()));
+        this.define(PLUS_TID, LST_TID, LST_TID, MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> lhs.value(Stream.concat(lhs.lstValue().stream(), inst.arg(0).lstValue().stream()).toList()));
         this.define(MULT_TID, INT_TID, INT_TID, MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> lhs.value(lhs.intValue() * inst.arg(0).intValue()));
         this.define(MULT_TID, REAL_TID, REAL_TID, MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> lhs.value(lhs.realValue() * inst.arg(0).realValue()));
         this.define(MULT_TID, URI_TID, URI_TID, MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> lhs.value(lhs.uriValue().retractPattern().extend(inst.arg(0).uriValue())));
@@ -123,9 +128,23 @@ public class MInstSet extends MObj implements InstSet {
         this.define(LTE_TID, INT_TID, BOOL_TID, MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> MBool.of(lhs.intValue() <= inst.arg(0).intValue()));
         this.define(LTE_TID, INT_TID, BOOL_TID, MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> MBool.of(lhs.intValue() <= inst.arg(0).intValue()));
         this.define(WITHIN_TID, fURI.ANY, fURI.ANY, MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> MLst.of(lhs.<Poly>as().stream().map(o -> MMonoid.of(inst.arg(0).as()).apply(o)).toList()));
-        this.define(SPLIT_TID, fURI.ANY, fURI.ANY, MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> MLst.of(inst.arg(0).lstValue().stream().map(e -> e.apply(lhs)).toList()));
-        this.define(COUNT_TID,fURI.ANY.coefficient("*"),INT_TID,MLst.of(),(lhs, inst)-> MInt.of(IteratorUtil.count(lhs.iterator())), MInt.of(0));
-        this.define(SUM_TID,INT_TID.coefficient("*"),INT_TID,MLst.of(),(lhs, inst)-> IteratorUtil.stream(lhs.iterator()).reduce(inst.seed(), (a,b)-> MInst.instB(PLUS_TID,MLst.of(b)).apply(a)), MInt.of(0));
+        this.define(SPLIT_TID, fURI.ANY, fURI.ANY, MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> {
+            if (inst.arg(0).isLst()) {
+                return MLst.of(inst.arg(0).<Poly>as().stream().map(e -> e.apply(lhs)).toList());
+            } else if (inst.arg(0).isRec()) {
+                return MRec.of(inst.arg(0).<Rec>as().stream()
+                        .map(e -> e.first().apply(lhs).<Rel>choose(Obj::isNoObj, null, x -> MRel.of(x, e.second().apply(x))))
+                        .filter(x -> !Objects.isNull(x))
+                        .collect(Collectors.toMap(a -> a.<Rel>as().first(), b -> b.<Rel>as().second())));
+            } else if (inst.arg(0).isRel()) {
+                return MRel.of(inst.arg(0).<Rel>as().first().apply(lhs), inst.arg(0).<Rel>as().second().apply(lhs));
+            } else {
+                throw MTronException.of("not a poly: %s", inst.arg(0));
+            }
+
+        });
+        this.define(COUNT_TID, fURI.ANY.coefficient("*"), INT_TID, MLst.of(), (lhs, inst) -> MInt.of(IteratorUtil.count(lhs.iterator())), MInt.of(0));
+        this.define(SUM_TID, INT_TID.coefficient("*"), INT_TID, MLst.of(), (lhs, inst) -> IteratorUtil.stream(lhs.iterator()).reduce(inst.seed(), (a, b) -> MInst.instB(PLUS_TID, MLst.of(b)).apply(a)), MInt.of(0));
         this.store();
     }
 
@@ -145,7 +164,7 @@ public class MInstSet extends MObj implements InstSet {
 
 
     protected MInstSet define(final fURI tid, final fURI domain, final fURI range, final Poly args, final BiFunction<Obj, Inst, Obj> f) {
-        return this.define(tid,domain,range,args,f,NoObj.single());
+        return this.define(tid, domain, range, args, f, NoObj.single());
     }
 
     protected MInstSet define(final fURI tid, final fURI domain, final fURI range, final Poly args, final BiFunction<Obj, Inst, Obj> f, final Obj seed) {
@@ -154,7 +173,7 @@ public class MInstSet extends MObj implements InstSet {
                 .computeIfAbsent(domain, k -> new LinkedHashSet<>())
                 .add(MInst.instC(tid
                         .query(fURI.DOM, TypefURI.orNone(domain))
-                        .query(fURI.RNG, TypefURI.orNone(range)), args, f,seed));
+                        .query(fURI.RNG, TypefURI.orNone(range)), args, f, seed));
         return this;
     }
 

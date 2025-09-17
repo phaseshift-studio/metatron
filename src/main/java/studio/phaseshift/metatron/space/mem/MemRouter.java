@@ -46,7 +46,7 @@ public class MemRouter implements Router {
         LOG.info("%s loaded at %s", this.tid().toUri(true), this.vid.toUri(true));
     }
 
-    public void registerStruct(final Space space) {
+    public void registerSpace(final Space space) {
         this.routes.entrySet().stream()
                 .filter(kv -> space.pattern().matches(kv.getKey()))
                 .findAny()
@@ -74,7 +74,7 @@ public class MemRouter implements Router {
         if (vid.equals(this.vid))
             return this;
         final Space space = this.getStruct(vid);
-        LOG.trace("reading %s at %s", space, vid);
+        LOG.trace("reading %s at %s => %s", space, vid, space.value());
         return space.read(vid);
     }
 
@@ -86,7 +86,7 @@ public class MemRouter implements Router {
     }
 
     @Override
-    public boolean hasStruct(final fURI vid) {
+    public boolean hasSpaceFor(final fURI vid) {
         return this.routes.entrySet().stream()
                 .filter(kv -> vid.matches(kv.getKey()))
                 .findAny().isPresent();

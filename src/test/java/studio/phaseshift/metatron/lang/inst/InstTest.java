@@ -6,7 +6,6 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.Inst;
-import studio.phaseshift.metatron.lang.obj.NoObj;
 import studio.phaseshift.metatron.lang.obj.mtron.MInst;
 import studio.phaseshift.metatron.lang.obj.mtron.MInt;
 import studio.phaseshift.metatron.lang.obj.mtron.MInstSet;
@@ -23,7 +22,7 @@ public class InstTest {
     @BeforeAll
     public static void loadInstructionSets() {
         final Space space = new MemSpace(fURI.ANY,fURI.NULL);
-        Router.global().registerStruct(space);
+        Router.global().registerSpace(space);
         new MInstSet().load();
        //if(true) {
        //     System.out.println(space.read("/mtron/int"));

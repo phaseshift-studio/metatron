@@ -21,16 +21,21 @@ package studio.phaseshift.metatron.space;
 import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.Obj;
-import studio.phaseshift.metatron.lang.obj.Objs;
+import studio.phaseshift.metatron.space.mem.StackSpace;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.Palette;
 
 public interface Router extends Obj {
 
     fURI ROUTER_TID = fURI.of("router");
+    public static final ThreadLocal<StackSpace> stack =   ThreadLocal.withInitial(() -> new StackSpace(fURI.of("+"),Router.global().tid().extend("/stack")));
 
     static Router global() {
         return BootLoader.ROUTER;
+    }
+
+    static StackSpace stack() {
+        return stack.get();
     }
 
     @Override
@@ -44,9 +49,9 @@ public interface Router extends Obj {
 
     Obj write(final fURI vid, final Obj obj);
 
-    boolean hasStruct(final fURI vid);
+    boolean hasSpaceFor(final fURI vid);
 
-    void registerStruct(final Space space);
+    void registerSpace(final Space space);
 
     default String toString(final Palette palette) {
         return Graphitty.string("!b%s!g:[!yrouter!g]!!".formatted(this.tid().toString()));

@@ -22,8 +22,10 @@ package studio.phaseshift.metatron.lang.obj;
 import org.javatuples.Pair;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.mtron.MRel;
+import studio.phaseshift.metatron.util.IteratorUtil;
 
 import java.util.Map;
+import java.util.stream.Stream;
 
 public interface Rec extends Poly {
 
@@ -36,6 +38,11 @@ public interface Rec extends Poly {
     @Override
     default long count() {
         return this.value().size();
+    }
+
+    @Override
+    default Stream<Rel> stream() {
+        return IteratorUtil.stream(this.elements());
     }
 
     @Override

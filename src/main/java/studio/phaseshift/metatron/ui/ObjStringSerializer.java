@@ -53,10 +53,15 @@ public class ObjStringSerializer implements ObjSerializer<String> {
                     .append(this.b.palette.formC())
                     .append(this.b.hideTypes.contains(inst.tid()) ? "" : "::")
                     .append("(");
-            for (int i = 0; i < inst.args().count(); i++) {
-                sb.append(inst.args().lstValue().get(i));
-                if (i != inst.args().count() - 1)
+            if(!inst.args().isEmpty()) {
+                boolean isLst = inst.args().isLst();
+                for (final Obj kv : inst.args().elements()) {
+                    sb.append(isLst ? kv : kv.<Rel>as().first());
+                    if (!isLst)
+                        sb.append(this.b.palette.formC()).append("=>").append(kv.<Rel>as().second());
                     sb.append(this.b.palette.formC()).append(',');
+                }
+               sb.setLength(sb.length()-1);
             }
             return sb.append(this.b.palette.formC())
                     .append("){")
@@ -91,7 +96,7 @@ public class ObjStringSerializer implements ObjSerializer<String> {
             else sb.append(this.b.palette.formC()).append('}');
             return generateVID(sb, objs).append(this.b.ignoreRewrites ? "" : "{{X}}").toString();
         } else if (obj instanceof final Rec rec) {
-            if(this.b.prettyPrint) {
+            if(this.b.prettyPrint && rec.count() > 1) {
                 this.generateRec(sb,obj.<Rec>as(),0);
             } else {
                 generateTID(sb, obj).append(this.b.palette.formC()).append('[').append(this.b.palette.valueC());
