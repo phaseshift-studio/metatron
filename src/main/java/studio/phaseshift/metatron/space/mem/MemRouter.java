@@ -35,76 +35,90 @@ import static studio.phaseshift.metatron.BootLoader.BOOTING;
 public class MemRouter implements Router {
 
     private static final GraphittyLogger LOG = Graphitty.log(MemRouter.class);
-    public static final fURI MEMROUTER_TID = fURI.of("router:/mtron/mem");
+    private static final fURI ROUTER_TID = fURI.of("/mtron/sys/router");
 
     private fURI vid;
-    private final Map<fURI, Space> routes = new HashMap<>();
+    private final Map<fURI, Space> spaces = new HashMap<>();
+    private final Map<fURI, fURI> smallToBigRewrites = new HashMap<>();
+    private final Map<fURI,fURI> bigToSmallRewrites = new HashMap<>();
 
 
     public MemRouter(final fURI vid) {
         this.vid = vid;
-        LOG.info("%s loaded at %s", this.tid().toUri(true), this.vid.toUri(true));
+        LOG.info("%s loaded at %s", this.tid(), this.vid);
+    }
+
+    public void registerRewrite(final fURI small, final fURI big) {
+        this.smallToBigRewrites.put(small,big);
+        this.bigToSmallRewrites.put(big,small);
+    }
+
+    @Override
+    public fURI rewrite(final fURI furi,final boolean big) {
+       return big ? this.smallToBigRewrites.getOrDefault(furi,furi) : this.bigToSmallRewrites.getOrDefault(furi,furi);
     }
 
     public void registerSpace(final Space space) {
-        this.routes.entrySet().stream()
+        this.spaces.entrySet().stream()
                 .filter(kv -> space.pattern().matches(kv.getKey()))
                 .findAny()
                 .ifPresent(kv -> {
                     LOG.except("%s and %s have overlapping address spaces", space.pattern(), kv.getKey());
                 });
-        this.routes.put(space.pattern(), space);
+        this.spaces.put(space.pattern(), space);
     }
 
-    public Space getStruct(final fURI pattern) {
-        Optional<Space> space = this.routes.entrySet().stream()
-                .filter(kv -> pattern.basePath().matches(kv.getKey()))
+    public <S extends Space> S getSpace(final fURI match) {
+   //     final fURI mvid = this.smallToBigRewrites.getOrDefault(vid,vid);
+        Optional<S> space = this.spaces.entrySet().stream()
+                .filter(kv -> match.basePath().matches(kv.getKey()))
                 .findAny()
-                .map(Map.Entry::getValue);
-        if(space.isPresent())
+                .map(Map.Entry::getValue).map(s -> (S) s);
+        if (space.isPresent())
             return space.get();
-        else if(!BOOTING)
-           throw LOG.except("no structure supports pattern %s", pattern.toUri(true));
+        else if (!BOOTING)
+            throw LOG.except("no structure supports pattern %s", match.toUri(true));
         else
-            return new NullSpace(pattern);
+            return (S) new NullSpace(match);
     }
 
     @Override
     public Obj read(final fURI vid) {
         if (vid.equals(this.vid))
             return this;
-        final Space space = this.getStruct(vid);
-        LOG.trace("reading %s at %s => %s", space, vid, space.value());
+       // final fURI mvid = this.smallToBigRewrites.getOrDefault(vid,vid);
+        final Space space = this.getSpace(vid);
+        LOG.trace("reading %s from %s", vid, space.vid());
         return space.read(vid);
     }
 
     @Override
     public Obj write(final fURI vid, final Obj obj) {
-        final Space space = this.getStruct(vid);
-        //LOG.trace("writing to %s: %s => %s", space, obj, vid);
+       // final fURI mvid = this.smallToBigRewrites.getOrDefault(vid,vid);
+        final Space space = this.getSpace(vid);
+        LOG.trace("writing %s to %s at %s", obj, vid, space.vid());
         return space.write(vid, obj);
     }
 
     @Override
     public boolean hasSpaceFor(final fURI vid) {
-        return this.routes.entrySet().stream()
-                .filter(kv -> vid.matches(kv.getKey()))
-                .findAny().isPresent();
+    //    final fURI mvid = this.smallToBigRewrites.getOrDefault(vid,vid);
+        return this.spaces.entrySet().stream().anyMatch(kv -> vid.matches(kv.getKey()));
     }
 
     @Override
-    public Map<Obj, Obj> value() {
-        return Map.of();
+    public Map<fURI, Space> value() {
+        return this.spaces;
     }
 
     @Override
-    public MemRouter apply(Obj other) {
+    public MemRouter apply(final Obj other) {
         return null;
     }
 
     @Override
     public fURI tid() {
-        return MEMROUTER_TID;
+        return ROUTER_TID;
     }
 
     @Override

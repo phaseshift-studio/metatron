@@ -23,6 +23,7 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.mtron.MInt;
 import studio.phaseshift.metatron.lang.obj.mtron.MInstSet;
 
@@ -33,7 +34,7 @@ public class InstParseTest {
 
     @BeforeAll
     public static void begin() {
-        MInstSet.of();
+        MInstSet.of(fURI.of("/mnt/sys/lang/mtron"));
     }
 
     @ParameterizedTest

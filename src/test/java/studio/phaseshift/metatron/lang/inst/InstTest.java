@@ -23,7 +23,7 @@ public class InstTest {
     public static void loadInstructionSets() {
         final Space space = new MemSpace(fURI.ANY,fURI.NULL);
         Router.global().registerSpace(space);
-        new MInstSet().load();
+        new MInstSet(fURI.of("/mnt/mtron"));
        //if(true) {
        //     System.out.println(space.read("/mtron/int"));
         //    throw new RuntimeException();
@@ -46,7 +46,7 @@ public class InstTest {
 
     @Test
     public void testInstObj() {
-       assertEquals(PLUS_TID.query(DOM,INT_TID).query(RNG,INT_TID),  new MInstSet().resolve(MInt.of(2),MInst.instA(fURI.of("plus"))).tid());
+       assertEquals(PLUS_TID.query(DOM,INT_TID).query(RNG,INT_TID),  new MInstSet(fURI.of("/mnt/mtron")).resolve(MInt.of(2),MInst.instA(fURI.of("plus"))).tid());
        // assertEquals(START_TID.query(DOM,NOOBJ_TID).query(RNG, ANY),  new MInstSet().resolve(NoObj.single(),MInst.instA(fURI.of("start"))).tid());
        //System.out.println(i);
     }

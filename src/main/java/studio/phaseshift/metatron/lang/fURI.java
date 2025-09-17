@@ -21,9 +21,12 @@ package studio.phaseshift.metatron.lang;
 import studio.phaseshift.metatron.lang.obj.Uri;
 import studio.phaseshift.metatron.lang.obj.mtron.MCoeff;
 import studio.phaseshift.metatron.lang.obj.mtron.MUri;
+import studio.phaseshift.metatron.space.Router;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 
 public class fURI implements Cloneable {
@@ -40,17 +43,36 @@ public class fURI implements Cloneable {
     private final String scheme;
     private final int port;
     private final List<String> path;
-    private final String query;
+    private final Map<String,String> query;
     private final boolean sstart;
     private boolean send;
     // private final boolean wildcard;
+
+
+    private static Map<String,String> queryToMap(final String query) {
+        return null == query ? null : Stream.of(query.split("&")).map(kv -> kv.split("=")).collect(Collectors.toMap(kv -> kv[0], kv->kv.length == 1 ? "" : kv[1]));
+    }
+    private static String queryToString(final Map<String,String> query) {
+        return null == query || query.isEmpty() ? null : query.entrySet().stream().map(kv -> kv.getKey() + (kv.getValue().isBlank() ? "" : ("=" + kv.getValue()))).reduce("",(a,b) -> a + "&" + b).substring(1);
+    }
+
+
+    public fURI big() {
+        return null == Router.global() ? this : Router.global().rewrite(this,true);
+    }
+
+    public fURI small() {
+        return  null == Router.global() ? this : Router.global().rewrite(this,false);
+    }
+
+
 
     private fURI(final String scheme, final String host, final int port, final boolean sstart, final List<String> path, final boolean send, final String query) {
         this.host = host;
         this.scheme = scheme;
         this.port = port;
         this.path = path;
-        this.query = query;
+        this.query = fURI.queryToMap(query) ;
         this.sstart = sstart;
         this.send = send;
     }
@@ -70,7 +92,7 @@ public class fURI implements Cloneable {
         if(queryPosition == -1 || uri.charAt(queryPosition-1) == '[')
             queryPosition = -1;
         final String tempQuery = queryPosition == -1 ? null : uri.substring(queryPosition + 1);
-        this.query = null == tempQuery ? null : (tempQuery.isBlank() ? null : tempQuery);
+        this.query = null == tempQuery || tempQuery.isBlank() ? null : queryToMap(tempQuery);
         if (null != this.query)
             uri = uri.substring(0, queryPosition);
         this.send = uri.charAt(uri.length() - 1) == '/';
@@ -139,11 +161,11 @@ public class fURI implements Cloneable {
     }
 
     public fURI scheme(final String scheme) {
-        return new fURI(scheme, this.host, this.port, this.sstart, this.path, this.send, this.query);
+        return new fURI(scheme, this.host, this.port, this.sstart, this.path, this.send, queryToString(this.query));
     }
 
     public fURI path(final String path) {
-        return new fURI(this.scheme, this.host, this.port, path.charAt(0) == '/', Arrays.asList(path.split("/")), path.charAt(path.length() - 1) == '/', this.query);
+        return new fURI(this.scheme, this.host, this.port, path.charAt(0) == '/', Arrays.asList(path.split("/")), path.charAt(path.length() - 1) == '/', queryToString(this.query));
     }
 
     public String path() {
@@ -202,7 +224,7 @@ public class fURI implements Cloneable {
         final List<String> newPath = new ArrayList<>();
         newPath.addAll(Arrays.asList(segment.split("/")));
         newPath.addAll(this.path);
-        return new fURI(this.scheme, this.host, this.port, !newPath.isEmpty() && null != this.host || segment.charAt(0) == '/', newPath, this.path.isEmpty() ? false : this.send, this.query);
+        return new fURI(this.scheme, this.host, this.port, !newPath.isEmpty() && null != this.host || segment.charAt(0) == '/', newPath, this.path.isEmpty() ? false : this.send, queryToString(this.query));
     }
 
     public fURI extend(final fURI extension) {
@@ -213,14 +235,14 @@ public class fURI implements Cloneable {
         final List<String> newPath = new ArrayList<>(this.path.size() + 1);
         newPath.addAll(this.path);
         newPath.addAll(Arrays.asList(segment.split("/")));
-        return new fURI(this.scheme, this.host, this.port, this.sstart, newPath, !segment.isEmpty() && (segment.charAt(segment.length() - 1) == '/'), this.query);
+        return new fURI(this.scheme, this.host, this.port, this.sstart, newPath, !segment.isEmpty() && (segment.charAt(segment.length() - 1) == '/'), queryToString(this.query));
     }
 
     private fURI rePreTract(boolean retract, final int steps) {
         if (this.path.size() < steps)
-            return new fURI(this.scheme, this.host, this.port, false, Collections.emptyList(), false, this.query);
+            return new fURI(this.scheme, this.host, this.port, false, Collections.emptyList(), false, queryToString(this.query));
         final List<String> newPath = retract ? this.path.subList(0, this.path.size() - steps) : this.path.subList(steps, this.path.size());
-        return new fURI(this.scheme, this.host, this.port, this.sstart && !newPath.isEmpty(), newPath, this.send && !newPath.isEmpty(), this.query);
+        return new fURI(this.scheme, this.host, this.port, this.sstart && !newPath.isEmpty(), newPath, this.send && !newPath.isEmpty(),queryToString(this.query));
 
     }
 
@@ -282,16 +304,16 @@ public class fURI implements Cloneable {
     }
 
     public fURI query(final String key, final String value) {
-        String appended = (null == this.query ? "" : (this.query + "&")) + key + "=" + value;
-        return new fURI(this.scheme, this.host, this.port, this.sstart, this.path, this.send, appended);
+        Map<String,String> appended = null == this.query ? new LinkedHashMap<>() : new LinkedHashMap<>(this.query);
+        appended.put(key,value);
+        return new fURI(this.scheme, this.host, this.port, this.sstart, this.path, this.send, queryToString(appended));
     }
 
     public fURI query(final Object key, final Object value) {
-        String appended = (null == this.query ? "" : (this.query + "&")) + key + "=" + value;
-        return new fURI(this.scheme, this.host, this.port, this.sstart, this.path, this.send, appended);
+       return this.query(key.toString(),value.toString());
     }
 
-    public fURI queryValue(final Map<Object, Object> kv) {
+    public fURI queryMap(final Map<Object, Object> kv) {
         StringBuilder q = new StringBuilder();
         kv.forEach((k, v) -> {
             q.append(k).append("=").append(v).append("&");
@@ -308,12 +330,12 @@ public class fURI implements Cloneable {
             final List<String> segments = new ArrayList<>(this.path);
             String last = segments.remove(segments.size() - 1);
             segments.add(last.substring(0, last.indexOf("[")));
-            return new fURI(this.scheme, this.host, this.port, this.sstart, segments, this.send, this.query);
+            return new fURI(this.scheme, this.host, this.port, this.sstart, segments, this.send, queryToString(this.query));
         } else {
             final List<String> segments = new ArrayList<String>(this.coefficient(null).path);
             String last = segments.isEmpty() ? "" : segments.remove(segments.size() - 1);
             segments.add(last + "[" + MCoeff.Int.of(coefficient) + "]");
-            return new fURI(this.scheme, this.host, this.port, this.sstart, segments, this.send, this.query);
+            return new fURI(this.scheme, this.host, this.port, this.sstart, segments, this.send,queryToString(this.query));
         }
     }
 
@@ -337,18 +359,11 @@ public class fURI implements Cloneable {
     }
 
     public String query() {
-        return this.query;
+        return queryToString(this.query);
     }
 
-    public Map<String, String> queryValue() {
-        if (null == this.query)
-            return Map.of();
-        final Map<String, String> q = new LinkedHashMap<>();
-        Arrays.stream(this.query.split("&")).forEach(kv -> {
-            String[] pairs = kv.split("=");
-            q.put(pairs[0], pairs.length > 1 ? pairs[1] : "");
-        });
-        return q;
+    public Map<String, String> queryMap() {
+       return null == this.query ? Map.of() : this.query;
     }
 
     public fURI basePath() {
@@ -368,7 +383,7 @@ public class fURI implements Cloneable {
     }
 
     public <T> T queryValue(final fURI key, final Class<T> conversion) {
-        final String value = this.queryValue().get(key.toString());
+        final String value = null == this.query ? null : this.query.get(key.toString());
         if (null == value)
             return (T) null;
         if (String.class.isAssignableFrom(conversion))
@@ -446,7 +461,7 @@ public class fURI implements Cloneable {
         if (!this.send && !this.path.isEmpty())
             b.delete(b.length() - 1, b.length());
         if (null != this.query)
-            b.append("?").append(this.query);
+            b.append("?").append(queryToString(this.query));
         return b.toString();
     }
 

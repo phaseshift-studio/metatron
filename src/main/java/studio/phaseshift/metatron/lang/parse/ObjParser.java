@@ -64,7 +64,6 @@ public class ObjParser {
         obj_parser.set(choice(
                 m_comment(),
                 m_noobj(),
-                m_rec(),
                 m_rel(),
                 m_bool(),
                 m_real(),
@@ -73,18 +72,19 @@ public class ObjParser {
                 m_code(),
                 m_objs(),
                 m_inst(),
+                m_rec(),
                 m_lst(),
                 m_uri()));
         obj_no_code_parser.set(choice(
                 m_comment(),
                 m_noobj(),
-                m_rec(),
                 m_rel(),
                 m_bool(),
                 m_real(),
                 m_int(),
                 m_str(),
                 m_objs(),
+                m_rec(),
                 m_lst(),
                 m_uri()));
         obj_rel_back_parser.set(choice(
@@ -98,16 +98,16 @@ public class ObjParser {
                 m_objs(),
                 m_rec(),
                 m_inst(),
+                m_rec(),
                 m_lst(),
                 m_uri()));
-
-        lst_parser.set(seq(m_type_prefix_opt_colon(LST_TID), seq(
+        lst_parser.set(seq(m_type_prefix_opt_colon(LST_TID),
                 of('[').trim(),
                 lst_internal(),
-                of(']').trim()).pick(1))
-                .map(t -> MLst.of(pick(t, 1), pick(t, 0))));
+                of(']').trim())
+                .map(t -> MLst.of(pick(t, 2), pick(t, 0))));
 
-        rec_parser.set(seq(seq(m_type_prefix_opt_colon(REC_TID), of('[').trim()).pick(0), rec_internal(), of(']')).trim().map(t -> MRec.of(pick(t, 1), pick(t, 0))));
+        rec_parser.set(seq(m_type_prefix_opt_colon(REC_TID), of('[').trim(), rec_internal(), of(']')).trim().map(t -> MRec.of(pick(t, 2), pick(t, 0))));
 
         inst_parser.set(seq(
                 choice(m_inst_furi(), m_type_prefix_opt_colon(INST_TID)), // 0 inst_tid
@@ -116,7 +116,7 @@ public class ObjParser {
                 // inst_seed []
                 .map(t -> {
                     return (Inst) new MInst(new Triplet<>(
-                           pick(t, 1) instanceof List ?
+                            pick(t, 1) instanceof List ?
                                     MLst.of(ObjParser.<List<Obj>>pick(t, 1)) :
                                     MRec.of(ObjParser.<Map<Obj, Obj>>pick(t, 1)),
                             Inst.f.of(ObjParser.<Obj>pick(t, 2)),
@@ -188,15 +188,15 @@ public class ObjParser {
                 m_furi(QUERYLESS_FURI_CHARS),
                 of("<=").trim(),
                 m_furi(QUERYLESS_FURI_CHARS))
-                        .map(t -> Stream.of(
-                                List.of("rng", pick(t, 0).toString()),
-                                List.of("dom", pick(t, 2).toString())).collect(Collectors.toMap(k -> k.get(0), v -> v.get(1), (v1, v2) -> v2, LinkedHashMap::new)));
+                .map(t -> Stream.of(
+                        List.of("rng", pick(t, 0).toString()),
+                        List.of("dom", pick(t, 2).toString())).collect(Collectors.toMap(k -> k.get(0), v -> v.get(1), (v1, v2) -> v2, LinkedHashMap::new)));
     }
 
 
     public static Parser m_inst_furi() {
         return seq(m_furi(QUERYLESS_FURI_CHARS), of('?'), m_furi_inst_dom_rng(), opt(of("::").trim(), "::"))
-                .map(t -> ObjParser.<fURI>pick(t, 0).queryValue(pick(t, 2)));
+                .map(t -> ObjParser.<fURI>pick(t, 0).queryMap(pick(t, 2)));
     }
 
 

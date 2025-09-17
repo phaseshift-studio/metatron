@@ -49,7 +49,7 @@ public class ObjStringSerializer implements ObjSerializer<String> {
                     .toString();
         else if (obj instanceof final Inst inst) {
             sb.append(this.b.palette.typeC())
-                    .append(this.b.hideTypes.contains(inst.tid()) ? "" : inst.tid())
+                    .append(this.b.hideTypes.contains(inst.tid()) ? "" : inst.tid().small())
                     .append(this.b.palette.formC())
                     .append(this.b.hideTypes.contains(inst.tid()) ? "" : "::")
                     .append("(");
@@ -61,7 +61,7 @@ public class ObjStringSerializer implements ObjSerializer<String> {
                         sb.append(this.b.palette.formC()).append("=>").append(kv.<Rel>as().second());
                     sb.append(this.b.palette.formC()).append(',');
                 }
-               sb.setLength(sb.length()-1);
+                sb.deleteCharAt(sb.length()-1);
             }
             return sb.append(this.b.palette.formC())
                     .append("){")
@@ -82,7 +82,7 @@ public class ObjStringSerializer implements ObjSerializer<String> {
             for (final Obj o : lst.value()) {
                 sb.append(o).append(this.b.palette.formC()).append(',');
             }
-            if (!lst.value().isEmpty()) sb.append("{{<1}}").append(this.b.palette.formC());
+            if (!lst.value().isEmpty()) sb.deleteCharAt(sb.length()-1).append(this.b.palette.formC());
             else sb.append(this.b.palette.formC()).append(",");
             return generateVID(sb.append(']'), lst).append(this.b.ignoreRewrites ? "" : "{{X}}").toString();
         } else if (obj instanceof final Objs objs) {
@@ -92,7 +92,7 @@ public class ObjStringSerializer implements ObjSerializer<String> {
                 found = true;
                 sb.append(o).append(this.b.palette.formC()).append(',');
             }
-            if (found) sb.append("{{<1}}");
+            if (found) sb.deleteCharAt(sb.length()-1);
             else sb.append(this.b.palette.formC()).append('}');
             return generateVID(sb, objs).append(this.b.ignoreRewrites ? "" : "{{X}}").toString();
         } else if (obj instanceof final Rec rec) {
@@ -108,7 +108,7 @@ public class ObjStringSerializer implements ObjSerializer<String> {
                             .append(',');
                 }
             }
-            if (!rec.value().isEmpty()) sb.append("{{<1}}").append(this.b.palette.formC());
+            if (!rec.value().isEmpty())  sb.deleteCharAt(sb.length()-1).append(this.b.palette.formC());
             else sb.append(this.b.palette.formC()).append("=>");
             return generateVID(sb.append(']'), rec).append(this.b.ignoreRewrites ? "" : "{{X}}").toString();
         } else
@@ -146,7 +146,7 @@ public class ObjStringSerializer implements ObjSerializer<String> {
 
     private StringBuilder generateTID(final StringBuilder sb, final Obj obj) {
         return this.b.hideTypes.contains(obj.tid()) ? sb : sb.append(this.b.palette.typeC())
-                .append(obj.tid())
+                .append(obj.tid().small())
                 .append(this.b.palette.formC())
                 .append("::");
     }

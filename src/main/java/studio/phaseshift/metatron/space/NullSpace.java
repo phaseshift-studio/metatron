@@ -1,15 +1,14 @@
 package studio.phaseshift.metatron.space;
 
 import studio.phaseshift.metatron.lang.fURI;
-import studio.phaseshift.metatron.lang.obj.NoObj;
-import studio.phaseshift.metatron.lang.obj.Obj;
-import studio.phaseshift.metatron.lang.obj.Objs;
+import studio.phaseshift.metatron.lang.obj.*;
 import studio.phaseshift.metatron.lang.obj.mtron.MObjs;
 
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
-public class NullSpace implements Space {
+public class NullSpace implements Space, InstSet {
 
 
     private final fURI vid;
@@ -18,7 +17,7 @@ public class NullSpace implements Space {
     }
 
     @Override
-    public Object value() {
+    public Map value() {
         return new LinkedHashMap<>();
     }
 
@@ -41,6 +40,10 @@ public class NullSpace implements Space {
     public void append(fURI addr, Obj... obj) {
 
     }
+    @Override
+    public Inst resolve(final Obj lhs, final Inst instAorB) {
+        return NoObj.single();
+    }
 
     @Override
     public fURI tid() {
@@ -53,8 +56,8 @@ public class NullSpace implements Space {
     }
 
     @Override
-    public <O extends Obj> O clone(Object value, fURI tid, fURI vid) {
-        return (O)this;
+    public NullSpace clone(Object value, fURI tid, fURI vid) {
+        return this;
     }
 
     @Override

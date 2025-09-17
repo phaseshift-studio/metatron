@@ -34,8 +34,9 @@ public class MObj implements Obj {
     protected final fURI vid;
 
     public MObj(final Object value, final fURI tid, final fURI vid) {
+        assert null != tid;
         this.value = value;
-        this.tid = tid;
+        this.tid = tid.big();
         this.vid = vid;
         // if(null != this.vid && !this.vid.equals(fURI.NONE))
         //     Router.global().write(this.vid,this);

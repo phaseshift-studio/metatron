@@ -20,20 +20,59 @@ package studio.phaseshift.metatron.lang.obj;
 
 import org.javatuples.Triplet;
 import studio.phaseshift.metatron.lang.fURI;
+import studio.phaseshift.metatron.lang.obj.base.furi.TypefURI;
+import studio.phaseshift.metatron.lang.obj.mtron.MInst;
 import studio.phaseshift.metatron.lang.obj.mtron.MLst;
+import studio.phaseshift.metatron.space.Space;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.*;
+import java.util.function.BiFunction;
 
 
-public interface InstSet extends Obj {
+public interface InstSet extends Space {
 
     @Override
-    InstSet clone(final Object value, final fURI tid, final fURI vid);
+    default InstSet clone(final Object value, final fURI tid, final fURI vid) {
+        return this;
+    }
 
     @Override
     Map<fURI, Map<fURI, Set<Inst>>> value();
 
+
+    @Override
+    fURI pattern();
+
+    @Override
+    default Obj read(final fURI vid) {
+        List<Inst> result = this.value().getOrDefault(vid.basePath(), Map.of())
+                .entrySet()
+                .stream()
+                .filter(kv -> {
+                    // Graphitty.stdout().println("%s matches %s = %s".formatted(lhs.tid().queryless(),kv.getKey().queryless(),lhs.tid().queryless().matches(kv.getKey().queryless())));
+                    return vid.queryValue(fURI.DOM, fURI.class).basePath().matches(kv.getKey().basePath());
+                }).flatMap(kv -> kv.getValue().stream()).toList();
+        if (result.isEmpty())
+            return NoObj.single();
+        return MLst.of((List) result);
+    }
+
+    @Override
+    default Obj write(final fURI vid, final Obj obj) {
+        final Inst inst = obj.<Inst>as();
+         this.value().computeIfAbsent(inst.tid().basePath(), k -> new LinkedHashMap<>())
+                .computeIfAbsent(inst.tid().queryValue(fURI.DOM, fURI.class), k -> new LinkedHashSet<>())
+                .add(MInst.instC(inst.tid()
+                        .query(fURI.DOM, TypefURI.orNone(inst.tid().queryValue(fURI.DOM,fURI.class)))
+                        .query(fURI.RNG, TypefURI.orNone(inst.tid().queryValue(fURI.RNG,fURI.class))), inst.args(), (BiFunction) inst.f().func, inst.seed()));
+        return obj;
+    }
+
+    @Override
+    default void append(fURI addr, Obj... obj) {
+        return;
+    }
 
     default Inst resolve(final Obj lhs, final Inst instAorB) {
         return this.value().getOrDefault(instAorB.tid().basePath(),Map.of())

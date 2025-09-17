@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.lang.obj.mtron;
 
+import org.javatuples.Pair;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.monoid.mtron.MMonoid;
 import studio.phaseshift.metatron.lang.obj.*;
@@ -34,8 +35,6 @@ import java.util.stream.Stream;
 public class MInstSet extends MObj implements InstSet {
 
     public static final fURI MTRON_TID = fURI.of("/mtron");
-
-
     public static final fURI BOOL_TID = fURI.of("/mtron/bool");
     public static final fURI INT_TID = fURI.of("/mtron/int");
     public static final fURI REAL_TID = fURI.of("/mtron/real");
@@ -50,7 +49,7 @@ public class MInstSet extends MObj implements InstSet {
     public static final fURI NOOBJ_REF_TID = fURI.of("/mtron/noobj");
     public static final fURI NOOBJ_TID = fURI.of("/mtron/noobj");
 
-    public static final fURI TID = fURI.of("/mtron/core");
+    public static final fURI MTRON_INST_TID = fURI.of("/mtron/inst");
     public static final fURI ID_TID = INST_TID.extend("id");
     public static final fURI START_TID = INST_TID.extend("start");
     public static final fURI COUNT_TID = INST_TID.extend("count");
@@ -149,17 +148,20 @@ public class MInstSet extends MObj implements InstSet {
     }
 
     protected void store() {
-        Router.global().write(NOOBJ_TID, MType.of(NOOBJ_TID));
-        Router.global().write(BOOL_TID, MType.of(BOOL_TID));
-        Router.global().write(INT_TID, MType.of(INT_TID));
-        Router.global().write(REAL_TID, MType.of(REAL_TID));
-        Router.global().write(STR_TID, MType.of(STR_TID));
-        Router.global().write(URI_TID, MType.of(URI_TID));
-        Router.global().write(REL_TID, MType.of(REL_TID));
-        Router.global().write(LST_TID, MType.of(LST_TID));
-        Router.global().write(REC_TID, MType.of(REC_TID));
-        Router.global().write(OBJS_TID, MType.of(OBJS_TID));
-        SYMBOL_TABLE.forEach((k1, v1) -> v1.forEach((k2, v2) -> v2.forEach(i -> Router.global().write(i.tid(), i))));
+        List.of(Pair.with(NOOBJ_TID, MType.of(NOOBJ_TID)),
+                Pair.with(BOOL_TID, MType.of(BOOL_TID)),
+                Pair.with(INT_TID, MType.of(INT_TID)),
+                Pair.with(REAL_TID, MType.of(REAL_TID)),
+                Pair.with(STR_TID, MType.of(STR_TID)),
+                Pair.with(URI_TID, MType.of(URI_TID)),
+                Pair.with(REL_TID, MType.of(REL_TID)),
+                Pair.with(LST_TID, MType.of(LST_TID)),
+                Pair.with(REC_TID, MType.of(REC_TID)),
+                Pair.with(OBJS_TID, MType.of(OBJS_TID)),
+                Pair.with(CODE_TID, MType.of(CODE_TID))).forEach(kv -> {
+            Router.global().registerRewrite(fURI.of(kv.getValue0().name()), kv.getValue0());
+        });
+        // SYMBOL_TABLE.forEach((k1, v1) -> v1.forEach((k2, v2) -> v2.forEach(i -> Router.global().write(i.tid(), i)))
     }
 
 
@@ -168,22 +170,25 @@ public class MInstSet extends MObj implements InstSet {
     }
 
     protected MInstSet define(final fURI tid, final fURI domain, final fURI range, final Poly args, final BiFunction<Obj, Inst, Obj> f, final Obj seed) {
-        SYMBOL_TABLE
+        Router.global().registerRewrite(fURI.of(tid.name()), tid);
+        this.write(tid, MInst.instC(tid
+                .query(fURI.DOM, TypefURI.orNone(domain))
+                .query(fURI.RNG, TypefURI.orNone(range)), args, f, seed));
+
+     /*   SYMBOL_TABLE
                 .computeIfAbsent(tid, k -> new LinkedHashMap<>())
                 .computeIfAbsent(domain, k -> new LinkedHashSet<>())
-                .add(MInst.instC(tid
-                        .query(fURI.DOM, TypefURI.orNone(domain))
-                        .query(fURI.RNG, TypefURI.orNone(range)), args, f, seed));
+                .add);*/
         return this;
     }
 
-    public MInstSet() {
-        super(SYMBOL_TABLE, TID, fURI.NULL);
+    public MInstSet(final fURI vid) {
+        super(SYMBOL_TABLE, MTRON_TID, vid);
         this.load();
     }
 
-    public static InstSet of() {
-        return new MInstSet();
+    public static InstSet of(final fURI vid) {
+        return new MInstSet(vid);
     }
 
     @Override
@@ -194,5 +199,10 @@ public class MInstSet extends MObj implements InstSet {
     @Override
     public Map<fURI, Map<fURI, Set<Inst>>> value() {
         return SYMBOL_TABLE;
+    }
+
+    @Override
+    public fURI pattern() {
+        return MTRON_TID.extend("#");
     }
 }

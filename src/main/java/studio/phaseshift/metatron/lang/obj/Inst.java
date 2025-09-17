@@ -65,13 +65,13 @@ public interface Inst extends Obj {
 
     @Override
     default Type dom() {
-        return MType.of(Router.global().read(TypefURI.dom(this.tid())), TypefURI.dom(this.tid())).orElseGet(() -> MType.of(TypefURI.dom(this.tid())));
+        return MType.of(Router.global().read(TypefURI.dom(this.tid())),TypefURI.dom(this.tid())).orElseGet(() -> MType.of(TypefURI.dom(this.tid())));
     }
 
     @Override
     default Type rng() {
         final fURI range = TypefURI.rng(this.tid());
-        return range.equals(fURI.ANY) ? MType.of(range) : MType.of(Router.global().read(range), TypefURI.rng(this.tid())).orElseGet(() -> MType.of(TypefURI.rng(this.tid())));
+        return range.equals(fURI.ANY) ? MType.of(range) : MType.of(Router.global().read(range),TypefURI.rng(this.tid())).orElseGet(() -> MType.of(TypefURI.rng(this.tid())));
     }
 
     default Poly args() {
@@ -110,7 +110,8 @@ public interface Inst extends Obj {
             return this;
         } else {
             if (currentResolution == Resolve.A) {
-                final Inst resolved = new MInstSet().resolve(lhs, this);
+                final Inst resolved = new MInstSet(fURI.of("/mnt/mtron")).resolve(lhs, this);
+                //final Inst resolved = Router.global().<InstSet>getSpace(fURI.of("/mtron")).resolve(lhs, this);
                 LOG.trace("resolution ({{m}}%s {{g}}=>{{/g}} %s{{/m}}): %s", currentResolution, resolved.resolution(), resolved);
                 return resolved.resolve(desiredResolution, lhs);
             } else { // Resolve.B
