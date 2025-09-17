@@ -18,7 +18,6 @@
 
 package studio.phaseshift.metatron.ui;
 
-import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.filter.ThresholdFilter;
 import org.jline.reader.*;
 import org.jline.reader.impl.DefaultParser;
@@ -28,15 +27,12 @@ import org.jline.terminal.TerminalBuilder;
 import org.jline.utils.AttributedString;
 import org.jline.utils.AttributedStringBuilder;
 import org.jline.widget.Widgets;
-import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.slf4j.spi.LoggingEventBuilder;
 import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.monoid.mtron.MMonoid;
 import studio.phaseshift.metatron.lang.obj.NoObj;
 import studio.phaseshift.metatron.lang.obj.Obj;
-import studio.phaseshift.metatron.lang.obj.mtron.MStr;
 import studio.phaseshift.metatron.lang.obj.mtron.MUri;
 import studio.phaseshift.metatron.lang.parse.ObjParser;
 import studio.phaseshift.metatron.util.IteratorUtil;
@@ -46,6 +42,7 @@ import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
 import java.util.*;
@@ -182,10 +179,22 @@ public class Console {
                     this.outputHeader();
                 else if (line.equals(":quit"))
                     break;
-                else if(line.startsWith(":log")) {
+                else if (line.startsWith(":log")) {
                     final ch.qos.logback.classic.Logger root = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME);
-                    if(line.equals(":log"))
-                        result = MUri.of(root.getLevel().levelStr,fURI.dotPath(root.getClass().getCanonicalName()));
+                    if (line.equals(":log"))
+                        result = MUri.of(root.getAppender("STDOUT").getCopyOfAttachedFiltersList()
+                                        .stream()
+                                        .filter(x -> x instanceof ThresholdFilter)
+                                        .map(x -> {
+                                            try {
+                                                final Field field = x.getClass().getDeclaredField("level");
+                                                field.trySetAccessible();
+                                                return field.get(x).toString();
+                                            } catch (final Exception e) {
+                                                throw LOG.except(e);
+                                            }
+                                        }).findFirst().get()
+                                , fURI.dotPath(root.getClass().getCanonicalName()));
                     else {
                         root.getAppender("STDOUT").clearAllFilters();
                         ThresholdFilter filter = new ThresholdFilter();
@@ -193,11 +202,10 @@ public class Console {
                         filter.start();
                         root.getAppender("STDOUT").addFilter(filter);
                     }
-                }
-                else
+                } else
                     result = ObjParser.parse(line);
 
-                if(null != result) {
+                if (null != result) {
                     IteratorUtil.iterate(IteratorUtil.consume(result.isNoObj() ?
                                     Collections.emptyIterator() :
                                     result.isCode() ?
