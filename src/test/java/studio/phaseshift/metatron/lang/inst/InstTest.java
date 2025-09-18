@@ -18,18 +18,7 @@ import static studio.phaseshift.metatron.lang.fURI.*;
 import static studio.phaseshift.metatron.lang.obj.mtron.MInstSet.*;
 
 public class InstTest {
-
-    @BeforeAll
-    public static void loadInstructionSets() {
-        final Space space = new MemSpace(fURI.ANY,fURI.NULL);
-        Router.global().registerSpace(space);
-        new MInstSet(fURI.of("/mnt/mtron"));
-       //if(true) {
-       //     System.out.println(space.read("/mtron/int"));
-        //    throw new RuntimeException();
-      //  }
-    }
-
+    
     @ParameterizedTest
     @CsvSource(value = {
             // furi | tid | dom | range
