@@ -87,6 +87,7 @@ public class MInstSet extends MSpace implements InstSet {
     private static final Map<fURI, Map<fURI, Set<Inst>>> SYMBOL_TABLE = new LinkedHashMap<>();
 
     public void load() {
+        this.define(NOOBJ_TID,fURI.ANY.maybe(), fURI.ANY.maybe(), MLst.of(), (lhs, inst) -> lhs); // noobj is also an inst (no inst)
         this.define(REIFY_TID, fURI.ANY.maybe(), REC_TID, MLst.of(), (lhs, inst) ->
                 MRec.ofUriKeyed(
                         "tid", MRec.ofUriKeyed(
@@ -106,9 +107,9 @@ public class MInstSet extends MSpace implements InstSet {
         this.define(VID_TID, fURI.ANY, URI_TID, MLst.of(), (lhs, inst) -> lhs.vid().toUri());
         this.define(MAP_TID, fURI.ANY, fURI.ANY, MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> inst.arg(0));
         this.define(BLOCK_TID, fURI.ANY.maybe(), fURI.ANY.maybe(), MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> inst.arg(0));
-        this.define(DOM_TID, REC_TID, URI_TID, MLst.of(), (lhs, inst) -> MObjs.of(lhs.recValue().keySet()));
-        this.define(DOM_TID, REL_TID, URI_TID, MLst.of(), (lhs, inst) -> MObjs.of(lhs.relValue().getValue0()));
-        this.define(DOM_TID, fURI.ANY, URI_TID, MLst.of(), (lhs, inst) -> lhs);
+        this.define(DOM_TID, REC_TID, fURI.ANY, MLst.of(), (lhs, inst) -> MObjs.of(lhs.recValue().keySet()));
+        this.define(DOM_TID, REL_TID, fURI.ANY, MLst.of(), (lhs, inst) -> MObjs.of(lhs.relValue().getValue0()));
+        this.define(DOM_TID, fURI.ANY, fURI.ANY, MLst.of(), (lhs, inst) -> lhs);
         this.define(RNG_TID, REC_TID, fURI.ANY, MLst.of(), (lhs, inst) -> MObjs.of(lhs.recValue().values()));
         this.define(RNG_TID, REL_TID, fURI.ANY, MLst.of(), (lhs, inst) -> MObjs.of(lhs.relValue().getValue1()));
         this.define(RNG_TID, fURI.ANY, fURI.ANY, MLst.of(), (lhs, inst) -> lhs);

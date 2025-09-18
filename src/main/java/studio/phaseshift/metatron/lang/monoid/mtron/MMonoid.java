@@ -28,11 +28,7 @@ import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
 import studio.phaseshift.metatron.util.MTronException;
 
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Queue;
-import java.util.stream.Stream;
+import java.util.*;
 
 import static studio.phaseshift.metatron.lang.obj.mtron.MInstSet.START_TID;
 
@@ -78,15 +74,21 @@ public class MMonoid extends MObj implements Monoid {
         Obj token = start;
         //LOG.none("%s", token.rng());
         final List<Inst> resolvedCode = new ArrayList<>();
+        fURI dom = null;
+        fURI rng = null;
         for (final Inst inst : this.code().value()) {
             try {
                 LOG.debug("{{g}}=>{{/g}} resolving inst %s", inst);
                 final Inst instB = inst.resolve(Inst.Resolve.B, token);
+                if (null == dom)
+                    dom = instB.tid().queryValue(fURI.DOM, fURI.class);
+                rng = instB.tid().queryValue(fURI.RNG, fURI.class);
                 resolvedCode.add(instB);
                 token = instB.rng();
                 if (instB.isInitial()) {
                     LOG.debug("{{g}}==>{{/g}} creating initial monad at %s", instB);
                     token = instB.arg(0);
+                    this.running().append(MMonad.of(this, NoObj.single(), instB));
                 } else if (instB.isGather()) {
                     // many-to-?
                     LOG.debug("{{g}}==>{{/g}} creating barrier monad at %s", instB);
@@ -97,10 +99,10 @@ public class MMonoid extends MObj implements Monoid {
             } catch (final Exception e) {
                 resolvedCode.add(inst);
                 LOG.warn("runtime resolution of %s required: %s", inst, e.getMessage());
-                e.printStackTrace();
+                //e.printStackTrace();
             }
         }
-        final Code resolved = MCode.of(resolvedCode);
+        final Code resolved = MCode.of(resolvedCode).tid(code().tid().query(fURI.DOM, Optional.ofNullable(dom).orElse(fURI.ANY)).query(fURI.RNG, Optional.ofNullable(rng).orElse(fURI.ANY)));
         LOG.debug("resolved monoidal code: %s", resolved);
         return resolved;
     }
@@ -108,40 +110,29 @@ public class MMonoid extends MObj implements Monoid {
     @Override
     public Obj apply(final Obj lhs) {
         final Code code = this.resolve(lhs);
-        lhs.stream().forEach(o -> {
-            this.running().<Queue<Monad>>valueAs().add(MMonad.of(this, o, code.inst(0)));
-        });
         while (true) {
             final Monad m = this.running().<LinkedList<Monad>>valueAs().poll();
             if (null != m) {
-                LOG.trace("{{g}}=>{{/g}} processing monad %s", m);
-                if (m.inst().isInitial()) {
-
-                }
-                if(m.inst().isGather()) {
-
-                }
-                // no need to check isGather -- simply determine whether to flatten the monad or not and everything should consequence from that
-                (m.inst().isInitial() ? NoObj.single().stream() : m.inst().isGather() ? Stream.of(m.obj()) :  m.obj().stream()).forEach(o -> {
-                    LOG.trace("{{g}}==>{{/g}} processing obj %s at %s [%s]", o, m.inst(), m.inst().isInitial() ? "initial" : "midway");
-                    final Monad n = m.obj(o).apply(code.next(m.inst()));
-                    LOG.trace("{{g}}===>{{/g}} post-processing monad %s", n);
-                    if (!n.dead()) {
-                        if (n.halted()) {
-                            LOG.trace("{{g}}====>{{/g}} halting monad %s", n);
-                            n.obj().iterator().forEachRemaining(p -> this.halted().<Queue<Obj>>valueAs().add(p));
-                        } else if (n.inst().isGather()) {
-                            final Monad barrier = this.barriers().<List<Monad>>valueAs().get(0);
-                            LOG.trace("{{g}}====>{{/g}} appending to barrier %s", n);
-                            if (null == barrier)
-                                throw MTronException.of("barrier should exist: %s", n.inst());
-                            barrier.obj().append(n.obj());
-                        } else {
-                            LOG.trace("{{g}}====>{{/g}} propagating monad %s", n);
-                            this.running().<LinkedList<Monad>>valueAs().add(n);
-                        }
+                LOG.trace("{{g}}=>{{/g}} processing monad %s [%s]", m, m.inst().isInitial() ? "initial" : "midway");
+                final Monad n = m.apply(code.next(m.inst()));
+                LOG.trace("{{g}}===>{{/g}} post-processing monad %s", n);
+                if (!n.dead()) {
+                    if (n.halted()) {
+                        LOG.trace("{{g}}====>{{/g}} halting monad %s", n);
+                        n.obj().iterator().forEachRemaining(p -> this.halted().<Queue<Obj>>valueAs().add(p));
+                    } else if (n.inst().isGather()) {
+                        final Monad barrier = this.barriers().<List<Monad>>valueAs().get(0);
+                        LOG.trace("{{g}}====>{{/g}} appending to barrier %s", n);
+                        if (null == barrier)
+                            throw MTronException.of("barrier should exist: %s", n.inst());
+                        barrier.obj().append(n.obj());
+                    } else {
+                        LOG.trace("{{g}}====>{{/g}} propagating monad %s", n);
+                        n.obj().iterator().forEachRemaining(no -> this.running().<LinkedList<Monad>>valueAs().add(n.obj(no)));
                     }
-                });
+                } else {
+                    LOG.trace("{{r}}====>{{/r}} killing monad %s", n);
+                }
             } else if (!this.barriers().isEmpty()) {
                 final Monad barrier = this.barriers().<LinkedList<Monad>>valueAs().poll();
                 if (null != barrier) {

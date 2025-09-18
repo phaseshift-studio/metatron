@@ -18,7 +18,7 @@ import static studio.phaseshift.metatron.lang.fURI.*;
 import static studio.phaseshift.metatron.lang.obj.mtron.MInstSet.*;
 
 public class InstTest {
-    
+
     @ParameterizedTest
     @CsvSource(value = {
             // furi | tid | dom | range

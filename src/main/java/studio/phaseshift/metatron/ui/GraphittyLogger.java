@@ -23,7 +23,6 @@ import ch.qos.logback.core.LayoutBase;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.event.Level;
-import studio.phaseshift.metatron.lang.obj.Obj;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.HashMap;
@@ -72,8 +71,10 @@ public class GraphittyLogger extends LayoutBase<ILoggingEvent> {
     private GraphittyLogger otherLevel(final OtherLevel level, final Object f, final Object... args) {
         if (OtherLevel.NONE == level)
             System.out.print(this.makeMessage(false, f, args));
-        else if (OtherLevel.EXCEPT == level)
+        else if (OtherLevel.EXCEPT == level) {
+            this.error(f,args);
             throw MTronException.of(f, args);
+        }
         return this;
     }
 

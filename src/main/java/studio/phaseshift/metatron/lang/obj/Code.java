@@ -20,10 +20,17 @@ package studio.phaseshift.metatron.lang.obj;
 
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.monoid.mtron.MMonoid;
+import studio.phaseshift.metatron.ui.Graphitty;
+import studio.phaseshift.metatron.ui.GraphittyLogger;
+import studio.phaseshift.metatron.util.ObjUtil;
 
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Supplier;
 
 public interface Code extends Obj {
+
+    static GraphittyLogger LOG = Graphitty.log(Code.class);
 
     @Override
     Code clone(final Object value, final fURI tid, final fURI vid);
@@ -36,19 +43,47 @@ public interface Code extends Obj {
     }
 
     default Inst next(final Inst inst) {
-        if(inst.isNoObj())
+      final Inst nextInst =  ((Supplier<Inst>) () -> {
+            if (inst.isNoObj())
+                return NoObj.single();
+            boolean found = false;
+            for (final Inst i : this.value()) {
+                if (found) return i;
+                if (i == inst) found = true;
+            }
             return NoObj.single();
-        boolean found = false;
-        for (final Inst i : this.value()) {
-            if (found) return i;
-            if (i == inst) found = true;
-        }
-        return NoObj.single();
+        }).get();
+      LOG.trace("fetching next inst: %s => %s", inst, nextInst);
+      return nextInst;
+    }
+
+    @Override
+    default Code vid(final fURI newVid) {
+        return (Code) Obj.super.vid(newVid);
+    }
+
+    @Override
+    default Code tid(final fURI newTid) {
+        return (Code) Obj.super.tid(newTid);
+    }
+
+    @Override
+    default Code value(final Object newValue) {
+        return (Code) Obj.super.value(newValue);
     }
 
     @Override
     default Obj apply(final Obj lhs) {
-        return MMonoid.of(this).apply(lhs).iterator().next();
+        return ObjUtil.oneNoneOrAll(MMonoid.of(lhs,this).apply(NoObj.single()).iterator());
+    }
+
+    default Code resolve(final Inst.Resolve desiredResolution, final Obj lhs) {
+        final AtomicReference<Obj> token = new AtomicReference<>(lhs);
+        return this.value(this.value().stream().map(i -> {
+           Inst rinst = i.resolve(desiredResolution,token.get());
+           token.set(rinst.dom());
+           return rinst;
+        }).toList());
     }
 
    // Code resolve(final Obj start);

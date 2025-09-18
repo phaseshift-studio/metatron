@@ -53,6 +53,11 @@ public class NoObj implements Obj, Inst {
     }
 
     @Override
+    public Obj apply(final Obj lhs) {
+        return lhs;
+    }
+
+    @Override
     public fURI vid() {
         return fURI.NULL;
     }

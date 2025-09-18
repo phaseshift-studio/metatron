@@ -40,31 +40,31 @@ public class BootLoader {
     public static Router ROUTER = new MemRouter(fURI.of("/sys/router"));
 
     public static void load() {
+        if(BOOTING) {
+            try {
+                LOG.info("booting metatron on %s {{g}}[%s{{g}}]{{X}}",
+                        MUri.of(InetAddress.getLocalHost().getHostName()).tid("host"),
+                        MUri.of(InetAddress.getLocalHost().getHostAddress()).tid("ipv4"));
+            } catch (final UnknownHostException e) {
+                LOG.warn("booting metatron on a non-networked jvm");
+            }
+            final Space mnt = new MemSpace(fURI.of("/mnt/#"), fURI.of("/mnt"));
+            Router.global().registerSpace(mnt);
+            final Space sys = new MemSpace(fURI.of("/sys/#"), fURI.of("/mnt/sys"));
+            Router.global().registerSpace(sys);
+            Router.global().write(Router.global().vid(), Router.global());
+            final Space stk = Router.stack();
+            Router.global().registerSpace(stk);
+            final Space mtron = new MInstSet(fURI.of("/mnt/lang/mtron"));
+            Router.global().registerSpace(mtron);
 
-        try {
-            LOG.info("booting metatron on %s {{g}}[%s{{g}}]{{X}}",
-                    MUri.of(InetAddress.getLocalHost().getHostName()).tid("host"),
-                    MUri.of(InetAddress.getLocalHost().getHostAddress()).tid("ipv4"));
-        } catch (final UnknownHostException e) {
-            LOG.warn("booting metatron on a non-networked jvm");
+
+            //Router.global().registerStruct(new MqttSpace(Map.of(new MUri("broker"), new MUri("ip://192.168.66.2:1883"), new MUri("pattern"), new MUri("/mqtt/#")), MQTT_TID, fURI.of("/mnt/mqtt")));
+            // Router.global().registerStruct(new MqttSpace(Map.of(new MUri("broker"), new MUri("ip://192.168.66.2:1883"), new MUri("pattern"), new MUri("zigbee2mqtt/#")), MQTT_TID, fURI.of("/mnt/zigbee2mqtt")));
+            BOOTING = false;
+        } else {
+            LOG.warn("boot processes previously completed -- ignoring request to boot");
         }
-        final Space mnt = new MemSpace(fURI.of("/mnt/#"), fURI.of("/mnt"));
-        Router.global().registerSpace(mnt);
-        final Space sys = new MemSpace(fURI.of("/sys/#"), fURI.of("/mnt/sys"));
-        Router.global().registerSpace(sys);
-        Router.global().write(Router.global().vid(), Router.global());
-        final Space stk = Router.stack();
-        Router.global().registerSpace(stk);
-        final Space mtron = new MInstSet(fURI.of("/mnt/lang/mtron"));
-        Router.global().registerSpace(mtron);
 
-
-        //Router.global().registerStruct(new MqttSpace(Map.of(new MUri("broker"), new MUri("ip://192.168.66.2:1883"), new MUri("pattern"), new MUri("/mqtt/#")), MQTT_TID, fURI.of("/mnt/mqtt")));
-        // Router.global().registerStruct(new MqttSpace(Map.of(new MUri("broker"), new MUri("ip://192.168.66.2:1883"), new MUri("pattern"), new MUri("zigbee2mqtt/#")), MQTT_TID, fURI.of("/mnt/zigbee2mqtt")));
-
-
-                        BOOTING = false;
-                        //SInst.load();
-        //SInst.ext();
     }
 }

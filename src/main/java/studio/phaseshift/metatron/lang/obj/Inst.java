@@ -107,10 +107,10 @@ public interface Inst extends Obj {
             return this;
         } else {
             if (currentResolution == Resolve.A) {
-                final Inst resolved = new MInstSet(fURI.of("/mnt/mtron")).resolve(lhs, this);
-                //final Inst resolved = Router.global().<InstSet>getSpace(fURI.of("/mtron")).resolve(lhs, this);
+                //final Inst resolved = new MInstSet(fURI.of("/mnt/mtron")).resolve(lhs, this);
+                final Inst resolved = Router.global().<InstSet>getSpace(fURI.of("/mtron/#")).resolve(lhs, this);
                 LOG.trace("resolution ({{m}}%s {{g}}=>{{/g}} %s{{/m}}): %s => %s", currentResolution, resolved.resolution(), lhs, resolved);
-                return resolved.resolution().equals(desiredResolution) ? resolved : resolved.resolve(desiredResolution, lhs);
+                return resolved.resolution().equals(desiredResolution) || resolved.resolution().compareTo(desiredResolution) >= 0 ? resolved : resolved.resolve(desiredResolution, lhs);
             } else { // Resolve.B
                 final boolean blocking = this.tid().equals(MInstSet.BLOCK_TID) || this.tid().equals(MInstSet.WITHIN_TID);
                 if (!blocking && !lhs.matches(this.dom()))
@@ -145,7 +145,7 @@ public interface Inst extends Obj {
     }
 
     default boolean isInitial() {
-        return this.dom().tid().coefficientValue().isZero();
+        return this.dom().tid().coefficientValue().isZero();// || this.dom().tid().coefficientValue().isQuestion();
     }
 
     default boolean isTerminal() {

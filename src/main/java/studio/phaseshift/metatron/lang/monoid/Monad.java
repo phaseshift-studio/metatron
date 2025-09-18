@@ -23,6 +23,10 @@ public interface Monad extends Obj {
         return this.obj().isNoObj();
     }
 
+    default boolean zombie() {
+        return this.dead() && !this.halted();
+    }
+
     default Rec state() {
         return this.value().getValue3();
     }
