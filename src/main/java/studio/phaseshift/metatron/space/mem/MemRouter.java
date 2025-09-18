@@ -55,7 +55,7 @@ public class MemRouter implements Router {
 
     @Override
     public fURI rewrite(final fURI furi,final boolean big) {
-       return big ? this.smallToBigRewrites.getOrDefault(furi,furi) : this.bigToSmallRewrites.getOrDefault(furi,furi);
+       return (big ? this.smallToBigRewrites.getOrDefault(furi.basePath(),furi) : this.bigToSmallRewrites.getOrDefault(furi.basePath(),furi)).coefficient(furi.coefficient()).queryMap(furi.queryMap());
     }
 
     public void registerSpace(final Space space) {

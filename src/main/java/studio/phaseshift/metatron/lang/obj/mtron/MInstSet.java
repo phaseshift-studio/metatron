@@ -47,7 +47,7 @@ public class MInstSet extends MObj implements InstSet {
     public static final fURI CODE_TID = fURI.of("/mtron/code");
     public static final fURI OBJS_TID = fURI.of("/mtron/objs");
     public static final fURI NOOBJ_REF_TID = fURI.of("/mtron/noobj");
-    public static final fURI NOOBJ_TID = fURI.of("/mtron/noobj");
+    public static final fURI NOOBJ_TID = fURI.of("");
 
     public static final fURI MTRON_INST_TID = fURI.of("/mtron/inst");
     public static final fURI ID_TID = INST_TID.extend("id");
@@ -73,6 +73,7 @@ public class MInstSet extends MObj implements InstSet {
     public static final fURI TYPE_TID = INST_TID.extend("type");
     public static final fURI AT_TID = INST_TID.extend("at");
     public static final fURI IS_TID = INST_TID.extend("is");
+    public static final fURI IN_TID = INST_TID.extend("in");
     public static final fURI EQ_TID = INST_TID.extend("eq");
     public static final fURI NEQ_TID = INST_TID.extend("neq");
     public static final fURI GT_TID = INST_TID.extend("gt");
@@ -80,12 +81,23 @@ public class MInstSet extends MObj implements InstSet {
     public static final fURI GTE_TID = INST_TID.extend("gte");
     public static final fURI LTE_TID = INST_TID.extend("lte");
     public static final fURI BARRIER_TID = INST_TID.extend("barrier");
+    public static final fURI REIFY_TID = INST_TID.extend("reify");
 
     // inst_tid -> <inst_tid_dom -> set<inst>>
     private static final Map<fURI, Map<fURI, Set<Inst>>> SYMBOL_TABLE = new LinkedHashMap<>();
 
     public void load() {
-        this.define(BARRIER_TID, fURI.ANY.coefficient("*"), fURI.ANY.coefficient("*"), MRec.of(MType.of(CODE_TID), MInst.instA(ID_TID)), (lhs, inst) -> inst.arg(0).apply(lhs), MObjs.of(List.of()));
+        this.define(REIFY_TID, fURI.ANY.maybe(), REC_TID, MLst.of(), (lhs, inst) ->
+                MRec.ofUriKeyed(
+                        "tid", MRec.ofUriKeyed(
+                                "path", MUri.of(lhs.tid().path()),
+                                "c", MRec.ofUriKeyed(
+                                        "min", MInt.of(lhs.tid().coefficientValue().min()),
+                                        "max", MInt.of(lhs.tid().coefficientValue().max())),
+                                "query", MStr.of(lhs.tid().queryMap().toString())),
+                        "value", MObjFactory.of().create(lhs.value()))
+        );
+        this.define(BARRIER_TID, fURI.ANY.coefficient("*"), fURI.ANY.coefficient("*"), MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> inst.arg(0).apply(lhs), MObjs.of(List.of()));
         this.define(MERGE_TID, LST_TID, fURI.ANY.coefficient("*"), MLst.of(), (lhs, inst) -> lhs.isPoly() ? MObjs.of(lhs.<Poly>as().elements()) : lhs);
         this.define(MERGE_TID, REC_TID, REL_TID.coefficient("*"), MLst.of(), (lhs, inst) -> lhs.isPoly() ? MObjs.of(lhs.<Poly>as().elements()) : lhs);
         this.define(AT_TID, fURI.ANY, fURI.ANY, MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> lhs.vid(inst.arg(0).uriValue()));
@@ -101,7 +113,7 @@ public class MInstSet extends MObj implements InstSet {
         this.define(RNG_TID, REL_TID, fURI.ANY, MLst.of(), (lhs, inst) -> MObjs.of(lhs.relValue().getValue1()));
         this.define(RNG_TID, fURI.ANY, fURI.ANY, MLst.of(), (lhs, inst) -> lhs);
         this.define(TO_TID, fURI.ANY, fURI.ANY, MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> Router.global().write(inst.arg(0).uriValue(), lhs));
-        this.define(FROM_TID, fURI.ANY, fURI.ANY, MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> Router.global().read(inst.arg(0).uriValue()));
+        this.define(FROM_TID, fURI.ANY.coefficient("?"), fURI.ANY.coefficient("0,"), MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> Router.global().read(inst.arg(0).uriValue()));
         this.define(REF_TID, fURI.ANY, fURI.ANY, MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> Router.global().write(lhs.uriValue(), inst.arg(0)));
         this.define(ID_TID, fURI.ANY, fURI.ANY, MLst.of(), (lhs, inst) -> lhs);
         this.define(START_TID, NOOBJ_TID.coefficient("0"), fURI.ANY.coefficient("*"), MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> inst.arg(0));
@@ -114,7 +126,8 @@ public class MInstSet extends MObj implements InstSet {
         this.define(MULT_TID, INT_TID, INT_TID, MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> lhs.value(lhs.intValue() * inst.arg(0).intValue()));
         this.define(MULT_TID, REAL_TID, REAL_TID, MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> lhs.value(lhs.realValue() * inst.arg(0).realValue()));
         this.define(MULT_TID, URI_TID, URI_TID, MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> lhs.value(lhs.uriValue().retractPattern().extend(inst.arg(0).uriValue())));
-        this.define(IS_TID, fURI.ANY, fURI.ANY, MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> inst.arg(0).boolValue() ? lhs : NoObj.single());
+        this.define(IS_TID, fURI.ANY, fURI.ANY.coefficient("?"), MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> inst.arg(0).boolValue() ? lhs : NoObj.single());
+        this.define(IN_TID, fURI.ANY, BOOL_TID, MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> MBool.of(lhs.matches(inst.arg(0))));
         this.define(EQ_TID, fURI.ANY, BOOL_TID, MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> MBool.of(lhs.equals(inst.arg(0))));
         this.define(NEQ_TID, fURI.ANY, BOOL_TID, MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> MBool.of(!lhs.equals(inst.arg(0))));
         this.define(GT_TID, INT_TID, BOOL_TID, MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> MBool.of(lhs.intValue() > inst.arg(0).intValue()));
@@ -134,7 +147,7 @@ public class MInstSet extends MObj implements InstSet {
                 return MRec.of(inst.arg(0).recValue().entrySet().stream()
                         .map(e -> e.getKey().apply(lhs).choose(Obj::isNoObj, null, x -> MRel.of(x, e.getValue().apply(x))))
                         .filter(x -> !Objects.isNull(x))
-                        .collect(Collectors.toMap(a -> a.<Rel>as().first(), b -> b.<Rel>as().second(), (a,b) -> b, LinkedHashMap<Obj,Obj>::new)));
+                        .collect(Collectors.toMap(a -> a.<Rel>as().first(), b -> b.<Rel>as().second(), (a, b) -> b, LinkedHashMap<Obj, Obj>::new)));
             } else if (inst.arg(0).isRel()) {
                 return MRel.of(inst.arg(0).<Rel>as().first().apply(lhs), inst.arg(0).<Rel>as().second().apply(lhs));
             } else {

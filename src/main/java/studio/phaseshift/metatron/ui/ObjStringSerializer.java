@@ -49,11 +49,7 @@ public class ObjStringSerializer implements ObjSerializer<String> {
                     .append(this.b.ignoreRewrites ? "" : "{{X}}")
                     .toString();
         else if (obj instanceof final Inst inst) {
-            sb.append(this.b.palette.typeC())
-                    .append(this.b.hideTypes.contains(inst.tid()) ? "" : inst.tid().small())
-                    .append(this.b.palette.formC())
-                    .append(this.b.hideTypes.contains(inst.tid()) ? "" : "::")
-                    .append("(");
+            generateTID(sb, obj.tid()).append("(");
             if (!inst.args().isEmpty()) {
                 boolean isLst = inst.args().isLst();
                 for (final Obj kv : inst.args().elements()) {
@@ -73,13 +69,13 @@ public class ObjStringSerializer implements ObjSerializer<String> {
                     .append(this.b.ignoreRewrites ? "" : "{{X}}")
                     .toString();
         } else if (obj instanceof final Rel rel) {
-            return generateTID(sb, rel).append(rel.first()).append(this.b.palette.formC())
+            return generateTID(sb, obj.tid()).append(rel.first()).append(this.b.palette.formC())
                     .append("=>")
                     .append(rel.second())
                     .append(this.b.ignoreRewrites ? "" : "{{X}}")
                     .toString();
         } else if (obj instanceof final Lst lst) {
-            generateTID(sb, obj).append(this.b.palette.formC()).append('[').append(this.b.palette.valueC());
+            generateTID(sb, obj.tid()).append(this.b.palette.formC()).append('[').append(this.b.palette.valueC());
             for (final Obj o : lst.value()) {
                 sb.append(o).append(this.b.palette.formC()).append(',');
             }
@@ -87,7 +83,7 @@ public class ObjStringSerializer implements ObjSerializer<String> {
             else sb.append(this.b.palette.formC()).append(",");
             return generateVID(sb.append(']'), lst).append(this.b.ignoreRewrites ? "" : "{{X}}").toString();
         } else if (obj instanceof final Objs objs) {
-            generateTID(sb, obj).append(this.b.palette.formC()).append("{").append(this.b.palette.valueC());
+            generateTID(sb, obj.tid()).append(this.b.palette.formC()).append("{").append(this.b.palette.valueC());
             boolean found = false;
             for (final Obj o : objs.value()) {
                 found = true;
@@ -100,7 +96,7 @@ public class ObjStringSerializer implements ObjSerializer<String> {
             if (this.b.prettyPrint && rec.count() > 1) {
                 this.generateRec(sb, rec, 0);
             } else {
-                generateTID(sb, obj).append(this.b.palette.formC()).append('[').append(this.b.palette.valueC());
+                generateTID(sb, obj.tid()).append(this.b.palette.formC()).append('[').append(this.b.palette.valueC());
                 for (final Map.Entry<Obj, Obj> o : rec.value().entrySet()) {
                     sb.append(o.getKey())
                             .append(this.b.palette.formC())
@@ -110,9 +106,9 @@ public class ObjStringSerializer implements ObjSerializer<String> {
                 }
             }
             if (rec.count() == 1) sb.deleteCharAt(sb.length() - 1).append(this.b.palette.formC()).append(']');
-            return generateVID(sb,rec).append(this.b.ignoreRewrites ? "" : "{{X}}").toString();
+            return generateVID(sb, rec).append(this.b.ignoreRewrites ? "" : "{{X}}").toString();
         } else if (obj instanceof final Type type) {
-            return generateTID(sb, obj)
+            return generateTID(sb, obj.tid())
                     .append("{{r}}T")
                     .append(this.b.palette.formC())
                     .append("[")
@@ -121,7 +117,7 @@ public class ObjStringSerializer implements ObjSerializer<String> {
                     .append(this.b.palette.formC())
                     .append("]{{X}}").toString();
         } else
-            return generateVID(generateTID(sb, obj)
+            return generateVID(generateTID(sb, obj.tid())
                     .append(this.b.palette.valueC())
                     .append(null == obj.value() ? "" : obj.value().toString())
                     .append(this.b.palette.form2C()), obj)
@@ -141,7 +137,7 @@ public class ObjStringSerializer implements ObjSerializer<String> {
                 sb.append(write(v));
             sb.append("{{FORM1}},\n");
         }); // {{FORM{sdfsdf}}}
-        sb.deleteCharAt(sb.length()-2);
+        sb.deleteCharAt(sb.length() - 2);
         sb.append(" ".repeat(depth)).append("{{FORM1}}]{{FORM1}}");
         return sb;
     }
@@ -154,11 +150,32 @@ public class ObjStringSerializer implements ObjSerializer<String> {
                 .append(obj.vid());
     }
 
-    private StringBuilder generateTID(final StringBuilder sb, final Obj obj) {
-        return this.b.hideTypes.contains(obj.tid()) ? sb : sb.append(this.b.palette.typeC())
-                .append(obj.tid().small())
-                .append(this.b.palette.formC())
-                .append("::");
+    private StringBuilder generateTID(final StringBuilder sb, final fURI tid) {
+        return generateTID(sb,tid,true);
+    }
+    private StringBuilder generateTID(final StringBuilder sb, final fURI tid, final boolean doubleColon) {
+        if (!this.b.hideTypes.contains(tid))
+            sb.append(this.b.palette.typeC()).append(tid.small().basePath());
+        if (!tid.coefficientValue().isOne())
+            sb.append(this.b.palette.form3C())
+                    .append('[')
+                    .append(this.b.palette.typeC())
+                    .append(tid.coefficient())
+                    .append(this.b.palette.form3C())
+                    .append(']');
+        if (tid.hasQuery()) {
+            sb.append(this.b.palette.valueC()).append('?');
+            for (Map.Entry<String, String> kv : tid.queryMap().entrySet()) {
+                sb.append(this.b.palette.form3C()).append(kv.getKey()).append(this.b.palette.form2C()).append("=");
+                if (kv.getKey().equals("dom") || kv.getKey().equals("rng"))
+                    generateTID(sb, fURI.of(kv.getValue()),false);
+                else
+                    sb.append(this.b.palette.typeC()).append(kv.getValue());
+                sb.append(this.b.palette.valueC()).append("&");
+            }
+            sb.deleteCharAt(sb.length()-1);
+        }
+        return doubleColon ? sb.append(this.b.palette.formC()).append("::") : sb;
     }
 
     @Override

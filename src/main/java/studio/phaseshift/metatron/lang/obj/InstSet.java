@@ -24,6 +24,7 @@ import studio.phaseshift.metatron.lang.obj.base.furi.TypefURI;
 import studio.phaseshift.metatron.lang.obj.mtron.MInst;
 import studio.phaseshift.metatron.lang.obj.mtron.MLst;
 import studio.phaseshift.metatron.space.Space;
+import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.*;
@@ -79,8 +80,8 @@ public interface InstSet extends Space {
                 .entrySet()
                 .stream()
                 .filter(kv -> {
-                    // Graphitty.stdout().println("%s matches %s = %s".formatted(lhs.tid().queryless(),kv.getKey().queryless(),lhs.tid().queryless().matches(kv.getKey().queryless())));
-                    return lhs.tid().basePath().matches(kv.getKey().basePath());
+                    Graphitty.stdout().println("%s matches %s = %s".formatted(lhs.tid(),kv.getKey(),lhs.tid().matches(kv.getKey())));
+                    return lhs.tid().matches(kv.getKey());
                 })
                 .map(Map.Entry::getValue)
                 .flatMap(Collection::stream)

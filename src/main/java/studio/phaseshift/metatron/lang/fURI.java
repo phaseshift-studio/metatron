@@ -50,7 +50,7 @@ public class fURI implements Cloneable {
 
 
     private static Map<String,String> queryToMap(final String query) {
-        return null == query ? null : Stream.of(query.split("&")).map(kv -> kv.split("=")).collect(Collectors.toMap(kv -> kv[0], kv->kv.length == 1 ? "" : kv[1]));
+        return null == query || query.isEmpty() ? null : Stream.of(query.split("&")).map(kv -> kv.split("=")).collect(Collectors.toMap(kv -> kv[0], kv->kv.length == 1 ? "" : kv[1]));
     }
     private static String queryToString(final Map<String,String> query) {
         return null == query || query.isEmpty() ? null : query.entrySet().stream().map(kv -> kv.getKey() + (kv.getValue().isBlank() ? "" : ("=" + kv.getValue()))).reduce("",(a,b) -> a + "&" + b).substring(1);
@@ -165,7 +165,7 @@ public class fURI implements Cloneable {
     }
 
     public String name() {
-        return this.segments().get(this.segments().size() - 1);
+        return this.segments().isEmpty() ? "" : this.segments().get(this.segments().size() - 1);
     }
 
     public Uri toUri() {
@@ -324,6 +324,10 @@ public class fURI implements Cloneable {
         return true;
     }
 
+    public boolean hasQuery() {
+        return this.query != null && !this.query.isEmpty();
+    }
+
     public fURI query(final String key, final String value) {
         Map<String,String> appended = null == this.query ? new LinkedHashMap<>() : new LinkedHashMap<>(this.query);
         appended.put(key,value);
@@ -334,12 +338,32 @@ public class fURI implements Cloneable {
        return this.query(key.toString(),value.toString());
     }
 
-    public fURI queryMap(final Map<Object, Object> kv) {
+    public fURI queryMap(final Map<String, String> kv) {
         StringBuilder q = new StringBuilder();
         kv.forEach((k, v) -> {
             q.append(k).append("=").append(v).append("&");
         });
         return new fURI(this.scheme, this.host, this.port, this.sstart, this.path, this.send, q.isEmpty() ? "" : q.substring(0, q.length() - 1));
+    }
+
+    public fURI one() {
+        return this.coefficient("1");
+    }
+
+    public fURI zero() {
+        return this.coefficient("0");
+    }
+
+    public fURI any() {
+        return this.coefficient("*");
+    }
+
+    public fURI maybe() {
+        return this.coefficient("?");
+    }
+
+    public fURI some() {
+        return this.coefficient("+");
     }
 
     public fURI coefficient(final String coefficient) {

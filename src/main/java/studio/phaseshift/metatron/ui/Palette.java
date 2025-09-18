@@ -51,6 +51,10 @@ public class Palette {
         return inColor ? "{{m}}" : "";
     }
 
+    public String form3C() {
+        return inColor ? "{{c}}" : "";
+    }
+
     public String warnC() {
         return inColor ? "{{y}}" : "";
     }

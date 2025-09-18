@@ -61,4 +61,20 @@ public class MRec extends MObj implements Rec {
         }
         return MRec.of(map);
     }
+
+    public static Rec ofUriKeyed(final Object... kv) {
+        final Map<Obj, Obj> map = new LinkedHashMap<>();
+        for (int i = 0; i < kv.length; i = i + 2) {
+            map.put(MUri.of(kv[i].toString()), (Obj)kv[i + 1]);
+        }
+        return MRec.of(map);
+    }
+
+    public static Rec ofUriKeyed(final Map<String,String> value, final fURI tid) {
+        final Map<Obj, Obj> map = new LinkedHashMap<>();
+        for(final Map.Entry<String,String> kv : value.entrySet()) {
+            map.put(MUri.of(kv.getKey()),MStr.of(kv.getValue()));
+        }
+        return MRec.of(map,tid);
+    }
 }

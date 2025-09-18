@@ -63,8 +63,9 @@ public class ObjParser {
                 .map(t -> MRel.of(pick(t, 1), pick(t, 3), pick(t, 0))));
         obj_parser.set(choice(
                 m_comment(),
+                m_type(),
                 m_noobj(),
-               // m_rel(),
+                // m_rel(),
                 m_bool(),
                 m_real(),
                 m_int(),
@@ -77,8 +78,9 @@ public class ObjParser {
                 m_uri()));
         obj_no_code_parser.set(choice(
                 m_comment(),
+                m_type(),
                 m_noobj(),
-              //  m_rel(),
+                //  m_rel(),
                 m_bool(),
                 m_real(),
                 m_int(),
@@ -89,6 +91,7 @@ public class ObjParser {
                 m_uri()));
         obj_rel_back_parser.set(choice(
                 m_comment(),
+                m_type(),
                 m_noobj(),
                 m_bool(),
                 m_real(),
@@ -147,7 +150,7 @@ public class ObjParser {
         final Result result = choice(sugar_code(), m_obj()).end().parse(code.trim());
         if (result.isFailure())
             Graphitty.log(ObjParser.class).except(result.getBuffer() + "\n" +
-                    String.format("%" + (result.getPosition() + "[ERROR] ".length() + 3) + "s", "") +
+                    String.format("%" + (result.getPosition() + "[ERROR] [Console] ".length() + 3) + "s", "") +
                     "{{b}}^ {{r}}" +
                     result.getMessage() + "{{X}}\n");
         return result.get();
@@ -162,8 +165,8 @@ public class ObjParser {
     private static final String QUERYLESS_FURI_CHARS = "/%!#_=@+&:";
 
     public static Parser m_furi(final String furiCharacterSet) {
-        final Supplier<Parser> internal = () -> seq(word().or(seq(of("=>").not(), of("::").not(), anyOf(furiCharacterSet))).plus().flatten(), m_furi_coefficient()).map(t -> new fURI(pick(t, 0)).coefficient(pick(t, 1)));
-        final Supplier<Parser> internal2 = () -> seq(word().or(seq(of("=>").not(), of("::").not(), anyOf(FULL_FURI_CHARS))).plus().flatten(), m_furi_coefficient()).map(t -> new fURI(pick(t, 0)).coefficient(pick(t, 1)));
+        final Supplier<Parser> internal = () -> seq(word().or(seq(of("=>").not(), of("::").not(), of("[").not(), anyOf(furiCharacterSet))).plus().flatten(), m_furi_coefficient()).map(t -> new fURI(pick(t, 0)).coefficient(pick(t, 1)));
+        final Supplier<Parser> internal2 = () -> seq(word().or(seq(of("=>").not(), of("::").not(), of("[").not(), anyOf(FULL_FURI_CHARS))).plus().flatten(), m_furi_coefficient()).map(t -> new fURI(pick(t, 0)).coefficient(pick(t, 1)));
         return choice(seq(of('<'), internal2.get(), of('>')).pick(1), internal.get());
     }
 
@@ -174,12 +177,11 @@ public class ObjParser {
 
     public static Parser m_furi_coefficient() {
         return opt(seq(of('['), choice(
-                        of('0').map(t -> "0,0"),
+                        seq(digit().plus(), of(','), digit().plus()).flatten(),
+                        digit().plus().flatten().map(t -> t + "," + t),
                         of('*').map(t -> "0,"),
                         of('+').map(t -> "1,"),
-                        of('?').map(t -> "0,1"),
-                        seq(digit().plus(), of(','), digit().plus()).flatten(),
-                        digit().plus().flatten().map(t -> t + "," + t)),
+                        of('?').map(t -> "0,1")),
                 of(']')).map(t -> pick(t, 1)), null);
     }
 
@@ -267,6 +269,10 @@ public class ObjParser {
 
     public static Parser m_rec() {
         return rec_parser;
+    }
+
+    public static Parser m_type() {
+        return seq(m_type_prefix(TYPE_TID), of("T["), opt(m_obj(), null), of("]")).map(t -> MType.of(pick(t, 2), pick(t, 0)));
     }
 
     public static Parser sugar_code() {

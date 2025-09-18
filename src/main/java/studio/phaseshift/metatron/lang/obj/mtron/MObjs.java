@@ -21,6 +21,7 @@ package studio.phaseshift.metatron.lang.obj.mtron;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.Obj;
 import studio.phaseshift.metatron.lang.obj.Objs;
+import studio.phaseshift.metatron.lang.obj.Type;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
 import studio.phaseshift.metatron.util.IteratorUtil;
@@ -55,6 +56,11 @@ public class MObjs extends MObj implements Objs {
         if(types.size() == 1) return types.iterator().next().coefficient(Long.toString(count));
         final fURI temp = types.stream().reduce(fURI::commonRoot).get();
         return temp.coefficient(""+count);
+    }
+
+    @Override
+    public Type type() {
+        return MType.of(this,this.tid());
     }
 
     @Override

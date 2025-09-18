@@ -27,7 +27,7 @@ import studio.phaseshift.metatron.ui.Palette;
 
 public interface Router extends Obj {
 
-    ThreadLocal<StackSpace> INST_STACK =   ThreadLocal.withInitial(() -> new StackSpace(fURI.of("+"),Router.global().tid().extend("/stack")));
+    ThreadLocal<StackSpace> INST_STACK =   ThreadLocal.withInitial(() -> new StackSpace(fURI.of("+"),Router.global().tid().extend("stack")));
 
     static Router global() {
         return BootLoader.ROUTER;

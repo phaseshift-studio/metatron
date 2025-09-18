@@ -36,27 +36,27 @@ public interface MCoeff {
         }
 
         public boolean isZero() {
-            return (this.max != null && this.max == 0) && (this.min != null && this.min == 0);
+                 return Objects.equals(this.min, 0L) && Objects.equals(this.max, 0L);
         }
 
         @Override
         public boolean isOne() {
-            return this.max == 1 && this.min == 1;
+            return Objects.equals(this.min, 1L) && Objects.equals(this.max,1L);
         }
 
         @Override
         public boolean isStar() {
-            return this.equals(Int.star());
+            return Objects.equals(this.min, 0L) && null == this.max;
         }
 
         @Override
         public boolean isPlus() {
-            return this.min == 1 && this.max == null;
+            return Objects.equals(this.min, 1L) && null == this.max;
         }
 
         @Override
         public boolean isQuestion() {
-            return this.min == 0 && this.max == 1;
+            return  Objects.equals(this.min, 0L) &&  Objects.equals(this.max, 1L);
         }
 
         @Override

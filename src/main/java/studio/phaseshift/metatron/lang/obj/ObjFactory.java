@@ -27,6 +27,8 @@ public interface ObjFactory {
 
     <O extends Obj> O create(final Object value, final fURI tid, final fURI vid, final Class<O> objClass);
 
+    Obj create(final Object value);
+
     default <O extends Obj> O create(final Object value, final fURI tid, final Class<O> objClass) {
         return this.create(value, tid, fURI.NULL, objClass);
     }
