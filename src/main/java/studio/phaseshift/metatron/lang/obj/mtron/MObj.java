@@ -21,6 +21,7 @@ package studio.phaseshift.metatron.lang.obj.mtron;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.Obj;
 import studio.phaseshift.metatron.lang.obj.Objs;
+import studio.phaseshift.metatron.space.Router;
 import studio.phaseshift.metatron.ui.Graphitty;
 
 import java.util.ArrayList;
@@ -38,8 +39,8 @@ public class MObj implements Obj {
         this.value = value;
         this.tid = tid.big();
         this.vid = vid;
-        // if(null != this.vid && !this.vid.equals(fURI.NONE))
-        //     Router.global().write(this.vid,this);
+       //  if(null != this.vid && !this.vid.equals(fURI.NONE))
+         //    Router.global().write(this.vid,this);
     }
 
     @Override

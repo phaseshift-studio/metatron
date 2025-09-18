@@ -33,49 +33,14 @@ import java.util.*;
 import java.util.stream.Stream;
 
 
-public class MemSpace extends MObj implements Space {
+public class MemSpace extends MSpace implements Space {
 
-    private static final GraphittyLogger LOG = Graphitty.log(MemSpace.class);
-    public static final fURI MEMSTRUCT_TID = fURI.of("struct:/mtron/mem");
-    private final fURI pattern;
+    public static final fURI MEMSPACE_TID = fURI.of("/mtron/space/memspace");
 
     final Map<fURI, Obj> store = new HashMap<>();
 
     public MemSpace(final fURI pattern, final fURI vid) {
-        super(Map.of(), MEMSTRUCT_TID, vid);
-        this.pattern = pattern;
-        // this.config = config;
-        LOG.info("%s loaded at %s {{g}}[{{y}}addr{{g}}=>{{X}}%s{{g}}]{{X}}", tid().toUri(true), MUri.of(this.vid), MUri.of(this.pattern));
-    }
-
-    @Override
-    public String toString() {
-        return "memstruct";
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(this.vid, this.pattern, this.tid());
-    }
-
-    @Override
-    public boolean equals(final Object other) {
-        return other instanceof MemSpace && this.hashCode() == other.hashCode();
-    }
-
-    @Override
-    public Map<Obj, Obj> value() {
-        return Map.of();
-    }
-
-  /*  @Override
-    public <O extends Obj> O clone(Object value) {
-        return this;
-    }*/
-
-    @Override
-    public fURI pattern() {
-        return null == this.pattern ? fURI.of("#") : this.pattern;
+        super(pattern, MEMSPACE_TID, vid);
     }
 
     @Override
@@ -170,38 +135,6 @@ public class MemSpace extends MObj implements Space {
                 this.store.put(resolvedAddr, resolvedObj);
         });
         return obj;
-    }
-
-   /* @Override
-    public void append(final fURI addr, final Obj... obj) {
-        Obj poly = this.store.get(addr);
-        if (null == poly || poly.isMono())
-            this.store.put(addr, new SObj.Objs(Arrays.asList(obj), OBJS_URI, null));
-        else {
-            Poly ppoly = (Poly) poly;
-            ppoly.append(obj);
-        }
-    }*/
-
-    /*@Override
-    public Obj get(int index) {
-        return NoObj.of();
-    }
-
-    @Override
-    public Obj get(final fURI key) {
-        return this.read(key);
-    }
-
-
-    @Override
-    public long length() {
-        return 0;
-    }*/
-
-    @Override
-    public <O extends Obj> O clone(Object value, fURI tid, fURI vid) {
-        return null;
     }
 
     @Override

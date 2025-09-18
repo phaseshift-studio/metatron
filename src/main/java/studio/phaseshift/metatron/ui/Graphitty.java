@@ -129,7 +129,6 @@ public class Graphitty {
         return ObjStringSerializer.build().create().write(obj);
     }
 
-
     public Graphitty(final Map<String, String> rewrites, final OutputStream out) {
         this.out = out;
         this.rewrites = new HashMap<>();

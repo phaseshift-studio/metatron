@@ -24,6 +24,7 @@ import studio.phaseshift.metatron.lang.monoid.mtron.MMonoid;
 import studio.phaseshift.metatron.lang.obj.*;
 import studio.phaseshift.metatron.lang.obj.base.furi.TypefURI;
 import studio.phaseshift.metatron.space.Router;
+import studio.phaseshift.metatron.space.mem.MSpace;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
@@ -32,7 +33,7 @@ import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class MInstSet extends MObj implements InstSet {
+public class MInstSet extends MSpace implements InstSet {
 
     public static final fURI MTRON_TID = fURI.of("/mtron");
     public static final fURI BOOL_TID = fURI.of("/mtron/bool");
@@ -46,7 +47,6 @@ public class MInstSet extends MObj implements InstSet {
     public static final fURI INST_TID = fURI.of("/mtron/inst");
     public static final fURI CODE_TID = fURI.of("/mtron/code");
     public static final fURI OBJS_TID = fURI.of("/mtron/objs");
-    public static final fURI NOOBJ_REF_TID = fURI.of("/mtron/noobj");
     public static final fURI NOOBJ_TID = fURI.of("");
 
     public static final fURI MTRON_INST_TID = fURI.of("/mtron/inst");
@@ -196,7 +196,7 @@ public class MInstSet extends MObj implements InstSet {
     }
 
     public MInstSet(final fURI vid) {
-        super(SYMBOL_TABLE, MTRON_TID, vid);
+        super(MTRON_TID.extend("#"), MTRON_TID, vid);
         this.load();
     }
 
@@ -205,17 +205,12 @@ public class MInstSet extends MObj implements InstSet {
     }
 
     @Override
-    public InstSet clone(final Object value, final fURI tid, final fURI vid) {
+    public MInstSet clone(final Object value, final fURI tid, final fURI vid) {
         return this;
     }
 
     @Override
     public Map<fURI, Map<fURI, Set<Inst>>> value() {
         return SYMBOL_TABLE;
-    }
-
-    @Override
-    public fURI pattern() {
-        return MTRON_TID.extend("#");
     }
 }

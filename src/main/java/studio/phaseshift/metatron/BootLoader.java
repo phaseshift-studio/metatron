@@ -49,18 +49,16 @@ public class BootLoader {
             LOG.warn("booting metatron on a non-networked jvm");
         }
         final Space mnt = new MemSpace(fURI.of("/mnt/#"), fURI.of("/mnt"));
-        final Space sys = new MemSpace(fURI.of("/sys/#"), fURI.of("/mnt/sys"));
-        final Space stk = Router.stack();
-        final Space mtron = new MInstSet(fURI.of("/mnt/lang/mtron"));
-        // final Router router = (ROUTER = new MemRouter(fURI.of("/sys/router")));
         Router.global().registerSpace(mnt);
+        final Space sys = new MemSpace(fURI.of("/sys/#"), fURI.of("/mnt/sys"));
         Router.global().registerSpace(sys);
+        Router.global().write(Router.global().vid(), Router.global());
+        final Space stk = Router.stack();
         Router.global().registerSpace(stk);
+        final Space mtron = new MInstSet(fURI.of("/mnt/lang/mtron"));
         Router.global().registerSpace(mtron);
 
-      //  Router.global().registerStruct(new MemSpace(fURI.of("/mtron/#"), fURI.of("/mnt/lang/mtron")));
-      //  Router.global().registerSpace(new MemSpace(fURI.of("#"), fURI.of("/sys/stack")));
-      //  Router.global().registerStruct(new MemSpace(fURI.of("/test/#"), fURI.of("/sys/test")));
+
         //Router.global().registerStruct(new MqttSpace(Map.of(new MUri("broker"), new MUri("ip://192.168.66.2:1883"), new MUri("pattern"), new MUri("/mqtt/#")), MQTT_TID, fURI.of("/mnt/mqtt")));
         // Router.global().registerStruct(new MqttSpace(Map.of(new MUri("broker"), new MUri("ip://192.168.66.2:1883"), new MUri("pattern"), new MUri("zigbee2mqtt/#")), MQTT_TID, fURI.of("/mnt/zigbee2mqtt")));
 

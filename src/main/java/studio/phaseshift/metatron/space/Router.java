@@ -27,6 +27,12 @@ import studio.phaseshift.metatron.ui.Palette;
 
 public interface Router extends Obj {
 
+    class Helpers {
+        public static String routerToString(final Router router) {
+            return Graphitty.string("{{b}}" + router.tid() + "{{g}}::[{{c}}global{{g}}]@{{b}}" + router.vid() + "{{X}}");
+        }
+    }
+
     ThreadLocal<StackSpace> INST_STACK =   ThreadLocal.withInitial(() -> new StackSpace(fURI.of("+"),Router.global().tid().extend("stack")));
 
     static Router global() {

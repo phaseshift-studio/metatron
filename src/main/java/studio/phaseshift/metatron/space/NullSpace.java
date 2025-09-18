@@ -6,7 +6,6 @@ import studio.phaseshift.metatron.lang.obj.InstSet;
 import studio.phaseshift.metatron.lang.obj.NoObj;
 import studio.phaseshift.metatron.lang.obj.Obj;
 
-import java.util.LinkedHashMap;
 import java.util.Map;
 
 import static studio.phaseshift.metatron.lang.obj.mtron.MInstSet.NOOBJ_TID;
@@ -25,12 +24,12 @@ public class NullSpace implements Space, InstSet {
 
     @Override
     public Map value() {
-        return new LinkedHashMap<>();
+        return Map.of();
     }
 
     @Override
     public fURI pattern() {
-        return NOOBJ_TID;
+        return NOOBJ_TID.zero();
     }
 
     @Override
@@ -70,6 +69,16 @@ public class NullSpace implements Space, InstSet {
 
     @Override
     public String toString() {
-        return "nullspace";
+        return Space.Helpers.spaceToString(this);
+    }
+
+    @Override
+    public int hashCode() {
+        return Space.Helpers.spaceHashCode(this);
+    }
+
+    @Override
+    public boolean equals(final Object other) {
+        return Space.Helpers.spaceEquals(this, other);
     }
 }

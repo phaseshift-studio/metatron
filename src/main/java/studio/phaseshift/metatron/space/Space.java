@@ -34,6 +34,18 @@ import java.util.function.Predicate;
 
 public interface Space extends Poly {
 
+    class Helpers {
+        public static String spaceToString(final Space space) {
+            return Graphitty.string("{{b}}" + space.tid() + "{{g}}::[{{c}}pattern:{{b}}" + space.pattern() + "{{g}}]@{{b}}" + space.vid() + "{{X}}");
+        }
+        public static int spaceHashCode(final Space space) {
+            return Objects.hash(space.tid(),space.vid());
+        }
+        public static boolean spaceEquals(final Space space, final Object other) {
+            return other instanceof Space && ((Space) other).tid().equals(space.tid()) && ((Space) other).vid().equals(space.vid());
+        }
+    }
+
     @Override
     Object value();
 
@@ -68,15 +80,6 @@ public interface Space extends Poly {
     default Obj vid(final fURI vid) {
         throw new IllegalStateException("structs must umount to change value id (vid)");
     }
-
-    default String toString(final Palette palette) {
-        return Graphitty.string("{{b}}%s{{g}}:[{{y}}pattern{{g}}=>{{y}}%s{{g}}]{{X}}".formatted(this.tid().toString(), this.pattern().toString()));
-    }
-
-    // @Override
-    // default Obj get(final int index) {
-    //    return NoObj.of();
-    // }
 
     default void resolveWrite(final fURI addr, final fURI stepAddr, final Obj obj, final BiConsumer<fURI, Obj> resolveWriter) {
         if (obj.isRec()) {

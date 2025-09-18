@@ -66,11 +66,12 @@ public class MemRouter implements Router {
                     LOG.except("%s and %s have overlapping address spaces", space.pattern(), kv.getKey());
                 });
         this.spaces.put(space.pattern(), space);
+        this.write(space.vid(),space);
     }
 
     public <S extends Space> S getSpace(final fURI match) {
         if (match.matches(fURI.NONE))
-            return  NullSpace.single();
+            return NullSpace.single();
         //     final fURI mvid = this.smallToBigRewrites.getOrDefault(vid,vid);
         Optional<S> space = this.spaces.entrySet().stream()
                 .filter(kv -> match.basePath().matches(kv.getKey()))
@@ -88,7 +89,6 @@ public class MemRouter implements Router {
     public Obj read(final fURI vid) {
         if (vid.equals(this.vid))
             return this;
-        // final fURI mvid = this.smallToBigRewrites.getOrDefault(vid,vid);
         final Space space = this.getSpace(vid);
         LOG.trace("reading %s from %s", vid, space.vid());
         return space.read(vid);
@@ -96,15 +96,13 @@ public class MemRouter implements Router {
 
     @Override
     public Obj write(final fURI vid, final Obj obj) {
-        // final fURI mvid = this.smallToBigRewrites.getOrDefault(vid,vid);
         final Space space = this.getSpace(vid);
-        LOG.trace("writing %s to %s at %s", obj, vid, space.vid());
+        LOG.trace("writing %s to %s", obj, space.vid());
         return space.write(vid, obj);
     }
 
     @Override
     public boolean hasSpaceFor(final fURI vid) {
-        //    final fURI mvid = this.smallToBigRewrites.getOrDefault(vid,vid);
         return this.spaces.entrySet().stream().anyMatch(kv -> vid.matches(kv.getKey()));
     }
 
@@ -137,6 +135,11 @@ public class MemRouter implements Router {
     public Obj vid(final fURI furi) {
         this.vid = furi;
         return this;
+    }
+
+    @Override
+    public String toString() {
+        return Router.Helpers.routerToString(this);
     }
 
 }
