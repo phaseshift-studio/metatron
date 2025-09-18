@@ -80,7 +80,7 @@ public interface InstSet extends Space {
                 .entrySet()
                 .stream()
                 .filter(kv -> {
-                    Graphitty.stdout().println("%s matches %s = %s".formatted(lhs.tid(),kv.getKey(),lhs.tid().matches(kv.getKey())));
+                    //Graphitty.stdout().println("%s matches %s = %s".formatted(lhs.tid(),kv.getKey(),lhs.tid().matches(kv.getKey())));
                     return lhs.tid().matches(kv.getKey());
                 })
                 .map(Map.Entry::getValue)
