@@ -40,7 +40,7 @@ public class MemRouter implements Router {
     private fURI vid;
     private final Map<fURI, Space> spaces = new HashMap<>();
     private final Map<fURI, fURI> smallToBigRewrites = new HashMap<>();
-    private final Map<fURI,fURI> bigToSmallRewrites = new HashMap<>();
+    private final Map<fURI, fURI> bigToSmallRewrites = new HashMap<>();
 
 
     public MemRouter(final fURI vid) {
@@ -49,13 +49,13 @@ public class MemRouter implements Router {
     }
 
     public void registerRewrite(final fURI small, final fURI big) {
-        this.smallToBigRewrites.put(small,big);
-        this.bigToSmallRewrites.put(big,small);
+        this.smallToBigRewrites.put(small, big);
+        this.bigToSmallRewrites.put(big, small);
     }
 
     @Override
-    public fURI rewrite(final fURI furi,final boolean big) {
-       return (big ? this.smallToBigRewrites.getOrDefault(furi.basePath(),furi) : this.bigToSmallRewrites.getOrDefault(furi.basePath(),furi)).coefficient(furi.coefficient()).queryMap(furi.queryMap());
+    public fURI rewrite(final fURI furi, final boolean big) {
+        return (big ? this.smallToBigRewrites.getOrDefault(furi.basePath(), furi) : this.bigToSmallRewrites.getOrDefault(furi.basePath(), furi)).coefficient(furi.coefficient()).queryMap(furi.queryMap());
     }
 
     public void registerSpace(final Space space) {
@@ -69,7 +69,9 @@ public class MemRouter implements Router {
     }
 
     public <S extends Space> S getSpace(final fURI match) {
-   //     final fURI mvid = this.smallToBigRewrites.getOrDefault(vid,vid);
+        if (match.matches(fURI.NONE))
+            return  NullSpace.single();
+        //     final fURI mvid = this.smallToBigRewrites.getOrDefault(vid,vid);
         Optional<S> space = this.spaces.entrySet().stream()
                 .filter(kv -> match.basePath().matches(kv.getKey()))
                 .findAny()
@@ -79,14 +81,14 @@ public class MemRouter implements Router {
         else if (!BOOTING)
             throw LOG.except("no structure supports pattern %s", match.toUri(true));
         else
-            return (S) new NullSpace(match);
+            return NullSpace.single();
     }
 
     @Override
     public Obj read(final fURI vid) {
         if (vid.equals(this.vid))
             return this;
-       // final fURI mvid = this.smallToBigRewrites.getOrDefault(vid,vid);
+        // final fURI mvid = this.smallToBigRewrites.getOrDefault(vid,vid);
         final Space space = this.getSpace(vid);
         LOG.trace("reading %s from %s", vid, space.vid());
         return space.read(vid);
@@ -94,7 +96,7 @@ public class MemRouter implements Router {
 
     @Override
     public Obj write(final fURI vid, final Obj obj) {
-       // final fURI mvid = this.smallToBigRewrites.getOrDefault(vid,vid);
+        // final fURI mvid = this.smallToBigRewrites.getOrDefault(vid,vid);
         final Space space = this.getSpace(vid);
         LOG.trace("writing %s to %s at %s", obj, vid, space.vid());
         return space.write(vid, obj);
@@ -102,7 +104,7 @@ public class MemRouter implements Router {
 
     @Override
     public boolean hasSpaceFor(final fURI vid) {
-    //    final fURI mvid = this.smallToBigRewrites.getOrDefault(vid,vid);
+        //    final fURI mvid = this.smallToBigRewrites.getOrDefault(vid,vid);
         return this.spaces.entrySet().stream().anyMatch(kv -> vid.matches(kv.getKey()));
     }
 

@@ -1,19 +1,26 @@
 package studio.phaseshift.metatron.space;
 
 import studio.phaseshift.metatron.lang.fURI;
-import studio.phaseshift.metatron.lang.obj.*;
-import studio.phaseshift.metatron.lang.obj.mtron.MObjs;
+import studio.phaseshift.metatron.lang.obj.Inst;
+import studio.phaseshift.metatron.lang.obj.InstSet;
+import studio.phaseshift.metatron.lang.obj.NoObj;
+import studio.phaseshift.metatron.lang.obj.Obj;
 
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
+
+import static studio.phaseshift.metatron.lang.obj.mtron.MInstSet.NOOBJ_TID;
 
 public class NullSpace implements Space, InstSet {
 
+    private static final NullSpace INSTANCE = new NullSpace();
 
-    private final fURI vid;
-    public NullSpace(final fURI vid) {
-        this.vid = vid;
+    public static <S extends Space> S single() {
+        return (S) INSTANCE;
+    }
+
+    private NullSpace() {
+
     }
 
     @Override
@@ -23,23 +30,24 @@ public class NullSpace implements Space, InstSet {
 
     @Override
     public fURI pattern() {
-        return fURI.of("#");
+        return NOOBJ_TID;
     }
 
     @Override
-    public Obj read(fURI vid) {
+    public Obj read(final fURI vid) {
         return NoObj.single();
     }
 
     @Override
-    public Obj write(fURI vid, Obj obj) {
+    public Obj write(final fURI vid, final Obj obj) {
         return obj;
     }
 
     @Override
-    public void append(fURI addr, Obj... obj) {
+    public void append(final fURI addr, final Obj... obj) {
 
     }
+
     @Override
     public Inst resolve(final Obj lhs, final Inst instAorB) {
         return NoObj.single();
@@ -47,16 +55,16 @@ public class NullSpace implements Space, InstSet {
 
     @Override
     public fURI tid() {
-        return fURI.of("#");
+        return NOOBJ_TID;
     }
 
     @Override
     public fURI vid() {
-        return this.vid;
+        return NOOBJ_TID;
     }
 
     @Override
-    public NullSpace clone(Object value, fURI tid, fURI vid) {
+    public NullSpace clone(final Object value, final fURI tid, final fURI vid) {
         return this;
     }
 

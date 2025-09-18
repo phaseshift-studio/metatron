@@ -30,6 +30,8 @@ import studio.phaseshift.metatron.util.MTronException;
 import java.util.*;
 import java.util.function.BiFunction;
 
+import static studio.phaseshift.metatron.lang.obj.mtron.MInstSet.BLOCK_TID;
+
 
 public interface InstSet extends Space {
 
@@ -81,14 +83,14 @@ public interface InstSet extends Space {
                 .stream()
                 .filter(kv -> {
                     //Graphitty.stdout().println("%s matches %s = %s".formatted(lhs.tid(),kv.getKey(),lhs.tid().matches(kv.getKey())));
-                    return lhs.tid().matches(kv.getKey());
+                    return lhs.tid().matches(kv.getKey()) || lhs.tid().basePath().equals(fURI.of("#"));
                 })
                 .map(Map.Entry::getValue)
                 .flatMap(Collection::stream)
                 .filter(i -> (instAorB.resolution() == Inst.Resolve.A) || (i.args().count() == instAorB.args().count()))
                 .map(i -> {
                     final List<Obj> resolvedArgs = new ArrayList<>();
-                    //final boolean blocking = false; // i.isBlocking();
+                  //  final boolean blocking = instAorB.tid().basePath().equals(BLOCK_TID);
                     for (int j = 0; j < i.args().count(); j++) {
                         //  resolvedArgs.add(i.arg(j).apply(instA.arg(j)));
                         resolvedArgs.add(instAorB.arg(j));
