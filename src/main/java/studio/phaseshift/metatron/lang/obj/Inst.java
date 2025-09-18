@@ -33,6 +33,8 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import static studio.phaseshift.metatron.lang.obj.mtron.MInstSet.ID_TID;
+
 public interface Inst extends Obj {
 
     // /mtron/plus?dom=/mtron/int,rng=/mtron/int
@@ -91,7 +93,7 @@ public interface Inst extends Obj {
         if (null == this.value() || null == this.f())
             return Resolve.A;
         for (Obj arg : this.args()) {
-            if (!arg.tid().equals(arg.vid())) {
+            if (!arg.tid().equals(arg.vid())) { // TODO: this is not a fool proof way of determining is a resolution has happened
                 return Resolve.B;
             }
         }
@@ -112,7 +114,7 @@ public interface Inst extends Obj {
                 LOG.trace("resolution ({{m}}%s {{g}}=>{{/g}} %s{{/m}}): %s => %s", currentResolution, resolved.resolution(), lhs, resolved);
                 return resolved.resolution().equals(desiredResolution) || resolved.resolution().compareTo(desiredResolution) >= 0 ? resolved : resolved.resolve(desiredResolution, lhs);
             } else { // Resolve.B
-                final boolean blocking = this.tid().equals(MInstSet.BLOCK_TID) || this.tid().equals(MInstSet.WITHIN_TID);
+                final boolean blocking = this.tid().basePath().equals(MInstSet.BLOCK_TID) || this.tid().basePath().equals(MInstSet.WITHIN_TID);
                 if (!blocking && !lhs.matches(this.dom()))
                     throw MTronException.of("lhs obj does not match inst domain: %s: %s {{r}}-/>{{/r}} %s", this, lhs, this.dom());
                 final Poly cargs = this.args().isLst() ?

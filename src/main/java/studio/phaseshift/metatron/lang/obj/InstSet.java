@@ -83,7 +83,7 @@ public interface InstSet extends Space {
                 .entrySet()
                 .stream()
                 .filter(kv -> {
-                    final boolean pass = lhs.tid().matches(kv.getKey()) || lhs.tid().basePath().equals(fURI.of("#"));
+                    final boolean pass = lhs.tid().matches(kv.getKey());
                     LOG.trace("{{y}}dom{{/y}} filtering: %s => %s [%s]".formatted(lhs.tid(), kv.getKey(), lhs.tid().matches(kv.getKey())));
                     return pass;
                 })

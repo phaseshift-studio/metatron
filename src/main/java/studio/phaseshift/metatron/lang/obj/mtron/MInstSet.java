@@ -172,6 +172,7 @@ public class MInstSet extends MSpace implements InstSet {
                 Pair.with(LST_TID, MType.of(LST_TID)),
                 Pair.with(REC_TID, MType.of(REC_TID)),
                 Pair.with(OBJS_TID, MType.of(OBJS_TID)),
+                Pair.with(INST_TID, MType.of(INST_TID)),
                 Pair.with(CODE_TID, MType.of(CODE_TID))).forEach(kv -> {
             Router.global().registerRewrite(fURI.of(kv.getValue0().name()), kv.getValue0());
         });
