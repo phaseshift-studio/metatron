@@ -51,6 +51,6 @@ public interface Code extends Obj {
         return MMonoid.of(this).apply(lhs).iterator().next();
     }
 
-    Code resolve(final Obj start);
+   // Code resolve(final Obj start);
 
 }

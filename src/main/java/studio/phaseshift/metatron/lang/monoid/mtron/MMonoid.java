@@ -32,6 +32,7 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
+import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.lang.obj.mtron.MInstSet.START_TID;
 
@@ -117,8 +118,11 @@ public class MMonoid extends MObj implements Monoid {
                 if (m.inst().isInitial()) {
 
                 }
+                if(m.inst().isGather()) {
+
+                }
                 // no need to check isGather -- simply determine whether to flatten the monad or not and everything should consequence from that
-                (m.inst().isInitial() ? NoObj.single() : m.obj()).stream().forEach(o -> {
+                (m.inst().isInitial() ? NoObj.single().stream() : m.inst().isGather() ? Stream.of(m.obj()) :  m.obj().stream()).forEach(o -> {
                     LOG.trace("{{g}}==>{{/g}} processing obj %s at %s [%s]", o, m.inst(), m.inst().isInitial() ? "initial" : "midway");
                     final Monad n = m.obj(o).apply(code.next(m.inst()));
                     LOG.trace("{{g}}===>{{/g}} post-processing monad %s", n);

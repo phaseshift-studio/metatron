@@ -21,10 +21,7 @@ package studio.phaseshift.metatron.lang.obj;
 import org.javatuples.Triplet;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.base.furi.TypefURI;
-import studio.phaseshift.metatron.lang.obj.mtron.MInstSet;
-import studio.phaseshift.metatron.lang.obj.mtron.MLst;
-import studio.phaseshift.metatron.lang.obj.mtron.MRec;
-import studio.phaseshift.metatron.lang.obj.mtron.MType;
+import studio.phaseshift.metatron.lang.obj.mtron.*;
 import studio.phaseshift.metatron.space.Router;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
@@ -112,8 +109,8 @@ public interface Inst extends Obj {
             if (currentResolution == Resolve.A) {
                 final Inst resolved = new MInstSet(fURI.of("/mnt/mtron")).resolve(lhs, this);
                 //final Inst resolved = Router.global().<InstSet>getSpace(fURI.of("/mtron")).resolve(lhs, this);
-                LOG.trace("resolution ({{m}}%s {{g}}=>{{/g}} %s{{/m}}): %s", currentResolution, resolved.resolution(), resolved);
-                return resolved.resolve(desiredResolution, lhs);
+                LOG.trace("resolution ({{m}}%s {{g}}=>{{/g}} %s{{/m}}): %s => %s", currentResolution, resolved.resolution(), lhs, resolved);
+                return resolved.resolution().equals(desiredResolution) ? resolved : resolved.resolve(desiredResolution, lhs);
             } else { // Resolve.B
                 final boolean blocking = this.tid().equals(MInstSet.BLOCK_TID) || this.tid().equals(MInstSet.WITHIN_TID);
                 if (!blocking && !lhs.matches(this.dom()))
@@ -140,7 +137,7 @@ public interface Inst extends Obj {
     }
 
     default boolean isGather() {
-        return this.dom().tid().coefficientValue().isStar();
+        return this.dom().tid().coefficientValue().min() > 1;
     }
 
     default boolean isScatter() {
@@ -157,51 +154,8 @@ public interface Inst extends Obj {
 
 
     final class f {
-        public enum Form {
-            ZERO_TO_ZERO,
-            ZERO_TO_ONE,
-            ZERO_TO_MANY,
-            ONE_TO_ZERO,
-            ONE_TO_ONE,
-            ONE_TO_MANY,
-            MANY_TO_ZERO,
-            MANY_TO_ONE,
-            MANY_TO_MANY;
-
-            //  manys
-            public boolean isGather() {
-                return this == MANY_TO_MANY || this == MANY_TO_ONE || this == MANY_TO_ZERO;
-            }
-
-            public boolean isScatter() {
-                return this == MANY_TO_MANY || this == ZERO_TO_MANY || this == ONE_TO_MANY;
-            }
-
-
-            // zeros
-            public boolean isInitial() {
-                return this == ZERO_TO_ONE || this == ZERO_TO_MANY || this == ZERO_TO_ZERO;
-            }
-
-            public boolean isTerminal() {
-                return this == ONE_TO_ZERO || this == MANY_TO_ZERO || this == ZERO_TO_ZERO;
-            }
-
-
-            // ones
-            public boolean isMapping() {
-                return this == ONE_TO_ONE || this == ONE_TO_ZERO || this == ONE_TO_MANY;
-            }
-
-            public boolean isReducing() {
-                return this == MANY_TO_ONE || this == ZERO_TO_ONE || this == ONE_TO_ONE;
-            }
-
-        }
-
         private final boolean bi;
         final Object func;
-        final Form form = Form.ONE_TO_ONE;
 
 
         private f(final BiFunction<Obj, Inst, Obj> func) {
@@ -213,10 +167,6 @@ public interface Inst extends Obj {
         private f(final Function<Obj, Obj> func) {
             this.bi = false;
             this.func = func;
-        }
-
-        public Form form() {
-            return this.form;
         }
 
         public Obj apply(final Obj lhs, final Inst cinst) {

@@ -41,6 +41,8 @@ public class StackSpace extends MObj implements Space {
     @Override
     public Obj read(final fURI vid) {
         LOG.trace("searching for %s in %s [%s]", vid, this.value, this.root.store);
+        //if(vid.coefficientValue().isZero())
+        //    return NoObj.single();
         for (final Map<fURI, Obj> layer : this.value()) {
             final Obj o = layer.get(vid.basePath());
             if (null != o)

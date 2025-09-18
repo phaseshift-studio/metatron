@@ -82,7 +82,7 @@ public interface InstSet extends Space {
                 .entrySet()
                 .stream()
                 .filter(kv -> {
-                    //Graphitty.stdout().println("%s matches %s = %s".formatted(lhs.tid(),kv.getKey(),lhs.tid().matches(kv.getKey())));
+                    Graphitty.stdout().println("%s matches %s = %s".formatted(lhs.tid(),kv.getKey(),lhs.tid().matches(kv.getKey())));
                     return lhs.tid().matches(kv.getKey()) || lhs.tid().basePath().equals(fURI.of("#"));
                 })
                 .map(Map.Entry::getValue)
@@ -96,7 +96,7 @@ public interface InstSet extends Space {
                         resolvedArgs.add(instAorB.arg(j));
                     }
                     return i.clone(new Triplet<>(MLst.of(resolvedArgs),
-                            i.f(), i.seed()), i.tid(), instAorB.vid());
+                            i.f(), i.seed()), i.tid().query(fURI.DOM,lhs.tid()), instAorB.vid());
                 }).findFirst().orElseThrow(() -> MTronException.of("unable to resolve %s => %s in instruction set %s", lhs, instAorB, this.value().get(instAorB.tid())));
     }
 }

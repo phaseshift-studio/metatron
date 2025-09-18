@@ -105,7 +105,7 @@ public class MInstSet extends MObj implements InstSet {
         this.define(TID_TID, fURI.ANY, URI_TID, MLst.of(), (lhs, inst) -> lhs.tid().toUri());
         this.define(VID_TID, fURI.ANY, URI_TID, MLst.of(), (lhs, inst) -> lhs.vid().toUri());
         this.define(MAP_TID, fURI.ANY, fURI.ANY, MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> inst.arg(0));
-        this.define(BLOCK_TID, fURI.ANY, fURI.ANY, MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> inst.arg(0));
+        this.define(BLOCK_TID, fURI.ANY.maybe(), fURI.ANY.maybe(), MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> inst.arg(0));
         this.define(DOM_TID, REC_TID, URI_TID, MLst.of(), (lhs, inst) -> MObjs.of(lhs.recValue().keySet()));
         this.define(DOM_TID, REL_TID, URI_TID, MLst.of(), (lhs, inst) -> MObjs.of(lhs.relValue().getValue0()));
         this.define(DOM_TID, fURI.ANY, URI_TID, MLst.of(), (lhs, inst) -> lhs);
@@ -115,7 +115,7 @@ public class MInstSet extends MObj implements InstSet {
         this.define(TO_TID, fURI.ANY, fURI.ANY, MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> Router.global().write(inst.arg(0).uriValue(), lhs));
         this.define(FROM_TID, fURI.ANY.maybe(), fURI.ANY.any(), MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> Router.global().read(inst.arg(0).uriValue()));
         this.define(REF_TID, fURI.ANY, fURI.ANY, MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> Router.global().write(lhs.uriValue(), inst.arg(0)));
-        this.define(ID_TID, fURI.ANY, fURI.ANY, MLst.of(), (lhs, inst) -> lhs);
+        this.define(ID_TID, fURI.ANY.maybe(), fURI.ANY.maybe(), MLst.of(), (lhs, inst) -> lhs);
         this.define(START_TID, NOOBJ_TID.zero(), fURI.ANY.any(), MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> inst.arg(0));
         this.define(PLUS_TID, BOOL_TID, BOOL_TID, MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> lhs.value(lhs.boolValue() || inst.arg(0).boolValue()));
         this.define(PLUS_TID, INT_TID, INT_TID, MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> lhs.value(lhs.intValue() + inst.arg(0).intValue()));

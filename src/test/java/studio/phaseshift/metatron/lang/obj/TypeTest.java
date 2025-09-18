@@ -60,7 +60,11 @@ public class TypeTest {
             "{1,2,3,4}            | /mtron/int[*]        | true",
             "{1,2,3,'abc'}        | /mtron/int[*]        | false",
             "{1,2,3,'abc'}        | /mtron/+[*]          | true",
-            "{1,2,3,4}            | /mtron/str[*]        | false"
+            "{1,2,3,4}            | /mtron/str[*]        | false",
+            "noobj                | #[0]                 | true",
+            "noobj                | #[1]                 | false",
+            "noobj                | +[0]                 | true",
+            "noobj                | a/b/c[0]             | true"
     }, delimiter = '|')
     public void testType(final String obj, final String typefURI, final boolean matches) {
         Obj o = ObjParser.m_obj().parse(obj).get();

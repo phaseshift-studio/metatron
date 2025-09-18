@@ -24,10 +24,13 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.lang.fURI;
+import studio.phaseshift.metatron.lang.obj.Code;
+import studio.phaseshift.metatron.lang.obj.Inst;
 import studio.phaseshift.metatron.lang.obj.mtron.MInt;
 import studio.phaseshift.metatron.lang.obj.mtron.MInstSet;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static studio.phaseshift.metatron.lang.parse.ObjParser.eval;
 
 public class InstParseTest {
@@ -36,6 +39,18 @@ public class InstParseTest {
     public static void begin() {
         MInstSet.of(fURI.of("/mnt/sys/lang/mtron"));
     }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "abc?int<=int(){ plus(_) }% true",
+            //"/mtron/code[plus(1).plus(2)].plus([d,e,f])% [a,b,c,d,e,f]" (requires union())
+    }, delimiter = '%')
+    void testInstDefinitions(final String expression, final String expectedResult) {
+        Code code = ObjParser.m_obj().parse(expression).get();
+        assertNotNull(code);
+        //assertEquals(inst, ObjParser.eval(expression).next());
+    }
+
 
     @ParameterizedTest
     @CsvSource(value = {
