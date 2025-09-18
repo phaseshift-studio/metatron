@@ -160,13 +160,14 @@ public class ObjParser {
         return new SequenceParser(of("---").trim(), any().starGreedy(anyOf("\n\r").or(new EndOfInputParser("end of input")))).map(t -> NoObj.single());
     }
 
-    private static final String FULL_FURI_CHARS = "/%!#_=?@+.&: ";
-    private static final String REDUCED_FURI_CHARS = "/%!#_=?@+&:";
-    private static final String QUERYLESS_FURI_CHARS = "/%!#_=@+&:";
+    private static final String FULL_FURI_CHARS = "/%!#_=@+.&: ";
+    private static final String REDUCED_FURI_CHARS = "/%!#_=@+&:";
 
     public static Parser m_furi(final String furiCharacterSet) {
-        final Supplier<Parser> internal = () -> seq(word().or(seq(of("=>").not(), of("::").not(), of("[").not(), anyOf(furiCharacterSet))).plus().flatten(), m_furi_coefficient()).map(t -> new fURI(pick(t, 0)).coefficient(pick(t, 1)));
-        final Supplier<Parser> internal2 = () -> seq(word().or(seq(of("=>").not(), of("::").not(), of("[").not(), anyOf(FULL_FURI_CHARS))).plus().flatten(), m_furi_coefficient()).map(t -> new fURI(pick(t, 0)).coefficient(pick(t, 1)));
+        final Supplier<Parser> internal = () -> seq(word().or(seq(of("=>").not(), of("::").not(), of('?').not(), of("[").not(),
+                anyOf(furiCharacterSet))).plus().flatten(),m_furi_coefficient(),m_furi_query()).map(t -> new fURI(pick(t, 0)).coefficient(pick(t, 1)).query(pick(t,2)));
+        final Supplier<Parser> internal2 = () -> seq(word().or(seq(of("=>").not(), of("::").not(), of('?').not(), of("[").not(),
+                anyOf(FULL_FURI_CHARS))).plus().flatten(),m_furi_coefficient(),m_furi_query()).map(t -> new fURI(pick(t, 0)).coefficient(pick(t, 1)).query(pick(t,2)));
         return choice(seq(of('<'), internal2.get(), of('>')).pick(1), internal.get());
     }
 
@@ -185,11 +186,15 @@ public class ObjParser {
                 of(']')).map(t -> pick(t, 1)), null);
     }
 
+    public static Parser m_furi_query() {
+        return opt(seq(of('?'), seq(word().plus(),opt(seq(of('='),word().or(anyOf(REDUCED_FURI_CHARS)).plus()),"")).separatedBy(of('&')).flatten()).map(t -> ObjParser.<String>pick(t,1)),null);
+    }
+
     public static Parser m_furi_inst_dom_rng() {
         return seq(
-                m_furi(QUERYLESS_FURI_CHARS),
+                m_furi(REDUCED_FURI_CHARS),
                 of("<=").trim(),
-                m_furi(QUERYLESS_FURI_CHARS))
+                m_furi(REDUCED_FURI_CHARS))
                 .map(t -> Stream.of(
                         List.of("rng", pick(t, 0).toString()),
                         List.of("dom", pick(t, 2).toString())).collect(Collectors.toMap(k -> k.get(0), v -> v.get(1), (v1, v2) -> v2, LinkedHashMap::new)));
@@ -197,7 +202,7 @@ public class ObjParser {
 
 
     public static Parser m_inst_furi() {
-        return seq(m_furi(QUERYLESS_FURI_CHARS), of('?'), m_furi_inst_dom_rng(), opt(of("::").trim(), "::"))
+        return seq(m_furi(REDUCED_FURI_CHARS), of('?'), m_furi_inst_dom_rng(), opt(of("::").trim(), "::"))
                 .map(t -> ObjParser.<fURI>pick(t, 0).queryMap(pick(t, 2)));
     }
 

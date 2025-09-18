@@ -328,6 +328,10 @@ public class fURI implements Cloneable {
         return this.query != null && !this.query.isEmpty();
     }
 
+    public fURI query(final String query) {
+        return new fURI(this.scheme, this.host, this.port, this.sstart, this.path, this.send, query);
+    }
+
     public fURI query(final String key, final String value) {
         Map<String,String> appended = null == this.query ? new LinkedHashMap<>() : new LinkedHashMap<>(this.query);
         appended.put(key,value);

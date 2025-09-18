@@ -75,6 +75,7 @@ public class ObjParserTest {
     public void testUriParse() {
         assertEquals(MUri.of("http://metatron.com?a=2&b=3"), ObjParser.parse("<http://metatron.com?a=2&b=3>"));
         assertEquals(MUri.of("http://metatron.com?a&b"), ObjParser.parse("<http://metatron.com?a&b>"));
+        assertEquals(MUri.of("http://metatron.com?a=a/b/c&b=a"), ObjParser.parse("<http://metatron.com?a=a/b/c&b=a>"));
         assertThrows(MTronException.class, () -> ObjParser.parse("/metatron.com?a&b"));
         assertEquals(MUri.of("metatron/com?a&b"), ObjParser.parse("metatron/com?a&b"));
     }
