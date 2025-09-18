@@ -66,7 +66,6 @@ public class MemRouter implements Router {
                     LOG.except("%s and %s have overlapping address spaces", space.pattern(), kv.getKey());
                 });
         this.spaces.put(space.pattern(), space);
-        this.write(space.vid(),space);
     }
 
     public <S extends Space> S getSpace(final fURI match) {

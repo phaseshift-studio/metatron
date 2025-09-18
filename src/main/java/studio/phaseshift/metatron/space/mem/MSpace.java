@@ -27,8 +27,9 @@ public abstract class MSpace implements Space {
         this.tid = tid.big();
         this.vid = vid;
         this.statistics.put("start_time", Instant.now().toString());
-        if (null != this.vid && !this.vid.equals(fURI.NONE))
+        if (null != this.vid && !this.vid.equals(fURI.NONE)) {
             Router.global().write(this.vid, this);
+        }
     }
 
     @Override
