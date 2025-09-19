@@ -30,8 +30,6 @@ import java.util.function.Supplier;
 
 public interface Code extends Obj {
 
-    static GraphittyLogger LOG = Graphitty.log(Code.class);
-
     @Override
     Code clone(final Object value, final fURI tid, final fURI vid);
 
@@ -53,7 +51,7 @@ public interface Code extends Obj {
             }
             return NoObj.single();
         }).get();
-      LOG.trace("fetching next inst: %s => %s", inst, nextInst);
+      this.logger().trace("fetching next inst: %s => %s", inst, nextInst);
       return nextInst;
     }
 

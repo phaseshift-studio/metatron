@@ -23,6 +23,7 @@ import studio.phaseshift.metatron.lang.obj.mtron.MUri;
 import studio.phaseshift.metatron.lang.obj.mtron.MInstSet;
 import studio.phaseshift.metatron.space.Router;
 import studio.phaseshift.metatron.space.Space;
+import studio.phaseshift.metatron.space.device.log.Log;
 import studio.phaseshift.metatron.space.mem.MemRouter;
 import studio.phaseshift.metatron.space.mem.MemSpace;
 import studio.phaseshift.metatron.space.mem.StackSpace;
@@ -52,12 +53,14 @@ public class BootLoader {
             Router.global().registerSpace(mnt);
             final Space sys = new MemSpace(fURI.of("/sys/#"), fURI.of("/mnt/sys"));
             Router.global().registerSpace(sys);
+            final Space usr = new MemSpace(fURI.of("/usr/#"), fURI.of("/mnt/usr"));
+            Router.global().registerSpace(usr);
             Router.global().write(Router.global().vid(), Router.global());
             final Space stk = Router.stack();
             Router.global().registerSpace(stk);
             final Space mtron = new MInstSet(fURI.of("/mnt/lang/mtron"));
             Router.global().registerSpace(mtron);
-
+            Log.of(fURI.of("/sys/log"));
 
             //Router.global().registerStruct(new MqttSpace(Map.of(new MUri("broker"), new MUri("ip://192.168.66.2:1883"), new MUri("pattern"), new MUri("/mqtt/#")), MQTT_TID, fURI.of("/mnt/mqtt")));
             // Router.global().registerStruct(new MqttSpace(Map.of(new MUri("broker"), new MUri("ip://192.168.66.2:1883"), new MUri("pattern"), new MUri("zigbee2mqtt/#")), MQTT_TID, fURI.of("/mnt/zigbee2mqtt")));

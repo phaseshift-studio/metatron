@@ -18,24 +18,22 @@
 
 package studio.phaseshift.metatron.space.mem;
 
-import org.javatuples.Pair;
 import studio.phaseshift.metatron.lang.fURI;
-import studio.phaseshift.metatron.lang.obj.NoObj;
 import studio.phaseshift.metatron.lang.obj.Obj;
-import studio.phaseshift.metatron.lang.obj.Poly;
-import studio.phaseshift.metatron.lang.obj.Uri;
-import studio.phaseshift.metatron.lang.obj.mtron.*;
+import studio.phaseshift.metatron.lang.obj.mtron.MRel;
 import studio.phaseshift.metatron.space.Space;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
 
-import java.util.*;
-import java.util.stream.Stream;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 
 
 public class MemSpace extends MSpace implements Space {
 
     public static final fURI MEMSPACE_TID = fURI.of("/mtron/space/memspace");
+    protected final GraphittyLogger LOG = Graphitty.log(this);
 
     final Map<fURI, Obj> store = new HashMap<>();
 
@@ -44,82 +42,14 @@ public class MemSpace extends MSpace implements Space {
     }
 
     @Override
-    public long count() {
-        return this.store.size();
-    }
-
-    @Override
     public Obj read(final fURI vid) {
-        if (vid.isBranch()) {
-            // pattern/branch
-            if (vid.hasPattern()) {
-                Graphitty.log(this).info("processing pattern %s", vid.toUri());
-                return new MObjs((Iterable)this.store.entrySet()
-                        .stream()
-                        .flatMap(kv -> kv.getValue().isRec() ? kv
-                                .getValue()
-                                .recValue()
-                                .entrySet()
-                                .stream()
-                                .filter(kv2 -> !kv2.getValue().isNoObj())
-                                .flatMap(kv2 -> Map.of(kv.getKey().extend(kv2.getKey().uriValue()), kv2.getValue()).entrySet().stream()) : Stream.of(kv))
-                        .flatMap(kv -> Map.of(kv.getKey().toUri(), kv.getValue()).entrySet().stream())
-                        .filter(kv -> {
-                            final boolean check = kv.getKey().matches(vid.toUri()) || kv.getKey().matches(vid.retractPattern().asNode().toUri());
-                            Graphitty.log(this).info("checking %s against %s at %s [%s]", vid.asNode(), kv.getValue(), kv.getKey(), check ? "{{g}}OK{{X}}" : "{{r}}X{{X}}");
-                            return check;
-                        })
-                        .map(kv -> MRel.of(kv.getKey(), kv.getValue())).toList());
-            } else {
-                // resolved/branch
-                Graphitty.log(this).info("searching %s", vid.extend("+").toUri());
-                return this.read(vid.extend("+").asBranch());// new SObj.Objs(List.of(new SObj.Rel(Pair.with(SObj.Uri.of(addr), this.store.getOrDefault(addr, NoObj.of())), REL_URI, fURI.NONE)), OBJS_URI, fURI.NONE);
-            }
-        } else {
-            Map<Uri, Obj> map = new LinkedHashMap<>();
-            if (vid.hasPattern()) {
-                this.store.entrySet()
-                        .stream()
-                        .filter(kv -> kv.getKey().matches(vid))
-                        .forEach(kv ->
-                                map.put(kv.getKey().toUri(), kv.getValue()));
-            } else if (this.store.containsKey(vid))
-                map.put(vid.toUri(), this.store.get(vid));
-            if (map.isEmpty()) {
-                final Optional<Pair<fURI, Poly>> pair = this.locateBasePoly(vid.retract(), null);
-                if (pair.isPresent()) {
-                    final Poly poly = pair.get().getValue1();
-                    Graphitty.stdout().print("base poly found at %s: %s\n".formatted(pair.get().getValue0(), poly));
-                    final fURI furiSubpath = vid.removeSubpath(pair.get().getValue0()).asNode();
-                    Graphitty.stdout().print("searching base poly %s for %s\n".formatted(poly, furiSubpath.toUri()));
-                    final Obj readObj = null; //poly.get(furiSubpath);
-                    Graphitty.stdout().print("located poly obj %s in %s\n".formatted(readObj, poly));
-                    if (!readObj.isNoObj())
-                        map.put(vid.retractPattern().toUri(), readObj);
-                } /*(else if (result.isNoObj()) {
-                    result. (NoObj.of());
-                }*/
-            }
-            if (map.isEmpty())
-                return NoObj.single();
-            else {
-                return new MRec((Map)map);
-                //   new SObj.Rec((Map) map, REC_URI, fURI.NONE);
-            }
-        }
-
-        /*
-
-        SObj.Objs.of(map.entrySet().stream()
-                        .flatMap(kv ->
-                                IteratorUtil.asList(nodeBranchProcess(addr.retractPattern().asBranch(), new SObj.Rec((Map) map, REC_URI, fURI.NONE)))
-                                        .stream()
-                                        .map(z -> new SObj.Rel(Pair.with(((Pair<fURI, Obj>) z).getValue0().toUri(), ((Pair<fURI, Obj>) z).getValue1()), REL_URI, fURI.NONE))
-                                        .toList()
-                                        .stream()).toList());
-         */
+        return Space.Helpers.resolveRead(this, vid, (key) -> {
+            if (key.equals(fURI.ANY))
+                return this.store;
+            else
+                return Map.of(key, this.store.get(key));
+        });
     }
-
 
     @Override
     public void append(fURI addr, Obj... obj) {
@@ -127,18 +57,23 @@ public class MemSpace extends MSpace implements Space {
     }
 
     @Override
-    public Obj write(final fURI vid, Obj obj) {
-        this.resolveWrite(vid, vid.retractPattern(), obj, (resolvedAddr, resolvedObj) -> {
-            if (resolvedObj.isNoObj())
-                this.store.remove(resolvedAddr);
+    public Obj write(final fURI vid, final Obj obj) {
+        Space.Helpers.resolveWrite(this, vid, vid.retractPattern(), obj, (key, value) -> {
+            if (value.isNoObj())
+                this.store.remove(key);
             else
-                this.store.put(resolvedAddr, resolvedObj);
+                this.store.put(key, value);
         });
         return obj;
     }
 
     @Override
+    public long count() {
+        return this.store.size();
+    }
+
+    @Override
     public Iterator<Obj> iterator() {
-        return Collections.emptyIterator();
+        return this.store.entrySet().stream().map(kv -> MRel.of(kv.getKey().toUri(), kv.getValue())).map(r -> (Obj) r).iterator();
     }
 }

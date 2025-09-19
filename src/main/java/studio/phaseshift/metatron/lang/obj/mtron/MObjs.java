@@ -26,8 +26,10 @@ import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
+import studio.phaseshift.metatron.util.ObjUtil;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -90,6 +92,16 @@ public class MObjs extends MObj implements Objs {
 
     public static Objs of(final Iterable<Obj> iterable) {
         return new MObjs(iterable);
+    }
+
+    public static Obj ofUsage(final Object object) {
+        if(object instanceof List) {
+            return ObjUtil.oneNoneOrAll((List)object);
+        } else if (object instanceof Obj) {
+            return (Obj) object;
+        } else
+            throw MTronException.of("unknown object type: %s",object.getClass().getCanonicalName());
+
     }
 
 

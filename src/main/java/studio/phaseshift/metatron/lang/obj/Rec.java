@@ -54,4 +54,9 @@ public interface Rec extends Poly {
                 .map(kv -> (Rel) new MRel(Pair.with(kv.getKey(), kv.getValue()))).iterator();
     }
 
+    @Override
+    default <O extends Obj> O at(final Obj key) {
+        return (O) this.value().getOrDefault(key,NoObj.single());
+    }
+
 }

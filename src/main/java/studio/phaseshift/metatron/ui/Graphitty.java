@@ -19,6 +19,8 @@
 package studio.phaseshift.metatron.ui;
 
 import studio.phaseshift.metatron.lang.obj.Obj;
+import studio.phaseshift.metatron.space.Router;
+import studio.phaseshift.metatron.space.Space;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.io.ByteArrayOutputStream;
@@ -106,7 +108,7 @@ public class Graphitty {
     private static final Graphitty GRAPHITTY_STDOUT = new Graphitty(System.out);
 
     public static GraphittyLogger log(final Object source) {
-        return new GraphittyLogger(source);
+        return source instanceof Obj && !(source instanceof Router)? new GraphittyObjLogger((Obj)source) : new GraphittyLogger(source);
     }
 
     public static void out(final OutputStream out, final String s) {

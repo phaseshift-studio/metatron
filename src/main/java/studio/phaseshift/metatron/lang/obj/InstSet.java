@@ -34,13 +34,6 @@ import java.util.function.BiFunction;
 
 public interface InstSet extends Space {
 
-     static final GraphittyLogger LOG = Graphitty.log(InstSet.class);
-
-    @Override
-    default InstSet clone(final Object value, final fURI tid, final fURI vid) {
-        return this;
-    }
-
     @Override
     Map<fURI, Map<fURI, Set<Inst>>> value();
 
@@ -84,27 +77,21 @@ public interface InstSet extends Space {
                 .stream()
                 .filter(kv -> {
                     final boolean pass = lhs.tid().matches(kv.getKey());
-                    LOG.trace("{{y}}dom{{/y}} filtering: %s => %s [%s]".formatted(lhs.tid(), kv.getKey(), lhs.tid().matches(kv.getKey())));
+                    this.logger().trace("{{y}}dom{{/y}} filtering: %s => %s [%s]".formatted(lhs.tid(), kv.getKey(), lhs.tid().matches(kv.getKey())));
                     return pass;
                 })
                 .map(Map.Entry::getValue)
                 .flatMap(Collection::stream)
                 .filter(i -> {
                     boolean pass = (instAorB.resolution() == Inst.Resolve.A) || (i.args().count() == instAorB.args().count());
-                    LOG.trace("{{y}}args{{/y}} filtering: %s => %s [%s]", lhs, i, pass);
+                    this.logger().trace("{{y}}args{{/y}} filtering: %s => %s [%s]", lhs, i, pass);
                     return pass;
                 })
                 .map(i -> {
-                    final List<Obj> resolvedArgs = new ArrayList<>();
-                    //  final boolean blocking = instAorB.tid().basePath().equals(BLOCK_TID);
-                    for (int j = 0; j < i.args().count(); j++) {
-                        //  resolvedArgs.add(i.arg(j).apply(instA.arg(j)));
-                        resolvedArgs.add(instAorB.arg(j));//.isCode() ? instAorB.arg(j).<Code>as().resolve(Inst.Resolve.B ,lhs) : instAorB.arg(j));
-                    }
-                    final Inst j = i.clone(new Triplet<>(MLst.of(resolvedArgs),
+                    final Inst j = i.clone(new Triplet<>(instAorB.args(),
                             i.f(), i.seed()), i.tid().query(fURI.DOM, lhs.tid()), instAorB.vid());
-                    LOG.trace("{{y}}inst{{/y}} resolution: %s => %s [%s]", lhs, j, i);
+                    this.logger().trace("{{y}}inst{{/y}} resolution: %s => %s [%s]", lhs, j, i);
                     return j;
-                }).findFirst().orElseThrow(() -> LOG.except("unable to resolve %s => %s in instruction set %s", lhs, instAorB, this.value().get(instAorB.tid())));
+                }).findFirst().orElseThrow(() -> this.logger().except("unable to resolve %s => %s in instruction set %s", lhs, instAorB, this.value().get(instAorB.tid())));
     }
 }

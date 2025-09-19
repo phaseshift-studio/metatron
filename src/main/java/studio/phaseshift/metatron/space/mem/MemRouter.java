@@ -34,7 +34,7 @@ import static studio.phaseshift.metatron.BootLoader.BOOTING;
 
 public class MemRouter implements Router {
 
-    private static final GraphittyLogger LOG = Graphitty.log(MemRouter.class);
+    private final GraphittyLogger LOG = Graphitty.log(this);
     private static final fURI ROUTER_TID = fURI.of("/mtron/sys/router");
 
     private fURI vid;
@@ -89,7 +89,7 @@ public class MemRouter implements Router {
         if (vid.equals(this.vid))
             return this;
         final Space space = this.getSpace(vid);
-        LOG.trace("reading %s from %s", vid, space.vid());
+        //LOG.trace("reading %s from %s", vid, space.vid());
         return space.read(vid);
     }
 

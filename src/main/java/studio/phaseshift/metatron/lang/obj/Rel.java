@@ -50,6 +50,11 @@ public interface Rel extends Poly {
         return this.value().getValue1();
     }
 
+    @Override
+    default <O extends Obj> O at(final Obj key) {
+        return (O) (this.first().matches(key) ? this.second() : NoObj.single());
+    }
+
     /*default Type dom() {
         return this.value().getValue0().dom();
     }

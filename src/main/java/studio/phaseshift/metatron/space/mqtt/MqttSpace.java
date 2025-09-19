@@ -168,11 +168,6 @@ public class MqttSpace extends MObj implements Space {
     }*/
 
     @Override
-    public <O extends Obj> O clone(Object value, fURI tid, fURI vid) {
-        return (O) this;
-    }
-
-    @Override
     public Iterator<Obj> iterator() {
         return this.cache.iterator();
     }

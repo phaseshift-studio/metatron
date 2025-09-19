@@ -44,7 +44,7 @@ public class fURI implements Cloneable {
     private final int port;
     private final List<String> path;
     private final Map<String,String> query;
-    private final boolean sstart;
+    private boolean sstart;
     private boolean send;
     // private final boolean wildcard;
 
@@ -273,6 +273,18 @@ public class fURI implements Cloneable {
     }
 
 
+    public fURI absolute() {
+        fURI clone = this.clone();
+        clone.sstart = true;
+        return clone;
+    }
+
+    public fURI relative() {
+        fURI clone = this.clone();
+        clone.sstart = false;
+        return clone;
+    }
+
     public fURI asNode() {
         fURI clone = this.clone();
         clone.send = false;
@@ -443,11 +455,6 @@ public class fURI implements Cloneable {
             return (T) Long.valueOf(value);
         else throw MTronException.of("no known conversion of %s to %s", value, conversion);
     }
-
-    /*public fURI query(final Map<String, String> map) {
-        final String queryString = map.entrySet().stream().map(kv -> kv.getValue().isEmpty() ? kv.getKey().toString() : kv.getKey() + "=" + kv.getValue()).reduce("", (a, b) -> a + "&" + b);
-        return new fURI(Scheme.GenericScheme.scheme(this.urin.asUri().getScheme()).relativeReference(this.urin.authority(), AbsolutePath.path(this.urin.path()), Query.query(queryString)));
-    }*/
 
     public boolean matches(final fURI rhs) {
         if (!this.coefficientValue().within(rhs.coefficientValue()))

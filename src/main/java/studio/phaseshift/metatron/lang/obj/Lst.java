@@ -40,4 +40,14 @@ public interface Lst extends Poly {
         return this.value();
     }
 
+    @Override
+    default <O extends Obj> O at(final Obj key) {
+        if(key.isInt())
+            return (O) this.value().get(key.value());
+        else {//if(key.isUri()) {
+            throw new RuntimeException("bad");
+          //  return NoObj.single();
+        }
+    }
+
 }

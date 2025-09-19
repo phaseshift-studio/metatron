@@ -10,21 +10,25 @@ import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.Map;
 
+import static studio.phaseshift.metatron.lang.obj.mtron.MInstSet.MTRON_TID;
+
 public class StackSpace extends MSpace {
 
-    private static final GraphittyLogger LOG = Graphitty.log(StackSpace.class);
+    public static final fURI STACKSPACE_TID = MTRON_TID.extend("space/stack");
+
+    private final GraphittyLogger LOG = Graphitty.log(this);
     private final MemSpace root;
     private final LinkedList<Map<fURI, Obj>> stack = new LinkedList<>();
 
     public StackSpace(final fURI pattern, final fURI vid) {
-        super(pattern, fURI.of("/mtron/space/stack"), vid);
-        this.root = new MemSpace(this.pattern, fURI.of("/mtron/space/stack/root"));
+        super(pattern, STACKSPACE_TID, vid);
+        this.root = new MemSpace(this.pattern, STACKSPACE_TID.extend("default"));
     }
 
     @Override
     public Obj read(final fURI vid) {
         LOG.trace("searching for %s in %s [%s]", vid, this.stack, this.root.store);
-        //if(vid.coefficientValue().isZero())
+        // if(vid.coefficientValue().isZero())
         //    return NoObj.single();
         for (final Map<fURI, Obj> layer : this.stack) {
             final Obj o = layer.get(vid.basePath());

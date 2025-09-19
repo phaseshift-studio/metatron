@@ -19,6 +19,7 @@
 package studio.phaseshift.metatron.ui;
 
 import ch.qos.logback.classic.filter.ThresholdFilter;
+import org.apache.tinkerpop.gremlin.process.traversal.IO;
 import org.jline.reader.*;
 import org.jline.reader.impl.DefaultParser;
 import org.jline.reader.impl.history.DefaultHistory;
@@ -173,6 +174,14 @@ public class Console {
        // autosuggestionWidgets.enable();
     }
 
+    public void stop() {
+        try {
+            this.terminal.close();
+        } catch(IOException e) {
+            LOG.error(e);
+        }
+    }
+
     public void run() throws IOException {
         new CustomWidgets(this.reader);
         BootLoader.load();
@@ -281,7 +290,18 @@ public class Console {
                 """);
     }
 
-    public static void main(final String[] args) throws Exception {
-        new Console().run();
+    public static void main(final String[] args) throws IOException {
+        boolean reload = true;
+        while(reload) {
+            reload = false;
+            final Console console = new Console();
+            try {
+                console.run();
+            } catch (final Exception e) {
+                LOG.error("a %s error occurred. reloading the console.\n", Graphitty.sillyPrint("catastrophic",true,true));
+                reload = true;
+            }
+            console.stop();
+        }
     }
 }

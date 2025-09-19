@@ -33,6 +33,7 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import static studio.phaseshift.metatron.lang.obj.mtron.MInstSet.COUNT_TID;
 import static studio.phaseshift.metatron.lang.obj.mtron.MInstSet.ID_TID;
 
 public interface Inst extends Obj {
@@ -139,7 +140,7 @@ public interface Inst extends Obj {
     }
 
     default boolean isGather() {
-        return this.dom().tid().coefficientValue().min() > 1;
+        return  this.dom().tid().coefficientValue().min() > 1 || this.dom().tid().coefficientValue().max()  == null;
     }
 
     default boolean isScatter() {

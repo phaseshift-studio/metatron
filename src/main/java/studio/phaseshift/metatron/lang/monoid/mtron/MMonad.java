@@ -24,7 +24,7 @@ import static studio.phaseshift.metatron.lang.obj.mtron.MInstSet.START_TID;
 // monoid, obj, inst, state
 public class MMonad extends MObj implements Monad {
 
-    private static final GraphittyLogger LOG = Graphitty.log(MMonad.class);
+    private final GraphittyLogger LOG = Graphitty.log(this);
 
     public MMonad(final Quartet<Monoid, Obj, Inst, Rec> value, final fURI tid, final fURI vid) {
         super(value, tid, vid);

@@ -23,6 +23,10 @@ import ch.qos.logback.core.LayoutBase;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.event.Level;
+import studio.phaseshift.metatron.lang.fURI;
+import studio.phaseshift.metatron.lang.obj.Obj;
+import studio.phaseshift.metatron.space.Router;
+import studio.phaseshift.metatron.space.device.log.Log;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.HashMap;
@@ -39,13 +43,13 @@ public class GraphittyLogger extends LayoutBase<ILoggingEvent> {
 
     private enum OtherLevel {NONE, EXCEPT}
 
-    Object source;
+    protected final Object source;
 
-    public GraphittyLogger() { // required by logback
+    public GraphittyLogger() {
         this.source = null;
     }
 
-    GraphittyLogger(final Object source) {
+    public GraphittyLogger(final Object source) {
         this.source = source;
     }
 
@@ -54,16 +58,16 @@ public class GraphittyLogger extends LayoutBase<ILoggingEvent> {
     }
 
     private String toSourceString() {
-        return this.source instanceof Class ? ((Class<?>) this.source).getSimpleName() : this.source.getClass().getSimpleName();
+      return  this.source instanceof Obj ? ((Obj) this.source).vidOrTid().toString() : (this.source instanceof Class ? ((Class<?>) this.source).getSimpleName() : this.source.getClass().getSimpleName());
     }
 
     private String makeMessage(final boolean metadata, final Object f, final Object... args) {
         return metadata ?
-                Graphitty.string("[{{y}}%s{{/y}}] %s".formatted(toSourceString(), args.length == 0 ? toStringOrNull(f) : toStringOrNull(f).formatted(args))) :
+                Graphitty.string("[{{b}}%s{{/b}}] %s".formatted(toSourceString(), args.length == 0 ? toStringOrNull(f) : toStringOrNull(f).formatted(args))) :
                 Graphitty.string(args.length == 0 ? toStringOrNull(f) : toStringOrNull(f).formatted(args));
     }
 
-    private GraphittyLogger logLevel(final Level level, final Object f, final Object... args) {
+    protected GraphittyLogger logLevel(final Level level, final Object f, final Object... args) {
         this.logger().makeLoggingEventBuilder(level).log(() -> this.makeMessage(true, f, args));
         return this;
     }
@@ -72,7 +76,6 @@ public class GraphittyLogger extends LayoutBase<ILoggingEvent> {
         if (OtherLevel.NONE == level)
             System.out.print(this.makeMessage(false, f, args));
         else if (OtherLevel.EXCEPT == level) {
-            this.error(f,args);
             throw MTronException.of(f, args);
         }
         return this;
@@ -114,7 +117,7 @@ public class GraphittyLogger extends LayoutBase<ILoggingEvent> {
         if (null == this.source)
             return LoggerFactory.getLogger(GraphittyLogger.class);
         else if (!(this.source instanceof Logger))
-           return LoggerFactory.getLogger(this.source.getClass());
+            return LoggerFactory.getLogger(this.source.getClass());
         return (Logger) this.source;
     }
 

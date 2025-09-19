@@ -19,10 +19,14 @@
 package studio.phaseshift.metatron.lang.obj;
 
 import org.javatuples.Pair;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.mtron.MObjs;
 import studio.phaseshift.metatron.lang.obj.mtron.MType;
 import studio.phaseshift.metatron.space.Router;
+import studio.phaseshift.metatron.ui.Graphitty;
+import studio.phaseshift.metatron.ui.GraphittyLogger;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
@@ -45,8 +49,16 @@ public interface Obj extends Function<Obj, Obj>, Iterable<Obj> {
 
     fURI vid();
 
+    default fURI vidOrTid() {
+        return this.vid() == null ? this.tid() : this.vid();
+    }
+
     default Type type() {
         return MType.of(this,this.tid());
+    }
+
+    default GraphittyLogger logger() {
+        return Graphitty.log(this);
     }
 
     <O extends Obj> O clone(final Object value, final fURI tid, final fURI vid);
