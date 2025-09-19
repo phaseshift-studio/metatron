@@ -4,6 +4,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.Inst;
 import studio.phaseshift.metatron.lang.obj.mtron.MInst;
@@ -18,6 +19,12 @@ import static studio.phaseshift.metatron.lang.fURI.*;
 import static studio.phaseshift.metatron.lang.obj.mtron.MInstSet.*;
 
 public class InstTest {
+
+    @BeforeAll
+    public static void setup() {
+        BootLoader.load();
+    }
+
 
     @ParameterizedTest
     @CsvSource(value = {
