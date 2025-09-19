@@ -29,7 +29,7 @@ import java.util.List;
 
 import static studio.phaseshift.metatron.lang.obj.mtron.MInstSet.NOOBJ_TID;
 
-public class NoObj implements Obj, Inst {
+public final class NoObj implements Obj, Inst {
 
     private static final NoObj SINGLE = new NoObj();
     private static final int HASHCODE = 632862684;

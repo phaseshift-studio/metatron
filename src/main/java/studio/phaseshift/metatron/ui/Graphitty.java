@@ -111,9 +111,9 @@ public class Graphitty {
         return source instanceof Obj && !(source instanceof Router)? new GraphittyObjLogger((Obj)source) : new GraphittyLogger(source);
     }
 
-    public static void out(final OutputStream out, final String s) {
+    public static void out(final OutputStream out, final String f, final Object... args) {
         final Graphitty g = new Graphitty(out);
-        g.print(s);
+        g.print(Graphitty.string(f.formatted(args)));
     }
 
     public static Graphitty stdout() {

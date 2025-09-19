@@ -70,9 +70,11 @@ public class Console {
             this.addWidget("quit-widget", this::quitWidget);
             this.addWidget("resolve-widget", this::resolveWidget);
             this.addWidget("define-widget", this::defineWidget);
+            this.addWidget("hide-widget", this::hideWidget);
             getKeyMap().bind(new Reference("quit-widget"), ctrl('q'));
             getKeyMap().bind(new Reference("resolve-widget"), ctrl('r'));
             getKeyMap().bind(new Reference("define-widget"), ctrl('e'));
+            getKeyMap().bind(new Reference("hide-widget"), ctrl('i'));
             //   getKeyMap().bind(new Reference("detach-widget"), alt(key_down.name()));
         }
 
@@ -98,6 +100,17 @@ public class Console {
                 ObjParser.eval(sourceCode).forEachRemaining(System.out::println);
                 return true;
             });
+            return true;
+        }
+
+        private boolean hideWidget() {
+            boolean hiding = ObjStringSerializer.HIDE_TIDS.isEmpty();
+            if(hiding)
+                ObjStringSerializer.HIDE_TIDS.addAll(ObjStringSerializer.BASE_TIDS);
+            else
+                ObjStringSerializer.HIDE_TIDS.clear();
+            final int xLocation = terminal.getCursorPosition(System.out::print).getX() + 1;
+            Graphitty.out(terminal.output(),"\n{{-X-&y}}hide base type prefixes{{/y}}: {{r}}%s{{/r}}{{^1&|%d}}{{X}}", hiding,xLocation);
             return true;
         }
     }
@@ -126,7 +139,7 @@ public class Console {
                             builder.append(buffer);
                             final String oString = o.toString();
                             final int yDistance = StringUtil.countLines(oString);
-                            Graphitty.out(this.terminal.output(), "{{v1&Xv&|%d}}%s".formatted(8, oString));
+                            Graphitty.out(this.terminal.output(), "{{v1&-X-&Xv&|%d}}%s".formatted(8, oString));
                             Graphitty.out(this.terminal.output(), "{{^%d&|%d}}".formatted(yDistance, xLocation));
                         }
 
@@ -190,7 +203,7 @@ public class Console {
             try {
                 Obj result = null;
                 Graphitty.out(this.terminal.output(), "\n{{v1&^1}}");
-                line = this.reader.readLine(Graphitty.string("{{FORM2}}mt%son{{FORM1}}> ".formatted(RESOLVE_MODE ? "{{[r]&y}}r{{X&FORM2}}" : "r"))).trim();
+                line = this.reader.readLine(Graphitty.string("{{FORM2}}mton{{FORM1}}> ")).trim();
                 if (line.equals(":header"))
                     this.outputHeader();
                 else if (line.equals(":quit"))
@@ -286,7 +299,10 @@ public class Console {
         }
         LOG.none("\t{{b}}ve{{y}}rs{{m}}ion {{y}}%s{{X}}\n\n", METATRON_VERSION);
         Graphitty.out(this.terminal.output(), """
-                . {{[r]&y}}r{{[d]}}esolve {{m}}[{{y}}ctrl-r{{m}}]{{X}} . {{[r]&y}}q{{[d]}}uit    {{m}}[{{y}}ctrl-q{{m}}]{{X}}
+                . {{y}}{{[r]}}r{{[d]}}esolve {{m}}[{{y}}ctrl-r{{m}}]{{X}}: automatic expression resolution
+                . {{y}}hi{{[r]}}d{{[d]}}e    {{m}}[{{y}}ctrl-h{{m}}]{{X}}: hide base type prefixes
+                . {{y}}{{[r]}}q{{[d]}}uit    {{m}}[{{y}}ctrl-q{{m}}]{{X}}: leave the metatron
+                
                 """);
     }
 

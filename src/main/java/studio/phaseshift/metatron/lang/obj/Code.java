@@ -28,7 +28,7 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 
-public interface Code extends Obj {
+public interface Code extends Call {
 
     @Override
     Code clone(final Object value, final fURI tid, final fURI vid);
@@ -57,17 +57,17 @@ public interface Code extends Obj {
 
     @Override
     default Code vid(final fURI newVid) {
-        return (Code) Obj.super.vid(newVid);
+        return (Code) Call.super.vid(newVid);
     }
 
     @Override
     default Code tid(final fURI newTid) {
-        return (Code) Obj.super.tid(newTid);
+        return (Code) Call.super.tid(newTid);
     }
 
     @Override
     default Code value(final Object newValue) {
-        return (Code) Obj.super.value(newValue);
+        return (Code) Call.super.value(newValue);
     }
 
     @Override

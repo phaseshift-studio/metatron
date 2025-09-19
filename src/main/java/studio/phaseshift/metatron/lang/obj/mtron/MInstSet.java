@@ -34,6 +34,8 @@ import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static studio.phaseshift.metatron.lang.fURI.f;
+
 public class MInstSet extends MSpace implements InstSet {
 
     public static final fURI MTRON_TID = fURI.of("/mtron");
@@ -193,7 +195,7 @@ public class MInstSet extends MSpace implements InstSet {
                 Pair.with(OBJS_TID, MType.of(OBJS_TID)),
                 Pair.with(INST_TID, MType.of(INST_TID)),
                 Pair.with(CODE_TID, MType.of(CODE_TID))).forEach(kv -> {
-            Router.global().registerRewrite(fURI.of(kv.getValue0().name()), kv.getValue0());
+            Router.global().registerRewrite(f(kv.getValue0().name()), kv.getValue0());
         });
         // SYMBOL_TABLE.forEach((k1, v1) -> v1.forEach((k2, v2) -> v2.forEach(i -> Router.global().write(i.tid(), i)))
     }

@@ -28,6 +28,8 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import static studio.phaseshift.metatron.lang.obj.mtron.MInstSet.*;
+
 public class ObjStringSerializer implements ObjSerializer<String> {
 
     private final Builder b;
@@ -40,6 +42,9 @@ public class ObjStringSerializer implements ObjSerializer<String> {
         return new Builder();
     }
 
+    public static Set<fURI> BASE_TIDS = Set.of(BOOL_TID, INT_TID, REL_TID, REAL_TID, STR_TID, URI_TID, REC_TID, LST_TID, OBJS_TID);
+    public static Set<fURI> HIDE_TIDS = new HashSet<>(BASE_TIDS);
+
     @Override
     public String write(final Obj obj) throws IllegalStateException {
         final StringBuilder sb = new StringBuilder();
@@ -48,8 +53,10 @@ public class ObjStringSerializer implements ObjSerializer<String> {
                     .append("noobj")
                     .append(this.b.ignoreRewrites ? "" : "{{X}}")
                     .toString();
+        /// ///////////////////////////////////////////////////////////////
+        /// ///////////////////////////////////////////////////////////////
         else if (obj instanceof final Inst inst) {
-            generateTID(sb, obj.tid()).append("(");
+            generateTID(sb, obj.tid(), false).append("(");
             if (!inst.args().isEmpty()) {
                 boolean isLst = inst.args().isLst();
                 for (final Obj kv : inst.args().elements()) {
@@ -68,22 +75,31 @@ public class ObjStringSerializer implements ObjSerializer<String> {
                     .append("}")
                     .append(this.b.ignoreRewrites ? "" : "{{X}}")
                     .toString();
-        } else if (obj instanceof final Rel rel) {
-            return generateTID(sb, obj.tid()).append(rel.first()).append(this.b.palette.formC())
+        }
+        /// ///////////////////////////////////////////////////////////////
+        /// ///////////////////////////////////////////////////////////////
+        else if (obj instanceof final Rel rel) {
+            return generateTID(sb, obj.tid(), true).append(rel.first()).append(this.b.palette.formC())
                     .append("=>")
                     .append(rel.second())
                     .append(this.b.ignoreRewrites ? "" : "{{X}}")
                     .toString();
-        } else if (obj instanceof final Lst lst) {
-            generateTID(sb, obj.tid()).append(this.b.palette.formC()).append('[').append(this.b.palette.valueC());
+        }
+        /// ///////////////////////////////////////////////////////////////
+        /// ///////////////////////////////////////////////////////////////
+        else if (obj instanceof final Lst lst) {
+            generateTID(sb, obj.tid(), true).append(this.b.palette.formC()).append('[').append(this.b.palette.valueC());
             for (final Obj o : lst.value()) {
                 sb.append(o).append(this.b.palette.formC()).append(',');
             }
             if (!lst.value().isEmpty()) sb.deleteCharAt(sb.length() - 1).append(this.b.palette.formC());
             else sb.append(this.b.palette.formC()).append(",");
             return generateVID(sb.append(']'), lst).append(this.b.ignoreRewrites ? "" : "{{X}}").toString();
-        } else if (obj instanceof final Objs objs) {
-            generateTID(sb, obj.tid()).append(this.b.palette.formC()).append("{").append(this.b.palette.valueC());
+        }
+        /// ///////////////////////////////////////////////////////////////
+        /// ///////////////////////////////////////////////////////////////
+        else if (obj instanceof final Objs objs) {
+            generateTID(sb, obj.tid(), true).append(this.b.palette.formC()).append("{").append(this.b.palette.valueC());
             boolean found = false;
             for (final Obj o : objs.value()) {
                 found = true;
@@ -92,11 +108,14 @@ public class ObjStringSerializer implements ObjSerializer<String> {
             if (found) sb.deleteCharAt(sb.length() - 1);
             sb.append(this.b.palette.formC()).append('}');
             return generateVID(sb, objs).append(this.b.ignoreRewrites ? "" : "{{X}}").toString();
-        } else if (obj instanceof final Rec rec) {
+        }
+        /// ///////////////////////////////////////////////////////////////
+        /// ///////////////////////////////////////////////////////////////
+        else if (obj instanceof final Rec rec) {
             if (this.b.prettyPrint && rec.count() > 1) {
                 this.generateRec(sb, rec, 0);
             } else {
-                generateTID(sb, obj.tid()).append(this.b.palette.formC()).append('[').append(this.b.palette.valueC());
+                generateTID(sb, obj.tid(), true).append(this.b.palette.formC()).append('[').append(this.b.palette.valueC());
                 for (final Map.Entry<Obj, Obj> o : rec.value().entrySet()) {
                     sb.append(o.getKey())
                             .append(this.b.palette.formC())
@@ -107,8 +126,11 @@ public class ObjStringSerializer implements ObjSerializer<String> {
             }
             if (rec.count() == 1) sb.deleteCharAt(sb.length() - 1).append(this.b.palette.formC()).append(']');
             return generateVID(sb, rec).append(this.b.ignoreRewrites ? "" : "{{X}}").toString();
-        } else if (obj instanceof final Type type) {
-            return generateTID(sb, obj.tid())
+        }
+        /// ///////////////////////////////////////////////////////////////
+        /// ///////////////////////////////////////////////////////////////
+        else if (obj instanceof final Type type) {
+            return generateTID(sb, obj.tid(), false)
                     .append("{{r}}T")
                     .append(this.b.palette.formC())
                     .append("[")
@@ -116,8 +138,11 @@ public class ObjStringSerializer implements ObjSerializer<String> {
                     .append(ObjUtil.isNoObj(obj.value()) ? "" : obj.value().toString())
                     .append(this.b.palette.formC())
                     .append("]{{X}}").toString();
-        } else
-            return generateVID(generateTID(sb, obj.tid())
+        }
+        /// ///////////////////////////////////////////////////////////////
+        /// ///////////////////////////////////////////////////////////////
+        else
+            return generateVID(generateTID(sb, obj.tid(), true)
                     .append(this.b.palette.valueC())
                     .append(null == obj.value() ? "" : obj.value().toString())
                     .append(this.b.palette.form2C()), obj)
@@ -150,10 +175,13 @@ public class ObjStringSerializer implements ObjSerializer<String> {
                 .append(obj.vid());
     }
 
-    private StringBuilder generateTID(final StringBuilder sb, final fURI tid) {
-        return generateTID(sb,tid,true);
+    private StringBuilder generateTID(final StringBuilder sb, final fURI tid, final boolean hide) {
+        return generateTID(sb, tid, true, hide);
     }
-    private StringBuilder generateTID(final StringBuilder sb, final fURI tid, final boolean doubleColon) {
+
+    private StringBuilder generateTID(final StringBuilder sb, final fURI tid, final boolean doubleColon, final boolean hide) {
+        if (hide && HIDE_TIDS.contains(tid))
+            return sb;
         if (!this.b.hideTypes.contains(tid))
             sb.append(this.b.palette.typeC()).append(tid.small().basePath());
         if (!tid.coefficientValue().isOne())
@@ -168,12 +196,12 @@ public class ObjStringSerializer implements ObjSerializer<String> {
             for (Map.Entry<String, String> kv : tid.queryMap().entrySet()) {
                 sb.append(this.b.palette.form3C()).append(kv.getKey()).append(this.b.palette.form2C()).append("=");
                 if (kv.getKey().equals("dom") || kv.getKey().equals("rng"))
-                    generateTID(sb, fURI.of(kv.getValue()),false);
+                    generateTID(sb, fURI.of(kv.getValue()), false, false);
                 else
                     sb.append(this.b.palette.typeC()).append(kv.getValue());
                 sb.append(this.b.palette.valueC()).append("&");
             }
-            sb.deleteCharAt(sb.length()-1);
+            sb.deleteCharAt(sb.length() - 1);
         }
         return doubleColon ? sb.append(this.b.palette.formC()).append("::") : sb;
     }

@@ -36,7 +36,7 @@ import java.util.stream.Collectors;
 import static studio.phaseshift.metatron.lang.obj.mtron.MInstSet.COUNT_TID;
 import static studio.phaseshift.metatron.lang.obj.mtron.MInstSet.ID_TID;
 
-public interface Inst extends Obj {
+public interface Inst extends Call {
 
     // /mtron/plus?dom=/mtron/int,rng=/mtron/int
 
