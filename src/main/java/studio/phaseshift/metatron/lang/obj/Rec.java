@@ -27,6 +27,8 @@ import studio.phaseshift.metatron.util.IteratorUtil;
 import java.util.Map;
 import java.util.stream.Stream;
 
+import static studio.phaseshift.metatron.lang.obj.mtron.MUri.uri;
+
 public interface Rec extends Poly {
 
     @Override
@@ -55,8 +57,23 @@ public interface Rec extends Poly {
     }
 
     @Override
+    default Rec value(final Object newValue) {
+        return this.clone(newValue, this.tid(), this.vid());
+    }
+
+    @Override
     default <O extends Obj> O at(final Obj key) {
-        return (O) this.value().getOrDefault(key,NoObj.single());
+        return (O) this.value().getOrDefault(key, NoObj.single());
+    }
+
+    default <O extends Obj> O at(final String key) {
+        return this.at(uri(key));
+    }
+
+    Rec put(final Obj key, final Obj value);
+
+    default Rec put(final String key, final Obj value) {
+        return this.put(uri(key),value);
     }
 
 }

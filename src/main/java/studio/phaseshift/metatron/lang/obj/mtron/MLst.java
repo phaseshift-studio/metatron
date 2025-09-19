@@ -27,6 +27,11 @@ import java.util.List;
 import static studio.phaseshift.metatron.lang.obj.mtron.MInstSet.LST_TID;
 
 public class MLst extends MObj implements Lst {
+
+    public static Lst lst(final Obj... objs) {
+        return MLst.of(objs);
+    }
+
     public MLst(final List<Obj> value, final fURI tid, final fURI vid) {
         super(value, tid, vid);
     }

@@ -23,9 +23,11 @@ import studio.phaseshift.metatron.lang.obj.Obj;
 import studio.phaseshift.metatron.lang.obj.Rec;
 
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 import static studio.phaseshift.metatron.lang.obj.mtron.MInstSet.REC_TID;
+import static studio.phaseshift.metatron.lang.obj.mtron.MUri.uri;
 
 public class MRec extends MObj implements Rec {
     public MRec(final Map<Obj, Obj> value, final fURI tid, final fURI vid) {
@@ -36,9 +38,27 @@ public class MRec extends MObj implements Rec {
         this(value, REC_TID, fURI.NULL);
     }
 
+    public static Rec rec(final Obj... kvs) {
+        return MRec.of(kvs);
+    }
+
     @Override
     public Rec clone(final Object value, final fURI tid, final fURI vid) {
         return new MRec((Map<Obj, Obj>) value, tid, vid);
+    }
+
+    public Rec put(final Obj key, final Obj value) {
+        final fURI k = key.uriValue();
+        if(k.segments().isEmpty())
+            return this;
+        final LinkedHashMap<Obj,Obj> map = new LinkedHashMap<>(this.recValue());
+        if(k.segments().size() == 1)
+            map.put(key,value);
+        else {
+            final Obj v = map.get(MUri.of(k.segments().get(0)));
+            map.put(uri(k.segments().get(0)), (v.isRec() ? v.<Rec>as() : rec()).put(k.pretract().toUri(), value));
+        }
+        return this.value(map);
     }
 
     @Override

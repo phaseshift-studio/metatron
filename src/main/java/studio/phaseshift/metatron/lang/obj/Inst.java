@@ -78,8 +78,17 @@ public interface Inst extends Obj {
         return this.value().getValue0();
     }
 
+    default Inst args(final Poly args) {
+        return this.clone(Triplet.with(args,this.f(),this.seed()),this.tid(),this.vid());
+    }
+
     default Obj arg(final int index) {
         return IteratorUtil.index(this.args().elements().iterator(), index, NoObj.single());
+    }
+
+
+    default Obj arg(final fURI key) {
+        return this.args().<Rec>as().at(key.toUri());
     }
 
     default Inst.f f() {

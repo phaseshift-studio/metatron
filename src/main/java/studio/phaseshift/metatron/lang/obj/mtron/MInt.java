@@ -25,6 +25,11 @@ import static studio.phaseshift.metatron.lang.obj.mtron.MInstSet.INT_TID;
 
 public class MInt extends MObj implements Int {
 
+    public static Int jnt(final long i) {
+        return MInt.of(i);
+    }
+
+
     public MInt(final Long value, final fURI tid, final fURI vid) {
         super(value, tid, vid);
     }

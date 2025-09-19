@@ -17,8 +17,8 @@ public class Log extends MRec {
 
     private static final fURI LOG_TID = fURI.of("/usr/log");
 
-    protected Log(final Map<Obj, Obj> log) {
-        super(log);
+    public Log(final Obj log) {
+        super(log.recValue());
     }
 
     protected Log(final fURI vid) {
@@ -31,7 +31,7 @@ public class Log extends MRec {
     }
 
     public static Log from(final Rec log) {
-        return new Log(log.value());
+        return new Log(log);
     }
 
     public boolean check(final Level level, final fURI pattern) {

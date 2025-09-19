@@ -19,6 +19,7 @@
 package studio.phaseshift.metatron.lang.obj.mtron;
 
 import org.javatuples.Pair;
+import org.javatuples.Triplet;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.monoid.mtron.MMonoid;
 import studio.phaseshift.metatron.lang.obj.*;
@@ -82,6 +83,7 @@ public class MInstSet extends MSpace implements InstSet {
     public static final fURI LTE_TID = INST_TID.extend("lte");
     public static final fURI BARRIER_TID = INST_TID.extend("barrier");
     public static final fURI REIFY_TID = INST_TID.extend("reify");
+    public static final fURI CROSS_TID = INST_TID.extend("cross");
 
     // inst_tid -> <inst_tid_dom -> set<inst>>
     private static final Map<fURI, Map<fURI, Set<Inst>>> SYMBOL_TABLE = new LinkedHashMap<>();
@@ -141,6 +143,23 @@ public class MInstSet extends MSpace implements InstSet {
         this.define(LTE_TID, INT_TID, BOOL_TID, MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> MBool.of(lhs.intValue() <= inst.arg(0).intValue()));
         this.define(LTE_TID, INT_TID, BOOL_TID, MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> MBool.of(lhs.intValue() <= inst.arg(0).intValue()));
         this.define(WITHIN_TID, LST_TID, LST_TID, MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> MLst.of(lhs.<Lst>as().lstValue().stream().map(o -> inst.arg(0).apply(o)).toList()));
+        this.define(CROSS_TID, LST_TID, LST_TID, MRec.ofUriKeyed("c",MInst.instA(ID_TID),"l", MInst.instA(ID_TID)), (lhs,inst) -> {
+           final List<Obj> result = new ArrayList<>();
+           final Obj toEval = inst.arg(0);
+           final List<Obj> lhsList = lhs.lstValue();
+           final List<Obj> rhsList = inst.arg(fURI.of("l")).lstValue();
+            for(int i=0; i< lhsList.size();i++) {
+              if(rhsList.size() > i) {
+                  final Obj lhsA = lhsList.get(i);
+                  final Obj rhsA = rhsList.get(i);
+                  Router.stack().push(MRec.ofUriKeyed("l",rhsA));
+                 result.add(toEval.apply(lhsA));
+              } else {
+                  break;
+              }
+           }
+            return MLst.of(result);
+        });
         this.define(SPLIT_TID, fURI.ANY, fURI.ANY, MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> {
             if (inst.arg(0).isLst()) {
                 return MLst.of(inst.arg(0).lstValue().stream().map(e -> e.apply(lhs)).toList());

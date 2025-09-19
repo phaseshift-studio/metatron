@@ -40,6 +40,11 @@ public class MObjs extends MObj implements Objs {
 
     private static final GraphittyLogger LOG = Graphitty.log(MObjs.class);
 
+    public static Objs objs(final Iterable<Obj> os) {
+        return MObjs.of(os);
+    }
+
+
     public MObjs(final Iterable<Obj> value, final fURI tid, final fURI vid) {
         super(value, value.iterator().hasNext() ? value.iterator().next().tid().coefficient("*") : fURI.of("/mtron/int[*]"), vid);
         if(value instanceof Obj)

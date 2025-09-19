@@ -24,6 +24,11 @@ import studio.phaseshift.metatron.lang.obj.Str;
 import static studio.phaseshift.metatron.lang.obj.mtron.MInstSet.STR_TID;
 
 public class MStr extends MObj implements Str {
+
+    public static Str str(final String s) {
+        return MStr.of(s);
+    }
+
     public MStr(final String value, final fURI tid, final fURI vid) {
         super(value, tid, vid);
     }

@@ -63,7 +63,7 @@ public interface Obj extends Function<Obj, Obj>, Iterable<Obj> {
 
     <O extends Obj> O clone(final Object value, final fURI tid, final fURI vid);
 
-    default Obj value(final Object newValue) {
+    default <O extends Obj> O value(final Object newValue) {
         return this.clone(newValue, this.tid(), this.vid());
     }
 
@@ -107,6 +107,10 @@ public interface Obj extends Function<Obj, Obj>, Iterable<Obj> {
     @Override
     default Obj apply(final Obj other) {
         return this;
+    }
+
+    default Obj apply() {
+        return this.apply(NoObj.single());
     }
 
     default boolean matches(final Obj rhs) {

@@ -38,6 +38,9 @@ public class fURI implements Cloneable {
     public static final fURI DOM = fURI.of("dom");
     public static final fURI RNG = fURI.of("rng");
 
+    public static fURI f(final String s) {
+        return fURI.of(s);
+    }
 
     private final String host;
     private final String scheme;

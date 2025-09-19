@@ -70,4 +70,8 @@ public class BootLoader {
         }
 
     }
+
+    public static Log logger() {
+        return Router.global().read("/sys/log",Log.class);
+    }
 }

@@ -33,7 +33,7 @@ public interface Router extends Obj {
         }
     }
 
-    ThreadLocal<StackSpace> INST_STACK =   ThreadLocal.withInitial(() -> new StackSpace(fURI.of("+"),Router.global().tid().extend("stack")));
+    ThreadLocal<StackSpace> INST_STACK = ThreadLocal.withInitial(() -> new StackSpace(fURI.of("+"), Router.global().tid().extend("stack")));
 
     static Router global() {
         return BootLoader.ROUTER;
@@ -45,7 +45,24 @@ public interface Router extends Obj {
 
     Obj read(final fURI vid);
 
+    default Obj read(final String vid) {
+        return this.read(fURI.of(vid));
+    }
+
+
+    default <O extends Obj> O read(final String vid, final Class<O> oClass) {
+        try {
+            return oClass.getConstructor(Obj.class).newInstance(this.read(fURI.of(vid)));
+        } catch (final Exception e) {
+            throw Graphitty.log(this).except(e);
+        }
+    }
+
     Obj write(final fURI vid, final Obj obj);
+
+    default Obj write(final String vid, final Obj obj) {
+        return this.write(fURI.of(vid), obj);
+    }
 
     boolean hasSpaceFor(final fURI vid);
 

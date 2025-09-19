@@ -18,12 +18,25 @@
 
 package studio.phaseshift.metatron.space;
 
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+import studio.phaseshift.metatron.BootLoader;
+import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.NoObj;
+import studio.phaseshift.metatron.lang.obj.Obj;
+import studio.phaseshift.metatron.lang.obj.mtron.MLst;
+import studio.phaseshift.metatron.lang.parse.ObjParser;
+import studio.phaseshift.metatron.ui.Graphitty;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static studio.phaseshift.metatron.lang.fURI.f;
+import static studio.phaseshift.metatron.lang.obj.mtron.MLst.lst;
+import static studio.phaseshift.metatron.lang.obj.mtron.MUri.uri;
 
-public class SpaceTest {
+public abstract class SpaceTest {
 
     public Space space;
 
@@ -31,6 +44,23 @@ public class SpaceTest {
     public void beforeEach() {
         assertNotNull(this.space);
         this.space.write("#", NoObj.single());
+        //BootLoader.logger().put(uri("level/INFO"), lst(uri("#")));
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "1.to(a)                     % 1.from(a)                  % 1", // todo: 1.from is a hack
+    }, delimiter = '%')
+    void testMonoReadWrite(final String writeExpression, final String readExpression, final String resultExpression) {
+        final Obj writeObj = ObjParser.parse(writeExpression).apply();
+        final Obj readObj = ObjParser.parse(readExpression).apply();
+        final Obj resultObj = ObjParser.parse(resultExpression);
+        Graphitty.log(this.space).debug("write [%s => %s] | read [%s => %s] | result [%s => %s]",
+                writeExpression, writeObj,
+                readExpression, readObj,
+                resultExpression, resultObj);
+        assertEquals(resultObj, readObj);
+
     }
 
   /*  public void testMonoSpace() {
