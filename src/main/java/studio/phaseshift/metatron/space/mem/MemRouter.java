@@ -96,7 +96,7 @@ public class MemRouter implements Router {
     @Override
     public Obj write(final fURI vid, final Obj obj) {
         final Space space = this.getSpace(vid);
-        LOG.trace("writing %s to %s", obj, space.vid());
+        LOG.trace("writing %s to %s", obj, space.vidOrTid());
         return space.write(vid, obj);
     }
 

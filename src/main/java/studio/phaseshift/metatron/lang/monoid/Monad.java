@@ -1,19 +1,36 @@
 package studio.phaseshift.metatron.lang.monoid;
 
 import org.javatuples.Quartet;
+import org.javatuples.Triplet;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.*;
+import studio.phaseshift.metatron.space.Space;
+import studio.phaseshift.metatron.ui.Graphitty;
+
+import java.util.Objects;
 
 public interface Monad extends Obj {
+
+    class Helpers {
+        public static String monadToString(final Monad monad) {
+            return Graphitty.string("{{b}}" + monad.tid() + "{{g}}::[" + monad.obj() + "{{g}}<--{{/g}}{{c}}M{{g}}-->{{c}}" + monad.inst() + "{{g}}]{{X}}");
+        }
+
+        public static int monadHashCode(final Monad monad) {
+            return Objects.hash(monad.tid(), monad.vid(), monad.value());
+        }
+
+        public static boolean monadEquals(final Monad monad, final Object other) {
+            return other instanceof Monad && ((Monad) other).tid().equals(monad.tid()) && ((Monad) other).vid().equals(monad.vid()) && ((Monad)other).value().equals(monad.value());
+        }
+    }
 
     @Override
     Monad clone(final Object value, final fURI tid, final fURI vid);
 
 
     @Override
-    Quartet<Monoid, Obj, Inst, Rec> value();
-
-    Monad halt();
+    Triplet<Obj, Inst, Rec> value();
 
     default boolean halted() {
         return this.inst().isNoObj();
@@ -28,27 +45,23 @@ public interface Monad extends Obj {
     }
 
     default Rec state() {
-        return this.value().getValue3();
-    }
-
-    default Inst inst() {
         return this.value().getValue2();
     }
 
-    default Obj obj() {
+    default Inst inst() {
         return this.value().getValue1();
     }
 
+    default Obj obj() {
+        return this.value().getValue0();
+    }
+
     default Monad obj(final Obj obj) {
-        return this.clone(Quartet.with(this.monoid(), obj, this.inst(), this.state()), this.tid(), this.vid());
+        return this.clone(Triplet.with(obj, this.inst(), this.state()), this.tid(), this.vid());
     }
 
     default Monad inst(final Inst inst) {
-        return this.clone(Quartet.with(this.monoid(), this.obj(), inst, this.state()), this.tid(), this.vid());
-    }
-
-    default Monoid monoid() {
-        return this.value().getValue0();
+        return this.clone(Triplet.with(this.obj(), inst, this.state()), this.tid(), this.vid());
     }
 
     default long bulk() {
@@ -65,11 +78,11 @@ public interface Monad extends Obj {
         return this.inst().rng();
     }
 
-    //long loops();
-
     @Override
-    Monad apply(final Obj inst);
-    /*{
-        return this.clone(Quartet.with(this.monoid(), inst.apply(this.obj()), inst, this.state()), this.tid(), this.vid());
-    }*/
+    default Monad apply(final Obj inst) {
+        if (this.halted())
+            return this;
+        return this.obj(this.inst().apply(this.obj())).inst(inst.as());
+    }
+
 }

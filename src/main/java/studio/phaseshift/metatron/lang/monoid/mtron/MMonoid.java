@@ -30,42 +30,18 @@ import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.*;
 
+import static studio.phaseshift.metatron.lang.obj.mtron.MInstSet.MTRON_TID;
 import static studio.phaseshift.metatron.lang.obj.mtron.MInstSet.START_TID;
 
 public class MMonoid extends MObj implements Monoid {
 
-    public static final fURI MONOID_TID = fURI.of("/mtron/lang/monoid");
+    public static final fURI MONOID_TID = MTRON_TID.extend("lang/monoid");
 
-    private  final GraphittyLogger LOG = Graphitty.log(this);
+    private final GraphittyLogger LOG = Graphitty.log(this);
 
     public MMonoid(final Quartet<Code, Objs, Lst, Objs> value, final fURI tid, final fURI vid) {
         super(value, tid, vid);
     }
-
-  /*  @Override
-    public Iterator<Obj> iterator() {
-        List<Obj> results = new ArrayList<>();
-        Obj m;
-        while (null != (m = this.next())) {
-            m.iterator().forEachRemaining(results::add);
-        }
-        return results.iterator();
-    }
-
-    private Obj next() {
-        while (true) {
-            if (this.halted().<List<Obj>>valueAs().isEmpty()) {
-                if (this.running().<List<Obj>>valueAs().isEmpty())
-                    return null;
-                this.apply(NoObj.single());
-            } else {
-                final Obj end = this.halted().<Queue<Obj>>valueAs().poll();
-                if (!end.isNoObj())
-                    return end;
-            }
-        }
-    }*/
-
 
     Code resolve(final Obj start) {
         // this.code = new ExplainRewrite().rewrite(code.<Code>as());
@@ -88,13 +64,13 @@ public class MMonoid extends MObj implements Monoid {
                 resolvedCode.add(instB);
                 token = instB.rng();
                 if (instB.isInitial()) {
-                    LOG.debug("  {{g}}==>{{/g}} creating {{y}}initial{{/y}} monad at %s", instB);
+                    LOG.trace("  {{g}}==>{{/g}} creating {{y}}initial{{/y}} monad at %s", instB);
                     token = instB.arg(0);
-                    this.running().append(MMonad.of(this, NoObj.single(), instB));
+                    this.running().append(MMonad.of(NoObj.single(), instB));
                 } else if (instB.isGather()) {
                     // many-to-?
-                    LOG.debug("  {{g}}==>{{/g}} creating {{y}}barrier{{/y}} monad at %s", instB);
-                    final Monad m = MMonad.of(this, MObjs.of(new LinkedList<>()), instB);
+                    LOG.trace("  {{g}}==>{{/g}} creating {{y}}barrier{{/y}} monad at %s", instB);
+                    final Monad m = MMonad.of(MObjs.of(new LinkedList<>(/*List.of(instB.seed())*/)), instB);
                     this.barriers().<LinkedList<Obj>>valueAs().add(m);
                 }
                 // LOG.none("%s", instB.rng().tid());
@@ -116,7 +92,7 @@ public class MMonoid extends MObj implements Monoid {
             final Monad m = this.running().<LinkedList<Monad>>valueAs().poll();
             if (null != m) {
                 LOG.trace("   {{g}}=>{{/g}} processing monad %s [%s]", m, m.inst().isInitial() ? "initial" : "midway");
-                final Monad n = m.apply(code.next(m.inst()));
+                final Monad n = m.apply(code.nextInst(m.inst()));
                 LOG.trace(" {{g}}===>{{/g}} post-processing monad %s", n);
                 if (!n.dead()) {
                     if (n.halted()) {
@@ -139,18 +115,18 @@ public class MMonoid extends MObj implements Monoid {
                 final Monad barrier = this.barriers().<LinkedList<Monad>>valueAs().poll();
                 if (null != barrier) {
                     LOG.trace("   {{m}}=>{{/m}} processing barrier monad %s", barrier);
-                    final Inst nextInst = code.next(barrier.inst());
+                    final Inst nextInst = code.nextInst(barrier.inst());
                     final Obj result = barrier.inst().apply(barrier.obj());
                     if (nextInst.dom().tid().coefficientValue().isOne())
                         result.forEach(o -> {
                             LOG.trace("  {{m}}==>{{/m}} scattering output barrier obj %s", o);
-                            this.running().<LinkedList<Monad>>valueAs().add(MMonad.of(this, o, nextInst));
+                            this.running().<LinkedList<Monad>>valueAs().add(MMonad.of(o, nextInst));
                         });
                     else if (nextInst.dom().tid().coefficientValue().isZero()) {
-                        this.running().<LinkedList<Monad>>valueAs().add(MMonad.of(this, NoObj.single(), nextInst));
+                        this.running().<LinkedList<Monad>>valueAs().add(MMonad.of(NoObj.single(), nextInst));
                     } else {
                         LOG.trace("  {{m}}==>{{/m}} passing output barrier obj %s", result);
-                        this.running().<LinkedList<Monad>>valueAs().add(MMonad.of(this, result, nextInst));
+                        this.running().<LinkedList<Monad>>valueAs().add(MMonad.of(result, nextInst));
                     }
                 }
             } else {
@@ -164,6 +140,16 @@ public class MMonoid extends MObj implements Monoid {
     @Override
     public String toString() {
         return "MONOID[" + this.code() + "]";
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(this.value, this.vid, this.tid);
+    }
+
+    @Override
+    public boolean equals(final Object other) {
+        return other instanceof Monoid && Objects.equals(this.value, ((Monoid) other).value());
     }
 
     @Override
@@ -184,7 +170,7 @@ public class MMonoid extends MObj implements Monoid {
         final List<Inst> prepended = new ArrayList<>();
         prepended.add(MInst.instB(START_TID, MLst.of(start)));
         prepended.addAll(code.codeValue());
-        return new MMonoid(Quartet.with(MCode.of(prepended), MObjs.of(new LinkedList<>()), MLst.of(new LinkedList<>()), MObjs.of(new LinkedList<>())),MONOID_TID, fURI.NULL);
+        return new MMonoid(Quartet.with(MCode.of(prepended), MObjs.of(new LinkedList<>()), MLst.of(new LinkedList<>()), MObjs.of(new LinkedList<>())), MONOID_TID, fURI.NULL);
     }
 
 }

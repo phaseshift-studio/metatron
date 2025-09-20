@@ -28,8 +28,7 @@ public interface Monoid extends Obj {
     @Override
     Monoid clone(final Object value, final fURI tid, final fURI vid);
 
-
-    // code, running, barrier, halted
+    // code, running, barriers, halted
     @Override
     Quartet<Code,Objs,Lst,Objs> value();
 

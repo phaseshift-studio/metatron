@@ -75,39 +75,39 @@ public interface ObjSerializer<T> {
         return (Bool) this.read(t);
     }
 
-    default Int writeInt(final T t) {
+    default Int readInt(final T t) {
         return (Int) this.read(t);
     }
 
-    default Real writeReal(final T t) {
+    default Real readReal(final T t) {
         return (Real) this.read(t);
     }
 
-    default Str writeStr(final T t) {
+    default Str readStr(final T t) {
         return (Str) this.read(t);
     }
 
-    default Uri writeUri(final T t) {
+    default Uri readUri(final T t) {
         return (Uri) this.read(t);
     }
 
-    default Rel writeRel(final T t) {
+    default Rel readRel(final T t) {
         return (Rel) this.read(t);
     }
 
-    default Lst writeLst(final T t) {
+    default Lst readLst(final T t) {
         return (Lst) this.read(t);
     }
 
-    default Rec writeRec(final T t) {
+    default Rec readRec(final T t) {
         return (Rec) this.read(t);
     }
 
-    default Inst writeInst(final T t) {
+    default Inst readInst(final T t) {
         return (Inst) this.read(t);
     }
 
-    default Code writeCode(final T t) {
+    default Code readCode(final T t) {
         return (Code) this.read(t);
     }
 }

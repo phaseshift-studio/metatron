@@ -20,12 +20,9 @@ package studio.phaseshift.metatron.lang.obj;
 
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.monoid.mtron.MMonoid;
-import studio.phaseshift.metatron.ui.Graphitty;
-import studio.phaseshift.metatron.ui.GraphittyLogger;
 import studio.phaseshift.metatron.util.ObjUtil;
 
 import java.util.List;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 
 public interface Code extends Call {
@@ -40,7 +37,7 @@ public interface Code extends Call {
         return index < this.value().size() ? this.value().get(index) : NoObj.single();
     }
 
-    default Inst next(final Inst inst) {
+    default Inst nextInst(final Inst inst) {
       final Inst nextInst =  ((Supplier<Inst>) () -> {
             if (inst.isNoObj())
                 return NoObj.single();
@@ -67,21 +64,12 @@ public interface Code extends Call {
 
     @Override
     default Code value(final Object newValue) {
-        return (Code) Call.super.value(newValue);
+        return Call.super.value(newValue);
     }
 
     @Override
     default Obj apply(final Obj lhs) {
         return ObjUtil.oneNoneOrAll(MMonoid.of(lhs,this).apply(NoObj.single()).iterator());
-    }
-
-    default Code resolve(final Inst.Resolve desiredResolution, final Obj lhs) {
-        final AtomicReference<Obj> token = new AtomicReference<>(lhs);
-        return this.value(this.value().stream().map(i -> {
-           Inst rinst = i.resolve(desiredResolution,token.get());
-           token.set(rinst.dom());
-           return rinst;
-        }).toList());
     }
 
    // Code resolve(final Obj start);

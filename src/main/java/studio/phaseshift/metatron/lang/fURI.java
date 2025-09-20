@@ -438,6 +438,14 @@ public class fURI implements Cloneable {
         return this.coefficient(null);
     }
 
+    public fURI dom() {
+        return this.queryValue(DOM,fURI.class,fURI.ANY);
+    }
+
+    public fURI rng() {
+        return this.queryValue(RNG,fURI.class,fURI.ANY);
+    }
+
     public fURI queryless() {
         return null == this.query ? this : new fURI(this.scheme, this.host, this.port, this.sstart, this.path, this.send, null);
     }

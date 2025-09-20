@@ -28,6 +28,7 @@ import studio.phaseshift.metatron.space.Router;
 import studio.phaseshift.metatron.space.mem.MSpace;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
+import studio.phaseshift.metatron.util.ObjUtil;
 
 import java.util.*;
 import java.util.function.BiFunction;
@@ -35,6 +36,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.lang.fURI.f;
+import static studio.phaseshift.metatron.lang.obj.mtron.MInt.jnt;
 
 public class MInstSet extends MSpace implements InstSet {
 
@@ -177,8 +179,8 @@ public class MInstSet extends MSpace implements InstSet {
             }
 
         });
-        this.define(COUNT_TID, fURI.ANY.any(), INT_TID, MLst.of(), (lhs, inst) -> MInt.of(IteratorUtil.count(lhs.iterator())), MInt.of(0));
-        this.define(SUM_TID, INT_TID.any(), INT_TID, MLst.of(), (lhs, inst) -> IteratorUtil.stream(lhs.iterator()).reduce(inst.seed(), (a, b) -> MInst.instB(PLUS_TID, MLst.of(b)).apply(a)), MInt.of(0));
+        this.define(COUNT_TID, fURI.ANY.any(), INT_TID, MLst.of(), (lhs, inst) ->  IteratorUtil.reduce(lhs.iterator(),jnt(0), (a, b) -> MInst.instB(PLUS_TID, MLst.of(jnt(1))).apply(a)));
+        this.define(SUM_TID, fURI.ANY.any(), INT_TID, MLst.of(), (lhs, inst) ->  IteratorUtil.reduce(lhs.iterator(),jnt(0), (a, b) -> MInst.instB(PLUS_TID, MLst.of(b)).apply(a)));
         this.store();
     }
 
