@@ -123,7 +123,7 @@ public class fURI implements Cloneable {
         int position = 0;
         int i = uri.indexOf(":");
         int temp = uri.indexOf("//");
-        if (i != -1 && i < temp) {
+        if (i != -1 && (temp == -1 || i < temp)) {
             this.scheme = uri.substring(0, i);
             position = i + 3;
         } else {

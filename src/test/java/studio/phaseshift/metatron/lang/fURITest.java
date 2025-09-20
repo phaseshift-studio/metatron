@@ -139,10 +139,16 @@ public class fURITest {
 
 
 
-    @Test
-    public void testScheme() {
-        assertEquals("http", new fURI("http://fhatos.org/b").scheme());
-        assertNull(new fURI("a/b/c/d").scheme());
+    @ParameterizedTest
+    @CsvSource(value = {
+            "/a/b/c                  |  ",
+            "a/b/c                   |  ",
+            "http://x.com/a/b/c      |  http",
+            "mtron://lang/obj        |  mtron",
+            "mtron:lang/obj          |  mtron"
+    }, delimiter = '|')
+    public void testScheme(final String furi, final String scheme) {
+      assertEquals(scheme, f(furi).scheme());
     }
 
     @Test
