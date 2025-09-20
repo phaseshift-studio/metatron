@@ -60,7 +60,7 @@ public class MemSpace extends MSpace implements Space {
 
     @Override
     public Obj write(final fURI vid, final Obj obj) {
-        Space.Helpers.resolveWrite(this, vid, vid.retractPattern(), obj, (key, value) -> {
+        Space.Helpers.resolveWrite(vid, vid.retractPattern(), obj, (key, value) -> {
             //LOG.trace("raw write of %s to %s {{g}}@{{b}}%s{{X}}", value, this, key);
             if (value.isNoObj())
                 this.store.remove(key);

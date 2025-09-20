@@ -181,6 +181,10 @@ public interface Obj extends Function<Obj, Obj>, Iterable<Obj> {
         return this instanceof Uri;
     }
 
+    default boolean isCall() {
+        return this instanceof Call;
+    }
+
     default boolean isRel() {
         return this instanceof Rel;
     }

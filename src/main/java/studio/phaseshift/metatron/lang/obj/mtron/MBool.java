@@ -25,6 +25,10 @@ import static studio.phaseshift.metatron.lang.obj.mtron.MInstSet.BOOL_TID;
 
 public class MBool extends MObj implements Bool {
 
+    public static Bool bool(final Boolean value) {
+        return MBool.of(value);
+    }
+
     public MBool(final Boolean value, final fURI tid, final fURI vid) {
         super(value, tid, vid);
     }

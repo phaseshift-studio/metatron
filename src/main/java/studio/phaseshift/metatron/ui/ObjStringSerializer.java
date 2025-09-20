@@ -129,7 +129,7 @@ public class ObjStringSerializer implements ObjSerializer<String> {
         }
         /// ///////////////////////////////////////////////////////////////
         /// ///////////////////////////////////////////////////////////////
-        else if (obj instanceof final Type type) {
+        else if (obj instanceof Type) {
             return generateTID(sb, obj.tid(), false)
                     .append("{{r}}T")
                     .append(this.b.palette.formC())
@@ -162,7 +162,8 @@ public class ObjStringSerializer implements ObjSerializer<String> {
                 sb.append(write(v));
             sb.append("{{FORM1}},\n");
         }); // {{FORM{sdfsdf}}}
-        sb.deleteCharAt(sb.length() - 2);
+        sb.deleteCharAt(sb.length() - 1);
+        sb.deleteCharAt(sb.length() - 1);
         sb.append(" ".repeat(depth)).append("{{FORM1}}]{{FORM1}}");
         return sb;
     }

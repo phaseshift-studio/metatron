@@ -121,7 +121,7 @@ public interface Inst extends Call {
         } else {
             if (currentResolution == Resolve.A) {
                 //final Inst resolved = new MInstSet(fURI.of("/mnt/mtron")).resolve(lhs, this);
-                final Inst resolved = Router.global().<InstSet>getSpace(fURI.of("/mtron/#")).resolve(lhs, this);
+                final Inst resolved = Router.global().<InstSet>getSpace(fURI.of("/mtron/#")).resolve(lhs, this); // TODO: generalize for any instruction set
                 LOG.trace("resolution ({{m}}%s {{g}}=>{{/g}} %s{{/m}}): %s => %s", currentResolution, resolved.resolution(), lhs, resolved);
                 return resolved.resolution().equals(desiredResolution) || resolved.resolution().compareTo(desiredResolution) >= 0 ? resolved : resolved.resolve(desiredResolution, lhs);
             } else { // Resolve.B
@@ -142,6 +142,8 @@ public interface Inst extends Call {
     default Obj apply(final Obj lhs) {
         final Inst cinst = this.resolve(Resolve.C, lhs);
         Router.stack().push(cinst.args());
+        if(!lhs.matches(cinst.dom()))
+            throw MTronException.of("{{m}}lhs obj{{/m}} (%s) does not match {{m}}inst domain{{/m}} (%s): %s", lhs, cinst.dom(), this);
         final Obj rhs = cinst.f().apply(lhs, cinst);
         Router.stack().pop();
         if (!rhs.matches(cinst.rng()))

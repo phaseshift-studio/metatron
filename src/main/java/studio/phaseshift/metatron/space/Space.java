@@ -113,14 +113,15 @@ public interface Space extends Poly {
             }
         }
 
-        public static void resolveWrite(final Space space, final fURI vid, final fURI stepvid, final Obj obj, final BiConsumer<fURI, Obj> resolveWriter) {
+        public static void resolveWrite(final fURI vid, final fURI stepvid, final Obj obj, final BiConsumer<fURI, Obj> resolveWriter) {
             if (obj.isRec()) {
                 obj.recValue().forEach((key, value) -> {
                     final fURI nextStepAddr = stepvid.extend(key.uriValue());
+                    // System.out.println("!!!!" + nextStepAddr);
                     // final fURI resolvedKey = addr.hasPattern() ? addr.extend(resolvedAddr) : extendedKey;
                     if (value.isRec()) {
                         if (nextStepAddr.isBranch()) {
-                            Space.Helpers.resolveWrite(space, vid, nextStepAddr, value, resolveWriter);
+                            Space.Helpers.resolveWrite(vid, nextStepAddr, value, resolveWriter);
                         } else {
                             final Map<Obj, Obj> submap = new LinkedHashMap<>();
                             value.recValue()
@@ -128,11 +129,14 @@ public interface Space extends Poly {
                                     .stream()
                                     .filter(kv -> nextStepAddr.extend(kv.getKey().uriValue()).matches(vid))
                                     .forEach(kv -> submap.put(kv.getKey(), kv.getValue()));
+                        //    System.out.println("SUBMAP TO WRITE: " + submap);
                             resolveWriter.accept(nextStepAddr, new MRec(submap, value.tid(), fURI.NULL));
                         }
-                    } else if (nextStepAddr.matches(vid)) {
+                    } else if (nextStepAddr.retract().matches(vid)) {
+                      //  System.out.println("WRITING VALUE: " + nextStepAddr + "~" + vid);
                         resolveWriter.accept(nextStepAddr, value);
                     }
+                    //System.out.println("JUST CHECKING VALUE: " + nextStepAddr + "~" + vid);
                 });
             } else if (stepvid.matches(vid)) {
                 resolveWriter.accept(stepvid, obj);

@@ -454,8 +454,16 @@ public class fURI implements Cloneable {
         return this.queryValue(DOM,fURI.class,fURI.ANY);
     }
 
+    public fURI dom(final fURI domain) {
+        return this.query(DOM,domain);
+    }
+
     public fURI rng() {
         return this.queryValue(RNG,fURI.class,fURI.ANY);
+    }
+
+    public fURI rng(final fURI range) {
+        return this.query(RNG,range);
     }
 
     public fURI queryless() {

@@ -21,6 +21,7 @@ package studio.phaseshift.metatron.lang.obj;
 import org.javatuples.Triplet;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.base.furi.TypefURI;
+import studio.phaseshift.metatron.lang.obj.mtron.MCode;
 import studio.phaseshift.metatron.lang.obj.mtron.MInst;
 import studio.phaseshift.metatron.lang.obj.mtron.MLst;
 import studio.phaseshift.metatron.space.Space;
@@ -30,6 +31,11 @@ import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.*;
 import java.util.function.BiFunction;
+import java.util.stream.Stream;
+
+import static studio.phaseshift.metatron.lang.obj.mtron.MInstSet.MAP_TID;
+import static studio.phaseshift.metatron.lang.obj.mtron.MInstSet.START_TID;
+import static studio.phaseshift.metatron.lang.obj.mtron.MLst.lst;
 
 
 public interface InstSet extends Space {
@@ -48,7 +54,7 @@ public interface InstSet extends Space {
                 .stream()
                 .filter(kv -> {
                     // Graphitty.stdout().println("%s matches %s = %s".formatted(lhs.tid().queryless(),kv.getKey().queryless(),lhs.tid().queryless().matches(kv.getKey().queryless())));
-                    return vid.queryValue(fURI.DOM, fURI.class).basePath().matches(kv.getKey().basePath());
+                    return vid.queryValue(fURI.DOM, fURI.class,fURI.ANY).basePath().matches(kv.getKey().basePath());
                 }).flatMap(kv -> kv.getValue().stream()).toList();
         if (result.isEmpty())
             return NoObj.single();
@@ -88,8 +94,24 @@ public interface InstSet extends Space {
                     return pass;
                 })
                 .map(i -> {
-                    final Inst j = i.clone(new Triplet<>(instAorB.args(),
-                            i.f(), i.seed()), i.tid().query(fURI.DOM, lhs.tid()), instAorB.vid());
+                    List<Obj> newArgs = new ArrayList<>();
+                    for(int k=0;k<i.args().count();k++) {
+                        final Obj originalArg = i.arg(k);
+                        final Obj userArg = instAorB.arg(k);
+                        if(false && originalArg.isType()) {
+                            //if(userArg.isCall())
+                              //  newArgs.add(userArg.<Call>as().rng(originalArg.<Type>as()));
+                            //else
+                                newArgs.add(userArg);
+                             // newArgs.add(originalArg.value(userArg));
+                                //newArgs.add(MInst.instB(MAP_TID, lst(userArg)).rng(originalArg.as()));
+                        } else {
+                            newArgs.add(userArg);
+                        }
+                    }
+                    final Inst j = i.clone(
+                            Triplet.with(lst(newArgs), i.f(), i.seed()),
+                            i.tid().query(fURI.DOM, lhs.tid()), instAorB.vid());
                     this.logger().trace("{{y}}inst{{/y}} resolution: %s => %s [%s]", lhs, j, i);
                     return j;
                 }).findFirst().orElseThrow(() -> this.logger().except("unable to resolve %s => %s in instruction set %s", lhs, instAorB, this.value().get(instAorB.tid())));

@@ -32,6 +32,10 @@ public class MLst extends MObj implements Lst {
         return MLst.of(objs);
     }
 
+    public static Lst lst(final List<Obj> objs) {
+        return MLst.of(objs);
+    }
+
     public MLst(final List<Obj> value, final fURI tid, final fURI vid) {
         super(value, tid, vid);
     }

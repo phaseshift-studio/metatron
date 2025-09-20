@@ -1,5 +1,6 @@
 package studio.phaseshift.metatron.lang.obj;
 
+import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.mtron.MCode;
 
 import java.util.List;
@@ -30,11 +31,11 @@ public interface Call extends Obj {
     }
 
 
-    default boolean checkDom(final Obj obj) {
-        return obj.matches(this.dom());
+    default <C extends Call> C dom(final Type domain) {
+        return (C) this.tid(this.tid().dom(domain.tid()));
     }
 
-    default boolean checkRng(final Obj obj) {
-        return obj.matches(this.rng());
+    default <C extends Call> C rng(final Type range) {
+        return (C) this.tid(this.tid().rng(range.tid()));
     }
 }

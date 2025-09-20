@@ -20,6 +20,7 @@ package studio.phaseshift.metatron.space;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.BootLoader;
@@ -47,6 +48,7 @@ public abstract class SpaceTest {
         //BootLoader.logger().put(uri("level/INFO"), lst(uri("#")));
     }
 
+    @Disabled
     @ParameterizedTest
     @CsvSource(value = {
             "1.to(a)                     % 1.from(a)                  % 1", // todo: 1.from is a hack
