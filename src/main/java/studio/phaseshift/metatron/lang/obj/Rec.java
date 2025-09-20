@@ -24,6 +24,7 @@ import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.mtron.MRel;
 import studio.phaseshift.metatron.util.IteratorUtil;
 
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.stream.Stream;
 
@@ -63,6 +64,22 @@ public interface Rec extends Poly {
 
     @Override
     default <O extends Obj> O at(final Obj key) {
+///  TODO: GOT TIRED --- THIS IS A NASTY ALGORITHM.
+        final Obj value = this.value().get(key);
+        if(null != value) {
+            return (O) value;
+        } else if(!key.isUri() || key.uriValue().segments().size() == 1)
+            return (O) NoObj.single();
+        else {
+            Map<Obj,Obj> match = new LinkedHashMap<>();
+         /*   final Obj v2 = this.value().get(key.uriValue().head(1));
+            if(null != v2)
+                match.put(key.uriValue(),v2);
+            else
+          */
+
+
+        }
         return (O) this.value().getOrDefault(key, NoObj.single());
     }
 

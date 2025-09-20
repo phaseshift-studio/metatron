@@ -1,6 +1,19 @@
 package studio.phaseshift.metatron.lang.obj;
 
+import studio.phaseshift.metatron.lang.obj.mtron.MCode;
+
+import java.util.List;
+
 public interface Call extends Obj {
+
+    static Call from(final List<Inst> insts) {
+        if(insts.isEmpty())
+            return NoObj.single();
+        else if(insts.size() == 1)
+            return insts.get(0);
+        else
+            return MCode.of(insts);
+    }
 
     default Call singleOrSequence() {
         if (this.isCode()) {
@@ -11,6 +24,11 @@ public interface Call extends Obj {
         }
         return this;
     }
+
+    default List<Inst> insts() {
+        return this.isCode() ? this.codeValue() : List.of(this.as());
+    }
+
 
     default boolean checkDom(final Obj obj) {
         return obj.matches(this.dom());

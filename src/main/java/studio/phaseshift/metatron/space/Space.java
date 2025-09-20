@@ -20,22 +20,24 @@ package studio.phaseshift.metatron.space;
 
 import org.javatuples.Pair;
 import studio.phaseshift.metatron.lang.fURI;
-import studio.phaseshift.metatron.lang.obj.*;
+import studio.phaseshift.metatron.lang.obj.NoObj;
+import studio.phaseshift.metatron.lang.obj.Obj;
+import studio.phaseshift.metatron.lang.obj.Poly;
+import studio.phaseshift.metatron.lang.obj.Uri;
 import studio.phaseshift.metatron.lang.obj.mtron.MObjs;
 import studio.phaseshift.metatron.lang.obj.mtron.MRec;
 import studio.phaseshift.metatron.lang.obj.mtron.MRel;
 import studio.phaseshift.metatron.ui.Graphitty;
-import studio.phaseshift.metatron.ui.GraphittyLogger;
-import studio.phaseshift.metatron.util.IteratorUtil;
 
 import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
-import java.util.function.Predicate;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public interface Space extends Poly {
+
+    fURI MTRON_TID = fURI.of("/mtron");
+    fURI MTRON_SPACE_TID = MTRON_TID.extend("space");
 
     class Helpers {
         public static String spaceToString(final Space space) {

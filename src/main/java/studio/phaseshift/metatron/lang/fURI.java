@@ -201,6 +201,10 @@ public class fURI implements Cloneable {
         return Collections.unmodifiableList(this.path);
     }
 
+    public fURI segments(final List<String> segs) {
+        return new fURI(this.scheme,this.host,this.port,this.sstart,segs,this.send,queryToString(this.query));
+    }
+
     public String scheme() {
         return this.scheme;
     }
@@ -306,6 +310,14 @@ public class fURI implements Cloneable {
 
     public fURI retract(final int steps) {
         return this.rePreTract(true, steps);
+    }
+
+    public fURI head(final int steps) {
+        final List<String> head = new ArrayList<>();
+        for(int i=0;i<steps;i++) {
+            head.add(this.segments().get(i));
+        }
+      return this.segments(head);
     }
 
     public fURI pretract() {

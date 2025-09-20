@@ -110,7 +110,7 @@ public class Console {
             else
                 ObjStringSerializer.HIDE_TIDS.clear();
             final int xLocation = terminal.getCursorPosition(System.out::print).getX() + 1;
-            Graphitty.out(terminal.output(),"\n{{-X-&y}}hide base type prefixes{{/y}}: {{r}}%s{{/r}}{{^1&|%d}}{{X}}", hiding,xLocation);
+            Graphitty.out(terminal.output(),"\n{{-X-}}{{%s}}%s{{/%s}}{{X}} base type prefixes{{^1&|%d}}{{X}}", hiding ? "y" : "g", hiding ? "hiding" : "showing", hiding ? "y" : "g", xLocation);
             return true;
         }
     }

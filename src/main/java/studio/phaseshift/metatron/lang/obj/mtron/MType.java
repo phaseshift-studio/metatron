@@ -31,4 +31,12 @@ public class MType extends MObj implements Type {
     public static MType of(final fURI tid) {
         return new MType(null, tid);
     }
+
+    @Override
+    public Obj apply(final Obj obj) {
+        if (obj.tid().basePath().matches(this.tid().basePath()) && obj.tid().coefficientValue().within(this.tid().coefficientValue()))
+            return null == this.value ? obj : (this.value().apply(obj).isNoObj() ? NoObj.single() : obj);
+        else
+            return NoObj.single();
+    }
 }

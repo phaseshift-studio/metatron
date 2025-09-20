@@ -20,12 +20,9 @@ package studio.phaseshift.metatron.lang.obj.mtron;
 
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.Obj;
-import studio.phaseshift.metatron.lang.obj.Objs;
 import studio.phaseshift.metatron.space.Router;
 import studio.phaseshift.metatron.ui.Graphitty;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
 
 public class MObj implements Obj {
@@ -39,8 +36,8 @@ public class MObj implements Obj {
         this.value = value;
         this.tid = tid.big();
         this.vid = vid;
-        if(!this.isType() && null != this.vid && !this.vid.equals(fURI.NONE))
-             Router.global().write(this.vid.extend("#"),this);
+        if (null != Router.global() && !this.isType() && null != this.vid && !this.vid.equals(fURI.NONE))
+            Router.global().write(this.vid.extend("#"), this);
     }
 
     @Override
@@ -70,10 +67,12 @@ public class MObj implements Obj {
 
     @Override
     public boolean equals(final Object other) {
+        if (this.isNoObj())
+            return other instanceof Obj && ((Obj) other).isNoObj();
         return this.getClass().isAssignableFrom(other.getClass()) &&
-                Objects.equals(this.tid, ((Obj) other).tid()) &&
-                Objects.equals(this.vid, ((Obj) other).vid()) &&
-                Objects.equals(this.value, ((Obj) other).value());
+                (Objects.equals(this.tid, ((Obj) other).tid()) &&
+                        Objects.equals(this.vid, ((Obj) other).vid()) &&
+                        Objects.equals(this.value, ((Obj) other).value()));
     }
 
     @Override

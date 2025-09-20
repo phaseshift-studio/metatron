@@ -30,6 +30,7 @@ import java.util.Map;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static studio.phaseshift.metatron.lang.fURI.f;
 
 public class fURITest {
 
@@ -102,6 +103,28 @@ public class fURITest {
     public void testQueryRead(final String f, final String queryMap) {
         final fURI furi = fURI.of(f);
         assertEquals(queryMap, furi.queryMap().toString());
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "/a/b/c                  |     1|            /a",
+            "a/b/c                   |     2|            a/b",
+            "/a/b/c                  |     3|            /a/b/c",
+            "http://x.com/a/b/c      |     3|            http://x.com/a/b/c",
+            "http://x.com/a/b/c      |     2|            http://x.com/a/b",
+            "http://x.com/a/b/c      |     1|            http://x.com/a",
+            "http://x.com/a/b/c      |     0|            http://x.com/",
+           // "http://a:b@x.com/a/b/c  |     2|            http://a:b@x.com/a/b", username password not implemented yet
+          },
+            delimiter = '|')
+    public void testHead(final String f, final int steps,final String head) {
+        final fURI furi = f(f);
+        final fURI computedHead = furi.head(steps);
+        final fURI expectedHead = f(head);
+        assertEquals(expectedHead, computedHead);
+        //assertEquals(computedHead,furi.retract(furi.segments().size()-steps));
+        assertEquals(furi.segments().size(), computedHead.segments().size()+(furi.segments().size() - steps));
+        assertEquals(steps, computedHead.segments().size());
     }
 
     @ParameterizedTest

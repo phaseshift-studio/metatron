@@ -29,10 +29,12 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
+import static studio.phaseshift.metatron.lang.obj.mtron.MInstSet.MTRON_TID;
+
 
 public class MemSpace extends MSpace implements Space {
 
-    public static final fURI MEMSPACE_TID = fURI.of("/mtron/space/memspace");
+    public static final fURI MEMSPACE_TID = MTRON_SPACE_TID.extend("mem");
     protected final GraphittyLogger LOG = Graphitty.log(this);
 
     final Map<fURI, Obj> store = new HashMap<>();
@@ -59,6 +61,7 @@ public class MemSpace extends MSpace implements Space {
     @Override
     public Obj write(final fURI vid, final Obj obj) {
         Space.Helpers.resolveWrite(this, vid, vid.retractPattern(), obj, (key, value) -> {
+            //LOG.trace("raw write of %s to %s {{g}}@{{b}}%s{{X}}", value, this, key);
             if (value.isNoObj())
                 this.store.remove(key);
             else

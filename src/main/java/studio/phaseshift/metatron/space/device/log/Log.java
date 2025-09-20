@@ -8,7 +8,6 @@ import studio.phaseshift.metatron.lang.obj.Rec;
 import studio.phaseshift.metatron.lang.obj.mtron.MLst;
 import studio.phaseshift.metatron.lang.obj.mtron.MRec;
 import studio.phaseshift.metatron.lang.obj.mtron.MUri;
-import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyObjLogger;
 
 import java.util.Map;
@@ -35,7 +34,12 @@ public class Log extends MRec {
     }
 
     public boolean check(final Level level, final fURI pattern) {
-       return this.value().getOrDefault(fURI.of(level.name().toUpperCase()).toUri(),MLst.of()).<Lst>as().value().stream().anyMatch(v -> pattern.matches(v.uriValue()));
+        return this.value()
+                .entrySet()
+                .stream()
+                .filter(kv -> Level.valueOf(kv.getKey().uriValue().toString()).compareTo(level) >= 0)
+                .flatMap(kv -> kv.getValue().<Lst>as().value().stream())
+                .anyMatch(v -> pattern.matches(v.uriValue()));
     }
 
     public static Log of(final fURI vid) {

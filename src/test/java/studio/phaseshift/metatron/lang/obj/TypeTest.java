@@ -73,6 +73,8 @@ public class TypeTest {
         assertEquals(matches, o.matches(t));
         if (!typefURI.startsWith("#") && !o.isNoObj())
             this.testType(obj, fURI.of("#[" + o.tid().coefficientValue() + "]").toString(), !o.isNoObj());
+        final Obj a = t.apply(o);
+        assertEquals(matches ? o : NoObj.single(), a);
 
     }
 

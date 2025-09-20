@@ -76,6 +76,7 @@ public class MInstSet extends MSpace implements InstSet {
     public static final fURI TID_TID = INST_TID.extend("tid");
     public static final fURI VID_TID = INST_TID.extend("vid");
     public static final fURI TYPE_TID = INST_TID.extend("type");
+    public static final fURI GET_TID = INST_TID.extend("get");
     public static final fURI AT_TID = INST_TID.extend("at");
     public static final fURI IS_TID = INST_TID.extend("is");
     public static final fURI IN_TID = INST_TID.extend("in");
@@ -91,7 +92,8 @@ public class MInstSet extends MSpace implements InstSet {
 
     // inst_tid -> <inst_tid_dom -> set<inst>>
     private static final Map<fURI, Map<fURI, Set<Inst>>> SYMBOL_TABLE = new LinkedHashMap<>();
-
+    private static final Inst ID__ = MInst.instB(ID_TID,MLst.of());
+    
     public void load() {
         this.define(NOOBJ_TID,fURI.ANY.maybe(), fURI.ANY.maybe(), MLst.of(), (lhs, inst) -> lhs); // noobj is also an inst (no inst)
         this.define(REIFY_TID, fURI.ANY.maybe(), REC_TID, MLst.of(), (lhs, inst) ->
@@ -104,50 +106,51 @@ public class MInstSet extends MSpace implements InstSet {
                                 "query", MStr.of(lhs.tid().queryMap().toString())),
                         "value", MObjFactory.of().create(lhs.value()))
         );
-        this.define(BARRIER_TID, fURI.ANY.any(), fURI.ANY.any(), MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> inst.arg(0).apply(lhs), MObjs.of(List.of()));
+        this.define(GET_TID,REC_TID,fURI.ANY.any(),MLst.of(ID__),(lhs,inst) -> lhs.<Rec>as().at(inst.arg(0)));
+        this.define(BARRIER_TID, fURI.ANY.any(), fURI.ANY.any(), MLst.of(ID__), (lhs, inst) -> inst.arg(0).apply(lhs), MObjs.of(List.of()));
         this.define(MERGE_TID, LST_TID, fURI.ANY.any(), MLst.of(), (lhs, inst) -> lhs.isPoly() ? MObjs.of(lhs.<Poly>as().elements()) : lhs);
         this.define(MERGE_TID, REC_TID, REL_TID.any(), MLst.of(), (lhs, inst) -> lhs.isPoly() ? MObjs.of(lhs.<Poly>as().elements()) : lhs);
-        this.define(AT_TID, fURI.ANY, fURI.ANY, MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> lhs.vid(inst.arg(0).uriValue()));
+        this.define(AT_TID, fURI.ANY, fURI.ANY, MLst.of(ID__), (lhs, inst) -> lhs.vid(inst.arg(0).uriValue()));
         this.define(TYPE_TID, fURI.ANY, fURI.ANY, MLst.of(), (lhs, inst) -> MType.of(lhs.tid()));
         this.define(TID_TID, fURI.ANY, URI_TID, MLst.of(), (lhs, inst) -> lhs.tid().toUri());
         this.define(VID_TID, fURI.ANY, URI_TID, MLst.of(), (lhs, inst) -> lhs.vid().toUri());
-        this.define(MAP_TID, fURI.ANY, fURI.ANY, MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> inst.arg(0));
-        this.define(BLOCK_TID, fURI.ANY.maybe(), fURI.ANY.maybe(), MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> inst.arg(0));
+        this.define(MAP_TID, fURI.ANY, fURI.ANY, MLst.of(ID__), (lhs, inst) -> inst.arg(0));
+        this.define(BLOCK_TID, fURI.ANY.maybe(), fURI.ANY.maybe(), MLst.of(ID__), (lhs, inst) -> inst.arg(0));
         this.define(DOM_TID, REC_TID, fURI.ANY, MLst.of(), (lhs, inst) -> MObjs.of(lhs.recValue().keySet()));
         this.define(DOM_TID, REL_TID, fURI.ANY, MLst.of(), (lhs, inst) -> MObjs.of(lhs.relValue().getValue0()));
         this.define(DOM_TID, fURI.ANY, fURI.ANY, MLst.of(), (lhs, inst) -> lhs);
         this.define(RNG_TID, REC_TID, fURI.ANY, MLst.of(), (lhs, inst) -> MObjs.of(lhs.recValue().values()));
         this.define(RNG_TID, REL_TID, fURI.ANY, MLst.of(), (lhs, inst) -> MObjs.of(lhs.relValue().getValue1()));
         this.define(RNG_TID, fURI.ANY, fURI.ANY, MLst.of(), (lhs, inst) -> lhs);
-        this.define(TO_TID, fURI.ANY, fURI.ANY, MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> Router.global().write(inst.arg(0).uriValue(), lhs));
-        this.define(FROM_TID, fURI.ANY.maybe(), fURI.ANY.any(), MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> Router.global().read(inst.arg(0).uriValue()));
-        this.define(REF_TID, fURI.ANY, fURI.ANY, MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> Router.global().write(lhs.uriValue(), inst.arg(0)));
+        this.define(TO_TID, fURI.ANY, fURI.ANY, MLst.of(ID__), (lhs, inst) -> Router.global().write(inst.arg(0).uriValue(), lhs));
+        this.define(FROM_TID, fURI.ANY.maybe(), fURI.ANY.any(), MLst.of(ID__), (lhs, inst) -> Router.global().read(inst.arg(0).uriValue()));
+        this.define(REF_TID, fURI.ANY, fURI.ANY, MLst.of(ID__), (lhs, inst) -> Router.global().write(lhs.uriValue(), inst.arg(0)));
         this.define(ID_TID, fURI.ANY.maybe(), fURI.ANY.maybe(), MLst.of(), (lhs, inst) -> lhs);
-        this.define(START_TID, NOOBJ_TID.zero(), fURI.ANY.any(), MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> inst.arg(0));
-        this.define(PLUS_TID, BOOL_TID, BOOL_TID, MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> lhs.value(lhs.boolValue() || inst.arg(0).boolValue()));
-        this.define(PLUS_TID, INT_TID, INT_TID, MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> lhs.value(lhs.intValue() + inst.arg(0).intValue()));
-        this.define(PLUS_TID, REAL_TID, REAL_TID, MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> lhs.value(lhs.realValue() + inst.arg(0).realValue()));
-        this.define(PLUS_TID, STR_TID, STR_TID, MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> lhs.value(lhs.strValue() + inst.arg(0).strValue()));
-        this.define(PLUS_TID, URI_TID, URI_TID, MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> lhs.value(lhs.uriValue().extend(inst.arg(0).uriValue())));
-        this.define(PLUS_TID, LST_TID, LST_TID, MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> lhs.value(Stream.concat(lhs.lstValue().stream(), inst.arg(0).lstValue().stream()).toList()));
-        this.define(MULT_TID, INT_TID, INT_TID, MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> lhs.value(lhs.intValue() * inst.arg(0).intValue()));
-        this.define(MULT_TID, REAL_TID, REAL_TID, MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> lhs.value(lhs.realValue() * inst.arg(0).realValue()));
-        this.define(MULT_TID, URI_TID, URI_TID, MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> lhs.value(lhs.uriValue().retractPattern().extend(inst.arg(0).uriValue())));
-        this.define(IS_TID, fURI.ANY, fURI.ANY.maybe(), MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> inst.arg(0).boolValue() ? lhs : NoObj.single());
-        this.define(IN_TID, fURI.ANY, BOOL_TID, MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> MBool.of(lhs.matches(inst.arg(0))));
-        this.define(EQ_TID, fURI.ANY, BOOL_TID, MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> MBool.of(lhs.equals(inst.arg(0))));
-        this.define(NEQ_TID, fURI.ANY, BOOL_TID, MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> MBool.of(!lhs.equals(inst.arg(0))));
-        this.define(GT_TID, INT_TID, BOOL_TID, MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> MBool.of(lhs.intValue() > inst.arg(0).intValue()));
-        this.define(GT_TID, REAL_TID, BOOL_TID, MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> MBool.of(lhs.realValue() > inst.arg(0).realValue()));
-        this.define(GT_TID, STR_TID, BOOL_TID, MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> MBool.of(lhs.strValue().compareTo(inst.arg(0).strValue()) > 0));
-        this.define(LT_TID, INT_TID, BOOL_TID, MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> MBool.of(lhs.intValue() < inst.arg(0).intValue()));
-        this.define(LT_TID, REAL_TID, BOOL_TID, MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> MBool.of(lhs.realValue() < inst.arg(0).realValue()));
-        this.define(GTE_TID, INT_TID, BOOL_TID, MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> MBool.of(lhs.intValue() >= inst.arg(0).intValue()));
-        this.define(GTE_TID, REAL_TID, BOOL_TID, MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> MBool.of(lhs.realValue() >= inst.arg(0).realValue()));
-        this.define(LTE_TID, INT_TID, BOOL_TID, MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> MBool.of(lhs.intValue() <= inst.arg(0).intValue()));
-        this.define(LTE_TID, INT_TID, BOOL_TID, MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> MBool.of(lhs.intValue() <= inst.arg(0).intValue()));
-        this.define(WITHIN_TID, LST_TID, LST_TID, MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> MLst.of(lhs.<Lst>as().lstValue().stream().map(o -> inst.arg(0).apply(o)).toList()));
-        this.define(CROSS_TID, LST_TID, LST_TID, MRec.ofUriKeyed("c",MInst.instA(ID_TID),"l", MInst.instA(ID_TID)), (lhs,inst) -> {
+        this.define(START_TID, NOOBJ_TID.zero(), fURI.ANY.any(), MLst.of(ID__), (lhs, inst) -> inst.arg(0));
+        this.define(PLUS_TID, BOOL_TID, BOOL_TID, MLst.of(ID__), (lhs, inst) -> lhs.value(lhs.boolValue() || inst.arg(0).boolValue()));
+        this.define(PLUS_TID, INT_TID, INT_TID, MLst.of(ID__), (lhs, inst) -> lhs.value(lhs.intValue() + inst.arg(0).intValue()));
+        this.define(PLUS_TID, REAL_TID, REAL_TID, MLst.of(ID__), (lhs, inst) -> lhs.value(lhs.realValue() + inst.arg(0).realValue()));
+        this.define(PLUS_TID, STR_TID, STR_TID, MLst.of(ID__), (lhs, inst) -> lhs.value(lhs.strValue() + inst.arg(0).strValue()));
+        this.define(PLUS_TID, URI_TID, URI_TID, MLst.of(ID__), (lhs, inst) -> lhs.value(lhs.uriValue().extend(inst.arg(0).uriValue())));
+        this.define(PLUS_TID, LST_TID, LST_TID, MLst.of(ID__), (lhs, inst) -> lhs.value(Stream.concat(lhs.lstValue().stream(), inst.arg(0).lstValue().stream()).toList()));
+        this.define(MULT_TID, INT_TID, INT_TID, MLst.of(ID__), (lhs, inst) -> lhs.value(lhs.intValue() * inst.arg(0).intValue()));
+        this.define(MULT_TID, REAL_TID, REAL_TID, MLst.of(ID__), (lhs, inst) -> lhs.value(lhs.realValue() * inst.arg(0).realValue()));
+        this.define(MULT_TID, URI_TID, URI_TID, MLst.of(ID__), (lhs, inst) -> lhs.value(lhs.uriValue().retractPattern().extend(inst.arg(0).uriValue())));
+        this.define(IS_TID, fURI.ANY, fURI.ANY.maybe(), MLst.of(ID__), (lhs, inst) -> inst.arg(0).boolValue() ? lhs : NoObj.single());
+        this.define(IN_TID, fURI.ANY, BOOL_TID, MLst.of(ID__), (lhs, inst) -> MBool.of(lhs.matches(inst.arg(0))));
+        this.define(EQ_TID, fURI.ANY, BOOL_TID, MLst.of(ID__), (lhs, inst) -> MBool.of(lhs.equals(inst.arg(0))));
+        this.define(NEQ_TID, fURI.ANY, BOOL_TID, MLst.of(ID__), (lhs, inst) -> MBool.of(!lhs.equals(inst.arg(0))));
+        this.define(GT_TID, INT_TID, BOOL_TID, MLst.of(ID__), (lhs, inst) -> MBool.of(lhs.intValue() > inst.arg(0).intValue()));
+        this.define(GT_TID, REAL_TID, BOOL_TID, MLst.of(ID__), (lhs, inst) -> MBool.of(lhs.realValue() > inst.arg(0).realValue()));
+        this.define(GT_TID, STR_TID, BOOL_TID, MLst.of(ID__), (lhs, inst) -> MBool.of(lhs.strValue().compareTo(inst.arg(0).strValue()) > 0));
+        this.define(LT_TID, INT_TID, BOOL_TID, MLst.of(ID__), (lhs, inst) -> MBool.of(lhs.intValue() < inst.arg(0).intValue()));
+        this.define(LT_TID, REAL_TID, BOOL_TID, MLst.of(ID__), (lhs, inst) -> MBool.of(lhs.realValue() < inst.arg(0).realValue()));
+        this.define(GTE_TID, INT_TID, BOOL_TID, MLst.of(ID__), (lhs, inst) -> MBool.of(lhs.intValue() >= inst.arg(0).intValue()));
+        this.define(GTE_TID, REAL_TID, BOOL_TID, MLst.of(ID__), (lhs, inst) -> MBool.of(lhs.realValue() >= inst.arg(0).realValue()));
+        this.define(LTE_TID, INT_TID, BOOL_TID, MLst.of(ID__), (lhs, inst) -> MBool.of(lhs.intValue() <= inst.arg(0).intValue()));
+        this.define(LTE_TID, INT_TID, BOOL_TID, MLst.of(ID__), (lhs, inst) -> MBool.of(lhs.intValue() <= inst.arg(0).intValue()));
+        this.define(WITHIN_TID, LST_TID, LST_TID, MLst.of(ID__), (lhs, inst) -> MLst.of(lhs.<Lst>as().lstValue().stream().map(o -> inst.arg(0).apply(o)).toList()));
+        this.define(CROSS_TID, LST_TID, LST_TID, MRec.ofUriKeyed("c",ID__,"l", ID__), (lhs,inst) -> {
            final List<Obj> result = new ArrayList<>();
            final Obj toEval = inst.arg(0);
            final List<Obj> lhsList = lhs.lstValue();
@@ -164,7 +167,7 @@ public class MInstSet extends MSpace implements InstSet {
            }
             return MLst.of(result);
         });
-        this.define(SPLIT_TID, fURI.ANY, fURI.ANY, MLst.of(MInst.instA(ID_TID)), (lhs, inst) -> {
+        this.define(SPLIT_TID, fURI.ANY, fURI.ANY, MLst.of(ID__), (lhs, inst) -> {
             if (inst.arg(0).isLst()) {
                 return MLst.of(inst.arg(0).lstValue().stream().map(e -> e.apply(lhs)).toList());
             } else if (inst.arg(0).isRec()) {

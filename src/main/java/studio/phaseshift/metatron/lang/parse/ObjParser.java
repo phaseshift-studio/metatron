@@ -25,10 +25,7 @@ import org.petitparser.parser.combinators.*;
 import org.petitparser.parser.primitive.CharacterParser;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.monoid.mtron.MMonoid;
-import studio.phaseshift.metatron.lang.obj.Code;
-import studio.phaseshift.metatron.lang.obj.Inst;
-import studio.phaseshift.metatron.lang.obj.NoObj;
-import studio.phaseshift.metatron.lang.obj.Obj;
+import studio.phaseshift.metatron.lang.obj.*;
 import studio.phaseshift.metatron.lang.obj.mtron.*;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
@@ -215,6 +212,10 @@ public class ObjParser {
     }
 
 
+    public static Parser m_call() {
+        return choice(m_code(),m_inst());
+    }
+
     public static Parser m_obj() {
         return obj_parser;
     }
@@ -289,20 +290,22 @@ public class ObjParser {
     }
 
     public static Parser sugar_code() {
-        return seq(opt(obj_no_code_parser, NoObj.single()), opt(of(".").trim(), '.'), m_code()).map(t -> {
+        return seq(opt(obj_no_code_parser, NoObj.single()), opt(of(".").trim(), '.'), m_call()).map(t -> {
             final List<Inst> newCode = new ArrayList<>();
-            newCode.add(new MInst(Triplet.with(MLst.of(ObjParser.<Obj>pick(t, 0)), null, NoObj.single()), START_TID, fURI.NULL));
-            newCode.addAll(ObjParser.<Code>pick(t, 2).codeValue());
+            newCode.add(new MInst(Triplet.with(MLst.of(ObjParser.<Obj>pick(t, 0)), Inst.f.UNKNOWN, NoObj.single()), START_TID, fURI.NULL));
+            newCode.addAll(ObjParser.<Call>pick(t, 2).insts());
             return new MCode(newCode, CODE_TID, fURI.NULL);
         });
     }
 
     public static Parser m_code() {
         return m_inst().separatedBy(opt(of('.').trim(), '.'))
-                .map(t -> new MCode((List) ((List<Object>) t)
-                        .stream()
-                        .filter(x -> x instanceof Inst)
-                        .toList(), CODE_TID, fURI.NULL));
+                .map(t -> ((List<Object>) t).size() == 1 ?
+                        ((List<Inst>) t).get(0) :
+                        new MCode((List) ((List<Object>) t)
+                                .stream()
+                                .filter(x -> x instanceof Inst)
+                                .toList(), CODE_TID, fURI.NULL));
     }
 
     public static Parser m_inst() {

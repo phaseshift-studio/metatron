@@ -61,6 +61,8 @@ public class BootLoader {
             final Space mtron = new MInstSet(fURI.of("/mnt/lang/mtron"));
             Router.global().registerSpace(mtron);
             Log.of(fURI.of("/sys/log"));
+            final Space var = new MemSpace(fURI.of("+/+/#"), fURI.of("/mnt/var"));
+            Router.global().registerSpace(var);
 
             //Router.global().registerStruct(new MqttSpace(Map.of(new MUri("broker"), new MUri("ip://192.168.66.2:1883"), new MUri("pattern"), new MUri("/mqtt/#")), MQTT_TID, fURI.of("/mnt/mqtt")));
             // Router.global().registerStruct(new MqttSpace(Map.of(new MUri("broker"), new MUri("ip://192.168.66.2:1883"), new MUri("pattern"), new MUri("zigbee2mqtt/#")), MQTT_TID, fURI.of("/mnt/zigbee2mqtt")));

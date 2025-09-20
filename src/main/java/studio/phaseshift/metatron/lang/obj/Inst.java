@@ -167,6 +167,8 @@ public interface Inst extends Call {
 
 
     final class f {
+        public static f UNKNOWN = null;
+
         private final boolean bi;
         final Object func;
 
