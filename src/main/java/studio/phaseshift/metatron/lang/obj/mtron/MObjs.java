@@ -58,7 +58,9 @@ public class MObjs extends MObj implements Objs {
     @Override
     public fURI tid() {
         Set<fURI> types = IteratorUtil.stream(this.value()).map(Obj::tid).map(fURI::basePath).collect(Collectors.toSet());
-        final long count = IteratorUtil.count(this.value());
+        // TODO: make efficient
+        final long count = IteratorUtil.stream(this.value()).map(Obj::tid).map(f -> (f.coefficientValue().max() != null) ? f.coefficientValue().max() : 1).reduce(0L, Long::sum);
+        //final long count = IteratorUtil.count(this.value());
         if(types.isEmpty() || 0 == count) return super.tid.coefficient("0");
         if(types.size() == 1) return types.iterator().next().coefficient(Long.toString(count));
         final fURI temp = types.stream().reduce(fURI::commonRoot).get();

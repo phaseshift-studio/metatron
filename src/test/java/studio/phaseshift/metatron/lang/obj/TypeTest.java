@@ -61,7 +61,10 @@ public class TypeTest {
             "{1,2,3,'abc'}        | /mtron/int[*]        | false",
             "{1,2,3,'abc'}        | /mtron/+[*]          | true",
             "{1,2,3,4}            | /mtron/str[*]        | false",
+            "{/mtron/int[2]::1,2} | /mtron/int[3]        | true", // TODO: think this through more carefully
             "noobj                | #[0]                 | true",
+            "noobj                | #[0,0]               | true",
+        //    "noobj                | #[?]                 | false", TODO: distinction between matches and equals?
             "noobj                | #[1]                 | false",
             "noobj                | +[0]                 | true",
             "noobj                | a/b/c[0]             | true"
