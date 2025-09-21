@@ -18,12 +18,15 @@
 
 package studio.phaseshift.metatron.lang;
 
+import org.apache.tinkerpop.shaded.minlog.Log;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
+import studio.phaseshift.metatron.ui.Graphitty;
+import studio.phaseshift.metatron.ui.GraphittyLogger;
 
 import java.util.List;
 import java.util.Map;
@@ -33,6 +36,8 @@ import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.lang.fURI.f;
 
 public class fURITest {
+
+    private static final GraphittyLogger LOG = Graphitty.log(fURITest.class);
 
     static Stream<Arguments> testSegmentsData() {
         return Stream.of(
@@ -185,38 +190,64 @@ public class fURITest {
         assertFalse(new fURI("a/+/#").isAbsolute());
     }
 
-    @Test
-    public void testRetract() {
-        assertEquals(new fURI("http://fhatos.org"), new fURI("http://fhatos.org/a").retract(1));
-        assertEquals(new fURI("http://fhatos.org/a"), new fURI("http://fhatos.org/a/b").retract(1));
-        assertEquals(new fURI("http://fhatos.org"), new fURI("http://fhatos.org/a/b").retract(2));
-        assertEquals(new fURI("http://fhatos.org"), new fURI("http://fhatos.org/a/b").retract(3));
-        ///
-        assertEquals(new fURI("http://fhatos.org:4500"), new fURI("http://fhatos.org:4500/a").retract(1));
-        assertEquals(new fURI("http://fhatos.org:4500/a"), new fURI("http://fhatos.org:4500/a/b").retract(1));
-        assertEquals(new fURI("http://fhatos.org:4500"), new fURI("http://fhatos.org:4500/a/b").retract(2));
-        assertEquals(new fURI("http://fhatos.org:4500"), new fURI("http://fhatos.org:4500/a/b").retract(3));
-        ///
-        assertEquals(new fURI("/fhatos.org/a"), new fURI("/fhatos.org/a/b").retract(1));
-        assertEquals(new fURI("/fhatos.org/a"), new fURI("/fhatos.org/a/b").retract(1));
-        assertEquals(new fURI("fhatos.org/a"), new fURI("fhatos.org/a/b").retract(1));
+    @ParameterizedTest
+    @CsvSource(value = {
+            "http://fhatos.org/a         | 1   | http://fhatos.org",
+            //    "http://fhatos.org/a/         | 1   | http://fhatos.org/",
+            "http://fhatos.org/a/b       | 1   | http://fhatos.org/a",
+            "http://fhatos.org/a/b/      | 1   | http://fhatos.org/a/",
+            "http://fhatos.org/a/b       | 2   | http://fhatos.org",
+            "http://fhatos.org/a/b       | 3   | http://fhatos.org",
+            "http://fhatos.org:81/a      | 1   | http://fhatos.org:81",
+            "http://fhatos.org:81/a/b    | 1   | http://fhatos.org:81/a",
+            "http://fhatos.org:81/a/b    | 2   | http://fhatos.org:81",
+            "http://fhatos.org:81/a/b    | 3   | http://fhatos.org:81",
+            "/fhat.org/a/b               | 1   | /fhat.org/a",
+            "fhat.org/a/b                | 1   | fhat.org/a",
+            "fhat.org/a/b                | 3   | ",
+            "/a/b/c?a=b&c=d              | 1   | /a/b?a=b&c=d",
+            "/a/b/c?a=b&c=d              | 2   | /a?a=b&c=d",
+            "/a/b/c/?a=b&c=d             | 2   | /a/?a=b&c=d",
+            "/a/b/c[*]?a=b&c=d           | 1   | /a/b[*]?a=b&c=d",
+            "/a/b/c[2,3]?a=b&c=d         | 2   | /a[2,3]?a=b&c=d",
+            // "/a/b/c/[0]?a=b&c=d          | 2   | /a/[0]?a=b&c=d",
+            // "/a/b/c/[?]?a=b&c=d          | 2   | /a/[?]?a=b&c=d",
+            // "/a/b?a=b&c=d                | 2   | ?a=b&c=d",
+    }, delimiter = '|')
+    public void testRetract(final String furi, final int steps, final String expected) {
+        final fURI start = fURI.of(furi);
+        final fURI end = fURI.of(expected);
+        assertEquals(end,start.retract(steps));
+        LOG.debug("testing %s retracted %d steps is %s", start, steps, expected);
     }
 
-    @Test
-    public void testPretract() {
-        assertEquals(new fURI("http://fhatos.org"), new fURI("http://fhatos.org/a").pretract(1));
-        assertEquals(new fURI("http://fhatos.org/b"), new fURI("http://fhatos.org/a/b").pretract(1));
-        assertEquals(new fURI("http://fhatos.org"), new fURI("http://fhatos.org/a/b").pretract(2));
-        assertEquals(new fURI("http://fhatos.org"), new fURI("http://fhatos.org/a/b").pretract(3));
-        ///
-        assertEquals(new fURI("http://fhatos.org:4500"), new fURI("http://fhatos.org:4500/a").pretract(1));
-        assertEquals(new fURI("http://fhatos.org:4500/b"), new fURI("http://fhatos.org:4500/a/b").pretract(1));
-        assertEquals(new fURI("http://fhatos.org:4500"), new fURI("http://fhatos.org:4500/a/b").pretract(2));
-        assertEquals(new fURI("http://fhatos.org:4500"), new fURI("http://fhatos.org:4500/a/b").pretract(3));
-        ///
-        assertEquals(new fURI("/a/b"), new fURI("/fhatos.org/a/b").pretract(1));
-        assertEquals(new fURI("a/b"), new fURI("fhatos.org/a/b").pretract(1));
+    @ParameterizedTest
+    @CsvSource(value = {
+            "http://fhatos.org/a         | 1   | http://fhatos.org",
+        //    "http://fhatos.org/a/         | 1   | http://fhatos.org/",
+            "http://fhatos.org/a/b       | 1   | http://fhatos.org/b",
+            "http://fhatos.org/a/b/      | 1   | http://fhatos.org/b/",
+            "http://fhatos.org/a/b       | 2   | http://fhatos.org",
+            "http://fhatos.org/a/b       | 3   | http://fhatos.org",
+            "http://fhatos.org:81/a      | 1   | http://fhatos.org:81",
+            "http://fhatos.org:81/a/b    | 1   | http://fhatos.org:81/b",
+            "http://fhatos.org:81/a/b    | 2   | http://fhatos.org:81",
+            "http://fhatos.org:81/a/b    | 3   | http://fhatos.org:81",
+            "/fhat.org/a/b               | 1   | /a/b",
+            "fhat.org/a/b                | 1   | a/b",
+            "/a/b/c?a=b&c=d              | 1   | /b/c?a=b&c=d",
+            "/a/b/c?a=b&c=d              | 2   | /c?a=b&c=d",
+            "/a/b/c/?a=b&c=d             | 2   | /c/?a=b&c=d",
+            "/a/b/c[*]?a=b&c=d           | 1   | /b/c[*]?a=b&c=d",
+            "/a/b/c[2,3]?a=b&c=d         | 2   | /c[2,3]?a=b&c=d",
+    }, delimiter = '|')
+    public void testPretract(final String furi, final int steps, final String expected) {
+        final fURI start = fURI.of(furi);
+        final fURI end = fURI.of(expected);
+        assertEquals(end,start.pretract(steps));
+        LOG.debug("testing %s pretracted %d steps is %s", start, steps, expected);
     }
+
 
     @ParameterizedTest
     @CsvSource({"http://fhatos.org/a,fhatos.org,-1",

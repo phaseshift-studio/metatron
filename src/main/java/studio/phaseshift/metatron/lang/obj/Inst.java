@@ -114,11 +114,11 @@ public interface Inst extends Call {
     default Inst resolve(final Resolve desiredResolution, final Obj lhs) {
         final GraphittyLogger LOG = Graphitty.log(lhs);
         final Resolve currentResolution = this.resolution();
-        if (currentResolution.compareTo(desiredResolution) == 0 ||
-                currentResolution.compareTo(desiredResolution) > 0) {
+       /* if (false &&(currentResolution.compareTo(desiredResolution) == 0 ||
+                currentResolution.compareTo(desiredResolution) > 0)) {
             LOG.trace("resolution ({{m}}%s {{g}}<=>{{/g}} %s{{/m}}): %s", currentResolution, desiredResolution, lhs);
             return this;
-        } else {
+        } else {*/
             if (currentResolution == Resolve.A) {
                 //final Inst resolved = new MInstSet(fURI.of("/mnt/mtron")).resolve(lhs, this);
                 final Inst resolved = Router.global().<InstSet>getSpace(fURI.of("/mtron/#")).resolve(lhs, this); // TODO: generalize for any instruction set
@@ -135,7 +135,7 @@ public interface Inst extends Call {
                 LOG.trace("resolution ({{m}}%s {{g}}=>{{/g}} %s{{/m}}): %s", currentResolution, resolved.resolution(), resolved);
                 return resolved;
             }
-        }
+     //   }
     }
 
     @Override

@@ -268,7 +268,12 @@ public class fURI implements Cloneable {
     private fURI rePreTract(boolean retract, final int steps) {
         if (this.path.size() < steps)
             return new fURI(this.scheme, this.host, this.port, false, Collections.emptyList(), false, queryToString(this.query));
-        final List<String> newPath = retract ? this.path.subList(0, this.path.size() - steps) : this.path.subList(steps, this.path.size());
+        final String coefficient = this.coefficient();
+        final fURI noc = this.coefficientless();
+        final List<String> newPath = retract ? noc.path.subList(0, noc.path.size() - steps) : noc.path.subList(steps, noc.path.size());
+        if(!newPath.isEmpty() && null != coefficient) {
+            newPath.set(newPath.size() - 1, newPath.get(newPath.size() - 1) + "[" + coefficient + "]");
+        }
         return new fURI(this.scheme, this.host, this.port, this.sstart && !newPath.isEmpty(), newPath, this.send && !newPath.isEmpty(),queryToString(this.query));
 
     }

@@ -114,7 +114,7 @@ public class MInstSet extends MSpace implements InstSet {
         this.define(ELSE_TID, fURI.ANY.maybe(), fURI.ANY, MLst.of(ID__), (lhs, inst) -> inst.arg(0));
         this.define(GET_TID, REC_TID, fURI.ANY.any(), MLst.of(ID__), (lhs, inst) -> lhs.<Rec>as().at(inst.arg(0)));
         this.define(BARRIER_TID, fURI.ANY.any(), fURI.ANY.any(), MLst.of(ID__), (lhs, inst) -> inst.arg(0).apply(lhs), MObjs.of(List.of()));
-        this.define(MERGE_TID, LST_TID, fURI.ANY.any(), NO_ARGS__, (lhs, inst) -> lhs.isPoly() ? MObjs.of(lhs.<Poly>as().elements()) : lhs);
+        this.define(MERGE_TID, LST_TID, fURI.ANY.any(), NO_ARGS__, (lhs, inst) -> MObjs.of(lhs.<Lst>as().value()));
         this.define(MERGE_TID, REC_TID, REL_TID.any(), NO_ARGS__, (lhs, inst) -> lhs.isPoly() ? MObjs.of(lhs.<Poly>as().elements()) : lhs);
         this.define(MERGE_TID, fURI.ANY, fURI.ANY, NO_ARGS__, (lhs, inst) -> lhs);
         this.define(AT_TID, fURI.ANY, fURI.ANY, MLst.of(ID__), (lhs, inst) -> lhs.vid(inst.arg(0).uriValue()));
@@ -176,15 +176,13 @@ public class MInstSet extends MSpace implements InstSet {
             }
             return MLst.of(result);
         });
+        this.define(SPLIT_TID, fURI.ANY, LST_TID, lst(T(LST_TID)), (lhs, inst) -> MLst.of(inst.arg(0).lstValue().stream().map(e -> e.apply(lhs)).toList()));
+        this.define(SPLIT_TID, fURI.ANY, REC_TID, lst(T(REC_TID)), (lhs, inst) -> MRec.of(inst.arg(0).recValue().entrySet().stream()
+                .map(e -> e.getKey().apply(lhs).choose(Obj::isNoObj, null, x -> MRel.of(x, e.getValue().apply(x))))
+                .filter(x -> !Objects.isNull(x))
+                .collect(Collectors.toMap(a -> a.<Rel>as().first(), b -> b.<Rel>as().second(), (a, b) -> b, LinkedHashMap<Obj, Obj>::new))));
         this.define(SPLIT_TID, fURI.ANY, fURI.ANY, MLst.of(ID__), (lhs, inst) -> {
-            if (inst.arg(0).isLst()) {
-                return MLst.of(inst.arg(0).lstValue().stream().map(e -> e.apply(lhs)).toList());
-            } else if (inst.arg(0).isRec()) {
-                return MRec.of(inst.arg(0).recValue().entrySet().stream()
-                        .map(e -> e.getKey().apply(lhs).choose(Obj::isNoObj, null, x -> MRel.of(x, e.getValue().apply(x))))
-                        .filter(x -> !Objects.isNull(x))
-                        .collect(Collectors.toMap(a -> a.<Rel>as().first(), b -> b.<Rel>as().second(), (a, b) -> b, LinkedHashMap<Obj, Obj>::new)));
-            } else if (inst.arg(0).isRel()) {
+            if (inst.arg(0).isRel()) {
                 return MRel.of(inst.arg(0).<Rel>as().first().apply(lhs), inst.arg(0).<Rel>as().second().apply(lhs));
             } else {
                 return inst.arg(0).apply(lhs);
