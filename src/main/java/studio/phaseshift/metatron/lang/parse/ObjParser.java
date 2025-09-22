@@ -25,7 +25,10 @@ import org.petitparser.parser.combinators.*;
 import org.petitparser.parser.primitive.CharacterParser;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.monoid.mtron.MMonoid;
-import studio.phaseshift.metatron.lang.obj.*;
+import studio.phaseshift.metatron.lang.obj.Call;
+import studio.phaseshift.metatron.lang.obj.Inst;
+import studio.phaseshift.metatron.lang.obj.NoObj;
+import studio.phaseshift.metatron.lang.obj.Obj;
 import studio.phaseshift.metatron.lang.obj.mtron.*;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
@@ -54,6 +57,12 @@ public class ObjParser {
     private static final SettableParser inst_parser = SettableParser.undefined();
     private static final SettableParser rel_parser = SettableParser.undefined();
     private static final SettableParser obj_rel_back_parser = SettableParser.undefined();
+
+    private static final Map<fURI, fURI> baseResolution = new HashMap<>() {{
+        put(fURI.of("int"), INT_TID);
+        put(fURI.of("real"), REAL_TID);
+        put(fURI.of("str"), STR_TID);
+    }};
 
     static {
         rel_parser.set(seq(m_type_prefix_opt_colon(REL_TID), obj_rel_back_parser, of("=>").trim(), m_obj())
@@ -132,7 +141,8 @@ public class ObjParser {
     public static Parser rec_internal() {
         return choice(of("=>").trim(),
                 seq(m_obj(), of("=>").trim(), m_obj()).separatedBy(of(',').trim())).map(t ->
-                t.equals("=>") ? Map.of() : ((List) t).stream()
+                t.equals("=>") ? Map.of() : ((List) t)
+                        .stream()
                         .filter(o -> o instanceof List)
                         .collect(Collectors.toMap(kv -> pick(kv, 0), kv -> pick(kv, 2), (a, b) -> b, LinkedHashMap::new)));
     }
@@ -213,7 +223,7 @@ public class ObjParser {
 
 
     public static Parser m_call() {
-        return choice(m_code(),m_inst());
+        return choice(m_code(), m_inst());
     }
 
     public static Parser m_obj() {
@@ -317,6 +327,7 @@ public class ObjParser {
     /// //////////////////////////////////////////////////////////////////////////////////////////
     private static Parser[] ordered_sugar_parsers() {
         return new Parser[]{
+                sugar_barrier(),
                 sugar_block(),
                 sugar_within(),
                 sugar_identity(),
@@ -324,45 +335,54 @@ public class ObjParser {
                 sugar_merge(),
                 sugar_split(),
                 sugar_ref(),
-                sugar_plus()};
+                sugar_plus(),
+                sugar_end()};
     }
 
     private static Parser generate_sugar_parser(final fURI tid, final String sugarOp, final int argCount) {
         return argCount == 0 ?
                 of(sugarOp).trim().map(t -> MInst.instA(tid)) :
-                seq(of(sugarOp).trim(), m_obj()).map(t -> MInst.instB(tid, MLst.of(ObjParser.<Obj>pick(t, 1))));
+                seq(of(sugarOp).trim(), opt(of('('), '('), m_obj(), opt(of(')'), ')')).map(t -> MInst.instB(tid, MLst.of(ObjParser.<Obj>pick(t, 2))));
     }
 
     public static Parser sugar_identity() {
-        return generate_sugar_parser(MInstSet.ID_TID, "_", 0);
+        return generate_sugar_parser(ID_TID, "_", 0);
+    }
+
+    public static Parser sugar_barrier() {
+        return generate_sugar_parser(BARRIER_TID, "-|", 1);
     }
 
     public static Parser sugar_from() {
-        return generate_sugar_parser(MInstSet.FROM_TID, "*", 1);
+        return generate_sugar_parser(FROM_TID, "*", 1);
     }
 
     public static Parser sugar_plus() {
-        return generate_sugar_parser(MInstSet.PLUS_TID, "+", 1);
+        return generate_sugar_parser(PLUS_TID, "+", 1);
     }
 
     public static Parser sugar_block() {
-        return generate_sugar_parser(MInstSet.BLOCK_TID, "|", 1);
+        return generate_sugar_parser(BLOCK_TID, "|", 1);
     }
 
     public static Parser sugar_ref() {
-        return generate_sugar_parser(MInstSet.REF_TID, "->", 1);
+        return generate_sugar_parser(REF_TID, "->", 1);
     }
 
     public static Parser sugar_merge() {
-        return generate_sugar_parser(MInstSet.MERGE_TID, ">-", 0);
+        return generate_sugar_parser(MERGE_TID, ">-", 0);
     }
 
     public static Parser sugar_split() {
-        return generate_sugar_parser(MInstSet.SPLIT_TID, "-<", 1);
+        return generate_sugar_parser(SPLIT_TID, "-<", 1);
     }
 
     public static Parser sugar_within() {
-        return generate_sugar_parser(MInstSet.WITHIN_TID, "_/", 1);
+        return generate_sugar_parser(WITHIN_TID, "_/", 1);
+    }
+
+    public static Parser sugar_end() {
+        return generate_sugar_parser(END_TID, ";", 0);
     }
 
     /// //////////////////////////////////////////////////////////////////////////////////////////

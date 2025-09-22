@@ -29,6 +29,10 @@ public class MUri extends MObj implements Uri {
         return MUri.of(s);
     }
 
+    public static Uri uri(final fURI s) {
+        return MUri.of(s);
+    }
+
     public MUri(final fURI value, final fURI tid, final fURI vid) {
         super(value, tid, vid);
     }

@@ -62,7 +62,7 @@ public class InstParseTest {
             "1.plus(2)% 3",
             "3.plus(-3)% 0",
             "\"abc\".plus(\"def\")% \"abcdef\"",
-            "abc.plus(def)% abc/def",
+            "abc[0,2].plus(abc[23])% abc[23,25]",
             "[a,b,c].plus([d,e,f])% [a,b,c,d,e,f]",
             //"/mtron/code[plus(1).plus(2)].plus([d,e,f])% [a,b,c,d,e,f]" (requires union())
     }, delimiter = '%')

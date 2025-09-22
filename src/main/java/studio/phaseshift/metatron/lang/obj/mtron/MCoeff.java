@@ -6,11 +6,11 @@ import java.util.Objects;
 
 public interface MCoeff {
 
-    class Int implements Coeff<Long,Int> {
+    class Int implements Coeff<Long, Int> {
         private final Long min;
         private final Long max;
 
-        private Int(final Long min, final Long  max) {
+        private Int(final Long min, final Long max) {
             this.min = min;
             this.max = max;
         }
@@ -22,26 +22,34 @@ public interface MCoeff {
 
         @Override
         public Long max() {
-            return  this.max;
+            return this.max;
         }
 
         @Override
         public Int plus(final Int rhs) {
-            return new Int(this.min() + rhs.min(), this.max() + rhs.max());
+            return new Int(this.min() == null ?
+                    rhs.min() : rhs.min() == null ?
+                    this.min() : this.min() + rhs.min(),
+                    this.max() == null || rhs.max() == null ?
+                            null : this.max() + rhs.max());
         }
 
         @Override
         public Int mult(final Int rhs) {
-            return new Int(this.min() * rhs.min(), this.max() * rhs.max());
+            return new Int(this.min() == null ?
+                    this.min() : rhs.min() == null ?
+                    rhs.min() : this.min() * rhs.min(),
+                    this.max() == null || rhs.max() == null ?
+                            null : this.max() * rhs.max());
         }
 
         public boolean isZero() {
-                 return Objects.equals(this.min, 0L) && Objects.equals(this.max, 0L);
+            return Objects.equals(this.min, 0L) && Objects.equals(this.max, 0L);
         }
 
         @Override
         public boolean isOne() {
-            return Objects.equals(this.min, 1L) && Objects.equals(this.max,1L);
+            return Objects.equals(this.min, 1L) && Objects.equals(this.max, 1L);
         }
 
         @Override
@@ -56,83 +64,95 @@ public interface MCoeff {
 
         @Override
         public boolean isQuestion() {
-            return  Objects.equals(this.min, 0L) &&  Objects.equals(this.max, 1L);
+            return Objects.equals(this.min, 0L) && Objects.equals(this.max, 1L);
         }
+
 
         @Override
         public boolean within(final Int rhs) {
-            Long minA = this.min() ==  null ? 0 : this.min();
+            Long minA = this.min() == null ? 0 : this.min();
             Long maxA = this.max() == null ? Long.MAX_VALUE : this.max();
-            Long minB = rhs.min() ==  null ? 0 : rhs.min();
+            Long minB = rhs.min() == null ? 0 : rhs.min();
             Long maxB = rhs.max() == null ? Long.MAX_VALUE : rhs.max();
             return minA.compareTo(minB) >= 0 && maxA.compareTo(maxB) <= 0;
         }
 
         // @Override
         public static Int star() {
-            return Int.of(0L,null);
+            return Int.of(0L, null);
         }
 
-      //  @Override
+        //  @Override
         public static Int plus() {
-            return Int.of(1L,null);
+            return Int.of(1L, null);
         }
 
         public static Int zero() {
-            return Int.of(0L,0L);
+            return Int.of(0L, 0L);
         }
 
-       // @Override
+        // @Override
         public static Int question() {
-            return Int.of(0L,1L);
+            return Int.of(0L, 1L);
         }
 
-       // @Override
+        // @Override
         public static Int one() {
-            return Int.of(1L,1L);
+            return Int.of(1L, 1L);
         }
 
         @Override
         public String toString() {
-            if(null != this.min && null != this.max && this.min.equals(this.max))
-                return this.min.toString();
-            return (null == this.min ? "" : this.min) + "," + (null == this.max ? "" : this.max);
+            if (this.isOne())
+                return "1";
+            else if (this.isQuestion())
+                return "?";
+            else if (this.isZero())
+                return "0";
+            else if (this.isPlus())
+                return "+";
+            else if (this.isStar())
+                return "*";
+            else if (this.isExact())
+                return "" + this.min;
+            else
+                return (null == this.min ? "" : this.min) + "," + (null == this.max ? "" : this.max);
         }
 
         @Override
         public int hashCode() {
-          return  Objects.hash(this.min,this.max);
+            return Objects.hash(this.min, this.max);
         }
 
         @Override
         public boolean equals(final Object other) {
-            return other instanceof Int && Objects.equals(this.min,((Int) other).min) && Objects.equals(this.max,((Int) other).max);
+            return other instanceof Int && Objects.equals(this.min, ((Int) other).min) && Objects.equals(this.max, ((Int) other).max);
         }
 
         public static Int of(final Long min, final Long max) {
-            return new Int(min,max);
+            return new Int(min, max);
         }
 
         public static Int of(final String parse) {
-            if(parse.isEmpty())
+            if (parse.isEmpty())
                 return Int.one();
-            else if(parse.equals("0"))
+            else if (parse.equals("0"))
                 return Int.zero();
-            else if(parse.equals("*"))
+            else if (parse.equals("*"))
                 return Int.star();
-            else if(parse.equals("?"))
+            else if (parse.equals("?"))
                 return Int.question();
-            else if(parse.equals("+"))
+            else if (parse.equals("+"))
                 return Int.plus();
-            else if(parse.equals("1"))
+            else if (parse.equals("1"))
                 return Int.one();
-            else if(!parse.contains(","))
-                return Int.of(Long.valueOf(parse),Long.valueOf(parse));
+            else if (!parse.contains(","))
+                return Int.of(Long.valueOf(parse), Long.valueOf(parse));
             else {
                 final String[] split = parse.split(",");
                 return split.length == 1 ?
-                        (parse.charAt(0) == ',' ? Int.of(null,Long.valueOf(split[0])) : Int.of(Long.valueOf(split[0]),null)):
-                        Int.of(Long.valueOf(split[0]),Long.valueOf(split[1]));
+                        (parse.charAt(0) == ',' ? Int.of(null, Long.valueOf(split[0])) : Int.of(Long.valueOf(split[0]), null)) :
+                        Int.of(Long.valueOf(split[0]), Long.valueOf(split[1]));
             }
 
         }

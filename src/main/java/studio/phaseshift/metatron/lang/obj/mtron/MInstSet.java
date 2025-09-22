@@ -93,6 +93,7 @@ public class MInstSet extends MSpace implements InstSet {
     public static final fURI REIFY_TID = INST_TID.extend("reify");
     public static final fURI CROSS_TID = INST_TID.extend("cross");
     public static final fURI ELSE_TID = INST_TID.extend("else");
+    public static final fURI END_TID = INST_TID.extend("end");
 
     // inst_tid -> <inst_tid_dom -> set<inst>>
     private static final Map<fURI, Map<fURI, Set<Inst>>> SYMBOL_TABLE = new LinkedHashMap<>();
@@ -135,15 +136,16 @@ public class MInstSet extends MSpace implements InstSet {
         this.define(REF_TID, fURI.ANY, fURI.ANY, MLst.of(ID__), (lhs, inst) -> Router.global().write(lhs.uriValue(), inst.arg(0)));
         this.define(ID_TID, fURI.ANY.maybe(), fURI.ANY.maybe(), MLst.of(), (lhs, inst) -> lhs);
         this.define(START_TID, NOOBJ_TID.zero(), fURI.ANY.any(), MLst.of(ID__), (lhs, inst) -> inst.arg(0));
+        this.define(END_TID, fURI.ANY.any(), NOOBJ_TID.zero(),NO_ARGS__,(lhs,inst) -> NoObj.single());
         this.define(PLUS_TID, BOOL_TID, BOOL_TID, MLst.of(ID__), (lhs, inst) -> lhs.value(lhs.boolValue() || inst.arg(0).boolValue()));
         this.define(PLUS_TID, INT_TID, INT_TID, lst(T(INT_TID)), (lhs, inst) -> lhs.value(lhs.intValue() + inst.arg(0).intValue()));
         this.define(PLUS_TID, REAL_TID, REAL_TID, MLst.of(ID__), (lhs, inst) -> lhs.value(lhs.realValue() + inst.arg(0).realValue()));
         this.define(PLUS_TID, STR_TID, STR_TID, MLst.of(ID__), (lhs, inst) -> lhs.value(lhs.strValue() + inst.arg(0).strValue()));
-        this.define(PLUS_TID, URI_TID, URI_TID, MLst.of(ID__), (lhs, inst) -> lhs.value(lhs.uriValue().extend(inst.arg(0).uriValue())));
+        this.define(PLUS_TID, URI_TID, URI_TID, MLst.of(ID__), (lhs, inst) -> lhs.value(lhs.uriValue().plus(inst.arg(0).uriValue())));
         this.define(PLUS_TID, LST_TID, LST_TID, MLst.of(ID__), (lhs, inst) -> lhs.value(Stream.concat(lhs.lstValue().stream(), inst.arg(0).lstValue().stream()).toList()));
         this.define(MULT_TID, INT_TID, INT_TID, MLst.of(ID__), (lhs, inst) -> lhs.value(lhs.intValue() * inst.arg(0).intValue()));
         this.define(MULT_TID, REAL_TID, REAL_TID, MLst.of(ID__), (lhs, inst) -> lhs.value(lhs.realValue() * inst.arg(0).realValue()));
-        this.define(MULT_TID, URI_TID, URI_TID, MLst.of(ID__), (lhs, inst) -> lhs.value(lhs.uriValue().retractPattern().extend(inst.arg(0).uriValue())));
+        this.define(MULT_TID, URI_TID, URI_TID, MLst.of(ID__), (lhs, inst) -> lhs.value(lhs.uriValue().mult(inst.arg(0).uriValue())));
         this.define(IS_TID, fURI.ANY, fURI.ANY.maybe(), MLst.of(ID__), (lhs, inst) -> inst.arg(0).boolValue() ? lhs : NoObj.single());
         this.define(IN_TID, fURI.ANY, BOOL_TID, MLst.of(ID__), (lhs, inst) -> bool(lhs.matches(inst.arg(0))));
         this.define(EQ_TID, fURI.ANY, BOOL_TID, MLst.of(ID__), (lhs, inst) -> bool(lhs.equals(inst.arg(0))));
@@ -156,8 +158,8 @@ public class MInstSet extends MSpace implements InstSet {
         this.define(GTE_TID, INT_TID, BOOL_TID, MLst.of(ID__), (lhs, inst) -> bool(lhs.intValue() >= inst.arg(0).intValue()));
         this.define(GTE_TID, REAL_TID, BOOL_TID, MLst.of(ID__), (lhs, inst) -> bool(lhs.realValue() >= inst.arg(0).realValue()));
         this.define(LTE_TID, INT_TID, BOOL_TID, MLst.of(ID__), (lhs, inst) -> bool(lhs.intValue() <= inst.arg(0).intValue()));
-        this.define(LTE_TID, INT_TID, BOOL_TID, MLst.of(ID__), (lhs, inst) -> bool(lhs.intValue() <= inst.arg(0).intValue()));
-        this.define(NOT_TID, fURI.ANY, BOOL_TID, MLst.of(MType.of(BOOL_TID)), (lhs, inst) -> bool(!inst.arg(0).boolValue()));
+        this.define(LTE_TID, INT_TID, BOOL_TID, lst(T(INT_TID)), (lhs, inst) -> bool(lhs.intValue() <= inst.arg(0).intValue()));
+        this.define(NOT_TID, fURI.ANY, BOOL_TID, lst(T(BOOL_TID)), (lhs, inst) -> bool(!inst.arg(0).boolValue()));
         this.define(WITHIN_TID, LST_TID, LST_TID, MLst.of(ID__), (lhs, inst) -> MLst.of(lhs.<Lst>as().lstValue().stream().map(o -> inst.arg(0).apply(o)).toList()));
         this.define(CROSS_TID, LST_TID, LST_TID, MRec.ofUriKeyed("c", ID__, "l", ID__), (lhs, inst) -> {
             final List<Obj> result = new ArrayList<>();

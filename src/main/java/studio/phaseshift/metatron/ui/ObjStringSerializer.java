@@ -112,19 +112,23 @@ public class ObjStringSerializer implements ObjSerializer<String> {
         /// ///////////////////////////////////////////////////////////////
         /// ///////////////////////////////////////////////////////////////
         else if (obj instanceof final Rec rec) {
-            if (this.b.prettyPrint && rec.count() > 1) {
-                this.generateRec(sb, rec, 0);
+            if (rec.isEmpty()) {
+                sb.append(this.b.palette.formC()).append("[=>]{{X}}");
             } else {
-                generateTID(sb, obj.tid(), true).append(this.b.palette.formC()).append('[').append(this.b.palette.valueC());
-                for (final Map.Entry<Obj, Obj> o : rec.value().entrySet()) {
-                    sb.append(o.getKey())
-                            .append(this.b.palette.formC())
-                            .append("=>").append(o.getValue())
-                            .append(this.b.palette.formC())
-                            .append(',');
+                if (this.b.prettyPrint && rec.count() > 1) {
+                    this.generateRec(sb, rec, 0);
+                } else {
+                    generateTID(sb, obj.tid(), true).append(this.b.palette.formC()).append('[').append(this.b.palette.valueC());
+                    for (final Map.Entry<Obj, Obj> o : rec.value().entrySet()) {
+                        sb.append(o.getKey())
+                                .append(this.b.palette.formC())
+                                .append("=>").append(o.getValue())
+                                .append(this.b.palette.formC())
+                                .append(',');
+                    }
                 }
+                if (rec.count() == 1) sb.deleteCharAt(sb.length() - 1).append(this.b.palette.formC()).append(']');
             }
-            if (rec.count() == 1) sb.deleteCharAt(sb.length() - 1).append(this.b.palette.formC()).append(']');
             return generateVID(sb, rec).append(this.b.ignoreRewrites ? "" : "{{X}}").toString();
         }
         /// ///////////////////////////////////////////////////////////////

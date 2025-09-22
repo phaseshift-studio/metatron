@@ -10,7 +10,7 @@ import java.util.Map;
 
 import static studio.phaseshift.metatron.lang.obj.mtron.MInstSet.NOOBJ_TID;
 
-public class NullSpace implements Space, InstSet {
+public final class NullSpace implements Space, InstSet {
 
     private static final NullSpace INSTANCE = new NullSpace();
 
@@ -80,5 +80,10 @@ public class NullSpace implements Space, InstSet {
     @Override
     public boolean equals(final Object other) {
         return Space.Helpers.spaceEquals(this, other);
+    }
+
+    @Override
+    public void close() {
+
     }
 }

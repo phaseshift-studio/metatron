@@ -101,7 +101,7 @@ public class MqttSpace extends MObj implements Space {
                                     fURI.of(p.getTopic().toString()),
                                     this.jsonTranslator.translateString(json));
                         } else {
-                          this.cache.write(
+                            this.cache.write(
                                     fURI.of(p.getTopic().toString()),
                                     NoObj.single());
                         }
@@ -170,5 +170,10 @@ public class MqttSpace extends MObj implements Space {
     @Override
     public Iterator<Obj> iterator() {
         return this.cache.iterator();
+    }
+
+    @Override
+    public void close() throws Exception {
+        this.incomingMessages.close();
     }
 }

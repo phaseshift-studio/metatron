@@ -46,44 +46,45 @@ public class fURI implements Cloneable {
     private final String scheme;
     private final int port;
     private final List<String> path;
-    private final Map<String,String> query;
+    private final Map<String, String> query;
     private boolean sstart;
     private boolean send;
     // private final boolean wildcard;
 
 
-    private static Map<String,String> queryToMap(final String query) {
-        return null == query || query.isEmpty() ? null : Stream.of(query.split("&")).map(kv -> kv.split("=")).collect(Collectors.toMap(kv -> kv[0], kv->kv.length == 1 ? "" : kv[1]));
+    private static Map<String, String> queryToMap(final String query) {
+        return null == query || query.isEmpty() ? null : Stream.of(query.split("&")).map(kv -> kv.split("=")).collect(Collectors.toMap(kv -> kv[0], kv -> kv.length == 1 ? "" : kv[1]));
     }
-    private static String queryToString(final Map<String,String> query) {
-        return null == query || query.isEmpty() ? null : query.entrySet().stream().map(kv -> kv.getKey() + (kv.getValue().isBlank() ? "" : ("=" + kv.getValue()))).reduce("",(a,b) -> a + "&" + b).substring(1);
+
+    private static String queryToString(final Map<String, String> query) {
+        return null == query || query.isEmpty() ? null : query.entrySet().stream().map(kv -> kv.getKey() + (kv.getValue().isBlank() ? "" : ("=" + kv.getValue()))).reduce("", (a, b) -> a + "&" + b).substring(1);
     }
 
 
     public fURI big() {
-        return null == Router.global() ? this : Router.global().rewrite(this,true);
+        return null == Router.global() ? this : Router.global().rewrite(this, true);
     }
 
     public fURI small() {
-        return  null == Router.global() ? this : Router.global().rewrite(this,false);
+        return null == Router.global() ? this : Router.global().rewrite(this, false);
     }
 
     public fURI commonRoot(final fURI other) {
-        if(this.sstart != other.sstart)
+        if (this.sstart != other.sstart)
             return fURI.of("");
         final List<String> common = new ArrayList<>();
-        final int maxLength = Math.min(this.path.size(),other.path.size());
-        for(int i=0;i<Math.min(this.path.size(),other.path.size());i++) {
-            if(this.path.get(i).equals(other.path.get(i)))
+        final int maxLength = Math.min(this.path.size(), other.path.size());
+        for (int i = 0; i < Math.min(this.path.size(), other.path.size()); i++) {
+            if (this.path.get(i).equals(other.path.get(i)))
                 common.add(this.path.get(i));
             else
                 break;
         }
-        fURI base = fURI.of(common.stream().reduce(this.sstart ? "/" : "",(a,b)->a + b + "/"));
-        if(other.path.size() != this.path.size())
+        fURI base = fURI.of(common.stream().reduce(this.sstart ? "/" : "", (a, b) -> a + b + "/"));
+        if (other.path.size() != this.path.size())
             return base.extend("#");
         final int extensionCount = maxLength - common.size();
-        for(int i=0;i<extensionCount;i++) {
+        for (int i = 0; i < extensionCount; i++) {
             base = base.extend("+");
         }
         return base;
@@ -95,7 +96,7 @@ public class fURI implements Cloneable {
         this.scheme = scheme;
         this.port = port;
         this.path = path;
-        this.query = fURI.queryToMap(query) ;
+        this.query = fURI.queryToMap(query);
         this.sstart = sstart;
         this.send = send;
     }
@@ -112,7 +113,7 @@ public class fURI implements Cloneable {
             return;
         }
         int queryPosition = uri.lastIndexOf('?');
-        if(queryPosition == -1 || uri.charAt(queryPosition-1) == '[')
+        if (queryPosition == -1 || uri.charAt(queryPosition - 1) == '[')
             queryPosition = -1;
         final String tempQuery = queryPosition == -1 ? null : uri.substring(queryPosition + 1);
         this.query = null == tempQuery || tempQuery.isBlank() ? null : queryToMap(tempQuery);
@@ -153,11 +154,15 @@ public class fURI implements Cloneable {
     }
 
     public static fURI dotPath(final String uri) {
-        return fURI.of(uri.replace('.','/'));
+        return fURI.of(uri.replace('.', '/'));
     }
 
     public static fURI of(final String uri) {
         return new fURI(uri);
+    }
+
+    public static fURI of(final Object uri) {
+        return uri instanceof fURI ? (fURI) uri : fURI.of(uri.toString());
     }
 
     public Uri toUri(final boolean schemaType) {
@@ -202,7 +207,7 @@ public class fURI implements Cloneable {
     }
 
     public fURI segments(final List<String> segs) {
-        return new fURI(this.scheme,this.host,this.port,this.sstart,segs,this.send,queryToString(this.query));
+        return new fURI(this.scheme, this.host, this.port, this.sstart, segs, this.send, queryToString(this.query));
     }
 
     public String scheme() {
@@ -271,10 +276,10 @@ public class fURI implements Cloneable {
         final String coefficient = this.coefficient();
         final fURI noc = this.coefficientless();
         final List<String> newPath = retract ? noc.path.subList(0, noc.path.size() - steps) : noc.path.subList(steps, noc.path.size());
-        if(!newPath.isEmpty() && null != coefficient) {
+        if (!newPath.isEmpty() && null != coefficient) {
             newPath.set(newPath.size() - 1, newPath.get(newPath.size() - 1) + "[" + coefficient + "]");
         }
-        return new fURI(this.scheme, this.host, this.port, this.sstart && !newPath.isEmpty(), newPath, this.send && !newPath.isEmpty(),queryToString(this.query));
+        return new fURI(this.scheme, this.host, this.port, this.sstart && !newPath.isEmpty(), newPath, this.send && !newPath.isEmpty(), queryToString(this.query));
 
     }
 
@@ -319,10 +324,10 @@ public class fURI implements Cloneable {
 
     public fURI head(final int steps) {
         final List<String> head = new ArrayList<>();
-        for(int i=0;i<steps;i++) {
+        for (int i = 0; i < steps; i++) {
             head.add(this.segments().get(i));
         }
-      return this.segments(head);
+        return this.segments(head);
     }
 
     public fURI pretract() {
@@ -365,13 +370,13 @@ public class fURI implements Cloneable {
     }
 
     public fURI query(final String key, final String value) {
-        Map<String,String> appended = null == this.query ? new LinkedHashMap<>() : new LinkedHashMap<>(this.query);
-        appended.put(key,value);
+        Map<String, String> appended = null == this.query ? new LinkedHashMap<>() : new LinkedHashMap<>(this.query);
+        appended.put(key, value);
         return new fURI(this.scheme, this.host, this.port, this.sstart, this.path, this.send, queryToString(appended));
     }
 
     public fURI query(final Object key, final Object value) {
-       return this.query(key.toString(),value.toString());
+        return this.query(key.toString(), value.toString());
     }
 
     public fURI queryMap(final Map<String, String> kv) {
@@ -416,7 +421,7 @@ public class fURI implements Cloneable {
             final List<String> segments = new ArrayList<String>(this.coefficient(null).path);
             String last = segments.isEmpty() ? "" : segments.remove(segments.size() - 1);
             segments.add(last + "[" + MCoeff.Int.of(coefficient) + "]");
-            return new fURI(this.scheme, this.host, this.port, this.sstart, segments, this.send,queryToString(this.query));
+            return new fURI(this.scheme, this.host, this.port, this.sstart, segments, this.send, queryToString(this.query));
         }
     }
 
@@ -439,12 +444,36 @@ public class fURI implements Cloneable {
         return last.substring(left + 1, right);
     }
 
+    public fURI plus(final fURI furi) {
+        if (this.basePath().matches(furi.basePath())) {
+            MCoeff.Int c1 = this.coefficientValue();
+            MCoeff.Int c2 = furi.coefficientValue();
+            MCoeff.Int c3 = c1.plus(c2);
+            Map<String, String> query = new LinkedHashMap<>();
+            query.putAll(this.queryMap());
+            query.putAll(furi.queryMap());
+            return this.coefficient(c3.toString()).queryMap(query);
+        } else {
+            throw MTronException.of("furis with different paths can not be added together");
+        }
+    }
+
+    public fURI mult(final fURI furi) {
+        MCoeff.Int c1 = this.coefficientValue();
+        MCoeff.Int c2 = furi.coefficientValue();
+        MCoeff.Int c3 = c1.mult(c2);
+        Map<String, String> query = new LinkedHashMap<>();
+        query.putAll(this.queryMap());
+        query.putAll(furi.queryMap());
+        return this.coefficientless().extend(furi).coefficient(c3.toString()).queryMap(query);
+    }
+
     public String query() {
         return queryToString(this.query);
     }
 
     public Map<String, String> queryMap() {
-       return null == this.query ? Map.of() : this.query;
+        return null == this.query ? Map.of() : this.query;
     }
 
     public fURI basePath() {
@@ -456,19 +485,19 @@ public class fURI implements Cloneable {
     }
 
     public fURI dom() {
-        return this.queryValue(DOM,fURI.class,fURI.ANY);
+        return this.queryValue(DOM, fURI.class, fURI.ANY);
     }
 
     public fURI dom(final fURI domain) {
-        return this.query(DOM,domain);
+        return this.query(DOM, domain);
     }
 
     public fURI rng() {
-        return this.queryValue(RNG,fURI.class,fURI.ANY);
+        return this.queryValue(RNG, fURI.class, fURI.ANY);
     }
 
     public fURI rng(final fURI range) {
-        return this.query(RNG,range);
+        return this.query(RNG, range);
     }
 
     public fURI queryless() {
@@ -526,14 +555,15 @@ public class fURI implements Cloneable {
 
     public boolean equals(final Object other) {
         return other instanceof fURI &&
-                this.toString().equals(other.toString());/*
+            //    this.toString().equals(other.toString());
                 Objects.equals(this.scheme, ((fURI) other).scheme) &&
                 Objects.equals(this.host, ((fURI) other).host) &&
                 Objects.equals(this.port, ((fURI) other).port) &&
                 this.sstart == ((fURI) other).sstart &&
-                Objects.equals(this.path, ((fURI) other).path) &&
+                Objects.equals(this.coefficientless().path, ((fURI) other).coefficientless().path) &&
                 this.send == ((fURI) other).send &&
-                Objects.equals(this.query, ((fURI) other).query);*/
+                Objects.equals(this.query, ((fURI) other).query) &&
+                Objects.equals(this.coefficientValue(),((fURI) other).coefficientValue());
     }
 
     public int hashCode() {

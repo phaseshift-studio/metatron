@@ -66,7 +66,7 @@ public class MMonoid extends MObj implements Monoid {
                 if (instB.isInitial()) {
                     LOG.trace("  {{g}}==>{{/g}} creating {{y}}initial{{/y}} monad at %s", instB);
                     token = instB.arg(0);
-                    this.running().append(MMonad.of(NoObj.single(), instB));
+                    //this.running().append(MMonad.of(NoObj.single(), instB));
                 } else if (instB.isGather()) {
                     // many-to-?
                     LOG.trace("  {{g}}==>{{/g}} creating {{y}}barrier{{/y}} monad at %s", instB);
@@ -88,6 +88,7 @@ public class MMonoid extends MObj implements Monoid {
     @Override
     public Obj apply(final Obj lhs) {
         final Code code = this.resolve(lhs);
+        this.running().append(MMonad.of(NoObj.single(), code.inst(0)));
         while (true) {
             final Monad m = this.running().<LinkedList<Monad>>valueAs().poll();
             if (null != m) {
@@ -96,11 +97,11 @@ public class MMonoid extends MObj implements Monoid {
                 LOG.trace(" {{g}}===>{{/g}} post-processing monad %s", n);
                 if (!n.dead()) {
                     if (n.halted()) {
-                        LOG.trace("{{g}}====>{{/g}} halting monad %s", n);
+                        LOG.trace("{{y}}====>{{/y}} halting monad %s", n);
                         n.obj().iterator().forEachRemaining(p -> this.halted().<Queue<Obj>>valueAs().add(p));
                     } else if (n.inst().isGather()) {
                         final Monad barrier = this.barriers().<List<Monad>>valueAs().get(0);
-                        LOG.trace("{{g}}====>{{/g}} appending to barrier %s", n);
+                        LOG.trace("{{m}}====>{{/m}} appending to barrier %s", n);
                         if (null == barrier)
                             throw MTronException.of("barrier should exist: %s", n.inst());
                         barrier.obj().append(n.obj());
@@ -108,24 +109,25 @@ public class MMonoid extends MObj implements Monoid {
                         LOG.trace("{{g}}====>{{/g}} propagating monad %s", n);
                         n.obj().iterator().forEachRemaining(no -> this.running().<LinkedList<Monad>>valueAs().add(n.obj(no)));
                     }
+                } else if (n.zombie()) {
+                    LOG.trace("{{c}}====>{{/c}} walking undead zombie monad %s", n);
+                    this.running().<LinkedList<Monad>>valueAs().add(n);
                 } else {
                     LOG.trace("{{r}}====>{{/r}} killing monad %s", n);
                 }
             } else if (!this.barriers().isEmpty()) {
                 final Monad barrier = this.barriers().<LinkedList<Monad>>valueAs().poll();
                 if (null != barrier) {
-                    LOG.trace("   {{m}}=>{{/m}} processing barrier monad %s", barrier);
+                    LOG.trace("   {{m}}|={{/m}} processing barrier monad %s", barrier);
                     final Inst nextInst = code.nextInst(barrier.inst());
                     final Obj result = barrier.inst().apply(barrier.obj());
                     if (nextInst.dom().tid().coefficientValue().isOne())
                         result.forEach(o -> {
-                            LOG.trace("  {{m}}==>{{/m}} scattering output barrier obj %s", o);
+                            LOG.trace("  {{m}}|==>{{/m}} scattering output barrier obj %s", o);
                             this.running().<LinkedList<Monad>>valueAs().add(MMonad.of(o, nextInst));
                         });
-                    else if (nextInst.dom().tid().coefficientValue().isZero()) {
-                        this.running().<LinkedList<Monad>>valueAs().add(MMonad.of(NoObj.single(), nextInst));
-                    } else {
-                        LOG.trace("  {{m}}==>{{/m}} passing output barrier obj %s", result);
+                    else {
+                        LOG.trace("  {{m}}|==>{{/m}} passing output barrier obj %s", result);
                         this.running().<LinkedList<Monad>>valueAs().add(MMonad.of(result, nextInst));
                     }
                 }

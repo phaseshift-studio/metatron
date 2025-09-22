@@ -60,4 +60,9 @@ public abstract class MSpace implements Space {
     public boolean equals(final Object other) {
         return Space.Helpers.spaceEquals(this, other);
     }
+
+    @Override
+    public void close() {
+
+    }
 }

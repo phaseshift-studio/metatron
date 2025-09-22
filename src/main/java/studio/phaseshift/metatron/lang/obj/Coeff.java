@@ -2,7 +2,9 @@ package studio.phaseshift.metatron.lang.obj;
 
 import org.javatuples.Pair;
 
-public interface Coeff<T extends Comparable<T>, C extends Coeff<T,C>> {
+import java.util.Objects;
+
+public interface Coeff<T extends Comparable<T>, C extends Coeff<T, C>> {
 
     T min();
 
@@ -12,9 +14,9 @@ public interface Coeff<T extends Comparable<T>, C extends Coeff<T,C>> {
         return Pair.with(this.min(), this.max());
     }
 
-   C plus(final C rhs);
+    C plus(final C rhs);
 
-   C mult(final C rhs);
+    C mult(final C rhs);
 
     boolean isOne();
 
@@ -25,6 +27,10 @@ public interface Coeff<T extends Comparable<T>, C extends Coeff<T,C>> {
     boolean isQuestion();
 
     boolean isZero();
+
+    default boolean isExact() {
+        return Objects.equals(this.min(), this.max());
+    }
 
     boolean within(final C rhs);
 }

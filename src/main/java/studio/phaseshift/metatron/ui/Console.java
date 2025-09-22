@@ -19,7 +19,6 @@
 package studio.phaseshift.metatron.ui;
 
 import ch.qos.logback.classic.filter.ThresholdFilter;
-import org.apache.tinkerpop.gremlin.process.traversal.IO;
 import org.jline.reader.*;
 import org.jline.reader.impl.DefaultParser;
 import org.jline.reader.impl.history.DefaultHistory;
@@ -27,7 +26,6 @@ import org.jline.terminal.Terminal;
 import org.jline.terminal.TerminalBuilder;
 import org.jline.utils.AttributedString;
 import org.jline.utils.AttributedStringBuilder;
-import org.jline.widget.AutosuggestionWidgets;
 import org.jline.widget.Widgets;
 import org.slf4j.LoggerFactory;
 import studio.phaseshift.metatron.BootLoader;
@@ -79,7 +77,7 @@ public class Console {
         }
 
         private boolean quitWidget() {
-            LOG.none(Graphitty.sillyPrint("\nshutting down the metatron\n", true, true));
+            BootLoader.close();
             System.exit(0);
             return true;
         }
@@ -105,12 +103,12 @@ public class Console {
 
         private boolean hideWidget() {
             boolean hiding = ObjStringSerializer.HIDE_TIDS.isEmpty();
-            if(hiding)
+            if (hiding)
                 ObjStringSerializer.HIDE_TIDS.addAll(ObjStringSerializer.BASE_TIDS);
             else
                 ObjStringSerializer.HIDE_TIDS.clear();
             final int xLocation = terminal.getCursorPosition(System.out::print).getX() + 1;
-            Graphitty.out(terminal.output(),"\n{{-X-}}{{%s}}%s{{/%s}}{{X}} base type prefixes{{^1&|%d}}{{X}}", hiding ? "y" : "g", hiding ? "hiding" : "showing", hiding ? "y" : "g", xLocation);
+            Graphitty.out(terminal.output(), "\n{{-X-}}{{%s}}%s{{/%s}}{{X}} base type prefixes{{^1&|%d}}{{X}}", hiding ? "y" : "g", hiding ? "hiding" : "showing", hiding ? "y" : "g", xLocation);
             return true;
         }
     }
@@ -125,7 +123,8 @@ public class Console {
             /*this.highlighters.add((builder,buffer) -> {
                if(!buffer.isEmpty())
                   builder.append(buffer.replaceAll("\\(",Graphitty.string("{{g}}({{/g}}")).replaceAll("\\)",Graphitty.string("{{g}}){{/g}}")));
-            })*/;
+            })*/
+            ;
             this.highlighters.add((builder, buffer) -> {
                 if (RESOLVE_MODE) {
                     try {
@@ -183,14 +182,14 @@ public class Console {
                 .variable(LineReader.SECONDARY_PROMPT_PATTERN, Graphitty.string("\n{{-X&v1&^1&FORM1}}%P >{{X}}"))
                 .variable(LineReader.INDENTATION, 2)
                 .build();
-       // final AutosuggestionWidgets autosuggestionWidgets = new AutosuggestionWidgets(this.reader);
-       // autosuggestionWidgets.enable();
+        // final AutosuggestionWidgets autosuggestionWidgets = new AutosuggestionWidgets(this.reader);
+        // autosuggestionWidgets.enable();
     }
 
     public void stop() {
         try {
             this.terminal.close();
-        } catch(IOException e) {
+        } catch (IOException e) {
             LOG.error(e);
         }
     }
@@ -245,12 +244,7 @@ public class Console {
             } catch (final UserInterruptException e) {
                 LOG.warn(Graphitty.sillyPrint("process interrupted", true, true));
             } catch (final EndOfFileException e) {
-                try {
-                    LOG.none(Graphitty.sillyPrint("the metatron is now offline\n", true, true));
-                    break;
-                } catch (final Exception e1) {
-                    System.exit(0);
-                }
+                System.exit(0);
             } catch (final Exception e) {
                 LOG.error(e.getMessage());
                 final String stackTrace = this.reader.readLine(Graphitty.string("{{WARN}}display stack trace {{FORM1}}[y/N]{{WARN}}?{{X}} "));
@@ -259,6 +253,7 @@ public class Console {
             }
         }
         this.terminal.close();
+        BootLoader.close();
         System.exit(0);
     }
 
@@ -308,13 +303,13 @@ public class Console {
 
     public static void main(final String[] args) throws IOException {
         boolean reload = true;
-        while(reload) {
+        while (reload) {
             reload = false;
             final Console console = new Console();
             try {
                 console.run();
             } catch (final Exception e) {
-                LOG.error("a %s error occurred. reloading the console.\n", Graphitty.sillyPrint("catastrophic",true,true));
+                LOG.error("a %s error occurred. reloading the console.\n", Graphitty.sillyPrint("catastrophic", true, true));
                 reload = true;
             }
             console.stop();

@@ -25,7 +25,7 @@ import studio.phaseshift.metatron.space.mem.StackSpace;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.Palette;
 
-public interface Router extends Obj {
+public interface Router extends Obj, AutoCloseable {
 
     class Helpers {
         public static String routerToString(final Router router) {
@@ -64,9 +64,20 @@ public interface Router extends Obj {
         return this.write(fURI.of(vid), obj);
     }
 
+    default Obj[] write(final Object... vidObj) {
+        int count = (int) ((double)vidObj.length / 2.0d);
+        final Obj[] result = new Obj[count];
+        for(int i=0;i<vidObj.length;i=i+2) {
+           result[--count] = this.write(fURI.of(vidObj[i]),(Obj)vidObj[i+1]);
+        }
+        return result;
+    }
+
     boolean hasSpaceFor(final fURI vid);
 
-    void registerSpace(final Space space);
+    void addSpace(final Space space);
+
+    void removeSpace(final fURI vid);
 
     void registerRewrite(final fURI small, final fURI big);
 
@@ -74,7 +85,11 @@ public interface Router extends Obj {
 
     <S extends Space> S getSpace(final fURI vid);
 
-    default String toString(final Palette palette) {
-        return Graphitty.string("!b%s!g:[!yrouter!g]!!".formatted(this.tid().toString()));
+    @Override
+    Iterable<Space> value();
+
+    @Override
+    default void close() {
+        this.value().forEach(s -> this.removeSpace(s.vid()));
     }
 }

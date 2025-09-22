@@ -18,7 +18,6 @@
 
 package studio.phaseshift.metatron.lang;
 
-import org.apache.tinkerpop.shaded.minlog.Log;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -27,6 +26,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
+import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.List;
 import java.util.Map;
@@ -103,11 +103,47 @@ public class fURITest {
             "/test.com?a=a/b/c&b=aaa&c=0.2|{a=a/b/c, b=aaa, c=0.2}",
             "/test.com?a=a/b/c&b=http://aaa&c=0.2|{a=a/b/c, b=http://aaa, c=0.2}",
             "http://test.com?a=a/b/c&b=sss.com&c=0.2|{a=a/b/c, b=sss.com, c=0.2}",
-            "/mtron/an_inst?dom=#&rng=+|{dom=#, rng=+}" },
+            "/mtron/an_inst?dom=#&rng=+|{dom=#, rng=+}"},
             delimiter = '|')
     public void testQueryRead(final String f, final String queryMap) {
         final fURI furi = fURI.of(f);
         assertEquals(queryMap, furi.queryMap().toString());
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "a                  | a               | a[2]",
+            "a/b/c[23]          | a/b/c[2]        | a/b/c[25]",
+            "a/b/c/[2,5]        | z[4,6]          | ERROR",
+            "a/b/c[6]?a=1&b=2   | a/+/c[4,6]?c=3  | a/b/c[10,12]?a=1&b=2&c=3",
+            "a/b/c[+]?a=1&b=2   | #[*]            | a/b/c[1,]?a=1&b=2",
+    }, delimiter = '|')
+    public void testPlus(final String f1, final String f2, final String expected) {
+        final fURI furi1 = fURI.of(f1);
+        final fURI furi2 = fURI.of(f2);
+        if (expected.equals("ERROR")) {
+            assertThrows(MTronException.class, () -> furi1.plus(furi2));
+        } else
+            assertEquals(fURI.of(expected), furi1.plus(furi2));
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "a                  | a               | a/a[1]",
+            "a                  | a               | a/a[1]",
+            "a/b/c[23]          | a/b/c[2]        | a/b/c/a/b/c[46]",
+            "a/b/c[2,5]         | z[4,6]          | a/b/c/z[8,30]",
+            "a/b/c[2,5]         | z[4,6]          | a/b/c/z[8,30]",
+            "a/b/c[6]?a=1&b=2   | a/+/c[4,6]?c=3  | a/b/c/a/+/c[24,36]?a=1&b=2&c=3",
+            "a/b/c[+]?a=1&b=2   | #[*]            | a/b/c/#[0,]?a=1&b=2",
+    }, delimiter = '|')
+    public void testMult(final String f1, final String f2, final String expected) {
+        final fURI furi1 = fURI.of(f1);
+        final fURI furi2 = fURI.of(f2);
+        if (expected.equals("ERROR")) {
+            assertThrows(MTronException.class, () -> furi1.mult(furi2));
+        } else
+            assertEquals(fURI.of(expected), furi1.mult(furi2));
     }
 
     @ParameterizedTest
@@ -119,29 +155,28 @@ public class fURITest {
             "http://x.com/a/b/c      |     2|            http://x.com/a/b",
             "http://x.com/a/b/c      |     1|            http://x.com/a",
             "http://x.com/a/b/c      |     0|            http://x.com/",
-           // "http://a:b@x.com/a/b/c  |     2|            http://a:b@x.com/a/b", username password not implemented yet
-          },
+            // "http://a:b@x.com/a/b/c  |     2|            http://a:b@x.com/a/b", username password not implemented yet
+    },
             delimiter = '|')
-    public void testHead(final String f, final int steps,final String head) {
+    public void testHead(final String f, final int steps, final String head) {
         final fURI furi = f(f);
         final fURI computedHead = furi.head(steps);
         final fURI expectedHead = f(head);
         assertEquals(expectedHead, computedHead);
         //assertEquals(computedHead,furi.retract(furi.segments().size()-steps));
-        assertEquals(furi.segments().size(), computedHead.segments().size()+(furi.segments().size() - steps));
+        assertEquals(furi.segments().size(), computedHead.segments().size() + (furi.segments().size() - steps));
         assertEquals(steps, computedHead.segments().size());
     }
 
     @ParameterizedTest
     @CsvSource(value = {
-            "/test.com?a=1&b=2|/test.com|a|1|b|2" },
+            "/test.com?a=1&b=2|/test.com|a|1|b|2"},
             delimiter = '|')
     public void testQueryWrite(final String expected, final String base, final String k1, final String v1, final String k2, final String v2) {
         final fURI expectedfURI = fURI.of(expected);
-        final fURI resultfURI = fURI.of(base).query(k1,v1).query(k2,v2);
-        assertEquals(expectedfURI,resultfURI);
+        final fURI resultfURI = fURI.of(base).query(k1, v1).query(k2, v2);
+        assertEquals(expectedfURI, resultfURI);
     }
-
 
 
     @ParameterizedTest
@@ -153,7 +188,7 @@ public class fURITest {
             "mtron:lang/obj          |  mtron"
     }, delimiter = '|')
     public void testScheme(final String furi, final String scheme) {
-      assertEquals(scheme, f(furi).scheme());
+        assertEquals(scheme, f(furi).scheme());
     }
 
     @Test
@@ -217,14 +252,14 @@ public class fURITest {
     public void testRetract(final String furi, final int steps, final String expected) {
         final fURI start = fURI.of(furi);
         final fURI end = fURI.of(expected);
-        assertEquals(end,start.retract(steps));
+        assertEquals(end, start.retract(steps));
         LOG.debug("testing %s retracted %d steps is %s", start, steps, expected);
     }
 
     @ParameterizedTest
     @CsvSource(value = {
             "http://fhatos.org/a         | 1   | http://fhatos.org",
-        //    "http://fhatos.org/a/         | 1   | http://fhatos.org/",
+            //    "http://fhatos.org/a/         | 1   | http://fhatos.org/",
             "http://fhatos.org/a/b       | 1   | http://fhatos.org/b",
             "http://fhatos.org/a/b/      | 1   | http://fhatos.org/b/",
             "http://fhatos.org/a/b       | 2   | http://fhatos.org",
@@ -244,7 +279,7 @@ public class fURITest {
     public void testPretract(final String furi, final int steps, final String expected) {
         final fURI start = fURI.of(furi);
         final fURI end = fURI.of(expected);
-        assertEquals(end,start.pretract(steps));
+        assertEquals(end, start.pretract(steps));
         LOG.debug("testing %s pretracted %d steps is %s", start, steps, expected);
     }
 
@@ -282,7 +317,7 @@ public class fURITest {
             "/mtron/int[0]?rng=/mtron/int[23]|0"
     }, delimiter = '|')
     void testCoefficients(final String furi, final String coefficient) {
-      assertEquals(coefficient, fURI.of(furi).coefficient());
+        assertEquals(coefficient, fURI.of(furi).coefficient());
     }
 
     @ParameterizedTest

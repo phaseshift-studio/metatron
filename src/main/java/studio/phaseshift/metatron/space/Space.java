@@ -34,7 +34,7 @@ import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
-public interface Space extends Poly {
+public interface Space extends Poly, AutoCloseable {
 
     fURI MTRON_TID = fURI.of("/mtron");
     fURI MTRON_SPACE_TID = MTRON_TID.extend("space");
@@ -57,7 +57,7 @@ public interface Space extends Poly {
         }
 
         public static Obj resolveRead(final Space space, final fURI vid, final Function<fURI, Map<fURI, Obj>> resolvedReader) { //final Map<fURI, Obj> store) {
-            if (vid.isBranch()) {
+            if (false && vid.isBranch()) {
                 // pattern/branch
                 if (vid.hasPattern()) {
                     Graphitty.log(space).info("processing pattern %s", vid.toUri());
@@ -107,8 +107,10 @@ public interface Space extends Poly {
                 }
                 if (map.isEmpty())
                     return NoObj.single();
-                else {
+                else if (vid.isNode()) {
                     return MObjs.ofUsage(new ArrayList<>(map.values())); // TODO: no need to maintain a map, a list will do
+                } else {
+                    return MObjs.ofUsage(map.entrySet().stream().map(kv -> MRel.of(kv.getKey(), kv.getValue())));
                 }
             }
         }
@@ -129,11 +131,11 @@ public interface Space extends Poly {
                                     .stream()
                                     .filter(kv -> nextStepAddr.extend(kv.getKey().uriValue()).matches(vid))
                                     .forEach(kv -> submap.put(kv.getKey(), kv.getValue()));
-                        //    System.out.println("SUBMAP TO WRITE: " + submap);
+                            //    System.out.println("SUBMAP TO WRITE: " + submap);
                             resolveWriter.accept(nextStepAddr, new MRec(submap, value.tid(), fURI.NULL));
                         }
                     } else if (nextStepAddr.retract().matches(vid)) {
-                      //  System.out.println("WRITING VALUE: " + nextStepAddr + "~" + vid);
+                        //  System.out.println("WRITING VALUE: " + nextStepAddr + "~" + vid);
                         resolveWriter.accept(nextStepAddr, value);
                     }
                     //System.out.println("JUST CHECKING VALUE: " + nextStepAddr + "~" + vid);
@@ -188,6 +190,11 @@ public interface Space extends Poly {
     Obj write(final fURI vid, final Obj obj);
 
     void append(final fURI addr, final Obj... obj);
+
+    @Override
+    default Obj apply(final Obj other) {
+        return this;
+    }
 
     @Override
     default long count() {

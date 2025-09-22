@@ -26,6 +26,7 @@ import studio.phaseshift.metatron.space.Space;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -58,7 +59,7 @@ public class MemRouter implements Router {
         return (big ? this.smallToBigRewrites.getOrDefault(furi.basePath(), furi) : this.bigToSmallRewrites.getOrDefault(furi.basePath(), furi)).coefficient(furi.coefficient()).queryMap(furi.queryMap());
     }
 
-    public void registerSpace(final Space space) {
+    public void addSpace(final Space space) {
         this.spaces.entrySet().stream()
                 .filter(kv -> space.pattern().matches(kv.getKey()))
                 .findAny()
@@ -66,6 +67,18 @@ public class MemRouter implements Router {
                     LOG.except("%s and %s have overlapping address spaces", space.pattern(), kv.getKey());
                 });
         this.spaces.put(space.pattern(), space);
+    }
+
+    @Override
+    public void removeSpace(final fURI vid) {
+        this.spaces.values().stream().filter(s -> vid.equals(s.vid())).findFirst().ifPresent(s -> {
+            try {
+                this.spaces.remove(s.pattern()).close();
+                LOG.trace("closing space %s", s);
+            } catch(final Exception e) {
+                LOG.error(e);
+            }
+        });
     }
 
     public <S extends Space> S getSpace(final fURI match) {
@@ -96,7 +109,7 @@ public class MemRouter implements Router {
     @Override
     public Obj write(final fURI vid, final Obj obj) {
         final Space space = this.getSpace(vid);
-        LOG.trace("writing %s to %s {{g}}@{{b}}%s{{X}}", obj, space.vidOrTid(), vid);
+        LOG.trace("writing %s to %s at {{b}}%s{{X}}", obj, space.vidOrTid(), vid);
         return space.write(vid, obj);
     }
 
@@ -106,8 +119,8 @@ public class MemRouter implements Router {
     }
 
     @Override
-    public Map<fURI, Space> value() {
-        return this.spaces;
+    public Iterable<Space> value() {
+        return this.spaces.values();
     }
 
     @Override
@@ -140,5 +153,4 @@ public class MemRouter implements Router {
     public String toString() {
         return Router.Helpers.routerToString(this);
     }
-
 }

@@ -19,6 +19,7 @@
 package studio.phaseshift.metatron.lang.obj.mtron;
 
 import studio.phaseshift.metatron.lang.fURI;
+import studio.phaseshift.metatron.lang.obj.NoObj;
 import studio.phaseshift.metatron.lang.obj.Obj;
 import studio.phaseshift.metatron.lang.obj.Objs;
 import studio.phaseshift.metatron.lang.obj.Type;
@@ -28,11 +29,10 @@ import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.ObjUtil;
 
-import java.util.Collection;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.lang.obj.mtron.MInstSet.OBJS_TID;
 
@@ -47,9 +47,19 @@ public class MObjs extends MObj implements Objs {
 
     public MObjs(final Iterable<Obj> value, final fURI tid, final fURI vid) {
         super(value, value.iterator().hasNext() ? value.iterator().next().tid().coefficient("*") : fURI.of("/mtron/int[*]"), vid);
+        if (value instanceof Obj)
+            LOG.error("objs can not directly nest: %s", value);
+    }
+
+    /*
+       public MObjs(final Iterable<Obj> value, final fURI tid, final fURI vid) {
+        super(value, tid,vid);
         if(value instanceof Obj)
             LOG.error("objs can not directly nest: %s",value);
+        IteratorUtil.stream(value).map(v -> v.tid());
     }
+
+     */
 
     public MObjs(final Iterable<Obj> value) {
         this(value, OBJS_TID, fURI.NULL);
@@ -61,15 +71,15 @@ public class MObjs extends MObj implements Objs {
         // TODO: make efficient
         final long count = IteratorUtil.stream(this.value()).map(Obj::tid).map(f -> (f.coefficientValue().max() != null) ? f.coefficientValue().max() : 1).reduce(0L, Long::sum);
         //final long count = IteratorUtil.count(this.value());
-        if(types.isEmpty() || 0 == count) return super.tid.coefficient("0");
-        if(types.size() == 1) return types.iterator().next().coefficient(Long.toString(count));
+        if (types.isEmpty() || 0 == count) return super.tid.coefficient("0");
+        if (types.size() == 1) return types.iterator().next().coefficient(Long.toString(count));
         final fURI temp = types.stream().reduce(fURI::commonRoot).get();
-        return temp.coefficient(""+count);
+        return temp.coefficient("" + count);
     }
 
     @Override
     public Type type() {
-        return MType.of(this,this.tid());
+        return MType.of(this, this.tid());
     }
 
     @Override
@@ -88,8 +98,8 @@ public class MObjs extends MObj implements Objs {
     }
 
     @Override
-    public Objs append(final Obj obj){
-       return (Objs) Objs.super.append(obj);//.tid(obj.tid().coefficient("*"));
+    public Objs append(final Obj obj) {
+        return (Objs) Objs.super.append(obj);//.tid(obj.tid().coefficient("*"));
     }
 
     @Override
@@ -102,12 +112,15 @@ public class MObjs extends MObj implements Objs {
     }
 
     public static Obj ofUsage(final Object object) {
-        if(object instanceof List) {
-            return ObjUtil.oneNoneOrAll((List)object);
-        } else if (object instanceof Obj) {
+        if (null == object)
+            return NoObj.single();
+        if(object instanceof Stream)
+            return ofUsage(((Stream)object).toList()); // TODO: strange....
+        if (object instanceof List)
+            return ObjUtil.oneNoneOrAll((List) object);
+        if (object instanceof Obj)
             return (Obj) object;
-        } else
-            throw MTronException.of("unknown object type: %s",object.getClass().getCanonicalName());
+        throw MTronException.of("unknown object type: %s", object);
 
     }
 

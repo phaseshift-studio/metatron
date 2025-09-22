@@ -33,6 +33,8 @@ public class Graphitty {
 
     // TODO: cherry pick from: https://gist.github.com/jonlabelle/7a76ecd29976aeb30877be326c683979
 
+    public static final String RULE_SEPARATOR = "&";
+
     static {
         COLOR_REWRITES.put("X", "\033[m");  // reset
         COLOR_REWRITES.put("k", "\033[30m"); // red
@@ -101,7 +103,7 @@ public class Graphitty {
         OBJ_REWRITES.put("FORM2", "{{m}}");
     }
 
-    private OutputStream out;
+    private final OutputStream out;
     private final Map<String, String> rewrites;
     private boolean ansiOn = true;
     private final Stack<String> rewriteStack = new Stack<>();
@@ -191,7 +193,7 @@ public class Graphitty {
                         rule.append(buffer.charAt(m));
                         i = m;
                     }
-                    Stream.of(rule.toString().split("&")).forEach(rulePiece -> {
+                    Stream.of(rule.toString().split(RULE_SEPARATOR)).forEach(rulePiece -> {
                         if (rulePiece.charAt(0) == '/') {
                             final String closeRule = rulePiece.substring(1);
                             final String openRule = this.rewriteStack.pop();
@@ -221,107 +223,11 @@ public class Graphitty {
                 } else {
                     this.out.write(buffer.charAt(i));
                 }
-                ////////////////////////////////// POSITION !^d = down
-               /* else if ('^' == j) {
-                    final char dir = buffer.charAt(i + 2);
-                    String s = "";
-                    for (int m = i + 3; m < bufferLength; m++) {
-                        if (buffer.charAt(m) == '^')
-                            break;
-                        s += buffer.charAt(m);
-                        i = m;
-                    }
-                    short steps = Short.parseShort(s);
-                  /*  if (dir == 'S')
-                        this.save_cursor(steps);
-                    else if (dir == 'L')
-                        this.load_cursor(steps);*/
-                   /* if (dir == 'u')
-                        this.up(steps);
-                    else if (dir == 'l')
-                        this.left(steps);
-                    else if (dir == 'd')
-                        this.down(steps);
-                    else if (dir == 'r')
-                        this.right(steps);
-                    else if (dir == 't') {
-                        String t = "";
-                        for (int m = i + 3; m < bufferLength; m++) {
-                            if (buffer.charAt(m) == '^')
-                                break;
-                            t += buffer.charAt(m);
-                            i = m;
-                        }
-                        this.teleport(steps, Short.parseShort(t));
-                    }
-                }
-                ////////////////////////////// FONT
-                // else if('*' == j)
-                //   this.background();
-                else if ('_' == j)
-                    this.underline();
-                else if ('-' == j)
-                    this.strike_through();
-                else if ('~' == j)
-                    this.italic();
-                else if ('*' == j)
-                    this.blink();
-                else if ('X' == j)
-                    this.clear();
-                else if ('Q' == j)
-                    this.top_left();
-                else if ('Z' == j)
-                    this.bottom_left();
-                else if ('H' == j)
-                    this.home();
-                else if (!Character.isAlphabetic(j)) {
-                    this.out.write(buffer.charAt(i));
-                    decr = true;
-                } else {
-                    ////////////////////////////// COLOR
-                    if (Character.isUpperCase(j))
-                        this.bold();
-                    final char jj = Character.toLowerCase(j);
-                    if ('r' == jj)
-                        this.red();
-                    else if ('g' == jj)
-                        this.green();
-                    else if ('b' == jj)
-                        this.blue();
-                    else if ('m' == jj)
-                        this.magenta();
-                    else if ('c' == jj)
-                        this.cyan();
-                    else if ('w' == jj)
-                        this.white();
-                    else if ('y' == jj)
-                        this.yellow();
-                    else if ('d' == jj)
-                        this.black();
-                    else {
-                        this.out.write(buffer.charAt(i));
-                        decr = true;
-                    }
-                }
-                if (!decr)
-                    i++;
-            } else{*/
-                //         this.out.write(buffer.charAt(i));
-                //   }
-
             }
             this.flush();
         } catch (final Exception e) {
-            throw new IllegalArgumentException(e);
+            throw MTronException.of(e);
         }
-    }
-
-    public void ansi_switch(boolean turn_on) {
-        this.ansiOn = turn_on;
-    }
-
-    public boolean is_ansi_on() {
-        return this.ansiOn;
     }
 
     public Graphitty print(final char c) {
@@ -335,7 +241,7 @@ public class Graphitty {
     }
 
     public Graphitty println(final String c) {
-        if (c.length() > 0)
+        if (!c.isEmpty())
             this.print(c);
         this.print('\n');
         return this;
@@ -364,41 +270,6 @@ public class Graphitty {
 
     /// ///////////////////////
 
-    public void clear() {
-        if (this.ansiOn)
-            this.print("\033[2J");
-    }
-
-    public void italic() {
-        if (this.ansiOn)
-            this.print("\033[3m");
-    }
-
-    public void underline() {
-        if (this.ansiOn)
-            this.print("\033[4m");
-    }
-
-    public void strike_through() {
-        if (this.ansiOn)
-            this.print("\033[9m");
-    }
-
-    public void reverse() {
-        if (this.ansiOn)
-            this.print("\033[7m");
-    }
-
-    public void bold() {
-        if (this.ansiOn)
-            this.print("\033[1m");
-    }
-
-    public void blink() {
-        if (this.ansiOn)
-            this.print("\033[5m");
-    }
-
     public void clearLine() {
         if (this.ansiOn)
             this.print("\033[2K");
@@ -418,23 +289,6 @@ public class Graphitty {
             this.print("\t");
     }
 
-// void background() {
-//   if (this._on)
-//     this.print("\033[40m");
-// }
-
-    /// /////// POSITIONING
-
-    public void top_left() {
-        if (this.ansiOn)
-            this.print("\033[H");
-    }
-
-    public void bottom_left() {
-        if (this.ansiOn)
-            this.print("\033[F");
-    }
-
 
     /// //////////// CURSOR MOVEMENT ///////////////
 
@@ -447,60 +301,6 @@ public class Graphitty {
             this.print('H');
         }
     }
-
-    public void home() {
-        if (this.ansiOn) {
-            this.print("\033[H");
-        }
-    }
-
-    public void move(final char direction, final int columns_or_rows) {
-        if (this.ansiOn) {
-            this.print("\033[");
-            this.print((char) columns_or_rows);
-            this.print(direction);
-        }
-    }
-
-    public void cursor(final boolean visible) {
-        if (this.ansiOn) {
-            this.print(visible ? "\0331b[?25h" : "\0331b[?25l"); // use to be \x
-        }
-    }
-
-    /*void save_cursor(final short slot =0) {
-        if (this.ansi_on_) {
-            if (0 == slot) {
-                this.print("\033[s");
-            } else {
-                this.location(this.slots[slot]);
-            }
-        }
-    }
-
-    void load_cursor(final short slot) {
-        if (this.ansi_on_) {
-            if (0 == slot) {
-                this.print("\033[u");
-            } else {
-                this.teleport(this.slots[slot][0], this.slots[slot][1]);
-            }
-        }
-    }
-
-    void location(int *pos) {
-        if (this.ansi_on_) {
-            this.print("\033[6n");
-            char c = this.read(); // esc
-            c = this.read(); // [
-            final char a[] = {static_cast < char>(this.read())};
-            pos[0] = atoi(a);
-            c = this.read(); // ;
-            final char b[] = {static_cast < char>(this.read())};
-            pos[1] = atoi(b);
-            c = this.read(); // R
-        }
-    }*/
 
     /*
     ESC[H	moves cursor to home position (0, 0)
@@ -521,7 +321,7 @@ public class Graphitty {
     ESC[u	restores the cursor to the last saved position (SCO)*/
 
 
-    static String sillyPrint(final String text, final boolean rainbow, final boolean rollercoaster) {
+    public static String sillyPrint(final String text, final boolean rainbow, final boolean rollercoaster) {
         final Random random = new Random();
         final String colors = "rgbmcy";
         final StringBuilder ret = new StringBuilder();

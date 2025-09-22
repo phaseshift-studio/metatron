@@ -19,20 +19,20 @@
 package studio.phaseshift.metatron;
 
 import studio.phaseshift.metatron.lang.fURI;
-import studio.phaseshift.metatron.lang.obj.mtron.MUri;
 import studio.phaseshift.metatron.lang.obj.mtron.MInstSet;
+import studio.phaseshift.metatron.lang.obj.mtron.MUri;
 import studio.phaseshift.metatron.space.Router;
 import studio.phaseshift.metatron.space.Space;
 import studio.phaseshift.metatron.space.device.log.Log;
 import studio.phaseshift.metatron.space.mem.MemRouter;
 import studio.phaseshift.metatron.space.mem.MemSpace;
-import studio.phaseshift.metatron.space.mem.StackSpace;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.Stack;
+
+import static studio.phaseshift.metatron.lang.obj.mtron.MUri.uri;
 
 public class BootLoader {
 
@@ -41,7 +41,7 @@ public class BootLoader {
     public static Router ROUTER = new MemRouter(fURI.of("/sys/router"));
 
     public static void load() {
-        if(BOOTING) {
+        if (BOOTING) {
             try {
                 LOG.info("booting metatron on %s {{g}}[%s{{g}}]{{X}}",
                         MUri.of(InetAddress.getLocalHost().getHostName()).tid("host"),
@@ -49,20 +49,28 @@ public class BootLoader {
             } catch (final UnknownHostException e) {
                 LOG.warn("booting metatron on a non-networked jvm");
             }
+
             final Space mnt = new MemSpace(fURI.of("/mnt/#"), fURI.of("/mnt"));
-            Router.global().registerSpace(mnt);
+            Router.global().addSpace(mnt);
             final Space sys = new MemSpace(fURI.of("/sys/#"), fURI.of("/mnt/sys"));
-            Router.global().registerSpace(sys);
+            Router.global().addSpace(sys);
             final Space usr = new MemSpace(fURI.of("/usr/#"), fURI.of("/mnt/usr"));
-            Router.global().registerSpace(usr);
+            Router.global().addSpace(usr);
             Router.global().write(Router.global().vid(), Router.global());
             final Space stk = Router.stack();
-            Router.global().registerSpace(stk);
+            Router.global().addSpace(stk);
             final Space mtron = new MInstSet(fURI.of("/mnt/lang/mtron"));
-            Router.global().registerSpace(mtron);
+            Router.global().addSpace(mtron);
             Log.of(fURI.of("/sys/log"));
             final Space var = new MemSpace(fURI.of("+/+/#"), fURI.of("/mnt/var"));
-            Router.global().registerSpace(var);
+            Router.global().addSpace(var);
+            /// ///////////////////////////////////
+            /*Router.global().write(
+                    "bool", uri(BOOL_TID), "int", uri(INT_TID),
+                    "real", uri(REAL_TID), "str", uri(STR_TID),
+                    "uri", uri(URI_TID), "rel", uri(REL_TID),
+                    "lst", uri(LST_TID), "rec", uri(REC_TID));*/
+
 
             //Router.global().registerStruct(new MqttSpace(Map.of(new MUri("broker"), new MUri("ip://192.168.66.2:1883"), new MUri("pattern"), new MUri("/mqtt/#")), MQTT_TID, fURI.of("/mnt/mqtt")));
             // Router.global().registerStruct(new MqttSpace(Map.of(new MUri("broker"), new MUri("ip://192.168.66.2:1883"), new MUri("pattern"), new MUri("zigbee2mqtt/#")), MQTT_TID, fURI.of("/mnt/zigbee2mqtt")));
@@ -73,7 +81,13 @@ public class BootLoader {
 
     }
 
+
     public static Log logger() {
-        return Router.global().read("/sys/log",Log.class);
+        return Router.global().read("/sys/log", Log.class);
+    }
+
+    public static void close() {
+        LOG.none(Graphitty.sillyPrint("\nshutting down the metatron\n", true, true));
+        Router.global().close();
     }
 }
