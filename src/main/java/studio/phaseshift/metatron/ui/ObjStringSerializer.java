@@ -165,10 +165,10 @@ public class ObjStringSerializer implements ObjSerializer<String> {
             } else
                 sb.append(write(v));
             sb.append("{{FORM1}},\n");
-        }); // {{FORM{sdfsdf}}}
+        });
         sb.deleteCharAt(sb.length() - 1);
         sb.deleteCharAt(sb.length() - 1);
-        sb.append(" ".repeat(depth)).append("{{FORM1}}]{{FORM1}}");
+        sb./*append(" ".repeat(depth)).*/append("{{FORM1}}]{{FORM1}}");
         return sb;
     }
 
