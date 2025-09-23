@@ -12,6 +12,8 @@ import studio.phaseshift.metatron.ui.GraphittyObjLogger;
 
 import java.util.Map;
 
+import static studio.phaseshift.metatron.lang.obj.mtron.MUri.uri;
+
 public class Log extends MRec {
 
     private static final fURI LOG_TID = fURI.of("/usr/log");
@@ -34,7 +36,7 @@ public class Log extends MRec {
     }
 
     public boolean check(final Level level, final fURI pattern) {
-        return this.value()
+        return ((Rec) this.value().get(uri("level"))).value()
                 .entrySet()
                 .stream()
                 .filter(kv -> Level.valueOf(kv.getKey().uriValue().toString()).compareTo(level) >= 0)

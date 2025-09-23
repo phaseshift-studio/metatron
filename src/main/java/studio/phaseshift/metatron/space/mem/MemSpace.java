@@ -28,8 +28,7 @@ import studio.phaseshift.metatron.ui.GraphittyLogger;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-
-import static studio.phaseshift.metatron.lang.obj.mtron.MInstSet.MTRON_TID;
+import java.util.stream.Collectors;
 
 
 public class MemSpace extends MSpace implements Space {
@@ -48,8 +47,14 @@ public class MemSpace extends MSpace implements Space {
         return Space.Helpers.resolveRead(this, vid, (key) -> {
             if (key.equals(fURI.ANY))
                 return this.store;
-            else
-                return Map.of(key, this.store.get(key));
+            else {
+                if (key.hasPattern()) {
+                    return this.store.entrySet().stream().filter(kv -> kv.getKey().matches(key.asNode())).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (a, b) -> b));
+                } else {
+                    final Obj value = this.store.get(key.asNode());
+                    return null == value ? Map.of() : Map.of(key.asNode(), value);
+                }
+            }
         });
     }
 
@@ -60,12 +65,29 @@ public class MemSpace extends MSpace implements Space {
 
     @Override
     public Obj write(final fURI vid, final Obj obj) {
-        Space.Helpers.resolveWrite(vid, vid.retractPattern(), obj, (key, value) -> {
+        Space.Helpers.resolveWrite(vid, obj, (key, value) -> {
             //LOG.trace("raw write of %s to %s {{g}}@{{b}}%s{{X}}", value, this, key);
-            if (value.isNoObj())
-                this.store.remove(key);
-            else
-                this.store.put(key, value);
+            if (value.isNoObj()) {
+                if (key.hasPattern()) // delete all existing values that match key pattern
+                    this.store.entrySet().stream().filter(kv -> kv.getKey().matches(key)).forEach(kv -> this.store.remove(kv.getKey()));
+                else
+                    this.store.remove(key); // delete existing value that matches key pattern
+            } else {
+                if (key.hasPattern()) // overwrite all existing values that match key pattern
+                    this.store.entrySet().stream().filter(kv -> kv.getKey().matches(key)).forEach(kv -> {
+                        if (key.isNode())
+                            this.store.put(kv.getKey(), value);
+                        else {
+                            this.store.compute(key.asNode(), (k, current) -> null == current ? value : current.append(value));
+                        }
+                    });
+                else { // overwwrite existing value that matches key pattern
+                    if (key.isNode())
+                        this.store.put(key, value);
+                    else
+                        this.store.compute(key.asNode(), (k, current) -> null == current ? value : current.append(value));
+                }
+            }
         });
         return obj;
     }

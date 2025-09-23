@@ -32,7 +32,7 @@ import studio.phaseshift.metatron.ui.GraphittyLogger;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
-import static studio.phaseshift.metatron.lang.obj.mtron.MUri.uri;
+import static studio.phaseshift.metatron.lang.fURI.f;
 
 public class BootLoader {
 
@@ -61,7 +61,7 @@ public class BootLoader {
             Router.global().addSpace(stk);
             final Space mtron = new MInstSet(fURI.of("/mnt/lang/mtron"));
             Router.global().addSpace(mtron);
-            Log.of(fURI.of("/sys/log"));
+            Log.of(f("/sys/log"));
             final Space var = new MemSpace(fURI.of("+/+/#"), fURI.of("/mnt/var"));
             Router.global().addSpace(var);
             /// ///////////////////////////////////

@@ -21,13 +21,17 @@ package studio.phaseshift.metatron.lang.obj;
 
 import org.javatuples.Pair;
 import studio.phaseshift.metatron.lang.fURI;
+import studio.phaseshift.metatron.lang.obj.mtron.MObjs;
 import studio.phaseshift.metatron.lang.obj.mtron.MRel;
+import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.util.IteratorUtil;
+import studio.phaseshift.metatron.util.ObjUtil;
 
-import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
+import static studio.phaseshift.metatron.lang.fURI.f;
 import static studio.phaseshift.metatron.lang.obj.mtron.MUri.uri;
 
 public interface Rec extends Poly {
@@ -64,14 +68,54 @@ public interface Rec extends Poly {
 
     @Override
     default <O extends Obj> O at(final Obj key) {
-///  TODO: GOT TIRED --- THIS IS A NASTY ALGORITHM.
-        final Obj value = this.value().get(key);
-        if(null != value) {
+        if (key.isUri()) {
+            fURI k = key.uriValue();
+            Obj value = this.recValue().getOrDefault(key, NoObj.single());
+            if (!value.isNoObj())
+                return (O) value;
+            int steps = 0;
+            for (final String segment : k.segments()) {
+                final fURI segmentF = f(segment);
+                steps++;
+                System.out.println(Graphitty.string("searching for " + segment + " in " + this));
+                if (segmentF.hasPattern()) {
+                    if (segmentF.equals(fURI.ANY))
+                        return (O) (k.isBranch() ? MRel.of(k.asNode().toUri(), MObjs.of(this.recValue().values())) : MObjs.of(this.recValue().values()));
+                    else {
+                        final int stepp = steps;
+                        return (O) ObjUtil.oneNoneOrAll( MObjs.of(this.recValue().values().stream().flatMap(v -> {
+                                    if (v.isRec()) {
+                                        return v.<Rec>as().at(k.pretract(stepp).toUri()).stream();
+                                    } else {
+                                        return stepp == k.segments().size() ? Stream.of(v) : Stream.of(NoObj.single());
+                                    }
+                                })
+                                .filter(v -> !v.isNoObj())
+                                .map(v -> k.isBranch() ? MRel.of(k.asNode().toUri(), v) : v).toList()).iterator());
+                    }
+                } else {
+                    value = this.recValue().getOrDefault(fURI.of(segment).toUri(), NoObj.single());
+                    // if (steps == k.segments().size())
+                    //   return (O) (k.isBranch() ? MRel.of(k.asNode().toUri(), value) : value);
+                    if (steps == k.segments().size())
+                        return (O) (k.isBranch() ? MRel.of(k.asNode().toUri(), value) : value);
+                    else if (value.isRec()) {
+                        return value.<Rec>as().at(k.pretract(steps).toUri());
+                    }
+                }
+            }
+        }
+        return (O) this.recValue().getOrDefault(key, NoObj.single());
+    }
+
+    ///  TODO: GOT TIRED --- THIS IS A NASTY ALGORITHM.
+    //SS  final Obj value = this.value().get(key);
+      /*  if (null != value) {
             return (O) value;
-        } else if(!key.isUri() || key.uriValue().segments().size() == 1)
+        } else if (!key.isUri() || key.uriValue().segments().size() == 1)
             return (O) NoObj.single();
         else {
-            Map<Obj,Obj> match = new LinkedHashMap<>();
+            Map<Obj, Obj> match = new LinkedHashMap<>();
          /*   final Obj v2 = this.value().get(key.uriValue().head(1));
             if(null != v2)
                 match.put(key.uriValue(),v2);
@@ -79,10 +123,9 @@ public interface Rec extends Poly {
           */
 
 
-        }
+/*        }
         return (O) this.value().getOrDefault(key, NoObj.single());
-    }
-
+    }*/
     default <O extends Obj> O at(final String key) {
         return this.at(uri(key));
     }
@@ -90,7 +133,7 @@ public interface Rec extends Poly {
     Rec put(final Obj key, final Obj value);
 
     default Rec put(final String key, final Obj value) {
-        return this.put(uri(key),value);
+        return this.put(uri(key), value);
     }
 
 }

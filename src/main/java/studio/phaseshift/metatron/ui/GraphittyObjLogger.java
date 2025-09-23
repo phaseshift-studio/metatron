@@ -19,20 +19,23 @@ public class GraphittyObjLogger extends GraphittyLogger {
     }
 
     public static void setLogger(final fURI logvid) {
-        LOG_VID = logvid.extend("+");
+        LOG_VID = logvid;
     }
 
 
-    private  boolean doLog(final Level level) {
+    private boolean doLog(final Level level) {
         final Router router = Router.global();
         if (null == router)
             return true;
         else {
-            final Obj o = Router.global().read(LOG_VID);
+            final Obj o = router.read(LOG_VID);
             if (o.isNoObj())
                 throw MTronException.of("no logger in space");
-            return Log.from(Router.global().read(LOG_VID).as()).check(level, ((Obj) this.source).vidOrTid());
+            return Log.from(router.read(LOG_VID).as()).check(level, ((Obj) this.source).vidOrTid());
         }
+        //   } catch(final Exception e) {
+        //return false;
+        // }
     }
 
     @Override

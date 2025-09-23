@@ -37,7 +37,7 @@ public class MObj implements Obj {
         this.tid = tid.big();
         this.vid = vid;
         if (null != Router.global() && !this.isType() && null != this.vid && !this.vid.equals(fURI.NONE))
-            Router.global().write(this.vid.extend("#"), this);
+            Router.global().write(this.vid, this);
     }
 
     @Override

@@ -43,6 +43,7 @@ public class TypeTest {
             "/mtron/int::1        | /mtron/+[?]          | true",
             "/mtron/int::1        | /mtron/+/+           | false",
             "/mtron/int::1        | /mtron/+/#           | true",
+          //  "/mtron/+[2]::{c,d}   | /mtron/+[2]          | true",
             // NOT CONVERTING ?       "str::\"abc\"         | /+/+/#        | true",
             "/abc/str::\"abc\"    | /+/+/+               | false",
             "/mtron/int::1        | /+/+                 | true",
