@@ -283,6 +283,10 @@ public class fURI implements Cloneable {
 
     }
 
+    public boolean isZero() {
+        return this.equals(fURI.NONE) || this.coefficientValue().isZero();
+    }
+
 
     public fURI removeSubpath(final fURI subpath) {
         String newPath = this.toString();
