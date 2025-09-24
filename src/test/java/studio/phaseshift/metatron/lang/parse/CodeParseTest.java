@@ -1,15 +1,10 @@
 package studio.phaseshift.metatron.lang.parse;
 
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.BootLoader;
-import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.Obj;
-import studio.phaseshift.metatron.lang.obj.mtron.MInstSet;
-import studio.phaseshift.metatron.space.Router;
-import studio.phaseshift.metatron.space.mem.StackSpace;
 import studio.phaseshift.metatron.util.ObjUtil;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;

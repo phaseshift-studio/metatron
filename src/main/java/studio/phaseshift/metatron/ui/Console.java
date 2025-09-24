@@ -179,7 +179,7 @@ public class Console {
                 .parser(parser)
                 .variable(LineReader.HISTORY_FILE, Paths.get(".metatron.history"))
                 .option(LineReader.Option.AUTO_FRESH_LINE, true)
-                .variable(LineReader.SECONDARY_PROMPT_PATTERN, Graphitty.string("\n{{-X&v1&^1&FORM1}}%P >{{X}}"))
+                .variable(LineReader.SECONDARY_PROMPT_PATTERN, Graphitty.string("\n{{-X&v1&^1&FORM1}}%%P >{{X}}"))
                 .variable(LineReader.INDENTATION, 2)
                 .build();
         // final AutosuggestionWidgets autosuggestionWidgets = new AutosuggestionWidgets(this.reader);

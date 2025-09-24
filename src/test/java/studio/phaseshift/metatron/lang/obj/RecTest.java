@@ -3,11 +3,9 @@ package studio.phaseshift.metatron.lang.obj;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-import studio.phaseshift.metatron.lang.fURI;
-import studio.phaseshift.metatron.lang.obj.mtron.MType;
+import studio.phaseshift.metatron.MetatronTest;
 import studio.phaseshift.metatron.lang.parse.ObjParser;
 import studio.phaseshift.metatron.ui.Graphitty;
-import studio.phaseshift.metatron.ui.GraphittyLogger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -17,8 +15,7 @@ import static studio.phaseshift.metatron.lang.obj.mtron.MRec.rec;
 import static studio.phaseshift.metatron.lang.obj.mtron.MStr.str;
 import static studio.phaseshift.metatron.lang.obj.mtron.MUri.uri;
 
-public class RecTest {
-    private static final GraphittyLogger LOG = Graphitty.log(TypeTest.class);
+public class RecTest extends MetatronTest {
 
     @ParameterizedTest
     @CsvSource(value = {
@@ -35,9 +32,9 @@ public class RecTest {
             "[a=>[b=>c,d=>[e=>f]]]                 | a/b                  | c",
             "[a=>[b=>c,d=>[e=>f]]]                 | a/d                  | [e=>f]",
             "[a=>[b=>c,d=>[e=>f]]]                 | a/d/e                | f",
-           // "[a=>[b=>c,d=>[e=>f]]]                 | a/d/e/               | /mtron/rel::a/d/e=>f",
+            // "[a=>[b=>c,d=>[e=>f]]]                 | a/d/e/               | /mtron/rel::a/d/e=>f",
             "[a=>[b=>c,d=>[e=>f]]]                 | a/#                  | {c,[e=>f]}",
-           // "[a=>[b=>c,d=>[e=>f]]]                 | a/+                  | {c,[e=>f]}",
+            // "[a=>[b=>c,d=>[e=>f]]]                 | a/+                  | {c,[e=>f]}",
             "[a=>[b=>c,d=>[e=>f]]]                 | a/+/e                | f"
     }, delimiter = '|')
     public void testType(final String rec, final String key, final String value) {
@@ -45,10 +42,32 @@ public class RecTest {
         Obj k = ObjParser.m_obj().parse(key).get();
         Obj v = ObjParser.m_obj().parse(value).get();
         Obj actual = r.at(k);
-        LOG.debug("testing %s at %s is %s [expected:%s]", k,r,actual,v);
+        LOG.debug("testing %s at %s is %s [expected:%s]", k, r, actual, v);
         assertTrue(r.isRec());
         assertEquals(v, actual);
     }
+
+
+    @Override
+    @ParameterizedTest
+    @CsvSource(value = {
+            // rec                                 | key                               | value
+            "[=>]                                  | [a=>b]                            | false",
+            "[a=>b]                                | [=>]                              | true",
+            "[a=>b]                                | [a=>b]                            | true",
+            "[a=>b,c=>d]                           | [a=>b]                            | true",
+            "[a=>b,c=>d]                           | [a=>b,c=>e]                       | false",
+            "[a=>b,c=>[d=>2]]                      | [a=>b,c=>[d=>2]]                  | true",
+            "[a=>b,c=>[d=>[a=>b]]]                 | [a=>b,c=>[d=>get(a).is(eq(b))]]   | true",
+            "[a=>b,c=>[d=>2]]                      | [a=>b,c=>[d=>is(gt(0))]]          | true",
+            "[a=>b,c=>[d=>2]]                      | [a=>b,c=>[d=>is(gt(3))]]          | false",
+            "[a=>b,c=>[d=>2]]                      | [a=>b,c=>[d=>is(in(int::T[]))]]   | true",
+            "[a=>b,c=>[d=>2]]                      | [a=>b,c=>[d=>is(in(str::T[]))]]   | false",
+    }, delimiter = '|')
+    public void testMatches(final String recA, final String recB, final boolean matches) {
+        super.testMatches(recA, recB, matches);
+    }
+
 
     @Test
     public void testRecJavaAPI() {

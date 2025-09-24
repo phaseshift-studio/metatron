@@ -74,9 +74,10 @@ public class fURITest {
             "/mtron/int",
             "/mtron/int?sub",
             "/mtron/int?sub=noobj",
-            /*"http:// adb/dg",
+            "http:// adb/dg",
             "http:// adb/dg   ",
-            "   http:// adb/dg   "*/})
+            "   http:// adb/dg   "
+    })
     public void testParse(final String f) {
         final fURI furi = fURI.of(f);
         assertEquals(f, furi.toString());
@@ -325,7 +326,7 @@ public class fURITest {
             "a|#|true",
             "#|#|true",
             "a||false",
-            // ",|false", should noobj match noobj?
+            // ",|false", // should noobj match noobj?
             ///
             "http://fhatos.org/a|http://fhatos.org/a|true",
             "http://fhatos.org/a|http://fhatos.org/a/b|false",
@@ -394,6 +395,7 @@ public class fURITest {
             "abc/a[+]|abc/a[1,]|true",
             "abc/a[*]|abc/a[0,]|true",
             "abc/a[?]|abc/a[0,1]|true",
+            "/mtron/rec|#|true",
     }, delimiter = '|')
     void testMatches(final String a, final String b, final boolean shouldMatch) {
         if (shouldMatch) assertTrue(fURI.of(nullToEmpty(a)).matches(fURI.of(nullToEmpty(b))));

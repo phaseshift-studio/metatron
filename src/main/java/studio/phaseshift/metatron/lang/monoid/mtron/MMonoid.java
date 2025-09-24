@@ -24,20 +24,28 @@ import studio.phaseshift.metatron.lang.monoid.Monad;
 import studio.phaseshift.metatron.lang.monoid.Monoid;
 import studio.phaseshift.metatron.lang.obj.*;
 import studio.phaseshift.metatron.lang.obj.mtron.*;
+import studio.phaseshift.metatron.space.Router;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.*;
 
+import static studio.phaseshift.metatron.lang.fURI.f;
 import static studio.phaseshift.metatron.lang.obj.mtron.MInstSet.MTRON_TID;
 import static studio.phaseshift.metatron.lang.obj.mtron.MInstSet.START_TID;
+import static studio.phaseshift.metatron.lang.obj.mtron.MType.T;
 
 public class MMonoid extends MObj implements Monoid {
 
     public static final fURI MONOID_TID = MTRON_TID.extend("lang/monoid");
 
     private final GraphittyLogger LOG = Graphitty.log(this);
+
+    public static void load() {
+      //  Router.global().write(MONOID_TID,T(MONOID_TID));
+      //  Router.global().write(MMonad.MMONAD_TID, T(MMonad.MMONAD_TID));
+    }
 
     public MMonoid(final Quartet<Code, Objs, Lst, Objs> value, final fURI tid, final fURI vid) {
         super(value, tid, vid);

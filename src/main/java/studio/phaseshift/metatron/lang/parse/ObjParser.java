@@ -170,49 +170,59 @@ public class ObjParser {
     private static final String FULL_FURI_CHARS = "/%!#_@+.:";
     private static final String REDUCED_FURI_CHARS = "/%!#_@+:";
 
-    public static Parser m_furi(final String furiCharacterSet) {
+    public static Parser m_furi() {
+        return m_furi(FULL_FURI_CHARS, true, true);
+    }
+
+    public static Parser m_furi(final String furiCharacterSet, final boolean coefficient, final boolean query) {
         final Supplier<Parser> internal = () -> seq(word().or(seq(of("::").not(),
-                anyOf(furiCharacterSet))).plus().flatten(), m_furi_coefficient(), m_furi_query()).map(t -> new fURI(pick(t, 0)).coefficient(pick(t, 1)).query(pick(t, 2)));
+                        anyOf(furiCharacterSet))).plus().flatten(),
+                opt(coefficient ? m_furi_coefficient() : none(), null),
+                opt(query ? m_furi_query() : none(), null)).map(t -> new fURI(pick(t, 0)).big().coefficient(pick(t, 1)).query(pick(t, 2)));
         final Supplier<Parser> internal2 = () -> seq(word().or(seq(of("::").not(),
-                anyOf(FULL_FURI_CHARS))).plus().flatten(), m_furi_coefficient(), m_furi_query()).map(t -> new fURI(pick(t, 0)).coefficient(pick(t, 1)).query(pick(t, 2)));
+                        anyOf(FULL_FURI_CHARS))).plus().flatten(),
+                opt(coefficient ? m_furi_coefficient() : none(), null),
+                opt(query ? m_furi_query() : none(), null)).map(t -> new fURI(pick(t, 0)).big().coefficient(pick(t, 1)).query(pick(t, 2)));
         return choice(seq(of('<'), internal2.get(), of('>')).pick(1), internal.get());
     }
 
     public static Parser m_furi_base_path(final String furiCharacterSet) {
-        final Supplier<Parser> internal = () -> seq(word().or(seq(of("::").not(),
-                anyOf(furiCharacterSet))).plus().flatten()).map(t -> new fURI(pick(t, 0)));
-        final Supplier<Parser> internal2 = () -> seq(word().or(seq(of("::").not(),
-                anyOf(FULL_FURI_CHARS))).plus().flatten()).map(t -> new fURI(pick(t, 0)));
-        return choice(seq(of('<'), internal2.get(), of('>')).pick(1), internal.get());
+        return m_furi(furiCharacterSet, false, false);
     }
-
-    public static Parser m_furi() {
-        return m_furi(FULL_FURI_CHARS);
-    }
-
 
     public static Parser m_furi_coefficient() {
-        return opt(seq(of('['), choice(
+        return seq(of('['), choice(
                         seq(digit().plus(), of(','), digit().plus()).flatten(),
                         digit().plus().flatten().map(t -> t + "," + t),
                         of('*').map(t -> "0,"),
                         of('+').map(t -> "1,"),
                         of('?').map(t -> "0,1")),
-                of(']')).map(t -> pick(t, 1)), null);
+                of(']')).map(t -> pick(t, 1));
     }
 
     public static Parser m_furi_query() {
-        return opt(seq(of('?'), seq(word().plus(), opt(seq(of('='), word().or(anyOf(REDUCED_FURI_CHARS)).plus()), "")).separatedBy(of('&')).flatten()).map(t -> ObjParser.<String>pick(t, 1)), null);
+        return seq(of('?'), choice(
+                m_furi_inst_dom_rng2(),
+                seq(word().plus(), opt(seq(of('='), word().or(anyOf(REDUCED_FURI_CHARS)).plus()), "")).separatedBy(of('&')).flatten()
+        )).map(t -> pick(t, 1));
     }
 
     public static Parser m_furi_inst_dom_rng() {
         return seq(
-                m_furi(REDUCED_FURI_CHARS),
+                m_furi(REDUCED_FURI_CHARS, true, false),
                 of("<=").trim(),
-                m_furi(REDUCED_FURI_CHARS))
+                m_furi(REDUCED_FURI_CHARS, true, false))
                 .map(t -> Stream.of(
                         List.of("rng", pick(t, 0).toString()),
                         List.of("dom", pick(t, 2).toString())).collect(Collectors.toMap(k -> k.get(0), v -> v.get(1), (v1, v2) -> v2, LinkedHashMap::new)));
+    }
+
+    public static Parser m_furi_inst_dom_rng2() {
+        return seq(
+                m_furi(REDUCED_FURI_CHARS, true, false),
+                of("<=").trim(),
+                m_furi(REDUCED_FURI_CHARS, true, false))
+                .map(t -> "dom=%s&rng=%s".formatted(pick(t, 2).toString(), pick(t, 0).toString()));
     }
 
 
@@ -244,7 +254,7 @@ public class ObjParser {
     }
 
     public static Parser m_type_prefix_opt_colon(final fURI baseType) {
-        return opt(seq(m_furi(REDUCED_FURI_CHARS), opt(of("::").trim(), "::")).pick(0), baseType);
+        return opt(seq(m_furi(REDUCED_FURI_CHARS, true, true), opt(of("::").trim(), "::")).pick(0), baseType);
     }
 
     public static Parser m_bool() {
@@ -280,7 +290,7 @@ public class ObjParser {
     }
 
     public static Parser m_uri() {
-        return seq(m_type_prefix(URI_TID), m_furi(REDUCED_FURI_CHARS)).map(t -> new MUri(pick(t, 1), pick(t, 0), fURI.NULL));
+        return seq(m_type_prefix(URI_TID), m_furi(REDUCED_FURI_CHARS, true, true)).map(t -> new MUri(pick(t, 1), pick(t, 0), fURI.NULL));
     }
 
     public static Parser m_rel() {
@@ -340,6 +350,7 @@ public class ObjParser {
     }
 
     private static Parser generate_sugar_parser(final fURI tid, final String sugarOp, final int argCount) {
+        // TODO: look into ExpressionBuilder for handling paren wrapping properly.
         return argCount == 0 ?
                 of(sugarOp).trim().map(t -> MInst.instA(tid)) :
                 seq(of(sugarOp).trim(), opt(of('('), '('), m_obj(), opt(of(')'), ')')).map(t -> MInst.instB(tid, MLst.of(ObjParser.<Obj>pick(t, 2))));

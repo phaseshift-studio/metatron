@@ -115,17 +115,17 @@ public class Graphitty {
 
     public static void out(final OutputStream out, final String f, final Object... args) {
         final Graphitty g = new Graphitty(out);
-        g.print(Graphitty.string(f.formatted(args)));
+        g.print(Graphitty.string(f,args));
     }
 
     public static Graphitty stdout() {
         return GRAPHITTY_STDOUT;
     }
 
-    public static String string(final String s) {
+    public static String string(final String f, final Object... args) {
         final ByteArrayOutputStream out = new ByteArrayOutputStream();
         final Graphitty temp = new Graphitty(out);
-        temp.parseDSL(s);
+        temp.parseDSL(f.formatted(args));
         return out.toString();
     }
 

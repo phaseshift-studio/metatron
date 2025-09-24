@@ -521,12 +521,16 @@ public class fURI implements Cloneable {
         else throw MTronException.of("no known conversion of %s to %s", value, conversion);
     }
 
+    public boolean bimatches(final fURI other) {
+        return this.matches(other) || other.matches(this);
+    }
+
     public boolean matches(final fURI rhs) {
         if (!this.coefficientValue().within(rhs.coefficientValue()))
             return false;
         final fURI lhs = this.basePath();
         final fURI other = rhs.basePath();
-        if (other.toString().equals("#"))
+        if (other.equals(f("#")))
             return true;
         if (!other.hasPattern())
             return lhs.equals(other);
@@ -555,7 +559,7 @@ public class fURI implements Cloneable {
 
     public boolean equals(final Object other) {
         return other instanceof fURI &&
-            //    this.toString().equals(other.toString());
+                //    this.toString().equals(other.toString());
                 Objects.equals(this.scheme, ((fURI) other).scheme) &&
                 Objects.equals(this.host, ((fURI) other).host) &&
                 Objects.equals(this.port, ((fURI) other).port) &&
@@ -563,7 +567,7 @@ public class fURI implements Cloneable {
                 Objects.equals(this.coefficientless().path, ((fURI) other).coefficientless().path) &&
                 this.send == ((fURI) other).send &&
                 Objects.equals(this.query, ((fURI) other).query) &&
-                Objects.equals(this.coefficientValue(),((fURI) other).coefficientValue());
+                Objects.equals(this.coefficientValue(), ((fURI) other).coefficientValue());
     }
 
     public int hashCode() {

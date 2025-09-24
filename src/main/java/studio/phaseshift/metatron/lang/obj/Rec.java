@@ -27,7 +27,6 @@ import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.ObjUtil;
 
-import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
@@ -62,6 +61,28 @@ public interface Rec extends Poly {
     }
 
     @Override
+    default boolean matches(final Obj obj) {
+        if (obj.isCall()) {
+          try {
+              return !obj.apply(this).isNoObj();
+          } catch(final Exception e) {
+              return false;
+          }
+        }
+        else if(obj.isRec()){
+            for (Map.Entry<Obj, Obj> entry : obj.recValue().entrySet()) {
+                final Obj value = this.recValue().getOrDefault(entry.getKey(), NoObj.single());
+                if (!value.matches(entry.getValue()))
+                    return false;
+            }
+            return true;
+        } else if(obj.isType()) {
+            return !obj.apply(this).isNoObj();
+        }
+        return false;
+    }
+
+    @Override
     default Rec value(final Object newValue) {
         return this.clone(newValue, this.tid(), this.vid());
     }
@@ -83,7 +104,7 @@ public interface Rec extends Poly {
                         return (O) (k.isBranch() ? MRel.of(k.asNode().toUri(), MObjs.of(this.recValue().values())) : MObjs.of(this.recValue().values()));
                     else {
                         final int stepp = steps;
-                        return (O) ObjUtil.oneNoneOrAll( MObjs.of(this.recValue().values().stream().flatMap(v -> {
+                        return (O) ObjUtil.oneNoneOrAll(MObjs.of(this.recValue().values().stream().flatMap(v -> {
                                     if (v.isRec()) {
                                         return v.<Rec>as().at(k.pretract(stepp).toUri()).stream();
                                     } else {

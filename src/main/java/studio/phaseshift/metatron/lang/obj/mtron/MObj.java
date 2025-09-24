@@ -25,6 +25,8 @@ import studio.phaseshift.metatron.ui.Graphitty;
 
 import java.util.Objects;
 
+import static studio.phaseshift.metatron.lang.obj.mtron.MType.T;
+
 public class MObj implements Obj {
 
     protected final Object value;
@@ -36,8 +38,11 @@ public class MObj implements Obj {
         this.value = value;
         this.tid = tid.big();
         this.vid = vid;
-        if (null != Router.global() && !this.isType() && null != this.vid && !this.vid.equals(fURI.NONE))
+        if (!this.isType() && !this.isNoObj() && T(tid).apply(this).isNoObj())
+            Graphitty.log(this).except("%s is not a %s".formatted(this, T(tid)));
+        if (null != Router.global() && !this.isType() && null != this.vid && !this.vid.equals(fURI.NONE)) {
             Router.global().write(this.vid, this);
+        }
     }
 
     @Override

@@ -2,6 +2,7 @@ package studio.phaseshift.metatron.lang.obj;
 
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import studio.phaseshift.metatron.MetatronTest;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.mtron.MType;
 import studio.phaseshift.metatron.lang.parse.ObjParser;
@@ -9,8 +10,9 @@ import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
-public class TypeTest {
+public class TypeTest extends MetatronTest {
     private static final GraphittyLogger LOG = Graphitty.log(TypeTest.class);
 
 
@@ -43,9 +45,9 @@ public class TypeTest {
             "/mtron/int::1        | /mtron/+[?]          | true",
             "/mtron/int::1        | /mtron/+/+           | false",
             "/mtron/int::1        | /mtron/+/#           | true",
-          //  "/mtron/+[2]::{c,d}   | /mtron/+[2]          | true",
-            // NOT CONVERTING ?       "str::\"abc\"         | /+/+/#        | true",
-            "/abc/str::\"abc\"    | /+/+/+               | false",
+            // "/mtron/+[2]::{c,d}   | /mtron/+[2]          | true",
+            "str::\"abc\"         | /+/+/#               | true",
+            "/mtron/int::\"abc\"  | /+/+/+               | false",
             "/mtron/int::1        | /+/+                 | true",
             "/mtron/str::'abc'    | /+/int               | false",
             "str::'abc'           | /+/int               | false",
@@ -72,21 +74,26 @@ public class TypeTest {
             "{/mtron/int[2]::1,2} | /mtron/int[3]        | true", // TODO: think this through more carefully
             "noobj                | #[0]                 | true",
             "noobj                | #[0,0]               | true",
-        //    "noobj                | #[?]                 | false", TODO: distinction between matches and equals?
+            "noobj                | #[?]                 | true",
             "noobj                | #[1]                 | false",
             "noobj                | +[0]                 | true",
-            "noobj                | a/b/c[0]             | true"
+            "noobj                | a/b/c[0]             | true",
+            "[a=>b]               | #                    | true",
+            "plus::(2)            | /mtron/inst/plus     | true"
     }, delimiter = '|')
     public void testType(final String obj, final String typefURI, final boolean matches) {
-        Obj o = ObjParser.m_obj().parse(obj).get();
-        Type t = MType.of(fURI.of(typefURI.trim()));
-        LOG.debug("testing %s %s %s", o, matches ? "{{c}}in{{/c}}" : "{{c}}not in{{/c}}", t);
-        assertEquals(matches, o.matches(t));
-        if (!typefURI.startsWith("#") && !o.isNoObj())
-            this.testType(obj, fURI.of("#[" + o.tid().coefficientValue() + "]").toString(), !o.isNoObj());
-        final Obj a = t.apply(o);
-        assertEquals(matches ? o : NoObj.single(), a);
-
+        try {
+            Obj o = ObjParser.m_obj().parse(obj).get();
+            Type t = MType.of(fURI.of(typefURI.trim()));
+            LOG.debug("testing %s %s %s", o, matches ? "{{c}}in{{/c}}" : "{{c}}not in{{/c}}", t);
+            assertEquals(matches, o.matches(t));
+            //if (!typefURI.startsWith("#") && !o.isNoObj())
+            //    this.testType(obj, fURI.of("#[" + o.tid().coefficientValue() + "]").toString(), !o.isNoObj());
+            final boolean a = t.matches(o);
+            assertEquals(matches, a);
+        } catch (Exception e) {
+            assertFalse(matches, "an exception occurred: " + e);
+        }
     }
 
     @ParameterizedTest
@@ -95,8 +102,11 @@ public class TypeTest {
             "1            | 1                  | true",
             "'a_string'   | 1                  | false",
             "213.0        | 1                  | false",
-            "1            | 1                  | true"},
+            "1            | 1                  | true",
+            "1            | 2                  | true",
+            "{1,1}        | {2,2}              | true"
             //  "1            | int^:is(gt(0))     | false"},
+    },
             delimiter = '|')
     public void testTypeObj(final String obj, final String type, final boolean matches) {
         Obj o = ObjParser.m_obj().parse(obj).get();

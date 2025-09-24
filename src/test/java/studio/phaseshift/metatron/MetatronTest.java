@@ -18,32 +18,38 @@
 
 package studio.phaseshift.metatron;
 
-import studio.phaseshift.metatron.lang.monoid.Monoid;
-
-import java.util.Iterator;
+import org.junit.jupiter.api.BeforeAll;
+import studio.phaseshift.metatron.lang.obj.Obj;
+import studio.phaseshift.metatron.lang.parse.ObjParser;
+import studio.phaseshift.metatron.ui.Graphitty;
+import studio.phaseshift.metatron.ui.GraphittyLogger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.fail;
 
-public final class MetatronTest {
+public class MetatronTest {
 
-    static {
-        //SInst.load();
+    protected GraphittyLogger LOG = Graphitty.log(this);
+
+    @BeforeAll
+    public static void begin() {
+        BootLoader.load();
     }
-    private MetatronTest() {
 
+    public void testMatches(final String lhs, final String rhs, final boolean matches) {
+        final Obj a = ObjParser.m_obj().parse(lhs).get();
+        final Obj b = ObjParser.m_obj().parse(rhs).get();
+        final boolean m = a.matches(b);
+        LOG.debug("testing %s matches %s: %s [expected:%s]", a, b, m, matches);
+        assertEquals(matches, m);
     }
 
-    public static void assertMEquals(final Object a, final Object b) {
-       /* final Iterator<Obj> aa = a instanceof Monoid ? ((Monoid) a).iterator() : SObj.Obj.of(a).iterator();
-        final Iterator<Obj> bb = b instanceof Monoid ? ((Monoid) b).iterator() : SObj.Obj.of(b).iterator();
-        while (aa.hasNext()) {
-            if (!bb.hasNext())
-                fail("%s has fewer objs than %s".formatted(b, a));
-            assertEquals(aa.next(), bb.next());
-        }
-        if (bb.hasNext()) {
-            fail("%s has more objs than %s".formatted(b, a));
-        }*/
+    public void testCode(final String lhs, final String code, final String expected) {
+        final Obj a = ObjParser.m_obj().parse(lhs).get();
+        final Obj b = ObjParser.m_obj().parse(code).get();
+        final Obj ex = ObjParser.m_obj().parse(expected).get();
+        final Obj actual = b.apply(a);
+        LOG.debug("testing %s.%s => %s [expected:%s]", a, b, actual, ex);
+        assertEquals(ex, actual);
     }
+
 }

@@ -25,7 +25,6 @@ public class InstTest {
         BootLoader.load();
     }
 
-
     @ParameterizedTest
     @CsvSource(value = {
             // furi | tid | dom | range

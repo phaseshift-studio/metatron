@@ -5,7 +5,6 @@ import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.Obj;
 import studio.phaseshift.metatron.space.Router;
 import studio.phaseshift.metatron.space.device.log.Log;
-import studio.phaseshift.metatron.util.MTronException;
 
 import static org.slf4j.event.Level.*;
 
@@ -29,9 +28,11 @@ public class GraphittyObjLogger extends GraphittyLogger {
             return true;
         else {
             final Obj o = router.read(LOG_VID);
-            if (o.isNoObj())
-                throw MTronException.of("no logger in space");
-            return Log.from(router.read(LOG_VID).as()).check(level, ((Obj) this.source).vidOrTid());
+            if (o.isNoObj()) {
+                this.warn("no space embedded logger found at %s", LOG_VID.toUri());
+                return true;
+            } else
+                return Log.from(o.as()).check(level, ((Obj) this.source).vidOrTid());
         }
         //   } catch(final Exception e) {
         //return false;

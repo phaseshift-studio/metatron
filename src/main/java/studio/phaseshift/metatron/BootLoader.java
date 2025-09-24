@@ -19,6 +19,7 @@
 package studio.phaseshift.metatron;
 
 import studio.phaseshift.metatron.lang.fURI;
+import studio.phaseshift.metatron.lang.monoid.mtron.MMonoid;
 import studio.phaseshift.metatron.lang.obj.mtron.MInstSet;
 import studio.phaseshift.metatron.lang.obj.mtron.MUri;
 import studio.phaseshift.metatron.space.Router;
@@ -61,6 +62,7 @@ public class BootLoader {
             Router.global().addSpace(stk);
             final Space mtron = new MInstSet(fURI.of("/mnt/lang/mtron"));
             Router.global().addSpace(mtron);
+            MMonoid.load();
             Log.of(f("/sys/log"));
             final Space var = new MemSpace(fURI.of("+/+/#"), fURI.of("/mnt/var"));
             Router.global().addSpace(var);

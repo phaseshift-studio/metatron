@@ -118,6 +118,14 @@ public interface Obj extends Function<Obj, Obj>, Iterable<Obj> {
                 (rhs.isType() && this.tid().basePath().matches(rhs.tid().basePath())) &&
                         this.tid().coefficientValue().within(rhs.tid().coefficientValue()))
                 return true;
+        if(rhs.isCall()) {
+            try {
+                return !rhs.apply(this).isNoObj();
+            } catch (final Exception e) {
+                Graphitty.log(this).warn(e.getMessage());
+                return false;
+            }
+        }
         return this.equals(rhs);
 
     }
@@ -158,7 +166,7 @@ public interface Obj extends Function<Obj, Obj>, Iterable<Obj> {
     }
 
     default boolean isNoObj() {
-        return this == NoObj.single() || this.tid().coefficientValue().isZero();
+        return this == NoObj.single() || this.tid().basePath().equals(fURI.NONE) || this.tid().coefficientValue().isZero();
     }
 
     default boolean isBool() {

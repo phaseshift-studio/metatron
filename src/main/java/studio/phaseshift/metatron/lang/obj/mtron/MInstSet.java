@@ -25,6 +25,7 @@ import studio.phaseshift.metatron.lang.obj.base.furi.TypefURI;
 import studio.phaseshift.metatron.space.Router;
 import studio.phaseshift.metatron.space.mem.MSpace;
 import studio.phaseshift.metatron.util.IteratorUtil;
+import studio.phaseshift.metatron.util.ObjUtil;
 
 import java.util.*;
 import java.util.function.BiFunction;
@@ -136,7 +137,7 @@ public class MInstSet extends MSpace implements InstSet {
         this.define(REF_TID, fURI.ANY, fURI.ANY, MLst.of(ID__), (lhs, inst) -> Router.global().write(lhs.uriValue(), inst.arg(0)));
         this.define(ID_TID, fURI.ANY.maybe(), fURI.ANY.maybe(), MLst.of(), (lhs, inst) -> lhs);
         this.define(START_TID, NOOBJ_TID.zero(), fURI.ANY.any(), MLst.of(ID__), (lhs, inst) -> inst.arg(0));
-        this.define(END_TID, fURI.ANY.any(), NOOBJ_TID.zero(),NO_ARGS__,(lhs,inst) -> NoObj.single());
+        this.define(END_TID, fURI.ANY.any(), NOOBJ_TID.zero(), NO_ARGS__, (lhs, inst) -> NoObj.single());
         this.define(PLUS_TID, BOOL_TID, BOOL_TID, MLst.of(ID__), (lhs, inst) -> lhs.value(lhs.boolValue() || inst.arg(0).boolValue()));
         this.define(PLUS_TID, INT_TID, INT_TID, lst(T(INT_TID)), (lhs, inst) -> lhs.value(lhs.intValue() + inst.arg(0).intValue()));
         this.define(PLUS_TID, REAL_TID, REAL_TID, MLst.of(ID__), (lhs, inst) -> lhs.value(lhs.realValue() + inst.arg(0).realValue()));
@@ -146,9 +147,9 @@ public class MInstSet extends MSpace implements InstSet {
         this.define(MULT_TID, INT_TID, INT_TID, MLst.of(ID__), (lhs, inst) -> lhs.value(lhs.intValue() * inst.arg(0).intValue()));
         this.define(MULT_TID, REAL_TID, REAL_TID, MLst.of(ID__), (lhs, inst) -> lhs.value(lhs.realValue() * inst.arg(0).realValue()));
         this.define(MULT_TID, URI_TID, URI_TID, MLst.of(ID__), (lhs, inst) -> lhs.value(lhs.uriValue().mult(inst.arg(0).uriValue())));
-        this.define(IS_TID, fURI.ANY, fURI.ANY.maybe(), MLst.of(ID__), (lhs, inst) -> inst.arg(0).boolValue() ? lhs : NoObj.single());
-        this.define(IN_TID, fURI.ANY, BOOL_TID, MLst.of(ID__), (lhs, inst) -> bool(lhs.matches(inst.arg(0))));
-        this.define(EQ_TID, fURI.ANY, BOOL_TID, MLst.of(ID__), (lhs, inst) -> bool(lhs.equals(inst.arg(0))));
+        this.define(IS_TID, fURI.ANY.maybe(), fURI.ANY.maybe(), MLst.of(ID__), (lhs, inst) -> inst.arg(0).boolValue() ? lhs : NoObj.single());
+        this.define(IN_TID, fURI.ANY.maybe(), BOOL_TID, MLst.of(ID__), (lhs, inst) -> bool(lhs.matches(inst.arg(0))));
+        this.define(EQ_TID, fURI.ANY.maybe(), BOOL_TID, MLst.of(ID__), (lhs, inst) -> bool(lhs.equals(inst.arg(0))));
         this.define(NEQ_TID, fURI.ANY, BOOL_TID, MLst.of(ID__), (lhs, inst) -> bool(!lhs.equals(inst.arg(0))));
         this.define(GT_TID, INT_TID, BOOL_TID, MLst.of(ID__), (lhs, inst) -> bool(lhs.intValue() > inst.arg(0).intValue()));
         this.define(GT_TID, REAL_TID, BOOL_TID, MLst.of(ID__), (lhs, inst) -> bool(lhs.realValue() > inst.arg(0).realValue()));
@@ -194,6 +195,18 @@ public class MInstSet extends MSpace implements InstSet {
         this.define(COUNT_TID, fURI.ANY.any(), INT_TID, MLst.of(), (lhs, inst) -> IteratorUtil.reduce(lhs.iterator(), jnt(0), (a, b) -> MInst.instB(PLUS_TID, MLst.of(jnt(1))).apply(a)));
         this.define(SUM_TID, fURI.ANY.any(), INT_TID, MLst.of(), (lhs, inst) -> IteratorUtil.reduce(lhs.iterator(), jnt(0), (a, b) -> MInst.instB(PLUS_TID, MLst.of(b)).apply(a)));
         this.store();
+    }
+
+    @Override
+    public Obj read(final fURI vid) {
+        return ObjUtil.oneNoneOrAll(SYMBOL_TABLE.entrySet()
+                .stream()
+                .filter(kv -> kv.getKey().matches(vid.basePath()))
+                .flatMap(kv -> kv.getValue().entrySet().stream())
+                .filter(kv -> kv.getKey().bimatches(vid.dom()))
+                .map(Map.Entry::getValue).flatMap(Set::stream)
+                .filter(i -> i.rng().tid().bimatches(vid.rng()))
+                .map(i -> (Obj) i).iterator());
     }
 
     protected void store() {

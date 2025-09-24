@@ -40,13 +40,25 @@ public class MObjs extends MObj implements Objs {
 
     private static final GraphittyLogger LOG = Graphitty.log(MObjs.class);
 
+    private static fURI computeTID(final Iterable<Obj> value) {
+        Set<fURI> types = IteratorUtil.stream(value).map(Obj::tid).map(fURI::basePath).collect(Collectors.toSet());
+        // TODO: make efficient
+        final long count = IteratorUtil.stream(value).map(Obj::tid).map(f -> (f.coefficientValue().max() != null) ? f.coefficientValue().max() : 1).reduce(0L, Long::sum);
+        //final long count = IteratorUtil.count(this.value());
+        if (types.isEmpty() || 0 == count) return fURI.NONE.zero();
+        if (types.size() == 1) return types.iterator().next().coefficient(Long.toString(count));
+        final fURI temp = types.stream().reduce(fURI::commonRoot).get();
+        return temp.coefficient("" + count);
+    }
+
+
     public static Objs objs(final Iterable<Obj> os) {
         return MObjs.of(os);
     }
 
 
     public MObjs(final Iterable<Obj> value, final fURI tid, final fURI vid) {
-        super(value, value.iterator().hasNext() ? value.iterator().next().tid().coefficient("*") : fURI.of("/mtron/int[*]"), vid);
+        super(value, computeTID(value), vid);
         if (value instanceof Obj)
             LOG.error("objs can not directly nest: %s", value);
     }
@@ -67,14 +79,7 @@ public class MObjs extends MObj implements Objs {
 
     @Override
     public fURI tid() {
-        Set<fURI> types = IteratorUtil.stream(this.value()).map(Obj::tid).map(fURI::basePath).collect(Collectors.toSet());
-        // TODO: make efficient
-        final long count = IteratorUtil.stream(this.value()).map(Obj::tid).map(f -> (f.coefficientValue().max() != null) ? f.coefficientValue().max() : 1).reduce(0L, Long::sum);
-        //final long count = IteratorUtil.count(this.value());
-        if (types.isEmpty() || 0 == count) return super.tid.coefficient("0");
-        if (types.size() == 1) return types.iterator().next().coefficient(Long.toString(count));
-        final fURI temp = types.stream().reduce(fURI::commonRoot).get();
-        return temp.coefficient("" + count);
+        return computeTID(this.objsValue());
     }
 
     @Override
@@ -114,8 +119,8 @@ public class MObjs extends MObj implements Objs {
     public static Obj ofUsage(final Object object) {
         if (null == object)
             return NoObj.single();
-        if(object instanceof Stream)
-            return ofUsage(((Stream)object).toList()); // TODO: strange....
+        if (object instanceof Stream)
+            return ofUsage(((Stream) object).toList()); // TODO: strange....
         if (object instanceof List)
             return ObjUtil.oneNoneOrAll((List) object);
         if (object instanceof Obj)

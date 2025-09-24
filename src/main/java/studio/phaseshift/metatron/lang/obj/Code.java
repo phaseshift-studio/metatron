@@ -81,10 +81,10 @@ public interface Code extends Call {
     @Override
     default Obj apply(final Obj lhs) {
      if(!lhs.matches(this.dom()))
-             throw MTronException.of("%s ({{m}}lhs{{/m}}) does not match {{m}}code domain{{/m}} (%s): %s", lhs, this.dom(), this);
+             throw MTronException.of("%s ({{m}}lhs{{/m}}) (%s) does not match {{m}}code domain{{/m}} (%s): %s", lhs, lhs.rng(), this.dom(), this);
         final Obj rhs = ObjUtil.oneNoneOrAll(MMonoid.of(lhs,this).apply(NoObj.single()).iterator());
         if(!rhs.matches(this.rng()))
-            throw MTronException.of("%s ({{m}}rhs{{/m}}) does not match {{m}}code range{{/m}} (%s): %s", rhs, this.rng(), this);
+            throw MTronException.of("%s ({{m}}rhs{{/m}}) (%s) does not match {{m}}code range{{/m}} (%s): %s", rhs, rhs.rng(), this.rng(), this);
         return rhs;
     }
 
