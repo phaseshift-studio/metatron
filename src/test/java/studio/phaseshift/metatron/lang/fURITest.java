@@ -323,9 +323,18 @@ public class fURITest {
 
     @ParameterizedTest
     @CsvSource(value = {
+            "a|a|true",
+            "a|+|true",
+            "a|+/|true", // TODO: should we match on ssend? (and sstart?)
+            "a|/+|false",
+            "+|a|false",
+            "|a|false",
+            "#|a|false",
             "a|#|true",
             "#|#|true",
             "a||false",
+            "|/|false",
+            // "[0]|[0]/|true", TODO: this should match. both are noobj?!
             // ",|false", // should noobj match noobj?
             ///
             "http://fhatos.org/a|http://fhatos.org/a|true",
