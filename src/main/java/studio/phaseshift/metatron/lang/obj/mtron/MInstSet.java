@@ -20,25 +20,25 @@ package studio.phaseshift.metatron.lang.obj.mtron;
 
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.*;
-import studio.phaseshift.metatron.lang.obj.base.furi.TypefURI;
 import studio.phaseshift.metatron.space.Router;
 import studio.phaseshift.metatron.space.mem.MSpace;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.ObjUtil;
 
 import java.util.*;
-import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static studio.phaseshift.metatron.lang.fURI.DOM;
 import static studio.phaseshift.metatron.lang.fURI.f;
 import static studio.phaseshift.metatron.lang.obj.mtron.MBool.bool;
+import static studio.phaseshift.metatron.lang.obj.mtron.MInstSet.Fluent.m.isA;
 import static studio.phaseshift.metatron.lang.obj.mtron.MInt.jnt;
 import static studio.phaseshift.metatron.lang.obj.mtron.MLst.lst;
 import static studio.phaseshift.metatron.lang.obj.mtron.MType.T;
 
 public class MInstSet extends MSpace implements InstSet {
+
+
 
     public static final fURI MTRON_TID = fURI.of("/mtron");
     public static final fURI BOOL_TID = fURI.of("/mtron/bool");
@@ -55,6 +55,13 @@ public class MInstSet extends MSpace implements InstSet {
     public static final fURI POLY_TID = fURI.of("/mtron/poly");
     public static final fURI MONO_TID = fURI.of("/mtron/mono");
     public static final fURI NOOBJ_TID = fURI.of("");
+
+    public static final Set<fURI> BASE_TYPES = Set.of(
+            BOOL_TID, INT_TID, REAL_TID,
+            STR_TID, URI_TID, REL_TID,
+            LST_TID, REC_TID, INST_TID,
+            CODE_TID, OBJS_TID, NOOBJ_TID);
+
 
     public static final fURI MTRON_INST_TID = fURI.of("/mtron/inst");
     public static final fURI ID_TID = INST_TID.extend("id");
@@ -83,6 +90,7 @@ public class MInstSet extends MSpace implements InstSet {
     public static final fURI GET_TID = INST_TID.extend("get");
     public static final fURI AT_TID = INST_TID.extend("at");
     public static final fURI IS_TID = INST_TID.extend("is");
+    public static final fURI ISA_TID = INST_TID.extend("isa");
     public static final fURI IN_TID = INST_TID.extend("in");
     public static final fURI EQ_TID = INST_TID.extend("eq");
     public static final fURI NEQ_TID = INST_TID.extend("neq");
@@ -104,13 +112,6 @@ public class MInstSet extends MSpace implements InstSet {
     private static final Lst NO_ARGS__ = MLst.of();
     public static final fURI ANY_TID = fURI.of("#");
 
-
-    public static final Set<fURI> BASE_TYPES = Set.of(
-            BOOL_TID, INT_TID, REAL_TID,
-            STR_TID, URI_TID, REL_TID,
-            LST_TID, REC_TID, INST_TID,
-            CODE_TID, OBJS_TID, NOOBJ_TID);
-
     public void load() {
         BASE_TYPES.forEach(t -> Router.global().registerRewrite(f(t.name()), t));
         this.write(
@@ -123,9 +124,13 @@ public class MInstSet extends MSpace implements InstSet {
                 TID_TID, MInst.instC(TID_TID.dom(fURI.ANY).rng(URI_TID), NO_ARGS__, (lhs, inst) -> lhs.tid().toUri()),
                 VID_TID, MInst.instC(VID_TID.dom(fURI.ANY).rng(URI_TID), NO_ARGS__, (lhs, inst) -> lhs.vid().toUri()),
                 ELSE_TID, MInst.instC(ELSE_TID.dom(fURI.ANY.maybe()).rng(fURI.ANY), lst(T(ANY_TID)), (lhs, inst) -> lhs.isNoObj() ? inst.arg(0) : lhs),
-                IS_TID, MInst.instC(IS_TID.dom(fURI.ANY.maybe()).rng(fURI.ANY.maybe()), lst(T(ANY_TID)), (lhs, inst) -> inst.arg(0).boolValue() ? lhs : NoObj.single()),
-                IN_TID, MInst.instC(IN_TID.dom(fURI.ANY.maybe()).rng(BOOL_TID), lst(T(ANY_TID)), (lhs, inst) -> bool(lhs.matches(inst.arg(0)))),
+                IS_TID, MInst.instC(IS_TID.dom(fURI.ANY.maybe()).rng(fURI.ANY.maybe()), lst(ID__), (lhs, inst) -> inst.arg(0).boolValue() ? lhs : NoObj.single()),
+                ISA_TID, MInst.instC(ISA_TID.dom(fURI.ANY.maybe()).rng(fURI.ANY.maybe()), lst(ID__), (lhs, inst) -> lhs.matches(inst.arg(0)) ? lhs : NoObj.single()),
+                IN_TID, MInst.instC(IN_TID.dom(fURI.ANY).rng(BOOL_TID), lst(ID__), (lhs, inst) -> bool(lhs.matches(inst.arg(0)))),
+                GET_TID, MInst.instC(GET_TID.dom(REC_TID).rng(fURI.ANY.any()), lst(ID__), (lhs, inst) -> lhs.<Rec>as().at(inst.arg(0))),
+                GET_TID, MInst.instC(GET_TID.dom(LST_TID).rng(fURI.ANY.any()), lst(T(INT_TID)), (lhs, inst) -> lhs.<Lst>as().at(inst.arg(0))),
                 /// ///////////////////////////////////////////////////////////////////////////////////////////////////
+                BLOCK_TID, MInst.instC(BLOCK_TID.dom(fURI.ANY.maybe()).rng(fURI.ANY.maybe()), lst(ID__), (lhs, inst) -> inst.arg(0)),
                 SPLIT_TID, MInst.instC(SPLIT_TID.dom(ANY_TID).rng(LST_TID), lst(T(LST_TID)), (lhs, inst) -> MLst.of(inst.arg(0).lstValue().stream().map(e -> e.apply(lhs)).toList())),
                 SPLIT_TID, MInst.instC(SPLIT_TID.dom(ANY_TID).rng(REL_TID), lst(T(REL_TID)), (lhs, inst) -> MRel.of(inst.arg(0).<Rel>as().first().apply(lhs), inst.arg(0).<Rel>as().second().apply(lhs))),
                 SPLIT_TID, MInst.instC(SPLIT_TID.dom(ANY_TID).rng(REC_TID), lst(T(REC_TID)), (lhs, inst) -> MRec.of(inst.arg(0).recValue().entrySet().stream()
@@ -154,7 +159,7 @@ public class MInstSet extends MSpace implements InstSet {
                 LTE_TID, MInst.instC(LTE_TID.dom(STR_TID).rng(BOOL_TID), lst(T(STR_TID)), (lhs, inst) -> bool(lhs.intValue().compareTo(inst.arg(0).intValue()) <= 0)),
                 /// ///////////////////////////////////////////////////////////////////////////////////////////////////
                 PLUS_TID, MInst.instC(PLUS_TID.dom(BOOL_TID).rng(BOOL_TID), lst(T(BOOL_TID)), (lhs, inst) -> lhs.value(lhs.boolValue() || inst.arg(0).boolValue())),
-                PLUS_TID, MInst.instC(PLUS_TID.dom(INT_TID).rng(INT_TID), lst(T(INT_TID)), (lhs, inst) -> lhs.value(lhs.intValue() + inst.arg(0).intValue())),
+                PLUS_TID, MInst.instC(PLUS_TID.dom(INT_TID).rng(INT_TID), lst(isA(T(STR_TID))), (lhs, inst) -> lhs.value(lhs.intValue() + inst.arg(0).intValue())),
                 PLUS_TID, MInst.instC(PLUS_TID.dom(REAL_TID).rng(REAL_TID), lst(T(REAL_TID)), (lhs, inst) -> lhs.value(lhs.realValue() + inst.arg(0).realValue())),
                 PLUS_TID, MInst.instC(PLUS_TID.dom(STR_TID).rng(STR_TID), lst(T(STR_TID)), (lhs, inst) -> lhs.value(lhs.strValue() + inst.arg(0).strValue())),
                 PLUS_TID, MInst.instC(PLUS_TID.dom(URI_TID).rng(URI_TID), lst(T(URI_TID)), (lhs, inst) -> lhs.value(lhs.uriValue().plus(inst.arg(0).uriValue()))),
@@ -168,40 +173,35 @@ public class MInstSet extends MSpace implements InstSet {
                 MULT_TID, MInst.instC(MULT_TID.dom(LST_TID).rng(LST_TID), lst(T(LST_TID)), (lhs, inst) -> lhs.value(lhs.lstValue().stream().flatMap(a -> inst.arg(0).lstValue().stream().map(b -> MRel.of(a, b))).toList())),
                 // MULT_TID, MInst.instC(MULT_TID.dom(REC_TID).rng(REC_TID), lst(T(REC_TID)), (lhs, inst) -> lhs.value(Stream.concat(lhs.recValue().entrySet().stream(), inst.arg(0).recValue().entrySet().stream()).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (a, b) -> b)))),
                 /// ///////////////////////////////////////////////////////////////////////////////////////////////////
+                TO_TID, MInst.instC(TO_TID.dom(fURI.ANY.maybe()).rng(fURI.ANY.maybe()), lst(T(URI_TID)), (lhs, inst) -> Router.global().write(inst.arg(0).uriValue(), lhs)),
+                FROM_TID, MInst.instC(FROM_TID.dom(fURI.ANY.maybe()).rng(fURI.ANY.any()), lst(ID__), (lhs, inst) -> Router.global().read(inst.arg(0).uriValue())),
                 REF_TID, MInst.instC(REF_TID.dom(ANY_TID).rng(ANY_TID.any()), lst(T(ANY_TID.any())), (lhs, inst) -> Router.global().write(lhs.uriValue(), inst.arg(0))),
                 TYPE_TID, MInst.instC(TYPE_TID.dom(ANY_TID).rng(TYPE_TID), NO_ARGS__, (lhs, inst) -> T(lhs.tid())),
                 /// ///////////////////////////////////////////////////////////////////////////////////////////////////
                 COUNT_TID, MInst.instC(COUNT_TID.dom(ANY_TID.any()).rng(INT_TID), NO_ARGS__, (lhs, inst) -> IteratorUtil.reduce(lhs.iterator(), jnt(0), (a, b) -> MInst.instB(PLUS_TID, MLst.of(jnt(1))).apply(a))),
-                SUM_TID, MInst.instC(SUM_TID.dom(ANY_TID.any()).rng(INT_TID), NO_ARGS__, (lhs, inst) -> IteratorUtil.reduce(lhs.iterator(), jnt(0), (a, b) -> MInst.instB(PLUS_TID, MLst.of(b)).apply(a))));
-
+                SUM_TID, MInst.instC(SUM_TID.dom(ANY_TID.any()).rng(INT_TID), NO_ARGS__, (lhs, inst) -> IteratorUtil.reduce(lhs.iterator(), jnt(0), (a, b) -> MInst.instB(PLUS_TID, MLst.of(b)).apply(a))),
+                REIFY_TID, MInst.instC(REIFY_TID.dom(fURI.ANY.maybe()).rng(REC_TID), NO_ARGS__, (lhs, inst) ->
+                        MRec.ofUriKeyed(
+                                "tid", MRec.ofUriKeyed(
+                                        "path", MUri.of(lhs.tid().path()),
+                                        "c", MRec.ofUriKeyed(
+                                                "min", MInt.of(lhs.tid().coefficientValue().min()),
+                                                "max", MInt.of(lhs.tid().coefficientValue().max())),
+                                        "query", MStr.of(lhs.tid().queryMap().toString())),
+                                "value", MObjFactory.of().create(lhs.value())))
+        );
 
         //TODO: convert below to the pure write() model above
-        this.define(NOOBJ_TID, fURI.ANY.maybe(), fURI.ANY.maybe(), MLst.of(), (lhs, inst) -> lhs); // noobj is also an inst (no inst)
-        this.write(REIFY_TID, MInst.instC(REIFY_TID.dom(fURI.ANY.maybe()).rng(REC_TID), NO_ARGS__, (lhs, inst) ->
-                MRec.ofUriKeyed(
-                        "tid", MRec.ofUriKeyed(
-                                "path", MUri.of(lhs.tid().path()),
-                                "c", MRec.ofUriKeyed(
-                                        "min", MInt.of(lhs.tid().coefficientValue().min()),
-                                        "max", MInt.of(lhs.tid().coefficientValue().max())),
-                                "query", MStr.of(lhs.tid().queryMap().toString())),
-                        "value", MObjFactory.of().create(lhs.value()))
-        ));
-        this.define(GET_TID, REC_TID, fURI.ANY, MLst.of(ID__), (lhs, inst) -> lhs.<Rec>as().at(inst.arg(0)));
+        // this.define(NOOBJ_TID, fURI.ANY.maybe(), fURI.ANY.maybe(), MLst.of(), (lhs, inst) -> lhs); // noobj is also an inst (no inst)
+        /*
         this.define(BARRIER_TID, fURI.ANY.any(), fURI.ANY.any(), MLst.of(ID__), (lhs, inst) -> inst.arg(0).apply(lhs), MObjs.of(List.of()));
-
         this.define(AT_TID, fURI.ANY, fURI.ANY, MLst.of(ID__), (lhs, inst) -> lhs.vid(inst.arg(0).uriValue()));
-
-        this.define(BLOCK_TID, fURI.ANY.maybe(), fURI.ANY.maybe(), MLst.of(ID__), (lhs, inst) -> inst.arg(0));
         this.define(DOM_TID, REC_TID, fURI.ANY, MLst.of(), (lhs, inst) -> MObjs.of(lhs.recValue().keySet()));
         this.define(DOM_TID, REL_TID, fURI.ANY, MLst.of(), (lhs, inst) -> MObjs.of(lhs.relValue().getValue0()));
         this.define(DOM_TID, fURI.ANY, fURI.ANY, MLst.of(), (lhs, inst) -> lhs);
         this.define(RNG_TID, REC_TID, fURI.ANY, MLst.of(), (lhs, inst) -> MObjs.of(lhs.recValue().values()));
         this.define(RNG_TID, REL_TID, fURI.ANY, MLst.of(), (lhs, inst) -> MObjs.of(lhs.relValue().getValue1()));
         this.define(RNG_TID, fURI.ANY, fURI.ANY, MLst.of(), (lhs, inst) -> lhs);
-        this.define(TO_TID, fURI.ANY.maybe(), fURI.ANY.maybe(), MLst.of(ID__), (lhs, inst) -> Router.global().write(inst.arg(0).uriValue(), lhs));
-        this.define(FROM_TID, fURI.ANY.maybe(), fURI.ANY.any(), MLst.of(ID__), (lhs, inst) -> Router.global().read(inst.arg(0).uriValue()));
-
 
         this.define(WITHIN_TID, LST_TID, LST_TID, MLst.of(ID__), (lhs, inst) -> MLst.of(lhs.<Lst>as().lstValue().stream().map(o -> inst.arg(0).apply(o)).toList()));
         this.define(CROSS_TID, LST_TID, LST_TID, MRec.ofUriKeyed("c", ID__, "l", ID__), (lhs, inst) -> {
@@ -220,7 +220,7 @@ public class MInstSet extends MSpace implements InstSet {
                 }
             }
             return MLst.of(result);
-        });
+        });*/
     }
 
     @Override
@@ -254,23 +254,6 @@ public class MInstSet extends MSpace implements InstSet {
         return obj;
     }
 
-    protected MInstSet define(final fURI tid, final fURI domain, final fURI range, final Poly args, final BiFunction<Obj, Inst, Obj> f) {
-        return this.define(tid, domain, range, args, f, NoObj.single());
-    }
-
-    protected MInstSet define(final fURI tid, final fURI domain, final fURI range, final Poly args, final BiFunction<Obj, Inst, Obj> f, final Obj seed) {
-        Router.global().registerRewrite(fURI.of(tid.name()), tid);
-        this.write(tid, MInst.instC(tid
-                .query(fURI.DOM, TypefURI.orNone(domain))
-                .query(fURI.RNG, TypefURI.orNone(range)), args, f, seed));
-
-     /*   SYMBOL_TABLE
-                .computeIfAbsent(tid, k -> new LinkedHashMap<>())
-                .computeIfAbsent(domain, k -> new LinkedHashSet<>())
-                .add);*/
-        return this;
-    }
-
     public MInstSet(final fURI vid) {
         super(MTRON_TID.extend("#"), MTRON_TID, vid);
         this.load();
@@ -288,5 +271,64 @@ public class MInstSet extends MSpace implements InstSet {
     @Override
     public Map<fURI, Map<fURI, Set<Inst>>> value() {
         return SYMBOL_TABLE;
+    }
+
+    public static class Fluent extends MObj implements Code {
+
+        protected Fluent() {
+            this(new ArrayList<>(), CODE_TID, null);
+        }
+
+        protected Fluent(final List<Inst> value, final fURI tid, final fURI vid) {
+            super(value, tid, vid);
+        }
+
+        @Override
+        public List<Inst> value() {
+            return (List<Inst>) this.value;
+        }
+
+        private Fluent addInst(final Inst inst) {
+            this.codeValue().add(inst);
+            return this;
+        }
+
+        public static Fluent start(final Obj obj) {
+            return new Fluent().addInst(MInst.instB(START_TID, lst(obj)));
+        }
+
+        public Fluent plus(final Obj obj) {
+            return this.addInst(MInst.instB(PLUS_TID, lst(obj)));
+        }
+
+        public Fluent isA(final Obj obj) {
+            return this.addInst(MInst.instB(ISA_TID, lst(obj)));
+        }
+
+        public Fluent in(final Obj obj) {
+            return this.addInst(MInst.instB(IN_TID, lst(obj)));
+        }
+
+        @Override
+        public Code clone(Object value, fURI tid, fURI vid) {
+            return new Fluent();
+        }
+
+        /// /////////////////////////////////////////////////////////////
+
+        public static class m {
+
+            public static Fluent plus(final Obj obj) {
+                return new Fluent().plus(obj);
+            }
+
+            public static Fluent isA(final Obj obj) {
+                return new Fluent().isA(obj);
+            }
+
+            public static Fluent in(final Obj obj) {
+                return new Fluent().in(obj);
+            }
+        }
     }
 }

@@ -65,4 +65,8 @@ public class MTronException extends RuntimeException {
             throw MTronException.of(e);
         }
     }
+
+    public String toString() {
+        return this.getMessage();
+    }
 }

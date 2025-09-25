@@ -62,6 +62,15 @@ public interface Inst extends Call {
     /// ////////////////////////////////////////////////////////////
     /// ////////////////////////////////////////////////////////////
 
+    /*@Override
+    default boolean matches(final Obj rhs) {
+        if (rhs.isType()) {
+            return this.tid().rng().matches(rhs.tid());
+        } else {
+            return rhs.matches(this.dom());
+        }
+    }*/
+
     @Override
     default Type dom() {
         final fURI domain = this.tid().dom();
@@ -127,7 +136,7 @@ public interface Inst extends Call {
                 return resolved.resolution().equals(desiredResolution) || resolved.resolution().compareTo(desiredResolution) >= 0 ? resolved : resolved.resolve(desiredResolution, lhs);
             } catch (Exception e) { // TODO: this is sloppy -- using exception handling for flow control
                 LOG.error(e);
-                final Inst resolved = ((Inst) Router.global().read(this.tid()));
+                final Inst resolved = ((Inst) Router.global().read(this.tid())).args(this.args());
                 LOG.warn("resolved %s from global router", resolved);
                 return resolved;
             }
@@ -136,7 +145,16 @@ public interface Inst extends Call {
             if (!blocking && !lhs.matches(this.dom()))
                 throw MTronException.of("lhs obj does not match inst domain: %s: %s {{r}}-/>{{/r}} %s", this, lhs, this.dom());
             final Poly cargs = this.args().isLst() ?
-                    MLst.of(this.args().lstValue().stream().map(arg -> blocking ? arg : arg.apply(lhs)).toList()) :
+                    MLst.of(this.args().lstValue().stream().map(arg -> {
+                        if (blocking) {
+                            return arg;
+                        } else {
+                            final Obj r = arg.apply(lhs);
+                            if (!r.matches(arg))
+                                throw MTronException.of("arg obj does not match inst arg: %s: %s {{r}}-/>{{/r}} %s", this, arg, r);
+                            return r;
+                        }
+                    }).toList()) :
                     MRec.of(this.args().recValue().entrySet().stream().map(kv -> List.of(kv.getKey(), blocking ? kv.getValue() : kv.getValue().apply(lhs))).collect(Collectors.toMap(kv -> kv.get(0), kv -> kv.get(1))));
             final Inst resolved = this.value(Triplet.with(cargs, this.f(), this.seed()));
             LOG.trace("resolution ({{m}}%s {{g}}=>{{/g}} %s{{/m}}): %s", currentResolution, resolved.resolution(), resolved);

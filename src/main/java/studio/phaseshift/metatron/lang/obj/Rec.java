@@ -61,23 +61,25 @@ public interface Rec extends Poly {
     }
 
     @Override
-    default boolean matches(final Obj obj) {
-        if (obj.isCall()) {
+    default boolean matches(final Obj rhs) {
+        if (rhs.isCall()) {
           try {
-              return !obj.apply(this).isNoObj();
+              return !rhs.apply(this).isNoObj();
           } catch(final Exception e) {
               return false;
           }
         }
-        else if(obj.isRec()){
-            for (Map.Entry<Obj, Obj> entry : obj.recValue().entrySet()) {
+        else if(rhs.isRec()){
+            for (Map.Entry<Obj, Obj> entry : rhs.recValue().entrySet()) {
                 final Obj value = this.recValue().getOrDefault(entry.getKey(), NoObj.single());
+                if(entry.getValue().isCall() && entry.getValue().apply(value).isNoObj())
+                    return false;
                 if (!value.matches(entry.getValue()))
                     return false;
             }
             return true;
-        } else if(obj.isType()) {
-            return !obj.apply(this).isNoObj();
+        } else if(rhs.isType()) {
+            return !rhs.apply(this).isNoObj();
         }
         return false;
     }

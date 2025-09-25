@@ -19,27 +19,23 @@
 package studio.phaseshift.metatron.lang.obj;
 
 import org.javatuples.Pair;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import studio.phaseshift.metatron.lang.fURI;
+import studio.phaseshift.metatron.lang.obj.mtron.MInstSet;
 import studio.phaseshift.metatron.lang.obj.mtron.MObjs;
 import studio.phaseshift.metatron.lang.obj.mtron.MType;
-import studio.phaseshift.metatron.space.Router;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.lang.obj.mtron.MInstSet.*;
+import static studio.phaseshift.metatron.lang.obj.mtron.MType.T;
 
 public interface Obj extends Function<Obj, Obj>, Iterable<Obj> {
 
@@ -54,7 +50,7 @@ public interface Obj extends Function<Obj, Obj>, Iterable<Obj> {
     }
 
     default Type type() {
-        return MType.of(this,this.tid());
+        return MType.of(this, this.tid());
     }
 
     default GraphittyLogger logger() {
@@ -72,7 +68,7 @@ public interface Obj extends Function<Obj, Obj>, Iterable<Obj> {
     }
 
     default <O extends Obj> Stream<O> stream() {
-        return this.isNoObj() ? Stream.of((O)NoObj.single()) : (Stream<O>) IteratorUtil.stream(this);
+        return this.isNoObj() ? Stream.of((O) NoObj.single()) : (Stream<O>) IteratorUtil.stream(this);
     }
 
     default Obj tid(final fURI newTid) {
@@ -114,20 +110,30 @@ public interface Obj extends Function<Obj, Obj>, Iterable<Obj> {
     }
 
     default boolean matches(final Obj rhs) {
-        if((rhs.isNoObj() && this.isNoObj()) ||
-                (rhs.isType() && this.tid().basePath().matches(rhs.tid().basePath())) &&
-                        this.tid().coefficientValue().within(rhs.tid().coefficientValue()))
-                return true;
-        if(rhs.isCall()) {
-            try {
-                return !rhs.apply(this).isNoObj();
-            } catch (final Exception e) {
-                Graphitty.log(this).warn(e.getMessage());
-                return false;
-            }
+        if (this.isNoObj() && rhs.isNoObj())
+            return true;
+        final fURI base = this.tid().basePath();
+        if (MInstSet.BASE_TYPES.contains(base) &&
+                !(this instanceof Objs) &&
+                !(this instanceof Type) &&
+                !(this instanceof Bool && base.equals(BOOL_TID) ||
+                        this instanceof Int && base.equals(INT_TID) ||
+                        this instanceof Real && base.equals(REAL_TID) ||
+                        this instanceof Str && base.equals(STR_TID) ||
+                        this instanceof Uri && base.equals(URI_TID) ||
+                        this instanceof Lst && base.equals(LST_TID) ||
+                        this instanceof Rec && base.equals(REC_TID) ||
+                        this instanceof Rel && base.equals(REL_TID) ||
+                        this instanceof Inst && base.equals(INST_TID) ||
+                        this instanceof Code && base.equals(CODE_TID))) {
+            return false;
         }
-        return this.equals(rhs);
-
+        if (rhs.isCall())
+            return this.rng().matches(rhs.dom());
+        if (rhs.isType())
+            return this.tid().matches(rhs.tid());// TODO: && (rhs.value() == null || this.matches(rhs.value()));
+        return this.tid().matches(rhs.tid()) &&
+                Objects.equals(this.value(), rhs.value());
     }
 
     @Override
@@ -135,13 +141,13 @@ public interface Obj extends Function<Obj, Obj>, Iterable<Obj> {
         return this.isNoObj() ? IteratorUtil.of() : (this.isObjs() ? this.objsValue().iterator() : IteratorUtil.of(this));
     }
 
-     default Type dom() {
-        return MType.of(fURI.ANY.maybe());
-     }
+    default Type dom() {
+        return T(fURI.ANY.maybe());
+    }
 
-     default Type rng() {
-        return MType.of(this.tid());
-     }
+    default Type rng() {
+        return T(this.tid());
+    }
 
     default <O extends Obj> O orElse(final O other) {
         return this.isNoObj() ? other : (O) this;
@@ -157,7 +163,7 @@ public interface Obj extends Function<Obj, Obj>, Iterable<Obj> {
         return (O) this;
     }
 
-    default <O extends Obj> O choose(final Predicate<Obj> predicate, final Function<Obj,O> trueBranch, final Function<Obj,O> falseBranch) {
+    default <O extends Obj> O choose(final Predicate<Obj> predicate, final Function<Obj, O> trueBranch, final Function<Obj, O> falseBranch) {
         return predicate.test(this) ? trueBranch.apply(this) : falseBranch.apply(this);
     }
 
@@ -221,7 +227,9 @@ public interface Obj extends Function<Obj, Obj>, Iterable<Obj> {
         return this instanceof Poly;
     }
 
-    default boolean isType() { return this instanceof Type; }
+    default boolean isType() {
+        return this instanceof Type;
+    }
 
     default boolean boolValue() {
         if (this.isBool())
@@ -285,7 +293,7 @@ public interface Obj extends Function<Obj, Obj>, Iterable<Obj> {
 
     default Obj typeValue() {
         if (this.isType())
-                return  this.value();
+            return this.value();
         throw MTronException.of("%s is a %s, not a %s", this, tid().toUri(), fURI.of("<type>").toUri());
     }
 }

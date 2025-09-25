@@ -24,9 +24,9 @@ import studio.phaseshift.metatron.lang.obj.Obj;
 import studio.phaseshift.metatron.lang.parse.ObjParser;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
-import studio.phaseshift.metatron.util.ObjUtil;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.fail;
 
 public class MetatronTest {
 
@@ -55,11 +55,21 @@ public class MetatronTest {
     }
 
     public void testCode(final String code, final String expected) {
-        final Obj cd = ObjParser.sugar_code().parse(code).get();
-        final Obj ex = ObjParser.m_obj().parse(expected).get();
-        final Obj actual = cd.apply(NoObj.single());
-        LOG.debug("testing %s => %s [expected:%s]", cd, actual, ex);
-        assertEquals(ex, actual);
+        if (expected.trim().equals("<ERROR>")) {
+            try {
+                final Obj cd = ObjParser.sugar_code().parse(code).get();
+                final Obj actual = cd.apply(NoObj.single());
+                fail(Graphitty.string("testing %s => %s [expected:%s]", cd, actual, expected));
+            } catch (final Exception e) {
+                LOG.debug("testing %s => %s", code, e.getMessage());
+            }
+        } else {
+            final Obj cd = ObjParser.sugar_code().parse(code).get();
+            final Obj ex = ObjParser.m_obj().parse(expected).get();
+            final Obj actual = cd.apply(NoObj.single());
+            LOG.debug("testing %s => %s [expected:%s]", cd, actual, ex);
+            assertEquals(ex, actual);
+        }
     }
 
 }

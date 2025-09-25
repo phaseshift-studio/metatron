@@ -38,7 +38,7 @@ public class MObj implements Obj {
         this.value = value;
         this.tid = tid.big();
         this.vid = vid;
-        if (!this.isType() && !this.isNoObj() && T(tid).apply(this).isNoObj())
+        if (!this.isType() && !this.isNoObj() && !this.matches(T(tid)))
             Graphitty.log(this).except("%s is not a %s".formatted(this, T(tid)));
         if (null != Router.global() && !this.isType() && null != this.vid && !this.vid.equals(fURI.NONE)) {
             Router.global().write(this.vid, this);

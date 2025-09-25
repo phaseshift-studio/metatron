@@ -30,6 +30,7 @@ import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.ObjUtil;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -83,6 +84,11 @@ public class MObjs extends MObj implements Objs {
     }
 
     @Override
+    public Objs tid(final fURI newtid) {
+        return (Objs) super.tid(computeTID(this.objsValue()));
+    }
+
+    @Override
     public Type type() {
         return MType.of(this, this.tid());
     }
@@ -90,8 +96,8 @@ public class MObjs extends MObj implements Objs {
     @Override
     public boolean equals(final Object other) {
         return this.toString().equals(other.toString()); // TODO: VERY BAD -- something is weird about the tid string encoding (hidden characters??)
-        /*this.getClass().isAssignableFrom(other.getClass()) &&
-                Objects.equals(this.tid, ((Obj) other).tid()) &&
+      /*  return other instanceof Obj && ((Obj) other).isObjs() &&
+                Objects.equals(this.tid(), ((Obj) other).tid()) &&
                 Objects.equals(this.vid, ((Obj) other).vid()) &&
                 Objects.equals(this.value, ((Obj) other).value());*/
     }

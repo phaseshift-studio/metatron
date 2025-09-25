@@ -1,12 +1,6 @@
 package studio.phaseshift.metatron.lang.obj;
 
 import studio.phaseshift.metatron.lang.fURI;
-import studio.phaseshift.metatron.lang.obj.mtron.MInstSet;
-import studio.phaseshift.metatron.space.Router;
-import studio.phaseshift.metatron.ui.Graphitty;
-
-import static studio.phaseshift.metatron.BootLoader.BOOTING;
-import static studio.phaseshift.metatron.lang.obj.mtron.MInstSet.*;
 
 public interface Type extends Obj {
 
@@ -17,6 +11,21 @@ public interface Type extends Obj {
     Obj value();
 
     @Override
+    default Type dom() {
+        return this;
+    }
+
+    @Override
+    default Type rng() {
+        return this;
+    }
+
+    @Override
+    default Obj apply(final Obj lhs) {
+        return null == this.value() || this.value().isNoObj() ? lhs : this.value().apply(lhs);
+    }
+
+  /*  @Override
     default boolean matches(final Obj obj) {
         if (obj.tid().isZero() && this.tid().isZero())
             return true;
@@ -52,16 +61,14 @@ public interface Type extends Obj {
                 Graphitty.log(this).info("[{{g}}GOOD{{/g}} ] inst in instruction set: %s", obj);
             }
             // can be an Objs of all inst permutations
-            return this.tid().basePath().matches(typeObj.tid().basePath());
+            return obj.tid().rng().matches(typeObj.tid());
         } else if (!(obj instanceof Objs)) {
             final Obj typeObj = Router.global().read(base);
             if (typeObj.isNoObj())
                 return false;
             //throw MTronException.of("type %s is undefined", typeObj);
         }
-        if (base.matches(this.tid().basePath()) && obj.tid().coefficientValue().within(this.tid().coefficientValue()))
-            return null == this.value() || !obj.matches(this.value());
-        return false;
+        return obj.tid().matches(this.tid()) && (null == this.value() || !obj.matches(this.value()));
         //throw MTronException.of("%s is not a type of %s",obj,this);
-    }
+    }*/
 }

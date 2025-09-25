@@ -33,4 +33,14 @@ public class IntTest extends MetatronTest {
     public void testCode(final String lhs, final String code, final String expected) {
         super.testCode(lhs, code, expected);
     }
+
+    @Override
+    @ParameterizedTest
+    @CsvSource(value = {
+            "str::1                              | <ERROR>",
+            "lst::1                              | <ERROR>"
+    }, delimiter = '|')
+    public void testCode(final String code, final String expected) {
+        super.testCode(code, expected);
+    }
 }
