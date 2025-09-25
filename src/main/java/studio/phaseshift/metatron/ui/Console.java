@@ -165,8 +165,11 @@ public class Console {
     }
 
     public Console() throws IOException {
-        final DefaultParser parser = new DefaultParser().quoteChars(new char[]{'\'', '"'}).lineCommentDelims(new String[]{"---"});
-        parser.setEofOnUnclosedBracket(DefaultParser.Bracket.CURLY, DefaultParser.Bracket.ROUND, DefaultParser.Bracket.SQUARE);
+        final DefaultParser parser = new DefaultParser()
+                .quoteChars(new char[]{'\'', '"'})
+                .lineCommentDelims(new String[]{"---"})
+                .eofOnUnclosedQuote(true)
+                .eofOnUnclosedBracket(DefaultParser.Bracket.CURLY, DefaultParser.Bracket.ROUND, DefaultParser.Bracket.SQUARE);
         this.terminal = TerminalBuilder.builder().encoding(StandardCharsets.UTF_8).system(true)/*.signalHandler(Terminal.SignalHandler.SIG_IGN)*/.build();
         this.outputHeader();
         // this.terminal.handle(Terminal.Signal.WINCH) // TODO: signal handling on some CNTRL-?? to resolve (not evaluate) current expression
@@ -179,8 +182,9 @@ public class Console {
                 .parser(parser)
                 .variable(LineReader.HISTORY_FILE, Paths.get(".metatron.history"))
                 .option(LineReader.Option.AUTO_FRESH_LINE, true)
-                .variable(LineReader.SECONDARY_PROMPT_PATTERN, Graphitty.string("\n{{-X&v1&^1&FORM1}}%%P >{{X}}"))
-                .variable(LineReader.INDENTATION, 2)
+                .option(LineReader.Option.HISTORY_IGNORE_DUPS, true)
+                .variable(LineReader.SECONDARY_PROMPT_PATTERN, Graphitty.string("{{-X&v1&^1&FORM2}}    {{FORM1}}> {{X}}"))
+                .variable(LineReader.INDENTATION, 0)
                 .build();
         // final AutosuggestionWidgets autosuggestionWidgets = new AutosuggestionWidgets(this.reader);
         // autosuggestionWidgets.enable();

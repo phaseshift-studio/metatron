@@ -98,7 +98,7 @@ public interface Rec extends Poly {
             for (final String segment : k.segments()) {
                 final fURI segmentF = f(segment);
                 steps++;
-                System.out.println(Graphitty.string("searching for " + segment + " in " + this));
+                Graphitty.log(this).trace("searching for %s in %s", segment, this);
                 if (segmentF.hasPattern()) {
                     if (segmentF.equals(fURI.ANY))
                         return (O) (k.isBranch() ? MRel.of(k.asNode().toUri(), MObjs.of(this.recValue().values())) : MObjs.of(this.recValue().values()));

@@ -18,23 +18,8 @@
 
 package studio.phaseshift.metatron.util;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.Spliterators;
-import java.util.function.BiFunction;
-import java.util.function.BinaryOperator;
-import java.util.function.Consumer;
-import java.util.function.Function;
-import java.util.function.Predicate;
+import java.util.*;
+import java.util.function.*;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
@@ -533,5 +518,33 @@ public final class IteratorUtil {
                 CloseableIterator.closeIterator(iterator);
             }
         };
+    }
+
+    public static class ExpandableIterator<T> implements Iterator<T> {
+
+        public Iterator<T> baseIterator;
+        public Queue<T> expansion;
+
+        public ExpandableIterator(final Iterator<T> baseIterator) {
+            this.baseIterator = baseIterator;
+            this.expansion = new LinkedList<>();
+        }
+
+        public T next() {
+            return this.expansion.isEmpty() ? this.baseIterator.next() : this.expansion.remove();
+        }
+
+        public boolean hasNext() {
+            return !this.expansion.isEmpty() || this.baseIterator.hasNext();
+        }
+
+        public boolean push(final T t) {
+            return this.expansion.add(t);
+        }
+
+        public static <T> ExpandableIterator<T> of(final Iterator<T> baseIterator) {
+            return new ExpandableIterator<>(baseIterator);
+        }
+
     }
 }

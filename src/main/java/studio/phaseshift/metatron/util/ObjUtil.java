@@ -27,6 +27,7 @@ import studio.phaseshift.metatron.ui.Graphitty;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Stream;
 
 public final class ObjUtil {
 
@@ -51,11 +52,26 @@ public final class ObjUtil {
             return MObjs.of(objs);
     }
 
+    public static Obj oneNoneOrAll(final Stream<Obj> objs) {
+        return ObjUtil.oneNoneOrAll(objs.iterator());
+    }
+
+   /* public static Obj oneNoneOrAll(final Iterator<Obj> objs) {
+        if (!objs.hasNext())
+            return NoObj.single();
+        final IteratorUtil.ExpandableIterator<Obj> itty = IteratorUtil.ExpandableIterator.of(objs);
+        final Obj o = itty.next();
+        if (!itty.hasNext())
+            return o;
+        itty.push(o);
+        return MObjs.of(IteratorUtil.list(itty));
+    } */
+
     public static Obj oneNoneOrAll(final Iterator<Obj> objs) {
         if (!objs.hasNext())
             return NoObj.single();
         List<Obj> o = IteratorUtil.list(objs);
-         if (o.size() == 1)
+        if (o.size() == 1)
             return o.get(0);
         else
             return MObjs.of(o);

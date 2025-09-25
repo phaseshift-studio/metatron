@@ -19,10 +19,12 @@
 package studio.phaseshift.metatron;
 
 import org.junit.jupiter.api.BeforeAll;
+import studio.phaseshift.metatron.lang.obj.NoObj;
 import studio.phaseshift.metatron.lang.obj.Obj;
 import studio.phaseshift.metatron.lang.parse.ObjParser;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
+import studio.phaseshift.metatron.util.ObjUtil;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -49,6 +51,14 @@ public class MetatronTest {
         final Obj ex = ObjParser.m_obj().parse(expected).get();
         final Obj actual = b.apply(a);
         LOG.debug("testing %s.%s => %s [expected:%s]", a, b, actual, ex);
+        assertEquals(ex, actual);
+    }
+
+    public void testCode(final String code, final String expected) {
+        final Obj cd = ObjParser.sugar_code().parse(code).get();
+        final Obj ex = ObjParser.m_obj().parse(expected).get();
+        final Obj actual = cd.apply(NoObj.single());
+        LOG.debug("testing %s => %s [expected:%s]", cd, actual, ex);
         assertEquals(ex, actual);
     }
 

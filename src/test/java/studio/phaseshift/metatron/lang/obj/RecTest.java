@@ -25,6 +25,8 @@ public class RecTest extends MetatronTest {
             "[a=>b]                                | a                    | /mtron/uri::b",
             "[a=>b]                                | a/                   | /mtron/rel::a=>b",
             "[a=>{b,c}]                            | a/                   | /mtron/rel::a=>{b,c}",
+            "[a=>noobj]                            | a/                   | /mtron/rel::a=>noobj",
+            "[a=>noobj]                            | a                    | noobj",
             "[1=>[2=>3]]                           | 1                    | [2=>3]",
             "[1=>[2=>3]]                           | 2                    | noobj",
             "[a=>[b=>c,d=>[e=>f]]]                 | a                    | [b=>c,d=>[e=>f]]",
@@ -67,6 +69,15 @@ public class RecTest extends MetatronTest {
     public void testMatches(final String recA, final String recB, final boolean matches) {
         super.testMatches(recA, recB, matches);
     }
+
+    /*@Override
+    @ParameterizedTest
+    @CsvSource(value = {
+            "[a=>b]               % type()         % rec::T[]",
+    }, delimiter = '%')
+    public void testCode(final String start, final String code,final String expected) {
+        super.testCode(start, code,expected);
+    }*/
 
 
     @Test

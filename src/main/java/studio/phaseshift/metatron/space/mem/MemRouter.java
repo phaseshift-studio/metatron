@@ -26,7 +26,6 @@ import studio.phaseshift.metatron.space.Space;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -42,21 +41,28 @@ public class MemRouter implements Router {
     private final Map<fURI, Space> spaces = new HashMap<>();
     private final Map<fURI, fURI> smallToBigRewrites = new HashMap<>();
     private final Map<fURI, fURI> bigToSmallRewrites = new HashMap<>();
+    private final Space localSpace;
 
 
     public MemRouter(final fURI vid) {
         this.vid = vid;
+        this.localSpace = new MemSpace(this.pattern(), this.vid);
+        this.spaces.put(this.vid, localSpace);
         LOG.info("%s loaded at %s", this.tid(), this.vid);
     }
 
     public void registerRewrite(final fURI small, final fURI big) {
         this.smallToBigRewrites.put(small, big);
         this.bigToSmallRewrites.put(big, small);
+        this.localSpace.write(this.vid.extend("prefix").extend(small), big.toUri());
     }
 
     @Override
     public fURI rewrite(final fURI furi, final boolean big) {
-        return (big ? this.smallToBigRewrites.getOrDefault(furi.basePath(), furi) : this.bigToSmallRewrites.getOrDefault(furi.basePath(), furi)).coefficient(furi.coefficient()).queryMap(furi.queryMap());
+        fURI temp = (big ? this.smallToBigRewrites.getOrDefault(furi.basePath(), furi) : this.bigToSmallRewrites.getOrDefault(furi.basePath(), furi)).coefficient(furi.coefficient()).queryMap(furi.queryMap());
+        temp = temp.hasDom() ? temp.dom(this.rewrite(temp.dom(), big)) : temp;
+        temp = temp.hasRng() ? temp.rng(this.rewrite(temp.rng(), big)) : temp;
+        return temp;
     }
 
     public void addSpace(final Space space) {
@@ -75,7 +81,7 @@ public class MemRouter implements Router {
             try {
                 this.spaces.remove(s.pattern()).close();
                 LOG.trace("closing space %s", s);
-            } catch(final Exception e) {
+            } catch (final Exception e) {
                 LOG.error(e);
             }
         });
@@ -85,10 +91,11 @@ public class MemRouter implements Router {
         if (match.matches(fURI.NONE))
             return NullSpace.single();
         //     final fURI mvid = this.smallToBigRewrites.getOrDefault(vid,vid);
-        Optional<S> space = this.spaces.entrySet().stream()
+        final Optional<S> space = this.spaces.entrySet().stream()
                 .filter(kv -> match.basePath().matches(kv.getKey()))
-                .findAny()
-                .map(Map.Entry::getValue).map(s -> (S) s);
+                .map(Map.Entry::getValue)
+                .map(s -> (S) s)
+                .findAny();
         if (space.isPresent())
             return space.get();
         else if (!BOOTING)
@@ -101,6 +108,9 @@ public class MemRouter implements Router {
     public Obj read(final fURI vid) {
         if (vid.equals(this.vid))
             return this;
+        else if (this.vid.hasPrefix(vid)) {
+
+        }
         final Space space = this.getSpace(vid);
         //LOG.trace("reading %s from %s", vid, space.vid());
         return space.read(vid);
@@ -114,6 +124,11 @@ public class MemRouter implements Router {
     }
 
     @Override
+    public void append(fURI addr, Obj... obj) {
+
+    }
+
+    @Override
     public boolean hasSpaceFor(final fURI vid) {
         return this.spaces.entrySet().stream().anyMatch(kv -> vid.matches(kv.getKey()));
     }
@@ -122,6 +137,7 @@ public class MemRouter implements Router {
     public Iterable<Space> value() {
         return this.spaces.values();
     }
+
 
     @Override
     public MemRouter apply(final Obj other) {
@@ -139,8 +155,8 @@ public class MemRouter implements Router {
     }
 
     @Override
-    public <O extends Obj> O clone(Object value, fURI tid, fURI vid) {
-        return (O) this;
+    public Router clone(Object value, fURI tid, fURI vid) {
+        return this;
     }
 
     @Override

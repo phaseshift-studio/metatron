@@ -31,6 +31,7 @@ import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static studio.phaseshift.metatron.lang.fURI.DOM;
 import static studio.phaseshift.metatron.lang.fURI.f;
 import static studio.phaseshift.metatron.lang.obj.mtron.MBool.bool;
 import static studio.phaseshift.metatron.lang.obj.mtron.MInt.jnt;
@@ -57,6 +58,7 @@ public class MInstSet extends MSpace implements InstSet {
 
     public static final fURI MTRON_INST_TID = fURI.of("/mtron/inst");
     public static final fURI ID_TID = INST_TID.extend("id");
+    public static final fURI APPLY_TID = INST_TID.extend("apply");
     public static final fURI START_TID = INST_TID.extend("start");
     public static final fURI COUNT_TID = INST_TID.extend("count");
     public static final fURI SUM_TID = INST_TID.extend("sum");
@@ -114,6 +116,8 @@ public class MInstSet extends MSpace implements InstSet {
         this.write(
                 START_TID, MInst.instC(START_TID.dom(fURI.NONE.zero()).rng(fURI.ANY.any()), lst(T(ANY_TID)), (lhs, inst) -> inst.arg(0)),
                 END_TID, MInst.instC(END_TID.dom(ANY_TID.any()).rng(NOOBJ_TID.zero()), NO_ARGS__, (lhs, inst) -> NoObj.single()),
+                ID_TID, MInst.instC(ID_TID.dom(ANY_TID.maybe()).rng(ANY_TID.maybe()), NO_ARGS__, (lhs, inst) -> lhs),
+                APPLY_TID, MInst.instC(APPLY_TID.dom(ANY_TID).rng(ANY_TID), lst(T(INST_TID)), (lhs, inst) -> inst.arg(0).apply(lhs)),
                 MAP_TID, MInst.instC(MAP_TID.dom(fURI.ANY).rng(fURI.ANY), lst(T(ANY_TID)), (lhs, inst) -> inst.arg(0)),
                 MAP_TID, MInst.instC(MAP_TID.dom(fURI.ANY).rng(fURI.ANY.maybe()), lst(T(ANY_TID)), (lhs, inst) -> inst.arg(0)),
                 TID_TID, MInst.instC(TID_TID.dom(fURI.ANY).rng(URI_TID), NO_ARGS__, (lhs, inst) -> lhs.tid().toUri()),
@@ -164,6 +168,9 @@ public class MInstSet extends MSpace implements InstSet {
                 MULT_TID, MInst.instC(MULT_TID.dom(LST_TID).rng(LST_TID), lst(T(LST_TID)), (lhs, inst) -> lhs.value(lhs.lstValue().stream().flatMap(a -> inst.arg(0).lstValue().stream().map(b -> MRel.of(a, b))).toList())),
                 // MULT_TID, MInst.instC(MULT_TID.dom(REC_TID).rng(REC_TID), lst(T(REC_TID)), (lhs, inst) -> lhs.value(Stream.concat(lhs.recValue().entrySet().stream(), inst.arg(0).recValue().entrySet().stream()).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (a, b) -> b)))),
                 /// ///////////////////////////////////////////////////////////////////////////////////////////////////
+                REF_TID, MInst.instC(REF_TID.dom(ANY_TID).rng(ANY_TID.any()), lst(T(ANY_TID.any())), (lhs, inst) -> Router.global().write(lhs.uriValue(), inst.arg(0))),
+                TYPE_TID, MInst.instC(TYPE_TID.dom(ANY_TID).rng(TYPE_TID), NO_ARGS__, (lhs, inst) -> T(lhs.tid())),
+                /// ///////////////////////////////////////////////////////////////////////////////////////////////////
                 COUNT_TID, MInst.instC(COUNT_TID.dom(ANY_TID.any()).rng(INT_TID), NO_ARGS__, (lhs, inst) -> IteratorUtil.reduce(lhs.iterator(), jnt(0), (a, b) -> MInst.instB(PLUS_TID, MLst.of(jnt(1))).apply(a))),
                 SUM_TID, MInst.instC(SUM_TID.dom(ANY_TID.any()).rng(INT_TID), NO_ARGS__, (lhs, inst) -> IteratorUtil.reduce(lhs.iterator(), jnt(0), (a, b) -> MInst.instB(PLUS_TID, MLst.of(b)).apply(a))));
 
@@ -180,11 +187,11 @@ public class MInstSet extends MSpace implements InstSet {
                                 "query", MStr.of(lhs.tid().queryMap().toString())),
                         "value", MObjFactory.of().create(lhs.value()))
         ));
-        this.define(GET_TID, REC_TID, fURI.ANY.any(), MLst.of(ID__), (lhs, inst) -> lhs.<Rec>as().at(inst.arg(0)));
+        this.define(GET_TID, REC_TID, fURI.ANY, MLst.of(ID__), (lhs, inst) -> lhs.<Rec>as().at(inst.arg(0)));
         this.define(BARRIER_TID, fURI.ANY.any(), fURI.ANY.any(), MLst.of(ID__), (lhs, inst) -> inst.arg(0).apply(lhs), MObjs.of(List.of()));
 
         this.define(AT_TID, fURI.ANY, fURI.ANY, MLst.of(ID__), (lhs, inst) -> lhs.vid(inst.arg(0).uriValue()));
-        this.define(TYPE_TID, fURI.ANY, fURI.ANY, MLst.of(), (lhs, inst) -> MType.of(lhs.tid()));
+
         this.define(BLOCK_TID, fURI.ANY.maybe(), fURI.ANY.maybe(), MLst.of(ID__), (lhs, inst) -> inst.arg(0));
         this.define(DOM_TID, REC_TID, fURI.ANY, MLst.of(), (lhs, inst) -> MObjs.of(lhs.recValue().keySet()));
         this.define(DOM_TID, REL_TID, fURI.ANY, MLst.of(), (lhs, inst) -> MObjs.of(lhs.relValue().getValue0()));
@@ -194,8 +201,7 @@ public class MInstSet extends MSpace implements InstSet {
         this.define(RNG_TID, fURI.ANY, fURI.ANY, MLst.of(), (lhs, inst) -> lhs);
         this.define(TO_TID, fURI.ANY.maybe(), fURI.ANY.maybe(), MLst.of(ID__), (lhs, inst) -> Router.global().write(inst.arg(0).uriValue(), lhs));
         this.define(FROM_TID, fURI.ANY.maybe(), fURI.ANY.any(), MLst.of(ID__), (lhs, inst) -> Router.global().read(inst.arg(0).uriValue()));
-        this.define(REF_TID, fURI.ANY, fURI.ANY, MLst.of(ID__), (lhs, inst) -> Router.global().write(lhs.uriValue(), inst.arg(0)));
-        this.define(ID_TID, fURI.ANY.maybe(), fURI.ANY.maybe(), MLst.of(), (lhs, inst) -> lhs);
+
 
         this.define(WITHIN_TID, LST_TID, LST_TID, MLst.of(ID__), (lhs, inst) -> MLst.of(lhs.<Lst>as().lstValue().stream().map(o -> inst.arg(0).apply(o)).toList()));
         this.define(CROSS_TID, LST_TID, LST_TID, MRec.ofUriKeyed("c", ID__, "l", ID__), (lhs, inst) -> {
@@ -219,16 +225,18 @@ public class MInstSet extends MSpace implements InstSet {
 
     @Override
     public Obj read(final fURI vid) {
+        final fURI bigvid = vid.big();
         final Obj result = ObjUtil.oneNoneOrAll(SYMBOL_TABLE.entrySet()
                 .stream()
-                .filter(kv -> kv.getKey().matches(vid.basePath()))
+                .filter(kv -> kv.getKey().matches(bigvid.basePath()))
                 .flatMap(kv -> kv.getValue().entrySet().stream())
-                .filter(kv -> kv.getKey().bimatches(vid.dom()))
-                .map(Map.Entry::getValue).flatMap(Set::stream)
-                .filter(i -> i.rng().tid().bimatches(vid.rng()))
-                .map(i -> (Obj) i).iterator());
+                .filter(kv2 -> !bigvid.hasQuery("dom") || kv2.getKey().bimatches(bigvid.dom()))
+                .map(Map.Entry::getValue)
+                .flatMap(Set::stream)
+                .filter(i -> !bigvid.hasQuery("rng") || i.rng().tid().bimatches(bigvid.rng()))
+                .map(i -> (Obj) i));
         return result.isNoObj() ?
-                ObjUtil.oneNoneOrAll(OBJ_TABLE.entrySet().stream().filter(kv -> kv.getKey().matches(vid)).map(Map.Entry::getValue).iterator()) :
+                ObjUtil.oneNoneOrAll(OBJ_TABLE.entrySet().stream().filter(kv -> kv.getKey().matches(bigvid)).map(Map.Entry::getValue).iterator()) :
                 result;
     }
 

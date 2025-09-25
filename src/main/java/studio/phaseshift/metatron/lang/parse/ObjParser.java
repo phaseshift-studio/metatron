@@ -37,7 +37,6 @@ import studio.phaseshift.metatron.util.MTronException;
 import java.util.*;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import static org.petitparser.parser.primitive.CharacterParser.any;
 import static org.petitparser.parser.primitive.CharacterParser.anyOf;
@@ -116,7 +115,7 @@ public class ObjParser {
                 of(']').trim())
                 .map(t -> MLst.of(pick(t, 2), pick(t, 0))));
 
-        rec_parser.set(seq(m_type_prefix_opt_colon(REC_TID), of('[').trim(), rec_internal(), of(']')).trim().map(t -> MRec.of(pick(t, 2), pick(t, 0))));
+        rec_parser.set(seq(m_type_prefix_opt_colon(REC_TID), of('[').trim(), rec_internal(), of(']')).trim().map(t -> MRec.of(ObjParser.<Map<Obj, Obj>>pick(t, 2), pick(t, 0))));
 
         inst_parser.set(seq(
                 choice(m_inst_furi(), m_type_prefix_opt_colon(INST_TID)), // 0 inst_tid
@@ -202,22 +201,12 @@ public class ObjParser {
 
     public static Parser m_furi_query() {
         return seq(of('?'), choice(
-                m_furi_inst_dom_rng2(),
+                m_furi_inst_dom_rng(),
                 seq(word().plus(), opt(seq(of('='), word().or(anyOf(REDUCED_FURI_CHARS)).plus()), "")).separatedBy(of('&')).flatten()
         )).map(t -> pick(t, 1));
     }
 
     public static Parser m_furi_inst_dom_rng() {
-        return seq(
-                m_furi(REDUCED_FURI_CHARS, true, false),
-                of("<=").trim(),
-                m_furi(REDUCED_FURI_CHARS, true, false))
-                .map(t -> Stream.of(
-                        List.of("rng", pick(t, 0).toString()),
-                        List.of("dom", pick(t, 2).toString())).collect(Collectors.toMap(k -> k.get(0), v -> v.get(1), (v1, v2) -> v2, LinkedHashMap::new)));
-    }
-
-    public static Parser m_furi_inst_dom_rng2() {
         return seq(
                 m_furi(REDUCED_FURI_CHARS, true, false),
                 of("<=").trim(),
@@ -228,7 +217,7 @@ public class ObjParser {
 
     public static Parser m_inst_furi() {
         return seq(m_furi_base_path(REDUCED_FURI_CHARS), opt(seq(of('?'), m_furi_inst_dom_rng()).map(t -> ObjParser.pick(t, 1)), null), opt(of("::").trim(), "::"))
-                .map(t -> ObjParser.<fURI>pick(t, 0).queryMap(ObjParser.pick(t, 1)));
+                .map(t -> ObjParser.<fURI>pick(t, 0).query(ObjParser.pick(t, 1)));
     }
 
 
@@ -277,16 +266,14 @@ public class ObjParser {
     }
 
     public static Parser m_str() {
-        final Parser singleQuote = seq(of('\''), (of("\\'").or(any())).starLazy(of('\'')), of('\''));
-        final Parser doubleQuote = seq(of('"'), (of("\\\"").or(any())).starLazy(of('"')), of('"'));
+        final Parser singleQuote = seq(of('\''), (of("\\'").or(any())).starLazy(of('\'')), of('\'')).flatten().map(t -> t.toString().substring(1, t.toString().length() - 1));
+        final Parser doubleQuote = seq(of('"'), (of("\\\"").or(any())).starLazy(of('"')), of('"')).flatten().map(t -> t.toString().substring(1, t.toString().length() - 1));
         final Parser tripleQuote = seq(
-                of('"').repeatLazy(of('"').not(), 3, 3),
-                any().starLazy(of('"').repeatLazy(of('"').not(), 3, 3)),
-                of('"').repeatLazy(of('"').not(), 3, 3));
-        return seq(m_type_prefix(STR_TID), choice(tripleQuote, singleQuote, doubleQuote)
-                .pick(1)
-                .flatten())
-                .map(t -> new MStr(ObjParser.<String>pick(t, 1).substring(1, ObjParser.<String>pick(t, 1).length() - 1), pick(t, 0), fURI.NULL));
+                of('"').repeat(3, 3),
+                any().starLazy(of('"').repeat(3, 3)),
+                of('"').repeat(3, 3)).flatten().map(t -> t.toString().substring(3, t.toString().length() - 3));
+        return seq(m_type_prefix(STR_TID), choice(tripleQuote, singleQuote, doubleQuote))
+                .map(t -> new MStr(ObjParser.pick(t, 1), pick(t, 0), fURI.NULL));
     }
 
     public static Parser m_uri() {
@@ -353,7 +340,9 @@ public class ObjParser {
         // TODO: look into ExpressionBuilder for handling paren wrapping properly.
         return argCount == 0 ?
                 of(sugarOp).trim().map(t -> MInst.instA(tid)) :
-                seq(of(sugarOp).trim(), opt(of('('), '('), m_obj(), opt(of(')'), ')')).map(t -> MInst.instB(tid, MLst.of(ObjParser.<Obj>pick(t, 2))));
+                seq(of(sugarOp).trim(), choice(
+                        seq(of('('), m_obj(), of(')')).map(t -> ObjParser.<Obj>pick(t, 1)),
+                        m_obj())).map(t -> MInst.instB(tid, MLst.of(ObjParser.<Obj>pick(t, 1))));
     }
 
     public static Parser sugar_identity() {

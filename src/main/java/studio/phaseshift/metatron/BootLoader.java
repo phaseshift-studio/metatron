@@ -25,6 +25,7 @@ import studio.phaseshift.metatron.lang.obj.mtron.MUri;
 import studio.phaseshift.metatron.space.Router;
 import studio.phaseshift.metatron.space.Space;
 import studio.phaseshift.metatron.space.device.log.Log;
+import studio.phaseshift.metatron.space.fs.FileSpace;
 import studio.phaseshift.metatron.space.mem.MemRouter;
 import studio.phaseshift.metatron.space.mem.MemSpace;
 import studio.phaseshift.metatron.ui.Graphitty;
@@ -66,6 +67,8 @@ public class BootLoader {
             Log.of(f("/sys/log"));
             final Space var = new MemSpace(fURI.of("+/+/#"), fURI.of("/mnt/var"));
             Router.global().addSpace(var);
+            final Space fs = new FileSpace(f("/home/#"), f("/mnt/fs"));
+            Router.global().addSpace(fs);
             /// ///////////////////////////////////
             /*Router.global().write(
                     "bool", uri(BOOL_TID), "int", uri(INT_TID),

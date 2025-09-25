@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.util;
 
+import org.apache.tinkerpop.gremlin.util.function.ThrowingSupplier;
 import studio.phaseshift.metatron.ui.Graphitty;
 
 import java.util.Arrays;
@@ -49,11 +50,19 @@ public class MTronException extends RuntimeException {
     }
 
     public static MTronException of(final Object throwableOrformat, final Object... args) {
-       if(throwableOrformat instanceof Throwable)
-            ((Throwable)throwableOrformat).printStackTrace();
+        if (throwableOrformat instanceof Throwable)
+            ((Throwable) throwableOrformat).printStackTrace();
         return throwableOrformat instanceof Throwable ?
                 new MTronException(Graphitty.string(((String) args[0]).formatted(Arrays.copyOfRange(args, 1, args.length))),
                         (Throwable) throwableOrformat) :
                 new MTronException(Graphitty.string(throwableOrformat.toString().formatted(args)));
+    }
+
+    public static <T> T wrap(final ThrowingSupplier<T> function) {
+        try {
+            return function.get();
+        } catch (final Exception e) {
+            throw MTronException.of(e);
+        }
     }
 }

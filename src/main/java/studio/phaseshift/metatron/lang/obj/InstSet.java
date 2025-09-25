@@ -21,20 +21,13 @@ package studio.phaseshift.metatron.lang.obj;
 import org.javatuples.Triplet;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.base.furi.TypefURI;
-import studio.phaseshift.metatron.lang.obj.mtron.MCode;
 import studio.phaseshift.metatron.lang.obj.mtron.MInst;
 import studio.phaseshift.metatron.lang.obj.mtron.MLst;
 import studio.phaseshift.metatron.space.Space;
-import studio.phaseshift.metatron.ui.Graphitty;
-import studio.phaseshift.metatron.ui.GraphittyLogger;
-import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.*;
 import java.util.function.BiFunction;
-import java.util.stream.Stream;
 
-import static studio.phaseshift.metatron.lang.obj.mtron.MInstSet.MAP_TID;
-import static studio.phaseshift.metatron.lang.obj.mtron.MInstSet.START_TID;
 import static studio.phaseshift.metatron.lang.obj.mtron.MLst.lst;
 
 
@@ -54,7 +47,7 @@ public interface InstSet extends Space {
                 .stream()
                 .filter(kv -> {
                     // Graphitty.stdout().println("%s matches %s = %s".formatted(lhs.tid().queryless(),kv.getKey().queryless(),lhs.tid().queryless().matches(kv.getKey().queryless())));
-                    return vid.queryValue(fURI.DOM, fURI.class,fURI.ANY).basePath().matches(kv.getKey().basePath());
+                    return vid.queryValue(fURI.DOM, fURI.class, fURI.ANY).basePath().matches(kv.getKey().basePath());
                 }).flatMap(kv -> kv.getValue().stream()).toList();
         if (result.isEmpty())
             return NoObj.single();
@@ -73,7 +66,7 @@ public interface InstSet extends Space {
     }
 
     @Override
-    default void append(fURI addr, Obj... obj) {
+    default void append(final fURI addr, final Obj... obj) {
         return;
     }
 
@@ -89,15 +82,15 @@ public interface InstSet extends Space {
                 .map(Map.Entry::getValue)
                 .flatMap(Collection::stream)
                 .filter(i -> {
-                    boolean pass = false ;
-                    if(instAorB.resolution() == Inst.Resolve.A) {
+                    boolean pass = false;
+                    if (instAorB.resolution() == Inst.Resolve.A) {
                         pass = true;
-                    } else if(i.args().count() == instAorB.args().count()){
+                    } else if (i.args().count() == instAorB.args().count()) {
                         pass = true;
                         for (int k = 0; k < i.args().count(); k++) {
                             final Obj originalArg = i.arg(k);
                             final Obj userArg = instAorB.arg(k);
-                           // TODO::  System.out.println("!!!!" + userArg + ":::" + originalArg + "::::" + userArg.matches(originalArg));
+                            // TODO::  System.out.println("!!!!" + userArg + ":::" + originalArg + "::::" + userArg.matches(originalArg));
                             if (!userArg.matches(originalArg)) {
                                 pass = false;
                                 break;
@@ -109,16 +102,16 @@ public interface InstSet extends Space {
                 })
                 .map(i -> {
                     List<Obj> newArgs = new ArrayList<>();
-                    for(int k=0;k<i.args().count();k++) {
+                    for (int k = 0; k < i.args().count(); k++) {
                         final Obj originalArg = i.arg(k);
                         final Obj userArg = instAorB.arg(k);
-                        if(false && originalArg.isType()) {
+                        if (false && originalArg.isType()) {
                             //if(userArg.isCall())
-                              //  newArgs.add(userArg.<Call>as().rng(originalArg.<Type>as()));
+                            //  newArgs.add(userArg.<Call>as().rng(originalArg.<Type>as()));
                             //else
-                                newArgs.add(userArg);
-                             // newArgs.add(originalArg.value(userArg));
-                                //newArgs.add(MInst.instB(MAP_TID, lst(userArg)).rng(originalArg.as()));
+                            newArgs.add(userArg);
+                            // newArgs.add(originalArg.value(userArg));
+                            //newArgs.add(MInst.instB(MAP_TID, lst(userArg)).rng(originalArg.as()));
                         } else {
                             newArgs.add(userArg);
                         }

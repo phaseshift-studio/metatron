@@ -119,30 +119,37 @@ public interface Inst extends Call {
             LOG.trace("resolution ({{m}}%s {{g}}<=>{{/g}} %s{{/m}}): %s", currentResolution, desiredResolution, lhs);
             return this;
         } else {*/
-            if (currentResolution == Resolve.A) {
-                //final Inst resolved = new MInstSet(fURI.of("/mnt/mtron")).resolve(lhs, this);
+        if (currentResolution == Resolve.A) {
+            //final Inst resolved = new MInstSet(fURI.of("/mnt/mtron")).resolve(lhs, this);
+            try {
                 final Inst resolved = Router.global().<InstSet>getSpace(fURI.of("/mtron/#")).resolve(lhs, this); // TODO: generalize for any instruction set
                 LOG.trace("resolution ({{m}}%s {{g}}=>{{/g}} %s{{/m}}): %s => %s", currentResolution, resolved.resolution(), lhs, resolved);
                 return resolved.resolution().equals(desiredResolution) || resolved.resolution().compareTo(desiredResolution) >= 0 ? resolved : resolved.resolve(desiredResolution, lhs);
-            } else { // Resolve.B
-                final boolean blocking = this.tid().basePath().equals(MInstSet.BLOCK_TID) || this.tid().basePath().equals(MInstSet.WITHIN_TID);
-                if (!blocking && !lhs.matches(this.dom()))
-                    throw MTronException.of("lhs obj does not match inst domain: %s: %s {{r}}-/>{{/r}} %s", this, lhs, this.dom());
-                final Poly cargs = this.args().isLst() ?
-                        MLst.of(this.args().lstValue().stream().map(arg -> blocking ? arg : arg.apply(lhs)).toList()) :
-                        MRec.of(this.args().recValue().entrySet().stream().map(kv -> List.of(kv.getKey(), blocking ? kv.getValue() : kv.getValue().apply(lhs))).collect(Collectors.toMap(kv -> kv.get(0), kv -> kv.get(1))));
-                final Inst resolved = this.value(Triplet.with(cargs, this.f(), this.seed()));
-                LOG.trace("resolution ({{m}}%s {{g}}=>{{/g}} %s{{/m}}): %s", currentResolution, resolved.resolution(), resolved);
+            } catch (Exception e) { // TODO: this is sloppy -- using exception handling for flow control
+                LOG.error(e);
+                final Inst resolved = ((Inst) Router.global().read(this.tid()));
+                LOG.warn("resolved %s from global router", resolved);
                 return resolved;
             }
-     //   }
+        } else { // Resolve.B
+            final boolean blocking = this.tid().basePath().equals(MInstSet.BLOCK_TID) || this.tid().basePath().equals(MInstSet.WITHIN_TID);
+            if (!blocking && !lhs.matches(this.dom()))
+                throw MTronException.of("lhs obj does not match inst domain: %s: %s {{r}}-/>{{/r}} %s", this, lhs, this.dom());
+            final Poly cargs = this.args().isLst() ?
+                    MLst.of(this.args().lstValue().stream().map(arg -> blocking ? arg : arg.apply(lhs)).toList()) :
+                    MRec.of(this.args().recValue().entrySet().stream().map(kv -> List.of(kv.getKey(), blocking ? kv.getValue() : kv.getValue().apply(lhs))).collect(Collectors.toMap(kv -> kv.get(0), kv -> kv.get(1))));
+            final Inst resolved = this.value(Triplet.with(cargs, this.f(), this.seed()));
+            LOG.trace("resolution ({{m}}%s {{g}}=>{{/g}} %s{{/m}}): %s", currentResolution, resolved.resolution(), resolved);
+            return resolved;
+        }
+        //   }
     }
 
     @Override
     default Obj apply(final Obj lhs) {
         final Inst cinst = this.resolve(Resolve.C, lhs);
         Router.stack().push(cinst.args());
-        if(!lhs.matches(cinst.dom()))
+        if (!lhs.matches(cinst.dom()))
             throw MTronException.of("{{m}}lhs obj{{/m}} (%s) does not match {{m}}inst domain{{/m}} (%s): %s", lhs, cinst.dom(), this);
         final Obj rhs = cinst.f().apply(lhs, cinst);
         Router.stack().pop();

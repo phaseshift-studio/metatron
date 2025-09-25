@@ -25,7 +25,7 @@ import studio.phaseshift.metatron.space.mem.StackSpace;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.Palette;
 
-public interface Router extends Obj, AutoCloseable {
+public interface Router extends Obj, Space, AutoCloseable {
 
     class Helpers {
         public static String routerToString(final Router router) {
@@ -49,6 +49,10 @@ public interface Router extends Obj, AutoCloseable {
         return this.read(fURI.of(vid));
     }
 
+    @Override
+    default fURI pattern() {
+        return fURI.ANY;
+    }
 
     default <O extends Obj> O read(final String vid, final Class<O> oClass) {
         try {

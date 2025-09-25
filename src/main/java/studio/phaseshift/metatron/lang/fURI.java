@@ -172,6 +172,16 @@ public class fURI implements Cloneable {
                 MUri.of(this);
     }
 
+    public boolean hasPrefix(final fURI subfuri) {
+        if (this.segments().size() < subfuri.segments().size())
+            return false;
+        for (int i = 0; i < subfuri.segments().size(); i++) {
+            if (!f(this.segments().get(i)).matches(f(subfuri.segments().get(i))))
+                return false;
+        }
+        return false;
+    }
+
     public String name() {
         return this.segments().isEmpty() ? "" : this.segments().get(this.segments().size() - 1);
     }
@@ -369,6 +379,18 @@ public class fURI implements Cloneable {
         return this.query != null && !this.query.isEmpty();
     }
 
+    public boolean hasQuery(final String key) {
+        return null != this.query && this.query.containsKey(key);
+    }
+
+    public boolean hasDom() {
+        return this.hasQuery("dom");
+    }
+
+    public boolean hasRng() {
+        return this.hasQuery("rng");
+    }
+
     public fURI query(final String query) {
         return new fURI(this.scheme, this.host, this.port, this.sstart, this.path, this.send, query);
     }
@@ -534,7 +556,7 @@ public class fURI implements Cloneable {
             return false;
         final fURI lhs = this.basePath();
         final fURI other = rhs.basePath();
-        if (other.equals(f("#")))
+        if (other.toString().equals("#"))
             return true;
         if (!other.hasPattern())
             return lhs.equals(other);
@@ -564,19 +586,19 @@ public class fURI implements Cloneable {
     public boolean equals(final Object other) {
         return other instanceof fURI &&
                 //    this.toString().equals(other.toString());
-                Objects.equals(this.scheme, ((fURI) other).scheme) &&
-                Objects.equals(this.host, ((fURI) other).host) &&
-                Objects.equals(this.port, ((fURI) other).port) &&
                 this.sstart == ((fURI) other).sstart &&
                 Objects.equals(this.coefficientless().path, ((fURI) other).coefficientless().path) &&
                 this.send == ((fURI) other).send &&
                 Objects.equals(this.query, ((fURI) other).query) &&
-                Objects.equals(this.coefficientValue(), ((fURI) other).coefficientValue());
+                Objects.equals(this.coefficientValue(), ((fURI) other).coefficientValue()) &&
+                Objects.equals(this.scheme, ((fURI) other).scheme) &&
+                Objects.equals(this.host, ((fURI) other).host) &&
+                Objects.equals(this.port, ((fURI) other).port);
     }
 
     public int hashCode() {
-        //  return Objects.hash(this.scheme, this.host, this.port, this.sstart, this.path, this.send, this.query);
-        return this.toString().hashCode();
+          return Objects.hash(this.scheme, this.host, this.port, this.sstart, this.path, this.send, this.query);
+        //return this.toString().hashCode();
     }
 
     public String toString() {
