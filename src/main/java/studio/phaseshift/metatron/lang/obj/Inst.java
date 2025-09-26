@@ -62,14 +62,6 @@ public interface Inst extends Call {
     /// ////////////////////////////////////////////////////////////
     /// ////////////////////////////////////////////////////////////
 
-    /*@Override
-    default boolean matches(final Obj rhs) {
-        if (rhs.isType()) {
-            return this.tid().rng().matches(rhs.tid());
-        } else {
-            return rhs.matches(this.dom());
-        }
-    }*/
 
     @Override
     default Type dom() {

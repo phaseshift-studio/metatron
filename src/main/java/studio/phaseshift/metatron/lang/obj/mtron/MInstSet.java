@@ -31,13 +31,13 @@ import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.lang.fURI.f;
 import static studio.phaseshift.metatron.lang.obj.mtron.MBool.bool;
+import static studio.phaseshift.metatron.lang.obj.mtron.MInst.instC;
 import static studio.phaseshift.metatron.lang.obj.mtron.MInstSet.Fluent.m.isA;
 import static studio.phaseshift.metatron.lang.obj.mtron.MInt.jnt;
 import static studio.phaseshift.metatron.lang.obj.mtron.MLst.lst;
 import static studio.phaseshift.metatron.lang.obj.mtron.MType.T;
 
 public class MInstSet extends MSpace implements InstSet {
-
 
 
     public static final fURI MTRON_TID = fURI.of("/mtron");
@@ -115,72 +115,73 @@ public class MInstSet extends MSpace implements InstSet {
     public void load() {
         BASE_TYPES.forEach(t -> Router.global().registerRewrite(f(t.name()), t));
         this.write(
-                START_TID, MInst.instC(START_TID.dom(fURI.NONE.zero()).rng(fURI.ANY.any()), lst(T(ANY_TID)), (lhs, inst) -> inst.arg(0)),
-                END_TID, MInst.instC(END_TID.dom(ANY_TID.any()).rng(NOOBJ_TID.zero()), NO_ARGS__, (lhs, inst) -> NoObj.single()),
-                ID_TID, MInst.instC(ID_TID.dom(ANY_TID.maybe()).rng(ANY_TID.maybe()), NO_ARGS__, (lhs, inst) -> lhs),
-                APPLY_TID, MInst.instC(APPLY_TID.dom(ANY_TID).rng(ANY_TID), lst(T(INST_TID)), (lhs, inst) -> inst.arg(0).apply(lhs)),
-                MAP_TID, MInst.instC(MAP_TID.dom(fURI.ANY).rng(fURI.ANY), lst(T(ANY_TID)), (lhs, inst) -> inst.arg(0)),
-                MAP_TID, MInst.instC(MAP_TID.dom(fURI.ANY).rng(fURI.ANY.maybe()), lst(T(ANY_TID)), (lhs, inst) -> inst.arg(0)),
-                TID_TID, MInst.instC(TID_TID.dom(fURI.ANY).rng(URI_TID), NO_ARGS__, (lhs, inst) -> lhs.tid().toUri()),
-                VID_TID, MInst.instC(VID_TID.dom(fURI.ANY).rng(URI_TID), NO_ARGS__, (lhs, inst) -> lhs.vid().toUri()),
-                ELSE_TID, MInst.instC(ELSE_TID.dom(fURI.ANY.maybe()).rng(fURI.ANY), lst(T(ANY_TID)), (lhs, inst) -> lhs.isNoObj() ? inst.arg(0) : lhs),
-                IS_TID, MInst.instC(IS_TID.dom(fURI.ANY.maybe()).rng(fURI.ANY.maybe()), lst(ID__), (lhs, inst) -> inst.arg(0).boolValue() ? lhs : NoObj.single()),
-                ISA_TID, MInst.instC(ISA_TID.dom(fURI.ANY.maybe()).rng(fURI.ANY.maybe()), lst(ID__), (lhs, inst) -> lhs.matches(inst.arg(0)) ? lhs : NoObj.single()),
-                IN_TID, MInst.instC(IN_TID.dom(fURI.ANY).rng(BOOL_TID), lst(ID__), (lhs, inst) -> bool(lhs.matches(inst.arg(0)))),
-                GET_TID, MInst.instC(GET_TID.dom(REC_TID).rng(fURI.ANY.any()), lst(ID__), (lhs, inst) -> lhs.<Rec>as().at(inst.arg(0))),
-                GET_TID, MInst.instC(GET_TID.dom(LST_TID).rng(fURI.ANY.any()), lst(T(INT_TID)), (lhs, inst) -> lhs.<Lst>as().at(inst.arg(0))),
+                START_TID, instC(START_TID.dom(fURI.NONE.zero()).rng(fURI.ANY.any()), lst(T(ANY_TID)), (lhs, inst) -> inst.arg(0)),
+                END_TID, instC(END_TID.dom(ANY_TID.any()).rng(NOOBJ_TID.zero()), NO_ARGS__, (lhs, inst) -> NoObj.single()),
+                ID_TID, instC(ID_TID.dom(ANY_TID.maybe()).rng(ANY_TID.maybe()), NO_ARGS__, (lhs, inst) -> lhs),
+                APPLY_TID, instC(APPLY_TID.dom(ANY_TID).rng(ANY_TID), lst(T(INST_TID)), (lhs, inst) -> inst.arg(0).apply(lhs)),
+                MAP_TID, instC(MAP_TID.dom(fURI.ANY).rng(fURI.ANY), lst(T(ANY_TID)), (lhs, inst) -> inst.arg(0)),
+                MAP_TID, instC(MAP_TID.dom(fURI.ANY).rng(fURI.ANY.maybe()), lst(T(ANY_TID)), (lhs, inst) -> inst.arg(0)),
+                TID_TID, instC(TID_TID.dom(fURI.ANY).rng(URI_TID), NO_ARGS__, (lhs, inst) -> lhs.tid().toUri()),
+                VID_TID, instC(VID_TID.dom(fURI.ANY).rng(URI_TID), NO_ARGS__, (lhs, inst) -> lhs.vid().toUri()),
+                ELSE_TID, instC(ELSE_TID.dom(fURI.ANY.maybe()).rng(fURI.ANY), lst(T(ANY_TID)), (lhs, inst) -> lhs.isNoObj() ? inst.arg(0) : lhs),
+                IS_TID, instC(IS_TID.dom(fURI.ANY.maybe()).rng(fURI.ANY.maybe()), lst(ID__), (lhs, inst) -> inst.arg(0).boolValue() ? lhs : NoObj.single()),
+                ISA_TID, instC(ISA_TID.dom(fURI.ANY.maybe()).rng(fURI.ANY.maybe()), lst(ID__), (lhs, inst) -> lhs.matches(inst.arg(0)) ? lhs : NoObj.single()),
+                IN_TID, instC(IN_TID.dom(fURI.ANY).rng(BOOL_TID), lst(ID__), (lhs, inst) -> bool(lhs.matches(inst.arg(0)))),
+                GET_TID, instC(GET_TID.dom(REC_TID).rng(fURI.ANY.any()), lst(ID__), (lhs, inst) -> lhs.<Rec>as().at(inst.arg(0))),
+                GET_TID, instC(GET_TID.dom(LST_TID).rng(fURI.ANY.any()), lst(T(INT_TID)), (lhs, inst) -> lhs.<Lst>as().at(inst.arg(0))),
                 /// ///////////////////////////////////////////////////////////////////////////////////////////////////
-                BLOCK_TID, MInst.instC(BLOCK_TID.dom(fURI.ANY.maybe()).rng(fURI.ANY.maybe()), lst(ID__), (lhs, inst) -> inst.arg(0)),
-                SPLIT_TID, MInst.instC(SPLIT_TID.dom(ANY_TID).rng(LST_TID), lst(T(LST_TID)), (lhs, inst) -> MLst.of(inst.arg(0).lstValue().stream().map(e -> e.apply(lhs)).toList())),
-                SPLIT_TID, MInst.instC(SPLIT_TID.dom(ANY_TID).rng(REL_TID), lst(T(REL_TID)), (lhs, inst) -> MRel.of(inst.arg(0).<Rel>as().first().apply(lhs), inst.arg(0).<Rel>as().second().apply(lhs))),
-                SPLIT_TID, MInst.instC(SPLIT_TID.dom(ANY_TID).rng(REC_TID), lst(T(REC_TID)), (lhs, inst) -> MRec.of(inst.arg(0).recValue().entrySet().stream()
+                BLOCK_TID, instC(BLOCK_TID.dom(fURI.ANY.maybe()).rng(fURI.ANY.maybe()), lst(ID__), (lhs, inst) -> inst.arg(0)),
+                SPLIT_TID, instC(SPLIT_TID.dom(ANY_TID).rng(LST_TID), lst(T(LST_TID)), (lhs, inst) -> MLst.of(inst.arg(0).lstValue().stream().map(e -> e.apply(lhs)).toList())),
+                SPLIT_TID, instC(SPLIT_TID.dom(ANY_TID).rng(REL_TID), lst(T(REL_TID)), (lhs, inst) -> MRel.of(inst.arg(0).<Rel>as().first().apply(lhs), inst.arg(0).<Rel>as().second().apply(lhs))),
+                SPLIT_TID, instC(SPLIT_TID.dom(ANY_TID).rng(REC_TID), lst(T(REC_TID)), (lhs, inst) -> MRec.of(inst.arg(0).recValue().entrySet().stream()
                         .map(e -> e.getKey().apply(lhs).choose(Obj::isNoObj, null, x -> MRel.of(x, e.getValue().apply(x))))
                         .filter(x -> !Objects.isNull(x))
                         .collect(Collectors.toMap(a -> a.<Rel>as().first(), b -> b.<Rel>as().second(), (a, b) -> b, LinkedHashMap<Obj, Obj>::new)))),
-                SPLIT_TID, MInst.instC(SPLIT_TID.dom(ANY_TID).rng(ANY_TID), lst(T(ANY_TID)), (lhs, inst) -> inst.arg(0).apply(lhs)),
-                MERGE_TID, MInst.instC(MERGE_TID.dom(LST_TID).rng(fURI.ANY.any()), NO_ARGS__, (lhs, inst) -> MObjs.of(lhs.<Lst>as().value())),
-                MERGE_TID, MInst.instC(MERGE_TID.dom(REC_TID).rng(REL_TID), NO_ARGS__, (lhs, inst) -> lhs.isPoly() ? MObjs.of(lhs.<Poly>as().elements()) : lhs),
-                MERGE_TID, MInst.instC(MERGE_TID.dom(ANY_TID).rng(ANY_TID), NO_ARGS__, (lhs, inst) -> lhs),
+                SPLIT_TID, instC(SPLIT_TID.dom(ANY_TID).rng(ANY_TID), lst(T(ANY_TID)), (lhs, inst) -> inst.arg(0).apply(lhs)),
+                MERGE_TID, instC(MERGE_TID.dom(LST_TID).rng(fURI.ANY.any()), NO_ARGS__, (lhs, inst) -> MObjs.of(lhs.<Lst>as().value())),
+                MERGE_TID, instC(MERGE_TID.dom(REC_TID).rng(REL_TID), NO_ARGS__, (lhs, inst) -> lhs.isPoly() ? MObjs.of(lhs.<Poly>as().elements()) : lhs),
+                MERGE_TID, instC(MERGE_TID.dom(ANY_TID).rng(ANY_TID), NO_ARGS__, (lhs, inst) -> lhs),
                 /// ///////////////////////////////////////////////////////////////////////////////////////////////////
-                NOT_TID, MInst.instC(NOT_TID.dom(fURI.ANY).rng(BOOL_TID), lst(T(BOOL_TID)), (lhs, inst) -> bool(!inst.arg(0).boolValue())),
-                EQ_TID, MInst.instC(EQ_TID.dom(ANY_TID).rng(BOOL_TID), lst(T(ANY_TID)), (lhs, inst) -> bool(lhs.equals(inst.arg(0)))),
-                NEQ_TID, MInst.instC(NEQ_TID.dom(fURI.ANY).rng(BOOL_TID), lst(T(ANY_TID)), (lhs, inst) -> bool(!lhs.equals(inst.arg(0)))),
-                GT_TID, MInst.instC(GT_TID.dom(INT_TID).rng(BOOL_TID), lst(T(INT_TID)), (lhs, inst) -> bool(lhs.intValue() > inst.arg(0).intValue())),
-                GT_TID, MInst.instC(GT_TID.dom(REAL_TID).rng(BOOL_TID), lst(T(REAL_TID)), (lhs, inst) -> bool(lhs.realValue() > inst.arg(0).realValue())),
-                GT_TID, MInst.instC(GT_TID.dom(STR_TID).rng(BOOL_TID), lst(T(STR_TID)), (lhs, inst) -> bool(lhs.intValue().compareTo(inst.arg(0).intValue()) > 0)),
-                GTE_TID, MInst.instC(GTE_TID.dom(INT_TID).rng(BOOL_TID), lst(T(INT_TID)), (lhs, inst) -> bool(lhs.intValue() >= inst.arg(0).intValue())),
-                GTE_TID, MInst.instC(GTE_TID.dom(REAL_TID).rng(BOOL_TID), lst(T(REAL_TID)), (lhs, inst) -> bool(lhs.realValue() >= inst.arg(0).realValue())),
-                GTE_TID, MInst.instC(GTE_TID.dom(STR_TID).rng(BOOL_TID), lst(T(STR_TID)), (lhs, inst) -> bool(lhs.intValue().compareTo(inst.arg(0).intValue()) >= 0)),
-                LT_TID, MInst.instC(LT_TID.dom(INT_TID).rng(BOOL_TID), lst(T(INT_TID)), (lhs, inst) -> bool(lhs.intValue() < inst.arg(0).intValue())),
-                LT_TID, MInst.instC(LT_TID.dom(REAL_TID).rng(BOOL_TID), lst(T(REAL_TID)), (lhs, inst) -> bool(lhs.realValue() < inst.arg(0).realValue())),
-                LT_TID, MInst.instC(LT_TID.dom(STR_TID).rng(BOOL_TID), lst(T(STR_TID)), (lhs, inst) -> bool(lhs.intValue().compareTo(inst.arg(0).intValue()) < 0)),
-                LTE_TID, MInst.instC(LTE_TID.dom(INT_TID).rng(BOOL_TID), lst(T(INT_TID)), (lhs, inst) -> bool(lhs.intValue() <= inst.arg(0).intValue())),
-                LTE_TID, MInst.instC(LTE_TID.dom(REAL_TID).rng(BOOL_TID), lst(T(REAL_TID)), (lhs, inst) -> bool(lhs.realValue() <= inst.arg(0).realValue())),
-                LTE_TID, MInst.instC(LTE_TID.dom(STR_TID).rng(BOOL_TID), lst(T(STR_TID)), (lhs, inst) -> bool(lhs.intValue().compareTo(inst.arg(0).intValue()) <= 0)),
+                NOT_TID, instC(NOT_TID.dom(fURI.ANY).rng(BOOL_TID), lst(T(BOOL_TID)), (lhs, inst) -> bool(!inst.arg(0).boolValue())),
+                EQ_TID, instC(EQ_TID.dom(ANY_TID).rng(BOOL_TID), lst(T(ANY_TID)), (lhs, inst) -> bool(lhs.equals(inst.arg(0)))),
+                NEQ_TID, instC(NEQ_TID.dom(fURI.ANY).rng(BOOL_TID), lst(T(ANY_TID)), (lhs, inst) -> bool(!lhs.equals(inst.arg(0)))),
+                GT_TID, instC(GT_TID.dom(INT_TID).rng(BOOL_TID), lst(T(INT_TID)), (lhs, inst) -> bool(lhs.intValue() > inst.arg(0).intValue())),
+                GT_TID, instC(GT_TID.dom(REAL_TID).rng(BOOL_TID), lst(T(REAL_TID)), (lhs, inst) -> bool(lhs.realValue() > inst.arg(0).realValue())),
+                GT_TID, instC(GT_TID.dom(STR_TID).rng(BOOL_TID), lst(T(STR_TID)), (lhs, inst) -> bool(lhs.intValue().compareTo(inst.arg(0).intValue()) > 0)),
+                GTE_TID, instC(GTE_TID.dom(INT_TID).rng(BOOL_TID), lst(T(INT_TID)), (lhs, inst) -> bool(lhs.intValue() >= inst.arg(0).intValue())),
+                GTE_TID, instC(GTE_TID.dom(REAL_TID).rng(BOOL_TID), lst(T(REAL_TID)), (lhs, inst) -> bool(lhs.realValue() >= inst.arg(0).realValue())),
+                GTE_TID, instC(GTE_TID.dom(STR_TID).rng(BOOL_TID), lst(T(STR_TID)), (lhs, inst) -> bool(lhs.intValue().compareTo(inst.arg(0).intValue()) >= 0)),
+                LT_TID, instC(LT_TID.dom(INT_TID).rng(BOOL_TID), lst(T(INT_TID)), (lhs, inst) -> bool(lhs.intValue() < inst.arg(0).intValue())),
+                LT_TID, instC(LT_TID.dom(REAL_TID).rng(BOOL_TID), lst(T(REAL_TID)), (lhs, inst) -> bool(lhs.realValue() < inst.arg(0).realValue())),
+                LT_TID, instC(LT_TID.dom(STR_TID).rng(BOOL_TID), lst(T(STR_TID)), (lhs, inst) -> bool(lhs.intValue().compareTo(inst.arg(0).intValue()) < 0)),
+                LTE_TID, instC(LTE_TID.dom(INT_TID).rng(BOOL_TID), lst(T(INT_TID)), (lhs, inst) -> bool(lhs.intValue() <= inst.arg(0).intValue())),
+                LTE_TID, instC(LTE_TID.dom(REAL_TID).rng(BOOL_TID), lst(T(REAL_TID)), (lhs, inst) -> bool(lhs.realValue() <= inst.arg(0).realValue())),
+                LTE_TID, instC(LTE_TID.dom(STR_TID).rng(BOOL_TID), lst(T(STR_TID)), (lhs, inst) -> bool(lhs.intValue().compareTo(inst.arg(0).intValue()) <= 0)),
                 /// ///////////////////////////////////////////////////////////////////////////////////////////////////
-                PLUS_TID, MInst.instC(PLUS_TID.dom(BOOL_TID).rng(BOOL_TID), lst(T(BOOL_TID)), (lhs, inst) -> lhs.value(lhs.boolValue() || inst.arg(0).boolValue())),
-                PLUS_TID, MInst.instC(PLUS_TID.dom(INT_TID).rng(INT_TID), lst(isA(T(STR_TID))), (lhs, inst) -> lhs.value(lhs.intValue() + inst.arg(0).intValue())),
-                PLUS_TID, MInst.instC(PLUS_TID.dom(REAL_TID).rng(REAL_TID), lst(T(REAL_TID)), (lhs, inst) -> lhs.value(lhs.realValue() + inst.arg(0).realValue())),
-                PLUS_TID, MInst.instC(PLUS_TID.dom(STR_TID).rng(STR_TID), lst(T(STR_TID)), (lhs, inst) -> lhs.value(lhs.strValue() + inst.arg(0).strValue())),
-                PLUS_TID, MInst.instC(PLUS_TID.dom(URI_TID).rng(URI_TID), lst(T(URI_TID)), (lhs, inst) -> lhs.value(lhs.uriValue().plus(inst.arg(0).uriValue()))),
-                PLUS_TID, MInst.instC(PLUS_TID.dom(LST_TID).rng(LST_TID), lst(T(LST_TID)), (lhs, inst) -> lhs.value(Stream.concat(lhs.lstValue().stream(), inst.arg(0).lstValue().stream()).toList())),
-                PLUS_TID, MInst.instC(PLUS_TID.dom(REC_TID).rng(REC_TID), lst(T(REC_TID)), (lhs, inst) -> lhs.value(Stream.concat(lhs.recValue().entrySet().stream(), inst.arg(0).recValue().entrySet().stream()).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (a, b) -> b)))),
-                MULT_TID, MInst.instC(MULT_TID.dom(BOOL_TID).rng(BOOL_TID), lst(T(BOOL_TID)), (lhs, inst) -> lhs.value(lhs.boolValue() && inst.arg(0).boolValue())),
-                MULT_TID, MInst.instC(MULT_TID.dom(INT_TID).rng(INT_TID), lst(T(INT_TID)), (lhs, inst) -> lhs.value(lhs.intValue() * inst.arg(0).intValue())),
-                MULT_TID, MInst.instC(MULT_TID.dom(REAL_TID).rng(REAL_TID), lst(T(REAL_TID)), (lhs, inst) -> lhs.value(lhs.realValue() * inst.arg(0).realValue())),
+                PLUS_TID, instC(PLUS_TID.dom(BOOL_TID).rng(BOOL_TID), lst(isA(T(BOOL_TID))), (lhs, inst) -> lhs.value(lhs.boolValue() || inst.arg(0).boolValue())),
+                PLUS_TID, instC(PLUS_TID.dom(INT_TID).rng(INT_TID), lst(isA(T(STR_TID))), (lhs, inst) -> lhs.value(lhs.intValue() + inst.arg(0).intValue())),
+                PLUS_TID, instC(PLUS_TID.dom(REAL_TID).rng(REAL_TID), lst(isA(T(REAL_TID))), (lhs, inst) -> lhs.value(lhs.realValue() + inst.arg(0).realValue())),
+                PLUS_TID, instC(PLUS_TID.dom(STR_TID).rng(STR_TID), lst(isA(T(STR_TID))), (lhs, inst) -> lhs.value(lhs.strValue() + inst.arg(0).strValue())),
+                PLUS_TID, instC(PLUS_TID.dom(URI_TID).rng(URI_TID), lst(isA(T(URI_TID))), (lhs, inst) -> lhs.value(lhs.uriValue().plus(inst.arg(0).uriValue()))),
+                PLUS_TID, instC(PLUS_TID.dom(LST_TID).rng(LST_TID), lst(isA(T(LST_TID))), (lhs, inst) -> lhs.value(Stream.concat(lhs.lstValue().stream(), inst.arg(0).lstValue().stream()).toList())),
+                PLUS_TID, instC(PLUS_TID.dom(REC_TID).rng(REC_TID), lst(isA(T(REC_TID))), (lhs, inst) -> lhs.value(Stream.concat(lhs.recValue().entrySet().stream(), inst.arg(0).recValue().entrySet().stream()).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (a, b) -> b)))),
+                MULT_TID, instC(MULT_TID.dom(BOOL_TID).rng(BOOL_TID), lst(isA(T(BOOL_TID))), (lhs, inst) -> lhs.value(lhs.boolValue() && inst.arg(0).boolValue())),
+                MULT_TID, instC(MULT_TID.dom(INT_TID).rng(INT_TID), lst(isA(T(INT_TID))), (lhs, inst) -> lhs.value(lhs.intValue() * inst.arg(0).intValue())),
+                MULT_TID, instC(MULT_TID.dom(REAL_TID).rng(REAL_TID), lst(isA(T(REAL_TID))), (lhs, inst) -> lhs.value(lhs.realValue() * inst.arg(0).realValue())),
                 // MULT_TID, MInst.instC(MULT_TID.dom(STR_TID).rng(STR_TID), lst(T(STR_TID)), (lhs, inst) -> lhs.value(lhs.strValue() + inst.arg(0).strValue())),
-                MULT_TID, MInst.instC(MULT_TID.dom(URI_TID).rng(URI_TID), lst(T(URI_TID)), (lhs, inst) -> lhs.value(lhs.uriValue().mult(inst.arg(0).uriValue()))),
-                MULT_TID, MInst.instC(MULT_TID.dom(LST_TID).rng(LST_TID), lst(T(LST_TID)), (lhs, inst) -> lhs.value(lhs.lstValue().stream().flatMap(a -> inst.arg(0).lstValue().stream().map(b -> MRel.of(a, b))).toList())),
+                MULT_TID, instC(MULT_TID.dom(URI_TID).rng(URI_TID), lst(isA(T(URI_TID))), (lhs, inst) -> lhs.value(lhs.uriValue().mult(inst.arg(0).uriValue()))),
+                MULT_TID, instC(MULT_TID.dom(LST_TID).rng(LST_TID), lst(isA(T(LST_TID))), (lhs, inst) -> lhs.value(lhs.lstValue().stream().flatMap(a -> inst.arg(0).lstValue().stream().map(b -> MRel.of(a, b))).toList())),
                 // MULT_TID, MInst.instC(MULT_TID.dom(REC_TID).rng(REC_TID), lst(T(REC_TID)), (lhs, inst) -> lhs.value(Stream.concat(lhs.recValue().entrySet().stream(), inst.arg(0).recValue().entrySet().stream()).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (a, b) -> b)))),
                 /// ///////////////////////////////////////////////////////////////////////////////////////////////////
-                TO_TID, MInst.instC(TO_TID.dom(fURI.ANY.maybe()).rng(fURI.ANY.maybe()), lst(T(URI_TID)), (lhs, inst) -> Router.global().write(inst.arg(0).uriValue(), lhs)),
-                FROM_TID, MInst.instC(FROM_TID.dom(fURI.ANY.maybe()).rng(fURI.ANY.any()), lst(ID__), (lhs, inst) -> Router.global().read(inst.arg(0).uriValue())),
-                REF_TID, MInst.instC(REF_TID.dom(ANY_TID).rng(ANY_TID.any()), lst(T(ANY_TID.any())), (lhs, inst) -> Router.global().write(lhs.uriValue(), inst.arg(0))),
-                TYPE_TID, MInst.instC(TYPE_TID.dom(ANY_TID).rng(TYPE_TID), NO_ARGS__, (lhs, inst) -> T(lhs.tid())),
+                TO_TID, instC(TO_TID.dom(fURI.ANY.maybe()).rng(fURI.ANY.maybe()), lst(T(URI_TID)), (lhs, inst) -> Router.global().write(inst.arg(0).uriValue(), lhs)),
+                FROM_TID, instC(FROM_TID.dom(fURI.ANY.maybe()).rng(fURI.ANY.any()), lst(ID__), (lhs, inst) -> Router.global().read(inst.arg(0).uriValue())),
+                REF_TID, instC(REF_TID.dom(ANY_TID).rng(ANY_TID.any()), lst(T(ANY_TID.any())), (lhs, inst) -> Router.global().write(lhs.uriValue(), inst.arg(0))),
+                TYPE_TID, instC(TYPE_TID.dom(ANY_TID).rng(TYPE_TID), NO_ARGS__, (lhs, inst) -> T(lhs.tid())),
                 /// ///////////////////////////////////////////////////////////////////////////////////////////////////
-                COUNT_TID, MInst.instC(COUNT_TID.dom(ANY_TID.any()).rng(INT_TID), NO_ARGS__, (lhs, inst) -> IteratorUtil.reduce(lhs.iterator(), jnt(0), (a, b) -> MInst.instB(PLUS_TID, MLst.of(jnt(1))).apply(a))),
-                SUM_TID, MInst.instC(SUM_TID.dom(ANY_TID.any()).rng(INT_TID), NO_ARGS__, (lhs, inst) -> IteratorUtil.reduce(lhs.iterator(), jnt(0), (a, b) -> MInst.instB(PLUS_TID, MLst.of(b)).apply(a))),
-                REIFY_TID, MInst.instC(REIFY_TID.dom(fURI.ANY.maybe()).rng(REC_TID), NO_ARGS__, (lhs, inst) ->
+                WITHIN_TID, instC(WITHIN_TID.dom(LST_TID).rng(LST_TID), lst(ID__), (lhs, inst) -> lst(lhs.<Lst>as().lstValue().stream().map(o -> inst.arg(0).apply(o)).toList())),
+                COUNT_TID, instC(COUNT_TID.dom(ANY_TID.any()).rng(INT_TID), NO_ARGS__, (lhs, inst) -> IteratorUtil.reduce(lhs.iterator(), jnt(0), (a, b) -> MInst.instB(PLUS_TID, MLst.of(jnt(1))).apply(a))),
+                SUM_TID, instC(SUM_TID.dom(ANY_TID.any()).rng(INT_TID), NO_ARGS__, (lhs, inst) -> IteratorUtil.reduce(lhs.iterator(), jnt(0), (a, b) -> MInst.instB(PLUS_TID, MLst.of(b)).apply(a))),
+                REIFY_TID, instC(REIFY_TID.dom(fURI.ANY.maybe()).rng(REC_TID), NO_ARGS__, (lhs, inst) ->
                         MRec.ofUriKeyed(
                                 "tid", MRec.ofUriKeyed(
                                         "path", MUri.of(lhs.tid().path()),
@@ -203,7 +204,6 @@ public class MInstSet extends MSpace implements InstSet {
         this.define(RNG_TID, REL_TID, fURI.ANY, MLst.of(), (lhs, inst) -> MObjs.of(lhs.relValue().getValue1()));
         this.define(RNG_TID, fURI.ANY, fURI.ANY, MLst.of(), (lhs, inst) -> lhs);
 
-        this.define(WITHIN_TID, LST_TID, LST_TID, MLst.of(ID__), (lhs, inst) -> MLst.of(lhs.<Lst>as().lstValue().stream().map(o -> inst.arg(0).apply(o)).toList()));
         this.define(CROSS_TID, LST_TID, LST_TID, MRec.ofUriKeyed("c", ID__, "l", ID__), (lhs, inst) -> {
             final List<Obj> result = new ArrayList<>();
             final Obj toEval = inst.arg(0);

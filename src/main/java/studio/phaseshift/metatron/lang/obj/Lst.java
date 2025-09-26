@@ -43,7 +43,7 @@ public interface Lst extends Poly {
     @Override
     default <O extends Obj> O at(final Obj key) {
         if(key.isInt())
-            return (O) this.value().get(key.value());
+            return (O) this.value().get(key.<Int>as().intValue().intValue());
         else {//if(key.isUri()) {
             throw new RuntimeException("bad");
           //  return NoObj.single();

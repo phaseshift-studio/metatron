@@ -51,21 +51,4 @@ public class MCode extends MObj implements Code {
     public static Code of(final List<Inst> insts) {
         return new MCode(insts, CODE_TID, fURI.NULL);
     }
-
-   /* @Override
-    public Code resolve(final Obj start) { // support callbacks on resolution so monoids can generate appropriate monads on the first scan of the code
-        Obj running_obj = start;
-        final List<Inst> resolvedCode = new ArrayList<>();
-        for (final Inst inst : this.value()) {
-                final Inst instB = inst.resolve(Inst.Resolve.B, running_obj);
-                running_obj = (instB.isInitial() ? instB.arg(0) : instB.rng());
-                resolvedCode.add(instB);
-        }
-       return MCode.of(resolvedCode);
-    }*/
-
-    /*@Override
-    public Obj apply(final Obj lhs) {
-        return lhs;
-    }*/
 }

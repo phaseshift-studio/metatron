@@ -55,7 +55,7 @@ public final class NoObj implements Obj, Inst {
     @Override
     public Obj apply(final Obj lhs) {
         return lhs;
-    }
+    } // TODO: should resolve to noobj (thus, like all other mono objs)
 
     @Override
     public fURI vid() {

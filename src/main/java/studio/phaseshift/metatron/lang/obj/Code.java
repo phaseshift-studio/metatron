@@ -20,12 +20,13 @@ package studio.phaseshift.metatron.lang.obj;
 
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.monoid.mtron.MMonoid;
-import studio.phaseshift.metatron.lang.obj.mtron.MType;
 import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.ObjUtil;
 
 import java.util.List;
 import java.util.function.Supplier;
+
+import static studio.phaseshift.metatron.lang.obj.mtron.MType.T;
 
 public interface Code extends Call {
 
@@ -40,7 +41,7 @@ public interface Code extends Call {
     }
 
     default Inst nextInst(final Inst inst) {
-      final Inst nextInst =  ((Supplier<Inst>) () -> {
+        final Inst nextInst = ((Supplier<Inst>) () -> {
             if (inst.isNoObj())
                 return NoObj.single();
             boolean found = false;
@@ -50,8 +51,8 @@ public interface Code extends Call {
             }
             return NoObj.single();
         }).get();
-      this.logger().trace("fetching next inst: %s => %s", inst, nextInst);
-      return nextInst;
+        this.logger().trace("fetching next inst: %s => %s", inst, nextInst);
+        return nextInst;
     }
 
     @Override
@@ -71,23 +72,23 @@ public interface Code extends Call {
 
     @Override
     default Type dom() {
-        return this.value().get(0).dom();
+        return this.value().isEmpty() ? T(fURI.NONE.zero()) : this.value().get(0).dom();
     }
 
     default Type rng() {
-        return this.value().get(this.value().size()-1).rng();
+        return this.value().isEmpty() ? T(fURI.NONE.zero()) : this.value().get(this.value().size() - 1).rng();
     }
 
     @Override
     default Obj apply(final Obj lhs) {
-     if(!lhs.matches(this.dom()))
-             throw MTronException.of("%s ({{m}}lhs{{/m}}) (%s) does not match {{m}}code domain{{/m}} (%s): %s", lhs, lhs.rng(), this.dom(), this);
-        final Obj rhs = ObjUtil.oneNoneOrAll(MMonoid.of(lhs,this).apply(NoObj.single()).iterator());
-        if(!rhs.matches(this.rng()))
+        if (!lhs.matches(this.dom()))
+            throw MTronException.of("%s ({{m}}lhs{{/m}}) (%s) does not match {{m}}code domain{{/m}} (%s): %s", lhs, lhs.rng(), this.dom(), this);
+        final Obj rhs = ObjUtil.oneNoneOrAll(MMonoid.of(lhs, this).apply(NoObj.single()).iterator());
+        if (!rhs.matches(this.rng()))
             throw MTronException.of("%s ({{m}}rhs{{/m}}) (%s) does not match {{m}}code range{{/m}} (%s): %s", rhs, rhs.rng(), this.rng(), this);
         return rhs;
     }
 
-   // Code resolve(final Obj start);
+    // Code resolve(final Obj start);
 
 }
