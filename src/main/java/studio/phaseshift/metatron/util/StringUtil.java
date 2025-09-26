@@ -63,29 +63,4 @@ public final class StringUtil {
         }
         return ss;
     }
-
-    /**
-     * Tokenises a string on a single character delimiter.
-     */
-    public static List<String> tokenize(String s, char delim) {
-        if (s == null) return Collections.emptyList();
-        return Arrays.stream(s.split(Pattern.quote(String.valueOf(delim))))
-                .map(String::trim)
-                .filter(x -> !x.isEmpty())
-                .collect(Collectors.toList());
-    }
-
-    /**
-     * Returns true if {@code s} contains only decimal digits.
-     */
-    public static boolean isInteger(String s) {
-        return s != null && s.matches("\\d+");
-    }
-
-    /**
-     * Compares two string pointers for equality (handles null).
-     */
-    public static boolean charPtrEqual(String a, String b) {
-        return Objects.equals(a, b);
-    }
 }

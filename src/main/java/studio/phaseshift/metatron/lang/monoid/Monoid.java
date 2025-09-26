@@ -18,19 +18,18 @@
 
 package studio.phaseshift.metatron.lang.monoid;
 
-import org.javatuples.Pair;
 import org.javatuples.Quartet;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.*;
 
-public interface Monoid extends Obj {
+public interface Monoid extends Obj, Call {
 
     @Override
     Monoid clone(final Object value, final fURI tid, final fURI vid);
 
     // code, running, barriers, halted
     @Override
-    Quartet<Code,Objs,Lst,Objs> value();
+    Quartet<Code, Objs, Lst, Objs> value();
 
 
     default Objs halted() {
@@ -48,6 +47,14 @@ public interface Monoid extends Obj {
     default Code code() {
         return this.value().getValue0();
     }
+
+    default Monoid code(final Code code) {
+        return this.clone(Quartet.with(code, this.running(), this.barriers(), this.halted()), this.tid(), this.vid());
+    }
+
+
+    @Override
+    Monoid resolve(final Obj lhs);
 
     @Override
     default Type dom() {

@@ -139,8 +139,8 @@ public class MInstSet extends MSpace implements InstSet {
                         .collect(Collectors.toMap(a -> a.<Rel>as().first(), b -> b.<Rel>as().second(), (a, b) -> b, LinkedHashMap<Obj, Obj>::new)))),
                 SPLIT_TID, instC(SPLIT_TID.dom(ANY_TID).rng(ANY_TID), lst(T(ANY_TID)), (lhs, inst) -> inst.arg(0).apply(lhs)),
                 MERGE_TID, instC(MERGE_TID.dom(LST_TID).rng(fURI.ANY.any()), NO_ARGS__, (lhs, inst) -> MObjs.of(lhs.<Lst>as().value())),
-                MERGE_TID, instC(MERGE_TID.dom(REC_TID).rng(REL_TID), NO_ARGS__, (lhs, inst) -> lhs.isPoly() ? MObjs.of(lhs.<Poly>as().elements()) : lhs),
-                MERGE_TID, instC(MERGE_TID.dom(ANY_TID).rng(ANY_TID), NO_ARGS__, (lhs, inst) -> lhs),
+                MERGE_TID, instC(MERGE_TID.dom(REC_TID).rng(REL_TID.any()), NO_ARGS__, (lhs, inst) -> lhs.isPoly() ? MObjs.of(lhs.<Poly>as().elements()) : lhs),
+                MERGE_TID, instC(MERGE_TID.dom(ANY_TID).rng(ANY_TID.any()), NO_ARGS__, (lhs, inst) -> lhs),
                 /// ///////////////////////////////////////////////////////////////////////////////////////////////////
                 NOT_TID, instC(NOT_TID.dom(fURI.ANY).rng(BOOL_TID), lst(T(BOOL_TID)), (lhs, inst) -> bool(!inst.arg(0).boolValue())),
                 EQ_TID, instC(EQ_TID.dom(ANY_TID).rng(BOOL_TID), lst(T(ANY_TID)), (lhs, inst) -> bool(lhs.equals(inst.arg(0)))),
@@ -176,7 +176,7 @@ public class MInstSet extends MSpace implements InstSet {
                 TO_TID, instC(TO_TID.dom(fURI.ANY.maybe()).rng(fURI.ANY.maybe()), lst(T(URI_TID)), (lhs, inst) -> Router.global().write(inst.arg(0).uriValue(), lhs)),
                 FROM_TID, instC(FROM_TID.dom(fURI.ANY.maybe()).rng(fURI.ANY.any()), lst(ID__), (lhs, inst) -> Router.global().read(inst.arg(0).uriValue())),
                 REF_TID, instC(REF_TID.dom(ANY_TID).rng(ANY_TID.any()), lst(T(ANY_TID.any())), (lhs, inst) -> Router.global().write(lhs.uriValue(), inst.arg(0))),
-                TYPE_TID, instC(TYPE_TID.dom(ANY_TID).rng(TYPE_TID), NO_ARGS__, (lhs, inst) -> T(lhs.tid())),
+                TYPE_TID, instC(TYPE_TID.dom(ANY_TID).rng(ANY_TID), NO_ARGS__, (lhs, inst) -> lhs.type()),
                 /// ///////////////////////////////////////////////////////////////////////////////////////////////////
                 WITHIN_TID, instC(WITHIN_TID.dom(LST_TID).rng(LST_TID), lst(ID__), (lhs, inst) -> lst(lhs.<Lst>as().lstValue().stream().map(o -> inst.arg(0).apply(o)).toList())),
                 COUNT_TID, instC(COUNT_TID.dom(ANY_TID.any()).rng(INT_TID), NO_ARGS__, (lhs, inst) -> IteratorUtil.reduce(lhs.iterator(), jnt(0), (a, b) -> MInst.instB(PLUS_TID, MLst.of(jnt(1))).apply(a))),
@@ -275,6 +275,10 @@ public class MInstSet extends MSpace implements InstSet {
 
     public static class Fluent extends MObj implements Code {
 
+        public static Fluent m() {
+            return new Fluent();
+        }
+
         protected Fluent() {
             this(new ArrayList<>(), CODE_TID, null);
         }
@@ -301,6 +305,14 @@ public class MInstSet extends MSpace implements InstSet {
             return this.addInst(MInst.instB(PLUS_TID, lst(obj)));
         }
 
+        public Fluent mult(final Obj obj) {
+            return this.addInst(MInst.instB(MULT_TID, lst(obj)));
+        }
+
+        public Fluent id() {
+            return this.addInst(MInst.instB(ID_TID, lst()));
+        }
+
         public Fluent isA(final Obj obj) {
             return this.addInst(MInst.instB(ISA_TID, lst(obj)));
         }
@@ -309,9 +321,21 @@ public class MInstSet extends MSpace implements InstSet {
             return this.addInst(MInst.instB(IN_TID, lst(obj)));
         }
 
+        public Fluent split(final Obj obj) {
+            return this.addInst(MInst.instB(SPLIT_TID, lst(obj)));
+        }
+
+        public Fluent merge() {
+            return this.addInst(MInst.instB(MERGE_TID, lst()));
+        }
+
+        public List<Obj> toList() {
+            return IteratorUtil.list(this.iterator());
+        }
+
         @Override
         public Code clone(Object value, fURI tid, fURI vid) {
-            return new Fluent();
+            return new Fluent(new ArrayList<>(this.value()), this.tid, this.vid);
         }
 
         /// /////////////////////////////////////////////////////////////
@@ -322,12 +346,28 @@ public class MInstSet extends MSpace implements InstSet {
                 return new Fluent().plus(obj);
             }
 
+            public static Fluent mult(final Obj obj) {
+                return new Fluent().mult(obj);
+            }
+
             public static Fluent isA(final Obj obj) {
                 return new Fluent().isA(obj);
             }
 
             public static Fluent in(final Obj obj) {
                 return new Fluent().in(obj);
+            }
+
+            public static Fluent id() {
+                return new Fluent().id();
+            }
+
+            public static Fluent split(final Obj obj) {
+                return new Fluent().split(obj);
+            }
+
+            public static Fluent merge() {
+                return new Fluent().merge();
             }
         }
     }

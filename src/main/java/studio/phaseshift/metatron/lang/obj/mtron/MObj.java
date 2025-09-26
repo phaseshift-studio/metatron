@@ -22,6 +22,7 @@ import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.Obj;
 import studio.phaseshift.metatron.space.Router;
 import studio.phaseshift.metatron.ui.Graphitty;
+import studio.phaseshift.metatron.util.ObjUtil;
 
 import java.util.Objects;
 
@@ -72,12 +73,13 @@ public class MObj implements Obj {
 
     @Override
     public boolean equals(final Object other) {
-        if (this.isNoObj())
+        return ObjUtil.objEquals(this,other);
+        /*if (this.isNoObj())
             return other instanceof Obj && ((Obj) other).isNoObj();
         return this.getClass().isAssignableFrom(other.getClass()) &&
                 (Objects.equals(this.tid, ((Obj) other).tid()) &&
                         Objects.equals(this.vid, ((Obj) other).vid()) &&
-                        Objects.equals(this.value, ((Obj) other).value()));
+                        Objects.equals(this.value, ((Obj) other).value()));*/
     }
 
     @Override

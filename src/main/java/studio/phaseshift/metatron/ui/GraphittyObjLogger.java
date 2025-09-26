@@ -29,7 +29,7 @@ public class GraphittyObjLogger extends GraphittyLogger {
         else {
             final Obj o = router.read(LOG_VID);
             if (o.isNoObj()) {
-                this.warn("no space embedded logger found at %s", LOG_VID.toUri());
+                this.none("no space embedded logger found at %s", LOG_VID.toUri());
                 return true;
             } else
                 return Log.from(o.as()).check(level, ((Obj) this.source).vidOrTid());

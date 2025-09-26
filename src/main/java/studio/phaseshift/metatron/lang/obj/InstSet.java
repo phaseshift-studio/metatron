@@ -121,6 +121,8 @@ public interface InstSet extends Space {
                             i.tid().query(fURI.DOM, lhs.tid()), instAorB.vid());
                     this.logger().trace("{{y}}inst{{/y}} resolution: %s => %s [%s]", lhs, j, i);
                     return j;
-                }).findFirst().orElseThrow(() -> this.logger().except("unable to resolve %s => %s in instruction set %s", lhs, instAorB, this.value().get(instAorB.tid())));
+                })
+                .findFirst()
+                .orElseThrow(() -> this.logger().except("unable to resolve %s => %s in instruction set %s", lhs, instAorB, this.value().get(instAorB.tid())));
     }
 }

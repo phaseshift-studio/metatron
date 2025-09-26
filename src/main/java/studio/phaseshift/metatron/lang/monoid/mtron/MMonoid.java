@@ -24,17 +24,14 @@ import studio.phaseshift.metatron.lang.monoid.Monad;
 import studio.phaseshift.metatron.lang.monoid.Monoid;
 import studio.phaseshift.metatron.lang.obj.*;
 import studio.phaseshift.metatron.lang.obj.mtron.*;
-import studio.phaseshift.metatron.space.Router;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.*;
 
-import static studio.phaseshift.metatron.lang.fURI.f;
 import static studio.phaseshift.metatron.lang.obj.mtron.MInstSet.MTRON_TID;
 import static studio.phaseshift.metatron.lang.obj.mtron.MInstSet.START_TID;
-import static studio.phaseshift.metatron.lang.obj.mtron.MType.T;
 
 public class MMonoid extends MObj implements Monoid {
 
@@ -43,21 +40,22 @@ public class MMonoid extends MObj implements Monoid {
     private final GraphittyLogger LOG = Graphitty.log(this);
 
     public static void load() {
-      //  Router.global().write(MONOID_TID,T(MONOID_TID));
-      //  Router.global().write(MMonad.MMONAD_TID, T(MMonad.MMONAD_TID));
+        //  Router.global().write(MONOID_TID,T(MONOID_TID));
+        //  Router.global().write(MMonad.MMONAD_TID, T(MMonad.MMONAD_TID));
     }
 
     public MMonoid(final Quartet<Code, Objs, Lst, Objs> value, final fURI tid, final fURI vid) {
         super(value, tid, vid);
     }
 
-    Code resolve(final Obj start) {
+    @Override
+    public Monoid resolve(final Obj lhs) {
         // this.code = new ExplainRewrite().rewrite(code.<Code>as());
         // process bcode inst pipeline
         //this.code = Rewriter({Rewriter::by(), Rewriter::explain()}).apply(this.code);
         // setup global behavior around barriers, initials, and terminals
-        LOG.debug("resolving code and generating structural monads:\n\t%s {{g}}=>{{/g}} %s", start, this.code());
-        Obj token = start;
+        LOG.debug("resolving code and generating structural monads:\n\t%s {{g}}=>{{/g}} %s", lhs, this.code());
+        Obj token = lhs;
         //LOG.none("%s", token.rng());
         final List<Inst> resolvedCode = new ArrayList<>();
         fURI dom = null;
@@ -65,7 +63,7 @@ public class MMonoid extends MObj implements Monoid {
         for (final Inst inst : this.code().value()) {
             try {
                 LOG.debug("   {{g}}=>{{/g}} resolving inst %s", inst);
-                final Inst instB = inst.resolve(Inst.Resolve.B, token);
+                final Inst instB = inst.resolve(token);
                 if (null == dom)
                     dom = instB.tid().queryValue(fURI.DOM, fURI.class);
                 rng = instB.tid().queryValue(fURI.RNG, fURI.class);
@@ -90,12 +88,11 @@ public class MMonoid extends MObj implements Monoid {
         }
         final Code resolved = MCode.of(resolvedCode).tid(code().tid().query(fURI.DOM, Optional.ofNullable(dom).orElse(fURI.ANY)).query(fURI.RNG, Optional.ofNullable(rng).orElse(fURI.ANY)));
         LOG.debug("resolved monoidal code: %s", resolved);
-        return resolved;
+        return this.code(resolved);
     }
 
-    @Override
-    public Obj apply(final Obj lhs) {
-        final Code code = this.resolve(lhs);
+    Monoid compute() {
+        final Code code = this.code();
         this.running().append(MMonad.of(NoObj.single(), code.inst(0)));
         while (true) {
             final Monad m = this.running().<LinkedList<Monad>>valueAs().poll();
@@ -144,7 +141,13 @@ public class MMonoid extends MObj implements Monoid {
                 break;
             }
         }
-        return this.halted();
+        return this;
+    }
+
+    @Override
+    public Obj apply(final Obj lhs) {
+        final MMonoid code = (MMonoid) this.resolve(lhs);
+        return code.compute().halted();
     }
 
     @Override

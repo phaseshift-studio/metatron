@@ -19,10 +19,12 @@
 package studio.phaseshift.metatron.lang.obj;
 
 import studio.phaseshift.metatron.lang.fURI;
+import studio.phaseshift.metatron.lang.monoid.Monoid;
 import studio.phaseshift.metatron.lang.monoid.mtron.MMonoid;
 import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.ObjUtil;
 
+import java.util.Iterator;
 import java.util.List;
 import java.util.function.Supplier;
 
@@ -38,6 +40,16 @@ public interface Code extends Call {
 
     default Inst inst(final int index) {
         return index < this.value().size() ? this.value().get(index) : NoObj.single();
+    }
+
+    @Override
+    default Iterator<Obj> iterator() {
+        return this.apply().iterator();
+    }
+
+    @Override
+    default Code resolve(final Obj lhs) {
+        return this;
     }
 
     default Inst nextInst(final Inst inst) {
@@ -80,11 +92,17 @@ public interface Code extends Call {
     }
 
     @Override
+    default Obj apply() {
+        return this.apply(null);
+    }
+
+    @Override
     default Obj apply(final Obj lhs) {
-        if (!lhs.matches(this.dom()))
+        if (null != lhs && !lhs.matches(this.dom()))
             throw MTronException.of("%s ({{m}}lhs{{/m}}) (%s) does not match {{m}}code domain{{/m}} (%s): %s", lhs, lhs.rng(), this.dom(), this);
-        final Obj rhs = ObjUtil.oneNoneOrAll(MMonoid.of(lhs, this).apply(NoObj.single()).iterator());
-        if (!rhs.matches(this.rng()))
+        final Monoid monoid = (null == lhs ? MMonoid.of(this) : MMonoid.of(lhs, this));
+        final Obj rhs = ObjUtil.oneNoneOrAll(monoid.apply(NoObj.single()).iterator());
+        if (!rhs.matches(monoid.rng()))
             throw MTronException.of("%s ({{m}}rhs{{/m}}) (%s) does not match {{m}}code range{{/m}} (%s): %s", rhs, rhs.rng(), this.rng(), this);
         return rhs;
     }

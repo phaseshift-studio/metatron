@@ -112,7 +112,9 @@ public interface Inst extends Call {
         return Resolve.C;
     }
 
-    default Inst resolve(final Resolve desiredResolution, final Obj lhs) {
+
+    @Override
+    default Inst resolve(final Obj lhs) {
         final GraphittyLogger LOG = Graphitty.log(lhs);
         final Resolve currentResolution = this.resolution();
        /* if (false &&(currentResolution.compareTo(desiredResolution) == 0 ||
@@ -125,7 +127,7 @@ public interface Inst extends Call {
             try {
                 final Inst resolved = Router.global().<InstSet>getSpace(fURI.of("/mtron/#")).resolve(lhs, this); // TODO: generalize for any instruction set
                 LOG.trace("resolution ({{m}}%s {{g}}=>{{/g}} %s{{/m}}): %s => %s", currentResolution, resolved.resolution(), lhs, resolved);
-                return resolved.resolution().equals(desiredResolution) || resolved.resolution().compareTo(desiredResolution) >= 0 ? resolved : resolved.resolve(desiredResolution, lhs);
+                return resolved.resolve(lhs);
             } catch (Exception e) { // TODO: this is sloppy -- using exception handling for flow control
                 LOG.error(e);
                 final Inst resolved = ((Inst) Router.global().read(this.tid())).args(this.args());
@@ -157,7 +159,7 @@ public interface Inst extends Call {
 
     @Override
     default Obj apply(final Obj lhs) {
-        final Inst cinst = this.resolve(Resolve.C, lhs);
+        final Inst cinst = this.resolve(lhs);
         Router.stack().push(cinst.args());
         if (!lhs.matches(cinst.dom()))
             throw MTronException.of("{{m}}lhs obj{{/m}} (%s) does not match {{m}}inst domain{{/m}} (%s): %s", lhs, cinst.dom(), this);

@@ -1,6 +1,5 @@
 package studio.phaseshift.metatron.lang.obj;
 
-import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.mtron.MCode;
 
 import java.util.List;
@@ -8,9 +7,9 @@ import java.util.List;
 public interface Call extends Obj {
 
     static Call from(final List<Inst> insts) {
-        if(insts.isEmpty())
+        if (insts.isEmpty())
             return NoObj.single();
-        else if(insts.size() == 1)
+        else if (insts.size() == 1)
             return insts.get(0);
         else
             return MCode.of(insts);
@@ -30,6 +29,7 @@ public interface Call extends Obj {
         return this.isCode() ? this.codeValue() : List.of(this.as());
     }
 
+    <C extends Call> C resolve(final Obj start);
 
     default <C extends Call> C dom(final Type domain) {
         return (C) this.tid(this.tid().dom(domain.tid()));
