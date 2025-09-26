@@ -20,10 +20,10 @@ public interface Type extends Obj {
         return this;
     }
 
-    @Override
+   /*@Override
     default Obj apply(final Obj lhs) {
-        return null == this.value() || this.value().isNoObj() ? lhs : this.value().apply(lhs);
-    }
+        return this;//null == this.value() || this.value().isNoObj() ? lhs : this.value().apply(lhs);
+    }*/
 
   /*  @Override
     default boolean matches(final Obj obj) {

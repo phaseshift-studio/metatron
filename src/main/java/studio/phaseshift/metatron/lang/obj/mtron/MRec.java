@@ -19,6 +19,7 @@
 package studio.phaseshift.metatron.lang.obj.mtron;
 
 import studio.phaseshift.metatron.lang.fURI;
+import studio.phaseshift.metatron.lang.obj.NoObj;
 import studio.phaseshift.metatron.lang.obj.Obj;
 import studio.phaseshift.metatron.lang.obj.Rec;
 
@@ -104,5 +105,22 @@ public class MRec extends MObj implements Rec {
             map.put(MUri.of(kv.getKey()), MStr.of(kv.getValue()));
         }
         return MRec.of(map, tid);
+    }
+
+    @Override
+    public boolean matches(final Obj rhs) {
+        if (this.isNoObj() && rhs.isNoObj())
+            return true;
+        if (rhs.isRec()) {
+            for (final Map.Entry<Obj, Obj> entry : rhs.recValue().entrySet()) {
+                final Obj value = this.recValue().getOrDefault(entry.getKey(), NoObj.single());
+                if (entry.getValue().isCall() && entry.getValue().apply(value).isNoObj())
+                    return false;
+                if (!value.matches(entry.getValue()))
+                    return false;
+            }
+            return true;
+        }
+        return super.matches(rhs);
     }
 }

@@ -70,7 +70,6 @@ public class ObjParser {
                 m_comment(),
                 m_type(),
                 m_noobj(),
-                m_rel(),
                 m_bool(),
                 m_real(),
                 m_int(),
@@ -79,19 +78,20 @@ public class ObjParser {
                 m_objs(),
                 m_inst(),
                 m_rec(),
+                m_rel(),
                 m_lst(),
                 m_uri()));
         obj_no_code_parser.set(choice(
                 m_comment(),
                 m_type(),
                 m_noobj(),
-                m_rel(),
                 m_bool(),
                 m_real(),
                 m_int(),
                 m_str(),
                 m_objs(),
                 m_rec(),
+                m_rel(),
                 m_lst(),
                 m_uri()));
         obj_rel_back_parser.set(choice(

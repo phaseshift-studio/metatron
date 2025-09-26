@@ -121,8 +121,8 @@ public interface Obj extends Function<Obj, Obj>, Iterable<Obj> {
                         this instanceof Real && base.equals(REAL_TID) ||
                         this instanceof Str && base.equals(STR_TID) ||
                         this instanceof Uri && base.equals(URI_TID) ||
-                        this instanceof Lst && base.equals(LST_TID) ||
                         this instanceof Rec && base.equals(REC_TID) ||
+                        this instanceof Lst && base.equals(LST_TID) ||
                         this instanceof Rel && base.equals(REL_TID) ||
                         this instanceof Inst && base.equals(INST_TID) ||
                         this instanceof Code && base.equals(CODE_TID))) {

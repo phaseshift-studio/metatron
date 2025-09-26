@@ -83,21 +83,20 @@ public interface InstSet extends Space {
                 .flatMap(Collection::stream)
                 .filter(i -> {
                     boolean pass = false;
-                    if (instAorB.resolution() == Inst.Resolve.A) {
+                    if (instAorB.resolution() == Inst.Resolve.A && instAorB.args().isEmpty()) { // TODO: this is a hack as we are using args size as a determiner of resolution level
                         pass = true;
                     } else if (i.args().count() == instAorB.args().count()) {
                         pass = true;
                         for (int k = 0; k < i.args().count(); k++) {
                             final Obj originalArg = i.arg(k);
                             final Obj userArg = instAorB.arg(k);
-                            // TODO::  System.out.println("!!!!" + userArg + ":::" + originalArg + "::::" + userArg.matches(originalArg));
                             if (!userArg.matches(originalArg)) {
                                 pass = false;
                                 break;
                             }
                         }
                     }
-                    this.logger().trace("{{y}}args{{/y}} filtering: %s => %s [%s]", lhs, i, pass);
+                    this.logger().trace("{{y}}args{{/y}} filtering: %s => %s(%s) [%s]", lhs.tid(), i,  instAorB.args(), pass);
                     return pass;
                 })
                 .map(i -> {
