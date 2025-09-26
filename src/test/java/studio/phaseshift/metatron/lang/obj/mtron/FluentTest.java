@@ -4,8 +4,8 @@ import org.junit.jupiter.api.Test;
 import studio.phaseshift.metatron.MetatronTest;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static studio.phaseshift.metatron.lang.obj.mtron.MInstSet.Fluent.m.mult;
-import static studio.phaseshift.metatron.lang.obj.mtron.MInstSet.Fluent.start;
+import static studio.phaseshift.metatron.lang.obj.mtron.MFluent.StartLess.mult;
+import static studio.phaseshift.metatron.lang.obj.mtron.MFluent.StartLess.start;
 import static studio.phaseshift.metatron.lang.obj.mtron.MInt.jnt;
 
 public class FluentTest extends MetatronTest {

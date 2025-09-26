@@ -32,7 +32,7 @@ import java.util.stream.Stream;
 import static studio.phaseshift.metatron.lang.fURI.f;
 import static studio.phaseshift.metatron.lang.obj.mtron.MBool.bool;
 import static studio.phaseshift.metatron.lang.obj.mtron.MInst.instC;
-import static studio.phaseshift.metatron.lang.obj.mtron.MInstSet.Fluent.m.isA;
+import static studio.phaseshift.metatron.lang.obj.mtron.MFluent.StartLess.isA;
 import static studio.phaseshift.metatron.lang.obj.mtron.MInt.jnt;
 import static studio.phaseshift.metatron.lang.obj.mtron.MLst.lst;
 import static studio.phaseshift.metatron.lang.obj.mtron.MType.T;
@@ -230,10 +230,10 @@ public class MInstSet extends MSpace implements InstSet {
                 .stream()
                 .filter(kv -> kv.getKey().matches(bigvid.basePath()))
                 .flatMap(kv -> kv.getValue().entrySet().stream())
-                .filter(kv2 -> !bigvid.hasQuery("dom") || kv2.getKey().bimatches(bigvid.dom()))
+                .filter(kv2 -> !bigvid.hasDom() || kv2.getKey().bimatches(bigvid.dom()))
                 .map(Map.Entry::getValue)
                 .flatMap(Set::stream)
-                .filter(i -> !bigvid.hasQuery("rng") || i.rng().tid().bimatches(bigvid.rng()))
+                .filter(i -> !bigvid.hasRng() || i.rng().tid().bimatches(bigvid.rng()))
                 .map(i -> (Obj) i));
         return result.isNoObj() ?
                 ObjUtil.oneNoneOrAll(OBJ_TABLE.entrySet().stream().filter(kv -> kv.getKey().matches(bigvid)).map(Map.Entry::getValue).iterator()) :
@@ -273,102 +273,4 @@ public class MInstSet extends MSpace implements InstSet {
         return SYMBOL_TABLE;
     }
 
-    public static class Fluent extends MObj implements Code {
-
-        public static Fluent m() {
-            return new Fluent();
-        }
-
-        protected Fluent() {
-            this(new ArrayList<>(), CODE_TID, null);
-        }
-
-        protected Fluent(final List<Inst> value, final fURI tid, final fURI vid) {
-            super(value, tid, vid);
-        }
-
-        @Override
-        public List<Inst> value() {
-            return (List<Inst>) this.value;
-        }
-
-        private Fluent addInst(final Inst inst) {
-            this.codeValue().add(inst);
-            return this;
-        }
-
-        public static Fluent start(final Obj obj) {
-            return new Fluent().addInst(MInst.instB(START_TID, lst(obj)));
-        }
-
-        public Fluent plus(final Obj obj) {
-            return this.addInst(MInst.instB(PLUS_TID, lst(obj)));
-        }
-
-        public Fluent mult(final Obj obj) {
-            return this.addInst(MInst.instB(MULT_TID, lst(obj)));
-        }
-
-        public Fluent id() {
-            return this.addInst(MInst.instB(ID_TID, lst()));
-        }
-
-        public Fluent isA(final Obj obj) {
-            return this.addInst(MInst.instB(ISA_TID, lst(obj)));
-        }
-
-        public Fluent in(final Obj obj) {
-            return this.addInst(MInst.instB(IN_TID, lst(obj)));
-        }
-
-        public Fluent split(final Obj obj) {
-            return this.addInst(MInst.instB(SPLIT_TID, lst(obj)));
-        }
-
-        public Fluent merge() {
-            return this.addInst(MInst.instB(MERGE_TID, lst()));
-        }
-
-        public List<Obj> toList() {
-            return IteratorUtil.list(this.iterator());
-        }
-
-        @Override
-        public Code clone(Object value, fURI tid, fURI vid) {
-            return new Fluent(new ArrayList<>(this.value()), this.tid, this.vid);
-        }
-
-        /// /////////////////////////////////////////////////////////////
-
-        public static class m {
-
-            public static Fluent plus(final Obj obj) {
-                return new Fluent().plus(obj);
-            }
-
-            public static Fluent mult(final Obj obj) {
-                return new Fluent().mult(obj);
-            }
-
-            public static Fluent isA(final Obj obj) {
-                return new Fluent().isA(obj);
-            }
-
-            public static Fluent in(final Obj obj) {
-                return new Fluent().in(obj);
-            }
-
-            public static Fluent id() {
-                return new Fluent().id();
-            }
-
-            public static Fluent split(final Obj obj) {
-                return new Fluent().split(obj);
-            }
-
-            public static Fluent merge() {
-                return new Fluent().merge();
-            }
-        }
-    }
 }
