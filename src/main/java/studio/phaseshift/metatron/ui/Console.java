@@ -183,6 +183,7 @@ public class Console {
                 .variable(LineReader.HISTORY_FILE, Paths.get(".metatron.history"))
                 .option(LineReader.Option.AUTO_FRESH_LINE, true)
                 .option(LineReader.Option.HISTORY_IGNORE_DUPS, true)
+                .option(LineReader.Option.DISABLE_EVENT_EXPANSION, true)
                 .variable(LineReader.SECONDARY_PROMPT_PATTERN, Graphitty.string("{{-X&v1&^1&FORM2}}    {{FORM1}}> {{X}}"))
                 .variable(LineReader.INDENTATION, 0)
                 .build();

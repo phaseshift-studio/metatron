@@ -29,6 +29,7 @@ import studio.phaseshift.metatron.ui.GraphittyLogger;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static studio.phaseshift.metatron.BootLoader.BOOTING;
 
@@ -38,7 +39,7 @@ public class MemRouter implements Router {
     private static final fURI ROUTER_TID = fURI.of("/mtron/sys/router");
 
     private fURI vid;
-    private final Map<fURI, Space> spaces = new HashMap<>();
+    private final Map<fURI, Space> spaces = new ConcurrentHashMap<>();
     private final Map<fURI, fURI> smallToBigRewrites = new HashMap<>();
     private final Map<fURI, fURI> bigToSmallRewrites = new HashMap<>();
     private final Space localSpace;
@@ -79,8 +80,11 @@ public class MemRouter implements Router {
     public void removeSpace(final fURI vid) {
         this.spaces.values().stream().filter(s -> vid.equals(s.vid())).findFirst().ifPresent(s -> {
             try {
-                this.spaces.remove(s.pattern()).close();
-                LOG.trace("closing space %s", s);
+                final Space space = this.spaces.remove(s.pattern());
+                if(null != space) {
+                    space.close();
+                    LOG.trace("closing space %s", s);
+                }
             } catch (final Exception e) {
                 LOG.error(e);
             }

@@ -324,65 +324,30 @@ public class ObjParser {
     /// //////////////////////////////////////////////////////////////////////////////////////////
     private static Parser[] ordered_sugar_parsers() {
         return new Parser[]{
-                sugar_barrier(),
-                sugar_block(),
-                sugar_within(),
-                sugar_identity(),
-                sugar_from(),
-                sugar_merge(),
-                sugar_split(),
-                sugar_ref(),
-                sugar_plus(),
-                sugar_end()};
+                generate_sugar_parser(BARRIER_TID, of("-|"), 1),
+                generate_sugar_parser(BLOCK_TID, of('|'), 1),
+                generate_sugar_parser(WITHIN_TID, of("_/"), 1, of("\\_")),
+                generate_sugar_parser(ID_TID, of('_'), 0),
+                generate_sugar_parser(FROM_TID, of('*'), 1),
+                generate_sugar_parser(MERGE_TID, of(">-"), 0),
+                generate_sugar_parser(SPLIT_TID, of("-<"), 1),
+                generate_sugar_parser(REF_TID, of("->"), 1),
+                generate_sugar_parser(PLUS_TID, of('+'), 1),
+                generate_sugar_parser(END_TID, of(';'), 0)};
     }
 
-    private static Parser generate_sugar_parser(final fURI tid, final String sugarOp, final int argCount) {
+    private static Parser generate_sugar_parser(final fURI tid, final Parser startToken, final int argCount) {
+        return generate_sugar_parser(tid, startToken, argCount, null);
+    }
+
+    private static Parser generate_sugar_parser(final fURI tid, final Parser startToken, final int argCount, final Parser endToken) {
         // TODO: look into ExpressionBuilder for handling paren wrapping properly.
         return argCount == 0 ?
-                of(sugarOp).trim().map(t -> MInst.instA(tid)) :
-                seq(of(sugarOp).trim(), choice(
+                startToken.trim().map(t -> MInst.instA(tid)) :
+                seq(startToken.trim(), choice(
                         seq(of('('), m_obj(), of(')')).map(t -> ObjParser.<Obj>pick(t, 1)),
-                        m_obj())).map(t -> MInst.instB(tid, MLst.of(ObjParser.<Obj>pick(t, 1))));
-    }
-
-    public static Parser sugar_identity() {
-        return generate_sugar_parser(ID_TID, "_", 0);
-    }
-
-    public static Parser sugar_barrier() {
-        return generate_sugar_parser(BARRIER_TID, "-|", 1);
-    }
-
-    public static Parser sugar_from() {
-        return generate_sugar_parser(FROM_TID, "*", 1);
-    }
-
-    public static Parser sugar_plus() {
-        return generate_sugar_parser(PLUS_TID, "+", 1);
-    }
-
-    public static Parser sugar_block() {
-        return generate_sugar_parser(BLOCK_TID, "|", 1);
-    }
-
-    public static Parser sugar_ref() {
-        return generate_sugar_parser(REF_TID, "->", 1);
-    }
-
-    public static Parser sugar_merge() {
-        return generate_sugar_parser(MERGE_TID, ">-", 0);
-    }
-
-    public static Parser sugar_split() {
-        return generate_sugar_parser(SPLIT_TID, "-<", 1);
-    }
-
-    public static Parser sugar_within() {
-        return generate_sugar_parser(WITHIN_TID, "_/", 1);
-    }
-
-    public static Parser sugar_end() {
-        return generate_sugar_parser(END_TID, ";", 0);
+                        m_obj()), null == endToken ? none().not() : endToken.trim())
+                        .map(t -> MInst.instB(tid, MLst.of(ObjParser.<Obj>pick(t, 1))));
     }
 
     /// //////////////////////////////////////////////////////////////////////////////////////////

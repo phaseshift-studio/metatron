@@ -64,14 +64,10 @@ public interface Monad extends Obj {
         return this.clone(Triplet.with(this.obj(), inst, this.state()), this.tid(), this.vid());
     }
 
-    default long bulk() {
-        return this.state().value().get(fURI.of("bulk").toUri()).intValue();
-    }
-
     @Override
     default Type dom() {
-        return this.inst().dom();
-    }
+        return this.obj().rng();
+    } // TODO: is this what we need?
 
     @Override
     default Type rng() {
