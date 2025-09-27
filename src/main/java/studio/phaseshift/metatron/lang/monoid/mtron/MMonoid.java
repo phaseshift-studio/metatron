@@ -82,7 +82,7 @@ public class MMonoid extends MObj implements Monoid {
                 // LOG.none("%s", instB.rng().tid());
             } catch (final Exception e) {
                 resolvedCode.add(inst);
-                LOG.warn("runtime resolution of %s required: %s", inst, e.getMessage());
+                LOG.warn("runtime resolution of %s required: not enough context to determine inst", inst);
                 //e.printStackTrace();
             }
         }

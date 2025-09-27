@@ -64,6 +64,14 @@ public class MFluent extends MObj implements Code {
         return this.addInst(instB(MInstSet.MERGE_TID, lst()));
     }
 
+    public MFluent e1se(final Obj obj) {
+        return this.addInst(instB(MInstSet.ELSE_TID, lst(obj)));
+    }
+
+    public MFluent from(final Obj obj) {
+        return this.addInst(instB(MInstSet.FROM_TID, lst(obj)));
+    }
+
     public List<Obj> toList() {
         return IteratorUtil.list(this.iterator());
     }
@@ -107,6 +115,14 @@ public class MFluent extends MObj implements Code {
 
         public static MFluent merge() {
             return new MFluent().merge();
+        }
+
+        public static MFluent e1se(final Obj obj) {
+            return new MFluent().e1se(obj);
+        }
+
+        public static MFluent from(final Obj obj) {
+            return new MFluent().from(obj);
         }
     }
 }

@@ -18,7 +18,6 @@
 
 package studio.phaseshift.metatron.lang.obj;
 
-import org.javatuples.Triplet;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.base.furi.TypefURI;
 import studio.phaseshift.metatron.lang.obj.mtron.MInst;
@@ -27,8 +26,6 @@ import studio.phaseshift.metatron.space.Space;
 
 import java.util.*;
 import java.util.function.BiFunction;
-
-import static studio.phaseshift.metatron.lang.obj.mtron.MLst.lst;
 
 
 public interface InstSet extends Space {
@@ -67,61 +64,5 @@ public interface InstSet extends Space {
 
     @Override
     default void append(final fURI addr, final Obj... obj) {
-        return;
-    }
-
-    default Inst resolve(final Obj lhs, final Inst instAorB) {
-        return this.value().getOrDefault(instAorB.tid().basePath(), Map.of())
-                .entrySet()
-                .stream()
-                .filter(kv -> {
-                    final boolean pass = lhs.tid().matches(kv.getKey());
-                    this.logger().trace("{{y}}dom{{/y}} filtering: %s => %s [%s]".formatted(lhs.tid(), kv.getKey(), lhs.tid().matches(kv.getKey())));
-                    return pass;
-                })
-                .map(Map.Entry::getValue)
-                .flatMap(Collection::stream)
-                .filter(i -> {
-                    boolean pass = false;
-                    if (instAorB.resolution() == Inst.Resolve.A && instAorB.args().isEmpty()) { // TODO: this is a hack as we are using args size as a determiner of resolution level
-                        pass = true;
-                    } else if (i.args().count() == instAorB.args().count()) {
-                        pass = true;
-                        for (int k = 0; k < i.args().count(); k++) {
-                            final Obj originalArg = i.arg(k);
-                            final Obj userArg = instAorB.arg(k);
-                            if (!userArg.matches(originalArg)) {
-                                pass = false;
-                                break;
-                            }
-                        }
-                    }
-                    this.logger().trace("{{y}}args{{/y}} filtering: %s => %s(%s) [%s]", lhs.tid(), i,  instAorB.args(), pass);
-                    return pass;
-                })
-                .map(i -> {
-                    List<Obj> newArgs = new ArrayList<>();
-                    for (int k = 0; k < i.args().count(); k++) {
-                        final Obj originalArg = i.arg(k);
-                        final Obj userArg = instAorB.arg(k);
-                        if (false && originalArg.isType()) {
-                            //if(userArg.isCall())
-                            //  newArgs.add(userArg.<Call>as().rng(originalArg.<Type>as()));
-                            //else
-                            newArgs.add(userArg);
-                            // newArgs.add(originalArg.value(userArg));
-                            //newArgs.add(MInst.instB(MAP_TID, lst(userArg)).rng(originalArg.as()));
-                        } else {
-                            newArgs.add(userArg);
-                        }
-                    }
-                    final Inst j = i.clone(
-                            Triplet.with(lst(newArgs), i.f(), i.seed()),
-                            i.tid().query(fURI.DOM, lhs.tid()), instAorB.vid());
-                    this.logger().trace("{{y}}inst{{/y}} resolution: %s => %s [%s]", lhs, j, i);
-                    return j;
-                })
-                .findFirst()
-                .orElseThrow(() -> this.logger().except("unable to resolve %s => %s in instruction set %s", lhs, instAorB, this.value().get(instAorB.tid())));
     }
 }

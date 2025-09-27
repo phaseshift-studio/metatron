@@ -31,12 +31,13 @@ import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.lang.fURI.f;
 import static studio.phaseshift.metatron.lang.obj.mtron.MBool.bool;
-import static studio.phaseshift.metatron.lang.obj.mtron.MFluent.StartLess.isA;
+import static studio.phaseshift.metatron.lang.obj.mtron.MFluent.StartLess.*;
 import static studio.phaseshift.metatron.lang.obj.mtron.MInst.instC;
 import static studio.phaseshift.metatron.lang.obj.mtron.MInt.jnt;
 import static studio.phaseshift.metatron.lang.obj.mtron.MLst.lst;
 import static studio.phaseshift.metatron.lang.obj.mtron.MRec.rec;
 import static studio.phaseshift.metatron.lang.obj.mtron.MType.T;
+import static studio.phaseshift.metatron.lang.obj.mtron.MUri.uri;
 
 public class MInstSet extends MSpace implements InstSet {
 
@@ -116,6 +117,7 @@ public class MInstSet extends MSpace implements InstSet {
     public void load() {
         BASE_TYPES.forEach(t -> Router.global().registerRewrite(f(t.name()), t));
         this.write(
+                INST_TID.extend("test"), instC(INST_TID.extend("test").dom(fURI.ANY.maybe()).rng(INT_TID), MRec.ofUriKeyed("a", e1se(jnt(1)).singleOrSequence(), "b", e1se(jnt(2)).singleOrSequence()), Inst.f.of(from(uri("a")).plus(from(uri("b"))))),
                 START_TID, instC(START_TID.dom(fURI.NONE.zero()).rng(fURI.ANY.any()), lst(T(ANY_TID)), (lhs, inst) -> inst.arg(0)),
                 END_TID, instC(END_TID.dom(ANY_TID.any()).rng(NOOBJ_TID.zero()), NO_ARGS__, (lhs, inst) -> NoObj.single()),
                 ID_TID, instC(ID_TID.dom(ANY_TID.maybe()).rng(ANY_TID.maybe()), NO_ARGS__, (lhs, inst) -> lhs),
@@ -124,7 +126,7 @@ public class MInstSet extends MSpace implements InstSet {
                 MAP_TID, instC(MAP_TID.dom(fURI.ANY).rng(fURI.ANY.maybe()), lst(T(ANY_TID)), (lhs, inst) -> inst.arg(0)),
                 TID_TID, instC(TID_TID.dom(fURI.ANY).rng(URI_TID), NO_ARGS__, (lhs, inst) -> lhs.tid().toUri()),
                 VID_TID, instC(VID_TID.dom(fURI.ANY).rng(URI_TID), NO_ARGS__, (lhs, inst) -> lhs.vid().toUri()),
-                ELSE_TID, instC(ELSE_TID.dom(fURI.ANY.maybe()).rng(fURI.ANY), lst(T(ANY_TID)), (lhs, inst) -> lhs.isNoObj() ? inst.arg(0) : lhs),
+                ELSE_TID, instC(ELSE_TID.dom(fURI.ANY.maybe()).rng(fURI.ANY), lst(T(ANY_TID.maybe())), (lhs, inst) -> lhs.isNoObj() ? inst.arg(0) : lhs),
                 IS_TID, instC(IS_TID.dom(fURI.ANY.maybe()).rng(fURI.ANY.maybe()), lst(ID__), (lhs, inst) -> inst.arg(0).boolValue() ? lhs : NoObj.single()),
                 ISA_TID, instC(ISA_TID.dom(fURI.ANY.maybe()).rng(fURI.ANY.maybe()), lst(ID__), (lhs, inst) -> lhs.matches(inst.arg(0)) ? lhs : NoObj.single()),
                 IN_TID, instC(IN_TID.dom(fURI.ANY).rng(BOOL_TID), lst(ID__), (lhs, inst) -> bool(lhs.matches(inst.arg(0)))),
@@ -164,7 +166,7 @@ public class MInstSet extends MSpace implements InstSet {
                 LTE_TID, instC(LTE_TID.dom(STR_TID).rng(BOOL_TID), lst(T(STR_TID)), (lhs, inst) -> bool(lhs.intValue().compareTo(inst.arg(0).intValue()) <= 0)),
                 /// ///////////////////////////////////////////////////////////////////////////////////////////////////
                 PLUS_TID, instC(PLUS_TID.dom(BOOL_TID).rng(BOOL_TID), lst(isA(T(BOOL_TID))), (lhs, inst) -> lhs.value(lhs.boolValue() || inst.arg(0).boolValue())),
-                PLUS_TID, instC(PLUS_TID.dom(INT_TID).rng(INT_TID), lst(isA(T(STR_TID))), (lhs, inst) -> lhs.value(lhs.intValue() + inst.arg(0).intValue())),
+                PLUS_TID, instC(PLUS_TID.dom(INT_TID).rng(INT_TID), lst(isA(T(INT_TID))), (lhs, inst) -> lhs.value(lhs.intValue() + inst.arg(0).intValue())),
                 PLUS_TID, instC(PLUS_TID.dom(REAL_TID).rng(REAL_TID), lst(isA(T(REAL_TID))), (lhs, inst) -> lhs.value(lhs.realValue() + inst.arg(0).realValue())),
                 PLUS_TID, instC(PLUS_TID.dom(STR_TID).rng(STR_TID), lst(isA(T(STR_TID))), (lhs, inst) -> lhs.value(lhs.strValue() + inst.arg(0).strValue())),
                 PLUS_TID, instC(PLUS_TID.dom(URI_TID).rng(URI_TID), lst(isA(T(URI_TID))), (lhs, inst) -> lhs.value(lhs.uriValue().plus(inst.arg(0).uriValue()))),

@@ -30,10 +30,14 @@ import studio.phaseshift.metatron.ui.GraphittyLogger;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+
+import static studio.phaseshift.metatron.lang.obj.mtron.MRec.rec;
 
 public interface Inst extends Call {
 
@@ -117,15 +121,39 @@ public interface Inst extends Call {
     default Inst resolve(final Obj lhs) {
         final GraphittyLogger LOG = Graphitty.log(lhs);
         final Resolve currentResolution = this.resolution();
-       /* if (false &&(currentResolution.compareTo(desiredResolution) == 0 ||
-                currentResolution.compareTo(desiredResolution) > 0)) {
-            LOG.trace("resolution ({{m}}%s {{g}}<=>{{/g}} %s{{/m}}): %s", currentResolution, desiredResolution, lhs);
-            return this;
-        } else {*/
         if (currentResolution == Resolve.A) {
-            //final Inst resolved = new MInstSet(fURI.of("/mnt/mtron")).resolve(lhs, this);
             try {
-                final Inst resolved = Router.global().<InstSet>getSpace(fURI.of("/mtron/#")).resolve(lhs, this); // TODO: generalize for any instruction set
+                final Inst resolved = Router.global().read(this.tid())
+                        .stream()
+                        .map(Obj::<Inst>as)
+                        .filter(i -> lhs.matches(i.dom()))
+                        .map(i -> {
+                            if (i.args().isLst()) {
+                                LOG.trace("processing lst args of %s", i);
+                                if (i.args().count() == this.args().count()) {
+                                    for (int k = 0; k < i.args().count(); k++) {
+                                        final Obj originalArg = i.arg(k);
+                                        final Obj userArg = this.arg(k);
+                                        if (!userArg.matches(originalArg))
+                                            return null;
+                                    }
+                                    return i.args(this.args());
+                                }
+                            } else if (i.args().isRec()) {
+                                LOG.trace("processing rec args of %s", i);
+                                return i.args(rec(i.args().recValue().entrySet()
+                                        .stream()
+                                        .map(kv -> List.of(kv.getKey(), kv.getValue().apply(this.arg(kv.getKey().uriValue()))))
+                                        .collect(Collectors.toMap(kv -> kv.get(0), kv -> kv.get(1), (a, b) -> b, LinkedHashMap::new))));
+                            } else
+                                throw MTronException.of("args are not a lst nor a rec: %s", i);
+                            return null;
+                        })
+                        .filter(i -> !Objects.isNull(i))
+                        .map(i -> i.tid(i.tid().query(fURI.DOM, lhs.tid())).vid(this.vid()))
+                        .map(Obj::<Inst>as)
+                        .findFirst()
+                        .orElseThrow(() -> this.logger().except("unable to resolve %s => %s in instruction set %s", lhs, this));
                 LOG.trace("resolution ({{m}}%s {{g}}=>{{/g}} %s{{/m}}): %s => %s", currentResolution, resolved.resolution(), lhs, resolved);
                 return resolved.resolve(lhs);
             } catch (Exception e) { // TODO: this is sloppy -- using exception handling for flow control
@@ -139,35 +167,48 @@ public interface Inst extends Call {
             if (!blocking && !lhs.matches(this.dom()))
                 throw MTronException.of("lhs obj does not match inst domain: %s: %s {{r}}-/>{{/r}} %s", this, lhs, this.dom());
             final Poly cargs = this.args().isLst() ?
-                    MLst.of(this.args().lstValue().stream().map(arg -> {
-                        if (blocking) {
-                            return arg;
-                        } else {
-                            final Obj r = arg.apply(lhs);
-                            if (!r.matches(arg))
-                                throw MTronException.of("arg obj does not match inst arg: %s: %s {{r}}-/>{{/r}} %s", this, arg, r);
-                            return r;
-                        }
-                    }).toList()) :
-                    MRec.of(this.args().recValue().entrySet().stream().map(kv -> List.of(kv.getKey(), blocking ? kv.getValue() : kv.getValue().apply(lhs))).collect(Collectors.toMap(kv -> kv.get(0), kv -> kv.get(1))));
-            final Inst resolved = this.value(Triplet.with(cargs, this.f(), this.seed()));
+                    MLst.of(this.args().lstValue()
+                            .stream()
+                            .map(arg -> {
+                                if (blocking)
+                                    return arg;
+                                else {
+                                    final Obj r = arg.apply(lhs);
+                                    if (!r.matches(arg))
+                                        throw MTronException.of("arg obj does not match inst arg: %s: %s {{r}}-/>{{/r}} %s", this, arg, r);
+                                    return r;
+                                }
+                            }).toList()) :
+                    MRec.of(this.args().recValue().entrySet()
+                            .stream()
+                            .map(kv -> List.of(kv.getKey(), blocking ?
+                                    kv.getValue() :
+                                    kv.getValue().apply(lhs)))
+                            .collect(Collectors.toMap(kv -> kv.get(0), kv -> kv.get(1))));
+            final Inst resolved = this.args(cargs);
             LOG.trace("resolution ({{m}}%s {{g}}=>{{/g}} %s{{/m}}): %s", currentResolution, resolved.resolution(), resolved);
             return resolved;
         }
-        //   }
     }
 
     @Override
     default Obj apply(final Obj lhs) {
         final Inst cinst = this.resolve(lhs);
-        Router.stack().push(cinst.args());
         if (!lhs.matches(cinst.dom()))
             throw MTronException.of("{{m}}lhs obj{{/m}} (%s) does not match {{m}}inst domain{{/m}} (%s): %s", lhs, cinst.dom(), this);
-        final Obj rhs = cinst.f().apply(lhs, cinst);
-        Router.stack().pop();
+        Router.stack().push(cinst.args());
+        Obj rhs = NoObj.single();
+        try {
+            rhs = cinst.f().apply(lhs, cinst);
+            Router.stack().pop();
+        } catch (final Exception e) {
+            Graphitty.log(this).error("%s => %s evaluation error: %s (reverting stack)", lhs, cinst, e.getMessage());
+            Router.stack().pop();
+        }
         if (!rhs.matches(cinst.rng()))
             throw MTronException.of("{{m}}rhs obj{{/m}} (%s) does not match {{m}}inst range{{/m}} (%s): %s", rhs, cinst.rng(), this);
         return rhs;
+
     }
 
     default boolean isGather() {
@@ -187,7 +228,7 @@ public interface Inst extends Call {
     }
 
 
-    final class f {
+    final class f implements BiFunction<Obj, Inst, Obj> {
         public static f UNKNOWN = null;
 
         private final boolean bi;

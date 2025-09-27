@@ -48,11 +48,6 @@ public final class NullSpace implements Space, InstSet {
     }
 
     @Override
-    public Inst resolve(final Obj lhs, final Inst instAorB) {
-        return NoObj.single();
-    }
-
-    @Override
     public fURI tid() {
         return NOOBJ_TID;
     }
