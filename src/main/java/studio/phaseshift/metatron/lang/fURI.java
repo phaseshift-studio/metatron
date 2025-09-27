@@ -654,7 +654,7 @@ public class fURI implements Cloneable {
         }
 
         public static Query from(final String queryString) {
-            return null == queryString || queryString.isEmpty() ? null : new Query(Stream.of(queryString.split("&")).map(kv -> kv.split("=")).collect(Collectors.toMap(kv -> kv[0], kv -> kv.length == 1 ? "" : kv[1])));
+            return null == queryString || queryString.isEmpty() ? null : new Query(Stream.of(queryString.split("&")).map(kv -> kv.split("=")).collect(Collectors.toMap(kv -> kv[0], kv -> kv.length == 1 ? "" : kv[1],(a,b)->b,LinkedHashMap::new)));
         }
 
         public static String to(final Query query) {

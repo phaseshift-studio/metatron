@@ -24,6 +24,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.lang.obj.Call;
+import studio.phaseshift.metatron.lang.obj.Obj;
 import studio.phaseshift.metatron.lang.obj.mtron.MInt;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -39,17 +40,24 @@ public class InstParseTest {
 
     @ParameterizedTest
     @CsvSource(value = {
-            "abc?int<=int(){ plus(_) }% true",
+            "|(/usr/abc?int<=int(){ map(6) }).to(/usr/abc)                       % 2./usr/abc()                   % 6",
+            "|(/usr/abc?int<=int(){ plus(_) }).to(/usr/abc)                      % 2./usr/abc()                   % 4",
+            "|(/usr/abc?int<=int(a=>int::T[]){ mult(*a) }).to(/usr/abc)          % 2./usr/abc(a=>4)               % 8",
+            "|(/usr/abc?int<=int(a=>isa(int::T[])){ mult(*a) }).to(/usr/abc)     % 2./usr/abc(a=>4)               % 8",
+            "|(/usr/abc?int<=int(a=>else(10)){ mult(*a) }).to(/usr/abc)          % 2./usr/abc()                   % 20",
+            "|(/usr/abc?int<=int(a=>int::T[]){ mult(*a) }).to(/usr/abc)          % 2./usr/abc(4)                  % 8",
+           // "|(/usr/abc?int<=int(isa(int::T[])){ mult(*arg0) }).to(/usr/abc)     % 2./usr/abc(4)                  % 8",
+           // "|(/usr/abc?int<=int(int::T[]){ mult(*arg0) }).to(/usr/abc)          % 2./usr/abc(4)                  % 8",
             //"/mtron/code[plus(1).plus(2)].plus([d,e,f])% [a,b,c,d,e,f]" (requires union())
     }, delimiter = '%')
-    void testInstDefinitions(final String expression, final String expectedResult) {
-        Call call = ObjParser.m_obj().parse(expression).get();
-        assertNotNull(call);
+    void testInstDefinitions(final String definition, final String usage, final String expected) {
+        Call def = ObjParser.<Call>eval(definition).next();
+        Obj use = ObjParser.eval(usage).next();
+        Obj exp = ObjParser.m_obj().parse(expected).get();
+        assertEquals(exp, use);
         //assertEquals(inst, ObjParser.eval(expression).next());
     }
 
-
-    @ParameterizedTest
     @CsvSource(value = {
             "true.plus(false)% true",
             "false.plus(false)% false",

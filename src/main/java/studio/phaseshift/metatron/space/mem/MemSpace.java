@@ -27,6 +27,7 @@ import studio.phaseshift.metatron.ui.GraphittyLogger;
 
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -49,7 +50,7 @@ public class MemSpace extends MSpace implements Space {
                 return this.pathStore;
             else {
                 if (key.hasPattern()) {
-                    return this.pathStore.entrySet().stream().filter(kv -> kv.getKey().matches(key.asNode())).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (a, b) -> b));
+                    return this.pathStore.entrySet().stream().filter(kv -> kv.getKey().matches(key.asNode())).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (a, b) -> b, LinkedHashMap::new));
                 } else {
                     final Obj value = this.pathStore.get(key.asNode());
                     return null == value ? Map.of() : Map.of(key.asNode(), value);

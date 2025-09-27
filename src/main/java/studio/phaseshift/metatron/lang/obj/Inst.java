@@ -21,8 +21,6 @@ package studio.phaseshift.metatron.lang.obj;
 import org.javatuples.Triplet;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.mtron.MInstSet;
-import studio.phaseshift.metatron.lang.obj.mtron.MLst;
-import studio.phaseshift.metatron.lang.obj.mtron.MRec;
 import studio.phaseshift.metatron.lang.obj.mtron.MType;
 import studio.phaseshift.metatron.space.Router;
 import studio.phaseshift.metatron.ui.Graphitty;
@@ -33,10 +31,12 @@ import studio.phaseshift.metatron.util.MTronException;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import static studio.phaseshift.metatron.lang.obj.mtron.MLst.lst;
 import static studio.phaseshift.metatron.lang.obj.mtron.MRec.rec;
 
 public interface Inst extends Call {
@@ -70,13 +70,13 @@ public interface Inst extends Call {
     @Override
     default Type dom() {
         final fURI domain = this.tid().dom();
-        return MType.of(Router.global().read(domain), domain).orElseGet(() -> MType.of(domain));
+        return MType.of(Router.global().read(domain), domain);
     }
 
     @Override
     default Type rng() {
         final fURI range = this.tid().rng();
-        return MType.of(Router.global().read(range), range).orElseGet(() -> MType.of(range));
+        return MType.of(Router.global().read(range), range);
         // return range.equals(fURI.ANY) ? MType.of(range) : MType.of(Router.global().read(range),range).orElseGet(() -> MType.of(range));
     }
 
@@ -89,12 +89,17 @@ public interface Inst extends Call {
     }
 
     default Obj arg(final int index) {
-        return IteratorUtil.index(this.args().elements().iterator(), index, NoObj.single());
+        return this.args().isLst() ?
+                (this.args().lstValue().size() > index ? this.args().lstValue().get(index) : NoObj.single()) :
+                IteratorUtil.index(this.args().elements().iterator(), index, NoObj.single());
     }
-
 
     default Obj arg(final fURI key) {
         return this.args().<Rec>as().at(key.toUri());
+    }
+
+    default Obj arg(final fURI key, final int index) {
+        return this.args().isRec() ? this.arg(key) : this.arg(index);
     }
 
     default Inst.f f() {
@@ -130,24 +135,21 @@ public interface Inst extends Call {
                         .map(i -> {
                             if (i.args().isLst()) {
                                 LOG.trace("processing lst args of %s", i);
-                                if (i.args().count() == this.args().count()) {
-                                    for (int k = 0; k < i.args().count(); k++) {
-                                        final Obj originalArg = i.arg(k);
-                                        final Obj userArg = this.arg(k);
-                                        if (!userArg.matches(originalArg))
-                                            return null;
-                                    }
-                                    return i.args(this.args());
-                                }
+                                final AtomicInteger counter = new AtomicInteger(0);
+                                return i.args().lstValue()
+                                        .stream()
+                                        .anyMatch(arg -> !this.arg(counter.getAndIncrement()).matches(arg)) ?
+                                        null :
+                                        i.args(this.args());
                             } else if (i.args().isRec()) {
                                 LOG.trace("processing rec args of %s", i);
+                                final AtomicInteger counter = new AtomicInteger(0);
                                 return i.args(rec(i.args().recValue().entrySet()
                                         .stream()
-                                        .map(kv -> List.of(kv.getKey(), kv.getValue().apply(this.arg(kv.getKey().uriValue()))))
+                                        .map(kv -> List.of(kv.getKey(), kv.getValue().apply(this.arg(kv.getKey().uriValue(), counter.getAndIncrement()))))
                                         .collect(Collectors.toMap(kv -> kv.get(0), kv -> kv.get(1), (a, b) -> b, LinkedHashMap::new))));
                             } else
-                                throw MTronException.of("args are not a lst nor a rec: %s", i);
-                            return null;
+                                throw MTronException.of("inst args must be a lst or rec: %s", i);
                         })
                         .filter(i -> !Objects.isNull(i))
                         .map(i -> i.tid(i.tid().query(fURI.DOM, lhs.tid())).vid(this.vid()))
@@ -167,7 +169,7 @@ public interface Inst extends Call {
             if (!blocking && !lhs.matches(this.dom()))
                 throw MTronException.of("lhs obj does not match inst domain: %s: %s {{r}}-/>{{/r}} %s", this, lhs, this.dom());
             final Poly cargs = this.args().isLst() ?
-                    MLst.of(this.args().lstValue()
+                    lst(this.args().lstValue()
                             .stream()
                             .map(arg -> {
                                 if (blocking)
@@ -179,12 +181,12 @@ public interface Inst extends Call {
                                     return r;
                                 }
                             }).toList()) :
-                    MRec.of(this.args().recValue().entrySet()
+                    rec(this.args().recValue().entrySet()
                             .stream()
                             .map(kv -> List.of(kv.getKey(), blocking ?
                                     kv.getValue() :
                                     kv.getValue().apply(lhs)))
-                            .collect(Collectors.toMap(kv -> kv.get(0), kv -> kv.get(1))));
+                            .collect(Collectors.toMap(kv -> kv.get(0), kv -> kv.get(1), (a, b) -> b, LinkedHashMap::new)));
             final Inst resolved = this.args(cargs);
             LOG.trace("resolution ({{m}}%s {{g}}=>{{/g}} %s{{/m}}): %s", currentResolution, resolved.resolution(), resolved);
             return resolved;
