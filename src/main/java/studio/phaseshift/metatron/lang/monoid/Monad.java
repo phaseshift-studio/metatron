@@ -28,7 +28,6 @@ public interface Monad extends Obj {
     @Override
     Monad clone(final Object value, final fURI tid, final fURI vid);
 
-
     @Override
     Triplet<Obj, Inst, Rec> value();
 
