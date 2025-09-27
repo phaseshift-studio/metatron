@@ -1,7 +1,6 @@
 package studio.phaseshift.metatron.lang.obj.mtron;
 
 import studio.phaseshift.metatron.lang.fURI;
-import studio.phaseshift.metatron.lang.obj.NoObj;
 import studio.phaseshift.metatron.lang.obj.Obj;
 import studio.phaseshift.metatron.lang.obj.Type;
 import studio.phaseshift.metatron.util.MTronException;
@@ -30,7 +29,7 @@ public class MType extends MObj implements Type {
     }
 
     public static MType of(final Obj value, final fURI tid) {
-        return new MType(value, tid);
+        return null == value || value.isNoObj() ? MType.of(tid) : new MType(value, tid);
     }
 
     public static MType of(final fURI tid) {

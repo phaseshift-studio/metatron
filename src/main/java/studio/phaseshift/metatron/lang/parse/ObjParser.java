@@ -216,7 +216,7 @@ public class ObjParser {
 
 
     public static Parser m_inst_furi() {
-        return seq(m_furi_base_path(REDUCED_FURI_CHARS), opt(seq(of('?'), m_furi_inst_dom_rng()).map(t -> ObjParser.pick(t, 1)), null), opt(of("::").trim(), "::"))
+        return seq(m_furi(REDUCED_FURI_CHARS, true, false), opt(seq(of('?'), m_furi_inst_dom_rng()).map(t -> ObjParser.pick(t, 1)), null), opt(of("::").trim(), "::"))
                 .map(t -> ObjParser.<fURI>pick(t, 0).query(ObjParser.pick(t, 1)));
     }
 

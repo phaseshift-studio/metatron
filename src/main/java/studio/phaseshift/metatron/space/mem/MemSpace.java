@@ -36,7 +36,7 @@ public class MemSpace extends MSpace implements Space {
     public static final fURI MEMSPACE_TID = MTRON_SPACE_TID.extend("mem");
     protected final GraphittyLogger LOG = Graphitty.log(this);
 
-    final Map<fURI, Obj> store = new HashMap<>();
+    final Map<fURI, Obj> pathStore = new HashMap<>();
 
     public MemSpace(final fURI pattern, final fURI vid) {
         super(pattern, MEMSPACE_TID, vid);
@@ -46,12 +46,12 @@ public class MemSpace extends MSpace implements Space {
     public Obj read(final fURI vid) {
         return Space.Helpers.resolveRead(this, vid, (key) -> {
             if (key.equals(fURI.ANY))
-                return this.store;
+                return this.pathStore;
             else {
                 if (key.hasPattern()) {
-                    return this.store.entrySet().stream().filter(kv -> kv.getKey().matches(key.asNode())).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (a, b) -> b));
+                    return this.pathStore.entrySet().stream().filter(kv -> kv.getKey().matches(key.asNode())).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (a, b) -> b));
                 } else {
-                    final Obj value = this.store.get(key.asNode());
+                    final Obj value = this.pathStore.get(key.asNode());
                     return null == value ? Map.of() : Map.of(key.asNode(), value);
                 }
             }
@@ -69,23 +69,23 @@ public class MemSpace extends MSpace implements Space {
             //LOG.trace("raw write of %s to %s {{g}}@{{b}}%s{{X}}", value, this, key);
             if (value.isNoObj()) {
                 if (key.hasPattern()) // delete all existing values that match key pattern
-                    this.store.entrySet().stream().filter(kv -> kv.getKey().matches(key)).forEach(kv -> this.store.remove(kv.getKey()));
+                    this.pathStore.entrySet().stream().filter(kv -> kv.getKey().matches(key)).forEach(kv -> this.pathStore.remove(kv.getKey()));
                 else
-                    this.store.remove(key); // delete existing value that matches key pattern
+                    this.pathStore.remove(key); // delete existing value that matches key pattern
             } else {
                 if (key.hasPattern()) // overwrite all existing values that match key pattern
-                    this.store.entrySet().stream().filter(kv -> kv.getKey().matches(key)).forEach(kv -> {
+                    this.pathStore.entrySet().stream().filter(kv -> kv.getKey().matches(key)).forEach(kv -> {
                         if (key.isNode())
-                            this.store.put(kv.getKey(), value);
+                            this.pathStore.put(kv.getKey(), value);
                         else {
-                            this.store.compute(key.asNode(), (k, current) -> null == current ? value : current.append(value));
+                            this.pathStore.compute(key.asNode(), (k, current) -> null == current ? value : current.append(value));
                         }
                     });
                 else { // overwwrite existing value that matches key pattern
                     if (key.isNode())
-                        this.store.put(key, value);
+                        this.pathStore.put(key, value);
                     else
-                        this.store.compute(key.asNode(), (k, current) -> null == current ? value : current.append(value));
+                        this.pathStore.compute(key.asNode(), (k, current) -> null == current ? value : current.append(value));
                 }
             }
         });
@@ -94,11 +94,11 @@ public class MemSpace extends MSpace implements Space {
 
     @Override
     public long count() {
-        return this.store.size();
+        return this.pathStore.size();
     }
 
     @Override
     public Iterator<Obj> iterator() {
-        return this.store.entrySet().stream().map(kv -> MRel.of(kv.getKey().toUri(), kv.getValue())).map(r -> (Obj) r).iterator();
+        return this.pathStore.entrySet().stream().map(kv -> MRel.of(kv.getKey().toUri(), kv.getValue())).map(r -> (Obj) r).iterator();
     }
 }

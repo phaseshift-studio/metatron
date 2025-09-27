@@ -26,7 +26,7 @@ public class StackSpace extends MSpace {
 
     @Override
     public Obj read(final fURI vid) {
-        LOG.trace("reading %s in %s [{{y}}root{{/y}}: %s]", vid, this.stack, this.root.store);
+        LOG.trace("reading %s in %s [{{y}}root{{/y}}: %s]", vid, this.stack, this.root.pathStore);
         // if(vid.coefficientValue().isZero())
         //    return NoObj.single();
         for (final Map<fURI, Obj> layer : this.stack) {
@@ -39,7 +39,7 @@ public class StackSpace extends MSpace {
 
     @Override
     public Obj write(final fURI vid, final Obj obj) {
-        LOG.trace("writing %s to %s in %s [{{y}}root{{/y}}: %s]", obj, vid, this.stack, this.root.store);
+        LOG.trace("writing %s to %s in %s [{{y}}root{{/y}}: %s]", obj, vid, this.stack, this.root.pathStore);
         this.stack.get(0).put(vid, obj);
         this.root.write(vid, obj);
         return obj;

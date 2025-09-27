@@ -319,7 +319,9 @@ public class fURITest {
             "http://a/b/c[1]|1",
             "/mtron/int[1,5]|1,5",
             "http://a/b/c[*]|*",
-            "/mtron/int[0]?rng=/mtron/int[23]|0"
+            "/mtron/int[0]?rng=/mtron/int[23]|0",
+            "/mtron/+/plus[3]?rng=/mtron/int[23]|3",
+            "/mtron/+/plus[?]?rng=/mtron/int[0,23]|?"
     }, delimiter = '|')
     void testCoefficients(final String furi, final String coefficient) {
         assertEquals(coefficient, fURI.of(furi).coefficient());
@@ -329,7 +331,7 @@ public class fURITest {
     @CsvSource(value = {
             "a|a|true",
             "a|+|true",
-            "a|+/|true", // TODO: should we match on ssend? (and sstart?)
+            "a|+/|false",
             "a|/+|false",
             "+|a|false",
             "|a|false",
@@ -338,9 +340,8 @@ public class fURITest {
             "#|#|true",
             "a||false",
             "|/|false",
-            // "[0]|[0]/|true", TODO: this should match. both are noobj?!
-            // ",|false", // should noobj match noobj?
-            ///
+            "[0]|[0]/|true",
+             "||true",
             "http://fhatos.org/a|http://fhatos.org/a|true",
             "http://fhatos.org/a|http://fhatos.org/a/b|false",
             "http://fhatos.org/a/b|http://fhatos.org/a|false",
@@ -387,10 +388,12 @@ public class fURITest {
             "abc/a|+|false",
             "abc/a|+/+|true",
             "abc/a/c|+/+|false",
+            "abc/a/c|+/+/+|true",
+            "abc/a/c|abc/+/+|true",
+            "abc/a/c|abc/+/c|true",
             "abc/a/c|+/+/#|true",
             "abc/a/c|abc/+/c|true",
             "abc/a|#|true",
-            /// ///
             "abc/a[1]|abc/a[0]|false",
             "abc/a[1]|abc/a[?]|true",
             "abc/a[1]|abc/a[*]|true",
@@ -409,8 +412,28 @@ public class fURITest {
             "abc/a[*]|abc/a[0,]|true",
             "abc/a[?]|abc/a[0,1]|true",
             "/mtron/rec|#|true",
+            "/mtron/inst/plus[4]|/mtron/+/+[4]|true",
+            "/mtron/inst/plus[4]|/mtron/+/+/+[4]|false",
+            "/mtron/inst/plus[4]|/+/inst/+[4]|true",
+            "/mtron/inst/plus|/mtron/+/plus|true",
+            "/mtron/inst/plus|/mtron/+/plus[?]|true",
+            "/mtron/inst/plus[1]|/mtron/#[?]|true",
+            "/mtron/+/plus[1]|/mtron/#[?]|true",
+            "/mtron/+/plus[1]|/mtron/+/+[?]|true",
+            "/mtron/+/plus[1]|/mtron/+/#[?]|true",
+            "/mtron/inst/plus|/mtron/+/plus[?]|true",
+            "/mtron/inst/+[1]|/mtron/+/+[?]|true",
+            "/mtron/+/+[1]|/mtron/+/+[?]|true",
+            "/mtron/+/+[1]|/mtron/+/#[?]|true",
+            "/mtron/inst/plus[1]|/mtron/inst/#[?]|true",
+            "/mtron/inst/plus[1]|/mtron/+/#[?]|true",
+           /* "/mtron/inst/plus/[1]|/mtron/+/plus/[?]|true",
+            "/mtron/+/plus[1]|/mtron/+/plus[?]|true",
+            "/mtron/inst/plus[1]|/mtron/+/plus[?]|true",
+            "/mtron/inst/plus[4]|/mtron/+/plus[4]|true"*/ // TODO:?!? STRANGE!?!?
     }, delimiter = '|')
     void testMatches(final String a, final String b, final boolean shouldMatch) {
+        LOG.trace("testing: {{b}}%s{{/b}} %s {{b}}%s{{/b}}", fURI.of(nullToEmpty(a)), shouldMatch ? "{{g}}should match{{/g}}" : "{{r}}should not match{{/r}}", fURI.of(nullToEmpty(b)));
         if (shouldMatch) assertTrue(fURI.of(nullToEmpty(a)).matches(fURI.of(nullToEmpty(b))));
         else assertFalse(fURI.of(nullToEmpty(a)).matches(fURI.of(nullToEmpty(b))));
     }

@@ -110,6 +110,8 @@ public interface Obj extends Function<Obj, Obj>, Iterable<Obj> {
     }
 
     default boolean matches(final Obj rhs) {
+        if (null == rhs)
+            return true;
         if (this.isNoObj() && rhs.isNoObj())
             return true;
         final fURI base = this.tid().basePath();
@@ -129,9 +131,9 @@ public interface Obj extends Function<Obj, Obj>, Iterable<Obj> {
             return false;
         }
         if (rhs.isCall())
-            return this.rng().matches(rhs.dom());
+            return this.rng().matches(rhs.dom());// && rhs.apply(this).matches(rhs.rng());
         if (rhs.isType())
-            return this.tid().matches(rhs.tid());// TODO: && (rhs.value() == null || this.matches(rhs.value()));
+            return this.tid().matches(rhs.tid()) && (rhs.value() == null || this.matches(rhs.value()));
         return this.tid().matches(rhs.tid()) &&
                 Objects.equals(this.value(), rhs.value());
     }
