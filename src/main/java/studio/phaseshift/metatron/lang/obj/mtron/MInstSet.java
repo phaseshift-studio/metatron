@@ -31,10 +31,11 @@ import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.lang.fURI.f;
 import static studio.phaseshift.metatron.lang.obj.mtron.MBool.bool;
-import static studio.phaseshift.metatron.lang.obj.mtron.MInst.instC;
 import static studio.phaseshift.metatron.lang.obj.mtron.MFluent.StartLess.isA;
+import static studio.phaseshift.metatron.lang.obj.mtron.MInst.instC;
 import static studio.phaseshift.metatron.lang.obj.mtron.MInt.jnt;
 import static studio.phaseshift.metatron.lang.obj.mtron.MLst.lst;
+import static studio.phaseshift.metatron.lang.obj.mtron.MRec.rec;
 import static studio.phaseshift.metatron.lang.obj.mtron.MType.T;
 
 public class MInstSet extends MSpace implements InstSet {
@@ -134,13 +135,17 @@ public class MInstSet extends MSpace implements InstSet {
                 SPLIT_TID, instC(SPLIT_TID.dom(ANY_TID).rng(LST_TID), lst(T(LST_TID)), (lhs, inst) -> MLst.of(inst.arg(0).lstValue().stream().map(e -> e.apply(lhs)).toList())),
                 SPLIT_TID, instC(SPLIT_TID.dom(ANY_TID).rng(REL_TID), lst(T(REL_TID)), (lhs, inst) -> MRel.of(inst.arg(0).<Rel>as().first().apply(lhs), inst.arg(0).<Rel>as().second().apply(lhs))),
                 SPLIT_TID, instC(SPLIT_TID.dom(ANY_TID).rng(REC_TID), lst(T(REC_TID)), (lhs, inst) -> MRec.of(inst.arg(0).recValue().entrySet().stream()
-                        .map(e -> e.getKey().apply(lhs).choose(Obj::isNoObj, null, x -> MRel.of(x, e.getValue().apply(x))))
+                        .map(e -> e.getKey().apply(lhs).choose(Obj::isNoObj, null, x -> MRel.of(x, e.getValue().apply(lhs))))
                         .filter(x -> !Objects.isNull(x))
                         .collect(Collectors.toMap(a -> a.<Rel>as().first(), b -> b.<Rel>as().second(), (a, b) -> b, LinkedHashMap<Obj, Obj>::new)))),
                 SPLIT_TID, instC(SPLIT_TID.dom(ANY_TID).rng(ANY_TID), lst(T(ANY_TID)), (lhs, inst) -> inst.arg(0).apply(lhs)),
                 MERGE_TID, instC(MERGE_TID.dom(LST_TID).rng(fURI.ANY.any()), NO_ARGS__, (lhs, inst) -> MObjs.of(lhs.<Lst>as().value())),
                 MERGE_TID, instC(MERGE_TID.dom(REC_TID).rng(REL_TID.any()), NO_ARGS__, (lhs, inst) -> lhs.isPoly() ? MObjs.of(lhs.<Poly>as().elements()) : lhs),
                 MERGE_TID, instC(MERGE_TID.dom(ANY_TID).rng(ANY_TID.any()), NO_ARGS__, (lhs, inst) -> lhs),
+                DOM_TID, instC(DOM_TID.dom(REL_TID).rng(fURI.ANY), NO_ARGS__, (lhs, inst) -> lhs.relValue().getValue0()),
+                RNG_TID, instC(RNG_TID.dom(REL_TID).rng(fURI.ANY), NO_ARGS__, (lhs, inst) -> lhs.relValue().getValue1()),
+                DOM_TID, instC(DOM_TID.dom(REC_TID).rng(fURI.ANY.any()), NO_ARGS__, (lhs, inst) -> MObjs.of(lhs.recValue().keySet())),
+                RNG_TID, instC(RNG_TID.dom(REC_TID).rng(fURI.ANY.any()), NO_ARGS__, (lhs, inst) -> MObjs.of(lhs.recValue().values())),
                 /// ///////////////////////////////////////////////////////////////////////////////////////////////////
                 NOT_TID, instC(NOT_TID.dom(fURI.ANY).rng(BOOL_TID), lst(T(BOOL_TID)), (lhs, inst) -> bool(!inst.arg(0).boolValue())),
                 EQ_TID, instC(EQ_TID.dom(ANY_TID).rng(BOOL_TID), lst(T(ANY_TID)), (lhs, inst) -> bool(lhs.equals(inst.arg(0)))),
@@ -178,7 +183,8 @@ public class MInstSet extends MSpace implements InstSet {
                 REF_TID, instC(REF_TID.dom(ANY_TID).rng(ANY_TID.any()), lst(T(ANY_TID.any())), (lhs, inst) -> Router.global().write(lhs.uriValue(), inst.arg(0))),
                 TYPE_TID, instC(TYPE_TID.dom(ANY_TID).rng(ANY_TID), NO_ARGS__, (lhs, inst) -> lhs.type()),
                 /// ///////////////////////////////////////////////////////////////////////////////////////////////////
-                WITHIN_TID, instC(WITHIN_TID.dom(LST_TID).rng(LST_TID), lst(ID__), (lhs, inst) -> lst(lhs.<Lst>as().lstValue().stream().map(o -> inst.arg(0).apply(o)).toList())),
+                WITHIN_TID, instC(WITHIN_TID.dom(LST_TID).rng(LST_TID), lst(ID__), (lhs, inst) -> lst(lhs.lstValue().stream().map(o -> inst.arg(0).apply(o)).toList())),
+                WITHIN_TID, instC(WITHIN_TID.dom(REC_TID).rng(REC_TID), lst(ID__), (lhs, inst) -> rec(lhs.recValue().entrySet().stream().map(kv -> inst.arg(0).apply(MRel.of(kv.getKey(), kv.getValue())).<Rel>as()).collect(Collectors.toMap(Rel::first, Rel::second, (a, b) -> b, LinkedHashMap<Obj, Obj>::new)))),
                 COUNT_TID, instC(COUNT_TID.dom(ANY_TID.any()).rng(INT_TID), NO_ARGS__, (lhs, inst) -> IteratorUtil.reduce(lhs.iterator(), jnt(0), (a, b) -> MInst.instB(PLUS_TID, MLst.of(jnt(1))).apply(a))),
                 SUM_TID, instC(SUM_TID.dom(ANY_TID.any()).rng(INT_TID), NO_ARGS__, (lhs, inst) -> IteratorUtil.reduce(lhs.iterator(), jnt(0), (a, b) -> MInst.instB(PLUS_TID, MLst.of(b)).apply(a))),
                 REIFY_TID, instC(REIFY_TID.dom(fURI.ANY.maybe()).rng(REC_TID), NO_ARGS__, (lhs, inst) ->

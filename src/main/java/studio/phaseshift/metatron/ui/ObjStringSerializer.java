@@ -154,8 +154,11 @@ public class ObjStringSerializer implements ObjSerializer<String> {
                     .toString();
     }
 
-    private StringBuilder generateRec(final StringBuilder sb, final Rec rec, final int depth) {
-        sb.append("{{FORM1}}[{{/FORM1}}").append("\n");
+    /*private StringBuilder generateRec(final StringBuilder sb, final Rec rec, final int depth) {
+        boolean nested = false; //rec.recValue().values().stream().anyMatch(Obj::isRec);
+        sb.append("{{FORM1}}[{{/FORM1}}");
+        if (nested)
+            sb.append("\n");
         rec.recValue().forEach((k, v) -> {
             if (depth > 0)
                 sb.append(" ".repeat(depth * 2));
@@ -164,11 +167,36 @@ public class ObjStringSerializer implements ObjSerializer<String> {
                 this.generateRec(sb, v.as(), depth + 1);
             } else
                 sb.append(write(v));
-            sb.append("{{FORM1}},\n");
+            sb.append("{{FORM1}},");
+           // if (nested) sb.append("\n");
         });
         sb.deleteCharAt(sb.length() - 1);
         sb.deleteCharAt(sb.length() - 1);
-        sb./*append(" ".repeat(depth)).*/append("{{FORM1}}]{{FORM1}}");
+        sb./*append(" ".repeat(depth)).append("{{FORM1}}]{{FORM1}}");
+        return sb;
+    }*/
+
+    private StringBuilder generateRec(final StringBuilder sb, final Rec rec, final int depth) {
+        boolean nested = rec.recValue().values().stream().anyMatch(Obj::isRec);
+        sb.append("{{FORM1}}[{{/FORM1}}");
+        if (nested)
+            sb.append("\n");
+        rec.recValue().forEach((k, v) -> {
+            if (depth > 0)
+                sb.append(" ".repeat(depth * 2));
+            sb.append(write(k)).append("{{FORM1}}=>{{/FORM1}}");
+            if (v.isRec()) {
+                this.generateRec(sb, v.as(), depth + 1);
+            } else
+                sb.append(write(v));
+            sb.append("{{FORM1}},");
+            if (nested)
+                sb.append("\n");
+        });
+        if (nested)
+            sb.deleteCharAt(sb.length() - 1);
+        sb.deleteCharAt(sb.length() - 1);
+        sb.append("{{FORM1}}]{{FORM1}}");
         return sb;
     }
 
