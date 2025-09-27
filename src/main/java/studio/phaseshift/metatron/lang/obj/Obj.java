@@ -110,8 +110,6 @@ public interface Obj extends Function<Obj, Obj>, Iterable<Obj> {
     }
 
     default boolean matches(final Obj rhs) {
-        if (null == rhs)
-            return true;
         if (this.isNoObj() && rhs.isNoObj())
             return true;
         final fURI base = this.tid().basePath();
