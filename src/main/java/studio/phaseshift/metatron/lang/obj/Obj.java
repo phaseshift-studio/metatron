@@ -172,7 +172,7 @@ public interface Obj extends Function<Obj, Obj>, Iterable<Obj> {
     }
 
     default boolean isNoObj() {
-        return this == NoObj.single() || this.tid().basePath().equals(fURI.NONE) || this.tid().coefficientValue().isZero();
+        return this == NoObj.single() || this.tid().basePath().equals(fURI.NONE) || this.tid().coefficientValue().isZero(); // TODO: consolidate the logic
     }
 
     default boolean isBool() {

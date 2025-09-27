@@ -66,6 +66,14 @@ public class MTronException extends RuntimeException {
         }
     }
 
+    public static <T> T wrap(final ThrowingSupplier<T> function, final T onException) {
+        try {
+            return function.get();
+        } catch (final Exception e) {
+            return onException;
+        }
+    }
+
     public String toString() {
         return this.getMessage();
     }
