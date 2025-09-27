@@ -118,6 +118,10 @@ public class fURITest {
             "a/b/c/[2,5]        | z[4,6]          | ERROR",
             "a/b/c[6]?a=1&b=2   | a/+/c[4,6]?c=3  | a/b/c[10,12]?a=1&b=2&c=3",
             "a/b/c[+]?a=1&b=2   | #[*]            | a/b/c[1,]?a=1&b=2",
+            "a/b/c[*]?a=1&b=2   | #[+]            | a/b/c[+]?a=1&b=2",
+            "a/b/c[+]?a=1&b=2   | #[+]            | a/b/c[2,]?a=1&b=2",
+            "a/b/c[+]?a=1&b=2   | #[?]            | a/b/c[+]?a=1&b=2",
+            "a/b/c[?]?a=1&b=2   | #[?]            | a/b/c[0,2]?a=1&b=2",
     }, delimiter = '|')
     public void testPlus(final String f1, final String f2, final String expected) {
         final fURI furi1 = fURI.of(f1);
