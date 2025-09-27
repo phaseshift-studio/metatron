@@ -179,7 +179,7 @@ public class ObjStringSerializer implements ObjSerializer<String> {
     private StringBuilder generateRec(final StringBuilder sb, final Rec rec, final int depth) {
         boolean nested = rec.recValue().values().stream().anyMatch(Obj::isRec);
         sb.append("{{FORM1}}[{{/FORM1}}");
-        if (nested)
+        if (depth > 0 || nested)
             sb.append("\n");
         rec.recValue().forEach((k, v) -> {
             if (depth > 0)
