@@ -106,6 +106,10 @@ public class fURI implements Cloneable {
         int queryPosition = uri.lastIndexOf('?');
         if (queryPosition == -1 || uri.charAt(queryPosition - 1) == '[')
             queryPosition = -1;
+        if(queryPosition == uri.length() - 1) {
+            uri = uri.substring(0, uri.length() - 1);
+            queryPosition = -1;
+        }
         final String tempQuery = queryPosition == -1 ? null : uri.substring(queryPosition + 1);
         this.query = Query.from(tempQuery);
         if (null != this.query)
@@ -383,7 +387,7 @@ public class fURI implements Cloneable {
     }
 
     public fURI query(final String query) {
-        return new fURI(this.scheme, this.host, this.port, this.sstart, this.path, this.send, query);
+        return new fURI(this.scheme, this.host, this.port, this.sstart, this.path, this.send, null == query || query.isEmpty() ? null : query);
     }
 
     public fURI query(final String key, final String value) {
@@ -593,7 +597,7 @@ public class fURI implements Cloneable {
         }
         if (!this.send && !this.path.isEmpty())
             b.delete(b.length() - 1, b.length());
-        if (null != this.query)
+        if (null != this.query && !this.query.query.isEmpty())
             b.append("?").append(Query.to(this.query));
         return b.toString();
     }
@@ -654,7 +658,7 @@ public class fURI implements Cloneable {
         }
 
         public static Query from(final String queryString) {
-            return null == queryString || queryString.isEmpty() ? null : new Query(Stream.of(queryString.split("&")).map(kv -> kv.split("=")).collect(Collectors.toMap(kv -> kv[0], kv -> kv.length == 1 ? "" : kv[1],(a,b)->b,LinkedHashMap::new)));
+            return null == queryString || queryString.trim().isEmpty() ? null : new Query(Stream.of(queryString.split("&")).map(kv -> kv.split("=")).collect(Collectors.toMap(kv -> kv[0], kv -> kv.length == 1 ? "" : kv[1], (a, b) -> b, LinkedHashMap::new)));
         }
 
         public static String to(final Query query) {

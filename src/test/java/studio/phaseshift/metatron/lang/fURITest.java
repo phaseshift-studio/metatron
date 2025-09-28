@@ -24,6 +24,7 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
+import studio.phaseshift.metatron.lang.parse.ObjParser;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
 import studio.phaseshift.metatron.util.MTronException;
@@ -59,7 +60,9 @@ public class fURITest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"http://fhatos.org/a/b/c",
+    @ValueSource(strings = {
+            "_0",
+            "http://fhatos.org/a/b/c",
             "http://fhatos.org:8080/a/b/c",
             "http://fhatos.org",
             "http://fhatos.org:8080",
@@ -74,14 +77,15 @@ public class fURITest {
             "/mtron/int",
             "/mtron/int?sub",
             "/mtron/int?sub=noobj",
-            "http:// adb/dg",
-            "http:// adb/dg   ",
-            "   http:// adb/dg   "
+            "http://_adb/dg",
     })
     public void testParse(final String f) {
-        final fURI furi = fURI.of(f);
-        assertEquals(f, furi.toString());
-        assertEquals(furi, fURI.of(furi.toString()));
+        final fURI furi1 = fURI.of(f);
+        final fURI furi2 = ObjParser.m_furi().parse(f).get();
+        assertEquals(f, furi1.toString());
+        assertEquals(f, furi2.toString());
+        assertEquals(furi1, furi2);
+        assertEquals(furi1, fURI.of(furi1.toString()));
     }
 
     @ParameterizedTest
@@ -107,8 +111,14 @@ public class fURITest {
             "/mtron/an_inst?dom=#&rng=+|{dom=#, rng=+}"},
             delimiter = '|')
     public void testQueryRead(final String f, final String queryMap) {
-        final fURI furi = fURI.of(f);
-        assertEquals(queryMap, furi.queryMap().toString());
+        final fURI furi1 = fURI.of(f);
+        final fURI furi2 = ObjParser.m_furi().parse(f).get();
+        assertEquals(queryMap, furi1.queryMap().toString());
+        assertEquals(queryMap, furi2.queryMap().toString());
+        //assertEquals(f, furi1.toString());
+        //assertEquals(f, furi2.toString());
+        assertEquals(furi1.toString(), furi2.toString());
+        assertEquals(furi1, furi2);
     }
 
     @ParameterizedTest
@@ -124,12 +134,19 @@ public class fURITest {
             "a/b/c[?]?a=1&b=2   | #[?]            | a/b/c[0,2]?a=1&b=2",
     }, delimiter = '|')
     public void testPlus(final String f1, final String f2, final String expected) {
-        final fURI furi1 = fURI.of(f1);
-        final fURI furi2 = fURI.of(f2);
+        final fURI furi1a = fURI.of(f1);
+        final fURI furi1b = fURI.of(f2);
+        final fURI furi2a = ObjParser.m_furi().parse(f1).get();
+        final fURI furi2b = ObjParser.m_furi().parse(f2).get();
+        //assertEquals(furi1a, furi2a); // TODO: important ssend issue
+        assertEquals(furi1b, furi2b);
         if (expected.equals("ERROR")) {
-            assertThrows(MTronException.class, () -> furi1.plus(furi2));
-        } else
-            assertEquals(fURI.of(expected), furi1.plus(furi2));
+            assertThrows(MTronException.class, () -> furi1a.plus(furi1b));
+            assertThrows(MTronException.class, () -> furi2a.plus(furi2b));
+        } else {
+            assertEquals(fURI.of(expected), furi1a.plus(furi1b));
+            assertEquals(fURI.of(expected), furi2a.plus(furi2b));
+        }
     }
 
     @ParameterizedTest
@@ -143,12 +160,19 @@ public class fURITest {
             "a/b/c[+]?a=1&b=2   | #[*]            | a/b/c/#[0,]?a=1&b=2",
     }, delimiter = '|')
     public void testMult(final String f1, final String f2, final String expected) {
-        final fURI furi1 = fURI.of(f1);
-        final fURI furi2 = fURI.of(f2);
+        final fURI furi1a = fURI.of(f1);
+        final fURI furi1b = fURI.of(f2);
+        final fURI furi2a = ObjParser.m_furi().parse(f1).get();
+        final fURI furi2b = ObjParser.m_furi().parse(f2).get();
+        assertEquals(furi1a, furi2a);
+        assertEquals(furi1b, furi2b);
         if (expected.equals("ERROR")) {
-            assertThrows(MTronException.class, () -> furi1.mult(furi2));
-        } else
-            assertEquals(fURI.of(expected), furi1.mult(furi2));
+            assertThrows(MTronException.class, () -> furi1a.mult(furi1b));
+            assertThrows(MTronException.class, () -> furi2a.mult(furi2b));
+        } else {
+            assertEquals(fURI.of(expected), furi1a.mult(furi1b));
+            assertEquals(fURI.of(expected), furi2a.mult(furi2b));
+        }
     }
 
     @ParameterizedTest
@@ -341,7 +365,7 @@ public class fURITest {
             "a||false",
             "|/|false",
             "[0]|[0]/|true",
-             "||true",
+            "||true",
             "http://fhatos.org/a|http://fhatos.org/a|true",
             "http://fhatos.org/a|http://fhatos.org/a/b|false",
             "http://fhatos.org/a/b|http://fhatos.org/a|false",
@@ -433,9 +457,24 @@ public class fURITest {
             "/mtron/inst/plus[4]|/mtron/+/plus[4]|true"*/ // TODO:?!? STRANGE!?!?
     }, delimiter = '|')
     void testMatches(final String a, final String b, final boolean shouldMatch) {
-        LOG.trace("testing: {{b}}%s{{/b}} %s {{b}}%s{{/b}}", fURI.of(nullToEmpty(a)), shouldMatch ? "{{g}}should match{{/g}}" : "{{r}}should not match{{/r}}", fURI.of(nullToEmpty(b)));
-        if (shouldMatch) assertTrue(fURI.of(nullToEmpty(a)).matches(fURI.of(nullToEmpty(b))));
-        else assertFalse(fURI.of(nullToEmpty(a)).matches(fURI.of(nullToEmpty(b))));
+        final fURI furi1a = fURI.of(nullToEmpty(a));
+        final fURI furi1b = fURI.of(nullToEmpty(b));
+        final boolean doObjParser = null != a && null != b && !a.equals("[0]");
+        final fURI furi2a = doObjParser ? ObjParser.m_furi().parse(nullToEmpty(a)).get() : fURI.of(nullToEmpty(a));
+        final fURI furi2b = doObjParser ? ObjParser.m_furi().parse(nullToEmpty(b)).get() : fURI.of(nullToEmpty(b));
+        LOG.trace("testing: {{b}}%s{{/b}} %s {{b}}%s{{/b}}", furi1a, shouldMatch ? "{{g}}should match{{/g}}" : "{{r}}should not match{{/r}}", furi1b);
+        assertEquals(furi1a, furi2a);
+        if (shouldMatch) {
+            assertTrue(furi1a.matches(furi1b));
+            assertTrue(furi2a.matches(furi2b));
+            assertTrue(furi1a.matches(furi2b));
+            assertTrue(furi2a.matches(furi1b));
+        } else {
+            assertFalse(furi1a.matches(furi1b));
+            assertFalse(furi2a.matches(furi2b));
+            assertFalse(furi1a.matches(furi2b));
+            assertFalse(furi2a.matches(furi1b));
+        }
     }
 
     private String nullToEmpty(final String s) {

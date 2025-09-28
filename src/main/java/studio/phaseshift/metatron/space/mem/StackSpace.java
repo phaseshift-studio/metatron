@@ -13,7 +13,7 @@ import java.util.Map;
 public class StackSpace extends MSpace {
 
     public static final fURI STACKSPACE_TID = MTRON_TID.extend("space/stack");
-    public static final String ARG_PREFIX = "arg";
+    public static final String ARG_PREFIX = "a";
 
     private final GraphittyLogger LOG = Graphitty.log(this);
     private final MemSpace root;
@@ -29,10 +29,13 @@ public class StackSpace extends MSpace {
         LOG.trace("reading %s in %s [{{y}}root{{/y}}: %s]", vid, this.stack, this.root.pathStore);
         // if(vid.coefficientValue().isZero())
         //    return NoObj.single();
+        boolean isArg = vid.toString().matches("a\\d+"); // skip first encounter of list arg variable as it's a variable to grab the variable
         for (final Map<fURI, Obj> layer : this.stack) {
             final Obj o = layer.get(vid.basePath());
-            if (null != o)
-                return o;
+            if (null != o) {
+                if (isArg) isArg = false;
+                else return o;
+            }
         }
         return this.root.read(vid);
     }

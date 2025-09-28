@@ -191,7 +191,7 @@ public class ObjParser {
 
     public static Parser m_furi_coefficient() {
         return seq(of('['), choice(
-                        seq(digit().plus(), of(','), digit().plus()).flatten(),
+                        seq(opt(digit().plus(), ""), of(','), opt(digit().plus(), "")).flatten(),
                         digit().plus().flatten().map(t -> t + "," + t),
                         of('*').map(t -> "0,"),
                         of('+').map(t -> "1,"),
@@ -202,7 +202,7 @@ public class ObjParser {
     public static Parser m_furi_query() {
         return seq(of('?'), choice(
                 m_furi_inst_dom_rng(),
-                seq(word().plus(), opt(seq(of('='), word().or(anyOf(REDUCED_FURI_CHARS)).plus()), "")).separatedBy(of('&')).flatten()
+                seq(word().plus(), opt(seq(of('='), word().or(anyOf(FULL_FURI_CHARS)).star()), "")).separatedBy(of('&')).flatten()
         )).map(t -> pick(t, 1));
     }
 
@@ -346,7 +346,7 @@ public class ObjParser {
                 startToken.trim().map(t -> MInst.instA(tid)) :
                 seq(startToken.trim(), choice(
                         seq(of('('), m_obj(), of(')')).map(t -> ObjParser.<Obj>pick(t, 1)),
-                        m_obj()), null == endToken ? none().not() : endToken.trim())
+                        m_obj()), null == endToken ? of("") : endToken.trim())
                         .map(t -> MInst.instB(tid, MLst.of(ObjParser.<Obj>pick(t, 1))));
     }
 

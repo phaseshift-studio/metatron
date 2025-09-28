@@ -121,6 +121,9 @@ public interface Inst extends Call {
         return Resolve.C;
     }
 
+    default boolean isBlocking() {
+        return this.tid().basePath().equals(MInstSet.BLOCK_TID) || this.tid().basePath().equals(MInstSet.WITHIN_TID);
+    }
 
     @Override
     default Inst resolve(final Obj lhs) {
@@ -165,7 +168,7 @@ public interface Inst extends Call {
                 return resolved;
             }
         } else { // Resolve.B
-            final boolean blocking = this.tid().basePath().equals(MInstSet.BLOCK_TID) || this.tid().basePath().equals(MInstSet.WITHIN_TID);
+            final boolean blocking = this.isBlocking();
             if (!blocking && !lhs.matches(this.dom()))
                 throw MTronException.of("lhs obj does not match inst domain: %s: %s {{r}}-/>{{/r}} %s", this, lhs, this.dom());
             final Poly cargs = this.args().isLst() ?
@@ -196,7 +199,7 @@ public interface Inst extends Call {
     @Override
     default Obj apply(final Obj lhs) {
         final Inst cinst = this.resolve(lhs);
-        if (!lhs.matches(cinst.dom()))
+        if (!this.isBlocking() && !lhs.matches(cinst.dom()))
             throw MTronException.of("{{m}}lhs obj{{/m}} (%s) does not match {{m}}inst domain{{/m}} (%s): %s", lhs, cinst.dom(), this);
         Router.stack().push(cinst.args());
         Obj rhs = NoObj.single();
