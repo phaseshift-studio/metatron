@@ -29,7 +29,8 @@ public interface Call extends Obj {
         return this.isCode() ? this.codeValue() : List.of(this.as());
     }
 
-    <C extends Call> C resolve(final Obj start);
+    @Override
+    Call resolve(final Obj start);
 
     default <C extends Call> C dom(final Type domain) {
         return (C) this.tid(this.tid().dom(domain.tid()));

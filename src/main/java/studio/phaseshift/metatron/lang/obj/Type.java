@@ -22,10 +22,12 @@ public interface Type extends Obj {
 
     @Override
     default Obj apply(final Obj obj) {
-        if (null == this.value())
+        if (!obj.rng().tid().matches(this.tid()))
+            return NoObj.single();
+        if(this.value() == null)
             return obj;
         else if (this.value().isCall()) {
-            return obj.matches(this.value().apply(obj)) ? obj : NoObj.single();
+            return this.value().apply(obj);
         } else {
             return obj.matches(this.value()) ? obj : NoObj.single();
         }

@@ -11,6 +11,8 @@ import studio.phaseshift.metatron.ui.GraphittyLogger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static studio.phaseshift.metatron.lang.fURI.f;
+import static studio.phaseshift.metatron.lang.obj.mtron.MType.T;
 
 public class TypeTest extends MetatronTest {
     private static final GraphittyLogger LOG = Graphitty.log(TypeTest.class);
@@ -90,7 +92,7 @@ public class TypeTest extends MetatronTest {
     public void testType(final String obj, final String typefURI, final boolean matches) {
         try {
             Obj o = ObjParser.m_obj().parse(obj).get();
-            Type t = MType.of(fURI.of(typefURI.trim()));
+            Type t = T(f(typefURI.trim()));
             LOG.debug("testing %s %s %s", o, matches ? "{{c}}in{{/c}}" : "{{c}}not in{{/c}}", t);
             assertEquals(matches, o.matches(t));
             //if (!typefURI.startsWith("#") && !o.isNoObj())
@@ -105,6 +107,10 @@ public class TypeTest extends MetatronTest {
     @ParameterizedTest
     @CsvSource(value = {
             // obj        | type                          | matches?
+           // "noobj        | noobj::T[]                  | true",
+            "1            | noobj::T[]                    | false",
+            "1            | str::T[]                      | false",
+            "1            | lst::T[]                      | false",
             "1            | int::T[]                      | true",
             "1            | int::T[1]                     | true",
             "'a_string'   | int::T[]                      | false",

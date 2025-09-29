@@ -63,6 +63,9 @@ public class RecTest extends MetatronTest {
             "[a=>b,c=>[d=>[a=>b]]]                 | [a=>b,c=>[d=>get(a).is(eq(b))]]   | true",
             "[a=>b,c=>[d=>2]]                      | [a=>b,c=>[d=>is(gt(0))]]          | true",
             "[a=>b,c=>[d=>2]]                      | [a=>b,c=>[d=>is(gt(3))]]          | false",
+            "[a=>b,c=>[d=>2]]                      | [a=>b,c=>[d=>is(in(int::T[is(gt(0))]))]]   | true",
+         // TODO:   "[a=>b,c=>[d=>2]]                      | [a=>b,c=>[d=>is(in(int::T[is(gt(10))]))]]   | false",
+         //   "[a=>b,c=>[d=>2]]                      | [a=>b,c=>[d=>int::T[is(gt(10))]]]  | false",
             "[a=>b,c=>[d=>2]]                      | [a=>b,c=>[d=>is(in(int::T[]))]]   | true",
             "[a=>b,c=>[d=>2]]                      | [a=>b,c=>[d=>is(in(str::T[]))]]   | false",
     }, delimiter = '|')

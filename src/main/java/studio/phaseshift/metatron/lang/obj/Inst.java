@@ -143,19 +143,23 @@ public interface Inst extends Call {
                                         .stream()
                                         .anyMatch(arg -> !this.arg(counter.getAndIncrement()).matches(arg)) ?
                                         null :
-                                        i.args(this.args());
+                                        i.args(lst(this.args().lstValue().stream().map(a -> a.isCall() ? a.resolve(lhs.type()) : a).toList()));
                             } else if (i.args().isRec()) {
                                 LOG.trace("processing rec args of %s", i);
                                 final AtomicInteger counter = new AtomicInteger(0);
                                 return i.args(rec(i.args().recValue().entrySet()
                                         .stream()
-                                        .map(kv -> List.of(kv.getKey(), kv.getValue().apply(this.arg(kv.getKey().uriValue(), counter.getAndIncrement()))))
+                                        .map(kv -> {
+                                           // return List.of(kv.getKey(), kv.getValue().resolve(this.arg(kv.getKey().uriValue(), counter.getAndIncrement())));
+                                            Obj this_arg = this.arg(kv.getKey().uriValue(), counter.getAndIncrement());
+                                           return List.of(kv.getKey(), kv.getValue().isCall() ? kv.getValue().apply(this_arg): this_arg);
+                                        })
                                         .collect(Collectors.toMap(kv -> kv.get(0), kv -> kv.get(1), (a, b) -> b, LinkedHashMap::new))));
                             } else
                                 throw MTronException.of("inst args must be a lst or rec: %s", i);
                         })
                         .filter(i -> !Objects.isNull(i))
-                        .map(i -> i.tid(i.tid().query(fURI.DOM, lhs.tid())).vid(this.vid()))
+                        .map(i -> i/*.tid(i.tid().query(fURI.DOM, lhs.tid()))*/.vid(this.vid()))
                         .map(Obj::<Inst>as)
                         .findFirst()
                         .orElseThrow(() -> this.logger().except("unable to resolve %s => %s in instruction set %s", lhs, this));
@@ -179,8 +183,11 @@ public interface Inst extends Call {
                                     return arg;
                                 else {
                                     final Obj r = arg.apply(lhs);
-                                    if (!r.matches(arg))
-                                        throw MTronException.of("arg obj does not match inst arg: %s: %s {{r}}-/>{{/r}} %s", this, arg, r);
+                                    if (!arg.isCall() && !r.matches(arg)) {
+                                        LOG.error("unmatched inst arg in %s: %s ({{y}}lhs{{/y}}) {{g}}=>{{/g}} %s ({{y}}arg{{/y}}) {{r}}~!>{{/r}} %s ", this, lhs, arg, r);
+                                        return arg;
+                                    }
+                                    //throw MTronException.of("arg obj does not match inst arg: %s: %s {{r}}-/>{{/r}} %s", this, arg, r);
                                     return r;
                                 }
                             }).toList()) :

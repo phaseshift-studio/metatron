@@ -54,7 +54,7 @@ public class MMonoid extends MObj implements Monoid {
         // process bcode inst pipeline
         //this.code = Rewriter({Rewriter::by(), Rewriter::explain()}).apply(this.code);
         // setup global behavior around barriers, initials, and terminals
-        LOG.debug("resolving code and generating structural monads:\n\t%s {{g}}=>{{/g}} %s", lhs, this.code());
+        LOG.debug("resolving code and generating structural monads:\n        [{{y}}PREPILED{{/y}}] %s {{g}}=>{{/g}} %s", lhs, this.code());
         Obj token = lhs;
         //LOG.none("%s", token.rng());
         final List<Inst> resolvedCode = new ArrayList<>();
@@ -62,7 +62,7 @@ public class MMonoid extends MObj implements Monoid {
         fURI rng = null;
         for (final Inst inst : this.code().value()) {
             try {
-                LOG.debug("   {{g}}=>{{/g}} resolving inst %s", inst);
+                LOG.debug("   {{g}}=>{{/g}} resolving inst %s of %s", inst, token);
                 final Inst instB = inst.resolve(token);
                 if (null == dom)
                     dom = instB.tid().queryValue(fURI.DOM, fURI.class);
@@ -86,8 +86,8 @@ public class MMonoid extends MObj implements Monoid {
                 //e.printStackTrace();
             }
         }
-        final Code resolved = MCode.of(resolvedCode).tid(code().tid().query(fURI.DOM, Optional.ofNullable(dom).orElse(fURI.ANY)).query(fURI.RNG, Optional.ofNullable(rng).orElse(fURI.ANY)));
-        LOG.debug("resolved monoidal code: %s", resolved);
+        final Code resolved = MCode.of(resolvedCode);//.tid(code().tid().query(fURI.DOM, Optional.ofNullable(dom).orElse(fURI.ANY.any())).query(fURI.RNG, Optional.ofNullable(rng).orElse(fURI.ANY.any())));
+        LOG.debug("resolved monoidal code:\n        [{{g}}COMPILED{{/g}}] %s", resolved);
         return this.code(resolved);
     }
 

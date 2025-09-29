@@ -12,6 +12,10 @@ public class MType extends MObj implements Type {
         return MType.of(tid);
     }
 
+    public static Type T(final Obj obj) {
+        return obj.isType() ? obj.as() : MType.of(obj, obj.tid());
+    }
+
     public MType(final Obj value, final fURI tid) {
         super(value, tid, tid);
     }

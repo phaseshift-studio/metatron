@@ -45,6 +45,10 @@ public interface Obj extends Function<Obj, Obj>, Iterable<Obj> {
 
     fURI vid();
 
+    default Obj resolve(final Obj lhs) {
+        return this;
+    }
+
     default fURI vidOrTid() {
         return this.vid() == null ? this.tid() : this.vid();
     }
@@ -112,6 +116,8 @@ public interface Obj extends Function<Obj, Obj>, Iterable<Obj> {
     default boolean matches(final Obj rhs) {
         if (this.isNoObj() && rhs.isNoObj())
             return true;
+       else if (rhs.isNoObj())
+            return false;
         final fURI base = this.tid().basePath();
         if (MInstSet.BASE_TYPES.contains(base) &&
                 !(this instanceof Objs) &&
@@ -128,10 +134,14 @@ public interface Obj extends Function<Obj, Obj>, Iterable<Obj> {
                         this instanceof Code && base.equals(CODE_TID))) {
             return false;
         }
+        if (this.isCall()) {
+            //return true;
+            return this.tid().coefficientValue().within(rhs.tid().coefficientValue()); // TODO: this is really flimsy.
+        }
         if (rhs.isCall())
             return this.rng().matches(rhs.dom());// && rhs.apply(this).matches(rhs.rng());
         if (rhs.isType())
-            return this.tid().matches(rhs.tid()) && (rhs.value() == null || this.matches(rhs.value()));
+            return this.tid().matches(rhs.tid()) && (rhs.value() == null || this.matches(rhs.<Type>as().value()));
         return this.tid().matches(rhs.tid()) &&
                 Objects.equals(this.value(), rhs.value());
     }

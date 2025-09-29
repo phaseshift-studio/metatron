@@ -84,11 +84,11 @@ public interface Code extends Call {
 
     @Override
     default Type dom() {
-        return this.value().isEmpty() ? T(fURI.NONE.zero()) : T(this.value().get(0).dom().tid().maybe()); // TODO: if unresolved, it's maybe.. is that good?
+        return this.value().isEmpty() ? T(fURI.NONE.zero()) : T(this.value().get(0).dom().tid().any()); // TODO: if unresolved, it's maybe.. is that good?
     }
 
     default Type rng() {
-        return this.value().isEmpty() ? T(fURI.NONE.zero()) : T(this.value().get(this.value().size() - 1).rng().tid().maybe());
+        return this.value().isEmpty() ? T(fURI.NONE.zero()) : T(this.value().get(this.value().size() - 1).rng().tid().any());
     }
 
     @Override

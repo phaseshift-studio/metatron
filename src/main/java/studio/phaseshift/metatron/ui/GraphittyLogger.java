@@ -23,10 +23,7 @@ import ch.qos.logback.core.LayoutBase;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.event.Level;
-import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.Obj;
-import studio.phaseshift.metatron.space.Router;
-import studio.phaseshift.metatron.space.device.log.Log;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.HashMap;
@@ -58,7 +55,7 @@ public class GraphittyLogger extends LayoutBase<ILoggingEvent> {
     }
 
     private String toSourceString() {
-      return  this.source instanceof Obj ? ((Obj) this.source).vidOrTid().toString() : (this.source instanceof Class ? ((Class<?>) this.source).getSimpleName() : this.source.getClass().getSimpleName());
+        return this.source instanceof Obj ? ((Obj) this.source).vidOrTid().toString() : (this.source instanceof Class ? ((Class<?>) this.source).getSimpleName() : this.source.getClass().getSimpleName());
     }
 
     private String makeMessage(final boolean metadata, final Object f, final Object... args) {
@@ -68,7 +65,11 @@ public class GraphittyLogger extends LayoutBase<ILoggingEvent> {
     }
 
     protected GraphittyLogger logLevel(final Level level, final Object f, final Object... args) {
-        this.logger().makeLoggingEventBuilder(level).log(() -> this.makeMessage(true, f, args));
+        try {
+            this.logger().makeLoggingEventBuilder(level).log(() -> this.makeMessage(true, f, args));
+        } catch (Exception e) {
+            System.out.println(e);
+        }
         return this;
     }
 

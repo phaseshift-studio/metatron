@@ -1,10 +1,11 @@
 package studio.phaseshift.metatron.lang.monoid;
 
-import org.javatuples.Quartet;
 import org.javatuples.Triplet;
 import studio.phaseshift.metatron.lang.fURI;
-import studio.phaseshift.metatron.lang.obj.*;
-import studio.phaseshift.metatron.space.Space;
+import studio.phaseshift.metatron.lang.obj.Inst;
+import studio.phaseshift.metatron.lang.obj.Obj;
+import studio.phaseshift.metatron.lang.obj.Rec;
+import studio.phaseshift.metatron.lang.obj.Type;
 import studio.phaseshift.metatron.ui.Graphitty;
 
 import java.util.Objects;
@@ -21,7 +22,7 @@ public interface Monad extends Obj {
         }
 
         public static boolean monadEquals(final Monad monad, final Object other) {
-            return other instanceof Monad && ((Monad) other).tid().equals(monad.tid()) && ((Monad) other).vid().equals(monad.vid()) && ((Monad)other).value().equals(monad.value());
+            return other instanceof Monad && Objects.equals(((Monad) other).tid(), monad.tid()) && Objects.equals(((Monad) other).vid(), monad.vid()) && Objects.equals(((Monad) other).value(), monad.value());
         }
     }
 
