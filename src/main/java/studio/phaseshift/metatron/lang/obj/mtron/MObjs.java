@@ -30,7 +30,6 @@ import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.ObjUtil;
 
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -55,6 +54,10 @@ public class MObjs extends MObj implements Objs {
 
     public static Objs objs(final Iterable<Obj> os) {
         return MObjs.of(os);
+    }
+
+    public static Objs objs(final Obj... objs) {
+        return objs(List.of(objs));
     }
 
 

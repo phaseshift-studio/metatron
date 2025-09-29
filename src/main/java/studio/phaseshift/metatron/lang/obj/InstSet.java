@@ -19,13 +19,14 @@
 package studio.phaseshift.metatron.lang.obj;
 
 import studio.phaseshift.metatron.lang.fURI;
-import studio.phaseshift.metatron.lang.obj.base.furi.TypefURI;
 import studio.phaseshift.metatron.lang.obj.mtron.MInst;
 import studio.phaseshift.metatron.lang.obj.mtron.MLst;
 import studio.phaseshift.metatron.space.Space;
 
 import java.util.*;
 import java.util.function.BiFunction;
+
+import static studio.phaseshift.metatron.lang.obj.mtron.MObjs.objs;
 
 
 public interface InstSet extends Space {
@@ -36,6 +37,10 @@ public interface InstSet extends Space {
 
     @Override
     fURI pattern();
+
+    default Objs types() {
+        return objs(List.of());
+    }
 
     @Override
     default Obj read(final fURI vid) {
@@ -57,8 +62,8 @@ public interface InstSet extends Space {
         this.value().computeIfAbsent(inst.tid().basePath(), k -> new LinkedHashMap<>())
                 .computeIfAbsent(inst.tid().queryValue(fURI.DOM, fURI.class), k -> new LinkedHashSet<>())
                 .add(MInst.instC(inst.tid()
-                        .query(fURI.DOM, TypefURI.orNone(inst.tid().queryValue(fURI.DOM, fURI.class)))
-                        .query(fURI.RNG, TypefURI.orNone(inst.tid().queryValue(fURI.RNG, fURI.class))), inst.args(), (BiFunction) inst.f().func, inst.seed()));
+                        .query(fURI.DOM, inst.tid().queryValue(fURI.DOM, fURI.class))
+                        .query(fURI.RNG, inst.tid().queryValue(fURI.RNG, fURI.class)), inst.args(), (BiFunction) inst.f().func, inst.seed()));
         return obj;
     }
 

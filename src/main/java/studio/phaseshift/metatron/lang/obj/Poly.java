@@ -20,13 +20,21 @@ package studio.phaseshift.metatron.lang.obj;
 
 public interface Poly extends Obj {
 
-     long count();
+    long count();
 
-     default boolean isEmpty() {
-        return  0 == this.count();
+    default boolean isEmpty() {
+        return 0 == this.count();
     }
 
     <O extends Obj> Iterable<O> elements();
 
-     <O extends Obj> O at(final Obj key);
+    <O extends Obj> O at(final Obj key);
+
+    default boolean has(final Obj key) {
+        return !this.at(key).isNoObj();
+    }
+
+    default boolean has(final long index) {
+        return index < this.count();
+    }
 }

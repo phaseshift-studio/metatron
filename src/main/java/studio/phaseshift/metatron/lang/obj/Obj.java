@@ -181,6 +181,10 @@ public interface Obj extends Function<Obj, Obj>, Iterable<Obj> {
         return (O) this;
     }
 
+    default <O extends Obj> boolean is(final Class<O> clazz) {
+        return clazz.isAssignableFrom(this.getClass());
+    }
+
     default boolean isNoObj() {
         return this == NoObj.single() || this.tid().basePath().equals(fURI.NONE) || this.tid().coefficientValue().isZero(); // TODO: consolidate the logic
     }

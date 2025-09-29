@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.lang;
 
+import studio.phaseshift.metatron.lang.obj.Coeff;
 import studio.phaseshift.metatron.lang.obj.Uri;
 import studio.phaseshift.metatron.lang.obj.mtron.MCoeff;
 import studio.phaseshift.metatron.lang.obj.mtron.MUri;
@@ -106,7 +107,7 @@ public class fURI implements Cloneable {
         int queryPosition = uri.lastIndexOf('?');
         if (queryPosition == -1 || uri.charAt(queryPosition - 1) == '[')
             queryPosition = -1;
-        if(queryPosition == uri.length() - 1) {
+        if (queryPosition == uri.length() - 1) {
             uri = uri.substring(0, uri.length() - 1);
             queryPosition = -1;
         }
@@ -535,10 +536,13 @@ public class fURI implements Cloneable {
     }
 
     public boolean matches(final fURI rhs) {
-        if (!this.coefficientValue().within(rhs.coefficientValue()))
-            return false;
-        if (this.coefficientValue().isZero() && rhs.coefficientValue().isZero())
+        final Coeff coeff = this.coefficientValue();
+        if (coeff.isZero() && rhs.coefficientValue().isZero())
             return true;
+        if (coeff.isZero() && coeff.within(rhs.coefficientValue()))
+            return true;
+        if (!coeff.within(rhs.coefficientValue()))
+            return false;
         final fURI lhs = this.basePath();
         final fURI other = rhs.basePath();
         if (!other.hasPattern())

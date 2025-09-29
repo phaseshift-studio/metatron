@@ -3,8 +3,6 @@ package studio.phaseshift.metatron.lang.obj;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.MetatronTest;
-import studio.phaseshift.metatron.lang.fURI;
-import studio.phaseshift.metatron.lang.obj.mtron.MType;
 import studio.phaseshift.metatron.lang.parse.ObjParser;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
@@ -107,7 +105,10 @@ public class TypeTest extends MetatronTest {
     @ParameterizedTest
     @CsvSource(value = {
             // obj        | type                          | matches?
-           // "noobj        | noobj::T[]                  | true",
+            // "noobj        | noobj::T[]                  | true",
+            "noobj        | abc[*]::T[]                   | true",
+            "noobj        | abc[?]::T[]                   | true",
+            "noobj        | abc[+]::T[]                   | false",
             "1            | noobj::T[]                    | false",
             "1            | str::T[]                      | false",
             "1            | lst::T[]                      | false",
