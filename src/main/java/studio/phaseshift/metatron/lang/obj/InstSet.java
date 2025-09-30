@@ -19,12 +19,9 @@
 package studio.phaseshift.metatron.lang.obj;
 
 import studio.phaseshift.metatron.lang.fURI;
-import studio.phaseshift.metatron.lang.obj.mtron.MInst;
-import studio.phaseshift.metatron.lang.obj.mtron.MLst;
 import studio.phaseshift.metatron.space.Space;
 
-import java.util.*;
-import java.util.function.BiFunction;
+import java.util.List;
 
 import static studio.phaseshift.metatron.lang.obj.mtron.MObjs.objs;
 
@@ -32,39 +29,10 @@ import static studio.phaseshift.metatron.lang.obj.mtron.MObjs.objs;
 public interface InstSet extends Space {
 
     @Override
-    Map<fURI, Map<fURI, Set<Inst>>> value();
-
-
-    @Override
     fURI pattern();
 
     default Objs types() {
         return objs(List.of());
-    }
-
-    @Override
-    default Obj read(final fURI vid) {
-        List<Inst> result = this.value().getOrDefault(vid.basePath(), Map.of())
-                .entrySet()
-                .stream()
-                .filter(kv -> {
-                    // Graphitty.stdout().println("%s matches %s = %s".formatted(lhs.tid().queryless(),kv.getKey().queryless(),lhs.tid().queryless().matches(kv.getKey().queryless())));
-                    return vid.queryValue(fURI.DOM, fURI.class, fURI.ANY).basePath().matches(kv.getKey().basePath());
-                }).flatMap(kv -> kv.getValue().stream()).toList();
-        if (result.isEmpty())
-            return NoObj.single();
-        return MLst.of((List) result);
-    }
-
-    @Override
-    default Obj write(final fURI vid, final Obj obj) {
-        final Inst inst = obj.<Inst>as();
-        this.value().computeIfAbsent(inst.tid().basePath(), k -> new LinkedHashMap<>())
-                .computeIfAbsent(inst.tid().queryValue(fURI.DOM, fURI.class), k -> new LinkedHashSet<>())
-                .add(MInst.instC(inst.tid()
-                        .query(fURI.DOM, inst.tid().queryValue(fURI.DOM, fURI.class))
-                        .query(fURI.RNG, inst.tid().queryValue(fURI.RNG, fURI.class)), inst.args(), (BiFunction) inst.f().func, inst.seed()));
-        return obj;
     }
 
     @Override

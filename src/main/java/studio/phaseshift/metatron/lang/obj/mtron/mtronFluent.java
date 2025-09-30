@@ -1,7 +1,6 @@
 package studio.phaseshift.metatron.lang.obj.mtron;
 
 import studio.phaseshift.metatron.lang.fURI;
-import studio.phaseshift.metatron.lang.obj.Code;
 import studio.phaseshift.metatron.lang.obj.Fluent;
 import studio.phaseshift.metatron.lang.obj.Inst;
 import studio.phaseshift.metatron.lang.obj.Obj;
@@ -13,72 +12,67 @@ import java.util.List;
 import static studio.phaseshift.metatron.lang.obj.mtron.MInst.instB;
 import static studio.phaseshift.metatron.lang.obj.mtron.MLst.lst;
 
-public class mtronFluent<F extends Fluent<F>> extends MObj implements Code, Fluent<F> {
+public class mtronFluent<F extends Fluent<F>> extends MCode implements Fluent<F> {
 
     protected mtronFluent() {
-        this(new ArrayList<>(), MInstSet.CODE_TID, null);
+        this(new ArrayList<>(), mtronInstSet.CODE_TID, null);
     }
 
     protected mtronFluent(final List<Inst> value, final fURI tid, final fURI vid) {
         super(value, tid, vid);
     }
 
-    @Override
-    public List<Inst> value() {
-        return (List<Inst>) this.value;
-    }
-
-    private F addInst(final Inst inst) {
+    protected F addInst(final Inst inst) {
         this.codeValue().add(inst);
         return (F) this;
     }
 
     public F start(final Obj obj) {
-        return this.addInst(instB(MInstSet.START_TID, lst(obj)));
+        return this.addInst(instB(mtronInstSet.START_TID, lst(obj)));
     }
 
     public F plus(final Obj obj) {
-        return this.addInst(instB(MInstSet.PLUS_TID, lst(obj)));
+        return this.addInst(instB(mtronInstSet.PLUS_TID, lst(obj)));
     }
 
     public F mult(final Obj obj) {
-        return this.addInst(instB(MInstSet.MULT_TID, lst(obj)));
+        return this.addInst(instB(mtronInstSet.MULT_TID, lst(obj)));
     }
 
     public F id() {
-        return this.addInst(instB(MInstSet.ID_TID, lst()));
+        return this.addInst(instB(mtronInstSet.ID_TID, lst()));
     }
 
     public F isA(final Obj obj) {
-        return this.addInst(instB(MInstSet.ISA_TID, lst(obj)));
+        return this.addInst(instB(mtronInstSet.ISA_TID, lst(obj)));
     }
 
     public F in(final Obj obj) {
-        return this.addInst(instB(MInstSet.IN_TID, lst(obj)));
+        return this.addInst(instB(mtronInstSet.IN_TID, lst(obj)));
     }
 
     public F split(final Obj obj) {
-        return this.addInst(instB(MInstSet.SPLIT_TID, lst(obj)));
+        return this.addInst(instB(mtronInstSet.SPLIT_TID, lst(obj)));
     }
 
     public F merge() {
-        return this.addInst(instB(MInstSet.MERGE_TID, lst()));
+        return this.addInst(instB(mtronInstSet.MERGE_TID, lst()));
     }
 
     public F e1se(final Obj obj) {
-        return this.addInst(instB(MInstSet.ELSE_TID, lst(obj)));
+        return this.addInst(instB(mtronInstSet.ELSE_TID, lst(obj)));
     }
 
     public F from(final Obj obj) {
-        return this.addInst(instB(MInstSet.FROM_TID, lst(obj)));
+        return this.addInst(instB(mtronInstSet.FROM_TID, lst(obj)));
     }
 
     public F count() {
-        return this.addInst(instB(MInstSet.COUNT_TID, lst()));
+        return this.addInst(instB(mtronInstSet.COUNT_TID, lst()));
     }
 
     public F sum() {
-        return this.addInst(instB(MInstSet.SUM_TID, lst()));
+        return this.addInst(instB(mtronInstSet.SUM_TID, lst()));
     }
 
 
@@ -87,8 +81,8 @@ public class mtronFluent<F extends Fluent<F>> extends MObj implements Code, Flue
     }
 
     @Override
-    public Code clone(Object value, fURI tid, fURI vid) {
-        return new mtronFluent<F>(new ArrayList<>(this.value()), this.tid, this.vid);
+    public mtronFluent<F> clone(Object value, fURI tid, fURI vid) {
+        return new mtronFluent<>(new ArrayList<>(this.value()), this.tid, this.vid);
     }
 
     /// /////////////////////////////////////////////////////////////

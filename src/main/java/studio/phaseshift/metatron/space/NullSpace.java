@@ -8,7 +8,7 @@ import studio.phaseshift.metatron.lang.obj.Obj;
 
 import java.util.Map;
 
-import static studio.phaseshift.metatron.lang.obj.mtron.MInstSet.NOOBJ_TID;
+import static studio.phaseshift.metatron.lang.obj.mtron.mtronInstSet.NOOBJ_TID;
 
 public final class NullSpace implements Space, InstSet {
 

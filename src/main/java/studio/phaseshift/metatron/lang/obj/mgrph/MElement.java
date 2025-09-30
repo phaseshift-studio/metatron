@@ -9,8 +9,7 @@ import studio.phaseshift.metatron.util.ObjUtil;
 
 import java.util.Iterator;
 
-import static studio.phaseshift.metatron.lang.fURI.f;
-import static studio.phaseshift.metatron.lang.obj.mgrph.GrphInstSet.VERTEX_TID;
+import static studio.phaseshift.metatron.lang.obj.mgrph.mgrphInstSet.VERTEX_TID;
 
 public abstract class MElement implements Element, Obj {
 

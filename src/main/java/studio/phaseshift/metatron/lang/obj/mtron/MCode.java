@@ -26,7 +26,7 @@ import studio.phaseshift.metatron.lang.obj.Obj;
 import java.util.ArrayList;
 import java.util.List;
 
-import static studio.phaseshift.metatron.lang.obj.mtron.MInstSet.*;
+import static studio.phaseshift.metatron.lang.obj.mtron.mtronInstSet.*;
 
 public class MCode extends MObj implements Code {
 

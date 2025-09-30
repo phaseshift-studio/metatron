@@ -30,8 +30,7 @@ import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.*;
 
-import static studio.phaseshift.metatron.lang.obj.mtron.MInstSet.MTRON_TID;
-import static studio.phaseshift.metatron.lang.obj.mtron.MInstSet.START_TID;
+import static studio.phaseshift.metatron.lang.obj.MInstSet.MTRON_TID;
 
 public class MMonoid extends MObj implements Monoid {
 
@@ -181,7 +180,7 @@ public class MMonoid extends MObj implements Monoid {
 
     public static MMonoid of(final Obj start, final Code code) {
         final List<Inst> prepended = new ArrayList<>();
-        prepended.add(MInst.instB(START_TID, MLst.of(start)));
+        prepended.add(MInst.instB(mtronInstSet.START_TID, MLst.of(start)));
         prepended.addAll(code.codeValue());
         return new MMonoid(Quartet.with(MCode.of(prepended), MObjs.of(new LinkedList<>()), MLst.of(new LinkedList<>()), MObjs.of(new LinkedList<>())), MONOID_TID, fURI.NULL);
     }

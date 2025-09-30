@@ -20,7 +20,7 @@ package studio.phaseshift.metatron.lang.obj;
 
 import studio.phaseshift.metatron.lang.fURI;
 
-public interface Int extends Obj {
+public interface Int extends Mono {
 
     @Override
     Int clone(final Object value, final fURI tid, final fURI vid);

@@ -20,7 +20,6 @@ package studio.phaseshift.metatron.lang.obj;
 
 import org.javatuples.Pair;
 import studio.phaseshift.metatron.lang.fURI;
-import studio.phaseshift.metatron.lang.obj.mtron.MInstSet;
 import studio.phaseshift.metatron.lang.obj.mtron.MObjs;
 import studio.phaseshift.metatron.lang.obj.mtron.MType;
 import studio.phaseshift.metatron.ui.Graphitty;
@@ -34,8 +33,8 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
-import static studio.phaseshift.metatron.lang.obj.mtron.MInstSet.*;
 import static studio.phaseshift.metatron.lang.obj.mtron.MType.T;
+import static studio.phaseshift.metatron.lang.obj.mtron.mtronInstSet.*;
 
 public interface Obj extends Function<Obj, Obj>, Iterable<Obj> {
 
@@ -121,7 +120,7 @@ public interface Obj extends Function<Obj, Obj>, Iterable<Obj> {
         else if (rhs.isNoObj())
             return false;
         final fURI base = this.tid().basePath();
-        if (MInstSet.BASE_TYPES.contains(base) &&
+        if (BASE_TYPES.contains(base) &&
                 !(this instanceof Objs) &&
                 !(this instanceof Type) &&
                 !(this instanceof Bool && base.equals(BOOL_TID) ||

@@ -26,8 +26,8 @@ import studio.phaseshift.metatron.lang.obj.Rec;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import static studio.phaseshift.metatron.lang.obj.mtron.MInstSet.REC_TID;
 import static studio.phaseshift.metatron.lang.obj.mtron.MUri.uri;
+import static studio.phaseshift.metatron.lang.obj.mtron.mtronInstSet.REC_TID;
 
 public class MRec extends MObj implements Rec {
     public MRec(final Map<Obj, Obj> value, final fURI tid, final fURI vid) {

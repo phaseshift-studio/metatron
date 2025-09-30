@@ -22,10 +22,10 @@ import org.apache.tinkerpop.gremlin.tinkergraph.structure.TinkerFactory;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.monoid.mtron.MMonoid;
 import studio.phaseshift.metatron.lang.obj.InstSet;
-import studio.phaseshift.metatron.lang.obj.mgrph.GrphInstSet;
+import studio.phaseshift.metatron.lang.obj.mgrph.mgrphInstSet;
 import studio.phaseshift.metatron.lang.obj.mgrph.MGraph;
-import studio.phaseshift.metatron.lang.obj.mtron.MInstSet;
 import studio.phaseshift.metatron.lang.obj.mtron.MUri;
+import studio.phaseshift.metatron.lang.obj.mtron.mtronInstSet;
 import studio.phaseshift.metatron.space.Router;
 import studio.phaseshift.metatron.space.Space;
 import studio.phaseshift.metatron.space.device.log.Log;
@@ -65,7 +65,7 @@ public class BootLoader {
             Router.global().write(Router.global().vid(), Router.global());
             final Space stk = Router.stack();
             Router.global().addSpace(stk);
-            final Space mtron = new MInstSet(fURI.of("/mnt/lang/mtron"));
+            final Space mtron = new mtronInstSet(fURI.of("/mnt/lang/mtron"));
             Router.global().addSpace(mtron);
             MMonoid.load();
             Log.of(f("/sys/log"));
@@ -75,7 +75,7 @@ public class BootLoader {
             Router.global().addSpace(fs);
             final Space grph = new MGraph(TinkerFactory.createModern(), f("/tp/#"), f("/mnt/tp"));
             Router.global().addSpace(grph);
-            final InstSet mgrph = new GrphInstSet(f("/grph/#"),f("/mnt/grph"));
+            final InstSet mgrph = new mgrphInstSet(f("/mnt/lang/mgrph"));
             Router.global().addSpace(mgrph);
             /// ///////////////////////////////////
             /*Router.global().write(

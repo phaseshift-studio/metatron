@@ -28,7 +28,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import static studio.phaseshift.metatron.lang.obj.mtron.MInstSet.*;
+import static studio.phaseshift.metatron.lang.obj.mtron.mtronInstSet.*;
 
 public class ObjStringSerializer implements ObjSerializer<String> {
 

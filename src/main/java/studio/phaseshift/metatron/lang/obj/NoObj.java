@@ -27,8 +27,6 @@ import studio.phaseshift.metatron.util.ObjUtil;
 import java.util.Iterator;
 import java.util.List;
 
-import static studio.phaseshift.metatron.lang.obj.mtron.MInstSet.NOOBJ_TID;
-
 public final class NoObj implements Obj, Inst {
 
     private static final NoObj SINGLE = new NoObj();

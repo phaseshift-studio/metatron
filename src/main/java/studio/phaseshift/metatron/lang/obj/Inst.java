@@ -20,8 +20,8 @@ package studio.phaseshift.metatron.lang.obj;
 
 import org.javatuples.Triplet;
 import studio.phaseshift.metatron.lang.fURI;
-import studio.phaseshift.metatron.lang.obj.mtron.MInstSet;
 import studio.phaseshift.metatron.lang.obj.mtron.MType;
+import studio.phaseshift.metatron.lang.obj.mtron.mtronInstSet;
 import studio.phaseshift.metatron.space.Router;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
@@ -122,7 +122,7 @@ public interface Inst extends Call {
     }
 
     default boolean isBlocking() {
-        return this.tid().basePath().equals(MInstSet.BLOCK_TID) || this.tid().basePath().equals(MInstSet.WITHIN_TID);
+        return this.tid().basePath().equals(mtronInstSet.BLOCK_TID) || this.tid().basePath().equals(mtronInstSet.WITHIN_TID);
     }
 
     @Override

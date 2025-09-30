@@ -21,7 +21,7 @@ package studio.phaseshift.metatron.lang.obj;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.util.MTronException;
 
-import static studio.phaseshift.metatron.lang.obj.mtron.MInstSet.*;
+import static studio.phaseshift.metatron.lang.obj.mtron.mtronInstSet.*;
 
 public interface ObjFactory {
 

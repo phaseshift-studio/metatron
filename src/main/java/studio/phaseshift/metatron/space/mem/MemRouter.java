@@ -19,6 +19,7 @@
 package studio.phaseshift.metatron.space.mem;
 
 import studio.phaseshift.metatron.lang.fURI;
+import studio.phaseshift.metatron.lang.obj.NoObj;
 import studio.phaseshift.metatron.lang.obj.Obj;
 import studio.phaseshift.metatron.space.NullSpace;
 import studio.phaseshift.metatron.space.Router;
@@ -29,6 +30,7 @@ import studio.phaseshift.metatron.ui.GraphittyLogger;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static studio.phaseshift.metatron.BootLoader.BOOTING;
@@ -81,7 +83,7 @@ public class MemRouter implements Router {
         this.spaces.values().stream().filter(s -> vid.equals(s.vid())).findFirst().ifPresent(s -> {
             try {
                 final Space space = this.spaces.remove(s.pattern());
-                if(null != space) {
+                if (null != space) {
                     space.close();
                     LOG.trace("closing space %s", s);
                 }
@@ -108,13 +110,17 @@ public class MemRouter implements Router {
             return NullSpace.single();
     }
 
+    private static final Set<fURI> READ_AS_NOOBJ = Set.of(fURI.ANY.any(),fURI.ANY.maybe(),fURI.ANY);
+
     @Override
     public Obj read(final fURI vid) {
         if (vid.equals(this.vid))
             return this;
-        else if (this.vid.hasPrefix(vid)) {
+        if (vid.isZero() || READ_AS_NOOBJ.contains(vid))
+            return NoObj.single();
+        /*else if (this.vid.hasPrefix(vid)) {
 
-        }
+        }*/
         final Space space = this.getSpace(vid);
         //LOG.trace("reading %s from %s", vid, space.vid());
         return space.read(vid);

@@ -21,7 +21,7 @@ public class MGraph extends MSpace implements Graph, WrappedGraph<Graph> {
     protected Graph graph;
 
     public MGraph(final Graph graph, final fURI pattern, final fURI vid) {
-        super(pattern, GrphInstSet.GRAPH_TID, vid);
+        super(pattern, mgrphInstSet.GRAPH_TID, vid);
         this.graph = graph;
         this.graph.configuration().addProperty("vid", vid);
         this.graph.configuration().addProperty("pattern", pattern);

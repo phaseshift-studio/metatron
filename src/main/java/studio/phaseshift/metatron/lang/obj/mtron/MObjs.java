@@ -34,7 +34,8 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static studio.phaseshift.metatron.lang.obj.mtron.MInstSet.OBJS_TID;
+import static studio.phaseshift.metatron.lang.obj.mtron.mtronInstSet.OBJS_TID;
+
 
 public class MObjs extends MObj implements Objs {
 
@@ -80,6 +81,7 @@ public class MObjs extends MObj implements Objs {
     public MObjs(final Iterable<Obj> value) {
         this(value, OBJS_TID, fURI.NULL);
     }
+
 
     @Override
     public fURI tid() {

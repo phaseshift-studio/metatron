@@ -1,45 +1,30 @@
-/*
- *   Metatron: A Distributed Virtual Machine
- *   Copyright (c) 2024 PhaseShift Studio, LLC
- *
- *   This program is free software: you can redistribute it and/or modify
- *   it under the terms of the GNU Affero General Public License as published by
- *   the Free Software Foundation, either version 3 of the License, or
- *   (at your option) any later version.
- *
- *   This program is distributed in the hope that it will be useful,
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *   GNU Affero General Public License for more details.
- *
- *   You should have received a copy of the GNU Affero General Public License
- *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
-
 package studio.phaseshift.metatron.lang.obj.mtron;
 
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.*;
 import studio.phaseshift.metatron.space.Router;
-import studio.phaseshift.metatron.space.mem.MSpace;
 import studio.phaseshift.metatron.util.IteratorUtil;
-import studio.phaseshift.metatron.util.ObjUtil;
 
-import java.util.*;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.lang.fURI.f;
 import static studio.phaseshift.metatron.lang.obj.mtron.MBool.bool;
-import static studio.phaseshift.metatron.lang.obj.mtron.mtronFluent.StartLess.*;
 import static studio.phaseshift.metatron.lang.obj.mtron.MInst.instC;
 import static studio.phaseshift.metatron.lang.obj.mtron.MInt.jnt;
 import static studio.phaseshift.metatron.lang.obj.mtron.MLst.lst;
+import static studio.phaseshift.metatron.lang.obj.mtron.MObjs.objs;
 import static studio.phaseshift.metatron.lang.obj.mtron.MRec.rec;
 import static studio.phaseshift.metatron.lang.obj.mtron.MType.T;
 import static studio.phaseshift.metatron.lang.obj.mtron.MUri.uri;
+import static studio.phaseshift.metatron.lang.obj.mtron.mtronFluent.StartLess.e1se;
+import static studio.phaseshift.metatron.lang.obj.mtron.mtronFluent.StartLess.from;
 
-public class MInstSet extends MSpace implements InstSet {
+public class mtronInstSet extends MInstSet {
 
 
     public static final fURI MTRON_TID = fURI.of("/mtron");
@@ -64,6 +49,9 @@ public class MInstSet extends MSpace implements InstSet {
             LST_TID, REC_TID, INST_TID,
             CODE_TID, OBJS_TID, NOOBJ_TID);
 
+    protected static final Inst ID__ = MInst.instB(mtronInstSet.INST_TID.extend("id"), lst());
+    protected static final Lst NO_ARGS__ = MLst.of();
+    protected static final fURI ANY_TID = fURI.of("#");
 
     public static final fURI MTRON_INST_TID = fURI.of("/mtron/inst");
     public static final fURI ID_TID = INST_TID.extend("id");
@@ -107,14 +95,7 @@ public class MInstSet extends MSpace implements InstSet {
     public static final fURI ELSE_TID = INST_TID.extend("else");
     public static final fURI END_TID = INST_TID.extend("end");
 
-    // inst_tid -> <inst_tid_dom -> set<inst>>
-    private static final Map<fURI, Map<fURI, Set<Inst>>> SYMBOL_TABLE = new LinkedHashMap<>();
-    private final Map<fURI, Obj> OBJ_TABLE = new LinkedHashMap<>();
-    private static final Inst ID__ = MInst.instB(ID_TID, MLst.of());
-    private static final Lst NO_ARGS__ = MLst.of();
-    public static final fURI ANY_TID = fURI.of("#");
-
-    public void load() {
+    protected void load() {
         BASE_TYPES.forEach(t -> Router.global().registerRewrite(f(t.name()), t));
         this.write(
                 INST_TID.extend("test"), instC(INST_TID.extend("test").dom(fURI.ANY.maybe()).rng(INT_TID), MRec.ofUriKeyed("a", e1se(jnt(1)).singleOrSequence(), "b", e1se(jnt(2)).singleOrSequence()), Inst.f.of(from(uri("a")).plus(from(uri("b"))))),
@@ -231,54 +212,18 @@ public class MInstSet extends MSpace implements InstSet {
         });*/
     }
 
-    @Override
-    public Obj read(final fURI vid) {
-        final fURI bigvid = vid.big();
-        final Obj result = ObjUtil.oneNoneOrAll(SYMBOL_TABLE.entrySet()
-                .stream()
-                .filter(kv -> kv.getKey().matches(bigvid.basePath()))
-                .flatMap(kv -> kv.getValue().entrySet().stream())
-                .filter(kv2 -> !bigvid.hasDom() || kv2.getKey().bimatches(bigvid.dom()))
-                .map(Map.Entry::getValue)
-                .flatMap(Set::stream)
-                .filter(i -> !bigvid.hasRng() || i.rng().tid().bimatches(bigvid.rng()))
-                .map(i -> (Obj) i));
-        return result.isNoObj() ?
-                ObjUtil.oneNoneOrAll(OBJ_TABLE.entrySet().stream().filter(kv -> kv.getKey().matches(bigvid)).map(Map.Entry::getValue).iterator()) :
-                result;
-    }
-
-    @Override
-    public Obj write(final fURI vid, final Obj obj) {
-        if (obj.isInst()) {
-            Router.global().registerRewrite(fURI.of(vid.name()), vid);
-            final Inst inst = obj.as();
-            SYMBOL_TABLE
-                    .computeIfAbsent(inst.tid().basePath(), k -> new LinkedHashMap<>())
-                    .computeIfAbsent(inst.tid().dom(), k -> new LinkedHashSet<>()).add(inst);
-        } else {
-            OBJ_TABLE.put(vid, obj);
-        }
-        return obj;
-    }
-
-    public MInstSet(final fURI vid) {
-        super(MTRON_TID.extend("#"), MTRON_TID, vid);
+    public mtronInstSet(final fURI vid) {
+        super(MTRON_TID, vid);
         this.load();
     }
 
-    public static InstSet of(final fURI vid) {
-        return new MInstSet(vid);
+    public static mtronInstSet of(final fURI vid) {
+        return new mtronInstSet(vid);
     }
 
     @Override
-    public MInstSet clone(final Object value, final fURI tid, final fURI vid) {
+    public mtronInstSet clone(final Object value, final fURI tid, final fURI vid) {
         return this;
-    }
-
-    @Override
-    public Map<fURI, Map<fURI, Set<Inst>>> value() {
-        return SYMBOL_TABLE;
     }
 
 }

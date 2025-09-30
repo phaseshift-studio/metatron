@@ -23,7 +23,8 @@ import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.Obj;
 import studio.phaseshift.metatron.lang.obj.Rel;
 
-import static studio.phaseshift.metatron.lang.obj.mtron.MInstSet.REL_TID;
+import static studio.phaseshift.metatron.lang.obj.mtron.mtronInstSet.REL_TID;
+
 
 public class MRel extends MObj implements Rel {
     public MRel(final Pair<Obj, Obj> value, final fURI tid, final fURI vid) {

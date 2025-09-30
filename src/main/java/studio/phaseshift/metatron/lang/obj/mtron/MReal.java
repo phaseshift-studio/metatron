@@ -21,7 +21,8 @@ package studio.phaseshift.metatron.lang.obj.mtron;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.Real;
 
-import static studio.phaseshift.metatron.lang.obj.mtron.MInstSet.REAL_TID;
+import static studio.phaseshift.metatron.lang.obj.mtron.mtronInstSet.REAL_TID;
+
 
 public class MReal extends MObj implements Real {
 

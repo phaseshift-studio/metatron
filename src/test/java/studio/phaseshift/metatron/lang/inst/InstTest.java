@@ -8,15 +8,8 @@ import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.Inst;
 import studio.phaseshift.metatron.lang.obj.mtron.MInst;
-import studio.phaseshift.metatron.lang.obj.mtron.MInt;
-import studio.phaseshift.metatron.lang.obj.mtron.MInstSet;
-import studio.phaseshift.metatron.space.Router;
-import studio.phaseshift.metatron.space.Space;
-import studio.phaseshift.metatron.space.mem.MemSpace;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static studio.phaseshift.metatron.lang.fURI.*;
-import static studio.phaseshift.metatron.lang.obj.mtron.MInstSet.*;
 
 public class InstTest {
 

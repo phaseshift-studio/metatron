@@ -11,7 +11,7 @@ import studio.phaseshift.metatron.lang.obj.mtron.MRec;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
 
-import static studio.phaseshift.metatron.lang.obj.mtron.MInstSet.MTRON_TID;
+import static studio.phaseshift.metatron.lang.obj.MInstSet.MTRON_TID;
 
 // monoid, obj, inst, state
 public class MMonad extends MObj implements Monad {

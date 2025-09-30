@@ -4,8 +4,6 @@ import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.space.Router;
 import studio.phaseshift.metatron.space.Space;
 
-import java.time.Instant;
-import java.util.LinkedHashMap;
 import java.util.Map;
 
 public abstract class MSpace implements Space {
@@ -13,13 +11,11 @@ public abstract class MSpace implements Space {
     protected final fURI pattern;
     protected final fURI tid;
     protected final fURI vid;
-    private final Map<String, Object> statistics = new LinkedHashMap<>();
 
     public MSpace(final fURI pattern, final fURI tid, final fURI vid) {
         this.pattern = pattern;
         this.tid = tid.big();
         this.vid = vid;
-        this.statistics.put("start_time", Instant.now().toString());
         if (null != Router.global() && null != this.vid && !this.vid.equals(fURI.NONE)) {
             Router.global().write(this.vid, this);
         }
@@ -27,7 +23,7 @@ public abstract class MSpace implements Space {
 
     @Override
     public Map value() {
-        return this.statistics;
+        return Map.of();
     }
 
     @Override
