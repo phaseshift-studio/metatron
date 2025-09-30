@@ -5,10 +5,13 @@ import org.apache.tinkerpop.gremlin.structure.Edge;
 import org.apache.tinkerpop.gremlin.structure.Property;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
 import org.apache.tinkerpop.gremlin.structure.util.wrapped.WrappedEdge;
+import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.Obj;
 import studio.phaseshift.metatron.util.IteratorUtil;
 
 import java.util.Iterator;
+
+import static studio.phaseshift.metatron.lang.obj.mgrph.mgrphInstSet.EDGE_TID;
 
 public class MEdge extends MElement implements Obj, Edge, WrappedEdge<Edge> {
 
@@ -26,12 +29,12 @@ public class MEdge extends MElement implements Obj, Edge, WrappedEdge<Edge> {
     }
 
     @Override
-    public Iterator<Vertex> vertices(Direction direction) {
-        return null;
+    public Iterator<Vertex> vertices(final Direction direction) {
+        return MVertex.makeVertices(this.getBaseEdge().vertices(direction));
     }
 
     @Override
-    public <V> Property<V> property(String key, V value) {
+    public <V> Property<V> property(final String key, final V value) {
         return null;
     }
 
@@ -48,4 +51,16 @@ public class MEdge extends MElement implements Obj, Edge, WrappedEdge<Edge> {
     public Edge getBaseEdge() {
         return this.value();
     }
+
+    @Override
+    public fURI tid() {
+        return EDGE_TID;
+        //return f(this.element.label());
+    }
+
+    @Override
+    public fURI vid() {
+        return this.graph().configuration().get(fURI.class, "vid").extend("edge").extend(this.element.id().toString());
+    }
+
 }

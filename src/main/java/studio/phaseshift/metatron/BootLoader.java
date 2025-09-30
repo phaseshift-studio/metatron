@@ -76,7 +76,7 @@ public class BootLoader {
             final Space grph = new MGraph(TinkerFactory.createModern(), f("/tp/#"), f("/mnt/tp"));
             Router.global().addSpace(grph);
             final InstSet mgrph = new mgrphInstSet(f("/mnt/lang/mgrph"));
-            Router.global().addSpace(mgrph);
+           Router.global().addSpace(mgrph);
             /// ///////////////////////////////////
             /*Router.global().write(
                     "bool", uri(BOOL_TID), "int", uri(INT_TID),

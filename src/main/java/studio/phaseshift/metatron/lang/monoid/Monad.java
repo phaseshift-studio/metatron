@@ -14,7 +14,7 @@ public interface Monad extends Obj {
 
     class Helpers {
         public static String monadToString(final Monad monad) {
-            return Graphitty.string("{{b}}" + monad.tid() + "{{g}}::[" + monad.obj() + "{{g}}<--{{/g}}{{c}}M{{g}}-->{{c}}" + monad.inst() + "{{g}}]{{X}}");
+            return Graphitty.string("{{b}}%s{{g}}::[%s{{g}}<--{{/g}}{{c}}M{{g}}-->{{c}}%s{{g}}]{{X}}", monad.tid(), monad.obj(), monad.inst());
         }
 
         public static int monadHashCode(final Monad monad) {

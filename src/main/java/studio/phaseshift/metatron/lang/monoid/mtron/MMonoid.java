@@ -61,7 +61,7 @@ public class MMonoid extends MObj implements Monoid {
         fURI rng = null;
         for (final Inst inst : this.code().value()) {
             try {
-                LOG.debug("   {{g}}=>{{/g}} resolving inst %s of %s", inst, token);
+                LOG.debug("   {{g}}=>{{/g}} resolving inst %s of %s", inst, null == token ? "[0]" : token);
                 final Inst instB = inst.resolve(token);
                 if (null == dom)
                     dom = instB.tid().queryValue(fURI.DOM, fURI.class);
@@ -81,7 +81,7 @@ public class MMonoid extends MObj implements Monoid {
                 // LOG.none("%s", instB.rng().tid());
             } catch (final Exception e) {
                 resolvedCode.add(inst);
-                LOG.warn("runtime resolution of %s required: not enough context to determine inst", inst);
+                LOG.warn("runtime resolution of %s required: not enough context to determine inst", null == inst ? "[0]" : inst);
                 //e.printStackTrace();
             }
         }

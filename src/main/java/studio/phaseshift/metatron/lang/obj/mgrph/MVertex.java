@@ -5,11 +5,14 @@ import org.apache.tinkerpop.gremlin.structure.Edge;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
 import org.apache.tinkerpop.gremlin.structure.VertexProperty;
 import org.apache.tinkerpop.gremlin.structure.util.wrapped.WrappedVertex;
+import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.Obj;
 import studio.phaseshift.metatron.space.Router;
 import studio.phaseshift.metatron.util.IteratorUtil;
 
 import java.util.Iterator;
+
+import static studio.phaseshift.metatron.lang.obj.mgrph.mgrphInstSet.VERTEX_TID;
 
 public class MVertex extends MElement implements Obj, Vertex, WrappedVertex<Vertex> {
 
@@ -48,12 +51,23 @@ public class MVertex extends MElement implements Obj, Vertex, WrappedVertex<Vert
     }
 
     @Override
-    public Iterator<Edge> edges(Direction direction, String... edgeLabels) {
-        return null;
+    public fURI tid() {
+        return VERTEX_TID;
+        //return f(this.element.label());
     }
 
     @Override
-    public Iterator<Vertex> vertices(Direction direction, String... edgeLabels) {
+    public fURI vid() {
+        return   this.graph().configuration().get(fURI.class, "vid").extend("vertex").extend(this.element.id().toString());
+    }
+
+    @Override
+    public Iterator<Edge> edges(final Direction direction, final String... edgeLabels) {
+        return MEdge.makeEdges(this.getBaseVertex().edges(direction, edgeLabels));
+    }
+
+    @Override
+    public Iterator<Vertex> vertices(final Direction direction, final String... edgeLabels) {
         return MVertex.makeVertices(this.getBaseVertex().vertices(direction, edgeLabels));
     }
 

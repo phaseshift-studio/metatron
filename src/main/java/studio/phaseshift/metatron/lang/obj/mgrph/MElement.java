@@ -55,16 +55,6 @@ public abstract class MElement implements Element, Obj {
         return this.element;
     }
 
-    @Override
-    public fURI tid() {
-        return VERTEX_TID;
-        //return f(this.element.label());
-    }
-
-    @Override
-    public fURI vid() {
-     return   this.graph().configuration().get(fURI.class, "vid").extend("vertex").extend(this.element.id().toString());
-    }
 
     @Override
     public MElement clone(final Object value, final fURI tid, final fURI vid) {
