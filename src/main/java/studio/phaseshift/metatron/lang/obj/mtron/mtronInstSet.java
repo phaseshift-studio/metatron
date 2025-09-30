@@ -98,7 +98,6 @@ public class mtronInstSet extends MInstSet {
     protected void load() {
         BASE_TYPES.forEach(t -> Router.global().registerRewrite(f(t.name()), t));
         this.write(
-                INST_TID.extend("test"), instC(INST_TID.extend("test").dom(fURI.ANY.maybe()).rng(INT_TID), MRec.ofUriKeyed("a", e1se(jnt(1)).singleOrSequence(), "b", e1se(jnt(2)).singleOrSequence()), Inst.f.of(from(uri("a")).plus(from(uri("b"))))),
                 START_TID, instC(START_TID.dom(fURI.NONE.zero()).rng(fURI.ANY.any()), lst(T(ANY_TID)), (lhs, inst) -> inst.arg(0)),
                 END_TID, instC(END_TID.dom(ANY_TID.any()).rng(NOOBJ_TID.zero()), NO_ARGS__, (lhs, inst) -> NoObj.single()),
                 ID_TID, instC(ID_TID.dom(ANY_TID.maybe()).rng(ANY_TID.maybe()), NO_ARGS__, (lhs, inst) -> lhs),
@@ -169,7 +168,7 @@ public class mtronInstSet extends MInstSet {
                 WITHIN_TID, instC(WITHIN_TID.dom(LST_TID).rng(LST_TID), lst(ID__), (lhs, inst) -> lst(lhs.lstValue().stream().map(o -> inst.arg(0).apply(o)).toList())),
                 WITHIN_TID, instC(WITHIN_TID.dom(REC_TID).rng(REC_TID), lst(ID__), (lhs, inst) -> rec(lhs.recValue().entrySet().stream().map(kv -> inst.arg(0).apply(MRel.of(kv.getKey(), kv.getValue())).<Rel>as()).collect(Collectors.toMap(Rel::first, Rel::second, (a, b) -> b, LinkedHashMap<Obj, Obj>::new)))),
                 BARRIER_TID, instC(BARRIER_TID.dom(fURI.ANY.any()).rng(fURI.ANY.any()), lst(ID__), (lhs, inst) -> inst.arg(0).apply(lhs)),
-                COUNT_TID, instC(COUNT_TID.dom(ANY_TID.any()).rng(INT_TID), NO_ARGS__, (lhs, inst) -> IteratorUtil.reduce(lhs.iterator(), jnt(0), (a, b) -> MInst.instB(PLUS_TID, MLst.of(jnt(1))).apply(a))),
+                COUNT_TID, instC(COUNT_TID.dom(ANY_TID.any()).rng(INT_TID), NO_ARGS__, (lhs, inst) -> IteratorUtil.reduce(lhs.iterator(), jnt(0), (a, b) -> MInst.instB(PLUS_TID, lst(jnt(1))).apply(a))),
                 SUM_TID, instC(SUM_TID.dom(ANY_TID.any()).rng(INT_TID), NO_ARGS__, (lhs, inst) -> IteratorUtil.reduce(lhs.iterator(), jnt(0), (a, b) -> MInst.instB(PLUS_TID, MLst.of(b)).apply(a))),
                 REIFY_TID, instC(REIFY_TID.dom(fURI.ANY.maybe()).rng(REC_TID), NO_ARGS__, (lhs, inst) ->
                         MRec.ofUriKeyed(

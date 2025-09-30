@@ -114,12 +114,12 @@ public interface Inst extends Call {
     default Resolve resolution() {
         if (null == this.value() || null == this.f())
             return Resolve.A;
-        for (Obj arg : this.args()) {
-            if (!arg.tid().equals(arg.vid())) { // TODO: this is not a fool proof way of determining is a resolution has happened
+       /* for (Obj arg : this.args()) {
+            if (!arg.tid().equals(arg.vid())) { // TODO: this is not a fool proof way of determining if a resolution has happened
                 return Resolve.B;
             }
-        }
-        return Resolve.C;
+        }*/
+        return Resolve.B;
     }
 
     default boolean isBlocking() {
@@ -160,17 +160,22 @@ public interface Inst extends Call {
                                 throw MTronException.of("inst args must be a lst or rec: %s", i);
                         })
                         .filter(i -> !Objects.isNull(i))
-                        .map(i -> i./*tid(this.tid()/*.query(fURI.DOM, lhs.tid())*/vid(this.vid()))
+                        //.map(i -> i.tid(i.tid().dom(lhs.tid())).vid(this.vid()))
                         .map(Obj::<Inst>as)
                         .findFirst()
                         .orElseThrow(() -> this.logger().except("unable to resolve %s => %s in instruction set %s", lhs, this));
                 LOG.trace("resolution ({{m}}%s {{g}}=>{{/g}} %s{{/m}}): %s => %s", currentResolution, resolved.resolution(), lhs, resolved);
                 return resolved.resolve(lhs);
             } catch (Exception e) { // TODO: this is sloppy -- using exception handling for flow control
-                LOG.error(e);
+                //LOG.error(e);
                 final Inst resolved = ((Inst) Router.global().read(this.tid())).args(this.args());
-                LOG.warn("resolved %s from global router", resolved);
-                return resolved;
+                if (resolved.isNoObj()) {
+                    LOG.error("unresolved %s across all known spaces", this);
+                    return NoObj.single();
+                } else {
+                    LOG.warn("resolved %s from global router", resolved);
+                    return resolved;//.resolve(lhs);
+                }
             }
         } else { // Resolve.B
             final boolean blocking = this.isBlocking();
@@ -238,6 +243,11 @@ public interface Inst extends Call {
 
     default boolean isTerminal() {
         return this.rng().tid().coefficientValue().isZero();
+    }
+
+    @Override
+    default Inst tid(final fURI newTid) {
+        return this.clone(this.value(), newTid, this.vid());
     }
 
 

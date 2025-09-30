@@ -47,7 +47,7 @@ public class MUri extends MObj implements Uri {
 
     @Override
     public Uri clone(final Object value, final fURI tid, final fURI vid) {
-        return new MUri((fURI) value, tid, vid);
+        return super.clone(value, tid, vid, (a, b, c) -> new MUri((fURI) a, b, c));
     }
 
     @Override
@@ -64,7 +64,7 @@ public class MUri extends MObj implements Uri {
     }
 
     public static Uri of(final String value, final fURI tid) {
-        return new MUri(fURI.of(value),tid,fURI.NULL);
+        return new MUri(fURI.of(value), tid, fURI.NULL);
     }
 }
 

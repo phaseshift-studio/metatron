@@ -52,7 +52,7 @@ public class MRec extends MObj implements Rec {
 
     @Override
     public Rec clone(final Object value, final fURI tid, final fURI vid) {
-        return new MRec((Map<Obj, Obj>) value, tid, vid);
+        return super.clone(value, tid, vid, (a, b, c) -> new MRec((Map<Obj,Obj>) a, b, c));
     }
 
     public Rec put(final Obj key, final Obj value) {

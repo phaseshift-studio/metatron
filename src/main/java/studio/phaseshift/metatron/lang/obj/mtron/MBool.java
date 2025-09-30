@@ -40,7 +40,7 @@ public class MBool extends MObj implements Bool {
 
     @Override
     public Bool clone(final Object value, final fURI tid, final fURI vid) {
-        return new MBool((Boolean) value, tid, vid);
+        return super.clone(value, tid, vid, (a, b, c) -> new MBool((Boolean) a, b, c));
     }
 
     @Override

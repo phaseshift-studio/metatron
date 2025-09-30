@@ -21,9 +21,7 @@ package studio.phaseshift.metatron.lang.obj;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.space.Space;
 
-import java.util.List;
-
-import static studio.phaseshift.metatron.lang.obj.mtron.MObjs.objs;
+import java.util.Set;
 
 
 public interface InstSet extends Space {
@@ -31,9 +29,11 @@ public interface InstSet extends Space {
     @Override
     fURI pattern();
 
-    default Objs types() {
-        return objs(List.of());
-    }
+    Set<Type> types();
+
+    Set<Inst> insts();
+
+    Set<Inst> rewrites();
 
     @Override
     default void append(final fURI addr, final Obj... obj) {

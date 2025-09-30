@@ -21,32 +21,28 @@ package studio.phaseshift.metatron.lang.obj;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.space.Router;
 import studio.phaseshift.metatron.space.mem.MSpace;
+import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.ObjUtil;
 
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.Map;
-import java.util.Set;
-
-import static studio.phaseshift.metatron.lang.obj.mtron.MLst.lst;
-import static studio.phaseshift.metatron.lang.obj.mtron.MObjs.objs;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class MInstSet extends MSpace implements InstSet {
 
-
-    protected static final Map<fURI, Map<fURI, Set<Inst>>> SYMBOL_TABLE = new LinkedHashMap<>();
-    protected final Map<fURI, Obj> OBJ_TABLE = new LinkedHashMap<>();
+    protected final Map<fURI, Map<fURI, Set<Inst>>> INST_TABLE = new LinkedHashMap<>();
+    protected final Map<fURI, Type> TYPE_TABLE = new LinkedHashMap<>();
+    protected final Map<fURI, Inst> REWRITE_TABLE = new LinkedHashMap<>();
 
     @Override
     public Map<fURI, Map<fURI, Set<Inst>>> value() {
-        return SYMBOL_TABLE;
+        return INST_TABLE;
     }
 
 
     @Override
     public Obj read(final fURI vid) {
         final fURI bigvid = vid.big();
-        final Obj result = ObjUtil.oneNoneOrAll(SYMBOL_TABLE.entrySet()
+        final Obj result = ObjUtil.oneNoneOrAll(INST_TABLE.entrySet()
                 .stream()
                 .filter(kv -> kv.getKey().matches(bigvid.basePath()))
                 .flatMap(kv -> kv.getValue().entrySet().stream())
@@ -56,20 +52,27 @@ public class MInstSet extends MSpace implements InstSet {
                 .filter(i -> !bigvid.hasRng() || i.rng().tid().bimatches(bigvid.rng()))
                 .map(i -> (Obj) i));
         return result.isNoObj() ?
-                ObjUtil.oneNoneOrAll(OBJ_TABLE.entrySet().stream().filter(kv -> kv.getKey().matches(bigvid)).map(Map.Entry::getValue).iterator()) :
+                ObjUtil.oneNoneOrAll((Iterator) TYPE_TABLE.entrySet().stream().filter(kv -> kv.getKey().matches(bigvid)).map(Map.Entry::getValue).iterator()) :
                 result;
     }
 
     @Override
     public Obj write(final fURI vid, final Obj obj) {
         if (obj.isInst()) {
-            Router.global().registerRewrite(fURI.of(vid.name()), vid);
             final Inst inst = obj.as();
-            SYMBOL_TABLE
-                    .computeIfAbsent(inst.tid().basePath(), k -> new LinkedHashMap<>())
-                    .computeIfAbsent(inst.tid().dom(), k -> new LinkedHashSet<>()).add(inst);
+            if (inst.dom().isCode()) {
+                REWRITE_TABLE.put(inst.tid(), inst);
+            } else {
+                Router.global().registerRewrite(fURI.of(vid.name()), vid);
+                INST_TABLE
+                        .computeIfAbsent(inst.tid().basePath(), k -> new LinkedHashMap<>())
+                        .computeIfAbsent(inst.tid().dom(), k -> new LinkedHashSet<>())
+                        .add(inst);
+            }
+        } else if (obj.isType()) {
+            TYPE_TABLE.put(vid, obj.as());
         } else {
-            OBJ_TABLE.put(vid, obj);
+            throw MTronException.of("inst set %s can only store insts, types, and rewrites: {{r}}!{{/r}} %s", this.simpeToString(), obj);
         }
         return obj;
     }
@@ -84,7 +87,17 @@ public class MInstSet extends MSpace implements InstSet {
     }
 
     @Override
-    public Objs types() {
-        return objs(this.OBJ_TABLE.values());
+    public Set<Type> types() {
+        return new HashSet<>(this.TYPE_TABLE.values());
+    }
+
+    @Override
+    public Set<Inst> rewrites() {
+        return new HashSet<>(this.REWRITE_TABLE.values());
+    }
+
+    @Override
+    public Set<Inst> insts() {
+        return this.INST_TABLE.values().stream().flatMap(s -> s.values().stream()).flatMap(Collection::stream).collect(Collectors.toSet());
     }
 }

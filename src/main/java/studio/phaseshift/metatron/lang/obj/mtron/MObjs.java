@@ -44,12 +44,13 @@ public class MObjs extends MObj implements Objs {
     private static fURI computeTID(final Iterable<Obj> value) {
         Set<fURI> types = IteratorUtil.stream(value).map(Obj::tid).map(fURI::basePath).collect(Collectors.toSet());
         // TODO: make efficient
-        final long count = IteratorUtil.stream(value).map(Obj::tid).map(f -> (f.coefficientValue().max() != null) ? f.coefficientValue().max() : 1).reduce(0L, Long::sum);
+        final long minCount = IteratorUtil.stream(value).map(Obj::tid).map(f -> (f.coefficientValue().min() != null) ? f.coefficientValue().min() : 1).reduce(0L, Long::sum);
+        final long maxCount = IteratorUtil.stream(value).map(Obj::tid).map(f -> (f.coefficientValue().max() != null) ? f.coefficientValue().max() : 1).reduce(0L, Long::sum);
         //final long count = IteratorUtil.count(this.value());
-        if (types.isEmpty() || 0 == count) return fURI.NONE.zero();
-        if (types.size() == 1) return types.iterator().next().coefficient(Long.toString(count));
+        if (types.isEmpty() || 0 == maxCount) return fURI.NONE.zero();
+        if (types.size() == 1) return types.iterator().next().coefficient(MCoeff.Int.of(minCount,maxCount).toString());
         final fURI temp = types.stream().reduce(fURI::commonRoot).get();
-        return temp.coefficient("" + count);
+        return temp.coefficient(MCoeff.Int.of(minCount,maxCount).toString());
     }
 
 
@@ -110,7 +111,7 @@ public class MObjs extends MObj implements Objs {
 
     @Override
     public Objs clone(final Object value, final fURI tid, final fURI vid) {
-        return new MObjs((Iterable<Obj>) value, tid, vid);
+        return super.clone(value, tid, vid, (a, b, c) -> new MObjs((Iterable<Obj>) a, b, c));
     }
 
     @Override

@@ -60,7 +60,7 @@ public class MEdge extends MElement implements Obj, Edge, WrappedEdge<Edge> {
 
     @Override
     public fURI vid() {
-        return this.graph().configuration().get(fURI.class, "vid").extend("edge").extend(this.element.id().toString());
+        return this.graph().configuration().get(fURI.class, "pattern").retractPattern().extend("edge").extend(this.element.id().toString());
     }
 
 }

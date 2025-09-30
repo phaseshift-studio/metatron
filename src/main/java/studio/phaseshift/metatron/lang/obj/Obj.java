@@ -38,6 +38,10 @@ import static studio.phaseshift.metatron.lang.obj.mtron.mtronInstSet.*;
 
 public interface Obj extends Function<Obj, Obj>, Iterable<Obj> {
 
+    default String simpeToString() {
+        return Graphitty.string("{{b}}%s{{g}}::{{m}}@{{b}}%s{{/b}}", this.tid().toString(), null == this.vid() ? "<nospace>" : this.vid().toString());
+    }
+
     <O extends Object> O value();
 
     fURI tid();
@@ -90,7 +94,9 @@ public interface Obj extends Function<Obj, Obj>, Iterable<Obj> {
         return null != this.vid();
     }
 
-    default Objs append(final Obj obj) {
+    default Obj append(final Obj obj) {
+        if (obj.isNoObj())
+            return this;
         if (this.isObjs())
             return this.<Objs>as().append(obj);
         else {

@@ -68,7 +68,7 @@ public class BootLoader {
             final Space mtron = new mtronInstSet(fURI.of("/mnt/lang/mtron"));
             Router.global().addSpace(mtron);
             MMonoid.load();
-            Log.of(f("/sys/log"));
+            Router.global().write("/sys/log", Log.of(f("/sys/log")));
             final Space var = new MemSpace(fURI.of("+/+/#"), fURI.of("/mnt/var"));
             Router.global().addSpace(var);
             final Space fs = new FileSpace(f("/home/#"), f("/mnt/fs"));

@@ -40,7 +40,7 @@ public class MReal extends MObj implements Real {
 
     @Override
     public Real clone(final Object value, final fURI tid, final fURI vid) {
-        return new MReal((Double) value, tid, vid);
+        return super.clone(value, tid, vid, (a, b, c) -> new MReal((Double) a, b, c));
     }
 
     @Override

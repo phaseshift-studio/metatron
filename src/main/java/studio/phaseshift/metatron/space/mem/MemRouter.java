@@ -26,6 +26,7 @@ import studio.phaseshift.metatron.space.Router;
 import studio.phaseshift.metatron.space.Space;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
+import studio.phaseshift.metatron.util.ObjUtil;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -76,6 +77,7 @@ public class MemRouter implements Router {
                     LOG.except("%s and %s have overlapping address spaces", space.pattern(), kv.getKey());
                 });
         this.spaces.put(space.pattern(), space);
+        this.write(space.vid(), space);
     }
 
     @Override
@@ -110,20 +112,15 @@ public class MemRouter implements Router {
             return NullSpace.single();
     }
 
-    private static final Set<fURI> READ_AS_NOOBJ = Set.of(fURI.ANY.any(),fURI.ANY.maybe(),fURI.ANY);
+    private static final Set<fURI> READ_AS_NOOBJ = Set.of(fURI.ANY.any(), fURI.ANY.maybe(), fURI.ANY);
 
     @Override
     public Obj read(final fURI vid) {
-        if (vid.equals(this.vid))
-            return this;
         if (vid.isZero() || READ_AS_NOOBJ.contains(vid))
             return NoObj.single();
-        /*else if (this.vid.hasPrefix(vid)) {
-
-        }*/
         final Space space = this.getSpace(vid);
         //LOG.trace("reading %s from %s", vid, space.vid());
-        return space.read(vid);
+        return ObjUtil.appendOnRead(vid.isBranch(), space.read(vid), this.vid.onlyMatches(vid) ? this : NoObj.single());
     }
 
     @Override

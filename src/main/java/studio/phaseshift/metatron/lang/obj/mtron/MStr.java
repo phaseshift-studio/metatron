@@ -40,7 +40,8 @@ public class MStr extends MObj implements Str {
 
     @Override
     public Str clone(final Object value, final fURI tid, final fURI vid) {
-        return new MStr((String) value, tid, vid);
+        return super.clone(value, tid, vid, (a, b, c) -> new MStr((String) a, b, c));
+        // return new MStr((String) value, tid, vid);
     }
 
     @Override

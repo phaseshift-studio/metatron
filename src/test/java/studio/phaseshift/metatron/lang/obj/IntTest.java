@@ -11,7 +11,11 @@ public class IntTest extends MetatronTest {
             // a                                 | b                            | matches
             "1                                   | 1                            | true",
             "1                                   | int::T[]                     | true",
-            "1                                   | str::T[]                     | false"
+            "1                                   | str::T[]                     | false",
+            "1                                   | int[0,4]::T[]                | true",
+            "int[5]::1                           | int[0,4]::T[]                | false",
+            "int[5]::1                           | int[*]::T[]                  | true",
+            "int[0]::1                           | noobj[0]::T[]                | true"
     }, delimiter = '|')
     public void testMatches(final String lhs, final String rhs, final boolean matches) {
         super.testMatches(lhs, rhs, matches);
@@ -37,8 +41,14 @@ public class IntTest extends MetatronTest {
     @Override
     @ParameterizedTest
     @CsvSource(value = {
-            "str::1                              | <ERROR>",
-            "lst::1                              | <ERROR>"
+            "bool::1                              | <ERROR>",
+            "real::1                              | <ERROR>",
+            "str::1                               | <ERROR>",
+            "uri::1                               | <ERROR>",
+            "lst::1                               | <ERROR>",
+            "rec::1                               | <ERROR>",
+            "inst::1                              | <ERROR>",
+            "code::1                              | <ERROR>",
     }, delimiter = '|')
     public void testCode(final String code, final String expected) {
         super.testCode(code, expected);

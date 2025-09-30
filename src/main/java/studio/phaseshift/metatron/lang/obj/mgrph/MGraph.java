@@ -9,12 +9,17 @@ import org.apache.tinkerpop.gremlin.structure.Vertex;
 import org.apache.tinkerpop.gremlin.structure.util.wrapped.WrappedGraph;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.Obj;
+import studio.phaseshift.metatron.space.Space;
 import studio.phaseshift.metatron.space.mem.MSpace;
+import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.ObjUtil;
 
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class MGraph extends MSpace implements Graph, WrappedGraph<Graph> {
 
@@ -51,14 +56,23 @@ public class MGraph extends MSpace implements Graph, WrappedGraph<Graph> {
     }
 
     @Override
-    public Iterator<Vertex> vertices(Object... vertexIds) {
+    public Iterator<Vertex> vertices(final Object... vertexIds) {
         return MVertex.makeVertices(this.graph.vertices(vertexIds));
     }
 
+    private Iterator<MVertex> mvertices(final fURI... vertexIds) {
+        return (Iterator) this.vertices(Stream.of(vertexIds).map(id -> Long.valueOf(id.name())).toArray(Long[]::new));
+    }
+
     @Override
-    public Iterator<Edge> edges(Object... edgeIds) {
+    public Iterator<Edge> edges(final Object... edgeIds) {
         return MEdge.makeEdges(this.graph.edges(edgeIds));
     }
+
+    private Iterator<MEdge> medges(final fURI... edgeIds) {
+        return (Iterator) this.edges(Stream.of(edgeIds).map(id -> Long.valueOf(id.name())).toArray(Long[]::new));
+    }
+
 
     @Override
     public Transaction tx() {
@@ -82,7 +96,28 @@ public class MGraph extends MSpace implements Graph, WrappedGraph<Graph> {
 
     @Override
     public Obj read(final fURI vid) {
-        return ObjUtil.oneNoneOrAll(MVertex.makeVertices(this.vertices()));
+        return Space.Helpers.resolveRead(this, vid, (key) -> {
+            //if (key.tail(this.vid.extend("/vertex/#")))
+            //    return IteratorUtil.stream(this.mvertices()).collect(Collectors.toMap(MVertex::vid, v -> v));
+            //else {
+            final Map<fURI, Obj> map = new HashMap<>();
+            if (vid.bimatches(this.pattern.retractPattern().extend("vertex/#"))) {
+                if (key.hasPattern())
+                    IteratorUtil.stream(this.mvertices()).collect(Collectors.toMap(MVertex::vid, v -> v, (a, b) -> b, () -> map));
+                else
+                    IteratorUtil.findFirst(this.mvertices(vid)).ifPresent(v -> map.put(v.vid(), v));
+
+                // }
+            }
+            if (vid.bimatches(this.pattern.retractPattern().extend("edge/#"))) {
+                if (key.hasPattern())
+                    IteratorUtil.stream(this.medges()).collect(Collectors.toMap(MEdge::vid, v -> v, (a, b) -> b, () -> map));
+                else
+                    IteratorUtil.findFirst(this.medges(vid)).ifPresent(v -> map.put(v.vid(), v));
+                // }
+            }
+            return map;
+        });
     }
 
     @Override

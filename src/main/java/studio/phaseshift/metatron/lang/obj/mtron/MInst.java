@@ -36,7 +36,7 @@ public class MInst extends MObj implements Inst {
 
     @Override
     public Inst clone(final Object value, final fURI tid, final fURI vid) {
-        return new MInst((Triplet<Poly, Inst.f, Obj>) value, tid, vid);
+        return super.clone(value, tid, vid, (a, b, c) -> new MInst((Triplet<Poly, Inst.f, Obj>) a, b, c));
     }
 
     @Override

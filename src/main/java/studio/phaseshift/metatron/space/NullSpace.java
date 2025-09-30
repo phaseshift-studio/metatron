@@ -1,13 +1,12 @@
 package studio.phaseshift.metatron.space;
 
 import studio.phaseshift.metatron.lang.fURI;
-import studio.phaseshift.metatron.lang.obj.Inst;
-import studio.phaseshift.metatron.lang.obj.InstSet;
-import studio.phaseshift.metatron.lang.obj.NoObj;
-import studio.phaseshift.metatron.lang.obj.Obj;
+import studio.phaseshift.metatron.lang.obj.*;
 
 import java.util.Map;
+import java.util.Set;
 
+import static studio.phaseshift.metatron.lang.obj.mtron.MType.T;
 import static studio.phaseshift.metatron.lang.obj.mtron.mtronInstSet.NOOBJ_TID;
 
 public final class NullSpace implements Space, InstSet {
@@ -30,6 +29,21 @@ public final class NullSpace implements Space, InstSet {
     @Override
     public fURI pattern() {
         return NOOBJ_TID.zero();
+    }
+
+    @Override
+    public Set<Type> types() {
+        return Set.of(T(NOOBJ_TID.zero()));
+    }
+
+    @Override
+    public Set<Inst> insts() {
+        return Set.of();
+    }
+
+    @Override
+    public Set<Inst> rewrites() {
+        return Set.of();
     }
 
     @Override

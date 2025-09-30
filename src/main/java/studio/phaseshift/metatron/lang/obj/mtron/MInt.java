@@ -18,8 +18,12 @@
 
 package studio.phaseshift.metatron.lang.obj.mtron;
 
+import org.javatuples.Triplet;
 import studio.phaseshift.metatron.lang.fURI;
+import studio.phaseshift.metatron.lang.obj.Inst;
 import studio.phaseshift.metatron.lang.obj.Int;
+import studio.phaseshift.metatron.lang.obj.Obj;
+import studio.phaseshift.metatron.lang.obj.Poly;
 
 import static studio.phaseshift.metatron.lang.obj.mtron.mtronInstSet.INT_TID;
 
@@ -40,7 +44,7 @@ public class MInt extends MObj implements Int {
 
     @Override
     public Int clone(final Object value, final fURI tid, final fURI vid) {
-        return new MInt((Long) value, tid, vid);
+        return super.clone(value, tid, vid, (a, b, c) -> new MInt((Long) a, b, c));
     }
 
     @Override

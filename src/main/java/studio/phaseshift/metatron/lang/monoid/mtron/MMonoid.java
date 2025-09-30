@@ -53,7 +53,7 @@ public class MMonoid extends MObj implements Monoid {
         // process bcode inst pipeline
         //this.code = Rewriter({Rewriter::by(), Rewriter::explain()}).apply(this.code);
         // setup global behavior around barriers, initials, and terminals
-        LOG.debug("resolving code and generating structural monads:\n        [{{y}}PREPILED{{/y}}] %s {{g}}=>{{/g}} %s", lhs, this.code());
+        LOG.debug("resolving code and generating structural monads:\n        [{{y}}PREPILED{{/y}}] %s {{g}}=>{{/g}} %s", lhs, this.code().codeValue().stream().map(Obj::toString).reduce("",(a,b) -> a + "\n          " + b));
         Obj token = lhs;
         //LOG.none("%s", token.rng());
         final List<Inst> resolvedCode = new ArrayList<>();
@@ -63,6 +63,10 @@ public class MMonoid extends MObj implements Monoid {
             try {
                 LOG.debug("   {{g}}=>{{/g}} resolving inst %s of %s", inst, null == token ? "[0]" : token);
                 final Inst instB = inst.resolve(token);
+                /*if(!resolvedCode.isEmpty()) {
+                  final Inst instA = resolvedCode.remove(resolvedCode.size() - 1);
+                  resolvedCode.add(instA.tid(instA.tid().rng(instB.tid().dom())));
+                }*/
                 if (null == dom)
                     dom = instB.tid().queryValue(fURI.DOM, fURI.class);
                 rng = instB.tid().queryValue(fURI.RNG, fURI.class);
@@ -86,7 +90,7 @@ public class MMonoid extends MObj implements Monoid {
             }
         }
         final Code resolved = MCode.of(resolvedCode);//.tid(code().tid().query(fURI.DOM, Optional.ofNullable(dom).orElse(fURI.ANY.any())).query(fURI.RNG, Optional.ofNullable(rng).orElse(fURI.ANY.any())));
-        LOG.debug("resolved monoidal code:\n        [{{g}}COMPILED{{/g}}] %s", resolved);
+        LOG.debug("resolved monoidal code:\n        [{{g}}COMPILED{{/g}}] %s", resolved.codeValue().stream().map(Obj::toString).reduce("",(a,b) -> a + "\n          " + b));
         return this.code(resolved);
     }
 
@@ -97,27 +101,31 @@ public class MMonoid extends MObj implements Monoid {
             final Monad m = this.running().<LinkedList<Monad>>valueAs().poll();
             if (null != m) {
                 LOG.trace("   {{g}}=>{{/g}} processing monad %s [%s]", m, m.inst().isInitial() ? "initial" : "midway");
-                final Monad n = m.apply(code.nextInst(m.inst()));
-                LOG.trace(" {{g}}===>{{/g}} post-processing monad %s", n);
-                if (!n.dead()) {
-                    if (n.halted()) {
-                        LOG.trace("{{y}}====>{{/y}} halting monad %s", n);
-                        n.obj().iterator().forEachRemaining(p -> this.halted().<Queue<Obj>>valueAs().add(p));
-                    } else if (n.inst().isGather()) {
-                        final Monad barrier = this.barriers().<List<Monad>>valueAs().get(0);
-                        LOG.trace("{{m}}====>{{/m}} appending to barrier %s", n);
-                        if (null == barrier)
-                            throw MTronException.of("barrier should exist: %s", n.inst());
-                        barrier.obj().append(n.obj());
+                try {
+                    final Monad n = m.apply(code.nextInst(m.inst()));
+                    LOG.trace(" {{g}}===>{{/g}} post-processing monad %s", n);
+                    if (!n.dead()) {
+                        if (n.halted()) {
+                            LOG.trace("{{y}}====>{{/y}} halting monad %s", n);
+                            n.obj().iterator().forEachRemaining(p -> this.halted().<Queue<Obj>>valueAs().add(p));
+                        } else if (n.inst().isGather()) {
+                            final Monad barrier = this.barriers().<List<Monad>>valueAs().get(0);
+                            LOG.trace("{{m}}====>{{/m}} appending to barrier %s", n);
+                            if (null == barrier)
+                                throw MTronException.of("barrier should exist: %s", n.inst());
+                            barrier.obj().append(n.obj());
+                        } else {
+                            LOG.trace("{{g}}====>{{/g}} propagating monad %s", n);
+                            n.obj().iterator().forEachRemaining(no -> this.running().<LinkedList<Monad>>valueAs().add(n.obj(no)));
+                        }
+                    } else if (n.zombie() && n.inst().dom().tid().coefficientValue().isNoObjable()) {
+                        LOG.trace("{{c}}====>{{/c}} walking undead zombie monad %s", n);
+                        this.running().<LinkedList<Monad>>valueAs().add(n);
                     } else {
-                        LOG.trace("{{g}}====>{{/g}} propagating monad %s", n);
-                        n.obj().iterator().forEachRemaining(no -> this.running().<LinkedList<Monad>>valueAs().add(n.obj(no)));
+                        LOG.trace("{{r}}====>{{/r}} killing monad %s", n);
                     }
-                } else if (n.zombie() && n.inst().dom().tid().coefficientValue().isNoObjable()) {
-                    LOG.trace("{{c}}====>{{/c}} walking undead zombie monad %s", n);
-                    this.running().<LinkedList<Monad>>valueAs().add(n);
-                } else {
-                    LOG.trace("{{r}}====>{{/r}} killing monad %s", n);
+                } catch (final Exception e) {
+                    throw MTronException.of("unable to evaluate monoid as some insts can not be resolved: %s", m.inst());
                 }
             } else if (!this.barriers().isEmpty()) {
                 final Monad barrier = this.barriers().<LinkedList<Monad>>valueAs().poll();

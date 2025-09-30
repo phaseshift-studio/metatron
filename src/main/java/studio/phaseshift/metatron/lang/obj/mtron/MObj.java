@@ -18,17 +18,19 @@
 
 package studio.phaseshift.metatron.lang.obj.mtron;
 
+import org.apache.tinkerpop.gremlin.util.function.TriFunction;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.Obj;
 import studio.phaseshift.metatron.space.Router;
 import studio.phaseshift.metatron.ui.Graphitty;
+import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.ObjUtil;
 
 import java.util.Objects;
 
 import static studio.phaseshift.metatron.lang.obj.mtron.MType.T;
 
-public class MObj implements Obj {
+public abstract class MObj implements Obj {
 
     protected final Object value;
     protected final fURI tid;
@@ -41,9 +43,6 @@ public class MObj implements Obj {
         this.vid = vid;
         if (!this.isType() && !this.isNoObj() && !this.matches(T(tid)))
             Graphitty.log(this).except("%s is not a %s".formatted(this, T(tid)));
-        if (null != Router.global() && !this.isType() && null != this.vid && !this.vid.equals(fURI.NONE)) {
-            Router.global().write(this.vid, this);
-        }
     }
 
     @Override
@@ -62,34 +61,31 @@ public class MObj implements Obj {
     }
 
     @Override
-    public <O extends Obj> O clone(final Object value, final fURI tid, final fURI vid) {
-        return (O) this;
-    }
-
-    @Override
     public int hashCode() {
-        return Objects.hash(this.value, this.tid, this.vid);
+        return ObjUtil.objHashCode(this);
     }
 
     @Override
     public boolean equals(final Object other) {
-        return ObjUtil.objEquals(this,other);
-        /*if (this.isNoObj())
-            return other instanceof Obj && ((Obj) other).isNoObj();
-        return this.getClass().isAssignableFrom(other.getClass()) &&
-                (Objects.equals(this.tid, ((Obj) other).tid()) &&
-                        Objects.equals(this.vid, ((Obj) other).vid()) &&
-                        Objects.equals(this.value, ((Obj) other).value()));*/
+        return ObjUtil.objEquals(this, other);
     }
 
     @Override
     public String toString() {
-        return Graphitty.string(this);
+        return ObjUtil.objToString(this);
     }
 
-    private static final Obj SINGLE = new MObj(new Object(), fURI.of("obj"), fURI.NULL);
-
-    public static Obj single() {
-        return SINGLE;
+    public <O extends Obj> O clone(final Object newValue, final fURI newtid, final fURI newvid, final TriFunction<Object, fURI, fURI, O> constructor) {
+        if (!Objects.equals(newValue, this.value) || !newtid.equals(this.tid)) {
+            try {
+                final O clone = constructor.apply(newValue, newtid, newvid);
+               // if (null != Router.global() && !this.isType() && null != this.vid)
+              //      Router.global().write(this.vid, clone);
+                return clone;
+            } catch (final Exception e) {
+                throw MTronException.of(e);
+            }
+        }
+        return (O) this;
     }
 }

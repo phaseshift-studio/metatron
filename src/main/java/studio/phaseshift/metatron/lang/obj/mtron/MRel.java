@@ -37,7 +37,7 @@ public class MRel extends MObj implements Rel {
 
     @Override
     public Rel clone(final Object value, final fURI tid, final fURI vid) {
-        return new MRel((Pair<Obj, Obj>) value, tid, vid);
+        return super.clone(value, tid, vid, (a, b, c) -> new MRel((Pair<Obj,Obj>) a, b, c));
     }
 
     @Override

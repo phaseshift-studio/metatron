@@ -531,6 +531,10 @@ public class fURI implements Cloneable {
 
     }
 
+    public boolean onlyMatches(final fURI other) {
+        return !this.equals(other) && this.matches(other);
+    }
+
     public boolean bimatches(final fURI other) {
         return this.matches(other) || other.matches(this);
     }

@@ -22,6 +22,7 @@ package studio.phaseshift.metatron.util;
 import studio.phaseshift.metatron.lang.obj.NoObj;
 import studio.phaseshift.metatron.lang.obj.Obj;
 import studio.phaseshift.metatron.lang.obj.mtron.MObjs;
+import studio.phaseshift.metatron.lang.obj.mtron.MRel;
 import studio.phaseshift.metatron.ui.Graphitty;
 
 import java.util.Iterator;
@@ -41,6 +42,10 @@ public final class ObjUtil {
 
     public static boolean isLambda(final Object o) {
         return o == null || o.toString().contains("$$Lambda");
+    }
+
+    public static Obj appendOnRead(final boolean send, final Obj base, final Obj addition) {
+        return addition.isNoObj() ? base : (send ? base.append(MRel.of(addition.vid().toUri(), addition)) : base.append(addition));
     }
 
     public static Obj oneNoneOrAll(final List<Obj> objs) {

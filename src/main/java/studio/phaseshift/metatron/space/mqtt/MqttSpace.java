@@ -75,6 +75,10 @@ public class MqttSpace extends MObj implements Space {
         this.init();
     }
 
+    public MqttSpace clone(final Object value, final fURI tid, final fURI vid) {
+        return this;
+    }
+
     public void init() {
         try {
             this.client = MqttClient.builder()

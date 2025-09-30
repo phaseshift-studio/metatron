@@ -57,15 +57,15 @@ public class mgrphInstSet extends MInstSet {
     }
 
     @Override
-    public Objs types() {
-        return objs(T(GRAPH_TID), T(ELEMENT_TID), T(VERTEX_TID), T(EDGE_TID), T(PROPERTY_TID));
+    public Set<Type> types() {
+        return Set.of(T(GRAPH_TID), T(ELEMENT_TID), T(VERTEX_TID), T(EDGE_TID), T(PROPERTY_TID));
     }
 
     public void load() {
         this.write(
                 G_TID, instC(G_TID.dom(fURI.NONE.zero()).rng(GRAPH_TID), lst(T(URI_TID)), (lhs, inst) -> Router.global().read(inst.arg(0).uriValue())),
-                V_TID, instC(V_TID.dom(GRAPH_TID).rng(VERTEX_TID.any()), lst(T(URI_TID.any())), (lhs, inst) -> objs(IteratorUtil.list(MVertex.makeVertices(lhs.<MGraph>as().vertices())))),
-                E_TID, instC(V_TID.dom(MGRPH_TID).rng(EDGE_TID.any()), lst(T(URI_TID.any())), (lhs, inst) -> objs(IteratorUtil.list(MEdge.makeEdges(lhs.<MGraph>as().edges())))),
+                V_TID, instC(V_TID.dom(GRAPH_TID).rng(VERTEX_TID.any()), lst(T(URI_TID.any())), (lhs, inst) -> objs(IteratorUtil.list((Iterator)lhs.<MGraph>as().vertices()))),
+                E_TID, instC(E_TID.dom(GRAPH_TID).rng(EDGE_TID.any()), lst(T(URI_TID.any())), (lhs, inst) -> objs(IteratorUtil.list((Iterator)lhs.<MGraph>as().edges()))),
                 OUTE_TID, instC(OUTE_TID.dom(VERTEX_TID).rng(EDGE_TID.any()), lst(T(URI_TID.any())), (lhs, inst) ->
                         objs(IteratorUtil.list((Iterator) lhs.<MVertex>as().edges(Direction.OUT, inst.args().isEmpty() ? EMPTY_STRING_ARRAY : IteratorUtil.stream(inst.args().elements()).flatMap(o -> IteratorUtil.stream(o.iterator())).map(Obj::uriValue).map(Object::toString).toArray(String[]::new))))),
                 OUT_TID, instC(OUT_TID.dom(VERTEX_TID).rng(VERTEX_TID.any()), lst(T(URI_TID.any())), (lhs, inst) ->

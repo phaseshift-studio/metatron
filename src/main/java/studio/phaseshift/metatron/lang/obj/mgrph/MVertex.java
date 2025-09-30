@@ -58,7 +58,7 @@ public class MVertex extends MElement implements Obj, Vertex, WrappedVertex<Vert
 
     @Override
     public fURI vid() {
-        return   this.graph().configuration().get(fURI.class, "vid").extend("vertex").extend(this.element.id().toString());
+        return   this.graph().configuration().get(fURI.class, "pattern").retractPattern().extend("vertex").extend(this.element.id().toString());
     }
 
     @Override

@@ -26,7 +26,7 @@ public class StackSpace extends MSpace {
 
     @Override
     public Obj read(final fURI vid) {
-        LOG.trace("reading %s in %s [{{y}}root{{/y}}: %s]", vid, this.stack, this.root.pathStore);
+        LOG.trace("reading {{b}}%s{{/b}} in %s [{{y}}root{{/y}}: %s]", vid, this.stack, this.root.pathStore);
         // if(vid.coefficientValue().isZero())
         //    return NoObj.single();
         boolean isArg = vid.toString().matches("a\\d+"); // skip first encounter of list arg variable as it's a variable to grab the variable

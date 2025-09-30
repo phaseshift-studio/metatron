@@ -16,9 +16,6 @@ public abstract class MSpace implements Space {
         this.pattern = pattern;
         this.tid = tid.big();
         this.vid = vid;
-        if (null != Router.global() && null != this.vid && !this.vid.equals(fURI.NONE)) {
-            Router.global().write(this.vid, this);
-        }
     }
 
     @Override
