@@ -70,6 +70,7 @@ public interface Inst extends Call {
     @Override
     default Type dom() {
         final fURI domain = this.tid().dom();
+        // return MType.of(domain);
         return MType.of(Router.global().read(domain), domain);
     }
 
@@ -77,7 +78,7 @@ public interface Inst extends Call {
     default Type rng() {
         final fURI range = this.tid().rng();
         return MType.of(Router.global().read(range), range);
-        // return range.equals(fURI.ANY) ? MType.of(range) : MType.of(Router.global().read(range),range).orElseGet(() -> MType.of(range));
+        //return MType.of(range);
     }
 
     default Poly args() {
@@ -150,16 +151,16 @@ public interface Inst extends Call {
                                 return i.args(rec(i.args().recValue().entrySet()
                                         .stream()
                                         .map(kv -> {
-                                           // return List.of(kv.getKey(), kv.getValue().resolve(this.arg(kv.getKey().uriValue(), counter.getAndIncrement())));
+                                            // return List.of(kv.getKey(), kv.getValue().resolve(this.arg(kv.getKey().uriValue(), counter.getAndIncrement())));
                                             Obj this_arg = this.arg(kv.getKey().uriValue(), counter.getAndIncrement());
-                                           return List.of(kv.getKey(), kv.getValue().isCall() ? kv.getValue().apply(this_arg): this_arg);
+                                            return List.of(kv.getKey(), kv.getValue().isCall() ? kv.getValue().apply(this_arg) : this_arg);
                                         })
                                         .collect(Collectors.toMap(kv -> kv.get(0), kv -> kv.get(1), (a, b) -> b, LinkedHashMap::new))));
                             } else
                                 throw MTronException.of("inst args must be a lst or rec: %s", i);
                         })
                         .filter(i -> !Objects.isNull(i))
-                        .map(i -> i/*.tid(i.tid().query(fURI.DOM, lhs.tid()))*/.vid(this.vid()))
+                        .map(i -> i./*tid(this.tid()/*.query(fURI.DOM, lhs.tid())*/vid(this.vid()))
                         .map(Obj::<Inst>as)
                         .findFirst()
                         .orElseThrow(() -> this.logger().except("unable to resolve %s => %s in instruction set %s", lhs, this));
