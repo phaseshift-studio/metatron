@@ -22,8 +22,8 @@ public abstract class MElement implements Element, Obj {
     }
 
     @Override
-    public fURI id() {
-        return this.vid();
+    public Object id() {
+        return this.vid().hashCode();
     }
 
     @Override
@@ -33,7 +33,7 @@ public abstract class MElement implements Element, Obj {
 
     @Override
     public Graph graph() {
-        return this.element.graph();
+        return MGraph.of(this.element.graph());
     }
 
     /*@Override
@@ -64,8 +64,7 @@ public abstract class MElement implements Element, Obj {
 
     @Override
     public fURI vid() {
-
-       return f(this.element.id().toString());
+     return   this.graph().configuration().get(fURI.class, "vid").extend("vertex").extend(this.element.id().toString());
     }
 
     @Override

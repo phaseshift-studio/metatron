@@ -53,18 +53,23 @@ public interface MCoeff {
         }
 
         @Override
-        public boolean isStar() {
+        public boolean isAny() {
             return Objects.equals(this.min, 0L) && null == this.max;
         }
 
         @Override
-        public boolean isPlus() {
+        public boolean isSome() {
             return Objects.equals(this.min, 1L) && null == this.max;
         }
 
         @Override
-        public boolean isQuestion() {
+        public boolean isMaybe() {
             return Objects.equals(this.min, 0L) && Objects.equals(this.max, 1L);
+        }
+
+        @Override
+        public boolean isNoObjable() {
+            return this.min == null || this.min <= 0;
         }
 
 
@@ -105,13 +110,13 @@ public interface MCoeff {
         public String toString() {
             if (this.isOne())
                 return "1";
-            else if (this.isQuestion())
+            else if (this.isMaybe())
                 return "?";
             else if (this.isZero())
                 return "0";
-            else if (this.isPlus())
+            else if (this.isSome())
                 return "+";
-            else if (this.isStar())
+            else if (this.isAny())
                 return "*";
             else if (this.isExact())
                 return "" + this.min;

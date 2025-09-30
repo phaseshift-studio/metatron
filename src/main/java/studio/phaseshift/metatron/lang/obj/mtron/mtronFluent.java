@@ -73,6 +73,15 @@ public class mtronFluent<F extends Fluent<F>> extends MObj implements Code, Flue
         return this.addInst(instB(MInstSet.FROM_TID, lst(obj)));
     }
 
+    public F count() {
+        return this.addInst(instB(MInstSet.COUNT_TID, lst()));
+    }
+
+    public F sum() {
+        return this.addInst(instB(MInstSet.SUM_TID, lst()));
+    }
+
+
     public List<Obj> toList() {
         return IteratorUtil.list(this.iterator());
     }
@@ -124,6 +133,14 @@ public class mtronFluent<F extends Fluent<F>> extends MObj implements Code, Flue
 
         public static <F extends mtronFluent<F>> F from(final Obj obj) {
             return new mtronFluent<F>().from(obj);
+        }
+
+        public static <F extends mtronFluent<F>> F count() {
+            return new mtronFluent<F>().count();
+        }
+
+        public static <F extends mtronFluent<F>> F sum() {
+            return new mtronFluent<F>().sum();
         }
     }
 }

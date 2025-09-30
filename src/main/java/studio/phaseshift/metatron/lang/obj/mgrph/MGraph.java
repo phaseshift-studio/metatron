@@ -8,7 +8,6 @@ import org.apache.tinkerpop.gremlin.structure.Transaction;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
 import org.apache.tinkerpop.gremlin.structure.util.wrapped.WrappedGraph;
 import studio.phaseshift.metatron.lang.fURI;
-import studio.phaseshift.metatron.lang.obj.NoObj;
 import studio.phaseshift.metatron.lang.obj.Obj;
 import studio.phaseshift.metatron.space.mem.MSpace;
 import studio.phaseshift.metatron.util.MTronException;
@@ -24,8 +23,17 @@ public class MGraph extends MSpace implements Graph, WrappedGraph<Graph> {
     public MGraph(final Graph graph, final fURI pattern, final fURI vid) {
         super(pattern, GrphInstSet.GRAPH_TID, vid);
         this.graph = graph;
+        this.graph.configuration().addProperty("vid", vid);
+        this.graph.configuration().addProperty("pattern", pattern);
     }
 
+    public static MGraph of(final Graph graph, final fURI pattern, final fURI vid) {
+        return new MGraph(graph, pattern, vid);
+    }
+
+    public static MGraph of(final Graph graph) {
+        return new MGraph(graph, graph.configuration().get(fURI.class, "pattern"), graph.configuration().get(fURI.class, "vid"));
+    }
 
     @Override
     public Vertex addVertex(final Object... keyValues) {
@@ -74,8 +82,7 @@ public class MGraph extends MSpace implements Graph, WrappedGraph<Graph> {
 
     @Override
     public Obj read(final fURI vid) {
-        final Iterator<MVertex> vertices = (Iterator) this.vertices(vid);
-        return vertices.hasNext() ? vertices.next() : NoObj.single();
+        return ObjUtil.oneNoneOrAll(MVertex.makeVertices(this.vertices()));
     }
 
     @Override

@@ -20,13 +20,15 @@ public interface Coeff<T extends Comparable<T>, C extends Coeff<T, C>> {
 
     boolean isOne();
 
-    boolean isStar();
+    boolean isAny();
 
-    boolean isPlus();
+    boolean isSome();
 
-    boolean isQuestion();
+    boolean isMaybe();
 
     boolean isZero();
+
+    boolean isNoObjable();
 
     default boolean isExact() {
         return Objects.equals(this.min(), this.max());

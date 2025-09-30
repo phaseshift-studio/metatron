@@ -114,7 +114,7 @@ public class MMonoid extends MObj implements Monoid {
                         LOG.trace("{{g}}====>{{/g}} propagating monad %s", n);
                         n.obj().iterator().forEachRemaining(no -> this.running().<LinkedList<Monad>>valueAs().add(n.obj(no)));
                     }
-                } else if (n.zombie()) {
+                } else if (n.zombie() && n.inst().dom().tid().coefficientValue().isNoObjable()) {
                     LOG.trace("{{c}}====>{{/c}} walking undead zombie monad %s", n);
                     this.running().<LinkedList<Monad>>valueAs().add(n);
                 } else {

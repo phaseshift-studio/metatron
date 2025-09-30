@@ -18,8 +18,12 @@
 
 package studio.phaseshift.metatron;
 
+import org.apache.tinkerpop.gremlin.tinkergraph.structure.TinkerFactory;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.monoid.mtron.MMonoid;
+import studio.phaseshift.metatron.lang.obj.InstSet;
+import studio.phaseshift.metatron.lang.obj.mgrph.GrphInstSet;
+import studio.phaseshift.metatron.lang.obj.mgrph.MGraph;
 import studio.phaseshift.metatron.lang.obj.mtron.MInstSet;
 import studio.phaseshift.metatron.lang.obj.mtron.MUri;
 import studio.phaseshift.metatron.space.Router;
@@ -69,6 +73,10 @@ public class BootLoader {
             Router.global().addSpace(var);
             final Space fs = new FileSpace(f("/home/#"), f("/mnt/fs"));
             Router.global().addSpace(fs);
+            final Space grph = new MGraph(TinkerFactory.createModern(), f("/tp/#"), f("/mnt/tp"));
+            Router.global().addSpace(grph);
+            final InstSet mgrph = new GrphInstSet(f("/grph/#"),f("/mnt/grph"));
+            Router.global().addSpace(mgrph);
             /// ///////////////////////////////////
             /*Router.global().write(
                     "bool", uri(BOOL_TID), "int", uri(INT_TID),

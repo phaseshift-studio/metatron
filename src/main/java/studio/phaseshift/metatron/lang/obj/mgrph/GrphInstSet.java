@@ -46,6 +46,7 @@ public class GrphInstSet extends MSpace implements InstSet {
 
     public GrphInstSet(final fURI pattern, final fURI vid) {
         super(pattern, GRPH_TID, vid);
+        this.load();
     }
 
     @Override
@@ -58,7 +59,7 @@ public class GrphInstSet extends MSpace implements InstSet {
         this.write(
                 V_TID, instC(V_TID.dom(GRAPH_TID).rng(VERTEX_TID.any()), lst(T(URI_TID.any())), (lhs, inst) -> objs(IteratorUtil.list(MVertex.makeVertices(lhs.<MGraph>as().vertices())))),
                 E_TID, instC(V_TID.dom(GRPH_TID).rng(VERTEX_TID.any()), lst(T(URI_TID.any())), (lhs, inst) -> objs(() -> MEdge.makeEdges(lhs.<MGraph>as().edges()))),
-                OUT_TID, instC(OUT_TID.dom(VERTEX_TID).rng(VERTEX_TID.any()), lst(T(URI_TID.maybe())), (lhs, inst) ->
+                OUT_TID, instC(OUT_TID.dom(VERTEX_TID).rng(VERTEX_TID.any()), lst(T(URI_TID.any())), (lhs, inst) ->
                         inst.args().has(0) ?
                                 objs(IteratorUtil.list((Iterator) lhs.<MVertex>as().vertices(Direction.OUT, (String[]) inst.args().stream().map(Object::toString).toArray()))) :
                                 objs(IteratorUtil.list((Iterator) lhs.<MVertex>as().vertices(Direction.OUT)))),

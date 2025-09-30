@@ -116,7 +116,9 @@ public interface Obj extends Function<Obj, Obj>, Iterable<Obj> {
     default boolean matches(final Obj rhs) {
         if (this.isNoObj() && rhs.isNoObj())
             return true;
-       else if (rhs.isNoObj())
+        else if (this.isNoObj() && rhs.tid().coefficientValue().isNoObjable())
+            return true;
+        else if (rhs.isNoObj())
             return false;
         final fURI base = this.tid().basePath();
         if (MInstSet.BASE_TYPES.contains(base) &&
