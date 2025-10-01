@@ -31,6 +31,7 @@ import studio.phaseshift.metatron.util.MTronException;
 import java.util.*;
 
 import static studio.phaseshift.metatron.lang.obj.MInstSet.MTRON_TID;
+import static studio.phaseshift.metatron.ui.ObjStringSerializer.prettyPrintCode;
 
 public class MMonoid extends MObj implements Monoid {
 
@@ -53,7 +54,7 @@ public class MMonoid extends MObj implements Monoid {
         // process bcode inst pipeline
         //this.code = Rewriter({Rewriter::by(), Rewriter::explain()}).apply(this.code);
         // setup global behavior around barriers, initials, and terminals
-        LOG.debug("resolving code and generating structural monads:\n        [{{y}}PREPILED{{/y}}] %s {{g}}=>{{/g}} %s", lhs, this.code().codeValue().stream().map(Obj::toString).reduce("",(a,b) -> a + "\n          " + b));
+        LOG.debug("resolving code and generating structural monads:\n        [{{y}}PREPILED{{/y}}] %s {{g}}=>{{/g}}\n%s", lhs, prettyPrintCode(new StringBuilder(), this.code(), 0, 7).toString());
         Obj token = lhs;
         //LOG.none("%s", token.rng());
         final List<Inst> resolvedCode = new ArrayList<>();
@@ -68,8 +69,8 @@ public class MMonoid extends MObj implements Monoid {
                   resolvedCode.add(instA.tid(instA.tid().rng(instB.tid().dom())));
                 }*/
                 if (null == dom)
-                    dom = instB.tid().queryValue(fURI.DOM, fURI.class);
-                rng = instB.tid().queryValue(fURI.RNG, fURI.class);
+                    dom = instB.tid().query().get(fURI.DOM.toString(), fURI.class);
+                rng = instB.tid().query().get(fURI.RNG.toString(), fURI.class);
                 resolvedCode.add(instB);
                 token = instB.rng();
                 if (instB.isInitial()) {
@@ -90,7 +91,7 @@ public class MMonoid extends MObj implements Monoid {
             }
         }
         final Code resolved = MCode.of(resolvedCode);//.tid(code().tid().query(fURI.DOM, Optional.ofNullable(dom).orElse(fURI.ANY.any())).query(fURI.RNG, Optional.ofNullable(rng).orElse(fURI.ANY.any())));
-        LOG.debug("resolved monoidal code:\n        [{{g}}COMPILED{{/g}}] %s", resolved.codeValue().stream().map(Obj::toString).reduce("",(a,b) -> a + "\n          " + b));
+        LOG.debug("resolved monoidal code:\n        [{{g}}COMPILED{{/g}}]\n%s", prettyPrintCode(new StringBuilder(), resolved, 0, 7).toString());
         return this.code(resolved);
     }
 

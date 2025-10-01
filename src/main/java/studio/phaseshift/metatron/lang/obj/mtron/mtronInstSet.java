@@ -4,6 +4,7 @@ import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.*;
 import studio.phaseshift.metatron.space.Router;
 import studio.phaseshift.metatron.util.IteratorUtil;
+import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -17,12 +18,8 @@ import static studio.phaseshift.metatron.lang.obj.mtron.MBool.bool;
 import static studio.phaseshift.metatron.lang.obj.mtron.MInst.instC;
 import static studio.phaseshift.metatron.lang.obj.mtron.MInt.jnt;
 import static studio.phaseshift.metatron.lang.obj.mtron.MLst.lst;
-import static studio.phaseshift.metatron.lang.obj.mtron.MObjs.objs;
 import static studio.phaseshift.metatron.lang.obj.mtron.MRec.rec;
 import static studio.phaseshift.metatron.lang.obj.mtron.MType.T;
-import static studio.phaseshift.metatron.lang.obj.mtron.MUri.uri;
-import static studio.phaseshift.metatron.lang.obj.mtron.mtronFluent.StartLess.e1se;
-import static studio.phaseshift.metatron.lang.obj.mtron.mtronFluent.StartLess.from;
 
 public class mtronInstSet extends MInstSet {
 
@@ -78,6 +75,7 @@ public class mtronInstSet extends MInstSet {
     public static final fURI VID_TID = INST_TID.extend("vid");
     public static final fURI TYPE_TID = INST_TID.extend("type");
     public static final fURI GET_TID = INST_TID.extend("get");
+    public static final fURI AS_TID = INST_TID.extend("as");
     public static final fURI AT_TID = INST_TID.extend("at");
     public static final fURI IS_TID = INST_TID.extend("is");
     public static final fURI ISA_TID = INST_TID.extend("isa");
@@ -165,6 +163,15 @@ public class mtronInstSet extends MInstSet {
                 REF_TID, instC(REF_TID.dom(ANY_TID).rng(ANY_TID.any()), lst(T(ANY_TID.any())), (lhs, inst) -> Router.global().write(lhs.uriValue(), inst.arg(0))),
                 TYPE_TID, instC(TYPE_TID.dom(ANY_TID).rng(ANY_TID), NO_ARGS__, (lhs, inst) -> lhs.type()),
                 /// ///////////////////////////////////////////////////////////////////////////////////////////////////
+                AS_TID, instC(AS_TID.dom(fURI.ANY.any()).rng(fURI.ANY.any()), lst(T(T(ANY_TID))), (lhs, inst) -> {
+                    final Type t = inst.arg(0).as();
+                    if (T(LST_TID).matches(t)) {
+                        if (lhs.isObjs()) {
+                            return lst(IteratorUtil.stream(lhs.objsValue()).toList());
+                        }
+                    }
+                    throw MTronException.of("unknown pair: %s %s", lhs, t);
+                }),
                 WITHIN_TID, instC(WITHIN_TID.dom(LST_TID).rng(LST_TID), lst(ID__), (lhs, inst) -> lst(lhs.lstValue().stream().map(o -> inst.arg(0).apply(o)).toList())),
                 WITHIN_TID, instC(WITHIN_TID.dom(REC_TID).rng(REC_TID), lst(ID__), (lhs, inst) -> rec(lhs.recValue().entrySet().stream().map(kv -> inst.arg(0).apply(MRel.of(kv.getKey(), kv.getValue())).<Rel>as()).collect(Collectors.toMap(Rel::first, Rel::second, (a, b) -> b, LinkedHashMap<Obj, Obj>::new)))),
                 BARRIER_TID, instC(BARRIER_TID.dom(fURI.ANY.any()).rng(fURI.ANY.any()), lst(ID__), (lhs, inst) -> inst.arg(0).apply(lhs)),
@@ -177,7 +184,7 @@ public class mtronInstSet extends MInstSet {
                                         "c", MRec.ofUriKeyed(
                                                 "min", MInt.of(lhs.tid().coefficientValue().min()),
                                                 "max", MInt.of(lhs.tid().coefficientValue().max())),
-                                        "query", MStr.of(lhs.tid().queryMap().toString())),
+                                        "query", MStr.of(lhs.tid().query().toString())),
                                 "value", MObjFactory.of().create(lhs.value())))
         );
 

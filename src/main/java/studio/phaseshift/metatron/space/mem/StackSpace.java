@@ -50,7 +50,7 @@ public class StackSpace extends MSpace {
 
     public boolean pop() {
         final Map<fURI, Obj> frameMap = this.stack.pop();
-        LOG.trace("popped frame from stack stack: %s [{{y}}depth{{/y}}: %d]", frameMap, this.stack.size());
+        LOG.trace("popped frame off stack: %s [{{y}}depth{{/y}}: %d]", frameMap, this.stack.size());
         return null != frameMap;
     }
 
@@ -64,7 +64,7 @@ public class StackSpace extends MSpace {
             }
         }
         this.stack.push(frameMap);
-        LOG.trace("pushed frame to stack: %s [depth: %d]", frameMap, this.stack.size());
+        LOG.trace("pushed frame on stack: %s [depth: %d]", frameMap, this.stack.size());
     }
 
 

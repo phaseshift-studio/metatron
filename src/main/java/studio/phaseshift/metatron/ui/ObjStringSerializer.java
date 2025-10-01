@@ -200,6 +200,25 @@ public class ObjStringSerializer implements ObjSerializer<String> {
         return sb;
     }
 
+    public static StringBuilder prettyPrintCode(final StringBuilder sb, final Call call, final int depth, final int leftMargin) {
+        if (call.isCode()) {
+            for (final Inst inst : call.<Code>as().codeValue()) {
+                prettyPrintCode(sb, inst, depth + 1, leftMargin);
+            }
+        } else if (call.isInst()) {
+            final Inst inst = call.as();
+            sb.append(" ".repeat(leftMargin)).append("  ".repeat(depth)).append(inst).append("\n");
+            if (null != inst.value()) {
+                for (final Obj arg : inst.args().elements()) {
+                    if (arg.isCall()) {
+                        prettyPrintCode(sb, arg.as(), depth + 1, leftMargin);
+                    }
+                }
+            }
+        }
+        return sb;
+    }
+
     private StringBuilder generateVID(final StringBuilder sb, final Obj obj) {
         return null == obj.vid() ? sb : sb.append(this.b.palette.typeC())
                 .append(this.b.palette.formC())
