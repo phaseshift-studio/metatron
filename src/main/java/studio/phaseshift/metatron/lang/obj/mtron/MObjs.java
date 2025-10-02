@@ -9,7 +9,10 @@ import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.ObjUtil;
 
-import java.util.*;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Stream;
 
 public class MObjs implements Objs {
@@ -43,15 +46,17 @@ public class MObjs implements Objs {
         obj.iterator().forEachRemaining(i -> {
             this.map.compute(i.tid(i.tid().coefficientless()), (lng, it) -> null == it ? i.tid().coefficientValue() : it.plus(i.tid().coefficientValue()));
         });
-        return this;
+        return this.value(this.value());
     }
 
     @Override
     public <O extends Obj> O remove() {
-        if (this.map.keySet().iterator().hasNext()) {
+        while (this.map.keySet().iterator().hasNext()) {
             final O key = (O) this.map.keySet().iterator().next();
             final MCoeff.Int value = this.map.remove(key);
-            return null == value ? key : (O) key.tid(key.tid().coefficient(value.toString()));
+            if (null == value)
+                return key;
+            else if (!value.isZero()) return (O) key.tid(key.tid().coefficient(value.toString()));
         }
         return null;
     }
@@ -61,7 +66,7 @@ public class MObjs implements Objs {
     }
 
     public static Objs of(final Obj... objs) {
-        return objs(objs);
+        return objs(List.of(objs));
     }
 
     public static <O extends Obj> Objs objs(final Iterable<O> os) {
@@ -74,12 +79,12 @@ public class MObjs implements Objs {
 
     @Override
     public Iterable<Obj> value() {
-        return () -> (Iterator) this.map.entrySet().stream().map(kv -> kv.getValue().isZero() ? NoObj.single() : (kv.getValue().isOne() ? kv.getKey() : kv.getKey().tid(kv.getKey().tid().coefficient(kv.getValue().toString())))).iterator();
+        return this.map.entrySet().stream().filter(kv -> !kv.getValue().isZero()).map(kv -> kv.getValue().isOne() ? kv.getKey() : kv.getKey().tid(kv.getKey().tid().coefficient(kv.getValue().toString()))).toList();
     }
 
     @Override
     public fURI tid() {
-        return this.map.entrySet().stream().map(kv -> kv.getKey().tid().coefficient(kv.getValue().toString())).reduce(fURI::plus).orElse(fURI.NONE.zero());
+        return this.map.entrySet().stream().filter(kv -> !kv.getValue().isZero()).map(kv -> kv.getKey().tid().coefficient(kv.getValue().toString())).reduce(fURI::plus).orElse(fURI.NONE.zero());
     }
 
     @Override
@@ -109,7 +114,7 @@ public class MObjs implements Objs {
 
     @Override
     public int hashCode() {
-        return ObjUtil.objHashCode(this);
+        return Objects.hash(this.map, this.vid);
     }
 
     @Override
