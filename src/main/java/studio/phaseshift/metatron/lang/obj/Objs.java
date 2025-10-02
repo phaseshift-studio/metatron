@@ -19,7 +19,6 @@
 package studio.phaseshift.metatron.lang.obj;
 
 import studio.phaseshift.metatron.lang.fURI;
-import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.Collection;
@@ -35,11 +34,17 @@ public interface Objs extends Obj {
     @Override
     fURI tid();
 
+    default <O extends Obj> Iterable<O> valueCast() {
+        return (Iterable<O>) this.value();
+    }
+
+    <O extends Obj> O remove();
+
     @Override
-    default Objs append(final Obj obj){
-        if(obj.isNoObj())
+    default Objs append(final Obj obj) {
+        if (obj.isNoObj())
             return this;
-        if(this.value() instanceof Collection<?>) {
+        if (this.value() instanceof Collection<?>) {
             obj.iterator().forEachRemaining(o -> this.<Collection<Obj>>valueAs().add(o));
             return this;
         } else {

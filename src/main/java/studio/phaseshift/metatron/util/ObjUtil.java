@@ -54,7 +54,7 @@ public final class ObjUtil {
         else if (objs.size() == 1)
             return objs.get(0);
         else
-            return MObjs.of(objs);
+            return MObjs.of(objs.stream().toList());
     }
 
     public static Obj oneNoneOrAll(final Stream<Obj> objs) {

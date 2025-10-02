@@ -20,7 +20,6 @@ package studio.phaseshift.metatron.ui;
 
 import studio.phaseshift.metatron.lang.obj.Obj;
 import studio.phaseshift.metatron.space.Router;
-import studio.phaseshift.metatron.space.Space;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.io.ByteArrayOutputStream;
@@ -83,7 +82,7 @@ public class Graphitty {
         CURSOR_REWRITES.put("-X", "\033[1K");  // clear line left
         CURSOR_REWRITES.put("-X-", "\033[2K");  // clear line
         CURSOR_REWRITES.put("Xv", "\033[0J"); // clear to bottom of screen
-        CURSOR_REWRITES.put("X^","\033[1J"); // clear to top of screen
+        CURSOR_REWRITES.put("X^", "\033[1J"); // clear to top of screen
         CURSOR_REWRITES.put("XX", "\033[2J"); // clear screen
         CURSOR_REWRITES.put("*", "\0331b[?25h"); // show cursor
         CURSOR_REWRITES.put(".", "\0331b[?25l"); // hide cursor
@@ -110,12 +109,12 @@ public class Graphitty {
     private static final Graphitty GRAPHITTY_STDOUT = new Graphitty(System.out);
 
     public static GraphittyLogger log(final Object source) {
-        return source instanceof Obj && !(source instanceof Router)? new GraphittyObjLogger((Obj)source) : new GraphittyLogger(source);
+        return source instanceof Obj && !(source instanceof Router) ? new GraphittyObjLogger((Obj) source) : new GraphittyLogger(source);
     }
 
     public static void out(final OutputStream out, final String f, final Object... args) {
         final Graphitty g = new Graphitty(out);
-        g.print(Graphitty.string(f,args));
+        g.print(Graphitty.string(f, args));
     }
 
     public static Graphitty stdout() {
@@ -183,8 +182,8 @@ public class Graphitty {
                         buffer.charAt(i + 2) != '{') {
                     i = i + 2;
                     final StringBuilder rule = new StringBuilder();
-                   // final boolean end = buffer.charAt(i) == '/';
-                   // if (end) i++;
+                    // final boolean end = buffer.charAt(i) == '/';
+                    // if (end) i++;
                     for (int m = i; m < bufferLength; m++) {
                         if (buffer.charAt(m) == '}' && buffer.charAt(m + 1) == '}') {
                             i += 2;
@@ -198,7 +197,7 @@ public class Graphitty {
                             final String closeRule = rulePiece.substring(1);
                             final String openRule = this.rewriteStack.pop();
                             if (!openRule.equals(closeRule))
-                                throw MTronException.of("closing doesn't match opening rule: %s != %s", openRule, closeRule);
+                                throw MTronException.of("unmatched rule wrap: %s != %s [buffer: %s]", openRule, closeRule, buffer.replace("{{", "").replace("}}", ""));
                             else {
                                 String reset = this.rewriteStack.isEmpty() ? null : this.rewrites.get(this.rewriteStack.peek());
                                 reset = null == reset ? this.rewrites.get("X") : reset.replace("\033[", "\033[0;");

@@ -18,6 +18,7 @@ import static studio.phaseshift.metatron.lang.obj.mtron.MBool.bool;
 import static studio.phaseshift.metatron.lang.obj.mtron.MInst.instC;
 import static studio.phaseshift.metatron.lang.obj.mtron.MInt.jnt;
 import static studio.phaseshift.metatron.lang.obj.mtron.MLst.lst;
+import static studio.phaseshift.metatron.lang.obj.mtron.MObjs.objs;
 import static studio.phaseshift.metatron.lang.obj.mtron.MRec.rec;
 import static studio.phaseshift.metatron.lang.obj.mtron.MType.T;
 
@@ -122,6 +123,7 @@ public class mtronInstSet extends MInstSet {
                 MERGE_TID, instC(MERGE_TID.dom(LST_TID).rng(fURI.ANY.any()), NO_ARGS__, (lhs, inst) -> MObjs.of(lhs.<Lst>as().value())),
                 MERGE_TID, instC(MERGE_TID.dom(REC_TID).rng(REL_TID.any()), NO_ARGS__, (lhs, inst) -> lhs.isPoly() ? MObjs.of(lhs.<Poly>as().elements()) : lhs),
                 MERGE_TID, instC(MERGE_TID.dom(ANY_TID).rng(ANY_TID.any()), NO_ARGS__, (lhs, inst) -> lhs),
+                MERGE_TID, instC(MERGE_TID.dom(ANY_TID.some()).rng(ANY_TID.any()), NO_ARGS__, (lhs, inst) -> lhs),
                 DOM_TID, instC(DOM_TID.dom(REL_TID).rng(fURI.ANY), NO_ARGS__, (lhs, inst) -> lhs.relValue().getValue0()),
                 RNG_TID, instC(RNG_TID.dom(REL_TID).rng(fURI.ANY), NO_ARGS__, (lhs, inst) -> lhs.relValue().getValue1()),
                 DOM_TID, instC(DOM_TID.dom(REC_TID).rng(fURI.ANY.any()), NO_ARGS__, (lhs, inst) -> MObjs.of(lhs.recValue().keySet())),
@@ -145,6 +147,7 @@ public class mtronInstSet extends MInstSet {
                 /// ///////////////////////////////////////////////////////////////////////////////////////////////////
                 PLUS_TID, instC(PLUS_TID.dom(BOOL_TID).rng(BOOL_TID), lst(T(BOOL_TID)), (lhs, inst) -> lhs.value(lhs.boolValue() || inst.arg(0).boolValue())),
                 PLUS_TID, instC(PLUS_TID.dom(INT_TID).rng(INT_TID), lst(T(INT_TID)), (lhs, inst) -> lhs.value(lhs.intValue() + inst.arg(0).intValue())),
+                PLUS_TID, instC(PLUS_TID.dom(INT_TID.some()).rng(INT_TID.some()), lst(T(INT_TID)), (lhs, inst) -> objs(lhs.<Int>stream().map(i -> i.value(i.intValue() + inst.arg(0).intValue())).toList())),
                 PLUS_TID, instC(PLUS_TID.dom(REAL_TID).rng(REAL_TID), lst(T(REAL_TID)), (lhs, inst) -> lhs.value(lhs.realValue() + inst.arg(0).realValue())),
                 PLUS_TID, instC(PLUS_TID.dom(STR_TID).rng(STR_TID), lst(T(STR_TID)), (lhs, inst) -> lhs.value(lhs.strValue() + inst.arg(0).strValue())),
                 PLUS_TID, instC(PLUS_TID.dom(URI_TID).rng(URI_TID), lst(T(URI_TID)), (lhs, inst) -> lhs.value(lhs.uriValue().plus(inst.arg(0).uriValue()))),

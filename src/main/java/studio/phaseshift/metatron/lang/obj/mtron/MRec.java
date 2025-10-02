@@ -30,6 +30,9 @@ import static studio.phaseshift.metatron.lang.obj.mtron.MUri.uri;
 import static studio.phaseshift.metatron.lang.obj.mtron.mtronInstSet.REC_TID;
 
 public class MRec extends MObj implements Rec {
+
+    public static Rec EMPTY_REC = MRec.of(Map.of());
+
     public MRec(final Map<Obj, Obj> value, final fURI tid, final fURI vid) {
         super(value, tid, vid);
     }
@@ -42,7 +45,7 @@ public class MRec extends MObj implements Rec {
         return MRec.of(key, value, kvs);
     }
 
-    public static Rec rec(final Map<Obj,Obj> map) {
+    public static Rec rec(final Map<Obj, Obj> map) {
         return MRec.of(map);
     }
 
@@ -52,7 +55,7 @@ public class MRec extends MObj implements Rec {
 
     @Override
     public Rec clone(final Object value, final fURI tid, final fURI vid) {
-        return super.clone(value, tid, vid, (a, b, c) -> new MRec((Map<Obj,Obj>) a, b, c));
+        return super.clone(value, tid, vid, (a, b, c) -> new MRec((Map<Obj, Obj>) a, b, c));
     }
 
     public Rec put(final Obj key, final Obj value) {

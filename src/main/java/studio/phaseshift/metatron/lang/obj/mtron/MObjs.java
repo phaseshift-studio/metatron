@@ -1,21 +1,3 @@
-/*
- *   Metatron: A Distributed Virtual Machine
- *   Copyright (c) 2024 PhaseShift Studio, LLC
- *
- *   This program is free software: you can redistribute it and/or modify
- *   it under the terms of the GNU Affero General Public License as published by
- *   the Free Software Foundation, either version 3 of the License, or
- *   (at your option) any later version.
- *
- *   This program is distributed in the hope that it will be useful,
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *   GNU Affero General Public License for more details.
- *
- *   You should have received a copy of the GNU Affero General Public License
- *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
-
 package studio.phaseshift.metatron.lang.obj.mtron;
 
 import studio.phaseshift.metatron.lang.fURI;
@@ -23,25 +5,20 @@ import studio.phaseshift.metatron.lang.obj.NoObj;
 import studio.phaseshift.metatron.lang.obj.Obj;
 import studio.phaseshift.metatron.lang.obj.Objs;
 import studio.phaseshift.metatron.lang.obj.Type;
-import studio.phaseshift.metatron.ui.Graphitty;
-import studio.phaseshift.metatron.ui.GraphittyLogger;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.ObjUtil;
 
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
+import java.util.*;
 import java.util.stream.Stream;
 
-import static studio.phaseshift.metatron.lang.obj.mtron.mtronInstSet.OBJS_TID;
+public class MObjs implements Objs {
 
+    private fURI vid;
+    private final Map<Obj, MCoeff.Int> map = new LinkedHashMap<>();
 
-public class MObjs extends MObj implements Objs {
-
-    private static final GraphittyLogger LOG = Graphitty.log(MObjs.class);
-
-    private static fURI computeTID(final Iterable<Obj> value) {
+/*
+ private static fURI computeTID(final Iterable<Obj> value) {
         Set<fURI> types = IteratorUtil.stream(value).map(Obj::tid).map(fURI::basePath).collect(Collectors.toSet());
         // TODO: make efficient
         final long minCount = IteratorUtil.stream(value).map(Obj::tid).map(f -> (f.coefficientValue().min() != null) ? f.coefficientValue().min() : 1).reduce(0L, Long::sum);
@@ -52,46 +29,67 @@ public class MObjs extends MObj implements Objs {
         final fURI temp = types.stream().reduce(fURI::commonRoot).get();
         return temp.coefficient(MCoeff.Int.of(minCount,maxCount).toString());
     }
+ */
 
+    public MObjs(final Iterable<Obj> ints, final fURI vid) {
+        this.vid = vid;
+        ints.forEach(i -> {
+            this.map.compute(i.tid(i.tid().coefficientless()), (lng, it) -> null == it ? i.tid().coefficientValue() : it.plus(i.tid().coefficientValue()));
+        });
+    }
 
-    public static Objs objs(final Iterable<Obj> os) {
-        return MObjs.of(os);
+    @Override
+    public Objs append(final Obj obj) {
+        obj.iterator().forEachRemaining(i -> {
+            this.map.compute(i.tid(i.tid().coefficientless()), (lng, it) -> null == it ? i.tid().coefficientValue() : it.plus(i.tid().coefficientValue()));
+        });
+        return this;
+    }
+
+    @Override
+    public <O extends Obj> O remove() {
+        if (this.map.keySet().iterator().hasNext()) {
+            final O key = (O) this.map.keySet().iterator().next();
+            final MCoeff.Int value = this.map.remove(key);
+            return null == value ? key : (O) key.tid(key.tid().coefficient(value.toString()));
+        }
+        return null;
+    }
+
+    public static Objs of(final Iterable<Obj> objs) {
+        return objs(objs);
+    }
+
+    public static Objs of(final Obj... objs) {
+        return objs(objs);
+    }
+
+    public static <O extends Obj> Objs objs(final Iterable<O> os) {
+        return new MObjs((Iterable) os, null);
     }
 
     public static Objs objs(final Obj... objs) {
         return objs(List.of(objs));
     }
 
-
-    public MObjs(final Iterable<Obj> value, final fURI tid, final fURI vid) {
-        super(value, computeTID(value), vid);
-        if (value instanceof Obj)
-            LOG.error("objs can not directly nest: %s", value);
+    @Override
+    public Iterable<Obj> value() {
+        return () -> (Iterator) this.map.entrySet().stream().map(kv -> kv.getValue().isZero() ? NoObj.single() : (kv.getValue().isOne() ? kv.getKey() : kv.getKey().tid(kv.getKey().tid().coefficient(kv.getValue().toString())))).iterator();
     }
-
-    /*
-       public MObjs(final Iterable<Obj> value, final fURI tid, final fURI vid) {
-        super(value, tid,vid);
-        if(value instanceof Obj)
-            LOG.error("objs can not directly nest: %s",value);
-        IteratorUtil.stream(value).map(v -> v.tid());
-    }
-
-     */
-
-    public MObjs(final Iterable<Obj> value) {
-        this(value, OBJS_TID, fURI.NULL);
-    }
-
 
     @Override
     public fURI tid() {
-        return computeTID(this.objsValue());
+        return this.map.entrySet().stream().map(kv -> kv.getKey().tid().coefficient(kv.getValue().toString())).reduce(fURI::plus).orElse(fURI.NONE.zero());
     }
 
     @Override
-    public Objs tid(final fURI newtid) {
-        return (Objs) super.tid(computeTID(this.objsValue()));
+    public Objs vid(final fURI vid) {
+        return new MInts(this.value(), vid);
+    }
+
+    @Override
+    public fURI vid() {
+        return this.vid;
     }
 
     @Override
@@ -100,32 +98,23 @@ public class MObjs extends MObj implements Objs {
     }
 
     @Override
-    public boolean equals(final Object other) {
-        return this.toString().equals(other.toString()); // TODO: VERY BAD -- something is weird about the tid string encoding (hidden characters??)
-      /*  return other instanceof Obj && ((Obj) other).isObjs() &&
-                Objects.equals(this.tid(), ((Obj) other).tid()) &&
-                Objects.equals(this.vid, ((Obj) other).vid()) &&
-                Objects.equals(this.value, ((Obj) other).value());*/
-    }
-
-
-    @Override
     public Objs clone(final Object value, final fURI tid, final fURI vid) {
-        return super.clone(value, tid, vid, (a, b, c) -> new MObjs((Iterable<Obj>) a, b, c));
+        return new MObjs(IteratorUtil.stream((Iterable) value).toList(), vid);
     }
 
     @Override
-    public Objs append(final Obj obj) {
-        return (Objs) Objs.super.append(obj);//.tid(obj.tid().coefficient("*"));
+    public String toString() {
+        return ObjUtil.objToString(this);
     }
 
     @Override
-    public Iterable<Obj> value() {
-        return (Iterable<Obj>) this.value;
+    public int hashCode() {
+        return ObjUtil.objHashCode(this);
     }
 
-    public static Objs of(final Iterable<Obj> iterable) {
-        return new MObjs(iterable);
+    @Override
+    public boolean equals(final Object other) {
+        return other instanceof MObjs && Objects.equals(this.vid, ((MObjs) other).vid) && Objects.equals(this.map, ((MObjs) other).map);
     }
 
     public static Obj ofUsage(final Object object) {
@@ -140,6 +129,4 @@ public class MObjs extends MObj implements Objs {
         throw MTronException.of("unknown object type: %s", object);
 
     }
-
-
 }

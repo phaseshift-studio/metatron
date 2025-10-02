@@ -28,7 +28,10 @@ import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
 import studio.phaseshift.metatron.util.MTronException;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Objects;
 
 import static studio.phaseshift.metatron.lang.obj.MInstSet.MTRON_TID;
 import static studio.phaseshift.metatron.ui.ObjStringSerializer.prettyPrintCode;
@@ -99,7 +102,7 @@ public class MMonoid extends MObj implements Monoid {
         final Code code = this.code();
         this.running().append(MMonad.of(NoObj.single(), code.inst(0)));
         while (true) {
-            final Monad m = this.running().<LinkedList<Monad>>valueAs().poll();
+            final Monad m = this.running().remove();
             if (null != m) {
                 LOG.trace("   {{g}}=>{{/g}} processing monad %s [%s]", m, m.inst().isInitial() ? "initial" : "midway");
                 try {
@@ -108,7 +111,7 @@ public class MMonoid extends MObj implements Monoid {
                     if (!n.dead()) {
                         if (n.halted()) {
                             LOG.trace("{{y}}====>{{/y}} halting monad %s", n);
-                            n.obj().iterator().forEachRemaining(p -> this.halted().<Queue<Obj>>valueAs().add(p));
+                            n.obj().iterator().forEachRemaining(p -> this.halted().append(p));
                         } else if (n.inst().isGather()) {
                             final Monad barrier = this.barriers().<List<Monad>>valueAs().get(0);
                             LOG.trace("{{m}}====>{{/m}} appending to barrier %s", n);
@@ -117,16 +120,16 @@ public class MMonoid extends MObj implements Monoid {
                             barrier.obj().append(n.obj());
                         } else {
                             LOG.trace("{{g}}====>{{/g}} propagating monad %s", n);
-                            n.obj().iterator().forEachRemaining(no -> this.running().<LinkedList<Monad>>valueAs().add(n.obj(no)));
+                            n.obj().iterator().forEachRemaining(no -> this.running().append(n.obj(no)));
                         }
                     } else if (n.zombie() && n.inst().dom().tid().coefficientValue().isNoObjable()) {
                         LOG.trace("{{c}}====>{{/c}} walking undead zombie monad %s", n);
-                        this.running().<LinkedList<Monad>>valueAs().add(n);
+                        this.running().append(n);
                     } else {
                         LOG.trace("{{r}}====>{{/r}} killing monad %s", n);
                     }
                 } catch (final Exception e) {
-                    throw MTronException.of("unable to evaluate monoid as some insts can not be resolved: %s", m.inst());
+                    throw MTronException.of("unable to evaluate inst of %s due to %s", m, e.getMessage());
                 }
             } else if (!this.barriers().isEmpty()) {
                 final Monad barrier = this.barriers().<LinkedList<Monad>>valueAs().poll();
@@ -137,11 +140,11 @@ public class MMonoid extends MObj implements Monoid {
                     if (nextInst.dom().tid().coefficientValue().isOne())
                         result.forEach(o -> {
                             LOG.trace("  {{m}}|==>{{/m}} scattering output barrier obj %s", o);
-                            this.running().<LinkedList<Monad>>valueAs().add(MMonad.of(o, nextInst));
+                            this.running().append(MMonad.of(o, nextInst));
                         });
                     else {
                         LOG.trace("  {{m}}|==>{{/m}} passing output barrier obj %s", result);
-                        this.running().<LinkedList<Monad>>valueAs().add(MMonad.of(result, nextInst));
+                        this.running().append(MMonad.of(result, nextInst));
                     }
                 }
             } else {

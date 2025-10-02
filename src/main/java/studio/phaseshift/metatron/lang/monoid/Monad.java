@@ -8,7 +8,10 @@ import studio.phaseshift.metatron.lang.obj.Rec;
 import studio.phaseshift.metatron.lang.obj.Type;
 import studio.phaseshift.metatron.ui.Graphitty;
 
+import java.util.List;
 import java.util.Objects;
+
+import static studio.phaseshift.metatron.lang.obj.mtron.MObjs.objs;
 
 public interface Monad extends Obj {
 
@@ -54,6 +57,14 @@ public interface Monad extends Obj {
 
     default Obj obj() {
         return this.value().getValue0();
+    }
+
+    default boolean merges(final Monad other) {
+        return Objects.equals(this.value(), other.value()) && Objects.equals(this.tid().basePath(), other.tid().basePath());
+    }
+
+    default Obj plus(final Monad other) {
+        return this.merges(other) ? this.tid(this.tid().plus(other.tid())) : objs(List.of(this, other));
     }
 
     default Monad obj(final Obj obj) {

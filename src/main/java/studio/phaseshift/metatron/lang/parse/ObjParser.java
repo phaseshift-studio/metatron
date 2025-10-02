@@ -44,6 +44,7 @@ import static org.petitparser.parser.primitive.CharacterParser.digit;
 import static org.petitparser.parser.primitive.CharacterParser.of;
 import static org.petitparser.parser.primitive.CharacterParser.word;
 import static org.petitparser.parser.primitive.StringParser.of;
+import static studio.phaseshift.metatron.lang.obj.mtron.MObjs.objs;
 import static studio.phaseshift.metatron.lang.obj.mtron.mtronInstSet.*;
 
 public class ObjParser {
@@ -235,7 +236,7 @@ public class ObjParser {
 
     public static Parser m_objs() {
         return seq(of('{').trim(), m_obj().separatedBy(of(',').trim()), of('}').trim()).pick(1)
-                .map(t -> new MObjs(((List) t).stream().filter(x -> x instanceof Obj).toList(), OBJS_TID, fURI.NULL));
+                .map(t -> objs(((List) t).stream().filter(x -> x instanceof Obj).toList()));
     }
 
     public static Parser m_type_prefix(final fURI baseType) {

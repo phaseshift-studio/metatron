@@ -20,32 +20,32 @@ public class MObjFactory implements ObjFactory {
     public Obj create(final Object value) {
         if (null == value)
             return NoObj.single();
-        if(value instanceof Obj)
-            return (Obj)value;
+        if (value instanceof Obj)
+            return (Obj) value;
         if (value instanceof Boolean)
             return MBool.of((Boolean) value);
         else if (value instanceof Long)
             return new MInt((Long) value);
         else if (value instanceof Double)
-            return  new MReal((Double) value);
+            return new MReal((Double) value);
         else if (value instanceof String)
-            return  new MStr((String) value);
+            return new MStr((String) value);
         else if (value instanceof fURI)
-            return  new MUri((fURI) value);
+            return new MUri((fURI) value);
         else if (value instanceof List)
             return new MLst((List<Obj>) value);
         else if (value instanceof Pair)
             return new MRel((Pair<Obj, Obj>) value);
         else if (value instanceof Rec)
             return new MRec((Map<Obj, Obj>) value);
-        //else if (value instanceof Triplet)
-        //    return new MInst((Triplet<Poly, Inst.f, Obj>) value);
-       // else if (Code.class.isAssignableFrom(objClass))
-        //    return (O) new MCode((List<Inst>) value, tid, vid);
-        //else if (Objs.class.isAssignableFrom(objClass))
-        //    return (O) new MObjs((Iterable<Obj>) value, tid, vid);
-       // else if (Type.class.isAssignableFrom(objClass))
-       //     return (O) new MType((Obj) value, tid);
+            //else if (value instanceof Triplet)
+            //    return new MInst((Triplet<Poly, Inst.f, Obj>) value);
+            // else if (Code.class.isAssignableFrom(objClass))
+            //    return (O) new MCode((List<Inst>) value, tid, vid);
+            //else if (Objs.class.isAssignableFrom(objClass))
+            //    return (O) new MObjs((Iterable<Obj>) value, tid, vid);
+            // else if (Type.class.isAssignableFrom(objClass))
+            //     return (O) new MType((Obj) value, tid);
         else
             throw MTronException.of("provided value has no corresponding obj: %s", value);
     }
@@ -73,7 +73,7 @@ public class MObjFactory implements ObjFactory {
         else if (Code.class.isAssignableFrom(objClass))
             return (O) new MCode((List<Inst>) value, tid, vid);
         else if (Objs.class.isAssignableFrom(objClass))
-            return (O) new MObjs((Iterable<Obj>) value, tid, vid);
+            return (O) new MObjs((Iterable<Obj>) value, vid);
         else if (Type.class.isAssignableFrom(objClass))
             return (O) new MType((Obj) value, tid);
         else if (NoObj.class.isAssignableFrom(objClass))
