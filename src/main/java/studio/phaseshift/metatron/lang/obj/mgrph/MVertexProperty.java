@@ -28,12 +28,6 @@ public class MVertexProperty<V> extends MProperty<V> implements VertexProperty<V
     }
 
     @Override
-    public fURI tid() {
-        return VERTEX_PROPERTY_TID;
-        //return f(this.element.label());
-    }
-
-    @Override
     public fURI vid() {
         return this.graph().configuration().get(fURI.class, "pattern").retractPattern().extend("vp").extend(this.getBaseVertexProperty().id().toString());
     }

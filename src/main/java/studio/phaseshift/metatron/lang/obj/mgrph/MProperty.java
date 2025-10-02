@@ -39,11 +39,6 @@ public class MProperty<V> extends MObj implements Property<V>, WrappedProperty<P
     }
 
     @Override
-    public fURI tid() {
-        return PROPERTY_TID;
-    }
-
-    @Override
     public String key() {
         return this.getBaseProperty().key();
     }
