@@ -84,7 +84,7 @@ public class MObjs implements Objs {
 
     @Override
     public Objs vid(final fURI vid) {
-        return new MInts(this.value(), vid);
+        return new MObjs(this.value(), vid);
     }
 
     @Override
