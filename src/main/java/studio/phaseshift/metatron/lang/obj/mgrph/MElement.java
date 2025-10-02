@@ -9,8 +9,6 @@ import studio.phaseshift.metatron.util.ObjUtil;
 
 import java.util.Iterator;
 
-import static studio.phaseshift.metatron.lang.obj.mgrph.mgrphInstSet.VERTEX_TID;
-
 public abstract class MElement implements Element, Obj {
 
     protected final Element element;
@@ -69,5 +67,10 @@ public abstract class MElement implements Element, Obj {
     @Override
     public boolean equals(final Object other) {
         return ObjUtil.objEquals(this, other);
+    }
+
+    @Override
+    public <V> Iterator<V> values(final String... propertyKeys) {
+        return MProperty.makeValues((Iterator) this.properties(propertyKeys));
     }
 }

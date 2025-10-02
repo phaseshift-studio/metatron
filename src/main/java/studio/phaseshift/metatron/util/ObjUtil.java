@@ -57,6 +57,16 @@ public final class ObjUtil {
             return MObjs.of(objs.stream().toList());
     }
 
+    public static Obj oneNoneOrAll(final Iterable<Obj> objs) {
+        final IteratorUtil.ExpandableIterator<Obj> itty = new IteratorUtil.ExpandableIterator<>(objs.iterator());
+        if (!itty.hasNext())
+            return NoObj.single();
+        else if (itty.onlyHasNext())
+            return itty.next();
+        else
+            return MObjs.of(IteratorUtil.list(itty));
+    }
+
     public static Obj oneNoneOrAll(final Stream<Obj> objs) {
         return ObjUtil.oneNoneOrAll(objs.iterator());
     }

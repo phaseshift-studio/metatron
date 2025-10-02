@@ -31,12 +31,20 @@ public class mtronFluent<F extends Fluent<F>> extends MCode implements Fluent<F>
         return this.addInst(instB(mtronInstSet.START_TID, lst(obj)));
     }
 
+    public F block(final Obj obj) {
+        return this.addInst(instB(mtronInstSet.BLOCK_TID, lst(obj)));
+    }
+
     public F plus(final Obj obj) {
         return this.addInst(instB(mtronInstSet.PLUS_TID, lst(obj)));
     }
 
     public F mult(final Obj obj) {
         return this.addInst(instB(mtronInstSet.MULT_TID, lst(obj)));
+    }
+
+    public F map(final Obj obj) {
+        return this.addInst(instB(mtronInstSet.MAP_TID, lst(obj)));
     }
 
     public F id() {
@@ -93,12 +101,20 @@ public class mtronFluent<F extends Fluent<F>> extends MCode implements Fluent<F>
             return new mtronFluent<F>().start(obj);
         }
 
+        public static <F extends mtronFluent<F>> F block(final Obj obj) {
+            return new mtronFluent<F>().block(obj);
+        }
+
         public static <F extends mtronFluent<F>> F plus(final Obj obj) {
             return new mtronFluent<F>().plus(obj);
         }
 
         public static <F extends mtronFluent<F>> F mult(final Obj obj) {
             return new mtronFluent<F>().mult(obj);
+        }
+
+        public static <F extends mtronFluent<F>> F map(final Obj obj) {
+            return new mtronFluent<F>().map(obj);
         }
 
         public static <F extends mtronFluent<F>> F isA(final Obj obj) {

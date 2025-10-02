@@ -77,6 +77,18 @@ public class MObjs implements Objs {
         return objs(List.of(objs));
     }
 
+    public static Obj ooobj(final Obj... objs) {
+        return ObjUtil.oneNoneOrAll(List.of(objs));
+    }
+
+    public static Obj ooobj(final Iterable<Obj> objs) {
+        return ObjUtil.oneNoneOrAll(objs);
+    }
+
+    public static Obj ooobj(final Stream<Obj> objs) {
+        return ObjUtil.oneNoneOrAll(objs);
+    }
+
     @Override
     public Iterable<Obj> value() {
         return this.map.entrySet().stream().filter(kv -> !kv.getValue().isZero()).map(kv -> kv.getValue().isOne() ? kv.getKey() : kv.getKey().tid(kv.getKey().tid().coefficient(kv.getValue().toString()))).toList();

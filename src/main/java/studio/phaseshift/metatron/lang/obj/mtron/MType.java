@@ -22,8 +22,8 @@ public class MType extends MObj implements Type {
 
     @Override
     public Type clone(final Object value, final fURI tid, final fURI vid) {
-        if (!tid.equals(vid))
-            throw MTronException.of("a tid and vid of a type must be the same: %s != %s", tid, vid);
+       // if (!tid.equals(vid))
+       //     throw MTronException.of("a tid and vid of a type must be the same: %s != %s", tid, vid);
         return new MType((Obj) value, tid);
     }
 

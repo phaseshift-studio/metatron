@@ -28,14 +28,16 @@ public class MProperty<V> extends MObj implements Property<V>, WrappedProperty<P
     @Override
     public V value() {
         final V value = this.getBaseProperty().value();
-        if (value instanceof String)
+        if (value instanceof Obj)
+            return value;
+        else if (value instanceof String)
             return (V) MStr.of((String) value);
         else if (value instanceof Long || value instanceof Integer)
             return (V) MInt.of(Long.valueOf(value.toString()));
         else if (value instanceof Float || value instanceof Double)
             return (V) MReal.of(Double.valueOf(value.toString()));
         else
-            throw MTronException.of(new UnsupportedOperationException());
+            throw MTronException.of(new UnsupportedOperationException("value type not supported: " + value.getClass()));
     }
 
     @Override
@@ -72,5 +74,9 @@ public class MProperty<V> extends MObj implements Property<V>, WrappedProperty<P
 
     public static <E, V> Iterator<E> makeProperties(final Iterator<Property<V>> properties) {
         return (Iterator) IteratorUtil.map(properties, MProperty::of);
+    }
+
+    public static <V> Iterator<V> makeValues(final Iterator<Property<V>> properties) {
+        return IteratorUtil.map(MProperty.<Property<V>, V>makeProperties(properties), Property::value);
     }
 }

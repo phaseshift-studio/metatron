@@ -23,7 +23,6 @@ import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.Obj;
 import studio.phaseshift.metatron.space.mem.StackSpace;
 import studio.phaseshift.metatron.ui.Graphitty;
-import studio.phaseshift.metatron.ui.Palette;
 
 public interface Router extends Obj, Space, AutoCloseable {
 
@@ -51,7 +50,7 @@ public interface Router extends Obj, Space, AutoCloseable {
 
     @Override
     default fURI pattern() {
-        return fURI.ANY;
+        return fURI.ALL_WILD;
     }
 
     default <O extends Obj> O read(final String vid, final Class<O> oClass) {

@@ -542,6 +542,24 @@ public final class IteratorUtil {
             return this.expansion.add(t);
         }
 
+        public boolean onlyHasNext() {
+            if (!this.hasNext())
+                return false;
+            final T t = this.next();
+            final boolean hasNextNext = this.hasNext();
+            this.push(t);
+            return !hasNextNext;
+        }
+
+        public boolean hasNextNext() {
+            if (!this.hasNext())
+                return false;
+            final T t = this.next();
+            final boolean hasNextNext = this.hasNext();
+            this.push(t);
+            return hasNextNext;
+        }
+
         public static <T> ExpandableIterator<T> of(final Iterator<T> baseIterator) {
             return new ExpandableIterator<>(baseIterator);
         }

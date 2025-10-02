@@ -30,7 +30,6 @@ import studio.phaseshift.metatron.util.MTronException;
 import java.util.*;
 import java.util.function.Function;
 import java.util.function.Predicate;
-import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.lang.obj.mtron.MType.T;
@@ -159,7 +158,7 @@ public interface Obj extends Function<Obj, Obj>, Iterable<Obj> {
     }
 
     default Type dom() {
-        return T(fURI.ANY.maybe());
+        return T(fURI.ALL_WILD.maybe());
     }
 
     default Type rng() {

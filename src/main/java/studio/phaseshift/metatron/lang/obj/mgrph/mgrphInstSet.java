@@ -44,6 +44,8 @@ public class mgrphInstSet extends MInstSet {
     public static final fURI INV_TID = INST_TID.extend("inV");
     public static final fURI BOTHV_TID = INST_TID.extend("bothV");
     public static final fURI VALUES_TID = INST_TID.extend("values");
+    public static final fURI PROPERTIES_TID = INST_TID.extend("properties");
+
 
     private static final Lst NO_ARGS__ = MLst.of();
     private static final Map<fURI, Map<fURI, Set<Inst>>> SYMBOL_TABLE = new LinkedHashMap<>();
@@ -97,8 +99,8 @@ public class mgrphInstSet extends MInstSet {
                 INV_TID, instC(INV_TID.dom(EDGE_TID).rng(VERTEX_TID), NO_ARGS__, (lhs, inst) -> (MVertex) lhs.<MEdge>as().vertices(Direction.IN).next()),
                 BOTHV_TID, instC(BOTHV_TID.dom(EDGE_TID).rng(VERTEX_TID.coefficient("2")), NO_ARGS__, (lhs, inst) -> objs(IteratorUtil.list((Iterator) lhs.<MEdge>as().vertices(Direction.BOTH)))),
                 /// ///////////////////////////////////////////////////////////////////////////////////////////////////
-                VALUES_TID, instC(VALUES_TID.dom(VERTEX_TID).rng(ANY_TID.any()), lst(T(URI_TID.any())), (lhs, inst) -> objs(IteratorUtil.list((Iterator) lhs.<MVertex>as().properties(labelsAsUri(inst))))),
-                VALUES_TID, instC(VALUES_TID.dom(EDGE_TID).rng(ANY_TID.any()), lst(T(URI_TID.any())), (lhs, inst) -> objs(IteratorUtil.list((Iterator) lhs.<MElement>as().properties(labelsAsUri(inst)))))
+                VALUES_TID, instC(VALUES_TID.dom(MGRPH_TID.extend(fURI.ONE_WILD)).rng(ANY_TID.any()), lst(T(URI_TID.any())), (lhs, inst) -> objs(IteratorUtil.list((Iterator) lhs.<MElement>as().values(labelsAsUri(inst))))),
+                PROPERTIES_TID, instC(PROPERTIES_TID.dom(MGRPH_TID.extend(fURI.ONE_WILD)).rng(ANY_TID.any()), lst(T(URI_TID.any())), (lhs, inst) -> objs(IteratorUtil.list((Iterator) lhs.<MElement>as().properties(labelsAsUri(inst)))))
         );
     }
 
@@ -106,4 +108,5 @@ public class mgrphInstSet extends MInstSet {
     public mgrphInstSet clone(final Object value, final fURI tid, final fURI vid) {
         return this;
     }
+
 }
