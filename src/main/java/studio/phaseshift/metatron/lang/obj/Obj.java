@@ -75,7 +75,7 @@ public interface Obj extends Function<Obj, Obj>, Iterable<Obj> {
     }
 
     default <O extends Obj> Stream<O> stream() {
-        return this.isNoObj() ? Stream.of((O) NoObj.single()) : (Stream<O>) IteratorUtil.stream(this);
+        return this.isNoObj() ? Stream.empty() : (Stream<O>) IteratorUtil.stream(this);
     }
 
     default Obj tid(final fURI newTid) {
@@ -168,10 +168,6 @@ public interface Obj extends Function<Obj, Obj>, Iterable<Obj> {
 
     default <O extends Obj> O orElse(final O other) {
         return this.isNoObj() ? other : (O) this;
-    }
-
-    default <O extends Obj> O orElseGet(final Supplier<O> other) {
-        return this.isNoObj() ? other.get() : (O) this;
     }
 
     default <O extends Obj> O orElseThrow(final RuntimeException e) {

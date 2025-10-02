@@ -1,0 +1,81 @@
+package studio.phaseshift.metatron.lang.obj.mgrph;
+
+import org.apache.tinkerpop.gremlin.structure.*;
+import org.apache.tinkerpop.gremlin.structure.util.wrapped.WrappedProperty;
+import studio.phaseshift.metatron.lang.fURI;
+import studio.phaseshift.metatron.lang.obj.Obj;
+import studio.phaseshift.metatron.lang.obj.mtron.MInt;
+import studio.phaseshift.metatron.lang.obj.mtron.MObj;
+import studio.phaseshift.metatron.lang.obj.mtron.MReal;
+import studio.phaseshift.metatron.lang.obj.mtron.MStr;
+import studio.phaseshift.metatron.util.IteratorUtil;
+import studio.phaseshift.metatron.util.MTronException;
+
+import java.util.Iterator;
+
+import static studio.phaseshift.metatron.lang.obj.mgrph.mgrphInstSet.PROPERTY_TID;
+
+public class MProperty<V> extends MObj implements Property<V>, WrappedProperty<Property<V>> {
+
+    public MProperty(final Property<V> property, final fURI tid) {
+        super(property, tid, fURI.NULL);
+    }
+
+    public static <V> MProperty<V> of(final Property<V> property) {
+        return new MProperty<>(property, PROPERTY_TID);
+    }
+
+    @Override
+    public V value() {
+        final V value = this.getBaseProperty().value();
+        if (value instanceof String)
+            return (V) MStr.of((String) value);
+        else if (value instanceof Long || value instanceof Integer)
+            return (V) MInt.of(Long.valueOf(value.toString()));
+        else if (value instanceof Float || value instanceof Double)
+            return (V) MReal.of(Double.valueOf(value.toString()));
+        else
+            throw MTronException.of(new UnsupportedOperationException());
+    }
+
+    @Override
+    public fURI tid() {
+        return PROPERTY_TID;
+    }
+
+    @Override
+    public String key() {
+        return this.getBaseProperty().key();
+    }
+
+    @Override
+    public boolean isPresent() {
+        return this.getBaseProperty().isPresent();
+    }
+
+    @Override
+    public Element element() {
+        final Element e = this.getBaseProperty().element();
+        return e instanceof Vertex ? MVertex.of((Vertex) e) : (e instanceof Edge ? MEdge.of((Edge) e) : MVertexProperty.of((VertexProperty) e));
+
+    }
+
+    @Override
+    public void remove() {
+        this.getBaseProperty().remove();
+    }
+
+    @Override
+    public <O extends Obj> O clone(Object value, fURI tid, fURI vid) {
+        return (O) this;
+    }
+
+    @Override
+    public Property<V> getBaseProperty() {
+        return (Property<V>) this.value;
+    }
+
+    public static <E, V> Iterator<E> makeProperties(final Iterator<Property<V>> properties) {
+        return (Iterator) IteratorUtil.map(properties, MProperty::of);
+    }
+}

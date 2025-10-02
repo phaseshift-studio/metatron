@@ -35,12 +35,12 @@ public class MEdge extends MElement implements Obj, Edge, WrappedEdge<Edge> {
 
     @Override
     public <V> Property<V> property(final String key, final V value) {
-        return null;
+        return MProperty.of(this.getBaseEdge().property(key, value));
     }
 
     @Override
     public <V> Iterator<Property<V>> properties(String... propertyKeys) {
-        return null;
+        return MProperty.makeProperties(this.getBaseEdge().<V>properties(propertyKeys));
     }
 
     public static <E> Iterator<E> makeEdges(final Iterator<Edge> edges) {

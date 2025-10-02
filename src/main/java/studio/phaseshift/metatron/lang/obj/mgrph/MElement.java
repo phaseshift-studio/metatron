@@ -35,20 +35,15 @@ public abstract class MElement implements Element, Obj {
         return MGraph.of(this.element.graph());
     }
 
-    /*@Override
-    public <V> Property<V> property(String key, V value) {
-        return this.element.property(key, value);
-    }*/
-
     @Override
     public void remove() {
         this.element.remove();
     }
 
-    @Override
+    /*@Override
     public <V> Iterator<? extends Property<V>> properties(String... propertyKeys) {
         return this.element.properties(propertyKeys);
-    }
+    }*/
 
     @Override
     public Element value() {

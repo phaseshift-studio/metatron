@@ -26,8 +26,9 @@ public class mgrphInstSet extends MInstSet {
     public static final fURI GRAPH_TID = MGRPH_TID.extend("graph");
     public static final fURI ELEMENT_TID = MGRPH_TID.extend("element");
     public static final fURI VERTEX_TID = MGRPH_TID.extend("vertex");
+    public static final fURI VERTEX_PROPERTY_TID = MGRPH_TID.extend("vp");
+    public static final fURI PROPERTY_TID = MGRPH_TID.extend("p");
     public static final fURI EDGE_TID = MGRPH_TID.extend("edge");
-    public static final fURI PROPERTY_TID = MGRPH_TID.extend("property");
 
     public static final fURI INST_TID = MGRPH_TID.extend("inst");
     public static final fURI G_TID = INST_TID.extend("g");
@@ -61,37 +62,43 @@ public class mgrphInstSet extends MInstSet {
         return Set.of(T(GRAPH_TID), T(ELEMENT_TID), T(VERTEX_TID), T(EDGE_TID), T(PROPERTY_TID));
     }
 
+
+    private static String[] labelsAsUri(final Inst inst) {
+        return inst.args().isEmpty() ?
+                EMPTY_STRING_ARRAY :
+                IteratorUtil.stream(inst.args().elements())
+                        .flatMap(o -> IteratorUtil.stream(o.iterator()))
+                        .map(Obj::uriValue)
+                        .map(Object::toString)
+                        .toArray(String[]::new);
+
+    }
+
     public void load() {
         this.write(
                 G_TID, instC(G_TID.dom(fURI.NONE.zero()).rng(GRAPH_TID), lst(T(URI_TID)), (lhs, inst) -> Router.global().read(inst.arg(0).uriValue())),
                 V_TID, instC(V_TID.dom(GRAPH_TID).rng(VERTEX_TID.any()), lst(T(URI_TID.any())), (lhs, inst) -> objs(IteratorUtil.list((Iterator) lhs.<MGraph>as().vertices()))),
                 E_TID, instC(E_TID.dom(GRAPH_TID).rng(EDGE_TID.any()), lst(T(URI_TID.any())), (lhs, inst) -> objs(IteratorUtil.list((Iterator) lhs.<MGraph>as().edges()))),
                 OUTE_TID, instC(OUTE_TID.dom(VERTEX_TID).rng(EDGE_TID.any()), lst(T(URI_TID.any())), (lhs, inst) ->
-                        objs(IteratorUtil.list((Iterator) lhs.<MVertex>as().edges(Direction.OUT, inst.args().isEmpty() ? EMPTY_STRING_ARRAY : IteratorUtil.stream(inst.args().elements()).flatMap(o -> IteratorUtil.stream(o.iterator())).map(Obj::uriValue).map(Object::toString).toArray(String[]::new))))),
+                        objs(IteratorUtil.list((Iterator) lhs.<MVertex>as().edges(Direction.OUT, labelsAsUri(inst))))),
                 OUT_TID, instC(OUT_TID.dom(VERTEX_TID).rng(VERTEX_TID.any()), lst(T(URI_TID.any())), (lhs, inst) ->
-                        objs(IteratorUtil.list((Iterator) lhs.<MVertex>as().vertices(Direction.OUT, inst.args().isEmpty() ? EMPTY_STRING_ARRAY : IteratorUtil.stream(inst.args().elements()).flatMap(o -> IteratorUtil.stream(o.iterator())).map(Obj::uriValue).map(Object::toString).toArray(String[]::new))))),
+                        objs(IteratorUtil.list((Iterator) lhs.<MVertex>as().vertices(Direction.OUT, labelsAsUri(inst))))),
                 OUT_TID, instC(OUT_TID.dom(VERTEX_TID.any()).rng(VERTEX_TID.any()), lst(T(URI_TID.any())), (lhs, inst) ->
-                        objs((Iterable) lhs.stream()
-                                .flatMap(v -> IteratorUtil.stream(
-                                        v.<MVertex>as().vertices(Direction.OUT, inst.args().isEmpty() ?
-                                                EMPTY_STRING_ARRAY :
-                                                IteratorUtil.stream(inst.args().elements())
-                                                        .flatMap(o -> IteratorUtil.stream(o.iterator()))
-                                                        .map(Obj::uriValue)
-                                                        .map(Object::toString)
-                                                        .toArray(String[]::new))))
-                                .toList())),
+                        objs((Iterable) lhs.stream().flatMap(v -> IteratorUtil.stream(v.<MVertex>as().vertices(Direction.OUT, labelsAsUri(inst)))).toList())),
                 INE_TID, instC(OUTE_TID.dom(VERTEX_TID).rng(EDGE_TID.any()), lst(T(URI_TID.any())), (lhs, inst) ->
-                        objs(IteratorUtil.list((Iterator) lhs.<MVertex>as().edges(Direction.IN, inst.args().isEmpty() ? EMPTY_STRING_ARRAY : IteratorUtil.stream(inst.args().elements()).flatMap(o -> IteratorUtil.stream(o.iterator())).map(Obj::uriValue).map(Object::toString).toArray(String[]::new))))),
+                        objs(IteratorUtil.list((Iterator) lhs.<MVertex>as().edges(Direction.IN, labelsAsUri(inst))))),
                 IN_TID, instC(OUT_TID.dom(VERTEX_TID).rng(VERTEX_TID.any()), lst(T(URI_TID.any())), (lhs, inst) ->
-                        objs(IteratorUtil.list((Iterator) lhs.<MVertex>as().vertices(Direction.IN, inst.args().isEmpty() ? EMPTY_STRING_ARRAY : IteratorUtil.stream(inst.args().elements()).flatMap(o -> IteratorUtil.stream(o.iterator())).map(Obj::uriValue).map(Object::toString).toArray(String[]::new))))),
+                        objs(IteratorUtil.list((Iterator) lhs.<MVertex>as().vertices(Direction.IN, labelsAsUri(inst))))),
                 BOTHE_TID, instC(BOTHE_TID.dom(VERTEX_TID).rng(EDGE_TID.any()), lst(T(URI_TID.any())), (lhs, inst) ->
-                        objs(IteratorUtil.list((Iterator) lhs.<MVertex>as().edges(Direction.BOTH, inst.args().isEmpty() ? EMPTY_STRING_ARRAY : IteratorUtil.stream(inst.args().elements()).flatMap(o -> IteratorUtil.stream(o.iterator())).map(Obj::uriValue).map(Object::toString).toArray(String[]::new))))),
+                        objs(IteratorUtil.list((Iterator) lhs.<MVertex>as().edges(Direction.BOTH, labelsAsUri(inst))))),
                 BOTH_TID, instC(BOTH_TID.dom(VERTEX_TID).rng(VERTEX_TID.any()), lst(T(URI_TID.any())), (lhs, inst) ->
-                        objs(IteratorUtil.list((Iterator) lhs.<MVertex>as().vertices(Direction.BOTH, inst.args().isEmpty() ? EMPTY_STRING_ARRAY : IteratorUtil.stream(inst.args().elements()).flatMap(o -> IteratorUtil.stream(o.iterator())).map(Obj::uriValue).map(Object::toString).toArray(String[]::new))))),
-                OUTV_TID, instC(OUTV_TID.dom(EDGE_TID).rng(VERTEX_TID), NO_ARGS__, (lhs, inst) -> MVertex.of(lhs.<MEdge>as().vertices(Direction.OUT).next())),
-                INV_TID, instC(INV_TID.dom(EDGE_TID).rng(VERTEX_TID), NO_ARGS__, (lhs, inst) -> MVertex.of(lhs.<MEdge>as().vertices(Direction.IN).next())),
-                BOTHV_TID, instC(BOTHV_TID.dom(EDGE_TID).rng(VERTEX_TID.coefficient("2")), NO_ARGS__, (lhs, inst) -> objs(IteratorUtil.list((Iterator) lhs.<MEdge>as().vertices(Direction.BOTH))))
+                        objs(IteratorUtil.list((Iterator) lhs.<MVertex>as().vertices(Direction.BOTH, labelsAsUri(inst))))),
+                OUTV_TID, instC(OUTV_TID.dom(EDGE_TID).rng(VERTEX_TID), NO_ARGS__, (lhs, inst) -> (MVertex) lhs.<MEdge>as().vertices(Direction.OUT).next()),
+                INV_TID, instC(INV_TID.dom(EDGE_TID).rng(VERTEX_TID), NO_ARGS__, (lhs, inst) -> (MVertex) lhs.<MEdge>as().vertices(Direction.IN).next()),
+                BOTHV_TID, instC(BOTHV_TID.dom(EDGE_TID).rng(VERTEX_TID.coefficient("2")), NO_ARGS__, (lhs, inst) -> objs(IteratorUtil.list((Iterator) lhs.<MEdge>as().vertices(Direction.BOTH)))),
+                /// ///////////////////////////////////////////////////////////////////////////////////////////////////
+                VALUES_TID, instC(VALUES_TID.dom(VERTEX_TID).rng(ANY_TID.any()), lst(T(URI_TID.any())), (lhs, inst) -> objs(IteratorUtil.list((Iterator) lhs.<MVertex>as().properties(labelsAsUri(inst))))),
+                VALUES_TID, instC(VALUES_TID.dom(EDGE_TID).rng(ANY_TID.any()), lst(T(URI_TID.any())), (lhs, inst) -> objs(IteratorUtil.list((Iterator) lhs.<MElement>as().properties(labelsAsUri(inst)))))
         );
     }
 

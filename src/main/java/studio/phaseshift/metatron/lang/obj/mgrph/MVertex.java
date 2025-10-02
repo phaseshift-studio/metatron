@@ -36,18 +36,18 @@ public class MVertex extends MElement implements Obj, Vertex, WrappedVertex<Vert
     }
 
     @Override
-    public <V> VertexProperty<V> property(String key) {
-        return Vertex.super.property(key);
+    public <V> VertexProperty<V> property(final String key) {
+        return MVertexProperty.of(Vertex.super.property(key));
     }
 
-    @Override
-    public <V> VertexProperty<V> property(String key, V value, Object... keyValues) {
-        return Vertex.super.property(key, value, keyValues);
-    }
+   /* @Override
+    public <V> VertexProperty<V> property(final String key, final V value, final Object... keyValues) {
+        return MVertexProperty.of(Vertex.super.property(key, value, keyValues));
+    }*/
 
     @Override
     public <V> VertexProperty<V> property(VertexProperty.Cardinality cardinality, String key, V value, Object... keyValues) {
-        return null;
+        return MVertexProperty.of(this.getBaseVertex().property(cardinality, key, value, keyValues));
     }
 
     @Override
@@ -58,7 +58,7 @@ public class MVertex extends MElement implements Obj, Vertex, WrappedVertex<Vert
 
     @Override
     public fURI vid() {
-        return   this.graph().configuration().get(fURI.class, "pattern").retractPattern().extend("vertex").extend(this.element.id().toString());
+        return this.graph().configuration().get(fURI.class, "pattern").retractPattern().extend("vertex").extend(this.element.id().toString());
     }
 
     @Override
@@ -72,8 +72,8 @@ public class MVertex extends MElement implements Obj, Vertex, WrappedVertex<Vert
     }
 
     @Override
-    public <V> Iterator<VertexProperty<V>> properties(String... propertyKeys) {
-        return null;
+    public <V> Iterator<VertexProperty<V>> properties(final String... propertyKeys) {
+        return MVertexProperty.makeVertexProperties(this.getBaseVertex().<V>properties(propertyKeys));
     }
 
     public static <E> Iterator<E> makeVertices(final Iterator<Vertex> vertices) {
