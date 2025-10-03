@@ -471,7 +471,7 @@ public class fURI implements Cloneable {
 
     public MCoeff.Int coefficientValue() {
         if (this.coefficient() == null)
-            return MCoeff.Int.one();
+            return MCoeff.Int.of(1L, 1L);
         return MCoeff.Int.of(this.coefficient());
     }
 

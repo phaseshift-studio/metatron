@@ -97,26 +97,26 @@ public interface MCoeff {
         }
 
         // @Override
-        public static Int any() {
+        public Int any() {
             return Int.of(0L, null);
         }
 
         //  @Override
-        public static Int some() {
+        public Int some() {
             return Int.of(1L, null);
         }
 
-        public static Int zero() {
+        public Int zero() {
             return Int.of(0L, 0L);
         }
 
         // @Override
-        public static Int maybe() {
+        public Int maybe() {
             return Int.of(0L, 1L);
         }
 
         // @Override
-        public static Int one() {
+        public Int one() {
             return Int.of(1L, 1L);
         }
 
@@ -148,17 +148,21 @@ public interface MCoeff {
             return new Int(min, max);
         }
 
+        public static Int of(final Long exact) {
+            return new Int(exact, exact);
+        }
+
         public static Int of(final String parse) {
             if (parse.isEmpty())
-                return Int.one();
+                return MCoeff.Int.of(1L);
             else if (parse.equals("*"))
-                return Int.any();
+                return MCoeff.Int.of(0L, null);
             else if (parse.equals("?"))
-                return Int.maybe();
+                return MCoeff.Int.of(0L, 1L);
             else if (parse.equals("+"))
-                return Int.some();
+                return MCoeff.Int.of(1L, null);
             else if (!parse.contains(","))
-                return Int.of(Long.valueOf(parse), Long.valueOf(parse));
+                return Int.of(Long.valueOf(parse));
             else {
                 final String[] split = parse.split(",");
                 if (parse.charAt(0) == ',') return Int.of(null, Long.valueOf(split[1]));
