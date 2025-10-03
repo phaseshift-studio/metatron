@@ -1,3 +1,23 @@
+/*
+ * Metatron: A Distributed Computing Language and Virtual Machine
+ * Copyright (C) 2025- PhaseShift Studio, LLC
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ * @author Marko A. Rodriguez (http://markorodriguez.com)
+ */
+
 package studio.phaseshift.metatron.lang.obj;
 
 import org.junit.jupiter.params.ParameterizedTest;
@@ -62,10 +82,10 @@ public class TypeTest extends MetatronTest {
             "{1,2,3,4}            | /mtron/int[0,5]                 | true",
             "{1,2,3,4}            | /mtron/int[*]                   | true",
             "{1,2,3,'abc'}        | /mtron/int[*]                   | false",
-           // "{1,2,3,'abc'}        | /mtron/+[*]                     | true",
-           // "{1,2,3,'abc'}        | /mtron/+[0,]                    | true",
-           // "{1,2,3,'abc'}        | /mtron/+[1,]                    | true",
-           // "{1,2,3,'abc'}        | /mtron/+[+]                     | true",
+            // "{1,2,3,'abc'}        | /mtron/+[*]                     | true",
+            // "{1,2,3,'abc'}        | /mtron/+[0,]                    | true",
+            // "{1,2,3,'abc'}        | /mtron/+[1,]                    | true",
+            // "{1,2,3,'abc'}        | /mtron/+[+]                     | true",
             "{1,2,3,'abc'}        | /mtron/+[2]                     | false",
             "{1,2,3,'abc'}        | /mtron/+[17,]                   | false",
             "{1,2,3,'abc'}        | /mtron/+[5,]                    | false",
@@ -119,7 +139,7 @@ public class TypeTest extends MetatronTest {
             "1            | int::T[1]                     | true",
             "1            | int::T[2]                     | false",
             "{1,1}        | int[2]::T[{2,2}]              | false",
-           // "{1,1}        | int[2]::T[{1,1}]              | true",
+            // "{1,1}        | int[2]::T[{1,1}]              | true",
             "{1,1}        | int[2]::T[]                   | true",
             "{1,1}        | int::T[is(gt(0))]             | false",
             // "{1,1}        | int[2]::T[is(gt(0))]          | true", //TODO: MAY BE TOO HARD TO COMPUTE GIVEN THE RECURSSIVE NATURE OF RESOLUTION

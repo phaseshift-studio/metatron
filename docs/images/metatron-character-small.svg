@@ -1,43 +1,63 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!--
+  - Metatron: A Distributed Computing Language and Virtual Machine
+  - Copyright (C) 2025- PhaseShift Studio, LLC
+  -
+  - This program is free software: you can redistribute it and/or modify
+  - it under the terms of the GNU Affero General Public License as published by
+  - the Free Software Foundation, either version 3 of the License, or
+  - (at your option) any later version.
+  -
+  - This program is distributed in the hope that it will be useful,
+  - but WITHOUT ANY WARRANTY; without even the implied warranty of
+  - MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  - GNU Affero General Public License for more details.
+  -
+  - You should have received a copy of the GNU Affero General Public License
+  - along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  -
+  - @author Marko A. Rodriguez (http://markorodriguez.com)
+  -->
+
 <!-- Created with Inkscape (http://www.inkscape.org/) -->
 
 <svg
-   version="1.1"
-   id="svg55"
-   width="677.33331"
-   height="614.66669"
-   viewBox="0 0 677.33331 614.66669"
-   sodipodi:docname="metatron-character-small.png"
-   inkscape:export-filename="meta.svg"
-   inkscape:export-xdpi="96"
-   inkscape:export-ydpi="96"
-   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
-   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
-   xmlns:xlink="http://www.w3.org/1999/xlink"
-   xmlns="http://www.w3.org/2000/svg"
-   xmlns:svg="http://www.w3.org/2000/svg">
-  <defs
-     id="defs59" />
-  <sodipodi:namedview
-     id="namedview57"
-     pagecolor="#ffffff"
-     bordercolor="#000000"
-     borderopacity="0.25"
-     inkscape:showpageshadow="2"
-     inkscape:pageopacity="0.0"
-     inkscape:pagecheckerboard="0"
-     inkscape:deskcolor="#d1d1d1"
-     showgrid="false" />
-  <g
-     inkscape:groupmode="layer"
-     inkscape:label="Image"
-     id="g61">
-    <image
-       width="677.33331"
-       height="614.66669"
-       preserveAspectRatio="none"
-       style="image-rendering:optimizeQuality"
-       xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAfwAAAHNCAYAAAD7dMkbAAAAAXNSR0IArs4c6QAAAIRlWElmTU0A
+        version="1.1"
+        id="svg55"
+        width="677.33331"
+        height="614.66669"
+        viewBox="0 0 677.33331 614.66669"
+        sodipodi:docname="metatron-character-small.png"
+        inkscape:export-filename="meta.svg"
+        inkscape:export-xdpi="96"
+        inkscape:export-ydpi="96"
+        xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+        xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+        xmlns:xlink="http://www.w3.org/1999/xlink"
+        xmlns="http://www.w3.org/2000/svg"
+>
+    <defs
+            id="defs59"/>
+    <sodipodi:namedview
+            id="namedview57"
+            pagecolor="#ffffff"
+            bordercolor="#000000"
+            borderopacity="0.25"
+            inkscape:showpageshadow="2"
+            inkscape:pageopacity="0.0"
+            inkscape:pagecheckerboard="0"
+            inkscape:deskcolor="#d1d1d1"
+            showgrid="false"/>
+    <g
+            inkscape:groupmode="layer"
+            inkscape:label="Image"
+            id="g61">
+        <image
+                width="677.33331"
+                height="614.66669"
+                preserveAspectRatio="none"
+                style="image-rendering:optimizeQuality"
+                xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAfwAAAHNCAYAAAD7dMkbAAAAAXNSR0IArs4c6QAAAIRlWElmTU0A
 KgAAAAgABQESAAMAAAABAAEAAAEaAAUAAAABAAAASgEbAAUAAAABAAAAUgEoAAMAAAABAAIAAIdp
 AAQAAAABAAAAWgAAAAAAAABIAAAAAQAAAEgAAAABAAOgAQADAAAAAQABAACgAgAEAAAAAQAAAfyg
 AwAEAAAAAQAAAc0AAAAAznU26gAAAAlwSFlzAAALEwAACxMBAJqcGAAAAVlpVFh0WE1MOmNvbS5h
@@ -3031,8 +3051,8 @@ AZuvD1Ng50IjpNN+QL0HNXTrOcDJgH3t2rWS3FXfmIZz1Bl3D1HPpHCNv3CC3JsJo/MKRonfJuLj
 +1yL2crTvbBsOA8UCBQIFAgUCBQYlQICGgGINAAcU0jV0iDKhc8b810MAUNtWdvqI+5L7V6Mtmlm
 /CQ9D9FHNgrMSvQxd8qdO3f+OXH9l2umel46hlQcFPg/jOZUmxF7orYAAAAASUVORK5CYII=
 "
-       id="image63"
-       x="0.54299176"
-       y="2.0336342" />
-  </g>
+                id="image63"
+                x="0.54299176"
+                y="2.0336342"/>
+    </g>
 </svg>

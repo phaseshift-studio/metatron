@@ -1,24 +1,25 @@
 /*
- *   Metatron: A Distributed Virtual Machine
- *   Copyright (c) 2024 PhaseShift Studio, LLC
+ * Metatron: A Distributed Computing Language and Virtual Machine
+ * Copyright (C) 2025- PhaseShift Studio, LLC
  *
- *   This program is free software: you can redistribute it and/or modify
- *   it under the terms of the GNU Affero General Public License as published by
- *   the Free Software Foundation, either version 3 of the License, or
- *   (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- *   This program is distributed in the hope that it will be useful,
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *   GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
  *
- *   You should have received a copy of the GNU Affero General Public License
- *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 
 package studio.phaseshift.metatron.lang.parse;
 
-import  static studio.phaseshift.metatron.util.Tuple.Triplet;
 import org.petitparser.context.Result;
 import org.petitparser.parser.Parser;
 import org.petitparser.parser.combinators.*;
@@ -46,6 +47,7 @@ import static org.petitparser.parser.primitive.CharacterParser.word;
 import static org.petitparser.parser.primitive.StringParser.of;
 import static studio.phaseshift.metatron.lang.obj.mtron.MObjs.objs;
 import static studio.phaseshift.metatron.lang.obj.mtron.mtronInstSet.*;
+import static studio.phaseshift.metatron.util.Tuple.Triplet;
 
 public class ObjParser {
 
@@ -192,8 +194,8 @@ public class ObjParser {
 
     public static Parser m_furi_coefficient() {
         return seq(of('['), choice(
-                        seq(opt(seq(opt(of('-'),""),digit().plus()), ""), of(','), opt(seq(opt(of('-'),""),digit().plus()), "")).flatten(),
-                        seq(opt(of('-'),""),digit().plus()).flatten().map(t -> t + "," + t),
+                        seq(opt(seq(opt(of('-'), ""), digit().plus()), ""), of(','), opt(seq(opt(of('-'), ""), digit().plus()), "")).flatten(),
+                        seq(opt(of('-'), ""), digit().plus()).flatten().map(t -> t + "," + t),
                         of('*').map(t -> "0,"),
                         of('+').map(t -> "1,"),
                         of('?').map(t -> "0,1")),

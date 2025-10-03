@@ -1,3 +1,23 @@
+/*
+ * Metatron: A Distributed Computing Language and Virtual Machine
+ * Copyright (C) 2025- PhaseShift Studio, LLC
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ * @author Marko A. Rodriguez (http://markorodriguez.com)
+ */
+
 package studio.phaseshift.metatron.lang.obj;
 
 import org.junit.jupiter.api.Test;
@@ -64,8 +84,8 @@ public class RecTest extends MetatronTest {
             "[a=>b,c=>[d=>2]]                      | [a=>b,c=>[d=>is(gt(0))]]          | true",
             "[a=>b,c=>[d=>2]]                      | [a=>b,c=>[d=>is(gt(3))]]          | false",
             "[a=>b,c=>[d=>2]]                      | [a=>b,c=>[d=>is(in(int::T[is(gt(0))]))]]   | true",
-         // TODO:   "[a=>b,c=>[d=>2]]                      | [a=>b,c=>[d=>is(in(int::T[is(gt(10))]))]]   | false",
-         //   "[a=>b,c=>[d=>2]]                      | [a=>b,c=>[d=>int::T[is(gt(10))]]]  | false",
+            // TODO:   "[a=>b,c=>[d=>2]]                      | [a=>b,c=>[d=>is(in(int::T[is(gt(10))]))]]   | false",
+            //   "[a=>b,c=>[d=>2]]                      | [a=>b,c=>[d=>int::T[is(gt(10))]]]  | false",
             "[a=>b,c=>[d=>2]]                      | [a=>b,c=>[d=>is(in(int::T[]))]]   | true",
             "[a=>b,c=>[d=>2]]                      | [a=>b,c=>[d=>is(in(str::T[]))]]   | false",
     }, delimiter = '|')

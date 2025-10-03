@@ -1,24 +1,25 @@
 /*
- *   Metatron: A Distributed Virtual Machine
- *   Copyright (c) 2024 PhaseShift Studio, LLC
+ * Metatron: A Distributed Computing Language and Virtual Machine
+ * Copyright (C) 2025- PhaseShift Studio, LLC
  *
- *   This program is free software: you can redistribute it and/or modify
- *   it under the terms of the GNU Affero General Public License as published by
- *   the Free Software Foundation, either version 3 of the License, or
- *   (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- *   This program is distributed in the hope that it will be useful,
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *   GNU Affero General Public License for more details.
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
  *
- *   You should have received a copy of the GNU Affero General Public License
- *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 
 package studio.phaseshift.metatron.lang.obj.mtron;
 
-import static studio.phaseshift.metatron.util.Tuple.Triplet;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.Inst;
 import studio.phaseshift.metatron.lang.obj.NoObj;
@@ -27,6 +28,8 @@ import studio.phaseshift.metatron.lang.obj.Poly;
 
 import java.util.Objects;
 import java.util.function.BiFunction;
+
+import static studio.phaseshift.metatron.util.Tuple.Triplet;
 
 public class MInst extends MObj implements Inst {
     public MInst(final Triplet<Poly, Inst.f, Obj> value, final fURI tid, final fURI vid) {
@@ -75,6 +78,6 @@ public class MInst extends MObj implements Inst {
         return this.getClass().isAssignableFrom(other.getClass()) &&
                 Objects.equals(this.tid, ((Obj) other).tid()) &&
                 Objects.equals(this.vid, ((Obj) other).vid());
-                /*Objects.equals(this.value,((Obj) other).value())*/
+        /*Objects.equals(this.value,((Obj) other).value())*/
     }
 }
