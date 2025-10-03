@@ -93,14 +93,15 @@ public final class ObjUtil {
     }
 
     public static int objHashCode(final Obj obj) {
-        return Objects.hash(obj.value(), obj.tid());
+        return obj.isNoObj() ? NoObj.single().hashCode() : Objects.hash(obj.value(), obj.tid());
     }
 
     public static boolean objEquals(final Obj obj, final Object other) {
         return other instanceof Obj &&
-                Objects.equals(obj.tid(), ((Obj) other).tid()) &&
-                Objects.equals(obj.vid(), ((Obj) other).vid()) &&
-                Objects.equals(obj.value(), ((Obj) other).value());
+                ((obj.isNoObj() && ((Obj) other).isNoObj()) ||
+                        (Objects.equals(obj.tid(), ((Obj) other).tid()) &&
+                                Objects.equals(obj.vid(), ((Obj) other).vid()) &&
+                                Objects.equals(obj.value(), ((Obj) other).value())));
     }
 
     public static String objToString(final Obj obj) {

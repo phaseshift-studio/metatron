@@ -3,6 +3,12 @@ package studio.phaseshift.metatron.lang.obj;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.MetatronTest;
+import studio.phaseshift.metatron.lang.fURI;
+import studio.phaseshift.metatron.lang.parse.ObjParser;
+import studio.phaseshift.metatron.util.Tuple;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static studio.phaseshift.metatron.lang.fURI.f;
 
 public class IntTest extends MetatronTest {
     @Override
@@ -56,5 +62,34 @@ public class IntTest extends MetatronTest {
     }, delimiter = '|')
     public void testCode(final String code, final String expected) {
         super.testCode(code, expected);
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "int[10]::1         |int[5]       |int[5]::1          |int[5]::1",
+            "int[10]::1         |int[3]       |int[3]::1          |int[7]::1",
+            "int[4,10]::1       |int[3]       |int[3]::1          |int[1,7]::1",
+            "int[10]::1         |int[10]      |int[10]::1         |int[0]::1",
+            "int[10]::1         |int[10]      |int[10]::1         |noobj",
+            "int[10]::1         |int[11]      |int[0]::1          |int[10]::1",
+            "int[0]::1          |int[0]       |int[0]::1          |int[0]::1",
+            "int[10]::1         |int[0]       |int[0]::1          |int[10]::1",
+            "int[10]::1         |int[-5]      |int[-5]::1         |int[15]::1",
+            "int[10,]::1        |int[10,]     |int[10,]::1        |int[0]::1",
+            "int[10,]::1        |int[1,]      |int[1,]::1         |noobj",
+            "noobj,             |int[10]      |noobj              |noobj",
+            "int[,10]::1        |int[,10]     |int[,10]::1        |noobj",
+            "int[,10]::1        |int[1]       |int::1             |int[,9]::1",
+            "int[1,10]::1       |int[1]       |int::1             |int[0,9]::1",
+    }, delimiter = '|')
+    public void testRemove(final String current, final String remove, final String retrieved, final String remaining) {
+        final Obj currentF = ObjParser.m_obj().parse(current).get();
+        final fURI removeF = f(remove);
+        final Obj retrievedF = ObjParser.m_obj().parse(retrieved).get();
+        final Obj remainingF = ObjParser.m_obj().parse(remaining).get();
+        assertEquals(Tuple.Pair.with(retrievedF, remainingF), currentF.remove(removeF.coefficientValue()));
+
+
+
     }
 }

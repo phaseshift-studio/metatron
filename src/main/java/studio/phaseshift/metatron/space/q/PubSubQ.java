@@ -18,7 +18,7 @@
 
 package studio.phaseshift.metatron.space.q;
 
-import org.javatuples.Triplet;
+import static studio.phaseshift.metatron.util.Tuple.Triplet;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.Code;
 import studio.phaseshift.metatron.lang.obj.Obj;

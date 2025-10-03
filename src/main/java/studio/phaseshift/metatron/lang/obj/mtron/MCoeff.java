@@ -27,24 +27,38 @@ public interface MCoeff {
 
         @Override
         public Int plus(final Int rhs) {
-            return new Int(this.min() == null ?
-                    rhs.min() : rhs.min() == null ?
-                    this.min() : this.min() + rhs.min(),
-                    this.max() == null || rhs.max() == null ?
-                            null : this.max() + rhs.max());
+            final Long newMin = (null == this.min || null == rhs.min) ? null : (this.min + rhs.min);
+            final Long newMax = (null == this.max || null == rhs.max) ? null : (this.max + rhs.max);
+            return null == newMin && null == newMax ? new Int(0L, 0L) : new Int(newMin, newMax);
+        }
+
+        @Override
+        public Int neg() {
+            final Long min = this.max == null ? null : -this.max;
+            final Long max = this.min == null ? null : -this.min;
+            return new Int(min, max);
         }
 
         @Override
         public Int mult(final Int rhs) {
-            return new Int(this.min() == null ?
-                    this.min() : rhs.min() == null ?
-                    rhs.min() : this.min() * rhs.min(),
-                    this.max() == null || rhs.max() == null ?
-                            null : this.max() * rhs.max());
+            final Long newMin = (null == this.min || null == rhs.min) ? null : (this.min * rhs.min);
+            final Long newMax = (null == this.max || null == rhs.max) ? null : (this.max * rhs.max);
+            return new Int(newMin, newMax);
         }
 
+        @Override
         public boolean isZero() {
             return Objects.equals(this.min, 0L) && Objects.equals(this.max, 0L);
+        }
+
+        @Override
+        public boolean isNeg() {
+            return this.min != null && this.min < 0L && this.max != null && this.max < 0L;
+        }
+
+        @Override
+        public boolean isZeroOrNeg() {
+            return this.isZero() || this.isNeg();
         }
 
         @Override
@@ -83,12 +97,12 @@ public interface MCoeff {
         }
 
         // @Override
-        public static Int star() {
+        public static Int any() {
             return Int.of(0L, null);
         }
 
         //  @Override
-        public static Int plus() {
+        public static Int some() {
             return Int.of(1L, null);
         }
 
@@ -97,7 +111,7 @@ public interface MCoeff {
         }
 
         // @Override
-        public static Int question() {
+        public static Int maybe() {
             return Int.of(0L, 1L);
         }
 
@@ -108,12 +122,8 @@ public interface MCoeff {
 
         @Override
         public String toString() {
-            if (this.isOne())
-                return "1";
-            else if (this.isMaybe())
+            if (this.isMaybe())
                 return "?";
-            else if (this.isZero())
-                return "0";
             else if (this.isSome())
                 return "+";
             else if (this.isAny())
@@ -141,25 +151,30 @@ public interface MCoeff {
         public static Int of(final String parse) {
             if (parse.isEmpty())
                 return Int.one();
-            else if (parse.equals("0"))
-                return Int.zero();
             else if (parse.equals("*"))
-                return Int.star();
+                return Int.any();
             else if (parse.equals("?"))
-                return Int.question();
+                return Int.maybe();
             else if (parse.equals("+"))
-                return Int.plus();
-            else if (parse.equals("1"))
-                return Int.one();
+                return Int.some();
             else if (!parse.contains(","))
                 return Int.of(Long.valueOf(parse), Long.valueOf(parse));
             else {
                 final String[] split = parse.split(",");
-                return split.length == 1 ?
-                        (parse.charAt(0) == ',' ? Int.of(null, Long.valueOf(split[0])) : Int.of(Long.valueOf(split[0]), null)) :
-                        Int.of(Long.valueOf(split[0]), Long.valueOf(split[1]));
+                if (parse.charAt(0) == ',') return Int.of(null, Long.valueOf(split[1]));
+                if (split.length == 1) return Int.of(Long.valueOf(split[0]), null);
+                return Int.of(Long.valueOf(split[0]), Long.valueOf(split[1]));
             }
 
+        }
+
+        @Override
+        public int compareTo(final MCoeff.Int rhs) {
+            Long minA = this.min() == null ? 0 : this.min();
+            Long maxA = this.max() == null ? Long.MAX_VALUE : this.max();
+            Long minB = rhs.min() == null ? 0 : rhs.min();
+            Long maxB = rhs.max() == null ? Long.MAX_VALUE : rhs.max();
+            return minA.compareTo(minB) + maxA.compareTo(maxB);
         }
     }
 }

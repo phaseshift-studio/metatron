@@ -1,7 +1,7 @@
 package studio.phaseshift.metatron.lang.obj.mtron;
 
-import org.javatuples.Pair;
-import org.javatuples.Triplet;
+import static studio.phaseshift.metatron.util.Tuple.Pair;
+import  static studio.phaseshift.metatron.util.Tuple.Triplet;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.*;
 import studio.phaseshift.metatron.util.MTronException;

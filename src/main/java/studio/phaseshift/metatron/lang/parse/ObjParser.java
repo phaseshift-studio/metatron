@@ -18,7 +18,7 @@
 
 package studio.phaseshift.metatron.lang.parse;
 
-import org.javatuples.Triplet;
+import  static studio.phaseshift.metatron.util.Tuple.Triplet;
 import org.petitparser.context.Result;
 import org.petitparser.parser.Parser;
 import org.petitparser.parser.combinators.*;
@@ -124,7 +124,7 @@ public class ObjParser {
                 opt(seq(of('{').trim(), m_code(), of('}').trim()).pick(1), null)) //  inst_code
                 // inst_seed []
                 .map(t -> {
-                    return (Inst) new MInst(new Triplet<>(
+                    return (Inst) new MInst(Triplet.with(
                             pick(t, 1).equals("") ? MLst.of() : pick(t, 1) instanceof List ?
                                     MLst.of(ObjParser.<List<Obj>>pick(t, 1)) :
                                     MRec.of(ObjParser.<Map<Obj, Obj>>pick(t, 1)),
@@ -192,8 +192,8 @@ public class ObjParser {
 
     public static Parser m_furi_coefficient() {
         return seq(of('['), choice(
-                        seq(opt(digit().plus(), ""), of(','), opt(digit().plus(), "")).flatten(),
-                        digit().plus().flatten().map(t -> t + "," + t),
+                        seq(opt(seq(opt(of('-'),""),digit().plus()), ""), of(','), opt(seq(opt(of('-'),""),digit().plus()), "")).flatten(),
+                        seq(opt(of('-'),""),digit().plus()).flatten().map(t -> t + "," + t),
                         of('*').map(t -> "0,"),
                         of('+').map(t -> "1,"),
                         of('?').map(t -> "0,1")),

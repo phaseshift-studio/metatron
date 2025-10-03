@@ -18,7 +18,7 @@
 
 package studio.phaseshift.metatron.lang.obj;
 
-import org.javatuples.Triplet;
+import  static studio.phaseshift.metatron.util.Tuple.Triplet;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.mtron.MType;
 import studio.phaseshift.metatron.lang.obj.mtron.mtronInstSet;
@@ -165,7 +165,7 @@ public interface Inst extends Call {
                         .findFirst()
                         .orElseThrow(() -> this.logger().except("unable to resolve %s => %s in instruction set %s", lhs, this));
                 LOG.trace("resolution ({{m}}%s {{g}}=>{{/g}} %s{{/m}}): %s => %s", currentResolution, resolved.resolution(), lhs, resolved);
-                return resolved.resolve(lhs);
+                return (this.tid().hasDom() || this.tid().hasRng()) ? resolved.tid(this.tid()).resolve(lhs) : resolved.resolve(lhs);
             } catch (Exception e) { // TODO: this is sloppy -- using exception handling for flow control
                 final Obj resolved = Router.global().read(this.tid());
                 if (resolved.isNoObj()) {

@@ -18,7 +18,7 @@
 
 package studio.phaseshift.metatron.lang.obj;
 
-import org.javatuples.Pair;
+import static studio.phaseshift.metatron.util.Tuple.Pair;
 import studio.phaseshift.metatron.lang.fURI;
 
 public interface Rel extends Poly {

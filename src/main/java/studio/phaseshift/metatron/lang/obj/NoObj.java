@@ -18,7 +18,7 @@
 
 package studio.phaseshift.metatron.lang.obj;
 
-import org.javatuples.Triplet;
+import static studio.phaseshift.metatron.util.Tuple.Triplet;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.mtron.MObjs;
 import studio.phaseshift.metatron.util.IteratorUtil;
@@ -87,7 +87,7 @@ public final class NoObj implements Obj, Inst {
 
     @Override
     public boolean equals(final Object other) {
-        return other instanceof NoObj;
+        return other instanceof Obj && ((Obj) other).isNoObj();
     }
 
     @Override
@@ -95,7 +95,7 @@ public final class NoObj implements Obj, Inst {
         return ObjUtil.objToString(this);
     }
 
-   // @Override
+    // @Override
    /* public Obj apply(final Obj lhs) {
         return lhs;
     }*/

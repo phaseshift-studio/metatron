@@ -19,7 +19,7 @@
 package studio.phaseshift.metatron.lang.obj;
 
 
-import org.javatuples.Pair;
+import static studio.phaseshift.metatron.util.Tuple.Pair;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.mtron.MObjs;
 import studio.phaseshift.metatron.lang.obj.mtron.MRel;

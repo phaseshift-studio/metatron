@@ -1,6 +1,6 @@
 package studio.phaseshift.metatron.lang.monoid;
 
-import org.javatuples.Triplet;
+import static studio.phaseshift.metatron.util.Tuple.Triplet;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.Inst;
 import studio.phaseshift.metatron.lang.obj.Obj;

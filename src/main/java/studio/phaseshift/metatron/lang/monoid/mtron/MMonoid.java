@@ -18,7 +18,7 @@
 
 package studio.phaseshift.metatron.lang.monoid.mtron;
 
-import org.javatuples.Quartet;
+import static studio.phaseshift.metatron.util.Tuple.Quartet;;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.monoid.Monad;
 import studio.phaseshift.metatron.lang.monoid.Monoid;

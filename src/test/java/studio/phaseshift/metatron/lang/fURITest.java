@@ -177,6 +177,33 @@ public class fURITest {
 
     @ParameterizedTest
     @CsvSource(value = {
+            "a                  | a[-1]",
+            "a[2,3]             | a[-3,-2]",
+            "a[0]               | a[0]",
+            "a[,10]             | a[-10,]",
+            "a[2,]              | a[,-2]",
+            "a[*]               | a[,0]",
+            "a[?]               | a[-1,0]",
+            "a[+]               | a[,-1]",
+            "a[10]              | a[-10]",
+            "a[10,]             | a[,-10]"
+    }, delimiter = '|')
+    public void testNeg(final String f1, final String expected) {
+        final fURI furi1 = fURI.of(f1);
+        final fURI furi2 = ObjParser.m_furi().parse(f1).get();
+        //assertEquals(furi1a, furi2a); // TODO: important ssend issue
+        assertEquals(furi1, furi2);
+        if (expected.equals("ERROR")) {
+            // assertThrows(MTronException.class, () -> furi1.);
+            // assertThrows(MTronException.class, () -> furi2a.plus(furi2b));
+        } else {
+            assertEquals(fURI.of(expected), furi1.neg());
+            assertEquals(fURI.of(expected), furi2.neg());
+        }
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
             "/a/b/c                  |     1|            /a",
             "/a/b/c/                 |     1|            /a/",
             "a/b/c                   |     2|            a/b",

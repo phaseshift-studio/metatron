@@ -18,8 +18,8 @@
 
 package studio.phaseshift.metatron.lang.obj;
 
-import org.javatuples.Pair;
 import studio.phaseshift.metatron.lang.fURI;
+import studio.phaseshift.metatron.lang.obj.mtron.MCoeff;
 import studio.phaseshift.metatron.lang.obj.mtron.MObjs;
 import studio.phaseshift.metatron.lang.obj.mtron.MType;
 import studio.phaseshift.metatron.ui.Graphitty;
@@ -34,6 +34,7 @@ import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.lang.obj.mtron.MType.T;
 import static studio.phaseshift.metatron.lang.obj.mtron.mtronInstSet.*;
+import static studio.phaseshift.metatron.util.Tuple.Pair;
 
 public interface Obj extends Function<Obj, Obj>, Iterable<Obj> {
 
@@ -46,6 +47,37 @@ public interface Obj extends Function<Obj, Obj>, Iterable<Obj> {
     fURI tid();
 
     fURI vid();
+
+    default MCoeff.Int c() {
+        return this.tid().coefficientValue();
+    }
+
+    default Obj c(final MCoeff.Int coeff) {
+        return this.tid(this.tid().coefficient(coeff.toString()));
+    }
+
+    default Obj c(final Long exact) {
+        return this.tid(this.tid().coefficient("" + exact));
+    }
+
+    default Obj c(final Long min, final Long max) {
+        if (Objects.equals(min, max))
+            return this.c(min);
+        String coeff = min == null ? "" : min.toString();
+        coeff = coeff + "," + (max == null ? "" : max.toString());
+        return this.tid(this.tid().coefficient(coeff));
+    }
+
+    default Pair<Obj, Obj> remove(final MCoeff.Int coeff) {
+       // System.out.println(coeff + "   <=   " + this.tid().coefficientValue() + "  ==   " + coeff.lte(this.tid().coefficientValue()));
+        if (coeff.lte(this.tid().coefficientValue())) {
+            final Obj remaining = this.tid(this.tid().coefficient(this.tid().coefficientValue().minus(coeff).toString()));
+            final Obj result = this.tid(this.tid().coefficient(coeff.toString()));
+            return Pair.with(result, remaining);
+        } else {
+            return Pair.with(NoObj.single(), this);
+        }
+    }
 
     default Obj resolve(final Obj lhs) {
         return this;

@@ -512,6 +512,10 @@ public class fURI implements Cloneable {
         return this.coefficientless().extend(furi).coefficient(c3.toString()).queryMap(query);
     }
 
+    public fURI neg() {
+        return this.coefficient(this.coefficientValue().neg().toString());
+    }
+
     public Query query() {
         return this.query;
     }

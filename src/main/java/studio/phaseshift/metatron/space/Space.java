@@ -18,7 +18,7 @@
 
 package studio.phaseshift.metatron.space;
 
-import org.javatuples.Pair;
+import static studio.phaseshift.metatron.util.Tuple.Pair;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.NoObj;
 import studio.phaseshift.metatron.lang.obj.Obj;

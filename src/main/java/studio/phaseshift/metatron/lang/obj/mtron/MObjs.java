@@ -61,6 +61,30 @@ public class MObjs implements Objs {
         return null;
     }
 
+
+    public <O extends Obj> O remove(final fURI selector) {
+        while (this.map.keySet().iterator().hasNext()) {
+            final O key = (O) this.map.keySet().iterator().next();
+            final MCoeff.Int value = this.map.get(key);
+            if (null == value) {
+                this.map.remove(key);
+                return key;
+            } else if (value.within(selector.coefficientValue())) {
+                final MCoeff.Int newValue = value.minus(selector.coefficientValue());
+                if (newValue.isZeroOrNeg())
+                    this.map.remove(key);
+                else
+                    this.map.put(key, newValue);
+                return (O) key.tid(key.tid().coefficient(selector.coefficient()));
+            } else {
+                throw MTronException.of("can't remove given selector: %s", selector);
+            }
+
+            //else if (!value.isZero()) return (O) key.tid(key.tid().coefficient(value.toString()));
+        }
+        return null;
+    }
+
     public static Objs of(final Iterable<Obj> objs) {
         return objs(objs);
     }
