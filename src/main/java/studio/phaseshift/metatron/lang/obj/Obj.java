@@ -158,7 +158,7 @@ public interface Obj extends Function<Obj, Obj>, Iterable<Obj> {
     }
 
     default Type dom() {
-        return T(fURI.ALL_WILD.maybe());
+        return T(fURI.ALL.maybe());
     }
 
     default Type rng() {

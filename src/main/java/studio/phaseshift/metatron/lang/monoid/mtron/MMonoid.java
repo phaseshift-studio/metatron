@@ -129,7 +129,7 @@ public class MMonoid extends MObj implements Monoid {
                         LOG.trace("{{r}}====>{{/r}} killing monad %s", n);
                     }
                 } catch (final Exception e) {
-                    throw MTronException.of("unable to evaluate inst of %s due to %s", m, e.getMessage());
+                    throw MTronException.of(e, "unable to evaluate inst of %s", m);
                 }
             } else if (!this.barriers().isEmpty()) {
                 final Monad barrier = this.barriers().<LinkedList<Monad>>valueAs().poll();

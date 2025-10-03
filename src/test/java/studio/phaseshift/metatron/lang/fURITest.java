@@ -178,6 +178,7 @@ public class fURITest {
     @ParameterizedTest
     @CsvSource(value = {
             "/a/b/c                  |     1|            /a",
+            "/a/b/c/                 |     1|            /a/",
             "a/b/c                   |     2|            a/b",
             "/a/b/c                  |     3|            /a/b/c",
             "http://x.com/a/b/c      |     3|            http://x.com/a/b/c",
@@ -195,6 +196,30 @@ public class fURITest {
         //assertEquals(computedHead,furi.retract(furi.segments().size()-steps));
         assertEquals(furi.segments().size(), computedHead.segments().size() + (furi.segments().size() - steps));
         assertEquals(steps, computedHead.segments().size());
+    }
+
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "/a/b/c                  |     1|            /c",
+            "/a/b/c/                 |     1|            /c/",
+            "a/b/c                   |     2|            b/c",
+            "/a/b/c                  |     3|            /a/b/c",
+            "http://x.com/a/b/c      |     3|            http://x.com/a/b/c",
+            "http://x.com/a/b/c      |     2|            http://x.com/b/c",
+            "http://x.com/a/b/c      |     1|            http://x.com/c",
+            "http://x.com/a/b/c      |     0|            http://x.com/",
+            // "http://a:b@x.com/a/b/c  |     2|            http://a:b@x.com/a/b", username password not implemented yet
+    },
+            delimiter = '|')
+    public void testTail(final String f, final int steps, final String tail) {
+        final fURI furi = f(f);
+        final fURI computeTail = furi.tail(steps);
+        final fURI expectedTail = f(tail);
+        assertEquals(expectedTail, computeTail);
+        //assertEquals(computedHead,furi.retract(furi.segments().size()-steps));
+        assertEquals(furi.segments().size(), computeTail.segments().size() + (furi.segments().size() - steps));
+        assertEquals(steps, computeTail.segments().size());
     }
 
     @ParameterizedTest
@@ -478,6 +503,39 @@ public class fURITest {
             assertFalse(furi1a.matches(furi2b));
             assertFalse(furi2a.matches(furi1b));
         }
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "a                 |+                 |[a]",
+            "a/b               |+/b               |[a]",
+            "/a/b              |/+/b              |[a]",
+            "a/b/c             |+/b/+             |[a, c]",
+            "a/b/c             |a/#               |[b, c]",
+            "a/b/c             |#                 |[a, b, c]",
+            "a/b/c             |+/#               |[a, b, c]",
+            "a/b/c             |+/+/+             |[a, b, c]",
+            "a/b/c             |a/b/c             |[]",
+            "a/b/c             |+                 |[]",
+            "a/b/c             |+/b/d             |[]",
+            "+/b/c             |+/b/c             |[+]",
+            "+/#               |+/b/c             |[]",
+            "+/#               |+/+/+             |[+, #]",
+            "+/b/c             |+/b/+             |[+, c]",
+    }, delimiter = '|')
+    void testSelect(final String a, final String b, final String matches) {
+        final fURI furi1a = fURI.of(nullToEmpty(a));
+        final fURI furi1b = fURI.of(nullToEmpty(b));
+        final boolean doObjParser = null != a && null != b && !a.equals("[0]");
+        final fURI furi2a = doObjParser ? ObjParser.m_furi().parse(nullToEmpty(a)).get() : fURI.of(nullToEmpty(a));
+        final fURI furi2b = doObjParser ? ObjParser.m_furi().parse(nullToEmpty(b)).get() : fURI.of(nullToEmpty(b));
+        LOG.trace("testing: {{b}}%s{{/b}} selects %s from {{b}}%s{{/b}}", furi2a, matches, furi1a);
+        assertEquals(furi1a, furi2a);
+        assertEquals(matches, furi1a.select(furi1b).toString());
+        assertEquals(matches, furi2a.select(furi2b).toString());
+        assertEquals(matches, furi1a.select(furi2b).toString());
+        assertEquals(matches, furi2a.select(furi1b).toString());
+
     }
 
     private String nullToEmpty(final String s) {

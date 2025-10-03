@@ -167,14 +167,16 @@ public interface Inst extends Call {
                 LOG.trace("resolution ({{m}}%s {{g}}=>{{/g}} %s{{/m}}): %s => %s", currentResolution, resolved.resolution(), lhs, resolved);
                 return resolved.resolve(lhs);
             } catch (Exception e) { // TODO: this is sloppy -- using exception handling for flow control
-                //LOG.error(e);
-                final Inst resolved = ((Inst) Router.global().read(this.tid())).args(this.args());
+                final Obj resolved = Router.global().read(this.tid());
                 if (resolved.isNoObj()) {
                     LOG.error("unresolved %s across all known spaces", this);
                     return NoObj.single();
+                } else if (!resolved.isInst()) {
+                    LOG.error("unable to resolve %s to a single inst", resolved);
+                    return NoObj.single();//.resolve(lhs);
                 } else {
                     LOG.warn("resolved %s from global router", resolved);
-                    return resolved;//.resolve(lhs);
+                    return resolved.<Inst>as().args(this.args()); //.resolve(lhs);
                 }
             }
         } else { // Resolve.B

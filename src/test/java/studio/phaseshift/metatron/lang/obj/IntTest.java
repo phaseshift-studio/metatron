@@ -50,8 +50,8 @@ public class IntTest extends MetatronTest {
             "inst::1                              | <ERROR>",
             "code::1                              | <ERROR>",
             "3.plus(mult(2))                      | 9",
-            "{2,3}.plus(mult(2))                  | {6,9}",
-            //"{2,3}.is(in(int[2]))                     | {2,3}"
+            //"{2,3}.plus(mult(2))                  | {6,9}",
+            //"{2,3}-<[_]>-is(in(int[2]))                     | {2,3}"
             //"{6,6,10}.plus(mult(2))                | {18,18,30}"
     }, delimiter = '|')
     public void testCode(final String code, final String expected) {

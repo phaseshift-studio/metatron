@@ -2,10 +2,7 @@ package studio.phaseshift.metatron.lang.obj.mgrph;
 
 import org.apache.commons.configuration2.Configuration;
 import org.apache.tinkerpop.gremlin.process.computer.GraphComputer;
-import org.apache.tinkerpop.gremlin.structure.Edge;
-import org.apache.tinkerpop.gremlin.structure.Graph;
-import org.apache.tinkerpop.gremlin.structure.Transaction;
-import org.apache.tinkerpop.gremlin.structure.Vertex;
+import org.apache.tinkerpop.gremlin.structure.*;
 import org.apache.tinkerpop.gremlin.structure.util.wrapped.WrappedGraph;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.Obj;
@@ -17,9 +14,12 @@ import studio.phaseshift.metatron.util.ObjUtil;
 
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import static studio.phaseshift.metatron.lang.fURI.f;
 
 public class MGraph extends MSpace implements Graph, WrappedGraph<Graph> {
 
@@ -101,20 +101,25 @@ public class MGraph extends MSpace implements Graph, WrappedGraph<Graph> {
             //    return IteratorUtil.stream(this.mvertices()).collect(Collectors.toMap(MVertex::vid, v -> v));
             //else {
             final Map<fURI, Obj> map = new HashMap<>();
-            if (vid.bimatches(this.pattern.retractPattern().extend("vertex/#"))) {
-                if (key.hasPattern())
+            if (vid.bimatches(f("/+/vertex/+"))) {
+                final String selector = vid.tail(1).asNode().relative().toString();
+                if (selector.equals(fURI.ONE_WILD_STRING) || selector.equals(fURI.ALL_WILD_STRING)) {
                     IteratorUtil.stream(this.mvertices()).collect(Collectors.toMap(MVertex::vid, v -> v, (a, b) -> b, () -> map));
-                else
+                } else {
                     IteratorUtil.findFirst(this.mvertices(vid)).ifPresent(v -> map.put(v.vid(), v));
-
-                // }
+                }
             }
-            if (vid.bimatches(this.pattern.retractPattern().extend("edge/#"))) {
-                if (key.hasPattern())
-                    IteratorUtil.stream(this.medges()).collect(Collectors.toMap(MEdge::vid, v -> v, (a, b) -> b, () -> map));
-                else
-                    IteratorUtil.findFirst(this.medges(vid)).ifPresent(v -> map.put(v.vid(), v));
-                // }
+            if (vid.bimatches(f("/+/vertex/+/outE/+/+"))) {
+                final List<String> selector = vid.select(f("/+/vertex/+/outE/+/+"));
+                if (!f(selector.get(3)).hasPattern()) {
+                    IteratorUtil.stream(this.edges(Long.parseLong(selector.get(3)))).map(e -> (MEdge) e).collect(Collectors.toMap(MEdge::vid, v -> v, (a, b) -> b, () -> map));
+                } else if (selector.get(1).equals(fURI.ONE_WILD_STRING) || selector.get(1).equals(fURI.ALL_WILD_STRING)) {
+                    if (selector.get(3).equals(fURI.ONE_WILD_STRING) || selector.get(3).equals(fURI.ALL_WILD_STRING)) {
+                        IteratorUtil.stream(this.mvertices()).flatMap(v -> IteratorUtil.stream(v.edges(Direction.OUT))).map(e -> (MEdge) e).filter(e -> f(e.label()).matches(f(selector.get(2)))).collect(Collectors.toMap(MEdge::vid, v -> v, (a, b) -> b, () -> map));
+                    }
+                } else {
+                    IteratorUtil.stream(this.mvertices(vid.head(3))).flatMap(v -> IteratorUtil.stream(v.edges(Direction.OUT))).map(e -> (MEdge) e).filter(e -> f(e.label()).matches(f(selector.get(2)))).collect(Collectors.toMap(MEdge::vid, v -> v, (a, b) -> b, () -> map));
+                }
             }
             return map;
         });

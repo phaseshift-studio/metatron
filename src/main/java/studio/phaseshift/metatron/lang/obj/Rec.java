@@ -78,7 +78,7 @@ public interface Rec extends Poly {
                 steps++;
                 Graphitty.log(this).trace("searching for %s in %s", segment, this);
                 if (segmentF.hasPattern()) {
-                    if (segmentF.equals(fURI.ALL_WILD))
+                    if (segmentF.equals(fURI.ALL))
                         return (O) (k.isBranch() ? MRel.of(k.asNode().toUri(), MObjs.of(this.recValue().values())) : MObjs.of(this.recValue().values()));
                     else {
                         final int stepp = steps;

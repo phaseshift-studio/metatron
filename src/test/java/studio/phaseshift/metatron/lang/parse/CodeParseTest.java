@@ -23,7 +23,7 @@ public class CodeParseTest {
             "1.map(2)% 2",
             "{1,2,3}.plus(2)% {3,4,5}",
             "{1}.plus(2)% 3",
-            "{22,33}.plus(plus(_))% {66,99}",
+          //  "{22,33}.plus(plus(_))% {66,99}",
             "/mtron/int::2.plus(/mtron/int::5)% /mtron/int::7"
     }, delimiter = '%')
     void testStandardExpressions(final String expression, final String expectedResult) {

@@ -44,8 +44,8 @@ public class fURI implements Cloneable {
     public static final char ONE_WILD_CHAR = '+';
     public static final String ALL_WILD_STRING = String.valueOf(ALL_WILD_CHAR);
     public static final String ONE_WILD_STRING = String.valueOf(ONE_WILD_CHAR);
-    public static final fURI ALL_WILD = fURI.of(ALL_WILD_CHAR);
-    public static final fURI ONE_WILD = fURI.of(ONE_WILD_CHAR);
+    public static final fURI ALL = fURI.of(ALL_WILD_CHAR);
+    public static final fURI SINGLE = fURI.of(ONE_WILD_CHAR);
     public static final fURI NONE = fURI.of("");
     public static final fURI NULL = null;
     public static final fURI DOM = fURI.of("dom");
@@ -86,10 +86,10 @@ public class fURI implements Cloneable {
         }
         fURI base = fURI.of(common.stream().reduce(this.sstart ? SEGMENT_SPLIT : EMPTY, (a, b) -> a + b + SEGMENT_SPLIT));
         if (other.path.size() != this.path.size())
-            return base.extend(ALL_WILD);
+            return base.extend(ALL);
         final int extensionCount = maxLength - common.size();
         for (int i = 0; i < extensionCount; i++) {
-            base = base.extend(ONE_WILD);
+            base = base.extend(SINGLE);
         }
         return base;
     }
@@ -238,7 +238,7 @@ public class fURI implements Cloneable {
         fURI r = this;
         while (!r.segments().isEmpty()) {
             final String end = r.segments().get(r.segments().size() - 1);
-            if (end.length() == 1 && (end.equals(ALL_WILD.toString()) || end.equals(ONE_WILD.toString())))
+            if (end.length() == 1 && (end.equals(ALL.toString()) || end.equals(SINGLE.toString())))
                 r = r.retract();
             else
                 break;
@@ -351,6 +351,20 @@ public class fURI implements Cloneable {
         }
         return this.segments(head);
     }
+
+
+    public fURI tail(final int steps) {
+        final List<String> tail = new ArrayList<>();
+        for (int i = 0; i < steps; i++) {
+            tail.add(0, this.segments().get(this.segments().size() - (i + 1)));
+        }
+        return this.segments(tail);
+    }
+
+    public fURI segment(final int step) {
+        return fURI.of(this.path.get(step));
+    }
+
 
     public fURI pretract() {
         return this.pretract(1);
@@ -484,7 +498,7 @@ public class fURI implements Cloneable {
             query.putAll(furi.queryMap());
             return this.coefficient(c3.toString()).queryMap(query);
         } else {
-            throw MTronException.of("furis with different paths can not be added together");
+            throw MTronException.of("only furis with the same path can be added: %s !+ %s", this, furi);
         }
     }
 
@@ -515,7 +529,7 @@ public class fURI implements Cloneable {
     }
 
     public fURI dom() {
-        return this.queryValue(DOM, fURI.class, fURI.ALL_WILD);
+        return this.queryValue(DOM, fURI.class, fURI.ALL);
     }
 
     public fURI dom(final fURI domain) {
@@ -523,7 +537,7 @@ public class fURI implements Cloneable {
     }
 
     public fURI rng() {
-        return this.queryValue(RNG, fURI.class, fURI.ALL_WILD);
+        return this.queryValue(RNG, fURI.class, fURI.ALL);
     }
 
     public fURI rng(final fURI range) {
@@ -549,6 +563,30 @@ public class fURI implements Cloneable {
 
     public boolean bimatches(final fURI other) {
         return this.matches(other) || other.matches(this);
+    }
+
+    public List<String> select(final fURI pattern) {
+        final List<String> selection = new ArrayList<>();
+        boolean fullMatch = false;
+        for (int i = 0; i < this.path.size(); i++) {
+            final String seg = this.path.get(i);
+            if (fullMatch) {
+                selection.add(seg);
+            } else {
+                if (pattern.path.size() <= i)
+                    return List.of();
+                final String pat = pattern.path.get(i);
+                if (pat.equals("+")) {
+                    selection.add(seg);
+                } else if (pat.equals("#")) {
+                    selection.add(seg);
+                    fullMatch = true;
+                } else if (!seg.equals(pat)) {
+                    return List.of();
+                }
+            }
+        }
+        return selection;
     }
 
     public boolean matches(final fURI rhs) {

@@ -46,7 +46,7 @@ public class MemSpace extends MSpace implements Space {
     @Override
     public Obj read(final fURI vid) {
         return Space.Helpers.resolveRead(this, vid, (key) -> {
-            if (key.equals(fURI.ALL_WILD))
+            if (key.equals(fURI.ALL))
                 return this.pathStore;
             else {
                 if (key.hasPattern()) {

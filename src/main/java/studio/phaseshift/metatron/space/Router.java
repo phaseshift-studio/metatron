@@ -50,7 +50,7 @@ public interface Router extends Obj, Space, AutoCloseable {
 
     @Override
     default fURI pattern() {
-        return fURI.ALL_WILD;
+        return fURI.ALL;
     }
 
     default <O extends Obj> O read(final String vid, final Class<O> oClass) {

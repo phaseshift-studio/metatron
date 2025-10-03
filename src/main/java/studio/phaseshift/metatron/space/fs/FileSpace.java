@@ -34,7 +34,7 @@ public class FileSpace extends MSpace {
     @Override
     public Obj read(final fURI vid) {
         return Space.Helpers.resolveRead(this, vid, (key) -> {
-            if (key.equals(fURI.ALL_WILD))
+            if (key.equals(fURI.ALL))
                 throw MTronException.of("infinite nested walks on file system not allowed");
             else {
                 if (key.hasPattern()) {

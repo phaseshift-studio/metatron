@@ -112,7 +112,7 @@ public class MemRouter implements Router {
             return NullSpace.single();
     }
 
-    private static final Set<fURI> READ_AS_NOOBJ = Set.of(fURI.ALL_WILD.any(), fURI.ALL_WILD.maybe(), fURI.ALL_WILD);
+    private static final Set<fURI> READ_AS_NOOBJ = Set.of(fURI.ALL.any(), fURI.ALL.maybe(), fURI.ALL);
 
     @Override
     public Obj read(final fURI vid) {
