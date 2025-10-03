@@ -236,11 +236,11 @@ public class ObjStringSerializer implements ObjSerializer<String> {
             return sb;
         if (!this.b.hideTypes.contains(tid))
             sb.append(this.b.palette.typeC()).append(tid.small().basePath());
-        if (!tid.coefficientValue().isOne())
+        if (!tid.cV().isOne())
             sb.append(this.b.palette.form3C())
                     .append('[')
                     .append(this.b.palette.typeC())
-                    .append(tid.coefficient())
+                    .append(tid.c())
                     .append(this.b.palette.form3C())
                     .append(']');
         if (tid.hasQuery()) {

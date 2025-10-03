@@ -232,19 +232,19 @@ public interface Inst extends Call {
     }
 
     default boolean isGather() {
-        return this.dom().tid().coefficientValue().min() > 1 || this.dom().tid().coefficientValue().max() == null;
+        return this.dom().tid().cV().min() > 1 || this.dom().tid().cV().max() == null;
     }
 
     default boolean isScatter() {
-        return this.rng().tid().coefficientValue().isOne();
+        return this.rng().tid().cV().isOne();
     }
 
     default boolean isInitial() {
-        return this.dom().tid().coefficientValue().isZero();// || this.dom().tid().coefficientValue().isQuestion();
+        return this.dom().tid().cV().isZero();// || this.dom().tid().coefficientValue().isQuestion();
     }
 
     default boolean isTerminal() {
-        return this.rng().tid().coefficientValue().isZero();
+        return this.rng().tid().cV().isZero();
     }
 
     @Override

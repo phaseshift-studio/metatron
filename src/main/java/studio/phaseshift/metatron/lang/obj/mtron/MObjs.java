@@ -5,6 +5,7 @@ import studio.phaseshift.metatron.lang.obj.NoObj;
 import studio.phaseshift.metatron.lang.obj.Obj;
 import studio.phaseshift.metatron.lang.obj.Objs;
 import studio.phaseshift.metatron.lang.obj.Type;
+import studio.phaseshift.metatron.lang.obj.mtron.c.cInt;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.ObjUtil;
@@ -18,7 +19,7 @@ import java.util.stream.Stream;
 public class MObjs implements Objs {
 
     private fURI vid;
-    private final Map<Obj, MCoeff.Int> map = new LinkedHashMap<>();
+    private final Map<Obj, cInt> map = new LinkedHashMap<>();
 
 /*
  private static fURI computeTID(final Iterable<Obj> value) {
@@ -37,14 +38,14 @@ public class MObjs implements Objs {
     public MObjs(final Iterable<Obj> ints, final fURI vid) {
         this.vid = vid;
         ints.forEach(i -> {
-            this.map.compute(i.tid(i.tid().coefficientless()), (lng, it) -> null == it ? i.tid().coefficientValue() : it.plus(i.tid().coefficientValue()));
+            this.map.compute(i.tid(i.tid().cLess()), (lng, it) -> null == it ? i.tid().cV() : it.plus(i.tid().cV()));
         });
     }
 
     @Override
     public Objs append(final Obj obj) {
         obj.iterator().forEachRemaining(i -> {
-            this.map.compute(i.tid(i.tid().coefficientless()), (lng, it) -> null == it ? i.tid().coefficientValue() : it.plus(i.tid().coefficientValue()));
+            this.map.compute(i.tid(i.tid().cLess()), (lng, it) -> null == it ? i.tid().cV() : it.plus(i.tid().cV()));
         });
         return this.value(this.value());
     }
@@ -53,10 +54,10 @@ public class MObjs implements Objs {
     public <O extends Obj> O remove() {
         while (this.map.keySet().iterator().hasNext()) {
             final O key = (O) this.map.keySet().iterator().next();
-            final MCoeff.Int value = this.map.remove(key);
+            final cInt value = this.map.remove(key);
             if (null == value)
                 return key;
-            else if (!value.isZero()) return (O) key.tid(key.tid().coefficient(value.toString()));
+            else if (!value.isZero()) return (O) key.tid(key.tid().c(value.toString()));
         }
         return null;
     }
@@ -65,17 +66,17 @@ public class MObjs implements Objs {
     public <O extends Obj> O remove(final fURI selector) {
         while (this.map.keySet().iterator().hasNext()) {
             final O key = (O) this.map.keySet().iterator().next();
-            final MCoeff.Int value = this.map.get(key);
+            final cInt value = this.map.get(key);
             if (null == value) {
                 this.map.remove(key);
                 return key;
-            } else if (value.within(selector.coefficientValue())) {
-                final MCoeff.Int newValue = value.minus(selector.coefficientValue());
+            } else if (value.within(selector.cV())) {
+                final cInt newValue = value.minus(selector.cV());
                 if (newValue.isZeroOrNeg())
                     this.map.remove(key);
                 else
                     this.map.put(key, newValue);
-                return (O) key.tid(key.tid().coefficient(selector.coefficient()));
+                return (O) key.tid(key.tid().c(selector.c()));
             } else {
                 throw MTronException.of("can't remove given selector: %s", selector);
             }
@@ -115,12 +116,12 @@ public class MObjs implements Objs {
 
     @Override
     public Iterable<Obj> value() {
-        return this.map.entrySet().stream().filter(kv -> !kv.getValue().isZero()).map(kv -> kv.getValue().isOne() ? kv.getKey() : kv.getKey().tid(kv.getKey().tid().coefficient(kv.getValue().toString()))).toList();
+        return this.map.entrySet().stream().filter(kv -> !kv.getValue().isZero()).map(kv -> kv.getValue().isOne() ? kv.getKey() : kv.getKey().tid(kv.getKey().tid().c(kv.getValue().toString()))).toList();
     }
 
     @Override
     public fURI tid() {
-        return this.map.entrySet().stream().filter(kv -> !kv.getValue().isZero()).map(kv -> kv.getKey().tid().coefficient(kv.getValue().toString())).reduce(fURI::plus).orElse(fURI.NONE.zero());
+        return this.map.entrySet().stream().filter(kv -> !kv.getValue().isZero()).map(kv -> kv.getKey().tid().c(kv.getValue().toString())).reduce(fURI::plus).orElse(fURI.NONE.zero());
     }
 
     @Override

@@ -178,11 +178,11 @@ public class ObjParser {
         final Supplier<Parser> internal = () -> seq(word().or(seq(of("::").not(),
                         anyOf(furiCharacterSet))).plus().flatten(),
                 opt(coefficient ? m_furi_coefficient() : none(), null),
-                opt(query ? m_furi_query() : none(), null)).map(t -> new fURI(pick(t, 0)).big().coefficient(pick(t, 1)).query(pick(t, 2)));
+                opt(query ? m_furi_query() : none(), null)).map(t -> new fURI(pick(t, 0)).big().c(pick(t, 1)).query(pick(t, 2)));
         final Supplier<Parser> internal2 = () -> seq(word().or(seq(of("::").not(),
                         anyOf(FULL_FURI_CHARS))).plus().flatten(),
                 opt(coefficient ? m_furi_coefficient() : none(), null),
-                opt(query ? m_furi_query() : none(), null)).map(t -> new fURI(pick(t, 0)).big().coefficient(pick(t, 1)).query(pick(t, 2)));
+                opt(query ? m_furi_query() : none(), null)).map(t -> new fURI(pick(t, 0)).big().c(pick(t, 1)).query(pick(t, 2)));
         return choice(seq(of('<'), internal2.get(), of('>')).pick(1), internal.get());
     }
 

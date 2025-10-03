@@ -179,15 +179,15 @@ public class mtronInstSet extends MInstSet {
                 WITHIN_TID, instC(WITHIN_TID.dom(LST_TID).rng(LST_TID), lst(ID__), (lhs, inst) -> lst(lhs.lstValue().stream().map(o -> inst.arg(0).apply(o)).toList())),
                 WITHIN_TID, instC(WITHIN_TID.dom(REC_TID).rng(REC_TID), lst(ID__), (lhs, inst) -> rec(lhs.recValue().entrySet().stream().map(kv -> inst.arg(0).apply(MRel.of(kv.getKey(), kv.getValue())).<Rel>as()).collect(Collectors.toMap(Rel::first, Rel::second, (a, b) -> b, LinkedHashMap<Obj, Obj>::new)))),
                 BARRIER_TID, instC(BARRIER_TID.dom(fURI.ALL.any()).rng(fURI.ALL.any()), lst(ID__), (lhs, inst) -> inst.arg(0).apply(lhs)),
-                COUNT_TID, instC(COUNT_TID.dom(ANY_TID.any()).rng(INT_TID), NO_ARGS__, (lhs, inst) -> IteratorUtil.reduce(lhs.iterator(), jnt(0), (a, b) -> start(a).plus(jnt(b.tid().coefficientValue().max())))),
-                SUM_TID, instC(SUM_TID.dom(ANY_TID.any()).rng(INT_TID), NO_ARGS__, (lhs, inst) -> IteratorUtil.reduce(new StackIterator<>(lhs.stream().iterator()), jnt(0), (a, b) -> start(a).plus(map(b).mult(MInt.of(b.tid().coefficientValue().max()))))),
+                COUNT_TID, instC(COUNT_TID.dom(ANY_TID.any()).rng(INT_TID), NO_ARGS__, (lhs, inst) -> IteratorUtil.reduce(lhs.iterator(), jnt(0), (a, b) -> start(a).plus(jnt(b.tid().cV().max())))),
+                SUM_TID, instC(SUM_TID.dom(ANY_TID.any()).rng(INT_TID), NO_ARGS__, (lhs, inst) -> IteratorUtil.reduce(new StackIterator<>(lhs.stream().iterator()), jnt(0), (a, b) -> start(a).plus(map(b).mult(MInt.of(b.tid().cV().max()))))),
                 REIFY_TID, instC(REIFY_TID.dom(fURI.ALL.maybe()).rng(REC_TID), NO_ARGS__, (lhs, inst) ->
                         MRec.ofUriKeyed(
                                 "tid", MRec.ofUriKeyed(
                                         "path", MUri.of(lhs.tid().path()),
                                         "c", MRec.ofUriKeyed(
-                                                "min", MInt.of(lhs.tid().coefficientValue().min()),
-                                                "max", MInt.of(lhs.tid().coefficientValue().max())),
+                                                "min", MInt.of(lhs.tid().cV().min()),
+                                                "max", MInt.of(lhs.tid().cV().max())),
                                         "query", MStr.of(lhs.tid().query().toString())),
                                 "value", MObjFactory.of().create(lhs.value()))),
                 CROSS_TID, instC(CROSS_TID.dom(LST_TID).rng(LST_TID), rec(uri("other"), T(LST_TID), uri("func"), e1se(ID__)), (lhs, inst) -> {

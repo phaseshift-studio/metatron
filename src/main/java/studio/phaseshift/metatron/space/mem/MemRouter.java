@@ -63,7 +63,7 @@ public class MemRouter implements Router {
 
     @Override
     public fURI rewrite(final fURI furi, final boolean big) {
-        fURI temp = (big ? this.smallToBigRewrites.getOrDefault(furi.basePath(), furi) : this.bigToSmallRewrites.getOrDefault(furi.basePath(), furi)).coefficient(furi.coefficient()).queryMap(furi.queryMap());
+        fURI temp = (big ? this.smallToBigRewrites.getOrDefault(furi.basePath(), furi) : this.bigToSmallRewrites.getOrDefault(furi.basePath(), furi)).c(furi.c()).queryMap(furi.queryMap());
         temp = temp.hasDom() ? temp.dom(this.rewrite(temp.dom(), big)) : temp;
         temp = temp.hasRng() ? temp.rng(this.rewrite(temp.rng(), big)) : temp;
         return temp;

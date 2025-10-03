@@ -1,0 +1,181 @@
+package studio.phaseshift.metatron.lang.obj.mtron.c;
+
+import studio.phaseshift.metatron.lang.obj.C;
+
+import java.util.Objects;
+
+public class cInt implements C<Long, cInt> {
+    private final Long min;
+    private final Long max;
+
+    private cInt(final Long min, final Long max) {
+        this.min = min;
+        this.max = max;
+    }
+
+    @Override
+    public Long min() {
+        return this.min;
+    }
+
+    @Override
+    public Long max() {
+        return this.max;
+    }
+
+    @Override
+    public cInt plus(final cInt rhs) {
+        final Long newMin = (null == this.min || null == rhs.min) ? null : (this.min + rhs.min);
+        final Long newMax = (null == this.max || null == rhs.max) ? null : (this.max + rhs.max);
+        return null == newMin && null == newMax ? new cInt(0L, 0L) : new cInt(newMin, newMax);
+    }
+
+    @Override
+    public cInt neg() {
+        final Long min = this.max == null ? null : -this.max;
+        final Long max = this.min == null ? null : -this.min;
+        return new cInt(min, max);
+    }
+
+    @Override
+    public cInt mult(final cInt rhs) {
+        final Long newMin = (null == this.min || null == rhs.min) ? null : (this.min * rhs.min);
+        final Long newMax = (null == this.max || null == rhs.max) ? null : (this.max * rhs.max);
+        return new cInt(newMin, newMax);
+    }
+
+    @Override
+    public boolean isZero() {
+        return Objects.equals(this.min, 0L) && Objects.equals(this.max, 0L);
+    }
+
+    @Override
+    public boolean isNeg() {
+        return this.min != null && this.min < 0L && this.max != null && this.max < 0L;
+    }
+
+    @Override
+    public boolean isZeroOrNeg() {
+        return this.isZero() || this.isNeg();
+    }
+
+    @Override
+    public boolean isOne() {
+        return Objects.equals(this.min, 1L) && Objects.equals(this.max, 1L);
+    }
+
+    @Override
+    public boolean isAny() {
+        return Objects.equals(this.min, 0L) && null == this.max;
+    }
+
+    @Override
+    public boolean isSome() {
+        return Objects.equals(this.min, 1L) && null == this.max;
+    }
+
+    @Override
+    public boolean isMaybe() {
+        return Objects.equals(this.min, 0L) && Objects.equals(this.max, 1L);
+    }
+
+    @Override
+    public boolean isNoObjable() {
+        return this.min == null || this.min <= 0;
+    }
+
+
+    @Override
+    public boolean within(final cInt rhs) {
+        Long minA = this.min() == null ? 0 : this.min();
+        Long maxA = this.max() == null ? Long.MAX_VALUE : this.max();
+        Long minB = rhs.min() == null ? 0 : rhs.min();
+        Long maxB = rhs.max() == null ? Long.MAX_VALUE : rhs.max();
+        return minA.compareTo(minB) >= 0 && maxA.compareTo(maxB) <= 0;
+    }
+
+    // @Override
+    public cInt any() {
+        return cInt.of(0L, null);
+    }
+
+    //  @Override
+    public cInt some() {
+        return cInt.of(1L, null);
+    }
+
+    public cInt zero() {
+        return cInt.of(0L, 0L);
+    }
+
+    // @Override
+    public cInt maybe() {
+        return cInt.of(0L, 1L);
+    }
+
+    // @Override
+    public cInt one() {
+        return cInt.of(1L, 1L);
+    }
+
+    @Override
+    public String toString() {
+        if (this.isMaybe())
+            return "?";
+        else if (this.isSome())
+            return "+";
+        else if (this.isAny())
+            return "*";
+        else if (this.isExact())
+            return "" + this.min;
+        else
+            return (null == this.min ? "" : this.min) + "," + (null == this.max ? "" : this.max);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(this.min, this.max);
+    }
+
+    @Override
+    public boolean equals(final Object other) {
+        return other instanceof cInt && Objects.equals(this.min, ((cInt) other).min) && Objects.equals(this.max, ((cInt) other).max);
+    }
+
+    public static cInt of(final Long min, final Long max) {
+        return new cInt(min, max);
+    }
+
+    public static cInt of(final Long exact) {
+        return new cInt(exact, exact);
+    }
+
+    public static cInt of(final String parse) {
+        if (parse.isEmpty())
+            return cInt.of(1L);
+        else if (parse.equals("*"))
+            return cInt.of(0L, null);
+        else if (parse.equals("?"))
+            return cInt.of(0L, 1L);
+        else if (parse.equals("+"))
+            return cInt.of(1L, null);
+        else if (!parse.contains(","))
+            return cInt.of(Long.valueOf(parse));
+        else {
+            final String[] split = parse.split(",");
+            if (parse.charAt(0) == ',') return cInt.of(null, Long.valueOf(split[1]));
+            if (split.length == 1) return cInt.of(Long.valueOf(split[0]), null);
+            return cInt.of(Long.valueOf(split[0]), Long.valueOf(split[1]));
+        }
+
+    }
+
+    @Override
+    public int compareTo(final cInt rhs) {
+        Long minA = this.min() == null ? 0 : this.min();
+        Long maxA = this.max() == null ? Long.MAX_VALUE : this.max();
+        Long minB = rhs.min() == null ? 0 : rhs.min();
+        Long maxB = rhs.max() == null ? Long.MAX_VALUE : rhs.max();
+        return minA.compareTo(minB) + maxA.compareTo(maxB);
+    }
+}

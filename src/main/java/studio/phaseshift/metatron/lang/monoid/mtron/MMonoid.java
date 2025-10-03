@@ -123,7 +123,7 @@ public class MMonoid extends MObj implements Monoid {
                             LOG.trace("{{g}}====>{{/g}} propagating monad %s", n);
                             n.obj().iterator().forEachRemaining(no -> this.running().append(n.obj(no)));
                         }
-                    } else if (n.zombie() && n.inst().dom().tid().coefficientValue().isNoObjable()) {
+                    } else if (n.zombie() && n.inst().dom().tid().cV().isNoObjable()) {
                         LOG.trace("{{c}}====>{{/c}} walking undead zombie monad %s", n);
                         this.running().append(n);
                     } else {
@@ -138,7 +138,7 @@ public class MMonoid extends MObj implements Monoid {
                     LOG.trace("   {{m}}|={{/m}} processing barrier monad %s", barrier);
                     final Inst nextInst = code.nextInst(barrier.inst());
                     final Obj result = barrier.inst().apply(barrier.obj());
-                    if (nextInst.dom().tid().coefficientValue().isOne())
+                    if (nextInst.dom().tid().cV().isOne())
                         result.forEach(o -> {
                             LOG.trace("  {{m}}|==>{{/m}} scattering output barrier obj %s", o);
                             this.running().append(MMonad.of(o, nextInst));

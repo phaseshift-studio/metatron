@@ -47,7 +47,7 @@ public final class NoObj implements Obj, Inst {
 
     @Override
     public fURI tid() {
-        return fURI.of("").coefficient("0");
+        return fURI.of("").c("0");
     }
 
     @Override

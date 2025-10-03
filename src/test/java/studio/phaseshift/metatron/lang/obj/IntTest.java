@@ -87,7 +87,7 @@ public class IntTest extends MetatronTest {
         final fURI removeF = f(remove);
         final Obj retrievedF = ObjParser.m_obj().parse(retrieved).get();
         final Obj remainingF = ObjParser.m_obj().parse(remaining).get();
-        assertEquals(Tuple.Pair.with(retrievedF, remainingF), currentF.remove(removeF.coefficientValue()));
+        assertEquals(Tuple.Pair.with(retrievedF, remainingF), currentF.remove(removeF.cV()));
 
 
 

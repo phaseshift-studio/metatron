@@ -18,10 +18,10 @@
 
 package studio.phaseshift.metatron.lang;
 
-import studio.phaseshift.metatron.lang.obj.Coeff;
+import studio.phaseshift.metatron.lang.obj.C;
 import studio.phaseshift.metatron.lang.obj.Uri;
-import studio.phaseshift.metatron.lang.obj.mtron.MCoeff;
 import studio.phaseshift.metatron.lang.obj.mtron.MUri;
+import studio.phaseshift.metatron.lang.obj.mtron.c.cInt;
 import studio.phaseshift.metatron.space.Router;
 import studio.phaseshift.metatron.util.MTronException;
 
@@ -291,8 +291,8 @@ public class fURI implements Cloneable {
     private fURI rePreTract(boolean retract, final int steps) {
         if (this.path.size() < steps)
             return new fURI(this.scheme, this.host, this.port, false, Collections.emptyList(), false, Query.to(this.query));
-        final String coefficient = this.coefficient();
-        final fURI noc = this.coefficientless();
+        final String coefficient = this.c();
+        final fURI noc = this.cLess();
         final List<String> newPath = retract ? noc.path.subList(0, noc.path.size() - steps) : noc.path.subList(steps, noc.path.size());
         if (!newPath.isEmpty() && null != coefficient) {
             newPath.set(newPath.size() - 1, newPath.get(newPath.size() - 1) + "[" + coefficient + "]");
@@ -302,7 +302,7 @@ public class fURI implements Cloneable {
     }
 
     public boolean isZero() {
-        return this.equals(fURI.NONE) || this.coefficientValue().isZero();
+        return this.equals(fURI.NONE) || this.cV().isZero();
     }
 
 
@@ -432,26 +432,26 @@ public class fURI implements Cloneable {
     }
 
     public fURI one() {
-        return this.coefficient("1");
+        return this.c("1");
     }
 
     public fURI zero() {
-        return this.coefficient("0");
+        return this.c("0");
     }
 
     public fURI any() {
-        return this.coefficient("*");
+        return this.c("*");
     }
 
     public fURI maybe() {
-        return this.coefficient("?");
+        return this.c("?");
     }
 
     public fURI some() {
-        return this.coefficient("+");
+        return this.c("+");
     }
 
-    public fURI coefficient(final String coefficient) {
+    public fURI c(final String coefficient) {
         if (null == coefficient) {
             if (this.path.isEmpty())
                 return this;
@@ -462,20 +462,20 @@ public class fURI implements Cloneable {
             segments.add(last.substring(0, last.indexOf("[")));
             return new fURI(this.scheme, this.host, this.port, this.sstart, segments, this.send, Query.to(this.query));
         } else {
-            final List<String> segments = new ArrayList<String>(this.coefficient(null).path);
+            final List<String> segments = new ArrayList<String>(this.c(null).path);
             String last = segments.isEmpty() ? "" : segments.remove(segments.size() - 1);
-            segments.add(last + "[" + MCoeff.Int.of(coefficient) + "]");
+            segments.add(last + "[" + cInt.of(coefficient) + "]");
             return new fURI(this.scheme, this.host, this.port, this.sstart, segments, this.send, Query.to(this.query));
         }
     }
 
-    public MCoeff.Int coefficientValue() {
-        if (this.coefficient() == null)
-            return MCoeff.Int.of(1L, 1L);
-        return MCoeff.Int.of(this.coefficient());
+    public cInt cV() {
+        if (this.c() == null)
+            return cInt.of(1L, 1L);
+        return cInt.of(this.c());
     }
 
-    public String coefficient() {
+    public String c() {
         if (this.path.isEmpty())
             return null;
         final String last = this.path.get(this.path.size() - 1);
@@ -490,30 +490,30 @@ public class fURI implements Cloneable {
 
     public fURI plus(final fURI furi) {
         if (this.basePath().matches(furi.basePath())) {
-            MCoeff.Int c1 = this.coefficientValue();
-            MCoeff.Int c2 = furi.coefficientValue();
-            MCoeff.Int c3 = c1.plus(c2);
+            cInt c1 = this.cV();
+            cInt c2 = furi.cV();
+            cInt c3 = c1.plus(c2);
             Map<String, String> query = new LinkedHashMap<>();
             query.putAll(this.queryMap());
             query.putAll(furi.queryMap());
-            return this.coefficient(c3.toString()).queryMap(query);
+            return this.c(c3.toString()).queryMap(query);
         } else {
             throw MTronException.of("only furis with the same path can be added: %s !+ %s", this, furi);
         }
     }
 
     public fURI mult(final fURI furi) {
-        MCoeff.Int c1 = this.coefficientValue();
-        MCoeff.Int c2 = furi.coefficientValue();
-        MCoeff.Int c3 = c1.mult(c2);
+        cInt c1 = this.cV();
+        cInt c2 = furi.cV();
+        cInt c3 = c1.mult(c2);
         Map<String, String> query = new LinkedHashMap<>();
         query.putAll(this.queryMap());
         query.putAll(furi.queryMap());
-        return this.coefficientless().extend(furi).coefficient(c3.toString()).queryMap(query);
+        return this.cLess().extend(furi).c(c3.toString()).queryMap(query);
     }
 
     public fURI neg() {
-        return this.coefficient(this.coefficientValue().neg().toString());
+        return this.c(this.cV().neg().toString());
     }
 
     public Query query() {
@@ -525,11 +525,11 @@ public class fURI implements Cloneable {
     }
 
     public fURI basePath() {
-        return this.coefficientless().queryless();
+        return this.cLess().qLess();
     }
 
-    public fURI coefficientless() {
-        return this.coefficient(null);
+    public fURI cLess() {
+        return this.c(null);
     }
 
     public fURI dom() {
@@ -548,7 +548,7 @@ public class fURI implements Cloneable {
         return this.query(RNG, range);
     }
 
-    public fURI queryless() {
+    public fURI qLess() {
         return null == this.query ? this : new fURI(this.scheme, this.host, this.port, this.sstart, this.path, this.send, null);
     }
 
@@ -594,12 +594,12 @@ public class fURI implements Cloneable {
     }
 
     public boolean matches(final fURI rhs) {
-        final Coeff coeff = this.coefficientValue();
-        if (coeff.isZero() && rhs.coefficientValue().isZero())
+        final C c = this.cV();
+        if (c.isZero() && rhs.cV().isZero())
             return true;
-        if (coeff.isZero() && coeff.within(rhs.coefficientValue()))
+        if (c.isZero() && c.within(rhs.cV()))
             return true;
-        if (!coeff.within(rhs.coefficientValue()))
+        if (!c.within(rhs.cV()))
             return false;
         final fURI lhs = this.basePath();
         final fURI other = rhs.basePath();
@@ -634,10 +634,10 @@ public class fURI implements Cloneable {
         return other instanceof fURI &&
                 //    this.toString().equals(other.toString());
                 this.sstart == ((fURI) other).sstart &&
-                Objects.equals(this.coefficientless().path, ((fURI) other).coefficientless().path) &&
+                Objects.equals(this.cLess().path, ((fURI) other).cLess().path) &&
                 this.send == ((fURI) other).send &&
                 Objects.equals(this.query, ((fURI) other).query) &&
-                Objects.equals(this.coefficientValue(), ((fURI) other).coefficientValue()) &&
+                Objects.equals(this.cV(), ((fURI) other).cV()) &&
                 Objects.equals(this.scheme, ((fURI) other).scheme) &&
                 Objects.equals(this.host, ((fURI) other).host) &&
                 Objects.equals(this.port, ((fURI) other).port);

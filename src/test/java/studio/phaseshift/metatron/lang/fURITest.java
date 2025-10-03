@@ -400,7 +400,7 @@ public class fURITest {
             "/mtron/+/plus[?]?rng=/mtron/int[0,23]|?"
     }, delimiter = '|')
     void testCoefficients(final String furi, final String coefficient) {
-        assertEquals(coefficient, fURI.of(furi).coefficient());
+        assertEquals(coefficient, fURI.of(furi).c());
     }
 
     @ParameterizedTest

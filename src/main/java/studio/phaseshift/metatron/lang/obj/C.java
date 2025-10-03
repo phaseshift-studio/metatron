@@ -2,51 +2,51 @@ package studio.phaseshift.metatron.lang.obj;
 
 import java.util.Objects;
 
-public interface Coeff<T extends Comparable<T>, C extends Coeff<T, C>> extends Comparable<C> {
+public interface C<T extends Comparable<T>, D extends C<T, D>> extends Comparable<D> {
 
     T min();
 
     T max();
 
-    C neg();
+    D neg();
 
-    C plus(final C rhs);
+    D plus(final D rhs);
 
-    C mult(final C rhs);
+    D mult(final D rhs);
 
-    default C minus(final C rhs) {
+    default D minus(final D rhs) {
         return this.plus(rhs.neg());
     }
 
     /// ////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    boolean within(final C rhs);
+    boolean within(final D rhs);
 
-    default boolean lt(final C rhs) {
+    default boolean lt(final D rhs) {
         return this.compareTo(rhs) < 0;
     }
 
-    default boolean gt(final C rhs) {
+    default boolean gt(final D rhs) {
         return this.compareTo(rhs) > 0;
     }
 
-    default boolean lte(final C rhs) {
+    default boolean lte(final D rhs) {
         return this.compareTo(rhs) <= 0;
     }
 
-    default boolean gte(final C rhs) {
+    default boolean gte(final D rhs) {
         return this.compareTo(rhs) >= 0;
     }
 
     /// ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    C any();
+    D any();
 
-    C some();
+    D some();
 
-    C zero();
+    D zero();
 
-    C one();
+    D one();
 
     /// ////////////////////////////////////////////////////////////////////////////////////////////////////////////
 

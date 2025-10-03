@@ -19,9 +19,9 @@
 package studio.phaseshift.metatron.lang.obj;
 
 import studio.phaseshift.metatron.lang.fURI;
-import studio.phaseshift.metatron.lang.obj.mtron.MCoeff;
 import studio.phaseshift.metatron.lang.obj.mtron.MObjs;
 import studio.phaseshift.metatron.lang.obj.mtron.MType;
+import studio.phaseshift.metatron.lang.obj.mtron.c.cInt;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
 import studio.phaseshift.metatron.util.IteratorUtil;
@@ -48,16 +48,16 @@ public interface Obj extends Function<Obj, Obj>, Iterable<Obj> {
 
     fURI vid();
 
-    default MCoeff.Int c() {
-        return this.tid().coefficientValue();
+    default cInt c() {
+        return this.tid().cV();
     }
 
-    default Obj c(final MCoeff.Int coeff) {
-        return this.tid(this.tid().coefficient(coeff.toString()));
+    default Obj c(final cInt coeff) {
+        return this.tid(this.tid().c(coeff.toString()));
     }
 
     default Obj c(final Long exact) {
-        return this.tid(this.tid().coefficient("" + exact));
+        return this.tid(this.tid().c("" + exact));
     }
 
     default Obj c(final Long min, final Long max) {
@@ -65,14 +65,14 @@ public interface Obj extends Function<Obj, Obj>, Iterable<Obj> {
             return this.c(min);
         String coeff = min == null ? "" : min.toString();
         coeff = coeff + "," + (max == null ? "" : max.toString());
-        return this.tid(this.tid().coefficient(coeff));
+        return this.tid(this.tid().c(coeff));
     }
 
-    default Pair<Obj, Obj> remove(final MCoeff.Int coeff) {
+    default Pair<Obj, Obj> remove(final cInt c) {
        // System.out.println(coeff + "   <=   " + this.tid().coefficientValue() + "  ==   " + coeff.lte(this.tid().coefficientValue()));
-        if (coeff.lte(this.tid().coefficientValue())) {
-            final Obj remaining = this.tid(this.tid().coefficient(this.tid().coefficientValue().minus(coeff).toString()));
-            final Obj result = this.tid(this.tid().coefficient(coeff.toString()));
+        if (c.lte(this.tid().cV())) {
+            final Obj remaining = this.tid(this.tid().c(this.tid().cV().minus(c).toString()));
+            final Obj result = this.tid(this.tid().c(c.toString()));
             return Pair.with(result, remaining);
         } else {
             return Pair.with(NoObj.single(), this);
@@ -152,7 +152,7 @@ public interface Obj extends Function<Obj, Obj>, Iterable<Obj> {
     default boolean matches(final Obj rhs) {
         if (this.isNoObj() && rhs.isNoObj())
             return true;
-        else if (this.isNoObj() && rhs.tid().coefficientValue().isNoObjable())
+        else if (this.isNoObj() && rhs.tid().cV().isNoObjable())
             return true;
         else if (rhs.isNoObj())
             return false;
@@ -174,7 +174,7 @@ public interface Obj extends Function<Obj, Obj>, Iterable<Obj> {
         }
         if (this.isCall()) {
             //return true;
-            return this.tid().coefficientValue().within(rhs.tid().coefficientValue()); // TODO: this is really flimsy.
+            return this.tid().cV().within(rhs.tid().cV()); // TODO: this is really flimsy.
         }
         if (rhs.isCall())
             return this.rng().matches(rhs.dom());// && rhs.apply(this).matches(rhs.rng());
@@ -220,7 +220,7 @@ public interface Obj extends Function<Obj, Obj>, Iterable<Obj> {
     }
 
     default boolean isNoObj() {
-        return this == NoObj.single() || this.tid().basePath().equals(fURI.NONE) || this.tid().coefficientValue().isZero(); // TODO: consolidate the logic
+        return this == NoObj.single() || this.tid().basePath().equals(fURI.NONE) || this.tid().cV().isZero(); // TODO: consolidate the logic
     }
 
     default boolean isBool() {
