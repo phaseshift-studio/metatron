@@ -21,10 +21,8 @@
 package studio.phaseshift.metatron.lang.monoid;
 
 import studio.phaseshift.metatron.lang.fURI;
-import studio.phaseshift.metatron.lang.obj.Inst;
-import studio.phaseshift.metatron.lang.obj.Obj;
-import studio.phaseshift.metatron.lang.obj.Rec;
-import studio.phaseshift.metatron.lang.obj.Type;
+import studio.phaseshift.metatron.lang.obj.*;
+import studio.phaseshift.metatron.lang.obj.mtron.c.cInt;
 import studio.phaseshift.metatron.ui.Graphitty;
 
 import java.util.List;
@@ -79,6 +77,17 @@ public interface Monad extends Obj {
         return this.value().getValue0();
     }
 
+    @Override
+    Monad tid(final fURI furi);
+
+    @Override
+    Monad c(final cInt coeff);
+
+    @Override
+    default Monad c(final Long exact) {
+        return this.c(cInt.of(exact));
+    }
+
     default boolean merges(final Monad other) {
         return Objects.equals(this.value(), other.value()) && Objects.equals(this.tid().basePath(), other.tid().basePath());
     }
@@ -93,6 +102,22 @@ public interface Monad extends Obj {
 
     default Monad inst(final Inst inst) {
         return this.clone(Triplet.with(this.obj(), inst, this.state()), this.tid(), this.vid());
+    }
+
+    default Monad liftC() {
+        boolean lift = !(this.obj() instanceof Objs) && !this.obj().isNoObj() && !this.obj().tid().cV().isOne();
+        if (!lift)
+            return this;
+        final cInt coeff = this.obj().c();
+        return this.obj(this.obj().c(1L)).c(this.c().mult(coeff));
+    }
+
+    default Monad dropC() {
+        boolean drop = !(this.obj() instanceof Objs) && !this.obj().isNoObj() && !this.tid().cV().isOne();
+        if (!drop)
+            return this;
+        final cInt coeff = this.c();
+        return this.obj(this.obj().c(this.obj().c().mult(coeff))).c(1L);
     }
 
     @Override

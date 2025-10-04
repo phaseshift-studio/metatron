@@ -111,12 +111,12 @@ public class MMonoid extends MObj implements Monoid {
                 LOG.trace("   {{g}}=>{{/g}} processing monad %s [%s]", m, m.inst().isInitial() ? "initial" : "midway");
                 try {
                     //final Obj no = m.obj().c()
-                    final Monad n = m.apply(code.nextInst(m.inst()));
+                    final Monad n = m.liftC().apply(code.nextInst(m.inst())).dropC();
                     LOG.trace(" {{g}}===>{{/g}} post-processing monad %s", n);
                     if (!n.dead()) {
                         if (n.halted()) {
                             LOG.trace("{{y}}====>{{/y}} halting monad %s", n);
-                            n.obj().iterator().forEachRemaining(p -> this.halted().append(p));
+                            n.obj().iterator().forEachRemaining(o -> this.halted().append(o));
                         } else if (n.inst().isGather()) {
                             final Monad barrier = this.barriers().<List<Monad>>valueAs().get(0);
                             LOG.trace("{{m}}====>{{/m}} appending to barrier %s", n);

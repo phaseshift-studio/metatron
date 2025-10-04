@@ -75,6 +75,8 @@ public class TypeTest extends MetatronTest {
             "1                    | /+/str                          | false",
             "1                    | /mtron/+                        | true",
             "1                    | /mtron/+/+                      | false",
+            "1                    | /mtron/int[+]                   | true",
+            "int[2]::1            | /mtron/int[1]                   | false",
             "{1,2,3,4}            | /mtron/int[4]                   | true",
             "{1,2,3,4}            | /mtron/int[3]                   | false",
             "{1,2,3,4}            | /mtron/int[0,3]                 | false",

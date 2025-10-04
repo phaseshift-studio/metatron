@@ -63,12 +63,18 @@ public class InstParseTest {
         //assertEquals(inst, ObjParser.eval(expression).next());
     }
 
+    @ParameterizedTest
     @CsvSource(value = {
             "true.plus(false)% true",
             "false.plus(false)% false",
             "0.plus(0)% 0",
             "1.plus(2)% 3",
             "3.plus(-3)% 0",
+            "{1,2,3}.plus(10).sum()% 36",
+           // "{1,2,3}.plus(mult(10)).sum()% 55",
+            "int[4]::10.plus(20)% int[4]::30",
+           // "int[4]::10.plus(mult(20))% int[4]::210",
+            "int[4]::10.plus(mult?int[+]<=int[+](20))% int[4]::210",
             "\"abc\".plus(\"def\")% \"abcdef\"",
             "abc[0,2].plus(abc[23])% abc[23,25]",
             "[a,b,c].plus([d,e,f])% [a,b,c,d,e,f]",

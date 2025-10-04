@@ -27,6 +27,7 @@ import studio.phaseshift.metatron.lang.obj.Obj;
 import studio.phaseshift.metatron.lang.obj.Rec;
 import studio.phaseshift.metatron.lang.obj.mtron.MObj;
 import studio.phaseshift.metatron.lang.obj.mtron.MRec;
+import studio.phaseshift.metatron.lang.obj.mtron.c.cInt;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
 
@@ -40,8 +41,9 @@ public class MMonad extends MObj implements Monad {
 
     private final GraphittyLogger LOG = Graphitty.log(this);
 
-    public MMonad(final Triplet<Obj, Inst, Rec> value, final fURI tid, final fURI vid) {
+    private MMonad(final Triplet<Obj, Inst, Rec> value, final fURI tid, final fURI vid) {
         super(value, tid, vid);
+
     }
 
     @Override
@@ -52,6 +54,11 @@ public class MMonad extends MObj implements Monad {
     @Override
     public Monad tid(final fURI tid) {
         return (Monad) super.tid(tid);
+    }
+
+    @Override
+    public Monad c(final cInt coeff) {
+        return (Monad) super.c(coeff);
     }
 
     @Override
