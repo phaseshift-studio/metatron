@@ -23,6 +23,7 @@ package studio.phaseshift.metatron.lang.obj.mtron;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.Uri;
 
+import static studio.phaseshift.metatron.lang.fURI.f;
 import static studio.phaseshift.metatron.lang.obj.mtron.mtronInstSet.URI_TID;
 
 public class MUri extends MObj implements Uri {
@@ -62,11 +63,11 @@ public class MUri extends MObj implements Uri {
     }
 
     public static Uri of(final String value) {
-        return MUri.of(fURI.of(value));
+        return MUri.of(f(value));
     }
 
     public static Uri of(final String value, final fURI tid) {
-        return new MUri(fURI.of(value), tid, fURI.NULL);
+        return new MUri(f(value), tid, fURI.NULL);
     }
 }
 

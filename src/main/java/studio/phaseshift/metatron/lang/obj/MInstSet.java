@@ -21,6 +21,7 @@
 package studio.phaseshift.metatron.lang.obj;
 
 import studio.phaseshift.metatron.lang.fURI;
+import studio.phaseshift.metatron.lang.obj.mtron.MLst;
 import studio.phaseshift.metatron.space.Router;
 import studio.phaseshift.metatron.space.mem.MSpace;
 import studio.phaseshift.metatron.util.MTronException;
@@ -30,6 +31,11 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class MInstSet extends MSpace implements InstSet {
+
+    protected static final fURI ANY_TID = fURI.of("#");
+    protected static final String[] EMPTY_STRING_ARRAY = new String[0];
+
+    /// /////////////////////////////////////////////////////////////////////////////////////////
 
     protected final Map<fURI, Map<fURI, Set<Inst>>> INST_TABLE = new LinkedHashMap<>();
     protected final Map<fURI, Type> TYPE_TABLE = new LinkedHashMap<>();

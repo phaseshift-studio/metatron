@@ -432,16 +432,13 @@ public class fURI implements Cloneable {
         return new fURI(this.scheme, this.host, this.port, this.sstart, this.path, this.send, Query.to(Query.from(kv)));
     }
 
-    public fURI one() {
-        return this.c("1");
-    }
 
     public fURI zero() {
         return this.c("0");
     }
 
-    public fURI any() {
-        return this.c("*");
+    public fURI one() {
+        return this.c("1");
     }
 
     public fURI maybe() {
@@ -450,6 +447,10 @@ public class fURI implements Cloneable {
 
     public fURI some() {
         return this.c("+");
+    }
+
+    public fURI all() {
+        return this.c("*");
     }
 
     public fURI c(final String coefficient) {

@@ -22,22 +22,22 @@ package studio.phaseshift.metatron.lang.obj.mgrph;
 
 import org.apache.tinkerpop.gremlin.structure.Direction;
 import studio.phaseshift.metatron.lang.fURI;
-import studio.phaseshift.metatron.lang.obj.*;
-import studio.phaseshift.metatron.lang.obj.mtron.MInst;
-import studio.phaseshift.metatron.lang.obj.mtron.MLst;
+import studio.phaseshift.metatron.lang.obj.Inst;
+import studio.phaseshift.metatron.lang.obj.MInstSet;
+import studio.phaseshift.metatron.lang.obj.Obj;
+import studio.phaseshift.metatron.lang.obj.Type;
 import studio.phaseshift.metatron.space.Router;
 import studio.phaseshift.metatron.util.IteratorUtil;
 
 import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.Map;
 import java.util.Set;
 
 import static studio.phaseshift.metatron.lang.obj.mtron.MInst.instC;
 import static studio.phaseshift.metatron.lang.obj.mtron.MLst.lst;
 import static studio.phaseshift.metatron.lang.obj.mtron.MObjs.objs;
+import static studio.phaseshift.metatron.lang.obj.mtron.MStr.str;
 import static studio.phaseshift.metatron.lang.obj.mtron.MType.T;
-import static studio.phaseshift.metatron.lang.obj.mtron.mtronInstSet.ID_TID;
+import static studio.phaseshift.metatron.lang.obj.mtron.mtronInstSet.STR_TID;
 import static studio.phaseshift.metatron.lang.obj.mtron.mtronInstSet.URI_TID;
 
 public class mgrphInstSet extends MInstSet {
@@ -65,14 +65,7 @@ public class mgrphInstSet extends MInstSet {
     public static final fURI BOTHV_TID = INST_TID.extend("bothV");
     public static final fURI VALUES_TID = INST_TID.extend("values");
     public static final fURI PROPERTIES_TID = INST_TID.extend("properties");
-
-
-    private static final Lst NO_ARGS__ = MLst.of();
-    private static final Map<fURI, Map<fURI, Set<Inst>>> SYMBOL_TABLE = new LinkedHashMap<>();
-    private final Map<fURI, Obj> OBJ_TABLE = new LinkedHashMap<>();
-    private static final Inst ID__ = MInst.instB(ID_TID, MLst.of());
-    public static final fURI ANY_TID = fURI.of("#");
-    private static final String[] EMPTY_STRING_ARRAY = new String[0];
+    public static final fURI LABEL_TID = INST_TID.extend("label");
 
     public mgrphInstSet(final fURI vid) {
         super(MGRPH_TID, vid);
@@ -110,28 +103,29 @@ public class mgrphInstSet extends MInstSet {
     public void load() {
         this.write(
                 G_TID, instC(G_TID.dom(fURI.NONE.zero()).rng(GRAPH_TID), lst(T(URI_TID)), (lhs, inst) -> Router.global().read(inst.arg(0).uriValue())),
-                V_TID, instC(V_TID.dom(GRAPH_TID).rng(VERTEX_TID.any()), lst(T(fURI.ALL.any())), (lhs, inst) -> objs(IteratorUtil.list((Iterator) lhs.<MGraph>as().vertices(idsAsUri(inst))))),
-                E_TID, instC(E_TID.dom(GRAPH_TID).rng(EDGE_TID.any()), lst(T(fURI.ALL.any())), (lhs, inst) -> objs(IteratorUtil.list((Iterator) lhs.<MGraph>as().edges(idsAsUri(inst))))),
-                OUTE_TID, instC(OUTE_TID.dom(VERTEX_TID).rng(EDGE_TID.any()), lst(T(URI_TID.any())), (lhs, inst) ->
+                V_TID, instC(V_TID.dom(GRAPH_TID).rng(VERTEX_TID.all()), lst(T(fURI.ALL.all())), (lhs, inst) -> objs(IteratorUtil.list((Iterator) lhs.<MGraph>as().vertices(idsAsUri(inst))))),
+                E_TID, instC(E_TID.dom(GRAPH_TID).rng(EDGE_TID.all()), lst(T(fURI.ALL.all())), (lhs, inst) -> objs(IteratorUtil.list((Iterator) lhs.<MGraph>as().edges(idsAsUri(inst))))),
+                OUTE_TID, instC(OUTE_TID.dom(VERTEX_TID).rng(EDGE_TID.all()), lst(T(URI_TID.all())), (lhs, inst) ->
                         objs(IteratorUtil.list((Iterator) lhs.<MVertex>as().edges(Direction.OUT, labelsAsUri(inst))))),
-                OUT_TID, instC(OUT_TID.dom(VERTEX_TID).rng(VERTEX_TID.any()), lst(T(URI_TID.any())), (lhs, inst) ->
+                OUT_TID, instC(OUT_TID.dom(VERTEX_TID).rng(VERTEX_TID.all()), lst(T(URI_TID.all())), (lhs, inst) ->
                         objs(IteratorUtil.list((Iterator) lhs.<MVertex>as().vertices(Direction.OUT, labelsAsUri(inst))))),
-                OUT_TID, instC(OUT_TID.dom(VERTEX_TID.any()).rng(VERTEX_TID.any()), lst(T(URI_TID.any())), (lhs, inst) ->
+                OUT_TID, instC(OUT_TID.dom(VERTEX_TID.all()).rng(VERTEX_TID.all()), lst(T(URI_TID.all())), (lhs, inst) ->
                         objs((Iterable) lhs.stream().flatMap(v -> IteratorUtil.stream(v.<MVertex>as().vertices(Direction.OUT, labelsAsUri(inst)))).toList())),
-                INE_TID, instC(OUTE_TID.dom(VERTEX_TID).rng(EDGE_TID.any()), lst(T(URI_TID.any())), (lhs, inst) ->
+                INE_TID, instC(OUTE_TID.dom(VERTEX_TID).rng(EDGE_TID.all()), lst(T(URI_TID.all())), (lhs, inst) ->
                         objs(IteratorUtil.list((Iterator) lhs.<MVertex>as().edges(Direction.IN, labelsAsUri(inst))))),
-                IN_TID, instC(OUT_TID.dom(VERTEX_TID).rng(VERTEX_TID.any()), lst(T(URI_TID.any())), (lhs, inst) ->
+                IN_TID, instC(OUT_TID.dom(VERTEX_TID).rng(VERTEX_TID.all()), lst(T(URI_TID.all())), (lhs, inst) ->
                         objs(IteratorUtil.list((Iterator) lhs.<MVertex>as().vertices(Direction.IN, labelsAsUri(inst))))),
-                BOTHE_TID, instC(BOTHE_TID.dom(VERTEX_TID).rng(EDGE_TID.any()), lst(T(URI_TID.any())), (lhs, inst) ->
+                BOTHE_TID, instC(BOTHE_TID.dom(VERTEX_TID).rng(EDGE_TID.all()), lst(T(URI_TID.all())), (lhs, inst) ->
                         objs(IteratorUtil.list((Iterator) lhs.<MVertex>as().edges(Direction.BOTH, labelsAsUri(inst))))),
-                BOTH_TID, instC(BOTH_TID.dom(VERTEX_TID).rng(VERTEX_TID.any()), lst(T(URI_TID.any())), (lhs, inst) ->
+                BOTH_TID, instC(BOTH_TID.dom(VERTEX_TID).rng(VERTEX_TID.all()), lst(T(URI_TID.all())), (lhs, inst) ->
                         objs(IteratorUtil.list((Iterator) lhs.<MVertex>as().vertices(Direction.BOTH, labelsAsUri(inst))))),
-                OUTV_TID, instC(OUTV_TID.dom(EDGE_TID).rng(VERTEX_TID), NO_ARGS__, (lhs, inst) -> (MVertex) lhs.<MEdge>as().vertices(Direction.OUT).next()),
-                INV_TID, instC(INV_TID.dom(EDGE_TID).rng(VERTEX_TID), NO_ARGS__, (lhs, inst) -> (MVertex) lhs.<MEdge>as().vertices(Direction.IN).next()),
-                BOTHV_TID, instC(BOTHV_TID.dom(EDGE_TID).rng(VERTEX_TID.c("2")), NO_ARGS__, (lhs, inst) -> objs(IteratorUtil.list((Iterator) lhs.<MEdge>as().vertices(Direction.BOTH)))),
+                OUTV_TID, instC(OUTV_TID.dom(EDGE_TID).rng(VERTEX_TID), lst(), (lhs, inst) -> (MVertex) lhs.<MEdge>as().vertices(Direction.OUT).next()),
+                INV_TID, instC(INV_TID.dom(EDGE_TID).rng(VERTEX_TID), lst(), (lhs, inst) -> (MVertex) lhs.<MEdge>as().vertices(Direction.IN).next()),
+                BOTHV_TID, instC(BOTHV_TID.dom(EDGE_TID).rng(VERTEX_TID.c("2")), lst(), (lhs, inst) -> objs(IteratorUtil.list((Iterator) lhs.<MEdge>as().vertices(Direction.BOTH)))),
                 /// ///////////////////////////////////////////////////////////////////////////////////////////////////
-                VALUES_TID, instC(VALUES_TID.dom(MGRPH_TID.extend(fURI.SINGLE)).rng(ANY_TID.any()), lst(T(URI_TID.any())), (lhs, inst) -> objs(IteratorUtil.list((Iterator) lhs.<MElement>as().values(labelsAsUri(inst))))),
-                PROPERTIES_TID, instC(PROPERTIES_TID.dom(MGRPH_TID.extend(fURI.SINGLE)).rng(ANY_TID.any()), lst(T(URI_TID.any())), (lhs, inst) -> objs(IteratorUtil.list((Iterator) lhs.<MElement>as().properties(labelsAsUri(inst)))))
+                LABEL_TID, instC(LABEL_TID.dom(MGRPH_TID.extend(fURI.SINGLE)).rng(STR_TID), lst(), (lhs, inst) -> str(lhs.<MElement>as().label())),
+                VALUES_TID, instC(VALUES_TID.dom(MGRPH_TID.extend(fURI.SINGLE)).rng(ANY_TID.all()), lst(T(URI_TID.all())), (lhs, inst) -> objs(IteratorUtil.list((Iterator) lhs.<MElement>as().values(labelsAsUri(inst))))),
+                PROPERTIES_TID, instC(PROPERTIES_TID.dom(MGRPH_TID.extend(fURI.SINGLE)).rng(ANY_TID.all()), lst(T(URI_TID.all())), (lhs, inst) -> objs(IteratorUtil.list((Iterator) lhs.<MElement>as().properties(labelsAsUri(inst)))))
         );
     }
 

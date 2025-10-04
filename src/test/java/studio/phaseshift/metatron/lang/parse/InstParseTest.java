@@ -84,14 +84,45 @@ public class InstParseTest {
         assertEquals(ObjParser.m_obj().parse(expectedResult).get(), ObjParser.eval(expression).next());
     }
 
-    @Test
-    public void testCountInst() {
-        assertEquals(MInt.of(3), eval("{1,2,3}.count()").next());
+    @ParameterizedTest
+    @CsvSource(value = {
+            "{1,2,3}.count()                                % 3",
+            "{1,int[10]::2,3}.count()                       % 12",
+            "5.count()                                      % 1",
+            "5.plus(count())                                % 6",
+            "{5,-5}.count()                                 % 2",
+            "{int[10]::1}.count()                           % 10",
+            //"{1,2,3}.plus(sum())-|id()                   % {2,4,6}"
+    }, delimiter = '%')
+    public void testCountInst(final String expression, final String expectedResult) {
+        assertEquals(ObjParser.m_obj().parse(expectedResult).get(), ObjParser.eval(expression).next());
     }
 
-    @Test
-    public void testSumInst() {
-        assertEquals(MInt.of(6), eval("{1,2,3}.sum()").next());
+    @ParameterizedTest
+    @CsvSource(value = {
+            "{1,2,3}.sum()                                % 6",
+            "{1,int[10]::2,3}.sum()                       % 24",
+            "5.sum()                                      % 5",
+            "5.plus(sum())                                % 10",
+            "{5,-5}.sum()                                 % 0",
+            "{int[10]::1}.sum()                           % 10",
+            //"{1,2,3}.plus(sum())-|id()                  % {2,4,6}"
+            /// ////////////////////////////////////////////////
+            "{1.0,2.2,3.3}.sum()                          % 6.5",
+            "{1.1,real[10]::2.1,3.5}.sum()                % 25.6",
+            "5.75.sum()                                   % 5.75",
+            "5.2.plus(sum())                              % 10.4",
+            "{5.1,-5.1}.sum()                             % 0.0",
+            "{real[10]::1.1}.sum()                        % 11.0",
+            /// ////////////////////////////////////////////////
+            "{[,],[,],[,]}.sum()                          % [,]",
+            "{[,],[,],[1]}.sum()                          % [1]",
+            "{[1],[2],[3]}.sum()                          % [1,2,3]",
+            "{[1,2],[2,4],[3,2,2]}.sum()                  % [1,2,2,4,3,2,2]",
+            "[1,2,3]_/sum?int<=int[*]()\\_                % [6]",
+    }, delimiter = '%')
+    public void testSumInst(final String expression, final String expectedResult) {
+        assertEquals(ObjParser.m_obj().parse(expectedResult).get(), ObjParser.eval(expression).next());
     }
 
 }
