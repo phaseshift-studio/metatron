@@ -86,7 +86,7 @@ public class MMonoid extends MObj implements Monoid {
                     //this.running().append(MMonad.of(NoObj.single(), instB));
                 } else if (instB.isGather()) {
                     // many-to-?
-                    LOG.trace("  {{g}}==>{{/g}} creating {{y}}barrier{{/y}} monad at %s", instB);
+                    LOG.trace("  {{m}}==|{{/m}} creating {{y}}barrier{{/y}} monad at %s", instB);
                     final Monad m = MMonad.of(MObjs.of(new LinkedList<>(/*List.of(instB.seed())*/)), instB);
                     this.barriers().<LinkedList<Obj>>valueAs().add(m);
                 }
@@ -118,8 +118,8 @@ public class MMonoid extends MObj implements Monoid {
                             LOG.trace("{{y}}====>{{/y}} halting monad %s", n);
                             n.obj().iterator().forEachRemaining(o -> this.halted().append(o));
                         } else if (n.inst().isGather()) {
-                            final Monad barrier = this.barriers().<List<Monad>>valueAs().get(0);
-                            LOG.trace("{{m}}====>{{/m}} appending to barrier %s", n);
+                            final Monad barrier = this.barriers().<LinkedList<Monad>>valueAs().peek();
+                            LOG.trace("{{m}}====|{{/m}} appending to barrier %s", n);
                             if (null == barrier)
                                 throw MTronException.of("barrier should exist: %s", n.inst());
                             barrier.obj().append(n.obj());
@@ -127,7 +127,7 @@ public class MMonoid extends MObj implements Monoid {
                             LOG.trace("{{g}}====>{{/g}} propagating monad %s", n);
                             n.obj().iterator().forEachRemaining(no -> this.running().append(n.obj(no)));
                         }
-                    } else if (n.zombie() && n.inst().dom().tid().cV().isNoObjable()) {
+                    } else if (n.zombie() && n.inst().dom().c().isNoObjable()) {
                         LOG.trace("{{c}}====>{{/c}} walking undead zombie monad %s", n);
                         this.running().append(n);
                     } else {
@@ -139,17 +139,22 @@ public class MMonoid extends MObj implements Monoid {
             } else if (!this.barriers().isEmpty()) {
                 final Monad barrier = this.barriers().<LinkedList<Monad>>valueAs().poll();
                 if (null != barrier) {
-                    LOG.trace("   {{m}}|={{/m}} processing barrier monad %s", barrier);
+                    LOG.trace("   {{m}}=|{{/m}} processing barrier monad %s", barrier);
                     final Inst nextInst = code.nextInst(barrier.inst());
                     final Obj result = barrier.inst().apply(barrier.obj());
-                    if (nextInst.dom().tid().cV().isOne())
+                    if (nextInst.isGather()) { // barrier-to-barrier can do direct handoff of result set
+                        LOG.trace("  {{m}}==|{{/m}} passing barrier obj %s to %s", result, nextInst);
+                        final Monad nextBarrier = this.barriers().<LinkedList<Monad>>valueAs().peek();
+                        if (null == nextBarrier)
+                            throw MTronException.of("barrier should exist: %s", nextInst);
+                        nextBarrier.obj().append(result);
+                    } else { // barrier-to-other requires an unrolling of result set
+                        LOG.trace("  {{m}}==|{{/m}} scattering barrier obj %s to %s", result, nextInst);
                         result.forEach(o -> {
-                            LOG.trace("  {{m}}|==>{{/m}} scattering output barrier obj %s", o);
-                            this.running().append(MMonad.of(o, nextInst));
+                            final Monad n = MMonad.of(o, nextInst);
+                            LOG.trace(" {{m}}===|{{/m}} scattering %s", n);
+                            this.running().append(n);
                         });
-                    else {
-                        LOG.trace("  {{m}}|==>{{/m}} passing output barrier obj %s", result);
-                        this.running().append(MMonad.of(result, nextInst));
                     }
                 }
             } else {

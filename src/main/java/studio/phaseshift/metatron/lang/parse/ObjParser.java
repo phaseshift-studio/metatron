@@ -176,6 +176,10 @@ public class ObjParser {
         return m_furi(FULL_FURI_CHARS, true, true);
     }
 
+    public static Parser m_furi_no_query() {
+        return m_furi(FULL_FURI_CHARS, true, false);
+    }
+
     public static Parser m_furi(final String furiCharacterSet, final boolean coefficient, final boolean query) {
         final Supplier<Parser> internal = () -> seq(word().or(seq(of("::").not(),
                         anyOf(furiCharacterSet))).plus().flatten(),
@@ -188,9 +192,9 @@ public class ObjParser {
         return choice(seq(of('<'), internal2.get(), of('>')).pick(1), internal.get());
     }
 
-    public static Parser m_furi_base_path(final String furiCharacterSet) {
+    /*public static Parser m_furi_base_path(final String furiCharacterSet) {
         return m_furi(furiCharacterSet, false, false);
-    }
+    }*/
 
     public static Parser m_furi_coefficient() {
         return seq(of('['), choice(
@@ -205,7 +209,7 @@ public class ObjParser {
     public static Parser m_furi_query() {
         return seq(of('?'), choice(
                 m_furi_inst_dom_rng(),
-                seq(word().plus(), opt(seq(of('='), word().or(anyOf(FULL_FURI_CHARS)).star()), "")).separatedBy(of('&')).flatten()
+                seq(word().plus(), opt(seq(of('='), choice(m_furi_no_query(), word().or(anyOf(FULL_FURI_CHARS)).star())), "")).separatedBy(of('&')).flatten()
         )).map(t -> pick(t, 1));
     }
 

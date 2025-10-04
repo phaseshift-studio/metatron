@@ -47,20 +47,20 @@ public class MemRouter implements Router {
     private final Map<fURI, Space> spaces = new ConcurrentHashMap<>();
     private final Map<fURI, fURI> smallToBigRewrites = new HashMap<>();
     private final Map<fURI, fURI> bigToSmallRewrites = new HashMap<>();
-    private final Space localSpace;
+    //private final Space localSpace;
 
 
     public MemRouter(final fURI vid) {
         this.vid = vid;
-        this.localSpace = new MemSpace(this.pattern(), this.vid);
-        this.spaces.put(this.vid, localSpace);
+        //this.localSpace = new MemSpace(this.pattern(), this.vid);
+        //this.spaces.put(this.vid, localSpace);
         LOG.info("%s loaded at %s", this.tid(), this.vid);
     }
 
     public void registerRewrite(final fURI small, final fURI big) {
         this.smallToBigRewrites.put(small, big);
         this.bigToSmallRewrites.put(big, small);
-        this.localSpace.write(this.vid.extend("prefix").extend(small), big.toUri());
+        //this.localSpace.write(this.vid.extend("prefix").extend(small), big.toUri());
     }
 
     @Override
@@ -114,21 +114,22 @@ public class MemRouter implements Router {
             return NullSpace.single();
     }
 
-    private static final Set<fURI> READ_AS_NOOBJ = Set.of(fURI.ALL.all(), fURI.ALL.maybe(), fURI.ALL);
+    private static final Set<fURI> READ_AS_NOOBJ = Set.of(fURI.ALL.maybeSome(), fURI.ALL.maybe(), fURI.ALL);
 
     @Override
     public Obj read(final fURI vid) {
         if (vid.isZero() || READ_AS_NOOBJ.contains(vid))
             return NoObj.single();
         final Space space = this.getSpace(vid);
-        //LOG.trace("reading %s from %s", vid, space.vid());
+        //if (null != space.vid() && !space.vid().segments().isEmpty())
+        //    LOG.trace("reading {{b}}%s{{/b}} from {{b}}%s{{/b}}", vid, space.vid());
         return ObjUtil.appendOnRead(vid.isBranch(), space.read(vid), this.vid.onlyMatches(vid) ? this : NoObj.single());
     }
 
     @Override
     public Obj write(final fURI vid, final Obj obj) {
         final Space space = this.getSpace(vid);
-        LOG.trace("writing %s to %s at {{b}}%s{{X}}", obj, space.vidOrTid(), vid);
+        LOG.trace("writing %s to {{b}}%s{{/b}} at {{b}}%s{{X}}", obj, space.vidOrTid(), vid);
         return space.write(vid, obj);
     }
 

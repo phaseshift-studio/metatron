@@ -32,6 +32,7 @@ import studio.phaseshift.metatron.util.MTronException;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -165,6 +166,7 @@ public interface Inst extends Call {
                         //.map(i -> i.tid(i.tid().dom(lhs.tid())).vid(this.vid()))
                         .map(Obj::<Inst>as)
                         .findFirst()
+                        //.or(() -> Optional.ofNullable(this.tid().dom().cV().isOne() ? null : (Inst) this.c(1L).resolve(lhs.c(1L))))
                         .orElseThrow(() -> this.logger().except("unable to resolve %s => %s in instruction set %s", lhs, this));
                 LOG.trace("resolution ({{m}}%s {{g}}=>{{/g}} %s{{/m}}): %s => %s", currentResolution, resolved.resolution(), lhs, resolved);
                 return (this.tid().hasDom() || this.tid().hasRng()) ? resolved.tid(this.tid()).resolve(lhs) : resolved.resolve(lhs);
@@ -234,19 +236,19 @@ public interface Inst extends Call {
     }
 
     default boolean isGather() {
-        return this.dom().tid().cV().min() > 1 || this.dom().tid().cV().max() == null;
+        return /*this.dom().c().min() > 1 ||*/ this.dom().c().max() == null;
     }
 
     default boolean isScatter() {
-        return this.rng().tid().cV().isOne();
+        return this.rng().c().isOne();
     }
 
     default boolean isInitial() {
-        return this.dom().tid().cV().isZero();// || this.dom().tid().coefficientValue().isQuestion();
+        return this.dom().c().isZero();// || this.dom().tid().coefficientValue().isQuestion();
     }
 
     default boolean isTerminal() {
-        return this.rng().tid().cV().isZero();
+        return this.rng().c().isZero();
     }
 
     @Override

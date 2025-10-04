@@ -20,6 +20,7 @@
 
 package studio.phaseshift.metatron.lang;
 
+import studio.phaseshift.metatron.Ring;
 import studio.phaseshift.metatron.lang.obj.Uri;
 import studio.phaseshift.metatron.lang.obj.mtron.MUri;
 import studio.phaseshift.metatron.lang.obj.mtron.c.cInt;
@@ -31,7 +32,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 
-public class fURI implements Cloneable {
+public class fURI implements Cloneable, Ring<fURI> {
 
     public static final String EMPTY = "";
     public static final String SEGMENT_SPLIT = "/";
@@ -449,7 +450,7 @@ public class fURI implements Cloneable {
         return this.c("+");
     }
 
-    public fURI all() {
+    public fURI maybeSome() {
         return this.c("*");
     }
 
@@ -464,7 +465,7 @@ public class fURI implements Cloneable {
             segments.add(last.substring(0, last.indexOf("[")));
             return new fURI(this.scheme, this.host, this.port, this.sstart, segments, this.send, Query.to(this.query));
         } else {
-            final List<String> segments = new ArrayList<String>(this.c(null).path);
+            final List<String> segments = new ArrayList<>(this.c(null).path);
             String last = segments.isEmpty() ? "" : segments.remove(segments.size() - 1);
             segments.add(last + "[" + cInt.of(coefficient) + "]");
             return new fURI(this.scheme, this.host, this.port, this.sstart, segments, this.send, Query.to(this.query));

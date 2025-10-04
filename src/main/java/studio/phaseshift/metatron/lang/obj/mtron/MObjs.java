@@ -141,7 +141,11 @@ public class MObjs implements Objs {
 
     @Override
     public fURI tid() {
-        return this.map.entrySet().stream().filter(kv -> !kv.getValue().isZero()).map(kv -> kv.getKey().tid().c(kv.getValue().toString())).reduce(fURI::plus).orElse(fURI.NONE.zero());
+        try {
+            return this.map.entrySet().stream().filter(kv -> !kv.getValue().isZero()).map(kv -> kv.getKey().tid().c(kv.getValue().toString())).reduce(fURI::plus).orElse(fURI.NONE.zero());
+        } catch (final Exception e) {
+            return this.map.entrySet().stream().filter(kv -> !kv.getValue().isZero()).map(kv -> kv.getKey().tid().c(kv.getValue().toString())).reduce(fURI::commonRoot).orElse(fURI.NONE.zero());
+        }
     }
 
     @Override

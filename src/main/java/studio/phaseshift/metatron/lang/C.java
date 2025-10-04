@@ -20,9 +20,11 @@
 
 package studio.phaseshift.metatron.lang;
 
+import studio.phaseshift.metatron.Ring;
+
 import java.util.Objects;
 
-public interface C<T extends Comparable<T>, D extends C<T, D>> extends Comparable<D> {
+public interface C<T extends Comparable<T>, D extends C<T, D>> extends Comparable<D>, Ring<D> {
 
     T min();
 
@@ -37,6 +39,8 @@ public interface C<T extends Comparable<T>, D extends C<T, D>> extends Comparabl
     default D minus(final D rhs) {
         return this.plus(rhs.neg());
     }
+
+    D clone(final T min, final T max);
 
     /// ////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -60,13 +64,23 @@ public interface C<T extends Comparable<T>, D extends C<T, D>> extends Comparabl
 
     /// ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    D any();
+    D maybeSome();
 
     D some();
+
+    D maybe();
 
     D zero();
 
     D one();
+
+    default D least() {
+        return this.clone(this.min(), this.min());
+    }
+
+    default D most() {
+        return this.clone(this.max(), this.max());
+    }
 
     /// ////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -80,7 +94,7 @@ public interface C<T extends Comparable<T>, D extends C<T, D>> extends Comparabl
 
     boolean isOne();
 
-    boolean isAny();
+    boolean isMaybeSome();
 
     boolean isSome();
 
@@ -92,5 +106,9 @@ public interface C<T extends Comparable<T>, D extends C<T, D>> extends Comparabl
 
     default boolean isExact() {
         return Objects.equals(this.min(), this.max());
+    }
+
+    default boolean isRange() {
+        return !this.isExact();
     }
 }

@@ -67,18 +67,22 @@ public class IntTest extends MetatronTest {
     @Override
     @ParameterizedTest
     @CsvSource(value = {
-            "bool::1                              | <ERROR>",
-            "real::1                              | <ERROR>",
-            "str::1                               | <ERROR>",
-            "uri::1                               | <ERROR>",
-            "lst::1                               | <ERROR>",
-            "rec::1                               | <ERROR>",
-            "inst::1                              | <ERROR>",
-            "code::1                              | <ERROR>",
-            "3.plus(mult(2))                      | 9",
-            //"{2,3}.plus(mult(2))                  | {6,9}",
-            //"{2,3}-<[_]>-is(in(int[2]))                     | {2,3}"
-            //"{6,6,10}.plus(mult(2))                | {18,18,30}"
+            "bool::1                                                      | <ERROR>",
+            "real::1                                                      | <ERROR>",
+            "str::1                                                       | <ERROR>",
+            "uri::1                                                       | <ERROR>",
+            "lst::1                                                       | <ERROR>",
+            "rec::1                                                       | <ERROR>",
+            "inst::1                                                      | <ERROR>",
+            "code::1                                                      | <ERROR>",
+            "3.plus(mult(2))                                              | 9",
+            "{2,3}>-plus(mult(2))                                         | {6,9}",
+            // "{2,3}.plus(mult(2))                                       | {6,9}",
+           // "{2,3}.is?int[*]<=int[*](in?bool[+]<=int[*](int[2]::T[]))   | {2,3}",
+            "{1,2,3}.plus(1).plus(2)                                      | {4,5,6}",
+            "{1,2,3}.plus(1).plus(2).mult(2)                              | {8,10,12}",
+            "{1,2,3}.plus(1).plus(2).mult(2).is(in(int::T[]))             | {8,10,12}",
+            "{1,2,3}.plus(1).plus(2).mult(2).is(in(str::T[]))             | noobj"
     }, delimiter = '|')
     public void testCode(final String code, final String expected) {
         super.testCode(code, expected);

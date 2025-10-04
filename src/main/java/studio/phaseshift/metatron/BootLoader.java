@@ -71,8 +71,8 @@ public class BootLoader {
             Router.global().addSpace(mtron);
             MMonoid.load();
             Router.global().write("/sys/log", Log.of(f("/sys/log")));
-            final Space var = new MemSpace(fURI.of("+/+/#"), fURI.of("/mnt/var"));
-            Router.global().addSpace(var);
+            //final Space var = new MemSpace(fURI.of("+/+/#"), fURI.of("/mnt/var"));
+            //Router.global().addSpace(var);
             final Space fs = new FileSpace(f("/home/#"), f("/mnt/fs"));
             Router.global().addSpace(fs);
             final Space grph = new MGraph(TinkerFactory.createModern(), f("/tp/#"), f("/mnt/tp"));

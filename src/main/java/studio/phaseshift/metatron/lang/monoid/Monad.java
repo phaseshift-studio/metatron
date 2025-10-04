@@ -20,6 +20,7 @@
 
 package studio.phaseshift.metatron.lang.monoid;
 
+import studio.phaseshift.metatron.Ring;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.*;
 import studio.phaseshift.metatron.lang.obj.mtron.c.cInt;
@@ -31,7 +32,7 @@ import java.util.Objects;
 import static studio.phaseshift.metatron.lang.obj.mtron.MObjs.objs;
 import static studio.phaseshift.metatron.util.Tuple.Triplet;
 
-public interface Monad extends Obj {
+public interface Monad extends Obj { //, Ring<Monad> {
 
     class Helpers {
         public static String monadToString(final Monad monad) {
@@ -95,6 +96,26 @@ public interface Monad extends Obj {
     default Obj plus(final Monad other) {
         return this.merges(other) ? this.tid(this.tid().plus(other.tid())) : objs(List.of(this, other));
     }
+
+   /* default Monad mult(final Monad rhs) {
+        return this.merges(rhs) ? this.tid(this.tid().mult(rhs.tid())) : objs(List.of(this, other));
+    }*/
+
+    /*default Monad one() {
+        return new MMonad(); // id()<--M-->id()?
+    }*/
+
+    /*
+    default Monad zero() {
+        return new MMonad(); // noobj<--M-->noobj?
+    }
+     */
+
+    /*
+    default Monad neg() {
+        return ???
+    }
+     */
 
     default Monad obj(final Obj obj) {
         return this.clone(Triplet.with(obj, this.inst(), this.state()), this.tid(), this.vid());

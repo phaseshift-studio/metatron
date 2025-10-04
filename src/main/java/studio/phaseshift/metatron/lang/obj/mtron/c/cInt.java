@@ -65,6 +65,11 @@ public class cInt implements C<Long, cInt> {
     }
 
     @Override
+    public cInt clone(final Long min, final Long max) {
+        return new cInt(min, max);
+    }
+
+    @Override
     public boolean isZero() {
         return Objects.equals(this.min, 0L) && Objects.equals(this.max, 0L);
     }
@@ -85,7 +90,7 @@ public class cInt implements C<Long, cInt> {
     }
 
     @Override
-    public boolean isAny() {
+    public boolean isMaybeSome() {
         return Objects.equals(this.min, 0L) && null == this.max;
     }
 
@@ -114,26 +119,27 @@ public class cInt implements C<Long, cInt> {
         return minA.compareTo(minB) >= 0 && maxA.compareTo(maxB) <= 0;
     }
 
-    // @Override
-    public cInt any() {
+    @Override
+    public cInt maybeSome() {
         return cInt.of(0L, null);
     }
 
-    //  @Override
+    @Override
     public cInt some() {
         return cInt.of(1L, null);
     }
 
+    @Override
     public cInt zero() {
         return cInt.of(0L, 0L);
     }
 
-    // @Override
+    @Override
     public cInt maybe() {
         return cInt.of(0L, 1L);
     }
 
-    // @Override
+    @Override
     public cInt one() {
         return cInt.of(1L, 1L);
     }
@@ -144,7 +150,7 @@ public class cInt implements C<Long, cInt> {
             return "?";
         else if (this.isSome())
             return "+";
-        else if (this.isAny())
+        else if (this.isMaybeSome())
             return "*";
         else if (this.isExact())
             return "" + this.min;

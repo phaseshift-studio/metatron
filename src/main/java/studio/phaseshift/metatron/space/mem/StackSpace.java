@@ -26,9 +26,7 @@ import studio.phaseshift.metatron.lang.obj.Poly;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
 
-import java.util.LinkedHashMap;
 import java.util.LinkedList;
-import java.util.Map;
 
 public class StackSpace extends MSpace {
 
@@ -37,11 +35,11 @@ public class StackSpace extends MSpace {
 
     private final GraphittyLogger LOG = Graphitty.log(this);
     private final MemSpace root;
-    private final LinkedList<Map<fURI, Obj>> stack = new LinkedList<>();
+    private final LinkedList<MemSpace> stack = new LinkedList<>();
 
     public StackSpace(final fURI pattern, final fURI vid) {
         super(pattern, STACKSPACE_TID, vid);
-        this.root = new MemSpace(this.pattern, STACKSPACE_TID.extend("default"));
+        this.root = new MemSpace(this.pattern, STACKSPACE_TID.extend("root"));
     }
 
     @Override
@@ -50,9 +48,9 @@ public class StackSpace extends MSpace {
         // if(vid.coefficientValue().isZero())
         //    return NoObj.single();
         boolean isArg = vid.toString().matches("a\\d+"); // skip first encounter of list arg variable as it's a variable to grab the variable
-        for (final Map<fURI, Obj> layer : this.stack) {
-            final Obj o = layer.get(vid.basePath());
-            if (null != o) {
+        for (final MemSpace layer : this.stack) {
+            final Obj o = layer.read(vid.basePath());
+            if (!o.isNoObj()) {
                 if (isArg) isArg = false;
                 else return o;
             }
@@ -63,28 +61,31 @@ public class StackSpace extends MSpace {
     @Override
     public Obj write(final fURI vid, final Obj obj) {
         LOG.trace("writing %s to %s in %s [{{y}}root{{/y}}: %s]", obj, vid, this.stack, this.root.pathStore);
-        this.stack.get(0).put(vid, obj);
+        if (!this.stack.isEmpty())
+            this.stack.get(0).write(vid, obj);
         this.root.write(vid, obj);
         return obj;
     }
 
     public boolean pop() {
-        final Map<fURI, Obj> frameMap = this.stack.pop();
-        LOG.trace("popped frame {{_&r}}off{{/r&/_}} stack: %s [{{y}}depth{{/y}}: %d]", frameMap, this.stack.size());
-        return null != frameMap;
+        final MemSpace frameSpace = this.stack.pop();
+        if (null == frameSpace)
+            return false;
+        LOG.trace("popped frame {{_&r}}off{{/r&/_}} stack: %s [{{y}}depth{{/y}}: %d]", frameSpace.pathStore, this.stack.size());
+        return true;
     }
 
     public void push(final Poly frame) {
-        final Map<fURI, Obj> frameMap = new LinkedHashMap<>();
+        final MemSpace frameSpace = new MemSpace(pattern, STACKSPACE_TID.extend("d" + this.stack.size()));
         if (frame.isRec())
-            frame.recValue().forEach((key, value1) -> frameMap.put(key.uriValue(), value1));
+            frame.recValue().forEach((key, value) -> frameSpace.write(key.uriValue(), value));
         else {
             for (int i = 0; i < frame.lstValue().size(); i++) {
-                frameMap.put(fURI.of(ARG_PREFIX + i), frame.lstValue().get(i));
+                frameSpace.write(fURI.of(ARG_PREFIX + i), frame.lstValue().get(i));
             }
         }
-        this.stack.push(frameMap);
-        LOG.trace("pushed frame {{_&g}}on{{/g&/_}} stack: %s [{{y}}depth{{/y}}: %d]", frameMap, this.stack.size());
+        this.stack.push(frameSpace);
+        LOG.trace("pushed frame {{_&g}}on{{/g&/_}} stack: %s [{{y}}depth{{/y}}: %d]", frameSpace.pathStore, this.stack.size());
     }
 
 
