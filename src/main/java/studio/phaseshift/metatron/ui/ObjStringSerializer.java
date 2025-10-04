@@ -207,7 +207,7 @@ public class ObjStringSerializer implements ObjSerializer<String> {
             for (final Inst inst : call.<Code>as().codeValue()) {
                 prettyPrintCode(sb, inst, depth + 1, leftMargin);
             }
-        } else if (call.isInst()) {
+        } else if (!call.isNoObj() && call.isInst()) {
             final Inst inst = call.as();
             sb.append(" ".repeat(leftMargin)).append("  ".repeat(depth)).append(inst).append("\n");
             if (null != inst.value()) {
