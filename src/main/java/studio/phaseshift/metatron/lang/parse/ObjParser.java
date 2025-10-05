@@ -72,11 +72,11 @@ public class ObjParser {
                 m_real(),
                 m_int(),
                 m_str(),
-                m_call(),
                 m_objs(),
                 m_rec(),
                 m_rel(),
                 m_lst(),
+                m_call(),
                 m_uri()));
         obj_no_code_parser.set(choice(
                 m_comment(),
@@ -99,10 +99,11 @@ public class ObjParser {
                 m_real(),
                 m_int(),
                 m_str(),
-                m_call(),
+                //m_call(),
                 m_objs(),
                 m_rec(),
                 m_lst(),
+                m_call(),
                 m_uri()));
         lst_parser.set(seq(m_type_prefix_opt_colon(LST_TID),
                 of('[').trim(),
@@ -337,6 +338,7 @@ public class ObjParser {
                 generate_sugar_parser(WITHIN_TID, of("_/"), 1, of("\\_")),
                 generate_sugar_parser(ID_TID, of('_'), 0),
                 generate_sugar_parser(FROM_TID, of('*'), 1),
+                generate_sugar_parser(MERGE_TID, of(">-"), 1),
                 generate_sugar_parser(MERGE_TID, of(">-"), 0),
                 generate_sugar_parser(SPLIT_TID, of("-<"), 1),
                 generate_sugar_parser(REF_TID, of("->"), 1),

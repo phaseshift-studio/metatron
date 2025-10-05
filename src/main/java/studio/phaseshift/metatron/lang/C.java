@@ -90,7 +90,9 @@ public interface C<T extends Comparable<T>, D extends C<T, D>> extends Comparabl
         return !this.isNeg();
     }
 
-    boolean isZeroOrNeg();
+    default boolean isZeroOrNeg() {
+        return this.isZero() || this.isNeg();
+    }
 
     boolean isOne();
 

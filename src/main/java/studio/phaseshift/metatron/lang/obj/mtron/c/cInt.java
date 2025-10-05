@@ -80,11 +80,6 @@ public class cInt implements C<Long, cInt> {
     }
 
     @Override
-    public boolean isZeroOrNeg() {
-        return this.isZero() || this.isNeg();
-    }
-
-    @Override
     public boolean isOne() {
         return Objects.equals(this.min, 1L) && Objects.equals(this.max, 1L);
     }

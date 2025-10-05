@@ -38,14 +38,6 @@ public final class ObjUtil {
 
     }
 
-    public static Obj orNoObj(final Obj obj) {
-        return null == obj ? NoObj.single() : obj;
-    }
-
-    public static boolean isLambda(final Object o) {
-        return o == null || o.toString().contains("$$Lambda");
-    }
-
     public static Obj appendOnRead(final boolean send, final Obj base, final Obj addition) {
         return addition.isNoObj() ? base : (send ? base.append(MRel.of(addition.vid().toUri(), addition)) : base.append(addition));
     }
@@ -102,7 +94,7 @@ public final class ObjUtil {
         return other instanceof Obj &&
                 ((obj.isNoObj() && ((Obj) other).isNoObj()) ||
                         (Objects.equals(obj.tid(), ((Obj) other).tid()) &&
-                                Objects.equals(obj.vid(), ((Obj) other).vid()) &&
+                                Objects.equals(obj.vid(), ((Obj) other).vid()) && // TODO: ??
                                 Objects.equals(obj.value(), ((Obj) other).value())));
     }
 

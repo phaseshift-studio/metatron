@@ -76,7 +76,7 @@ public class IntTest extends MetatronTest {
             "inst::1                                                      | <ERROR>",
             "code::1                                                      | <ERROR>",
             "3.plus(mult(2))                                              | 9",
-            "{2,3}>-plus(mult(2))                                         | {6,9}",
+            "{2,3}>-.plus(mult(2))                                         | {6,9}",
             // "{2,3}.plus(mult(2))                                       | {6,9}",
            // "{2,3}.is?int[*]<=int[*](in?bool[+]<=int[*](int[2]::T[]))   | {2,3}",
             "{1,2,3}.plus(1).plus(2)                                      | {4,5,6}",

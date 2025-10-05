@@ -131,6 +131,7 @@ public interface Inst extends Call {
                         .stream()
                         .map(Obj::<Inst>as)
                         .filter(i -> lhs.matches(i.dom()))
+                        .filter(i -> this.args().isRec() || i.args().isRec() || i.args().count() == this.args().count())
                         .map(i -> {
                             if (i.args().isLst()) {
                                 LOG.trace("processing lst args of %s", i);
