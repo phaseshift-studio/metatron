@@ -93,14 +93,14 @@ public class RecTest extends MetatronTest {
         super.testMatches(recA, recB, matches);
     }
 
-    /*@Override
+    @Override
     @ParameterizedTest
     @CsvSource(value = {
-            "[a=>b]               % type()         % rec::T[]",
+            "[1,2,3]-<[>-is(gt(2))=>>-is(gt(1)),>-is(gt(1))=>>-]                          % [3=>{2,3},{2,3}=>{1,2,3}]",
     }, delimiter = '%')
-    public void testCode(final String start, final String code,final String expected) {
-        super.testCode(start, code,expected);
-    }*/
+    public void testCode(final String code, final String expected) {
+        super.testCode(code, expected);
+    }
 
 
     @Test

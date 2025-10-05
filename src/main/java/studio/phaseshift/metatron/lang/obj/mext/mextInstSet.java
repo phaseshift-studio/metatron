@@ -59,9 +59,4 @@ public class mextInstSet extends MInstSet {
     public static mextInstSet of(final fURI vid) {
         return new mextInstSet(vid);
     }
-
-    @Override
-    public mextInstSet clone(final Object value, final fURI tid, final fURI vid) {
-        return this;
-    }
 }

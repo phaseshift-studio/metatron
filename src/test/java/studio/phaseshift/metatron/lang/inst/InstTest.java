@@ -25,18 +25,15 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.BootLoader;
+import studio.phaseshift.metatron.MetatronTest;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.Inst;
 import studio.phaseshift.metatron.lang.obj.mtron.MInst;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class InstTest {
+public class InstTest extends MetatronTest {
 
-    @BeforeAll
-    public static void setup() {
-        BootLoader.load();
-    }
 
     @ParameterizedTest
     @CsvSource(value = {
@@ -50,12 +47,5 @@ public class InstTest {
         assertEquals(op, inst.tid().path());
         assertEquals(fURI.of(dom), inst.dom().tid());
         assertEquals(fURI.of(rng), inst.rng().tid());
-    }
-
-    @Test
-    public void testInstObj() {
-        // assertEquals(PLUS_TID.query(DOM,INT_TID).query(RNG,INT_TID),  new MInstSet(fURI.of("/mnt/mtron")).resolve(MInt.of(2),MInst.instA(fURI.of("plus"))).tid());
-        // assertEquals(START_TID.query(DOM,NOOBJ_TID).query(RNG, ANY),  new MInstSet().resolve(NoObj.single(),MInst.instA(fURI.of("start"))).tid());
-        //System.out.println(i);
     }
 }

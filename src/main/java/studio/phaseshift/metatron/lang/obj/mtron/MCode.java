@@ -21,9 +21,12 @@
 package studio.phaseshift.metatron.lang.obj.mtron;
 
 import studio.phaseshift.metatron.lang.fURI;
+import studio.phaseshift.metatron.lang.obj.Call;
 import studio.phaseshift.metatron.lang.obj.Code;
 import studio.phaseshift.metatron.lang.obj.Inst;
+import studio.phaseshift.metatron.lang.obj.Obj;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static studio.phaseshift.metatron.lang.obj.mtron.mtronInstSet.CODE_TID;
@@ -41,6 +44,17 @@ public class MCode extends MObj implements Code {
     @Override
     public Code clone(final Object value, final fURI tid, final fURI vid) {
         return super.clone(value, tid, vid, (a, b, c) -> new MCode((List<Inst>) a, b, c));
+    }
+
+    @Override
+    public Code append(final Obj obj) { // TODO: is this plus()? and should this actually be split and not concat?
+        if (obj.isCall()) {
+            final List<Inst> newInsts = new ArrayList<>();
+            newInsts.addAll(this.insts());
+            newInsts.addAll(obj.<Call>as().insts());
+            return this.value(newInsts);
+        }
+        return this;
     }
 
     @Override

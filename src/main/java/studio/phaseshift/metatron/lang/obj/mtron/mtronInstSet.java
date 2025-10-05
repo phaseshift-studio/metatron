@@ -131,10 +131,7 @@ public class mtronInstSet extends MInstSet {
                 BLOCK_TID, instC(BLOCK_TID.dom(fURI.ALL.maybe()).rng(fURI.ALL.maybe()), lst(T(fURI.ALL.maybeSome())), (lhs, inst) -> inst.arg(0)),
                 SPLIT_TID, instC(SPLIT_TID.dom(ANY_TID).rng(LST_TID), lst(T(LST_TID)), (lhs, inst) -> MLst.of(inst.arg(0).lstValue().stream().map(e -> e.apply(lhs)).toList())),
                 SPLIT_TID, instC(SPLIT_TID.dom(ANY_TID).rng(REL_TID), lst(T(REL_TID)), (lhs, inst) -> MRel.of(inst.arg(0).<Rel>as().first().apply(lhs), inst.arg(0).<Rel>as().second().apply(lhs))),
-                SPLIT_TID, instC(SPLIT_TID.dom(ANY_TID).rng(REC_TID), lst(T(REC_TID)), (lhs, inst) -> MRec.of(inst.arg(0).recValue().entrySet().stream()
-                        .map(e -> e.getKey().apply(lhs).choose(Obj::isNoObj, null, x -> MRel.of(x, e.getValue().apply(lhs))))
-                        .filter(x -> !Objects.isNull(x))
-                        .collect(Collectors.toMap(a -> a.<Rel>as().first(), b -> b.<Rel>as().second(), (a, b) -> b, LinkedHashMap<Obj, Obj>::new)))),
+                SPLIT_TID, instC(SPLIT_TID.dom(ANY_TID).rng(REC_TID), lst(T(REC_TID)), (lhs, inst) -> MRec.of(inst.arg(0).recValue().entrySet().stream().map(e -> e.getKey().apply(lhs).choose(Obj::isNoObj, x -> null, x -> MRel.of(x, e.getValue().apply(lhs)))).filter(x -> !Objects.isNull(x)).collect(Collectors.toMap(a -> a.<Rel>as().first(), b -> b.<Rel>as().second(), Obj::append, LinkedHashMap<Obj, Obj>::new)))),
                 SPLIT_TID, instC(SPLIT_TID.dom(ANY_TID).rng(ANY_TID), lst(T(ANY_TID)), (lhs, inst) -> inst.arg(0).apply(lhs)),
                 MERGE_TID, instC(MERGE_TID.dom(LST_TID).rng(fURI.ALL.maybeSome()), lst(), (lhs, inst) -> MObjs.of(lhs.<Lst>as().value())),
                 MERGE_TID, instC(MERGE_TID.dom(REC_TID).rng(REL_TID.maybeSome()), lst(), (lhs, inst) -> lhs.isPoly() ? MObjs.of(lhs.<Poly>as().elements()) : lhs),
@@ -168,7 +165,7 @@ public class mtronInstSet extends MInstSet {
                 PLUS_TID, instC(PLUS_TID.dom(STR_TID).rng(STR_TID), lst(T(STR_TID)), (lhs, inst) -> lhs.value(lhs.strValue() + inst.arg(0).strValue())),
                 PLUS_TID, instC(PLUS_TID.dom(URI_TID).rng(URI_TID), lst(T(URI_TID)), (lhs, inst) -> lhs.value(lhs.uriValue().plus(inst.arg(0).uriValue()))),
                 PLUS_TID, instC(PLUS_TID.dom(LST_TID).rng(LST_TID), lst(T(LST_TID)), (lhs, inst) -> lhs.value(Stream.concat(lhs.lstValue().stream(), inst.arg(0).lstValue().stream()).toList())),
-                PLUS_TID, instC(PLUS_TID.dom(REC_TID).rng(REC_TID), lst(T(REC_TID)), (lhs, inst) -> lhs.value(Stream.concat(lhs.recValue().entrySet().stream(), inst.arg(0).recValue().entrySet().stream()).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (a, b) -> b, LinkedHashMap::new)))),
+                PLUS_TID, instC(PLUS_TID.dom(REC_TID).rng(REC_TID), lst(T(REC_TID)), (lhs, inst) -> lhs.value(Stream.concat(lhs.recValue().entrySet().stream(), inst.arg(0).recValue().entrySet().stream()).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, Obj::append, LinkedHashMap::new)))),
                 MULT_TID, instC(MULT_TID.dom(BOOL_TID).rng(BOOL_TID), lst(T(BOOL_TID)), (lhs, inst) -> lhs.value(lhs.boolValue() && inst.arg(0).boolValue())),
                 MULT_TID, instC(MULT_TID.dom(INT_TID).rng(INT_TID), lst(T(INT_TID)), (lhs, inst) -> lhs.value(lhs.intValue() * inst.arg(0).intValue())),
                 MULT_TID, instC(MULT_TID.dom(REAL_TID).rng(REAL_TID), lst(T(REAL_TID)), (lhs, inst) -> lhs.value(lhs.realValue() * inst.arg(0).realValue())),
@@ -193,7 +190,7 @@ public class mtronInstSet extends MInstSet {
                     throw MTronException.of("unknown pair: %s %s", lhs, t);
                 }),
                 WITHIN_TID, instC(WITHIN_TID.dom(LST_TID).rng(LST_TID), lst(T(ANY_TID.maybeSome())), (lhs, inst) -> lst(inst.arg(0).apply(ooobj(lhs.lstValue())))),
-                WITHIN_TID, instC(WITHIN_TID.dom(REC_TID).rng(REC_TID), lst(T(fURI.ALL.maybeSome())), (lhs, inst) -> rec(lhs.recValue().entrySet().stream().map(kv -> inst.arg(0).apply(MRel.of(kv.getKey(), kv.getValue())).<Rel>as()).collect(Collectors.toMap(Rel::first, Rel::second, (a, b) -> b, LinkedHashMap<Obj, Obj>::new)))),
+                WITHIN_TID, instC(WITHIN_TID.dom(REC_TID).rng(REC_TID), lst(T(fURI.ALL.maybeSome())), (lhs, inst) -> rec(lhs.recValue().entrySet().stream().map(kv -> inst.arg(0).apply(MRel.of(kv.getKey(), kv.getValue())).<Rel>as()).collect(Collectors.toMap(Rel::first, Rel::second, Obj::append, LinkedHashMap<Obj, Obj>::new)))),
                 BARRIER_TID, instC(BARRIER_TID.dom(ANY_TID.maybeSome()).rng(fURI.ALL.maybeSome()), lst(T(fURI.ALL.maybeSome())), (lhs, inst) -> inst.arg(0).apply(lhs)),
                 COUNT_TID, instC(COUNT_TID.dom(ANY_TID.maybeSome()).rng(INT_TID), lst(), (lhs, inst) -> IteratorUtil.reduce(lhs.iterator(), jnt(0), (a, b) -> jnt(a.intValue() + b.tid().cV().max()))),
                 SUM_TID, instC(SUM_TID.dom(INT_TID.maybeSome()).rng(INT_TID), lst(), (lhs, inst) -> IteratorUtil.reduce(lhs.iterator(), jnt(0), (a, b) -> jnt(a.intValue() + (b.intValue() * b.tid().cV().max())))),
@@ -241,6 +238,15 @@ public class mtronInstSet extends MInstSet {
 
     }
 
+    @Override
+    public Set<Type> types() {
+        return Set.of(
+                T(BOOL_TID), T(INT_TID), T(REAL_TID),
+                T(STR_TID), T(URI_TID), T(LST_TID),
+                T(REC_TID), T(INST_TID), T(REC_TID),
+                T(OBJS_TID), T(NOOBJ_TID));
+    }
+
     public mtronInstSet(final fURI vid) {
         super(MTRON_TID, vid);
         this.load();
@@ -249,10 +255,4 @@ public class mtronInstSet extends MInstSet {
     public static mtronInstSet of(final fURI vid) {
         return new mtronInstSet(vid);
     }
-
-    @Override
-    public mtronInstSet clone(final Object value, final fURI tid, final fURI vid) {
-        return this;
-    }
-
 }

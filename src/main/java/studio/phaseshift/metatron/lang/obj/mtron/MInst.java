@@ -75,8 +75,9 @@ public class MInst extends MObj implements Inst {
 
     @Override
     public boolean equals(final Object other) {
-        return this.getClass().isAssignableFrom(other.getClass()) &&
+        return (other instanceof Inst) &&
                 Objects.equals(this.tid, ((Obj) other).tid()) &&
+                Objects.equals(this.args(), ((Inst) other).args()) &&
                 Objects.equals(this.vid, ((Obj) other).vid());
         /*Objects.equals(this.value,((Obj) other).value())*/
     }

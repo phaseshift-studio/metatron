@@ -128,10 +128,4 @@ public class mgrphInstSet extends MInstSet {
                 PROPERTIES_TID, instC(PROPERTIES_TID.dom(MGRPH_TID.extend(fURI.SINGLE)).rng(ANY_TID.maybeSome()), lst(T(URI_TID.maybeSome())), (lhs, inst) -> objs(IteratorUtil.list((Iterator) lhs.<MElement>as().properties(labelsAsUri(inst)))))
         );
     }
-
-    @Override
-    public mgrphInstSet clone(final Object value, final fURI tid, final fURI vid) {
-        return this;
-    }
-
 }

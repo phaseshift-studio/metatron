@@ -59,7 +59,7 @@ public class FileSpace extends MSpace {
             else {
                 if (key.hasPattern()) {
                     try (Stream<Path> walk = Files.walk(Path.of(this.pattern.retractPattern().toString()), vid.segments().size(), FileVisitOption.FOLLOW_LINKS)) {
-                        return walk.map(p -> f(p.toString())).filter(p -> p.matches(vid)).collect(Collectors.toMap(p -> p, p -> uri(p.toString()), (a, b) -> b, LinkedHashMap::new));
+                        return walk.map(p -> f(p.toString())).filter(p -> p.matches(vid)).collect(Collectors.toMap(p -> p, p -> uri(p.toString()),Obj::append, LinkedHashMap::new));
                     } catch (IOException e) {
                         throw MTronException.of(e);
                     }
@@ -70,7 +70,7 @@ public class FileSpace extends MSpace {
                             return Files.list(vidPath)
                                     .collect(Collectors.toMap(
                                             p -> f(p.toString()),
-                                            p -> MRec.ofUriKeyed("name", str(p.getFileName().toString()), "permissions", str(MTronException.wrap(() -> Files.getPosixFilePermissions(p)).toString())), (a, b) -> b, LinkedHashMap::new));
+                                            p -> MRec.ofUriKeyed("name", str(p.getFileName().toString()), "permissions", str(MTronException.wrap(() -> Files.getPosixFilePermissions(p)).toString())), Obj::append, LinkedHashMap::new));
                         } else {
                             final Str value = MStr.of(Files.readString(vidPath));
                             return Map.of(vid, value);

@@ -60,12 +60,6 @@ public class ObjParser {
     private static final SettableParser rel_parser = SettableParser.undefined();
     private static final SettableParser obj_rel_back_parser = SettableParser.undefined();
 
-    private static final Map<fURI, fURI> baseResolution = new HashMap<>() {{
-        put(fURI.of("int"), INT_TID);
-        put(fURI.of("real"), REAL_TID);
-        put(fURI.of("str"), STR_TID);
-    }};
-
     static {
         rel_parser.set(seq(m_type_prefix_opt_colon(REL_TID), obj_rel_back_parser, of("=>").trim(), m_obj())
                 .map(t -> MRel.of(pick(t, 1), pick(t, 3), pick(t, 0))));
@@ -77,9 +71,9 @@ public class ObjParser {
                 m_real(),
                 m_int(),
                 m_str(),
-                m_code(),
+                m_call(),
                 m_objs(),
-                m_inst(),
+                // m_inst(),
                 m_rec(),
                 m_rel(),
                 m_lst(),
@@ -105,10 +99,10 @@ public class ObjParser {
                 m_real(),
                 m_int(),
                 m_str(),
-                m_code(),
+                m_call(),
                 m_objs(),
                 m_rec(),
-                m_inst(),
+                //m_inst(),
                 m_rec(),
                 m_lst(),
                 m_uri()));
@@ -125,15 +119,13 @@ public class ObjParser {
                 seq(of('(').trim(), choice(rec_internal(), lst_internal(), of("")), of(')').trim()).pick(1), // 1 inst_args
                 opt(seq(of('{').trim(), m_code(), of('}').trim()).pick(1), null)) //  inst_code
                 // inst_seed []
-                .map(t -> {
-                    return (Inst) new MInst(Triplet.with(
-                            pick(t, 1).equals("") ? MLst.of() : pick(t, 1) instanceof List ?
-                                    MLst.of(ObjParser.<List<Obj>>pick(t, 1)) :
-                                    MRec.of(ObjParser.<Map<Obj, Obj>>pick(t, 1)),
-                            Inst.f.of(ObjParser.<Obj>pick(t, 2)),
-                            NoObj.single()), // todo: encode seed in parser
-                            pick(t, 0), fURI.NULL);
-                }));
+                .map(t -> (Inst) new MInst(Triplet.with(
+                        pick(t, 1).equals("") ? MLst.of() : pick(t, 1) instanceof List ?
+                                MLst.of(ObjParser.<List<Obj>>pick(t, 1)) :
+                                MRec.of(ObjParser.<Map<Obj, Obj>>pick(t, 1)),
+                        Inst.f.of(ObjParser.<Obj>pick(t, 2)),
+                        NoObj.single()), // todo: encode seed in parser
+                        pick(t, 0), fURI.NULL)));
     }
 
     public static Parser lst_internal() {
@@ -142,11 +134,14 @@ public class ObjParser {
 
     public static Parser rec_internal() {
         return choice(of("=>").trim(),
-                seq(m_obj(), of("=>").trim(), m_obj()).separatedBy(of(',').trim())).map(t ->
-                t.equals("=>") ? Map.of() : ((List) t)
-                        .stream()
-                        .filter(o -> o instanceof List)
-                        .collect(Collectors.toMap(kv -> pick(kv, 0), kv -> pick(kv, 2), (a, b) -> b, LinkedHashMap::new)));
+                /*choice(seq(of('(').trim(), m_obj(), of("=>").trim(), m_obj(), of(')').trim()),*/
+                seq(m_obj(), of("=>").trim(), m_obj()).separatedBy(of(',').trim()))
+                        .map(t -> t.equals("=>") ?
+                                Map.of() :
+                                ((List) t).stream()
+                                        .filter(o -> o instanceof List)
+                                        //.map(l -> (((List) l).get(0) instanceof Obj) ? l : ((List) l).subList(1, ((List) l).size() - 1))
+                                        .collect(Collectors.toMap(kv -> pick(kv, 0), kv -> pick(kv, 2), Obj::append, LinkedHashMap::new)));
     }
 
     public static <O extends Obj> Iterator<O> eval(final String code) {
@@ -207,10 +202,11 @@ public class ObjParser {
     }
 
     public static Parser m_furi_query() {
-        return seq(of('?'), choice(
-                m_furi_inst_dom_rng(),
-                seq(word().plus(), opt(seq(of('='), choice(m_furi_no_query(), word().or(anyOf(FULL_FURI_CHARS)).star())), "")).separatedBy(of('&')).flatten()
-        )).map(t -> pick(t, 1));
+        return seq(of('?'), seq(
+                opt(m_furi_inst_dom_rng(), ""),
+                opt(of('&'), ""),
+                opt(seq(word().plus(), opt(seq(of('='), choice(m_furi_no_query(), word().or(anyOf(FULL_FURI_CHARS)).star())), "")).separatedBy(of('&')), "").flatten())
+        ).map(t -> ObjParser.<List<String>>pick(t, 1).stream().reduce((a, b) -> a + b).orElse(""));
     }
 
     public static Parser m_furi_inst_dom_rng() {
@@ -223,13 +219,13 @@ public class ObjParser {
 
 
     public static Parser m_inst_furi() {
-        return seq(m_furi(REDUCED_FURI_CHARS, true, false), opt(seq(of('?'), m_furi_inst_dom_rng()).map(t -> ObjParser.pick(t, 1)), null), opt(of("::").trim(), "::"))
+        return seq(m_furi(REDUCED_FURI_CHARS, true, false), opt(m_furi_query(), ""), opt(of("::").trim(), "::"))
                 .map(t -> ObjParser.<fURI>pick(t, 0).query(ObjParser.pick(t, 1)));
     }
 
 
     public static Parser m_call() {
-        return choice(m_code(), m_inst());
+        return choice(seq(of('('), m_code(), of(')')).map(t -> pick(t, 1)), m_code());
     }
 
     public static Parser m_obj() {
@@ -304,7 +300,7 @@ public class ObjParser {
     }
 
     public static Parser sugar_code() {
-        return seq(opt(obj_no_code_parser, NoObj.single()), opt(of(".").trim(), '.'), m_call()).map(t -> {
+        return seq(opt(obj_no_code_parser, NoObj.single()), opt(of(".").trim(), '.'), m_code()).map(t -> {
             final List<Inst> newCode = new ArrayList<>();
             newCode.add(new MInst(Triplet.with(MLst.of(ObjParser.<Obj>pick(t, 0)), Inst.f.UNKNOWN, NoObj.single()), START_TID, fURI.NULL));
             newCode.addAll(ObjParser.<Call>pick(t, 2).insts());

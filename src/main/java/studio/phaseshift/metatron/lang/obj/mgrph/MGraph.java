@@ -124,7 +124,7 @@ public class MGraph extends MSpace implements Graph, WrappedGraph<Graph> {
             if (vid.bimatches(f("/+/vertex/+"))) {
                 final String selector = vid.tail(1).asNode().asRelative().toString();
                 if (selector.equals(fURI.ONE_WILD_STRING) || selector.equals(fURI.ALL_WILD_STRING)) {
-                    IteratorUtil.stream(this.mvertices()).collect(Collectors.toMap(MVertex::vid, v -> v, (a, b) -> b, () -> map));
+                    IteratorUtil.stream(this.mvertices()).collect(Collectors.toMap(MVertex::vid, v -> v, Obj::append, () -> map));
                 } else {
                     IteratorUtil.findFirst(this.mvertices(vid)).ifPresent(v -> map.put(v.vid(), v));
                 }

@@ -22,7 +22,9 @@ package studio.phaseshift.metatron.lang.obj;
 
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.mtron.MLst;
+import studio.phaseshift.metatron.lang.obj.mtron.mtronInstSet;
 import studio.phaseshift.metatron.space.Router;
+import studio.phaseshift.metatron.space.Space;
 import studio.phaseshift.metatron.space.mem.MSpace;
 import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.ObjUtil;
@@ -90,7 +92,8 @@ public class MInstSet extends MSpace implements InstSet {
     }
 
     @Override
-    public MInstSet clone(final Object value, final fURI tid, final fURI vid) {
+    public InstSet clone(final Object value, final fURI tid, final fURI vid) {
+        Space.Helpers.noCloneWarning(this);
         return this;
     }
 

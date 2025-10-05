@@ -32,7 +32,6 @@ import studio.phaseshift.metatron.util.MTronException;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -158,7 +157,7 @@ public interface Inst extends Call {
                                             Obj this_arg = this.arg(kv.getKey().uriValue(), counter.getAndIncrement());
                                             return List.of(kv.getKey(), kv.getValue().isCall() ? kv.getValue().apply(this_arg) : this_arg);
                                         })
-                                        .collect(Collectors.toMap(kv -> kv.get(0), kv -> kv.get(1), (a, b) -> b, LinkedHashMap::new))));
+                                        .collect(Collectors.toMap(kv -> kv.get(0), kv -> kv.get(1), Obj::append, LinkedHashMap::new))));
                             } else
                                 throw MTronException.of("inst args must be a lst or rec: %s", i);
                         })
@@ -208,7 +207,7 @@ public interface Inst extends Call {
                             .map(kv -> List.of(kv.getKey(), blocking ?
                                     kv.getValue() :
                                     kv.getValue().apply(lhs)))
-                            .collect(Collectors.toMap(kv -> kv.get(0), kv -> kv.get(1), (a, b) -> b, LinkedHashMap::new)));
+                            .collect(Collectors.toMap(kv -> kv.get(0), kv -> kv.get(1), Obj::append, LinkedHashMap::new)));
             final Inst resolved = this.args(cargs);
             LOG.trace("resolution ({{m}}%s {{g}}=>{{/g}} %s{{/m}}): %s", currentResolution, resolved.resolution(), resolved);
             return resolved;
