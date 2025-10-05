@@ -564,6 +564,11 @@ public class fURI implements Cloneable, Ring<fURI> {
 
     }
 
+    public fURI path(final List<String> segments) {
+        return new fURI(this.scheme, this.host, this.port, this.sstart, segments, this.send, null == this.query ? null : this.query.toString());
+    }
+
+
     public boolean onlyMatches(final fURI other) {
         return !this.equals(other) && this.matches(other);
     }
@@ -594,6 +599,46 @@ public class fURI implements Cloneable, Ring<fURI> {
             }
         }
         return selection;
+    }
+
+   /* public boolean matches(final fURI rhs, final Map<fURI, fURI> generics) {
+        final fURI lhsBaseNorm = this.basePath().isGeneric() ? generics.getOrDefault(this.basePath(), this.basePath()) : this.basePath();
+        final fURI lhsDomNorm = this.hasDom() && this.dom().isGeneric() ? generics.getOrDefault(this.dom(), this.dom()) : this.dom();
+        final fURI lhsRngNorm = this.hasRng() && this.rng().isGeneric() ? generics.getOrDefault(this.rng(), this.rng()) : this.rng();
+        final fURI lhsNorm = lhsBaseNorm.dom(lhsDomNorm).rng(lhsRngNorm);
+        /// /////////////
+        final fURI rhsBaseNorm = rhs.basePath().isGeneric() ? generics.getOrDefault(rhs.basePath(), rhs.basePath()) : rhs.basePath();
+        final fURI rhsDomNorm = rhs.hasDom() && rhs.dom().isGeneric() ? generics.getOrDefault(rhs.dom(), rhs.dom()) : rhs.dom();
+        final fURI rhsRngNorm = rhs.hasRng() && rhs.rng().isGeneric() ? generics.getOrDefault(rhs.rng(), rhs.rng()) : rhs.rng();
+        final fURI rhsNorm = rhsBaseNorm.dom(rhsDomNorm).rng(rhsRngNorm);
+        return lhsNorm.matches(rhsNorm);
+    }*/
+
+    private static boolean isGenericString(final String s) {
+        boolean acharacter = s.chars().anyMatch(c -> c != ALL_WILD_CHAR && c != ONE_WILD_CHAR);
+        if (s.chars().anyMatch(Character::isLowerCase))
+            return false;
+        return acharacter;
+    }
+
+    public fURI resolve(final Map<fURI, fURI> generics) {
+        final fURI cless = this.cLess();
+        if (cless.isGeneric()) {
+            fURI lhs = cless.basePath().isGeneric() ?
+                    cless.basePath().path(cless.basePath().segments().stream().map(s -> generics.getOrDefault(f(s), f(s)).toString()).toList()) :
+                    cless.basePath();
+            if (cless.hasDom())
+                lhs = cless.dom().isGeneric() ?
+                        lhs.dom(cless.dom().path(cless.dom().segments().stream().map(s -> generics.getOrDefault(f(s), f(s)).toString()).toList())) :
+                        lhs.dom(cless.dom());
+            if (cless.hasRng())
+                lhs = cless.rng().isGeneric() ?
+                        lhs.rng(cless.rng().path(cless.rng().segments().stream().map(s -> generics.getOrDefault(f(s), f(s)).toString()).toList())) :
+                        lhs.rng(cless.rng());
+            return lhs.query(this.hasQuery() ? this.query.toString() : null).c(this.c());
+        } else {
+            return this;
+        }
     }
 
     public boolean matches(final fURI rhs) {
@@ -631,6 +676,18 @@ public class fURI implements Cloneable, Ring<fURI> {
             }  // +
         }
         return this.path.size() == other.path.size() && this.send == other.send;
+    }
+
+    public boolean isGeneric() {
+        boolean acharacter = false;
+        boolean acaps = false;
+        for (final String seg : this.path) {
+            if (!acharacter)
+                acharacter = seg.chars().anyMatch(c -> c != ALL_WILD_CHAR && c != ONE_WILD_CHAR);
+            if (!acaps)
+                acaps = seg.chars().allMatch(Character::isUpperCase);
+        }
+        return acharacter && acaps;
     }
 
     public boolean equals(final Object other) {

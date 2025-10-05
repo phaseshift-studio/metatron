@@ -91,6 +91,64 @@ public class fURITest {
     }
 
     @ParameterizedTest
+    @CsvSource(value = {
+            "#                                    | false",
+            "+                                    | false",
+            "                                     | false",
+            "A                                    | true",
+            "a                                    | false",
+            "ABC                                  | true",
+            "/+/+/A                               | true",
+            "/mtron/+/A                           | true",
+            "AbC                                  | false",
+            "AbC/A                                | true",
+            "abc/A                                | true",
+            "abc/d                                | false",
+            "A/B/C                                | true",
+            "A/+/C                                | true",
+            "A/#                                  | true",
+            "A/#[*]                               | true"
+    }, delimiter = '|')
+    public void testGeneric(final String f, final boolean isGeneric) {
+        final fURI furi1 = fURI.of(null == f ? "" : f);
+        if (null == f) {
+            assertEquals(isGeneric, furi1.isGeneric());
+            return;
+        }
+        final fURI furi2 = ObjParser.m_furi().parse(f).get();
+        assertEquals(f, furi1.toString());
+        assertEquals(f, furi2.toString());
+        assertEquals(furi1, furi2);
+        assertEquals(furi1, fURI.of(furi1.toString()));
+        LOG.info("testing {{b}}%s{{/b}} %s generics", furi1, isGeneric ? "{{g}}for{{/g}}" : "{{r}}for no{{/r}}");
+        assertEquals(isGeneric, furi1.isGeneric());
+        assertEquals(isGeneric, furi2.isGeneric());
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "A             |  A             | true",
+            "A/b/c         |  A/B/C         | true",
+            "A/B           |  A/C           | false",
+            "A[+]          |  A[*]          | true",
+            "A/B[2,4]      |  a/#[*]        | true",
+            "A/B/C[2,4]    |  a/#[*]        | true",
+            "A/[+]         |  A/#[*]        | true",
+            "A/[0]         |  A/#[2]        | false",
+            "A/aB[0]       |  Z/+[0]        | true"
+    }, delimiter = '|')
+    public void testGenericMatch(final String f1, final String f2, final boolean matches) {
+        final Map<fURI, fURI> generics = Map.of(f("A"), f("a"), f("B"), f("b"), f("C"), f("c"));
+        final fURI lhs = f(f1);
+        final fURI lhsResolved = lhs.resolve(generics);
+        final fURI rhs = f(f2);
+        final fURI rhsResolved = rhs.resolve(generics);
+        final boolean resultMatch = lhsResolved.matches(rhsResolved);
+        LOG.info("testing {{b}}%s{{/b}} [resolved: {{m}}%s{{/m}}] %s {{b}}%s{{/b}} [resolved: {{m}}%s{{/m}}]", lhs, lhsResolved, matches ? "{{g}}matches{{/g}}" : "{{r}}doesn't match{{/r}}", rhs, rhsResolved);
+        assertEquals(matches, resultMatch);
+    }
+
+    @ParameterizedTest
     @MethodSource("testSegmentsData")
     public void testSegments(final String f, final List<String> segments) {
         final fURI furi = fURI.of(f);

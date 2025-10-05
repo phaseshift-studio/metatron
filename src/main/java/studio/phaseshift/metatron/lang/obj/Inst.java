@@ -29,9 +29,7 @@ import studio.phaseshift.metatron.ui.GraphittyLogger;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -127,6 +125,9 @@ public interface Inst extends Call {
         final Resolution currentResolution = this.resolution();
         if (currentResolution == Resolution.A) {
             try {
+                /*final Map<fURI, fURI> genericMap = new HashMap<>();
+                if (this.tid().dom().isGeneric())
+                    genericMap.put(this.tid().dom(), lhs.tid().qLess());*/
                 final Inst resolved = Router.global().read(this.tid())
                         .stream()
                         .map(Obj::<Inst>as)

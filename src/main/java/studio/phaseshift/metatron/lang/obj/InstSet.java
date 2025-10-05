@@ -25,8 +25,18 @@ import studio.phaseshift.metatron.space.Space;
 
 import java.util.Set;
 
+import static studio.phaseshift.metatron.lang.fURI.f;
+
 
 public interface InstSet extends Space {
+
+    fURI A = f("A");
+    fURI B = f("B");
+    fURI C = f("C");
+    fURI D = f("D");
+    fURI E = f("E");
+    fURI F = f("F");
+    fURI G = f("G");
 
     @Override
     fURI pattern();

@@ -115,7 +115,7 @@ public class mtronInstSet extends MInstSet {
     protected void load() {
         BASE_TYPES.forEach(t -> Router.global().registerRewrite(f(t.name()), t));
         this.write(
-                START_TID, instC(START_TID.dom(fURI.NONE.zero()).rng(OBJS_ID), lst(T(OBJS_ID)), (lhs, inst) -> inst.arg(0)),
+                START_TID, instC(START_TID.dom(fURI.NONE.zero()).rng(OBJS_ID.maybeSome()), lst(T(OBJS_ID.maybeSome())), (lhs, inst) -> inst.arg(0)),
                 END_TID, instC(END_TID.dom(OBJS_ID).rng(NOOBJ_TID.zero()), lst(), (lhs, inst) -> NoObj.single()),
                 ID_TID, instC(ID_TID.dom(fURI.ALL.maybe()).rng(fURI.ALL.maybe()), lst(), (lhs, inst) -> lhs),
                 APPLY_TID, instC(APPLY_TID.dom(fURI.ALL).rng(fURI.ALL), lst(T(INST_TID)), (lhs, inst) -> inst.arg(0).apply(lhs)),
