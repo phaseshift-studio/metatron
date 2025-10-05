@@ -23,6 +23,7 @@ package studio.phaseshift.metatron.lang.obj.mtron;
 import org.apache.tinkerpop.gremlin.util.function.TriFunction;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.Obj;
+import studio.phaseshift.metatron.space.Router;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.ObjUtil;
@@ -77,11 +78,11 @@ public abstract class MObj implements Obj {
     }
 
     public <O extends Obj> O clone(final Object newValue, final fURI newtid, final fURI newvid, final TriFunction<Object, fURI, fURI, O> constructor) {
-        if (!Objects.equals(newValue, this.value) || !newtid.equals(this.tid)) {
+        if (!Objects.equals(newValue, this.value) || !newtid.equals(this.tid) || !Objects.equals(newvid, this.vid)) {
             try {
                 final O clone = constructor.apply(newValue, newtid, newvid);
-                // if (null != Router.global() && !this.isType() && null != this.vid)
-                //      Router.global().write(this.vid, clone);
+                if (null != newvid && null != Router.global() && !this.isType())
+                    Router.global().write(newvid, clone);
                 return clone;
             } catch (final Exception e) {
                 throw MTronException.of(e);
