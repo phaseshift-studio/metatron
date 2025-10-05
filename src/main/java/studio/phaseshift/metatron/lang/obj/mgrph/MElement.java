@@ -67,7 +67,6 @@ public abstract class MElement implements Element, Obj {
         return this.element;
     }
 
-
     @Override
     public MElement clone(final Object value, final fURI tid, final fURI vid) {
         return this; // TODO: fix

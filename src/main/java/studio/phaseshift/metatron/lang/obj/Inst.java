@@ -45,12 +45,12 @@ public interface Inst extends Call {
 
     // /mtron/plus?dom=/mtron/int,rng=/mtron/int
 
-    public enum Resolve {
+    public enum Resolution {
         A("f"), B("f(a)"), C("f(a)->b");
 
         final String value;
 
-        Resolve(final String value) {
+        Resolution(final String value) {
             this.value = value;
         }
 
@@ -113,15 +113,8 @@ public interface Inst extends Call {
         return this.value().getValue2();
     }
 
-    default Resolve resolution() {
-        if (null == this.value() || null == this.f())
-            return Resolve.A;
-       /* for (Obj arg : this.args()) {
-            if (!arg.tid().equals(arg.vid())) { // TODO: this is not a fool proof way of determining if a resolution has happened
-                return Resolve.B;
-            }
-        }*/
-        return Resolve.B;
+    default Resolution resolution() {
+        return null == this.value() || null == this.f() ? Resolution.A : Resolution.B;
     }
 
     default boolean isBlocking() {
@@ -131,8 +124,8 @@ public interface Inst extends Call {
     @Override
     default Inst resolve(final Obj lhs) {
         final GraphittyLogger LOG = Graphitty.log(lhs);
-        final Resolve currentResolution = this.resolution();
-        if (currentResolution == Resolve.A) {
+        final Resolution currentResolution = this.resolution();
+        if (currentResolution == Resolution.A) {
             try {
                 final Inst resolved = Router.global().read(this.tid())
                         .stream()
@@ -164,23 +157,28 @@ public interface Inst extends Call {
                         .filter(i -> !Objects.isNull(i))
                         //.map(i -> i.tid(i.tid().dom(lhs.tid())).vid(this.vid()))
                         .map(Obj::<Inst>as)
+                        .map(i -> (this.tid().hasDom() || this.tid().hasRng()) ? i.tid(this.tid()).resolve(lhs) : i.resolve(lhs))
                         .findFirst()
                         //.or(() -> Optional.ofNullable(this.tid().dom().cV().isOne() ? null : (Inst) this.c(1L).resolve(lhs.c(1L))))
-                        .orElseThrow(() -> this.logger().except("unable to resolve %s => %s in instruction set %s", lhs, this));
-                LOG.trace("resolution ({{m}}%s {{g}}=>{{/g}} %s{{/m}}): %s => %s", currentResolution, resolved.resolution(), lhs, resolved);
-                return (this.tid().hasDom() || this.tid().hasRng()) ? resolved.tid(this.tid()).resolve(lhs) : resolved.resolve(lhs);
-            } catch (Exception e) { // TODO: this is sloppy -- using exception handling for flow control
-                final Obj resolved = Router.global().read(this.tid());
-                if (resolved.isNoObj()) {
-                    LOG.error("unresolved %s across all known spaces", this);
-                    return NoObj.single();
-                } else if (!resolved.isInst()) {
-                    LOG.error("unable to resolve %s to a single inst", resolved);
-                    return NoObj.single();//.resolve(lhs);
-                } else {
-                    LOG.warn("resolved %s from global router", resolved);
-                    return resolved.<Inst>as().args(this.args()); //.resolve(lhs);
+                        .orElse(null);
+                if (null != resolved) {
+                    LOG.trace("resolution ({{m}}%s {{g}}=>{{/g}} %s{{/m}}): %s => %s", currentResolution, resolved.resolution(), lhs, resolved);
+                    return resolved;
                 }
+            } catch (final Exception e) {
+                this.logger().error("unable to resolve %s => %s in instruction set %s: %s", lhs, this, e.getMessage());
+            }
+            this.logger().warn("searching spaces for runtime resolution of inst %s => %s", lhs, this);
+            final Obj resolved2 = Router.global().read(this.tid());
+            if (resolved2.isNoObj()) {
+                LOG.error("unresolved %s across all known spaces", this);
+                return NoObj.single();
+            } else if (!resolved2.isInst()) {
+                LOG.error("unable to resolve %s to a single inst", resolved2);
+                return NoObj.single();//.resolve(lhs);
+            } else {
+                LOG.warn("resolved %s from global router", resolved2);
+                return resolved2.<Inst>as().args(this.args()); //.resolve(lhs);
             }
         } else { // Resolve.B
             final boolean blocking = this.isBlocking();
@@ -209,7 +207,7 @@ public interface Inst extends Call {
                                     kv.getValue().apply(lhs)))
                             .collect(Collectors.toMap(kv -> kv.get(0), kv -> kv.get(1), Obj::append, LinkedHashMap::new)));
             final Inst resolved = this.args(cargs);
-            LOG.trace("resolution ({{m}}%s {{g}}=>{{/g}} %s{{/m}}): %s", currentResolution, resolved.resolution(), resolved);
+            LOG.trace("resolution ({{m}}%s {{g}}=>{{/g}} %s{{/m}}): %s => %s", currentResolution, resolved.resolution(), lhs, resolved);
             return resolved;
         }
     }

@@ -34,6 +34,7 @@ import studio.phaseshift.metatron.lang.obj.mtron.*;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
 import studio.phaseshift.metatron.util.MTronException;
+import studio.phaseshift.metatron.util.Tuple;
 
 import java.util.*;
 import java.util.function.Supplier;
@@ -61,8 +62,8 @@ public class ObjParser {
     private static final SettableParser obj_rel_back_parser = SettableParser.undefined();
 
     static {
-        rel_parser.set(seq(m_type_prefix_opt_colon(REL_TID), obj_rel_back_parser, of("=>").trim(), m_obj())
-                .map(t -> MRel.of(pick(t, 1), pick(t, 3), pick(t, 0))));
+        rel_parser.set(seq(m_type_prefix_opt_colon(REL_TID), obj_rel_back_parser, of("=>").trim(), m_obj(), m_vid_postfix())
+                .map(t -> new MRel(Tuple.Pair.with(pick(t, 1), pick(t, 3)), pick(t, 0), pick(t, 4))));
         obj_parser.set(choice(
                 m_comment(),
                 m_type(),
@@ -73,7 +74,6 @@ public class ObjParser {
                 m_str(),
                 m_call(),
                 m_objs(),
-                // m_inst(),
                 m_rec(),
                 m_rel(),
                 m_lst(),
@@ -102,22 +102,22 @@ public class ObjParser {
                 m_call(),
                 m_objs(),
                 m_rec(),
-                //m_inst(),
-                m_rec(),
                 m_lst(),
                 m_uri()));
         lst_parser.set(seq(m_type_prefix_opt_colon(LST_TID),
                 of('[').trim(),
                 lst_internal(),
-                of(']').trim())
-                .map(t -> MLst.of(pick(t, 2), pick(t, 0))));
+                of(']').trim(),
+                m_vid_postfix())
+                .map(t -> new MLst(pick(t, 2), pick(t, 0), pick(t, 4))));
 
-        rec_parser.set(seq(m_type_prefix_opt_colon(REC_TID), of('[').trim(), rec_internal(), of(']')).trim().map(t -> MRec.of(ObjParser.<Map<Obj, Obj>>pick(t, 2), pick(t, 0))));
+        rec_parser.set(seq(m_type_prefix_opt_colon(REC_TID), of('[').trim(), rec_internal(), of(']'), m_vid_postfix()).trim().map(t -> new MRec(ObjParser.pick(t, 2), pick(t, 0), pick(t, 4))));
 
         inst_parser.set(seq(
                 choice(m_inst_furi(), m_type_prefix_opt_colon(INST_TID)), // 0 inst_tid
                 seq(of('(').trim(), choice(rec_internal(), lst_internal(), of("")), of(')').trim()).pick(1), // 1 inst_args
-                opt(seq(of('{').trim(), m_code(), of('}').trim()).pick(1), null)) //  inst_code
+                opt(seq(of('{').trim(), m_code(), of('}').trim()).pick(1), null),
+                m_vid_postfix()) //  inst_code
                 // inst_seed []
                 .map(t -> (Inst) new MInst(Triplet.with(
                         pick(t, 1).equals("") ? MLst.of() : pick(t, 1) instanceof List ?
@@ -125,7 +125,7 @@ public class ObjParser {
                                 MRec.of(ObjParser.<Map<Obj, Obj>>pick(t, 1)),
                         Inst.f.of(ObjParser.<Obj>pick(t, 2)),
                         NoObj.single()), // todo: encode seed in parser
-                        pick(t, 0), fURI.NULL)));
+                        pick(t, 0), pick(t, 3))));
     }
 
     public static Parser lst_internal() {
@@ -136,12 +136,12 @@ public class ObjParser {
         return choice(of("=>").trim(),
                 /*choice(seq(of('(').trim(), m_obj(), of("=>").trim(), m_obj(), of(')').trim()),*/
                 seq(m_obj(), of("=>").trim(), m_obj()).separatedBy(of(',').trim()))
-                        .map(t -> t.equals("=>") ?
-                                Map.of() :
-                                ((List) t).stream()
-                                        .filter(o -> o instanceof List)
-                                        //.map(l -> (((List) l).get(0) instanceof Obj) ? l : ((List) l).subList(1, ((List) l).size() - 1))
-                                        .collect(Collectors.toMap(kv -> pick(kv, 0), kv -> pick(kv, 2), Obj::append, LinkedHashMap::new)));
+                .map(t -> t.equals("=>") ?
+                        Map.of() :
+                        ((List) t).stream()
+                                .filter(o -> o instanceof List)
+                                //.map(l -> (((List) l).get(0) instanceof Obj) ? l : ((List) l).subList(1, ((List) l).size() - 1))
+                                .collect(Collectors.toMap(kv -> pick(kv, 0), kv -> pick(kv, 2), Obj::append, LinkedHashMap::new)));
     }
 
     public static <O extends Obj> Iterator<O> eval(final String code) {
@@ -245,27 +245,31 @@ public class ObjParser {
         return opt(seq(m_furi(), of("::")).pick(0), baseType);
     }
 
+    public static Parser m_vid_postfix() {
+        return opt(seq(of('@'), m_furi(REDUCED_FURI_CHARS, false, false)).map(t -> pick(t, 1)), null);
+    }
+
     public static Parser m_type_prefix_opt_colon(final fURI baseType) {
         return opt(seq(m_furi(REDUCED_FURI_CHARS, true, true), opt(of("::").trim(), "::")).pick(0), baseType);
     }
 
     public static Parser m_bool() {
-        return seq(m_type_prefix(BOOL_TID), of("true").trim().or(of("false").trim()))
+        return seq(m_type_prefix(BOOL_TID), of("true").trim().or(of("false").trim()), m_vid_postfix())
                 .map(t -> pick(t, 1).equals("true") ?
-                        new MBool(true, pick(t, 0), fURI.NULL) :
-                        new MBool(false, pick(t, 0), fURI.NULL));
+                        new MBool(true, pick(t, 0), pick(t, 2)) :
+                        new MBool(false, pick(t, 0), pick(t, 2)));
     }
 
     public static Parser m_int() {
         return seq(m_type_prefix(INT_TID), seq(opt(of('-'), '+'), choice(of('0'), digit().plus()))
-                .flatten().trim())
-                .map(t -> new MInt(Long.parseLong(pick(t, 1).toString()), pick(t, 0), fURI.NULL));
+                .flatten().trim(), m_vid_postfix())
+                .map(t -> new MInt(Long.parseLong(pick(t, 1).toString()), pick(t, 0), pick(t, 2)));
     }
 
     public static Parser m_real() {
         return seq(m_type_prefix(REAL_TID), seq(opt(of('-'), '+'), choice(of('0'), digit().plus()), of('.'), digit().plus())
-                .flatten().trim())
-                .map(t -> new MReal(Double.parseDouble(pick(t, 1).toString()), pick(t, 0), fURI.NULL));
+                .flatten().trim(), m_vid_postfix())
+                .map(t -> new MReal(Double.parseDouble(pick(t, 1).toString()), pick(t, 0), pick(t, 2)));
     }
 
     public static Parser m_str() {
@@ -275,12 +279,12 @@ public class ObjParser {
                 of('"').repeat(3, 3),
                 any().starLazy(of('"').repeat(3, 3)),
                 of('"').repeat(3, 3)).flatten().map(t -> t.toString().substring(3, t.toString().length() - 3));
-        return seq(m_type_prefix(STR_TID), choice(tripleQuote, singleQuote, doubleQuote))
-                .map(t -> new MStr(ObjParser.pick(t, 1), pick(t, 0), fURI.NULL));
+        return seq(m_type_prefix(STR_TID), choice(tripleQuote, singleQuote, doubleQuote), m_vid_postfix())
+                .map(t -> new MStr(ObjParser.pick(t, 1), pick(t, 0), pick(t, 2)));
     }
 
     public static Parser m_uri() {
-        return seq(m_type_prefix(URI_TID), m_furi(REDUCED_FURI_CHARS, true, true)).map(t -> new MUri(pick(t, 1), pick(t, 0), fURI.NULL));
+        return seq(m_type_prefix(URI_TID), m_furi(REDUCED_FURI_CHARS, true, true), m_vid_postfix()).map(t -> new MUri(pick(t, 1), pick(t, 0), pick(t, 2)));
     }
 
     public static Parser m_rel() {
@@ -300,22 +304,22 @@ public class ObjParser {
     }
 
     public static Parser sugar_code() {
-        return seq(opt(obj_no_code_parser, NoObj.single()), opt(of(".").trim(), '.'), m_code()).map(t -> {
+        return seq(opt(obj_no_code_parser, NoObj.single()), opt(of(".").trim(), '.'), m_code(), m_vid_postfix()).map(t -> {
             final List<Inst> newCode = new ArrayList<>();
             newCode.add(new MInst(Triplet.with(MLst.of(ObjParser.<Obj>pick(t, 0)), Inst.f.UNKNOWN, NoObj.single()), START_TID, fURI.NULL));
             newCode.addAll(ObjParser.<Call>pick(t, 2).insts());
-            return new MCode(newCode, CODE_TID, fURI.NULL);
+            return new MCode(newCode, CODE_TID, pick(t, 3));
         });
     }
 
     public static Parser m_code() {
-        return m_inst().separatedBy(opt(of('.').trim(), '.'))
-                .map(t -> ((List<Object>) t).size() == 1 ?
-                        ((List<Inst>) t).get(0) :
-                        new MCode((List) ((List<Object>) t)
+        return seq(m_inst().separatedBy(opt(of('.').trim(), '.')), m_vid_postfix())
+                .map(t -> ((List<Object>) pick(t, 0)).size() == 1 ?
+                        ((List<Inst>) pick(t, 0)).get(0) :
+                        new MCode((List) ((List<Object>) pick(t, 0))
                                 .stream()
                                 .filter(x -> x instanceof Inst)
-                                .toList(), CODE_TID, fURI.NULL));
+                                .toList(), CODE_TID, pick(t, 1)));
     }
 
     public static Parser m_inst() {
@@ -327,6 +331,7 @@ public class ObjParser {
     /// //////////////////////////////////////////////////////////////////////////////////////////
     private static Parser[] ordered_sugar_parsers() {
         return new Parser[]{
+                generate_sugar_parser(VID_TID, of('@'), 1),
                 generate_sugar_parser(BARRIER_TID, of("-|"), 1),
                 generate_sugar_parser(BLOCK_TID, of('|'), 1),
                 generate_sugar_parser(WITHIN_TID, of("_/"), 1, of("\\_")),

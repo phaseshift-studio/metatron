@@ -24,7 +24,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-public class Tuple {
+public abstract class Tuple {
 
     protected final List elements;
 

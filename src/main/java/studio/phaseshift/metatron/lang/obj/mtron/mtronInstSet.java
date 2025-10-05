@@ -113,14 +113,15 @@ public class mtronInstSet extends MInstSet {
     protected void load() {
         BASE_TYPES.forEach(t -> Router.global().registerRewrite(f(t.name()), t));
         this.write(
-                START_TID, instC(START_TID.dom(fURI.NONE.zero()).rng(fURI.ALL.maybeSome()), lst(T(ANY_TID)), (lhs, inst) -> inst.arg(0)),
+                START_TID, instC(START_TID.dom(fURI.NONE.zero()).rng(fURI.ALL.maybeSome()), lst(T(ANY_TID.maybeSome())), (lhs, inst) -> inst.arg(0)),
                 END_TID, instC(END_TID.dom(ANY_TID.maybeSome()).rng(NOOBJ_TID.zero()), lst(), (lhs, inst) -> NoObj.single()),
                 ID_TID, instC(ID_TID.dom(ANY_TID.maybe()).rng(ANY_TID.maybe()), lst(), (lhs, inst) -> lhs),
                 APPLY_TID, instC(APPLY_TID.dom(ANY_TID).rng(ANY_TID), lst(T(INST_TID)), (lhs, inst) -> inst.arg(0).apply(lhs)),
                 MAP_TID, instC(MAP_TID.dom(fURI.ALL).rng(fURI.ALL), lst(T(ANY_TID)), (lhs, inst) -> inst.arg(0)),
                 MAP_TID, instC(MAP_TID.dom(fURI.ALL).rng(fURI.ALL.maybe()), lst(T(ANY_TID)), (lhs, inst) -> inst.arg(0)),
                 TID_TID, instC(TID_TID.dom(fURI.ALL).rng(URI_TID), lst(), (lhs, inst) -> lhs.tid().toUri()),
-                VID_TID, instC(VID_TID.dom(fURI.ALL).rng(URI_TID), lst(), (lhs, inst) -> lhs.vid().toUri()),
+                VID_TID, instC(VID_TID.dom(fURI.ALL).rng(fURI.ALL), lst(T(URI_TID)), (lhs, inst) -> lhs.vid(inst.arg(0).uriValue())),
+                VID_TID, instC(VID_TID.dom(fURI.ALL).rng(URI_TID), lst(), (lhs, inst) -> null == lhs.vid() ? NoObj.single() : lhs.vid().toUri()),
                 ELSE_TID, instC(ELSE_TID.dom(fURI.ALL.maybe()).rng(fURI.ALL), lst(T(ANY_TID.maybe())), (lhs, inst) -> lhs.isNoObj() ? inst.arg(0) : lhs),
                 IS_TID, instC(IS_TID.dom(fURI.ALL.maybe()).rng(fURI.ALL.maybe()), lst(T(fURI.ALL)), (lhs, inst) -> inst.arg(0).boolValue() ? lhs : NoObj.single()),
                 ISA_TID, instC(ISA_TID.dom(fURI.ALL.maybe()).rng(fURI.ALL.maybe()), lst(T(fURI.ALL.maybeSome())), (lhs, inst) -> lhs.matches(inst.arg(0)) ? lhs : NoObj.single()),

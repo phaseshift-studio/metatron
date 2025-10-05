@@ -81,6 +81,11 @@ public class MqttSpace extends MObj implements Space {
         return this;
     }
 
+    @Override
+    public Object value() {
+        return null;
+    }
+
     public void init() {
         try {
             this.client = MqttClient.builder()

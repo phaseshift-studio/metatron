@@ -34,7 +34,7 @@ public interface Router extends Obj, Space, AutoCloseable {
         }
     }
 
-    ThreadLocal<StackSpace> INST_STACK = ThreadLocal.withInitial(() -> new StackSpace(fURI.of("+/#"), Router.global().tid().extend("stack")));
+    ThreadLocal<StackSpace> INST_STACK = ThreadLocal.withInitial(() -> new StackSpace(fURI.of("+/#"), Router.global().vid().extend("stack")));
 
     static Router global() {
         return BootLoader.ROUTER;

@@ -72,7 +72,7 @@ public class ObjStringSerializer implements ObjSerializer<String> {
             return sb.append(this.b.palette.formC())
                     .append("){")
                     .append(this.b.palette.valueC())
-                    .append(inst.resolution() == Inst.Resolve.A ? "{{r}}?{{/r}}" : ("{{g}}" + inst.f().toString() + "{{/g}}"))
+                    .append(inst.resolution() == Inst.Resolution.A ? "{{r}}?{{/r}}" : ("{{g}}" + inst.f().toString() + "{{/g}}"))
                     .append(this.b.palette.formC())
                     .append("}{{X}}")
                     //.append(this.b.ignoreRewrites ? "" : "{{X}}")
