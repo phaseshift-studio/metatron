@@ -102,7 +102,7 @@ public class mgrphInstSet extends MInstSet {
 
     public void load() {
         this.write(
-                G_TID, instC(G_TID.dom(fURI.NONE.zero()).rng(GRAPH_TID), lst(T(URI_TID)), (lhs, inst) -> Router.global().read(inst.arg(0).uriValue())),
+                //G_TID, instC(G_TID.dom(fURI.NONE.zero()).rng(GRAPH_TID), lst(T(URI_TID)), (lhs, inst) -> Router.global().read(inst.arg(0).uriValue())),
                 V_TID, instC(V_TID.dom(GRAPH_TID).rng(VERTEX_TID.maybeSome()), lst(T(fURI.ALL.maybeSome())), (lhs, inst) -> objs(IteratorUtil.list((Iterator) lhs.<MGraph>as().vertices(idsAsUri(inst))))),
                 E_TID, instC(E_TID.dom(GRAPH_TID).rng(EDGE_TID.maybeSome()), lst(T(fURI.ALL.maybeSome())), (lhs, inst) -> objs(IteratorUtil.list((Iterator) lhs.<MGraph>as().edges(idsAsUri(inst))))),
                 OUTE_TID, instC(OUTE_TID.dom(VERTEX_TID).rng(EDGE_TID.maybeSome()), lst(T(URI_TID.maybeSome())), (lhs, inst) ->
