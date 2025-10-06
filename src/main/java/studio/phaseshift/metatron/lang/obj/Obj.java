@@ -55,11 +55,11 @@ public interface Obj extends Function<Obj, Obj>, Iterable<Obj> {
     }
 
     default Obj c(final cInt coeff) {
-        return this.tid(this.tid().c(coeff.toString()));
+        return this.tid(this.tid().c(null == coeff || coeff.isOne() ? null : coeff.toString()));
     }
 
     default Obj c(final Long exact) {
-        return this.tid(this.tid().c("" + exact));
+        return null == exact || exact == 1L ? this.tid(this.tid().c(null)) : this.tid(this.tid().c("" + exact));
     }
 
     default Obj c(final Long min, final Long max) {

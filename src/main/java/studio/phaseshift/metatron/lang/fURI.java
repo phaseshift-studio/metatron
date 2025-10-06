@@ -456,7 +456,7 @@ public class fURI implements Cloneable, Ring<fURI> {
     }
 
     public fURI c(final String coefficient) {
-        if (null == coefficient) {
+        if (null == coefficient || coefficient.isEmpty() || cInt.of(coefficient).isOne()) {
             if (this.path.isEmpty())
                 return this;
             if (this.path.get(this.path.size() - 1).indexOf('[') == -1)

@@ -37,6 +37,7 @@ import java.util.stream.Collectors;
 
 import static studio.phaseshift.metatron.lang.obj.mtron.MLst.lst;
 import static studio.phaseshift.metatron.lang.obj.mtron.MRec.rec;
+import static studio.phaseshift.metatron.lang.obj.mtron.MType.T;
 import static studio.phaseshift.metatron.util.Tuple.Triplet;
 
 public interface Inst extends Call {
@@ -85,6 +86,11 @@ public interface Inst extends Call {
         return this.value().getValue0();
     }
 
+    default Inst args(final Function<Poly, Poly> redefine) {
+        return this.args(redefine.apply(this.args()));
+    }
+
+
     default Inst args(final Poly args) {
         return this.clone(Triplet.with(args, this.f(), this.seed()), this.tid(), this.vid());
     }
@@ -112,17 +118,56 @@ public interface Inst extends Call {
     }
 
     default Resolution resolution() {
-        return null == this.value() || null == this.f() ? Resolution.A : Resolution.B;
+        return null == this.value() || null == this.f() || this.tid().isGeneric() ? Resolution.A : Resolution.B;
     }
 
     default boolean isBlocking() {
         return this.tid().basePath().equals(mtronInstSet.BLOCK_TID) || this.tid().basePath().equals(mtronInstSet.WITHIN_TID);
     }
 
+    default Inst specify(final Obj lhs, final Obj spec) {
+        final GraphittyLogger LOG = Graphitty.log(lhs);
+        final Map<fURI, fURI> generics = new HashMap<>();
+        Inst def = this;
+        if (def.dom().tid().cLess().isGeneric() && lhs.type().c().within(def.dom().c())) {
+            generics.put(def.dom().tid().cLess(), lhs.type().tid().cLess());
+            def = def.dom(lhs.type().c(def.dom().c()).as());
+        }
+        if (def.rng().tid().isGeneric() && generics.containsKey(def.rng().tid().cLess())) {
+            def = def.rng(T(generics.get(def.rng().tid().cLess()).c(def.rng().c().toString())));
+        }
+        if (!this.args().isEmpty() && this.args().isLst()) {
+            final List<Obj> newArgs = new ArrayList<>();
+            for (int i = 0; i < this.args().count(); i++) {
+                Obj argD = this.arg(i);
+                Obj argS = spec.isInst() ? spec.<Inst>as().arg(i) : spec;
+                if (argD.tid().cLess().isGeneric()) {
+                    if (generics.containsKey(argD.tid().cLess()) && !argS.tid().cLess().matches(generics.get(argD.tid().cLess())))
+                        LOG.warn("existing generic doesn't match current usage: [generic] %s !~ [past] %s !~ [present] %s", argS.tid(), generics.get(argD.tid()), argD.tid());
+                    generics.put(argD.tid().cLess(), argS.tid().cLess());
+                }
+                if (argD.isInst()) {
+                    argD = argD.<Inst>as().specify(lhs, argS);
+                } else if (argD.tid().cLess().isGeneric()) {
+                    argD = argD.tid(generics.getOrDefault(argD.tid().cLess(), argS.tid())).c(argD.c());
+                }
+                newArgs.add(argD);
+            }
+            def = def.args(lst(newArgs));
+        }
+
+        if (def.rng().tid().cLess().isGeneric()) {
+            def = def.rng(T(generics.getOrDefault(def.rng().tid().cLess(), spec.rng().tid()).c(def.rng().c().toString())));
+        }
+        LOG.trace("generic specification mapped %s => %s to %s via %s", lhs, spec, def, this);
+        return def;
+    }
+
     @Override
     default Inst resolve(final Obj lhs) {
         final GraphittyLogger LOG = Graphitty.log(lhs);
         final Resolution currentResolution = this.resolution();
+        LOG.trace("%s => %s in resolution state {{m}}%s{{/m}}", lhs, this, currentResolution);
         if (currentResolution == Resolution.A) {
             try {
                 /*final Map<fURI, fURI> genericMap = new HashMap<>();
@@ -131,8 +176,9 @@ public interface Inst extends Call {
                 final Inst resolved = Router.global().read(this.tid())
                         .stream()
                         .map(Obj::<Inst>as)
-                        .filter(i -> lhs.matches(i.dom()))
                         .filter(i -> this.args().isRec() || i.args().isRec() || i.args().count() == this.args().count())
+                        .map(i -> i.specify(lhs, this))
+                        .filter(i -> lhs.matches(i.dom()))
                         .map(i -> {
                             if (i.args().isLst()) {
                                 LOG.trace("processing lst args of %s", i);

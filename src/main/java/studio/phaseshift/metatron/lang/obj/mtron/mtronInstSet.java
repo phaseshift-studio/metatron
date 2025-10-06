@@ -115,23 +115,23 @@ public class mtronInstSet extends MInstSet {
     protected void load() {
         BASE_TYPES.forEach(t -> Router.global().registerRewrite(f(t.name()), t));
         this.write(
-                START_TID, instC(START_TID.dom(fURI.NONE.zero()).rng(OBJS_ID.maybeSome()), lst(T(OBJS_ID.maybeSome())), (lhs, inst) -> inst.arg(0)),
+                START_TID, instC(START_TID.dom(fURI.NONE.zero()).rng(A.maybeSome()), lst(T(A.maybeSome())), (lhs, inst) -> inst.arg(0)),
                 END_TID, instC(END_TID.dom(OBJS_ID).rng(NOOBJ_TID.zero()), lst(), (lhs, inst) -> NoObj.single()),
-                ID_TID, instC(ID_TID.dom(fURI.ALL.maybe()).rng(fURI.ALL.maybe()), lst(), (lhs, inst) -> lhs),
+                ID_TID, instC(ID_TID.dom(A.maybe()).rng(A.maybe()), lst(), (lhs, inst) -> lhs),
                 APPLY_TID, instC(APPLY_TID.dom(fURI.ALL).rng(fURI.ALL), lst(T(INST_TID)), (lhs, inst) -> inst.arg(0).apply(lhs)),
-                MAP_TID, instC(MAP_TID.dom(ALL).rng(ALL), lst(T(fURI.ALL)), (lhs, inst) -> inst.arg(0)),
+                MAP_TID, instC(MAP_TID.dom(ALL).rng(A), lst(T(A)), (lhs, inst) -> inst.arg(0)),
                 MAP_TID, instC(MAP_TID.dom(ALL).rng(ALL.maybe()), lst(T(fURI.ALL)), (lhs, inst) -> inst.arg(0)),
                 TID_TID, instC(TID_TID.dom(ALL).rng(URI_TID), lst(), (lhs, inst) -> lhs.tid().toUri()),
                 VID_TID, instC(VID_TID.dom(ALL).rng(ALL), lst(T(URI_TID)), (lhs, inst) -> lhs.vid(inst.arg(0).uriValue())),
                 VID_TID, instC(VID_TID.dom(ALL).rng(URI_TID), lst(), (lhs, inst) -> null == lhs.vid() ? NoObj.single() : lhs.vid().toUri()),
-                ELSE_TID, instC(ELSE_TID.dom(ALL.maybe()).rng(ALL), lst(T(fURI.ALL.maybe())), (lhs, inst) -> lhs.isNoObj() ? inst.arg(0) : lhs),
-                IS_TID, instC(IS_TID.dom(ALL.maybe()).rng(ALL.maybe()), lst(T(ALL)), (lhs, inst) -> inst.arg(0).boolValue() ? lhs : NoObj.single()),
+                ELSE_TID, instC(ELSE_TID.dom(ALL.maybe()).rng(ALL), lst(T(fURI.ALL.maybe())), (lhs, inst) -> lhs.isNoObj() ? inst.arg(0) : lhs), // TODO: rec args needs resolution on generics connected
+                IS_TID, instC(IS_TID.dom(ALL.maybe()).rng(ALL.maybe()), lst(T(ALL)), (lhs, inst) -> inst.arg(0).boolValue() ? lhs : NoObj.single()), // TODO: generics are not working for some reason
                 ISA_TID, instC(ISA_TID.dom(ALL.maybe()).rng(ALL.maybe()), lst(T(OBJS_ID)), (lhs, inst) -> lhs.matches(inst.arg(0)) ? lhs : NoObj.single()),
                 IN_TID, instC(IN_TID.dom(ALL.maybe()).rng(BOOL_TID), lst(T(ALL.maybe())), (lhs, inst) -> bool(lhs.matches(inst.arg(0)))),
                 GET_TID, instC(GET_TID.dom(REC_TID).rng(OBJS_ID), lst(T(URI_TID)), (lhs, inst) -> lhs.<Rec>as().at(inst.arg(0))),
                 GET_TID, instC(GET_TID.dom(LST_TID).rng(OBJS_ID), lst(T(INT_TID)), (lhs, inst) -> lhs.<Lst>as().at(inst.arg(0))),
                 /// ///////////////////////////////////////////////////////////////////////////////////////////////////
-                BLOCK_TID, instC(BLOCK_TID.dom(ALL.maybe()).rng(ALL.maybe()), lst(T(OBJS_ID)), (lhs, inst) -> inst.arg(0)),
+                BLOCK_TID, instC(BLOCK_TID.dom(A.maybe()).rng(A.maybe()), lst(T(A)), (lhs, inst) -> inst.arg(0)),
                 SPLIT_TID, instC(SPLIT_TID.dom(fURI.ALL).rng(LST_TID), lst(T(LST_TID)), (lhs, inst) -> MLst.of(inst.arg(0).lstValue().stream().map(e -> e.apply(lhs)).toList())),
                 SPLIT_TID, instC(SPLIT_TID.dom(fURI.ALL).rng(REL_TID), lst(T(REL_TID)), (lhs, inst) -> MRel.of(inst.arg(0).<Rel>as().first().apply(lhs), inst.arg(0).<Rel>as().second().apply(lhs))),
                 SPLIT_TID, instC(SPLIT_TID.dom(fURI.ALL).rng(REC_TID), lst(T(REC_TID)), (lhs, inst) -> MRec.of(inst.arg(0).recValue().entrySet().stream().map(e -> e.getKey().apply(lhs).choose(Obj::isNoObj, x -> null, x -> MRel.of(x, e.getValue().apply(lhs)))).filter(x -> !Objects.isNull(x)).collect(Collectors.toMap(a -> a.<Rel>as().first(), b -> b.<Rel>as().second(), Obj::append, LinkedHashMap<Obj, Obj>::new)))),
@@ -139,9 +139,9 @@ public class mtronInstSet extends MInstSet {
 
                 MERGE_TID, instC(MERGE_TID.dom(LST_TID).rng(OBJS_ID), lst(), (lhs, inst) -> MObjs.of(lhs.<Lst>as().value())),
                 MERGE_TID, instC(MERGE_TID.dom(REC_TID).rng(REL_TID.maybeSome()), lst(), (lhs, inst) -> lhs.isPoly() ? MObjs.of(lhs.<Poly>as().elements()) : lhs),
-                MERGE_TID, instC(MERGE_TID.dom(fURI.ALL).rng(fURI.ALL), lst(), (lhs, inst) -> lhs),
-                MERGE_TID, instC(MERGE_TID.dom(OBJS_ID).rng(OBJS_ID), lst(), (lhs, inst) -> lhs),
-                MERGE_TID, instC(MERGE_TID.dom(OBJS_ID).rng(LST_TID), lst(T(LST_TID)), (lhs, inst) -> inst.arg(0).value(Stream.concat(lhs.stream(), inst.arg(0).lstValue().stream()).toList())),
+                MERGE_TID, instC(MERGE_TID.dom(A).rng(A), lst(), (lhs, inst) -> lhs),
+                MERGE_TID, instC(MERGE_TID.dom(A.maybeSome()).rng(A.maybeSome()), lst(), (lhs, inst) -> lhs),
+                MERGE_TID, instC(MERGE_TID.dom(A.maybeSome()).rng(LST_TID), lst(T(LST_TID)), (lhs, inst) -> inst.arg(0).value(Stream.concat(lhs.stream(), inst.arg(0).lstValue().stream()).toList())),
 
                 DOM_TID, instC(DOM_TID.dom(REL_TID).rng(ALL), lst(), (lhs, inst) -> lhs.relValue().getValue0()),
                 RNG_TID, instC(RNG_TID.dom(REL_TID).rng(ALL), lst(), (lhs, inst) -> lhs.relValue().getValue1()),
@@ -183,10 +183,10 @@ public class mtronInstSet extends MInstSet {
                 TO_TID, instC(TO_TID.dom(ALL.maybe()).rng(ALL.maybe()), lst(T(URI_TID)), (lhs, inst) -> Router.global().write(inst.arg(0).uriValue(), lhs)),
                 FROM_TID, instC(FROM_TID.dom(ALL.maybe()).rng(OBJS_ID), lst(T(URI_TID)), (lhs, inst) -> Router.global().read(inst.arg(0).uriValue())),
                 REF_TID, instC(REF_TID.dom(fURI.ALL).rng(OBJS_ID), lst(T(OBJS_ID)), (lhs, inst) -> Router.global().write(lhs.uriValue(), inst.arg(0))),
-                TYPE_TID, instC(TYPE_TID.dom(fURI.ALL).rng(fURI.ALL), lst(), (lhs, inst) -> lhs.type()),
-                TYPE_TID, instC(TYPE_TID.dom(fURI.ALL.some()).rng(fURI.ALL.some()), lst(), (lhs, inst) -> ooobj(lhs).type()),
+                TYPE_TID, instC(TYPE_TID.dom(A).rng(A), lst(), (lhs, inst) -> lhs.type()),
+                TYPE_TID, instC(TYPE_TID.dom(A.some()).rng(A.some()), lst(), (lhs, inst) -> ooobj(lhs).type()),
                 /// ///////////////////////////////////////////////////////////////////////////////////////////////////
-                AS_TID, instC(AS_TID.dom(OBJS_ID).rng(OBJS_ID), lst(T(T(fURI.ALL))), (lhs, inst) -> {
+                AS_TID, instC(AS_TID.dom(OBJS_ID).rng(A), lst(T(T(A))), (lhs, inst) -> {
                     final Type t = inst.arg(0).as();
                     if (T(LST_TID).matches(t)) {
                         if (lhs.isObjs()) {
