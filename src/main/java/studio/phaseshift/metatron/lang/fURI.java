@@ -25,6 +25,7 @@ import studio.phaseshift.metatron.lang.obj.Uri;
 import studio.phaseshift.metatron.lang.obj.mtron.MUri;
 import studio.phaseshift.metatron.lang.obj.mtron.c.cInt;
 import studio.phaseshift.metatron.space.Router;
+import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.*;
@@ -623,18 +624,20 @@ public class fURI implements Cloneable, Ring<fURI> {
 
     public fURI resolve(final Map<fURI, fURI> generics) {
         final fURI cless = this.cLess();
+        Graphitty.log(this).trace("resolving generics: %s", generics);
         if (cless.isGeneric()) {
             fURI lhs = cless.basePath().isGeneric() ?
-                    cless.basePath().path(cless.basePath().segments().stream().map(s -> generics.getOrDefault(f(s), f(s)).toString()).toList()) :
+                    cless.basePath().path(cless.basePath().segments().stream().map(s -> generics.computeIfAbsent(f(s), k -> f(s)).toString()).reduce("", (a, b) -> a + "/" + b).substring(1)) :
                     cless.basePath();
             if (cless.hasDom())
                 lhs = cless.dom().isGeneric() ?
-                        lhs.dom(cless.dom().path(cless.dom().segments().stream().map(s -> generics.getOrDefault(f(s), f(s)).toString()).toList())) :
+                        lhs.dom(cless.dom().path(cless.dom().segments().stream().map(s -> generics.computeIfAbsent(f(s), k -> f(s)).toString()).reduce("", (a, b) -> a + "/" + b).substring(1))) :
                         lhs.dom(cless.dom());
             if (cless.hasRng())
                 lhs = cless.rng().isGeneric() ?
-                        lhs.rng(cless.rng().path(cless.rng().segments().stream().map(s -> generics.getOrDefault(f(s), f(s)).toString()).toList())) :
+                        lhs.rng(cless.rng().path(cless.rng().segments().stream().map(s -> generics.computeIfAbsent(f(s), k -> f(s)).toString()).reduce("", (a, b) -> a + "/" + b).substring(1))) :
                         lhs.rng(cless.rng());
+            Graphitty.log(this).trace("generics after resolution: %s", generics);
             return lhs.query(this.hasQuery() ? this.query.toString() : null).c(this.c());
         } else {
             return this;

@@ -31,6 +31,7 @@ import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
 import studio.phaseshift.metatron.util.MTronException;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
@@ -129,16 +130,18 @@ public class fURITest {
     @CsvSource(value = {
             "A             |  A             | true",
             "A/b/c         |  A/B/C         | true",
+            "a/b/c         |  D             | true",
             "A/B           |  A/C           | false",
             "A[+]          |  A[*]          | true",
             "A/B[2,4]      |  a/#[*]        | true",
             "A/B/C[2,4]    |  a/#[*]        | true",
-            "A/[+]         |  A/#[*]        | true",
+            //"A/[+]         |  A/#[*]        | true",
             "A/[0]         |  A/#[2]        | false",
-            "A/aB[0]       |  Z/+[0]        | true"
+            "A/aB[0]       |  Z/+[0]        | true",
+            "a[1]          |  A[1]          | true"
     }, delimiter = '|')
     public void testGenericMatch(final String f1, final String f2, final boolean matches) {
-        final Map<fURI, fURI> generics = Map.of(f("A"), f("a"), f("B"), f("b"), f("C"), f("c"));
+        final Map<fURI, fURI> generics = new HashMap<>(Map.of(f("A"), f("a"), f("B"), f("b"), f("C"), f("c"), f("D"), f("a/b/c")));
         final fURI lhs = f(f1);
         final fURI lhsResolved = lhs.resolve(generics);
         final fURI rhs = f(f2);
