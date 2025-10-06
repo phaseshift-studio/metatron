@@ -31,8 +31,21 @@ public interface Ring<R extends Ring<R>> {
 
     R neg();
 
+    default R minus(final R r) {
+        return this.plus(r.neg());
+    }
+
+
     R one();
 
     R zero();
+
+    default boolean isZero() {
+        return this.equals(this.zero());
+    }
+
+    default boolean isOne() {
+        return this.equals(this.one());
+    }
 
 }
