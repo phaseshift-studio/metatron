@@ -8,6 +8,8 @@ on:
 
 jobs:
   build:
+    permissions: write-all
+    name: Build Project
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
