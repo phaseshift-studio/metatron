@@ -18,14 +18,12 @@
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 
-package studio.phaseshift.metatron.lang.inst;
+package studio.phaseshift.metatron.lang.obj;
 
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.MetatronTest;
 import studio.phaseshift.metatron.lang.fURI;
-import studio.phaseshift.metatron.lang.obj.Inst;
-import studio.phaseshift.metatron.lang.obj.Obj;
 import studio.phaseshift.metatron.lang.obj.mtron.MInst;
 import studio.phaseshift.metatron.lang.parse.ObjParser;
 
