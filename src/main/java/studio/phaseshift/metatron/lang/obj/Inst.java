@@ -143,8 +143,8 @@ public interface Inst extends Call {
                 Obj argS = spec.isInst() ? spec.<Inst>as().arg(i) : spec;
                 if (argD.tid().cLess().isGeneric()) {
                     if (generics.containsKey(argD.tid().cLess()) && !argS.tid().cLess().matches(generics.get(argD.tid().cLess())))
-                        LOG.warn("existing generic doesn't match current usage: [generic] %s !~ [past] %s !~ [present] %s", argS.tid(), generics.get(argD.tid()), argD.tid());
-                    generics.put(argD.tid().cLess(), argS.tid().cLess());
+                        LOG.warn("existing generic doesn't match current usage: [{{m}}generic{{/m}}] %s [{{m}}past{{/m}}] %s [{{m}}present{{/m}}] %s", argS.tid(), generics.get(argD.tid()), argD.tid());
+                    generics.computeIfAbsent(argD.tid().cLess(), k -> argS.tid().cLess()); // beware of int[0] yielding noobj across all bindings
                 }
                 if (argD.isInst()) {
                     argD = argD.<Inst>as().specify(lhs, argS);
@@ -222,7 +222,7 @@ public interface Inst extends Call {
                 LOG.error("unresolved %s across all known spaces", this);
                 return NoObj.single();
             } else if (!resolved2.isInst()) {
-                LOG.error("unable to resolve %s to a single inst", resolved2);
+                LOG.error("unable to resolve %s to a single inst in %s", this.dom(lhs.type()), resolved2);
                 return NoObj.single();//.resolve(lhs);
             } else {
                 LOG.warn("resolved %s from global router", resolved2);

@@ -24,6 +24,7 @@ import studio.phaseshift.metatron.space.Router;
 
 import java.util.Set;
 
+import static studio.phaseshift.metatron.lang.fURI.ALL;
 import static studio.phaseshift.metatron.lang.fURI.f;
 import static studio.phaseshift.metatron.lang.obj.mtron.MInst.instC;
 import static studio.phaseshift.metatron.lang.obj.mtron.MLst.lst;
@@ -45,7 +46,7 @@ public class mextInstSet extends MInstSet {
 
     protected void load() {
         MEXT_TYPES.forEach(t -> Router.global().registerRewrite(f(t.name()), t));
-        this.write(ID_TID, instC(ID_TID.dom(ANY_TID.maybe()).rng(ANY_TID.maybe()), lst(), (lhs, inst) -> lhs));
+        this.write(ID_TID, instC(ID_TID.dom(ALL.maybe()).rng(ALL.maybe()), lst(), (lhs, inst) -> lhs));
 
         //TODO: convert below to the pure write() model above
         // this.define(NOOBJ_TID, fURI.ANY.maybe(), fURI.ANY.maybe(), MLst.of(), (lhs, inst) -> lhs); // noobj is also an inst (no inst)

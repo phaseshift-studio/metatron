@@ -28,6 +28,7 @@ import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.ObjUtil;
 
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.stream.Stream;
 
@@ -137,4 +138,15 @@ public interface Rec extends Poly {
         return this.put(uri(key), value);
     }
 
+    @Override
+    default Obj append(final Obj obj) {
+        //  return obj.choose(Obj::isNoObj, o -> this, os -> this.value(os.stream().collect(Collectors.toMap(o -> o.relValue().getValue0(), o -> relValue().getValue1(), (a, b) -> b, LinkedHashMap<Obj, Obj>::new));
+        if (obj.isNoObj())
+            return this;
+        final Map<Obj, Obj> map = new LinkedHashMap<>(this.recValue());
+        obj.stream().forEach(o -> map.compute(o.relValue().getValue0(), (k, v) -> null == v ? o.relValue().getValue1() : v.append(o.relValue().getValue1())));
+        return this.value(map);
+        //return this.value(obj.stream().collect(Collectors.toMap(o->o.relValue().getValue0(),o->relValue().getValue1(),(a,b)->a.append(b),LinkedHashMap<Obj,Obj>::new)));
+        //return this.value(map);
+    }
 }

@@ -238,7 +238,9 @@ public class ObjParser {
     }
 
     public static Parser m_objs() {
-        return seq(of('{').trim(), m_obj().separatedBy(of(',').trim()), of('}').trim()).pick(1)
+        return choice(
+                seq(of('{').trim(), of(',').trim(), of('}').trim()),
+                seq(of('{').trim(), m_obj().separatedBy(of(',').trim()), of('}').trim()).pick(1))
                 .map(t -> objs(((List) t).stream().filter(x -> x instanceof Obj).toList()));
     }
 

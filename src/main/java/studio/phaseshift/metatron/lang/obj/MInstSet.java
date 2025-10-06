@@ -21,33 +21,58 @@
 package studio.phaseshift.metatron.lang.obj;
 
 import studio.phaseshift.metatron.lang.fURI;
-import studio.phaseshift.metatron.lang.obj.mtron.MLst;
-import studio.phaseshift.metatron.lang.obj.mtron.mtronInstSet;
 import studio.phaseshift.metatron.space.Router;
-import studio.phaseshift.metatron.space.Space;
 import studio.phaseshift.metatron.space.mem.MSpace;
 import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.ObjUtil;
 
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.Map;
+import java.util.Set;
+import java.util.function.BiConsumer;
+import java.util.function.Supplier;
+import java.util.stream.Collector;
 
-public class MInstSet extends MSpace implements InstSet {
+import static studio.phaseshift.metatron.lang.fURI.f;
 
-    protected static final fURI ANY_TID = fURI.of("#");
+public abstract class MInstSet extends MSpace implements InstSet {
+
     protected static final String[] EMPTY_STRING_ARRAY = new String[0];
 
     /// /////////////////////////////////////////////////////////////////////////////////////////
 
-    protected final Map<fURI, Map<fURI, Set<Inst>>> INST_TABLE = new LinkedHashMap<>();
+    protected final Map<fURI, Set<Inst>> INST_TABLE = new LinkedHashMap<>();
     protected final Map<fURI, Type> TYPE_TABLE = new LinkedHashMap<>();
     protected final Map<fURI, Inst> REWRITE_TABLE = new LinkedHashMap<>();
 
-    @Override
-    public Map<fURI, Map<fURI, Set<Inst>>> value() {
-        return INST_TABLE;
+    public MInstSet(final fURI tid, final fURI vid) {
+        super(tid.extend(fURI.ALL), tid, vid);
+        this.insts().forEach(i -> this.write(i.tid(), i));
     }
 
+    @Override
+    public Set<Type> types() {
+        return new LinkedHashSet<>();
+    }
+
+    @Override
+    public Set<Inst> insts() {
+        return new LinkedHashSet<>();
+    }
+
+    @Override
+    public Set<Inst> rewrites() {
+        return new LinkedHashSet<>();
+    }
+
+    @Override
+    public Map<fURI, Set<? extends Obj>> value() {
+        return Map.of(
+                f("types"), this.types(),
+                f("insts"), this.insts(),
+                f("rewrites"), this.rewrites());
+    }
 
     @Override
     public Obj read(final fURI vid) {
@@ -55,14 +80,12 @@ public class MInstSet extends MSpace implements InstSet {
         final Obj result = ObjUtil.oneNoneOrAll(INST_TABLE.entrySet()
                 .stream()
                 .filter(kv -> kv.getKey().matches(bigvid.basePath()))
-                .flatMap(kv -> kv.getValue().entrySet().stream())
-                .filter(kv2 -> !bigvid.hasDom() || kv2.getKey().bimatches(bigvid.dom()))
-                .map(Map.Entry::getValue)
-                .flatMap(Set::stream)
+                .flatMap(kv -> kv.getValue().stream())
+                .filter(i -> !bigvid.hasDom() || i.dom().tid().bimatches(bigvid.dom()))
                 .filter(i -> !bigvid.hasRng() || i.rng().tid().bimatches(bigvid.rng()))
-                .map(i -> (Obj) i));
+                .map(i -> i));
         return result.isNoObj() ?
-                ObjUtil.oneNoneOrAll((Iterator) TYPE_TABLE.entrySet().stream().filter(kv -> kv.getKey().matches(bigvid)).map(Map.Entry::getValue).iterator()) :
+                ObjUtil.oneNoneOrAll(TYPE_TABLE.entrySet().stream().filter(kv -> kv.getKey().matches(bigvid)).map(Map.Entry::getValue)) :
                 result;
     }
 
@@ -75,8 +98,7 @@ public class MInstSet extends MSpace implements InstSet {
             } else {
                 Router.global().registerRewrite(fURI.of(vid.name()), vid);
                 INST_TABLE
-                        .computeIfAbsent(inst.tid().basePath(), k -> new LinkedHashMap<>())
-                        .computeIfAbsent(inst.tid().dom(), k -> new LinkedHashSet<>())
+                        .computeIfAbsent(inst.tid().basePath(), k -> new LinkedHashSet<>())
                         .add(inst);
             }
         } else if (obj.isType()) {
@@ -87,28 +109,4 @@ public class MInstSet extends MSpace implements InstSet {
         return obj;
     }
 
-    public MInstSet(final fURI tid, final fURI vid) {
-        super(tid.extend("#"), tid, vid);
-    }
-
-    @Override
-    public InstSet clone(final Object value, final fURI tid, final fURI vid) {
-        Space.Helpers.noCloneWarning(this);
-        return this;
-    }
-
-    @Override
-    public Set<Type> types() {
-        return new HashSet<>(this.TYPE_TABLE.values());
-    }
-
-    @Override
-    public Set<Inst> rewrites() {
-        return new HashSet<>(this.REWRITE_TABLE.values());
-    }
-
-    @Override
-    public Set<Inst> insts() {
-        return this.INST_TABLE.values().stream().flatMap(s -> s.values().stream()).flatMap(Collection::stream).collect(Collectors.toSet());
-    }
 }

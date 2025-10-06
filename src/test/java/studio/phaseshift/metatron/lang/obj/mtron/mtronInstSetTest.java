@@ -37,6 +37,13 @@ public class mtronInstSetTest extends MetatronTest {
             "{1,2,3}._                                                              % {1,2,3}",
             "{1,2,3}.plus(2)                                                        % {3,4,5}",
            // "{1,2,3}.plus(id?int<=int())                                            % {2,4,6}"
+            "{1,2,3,4}>-[,]                                                         % [1,2,3,4]",
+            "{3,4}>-[1,2]                                                           % [1,2,3,4]",
+            "{1,2,3,4}>-{,}                                                         % {1,2,3,4}",
+            "{3,4}>-{1,2}                                                           % {1,2,3,4}",
+            "[a=>1,b=>2]>-.>-[=>]                                                   % [a=>1,b=>2]",
+            "[b=>2]>-.>-[a=>1]                                                      % [a=>1,b=>2]",
+            "{a,b,c}.>-[=>]                                                         % <ERROR>"
     }, delimiter = '%')
     public void testCode(final String code, final String expected) {
         super.testCode(code, expected);
