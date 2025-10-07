@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.lang.obj.mtron;
 
+import studio.phaseshift.metatron.lang.C;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.NoObj;
 import studio.phaseshift.metatron.lang.obj.Obj;
@@ -39,10 +40,10 @@ public class MObjs implements Objs {
     private fURI vid;
     private final Map<Obj, cInt> cstream = new LinkedHashMap<>();
 
-    public MObjs(final Iterable<Obj> ints, final fURI vid) {
+    public MObjs(final Iterable<Obj> objs, final fURI vid) {
         this.vid = vid;
-        ints.forEach(i -> {
-            this.cstream.compute(i.c(cInt::one), (lng, it) -> null == it ? i.tid().cV() : it.plus(i.tid().cV()));
+        objs.forEach(i -> {
+            this.cstream.compute(i.c(C::one), (lng, it) -> null == it ? i.c() : it.plus(i.c()));
         });
     }
 
@@ -59,10 +60,8 @@ public class MObjs implements Objs {
 
     @Override
     public Objs append(final Obj obj) {
-        obj.iterator().forEachRemaining(i -> {
-            this.cstream.compute(i.tid(i.tid().cLess()), (lng, it) -> null == it ? i.tid().cV() : it.plus(i.tid().cV()));
-        });
-        return this.value(this.value());
+        obj.forEach(i -> this.cstream.compute(i.tid(i.tid().cLess()), (lng, it) -> null == it ? i.c() : it.plus(i.c())));
+        return this;
     }
 
     @Override

@@ -19,9 +19,9 @@
 package studio.phaseshift.metatron.lang.obj;
 
 import studio.phaseshift.metatron.lang.fURI;
-import studio.phaseshift.metatron.util.MTronException;
+import studio.phaseshift.metatron.util.IteratorUtil;
 
-import java.util.Collection;
+import java.util.stream.Stream;
 
 public interface Objs extends Obj {
 
@@ -38,5 +38,10 @@ public interface Objs extends Obj {
 
     @Override
     Obj append(final Obj obj);
+
+    @Override
+    default Stream<Obj> stream() {
+        return IteratorUtil.stream(this.value());
+    }
 
 }

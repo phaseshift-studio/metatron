@@ -142,7 +142,9 @@ public class mtronInstSet extends MInstSet {
                 instC(GET_TID.dom(LST_TID).rng(OBJS_ID), lst(T(INT_TID)), (lhs, inst) -> lhs.<Lst>as().at(inst.arg(0))),
                 /// ///////////////////////////////////////////////////////////////////////////////////////////////////
                 instC(BLOCK_TID.dom(A.maybe()).rng(A.maybe()), lst(T(A)), (lhs, inst) -> inst.arg(0)),
+                /// ///////////////////////////////////////////////////////////////////////////////////////////////////
                 instC(SPLIT_TID.dom(fURI.ALL).rng(LST_TID), lst(T(LST_TID)), (lhs, inst) -> MLst.of(inst.arg(0).lstValue().stream().map(e -> e.apply(lhs)).toList())),
+                instC(SPLIT_TID.dom(fURI.ALL.maybeSome()).rng(LST_TID), lst(T(LST_TID)), (lhs, inst) -> MLst.of(inst.arg(0).lstValue().stream().map(e -> e.apply(lhs)).toList())),
                 instC(SPLIT_TID.dom(fURI.ALL).rng(REL_TID), lst(T(REL_TID)), (lhs, inst) -> MRel.of(inst.arg(0).<Rel>as().first().apply(lhs), inst.arg(0).<Rel>as().second().apply(lhs))),
                 instC(SPLIT_TID.dom(fURI.ALL).rng(REC_TID), lst(T(REC_TID)), (lhs, inst) -> MRec.of(inst.arg(0).recValue().entrySet().stream().map(e -> e.getKey().apply(lhs).choose(Obj::isNoObj, x -> null, x -> MRel.of(x, e.getValue().apply(lhs)))).filter(x -> !Objects.isNull(x)).collect(Collectors.toMap(a -> a.<Rel>as().first(), b -> b.<Rel>as().second(), Obj::append, LinkedHashMap<Obj, Obj>::new)))),
                 instC(SPLIT_TID.dom(A.maybeSome()).rng(REC_TID), lst(T(REC_TID)), (lhs, inst) ->
@@ -163,7 +165,7 @@ public class mtronInstSet extends MInstSet {
                 instC(MERGE_TID.dom(REL_TID.maybeSome()).rng(REC_TID), lst(T(REC_TID)), (lhs, inst) -> inst.arg(0).value(Stream.concat(inst.arg(0).<Rec>as().stream(), lhs.stream().map(Obj::as)).collect(Collectors.toMap(Rel::first, Rel::second, Obj::append, LinkedHashMap::new)))),
                 instC(MERGE_TID.dom(A).rng(A), lst(), (lhs, inst) -> lhs),
                 //
-                instC(MERGE_TID.dom(A.maybeSome()).rng(A.maybeSome()), lst(T(A.maybeSome())), (lhs, inst) -> inst.arg(0).append(lhs)),
+                instC(MERGE_TID.dom(A.maybeSome()).rng(A.maybeSome()), lst(T(A.maybeSome())), (lhs, inst) -> ooobj(Stream.concat(inst.arg(0).stream(), lhs.stream()))),
                 instC(MERGE_TID.dom(A.maybeSome()).rng(A.maybeSome()), lst(), (lhs, inst) -> lhs),
                 /// ///////////////////////////////////////////////////////////////////////////////////////////////////
                 instC(DOM_TID.dom(REL_TID).rng(ALL), lst(), (lhs, inst) -> lhs.relValue().get0()),
