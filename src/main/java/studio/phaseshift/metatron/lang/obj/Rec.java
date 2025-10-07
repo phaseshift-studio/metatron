@@ -19,7 +19,6 @@
 package studio.phaseshift.metatron.lang.obj;
 
 
-import studio.phaseshift.metatron.algebra.Monoid;
 import studio.phaseshift.metatron.algebra.Semiring;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.mtron.MObjs;
@@ -145,7 +144,7 @@ public interface Rec extends Poly, Semiring<Rec> {
         if (obj.isNoObj())
             return this;
         final Map<Obj, Obj> map = new LinkedHashMap<>(this.recValue());
-        obj.stream().forEach(o -> map.compute(o.relValue().getValue0(), (k, v) -> null == v ? o.relValue().getValue1() : v.append(o.relValue().getValue1())));
+        obj.stream().forEach(o -> map.compute(o.relValue().get0(), (k, v) -> null == v ? o.relValue().get1() : v.append(o.relValue().get1())));
         return this.value(map);
         //return this.value(obj.stream().collect(Collectors.toMap(o->o.relValue().getValue0(),o->relValue().getValue1(),(a,b)->a.append(b),LinkedHashMap<Obj,Obj>::new)));
         //return this.value(map);

@@ -66,9 +66,9 @@ public interface Space extends Poly, AutoCloseable {
             if (map.isEmpty()) {
                 final Pair<fURI, Poly> pair = Space.Helpers.locateBasePoly(space, vid);
                 if (null != pair) {
-                    final Poly poly = pair.getValue1();
-                    Graphitty.log(space).trace("base poly found at %s: %s", pair.getValue0(), poly);
-                    final fURI furiSubpath = vid.removeSubpath(pair.getValue0()).asNode();
+                    final Poly poly = pair.get1();
+                    Graphitty.log(space).trace("base poly found at %s: %s", pair.get0(), poly);
+                    final fURI furiSubpath = vid.removeSubpath(pair.get0()).asNode();
                     Graphitty.log(space).trace("searching for %s in base poly %s", furiSubpath.toUri(), poly);
                     final Obj readObj = poly.at(furiSubpath.toUri());
                     Graphitty.log(space).trace("located poly obj %s in %s", readObj, poly);

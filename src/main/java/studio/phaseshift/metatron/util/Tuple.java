@@ -61,11 +61,11 @@ public abstract class Tuple {
             return new Pair<>(list);
         }
 
-        public A getValue0() {
+        public A get0() {
             return (A) this.elements.get(0);
         }
 
-        public B getValue1() {
+        public B get1() {
             return (B) this.elements.get(1);
         }
     }
@@ -84,7 +84,7 @@ public abstract class Tuple {
             return new Triplet<>(list);
         }
 
-        public C getValue2() {
+        public C get2() {
             return (C) this.elements.get(2);
         }
     }
@@ -104,7 +104,7 @@ public abstract class Tuple {
             return new Quartet<>(list);
         }
 
-        public D getValue3() {
+        public D get3() {
             return (D) this.elements.get(3);
         }
     }

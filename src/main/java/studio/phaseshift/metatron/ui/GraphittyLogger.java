@@ -55,7 +55,7 @@ public class GraphittyLogger extends LayoutBase<ILoggingEvent> {
     }
 
     private String toSourceString() {
-        return this.source instanceof Obj ? ((Obj) this.source).vidOrTid().toString() : (this.source instanceof Class ? ((Class<?>) this.source).getSimpleName() : this.source.getClass().getSimpleName());
+        return this.source instanceof Obj ? ((Obj) this.source).vidOrTid().basePath().toString() : (this.source instanceof Class ? ((Class<?>) this.source).getSimpleName() : this.source.getClass().getSimpleName());
     }
 
     private String makeMessage(final boolean metadata, final Object f, final Object... args) {

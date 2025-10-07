@@ -19,8 +19,8 @@
 package studio.phaseshift.metatron.lang.monoid.mtron;
 
 import studio.phaseshift.metatron.lang.fURI;
-import studio.phaseshift.metatron.lang.monoid.Monad;
 import studio.phaseshift.metatron.lang.monoid.MTonoid;
+import studio.phaseshift.metatron.lang.monoid.Monad;
 import studio.phaseshift.metatron.lang.obj.*;
 import studio.phaseshift.metatron.lang.obj.mtron.*;
 import studio.phaseshift.metatron.ui.Graphitty;
@@ -59,15 +59,16 @@ public class MMonoid extends MObj implements MTonoid {
         // process bcode inst pipeline
         //this.code = Rewriter({Rewriter::by(), Rewriter::explain()}).apply(this.code);
         // setup global behavior around barriers, initials, and terminals
-        LOG.debug("resolving code and generating structural monads:\n        [{{y}}PREPILED{{/y}}] %s {{g}}=>{{/g}}\n%s", lhs, prettyPrintCode(new StringBuilder(), this.code(), 0, 7).toString());
+        LOG.debug("resolving code:\n        [{{y}}PREPILED{{/y}}] %s {{g}}=>{{/g}}\n%s", lhs, prettyPrintCode(new StringBuilder(), this.code(), 0, 7).toString());
         Obj token = lhs;
         //LOG.none("%s", token.rng());
         final List<Inst> resolvedCode = new ArrayList<>();
         fURI dom = null;
         fURI rng = null;
+        boolean fullResolution = true;
         for (final Inst inst : this.code().value()) {
             try {
-                LOG.debug("   {{g}}=>{{/g}} resolving inst %s of %s", inst, null == token ? "[0]" : token);
+                LOG.trace("   {{g}}=>{{/g}} resolving inst %s of %s", inst, null == token ? "[0]" : token);
                 final Inst instB = inst.resolve(token);
                 /*if(!resolvedCode.isEmpty()) {
                   final Inst instA = resolvedCode.remove(resolvedCode.size() - 1);
@@ -91,12 +92,13 @@ public class MMonoid extends MObj implements MTonoid {
                 // LOG.none("%s", instB.rng().tid());
             } catch (final Exception e) {
                 resolvedCode.add(inst);
-                LOG.warn("runtime resolution of %s required: not enough context to determine inst", null == inst ? "[0]" : inst);
+                LOG.debug("runtime resolution of %s required: not enough context to determine inst", null == inst ? "[0]" : inst);
                 //e.printStackTrace();
+                fullResolution = false;
             }
         }
         final Code resolved = MCode.of(resolvedCode);//.tid(code().tid().query(fURI.DOM, Optional.ofNullable(dom).orElse(fURI.ANY.any())).query(fURI.RNG, Optional.ofNullable(rng).orElse(fURI.ANY.any())));
-        LOG.debug("resolved monoidal code:\n        [{{g}}COMPILED{{/g}}]\n%s", prettyPrintCode(new StringBuilder(), resolved, 0, 7).toString());
+        LOG.debug("%s code:\n        [{{g}}COMPILED{{/g}}]\n%s", fullResolution ? "{{g}}resolved{{/g}}" : "{{y}}semi-resolved{{/y}}", prettyPrintCode(new StringBuilder(), resolved, 0, 7).toString());
         return this.code(resolved);
     }
 
@@ -132,7 +134,7 @@ public class MMonoid extends MObj implements MTonoid {
                         LOG.trace("{{r}}====>{{/r}} killing monad %s", n);
                     }
                 } catch (final Exception e) {
-                    throw MTronException.of(e, "unable to evaluate inst of %s", m);
+                    throw MTronException.of(e, "unable to evaluate %s", m);
                 }
             } else if (!this.barriers().isEmpty()) {
                 final Monad barrier = this.barriers().<LinkedList<Monad>>valueAs().poll();

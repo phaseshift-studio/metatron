@@ -81,7 +81,7 @@ public interface Inst extends Call {
     }
 
     default Poly args() {
-        return this.value().getValue0();
+        return this.value().get0();
     }
 
     default Inst args(final Function<Poly, Poly> redefine) {
@@ -108,11 +108,11 @@ public interface Inst extends Call {
     }
 
     default Inst.f f() {
-        return this.value().getValue1();
+        return this.value().get1();
     }
 
     default Obj seed() {
-        return this.value().getValue2();
+        return this.value().get2();
     }
 
     default Resolution resolution() {
@@ -140,8 +140,9 @@ public interface Inst extends Call {
                 Obj argD = this.arg(i);
                 Obj argS = spec.isInst() ? spec.<Inst>as().arg(i) : spec;
                 if (argD.tid().cLess().isGeneric()) {
-                    if (generics.containsKey(argD.tid().cLess()) && !argS.tid().cLess().matches(generics.get(argD.tid().cLess())))
-                        LOG.warn("existing generic doesn't match current usage: [{{m}}generic{{/m}}] %s [{{m}}past{{/m}}] %s [{{m}}present{{/m}}] %s", argS.tid(), generics.get(argD.tid()), argD.tid());
+                    final fURI lastBinding = generics.get(argD.tid().cLess());
+                    if (null != lastBinding && !argS.tid().cLess().matches(lastBinding))
+                        LOG.debug("existing generic doesn't match current usage: [{{m}}generic{{/m}}] %s [{{m}}past{{/m}}] %s [{{m}}present{{/m}}] %s", argS.tid(), lastBinding, argD.tid());
                     generics.computeIfAbsent(argD.tid().cLess(), k -> argS.tid().cLess()); // beware of int[0] yielding noobj across all bindings
                 }
                 if (argD.isInst()) {
@@ -185,7 +186,7 @@ public interface Inst extends Call {
                                         .stream()
                                         .anyMatch(arg -> !this.arg(counter.getAndIncrement()).matches(arg)) ?
                                         null :
-                                        i.args(lst(this.args().lstValue().stream().map(a -> a.isCall() ? a.resolve(lhs.type()) : a).toList()));
+                                        i.args(lst(this.args().lstValue().stream().map(a -> a.resolve(lhs)).toList()));
                             } else if (i.args().isRec()) {
                                 LOG.trace("processing rec args of %s", i);
                                 final AtomicInteger counter = new AtomicInteger(0);
@@ -214,16 +215,16 @@ public interface Inst extends Call {
             } catch (final Exception e) {
                 this.logger().error("unable to resolve %s => %s in instruction set %s: %s", lhs, this, e.getMessage());
             }
-            this.logger().warn("searching spaces for runtime resolution of inst %s => %s", lhs, this);
+            this.logger().trace("searching spaces for runtime resolution of inst %s => %s", lhs, this);
             final Obj resolved2 = Router.global().read(this.tid());
             if (resolved2.isNoObj()) {
-                LOG.error("unresolved %s across all known spaces", this);
+                LOG.error("%s could not be resolved in any space", this);
                 return NoObj.single();
             } else if (!resolved2.isInst()) {
                 LOG.error("unable to resolve %s to a single inst in %s", this.dom(lhs.type()), resolved2);
                 return NoObj.single();//.resolve(lhs);
             } else {
-                LOG.warn("resolved %s from global router", resolved2);
+                LOG.debug("resolved %s from global router", resolved2);
                 return resolved2.<Inst>as().args(this.args()); //.resolve(lhs);
             }
         } else { // Resolve.B
@@ -267,13 +268,14 @@ public interface Inst extends Call {
         Obj rhs = NoObj.single();
         try {
             rhs = cinst.f().apply(lhs, cinst);
+            Graphitty.log(this).trace("%s ({{m}}lhs{{/m}}) => %s ({{m}}inst{{/m}}) => %s ({{m}}rhs{{/m}}) evaluated {{g}}successfully{{/g}}", lhs, cinst, rhs);
             Router.stack().pop();
         } catch (final Exception e) {
             Graphitty.log(this).error("%s => %s evaluation error: %s (reverting stack)", lhs, cinst, e.getMessage());
             Router.stack().pop();
         }
         if (!rhs.matches(cinst.rng()))
-            throw MTronException.of("{{m}}rhs obj{{/m}} (%s) does not match {{m}}inst range{{/m}} (%s): %s", rhs, cinst.rng(), this);
+            throw MTronException.of("{{m}}rhs obj{{/m}} (%s) {{r}}does not match{{/r}} {{m}}inst range{{/m}} (%s): %s", rhs, cinst.rng(), this);
         return rhs;
 
     }

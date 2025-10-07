@@ -44,11 +44,11 @@ public interface Rel extends Poly {
     /// /////////////////////////////////////////////////////////
 
     default Obj first() {
-        return this.value().getValue0();
+        return this.value().get0();
     }
 
     default Obj second() {
-        return this.value().getValue1();
+        return this.value().get1();
     }
 
     default Rel first(final Obj key) {

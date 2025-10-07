@@ -39,8 +39,8 @@ public class PubSubQ implements Q {
 
     @Override
     public void onQLessWrite(final fURI source, final fURI target, final Obj original) {
-        this.subscriptions.stream().filter(t -> target.matches(t.getValue1())).forEach(t -> {
-            t.getValue2().apply(original);
+        this.subscriptions.stream().filter(t -> target.matches(t.get1())).forEach(t -> {
+            t.get2().apply(original);
         });
     }
 

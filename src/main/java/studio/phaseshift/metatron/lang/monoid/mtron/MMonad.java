@@ -55,11 +55,6 @@ public class MMonad extends MObj implements Monad {
     }
 
     @Override
-    public Monad c(final cInt coeff) {
-        return (Monad) super.c(coeff);
-    }
-
-    @Override
     public Monad vid(final fURI vid) {
         return (Monad) super.vid(vid);
     }

@@ -53,6 +53,11 @@ public class MObjs implements Objs {
     }*/
 
     @Override
+    public Obj resolve(final Obj obj) {
+        return ooobj(this.stream().map(o -> o.resolve(obj)));
+    }
+
+    @Override
     public Objs append(final Obj obj) {
         obj.iterator().forEachRemaining(i -> {
             this.cstream.compute(i.tid(i.tid().cLess()), (lng, it) -> null == it ? i.tid().cV() : it.plus(i.tid().cV()));

@@ -145,6 +145,15 @@ public class mtronInstSet extends MInstSet {
                 instC(SPLIT_TID.dom(fURI.ALL).rng(LST_TID), lst(T(LST_TID)), (lhs, inst) -> MLst.of(inst.arg(0).lstValue().stream().map(e -> e.apply(lhs)).toList())),
                 instC(SPLIT_TID.dom(fURI.ALL).rng(REL_TID), lst(T(REL_TID)), (lhs, inst) -> MRel.of(inst.arg(0).<Rel>as().first().apply(lhs), inst.arg(0).<Rel>as().second().apply(lhs))),
                 instC(SPLIT_TID.dom(fURI.ALL).rng(REC_TID), lst(T(REC_TID)), (lhs, inst) -> MRec.of(inst.arg(0).recValue().entrySet().stream().map(e -> e.getKey().apply(lhs).choose(Obj::isNoObj, x -> null, x -> MRel.of(x, e.getValue().apply(lhs)))).filter(x -> !Objects.isNull(x)).collect(Collectors.toMap(a -> a.<Rel>as().first(), b -> b.<Rel>as().second(), Obj::append, LinkedHashMap<Obj, Obj>::new)))),
+                instC(SPLIT_TID.dom(A.maybeSome()).rng(REC_TID), lst(T(REC_TID)), (lhs, inst) ->
+                        inst.arg(0).value(lhs.stream().flatMap(o -> inst.arg(0).<Rec>as()
+                                        .stream()
+                                        .map(rel -> rel.first().apply(o).choose(Obj::isNoObj, NoObj.single(), r -> rel.second(rel.second().apply(o))))
+                                        .filter(p -> !p.isNoObj())
+                                        .map(Obj::<Rel>as))
+                                .collect(Collectors.toMap(Rel::first, Rel::second, Obj::append, LinkedHashMap::new)))),
+                instC(SPLIT_TID.dom(A.maybeSome()).rng(A.maybeSome()), lst(T(A.maybeSome())), (lhs, inst) -> ooobj(inst.arg(0).stream().map(o -> o.apply(lhs)))),
+                instC(SPLIT_TID.dom(fURI.ALL).rng(fURI.ALL.maybeSome()), lst(T(fURI.ALL.some())), (lhs, inst) -> MObjs.ooobj(inst.arg(0).stream().map(o -> o.apply(lhs)))),
                 instC(SPLIT_TID.dom(fURI.ALL).rng(fURI.ALL), lst(T(fURI.ALL)), (lhs, inst) -> inst.arg(0).apply(lhs)),
                 /// ///////////////////////////////////////////////////////////////////////////////////////////////////
                 instC(MERGE_TID.dom(LST_TID).rng(OBJS_ID), lst(), (lhs, inst) -> MObjs.of(lhs.<Lst>as().value())),
@@ -152,21 +161,13 @@ public class mtronInstSet extends MInstSet {
                 //
                 instC(MERGE_TID.dom(A.maybeSome()).rng(LST_TID), lst(T(LST_TID)), (lhs, inst) -> inst.arg(0).value(Stream.concat(inst.arg(0).lstValue().stream(), lhs.stream()).toList())),
                 instC(MERGE_TID.dom(REL_TID.maybeSome()).rng(REC_TID), lst(T(REC_TID)), (lhs, inst) -> inst.arg(0).value(Stream.concat(inst.arg(0).<Rec>as().stream(), lhs.stream().map(Obj::as)).collect(Collectors.toMap(Rel::first, Rel::second, Obj::append, LinkedHashMap::new)))),
-                instC(MERGE_TID.dom(A.maybeSome()).rng(REC_TID), lst(T(REC_TID)), (lhs, inst) ->
-                        inst.arg(0).value(lhs.stream().flatMap(o -> inst.arg(0).<Rec>as()
-                                        .stream()
-                                        .map(rel -> rel.first().apply(o).choose(Obj::isNoObj, NoObj.single(), r -> rel.second(rel.second().apply(o))))
-                                        .filter(p -> !p.isNoObj())
-                                        .map(Obj::<Rel>as))
-                                .collect(Collectors.toMap(Rel::first, Rel::second, Obj::append, LinkedHashMap::new)))),
-                //
                 instC(MERGE_TID.dom(A).rng(A), lst(), (lhs, inst) -> lhs),
                 //
                 instC(MERGE_TID.dom(A.maybeSome()).rng(A.maybeSome()), lst(T(A.maybeSome())), (lhs, inst) -> inst.arg(0).append(lhs)),
                 instC(MERGE_TID.dom(A.maybeSome()).rng(A.maybeSome()), lst(), (lhs, inst) -> lhs),
                 /// ///////////////////////////////////////////////////////////////////////////////////////////////////
-                instC(DOM_TID.dom(REL_TID).rng(ALL), lst(), (lhs, inst) -> lhs.relValue().getValue0()),
-                instC(RNG_TID.dom(REL_TID).rng(ALL.some()), lst(), (lhs, inst) -> lhs.relValue().getValue1()),
+                instC(DOM_TID.dom(REL_TID).rng(ALL), lst(), (lhs, inst) -> lhs.relValue().get0()),
+                instC(RNG_TID.dom(REL_TID).rng(ALL.some()), lst(), (lhs, inst) -> lhs.relValue().get1()),
                 instC(DOM_TID.dom(REC_TID).rng(OBJS_ID), lst(), (lhs, inst) -> MObjs.of(lhs.recValue().keySet())),
                 instC(RNG_TID.dom(REC_TID).rng(OBJS_ID), lst(), (lhs, inst) -> MObjs.of(lhs.recValue().values())),
                 /// ///////////////////////////////////////////////////////////////////////////////////////////////////

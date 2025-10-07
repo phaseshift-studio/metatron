@@ -29,6 +29,7 @@ import java.util.List;
 
 import static studio.phaseshift.metatron.lang.obj.mtron.MInst.instB;
 import static studio.phaseshift.metatron.lang.obj.mtron.MLst.lst;
+import static studio.phaseshift.metatron.lang.obj.mtron.mtronInstSet.ID_TID;
 
 public class mtronFluent<F extends Fluent<F>> extends MCode implements Fluent<F> {
 
@@ -40,10 +41,11 @@ public class mtronFluent<F extends Fluent<F>> extends MCode implements Fluent<F>
         super(value, tid, vid);
     }
 
-    protected F addInst(final Inst inst) {
+    public F addInst(final Inst inst) {
         this.codeValue().add(inst);
         return (F) this;
     }
+
 
     public F start(final Obj obj) {
         return this.addInst(instB(mtronInstSet.START_TID, lst(obj)));
@@ -53,7 +55,7 @@ public class mtronFluent<F extends Fluent<F>> extends MCode implements Fluent<F>
         return this.addInst(instB(mtronInstSet.BLOCK_TID, lst(obj)));
     }
 
-    public F plus(final Obj obj) {
+    public F p1us(final Obj obj) {
         return this.addInst(instB(mtronInstSet.PLUS_TID, lst(obj)));
     }
 
@@ -66,7 +68,7 @@ public class mtronFluent<F extends Fluent<F>> extends MCode implements Fluent<F>
     }
 
     public F id() {
-        return this.addInst(instB(mtronInstSet.ID_TID, lst()));
+        return this.addInst(instB(ID_TID, lst()));
     }
 
     public F isA(final Obj obj) {
@@ -124,7 +126,7 @@ public class mtronFluent<F extends Fluent<F>> extends MCode implements Fluent<F>
         }
 
         public static <F extends mtronFluent<F>> F plus(final Obj obj) {
-            return new mtronFluent<F>().plus(obj);
+            return new mtronFluent<F>().p1us(obj);
         }
 
         public static <F extends mtronFluent<F>> F mult(final Obj obj) {

@@ -21,6 +21,7 @@ package studio.phaseshift.metatron.lang.obj;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.mtron.MObjs;
 import studio.phaseshift.metatron.util.IteratorUtil;
+import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.ObjUtil;
 
 import java.util.Iterator;
@@ -44,6 +45,11 @@ public final class NoObj implements Obj, Inst {
     @Override
     public Triplet value() {
         return null;
+    }
+
+    @Override
+    public Poly args() {
+        throw MTronException.of("%s has no accessible arguments", this);
     }
 
     @Override

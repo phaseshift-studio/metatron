@@ -70,7 +70,7 @@ public class ObjStringSerializer implements ObjSerializer<String> {
             return sb.append(this.b.palette.formC())
                     .append("){")
                     .append(this.b.palette.valueC())
-                    .append(inst.resolution() == Inst.Resolution.A ? "{{r}}?{{/r}}" : ("{{g}}" + inst.f().toString() ))
+                    .append(inst.resolution() == Inst.Resolution.A ? "{{r}}?{{/r}}" : ("{{g}}" + inst.f().toString()))
                     .append(this.b.palette.formC())
                     .append("}{{X}}")
                     //.append(this.b.ignoreRewrites ? "" : "{{X}}")
@@ -200,7 +200,7 @@ public class ObjStringSerializer implements ObjSerializer<String> {
         return sb;
     }
 
-    public static StringBuilder prettyPrintCode(final StringBuilder sb, final Call call, final int depth, final int leftMargin) {
+    public static StringBuilder prettyPrintCode(final StringBuilder sb, final Obj call, final int depth, final int leftMargin) {
         if (call.isCode()) {
             for (final Inst inst : call.<Code>as().codeValue()) {
                 prettyPrintCode(sb, inst, depth + 1, leftMargin);
@@ -210,11 +210,14 @@ public class ObjStringSerializer implements ObjSerializer<String> {
             sb.append(" ".repeat(leftMargin)).append("  ".repeat(depth)).append(inst).append("\n");
             if (null != inst.value()) {
                 for (final Obj arg : inst.args().elements()) {
-                    if (arg.isCall()) {
+                    if (arg.isCall() || arg.isObjs()) {
                         prettyPrintCode(sb, arg.as(), depth + 1, leftMargin);
                     }
                 }
             }
+        } else if (!call.isNoObj() && call.isObjs()) {
+            call.stream().forEach(o -> prettyPrintCode(sb, o, depth + 1, leftMargin));
+
         }
         return sb;
     }

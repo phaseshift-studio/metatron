@@ -25,6 +25,7 @@ import studio.phaseshift.metatron.ui.Graphitty;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Function;
 
 import static studio.phaseshift.metatron.lang.obj.mtron.MObjs.objs;
 import static studio.phaseshift.metatron.util.Tuple.Triplet;
@@ -64,22 +65,29 @@ public interface Monad extends Obj { //, Ring<Monad> {
     }
 
     default Rec state() {
-        return this.value().getValue2();
+        return this.value().get2();
     }
 
     default Inst inst() {
-        return this.value().getValue1();
+        return this.value().get1();
     }
 
     default Obj obj() {
-        return this.value().getValue0();
+        return this.value().get0();
     }
 
     @Override
     Monad tid(final fURI furi);
 
     @Override
-    Monad c(final cInt coeff);
+    default Monad c(final cInt coeff) {
+        return (Monad) Obj.super.c(coeff);
+    }
+
+    @Override
+    default Monad c(final Function<cInt, cInt> func) {
+        return (Monad) Obj.super.c(func);
+    }
 
     @Override
     default Monad c(final Long exact) {
@@ -94,26 +102,6 @@ public interface Monad extends Obj { //, Ring<Monad> {
         return this.merges(other) ? this.tid(this.tid().plus(other.tid())) : objs(List.of(this, other));
     }
 
-   /* default Monad mult(final Monad rhs) {
-        return this.merges(rhs) ? this.tid(this.tid().mult(rhs.tid())) : objs(List.of(this, other));
-    }*/
-
-    /*default Monad one() {
-        return new MMonad(); // id()<--M-->id()?
-    }*/
-
-    /*
-    default Monad zero() {
-        return new MMonad(); // noobj<--M-->noobj?
-    }
-     */
-
-    /*
-    default Monad neg() {
-        return ???
-    }
-     */
-
     default Monad obj(final Obj obj) {
         return this.clone(Triplet.with(obj, this.inst(), this.state()), this.tid(), this.vid());
     }
@@ -127,15 +115,16 @@ public interface Monad extends Obj { //, Ring<Monad> {
         if (!lift)
             return this;
         final cInt coeff = this.obj().c();
-        return this.obj(this.obj().c(1L)).c(this.c().mult(coeff));
+        return this.obj(this.obj().c(cInt::one)).c(this.c().mult(coeff));
     }
+
 
     default Monad dropC() {
         boolean drop = !(this.obj() instanceof Objs) && !this.obj().isNoObj() && !this.tid().cV().isOne();
         if (!drop)
             return this;
         final cInt coeff = this.c();
-        return this.obj(this.obj().c(this.obj().c().mult(coeff))).c(1L);
+        return this.obj(this.obj().c(this.obj().c().mult(coeff))).c(cInt::one);
     }
 
     @Override

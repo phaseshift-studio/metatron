@@ -36,19 +36,19 @@ public interface MTonoid extends Obj, Call {
 
 
     default Objs halted() {
-        return this.value().getValue3();
+        return this.value().get3();
     }
 
     default Lst barriers() {
-        return this.value().getValue2();
+        return this.value().get2();
     }
 
     default Objs running() {
-        return this.value().getValue1();
+        return this.value().get1();
     }
 
     default Code code() {
-        return this.value().getValue0();
+        return this.value().get0();
     }
 
     default MTonoid code(final Code code) {
@@ -61,12 +61,12 @@ public interface MTonoid extends Obj, Call {
 
     @Override
     default Type dom() {
-        return this.value().getValue0().dom();
+        return this.value().get0().dom();
     }
 
     @Override
     default Type rng() {
-        return this.value().getValue0().rng();
+        return this.value().get0().rng();
     }
 
 }

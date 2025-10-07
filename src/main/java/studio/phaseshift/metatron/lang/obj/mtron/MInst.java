@@ -46,7 +46,7 @@ public class MInst extends MObj implements Inst {
     }
 
     public boolean resolved() {
-        return null != this.value().getValue1();
+        return null != this.value().get1();
     }
 
     public static Inst instA(final fURI tid) {

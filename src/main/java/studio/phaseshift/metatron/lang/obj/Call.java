@@ -18,11 +18,19 @@
 
 package studio.phaseshift.metatron.lang.obj;
 
+import studio.phaseshift.metatron.algebra.Ring;
 import studio.phaseshift.metatron.lang.obj.mtron.MCode;
+import studio.phaseshift.metatron.lang.obj.mtron.MInst;
+import studio.phaseshift.metatron.lang.obj.mtron.c.cInt;
 
+import java.util.ArrayList;
 import java.util.List;
 
-public interface Call extends Obj {
+import static studio.phaseshift.metatron.lang.obj.mtron.MLst.lst;
+import static studio.phaseshift.metatron.lang.obj.mtron.mtronFluent.StartLess.split;
+import static studio.phaseshift.metatron.lang.obj.mtron.mtronInstSet.ID_TID;
+
+public interface Call extends Obj, Ring<Call> {
 
     static Call from(final List<Inst> insts) {
         if (insts.isEmpty())
@@ -56,5 +64,33 @@ public interface Call extends Obj {
 
     default <C extends Call> C rng(final Type range) {
         return (C) this.tid(this.tid().rng(range.tid()));
+    }
+
+    @Override
+    default Call neg() {
+        return this.c(cInt::neg).as();
+    }
+
+
+    @Override
+    default Call mult(final Call objs) {
+        final List<Inst> insts = new ArrayList<>(this.insts());
+        insts.addAll(objs.insts());
+        return MCode.of(insts);
+    }
+
+    @Override
+    default Call one() {
+        return MInst.instB(ID_TID, lst());
+    }
+
+    @Override
+    default Call plus(final Call objs) {
+        return split(lst(this, objs)).c(c -> this.c().plus(objs.c())).as();
+    }
+
+    @Override
+    default Call zero() {
+        return NoObj.single();
     }
 }
