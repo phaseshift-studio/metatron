@@ -14,8 +14,6 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 
 package studio.phaseshift.metatron.lang.obj;
@@ -51,6 +49,14 @@ public interface Rel extends Poly {
 
     default Obj second() {
         return this.value().getValue1();
+    }
+
+    default Rel first(final Obj key) {
+        return this.value(Pair.with(key, this.second()));
+    }
+
+    default Rel second(final Obj value) {
+        return this.value(Pair.with(this.first(), value));
     }
 
     @Override

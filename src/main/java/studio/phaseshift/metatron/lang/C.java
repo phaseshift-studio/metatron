@@ -14,13 +14,11 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 
 package studio.phaseshift.metatron.lang;
 
-import studio.phaseshift.metatron.Ring;
+import studio.phaseshift.metatron.algebra.Ring;
 
 import java.util.Objects;
 

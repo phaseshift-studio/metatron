@@ -14,8 +14,6 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 
 package studio.phaseshift.metatron.lang.monoid;
@@ -27,10 +25,10 @@ import static studio.phaseshift.metatron.util.Tuple.Quartet;
 
 ;
 
-public interface Monoid extends Obj, Call {
+public interface MTonoid extends Obj, Call {
 
     @Override
-    Monoid clone(final Object value, final fURI tid, final fURI vid);
+    MTonoid clone(final Object value, final fURI tid, final fURI vid);
 
     // code, running, barriers, halted
     @Override
@@ -53,13 +51,13 @@ public interface Monoid extends Obj, Call {
         return this.value().getValue0();
     }
 
-    default Monoid code(final Code code) {
+    default MTonoid code(final Code code) {
         return this.clone(Quartet.with(code, this.running(), this.barriers(), this.halted()), this.tid(), this.vid());
     }
 
 
     @Override
-    Monoid resolve(final Obj lhs);
+    MTonoid resolve(final Obj lhs);
 
     @Override
     default Type dom() {

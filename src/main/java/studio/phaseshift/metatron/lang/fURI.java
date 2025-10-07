@@ -14,13 +14,11 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 
 package studio.phaseshift.metatron.lang;
 
-import studio.phaseshift.metatron.Ring;
+import studio.phaseshift.metatron.algebra.Ring;
 import studio.phaseshift.metatron.lang.obj.Uri;
 import studio.phaseshift.metatron.lang.obj.mtron.MUri;
 import studio.phaseshift.metatron.lang.obj.mtron.c.cInt;
@@ -49,7 +47,7 @@ public class fURI implements Cloneable, Ring<fURI> {
     public static final String ONE_WILD_STRING = String.valueOf(ONE_WILD_CHAR);
     public static final fURI ALL = fURI.of(ALL_WILD_CHAR);
     public static final fURI SINGLE = fURI.of(ONE_WILD_CHAR);
-    public static final fURI NONE = fURI.of("");
+    public static final fURI NOOBJ = fURI.of("").zero();
     public static final fURI NULL = null;
     public static final fURI DOM = fURI.of("dom");
     public static final fURI RNG = fURI.of("rng");
@@ -305,7 +303,7 @@ public class fURI implements Cloneable, Ring<fURI> {
     }
 
     public boolean isZero() {
-        return this.equals(fURI.NONE) || this.cV().isZero();
+        return this.equals(fURI.NOOBJ) || this.cV().isZero();
     }
 
 

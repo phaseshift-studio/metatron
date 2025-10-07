@@ -14,15 +14,13 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 
 package studio.phaseshift.metatron.lang.monoid.mtron;
 
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.monoid.Monad;
-import studio.phaseshift.metatron.lang.monoid.Monoid;
+import studio.phaseshift.metatron.lang.monoid.MTonoid;
 import studio.phaseshift.metatron.lang.obj.*;
 import studio.phaseshift.metatron.lang.obj.mtron.*;
 import studio.phaseshift.metatron.ui.Graphitty;
@@ -40,7 +38,7 @@ import static studio.phaseshift.metatron.util.Tuple.Quartet;
 
 ;
 
-public class MMonoid extends MObj implements Monoid {
+public class MMonoid extends MObj implements MTonoid {
 
     public static final fURI MONOID_TID = MTRON_TID.extend("lang/monoid");
 
@@ -56,7 +54,7 @@ public class MMonoid extends MObj implements Monoid {
     }
 
     @Override
-    public Monoid resolve(final Obj lhs) {
+    public MTonoid resolve(final Obj lhs) {
         // this.code = new ExplainRewrite().rewrite(code.<Code>as());
         // process bcode inst pipeline
         //this.code = Rewriter({Rewriter::by(), Rewriter::explain()}).apply(this.code);
@@ -102,7 +100,7 @@ public class MMonoid extends MObj implements Monoid {
         return this.code(resolved);
     }
 
-    Monoid compute() {
+    MTonoid compute() {
         final Code code = this.code();
         this.running().append(MMonad.of(NoObj.single(), code.inst(0)));
         while (true) {
@@ -183,7 +181,7 @@ public class MMonoid extends MObj implements Monoid {
 
     @Override
     public boolean equals(final Object other) {
-        return other instanceof Monoid && Objects.equals(this.value, ((Monoid) other).value());
+        return other instanceof MTonoid && Objects.equals(this.value, ((MTonoid) other).value());
     }
 
     @Override
@@ -192,7 +190,7 @@ public class MMonoid extends MObj implements Monoid {
     }
 
     @Override
-    public Monoid clone(Object value, fURI tid, fURI vid) {
+    public MTonoid clone(Object value, fURI tid, fURI vid) {
         return new MMonoid((Quartet<Code, Objs, Lst, Objs>) value, tid, vid);
     }
 

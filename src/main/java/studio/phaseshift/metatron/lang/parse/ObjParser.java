@@ -14,8 +14,6 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 
 package studio.phaseshift.metatron.lang.parse;
@@ -72,11 +70,11 @@ public class ObjParser {
                 m_real(),
                 m_int(),
                 m_str(),
-                m_objs(),
+                m_call(),
                 m_rec(),
+                m_objs(),
                 m_rel(),
                 m_lst(),
-                m_call(),
                 m_uri()));
         obj_no_code_parser.set(choice(
                 m_comment(),
@@ -86,8 +84,8 @@ public class ObjParser {
                 m_real(),
                 m_int(),
                 m_str(),
-                m_objs(),
                 m_rec(),
+                m_objs(),
                 m_rel(),
                 m_lst(),
                 m_uri()));
@@ -99,11 +97,11 @@ public class ObjParser {
                 m_real(),
                 m_int(),
                 m_str(),
-                //m_call(),
-                m_objs(),
-                m_rec(),
-                m_lst(),
                 m_call(),
+                //m_call(),
+                m_rec(),
+                m_objs(),
+                m_lst(),
                 m_uri()));
         lst_parser.set(seq(m_type_prefix_opt_colon(LST_TID),
                 of('[').trim(),

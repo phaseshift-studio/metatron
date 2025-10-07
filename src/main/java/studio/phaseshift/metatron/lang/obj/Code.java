@@ -14,14 +14,12 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 
 package studio.phaseshift.metatron.lang.obj;
 
 import studio.phaseshift.metatron.lang.fURI;
-import studio.phaseshift.metatron.lang.monoid.Monoid;
+import studio.phaseshift.metatron.lang.monoid.MTonoid;
 import studio.phaseshift.metatron.lang.monoid.mtron.MMonoid;
 import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.ObjUtil;
@@ -86,11 +84,11 @@ public interface Code extends Call {
 
     @Override
     default Type dom() {
-        return this.value().isEmpty() ? T(fURI.NONE.zero()) : T(this.value().get(0).dom().tid().maybeSome()); // TODO: if unresolved, it's maybe.. is that good?
+        return this.value().isEmpty() ? T(fURI.NOOBJ.zero()) : T(this.value().get(0).dom().tid().maybeSome()); // TODO: if unresolved, it's maybe.. is that good?
     }
 
     default Type rng() {
-        return this.value().isEmpty() ? T(fURI.NONE.zero()) : T(this.value().get(this.value().size() - 1).rng().tid().maybeSome());
+        return this.value().isEmpty() ? T(fURI.NOOBJ.zero()) : T(this.value().get(this.value().size() - 1).rng().tid().maybeSome());
     }
 
     @Override
@@ -102,7 +100,7 @@ public interface Code extends Call {
     default Obj apply(final Obj lhs) {
         if (null != lhs && !lhs.matches(this.dom()))
             throw MTronException.of("%s ({{m}}lhs{{/m}}) (%s) does not match {{m}}code domain{{/m}} (%s): %s", lhs, lhs.rng(), this.dom(), this);
-        final Monoid monoid = (null == lhs ? MMonoid.of(this) : MMonoid.of(lhs, this));
+        final MTonoid monoid = (null == lhs ? MMonoid.of(this) : MMonoid.of(lhs, this));
         final Obj rhs = ObjUtil.oneNoneOrAll(monoid.apply(NoObj.single()).iterator());
         if (!rhs.matches(monoid.rng()))
             throw MTronException.of("%s ({{m}}rhs{{/m}}) (%s) does not match {{m}}code range{{/m}} (%s): %s", rhs, rhs.rng(), this.rng(), this);

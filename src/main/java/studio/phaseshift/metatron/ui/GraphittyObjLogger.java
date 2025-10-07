@@ -14,8 +14,6 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 
 package studio.phaseshift.metatron.ui;
@@ -31,7 +29,7 @@ import static org.slf4j.event.Level.*;
 
 public class GraphittyObjLogger extends GraphittyLogger {
 
-    private static fURI LOG_VID = fURI.NONE;
+    private static fURI LOG_VID = fURI.NOOBJ;
 
     public GraphittyObjLogger(final Obj source) {
         super(source);

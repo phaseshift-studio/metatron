@@ -14,8 +14,6 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 
 package studio.phaseshift.metatron.lang.obj;
@@ -36,22 +34,9 @@ public interface Objs extends Obj {
     @Override
     fURI tid();
 
-    default <O extends Obj> Iterable<O> valueCast() {
-        return (Iterable<O>) this.value();
-    }
-
     <O extends Obj> O remove();
 
     @Override
-    default Objs append(final Obj obj) {
-        if (obj.isNoObj())
-            return this;
-        if (this.value() instanceof Collection<?>) {
-            obj.iterator().forEachRemaining(o -> this.<Collection<Obj>>valueAs().add(o));
-            return this;
-        } else {
-            throw MTronException.of("unable to add to underlying iterable: %s", this.value().getClass());
-        }
-    }
+    Obj append(final Obj obj);
 
 }

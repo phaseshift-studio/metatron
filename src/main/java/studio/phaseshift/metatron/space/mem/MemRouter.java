@@ -14,8 +14,6 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 
 package studio.phaseshift.metatron.space.mem;
@@ -98,7 +96,7 @@ public class MemRouter implements Router {
     }
 
     public <S extends Space> S getSpace(final fURI match) {
-        if (match.matches(fURI.NONE))
+        if (match.matches(fURI.NOOBJ))
             return NullSpace.single();
         //     final fURI mvid = this.smallToBigRewrites.getOrDefault(vid,vid);
         final Optional<S> space = this.spaces.entrySet().stream()

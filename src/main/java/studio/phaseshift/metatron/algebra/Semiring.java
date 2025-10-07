@@ -14,29 +14,16 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 
-package studio.phaseshift.metatron;
+package studio.phaseshift.metatron.algebra;
 
 /*
-@author Marko A. Rodriguez (http://markorodriguez.com)
-*/
-public interface Ring<R extends Ring<R>> {
+ * @author Marko A. Rodriguez (http://markorodriguez.com)
+ */
+public interface Semiring<R extends Semiring<R>> {
 
     R plus(final R r);
-
-    R mult(final R r);
-
-    R neg();
-
-    default R minus(final R r) {
-        return this.plus(r.neg());
-    }
-
-
-    R one();
 
     R zero();
 
@@ -44,8 +31,5 @@ public interface Ring<R extends Ring<R>> {
         return this.equals(this.zero());
     }
 
-    default boolean isOne() {
-        return this.equals(this.one());
-    }
 
 }

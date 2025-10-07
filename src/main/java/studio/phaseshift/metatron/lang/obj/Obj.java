@@ -14,8 +14,6 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 
 package studio.phaseshift.metatron.lang.obj;
@@ -52,6 +50,10 @@ public interface Obj extends Function<Obj, Obj>, Iterable<Obj> {
 
     default cInt c() {
         return this.tid().cV();
+    }
+
+    default Obj c(final Function<cInt, cInt> func) {
+        return this.c(func.apply(this.c()));
     }
 
     default Obj c(final cInt coeff) {
@@ -222,7 +224,7 @@ public interface Obj extends Function<Obj, Obj>, Iterable<Obj> {
     }
 
     default boolean isNoObj() {
-        return this == NoObj.single() || this.tid().basePath().equals(fURI.NONE) || this.tid().cV().isZero(); // TODO: consolidate the logic
+        return this == NoObj.single() || this.tid().basePath().equals(fURI.NOOBJ) || this.tid().cV().isZero(); // TODO: consolidate the logic
     }
 
     default boolean isBool() {

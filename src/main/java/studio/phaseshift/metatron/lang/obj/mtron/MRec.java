@@ -14,8 +14,6 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 
 package studio.phaseshift.metatron.lang.obj.mtron;
@@ -54,6 +52,19 @@ public class MRec extends MObj implements Rec {
     public static Rec rec() {
         return MRec.of(new LinkedHashMap<>());
     }
+
+    @Override
+    public Rec plus(final Rec objs) {
+        final Map<Obj, Obj> newMap = new LinkedHashMap<>(this.recValue());
+        objs.stream().forEach(o -> newMap.compute(o.first(), (k, v) -> null == v ? o.second() : v.append(o.second())));
+        return this.value(newMap);
+    }
+
+    @Override
+    public Rec zero() {
+        return EMPTY_REC;
+    }
+
 
     @Override
     public Rec clone(final Object value, final fURI tid, final fURI vid) {

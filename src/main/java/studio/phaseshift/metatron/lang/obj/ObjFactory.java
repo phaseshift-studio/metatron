@@ -14,8 +14,6 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 
 package studio.phaseshift.metatron.lang.obj;
@@ -62,7 +60,7 @@ public interface ObjFactory {
         else if (Type.class.isAssignableFrom(objClass))
             tid = TYPE_TID;
         else if (NoObj.class.isAssignableFrom(objClass))
-            tid = fURI.NONE;
+            tid = fURI.NOOBJ;
         else
             throw MTronException.of("unable to convert to requested obj class: %s", objClass);
         return this.create(value, tid, fURI.NULL, objClass);

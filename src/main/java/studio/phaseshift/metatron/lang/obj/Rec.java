@@ -14,13 +14,13 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 
 package studio.phaseshift.metatron.lang.obj;
 
 
+import studio.phaseshift.metatron.algebra.Monoid;
+import studio.phaseshift.metatron.algebra.Semiring;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.mtron.MObjs;
 import studio.phaseshift.metatron.lang.obj.mtron.MRel;
@@ -36,7 +36,7 @@ import static studio.phaseshift.metatron.lang.fURI.f;
 import static studio.phaseshift.metatron.lang.obj.mtron.MUri.uri;
 import static studio.phaseshift.metatron.util.Tuple.Pair;
 
-public interface Rec extends Poly {
+public interface Rec extends Poly, Semiring<Rec> {
 
     @Override
     Rec clone(final Object value, final fURI tid, final fURI vid);
@@ -53,6 +53,7 @@ public interface Rec extends Poly {
     default Stream<Rel> stream() {
         return IteratorUtil.stream(this.elements());
     }
+
 
     @Override
     default Iterable<Rel> elements() {

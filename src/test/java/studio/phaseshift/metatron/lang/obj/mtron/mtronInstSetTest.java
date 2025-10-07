@@ -14,8 +14,6 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 
 package studio.phaseshift.metatron.lang.obj.mtron;
@@ -43,7 +41,7 @@ public class mtronInstSetTest extends MetatronTest {
             "{3,4}>-{1,2}                                                           % {1,2,3,4}",
             "[a=>1,b=>2]>-.>-[=>]                                                   % [a=>1,b=>2]",
             "[b=>2]>-.>-[a=>1]                                                      % [a=>1,b=>2]",
-            "{a,b,c}.>-[=>]                                                         % <ERROR>"
+            "{1,2,3}>-[is(gt(1))=>_, is(gt(2))=>_]                                  % [is(gt(1))=>{2,3},is(gt(2))=>3]"
     }, delimiter = '%')
     public void testCode(final String code, final String expected) {
         super.testCode(code, expected);

@@ -14,8 +14,6 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 
 package studio.phaseshift.metatron.lang.obj.mtron;
@@ -126,7 +124,7 @@ public class mtronInstSet extends MInstSet {
     @Override
     public Set<Inst> insts() {
         return Stream.of(
-                instC(START_TID.dom(fURI.NONE.zero()).rng(A.maybeSome()), lst(T(A.maybeSome())), (lhs, inst) -> inst.arg(0)),
+                instC(START_TID.dom(fURI.NOOBJ.zero()).rng(A.maybeSome()), lst(T(A.maybeSome())), (lhs, inst) -> inst.arg(0)),
                 instC(END_TID.dom(OBJS_ID).rng(NOOBJ_TID.zero()), lst(), (lhs, inst) -> NoObj.single()),
                 instC(ID_TID.dom(A.maybe()).rng(A.maybe()), lst(), (lhs, inst) -> lhs),
                 instC(ID_TID.dom(A.maybeSome()).rng(A.maybeSome()), lst(), (lhs, inst) -> lhs),
@@ -154,15 +152,21 @@ public class mtronInstSet extends MInstSet {
                 //
                 instC(MERGE_TID.dom(A.maybeSome()).rng(LST_TID), lst(T(LST_TID)), (lhs, inst) -> inst.arg(0).value(Stream.concat(inst.arg(0).lstValue().stream(), lhs.stream()).toList())),
                 instC(MERGE_TID.dom(REL_TID.maybeSome()).rng(REC_TID), lst(T(REC_TID)), (lhs, inst) -> inst.arg(0).value(Stream.concat(inst.arg(0).<Rec>as().stream(), lhs.stream().map(Obj::as)).collect(Collectors.toMap(Rel::first, Rel::second, Obj::append, LinkedHashMap::new)))),
+                instC(MERGE_TID.dom(A.maybeSome()).rng(REC_TID), lst(T(REC_TID)), (lhs, inst) ->
+                        inst.arg(0).value(lhs.stream().flatMap(o -> inst.arg(0).<Rec>as()
+                                        .stream()
+                                        .map(rel -> rel.first().apply(o).choose(Obj::isNoObj, NoObj.single(), r -> rel.second(rel.second().apply(o))))
+                                        .filter(p -> !p.isNoObj())
+                                        .map(Obj::<Rel>as))
+                                .collect(Collectors.toMap(Rel::first, Rel::second, Obj::append, LinkedHashMap::new)))),
                 //
                 instC(MERGE_TID.dom(A).rng(A), lst(), (lhs, inst) -> lhs),
                 //
                 instC(MERGE_TID.dom(A.maybeSome()).rng(A.maybeSome()), lst(T(A.maybeSome())), (lhs, inst) -> inst.arg(0).append(lhs)),
                 instC(MERGE_TID.dom(A.maybeSome()).rng(A.maybeSome()), lst(), (lhs, inst) -> lhs),
-
                 /// ///////////////////////////////////////////////////////////////////////////////////////////////////
                 instC(DOM_TID.dom(REL_TID).rng(ALL), lst(), (lhs, inst) -> lhs.relValue().getValue0()),
-                instC(RNG_TID.dom(REL_TID).rng(ALL), lst(), (lhs, inst) -> lhs.relValue().getValue1()),
+                instC(RNG_TID.dom(REL_TID).rng(ALL.some()), lst(), (lhs, inst) -> lhs.relValue().getValue1()),
                 instC(DOM_TID.dom(REC_TID).rng(OBJS_ID), lst(), (lhs, inst) -> MObjs.of(lhs.recValue().keySet())),
                 instC(RNG_TID.dom(REC_TID).rng(OBJS_ID), lst(), (lhs, inst) -> MObjs.of(lhs.recValue().values())),
                 /// ///////////////////////////////////////////////////////////////////////////////////////////////////
