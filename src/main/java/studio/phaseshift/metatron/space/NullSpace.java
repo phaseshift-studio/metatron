@@ -113,4 +113,9 @@ public final class NullSpace implements Space, InstSet {
     public void close() {
 
     }
+
+    @Override
+    public NullSpace clone() {
+        return this;
+    }
 }

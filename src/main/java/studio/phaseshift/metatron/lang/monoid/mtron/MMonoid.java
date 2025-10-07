@@ -49,7 +49,8 @@ public class MMonoid extends MObj implements MTonoid {
         //  Router.global().write(MMonad.MMONAD_TID, T(MMonad.MMONAD_TID));
     }
 
-    public MMonoid(final Quartet<Code, Objs, Lst, Objs> value, final fURI tid, final fURI vid) {
+    // code running barriers halted
+    public MMonoid(final Quartet<Code, Obj, Lst, Obj> value, final fURI tid, final fURI vid) {
         super(value, tid, vid);
     }
 
@@ -86,7 +87,7 @@ public class MMonoid extends MObj implements MTonoid {
                 } else if (instB.isGather()) {
                     // many-to-?
                     LOG.trace("  {{m}}==|{{/m}} creating {{y}}barrier{{/y}} monad at %s", instB);
-                    final Monad m = MMonad.of(MObjs.of(new LinkedList<>(/*List.of(instB.seed())*/)), instB);
+                    final Monad m = MMonad.of(MObjs.empty(/*List.of(instB.seed())*/), instB);
                     this.barriers().<LinkedList<Obj>>valueAs().add(m);
                 }
                 // LOG.none("%s", instB.rng().tid());
@@ -106,7 +107,7 @@ public class MMonoid extends MObj implements MTonoid {
         final Code code = this.code();
         this.running().append(MMonad.of(NoObj.single(), code.inst(0)));
         while (true) {
-            final Monad m = this.running().remove();
+            final Monad m = (Monad) this.running().take();
             if (null != m) {
                 LOG.trace("   {{g}}=>{{/g}} processing monad %s [%s]", m, m.inst().isInitial() ? "initial" : "midway");
                 try {
@@ -187,24 +188,24 @@ public class MMonoid extends MObj implements MTonoid {
     }
 
     @Override
-    public Quartet<Code, Objs, Lst, Objs> value() {
-        return (Quartet<Code, Objs, Lst, Objs>) this.value;
+    public Quartet<Code, Obj, Lst, Obj> value() {
+        return (Quartet<Code, Obj, Lst, Obj>) this.value;
     }
 
     @Override
     public MTonoid clone(Object value, fURI tid, fURI vid) {
-        return new MMonoid((Quartet<Code, Objs, Lst, Objs>) value, tid, vid);
+        return new MMonoid((Quartet<Code, Obj, Lst, Obj>) value, tid, vid);
     }
 
     public static MMonoid of(final Code code) {
-        return new MMonoid(Quartet.with(code, MObjs.of(new LinkedList<>()), MLst.of(new LinkedList<>()), MObjs.of(new LinkedList<>())), MONOID_TID, fURI.NULL);
+        return new MMonoid(Quartet.with(code, MObjs.empty(), MLst.of(new LinkedList<>()), MObjs.empty()), MONOID_TID, fURI.NULL);
     }
 
     public static MMonoid of(final Obj start, final Code code) {
         final List<Inst> prepended = new ArrayList<>();
         prepended.add(MInst.instB(mtronInstSet.START_TID, MLst.of(start)));
         prepended.addAll(code.codeValue());
-        return new MMonoid(Quartet.with(MCode.of(prepended), MObjs.of(new LinkedList<>()), MLst.of(new LinkedList<>()), MObjs.of(new LinkedList<>())), MONOID_TID, fURI.NULL);
+        return new MMonoid(Quartet.with(MCode.of(prepended), MObjs.empty(), MLst.of(new LinkedList<>()), MObjs.empty()), MONOID_TID, fURI.NULL);
     }
 
 }

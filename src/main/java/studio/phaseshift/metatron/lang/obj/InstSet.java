@@ -20,6 +20,7 @@ package studio.phaseshift.metatron.lang.obj;
 
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.space.Space;
+import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.Set;
 

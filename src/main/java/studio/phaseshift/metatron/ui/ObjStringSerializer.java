@@ -22,7 +22,6 @@ import org.petitparser.context.Result;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.*;
 import studio.phaseshift.metatron.lang.parse.ObjParser;
-import studio.phaseshift.metatron.util.ObjUtil;
 
 import java.util.HashSet;
 import java.util.Map;
@@ -70,7 +69,7 @@ public class ObjStringSerializer implements ObjSerializer<String> {
             return sb.append(this.b.palette.formC())
                     .append("){")
                     .append(this.b.palette.valueC())
-                    .append(inst.resolution() == Inst.Resolution.A ? "{{r}}?{{/r}}" : ("{{g}}" + inst.f().toString()))
+                    .append(inst.resolution() == Inst.Resolution.A ? "{{r}}?{{/r}}" : ("{{y}}" + inst.f().toString()))
                     .append(this.b.palette.formC())
                     .append("}{{X}}")
                     //.append(this.b.ignoreRewrites ? "" : "{{X}}")
@@ -139,7 +138,7 @@ public class ObjStringSerializer implements ObjSerializer<String> {
                     .append(this.b.palette.formC())
                     .append("[")
                     .append(this.b.palette.valueC())
-                    .append(ObjUtil.isNoObj(obj.value()) ? "" : obj.value().toString())
+                    .append(null == obj.value() ? "" : obj.value().toString())
                     .append(this.b.palette.formC())
                     .append("]{{X}}").toString();
         }

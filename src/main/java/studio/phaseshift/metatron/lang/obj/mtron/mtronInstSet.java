@@ -34,7 +34,7 @@ import static studio.phaseshift.metatron.lang.obj.mtron.MBool.bool;
 import static studio.phaseshift.metatron.lang.obj.mtron.MInst.instC;
 import static studio.phaseshift.metatron.lang.obj.mtron.MInt.jnt;
 import static studio.phaseshift.metatron.lang.obj.mtron.MLst.lst;
-import static studio.phaseshift.metatron.lang.obj.mtron.MObjs.ooobj;
+import static studio.phaseshift.metatron.lang.obj.mtron.MObjs.objs;
 import static studio.phaseshift.metatron.lang.obj.mtron.MReal.real;
 import static studio.phaseshift.metatron.lang.obj.mtron.MRec.rec;
 import static studio.phaseshift.metatron.lang.obj.mtron.MType.T;
@@ -109,6 +109,7 @@ public class mtronInstSet extends MInstSet {
     public static final fURI CROSS_TID = INST_TID.extend("cross");
     public static final fURI ELSE_TID = INST_TID.extend("else");
     public static final fURI END_TID = INST_TID.extend("end");
+    public static final fURI SWAP_TID = INST_TID.extend("swap");
 
     public mtronInstSet(final fURI vid) {
         super(MTRON_TID, vid);
@@ -142,6 +143,7 @@ public class mtronInstSet extends MInstSet {
                 instC(GET_TID.dom(LST_TID).rng(OBJS_ID), lst(T(INT_TID)), (lhs, inst) -> lhs.<Lst>as().at(inst.arg(0))),
                 /// ///////////////////////////////////////////////////////////////////////////////////////////////////
                 instC(BLOCK_TID.dom(A.maybe()).rng(A.maybe()), lst(T(A)), (lhs, inst) -> inst.arg(0)),
+                instC(SWAP_TID.dom(A).rng(B), lst(T(C)), (lhs, inst) -> lhs.apply(inst.arg(0))),
                 /// ///////////////////////////////////////////////////////////////////////////////////////////////////
                 instC(SPLIT_TID.dom(fURI.ALL).rng(LST_TID), lst(T(LST_TID)), (lhs, inst) -> MLst.of(inst.arg(0).lstValue().stream().map(e -> e.apply(lhs)).toList())),
                 instC(SPLIT_TID.dom(fURI.ALL.maybeSome()).rng(LST_TID), lst(T(LST_TID)), (lhs, inst) -> MLst.of(inst.arg(0).lstValue().stream().map(e -> e.apply(lhs)).toList())),
@@ -150,28 +152,32 @@ public class mtronInstSet extends MInstSet {
                 instC(SPLIT_TID.dom(A.maybeSome()).rng(REC_TID), lst(T(REC_TID)), (lhs, inst) ->
                         inst.arg(0).value(lhs.stream().flatMap(o -> inst.arg(0).<Rec>as()
                                         .stream()
-                                        .map(rel -> rel.first().apply(o).choose(Obj::isNoObj, NoObj.single(), r -> rel.second(rel.second().apply(o))))
+                                        .map(rel -> rel.first()
+                                                .apply(o)
+                                                .andThen(oo -> oo.isNoObj() ?
+                                                        NoObj.single() :
+                                                        rel.second(rel.second().apply(oo))).apply(o))//.choose(Obj::isNoObj, NoObj.single(), r -> rel.second(rel.second().apply(o))))
                                         .filter(p -> !p.isNoObj())
                                         .map(Obj::<Rel>as))
                                 .collect(Collectors.toMap(Rel::first, Rel::second, Obj::append, LinkedHashMap::new)))),
-                instC(SPLIT_TID.dom(A.maybeSome()).rng(A.maybeSome()), lst(T(A.maybeSome())), (lhs, inst) -> ooobj(inst.arg(0).stream().map(o -> o.apply(lhs)))),
-                instC(SPLIT_TID.dom(fURI.ALL).rng(fURI.ALL.maybeSome()), lst(T(fURI.ALL.some())), (lhs, inst) -> MObjs.ooobj(inst.arg(0).stream().map(o -> o.apply(lhs)))),
+                instC(SPLIT_TID.dom(A.maybeSome()).rng(A.maybeSome()), lst(T(A.maybeSome())), (lhs, inst) -> objs(inst.arg(0).stream().map(o -> o.apply(lhs)))),
+                instC(SPLIT_TID.dom(fURI.ALL).rng(fURI.ALL.maybeSome()), lst(T(fURI.ALL.some())), (lhs, inst) -> objs(inst.arg(0).stream().map(o -> o.apply(lhs)))),
                 instC(SPLIT_TID.dom(fURI.ALL).rng(fURI.ALL), lst(T(fURI.ALL)), (lhs, inst) -> inst.arg(0).apply(lhs)),
                 /// ///////////////////////////////////////////////////////////////////////////////////////////////////
-                instC(MERGE_TID.dom(LST_TID).rng(OBJS_ID), lst(), (lhs, inst) -> MObjs.of(lhs.<Lst>as().value())),
-                instC(MERGE_TID.dom(REC_TID).rng(REL_TID.maybeSome()), lst(), (lhs, inst) -> MObjs.of(lhs.stream().toList())),
+                instC(MERGE_TID.dom(LST_TID).rng(OBJS_ID), lst(), (lhs, inst) -> objs(lhs.<Lst>as().value())),
+                instC(MERGE_TID.dom(REC_TID).rng(REL_TID.maybeSome()), lst(), (lhs, inst) -> objs(lhs.stream().toList())),
                 //
-                instC(MERGE_TID.dom(A.maybeSome()).rng(LST_TID), lst(T(LST_TID)), (lhs, inst) -> inst.arg(0).value(Stream.concat(inst.arg(0).lstValue().stream(), lhs.stream()).toList())),
-                instC(MERGE_TID.dom(REL_TID.maybeSome()).rng(REC_TID), lst(T(REC_TID)), (lhs, inst) -> inst.arg(0).value(Stream.concat(inst.arg(0).<Rec>as().stream(), lhs.stream().map(Obj::as)).collect(Collectors.toMap(Rel::first, Rel::second, Obj::append, LinkedHashMap::new)))),
+                instC(MERGE_TID.dom(A.maybeSome()).rng(LST_TID), lst(T(LST_TID)), (lhs, inst) -> inst.arg(0).value(Stream.concat(lhs.stream(), inst.arg(0).lstValue().stream()).toList())),
+                instC(MERGE_TID.dom(REL_TID.maybeSome()).rng(REC_TID), lst(T(REC_TID)), (lhs, inst) -> inst.arg(0).value(Stream.concat(lhs.stream().map(Obj::as), inst.arg(0).<Rec>as().stream()).collect(Collectors.toMap(Rel::first, Rel::second, Obj::append, LinkedHashMap::new)))),
                 instC(MERGE_TID.dom(A).rng(A), lst(), (lhs, inst) -> lhs),
                 //
-                instC(MERGE_TID.dom(A.maybeSome()).rng(A.maybeSome()), lst(T(A.maybeSome())), (lhs, inst) -> ooobj(Stream.concat(inst.arg(0).stream(), lhs.stream()))),
+                instC(MERGE_TID.dom(A.maybeSome()).rng(A.maybeSome()), lst(T(A.maybeSome())), (lhs, inst) -> objs(Stream.concat(lhs.stream(), inst.arg(0).stream()))),
                 instC(MERGE_TID.dom(A.maybeSome()).rng(A.maybeSome()), lst(), (lhs, inst) -> lhs),
                 /// ///////////////////////////////////////////////////////////////////////////////////////////////////
                 instC(DOM_TID.dom(REL_TID).rng(ALL), lst(), (lhs, inst) -> lhs.relValue().get0()),
                 instC(RNG_TID.dom(REL_TID).rng(ALL.some()), lst(), (lhs, inst) -> lhs.relValue().get1()),
-                instC(DOM_TID.dom(REC_TID).rng(OBJS_ID), lst(), (lhs, inst) -> MObjs.of(lhs.recValue().keySet())),
-                instC(RNG_TID.dom(REC_TID).rng(OBJS_ID), lst(), (lhs, inst) -> MObjs.of(lhs.recValue().values())),
+                instC(DOM_TID.dom(REC_TID).rng(OBJS_ID), lst(), (lhs, inst) -> objs(lhs.recValue().keySet())),
+                instC(RNG_TID.dom(REC_TID).rng(OBJS_ID), lst(), (lhs, inst) -> objs(lhs.recValue().values())),
                 /// ///////////////////////////////////////////////////////////////////////////////////////////////////
                 instC(NOT_TID.dom(ALL).rng(BOOL_TID), lst(T(BOOL_TID)), (lhs, inst) -> bool(!inst.arg(0).boolValue())),
                 instC(EQ_TID.dom(fURI.ALL).rng(BOOL_TID), lst(T(fURI.ALL)), (lhs, inst) -> bool(lhs.equals(inst.arg(0)))),
@@ -191,7 +197,7 @@ public class mtronInstSet extends MInstSet {
                 /// ///////////////////////////////////////////////////////////////////////////////////////////////////
                 instC(PLUS_TID.dom(BOOL_TID).rng(BOOL_TID), lst(T(BOOL_TID)), (lhs, inst) -> lhs.value(lhs.boolValue() || inst.arg(0).boolValue())),
                 instC(PLUS_TID.dom(INT_TID).rng(INT_TID), lst(T(INT_TID)), (lhs, inst) -> lhs.value(lhs.intValue() + inst.arg(0).intValue())),
-                instC(PLUS_TID.dom(INT_TID.some()).rng(INT_TID.some()), lst(T(INT_TID)), (lhs, inst) -> ooobj(lhs.<Int>stream().map(i -> i.value(i.intValue() + inst.arg(0).intValue())))),
+                instC(PLUS_TID.dom(INT_TID.some()).rng(INT_TID.some()), lst(T(INT_TID)), (lhs, inst) -> objs(lhs.<Int>stream().map(i -> i.value(i.intValue() + inst.arg(0).intValue())))),
                 instC(PLUS_TID.dom(REAL_TID).rng(REAL_TID), lst(T(REAL_TID)), (lhs, inst) -> lhs.value(lhs.realValue() + inst.arg(0).realValue())),
                 instC(PLUS_TID.dom(STR_TID).rng(STR_TID), lst(T(STR_TID)), (lhs, inst) -> lhs.value(lhs.strValue() + inst.arg(0).strValue())),
                 instC(PLUS_TID.dom(URI_TID).rng(URI_TID), lst(T(URI_TID)), (lhs, inst) -> lhs.value(lhs.uriValue().plus(inst.arg(0).uriValue()))),
@@ -209,7 +215,7 @@ public class mtronInstSet extends MInstSet {
                 instC(FROM_TID.dom(ALL.maybe()).rng(OBJS_ID), lst(T(URI_TID)), (lhs, inst) -> Router.global().read(inst.arg(0).uriValue())),
                 instC(REF_TID.dom(fURI.ALL).rng(OBJS_ID), lst(T(OBJS_ID)), (lhs, inst) -> Router.global().write(lhs.uriValue(), inst.arg(0))),
                 instC(TYPE_TID.dom(A).rng(A), lst(), (lhs, inst) -> lhs.type()),
-                instC(TYPE_TID.dom(A.some()).rng(A.some()), lst(), (lhs, inst) -> ooobj(lhs).type()),
+                instC(TYPE_TID.dom(A.some()).rng(A.some()), lst(), (lhs, inst) -> objs(lhs).type()),
                 /// ///////////////////////////////////////////////////////////////////////////////////////////////////
                 instC(AS_TID.dom(OBJS_ID).rng(A), lst(T(T(A))), (lhs, inst) -> {
                     final Type t = inst.arg(0).as();
@@ -220,7 +226,7 @@ public class mtronInstSet extends MInstSet {
                     }
                     throw MTronException.of("unknown pair: %s %s", lhs, t);
                 }),
-                instC(WITHIN_TID.dom(LST_TID).rng(LST_TID), lst(T(OBJS_ID)), (lhs, inst) -> lst(inst.arg(0).apply(ooobj(lhs.lstValue())))),
+                instC(WITHIN_TID.dom(LST_TID).rng(LST_TID), lst(T(OBJS_ID)), (lhs, inst) -> lst(inst.arg(0).apply(objs(lhs.lstValue())))),
                 instC(WITHIN_TID.dom(REC_TID).rng(REC_TID), lst(T(OBJS_ID)), (lhs, inst) -> rec(lhs.recValue().entrySet().stream().map(kv -> inst.arg(0).apply(MRel.of(kv.getKey(), kv.getValue())).<Rel>as()).collect(Collectors.toMap(Rel::first, Rel::second, Obj::append, LinkedHashMap<Obj, Obj>::new)))),
                 instC(BARRIER_TID.dom(OBJS_ID).rng(OBJS_ID), lst(T(OBJS_ID)), (lhs, inst) -> inst.arg(0).apply(lhs)),
                 instC(COUNT_TID.dom(OBJS_ID).rng(INT_TID), lst(), (lhs, inst) -> IteratorUtil.reduce(lhs.iterator(), jnt(0), (a, b) -> jnt(a.intValue() + b.tid().cV().max()))),

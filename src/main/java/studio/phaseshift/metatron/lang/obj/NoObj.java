@@ -19,13 +19,10 @@
 package studio.phaseshift.metatron.lang.obj;
 
 import studio.phaseshift.metatron.lang.fURI;
-import studio.phaseshift.metatron.lang.obj.mtron.MObjs;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
-import studio.phaseshift.metatron.util.ObjUtil;
 
 import java.util.Iterator;
-import java.util.List;
 
 import static studio.phaseshift.metatron.util.Tuple.Triplet;
 
@@ -78,8 +75,8 @@ public final class NoObj implements Obj, Inst {
     }
 
     @Override
-    public Objs append(Obj obj) {
-        return MObjs.of(List.of());
+    public Obj append(final Obj obj) {
+        return obj;
     }
 
     @Override
@@ -99,11 +96,11 @@ public final class NoObj implements Obj, Inst {
 
     @Override
     public String toString() {
-        return ObjUtil.objToString(this);
+        return Helper.objToString(this);
     }
 
-    // @Override
-   /* public Obj apply(final Obj lhs) {
-        return lhs;
-    }*/
+    @Override
+    public NoObj clone() {
+        return SINGLE;
+    }
 }

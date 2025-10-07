@@ -22,7 +22,7 @@ import org.apache.tinkerpop.gremlin.structure.Element;
 import org.apache.tinkerpop.gremlin.structure.Graph;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.Obj;
-import studio.phaseshift.metatron.util.ObjUtil;
+import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.Iterator;
 
@@ -55,6 +55,13 @@ public abstract class MElement implements Element, Obj {
         this.element.remove();
     }
 
+    @Override
+    public Obj take() {
+        final MElement r = (MElement) this.clone();
+        this.remove();
+        return r;
+    }
+
     /*@Override
     public <V> Iterator<? extends Property<V>> properties(String... propertyKeys) {
         return this.element.properties(propertyKeys);
@@ -72,21 +79,30 @@ public abstract class MElement implements Element, Obj {
 
     @Override
     public String toString() {
-        return ObjUtil.objToString(this);
+        return Helper.objToString(this);
     }
 
     @Override
     public int hashCode() {
-        return ObjUtil.objHashCode(this);
+        return Helper.objHashCode(this);
     }
 
     @Override
     public boolean equals(final Object other) {
-        return ObjUtil.objEquals(this, other);
+        return Helper.objEquals(this, other);
     }
 
     @Override
     public <V> Iterator<V> values(final String... propertyKeys) {
         return MProperty.makeValues((Iterator) this.properties(propertyKeys));
+    }
+
+    @Override
+    public Obj clone() {
+        try {
+            return (Obj) super.clone();
+        } catch (final Exception e) {
+            throw MTronException.of(e);
+        }
     }
 }

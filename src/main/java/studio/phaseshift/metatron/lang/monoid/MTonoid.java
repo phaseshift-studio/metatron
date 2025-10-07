@@ -32,10 +32,10 @@ public interface MTonoid extends Obj, Call {
 
     // code, running, barriers, halted
     @Override
-    Quartet<Code, Objs, Lst, Objs> value();
+    Quartet<Code, Obj, Lst, Obj> value();
 
 
-    default Objs halted() {
+    default Obj halted() {
         return this.value().get3();
     }
 
@@ -43,7 +43,7 @@ public interface MTonoid extends Obj, Call {
         return this.value().get2();
     }
 
-    default Objs running() {
+    default Obj running() {
         return this.value().get1();
     }
 

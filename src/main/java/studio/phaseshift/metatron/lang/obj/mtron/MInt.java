@@ -40,7 +40,7 @@ public class MInt extends MObj implements Int {
 
     @Override
     public Int clone(final Object value, final fURI tid, final fURI vid) {
-        return super.clone(value, tid, vid, (a, b, c) -> new MInt((Long) a, b, c));
+        return (Int) super.clone(value, tid, vid);
     }
 
     @Override

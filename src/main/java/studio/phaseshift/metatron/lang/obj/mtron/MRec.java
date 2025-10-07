@@ -53,6 +53,10 @@ public class MRec extends MObj implements Rec {
         return MRec.of(new LinkedHashMap<>());
     }
 
+    public Rec clone() {
+        return (Rec) super.clone();
+    }
+
     @Override
     public Rec plus(final Rec objs) {
         final Map<Obj, Obj> newMap = new LinkedHashMap<>(this.recValue());
@@ -68,14 +72,14 @@ public class MRec extends MObj implements Rec {
 
     @Override
     public Rec clone(final Object value, final fURI tid, final fURI vid) {
-        return super.clone(value, tid, vid, (a, b, c) -> new MRec((Map<Obj, Obj>) a, b, c));
+        return (Rec) super.clone(value, tid, vid);
     }
 
     public Rec put(final Obj key, final Obj value) {
         final fURI k = key.uriValue();
         if (k.segments().isEmpty())
             return this;
-        final LinkedHashMap<Obj, Obj> map = new LinkedHashMap<>(this.recValue());
+        final Map<Obj, Obj> map = new LinkedHashMap<>(this.recValue());
         if (k.segments().size() == 1)
             map.put(key, value);
         else {

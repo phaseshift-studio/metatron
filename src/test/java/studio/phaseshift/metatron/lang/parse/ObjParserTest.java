@@ -28,6 +28,9 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static studio.phaseshift.metatron.lang.obj.mtron.MObjs.objs;
+import static studio.phaseshift.metatron.lang.obj.mtron.mtronInstSet.BOOL_TID;
+import static studio.phaseshift.metatron.lang.parse.ObjParser.m_bool;
 
 
 public class ObjParserTest {
@@ -39,7 +42,7 @@ public class ObjParserTest {
 
     @Test
     public void testBoolParse() {
-        // assertEquals(MBool.TID, m_bool().parse("true").<Obj>get().tid());
+        assertEquals(BOOL_TID, m_bool().parse("true").<Obj>get().tid());
         assertEquals(MBool.of(true), ObjParser.parse("true"));
         assertEquals(MBool.of(false), ObjParser.parse("false"));
     }
@@ -49,11 +52,11 @@ public class ObjParserTest {
         assertEquals(MInt.of(1234), ObjParser.parse("1234 "));
         Obj t = MInt.of(1);
         assertEquals(t, ObjParser.parse("1 "));
-        assertEquals(MObjs.of(List.of(MInt.of(1), MInt.of(5))), t.append(MInt.of(5)));
-        assertEquals(MObjs.of(List.of(MInt.of(1), MInt.of(4))), t.append(MInt.of(4)));
-        assertEquals(MObjs.of(List.of(MInt.of(1), MInt.of(3), MInt.of(4), MInt.of(5))),
+        assertEquals(objs(List.of(MInt.of(1), MInt.of(5))), t.append(MInt.of(5)));
+        assertEquals(objs(List.of(MInt.of(1), MInt.of(4))), t.append(MInt.of(4)));
+        assertEquals(objs(List.of(MInt.of(1), MInt.of(3), MInt.of(4), MInt.of(5))),
                 t.append(MInt.of(3)).append(MInt.of(4)).append(MInt.of(5)));
-        assertEquals(MObjs.of(List.of(MInt.of(1), MInt.of(3), MInt.of(4), MInt.of(5))),
+        assertEquals(objs(List.of(MInt.of(1), MInt.of(3), MInt.of(4), MInt.of(5))),
                 t.append(MInt.of(3)).append(MInt.of(4)).append(MInt.of(5)));
         //assertEquals(Int.of(10), ObjParser.parse("start(4).plus(plus(2))").apply(Int.of(4)));
         //  assertEquals(Int.of("m:nat", 1234), ObjParser.parse("m:nat[1234] "));

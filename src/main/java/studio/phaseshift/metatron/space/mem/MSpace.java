@@ -19,7 +19,9 @@
 package studio.phaseshift.metatron.space.mem;
 
 import studio.phaseshift.metatron.lang.fURI;
+import studio.phaseshift.metatron.lang.obj.Obj;
 import studio.phaseshift.metatron.space.Space;
+import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.Map;
 
@@ -74,5 +76,14 @@ public abstract class MSpace implements Space {
     @Override
     public void close() {
 
+    }
+
+    @Override
+    public Obj clone() {
+        try {
+            return (Obj) super.clone();
+        } catch (final Exception e) {
+            throw MTronException.of(e);
+        }
     }
 }

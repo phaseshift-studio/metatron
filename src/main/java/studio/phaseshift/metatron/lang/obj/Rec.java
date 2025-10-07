@@ -21,17 +21,16 @@ package studio.phaseshift.metatron.lang.obj;
 
 import studio.phaseshift.metatron.algebra.Semiring;
 import studio.phaseshift.metatron.lang.fURI;
-import studio.phaseshift.metatron.lang.obj.mtron.MObjs;
 import studio.phaseshift.metatron.lang.obj.mtron.MRel;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.util.IteratorUtil;
-import studio.phaseshift.metatron.util.ObjUtil;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.lang.fURI.f;
+import static studio.phaseshift.metatron.lang.obj.mtron.MObjs.objs;
 import static studio.phaseshift.metatron.lang.obj.mtron.MUri.uri;
 import static studio.phaseshift.metatron.util.Tuple.Pair;
 
@@ -82,10 +81,10 @@ public interface Rec extends Poly, Semiring<Rec> {
                 Graphitty.log(this).trace("searching for %s in %s", segment, this);
                 if (segmentF.hasPattern()) {
                     if (segmentF.equals(fURI.ALL))
-                        return (O) (k.isBranch() ? MRel.of(k.asNode().toUri(), MObjs.of(this.recValue().values())) : MObjs.of(this.recValue().values()));
+                        return (O) (k.isBranch() ? MRel.of(k.asNode().toUri(), objs(this.recValue().values())) : objs(this.recValue().values()));
                     else {
                         final int stepp = steps;
-                        return (O) ObjUtil.oneNoneOrAll(MObjs.of(this.recValue().values().stream().flatMap(v -> {
+                        return (O) objs(objs(this.recValue().values().stream().flatMap(v -> {
                                     if (v.isRec()) {
                                         return v.<Rec>as().at(k.pretract(stepp).toUri()).stream();
                                     } else {
@@ -93,7 +92,7 @@ public interface Rec extends Poly, Semiring<Rec> {
                                     }
                                 })
                                 .filter(v -> !v.isNoObj())
-                                .map(v -> k.isBranch() ? MRel.of(k.asNode().toUri(), v) : v).toList()).iterator());
+                                .map(v -> k.isBranch() ? MRel.of(k.asNode().toUri(), v) : v).toList()));
                     }
                 } else {
                     value = this.recValue().getOrDefault(fURI.of(segment).toUri(), NoObj.single());

@@ -22,17 +22,14 @@ import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.space.Router;
 import studio.phaseshift.metatron.space.mem.MSpace;
 import studio.phaseshift.metatron.util.MTronException;
-import studio.phaseshift.metatron.util.ObjUtil;
 
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.BiConsumer;
-import java.util.function.Supplier;
-import java.util.stream.Collector;
 
 import static studio.phaseshift.metatron.lang.fURI.f;
+import static studio.phaseshift.metatron.lang.obj.mtron.MObjs.objs;
 
 public abstract class MInstSet extends MSpace implements InstSet {
 
@@ -75,7 +72,7 @@ public abstract class MInstSet extends MSpace implements InstSet {
     @Override
     public Obj read(final fURI vid) {
         final fURI bigvid = vid.big();
-        final Obj result = ObjUtil.oneNoneOrAll(INST_TABLE.entrySet()
+        final Obj result = objs(INST_TABLE.entrySet()
                 .stream()
                 .filter(kv -> kv.getKey().matches(bigvid.basePath()))
                 .flatMap(kv -> kv.getValue().stream())
@@ -83,7 +80,7 @@ public abstract class MInstSet extends MSpace implements InstSet {
                 .filter(i -> !bigvid.hasRng() || i.rng().tid().bimatches(bigvid.rng()))
                 .map(i -> i));
         return result.isNoObj() ?
-                ObjUtil.oneNoneOrAll(TYPE_TABLE.entrySet().stream().filter(kv -> kv.getKey().matches(bigvid)).map(Map.Entry::getValue)) :
+                objs(TYPE_TABLE.entrySet().stream().filter(kv -> kv.getKey().matches(bigvid)).map(Map.Entry::getValue)) :
                 result;
     }
 

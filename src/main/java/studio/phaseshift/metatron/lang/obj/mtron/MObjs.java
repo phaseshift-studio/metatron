@@ -27,12 +27,8 @@ import studio.phaseshift.metatron.lang.obj.Type;
 import studio.phaseshift.metatron.lang.obj.mtron.c.cInt;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
-import studio.phaseshift.metatron.util.ObjUtil;
 
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Stream;
 
 public class MObjs implements Objs {
@@ -40,11 +36,19 @@ public class MObjs implements Objs {
     private fURI vid;
     private final Map<Obj, cInt> cstream = new LinkedHashMap<>();
 
+    public MObjs(final Iterable<Obj> objs) {
+        this(objs, null);
+    }
+
     public MObjs(final Iterable<Obj> objs, final fURI vid) {
         this.vid = vid;
-        objs.forEach(i -> {
+        flatten(objs).forEach(i -> {
             this.cstream.compute(i.c(C::one), (lng, it) -> null == it ? i.c() : it.plus(i.c()));
         });
+    }
+
+    private static Stream<Obj> flatten(final Iterable<Obj> objs) {
+        return IteratorUtil.stream(objs).flatMap(o -> o.isObjs() ? flatten(o.objsValue()) : Stream.of(o));
     }
 
  /*   @Override
@@ -55,7 +59,7 @@ public class MObjs implements Objs {
 
     @Override
     public Obj resolve(final Obj obj) {
-        return ooobj(this.stream().map(o -> o.resolve(obj)));
+        return objs(this.stream().map(o -> o.resolve(obj)));
     }
 
     @Override
@@ -65,19 +69,36 @@ public class MObjs implements Objs {
     }
 
     @Override
-    public <O extends Obj> O remove() {
+    public Iterable<Obj> value() {
+        return this.cstream.entrySet().stream().map(kv -> kv.getKey().c(kv.getValue())).toList();
+    }
+
+    /*
+
+    @Override
+    public Iterable<Obj> value() {
+        return this.cstream.entrySet()
+                .stream()
+                .filter(kv -> !kv.getValue().isZero())
+                .map(kv -> kv.getValue().isOne() ? kv.getKey() : kv.getKey().c(kv.getValue()))
+                .toList();
+    }
+     */
+
+    @Override
+    public Obj take() {
         while (this.cstream.keySet().iterator().hasNext()) {
-            final O key = (O) this.cstream.keySet().iterator().next();
+            final Obj key = this.cstream.keySet().iterator().next();
             final cInt value = this.cstream.remove(key);
             if (null == value)
                 return key;
-            else if (!value.isZero()) return (O) key.tid(key.tid().c(value.toString()));
+            else if (!value.isZero()) return key.tid(key.tid().c(value.toString()));
         }
         return null;
     }
 
 
-    public <O extends Obj> O remove(final fURI selector) {
+    public <O extends Obj> O take(final fURI selector) {
         while (this.cstream.keySet().iterator().hasNext()) {
             final O key = (O) this.cstream.keySet().iterator().next();
             final cInt value = this.cstream.get(key);
@@ -100,41 +121,22 @@ public class MObjs implements Objs {
         return null;
     }
 
-    public static Objs of(final Iterable<Obj> objs) {
-        return objs(objs);
+    public static Objs empty() {
+        return new MObjs(new LinkedList<>());
     }
 
-    public static Objs of(final Obj... objs) {
-        return objs(List.of(objs));
+    public static Obj objs(final Iterable<Obj> objs) {
+        final IteratorUtil.ExpandableIterator<Obj> itty = new IteratorUtil.ExpandableIterator<>(objs.iterator());
+        if (!itty.hasNext())
+            return NoObj.single();
+        else if (itty.onlyHasNext())
+            return itty.next();
+        else
+            return new MObjs(IteratorUtil.list(itty));
     }
 
-    public static <O extends Obj> Objs objs(final Iterable<O> os) {
-        return new MObjs((Iterable) os, null);
-    }
-
-    public static Objs objs(final Obj... objs) {
-        return objs(List.of(objs));
-    }
-
-    public static Obj ooobj(final Obj... objs) {
-        return ObjUtil.oneNoneOrAll(List.of(objs));
-    }
-
-    public static Obj ooobj(final Iterable<Obj> objs) {
-        return ObjUtil.oneNoneOrAll(objs);
-    }
-
-    public static Obj ooobj(final Stream<Obj> objs) {
-        return ObjUtil.oneNoneOrAll(objs);
-    }
-
-    @Override
-    public Iterable<Obj> value() {
-        return this.cstream.entrySet()
-                .stream()
-                .filter(kv -> !kv.getValue().isZero())
-                .map(kv -> kv.getValue().isOne() ? kv.getKey() : kv.getKey().c(kv.getValue()))
-                .toList();
+    public static Obj objs(final Stream<Obj> objs) {
+        return MObjs.objs(objs.toList());
     }
 
     @Override
@@ -167,6 +169,7 @@ public class MObjs implements Objs {
         return this.vid;
     }
 
+
     @Override
     public Type type() {
         return MType.of(this.tid());
@@ -179,7 +182,7 @@ public class MObjs implements Objs {
 
     @Override
     public String toString() {
-        return ObjUtil.objToString(this);
+        return Helper.objToString(this);
     }
 
     @Override
@@ -198,10 +201,19 @@ public class MObjs implements Objs {
         if (object instanceof Stream)
             return ofUsage(((Stream) object).toList()); // TODO: strange....
         if (object instanceof List)
-            return ObjUtil.oneNoneOrAll((List) object);
+            return objs((List) object);
         if (object instanceof Obj)
             return (Obj) object;
         throw MTronException.of("unknown object type: %s", object);
 
+    }
+
+    @Override
+    public Objs clone() {
+        try {
+            return (Objs) super.clone();
+        } catch (final Exception e) {
+            throw MTronException.of(e);
+        }
     }
 }

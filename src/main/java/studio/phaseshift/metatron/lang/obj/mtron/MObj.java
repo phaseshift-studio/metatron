@@ -18,23 +18,21 @@
 
 package studio.phaseshift.metatron.lang.obj.mtron;
 
-import org.apache.tinkerpop.gremlin.util.function.TriFunction;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.Obj;
 import studio.phaseshift.metatron.space.Router;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.util.MTronException;
-import studio.phaseshift.metatron.util.ObjUtil;
 
 import java.util.Objects;
 
 import static studio.phaseshift.metatron.lang.obj.mtron.MType.T;
 
-public abstract class MObj implements Obj {
+public abstract class MObj implements Obj, Cloneable {
 
-    protected final Object value;
-    protected final fURI tid;
-    protected final fURI vid;
+    protected Object value;
+    protected fURI tid;
+    protected fURI vid;
 
     public MObj(final Object value, final fURI tid, final fURI vid) {
         assert null != tid;
@@ -43,6 +41,9 @@ public abstract class MObj implements Obj {
         this.vid = vid;
         if (!this.isType() && !this.isNoObj() && !this.matches(T(tid)))
             Graphitty.log(this).except("%s is not a %s".formatted(this, T(tid)));
+        if (null != vid && null != Router.global() && !this.isType())
+            Router.global().write(this.vid, this);
+
     }
 
     @Override
@@ -62,23 +63,35 @@ public abstract class MObj implements Obj {
 
     @Override
     public int hashCode() {
-        return ObjUtil.objHashCode(this);
+        return Helper.objHashCode(this);
     }
 
     @Override
     public boolean equals(final Object other) {
-        return ObjUtil.objEquals(this, other);
+        return Helper.objEquals(this, other);
     }
 
     @Override
     public String toString() {
-        return ObjUtil.objToString(this);
+        return Helper.objToString(this);
     }
 
-    public <O extends Obj> O clone(final Object newValue, final fURI newtid, final fURI newvid, final TriFunction<Object, fURI, fURI, O> constructor) {
+    @Override
+    public Obj clone() {
+        try {
+            return (Obj) super.clone();
+        } catch (final Exception e) {
+            throw MTronException.of(e);
+        }
+    }
+
+    public Obj clone(final Object newValue, final fURI newtid, final fURI newvid) {
         if (!Objects.equals(newValue, this.value) || !newtid.equals(this.tid) || !Objects.equals(newvid, this.vid)) {
             try {
-                final O clone = constructor.apply(newValue, newtid, newvid);
+                final MObj clone = (MObj) this.clone();
+                clone.value = newValue;
+                clone.tid = newtid;
+                clone.vid = newvid;
                 if (null != newvid && null != Router.global() && !this.isType())
                     Router.global().write(newvid, clone);
                 return clone;
@@ -86,6 +99,16 @@ public abstract class MObj implements Obj {
                 throw MTronException.of(e);
             }
         }
-        return (O) this;
+        return this;
+    }
+
+    @Override
+    public Obj take() {
+        if (this.isNoObj())
+            return null;
+        final Obj r = this.clone();
+        this.tid = fURI.NOOBJ;
+        this.vid = fURI.NULL;
+        return r;
     }
 }

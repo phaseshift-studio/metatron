@@ -28,7 +28,6 @@ import studio.phaseshift.metatron.space.Space;
 import studio.phaseshift.metatron.space.mem.MSpace;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
-import studio.phaseshift.metatron.util.ObjUtil;
 
 import java.util.HashMap;
 import java.util.Iterator;
@@ -178,16 +177,16 @@ public class MGraph extends MSpace implements Graph, WrappedGraph<Graph> {
 
     @Override
     public String toString() {
-        return ObjUtil.objToString(this);
+        return Helper.objToString(this);
     }
 
     @Override
     public int hashCode() {
-        return ObjUtil.objHashCode(this);
+        return Helper.objHashCode(this);
     }
 
     @Override
     public boolean equals(final Object other) {
-        return ObjUtil.objEquals(this, other);
+        return Helper.objEquals(this, other);
     }
 }

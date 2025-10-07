@@ -41,7 +41,7 @@ public class MCode extends MObj implements Code {
 
     @Override
     public Code clone(final Object value, final fURI tid, final fURI vid) {
-        return super.clone(value, tid, vid, (a, b, c) -> new MCode((List<Inst>) a, b, c));
+        return (Code) super.clone(value, tid, vid);
     }
 
     @Override

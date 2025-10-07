@@ -34,8 +34,6 @@ public interface Objs extends Obj {
     @Override
     fURI tid();
 
-    <O extends Obj> O remove();
-
     @Override
     Obj append(final Obj obj);
 

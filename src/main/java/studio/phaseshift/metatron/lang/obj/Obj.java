@@ -36,7 +36,26 @@ import static studio.phaseshift.metatron.lang.obj.mtron.MType.T;
 import static studio.phaseshift.metatron.lang.obj.mtron.mtronInstSet.*;
 import static studio.phaseshift.metatron.util.Tuple.Pair;
 
-public interface Obj extends Function<Obj, Obj>, Iterable<Obj> {
+public interface Obj extends Function<Obj, Obj>, Iterable<Obj>, Cloneable {
+
+    class Helper {
+
+        public static int objHashCode(final Obj obj) {
+            return obj.isNoObj() ? NoObj.single().hashCode() : Objects.hash(obj.value(), obj.tid());
+        }
+
+        public static boolean objEquals(final Obj obj, final Object other) {
+            return other instanceof Obj &&
+                    ((obj.isNoObj() && ((Obj) other).isNoObj()) ||
+                            (Objects.equals(obj.tid(), ((Obj) other).tid()) &&
+                                    Objects.equals(obj.vid(), ((Obj) other).vid()) && // TODO: ??
+                                    Objects.equals(obj.value(), ((Obj) other).value())));
+        }
+
+        public static String objToString(final Obj obj) {
+            return Graphitty.string(obj);
+        }
+    }
 
     default String simpeToString() {
         return Graphitty.string("{{b}}%s{{g}}::{{m}}@{{b}}%s{{/b}}", this.tid().toString(), null == this.vid() ? "<nospace>" : this.vid().toString());
@@ -72,7 +91,7 @@ public interface Obj extends Function<Obj, Obj>, Iterable<Obj> {
         return this.tid(this.tid().c(coeff));
     }
 
-    default Pair<Obj, Obj> remove(final cInt c) {
+    default Pair<Obj, Obj> take(final cInt c) {
         // System.out.println(coeff + "   <=   " + this.tid().coefficientValue() + "  ==   " + coeff.lte(this.tid().coefficientValue()));
         if (c.lte(this.tid().cV())) {
             final Obj remaining = this.tid(this.tid().c(this.tid().cV().minus(c).toString()));
@@ -81,6 +100,10 @@ public interface Obj extends Function<Obj, Obj>, Iterable<Obj> {
         } else {
             return Pair.with(NoObj.single(), this);
         }
+    }
+
+    default Obj take() {
+        throw MTronException.of("%s can not be taken from", this);
     }
 
     default Obj resolve(final Obj lhs) {
@@ -140,7 +163,7 @@ public interface Obj extends Function<Obj, Obj>, Iterable<Obj> {
                 objs.add(this);
             if (!obj.isNoObj())
                 objs.add(obj);
-            return MObjs.of(objs);
+            return MObjs.objs(objs);
         }
     }
 
@@ -348,4 +371,6 @@ public interface Obj extends Function<Obj, Obj>, Iterable<Obj> {
             return this.value();
         throw MTronException.of("%s is a %s, not a %s", this, tid().toUri(), fURI.of("<type>").toUri());
     }
+
+    Obj clone();
 }

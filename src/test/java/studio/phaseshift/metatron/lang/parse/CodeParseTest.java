@@ -23,9 +23,9 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.lang.obj.Obj;
-import studio.phaseshift.metatron.util.ObjUtil;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static studio.phaseshift.metatron.lang.obj.mtron.MObjs.objs;
 
 public class CodeParseTest {
 
@@ -45,7 +45,7 @@ public class CodeParseTest {
             "/mtron/int::2.plus(/mtron/int::5)% /mtron/int::7"
     }, delimiter = '%')
     void testStandardExpressions(final String expression, final String expectedResult) {
-        assertEquals(ObjParser.m_obj().parse(expectedResult).<Obj>get(), ObjUtil.oneNoneOrAll(ObjParser.eval(expression)));
+        assertEquals(ObjParser.m_obj().parse(expectedResult).<Obj>get(), objs(()->ObjParser.eval(expression)));
     }
 
     @ParameterizedTest

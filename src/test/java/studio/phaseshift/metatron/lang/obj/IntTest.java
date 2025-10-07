@@ -76,7 +76,7 @@ public class IntTest extends MetatronTest {
             "3.plus(mult(2))                                              | 9",
             "{2,3}>-.plus(mult(2))                                         | {6,9}",
             // "{2,3}.plus(mult(2))                                       | {6,9}",
-           // "{2,3}.is?int[*]<=int[*](in?bool[+]<=int[*](int[2]::T[]))   | {2,3}",
+            // "{2,3}.is?int[*]<=int[*](in?bool[+]<=int[*](int[2]::T[]))   | {2,3}",
             "{1,2,3}.plus(1).plus(2)                                      | {4,5,6}",
             "{1,2,3}.plus(1).plus(2).mult(2)                              | {8,10,12}",
             "{1,2,3}.plus(1).plus(2).mult(2).is(in(int::T[]))             | {8,10,12}",
@@ -109,7 +109,7 @@ public class IntTest extends MetatronTest {
         final fURI removeF = f(remove);
         final Obj retrievedF = ObjParser.m_obj().parse(retrieved).get();
         final Obj remainingF = ObjParser.m_obj().parse(remaining).get();
-        assertEquals(Tuple.Pair.with(retrievedF, remainingF), currentF.remove(removeF.cV()));
+        assertEquals(Tuple.Pair.with(retrievedF, remainingF), currentF.take(removeF.cV()));
 
 
     }

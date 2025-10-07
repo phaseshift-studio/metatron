@@ -22,12 +22,12 @@ import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.monoid.MTonoid;
 import studio.phaseshift.metatron.lang.monoid.mtron.MMonoid;
 import studio.phaseshift.metatron.util.MTronException;
-import studio.phaseshift.metatron.util.ObjUtil;
 
 import java.util.Iterator;
 import java.util.List;
 import java.util.function.Supplier;
 
+import static studio.phaseshift.metatron.lang.obj.mtron.MObjs.objs;
 import static studio.phaseshift.metatron.lang.obj.mtron.MType.T;
 
 public interface Code extends Call {
@@ -101,7 +101,7 @@ public interface Code extends Call {
         if (null != lhs && !lhs.matches(this.dom()))
             throw MTronException.of("%s ({{m}}lhs{{/m}}) (%s) does not match {{m}}code domain{{/m}} (%s): %s", lhs, lhs.rng(), this.dom(), this);
         final MTonoid monoid = (null == lhs ? MMonoid.of(this) : MMonoid.of(lhs, this));
-        final Obj rhs = ObjUtil.oneNoneOrAll(monoid.apply(NoObj.single()).iterator());
+        final Obj rhs = objs(monoid.apply(NoObj.single()));
         if (!rhs.matches(monoid.rng()))
             throw MTronException.of("%s ({{m}}rhs{{/m}}) (%s) does not match {{m}}code range{{/m}} (%s): %s", rhs, rhs.rng(), this.rng(), this);
         return rhs;

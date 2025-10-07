@@ -19,6 +19,7 @@
 package studio.phaseshift.metatron.lang.obj.mtron;
 
 import studio.phaseshift.metatron.lang.fURI;
+import studio.phaseshift.metatron.lang.obj.Obj;
 import studio.phaseshift.metatron.lang.obj.Uri;
 
 import static studio.phaseshift.metatron.lang.fURI.f;
@@ -48,7 +49,7 @@ public class MUri extends MObj implements Uri {
 
     @Override
     public Uri clone(final Object value, final fURI tid, final fURI vid) {
-        return super.clone(value, tid, vid, (a, b, c) -> new MUri((fURI) a, b, c));
+        return (Uri) super.clone(value, tid, vid);
     }
 
     @Override

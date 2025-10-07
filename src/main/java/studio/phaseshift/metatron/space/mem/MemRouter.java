@@ -21,12 +21,13 @@ package studio.phaseshift.metatron.space.mem;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.NoObj;
 import studio.phaseshift.metatron.lang.obj.Obj;
+import studio.phaseshift.metatron.lang.obj.mtron.MRel;
 import studio.phaseshift.metatron.space.NullSpace;
 import studio.phaseshift.metatron.space.Router;
 import studio.phaseshift.metatron.space.Space;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
-import studio.phaseshift.metatron.util.ObjUtil;
+import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -114,6 +115,10 @@ public class MemRouter implements Router {
 
     private static final Set<fURI> READ_AS_NOOBJ = Set.of(fURI.ALL.maybeSome(), fURI.ALL.maybe(), fURI.ALL);
 
+    private static Obj appendOnRead(final boolean send, final Obj base, final Obj addition) {
+        return addition.isNoObj() ? base : (send ? base.append(MRel.of(addition.vid().toUri(), addition)) : base.append(addition));
+    }
+
     @Override
     public Obj read(final fURI vid) {
         if (vid.isZero() || READ_AS_NOOBJ.contains(vid))
@@ -121,7 +126,7 @@ public class MemRouter implements Router {
         final Space space = this.getSpace(vid);
         //if (null != space.vid() && !space.vid().segments().isEmpty())
         //    LOG.trace("reading {{b}}%s{{/b}} from {{b}}%s{{/b}}", vid, space.vid());
-        return ObjUtil.appendOnRead(vid.isBranch(), space.read(vid), this.vid.onlyMatches(vid) ? this : NoObj.single());
+        return MemRouter.appendOnRead(vid.isBranch(), space.read(vid), this.vid.onlyMatches(vid) ? this : NoObj.single());
     }
 
     @Override
@@ -176,5 +181,14 @@ public class MemRouter implements Router {
     @Override
     public String toString() {
         return Router.Helpers.routerToString(this);
+    }
+
+    @Override
+    public Obj clone() {
+        try {
+            return (Obj) super.clone();
+        } catch (final Exception e) {
+            throw MTronException.of(e);
+        }
     }
 }

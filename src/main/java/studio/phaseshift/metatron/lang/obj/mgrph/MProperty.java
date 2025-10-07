@@ -81,8 +81,8 @@ public class MProperty<V> extends MObj implements Property<V>, WrappedProperty<P
     }
 
     @Override
-    public <O extends Obj> O clone(Object value, fURI tid, fURI vid) {
-        return (O) this;
+    public MProperty clone(Object value, fURI tid, fURI vid) {
+        return (MProperty) super.clone();
     }
 
     @Override
