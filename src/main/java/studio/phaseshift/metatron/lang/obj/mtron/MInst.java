@@ -23,6 +23,7 @@ import studio.phaseshift.metatron.lang.obj.Inst;
 import studio.phaseshift.metatron.lang.obj.NoObj;
 import studio.phaseshift.metatron.lang.obj.Obj;
 import studio.phaseshift.metatron.lang.obj.Poly;
+import studio.phaseshift.metatron.lang.obj.mtron.c.cInt;
 
 import java.util.Objects;
 import java.util.function.BiFunction;
@@ -43,6 +44,11 @@ public class MInst extends MObj implements Inst {
     @Override
     public Triplet<Poly, Inst.f, Obj> value() {
         return (Triplet<Poly, Inst.f, Obj>) this.value;
+    }
+
+    @Override
+    public Inst c(final cInt c) {
+        return (Inst) super.c(c);
     }
 
     public boolean resolved() {

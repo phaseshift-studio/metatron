@@ -100,6 +100,9 @@ public interface Inst extends Call {
                 IteratorUtil.index(this.args().elements().iterator(), index, NoObj.single());
     }
 
+    @Override
+    Inst c(final cInt c);
+
     default Obj arg(final fURI key) {
         return this.args().<Rec>as().at(key.toUri());
     }
@@ -206,6 +209,7 @@ public interface Inst extends Call {
                         //.map(i -> i.tid(i.tid().dom(lhs.tid())).vid(this.vid()))
                         .map(Obj::<Inst>as)
                         .map(i -> (this.tid().hasDom() || this.tid().hasRng()) ? i.tid(this.tid()).resolve(lhs) : i.resolve(lhs))
+                        .map(i -> i.c(this.c()))
                         .findFirst()
                         .orElse(null);
                 if (null != resolved) {
@@ -216,7 +220,7 @@ public interface Inst extends Call {
                 this.logger().error(e);
             }
             this.logger().trace("searching spaces for runtime resolution of inst %s => %s", lhs, this);
-            final Obj resolved2 = Router.global().read(this.tid());
+            final Obj resolved2 = Router.global().read(this.tid()).c(this.c());
             if (resolved2.isNoObj()) {
                 LOG.error("%s could not be resolved in any space", this);
                 return NoObj.single();
@@ -285,7 +289,8 @@ public interface Inst extends Call {
         }
         if (!rhs.matches(cinst.rng()))
             throw MTronException.of("{{m}}rhs obj{{/m}} (%s) {{r}}does not match{{/r}} {{m}}inst range{{/m}} (%s): %s", rhs, cinst.rng(), cinst);
-        return modulateC ? rhs.c(c -> c.mult(lhs.c())) : rhs;
+        final cInt cinstc = cinst.isReducing() ? cInt.ONE() : cinst.c();
+        return (modulateC ? rhs.c(c -> c.mult(lhs.c())) : rhs).c(c -> c.mult(cinstc));
 
     }
 
@@ -303,6 +308,10 @@ public interface Inst extends Call {
 
     default boolean isTerminal() {
         return this.rng().c().isZero();
+    }
+
+    default boolean isReducing() {
+        return this.isGather() && this.rng().c().isOne();
     }
 
     @Override

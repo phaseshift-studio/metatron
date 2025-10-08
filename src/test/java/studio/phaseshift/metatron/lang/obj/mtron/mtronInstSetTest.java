@@ -71,7 +71,7 @@ public class mtronInstSetTest extends MetatronTest {
             "{1,2,3}-<[noobj=>noobj]                                                % [=>]",
             "{1,2,3}-<1                                                             % 1",
             "{1,2,3}-<[is(gt(1))=>_, is(gt(2))=>_]                                  % [is(gt(1))=>{2,3},is(gt(2))=>3]",
-            "{1,2,3}-<{is(gt(1)), is(gt(2))}                                        % {2,3}", // TODO: hmmmm
+            "{1,2,3}-<{is(gt(1)), is(gt(2))}                                        % {2,3,3}", // TODO: hmmmm
             "{1,2,3}.>-{3,3,2}                                                      % {3,3,2,3,2,1}",
             "{1,2,3}.>-{3,3,2}                                                      % {int[1]::1,int[2]::2,int[3]::3}",
             // MULT //
@@ -79,6 +79,8 @@ public class mtronInstSetTest extends MetatronTest {
             "{int[2]::1,int[3]::2,int[4]::3}.mult(10)                               % {int[2]::10,int[3]::20,int[4]::30}",
             "int[50]::10.mult(10)                                                   % int[50]::100",
             // COUNT/SUM //
+            "{1,2,3,4}.id[5]().count()                                              % 20",
+            "{1,2,3,4}.id[3]().count()                                              % 12",
             "{1,2,3,4}.is(gt(5)).count()                                            % 0",
             "{1,2,3,4}.count()                                                      % 4",
             "{1,2,3,4}.is(gt(2)).count()                                            % 2",
@@ -93,6 +95,8 @@ public class mtronInstSetTest extends MetatronTest {
             "{int[50]::10,int[10]::5}-<{mult(10),mult(1)}                           % {int[50]::100,int[10]::50,int[50]::10,int[10]::5}",
             "{int[50]::10,int[10]::5}-<{mult(10),mult(1)}.count()                   % 120",
             "{int[50]::10,int[10]::5}-<{mult(10),mult(1)}.sum()                     % 6050",
+            "{int[50]::10,int[10]::5}-<{mult(10),mult(1)}.sum[2]()                  % 12100",
+            "{10,5}-<{mult[3](10),mult(1)}.sum[2]()                                 % 930",
             "{[1,2],[3,4,5],[6,7,8]}.sum()                                          % [1,2,3,4,5,6,7,8]",
             "{[1,2],[3,4,5],[6,7,8]}>-[,]                                           % [[1,2],[3,4,5],[6,7,8]]",
             // dummy without ending comma so it's easier to add more test cases

@@ -171,7 +171,7 @@ public interface Obj extends Function<Obj, Obj>, Iterable<Obj>, Cloneable {
 
     @Override
     default Obj apply(final Obj other) {
-        return this;
+        return this;//.c(c -> c.mult(other.c()));
     }
 
     default Obj apply() {

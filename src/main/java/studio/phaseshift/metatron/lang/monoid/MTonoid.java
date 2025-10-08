@@ -61,12 +61,12 @@ public interface MTonoid extends Obj, Call {
 
     @Override
     default Type dom() {
-        return this.value().get0().dom();
+        return this.code().dom();
     }
 
     @Override
     default Type rng() {
-        return this.value().get0().rng();
+        return this.code().rng();
     }
 
 }
