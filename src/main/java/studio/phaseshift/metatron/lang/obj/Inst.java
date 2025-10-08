@@ -180,11 +180,14 @@ public interface Inst extends Call {
                             if (i.args().isLst()) {
                                 LOG.trace("processing lst args of %s", i);
                                 final AtomicInteger counter = new AtomicInteger(0);
-                                return i.args().lstValue()
+                                final Lst resolvedArgs = i.args().lstValue()
                                         .stream()
                                         .anyMatch(arg -> !this.arg(counter.getAndIncrement()).matches(arg)) ?
                                         null :
-                                        i.args(lst(this.args().lstValue().stream().map(a -> a.resolve(lhs)).toList()));
+                                        lst(this.args().lstValue().stream().map(a -> a.resolve(lhs)).toList());
+                                if (null == resolvedArgs)
+                                    return null; // TODO: backtrack the resolution to the outer inst to see if adjusting the coefficient can resolve the internal resolution
+                                return i.args(resolvedArgs);
                             } else if (i.args().isRec()) {
                                 LOG.trace("processing rec args of %s", i);
                                 final AtomicInteger counter = new AtomicInteger(0);
@@ -204,14 +207,13 @@ public interface Inst extends Call {
                         .map(Obj::<Inst>as)
                         .map(i -> (this.tid().hasDom() || this.tid().hasRng()) ? i.tid(this.tid()).resolve(lhs) : i.resolve(lhs))
                         .findFirst()
-                        //.or(() -> Optional.ofNullable(this.tid().dom().cV().isOne() ? null : (Inst) this.c(1L).resolve(lhs.c(1L))))
                         .orElse(null);
                 if (null != resolved) {
                     LOG.trace("resolution ({{m}}%s {{g}}=>{{/g}} %s{{/m}}): %s => %s", currentResolution, resolved.resolution(), lhs, resolved);
                     return resolved;
                 }
             } catch (final Exception e) {
-                this.logger().error("unable to resolve %s => %s in instruction set %s: %s", lhs, this, e.getMessage());
+                this.logger().error(e);
             }
             this.logger().trace("searching spaces for runtime resolution of inst %s => %s", lhs, this);
             final Obj resolved2 = Router.global().read(this.tid());
@@ -228,7 +230,7 @@ public interface Inst extends Call {
         } else { // Resolve.B
             final boolean blocking = this.isBlocking();
             if (!blocking && !lhs.matches(this.dom()))
-                throw MTronException.of("lhs obj does not match inst domain: %s: %s {{r}}-/>{{/r}} %s", this, lhs, this.dom());
+                throw MTronException.of("{{m}}lhs obj{{/m}} does not match inst domain (resolve): %s {{r}}=/>{{/r}} %s", lhs, this);
             final Poly cargs = this.args().isLst() ?
                     lst(this.args().lstValue()
                             .stream()
@@ -269,7 +271,7 @@ public interface Inst extends Call {
                 modulateC = true;
             }
             if (!clhs.matches(cinst.dom()))
-                throw MTronException.of("{{m}}lhs obj{{/m}} (%s) does not match {{m}}inst domain{{/m}} (%s): %s", clhs, cinst.dom(), this);
+                throw MTronException.of("{{m}}lhs obj{{/m}} does not match inst domain (apply): %s {{r}}=/>{{/r}} %s", clhs, cinst);
         }
         Router.stack().push(cinst.args());
         Obj rhs = NoObj.single();
