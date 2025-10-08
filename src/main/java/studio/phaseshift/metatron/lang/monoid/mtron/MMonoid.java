@@ -87,7 +87,7 @@ public class MMonoid extends MObj implements MTonoid {
                 } else if (instB.isGather()) {
                     // many-to-?
                     LOG.trace("  {{m}}==|{{/m}} creating {{y}}barrier{{/y}} monad at %s", instB);
-                    final Monad m = MMonad.of(MObjs.empty(/*List.of(instB.seed())*/), instB);
+                    final Monad m = MMonad.of(MObjs.empty(), instB);
                     this.barriers().<LinkedList<Obj>>valueAs().add(m);
                 }
                 // LOG.none("%s", instB.rng().tid());
@@ -114,16 +114,16 @@ public class MMonoid extends MObj implements MTonoid {
                     //final Obj no = m.obj().c()
                     final Monad n = m.apply(code.nextInst(m.inst()));
                     LOG.trace(" {{g}}===>{{/g}} post-processing monad %s", n);
-                    if (!n.dead()) {
+                    if (n.inst().isGather() && (!n.dead() || n.inst().dom().c().isNoObjable())) {
+                        final Monad barrier = this.barriers().<LinkedList<Monad>>valueAs().peek();
+                        LOG.trace("{{m}}====|{{/m}} appending living obj to barrier %s", n);
+                        if (null == barrier)
+                            throw MTronException.of("barrier should exist: %s", n.inst());
+                        barrier.obj().append(n.obj());
+                    } else if (!n.dead()) {
                         if (n.halted()) {
                             LOG.trace("{{y}}====>{{/y}} halting monad %s", n);
                             n.obj().iterator().forEachRemaining(o -> this.halted().append(o));
-                        } else if (n.inst().isGather()) {
-                            final Monad barrier = this.barriers().<LinkedList<Monad>>valueAs().peek();
-                            LOG.trace("{{m}}====|{{/m}} appending to barrier %s", n);
-                            if (null == barrier)
-                                throw MTronException.of("barrier should exist: %s", n.inst());
-                            barrier.obj().append(n.obj());
                         } else {
                             LOG.trace("{{g}}====>{{/g}} propagating monad %s", n);
                             n.obj().iterator().forEachRemaining(no -> this.running().append(n.obj(no)));

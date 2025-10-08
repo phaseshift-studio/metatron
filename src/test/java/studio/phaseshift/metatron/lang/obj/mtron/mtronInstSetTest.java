@@ -79,6 +79,9 @@ public class mtronInstSetTest extends MetatronTest {
             "{int[2]::1,int[3]::2,int[4]::3}.mult(10)                               % {int[2]::10,int[3]::20,int[4]::30}",
             "int[50]::10.mult(10)                                                   % int[50]::100",
             // COUNT/SUM //
+            "{1,2,3,4}.is(gt(5)).count()                                            % 0",
+            "{1,2,3,4}.count()                                                      % 4",
+            "{1,2,3,4}.is(gt(2)).count()                                            % 2",
             "int[50]::10.mult(10).count()                                           % int[1]::50",
             "int[50]::10.mult(10).sum()                                             % 5000",
             "int[50]::10-<{mult(10),mult(1)}                                        % {int[50]::100,int[50]::10}",
@@ -90,6 +93,8 @@ public class mtronInstSetTest extends MetatronTest {
             "{int[50]::10,int[10]::5}-<{mult(10),mult(1)}                           % {int[50]::100,int[10]::50,int[50]::10,int[10]::5}",
             "{int[50]::10,int[10]::5}-<{mult(10),mult(1)}.count()                   % 120",
             "{int[50]::10,int[10]::5}-<{mult(10),mult(1)}.sum()                     % 6050",
+            "{[1,2],[3,4,5],[6,7,8]}.sum()                                          % [1,2,3,4,5,6,7,8]",
+            "{[1,2],[3,4,5],[6,7,8]}>-[,]                                           % [[1,2],[3,4,5],[6,7,8]]",
             // dummy without ending comma so it's easier to add more test cases
             "1.plus(1)                                                              % 2"
     }, delimiter = '%')

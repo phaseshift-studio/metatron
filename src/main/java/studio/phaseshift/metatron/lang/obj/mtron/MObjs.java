@@ -47,7 +47,7 @@ public class MObjs implements Objs {
     }
 
     private static Stream<Obj> flatten(final Iterable<Obj> objs) {
-        return IteratorUtil.stream(objs).flatMap(o -> o.isObjs() ? flatten(o.objsValue()) : Stream.of(o));
+        return IteratorUtil.stream(objs).flatMap(o -> o.isObjs() ? flatten(o.objsValue()) : Stream.of(o)).filter(o -> !o.isNoObj());
     }
 
  /*   @Override
@@ -63,6 +63,8 @@ public class MObjs implements Objs {
 
     @Override
     public Objs append(final Obj obj) {
+        if (obj.isNoObj())
+            return this;
         flatten(obj).forEach(o -> this.cstream.compute(o.c(cInt::one), (lng, it) -> null == it ? o.c() : it.plus(o.c())));
         return this;
     }
@@ -180,7 +182,8 @@ public class MObjs implements Objs {
 
     @Override
     public Objs clone(final Object value, final fURI tid, final fURI vid) {
-        return new MObjs(IteratorUtil.stream((Iterable) value).toList(), vid);
+        return this;
+        //return new MObjs(IteratorUtil.list(((Iterable) value)).iterator(), vid);
     }
 
     @Override
@@ -213,10 +216,11 @@ public class MObjs implements Objs {
 
     @Override
     public Objs clone() {
-        try {
+       /* try {
             return (Objs) super.clone();
         } catch (final Exception e) {
             throw MTronException.of(e);
-        }
+        }*/
+        return this;
     }
 }

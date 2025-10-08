@@ -91,6 +91,10 @@ public class TypeTest extends MetatronTest {
             "{1,2,3,'abc'}        | /mtron/+[17,]                   | false",
             "{1,2,3,'abc'}        | /mtron/+[5,]                    | false",
             "{1,2,3,4}            | /mtron/str[*]                   | false",
+            "{1,2,3,4}            | #[+]                            | true",
+            "{1,2,3,4}            | int[+]                          | true",
+            "{1,2,3,4}            | int[4]                          | true",
+            "{1,2,3,4}            | int[3]                          | false",
             "{int[2]::1,int[2]::4}| int[3,5]                        | true",
             "{/mtron/int[2]::1,2} | /mtron/int[3]                   | true", // TODO: think this through more carefully
             "noobj                | #[0]                            | true",

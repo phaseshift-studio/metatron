@@ -71,13 +71,13 @@ public interface Inst extends Call {
     default Type dom() {
         final fURI domain = this.tid().dom();
         // return MType.of(domain);
-        return MType.of(Router.global().read(domain), domain);
+        return MType.of(domain);
     }
 
     @Override
     default Type rng() {
         final fURI range = this.tid().rng();
-        return MType.of(Router.global().read(range), range);
+        return MType.of(range);
         //return MType.of(range);
     }
 
