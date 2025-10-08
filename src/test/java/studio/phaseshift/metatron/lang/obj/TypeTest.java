@@ -96,6 +96,8 @@ public class TypeTest extends MetatronTest {
             "{1,2,3,4}            | int[4]                          | true",
             "{1,2,3,4}            | int[3]                          | false",
             "{int[2]::1,int[2]::4}| int[3,5]                        | true",
+            "{int[2]::1,int[2]::4}| int[4]                          | true",
+            "{int[2]::1,int[2]::4}| int[3]                          | false",
             "{/mtron/int[2]::1,2} | /mtron/int[3]                   | true", // TODO: think this through more carefully
             "noobj                | #[0]                            | true",
             "noobj                | #[0,0]                          | true",
