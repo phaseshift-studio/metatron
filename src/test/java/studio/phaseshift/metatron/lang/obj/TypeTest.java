@@ -63,7 +63,8 @@ public class TypeTest extends MetatronTest {
             "/mtron/int::1        | /mtron/+[?]                     | true",
             "/mtron/int::1        | /mtron/+/+                      | false",
             "/mtron/int::1        | /mtron/+/#                      | true",
-            // "/mtron/+[2]::{c,d}   | /mtron/+[2]                  | true",
+            "{c,d}                | /mtron/uri[2]                   | true",
+            "{c,d}                | /mtron/+[2]                     | true",
             "str::\"abc\"         | /+/+/#                          | true",
             "/mtron/int::\"abc\"  | /+/+/+                          | false",
             "/mtron/int::1        | /+/+                            | true",
@@ -82,10 +83,10 @@ public class TypeTest extends MetatronTest {
             "{1,2,3,4}            | /mtron/int[0,5]                 | true",
             "{1,2,3,4}            | /mtron/int[*]                   | true",
             "{1,2,3,'abc'}        | /mtron/int[*]                   | false",
-            // "{1,2,3,'abc'}        | /mtron/+[*]                     | true",
-            // "{1,2,3,'abc'}        | /mtron/+[0,]                    | true",
-            // "{1,2,3,'abc'}        | /mtron/+[1,]                    | true",
-            // "{1,2,3,'abc'}        | /mtron/+[+]                     | true",
+            "{1,2,3,'abc'}        | /mtron/+[*]                     | true",
+            "{1,2,3,'abc'}        | /mtron/+[0,]                    | true",
+            "{1,2,3,'abc'}        | /mtron/+[1,]                    | true",
+            "{1,2,3,'abc'}        | /mtron/+[+]                     | true",
             "{1,2,3,'abc'}        | /mtron/+[2]                     | false",
             "{1,2,3,'abc'}        | /mtron/+[17,]                   | false",
             "{1,2,3,'abc'}        | /mtron/+[5,]                    | false",
@@ -104,7 +105,7 @@ public class TypeTest extends MetatronTest {
             "plus[2]::(2)         | /mtron/inst/plus[2]             | true",
             "plus[5]::(2)         | /mtron/inst/plus[2,7]           | true",
             "plus[4]::()          | #[1,3]                          | false",
-            //  "plus[4]::()          | /mtron/+/plus[4]                | true", TODO: weird? (more detailed failed tests in fURITest)
+            "plus[4]::()          | /mtron/+/plus[4]                | true",
             "plus[4]::()          | /mtron/+/+[*]                   | true"
     }, delimiter = '|')
     public void testType(final String obj, final String typefURI, final boolean matches) {

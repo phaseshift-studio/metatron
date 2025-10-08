@@ -567,10 +567,12 @@ public class fURITest {
             "/mtron/+/+[1]|/mtron/+/#[?]|true",
             "/mtron/inst/plus[1]|/mtron/inst/#[?]|true",
             "/mtron/inst/plus[1]|/mtron/+/#[?]|true",
-           /* "/mtron/inst/plus/[1]|/mtron/+/plus/[?]|true",
-            "/mtron/+/plus[1]|/mtron/+/plus[?]|true",
-            "/mtron/inst/plus[1]|/mtron/+/plus[?]|true",
-            "/mtron/inst/plus[4]|/mtron/+/plus[4]|true"*/ // TODO:?!? STRANGE!?!?
+            //"/mtron/inst/plus/|/mtron/+/plus/[?]|true",
+            "/mtron/+/+|/mtron/+/+[?]|true",
+            //"/+/+/+|/mtron/+/+[?]|true",
+            "/mtron/+/plus|/mtron/+/plus[?]|true",
+            "/mtron/inst/plus|/mtron/+/plus[?]|true",
+            //"/mtron/inst/plus[4]|/mtron/+/plus[4]|true" // TODO:?!? STRANGE!?!?
     }, delimiter = '|')
     void testMatches(final String a, final String b, final boolean shouldMatch) {
         final fURI furi1a = fURI.of(nullToEmpty(a));
