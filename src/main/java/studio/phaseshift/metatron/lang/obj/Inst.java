@@ -264,7 +264,7 @@ public interface Inst extends Call {
         Obj clhs = lhs;
         Inst cinst = this.resolve(clhs);
         boolean modulateC = false;
-        if (!this.isBlocking() && !clhs.matches(cinst.dom())) {
+        if (!cinst.isBlocking() && !clhs.matches(cinst.dom())) {
             if (clhs.uniqueValues().isOne() && !clhs.c().isOne()) { // && cinst.dom().c().within(cInt.SOME())) {
                 clhs = clhs.c(cInt::one);
                 cinst = this.resolve(clhs);
@@ -277,14 +277,14 @@ public interface Inst extends Call {
         Obj rhs = NoObj.single();
         try {
             rhs = cinst.f().apply(clhs, cinst);
-            Graphitty.log(this).trace("%s ({{m}}lhs{{/m}}) => %s ({{m}}inst{{/m}}) => %s ({{m}}rhs{{/m}}) evaluated {{g}}successfully{{/g}}", clhs, cinst, rhs);
+            Graphitty.log(cinst).trace("%s ({{m}}lhs{{/m}}) => %s ({{m}}inst{{/m}}) => %s ({{m}}rhs{{/m}}) evaluated {{g}}successfully{{/g}}", clhs, cinst, rhs);
             Router.stack().pop();
         } catch (final Exception e) {
-            Graphitty.log(this).error("%s => %s evaluation error: %s (reverting stack)", clhs, cinst, e.getMessage());
+            Graphitty.log(cinst).error("%s => %s evaluation error: %s (reverting stack)", clhs, cinst, e.getMessage());
             Router.stack().pop();
         }
         if (!rhs.matches(cinst.rng()))
-            throw MTronException.of("{{m}}rhs obj{{/m}} (%s) {{r}}does not match{{/r}} {{m}}inst range{{/m}} (%s): %s", rhs, cinst.rng(), this);
+            throw MTronException.of("{{m}}rhs obj{{/m}} (%s) {{r}}does not match{{/r}} {{m}}inst range{{/m}} (%s): %s", rhs, cinst.rng(), cinst);
         return modulateC ? rhs.c(c -> c.mult(lhs.c())) : rhs;
 
     }
