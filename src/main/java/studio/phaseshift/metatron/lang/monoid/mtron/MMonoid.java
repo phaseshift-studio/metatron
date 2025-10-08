@@ -112,7 +112,7 @@ public class MMonoid extends MObj implements MTonoid {
                 LOG.trace("   {{g}}=>{{/g}} processing monad %s [%s]", m, m.inst().isInitial() ? "initial" : "midway");
                 try {
                     //final Obj no = m.obj().c()
-                    final Monad n = m.liftC().apply(code.nextInst(m.inst())).dropC();
+                    final Monad n = m.apply(code.nextInst(m.inst()));
                     LOG.trace(" {{g}}===>{{/g}} post-processing monad %s", n);
                     if (!n.dead()) {
                         if (n.halted()) {

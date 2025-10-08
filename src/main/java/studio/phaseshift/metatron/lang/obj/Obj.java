@@ -67,28 +67,30 @@ public interface Obj extends Function<Obj, Obj>, Iterable<Obj>, Cloneable {
 
     fURI vid();
 
+    default cInt uniqueValues() {
+        return cInt.of(1L);
+    }
+
     default cInt c() {
         return this.tid().cV();
     }
 
-    default Obj c(final Function<cInt, cInt> func) {
-        return this.c(func.apply(this.c()));
+    default Obj c(final cInt c) {
+        return this.c(oldC -> c);
     }
 
-    default Obj c(final cInt coeff) {
-        return this.tid(this.tid().c(null == coeff || coeff.isOne() ? null : coeff.toString()));
+    default Obj c(final Function<cInt, cInt> func) {
+        final cInt oldC = this.c();
+        final cInt newC = func.apply(oldC);
+        return Objects.equals(oldC, newC) ? this : this.tid(this.tid().c(null == newC || newC.isOne() ? null : newC.toString()));
     }
 
     default Obj c(final Long exact) {
-        return null == exact || exact == 1L ? this.tid(this.tid().c(null)) : this.tid(this.tid().c("" + exact));
+        return this.c(cInt.of(exact));
     }
 
     default Obj c(final Long min, final Long max) {
-        if (Objects.equals(min, max))
-            return this.c(min);
-        String coeff = min == null ? "" : min.toString();
-        coeff = coeff + "," + (max == null ? "" : max.toString());
-        return this.tid(this.tid().c(coeff));
+        return this.c(cInt.of(min, max));
     }
 
     default Pair<Obj, Obj> take(final cInt c) {

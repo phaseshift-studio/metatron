@@ -32,11 +32,11 @@ import static studio.phaseshift.metatron.lang.obj.mtron.mtronInstSet.START_TID;
 
 public class MMonadTest {
 
-    @Test
+    /*@Test
     public void testLiftAndDrop() {
         assertEquals(cInt.of(1L), MMonad.of(jnt(10).c(5L), MInst.instA(START_TID)).c());
         assertEquals(cInt.of(5L), MMonad.of(jnt(10).c(5L), MInst.instA(START_TID)).liftC().c());
         assertEquals(cInt.of(1L), MMonad.of(jnt(10).c(5L), MInst.instA(START_TID)).liftC().dropC().c());
         assertEquals(cInt.of(5L), MMonad.of(jnt(10).c(5L), MInst.instA(START_TID)).liftC().dropC().liftC().c());
-    }
+    }*/
 }

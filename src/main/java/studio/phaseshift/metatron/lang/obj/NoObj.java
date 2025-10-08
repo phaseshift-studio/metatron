@@ -19,6 +19,7 @@
 package studio.phaseshift.metatron.lang.obj;
 
 import studio.phaseshift.metatron.lang.fURI;
+import studio.phaseshift.metatron.lang.obj.mtron.c.cInt;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
@@ -102,5 +103,20 @@ public final class NoObj implements Obj, Inst {
     @Override
     public NoObj clone() {
         return SINGLE;
+    }
+
+    @Override
+    public cInt uniqueValues() {
+        return cInt.of(0L);
+    }
+
+    @Override
+    public NoObj c(final cInt c) {
+        return this;
+    }
+
+    @Override
+    public NoObj tid(final fURI tid) {
+        return this;
     }
 }

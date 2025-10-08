@@ -34,7 +34,7 @@ public class mtronInstSetTest extends MetatronTest {
             "1.plus(2)                                                              % 3      ",
             "{1,2,3}._                                                              % {1,2,3}",
             "{1,2,3}.plus(2)                                                        % {3,4,5}",
-           // "{1,2,3}.plus(id?int<=int())                                            % {2,4,6}"
+            // "{1,2,3}.plus(id?int<=int())                                            % {2,4,6}"
             // MERGE ///
             "{1,2,3}>-{,}                                                           % {1,2,3}",
             "{1,1,2,2,2,3}>-{,}                                                     % {1,1,2,2,2,3}",
@@ -62,7 +62,12 @@ public class mtronInstSetTest extends MetatronTest {
             "{1,2,3}-<1                                                             % 1",
             "{1,2,3}-<[is(gt(1))=>_, is(gt(2))=>_]                                  % [is(gt(1))=>{2,3},is(gt(2))=>3]",
             "{1,2,3}-<{is(gt(1)), is(gt(2))}                                        % {2,3}", // TODO: hmmmm
-            "{1,2,3}.>-{3,3,2}                                                      % {3,3,2,3,2,1}"
+            "{1,2,3}.>-{3,3,2}                                                      % {3,3,2,3,2,1}",
+            // MULT //
+            "{1,2,3}.mult(10)                                                       % {10,20,30}",
+            "int[50]::10.mult(10)                                                   % int[50]::100",
+            "int[50]::10-<{mult(10),mult(1)}                                        % {int[50]::100,int[50]::10}",
+            "{1,2,3}.>-{3,3,2}                                                      % {3,3,2,3,2,1}",
     }, delimiter = '%')
     public void testCode(final String code, final String expected) {
         super.testCode(code, expected);

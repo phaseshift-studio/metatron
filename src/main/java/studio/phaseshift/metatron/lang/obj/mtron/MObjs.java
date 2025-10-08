@@ -29,6 +29,7 @@ import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 public class MObjs implements Objs {
@@ -42,9 +43,7 @@ public class MObjs implements Objs {
 
     public MObjs(final Iterable<Obj> objs, final fURI vid) {
         this.vid = vid;
-        flatten(objs).forEach(i -> {
-            this.cstream.compute(i.c(C::one), (lng, it) -> null == it ? i.c() : it.plus(i.c()));
-        });
+        flatten(objs).forEach(o -> this.cstream.compute(o.c(C::one), (lng, it) -> null == it ? o.c() : it.plus(o.c())));
     }
 
     private static Stream<Obj> flatten(final Iterable<Obj> objs) {
@@ -64,26 +63,30 @@ public class MObjs implements Objs {
 
     @Override
     public Objs append(final Obj obj) {
-        obj.forEach(i -> this.cstream.compute(i.tid(i.tid().cLess()), (lng, it) -> null == it ? i.c() : it.plus(i.c())));
+        flatten(obj).forEach(o -> this.cstream.compute(o.c(cInt::one), (lng, it) -> null == it ? o.c() : it.plus(o.c())));
         return this;
     }
 
     @Override
-    public Iterable<Obj> value() {
-        return this.cstream.entrySet().stream().map(kv -> kv.getKey().c(kv.getValue())).toList();
+    public cInt uniqueValues() {
+        return cInt.of((long) this.cstream.size());
     }
-
-    /*
 
     @Override
     public Iterable<Obj> value() {
-        return this.cstream.entrySet()
-                .stream()
-                .filter(kv -> !kv.getValue().isZero())
-                .map(kv -> kv.getValue().isOne() ? kv.getKey() : kv.getKey().c(kv.getValue()))
-                .toList();
+        return this.cstream.entrySet().stream().map(kv -> kv.getValue().isOne() ? kv.getKey() : kv.getKey().c(kv.getValue())).toList();
     }
-     */
+
+    @Override
+    public cInt c() {
+        return this.cstream.values().stream().reduce(cInt.ZERO(), cInt::plus);
+    }
+
+    @Override
+    public Obj c(final Function<cInt, cInt> func) {
+        this.cstream.keySet().forEach(obj -> this.cstream.computeIfPresent(obj, (k, v) -> func.apply(v)));
+        return this;
+    }
 
     @Override
     public Obj take() {

@@ -19,8 +19,10 @@
 package studio.phaseshift.metatron.lang.obj;
 
 import studio.phaseshift.metatron.lang.fURI;
+import studio.phaseshift.metatron.lang.obj.mtron.c.cInt;
 import studio.phaseshift.metatron.util.IteratorUtil;
 
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 public interface Objs extends Obj {
@@ -36,6 +38,15 @@ public interface Objs extends Obj {
 
     @Override
     Obj append(final Obj obj);
+
+    @Override
+    cInt uniqueValues();
+
+    @Override
+    Obj c(final Function<cInt, cInt> func);
+
+    @Override
+    cInt c();
 
     @Override
     default Stream<Obj> stream() {

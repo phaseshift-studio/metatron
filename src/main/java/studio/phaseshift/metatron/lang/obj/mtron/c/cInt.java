@@ -31,6 +31,26 @@ public class cInt implements C<Long, cInt> {
         this.max = max;
     }
 
+    public static cInt ZERO() {
+        return cInt.of(0L);
+    }
+
+    public static cInt ONE() {
+        return cInt.of(1L);
+    }
+
+    public static cInt SOME() {
+        return cInt.of(1L, null);
+    }
+
+    public static cInt MAYBE() {
+        return cInt.of(0L, 1L);
+    }
+
+    public static cInt MAYBESOME() {
+        return cInt.of(0L, null);
+    }
+
     @Override
     public Long min() {
         return this.min;

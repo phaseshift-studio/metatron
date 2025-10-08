@@ -20,6 +20,7 @@ package studio.phaseshift.metatron.lang.obj;
 
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.mtron.MType;
+import studio.phaseshift.metatron.lang.obj.mtron.c.cInt;
 import studio.phaseshift.metatron.lang.obj.mtron.mtronInstSet;
 import studio.phaseshift.metatron.space.Router;
 import studio.phaseshift.metatron.ui.Graphitty;
@@ -169,9 +170,6 @@ public interface Inst extends Call {
         LOG.trace("%s => %s in resolution state {{m}}%s{{/m}}", lhs, this, currentResolution);
         if (currentResolution == Resolution.A) {
             try {
-                /*final Map<fURI, fURI> genericMap = new HashMap<>();
-                if (this.tid().dom().isGeneric())
-                    genericMap.put(this.tid().dom(), lhs.tid().qLess());*/
                 final Inst resolved = Router.global().read(this.tid())
                         .stream()
                         .map(Obj::<Inst>as)
@@ -261,22 +259,31 @@ public interface Inst extends Call {
 
     @Override
     default Obj apply(final Obj lhs) {
-        final Inst cinst = this.resolve(lhs);
-        if (!this.isBlocking() && !lhs.matches(cinst.dom()))
-            throw MTronException.of("{{m}}lhs obj{{/m}} (%s) does not match {{m}}inst domain{{/m}} (%s): %s", lhs, cinst.dom(), this);
+        Obj clhs = lhs;
+        Inst cinst = this.resolve(clhs);
+        boolean modulateC = false;
+        if (!this.isBlocking() && !clhs.matches(cinst.dom())) {
+            if (clhs.uniqueValues().isOne() && !clhs.c().isOne()) { // && cinst.dom().c().within(cInt.SOME())) {
+                clhs = clhs.c(cInt::one);
+                cinst = this.resolve(clhs);
+                modulateC = true;
+            }
+            if (!clhs.matches(cinst.dom()))
+                throw MTronException.of("{{m}}lhs obj{{/m}} (%s) does not match {{m}}inst domain{{/m}} (%s): %s", clhs, cinst.dom(), this);
+        }
         Router.stack().push(cinst.args());
         Obj rhs = NoObj.single();
         try {
-            rhs = cinst.f().apply(lhs, cinst);
-            Graphitty.log(this).trace("%s ({{m}}lhs{{/m}}) => %s ({{m}}inst{{/m}}) => %s ({{m}}rhs{{/m}}) evaluated {{g}}successfully{{/g}}", lhs, cinst, rhs);
+            rhs = cinst.f().apply(clhs, cinst);
+            Graphitty.log(this).trace("%s ({{m}}lhs{{/m}}) => %s ({{m}}inst{{/m}}) => %s ({{m}}rhs{{/m}}) evaluated {{g}}successfully{{/g}}", clhs, cinst, rhs);
             Router.stack().pop();
         } catch (final Exception e) {
-            Graphitty.log(this).error("%s => %s evaluation error: %s (reverting stack)", lhs, cinst, e.getMessage());
+            Graphitty.log(this).error("%s => %s evaluation error: %s (reverting stack)", clhs, cinst, e.getMessage());
             Router.stack().pop();
         }
         if (!rhs.matches(cinst.rng()))
             throw MTronException.of("{{m}}rhs obj{{/m}} (%s) {{r}}does not match{{/r}} {{m}}inst range{{/m}} (%s): %s", rhs, cinst.rng(), this);
-        return rhs;
+        return modulateC ? rhs.c(c -> c.mult(lhs.c())) : rhs;
 
     }
 

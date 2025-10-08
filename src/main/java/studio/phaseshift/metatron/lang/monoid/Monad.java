@@ -80,8 +80,8 @@ public interface Monad extends Obj { //, Ring<Monad> {
     Monad tid(final fURI furi);
 
     @Override
-    default Monad c(final cInt coeff) {
-        return (Monad) Obj.super.c(coeff);
+    default Monad c(final cInt c) {
+        return (Monad) Obj.super.c(c);
     }
 
     @Override
@@ -108,23 +108,6 @@ public interface Monad extends Obj { //, Ring<Monad> {
 
     default Monad inst(final Inst inst) {
         return this.clone(Triplet.with(this.obj(), inst, this.state()), this.tid(), this.vid());
-    }
-
-    default Monad liftC() {
-        boolean lift = !(this.obj() instanceof Objs) && !this.obj().isNoObj() && !this.obj().tid().cV().isOne();
-        if (!lift)
-            return this;
-        final cInt coeff = this.obj().c();
-        return this.obj(this.obj().c(cInt::one)).c(this.c().mult(coeff));
-    }
-
-
-    default Monad dropC() {
-        boolean drop = !(this.obj() instanceof Objs) && !this.obj().isNoObj() && !this.tid().cV().isOne();
-        if (!drop)
-            return this;
-        final cInt coeff = this.c();
-        return this.obj(this.obj().c(this.obj().c().mult(coeff))).c(cInt::one);
     }
 
     @Override
