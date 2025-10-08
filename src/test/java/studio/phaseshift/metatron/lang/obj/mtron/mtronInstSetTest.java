@@ -31,10 +31,15 @@ public class mtronInstSetTest extends MetatronTest {
     @Override
     @ParameterizedTest
     @CsvSource(value = {
-            "1.plus(2)                                                              % 3      ",
+            "1.plus(2)                                                              % 3",
             "{1,2,3}._                                                              % {1,2,3}",
             "{1,2,3}.plus(2)                                                        % {3,4,5}",
-            // "{1,2,3}.plus(id?int<=int())                                            % {2,4,6}"
+            "{int[10]::1}.plus(id())                                                % int[10]::2",
+            "int[10]::2.plus(id())                                                  % int[10]::4",
+            "{1,2,3}>-._.plus(id())                                                 % {2,4,6}",
+            "{1,2,3}._.plus(id())                                                   % {2,4,6}",
+            //"{1,2,3}.plus(id())                                                     % {2,4,6}",
+            //"{1,2,3}.plus(mult(1))                                                  % {2,4,6}",
             // MERGE ///
             "{1,2,3}>-{,}                                                           % {1,2,3}",
             "{1,1,2,2,2,3}>-{,}                                                     % {1,1,2,2,2,3}",
@@ -63,11 +68,25 @@ public class mtronInstSetTest extends MetatronTest {
             "{1,2,3}-<[is(gt(1))=>_, is(gt(2))=>_]                                  % [is(gt(1))=>{2,3},is(gt(2))=>3]",
             "{1,2,3}-<{is(gt(1)), is(gt(2))}                                        % {2,3}", // TODO: hmmmm
             "{1,2,3}.>-{3,3,2}                                                      % {3,3,2,3,2,1}",
+            "{1,2,3}.>-{3,3,2}                                                      % {int[1]::1,int[2]::2,int[3]::3}",
             // MULT //
-            "{1,2,3}.mult(10)                                                       % {10,20,30}",
+            "{1,2,3}.mult(10)                                                       % {int[1]::10,int[1]::20,int[1]::30}",
+            "{int[2]::1,int[3]::2,int[4]::3}.mult(10)                               % {int[2]::10,int[3]::20,int[4]::30}",
             "int[50]::10.mult(10)                                                   % int[50]::100",
+            // COUNT/SUM //
+            "int[50]::10.mult(10).count()                                           % int[1]::50",
+            "int[50]::10.mult(10).sum()                                             % 5000",
             "int[50]::10-<{mult(10),mult(1)}                                        % {int[50]::100,int[50]::10}",
-            "{1,2,3}.>-{3,3,2}                                                      % {3,3,2,3,2,1}",
+            "int[50]::10-<{mult(10),mult(1)}.count()                                % 100",
+            "int[50]::10-<{mult(10),mult(1)}.sum()                                  % 5500",
+            "{int[50]::10}-<{mult(10),mult(1)}                                      % {int[50]::100,int[50]::10}",
+            "{int[50]::10}-<{mult(10),mult(1)}.count()                              % 100",
+            "{int[50]::10}-<{mult(10),mult(1)}.sum()                                % 5500",
+            "{int[50]::10,int[10]::5}-<{mult(10),mult(1)}                           % {int[50]::100,int[10]::50,int[50]::10,int[10]::5}",
+            "{int[50]::10,int[10]::5}-<{mult(10),mult(1)}.count()                   % 120",
+            "{int[50]::10,int[10]::5}-<{mult(10),mult(1)}.sum()                     % 6050",
+            // dummy without ending comma so it's easier to add more test cases
+            "1.plus(1)                                                              % 2"
     }, delimiter = '%')
     public void testCode(final String code, final String expected) {
         super.testCode(code, expected);
