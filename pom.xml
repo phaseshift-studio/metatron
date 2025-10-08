@@ -50,7 +50,7 @@
         <jline.version>3.30.0</jline.version>
         <logback.version>1.5.19</logback.version>
         <slf4j.version>2.0.17</slf4j.version>
-        <hive.version>1.3.9</hive.version>
+        <hive.version>1.3.10</hive.version>
         <snf4j.version>1.11.1</snf4j.version>
         <!-- LOGBACK PROPERTIES -->
     </properties>
