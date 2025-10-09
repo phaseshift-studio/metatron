@@ -132,6 +132,14 @@ public class MRec extends MObj implements Rec {
     }
 
     @Override
+    public Rec value(final Object value) {
+        Map<Obj, Obj> map = (Map<Obj, Obj>) value;
+        Map<Obj, Obj> newMap = new LinkedHashMap<>();
+        map.entrySet().stream().filter(kv -> !kv.getKey().isNoObj()).filter(kv -> !kv.getValue().isNoObj()).forEach(kv -> newMap.put(kv.getKey(), kv.getValue()));
+        return (Rec) super.value(newMap);
+    }
+
+    @Override
     public boolean matches(final Obj rhs) {
         if (this.isNoObj() && rhs.isNoObj())
             return true;

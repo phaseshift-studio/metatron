@@ -155,9 +155,10 @@ public class mtronInstSet extends MInstSet {
                                         .map(rel -> rel.first()
                                                 .apply(o)
                                                 .andThen(oo -> oo.isNoObj() ?
-                                                        NoObj.single() :
-                                                        rel.second(rel.second().apply(oo))).apply(o))//.choose(Obj::isNoObj, NoObj.single(), r -> rel.second(rel.second().apply(o))))
-                                        .filter(p -> !p.isNoObj())
+                                                        rel.second(NoObj.single()) :
+                                                        rel.second(rel.second().apply(o))).apply(o))//.choose(Obj::isNoObj, NoObj.single(), r -> rel.second(rel.second().apply(o))))
+                                        .map(Obj::<Rel>as)
+                                        .filter(p -> !p.first().isNoObj() && !p.second().isNoObj())
                                         .map(Obj::<Rel>as))
                                 .collect(Collectors.toMap(Rel::first, Rel::second, Obj::append, LinkedHashMap::new)))),
                 instC(SPLIT_TID.dom(A.maybeSome()).rng(A.maybeSome()), lst(T(A.maybeSome())), (lhs, inst) -> objs(inst.arg(0).stream().map(o -> o.apply(lhs)))),
