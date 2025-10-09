@@ -35,7 +35,7 @@ import java.util.stream.Stream;
 public class MObjs implements Objs {
 
     private fURI vid;
-    private final Map<Obj, cInt> cstream = new LinkedHashMap<>();
+    private final Map<Obj, cInt> cstream;
 
     public MObjs(final Iterable<Obj> objs) {
         this(objs, null);
@@ -43,11 +43,29 @@ public class MObjs implements Objs {
 
     public MObjs(final Iterable<Obj> objs, final fURI vid) {
         this.vid = vid;
-        flatten(objs).forEach(o -> this.cstream.compute(o.c(C::one), (lng, it) -> null == it ? o.c() : it.plus(o.c())));
+        this.cstream = flattenToMap(new LinkedHashMap<>(), objs);
+    }
+
+    private MObjs(final Map<Obj, cInt> cstream, final fURI vid) {
+        this.vid = vid;
+        this.cstream = cstream;
     }
 
     private static Stream<Obj> flatten(final Iterable<Obj> objs) {
         return IteratorUtil.stream(objs).flatMap(o -> o.isObjs() ? flatten(o.objsValue()) : Stream.of(o)).filter(o -> !o.isNoObj());
+    }
+
+    private static Map<Obj, cInt> flattenToMap(final Map<Obj, cInt> map, final Iterable<Obj> objs) {
+        flatten(objs).forEach(o -> map.compute(o.c(C::one), (lng, it) -> null == it ? o.c() : it.plus(o.c())));
+        return map;
+    }
+
+    private static Optional<Obj> tryToShrink(final Map<Obj, cInt> map) {
+        if (map.isEmpty())
+            return Optional.of(NoObj.single());
+        if (1 == map.size())
+            return Optional.of(map.entrySet().stream().map(kv -> kv.getKey().c(kv.getValue())).iterator().next());
+        return Optional.empty();
     }
 
  /*   @Override
@@ -62,11 +80,10 @@ public class MObjs implements Objs {
     }
 
     @Override
-    public Objs append(final Obj obj) {
+    public Obj append(final Obj obj) {
         if (obj.isNoObj())
             return this;
-        flatten(obj).forEach(o -> this.cstream.compute(o.c(cInt::one), (lng, it) -> null == it ? o.c() : it.plus(o.c())));
-        return this;
+        return tryToShrink(flattenToMap(this.cstream, obj)).orElse(this);
     }
 
     @Override
@@ -131,13 +148,10 @@ public class MObjs implements Objs {
     }
 
     public static Obj objs(final Iterable<Obj> objs) {
-        final IteratorUtil.ExpandableIterator<Obj> itty = new IteratorUtil.ExpandableIterator<>(objs.iterator());
-        if (!itty.hasNext())
-            return NoObj.single();
-        else if (itty.onlyHasNext())
-            return itty.next();
-        else
-            return new MObjs(IteratorUtil.list(itty));
+        Map<Obj, cInt> map = new LinkedHashMap<>();
+        flattenToMap(map, objs);
+        Optional<Obj> ret = tryToShrink(map);
+        return ret.orElseGet(() -> new MObjs(map, fURI.NULL));
     }
 
     public static Obj objs(final Stream<Obj> objs) {

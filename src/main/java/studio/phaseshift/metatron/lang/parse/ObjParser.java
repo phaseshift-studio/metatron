@@ -110,7 +110,7 @@ public class ObjParser {
                 m_vid_postfix())
                 .map(t -> new MLst(pick(t, 2), pick(t, 0), pick(t, 4))));
 
-        rec_parser.set(seq(m_type_prefix_opt_colon(REC_TID), of('[').trim(), rec_internal(), of(']'), m_vid_postfix()).trim().map(t -> new MRec(ObjParser.pick(t, 2), pick(t, 0), pick(t, 4))));
+        rec_parser.set(seq(m_type_prefix_opt_colon(REC_TID), of('[').trim(), rec_internal(), of(']'), m_vid_postfix()).trim().map(t -> new MRec(pick(t, 2), pick(t, 0), pick(t, 4))));
 
         inst_parser.set(seq(
                 choice(m_inst_furi(), m_type_prefix_opt_colon(INST_TID)), // 0 inst_tid
@@ -311,6 +311,10 @@ public class ObjParser {
             newCode.addAll(ObjParser.<Call>pick(t, 2).insts());
             return new MCode(newCode, CODE_TID, pick(t, 3));
         });
+    }
+
+    public static Parser m_code_or_obj() {
+        return choice(sugar_code(), m_obj());
     }
 
     public static Parser m_code() {

@@ -165,6 +165,10 @@ public interface Obj extends Function<Obj, Obj>, Iterable<Obj>, Cloneable {
                 objs.add(this);
             if (!obj.isNoObj())
                 objs.add(obj);
+            if (objs.isEmpty())
+                return NoObj.single();
+            if (objs.size() == 1)
+                return objs.get(0);
             return MObjs.objs(objs);
         }
     }

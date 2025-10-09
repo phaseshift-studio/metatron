@@ -64,7 +64,7 @@ public class MetatronTest {
                 LOG.debug("testing %s => %s", code, e.getMessage());
             }
         } else {
-            final Obj cd = ObjParser.sugar_code().parse(code).get();
+            final Obj cd = ObjParser.m_code_or_obj().parse(code).get();
             final Obj ex = ObjParser.m_obj().parse(expected).get();
             final Obj actual = cd.apply(NoObj.single());
             LOG.debug("testing %s => %s [expected:%s]", cd, actual, ex);
