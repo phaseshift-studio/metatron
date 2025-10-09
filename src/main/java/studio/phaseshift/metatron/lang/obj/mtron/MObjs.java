@@ -148,9 +148,8 @@ public class MObjs implements Objs {
     }
 
     public static Obj objs(final Iterable<Obj> objs) {
-        Map<Obj, cInt> map = new LinkedHashMap<>();
-        flattenToMap(map, objs);
-        Optional<Obj> ret = tryToShrink(map);
+        final Map<Obj, cInt> map = new LinkedHashMap<>();
+        final Optional<Obj> ret = tryToShrink(flattenToMap(map, objs));
         return ret.orElseGet(() -> new MObjs(map, fURI.NULL));
     }
 

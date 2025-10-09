@@ -19,6 +19,7 @@
 package studio.phaseshift.metatron.lang.monoid;
 
 import studio.phaseshift.metatron.lang.fURI;
+import studio.phaseshift.metatron.lang.monoid.mtron.MMonad;
 import studio.phaseshift.metatron.lang.obj.*;
 import studio.phaseshift.metatron.lang.obj.mtron.c.cInt;
 import studio.phaseshift.metatron.ui.Graphitty;
@@ -28,6 +29,7 @@ import java.util.Objects;
 import java.util.function.Function;
 
 import static studio.phaseshift.metatron.lang.obj.mtron.MObjs.objs;
+import static studio.phaseshift.metatron.lang.obj.mtron.MType.T;
 import static studio.phaseshift.metatron.util.Tuple.Triplet;
 
 public interface Monad extends Obj { //, Ring<Monad> {
@@ -112,12 +114,12 @@ public interface Monad extends Obj { //, Ring<Monad> {
 
     @Override
     default Type dom() {
-        return this.obj().rng();
+        return T(MMonad.MMONAD_TID);
     } // TODO: is this what we need?
 
     @Override
     default Type rng() {
-        return this.inst().rng();
+        return T(MMonad.MMONAD_TID);
     }
 
     @Override

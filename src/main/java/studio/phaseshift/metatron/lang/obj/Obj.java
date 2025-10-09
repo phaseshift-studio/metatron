@@ -212,7 +212,7 @@ public interface Obj extends Function<Obj, Obj>, Iterable<Obj>, Cloneable {
         if (rhs.isCall())
             return this.rng().matches(rhs.dom());// && rhs.apply(this).matches(rhs.rng());
         if (rhs.isType())
-            return this.tid().matches(rhs.tid()) && (rhs.value() == null || this.matches(rhs.<Type>as().value()));
+            return this.tid().matches(rhs.tid()) && rhs.apply(this).tid().matches(rhs.tid());
         return this.tid().matches(rhs.tid()) &&
                 Objects.equals(this.value(), rhs.value());
     }

@@ -132,7 +132,7 @@ public class TypeTest extends MetatronTest {
     @ParameterizedTest
     @CsvSource(value = {
             // obj        | type                          | matches?
-            // "noobj        | noobj::T[]                  | true",
+            // "noobj     | noobj::T[]                    | true",
             "noobj        | abc[*]::T[]                   | true",
             "noobj        | abc[?]::T[]                   | true",
             "noobj        | abc[+]::T[]                   | false",
@@ -146,12 +146,14 @@ public class TypeTest extends MetatronTest {
             "1            | int::T[1]                     | true",
             "1            | int::T[2]                     | false",
             "{1,1}        | int[2]::T[{2,2}]              | false",
-            // "{1,1}        | int[2]::T[{1,1}]              | true",
+            // "{1,1}     | int[2]::T[{1,1}]              | true",
             "{1,1}        | int[2]::T[]                   | true",
             "{1,1}        | int::T[is(gt(0))]             | false",
-            // "{1,1}        | int[2]::T[is(gt(0))]          | true", //TODO: MAY BE TOO HARD TO COMPUTE GIVEN THE RECURSSIVE NATURE OF RESOLUTION
-            "{1,2}        | int[2]::T[is(gt(1))]          | false",
-            //  "1            | int^:is(gt(0))                | false"},
+            "{1,1}        | int[2]::T[is(gt(0))]          | true",
+            "1            | int[2]::T[is(gt(0))]          | false",
+            "{0,0}        | int[2]::T[is(gt(0))]          | false",
+            //"{1,2}      | int[2]::T[is(gt(1))]          | false",
+            //  "1        | int^:is(gt(0))                | false"},
     },
             delimiter = '|')
     public void testTypeObj(final String obj, final String type, final boolean matches) {

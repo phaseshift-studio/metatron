@@ -18,7 +18,6 @@
 
 package studio.phaseshift.metatron.lang.obj;
 
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -72,21 +71,23 @@ public class RecTest extends MetatronTest {
     @Override
     @ParameterizedTest
     @CsvSource(value = {
-            // rec                                 | key                               | value
-            "[=>]                                  | [a=>b]                            | false",
-            "[a=>b]                                | [=>]                              | true",
-            "[a=>b]                                | [a=>b]                            | true",
-            "[a=>b,c=>d]                           | [a=>b]                            | true",
-            "[a=>b,c=>d]                           | [a=>b,c=>e]                       | false",
-            "[a=>b,c=>[d=>2]]                      | [a=>b,c=>[d=>2]]                  | true",
-            "[a=>b,c=>[d=>[a=>b]]]                 | [a=>b,c=>[d=>get(a).is(eq(b))]]   | true",
-            "[a=>b,c=>[d=>2]]                      | [a=>b,c=>[d=>is(gt(0))]]          | true",
-            "[a=>b,c=>[d=>2]]                      | [a=>b,c=>[d=>is(gt(3))]]          | false",
+            // rec                                 | key                                        | value
+            "[=>]                                  | [a=>b]                                     | false",
+            "[a=>b]                                | [=>]                                       | true",
+            "[a=>b]                                | [a=>b]                                     | true",
+            "[a=>b,c=>d]                           | [a=>b]                                     | true",
+            "[a=>b,c=>d]                           | [a=>b,c=>e]                                | false",
+            "[a=>b,c=>[d=>2]]                      | [a=>b,c=>[d=>2]]                           | true",
+            "[a=>b,c=>[d=>[a=>b]]]                 | [a=>b,c=>[d=>get(a).is(eq(b))]]            | true",
+            "[a=>b,c=>[d=>2]]                      | [a=>b,c=>[d=>is(gt(0))]]                   | true",
+            "[a=>b,c=>[d=>2]]                      | [a=>b,c=>[d=>is(gt(3))]]                   | false",
             "[a=>b,c=>[d=>2]]                      | [a=>b,c=>[d=>is(in(int::T[is(gt(0))]))]]   | true",
-            // TODO:   "[a=>b,c=>[d=>2]]                      | [a=>b,c=>[d=>is(in(int::T[is(gt(10))]))]]   | false",
-            //   "[a=>b,c=>[d=>2]]                      | [a=>b,c=>[d=>int::T[is(gt(10))]]]  | false",
-            "[a=>b,c=>[d=>2]]                      | [a=>b,c=>[d=>is(in(int::T[]))]]   | true",
-            "[a=>b,c=>[d=>2]]                      | [a=>b,c=>[d=>is(in(str::T[]))]]   | false",
+            "[a=>b,c=>[d=>2]]                      | [a=>b,c=>[d=>is(gt(10))]]                  | false",
+            "[a=>b,c=>[d=>2]]                      | [a=>b,c=>[d=>is(in(int::T[is(gt(10))]))]]  | false",
+            "[a=>b,c=>[d=>2]]                      | [a=>b,c=>[d=>int::T[is(gt(10))]]]          | false",
+            "[a=>b,c=>[d=>2]]                      | [a=>b,c=>[d=>int::T[is(gt(1))]]]           | true",
+            "[a=>b,c=>[d=>2]]                      | [a=>b,c=>[d=>is(in(int::T[]))]]            | true",
+            "[a=>b,c=>[d=>2]]                      | [a=>b,c=>[d=>is(in(str::T[]))]]            | false",
     }, delimiter = '|')
     public void testMatches(final String recA, final String recB, final boolean matches) {
         super.testMatches(recA, recB, matches);
