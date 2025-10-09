@@ -32,6 +32,9 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
+import static studio.phaseshift.metatron.lang.obj.mtron.MLst.lst;
+import static studio.phaseshift.metatron.lang.obj.mtron.mtronInstSet.SPLIT_TID;
+
 public class MObjs implements Objs {
 
     private fURI vid;
@@ -65,6 +68,8 @@ public class MObjs implements Objs {
             return Optional.of(NoObj.single());
         if (1 == map.size())
             return Optional.of(map.entrySet().stream().map(kv -> kv.getKey().c(kv.getValue())).iterator().next());
+       // if (map.keySet().stream().allMatch(Obj::isCall))
+       //     return Optional.of(MInst.instB(SPLIT_TID, lst(map.entrySet().stream().map(a -> a.getKey().c(a.getValue())).toList())));
         return Optional.empty();
     }
 
