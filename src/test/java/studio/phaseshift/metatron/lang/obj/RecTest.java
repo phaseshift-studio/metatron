@@ -88,6 +88,14 @@ public class RecTest extends MetatronTest {
             "[a=>b,c=>[d=>2]]                      | [a=>b,c=>[d=>int::T[is(gt(1))]]]           | true",
             "[a=>b,c=>[d=>2]]                      | [a=>b,c=>[d=>is(in(int::T[]))]]            | true",
             "[a=>b,c=>[d=>2]]                      | [a=>b,c=>[d=>is(in(str::T[]))]]            | false",
+            "[a=>b,c=>[d=>2]]                      | [a=>b,c=>rec::T[]]                         | true",
+            "[a=>b,c=>[d=>2]]                      | [a=>uri::T[],c=>rec::T[]]                  | true",
+            "[a=>b,c=>[d=>2]]                      | [a=>uri::T[is(eq(b))],c=>rec::T[]]         | true",
+            "[a=>b,c=>[d=>2]]                      | [a=>str::T[],c=>rec::T[]]                  | false",
+            "[a=>b,c=>[d=>2]]                      | rec::T[]                                   | true",
+            "[a=>b,c=>[d=>2]]                      | str::T[]                                   | false",
+            "[a=>b,c=>[d=>2]]                      | rec::T[is(rng().count().eq(2))]            | true",
+            "[a=>b,c=>[d=>2]]                      | rec::T[is(rng().count().eq(3))]            | false",
     }, delimiter = '|')
     public void testMatches(final String recA, final String recB, final boolean matches) {
         super.testMatches(recA, recB, matches);
@@ -96,14 +104,18 @@ public class RecTest extends MetatronTest {
     @Override
     @ParameterizedTest
     @CsvSource(value = {
-            "[a=>1,a=>1,b=>2,a=>1,b=>2]                                                             % [a=>int[3]::1,b=>int[2]::2]",
-            "[a=>1,a=>1,b=>2,a=>1,b=>2,b=>3]                                                        % [a=>int[3]::1,b=>{int[2]::2,3}]",
-            "[1,2,3]-<[>-.is(gt(2)) => >-.is(gt(1)), >-.is(gt(1)) => >-._]                          % [3=>{2,3},{2,3}=>{1,2,3}]",
+            "[a=>1,a=>1,b=>2,a=>1,b=>2]                                                              % [a=>int[3]::1,b=>int[2]::2]",
+            "[a=>1,a=>1,b=>2,a=>1,b=>2,b=>3]                                                         % [a=>int[3]::1,b=>{int[2]::2,3}]",
+            "[a=>1,a=>1,b=>[1=>2],a=>1,b=>[1=>2],b=>[2=>3]]                                          % [a=>int[3]::1,b=>[1=>int[2]::2,2=>3]]",
+            "[a=>1,a=>1,b=>[1=>2],a=>1,b=>[1=>2],b=>[2=>3],b=>[1=>'a']]                              % [a=>int[3]::1,b=>[1=>{int[2]::2,'a'},2=>3]]",
+            "[a=>int[3]::1,b=>[1=>2],b=>[1=>2],b=>[2=>3],b=>[1=>'a']]                                % [a=>int[3]::1,b=>[1=>{int[2]::2,'a'},2=>3]]",
+            "[a=>int[3]::1,b=>[1=>[2=>'a']],b=>[1=>[2=>'b']],b=>[1=>[2=>'c']],b=>[1=>[7=>7]]]        % [a=>int[3]::1,b=>[1=>[2=>{'a','b','c'},7=>7]]]",
+            "[a=>int[3]::1,b=>[1=>[2=>'b']],b=>[1=>[2=>'c']],b=>[1=>[7=>7]],b=>[1=>[7=>int[-1]::7]]] % [a=>int[3]::1,b=>[1=>[2=>{'b','c'},7=>noobj]]]", // TODO: noobj values should not be encoded
+            "[1,2,3]-<[>-.is(gt(2)) => >-.is(gt(1)), >-.is(gt(1)) => >-._]                           % [3=>{2,3},{2,3}=>{1,2,3}]",
     }, delimiter = '%')
     public void testCode(final String code, final String expected) {
         super.testCode(code, expected);
     }
-
 
     @Test
     public void testRecJavaAPI() {
