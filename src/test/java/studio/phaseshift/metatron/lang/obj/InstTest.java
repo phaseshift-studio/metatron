@@ -18,15 +18,22 @@
 
 package studio.phaseshift.metatron.lang.obj;
 
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.MetatronTest;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.mtron.MInst;
 import studio.phaseshift.metatron.lang.parse.ObjParser;
+import studio.phaseshift.metatron.util.Tuple;
+
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static studio.phaseshift.metatron.lang.obj.mtron.MInt.jnt;
+import static studio.phaseshift.metatron.lang.obj.mtron.MObjs.objs;
+import static studio.phaseshift.metatron.lang.obj.mtron.mtronFluent.StartLess.*;
 
 public class InstTest extends MetatronTest {
 
@@ -56,8 +63,8 @@ public class InstTest extends MetatronTest {
             "{1,2}     % test?A[*]<=A[*](A[*]::T[])       % test({3,4})      % test?int[4]<=int[2](int[2]::T[])",
             "{1,2}     % test?A[+]<=A[+](A[+]::T[])       % test({3,4})      % test?int[4]<=int[2](int[2]::T[])",
             "{1,2}     % test?A[*]<=A[+](A[*]::T[])       % test({3,4})      % test?int[4]<=int[2](int[2]::T[])"
-          //  "noobj     % test?A<=[0](A::T[])              % test(3)          % test?int<=[0](int::T[])",
-           // "noobj     % test?A[*]<=[0](A[*]::T[])        % test({1,2,3})    % test?int[3]<=[0](int[3]::T[])",
+            //  "noobj     % test?A<=[0](A::T[])              % test(3)          % test?int<=[0](int::T[])",
+            // "noobj     % test?A[*]<=[0](A[*]::T[])        % test({1,2,3})    % test?int[3]<=[0](int[3]::T[])",
     }, delimiter = '%')
     public void testResolution(final String lhs, final String def, final String spec, final String resolution) {
         final Obj lhsA = ObjParser.m_obj().parse(lhs).get();
@@ -85,5 +92,22 @@ public class InstTest extends MetatronTest {
         assertTrue(defA.tid().matches(resolutionA.tid()));
         assertTrue(specA.matches(defA));
         assertTrue(specA.tid().matches(defA.tid()));
+    }
+
+    @Test
+    public void testRingAlgebra() {
+        for (Tuple.Pair<? extends Obj, Call> item : List.of(
+                Tuple.Pair.with(jnt(3), start(jnt(1)).mult(plus(jnt(2)))),
+                Tuple.Pair.with(objs(jnt(2), jnt(3)), start(jnt(1)).mult(plus(jnt(1)).plus(plus(jnt(2))))),
+                Tuple.Pair.with(objs(jnt(6).c(2L)), start(jnt(2)).mult(plus(jnt(4)).plus(mult(jnt(3))))),
+                Tuple.Pair.with(objs(jnt(6), jnt(7)), start(jnt(2)).mult(plus(jnt(4)).mult(plus(jnt(1))).plus(mult(jnt(3))))),
+                 Tuple.Pair.with(objs(jnt(6), jnt(7)), start(jnt(2)).mult(plus(jnt(4)).mult(plus(jnt(1))).plus(mult(jnt(3))).plus(NoObj.single()))),
+                Tuple.Pair.with(NoObj.single(), start(jnt(2)).mult(NoObj.single())),
+                Tuple.Pair.with(NoObj.single(), start(jnt(2)).mult(plus(jnt(4)).mult(plus(jnt(1))).plus(mult(jnt(3))).plus(NoObj.single())).mult(NoObj.single())))) {
+            LOG.trace("\n\ntesting %s == %s", item.get1(), item.get0());
+            assertEquals(item.get0(), item.get1().apply());
+        }
+
+
     }
 }

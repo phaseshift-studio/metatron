@@ -119,4 +119,14 @@ public final class NoObj implements Obj, Inst {
     public NoObj tid(final fURI tid) {
         return this;
     }
+
+    @Override
+    public Call plus(final Call rhs) { // a no-op branch
+        return rhs;
+    }
+
+    @Override
+    public Call mult(final Call rhs) { // a no-op sink
+        return this;
+    }
 }

@@ -32,9 +32,6 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
-import static studio.phaseshift.metatron.lang.obj.mtron.MLst.lst;
-import static studio.phaseshift.metatron.lang.obj.mtron.mtronInstSet.SPLIT_TID;
-
 public class MObjs implements Objs {
 
     private fURI vid;
@@ -68,8 +65,9 @@ public class MObjs implements Objs {
             return Optional.of(NoObj.single());
         if (1 == map.size())
             return Optional.of(map.entrySet().stream().map(kv -> kv.getKey().c(kv.getValue())).iterator().next());
-       // if (map.keySet().stream().allMatch(Obj::isCall))
-       //     return Optional.of(MInst.instB(SPLIT_TID, lst(map.entrySet().stream().map(a -> a.getKey().c(a.getValue())).toList())));
+        // if (map.keySet().stream().allMatch(Obj::isRing))
+        //    return (Optional) map.entrySet().stream().map(a -> (Call) a.getKey().c(a.getValue())).reduce((a, b)->(Call)a.append(b));
+        //return Optional.of(MInst.instB(SPLIT_TID, lst(map.entrySet().stream().map(a -> a.getKey().c(a.getValue())).toList())));
         return Optional.empty();
     }
 
@@ -84,10 +82,16 @@ public class MObjs implements Objs {
         return objs(this.stream().map(o -> o.resolve(obj)));
     }
 
+    private boolean isOnlyCall() {
+        return !this.cstream.isEmpty() && this.cstream.keySet().stream().anyMatch(Obj::isCall);
+    }
+
     @Override
     public Obj append(final Obj obj) {
         if (obj.isNoObj())
             return this;
+        else if(obj.isCall() && this.isOnlyCall())
+            return this.iterator().next().append(obj);
         return tryToShrink(flattenToMap(this.cstream, obj)).orElse(this);
     }
 
@@ -150,6 +154,11 @@ public class MObjs implements Objs {
 
     public static Objs empty() {
         return new MObjs(new LinkedList<>());
+    }
+
+
+    public static Obj objs(final Obj... objs) {
+        return objs(List.of(objs));
     }
 
     public static Obj objs(final Iterable<Obj> objs) {

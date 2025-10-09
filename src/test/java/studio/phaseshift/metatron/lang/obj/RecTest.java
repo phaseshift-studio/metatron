@@ -111,12 +111,16 @@ public class RecTest extends MetatronTest {
             "[a=>int[3]::1,b=>[1=>2],b=>[1=>2],b=>[2=>3],b=>[1=>'a']]                                % [a=>int[3]::1,b=>[1=>{int[2]::2,'a'},2=>3]]",
             "[a=>int[3]::1,b=>[1=>[2=>'a']],b=>[1=>[2=>'b']],b=>[1=>[2=>'c']],b=>[1=>[7=>7]]]        % [a=>int[3]::1,b=>[1=>[2=>{'a','b','c'},7=>7]]]",
             "[a=>int[3]::1,b=>[1=>[2=>'b']],b=>[1=>[2=>'c']],b=>[1=>[7=>7]],b=>[1=>[7=>int[-1]::7]]] % [a=>int[3]::1,b=>[1=>[2=>{'b','c'},7=>noobj]]]", // TODO: noobj values should not be encoded
-            "[a=>is(gt(0)),a=>is(gt(2)),b=>3]                                                        % [a=>{is(gt(0)),is(gt(2))},b=>3]",
-            // "2-<[a=>is(gt(0)),a=>is(gt(2)),b=>3]                                                     % [a=>2,b=>3]", // TODO: appended insts should be + code.
+            "[a=>is(gt(0)),a=>is(gt(2)),b=>3]                                                        % [a=>split({is(gt(0)),is(gt(2))}),b=>3]",
+            "2-<[a=>is(gt(0)),a=>is(gt(2)),b=>3]                                                     % [a=>2,b=>3]",
             "2-<[a=>is(gt(0)),b=>3]                                                                  % [a=>2,b=>3]",
             "2-<[a=>is[2](gt(0)),b=>3]                                                               % [a=>int[2]::2,b=>3]",
+            "[a=>is[2](gt(0)),a=>noobj]                                                              % [a=>is[2](gt(0))]",
+            "[a=>is[3](gt(0)),a=>is[2](gt(0)),a=>noobj]                                              % [a=>is[5](gt(0))]",
+            "2-<[a=>is[3](gt(0)),a=>is[2](gt(0)),a=>noobj]                                           % [a=>int[5]::2]",
+            "2-<[a=>is[3](gt(0)),a=>is[2](gt(0)),a=>noobj].rng()                                     % int[5]::2",
             "2-<[a=>is(gt(0)),a=>is(gt(0)),b=>3]                                                     % [a=>int[2]::2,b=>3]",
-            //"2-<[a=>is(gt(0)),a=>is(gt(1)),b=>3]                                                     % [a=>int[2]::2,b=>3]", // TODO: appended insts should be + code.
+            "2-<[a=>is(gt(0)),a=>is(gt(1)),b=>3]                                                     % [a=>int[2]::2,b=>3]",
             "[1,2,3]-<[>-.is(gt(2)) => >-.is(gt(1)), >-.is(gt(1)) => >-._]                           % [3=>{2,3},{2,3}=>{1,2,3}]",
     }, delimiter = '%')
     public void testCode(final String code, final String expected) {

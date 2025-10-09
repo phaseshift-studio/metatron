@@ -25,8 +25,10 @@ import studio.phaseshift.metatron.lang.obj.mtron.c.cInt;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Function;
 
 import static studio.phaseshift.metatron.lang.obj.mtron.MLst.lst;
+import static studio.phaseshift.metatron.lang.obj.mtron.MObjs.objs;
 import static studio.phaseshift.metatron.lang.obj.mtron.mtronFluent.StartLess.split;
 import static studio.phaseshift.metatron.lang.obj.mtron.mtronInstSet.ID_TID;
 
@@ -71,12 +73,9 @@ public interface Call extends Obj, Ring<Call> {
         return this.c(cInt::neg).as();
     }
 
-
     @Override
-    default Call mult(final Call objs) {
-        final List<Inst> insts = new ArrayList<>(this.insts());
-        insts.addAll(objs.insts());
-        return MCode.of(insts);
+    default Obj append(final Obj obj) {
+        return obj.isCall() ? this.plus((Call) obj) : objs(List.of(this, obj));
     }
 
     @Override
@@ -85,8 +84,38 @@ public interface Call extends Obj, Ring<Call> {
     }
 
     @Override
-    default Call plus(final Call objs) {
-        return split(lst(this, objs)).c(c -> this.c().plus(objs.c())).as();
+    default boolean isOne() {
+        return this.equals(this.one());
+    }
+
+    @Override
+    default boolean isZero() {
+        return this.isNoObj();
+    }
+
+    @Override
+    default Call c(final Function<cInt, cInt> func) {
+        return (Call) Obj.super.c(func);
+    }
+
+    @Override
+    default Call plus(final Call rhs) {
+        if (rhs.isZero()) return this;
+        if (this.isZero()) return rhs;
+        if (this.clessEquals(rhs))
+            return this.c(c -> c.plus(rhs.c()));
+        return split(objs(this.singleOrSequence(), rhs.singleOrSequence())).singleOrSequence();
+    }
+
+    @Override
+    default Call mult(final Call rhs) {
+        if (rhs.isZero() || this.isZero())
+            return NoObj.single();
+        if (rhs.isOne()) return this;
+        if (this.isOne()) return rhs;
+        final List<Inst> insts = new ArrayList<>(this.insts());
+        insts.addAll(rhs.insts());
+        return MCode.of(insts).singleOrSequence().c(c -> this.c().mult(rhs.c()));
     }
 
     @Override

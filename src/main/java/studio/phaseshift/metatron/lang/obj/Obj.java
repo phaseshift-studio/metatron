@@ -18,6 +18,8 @@
 
 package studio.phaseshift.metatron.lang.obj;
 
+import studio.phaseshift.metatron.algebra.Ring;
+import studio.phaseshift.metatron.algebra.Semiring;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.mtron.MObjs;
 import studio.phaseshift.metatron.lang.obj.mtron.MType;
@@ -41,7 +43,7 @@ public interface Obj extends Function<Obj, Obj>, Iterable<Obj>, Cloneable {
     class Helper {
 
         public static int objHashCode(final Obj obj) {
-            return obj.isNoObj() ? NoObj.single().hashCode() : Objects.hash(obj.value(), obj.tid());
+            return obj.isNoObj() ? NoObj.single().hashCode() : Objects.hash(obj.value(), obj.tid().cLess());
         }
 
         public static boolean objEquals(final Obj obj, final Object other) {
@@ -49,6 +51,13 @@ public interface Obj extends Function<Obj, Obj>, Iterable<Obj>, Cloneable {
                     ((obj.isNoObj() && ((Obj) other).isNoObj()) ||
                             (Objects.equals(obj.tid(), ((Obj) other).tid()) &&
                                     Objects.equals(obj.vid(), ((Obj) other).vid()) && // TODO: ??
+                                    Objects.equals(obj.value(), ((Obj) other).value())));
+        }
+
+        public static boolean objcLessEquals(final Obj obj, final Object other) {
+            return other instanceof Obj &&
+                    ((obj.isNoObj() && ((Obj) other).isNoObj()) ||
+                            (Objects.equals(obj.tid().cLess(), ((Obj) other).tid().cLess()) && // TODO: no vid checked ...
                                     Objects.equals(obj.value(), ((Obj) other).value())));
         }
 
@@ -69,6 +78,10 @@ public interface Obj extends Function<Obj, Obj>, Iterable<Obj>, Cloneable {
 
     default cInt uniqueValues() {
         return cInt.of(1L);
+    }
+
+    default boolean clessEquals(final Object other) {
+        return Helper.objcLessEquals(this, other);
     }
 
     default cInt c() {
@@ -278,6 +291,14 @@ public interface Obj extends Function<Obj, Obj>, Iterable<Obj>, Cloneable {
 
     default boolean isCall() {
         return this instanceof Call;
+    }
+
+    default boolean isRing() {
+        return this instanceof Ring;
+    }
+
+    default boolean isSemiring() {
+        return this instanceof Semiring;
     }
 
     default boolean isRel() {
