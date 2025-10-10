@@ -34,7 +34,7 @@ import static studio.phaseshift.metatron.lang.obj.mgrph.mgrphInstSet.EDGE_TID;
 public class MEdge extends MElement implements Obj, Edge, WrappedEdge<Edge> {
 
     protected MEdge(final Edge edge) {
-        super(edge);
+        super(edge,EDGE_TID,fURI.NULL);
     }
 
     public static MEdge of(final Edge edge) {
@@ -43,7 +43,7 @@ public class MEdge extends MElement implements Obj, Edge, WrappedEdge<Edge> {
 
     @Override
     public Edge value() {
-        return (Edge) this.element;
+        return (Edge) this.value;
     }
 
     @Override
@@ -71,14 +71,9 @@ public class MEdge extends MElement implements Obj, Edge, WrappedEdge<Edge> {
     }
 
     @Override
-    public fURI tid() {
-        return EDGE_TID;
-        //return f(this.element.label());
-    }
-
-    @Override
     public fURI vid() {
-        return ((MVertex) this.outVertex()).vid().extend("outE").extend(this.label()).extend(this.element.id().toString());
+     return fURI.NULL;
+      //  return ((MVertex) this.outVertex()).vid().extend("outE").extend(this.label()).extend(this.value().id().toString());
         //return this.graph().configuration().get(fURI.class, "pattern").retractPattern().extend("edge").extend(this.element.id().toString());
     }
 

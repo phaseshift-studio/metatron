@@ -25,6 +25,7 @@ import studio.phaseshift.metatron.lang.obj.Obj;
 import studio.phaseshift.metatron.lang.obj.Rec;
 import studio.phaseshift.metatron.lang.obj.mtron.MObj;
 import studio.phaseshift.metatron.lang.obj.mtron.MRec;
+import studio.phaseshift.metatron.lang.obj.mtron.MType;
 import studio.phaseshift.metatron.lang.obj.mtron.c.cInt;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
@@ -51,7 +52,7 @@ public class MMonad extends MObj implements Monad {
 
     @Override
     public Monad tid(final fURI tid) {
-        return (Monad) super.tid(tid);
+        return this.clone(this.value, tid, this.vid);
     }
 
     @Override
@@ -65,7 +66,11 @@ public class MMonad extends MObj implements Monad {
 
     @Override
     public Monad clone(final Object value, final fURI tid, final fURI vid) {
-        return new MMonad((Triplet<Obj, Inst, Rec>) value, tid, vid);
+        MMonad clone = (MMonad) this.clone();
+        clone.value = value;
+        clone.tid = tid;
+        clone.vid = vid;
+        return clone;
     }
 
     @Override

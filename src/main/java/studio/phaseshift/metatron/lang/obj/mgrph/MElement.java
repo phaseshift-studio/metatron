@@ -22,16 +22,17 @@ import org.apache.tinkerpop.gremlin.structure.Element;
 import org.apache.tinkerpop.gremlin.structure.Graph;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.Obj;
+import studio.phaseshift.metatron.lang.obj.mtron.MObj;
+import studio.phaseshift.metatron.space.Router;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.Iterator;
+import java.util.Objects;
 
-public abstract class MElement implements Element, Obj {
+public abstract class MElement extends MObj implements Element, Obj {
 
-    protected final Element element;
-
-    protected MElement(final Element element) {
-        this.element = element;
+    protected MElement(final Element element, final fURI tid, final fURI vid) {
+        super(element, tid, vid);
 
     }
 
@@ -42,17 +43,17 @@ public abstract class MElement implements Element, Obj {
 
     @Override
     public String label() {
-        return this.element.label();
+        return this.value().label();
     }
 
     @Override
     public Graph graph() {
-        return MGraph.of(this.element.graph());
+        return MGraph.of(this.value().graph());
     }
 
     @Override
     public void remove() {
-        this.element.remove();
+        this.value().remove();
     }
 
     @Override
@@ -69,27 +70,12 @@ public abstract class MElement implements Element, Obj {
 
     @Override
     public Element value() {
-        return this.element;
+        return (Element) this.value;
     }
 
     @Override
-    public MElement clone(final Object value, final fURI tid, final fURI vid) {
-        return this; // TODO: fix
-    }
-
-    @Override
-    public String toString() {
-        return Helper.objToString(this);
-    }
-
-    @Override
-    public int hashCode() {
-        return Helper.objHashCode(this);
-    }
-
-    @Override
-    public boolean equals(final Object other) {
-        return Helper.objEquals(this, other);
+    public MElement clone(final Object newValue, final fURI newtid, final fURI newvid) {
+        return (MElement) super.clone(newValue, newtid, newvid);
     }
 
     @Override

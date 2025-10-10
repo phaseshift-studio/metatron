@@ -236,7 +236,7 @@ public interface Inst extends Call {
             }
         } else { // Resolve.B
             final boolean blocking = this.isBlocking();
-            if (!blocking && !lhs.matches(this.dom()))
+            if (!blocking && (!lhs.matches(this.dom()) || !(lhs.take(this.dom().c()).get0()).matches(this.dom())))
                 throw MTronException.of("{{m}}lhs obj{{/m}} does not match inst domain (resolve): %s {{r}}=/>{{/r}} %s", lhs, this);
             final Poly cargs = this.args().isLst() ?
                     lst(this.args().lstValue()

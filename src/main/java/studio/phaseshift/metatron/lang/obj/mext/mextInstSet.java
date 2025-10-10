@@ -34,7 +34,6 @@ import static studio.phaseshift.metatron.lang.obj.mtron.MLst.lst;
 */
 public class mextInstSet extends MInstSet {
 
-
     public static final fURI MEXT_TID = fURI.of("/mext");
     public static final fURI COMPLEX_TID = MEXT_TID.extend("cmplx");
 

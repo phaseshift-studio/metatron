@@ -35,7 +35,7 @@ import static studio.phaseshift.metatron.lang.obj.mgrph.mgrphInstSet.VERTEX_TID;
 public class MVertex extends MElement implements Obj, Vertex, WrappedVertex<Vertex> {
 
     protected MVertex(final Vertex vertex) {
-        super(vertex);
+        super(vertex, VERTEX_TID, fURI.NULL);
     }
 
     public static MVertex of(final Vertex vertex) {
@@ -44,7 +44,7 @@ public class MVertex extends MElement implements Obj, Vertex, WrappedVertex<Vert
 
     @Override
     public Vertex value() {
-        return (Vertex) this.element;
+        return (Vertex) this.value;
     }
 
     @Override
@@ -69,14 +69,8 @@ public class MVertex extends MElement implements Obj, Vertex, WrappedVertex<Vert
     }
 
     @Override
-    public fURI tid() {
-        return VERTEX_TID;
-        //return f(this.element.label());
-    }
-
-    @Override
     public fURI vid() {
-        return this.graph().configuration().get(fURI.class, "pattern").retractPattern().extend("vertex").extend(this.element.id().toString());
+        return fURI.NULL; //this.graph().configuration().get(fURI.class, "pattern").retractPattern().extend("vertex").extend(this.value().id().toString());
     }
 
     @Override
@@ -86,7 +80,7 @@ public class MVertex extends MElement implements Obj, Vertex, WrappedVertex<Vert
 
     @Override
     public Iterator<Vertex> vertices(final Direction direction, final String... edgeLabels) {
-        return MVertex.makeVertices(this.getBaseVertex().vertices(direction, edgeLabels));
+        return (Iterator) IteratorUtil.map(MVertex.makeVertices(this.getBaseVertex().vertices(direction, edgeLabels)),v->((MVertex)v).c(this.c()));
     }
 
     @Override
