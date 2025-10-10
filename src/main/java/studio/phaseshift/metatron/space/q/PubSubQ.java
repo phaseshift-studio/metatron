@@ -19,44 +19,98 @@
 package studio.phaseshift.metatron.space.q;
 
 import studio.phaseshift.metatron.lang.fURI;
+import studio.phaseshift.metatron.lang.obj.Call;
 import studio.phaseshift.metatron.lang.obj.Code;
 import studio.phaseshift.metatron.lang.obj.Obj;
+import studio.phaseshift.metatron.lang.obj.mtron.MObj;
+import studio.phaseshift.metatron.space.Qs;
+import studio.phaseshift.metatron.ui.Graphitty;
+import studio.phaseshift.metatron.ui.GraphittyLogger;
+import studio.phaseshift.metatron.util.Tuple;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
+import static studio.phaseshift.metatron.lang.fURI.f;
+import static studio.phaseshift.metatron.space.Space.MTRON_SPACE_TID;
 import static studio.phaseshift.metatron.util.Tuple.Triplet;
 
-public class PubSubQ implements Q {
+public class PubSubQ extends BaseQ {
+
+    public static final fURI SUBSCRIPTION_TID = MTRON_SPACE_TID.extend("sub");
+    protected final GraphittyLogger LOG = Graphitty.log(this);
+
+    public static class Subscription extends MObj {
+
+
+        public Subscription(final fURI source, final fURI target, final Call code) {
+            super(Triplet.with(source, target, code), SUBSCRIPTION_TID, fURI.NULL);
+        }
+
+        public Triplet<fURI, fURI, Call> value() {
+            return (Triplet<fURI, fURI, Call>) super.value();
+        }
+
+        public fURI source() {
+            return this.value().get0();
+        }
+
+        public fURI target() {
+            return this.value().get1();
+        }
+
+        public Call code() {
+            return this.value().get2();
+        }
+    }
+
 
     // <source,pattern,callback>
-    final List<Triplet<fURI, fURI, Code>> subscriptions = new ArrayList<>();
+    protected final List<Subscription> subscriptions = new ArrayList<>();
+    protected final Queue<Runnable> mail = new LinkedList<>();
 
-    @Override
-    public String query() {
-        return "sub";
+    public PubSubQ() {
+        super(f("sub"));
+        this.onRead = new OnRead();
+        this.onWrite = new OnWrite();
     }
 
-    @Override
-    public void onQLessWrite(final fURI source, final fURI target, final Obj original) {
-        this.subscriptions.stream().filter(t -> target.matches(t.get1())).forEach(t -> {
-            t.get2().apply(original);
-        });
+    public class OnRead extends BaseQ.OnRead {
+
+        @Override
+        public Optional<Obj> preRead(final fURI source, final fURI vid) {
+            LOG.trace("evaluating {{y}}preread{{/y}}: %s", vid);
+            return subscriptions.stream().filter(s -> vid.basePath().matches(s.target())).map(Obj::<Obj>as).reduce(Obj::append);
+        }
     }
 
-    /*@Override
-    public void onPostWrite(final fURI source, final fURI target, final BObj.Obj original, final BObj.Obj replacement) {
+    public class OnWrite extends BaseQ.OnWrite {
 
-    }*/
+        @Override
+        public Optional<Obj> qlessWrite(final fURI source, final fURI vid, final Obj obj) {
+            LOG.trace("evaluating {{y}}qless write{{/y}}: %s => %s", obj, vid);
+            subscriptions.stream().filter(s -> vid.basePath().matches(s.target())).forEach(s -> {
+                LOG.debug("adding mail: (%s, %s)", obj, s);
+                mail.add(() -> s.code().apply(obj));
+            });
+            while (!mail.isEmpty()) {
+                final Runnable runnable = mail.poll();
+                LOG.trace("evaluating mail");
+                runnable.run();
+            }
+            return Optional.of(obj);
+        }
 
-    @Override
-    public Obj onPreRead(fURI source, fURI target) {
-        return Q.super.onPreRead(source, target);
+        @Override
+        public Optional<Obj> postWrite(final fURI source, final fURI vid, final Obj oldObj, final Obj newObj) {
+            LOG.trace("evaluating {{y}}post write{{/y}}: %s (old:%s) => %s", newObj, oldObj, vid);
+            if (vid.hasQuery("sub")) {
+                if (newObj.isNoObj()) {
+                    subscriptions.removeIf(s -> vid.basePath().matches(s.vid()));
+                } else
+                    subscriptions.add(new Subscription(source, vid.basePath(), newObj.as()));
+                LOG.debug("current subscriptions: %s", subscriptions);
+            }
+            return Optional.empty();
+        }
     }
-
-    @Override
-    public Obj onPostRead(fURI source, fURI target) {
-        return Q.super.onPostRead(source, target);
-    }
-
 }

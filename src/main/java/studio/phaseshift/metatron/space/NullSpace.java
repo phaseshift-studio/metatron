@@ -95,6 +95,11 @@ public final class NullSpace implements Space, InstSet {
     }
 
     @Override
+    public Qs qs() {
+        return null;
+    }
+
+    @Override
     public String toString() {
         return Space.Helpers.spaceToString(this);
     }

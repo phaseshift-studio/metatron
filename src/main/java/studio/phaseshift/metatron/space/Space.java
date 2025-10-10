@@ -143,6 +143,8 @@ public interface Space extends Poly, AutoCloseable {
         return this;
     }
 
+    Qs qs();
+
     @Override
     Object value();
 

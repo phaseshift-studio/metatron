@@ -20,9 +20,12 @@ package studio.phaseshift.metatron.space.mem;
 
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.Obj;
+import studio.phaseshift.metatron.space.Qs;
 import studio.phaseshift.metatron.space.Space;
+import studio.phaseshift.metatron.space.q.PubSubQ;
 import studio.phaseshift.metatron.util.MTronException;
 
+import java.util.List;
 import java.util.Map;
 
 public abstract class MSpace implements Space {
@@ -30,11 +33,18 @@ public abstract class MSpace implements Space {
     protected final fURI pattern;
     protected final fURI tid;
     protected final fURI vid;
+    protected final Qs qs;
 
     public MSpace(final fURI pattern, final fURI tid, final fURI vid) {
         this.pattern = pattern;
         this.tid = tid.big();
         this.vid = vid;
+        this.qs = new Qs(List.of(new PubSubQ()));
+    }
+
+    @Override
+    public Qs qs() {
+        return this.qs;
     }
 
     @Override

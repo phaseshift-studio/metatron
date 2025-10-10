@@ -31,6 +31,7 @@ import studio.phaseshift.metatron.lang.obj.Uri;
 import studio.phaseshift.metatron.lang.obj.mtron.MObj;
 import studio.phaseshift.metatron.lang.obj.mtron.MUri;
 import studio.phaseshift.metatron.lang.translate.JSONTranslator;
+import studio.phaseshift.metatron.space.Qs;
 import studio.phaseshift.metatron.space.Space;
 import studio.phaseshift.metatron.space.mem.MemSpace;
 import studio.phaseshift.metatron.ui.ObjSerializer;
@@ -77,6 +78,11 @@ public class MqttSpace extends MObj implements Space {
 
     public MqttSpace clone(final Object value, final fURI tid, final fURI vid) {
         return this;
+    }
+
+    @Override
+    public Qs qs() {
+        return null;
     }
 
     @Override

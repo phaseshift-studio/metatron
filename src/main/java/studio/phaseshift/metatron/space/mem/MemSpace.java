@@ -25,10 +25,7 @@ import studio.phaseshift.metatron.space.Space;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
 
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 
@@ -45,7 +42,7 @@ public class MemSpace extends MSpace implements Space {
 
     @Override
     public Obj read(final fURI vid) {
-        return Space.Helpers.resolveRead(this, vid, (key) -> {
+        return this.qs().processPreRead(vid, vid).orElseGet(() -> Helpers.resolveRead(this, vid, (key) -> {
             if (key.equals(fURI.ALL))
                 return this.pathStore;
             else {
@@ -56,7 +53,7 @@ public class MemSpace extends MSpace implements Space {
                     return null == value ? Map.of() : Map.of(key.asNode(), value);
                 }
             }
-        });
+        }));
     }
 
     @Override
@@ -66,7 +63,8 @@ public class MemSpace extends MSpace implements Space {
 
     @Override
     public Obj write(final fURI vid, final Obj obj) {
-        Space.Helpers.resolveWrite(vid, obj, (key, value) -> {
+        this.qs().processPreWrite(vid, vid, obj);
+        Space.Helpers.resolveWrite(vid.basePath(), obj, (key, value) -> {
             //LOG.trace("raw write of %s to %s {{g}}@{{b}}%s{{X}}", value, this, key);
             if (value.isNoObj()) {
                 if (key.hasPattern()) // delete all existing values that match key pattern
@@ -90,7 +88,8 @@ public class MemSpace extends MSpace implements Space {
                 }
             }
         });
-        return obj;
+        this.qs().processPostWrite(vid, vid, obj);
+        return this.qs().processQlessWrite(vid, vid, obj).orElse(obj);
     }
 
     @Override

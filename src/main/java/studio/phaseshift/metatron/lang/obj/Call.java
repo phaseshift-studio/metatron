@@ -43,7 +43,7 @@ public interface Call extends Obj, Ring<Call> {
             return MCode.of(insts);
     }
 
-    default Call singleOrSequence() {
+    default Call instOrCode() {
         if (this.isCode()) {
             if (this.codeValue().isEmpty())
                 return NoObj.single();
@@ -104,7 +104,7 @@ public interface Call extends Obj, Ring<Call> {
         if (this.isZero()) return rhs;
         if (this.clessEquals(rhs))
             return this.c(c -> c.plus(rhs.c()));
-        return split(objs(this.singleOrSequence(), rhs.singleOrSequence())).singleOrSequence();
+        return split(objs(this.instOrCode(), rhs.instOrCode())).instOrCode();
     }
 
     @Override
@@ -115,7 +115,7 @@ public interface Call extends Obj, Ring<Call> {
         if (this.isOne()) return rhs;
         final List<Inst> insts = new ArrayList<>(this.insts());
         insts.addAll(rhs.insts());
-        return MCode.of(insts).singleOrSequence().c(c -> this.c().mult(rhs.c()));
+        return MCode.of(insts).instOrCode().c(c -> this.c().mult(rhs.c()));
     }
 
     @Override

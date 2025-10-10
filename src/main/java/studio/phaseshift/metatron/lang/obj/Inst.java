@@ -37,6 +37,7 @@ import java.util.stream.Collectors;
 import static studio.phaseshift.metatron.lang.obj.mtron.MLst.lst;
 import static studio.phaseshift.metatron.lang.obj.mtron.MRec.rec;
 import static studio.phaseshift.metatron.lang.obj.mtron.MType.T;
+import static studio.phaseshift.metatron.lang.obj.mtron.mtronInstSet.SPLIT_TID;
 import static studio.phaseshift.metatron.util.Tuple.Triplet;
 
 public interface Inst extends Call {
@@ -189,7 +190,7 @@ public interface Inst extends Call {
                                         .stream()
                                         .anyMatch(arg -> !this.arg(counter.getAndIncrement()).matches(arg)) ?
                                         null :
-                                        lst(this.args().lstValue().stream().map(a -> a.resolve(lhs)).toList());
+                                        lst(this.args().lstValue().stream().map(a -> a.resolve(lhs)).map(a -> a.isCall() ? a.<Call>as().instOrCode() : a).toList());
                                 if (null == resolvedArgs)
                                     return null; // TODO: backtrack the resolution to the outer inst to see if adjusting the coefficient can resolve the internal resolution
                                 return i.args(resolvedArgs);
@@ -291,13 +292,18 @@ public interface Inst extends Call {
         }
         if (!rhs.matches(cinst.rng()))
             throw MTronException.of("{{m}}rhs obj{{/m}} (%s) {{r}}does not match{{/r}} {{m}}inst range{{/m}} (%s): %s", rhs, cinst.rng(), cinst);
-        final cInt cinstc = false && cinst.isReducing() ? cInt.ONE() : cinst.c();
-        return (modulateC ? rhs.c(c -> c.mult(lhs.c())) : rhs).c(c -> c.mult(cinstc));
+        //final cInt cinstc = false && cinst.isReducing() ? cInt.ONE() : cinst.c();
+        final cInt cc = cinst.c();
+        return (modulateC ? rhs.c(c -> c.mult(lhs.c())) : rhs).c(c -> c.mult(cc));
 
     }
 
     default boolean isGather() {
         return /*this.dom().c().min() > 1 ||*/ this.dom().c().max() == null;
+    }
+
+    default boolean isBatching() {
+        return this.isGather() || this.dom().c().max() > 1;
     }
 
     default boolean isScatter() {
@@ -314,6 +320,10 @@ public interface Inst extends Call {
 
     default boolean isReducing() {
         return this.isGather() && this.rng().c().isOne();
+    }
+
+    default boolean isBranching() {
+        return this.tid().basePath().equals(SPLIT_TID);
     }
 
     @Override

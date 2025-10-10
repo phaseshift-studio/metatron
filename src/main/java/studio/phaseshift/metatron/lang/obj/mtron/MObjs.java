@@ -25,6 +25,7 @@ import studio.phaseshift.metatron.lang.obj.Obj;
 import studio.phaseshift.metatron.lang.obj.Objs;
 import studio.phaseshift.metatron.lang.obj.Type;
 import studio.phaseshift.metatron.lang.obj.mtron.c.cInt;
+import studio.phaseshift.metatron.space.Router;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
@@ -79,7 +80,7 @@ public class MObjs implements Objs {
 
     @Override
     public Obj resolve(final Obj obj) {
-        return objs(this.stream().map(o -> o.resolve(obj)));
+        return objs(flatten(this).map(o -> o.resolve(obj)));
     }
 
     private boolean isOnlyCall() {
@@ -90,7 +91,7 @@ public class MObjs implements Objs {
     public Obj append(final Obj obj) {
         if (obj.isNoObj())
             return this;
-        else if(obj.isCall() && this.isOnlyCall())
+        else if (obj.isCall() && this.isOnlyCall())
             return this.iterator().next().append(obj);
         return tryToShrink(flattenToMap(this.cstream, obj)).orElse(this);
     }
@@ -168,7 +169,7 @@ public class MObjs implements Objs {
     }
 
     public static Obj objs(final Stream<Obj> objs) {
-        return MObjs.objs(objs.toList());
+        return MObjs.objs((Iterable<Obj>) objs.toList());
     }
 
     @Override
@@ -201,16 +202,9 @@ public class MObjs implements Objs {
         return this.vid;
     }
 
-
     @Override
-    public Type type() {
-        return MType.of(this.tid());
-    }
-
-    @Override
-    public Objs clone(final Object value, final fURI tid, final fURI vid) {
-        return this;
-        //return new MObjs(IteratorUtil.list(((Iterable) value)).iterator(), vid);
+    public Obj clone(final Object newValue, final fURI newtid, final fURI newvid) {
+        return MObjs.objs(flatten((Iterable<Obj>)newValue));
     }
 
     @Override
@@ -248,6 +242,6 @@ public class MObjs implements Objs {
         } catch (final Exception e) {
             throw MTronException.of(e);
         }*/
-        return this;
+        return (Objs) this.clone((Iterable<Obj>)this.value(), this.tid(), this.vid);
     }
 }

@@ -20,15 +20,24 @@ package studio.phaseshift.metatron.lang.obj;
 
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.monoid.MTonoid;
+import studio.phaseshift.metatron.lang.monoid.Monad;
+import studio.phaseshift.metatron.lang.monoid.mtron.MMonad;
 import studio.phaseshift.metatron.lang.monoid.mtron.MMonoid;
+import studio.phaseshift.metatron.lang.obj.mtron.MCode;
+import studio.phaseshift.metatron.lang.obj.mtron.MObjs;
+import studio.phaseshift.metatron.ui.Graphitty;
+import studio.phaseshift.metatron.ui.GraphittyLogger;
 import studio.phaseshift.metatron.util.MTronException;
 
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.function.Supplier;
 
 import static studio.phaseshift.metatron.lang.obj.mtron.MObjs.objs;
 import static studio.phaseshift.metatron.lang.obj.mtron.MType.T;
+import static studio.phaseshift.metatron.ui.ObjStringSerializer.prettyPrintCode;
 
 public interface Code extends Call {
 
@@ -49,7 +58,51 @@ public interface Code extends Call {
 
     @Override
     default Code resolve(final Obj lhs) {
-        return this;
+        GraphittyLogger LOG = Graphitty.log(this);
+        // this.code = new ExplainRewrite().rewrite(code.<Code>as());
+        // process bcode inst pipeline
+        //this.code = Rewriter({Rewriter::by(), Rewriter::explain()}).apply(this.code);
+        // setup global behavior around barriers, initials, and terminals
+        LOG.debug("resolving code:\n        [{{y}}PREPILED{{/y}}] %s {{g}}=>{{/g}}\n%s", lhs, prettyPrintCode(new StringBuilder(), this, 0, 7).toString());
+        Obj token = lhs.type();
+        //LOG.none("%s", token.rng());
+        final List<Inst> resolvedCode = new ArrayList<>();
+        fURI dom = null;
+        fURI rng = null;
+        boolean fullResolution = true;
+        for (final Inst inst : this.value()) {
+            try {
+                LOG.trace("   {{g}}=>{{/g}} resolving %s => %s", token, inst);
+                final Inst resolvedInst = inst.resolve(token);
+                /*if(!resolvedCode.isEmpty()) {
+                  final Inst instA = resolvedCode.remove(resolvedCode.size() - 1);
+                  resolvedCode.add(instA.tid(instA.tid().rng(instB.tid().dom())));
+                }*/
+                if (null == dom)
+                    dom = resolvedInst.tid().query().get(fURI.DOM.toString(), fURI.class);
+                rng = resolvedInst.tid().query().get(fURI.RNG.toString(), fURI.class);
+                resolvedCode.add(resolvedInst);
+                token = resolvedInst.rng();
+                if (resolvedInst.isInitial()) {
+                    LOG.trace("  {{g}}==>{{/g}} marking {{y}}initial{{/y}} at %s", resolvedInst);
+                    token = resolvedInst.arg(0).type();
+                    //this.running().append(MMonad.of(NoObj.single(), instB));
+                } else if (resolvedInst.isGather()) {
+                    // many-to-?
+                    LOG.trace("  {{m}}==|{{/m}} marking {{y}}barrier{{/y}} at %s", resolvedInst);
+                }
+                token = token.c(c -> c.mult(resolvedInst.c()));
+            } catch (final Exception e) {
+                resolvedCode.add(inst);
+                LOG.debug("runtime resolution of %s required: not enough context to determine inst", null == inst ? "[0]" : inst);
+                //e.printStackTrace();
+                fullResolution = false;
+            }
+        }
+        final Code resolved = this.value(resolvedCode);
+        LOG.debug("%s code:\n        [{{g}}COMPILED{{/g}}]\n%s", fullResolution ? "{{g}}resolved{{/g}}" : "{{y}}semi-resolved{{/y}}", prettyPrintCode(new StringBuilder(), resolved, 0, 7).toString());
+        return resolved;
+
     }
 
     default Inst nextInst(final Inst inst) {
@@ -94,14 +147,15 @@ public interface Code extends Call {
 
     @Override
     default Obj apply() {
-        return this.apply(null);
+        return this.apply(NoObj.single());
     }
 
     @Override
     default Obj apply(final Obj lhs) {
-        if (null != lhs && !lhs.matches(this.dom()))
+        if (!lhs.matches(this.dom()))
             throw MTronException.of("%s ({{m}}lhs{{/m}}) (%s) does not match {{m}}code domain{{/m}} (%s): %s", lhs, lhs.rng(), this.dom(), this);
-        final MTonoid monoid = (null == lhs ? MMonoid.of(this) : MMonoid.of(lhs, this));
+        final Code resolve = this.resolve(lhs);
+        final MTonoid monoid =  MMonoid.of(lhs, resolve);
         final Obj rhs = objs(monoid.apply(NoObj.single()));
         if (!rhs.matches(monoid.rng()))
             throw MTronException.of("%s ({{m}}rhs{{/m}}) (%s) does not match {{m}}code range{{/m}} (%s): %s", rhs, rhs.rng(), this.rng(), this);

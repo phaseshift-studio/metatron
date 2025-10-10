@@ -56,56 +56,26 @@ public class MMonoid extends MObj implements MTonoid {
 
     @Override
     public MTonoid resolve(final Obj lhs) {
-        // this.code = new ExplainRewrite().rewrite(code.<Code>as());
-        // process bcode inst pipeline
-        //this.code = Rewriter({Rewriter::by(), Rewriter::explain()}).apply(this.code);
-        // setup global behavior around barriers, initials, and terminals
-        LOG.debug("resolving code:\n        [{{y}}PREPILED{{/y}}] %s {{g}}=>{{/g}}\n%s", lhs, prettyPrintCode(new StringBuilder(), this.code(), 0, 7).toString());
-        Obj token = lhs;
-        //LOG.none("%s", token.rng());
-        final List<Inst> resolvedCode = new ArrayList<>();
-        fURI dom = null;
-        fURI rng = null;
-        boolean fullResolution = true;
-        for (final Inst inst : this.code().value()) {
-            try {
-                LOG.trace("   {{g}}=>{{/g}} resolving inst %s of %s", inst, null == token ? "[0]" : token);
-                final Inst instB = inst.resolve(token);
-                /*if(!resolvedCode.isEmpty()) {
-                  final Inst instA = resolvedCode.remove(resolvedCode.size() - 1);
-                  resolvedCode.add(instA.tid(instA.tid().rng(instB.tid().dom())));
-                }*/
-                if (null == dom)
-                    dom = instB.tid().query().get(fURI.DOM.toString(), fURI.class);
-                rng = instB.tid().query().get(fURI.RNG.toString(), fURI.class);
-                resolvedCode.add(instB);
-                token = instB.rng();
-                if (instB.isInitial()) {
-                    LOG.trace("  {{g}}==>{{/g}} creating {{y}}initial{{/y}} monad at %s", instB);
-                    token = instB.arg(0);
-                    //this.running().append(MMonad.of(NoObj.single(), instB));
-                } else if (instB.isGather()) {
-                    // many-to-?
-                    LOG.trace("  {{m}}==|{{/m}} creating {{y}}barrier{{/y}} monad at %s", instB);
-                    final Monad m = MMonad.of(MObjs.empty(), instB);
-                    this.barriers().<LinkedList<Obj>>valueAs().add(m);
-                }
-                // LOG.none("%s", instB.rng().tid());
-            } catch (final Exception e) {
-                resolvedCode.add(inst);
-                LOG.debug("runtime resolution of %s required: not enough context to determine inst", null == inst ? "[0]" : inst);
-                //e.printStackTrace();
-                fullResolution = false;
+        final Code resolvedCode = this.code().resolve(lhs);
+        final MTonoid mt = this.code(resolvedCode);
+        for (final Inst inst : mt.code().value()) {
+            if (inst.isInitial()) {
+                LOG.trace("  {{g}}==>{{/g}} creating {{y}}initial{{/y}} monad at %s", inst);
+                this.running().append(MMonad.of(NoObj.single(), inst));
+            } else if (inst.isGather()) {
+                // many-to-?
+                LOG.trace("  {{m}}==|{{/m}} creating {{y}}barrier{{/y}} monad at %s", inst);
+                final Monad m = MMonad.of(MObjs.empty(), inst);
+                mt.barriers().<LinkedList<Obj>>valueAs().add(m);
             }
         }
-        final Code resolved = MCode.of(resolvedCode);//.tid(code().tid().query(fURI.DOM, Optional.ofNullable(dom).orElse(fURI.ANY.any())).query(fURI.RNG, Optional.ofNullable(rng).orElse(fURI.ANY.any())));
-        LOG.debug("%s code:\n        [{{g}}COMPILED{{/g}}]\n%s", fullResolution ? "{{g}}resolved{{/g}}" : "{{y}}semi-resolved{{/y}}", prettyPrintCode(new StringBuilder(), resolved, 0, 7).toString());
-        return this.code(resolved);
+        return mt;
     }
 
     MTonoid compute() {
         final Code code = this.code();
-        this.running().append(MMonad.of(NoObj.single(), code.inst(0)));
+        if(this.running().c().isZero())
+            this.running().append(MMonad.of(NoObj.single(),code.insts().get(0)));
         while (true) {
             final Monad m = (Monad) this.running().take();
             if (null != m) {
@@ -114,12 +84,16 @@ public class MMonoid extends MObj implements MTonoid {
                     //final Obj no = m.obj().c()
                     final Monad n = m.apply(code.nextInst(m.inst()));
                     LOG.trace(" {{g}}===>{{/g}} post-processing monad %s", n);
-                    if (n.inst().isGather() && (!n.dead() || n.inst().dom().c().isNoObjable())) {
-                        final Monad barrier = this.barriers().<LinkedList<Monad>>valueAs().peek();
-                        LOG.trace("{{m}}====|{{/m}} appending living obj to barrier %s", n);
-                        if (null == barrier)
-                            throw MTronException.of("barrier should exist: %s", n.inst());
-                        barrier.obj().append(n.obj());
+                    if (n.inst().isBatching() && (!n.dead() || n.inst().dom().c().isNoObjable())) {
+                        if (n.inst().isGather()) {
+                            final Monad barrier = this.barriers().<LinkedList<Monad>>valueAs().peek();
+                            LOG.trace("{{m}}====|{{/m}} appending living obj to barrier %s", n);
+                            if (null == barrier)
+                                throw MTronException.of("barrier should exist: %s", n.inst());
+                            barrier.obj().append(n.obj());
+                        } else {
+                            this.running().append(n);
+                        }
                     } else if (!n.dead()) {
                         if (n.halted()) {
                             LOG.trace("{{y}}====>{{/y}} halting monad %s", n);
@@ -141,14 +115,16 @@ public class MMonoid extends MObj implements MTonoid {
                 final Monad barrier = this.barriers().<LinkedList<Monad>>valueAs().poll();
                 if (null != barrier) {
                     LOG.trace("   {{m}}=|{{/m}} processing barrier monad %s", barrier);
-                    final Inst nextInst = code.nextInst(barrier.inst());
                     final Obj result = barrier.inst().apply(barrier.obj());
+                    final Inst nextInst = code.nextInst(barrier.inst());
                     if (nextInst.isGather()) { // barrier-to-barrier can do direct handoff of result set
                         LOG.trace("  {{m}}==|{{/m}} passing barrier obj %s to %s", result, nextInst);
                         final Monad nextBarrier = this.barriers().<LinkedList<Monad>>valueAs().peek();
                         if (null == nextBarrier)
                             throw MTronException.of("barrier should exist: %s", nextInst);
                         nextBarrier.obj().append(result);
+                    } else if (nextInst.isBatching()) {
+                        this.running().append(MMonad.of(result, nextInst));
                     } else { // barrier-to-other requires an unrolling of result set
                         LOG.trace("  {{m}}==|{{/m}} scattering barrier obj %s to %s", result, nextInst);
                         result.forEach(o -> {
@@ -168,24 +144,24 @@ public class MMonoid extends MObj implements MTonoid {
 
     @Override
     public Obj apply(final Obj lhs) {
-        final MMonoid code = (MMonoid) this.resolve(lhs);
+        final MMonoid code =  (MMonoid) this.resolve(lhs);
         return code.compute().halted();
     }
 
-    @Override
+    /*@Override
     public String toString() {
-        return "MONOID[" + this.code() + "]";
-    }
+        return Obj.Helper.objToString(this);
+    }*/
 
-    @Override
+    /*@Override
     public int hashCode() {
         return Objects.hash(this.value, this.vid, this.tid);
-    }
+    }*/
 
-    @Override
+   /* @Override
     public boolean equals(final Object other) {
         return other instanceof MTonoid && Objects.equals(this.value, ((MTonoid) other).value());
-    }
+    }*/
 
     @Override
     public Quartet<Code, Obj, Lst, Obj> value() {
@@ -202,10 +178,14 @@ public class MMonoid extends MObj implements MTonoid {
     }
 
     public static MMonoid of(final Obj start, final Code code) {
-        final List<Inst> prepended = new ArrayList<>();
-        prepended.add(MInst.instB(mtronInstSet.START_TID, MLst.of(start)));
-        prepended.addAll(code.codeValue());
-        return new MMonoid(Quartet.with(MCode.of(prepended), MObjs.empty(), MLst.of(new LinkedList<>()), MObjs.empty()), MONOID_TID, fURI.NULL);
+        if (!start.isNoObj()) {
+            final List<Inst> prepended = new ArrayList<>();
+            prepended.add(MInst.instB(mtronInstSet.START_TID, MLst.of(start)));
+            prepended.addAll(code.codeValue());
+            return new MMonoid(Quartet.with(MCode.of(prepended), MObjs.empty(), MLst.of(new LinkedList<>()), MObjs.empty()), MONOID_TID, fURI.NULL);
+        } else {
+            return MMonoid.of(code);
+        }
     }
 
 }

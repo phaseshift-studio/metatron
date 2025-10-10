@@ -28,7 +28,7 @@ import java.util.stream.Stream;
 public interface Objs extends Obj {
 
     @Override
-    Objs clone(final Object value, final fURI tid, final fURI vid);
+    Obj clone(final Object value, final fURI tid, final fURI vid);
 
     @Override
     Iterable<Obj> value();

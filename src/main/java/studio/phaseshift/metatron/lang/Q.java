@@ -18,5 +18,30 @@
 
 package studio.phaseshift.metatron.lang;
 
+import studio.phaseshift.metatron.lang.obj.Obj;
+
+import java.util.Optional;
+
 public interface Q {
+
+    fURI template();
+
+    Optional<OnWrite> onWrite();
+
+    Optional<OnRead> onRead();
+
+    interface OnWrite {
+        Optional<Obj> preWrite(final fURI source, final fURI vid, final Obj obj);
+
+        Optional<Obj> postWrite(final fURI source, final fURI vid, final Obj oldObj, final Obj newObj);
+
+        Optional<Obj> qlessWrite(final fURI source, final fURI vid, final Obj obj);
+    }
+
+    interface OnRead {
+        Optional<Obj> preRead(final fURI source, final fURI vid);
+
+        Optional<Obj> postRead(final fURI source, final fURI vid, final Obj obj);
+    }
+
 }

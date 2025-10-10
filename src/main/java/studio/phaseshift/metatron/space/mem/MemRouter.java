@@ -23,6 +23,7 @@ import studio.phaseshift.metatron.lang.obj.NoObj;
 import studio.phaseshift.metatron.lang.obj.Obj;
 import studio.phaseshift.metatron.lang.obj.mtron.MRel;
 import studio.phaseshift.metatron.space.NullSpace;
+import studio.phaseshift.metatron.space.Qs;
 import studio.phaseshift.metatron.space.Router;
 import studio.phaseshift.metatron.space.Space;
 import studio.phaseshift.metatron.ui.Graphitty;
@@ -170,6 +171,11 @@ public class MemRouter implements Router {
     @Override
     public Router clone(Object value, fURI tid, fURI vid) {
         return this;
+    }
+
+    @Override
+    public Qs qs() {
+        return null;
     }
 
     @Override

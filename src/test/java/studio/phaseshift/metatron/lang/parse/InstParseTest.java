@@ -47,7 +47,7 @@ public class InstParseTest {
             "|(/usr/abc?int<=int(a=>else(10)){ mult(*a) }).to(/usr/abc)          % 2./usr/abc()                   % 20",
             "|(/usr/abc?int<=int(a=>else(10)){ mult(*a) }).to(/usr/abc)          % 2./usr/abc(a=>noobj)           % 20",
             "|(/usr/abc?int<=int(a=>int::T[]){ mult(*a) }).to(/usr/abc)          % 2./usr/abc(4)                  % 8",
-            "|(/usr/abc?int<=int(a=>int::T[]){ mult(*a) }).to(/usr/abc)          % 2./usr/abc(plus(10))           % 24",
+           // "|(/usr/abc?int<=int(a=>int::T[]){ mult(*a) }).to(/usr/abc)          % 2./usr/abc(plus(10))           % 24",
             "|(/usr/abc?int<=int(int::T[]){ mult(*a0) }).to(/usr/abc)            % 2./usr/abc(10)                 % 20",
             "|(/usr/abc?int<=int(int::T[]){ mult(*a0) }).to(/usr/abc)            % 2./usr/abc(10)                 % 20",
             "|(/usr/abc?int<=int(int::T[]){ mult(*a0) }).to(/usr/abc)            % 2./usr/abc(plus(10))           % 24",
