@@ -106,7 +106,7 @@ public final class NoObj implements Obj, Inst {
     }
 
     @Override
-    public cInt uniqueValues() {
+    public cInt uniqueCount() {
         return cInt.of(0L);
     }
 

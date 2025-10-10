@@ -76,7 +76,7 @@ public interface Obj extends Function<Obj, Obj>, Iterable<Obj>, Cloneable {
 
     fURI vid();
 
-    default cInt uniqueValues() {
+    default cInt uniqueCount() {
         return cInt.of(1L);
     }
 
@@ -130,7 +130,7 @@ public interface Obj extends Function<Obj, Obj>, Iterable<Obj>, Cloneable {
     }
 
     default Type type() {
-        return MType.of(this, this.tid());
+        return MType.of(this.tid());
     }
 
     default GraphittyLogger logger() {

@@ -96,7 +96,7 @@ public class MObjs implements Objs {
     }
 
     @Override
-    public cInt uniqueValues() {
+    public cInt uniqueCount() {
         return cInt.of((long) this.cstream.size());
     }
 

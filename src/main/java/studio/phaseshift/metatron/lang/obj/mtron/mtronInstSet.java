@@ -230,8 +230,8 @@ public class mtronInstSet extends MInstSet {
                 instC(WITHIN_TID.dom(LST_TID).rng(LST_TID), lst(T(OBJS_ID)), (lhs, inst) -> lst(inst.arg(0).apply(objs(lhs.lstValue())))),
                 instC(WITHIN_TID.dom(REC_TID).rng(REC_TID), lst(T(OBJS_ID)), (lhs, inst) -> rec(lhs.recValue().entrySet().stream().map(kv -> inst.arg(0).apply(MRel.of(kv.getKey(), kv.getValue())).<Rel>as()).collect(Collectors.toMap(Rel::first, Rel::second, Obj::append, LinkedHashMap<Obj, Obj>::new)))),
                 instC(BARRIER_TID.dom(OBJS_ID).rng(OBJS_ID), lst(T(OBJS_ID)), (lhs, inst) -> inst.arg(0).apply(lhs)),
-                instC(COUNT_TID.dom(ALL.maybeSome()).rng(INT_TID), lst(), (lhs, inst) -> inst.seed().value(IteratorUtil.reduce(lhs.iterator(), inst.seed(), (a, b) -> jnt(a.intValue() + b.c().max())).intValue() * inst.c().max()), jnt(0)),
-                instC(SUM_TID.dom(INT_TID.maybeSome()).rng(INT_TID), lst(), (lhs, inst) -> inst.seed().value(IteratorUtil.reduce(lhs.iterator(), inst.seed(), (a, b) -> jnt(a.intValue() + (b.intValue() * b.c().max()))).intValue() * inst.c().max()), jnt(0)),
+                instC(COUNT_TID.dom(ALL.maybeSome()).rng(INT_TID), lst(), (lhs, inst) -> inst.seed().value(IteratorUtil.reduce(lhs.iterator(), inst.seed(), (a, b) -> jnt(a.intValue() + b.c().max())).intValue()/* * inst.c().max()*/), jnt(0)),
+                instC(SUM_TID.dom(INT_TID.maybeSome()).rng(INT_TID), lst(), (lhs, inst) -> inst.seed().value(IteratorUtil.reduce(lhs.iterator(), inst.seed(), (a, b) -> jnt(a.intValue() + (b.intValue() * b.c().max()))).intValue()/* * inst.c().max()*/), jnt(0)),
                 instC(SUM_TID.dom(REAL_TID.maybeSome()).rng(REAL_TID), lst(), (lhs, inst) -> IteratorUtil.reduce(lhs.iterator(), inst.seed(), (a, b) -> real(a.realValue() + (b.realValue() * b.c().max()))), real(0.0)),
                 instC(SUM_TID.dom(LST_TID.maybeSome()).rng(LST_TID), lst(), (lhs, inst) -> IteratorUtil.reduce(lhs.iterator(), inst.seed(), (a, b) -> lst(Stream.concat(a.lstValue().stream(), b.lstValue().stream()).toList())), lst()),
                 instC(REIFY_TID.dom(ALL.maybe()).rng(REC_TID), lst(), (lhs, inst) ->
@@ -243,21 +243,30 @@ public class mtronInstSet extends MInstSet {
                                                 "max", MInt.of(lhs.tid().cV().max())),
                                         "query", MStr.of(lhs.tid().query().toString())),
                                 "value", MObjFactory.of().create(lhs.value()))),
-                instC(CROSS_TID.dom(LST_TID).rng(LST_TID), rec(uri("other"), T(LST_TID), uri("func"), e1se(MInst.instA(ID_TID))), (lhs, inst) -> {
+                instC(CROSS_TID.dom(LST_TID).rng(LST_TID), lst(T(LST_TID)), (lhs, inst) -> {
                     final List<Obj> result = new ArrayList<>();
-                    final Obj toEval = inst.arg(f("func"));
                     final List<Obj> lhsList = lhs.lstValue();
-                    final List<Obj> rhsList = inst.arg(f("other")).lstValue();
+                    final List<Obj> rhsList = inst.arg(0).lstValue();
                     for (int i = 0; i < lhsList.size(); i++) {
                         if (rhsList.size() > i) {
                             final Obj lhsA = lhsList.get(i);
                             final Obj rhsA = rhsList.get(i);
-                            Router.stack().push(rec(uri("b1"), rhsA));
-                            result.add(toEval.isNoObj() ? rhsA.apply(lhsA) : toEval.<Inst>as().apply(lhsA));
+                            result.add(rhsA.apply(lhsA));
                         } else {
                             break;
                         }
                     }
+                    return lhs.value(result);
+                }),
+                instC(CROSS_TID.dom(REC_TID).rng(REC_TID), lst(T(REC_TID)), (lhs, inst) -> {
+                    final Map<Obj, Obj> result = new LinkedHashMap<>();
+                    lhs.recValue().forEach((lKey, lValue) -> inst.arg(0).recValue()
+                            .forEach((rKey, rValue) -> {
+                                if (lKey.matches(rKey)) {
+                                    final Obj r = rValue.apply(lValue);
+                                    result.compute(rKey.apply(lKey), (k, v) -> null == v ? r : v.append(r));
+                                }
+                            }));
                     return lhs.value(result);
                 })
         ).collect(LinkedHashSet::new, LinkedHashSet::add, LinkedHashSet::addAll);

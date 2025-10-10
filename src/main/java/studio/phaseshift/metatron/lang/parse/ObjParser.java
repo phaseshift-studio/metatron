@@ -45,6 +45,7 @@ import static org.petitparser.parser.primitive.CharacterParser.of;
 import static org.petitparser.parser.primitive.CharacterParser.word;
 import static org.petitparser.parser.primitive.StringParser.of;
 import static studio.phaseshift.metatron.lang.obj.mtron.MObjs.objs;
+import static studio.phaseshift.metatron.lang.obj.mtron.mtronFluent.StartLess.split;
 import static studio.phaseshift.metatron.lang.obj.mtron.mtronInstSet.*;
 import static studio.phaseshift.metatron.util.Tuple.Triplet;
 
@@ -58,8 +59,11 @@ public class ObjParser {
     private static final SettableParser inst_parser = SettableParser.undefined();
     private static final SettableParser rel_parser = SettableParser.undefined();
     private static final SettableParser obj_rel_back_parser = SettableParser.undefined();
+    private static final SettableParser branch_parser = SettableParser.undefined();
 
     static {
+        branch_parser.set(seq(opt(of("-<"),""),of('{').trim(), m_code().separatedBy(of(',').trim()), of('}').trim()).pick(2)
+                .map(t -> split(objs(((List) t).stream().filter(x -> x instanceof Call).toList())).singleOrSequence()));
         rel_parser.set(seq(m_type_prefix_opt_colon(REL_TID), obj_rel_back_parser, of("=>").trim(), m_obj(), m_vid_postfix())
                 .map(t -> new MRel(Tuple.Pair.with(pick(t, 1), pick(t, 3)), pick(t, 0), pick(t, 4))));
         obj_parser.set(choice(
@@ -112,7 +116,7 @@ public class ObjParser {
 
         rec_parser.set(seq(m_type_prefix_opt_colon(REC_TID), of('[').trim(), rec_internal(), of(']'), m_vid_postfix()).trim().map(t -> new MRec(pick(t, 2), pick(t, 0), pick(t, 4))));
 
-        inst_parser.set(seq(
+        inst_parser.set(choice(branch_parser,seq(
                 choice(m_inst_furi(), m_type_prefix_opt_colon(INST_TID)), // 0 inst_tid
                 seq(of('(').trim(), choice(rec_internal(), lst_internal(), of("")), of(')').trim()).pick(1), // 1 inst_args
                 opt(seq(of('{').trim(), m_code(), of('}').trim()).pick(1), null),
@@ -124,7 +128,7 @@ public class ObjParser {
                                 MRec.of(ObjParser.<Map<Obj, Obj>>pick(t, 1)),
                         Inst.f.of(ObjParser.<Obj>pick(t, 2)),
                         NoObj.single()), // todo: encode seed in parser
-                        pick(t, 0), pick(t, 3))));
+                        pick(t, 0), pick(t, 3)))));
     }
 
     public static Parser lst_internal() {
@@ -336,6 +340,7 @@ public class ObjParser {
     /// //////////////////////////////////////////////////////////////////////////////////////////
     private static Parser[] ordered_sugar_parsers() {
         return new Parser[]{
+                branch_parser,
                 generate_sugar_parser(VID_TID, of('@'), 1),
                 generate_sugar_parser(BARRIER_TID, of("-|"), 1),
                 generate_sugar_parser(BLOCK_TID, of('|'), 1),

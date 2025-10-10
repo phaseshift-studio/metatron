@@ -124,7 +124,9 @@ public interface Inst extends Call {
     }
 
     default boolean isBlocking() {
-        return this.tid().basePath().equals(mtronInstSet.BLOCK_TID) || this.tid().basePath().equals(mtronInstSet.WITHIN_TID);
+        return this.tid().basePath().equals(mtronInstSet.BLOCK_TID) ||
+                this.tid().basePath().equals(mtronInstSet.WITHIN_TID) ||
+                this.tid().basePath().equals(mtronInstSet.CROSS_TID);
     }
 
     default Inst specify(final Obj lhs, final Obj spec) {
@@ -269,7 +271,7 @@ public interface Inst extends Call {
         Inst cinst = this.resolve(clhs);
         boolean modulateC = false;
         if (!cinst.isBlocking() && !clhs.matches(cinst.dom())) {
-            if (clhs.uniqueValues().isOne() && !clhs.c().isOne()) { // && cinst.dom().c().within(cInt.SOME())) {
+            if (clhs.uniqueCount().isOne() && !clhs.c().isOne()) { // && cinst.dom().c().within(cInt.SOME())) {
                 clhs = clhs.c(cInt::one);
                 cinst = this.resolve(clhs);
                 modulateC = true;
@@ -289,7 +291,7 @@ public interface Inst extends Call {
         }
         if (!rhs.matches(cinst.rng()))
             throw MTronException.of("{{m}}rhs obj{{/m}} (%s) {{r}}does not match{{/r}} {{m}}inst range{{/m}} (%s): %s", rhs, cinst.rng(), cinst);
-        final cInt cinstc = cinst.isReducing() ? cInt.ONE() : cinst.c();
+        final cInt cinstc = false && cinst.isReducing() ? cInt.ONE() : cinst.c();
         return (modulateC ? rhs.c(c -> c.mult(lhs.c())) : rhs).c(c -> c.mult(cinstc));
 
     }

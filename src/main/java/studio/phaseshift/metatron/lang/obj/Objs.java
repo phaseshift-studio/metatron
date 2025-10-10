@@ -40,7 +40,7 @@ public interface Objs extends Obj {
     Obj append(final Obj obj);
 
     @Override
-    cInt uniqueValues();
+    cInt uniqueCount();
 
     @Override
     Obj c(final Function<cInt, cInt> func);

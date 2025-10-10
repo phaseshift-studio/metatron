@@ -61,6 +61,7 @@ public interface Code extends Call {
                 if (found) return i;
                 if (i == inst) found = true;
             }
+            //if (found) return this.value().get(this.value().size() - 1);
             return NoObj.single();
         }).get();
         this.logger().trace("fetching next inst: %s => %s", inst, nextInst);
