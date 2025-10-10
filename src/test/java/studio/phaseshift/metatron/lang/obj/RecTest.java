@@ -104,6 +104,9 @@ public class RecTest extends MetatronTest {
     @Override
     @ParameterizedTest
     @CsvSource(value = {
+            "[noobj=>noobj]                                                                          % [=>]",
+            "[7=>noobj]                                                                              % [=>]",
+            "[noobj=>7]                                                                              % [=>]",
             "[a=>1,a=>1,b=>2,a=>1,b=>2]                                                              % [a=>int[3]::1,b=>int[2]::2]",
             "[a=>1,a=>1,b=>2,a=>1,b=>2,b=>3]                                                         % [a=>int[3]::1,b=>{int[2]::2,3}]",
             "[a=>1,a=>1,b=>[1=>2],a=>1,b=>[1=>2],b=>[2=>3]]                                          % [a=>int[3]::1,b=>[1=>int[2]::2,2=>3]]",
@@ -128,6 +131,7 @@ public class RecTest extends MetatronTest {
             "2-<[a=>is(gt(0)),a=>is(gt(0)),b=>3]                                                     % [a=>int[2]::2,b=>3]",
             "2-<[a=>is(gt(0)),a=>is(gt(1)),b=>3]                                                     % [a=>int[2]::2,b=>3]",
             "[1,2,3]-<[>-.is(gt(2)) => >-.is(gt(1)), >-.is(gt(1)) => >-._]                           % [3=>{2,3},{2,3}=>{1,2,3}]",
+            //"[1,2,3].-<[>-.is(gt(2)) => _/is(gt(1))\\_, >-.is(gt(1)) => _/id()\\_]                    % [3=>[2,3],{2,3}=>[1,2,3]]",
     }, delimiter = '%')
     public void testCode(final String code, final String expected) {
         super.testCode(code, expected);

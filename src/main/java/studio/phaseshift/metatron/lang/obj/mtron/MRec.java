@@ -34,7 +34,7 @@ public class MRec extends MObj implements Rec {
     public static Rec EMPTY_REC = MRec.of(Map.of());
 
     public MRec(final Map<Obj, Obj> value, final fURI tid, final fURI vid) {
-        super(value, tid, vid);
+        super(cleanMap(value), tid, vid);
     }
 
     public MRec(final Map<Obj, Obj> value) {
@@ -46,7 +46,7 @@ public class MRec extends MObj implements Rec {
     }
 
     public static Rec rec(final Map<Obj, Obj> map) {
-        return MRec.of(map);
+        return MRec.of(cleanMap(map));
     }
 
     public static Rec rec() {
@@ -131,12 +131,17 @@ public class MRec extends MObj implements Rec {
         return MRec.of(map, tid);
     }
 
+    private static Map<Obj, Obj> cleanMap(final Map<Obj, Obj> map) {
+        if (map.containsKey(NoObj.single()))
+            map.remove(NoObj.single());
+        if (map.containsValue(NoObj.single()))
+            map.entrySet().stream().filter(kv -> kv.getValue().isNoObj()).map(Map.Entry::getKey).toList().forEach(map::remove);
+        return map;
+    }
+
     @Override
     public Rec value(final Object value) {
-        Map<Obj, Obj> map = (Map<Obj, Obj>) value;
-        Map<Obj, Obj> newMap = new LinkedHashMap<>();
-        map.entrySet().stream().filter(kv -> !kv.getKey().isNoObj()).filter(kv -> !kv.getValue().isNoObj()).forEach(kv -> newMap.put(kv.getKey(), kv.getValue()));
-        return (Rec) super.value(newMap);
+        return super.value(cleanMap((Map<Obj, Obj>) value));
     }
 
     @Override
