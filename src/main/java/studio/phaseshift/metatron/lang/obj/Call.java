@@ -19,6 +19,7 @@
 package studio.phaseshift.metatron.lang.obj;
 
 import studio.phaseshift.metatron.algebra.Ring;
+import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.mtron.MCode;
 import studio.phaseshift.metatron.lang.obj.mtron.MInst;
 import studio.phaseshift.metatron.lang.obj.mtron.c.cInt;
@@ -30,9 +31,14 @@ import java.util.function.Function;
 import static studio.phaseshift.metatron.lang.obj.mtron.MLst.lst;
 import static studio.phaseshift.metatron.lang.obj.mtron.MObjs.objs;
 import static studio.phaseshift.metatron.lang.obj.mtron.mtronFluent.StartLess.split;
+import static studio.phaseshift.metatron.lang.obj.mtron.mtronInstSet.CODE_TID;
 import static studio.phaseshift.metatron.lang.obj.mtron.mtronInstSet.ID_TID;
 
 public interface Call extends Obj, Ring<Call> {
+
+    default boolean hasDomOrRng() {
+        return this.tid().hasDom() || this.tid().hasRng();
+    }
 
     static Call from(final List<Inst> insts) {
         if (insts.isEmpty())
@@ -43,7 +49,7 @@ public interface Call extends Obj, Ring<Call> {
             return MCode.of(insts);
     }
 
-    default Call instOrCode() {
+    default Call tryToInst() {
         if (this.isCode()) {
             if (this.codeValue().isEmpty())
                 return NoObj.single();
@@ -51,6 +57,13 @@ public interface Call extends Obj, Ring<Call> {
                 return this.codeValue().get(0);
         }
         return this;
+    }
+
+    default Code toCode() {
+        if (this.isCode())
+            return (Code) this;
+        else
+            return new MCode(List.of(this.as()), CODE_TID, fURI.NULL);
     }
 
     default List<Inst> insts() {
@@ -104,7 +117,7 @@ public interface Call extends Obj, Ring<Call> {
         if (this.isZero()) return rhs;
         if (this.clessEquals(rhs))
             return this.c(c -> c.plus(rhs.c()));
-        return split(objs(this.instOrCode(), rhs.instOrCode())).instOrCode();
+        return split(objs(this.tryToInst(), rhs.tryToInst())).tryToInst();
     }
 
     @Override
@@ -115,7 +128,7 @@ public interface Call extends Obj, Ring<Call> {
         if (this.isOne()) return rhs;
         final List<Inst> insts = new ArrayList<>(this.insts());
         insts.addAll(rhs.insts());
-        return MCode.of(insts).instOrCode().c(c -> this.c().mult(rhs.c()));
+        return MCode.of(insts).tryToInst().c(c -> this.c().mult(rhs.c()));
     }
 
     @Override

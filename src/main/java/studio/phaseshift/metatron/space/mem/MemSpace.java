@@ -63,7 +63,9 @@ public class MemSpace extends MSpace implements Space {
 
     @Override
     public Obj write(final fURI vid, final Obj obj) {
-        this.qs().processPreWrite(vid, vid, obj);
+        final Obj ret = this.qs().processPreWrite(vid, vid, obj).orElse(null);
+        if (null != ret)
+            return ret;
         Space.Helpers.resolveWrite(vid.basePath(), obj, (key, value) -> {
             //LOG.trace("raw write of %s to %s {{g}}@{{b}}%s{{X}}", value, this, key);
             if (value.isNoObj()) {

@@ -67,7 +67,6 @@ public interface Inst extends Call {
     /// ////////////////////////////////////////////////////////////
     /// ////////////////////////////////////////////////////////////
 
-
     @Override
     default Type dom() {
         final fURI domain = this.tid().dom();
@@ -188,9 +187,9 @@ public interface Inst extends Call {
                                 final AtomicInteger counter = new AtomicInteger(0);
                                 final Lst resolvedArgs = i.args().lstValue()
                                         .stream()
-                                        .anyMatch(arg -> !this.arg(counter.getAndIncrement()).matches(arg)) ?
+                                        .anyMatch(arg -> !this.arg(counter.getAndIncrement()).matches(arg) /*&& !arg.c().least().isZero()*/) ?
                                         null :
-                                        lst(this.args().lstValue().stream().map(a -> a.resolve(lhs)).map(a -> a.isCall() ? a.<Call>as().instOrCode() : a).toList());
+                                        lst(this.args().lstValue().stream().map(a -> a.resolve(lhs)).map(a -> a.isCall() ? a.<Call>as().tryToInst() : a).toList());
                                 if (null == resolvedArgs)
                                     return null; // TODO: backtrack the resolution to the outer inst to see if adjusting the coefficient can resolve the internal resolution
                                 return i.args(resolvedArgs);
@@ -211,7 +210,7 @@ public interface Inst extends Call {
                         .filter(i -> !Objects.isNull(i))
                         //.map(i -> i.tid(i.tid().dom(lhs.tid())).vid(this.vid()))
                         .map(Obj::<Inst>as)
-                        .map(i -> (this.tid().hasDom() || this.tid().hasRng()) ? i.tid(this.tid()).resolve(lhs) : i.resolve(lhs))
+                        .map(i -> this.hasDomOrRng() ? i.resolve(lhs).tid(this.tid()) : i.resolve(lhs)) // TODO: return resolve(lhs) if failing
                         .map(i -> i.c(this.c()))
                         .findFirst()
                         .orElse(null);
@@ -223,7 +222,8 @@ public interface Inst extends Call {
                 this.logger().error(e);
             }
             this.logger().trace("searching spaces for runtime resolution of inst %s => %s", lhs, this);
-            final Obj resolved2 = Router.global().read(this.tid()).c(this.c());
+            Obj resolved2 = Router.global().read(this.tid()).c(this.c());
+            resolved2 = this.hasDomOrRng() ? resolved2.tid(this.tid()) : resolved2;
             if (resolved2.isNoObj()) {
                 LOG.error("%s could not be resolved in any space", this);
                 return NoObj.single();

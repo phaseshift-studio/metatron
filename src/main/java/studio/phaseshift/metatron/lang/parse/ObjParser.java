@@ -63,7 +63,7 @@ public class ObjParser {
 
     static {
         branch_parser.set(seq(opt(of("-<"),""),of('{').trim(), m_code().separatedBy(of(',').trim()), of('}').trim()).pick(2)
-                .map(t -> split(objs(((List) t).stream().filter(x -> x instanceof Call).toList())).instOrCode()));
+                .map(t -> split(objs(((List) t).stream().filter(x -> x instanceof Call).toList())).tryToInst()));
         rel_parser.set(seq(m_type_prefix_opt_colon(REL_TID), obj_rel_back_parser, of("=>").trim(), m_obj(), m_vid_postfix())
                 .map(t -> new MRel(Tuple.Pair.with(pick(t, 1), pick(t, 3)), pick(t, 0), pick(t, 4))));
         obj_parser.set(choice(

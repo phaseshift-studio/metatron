@@ -20,6 +20,7 @@ package studio.phaseshift.metatron.lang.obj.mtron;
 
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.*;
+import studio.phaseshift.metatron.lang.obj.mtron.c.cInt;
 import studio.phaseshift.metatron.space.Router;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.util.IteratorUtil;
@@ -129,7 +130,7 @@ public class mtronInstSet extends MInstSet {
         return Stream.of(
                 instC(START_TID.dom(fURI.NOOBJ.zero()).rng(A.maybeSome()), lst(T(A.maybeSome())), (lhs, inst) -> inst.arg(0)),
                 instC(END_TID.dom(OBJS_ID).rng(NOOBJ_TID.zero()), lst(), (lhs, inst) -> NoObj.single()),
-                instC(PRINT_TID.dom(A).rng(A), lst(T(OBJS_ID)), (lhs, inst) -> inst.args().stream().peek(o -> Graphitty.stdout().println(Graphitty.string(o))).reduce((a, b) -> null).orElse(lhs)),
+                instC(PRINT_TID.dom(ALL).rng(ALL), lst(T(OBJS_ID)), (lhs, inst) -> IteratorUtil.stream(inst.args().elements()).peek(o -> Graphitty.stdout().println(Graphitty.string(o))).filter(a -> false).findAny().orElse(lhs)),
                 instC(ID_TID.dom(A.maybe()).rng(A.maybe()), lst(), (lhs, inst) -> lhs),
                 instC(ID_TID.dom(A.maybeSome()).rng(A.maybeSome()), lst(), (lhs, inst) -> lhs),
                 instC(APPLY_TID.dom(ALL).rng(ALL), lst(T(INST_TID)), (lhs, inst) -> inst.arg(0).apply(lhs)),
