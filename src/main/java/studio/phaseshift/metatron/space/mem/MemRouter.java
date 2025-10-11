@@ -21,6 +21,7 @@ package studio.phaseshift.metatron.space.mem;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.NoObj;
 import studio.phaseshift.metatron.lang.obj.Obj;
+import studio.phaseshift.metatron.lang.obj.mtron.MRec;
 import studio.phaseshift.metatron.lang.obj.mtron.MRel;
 import studio.phaseshift.metatron.space.NullSpace;
 import studio.phaseshift.metatron.space.Qs;
@@ -30,13 +31,11 @@ import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
 import studio.phaseshift.metatron.util.MTronException;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static studio.phaseshift.metatron.BootLoader.BOOTING;
+import static studio.phaseshift.metatron.lang.obj.mtron.MUri.uri;
 
 public class MemRouter implements Router {
 
@@ -60,6 +59,7 @@ public class MemRouter implements Router {
     public void registerRewrite(final fURI small, final fURI big) {
         this.smallToBigRewrites.put(small, big);
         this.bigToSmallRewrites.put(big, small);
+        //this.write(this.vid().extend("rewrite"), MRec.of(this.bigToSmallRewrites.entrySet().stream().map(kv -> Map.of(uri(kv.getKey()), uri(kv.getValue()))).reduce(new LinkedHashMap(),(a, b)->{ a.putAll(b); return a; })));
         //this.localSpace.write(this.vid.extend("prefix").extend(small), big.toUri());
     }
 

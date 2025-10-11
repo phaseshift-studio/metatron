@@ -117,6 +117,7 @@ public class mtronInstSet extends MInstSet {
     public mtronInstSet(final fURI vid) {
         super(MTRON_TID, vid);
         this.types().forEach(t -> Router.global().registerRewrite(f(t.tid().name()), t.tid()));
+        this.insts().forEach(t -> Router.global().registerRewrite(f(t.tid().name()), t.tid().basePath()));
     }
 
     @Override

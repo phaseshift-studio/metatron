@@ -146,7 +146,7 @@ public class TypeTest extends MetatronTest {
             "1            | int::T[1]                     | true",
             "1            | int::T[2]                     | false",
             "{1,1}        | int[2]::T[{2,2}]              | false",
-            // "{1,1}     | int[2]::T[{1,1}]              | true",
+            "{1,1}        | int[2]::T[{1,1}]              | true",
             "{1,1}        | int[2]::T[]                   | true",
             "{1,1}        | int::T[is(gt(0))]             | false",
             "{1,1}        | int[2]::T[is(gt(0))]          | true",

@@ -39,7 +39,7 @@ public abstract class SpaceTest extends MetatronTest {
     @ParameterizedTest
     @CsvSource(value = {
             "1.to(a)                                               % .from(a)                  % 1",
-            //"1.vid(abc)                                            % *abc                     % 1@abc",
+            "1.vid(abc)                                            % *abc                     % 1@abc",
             //"[1@a,2@b,3@c]@d.map(10).vid(b)                        % *d                       % [1@a,10@b,3@c]@d"
     }, delimiter = '%')
     void testMonoReadWrite(final String writeExpression, final String readExpression, final String resultExpression) {

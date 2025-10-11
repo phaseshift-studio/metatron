@@ -192,7 +192,7 @@ public class fURI implements Cloneable, Ring<fURI> {
     }
 
     public String name() {
-        return this.segments().isEmpty() ? EMPTY : this.segments().get(this.segments().size() - 1);
+        return this.segments().isEmpty() ? EMPTY : this.qLess().segments().get(this.segments().size() - 1);
     }
 
     public Uri toUri() {

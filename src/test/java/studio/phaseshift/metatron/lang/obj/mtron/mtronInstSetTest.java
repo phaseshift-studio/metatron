@@ -39,7 +39,7 @@ public class mtronInstSetTest extends MetatronTest {
             "{1,2,3}>-._.plus(_)                                                    % {2,4,6}",
             "{1,2,3}._.plus(_)                                                      % {2,4,6}",
             //"{1,2,3}.plus(id())                                                     % {2,4,6}",
-            //"{1,2,3}.plus(mult(1))                                                  % {2,4,6}",
+            "{1,2,3}.plus(mult(1))                                                  % {2,4,6}",
             "{1,2,3}.plus(plus(1))                                                % {3,5,7}",
             "{1,2,3}.plus(plus(map(1)))                                             % {3,5,7}",
             "{1,2,3}.plus(plus(_))                                                  % {3,6,9}",

@@ -168,6 +168,34 @@ public interface Inst extends Call {
         return def;
     }
 
+    private static Poly resolveArgs(final Inst source, final Inst target, final Obj lhs) {
+        final GraphittyLogger LOG = Graphitty.log(source);
+        if (target.args().isLst()) {
+            LOG.trace("processing lst args of %s", target);
+            final AtomicInteger counter = new AtomicInteger(0);
+            final Lst resolvedArgs = target.args().lstValue()
+                    .stream()
+                    .anyMatch(arg -> !source.arg(counter.getAndIncrement()).matches(arg) /*&& !arg.c().least().isZero()*/) ?
+                    null :
+                    lst(source.args().lstValue().stream().map(a -> a.resolve(lhs)).map(a -> a.isCall() ? a.<Call>as().tryToInst() : a).toList());
+            if (null == resolvedArgs)
+                return null; // TODO: backtrack the resolution to the outer inst to see if adjusting the coefficient can resolve the internal resolution
+            return resolvedArgs;
+        } else if (target.args().isRec()) {
+            LOG.trace("processing rec args of %s", target);
+            final AtomicInteger counter = new AtomicInteger(0);
+            return rec(target.args().recValue().entrySet()
+                    .stream()
+                    .map(kv -> {
+                        // return List.of(kv.getKey(), kv.getValue().resolve(this.arg(kv.getKey().uriValue(), counter.getAndIncrement())));
+                        Obj this_arg = source.arg(kv.getKey().uriValue(), counter.getAndIncrement());
+                        return List.of(kv.getKey(), kv.getValue().isCall() ? kv.getValue().apply(this_arg) : this_arg);
+                    })
+                    .collect(Collectors.toMap(kv -> kv.get(0), kv -> kv.get(1), Obj::append, LinkedHashMap::new)));
+        } else
+            throw MTronException.of("inst args must be a lst or rec: %s", target);
+    }
+
     @Override
     default Inst resolve(final Obj lhs) {
         final GraphittyLogger LOG = Graphitty.log(lhs);
@@ -182,30 +210,10 @@ public interface Inst extends Call {
                         .map(i -> i.specify(lhs, this))
                         .filter(i -> lhs.matches(i.dom()))
                         .map(i -> {
-                            if (i.args().isLst()) {
-                                LOG.trace("processing lst args of %s", i);
-                                final AtomicInteger counter = new AtomicInteger(0);
-                                final Lst resolvedArgs = i.args().lstValue()
-                                        .stream()
-                                        .anyMatch(arg -> !this.arg(counter.getAndIncrement()).matches(arg) /*&& !arg.c().least().isZero()*/) ?
-                                        null :
-                                        lst(this.args().lstValue().stream().map(a -> a.resolve(lhs)).map(a -> a.isCall() ? a.<Call>as().tryToInst() : a).toList());
-                                if (null == resolvedArgs)
-                                    return null; // TODO: backtrack the resolution to the outer inst to see if adjusting the coefficient can resolve the internal resolution
-                                return i.args(resolvedArgs);
-                            } else if (i.args().isRec()) {
-                                LOG.trace("processing rec args of %s", i);
-                                final AtomicInteger counter = new AtomicInteger(0);
-                                return i.args(rec(i.args().recValue().entrySet()
-                                        .stream()
-                                        .map(kv -> {
-                                            // return List.of(kv.getKey(), kv.getValue().resolve(this.arg(kv.getKey().uriValue(), counter.getAndIncrement())));
-                                            Obj this_arg = this.arg(kv.getKey().uriValue(), counter.getAndIncrement());
-                                            return List.of(kv.getKey(), kv.getValue().isCall() ? kv.getValue().apply(this_arg) : this_arg);
-                                        })
-                                        .collect(Collectors.toMap(kv -> kv.get(0), kv -> kv.get(1), Obj::append, LinkedHashMap::new))));
-                            } else
-                                throw MTronException.of("inst args must be a lst or rec: %s", i);
+                            final Poly resolvedArgs = resolveArgs(this, i, lhs);
+                            if (null == resolvedArgs)
+                                return null; // TODO: backtrack the resolution to the outer inst to see if adjusting the coefficient can resolve the internal resolution
+                            return i.args(resolvedArgs);
                         })
                         .filter(i -> !Objects.isNull(i))
                         //.map(i -> i.tid(i.tid().dom(lhs.tid())).vid(this.vid()))
@@ -229,7 +237,9 @@ public interface Inst extends Call {
                 return NoObj.single();
             } else if (!resolved2.isInst()) {
                 LOG.error("unable to resolve %s to a single inst in %s", this.dom(lhs.type()), resolved2);
-                return NoObj.single();//.resolve(lhs);
+                final Poly args = resolveArgs(this,this,lhs);
+                return null == args ? this : this.args(args);
+                //return this;//NoObj.single();//.resolve(lhs);
             } else {
                 LOG.debug("resolved %s from global router", resolved2);
                 return resolved2.<Inst>as().args(this.args()); //.resolve(lhs);
