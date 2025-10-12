@@ -61,8 +61,8 @@ public class ObjStringSerializer implements ObjSerializer<String> {
                 for (final Obj kv : inst.args().elements()) {
                     sb.append(isLst ? kv : kv.<Rel>as().first());
                     if (!isLst)
-                        sb.append(this.b.palette.formC()).append("=>").append(kv.<Rel>as().second());
-                    sb.append(this.b.palette.formC()).append(',');
+                        sb.append("{{g}}=>").append(kv.<Rel>as().second());
+                    sb.append("{{g}},");
                 }
                 sb.deleteCharAt(sb.length() - 1);
             }
@@ -87,46 +87,42 @@ public class ObjStringSerializer implements ObjSerializer<String> {
         /// ///////////////////////////////////////////////////////////////
         /// ///////////////////////////////////////////////////////////////
         else if (obj instanceof final Lst lst) {
-            generateTID(sb, obj.tid(), true).append(this.b.palette.formC()).append('[').append(this.b.palette.valueC());
+            generateTID(sb, obj.tid(), true).append("{{g}}[").append(this.b.palette.valueC());
             for (final Obj o : lst.value()) {
                 sb.append(o).append(this.b.palette.formC()).append(',');
             }
-            if (!lst.value().isEmpty()) sb.deleteCharAt(sb.length() - 1).append(this.b.palette.formC());
-            else sb.append(this.b.palette.formC()).append(",");
-            return generateVID(sb.append(']'), lst).append(this.b.ignoreRewrites ? "" : "{{X}}").toString();
+            if (!lst.value().isEmpty()) sb.deleteCharAt(sb.length() - 1);
+            else sb.append("{{g}},");
+            return generateVID(sb.append("{{g}}]"), lst).append(this.b.ignoreRewrites ? "" : "{{X}}").toString();
         }
         /// ///////////////////////////////////////////////////////////////
         /// ///////////////////////////////////////////////////////////////
         else if (obj instanceof final Objs objs) {
-            generateTID(sb, obj.tid(), true).append(this.b.palette.formC()).append("{").append(this.b.palette.valueC());
+            generateTID(sb, obj.tid(), true).append("{{g}}{").append(this.b.palette.valueC());
             boolean found = false;
             for (final Obj o : objs.value()) {
                 found = true;
-                sb.append(o).append(this.b.palette.formC()).append(',');
+                sb.append(o).append("{{g}},");
             }
             if (found) sb.deleteCharAt(sb.length() - 1);
-            sb.append(this.b.palette.formC()).append('}');
+            sb.append("{{g}}}");
             return generateVID(sb, objs).append(this.b.ignoreRewrites ? "" : "{{X}}").toString();
         }
         /// ///////////////////////////////////////////////////////////////
         /// ///////////////////////////////////////////////////////////////
         else if (obj instanceof final Rec rec) {
             if (rec.isEmpty()) {
-                sb.append(this.b.palette.formC()).append("[=>]{{X}}");
+                sb.append("{{g}}[=>]{{X}}");
             } else {
                 if (this.b.prettyPrint && rec.count() > 1) {
                     this.generateRec(sb, rec, 0);
                 } else {
-                    generateTID(sb, obj.tid(), true).append(this.b.palette.formC()).append('[').append(this.b.palette.valueC());
+                    generateTID(sb, obj.tid(), true).append("{{g}}[");
                     for (final Map.Entry<Obj, Obj> o : rec.value().entrySet()) {
-                        sb.append(o.getKey())
-                                .append(this.b.palette.formC())
-                                .append("=>").append(o.getValue())
-                                .append(this.b.palette.formC())
-                                .append(',');
+                        sb.append(o.getKey()).append("{{g}}=>").append(o.getValue()).append("{{g}},");
                     }
                 }
-                if (rec.count() == 1) sb.deleteCharAt(sb.length() - 1).append(this.b.palette.formC()).append(']');
+                if (rec.count() == 1) sb.deleteCharAt(sb.length() - 1).append("{{g}}]");
             }
             return generateVID(sb, rec).append(this.b.ignoreRewrites ? "" : "{{X}}").toString();
         }
@@ -134,13 +130,9 @@ public class ObjStringSerializer implements ObjSerializer<String> {
         /// ///////////////////////////////////////////////////////////////
         else if (obj instanceof Type) {
             return generateTID(sb, obj.tid(), false)
-                    .append("{{r}}T")
-                    .append(this.b.palette.formC())
-                    .append("[")
-                    .append(this.b.palette.valueC())
+                    .append("{{r}}T{{g}}[{{y}}")
                     .append(null == obj.value() ? "" : obj.value().toString())
-                    .append(this.b.palette.formC())
-                    .append("]{{X}}").toString();
+                    .append("{{g}}]{{X}}").toString();
         }
         /// ///////////////////////////////////////////////////////////////
         /// ///////////////////////////////////////////////////////////////
@@ -183,19 +175,19 @@ public class ObjStringSerializer implements ObjSerializer<String> {
         rec.recValue().forEach((k, v) -> {
             if (depth > 0)
                 sb.append(" ".repeat(depth * 2));
-            sb.append(write(k)).append("{{FORM1}}=>{{/FORM1}}");
+            sb.append(write(k)).append("{{g}}=>{{/g}}");
             if (v.isRec()) {
                 this.generateRec(sb, v.as(), depth + 1);
             } else
                 sb.append(write(v));
-            sb.append("{{FORM1}},");
+            sb.append("{{g}},");
             if (nested)
                 sb.append("\n");
         });
         if (nested)
             sb.deleteCharAt(sb.length() - 1);
         sb.deleteCharAt(sb.length() - 1);
-        sb.append("{{FORM1}}]{{FORM1}}");
+        sb.append("{{g}}]{{/g}}");
         return sb;
     }
 
