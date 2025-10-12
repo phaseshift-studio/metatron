@@ -31,7 +31,7 @@ import java.util.Set;
 import static studio.phaseshift.metatron.lang.fURI.f;
 import static studio.phaseshift.metatron.lang.obj.mtron.MObjs.objs;
 
-public abstract class MInstSet extends MSpace implements InstSet {
+public abstract class MInstSet extends MSpace<Map<fURI, Set<? extends Obj>>> implements InstSet {
 
     protected static final String[] EMPTY_STRING_ARRAY = new String[0];
 
@@ -41,8 +41,8 @@ public abstract class MInstSet extends MSpace implements InstSet {
     protected final Map<fURI, Type> TYPE_TABLE = new LinkedHashMap<>();
     protected final Map<fURI, Inst> REWRITE_TABLE = new LinkedHashMap<>();
 
-    public MInstSet(final fURI tid, final fURI vid) {
-        super(tid.extend(fURI.ALL), tid, vid);
+    public MInstSet(final Map<fURI, Set<? extends Obj>> value, final fURI tid, final fURI vid) {
+        super(value,tid.extend(fURI.ALL), tid, vid);
         this.insts().forEach(i -> this.write(i.tid(), i));
     }
 

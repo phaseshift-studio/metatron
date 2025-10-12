@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.lang.obj.mgrph;
+package studio.phaseshift.metatron.lang.obj.mgrph.tp;
 
 import org.apache.tinkerpop.gremlin.structure.Property;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
@@ -27,7 +27,7 @@ import studio.phaseshift.metatron.util.IteratorUtil;
 
 import java.util.Iterator;
 
-import static studio.phaseshift.metatron.lang.obj.mgrph.mgrphInstSet.VERTEX_PROPERTY_TID;
+import static studio.phaseshift.metatron.lang.obj.mgrph.tp.mgrphInstSet.VERTEX_PROPERTY_TID;
 
 
 public class MVertexProperty<V> extends MProperty<V> implements VertexProperty<V>, WrappedVertexProperty<VertexProperty<V>> {

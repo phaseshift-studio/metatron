@@ -26,27 +26,26 @@ import studio.phaseshift.metatron.ui.GraphittyLogger;
 
 import java.util.LinkedList;
 
-public class StackSpace extends MSpace {
+public class StackSpace extends MSpace<LinkedList<MemSpace>> {
 
     public static final fURI STACKSPACE_TID = MTRON_TID.extend("space/stack");
     public static final String ARG_PREFIX = "a";
 
     private final GraphittyLogger LOG = Graphitty.log(this);
     private final MemSpace root;
-    private final LinkedList<MemSpace> stack = new LinkedList<>();
 
     public StackSpace(final fURI pattern, final fURI vid) {
-        super(pattern, STACKSPACE_TID, vid);
+        super(new LinkedList<>(), pattern, STACKSPACE_TID, vid);
         this.root = new MemSpace(this.pattern, STACKSPACE_TID.extend("root"));
     }
 
     @Override
     public Obj read(final fURI vid) {
-        LOG.trace("reading {{b}}%s{{/b}} in %s [{{y}}root{{/y}}: %s]", vid, this.stack, this.root.pathStore);
+        LOG.trace("reading {{b}}%s{{/b}} in %s [{{y}}root{{/y}}: %s]", vid, this.structure, this.root.structure);
         // if(vid.coefficientValue().isZero())
         //    return NoObj.single();
         boolean isArg = vid.toString().matches("a\\d+"); // skip first encounter of list arg variable as it's a variable to grab the variable
-        for (final MemSpace layer : this.stack) {
+        for (final MemSpace layer : this.structure) {
             final Obj o = layer.read(vid.basePath());
             if (!o.isNoObj()) {
                 if (isArg) isArg = false;
@@ -58,23 +57,23 @@ public class StackSpace extends MSpace {
 
     @Override
     public Obj write(final fURI vid, final Obj obj) {
-        LOG.trace("writing %s to %s in %s [{{y}}root{{/y}}: %s]", obj, vid, this.stack, this.root.pathStore);
-        if (!this.stack.isEmpty())
-            this.stack.get(0).write(vid, obj);
+        LOG.trace("writing %s to %s in %s [{{y}}root{{/y}}: %s]", obj, vid, this.structure, this.root.structure);
+        if (!this.structure.isEmpty())
+            this.structure.get(0).write(vid, obj);
         this.root.write(vid, obj);
         return obj;
     }
 
     public boolean pop() {
-        final MemSpace frameSpace = this.stack.pop();
+        final MemSpace frameSpace = this.structure.pop();
         if (null == frameSpace)
             return false;
-        LOG.trace("popped frame {{_&r}}off{{/r&/_}} stack: %s [{{y}}depth{{/y}}: %d]", frameSpace.pathStore, this.stack.size());
+        LOG.trace("popped frame {{_&r}}off{{/r&/_}} stack: %s [{{y}}depth{{/y}}: %d]", frameSpace.structure, this.structure.size());
         return true;
     }
 
     public void push(final Poly frame) {
-        final MemSpace frameSpace = new MemSpace(pattern, STACKSPACE_TID.extend("d" + this.stack.size()));
+        final MemSpace frameSpace = new MemSpace(pattern, STACKSPACE_TID.extend("d" + this.structure.size()));
         if (frame.isRec())
             frame.recValue().forEach((key, value) -> frameSpace.write(key.uriValue(), value));
         else {
@@ -82,8 +81,8 @@ public class StackSpace extends MSpace {
                 frameSpace.write(fURI.of(ARG_PREFIX + i), frame.lstValue().get(i));
             }
         }
-        this.stack.push(frameSpace);
-        LOG.trace("pushed frame {{_&g}}on{{/g&/_}} stack: %s [{{y}}depth{{/y}}: %d]", frameSpace.pathStore, this.stack.size());
+        this.structure.push(frameSpace);
+        LOG.trace("pushed frame {{_&g}}on{{/g&/_}} stack: %s [{{y}}depth{{/y}}: %d]", frameSpace.structure, this.structure.size());
     }
 
 

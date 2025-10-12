@@ -16,18 +16,16 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.lang.obj.mgrph;
+package studio.phaseshift.metatron.lang.obj.mgrph.tp;
 
 import org.apache.tinkerpop.gremlin.structure.Element;
 import org.apache.tinkerpop.gremlin.structure.Graph;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.Obj;
 import studio.phaseshift.metatron.lang.obj.mtron.MObj;
-import studio.phaseshift.metatron.space.Router;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.Iterator;
-import java.util.Objects;
 
 public abstract class MElement extends MObj implements Element, Obj {
 

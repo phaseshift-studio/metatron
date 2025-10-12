@@ -29,6 +29,7 @@ import studio.phaseshift.metatron.space.mem.MSpace;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.io.IOException;
+import java.nio.file.FileSystem;
 import java.nio.file.FileVisitOption;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -41,12 +42,12 @@ import static studio.phaseshift.metatron.lang.fURI.f;
 import static studio.phaseshift.metatron.lang.obj.mtron.MStr.str;
 import static studio.phaseshift.metatron.lang.obj.mtron.MUri.uri;
 
-public class FileSpace extends MSpace {
+public class FileSpace extends MSpace<FileSystem> {
 
     public static final fURI FILESPACE_TID = f("/mtron/io/fs");
 
-    public FileSpace(final fURI pattern, final fURI vid) {
-        super(pattern, FILESPACE_TID, vid);
+    public FileSpace(final FileSystem fs, final fURI pattern, final fURI vid) {
+        super(fs, pattern, FILESPACE_TID, vid);
     }
 
     @Override

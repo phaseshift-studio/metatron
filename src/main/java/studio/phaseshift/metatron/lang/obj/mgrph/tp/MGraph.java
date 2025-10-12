@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.lang.obj.mgrph;
+package studio.phaseshift.metatron.lang.obj.mgrph.tp;
 
 import org.apache.commons.configuration2.Configuration;
 import org.apache.tinkerpop.gremlin.process.computer.GraphComputer;
@@ -38,12 +38,12 @@ import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.lang.fURI.f;
 
-public class MGraph extends MSpace implements Graph, WrappedGraph<Graph> {
+public class MGraph extends MSpace<Graph> implements Graph, WrappedGraph<Graph> {
 
     protected Graph graph;
 
     public MGraph(final Graph graph, final fURI pattern, final fURI vid) {
-        super(pattern, mgrphInstSet.GRAPH_TID, vid);
+        super(graph, pattern, mgrphInstSet.GRAPH_TID, vid);
         this.graph = graph;
         this.graph.configuration().addProperty("vid", vid);
         this.graph.configuration().addProperty("pattern", pattern);

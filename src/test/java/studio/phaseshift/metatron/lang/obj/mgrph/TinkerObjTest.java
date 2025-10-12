@@ -20,6 +20,7 @@ package studio.phaseshift.metatron.lang.obj.mgrph;
 
 import org.junit.jupiter.api.Test;
 import studio.phaseshift.metatron.MetatronTest;
+import studio.phaseshift.metatron.lang.obj.mgrph.tp.MGraph;
 import studio.phaseshift.metatron.space.Router;
 import studio.phaseshift.metatron.ui.Graphitty;
 

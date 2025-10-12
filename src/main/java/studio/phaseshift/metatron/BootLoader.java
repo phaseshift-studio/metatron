@@ -22,8 +22,8 @@ import org.apache.tinkerpop.gremlin.tinkergraph.structure.TinkerFactory;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.monoid.mtron.MMonoid;
 import studio.phaseshift.metatron.lang.obj.InstSet;
-import studio.phaseshift.metatron.lang.obj.mgrph.MGraph;
-import studio.phaseshift.metatron.lang.obj.mgrph.mgrphInstSet;
+import studio.phaseshift.metatron.lang.obj.mgrph.tp.MGraph;
+import studio.phaseshift.metatron.lang.obj.mgrph.tp.mgrphInstSet;
 import studio.phaseshift.metatron.lang.obj.mtron.MUri;
 import studio.phaseshift.metatron.lang.obj.mtron.mtronInstSet;
 import studio.phaseshift.metatron.space.Router;
@@ -37,6 +37,8 @@ import studio.phaseshift.metatron.ui.GraphittyLogger;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.nio.file.FileSystem;
+import java.nio.file.FileSystems;
 
 import static studio.phaseshift.metatron.lang.fURI.f;
 
@@ -71,7 +73,7 @@ public class BootLoader {
             Router.global().write("/sys/log", Log.of(f("/sys/log")));
             //final Space var = new MemSpace(fURI.of("+/+/#"), fURI.of("/mnt/var"));
             //Router.global().addSpace(var);
-            final Space fs = new FileSpace(f("/home/#"), f("/mnt/fs"));
+            final Space fs = new FileSpace(FileSystems.getDefault(), f("/home/#"), f("/mnt/fs"));
             Router.global().addSpace(fs);
             final Space grph = new MGraph(TinkerFactory.createModern(), f("/tp/#"), f("/mnt/tp"));
             Router.global().addSpace(grph);

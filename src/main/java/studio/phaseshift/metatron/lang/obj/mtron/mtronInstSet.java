@@ -115,7 +115,7 @@ public class mtronInstSet extends MInstSet {
     public static final fURI PRINT_TID = INST_TID.extend("print");
 
     public mtronInstSet(final fURI vid) {
-        super(MTRON_TID, vid);
+        super(new HashMap<>(), MTRON_TID, vid);
         this.types().forEach(t -> Router.global().registerRewrite(f(t.tid().name()), t.tid()));
         this.insts().forEach(t -> Router.global().registerRewrite(f(t.tid().name()), t.tid().basePath()));
     }

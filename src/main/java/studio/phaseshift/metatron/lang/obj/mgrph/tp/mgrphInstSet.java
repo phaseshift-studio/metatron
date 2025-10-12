@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.lang.obj.mgrph;
+package studio.phaseshift.metatron.lang.obj.mgrph.tp;
 
 import org.apache.tinkerpop.gremlin.structure.Direction;
 import studio.phaseshift.metatron.lang.fURI;
@@ -27,6 +27,7 @@ import studio.phaseshift.metatron.lang.obj.Type;
 import studio.phaseshift.metatron.space.Router;
 import studio.phaseshift.metatron.util.IteratorUtil;
 
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
@@ -71,7 +72,7 @@ public class mgrphInstSet extends MInstSet {
     public static final fURI LABEL_TID = INST_TID.extend("label");
 
     public mgrphInstSet(final fURI vid) {
-        super(MGRPH_TID, vid);
+        super(new HashMap<>(), MGRPH_TID, vid);
         this.types().forEach(t -> Router.global().registerRewrite(f(t.tid().name()), t.tid()));
     }
 

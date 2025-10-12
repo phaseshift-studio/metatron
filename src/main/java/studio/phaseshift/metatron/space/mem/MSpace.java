@@ -28,14 +28,16 @@ import studio.phaseshift.metatron.util.MTronException;
 import java.util.List;
 import java.util.Map;
 
-public abstract class MSpace implements Space {
+public abstract class MSpace<T> implements Space {
 
+    protected final T structure;
     protected final fURI pattern;
     protected final fURI tid;
     protected final fURI vid;
     protected final Qs qs;
 
-    public MSpace(final fURI pattern, final fURI tid, final fURI vid) {
+    public MSpace(final T structure, final fURI pattern, final fURI tid, final fURI vid) {
+        this.structure = structure;
         this.pattern = pattern;
         this.tid = tid.big();
         this.vid = vid;
@@ -48,8 +50,8 @@ public abstract class MSpace implements Space {
     }
 
     @Override
-    public Map value() {
-        return Map.of();
+    public <T> T value() {
+        return (T) this.structure;
     }
 
     @Override
@@ -86,6 +88,11 @@ public abstract class MSpace implements Space {
     @Override
     public void close() {
 
+    }
+
+    @Override
+    public Space clone(final Object structure, final fURI tid, final fURI vid) {
+        return this;
     }
 
     @Override

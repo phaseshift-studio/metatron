@@ -22,6 +22,7 @@ import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.MInstSet;
 import studio.phaseshift.metatron.space.Router;
 
+import java.util.HashMap;
 import java.util.Set;
 
 import static studio.phaseshift.metatron.lang.fURI.ALL;
@@ -52,7 +53,7 @@ public class mextInstSet extends MInstSet {
     }
 
     public mextInstSet(final fURI vid) {
-        super(MEXT_TID, vid);
+        super(new HashMap<>(), MEXT_TID, vid);
         this.load();
     }
 

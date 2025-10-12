@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.lang.obj.mgrph;
+package studio.phaseshift.metatron.lang.obj.mgrph.tp;
 
 import org.apache.tinkerpop.gremlin.structure.*;
 import org.apache.tinkerpop.gremlin.structure.util.wrapped.WrappedProperty;
@@ -31,7 +31,7 @@ import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.Iterator;
 
-import static studio.phaseshift.metatron.lang.obj.mgrph.mgrphInstSet.PROPERTY_TID;
+import static studio.phaseshift.metatron.lang.obj.mgrph.tp.mgrphInstSet.PROPERTY_TID;
 
 public class MProperty<V> extends MObj implements Property<V>, WrappedProperty<Property<V>> {
 

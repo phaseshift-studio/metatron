@@ -145,9 +145,6 @@ public interface Space extends Poly, AutoCloseable {
 
     Qs qs();
 
-    @Override
-    Object value();
-
     fURI pattern();
 
     default Obj read(final String vid) {
@@ -190,15 +187,13 @@ public interface Space extends Poly, AutoCloseable {
     }
 
     @Override
-    default List<Obj> elements() {
-        return List.of();
-
-    }
-
-    @Override
     default Obj vid(final fURI vid) {
         throw new IllegalStateException("structs must umount to change value id (vid)");
     }
 
+    @Override
+    default <O extends Obj> Iterable<O> elements() {
+        return (Iterable<O>) this.value();
+    }
 
 }
