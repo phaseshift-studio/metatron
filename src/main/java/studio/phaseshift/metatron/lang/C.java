@@ -44,6 +44,10 @@ public interface C<T extends Comparable<T>, D extends C<T, D>> extends Comparabl
 
     boolean within(final D rhs);
 
+    default boolean contains(final D rhs) {
+        return this.lte(rhs.least()) && this.gte(rhs.most());
+    }
+
     default boolean lt(final D rhs) {
         return this.compareTo(rhs) < 0;
     }

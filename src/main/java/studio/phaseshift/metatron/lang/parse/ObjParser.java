@@ -362,12 +362,12 @@ public class ObjParser {
 
     private static Parser generate_sugar_parser(final fURI tid, final Parser startToken, final int argCount, final Parser endToken) {
         // TODO: look into ExpressionBuilder for handling paren wrapping properly.
-        return argCount == 0 ?
-                startToken.trim().map(t -> MInst.instA(tid)) :
-                seq(startToken.trim(), choice(
+        return (argCount == 0 ?
+                seq(startToken.trim(),opt(seq(of('?'),m_furi_inst_dom_rng()).map(t->pick(t,1)),null)).map(t -> MInst.instA(tid.query(pick(t,1)))) :
+                seq(startToken.trim(),opt(seq(of('?'),m_furi_inst_dom_rng()).map(t->pick(t,1)),null), choice(
                         seq(of('('), m_obj(), of(')')).map(t -> ObjParser.<Obj>pick(t, 1)),
                         m_obj()), null == endToken ? of("") : endToken.trim())
-                        .map(t -> MInst.instB(tid, MLst.of(ObjParser.<Obj>pick(t, 1))));
+                        .map(t -> MInst.instB(tid.query(pick(t,1)), MLst.of(ObjParser.<Obj>pick(t, 2)))));
     }
 
     /// //////////////////////////////////////////////////////////////////////////////////////////

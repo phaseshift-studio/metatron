@@ -55,7 +55,7 @@ public class ObjStringSerializer implements ObjSerializer<String> {
         /// ///////////////////////////////////////////////////////////////
         /// ///////////////////////////////////////////////////////////////
         else if (obj instanceof final Inst inst) {
-            generateTID(sb, obj.tid(), false).append("(");
+            generateTID(sb, obj.tid(), false, false).append("{{g}}({{/g}}");
             if (!inst.args().isEmpty()) {
                 boolean isLst = inst.args().isLst();
                 for (final Obj kv : inst.args().elements()) {
@@ -177,7 +177,7 @@ public class ObjStringSerializer implements ObjSerializer<String> {
 
     private StringBuilder generateRec(final StringBuilder sb, final Rec rec, final int depth) {
         boolean nested = rec.recValue().values().stream().anyMatch(Obj::isRec);
-        sb.append("{{FORM1}}[{{/FORM1}}");
+        sb.append("{{g}}[{{/g}}");
         if (depth > 0 || nested)
             sb.append("\n");
         rec.recValue().forEach((k, v) -> {
