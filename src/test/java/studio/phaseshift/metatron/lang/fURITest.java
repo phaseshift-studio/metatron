@@ -106,7 +106,7 @@ public class fURITest {
             "A/B/C                                | true",
             "A/+/C                                | true",
             "A/#                                  | true",
-            "A/#[*]                               | true"
+            "A/#{*}                               | true"
     }, delimiter = '|')
     public void testGeneric(final String f, final boolean isGeneric) {
         final fURI furi1 = fURI.of(null == f ? "" : f);
@@ -130,13 +130,13 @@ public class fURITest {
             "A/b/c         |  A/B/C         | true",
             "a/b/c         |  D             | true",
             "A/B           |  A/C           | false",
-            "A[+]          |  A[*]          | true",
-            "A/B[2,4]      |  a/#[*]        | true",
-            "A/B/C[2,4]    |  a/#[*]        | true",
-            //"A/[+]         |  A/#[*]        | true",
-            "A/[0]         |  A/#[2]        | false",
-            "A/aB[0]       |  Z/+[0]        | true",
-            "a[1]          |  A[1]          | true"
+            "A{+}          |  A{*}          | true",
+            "A/B{2,4}      |  a/#{*}        | true",
+            "A/B/C{2,4}    |  a/#{*}        | true",
+            //"A/{+}         |  A/#{*}        | true",
+            "A/{0}         |  A/#{2}        | false",
+            "A/aB{0}       |  Z/+{0}        | true",
+            "a{1}          |  A{1}          | true"
     }, delimiter = '|')
     public void testGenericMatch(final String f1, final String f2, final boolean matches) {
         final Map<fURI, fURI> generics = new HashMap<>(Map.of(f("A"), f("a"), f("B"), f("b"), f("C"), f("c"), f("D"), f("a/b/c")));
@@ -184,15 +184,15 @@ public class fURITest {
 
     @ParameterizedTest
     @CsvSource(value = {
-            "a                  | a               | a[2]",
-            "a/b/c[23]          | a/b/c[2]        | a/b/c[25]",
-            "a/b/c/[2,5]        | z[4,6]          | ERROR",
-            "a/b/c[6]?a=1&b=2   | a/+/c[4,6]?c=3  | a/b/c[10,12]?a=1&b=2&c=3",
-            "a/b/c[+]?a=1&b=2   | #[*]            | a/b/c[1,]?a=1&b=2",
-            "a/b/c[*]?a=1&b=2   | #[+]            | a/b/c[+]?a=1&b=2",
-            "a/b/c[+]?a=1&b=2   | #[+]            | a/b/c[2,]?a=1&b=2",
-            "a/b/c[+]?a=1&b=2   | #[?]            | a/b/c[+]?a=1&b=2",
-            "a/b/c[?]?a=1&b=2   | #[?]            | a/b/c[0,2]?a=1&b=2",
+            "a                  | a               | a{2}",
+            "a/b/c{23}          | a/b/c{2}        | a/b/c{25}",
+            "a/b/c/{2,5}        | z{4,6}          | ERROR",
+            "a/b/c{6}?a=1&b=2   | a/+/c{4,6}?c=3  | a/b/c{10,12}?a=1&b=2&c=3",
+            "a/b/c{+}?a=1&b=2   | #{*}            | a/b/c{1,}?a=1&b=2",
+            "a/b/c{*}?a=1&b=2   | #{+}            | a/b/c{+}?a=1&b=2",
+            "a/b/c{+}?a=1&b=2   | #{+}            | a/b/c{2,}?a=1&b=2",
+            "a/b/c{+}?a=1&b=2   | #{?}            | a/b/c{+}?a=1&b=2",
+            "a/b/c{?}?a=1&b=2   | #{?}            | a/b/c{0,2}?a=1&b=2",
     }, delimiter = '|')
     public void testPlus(final String f1, final String f2, final String expected) {
         final fURI furi1a = fURI.of(f1);
@@ -212,13 +212,13 @@ public class fURITest {
 
     @ParameterizedTest
     @CsvSource(value = {
-            "a                  | a               | a/a[1]",
-            "a                  | a               | a/a[1]",
-            "a/b/c[23]          | a/b/c[2]        | a/b/c/a/b/c[46]",
-            "a/b/c[2,5]         | z[4,6]          | a/b/c/z[8,30]",
-            "a/b/c[2,5]         | z[4,6]          | a/b/c/z[8,30]",
-            "a/b/c[6]?a=1&b=2   | a/+/c[4,6]?c=3  | a/b/c/a/+/c[24,36]?a=1&b=2&c=3",
-            "a/b/c[+]?a=1&b=2   | #[*]            | a/b/c/#[0,]?a=1&b=2",
+            "a                  | a               | a/a{1}",
+            "a                  | a               | a/a{1}",
+            "a/b/c{23}          | a/b/c{2}        | a/b/c/a/b/c{46}",
+            "a/b/c{2,5}         | z{4,6}          | a/b/c/z{8,30}",
+            "a/b/c{2,5}         | z{4,6}          | a/b/c/z{8,30}",
+            "a/b/c{6}?a=1&b=2   | a/+/c{4,6}?c=3  | a/b/c/a/+/c{24,36}?a=1&b=2&c=3",
+            "a/b/c{+}?a=1&b=2   | #{*}            | a/b/c/#{0,}?a=1&b=2",
     }, delimiter = '|')
     public void testMult(final String f1, final String f2, final String expected) {
         final fURI furi1a = fURI.of(f1);
@@ -238,16 +238,16 @@ public class fURITest {
 
     @ParameterizedTest
     @CsvSource(value = {
-            "a                  | a[-1]",
-            "a[2,3]             | a[-3,-2]",
-            "a[0]               | a[0]",
-            "a[,10]             | a[-10,]",
-            "a[2,]              | a[,-2]",
-            "a[*]               | a[,0]",
-            "a[?]               | a[-1,0]",
-            "a[+]               | a[,-1]",
-            "a[10]              | a[-10]",
-            "a[10,]             | a[,-10]"
+            "a                  | a{-1}",
+            "a{2,3}             | a{-3,-2}",
+            "a{0}               | a{0}",
+            "a{,10}             | a{-10,}",
+            "a{2,}              | a{,-2}",
+            "a{*}               | a{,0}",
+            "a{?}               | a{-1,0}",
+            "a{+}               | a{,-1}",
+            "a{10}              | a{-10}",
+            "a{10,}             | a{,-10}"
     }, delimiter = '|')
     public void testNeg(final String f1, final String expected) {
         final fURI furi1 = fURI.of(f1);
@@ -385,10 +385,10 @@ public class fURITest {
             "/a/b/c?a=b&c=d              | 1   | /a/b?a=b&c=d",
             "/a/b/c?a=b&c=d              | 2   | /a?a=b&c=d",
             "/a/b/c/?a=b&c=d             | 2   | /a/?a=b&c=d",
-            "/a/b/c[*]?a=b&c=d           | 1   | /a/b[*]?a=b&c=d",
-            "/a/b/c[2,3]?a=b&c=d         | 2   | /a[2,3]?a=b&c=d",
+            "/a/b/c{*}?a=b&c=d           | 1   | /a/b{*}?a=b&c=d",
+            "/a/b/c{2,3}?a=b&c=d         | 2   | /a{2,3}?a=b&c=d",
             // "/a/b/c/[0]?a=b&c=d          | 2   | /a/[0]?a=b&c=d",
-            // "/a/b/c/[?]?a=b&c=d          | 2   | /a/[?]?a=b&c=d",
+            // "/a/b/c/{?}?a=b&c=d          | 2   | /a/{?}?a=b&c=d",
             // "/a/b?a=b&c=d                | 2   | ?a=b&c=d",
     }, delimiter = '|')
     public void testRetract(final String furi, final int steps, final String expected) {
@@ -415,8 +415,8 @@ public class fURITest {
             "/a/b/c?a=b&c=d              | 1   | /b/c?a=b&c=d",
             "/a/b/c?a=b&c=d              | 2   | /c?a=b&c=d",
             "/a/b/c/?a=b&c=d             | 2   | /c/?a=b&c=d",
-            "/a/b/c[*]?a=b&c=d           | 1   | /b/c[*]?a=b&c=d",
-            "/a/b/c[2,3]?a=b&c=d         | 2   | /c[2,3]?a=b&c=d",
+            "/a/b/c{*}?a=b&c=d           | 1   | /b/c{*}?a=b&c=d",
+            "/a/b/c{2,3}?a=b&c=d         | 2   | /c{2,3}?a=b&c=d",
     }, delimiter = '|')
     public void testPretract(final String furi, final int steps, final String expected) {
         final fURI start = fURI.of(furi);
@@ -453,12 +453,12 @@ public class fURITest {
 
     @ParameterizedTest
     @CsvSource(value = {
-            "http://a/b/c[1]|1",
-            "/mtron/int[1,5]|1,5",
-            "http://a/b/c[*]|*",
-            "/mtron/int[0]?rng=/mtron/int[23]|0",
-            "/mtron/+/plus[3]?rng=/mtron/int[23]|3",
-            "/mtron/+/plus[?]?rng=/mtron/int[0,23]|?"
+            "http://a/b/c{1}|1",
+            "/mtron/int{1,5}|1,5",
+            "http://a/b/c{*}|*",
+            "/mtron/int{0}?rng=/mtron/int{23}|0",
+            "/mtron/+/plus{3}?rng=/mtron/int{23}|3",
+            "/mtron/+/plus{?}?rng=/mtron/int{0,23}|?"
     }, delimiter = '|')
     void testCoefficients(final String furi, final String coefficient) {
         assertEquals(coefficient, fURI.of(furi).c());
@@ -477,10 +477,10 @@ public class fURITest {
             "#|#|true",
             "a||false",
             "|/|false",
-            "[0]|[0]/|true",
-            "[0]|a/b[*]|true",
-            "/a/b[0]|/a/b[*]|true",
-            "/[0]|/[*]|true",
+            "{0}|{0}/|true",
+            "{0}|a/b{*}|true",
+            "/a/b{0}|/a/b{*}|true",
+            "/{0}|/{*}|true",
             "||true",
             "http://fhatos.org/a|http://fhatos.org/a|true",
             "http://fhatos.org/a|http://fhatos.org/a/b|false",
@@ -534,50 +534,50 @@ public class fURITest {
             "abc/a/c|+/+/#|true",
             "abc/a/c|abc/+/c|true",
             "abc/a|#|true",
-            "abc/a[1]|abc/a[0]|false",
-            "abc/a[1]|abc/a[?]|true",
-            "abc/a[1]|abc/a[*]|true",
-            "abc/a[1]|#[*]|true",
-            "abc/a[1]|+[*]|false",
-            "abc/a[1]|abc/+[*]|true",
-            "abc/a[1]|+/+[*]|true",
-            "abc/a[0]|#[*]|true",
-            "abc/a[0]|+[+]|false",
-            "abc/a[2]|abc/a[?]|false",
-            "abc/a[2]|abc/a[0,3]|true",
-            "abc/a[*]|abc/a[*]|true",
-            "abc/a[0]|abc/a[0]|true",
-            "abc/a[1,1]|abc/a[1]|true",
-            "abc/a[+]|abc/a[1,]|true",
-            "abc/a[*]|abc/a[0,]|true",
-            "abc/a[?]|abc/a[0,1]|true",
+            "abc/a{1}|abc/a{0}|false",
+            "abc/a{1}|abc/a{?}|true",
+            "abc/a{1}|abc/a{*}|true",
+            "abc/a{1}|#{*}|true",
+            "abc/a{1}|+{*}|false",
+            "abc/a{1}|abc/+{*}|true",
+            "abc/a{1}|+/+{*}|true",
+            "abc/a{0}|#{*}|true",
+            "abc/a{0}|+{+}|false",
+            "abc/a{2}|abc/a{?}|false",
+            "abc/a{2}|abc/a{0,3}|true",
+            "abc/a{*}|abc/a{*}|true",
+            "abc/a{0}|abc/a{0}|true",
+            "abc/a{1,1}|abc/a{1}|true",
+            "abc/a{+}|abc/a{1,}|true",
+            "abc/a{*}|abc/a{0,}|true",
+            "abc/a{?}|abc/a{0,1}|true",
             "/mtron/rec|#|true",
-            "/mtron/inst/plus[4]|/mtron/+/+[4]|true",
-            "/mtron/inst/plus[4]|/mtron/+/+/+[4]|false",
-            "/mtron/inst/plus[4]|/+/inst/+[4]|true",
+            "/mtron/inst/plus{4}|/mtron/+/+{4}|true",
+            "/mtron/inst/plus{4}|/mtron/+/+/+{4}|false",
+            "/mtron/inst/plus{4}|/+/inst/+{4}|true",
             "/mtron/inst/plus|/mtron/+/plus|true",
-            "/mtron/inst/plus|/mtron/+/plus[?]|true",
-            "/mtron/inst/plus[1]|/mtron/#[?]|true",
-            "/mtron/+/plus[1]|/mtron/#[?]|true",
-            "/mtron/+/plus[1]|/mtron/+/+[?]|true",
-            "/mtron/+/plus[1]|/mtron/+/#[?]|true",
-            "/mtron/inst/plus|/mtron/+/plus[?]|true",
-            "/mtron/inst/+[1]|/mtron/+/+[?]|true",
-            "/mtron/+/+[1]|/mtron/+/+[?]|true",
-            "/mtron/+/+[1]|/mtron/+/#[?]|true",
-            "/mtron/inst/plus[1]|/mtron/inst/#[?]|true",
-            "/mtron/inst/plus[1]|/mtron/+/#[?]|true",
-            //"/mtron/inst/plus/|/mtron/+/plus/[?]|true",
-            "/mtron/+/+|/mtron/+/+[?]|true",
-            //"/+/+/+|/mtron/+/+[?]|true",
-            "/mtron/+/plus|/mtron/+/plus[?]|true",
-            "/mtron/inst/plus|/mtron/+/plus[?]|true",
+            "/mtron/inst/plus|/mtron/+/plus{?}|true",
+            "/mtron/inst/plus{1}|/mtron/#{?}|true",
+            "/mtron/+/plus{1}|/mtron/#{?}|true",
+            "/mtron/+/plus{1}|/mtron/+/+{?}|true",
+            "/mtron/+/plus{1}|/mtron/+/#{?}|true",
+            "/mtron/inst/plus|/mtron/+/plus{?}|true",
+            "/mtron/inst/+{1}|/mtron/+/+{?}|true",
+            "/mtron/+/+{1}|/mtron/+/+{?}|true",
+            "/mtron/+/+{1}|/mtron/+/#{?}|true",
+            "/mtron/inst/plus{1}|/mtron/inst/#{?}|true",
+            "/mtron/inst/plus{1}|/mtron/+/#{?}|true",
+            //"/mtron/inst/plus/|/mtron/+/plus/{?}|true",
+            "/mtron/+/+|/mtron/+/+{?}|true",
+            //"/+/+/+|/mtron/+/+{?}|true",
+            "/mtron/+/plus|/mtron/+/plus{?}|true",
+            "/mtron/inst/plus|/mtron/+/plus{?}|true",
             //"/mtron/inst/plus[4]|/mtron/+/plus[4]|true" // TODO:?!? STRANGE!?!?
     }, delimiter = '|')
     void testMatches(final String a, final String b, final boolean shouldMatch) {
         final fURI furi1a = fURI.of(nullToEmpty(a));
         final fURI furi1b = fURI.of(nullToEmpty(b));
-        final boolean doObjParser = null != a && null != b && !a.equals("[0]");
+        final boolean doObjParser = null != a && null != b && !a.equals("{0}");
         final fURI furi2a = doObjParser ? ObjParser.m_furi().parse(nullToEmpty(a)).get() : fURI.of(nullToEmpty(a));
         final fURI furi2b = doObjParser ? ObjParser.m_furi().parse(nullToEmpty(b)).get() : fURI.of(nullToEmpty(b));
         LOG.trace("testing: {{b}}%s{{/b}} %s {{b}}%s{{/b}}", furi1a, shouldMatch ? "{{g}}should match{{/g}}" : "{{r}}should not match{{/r}}", furi1b);

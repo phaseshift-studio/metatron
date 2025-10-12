@@ -36,10 +36,10 @@ public class IntTest extends MetatronTest {
             "1                                   | 1                            | true",
             "1                                   | int::T[]                     | true",
             "1                                   | str::T[]                     | false",
-            "1                                   | int[0,4]::T[]                | true",
-            "int[5]::1                           | int[0,4]::T[]                | false",
-            "int[5]::1                           | int[*]::T[]                  | true",
-            "int[0]::1                           | noobj[0]::T[]                | true"
+            "1                                   | int{0,4}::T[]                | true",
+            "int{5}::1                           | int{0,4}::T[]                | false",
+            "int{5}::1                           | int{*}::T[]                  | true",
+            "int{0}::1                           | noobj[0}::T[]                | true"
     }, delimiter = '|')
     public void testMatches(final String lhs, final String rhs, final boolean matches) {
         super.testMatches(lhs, rhs, matches);
@@ -76,7 +76,7 @@ public class IntTest extends MetatronTest {
             "3.plus(mult(2))                                              | 9",
             "{2,3}>-.plus(mult(2))                                        | {6,9}",
             "{2,3}.plus(mult(2))                                          | {6,9}",
-            // "{2,3}.is?int[*]<=int[*](in?bool[+]<=int[*](int[2]::T[]))   | {2,3}",
+            // "{2,3}.is?int{*]<=int{*](in?bool[+]<=int{*](int{2}::T[]))   | {2,3}",
             "{1,2,3}.plus(1).plus(2)                                      | {4,5,6}",
             "{1,2,3}.plus(1).plus(2).mult(2)                              | {8,10,12}",
             "{1,2,3}.plus(1).plus(2).mult(2).is(in(int::T[]))             | {8,10,12}",
@@ -88,21 +88,21 @@ public class IntTest extends MetatronTest {
 
     @ParameterizedTest
     @CsvSource(value = {
-            "int[10]::1         |int[5]       |int[5]::1          |int[5]::1",
-            "int[10]::1         |int[3]       |int[3]::1          |int[7]::1",
-            "int[4,10]::1       |int[3]       |int[3]::1          |int[1,7]::1",
-            "int[10]::1         |int[10]      |int[10]::1         |int[0]::1",
-            "int[10]::1         |int[10]      |int[10]::1         |noobj",
-            "int[10]::1         |int[11]      |int[0]::1          |int[10]::1",
-            "int[0]::1          |int[0]       |int[0]::1          |int[0]::1",
-            "int[10]::1         |int[0]       |int[0]::1          |int[10]::1",
-            "int[10]::1         |int[-5]      |int[-5]::1         |int[15]::1",
-            "int[10,]::1        |int[10,]     |int[10,]::1        |int[0]::1",
-            "int[10,]::1        |int[1,]      |int[1,]::1         |noobj",
-            "noobj,             |int[10]      |noobj              |noobj",
-            "int[,10]::1        |int[,10]     |int[,10]::1        |noobj",
-            "int[,10]::1        |int[1]       |int::1             |int[,9]::1",
-            "int[1,10]::1       |int[1]       |int::1             |int[0,9]::1",
+            "int{10}::1         |int{5}       |int{5}::1          |int{5}::1",
+            "int{10}::1         |int{3}       |int{3}::1          |int{7}::1",
+            "int{4,10}::1       |int{3}       |int{3}::1          |int{1,7}::1",
+            "int{10}::1         |int{10}      |int{10}::1         |int{0}::1",
+            "int{10}::1         |int{10}      |int{10}::1         |noobj",
+            "int{10}::1         |int{11}      |int{0}::1          |int{10}::1",
+            "int{0}::1          |int{0}       |int{0}::1          |int{0}::1",
+            "int{10}::1         |int{0}       |int{0}::1          |int{10}::1",
+            "int{10}::1         |int{-5}      |int{-5}::1         |int{15}::1",
+            "int{10,}::1        |int{10,}     |int{10,}::1        |int{0}::1",
+            "int{10,}::1        |int{1,}      |int{1,}::1         |noobj",
+            "noobj,             |int{10}      |noobj              |noobj",
+            "int{,10}::1        |int{,10}     |int{,10}::1        |noobj",
+            "int{,10}::1        |int{1}       |int::1             |int{,9}::1",
+            "int{1,10}::1       |int{1}       |int::1             |int{0,9}::1",
     }, delimiter = '|')
     public void testRemove(final String current, final String remove, final String retrieved, final String remaining) {
         final Obj currentF = ObjParser.m_obj().parse(current).get();

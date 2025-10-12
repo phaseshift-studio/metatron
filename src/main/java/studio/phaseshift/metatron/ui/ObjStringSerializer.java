@@ -240,11 +240,11 @@ public class ObjStringSerializer implements ObjSerializer<String> {
             sb.append(this.b.palette.typeC()).append(tid.small().basePath());
         if (!tid.cV().isOne())
             sb.append(this.b.palette.form3C())
-                    .append('[')
+                    .append('{')
                     .append(this.b.palette.typeC())
                     .append(tid.c())
                     .append(this.b.palette.form3C())
-                    .append(']');
+                    .append('}');
         if (tid.hasQuery()) {
             sb.append(this.b.palette.valueC()).append('?');
             for (Map.Entry<String, String> kv : tid.queryMap().entrySet()) {

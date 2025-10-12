@@ -195,13 +195,13 @@ public class ObjParser {
     }*/
 
     public static Parser m_furi_coefficient() {
-        return seq(of('['), choice(
+        return seq(of('{'), choice(
                         seq(opt(seq(opt(of('-'), ""), digit().plus()), ""), of(','), opt(seq(opt(of('-'), ""), digit().plus()), "")).flatten(),
                         seq(opt(of('-'), ""), digit().plus()).flatten().map(t -> t + "," + t),
                         of('*').map(t -> "0,"),
                         of('+').map(t -> "1,"),
                         of('?').map(t -> "0,1")),
-                of(']')).map(t -> pick(t, 1));
+                of('}')).map(t -> pick(t, 1));
     }
 
     public static Parser m_furi_query() {
