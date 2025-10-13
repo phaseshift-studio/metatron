@@ -18,16 +18,21 @@
 
 package studio.phaseshift.metatron.space.device.log;
 
+import ch.qos.logback.classic.filter.ThresholdFilter;
+import org.slf4j.LoggerFactory;
 import org.slf4j.event.Level;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.Lst;
 import studio.phaseshift.metatron.lang.obj.Obj;
 import studio.phaseshift.metatron.lang.obj.Rec;
+import studio.phaseshift.metatron.lang.obj.Uri;
 import studio.phaseshift.metatron.lang.obj.mtron.MLst;
 import studio.phaseshift.metatron.lang.obj.mtron.MRec;
 import studio.phaseshift.metatron.lang.obj.mtron.MUri;
 import studio.phaseshift.metatron.ui.GraphittyObjLogger;
+import studio.phaseshift.metatron.util.MTronException;
 
+import java.lang.reflect.Field;
 import java.util.Map;
 
 import static studio.phaseshift.metatron.lang.obj.mtron.MUri.uri;
@@ -67,6 +72,31 @@ public class Log extends MRec {
         return new Log(vid);
     }
 
+    public static Uri setSLF4J(final String level) {
+        final ch.qos.logback.classic.Logger root = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME);
+        if (null == level || level.isEmpty()) {
+            return MUri.of(root.getAppender("STDOUT").getCopyOfAttachedFiltersList()
+                            .stream()
+                            .filter(x -> x instanceof ThresholdFilter)
+                            .map(x -> {
+                                try {
+                                    final Field field = x.getClass().getDeclaredField("level");
+                                    field.trySetAccessible();
+                                    return field.get(x).toString();
+                                } catch (final Exception e) {
+                                    throw MTronException.of(e);
+                                }
+                            }).findFirst().get()
+                    , fURI.dotPath(root.getClass().getCanonicalName()));
+        } else {
+            root.getAppender("STDOUT").clearAllFilters();
+            ThresholdFilter filter = new ThresholdFilter();
+            filter.setLevel(level.replace(":log", "").trim());
+            filter.start();
+            root.getAppender("STDOUT").addFilter(filter);
+            return uri(level);
+        }
+    }
 }
 
 

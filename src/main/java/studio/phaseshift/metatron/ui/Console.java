@@ -35,6 +35,7 @@ import studio.phaseshift.metatron.lang.obj.NoObj;
 import studio.phaseshift.metatron.lang.obj.Obj;
 import studio.phaseshift.metatron.lang.obj.mtron.MUri;
 import studio.phaseshift.metatron.lang.parse.ObjParser;
+import studio.phaseshift.metatron.space.device.log.Log;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.StringUtil;
 
@@ -164,7 +165,7 @@ public class Console {
         }
     }
 
-    public Console() throws IOException {
+    public Console(final Map<String, String> terminalArgs) throws IOException {
         final DefaultParser parser = new DefaultParser()
                 .quoteChars(new char[]{'\'', '"'})
                 .lineCommentDelims(new String[]{"---"})
@@ -187,6 +188,10 @@ public class Console {
                 .variable(LineReader.SECONDARY_PROMPT_PATTERN, Graphitty.string("{{-X&v1&^1&FORM2}}    {{FORM1}}> {{X}}"))
                 .variable(LineReader.INDENTATION, 0)
                 .build();
+        terminalArgs.forEach((k, v) -> {
+            if (k.equals("log"))
+                Log.setSLF4J(v);
+        });
         // final AutosuggestionWidgets autosuggestionWidgets = new AutosuggestionWidgets(this.reader);
         // autosuggestionWidgets.enable();
     }
@@ -213,28 +218,7 @@ public class Console {
                 else if (line.equals(":quit"))
                     break;
                 else if (line.startsWith(":log")) {
-                    final ch.qos.logback.classic.Logger root = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME);
-                    if (line.equals(":log"))
-                        result = MUri.of(root.getAppender("STDOUT").getCopyOfAttachedFiltersList()
-                                        .stream()
-                                        .filter(x -> x instanceof ThresholdFilter)
-                                        .map(x -> {
-                                            try {
-                                                final Field field = x.getClass().getDeclaredField("level");
-                                                field.trySetAccessible();
-                                                return field.get(x).toString();
-                                            } catch (final Exception e) {
-                                                throw LOG.except(e);
-                                            }
-                                        }).findFirst().get()
-                                , fURI.dotPath(root.getClass().getCanonicalName()));
-                    else {
-                        root.getAppender("STDOUT").clearAllFilters();
-                        ThresholdFilter filter = new ThresholdFilter();
-                        filter.setLevel(line.replace(":log", "").trim());
-                        filter.start();
-                        root.getAppender("STDOUT").addFilter(filter);
-                    }
+                    Log.setSLF4J(line.substring(4));
                 } else
                     result = ObjParser.parse(line);
 
@@ -307,10 +291,15 @@ public class Console {
     }
 
     public static void main(final String[] args) throws IOException {
+        final Map<String, String> params = new HashMap<>();
+        for (final String arg : args) {
+            final String[] kv = arg.split("=");
+            params.put(kv[0].replace("--", ""), kv[1]);
+        }
         boolean reload = true;
         while (reload) {
             reload = false;
-            final Console console = new Console();
+            final Console console = new Console(params);
             try {
                 console.run();
             } catch (final Exception e) {
