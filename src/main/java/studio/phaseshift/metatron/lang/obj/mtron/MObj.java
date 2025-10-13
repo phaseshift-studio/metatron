@@ -40,11 +40,18 @@ public abstract class MObj implements Obj, Cloneable {
         this.value = value;
         this.tid = tid.big();
         this.vid = vid;
+        this.check();
+        this.save();
+    }
+
+    protected void check() {
         if (!this.isType() && !this.isNoObj() && !this.matches(T(tid)))
-            Graphitty.log(this).except("%s is not a %s".formatted(this, T(tid)));
+            Graphitty.log(this).except("[{{r}}type error{{/r}}] %s is not a %s".formatted(this, T(tid)));
+    }
+
+    protected void save() {
         if (null != vid && null != Router.global() && !this.isType())
             Router.global().write(this.vid, this);
-
     }
 
     @Override
@@ -93,8 +100,8 @@ public abstract class MObj implements Obj, Cloneable {
                 clone.value = newValue;
                 clone.tid = newtid;
                 clone.vid = newvid;
-                if (null != newvid && null != Router.global() && !this.isType())
-                    Router.global().write(newvid, clone);
+                this.check();
+                this.save();
                 return clone;
             } catch (final Exception e) {
                 throw MTronException.of(e);

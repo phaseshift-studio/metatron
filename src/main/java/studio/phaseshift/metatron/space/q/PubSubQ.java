@@ -23,6 +23,7 @@ import studio.phaseshift.metatron.lang.monoid.mtron.MMonoid;
 import studio.phaseshift.metatron.lang.obj.Call;
 import studio.phaseshift.metatron.lang.obj.Obj;
 import studio.phaseshift.metatron.lang.obj.mtron.MObj;
+import studio.phaseshift.metatron.space.Space;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
 
@@ -66,8 +67,8 @@ public class PubSubQ extends BaseQ {
     protected final List<Subscription> subscriptions = new ArrayList<>();
     protected final Queue<MMonoid> mail = new LinkedList<>();
 
-    public PubSubQ() {
-        super(f("sub"));
+    public PubSubQ(final Space space) {
+        super(space, f("sub"), SUBSCRIPTION_TID);
         this.onRead = new OnRead();
         this.onWrite = new OnWrite();
     }

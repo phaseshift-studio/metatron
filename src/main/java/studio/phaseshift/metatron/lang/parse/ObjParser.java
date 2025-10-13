@@ -148,7 +148,7 @@ public class ObjParser {
     }
 
     public static <O extends Obj> Iterator<O> eval(final String code) {
-        return (Iterator) MMonoid.of(parse(code)).apply(NoObj.single()).iterator();
+        return (Iterator) parse(code).apply().iterator();
     }
 
     public static <O extends Obj> O parse(final String code) {

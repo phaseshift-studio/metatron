@@ -37,6 +37,7 @@ import java.util.stream.Collectors;
 import static studio.phaseshift.metatron.lang.obj.mtron.MLst.lst;
 import static studio.phaseshift.metatron.lang.obj.mtron.MRec.rec;
 import static studio.phaseshift.metatron.lang.obj.mtron.MType.T;
+import static studio.phaseshift.metatron.lang.obj.mtron.mtronInstSet.FROM_TID;
 import static studio.phaseshift.metatron.lang.obj.mtron.mtronInstSet.SPLIT_TID;
 import static studio.phaseshift.metatron.util.Tuple.Triplet;
 
@@ -101,7 +102,9 @@ public interface Inst extends Call {
     }
 
     @Override
-    Inst c(final cInt c);
+    default Inst c(final cInt c) {
+        return this.tid(this.tid().c(c.toString()));
+    }
 
     default Obj arg(final fURI key) {
         return this.args().<Rec>as().at(key.toUri());
@@ -172,15 +175,27 @@ public interface Inst extends Call {
         final GraphittyLogger LOG = Graphitty.log(source);
         if (target.args().isLst()) {
             LOG.trace("processing lst args of %s", target);
-            final AtomicInteger counter = new AtomicInteger(0);
-            final Lst resolvedArgs = target.args().lstValue()
-                    .stream()
-                    .anyMatch(arg -> !source.arg(counter.getAndIncrement()).matches(arg) /*&& !arg.c().least().isZero()*/) ?
-                    null :
-                    lst(source.args().lstValue().stream().map(a -> a.resolve(lhs)).map(a -> a.isCall() ? a.<Call>as().tryToInst() : a).toList());
-            if (null == resolvedArgs)
-                return null; // TODO: backtrack the resolution to the outer inst to see if adjusting the coefficient can resolve the internal resolution
-            return resolvedArgs;
+            List<Obj> resolvedArgs = new ArrayList<>();
+            for (int i = 0; i < source.args().count(); i++) {
+                final Obj sObj = source.arg(i);
+                final Obj tObj = target.arg(i);
+                if (sObj.isCall()) {
+                    final Inst firstInst = sObj.<Call>as().insts().get(0);
+                    if (!firstInst.hasDomOrRng() && firstInst.tid().basePath().equals(FROM_TID)) { // from() is a side-effect and the type can't be known unless explcitly specified (need a way to denote side-effect insts).
+                        resolvedArgs.add(sObj.resolve(lhs));
+                    } else {
+                        final Obj r = sObj.resolve(lhs);
+                        if (r.rng().matches(tObj))
+                            resolvedArgs.add(r);
+                        else return null;
+                    }
+                } else {
+                    if (!sObj.matches(tObj))
+                        return null;
+                    resolvedArgs.add(sObj.resolve(lhs));
+                }
+            }
+            return lst(resolvedArgs);
         } else if (target.args().isRec()) {
             LOG.trace("processing rec args of %s", target);
             final AtomicInteger counter = new AtomicInteger(0);
@@ -207,6 +222,7 @@ public interface Inst extends Call {
                         .stream()
                         .map(Obj::<Inst>as)
                         .filter(i -> this.args().isRec() || i.args().isRec() || i.args().count() == this.args().count())
+                        .map(i -> this.hasDomOrRng() ? i.tid(this.tid()) : i)
                         .map(i -> i.specify(lhs, this))
                         .filter(i -> lhs.matches(i.dom()))
                         .map(i -> {
@@ -218,7 +234,7 @@ public interface Inst extends Call {
                         .filter(i -> !Objects.isNull(i))
                         //.map(i -> i.tid(i.tid().dom(lhs.tid())).vid(this.vid()))
                         .map(Obj::<Inst>as)
-                        .map(i -> this.hasDomOrRng() ? i.resolve(lhs).tid(this.tid()) : i.resolve(lhs)) // TODO: return resolve(lhs) if failing
+                        .map(i -> i.resolve(lhs)) // TODO: return resolve(lhs) if failing
                         .map(i -> i.c(this.c()))
                         .findFirst()
                         .orElse(null);
@@ -230,19 +246,19 @@ public interface Inst extends Call {
                 this.logger().error(e);
             }
             this.logger().trace("searching spaces for runtime resolution of inst %s => %s", lhs, this);
-            Obj resolved2 = Router.global().read(this.tid()).c(this.c());
+            Obj resolved2 = Router.global().read(this.tid());//.c(this.c());
             resolved2 = this.hasDomOrRng() ? resolved2.tid(this.tid()) : resolved2;
             if (resolved2.isNoObj()) {
                 LOG.error("%s could not be resolved in any space", this);
                 return NoObj.single();
             } else if (!resolved2.isInst()) {
                 LOG.error("unable to resolve %s to a single inst in %s", this.dom(lhs.type()), resolved2);
-                final Poly args = resolveArgs(this,this,lhs);
+                final Poly args = resolveArgs(this, this, lhs);
                 return null == args ? this : this.args(args);
                 //return this;//NoObj.single();//.resolve(lhs);
             } else {
                 LOG.debug("resolved %s from global router", resolved2);
-                return resolved2.<Inst>as().args(this.args()); //.resolve(lhs);
+                return resolved2.<Inst>as().args(this.args()).c(this.c()); //.resolve(lhs);
             }
         } else { // Resolve.B
             final boolean blocking = this.isBlocking();
@@ -304,7 +320,7 @@ public interface Inst extends Call {
             throw MTronException.of("{{m}}rhs obj{{/m}} (%s) {{r}}does not match{{/r}} {{m}}inst range{{/m}} (%s): %s", rhs, cinst.rng(), cinst);
         //final cInt cinstc = false && cinst.isReducing() ? cInt.ONE() : cinst.c();
         final cInt cc = cinst.c();
-        return (modulateC ? rhs.c(c -> c.mult(lhs.c())) : rhs).c(c -> c.mult(cc));
+        return false && rhs.isObjs() ? rhs : (modulateC ? rhs.c(c -> c.mult(lhs.c())) : rhs).c(c -> c.mult(cc));
 
     }
 

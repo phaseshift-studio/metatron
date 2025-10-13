@@ -54,7 +54,7 @@ public interface Space extends Poly, AutoCloseable {
         }
 
         public static void noCloneWarning(final Space space) {
-            Graphitty.log(space.getClass()).warn("cloning a space does not create a copy of that space");
+            Graphitty.log(space.getClass()).warn("the clone of a space is the space itself");
         }
 
         public static Obj resolveRead(final Space space, final fURI vid, final Function<fURI, Map<fURI, Obj>> resolvedReader) { //final Map<fURI, Obj> store) {

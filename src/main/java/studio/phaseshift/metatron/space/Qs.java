@@ -21,22 +21,33 @@ package studio.phaseshift.metatron.space;
 import studio.phaseshift.metatron.lang.Q;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.Obj;
+import studio.phaseshift.metatron.lang.obj.mtron.MLst;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-public class Qs {
+import static studio.phaseshift.metatron.lang.fURI.f;
+
+public class Qs extends MLst {
+
 
     final List<Q> qs = new ArrayList<>();
 
-    public Qs(final List<Q> qs) {
+    public Qs(final fURI spacevid, final List<Q> qs) {
+        super((List) qs, f("q"), fURI.NULL);
         this.qs.addAll(qs);
+        Router.global().write(spacevid.extend("q"),this);
+    }
+
+    public Qs register(final Q q) {
+        this.qs.add(q);
+        return this;
     }
 
     public Optional<Obj> processPreWrite(final fURI source, final fURI vid, final Obj obj) {
         return this.qs.stream()
-                .filter(q -> vid.hasQuery(q.template().toString()))
+                .filter(q -> vid.hasQuery(q.qPattern().toString()))
                 .map(Q::onWrite)
                 .filter(Optional::isPresent)
                 .map(Optional::get)
@@ -48,7 +59,7 @@ public class Qs {
 
     public Optional<Obj> processPreRead(final fURI source, final fURI vid) {
         return this.qs.stream()
-                .filter(q -> vid.hasQuery(q.template().toString()))
+                .filter(q -> vid.hasQuery(q.qPattern().toString()))
                 .map(Q::onRead)
                 .filter(Optional::isPresent)
                 .map(Optional::get)
@@ -71,7 +82,7 @@ public class Qs {
 
     public Optional<Obj> processPostWrite(final fURI source, final fURI vid, final Obj obj) {
         return this.qs.stream()
-                .filter(q -> vid.hasQuery(q.template().toString()))
+                .filter(q -> vid.hasQuery(q.qPattern().toString()))
                 .map(Q::onWrite)
                 .filter(Optional::isPresent)
                 .map(Optional::get)

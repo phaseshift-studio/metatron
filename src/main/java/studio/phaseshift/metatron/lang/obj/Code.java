@@ -58,6 +58,8 @@ public interface Code extends Call {
 
     @Override
     default Code resolve(final Obj lhs) {
+        //if(this.insts().stream().noneMatch(x -> x.resolution().equals(Inst.Resolution.A)))
+          //  return this;
         GraphittyLogger LOG = Graphitty.log(this);
         // this.code = new ExplainRewrite().rewrite(code.<Code>as());
         // process bcode inst pipeline
@@ -74,10 +76,7 @@ public interface Code extends Call {
             try {
                 LOG.trace("   {{g}}=>{{/g}} resolving %s => %s", token, inst);
                 final Inst resolvedInst = inst.resolve(token);
-                /*if(!resolvedCode.isEmpty()) {
-                  final Inst instA = resolvedCode.remove(resolvedCode.size() - 1);
-                  resolvedCode.add(instA.tid(instA.tid().rng(instB.tid().dom())));
-                }*/
+
                 if (null == dom)
                     dom = resolvedInst.tid().query().get(fURI.DOM.toString(), fURI.class);
                 rng = resolvedInst.tid().query().get(fURI.RNG.toString(), fURI.class);
@@ -138,11 +137,11 @@ public interface Code extends Call {
 
     @Override
     default Type dom() {
-        return this.value().isEmpty() ? T(fURI.NOOBJ.zero()) : T(this.value().get(0).dom().tid().maybeSome()); // TODO: if unresolved, it's maybe.. is that good?
+        return this.value().isEmpty() ? T(fURI.NOOBJ.zero()) : T(this.value().get(0).dom().tid()); // TODO: if unresolved, it's maybe.. is that good?
     }
 
     default Type rng() {
-        return this.value().isEmpty() ? T(fURI.NOOBJ.zero()) : T(this.value().get(this.value().size() - 1).rng().tid().maybeSome());
+        return this.value().isEmpty() ? T(fURI.NOOBJ.zero()) : T(this.value().get(this.value().size() - 1).rng().tid());
     }
 
     @Override
@@ -152,13 +151,17 @@ public interface Code extends Call {
 
     @Override
     default Obj apply(final Obj lhs) {
-        if (!lhs.matches(this.dom()))
-            throw MTronException.of("%s ({{m}}lhs{{/m}}) (%s) does not match {{m}}code domain{{/m}} (%s): %s", lhs, lhs.rng(), this.dom(), this);
+        /*
+          final Inst type = Router.global().read(mtronRewrites.REWRITE_TYPER_TID).as();
+        final MTonoid monoid = MMonoid.of(lhs, type.args(lst(this)).apply(lhs).as());
+         */
+       // if (!lhs.matches(this.dom()))
+         //   throw MTronException.of("%s ({{m}}lhs{{/m}}) (%s) does not match {{m}}code domain{{/m}} (%s): %s", lhs, lhs.rng(), this.dom(), this);
         final Code resolve = this.resolve(lhs);
         final MTonoid monoid =  MMonoid.of(lhs, resolve);
         final Obj rhs = objs(monoid.apply(NoObj.single()));
-        if (!rhs.matches(monoid.rng()))
-            throw MTronException.of("%s ({{m}}rhs{{/m}}) (%s) does not match {{m}}code range{{/m}} (%s): %s", rhs, rhs.rng(), this.rng(), this);
+       // if (!rhs.matches(monoid.rng()))
+      //      throw MTronException.of("%s ({{m}}rhs{{/m}}) (%s) does not match {{m}}code range{{/m}} (%s): %s", rhs, rhs.rng(), this.rng(), this);
         return rhs;
     }
 

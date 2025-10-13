@@ -32,7 +32,8 @@ import static studio.phaseshift.metatron.lang.obj.mtron.MObjs.objs;
 import static studio.phaseshift.metatron.lang.obj.mtron.MType.T;
 import static studio.phaseshift.metatron.util.Tuple.Triplet;
 
-public interface Monad extends Obj { //, Ring<Monad> {
+public interface Monad extends Obj {
+
 
     class Helpers {
         public static String monadToString(final Monad monad) {
@@ -40,11 +41,15 @@ public interface Monad extends Obj { //, Ring<Monad> {
         }
 
         public static int monadHashCode(final Monad monad) {
-            return Objects.hash(monad.tid(), monad.vid(), monad.value());
+            return Objects.hash(monad.tid().cLess(), monad.value());
         }
 
         public static boolean monadEquals(final Monad monad, final Object other) {
-            return other instanceof Monad && Objects.equals(((Monad) other).tid(), monad.tid()) && Objects.equals(((Monad) other).vid(), monad.vid()) && Objects.equals(((Monad) other).value(), monad.value());
+            return other instanceof Monad && Obj.Helper.objEquals(monad, other);
+        }
+
+        public static boolean monadcLessEquals(final Monad monad, final Object other) {
+            return other instanceof Monad && Obj.Helper.objcLessEquals(monad, other);
         }
     }
 
@@ -80,6 +85,16 @@ public interface Monad extends Obj { //, Ring<Monad> {
 
     @Override
     Monad tid(final fURI furi);
+
+    @Override
+    default fURI tid() {
+        return null;
+    }
+
+    @Override
+    default fURI vid() {
+        return null;
+    }
 
     @Override
     default Monad c(final cInt c) {
@@ -120,6 +135,11 @@ public interface Monad extends Obj { //, Ring<Monad> {
     @Override
     default Type rng() {
         return T(MMonad.MMONAD_TID);
+    }
+
+    @Override
+    default Obj clone() {
+        return null;
     }
 
     @Override

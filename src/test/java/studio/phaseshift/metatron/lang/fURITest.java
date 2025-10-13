@@ -186,7 +186,7 @@ public class fURITest {
     @CsvSource(value = {
             "a                  | a               | a{2}",
             "a/b/c{23}          | a/b/c{2}        | a/b/c{25}",
-            "a/b/c/{2,5}        | z{4,6}          | ERROR",
+            "a/b/c/{2,5}        | z{4,6}          | #{6,11}",
             "a/b/c{6}?a=1&b=2   | a/+/c{4,6}?c=3  | a/b/c{10,12}?a=1&b=2&c=3",
             "a/b/c{+}?a=1&b=2   | #{*}            | a/b/c{1,}?a=1&b=2",
             "a/b/c{*}?a=1&b=2   | #{+}            | a/b/c{+}?a=1&b=2",
@@ -202,11 +202,14 @@ public class fURITest {
         //assertEquals(furi1a, furi2a); // TODO: important ssend issue
         assertEquals(furi1b, furi2b);
         if (expected.equals("ERROR")) {
-            assertThrows(MTronException.class, () -> furi1a.plus(furi1b));
+            LOG.trace("testing adding {{b}}%s{{/b}} and {{b}}%s{{/b}} = {{r}}ERROR{{/r}}", furi1a,furi1b);
+            assertThrows(MTronException.class, () -> LOG.error("this shouldn't work: %s", furi1a.plus(furi1b)));
             assertThrows(MTronException.class, () -> furi2a.plus(furi2b));
         } else {
+            LOG.trace("testing adding {{b}}%s{{/b}} and {{b}}%s{{/b}} = {{b}}%s{{/b}}", furi1a,furi1b,furi1a.plus(furi1b));
             assertEquals(fURI.of(expected), furi1a.plus(furi1b));
             assertEquals(fURI.of(expected), furi2a.plus(furi2b));
+
         }
     }
 

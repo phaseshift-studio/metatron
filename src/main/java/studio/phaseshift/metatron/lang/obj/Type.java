@@ -18,9 +18,13 @@
 
 package studio.phaseshift.metatron.lang.obj;
 
+import studio.phaseshift.metatron.algebra.Ring;
+import studio.phaseshift.metatron.algebra.Semiring;
 import studio.phaseshift.metatron.lang.fURI;
+import studio.phaseshift.metatron.lang.obj.mtron.MType;
+import studio.phaseshift.metatron.lang.obj.mtron.c.cInt;
 
-public interface Type extends Obj {
+public interface Type extends Obj, Semiring<Type> {
 
     @Override
     Type clone(final Object value, final fURI tid, final fURI vid);
@@ -39,15 +43,42 @@ public interface Type extends Obj {
     }
 
     @Override
+    default Obj clone() {
+        return null;
+    }
+
+    @Override
+    default fURI tid() {
+        return null;
+    }
+
+    @Override
+    default fURI vid() {
+        return null;
+    }
+
+    @Override
     default Obj apply(final Obj obj) {
         if (!obj.rng().tid().matches(this.tid()))
             return NoObj.single();
-        if (this.value() == null)
-            return obj;
-        else if (this.value().isCall()) {
-            return this.value().apply(obj);
-        } else {
-            return obj.matches(this.value()) ? obj : NoObj.single();
-        }
+        return null == this.value() || obj.matches(this.value().apply(obj)) ?
+                obj :
+                NoObj.single();
+    }
+
+    @Override
+    default Type plus(final Type other) {
+        if (this.isNoObj())
+            return other;
+        if (other.isNoObj())
+            return this;
+        fURI t = this.tid().plus(other.tid());
+        Obj value = null == this.value() ? other.value() : null == other.value() ? this.value() : this.value().<Call>as().plus(other.value().<Call>as());
+        return this.tid(t).value(value);
+    }
+
+    @Override
+    default Type zero() {
+        return this.tid(this.tid().zero()).value(null);
     }
 }

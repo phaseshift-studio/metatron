@@ -22,6 +22,7 @@ import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.monoid.Monad;
 import studio.phaseshift.metatron.lang.obj.Inst;
 import studio.phaseshift.metatron.lang.obj.Obj;
+import studio.phaseshift.metatron.lang.obj.Poly;
 import studio.phaseshift.metatron.lang.obj.Rec;
 import studio.phaseshift.metatron.lang.obj.mtron.MObj;
 import studio.phaseshift.metatron.lang.obj.mtron.MRec;
@@ -68,8 +69,8 @@ public class MMonad extends MObj implements Monad {
     public Monad clone(final Object value, final fURI tid, final fURI vid) {
         MMonad clone = (MMonad) this.clone();
         clone.value = value;
-        clone.tid = tid;
-        clone.vid = vid;
+        clone.tid = tid.clone();
+        clone.vid = null == vid ? null : vid.clone();
         return clone;
     }
 

@@ -127,12 +127,17 @@ public class mtronInstSet extends MInstSet {
     }
 
     @Override
+    public Set<Inst> rewrites() {
+        return new mtronRewrites(mtronRewrites.REWRITE_TID,this.vid.extend("rewrite")).insts();
+    }
+
+    @Override
     public Set<Inst> insts() {
         return Stream.of(
                 instC(START_TID.dom(fURI.NOOBJ.zero()).rng(A.maybeSome()), lst(T(A.maybeSome())), (lhs, inst) -> inst.arg(0)),
                 instC(END_TID.dom(OBJS_ID).rng(NOOBJ_TID.zero()), lst(), (lhs, inst) -> NoObj.single()),
                 instC(PRINT_TID.dom(ALL).rng(ALL), lst(T(OBJS_ID)), (lhs, inst) -> IteratorUtil.stream(inst.args().elements()).peek(o -> Graphitty.stdout().println(Graphitty.string(o))).filter(a -> false).findAny().orElse(lhs)),
-                instC(ID_TID.dom(A.maybe()).rng(A.maybe()), lst(), (lhs, inst) -> lhs),
+                instC(ID_TID.dom(A).rng(A), lst(), (lhs, inst) -> lhs),
                 instC(ID_TID.dom(A.maybeSome()).rng(A.maybeSome()), lst(), (lhs, inst) -> lhs),
                 instC(APPLY_TID.dom(ALL).rng(ALL), lst(T(INST_TID)), (lhs, inst) -> inst.arg(0).apply(lhs)),
                 instC(MAP_TID.dom(ALL).rng(A), lst(T(A)), (lhs, inst) -> inst.arg(0)),

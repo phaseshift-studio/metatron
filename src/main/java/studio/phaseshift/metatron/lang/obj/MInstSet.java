@@ -44,6 +44,7 @@ public abstract class MInstSet extends MSpace<Map<fURI, Set<? extends Obj>>> imp
     public MInstSet(final Map<fURI, Set<? extends Obj>> value, final fURI tid, final fURI vid) {
         super(value,tid.extend(fURI.ALL), tid, vid);
         this.insts().forEach(i -> this.write(i.tid(), i));
+        this.rewrites().forEach(i -> this.write(i.tid(), i));
     }
 
     @Override

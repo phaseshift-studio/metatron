@@ -491,6 +491,10 @@ public class fURI implements Cloneable, Ring<fURI> {
     }
 
     public fURI plus(final fURI furi) {
+        if (this.isZero())
+            return furi;
+        if (furi.isZero())
+            return this;
         if (this.basePath().matches(furi.basePath())) {
             cInt c1 = this.cV();
             cInt c2 = furi.cV();
@@ -500,7 +504,8 @@ public class fURI implements Cloneable, Ring<fURI> {
             query.putAll(furi.queryMap());
             return this.c(c3.toString()).queryMap(query);
         } else {
-            throw MTronException.of("only furis with the same path can be added: %s !+ %s", this, furi);
+            return this.commonRoot(furi).c(this.cV().plus(furi.cV()).toString());
+            //throw MTronException.of("only furis with the same path can be added: %s !+ %s", this, furi);
         }
     }
 
@@ -644,17 +649,18 @@ public class fURI implements Cloneable, Ring<fURI> {
 
     public boolean matches(final fURI rhs) {
         final C c = this.cV();
-        if (c.isZero() && rhs.cV().isZero())
+        final C d = rhs.cV();
+        if (c.isZero() && d.isZero())
             return true;
-        if (c.isZero() && c.within(rhs.cV()))
+        if (c.isZero() && c.within(d)) // no need to check path as its noobj
             return true;
-        if (!c.within(rhs.cV()))
+        if (!c.within(d))
             return false;
         final fURI lhs = this.basePath();
         final fURI other = rhs.basePath();
         if (!other.hasPattern())
             return lhs.equals(other);
-        if (other.toString().equals("#"))
+        if (other.toString().equals(ALL_WILD_STRING))
             return true;
         if (this.isAbsolute() != other.isAbsolute())
             return false;

@@ -22,9 +22,9 @@ import studio.phaseshift.metatron.lang.obj.Obj;
 
 import java.util.Optional;
 
-public interface Q {
+public interface Q extends Obj {
 
-    fURI template();
+    fURI qPattern();
 
     Optional<OnWrite> onWrite();
 

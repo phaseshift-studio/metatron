@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.lang.obj;
 
+import org.checkerframework.checker.fenum.qual.PolyFenum;
 import studio.phaseshift.metatron.algebra.Ring;
 import studio.phaseshift.metatron.algebra.Semiring;
 import studio.phaseshift.metatron.lang.fURI;
@@ -28,6 +29,7 @@ import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
+import studio.phaseshift.metatron.util.Tuple;
 
 import java.util.*;
 import java.util.function.Function;
@@ -43,7 +45,7 @@ public interface Obj extends Function<Obj, Obj>, Iterable<Obj>, Cloneable {
     class Helper {
 
         public static int objHashCode(final Obj obj) {
-            return obj.isNoObj() ? NoObj.single().hashCode() : Objects.hash(obj.value(), obj.tid().cLess());
+            return obj.isNoObj() ? NoObj.single().hashCode() : obj.isInst() ? obj.tid().hashCode() : Objects.hash(obj.value(), obj.tid().cLess());
         }
 
         public static boolean objEquals(final Obj obj, final Object other) {
@@ -117,8 +119,21 @@ public interface Obj extends Function<Obj, Obj>, Iterable<Obj>, Cloneable {
         }
     }
 
+    default Pair<Obj, Obj> take(final Inst inst) {
+        if (this.c().equals(inst.dom().c().most())) {
+            return Pair.with(this, this.c(cInt.ZERO()));
+        } else { //if(this.c().lt(inst.dom().c().most())) {
+            Obj clone = this.clone().c(inst.dom().c().most());
+            return Pair.with(clone, this.c(c -> c.minus(inst.dom().c())));
+        }
+    }
+
     default Obj take() {
         throw MTronException.of("%s can not be taken from", this);
+    }
+
+    default Tuple.Pair<Obj, Obj> headTailsSplit(final Function<Obj, Object> partitioner) {
+        return Pair.with(this, NoObj.single());
     }
 
     default Obj resolve(final Obj lhs) {
@@ -266,7 +281,7 @@ public interface Obj extends Function<Obj, Obj>, Iterable<Obj>, Cloneable {
     }
 
     default boolean isNoObj() {
-        return this == NoObj.single() || this.tid().basePath().equals(fURI.NOOBJ) || this.tid().cV().isZero(); // TODO: consolidate the logic
+        return this == NoObj.single() || this.tid().cV().isZero(); // TODO: consolidate the logic
     }
 
     default boolean isBool() {
