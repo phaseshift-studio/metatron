@@ -20,32 +20,26 @@ package studio.phaseshift.metatron.space.q;
 
 import studio.phaseshift.metatron.lang.Q;
 import studio.phaseshift.metatron.lang.fURI;
-import studio.phaseshift.metatron.lang.obj.NoObj;
 import studio.phaseshift.metatron.lang.obj.Obj;
+import studio.phaseshift.metatron.lang.obj.mtron.MObj;
 import studio.phaseshift.metatron.space.Space;
 
 import java.util.Optional;
 
+import static studio.phaseshift.metatron.lang.fURI.f;
+
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class BaseQ implements Q {
+public class BaseQ extends MObj implements Q {
 
-    protected final fURI tid;
     protected final Space space;
-    protected final fURI queryPattern;
     protected OnRead onRead;
     protected OnWrite onWrite;
 
     public BaseQ(final Space space, final fURI queryPattern, final fURI tid) {
-        this.space= space;
-        this.queryPattern = queryPattern;
-        this.tid= tid;
-    }
-
-    @Override
-    public fURI qPattern() {
-        return this.queryPattern;
+        super(queryPattern, tid, f("/mnt/").extend("q").extend(tid));
+        this.space = space;
     }
 
     @Override
@@ -59,24 +53,13 @@ public class BaseQ implements Q {
     }
 
     @Override
-    public <O> O value() {
-        return (O) NoObj.single();
+    public fURI value() {
+        return (fURI) super.value();
     }
 
     @Override
-    public fURI vid() {
-        return this.space.vid().extend("q");
-    }
-
-    @Override
-    public fURI tid() {
-        return this.tid;
-    }
-
-
-    @Override
-    public <O extends Obj> O clone(Object value, fURI tid, fURI vid) {
-        return (O)this;
+    public BaseQ clone(Object value, fURI tid, fURI vid) {
+        return this;
     }
 
     @Override

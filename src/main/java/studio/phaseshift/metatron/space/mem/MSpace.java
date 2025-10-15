@@ -21,15 +21,8 @@ package studio.phaseshift.metatron.space.mem;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.Obj;
 import studio.phaseshift.metatron.space.Qs;
-import studio.phaseshift.metatron.space.Router;
 import studio.phaseshift.metatron.space.Space;
-import studio.phaseshift.metatron.space.q.DocQ;
-import studio.phaseshift.metatron.space.q.PubSubQ;
 import studio.phaseshift.metatron.util.MTronException;
-
-import javax.print.Doc;
-import java.util.List;
-import java.util.Map;
 
 import static studio.phaseshift.metatron.lang.fURI.f;
 
@@ -46,9 +39,13 @@ public abstract class MSpace<T> implements Space {
         this.pattern = pattern;
         this.tid = tid.big();
         this.vid = vid;
-        if (null != vid)
-            this.qs = new Qs(f("/mnt").extend(vid.name()), List.of());//new Qs(this,List.of(new PubSubQ(this)));
-        else this.qs = new Qs(f(""),List.of());
+        if (!(this instanceof StackSpace)) {
+            if (null != vid)
+                this.qs = new Qs(f(""));
+            else this.qs = new Qs(f(""));
+        } else {
+            this.qs = null;
+        }
     }
 
     @Override

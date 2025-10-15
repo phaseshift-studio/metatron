@@ -19,27 +19,48 @@
 package studio.phaseshift.metatron.lang.translate;
 
 import com.google.gson.*;
+import com.google.gson.stream.JsonReader;
 import studio.phaseshift.metatron.lang.obj.NoObj;
 import studio.phaseshift.metatron.lang.obj.Obj;
-import studio.phaseshift.metatron.lang.obj.mtron.*;
-import studio.phaseshift.metatron.ui.ObjSerializer;
-import studio.phaseshift.metatron.ui.ObjStringSerializer;
-import studio.phaseshift.metatron.ui.Palette;
+import studio.phaseshift.metatron.ui.*;
+import studio.phaseshift.metatron.util.MTronException;
 
-import java.net.URI;
+import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import static studio.phaseshift.metatron.lang.obj.mtron.MBool.bool;
+import static studio.phaseshift.metatron.lang.obj.mtron.MInt.jnt;
+import static studio.phaseshift.metatron.lang.obj.mtron.MLst.lst;
+import static studio.phaseshift.metatron.lang.obj.mtron.MReal.real;
+import static studio.phaseshift.metatron.lang.obj.mtron.MRec.rec;
+import static studio.phaseshift.metatron.lang.obj.mtron.MStr.str;
+import static studio.phaseshift.metatron.lang.obj.mtron.MUri.uri;
+
 public class JSONTranslator implements Translator<Obj, JsonElement> {
+
+    private static final GraphittyLogger LOG = Graphitty.log(JSONTranslator.class);
+
     private static final ObjSerializer<String> SERIALIZER = ObjStringSerializer
             .build()
             .simpleColon(true)
             // .hideTypesMatching(MTRON_CORE_TYPES)
             .palette(Palette.NO_COLOR)
+            .prettyPrint(false)
             .ignoreRewrites(true)
             .create();
+
+    private final ObjSerializer<String> serializer;
+
+    public JSONTranslator() {
+        this(SERIALIZER);
+    }
+
+    public JSONTranslator(final ObjSerializer<String> serializer) {
+        this.serializer = serializer;
+    }
 
     @Override
     public Obj translate(final JsonElement json) {
@@ -48,19 +69,20 @@ public class JSONTranslator implements Translator<Obj, JsonElement> {
         else if (json.isJsonPrimitive()) {
             final JsonPrimitive jp = (JsonPrimitive) json;
             if (jp.isBoolean())
-                return new MBool(jp.getAsBoolean());
+                return bool(jp.getAsBoolean());
             else if (jp.isNumber()) {
                 if (jp.getAsString().contains("."))
-                    return new MReal(jp.getAsDouble());
+                    return real(jp.getAsDouble());
                 else
-
-                    return new MInt(jp.getAsLong());
+                    return jnt(jp.getAsLong());
             } else if (jp.isString()) {
-                final String jpstr = jp.getAsString();
+                String jpstr = jp.getAsString();
+                if (jpstr.charAt(0) == '"' && jpstr.charAt(jpstr.length() - 1) == '"')
+                    jpstr = jpstr.substring(1, jpstr.length() - 1);
                 try {
-                    return new MUri(URI.create(jpstr).toString());
+                    return uri(jpstr);
                 } catch (Exception e) {
-                    return new MStr(jpstr);
+                    return str(jpstr);
                 }
             }
         } else if (json.isJsonArray()) {
@@ -69,14 +91,14 @@ public class JSONTranslator implements Translator<Obj, JsonElement> {
             for (var j : jp.getAsJsonArray()) {
                 list.add(translate(j));
             }
-            return new MLst(list);
+            return lst(list);
         } else if (json.isJsonObject()) {
             final JsonObject jp = (JsonObject) json;
             final Map<Obj, Obj> map = new LinkedHashMap<>();
             for (var kv : jp.getAsJsonObject().asMap().entrySet()) {
-                map.put(new MUri(kv.getKey()), translate(kv.getValue()));
+                map.put(uri(kv.getKey()), translate(kv.getValue()));
             }
-            return new MRec(map);
+            return rec(map);
         }
         throw new IllegalStateException("unknown type: " + json + "::" + json.getAsInt());
     }
@@ -84,28 +106,37 @@ public class JSONTranslator implements Translator<Obj, JsonElement> {
     @Override
     public JsonElement translate(final Obj obj) {
         try {
-            if (!obj.isPoly()) {
-                return JsonParser.parseString(SERIALIZER.write(obj));
-            } else if (obj.isLst()) {
+            if (obj.isUri())
+                return JsonParser.parseString(obj.uriValue().toString());
+            if (obj.isStr())
+                return JsonParser.parseString(obj.strValue());
+            if (!obj.isPoly())
+                return JsonParser.parseString(this.serializer.write(obj));
+            if (obj.isLst()) {
                 JsonArray array = new JsonArray();
                 obj.lstValue().forEach(o -> array.add(translate(o)));
                 return array;
-            } else if (obj.isRec()) {
-                JsonObject object = new JsonObject();
-                obj.recValue().forEach((key, value) -> object.add(translate(key).toString(), translate(value)));
-                return object;
-            } else {
-                throw new IllegalArgumentException("unable to jsonify " + obj);
             }
+            if (obj.isRec()) {
+                JsonObject object = new JsonObject();
+                obj.recValue().forEach((key, value) -> object.add(key.uriValue().toString(), translate(value)));
+                return object;
+            } else
+                throw MTronException.of("could not parse %s to json", obj);
+
         } catch (final Exception e) {
-            throw new IllegalArgumentException("could not parse %s to json".formatted(SERIALIZER.write(obj)));
+            throw MTronException.of("could not parse %s to json", obj);
         }
     }
 
     public Obj translateString(final String json) {
         try {
-            return this.translate(JsonParser.parseString(json));
+            final JsonReader reader = new JsonReader(new StringReader(json));
+            reader.setStrictness(Strictness.LENIENT);
+            return this.translate(JsonParser.parseReader(reader));
         } catch (final Exception e) {
+            // LOG.error(e);
+            // return NoObj.single();
             throw new IllegalArgumentException(json, e);
         }
     }

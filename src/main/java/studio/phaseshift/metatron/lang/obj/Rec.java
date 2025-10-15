@@ -67,6 +67,16 @@ public interface Rec extends Poly, Semiring<Rec> {
         return this.clone(newValue, this.tid(), this.vid());
     }
 
+    default Rec at(final Obj key, final Obj value) {
+        final Map<Obj, Obj> newMap = new LinkedHashMap<>();
+        newMap.putAll(this.recValue());
+        if (value.isNoObj())
+            newMap.remove(key);
+        else
+            newMap.put(key, value);
+        return this.clone(newMap, this.tid(), this.vid());
+    }
+
     @Override
     default <O extends Obj> O at(final Obj key) {
         if (key.isUri()) {

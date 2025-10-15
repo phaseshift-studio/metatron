@@ -51,11 +51,6 @@ public class fURI implements Cloneable, Ring<fURI> {
     public static final fURI NULL = null;
     public static final fURI DOM = fURI.of("dom");
     public static final fURI RNG = fURI.of("rng");
-
-    public static fURI f(final String s) {
-        return fURI.of(s);
-    }
-
     private final String host;
     private final String scheme;
     private final int port;
@@ -63,38 +58,6 @@ public class fURI implements Cloneable, Ring<fURI> {
     private final Query query;
     private boolean sstart;
     private boolean send;
-    // private final boolean wildcard;
-
-
-    public fURI big() {
-        return null == Router.global() ? this : Router.global().rewrite(this, true);
-    }
-
-    public fURI small() {
-        return null == Router.global() ? this : Router.global().rewrite(this, false);
-    }
-
-    public fURI commonRoot(final fURI other) {
-        if (this.sstart != other.sstart)
-            return fURI.of("");
-        final List<String> common = new ArrayList<>();
-        final int maxLength = Math.min(this.path.size(), other.path.size());
-        for (int i = 0; i < Math.min(this.path.size(), other.path.size()); i++) {
-            if (this.path.get(i).equals(other.path.get(i)))
-                common.add(this.path.get(i));
-            else
-                break;
-        }
-        fURI base = fURI.of(common.stream().reduce(this.sstart ? SEGMENT_SPLIT : EMPTY, (a, b) -> a + b + SEGMENT_SPLIT));
-        if (other.path.size() != this.path.size())
-            return base.extend(ALL);
-        final int extensionCount = maxLength - common.size();
-        for (int i = 0; i < extensionCount; i++) {
-            base = base.extend(SINGLE);
-        }
-        return base;
-    }
-
 
     private fURI(final String scheme, final String host, final int port, final boolean sstart, final List<String> path, final boolean send, final String query) {
         this.host = host;
@@ -105,6 +68,8 @@ public class fURI implements Cloneable, Ring<fURI> {
         this.sstart = sstart;
         this.send = send;
     }
+    // private final boolean wildcard;
+
 
     public fURI(String uri) {
         if (null == uri || uri.isEmpty()) {
@@ -162,6 +127,10 @@ public class fURI implements Cloneable, Ring<fURI> {
         this.path = Arrays.asList(uri.substring(position).split(SEGMENT_SPLIT));
     }
 
+    public static fURI f(final String s) {
+        return fURI.of(s);
+    }
+
     public static fURI dotPath(final String uri) {
         return fURI.of(uri.replace('.', SEGMENT_SPLIT_CHAR));
     }
@@ -174,6 +143,58 @@ public class fURI implements Cloneable, Ring<fURI> {
         return uri instanceof fURI ? (fURI) uri : fURI.of(uri.toString());
     }
 
+    private static boolean matchString(final String a, final String b) {
+        final String[] as = a.split(SEGMENT_SPLIT);
+        final String[] bs = b.split(SEGMENT_SPLIT);
+        for (int i = 0; i < bs.length; i++) {
+            if (bs[i].equals("#") || (bs[i].equals("+") && i == bs.length - 1))
+                return true;
+            if (bs[i].equals("+"))
+                continue;
+            if (as.length > i) {
+                if (!as[i].equals(bs[i]))
+                    return false;
+            }
+        }
+        return true;
+    }
+
+    private static boolean isGenericString(final String s) {
+        boolean acharacter = s.chars().anyMatch(c -> c != ALL_WILD_CHAR && c != ONE_WILD_CHAR);
+        if (s.chars().anyMatch(Character::isLowerCase))
+            return false;
+        return acharacter;
+    }
+
+    public fURI big() {
+        return null == Router.global() ? this : Router.global().rewrite(this, true);
+    }
+
+    public fURI small() {
+        return null == Router.global() ? this : Router.global().rewrite(this, false);
+    }
+
+    public fURI commonRoot(final fURI other) {
+        if (this.sstart != other.sstart)
+            return fURI.of("");
+        final List<String> common = new ArrayList<>();
+        final int maxLength = Math.min(this.path.size(), other.path.size());
+        for (int i = 0; i < Math.min(this.path.size(), other.path.size()); i++) {
+            if (this.path.get(i).equals(other.path.get(i)))
+                common.add(this.path.get(i));
+            else
+                break;
+        }
+        fURI base = fURI.of(common.stream().reduce(this.sstart ? SEGMENT_SPLIT : EMPTY, (a, b) -> a + b + SEGMENT_SPLIT));
+        if (other.path.size() != this.path.size())
+            return base.extend(ALL);
+        final int extensionCount = maxLength - common.size();
+        for (int i = 0; i < extensionCount; i++) {
+            base = base.extend(SINGLE);
+        }
+        return base;
+    }
+
     public Uri toUri(final boolean schemaType) {
         final String scheme = this.scheme();
         return schemaType && null != scheme ?
@@ -181,14 +202,13 @@ public class fURI implements Cloneable, Ring<fURI> {
                 MUri.of(this);
     }
 
-    public boolean hasPrefix(final fURI subfuri) {
-        if (this.segments().size() < subfuri.segments().size())
-            return false;
-        for (int i = 0; i < subfuri.segments().size(); i++) {
-            if (!f(this.segments().get(i)).matches(f(subfuri.segments().get(i))))
-                return false;
-        }
-        return false;
+    public int pathLength() {
+        return this.segments().size();
+    }
+
+    public fURI removePrefix(final fURI prefix) {
+        String newPath = this.toString();
+        return new fURI(newPath.startsWith(prefix.toString()) ? newPath.substring(prefix.toString().length() + 1) : newPath);
     }
 
     public String name() {
@@ -219,7 +239,6 @@ public class fURI implements Cloneable, Ring<fURI> {
         final String p = this.path.stream().reduce(this.sstart ? SEGMENT_SPLIT : EMPTY, (a, b) -> a + b + SEGMENT_SPLIT);
         return this.send ? p : p.substring(0, p.length() - 1);
     }
-
 
     public List<String> segments() {
         return Collections.unmodifiableList(this.path);
@@ -286,6 +305,7 @@ public class fURI implements Cloneable, Ring<fURI> {
         final List<String> newPath = new ArrayList<>(this.path.size() + 1);
         newPath.addAll(this.path);
         newPath.addAll(Arrays.asList(segment.split(SEGMENT_SPLIT)));
+        newPath.removeIf(String::isEmpty);
         return new fURI(this.scheme, this.host, this.port, this.sstart, newPath, !segment.isEmpty() && (segment.charAt(segment.length() - 1) == SEGMENT_SPLIT_CHAR), Query.to(this.query));
     }
 
@@ -306,12 +326,10 @@ public class fURI implements Cloneable, Ring<fURI> {
         return this.equals(fURI.NOOBJ) || this.cV().isZero();
     }
 
-
     public fURI removeSubpath(final fURI subpath) {
         String newPath = this.toString();
         return new fURI(newPath.replace(subpath.asBranch().toString(), EMPTY));
     }
-
 
     public fURI asAbsolute() {
         fURI clone = this.clone();
@@ -353,7 +371,6 @@ public class fURI implements Cloneable, Ring<fURI> {
         return this.segments(head);
     }
 
-
     public fURI tail(final int steps) {
         final List<String> tail = new ArrayList<>();
         for (int i = 0; i < steps; i++) {
@@ -365,7 +382,6 @@ public class fURI implements Cloneable, Ring<fURI> {
     public fURI segment(final int step) {
         return fURI.of(this.path.get(step));
     }
-
 
     public fURI pretract() {
         return this.pretract(1);
@@ -380,22 +396,6 @@ public class fURI implements Cloneable, Ring<fURI> {
                 this.path.toString().indexOf(ALL_WILD_CHAR) != -1 ||
                 (null != this.host && this.host.indexOf(ONE_WILD_CHAR) != -1) ||
                 this.path.toString().indexOf(ONE_WILD_CHAR) != -1;
-    }
-
-    private static boolean matchString(final String a, final String b) {
-        final String[] as = a.split(SEGMENT_SPLIT);
-        final String[] bs = b.split(SEGMENT_SPLIT);
-        for (int i = 0; i < bs.length; i++) {
-            if (bs[i].equals("#") || (bs[i].equals("+") && i == bs.length - 1))
-                return true;
-            if (bs[i].equals("+"))
-                continue;
-            if (as.length > i) {
-                if (!as[i].equals(bs[i]))
-                    return false;
-            }
-        }
-        return true;
     }
 
     public boolean hasQuery() {
@@ -431,7 +431,6 @@ public class fURI implements Cloneable, Ring<fURI> {
     public fURI queryMap(final Map<String, String> kv) {
         return new fURI(this.scheme, this.host, this.port, this.sstart, this.path, this.send, Query.to(Query.from(kv)));
     }
-
 
     public fURI zero() {
         return this.c("0");
@@ -572,7 +571,6 @@ public class fURI implements Cloneable, Ring<fURI> {
         return new fURI(this.scheme, this.host, this.port, this.sstart, segments, this.send, null == this.query ? null : this.query.toString());
     }
 
-
     public boolean onlyMatches(final fURI other) {
         return !this.equals(other) && this.matches(other);
     }
@@ -580,6 +578,19 @@ public class fURI implements Cloneable, Ring<fURI> {
     public boolean bimatches(final fURI other) {
         return this.matches(other) || other.matches(this);
     }
+
+   /* public boolean matches(final fURI rhs, final Map<fURI, fURI> generics) {
+        final fURI lhsBaseNorm = this.basePath().isGeneric() ? generics.getOrDefault(this.basePath(), this.basePath()) : this.basePath();
+        final fURI lhsDomNorm = this.hasDom() && this.dom().isGeneric() ? generics.getOrDefault(this.dom(), this.dom()) : this.dom();
+        final fURI lhsRngNorm = this.hasRng() && this.rng().isGeneric() ? generics.getOrDefault(this.rng(), this.rng()) : this.rng();
+        final fURI lhsNorm = lhsBaseNorm.dom(lhsDomNorm).rng(lhsRngNorm);
+        /// /////////////
+        final fURI rhsBaseNorm = rhs.basePath().isGeneric() ? generics.getOrDefault(rhs.basePath(), rhs.basePath()) : rhs.basePath();
+        final fURI rhsDomNorm = rhs.hasDom() && rhs.dom().isGeneric() ? generics.getOrDefault(rhs.dom(), rhs.dom()) : rhs.dom();
+        final fURI rhsRngNorm = rhs.hasRng() && rhs.rng().isGeneric() ? generics.getOrDefault(rhs.rng(), rhs.rng()) : rhs.rng();
+        final fURI rhsNorm = rhsBaseNorm.dom(rhsDomNorm).rng(rhsRngNorm);
+        return lhsNorm.matches(rhsNorm);
+    }*/
 
     public List<String> select(final fURI pattern) {
         final List<String> selection = new ArrayList<>();
@@ -603,26 +614,6 @@ public class fURI implements Cloneable, Ring<fURI> {
             }
         }
         return selection;
-    }
-
-   /* public boolean matches(final fURI rhs, final Map<fURI, fURI> generics) {
-        final fURI lhsBaseNorm = this.basePath().isGeneric() ? generics.getOrDefault(this.basePath(), this.basePath()) : this.basePath();
-        final fURI lhsDomNorm = this.hasDom() && this.dom().isGeneric() ? generics.getOrDefault(this.dom(), this.dom()) : this.dom();
-        final fURI lhsRngNorm = this.hasRng() && this.rng().isGeneric() ? generics.getOrDefault(this.rng(), this.rng()) : this.rng();
-        final fURI lhsNorm = lhsBaseNorm.dom(lhsDomNorm).rng(lhsRngNorm);
-        /// /////////////
-        final fURI rhsBaseNorm = rhs.basePath().isGeneric() ? generics.getOrDefault(rhs.basePath(), rhs.basePath()) : rhs.basePath();
-        final fURI rhsDomNorm = rhs.hasDom() && rhs.dom().isGeneric() ? generics.getOrDefault(rhs.dom(), rhs.dom()) : rhs.dom();
-        final fURI rhsRngNorm = rhs.hasRng() && rhs.rng().isGeneric() ? generics.getOrDefault(rhs.rng(), rhs.rng()) : rhs.rng();
-        final fURI rhsNorm = rhsBaseNorm.dom(rhsDomNorm).rng(rhsRngNorm);
-        return lhsNorm.matches(rhsNorm);
-    }*/
-
-    private static boolean isGenericString(final String s) {
-        boolean acharacter = s.chars().anyMatch(c -> c != ALL_WILD_CHAR && c != ONE_WILD_CHAR);
-        if (s.chars().anyMatch(Character::isLowerCase))
-            return false;
-        return acharacter;
     }
 
     public fURI resolve(final Map<fURI, fURI> generics) {
@@ -752,6 +743,25 @@ public class fURI implements Cloneable, Ring<fURI> {
             this.query = query;
         }
 
+        public static Query from(final String queryString) {
+            return null == queryString || queryString.trim().isEmpty() ? null :
+                    new Query(Stream.of(queryString.split(KVS_SPLIT))
+                            .map(kv -> kv.split(KV_SPLIT))
+                            .collect(Collectors.toMap(kv -> kv[0], kv -> kv.length == 1 ? EMPTY : kv[1], (a, b) -> b, LinkedHashMap::new)));
+        }
+
+        public static String to(final Query query) {
+            return (null == query || query.query.isEmpty()) ? null : query.toString();
+        }
+
+        public static Query from(final Map<String, String> query) {
+            return null == query || query.isEmpty() ? null : new Query(query);
+        }
+
+        public static <T> T get(final Query query, final String key, final Class<T> conversion) {
+            return null == query ? null : query.get(key, conversion);
+        }
+
         public <T> T get(final String key, final Class<T> type) {
             final String value = this.query.get(key);
             if (null == value)
@@ -784,25 +794,6 @@ public class fURI implements Cloneable, Ring<fURI> {
             this.query.forEach((key, value) -> sb.append(key).append(null == value || value.isEmpty() ? EMPTY : KV_SPLIT + value).append(KVS_SPLIT));
             sb.deleteCharAt(sb.length() - 1);
             return sb.toString();
-        }
-
-        public static Query from(final String queryString) {
-            return null == queryString || queryString.trim().isEmpty() ? null :
-                    new Query(Stream.of(queryString.split(KVS_SPLIT))
-                            .map(kv -> kv.split(KV_SPLIT))
-                            .collect(Collectors.toMap(kv -> kv[0], kv -> kv.length == 1 ? EMPTY : kv[1], (a, b) -> b, LinkedHashMap::new)));
-        }
-
-        public static String to(final Query query) {
-            return (null == query || query.query.isEmpty()) ? null : query.toString();
-        }
-
-        public static Query from(final Map<String, String> query) {
-            return null == query || query.isEmpty() ? null : new Query(query);
-        }
-
-        public static <T> T get(final Query query, final String key, final Class<T> conversion) {
-            return null == query ? null : query.get(key, conversion);
         }
 
     }

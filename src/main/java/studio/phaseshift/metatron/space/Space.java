@@ -19,119 +19,25 @@
 package studio.phaseshift.metatron.space;
 
 import studio.phaseshift.metatron.lang.fURI;
-import studio.phaseshift.metatron.lang.obj.NoObj;
-import studio.phaseshift.metatron.lang.obj.Obj;
-import studio.phaseshift.metatron.lang.obj.Poly;
-import studio.phaseshift.metatron.lang.obj.Uri;
+import studio.phaseshift.metatron.lang.obj.*;
 import studio.phaseshift.metatron.lang.obj.mtron.MObjs;
-import studio.phaseshift.metatron.lang.obj.mtron.MRec;
 import studio.phaseshift.metatron.lang.obj.mtron.MRel;
 import studio.phaseshift.metatron.ui.Graphitty;
-import studio.phaseshift.metatron.util.MTronException;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
+import static studio.phaseshift.metatron.lang.obj.mtron.MUri.uri;
 import static studio.phaseshift.metatron.util.Tuple.Pair;
 
 public interface Space extends Poly, AutoCloseable {
 
     fURI MTRON_TID = fURI.of("/mtron");
     fURI MTRON_SPACE_TID = MTRON_TID.extend("space");
-
-    class Helpers {
-        public static String spaceToString(final Space space) {
-            return Graphitty.string("{{b}}" + space.tid() + "{{g}}::[{{c}}pattern:{{b}}" + space.pattern() + "{{g}}]@{{b}}" + space.vid() + "{{X}}");
-        }
-
-        public static int spaceHashCode(final Space space) {
-            return Objects.hash(space.tid(), space.vid());
-        }
-
-        public static boolean spaceEquals(final Space space, final Object other) {
-            return other instanceof Space && ((Space) other).tid().equals(space.tid()) && ((Space) other).vid().equals(space.vid());
-        }
-
-        public static void noCloneWarning(final Space space) {
-            Graphitty.log(space.getClass()).warn("the clone of a space is the space itself");
-        }
-
-        public static Obj resolveRead(final Space space, final fURI vid, final Function<fURI, Map<fURI, Obj>> resolvedReader) { //final Map<fURI, Obj> store) {
-            final Map<Uri, Obj> map = new LinkedHashMap<>();
-            resolvedReader.apply(vid).forEach((key, value) -> map.put(key.toUri(), value));
-            /// //////////////////////////////////////////////////////////////////////////////////////////////////////
-            /// //////////////////////////////////////////////////////////////////////////////////////////////////////
-            /// //////////////////////////////////////////////////////////////////////////////////////////////////////
-            if (map.isEmpty()) {
-                final Pair<fURI, Poly> pair = Space.Helpers.locateBasePoly(space, vid);
-                if (null != pair) {
-                    final Poly poly = pair.get1();
-                    Graphitty.log(space).trace("base poly found at %s: %s", pair.get0(), poly);
-                    final fURI furiSubpath = vid.removeSubpath(pair.get0()).asNode();
-                    Graphitty.log(space).trace("searching for %s in base poly %s", furiSubpath.toUri(), poly);
-                    final Obj readObj = poly.at(furiSubpath.toUri());
-                    Graphitty.log(space).trace("located poly obj %s in %s", readObj, poly);
-                    if (!readObj.isNoObj())
-                        map.put(vid.retractPattern().toUri(), readObj);
-                }
-            }
-            if (map.isEmpty())
-                return NoObj.single();
-            else if (vid.isNode()) {
-                return MObjs.ofUsage(new ArrayList<>(map.values())); // TODO: no need to maintain a map, a list will do
-            } else {
-                return MObjs.ofUsage(map.entrySet().stream().map(kv -> MRel.of(kv.getKey(), kv.getValue())));
-            }
-        }
-
-        public static void resolveWrite(final fURI vid, final Obj obj, final BiConsumer<fURI, Obj> resolveWriter) {
-            if (obj.isRec()) {
-                if (vid.isNode()) {
-                    resolveWriter.accept(vid, obj);
-                } else {
-                    obj.recValue().forEach((key, value) -> {
-                        final fURI nextStepAddr = vid.extend(key.uriValue());
-                        if (value.isRec()) {
-                            if (nextStepAddr.isBranch()) {
-                                Space.Helpers.resolveWrite(nextStepAddr, value, resolveWriter);
-                            } else {
-                                final Map<Obj, Obj> submap = new LinkedHashMap<>();
-                                value.recValue()
-                                        .entrySet()
-                                        .stream()
-                                        .filter(kv -> nextStepAddr.extend(kv.getKey().uriValue()).matches(vid))
-                                        .forEach(kv -> submap.put(kv.getKey(), kv.getValue()));
-                                resolveWriter.accept(nextStepAddr, new MRec(submap, value.tid(), fURI.NULL));
-                            }
-                        } else if (nextStepAddr.retract().matches(vid)) {
-                            resolveWriter.accept(nextStepAddr, value);
-                        }
-                    });
-                }
-            } else {
-                if (!vid.hasPattern()) {
-                    resolveWriter.accept(vid, obj);
-                } else {
-                    throw MTronException.of("obj pattern only supported for poly");
-                }
-            }
-        }
-
-
-        public static Pair<fURI, Poly> locateBasePoly(final Space space, final fURI furi) {
-            fURI newFuri = furi.retract().asNode();
-            Obj obj = NoObj.single();
-            while (!newFuri.segments().isEmpty()) {
-                obj = space.read(newFuri);
-                if (!obj.isNoObj())
-                    break;
-                newFuri = newFuri.retract().asNode();
-            }
-            return obj.isPoly() ? Pair.with(newFuri.retractPattern(), obj.as()) : null;
-        }
-    }
-
 
     /// ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     /// ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -194,6 +100,137 @@ public interface Space extends Poly, AutoCloseable {
     @Override
     default <O extends Obj> Iterable<O> elements() {
         return (Iterable<O>) this.value();
+    }
+
+    class Helpers {
+        public static String spaceToString(final Space space) {
+            return Graphitty.string("{{b}}" + space.tid() + "{{g}}::[{{c}}pattern:{{b}}" + space.pattern() + "{{g}}]@{{b}}" + space.vid() + "{{X}}");
+        }
+
+        public static int spaceHashCode(final Space space) {
+            return Objects.hash(space.tid(), space.vid());
+        }
+
+        public static boolean spaceEquals(final Space space, final Object other) {
+            return other instanceof Space && ((Space) other).tid().equals(space.tid()) && ((Space) other).vid().equals(space.vid());
+        }
+
+        public static void noCloneWarning(final Space space) {
+            Graphitty.log(space.getClass()).warn("the clone of a space is the space itself");
+        }
+
+        public static Obj resolveRead(final Space space, final fURI vid, final Function<fURI, Map<fURI, Obj>> resolvedReader) { //final Map<fURI, Obj> store) {
+            final Map<Uri, Obj> map = new LinkedHashMap<>();
+            resolvedReader.apply(vid).forEach((key, value) -> map.put(key.toUri(), value));
+            if (map.isEmpty()) {
+                resolvedReader.apply(vid.isBranch() ? vid.extend(fURI.ONE_WILD_STRING) : vid.asNode()).forEach((key, value) -> {
+                    if (value.isRec()) {
+                        value.recValue().forEach((key2, value2) -> map.put(uri(key.extend(key2.uriValue())), value2));
+                    } else {
+                        map.put(key.toUri(), value);
+                    }
+                });
+            }
+            //if (map.isEmpty()) {
+            final Pair<fURI, Poly> base = Space.Helpers.locateBasePoly(space, vid);
+            if (null != base) {
+                final Poly poly = base.get1();
+                Graphitty.log(space).trace("base poly found at %s: %s", base.get0(), poly);
+                final fURI relativeVid = vid.removePrefix(base.get0()).asNode();
+                Graphitty.log(space).trace("searching for %s in base poly %s", relativeVid.toUri(), poly);
+                final Obj readObj = poly.at(relativeVid.toUri());
+                Graphitty.log(space).trace("located poly obj %s in %s", readObj, poly);
+                if (!readObj.isNoObj())
+                    map.put(vid.retractPattern().toUri(), readObj);
+            }
+            //   }
+//            if (map.isEmpty())
+            //              return NoObj.single();
+            if (vid.isNode()) {
+                return MObjs.ofUsage(new ArrayList<>(map.values())); // TODO: no need to maintain a map, a list will do
+            } else {
+                return MObjs.ofUsage(map.entrySet().stream().map(kv -> MRel.of(kv.getKey(), kv.getValue())));
+            }
+        }
+
+        public static void resolveWrite(final Space space, final fURI vid, final Obj obj, final BiConsumer<fURI, Obj> resolveWriter) {
+            final Pair<fURI, Poly> base = Space.Helpers.locateBasePoly(space, vid);
+            if (null == base) {
+                if (vid.isNode() || !obj.isPoly()) {
+                    resolveWriter.accept(vid, obj);
+                } else if (obj.isRec()) { // branch
+                    obj.recValue().forEach((key, value) -> Helpers.resolveWrite(space, vid.extend(key.uriValue()), value, resolveWriter));
+                } else if (obj.isLst()) {
+                    for (int i = 0; i < obj.lstValue().size(); i++) { // branch
+                        Helpers.resolveWrite(space, vid.extend(String.valueOf(i)), obj.lstValue().get(i), resolveWriter);
+                    }
+                }
+            } else if (vid.isNode() || !obj.isPoly()) {
+                if (base.get1().isRec())
+                    Space.Helpers.resolveWrite(space, base.get0(), base.get1().<Rec>as().put(uri(vid.removePrefix(base.get0())), obj), resolveWriter);
+                else if (base.get1().isLst())
+                    Space.Helpers.resolveWrite(space, base.get0(), base.get1().<Lst>as().append(obj), resolveWriter);
+                else {
+                    //throw MTronException.of("unknown poly: %s %s %s", base.get1(), vid, obj);
+                    resolveWriter.accept(vid, obj);
+                }
+            } else if (base.get1().isRec()) {
+                if (obj.isRec()) {
+                    obj.recValue()
+                            .entrySet()
+                            .stream()
+                            //.filter(kv -> nextStepAddr.extend(kv.getKey().uriValue()).matches(vid))
+                            //.forEach(kv -> submap.put(kv.getKey(), kv.getValue()));
+                            .forEach(kv -> Space.Helpers.resolveWrite(space, kv.getKey().uriValue(), kv.getValue(), resolveWriter));
+                    // resolveWriter.accept(nextStepAddr, new MRec(submap, value.tid(), fURI.NULL));
+
+                } else {
+                    resolveWriter.accept(vid, obj);
+                }
+            } else if (base.get1().isLst()) {
+                Lst newLst = base.get1().<Lst>as().at(uri(vid.removePrefix(base.get0()).pretract()), obj);
+                Space.Helpers.resolveWrite(space, vid, newLst, resolveWriter);
+            }
+                   /* obj.recValue().forEach((key, value) -> {
+                        final fURI nextStepAddr = vid.extend(key.uriValue());
+                        if (value.isRec()) {
+                            if (nextStepAddr.isBranch()) {
+                                Space.Helpers.resolveWrite(space, nextStepAddr, value, resolveWriter);
+                            } else {
+                                final Map<Obj, Obj> submap = new LinkedHashMap<>();
+                                value.recValue()
+                                        .entrySet()
+                                        .stream()
+                                        .filter(kv -> nextStepAddr.extend(kv.getKey().uriValue()).matches(vid))
+                                        .forEach(kv -> submap.put(kv.getKey(), kv.getValue()));
+                                resolveWriter.accept(nextStepAddr, new MRec(submap, value.tid(), fURI.NULL));
+                            }
+                        } else if (nextStepAddr.retract().matches(vid)) {
+                            resolveWriter.accept(nextStepAddr, value);
+                        }
+                    });
+                } else {
+                    base.get1().<Rec>as().put(uri(vid.removePrefix(base.get0())), obj);
+                    resolveWriter.accept(base.get0(), base.get1());
+                }
+            } else {
+                Graphitty.log(space).error("currently unsupported: %s %s %s", base, vid, obj);
+                resolveWriter.accept(vid, obj);
+            }*/
+        }
+
+
+        public static Pair<fURI, Poly> locateBasePoly(final Space space, final fURI furi) {
+            fURI newFuri = furi.retract().asNode();
+            Obj obj = NoObj.single();
+            while (!newFuri.segments().isEmpty()) {
+                obj = space.read(newFuri);
+                if (!obj.isNoObj())
+                    break;
+                newFuri = newFuri.retract().asNode();
+            }
+            return obj.isPoly() ? Pair.with(newFuri.retractPattern(), obj.as()) : null;
+        }
     }
 
 }

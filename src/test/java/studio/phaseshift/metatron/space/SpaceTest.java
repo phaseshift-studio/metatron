@@ -18,40 +18,92 @@
 
 package studio.phaseshift.metatron.space;
 
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.MetatronTest;
-import studio.phaseshift.metatron.lang.obj.NoObj;
 import studio.phaseshift.metatron.lang.obj.Obj;
 import studio.phaseshift.metatron.lang.parse.ObjParser;
 import studio.phaseshift.metatron.ui.Graphitty;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Supplier;
+
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 public abstract class SpaceTest extends MetatronTest {
 
-    public Space space;
+    public static final List<String> PREVIOUS_LINE = new ArrayList<>(List.of("", "", ""));
+    public static Supplier<Space> SPACE;
 
-    @Disabled
     @ParameterizedTest
     @CsvSource(value = {
-            "1.to(a)                                               % .from(a)                  % 1",
-            "1.vid(abc)                                            % *abc                     % 1@abc",
+            "1.to(a)                                               % *a                       % 1",
+            "/t -> [a,b,c]                                         % */t                      % [a,b,c]",
+            ".                                                     % */t/0                    % a",
+            ".                                                     % */t/1                    % b",
+            ".                                                     % */t/2                    % c",
+            "/t -> [a=>1,b=>2,c=>3]                                % */t                       % [a=>1,b=>2,c=>3]",
+            ".                                                     % */t/a                     % 1",
+            ".                                                     % */t/b                     % 2",
+            ".                                                     % */t/c                     % 3",
+            ".                                                     % */t/c                     % 3",
+            ".                                                     % */t/+                     % {1,2,3}",
+            // ".                                                     % *<t/+>.sum()               % 6",
+            // ".                                                     % *#.sum()                 % .",
+            // ".                                                     % *+/+.sum()               % .",
+            "/t/ -> [a=>1,b=>2,c=>3]                               % */t/                      % [/t/a=>1,/t/b=>2,/t/c=>3]>-",
+            ".                                                     % */t                       % noobj",
+            ".                                                     % */t/a                     % 1",
+            "/t -> [a=>[b=>2,c=>3],d=>4]                            % */t/a/b                   % 2",
+            ".                                                     % */t/#                     % {[b=>2,c=>3],4}",
+            //".                                                     % *t/#/                    % [t/a/b/=>2,t/a/c=>3,t/d/=>4]>-",
+            ".                                                     % */t/a/c                   % 3",
+            ".                                                     % */t/a                     % [b=>2,c=>3]",
+            ".                                                     % */t/d                     % 4",
+            // ".                                                     % *t/+                     % {[b=>2,c=>3],4}",
+            // ".                                                     % *t/+/#                   % {[a=>[b=>2,c=>3]],4}",
+            ".                                                     % */t/a/                    % [/t/a/=>[b=>2,c=>3]]>-",
+            ".                                                     % */t/a/+                   % {2,3}",
+            // ".                                                     % *t/a/+/                  % [t/a/b/=>2,t/a/c/=>3]>-"
+            //"1.vid(abc)                                            % *abc                     % 1@abc",
             //"[1@a,2@b,3@c]@d.map(10).vid(b)                        % *d                       % [1@a,10@b,3@c]@d"
     }, delimiter = '%')
     void testMonoReadWrite(final String writeExpression, final String readExpression, final String resultExpression) {
-        final Obj writeObj = ObjParser.parse(writeExpression).apply();
-        final Obj readObj = ObjParser.parse(readExpression).apply();
-        final Obj resultObj = ObjParser.parse(resultExpression).apply();
-        Graphitty.log(this.space).debug("write [%s => %s] | read [%s => %s] | result [%s => %s]",
+        final Space space = SPACE.get();
+        Router.global().addSpace(space);
+        final Obj writeObj = ObjParser.parse(writeExpression.equals(".") ? PREVIOUS_LINE.get(0) : writeExpression).apply();
+        final Obj readObj = ObjParser.parse(readExpression.equals(".") ? PREVIOUS_LINE.get(1) : readExpression).apply();
+        final Obj resultObj = ObjParser.parse(resultExpression.equals(".") ? PREVIOUS_LINE.get(2) : resultExpression).apply();
+        if (!writeExpression.equals("."))
+            PREVIOUS_LINE.set(0, writeExpression);
+        if (!readExpression.equals("."))
+            PREVIOUS_LINE.set(1, readExpression);
+        if (!resultExpression.equals("."))
+            PREVIOUS_LINE.set(2, resultExpression);
+        Graphitty.log(SPACE).debug("write [%s => %s] | read [%s => %s] | result [%s => %s]",
                 writeExpression, writeObj,
                 readExpression, readObj,
                 resultExpression, resultObj);
-        assertEquals(resultObj, readObj);
+        try {
+            assertEquals(resultObj, readObj);
+        } catch (final Exception e) {
+            LOG.error(e);
+        } finally {
+            Router.global().removeSpace(space.vid());
+            assertDoesNotThrow(space::close);
+        }
+    }
 
+
+    @Override
+    @ParameterizedTest
+    @CsvSource(value = {
+            "a -> 1                                               % 1"
+    }, delimiter = '%')
+    public void testCode(final String code, final String expected) {
+        super.testCode(code, expected);
     }
 
   /*  public void testMonoSpace() {

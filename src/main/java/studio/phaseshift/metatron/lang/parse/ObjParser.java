@@ -167,7 +167,7 @@ public class ObjParser {
         return new SequenceParser(of("---").trim(), any().starGreedy(anyOf("\n\r").or(new EndOfInputParser("end of input")))).map(t -> NoObj.single());
     }
 
-    private static final String FULL_FURI_CHARS = "/%!#_@+.:";
+    private static final String FULL_FURI_CHARS = "/%!#_@+.: ";
     private static final String REDUCED_FURI_CHARS = "/%!#_@+:";
 
     public static Parser m_furi() {

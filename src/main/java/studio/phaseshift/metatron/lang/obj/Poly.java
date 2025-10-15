@@ -30,6 +30,10 @@ public interface Poly extends Obj {
 
     <O extends Obj> O at(final Obj key);
 
+   default Poly at(final Obj key, final Obj value) {
+       return this;
+   }
+
     default boolean has(final Obj key) {
         return !this.at(key).isNoObj();
     }

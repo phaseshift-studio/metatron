@@ -24,7 +24,8 @@ import java.util.Optional;
 
 public interface Q extends Obj {
 
-    fURI qPattern();
+    @Override
+    fURI value();
 
     Optional<OnWrite> onWrite();
 

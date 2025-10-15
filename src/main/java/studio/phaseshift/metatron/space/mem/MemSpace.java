@@ -24,6 +24,7 @@ import studio.phaseshift.metatron.lang.obj.mtron.MRel;
 import studio.phaseshift.metatron.space.Space;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
+import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -41,6 +42,7 @@ public class MemSpace extends MSpace<Map<fURI,Obj>> implements Space {
 
     @Override
     public Obj read(final fURI vid) {
+       //System.out.println("%s".formatted(this.structure.keySet()));
         return this.qs().processPreRead(vid, vid).orElseGet(() -> Helpers.resolveRead(this, vid, (key) -> {
             if (key.equals(fURI.ALL))
                 return this.structure;
@@ -48,8 +50,9 @@ public class MemSpace extends MSpace<Map<fURI,Obj>> implements Space {
                 if (key.hasPattern()) {
                     return this.structure.entrySet().stream().filter(kv -> kv.getKey().matches(key.asNode())).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, Obj::append, LinkedHashMap::new));
                 } else {
-                    final Obj value = this.structure.get(key.asNode());
-                    return null == value ? Map.of() : Map.of(key.asNode(), value);
+
+                    final Obj value = this.structure.get(key);
+                    return null == value ? Map.of() : Map.of(key, value);
                 }
             }
         }));
@@ -65,9 +68,18 @@ public class MemSpace extends MSpace<Map<fURI,Obj>> implements Space {
         final Obj ret = this.qs().processPreWrite(vid, vid, obj).orElse(null);
         if (null != ret)
             return ret;
-        Space.Helpers.resolveWrite(vid.basePath(), obj, (key, value) -> {
+        Space.Helpers.resolveWrite(this,vid.basePath(), obj, (key, value) -> {
+            final Obj current = this.read(key);
+            if(value.isNoObj() && current instanceof Space) {
+                try {
+                    ((Space) current).close();
+                } catch (final Exception e) {
+                    throw MTronException.of(e);
+                }
+            }
+            this.structure.put(key,value);
             //LOG.trace("raw write of %s to %s {{g}}@{{b}}%s{{X}}", value, this, key);
-            if (value.isNoObj()) {
+           /* if (value.isNoObj()) {
                 if (key.hasPattern()) // delete all existing values that match key pattern
                     this.structure.entrySet().stream().filter(kv -> kv.getKey().matches(key)).forEach(kv -> this.structure.remove(kv.getKey()));
                 else
@@ -87,7 +99,7 @@ public class MemSpace extends MSpace<Map<fURI,Obj>> implements Space {
                     else
                         this.structure.compute(key.asNode(), (k, current) -> null == current ? value : current.append(value));
                 }
-            }
+            }*/
         });
         this.qs().processPostWrite(vid, vid, obj);
         return this.qs().processQlessWrite(vid, vid, obj).orElse(obj);

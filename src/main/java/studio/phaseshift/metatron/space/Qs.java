@@ -31,13 +31,12 @@ import static studio.phaseshift.metatron.lang.fURI.f;
 
 public class Qs extends MLst {
 
+    public static final fURI QS_TID = f("/mtron/space/q");
 
     final List<Q> qs = new ArrayList<>();
 
-    public Qs(final fURI spacevid, final List<Q> qs) {
-        super((List) qs, f("q"), fURI.NULL);
-        this.qs.addAll(qs);
-        Router.global().write(spacevid.extend("q"),this);
+    public Qs(final fURI spacevid) {
+        super(new ArrayList<>(), QS_TID, spacevid.extend("q"));
     }
 
     public Qs register(final Q q) {
@@ -45,9 +44,14 @@ public class Qs extends MLst {
         return this;
     }
 
+    public Qs clear() {
+        this.qs.clear();
+        return this;
+    }
+
     public Optional<Obj> processPreWrite(final fURI source, final fURI vid, final Obj obj) {
         return this.qs.stream()
-                .filter(q -> vid.hasQuery(q.qPattern().toString()))
+                .filter(q -> vid.hasQuery(q.value().toString()))
                 .map(Q::onWrite)
                 .filter(Optional::isPresent)
                 .map(Optional::get)
@@ -59,7 +63,7 @@ public class Qs extends MLst {
 
     public Optional<Obj> processPreRead(final fURI source, final fURI vid) {
         return this.qs.stream()
-                .filter(q -> vid.hasQuery(q.qPattern().toString()))
+                .filter(q -> vid.hasQuery(q.value().toString()))
                 .map(Q::onRead)
                 .filter(Optional::isPresent)
                 .map(Optional::get)
@@ -82,7 +86,7 @@ public class Qs extends MLst {
 
     public Optional<Obj> processPostWrite(final fURI source, final fURI vid, final Obj obj) {
         return this.qs.stream()
-                .filter(q -> vid.hasQuery(q.qPattern().toString()))
+                .filter(q -> vid.hasQuery(q.value().toString()))
                 .map(Q::onWrite)
                 .filter(Optional::isPresent)
                 .map(Optional::get)

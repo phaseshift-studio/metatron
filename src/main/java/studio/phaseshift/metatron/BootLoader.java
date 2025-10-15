@@ -22,6 +22,7 @@ import org.apache.tinkerpop.gremlin.tinkergraph.structure.TinkerFactory;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.monoid.mtron.MMonoid;
 import studio.phaseshift.metatron.lang.obj.InstSet;
+import studio.phaseshift.metatron.lang.obj.NoObj;
 import studio.phaseshift.metatron.lang.obj.mgrph.tp.MGraph;
 import studio.phaseshift.metatron.lang.obj.mgrph.tp.mgrphInstSet;
 import studio.phaseshift.metatron.lang.obj.mtron.MUri;
@@ -32,6 +33,7 @@ import studio.phaseshift.metatron.space.device.log.Log;
 import studio.phaseshift.metatron.space.fs.FileSpace;
 import studio.phaseshift.metatron.space.mem.MemRouter;
 import studio.phaseshift.metatron.space.mem.MemSpace;
+import studio.phaseshift.metatron.space.mqtt.MqttSpace;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
 
@@ -39,8 +41,10 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
+import java.util.Map;
 
 import static studio.phaseshift.metatron.lang.fURI.f;
+import static studio.phaseshift.metatron.lang.obj.mtron.MUri.uri;
 
 public class BootLoader {
 
@@ -79,6 +83,11 @@ public class BootLoader {
             Router.global().addSpace(grph);
             final InstSet mgrph = new mgrphInstSet(f("/mnt/lang/mgrph"));
             Router.global().addSpace(mgrph);
+            final Space mqtt = new MqttSpace(Map.of(
+                    uri("broker"), uri("mqtt://192.168.66.2:1883"),
+                    uri("prefix"), uri("/mqtt"),
+                    uri("pattern"),uri("zigbee2mqtt/#")), f("/mnt/zigbee2mqtt"));
+            Router.global().addSpace(mqtt);
             /// ///////////////////////////////////
             /*Router.global().write(
                     "bool", uri(BOOL_TID), "int", uri(INT_TID),

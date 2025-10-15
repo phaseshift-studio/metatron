@@ -36,7 +36,7 @@ public class JSONTranslatorTest {
                     0.0 | 0.0
                     0.01 | 0.01
                     12.34 | 12.34
-                    "hello world" | "hello world"
+                    "hello world" | <hello world>
                     "a/b/c" | <a/b/c>
                     [1,2,3] | [1,2,3]
                     {a:1,b:2,c:3} | [a=>1,b=>2,c=>3]

@@ -22,57 +22,119 @@ import com.hivemq.client.mqtt.MqttClient;
 import com.hivemq.client.mqtt.mqtt5.Mqtt5BlockingClient;
 import com.hivemq.client.mqtt.mqtt5.Mqtt5Client;
 import com.hivemq.client.mqtt.mqtt5.message.subscribe.Mqtt5RetainHandling;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import studio.phaseshift.metatron.lang.Q;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.NoObj;
 import studio.phaseshift.metatron.lang.obj.Obj;
 import studio.phaseshift.metatron.lang.obj.Uri;
-import studio.phaseshift.metatron.lang.obj.mtron.MObj;
-import studio.phaseshift.metatron.lang.obj.mtron.MUri;
 import studio.phaseshift.metatron.lang.translate.JSONTranslator;
 import studio.phaseshift.metatron.space.Qs;
 import studio.phaseshift.metatron.space.Space;
+import studio.phaseshift.metatron.space.mem.MSpace;
 import studio.phaseshift.metatron.space.mem.MemSpace;
-import studio.phaseshift.metatron.ui.ObjSerializer;
-import studio.phaseshift.metatron.ui.ObjStringSerializer;
-import studio.phaseshift.metatron.ui.Palette;
+import studio.phaseshift.metatron.space.q.PubSubQ;
+import studio.phaseshift.metatron.ui.*;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.Set;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 
+import static studio.phaseshift.metatron.lang.fURI.f;
+import static studio.phaseshift.metatron.lang.obj.mtron.MUri.uri;
 
-public class MqttSpace extends MObj implements Space {
 
-    public static fURI MQTT_TID = fURI.of("mqtt/broker");
-    private static final Logger LOG = LoggerFactory.getLogger(MqttSpace.class);
+public class MqttSpace extends MSpace<Map<Uri, Obj>> implements Space {
+
+    private static final ObjSerializer<String> SERIALIZER = ObjStringSerializer
+            .build()
+            .simpleColon(true)
+            .palette(Palette.NO_COLOR)
+            .prettyPrint(false)
+            .ignoreRewrites(true)
+            .create();
+    public static fURI MQTT_TID = fURI.of("/mtron/space/mqtt");
     protected final fURI broker;
-    protected final fURI pattern;
+    protected final fURI prefix;
+    final JSONTranslator jsonTranslator = new JSONTranslator(SERIALIZER);
+    final Qs qs;
+    private final GraphittyLogger LOG = Graphitty.log(this);
     Mqtt5Client client;
     Mqtt5BlockingClient.Mqtt5Publishes incomingMessages;
-
     MemSpace cache;
 
-    private static final ObjSerializer<String> SERIALIZER = ObjStringSerializer.build()
-            .simpleColon(false)
-            .hideTypesMatching(Set.of())
-            .palette(Palette.NO_COLOR)
-            .create();
-    final JSONTranslator jsonTranslator = new JSONTranslator();
+    public MqttSpace(final Map<Uri, Obj> config, final fURI vid) {
+        super(config, config.containsKey(uri("prefix")) ?
+                config.get(uri("prefix")).uriValue().extend(config
+                        .get(uri("pattern"))
+                        .orElseThrow(new IllegalArgumentException("config must have a pattern key")).uriValue()) :
+                config.get(uri("pattern"))
+                        .orElseThrow(new IllegalArgumentException("config must have a pattern key")).uriValue(), MQTT_TID, vid);
+        this.prefix = config.containsKey(uri("prefix")) ? config.get(uri("prefix")).uriValue() : null;
+        LOG.info("{{y}}mtron{{g}}<=>{{y}}mqtt{{X}} mapping established: {{b}}%s {{g}}<=> ({{b}}%s {{g}}<=> {{b}}%s{{g}}){{X}}", this.pattern(), this.prefix, this.toMqttTopic(this.pattern()));
+        this.cache = new MemSpace(this.pattern(), this.vid.extend("cache"));
+        this.cache.qs().clear();
+        this.qs = new Qs(this.vid);
+        this.qs.register(new PubSubQ(this) {
+            @Override
+            public Optional<Q.OnWrite> onWrite() {
+                return Optional.of(new PubSubQ.OnWrite() {
+                    @Override
+                    public Optional<Obj> qlessWrite(final fURI source, final fURI vid, final Obj obj) {
+                        return Optional.empty();
+                    }
 
-    public MqttSpace(final Map<Uri, Obj> config, final fURI tid, final fURI vid) {
-        super(config, tid, vid);
-        this.broker = config
-                .get(new MUri(fURI.of("broker")))
-                .orElseThrow(new IllegalArgumentException("config must have a broker key")).uriValue();
-        this.pattern = config
-                .get(new MUri(fURI.of("pattern")))
-                .orElseThrow(new IllegalArgumentException("config nust have a pattern key")).uriValue();
-        this.cache = new MemSpace(this.pattern, fURI.NULL);
+                    @Override
+                    public Optional<Obj> preWrite(final fURI source, final fURI vid, final Obj obj) {
+                        LOG.trace("evaluating {{y}}prewrite{{/y}}: %s => %s", obj, vid);
+                        if (vid.hasQuery("sub")) {
+                            if (obj.isNoObj()) {
+                                client.toAsync()
+                                        .unsubscribeWith()
+                                        .topicFilter(toMqttTopic(vid.basePath()))
+                                        .send().
+                                        whenComplete((m, e) -> {
+                                            if (null != e)
+                                                LOG.error(e);
+                                            else
+                                                LOG.debug("unsubscribed from %s", m);
+                                        });
+                            } else {
+                                client.toAsync()
+                                        .subscribeWith()
+                                        .topicFilter(toMqttTopic(vid.basePath()))
+                                        .callback(p -> {
+                                            LOG.debug("received %s", p);
+                                            if (p.getPayload().isPresent()) {
+                                                final String json = StandardCharsets.UTF_8.decode(p.getPayload().get()).toString();
+                                                final Obj o = jsonTranslator.translateString(json);
+                                                cache.write(toMtronVid(p.getTopic().toString()), o);
+                                                final Obj result = obj.apply(o);
+                                                LOG.trace("subscription evaluation of %s => %s yielded %s", o, obj, result);
+                                            } else {
+                                                cache.write(toMtronVid(p.getTopic().toString()), NoObj.single());
+                                                final Obj result = obj.apply();
+                                                LOG.trace("subscription evaluation of %s => %s yielded %s", NoObj.single(), obj, result);
+                                            }
+                                        })
+                                        .send()
+                                        .whenComplete((m, e) -> {
+                                            if (null != e)
+                                                LOG.error(e);
+                                            else
+                                                LOG.debug("subscribed to %s", m);
+                                        });
+                            }
+                            return super.preWrite(source, vid, obj);
+                        }
+                        return Optional.empty();
+                    }
+                });
+            }
+        });
+        this.broker = config.get(uri("broker")).orElseThrow(new IllegalArgumentException("config must have a broker key")).uriValue();
         this.init();
     }
 
@@ -82,12 +144,15 @@ public class MqttSpace extends MObj implements Space {
 
     @Override
     public Qs qs() {
-        return null;
+        return this.qs;
     }
 
-    @Override
-    public Object value() {
-        return null;
+    private String toMqttTopic(final fURI vid) {
+        return null == this.prefix ? vid.toString() : vid.removePrefix(this.prefix).toString();
+    }
+
+    private fURI toMtronVid(final String topic) {
+        return null == this.prefix ? f(topic) : this.prefix.extend(topic);
     }
 
     public void init() {
@@ -102,23 +167,27 @@ public class MqttSpace extends MObj implements Space {
                     .connectWith()
                     .cleanStart(false)
                     .send()
-                    .whenComplete((a, b) -> LOG.info("connected {}", a))
+                    .whenComplete((a, b) -> LOG.info("connected %s", a))
                     .get();
             this.client.toAsync()
                     .subscribeWith()
-                    .topicFilter(this.pattern.toString())
+                    .topicFilter(toMqttTopic(this.pattern))
                     .retainHandling(Mqtt5RetainHandling.SEND)
                     .callback(p -> {
-                        LOG.info("received {}", p);
-                        if (p.getPayload().isPresent()) {
-                            final String json = StandardCharsets.UTF_8.decode(p.getPayload().get()).toString();
-                            this.cache.write(
-                                    fURI.of(p.getTopic().toString()),
-                                    this.jsonTranslator.translateString(json));
-                        } else {
-                            this.cache.write(
-                                    fURI.of(p.getTopic().toString()),
-                                    NoObj.single());
+                        try {
+                            LOG.debug("received %s", p);
+                            if (p.getPayload().isPresent()) {
+                                final String json = StandardCharsets.UTF_8.decode(p.getPayload().get()).toString();
+                                this.cache.write(
+                                        toMtronVid(p.getTopic().toString()),
+                                        this.jsonTranslator.translateString(json));
+                            } else {
+                                this.cache.write(
+                                        toMtronVid(p.getTopic().toString()),
+                                        NoObj.single());
+                            }
+                        } catch (final Exception e) {
+                            LOG.error(e);
                         }
                     })
                     .send()
@@ -129,39 +198,43 @@ public class MqttSpace extends MObj implements Space {
     }
 
     @Override
-    public fURI pattern() {
-        return this.pattern;
-    }
-
-    @Override
     public Obj read(final fURI vid) {
         return this.cache.read(vid);
     }
 
     @Override
     public Obj write(final fURI vid, final Obj obj) {
+        final Obj ret = this.qs().processPreWrite(vid, vid, obj).orElse(null);
+        if (null != ret)
+            return ret;
+        Space.Helpers.resolveWrite(this, vid.basePath(), obj, (key, value) -> {
+            this.send(vid, value);
+        });
+        return obj;
+    }
+
+    private void send(final fURI vid, final Obj obj) {
         try {
             this.client
                     .toAsync()
                     .publishWith()
-                    .topic(vid.toString())
+                    .topic(toMqttTopic(vid))
                     .payload(obj.isNoObj() ? new byte[0] : this.jsonTranslator.translate(obj).toString().getBytes())
                     .retain(true)
                     .send()
                     .whenComplete((p, t) -> {
-                        LOG.info("caching {}", p.getPublish());
+                        LOG.info("caching %s", p.getPublish());
                         if (p.getPublish().getPayload().isPresent()) {
                             final String json = StandardCharsets.UTF_8.decode(p.getPublish().getPayload().get()).toString();
                             this.cache.write(
-                                    fURI.of(p.getPublish().getTopic().toString()),
+                                    toMtronVid(p.getPublish().getTopic().toString()),
                                     this.jsonTranslator.translateString(json));
                         } else {
                             this.cache.write(
-                                    fURI.of(p.getPublish().getTopic().toString()),
+                                    toMtronVid(p.getPublish().getTopic().toString()),
                                     NoObj.single());
                         }
                     }).get();
-            return NoObj.single();
         } catch (InterruptedException | ExecutionException e) {
             throw new IllegalArgumentException(e);
         }
@@ -172,23 +245,15 @@ public class MqttSpace extends MObj implements Space {
         throw new RuntimeException("append currently not implemented");
     }
 
-   /* @Override
-    public long length() {
-        return 0;
-    }
-
-    @Override
-    public Obj get(final fURI key) {
-        return this.read(key);
-    }*/
-
     @Override
     public Iterator<Obj> iterator() {
         return this.cache.iterator();
     }
 
     @Override
-    public void close() throws Exception {
-        this.incomingMessages.close();
+    public void close() {
+        LOG.debug("closing %s", this);
+        this.client.toBlocking().disconnect();
+        this.cache.close();
     }
 }
