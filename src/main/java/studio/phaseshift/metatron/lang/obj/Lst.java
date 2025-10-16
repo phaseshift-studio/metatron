@@ -72,7 +72,6 @@ public interface Lst extends Poly {
         }
     }
 
-
     @Override
     default <O extends Obj> O at(final Obj key) {
         if (key.isInt())
@@ -90,7 +89,6 @@ public interface Lst extends Poly {
                 return (O) result;
             } else {
                 return (O) objs(IteratorUtil.stream(result.iterator()).filter(Obj::isPoly).map(r -> r.<Poly>as().at(uri(key.<Uri>as().uriValue().pretract()))));
-
             }
         } else {
             throw MTronException.of("unknown key for lst: %s", key);

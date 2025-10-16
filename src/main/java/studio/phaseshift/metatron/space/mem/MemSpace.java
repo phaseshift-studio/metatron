@@ -24,38 +24,45 @@ import studio.phaseshift.metatron.lang.obj.mtron.MRel;
 import studio.phaseshift.metatron.space.Space;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
-import studio.phaseshift.metatron.util.MTronException;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 
-public class MemSpace extends MSpace<Map<fURI,Obj>> implements Space {
+public class MemSpace extends MSpace<Map<fURI, Obj>> implements Space {
 
     public static final fURI MEMSPACE_TID = MTRON_SPACE_TID.extend("mem");
     protected final GraphittyLogger LOG = Graphitty.log(this);
-    
+
 
     public MemSpace(final fURI pattern, final fURI vid) {
-        super(new HashMap<>(),pattern, MEMSPACE_TID, vid);
+        super(new HashMap<>(), pattern, MEMSPACE_TID, vid);
     }
 
     @Override
     public Obj read(final fURI vid) {
-       //System.out.println("%s".formatted(this.structure.keySet()));
-        return this.qs().processPreRead(vid, vid).orElseGet(() -> Helpers.resolveRead(this, vid, (key) -> {
-            if (key.equals(fURI.ALL))
-                return this.structure;
-            else {
-                if (key.hasPattern()) {
-                    return this.structure.entrySet().stream().filter(kv -> kv.getKey().matches(key.asNode())).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, Obj::append, LinkedHashMap::new));
-                } else {
-
-                    final Obj value = this.structure.get(key);
-                    return null == value ? Map.of() : Map.of(key, value);
+        return this.qs().processPreRead(vid, vid).orElseGet(() -> {
+            Obj result = Helpers.resolveRead(this, vid, (key) -> {
+                if (key.equals(fURI.ALL))
+                    return this.structure;
+                else {
+                    if (key.hasPattern()) {
+                        return this.structure
+                                .entrySet()
+                                .stream()
+                                .filter(kv -> kv.getKey().matches(key.asNode()))
+                                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, Obj::append, LinkedHashMap::new));
+                    } else {
+                        final Obj value = this.structure.get(key);
+                        return null == value ? Map.of() : Map.of(key, value);
+                    }
                 }
-            }
-        }));
+            });
+            return this.qs().processPostRead(vid, vid, result).orElse(result);
+        });
     }
 
     @Override
@@ -65,44 +72,10 @@ public class MemSpace extends MSpace<Map<fURI,Obj>> implements Space {
 
     @Override
     public Obj write(final fURI vid, final Obj obj) {
-        final Obj ret = this.qs().processPreWrite(vid, vid, obj).orElse(null);
-        if (null != ret)
-            return ret;
-        Space.Helpers.resolveWrite(this,vid.basePath(), obj, (key, value) -> {
-            final Obj current = this.read(key);
-            if(value.isNoObj() && current instanceof Space) {
-                try {
-                    ((Space) current).close();
-                } catch (final Exception e) {
-                    throw MTronException.of(e);
-                }
-            }
-            this.structure.put(key,value);
-            //LOG.trace("raw write of %s to %s {{g}}@{{b}}%s{{X}}", value, this, key);
-           /* if (value.isNoObj()) {
-                if (key.hasPattern()) // delete all existing values that match key pattern
-                    this.structure.entrySet().stream().filter(kv -> kv.getKey().matches(key)).forEach(kv -> this.structure.remove(kv.getKey()));
-                else
-                    this.structure.remove(key); // delete existing value that matches key pattern
-            } else {
-                if (key.hasPattern()) // overwrite all existing values that match key pattern
-                    this.structure.entrySet().stream().filter(kv -> kv.getKey().matches(key)).forEach(kv -> {
-                        if (key.isNode())
-                            this.structure.put(kv.getKey(), value);
-                        else {
-                            this.structure.compute(key.asNode(), (k, current) -> null == current ? value : current.append(value));
-                        }
-                    });
-                else { // overwwrite existing value that matches key pattern
-                    if (key.isNode())
-                        this.structure.put(key, value);
-                    else
-                        this.structure.compute(key.asNode(), (k, current) -> null == current ? value : current.append(value));
-                }
-            }*/
+        return this.qs().processPreWrite(vid, vid, obj).orElseGet(() -> {
+            Space.Helpers.resolveWrite(this, vid.basePath(), obj, this.structure::put);
+            return this.qs().processPostWrite(vid, vid, obj).orElse(this.qs().processQlessWrite(vid, vid, obj).orElse(obj));
         });
-        this.qs().processPostWrite(vid, vid, obj);
-        return this.qs().processQlessWrite(vid, vid, obj).orElse(obj);
     }
 
     @Override

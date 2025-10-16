@@ -46,21 +46,15 @@ public class MemRouter implements Router {
     private final Map<fURI, Space> spaces = new ConcurrentHashMap<>();
     private final Map<fURI, fURI> smallToBigRewrites = new HashMap<>();
     private final Map<fURI, fURI> bigToSmallRewrites = new HashMap<>();
-    //private final Space localSpace;
-
 
     public MemRouter(final fURI vid) {
         this.vid = vid;
-        //this.localSpace = new MemSpace(this.pattern(), this.vid);
-        //this.spaces.put(this.vid, localSpace);
         LOG.info("%s loaded at %s", this.tid(), this.vid);
     }
 
     public void registerRewrite(final fURI small, final fURI big) {
         this.smallToBigRewrites.put(small, big);
         this.bigToSmallRewrites.put(big, small);
-        //this.write(this.vid().extend("rewrite"), MRec.of(this.bigToSmallRewrites.entrySet().stream().map(kv -> Map.of(uri(kv.getKey()), uri(kv.getValue()))).reduce(new LinkedHashMap(),(a, b)->{ a.putAll(b); return a; })));
-        //this.localSpace.write(this.vid.extend("prefix").extend(small), big.toUri());
     }
 
     @Override
@@ -132,6 +126,7 @@ public class MemRouter implements Router {
 
     @Override
     public Obj write(final fURI vid, final Obj obj) {
+        Router.Helpers.writeIntercept(this,vid,obj);
         final Space space = this.getSpace(vid);
         LOG.trace("writing %s to {{b}}%s{{/b}} at {{b}}%s{{X}}", obj, space.vidOrTid(), vid);
         return space.write(vid, obj);

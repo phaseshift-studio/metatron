@@ -119,14 +119,14 @@ public interface Space extends Poly, AutoCloseable {
             Graphitty.log(space.getClass()).warn("the clone of a space is the space itself");
         }
 
-        public static Obj resolveRead(final Space space, final fURI vid, final Function<fURI, Map<fURI, Obj>> resolvedReader) { //final Map<fURI, Obj> store) {
+        public static Obj resolveRead(final Space space, final fURI vid, final Function<fURI, Map<fURI, Obj>> directReader) { //final Map<fURI, Obj> store) {
             final Map<Uri, Obj> map = new LinkedHashMap<>();
-            resolvedReader.apply(vid).forEach((key, value) -> map.put(key.toUri(), value));
+            directReader.apply(vid).forEach((key, value) -> map.put(key.toUri(), value));
             if (map.isEmpty()) {
-                resolvedReader.apply(vid.isBranch() ? vid.extend(fURI.ONE_WILD_STRING) : vid.asNode()).forEach((key, value) -> {
+                directReader.apply(vid.isBranch() ? vid.extend(fURI.ONE_WILD_STRING) : vid.asNode()).forEach((key, value) -> {
                     if (value.isRec()) {
                         value.recValue().forEach((key2, value2) -> map.put(uri(key.extend(key2.uriValue())), value2));
-                    } else if (false && value.isLst()) {
+                    } else if (value.isLst()) {
                         for (int i = 0; i < value.lstValue().size(); i++) {
                             map.put(uri(String.valueOf(i)), value.lstValue().get(i));
                         }
@@ -153,70 +153,49 @@ public interface Space extends Poly, AutoCloseable {
             }
         }
 
-        public static void resolveWrite(final Space space, final fURI vid, final Obj obj, final BiConsumer<fURI, Obj> resolveWriter) {
-            final Pair<fURI, Poly> base = Space.Helpers.locateBasePoly(space, vid);
-            if (null == base) {
-                if (vid.isNode() || !obj.isPoly()) {
-                    resolveWriter.accept(vid, obj);
-                } else if (obj.isRec()) { // branch
-                    obj.recValue().forEach((key, value) -> Helpers.resolveWrite(space, vid.extend(key.uriValue()), value, resolveWriter));
-                } else if (obj.isLst()) {
-                    for (int i = 0; i < obj.lstValue().size(); i++) { // branch
-                        Helpers.resolveWrite(space, vid.extend(String.valueOf(i)), obj.lstValue().get(i), resolveWriter);
-                    }
-                }
-            } else if (vid.isNode() || !obj.isPoly()) {
-                if (base.get1().isRec())
-                    Space.Helpers.resolveWrite(space, base.get0(), base.get1().<Rec>as().put(uri(vid.removePrefix(base.get0())), obj), resolveWriter);
-                else if (base.get1().isLst())
-                    Space.Helpers.resolveWrite(space, base.get0(), base.get1().<Lst>as().append(obj), resolveWriter);
-                else {
-                    //throw MTronException.of("unknown poly: %s %s %s", base.get1(), vid, obj);
-                    resolveWriter.accept(vid, obj);
-                }
-            } else if (base.get1().isRec()) {
-                if (obj.isRec()) {
-                    obj.recValue()
-                            .entrySet()
-                            .stream()
-                            //.filter(kv -> nextStepAddr.extend(kv.getKey().uriValue()).matches(vid))
-                            //.forEach(kv -> submap.put(kv.getKey(), kv.getValue()));
-                            .forEach(kv -> Space.Helpers.resolveWrite(space, kv.getKey().uriValue(), kv.getValue(), resolveWriter));
-                    // resolveWriter.accept(nextStepAddr, new MRec(submap, value.tid(), fURI.NULL));
-
-                } else {
-                    resolveWriter.accept(vid, obj);
-                }
-            } else if (base.get1().isLst()) {
-                Lst newLst = base.get1().<Lst>as().at(uri(vid.removePrefix(base.get0()).pretract()), obj);
-                Space.Helpers.resolveWrite(space, vid, newLst, resolveWriter);
-            }
-                   /* obj.recValue().forEach((key, value) -> {
-                        final fURI nextStepAddr = vid.extend(key.uriValue());
-                        if (value.isRec()) {
-                            if (nextStepAddr.isBranch()) {
-                                Space.Helpers.resolveWrite(space, nextStepAddr, value, resolveWriter);
-                            } else {
-                                final Map<Obj, Obj> submap = new LinkedHashMap<>();
-                                value.recValue()
-                                        .entrySet()
-                                        .stream()
-                                        .filter(kv -> nextStepAddr.extend(kv.getKey().uriValue()).matches(vid))
-                                        .forEach(kv -> submap.put(kv.getKey(), kv.getValue()));
-                                resolveWriter.accept(nextStepAddr, new MRec(submap, value.tid(), fURI.NULL));
-                            }
-                        } else if (nextStepAddr.retract().matches(vid)) {
-                            resolveWriter.accept(nextStepAddr, value);
-                        }
-                    });
-                } else {
-                    base.get1().<Rec>as().put(uri(vid.removePrefix(base.get0())), obj);
-                    resolveWriter.accept(base.get0(), base.get1());
-                }
+        public static void resolveWrite(final Space space, final fURI vid, final Obj obj, final BiConsumer<fURI, Obj> directWriter) {
+            final Obj current = space.read(vid);
+            if (!current.isNoObj() && vid.isNode()) {
+                directWriter.accept(vid, obj);
             } else {
-                Graphitty.log(space).error("currently unsupported: %s %s %s", base, vid, obj);
-                resolveWriter.accept(vid, obj);
-            }*/
+                final Pair<fURI, Poly> base = Space.Helpers.locateBasePoly(space, vid);
+                if (null == base) {
+                    if (vid.isNode() || !obj.isPoly()) {
+                        directWriter.accept(vid, obj);
+                    } else if (obj.isRec()) { // branch
+                        obj.recValue().forEach((key, value) -> Helpers.resolveWrite(space, vid.extend(key.uriValue()), value, directWriter));
+                    } else if (obj.isLst()) {
+                        for (int i = 0; i < obj.lstValue().size(); i++) { // branch
+                            Helpers.resolveWrite(space, vid.extend(String.valueOf(i)), obj.lstValue().get(i), directWriter);
+                        }
+                    }
+                } else if (vid.isNode() || !obj.isPoly()) {
+                    if (base.get1().isRec())
+                        Space.Helpers.resolveWrite(space, base.get0(), base.get1().<Rec>as().at(uri(vid.removePrefix(base.get0())), obj), directWriter);
+                    else if (base.get1().isLst())
+                        Space.Helpers.resolveWrite(space, base.get0(), base.get1().<Lst>as().append(obj), directWriter);
+                    else {
+                        //throw MTronException.of("unknown poly: %s %s %s", base.get1(), vid, obj);
+                        directWriter.accept(vid, obj);
+                    }
+                } else if (base.get1().isRec()) {
+                    if (obj.isRec()) {
+                        obj.recValue()
+                                .entrySet()
+                                .stream()
+                                //.filter(kv -> nextStepAddr.extend(kv.getKey().uriValue()).matches(vid))
+                                //.forEach(kv -> submap.put(kv.getKey(), kv.getValue()));
+                                .forEach(kv -> Space.Helpers.resolveWrite(space, kv.getKey().uriValue(), kv.getValue(), directWriter));
+                        // resolveWriter.accept(nextStepAddr, new MRec(submap, value.tid(), fURI.NULL));
+
+                    } else {
+                        directWriter.accept(vid, obj);
+                    }
+                } else if (base.get1().isLst()) {
+                    Lst newLst = base.get1().<Lst>as().at(uri(vid.removePrefix(base.get0()).pretract()), obj);
+                    Space.Helpers.resolveWrite(space, vid, newLst, directWriter);
+                }
+            }
         }
 
 

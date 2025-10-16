@@ -22,15 +22,14 @@ package studio.phaseshift.metatron.lang.obj;
 import studio.phaseshift.metatron.algebra.Semiring;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.mtron.MRel;
-import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.util.IteratorUtil;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.stream.Stream;
 
-import static studio.phaseshift.metatron.lang.fURI.f;
 import static studio.phaseshift.metatron.lang.obj.mtron.MObjs.objs;
+import static studio.phaseshift.metatron.lang.obj.mtron.MRel.rel;
 import static studio.phaseshift.metatron.lang.obj.mtron.MUri.uri;
 import static studio.phaseshift.metatron.util.Tuple.Pair;
 
@@ -79,64 +78,26 @@ public interface Rec extends Poly, Semiring<Rec> {
 
     @Override
     default <O extends Obj> O at(final Obj key) {
-        if (key.isUri()) {
-            fURI k = key.uriValue();
-            Obj value = this.recValue().getOrDefault(key, NoObj.single());
-            if (!value.isNoObj())
-                return (O) value;
-            int steps = 0;
-            for (final String segment : k.segments()) {
-                final fURI segmentF = f(segment);
-                steps++;
-                Graphitty.log(this).trace("searching for %s in %s", segment, this);
-                if (segmentF.hasPattern()) {
-                    if (segmentF.equals(fURI.ALL))
-                        return (O) (k.isBranch() ? MRel.of(k.asNode().toUri(), objs(this.recValue().values())) : objs(this.recValue().values()));
-                    else {
-                        final int stepp = steps;
-                        return (O) objs(objs(this.recValue().values().stream().flatMap(v -> {
-                                    if (v.isRec()) {
-                                        return v.<Rec>as().at(k.pretract(stepp).toUri()).stream();
-                                    } else {
-                                        return stepp == k.segments().size() ? Stream.of(v) : Stream.of(NoObj.single());
-                                    }
-                                })
-                                .filter(v -> !v.isNoObj())
-                                .map(v -> k.isBranch() ? MRel.of(k.asNode().toUri(), v) : v).toList()));
-                    }
-                } else {
-                    value = this.recValue().getOrDefault(fURI.of(segment).toUri(), NoObj.single());
-                    // if (steps == k.segments().size())
-                    //   return (O) (k.isBranch() ? MRel.of(k.asNode().toUri(), value) : value);
-                    if (steps == k.segments().size())
-                        return (O) (k.isBranch() ? MRel.of(k.asNode().toUri(), value) : value);
-                    else if (value.isRec()) {
-                        return value.<Rec>as().at(k.pretract(steps).toUri());
-                    }
-                }
+        if (!key.isUri())
+            return (O) this.value().getOrDefault(key, NoObj.single());
+        else {
+            final String step = key.uriValue().segments().get(0);
+            Obj result;
+            if (step.equals("+") || step.equals("#")) {
+                result = key.uriValue().isBranch() ? objs(this.recValue().entrySet().stream().map(kv -> rel(kv.getKey(), kv.getValue()))) : objs(this.recValue().values());
+            } else {
+                final Obj temp = this.value().getOrDefault(uri(step), NoObj.single());
+                result = key.uriValue().isBranch() ? rel(key.uriValue().asNode().toUri(), temp) : temp;
+            }
+            if (key.uriValue().segments().size() == 1) {
+                return (O) result;
+            } else {
+                final fURI nextKey = key.uriValue().isBranch() ? key.<Uri>as().uriValue().pretract().asBranch() : key.<Uri>as().uriValue().pretract();
+                return (O) objs(IteratorUtil.stream(result.iterator()).filter(Obj::isPoly).map(r -> r.<Poly>as().at(uri(nextKey))));
             }
         }
-        return (O) this.recValue().getOrDefault(key, NoObj.single());
     }
 
-    ///  TODO: GOT TIRED --- THIS IS A NASTY ALGORITHM.
-    //SS  final Obj value = this.value().get(key);
-      /*  if (null != value) {
-            return (O) value;
-        } else if (!key.isUri() || key.uriValue().segments().size() == 1)
-            return (O) NoObj.single();
-        else {
-            Map<Obj, Obj> match = new LinkedHashMap<>();
-         /*   final Obj v2 = this.value().get(key.uriValue().head(1));
-            if(null != v2)
-                match.put(key.uriValue(),v2);
-            else
-          */
-
-
-/*        }
-        return (O) this.value().getOrDefault(key, NoObj.single());
-    }*/
     default <O extends Obj> O at(final String key) {
         return this.at(uri(key));
     }

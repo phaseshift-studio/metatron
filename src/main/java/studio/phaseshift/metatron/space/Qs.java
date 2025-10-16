@@ -73,6 +73,18 @@ public class Qs extends MLst {
                 .reduce(Obj::append);
     }
 
+    public Optional<Obj> processPostRead(final fURI source, final fURI vid, final Obj current) {
+        return this.qs.stream()
+                .filter(q -> vid.hasQuery(q.value().toString()))
+                .map(Q::onRead)
+                .filter(Optional::isPresent)
+                .map(Optional::get)
+                .map(q -> q.postRead(source, vid, current))
+                .filter(Optional::isPresent)
+                .map(Optional::get)
+                .reduce(Obj::append);
+    }
+
     public Optional<Obj> processQlessWrite(final fURI source, final fURI vid, final Obj obj) {
         return this.qs.stream()
                 .map(Q::onWrite)

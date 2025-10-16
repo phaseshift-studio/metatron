@@ -23,14 +23,9 @@ import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.Obj;
 import studio.phaseshift.metatron.space.mem.StackSpace;
 import studio.phaseshift.metatron.ui.Graphitty;
+import studio.phaseshift.metatron.util.MTronException;
 
 public interface Router extends Obj, Space, AutoCloseable {
-
-    class Helpers {
-        public static String routerToString(final Router router) {
-            return Graphitty.string("{{b}}" + router.tid() + "{{g}}::[{{c}}global{{g}}]@{{b}}" + router.vid() + "{{X}}");
-        }
-    }
 
     ThreadLocal<StackSpace> INST_STACK = ThreadLocal.withInitial(() -> new StackSpace(fURI.of("+/#"), Router.global().vid().extend("stack")));
 
@@ -94,5 +89,26 @@ public interface Router extends Obj, Space, AutoCloseable {
     @Override
     default void close() {
         this.value().forEach(s -> this.removeSpace(s.vid()));
+    }
+
+    class Helpers {
+        public static String routerToString(final Router router) {
+            return Graphitty.string("{{b}}" + router.tid() + "{{g}}::[{{c}}global{{g}}]@{{b}}" + router.vid() + "{{X}}");
+        }
+
+        public static void writeIntercept(final Router router, final fURI vid, final Obj obj) {
+            if (obj.isNoObj()) {
+                final Space space = router.getSpace(vid);
+                if (null != space && !space.isNoObj()) {
+                    try {
+                        router.logger().info("disconnected %s", space);
+                        space.close();
+                        router.removeSpace(vid);
+                    } catch (final Exception e) {
+                        throw MTronException.of(e);
+                    }
+                }
+            }
+        }
     }
 }
