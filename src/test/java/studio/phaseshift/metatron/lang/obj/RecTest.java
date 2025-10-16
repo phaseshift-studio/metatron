@@ -57,7 +57,7 @@ public class RecTest extends MetatronTest {
             // "[a=>[b=>c,d=>[e=>f]]]                 | a/+                  | {c,[e=>f]}",
             "[a=>[b=>c,d=>[e=>f]]]                 | a/+/e                | f"
     }, delimiter = '|')
-    public void testType(final String rec, final String key, final String value) {
+    public void testKeyValue(final String rec, final String key, final String value) {
         Rec r = ObjParser.m_obj().parse(rec).get();
         Obj k = ObjParser.m_obj().parse(key).get();
         Obj v = ObjParser.m_obj().parse(value).get();

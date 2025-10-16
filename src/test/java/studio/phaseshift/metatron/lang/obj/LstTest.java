@@ -27,9 +27,40 @@ package studio.phaseshift.metatron.lang.obj;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.MetatronTest;
+import studio.phaseshift.metatron.lang.parse.ObjParser;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 
 public class LstTest extends MetatronTest {
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            // lst                                 | key                  | value
+            //"[a,[b,[c,d],e],f]                     | <>                   |[a,[b,[c,d],e],f]",
+            "[a,[b,[c,d],e],f]                     | <0>                  | a",
+            "[a,[b,[c,d],e],f]                     | <1/0>                | b",
+            "[a,[b,[c,d],e],f]                     | <1/1/0>              | c",
+            "[a,[b,[c,d],e],f]                     | <1/1/1>              | d",
+            "[a,[b,[c,d],e],f]                     | <1/1/+>              | {c,d}",
+            "[a,[b,[c,d],e],f]                     | <1/+/+>              | {c,d}",
+            "[a,[b,[c,d],[e,f]],g]                 | <1/+/+>              | {c,d,e,f}",
+            "[a,[b,[c,d],[e,[f,g]]],h]             | <1/+/+>              | {c,d,e,[f,g]}",
+            "[a,[b,[c,d],e],f]                     | <1/+>                | {b,[c,d],e}",
+            "[a,[b,[c,d],e],f]                     | <1/+>                | {b,[c,d],e}",
+            "[a,[b,[c,d],e],f]                     | <#>                  | {a,[b,[c,d],e],f}" // TODO: should this be unrolled?
+    }, delimiter = '|')
+    public void testKeyValue(final String lst, final String key, final String value) {
+        Lst r = ObjParser.m_obj().parse(lst).get();
+        Obj k = ObjParser.m_obj().parse(key).get();
+        Obj v = ObjParser.m_obj().parse(value).get();
+        Obj actual = r.at(k);
+        LOG.debug("testing %s at %s is %s [expected:%s]", k, r, actual, v);
+        assertTrue(r.isLst());
+        assertEquals(v, actual);
+    }
+
 
     @Override
     @ParameterizedTest
