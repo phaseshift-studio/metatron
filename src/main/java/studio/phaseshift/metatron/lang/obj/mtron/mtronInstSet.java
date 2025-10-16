@@ -151,6 +151,7 @@ public class mtronInstSet extends MInstSet {
                 instC(IN_TID.dom(ALL.maybe()).rng(BOOL_TID), lst(T(ALL.maybe())), (lhs, inst) -> bool(lhs.matches(inst.arg(0)))),
                 instC(GET_TID.dom(REC_TID).rng(OBJS_ID), lst(T(URI_TID)), (lhs, inst) -> lhs.<Rec>as().at(inst.arg(0))),
                 instC(GET_TID.dom(LST_TID).rng(OBJS_ID), lst(T(INT_TID)), (lhs, inst) -> lhs.<Lst>as().at(inst.arg(0))),
+                instC(GET_TID.dom(LST_TID).rng(OBJS_ID), lst(T(URI_TID)), (lhs, inst) -> lhs.<Lst>as().at(inst.arg(0))),
                 /// ///////////////////////////////////////////////////////////////////////////////////////////////////
                 instC(BLOCK_TID.dom(A.maybe()).rng(A.maybe()), lst(T(A)), (lhs, inst) -> inst.arg(0)),
                 instC(SWAP_TID.dom(A).rng(B), lst(T(C)), (lhs, inst) -> lhs.apply(inst.arg(0))),

@@ -19,12 +19,14 @@
 package studio.phaseshift.metatron.lang.obj;
 
 import studio.phaseshift.metatron.lang.fURI;
+import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import static studio.phaseshift.metatron.lang.obj.mtron.MInt.jnt;
+import static studio.phaseshift.metatron.lang.obj.mtron.MObjs.objs;
 import static studio.phaseshift.metatron.lang.obj.mtron.MUri.uri;
 
 public interface Lst extends Poly {
@@ -47,21 +49,20 @@ public interface Lst extends Poly {
 
     default Lst at(final Obj key, final Obj value) {
         if (key.isInt()) {
-            final ArrayList<Obj> newList = new ArrayList<>();
-            newList.addAll(this.lstValue());
+            final ArrayList<Obj> newList = new ArrayList<>(this.lstValue());
             if (value.isNoObj())
                 newList.remove(key.intValue().intValue());
             else
                 newList.set(key.intValue().intValue(), value);
             return this.clone(newList, this.tid(), this.vid());
         } else if (key.isUri()) {
-            final Int k = jnt(Long.valueOf(key.uriValue().segments().get(0)));
+            final Int k = jnt(Long.parseLong(key.uriValue().segments().get(0)));
             if (key.uriValue().segments().size() == 1) {
                 return this.at(k, value);
             } else {
                 final Obj v = this.value().get(k.intValue().intValue());
                 if (v.isPoly()) {
-                   return this.at(k, v.<Poly>as().at(uri(key.<Uri>as().uriValue().pretract()), value));
+                    return this.at(k, v.<Poly>as().at(uri(key.<Uri>as().uriValue().pretract()), value));
                 } else {
                     throw MTronException.of("unknown key value for lst: %s => %s", key, value);
                 }
@@ -77,12 +78,19 @@ public interface Lst extends Poly {
         if (key.isInt())
             return (O) this.value().get(key.<Int>as().intValue().intValue());
         else if (key.isUri()) {
-            final Int k = jnt(Long.valueOf(key.uriValue().segments().get(0)));
-            final Obj result = this.value().get(k.intValue().intValue());
-            if (result.isPoly()) {
-                return result.<Poly>as().at(uri(key.<Uri>as().uriValue().pretract()));
+            final String step = key.uriValue().segments().get(0);
+            Obj result;
+            if (step.equals("+") || step.equals("#")) {
+                result = objs(this.elements());
             } else {
+                final Int k = jnt(Long.parseLong(step));
+                result = this.value().get(k.intValue().intValue());
+            }
+            if (key.uriValue().segments().size() == 1) {
                 return (O) result;
+            } else {
+                return (O) objs(IteratorUtil.stream(result.iterator()).filter(Obj::isPoly).map(r -> r.<Poly>as().at(uri(key.<Uri>as().uriValue().pretract()))));
+
             }
         } else {
             throw MTronException.of("unknown key for lst: %s", key);

@@ -126,12 +126,15 @@ public interface Space extends Poly, AutoCloseable {
                 resolvedReader.apply(vid.isBranch() ? vid.extend(fURI.ONE_WILD_STRING) : vid.asNode()).forEach((key, value) -> {
                     if (value.isRec()) {
                         value.recValue().forEach((key2, value2) -> map.put(uri(key.extend(key2.uriValue())), value2));
+                    } else if (false && value.isLst()) {
+                        for (int i = 0; i < value.lstValue().size(); i++) {
+                            map.put(uri(String.valueOf(i)), value.lstValue().get(i));
+                        }
                     } else {
                         map.put(key.toUri(), value);
                     }
                 });
             }
-            //if (map.isEmpty()) {
             final Pair<fURI, Poly> base = Space.Helpers.locateBasePoly(space, vid);
             if (null != base) {
                 final Poly poly = base.get1();
@@ -143,9 +146,6 @@ public interface Space extends Poly, AutoCloseable {
                 if (!readObj.isNoObj())
                     map.put(vid.retractPattern().toUri(), readObj);
             }
-            //   }
-//            if (map.isEmpty())
-            //              return NoObj.single();
             if (vid.isNode()) {
                 return MObjs.ofUsage(new ArrayList<>(map.values())); // TODO: no need to maintain a map, a list will do
             } else {
