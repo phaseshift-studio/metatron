@@ -25,6 +25,7 @@ import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.Iterator;
 
+import static studio.phaseshift.metatron.lang.obj.mtron.MLst.lst;
 import static studio.phaseshift.metatron.util.Tuple.Triplet;
 
 public final class NoObj implements Obj, Inst {
@@ -47,7 +48,8 @@ public final class NoObj implements Obj, Inst {
 
     @Override
     public Poly args() {
-        throw MTronException.of("%s has no accessible arguments", this);
+        return lst();
+        //throw MTronException.of("%s has no accessible arguments", this);
     }
 
     @Override
@@ -128,5 +130,10 @@ public final class NoObj implements Obj, Inst {
     @Override
     public Call mult(final Call rhs) { // a no-op sink
         return this;
+    }
+
+    @Override
+    public Type rng() {
+        return NoObj.single().type();
     }
 }

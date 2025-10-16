@@ -51,10 +51,6 @@ public class MInst extends MObj implements Inst {
         return (Inst) super.c(c);
     }
 
-    public boolean resolved() {
-        return null != this.value().get1();
-    }
-
     public static Inst instA(final fURI tid) {
         return new MInst(Triplet.with(MLst.of(), null, NoObj.single()), tid, fURI.NULL);
     }

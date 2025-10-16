@@ -127,7 +127,7 @@ public interface Call extends Obj, Ring<Call> {
         if (rhs.isOne()) return this;
         if (this.isOne()) return rhs;
         final List<Inst> insts = new ArrayList<>(this.insts());
-        insts.addAll(rhs.insts());
+        insts.addAll(rhs.tryToInst().insts());
         return MCode.of(insts).tryToInst().c(c -> this.c().mult(rhs.c()));
     }
 
