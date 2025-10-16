@@ -209,7 +209,7 @@ public class MqttSpace extends MSpace<Map<Uri, Obj>> implements Space {
             return ret;
         Space.Helpers.resolveWrite(this, vid.basePath(), obj, (key, value) -> {
             this.send(vid, value);
-        });
+        },this.cache.directReader());
         return obj;
     }
 

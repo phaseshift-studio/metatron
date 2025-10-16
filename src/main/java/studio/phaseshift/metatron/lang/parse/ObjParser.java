@@ -347,6 +347,7 @@ public class ObjParser {
                 generate_sugar_parser(WITHIN_TID, of("_/"), 1, of("\\_")),
                 generate_sugar_parser(ID_TID, of('_'), 0),
                 generate_sugar_parser(FROM_TID, of('*'), 1),
+                generate_sugar_parser(RNG_TID, of(">>-"),0),
                 generate_sugar_parser(MERGE_TID, of(">-"), 1),
                 generate_sugar_parser(MERGE_TID, of(">-"), 0),
                 generate_sugar_parser(SPLIT_TID, of("-<"), 1),

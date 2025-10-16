@@ -21,7 +21,6 @@ package studio.phaseshift.metatron.space.mem;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.NoObj;
 import studio.phaseshift.metatron.lang.obj.Obj;
-import studio.phaseshift.metatron.lang.obj.mtron.MRec;
 import studio.phaseshift.metatron.lang.obj.mtron.MRel;
 import studio.phaseshift.metatron.space.NullSpace;
 import studio.phaseshift.metatron.space.Qs;
@@ -31,25 +30,31 @@ import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
 import studio.phaseshift.metatron.util.MTronException;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static studio.phaseshift.metatron.BootLoader.BOOTING;
-import static studio.phaseshift.metatron.lang.obj.mtron.MUri.uri;
 
 public class MemRouter implements Router {
 
-    private final GraphittyLogger LOG = Graphitty.log(this);
     private static final fURI ROUTER_TID = fURI.of("/mtron/sys/router");
-
-    private fURI vid;
+    private static final Set<fURI> READ_AS_NOOBJ = Set.of(fURI.ALL.maybeSome(), fURI.ALL.maybe(), fURI.ALL);
+    private final GraphittyLogger LOG = Graphitty.log(this);
     private final Map<fURI, Space> spaces = new ConcurrentHashMap<>();
     private final Map<fURI, fURI> smallToBigRewrites = new HashMap<>();
     private final Map<fURI, fURI> bigToSmallRewrites = new HashMap<>();
+    private fURI vid;
 
     public MemRouter(final fURI vid) {
         this.vid = vid;
         LOG.info("%s loaded at %s", this.tid(), this.vid);
+    }
+
+    private static Obj appendOnRead(final boolean send, final Obj base, final Obj addition) {
+        return addition.isNoObj() ? base : (send ? base.append(MRel.of(addition.vid().toUri(), addition)) : base.append(addition));
     }
 
     public void registerRewrite(final fURI small, final fURI big) {
@@ -108,12 +113,6 @@ public class MemRouter implements Router {
             return NullSpace.single();
     }
 
-    private static final Set<fURI> READ_AS_NOOBJ = Set.of(fURI.ALL.maybeSome(), fURI.ALL.maybe(), fURI.ALL);
-
-    private static Obj appendOnRead(final boolean send, final Obj base, final Obj addition) {
-        return addition.isNoObj() ? base : (send ? base.append(MRel.of(addition.vid().toUri(), addition)) : base.append(addition));
-    }
-
     @Override
     public Obj read(final fURI vid) {
         if (vid.isZero() || READ_AS_NOOBJ.contains(vid))
@@ -126,8 +125,15 @@ public class MemRouter implements Router {
 
     @Override
     public Obj write(final fURI vid, final Obj obj) {
-        Router.Helpers.writeIntercept(this,vid,obj);
         final Space space = this.getSpace(vid);
+        /// TOTAL HACK -- find a more elegant solution ///
+        if (obj.isNoObj()) {
+            final Map<fURI, Obj> current = space.directReader().apply(vid);
+            if (!current.isEmpty() && current.values().iterator().next() instanceof Space) {
+                this.removeSpace(vid);
+            }
+        }
+        /// ///////////////////////////////////////////////
         LOG.trace("writing %s to {{b}}%s{{/b}} at {{b}}%s{{X}}", obj, space.vidOrTid(), vid);
         return space.write(vid, obj);
     }

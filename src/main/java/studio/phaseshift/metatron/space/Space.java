@@ -75,6 +75,13 @@ public interface Space extends Poly, AutoCloseable {
         return results;
     }
 
+    default Function<fURI,Map<fURI,Obj>> directReader() {
+        return f -> Map.of();
+    }
+    default BiConsumer<fURI,Obj> directWriter() {
+        return (k,v) -> {};
+    }
+
     void append(final fURI addr, final Obj... obj);
 
     @Override
@@ -153,9 +160,9 @@ public interface Space extends Poly, AutoCloseable {
             }
         }
 
-        public static void resolveWrite(final Space space, final fURI vid, final Obj obj, final BiConsumer<fURI, Obj> directWriter) {
-            final Obj current = space.read(vid);
-            if (!current.isNoObj() && vid.isNode()) {
+        public static void resolveWrite(final Space space, final fURI vid, final Obj obj, final BiConsumer<fURI, Obj> directWriter,final Function<fURI, Map<fURI, Obj>> directReader) {
+            final Map<fURI,Obj> current = directReader.apply(vid);
+            if (!current.isEmpty() && vid.isNode()) {
                 directWriter.accept(vid, obj);
             } else {
                 final Pair<fURI, Poly> base = Space.Helpers.locateBasePoly(space, vid);
@@ -163,17 +170,17 @@ public interface Space extends Poly, AutoCloseable {
                     if (vid.isNode() || !obj.isPoly()) {
                         directWriter.accept(vid, obj);
                     } else if (obj.isRec()) { // branch
-                        obj.recValue().forEach((key, value) -> Helpers.resolveWrite(space, vid.extend(key.uriValue()), value, directWriter));
+                        obj.recValue().forEach((key, value) -> Helpers.resolveWrite(space, vid.extend(key.uriValue()), value, directWriter,directReader));
                     } else if (obj.isLst()) {
                         for (int i = 0; i < obj.lstValue().size(); i++) { // branch
-                            Helpers.resolveWrite(space, vid.extend(String.valueOf(i)), obj.lstValue().get(i), directWriter);
+                            Helpers.resolveWrite(space, vid.extend(String.valueOf(i)), obj.lstValue().get(i), directWriter,directReader);
                         }
                     }
                 } else if (vid.isNode() || !obj.isPoly()) {
                     if (base.get1().isRec())
-                        Space.Helpers.resolveWrite(space, base.get0(), base.get1().<Rec>as().at(uri(vid.removePrefix(base.get0())), obj), directWriter);
+                        Space.Helpers.resolveWrite(space, base.get0(), base.get1().<Rec>as().at(uri(vid.removePrefix(base.get0())), obj), directWriter,directReader);
                     else if (base.get1().isLst())
-                        Space.Helpers.resolveWrite(space, base.get0(), base.get1().<Lst>as().append(obj), directWriter);
+                        Space.Helpers.resolveWrite(space, base.get0(), base.get1().<Lst>as().append(obj), directWriter,directReader);
                     else {
                         //throw MTronException.of("unknown poly: %s %s %s", base.get1(), vid, obj);
                         directWriter.accept(vid, obj);
@@ -185,7 +192,7 @@ public interface Space extends Poly, AutoCloseable {
                                 .stream()
                                 //.filter(kv -> nextStepAddr.extend(kv.getKey().uriValue()).matches(vid))
                                 //.forEach(kv -> submap.put(kv.getKey(), kv.getValue()));
-                                .forEach(kv -> Space.Helpers.resolveWrite(space, kv.getKey().uriValue(), kv.getValue(), directWriter));
+                                .forEach(kv -> Space.Helpers.resolveWrite(space, kv.getKey().uriValue(), kv.getValue(), directWriter,directReader));
                         // resolveWriter.accept(nextStepAddr, new MRec(submap, value.tid(), fURI.NULL));
 
                     } else {
@@ -193,7 +200,7 @@ public interface Space extends Poly, AutoCloseable {
                     }
                 } else if (base.get1().isLst()) {
                     Lst newLst = base.get1().<Lst>as().at(uri(vid.removePrefix(base.get0()).pretract()), obj);
-                    Space.Helpers.resolveWrite(space, vid, newLst, directWriter);
+                    Space.Helpers.resolveWrite(space, vid, newLst, directWriter,directReader);
                 }
             }
         }

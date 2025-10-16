@@ -86,8 +86,8 @@ public class MObjs implements Objs {
     public Obj append(final Obj obj) {
         if (obj.isNoObj())
             return this;
-        else if (obj.isCall() && this.isOnlyCall())
-            return this.iterator().next().append(obj);
+        //else if (obj.isCall() && this.isOnlyCall())
+          //  return this.iterator().next().append(obj);
         return tryToShrink(flattenToMap(this.cstream, obj)).orElse(this);
     }
 

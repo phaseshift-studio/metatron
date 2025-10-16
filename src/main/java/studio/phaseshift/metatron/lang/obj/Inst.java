@@ -249,7 +249,7 @@ public interface Inst extends Call {
             Obj resolved2 = Router.global().read(this.tid());//.c(this.c());
             resolved2 = this.hasDomOrRng() ? resolved2.tid(this.tid()) : resolved2;
             if (resolved2.isNoObj()) {
-                LOG.error("%s could not be resolved in any space", this);
+                //LOG.error("%s could not be resolved in any space", this);
                 return NoObj.single();
             } else if (!resolved2.isInst()) {
                 LOG.error("unable to resolve %s to a single inst in %s", this.dom(lhs.type()), resolved2);

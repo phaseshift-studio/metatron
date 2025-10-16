@@ -95,20 +95,5 @@ public interface Router extends Obj, Space, AutoCloseable {
         public static String routerToString(final Router router) {
             return Graphitty.string("{{b}}" + router.tid() + "{{g}}::[{{c}}global{{g}}]@{{b}}" + router.vid() + "{{X}}");
         }
-
-        public static void writeIntercept(final Router router, final fURI vid, final Obj obj) {
-            if (obj.isNoObj()) {
-                final Space space = router.getSpace(vid);
-                if (null != space && !space.isNoObj()) {
-                    try {
-                        router.logger().info("disconnected %s", space);
-                        space.close();
-                        router.removeSpace(vid);
-                    } catch (final Exception e) {
-                        throw MTronException.of(e);
-                    }
-                }
-            }
-        }
     }
 }

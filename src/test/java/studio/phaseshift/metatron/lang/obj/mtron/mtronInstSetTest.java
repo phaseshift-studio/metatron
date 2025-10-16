@@ -115,6 +115,7 @@ public class mtronInstSetTest extends MetatronTest {
             "{[1,2],[3,4,5],[6,7,8]}.sum().>-.count()                               % 8",
             //"{[1,2],[3,4,5],[6,7,8]}.sum()._/sum()\\_>-                                % 36",
             "{[1,2],[3,4,5],[6,7,8]}>-[,]                                           % [[1,2],[3,4,5],[6,7,8]]",
+            "*/mtron/inst/#.count()-<[is(gt(0))=>true,is(eq(0))=>false]>>-          % true",
             // dummy without ending comma so it's easier to add more test cases
             "1.plus(1)                                                              % 2"
     }, delimiter = '%')

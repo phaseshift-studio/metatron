@@ -86,6 +86,7 @@ public class mtronInstSet extends MInstSet {
     public static final fURI REF_TID = INST_TID.extend("ref");
     public static final fURI SPLIT_TID = INST_TID.extend("split");
     public static final fURI MERGE_TID = INST_TID.extend("merge");
+    public static final fURI RMERGE_TID = INST_TID.extend("rmerge");
     public static final fURI WITHIN_TID = INST_TID.extend("within");
     public static final fURI BLOCK_TID = INST_TID.extend("block");
     public static final fURI RNG_TID = INST_TID.extend("rng");
