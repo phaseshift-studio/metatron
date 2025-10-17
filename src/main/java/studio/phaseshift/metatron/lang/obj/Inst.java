@@ -45,18 +45,62 @@ public interface Inst extends Call {
 
     // /mtron/plus?dom=/mtron/int,rng=/mtron/int
 
-    public enum Resolution {
-        A("f"), B("f(a)"), C("f(a)->b");
-
-        final String value;
-
-        Resolution(final String value) {
-            this.value = value;
-        }
-
-        public String value() {
-            return this.value;
-        }
+    private static Poly resolveArgs(final Inst source, final Inst target, final Obj lhs) {
+        final GraphittyLogger LOG = Graphitty.log(source);
+        if (target.args().isLst()) {
+            LOG.trace("processing lst args of %s", target);
+            List<Obj> resolvedArgs = new ArrayList<>();
+            for (int i = 0; i < source.args().count(); i++) {
+                final Obj sObj = source.arg(i);
+                final Obj tObj = target.arg(i);
+                if (sObj.isCall()) {
+                    final Inst firstInst = sObj.<Call>as().insts().get(0);
+                    if (!firstInst.hasDomOrRng() && firstInst.tid().basePath().equals(FROM_TID)) { // from() is a side-effect and the type can't be known unless explcitly specified (need a way to denote side-effect insts).
+                        resolvedArgs.add(sObj.resolve(lhs));
+                    } else {
+                        // TODO: is this necessary and if so, do the same for lst
+                        if (source.tid().name().equals(SPLIT_TID.name()) && sObj.isRec()) {
+                            Rec sRecObj = rec(sObj.recValue().entrySet()
+                                    .stream()
+                                    .map(kv2 -> List.of(kv2.getKey().resolve(lhs), kv2.getValue().resolve(lhs)))
+                                    .collect(Collectors.toMap(kv2 -> kv2.get(0), kv2 -> kv2.get(1), Obj::append, LinkedHashMap::new)));
+                            final Obj r = sRecObj.resolve(lhs);
+                            if (r.rng().matches(tObj))
+                                resolvedArgs.add(r);
+                            else return null;
+                        }
+                        final Obj r = sObj.resolve(lhs);
+                        if (r.rng().matches(tObj))
+                            resolvedArgs.add(r);
+                        else return null;
+                    }
+                } else {
+                    if (!sObj.matches(tObj))
+                        return null;
+                    resolvedArgs.add(sObj.resolve(lhs));
+                }
+            }
+            return lst(resolvedArgs);
+        } else if (target.args().isRec()) {
+            LOG.trace("processing rec args of %s", target);
+            final AtomicInteger counter = new AtomicInteger(0);
+            return rec(target.args().recValue().entrySet()
+                    .stream()
+                    .map(kv -> {
+                        // return List.of(kv.getKey(), kv.getValue().resolve(this.arg(kv.getKey().uriValue(), counter.getAndIncrement())));
+                        Obj this_arg = source.arg(kv.getKey().uriValue(), counter.getAndIncrement());
+                        /*if (source.tid().basePath().equals(SPLIT_TID) && this_arg.isRec()) {
+                            final Rec this_rec_arg = rec(this_arg.recValue().entrySet()
+                                    .stream()
+                                    .map(kv2 -> List.of(kv2.getKey().resolve(lhs), kv2.getValue().resolve(lhs)))
+                                    .collect(Collectors.toMap(kv2 -> kv2.get(0), kv2 -> kv2.get(1), Obj::append, LinkedHashMap::new)));
+                            return List.of(kv.getKey(), kv.getValue().isCall() ? kv.getValue().apply(this_rec_arg) : this_rec_arg);
+                        } else*/
+                        return List.of(kv.getKey(), kv.getValue().isCall() ? kv.getValue().apply(this_arg) : this_arg);
+                    })
+                    .collect(Collectors.toMap(kv -> kv.get(0), kv -> kv.get(1), Obj::append, LinkedHashMap::new)));
+        } else
+            throw MTronException.of("inst args must be a lst or rec: %s", target);
     }
 
     @Override
@@ -171,46 +215,6 @@ public interface Inst extends Call {
         return def;
     }
 
-    private static Poly resolveArgs(final Inst source, final Inst target, final Obj lhs) {
-        final GraphittyLogger LOG = Graphitty.log(source);
-        if (target.args().isLst()) {
-            LOG.trace("processing lst args of %s", target);
-            List<Obj> resolvedArgs = new ArrayList<>();
-            for (int i = 0; i < source.args().count(); i++) {
-                final Obj sObj = source.arg(i);
-                final Obj tObj = target.arg(i);
-                if (sObj.isCall()) {
-                    final Inst firstInst = sObj.<Call>as().insts().get(0);
-                    if (!firstInst.hasDomOrRng() && firstInst.tid().basePath().equals(FROM_TID)) { // from() is a side-effect and the type can't be known unless explcitly specified (need a way to denote side-effect insts).
-                        resolvedArgs.add(sObj.resolve(lhs));
-                    } else {
-                        final Obj r = sObj.resolve(lhs);
-                        if (r.rng().matches(tObj))
-                            resolvedArgs.add(r);
-                        else return null;
-                    }
-                } else {
-                    if (!sObj.matches(tObj))
-                        return null;
-                    resolvedArgs.add(sObj.resolve(lhs));
-                }
-            }
-            return lst(resolvedArgs);
-        } else if (target.args().isRec()) {
-            LOG.trace("processing rec args of %s", target);
-            final AtomicInteger counter = new AtomicInteger(0);
-            return rec(target.args().recValue().entrySet()
-                    .stream()
-                    .map(kv -> {
-                        // return List.of(kv.getKey(), kv.getValue().resolve(this.arg(kv.getKey().uriValue(), counter.getAndIncrement())));
-                        Obj this_arg = source.arg(kv.getKey().uriValue(), counter.getAndIncrement());
-                        return List.of(kv.getKey(), kv.getValue().isCall() ? kv.getValue().apply(this_arg) : this_arg);
-                    })
-                    .collect(Collectors.toMap(kv -> kv.get(0), kv -> kv.get(1), Obj::append, LinkedHashMap::new)));
-        } else
-            throw MTronException.of("inst args must be a lst or rec: %s", target);
-    }
-
     @Override
     default Inst resolve(final Obj lhs) {
         final GraphittyLogger LOG = Graphitty.log(lhs);
@@ -249,10 +253,10 @@ public interface Inst extends Call {
             Obj resolved2 = Router.global().read(this.tid());//.c(this.c());
             resolved2 = this.hasDomOrRng() ? resolved2.tid(this.tid()) : resolved2;
             if (resolved2.isNoObj()) {
-                //LOG.error("%s could not be resolved in any space", this);
+                LOG.debug("%s could not be resolved in any space", this);
                 return NoObj.single();
             } else if (!resolved2.isInst()) {
-                LOG.error("unable to resolve %s to a single inst in %s", this.dom(lhs.type()), resolved2);
+                LOG.debug("unable to resolve %s to a single inst in %s", this.dom(lhs.type()), resolved2);
                 final Poly args = resolveArgs(this, this, lhs);
                 return null == args ? this : this.args(args);
                 //return this;//NoObj.single();//.resolve(lhs);
@@ -311,9 +315,9 @@ public interface Inst extends Call {
         try {
             rhs = cinst.f().apply(clhs, cinst);
             Graphitty.log(cinst).trace("%s ({{m}}lhs{{/m}}) => %s ({{m}}inst{{/m}}) => %s ({{m}}rhs{{/m}}) evaluated {{g}}successfully{{/g}}", clhs, cinst, rhs);
-            Router.stack().pop();
         } catch (final Exception e) {
-            Graphitty.log(cinst).error("%s => %s evaluation error: %s (reverting stack)", clhs, cinst, e.getMessage());
+            Graphitty.log(cinst).error("%s => %s evaluation error: %s", clhs, cinst, e.getMessage());
+        } finally {
             Router.stack().pop();
         }
         if (!rhs.matches(cinst.rng()))
@@ -357,12 +361,24 @@ public interface Inst extends Call {
         return this.clone(this.value(), newTid, this.vid());
     }
 
+    public enum Resolution {
+        A("f"), B("f(a)"), C("f(a)->b");
+
+        final String value;
+
+        Resolution(final String value) {
+            this.value = value;
+        }
+
+        public String value() {
+            return this.value;
+        }
+    }
 
     final class f implements BiFunction<Obj, Inst, Obj> {
         public static f UNKNOWN = null;
-
-        private final boolean bi;
         final Object func;
+        private final boolean bi;
 
 
         private f(final BiFunction<Obj, Inst, Obj> func) {
@@ -376,18 +392,18 @@ public interface Inst extends Call {
             this.func = func;
         }
 
-        public Obj apply(final Obj lhs, final Inst cinst) {
-            return this.bi ?
-                    ((BiFunction<Obj, Inst, Obj>) this.func).apply(lhs, cinst) :
-                    ((Function<Obj, Obj>) this.func).apply(lhs);
-        }
-
         public static f of(final BiFunction<Obj, Inst, Obj> func) {
             return null == func ? null : new f(func);
         }
 
         public static f of(final Function<Obj, Obj> func) {
             return null == func ? null : new f(func);
+        }
+
+        public Obj apply(final Obj lhs, final Inst cinst) {
+            return this.bi ?
+                    ((BiFunction<Obj, Inst, Obj>) this.func).apply(lhs, cinst) :
+                    ((Function<Obj, Obj>) this.func).apply(lhs);
         }
 
         @Override

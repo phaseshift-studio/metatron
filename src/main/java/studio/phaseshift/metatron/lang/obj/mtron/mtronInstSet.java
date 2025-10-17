@@ -20,7 +20,6 @@ package studio.phaseshift.metatron.lang.obj.mtron;
 
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.*;
-import studio.phaseshift.metatron.lang.obj.mtron.c.cInt;
 import studio.phaseshift.metatron.space.Router;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.util.IteratorUtil;
@@ -41,7 +40,6 @@ import static studio.phaseshift.metatron.lang.obj.mtron.MReal.real;
 import static studio.phaseshift.metatron.lang.obj.mtron.MRec.rec;
 import static studio.phaseshift.metatron.lang.obj.mtron.MType.T;
 import static studio.phaseshift.metatron.lang.obj.mtron.MUri.uri;
-import static studio.phaseshift.metatron.lang.obj.mtron.mtronFluent.StartLess.e1se;
 
 public class mtronInstSet extends MInstSet {
 
@@ -114,11 +112,17 @@ public class mtronInstSet extends MInstSet {
     public static final fURI END_TID = INST_TID.extend("end");
     public static final fURI SWAP_TID = INST_TID.extend("swap");
     public static final fURI PRINT_TID = INST_TID.extend("print");
+    public static final fURI LSHIFT_TID = INST_TID.extend("lshift");
+    public static final fURI RSHIFT_TID = INST_TID.extend("rshift");
 
     public mtronInstSet(final fURI vid) {
         super(new HashMap<>(), MTRON_TID, vid);
         this.types().forEach(t -> Router.global().registerRewrite(f(t.tid().name()), t.tid()));
         this.insts().forEach(t -> Router.global().registerRewrite(f(t.tid().name()), t.tid().basePath()));
+    }
+
+    public static mtronInstSet of(final fURI vid) {
+        return new mtronInstSet(vid);
     }
 
     @Override
@@ -129,7 +133,7 @@ public class mtronInstSet extends MInstSet {
 
     @Override
     public Set<Inst> rewrites() {
-        return new mtronRewrites(mtronRewrites.REWRITE_TID,this.vid.extend("rewrite")).insts();
+        return new mtronRewrites(mtronRewrites.REWRITE_TID, this.vid.extend("rewrite")).insts();
     }
 
     @Override
@@ -193,6 +197,10 @@ public class mtronInstSet extends MInstSet {
                 instC(RNG_TID.dom(REL_TID).rng(ALL.some()), lst(), (lhs, inst) -> lhs.relValue().get1()),
                 instC(DOM_TID.dom(REC_TID).rng(OBJS_ID), lst(), (lhs, inst) -> objs(lhs.recValue().keySet())),
                 instC(RNG_TID.dom(REC_TID).rng(OBJS_ID), lst(), (lhs, inst) -> objs(lhs.recValue().values())),
+                instC(LSHIFT_TID.dom(URI_TID).rng(URI_TID), lst(T(INT_TID.maybe())), (lhs, inst) -> uri(lhs.uriValue().pretract(inst.arg(0).orElse(jnt(1)).intValue().intValue()))),
+                instC(RSHIFT_TID.dom(URI_TID).rng(URI_TID), lst(T(INT_TID.maybe())), (lhs, inst) -> uri(lhs.uriValue().retract(inst.arg(0).orElse(jnt(1)).intValue().intValue()))),
+                instC(LSHIFT_TID.dom(REC_TID).rng(OBJS_ID), lst(), (lhs, inst) -> objs(lhs.recValue().values())),
+                instC(RSHIFT_TID.dom(REC_TID).rng(OBJS_ID), lst(), (lhs, inst) -> objs(lhs.recValue().keySet())),
                 /// ///////////////////////////////////////////////////////////////////////////////////////////////////
                 instC(NOT_TID.dom(ALL).rng(BOOL_TID), lst(T(BOOL_TID)), (lhs, inst) -> bool(!inst.arg(0).boolValue())),
                 instC(EQ_TID.dom(ALL).rng(BOOL_TID), lst(T(ALL)), (lhs, inst) -> bool(lhs.equals(inst.arg(0)))),
@@ -299,7 +307,4 @@ public class mtronInstSet extends MInstSet {
 
     }
 
-    public static mtronInstSet of(final fURI vid) {
-        return new mtronInstSet(vid);
-    }
 }

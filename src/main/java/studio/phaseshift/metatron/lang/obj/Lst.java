@@ -42,6 +42,12 @@ public interface Lst extends Poly {
         return this.value().size();
     }
 
+    default Lst add(final Obj obj) {
+        final ArrayList<Obj> newList = new ArrayList<>(this.lstValue());
+        newList.add(obj);
+        return this.value(newList);
+    }
+
     @Override
     default Iterable<Obj> elements() {
         return this.value();

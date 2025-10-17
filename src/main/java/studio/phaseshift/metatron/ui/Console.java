@@ -18,7 +18,6 @@
 
 package studio.phaseshift.metatron.ui;
 
-import ch.qos.logback.classic.filter.ThresholdFilter;
 import org.jline.reader.*;
 import org.jline.reader.impl.DefaultParser;
 import org.jline.reader.impl.history.DefaultHistory;
@@ -27,13 +26,10 @@ import org.jline.terminal.TerminalBuilder;
 import org.jline.utils.AttributedString;
 import org.jline.utils.AttributedStringBuilder;
 import org.jline.widget.Widgets;
-import org.slf4j.LoggerFactory;
 import studio.phaseshift.metatron.BootLoader;
-import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.monoid.mtron.MMonoid;
 import studio.phaseshift.metatron.lang.obj.NoObj;
 import studio.phaseshift.metatron.lang.obj.Obj;
-import studio.phaseshift.metatron.lang.obj.mtron.MUri;
 import studio.phaseshift.metatron.lang.parse.ObjParser;
 import studio.phaseshift.metatron.space.device.log.Log;
 import studio.phaseshift.metatron.util.IteratorUtil;
@@ -43,7 +39,6 @@ import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
 import java.util.*;
@@ -57,61 +52,162 @@ public class Console {
     private static final GraphittyLogger LOG = Graphitty.log(Console.class);
     public static String HEADER_FILE = "./conf/ansi_headers.txt";
     public static String HEADER_SEPARATOR = "####################";
+    private static boolean RESOLVE_MODE = false;
     private final Terminal terminal;
     private final LineReader reader;
 
-    private static boolean RESOLVE_MODE = false;
+    public Console(final Map<String, String> terminalArgs) throws IOException {
+        final DefaultParser parser = new DefaultParser()
+                .quoteChars(new char[]{'\'', '"'})
+                .lineCommentDelims(new String[]{"---"})
+                .eofOnUnclosedQuote(true)
+                .eofOnUnclosedBracket(DefaultParser.Bracket.CURLY, DefaultParser.Bracket.ROUND, DefaultParser.Bracket.SQUARE);
+        this.terminal = TerminalBuilder.builder().encoding(StandardCharsets.UTF_8).system(true)/*.signalHandler(Terminal.SignalHandler.SIG_IGN)*/.build();
+        this.outputHeader();
+        // this.terminal.handle(Terminal.Signal.WINCH) // TODO: signal handling on some CNTRL-?? to resolve (not evaluate) current expression
+        final History history = new DefaultHistory();
+        this.reader = LineReaderBuilder.builder()
+                .terminal(terminal)
+                .appName("metatron")
+                .history(history)
+                .highlighter(CustomHighlighters.of(this.terminal))
+                .parser(parser)
+                .variable(LineReader.HISTORY_FILE, Paths.get(".metatron.history"))
+                .option(LineReader.Option.AUTO_FRESH_LINE, true)
+                .option(LineReader.Option.HISTORY_IGNORE_DUPS, true)
+                .option(LineReader.Option.DISABLE_EVENT_EXPANSION, true)
+                .variable(LineReader.SECONDARY_PROMPT_PATTERN, Graphitty.string("{{-X&v1&^1&FORM2}}    {{FORM1}}> {{X}}"))
+                .variable(LineReader.INDENTATION, 0)
+                .build();
+        terminalArgs.forEach((k, v) -> {
+            if (k.equals("log"))
+                Log.setSLF4J(v);
+        });
+        // final AutosuggestionWidgets autosuggestionWidgets = new AutosuggestionWidgets(this.reader);
+        // autosuggestionWidgets.enable();
+    }
 
-    class CustomWidgets extends Widgets {
-
-        private CustomWidgets(final LineReader reader) {
-            super(reader);
-            this.addWidget("quit-widget", this::quitWidget);
-            this.addWidget("resolve-widget", this::resolveWidget);
-            this.addWidget("define-widget", this::defineWidget);
-            this.addWidget("hide-widget", this::hideWidget);
-            getKeyMap().bind(new Reference("quit-widget"), ctrl('q'));
-            getKeyMap().bind(new Reference("resolve-widget"), ctrl('r'));
-            getKeyMap().bind(new Reference("define-widget"), ctrl('e'));
-            getKeyMap().bind(new Reference("hide-widget"), ctrl('i'));
-            //   getKeyMap().bind(new Reference("detach-widget"), alt(key_down.name()));
+    public static void main(final String[] args) throws IOException {
+        final Map<String, String> params = new HashMap<>();
+        for (final String arg : args) {
+            final String[] kv = arg.split("=");
+            params.put(kv[0].replace("--", ""), kv[1]);
         }
-
-        private boolean quitWidget() {
-            BootLoader.close();
-            System.exit(0);
-            return true;
+        boolean reload = true;
+        while (reload) {
+            reload = false;
+            final Console console = new Console(params);
+            try {
+                console.run();
+            } catch (final Exception e) {
+                LOG.error("a %s error occurred. reloading the console.\n", Graphitty.sillyPrint("catastrophic", true, true));
+                final String stackTrace = console.reader.readLine(Graphitty.string("{{WARN}}display stack trace {{FORM1}}[y/N]{{WARN}}?{{X}} "));
+                if (stackTrace.trim().equalsIgnoreCase("y"))
+                    e.printStackTrace();
+                reload = true;
+            }
+            console.stop();
         }
+    }
 
-        private boolean resolveWidget() {
-            RESOLVE_MODE = !RESOLVE_MODE;
-            //LOG.none("{{@&v1&-X}}switched %s auto-resolution mode{{^1&/@}}", RESOLVE_MODE ? "{{g}}on{{/g}}" : "{{y}}off{{/y}}");
-            return true;
+    public void stop() {
+        try {
+            this.terminal.close();
+        } catch (IOException e) {
+            LOG.error(e);
         }
+    }
 
-        private boolean defineWidget() {
-            String sourceCode = reader.getBuffer().toString();
-            reader.getBuffer().clear();
-            String sourceName = "stuff"; // reader.readLine(/*Graphitty.string("{{-X-}}\r{{m}}name{{g}}:{{X}} "*/);
-            String sourceKey = "B"; //reader.readLine(Graphitty.string("{{-X-}}\r{{m}}hotkey{{g}}:{{X}} "));
-            getKeyMap().bind(new Reference(sourceName), ctrl(sourceKey.charAt(0)));
-            this.addWidget(sourceName, () -> {
-                ObjParser.eval(sourceCode).forEachRemaining(System.out::println);
-                return true;
-            });
-            return true;
-        }
+    public void run() throws IOException {
+        new CustomWidgets(this.reader);
+        BootLoader.load();
+        String line = "";
+        while (true) {
+            try {
+                Obj result = null;
+                Graphitty.out(this.terminal.output(), "\n{{v1&^1}}");
+                line = this.reader.readLine(Graphitty.string("{{FORM2}}mton{{FORM1}}> ")).trim();
+                if (line.equals(":header"))
+                    this.outputHeader();
+                else if (line.equals(":quit"))
+                    break;
+                else if (line.startsWith(":log")) {
+                    Log.setSLF4J(line.substring(4));
+                } else
+                    result = ObjParser.parse(line);
 
-        private boolean hideWidget() {
-            boolean hiding = ObjStringSerializer.HIDE_TIDS.isEmpty();
-            if (hiding)
-                ObjStringSerializer.HIDE_TIDS.addAll(ObjStringSerializer.BASE_TIDS);
-            else
-                ObjStringSerializer.HIDE_TIDS.clear();
-            final int xLocation = terminal.getCursorPosition(System.out::print).getX() + 1;
-            Graphitty.out(terminal.output(), "\n{{-X-}}{{%s}}%s{{/%s}}{{X}} base type prefixes{{^1&|%d}}{{X}}", hiding ? "y" : "g", hiding ? "hiding" : "showing", hiding ? "y" : "g", xLocation);
-            return true;
+                if (null != result) {
+                    IteratorUtil.iterate(IteratorUtil.consume(result.isNoObj() ?
+                                    Collections.emptyIterator() :
+                                    result.isCode() ?
+                                            MMonoid.of(result.as()).apply(NoObj.single()).iterator() :
+                                            result.iterator(),
+                            o -> Graphitty.out(this.terminal.output(), "{{-X-}}{{FORM2}}=={{FORM1}}>{{X}}%s\n".formatted(o))));
+                }
+            } catch (final UserInterruptException e) {
+                LOG.warn(Graphitty.sillyPrint("process interrupted", true, true));
+            } catch (final EndOfFileException e) {
+                System.exit(0);
+            } catch (final Exception e) {
+                Throwable x = e;
+                int y = 0;
+                while (null != x) {
+                    LOG.error("%s%s", ((0 == y++) ? "" : (" ".repeat(y) + "\\_")), x.getMessage());
+                    x = x.getCause();
+                }
+                final String stackTrace = this.reader.readLine(Graphitty.string("{{WARN}}display stack trace {{FORM1}}[y/N]{{WARN}}?{{X}} "));
+                if (stackTrace.trim().equalsIgnoreCase("y")) {
+                    e.printStackTrace();
+                }
+            }
         }
+        this.terminal.close();
+        BootLoader.close();
+        System.exit(0);
+    }
+
+    protected void outputHeader() {
+        try {
+            final Map<String, String> headers = new HashMap<>();
+            StringBuilder current = new StringBuilder();
+            final BufferedReader input = new BufferedReader(new InputStreamReader(new FileInputStream(HEADER_FILE)));
+            String headerTitle = null;
+            while (input.ready()) {
+                final String line = input.readLine().stripTrailing();
+                if (line.startsWith(HEADER_SEPARATOR) && line.endsWith(HEADER_SEPARATOR)) {
+                    if (null != headerTitle && !current.isEmpty()) {
+                        headers.put(headerTitle, current.toString());
+                    }
+                    current = new StringBuilder();
+                    headerTitle = line.replace(HEADER_SEPARATOR, "").trim();
+                } else {
+                    current.append(line).append("\n");
+                }
+            }
+            if (!current.isEmpty())
+                headers.put(headerTitle, current.toString());
+            final String randomHeaderTitle = new ArrayList<>(headers.keySet()).get(new Random().nextInt(headers.size()));
+            final String randomHeader = headers.get(randomHeaderTitle);
+            if (null == randomHeader) throw new IllegalArgumentException("<unknown header: " + randomHeaderTitle + ">");
+            this.terminal.writer().print(Graphitty.string(randomHeader));
+            this.terminal.writer().flush();
+        } catch (final Exception e) {
+            this.terminal.writer().println("...an exception has occurred.");
+            this.terminal.writer().println("      ...this doesn't bode well for your time in the meTaRon: " + e);
+            this.terminal.writer().println(" __  __  ____  ____   __   ____  ____  _____  _  _ \n" +
+                    "(  \\/  )( ___)(_  _) /__\\ (_  _)(  _ \\(  _  )( \\( )\n" +
+                    " )    (  )__)   )(  /(__)\\  )(   )   / )(_)(  )  ( \n" +
+                    "(_/\\/\\_)(____) (__)(__)(__)(__) (_)\\_)(_____)(_)\\_)");
+            this.terminal.writer().printf("\t\t\tby PhaseShift Studio (%s)\n", Calendar.getInstance().get(Calendar.YEAR));
+            this.terminal.flush();
+        }
+        LOG.none("\t{{b}}ve{{y}}rs{{m}}ion {{y}}%s{{X}}\n\n", METATRON_VERSION);
+        Graphitty.out(this.terminal.output(), """
+                . {{y}}{{[r]}}r{{[d]}}esolve {{m}}[{{y}}ctrl-r{{m}}]{{X}}: automatic expression resolution
+                . {{y}}hi{{[r]}}d{{[d]}}e    {{m}}[{{y}}ctrl-h{{m}}]{{X}}: hide base type prefixes
+                . {{y}}{{[r]}}q{{[d]}}uit    {{m}}[{{y}}ctrl-q{{m}}]{{X}}: leave the metatron
+                
+                """);
     }
 
     static class CustomHighlighters implements Highlighter {
@@ -165,151 +261,55 @@ public class Console {
         }
     }
 
-    public Console(final Map<String, String> terminalArgs) throws IOException {
-        final DefaultParser parser = new DefaultParser()
-                .quoteChars(new char[]{'\'', '"'})
-                .lineCommentDelims(new String[]{"---"})
-                .eofOnUnclosedQuote(true)
-                .eofOnUnclosedBracket(DefaultParser.Bracket.CURLY, DefaultParser.Bracket.ROUND, DefaultParser.Bracket.SQUARE);
-        this.terminal = TerminalBuilder.builder().encoding(StandardCharsets.UTF_8).system(true)/*.signalHandler(Terminal.SignalHandler.SIG_IGN)*/.build();
-        this.outputHeader();
-        // this.terminal.handle(Terminal.Signal.WINCH) // TODO: signal handling on some CNTRL-?? to resolve (not evaluate) current expression
-        final History history = new DefaultHistory();
-        this.reader = LineReaderBuilder.builder()
-                .terminal(terminal)
-                .appName("metatron")
-                .history(history)
-                .highlighter(CustomHighlighters.of(this.terminal))
-                .parser(parser)
-                .variable(LineReader.HISTORY_FILE, Paths.get(".metatron.history"))
-                .option(LineReader.Option.AUTO_FRESH_LINE, true)
-                .option(LineReader.Option.HISTORY_IGNORE_DUPS, true)
-                .option(LineReader.Option.DISABLE_EVENT_EXPANSION, true)
-                .variable(LineReader.SECONDARY_PROMPT_PATTERN, Graphitty.string("{{-X&v1&^1&FORM2}}    {{FORM1}}> {{X}}"))
-                .variable(LineReader.INDENTATION, 0)
-                .build();
-        terminalArgs.forEach((k, v) -> {
-            if (k.equals("log"))
-                Log.setSLF4J(v);
-        });
-        // final AutosuggestionWidgets autosuggestionWidgets = new AutosuggestionWidgets(this.reader);
-        // autosuggestionWidgets.enable();
-    }
+    class CustomWidgets extends Widgets {
 
-    public void stop() {
-        try {
-            this.terminal.close();
-        } catch (IOException e) {
-            LOG.error(e);
+        private CustomWidgets(final LineReader reader) {
+            super(reader);
+            this.addWidget("quit-widget", this::quitWidget);
+            this.addWidget("resolve-widget", this::resolveWidget);
+            this.addWidget("define-widget", this::defineWidget);
+            this.addWidget("hide-widget", this::hideWidget);
+            getKeyMap().bind(new Reference("quit-widget"), ctrl('q'));
+            getKeyMap().bind(new Reference("resolve-widget"), ctrl('r'));
+            getKeyMap().bind(new Reference("define-widget"), ctrl('e'));
+            getKeyMap().bind(new Reference("hide-widget"), ctrl('i'));
+            //   getKeyMap().bind(new Reference("detach-widget"), alt(key_down.name()));
         }
-    }
 
-    public void run() throws IOException {
-        new CustomWidgets(this.reader);
-        BootLoader.load();
-        String line = "";
-        while (true) {
-            try {
-                Obj result = null;
-                Graphitty.out(this.terminal.output(), "\n{{v1&^1}}");
-                line = this.reader.readLine(Graphitty.string("{{FORM2}}mton{{FORM1}}> ")).trim();
-                if (line.equals(":header"))
-                    this.outputHeader();
-                else if (line.equals(":quit"))
-                    break;
-                else if (line.startsWith(":log")) {
-                    Log.setSLF4J(line.substring(4));
-                } else
-                    result = ObjParser.parse(line);
-
-                if (null != result) {
-                    IteratorUtil.iterate(IteratorUtil.consume(result.isNoObj() ?
-                                    Collections.emptyIterator() :
-                                    result.isCode() ?
-                                            MMonoid.of(result.as()).apply(NoObj.single()).iterator() :
-                                            result.iterator(),
-                            o -> Graphitty.out(this.terminal.output(), "{{-X-}}{{FORM2}}=={{FORM1}}>{{X}}%s\n".formatted(o))));
-                }
-            } catch (final UserInterruptException e) {
-                LOG.warn(Graphitty.sillyPrint("process interrupted", true, true));
-            } catch (final EndOfFileException e) {
-                System.exit(0);
-            } catch (final Exception e) {
-                LOG.error(e.getMessage());
-                final String stackTrace = this.reader.readLine(Graphitty.string("{{WARN}}display stack trace {{FORM1}}[y/N]{{WARN}}?{{X}} "));
-                if (stackTrace.trim().equalsIgnoreCase("y"))
-                    e.printStackTrace();
-            }
+        private boolean quitWidget() {
+            BootLoader.close();
+            System.exit(0);
+            return true;
         }
-        this.terminal.close();
-        BootLoader.close();
-        System.exit(0);
-    }
 
-    protected void outputHeader() {
-        try {
-            final Map<String, String> headers = new HashMap<>();
-            StringBuilder current = new StringBuilder();
-            final BufferedReader input = new BufferedReader(new InputStreamReader(new FileInputStream(HEADER_FILE)));
-            String headerTitle = null;
-            while (input.ready()) {
-                final String line = input.readLine().stripTrailing();
-                if (line.startsWith(HEADER_SEPARATOR) && line.endsWith(HEADER_SEPARATOR)) {
-                    if (null != headerTitle && !current.isEmpty()) {
-                        headers.put(headerTitle, current.toString());
-                    }
-                    current = new StringBuilder();
-                    headerTitle = line.replace(HEADER_SEPARATOR, "").trim();
-                } else {
-                    current.append(line).append("\n");
-                }
-            }
-            if (!current.isEmpty())
-                headers.put(headerTitle, current.toString());
-            final String randomHeaderTitle = new ArrayList<>(headers.keySet()).get(new Random().nextInt(headers.size()));
-            final String randomHeader = headers.get(randomHeaderTitle);
-            if (null == randomHeader) throw new IllegalArgumentException("<unknown header: " + randomHeaderTitle + ">");
-            this.terminal.writer().print(Graphitty.string(randomHeader));
-            this.terminal.writer().flush();
-        } catch (final Exception e) {
-            this.terminal.writer().println("...an exception has occurred.");
-            this.terminal.writer().println("      ...this doesn't bode well for your time in the meTaRon: " + e);
-            this.terminal.writer().println(" __  __  ____  ____   __   ____  ____  _____  _  _ \n" +
-                    "(  \\/  )( ___)(_  _) /__\\ (_  _)(  _ \\(  _  )( \\( )\n" +
-                    " )    (  )__)   )(  /(__)\\  )(   )   / )(_)(  )  ( \n" +
-                    "(_/\\/\\_)(____) (__)(__)(__)(__) (_)\\_)(_____)(_)\\_)");
-            this.terminal.writer().printf("\t\t\tby PhaseShift Studio (%s)\n", Calendar.getInstance().get(Calendar.YEAR));
-            this.terminal.flush();
+        private boolean resolveWidget() {
+            RESOLVE_MODE = !RESOLVE_MODE;
+            //LOG.none("{{@&v1&-X}}switched %s auto-resolution mode{{^1&/@}}", RESOLVE_MODE ? "{{g}}on{{/g}}" : "{{y}}off{{/y}}");
+            return true;
         }
-        LOG.none("\t{{b}}ve{{y}}rs{{m}}ion {{y}}%s{{X}}\n\n", METATRON_VERSION);
-        Graphitty.out(this.terminal.output(), """
-                . {{y}}{{[r]}}r{{[d]}}esolve {{m}}[{{y}}ctrl-r{{m}}]{{X}}: automatic expression resolution
-                . {{y}}hi{{[r]}}d{{[d]}}e    {{m}}[{{y}}ctrl-h{{m}}]{{X}}: hide base type prefixes
-                . {{y}}{{[r]}}q{{[d]}}uit    {{m}}[{{y}}ctrl-q{{m}}]{{X}}: leave the metatron
-                
-                """);
-    }
 
-    public static void main(final String[] args) throws IOException {
-        final Map<String, String> params = new HashMap<>();
-        for (final String arg : args) {
-            final String[] kv = arg.split("=");
-            params.put(kv[0].replace("--", ""), kv[1]);
+        private boolean defineWidget() {
+            String sourceCode = reader.getBuffer().toString();
+            reader.getBuffer().clear();
+            String sourceName = "stuff"; // reader.readLine(/*Graphitty.string("{{-X-}}\r{{m}}name{{g}}:{{X}} "*/);
+            String sourceKey = "B"; //reader.readLine(Graphitty.string("{{-X-}}\r{{m}}hotkey{{g}}:{{X}} "));
+            getKeyMap().bind(new Reference(sourceName), ctrl(sourceKey.charAt(0)));
+            this.addWidget(sourceName, () -> {
+                ObjParser.eval(sourceCode).forEachRemaining(System.out::println);
+                return true;
+            });
+            return true;
         }
-        boolean reload = true;
-        while (reload) {
-            reload = false;
-            final Console console = new Console(params);
-            try {
-                console.run();
-            } catch (final Exception e) {
-                LOG.error("a %s error occurred. reloading the console.\n", Graphitty.sillyPrint("catastrophic", true, true));
-                final String stackTrace = console.reader.readLine(Graphitty.string("{{WARN}}display stack trace {{FORM1}}[y/N]{{WARN}}?{{X}} "));
-                if (stackTrace.trim().equalsIgnoreCase("y"))
-                    e.printStackTrace();
-                reload = true;
-            }
-            console.stop();
+
+        private boolean hideWidget() {
+            boolean hiding = ObjStringSerializer.HIDE_TIDS.isEmpty();
+            if (hiding)
+                ObjStringSerializer.HIDE_TIDS.addAll(ObjStringSerializer.BASE_TIDS);
+            else
+                ObjStringSerializer.HIDE_TIDS.clear();
+            final int xLocation = terminal.getCursorPosition(System.out::print).getX() + 1;
+            Graphitty.out(terminal.output(), "\n{{-X-}}{{%s}}%s{{/%s}}{{X}} base type prefixes{{^1&|%d}}{{X}}", hiding ? "y" : "g", hiding ? "hiding" : "showing", hiding ? "y" : "g", xLocation);
+            return true;
         }
     }
 }
