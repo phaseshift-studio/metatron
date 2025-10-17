@@ -22,7 +22,7 @@ import org.apache.tinkerpop.gremlin.tinkergraph.structure.TinkerFactory;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.monoid.mtron.MMonoid;
 import studio.phaseshift.metatron.lang.obj.InstSet;
-import studio.phaseshift.metatron.lang.obj.NoObj;
+import studio.phaseshift.metatron.lang.obj.mext.mextInstSet;
 import studio.phaseshift.metatron.lang.obj.mgrph.tp.MGraph;
 import studio.phaseshift.metatron.lang.obj.mgrph.tp.mgrphInstSet;
 import studio.phaseshift.metatron.lang.obj.mtron.MUri;
@@ -39,7 +39,6 @@ import studio.phaseshift.metatron.ui.GraphittyLogger;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.util.Map;
 
@@ -86,8 +85,10 @@ public class BootLoader {
             final Space mqtt = new MqttSpace(Map.of(
                     uri("broker"), uri("mqtt://192.168.66.2:1883"),
                     uri("prefix"), uri("/mqtt"),
-                    uri("pattern"),uri("zigbee2mqtt/#")), f("/mnt/zigbee2mqtt"));
+                    uri("pattern"), uri("zigbee2mqtt/#")), f("/mnt/zigbee2mqtt"));
             Router.global().addSpace(mqtt);
+            final InstSet mext = mextInstSet.of(f("/mnt/lang/mext"));
+            Router.global().addSpace(mext);
             /// ///////////////////////////////////
             /*Router.global().write(
                     "bool", uri(BOOL_TID), "int", uri(INT_TID),
