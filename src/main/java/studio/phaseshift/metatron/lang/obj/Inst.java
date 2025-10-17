@@ -173,6 +173,7 @@ public interface Inst extends Call {
     default boolean isBlocking() {
         return this.tid().basePath().equals(mtronInstSet.BLOCK_TID) ||
                 this.tid().basePath().equals(mtronInstSet.WITHIN_TID) ||
+                this.tid().basePath().equals(mtronInstSet.ISA_TID) ||
                 this.tid().basePath().equals(mtronInstSet.CROSS_TID);
     }
 

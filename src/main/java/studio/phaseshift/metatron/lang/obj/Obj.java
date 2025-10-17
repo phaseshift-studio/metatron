@@ -18,7 +18,6 @@
 
 package studio.phaseshift.metatron.lang.obj;
 
-import org.checkerframework.checker.fenum.qual.PolyFenum;
 import studio.phaseshift.metatron.algebra.Ring;
 import studio.phaseshift.metatron.algebra.Semiring;
 import studio.phaseshift.metatron.lang.fURI;
@@ -41,32 +40,6 @@ import static studio.phaseshift.metatron.lang.obj.mtron.mtronInstSet.*;
 import static studio.phaseshift.metatron.util.Tuple.Pair;
 
 public interface Obj extends Function<Obj, Obj>, Iterable<Obj>, Cloneable {
-
-    class Helper {
-
-        public static int objHashCode(final Obj obj) {
-            return obj.isNoObj() ? NoObj.single().hashCode() : obj.isInst() ? obj.tid().hashCode() : Objects.hash(obj.value(), obj.tid().cLess());
-        }
-
-        public static boolean objEquals(final Obj obj, final Object other) {
-            return other instanceof Obj &&
-                    ((obj.isNoObj() && ((Obj) other).isNoObj()) ||
-                            (Objects.equals(obj.tid(), ((Obj) other).tid()) &&
-                                    Objects.equals(obj.vid(), ((Obj) other).vid()) && // TODO: ??
-                                    Objects.equals(obj.value(), ((Obj) other).value())));
-        }
-
-        public static boolean objcLessEquals(final Obj obj, final Object other) {
-            return other instanceof Obj &&
-                    ((obj.isNoObj() && ((Obj) other).isNoObj()) ||
-                            (Objects.equals(obj.tid().cLess(), ((Obj) other).tid().cLess()) && // TODO: no vid checked ...
-                                    Objects.equals(obj.value(), ((Obj) other).value())));
-        }
-
-        public static String objToString(final Obj obj) {
-            return Graphitty.string(obj);
-        }
-    }
 
     default String simpeToString() {
         return Graphitty.string("{{b}}%s{{g}}::{{m}}@{{b}}%s{{/b}}", this.tid().toString(), null == this.vid() ? "<nospace>" : this.vid().toString());
@@ -239,8 +212,11 @@ public interface Obj extends Function<Obj, Obj>, Iterable<Obj>, Cloneable {
         }
         if (rhs.isCall())
             return this.rng().matches(rhs.dom());// && rhs.apply(this).matches(rhs.rng());
-        if (rhs.isType())
-            return this.tid().matches(rhs.tid()) && rhs.apply(this).tid().matches(rhs.tid());
+        if(!this.c().within(rhs.c()))
+            return false;
+        if (rhs.isType()) {
+            return (this.tid().matches(rhs.tid()) || this.baseType().matches(rhs.tid())) && (rhs.value() == null || this.isObjs() || !rhs.apply(this).isNoObj());
+        }
         return this.tid().matches(rhs.tid()) &&
                 Objects.equals(this.value(), rhs.value());
     }
@@ -256,6 +232,19 @@ public interface Obj extends Function<Obj, Obj>, Iterable<Obj>, Cloneable {
 
     default Type rng() {
         return T(this.tid());
+    }
+
+    default fURI baseType() {
+        if (this.isBool()) return BOOL_TID.c(this.c().toString());
+        else if (this.isStr()) return STR_TID.c(this.c().toString());
+        else if (this.isUri()) return URI_TID.c(this.c().toString());
+        else if (this.isLst()) return LST_TID.c(this.c().toString());
+        else if (this.isInt()) return INT_TID.c(this.c().toString());
+        else if (this.isReal()) return REAL_TID.c(this.c().toString());
+        else if (this.isInst()) return INST_TID.c(this.c().toString()).dom(this.dom().tid()).rng(this.rng().tid());
+        else if (this.isCode()) return CODE_TID.c(this.c().toString());
+        else if (this.isNoObj()) return NOOBJ_TID.c(this.c().toString());
+        else return this.tid();
     }
 
     default <O extends Obj> O orElse(final O other) {
@@ -281,7 +270,7 @@ public interface Obj extends Function<Obj, Obj>, Iterable<Obj>, Cloneable {
     }
 
     default boolean isNoObj() {
-        return this == NoObj.single() || this.tid().cV().isZero(); // TODO: consolidate the logic
+        return  this.tid().cV().isZero() /*|| this.tid().basePath().toString().equals("noobj")*/; // TODO: consolidate the logic
     }
 
     default boolean isBool() {
@@ -415,4 +404,30 @@ public interface Obj extends Function<Obj, Obj>, Iterable<Obj>, Cloneable {
     }
 
     Obj clone();
+
+    class Helper {
+
+        public static int objHashCode(final Obj obj) {
+            return obj.isNoObj() ? NoObj.single().hashCode() : obj.isInst() ? obj.tid().hashCode() : Objects.hash(obj.value(), obj.tid().cLess());
+        }
+
+        public static boolean objEquals(final Obj obj, final Object other) {
+            return other instanceof Obj &&
+                    ((obj.isNoObj() && ((Obj) other).isNoObj()) ||
+                            (Objects.equals(obj.tid(), ((Obj) other).tid()) &&
+                                    Objects.equals(obj.vid(), ((Obj) other).vid()) && // TODO: ??
+                                    Objects.equals(obj.value(), ((Obj) other).value())));
+        }
+
+        public static boolean objcLessEquals(final Obj obj, final Object other) {
+            return other instanceof Obj &&
+                    ((obj.isNoObj() && ((Obj) other).isNoObj()) ||
+                            (Objects.equals(obj.tid().cLess(), ((Obj) other).tid().cLess()) && // TODO: no vid checked ...
+                                    Objects.equals(obj.value(), ((Obj) other).value())));
+        }
+
+        public static String objToString(final Obj obj) {
+            return Graphitty.string(obj);
+        }
+    }
 }

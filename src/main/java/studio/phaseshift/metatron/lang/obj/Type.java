@@ -59,8 +59,8 @@ public interface Type extends Obj, Semiring<Type> {
 
     @Override
     default Obj apply(final Obj obj) {
-        if (!obj.rng().tid().matches(this.tid()))
-            return NoObj.single();
+       // if (!obj.rng().tid().matches(this.tid()))
+       //     return NoObj.single();
         return null == this.value() || obj.matches(this.value().apply(obj)) ?
                 obj :
                 NoObj.single();

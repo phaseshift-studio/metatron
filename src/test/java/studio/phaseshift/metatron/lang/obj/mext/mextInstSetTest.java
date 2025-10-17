@@ -30,7 +30,8 @@ public class mextInstSetTest extends MetatronTest {
     @Override
     @ParameterizedTest
     @CsvSource(value = {
-            "vec::[1,2,3,4].dot(vec::[5,6,7,8])         % 70",
+            "9.0.sqrt()                                   % 3.0",
+            "vec::[1,2,3,4].dot(vec::[5,6,7,8])           % 70",
             // dummy without ending comma so it's easier to add more test cases
             "1.plus(1)                                                              % 2"
     }, delimiter = '%')

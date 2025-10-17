@@ -24,7 +24,6 @@ import studio.phaseshift.metatron.lang.obj.MInstSet;
 import studio.phaseshift.metatron.lang.obj.Obj;
 import studio.phaseshift.metatron.lang.obj.Type;
 import studio.phaseshift.metatron.lang.obj.mtron.MType;
-import studio.phaseshift.metatron.lang.obj.mtron.mtronInstSet;
 import studio.phaseshift.metatron.space.Router;
 
 import java.util.HashMap;
@@ -37,9 +36,10 @@ import static studio.phaseshift.metatron.lang.fURI.ALL;
 import static studio.phaseshift.metatron.lang.fURI.f;
 import static studio.phaseshift.metatron.lang.obj.mtron.MInst.instC;
 import static studio.phaseshift.metatron.lang.obj.mtron.MLst.lst;
+import static studio.phaseshift.metatron.lang.obj.mtron.MReal.real;
 import static studio.phaseshift.metatron.lang.obj.mtron.MType.T;
 import static studio.phaseshift.metatron.lang.obj.mtron.mtronFluent.StartLess.*;
-import static studio.phaseshift.metatron.lang.obj.mtron.mtronInstSet.PLUS_TID;
+import static studio.phaseshift.metatron.lang.obj.mtron.mtronInstSet.*;
 
 /*
 @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -47,17 +47,22 @@ import static studio.phaseshift.metatron.lang.obj.mtron.mtronInstSet.PLUS_TID;
 public class mextInstSet extends MInstSet {
 
     public static final fURI MEXT_TID = fURI.of("/mext");
-    public static final fURI COMPLEX_TID = MEXT_TID.extend("cmplx");
-    private static Set<fURI> MEXT_TYPES = Set.of(COMPLEX_TID);
     public static final fURI VEC_TID = MEXT_TID.extend("vec");
+    public static final fURI MTRX_TID = MEXT_TID.extend("mtrx");
+    public static final fURI CMPLX_TID = MEXT_TID.extend("cmplx");
+    public static final fURI IMG_TID = MEXT_TID.extend("img");
+    /// ////////////////////////////////////////////////////////////
     public static final fURI MEXT_INST_TID = MEXT_TID.extend("inst");
-    public static final fURI ID_TID = MEXT_INST_TID.extend("id");
-    //
     public static final fURI DOT_TID = MEXT_INST_TID.extend("dot");
+    public static final fURI SQRT_TID = MEXT_INST_TID.extend("sqrt");
 
 
     public mextInstSet(final fURI vid) {
         super(new HashMap<>(), MEXT_TID, vid);
+        this.consts().forEach(t -> {
+            Router.global().registerRewrite(f(t.tid().name()), t.tid().basePath());
+            Router.global().write(t.vid(), t);
+        });
         this.types().forEach(t -> Router.global().registerRewrite(f(t.tid().name()), t.tid()));
         this.insts().forEach(t -> Router.global().registerRewrite(f(t.tid().name()), t.tid().basePath()));
     }
@@ -67,9 +72,15 @@ public class mextInstSet extends MInstSet {
     }
 
     @Override
+    public Set<Obj> consts() {
+        return Stream.of(real(Math.sqrt(-1.0d), IMG_TID, IMG_TID)).collect(Collectors.toSet());
+    }
+
+    @Override
     public Set<Inst> insts() {
         return Stream.of(
                 instC(PLUS_TID.dom(VEC_TID).rng(VEC_TID), lst(T(VEC_TID)), (lhs, inst) -> cross(inst.arg(0)).apply(lhs)),
+                instC(SQRT_TID.dom(REAL_TID).rng(REAL_TID), lst(), (lhs, inst) -> lhs.value(Math.sqrt(lhs.realValue()))),
                 instC(DOT_TID.dom(VEC_TID).rng(ALL), lst(T(VEC_TID)), (lhs, inst) -> {
                             Obj result = null;
                             for (int i = 0; i < lhs.lstValue().size(); i++) {
@@ -83,6 +94,6 @@ public class mextInstSet extends MInstSet {
 
     @Override
     public Set<Type> types() {
-        return Stream.of(MType.of(VEC_TID)).collect(Collectors.toSet());
+        return Stream.of(T(VEC_TID,isA(T(LST_TID))), MType.of(MTRX_TID), MType.of(CMPLX_TID)).collect(Collectors.toSet());
     }
 }

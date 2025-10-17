@@ -18,15 +18,12 @@
 
 package studio.phaseshift.metatron.lang.obj;
 
+import org.petitparser.parser.Parser;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.space.Router;
 import studio.phaseshift.metatron.space.mem.MSpace;
-import studio.phaseshift.metatron.util.MTronException;
 
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import static studio.phaseshift.metatron.lang.fURI.f;
 import static studio.phaseshift.metatron.lang.obj.mtron.MObjs.objs;
@@ -39,12 +36,20 @@ public abstract class MInstSet extends MSpace<Map<fURI, Set<? extends Obj>>> imp
 
     protected final Map<fURI, Set<Inst>> INST_TABLE = new LinkedHashMap<>();
     protected final Map<fURI, Type> TYPE_TABLE = new LinkedHashMap<>();
+    protected final Map<fURI, Obj> CONST_TABLE = new LinkedHashMap<>();
     protected final Map<fURI, Inst> REWRITE_TABLE = new LinkedHashMap<>();
 
     public MInstSet(final Map<fURI, Set<? extends Obj>> value, final fURI tid, final fURI vid) {
-        super(value,tid.extend(fURI.ALL), tid, vid);
+        super(value, tid.extend(fURI.ALL), tid, vid);
+        this.types().forEach(t -> this.write(t.tid(), t));
+        this.consts().forEach(c -> this.write(c.vid(), c));
         this.insts().forEach(i -> this.write(i.tid(), i));
-        this.rewrites().forEach(i -> this.write(i.tid(), i));
+        this.rewrites().forEach(r -> this.write(r.tid(), r));
+    }
+
+    @Override
+    public Set<Obj> consts() {
+        return new LinkedHashSet<>();
     }
 
     @Override
@@ -65,6 +70,7 @@ public abstract class MInstSet extends MSpace<Map<fURI, Set<? extends Obj>>> imp
     @Override
     public Map<fURI, Set<? extends Obj>> value() {
         return Map.of(
+                f("consts"), this.consts(),
                 f("types"), this.types(),
                 f("insts"), this.insts(),
                 f("rewrites"), this.rewrites());
@@ -73,16 +79,15 @@ public abstract class MInstSet extends MSpace<Map<fURI, Set<? extends Obj>>> imp
     @Override
     public Obj read(final fURI vid) {
         final fURI bigvid = vid.big();
-        final Obj result = objs(INST_TABLE.entrySet()
+        return objs(INST_TABLE.entrySet()
                 .stream()
                 .filter(kv -> kv.getKey().matches(bigvid.basePath()))
                 .flatMap(kv -> kv.getValue().stream())
                 .filter(i -> !bigvid.hasDom() || i.dom().tid().bimatches(bigvid.dom()))
                 .filter(i -> !bigvid.hasRng() || i.rng().tid().bimatches(bigvid.rng()))
-                .map(i -> i));
-        return result.isNoObj() ?
-                objs(TYPE_TABLE.entrySet().stream().filter(kv -> kv.getKey().matches(bigvid)).map(Map.Entry::getValue)) :
-                result;
+                .map(i -> i))
+                .append(objs(TYPE_TABLE.entrySet().stream().filter(kv -> kv.getKey().matches(bigvid)).map(Map.Entry::getValue)))
+                .append(objs(CONST_TABLE.entrySet().stream().filter(kv -> kv.getKey().matches(bigvid)).map(Map.Entry::getValue)));
     }
 
     @Override
@@ -100,9 +105,14 @@ public abstract class MInstSet extends MSpace<Map<fURI, Set<? extends Obj>>> imp
         } else if (obj.isType()) {
             TYPE_TABLE.put(vid, obj.as());
         } else {
-            throw MTronException.of("inst set %s can only store insts, types, and rewrites: {{r}}!{{/r}} %s", this.simpeToString(), obj);
+            CONST_TABLE.put(vid, obj);
+            // throw MTronException.of("inst set %s can only store insts, types, and rewrites: {{r}}!{{/r}} %s", this.simpeToString(), obj);
         }
         return obj;
+    }
+
+    public List<Parser> sugars() {
+        return List.of();
     }
 
 }

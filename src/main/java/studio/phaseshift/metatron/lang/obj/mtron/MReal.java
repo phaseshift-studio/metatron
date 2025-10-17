@@ -26,16 +26,24 @@ import static studio.phaseshift.metatron.lang.obj.mtron.mtronInstSet.REAL_TID;
 
 public class MReal extends MObj implements Real {
 
-    public static Real real(final Double r) {
-        return MReal.of(r);
-    }
-
     public MReal(final Double value, final fURI tid, final fURI vid) {
         super(value, tid, vid);
     }
 
     public MReal(final Double value) {
         this(value, REAL_TID, fURI.NULL);
+    }
+
+    public static Real real(final Double r) {
+        return MReal.of(r);
+    }
+
+    public static Real real(final Double r, final fURI tid, final fURI vid) {
+        return new MReal(r, tid, vid);
+    }
+
+    public static Real of(final double value) {
+        return new MReal(value);
     }
 
     @Override
@@ -46,9 +54,5 @@ public class MReal extends MObj implements Real {
     @Override
     public Double value() {
         return (Double) this.value;
-    }
-
-    public static Real of(final double value) {
-        return new MReal(value);
     }
 }

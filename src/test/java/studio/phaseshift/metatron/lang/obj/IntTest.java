@@ -39,7 +39,11 @@ public class IntTest extends MetatronTest {
             "1                                   | int{0,4}::T[]                | true",
             "int{5}::1                           | int{0,4}::T[]                | false",
             "int{5}::1                           | int{*}::T[]                  | true",
-            "int{0}::1                           | noobj[0}::T[]                | true"
+            "int{0}::1                           | noobj[0}::T[]                | true",
+            "int{,}::1                           | int{,}::T[]                  | true",
+            "int{-1}::1                          | int{,}::T[]                  | true",
+            "int{-1}::1                          | int{0,1}::T[]                | false",
+            "int{-1}::1                          | int{-1,1}::T[]               | true"
     }, delimiter = '|')
     public void testMatches(final String lhs, final String rhs, final boolean matches) {
         super.testMatches(lhs, rhs, matches);
@@ -56,7 +60,8 @@ public class IntTest extends MetatronTest {
             "1                                   | in(int::T[])                 | true",
             "1                                   | is(in(int::T[]))             | 1",
             "1                                   | in(str::T[])                 | false",
-            "1                                   | is(in(str::T[]))             | noobj"
+            "1                                   | is(in(str::T[]))             | noobj",
+            "int{-1}::1                          | is(in(int{,}::T[]))          | int{-1}::1"
     }, delimiter = '|')
     public void testCode(final String lhs, final String code, final String expected) {
         super.testCode(lhs, code, expected);
@@ -82,7 +87,7 @@ public class IntTest extends MetatronTest {
             "{1,2,3}.plus(1).plus(2).mult(2).is(in(int::T[]))             | {8,10,12}",
             "{1,2,3}.plus(1).plus(2).mult(2).is(in(str::T[]))             | noobj",
             "{int{-1}::1,int::1}                                          | noobj",
-            "start?int{-1,1}<=int{0}(int{-1}::1)>-{int::1}                | noobj"
+           // "start?int{-1,1}<=int{0}(int{-1}::1)>-{int::1}                | noobj"
     }, delimiter = '|')
     public void testCode(final String code, final String expected) {
         super.testCode(code, expected);

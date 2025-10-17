@@ -50,6 +50,11 @@ public final class NullSpace implements Space, InstSet {
     }
 
     @Override
+    public Set<Obj> consts() {
+        return Set.of();
+    }
+
+    @Override
     public Set<Type> types() {
         return Set.of(T(NOOBJ_TID.zero()));
     }

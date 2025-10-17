@@ -20,6 +20,7 @@ package studio.phaseshift.metatron.lang.obj.mtron;
 
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.*;
+import studio.phaseshift.metatron.lang.obj.mtron.c.cInt;
 import studio.phaseshift.metatron.space.Router;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.util.IteratorUtil;
@@ -139,7 +140,7 @@ public class mtronInstSet extends MInstSet {
     @Override
     public Set<Inst> insts() {
         return Stream.of(
-                instC(START_TID.dom(fURI.NOOBJ.zero()).rng(A.maybeSome()), lst(T(A.maybeSome())), (lhs, inst) -> inst.arg(0)),
+                instC(START_TID.dom(fURI.NOOBJ.zero()).rng(A.c(cInt.of(null, null).toString())), lst(T(A.maybeSome())), (lhs, inst) -> inst.arg(0)),
                 instC(END_TID.dom(OBJS_ID).rng(NOOBJ_TID.zero()), lst(), (lhs, inst) -> NoObj.single()),
                 instC(PRINT_TID.dom(ALL).rng(ALL), lst(T(OBJS_ID)), (lhs, inst) -> IteratorUtil.stream(inst.args().elements()).peek(o -> Graphitty.stdout().println(Graphitty.string(o))).filter(a -> false).findAny().orElse(lhs)),
                 instC(ID_TID.dom(A).rng(A), lst(), (lhs, inst) -> lhs),
@@ -152,7 +153,7 @@ public class mtronInstSet extends MInstSet {
                 instC(VID_TID.dom(ALL).rng(URI_TID), lst(), (lhs, inst) -> null == lhs.vid() ? NoObj.single() : lhs.vid().toUri()),
                 instC(ELSE_TID.dom(ALL.maybe()).rng(ALL), lst(T(ALL.maybe())), (lhs, inst) -> lhs.isNoObj() ? inst.arg(0) : lhs), // TODO: rec args needs resolution on generics connected
                 instC(IS_TID.dom(ALL.maybe()).rng(ALL.maybe()), lst(T(ALL)), (lhs, inst) -> inst.arg(0).boolValue() ? lhs : NoObj.single()), // TODO: generics are not working for some reason
-                instC(ISA_TID.dom(ALL.maybe()).rng(ALL.maybe()), lst(T(OBJS_ID)), (lhs, inst) -> lhs.matches(inst.arg(0)) ? lhs : NoObj.single()),
+                instC(ISA_TID.dom(ALL.maybe()).rng(ALL.maybe()), lst(T(ALL)), (lhs, inst) -> lhs.matches(inst.arg(0)) ? lhs : NoObj.single()),
                 instC(IN_TID.dom(ALL.maybe()).rng(BOOL_TID), lst(T(ALL.maybe())), (lhs, inst) -> bool(lhs.matches(inst.arg(0)))),
                 instC(GET_TID.dom(REC_TID).rng(OBJS_ID), lst(T(URI_TID)), (lhs, inst) -> lhs.<Rec>as().at(inst.arg(0))),
                 instC(GET_TID.dom(LST_TID).rng(OBJS_ID), lst(T(INT_TID)), (lhs, inst) -> lhs.<Lst>as().at(inst.arg(0))),
@@ -240,7 +241,7 @@ public class mtronInstSet extends MInstSet {
                 instC(TYPE_TID.dom(A).rng(A), lst(), (lhs, inst) -> lhs.type()),
                 instC(TYPE_TID.dom(A.some()).rng(A.some()), lst(), (lhs, inst) -> objs(lhs).type()),
                 /// ///////////////////////////////////////////////////////////////////////////////////////////////////
-                instC(AS_TID.dom(OBJS_ID).rng(A), lst(T(T(A))), (lhs, inst) -> {
+                instC(AS_TID.dom(OBJS_ID).rng(A), lst(T(A)), (lhs, inst) -> {
                     final Type t = inst.arg(0).as();
                     if (T(LST_TID).matches(t)) {
                         if (lhs.isObjs()) {
