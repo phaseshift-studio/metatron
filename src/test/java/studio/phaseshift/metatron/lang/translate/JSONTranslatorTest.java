@@ -36,10 +36,17 @@ public class JSONTranslatorTest {
                     0.0 | 0.0
                     0.01 | 0.01
                     12.34 | 12.34
-                    "hello world" | <hello world>
+                    true  | true
+                    false | false
+                    "hello world" | "hello world"
                     "a/b/c" | <a/b/c>
                     [1,2,3] | [1,2,3]
+                    [1,"a/b",{a:1,b:2}] | [1,a/b,[a=>1,b=>2]]
+                    [1,"'a/b'",{a:1,b:2}] | [1,"a/b",[a=>1,b=>2]]
                     {a:1,b:2,c:3} | [a=>1,b=>2,c=>3]
+                    {a:1,b:[1,2,[3,4]],c:3} | [a=>1,b=>[1,2,[3,4]],c=>3]
+                    "1.plus(mult(2))"   | 1.plus(mult(2))
+                    1.plus(mult(2))     | 1.plus(mult(2))
             """)
     public void testJSONTranslation(final String json, final String mtron) {
         final JSONTranslator translator = new JSONTranslator();

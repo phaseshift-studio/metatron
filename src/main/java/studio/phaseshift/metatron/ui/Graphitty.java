@@ -33,6 +33,9 @@ public class Graphitty {
     // TODO: cherry pick from: https://gist.github.com/jonlabelle/7a76ecd29976aeb30877be326c683979
 
     public static final String RULE_SEPARATOR = "&";
+    public static final Map<String, String> CURSOR_REWRITES = new LinkedHashMap<>();
+    public static final Map<String, String> OBJ_REWRITES = new LinkedHashMap<>();
+    private static final Graphitty GRAPHITTY_STDOUT = new Graphitty(System.out);
 
     static {
         COLOR_REWRITES.put("X", "\033[m");  // reset
@@ -68,8 +71,6 @@ public class Graphitty {
         COLOR_REWRITES.put("-", "\033[9m"); // strikethrough
     }
 
-    public static final Map<String, String> CURSOR_REWRITES = new LinkedHashMap<>();
-
     static {
         CURSOR_REWRITES.put("@", "\033[H"); // home
         CURSOR_REWRITES.put("^", "\033[{{^}}A"); // up X
@@ -89,8 +90,6 @@ public class Graphitty {
         // CURSOR_REWRITES.put("X", "\033[{{<}}D");
     }
 
-    public static final Map<String, String> OBJ_REWRITES = new LinkedHashMap<>();
-
     static {
         OBJ_REWRITES.put("DEBUG", "{{y}}");
         OBJ_REWRITES.put("INFO", "{{g}}");
@@ -104,9 +103,21 @@ public class Graphitty {
 
     private final OutputStream out;
     private final Map<String, String> rewrites;
-    private boolean ansiOn = true;
     private final Stack<String> rewriteStack = new Stack<>();
-    private static final Graphitty GRAPHITTY_STDOUT = new Graphitty(System.out);
+    private boolean ansiOn = true;
+
+    public Graphitty(final Map<String, String> rewrites, final OutputStream out) {
+        this.out = out;
+        this.rewrites = new HashMap<>();
+        this.rewrites.putAll(Graphitty.COLOR_REWRITES);
+        this.rewrites.putAll(Graphitty.CURSOR_REWRITES);
+        this.rewrites.putAll(Graphitty.OBJ_REWRITES);
+        this.rewrites.putAll(rewrites);
+    }
+
+    public Graphitty(final OutputStream out) {
+        this(Map.of(), out);
+    }
 
     public static GraphittyLogger log(final Object source) {
         return source instanceof Obj && !(source instanceof Router) ? new GraphittyObjLogger((Obj) source) : new GraphittyLogger(source);
@@ -132,17 +143,28 @@ public class Graphitty {
         return ObjStringSerializer.build().create().write(obj);
     }
 
-    public Graphitty(final Map<String, String> rewrites, final OutputStream out) {
-        this.out = out;
-        this.rewrites = new HashMap<>();
-        this.rewrites.putAll(Graphitty.COLOR_REWRITES);
-        this.rewrites.putAll(Graphitty.CURSOR_REWRITES);
-        this.rewrites.putAll(Graphitty.OBJ_REWRITES);
-        this.rewrites.putAll(rewrites);
+    public static String sillyPrint(final String text, final boolean rainbow, final boolean rollercoaster) {
+        final Random random = new Random();
+        final String colors = "rgbmcy";
+        final StringBuilder ret = new StringBuilder();
+        for (int i = 0; i < text.length(); i++) {
+            if (rainbow)
+                ret.append("{{").append(colors.charAt(random.nextInt(colors.length()))).append("}}");
+            ret.append((rollercoaster ? (random.nextBoolean() ?
+                    ("" + text.charAt(i)).toLowerCase(Locale.ROOT) :
+                    ("" + text.charAt(i)).toUpperCase(Locale.ROOT)) : text.charAt(i)));
+        }
+        if (rainbow)
+            ret.append("{{X}}");
+        return ret.toString();
     }
 
-    public Graphitty(final OutputStream out) {
-        this(Map.of(), out);
+    public static String strip(final String string) {
+        final ByteArrayOutputStream out = new ByteArrayOutputStream();
+        final Graphitty temp = new Graphitty(out);
+        temp.ansiOn = false;
+        temp.parseDSL(string);
+        return out.toString();
     }
 
     public void removeRewrites(final Map<String, String> deadRewrites) {
@@ -192,32 +214,34 @@ public class Graphitty {
                         rule.append(buffer.charAt(m));
                         i = m;
                     }
-                    Stream.of(rule.toString().split(RULE_SEPARATOR)).forEach(rulePiece -> {
-                        if (rulePiece.charAt(0) == '/') {
-                            final String closeRule = rulePiece.substring(1);
-                            final String openRule = this.rewriteStack.pop();
-                            if (!openRule.equals(closeRule))
-                                throw MTronException.of("unmatched rule wrap: %s != %s [buffer: %s]", openRule, closeRule, buffer.replace("{{", "").replace("}}", ""));
-                            else {
-                                String reset = this.rewriteStack.isEmpty() ? null : this.rewrites.get(this.rewriteStack.peek());
-                                reset = null == reset ? this.rewrites.get("X") : reset.replace("\033[", "\033[0;");
-                                if (null != reset)
-                                    this.parseDSL(reset);
+                    if (this.ansiOn) {
+                        Stream.of(rule.toString().split(RULE_SEPARATOR)).forEach(rulePiece -> {
+                            if (rulePiece.charAt(0) == '/') {
+                                final String closeRule = rulePiece.substring(1);
+                                final String openRule = this.rewriteStack.pop();
+                                if (!openRule.equals(closeRule))
+                                    throw MTronException.of("unmatched rule wrap: %s != %s [buffer: %s]", openRule, closeRule, buffer.replace("{{", "").replace("}}", ""));
+                                else {
+                                    String reset = this.rewriteStack.isEmpty() ? null : this.rewrites.get(this.rewriteStack.peek());
+                                    reset = null == reset ? this.rewrites.get("X") : reset.replace("\033[", "\033[0;");
+                                    if (null != reset)
+                                        this.parseDSL(reset);
+                                }
+                            } else {
+                                this.rewriteStack.push(rulePiece);
+                                String r = this.rewrites.get(rulePiece);
+                                while (null != r && r.startsWith("{{") && r.endsWith("}}"))
+                                    r = this.rewrites.get(r.substring(2, r.length() - 2));
+                                if (Set.of('^', 'v', '<', '>', '|').contains(rulePiece.charAt(0))) {
+                                    if (!rulePiece.substring(1).equals("0"))
+                                        r = this.rewrites.get("" + rulePiece.charAt(0)).replace("{{" + rulePiece.charAt(0) + "}}", rulePiece.substring(1));
+                                }
+                                if (null == r)
+                                    throw new IllegalStateException("unknown rule: %s\n\t%s".formatted(rulePiece, buffer));
+                                this.parseDSL(r);
                             }
-                        } else {
-                            this.rewriteStack.push(rulePiece);
-                            String r = this.rewrites.get(rulePiece);
-                            while (null != r && r.startsWith("{{") && r.endsWith("}}"))
-                                r = this.rewrites.get(r.substring(2, r.length() - 2));
-                            if (Set.of('^', 'v', '<', '>', '|').contains(rulePiece.charAt(0))) {
-                                if (!rulePiece.substring(1).equals("0"))
-                                    r = this.rewrites.get("" + rulePiece.charAt(0)).replace("{{" + rulePiece.charAt(0) + "}}", rulePiece.substring(1));
-                            }
-                            if (null == r)
-                                throw new IllegalStateException("unknown rule: %s\n\t%s".formatted(rulePiece, buffer));
-                            this.parseDSL(r);
-                        }
-                    });
+                        });
+                    }
 
                 } else {
                     this.out.write(buffer.charAt(i));
@@ -246,15 +270,6 @@ public class Graphitty {
         return this;
     }
 
-    public Graphitty flush() {
-        try {
-            this.out.flush();
-        } catch (final Exception e) {
-            throw new RuntimeException(e);
-        }
-        return this;
-    }
-
    /*static String strip(final String s) {
         var a = new String();
         final var b = StringPrinter(a);
@@ -266,6 +281,14 @@ public class Graphitty {
         return ret;
     }*/
 
+    public Graphitty flush() {
+        try {
+            this.out.flush();
+        } catch (final Exception e) {
+            throw new RuntimeException(e);
+        }
+        return this;
+    }
 
     /// ///////////////////////
 
@@ -288,19 +311,6 @@ public class Graphitty {
             this.print("\t");
     }
 
-
-    /// //////////// CURSOR MOVEMENT ///////////////
-
-    public void teleport(final int row, final int column) {
-        if (this.ansiOn) {
-            this.print("\033[");
-            this.print(Objects.toString(row));
-            this.print(';');
-            this.print(Objects.toString(column));
-            this.print('H');
-        }
-    }
-
     /*
     ESC[H	moves cursor to home position (0, 0)
     ESC[{line};{column}H
@@ -319,20 +329,15 @@ public class Graphitty {
     ESC[s	save cursor position (SCO)
     ESC[u	restores the cursor to the last saved position (SCO)*/
 
+    /// //////////// CURSOR MOVEMENT ///////////////
 
-    public static String sillyPrint(final String text, final boolean rainbow, final boolean rollercoaster) {
-        final Random random = new Random();
-        final String colors = "rgbmcy";
-        final StringBuilder ret = new StringBuilder();
-        for (int i = 0; i < text.length(); i++) {
-            if (rainbow)
-                ret.append("{{").append(colors.charAt(random.nextInt(colors.length()))).append("}}");
-            ret.append((rollercoaster ? (random.nextBoolean() ?
-                    ("" + text.charAt(i)).toLowerCase(Locale.ROOT) :
-                    ("" + text.charAt(i)).toUpperCase(Locale.ROOT)) : text.charAt(i)));
+    public void teleport(final int row, final int column) {
+        if (this.ansiOn) {
+            this.print("\033[");
+            this.print(Objects.toString(row));
+            this.print(';');
+            this.print(Objects.toString(column));
+            this.print('H');
         }
-        if (rainbow)
-            ret.append("{{X}}");
-        return ret.toString();
     }
 }

@@ -20,8 +20,10 @@ package studio.phaseshift.metatron.lang.translate;
 
 import com.google.gson.*;
 import com.google.gson.stream.JsonReader;
+import org.petitparser.context.Result;
 import studio.phaseshift.metatron.lang.obj.NoObj;
 import studio.phaseshift.metatron.lang.obj.Obj;
+import studio.phaseshift.metatron.lang.parse.ObjParser;
 import studio.phaseshift.metatron.ui.*;
 import studio.phaseshift.metatron.util.MTronException;
 
@@ -76,11 +78,12 @@ public class JSONTranslator implements Translator<Obj, JsonElement> {
                 else
                     return jnt(jp.getAsLong());
             } else if (jp.isString()) {
-                String jpstr = jp.getAsString();
-                if (jpstr.charAt(0) == '"' && jpstr.charAt(jpstr.length() - 1) == '"')
-                    jpstr = jpstr.substring(1, jpstr.length() - 1);
+                final String jpstr = jp.getAsString();
                 try {
-                    return uri(jpstr);
+                    final Result r = ObjParser.m_call().parse(jpstr);
+                    return r.isSuccess() ? r.get() : ObjParser.parse(jpstr);
+                    // if (jpstr.charAt(0) == '"' && jpstr.charAt(jpstr.length() - 1) == '"')
+                    //     jpstr = jpstr.substring(1, jpstr.length() - 1);
                 } catch (Exception e) {
                     return str(jpstr);
                 }
@@ -106,12 +109,16 @@ public class JSONTranslator implements Translator<Obj, JsonElement> {
     @Override
     public JsonElement translate(final Obj obj) {
         try {
+            if (obj.isNoObj())
+                return JsonNull.INSTANCE;
             if (obj.isUri())
                 return JsonParser.parseString(obj.uriValue().toString());
             if (obj.isStr())
                 return JsonParser.parseString(obj.strValue());
-            if (!obj.isPoly())
+            if (!obj.isPoly() && !obj.isCall())
                 return JsonParser.parseString(this.serializer.write(obj));
+            if (obj.isCall())
+                return new JsonPrimitive(Graphitty.strip(SERIALIZER.write(obj)));
             if (obj.isLst()) {
                 JsonArray array = new JsonArray();
                 obj.lstValue().forEach(o -> array.add(translate(o)));
@@ -125,7 +132,7 @@ public class JSONTranslator implements Translator<Obj, JsonElement> {
                 throw MTronException.of("could not parse %s to json", obj);
 
         } catch (final Exception e) {
-            throw MTronException.of("could not parse %s to json", obj);
+            throw MTronException.of(e, "could not parse to json: %s", obj);
         }
     }
 

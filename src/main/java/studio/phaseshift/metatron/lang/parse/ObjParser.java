@@ -23,7 +23,6 @@ import org.petitparser.parser.Parser;
 import org.petitparser.parser.combinators.*;
 import org.petitparser.parser.primitive.CharacterParser;
 import studio.phaseshift.metatron.lang.fURI;
-import studio.phaseshift.metatron.lang.monoid.mtron.MMonoid;
 import studio.phaseshift.metatron.lang.obj.Call;
 import studio.phaseshift.metatron.lang.obj.Inst;
 import studio.phaseshift.metatron.lang.obj.NoObj;
@@ -60,9 +59,11 @@ public class ObjParser {
     private static final SettableParser rel_parser = SettableParser.undefined();
     private static final SettableParser obj_rel_back_parser = SettableParser.undefined();
     private static final SettableParser branch_parser = SettableParser.undefined();
+    private static final String FULL_FURI_CHARS = "/%!#_@+.: ";
+    private static final String REDUCED_FURI_CHARS = "/%!#_@+:";
 
     static {
-        branch_parser.set(seq(opt(of("-<"),""),of('{').trim(), m_code().separatedBy(of(',').trim()), of('}').trim()).pick(2)
+        branch_parser.set(seq(opt(of("-<"), ""), of('{').trim(), m_code().separatedBy(of(',').trim()), of('}').trim()).pick(2)
                 .map(t -> split(objs(((List) t).stream().filter(x -> x instanceof Call).toList())).tryToInst()));
         rel_parser.set(seq(m_type_prefix_opt_colon(REL_TID), obj_rel_back_parser, of("=>").trim(), m_obj(), m_vid_postfix())
                 .map(t -> new MRel(Tuple.Pair.with(pick(t, 1), pick(t, 3)), pick(t, 0), pick(t, 4))));
@@ -116,10 +117,14 @@ public class ObjParser {
 
         rec_parser.set(seq(m_type_prefix_opt_colon(REC_TID), of('[').trim(), rec_internal(), of(']'), m_vid_postfix()).trim().map(t -> new MRec(pick(t, 2), pick(t, 0), pick(t, 4))));
 
-        inst_parser.set(choice(branch_parser,seq(
+        inst_parser.set(choice(branch_parser, seq(
                 choice(m_inst_furi(), m_type_prefix_opt_colon(INST_TID)), // 0 inst_tid
                 seq(of('(').trim(), choice(rec_internal(), lst_internal(), of("")), of(')').trim()).pick(1), // 1 inst_args
-                opt(seq(of('{').trim(), m_code(), of('}').trim()).pick(1), null),
+                opt(seq(of('{').trim(), choice(
+                                of('?').map(t -> null),
+                                of("<j>").map(t -> null),
+                                m_code()),
+                        of('}').trim()).pick(1), null),
                 m_vid_postfix()) //  inst_code
                 // inst_seed []
                 .map(t -> (Inst) new MInst(Triplet.with(
@@ -166,9 +171,6 @@ public class ObjParser {
     public static Parser m_comment() {
         return new SequenceParser(of("---").trim(), any().starGreedy(anyOf("\n\r").or(new EndOfInputParser("end of input")))).map(t -> NoObj.single());
     }
-
-    private static final String FULL_FURI_CHARS = "/%!#_@+.: ";
-    private static final String REDUCED_FURI_CHARS = "/%!#_@+:";
 
     public static Parser m_furi() {
         return m_furi(FULL_FURI_CHARS, true, true);
@@ -347,7 +349,7 @@ public class ObjParser {
                 generate_sugar_parser(WITHIN_TID, of("_/"), 1, of("\\_")),
                 generate_sugar_parser(ID_TID, of('_'), 0),
                 generate_sugar_parser(FROM_TID, of('*'), 1),
-                generate_sugar_parser(RNG_TID, of(">>-"),0),
+                generate_sugar_parser(RNG_TID, of(">>-"), 0),
                 generate_sugar_parser(MERGE_TID, of(">-"), 1),
                 generate_sugar_parser(MERGE_TID, of(">-"), 0),
                 generate_sugar_parser(SPLIT_TID, of("-<"), 1),
@@ -364,11 +366,11 @@ public class ObjParser {
     private static Parser generate_sugar_parser(final fURI tid, final Parser startToken, final int argCount, final Parser endToken) {
         // TODO: look into ExpressionBuilder for handling paren wrapping properly.
         return (argCount == 0 ?
-                seq(startToken.trim(),opt(seq(of('?'),m_furi_inst_dom_rng()).map(t->pick(t,1)),null)).map(t -> MInst.instA(tid.query(pick(t,1)))) :
-                seq(startToken.trim(),opt(seq(of('?'),m_furi_inst_dom_rng()).map(t->pick(t,1)),null), choice(
+                seq(startToken.trim(), opt(seq(of('?'), m_furi_inst_dom_rng()).map(t -> pick(t, 1)), null)).map(t -> MInst.instA(tid.query(pick(t, 1)))) :
+                seq(startToken.trim(), opt(seq(of('?'), m_furi_inst_dom_rng()).map(t -> pick(t, 1)), null), choice(
                         seq(of('('), m_obj(), of(')')).map(t -> ObjParser.<Obj>pick(t, 1)),
                         m_obj()), null == endToken ? of("") : endToken.trim())
-                        .map(t -> MInst.instB(tid.query(pick(t,1)), MLst.of(ObjParser.<Obj>pick(t, 2)))));
+                        .map(t -> MInst.instB(tid.query(pick(t, 1)), MLst.of(ObjParser.<Obj>pick(t, 2)))));
     }
 
     /// //////////////////////////////////////////////////////////////////////////////////////////
