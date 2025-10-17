@@ -48,6 +48,7 @@ public class mextInstSet extends MInstSet {
 
     public static final fURI MEXT_TID = fURI.of("/mext");
     public static final fURI VEC_TID = MEXT_TID.extend("vec");
+    //public static final fURI RVEC_TID = MEXT_TID.extend("rvec");
     public static final fURI MTRX_TID = MEXT_TID.extend("mtrx");
     public static final fURI CMPLX_TID = MEXT_TID.extend("cmplx");
     public static final fURI IMG_TID = MEXT_TID.extend("img");
@@ -80,6 +81,7 @@ public class mextInstSet extends MInstSet {
     public Set<Inst> insts() {
         return Stream.of(
                 instC(PLUS_TID.dom(VEC_TID).rng(VEC_TID), lst(T(VEC_TID)), (lhs, inst) -> cross(inst.arg(0)).apply(lhs)),
+              //  instC(PLUS_TID.dom(RVEC_TID).rng(RVEC_TID), lst(T(RVEC_TID)), (lhs, inst) -> lhs.value(lhs.<MRealVec>as().value().add(inst.arg(0).<MRealVec>as().value()))),
                 instC(SQRT_TID.dom(REAL_TID).rng(REAL_TID), lst(), (lhs, inst) -> lhs.value(Math.sqrt(lhs.realValue()))),
                 instC(DOT_TID.dom(VEC_TID).rng(ALL), lst(T(VEC_TID)), (lhs, inst) -> {
                             Obj result = null;

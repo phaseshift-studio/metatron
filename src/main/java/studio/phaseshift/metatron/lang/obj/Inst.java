@@ -308,8 +308,8 @@ public interface Inst extends Call {
                 cinst = this.resolve(clhs);
                 modulateC = true;
             }
-            if (!clhs.matches(cinst.dom()))
-                throw MTronException.of("{{m}}lhs obj{{/m}} does not match inst domain (apply): %s {{r}}=/>{{/r}} %s", clhs, cinst);
+            if (!clhs.rng().matches(cinst.dom()))
+                throw MTronException.of("{{m}}lhs obj{{/m}} does not match inst domain (apply): %s {{r}}=/>{{/r}} %s", clhs.rng(), cinst.dom());
         }
         Router.stack().push(cinst.args());
         Obj rhs = NoObj.single();

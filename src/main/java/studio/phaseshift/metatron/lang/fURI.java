@@ -55,6 +55,7 @@ public class fURI implements Cloneable, Ring<fURI> {
     private final String scheme;
     private final int port;
     private final List<String> path;
+    private final List<String> poly;
     private final Query query;
     private boolean sstart;
     private boolean send;
@@ -67,6 +68,18 @@ public class fURI implements Cloneable, Ring<fURI> {
         this.query = Query.from(query);
         this.sstart = sstart;
         this.send = send;
+        this.poly = this.name().contains("[") ? Arrays.asList(this.name().substring(this.name().indexOf('[') + 1, this.name().indexOf(']')).split(",")) : null;
+    }
+
+    private fURI(final String scheme, final String host, final int port, final boolean sstart, final List<String> path, final boolean send, final List<String> poly, final String query) {
+        this.host = host;
+        this.scheme = scheme;
+        this.port = port;
+        this.path = path;
+        this.query = Query.from(query);
+        this.sstart = sstart;
+        this.send = send;
+        this.poly = poly;
     }
     // private final boolean wildcard;
 
@@ -80,6 +93,7 @@ public class fURI implements Cloneable, Ring<fURI> {
             this.sstart = false;
             this.send = false;
             this.query = null;
+            this.poly = null;
             return;
         }
         int queryPosition = uri.lastIndexOf(QUERY_START);
@@ -122,9 +136,20 @@ public class fURI implements Cloneable, Ring<fURI> {
         if (position == uri.length()) {
             this.path = Collections.emptyList();
             this.send = false;
+            this.poly = null;
             return;
         }
-        this.path = Arrays.asList(uri.substring(position).split(SEGMENT_SPLIT));
+        final int polyStart = uri.indexOf('[');
+        final int polyEnd = polyStart == -1 ? -1 : uri.indexOf(']');
+        this.path = Arrays.asList((polyStart == -1 ? uri.substring(position) : uri.substring(position, polyStart)).split(SEGMENT_SPLIT));
+        if (polyStart != -1 && polyEnd != -1) {
+            final String remaining = uri.substring(polyStart + 1, polyEnd);
+            this.poly = Arrays.asList(remaining.split(","));
+            this.path.set(this.path.size() - 1, this.path.get(this.path.size() - 1) + uri.substring(polyEnd + 1));
+        } else {
+            this.poly = null;
+        }
+        //   this.poly = this.name().contains("[") ? Arrays.asList(this.name().substring(this.name().indexOf('[') + 1, this.name().indexOf(']')).split(",")) : null;
     }
 
     public static fURI f(final String s) {
@@ -172,6 +197,17 @@ public class fURI implements Cloneable, Ring<fURI> {
 
     public fURI small() {
         return null == Router.global() ? this : Router.global().rewrite(this, false);
+    }
+
+    public List<String> poly() {
+        return null == this.poly ? List.of() : this.poly;
+    }
+
+    public fURI poly(final List<String> poly) {
+        if (null == this.poly || poly.isEmpty() || Objects.equals(this.poly, poly))
+            return this;
+        return new fURI(this.scheme, this.host, this.port, this.sstart, this.path, this.send, poly, Query.to(this.query));
+
     }
 
     public fURI commonRoot(final fURI other) {
@@ -713,10 +749,15 @@ public class fURI implements Cloneable, Ring<fURI> {
         if (this.sstart)
             b.append(SEGMENT_SPLIT);
         for (final String path : this.path) {
-            b.append(path).append(SEGMENT_SPLIT);
+            b.append( path.contains("{") ? path.substring(0, path.indexOf("{")) : path).append(SEGMENT_SPLIT);
         }
         if (!this.send && !this.path.isEmpty())
             b.delete(b.length() - 1, b.length());
+        if (this.poly != null)
+            b.append(this.poly);
+        if(this.c() != null)
+            b.append('{').append(this.c()).append('}');
+
         if (null != this.query && !this.query.query.isEmpty())
             b.append("?").append(Query.to(this.query));
         return b.toString();

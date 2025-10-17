@@ -52,7 +52,6 @@ public class ObjParser {
 
     private static final GraphittyLogger LOG = Graphitty.log(ObjParser.class);
     private static final SettableParser obj_parser = SettableParser.undefined();
-    private static final SettableParser obj_no_code_parser = SettableParser.undefined();
     private static final SettableParser lst_parser = SettableParser.undefined();
     private static final SettableParser rec_parser = SettableParser.undefined();
     private static final SettableParser inst_parser = SettableParser.undefined();
@@ -76,19 +75,6 @@ public class ObjParser {
                 m_int(),
                 m_str(),
                 m_call(),
-                m_rec(),
-                m_objs(),
-                m_rel(),
-                m_lst(),
-                m_uri()));
-        obj_no_code_parser.set(choice(
-                m_comment(),
-                m_type(),
-                m_noobj(),
-                m_bool(),
-                m_real(),
-                m_int(),
-                m_str(),
                 m_rec(),
                 m_objs(),
                 m_rel(),
@@ -173,28 +159,35 @@ public class ObjParser {
     }
 
     public static Parser m_furi() {
-        return m_furi(FULL_FURI_CHARS, true, true);
+        return m_furi(FULL_FURI_CHARS, true, true, true);
     }
 
     public static Parser m_furi_no_query() {
-        return m_furi(FULL_FURI_CHARS, true, false);
+        return m_furi(FULL_FURI_CHARS, false, true, false);
     }
 
-    public static Parser m_furi(final String furiCharacterSet, final boolean coefficient, final boolean query) {
+    public static Parser m_furi(final String furiCharacterSet, final boolean polynomial, final boolean coefficient, final boolean query) {
         final Supplier<Parser> internal = () -> seq(word().or(seq(of("::").not(),
                         anyOf(furiCharacterSet))).plus().flatten(),
+                opt(polynomial ? m_furi_poly_type() : none(), null),
                 opt(coefficient ? m_furi_coefficient() : none(), null),
-                opt(query ? m_furi_query() : none(), null)).map(t -> new fURI(pick(t, 0)).big().c(pick(t, 1)).query(pick(t, 2)));
+                opt(query ? m_furi_query() : none(), null)).map(t -> new fURI(pick(t, 0)).big().poly(pick(t, 1)).c(pick(t, 2)).query(pick(t, 3)));
+        // final String scheme, final String host, final int port, final boolean sstart, final List<String> path, final boolean send, final List<String> poly, final Coeff c, final String query
         final Supplier<Parser> internal2 = () -> seq(word().or(seq(of("::").not(),
                         anyOf(FULL_FURI_CHARS))).plus().flatten(),
+                opt(polynomial ? m_furi_poly_type() : none(), null),
                 opt(coefficient ? m_furi_coefficient() : none(), null),
-                opt(query ? m_furi_query() : none(), null)).map(t -> new fURI(pick(t, 0)).big().c(pick(t, 1)).query(pick(t, 2)));
+                opt(query ? m_furi_query() : none(), null)).map(t -> new fURI(pick(t, 0)).big().poly(pick(t, 1)).c(pick(t, 2)).query(pick(t, 3)));
         return choice(seq(of('<'), internal2.get(), of('>')).pick(1), internal.get());
     }
 
     /*public static Parser m_furi_base_path(final String furiCharacterSet) {
         return m_furi(furiCharacterSet, false, false);
     }*/
+
+    public static Parser m_furi_poly_type() {
+        return seq(of('['), m_furi_no_query().separatedBy(of(',')), of(']')).map(t -> pick(t, 1));
+    }
 
     public static Parser m_furi_coefficient() {
         return seq(of('{'), choice(
@@ -216,15 +209,15 @@ public class ObjParser {
 
     public static Parser m_furi_inst_dom_rng() {
         return seq(
-                m_furi(REDUCED_FURI_CHARS, true, false),
+                m_furi(REDUCED_FURI_CHARS, true, true, false),
                 of("<=").trim(),
-                m_furi(REDUCED_FURI_CHARS, true, false))
+                m_furi(REDUCED_FURI_CHARS, true, true, false))
                 .map(t -> "dom=%s&rng=%s".formatted(pick(t, 2).toString(), pick(t, 0).toString()));
     }
 
 
     public static Parser m_inst_furi() {
-        return seq(m_furi(REDUCED_FURI_CHARS, true, false), opt(m_furi_query(), ""), opt(of("::").trim(), "::"))
+        return seq(m_furi(REDUCED_FURI_CHARS, true, true, false), opt(m_furi_query(), ""), opt(of("::").trim(), "::"))
                 .map(t -> ObjParser.<fURI>pick(t, 0).query(ObjParser.pick(t, 1)));
     }
 
@@ -253,11 +246,11 @@ public class ObjParser {
     }
 
     public static Parser m_vid_postfix() {
-        return opt(seq(of('@'), m_furi(REDUCED_FURI_CHARS, false, false)).map(t -> pick(t, 1)), null);
+        return opt(seq(of('@'), m_furi(REDUCED_FURI_CHARS, true, false, false)).map(t -> pick(t, 1)), null);
     }
 
     public static Parser m_type_prefix_opt_colon(final fURI baseType) {
-        return opt(seq(m_furi(REDUCED_FURI_CHARS, true, true), opt(of("::").trim(), "::")).pick(0), baseType);
+        return opt(seq(m_furi(REDUCED_FURI_CHARS, true, true, true), opt(of("::").trim(), "::")).pick(0), baseType);
     }
 
     public static Parser m_bool() {
@@ -291,7 +284,7 @@ public class ObjParser {
     }
 
     public static Parser m_uri() {
-        return seq(m_type_prefix(URI_TID), m_furi(REDUCED_FURI_CHARS, true, true), m_vid_postfix()).map(t -> new MUri(pick(t, 1), pick(t, 0), pick(t, 2)));
+        return seq(m_type_prefix(URI_TID), m_furi(REDUCED_FURI_CHARS, true, true, true), m_vid_postfix()).map(t -> new MUri(pick(t, 1), pick(t, 0), pick(t, 2)));
     }
 
     public static Parser m_rel() {
@@ -311,7 +304,7 @@ public class ObjParser {
     }
 
     public static Parser sugar_code() {
-        return seq(opt(obj_no_code_parser, NoObj.single()), opt(of(".").trim(), '.'), m_code(), m_vid_postfix()).map(t -> {
+        return seq(opt(obj_parser, NoObj.single()), opt(of(".").trim(), '.'), m_code(), m_vid_postfix()).map(t -> {
             final List<Inst> newCode = new ArrayList<>();
             newCode.add(new MInst(Triplet.with(MLst.of(ObjParser.<Obj>pick(t, 0)), Inst.f.UNKNOWN, NoObj.single()), START_TID, fURI.NULL));
             newCode.addAll(ObjParser.<Call>pick(t, 2).insts());

@@ -41,8 +41,9 @@ public class InstTest extends MetatronTest {
     @ParameterizedTest
     @CsvSource(value = {
             // furi | tid | dom | range
-            "/mtron/plus?dom=/mtron/int&rng=/mtron/int|/mtron/plus|/mtron/int|/mtron/int",
-            "/mtron/mult/a?dom=+&rng=+|/mtron/mult/a|+|+"},
+            "/mtron/plus?dom=/mtron/int&rng=/mtron/int              | /mtron/plus        | /mtron/int     | /mtron/int",
+            "/mtron/mult/a?dom=+&rng=+                              | /mtron/mult/a      | +              | +",
+            "/mtron/mult/z?dom=real{0,1}&rng=lst[int{5}]{2,3}       | /mtron/mult/z      | /mtron/real{?} | /mtron/lst{2,3}"},
             delimiter = '|')
     public void testDomRng(final String f, final String op, final String dom, final String rng) {
         final fURI furi = fURI.of(f);
@@ -50,6 +51,8 @@ public class InstTest extends MetatronTest {
         assertEquals(op, inst.tid().path());
         assertEquals(fURI.of(dom), inst.dom().tid());
         assertEquals(fURI.of(rng), inst.rng().tid());
+        assertEquals(op+"?dom="+dom + "&rng="+rng, furi.big().toString());
+        LOG.info("testing furi::rng<=dom: {{y}}%s{{g}}::{{b}}%s{{g}}<={{m}}%s{{X}}",furi.big(),furi.rng(),furi.dom());
     }
 
 
