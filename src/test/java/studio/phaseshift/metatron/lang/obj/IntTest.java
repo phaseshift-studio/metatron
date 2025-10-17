@@ -111,7 +111,7 @@ public class IntTest extends MetatronTest {
             "int{,10}::1        |int{1}       |int::1             |int{,9}::1",
             "int{1,10}::1       |int{1}       |int::1             |int{0,9}::1",
     }, delimiter = '|')
-    public void testRemove(final String current, final String remove, final String retrieved, final String remaining) {
+    public void testTake(final String current, final String remove, final String retrieved, final String remaining) {
         final Obj currentF = ObjParser.m_obj().parse(current).get();
         final fURI removeF = f(remove);
         final Obj retrievedF = ObjParser.m_obj().parse(retrieved).get();
