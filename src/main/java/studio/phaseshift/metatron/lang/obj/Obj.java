@@ -93,11 +93,16 @@ public interface Obj extends Function<Obj, Obj>, Iterable<Obj>, Cloneable {
     }
 
     default Pair<Obj, Obj> take(final Inst inst) {
-        if (this.c().equals(inst.dom().c().most())) {
-            return Pair.with(this, this.c(cInt.ZERO()));
-        } else { //if(this.c().lt(inst.dom().c().most())) {
-            Obj clone = this.clone().c(inst.dom().c().most());
-            return Pair.with(clone, this.c(c -> c.minus(inst.dom().c())));
+        if (inst.dom().isZero())
+            return Pair.with(NoObj.single(), this);
+        else if (this.c().lte(inst.dom().c().most()))
+            return Pair.with(this, NoObj.single());
+        else if (inst.dom().c().most().lt(this.c()))
+            return Pair.with(this.c(inst.dom().c().most()), this.c(c -> c.minus(inst.dom().c().most())));
+        else if (!inst.dom().c().isZero() && inst.dom().c().least().lte(this.c()))
+            return Pair.with(this.c(inst.dom().c().min()), this.c(c -> c.minus(inst.dom().c().least())));
+        else { // if the obj can't be split, just return it (will typically lead to an evaluation error)
+            return Pair.with(this, NoObj.single());
         }
     }
 
@@ -212,7 +217,7 @@ public interface Obj extends Function<Obj, Obj>, Iterable<Obj>, Cloneable {
         }
         if (rhs.isCall())
             return this.rng().matches(rhs.dom());// && rhs.apply(this).matches(rhs.rng());
-        if(!this.c().within(rhs.c()))
+        if (!this.c().within(rhs.c()))
             return false;
         if (rhs.isType()) {
             return (this.tid().matches(rhs.tid()) || this.baseType().matches(rhs.tid())) && (rhs.value() == null || this.isObjs() || !rhs.apply(this).isNoObj());
@@ -270,7 +275,7 @@ public interface Obj extends Function<Obj, Obj>, Iterable<Obj>, Cloneable {
     }
 
     default boolean isNoObj() {
-        return  this.tid().cV().isZero() /*|| this.tid().basePath().toString().equals("noobj")*/; // TODO: consolidate the logic
+        return this.tid().cV().isZero() /*|| this.tid().basePath().toString().equals("noobj")*/; // TODO: consolidate the logic
     }
 
     default boolean isBool() {

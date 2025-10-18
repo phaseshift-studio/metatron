@@ -313,6 +313,9 @@ public interface Inst extends Call {
         }
         Router.stack().push(cinst.args());
         Obj rhs = NoObj.single();
+        if (null == cinst.f()) {
+            throw MTronException.of("unable to resolve %s", cinst);
+        }
         try {
             rhs = cinst.f().apply(clhs, cinst);
             Graphitty.log(cinst).trace("%s ({{m}}lhs{{/m}}) => %s ({{m}}inst{{/m}}) => %s ({{m}}rhs{{/m}}) evaluated {{g}}successfully{{/g}}", clhs, cinst, rhs);
