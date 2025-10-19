@@ -24,7 +24,7 @@ import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.MetatronTest;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.mtron.MInst;
-import studio.phaseshift.metatron.lang.parse.ObjParser;
+import studio.phaseshift.metatron.lang.translate.ObjParser;
 import studio.phaseshift.metatron.util.Tuple;
 
 import java.util.List;
@@ -35,7 +35,7 @@ import static studio.phaseshift.metatron.lang.obj.mtron.MInt.jnt;
 import static studio.phaseshift.metatron.lang.obj.mtron.MObjs.objs;
 import static studio.phaseshift.metatron.lang.obj.mtron.mtronFluent.StartLess.*;
 
-public class InstTest extends MetatronTest {
+public class InstTest extends MetatronObjTest {
 
 
     @ParameterizedTest

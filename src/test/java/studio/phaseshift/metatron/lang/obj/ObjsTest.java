@@ -18,16 +18,24 @@
 
 package studio.phaseshift.metatron.lang.obj;
 
-public class ObjsTest {
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
-    private final ObjFactory factory;
+public class ObjsTest extends MetatronObjTest {
 
-    public ObjsTest(final ObjFactory factory) {
-        this.factory = factory;
+    @ParameterizedTest
+    @CsvSource(value = {
+            "{1,1,1,1}                      |int{0}       |{,}                            |{1,1,1,1}",
+            "int{4}::1                      |int{4}       |int{4}::1                      |{,}",
+            "{int{2}::1,int{2}::1}          |int{4}       |int{4}::1                      |{,}",
+            "{int{2}::1,int{2}::1}          |int{0}       |{,}                            |{int{4}::1}",
+            "{int{2}::1,int{2}::2}          |int{0}       |{,}                            |{int{2}::1,int{2}::2}",
+            "{int{2}::1,int{2}::2}          |int{4}       |{int{2}::1,int{2}::2}          |{,}",
+            "{1,2,3,4}                      |int{4}       |{1,2,3,4}                      |{,}",
+            "{1,2,3,4,5,5,5,5,5}            |int{4}       |{1,2,3,4}                      |int{5}::5",
+            "{1,2,3,'four',5,5,5,5,5}       |obj{4}       |{1,2,3,'four'}                 |int{5}::5",
+    }, delimiter = '|')
+    public void testTake(final String current, final String remove, final String retrieved, final String remaining) {
+        super.testTake(current, remove, retrieved, remaining);
     }
-
-    public void testBasicObjs() {
-        //this.factory.create(List.of(this.factory.create(3,Int.class)))
-    }
-
 }

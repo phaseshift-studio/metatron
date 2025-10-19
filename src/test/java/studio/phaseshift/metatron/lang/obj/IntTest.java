@@ -20,15 +20,8 @@ package studio.phaseshift.metatron.lang.obj;
 
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-import studio.phaseshift.metatron.MetatronTest;
-import studio.phaseshift.metatron.lang.fURI;
-import studio.phaseshift.metatron.lang.parse.ObjParser;
-import studio.phaseshift.metatron.util.Tuple;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static studio.phaseshift.metatron.lang.fURI.f;
-
-public class IntTest extends MetatronTest {
+public class IntTest extends MetatronObjTest {
     @Override
     @ParameterizedTest
     @CsvSource(value = {
@@ -87,7 +80,7 @@ public class IntTest extends MetatronTest {
             "{1,2,3}.plus(1).plus(2).mult(2).is(in(int::T[]))             | {8,10,12}",
             "{1,2,3}.plus(1).plus(2).mult(2).is(in(str::T[]))             | noobj",
             "{int{-1}::1,int::1}                                          | noobj",
-           // "start?int{-1,1}<=int{0}(int{-1}::1)>-{int::1}                | noobj"
+            // "start?int{-1,1}<=int{0}(int{-1}::1)>-{int::1}                | noobj"
     }, delimiter = '|')
     public void testCode(final String code, final String expected) {
         super.testCode(code, expected);
@@ -112,12 +105,6 @@ public class IntTest extends MetatronTest {
             "int{1,10}::1       |int{1}       |int::1             |int{0,9}::1",
     }, delimiter = '|')
     public void testTake(final String current, final String remove, final String retrieved, final String remaining) {
-        final Obj currentF = ObjParser.m_obj().parse(current).get();
-        final fURI removeF = f(remove);
-        final Obj retrievedF = ObjParser.m_obj().parse(retrieved).get();
-        final Obj remainingF = ObjParser.m_obj().parse(remaining).get();
-        assertEquals(Tuple.Pair.with(retrievedF, remainingF), currentF.take(removeF.cV()));
-
-
+        super.testTake(current, remove, retrieved, remaining);
     }
 }

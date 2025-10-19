@@ -22,7 +22,6 @@ import com.google.gson.JsonParser;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.lang.obj.Obj;
-import studio.phaseshift.metatron.lang.parse.ObjParser;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 

@@ -24,7 +24,7 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
-import studio.phaseshift.metatron.lang.parse.ObjParser;
+import studio.phaseshift.metatron.lang.translate.ObjParser;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
 import studio.phaseshift.metatron.util.MTronException;
@@ -242,6 +242,9 @@ public class fURITest {
     @ParameterizedTest
     @CsvSource(value = {
             "a                  | a{-1}",
+            "a{1,1}             | a{-1}",
+            "a{-1}              | a",
+            "a{-1}              | a{1}",
             "a{2,3}             | a{-3,-2}",
             "a{0}               | a{0}",
             "a{,10}             | a{-10,}",

@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.lang.parse;
+package studio.phaseshift.metatron.lang.translate;
 
 import org.petitparser.context.Result;
 import org.petitparser.parser.Parser;

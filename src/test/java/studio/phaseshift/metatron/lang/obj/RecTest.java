@@ -22,7 +22,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.MetatronTest;
-import studio.phaseshift.metatron.lang.parse.ObjParser;
+import studio.phaseshift.metatron.lang.translate.ObjParser;
 import studio.phaseshift.metatron.ui.Graphitty;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -33,7 +33,7 @@ import static studio.phaseshift.metatron.lang.obj.mtron.MRec.rec;
 import static studio.phaseshift.metatron.lang.obj.mtron.MStr.str;
 import static studio.phaseshift.metatron.lang.obj.mtron.MUri.uri;
 
-public class RecTest extends MetatronTest {
+public class RecTest extends MetatronObjTest {
 
     @ParameterizedTest
     @CsvSource(value = {

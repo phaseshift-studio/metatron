@@ -24,9 +24,9 @@ import java.util.Objects;
 
 public abstract class Tuple {
 
-    protected final List elements;
+    protected final List<Object> elements;
 
-    protected Tuple(final List elements) {
+    protected Tuple(final List<Object> elements) {
         this.elements = elements;
     }
 
@@ -50,12 +50,12 @@ public abstract class Tuple {
 
     public static class Pair<A, B> extends Tuple {
 
-        private Pair(List elements) {
+        private Pair(List<Object> elements) {
             super(elements);
         }
 
         public static <A, B> Pair<A, B> with(final A a, final B b) {
-            final ArrayList list = new ArrayList();
+            final ArrayList<Object> list = new ArrayList<>();
             list.add(a);
             list.add(b);
             return new Pair<>(list);
@@ -72,12 +72,12 @@ public abstract class Tuple {
 
     public static class Triplet<A, B, C> extends Pair<A, B> {
 
-        private Triplet(List elements) {
+        private Triplet(List<Object> elements) {
             super(elements);
         }
 
         public static <A, B, C> Triplet<A, B, C> with(final A a, final B b, final C c) {
-            final ArrayList list = new ArrayList();
+            final ArrayList<Object> list = new ArrayList<>();
             list.add(a);
             list.add(b);
             list.add(c);
@@ -91,12 +91,12 @@ public abstract class Tuple {
 
     public static class Quartet<A, B, C, D> extends Triplet<A, B, C> {
 
-        private Quartet(final List elements) {
+        private Quartet(final List<Object> elements) {
             super(elements);
         }
 
         public static <A, B, C, D> Quartet<A, B, C, D> with(final A a, final B b, final C c, final D d) {
-            final ArrayList list = new ArrayList();
+            final ArrayList<Object> list = new ArrayList<>();
             list.add(a);
             list.add(b);
             list.add(c);

@@ -23,7 +23,6 @@ import com.google.gson.stream.JsonReader;
 import org.petitparser.context.Result;
 import studio.phaseshift.metatron.lang.obj.NoObj;
 import studio.phaseshift.metatron.lang.obj.Obj;
-import studio.phaseshift.metatron.lang.parse.ObjParser;
 import studio.phaseshift.metatron.ui.*;
 import studio.phaseshift.metatron.util.MTronException;
 

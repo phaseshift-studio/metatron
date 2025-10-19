@@ -16,26 +16,17 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.lang.parse;
+package studio.phaseshift.metatron.lang.translate;
 
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-import studio.phaseshift.metatron.BootLoader;
+import studio.phaseshift.metatron.MetatronTest;
 import studio.phaseshift.metatron.lang.obj.Call;
 import studio.phaseshift.metatron.lang.obj.Obj;
-import studio.phaseshift.metatron.lang.obj.mtron.MInt;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static studio.phaseshift.metatron.lang.parse.ObjParser.eval;
 
-public class InstParseTest {
-
-    @BeforeAll
-    public static void begin() {
-        BootLoader.load();
-    }
+public class InstParseTest extends MetatronTest {
 
     @ParameterizedTest
     @CsvSource(value = {
@@ -47,7 +38,7 @@ public class InstParseTest {
             "|(/usr/abc?int<=int(a=>else(10)){ mult(*a) }).to(/usr/abc)          % 2./usr/abc()                   % 20",
             "|(/usr/abc?int<=int(a=>else(10)){ mult(*a) }).to(/usr/abc)          % 2./usr/abc(a=>noobj)           % 20",
             "|(/usr/abc?int<=int(a=>int::T[]){ mult(*a) }).to(/usr/abc)          % 2./usr/abc(4)                  % 8",
-           // "|(/usr/abc?int<=int(a=>int::T[]){ mult(*a) }).to(/usr/abc)          % 2./usr/abc(plus(10))           % 24",
+            // "|(/usr/abc?int<=int(a=>int::T[]){ mult(*a) }).to(/usr/abc)          % 2./usr/abc(plus(10))           % 24",
             "|(/usr/abc?int<=int(int::T[]){ mult(*a0) }).to(/usr/abc)            % 2./usr/abc(10)                 % 20",
             "|(/usr/abc?int<=int(int::T[]){ mult(*a0) }).to(/usr/abc)            % 2./usr/abc(10)                 % 20",
             "|(/usr/abc?int<=int(int::T[]){ mult(*a0) }).to(/usr/abc)            % 2./usr/abc(plus(10))           % 24",
@@ -72,7 +63,7 @@ public class InstParseTest {
             "{1,2,3}.plus(mult(10)).sum()% 66",
             "int{4}::10.plus(20)% int{4}::30",
             "int{4}::10.plus(mult(20))% int{4}::210",
-           // "int{4}::10.plus(mult?int{+}<=int{+}(20))% int{4}::210", // todo: doesn't work because of the forced domain/range on mult
+            // "int{4}::10.plus(mult?int{+}<=int{+}(20))% int{4}::210", // todo: doesn't work because of the forced domain/range on mult
             "\"abc\".plus(\"def\")% \"abcdef\"",
             "abc{0,2}.plus(abc{23})% abc{23,25}",
             "[a,b,c].plus([d,e,f])% [a,b,c,d,e,f]",

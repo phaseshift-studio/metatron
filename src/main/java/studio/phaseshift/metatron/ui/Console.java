@@ -28,7 +28,7 @@ import org.jline.utils.AttributedStringBuilder;
 import org.jline.widget.Widgets;
 import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.lang.obj.Obj;
-import studio.phaseshift.metatron.lang.parse.ObjParser;
+import studio.phaseshift.metatron.lang.translate.ObjParser;
 import studio.phaseshift.metatron.space.device.log.Log;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.StringUtil;

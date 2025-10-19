@@ -198,6 +198,30 @@ public class MObjs implements Objs {
         return Tuple.Pair.with(headObj, tailObj);
     }*/
 
+
+    @Override
+    public Tuple.Pair<Obj, Obj> take(final cInt c) {
+        final cInt currentC = this.c();
+        if (c.isMaybeSome() || c.equals(currentC))
+            return Tuple.Pair.with(this, NoObj.single());
+        if (c.isZero())
+            return Tuple.Pair.with(NoObj.single(), this);
+        Obj retrieved = MObjs.empty();
+        Obj remaining = MObjs.empty();
+        cInt total = cInt.ZERO();
+        for (Map.Entry<Obj, cInt> entry : this.cstream.entrySet()) {
+            if (total.equals(c))
+                remaining = remaining.append(entry.getKey().c(entry.getValue()));
+            else if (total.plus(entry.getValue()).lte(c)) {
+                retrieved = retrieved.append(entry.getKey().c(entry.getValue()));
+                total = total.plus(entry.getValue());
+            } else {
+                remaining = remaining.append(entry.getKey().c(entry.getValue()));
+            }
+        }
+        return Tuple.Pair.with(retrieved, remaining);
+    }
+
     @Override
     public Tuple.Pair<Obj, Obj> take(final Inst inst) {
         if (this.isNoObj())

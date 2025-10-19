@@ -21,7 +21,7 @@ package studio.phaseshift.metatron.ui;
 import org.petitparser.context.Result;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.*;
-import studio.phaseshift.metatron.lang.parse.ObjParser;
+import studio.phaseshift.metatron.lang.translate.ObjParser;
 
 import java.util.HashSet;
 import java.util.Map;

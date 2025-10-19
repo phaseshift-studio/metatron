@@ -27,13 +27,13 @@ package studio.phaseshift.metatron.lang.obj;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.MetatronTest;
-import studio.phaseshift.metatron.lang.parse.ObjParser;
+import studio.phaseshift.metatron.lang.translate.ObjParser;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 
-public class LstTest extends MetatronTest {
+public class LstTest extends MetatronObjTest {
 
     @ParameterizedTest
     @CsvSource(value = {

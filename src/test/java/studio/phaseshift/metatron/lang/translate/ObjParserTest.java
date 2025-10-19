@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.lang.parse;
+package studio.phaseshift.metatron.lang.translate;
 
 import org.junit.jupiter.api.Test;
 import studio.phaseshift.metatron.lang.obj.NoObj;
@@ -30,7 +30,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static studio.phaseshift.metatron.lang.obj.mtron.MObjs.objs;
 import static studio.phaseshift.metatron.lang.obj.mtron.mtronInstSet.BOOL_TID;
-import static studio.phaseshift.metatron.lang.parse.ObjParser.m_bool;
+import static studio.phaseshift.metatron.lang.translate.ObjParser.m_bool;
 
 
 public class ObjParserTest {
