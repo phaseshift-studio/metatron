@@ -20,15 +20,12 @@ package studio.phaseshift.metatron;
 
 import org.apache.tinkerpop.gremlin.tinkergraph.structure.TinkerFactory;
 import studio.phaseshift.metatron.lang.fURI;
-import studio.phaseshift.metatron.lang.monoid.mtron.MMonoid;
-import studio.phaseshift.metatron.lang.obj.InstSet;
 import studio.phaseshift.metatron.lang.obj.mext.mextInstSet;
 import studio.phaseshift.metatron.lang.obj.mgrph.tp.MGraph;
 import studio.phaseshift.metatron.lang.obj.mgrph.tp.mgrphInstSet;
 import studio.phaseshift.metatron.lang.obj.mtron.MUri;
 import studio.phaseshift.metatron.lang.obj.mtron.mtronInstSet;
 import studio.phaseshift.metatron.space.Router;
-import studio.phaseshift.metatron.space.Space;
 import studio.phaseshift.metatron.space.device.log.Log;
 import studio.phaseshift.metatron.space.fs.FileSpace;
 import studio.phaseshift.metatron.space.mem.MemRouter;
@@ -60,55 +57,26 @@ public class BootLoader {
             } catch (final UnknownHostException e) {
                 LOG.warn("booting metatron on a non-networked jvm");
             }
-
-            final Space mnt = new MemSpace(fURI.of("/mnt/#"), fURI.of("/mnt"));
-            Router.global().addSpace(mnt);
-            final Space sys = new MemSpace(fURI.of("/sys/#"), fURI.of("/mnt/sys"));
-            Router.global().addSpace(sys);
-            final Space usr = new MemSpace(fURI.of("/usr/#"), fURI.of("/mnt/usr"));
-            Router.global().addSpace(usr);
-            Router.global().write(Router.global().vid(), Router.global());
-            final Space stk = Router.stack();
-            Router.global().addSpace(stk);
-            final Space mtron = new mtronInstSet(fURI.of("/mnt/lang/mtron"));
-            Router.global().addSpace(mtron);
-            MMonoid.load();
+            Router.global().write(f("/mnt"), new MemSpace(f("/mnt/#"), f("/mnt")));
+            Router.global().write(f("/mnt/sys"), new MemSpace(fURI.of("/sys/#"), fURI.of("/mnt/sys")));
+            Router.global().write(f("/mnt/usr"), new MemSpace(fURI.of("/usr/#"), fURI.of("/mnt/usr")));
+            Router.global().write(f("/sys/router"), Router.global());
+            Router.global().addSpace(Router.stack());
+            Router.global().write(f("/mnt/lang/mtron"), new mtronInstSet(fURI.of("/mnt/lang/mtron")));
             Router.global().write("/sys/log", Log.of(f("/sys/log")));
-            //final Space var = new MemSpace(fURI.of("+/+/#"), fURI.of("/mnt/var"));
-            //Router.global().addSpace(var);
-            final Space fs = new FileSpace(FileSystems.getDefault(), f("/home/#"), f("/mnt/fs"));
-            Router.global().addSpace(fs);
-            final Space grph = new MGraph(TinkerFactory.createModern(), f("/tp/#"), f("/mnt/tp"));
-            Router.global().addSpace(grph);
-            final InstSet mgrph = new mgrphInstSet(f("/mnt/lang/mgrph"));
-            Router.global().addSpace(mgrph);
-            final Space mqtt = new MqttSpace(Map.of(
+            Router.global().write(f("/mnt/fs"), new FileSpace(FileSystems.getDefault(), f("/home/#"), f("/mnt/fs")));
+            Router.global().write(f("/mnt/tp"), new MGraph(TinkerFactory.createModern(), f("/tp/#"), f("/mnt/tp")));
+            Router.global().write(f("/mnt/lang/mgrph"), new mgrphInstSet(f("/mnt/lang/mgrph")));
+            Router.global().write(f("/mnt/zigbee2mqtt"), new MqttSpace(Map.of(
                     uri("broker"), uri("mqtt://192.168.66.2:1883"),
                     uri("prefix"), uri("/mqtt"),
-                    uri("pattern"), uri("zigbee2mqtt/#")), f("/mnt/zigbee2mqtt"));
-            Router.global().addSpace(mqtt);
-            final InstSet mext = mextInstSet.of(f("/mnt/lang/mext"));
-            Router.global().addSpace(mext);
+                    uri("pattern"), uri("zigbee2mqtt/#")), f("/mnt/zigbee2mqtt")));
+            Router.global().write(f("/mnt/lang/mext"), mextInstSet.of(f("/mnt/lang/mext")));
             /// ///////////////////////////////////
-            /*Router.global().write(
-                    "bool", uri(BOOL_TID), "int", uri(INT_TID),
-                    "real", uri(REAL_TID), "str", uri(STR_TID),
-                    "uri", uri(URI_TID), "rel", uri(REL_TID),
-                    "lst", uri(LST_TID), "rec", uri(REC_TID));*/
-
-
-            //Router.global().registerStruct(new MqttSpace(Map.of(new MUri("broker"), new MUri("ip://192.168.66.2:1883"), new MUri("pattern"), new MUri("/mqtt/#")), MQTT_TID, fURI.of("/mnt/mqtt")));
-            // Router.global().registerStruct(new MqttSpace(Map.of(new MUri("broker"), new MUri("ip://192.168.66.2:1883"), new MUri("pattern"), new MUri("zigbee2mqtt/#")), MQTT_TID, fURI.of("/mnt/zigbee2mqtt")));
             BOOTING = false;
         } else {
             LOG.warn("boot processes previously completed -- ignoring request to boot");
         }
-
-    }
-
-
-    public static Log logger() {
-        return Router.global().read("/sys/log", Log.class);
     }
 
     public static void close() {

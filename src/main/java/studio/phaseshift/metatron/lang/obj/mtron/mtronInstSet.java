@@ -44,31 +44,16 @@ import static studio.phaseshift.metatron.lang.obj.mtron.MUri.uri;
 
 public class mtronInstSet extends MInstSet {
 
-
     public static final fURI MTRON_TID = fURI.of("/mtron");
-    public static final fURI BOOL_TID = fURI.of("/mtron/bool");
-    public static final fURI INT_TID = fURI.of("/mtron/int");
-    public static final fURI REAL_TID = fURI.of("/mtron/real");
-    public static final fURI STR_TID = fURI.of("/mtron/str");
-    public static final fURI URI_TID = fURI.of("/mtron/uri");
-    public static final fURI REL_TID = fURI.of("/mtron/rel");
-    public static final fURI LST_TID = fURI.of("/mtron/lst");
-    public static final fURI REC_TID = fURI.of("/mtron/rec");
-    public static final fURI INST_TID = fURI.of("/mtron/inst");
-    public static final fURI CODE_TID = fURI.of("/mtron/code");
-    public static final fURI OBJS_TID = fURI.of("/mtron/objs");
-    public static final fURI OBJS_ID = ALL.maybeSome();
-    public static final fURI POLY_TID = fURI.of("/mtron/poly");
-    public static final fURI MONO_TID = fURI.of("/mtron/mono");
-    public static final fURI NOOBJ_TID = fURI.of("");
-
-    public static final Set<fURI> BASE_TYPES = Set.of(
-            BOOL_TID, INT_TID, REAL_TID,
-            STR_TID, URI_TID, REL_TID,
-            LST_TID, REC_TID, INST_TID,
-            CODE_TID, OBJS_TID, NOOBJ_TID);
-
-    public static final fURI MTRON_INST_TID = fURI.of("/mtron/inst");
+    public static final fURI BOOL_TID = MTRON_TID.extend("bool");
+    public static final fURI INT_TID = MTRON_TID.extend("int");
+    public static final fURI REAL_TID = MTRON_TID.extend("real");
+    public static final fURI STR_TID = MTRON_TID.extend("str");
+    public static final fURI URI_TID = MTRON_TID.extend("uri");
+    public static final fURI REL_TID = MTRON_TID.extend("rel");
+    public static final fURI LST_TID = MTRON_TID.extend("lst");
+    public static final fURI REC_TID = MTRON_TID.extend("rec");
+    public static final fURI INST_TID = MTRON_TID.extend("inst");
     public static final fURI ID_TID = INST_TID.extend("id");
     public static final fURI APPLY_TID = INST_TID.extend("apply");
     public static final fURI START_TID = INST_TID.extend("start");
@@ -115,11 +100,22 @@ public class mtronInstSet extends MInstSet {
     public static final fURI PRINT_TID = INST_TID.extend("print");
     public static final fURI LSHIFT_TID = INST_TID.extend("lshift");
     public static final fURI RSHIFT_TID = INST_TID.extend("rshift");
+    public static final fURI CODE_TID = MTRON_TID.extend("code");
+    public static final fURI OBJS_TID = MTRON_TID.extend("objs");
+    public static final fURI NOOBJ_TID = fURI.of("");
+    public static final Set<fURI> BASE_TYPES = Set.of(
+            BOOL_TID, INT_TID, REAL_TID,
+            STR_TID, URI_TID, REL_TID,
+            LST_TID, REC_TID, INST_TID,
+            CODE_TID, OBJS_TID, NOOBJ_TID);
+    public static final fURI OBJS_ID = ALL.maybeSome();
+    public static final fURI POLY_TID = MTRON_TID.extend("poly");
+    public static final fURI MONO_TID = MTRON_TID.extend("mono");
+
+    public static final fURI MTRON_INST_TID = fURI.of("/mtron/inst");
 
     public mtronInstSet(final fURI vid) {
-        super(new HashMap<>(), MTRON_TID, vid);
-        this.types().forEach(t -> Router.global().registerRewrite(f(t.tid().name()), t.tid()));
-        this.insts().forEach(t -> Router.global().registerRewrite(f(t.tid().name()), t.tid().basePath()));
+        super(MTRON_TID, vid);
     }
 
     public static mtronInstSet of(final fURI vid) {
@@ -135,6 +131,11 @@ public class mtronInstSet extends MInstSet {
     @Override
     public Set<Inst> rewrites() {
         return new mtronRewrites(mtronRewrites.REWRITE_TID, this.vid.extend("rewrite")).insts();
+    }
+
+    @Override
+    public Set<Obj> consts() {
+        return Stream.of(NoObj.single()).collect(Collectors.toSet());
     }
 
     @Override
@@ -264,7 +265,7 @@ public class mtronInstSet extends MInstSet {
                                         "c", MRec.ofUriKeyed(
                                                 "min", MInt.of(lhs.tid().cV().min()),
                                                 "max", MInt.of(lhs.tid().cV().max())),
-                                        "query", MStr.of(lhs.tid().query().toString())),
+                                        "query", MStr.of(Optional.ofNullable(lhs.tid().query()).map(fURI.Query::toString).orElse(""))),
                                 "value", MObjFactory.of().create(lhs.value()))),
                 instC(CROSS_TID.dom(LST_TID).rng(LST_TID), lst(T(LST_TID)), (lhs, inst) -> {
                     final List<Obj> result = new ArrayList<>();

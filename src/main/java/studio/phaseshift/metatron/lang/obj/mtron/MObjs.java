@@ -18,27 +18,26 @@
 
 package studio.phaseshift.metatron.lang.obj.mtron;
 
-import org.checkerframework.checker.units.qual.A;
-import org.javatuples.Pair;
 import studio.phaseshift.metatron.lang.C;
 import studio.phaseshift.metatron.lang.fURI;
-import studio.phaseshift.metatron.lang.obj.*;
+import studio.phaseshift.metatron.lang.obj.Inst;
+import studio.phaseshift.metatron.lang.obj.NoObj;
+import studio.phaseshift.metatron.lang.obj.Obj;
+import studio.phaseshift.metatron.lang.obj.Objs;
 import studio.phaseshift.metatron.lang.obj.mtron.c.cInt;
-import studio.phaseshift.metatron.space.Router;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
 
 import java.util.*;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
 public class MObjs implements Objs {
 
-    private fURI vid;
     private final Map<Obj, cInt> cstream; // <obj{1}, coeff{+}>
+    private fURI vid;
 
     public MObjs(final Iterable<Obj> objs) {
         this(objs, null);
@@ -73,26 +72,56 @@ public class MObjs implements Objs {
         return Optional.empty();
     }
 
+    public static Objs empty() {
+        return new MObjs(new LinkedList<>()); // a noobj that can be appended
+    }
+
+    public static Obj objs(final Obj... objs) {
+        return objs.length == 0 ? NoObj.single() : objs(List.of(objs));
+    }
+
+    public static Obj objs(final Iterable<Obj> objs) {
+        final Map<Obj, cInt> map = new LinkedHashMap<>();
+        return tryToShrink(flattenToMap(map, objs)).orElseGet(() -> new MObjs(map, fURI.NULL));
+    }
+
+    public static Obj objs(final Stream<Obj> objs) {
+        return MObjs.objs(objs.toList());
+    }
+
+    public static Obj ofUsage(final Object object) {
+        if (null == object)
+            return NoObj.single();
+        if (object instanceof Stream)
+            return ofUsage(((Stream) object).toList()); // TODO: strange....
+        if (object instanceof List)
+            return objs((List) object);
+        if (object instanceof Obj)
+            return (Obj) object;
+        throw MTronException.of("unknown object type: %s", object);
+
+    }
+
     @Override
     public Obj resolve(final Obj obj) {
         return objs(flatten(this).map(o -> o.resolve(obj)));
     }
 
-    private boolean isOnlyCall() {
+    /*private boolean isOnlyCall() {
         return !this.cstream.isEmpty() && this.cstream.keySet().stream().anyMatch(Obj::isCall);
-    }
+    }*/
 
     @Override
     public Obj append(final Obj obj) {
         if (obj.isNoObj())
             return this;
         //else if (obj.isCall() && this.isOnlyCall())
-          //  return this.iterator().next().append(obj);
+        //  return this.iterator().next().append(obj);
         return tryToShrink(flattenToMap(this.cstream, obj)).orElse(this);
     }
 
     @Override
-    public cInt uniqueCount() {
+    public cInt uniqueC() {
         return cInt.of((long) this.cstream.size());
     }
 
@@ -100,6 +129,30 @@ public class MObjs implements Objs {
     public Iterable<Obj> value() {
         return this.cstream.entrySet().stream().map(kv -> kv.getValue().isOne() ? kv.getKey() : kv.getKey().c(kv.getValue())).toList();
     }
+
+
+  /*  public <O extends Obj> O take(final fURI selector) {
+        while (this.cstream.keySet().iterator().hasNext()) {
+            final O key = (O) this.cstream.keySet().iterator().next();
+            final cInt value = this.cstream.get(key);
+            if (null == value) {
+                this.cstream.remove(key);
+                return key;
+            } else if (value.within(selector.cV())) {
+                final cInt newValue = value.minus(selector.cV());
+                if (newValue.isZeroOrNeg())
+                    this.cstream.remove(key);
+                else
+                    this.cstream.put(key, newValue);
+                return (O) key.tid(key.tid().c(selector.c()));
+            } else {
+                throw MTronException.of("can't remove given selector: %s", selector);
+            }
+
+            //else if (!value.isZero()) return (O) key.tid(key.tid().coefficient(value.toString()));
+        }
+        return null;
+    }*/
 
     @Override
     public cInt c() {
@@ -124,7 +177,7 @@ public class MObjs implements Objs {
         return null;
     }
 
-    @Override
+   /* @Override
     public Tuple.Pair<Obj, Obj> headTailsSplit(final Function<Obj, Object> partitioner) {
         Obj head = null;
         final Map<Obj, cInt> tail = new LinkedHashMap<>();
@@ -142,9 +195,9 @@ public class MObjs implements Objs {
         }
         final Obj headObj = null == head ? NoObj.single() : head;
         final Obj tailObj = tail.isEmpty() ? NoObj.single() : tail.size() == 1 ? tail.entrySet().stream().map(kv -> kv.getKey().c(kv.getValue())).iterator().next() : new MObjs(tail, this.vid);
-        Graphitty.log(this).info("SPLIT: %s ::  %s",headObj,tailObj);
+        //Graphitty.log(this).info("SPLIT: %s ::  %s", headObj, tailObj);
         return Tuple.Pair.with(headObj, tailObj);
-    }
+    }*/
 
     @Override
     public Tuple.Pair<Obj, Obj> take(final Inst inst) {
@@ -174,48 +227,6 @@ public class MObjs implements Objs {
         final Obj remainingObj = remaining.isEmpty() ? NoObj.single() : remaining.size() == 1 ? remaining.entrySet().stream().map(kv -> kv.getKey().c(kv.getValue())).iterator().next() : new MObjs(remaining, this.vid);
         return Tuple.Pair.with(takenObj, remainingObj);
 
-    }
-
-
-    public <O extends Obj> O take(final fURI selector) {
-        while (this.cstream.keySet().iterator().hasNext()) {
-            final O key = (O) this.cstream.keySet().iterator().next();
-            final cInt value = this.cstream.get(key);
-            if (null == value) {
-                this.cstream.remove(key);
-                return key;
-            } else if (value.within(selector.cV())) {
-                final cInt newValue = value.minus(selector.cV());
-                if (newValue.isZeroOrNeg())
-                    this.cstream.remove(key);
-                else
-                    this.cstream.put(key, newValue);
-                return (O) key.tid(key.tid().c(selector.c()));
-            } else {
-                throw MTronException.of("can't remove given selector: %s", selector);
-            }
-
-            //else if (!value.isZero()) return (O) key.tid(key.tid().coefficient(value.toString()));
-        }
-        return null;
-    }
-
-    public static Objs empty() {
-        return new MObjs(new LinkedList<>()); // a noobj that can be appended
-    }
-
-
-    public static Obj objs(final Obj... objs) {
-        return objs.length == 0 ? NoObj.single() : objs(List.of(objs));
-    }
-
-    public static Obj objs(final Iterable<Obj> objs) {
-        final Map<Obj, cInt> map = new LinkedHashMap<>();
-        return tryToShrink(flattenToMap(map, objs)).orElseGet(() -> new MObjs(map, fURI.NULL));
-    }
-
-    public static Obj objs(final Stream<Obj> objs) {
-        return MObjs.objs(objs.toList());
     }
 
     @Override
@@ -250,7 +261,7 @@ public class MObjs implements Objs {
 
     @Override
     public Obj clone(final Object newValue, final fURI newtid, final fURI newvid) {
-        return MObjs.objs(flatten((Iterable<Obj>) newValue));
+        return objs(flatten((Iterable<Obj>) newValue));
     }
 
     @Override
@@ -268,19 +279,6 @@ public class MObjs implements Objs {
         return other instanceof MObjs && Objects.equals(this.vid, ((MObjs) other).vid) && Objects.equals(this.cstream, ((MObjs) other).cstream);
     }
 
-    public static Obj ofUsage(final Object object) {
-        if (null == object)
-            return NoObj.single();
-        if (object instanceof Stream)
-            return ofUsage(((Stream) object).toList()); // TODO: strange....
-        if (object instanceof List)
-            return objs((List) object);
-        if (object instanceof Obj)
-            return (Obj) object;
-        throw MTronException.of("unknown object type: %s", object);
-
-    }
-
     @Override
     public Objs clone() {
        /* try {
@@ -288,6 +286,6 @@ public class MObjs implements Objs {
         } catch (final Exception e) {
             throw MTronException.of(e);
         }*/
-        return (Objs) this.clone((Iterable<Obj>) this.value(), this.tid(), this.vid);
+        return (Objs) this.clone(this.value(), this.tid(), this.vid);
     }
 }

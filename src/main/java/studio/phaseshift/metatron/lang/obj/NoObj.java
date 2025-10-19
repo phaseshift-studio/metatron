@@ -54,7 +54,7 @@ public final class NoObj implements Obj, Inst {
 
     @Override
     public fURI tid() {
-        return fURI.of("").zero();
+        return fURI.NOOBJ.zero();
     }
 
     @Override
@@ -64,7 +64,7 @@ public final class NoObj implements Obj, Inst {
 
     @Override
     public fURI vid() {
-        return fURI.NULL;
+        return fURI.NOOBJ;
     }
 
     @Override
@@ -108,7 +108,7 @@ public final class NoObj implements Obj, Inst {
     }
 
     @Override
-    public cInt uniqueCount() {
+    public cInt uniqueC() {
         return cInt.of(0L);
     }
 

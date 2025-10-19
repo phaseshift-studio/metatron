@@ -241,11 +241,6 @@ public class MqttSpace extends MSpace<Map<Uri, Obj>> implements Space {
     }
 
     @Override
-    public void append(fURI addr, Obj... obj) {
-        throw new RuntimeException("append currently not implemented");
-    }
-
-    @Override
     public Iterator<Obj> iterator() {
         return this.cache.iterator();
     }

@@ -46,7 +46,7 @@ import static studio.phaseshift.metatron.lang.obj.mtron.mtronInstSet.*;
 */
 public class mextInstSet extends MInstSet {
 
-    public static final fURI MEXT_TID = fURI.of("/mext");
+    public static final fURI MEXT_TID = fURI.of("/m/ext");
     public static final fURI VEC_TID = MEXT_TID.extend("vec");
     //public static final fURI RVEC_TID = MEXT_TID.extend("rvec");
     public static final fURI MTRX_TID = MEXT_TID.extend("mtrx");
@@ -59,13 +59,7 @@ public class mextInstSet extends MInstSet {
 
 
     public mextInstSet(final fURI vid) {
-        super(new HashMap<>(), MEXT_TID, vid);
-        this.consts().forEach(t -> {
-            Router.global().registerRewrite(f(t.tid().name()), t.tid().basePath());
-            Router.global().write(t.vid(), t);
-        });
-        this.types().forEach(t -> Router.global().registerRewrite(f(t.tid().name()), t.tid()));
-        this.insts().forEach(t -> Router.global().registerRewrite(f(t.tid().name()), t.tid().basePath()));
+        super(MEXT_TID, vid);
     }
 
     public static mextInstSet of(final fURI vid) {

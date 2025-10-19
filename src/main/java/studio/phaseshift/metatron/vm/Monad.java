@@ -16,10 +16,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.lang.monoid;
+package studio.phaseshift.metatron.vm;
 
+import studio.phaseshift.metatron.algebra.Semiring;
 import studio.phaseshift.metatron.lang.fURI;
-import studio.phaseshift.metatron.lang.monoid.mtron.MMonad;
 import studio.phaseshift.metatron.lang.obj.*;
 import studio.phaseshift.metatron.lang.obj.mtron.c.cInt;
 import studio.phaseshift.metatron.ui.Graphitty;
@@ -31,6 +31,7 @@ import java.util.function.Function;
 import static studio.phaseshift.metatron.lang.obj.mtron.MObjs.objs;
 import static studio.phaseshift.metatron.lang.obj.mtron.MType.T;
 import static studio.phaseshift.metatron.util.Tuple.Triplet;
+import static studio.phaseshift.metatron.vm.machInstSet.MONAD_TID;
 
 public interface Monad extends Obj {
 
@@ -111,12 +112,10 @@ public interface Monad extends Obj {
         return this.c(cInt.of(exact));
     }
 
-    default boolean merges(final Monad other) {
-        return Objects.equals(this.value(), other.value()) && Objects.equals(this.tid().basePath(), other.tid().basePath());
-    }
-
     default Obj plus(final Monad other) {
-        return this.merges(other) ? this.tid(this.tid().plus(other.tid())) : objs(List.of(this, other));
+        return Objects.equals(this.value(), other.value()) && Objects.equals(this.tid().basePath(), other.tid().basePath()) ?
+                this.tid(this.tid().plus(other.tid())) :
+                objs(List.of(this, other));
     }
 
     default Monad obj(final Obj obj) {
@@ -129,12 +128,12 @@ public interface Monad extends Obj {
 
     @Override
     default Type dom() {
-        return T(MMonad.MMONAD_TID);
+        return T(MONAD_TID);
     } // TODO: is this what we need?
 
     @Override
     default Type rng() {
-        return T(MMonad.MMONAD_TID);
+        return T(MONAD_TID);
     }
 
     @Override

@@ -28,13 +28,13 @@ import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
-import studio.phaseshift.metatron.util.Tuple;
 
 import java.util.*;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
+import static studio.phaseshift.metatron.lang.fURI.f;
 import static studio.phaseshift.metatron.lang.obj.mtron.MType.T;
 import static studio.phaseshift.metatron.lang.obj.mtron.mtronInstSet.*;
 import static studio.phaseshift.metatron.util.Tuple.Pair;
@@ -45,13 +45,13 @@ public interface Obj extends Function<Obj, Obj>, Iterable<Obj>, Cloneable {
         return Graphitty.string("{{b}}%s{{g}}::{{m}}@{{b}}%s{{/b}}", this.tid().toString(), null == this.vid() ? "<nospace>" : this.vid().toString());
     }
 
-    <O extends Object> O value();
+    <V> V value();
 
     fURI tid();
 
     fURI vid();
 
-    default cInt uniqueCount() {
+    default cInt uniqueC() {
         return cInt.of(1L);
     }
 
@@ -82,7 +82,6 @@ public interface Obj extends Function<Obj, Obj>, Iterable<Obj>, Cloneable {
     }
 
     default Pair<Obj, Obj> take(final cInt c) {
-        // System.out.println(coeff + "   <=   " + this.tid().coefficientValue() + "  ==   " + coeff.lte(this.tid().coefficientValue()));
         if (c.lte(this.tid().cV())) {
             final Obj remaining = this.tid(this.tid().c(this.tid().cV().minus(c).toString()));
             final Obj result = this.tid(this.tid().c(c.toString()));
@@ -93,13 +92,13 @@ public interface Obj extends Function<Obj, Obj>, Iterable<Obj>, Cloneable {
     }
 
     default Pair<Obj, Obj> take(final Inst inst) {
-        if (inst.dom().isZero())
+        if (inst.dom().isZero() || this.isNoObj())
             return Pair.with(NoObj.single(), this);
-        else if (this.c().lte(inst.dom().c().most()))
+        else if (this.c().within(inst.dom().c()))
             return Pair.with(this, NoObj.single());
-        else if (inst.dom().c().most().lt(this.c()))
+        else if (inst.dom().c().most().within(this.c()))
             return Pair.with(this.c(inst.dom().c().most()), this.c(c -> c.minus(inst.dom().c().most())));
-        else if (!inst.dom().c().isZero() && inst.dom().c().least().lte(this.c()))
+        else if (inst.dom().c().least().within(this.c()))
             return Pair.with(this.c(inst.dom().c().min()), this.c(c -> c.minus(inst.dom().c().least())));
         else { // if the obj can't be split, just return it (will typically lead to an evaluation error)
             return Pair.with(this, NoObj.single());
@@ -110,9 +109,9 @@ public interface Obj extends Function<Obj, Obj>, Iterable<Obj>, Cloneable {
         throw MTronException.of("%s can not be taken from", this);
     }
 
-    default Tuple.Pair<Obj, Obj> headTailsSplit(final Function<Obj, Object> partitioner) {
+   /* default Tuple.Pair<Obj, Obj> headTailsSplit(final Function<Obj, Object> partitioner) {
         return Pair.with(this, NoObj.single());
-    }
+    }*/
 
     default Obj resolve(final Obj lhs) {
         return this;
@@ -149,16 +148,16 @@ public interface Obj extends Function<Obj, Obj>, Iterable<Obj>, Cloneable {
     }
 
     default Obj tid(final String newTid) {
-        return this.clone(this.value(), fURI.of(newTid), this.vid());
+        return this.tid(f(newTid));
     }
 
     default Obj vid(final fURI newVid) {
         return this.clone(this.value(), this.tid(), newVid);
     }
 
-    default boolean inSpace() {
+    /*default boolean inSpace() {
         return null != this.vid();
-    }
+    }*/
 
     default Obj append(final Obj obj) {
         if (obj.isNoObj())

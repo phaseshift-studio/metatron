@@ -82,8 +82,6 @@ public interface Space extends Poly, AutoCloseable {
         return (k,v) -> {};
     }
 
-    void append(final fURI addr, final Obj... obj);
-
     @Override
     default Obj apply(final Obj other) {
         return this;

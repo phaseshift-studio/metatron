@@ -41,9 +41,4 @@ public class VertexSpace extends MSpace<Vertex> {
     public Obj write(final fURI vid, final Obj obj) {
         return null;
     }
-
-    @Override
-    public void append(final fURI addr, final Obj... obj) {
-
-    }
 }

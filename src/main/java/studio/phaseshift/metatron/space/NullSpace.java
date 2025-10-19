@@ -80,11 +80,6 @@ public final class NullSpace implements Space, InstSet {
     }
 
     @Override
-    public void append(final fURI addr, final Obj... obj) {
-
-    }
-
-    @Override
     public fURI tid() {
         return NOOBJ_TID;
     }

@@ -70,8 +70,4 @@ public class GraphSpace extends MSpace<Graph> {
         return null;
     }
 
-    @Override
-    public void append(fURI addr, Obj... obj) {
-
-    }
 }

@@ -19,7 +19,6 @@
 package studio.phaseshift.metatron.space.q;
 
 import studio.phaseshift.metatron.lang.fURI;
-import studio.phaseshift.metatron.lang.monoid.mtron.MMonoid;
 import studio.phaseshift.metatron.lang.obj.Call;
 import studio.phaseshift.metatron.lang.obj.Obj;
 import studio.phaseshift.metatron.lang.obj.mtron.MObj;
@@ -27,6 +26,8 @@ import studio.phaseshift.metatron.lang.obj.mtron.MObjs;
 import studio.phaseshift.metatron.space.Space;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
+import studio.phaseshift.metatron.vm.MMachine;
+import studio.phaseshift.metatron.vm.Machine;
 
 import java.util.LinkedList;
 import java.util.Optional;
@@ -42,7 +43,7 @@ public class PubSubQ extends BaseQ {
     protected final GraphittyLogger LOG = Graphitty.log(this);
     // <source,pattern,callback>
     protected final Obj subscriptions = MObjs.empty();
-    protected final Queue<MMonoid> mail = new LinkedList<>();
+    protected final Queue<Machine> mail = new LinkedList<>();
 
     public PubSubQ(final Space space) {
         super(space, f("sub"), SUBSCRIPTION_TID);
@@ -58,7 +59,7 @@ public class PubSubQ extends BaseQ {
         }
 
         public Triplet<fURI, fURI, Call> value() {
-            return (Triplet<fURI, fURI, Call>) super.value();
+            return super.value();
         }
 
         public fURI source() {
@@ -90,10 +91,10 @@ public class PubSubQ extends BaseQ {
             LOG.trace("evaluating {{y}}qless write{{/y}}: %s => %s", obj, vid);
             subscriptions.stream().map(Obj::<Subscription>as).filter(s -> vid.basePath().matches(s.target())).forEach(s -> {
                 LOG.debug("sending mail: (%s, %s)", obj, s);
-                mail.add(MMonoid.of(obj, s.call().toCode()));
+                mail.add(MMachine.of(obj, s.call().toCode()));
             });
             while (!mail.isEmpty()) {
-                final MMonoid monoid = mail.poll();
+                final Machine monoid = mail.poll();
                 LOG.trace("processing mail: %s", monoid);
                 monoid.apply();
             }

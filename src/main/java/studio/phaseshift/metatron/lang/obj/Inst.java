@@ -303,7 +303,7 @@ public interface Inst extends Call {
         Inst cinst = this.resolve(clhs);
         boolean modulateC = false;
         if (!cinst.isBlocking() && !clhs.matches(cinst.dom())) {
-            if (clhs.uniqueCount().isOne() && !clhs.c().isOne()) { // && cinst.dom().c().within(cInt.SOME())) {
+            if (clhs.uniqueC().isOne() && !clhs.c().isOne()) { // && cinst.dom().c().within(cInt.SOME())) {
                 clhs = clhs.c(cInt::one);
                 cinst = this.resolve(clhs);
                 modulateC = true;

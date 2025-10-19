@@ -16,11 +16,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.lang.monoid.mtron;
+package studio.phaseshift.metatron.vm;
 
 import studio.phaseshift.metatron.lang.fURI;
-import studio.phaseshift.metatron.lang.monoid.MTonoid;
-import studio.phaseshift.metatron.lang.monoid.Monad;
 import studio.phaseshift.metatron.lang.obj.*;
 import studio.phaseshift.metatron.lang.obj.mtron.*;
 import studio.phaseshift.metatron.ui.Graphitty;
@@ -37,42 +35,37 @@ import static studio.phaseshift.metatron.util.Tuple.Quartet;
 
 ;
 
-public class MMonoid extends MObj implements MTonoid {
+public class MMachine extends MObj implements Machine {
 
     public static final fURI MONOID_TID = MTRON_TID.extend("lang/monoid");
 
     private final GraphittyLogger LOG = Graphitty.log(this);
 
     // code running barriers halted
-    public MMonoid(final Quartet<Code, Obj, Lst, Obj> value, final fURI tid, final fURI vid) {
+    public MMachine(final Quartet<Code, Obj, Lst, Obj> value, final fURI tid, final fURI vid) {
         super(value, tid, vid);
     }
 
-    public static void load() {
-        //  Router.global().write(MONOID_TID,T(MONOID_TID));
-        //  Router.global().write(MMonad.MMONAD_TID, T(MMonad.MMONAD_TID));
+    public static Machine of(final Code code) {
+        return new MMachine(Quartet.with(code, MObjs.empty(), MLst.of(new LinkedList<>()), MObjs.empty()), MONOID_TID, fURI.NULL);
     }
 
-    public static MMonoid of(final Code code) {
-        return new MMonoid(Quartet.with(code, MObjs.empty(), MLst.of(new LinkedList<>()), MObjs.empty()), MONOID_TID, fURI.NULL);
-    }
-
-    public static MMonoid of(final Obj start, final Code code) {
+    public static Machine of(final Obj start, final Code code) {
         if (!start.isNoObj()) {
             final List<Inst> prepended = new ArrayList<>();
             prepended.add(MInst.instB(mtronInstSet.START_TID, MLst.of(start)));
             prepended.addAll(code.codeValue());
-            return new MMonoid(Quartet.with(MCode.of(prepended), MObjs.empty(), MLst.of(new LinkedList<>()), MObjs.empty()), MONOID_TID, fURI.NULL);
+            return new MMachine(Quartet.with(MCode.of(prepended), MObjs.empty(), MLst.of(new LinkedList<>()), MObjs.empty()), MONOID_TID, fURI.NULL);
         } else {
-            return MMonoid.of(code);
+            return MMachine.of(code);
         }
     }
 
     @Override
-    public MTonoid resolve(final Obj lhs) {
+    public Machine resolve(final Obj lhs) {
         final Code resolvedCode = this.code().resolve(lhs);
-        final MTonoid mt = this.code(resolvedCode);
-        for (final Inst inst : mt.code().value()) {
+        final Machine mach = this.code(resolvedCode);
+        for (final Inst inst : mach.code().value()) {
             if (inst.isInitial()) {
                 LOG.trace("  {{g}}==>{{/g}} creating {{y}}initial{{/y}} monad at %s", inst);
                 this.running().append(MMonad.of(NoObj.single(), inst));
@@ -80,36 +73,23 @@ public class MMonoid extends MObj implements MTonoid {
                 // many-to-?
                 LOG.trace("  {{m}}==|{{/m}} creating {{y}}barrier{{/y}} monad at %s", inst);
                 final Monad m = MMonad.of(MObjs.empty(), inst);
-                mt.barriers().<LinkedList<Obj>>valueAs().add(m);
+                mach.barriers().<LinkedList<Obj>>valueAs().add(m);
             }
         }
-        return mt;
+        return mach;
     }
 
-    /*@Override
-    public String toString() {
-        return Obj.Helper.objToString(this);
-    }*/
-
-    /*@Override
-    public int hashCode() {
-        return Objects.hash(this.value, this.vid, this.tid);
-    }*/
-
-   /* @Override
-    public boolean equals(final Object other) {
-        return other instanceof MTonoid && Objects.equals(this.value, ((MTonoid) other).value());
-    }*/
-
-    Monad splitMonad(final Monad monad) {
+    protected Monad split(final Monad monad) {
         final Tuple.Pair<Obj, Obj> pair = monad.obj().take(monad.inst());
         if (!pair.get1().isNoObj())
             this.running().append(monad.obj(pair.get1()));
+        LOG.trace("   {{g}}=>{{/g}} splitting monad %s / %s", pair.get0(), pair.get1());
         return monad.obj(pair.get0());
     }
 
-    MTonoid compute() {
-        final Code code = this.code();
+    @Override
+    public Obj apply(final Obj lhs) {
+        final Code code = this.resolve(lhs).code();
         if (this.running().c().isZero())
             this.running().append(MMonad.of(NoObj.single(), code.insts().get(0)));
         while (true) {
@@ -117,7 +97,7 @@ public class MMonoid extends MObj implements MTonoid {
             if (null != m) {
                 LOG.trace("   {{g}}=>{{/g}} processing monad %s [%s]", m, m.inst().isInitial() ? "initial" : "midway");
                 try {
-                    final Monad x = this.splitMonad(m);
+                    final Monad x = this.split(m);
                     final Monad n = x.apply(code.nextInst(x.inst()));
                     LOG.trace(" {{g}}===>{{/g}} post-processing monad %s", n);
                     if (n.inst().isBatching() && (!n.dead() || n.inst().dom().c().isNoObjable())) {
@@ -175,13 +155,8 @@ public class MMonoid extends MObj implements MTonoid {
                 break;
             }
         }
-        return this;
-    }
-
-    @Override
-    public Obj apply(final Obj lhs) {
-        final MMonoid code = (MMonoid) this.resolve(lhs);
-        return code.compute().halted();
+        //return this;
+        return this.halted();
     }
 
     @Override
@@ -190,8 +165,8 @@ public class MMonoid extends MObj implements MTonoid {
     }
 
     @Override
-    public MTonoid clone(Object value, fURI tid, fURI vid) {
-        return new MMonoid((Quartet<Code, Obj, Lst, Obj>) value, tid, vid);
+    public Machine clone(Object value, fURI tid, fURI vid) {
+        return new MMachine((Quartet<Code, Obj, Lst, Obj>) value, tid, vid);
     }
 
 }

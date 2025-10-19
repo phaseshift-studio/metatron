@@ -24,6 +24,8 @@ import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.MetatronTest;
 import studio.phaseshift.metatron.space.Router;
 
+import static studio.phaseshift.metatron.lang.obj.mtron.MUri.uri;
+
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
@@ -32,19 +34,19 @@ public class mgrphInstSetTest extends MetatronTest {
     @BeforeAll
     public static void begin() {
         MetatronTest.begin();
-        Router.global().write("g", Router.global().read("/mnt/tp"));
+        Router.global().write("g", uri("/mnt/tp"));
     }
 
 
     @Override
     @ParameterizedTest
     @CsvSource(value = {
-            "*g.V().count()                                                         % 6",
-            "*g.E().count()                                                         % 6",
-            "*g.V().values(name)                                                    % {'marko','josh','peter','vadas','lop','ripple'}",
-            "*g.V().values(age).count()                                             % 4",
+            ".*(*g).V().count()                                                         % 6",
+            ".*(*g).E().count()                                                         % 6",
+            ".*(*g).V().values(name)                                                    % {'marko','josh','peter','vadas','lop','ripple'}",
+            ".*(*g).V().values(age).count()                                             % 4",
             // dummy without ending comma so it's easier to add more test cases
-            "1.plus(1)                                                              % 2"
+            "1.plus(1)                                                                  % 2"
     }, delimiter = '%')
     public void testCode(final String code, final String expected) {
         super.testCode(code, expected);

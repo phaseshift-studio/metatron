@@ -46,8 +46,4 @@ public interface InstSet extends Space {
     Set<Inst> insts();
 
     Set<Inst> rewrites();
-
-    @Override
-    default void append(final fURI addr, final Obj... obj) {
-    }
 }

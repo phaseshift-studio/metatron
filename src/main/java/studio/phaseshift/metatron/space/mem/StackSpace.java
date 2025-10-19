@@ -84,10 +84,4 @@ public class StackSpace extends MSpace<LinkedList<MemSpace>> {
         this.structure.push(frameSpace);
         LOG.trace("pushed frame {{_&g}}on{{/g&/_}} stack: %s [{{y}}depth{{/y}}: %d]", frameSpace.structure, this.structure.size());
     }
-
-
-    @Override
-    public void append(final fURI addr, final Obj... obj) {
-
-    }
 }

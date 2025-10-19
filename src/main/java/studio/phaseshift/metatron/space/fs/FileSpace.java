@@ -89,9 +89,4 @@ public class FileSpace extends MSpace<FileSystem> {
     public Obj write(fURI vid, Obj obj) {
         return NoObj.single();
     }
-
-    @Override
-    public void append(fURI addr, Obj... obj) {
-
-    }
 }

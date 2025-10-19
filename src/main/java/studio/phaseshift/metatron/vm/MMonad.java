@@ -16,28 +16,23 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.lang.monoid.mtron;
+package studio.phaseshift.metatron.vm;
 
 import studio.phaseshift.metatron.lang.fURI;
-import studio.phaseshift.metatron.lang.monoid.Monad;
 import studio.phaseshift.metatron.lang.obj.Inst;
 import studio.phaseshift.metatron.lang.obj.Obj;
-import studio.phaseshift.metatron.lang.obj.Poly;
 import studio.phaseshift.metatron.lang.obj.Rec;
 import studio.phaseshift.metatron.lang.obj.mtron.MObj;
 import studio.phaseshift.metatron.lang.obj.mtron.MRec;
-import studio.phaseshift.metatron.lang.obj.mtron.MType;
-import studio.phaseshift.metatron.lang.obj.mtron.c.cInt;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
 
 import static studio.phaseshift.metatron.lang.obj.MInstSet.MTRON_TID;
 import static studio.phaseshift.metatron.util.Tuple.Triplet;
+import static studio.phaseshift.metatron.vm.machInstSet.MONAD_TID;
 
 // monoid, obj, inst, state
 public class MMonad extends MObj implements Monad {
-
-    public static final fURI MMONAD_TID = MTRON_TID.extend("lang/monad");
 
     private final GraphittyLogger LOG = Graphitty.log(this);
 
@@ -90,6 +85,6 @@ public class MMonad extends MObj implements Monad {
     }
 
     public static Monad of(final Obj obj, final Inst inst) {
-        return new MMonad(Triplet.with(obj, inst, MRec.EMPTY_REC), MMONAD_TID, fURI.NULL);
+        return new MMonad(Triplet.with(obj, inst, MRec.EMPTY_REC), MONAD_TID, fURI.NULL);
     }
 }

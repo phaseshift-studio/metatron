@@ -39,12 +39,19 @@ public abstract class MInstSet extends MSpace<Map<fURI, Set<? extends Obj>>> imp
     protected final Map<fURI, Obj> CONST_TABLE = new LinkedHashMap<>();
     protected final Map<fURI, Inst> REWRITE_TABLE = new LinkedHashMap<>();
 
+    public MInstSet(final fURI tid, final fURI vid) {
+        this(new HashMap<>(), tid, vid);
+    }
+
     public MInstSet(final Map<fURI, Set<? extends Obj>> value, final fURI tid, final fURI vid) {
         super(value, tid.extend(fURI.ALL), tid, vid);
         this.types().forEach(t -> this.write(t.tid(), t));
         this.consts().forEach(c -> this.write(c.vid(), c));
         this.insts().forEach(i -> this.write(i.tid(), i));
         this.rewrites().forEach(r -> this.write(r.tid(), r));
+        this.types().forEach(t -> Router.global().registerRewrite(f(t.tid().name()), t.tid()));
+        this.consts().forEach(t -> Router.global().registerRewrite(f(t.vid().name()), t.vid()));
+        this.insts().forEach(t -> Router.global().registerRewrite(f(t.tid().name()), t.tid().basePath()));
     }
 
     @Override

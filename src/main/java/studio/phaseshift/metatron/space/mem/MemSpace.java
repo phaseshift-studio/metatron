@@ -72,11 +72,6 @@ public class MemSpace extends MSpace<Map<fURI, Obj>> implements Space {
     }
 
     @Override
-    public void append(fURI addr, Obj... obj) {
-
-    }
-
-    @Override
     public Obj write(final fURI vid, final Obj obj) {
         return this.qs().processPreWrite(vid, vid, obj).orElseGet(() -> {
             Space.Helpers.resolveWrite(this, vid.basePath(), obj, this.directWriter ,this.directReader);

@@ -78,7 +78,7 @@ public class MemRouter implements Router {
                     LOG.except("%s and %s have overlapping address spaces", space.pattern(), kv.getKey());
                 });
         this.spaces.put(space.pattern(), space);
-        this.write(space.vid(), space);
+        //this.write(space.vid(), space);
     }
 
     @Override
@@ -127,20 +127,13 @@ public class MemRouter implements Router {
     public Obj write(final fURI vid, final Obj obj) {
         final Space space = this.getSpace(vid);
         /// TOTAL HACK -- find a more elegant solution ///
-        if (obj.isNoObj()) {
-            final Map<fURI, Obj> current = space.directReader().apply(vid);
-            if (!current.isEmpty() && current.values().iterator().next() instanceof Space) {
-                this.removeSpace(vid);
-            }
-        }
+        if (obj.isNoObj() && !vid.hasPattern())
+            this.removeSpace(vid);
+        if (obj instanceof Space && !(obj instanceof Router))
+            this.addSpace((Space) obj);
         /// ///////////////////////////////////////////////
         LOG.trace("writing %s to {{b}}%s{{/b}} at {{b}}%s{{X}}", obj, space.vidOrTid(), vid);
         return space.write(vid, obj);
-    }
-
-    @Override
-    public void append(fURI addr, Obj... obj) {
-
     }
 
     @Override
@@ -170,7 +163,7 @@ public class MemRouter implements Router {
     }
 
     @Override
-    public Router clone(Object value, fURI tid, fURI vid) {
+    public Router clone(final Object value, final fURI tid, final fURI vid) {
         return this;
     }
 

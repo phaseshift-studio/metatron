@@ -19,19 +19,13 @@
 package studio.phaseshift.metatron.lang.obj;
 
 import studio.phaseshift.metatron.lang.fURI;
-import studio.phaseshift.metatron.lang.monoid.MTonoid;
-import studio.phaseshift.metatron.lang.monoid.Monad;
-import studio.phaseshift.metatron.lang.monoid.mtron.MMonad;
-import studio.phaseshift.metatron.lang.monoid.mtron.MMonoid;
-import studio.phaseshift.metatron.lang.obj.mtron.MCode;
-import studio.phaseshift.metatron.lang.obj.mtron.MObjs;
+import studio.phaseshift.metatron.vm.MMachine;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
-import studio.phaseshift.metatron.util.MTronException;
+import studio.phaseshift.metatron.vm.Machine;
 
 import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.function.Supplier;
 
@@ -158,8 +152,8 @@ public interface Code extends Call {
        // if (!lhs.matches(this.dom()))
          //   throw MTronException.of("%s ({{m}}lhs{{/m}}) (%s) does not match {{m}}code domain{{/m}} (%s): %s", lhs, lhs.rng(), this.dom(), this);
         final Code resolve = this.resolve(lhs);
-        final MTonoid monoid =  MMonoid.of(lhs, resolve);
-        final Obj rhs = objs(monoid.apply(NoObj.single()));
+        final Machine machine =  MMachine.of(lhs, resolve);
+        final Obj rhs = objs(machine.apply(NoObj.single()));
        // if (!rhs.matches(monoid.rng()))
       //      throw MTronException.of("%s ({{m}}rhs{{/m}}) (%s) does not match {{m}}code range{{/m}} (%s): %s", rhs, rhs.rng(), this.rng(), this);
         return rhs;

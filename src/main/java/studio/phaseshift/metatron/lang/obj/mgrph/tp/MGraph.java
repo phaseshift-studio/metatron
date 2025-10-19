@@ -155,11 +155,6 @@ public class MGraph extends MSpace<Graph> implements Graph, WrappedGraph<Graph> 
     }
 
     @Override
-    public void append(fURI addr, Obj... obj) {
-
-    }
-
-    @Override
     public void close() {
         super.close();
         try {

@@ -19,7 +19,6 @@
 package studio.phaseshift.metatron.lang.obj.mtron;
 
 import studio.phaseshift.metatron.lang.fURI;
-import studio.phaseshift.metatron.lang.monoid.Monad;
 import studio.phaseshift.metatron.lang.obj.Obj;
 import studio.phaseshift.metatron.space.Router;
 import studio.phaseshift.metatron.ui.Graphitty;
@@ -55,8 +54,8 @@ public abstract class MObj implements Obj, Cloneable {
     }
 
     @Override
-    public Object value() {
-        return this.value;
+    public <V> V value() {
+        return (V) this.value;
     }
 
     @Override
@@ -93,7 +92,7 @@ public abstract class MObj implements Obj, Cloneable {
         }
     }
 
-    public Obj clone(final Object newValue, final fURI newtid, final fURI newvid) {
+    public <O extends Obj> O clone(final Object newValue, final fURI newtid, final fURI newvid) {
         if (!Objects.equals(newValue, this.value) || !newtid.equals(this.tid) || !Objects.equals(newvid, this.vid)) {
             try {
                 final MObj clone = (MObj) this.clone();
@@ -102,12 +101,12 @@ public abstract class MObj implements Obj, Cloneable {
                 clone.vid = newvid;
                 this.check();
                 this.save();
-                return clone;
+                return (O) clone;
             } catch (final Exception e) {
                 throw MTronException.of(e);
             }
         }
-        return this;
+        return (O) this;
     }
 
     @Override

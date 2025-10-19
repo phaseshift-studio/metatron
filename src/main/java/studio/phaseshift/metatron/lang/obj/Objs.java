@@ -52,7 +52,7 @@ public interface Objs extends Obj {
     Obj append(final Obj obj);
 
     @Override
-    cInt uniqueCount();
+    cInt uniqueC();
 
     @Override
     Obj c(final Function<cInt, cInt> func);
@@ -65,7 +65,7 @@ public interface Objs extends Obj {
         return IteratorUtil.stream(this.value());
     }
 
-    @Override
-    Tuple.Pair<Obj, Obj> headTailsSplit(final Function<Obj, Object> partitioner);
+  //  @Override
+  //  Tuple.Pair<Obj, Obj> headTailsSplit(final Function<Obj, Object> partitioner);
 
 }
