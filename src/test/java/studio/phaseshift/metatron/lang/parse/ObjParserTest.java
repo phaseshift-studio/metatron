@@ -70,8 +70,8 @@ public class ObjParserTest {
 
     @Test
     public void testStrParse() {
-        assertEquals(MStr.of("abc").value(), ObjParser.parse("'abc'").value());
-        assertEquals(MStr.of("aBc35 4e6").value(), ObjParser.parse("'aBc35 4e6'").value());
+        assertEquals(MStr.of("abc").jvm(), ObjParser.parse("'abc'").jvm());
+        assertEquals(MStr.of("aBc35 4e6").jvm(), ObjParser.parse("'aBc35 4e6'").jvm());
     }
 
     @Test

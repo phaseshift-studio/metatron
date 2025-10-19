@@ -30,13 +30,13 @@ import static studio.phaseshift.metatron.lang.obj.mtron.MType.T;
 
 public abstract class MObj implements Obj, Cloneable {
 
-    protected Object value;
+    protected Object jvm;
     protected fURI tid;
     protected fURI vid;
 
-    public MObj(final Object value, final fURI tid, final fURI vid) {
+    public MObj(final Object jvm, final fURI tid, final fURI vid) {
         assert null != tid;
-        this.value = value;
+        this.jvm = jvm;
         this.tid = tid.big();
         this.vid = vid;
         this.check();
@@ -54,8 +54,8 @@ public abstract class MObj implements Obj, Cloneable {
     }
 
     @Override
-    public <V> V value() {
-        return (V) this.value;
+    public <V> V jvm() {
+        return (V) this.jvm;
     }
 
     @Override
@@ -92,11 +92,11 @@ public abstract class MObj implements Obj, Cloneable {
         }
     }
 
-    public <O extends Obj> O clone(final Object newValue, final fURI newtid, final fURI newvid) {
-        if (!Objects.equals(newValue, this.value) || !newtid.equals(this.tid) || !Objects.equals(newvid, this.vid)) {
+    public <O extends Obj> O clone(final Object jvm, final fURI newtid, final fURI newvid) {
+        if (!Objects.equals(jvm, this.jvm) || !newtid.equals(this.tid) || !Objects.equals(newvid, this.vid)) {
             try {
                 final MObj clone = (MObj) this.clone();
-                clone.value = newValue;
+                clone.jvm = jvm;
                 clone.tid = newtid;
                 clone.vid = newvid;
                 this.check();

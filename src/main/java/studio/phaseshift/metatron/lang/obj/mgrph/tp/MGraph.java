@@ -107,7 +107,7 @@ public class MGraph extends MSpace<Graph> implements Graph, WrappedGraph<Graph> 
     }
 
     @Override
-    public Map<Vertex, Iterator<Edge>> value() {
+    public Map<Vertex, Iterator<Edge>> jvm() {
         return Map.of();
     }
 

@@ -22,9 +22,9 @@ import studio.phaseshift.metatron.lang.fURI;
 
 public interface Bool extends Mono {
     @Override
-    Bool clone(final Object value, final fURI tid, final fURI vid);
+    Bool clone(final Object jvm, final fURI tid, final fURI vid);
 
     @Override
-    Boolean value();
+    Boolean jvm();
 
 }

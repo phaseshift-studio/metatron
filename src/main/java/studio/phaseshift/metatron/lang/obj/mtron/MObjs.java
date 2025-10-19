@@ -25,7 +25,6 @@ import studio.phaseshift.metatron.lang.obj.NoObj;
 import studio.phaseshift.metatron.lang.obj.Obj;
 import studio.phaseshift.metatron.lang.obj.Objs;
 import studio.phaseshift.metatron.lang.obj.mtron.c.cInt;
-import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
@@ -39,17 +38,17 @@ public class MObjs implements Objs {
     private final Map<Obj, cInt> cstream; // <obj{1}, coeff{+}>
     private fURI vid;
 
-    public MObjs(final Iterable<Obj> objs) {
-        this(objs, null);
+    public MObjs(final Iterable<Obj> jvm) {
+        this(jvm, null);
     }
 
-    public MObjs(final Iterable<Obj> objs, final fURI vid) {
-        this(flattenToMap(new LinkedHashMap<>(), objs), vid);
+    public MObjs(final Iterable<Obj> jvm, final fURI vid) {
+        this(flattenToMap(new LinkedHashMap<>(), jvm), vid);
     }
 
-    private MObjs(final Map<Obj, cInt> cstream, final fURI vid) {
+    private MObjs(final Map<Obj, cInt> jvmAlternative, final fURI vid) {
         this.vid = vid;
-        this.cstream = cstream;
+        this.cstream = jvmAlternative;
     }
 
     private static Stream<Obj> flatten(final Iterable<Obj> objs) {
@@ -126,7 +125,7 @@ public class MObjs implements Objs {
     }
 
     @Override
-    public Iterable<Obj> value() {
+    public Iterable<Obj> jvm() {
         return this.cstream.entrySet().stream().map(kv -> kv.getValue().isOne() ? kv.getKey() : kv.getKey().c(kv.getValue())).toList();
     }
 
@@ -251,7 +250,7 @@ public class MObjs implements Objs {
 
     @Override
     public Objs vid(final fURI vid) {
-        return new MObjs(this.value(), vid);
+        return new MObjs(this.jvm(), vid);
     }
 
     @Override
@@ -260,8 +259,8 @@ public class MObjs implements Objs {
     }
 
     @Override
-    public Obj clone(final Object newValue, final fURI newtid, final fURI newvid) {
-        return objs(flatten((Iterable<Obj>) newValue));
+    public Obj clone(final Object jvm, final fURI tid, final fURI vid) {
+        return objs(flatten((Iterable<Obj>) jvm));
     }
 
     @Override
@@ -286,6 +285,6 @@ public class MObjs implements Objs {
         } catch (final Exception e) {
             throw MTronException.of(e);
         }*/
-        return (Objs) this.clone(this.value(), this.tid(), this.vid);
+        return (Objs) this.clone(this.jvm(), this.tid(), this.vid);
     }
 }

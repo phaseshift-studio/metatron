@@ -113,8 +113,8 @@ public class mtronFluent<F extends Fluent<F>> extends MCode implements Fluent<F>
     }
 
     @Override
-    public mtronFluent<F> clone(Object value, fURI tid, fURI vid) {
-        return new mtronFluent<>(new ArrayList<>(this.value()), this.tid, this.vid);
+    public mtronFluent<F> clone(Object jvm, fURI tid, fURI vid) {
+        return new mtronFluent<>(new ArrayList<>(this.jvm()), this.tid, this.vid);
     }
 
     /// /////////////////////////////////////////////////////////////

@@ -39,13 +39,13 @@ public class MStr extends MObj implements Str {
     }
 
     @Override
-    public Str clone(final Object value, final fURI tid, final fURI vid) {
-        return (Str) super.clone(value, tid, vid);
+    public Str clone(final Object jvm, final fURI tid, final fURI vid) {
+        return (Str) super.clone(jvm, tid, vid);
     }
 
     @Override
-    public String value() {
-        return (String) this.value;
+    public String jvm() {
+        return (String) this.jvm;
     }
 
     public static Str of(final String value) {

@@ -26,26 +26,26 @@ import static studio.phaseshift.metatron.lang.obj.mtron.mtronInstSet.BOOL_TID;
 
 public class MBool extends MObj implements Bool {
 
-    public static Bool bool(final Boolean value) {
-        return MBool.of(value);
+    public static Bool bool(final Boolean jvm) {
+        return MBool.of(jvm);
     }
 
-    public MBool(final Boolean value, final fURI tid, final fURI vid) {
-        super(value, tid, vid);
+    public MBool(final Boolean jvm, final fURI tid, final fURI vid) {
+        super(jvm, tid, vid);
     }
 
-    public MBool(final Boolean value) {
-        this(value, BOOL_TID, fURI.NULL);
-    }
-
-    @Override
-    public Bool clone(final Object value, final fURI tid, final fURI vid) {
-        return (Bool) super.clone(value, tid, vid);
+    public MBool(final Boolean jvm) {
+        this(jvm, BOOL_TID, fURI.NULL);
     }
 
     @Override
-    public Boolean value() {
-        return (Boolean) this.value;
+    public Bool clone(final Object jvm, final fURI tid, final fURI vid) {
+        return super.clone(jvm, tid, vid);
+    }
+
+    @Override
+    public Boolean jvm() {
+        return (Boolean) this.jvm;
     }
 
     public static Bool of(final boolean value) {

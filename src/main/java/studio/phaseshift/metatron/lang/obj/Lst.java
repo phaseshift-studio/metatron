@@ -32,25 +32,25 @@ import static studio.phaseshift.metatron.lang.obj.mtron.MUri.uri;
 public interface Lst extends Poly {
 
     @Override
-    Lst clone(final Object value, final fURI tid, final fURI vid);
+    Lst clone(final Object jvm, final fURI tid, final fURI vid);
 
     @Override
-    List<Obj> value();
+    List<Obj> jvm();
 
     @Override
     default long count() {
-        return this.value().size();
+        return this.jvm().size();
     }
 
     default Lst add(final Obj obj) {
         final ArrayList<Obj> newList = new ArrayList<>(this.lstValue());
         newList.add(obj);
-        return this.value(newList);
+        return this.jvm(newList);
     }
 
     @Override
     default Iterable<Obj> elements() {
-        return this.value();
+        return this.jvm();
     }
 
     default Lst at(final Obj key, final Obj value) {
@@ -66,7 +66,7 @@ public interface Lst extends Poly {
             if (key.uriValue().segments().size() == 1) {
                 return this.at(k, value);
             } else {
-                final Obj v = this.value().get(k.intValue().intValue());
+                final Obj v = this.jvm().get(k.intValue().intValue());
                 if (v.isPoly()) {
                     return this.at(k, v.<Poly>as().at(uri(key.<Uri>as().uriValue().pretract()), value));
                 } else {
@@ -81,7 +81,7 @@ public interface Lst extends Poly {
     @Override
     default <O extends Obj> O at(final Obj key) {
         if (key.isInt())
-            return (O) this.value().get(key.<Int>as().intValue().intValue());
+            return (O) this.jvm().get(key.<Int>as().intValue().intValue());
         else if (key.isUri()) {
             final String step = key.uriValue().segments().get(0);
             Obj result;
@@ -89,7 +89,7 @@ public interface Lst extends Poly {
                 result = objs(this.elements());
             } else {
                 final Int k = jnt(Long.parseLong(step));
-                result = this.value().get(k.intValue().intValue());
+                result = this.jvm().get(k.intValue().intValue());
             }
             if (key.uriValue().segments().size() == 1) {
                 return (O) result;

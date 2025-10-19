@@ -40,7 +40,7 @@ public final class NullSpace implements Space, InstSet {
     }
 
     @Override
-    public Map value() {
+    public Map jvm() {
         return Map.of();
     }
 
@@ -90,7 +90,7 @@ public final class NullSpace implements Space, InstSet {
     }
 
     @Override
-    public NullSpace clone(final Object value, final fURI tid, final fURI vid) {
+    public NullSpace clone(final Object jvm, final fURI tid, final fURI vid) {
         return this;
     }
 

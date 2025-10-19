@@ -51,7 +51,7 @@ public class Qs extends MLst {
 
     public Optional<Obj> processPreWrite(final fURI source, final fURI vid, final Obj obj) {
         return this.qs.stream()
-                .filter(q -> vid.hasQuery(q.value().toString()))
+                .filter(q -> vid.hasQuery(q.jvm().toString()))
                 .map(Q::onWrite)
                 .filter(Optional::isPresent)
                 .map(Optional::get)
@@ -63,7 +63,7 @@ public class Qs extends MLst {
 
     public Optional<Obj> processPreRead(final fURI source, final fURI vid) {
         return this.qs.stream()
-                .filter(q -> vid.hasQuery(q.value().toString()))
+                .filter(q -> vid.hasQuery(q.jvm().toString()))
                 .map(Q::onRead)
                 .filter(Optional::isPresent)
                 .map(Optional::get)
@@ -75,7 +75,7 @@ public class Qs extends MLst {
 
     public Optional<Obj> processPostRead(final fURI source, final fURI vid, final Obj current) {
         return this.qs.stream()
-                .filter(q -> vid.hasQuery(q.value().toString()))
+                .filter(q -> vid.hasQuery(q.jvm().toString()))
                 .map(Q::onRead)
                 .filter(Optional::isPresent)
                 .map(Optional::get)
@@ -98,7 +98,7 @@ public class Qs extends MLst {
 
     public Optional<Obj> processPostWrite(final fURI source, final fURI vid, final Obj obj) {
         return this.qs.stream()
-                .filter(q -> vid.hasQuery(q.value().toString()))
+                .filter(q -> vid.hasQuery(q.jvm().toString()))
                 .map(Q::onWrite)
                 .filter(Optional::isPresent)
                 .map(Optional::get)

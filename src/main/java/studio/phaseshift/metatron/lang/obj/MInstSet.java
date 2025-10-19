@@ -75,7 +75,7 @@ public abstract class MInstSet extends MSpace<Map<fURI, Set<? extends Obj>>> imp
     }
 
     @Override
-    public Map<fURI, Set<? extends Obj>> value() {
+    public Map<fURI, Set<? extends Obj>> jvm() {
         return Map.of(
                 f("consts"), this.consts(),
                 f("types"), this.types(),

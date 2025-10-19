@@ -30,25 +30,25 @@ public class MInt extends MObj implements Int {
     }
 
 
-    public MInt(final Long value, final fURI tid, final fURI vid) {
-        super(value, tid, vid);
+    public MInt(final Long jvm, final fURI tid, final fURI vid) {
+        super(jvm, tid, vid);
     }
 
-    public MInt(final Long value) {
-        this(value, INT_TID, fURI.NULL);
-    }
-
-    @Override
-    public Int clone(final Object value, final fURI tid, final fURI vid) {
-        return (Int) super.clone(value, tid, vid);
+    public MInt(final Long jvm) {
+        this(jvm, INT_TID, fURI.NULL);
     }
 
     @Override
-    public Long value() {
-        return (Long) this.value;
+    public Int clone(final Object jvm, final fURI tid, final fURI vid) {
+        return (Int) super.clone(jvm, tid, vid);
     }
 
-    public static Int of(final long value) {
-        return new MInt(value);
+    @Override
+    public Long jvm() {
+        return (Long) this.jvm;
+    }
+
+    public static Int of(final long jvm) {
+        return new MInt(jvm);
     }
 }

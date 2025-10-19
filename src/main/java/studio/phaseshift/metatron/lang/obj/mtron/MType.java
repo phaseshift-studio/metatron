@@ -20,7 +20,6 @@ package studio.phaseshift.metatron.lang.obj.mtron;
 
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.Call;
-import studio.phaseshift.metatron.lang.obj.Obj;
 import studio.phaseshift.metatron.lang.obj.Type;
 import studio.phaseshift.metatron.space.Router;
 
@@ -64,14 +63,14 @@ public class MType extends MObj implements Type {
     }*/
 
     @Override
-    public Type clone(final Object value, final fURI tid, final fURI vid) {
+    public Type clone(final Object jvm, final fURI tid, final fURI vid) {
         // if (!tid.equals(vid))
         //     throw MTronException.of("a tid and vid of a type must be the same: %s != %s", tid, vid);
-        return new MType((Call) value, tid);
+        return new MType((Call) jvm, tid);
     }
 
     @Override
-    public Call value() {
-        return (Call) this.value;
+    public Call jvm() {
+        return (Call) this.jvm;
     }
 }

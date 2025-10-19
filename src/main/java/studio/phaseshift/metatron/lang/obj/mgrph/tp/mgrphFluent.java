@@ -67,8 +67,8 @@ public class mgrphFluent<F extends Fluent<F>> extends mtronFluent<F> {
     }
 
     @Override
-    public mgrphFluent<F> clone(Object value, fURI tid, fURI vid) {
-        return new mgrphFluent<>(new ArrayList<>(this.value()), this.tid, this.vid);
+    public mgrphFluent<F> clone(Object jvm, fURI tid, fURI vid) {
+        return new mgrphFluent<>(new ArrayList<>(this.jvm()), this.tid, this.vid);
     }
 
     /// /////////////////////////////////////////////////////////////

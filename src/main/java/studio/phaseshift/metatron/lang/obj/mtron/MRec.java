@@ -61,7 +61,7 @@ public class MRec extends MObj implements Rec {
     public Rec plus(final Rec objs) {
         final Map<Obj, Obj> newMap = new LinkedHashMap<>(this.recValue());
         objs.stream().forEach(o -> newMap.compute(o.first(), (k, v) -> null == v ? o.second() : v.append(o.second())));
-        return this.value(newMap);
+        return this.jvm(newMap);
     }
 
     @Override
@@ -71,8 +71,8 @@ public class MRec extends MObj implements Rec {
 
 
     @Override
-    public Rec clone(final Object value, final fURI tid, final fURI vid) {
-        return (Rec) super.clone(value, tid, vid);
+    public Rec clone(final Object jvm, final fURI tid, final fURI vid) {
+        return (Rec) super.clone(jvm, tid, vid);
     }
 
     public Rec put(final Obj key, final Obj value) {
@@ -86,12 +86,12 @@ public class MRec extends MObj implements Rec {
             final Obj v = map.get(MUri.of(k.segments().get(0)));
             map.put(uri(k.segments().get(0)), (v.isRec() ? v.<Rec>as() : rec()).put(k.pretract().toUri(), value));
         }
-        return this.value(map);
+        return this.jvm(map);
     }
 
     @Override
-    public Map<Obj, Obj> value() {
-        return (Map<Obj, Obj>) this.value;
+    public Map<Obj, Obj> jvm() {
+        return (Map<Obj, Obj>) this.jvm;
     }
 
     public static Rec of(final Map<Obj, Obj> value) {
@@ -140,8 +140,8 @@ public class MRec extends MObj implements Rec {
     }
 
     @Override
-    public Rec value(final Object value) {
-        return super.value(cleanMap((Map<Obj, Obj>) value));
+    public Rec jvm(final Object value) {
+        return super.jvm(cleanMap((Map<Obj, Obj>) value));
     }
 
     @Override

@@ -58,20 +58,20 @@ public class PubSubQ extends BaseQ {
             super(Triplet.with(source, target, call), SUBSCRIPTION_TID, fURI.NULL);
         }
 
-        public Triplet<fURI, fURI, Call> value() {
-            return super.value();
+        public Triplet<fURI, fURI, Call> jvm() {
+            return super.jvm();
         }
 
         public fURI source() {
-            return this.value().get0();
+            return this.jvm().get0();
         }
 
         public fURI target() {
-            return this.value().get1();
+            return this.jvm().get1();
         }
 
         public Call call() {
-            return this.value().get2();
+            return this.jvm().get2();
         }
     }
 

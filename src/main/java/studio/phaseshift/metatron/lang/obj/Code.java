@@ -36,13 +36,13 @@ import static studio.phaseshift.metatron.ui.ObjStringSerializer.prettyPrintCode;
 public interface Code extends Call {
 
     @Override
-    Code clone(final Object value, final fURI tid, final fURI vid);
+    Code clone(final Object jvm, final fURI tid, final fURI vid);
 
     @Override
-    List<Inst> value();
+    List<Inst> jvm();
 
     default Inst inst(final int index) {
-        return index < this.value().size() ? this.value().get(index) : NoObj.single();
+        return index < this.jvm().size() ? this.jvm().get(index) : NoObj.single();
     }
 
     @Override
@@ -66,7 +66,7 @@ public interface Code extends Call {
         fURI dom = null;
         fURI rng = null;
         boolean fullResolution = true;
-        for (final Inst inst : this.value()) {
+        for (final Inst inst : this.jvm()) {
             try {
                 LOG.trace("   {{g}}=>{{/g}} resolving %s => %s", token, inst);
                 final Inst resolvedInst = inst.resolve(token);
@@ -92,7 +92,7 @@ public interface Code extends Call {
                 fullResolution = false;
             }
         }
-        final Code resolved = this.value(resolvedCode);
+        final Code resolved = this.jvm(resolvedCode);
         LOG.debug("%s code:\n        [{{g}}COMPILED{{/g}}]\n%s", fullResolution ? "{{g}}resolved{{/g}}" : "{{y}}semi-resolved{{/y}}", prettyPrintCode(new StringBuilder(), resolved, 0, 7).toString());
         return resolved;
 
@@ -103,7 +103,7 @@ public interface Code extends Call {
             if (inst.isNoObj())
                 return NoObj.single();
             boolean found = false;
-            for (final Inst i : this.value()) {
+            for (final Inst i : this.jvm()) {
                 if (found) return i;
                 if (i == inst) found = true;
             }
@@ -125,17 +125,17 @@ public interface Code extends Call {
     }
 
     @Override
-    default Code value(final Object newValue) {
-        return Call.super.value(newValue);
+    default Code jvm(final Object newValue) {
+        return Call.super.jvm(newValue);
     }
 
     @Override
     default Type dom() {
-        return this.value().isEmpty() ? T(fURI.NOOBJ.zero()) : T(this.value().get(0).dom().tid()); // TODO: if unresolved, it's maybe.. is that good?
+        return this.jvm().isEmpty() ? T(fURI.NOOBJ.zero()) : T(this.jvm().get(0).dom().tid()); // TODO: if unresolved, it's maybe.. is that good?
     }
 
     default Type rng() {
-        return this.value().isEmpty() ? T(fURI.NOOBJ.zero()) : T(this.value().get(this.value().size() - 1).rng().tid());
+        return this.jvm().isEmpty() ? T(fURI.NOOBJ.zero()) : T(this.jvm().get(this.jvm().size() - 1).rng().tid());
     }
 
     @Override

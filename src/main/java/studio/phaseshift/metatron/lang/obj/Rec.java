@@ -36,14 +36,14 @@ import static studio.phaseshift.metatron.util.Tuple.Pair;
 public interface Rec extends Poly, Semiring<Rec> {
 
     @Override
-    Rec clone(final Object value, final fURI tid, final fURI vid);
+    Rec clone(final Object jvm, final fURI tid, final fURI vid);
 
     @Override
-    Map<Obj, Obj> value();
+    Map<Obj, Obj> jvm();
 
     @Override
     default long count() {
-        return this.value().size();
+        return this.jvm().size();
     }
 
     @Override
@@ -55,14 +55,14 @@ public interface Rec extends Poly, Semiring<Rec> {
     @Override
     default Iterable<Rel> elements() {
         return () -> this
-                .value()
+                .jvm()
                 .entrySet()
                 .stream()
                 .map(kv -> (Rel) new MRel(Pair.with(kv.getKey(), kv.getValue()))).iterator();
     }
 
     @Override
-    default Rec value(final Object newValue) {
+    default Rec jvm(final Object newValue) {
         return this.clone(newValue, this.tid(), this.vid());
     }
 
@@ -79,14 +79,14 @@ public interface Rec extends Poly, Semiring<Rec> {
     @Override
     default <O extends Obj> O at(final Obj key) {
         if (!key.isUri())
-            return (O) this.value().getOrDefault(key, NoObj.single());
+            return (O) this.jvm().getOrDefault(key, NoObj.single());
         else {
             final String step = key.uriValue().segments().get(0);
             Obj result;
             if (step.equals("+") || step.equals("#")) {
                 result = key.uriValue().isBranch() ? objs(this.recValue().entrySet().stream().map(kv -> rel(kv.getKey(), kv.getValue()))) : objs(this.recValue().values());
             } else {
-                final Obj temp = this.value().getOrDefault(uri(step), NoObj.single());
+                final Obj temp = this.jvm().getOrDefault(uri(step), NoObj.single());
                 result = key.uriValue().isBranch() ? rel(key.uriValue().asNode().toUri(), temp) : temp;
             }
             if (key.uriValue().segments().size() == 1) {
@@ -115,7 +115,7 @@ public interface Rec extends Poly, Semiring<Rec> {
             return this;
         final Map<Obj, Obj> map = new LinkedHashMap<>(this.recValue());
         obj.stream().forEach(o -> map.compute(o.relValue().get0(), (k, v) -> null == v ? o.relValue().get1() : v.append(o.relValue().get1())));
-        return this.value(map);
+        return this.jvm(map);
         //return this.value(obj.stream().collect(Collectors.toMap(o->o.relValue().getValue0(),o->relValue().getValue1(),(a,b)->a.append(b),LinkedHashMap<Obj,Obj>::new)));
         //return this.value(map);
     }

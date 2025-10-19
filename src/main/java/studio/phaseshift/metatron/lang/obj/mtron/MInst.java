@@ -31,19 +31,19 @@ import java.util.function.BiFunction;
 import static studio.phaseshift.metatron.util.Tuple.Triplet;
 
 public class MInst extends MObj implements Inst {
-    public MInst(final Triplet<Poly, Inst.f, Obj> value, final fURI tid, final fURI vid) {
-        super(value, tid, vid);
+    public MInst(final Triplet<Poly, Inst.f, Obj> jvm, final fURI tid, final fURI vid) {
+        super(jvm, tid, vid);
     }
 
 
     @Override
-    public Inst clone(final Object value, final fURI tid, final fURI vid) {
-        return (Inst) super.clone(value, tid, vid);
+    public Inst clone(final Object jvm, final fURI tid, final fURI vid) {
+        return (Inst) super.clone(jvm, tid, vid);
     }
 
     @Override
-    public Triplet<Poly, Inst.f, Obj> value() {
-        return (Triplet<Poly, Inst.f, Obj>) this.value;
+    public Triplet<Poly, Inst.f, Obj> jvm() {
+        return (Triplet<Poly, Inst.f, Obj>) this.jvm;
     }
 
     @Override

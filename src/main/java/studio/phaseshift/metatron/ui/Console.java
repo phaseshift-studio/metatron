@@ -27,13 +27,12 @@ import org.jline.utils.AttributedString;
 import org.jline.utils.AttributedStringBuilder;
 import org.jline.widget.Widgets;
 import studio.phaseshift.metatron.BootLoader;
-import studio.phaseshift.metatron.vm.MMachine;
-import studio.phaseshift.metatron.lang.obj.NoObj;
 import studio.phaseshift.metatron.lang.obj.Obj;
 import studio.phaseshift.metatron.lang.parse.ObjParser;
 import studio.phaseshift.metatron.space.device.log.Log;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.StringUtil;
+import studio.phaseshift.metatron.vm.MMachine;
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;
@@ -137,12 +136,12 @@ public class Console {
                     result = ObjParser.parse(line);
 
                 if (null != result) {
-                    IteratorUtil.iterate(IteratorUtil.consume(result.isNoObj() ?
-                                    Collections.emptyIterator() :
-                                    result.isCode() ?
-                                            MMachine.of(result.as()).apply(NoObj.single()).iterator() :
-                                            result.iterator(),
-                            o -> Graphitty.out(this.terminal.output(), "{{-X-}}{{FORM2}}=={{FORM1}}>{{X}}%s\n".formatted(o))));
+                    IteratorUtil.stream(result.isNoObj() ?
+                            List.of() :
+                            result.isCode() ?
+                                    MMachine.of(result.as()).apply() :
+                                    result).forEach(
+                            o -> Graphitty.out(this.terminal.output(), "{{-X-}}{{FORM2}}=={{FORM1}}>{{X}}%s\n".formatted(o)));
                 }
             } catch (final UserInterruptException e) {
                 LOG.warn(Graphitty.sillyPrint("process interrupted", true, true));

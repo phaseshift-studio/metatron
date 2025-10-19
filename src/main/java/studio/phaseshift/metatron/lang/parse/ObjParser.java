@@ -34,7 +34,6 @@ import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
 
 import java.util.*;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import static org.petitparser.parser.primitive.CharacterParser.any;
@@ -43,6 +42,7 @@ import static org.petitparser.parser.primitive.CharacterParser.digit;
 import static org.petitparser.parser.primitive.CharacterParser.of;
 import static org.petitparser.parser.primitive.CharacterParser.word;
 import static org.petitparser.parser.primitive.StringParser.of;
+import static studio.phaseshift.metatron.lang.obj.mtron.MLst.lst;
 import static studio.phaseshift.metatron.lang.obj.mtron.MObjs.objs;
 import static studio.phaseshift.metatron.lang.obj.mtron.mtronFluent.StartLess.split;
 import static studio.phaseshift.metatron.lang.obj.mtron.mtronInstSet.*;
@@ -166,19 +166,18 @@ public class ObjParser {
         return m_furi(FULL_FURI_CHARS, false, true, false);
     }
 
-    public static Parser m_furi(final String furiCharacterSet, final boolean polynomial, final boolean coefficient, final boolean query) {
-        final Supplier<Parser> internal = () -> seq(word().or(seq(of("::").not(),
+    private static Parser m_furi_internal(final String furiCharacterSet, final boolean polynomial, final boolean coefficient, final boolean query) {
+        return seq(word().or(seq(of("::").not(),
                         anyOf(furiCharacterSet))).plus().flatten(),
                 opt(polynomial ? m_furi_poly_type() : none(), null),
                 opt(coefficient ? m_furi_coefficient() : none(), null),
                 opt(query ? m_furi_query() : none(), null)).map(t -> new fURI(pick(t, 0)).big().poly(pick(t, 1)).c(pick(t, 2)).query(pick(t, 3)));
-        // final String scheme, final String host, final int port, final boolean sstart, final List<String> path, final boolean send, final List<String> poly, final Coeff c, final String query
-        final Supplier<Parser> internal2 = () -> seq(word().or(seq(of("::").not(),
-                        anyOf(FULL_FURI_CHARS))).plus().flatten(),
-                opt(polynomial ? m_furi_poly_type() : none(), null),
-                opt(coefficient ? m_furi_coefficient() : none(), null),
-                opt(query ? m_furi_query() : none(), null)).map(t -> new fURI(pick(t, 0)).big().poly(pick(t, 1)).c(pick(t, 2)).query(pick(t, 3)));
-        return choice(seq(of('<'), internal2.get(), of('>')).pick(1), internal.get());
+    }
+
+    public static Parser m_furi(final String furiCharacterSet, final boolean polynomial, final boolean coefficient, final boolean query) {
+        return choice(
+                seq(of('<'), m_furi_internal(FULL_FURI_CHARS, polynomial, coefficient, query), of('>')).pick(1),
+                m_furi_internal(furiCharacterSet, polynomial, coefficient, query));
     }
 
     /*public static Parser m_furi_base_path(final String furiCharacterSet) {
@@ -306,7 +305,7 @@ public class ObjParser {
     public static Parser sugar_code() {
         return seq(opt(obj_parser, NoObj.single()), opt(of(".").trim(), '.'), m_code(), m_vid_postfix()).map(t -> {
             final List<Inst> newCode = new ArrayList<>();
-            newCode.add(new MInst(Triplet.with(MLst.of(ObjParser.<Obj>pick(t, 0)), Inst.f.UNKNOWN, NoObj.single()), START_TID, fURI.NULL));
+            newCode.add(new MInst(Triplet.with(lst(ObjParser.<Call>pick(t, 0)), Inst.f.UNKNOWN, NoObj.single()), START_TID, fURI.NULL));
             newCode.addAll(ObjParser.<Call>pick(t, 2).insts());
             return new MCode(newCode, CODE_TID, pick(t, 3));
         });

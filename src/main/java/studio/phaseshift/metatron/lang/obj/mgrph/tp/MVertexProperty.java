@@ -71,6 +71,6 @@ public class MVertexProperty<V> extends MProperty<V> implements VertexProperty<V
 
     @Override
     public VertexProperty<V> getBaseVertexProperty() {
-        return (VertexProperty<V>) this.value;
+        return (VertexProperty<V>) this.jvm;
     }
 }

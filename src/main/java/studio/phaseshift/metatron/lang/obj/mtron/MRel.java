@@ -36,13 +36,13 @@ public class MRel extends MObj implements Rel {
     }
 
     @Override
-    public Rel clone(final Object value, final fURI tid, final fURI vid) {
-        return (Rel) super.clone(value, tid, vid);
+    public Rel clone(final Object jvm, final fURI tid, final fURI vid) {
+        return (Rel) super.clone(jvm, tid, vid);
     }
 
     @Override
-    public Pair<Obj, Obj> value() {
-        return (Pair<Obj, Obj>) this.value;
+    public Pair<Obj, Obj> jvm() {
+        return (Pair<Obj, Obj>) this.jvm;
     }
 
     public static Rel of(final Obj dom, final Obj rng) {

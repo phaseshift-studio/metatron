@@ -138,7 +138,7 @@ public class MqttSpace extends MSpace<Map<Uri, Obj>> implements Space {
         this.init();
     }
 
-    public MqttSpace clone(final Object value, final fURI tid, final fURI vid) {
+    public MqttSpace clone(final Object jvm, final fURI tid, final fURI vid) {
         return this;
     }
 

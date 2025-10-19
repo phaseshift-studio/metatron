@@ -104,10 +104,10 @@ public interface Inst extends Call {
     }
 
     @Override
-    Inst clone(final Object value, final fURI tid, final fURI vid);
+    Inst clone(final Object jvm, final fURI tid, final fURI vid);
 
     @Override
-    Triplet<Poly, f, Obj> value();
+    Triplet<Poly, f, Obj> jvm();
 
     /// ////////////////////////////////////////////////////////////
     /// ////////////////////////////////////////////////////////////
@@ -127,7 +127,7 @@ public interface Inst extends Call {
     }
 
     default Poly args() {
-        return this.value().get0();
+        return this.jvm().get0();
     }
 
     default Inst args(final Function<Poly, Poly> redefine) {
@@ -159,15 +159,15 @@ public interface Inst extends Call {
     }
 
     default Inst.f f() {
-        return this.value().get1();
+        return null == this.jvm() ? null : this.jvm().get1();
     }
 
     default Obj seed() {
-        return this.value().get2();
+        return this.jvm().get2();
     }
 
     default Resolution resolution() {
-        return null == this.value() || null == this.f() || this.tid().isGeneric() ? Resolution.A : Resolution.B;
+        return null == this.f() /*|| this.tid().isGeneric()*/ ? Resolution.A : Resolution.B;
     }
 
     default boolean isBlocking() {
@@ -250,7 +250,7 @@ public interface Inst extends Call {
             } catch (final Exception e) {
                 this.logger().error(e);
             }
-            this.logger().trace("searching spaces for runtime resolution of inst %s => %s", lhs, this);
+            this.logger().trace("performing runtime resolution of %s => %s", lhs, this);
             Obj resolved2 = Router.global().read(this.tid());//.c(this.c());
             resolved2 = this.hasDomOrRng() ? resolved2.tid(this.tid()) : resolved2;
             if (resolved2.isNoObj()) {
@@ -260,7 +260,6 @@ public interface Inst extends Call {
                 LOG.debug("unable to resolve %s to a single inst in %s", this.dom(lhs.type()), resolved2);
                 final Poly args = resolveArgs(this, this, lhs);
                 return null == args ? this : this.args(args);
-                //return this;//NoObj.single();//.resolve(lhs);
             } else {
                 LOG.debug("resolved %s from global router", resolved2);
                 return resolved2.<Inst>as().args(this.args()).c(this.c()); //.resolve(lhs);
@@ -312,10 +311,9 @@ public interface Inst extends Call {
                 throw MTronException.of("{{m}}lhs obj{{/m}} does not match inst domain (apply): %s {{r}}=/>{{/r}} %s", clhs.rng(), cinst.dom());
         }
         Router.stack().push(cinst.args());
-        Obj rhs = NoObj.single();
-        if (null == cinst.f()) {
+        if (null == cinst.f())
             throw MTronException.of("unable to resolve %s", cinst);
-        }
+        Obj rhs = NoObj.single();
         try {
             rhs = cinst.f().apply(clhs, cinst);
             Graphitty.log(cinst).trace("%s ({{m}}lhs{{/m}}) => %s ({{m}}inst{{/m}}) => %s ({{m}}rhs{{/m}}) evaluated {{g}}successfully{{/g}}", clhs, cinst, rhs);
@@ -328,8 +326,8 @@ public interface Inst extends Call {
             throw MTronException.of("{{m}}rhs obj{{/m}} (%s) {{r}}does not match{{/r}} {{m}}inst range{{/m}} (%s): %s", rhs, cinst.rng(), cinst);
         //final cInt cinstc = false && cinst.isReducing() ? cInt.ONE() : cinst.c();
         final cInt cc = cinst.c();
-        return false && rhs.isObjs() ? rhs : (modulateC ? rhs.c(c -> c.mult(lhs.c())) : rhs).c(c -> c.mult(cc));
-
+        //return false && rhs.isObjs() ? rhs : (modulateC ? rhs.c(c -> c.mult(lhs.c())) : rhs).c(c -> c.mult(cc));
+        return modulateC ? rhs.c(c -> c.mult(lhs.c()).mult(cc)) : rhs.c(c -> c.mult(cc));
     }
 
     default boolean isGather() {
@@ -362,7 +360,7 @@ public interface Inst extends Call {
 
     @Override
     default Inst tid(final fURI newTid) {
-        return this.clone(this.value(), newTid, this.vid());
+        return this.clone(this.jvm(), newTid, this.vid());
     }
 
     public enum Resolution {

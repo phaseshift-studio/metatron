@@ -23,9 +23,9 @@ import studio.phaseshift.metatron.lang.fURI;
 public interface Str extends Mono {
 
     @Override
-    Str clone(final Object value, final fURI tid, final fURI vid);
+    Str clone(final Object jvm, final fURI tid, final fURI vid);
 
     @Override
-    String value();
+    String jvm();
 
 }

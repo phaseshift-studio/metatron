@@ -29,7 +29,6 @@ import java.util.stream.Stream;
 import static studio.phaseshift.metatron.lang.obj.mtron.MInst.instC;
 import static studio.phaseshift.metatron.lang.obj.mtron.MLst.lst;
 import static studio.phaseshift.metatron.lang.obj.mtron.MType.T;
-import static studio.phaseshift.metatron.lang.obj.mtron.mtronInstSet.CODE_TID;
 import static studio.phaseshift.metatron.ui.ObjStringSerializer.prettyPrintCode;
 
 /*
@@ -82,7 +81,7 @@ public class mtronRewrites extends MInstSet {
                             fullResolution = false;
                         }
                     }
-                    final Code resolved = this.value(resolvedInsts);
+                    final Code resolved = this.jvm(resolvedInsts);
                     LOG.debug("%s code:\n        [{{g}}COMPILED{{/g}}]\n%s", fullResolution ? "{{g}}resolved{{/g}}" : "{{y}}semi-resolved{{/y}}", prettyPrintCode(new StringBuilder(), resolved, 0, 7).toString());
                     return resolved;
                 }) // /+/call/A{*}

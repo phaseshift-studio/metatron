@@ -133,7 +133,7 @@ public class mgrphInstSet extends MInstSet {
                 EMPTY_STRING_ARRAY :
                 IteratorUtil.stream(inst.args().elements())
                         .flatMap(o -> IteratorUtil.stream(o.iterator()))
-                        .map(Obj::value)
+                        .map(Obj::jvm)
                         .map(o -> o instanceof fURI ? ((fURI) o).name() : o)
                         .toArray(Object[]::new);
 

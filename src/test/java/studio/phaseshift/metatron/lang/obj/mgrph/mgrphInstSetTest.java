@@ -41,10 +41,10 @@ public class mgrphInstSetTest extends MetatronTest {
     @Override
     @ParameterizedTest
     @CsvSource(value = {
-            ".*(*g).V().count()                                                         % 6",
-            ".*(*g).E().count()                                                         % 6",
-            ".*(*g).V().values(name)                                                    % {'marko','josh','peter','vadas','lop','ripple'}",
-            ".*(*g).V().values(age).count()                                             % 4",
+            "*(*g).V().count()                                                         % 6",
+            "*(*g).E().count()                                                         % 6",
+            "*(*g).V().values(name)                                                    % {'marko','josh','peter','vadas','lop','ripple'}",
+            "*(*g).V().values(age).count()                                             % 4",
             // dummy without ending comma so it's easier to add more test cases
             "1.plus(1)                                                                  % 2"
     }, delimiter = '%')

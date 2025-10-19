@@ -142,7 +142,7 @@ public class MemRouter implements Router {
     }
 
     @Override
-    public Iterable<Space> value() {
+    public Iterable<Space> jvm() {
         return this.spaces.values();
     }
 
@@ -163,7 +163,7 @@ public class MemRouter implements Router {
     }
 
     @Override
-    public Router clone(final Object value, final fURI tid, final fURI vid) {
+    public Router clone(final Object jvm, final fURI tid, final fURI vid) {
         return this;
     }
 

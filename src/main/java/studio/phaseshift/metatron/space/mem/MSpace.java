@@ -54,7 +54,7 @@ public abstract class MSpace<T> implements Space {
     }
 
     @Override
-    public <T> T value() {
+    public <T> T jvm() {
         return (T) this.structure;
     }
 
@@ -95,7 +95,7 @@ public abstract class MSpace<T> implements Space {
     }
 
     @Override
-    public Space clone(final Object structure, final fURI tid, final fURI vid) {
+    public Space clone(final Object jvm, final fURI tid, final fURI vid) {
         return this;
     }
 

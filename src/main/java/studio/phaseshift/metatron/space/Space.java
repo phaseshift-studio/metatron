@@ -44,7 +44,7 @@ public interface Space extends Poly, AutoCloseable {
     /// ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    default Space clone(final Object value, final fURI tid, final fURI vid) {
+    default Space clone(final Object jvm, final fURI tid, final fURI vid) {
         Space.Helpers.noCloneWarning(this);
         return this;
     }
@@ -104,7 +104,7 @@ public interface Space extends Poly, AutoCloseable {
 
     @Override
     default <O extends Obj> Iterable<O> elements() {
-        return (Iterable<O>) this.value();
+        return (Iterable<O>) this.jvm();
     }
 
     class Helpers {

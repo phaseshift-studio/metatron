@@ -50,7 +50,7 @@ public class GraphSpace extends MSpace<Graph> {
     }
 
     @Override
-    public Graph value() {
+    public Graph jvm() {
         return this.structure;
     }
 

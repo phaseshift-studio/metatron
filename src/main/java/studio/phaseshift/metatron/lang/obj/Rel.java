@@ -25,10 +25,10 @@ import static studio.phaseshift.metatron.util.Tuple.Pair;
 public interface Rel extends Poly {
 
     @Override
-    Rel clone(final Object value, final fURI tid, final fURI vid);
+    Rel clone(final Object jvm, final fURI tid, final fURI vid);
 
     @Override
-    Pair<Obj, Obj> value();
+    Pair<Obj, Obj> jvm();
 
     @Override
     default long count() {
@@ -37,26 +37,26 @@ public interface Rel extends Poly {
 
     @Override
     default Iterable<Obj> elements() {
-        return (Iterable) this.value();
+        return (Iterable) this.jvm();
     }
 
     /// /////////////////////////////////////////////////////////
     /// /////////////////////////////////////////////////////////
 
     default Obj first() {
-        return this.value().get0();
+        return this.jvm().get0();
     }
 
     default Obj second() {
-        return this.value().get1();
+        return this.jvm().get1();
     }
 
     default Rel first(final Obj key) {
-        return this.value(Pair.with(key, this.second()));
+        return this.jvm(Pair.with(key, this.second()));
     }
 
     default Rel second(final Obj value) {
-        return this.value(Pair.with(this.first(), value));
+        return this.jvm(Pair.with(this.first(), value));
     }
 
     @Override

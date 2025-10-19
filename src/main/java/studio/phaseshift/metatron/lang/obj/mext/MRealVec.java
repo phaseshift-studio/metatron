@@ -20,8 +20,6 @@ package studio.phaseshift.metatron.lang.obj.mext;
 
 import jdk.incubator.vector.DoubleVector;
 import studio.phaseshift.metatron.lang.fURI;
-import studio.phaseshift.metatron.lang.obj.Lst;
-import studio.phaseshift.metatron.lang.obj.NoObj;
 import studio.phaseshift.metatron.lang.obj.Obj;
 
 import java.util.Collections;
@@ -45,13 +43,13 @@ public class MRealVec extends MVec<Double> {
     }*/
 
     @Override
-    public DoubleVector value() {
-        return (DoubleVector) this.value;
+    public DoubleVector jvm() {
+        return (DoubleVector) this.jvm;
     }
 
     @Override
     public long count() {
-        return this.value().length();
+        return this.jvm().length();
     }
 
     @Override

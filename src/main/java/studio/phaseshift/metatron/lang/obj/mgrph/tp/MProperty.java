@@ -81,13 +81,13 @@ public class MProperty<V> extends MObj implements Property<V>, WrappedProperty<P
     }
 
     @Override
-    public MProperty clone(Object value, fURI tid, fURI vid) {
+    public MProperty clone(Object jvm, fURI tid, fURI vid) {
         return (MProperty) super.clone();
     }
 
     @Override
     public Property<V> getBaseProperty() {
-        return (Property<V>) this.value;
+        return (Property<V>) this.jvm;
     }
 
     public static <E, V> Iterator<E> makeProperties(final Iterator<Property<V>> properties) {

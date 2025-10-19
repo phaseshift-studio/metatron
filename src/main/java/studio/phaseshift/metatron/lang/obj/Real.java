@@ -23,9 +23,9 @@ import studio.phaseshift.metatron.lang.fURI;
 public interface Real extends Mono {
 
     @Override
-    Real clone(final Object value, final fURI tid, final fURI vid);
+    Real clone(final Object jvm, final fURI tid, final fURI vid);
 
     @Override
-    Double value();
+    Double jvm();
 
 }

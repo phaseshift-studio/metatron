@@ -53,12 +53,12 @@ public class BaseQ extends MObj implements Q {
     }
 
     @Override
-    public fURI value() {
-        return (fURI) super.value();
+    public fURI jvm() {
+        return (fURI) super.jvm();
     }
 
     @Override
-    public BaseQ clone(Object value, fURI tid, fURI vid) {
+    public BaseQ clone(Object jvm, fURI tid, fURI vid) {
         return this;
     }
 

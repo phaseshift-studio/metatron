@@ -23,7 +23,6 @@ import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.Obj;
 import studio.phaseshift.metatron.space.mem.StackSpace;
 import studio.phaseshift.metatron.ui.Graphitty;
-import studio.phaseshift.metatron.util.MTronException;
 
 public interface Router extends Obj, Space, AutoCloseable {
 
@@ -84,11 +83,11 @@ public interface Router extends Obj, Space, AutoCloseable {
     <S extends Space> S getSpace(final fURI vid);
 
     @Override
-    Iterable<Space> value();
+    Iterable<Space> jvm();
 
     @Override
     default void close() {
-        this.value().forEach(s -> this.removeSpace(s.vid()));
+        this.jvm().forEach(s -> this.removeSpace(s.vid()));
     }
 
     class Helpers {

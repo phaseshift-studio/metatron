@@ -65,7 +65,7 @@ public class MMachine extends MObj implements Machine {
     public Machine resolve(final Obj lhs) {
         final Code resolvedCode = this.code().resolve(lhs);
         final Machine mach = this.code(resolvedCode);
-        for (final Inst inst : mach.code().value()) {
+        for (final Inst inst : mach.code().jvm()) {
             if (inst.isInitial()) {
                 LOG.trace("  {{g}}==>{{/g}} creating {{y}}initial{{/y}} monad at %s", inst);
                 this.running().append(MMonad.of(NoObj.single(), inst));
@@ -73,7 +73,7 @@ public class MMachine extends MObj implements Machine {
                 // many-to-?
                 LOG.trace("  {{m}}==|{{/m}} creating {{y}}barrier{{/y}} monad at %s", inst);
                 final Monad m = MMonad.of(MObjs.empty(), inst);
-                mach.barriers().<LinkedList<Obj>>valueAs().add(m);
+                mach.barriers().<LinkedList<Obj>>jvmAs().add(m);
             }
         }
         return mach;
@@ -102,7 +102,7 @@ public class MMachine extends MObj implements Machine {
                     LOG.trace(" {{g}}===>{{/g}} post-processing monad %s", n);
                     if (n.inst().isBatching() && (!n.dead() || n.inst().dom().c().isNoObjable())) {
                         if (n.inst().isGather()) {
-                            final Monad barrier = this.barriers().<LinkedList<Monad>>valueAs().peek();
+                            final Monad barrier = this.barriers().<LinkedList<Monad>>jvmAs().peek();
                             LOG.trace("{{m}}====|{{/m}} appending living obj to barrier %s", n);
                             if (null == barrier)
                                 throw MTronException.of("barrier should exist: %s", n.inst());
@@ -128,14 +128,14 @@ public class MMachine extends MObj implements Machine {
                     throw MTronException.of(e, "unable to evaluate %s", m);
                 }
             } else if (!this.barriers().isEmpty()) {
-                final Monad barrier = this.barriers().<LinkedList<Monad>>valueAs().poll();
+                final Monad barrier = this.barriers().<LinkedList<Monad>>jvmAs().poll();
                 if (null != barrier) {
                     LOG.trace("   {{m}}=|{{/m}} processing barrier monad %s", barrier);
                     final Obj result = barrier.inst().apply(barrier.obj());
                     final Inst nextInst = code.nextInst(barrier.inst());
                     if (nextInst.isGather()) { // barrier-to-barrier can do direct handoff of result set
                         LOG.trace("  {{m}}==|{{/m}} passing barrier obj %s to %s", result, nextInst);
-                        final Monad nextBarrier = this.barriers().<LinkedList<Monad>>valueAs().peek();
+                        final Monad nextBarrier = this.barriers().<LinkedList<Monad>>jvmAs().peek();
                         if (null == nextBarrier)
                             throw MTronException.of("barrier should exist: %s", nextInst);
                         nextBarrier.obj().append(result);
@@ -160,13 +160,13 @@ public class MMachine extends MObj implements Machine {
     }
 
     @Override
-    public Quartet<Code, Obj, Lst, Obj> value() {
-        return (Quartet<Code, Obj, Lst, Obj>) this.value;
+    public Quartet<Code, Obj, Lst, Obj> jvm() {
+        return (Quartet<Code, Obj, Lst, Obj>) this.jvm;
     }
 
     @Override
-    public Machine clone(Object value, fURI tid, fURI vid) {
-        return new MMachine((Quartet<Code, Obj, Lst, Obj>) value, tid, vid);
+    public Machine clone(Object jvm, fURI tid, fURI vid) {
+        return new MMachine((Quartet<Code, Obj, Lst, Obj>) jvm, tid, vid);
     }
 
 }

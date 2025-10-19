@@ -27,7 +27,6 @@ import studio.phaseshift.metatron.lang.obj.mtron.MRec;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
 
-import static studio.phaseshift.metatron.lang.obj.MInstSet.MTRON_TID;
 import static studio.phaseshift.metatron.util.Tuple.Triplet;
 import static studio.phaseshift.metatron.vm.machInstSet.MONAD_TID;
 
@@ -42,13 +41,13 @@ public class MMonad extends MObj implements Monad {
     }
 
     @Override
-    public Triplet<Obj, Inst, Rec> value() {
-        return (Triplet<Obj, Inst, Rec>) this.value;
+    public Triplet<Obj, Inst, Rec> jvm() {
+        return (Triplet<Obj, Inst, Rec>) this.jvm;
     }
 
     @Override
     public Monad tid(final fURI tid) {
-        return this.clone(this.value, tid, this.vid);
+        return this.clone(this.jvm, tid, this.vid);
     }
 
     @Override
@@ -61,9 +60,9 @@ public class MMonad extends MObj implements Monad {
     }
 
     @Override
-    public Monad clone(final Object value, final fURI tid, final fURI vid) {
+    public Monad clone(final Object jvm, final fURI tid, final fURI vid) {
         MMonad clone = (MMonad) this.clone();
-        clone.value = value;
+        clone.jvm = jvm;
         clone.tid = tid.clone();
         clone.vid = null == vid ? null : vid.clone();
         return clone;

@@ -41,17 +41,17 @@ public abstract class MElement extends MObj implements Element, Obj {
 
     @Override
     public String label() {
-        return this.value().label();
+        return this.jvm().label();
     }
 
     @Override
     public Graph graph() {
-        return MGraph.of(this.value().graph());
+        return MGraph.of(this.jvm().graph());
     }
 
     @Override
     public void remove() {
-        this.value().remove();
+        this.jvm().remove();
     }
 
     @Override
@@ -67,13 +67,13 @@ public abstract class MElement extends MObj implements Element, Obj {
     }*/
 
     @Override
-    public Element value() {
-        return (Element) this.value;
+    public Element jvm() {
+        return (Element) this.jvm;
     }
 
     @Override
-    public MElement clone(final Object newValue, final fURI newtid, final fURI newvid) {
-        return (MElement) super.clone(newValue, newtid, newvid);
+    public MElement clone(final Object jvm, final fURI newtid, final fURI newvid) {
+        return (MElement) super.clone(jvm, newtid, newvid);
     }
 
     @Override

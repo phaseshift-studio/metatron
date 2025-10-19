@@ -41,18 +41,14 @@ import static studio.phaseshift.metatron.util.Tuple.Pair;
 
 public interface Obj extends Function<Obj, Obj>, Iterable<Obj>, Cloneable {
 
-    default String simpeToString() {
-        return Graphitty.string("{{b}}%s{{g}}::{{m}}@{{b}}%s{{/b}}", this.tid().toString(), null == this.vid() ? "<nospace>" : this.vid().toString());
-    }
-
-    <V> V value();
+    <V> V jvm();
 
     fURI tid();
 
     fURI vid();
 
     default cInt uniqueC() {
-        return cInt.of(1L);
+        return cInt.ONE();
     }
 
     default boolean clessEquals(final Object other) {
@@ -129,14 +125,14 @@ public interface Obj extends Function<Obj, Obj>, Iterable<Obj>, Cloneable {
         return Graphitty.log(this);
     }
 
-    <O extends Obj> O clone(final Object value, final fURI tid, final fURI vid);
+    <O extends Obj> O clone(final Object jvm, final fURI tid, final fURI vid);
 
-    default <O extends Obj> O value(final Object newValue) {
+    default <O extends Obj> O jvm(final Object newValue) {
         return this.clone(newValue, this.tid(), this.vid());
     }
 
-    default <O> O valueAs() {
-        return this.value();
+    default <O> O jvmAs() {
+        return this.jvm();
     }
 
     default <O extends Obj> Stream<O> stream() {
@@ -144,7 +140,7 @@ public interface Obj extends Function<Obj, Obj>, Iterable<Obj>, Cloneable {
     }
 
     default Obj tid(final fURI newTid) {
-        return this.clone(this.value(), newTid, this.vid());
+        return this.clone(this.jvm(), newTid, this.vid());
     }
 
     default Obj tid(final String newTid) {
@@ -152,7 +148,7 @@ public interface Obj extends Function<Obj, Obj>, Iterable<Obj>, Cloneable {
     }
 
     default Obj vid(final fURI newVid) {
-        return this.clone(this.value(), this.tid(), newVid);
+        return this.clone(this.jvm(), this.tid(), newVid);
     }
 
     /*default boolean inSpace() {
@@ -219,10 +215,10 @@ public interface Obj extends Function<Obj, Obj>, Iterable<Obj>, Cloneable {
         if (!this.c().within(rhs.c()))
             return false;
         if (rhs.isType()) {
-            return (this.tid().matches(rhs.tid()) || this.baseType().matches(rhs.tid())) && (rhs.value() == null || this.isObjs() || !rhs.apply(this).isNoObj());
+            return (this.tid().matches(rhs.tid()) || this.baseType().matches(rhs.tid())) && (rhs.jvm() == null || this.isObjs() || !rhs.apply(this).isNoObj());
         }
         return this.tid().matches(rhs.tid()) &&
-                Objects.equals(this.value(), rhs.value());
+                Objects.equals(this.jvm(), rhs.jvm());
     }
 
     @Override
@@ -343,67 +339,67 @@ public interface Obj extends Function<Obj, Obj>, Iterable<Obj>, Cloneable {
 
     default boolean boolValue() {
         if (this.isBool())
-            return this.value();
+            return this.jvm();
         throw MTronException.of("%s is a %s, not a %s", this, tid().toUri(), BOOL_TID.toUri());
     }
 
     default Long intValue() {
         if (this.isInt())
-            return this.value();
+            return this.jvm();
         throw MTronException.of("%s is a %s, not an %s", this, tid().toUri(), INT_TID.toUri());
     }
 
     default Double realValue() {
         if (this.isReal())
-            return this.value();
+            return this.jvm();
         throw MTronException.of("%s is a %s, not a %s", this, tid().toUri(), REAL_TID.toUri());
     }
 
     default String strValue() {
         if (this.isStr())
-            return this.value();
+            return this.jvm();
         throw MTronException.of("%s is a %s, not a %s", this, tid().toUri(), STR_TID.toUri());
     }
 
     default fURI uriValue() {
         if (this.isUri())
-            return this.value();
+            return this.jvm();
         throw MTronException.of("%s is a %s, not a %s", this, tid().toUri(), URI_TID.toUri());
     }
 
     default List<Obj> lstValue() {
         if (this.isLst())
-            return this.value();
+            return this.jvm();
         throw MTronException.of("%s is a %s, not a %s", this, tid().toUri(), LST_TID.toUri());
     }
 
     default Iterable<Obj> objsValue() {
         if (this.isObjs())
-            return this.value();
+            return this.jvm();
         throw MTronException.of("%s is a %s, not an %s", this, tid().toUri(), OBJS_TID.toUri());
     }
 
     default Map<Obj, Obj> recValue() {
         if (this.isRec())
-            return this.value();
+            return this.jvm();
         throw MTronException.of("%s is a %s, not a %s", this, tid().toUri(), REC_TID.toUri());
     }
 
     default Pair<Obj, Obj> relValue() {
         if (this.isRel())
-            return this.value();
+            return this.jvm();
         throw MTronException.of("%s is a %s, not a %s", this, tid().toUri(), REL_TID.toUri());
     }
 
     default List<Inst> codeValue() {
         if (this.isCode())
-            return this.value();
+            return this.jvm();
         throw MTronException.of("%s is a %s, not a %s", this, tid().toUri(), CODE_TID.toUri());
     }
 
     default Obj typeValue() {
         if (this.isType())
-            return this.value();
+            return this.jvm();
         throw MTronException.of("%s is a %s, not a %s", this, tid().toUri(), fURI.of("<type>").toUri());
     }
 
@@ -412,7 +408,7 @@ public interface Obj extends Function<Obj, Obj>, Iterable<Obj>, Cloneable {
     class Helper {
 
         public static int objHashCode(final Obj obj) {
-            return obj.isNoObj() ? NoObj.single().hashCode() : obj.isInst() ? obj.tid().hashCode() : Objects.hash(obj.value(), obj.tid().cLess());
+            return obj.isNoObj() ? NoObj.single().hashCode() : obj.isInst() ? obj.tid().hashCode() : Objects.hash(obj.jvm(), obj.tid().cLess());
         }
 
         public static boolean objEquals(final Obj obj, final Object other) {
@@ -420,14 +416,14 @@ public interface Obj extends Function<Obj, Obj>, Iterable<Obj>, Cloneable {
                     ((obj.isNoObj() && ((Obj) other).isNoObj()) ||
                             (Objects.equals(obj.tid(), ((Obj) other).tid()) &&
                                     Objects.equals(obj.vid(), ((Obj) other).vid()) && // TODO: ??
-                                    Objects.equals(obj.value(), ((Obj) other).value())));
+                                    Objects.equals(obj.jvm(), ((Obj) other).jvm())));
         }
 
         public static boolean objcLessEquals(final Obj obj, final Object other) {
             return other instanceof Obj &&
                     ((obj.isNoObj() && ((Obj) other).isNoObj()) ||
                             (Objects.equals(obj.tid().cLess(), ((Obj) other).tid().cLess()) && // TODO: no vid checked ...
-                                    Objects.equals(obj.value(), ((Obj) other).value())));
+                                    Objects.equals(obj.jvm(), ((Obj) other).jvm())));
         }
 
         public static String objToString(final Obj obj) {

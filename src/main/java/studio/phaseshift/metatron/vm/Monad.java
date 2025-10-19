@@ -18,7 +18,6 @@
 
 package studio.phaseshift.metatron.vm;
 
-import studio.phaseshift.metatron.algebra.Semiring;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.*;
 import studio.phaseshift.metatron.lang.obj.mtron.c.cInt;
@@ -42,7 +41,7 @@ public interface Monad extends Obj {
         }
 
         public static int monadHashCode(final Monad monad) {
-            return Objects.hash(monad.tid().cLess(), monad.value());
+            return Objects.hash(monad.tid().cLess(), monad.jvm());
         }
 
         public static boolean monadEquals(final Monad monad, final Object other) {
@@ -55,10 +54,10 @@ public interface Monad extends Obj {
     }
 
     @Override
-    Monad clone(final Object value, final fURI tid, final fURI vid);
+    Monad clone(final Object jvm, final fURI tid, final fURI vid);
 
     @Override
-    Triplet<Obj, Inst, Rec> value();
+    Triplet<Obj, Inst, Rec> jvm();
 
     default boolean halted() {
         return this.inst().isNoObj();
@@ -73,15 +72,15 @@ public interface Monad extends Obj {
     }
 
     default Rec state() {
-        return this.value().get2();
+        return this.jvm().get2();
     }
 
     default Inst inst() {
-        return this.value().get1();
+        return this.jvm().get1();
     }
 
     default Obj obj() {
-        return this.value().get0();
+        return this.jvm().get0();
     }
 
     @Override
@@ -113,7 +112,7 @@ public interface Monad extends Obj {
     }
 
     default Obj plus(final Monad other) {
-        return Objects.equals(this.value(), other.value()) && Objects.equals(this.tid().basePath(), other.tid().basePath()) ?
+        return Objects.equals(this.jvm(), other.jvm()) && Objects.equals(this.tid().basePath(), other.tid().basePath()) ?
                 this.tid(this.tid().plus(other.tid())) :
                 objs(List.of(this, other));
     }

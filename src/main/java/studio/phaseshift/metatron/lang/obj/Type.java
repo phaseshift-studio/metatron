@@ -18,19 +18,16 @@
 
 package studio.phaseshift.metatron.lang.obj;
 
-import studio.phaseshift.metatron.algebra.Ring;
 import studio.phaseshift.metatron.algebra.Semiring;
 import studio.phaseshift.metatron.lang.fURI;
-import studio.phaseshift.metatron.lang.obj.mtron.MType;
-import studio.phaseshift.metatron.lang.obj.mtron.c.cInt;
 
 public interface Type extends Obj, Semiring<Type> {
 
     @Override
-    Type clone(final Object value, final fURI tid, final fURI vid);
+    Type clone(final Object jvm, final fURI tid, final fURI vid);
 
     @Override
-    Obj value();
+    Obj jvm();
 
     @Override
     default Type dom() {
@@ -61,7 +58,7 @@ public interface Type extends Obj, Semiring<Type> {
     default Obj apply(final Obj obj) {
        // if (!obj.rng().tid().matches(this.tid()))
        //     return NoObj.single();
-        return null == this.value() || obj.matches(this.value().apply(obj)) ?
+        return null == this.jvm() || obj.matches(this.jvm().apply(obj)) ?
                 obj :
                 NoObj.single();
     }
@@ -73,12 +70,12 @@ public interface Type extends Obj, Semiring<Type> {
         if (other.isNoObj())
             return this;
         fURI t = this.tid().plus(other.tid());
-        Obj value = null == this.value() ? other.value() : null == other.value() ? this.value() : this.value().<Call>as().plus(other.value().<Call>as());
-        return this.tid(t).value(value);
+        Obj value = null == this.jvm() ? other.jvm() : null == other.jvm() ? this.jvm() : this.jvm().<Call>as().plus(other.jvm().<Call>as());
+        return this.tid(t).jvm(value);
     }
 
     @Override
     default Type zero() {
-        return this.tid(this.tid().zero()).value(null);
+        return this.tid(this.tid().zero()).jvm(null);
     }
 }

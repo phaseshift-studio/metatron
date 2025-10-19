@@ -36,22 +36,22 @@ public class MLst extends MObj implements Lst {
         return MLst.of(objs);
     }
 
-    public MLst(final List<Obj> value, final fURI tid, final fURI vid) {
-        super(value, tid, vid);
+    public MLst(final List<Obj> jvm, final fURI tid, final fURI vid) {
+        super(jvm, tid, vid);
     }
 
-    public MLst(final List<Obj> value) {
-        this(value, LST_TID, fURI.NULL);
-    }
-
-    @Override
-    public Lst clone(final Object value, final fURI tid, final fURI vid) {
-        return (Lst) super.clone(value, tid, vid);
+    public MLst(final List<Obj> jvm) {
+        this(jvm, LST_TID, fURI.NULL);
     }
 
     @Override
-    public List<Obj> value() {
-        return (List<Obj>) this.value;
+    public Lst clone(final Object jvm, final fURI tid, final fURI vid) {
+        return (Lst) super.clone(jvm, tid, vid);
+    }
+
+    @Override
+    public List<Obj> jvm() {
+        return (List<Obj>) this.jvm;
     }
 
     private static final Lst EMPTY_LST = new MLst(List.of(), LST_TID, fURI.NULL);
@@ -60,13 +60,13 @@ public class MLst extends MObj implements Lst {
         return args.length == 0 ? EMPTY_LST : new MLst(List.of(args));
     }
 
-    public static Lst of(final List<Obj> args) {
+    public static Lst of(final List<Obj> objs) {
         // return args.isEmpty() ? EMPTY_LST : new MLst(args);
-        return new MLst(args);
+        return new MLst(objs);
     }
 
-    public static Lst of(final List<Obj> args, final fURI tid) {
+    public static Lst of(final List<Obj> objs, final fURI tid) {
         // return args.isEmpty() ? EMPTY_LST : new MLst(args);
-        return new MLst(args, tid, fURI.NULL);
+        return new MLst(objs, tid, fURI.NULL);
     }
 }

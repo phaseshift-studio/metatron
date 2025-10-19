@@ -42,7 +42,7 @@ public final class NoObj implements Obj, Inst {
     }
 
     @Override
-    public Triplet value() {
+    public Triplet jvm() {
         return null;
     }
 
@@ -68,7 +68,7 @@ public final class NoObj implements Obj, Inst {
     }
 
     @Override
-    public NoObj clone(final Object value, final fURI tid, final fURI vid) {
+    public NoObj clone(final Object jvm, final fURI tid, final fURI vid) {
         return this;
     }
 

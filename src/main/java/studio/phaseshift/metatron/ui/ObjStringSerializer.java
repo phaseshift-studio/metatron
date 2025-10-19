@@ -88,10 +88,10 @@ public class ObjStringSerializer implements ObjSerializer<String> {
         /// ///////////////////////////////////////////////////////////////
         else if (obj instanceof final Lst lst) {
             generateTID(sb, obj.tid(), true).append("{{g}}[").append(this.b.palette.valueC());
-            for (final Obj o : lst.value()) {
+            for (final Obj o : lst.jvm()) {
                 sb.append(o).append(this.b.palette.formC()).append(',');
             }
-            if (!lst.value().isEmpty()) sb.deleteCharAt(sb.length() - 1);
+            if (!lst.jvm().isEmpty()) sb.deleteCharAt(sb.length() - 1);
             else sb.append("{{g}},");
             return generateVID(sb.append("{{g}}]"), lst).append(this.b.ignoreRewrites ? "" : "{{X}}").toString();
         }
@@ -100,7 +100,7 @@ public class ObjStringSerializer implements ObjSerializer<String> {
         else if (obj instanceof final Objs objs) {
             generateTID(sb, obj.tid(), true).append("{{g}}{").append(this.b.palette.valueC());
             boolean found = false;
-            for (final Obj o : objs.value()) {
+            for (final Obj o : objs.jvm()) {
                 found = true;
                 sb.append(o).append("{{g}},");
             }
@@ -118,7 +118,7 @@ public class ObjStringSerializer implements ObjSerializer<String> {
                     this.generateRec(sb, rec, 0);
                 } else {
                     generateTID(sb, obj.tid(), true).append("{{g}}[");
-                    for (final Map.Entry<Obj, Obj> o : rec.value().entrySet()) {
+                    for (final Map.Entry<Obj, Obj> o : rec.jvm().entrySet()) {
                         sb.append(o.getKey()).append("{{g}}=>").append(o.getValue()).append("{{g}},");
                     }
                 }
@@ -131,7 +131,7 @@ public class ObjStringSerializer implements ObjSerializer<String> {
         else if (obj instanceof Type) {
             return generateTID(sb, obj.tid(), false)
                     .append("{{r}}T{{g}}[{{y}}")
-                    .append(null == obj.value() ? "" : obj.value().toString())
+                    .append(null == obj.jvm() ? "" : obj.jvm().toString())
                     .append("{{g}}]{{X}}").toString();
         }
         /// ///////////////////////////////////////////////////////////////
@@ -139,7 +139,7 @@ public class ObjStringSerializer implements ObjSerializer<String> {
         else
             return generateVID(generateTID(sb, obj.tid(), true)
                     .append(this.b.palette.valueC())
-                    .append(null == obj.value() ? "" : obj.value().toString())
+                    .append(null == obj.jvm() ? "" : obj.jvm().toString())
                     .append(this.b.palette.form2C()), obj)
                     .append(this.b.ignoreRewrites ? "" : "{{X}}")
                     .toString();
@@ -199,7 +199,7 @@ public class ObjStringSerializer implements ObjSerializer<String> {
         } else if (!call.isNoObj() && call.isInst()) {
             final Inst inst = call.as();
             sb.append(" ".repeat(leftMargin)).append("  ".repeat(depth)).append(inst).append("\n");
-            if (null != inst.value()) {
+            if (null != inst.jvm()) {
                 for (final Obj arg : inst.args().elements()) {
                     if (arg.isCall() || arg.isObjs()) {
                         prettyPrintCode(sb, arg.as(), depth + 1, leftMargin);

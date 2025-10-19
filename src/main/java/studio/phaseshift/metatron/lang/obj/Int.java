@@ -23,16 +23,16 @@ import studio.phaseshift.metatron.lang.fURI;
 public interface Int extends Mono {
 
     @Override
-    Int clone(final Object value, final fURI tid, final fURI vid);
+    Int clone(final Object jvm, final fURI tid, final fURI vid);
 
     @Override
-    Long value();
+    Long jvm();
 
-    default Int value(final Long value) {
+    default Int jvm(final Long value) {
         return this.clone(value, this.tid(), this.vid());
     }
 
     default Int tid(final fURI newTid) {
-        return this.clone(this.value(), newTid, this.vid());
+        return this.clone(this.jvm(), newTid, this.vid());
     }
 }

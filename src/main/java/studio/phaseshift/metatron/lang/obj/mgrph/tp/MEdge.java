@@ -42,8 +42,8 @@ public class MEdge extends MElement implements Obj, Edge, WrappedEdge<Edge> {
     }
 
     @Override
-    public Edge value() {
-        return (Edge) this.value;
+    public Edge jvm() {
+        return (Edge) this.jvm;
     }
 
     @Override
@@ -67,7 +67,7 @@ public class MEdge extends MElement implements Obj, Edge, WrappedEdge<Edge> {
 
     @Override
     public Edge getBaseEdge() {
-        return this.value();
+        return this.jvm();
     }
 
     @Override

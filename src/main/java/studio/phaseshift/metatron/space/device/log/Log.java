@@ -59,11 +59,11 @@ public class Log extends MRec {
     }
 
     public boolean check(final Level level, final fURI pattern) {
-        return ((Rec) this.value().get(uri("level"))).value()
+        return ((Rec) this.jvm().get(uri("level"))).jvm()
                 .entrySet()
                 .stream()
                 .filter(kv -> Level.valueOf(kv.getKey().uriValue().toString()).compareTo(level) >= 0)
-                .flatMap(kv -> kv.getValue().<Lst>as().value().stream())
+                .flatMap(kv -> kv.getValue().<Lst>as().jvm().stream())
                 .anyMatch(v -> pattern.matches(v.uriValue()));
     }
 

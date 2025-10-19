@@ -21,9 +21,7 @@ package studio.phaseshift.metatron.lang.obj;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.mtron.c.cInt;
 import studio.phaseshift.metatron.util.IteratorUtil;
-import studio.phaseshift.metatron.util.Tuple;
 
-import java.util.Iterator;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
@@ -31,19 +29,19 @@ public interface Objs extends Obj {
 
     @Override
     default Type rng() {
-        return IteratorUtil.stream(this.value()).map(Obj::rng).reduce(NoObj.single().type(), Type::plus);
+        return IteratorUtil.stream(this.jvm()).map(Obj::rng).reduce(NoObj.single().type(), Type::plus);
     }
 
     @Override
     default Type dom() {
-        return IteratorUtil.stream(this.value()).map(Obj::dom).reduce(NoObj.single().type(), Type::plus);
+        return IteratorUtil.stream(this.jvm()).map(Obj::dom).reduce(NoObj.single().type(), Type::plus);
     }
 
     @Override
-    Obj clone(final Object value, final fURI tid, final fURI vid);
+    Obj clone(final Object jvm, final fURI tid, final fURI vid);
 
     @Override
-    Iterable<Obj> value();
+    Iterable<Obj> jvm();
 
     @Override
     fURI tid();
@@ -62,7 +60,7 @@ public interface Objs extends Obj {
 
     @Override
     default Stream<Obj> stream() {
-        return IteratorUtil.stream(this.value());
+        return IteratorUtil.stream(this.jvm());
     }
 
   //  @Override

@@ -47,12 +47,12 @@ public class MReal extends MObj implements Real {
     }
 
     @Override
-    public Real clone(final Object value, final fURI tid, final fURI vid) {
-        return (Real) super.clone(value, tid, vid);
+    public Real clone(final Object jvm, final fURI tid, final fURI vid) {
+        return (Real) super.clone(jvm, tid, vid);
     }
 
     @Override
-    public Double value() {
-        return (Double) this.value;
+    public Double jvm() {
+        return (Double) this.jvm;
     }
 }

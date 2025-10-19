@@ -43,8 +43,8 @@ public class MVertex extends MElement implements Obj, Vertex, WrappedVertex<Vert
     }
 
     @Override
-    public Vertex value() {
-        return (Vertex) this.value;
+    public Vertex jvm() {
+        return (Vertex) this.jvm;
     }
 
     @Override
@@ -94,6 +94,6 @@ public class MVertex extends MElement implements Obj, Vertex, WrappedVertex<Vert
 
     @Override
     public Vertex getBaseVertex() {
-        return this.value();
+        return this.jvm();
     }
 }

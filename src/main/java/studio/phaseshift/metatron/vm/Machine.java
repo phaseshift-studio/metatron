@@ -29,27 +29,26 @@ import studio.phaseshift.metatron.util.Tuple;
 public interface Machine extends Call, Ring<Call> {
 
     @Override
-    Machine clone(final Object value, final fURI tid, final fURI vid);
+    Machine clone(final Object jvm, final fURI tid, final fURI vid);
 
     // code, running, barriers, halted
     @Override
-    Tuple.Quartet<Code, Obj, Lst, Obj> value();
-
+    Tuple.Quartet<Code, Obj, Lst, Obj> jvm();
 
     default Obj halted() {
-        return this.value().get3();
+        return this.jvm().get3();
     }
 
     default Lst barriers() {
-        return this.value().get2();
+        return this.jvm().get2();
     }
 
     default Obj running() {
-        return this.value().get1();
+        return this.jvm().get1();
     }
 
     default Code code() {
-        return this.value().get0();
+        return this.jvm().get0();
     }
 
     default Machine code(final Code code) {
@@ -60,10 +59,10 @@ public interface Machine extends Call, Ring<Call> {
     default Machine plus(final Call other) {
         // two machines executing in parallel
         final boolean otherMachine = other instanceof Machine;
-        return this.clone(Tuple.Quartet.with(this.value().get0().plus(otherMachine ? other.<Machine>as().value().get0() : other.value()),
-                otherMachine ? this.value().get1().append(other.<Machine>as().value().get1()) : this.value().get1(),
-                otherMachine ? this.value().get2().append(other.<Machine>as().value().get2()) : this.value().get2(),
-                otherMachine ? this.value().get3().append(other.<Machine>as().value().get3()) : this.value().get3()),
+        return this.clone(Tuple.Quartet.with(this.jvm().get0().plus(otherMachine ? other.<Machine>as().jvm().get0() : other.jvm()),
+                otherMachine ? this.jvm().get1().append(other.<Machine>as().jvm().get1()) : this.jvm().get1(),
+                otherMachine ? this.jvm().get2().append(other.<Machine>as().jvm().get2()) : this.jvm().get2(),
+                otherMachine ? this.jvm().get3().append(other.<Machine>as().jvm().get3()) : this.jvm().get3()),
                 this.tid().plus(other.tid()), this.vid());
     }
 
