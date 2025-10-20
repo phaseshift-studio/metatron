@@ -47,27 +47,13 @@ public class BootLoader {
     private static final GraphittyLogger LOG = Graphitty.log(BootLoader.class);
     public static boolean BOOTING = true;
     public static Router ROUTER = new MemRouter(fURI.of("/sys/router"));
-    public static Thread SERVER_THREAD;
+    public static MServer SERVER;
 
     public static void load() {
         if (BOOTING) {
             try {
-                final Runnable r = () -> {
-                    try (final MServer server = new MServer(f("ws://" + InetAddress.getLocalHost().getHostName() + ".local" + ":" + 8887))) {
-                        server.start();
-                    } catch (final Exception e) {
-                        if (!(e.getCause() instanceof InterruptedException)) {
-                            throw MTronException.of(e);
-                        }
-                    }
-                };
-                try {
-                    SERVER_THREAD = new Thread(r);
-                    SERVER_THREAD.start();
-                } catch (final Exception e) {
-                    // do nothing
-                }
-                //  MUri.of(InetAddress.getLocalHost().getHostAddress()).tid("ipv4"));
+              SERVER = new MServer(f("ws://" + InetAddress.getLocalHost().getHostName() + ".local" + ":" + 8887));
+              SERVER.start();
             } catch (final Exception e) {
                 LOG.warn("booting metatron on a non-networked jvm");
             }
@@ -96,7 +82,7 @@ public class BootLoader {
 
     public static void close() {
         LOG.none(Graphitty.sillyPrint("\nshutting down the metatron\n", true, true));
-        SERVER_THREAD.interrupt();
+        SERVER.close();
         Router.global().close();
     }
 }

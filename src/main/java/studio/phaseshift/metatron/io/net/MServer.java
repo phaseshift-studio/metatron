@@ -23,7 +23,6 @@ import org.java_websocket.handshake.ClientHandshake;
 import org.java_websocket.server.WebSocketServer;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.Obj;
-import studio.phaseshift.metatron.space.device.log.Log;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
 import studio.phaseshift.metatron.ui.ObjSerializer;
@@ -32,13 +31,12 @@ import studio.phaseshift.metatron.util.MTronException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 
-import static studio.phaseshift.metatron.lang.fURI.f;
-
 public class MServer extends WebSocketServer implements AutoCloseable {
 
     protected final fURI host;
     protected final GraphittyLogger LOG;
     protected final ObjSerializer<ByteBuffer> serializer;
+    protected Thread serverThread;
 
     public MServer(final fURI host) {
         super(new InetSocketAddress(host.host(), host.port()));
@@ -47,17 +45,23 @@ public class MServer extends WebSocketServer implements AutoCloseable {
         this.serializer = new ObjByteBufferSerializer();
     }
 
-  /*  public static void main(final String[] args) throws Exception {
-        String host = "localhost";
-        int port = 8887;
-        Log.setSLF4J("TRACE");
-        WebSocketServer server = new MServer(f("ws://" + host + ":" + port));
-        server.run();
-        server.stop();
-    }*/
+    public void start() {
+        final Runnable r = () -> {
+            try (this) {
+                this.run();
+            } catch (final Exception e) {
+                if (!(e.getCause() instanceof InterruptedException)) {
+                    throw MTronException.of(e);
+                }
+            }
+        };
+        try {
+            this.serverThread = new Thread(r);
+            this.serverThread.start();
+        } catch (final Exception e) {
+            // do nothing
+        }
 
-    public void start()  {
-        this.run();
     }
 
     @Override
