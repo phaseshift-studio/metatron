@@ -26,6 +26,7 @@ import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.drafts.Draft;
 import org.java_websocket.drafts.Draft_6455;
 import org.java_websocket.handshake.ServerHandshake;
+import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.Obj;
 import studio.phaseshift.metatron.lang.translate.ObjParser;
 import studio.phaseshift.metatron.space.device.log.Log;
@@ -34,48 +35,53 @@ import studio.phaseshift.metatron.ui.GraphittyLogger;
 import studio.phaseshift.metatron.ui.ObjSerializer;
 
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.nio.ByteBuffer;
 
-import static studio.phaseshift.metatron.lang.obj.mtron.MStr.str;
+import static studio.phaseshift.metatron.lang.fURI.f;
 
-public class MClient extends WebSocketClient {
+public class MClient extends WebSocketClient implements AutoCloseable {
 
     protected final GraphittyLogger LOG;
     protected final ObjSerializer<ByteBuffer> serializer;
 
-    public MClient(URI serverUri, Draft draft) {
-        super(serverUri, draft);
+    public MClient(final fURI server, final Draft draft) {
+        super(URI.create(server.toString()), draft);
         LOG = Graphitty.log(this);
         this.serializer = new ObjByteBufferSerializer();
     }
 
-    public MClient(URI serverURI) {
-        this(serverURI, new Draft_6455());
+    public MClient(final fURI server) {
+        this(server, new Draft_6455());
     }
 
-    public static void main(String[] args) throws URISyntaxException {
+   /* public static void main(String[] args) {
         Log.setSLF4J("TRACE");
-        WebSocketClient client = new MClient(new URI("ws://localhost:8887"));
+        WebSocketClient client = new MClient(f("ws://localhost:8887"));
         client.connect();
+    }*/
+
+    public void start() {
+        this.connect();
+    }
+
+    public void close() {
+        super.close();
     }
 
     @Override
     public void onOpen(final ServerHandshake handshakedata) {
-        send(serializer.write(str("a welcome str")));
         LOG.debug("new connection opened");
     }
 
     @Override
     public void onClose(final int code, final String reason, final boolean remote) {
-        LOG.debug("closed with exit code %s [reason:%s]", reason);
+        LOG.debug("closed with exit code %d [reason:%s]", code, reason);
     }
 
     @Override
     public void onMessage(final String message) {
-        LOG.trace("%s received [raw string:%s]", message);
         final Obj obj = ObjParser.parse(message);
-        LOG.trace("%s received [parsed]", obj);
+        LOG.trace("%s received [raw string:%s]", obj, message);
 
     }
 

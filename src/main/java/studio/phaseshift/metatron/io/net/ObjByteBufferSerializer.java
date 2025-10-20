@@ -135,7 +135,7 @@ public class ObjByteBufferSerializer implements ObjSerializer<ByteBuffer> {
 
     @Override
     public Obj read(final ByteBuffer data) throws MTronException {
-        System.out.println(new String(data.array()));
+       // System.out.println(new String(data.array()));
         return ObjParser.m_obj().parse(new String(data.array())).get();
     }
 }

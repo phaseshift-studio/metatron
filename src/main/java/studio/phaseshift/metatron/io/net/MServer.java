@@ -21,31 +21,58 @@ package studio.phaseshift.metatron.io.net;
 import org.java_websocket.WebSocket;
 import org.java_websocket.handshake.ClientHandshake;
 import org.java_websocket.server.WebSocketServer;
+import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.Obj;
 import studio.phaseshift.metatron.space.device.log.Log;
-import studio.phaseshift.metatron.ui.*;
+import studio.phaseshift.metatron.ui.Graphitty;
+import studio.phaseshift.metatron.ui.GraphittyLogger;
+import studio.phaseshift.metatron.ui.ObjSerializer;
+import studio.phaseshift.metatron.util.MTronException;
 
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 
-public class MServer extends WebSocketServer {
+import static studio.phaseshift.metatron.lang.fURI.f;
 
+public class MServer extends WebSocketServer implements AutoCloseable {
+
+    protected final fURI host;
     protected final GraphittyLogger LOG;
     protected final ObjSerializer<ByteBuffer> serializer;
 
-    public MServer(InetSocketAddress address) {
-        super(address);
+    public MServer(final fURI host) {
+        super(new InetSocketAddress(host.host(), host.port()));
+        this.host = host;
         LOG = Graphitty.log(this);
         this.serializer = new ObjByteBufferSerializer();
     }
 
-    public static void main(final String[] args) throws Exception  {
+  /*  public static void main(final String[] args) throws Exception {
         String host = "localhost";
         int port = 8887;
         Log.setSLF4J("TRACE");
-        WebSocketServer server = new MServer(new InetSocketAddress(host, port));
+        WebSocketServer server = new MServer(f("ws://" + host + ":" + port));
         server.run();
         server.stop();
+    }*/
+
+    public void start()  {
+        this.run();
+    }
+
+    @Override
+    public void close() {
+        this.stop();
+    }
+
+    @Override
+    public void stop() {
+        try {
+            LOG.info("{{g}}stopping{{/g}} %s node: %s", Graphitty.sillyPrint("mtron", true, true), this.host.toUri());
+            super.stop();
+        } catch (final Exception e) {
+            throw MTronException.of(e);
+        }
     }
 
     @Override
@@ -80,6 +107,6 @@ public class MServer extends WebSocketServer {
 
     @Override
     public void onStart() {
-        LOG.info("web socket server started %s", this.getAddress());
+        LOG.info("{{g}}starting{{/g}} %s node: %s", Graphitty.sillyPrint("mtron", true, true), this.getAddress());
     }
 }

@@ -19,11 +19,11 @@
 package studio.phaseshift.metatron;
 
 import org.apache.tinkerpop.gremlin.tinkergraph.structure.TinkerFactory;
+import studio.phaseshift.metatron.io.net.MServer;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.mext.mextInstSet;
 import studio.phaseshift.metatron.lang.obj.mgrph.tp.MGraph;
 import studio.phaseshift.metatron.lang.obj.mgrph.tp.mgrphInstSet;
-import studio.phaseshift.metatron.lang.obj.mtron.MUri;
 import studio.phaseshift.metatron.lang.obj.mtron.mtronInstSet;
 import studio.phaseshift.metatron.space.Router;
 import studio.phaseshift.metatron.space.device.log.Log;
@@ -33,9 +33,9 @@ import studio.phaseshift.metatron.space.mem.MemSpace;
 import studio.phaseshift.metatron.space.mqtt.MqttSpace;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
+import studio.phaseshift.metatron.util.MTronException;
 
 import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.nio.file.FileSystems;
 import java.util.Map;
 
@@ -47,16 +47,31 @@ public class BootLoader {
     private static final GraphittyLogger LOG = Graphitty.log(BootLoader.class);
     public static boolean BOOTING = true;
     public static Router ROUTER = new MemRouter(fURI.of("/sys/router"));
+    public static Thread SERVER_THREAD;
 
     public static void load() {
         if (BOOTING) {
             try {
-                LOG.info("booting metatron on %s {{g}}[%s{{g}}]{{X}}",
-                        MUri.of(InetAddress.getLocalHost().getHostName()).tid("host"),
-                        MUri.of(InetAddress.getLocalHost().getHostAddress()).tid("ipv4"));
-            } catch (final UnknownHostException e) {
+                final Runnable r = () -> {
+                    try (final MServer server = new MServer(f("ws://" + InetAddress.getLocalHost().getHostName() + ".local" + ":" + 8887))) {
+                        server.start();
+                    } catch (final Exception e) {
+                        if (!(e.getCause() instanceof InterruptedException)) {
+                            throw MTronException.of(e);
+                        }
+                    }
+                };
+                try {
+                    SERVER_THREAD = new Thread(r);
+                    SERVER_THREAD.start();
+                } catch (final Exception e) {
+                    // do nothing
+                }
+                //  MUri.of(InetAddress.getLocalHost().getHostAddress()).tid("ipv4"));
+            } catch (final Exception e) {
                 LOG.warn("booting metatron on a non-networked jvm");
             }
+
             Router.global().write(f("/mnt"), new MemSpace(f("/mnt/#"), f("/mnt")));
             Router.global().write(f("/mnt/sys"), new MemSpace(fURI.of("/sys/#"), fURI.of("/mnt/sys")));
             Router.global().write(f("/mnt/usr"), new MemSpace(fURI.of("/usr/#"), fURI.of("/mnt/usr")));
@@ -81,6 +96,7 @@ public class BootLoader {
 
     public static void close() {
         LOG.none(Graphitty.sillyPrint("\nshutting down the metatron\n", true, true));
+        SERVER_THREAD.interrupt();
         Router.global().close();
     }
 }
