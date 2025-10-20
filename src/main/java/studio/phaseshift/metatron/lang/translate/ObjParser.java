@@ -76,8 +76,8 @@ public class ObjParser {
                 m_str(),
                 m_call(),
                 m_rec(),
-                m_objs(),
                 m_rel(),
+                m_objs(),
                 m_lst(),
                 m_uri()));
         obj_rel_back_parser.set(choice(
@@ -89,7 +89,6 @@ public class ObjParser {
                 m_int(),
                 m_str(),
                 m_call(),
-                //m_call(),
                 m_rec(),
                 m_objs(),
                 m_lst(),
@@ -129,7 +128,7 @@ public class ObjParser {
     public static Parser rec_internal() {
         return choice(of("=>").trim(),
                 /*choice(seq(of('(').trim(), m_obj(), of("=>").trim(), m_obj(), of(')').trim()),*/
-                seq(m_obj(), of("=>").trim(), m_obj()).separatedBy(of(',').trim()))
+                seq(obj_rel_back_parser, of("=>").trim(), m_obj()).separatedBy(of(',').trim()))
                 .map(t -> t.equals("=>") ?
                         Map.of() :
                         ((List) t).stream()

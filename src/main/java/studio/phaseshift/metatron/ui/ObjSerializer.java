@@ -69,6 +69,11 @@ public interface ObjSerializer<T> {
         return this.write(c);
     }
 
+    default T writeObjs(final Objs o) {
+        return this.write(o);
+    }
+
+
     /// ////////////////////////////////
 
     default Bool readBool(final T t) {

@@ -19,6 +19,7 @@
 package studio.phaseshift.metatron.space.device.log;
 
 import ch.qos.logback.classic.filter.ThresholdFilter;
+import ch.qos.logback.core.Appender;
 import org.slf4j.LoggerFactory;
 import org.slf4j.event.Level;
 import studio.phaseshift.metatron.lang.fURI;
@@ -58,15 +59,6 @@ public class Log extends MRec {
         return new Log(log);
     }
 
-    public boolean check(final Level level, final fURI pattern) {
-        return ((Rec) this.jvm().get(uri("level"))).jvm()
-                .entrySet()
-                .stream()
-                .filter(kv -> Level.valueOf(kv.getKey().uriValue().toString()).compareTo(level) >= 0)
-                .flatMap(kv -> kv.getValue().<Lst>as().jvm().stream())
-                .anyMatch(v -> pattern.matches(v.uriValue()));
-    }
-
     public static Log of(final fURI vid) {
         GraphittyObjLogger.setLogger(vid);
         return new Log(vid);
@@ -89,13 +81,27 @@ public class Log extends MRec {
                             }).findFirst().get()
                     , fURI.dotPath(root.getClass().getCanonicalName()));
         } else {
-            root.getAppender("STDOUT").clearAllFilters();
+            final Appender<?> appender = root.getAppender("STDOUT");
+            if (null != appender)
+                appender.clearAllFilters();
+            else
+                root.setLevel(ch.qos.logback.classic.Level.valueOf(level));
             ThresholdFilter filter = new ThresholdFilter();
             filter.setLevel(level.replace(":log", "").trim());
             filter.start();
-            root.getAppender("STDOUT").addFilter(filter);
+            if(appender != null)
+                root.getAppender("STDOUT").addFilter(filter);
             return uri(level);
         }
+    }
+
+    public boolean check(final Level level, final fURI pattern) {
+        return ((Rec) this.jvm().get(uri("level"))).jvm()
+                .entrySet()
+                .stream()
+                .filter(kv -> Level.valueOf(kv.getKey().uriValue().toString()).compareTo(level) >= 0)
+                .flatMap(kv -> kv.getValue().<Lst>as().jvm().stream())
+                .anyMatch(v -> pattern.matches(v.uriValue()));
     }
 }
 

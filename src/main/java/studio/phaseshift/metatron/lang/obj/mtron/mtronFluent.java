@@ -107,6 +107,9 @@ public class mtronFluent<F extends Fluent<F>> extends MCode implements Fluent<F>
         return this.addInst(instB(mtronInstSet.CROSS_TID, lst(obj)));
     }
 
+    public F get(final Obj obj) {
+        return this.addInst(instB(mtronInstSet.GET_TID, lst(obj)));
+    }
 
     public List<Obj> toList() {
         return IteratorUtil.list(this.iterator());
@@ -179,6 +182,10 @@ public class mtronFluent<F extends Fluent<F>> extends MCode implements Fluent<F>
 
         public static <F extends mtronFluent<F>> F cross(final Obj obj) {
             return new mtronFluent<F>().cross(obj);
+        }
+
+        public static <F extends mtronFluent<F>> F get(final Obj obj) {
+            return new mtronFluent<F>().get(obj);
         }
     }
 }

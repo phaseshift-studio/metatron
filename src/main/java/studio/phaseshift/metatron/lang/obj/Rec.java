@@ -83,6 +83,9 @@ public interface Rec extends Poly, Semiring<Rec> {
         else {
             final String step = key.uriValue().segments().get(0);
             Obj result;
+            final Uri asNode = uri(key.uriValue().asNode());
+            if (this.recValue().containsKey(asNode))
+                return (O) (key.uriValue().isBranch() ? rel(asNode, this.recValue().get(asNode)) : this.recValue().get(asNode));
             if (step.equals("+") || step.equals("#")) {
                 result = key.uriValue().isBranch() ? objs(this.recValue().entrySet().stream().map(kv -> rel(kv.getKey(), kv.getValue()))) : objs(this.recValue().values());
             } else {
