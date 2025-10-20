@@ -18,42 +18,32 @@
 
 package studio.phaseshift.metatron.space.remote;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import studio.phaseshift.metatron.MetatronTest;
-import studio.phaseshift.metatron.io.net.MServer;
 import studio.phaseshift.metatron.lang.obj.Obj;
-import studio.phaseshift.metatron.space.Router;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static studio.phaseshift.metatron.lang.fURI.f;
 import static studio.phaseshift.metatron.lang.obj.mtron.MStr.str;
+import static studio.phaseshift.metatron.lang.obj.mtron.MUri.uri;
+import static studio.phaseshift.metatron.lang.obj.mtron.mtronFluent.StartLess.start;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public class RemoteSpaceTest extends MetatronTest {
 
-    static MServer server;
-
-    @BeforeAll
-    public static void begin() {
-        MetatronTest.begin();
-        server = new MServer(f("ws://chibi.local:8889"));
-        server.start();
-    }
-
-    @AfterAll
+    /* @AfterAll
     public static void end() {
-        server.close();
-    }
+        BootLoader.close();
+    }*/
 
     @Test
     public void testRemote() {
-        Router.global().write("/usr/a", str("hello world"));
-        RemoteSpace remote = new RemoteSpace(f("ws://chibi.local:8889"), f("/remote/#"), f("/mnt/chibi.local/usr"));
-        final Obj a = remote.read("/usr/a");
+        RemoteSpace remote = new RemoteSpace(f("ws://chibi.local:8887/usr/#"), f("/mnt/ws/chibi.local/8887/usr"));
+        assertEquals(str("hello world"), start(str("hello world")).to_(uri("/usr/a")).apply());
+        //final Obj obj = str("hello world").vid(f("ws://chibi.local:8887/usr/a"));
+        final Obj a = remote.read("ws://chibi.local:8887/usr/a");
         assertEquals(str("hello world"), a);
         remote.close();
     }

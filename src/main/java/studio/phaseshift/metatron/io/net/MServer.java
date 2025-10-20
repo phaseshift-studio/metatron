@@ -35,16 +35,20 @@ import static studio.phaseshift.metatron.lang.fURI.f;
 
 public class MServer extends WebSocketServer implements AutoCloseable {
 
-    protected final fURI host;
+    protected final fURI authority;
     protected final GraphittyLogger LOG;
     protected final ObjSerializer<ByteBuffer> serializer;
     protected Thread serverThread;
 
-    public MServer(final fURI host) {
-        super(new InetSocketAddress(host.host(), host.port()));
-        this.host = host;
+    public MServer(final fURI authority) {
+        super(new InetSocketAddress(authority.host(), authority.port()));
+        this.authority = authority;
         LOG = Graphitty.log(this);
         this.serializer = new ObjByteBufferSerializer();
+    }
+
+    public fURI authority() {
+        return this.authority;
     }
 
     public void start() {
@@ -60,6 +64,7 @@ public class MServer extends WebSocketServer implements AutoCloseable {
         try {
             this.serverThread = new Thread(r);
             this.serverThread.start();
+            LOG.trace("server started: %s", this.getAddress());
         } catch (final Exception e) {
             // do nothing
         }
@@ -74,7 +79,7 @@ public class MServer extends WebSocketServer implements AutoCloseable {
     @Override
     public void stop() {
         try {
-            LOG.info("{{g}}stopping{{/g}} %s node: %s", Graphitty.sillyPrint("mtron", true, true), this.host.toUri());
+            LOG.info("{{g}}stopping{{/g}} %s node: %s", Graphitty.sillyPrint("mtron", true, true), this.authority.toUri());
             super.stop();
         } catch (final Exception e) {
             throw MTronException.of(e);

@@ -176,6 +176,10 @@ public class mtronFluent<F extends Fluent<F>> extends MCode implements Fluent<F>
             return new mtronFluent<F>().from(obj);
         }
 
+        public static <F extends mtronFluent<F>> F to_(final Obj obj) {
+            return new mtronFluent<F>().to_(obj);
+        }
+
         public static <F extends mtronFluent<F>> F count() {
             return new mtronFluent<F>().count();
         }

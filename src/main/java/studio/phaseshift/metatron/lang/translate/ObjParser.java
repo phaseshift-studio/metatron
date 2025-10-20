@@ -191,9 +191,12 @@ public class ObjParser {
         return seq(of('{'), choice(
                         seq(opt(seq(opt(of('-'), ""), digit().plus()), ""), of(','), opt(seq(opt(of('-'), ""), digit().plus()), "")).flatten(),
                         seq(opt(of('-'), ""), digit().plus()).flatten().map(t -> t + "," + t),
-                        of('*').map(t -> "0,"),
-                        of('+').map(t -> "1,"),
-                        of('?').map(t -> "0,1")),
+                        of(","),
+                        of("**"),
+                        of("*"),
+                        of("+"),
+                        of("??"),
+                        of("?")),
                 of('}')).map(t -> pick(t, 1));
     }
 
@@ -240,7 +243,7 @@ public class ObjParser {
     }
 
     public static Parser m_type_prefix(final fURI baseType) {
-        return opt(seq(m_furi(), of("::")).pick(0), baseType);
+        return opt(seq(m_furi(), of("://").not(), of("::")).pick(0), baseType);
     }
 
     public static Parser m_vid_postfix() {
@@ -315,7 +318,7 @@ public class ObjParser {
     }
 
     public static Parser m_code() {
-        return seq(opt(of(CODE_TID.toString() +"::|["),CODE_TID + "::|["), m_inst().separatedBy(opt(of('.').trim(), '.')), opt(of("]|"), "]|"), m_vid_postfix())
+        return seq(opt(of(CODE_TID.toString() + "::|["), CODE_TID + "::|["), m_inst().separatedBy(opt(of('.').trim(), '.')), opt(of("]|"), "]|"), m_vid_postfix())
                 .map(t -> ((List<Object>) pick(t, 1)).size() == 1 ?
                         ((List<Inst>) pick(t, 1)).get(0) :
                         new MCode((List) ((List<Object>) pick(t, 1))

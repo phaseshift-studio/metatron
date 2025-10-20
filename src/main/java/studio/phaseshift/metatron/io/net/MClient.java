@@ -45,15 +45,21 @@ public class MClient extends WebSocketClient implements AutoCloseable {
     protected final GraphittyLogger LOG;
     protected final ObjSerializer<ByteBuffer> serializer;
     protected final List<FutureObj<?>> futures = new ArrayList<>();
+    protected final fURI server;
 
     public MClient(final fURI server, final Draft draft) {
         super(URI.create(server.toString()), draft);
         LOG = Graphitty.log(this);
         this.serializer = new ObjByteBufferSerializer();
+        this.server = server;
     }
 
     public MClient(final fURI server) {
         this(server, new Draft_6455());
+    }
+
+    public fURI server() {
+        return this.server;
     }
 
     public void start() {
@@ -105,7 +111,7 @@ public class MClient extends WebSocketClient implements AutoCloseable {
     public <O extends Obj> FutureObj<O> sendRecv(final Obj obj) {
         final Obj toSend = obj;
         //final Obj toSend = obj.vid(obj.vid() == null ? f("temp?tag=abc") : obj.vid().query("tag", "abc"));
-        LOG.trace("sending obj with vid %s: %s", toSend.vid(), toSend);
+        LOG.trace("sending obj: %s", toSend);
         final FutureObj<O> future = new FutureObj<>("abc");
         this.futures.add(future);
         this.send(toSend);

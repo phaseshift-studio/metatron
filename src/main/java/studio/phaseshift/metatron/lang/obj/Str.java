@@ -28,4 +28,8 @@ public interface Str extends Mono {
     @Override
     String jvm();
 
+    default Str vid(final fURI newVid) {
+        return this.clone(this.jvm(), this.tid(), newVid);
+    }
+
 }

@@ -60,7 +60,7 @@ public class ObjByteBufferSerializer implements ObjSerializer<ByteBuffer> {
     }
 
     private String handleIds(final Obj obj, final String objString) {
-        return obj.tid() + "::" + objString + ((obj.vid() == null) ? "" : ("@" + obj.vid()));
+        return obj.tid() + "::" + objString + ((obj.vid() == null) ? "" : ("@<" + obj.vid() + ">"));
     }
 
     @Override

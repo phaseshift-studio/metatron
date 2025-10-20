@@ -38,6 +38,8 @@ public interface Router extends Obj, Space, Closeable {
         return INST_STACK.get();
     }
 
+    void start();
+
     Obj read(final fURI vid);
 
     default Obj read(final String vid) {

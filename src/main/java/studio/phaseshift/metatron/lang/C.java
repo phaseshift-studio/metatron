@@ -66,6 +66,8 @@ public interface C<T extends Comparable<T>, D extends C<T, D>> extends Comparabl
 
     /// ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+    D any();
+
     D maybeSome();
 
     D some();
@@ -96,17 +98,33 @@ public interface C<T extends Comparable<T>, D extends C<T, D>> extends Comparabl
         return this.isZero() || this.isNeg();
     }
 
-    boolean isOne();
+    default boolean isOne() {
+        return Objects.equals(this, this.one());
+    }
 
-    boolean isMaybeSome();
+    default boolean isAny() {
+        return Objects.equals(this, this.any());
+    }
 
-    boolean isSome();
+    default boolean isMaybeSome() {
+        return Objects.equals(this, this.maybeSome());
+    }
 
-    boolean isMaybe();
+    default boolean isSome() {
+        return Objects.equals(this, this.some());
+    }
 
-    boolean isZero();
+    default boolean isMaybe() {
+        return Objects.equals(this, this.maybe());
+    }
 
-    boolean isNoObjable();
+    default boolean isZero() {
+        return Objects.equals(this, this.zero());
+    }
+
+    default boolean isNoObjable() {
+        return this.contains(this.zero());
+    }
 
     default boolean isExact() {
         return Objects.equals(this.min(), this.max());

@@ -191,6 +191,20 @@ public class fURI implements Cloneable, Ring<fURI> {
         return acharacter;
     }
 
+    public fURI authority(final fURI authority) {
+        return new fURI(null, null == authority ? null : authority.host, null == authority ? -1 : authority.port, this.sstart, this.path, this.send, this.poly, this.query == null ? null : this.query.toString());
+    }
+
+    public boolean hasAuthority() {
+        return null != this.host && -1 != this.port;
+    }
+
+    public boolean hasAuthority(final fURI authority) {
+        if (null == authority)
+            return null == this.host && -1 == this.port;
+        return Objects.equals(authority.host, this.host) && Objects.equals(authority.port, this.port);
+    }
+
     public fURI big() {
         return null == Router.global() ? this : Router.global().rewrite(this, true);
     }
@@ -252,7 +266,7 @@ public class fURI implements Cloneable, Ring<fURI> {
     }
 
     public Uri toUri() {
-        return this.toUri(true);
+        return this.toUri(false);
     }
 
     public boolean isBranch() {
@@ -306,8 +320,9 @@ public class fURI implements Cloneable, Ring<fURI> {
         return null != this.authority() ? this.host : this.path.get(0);
     }
 
-    public String authority() {
-        return null == this.host ? null : this.host + (this.port == -1 ? "" : SCHEMA_END + this.port);
+    public fURI authority() {
+        return null == this.host ? null : f(this.scheme + "://" + this.host + (this.port == -1 ? "" : SCHEMA_END + this.port));
+        //return null == this.host ? null : this.host +;
     }
 
     public String host() {
@@ -751,17 +766,17 @@ public class fURI implements Cloneable, Ring<fURI> {
     public String toString() {
         final StringBuilder b = new StringBuilder(null == this.scheme ? EMPTY : this.scheme + SCHEMA_END);
         if (null != this.host)
-            b.append(HOST_START).append(this.authority());
+            b.append(HOST_START).append(this.host).append(this.port == -1 ? "" : (":" + this.port));
         if (this.sstart)
             b.append(SEGMENT_SPLIT);
         for (final String path : this.path) {
-            b.append( path.contains("{") ? path.substring(0, path.indexOf("{")) : path).append(SEGMENT_SPLIT);
+            b.append(path.contains("{") ? path.substring(0, path.indexOf("{")) : path).append(SEGMENT_SPLIT);
         }
         if (!this.send && !this.path.isEmpty())
             b.delete(b.length() - 1, b.length());
         if (this.poly != null)
             b.append(this.poly);
-        if(this.c() != null)
+        if (this.c() != null)
             b.append('{').append(this.c()).append('}');
 
         if (null != this.query && !this.query.query.isEmpty())

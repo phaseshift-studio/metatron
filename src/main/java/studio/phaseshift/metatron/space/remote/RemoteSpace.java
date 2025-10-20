@@ -21,15 +21,13 @@ package studio.phaseshift.metatron.space.remote;
 import studio.phaseshift.metatron.io.net.FutureObj;
 import studio.phaseshift.metatron.io.net.MClient;
 import studio.phaseshift.metatron.lang.fURI;
-import studio.phaseshift.metatron.lang.obj.Code;
-import studio.phaseshift.metatron.lang.obj.NoObj;
+import studio.phaseshift.metatron.lang.obj.Inst;
 import studio.phaseshift.metatron.lang.obj.Obj;
-import studio.phaseshift.metatron.lang.obj.mtron.MCode;
-import studio.phaseshift.metatron.lang.obj.mtron.mtronFluent;
 import studio.phaseshift.metatron.space.mem.MSpace;
 import studio.phaseshift.metatron.util.MTronException;
 
-import static studio.phaseshift.metatron.lang.obj.mtron.mtronInstSet.CODE_TID;
+import static studio.phaseshift.metatron.lang.fURI.f;
+import static studio.phaseshift.metatron.lang.obj.mtron.mtronFluent.StartLess.from;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -38,9 +36,10 @@ public class RemoteSpace extends MSpace<MClient> {
 
     public static final fURI REMOTE_TID = MTRON_SPACE_TID.extend("remote");
 
-    public RemoteSpace(final fURI server, final fURI pattern, final fURI vid) {
-        super(new MClient(server), pattern, REMOTE_TID, vid);
+    public RemoteSpace(final fURI pattern, final fURI vid) {
+        super(new MClient(pattern.authority()), pattern, REMOTE_TID, vid);
         try {
+            LOG.info("connecting to {{b}}%s{{/b}}", this.jvm().server());
             this.jvm().connectBlocking();
         } catch (final Exception e) {
             throw MTronException.of(e);
@@ -50,7 +49,8 @@ public class RemoteSpace extends MSpace<MClient> {
 
     @Override
     public Obj read(final fURI vid) {
-        final Code code = new MCode(mtronFluent.StartLess.start(NoObj.single()).from(vid.toUri()).to_(this.vid.toUri()).insts(), CODE_TID, null);//, vid.query("tag","abc"));
+        LOG.info("%s", vid.toUri());
+        final Inst code = from(vid.authority(null).scheme(null).toUri()).insts().get(0);//, vid.query("tag","abc"));
         LOG.info("performing remote read: %s", code);
         FutureObj<Obj> future = this.jvm().sendRecv(code);
         LOG.info("future %s", future);

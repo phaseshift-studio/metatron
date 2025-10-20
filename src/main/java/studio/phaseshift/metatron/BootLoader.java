@@ -28,16 +28,13 @@ import studio.phaseshift.metatron.lang.obj.mtron.mtronInstSet;
 import studio.phaseshift.metatron.space.Router;
 import studio.phaseshift.metatron.space.device.log.Log;
 import studio.phaseshift.metatron.space.fs.FileSpace;
-import studio.phaseshift.metatron.space.mem.MemRouter;
+import studio.phaseshift.metatron.space.router.MRouter;
 import studio.phaseshift.metatron.space.mem.MemSpace;
-import studio.phaseshift.metatron.space.mqtt.MqttSpace;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
-import studio.phaseshift.metatron.util.MTronException;
 
 import java.net.InetAddress;
 import java.nio.file.FileSystems;
-import java.util.Map;
 
 import static studio.phaseshift.metatron.lang.fURI.f;
 import static studio.phaseshift.metatron.lang.obj.mtron.MUri.uri;
@@ -46,14 +43,14 @@ public class BootLoader {
 
     private static final GraphittyLogger LOG = Graphitty.log(BootLoader.class);
     public static boolean BOOTING = true;
-    public static Router ROUTER = new MemRouter(fURI.of("/sys/router"));
+    public static Router ROUTER;
     public static MServer SERVER;
 
     public static void load() {
         if (BOOTING) {
             try {
-              SERVER = new MServer(f("ws://" + InetAddress.getLocalHost().getHostName() + ".local" + ":" + 8887));
-              SERVER.start();
+              ROUTER = new MRouter(f("ws://" + InetAddress.getLocalHost().getHostName() + ".local" + ":" + 8887),fURI.of("/sys/router"));
+              ROUTER.start();
             } catch (final Exception e) {
                 LOG.warn("booting metatron on a non-networked jvm");
             }
@@ -82,7 +79,6 @@ public class BootLoader {
 
     public static void close() {
         LOG.none(Graphitty.sillyPrint("\nshutting down the metatron\n", true, true));
-        SERVER.close();
         Router.global().close();
     }
 }

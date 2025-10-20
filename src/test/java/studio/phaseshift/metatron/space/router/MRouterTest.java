@@ -16,13 +16,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.space.mem;
+package studio.phaseshift.metatron.space.router;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.NoObj;
 import studio.phaseshift.metatron.space.RouterTest;
+import studio.phaseshift.metatron.space.mem.MemSpace;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.lang.fURI.f;
@@ -31,7 +31,7 @@ import static studio.phaseshift.metatron.lang.obj.mtron.MInt.jnt;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class MemRouterTest extends RouterTest {
+public class MRouterTest extends RouterTest {
 
     @BeforeAll
     public static void setup() {
@@ -41,7 +41,7 @@ public class MemRouterTest extends RouterTest {
     @Test
     public void testCloseSpace() {
         MemSpace mnt = new MemSpace(f("/mnt/#"), f("/mnt"));
-        MemRouter router = new MemRouter(f("/mnt/sys/router"));
+        MRouter router = new MRouter(f("ws://localhost:8889"),f("/mnt/sys/router"));
         router.addSpace(mnt);
         assertFalse(router.hasSpaceFor(f("/test/a")));
         MemSpace test = new MemSpace(f("/test/#"), f("/mnt/test"));

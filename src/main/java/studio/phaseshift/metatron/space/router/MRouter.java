@@ -16,8 +16,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.space.mem;
+package studio.phaseshift.metatron.space.router;
 
+import studio.phaseshift.metatron.io.net.MServer;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.NoObj;
 import studio.phaseshift.metatron.lang.obj.Obj;
@@ -38,7 +39,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import static studio.phaseshift.metatron.BootLoader.BOOTING;
 
-public class MemRouter implements Router {
+public class MRouter implements Router {
 
     private static final fURI ROUTER_TID = fURI.of("/mtron/sys/router");
     private static final Set<fURI> READ_AS_NOOBJ = Set.of(fURI.ALL.maybeSome(), fURI.ALL.maybe(), fURI.ALL);
@@ -47,14 +48,24 @@ public class MemRouter implements Router {
     private final Map<fURI, fURI> smallToBigRewrites = new HashMap<>();
     private final Map<fURI, fURI> bigToSmallRewrites = new HashMap<>();
     private fURI vid;
+    private MServer server;
 
-    public MemRouter(final fURI vid) {
+    public MRouter(final fURI host, final fURI vid) {
         this.vid = vid;
-        LOG.info("%s loaded at %s", this.tid(), this.vid);
+        this.server = new MServer(host);
+        LOG.info("%s loaded at %s accessible via %s", this.tid(), this.vid, this.server.getAddress());
     }
 
     private static Obj appendOnRead(final boolean send, final Obj base, final Obj addition) {
         return addition.isNoObj() ? base : (send ? base.append(MRel.of(addition.vid().toUri(), addition)) : base.append(addition));
+    }
+
+    public void start() {
+        this.server.start();
+    }
+
+    public void close() {
+        this.server.stop();
     }
 
     public void registerRewrite(final fURI small, final fURI big) {
@@ -117,23 +128,39 @@ public class MemRouter implements Router {
     public Obj read(final fURI vid) {
         if (vid.isZero() || READ_AS_NOOBJ.contains(vid))
             return NoObj.single();
-        final Space space = this.getSpace(vid);
-        //if (null != space.vid() && !space.vid().segments().isEmpty())
-        //    LOG.trace("reading {{b}}%s{{/b}} from {{b}}%s{{/b}}", vid, space.vid());
-        return MemRouter.appendOnRead(vid.isBranch(), space.read(vid), this.vid.onlyMatches(vid) ? this : NoObj.single());
+        if (vid.hasAuthority() && !vid.hasAuthority(this.server.authority())) {
+            LOG.warn("p2p routing not implemented yet: %s", vid);
+            return NoObj.single();
+        } else {
+            final fURI local = vid.authority(null).scheme(null);
+            final Space space = this.getSpace(local);
+            //if (null != space.vid() && !space.vid().segments().isEmpty())
+            //    LOG.trace("reading {{b}}%s{{/b}} from {{b}}%s{{/b}}", vid, space.vid());
+            return MRouter.appendOnRead(vid.isBranch(), space.read(vid), this.vid.onlyMatches(vid) ? this : NoObj.single());
+        }
     }
 
     @Override
     public Obj write(final fURI vid, final Obj obj) {
-        final Space space = this.getSpace(vid);
+        fURI local;
+        if (vid.hasAuthority()) {
+            if (vid.hasAuthority(this.server.authority())) {
+                local = vid.scheme(null).authority(null);
+            } else {
+                LOG.warn("p2p routing not implemented yet: %s", vid);
+                return NoObj.single();
+            }
+        } else
+            local = vid;
+        final Space space = this.getSpace(local);
         /// TOTAL HACK -- find a more elegant solution ///
-        if (obj.isNoObj() && !vid.hasPattern())
-            this.removeSpace(vid);
+        if (obj.isNoObj() && !local.hasPattern())
+            this.removeSpace(local);
         if (obj instanceof Space && !(obj instanceof Router))
             this.addSpace((Space) obj);
         /// ///////////////////////////////////////////////
-        LOG.trace("writing %s to {{b}}%s{{/b}} at {{b}}%s{{X}}", obj, space.vidOrTid(), vid);
-        return space.write(vid, obj);
+        LOG.trace("writing %s to {{b}}%s{{/b}} at {{b}}%s{{X}}", obj, space.vidOrTid(), local);
+        return space.write(local, obj);
     }
 
     @Override
@@ -148,7 +175,7 @@ public class MemRouter implements Router {
 
 
     @Override
-    public MemRouter apply(final Obj other) {
+    public MRouter apply(final Obj other) {
         return null;
     }
 

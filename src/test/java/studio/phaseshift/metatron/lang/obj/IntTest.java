@@ -33,8 +33,8 @@ public class IntTest extends MetatronObjTest {
             "int{5}::1                           | int{0,4}::T[]                | false",
             "int{5}::1                           | int{*}::T[]                  | true",
             "int{0}::1                           | noobj[0}::T[]                | true",
-            "int{,}::1                           | int{,}::T[]                  | true",
-            "int{-1}::1                          | int{,}::T[]                  | true",
+            "int{**}::1                          | int{**}::T[]                 | true",
+            "int{-1}::1                          | int{**}::T[]                 | true",
             "int{-1}::1                          | int{0,1}::T[]                | false",
             "int{-1}::1                          | int{-1,1}::T[]               | true"
     }, delimiter = '|')
@@ -54,6 +54,7 @@ public class IntTest extends MetatronObjTest {
             "1                                   | is(in(int::T[]))             | 1",
             "1                                   | in(str::T[])                 | false",
             "1                                   | is(in(str::T[]))             | noobj",
+            "int{-1}::1                          | is(in(int{**}::T[]))          | int{-1}::1",
             "int{-1}::1                          | is(in(int{,}::T[]))          | int{-1}::1"
     }, delimiter = '|')
     public void testCode(final String lhs, final String code, final String expected) {

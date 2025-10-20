@@ -62,19 +62,24 @@ public class cInt implements C<Long, cInt> {
     public static cInt of(final String parse) {
         if (parse.isEmpty())
             return cInt.of(1L);
+        else if (parse.equals("**"))
+            return cInt.of(null, null);
         else if (parse.equals("*"))
             return cInt.of(0L, null);
         else if (parse.equals("?"))
             return cInt.of(0L, 1L);
+        else if (parse.equals("??"))
+            return cInt.of(-1L, 1L);
         else if (parse.equals("+"))
             return cInt.of(1L, null);
-        else if (parse.equals(","))
-            return cInt.of(null, null);
+            // else if (parse.equals(","))
+            //    return cInt.of(null, null);
         else if (!parse.contains(","))
             return cInt.of(Long.valueOf(parse));
         else {
             final String[] split = parse.split(",");
-            if (parse.charAt(0) == ',') return cInt.of(null, Long.valueOf(split[1]));
+            if (parse.charAt(0) == ',')
+                return (1 == parse.length()) ? cInt.of(null, null) : cInt.of(null, Long.valueOf(split[1]));
             if (split.length == 1) return cInt.of(Long.valueOf(split[0]), null);
             return cInt.of(Long.valueOf(split[0]), Long.valueOf(split[1]));
         }
@@ -118,38 +123,8 @@ public class cInt implements C<Long, cInt> {
     }
 
     @Override
-    public boolean isZero() {
-        return Objects.equals(this.min, 0L) && Objects.equals(this.max, 0L);
-    }
-
-    @Override
     public boolean isNeg() {
         return this.min != null && this.min < 0L && this.max != null && this.max < 0L;
-    }
-
-    @Override
-    public boolean isOne() {
-        return Objects.equals(this.min, 1L) && Objects.equals(this.max, 1L);
-    }
-
-    @Override
-    public boolean isMaybeSome() {
-        return Objects.equals(this.min, 0L) && null == this.max;
-    }
-
-    @Override
-    public boolean isSome() {
-        return Objects.equals(this.min, 1L) && null == this.max;
-    }
-
-    @Override
-    public boolean isMaybe() {
-        return Objects.equals(this.min, 0L) && Objects.equals(this.max, 1L);
-    }
-
-    @Override
-    public boolean isNoObjable() {
-        return this.min == null || this.min <= 0;
     }
 
     @Override
@@ -159,6 +134,11 @@ public class cInt implements C<Long, cInt> {
         Long minB = rhs.min() == null ? Long.MIN_VALUE : rhs.min();
         Long maxB = rhs.max() == null ? Long.MAX_VALUE : rhs.max();
         return minA.compareTo(minB) >= 0 && maxA.compareTo(maxB) <= 0;
+    }
+
+    @Override
+    public cInt any() {
+        return cInt.of(null, null);
     }
 
     @Override
@@ -188,8 +168,8 @@ public class cInt implements C<Long, cInt> {
 
     @Override
     public String toString() {
-        if (this.min == null && this.max == null)
-            return ",";
+        if (this.isAny())
+            return "**";
         else if (this.isMaybe())
             return "?";
         else if (this.isSome())
