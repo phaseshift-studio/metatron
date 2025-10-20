@@ -460,6 +460,12 @@ public class fURI implements Cloneable, Ring<fURI> {
         return new fURI(this.scheme, this.host, this.port, this.sstart, this.path, this.send, Query.to(Query.from(appended)));
     }
 
+    public fURI removeQ(final String key) {
+        Map<String, String> appended = null == this.query ? new LinkedHashMap<>() : new LinkedHashMap<>(this.query.query);
+        appended.remove(key);
+        return new fURI(this.scheme, this.host, this.port, this.sstart, this.path, this.send, Query.to(Query.from(appended)));
+    }
+
     public fURI query(final Object key, final Object value) {
         return this.query(key.toString(), value.toString());
     }

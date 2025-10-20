@@ -124,7 +124,7 @@ public class ObjByteBufferSerializer implements ObjSerializer<ByteBuffer> {
     @Override
     public ByteBuffer writeCode(final Code code) {
         final String internal = IteratorUtil.stream(code.insts()).map(i -> new String(this.writeInst(i).array())).reduce(".", (a, b) -> a + b + ".");
-        return ByteBuffer.wrap(internal.substring(1,internal.length()-1).getBytes());
+        return ByteBuffer.wrap(handleIds(code, "|[" + internal.substring(1,internal.length()-1) + "]|").getBytes());
     }
 
     @Override

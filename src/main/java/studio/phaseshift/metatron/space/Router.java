@@ -24,7 +24,9 @@ import studio.phaseshift.metatron.lang.obj.Obj;
 import studio.phaseshift.metatron.space.mem.StackSpace;
 import studio.phaseshift.metatron.ui.Graphitty;
 
-public interface Router extends Obj, Space, AutoCloseable {
+import java.io.Closeable;
+
+public interface Router extends Obj, Space, Closeable {
 
     ThreadLocal<StackSpace> INST_STACK = ThreadLocal.withInitial(() -> new StackSpace(fURI.of("+/#"), Router.global().vid().extend("stack")));
 

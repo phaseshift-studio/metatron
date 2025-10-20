@@ -22,11 +22,15 @@ import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.Obj;
 import studio.phaseshift.metatron.space.Qs;
 import studio.phaseshift.metatron.space.Space;
+import studio.phaseshift.metatron.ui.Graphitty;
+import studio.phaseshift.metatron.ui.GraphittyLogger;
 import studio.phaseshift.metatron.util.MTronException;
 
 import static studio.phaseshift.metatron.lang.fURI.f;
 
 public abstract class MSpace<T> implements Space {
+
+    protected final GraphittyLogger LOG;
 
     protected final T structure;
     protected final fURI pattern;
@@ -35,6 +39,7 @@ public abstract class MSpace<T> implements Space {
     protected final Qs qs;
 
     public MSpace(final T structure, final fURI pattern, final fURI tid, final fURI vid) {
+        LOG = Graphitty.log(this);
         this.structure = structure;
         this.pattern = pattern;
         this.tid = tid.big();
@@ -54,8 +59,8 @@ public abstract class MSpace<T> implements Space {
     }
 
     @Override
-    public <T> T jvm() {
-        return (T) this.structure;
+    public T jvm() {
+        return this.structure;
     }
 
     @Override

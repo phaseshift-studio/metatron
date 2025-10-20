@@ -95,6 +95,10 @@ public class mtronFluent<F extends Fluent<F>> extends MCode implements Fluent<F>
         return this.addInst(instB(mtronInstSet.FROM_TID, lst(obj)));
     }
 
+    public F to_(final Obj obj) {
+        return this.addInst(instB(mtronInstSet.TO_TID, lst(obj)));
+    }
+
     public F count() {
         return this.addInst(instB(mtronInstSet.COUNT_TID, lst()));
     }

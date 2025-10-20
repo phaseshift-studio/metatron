@@ -315,13 +315,13 @@ public class ObjParser {
     }
 
     public static Parser m_code() {
-        return seq(m_inst().separatedBy(opt(of('.').trim(), '.')), m_vid_postfix())
-                .map(t -> ((List<Object>) pick(t, 0)).size() == 1 ?
-                        ((List<Inst>) pick(t, 0)).get(0) :
-                        new MCode((List) ((List<Object>) pick(t, 0))
+        return seq(opt(of(CODE_TID.toString() +"::|["),CODE_TID + "::|["), m_inst().separatedBy(opt(of('.').trim(), '.')), opt(of("]|"), "]|"), m_vid_postfix())
+                .map(t -> ((List<Object>) pick(t, 1)).size() == 1 ?
+                        ((List<Inst>) pick(t, 1)).get(0) :
+                        new MCode((List) ((List<Object>) pick(t, 1))
                                 .stream()
                                 .filter(x -> x instanceof Inst)
-                                .toList(), CODE_TID, pick(t, 1)));
+                                .toList(), CODE_TID, pick(t, 3)));
     }
 
     public static Parser m_inst() {

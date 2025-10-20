@@ -28,14 +28,15 @@ import org.java_websocket.drafts.Draft_6455;
 import org.java_websocket.handshake.ServerHandshake;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.Obj;
-import studio.phaseshift.metatron.lang.translate.ObjParser;
-import studio.phaseshift.metatron.space.device.log.Log;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
 import studio.phaseshift.metatron.ui.ObjSerializer;
 
 import java.net.URI;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 
 import static studio.phaseshift.metatron.lang.fURI.f;
 
@@ -43,6 +44,7 @@ public class MClient extends WebSocketClient implements AutoCloseable {
 
     protected final GraphittyLogger LOG;
     protected final ObjSerializer<ByteBuffer> serializer;
+    protected final List<FutureObj<?>> futures = new ArrayList<>();
 
     public MClient(final fURI server, final Draft draft) {
         super(URI.create(server.toString()), draft);
@@ -54,12 +56,6 @@ public class MClient extends WebSocketClient implements AutoCloseable {
         this(server, new Draft_6455());
     }
 
-   /* public static void main(String[] args) {
-        Log.setSLF4J("TRACE");
-        WebSocketClient client = new MClient(f("ws://localhost:8887"));
-        client.connect();
-    }*/
-
     public void start() {
         this.connect();
     }
@@ -69,8 +65,8 @@ public class MClient extends WebSocketClient implements AutoCloseable {
     }
 
     @Override
-    public void onOpen(final ServerHandshake handshakedata) {
-        LOG.debug("new connection opened");
+    public void onOpen(final ServerHandshake handshake) {
+        LOG.debug("new connection opened: %s", handshake.getHttpStatusMessage());
     }
 
     @Override
@@ -80,19 +76,61 @@ public class MClient extends WebSocketClient implements AutoCloseable {
 
     @Override
     public void onMessage(final String message) {
-        final Obj obj = ObjParser.parse(message);
-        LOG.trace("%s received [raw string:%s]", obj, message);
+        LOG.trace("received string [length:%d]", message.length());
+        final Obj obj = this.serializer.read(ByteBuffer.wrap(message.getBytes()));
+        this.onObj(obj);
 
     }
 
     @Override
     public void onMessage(final ByteBuffer message) {
-        Obj obj = this.serializer.read(message);
-        LOG.trace("%s received [raw bytes:%s]", obj, message);
+        LOG.trace("received byte buffer [length:%d]", message.array().length);
+        final Obj obj = this.serializer.read(message);
+        this.onObj(obj);
+
     }
 
     @Override
-    public void onError(Exception ex) {
+    public void onError(final Exception ex) {
         LOG.error("an error occurred on connection: %s", ex);
     }
+
+    /// ////////////////////////////////////////////////////////////////////////////////////////
+
+    public void send(final Obj obj) {
+        final ByteBuffer buffer = this.serializer.write(obj);
+        this.send(buffer);
+    }
+
+    public <O extends Obj> FutureObj<O> sendRecv(final Obj obj) {
+        final Obj toSend = obj;
+        //final Obj toSend = obj.vid(obj.vid() == null ? f("temp?tag=abc") : obj.vid().query("tag", "abc"));
+        LOG.trace("sending obj with vid %s: %s", toSend.vid(), toSend);
+        final FutureObj<O> future = new FutureObj<>("abc");
+        this.futures.add(future);
+        this.send(toSend);
+        return future;
+    }
+
+    public void onObj(final Obj obj) {
+        LOG.trace("processing %s", obj);
+        if (obj.vid() != null && obj.vid().hasQuery("tag")) {
+            LOG.trace("processing tagged obj %s", obj.vid());
+            final String tag = obj.vid().queryValue(f("tag"), String.class);
+            Optional<FutureObj<?>> future = this.futures.stream().filter(f -> f.tag().equals(tag)).findAny();
+            if (future.isPresent()) {
+                final FutureObj<Obj> f = (FutureObj<Obj>) future.get();
+                f.setObj(obj.vid(obj.vid().removeQ("tag")));
+            }
+        } else {
+            final Optional<FutureObj<?>> future = this.futures.stream().findAny();
+            LOG.trace("processing future obj %s", future);
+            if (future.isPresent()) {
+                final FutureObj<Obj> f = (FutureObj<Obj>) future.get();
+                f.setObj(obj);
+            }
+        }
+    }
+
+
 }

@@ -31,6 +31,8 @@ import studio.phaseshift.metatron.util.MTronException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 
+import static studio.phaseshift.metatron.lang.fURI.f;
+
 public class MServer extends WebSocketServer implements AutoCloseable {
 
     protected final fURI host;
@@ -93,15 +95,32 @@ public class MServer extends WebSocketServer implements AutoCloseable {
 
     @Override
     public void onMessage(final WebSocket conn, final String message) {
-        LOG.trace("parsing raw message: %s", message);
-        Obj obj = this.serializer.read(ByteBuffer.wrap(message.getBytes()));
-        LOG.trace("%s received from %s [raw string:%s]", obj, conn.getRemoteSocketAddress(), message);
+        LOG.trace("received from %s string [length:%d]", conn, message.length());
+        final Obj obj = this.serializer.read(ByteBuffer.wrap(message.getBytes()));
+        this.onObj(conn, obj);
     }
 
     @Override
-    public void onMessage(WebSocket conn, ByteBuffer message) {
-        Obj obj = this.serializer.read(message);
-        LOG.trace("%s received from %s [raw bytes:%s]", obj, conn.getRemoteSocketAddress(), message);
+    public void onMessage(final WebSocket conn, final ByteBuffer message) {
+        LOG.trace("received from %s byte buffer [length:%d]", conn, message.array().length);
+        final Obj obj = this.serializer.read(message);
+        this.onObj(conn, obj);
+    }
+
+    public void onObj(final WebSocket conn, final Obj obj) {
+        try {
+            LOG.trace("processing %s for %s", obj, conn);
+            Obj result = obj.apply().vid(null);
+            final String tag = obj.vid() != null ? obj.vid().queryValue(f("tag"), String.class, null) : null;
+            if (tag != null) {
+                fURI rvid = result.vid() == null ? f("/usr/temp?tag=" + tag) : result.vid().query("tag", tag);
+                result = result.vid(rvid);
+                LOG.info("obj tagged: %s", result);
+            }
+            conn.send(this.serializer.write(result));
+        } catch (final Exception e) {
+            this.onError(conn, e);
+        }
     }
 
     @Override

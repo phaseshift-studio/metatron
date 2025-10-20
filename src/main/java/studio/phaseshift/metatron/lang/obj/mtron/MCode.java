@@ -37,9 +37,13 @@ public class MCode extends MObj implements Code {
         this(jvm, CODE_TID, fURI.NULL);
     }
 
+    public static Code of(final List<Inst> insts) {
+        return new MCode(insts, CODE_TID, fURI.NULL);
+    }
+
     @Override
     public Code clone(final Object jvm, final fURI tid, final fURI vid) {
-        return (Code) super.clone(jvm, tid, vid);
+        return super.clone(jvm, tid, vid);
     }
 
     @Override
@@ -51,11 +55,12 @@ public class MCode extends MObj implements Code {
     }
 
     @Override
-    public List<Inst> jvm() {
-        return (List<Inst>) this.jvm;
+    public Code vid(final fURI vid) {
+        return this.clone(jvm, this.tid, vid);
     }
 
-    public static Code of(final List<Inst> insts) {
-        return new MCode(insts, CODE_TID, fURI.NULL);
+    @Override
+    public List<Inst> jvm() {
+        return (List<Inst>) this.jvm;
     }
 }
