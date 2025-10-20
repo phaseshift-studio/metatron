@@ -82,10 +82,10 @@ public class BootLoader {
             Router.global().write(f("/mnt/fs"), new FileSpace(FileSystems.getDefault(), f("/home/#"), f("/mnt/fs")));
             Router.global().write(f("/mnt/tp"), new MGraph(TinkerFactory.createModern(), f("/tp/#"), f("/mnt/tp")));
             Router.global().write(f("/mnt/lang/mgrph"), new mgrphInstSet(f("/mnt/lang/mgrph")));
-            Router.global().write(f("/mnt/zigbee2mqtt"), new MqttSpace(Map.of(
+            /*Router.global().write(f("/mnt/zigbee2mqtt"), new MqttSpace(Map.of(
                     uri("broker"), uri("mqtt://192.168.66.2:1883"),
                     uri("prefix"), uri("/mqtt"),
-                    uri("pattern"), uri("zigbee2mqtt/#")), f("/mnt/zigbee2mqtt")));
+                    uri("pattern"), uri("zigbee2mqtt/#")), f("/mnt/zigbee2mqtt")));*/
             Router.global().write(f("/mnt/lang/mext"), mextInstSet.of(f("/mnt/lang/mext")));
             /// ///////////////////////////////////
             BOOTING = false;
