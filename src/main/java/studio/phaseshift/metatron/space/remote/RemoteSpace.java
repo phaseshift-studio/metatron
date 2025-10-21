@@ -46,6 +46,11 @@ public class RemoteSpace extends MSpace<MClient> {
         }
     }
 
+    @Override
+    public void close() {
+       // this.jvm().close();
+    }
+
 
     @Override
     public Obj read(final fURI vid) {

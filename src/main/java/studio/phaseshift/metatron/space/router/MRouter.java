@@ -23,7 +23,6 @@ import studio.phaseshift.metatron.io.net.MServer;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.NoObj;
 import studio.phaseshift.metatron.lang.obj.Obj;
-import studio.phaseshift.metatron.lang.obj.mtron.MObjs;
 import studio.phaseshift.metatron.lang.obj.mtron.MRel;
 import studio.phaseshift.metatron.space.NullSpace;
 import studio.phaseshift.metatron.space.Qs;
@@ -33,10 +32,7 @@ import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
 import studio.phaseshift.metatron.util.MTronException;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static studio.phaseshift.metatron.BootLoader.BOOTING;
@@ -68,8 +64,13 @@ public class MRouter implements Router {
         this.server.start();
     }
 
-    public void close() {
+    public synchronized void close() {
+        final List<fURI> list = this.spaces.values().stream().map(Space::vid).toList();
+        list.forEach(this::removeSpace);
+        this.spaces.clear();
+        LOG.info("closing server at %s", this.server.authority().toUri());
         this.server.stop();
+
     }
 
     public void registerRewrite(final fURI small, final fURI big) {
@@ -102,8 +103,8 @@ public class MRouter implements Router {
             try {
                 final Space space = this.spaces.remove(s.pattern());
                 if (null != space) {
+                    Space.Helpers.spaceCloseLog(this, space);
                     space.close();
-                    LOG.trace("closing space %s", s);
                 }
             } catch (final Exception e) {
                 LOG.error(e);
@@ -199,6 +200,7 @@ public class MRouter implements Router {
 
     @Override
     public Router clone(final Object jvm, final fURI tid, final fURI vid) {
+        Space.Helpers.noCloneWarning(this);
         return this;
     }
 

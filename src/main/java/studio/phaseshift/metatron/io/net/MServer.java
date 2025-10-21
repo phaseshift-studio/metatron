@@ -28,6 +28,7 @@ import studio.phaseshift.metatron.ui.GraphittyLogger;
 import studio.phaseshift.metatron.ui.ObjSerializer;
 import studio.phaseshift.metatron.util.MTronException;
 
+import java.io.Closeable;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -35,7 +36,7 @@ import java.util.List;
 
 import static studio.phaseshift.metatron.lang.fURI.f;
 
-public class MServer extends WebSocketServer implements AutoCloseable {
+public class MServer extends WebSocketServer implements Closeable {
 
     protected final fURI authority;
     protected final GraphittyLogger LOG;
@@ -86,7 +87,6 @@ public class MServer extends WebSocketServer implements AutoCloseable {
     @Override
     public void stop() {
         try {
-            LOG.info("{{g}}stopping{{/g}} %s node: %s", Graphitty.sillyPrint("mtron", true, true), this.authority.toUri());
             super.stop();
         } catch (final Exception e) {
             throw MTronException.of(e);

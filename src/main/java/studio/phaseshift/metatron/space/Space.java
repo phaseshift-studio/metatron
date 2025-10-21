@@ -24,6 +24,7 @@ import studio.phaseshift.metatron.lang.obj.mtron.MObjs;
 import studio.phaseshift.metatron.lang.obj.mtron.MRel;
 import studio.phaseshift.metatron.ui.Graphitty;
 
+import java.io.Closeable;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -34,7 +35,7 @@ import java.util.function.Function;
 import static studio.phaseshift.metatron.lang.obj.mtron.MUri.uri;
 import static studio.phaseshift.metatron.util.Tuple.Pair;
 
-public interface Space extends Poly, AutoCloseable {
+public interface Space extends Poly, Closeable {
 
     fURI MTRON_TID = fURI.of("/mtron");
     fURI MTRON_SPACE_TID = MTRON_TID.extend("space");
@@ -75,11 +76,13 @@ public interface Space extends Poly, AutoCloseable {
         return results;
     }
 
-    default Function<fURI,Map<fURI,Obj>> directReader() {
+    default Function<fURI, Map<fURI, Obj>> directReader() {
         return f -> Map.of();
     }
-    default BiConsumer<fURI,Obj> directWriter() {
-        return (k,v) -> {};
+
+    default BiConsumer<fURI, Obj> directWriter() {
+        return (k, v) -> {
+        };
     }
 
     @Override
@@ -104,10 +107,15 @@ public interface Space extends Poly, AutoCloseable {
 
     @Override
     default <O extends Obj> Iterable<O> elements() {
-        return (Iterable<O>) this.jvm();
+        return this.jvm();
     }
 
     class Helpers {
+
+        public static void spaceCloseLog(final Obj source, final Space space) {
+            source.logger().info("closing space %s", space);
+        }
+
         public static String spaceToString(final Space space) {
             return Graphitty.string("{{b}}" + space.tid() + "{{g}}::[{{c}}pattern:{{b}}" + space.pattern() + "{{g}}]@{{b}}" + space.vid() + "{{X}}");
         }
@@ -158,8 +166,8 @@ public interface Space extends Poly, AutoCloseable {
             }
         }
 
-        public static void resolveWrite(final Space space, final fURI vid, final Obj obj, final BiConsumer<fURI, Obj> directWriter,final Function<fURI, Map<fURI, Obj>> directReader) {
-            final Map<fURI,Obj> current = directReader.apply(vid);
+        public static void resolveWrite(final Space space, final fURI vid, final Obj obj, final BiConsumer<fURI, Obj> directWriter, final Function<fURI, Map<fURI, Obj>> directReader) {
+            final Map<fURI, Obj> current = directReader.apply(vid);
             if (!current.isEmpty() && vid.isNode()) {
                 directWriter.accept(vid, obj);
             } else {
@@ -168,17 +176,17 @@ public interface Space extends Poly, AutoCloseable {
                     if (vid.isNode() || !obj.isPoly()) {
                         directWriter.accept(vid, obj);
                     } else if (obj.isRec()) { // branch
-                        obj.recValue().forEach((key, value) -> Helpers.resolveWrite(space, vid.extend(key.uriValue()), value, directWriter,directReader));
+                        obj.recValue().forEach((key, value) -> Helpers.resolveWrite(space, vid.extend(key.uriValue()), value, directWriter, directReader));
                     } else if (obj.isLst()) {
                         for (int i = 0; i < obj.lstValue().size(); i++) { // branch
-                            Helpers.resolveWrite(space, vid.extend(String.valueOf(i)), obj.lstValue().get(i), directWriter,directReader);
+                            Helpers.resolveWrite(space, vid.extend(String.valueOf(i)), obj.lstValue().get(i), directWriter, directReader);
                         }
                     }
                 } else if (vid.isNode() || !obj.isPoly()) {
                     if (base.get1().isRec())
-                        Space.Helpers.resolveWrite(space, base.get0(), base.get1().<Rec>as().at(uri(vid.removePrefix(base.get0())), obj), directWriter,directReader);
+                        Space.Helpers.resolveWrite(space, base.get0(), base.get1().<Rec>as().at(uri(vid.removePrefix(base.get0())), obj), directWriter, directReader);
                     else if (base.get1().isLst())
-                        Space.Helpers.resolveWrite(space, base.get0(), base.get1().<Lst>as().append(obj), directWriter,directReader);
+                        Space.Helpers.resolveWrite(space, base.get0(), base.get1().<Lst>as().append(obj), directWriter, directReader);
                     else {
                         //throw MTronException.of("unknown poly: %s %s %s", base.get1(), vid, obj);
                         directWriter.accept(vid, obj);
@@ -190,7 +198,7 @@ public interface Space extends Poly, AutoCloseable {
                                 .stream()
                                 //.filter(kv -> nextStepAddr.extend(kv.getKey().uriValue()).matches(vid))
                                 //.forEach(kv -> submap.put(kv.getKey(), kv.getValue()));
-                                .forEach(kv -> Space.Helpers.resolveWrite(space, kv.getKey().uriValue(), kv.getValue(), directWriter,directReader));
+                                .forEach(kv -> Space.Helpers.resolveWrite(space, kv.getKey().uriValue(), kv.getValue(), directWriter, directReader));
                         // resolveWriter.accept(nextStepAddr, new MRec(submap, value.tid(), fURI.NULL));
 
                     } else {
@@ -198,7 +206,7 @@ public interface Space extends Poly, AutoCloseable {
                     }
                 } else if (base.get1().isLst()) {
                     Lst newLst = base.get1().<Lst>as().at(uri(vid.removePrefix(base.get0()).pretract()), obj);
-                    Space.Helpers.resolveWrite(space, vid, newLst, directWriter,directReader);
+                    Space.Helpers.resolveWrite(space, vid, newLst, directWriter, directReader);
                 }
             }
         }

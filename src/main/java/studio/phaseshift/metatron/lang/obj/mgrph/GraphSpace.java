@@ -51,7 +51,7 @@ public class GraphSpace extends MSpace<Graph> {
 
     @Override
     public Graph jvm() {
-        return this.structure;
+        return this.jvm;
     }
 
     @Override

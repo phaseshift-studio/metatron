@@ -61,12 +61,10 @@ public class MLst extends MObj implements Lst {
     }
 
     public static Lst of(final List<Obj> objs) {
-        // return args.isEmpty() ? EMPTY_LST : new MLst(args);
         return new MLst(objs);
     }
 
     public static Lst of(final List<Obj> objs, final fURI tid) {
-        // return args.isEmpty() ? EMPTY_LST : new MLst(args);
         return new MLst(objs, tid, fURI.NULL);
     }
 }

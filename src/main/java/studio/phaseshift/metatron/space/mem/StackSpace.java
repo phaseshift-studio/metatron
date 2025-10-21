@@ -40,12 +40,17 @@ public class StackSpace extends MSpace<LinkedList<MemSpace>> {
     }
 
     @Override
+    public void close() {
+        this.root.close();
+    }
+
+    @Override
     public Obj read(final fURI vid) {
-        LOG.trace("reading {{b}}%s{{/b}} in %s [{{y}}root{{/y}}: %s]", vid, this.structure, this.root.structure);
+        LOG.trace("reading {{b}}%s{{/b}} in %s [{{y}}root{{/y}}: %s]", vid, this.jvm, this.root.jvm);
         // if(vid.coefficientValue().isZero())
         //    return NoObj.single();
         boolean isArg = vid.toString().matches("a\\d+"); // skip first encounter of list arg variable as it's a variable to grab the variable
-        for (final MemSpace layer : this.structure) {
+        for (final MemSpace layer : this.jvm) {
             final Obj o = layer.read(vid.basePath());
             if (!o.isNoObj()) {
                 if (isArg) isArg = false;
@@ -57,23 +62,23 @@ public class StackSpace extends MSpace<LinkedList<MemSpace>> {
 
     @Override
     public Obj write(final fURI vid, final Obj obj) {
-        LOG.trace("writing %s to %s in %s [{{y}}root{{/y}}: %s]", obj, vid, this.structure, this.root.structure);
-        if (!this.structure.isEmpty())
-            this.structure.get(0).write(vid, obj);
+        LOG.trace("writing %s to %s in %s [{{y}}root{{/y}}: %s]", obj, vid, this.jvm, this.root.jvm);
+        if (!this.jvm.isEmpty())
+            this.jvm.get(0).write(vid, obj);
         this.root.write(vid, obj);
         return obj;
     }
 
     public boolean pop() {
-        final MemSpace frameSpace = this.structure.pop();
+        final MemSpace frameSpace = this.jvm.pop();
         if (null == frameSpace)
             return false;
-        LOG.trace("popped frame {{_&r}}off{{/r&/_}} stack: %s [{{y}}depth{{/y}}: %d]", frameSpace.structure, this.structure.size());
+        LOG.trace("popped frame {{_&r}}off{{/r&/_}} stack: %s [{{y}}depth{{/y}}: %d]", frameSpace.jvm, this.jvm.size());
         return true;
     }
 
     public void push(final Poly frame) {
-        final MemSpace frameSpace = new MemSpace(pattern, STACKSPACE_TID.extend("d" + this.structure.size()));
+        final MemSpace frameSpace = new MemSpace(pattern, STACKSPACE_TID.extend("d" + this.jvm.size()));
         if (frame.isRec())
             frame.recValue().forEach((key, value) -> frameSpace.write(key.uriValue(), value));
         else {
@@ -81,7 +86,7 @@ public class StackSpace extends MSpace<LinkedList<MemSpace>> {
                 frameSpace.write(fURI.of(ARG_PREFIX + i), frame.lstValue().get(i));
             }
         }
-        this.structure.push(frameSpace);
-        LOG.trace("pushed frame {{_&g}}on{{/g&/_}} stack: %s [{{y}}depth{{/y}}: %d]", frameSpace.structure, this.structure.size());
+        this.jvm.push(frameSpace);
+        LOG.trace("pushed frame {{_&g}}on{{/g&/_}} stack: %s [{{y}}depth{{/y}}: %d]", frameSpace.jvm, this.jvm.size());
     }
 }

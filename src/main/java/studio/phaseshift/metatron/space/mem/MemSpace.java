@@ -41,21 +41,21 @@ public class MemSpace extends MSpace<Map<fURI, Obj>> implements Space {
 
     private final Function<fURI,Map<fURI,Obj>> directReader = (key) -> {
         if (key.equals(fURI.ALL))
-            return this.structure;
+            return this.jvm;
         else {
             if (key.hasPattern()) {
-                return this.structure
+                return this.jvm
                         .entrySet()
                         .stream()
                         .filter(kv -> kv.getKey().matches(key.asNode()))
                         .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, Obj::append, LinkedHashMap::new));
             } else {
-                final Obj value = this.structure.get(key);
+                final Obj value = this.jvm.get(key);
                 return null == value ? Map.of() : Map.of(key, value);
             }
         }
     };
-    private final BiConsumer<fURI,Obj> directWriter = this.structure::put;
+    private final BiConsumer<fURI,Obj> directWriter = this.jvm::put;
 
     public MemSpace(final fURI pattern, final fURI vid) {
         super(new HashMap<>(), pattern, MEMSPACE_TID, vid);
@@ -91,11 +91,11 @@ public class MemSpace extends MSpace<Map<fURI, Obj>> implements Space {
 
     @Override
     public long count() {
-        return this.structure.size();
+        return this.jvm.size();
     }
 
     @Override
     public Iterator<Obj> iterator() {
-        return this.structure.entrySet().stream().map(kv -> MRel.of(kv.getKey().toUri(), kv.getValue())).map(r -> (Obj) r).iterator();
+        return this.jvm.entrySet().stream().map(kv -> MRel.of(kv.getKey().toUri(), kv.getValue())).map(r -> (Obj) r).iterator();
     }
 }

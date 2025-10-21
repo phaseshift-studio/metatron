@@ -173,7 +173,6 @@ public class Console {
             }
         }
         this.terminal.close();
-        BootLoader.close();
         System.exit(0);
     }
 
@@ -288,7 +287,6 @@ public class Console {
         }
 
         private boolean quitWidget() {
-            BootLoader.close();
             System.exit(0);
             return true;
         }

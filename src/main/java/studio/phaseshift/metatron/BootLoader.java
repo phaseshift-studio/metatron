@@ -60,6 +60,7 @@ public class BootLoader {
     }
 
     public static void load(final Map<String, String> args) {
+        Runtime.getRuntime().addShutdownHook(new Thread(BootLoader::close));
         if (BOOTING) {
             try {
 

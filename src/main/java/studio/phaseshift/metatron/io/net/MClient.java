@@ -66,10 +66,6 @@ public class MClient extends WebSocketClient implements AutoCloseable {
         this.connect();
     }
 
-    public void close() {
-        super.close();
-    }
-
     @Override
     public void onOpen(final ServerHandshake handshake) {
         LOG.debug("new connection opened: %s", handshake.getHttpStatusMessage());

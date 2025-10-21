@@ -29,7 +29,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static studio.phaseshift.metatron.lang.obj.mtron.MObjs.objs;
 
 public class CodeParseTest extends MetatronTest {
-    
+
     @ParameterizedTest
     @CsvSource(value = {
             "1.plus(2)% 3",

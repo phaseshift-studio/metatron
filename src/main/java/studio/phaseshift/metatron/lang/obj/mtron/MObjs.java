@@ -106,16 +106,9 @@ public class MObjs implements Objs {
         return objs(flatten(this).map(o -> o.resolve(obj)));
     }
 
-    /*private boolean isOnlyCall() {
-        return !this.cstream.isEmpty() && this.cstream.keySet().stream().anyMatch(Obj::isCall);
-    }*/
-
     @Override
     public Obj append(final Obj obj) {
-        if (obj.isNoObj())
-            return this;
-        //else if (obj.isCall() && this.isOnlyCall())
-        //  return this.iterator().next().append(obj);
+        if (obj.isNoObj()) return this;
         return tryToShrink(flattenToMap(this.cstream, obj)).orElse(this);
     }
 

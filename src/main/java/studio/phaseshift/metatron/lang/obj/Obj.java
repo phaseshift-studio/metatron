@@ -41,7 +41,7 @@ import static studio.phaseshift.metatron.util.Tuple.Pair;
 
 public interface Obj extends Function<Obj, Obj>, Iterable<Obj>, Cloneable {
 
-    <V> V jvm();
+    <J> J jvm();
 
     fURI tid();
 
@@ -236,10 +236,10 @@ public interface Obj extends Function<Obj, Obj>, Iterable<Obj>, Cloneable {
 
     default fURI baseType() {
         if (this.isBool()) return BOOL_TID.c(this.c().toString());
+        else if (this.isInt()) return INT_TID.c(this.c().toString());
         else if (this.isStr()) return STR_TID.c(this.c().toString());
         else if (this.isUri()) return URI_TID.c(this.c().toString());
         else if (this.isLst()) return LST_TID.c(this.c().toString());
-        else if (this.isInt()) return INT_TID.c(this.c().toString());
         else if (this.isReal()) return REAL_TID.c(this.c().toString());
         else if (this.isInst()) return INST_TID.c(this.c().toString()).dom(this.dom().tid()).rng(this.rng().tid());
         else if (this.isCode()) return CODE_TID.c(this.c().toString());
@@ -270,7 +270,7 @@ public interface Obj extends Function<Obj, Obj>, Iterable<Obj>, Cloneable {
     }
 
     default boolean isNoObj() {
-        return this.tid().cV().isZero() /*|| this.tid().basePath().toString().equals("noobj")*/; // TODO: consolidate the logic
+        return this.c().isZero();
     }
 
     default boolean isBool() {

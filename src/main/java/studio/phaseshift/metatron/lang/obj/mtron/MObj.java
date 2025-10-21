@@ -20,13 +20,11 @@ package studio.phaseshift.metatron.lang.obj.mtron;
 
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.Obj;
+import studio.phaseshift.metatron.lang.obj.mtron.c.cInt;
 import studio.phaseshift.metatron.space.Router;
-import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.Objects;
-
-import static studio.phaseshift.metatron.lang.obj.mtron.MType.T;
 
 public abstract class MObj implements Obj, Cloneable {
 
@@ -39,13 +37,20 @@ public abstract class MObj implements Obj, Cloneable {
         this.jvm = jvm;
         this.tid = tid.big();
         this.vid = vid;
-        this.check();
-        this.save();
+        if (!this.check()) {
+            this.tid = tid.c(cInt.ZERO().toString());
+            this.vid = null;
+            this.jvm = null;
+        } else
+            this.save();
     }
 
-    protected void check() {
-        if (!this.isType() && !this.isNoObj() && !this.matches(T(tid)))
-            Graphitty.log(this).except("[{{r}}type error{{/r}}] %s is not a %s".formatted(this, T(tid)));
+    protected boolean check() {
+        if (!this.isNoObj() && !this.isType() && !this.matches(this.type())) {
+            this.logger().error("[{{r}}type error{{/r}}] %s is not a %s".formatted(this, this.type()));
+            return false;
+        }
+        return true;
     }
 
     protected void save() {
@@ -54,8 +59,8 @@ public abstract class MObj implements Obj, Cloneable {
     }
 
     @Override
-    public <V> V jvm() {
-        return (V) this.jvm;
+    public <J> J jvm() {
+        return (J) this.jvm;
     }
 
     @Override
