@@ -41,6 +41,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import static studio.phaseshift.metatron.BootLoader.BOOTING;
 import static studio.phaseshift.metatron.lang.obj.mtron.mtronFluent.StartLess.from_;
+import static studio.phaseshift.metatron.lang.obj.mtron.mtronFluent.StartLess.start_;
 
 public class MRouter implements Router {
 
@@ -152,8 +153,10 @@ public class MRouter implements Router {
             if (vid.hasAuthority(this.server.authority())) {
                 local = vid.scheme(null).authority(null);
             } else {
-                LOG.warn("p2p routing not implemented yet: %s", vid);
-                return NoObj.single();
+                return this.server.getRouters(vid.authority().extend("#")).stream().map(msc -> {
+                    final FutureObj<Obj> future = msc.sendRecvObj(start_(obj).to_(vid.toUri()));
+                    return future.get(5000);
+                }).reduce(NoObj.single(), Obj::append);
             }
         } else
             local = vid;

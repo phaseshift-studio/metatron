@@ -22,18 +22,14 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.BootLoader;
+import studio.phaseshift.metatron.MetatronTest;
 import studio.phaseshift.metatron.lang.obj.Obj;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static studio.phaseshift.metatron.lang.obj.mtron.MObjs.objs;
 
-public class CodeParseTest {
-
-    @BeforeAll
-    public static void setup() {
-        BootLoader.load();
-    }
-
+public class CodeParseTest extends MetatronTest {
+    
     @ParameterizedTest
     @CsvSource(value = {
             "1.plus(2)% 3",

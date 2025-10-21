@@ -26,6 +26,8 @@ import studio.phaseshift.metatron.lang.translate.ObjParser;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
 
+import java.util.Map;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.fail;
 
@@ -35,7 +37,7 @@ public class MetatronTest {
 
     @BeforeAll
     public static void begin() {
-        BootLoader.load();
+        BootLoader.load(Map.of());
     }
 
     public void testMatches(final String lhs, final String rhs, final boolean matches) {

@@ -31,6 +31,7 @@ import studio.phaseshift.metatron.lang.obj.Obj;
 import studio.phaseshift.metatron.lang.translate.ObjParser;
 import studio.phaseshift.metatron.space.device.log.Log;
 import studio.phaseshift.metatron.util.IteratorUtil;
+import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.StringUtil;
 import studio.phaseshift.metatron.vm.MMachine;
 
@@ -118,9 +119,19 @@ public class Console {
         }
     }
 
+    public void start() {
+        final Runnable console = () -> {
+            try {
+                this.run();
+            } catch (final Exception e) {
+                throw MTronException.of(e);
+            }
+        };
+        new Thread(console).start();
+    }
+
     public void run() throws IOException {
         new CustomWidgets(this.reader);
-        BootLoader.load();
         String line = "";
         while (true) {
             try {

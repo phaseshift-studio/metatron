@@ -1,1 +1,1 @@
-java -Dlogback.configurationFile=target/logback.xml -cp target/metatron-0.1-SNAPSHOT-jar-with-dependencies.jar studio.phaseshift.metatron.ui.Console $@
+java -Dlogback.configurationFile=target/logback.xml -cp target/metatron-0.1-SNAPSHOT-jar-with-dependencies.jar studio.phaseshift.metatron.BootLoader $@

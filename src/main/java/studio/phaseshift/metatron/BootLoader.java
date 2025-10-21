@@ -31,11 +31,15 @@ import studio.phaseshift.metatron.space.fs.FileSpace;
 import studio.phaseshift.metatron.space.mem.MemSpace;
 import studio.phaseshift.metatron.space.remote.RemoteSpace;
 import studio.phaseshift.metatron.space.router.MRouter;
+import studio.phaseshift.metatron.ui.Console;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
 
+import java.io.IOException;
 import java.net.InetAddress;
 import java.nio.file.FileSystems;
+import java.util.HashMap;
+import java.util.Map;
 
 import static studio.phaseshift.metatron.lang.fURI.f;
 
@@ -46,9 +50,21 @@ public class BootLoader {
     public static Router ROUTER;
     public static MServer SERVER;
 
-    public static void load() {
+    public static void main(final String[] args) throws IOException {
+        final Map<String, String> params = new HashMap<>();
+        for (final String arg : args) {
+            final String[] kv = arg.split("=");
+            params.put(kv[0].replace("--", ""), kv[1]);
+        }
+        BootLoader.load(params);
+    }
+
+    public static void load(final Map<String, String> args) {
         if (BOOTING) {
             try {
+
+                if (args.containsKey("console"))
+                    new Console(args).start();
                 ROUTER = new MRouter(f("ws://" + InetAddress.getLocalHost().getHostName() + ".local" + ":" + 8887), fURI.of("/sys/router"));
                 ROUTER.start();
             } catch (final Exception e) {
@@ -70,7 +86,7 @@ public class BootLoader {
                     uri("prefix"), uri("/mqtt"),
                     uri("pattern"), uri("zigbee2mqtt/#")), f("/mnt/zigbee2mqtt")));*/
             Router.global().write(f("/mnt/lang/mext"), mextInstSet.of(f("/mnt/lang/mext")));
-            Router.global().write(f("/mnt/ws/chibi.local/8887/usr"), new RemoteSpace(f("ws://chibi.local:8887/usr/#"), f("/mnt/ws/chibi.local/8887/usr")));
+            Router.global().write(f("/mnt/ws/chibi.local/8887/usr"), new RemoteSpace(f(args.getOrDefault("host", "ws://localhost:8887") + "/usr/#"), f("/mnt/ws/chibi.local/8887/usr")));
             /// ///////////////////////////////////
             BOOTING = false;
         } else {
