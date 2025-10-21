@@ -21,7 +21,6 @@ package studio.phaseshift.metatron.lang.obj;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-import studio.phaseshift.metatron.MetatronTest;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.mtron.MInst;
 import studio.phaseshift.metatron.lang.translate.ObjParser;
@@ -100,13 +99,13 @@ public class InstTest extends MetatronObjTest {
     @Test
     public void testRingAlgebra() {
         for (Tuple.Pair<? extends Obj, Call> item : List.of(
-                Tuple.Pair.with(jnt(3), start(jnt(1)).mult(plus(jnt(2)))),
-                Tuple.Pair.with(objs(jnt(2), jnt(3)), start(jnt(1)).mult(plus(jnt(1)).plus(plus(jnt(2))))),
-                Tuple.Pair.with(objs(jnt(6).c(2L)), start(jnt(2)).mult(plus(jnt(4)).plus(mult(jnt(3))))),
-                Tuple.Pair.with(objs(jnt(6), jnt(7)), start(jnt(2)).mult(plus(jnt(4)).mult(plus(jnt(1))).plus(mult(jnt(3))))),
-                 Tuple.Pair.with(objs(jnt(6), jnt(7)), start(jnt(2)).mult(plus(jnt(4)).mult(plus(jnt(1))).plus(mult(jnt(3))).plus(NoObj.single()))),
-                Tuple.Pair.with(NoObj.single(), start(jnt(2)).mult(NoObj.single())),
-                Tuple.Pair.with(NoObj.single(), start(jnt(2)).mult(plus(jnt(4)).mult(plus(jnt(1))).plus(mult(jnt(3))).plus(NoObj.single())).mult(NoObj.single())))) {
+                Tuple.Pair.with(jnt(3), start_(jnt(1)).mult(plus_(jnt(2)))),
+                Tuple.Pair.with(objs(jnt(2), jnt(3)), start_(jnt(1)).mult(plus_(jnt(1)).plus(plus_(jnt(2))))),
+                Tuple.Pair.with(objs(jnt(6).c(2L)), start_(jnt(2)).mult(plus_(jnt(4)).plus(mult_(jnt(3))))),
+                Tuple.Pair.with(objs(jnt(6), jnt(7)), start_(jnt(2)).mult(plus_(jnt(4)).mult(plus_(jnt(1))).plus(mult_(jnt(3))))),
+                 Tuple.Pair.with(objs(jnt(6), jnt(7)), start_(jnt(2)).mult(plus_(jnt(4)).mult(plus_(jnt(1))).plus(mult_(jnt(3))).plus(NoObj.single()))),
+                Tuple.Pair.with(NoObj.single(), start_(jnt(2)).mult(NoObj.single())),
+                Tuple.Pair.with(NoObj.single(), start_(jnt(2)).mult(plus_(jnt(4)).mult(plus_(jnt(1))).plus(mult_(jnt(3))).plus(NoObj.single())).mult(NoObj.single())))) {
             LOG.trace("\n\ntesting %s == %s", item.get1(), item.get0());
             assertEquals(item.get0(), item.get1().apply());
         }

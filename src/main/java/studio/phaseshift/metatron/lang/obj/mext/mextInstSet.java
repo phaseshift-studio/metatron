@@ -71,14 +71,14 @@ public class mextInstSet extends MInstSet {
     @Override
     public Set<Inst> insts() {
         return Stream.of(
-                instC(PLUS_TID.dom(VEC_TID).rng(VEC_TID), lst(T(VEC_TID)), (lhs, inst) -> cross(inst.arg(0)).apply(lhs)),
+                instC(PLUS_TID.dom(VEC_TID).rng(VEC_TID), lst(T(VEC_TID)), (lhs, inst) -> cross_(inst.arg(0)).apply(lhs)),
               //  instC(PLUS_TID.dom(RVEC_TID).rng(RVEC_TID), lst(T(RVEC_TID)), (lhs, inst) -> lhs.value(lhs.<MRealVec>as().value().add(inst.arg(0).<MRealVec>as().value()))),
                 instC(SQRT_TID.dom(REAL_TID).rng(REAL_TID), lst(), (lhs, inst) -> lhs.jvm(Math.sqrt(lhs.realValue()))),
                 instC(DOT_TID.dom(VEC_TID).rng(ALL), lst(T(VEC_TID)), (lhs, inst) -> {
                             Obj result = null;
                             for (int i = 0; i < lhs.lstValue().size(); i++) {
-                                Obj pairwise = mult(inst.arg(0).lstValue().get(i)).apply(lhs.lstValue().get(i));
-                                result = result == null ? pairwise : plus(result).apply(pairwise);
+                                Obj pairwise = mult_(inst.arg(0).lstValue().get(i)).apply(lhs.lstValue().get(i));
+                                result = result == null ? pairwise : plus_(result).apply(pairwise);
                             }
                             return result;
                         }
@@ -87,6 +87,6 @@ public class mextInstSet extends MInstSet {
 
     @Override
     public Set<Type> types() {
-        return Stream.of(T(VEC_TID,isA(T(LST_TID))), MType.of(MTRX_TID), MType.of(CMPLX_TID)).collect(Collectors.toSet());
+        return Stream.of(T(VEC_TID, isa_(T(LST_TID))), MType.of(MTRX_TID), MType.of(CMPLX_TID)).collect(Collectors.toSet());
     }
 }

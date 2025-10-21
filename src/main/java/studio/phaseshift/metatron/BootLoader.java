@@ -28,8 +28,9 @@ import studio.phaseshift.metatron.lang.obj.mtron.mtronInstSet;
 import studio.phaseshift.metatron.space.Router;
 import studio.phaseshift.metatron.space.device.log.Log;
 import studio.phaseshift.metatron.space.fs.FileSpace;
-import studio.phaseshift.metatron.space.router.MRouter;
 import studio.phaseshift.metatron.space.mem.MemSpace;
+import studio.phaseshift.metatron.space.remote.RemoteSpace;
+import studio.phaseshift.metatron.space.router.MRouter;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
 
@@ -37,7 +38,6 @@ import java.net.InetAddress;
 import java.nio.file.FileSystems;
 
 import static studio.phaseshift.metatron.lang.fURI.f;
-import static studio.phaseshift.metatron.lang.obj.mtron.MUri.uri;
 
 public class BootLoader {
 
@@ -49,8 +49,8 @@ public class BootLoader {
     public static void load() {
         if (BOOTING) {
             try {
-              ROUTER = new MRouter(f("ws://" + InetAddress.getLocalHost().getHostName() + ".local" + ":" + 8887),fURI.of("/sys/router"));
-              ROUTER.start();
+                ROUTER = new MRouter(f("ws://" + InetAddress.getLocalHost().getHostName() + ".local" + ":" + 8887), fURI.of("/sys/router"));
+                ROUTER.start();
             } catch (final Exception e) {
                 LOG.warn("booting metatron on a non-networked jvm");
             }
@@ -70,6 +70,7 @@ public class BootLoader {
                     uri("prefix"), uri("/mqtt"),
                     uri("pattern"), uri("zigbee2mqtt/#")), f("/mnt/zigbee2mqtt")));*/
             Router.global().write(f("/mnt/lang/mext"), mextInstSet.of(f("/mnt/lang/mext")));
+            Router.global().write(f("/mnt/ws/chibi.local/8887/usr"), new RemoteSpace(f("ws://chibi.local:8887/usr/#"), f("/mnt/ws/chibi.local/8887/usr")));
             /// ///////////////////////////////////
             BOOTING = false;
         } else {
@@ -80,5 +81,6 @@ public class BootLoader {
     public static void close() {
         LOG.none(Graphitty.sillyPrint("\nshutting down the metatron\n", true, true));
         Router.global().close();
+        BOOTING = true;
     }
 }

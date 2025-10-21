@@ -19,6 +19,7 @@
 package studio.phaseshift.metatron.lang.obj.mtron;
 
 import studio.phaseshift.metatron.lang.fURI;
+import studio.phaseshift.metatron.lang.obj.Code;
 import studio.phaseshift.metatron.lang.obj.Fluent;
 import studio.phaseshift.metatron.lang.obj.Inst;
 import studio.phaseshift.metatron.lang.obj.Obj;
@@ -31,7 +32,7 @@ import static studio.phaseshift.metatron.lang.obj.mtron.MInst.instB;
 import static studio.phaseshift.metatron.lang.obj.mtron.MLst.lst;
 import static studio.phaseshift.metatron.lang.obj.mtron.mtronInstSet.ID_TID;
 
-public class mtronFluent<F extends Fluent<F>> extends MCode implements Fluent<F> {
+public class mtronFluent<F extends Fluent<F>> extends MCode implements Fluent<F>, Code {
 
     protected mtronFluent() {
         this(new ArrayList<>(), mtronInstSet.CODE_TID, null);
@@ -47,51 +48,51 @@ public class mtronFluent<F extends Fluent<F>> extends MCode implements Fluent<F>
     }
 
 
-    public F start(final Obj obj) {
+    public F start_(final Obj obj) {
         return this.addInst(instB(mtronInstSet.START_TID, lst(obj)));
     }
 
-    public F block(final Obj obj) {
+    public F block_(final Obj obj) {
         return this.addInst(instB(mtronInstSet.BLOCK_TID, lst(obj)));
     }
 
-    public F p1us(final Obj obj) {
+    public F plus_(final Obj obj) {
         return this.addInst(instB(mtronInstSet.PLUS_TID, lst(obj)));
     }
 
-    public F mult(final Obj obj) {
+    public F mult_(final Obj obj) {
         return this.addInst(instB(mtronInstSet.MULT_TID, lst(obj)));
     }
 
-    public F map(final Obj obj) {
+    public F map_(final Obj obj) {
         return this.addInst(instB(mtronInstSet.MAP_TID, lst(obj)));
     }
 
-    public F id() {
+    public F id_() {
         return this.addInst(instB(ID_TID, lst()));
     }
 
-    public F isA(final Obj obj) {
+    public F isa_(final Obj obj) {
         return this.addInst(instB(mtronInstSet.ISA_TID, lst(obj)));
     }
 
-    public F in(final Obj obj) {
+    public F in_(final Obj obj) {
         return this.addInst(instB(mtronInstSet.IN_TID, lst(obj)));
     }
 
-    public F split(final Obj obj) {
+    public F split_(final Obj obj) {
         return this.addInst(instB(mtronInstSet.SPLIT_TID, lst(obj)));
     }
 
-    public F merge() {
+    public F merge_() {
         return this.addInst(instB(mtronInstSet.MERGE_TID, lst()));
     }
 
-    public F e1se(final Obj obj) {
+    public F else_(final Obj obj) {
         return this.addInst(instB(mtronInstSet.ELSE_TID, lst(obj)));
     }
 
-    public F from(final Obj obj) {
+    public F from_(final Obj obj) {
         return this.addInst(instB(mtronInstSet.FROM_TID, lst(obj)));
     }
 
@@ -99,19 +100,19 @@ public class mtronFluent<F extends Fluent<F>> extends MCode implements Fluent<F>
         return this.addInst(instB(mtronInstSet.TO_TID, lst(obj)));
     }
 
-    public F count() {
+    public F count_() {
         return this.addInst(instB(mtronInstSet.COUNT_TID, lst()));
     }
 
-    public F sum() {
+    public F sum_() {
         return this.addInst(instB(mtronInstSet.SUM_TID, lst()));
     }
 
-    public F cross(final Obj obj) {
+    public F cross_(final Obj obj) {
         return this.addInst(instB(mtronInstSet.CROSS_TID, lst(obj)));
     }
 
-    public F get(final Obj obj) {
+    public F get_(final Obj obj) {
         return this.addInst(instB(mtronInstSet.GET_TID, lst(obj)));
     }
 
@@ -120,80 +121,80 @@ public class mtronFluent<F extends Fluent<F>> extends MCode implements Fluent<F>
     }
 
     @Override
-    public mtronFluent<F> clone(Object jvm, fURI tid, fURI vid) {
-        return new mtronFluent<>(new ArrayList<>(this.jvm()), this.tid, this.vid);
+    public mtronFluent<F> clone(final Object jvm, final fURI tid, final fURI vid) {
+        return (mtronFluent<F>) super.clone(jvm, tid, vid);
     }
 
     /// /////////////////////////////////////////////////////////////
 
     public static class StartLess {
 
-        public static <F extends mtronFluent<F>> F start(final Obj obj) {
-            return new mtronFluent<F>().start(obj);
+        public static <F extends mtronFluent<F>> F start_(final Obj obj) {
+            return new mtronFluent<F>().start_(obj);
         }
 
-        public static <F extends mtronFluent<F>> F block(final Obj obj) {
-            return new mtronFluent<F>().block(obj);
+        public static <F extends mtronFluent<F>> F block_(final Obj obj) {
+            return new mtronFluent<F>().block_(obj);
         }
 
-        public static <F extends mtronFluent<F>> F plus(final Obj obj) {
-            return new mtronFluent<F>().p1us(obj);
+        public static <F extends mtronFluent<F>> F plus_(final Obj obj) {
+            return new mtronFluent<F>().plus_(obj);
         }
 
-        public static <F extends mtronFluent<F>> F mult(final Obj obj) {
-            return new mtronFluent<F>().mult(obj);
+        public static <F extends mtronFluent<F>> F mult_(final Obj obj) {
+            return new mtronFluent<F>().mult_(obj);
         }
 
-        public static <F extends mtronFluent<F>> F map(final Obj obj) {
-            return new mtronFluent<F>().map(obj);
+        public static <F extends mtronFluent<F>> F map_(final Obj obj) {
+            return new mtronFluent<F>().map_(obj);
         }
 
-        public static <F extends mtronFluent<F>> F isA(final Obj obj) {
-            return new mtronFluent<F>().isA(obj);
+        public static <F extends mtronFluent<F>> F isa_(final Obj obj) {
+            return new mtronFluent<F>().isa_(obj);
         }
 
-        public static <F extends mtronFluent<F>> F in(final Obj obj) {
-            return new mtronFluent<F>().in(obj);
+        public static <F extends mtronFluent<F>> F in_(final Obj obj) {
+            return new mtronFluent<F>().in_(obj);
         }
 
-        public static <F extends mtronFluent<F>> F id() {
-            return new mtronFluent<F>().id();
+        public static <F extends mtronFluent<F>> F id_() {
+            return new mtronFluent<F>().id_();
         }
 
-        public static <F extends mtronFluent<F>> F split(final Obj obj) {
-            return new mtronFluent<F>().split(obj);
+        public static <F extends mtronFluent<F>> F split_(final Obj obj) {
+            return new mtronFluent<F>().split_(obj);
         }
 
-        public static <F extends mtronFluent<F>> F merge() {
-            return new mtronFluent<F>().merge();
+        public static <F extends mtronFluent<F>> F merge_() {
+            return new mtronFluent<F>().merge_();
         }
 
-        public static <F extends mtronFluent<F>> F e1se(final Obj obj) {
-            return new mtronFluent<F>().e1se(obj);
+        public static <F extends mtronFluent<F>> F else_(final Obj obj) {
+            return new mtronFluent<F>().else_(obj);
         }
 
-        public static <F extends mtronFluent<F>> F from(final Obj obj) {
-            return new mtronFluent<F>().from(obj);
+        public static <F extends mtronFluent<F>> F from_(final Obj obj) {
+            return new mtronFluent<F>().from_(obj);
         }
 
         public static <F extends mtronFluent<F>> F to_(final Obj obj) {
             return new mtronFluent<F>().to_(obj);
         }
 
-        public static <F extends mtronFluent<F>> F count() {
-            return new mtronFluent<F>().count();
+        public static <F extends mtronFluent<F>> F count_() {
+            return new mtronFluent<F>().count_();
         }
 
-        public static <F extends mtronFluent<F>> F sum() {
-            return new mtronFluent<F>().sum();
+        public static <F extends mtronFluent<F>> F sum_() {
+            return new mtronFluent<F>().sum_();
         }
 
-        public static <F extends mtronFluent<F>> F cross(final Obj obj) {
-            return new mtronFluent<F>().cross(obj);
+        public static <F extends mtronFluent<F>> F cross_(final Obj obj) {
+            return new mtronFluent<F>().cross_(obj);
         }
 
-        public static <F extends mtronFluent<F>> F get(final Obj obj) {
-            return new mtronFluent<F>().get(obj);
+        public static <F extends mtronFluent<F>> F get_(final Obj obj) {
+            return new mtronFluent<F>().get_(obj);
         }
     }
 }

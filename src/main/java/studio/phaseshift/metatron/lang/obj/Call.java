@@ -30,7 +30,7 @@ import java.util.function.Function;
 
 import static studio.phaseshift.metatron.lang.obj.mtron.MLst.lst;
 import static studio.phaseshift.metatron.lang.obj.mtron.MObjs.objs;
-import static studio.phaseshift.metatron.lang.obj.mtron.mtronFluent.StartLess.split;
+import static studio.phaseshift.metatron.lang.obj.mtron.mtronFluent.StartLess.split_;
 import static studio.phaseshift.metatron.lang.obj.mtron.mtronInstSet.CODE_TID;
 import static studio.phaseshift.metatron.lang.obj.mtron.mtronInstSet.ID_TID;
 
@@ -117,7 +117,7 @@ public interface Call extends Obj, Ring<Call> {
         if (this.isZero()) return rhs;
         if (this.clessEquals(rhs))
             return this.c(c -> c.plus(rhs.c()));
-        return split(objs(this.tryToInst(), rhs.tryToInst())).tryToInst();
+        return split_(objs(this.tryToInst(), rhs.tryToInst())).tryToInst();
     }
 
     @Override

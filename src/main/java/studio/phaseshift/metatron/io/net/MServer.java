@@ -30,6 +30,8 @@ import studio.phaseshift.metatron.util.MTronException;
 
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.List;
 
 import static studio.phaseshift.metatron.lang.fURI.f;
 
@@ -39,6 +41,7 @@ public class MServer extends WebSocketServer implements AutoCloseable {
     protected final GraphittyLogger LOG;
     protected final ObjSerializer<ByteBuffer> serializer;
     protected Thread serverThread;
+    protected List<FutureObj<?>> futures = new ArrayList<>();
 
     public MServer(final fURI authority) {
         super(new InetSocketAddress(authority.host(), authority.port()));
@@ -71,6 +74,10 @@ public class MServer extends WebSocketServer implements AutoCloseable {
 
     }
 
+    public List<MServerClient> getRouters(final fURI pattern) {
+        return this.getConnections().stream().map(MServerClient::new).filter(msc -> msc.authority().matches(pattern)).toList();
+    }
+
     @Override
     public void close() {
         this.stop();
@@ -87,8 +94,9 @@ public class MServer extends WebSocketServer implements AutoCloseable {
     }
 
     @Override
-    public void onOpen(final WebSocket conn, final ClientHandshake handshake) {
-        LOG.debug("new connection from %s", conn.getRemoteSocketAddress());
+    public void onOpen(final WebSocket ws, final ClientHandshake handshake) {
+        ws.setAttachment(f("ws://" + ws.getRemoteSocketAddress()));
+        LOG.debug("new connection from %s", ws.getRemoteSocketAddress());
         // conn.send("Welcome to the server!"); //This method sends a message to the new client
         // broadcast("new connection: " + handshake.getResourceDescriptor()); //This method sends a message to all clients connected
     }
@@ -136,5 +144,28 @@ public class MServer extends WebSocketServer implements AutoCloseable {
     @Override
     public void onStart() {
         LOG.info("{{g}}starting{{/g}} %s node: %s", Graphitty.sillyPrint("mtron", true, true), this.getAddress());
+    }
+
+    public class MServerClient {
+        private final WebSocket ws;
+
+        public MServerClient(final WebSocket ws) {
+            this.ws = ws;
+        }
+
+        public void sendObj(final Obj obj) {
+            this.ws.send(serializer.write(obj));
+        }
+
+        public <O extends Obj> FutureObj<O> sendRecvObj(final Obj obj) {
+            final FutureObj<O> future = new FutureObj<>("abc");
+            futures.add(future);
+            this.ws.send(serializer.write(obj));
+            return future;
+        }
+
+        public fURI authority() {
+            return this.ws.getAttachment();
+        }
     }
 }

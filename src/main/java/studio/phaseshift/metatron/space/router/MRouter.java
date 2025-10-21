@@ -18,10 +18,12 @@
 
 package studio.phaseshift.metatron.space.router;
 
+import studio.phaseshift.metatron.io.net.FutureObj;
 import studio.phaseshift.metatron.io.net.MServer;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.NoObj;
 import studio.phaseshift.metatron.lang.obj.Obj;
+import studio.phaseshift.metatron.lang.obj.mtron.MObjs;
 import studio.phaseshift.metatron.lang.obj.mtron.MRel;
 import studio.phaseshift.metatron.space.NullSpace;
 import studio.phaseshift.metatron.space.Qs;
@@ -38,6 +40,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static studio.phaseshift.metatron.BootLoader.BOOTING;
+import static studio.phaseshift.metatron.lang.obj.mtron.mtronFluent.StartLess.from_;
 
 public class MRouter implements Router {
 
@@ -53,7 +56,7 @@ public class MRouter implements Router {
     public MRouter(final fURI host, final fURI vid) {
         this.vid = vid;
         this.server = new MServer(host);
-        LOG.info("%s loaded at %s accessible via %s", this.tid(), this.vid, this.server.getAddress());
+        LOG.info("{{y}}router{{/y}} loaded at {{b}}%s{{/b}} [addr: {{b}}%s{{/b}}]", this.vid, this.server.getAddress());
     }
 
     private static Obj appendOnRead(final boolean send, final Obj base, final Obj addition) {
@@ -129,8 +132,10 @@ public class MRouter implements Router {
         if (vid.isZero() || READ_AS_NOOBJ.contains(vid))
             return NoObj.single();
         if (vid.hasAuthority() && !vid.hasAuthority(this.server.authority())) {
-            LOG.warn("p2p routing not implemented yet: %s", vid);
-            return NoObj.single();
+            return this.server.getRouters(vid.authority().extend("#")).stream().map(msc -> {
+                final FutureObj<Obj> future = msc.sendRecvObj(from_(vid.toUri()));
+                return future.get(5000);
+            }).reduce(NoObj.single(), Obj::append);
         } else {
             final fURI local = vid.authority(null).scheme(null);
             final Space space = this.getSpace(local);

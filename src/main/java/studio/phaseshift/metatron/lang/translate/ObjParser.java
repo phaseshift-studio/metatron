@@ -44,7 +44,7 @@ import static org.petitparser.parser.primitive.CharacterParser.word;
 import static org.petitparser.parser.primitive.StringParser.of;
 import static studio.phaseshift.metatron.lang.obj.mtron.MLst.lst;
 import static studio.phaseshift.metatron.lang.obj.mtron.MObjs.objs;
-import static studio.phaseshift.metatron.lang.obj.mtron.mtronFluent.StartLess.split;
+import static studio.phaseshift.metatron.lang.obj.mtron.mtronFluent.StartLess.split_;
 import static studio.phaseshift.metatron.lang.obj.mtron.mtronInstSet.*;
 import static studio.phaseshift.metatron.util.Tuple.Triplet;
 
@@ -63,7 +63,7 @@ public class ObjParser {
 
     static {
         branch_parser.set(seq(opt(of("-<"), ""), of('{').trim(), m_code().separatedBy(of(',').trim()), of('}').trim()).pick(2)
-                .map(t -> split(objs(((List) t).stream().filter(x -> x instanceof Call).toList())).tryToInst()));
+                .map(t -> split_(objs(((List) t).stream().filter(x -> x instanceof Call).toList())).tryToInst()));
         rel_parser.set(seq(m_type_prefix_opt_colon(REL_TID), obj_rel_back_parser, of("=>").trim(), m_obj(), m_vid_postfix())
                 .map(t -> new MRel(Tuple.Pair.with(pick(t, 1), pick(t, 3)), pick(t, 0), pick(t, 4))));
         obj_parser.set(choice(
@@ -309,7 +309,7 @@ public class ObjParser {
             final List<Inst> newCode = new ArrayList<>();
             newCode.add(new MInst(Triplet.with(lst(ObjParser.<Call>pick(t, 0)), Inst.f.UNKNOWN, NoObj.single()), START_TID, fURI.NULL));
             newCode.addAll(ObjParser.<Call>pick(t, 2).insts());
-            return new MCode(newCode, CODE_TID, pick(t, 3));
+            return MCode.of(newCode, CODE_TID, pick(t, 3));
         });
     }
 

@@ -100,6 +100,7 @@ public class Console {
                 console.run();
             } catch (final Exception e) {
                 LOG.error("a %s error occurred. reloading the console.\n", Graphitty.sillyPrint("catastrophic", true, true));
+                BootLoader.close();
                 final String stackTrace = console.reader.readLine(Graphitty.string("{{WARN}}display stack trace {{FORM1}}[y/N]{{WARN}}?{{X}} "));
                 if (stackTrace.trim().equalsIgnoreCase("y"))
                     e.printStackTrace();

@@ -78,6 +78,7 @@ public class MInst extends MObj implements Inst {
         return (other instanceof Inst) &&
                 Objects.equals(this.tid, ((Obj) other).tid()) &&
                 Objects.equals(this.args(), ((Inst) other).args()) &&
+                Objects.equals(this.f(), ((Inst)other).f()) &&
                 Objects.equals(this.vid, ((Obj) other).vid());
         /*Objects.equals(this.value,((Obj) other).value())*/
     }

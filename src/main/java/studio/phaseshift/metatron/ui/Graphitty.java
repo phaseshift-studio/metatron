@@ -73,6 +73,9 @@ public class Graphitty {
 
     static {
         CURSOR_REWRITES.put("@", "\033[H"); // home
+        CURSOR_REWRITES.put("v<", "\033[{{v<}}E"); // move cursor to beginning of next X line
+        CURSOR_REWRITES.put("^<", "\033[{{v<}}F"); // move cursor to beginning of previous X line
+        CURSOR_REWRITES.put("^+", "<redo>");
         CURSOR_REWRITES.put("^", "\033[{{^}}A"); // up X
         CURSOR_REWRITES.put("v", "\033[{{v}}B"); // down X
         CURSOR_REWRITES.put(">", "\033[{{>}}C"); // right X
@@ -232,7 +235,11 @@ public class Graphitty {
                                 String r = this.rewrites.get(rulePiece);
                                 while (null != r && r.startsWith("{{") && r.endsWith("}}"))
                                     r = this.rewrites.get(r.substring(2, r.length() - 2));
-                                if (Set.of('^', 'v', '<', '>', '|').contains(rulePiece.charAt(0))) {
+
+                                if (rulePiece.length() > 2 && Set.of("^<", "v<").contains(rulePiece.substring(0, 2))) {
+                                    if (!rulePiece.substring(2).equals("0"))
+                                        r = this.rewrites.get(rulePiece.substring(0, 2)).replace("{{" + rulePiece.substring(0, 2) + "}}", rulePiece.substring(2));
+                                } else if (Set.of('^', 'v', '<', '>', '|').contains(rulePiece.charAt(0))) {
                                     if (!rulePiece.substring(1).equals("0"))
                                         r = this.rewrites.get("" + rulePiece.charAt(0)).replace("{{" + rulePiece.charAt(0) + "}}", rulePiece.substring(1));
                                 }

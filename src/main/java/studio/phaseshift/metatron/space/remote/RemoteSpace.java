@@ -26,8 +26,7 @@ import studio.phaseshift.metatron.lang.obj.Obj;
 import studio.phaseshift.metatron.space.mem.MSpace;
 import studio.phaseshift.metatron.util.MTronException;
 
-import static studio.phaseshift.metatron.lang.fURI.f;
-import static studio.phaseshift.metatron.lang.obj.mtron.mtronFluent.StartLess.from;
+import static studio.phaseshift.metatron.lang.obj.mtron.mtronFluent.StartLess.from_;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -39,8 +38,9 @@ public class RemoteSpace extends MSpace<MClient> {
     public RemoteSpace(final fURI pattern, final fURI vid) {
         super(new MClient(pattern.authority()), pattern, REMOTE_TID, vid);
         try {
-            LOG.info("connecting to {{b}}%s{{/b}}", this.jvm().server());
+            LOG.info("{{g}}connecting{{/g}} to {{b}}%s{{/b}}", this.jvm().server());
             this.jvm().connectBlocking();
+            //LOG.info("{{^<2&X-&g}}connected{{X}} to {{b}}%s{{/b}}{{v1}}", this.jvm().server());
         } catch (final Exception e) {
             throw MTronException.of(e);
         }
@@ -50,9 +50,9 @@ public class RemoteSpace extends MSpace<MClient> {
     @Override
     public Obj read(final fURI vid) {
         LOG.info("%s", vid.toUri());
-        final Inst code = from(vid.authority(null).scheme(null).toUri()).insts().get(0);//, vid.query("tag","abc"));
+        final Inst code = from_(vid.authority(null).scheme(null).toUri()).insts().get(0);//, vid.query("tag","abc"));
         LOG.info("performing remote read: %s", code);
-        FutureObj<Obj> future = this.jvm().sendRecv(code);
+        final FutureObj<Obj> future = this.jvm().sendRecv(code);
         LOG.info("future %s", future);
         LOG.info("future obj %s", future.get(10000));
         return future.get(1);

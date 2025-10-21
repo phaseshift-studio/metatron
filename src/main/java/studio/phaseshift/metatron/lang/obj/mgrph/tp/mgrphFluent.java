@@ -42,7 +42,7 @@ public class mgrphFluent<F extends Fluent<F>> extends mtronFluent<F> {
         super(value, tid, vid);
     }
 
-    public F start(final Obj obj) {
+    public F start_(final Obj obj) {
         return this.addInst(instB(mtronInstSet.START_TID, lst(obj)));
     }
 
@@ -76,7 +76,7 @@ public class mgrphFluent<F extends Fluent<F>> extends mtronFluent<F> {
     public static class StartLess {
 
         public static <F extends mgrphFluent<F>> F g(final MGraph obj) {
-            return (F) new mgrphFluent<F>().start(obj);
+            return (F) new mgrphFluent<F>().start_(obj);
         }
 
         public static <F extends mgrphFluent<F>> F out(final Obj obj) {

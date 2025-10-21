@@ -19,10 +19,11 @@
 package studio.phaseshift.metatron.lang.obj;
 
 import studio.phaseshift.metatron.lang.fURI;
-import studio.phaseshift.metatron.vm.MMachine;
+import studio.phaseshift.metatron.lang.obj.mtron.MCode;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
-import studio.phaseshift.metatron.vm.Machine;
+import studio.phaseshift.metatron.util.MTronException;
+import studio.phaseshift.metatron.vm.MMachine;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -53,7 +54,7 @@ public interface Code extends Call {
     @Override
     default Code resolve(final Obj lhs) {
         //if(this.insts().stream().noneMatch(x -> x.resolution().equals(Inst.Resolution.A)))
-          //  return this;
+        //  return this;
         GraphittyLogger LOG = Graphitty.log(this);
         // this.code = new ExplainRewrite().rewrite(code.<Code>as());
         // process bcode inst pipeline
@@ -70,7 +71,6 @@ public interface Code extends Call {
             try {
                 LOG.trace("   {{g}}=>{{/g}} resolving %s => %s", token, inst);
                 final Inst resolvedInst = inst.resolve(token);
-
                 if (null == dom)
                     dom = resolvedInst.tid().query().get(fURI.DOM.toString(), fURI.class);
                 rng = resolvedInst.tid().query().get(fURI.RNG.toString(), fURI.class);
@@ -115,18 +115,18 @@ public interface Code extends Call {
     }
 
     @Override
-    default Code vid(final fURI newVid) {
-        return (Code) Call.super.vid(newVid);
+    default Code vid(final fURI vid) {
+        return this.clone(this.jvm(), this.tid(), vid);
     }
 
     @Override
-    default Code tid(final fURI newTid) {
-        return (Code) Call.super.tid(newTid);
+    default Code tid(final fURI tid) {
+        return this.clone(this.jvm(), tid, this.vid());
     }
 
     @Override
-    default Code jvm(final Object newValue) {
-        return Call.super.jvm(newValue);
+    default Code jvm(final Object jvm) {
+        return this.clone(jvm, this.tid(), this.vid());
     }
 
     @Override
@@ -145,17 +145,12 @@ public interface Code extends Call {
 
     @Override
     default Obj apply(final Obj lhs) {
-        /*
-          final Inst type = Router.global().read(mtronRewrites.REWRITE_TYPER_TID).as();
-        final MTonoid monoid = MMonoid.of(lhs, type.args(lst(this)).apply(lhs).as());
-         */
-       // if (!lhs.matches(this.dom()))
-         //   throw MTronException.of("%s ({{m}}lhs{{/m}}) (%s) does not match {{m}}code domain{{/m}} (%s): %s", lhs, lhs.rng(), this.dom(), this);
-        final Code resolve = this.resolve(lhs);
-        final Machine machine =  MMachine.of(lhs, resolve);
-        final Obj rhs = objs(machine.apply(NoObj.single()));
-       // if (!rhs.matches(monoid.rng()))
-      //      throw MTronException.of("%s ({{m}}rhs{{/m}}) (%s) does not match {{m}}code range{{/m}} (%s): %s", rhs, rhs.rng(), this.rng(), this);
+        final Call resolve = this.tryToInst().resolve(lhs);
+        if (!lhs.matches(resolve.dom()))
+            throw MTronException.of("%s ({{m}}lhs{{/m}}) (%s) does not match {{m}}code domain{{/m}} (%s): %s", lhs, lhs.rng(), resolve.dom(), resolve);
+        final Obj rhs = (resolve.isCode()) ? objs(MMachine.of(lhs, resolve.as()).apply(NoObj.single())) : resolve.apply(lhs);
+        //if (!rhs.matches(call.rng()))
+        //    throw MTronException.of("%s ({{m}}rhs{{/m}}) (%s) does not match {{m}}code range{{/m}} (%s): %s", rhs, rhs.rng(), call.rng(), this);
         return rhs;
     }
 
