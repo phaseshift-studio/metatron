@@ -18,9 +18,10 @@
 
 package studio.phaseshift.metatron.lang.obj;
 
+import studio.phaseshift.metatron.algebra.Ring;
 import studio.phaseshift.metatron.lang.fURI;
 
-public interface Uri extends Mono {
+public interface Uri extends Mono, Ring<Uri> {
 
     @Override
     Uri clone(final Object jvm, final fURI tid, final fURI vid);
@@ -32,12 +33,40 @@ public interface Uri extends Mono {
         return this.clone(jvm, this.tid(), this.vid());
     }
 
+    @Override
     default Uri tid(final fURI tid) {
         return this.clone(this.jvm(), tid, this.vid());
     }
 
+    @Override
     default Uri vid(final fURI vid) {
         return this.clone(this.jvm(), this.tid(), vid);
+    }
+
+    @Override
+    default Uri one() {
+        return this.jvm().one().toUri();
+    }
+
+    @Override
+    default Uri mult(final Uri rhs) {
+        return this.jvm(this.uriValue().mult(rhs.uriValue()));
+    }
+
+
+    @Override
+    default Uri zero() {
+        return this.jvm().zero().toUri();
+    }
+
+    @Override
+    default Uri plus(final Uri rhs) {
+        return this.jvm(this.uriValue().plus(rhs.uriValue()));
+    }
+
+    @Override
+    default Uri neg() {
+        return this.jvm(this.uriValue().neg());
     }
 
 

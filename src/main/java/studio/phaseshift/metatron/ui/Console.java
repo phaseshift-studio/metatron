@@ -26,6 +26,7 @@ import org.jline.terminal.TerminalBuilder;
 import org.jline.utils.AttributedString;
 import org.jline.utils.AttributedStringBuilder;
 import org.jline.widget.Widgets;
+import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.lang.obj.NoObj;
 import studio.phaseshift.metatron.lang.obj.Obj;
 import studio.phaseshift.metatron.lang.obj.mtron.mtronInstSet;
@@ -134,6 +135,13 @@ public class Console {
     public void run() throws IOException {
         new CustomWidgets(this.reader);
         String line = "";
+        while (BootLoader.BOOTING) {
+            try {
+                Thread.sleep(10);
+            } catch (Exception e) {
+                throw MTronException.of(e);
+            }
+        }
         while (true) {
             try {
                 Obj result = null;
@@ -217,9 +225,9 @@ public class Console {
         }
         LOG.none("\t{{b}}ve{{y}}rs{{m}}ion {{y}}%s{{X}}\n\n", METATRON_VERSION);
         Graphitty.out(this.terminal.output(), """
-                . {{y}}{{[r]}}r{{[d]}}esolve {{m}}[{{y}}ctrl-r{{m}}]{{X}}: automatic expression resolution
-                . {{y}}hi{{[r]}}d{{[d]}}e    {{m}}[{{y}}ctrl-h{{m}}]{{X}}: hide base type prefixes
-                . {{y}}{{[r]}}q{{[d]}}uit    {{m}}[{{y}}ctrl-q{{m}}]{{X}}: leave the metatron
+                . {{y&_}}r{{X&y}}esolve {{m}}[{{y}}ctrl-r{{m}}]{{X}}: automatic expression resolution
+                . {{y&_}}h{{X&y}}ide    {{m}}[{{y}}ctrl-h{{m}}]{{X}}: hide base type prefixes
+                . {{y&_}}q{{X&y}}uit    {{m}}[{{y}}ctrl-q{{m}}]{{X}}: leave the metatron
                 
                 """);
     }

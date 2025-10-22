@@ -18,9 +18,13 @@
 
 package studio.phaseshift.metatron.lang.obj;
 
+import studio.phaseshift.metatron.algebra.Ring;
 import studio.phaseshift.metatron.lang.fURI;
+import studio.phaseshift.metatron.lang.obj.mtron.c.cInt;
 
-public interface Real extends Mono {
+import static studio.phaseshift.metatron.lang.obj.mtron.MReal.real;
+
+public interface Real extends Mono, Ring<Real> {
 
     @Override
     Real clone(final Object jvm, final fURI tid, final fURI vid);
@@ -38,6 +42,36 @@ public interface Real extends Mono {
 
     default Real vid(final fURI vid) {
         return this.clone(this.jvm(), this.tid(), vid);
+    }
+
+    @Override
+    default Real c(final cInt c) {
+        return (Real) Mono.super.c(c);
+    }
+
+    @Override
+    default Real zero() {
+        return real(0.0d);
+    }
+
+    @Override
+    default Real one() {
+        return real(1.0d);
+    }
+
+    @Override
+    default Real plus(final Real rhs) {
+        return this.jvm((this.realValue() * this.c().max()) + (rhs.realValue() * rhs.c().max())).c(cInt.ONE());
+    }
+
+    @Override
+    default Real mult(final Real rhs) {
+        return this.jvm((this.realValue() * this.c().max()) * (rhs.realValue() * rhs.c().max())).c(cInt.ONE());
+    }
+
+    @Override
+    default Real neg() {
+        return this.jvm(-1.0d * this.realValue());
     }
 
 }

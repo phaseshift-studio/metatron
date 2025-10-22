@@ -64,20 +64,21 @@ public class BootLoader {
             params.put(kv[0].replace("--", ""), ObjParser.m_obj().parse(kv[1]).get());
         }
         if (params.getOrDefault("verbose", bool(false)).jvm()) {
-            LOG.debug("params", params);
+            LOG.debug("boot parameters: %s", params);
         }
         BootLoader.load(params);
-
     }
 
     public static void load(final Map<String, Obj> args) {
         Runtime.getRuntime().addShutdownHook(new Thread(BootLoader::close));
+        final Obj mode = args.getOrDefault("mode", uri("server"));
         fURI routerServer = null;
         if (BOOTING) {
+          /// /// START OF BOOTING PROCESS /// /// allow boot description to be read from a mtron file
             try {
                 routerServer = args.getOrDefault(HOST, uri("ws://" + InetAddress.getLocalHost().getHostName() + ".local" + ":" + 8887)).uriValue();
                 LOG.info("router server: %s", routerServer);
-                if (args.containsKey("console"))
+                if (mode.equals(uri("console")))
                     new Console(args).start();
 
             } catch (final Exception e) {
@@ -104,6 +105,9 @@ public class BootLoader {
             Router.global().write(new RemoteSpace(routerServer.extend("shared/#"), f("/mnt/localhost/8887/shared")));
             /// ///////////////////////////////////
             BOOTING = false;
+            if (mode.equals(uri("server")))
+                LOG.info("{{g}}server mode{{/g}}.\n\tctrl-c to {{y}}quit{{/y}}\n\tctrl-w for {{y}}console{{/y}}");
+            /// /// END OF BOOTING PROCESS /// ///
         } else {
             LOG.warn("boot processes previously completed -- ignoring request to boot");
         }

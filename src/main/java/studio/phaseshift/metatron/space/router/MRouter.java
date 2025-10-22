@@ -95,6 +95,7 @@ public class MRouter implements Router {
                     LOG.except("%s and %s have overlapping address spaces", space.pattern(), kv.getKey());
                 });
         this.spaces.put(space.pattern(), space);
+        Space.Helpers.spaceOpenLog(this, space);
         //this.write(space.vid(), space);
     }
 

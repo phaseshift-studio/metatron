@@ -18,18 +18,22 @@
 
 package studio.phaseshift.metatron.lang.obj;
 
+import studio.phaseshift.metatron.algebra.Semiring;
 import studio.phaseshift.metatron.lang.fURI;
+import studio.phaseshift.metatron.lang.obj.mtron.c.cInt;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Function;
 
 import static studio.phaseshift.metatron.lang.obj.mtron.MInt.jnt;
+import static studio.phaseshift.metatron.lang.obj.mtron.MLst.lst;
 import static studio.phaseshift.metatron.lang.obj.mtron.MObjs.objs;
 import static studio.phaseshift.metatron.lang.obj.mtron.MUri.uri;
 
-public interface Lst extends Poly {
+public interface Lst extends Poly, Semiring<Lst> {
 
     @Override
     Lst clone(final Object jvm, final fURI tid, final fURI vid);
@@ -100,5 +104,24 @@ public interface Lst extends Poly {
             throw MTronException.of("unknown key for lst: %s", key);
         }
     }
+
+    @Override
+    default Lst c(final Function<cInt, cInt> f) {
+        return (Lst) Poly.super.c(f);
+    }
+
+    @Override
+    default Lst plus(final Lst rhs) {
+        final List<Obj> list = new ArrayList<>();
+        this.lstValue().stream().map(e -> e.c(c -> c.mult(this.c()))).forEach(list::add);
+        rhs.lstValue().stream().map(e -> e.c(c -> c.mult(rhs.c()))).forEach(list::add);
+        return this.<Lst>jvm(list).c(cInt::one);
+    }
+
+    @Override
+    default Lst zero() {
+        return lst(List.of());
+    }
+
 
 }

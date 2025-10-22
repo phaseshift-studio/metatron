@@ -18,6 +18,8 @@
 
 package studio.phaseshift.metatron.algebra;
 
+import studio.phaseshift.metatron.lang.obj.Obj;
+
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
@@ -29,6 +31,10 @@ public interface Monoid<R extends Monoid<R>> {
 
     default boolean isOne() {
         return this.equals(this.one());
+    }
+
+    interface O<OBJ extends Monoid.O<OBJ>> extends Monoid<OBJ>, Obj {
+
     }
 }
 

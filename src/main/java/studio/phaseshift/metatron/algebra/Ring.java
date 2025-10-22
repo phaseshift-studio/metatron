@@ -18,14 +18,24 @@
 
 package studio.phaseshift.metatron.algebra;
 
+import studio.phaseshift.metatron.lang.obj.Obj;
+
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public interface Ring<R extends Ring<R>> extends Semiring<R>, Monoid<R> {
+public interface Ring<R extends Ring<R>> extends Rig<R> {
 
     R neg();
 
     default R minus(final R r) {
         return this.plus(r.neg());
+    }
+
+    interface O<R extends O<R>> extends Ring<R>, Rig.O<R>, Obj {
+        R neg();
+
+        default R minus(final R r) {
+            return Ring.super.minus(r);
+        }
     }
 }

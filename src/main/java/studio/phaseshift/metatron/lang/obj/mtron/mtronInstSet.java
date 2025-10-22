@@ -18,7 +18,7 @@
 
 package studio.phaseshift.metatron.lang.obj.mtron;
 
-import org.javatuples.Pair;
+import studio.phaseshift.metatron.algebra.Semiring;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.*;
 import studio.phaseshift.metatron.lang.obj.mtron.c.cInt;
@@ -301,9 +301,14 @@ public class mtronInstSet extends MInstSet {
                 instC(WITHIN_TID.dom(REC_TID).rng(REC_TID), lst(T(OBJS_ID)), (lhs, inst) -> rec(lhs.recValue().entrySet().stream().map(kv -> inst.arg(0).apply(MRel.of(kv.getKey(), kv.getValue())).<Rel>as()).collect(Collectors.toMap(Rel::first, Rel::second, Obj::append, LinkedHashMap<Obj, Obj>::new)))),
                 instC(BARRIER_TID.dom(OBJS_ID).rng(OBJS_ID), lst(T(OBJS_ID)), (lhs, inst) -> inst.arg(0).apply(lhs)),
                 instC(COUNT_TID.dom(ALL.maybeSome()).rng(INT_TID), lst(), (lhs, inst) -> inst.seed().jvm(IteratorUtil.reduce(lhs.iterator(), inst.seed(), (a, b) -> jnt(a.intValue() + b.c().max())).intValue()/* * inst.c().max()*/), jnt(0)),
-                instC(SUM_TID.dom(INT_TID.maybeSome()).rng(INT_TID), lst(), (lhs, inst) -> inst.seed().jvm(IteratorUtil.reduce(lhs.iterator(), inst.seed(), (a, b) -> jnt(a.intValue() + (b.intValue() * b.c().max()))).intValue()/* * inst.c().max()*/), jnt(0)),
-                instC(SUM_TID.dom(REAL_TID.maybeSome()).rng(REAL_TID), lst(), (lhs, inst) -> IteratorUtil.reduce(lhs.iterator(), inst.seed(), (a, b) -> real(a.realValue() + (b.realValue() * b.c().max()))), real(0.0)),
-                instC(SUM_TID.dom(LST_TID.maybeSome()).rng(LST_TID), lst(), (lhs, inst) -> IteratorUtil.reduce(lhs.iterator(), inst.seed(), (a, b) -> lst(Stream.concat(a.lstValue().stream(), b.lstValue().stream()).toList())), lst()),
+                instC(SUM_TID.dom(INT_TID.maybeSome()).rng(INT_TID), lst(), (lhs, inst) -> inst.seed().jvm(IteratorUtil.reduce(lhs.iterator(), inst.seed(), (a, b) -> ((Int) a).plus((Int) b)).intValue()), jnt(0)),
+                instC(SUM_TID.dom(LST_TID.maybeSome()).rng(LST_TID), lst(), (lhs, inst) -> inst.seed().jvm(IteratorUtil.reduce(lhs.iterator(), inst.seed(), (a, b) -> ((Lst) a).plus((Lst) b)).lstValue()), lst()),
+                instC(SUM_TID.dom(REAL_TID.maybeSome()).rng(REAL_TID), lst(), (lhs, inst) -> inst.seed().jvm(IteratorUtil.reduce(lhs.iterator(), inst.seed(), (a, b) -> ((Real) a).plus((Real) b)).realValue()), real(0.0)),
+                instC(SUM_TID.dom(URI_TID.maybeSome()).rng(URI_TID), lst(), (lhs, inst) -> inst.seed().jvm(IteratorUtil.reduce(lhs.iterator(), inst.seed(), (a, b) -> ((Uri) a).plus((Uri) b)).uriValue()), uri(fURI.NOOBJ)),
+                //instC(SUM_TID.dom(A.maybeSome()).rng(A), lst(), (lhs, inst) -> ((Semiring.O)lhs).zero().jvm(IteratorUtil.reduce(lhs.iterator(), ((Semiring.O)lhs).zero(), (a, b) -> ((Semiring.O) a).plus((Semiring.O) b)).jvm()), uri(fURI.NOOBJ)),
+                //instC(SUM_TID.dom(A.maybeSome()).rng(A), lst(), (lhs, inst) -> IteratorUtil.reduce((Iterator)lhs.iterator(), lhs.<Semiring.O>as().zero(), (a, b) -> a.plus(b)), NoObj.single()),
+                //instC(SUM_TID.dom(REAL_TID.maybeSome()).rng(REAL_TID), lst(), (lhs, inst) -> IteratorUtil.reduce(lhs.iterator(), inst.seed(), (a, b) -> real(a.realValue() + (b.realValue() * b.c().max()))), real(0.0)),
+                // instC(SUM_TID.dom(LST_TID.maybeSome()).rng(LST_TID), lst(), (lhs, inst) -> IteratorUtil.reduce(lhs.iterator(), inst.seed(), (a, b) -> lst(Stream.concat(a.lstValue().stream(), b.lstValue().stream()).toList())), lst()),
                 instC(PROD_TID.dom(INT_TID.maybeSome()).rng(INT_TID), lst(), (lhs, inst) -> inst.seed().jvm(IteratorUtil.reduce(lhs.iterator(), inst.seed(), (a, b) -> jnt(a.intValue() * (b.intValue() * b.c().max()))).intValue()/* * inst.c().max()*/), jnt(1)),
                 instC(PROD_TID.dom(REAL_TID.maybeSome()).rng(REAL_TID), lst(), (lhs, inst) -> IteratorUtil.reduce(lhs.iterator(), inst.seed(), (a, b) -> real(a.realValue() * (b.realValue() * b.c().max()))), real(1.0)),
                 instC(PROD_TID.dom(URI_TID.maybeSome()).rng(URI_TID), lst(), (lhs, inst) -> IteratorUtil.reduce(lhs.iterator(), inst.seed(), (a, b) -> uri(a.uriValue().mult(b.uriValue()))), uri(".")),
@@ -327,14 +332,14 @@ public class mtronInstSet extends MInstSet {
                 })*/
                 instC(GROUP_TID.dom(REC_TID).rng(REC_TID), lst(T(REC_TID)), (lhs, inst) -> {
                     final Map<Obj, Obj> result = new LinkedHashMap<>();
-                    final Map<Tuple.Pair<Obj,Obj>, Obj> resultK = new LinkedHashMap<>();
-                    final Map<Tuple.Pair<Obj,Obj>, Obj> resultV = new LinkedHashMap<>();
+                    final Map<Tuple.Pair<Obj, Obj>, Obj> resultK = new LinkedHashMap<>();
+                    final Map<Tuple.Pair<Obj, Obj>, Obj> resultV = new LinkedHashMap<>();
                     final Map<Obj, Obj> lhsMap = lhs.recValue();
                     final Map<Obj, Obj> rhsMap = inst.arg(0).recValue();
                     lhsMap.forEach((lk, lv) -> {
                         rhsMap.forEach((rk, rv) -> {
-                            resultK.compute(Tuple.Pair.with(rk,rv), (k, v) -> null == v ? lk : v.append(lk));
-                            resultV.compute(Tuple.Pair.with(rk,rv), (k, v) -> null == v ? lv : v.append(lv));
+                            resultK.compute(Tuple.Pair.with(rk, rv), (k, v) -> null == v ? lk : v.append(lk));
+                            resultV.compute(Tuple.Pair.with(rk, rv), (k, v) -> null == v ? lv : v.append(lv));
                         });
                     });
                     resultK.forEach((k, v) -> result.put(k.get0().apply(v), k.get1().apply(resultV.get(k))));

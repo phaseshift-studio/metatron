@@ -18,6 +18,8 @@
 
 package studio.phaseshift.metatron.algebra;
 
+import studio.phaseshift.metatron.lang.obj.Obj;
+
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
@@ -27,5 +29,9 @@ public interface Group<R extends Group<R>> extends Monoid<R> {
 
     default R div(final R r) {
         return this.mult(r.inv());
+    }
+
+    interface O<OBJ extends Group.O<OBJ>> extends Group<OBJ>, Obj {
+
     }
 }

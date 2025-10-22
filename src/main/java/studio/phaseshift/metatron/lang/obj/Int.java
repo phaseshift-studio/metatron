@@ -18,9 +18,13 @@
 
 package studio.phaseshift.metatron.lang.obj;
 
+import studio.phaseshift.metatron.algebra.Ring;
 import studio.phaseshift.metatron.lang.fURI;
+import studio.phaseshift.metatron.lang.obj.mtron.c.cInt;
 
-public interface Int extends Mono {
+import static studio.phaseshift.metatron.lang.obj.mtron.MInt.jnt;
+
+public interface Int extends Mono, Ring.O<Int> {
 
     @Override
     Int clone(final Object jvm, final fURI tid, final fURI vid);
@@ -38,5 +42,35 @@ public interface Int extends Mono {
 
     default Int vid(final fURI vid) {
         return this.clone(this.jvm(), this.tid(), vid);
+    }
+
+    @Override
+    default Int c(cInt c) {
+        return (Int) Mono.super.c(c);
+    }
+
+    @Override
+    default Int zero() {
+        return jnt(0);
+    }
+
+    @Override
+    default Int one() {
+        return jnt(1);
+    }
+
+    @Override
+    default Int plus(final Int rhs) {
+        return this.jvm((this.intValue() * this.c().max()) + (rhs.intValue() * rhs.c().max())).c(cInt.ONE());
+    }
+
+    @Override
+    default Int mult(final Int rhs) {
+        return this.jvm((this.intValue() * this.c().max()) * (rhs.intValue() * rhs.c().max())).c(cInt.ONE());
+    }
+
+    @Override
+    default Int neg() {
+        return this.jvm(-1 * this.intValue());
     }
 }

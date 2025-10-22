@@ -18,14 +18,17 @@
 
 package studio.phaseshift.metatron.lang.obj;
 
+import studio.phaseshift.metatron.algebra.Semiring;
 import studio.phaseshift.metatron.lang.fURI;
+import studio.phaseshift.metatron.lang.obj.mtron.MObjs;
 import studio.phaseshift.metatron.lang.obj.mtron.c.cInt;
 import studio.phaseshift.metatron.util.IteratorUtil;
 
+import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
-public interface Objs extends Obj {
+public interface Objs extends Obj, Semiring.O<Objs> {
 
     @Override
     default Type rng() {
@@ -63,7 +66,20 @@ public interface Objs extends Obj {
         return IteratorUtil.stream(this.jvm());
     }
 
-  //  @Override
-  //  Tuple.Pair<Obj, Obj> headTailsSplit(final Function<Obj, Object> partitioner);
+    @Override
+    default Objs zero() {
+        return MObjs.empty();
+    }
+
+    @Override
+    default Objs plus(final Objs other) {
+        final Obj first = this.take();
+        final Obj second = other instanceof Objs ? other.take() : other;
+        final Semiring.O result = null == first ? (null == second ? this.zero() : (Semiring.O) second) : ((Semiring.O) first).plus((Semiring.O) second);
+        return new MObjs(List.of(result, this, other));
+    }
+
+    //  @Override
+    //  Tuple.Pair<Obj, Obj> headTailsSplit(final Function<Obj, Object> partitioner);
 
 }

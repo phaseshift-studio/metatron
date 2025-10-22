@@ -110,7 +110,11 @@ public interface Space extends Poly, Closeable {
     class Helpers {
 
         public static void spaceCloseLog(final Obj source, final Space space) {
-            source.logger().info("closing space %s", space);
+            source.logger().info("closed space %s", space);
+        }
+
+        public static void spaceOpenLog(final Obj source, final Space space) {
+            source.logger().info("open space %s", space);
         }
 
         public static String spaceToString(final Space space) {

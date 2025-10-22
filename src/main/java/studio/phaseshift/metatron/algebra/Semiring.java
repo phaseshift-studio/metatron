@@ -18,6 +18,8 @@
 
 package studio.phaseshift.metatron.algebra;
 
+import studio.phaseshift.metatron.lang.obj.Obj;
+
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
@@ -31,5 +33,13 @@ public interface Semiring<R extends Semiring<R>> {
         return this.equals(this.zero());
     }
 
+    interface O<R extends Semiring.O<R>> extends Semiring<R>, Obj {
+        R plus(final R r);
 
+        R zero();
+
+        default boolean isZero() {
+            return Semiring.super.isZero();
+        }
+    }
 }
