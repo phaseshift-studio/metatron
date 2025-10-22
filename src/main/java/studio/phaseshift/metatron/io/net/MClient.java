@@ -32,6 +32,7 @@ import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
 import studio.phaseshift.metatron.ui.ObjSerializer;
 
+import java.io.Closeable;
 import java.net.URI;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -40,7 +41,7 @@ import java.util.Optional;
 
 import static studio.phaseshift.metatron.lang.fURI.f;
 
-public class MClient extends WebSocketClient implements AutoCloseable {
+public class MClient extends WebSocketClient implements Closeable {
 
     protected final GraphittyLogger LOG;
     protected final ObjSerializer<ByteBuffer> serializer;
@@ -57,6 +58,14 @@ public class MClient extends WebSocketClient implements AutoCloseable {
     public MClient(final fURI server) {
         this(server, new Draft_6455());
     }
+
+   /* public void close() {
+        try {
+            super.closeBlocking();
+        } catch (final InterruptedException e) {
+            LOG.error(e);
+        }
+    }*/
 
     public fURI server() {
         return this.server;

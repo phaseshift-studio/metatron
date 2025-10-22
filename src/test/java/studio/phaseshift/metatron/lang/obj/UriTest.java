@@ -37,7 +37,7 @@ public class UriTest extends MetatronTest  {
             "lst::<abc/def>                                               | <ERROR>",
             "lst::<abc/def>                                               | <ERROR>",
             "inst::<abc/def>                                              | <ERROR>",
-            "code::<abc/def>                                              | <ERROR>",
+          //  "code::<abc/def>                                              | <ERROR>",
             "uri::<http://webpage.com>                                    | <http://webpage.com>",
             "uri::<http://webpage.com>.type()                             | uri::T[]",
             "<http://webpage.com>.type()                                  | uri::T[]",

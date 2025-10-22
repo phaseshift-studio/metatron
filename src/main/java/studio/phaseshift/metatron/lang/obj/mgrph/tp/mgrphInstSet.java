@@ -46,15 +46,15 @@ import static studio.phaseshift.metatron.lang.obj.mtron.mtronInstSet.URI_TID;
 
 public class mgrphInstSet extends MInstSet {
 
-    public static final fURI MGRPH_TID = fURI.of("/mgrph");
-    public static final fURI GRAPH_TID = MGRPH_TID.extend("graph");
-    public static final fURI ELEMENT_TID = MGRPH_TID.extend("element");
-    public static final fURI VERTEX_TID = MGRPH_TID.extend("vertex");
-    public static final fURI VERTEX_PROPERTY_TID = MGRPH_TID.extend("vp");
-    public static final fURI PROPERTY_TID = MGRPH_TID.extend("p");
-    public static final fURI EDGE_TID = MGRPH_TID.extend("edge");
+    public static final fURI GRPH_TID = f("/grph");
+    public static final fURI GRAPH_TID = GRPH_TID.extend("graph");
+    public static final fURI ELEMENT_TID = GRPH_TID.extend("element");
+    public static final fURI VERTEX_TID = GRPH_TID.extend("vertex");
+    public static final fURI VERTEX_PROPERTY_TID = GRPH_TID.extend("vp");
+    public static final fURI PROPERTY_TID = GRPH_TID.extend("p");
+    public static final fURI EDGE_TID = GRPH_TID.extend("edge");
 
-    public static final fURI INST_TID = MGRPH_TID.extend("inst");
+    public static final fURI INST_TID = GRPH_TID.extend("inst");
     public static final fURI G_TID = INST_TID.extend("g");
     public static final fURI V_TID = INST_TID.extend("V");
     public static final fURI E_TID = INST_TID.extend("E");
@@ -72,7 +72,7 @@ public class mgrphInstSet extends MInstSet {
     public static final fURI LABEL_TID = INST_TID.extend("label");
 
     public mgrphInstSet(final fURI vid) {
-        super(new HashMap<>(), MGRPH_TID, vid);
+        super(new HashMap<>(), GRPH_TID, vid);
         this.types().forEach(t -> Router.global().registerRewrite(f(t.tid().name()), t.tid()));
     }
 
@@ -110,9 +110,9 @@ public class mgrphInstSet extends MInstSet {
                 instC(INV_TID.dom(EDGE_TID).rng(VERTEX_TID), lst(), (lhs, inst) -> (MVertex) lhs.<MEdge>as().vertices(Direction.IN).next()),
                 instC(BOTHV_TID.dom(EDGE_TID).rng(VERTEX_TID.c("2")), lst(), (lhs, inst) -> objs(IteratorUtil.list((Iterator) lhs.<MEdge>as().vertices(Direction.BOTH)))),
                 /// ///////////////////////////////////////////////////////////////////////////////////////////////////
-                instC(LABEL_TID.dom(MGRPH_TID.extend(fURI.SINGLE)).rng(STR_TID), lst(), (lhs, inst) -> str(lhs.<MElement>as().label())),
-                instC(VALUES_TID.dom(MGRPH_TID.extend(fURI.SINGLE)).rng(ALL.maybeSome()), lst(T(URI_TID.maybeSome())), (lhs, inst) -> objs(IteratorUtil.list((Iterator) lhs.<MElement>as().values(labelsAsUri(inst))))),
-                instC(PROPERTIES_TID.dom(MGRPH_TID.extend(fURI.SINGLE)).rng(ALL.maybeSome()), lst(T(URI_TID.maybeSome())), (lhs, inst) -> objs(IteratorUtil.list((Iterator) lhs.<MElement>as().properties(labelsAsUri(inst)))))
+                instC(LABEL_TID.dom(GRPH_TID.extend(fURI.SINGLE)).rng(STR_TID), lst(), (lhs, inst) -> str(lhs.<MElement>as().label())),
+                instC(VALUES_TID.dom(GRPH_TID.extend(fURI.SINGLE)).rng(ALL.maybeSome()), lst(T(URI_TID.maybeSome())), (lhs, inst) -> objs(IteratorUtil.list((Iterator) lhs.<MElement>as().values(labelsAsUri(inst))))),
+                instC(PROPERTIES_TID.dom(GRPH_TID.extend(fURI.SINGLE)).rng(ALL.maybeSome()), lst(T(URI_TID.maybeSome())), (lhs, inst) -> objs(IteratorUtil.list((Iterator) lhs.<MElement>as().properties(labelsAsUri(inst)))))
         ).collect(Collectors.toSet());
     }
 

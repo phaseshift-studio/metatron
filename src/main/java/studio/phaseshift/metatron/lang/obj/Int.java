@@ -28,11 +28,15 @@ public interface Int extends Mono {
     @Override
     Long jvm();
 
-    default Int jvm(final Long value) {
-        return this.clone(value, this.tid(), this.vid());
+    default Int jvm(final Long jvm) {
+        return this.clone(jvm, this.tid(), this.vid());
     }
 
-    default Int tid(final fURI newTid) {
-        return this.clone(this.jvm(), newTid, this.vid());
+    default Int tid(final fURI tid) {
+        return this.clone(this.jvm(), tid, this.vid());
+    }
+
+    default Int vid(final fURI vid) {
+        return this.clone(this.jvm(), this.tid(), vid);
     }
 }

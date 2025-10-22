@@ -21,6 +21,7 @@ package studio.phaseshift.metatron.ui;
 import org.petitparser.context.Result;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.*;
+import studio.phaseshift.metatron.lang.obj.mtron.mtronInstSet;
 import studio.phaseshift.metatron.lang.translate.ObjParser;
 
 import java.util.HashSet;
@@ -31,6 +32,7 @@ import static studio.phaseshift.metatron.lang.obj.mtron.mtronInstSet.*;
 
 public class ObjStringSerializer implements ObjSerializer<String> {
 
+    public static Set<fURI> HIDE_TIDS = new HashSet<>(BASE_TYPES);
     private final Builder b;
 
     private ObjStringSerializer(final Builder builder) {
@@ -41,8 +43,27 @@ public class ObjStringSerializer implements ObjSerializer<String> {
         return new Builder();
     }
 
-    public static Set<fURI> BASE_TIDS = Set.of(BOOL_TID, INT_TID, REL_TID, REAL_TID, STR_TID, URI_TID, REC_TID, LST_TID, OBJS_TID);
-    public static Set<fURI> HIDE_TIDS = new HashSet<>(BASE_TIDS);
+    public static StringBuilder prettyPrintCode(final StringBuilder sb, final Obj call, final int depth, final int leftMargin) {
+        if (call.isCode()) {
+            for (final Inst inst : call.<Code>as().codeValue()) {
+                prettyPrintCode(sb, inst, depth + 1, leftMargin);
+            }
+        } else if (!call.isNoObj() && call.isInst()) {
+            final Inst inst = call.as();
+            sb.append(" ".repeat(leftMargin)).append("  ".repeat(depth)).append(inst).append("\n");
+            if (null != inst.jvm()) {
+                for (final Obj arg : inst.args().elements()) {
+                    if (arg.isCall() || arg.isObjs()) {
+                        prettyPrintCode(sb, arg.as(), depth + 1, leftMargin);
+                    }
+                }
+            }
+        } else if (!call.isNoObj() && call.isObjs()) {
+            call.stream().forEach(o -> prettyPrintCode(sb, o, depth + 1, leftMargin));
+
+        }
+        return sb;
+    }
 
     @Override
     public String write(final Obj obj) throws IllegalStateException {
@@ -136,36 +157,26 @@ public class ObjStringSerializer implements ObjSerializer<String> {
         }
         /// ///////////////////////////////////////////////////////////////
         /// ///////////////////////////////////////////////////////////////
+        else if (obj instanceof Fail) {
+            generateTID(sb, obj.tid(), false);
+            Throwable t = obj.<Fail>as().jvm();
+            while (t != null) {
+                sb.append("{{r}}[{{/r}}").append(t.getMessage()).append("{{r}}]{{/r}}").append("\n\t ");
+                t = t.getCause();
+            }
+            sb.delete(sb.length() - 3,sb.length()-1);
+            return sb.toString();
+        }
+        /// ///////////////////////////////////////////////////////////////
+        /// ///////////////////////////////////////////////////////////////
         else
             return generateVID(generateTID(sb, obj.tid(), true)
                     .append(this.b.palette.valueC())
-                    .append(null == obj.jvm() ? "" : obj.jvm().toString())
+                    .append(null == obj.jvm() ? "" : (obj.isStr() ? "'" + obj.jvm().toString() + "'" : obj.jvm().toString()))
                     .append(this.b.palette.form2C()), obj)
                     .append(this.b.ignoreRewrites ? "" : "{{X}}")
                     .toString();
     }
-
-    /*private StringBuilder generateRec(final StringBuilder sb, final Rec rec, final int depth) {
-        boolean nested = false; //rec.recValue().values().stream().anyMatch(Obj::isRec);
-        sb.append("{{FORM1}}[{{/FORM1}}");
-        if (nested)
-            sb.append("\n");
-        rec.recValue().forEach((k, v) -> {
-            if (depth > 0)
-                sb.append(" ".repeat(depth * 2));
-            sb.append(write(k)).append("{{FORM1}}=>{{/FORM1}}");
-            if (v.isRec()) {
-                this.generateRec(sb, v.as(), depth + 1);
-            } else
-                sb.append(write(v));
-            sb.append("{{FORM1}},");
-           // if (nested) sb.append("\n");
-        });
-        sb.deleteCharAt(sb.length() - 1);
-        sb.deleteCharAt(sb.length() - 1);
-        sb./*append(" ".repeat(depth)).append("{{FORM1}}]{{FORM1}}");
-        return sb;
-    }*/
 
     private StringBuilder generateRec(final StringBuilder sb, final Rec rec, final int depth) {
         boolean nested = rec.recValue().values().stream().anyMatch(Obj::isRec);
@@ -188,28 +199,6 @@ public class ObjStringSerializer implements ObjSerializer<String> {
             sb.deleteCharAt(sb.length() - 1);
         sb.deleteCharAt(sb.length() - 1);
         sb.append("{{g}}]{{/g}}");
-        return sb;
-    }
-
-    public static StringBuilder prettyPrintCode(final StringBuilder sb, final Obj call, final int depth, final int leftMargin) {
-        if (call.isCode()) {
-            for (final Inst inst : call.<Code>as().codeValue()) {
-                prettyPrintCode(sb, inst, depth + 1, leftMargin);
-            }
-        } else if (!call.isNoObj() && call.isInst()) {
-            final Inst inst = call.as();
-            sb.append(" ".repeat(leftMargin)).append("  ".repeat(depth)).append(inst).append("\n");
-            if (null != inst.jvm()) {
-                for (final Obj arg : inst.args().elements()) {
-                    if (arg.isCall() || arg.isObjs()) {
-                        prettyPrintCode(sb, arg.as(), depth + 1, leftMargin);
-                    }
-                }
-            }
-        } else if (!call.isNoObj() && call.isObjs()) {
-            call.stream().forEach(o -> prettyPrintCode(sb, o, depth + 1, leftMargin));
-
-        }
         return sb;
     }
 

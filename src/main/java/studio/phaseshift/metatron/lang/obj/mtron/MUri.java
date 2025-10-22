@@ -26,24 +26,24 @@ import static studio.phaseshift.metatron.lang.obj.mtron.mtronInstSet.URI_TID;
 
 public class MUri extends MObj implements Uri {
 
-    public static Uri uri(final String s) {
-        return MUri.of(s);
-    }
-
-    public static Uri uri(final fURI s) {
-        return MUri.of(s);
-    }
-
     public MUri(final fURI value, final fURI tid, final fURI vid) {
         super(value, tid, vid);
     }
 
-    public MUri(final fURI value) {
-        this(value, URI_TID, fURI.NULL);
+    public static Uri uri(final String jvm) {
+        return new MUri(f(jvm), URI_TID, fURI.NULL);
     }
 
-    public MUri(final String value) {
-        this(fURI.of(value));
+    public static Uri uri(final fURI jvm) {
+        return new MUri(jvm, URI_TID, fURI.NULL);
+    }
+
+    public static Uri uri(final fURI jvm, final fURI tid) {
+        return new MUri(jvm, tid, fURI.NULL);
+    }
+
+    public static Uri uri(final String jvm, final fURI tid) {
+        return new MUri(f(jvm), tid, fURI.NULL);
     }
 
     @Override
@@ -54,18 +54,6 @@ public class MUri extends MObj implements Uri {
     @Override
     public fURI jvm() {
         return (fURI) this.jvm;
-    }
-
-    public static Uri of(final fURI value) {
-        return new MUri(value);
-    }
-
-    public static Uri of(final String value) {
-        return MUri.of(f(value));
-    }
-
-    public static Uri of(final String value, final fURI tid) {
-        return new MUri(f(value), tid, fURI.NULL);
     }
 }
 

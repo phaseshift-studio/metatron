@@ -176,7 +176,7 @@ public interface Obj extends Function<Obj, Obj>, Iterable<Obj>, Cloneable {
 
     @Override
     default Obj apply(final Obj other) {
-        return this;//.c(c -> c.mult(other.c()));
+        return this;//.c(c -> c.mult(other.c())); // need to redefine equality (no c() test)
     }
 
     default Obj apply() {
@@ -195,15 +195,16 @@ public interface Obj extends Function<Obj, Obj>, Iterable<Obj>, Cloneable {
                 !(this instanceof Objs) &&
                 !(this instanceof Type) &&
                 !(this instanceof Bool && base.equals(BOOL_TID) ||
-                        this instanceof Int && base.equals(INT_TID) ||
-                        this instanceof Real && base.equals(REAL_TID) ||
-                        this instanceof Str && base.equals(STR_TID) ||
-                        this instanceof Uri && base.equals(URI_TID) ||
-                        this instanceof Rec && base.equals(REC_TID) ||
-                        this instanceof Lst && base.equals(LST_TID) ||
-                        this instanceof Rel && base.equals(REL_TID) ||
-                        this instanceof Inst && base.equals(INST_TID) ||
-                        this instanceof Code && base.equals(CODE_TID))) {
+                        this.isInt() && base.equals(INT_TID) ||
+                        this.isReal() && base.equals(REAL_TID) ||
+                        this.isStr() && base.equals(STR_TID) ||
+                        this.isUri() && base.equals(URI_TID) ||
+                        this.isRec() && base.equals(REC_TID) ||
+                        this.isLst() && base.equals(LST_TID) ||
+                        this.isRel() && base.equals(REL_TID) ||
+                        this.isInst() && base.equals(INST_TID) ||
+                        this.isCode() && base.equals(CODE_TID) ||
+                        this.isFail() && base.equals(FAIL_TID))) {
             return false;
         }
         if (this.isCall()) {
@@ -244,6 +245,7 @@ public interface Obj extends Function<Obj, Obj>, Iterable<Obj>, Cloneable {
         else if (this.isInst()) return INST_TID.c(this.c().toString()).dom(this.dom().tid()).rng(this.rng().tid());
         else if (this.isCode()) return CODE_TID.c(this.c().toString());
         else if (this.isNoObj()) return NOOBJ_TID.c(this.c().toString());
+        else if (this.isFail()) return FAIL_TID.c(this.c().toString());
         else return this.tid();
     }
 
@@ -271,6 +273,10 @@ public interface Obj extends Function<Obj, Obj>, Iterable<Obj>, Cloneable {
 
     default boolean isNoObj() {
         return this.c().isZero();
+    }
+
+    default boolean isFail() {
+        return this instanceof Fail;
     }
 
     default boolean isBool() {

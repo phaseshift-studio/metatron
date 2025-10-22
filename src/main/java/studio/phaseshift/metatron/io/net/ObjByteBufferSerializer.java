@@ -54,6 +54,8 @@ public class ObjByteBufferSerializer implements ObjSerializer<ByteBuffer> {
             return this.writeInst(obj.as());
         if (obj.isCode())
             return this.writeCode(obj.as());
+        if (obj.isFail())
+            throw new UnsupportedOperationException("fail serialization not implemented yet");
         if (obj.isObjs())
             return this.writeObjs(obj.as());
         throw MTronException.of("unknown obj type: ", obj);
@@ -90,10 +92,10 @@ public class ObjByteBufferSerializer implements ObjSerializer<ByteBuffer> {
 
     @Override
     public ByteBuffer writeLst(final Lst lst) {
-        if(lst.isEmpty())
-            return ByteBuffer.wrap(handleIds(lst,"[,]").getBytes());
-        final String internal = IteratorUtil.stream(lst.elements()).map(o -> new String(this.write(o).array())).reduce(",", (a, b) ->  a + b + ",");
-        return ByteBuffer.wrap(handleIds(lst, "[" + internal.substring(1,internal.length()-1) + "]").getBytes());
+        if (lst.isEmpty())
+            return ByteBuffer.wrap(handleIds(lst, "[,]").getBytes());
+        final String internal = IteratorUtil.stream(lst.elements()).map(o -> new String(this.write(o).array())).reduce(",", (a, b) -> a + b + ",");
+        return ByteBuffer.wrap(handleIds(lst, "[" + internal.substring(1, internal.length() - 1) + "]").getBytes());
     }
 
     @Override
@@ -103,13 +105,13 @@ public class ObjByteBufferSerializer implements ObjSerializer<ByteBuffer> {
 
     @Override
     public ByteBuffer writeRec(final Rec rec) {
-        if(rec.isEmpty())
-            return ByteBuffer.wrap(handleIds(rec,"[=>]").getBytes());
+        if (rec.isEmpty())
+            return ByteBuffer.wrap(handleIds(rec, "[=>]").getBytes());
         final String internal = IteratorUtil.stream(rec.elements())
                 .map(o -> new String(this.write(o.first()).array()) + " => " + new String(this.write(o.second()).array()))
-                .reduce(",", (a, b) ->  a + b + ",");
+                .reduce(",", (a, b) -> a + b + ",");
 
-        return ByteBuffer.wrap(handleIds(rec, "[" + internal.substring(1,internal.length()-1)+ "]").getBytes());
+        return ByteBuffer.wrap(handleIds(rec, "[" + internal.substring(1, internal.length() - 1) + "]").getBytes());
     }
 
     @Override
@@ -118,24 +120,24 @@ public class ObjByteBufferSerializer implements ObjSerializer<ByteBuffer> {
                 .map(o -> new String(this.write(o).array()))
                 .reduce(",", (a, b) -> a + b + ",");
         return ByteBuffer.wrap(handleIds(inst, "(" +
-                (internal.length() == 1 ? "" : internal.substring(1,internal.length()-1))+ ")" + (inst.f() == null ? "" : "{" + inst.f() + "}")).getBytes());
+                (internal.length() == 1 ? "" : internal.substring(1, internal.length() - 1)) + ")" + (inst.f() == null ? "" : "{" + inst.f() + "}")).getBytes());
     }
 
     @Override
     public ByteBuffer writeCode(final Code code) {
         final String internal = IteratorUtil.stream(code.insts()).map(i -> new String(this.writeInst(i).array())).reduce(".", (a, b) -> a + b + ".");
-        return ByteBuffer.wrap(handleIds(code, "|[" + internal.substring(1,internal.length()-1) + "]|").getBytes());
+        return ByteBuffer.wrap(handleIds(code, "|[" + internal.substring(1, internal.length() - 1) + "]|").getBytes());
     }
 
     @Override
     public ByteBuffer writeObjs(final Objs objs) {
-        final String internal = IteratorUtil.stream(objs.objsValue()).map(o -> new String(this.write(o).array())).reduce(",", (a, b) ->  a + b + ",");
-        return ByteBuffer.wrap(("{" + internal.substring(1,internal.length()-1) + "}").getBytes());
+        final String internal = IteratorUtil.stream(objs.objsValue()).map(o -> new String(this.write(o).array())).reduce(",", (a, b) -> a + b + ",");
+        return ByteBuffer.wrap(("{" + internal.substring(1, internal.length() - 1) + "}").getBytes());
     }
 
     @Override
     public Obj read(final ByteBuffer data) throws MTronException {
-       // System.out.println(new String(data.array()));
+        // System.out.println(new String(data.array()));
         return ObjParser.m_obj().parse(new String(data.array())).get();
     }
 }

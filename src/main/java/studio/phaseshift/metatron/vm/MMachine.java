@@ -30,14 +30,12 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
-import static studio.phaseshift.metatron.lang.obj.MInstSet.MTRON_TID;
 import static studio.phaseshift.metatron.util.Tuple.Quartet;
+import static studio.phaseshift.metatron.vm.machInstSet.MTRON_MACH_TID;
 
 ;
 
 public class MMachine extends MObj implements Machine {
-
-    public static final fURI MONOID_TID = MTRON_TID.extend("lang/monoid");
 
     private final GraphittyLogger LOG = Graphitty.log(this);
 
@@ -47,15 +45,16 @@ public class MMachine extends MObj implements Machine {
     }
 
     public static Machine of(final Code code) {
-        return new MMachine(Quartet.with(code, MObjs.empty(), MLst.of(new LinkedList<>()), MObjs.empty()), MONOID_TID, fURI.NULL);
+        return new MMachine(Quartet.with(code, MObjs.empty(), MLst.of(new LinkedList<>()), MObjs.empty()), MTRON_MACH_TID, fURI.NULL);
     }
+
 
     public static Machine of(final Obj start, final Code code) {
         if (!start.isNoObj()) {
             final List<Inst> prepended = new ArrayList<>();
             prepended.add(MInst.instB(mtronInstSet.START_TID, MLst.of(start)));
             prepended.addAll(code.codeValue());
-            return new MMachine(Quartet.with(MCode.of(prepended), MObjs.empty(), MLst.of(new LinkedList<>()), MObjs.empty()), MONOID_TID, fURI.NULL);
+            return new MMachine(Quartet.with(MCode.of(prepended), MObjs.empty(), MLst.of(new LinkedList<>()), MObjs.empty()), MTRON_MACH_TID, fURI.NULL);
         } else {
             return MMachine.of(code);
         }

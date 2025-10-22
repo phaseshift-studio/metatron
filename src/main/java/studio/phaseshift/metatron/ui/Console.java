@@ -26,8 +26,9 @@ import org.jline.terminal.TerminalBuilder;
 import org.jline.utils.AttributedString;
 import org.jline.utils.AttributedStringBuilder;
 import org.jline.widget.Widgets;
-import studio.phaseshift.metatron.BootLoader;
+import studio.phaseshift.metatron.lang.obj.NoObj;
 import studio.phaseshift.metatron.lang.obj.Obj;
+import studio.phaseshift.metatron.lang.obj.mtron.mtronInstSet;
 import studio.phaseshift.metatron.lang.translate.ObjParser;
 import studio.phaseshift.metatron.space.device.log.Log;
 import studio.phaseshift.metatron.util.IteratorUtil;
@@ -56,7 +57,7 @@ public class Console {
     private final Terminal terminal;
     private final LineReader reader;
 
-    public Console(final Map<String, String> terminalArgs) throws IOException {
+    public Console(final Map<String, Obj> terminalArgs) throws IOException {
         final DefaultParser parser = new DefaultParser()
                 .quoteChars(new char[]{'\'', '"'})
                 .lineCommentDelims(new String[]{"---"})
@@ -81,14 +82,14 @@ public class Console {
                 .build();
         terminalArgs.forEach((k, v) -> {
             if (k.equals("log"))
-                Log.setSLF4J(v);
+                Log.setSLF4J(v.uriValue().toString());
         });
         // final AutosuggestionWidgets autosuggestionWidgets = new AutosuggestionWidgets(this.reader);
         // autosuggestionWidgets.enable();
     }
 
     public static void main(final String[] args) throws IOException {
-        final Map<String, String> params = new HashMap<>();
+       /* final Map<String, String> params = new HashMap<>();
         for (final String arg : args) {
             final String[] kv = arg.split("=");
             params.put(kv[0].replace("--", ""), kv[1]);
@@ -108,7 +109,7 @@ public class Console {
                 reload = true;
             }
             console.stop();
-        }
+        }*/
     }
 
     public void stop() {
@@ -136,7 +137,10 @@ public class Console {
         while (true) {
             try {
                 Obj result = null;
-                Graphitty.out(this.terminal.output(), "\n{{v1&^1}}");
+                Graphitty.out(this.terminal.output(), "%s{{v%d&^%d&Xv}}",
+                        RESOLVE_MODE ? "\n".repeat(3) : "\n".repeat(1),
+                        RESOLVE_MODE ? 3 : 1,
+                        RESOLVE_MODE ? 3 : 1);
                 line = this.reader.readLine(Graphitty.string("{{FORM2}}mton{{FORM1}}> ")).trim();
                 if (line.equals(":header"))
                     this.outputHeader();
@@ -243,10 +247,20 @@ public class Console {
                             final int xLocation = this.terminal.getCursorPosition(System.out::print).getX() + 1;
                             // final int promptLength = 8; //"mtron> ".length() + 1;
                             builder.append(buffer);
-                            final String oString = o.toString();
-                            final int yDistance = StringUtil.countLines(oString);
-                            Graphitty.out(this.terminal.output(), "{{v1&-X-&Xv&|%d}}%s".formatted(8, oString));
-                            Graphitty.out(this.terminal.output(), "{{^%d&|%d}}".formatted(yDistance, xLocation));
+                            try {
+                                final String objString = o.toString();
+                                final String compiledString = o.isCode() ? o.resolve(NoObj.single()).toString() : null;
+                                final int yDistance = StringUtil.countLines(objString);
+                                final int yyDistance = null == compiledString ? 0 : (StringUtil.countLines(compiledString) + 1);
+                                Graphitty.out(this.terminal.output(), "{{v%d&-X-&Xv&|%d}}%s", yDistance, 8, objString);
+                                if (null != compiledString) {
+                                    Graphitty.out(this.terminal.output(), "\n{{|%d}}{{r}}%s{{/r}}", 8, "-".repeat(Graphitty.strip(compiledString).length()));
+                                    Graphitty.out(this.terminal.output(), "{{v%d&-X-&Xv&|%d}}%s", yyDistance, 8, compiledString);
+                                }
+                                Graphitty.out(this.terminal.output(), "{{^%d&|%d}}", yDistance + yyDistance, xLocation);
+                            } catch (Exception e) {
+                                // do nothing
+                            }
                         }
 
                     } catch (final Exception e) {
@@ -313,7 +327,7 @@ public class Console {
         private boolean hideWidget() {
             boolean hiding = ObjStringSerializer.HIDE_TIDS.isEmpty();
             if (hiding)
-                ObjStringSerializer.HIDE_TIDS.addAll(ObjStringSerializer.BASE_TIDS);
+                ObjStringSerializer.HIDE_TIDS.addAll(mtronInstSet.BASE_TYPES);
             else
                 ObjStringSerializer.HIDE_TIDS.clear();
             final int xLocation = terminal.getCursorPosition(System.out::print).getX() + 1;

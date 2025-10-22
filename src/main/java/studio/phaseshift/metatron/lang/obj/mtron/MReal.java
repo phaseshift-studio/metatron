@@ -30,25 +30,21 @@ public class MReal extends MObj implements Real {
         super(value, tid, vid);
     }
 
-    public MReal(final Double value) {
-        this(value, REAL_TID, fURI.NULL);
+    public static Real real(final Double jvm) {
+        return new MReal(jvm, REAL_TID, fURI.NULL);
     }
 
-    public static Real real(final Double r) {
-        return MReal.of(r);
+    public static Real real(final Double jvm, final fURI tid, final fURI vid) {
+        return new MReal(jvm, tid, vid);
     }
 
-    public static Real real(final Double r, final fURI tid, final fURI vid) {
-        return new MReal(r, tid, vid);
-    }
-
-    public static Real of(final double value) {
-        return new MReal(value);
+    public static Real of(final double jvm) {
+        return new MReal(jvm, REAL_TID, fURI.NULL);
     }
 
     @Override
     public Real clone(final Object jvm, final fURI tid, final fURI vid) {
-        return (Real) super.clone(jvm, tid, vid);
+        return super.clone(jvm, tid, vid);
     }
 
     @Override

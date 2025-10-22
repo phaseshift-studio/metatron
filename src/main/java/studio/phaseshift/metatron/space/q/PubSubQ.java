@@ -34,7 +34,7 @@ import java.util.Optional;
 import java.util.Queue;
 
 import static studio.phaseshift.metatron.lang.fURI.f;
-import static studio.phaseshift.metatron.space.Space.MTRON_SPACE_TID;
+import static studio.phaseshift.metatron.lang.obj.mtron.mtronInstSet.MTRON_SPACE_TID;
 import static studio.phaseshift.metatron.util.Tuple.Triplet;
 
 public class PubSubQ extends BaseQ {

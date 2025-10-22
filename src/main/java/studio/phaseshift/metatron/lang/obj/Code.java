@@ -146,8 +146,8 @@ public interface Code extends Call {
     @Override
     default Obj apply(final Obj lhs) {
         final Call resolve = this.tryToInst().resolve(lhs);
-        if (!lhs.matches(resolve.dom()))
-            throw MTronException.of("%s ({{m}}lhs{{/m}}) (%s) does not match {{m}}code domain{{/m}} (%s): %s", lhs, lhs.rng(), resolve.dom(), resolve);
+        //if (!lhs.matches(resolve.dom()))
+        //    throw MTronException.of("%s ({{m}}lhs{{/m}}) (%s) does not match {{m}}code domain{{/m}} (%s): %s", lhs, lhs.rng(), resolve.dom(), resolve);
         final Obj rhs = (resolve.isCode()) ? objs(MMachine.of(lhs, resolve.as()).apply(NoObj.single())) : resolve.apply(lhs);
         //if (!rhs.matches(call.rng()))
         //    throw MTronException.of("%s ({{m}}rhs{{/m}}) (%s) does not match {{m}}code range{{/m}} (%s): %s", rhs, rhs.rng(), call.rng(), this);

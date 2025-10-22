@@ -27,4 +27,16 @@ public interface Bool extends Mono {
     @Override
     Boolean jvm();
 
+    default Bool jvm(final Boolean jvm) {
+        return this.clone(jvm, this.tid(), this.vid());
+    }
+
+    default Bool tid(final fURI tid) {
+        return this.clone(this.jvm(), tid, this.vid());
+    }
+
+    default Bool vid(final fURI vid) {
+        return this.clone(this.jvm(), this.tid(), vid);
+    }
+
 }

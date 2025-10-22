@@ -22,7 +22,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import studio.phaseshift.metatron.lang.obj.NoObj;
 import studio.phaseshift.metatron.space.RouterTest;
-import studio.phaseshift.metatron.space.mem.MemSpace;
+import studio.phaseshift.metatron.space.mem.KVSpace;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.lang.fURI.f;
@@ -40,11 +40,11 @@ public class MRouterTest extends RouterTest {
 
     @Test
     public void testCloseSpace() {
-        MemSpace mnt = new MemSpace(f("/mnt/#"), f("/mnt"));
+        KVSpace mnt = new KVSpace(f("/mnt/#"), f("/mnt"));
         MRouter router = new MRouter(f("ws://localhost:8889"),f("/mnt/sys/router"));
         router.addSpace(mnt);
         assertFalse(router.hasSpaceFor(f("/test/a")));
-        MemSpace test = new MemSpace(f("/test/#"), f("/mnt/test"));
+        KVSpace test = new KVSpace(f("/test/#"), f("/mnt/test"));
         assertFalse(router.hasSpaceFor(f("/test/a")));
         router.addSpace(test);
         assertTrue(router.hasSpaceFor(f("/test/a")));

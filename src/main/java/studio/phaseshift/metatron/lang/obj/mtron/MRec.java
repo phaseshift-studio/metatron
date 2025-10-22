@@ -26,6 +26,7 @@ import studio.phaseshift.metatron.lang.obj.Rec;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import static studio.phaseshift.metatron.lang.obj.mtron.MStr.str;
 import static studio.phaseshift.metatron.lang.obj.mtron.MUri.uri;
 import static studio.phaseshift.metatron.lang.obj.mtron.mtronInstSet.REC_TID;
 
@@ -83,7 +84,7 @@ public class MRec extends MObj implements Rec {
         if (k.segments().size() == 1)
             map.put(key, value);
         else {
-            final Obj v = map.get(MUri.of(k.segments().get(0)));
+            final Obj v = map.get(uri(k.segments().get(0)));
             map.put(uri(k.segments().get(0)), (v.isRec() ? v.<Rec>as() : rec()).put(k.pretract().toUri(), value));
         }
         return this.jvm(map);
@@ -118,7 +119,7 @@ public class MRec extends MObj implements Rec {
     public static Rec ofUriKeyed(final Object... kv) {
         final Map<Obj, Obj> map = new LinkedHashMap<>();
         for (int i = 0; i < kv.length; i = i + 2) {
-            map.put(MUri.of(kv[i].toString()), (Obj) kv[i + 1]);
+            map.put(uri(kv[i].toString()), (Obj) kv[i + 1]);
         }
         return MRec.of(map);
     }
@@ -126,7 +127,7 @@ public class MRec extends MObj implements Rec {
     public static Rec ofUriKeyed(final Map<String, String> value, final fURI tid) {
         final Map<Obj, Obj> map = new LinkedHashMap<>();
         for (final Map.Entry<String, String> kv : value.entrySet()) {
-            map.put(MUri.of(kv.getKey()), MStr.of(kv.getValue()));
+            map.put(uri(kv.getKey()), str(kv.getValue()));
         }
         return MRec.of(map, tid);
     }

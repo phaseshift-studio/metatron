@@ -28,7 +28,7 @@ import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
 
 import static studio.phaseshift.metatron.util.Tuple.Triplet;
-import static studio.phaseshift.metatron.vm.machInstSet.MONAD_TID;
+import static studio.phaseshift.metatron.vm.machInstSet.MTRON_MACH_MONAD_TID;
 
 // monoid, obj, inst, state
 public class MMonad extends MObj implements Monad {
@@ -38,6 +38,10 @@ public class MMonad extends MObj implements Monad {
     private MMonad(final Triplet<Obj, Inst, Rec> value, final fURI tid, final fURI vid) {
         super(value, tid, vid);
 
+    }
+
+    public static Monad of(final Obj obj, final Inst inst) {
+        return new MMonad(Triplet.with(obj, inst, MRec.EMPTY_REC), MTRON_MACH_MONAD_TID, fURI.NULL);
     }
 
     @Override
@@ -81,9 +85,5 @@ public class MMonad extends MObj implements Monad {
     @Override
     public String toString() {
         return Monad.Helpers.monadToString(this);
-    }
-
-    public static Monad of(final Obj obj, final Inst inst) {
-        return new MMonad(Triplet.with(obj, inst, MRec.EMPTY_REC), MONAD_TID, fURI.NULL);
     }
 }

@@ -22,10 +22,10 @@ import org.junit.jupiter.api.BeforeAll;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.space.SpaceTest;
 
-public class MemSpaceTest extends SpaceTest {
+public class KVSpaceTest extends SpaceTest {
 
     @BeforeAll
     public static void setup() {
-        SPACE = () -> new MemSpace(fURI.of("/t/#"), fURI.of("/mnt/t"));
+        SPACE = () -> new KVSpace(fURI.of("/t/#"), fURI.of("/mnt/t"));
     }
 }

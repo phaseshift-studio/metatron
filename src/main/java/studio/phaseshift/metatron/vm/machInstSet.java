@@ -22,27 +22,25 @@ import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.Inst;
 import studio.phaseshift.metatron.lang.obj.MInstSet;
 import studio.phaseshift.metatron.lang.obj.Type;
-import studio.phaseshift.metatron.lang.obj.mtron.mtronInstSet;
 import studio.phaseshift.metatron.lang.obj.mtron.mtronRewrites;
 
-import java.util.HashMap;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static studio.phaseshift.metatron.lang.fURI.f;
 import static studio.phaseshift.metatron.lang.obj.mtron.MType.T;
+import static studio.phaseshift.metatron.lang.obj.mtron.mtronInstSet.MTRON_TID;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public class machInstSet extends MInstSet {
 
-    public static final fURI MACH_TID = f("/mtron/mach");
-    public static final fURI MONAD_TID = f("/mtron/mach/monad");
+    public static final fURI MTRON_MACH_TID = MTRON_TID.extend("/mach");
+    public static final fURI MTRON_MACH_MONAD_TID = MTRON_MACH_TID.extend("monad");
 
     public machInstSet(final fURI vid) {
-        super(MACH_TID, vid);
+        super(MTRON_MACH_TID, vid);
     }
 
     public static machInstSet of(final fURI vid) {
@@ -51,7 +49,7 @@ public class machInstSet extends MInstSet {
 
     @Override
     public Set<Type> types() {
-        return Stream.of(T(MACH_TID), T(MONAD_TID)).collect(Collectors.toSet());
+        return Stream.of(T(MTRON_MACH_TID), T(MTRON_MACH_MONAD_TID)).collect(Collectors.toSet());
     }
 
     @Override

@@ -34,11 +34,11 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import static studio.phaseshift.metatron.lang.obj.mtron.MFail.fail;
 import static studio.phaseshift.metatron.lang.obj.mtron.MLst.lst;
 import static studio.phaseshift.metatron.lang.obj.mtron.MRec.rec;
 import static studio.phaseshift.metatron.lang.obj.mtron.MType.T;
-import static studio.phaseshift.metatron.lang.obj.mtron.mtronInstSet.FROM_TID;
-import static studio.phaseshift.metatron.lang.obj.mtron.mtronInstSet.SPLIT_TID;
+import static studio.phaseshift.metatron.lang.obj.mtron.mtronInstSet.*;
 import static studio.phaseshift.metatron.util.Tuple.Triplet;
 
 public interface Inst extends Call {
@@ -300,34 +300,40 @@ public interface Inst extends Call {
     default Obj apply(final Obj lhs) {
         Obj clhs = lhs;
         Inst cinst = this.resolve(clhs);
+        Obj rhs = NoObj.single();
         boolean modulateC = false;
-        if (!cinst.isBlocking() && !clhs.matches(cinst.dom())) {
+        if (!lhs.isFail() && !cinst.isBlocking() && !clhs.matches(cinst.dom())) {
             if (clhs.uniqueC().isOne() && !clhs.c().isOne()) { // && cinst.dom().c().within(cInt.SOME())) {
                 clhs = clhs.c(cInt::one);
                 cinst = this.resolve(clhs);
                 modulateC = true;
             }
             if (!clhs.rng().matches(cinst.dom()))
-                throw MTronException.of("{{m}}lhs obj{{/m}} does not match inst domain (apply): %s {{r}}=/>{{/r}} %s", clhs.rng(), cinst.dom());
+                rhs = fail(MTronException.of("{{m}}lhs obj{{/m}} does not match inst domain (apply): %s {{r}}=/>{{/r}} %s", clhs.rng(), cinst.dom()));
         }
         Router.stack().push(cinst.args());
         if (null == cinst.f())
-            throw MTronException.of("unable to resolve %s", cinst);
-        Obj rhs = NoObj.single();
+            rhs = fail(MTronException.of("unable to resolve %s", cinst));
         try {
-            rhs = cinst.f().apply(clhs, cinst);
-            Graphitty.log(cinst).trace("%s ({{m}}lhs{{/m}}) => %s ({{m}}inst{{/m}}) => %s ({{m}}rhs{{/m}}) evaluated {{g}}successfully{{/g}}", clhs, cinst, rhs);
+            if (!rhs.isFail() || cinst.isCatch()) {
+                rhs = cinst.f().apply(clhs, cinst);
+                Graphitty.log(cinst).trace("%s ({{m}}lhs{{/m}}) => %s ({{m}}inst{{/m}}) => %s ({{m}}rhs{{/m}}) evaluated {{g}}successfully{{/g}}", clhs, cinst, rhs);
+            }
         } catch (final Exception e) {
-            Graphitty.log(cinst).error("%s => %s evaluation error: %s", clhs, cinst, e.getMessage());
+            rhs = fail(e, "%s => %s evaluation error", clhs, cinst);
         } finally {
             Router.stack().pop();
         }
-        if (!rhs.matches(cinst.rng()))
-            throw MTronException.of("{{m}}rhs obj{{/m}} (%s) {{r}}does not match{{/r}} {{m}}inst range{{/m}} (%s): %s", rhs, cinst.rng(), cinst);
+        if (!rhs.isFail() && !rhs.matches(cinst.rng()))
+            rhs = fail(MTronException.of("{{m}}rhs obj{{/m}} (%s) {{r}}does not match{{/r}} {{m}}inst range{{/m}} (%s): %s", rhs, cinst.rng(), cinst));
         //final cInt cinstc = false && cinst.isReducing() ? cInt.ONE() : cinst.c();
         final cInt cc = cinst.c();
         //return false && rhs.isObjs() ? rhs : (modulateC ? rhs.c(c -> c.mult(lhs.c())) : rhs).c(c -> c.mult(cc));
         return modulateC ? rhs.c(c -> c.mult(lhs.c()).mult(cc)) : rhs.c(c -> c.mult(cc));
+    }
+
+    default boolean isCatch() {
+        return this.tid().basePath().equals(CATCH_TID);
     }
 
     default boolean isGather() {
@@ -403,9 +409,10 @@ public interface Inst extends Call {
         }
 
         public Obj apply(final Obj lhs, final Inst cinst) {
-            return this.bi ?
+            return lhs.isFail() && !cinst.isCatch() ?
+                    lhs : (this.bi ?
                     ((BiFunction<Obj, Inst, Obj>) this.func).apply(lhs, cinst) :
-                    ((Function<Obj, Obj>) this.func).apply(lhs);
+                    ((Function<Obj, Obj>) this.func).apply(lhs));
         }
 
         @Override

@@ -40,7 +40,7 @@ public abstract class MInstSet extends MSpace<Map<fURI, Set<? extends Obj>>> imp
     protected final Map<fURI, Inst> REWRITE_TABLE = new LinkedHashMap<>();
 
     public MInstSet(final fURI tid, final fURI vid) {
-        this(new HashMap<>(), tid, vid);
+        this(new LinkedHashMap<>(), tid, vid);
     }
 
     public MInstSet(final Map<fURI, Set<? extends Obj>> value, final fURI tid, final fURI vid) {

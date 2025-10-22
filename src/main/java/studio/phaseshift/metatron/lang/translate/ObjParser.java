@@ -52,6 +52,7 @@ public class ObjParser {
 
     private static final GraphittyLogger LOG = Graphitty.log(ObjParser.class);
     private static final SettableParser obj_parser = SettableParser.undefined();
+    private static final SettableParser obj_no_code_parser = SettableParser.undefined();
     private static final SettableParser lst_parser = SettableParser.undefined();
     private static final SettableParser rec_parser = SettableParser.undefined();
     private static final SettableParser inst_parser = SettableParser.undefined();
@@ -66,6 +67,20 @@ public class ObjParser {
                 .map(t -> split_(objs(((List) t).stream().filter(x -> x instanceof Call).toList())).tryToInst()));
         rel_parser.set(seq(m_type_prefix_opt_colon(REL_TID), obj_rel_back_parser, of("=>").trim(), m_obj(), m_vid_postfix())
                 .map(t -> new MRel(Tuple.Pair.with(pick(t, 1), pick(t, 3)), pick(t, 0), pick(t, 4))));
+        obj_no_code_parser.set(choice(
+                m_comment(),
+                m_type(),
+                m_noobj(),
+                m_bool(),
+                m_real(),
+                m_int(),
+                m_str(),
+                m_rec(),
+                m_rel(),
+                m_objs(),
+                m_lst(),
+                m_inst(),
+                m_uri()));
         obj_parser.set(choice(
                 m_comment(),
                 m_type(),
@@ -305,9 +320,15 @@ public class ObjParser {
     }
 
     public static Parser sugar_code() {
-        return seq(opt(obj_parser, NoObj.single()), opt(of(".").trim(), '.'), m_code(), m_vid_postfix()).map(t -> {
+        return seq(opt(obj_no_code_parser, NoObj.single()), opt(of(".").trim(), '.'), opt(m_code(), null), m_vid_postfix()).map(t -> {
+            final Obj first = ObjParser.<Call>pick(t, 0);
+            final Obj second = ObjParser.pick(t, 2);
+            if (null == second)
+                return first.isInst() && !first.isNoObj() ? MCode.of(List.of(first.as())) : first;
             final List<Inst> newCode = new ArrayList<>();
-            newCode.add(new MInst(Triplet.with(lst(ObjParser.<Call>pick(t, 0)), Inst.f.UNKNOWN, NoObj.single()), START_TID, fURI.NULL));
+            if (!first.isNoObj() && !first.isInst())
+                newCode.add(new MInst(Triplet.with(lst(first.isInst() ? NoObj.single() : first), Inst.f.UNKNOWN, NoObj.single()), START_TID, fURI.NULL));
+            else if (first.isInst()) newCode.add(first.as());
             newCode.addAll(ObjParser.<Call>pick(t, 2).insts());
             return MCode.of(newCode, CODE_TID, pick(t, 3));
         });

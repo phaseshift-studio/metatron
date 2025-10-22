@@ -38,7 +38,7 @@ public class CodeParseTest extends MetatronTest {
             "{1,2,3}.plus(2)% {3,4,5}",
             "{1}.plus(2)% 3",
             "{22,33}.plus(plus(_))% {66,99}",
-            "/mtron/int::2.plus(/mtron/int::5)% /mtron/int::7"
+            "/m/int::2.plus(/m/int::5)% /m/int::7"
     }, delimiter = '%')
     void testStandardExpressions(final String expression, final String expectedResult) {
         assertEquals(ObjParser.m_obj().parse(expectedResult).<Obj>get(), objs(()->ObjParser.eval(expression)));

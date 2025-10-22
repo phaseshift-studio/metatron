@@ -20,11 +20,12 @@ package studio.phaseshift.metatron.lang.obj.mtron;
 
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.Obj;
-import studio.phaseshift.metatron.lang.obj.mtron.c.cInt;
 import studio.phaseshift.metatron.space.Router;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.Objects;
+
+import static studio.phaseshift.metatron.lang.obj.mtron.mtronInstSet.FAIL_TID;
 
 public abstract class MObj implements Obj, Cloneable {
 
@@ -37,17 +38,15 @@ public abstract class MObj implements Obj, Cloneable {
         this.jvm = jvm;
         this.tid = tid.big();
         this.vid = vid;
-        if (!this.check()) {
-            this.tid = tid.c(cInt.ZERO().toString());
-            this.vid = null;
-            this.jvm = null;
-        } else
+        if (this.check())
             this.save();
     }
 
     protected boolean check() {
         if (!this.isNoObj() && !this.isType() && !this.matches(this.type())) {
-            this.logger().error("[{{r}}type error{{/r}}] %s is not a %s".formatted(this, this.type()));
+            this.tid = FAIL_TID;
+            this.vid = fURI.NULL;
+            this.jvm = MTronException.of("[{{r}}type error{{/r}}] %s is not a %s".formatted(this, this.type()));
             return false;
         }
         return true;

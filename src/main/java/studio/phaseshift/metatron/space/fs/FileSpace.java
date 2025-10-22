@@ -41,10 +41,12 @@ import java.util.stream.Stream;
 import static studio.phaseshift.metatron.lang.fURI.f;
 import static studio.phaseshift.metatron.lang.obj.mtron.MStr.str;
 import static studio.phaseshift.metatron.lang.obj.mtron.MUri.uri;
+import static studio.phaseshift.metatron.lang.obj.mtron.mtronInstSet.MTRON_SPACE_TID;
+import static studio.phaseshift.metatron.lang.obj.mtron.mtronInstSet.MTRON_TID;
 
 public class FileSpace extends MSpace<FileSystem> {
 
-    public static final fURI FILESPACE_TID = f("/mtron/io/fs");
+    public static final fURI FILESPACE_TID = MTRON_SPACE_TID.extend("fs");
 
     public FileSpace(final FileSystem fs, final fURI pattern, final fURI vid) {
         super(fs, pattern, FILESPACE_TID, vid);
@@ -58,7 +60,7 @@ public class FileSpace extends MSpace<FileSystem> {
             else {
                 if (key.hasPattern()) {
                     try (Stream<Path> walk = Files.walk(Path.of(this.pattern.retractPattern().toString()), vid.segments().size(), FileVisitOption.FOLLOW_LINKS)) {
-                        return walk.map(p -> f(p.toString())).filter(p -> p.matches(vid)).collect(Collectors.toMap(p -> p, p -> uri(p.toString()),Obj::append, LinkedHashMap::new));
+                        return walk.map(p -> f(p.toString())).filter(p -> p.matches(vid)).collect(Collectors.toMap(p -> p, p -> uri(p.toString()), Obj::append, LinkedHashMap::new));
                     } catch (IOException e) {
                         throw MTronException.of(e);
                     }
@@ -71,7 +73,7 @@ public class FileSpace extends MSpace<FileSystem> {
                                             p -> f(p.toString()),
                                             p -> MRec.ofUriKeyed("name", str(p.getFileName().toString()), "permissions", str(MTronException.wrap(() -> Files.getPosixFilePermissions(p)).toString())), Obj::append, LinkedHashMap::new));
                         } else {
-                            final Str value = MStr.of(Files.readString(vidPath));
+                            final Str value = str(Files.readString(vidPath));
                             return Map.of(vid, value);
                         }
                     } catch (IOException e) {

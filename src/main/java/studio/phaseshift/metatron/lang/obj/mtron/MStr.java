@@ -26,8 +26,8 @@ import static studio.phaseshift.metatron.lang.obj.mtron.mtronInstSet.STR_TID;
 
 public class MStr extends MObj implements Str {
 
-    public static Str str(final String s) {
-        return MStr.of(s);
+    public static Str str(final String jvm) {
+        return new MStr(jvm,STR_TID,fURI.NULL);
     }
 
     public MStr(final String value, final fURI tid, final fURI vid) {
@@ -46,9 +46,5 @@ public class MStr extends MObj implements Str {
     @Override
     public String jvm() {
         return (String) this.jvm;
-    }
-
-    public static Str of(final String value) {
-        return new MStr(value);
     }
 }

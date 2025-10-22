@@ -24,7 +24,7 @@ import studio.phaseshift.metatron.lang.obj.Obj;
 import studio.phaseshift.metatron.space.mem.MSpace;
 
 import static studio.phaseshift.metatron.lang.fURI.f;
-import static studio.phaseshift.metatron.lang.obj.mgrph.tp.mgrphInstSet.MGRPH_TID;
+import static studio.phaseshift.metatron.lang.obj.mtron.mtronInstSet.MTRON_SPACE_TID;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -40,7 +40,7 @@ public class GraphSpace extends MSpace<Graph> {
      * /root/v/{id}/vp/{key}           => vertex property by key
      * /root/v/{id}/vp/{key}/{key2}    => vertex property property by key
      */
-    public static final fURI GRAPHSPACE_TID = MGRPH_TID.extend("space");
+    public static final fURI GRAPHSPACE_TID = MTRON_SPACE_TID.extend("grph");
     protected static final fURI V_PATTERN = f("/v/+");
     protected static final fURI E_V_ADJ_PATTERN = f("/v/+/");
 
@@ -59,7 +59,7 @@ public class GraphSpace extends MSpace<Graph> {
         final fURI subset = vid.removeSubpath(pattern.retractPattern());
         if (subset.equals(V_PATTERN)) {  // g.V()
 
-        } else if(subset.matches(V_PATTERN)) { // g.V(1,2,3)
+        } else if (subset.matches(V_PATTERN)) { // g.V(1,2,3)
 
         }
         return null;

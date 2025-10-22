@@ -29,6 +29,7 @@ import java.util.stream.Stream;
 import static studio.phaseshift.metatron.lang.obj.mtron.MInst.instC;
 import static studio.phaseshift.metatron.lang.obj.mtron.MLst.lst;
 import static studio.phaseshift.metatron.lang.obj.mtron.MType.T;
+import static studio.phaseshift.metatron.lang.obj.mtron.mtronInstSet.MTRON_TID;
 import static studio.phaseshift.metatron.ui.ObjStringSerializer.prettyPrintCode;
 
 /*

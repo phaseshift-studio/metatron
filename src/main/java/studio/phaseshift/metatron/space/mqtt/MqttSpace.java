@@ -31,7 +31,7 @@ import studio.phaseshift.metatron.lang.translate.JSONTranslator;
 import studio.phaseshift.metatron.space.Qs;
 import studio.phaseshift.metatron.space.Space;
 import studio.phaseshift.metatron.space.mem.MSpace;
-import studio.phaseshift.metatron.space.mem.MemSpace;
+import studio.phaseshift.metatron.space.mem.KVSpace;
 import studio.phaseshift.metatron.space.q.PubSubQ;
 import studio.phaseshift.metatron.ui.*;
 
@@ -44,6 +44,7 @@ import java.util.concurrent.ExecutionException;
 
 import static studio.phaseshift.metatron.lang.fURI.f;
 import static studio.phaseshift.metatron.lang.obj.mtron.MUri.uri;
+import static studio.phaseshift.metatron.lang.obj.mtron.mtronInstSet.MTRON_SPACE_TID;
 
 
 public class MqttSpace extends MSpace<Map<Uri, Obj>> implements Space {
@@ -55,7 +56,7 @@ public class MqttSpace extends MSpace<Map<Uri, Obj>> implements Space {
             .prettyPrint(false)
             .ignoreRewrites(true)
             .create();
-    public static fURI MQTT_TID = fURI.of("/mtron/space/mqtt");
+    public static fURI MQTT_TID = MTRON_SPACE_TID.extend("mqtt");
     protected final fURI broker;
     protected final fURI prefix;
     final JSONTranslator jsonTranslator = new JSONTranslator(SERIALIZER);
@@ -63,7 +64,7 @@ public class MqttSpace extends MSpace<Map<Uri, Obj>> implements Space {
     private final GraphittyLogger LOG = Graphitty.log(this);
     Mqtt5Client client;
     Mqtt5BlockingClient.Mqtt5Publishes incomingMessages;
-    MemSpace cache;
+    KVSpace cache;
 
     public MqttSpace(final Map<Uri, Obj> config, final fURI vid) {
         super(config, config.containsKey(uri("prefix")) ?
@@ -74,7 +75,7 @@ public class MqttSpace extends MSpace<Map<Uri, Obj>> implements Space {
                         .orElseThrow(new IllegalArgumentException("config must have a pattern key")).uriValue(), MQTT_TID, vid);
         this.prefix = config.containsKey(uri("prefix")) ? config.get(uri("prefix")).uriValue() : null;
         LOG.info("{{y}}mtron{{g}}<=>{{y}}mqtt{{X}} mapping established: {{b}}%s {{g}}<=> ({{b}}%s {{g}}<=> {{b}}%s{{g}}){{X}}", this.pattern(), this.prefix, this.toMqttTopic(this.pattern()));
-        this.cache = new MemSpace(this.pattern(), this.vid.extend("cache"));
+        this.cache = new KVSpace(this.pattern(), this.vid.extend("cache"));
         this.cache.qs().clear();
         this.qs = new Qs(this.vid);
         this.qs.register(new PubSubQ(this) {

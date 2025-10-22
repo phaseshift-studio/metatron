@@ -22,17 +22,20 @@ import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.Obj;
 import studio.phaseshift.metatron.lang.obj.mtron.MRec;
 import studio.phaseshift.metatron.space.Space;
-import studio.phaseshift.metatron.space.mem.MemSpace;
+import studio.phaseshift.metatron.space.mem.KVSpace;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
 
-import java.util.*;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static studio.phaseshift.metatron.lang.fURI.f;
 import static studio.phaseshift.metatron.lang.obj.mtron.MStr.str;
 import static studio.phaseshift.metatron.lang.obj.mtron.MUri.uri;
-import static studio.phaseshift.metatron.space.Space.MTRON_SPACE_TID;
+import static studio.phaseshift.metatron.lang.obj.mtron.mtronInstSet.MTRON_SPACE_TID;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -41,6 +44,16 @@ public class DocQ extends BaseQ {
 
     public static final fURI DOC_TID = MTRON_SPACE_TID.extend("doc");
     protected final GraphittyLogger LOG = Graphitty.log(this);
+    // <source,pattern,callback>
+    protected final Space docSpace;
+
+
+    public DocQ(final Space space) {
+        super(space, f("doc"), DOC_TID);
+        this.docSpace = new KVSpace(f("doc"), fURI.NULL);
+        this.onRead = new DocQ.OnRead();
+        this.onWrite = new DocQ.OnWrite();
+    }
 
     public static class Documentation extends MRec {
         public Documentation(final Map<Obj, Obj> value, final fURI tid, final fURI vid) {
@@ -48,22 +61,11 @@ public class DocQ extends BaseQ {
         }
 
         public static Documentation of(final fURI instvid, final String domDesc, final String rngDesc, final Map<fURI, String> argDescription) {
-            return new Documentation((Map)Map.of(
+            return new Documentation((Map) Map.of(
                     uri("dom"), str(domDesc),
                     uri("rng"), str(rngDesc),
-                    uri("args"), argDescription.entrySet().stream().map(kv -> List.of(uri(kv.getKey()), str(kv.getValue()))).collect(Collectors.toMap(kv -> (Obj)kv.get(0), kv -> (Obj) kv.get(1), (a, b) -> b, LinkedHashMap::new))), DOC_TID, instvid);
+                    uri("args"), argDescription.entrySet().stream().map(kv -> List.of(uri(kv.getKey()), str(kv.getValue()))).collect(Collectors.toMap(kv -> (Obj) kv.get(0), kv -> (Obj) kv.get(1), (a, b) -> b, LinkedHashMap::new))), DOC_TID, instvid);
         }
-    }
-
-
-    // <source,pattern,callback>
-    protected final Space docSpace;
-
-    public DocQ(final Space space) {
-        super(space, f("doc"), DOC_TID);
-        this.docSpace = new MemSpace(f("doc"), fURI.NULL);
-        this.onRead = new DocQ.OnRead();
-        this.onWrite = new DocQ.OnWrite();
     }
 
     public class OnRead extends BaseQ.OnRead {

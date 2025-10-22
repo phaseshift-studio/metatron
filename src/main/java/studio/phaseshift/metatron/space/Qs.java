@@ -27,11 +27,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import static studio.phaseshift.metatron.lang.fURI.f;
+import static studio.phaseshift.metatron.lang.obj.mtron.mtronInstSet.MTRON_SPACE_TID;
 
 public class Qs extends MLst {
 
-    public static final fURI QS_TID = f("/mtron/space/q");
+    public static final fURI QS_TID = MTRON_SPACE_TID.extend("qs");
 
     final List<Q> qs = new ArrayList<>();
 

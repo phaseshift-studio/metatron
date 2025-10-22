@@ -42,7 +42,7 @@ public class InstParseTest extends MetatronTest {
             "|(/usr/abc?int<=int(int::T[]){ mult(*a0) }).to(/usr/abc)            % 2./usr/abc(10)                 % 20",
             "|(/usr/abc?int<=int(int::T[]){ mult(*a0) }).to(/usr/abc)            % 2./usr/abc(10)                 % 20",
             "|(/usr/abc?int<=int(int::T[]){ mult(*a0) }).to(/usr/abc)            % 2./usr/abc(plus(10))           % 24",
-            //"/mtron/code[plus(1).plus(2)].plus([d,e,f])% [a,b,c,d,e,f]" (requires union())
+            //"/m/code[plus(1).plus(2)].plus([d,e,f])% [a,b,c,d,e,f]" (requires union())
     }, delimiter = '%')
     void testInstDefinitions(final String definition, final String usage, final String expected) {
         Call def = ObjParser.<Call>eval(definition).next();
@@ -67,7 +67,7 @@ public class InstParseTest extends MetatronTest {
             "\"abc\".plus(\"def\")% \"abcdef\"",
             "abc{0,2}.plus(abc{23})% abc{23,25}",
             "[a,b,c].plus([d,e,f])% [a,b,c,d,e,f]",
-            //"/mtron/code[plus(1).plus(2)].plus([d,e,f])% [a,b,c,d,e,f]" (requires union())
+            //"/m/code[plus(1).plus(2)].plus([d,e,f])% [a,b,c,d,e,f]" (requires union())
     }, delimiter = '%')
     void testPlusInst(final String expression, final String expectedResult) {
         assertEquals(ObjParser.m_obj().parse(expectedResult).get(), ObjParser.eval(expression).next());

@@ -19,7 +19,10 @@
 package studio.phaseshift.metatron.vm;
 
 import studio.phaseshift.metatron.lang.fURI;
-import studio.phaseshift.metatron.lang.obj.*;
+import studio.phaseshift.metatron.lang.obj.Inst;
+import studio.phaseshift.metatron.lang.obj.Obj;
+import studio.phaseshift.metatron.lang.obj.Rec;
+import studio.phaseshift.metatron.lang.obj.Type;
 import studio.phaseshift.metatron.lang.obj.mtron.c.cInt;
 import studio.phaseshift.metatron.ui.Graphitty;
 
@@ -30,28 +33,10 @@ import java.util.function.Function;
 import static studio.phaseshift.metatron.lang.obj.mtron.MObjs.objs;
 import static studio.phaseshift.metatron.lang.obj.mtron.MType.T;
 import static studio.phaseshift.metatron.util.Tuple.Triplet;
-import static studio.phaseshift.metatron.vm.machInstSet.MONAD_TID;
+import static studio.phaseshift.metatron.vm.machInstSet.MTRON_MACH_MONAD_TID;
 
 public interface Monad extends Obj {
 
-
-    class Helpers {
-        public static String monadToString(final Monad monad) {
-            return Graphitty.string("{{b}}%s{{g}}::[%s{{g}}<--{{/g}}{{c}}M{{g}}-->{{c}}%s{{g}}]{{X}}", monad.tid(), monad.obj(), monad.inst());
-        }
-
-        public static int monadHashCode(final Monad monad) {
-            return Objects.hash(monad.tid().cLess(), monad.jvm());
-        }
-
-        public static boolean monadEquals(final Monad monad, final Object other) {
-            return other instanceof Monad && Obj.Helper.objEquals(monad, other);
-        }
-
-        public static boolean monadcLessEquals(final Monad monad, final Object other) {
-            return other instanceof Monad && Obj.Helper.objcLessEquals(monad, other);
-        }
-    }
 
     @Override
     Monad clone(final Object jvm, final fURI tid, final fURI vid);
@@ -127,12 +112,12 @@ public interface Monad extends Obj {
 
     @Override
     default Type dom() {
-        return T(MONAD_TID);
+        return T(MTRON_MACH_MONAD_TID);
     } // TODO: is this what we need?
 
     @Override
     default Type rng() {
-        return T(MONAD_TID);
+        return T(MTRON_MACH_MONAD_TID);
     }
 
     @Override
@@ -145,6 +130,24 @@ public interface Monad extends Obj {
         if (this.halted())
             return this;
         return this.obj(this.inst().apply(this.obj())).inst(inst.as());
+    }
+
+    class Helpers {
+        public static String monadToString(final Monad monad) {
+            return Graphitty.string("{{b}}%s{{g}}::[%s{{g}}<--{{/g}}{{c}}M{{g}}-->{{c}}%s{{g}}]{{X}}", monad.tid(), monad.obj(), monad.inst());
+        }
+
+        public static int monadHashCode(final Monad monad) {
+            return Objects.hash(monad.tid().cLess(), monad.jvm());
+        }
+
+        public static boolean monadEquals(final Monad monad, final Object other) {
+            return other instanceof Monad && Obj.Helper.objEquals(monad, other);
+        }
+
+        public static boolean monadcLessEquals(final Monad monad, final Object other) {
+            return other instanceof Monad && Obj.Helper.objcLessEquals(monad, other);
+        }
     }
 
 }

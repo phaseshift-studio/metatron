@@ -25,6 +25,11 @@ import studio.phaseshift.metatron.util.MTronException;
 import java.util.List;
 import java.util.Map;
 
+import static studio.phaseshift.metatron.lang.obj.mtron.MBool.bool;
+import static studio.phaseshift.metatron.lang.obj.mtron.MInt.jnt;
+import static studio.phaseshift.metatron.lang.obj.mtron.MReal.real;
+import static studio.phaseshift.metatron.lang.obj.mtron.MStr.str;
+import static studio.phaseshift.metatron.lang.obj.mtron.MUri.uri;
 import static studio.phaseshift.metatron.util.Tuple.Pair;
 import static studio.phaseshift.metatron.util.Tuple.Triplet;
 
@@ -35,6 +40,10 @@ public class MObjFactory implements ObjFactory {
     private MObjFactory() {
     }
 
+    public static ObjFactory of() {
+        return SINGLETON;
+    }
+
     @Override
     public Obj create(final Object value) {
         if (null == value)
@@ -42,15 +51,15 @@ public class MObjFactory implements ObjFactory {
         if (value instanceof Obj)
             return (Obj) value;
         if (value instanceof Boolean)
-            return MBool.of((Boolean) value);
+            return bool((Boolean) value);
         else if (value instanceof Long)
-            return new MInt((Long) value);
+            return jnt((Long) value);
         else if (value instanceof Double)
-            return new MReal((Double) value);
+            return real((Double) value);
         else if (value instanceof String)
-            return new MStr((String) value);
+            return str((String) value);
         else if (value instanceof fURI)
-            return new MUri((fURI) value);
+            return uri((fURI) value);
         else if (value instanceof List)
             return new MLst((List<Obj>) value);
         else if (value instanceof Pair)
@@ -99,9 +108,5 @@ public class MObjFactory implements ObjFactory {
             return (O) NoObj.single();
         else
             throw MTronException.of("provided class has not obj equivalent: %s", objClass);
-    }
-
-    public static ObjFactory of() {
-        return SINGLETON;
     }
 }

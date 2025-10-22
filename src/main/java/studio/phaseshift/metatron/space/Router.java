@@ -23,6 +23,7 @@ import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.Obj;
 import studio.phaseshift.metatron.space.mem.StackSpace;
 import studio.phaseshift.metatron.ui.Graphitty;
+import studio.phaseshift.metatron.util.MTronException;
 
 import java.io.Closeable;
 
@@ -60,6 +61,13 @@ public interface Router extends Obj, Space, Closeable {
     }
 
     Obj write(final fURI vid, final Obj obj);
+
+    default Obj write(final Obj obj) {
+        if (null == obj.vid()) {
+            throw MTronException.of("direct obj writing requires obj already be in space");
+        }
+        return this.write(obj.vid(), obj);
+    }
 
     default Obj write(final String vid, final Obj obj) {
         return this.write(fURI.of(vid), obj);

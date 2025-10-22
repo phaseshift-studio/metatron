@@ -33,13 +33,15 @@ import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import static studio.phaseshift.metatron.lang.obj.mtron.mtronInstSet.MTRON_SPACE_TID;
 
-public class MemSpace extends MSpace<Map<fURI, Obj>> implements Space {
 
-    public static final fURI MEMSPACE_TID = MTRON_SPACE_TID.extend("mem");
+public class KVSpace extends MSpace<Map<fURI, Obj>> implements Space {
+
+    public static final fURI KVSPACE_TID = MTRON_SPACE_TID.extend("kv");
     protected final GraphittyLogger LOG = Graphitty.log(this);
 
-    private final Function<fURI,Map<fURI,Obj>> directReader = (key) -> {
+    private final Function<fURI, Map<fURI, Obj>> directReader = (key) -> {
         if (key.equals(fURI.ALL))
             return this.jvm;
         else {
@@ -55,12 +57,11 @@ public class MemSpace extends MSpace<Map<fURI, Obj>> implements Space {
             }
         }
     };
-    private final BiConsumer<fURI,Obj> directWriter = this.jvm::put;
+    private final BiConsumer<fURI, Obj> directWriter = this.jvm::put;
 
-    public MemSpace(final fURI pattern, final fURI vid) {
-        super(new HashMap<>(), pattern, MEMSPACE_TID, vid);
+    public KVSpace(final fURI pattern, final fURI vid) {
+        super(new HashMap<>(), pattern, KVSPACE_TID, vid);
     }
-
 
 
     @Override
@@ -74,13 +75,13 @@ public class MemSpace extends MSpace<Map<fURI, Obj>> implements Space {
     @Override
     public Obj write(final fURI vid, final Obj obj) {
         return this.qs().processPreWrite(vid, vid, obj).orElseGet(() -> {
-            Space.Helpers.resolveWrite(this, vid.basePath(), obj, this.directWriter ,this.directReader);
+            Space.Helpers.resolveWrite(this, vid.basePath(), obj, this.directWriter, this.directReader);
             return this.qs().processPostWrite(vid, vid, obj).orElse(this.qs().processQlessWrite(vid, vid, obj).orElse(obj));
         });
     }
 
     @Override
-    public Function<fURI, Map<fURI,Obj>> directReader() {
+    public Function<fURI, Map<fURI, Obj>> directReader() {
         return this.directReader;
     }
 

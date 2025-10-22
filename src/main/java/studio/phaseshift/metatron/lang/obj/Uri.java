@@ -28,4 +28,17 @@ public interface Uri extends Mono {
     @Override
     fURI jvm();
 
+    default Uri jvm(final fURI jvm) {
+        return this.clone(jvm, this.tid(), this.vid());
+    }
+
+    default Uri tid(final fURI tid) {
+        return this.clone(this.jvm(), tid, this.vid());
+    }
+
+    default Uri vid(final fURI vid) {
+        return this.clone(this.jvm(), this.tid(), vid);
+    }
+
+
 }

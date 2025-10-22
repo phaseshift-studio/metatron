@@ -142,11 +142,44 @@ public class mtronInstSetTest extends MetatronTest {
             "{[1,2],[3,4,5],[6,7,8]}>-[,]==[>-,>-,>-]>-                             % {{1,2},{3,4,5},{6,7,8}}",
             "{[1,2],[3,4,5],[6,7,8]}>-[,]==[>-,>-,>-]>-                             % {1,2,3,4,5,6,7,8}",
             "{[1,2],[3,4,5],[6,7,8]}>-[,]==[>-,>-,>-]>-.count()                     % 8",
-            "*/mtron/inst/#.count()-<[is(gt(0))=>true,is(eq(0))=>false]>>-          % true",
+            "*/m/inst/#.count()-<[is(gt(0))=>true,is(eq(0))=>false]>>-          % true",
             // dummy without ending comma so it's easier to add more test cases
             "1.plus(1)                                                              % 2"
     }, delimiter = '%')
     public void testCode(final String code, final String expected) {
+        super.testCode(code, expected);
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "{1,2,3,4}.prod()                                                       % 24",
+            "1.prod()                                                               % 1",
+            "int{5}::3.prod()                                                       % 15",
+            "{a,b,c}.prod()                                                         % a/b/c",
+            "{a/b,c/d,e/f}.prod()                                                   % a/b/c/d/e/f",
+            "{a/b,c/d,e/f}.sum()                                                    % {a/b,c/d,e/f}",
+            // dummy without ending comma so it's easier to add more test cases
+            "1.plus(1)                                                              % 2"
+    }, delimiter = '%')
+    public void testReductions(final String code, final String expected) {
+        super.testCode(code, expected);
+    }
+
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "[a=>1,b=>2,c=>3].group([_=>_])                                               % [{a,b,c}=>{1,2,3}]",
+            "[a=>1,b=>2,c=>3].group([_=>+10])                                             % [{a,b,c}=>{11,12,13}]",
+            "[a=>1,b=>2,c=>3].group([_=>8])                                               % [{a,b,c}=>8]", // should be [{a,b,c}=>int{3}::8]",
+            "[a=>1,b=>2,c=>3].group([_=>noobj])                                           % [=>]",
+            "[a=>1,b=>2,c=>3].group([prod()=>prod()])                                     % [a/b/c=>6]",
+            "[a=>1,b=>2,c=>3].group([_=>_,prod()=>prod()])                                % [{a,b,c}=>{1,2,3},a/b/c=>6]",
+            "[a=>1,b=>2,c=>3].group([_=>_,prod()=>prod()])                                % [{a,b,c}=>{1,2,3},a/b/c=>6]",
+            "[a=>1,b=>c,c=>3]==[is(eq(a))=>plus(1)]                                       % [a=>2]",
+            // dummy without ending comma so it's easier to add more test cases
+            "1.plus(1)                                                              % 2"
+    }, delimiter = '%')
+    public void testCross(final String code, final String expected) {
         super.testCode(code, expected);
     }
 }

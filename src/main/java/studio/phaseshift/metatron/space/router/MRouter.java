@@ -38,10 +38,11 @@ import java.util.concurrent.ConcurrentHashMap;
 import static studio.phaseshift.metatron.BootLoader.BOOTING;
 import static studio.phaseshift.metatron.lang.obj.mtron.mtronFluent.StartLess.from_;
 import static studio.phaseshift.metatron.lang.obj.mtron.mtronFluent.StartLess.start_;
+import static studio.phaseshift.metatron.lang.obj.mtron.mtronInstSet.MTRON_TID;
 
 public class MRouter implements Router {
 
-    private static final fURI ROUTER_TID = fURI.of("/mtron/sys/router");
+    private static final fURI ROUTER_TID = MTRON_TID.extend("router");
     private static final Set<fURI> READ_AS_NOOBJ = Set.of(fURI.ALL.maybeSome(), fURI.ALL.maybe(), fURI.ALL);
     private final GraphittyLogger LOG = Graphitty.log(this);
     private final Map<fURI, Space> spaces = new ConcurrentHashMap<>();
@@ -124,7 +125,7 @@ public class MRouter implements Router {
         if (space.isPresent())
             return space.get();
         else if (!BOOTING)
-            throw LOG.except("no structure supports pattern %s", match.toUri(true));
+            throw MTronException.of("no structure supports pattern %s", match.toUri(true));
         else
             return NullSpace.single();
     }

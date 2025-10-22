@@ -20,7 +20,6 @@ package studio.phaseshift.metatron.lang;
 
 import studio.phaseshift.metatron.algebra.Ring;
 import studio.phaseshift.metatron.lang.obj.Uri;
-import studio.phaseshift.metatron.lang.obj.mtron.MUri;
 import studio.phaseshift.metatron.lang.obj.mtron.c.cInt;
 import studio.phaseshift.metatron.space.Router;
 import studio.phaseshift.metatron.ui.Graphitty;
@@ -29,6 +28,8 @@ import studio.phaseshift.metatron.util.MTronException;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import static studio.phaseshift.metatron.lang.obj.mtron.MUri.uri;
 
 
 public class fURI implements Cloneable, Ring<fURI> {
@@ -47,10 +48,12 @@ public class fURI implements Cloneable, Ring<fURI> {
     public static final String ONE_WILD_STRING = String.valueOf(ONE_WILD_CHAR);
     public static final fURI ALL = fURI.of(ALL_WILD_CHAR);
     public static final fURI SINGLE = fURI.of(ONE_WILD_CHAR);
-    public static final fURI NOOBJ = fURI.of("").zero();
     public static final fURI NULL = null;
     public static final fURI DOM = fURI.of("dom");
     public static final fURI RNG = fURI.of("rng");
+    private static final fURI ONE = f(".").c("1");
+    private static final fURI ZERO = f("").c("0");
+    public static final fURI NOOBJ = fURI.of("").zero();
     private final String host;
     private final String scheme;
     private final int port;
@@ -248,8 +251,8 @@ public class fURI implements Cloneable, Ring<fURI> {
     public Uri toUri(final boolean schemaType) {
         final String scheme = this.scheme();
         return schemaType && null != scheme ?
-                new MUri(this.scheme(null), fURI.of(scheme), null) :
-                MUri.of(this);
+                uri(this.scheme(null), fURI.of(scheme)) :
+                uri(this);
     }
 
     public int pathLength() {
@@ -357,7 +360,7 @@ public class fURI implements Cloneable, Ring<fURI> {
         newPath.addAll(this.path);
         newPath.addAll(Arrays.asList(segment.split(SEGMENT_SPLIT)));
         newPath.removeIf(String::isEmpty);
-        return new fURI(this.scheme, this.host, this.port, this.sstart, newPath, !segment.isEmpty() && (segment.charAt(segment.length() - 1) == SEGMENT_SPLIT_CHAR), Query.to(this.query));
+        return new fURI(this.scheme, this.host, this.port, (this.hasAuthority() && this.path.isEmpty()) || this.sstart, newPath, !segment.isEmpty() && (segment.charAt(segment.length() - 1) == SEGMENT_SPLIT_CHAR), Query.to(this.query));
     }
 
     private fURI rePreTract(boolean retract, final int steps) {
@@ -490,11 +493,11 @@ public class fURI implements Cloneable, Ring<fURI> {
     }
 
     public fURI zero() {
-        return this.c("0");
+        return ZERO;
     }
 
     public fURI one() {
-        return this.c("1");
+        return ONE;
     }
 
     public fURI maybe() {
@@ -566,6 +569,10 @@ public class fURI implements Cloneable, Ring<fURI> {
     }
 
     public fURI mult(final fURI furi) {
+        if (this.isOne())
+            return furi;
+        if (furi.isOne())
+            return this;
         cInt c1 = this.cV();
         cInt c2 = furi.cV();
         cInt c3 = c1.mult(c2);

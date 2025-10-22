@@ -30,7 +30,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
 
-import static studio.phaseshift.metatron.space.Space.MTRON_TID;
+import static studio.phaseshift.metatron.lang.obj.mtron.mtronInstSet.MTRON_TID;
+
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)

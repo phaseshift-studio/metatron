@@ -28,4 +28,16 @@ public interface Real extends Mono {
     @Override
     Double jvm();
 
+    default Real jvm(final Double jvm) {
+        return this.clone(jvm, this.tid(), this.vid());
+    }
+
+    default Real tid(final fURI tid) {
+        return this.clone(this.jvm(), tid, this.vid());
+    }
+
+    default Real vid(final fURI vid) {
+        return this.clone(this.jvm(), this.tid(), vid);
+    }
+
 }

@@ -21,36 +21,44 @@ package studio.phaseshift.metatron.space.mem;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.Obj;
 import studio.phaseshift.metatron.lang.obj.Poly;
+import studio.phaseshift.metatron.space.Space;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
+import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.LinkedList;
 
-public class StackSpace extends MSpace<LinkedList<MemSpace>> {
+import static studio.phaseshift.metatron.lang.obj.mtron.mtronInstSet.MTRON_SPACE_TID;
 
-    public static final fURI STACKSPACE_TID = MTRON_TID.extend("space/stack");
+public class StackSpace extends MSpace<LinkedList<KVSpace>> {
+
+    public static final fURI STACKSPACE_TID = MTRON_SPACE_TID.extend("stack");
     public static final String ARG_PREFIX = "a";
 
     private final GraphittyLogger LOG = Graphitty.log(this);
-    private final MemSpace root;
+    private final Space root;
 
     public StackSpace(final fURI pattern, final fURI vid) {
         super(new LinkedList<>(), pattern, STACKSPACE_TID, vid);
-        this.root = new MemSpace(this.pattern, STACKSPACE_TID.extend("root"));
+        this.root = new KVSpace(this.pattern, vid.extend("root"));
     }
 
     @Override
     public void close() {
-        this.root.close();
+        try {
+            this.root.close();
+        } catch (final Exception e) {
+            throw MTronException.of(e);
+        }
     }
 
     @Override
     public Obj read(final fURI vid) {
-        LOG.trace("reading {{b}}%s{{/b}} in %s [{{y}}root{{/y}}: %s]", vid, this.jvm, this.root.jvm);
+        LOG.trace("reading {{b}}%s{{/b}} in %s [{{y}}root{{/y}}: %s]", vid, this.jvm, this.root.jvm());
         // if(vid.coefficientValue().isZero())
         //    return NoObj.single();
         boolean isArg = vid.toString().matches("a\\d+"); // skip first encounter of list arg variable as it's a variable to grab the variable
-        for (final MemSpace layer : this.jvm) {
+        for (final KVSpace layer : this.jvm) {
             final Obj o = layer.read(vid.basePath());
             if (!o.isNoObj()) {
                 if (isArg) isArg = false;
@@ -62,7 +70,7 @@ public class StackSpace extends MSpace<LinkedList<MemSpace>> {
 
     @Override
     public Obj write(final fURI vid, final Obj obj) {
-        LOG.trace("writing %s to %s in %s [{{y}}root{{/y}}: %s]", obj, vid, this.jvm, this.root.jvm);
+        LOG.trace("writing %s to %s in %s [{{y}}root{{/y}}: %s]", obj, vid, this.jvm, this.root.jvm());
         if (!this.jvm.isEmpty())
             this.jvm.get(0).write(vid, obj);
         this.root.write(vid, obj);
@@ -70,7 +78,7 @@ public class StackSpace extends MSpace<LinkedList<MemSpace>> {
     }
 
     public boolean pop() {
-        final MemSpace frameSpace = this.jvm.pop();
+        final KVSpace frameSpace = this.jvm.pop();
         if (null == frameSpace)
             return false;
         LOG.trace("popped frame {{_&r}}off{{/r&/_}} stack: %s [{{y}}depth{{/y}}: %d]", frameSpace.jvm, this.jvm.size());
@@ -78,7 +86,7 @@ public class StackSpace extends MSpace<LinkedList<MemSpace>> {
     }
 
     public void push(final Poly frame) {
-        final MemSpace frameSpace = new MemSpace(pattern, STACKSPACE_TID.extend("d" + this.jvm.size()));
+        final KVSpace frameSpace = new KVSpace(pattern, STACKSPACE_TID.extend("d" + this.jvm.size()));
         if (frame.isRec())
             frame.recValue().forEach((key, value) -> frameSpace.write(key.uriValue(), value));
         else {

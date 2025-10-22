@@ -27,6 +27,7 @@ import studio.phaseshift.metatron.space.mem.MSpace;
 import studio.phaseshift.metatron.util.MTronException;
 
 import static studio.phaseshift.metatron.lang.obj.mtron.mtronFluent.StartLess.from_;
+import static studio.phaseshift.metatron.lang.obj.mtron.mtronInstSet.MTRON_SPACE_TID;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -48,7 +49,7 @@ public class RemoteSpace extends MSpace<MClient> {
 
     @Override
     public void close() {
-       // this.jvm().close();
+        this.jvm().close();
     }
 
 

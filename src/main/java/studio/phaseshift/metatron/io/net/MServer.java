@@ -87,7 +87,7 @@ public class MServer extends WebSocketServer implements Closeable {
     @Override
     public void stop() {
         try {
-            super.stop();
+            super.stop(1000);
         } catch (final Exception e) {
             throw MTronException.of(e);
         }

@@ -32,6 +32,9 @@ import studio.phaseshift.metatron.util.MTronException;
 import java.util.Iterator;
 
 import static studio.phaseshift.metatron.lang.obj.mgrph.tp.mgrphInstSet.PROPERTY_TID;
+import static studio.phaseshift.metatron.lang.obj.mtron.MInt.jnt;
+import static studio.phaseshift.metatron.lang.obj.mtron.MReal.real;
+import static studio.phaseshift.metatron.lang.obj.mtron.MStr.str;
 
 public class MProperty<V> extends MObj implements Property<V>, WrappedProperty<Property<V>> {
 
@@ -49,11 +52,11 @@ public class MProperty<V> extends MObj implements Property<V>, WrappedProperty<P
         if (value instanceof Obj)
             return value;
         else if (value instanceof String)
-            return (V) MStr.of((String) value);
+            return (V) str((String) value);
         else if (value instanceof Long || value instanceof Integer)
-            return (V) MInt.of(Long.valueOf(value.toString()));
+            return (V) jnt(Long.valueOf(value.toString()));
         else if (value instanceof Float || value instanceof Double)
-            return (V) MReal.of(Double.valueOf(value.toString()));
+            return (V) real(Double.valueOf(value.toString()));
         else
             throw MTronException.of(new UnsupportedOperationException("value type not supported: " + value.getClass()));
     }

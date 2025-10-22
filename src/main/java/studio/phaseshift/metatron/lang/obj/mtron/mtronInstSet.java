@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.lang.obj.mtron;
 
+import org.javatuples.Pair;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.*;
 import studio.phaseshift.metatron.lang.obj.mtron.c.cInt;
@@ -25,12 +26,14 @@ import studio.phaseshift.metatron.space.Router;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
+import studio.phaseshift.metatron.util.Tuple;
 
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.lang.fURI.ALL;
+import static studio.phaseshift.metatron.lang.fURI.f;
 import static studio.phaseshift.metatron.lang.obj.mtron.MBool.bool;
 import static studio.phaseshift.metatron.lang.obj.mtron.MInst.instC;
 import static studio.phaseshift.metatron.lang.obj.mtron.MInt.jnt;
@@ -38,12 +41,17 @@ import static studio.phaseshift.metatron.lang.obj.mtron.MLst.lst;
 import static studio.phaseshift.metatron.lang.obj.mtron.MObjs.objs;
 import static studio.phaseshift.metatron.lang.obj.mtron.MReal.real;
 import static studio.phaseshift.metatron.lang.obj.mtron.MRec.rec;
+import static studio.phaseshift.metatron.lang.obj.mtron.MStr.str;
 import static studio.phaseshift.metatron.lang.obj.mtron.MType.T;
 import static studio.phaseshift.metatron.lang.obj.mtron.MUri.uri;
 
 public class mtronInstSet extends MInstSet {
 
-    public static final fURI MTRON_TID = fURI.of("/mtron");
+    public static final fURI MTRON_TID = f("/m");
+    public static final fURI MTRON_LANG_TID = MTRON_TID.extend("lang");
+    // /m/obj
+    public static final fURI MTRON_SPACE_TID = f("/space");// MTRON_TID.extend("space");
+    public static final fURI FAIL_TID = MTRON_TID.extend("fail");
     public static final fURI BOOL_TID = MTRON_TID.extend("bool");
     public static final fURI INT_TID = MTRON_TID.extend("int");
     public static final fURI REAL_TID = MTRON_TID.extend("real");
@@ -54,6 +62,7 @@ public class mtronInstSet extends MInstSet {
     public static final fURI REC_TID = MTRON_TID.extend("rec");
     public static final fURI INST_TID = MTRON_TID.extend("inst");
     public static final fURI ID_TID = INST_TID.extend("id");
+    public static final fURI CATCH_TID = INST_TID.extend("catch");
     public static final fURI APPLY_TID = INST_TID.extend("apply");
     public static final fURI START_TID = INST_TID.extend("start");
     public static final fURI COUNT_TID = INST_TID.extend("count");
@@ -93,6 +102,7 @@ public class mtronInstSet extends MInstSet {
     public static final fURI BARRIER_TID = INST_TID.extend("barrier");
     public static final fURI REIFY_TID = INST_TID.extend("reify");
     public static final fURI CROSS_TID = INST_TID.extend("cross");
+    public static final fURI GROUP_TID = INST_TID.extend("group");
     public static final fURI ELSE_TID = INST_TID.extend("else");
     public static final fURI END_TID = INST_TID.extend("end");
     public static final fURI SWAP_TID = INST_TID.extend("swap");
@@ -100,19 +110,21 @@ public class mtronInstSet extends MInstSet {
     public static final fURI LSHIFT_TID = INST_TID.extend("lshift");
     public static final fURI RSHIFT_TID = INST_TID.extend("rshift");
     public static final fURI CODE_TID = MTRON_TID.extend("code");
-    public static final fURI OBJS_TID = MTRON_TID.extend("objs");
     public static final fURI NOOBJ_TID = fURI.of("");
+    public static final fURI OBJS_ID = ALL.maybeSome();
+    public static final fURI OBJS_TID = MTRON_TID.extend("objs");
     public static final Set<fURI> BASE_TYPES = Set.of(
-            BOOL_TID, INT_TID, REAL_TID,
+            FAIL_TID, BOOL_TID, INT_TID, REAL_TID,
             STR_TID, URI_TID, REL_TID,
             LST_TID, REC_TID, INST_TID,
             CODE_TID, OBJS_TID, NOOBJ_TID);
-    public static final fURI OBJS_ID = ALL.maybeSome();
+    /// ////////////
+    /// ////////////
     public static final fURI POLY_TID = MTRON_TID.extend("poly");
     public static final fURI MONO_TID = MTRON_TID.extend("mono");
 
-    public static final fURI MTRON_INST_TID = fURI.of("/mtron/inst");
-
+    /// ////////////
+    /// ////////////
     public mtronInstSet(final fURI vid) {
         super(MTRON_TID, vid);
     }
@@ -123,8 +135,8 @@ public class mtronInstSet extends MInstSet {
 
     @Override
     public Set<Type> types() {
-        return Stream.of(T(BOOL_TID), T(INT_TID), T(REAL_TID), T(STR_TID), T(URI_TID), T(LST_TID),
-                T(REC_TID), T(INST_TID), T(REC_TID), T(OBJS_TID), T(NOOBJ_TID)).collect(Collectors.toSet());
+        return Stream.of(T(FAIL_TID), T(BOOL_TID), T(INT_TID), T(REAL_TID), T(STR_TID), T(URI_TID), T(LST_TID),
+                T(REL_TID), T(REC_TID), T(INST_TID), T(OBJS_TID), T(NOOBJ_TID)).collect(Collectors.toSet());
     }
 
     @Override
@@ -137,9 +149,44 @@ public class mtronInstSet extends MInstSet {
         return Stream.of(NoObj.single()).collect(Collectors.toSet());
     }
 
+
+    private Obj crossLst(Obj lhs, Obj rhs) {
+        final List<Obj> result = new ArrayList<>();
+        final List<Obj> lhsList = lhs.lstValue();
+        final List<Obj> rhsList = rhs.lstValue();
+        for (int i = 0; i < lhsList.size(); i++) {
+            if (rhsList.size() > i) {
+                final Obj lhsA = lhsList.get(i);
+                final Obj rhsA = rhsList.get(i);
+                result.add(((lhsA.isRec() && rhsA.isRec()) || (lhsA.isLst() && rhsA.isLst())) ? crossRec(lhsA, rhsA) : rhsA.apply(lhsA));
+            } else {
+                break;
+            }
+        }
+        return lhs.jvm(result);
+    }
+
+    ;
+
+    private Obj crossRec(Obj lhs, Obj rhs) {
+        final Map<Obj, Obj> result = new LinkedHashMap<>();
+        lhs.recValue().forEach((lKey, lValue) -> rhs.recValue()
+                .forEach((rKey, rValue) -> {
+                    if (lKey.matches(rKey)) {
+                        final Obj r = ((lValue.isRec() && rValue.isRec()) || (lValue.isLst() && rValue.isLst())) ?
+                                crossRec(lValue, rValue) : rValue.apply(lValue);
+                        result.compute(rKey.apply(lKey), (k, v) -> null == v ? r : v.append(r));
+                    }
+                }));
+        return lhs.jvm(result);
+    }
+
+    ;
+
     @Override
     public Set<Inst> insts() {
         return Stream.of(
+                instC(CATCH_TID.dom(ALL).rng(ALL), lst(T(ALL)), (lhs, inst) -> lhs.isFail() ? inst.arg(0).apply(lhs) : lhs),
                 instC(START_TID.dom(fURI.NOOBJ.zero()).rng(A.c(cInt.of(null, null).toString())), lst(T(A.maybeSome())), (lhs, inst) -> inst.arg(0)),
                 instC(END_TID.dom(OBJS_ID).rng(NOOBJ_TID.zero()), lst(), (lhs, inst) -> NoObj.single()),
                 instC(PRINT_TID.dom(ALL).rng(ALL), lst(T(OBJS_ID)), (lhs, inst) -> IteratorUtil.stream(inst.args().elements()).peek(o -> Graphitty.stdout().println(Graphitty.string(o))).filter(a -> false).findAny().orElse(lhs)),
@@ -184,8 +231,8 @@ public class mtronInstSet extends MInstSet {
                 instC(SPLIT_TID.dom(ALL).rng(ALL.maybeSome()), lst(T(ALL.some())), (lhs, inst) -> objs(inst.arg(0).stream().map(o -> o.apply(lhs)))),
                 instC(SPLIT_TID.dom(ALL).rng(ALL.maybeSome()), lst(T(ALL)), (lhs, inst) -> inst.arg(0).apply(lhs)),
                 /// ///////////////////////////////////////////////////////////////////////////////////////////////////
-                instC(MERGE_TID.dom(LST_TID).rng(OBJS_ID), lst(), (lhs, inst) -> objs(lhs.<Lst>as().jvm())),
-                instC(MERGE_TID.dom(REC_TID).rng(REL_TID.maybeSome()), lst(), (lhs, inst) -> objs(lhs.stream().toList())),
+                instC(MERGE_TID.dom(LST_TID).rng(OBJS_ID), lst(), (lhs, inst) -> objs(lhs.lstValue())),
+                instC(MERGE_TID.dom(REC_TID).rng(REL_TID.maybeSome()), lst(), (lhs, inst) -> objs(lhs.stream())),
                 //
                 instC(MERGE_TID.dom(A.maybeSome()).rng(LST_TID), lst(T(LST_TID)), (lhs, inst) -> inst.arg(0).jvm(Stream.concat(lhs.stream(), inst.arg(0).lstValue().stream()).toList())),
                 instC(MERGE_TID.dom(REL_TID.maybeSome()).rng(REC_TID), lst(T(REC_TID)), (lhs, inst) -> inst.arg(0).jvm(Stream.concat(lhs.stream().map(Obj::as), inst.arg(0).<Rec>as().stream()).collect(Collectors.toMap(Rel::first, Rel::second, Obj::append, LinkedHashMap::new)))),
@@ -257,15 +304,43 @@ public class mtronInstSet extends MInstSet {
                 instC(SUM_TID.dom(INT_TID.maybeSome()).rng(INT_TID), lst(), (lhs, inst) -> inst.seed().jvm(IteratorUtil.reduce(lhs.iterator(), inst.seed(), (a, b) -> jnt(a.intValue() + (b.intValue() * b.c().max()))).intValue()/* * inst.c().max()*/), jnt(0)),
                 instC(SUM_TID.dom(REAL_TID.maybeSome()).rng(REAL_TID), lst(), (lhs, inst) -> IteratorUtil.reduce(lhs.iterator(), inst.seed(), (a, b) -> real(a.realValue() + (b.realValue() * b.c().max()))), real(0.0)),
                 instC(SUM_TID.dom(LST_TID.maybeSome()).rng(LST_TID), lst(), (lhs, inst) -> IteratorUtil.reduce(lhs.iterator(), inst.seed(), (a, b) -> lst(Stream.concat(a.lstValue().stream(), b.lstValue().stream()).toList())), lst()),
+                instC(PROD_TID.dom(INT_TID.maybeSome()).rng(INT_TID), lst(), (lhs, inst) -> inst.seed().jvm(IteratorUtil.reduce(lhs.iterator(), inst.seed(), (a, b) -> jnt(a.intValue() * (b.intValue() * b.c().max()))).intValue()/* * inst.c().max()*/), jnt(1)),
+                instC(PROD_TID.dom(REAL_TID.maybeSome()).rng(REAL_TID), lst(), (lhs, inst) -> IteratorUtil.reduce(lhs.iterator(), inst.seed(), (a, b) -> real(a.realValue() * (b.realValue() * b.c().max()))), real(1.0)),
+                instC(PROD_TID.dom(URI_TID.maybeSome()).rng(URI_TID), lst(), (lhs, inst) -> IteratorUtil.reduce(lhs.iterator(), inst.seed(), (a, b) -> uri(a.uriValue().mult(b.uriValue()))), uri(".")),
                 instC(REIFY_TID.dom(ALL.maybe()).rng(REC_TID), lst(), (lhs, inst) ->
                         MRec.ofUriKeyed(
                                 "tid", MRec.ofUriKeyed(
-                                        "path", MUri.of(lhs.tid().path()),
+                                        "path", uri(lhs.tid().path()),
                                         "c", MRec.ofUriKeyed(
-                                                "min", MInt.of(lhs.tid().cV().min()),
-                                                "max", MInt.of(lhs.tid().cV().max())),
-                                        "query", MStr.of(Optional.ofNullable(lhs.tid().query()).map(fURI.Query::toString).orElse(""))),
+                                                "min", jnt(lhs.tid().cV().min()),
+                                                "max", jnt(lhs.tid().cV().max())),
+                                        "query", str(Optional.ofNullable(lhs.tid().query()).map(fURI.Query::toString).orElse(""))),
                                 "value", MObjFactory.of().create(lhs.jvm()))),
+              /*  instC(CROSS_TID.dom(REL_TID).rng(REL_TID), lst(T(REL_TID)), (lhs, inst) ->
+                        rel(inst.arg(0).<Rel>as().first().apply(lhs.<Rel>as().first()),
+                                inst.arg(0).<Rel>as().second().apply(lhs.<Rel>as().second()))),
+                instC(CROSS_TID.dom(LST_TID).rng(LST_TID.maybe()), lst(T(LST_TID)), (lhs, inst) -> {
+                    return crossLst(lhs, inst.arg(0));
+                }),
+                instC(CROSS_TID.dom(REC_TID).rng(REC_TID.maybe()), lst(T(REC_TID)), (lhs, inst) -> {
+                    return crossRec(lhs, inst.arg(0));
+                })*/
+                instC(GROUP_TID.dom(REC_TID).rng(REC_TID), lst(T(REC_TID)), (lhs, inst) -> {
+                    final Map<Obj, Obj> result = new LinkedHashMap<>();
+                    final Map<Tuple.Pair<Obj,Obj>, Obj> resultK = new LinkedHashMap<>();
+                    final Map<Tuple.Pair<Obj,Obj>, Obj> resultV = new LinkedHashMap<>();
+                    final Map<Obj, Obj> lhsMap = lhs.recValue();
+                    final Map<Obj, Obj> rhsMap = inst.arg(0).recValue();
+                    lhsMap.forEach((lk, lv) -> {
+                        rhsMap.forEach((rk, rv) -> {
+                            resultK.compute(Tuple.Pair.with(rk,rv), (k, v) -> null == v ? lk : v.append(lk));
+                            resultV.compute(Tuple.Pair.with(rk,rv), (k, v) -> null == v ? lv : v.append(lv));
+                        });
+                    });
+                    resultK.forEach((k, v) -> result.put(k.get0().apply(v), k.get1().apply(resultV.get(k))));
+                    return rec(result);
+                }),
+
                 instC(CROSS_TID.dom(LST_TID).rng(LST_TID), lst(T(LST_TID)), (lhs, inst) -> {
                     final List<Obj> result = new ArrayList<>();
                     final List<Obj> lhsList = lhs.lstValue();
@@ -279,6 +354,17 @@ public class mtronInstSet extends MInstSet {
                             break;
                         }
                     }
+                    return lhs.jvm(result);
+                }),
+                instC(CROSS_TID.dom(REC_TID).rng(REC_TID), lst(T(REC_TID)), (lhs, inst) -> {
+                    final Map<Obj, Obj> result = new LinkedHashMap<>();
+                    lhs.recValue().forEach((lKey, lValue) -> inst.arg(0).recValue()
+                            .forEach((rKey, rValue) -> {
+                                if (lKey.matches(rKey)) {
+                                    final Obj r = rValue.apply(lValue);
+                                    result.compute(rKey.apply(lKey), (k, v) -> null == v ? r : v.append(r));
+                                }
+                            }));
                     return lhs.jvm(result);
                 }),
                 instC(CROSS_TID.dom(REC_TID).rng(REC_TID), lst(T(REC_TID)), (lhs, inst) -> {

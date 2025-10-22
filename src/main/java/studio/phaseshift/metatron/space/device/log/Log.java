@@ -47,11 +47,11 @@ public class Log extends MRec {
     }
 
     protected Log(final fURI vid) {
-        super(Map.of(MUri.of("level"), MRec.ofUriKeyed(
+        super(Map.of(uri("level"), MRec.ofUriKeyed(
                 "INFO", MLst.of(),
                 "DEBUG", MLst.of(),
                 "WARN", MLst.of(),
-                "TRACE", MLst.of(MUri.of("#")),
+                "TRACE", MLst.of(uri("#")),
                 "ERROR", MLst.of())), LOG_TID, vid);
     }
 
@@ -67,7 +67,7 @@ public class Log extends MRec {
     public static Uri setSLF4J(final String level) {
         final ch.qos.logback.classic.Logger root = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME);
         if (null == level || level.isEmpty()) {
-            return MUri.of(root.getAppender("STDOUT").getCopyOfAttachedFiltersList()
+            return uri(root.getAppender("STDOUT").getCopyOfAttachedFiltersList()
                             .stream()
                             .filter(x -> x instanceof ThresholdFilter)
                             .map(x -> {
