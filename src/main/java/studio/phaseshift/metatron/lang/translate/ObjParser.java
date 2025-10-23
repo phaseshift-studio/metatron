@@ -44,6 +44,7 @@ import static org.petitparser.parser.primitive.CharacterParser.word;
 import static org.petitparser.parser.primitive.StringParser.of;
 import static studio.phaseshift.metatron.lang.obj.mtron.MLst.lst;
 import static studio.phaseshift.metatron.lang.obj.mtron.MObjs.objs;
+import static studio.phaseshift.metatron.lang.obj.mtron.MRec.rec;
 import static studio.phaseshift.metatron.lang.obj.mtron.mtronFluent.StartLess.split_;
 import static studio.phaseshift.metatron.lang.obj.mtron.mtronInstSet.*;
 import static studio.phaseshift.metatron.util.Tuple.Triplet;
@@ -128,9 +129,9 @@ public class ObjParser {
                 m_vid_postfix()) //  inst_code
                 // inst_seed []
                 .map(t -> (Inst) new MInst(Triplet.with(
-                        pick(t, 1).equals("") ? MLst.of() : pick(t, 1) instanceof List ?
-                                MLst.of(ObjParser.<List<Obj>>pick(t, 1)) :
-                                MRec.of(ObjParser.<Map<Obj, Obj>>pick(t, 1)),
+                        pick(t, 1).equals("") ? lst() : pick(t, 1) instanceof List ?
+                                lst(ObjParser.<List<Obj>>pick(t, 1)) :
+                                rec(ObjParser.pick(t, 1)),
                         Inst.f.of(ObjParser.<Obj>pick(t, 2)),
                         NoObj.single()), // todo: encode seed in parser
                         pick(t, 0), pick(t, 3)))));
@@ -358,6 +359,10 @@ public class ObjParser {
     private static Parser[] ordered_sugar_parsers() {
         return new Parser[]{
                 branch_parser,
+                generate_sugar_parser(List.of(IS_TID, EQ_TID), of("?="), 1),
+                generate_sugar_parser(List.of(IS_TID, GT_TID), of("?>"), 1),
+                generate_sugar_parser(List.of(IS_TID, LT_TID), of("?<"), 1),
+                generate_sugar_parser(List.of(IS_TID, NEQ_TID), of("?!="), 1),
                 generate_sugar_parser(AT_TID, of('@'), 1),
                 generate_sugar_parser(BARRIER_TID, of("-|"), 1),
                 generate_sugar_parser(BLOCK_TID, of('|'), 1),
@@ -381,6 +386,21 @@ public class ObjParser {
 
     private static Parser generate_sugar_parser(final fURI tid, final Parser startToken, final int argCount) {
         return generate_sugar_parser(tid, startToken, argCount, null);
+    }
+
+
+    private static Parser generate_sugar_parser(final List<fURI> instChain, final Parser startToken, final int argCount) {
+        return generate_sugar_parser(instChain, startToken, argCount, null);
+    }
+
+    private static Parser generate_sugar_parser(final List<fURI> instChain, final Parser startToken, final int argCount, final Parser endToken) {
+        // TODO: look into ExpressionBuilder for handling paren wrapping properly.
+        return (argCount == 0 ?
+                seq(startToken.trim(), opt(seq(of('?'), m_furi_inst_dom_rng()).map(t -> pick(t, 1)), null)).map(t -> MInst.instB(instChain.get(0), lst(MInst.instA(instChain.get(1).query(pick(t, 1)))))) :
+                seq(startToken.trim(), opt(seq(of('?'), m_furi_inst_dom_rng()).map(t -> pick(t, 1)), null), choice(
+                        seq(of('('), m_obj(), of(')')).map(t -> ObjParser.<Obj>pick(t, 1)),
+                        m_obj()), null == endToken ? of("") : endToken.trim())
+                        .map(t -> MInst.instB(instChain.get(0), lst(MInst.instB(instChain.get(1).query(pick(t, 1)), lst(ObjParser.<Obj>pick(t, 2)))))));
     }
 
     private static Parser generate_sugar_parser(final fURI tid, final Parser startToken, final int argCount, final Parser endToken) {

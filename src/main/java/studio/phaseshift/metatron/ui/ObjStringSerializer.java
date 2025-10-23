@@ -21,14 +21,13 @@ package studio.phaseshift.metatron.ui;
 import org.petitparser.context.Result;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.*;
-import studio.phaseshift.metatron.lang.obj.mtron.mtronInstSet;
 import studio.phaseshift.metatron.lang.translate.ObjParser;
 
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import static studio.phaseshift.metatron.lang.obj.mtron.mtronInstSet.*;
+import static studio.phaseshift.metatron.lang.obj.mtron.mtronInstSet.BASE_TYPES;
 
 public class ObjStringSerializer implements ObjSerializer<String> {
 
@@ -87,12 +86,10 @@ public class ObjStringSerializer implements ObjSerializer<String> {
                 }
                 sb.deleteCharAt(sb.length() - 1);
             }
-            return sb.append(this.b.palette.formC())
-                    .append("){")
+            return sb.append("{{g}}){")
                     .append(this.b.palette.valueC())
                     .append(inst.resolution() == Inst.Resolution.A ? "{{r}}?{{/r}}" : ("{{y}}" + inst.f().toString()))
-                    .append(this.b.palette.formC())
-                    .append("}{{X}}")
+                    .append("{{g}}}{{X}}")
                     //.append(this.b.ignoreRewrites ? "" : "{{X}}")
                     .toString();
         }
@@ -164,7 +161,7 @@ public class ObjStringSerializer implements ObjSerializer<String> {
                 sb.append("{{r}}[{{/r}}").append(t.getMessage()).append("{{r}}]{{/r}}").append("\n\t ");
                 t = t.getCause();
             }
-            sb.delete(sb.length() - 3,sb.length()-1);
+            sb.delete(sb.length() - 3, sb.length() - 1);
             return sb.toString();
         }
         /// ///////////////////////////////////////////////////////////////
@@ -179,32 +176,36 @@ public class ObjStringSerializer implements ObjSerializer<String> {
     }
 
     private StringBuilder generateRec(final StringBuilder sb, final Rec rec, final int depth) {
-        boolean nested = rec.recValue().values().stream().anyMatch(Obj::isPoly);
-        sb.append("{{g}}[{{/g}}");
-        if (nested)
-            sb.append("\n");
-        rec.recValue().forEach((k, v) -> {
-            if (nested)
-                sb.append(" ".repeat(depth * 2));
-            sb.append(write(k)).append("{{g}}=>{{/g}}");
-            if (v.isRec()) {
-                this.generateRec(sb, v.as(), depth + 1);
-            } else
-                sb.append(write(v));
-            sb.append("{{g}},");
+        if (rec.isEmpty()) {
+            sb.append("{{g}}[=>]{{/g}}");
+        } else {
+            boolean nested = rec.recValue().values().stream().anyMatch(Obj::isPoly);
+            sb.append("{{g}}[");
             if (nested)
                 sb.append("\n");
-        });
-        if (nested)
+            rec.recValue().forEach((k, v) -> {
+                if (nested)
+                    sb.append(" ".repeat(depth * 2));
+                sb.append(write(k)).append("{{g}}=>");
+                if (v.isRec()) {
+                    this.generateRec(sb, v.as(), depth + 1);
+                } else
+                    sb.append(write(v));
+                sb.append("{{g}},");
+                if (nested)
+                    sb.append("\n");
+            });
+            if (nested)
+                sb.deleteCharAt(sb.length() - 1);
             sb.deleteCharAt(sb.length() - 1);
-        sb.deleteCharAt(sb.length() - 1);
-        sb.append("{{g}}]{{/g}}");
+            sb.append("{{g}}]");
+        }
         return sb;
     }
 
     private StringBuilder generateVID(final StringBuilder sb, final Obj obj) {
         return null == obj.vid() ? sb : sb.append(this.b.palette.typeC())
-                .append(this.b.palette.formC())
+                .append("{{g}}")
                 .append('@')
                 .append(this.b.palette.typeC())
                 .append(obj.vid());

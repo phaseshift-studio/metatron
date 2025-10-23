@@ -77,6 +77,20 @@ public interface Rec extends Poly, Semiring<Rec> {
     }
 
     @Override
+    default boolean matches(final Obj rhs) {
+        if (rhs.isRec()) {
+            return rhs.recValue().entrySet().stream().allMatch(r ->
+                    this.recValue().entrySet().stream().anyMatch(l -> {
+                        if (l.getKey().matches(r.getKey()))
+                            return l.getValue().matches(r.getValue());
+                        else return false;
+                    }));
+        } else {
+            return Poly.super.matches(rhs);
+        }
+    }
+
+    @Override
     default <O extends Obj> O at(final Obj key) {
         if (!key.isUri())
             return (O) this.jvm().getOrDefault(key, NoObj.single());

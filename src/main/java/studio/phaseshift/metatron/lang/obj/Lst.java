@@ -123,5 +123,22 @@ public interface Lst extends Poly, Semiring<Lst> {
         return lst(List.of());
     }
 
+    @Override
+    default boolean matches(final Obj rhs) {
+        if (rhs.isLst()) {
+            if (rhs.lstValue().size() > this.lstValue().size())
+                return false;
+            for (int i = 0; i < rhs.lstValue().size(); i++) {
+                final Obj l = this.lstValue().get(i);
+                final Obj r = rhs.lstValue().get(i);
+                if (!l.matches(r))
+                    return false;
+            }
+            return true;
+        } else {
+            return Poly.super.matches(rhs);
+        }
+    }
+
 
 }

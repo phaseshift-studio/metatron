@@ -69,5 +69,12 @@ public interface Uri extends Mono, Ring<Uri> {
         return this.jvm(this.uriValue().neg());
     }
 
+    @Override
+    default boolean matches(final Obj obj) {
+        if (obj.isUri())
+            return this.uriValue().matches(obj.uriValue());
+        return Mono.super.matches(obj);
+    }
+
 
 }
