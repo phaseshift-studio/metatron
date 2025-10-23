@@ -28,6 +28,7 @@ import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -40,6 +41,7 @@ import static studio.phaseshift.metatron.lang.obj.mtron.MLst.lst;
 import static studio.phaseshift.metatron.lang.obj.mtron.MObjs.objs;
 import static studio.phaseshift.metatron.lang.obj.mtron.MReal.real;
 import static studio.phaseshift.metatron.lang.obj.mtron.MRec.rec;
+import static studio.phaseshift.metatron.lang.obj.mtron.MRel.rel;
 import static studio.phaseshift.metatron.lang.obj.mtron.MStr.str;
 import static studio.phaseshift.metatron.lang.obj.mtron.MType.T;
 import static studio.phaseshift.metatron.lang.obj.mtron.MUri.uri;
@@ -61,6 +63,7 @@ public class mtronInstSet extends MInstSet {
     public static final fURI REC_TID = MTRON_TID.extend("rec");
     public static final fURI INST_TID = MTRON_TID.extend("inst");
     public static final fURI ID_TID = INST_TID.extend("id");
+    public static final fURI HAS_TID = INST_TID.extend("has");
     public static final fURI CATCH_TID = INST_TID.extend("catch");
     public static final fURI APPLY_TID = INST_TID.extend("apply");
     public static final fURI START_TID = INST_TID.extend("start");
@@ -148,39 +151,45 @@ public class mtronInstSet extends MInstSet {
         return Stream.of(NoObj.single()).collect(Collectors.toSet());
     }
 
-
-    private Obj crossLst(Obj lhs, Obj rhs) {
-        final List<Obj> result = new ArrayList<>();
-        final List<Obj> lhsList = lhs.lstValue();
-        final List<Obj> rhsList = rhs.lstValue();
-        for (int i = 0; i < lhsList.size(); i++) {
-            if (rhsList.size() > i) {
-                final Obj lhsA = lhsList.get(i);
-                final Obj rhsA = rhsList.get(i);
-                result.add(((lhsA.isRec() && rhsA.isRec()) || (lhsA.isLst() && rhsA.isLst())) ? crossRec(lhsA, rhsA) : rhsA.apply(lhsA));
-            } else {
-                break;
+    private Obj crossPoly(Obj lhs, Obj rhs) {
+        if (lhs.isLst() && rhs.isLst()) {
+            final List<Obj> result = new ArrayList<>();
+            final List<Obj> lhsList = lhs.lstValue();
+            final List<Obj> rhsList = rhs.lstValue();
+            final AtomicBoolean found = new AtomicBoolean(false);
+            for (int i = 0; i < lhsList.size(); i++) {
+                if (rhsList.size() > i) {
+                    found.set(true);
+                    final Obj lhsA = lhsList.get(i);
+                    final Obj rhsA = rhsList.get(i);
+                    result.add(//(lhsA.isRec() && rhsA.isRec()) || (lhsA.isLst() && rhsA.isLst()) ?
+                            crossPoly(lhsA, rhsA));// :
+                            //rhsA.apply(lhsA));
+                } else {
+                    break;
+                }
             }
+            return result.isEmpty() || !found.get() ? NoObj.single() : lhs.jvm(result);
+        } else if (lhs.isRec() && rhs.isRec()) {
+            final Map<Obj, Obj> result = new LinkedHashMap<>();
+            final AtomicBoolean found = new AtomicBoolean(false);
+            lhs.recValue().forEach((lKey, lValue) ->
+                    rhs.recValue().forEach((rKey, rValue) -> {
+                        if (lKey.matches(rKey)) {
+                            found.set(true);
+                            final Obj r = //((lValue.isRec() && rValue.isRec()) || (lValue.isLst() && rValue.isLst())) ?
+                                    crossPoly(lValue, rValue);
+                                   // lValue.isPoly() ? NoObj.single() : rValue.apply(lValue);
+                            result.compute(rKey.apply(lKey), (k, v) -> null == v ? r : v.append(r));
+                        }
+                    }));
+            return result.isEmpty() || !found.get() ? NoObj.single() : lhs.jvm(result);
+        } else if (!rhs.isCall() && (lhs.isPoly() || rhs.isPoly())) {
+            return NoObj.single();
+        } else {
+            return  rhs.apply(lhs);
         }
-        return lhs.jvm(result);
     }
-
-    ;
-
-    private Obj crossRec(Obj lhs, Obj rhs) {
-        final Map<Obj, Obj> result = new LinkedHashMap<>();
-        lhs.recValue().forEach((lKey, lValue) -> rhs.recValue()
-                .forEach((rKey, rValue) -> {
-                    if (lKey.matches(rKey)) {
-                        final Obj r = ((lValue.isRec() && rValue.isRec()) || (lValue.isLst() && rValue.isLst())) ?
-                                crossRec(lValue, rValue) : rValue.apply(lValue);
-                        result.compute(rKey.apply(lKey), (k, v) -> null == v ? r : v.append(r));
-                    }
-                }));
-        return lhs.jvm(result);
-    }
-
-    ;
 
     @Override
     public Set<Inst> insts() {
@@ -190,6 +199,7 @@ public class mtronInstSet extends MInstSet {
                 instC(END_TID.dom(OBJS_ID).rng(NOOBJ_TID.zero()), lst(), (lhs, inst) -> NoObj.single()),
                 instC(PRINT_TID.dom(ALL).rng(ALL), lst(T(OBJS_ID)), (lhs, inst) -> IteratorUtil.stream(inst.args().elements()).peek(o -> Graphitty.stdout().println(Graphitty.string(o))).filter(a -> false).findAny().orElse(lhs)),
                 instC(AT_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(T(URI_TID)), (lhs, inst) -> Router.global().read(inst.arg(0).uriValue()).vid(inst.arg(0).uriValue())),
+                instC(HAS_TID.dom(REC_TID).rng(REC_TID.maybe()), lst(T(ALL)), (lhs, inst) -> IteratorUtil.stream(lhs.<Rec>as().elements()).map(Rel::first).anyMatch(r -> r.matches(inst.arg(0))) ? lhs : NoObj.single()),
                 instC(ID_TID.dom(A).rng(A), lst(), (lhs, inst) -> lhs),
                 instC(ID_TID.dom(A.maybeSome()).rng(A.maybeSome()), lst(), (lhs, inst) -> lhs),
                 instC(APPLY_TID.dom(ALL).rng(ALL), lst(T(ALL)), (lhs, inst) -> lhs.apply(inst.arg(0))),
@@ -321,15 +331,15 @@ public class mtronInstSet extends MInstSet {
                                                 "max", jnt(lhs.tid().cV().max())),
                                         "query", str(Optional.ofNullable(lhs.tid().query()).map(fURI.Query::toString).orElse(""))),
                                 "value", MObjFactory.of().create(lhs.jvm()))),
-              /*  instC(CROSS_TID.dom(REL_TID).rng(REL_TID), lst(T(REL_TID)), (lhs, inst) ->
+                instC(CROSS_TID.dom(REL_TID).rng(REL_TID), lst(T(REL_TID)), (lhs, inst) ->
                         rel(inst.arg(0).<Rel>as().first().apply(lhs.<Rel>as().first()),
                                 inst.arg(0).<Rel>as().second().apply(lhs.<Rel>as().second()))),
                 instC(CROSS_TID.dom(LST_TID).rng(LST_TID.maybe()), lst(T(LST_TID)), (lhs, inst) -> {
-                    return crossLst(lhs, inst.arg(0));
+                    return crossPoly(lhs, inst.arg(0));
                 }),
                 instC(CROSS_TID.dom(REC_TID).rng(REC_TID.maybe()), lst(T(REC_TID)), (lhs, inst) -> {
-                    return crossRec(lhs, inst.arg(0));
-                })*/
+                    return crossPoly(lhs, inst.arg(0));
+                }),
                 instC(GROUP_TID.dom(REC_TID).rng(REC_TID), lst(T(REC_TID)), (lhs, inst) -> {
                     final Map<Obj, Obj> result = new LinkedHashMap<>();
                     final Map<Tuple.Pair<Obj, Obj>, Obj> resultK = new LinkedHashMap<>();
@@ -344,9 +354,9 @@ public class mtronInstSet extends MInstSet {
                     });
                     resultK.forEach((k, v) -> result.put(k.get0().apply(v), k.get1().apply(resultV.get(k))));
                     return rec(result);
-                }),
+                })
 
-                instC(CROSS_TID.dom(LST_TID).rng(LST_TID), lst(T(LST_TID)), (lhs, inst) -> {
+               /* instC(CROSS_TID.dom(LST_TID).rng(LST_TID), lst(T(LST_TID)), (lhs, inst) -> {
                     final List<Obj> result = new ArrayList<>();
                     final List<Obj> lhsList = lhs.lstValue();
                     final List<Obj> rhsList = inst.arg(0).lstValue();
@@ -382,7 +392,7 @@ public class mtronInstSet extends MInstSet {
                                 }
                             }));
                     return lhs.jvm(result);
-                })
+                })*/
         ).collect(LinkedHashSet::new, LinkedHashSet::add, LinkedHashSet::addAll);
 
         //TODO: convert below to the pure write() model above

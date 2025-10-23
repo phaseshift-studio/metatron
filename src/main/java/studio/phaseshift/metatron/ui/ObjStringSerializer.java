@@ -179,12 +179,12 @@ public class ObjStringSerializer implements ObjSerializer<String> {
     }
 
     private StringBuilder generateRec(final StringBuilder sb, final Rec rec, final int depth) {
-        boolean nested = rec.recValue().values().stream().anyMatch(Obj::isRec);
+        boolean nested = rec.recValue().values().stream().anyMatch(Obj::isPoly);
         sb.append("{{g}}[{{/g}}");
-        if (depth > 0 || nested)
+        if (nested)
             sb.append("\n");
         rec.recValue().forEach((k, v) -> {
-            if (depth > 0 && nested)
+            if (nested)
                 sb.append(" ".repeat(depth * 2));
             sb.append(write(k)).append("{{g}}=>{{/g}}");
             if (v.isRec()) {

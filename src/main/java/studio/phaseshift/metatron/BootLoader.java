@@ -103,7 +103,7 @@ public class BootLoader {
             Router.global().write(new mextInstSet(f("/mnt/lang/ext")));
            // Router.global().write(new RemoteSpace(remoteAuthority,f("/shared/remote/#"), f("/mnt/shared/remote")));
             //Router.global().write(new KVSpace(fURI.of("/shared/#"), fURI.of("/mnt/shared")));
-            Router.global().write(RemoteSpace.open(f("ws://chibi.local:8888"), f("/shared/#"), f("/mnt/shared")));
+           Router.global().write(RemoteSpace.open(f("ws://chibi.local:8888"), f("/shared/#"), f("/mnt/shared")));
             /// ///////////////////////////////////
             BOOTING = false;
             if (mode.equals(uri("server")))

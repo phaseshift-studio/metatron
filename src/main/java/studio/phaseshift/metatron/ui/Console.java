@@ -149,7 +149,7 @@ public class Console {
                         RESOLVE_MODE ? "\n".repeat(3) : "\n".repeat(1),
                         RESOLVE_MODE ? 3 : 1,
                         RESOLVE_MODE ? 3 : 1);
-                line = this.reader.readLine(Graphitty.string("{{FORM2}}mton{{FORM1}}> ")).trim();
+                line = this.reader.readLine(Graphitty.string("{{FORM2}}mtron{{FORM1}}> ")).trim();
                 if (line.equals(":header"))
                     this.outputHeader();
                 else if (line.equals(":quit"))
