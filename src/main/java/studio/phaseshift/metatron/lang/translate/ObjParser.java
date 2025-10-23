@@ -358,7 +358,7 @@ public class ObjParser {
     private static Parser[] ordered_sugar_parsers() {
         return new Parser[]{
                 branch_parser,
-                generate_sugar_parser(VID_TID, of('@'), 1),
+                generate_sugar_parser(AT_TID, of('@'), 1),
                 generate_sugar_parser(BARRIER_TID, of("-|"), 1),
                 generate_sugar_parser(BLOCK_TID, of('|'), 1),
                 generate_sugar_parser(WITHIN_TID, of("_/"), 1, of("\\_")),

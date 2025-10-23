@@ -23,10 +23,11 @@ import studio.phaseshift.metatron.io.net.MClient;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.Inst;
 import studio.phaseshift.metatron.lang.obj.Obj;
+import studio.phaseshift.metatron.space.NullSpace;
 import studio.phaseshift.metatron.space.mem.MSpace;
 import studio.phaseshift.metatron.util.MTronException;
 
-import static studio.phaseshift.metatron.lang.obj.mtron.mtronFluent.StartLess.from_;
+import static studio.phaseshift.metatron.lang.obj.mtron.mtronFluent.StartLess.*;
 import static studio.phaseshift.metatron.lang.obj.mtron.mtronInstSet.MTRON_SPACE_TID;
 
 /*
@@ -36,14 +37,21 @@ public class RemoteSpace extends MSpace<MClient> {
 
     public static final fURI REMOTE_TID = MTRON_SPACE_TID.extend("remote");
 
-    public RemoteSpace(final fURI pattern, final fURI vid) {
-        super(new MClient(pattern.authority()), pattern, REMOTE_TID, vid);
+    public RemoteSpace(final fURI authority, final fURI pattern, final fURI vid) {
+        super(new MClient(authority), pattern, REMOTE_TID, vid);
         try {
-            LOG.info("{{g}}connecting{{/g}} to {{b}}%s{{/b}}", this.jvm().server());
+            LOG.info("{{g}}connecting{{/g}} to {{b}}%s{{/b}}", this.jvm().authority());
             this.jvm().connectBlocking();
-            //LOG.info("{{^<2&X-&g}}connected{{X}} to {{b}}%s{{/b}}{{v1}}", this.jvm().server());
         } catch (final Exception e) {
-            throw MTronException.of(e);
+            throw MTronException.of(e, "unable to connect to remote space at %s", authority);
+        }
+    }
+
+    public static RemoteSpace open(final fURI authority, final fURI pattern, final fURI vid) {
+        try {
+            return new RemoteSpace(authority, pattern, vid);
+        } catch (final MTronException e) {
+            return NullSpace.single();
         }
     }
 
@@ -59,14 +67,22 @@ public class RemoteSpace extends MSpace<MClient> {
         final Inst code = from_(vid.authority(null).scheme(null).toUri()).insts().get(0);//, vid.query("tag","abc"));
         LOG.info("performing remote read: %s", code);
         final FutureObj<Obj> future = this.jvm().sendRecv(code);
-        LOG.info("future %s", future);
-        LOG.info("future obj %s", future.get(10000));
+        LOG.info("future read %s", future.get(10000));
         return future.get(1);
     }
 
     @Override
     public Obj write(final fURI vid, final Obj obj) {
-        this.jvm().send(obj);
+        this.jvm().send(start_(obj).to_(vid.toUri()));
         return obj;
+    }
+
+    @Override
+    public Obj apply(final Obj obj) {
+        final Inst code = apply_(obj);
+        LOG.info("performing remote apply: %s", code);
+        final FutureObj<Obj> future = this.jvm().sendRecv(code);
+        LOG.info("future apply %s", future.get(10000));
+        return future.get(1);
     }
 }

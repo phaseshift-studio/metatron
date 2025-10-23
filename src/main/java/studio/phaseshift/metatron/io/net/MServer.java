@@ -124,12 +124,12 @@ public class MServer extends WebSocketServer implements Closeable {
         try {
             LOG.trace("processing %s for %s", obj, conn);
             Obj result = obj.apply().vid(null);
-            final String tag = obj.vid() != null ? obj.vid().queryValue(f("tag"), String.class, null) : null;
-            if (tag != null) {
-                fURI rvid = result.vid() == null ? f("/usr/temp?tag=" + tag) : result.vid().query("tag", tag);
-                result = result.vid(rvid);
-                LOG.info("obj tagged: %s", result);
-            }
+           // final String tag = obj.vid() != null ? obj.vid().queryValue(f("tag"), String.class, null) : null;
+            //if (tag != null) {
+            //    fURI rvid = result.vid() == null ? f("/usr/temp?tag=" + tag) : result.vid().query("tag", tag);
+            //    result = result.vid(rvid);
+           //     LOG.info("obj tagged: %s", result);
+           // }
             conn.send(this.serializer.write(result));
         } catch (final Exception e) {
             this.onError(conn, e);

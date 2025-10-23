@@ -31,7 +31,7 @@ public interface Group<R extends Group<R>> extends Monoid<R> {
         return this.mult(r.inv());
     }
 
-    interface O<OBJ extends Group.O<OBJ>> extends Group<OBJ>, Obj {
+    interface O<R extends Group.O<R>> extends Group<R>, Monoid.O<R>, Obj {
 
     }
 }

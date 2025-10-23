@@ -72,24 +72,23 @@ public class BootLoader {
     public static void load(final Map<String, Obj> args) {
         Runtime.getRuntime().addShutdownHook(new Thread(BootLoader::close));
         final Obj mode = args.getOrDefault("mode", uri("server"));
-        fURI routerServer = null;
+        fURI remoteAuthority = null;
         if (BOOTING) {
           /// /// START OF BOOTING PROCESS /// /// allow boot description to be read from a mtron file
             try {
-                routerServer = args.getOrDefault(HOST, uri("ws://" + InetAddress.getLocalHost().getHostName() + ".local" + ":" + 8887)).uriValue();
-                LOG.info("router server: %s", routerServer);
+                remoteAuthority = args.getOrDefault(HOST, uri("ws://" + InetAddress.getLocalHost().getHostName() + ".local" + ":" + 8887)).uriValue();
+                LOG.info("router server: %s", remoteAuthority);
                 if (mode.equals(uri("console")))
                     new Console(args).start();
 
             } catch (final Exception e) {
                 LOG.warn("booting metatron on a non-networked jvm");
             }
-            ROUTER = new MRouter(routerServer, f("/sys/router"));
+            ROUTER = new MRouter(remoteAuthority, f("/sys/router"));
             ROUTER.start();
             Router.global().write(new KVSpace(f("/mnt/#"), f("/mnt")));
             Router.global().write(new KVSpace(fURI.of("/sys/#"), fURI.of("/mnt/sys")));
             Router.global().write(new KVSpace(fURI.of("/usr/#"), fURI.of("/mnt/usr")));
-            Router.global().write(new KVSpace(fURI.of("/shared/#"), fURI.of("/mnt/shared")));
             Router.global().write(Router.global());
             Router.global().write(new StackSpace(f("+/#"), f("/sys/router/stack")));
             Router.global().write(new mtronInstSet(fURI.of("/mnt/lang/m")));
@@ -102,7 +101,9 @@ public class BootLoader {
                     uri("prefix"), uri("/mqtt"),
                     uri("pattern"), uri("zigbee2mqtt/#")), f("/mnt/zigbee2mqtt")));*/
             Router.global().write(new mextInstSet(f("/mnt/lang/ext")));
-            Router.global().write(new RemoteSpace(routerServer.extend("shared/#"), f("/mnt/localhost/8887/shared")));
+           // Router.global().write(new RemoteSpace(remoteAuthority,f("/shared/remote/#"), f("/mnt/shared/remote")));
+            //Router.global().write(new KVSpace(fURI.of("/shared/#"), fURI.of("/mnt/shared")));
+            Router.global().write(RemoteSpace.open(f("ws://chibi.local:8888"), f("/shared/#"), f("/mnt/shared")));
             /// ///////////////////////////////////
             BOOTING = false;
             if (mode.equals(uri("server")))

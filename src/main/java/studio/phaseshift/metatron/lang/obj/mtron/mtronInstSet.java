@@ -18,7 +18,6 @@
 
 package studio.phaseshift.metatron.lang.obj.mtron;
 
-import studio.phaseshift.metatron.algebra.Semiring;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.*;
 import studio.phaseshift.metatron.lang.obj.mtron.c.cInt;
@@ -190,9 +189,10 @@ public class mtronInstSet extends MInstSet {
                 instC(START_TID.dom(fURI.NOOBJ.zero()).rng(A.c(cInt.of(null, null).toString())), lst(T(A.maybeSome())), (lhs, inst) -> inst.arg(0)),
                 instC(END_TID.dom(OBJS_ID).rng(NOOBJ_TID.zero()), lst(), (lhs, inst) -> NoObj.single()),
                 instC(PRINT_TID.dom(ALL).rng(ALL), lst(T(OBJS_ID)), (lhs, inst) -> IteratorUtil.stream(inst.args().elements()).peek(o -> Graphitty.stdout().println(Graphitty.string(o))).filter(a -> false).findAny().orElse(lhs)),
+                instC(AT_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(T(URI_TID)), (lhs, inst) -> Router.global().read(inst.arg(0).uriValue()).vid(inst.arg(0).uriValue())),
                 instC(ID_TID.dom(A).rng(A), lst(), (lhs, inst) -> lhs),
                 instC(ID_TID.dom(A.maybeSome()).rng(A.maybeSome()), lst(), (lhs, inst) -> lhs),
-                instC(APPLY_TID.dom(ALL).rng(ALL), lst(T(INST_TID)), (lhs, inst) -> inst.arg(0).apply(lhs)),
+                instC(APPLY_TID.dom(ALL).rng(ALL), lst(T(ALL)), (lhs, inst) -> lhs.apply(inst.arg(0))),
                 instC(MAP_TID.dom(ALL).rng(A), lst(T(A)), (lhs, inst) -> inst.arg(0)),
                 instC(MAP_TID.dom(ALL).rng(ALL.maybe()), lst(T(ALL)), (lhs, inst) -> inst.arg(0)),
                 instC(TID_TID.dom(ALL).rng(URI_TID), lst(), (lhs, inst) -> lhs.tid().toUri()),

@@ -23,6 +23,7 @@ import studio.phaseshift.metatron.lang.obj.*;
 import studio.phaseshift.metatron.lang.obj.mtron.MObjs;
 import studio.phaseshift.metatron.lang.obj.mtron.MRel;
 import studio.phaseshift.metatron.ui.Graphitty;
+import studio.phaseshift.metatron.vm.MMachine;
 
 import java.io.Closeable;
 import java.util.ArrayList;
@@ -84,7 +85,8 @@ public interface Space extends Poly, Closeable {
 
     @Override
     default Obj apply(final Obj other) {
-        return this;
+        this.logger().info("%s applying %s", this, other);
+        return Space.Helpers.resolveApply(this, other);
     }
 
     @Override
@@ -131,6 +133,16 @@ public interface Space extends Poly, Closeable {
 
         public static void noCloneWarning(final Space space) {
             Graphitty.log(space.getClass()).warn("the clone of a space is the space itself");
+        }
+
+        public static Obj resolveApply(final Space space, final Obj rhs) {
+            if (rhs.isCode()) {
+                return MMachine.of(rhs.as()).apply();
+            } else if (rhs.isInst()) {
+                return rhs.<Inst>as().apply();
+            } else {
+                return rhs;
+            }
         }
 
         public static Obj resolveRead(final Space space, final fURI vid, final Function<fURI, Map<fURI, Obj>> directReader) { //final Map<fURI, Obj> store) {

@@ -35,28 +35,25 @@ import studio.phaseshift.metatron.ui.ObjSerializer;
 import java.io.Closeable;
 import java.net.URI;
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-
-import static studio.phaseshift.metatron.lang.fURI.f;
+import java.util.LinkedList;
+import java.util.Queue;
 
 public class MClient extends WebSocketClient implements Closeable {
 
     protected final GraphittyLogger LOG;
     protected final ObjSerializer<ByteBuffer> serializer;
-    protected final List<FutureObj<?>> futures = new ArrayList<>();
-    protected final fURI server;
+    protected final Queue<FutureObj<Obj>> futures = new LinkedList<>();
+    protected final fURI authority;
 
-    public MClient(final fURI server, final Draft draft) {
-        super(URI.create(server.toString()), draft);
+    public MClient(final fURI authority, final Draft draft) {
+        super(URI.create(authority.toString()), draft);
         LOG = Graphitty.log(this);
         this.serializer = new ObjByteBufferSerializer();
-        this.server = server;
+        this.authority = authority;
     }
 
-    public MClient(final fURI server) {
-        this(server, new Draft_6455());
+    public MClient(final fURI authority) {
+        this(authority, new Draft_6455());
     }
 
    /* public void close() {
@@ -67,8 +64,8 @@ public class MClient extends WebSocketClient implements Closeable {
         }
     }*/
 
-    public fURI server() {
-        return this.server;
+    public fURI authority() {
+        return this.authority;
     }
 
     public void start() {
@@ -117,15 +114,15 @@ public class MClient extends WebSocketClient implements Closeable {
         final Obj toSend = obj;
         //final Obj toSend = obj.vid(obj.vid() == null ? f("temp?tag=abc") : obj.vid().query("tag", "abc"));
         LOG.trace("sending obj: %s", toSend);
-        final FutureObj<O> future = new FutureObj<>("abc");
+        final FutureObj<Obj> future = new FutureObj<>("abc");
         this.futures.add(future);
         this.send(toSend);
-        return future;
+        return (FutureObj<O>) future;
     }
 
     public void onObj(final Obj obj) {
         LOG.trace("processing %s", obj);
-        if (obj.vid() != null && obj.vid().hasQuery("tag")) {
+        /*if (obj.vid() != null && obj.vid().hasQuery("tag")) {
             LOG.trace("processing tagged obj %s", obj.vid());
             final String tag = obj.vid().queryValue(f("tag"), String.class);
             Optional<FutureObj<?>> future = this.futures.stream().filter(f -> f.tag().equals(tag)).findAny();
@@ -133,14 +130,13 @@ public class MClient extends WebSocketClient implements Closeable {
                 final FutureObj<Obj> f = (FutureObj<Obj>) future.get();
                 f.setObj(obj.vid(obj.vid().removeQ("tag")));
             }
-        } else {
-            final Optional<FutureObj<?>> future = this.futures.stream().findAny();
-            LOG.trace("processing future obj %s", future);
-            if (future.isPresent()) {
-                final FutureObj<Obj> f = (FutureObj<Obj>) future.get();
-                f.setObj(obj);
-            }
+        } else {*/
+        final FutureObj<Obj> future = this.futures.poll();
+        LOG.trace("processing future obj %s", future);
+        if (null != future) {
+            future.setObj(obj);
         }
+        //}
     }
 
 

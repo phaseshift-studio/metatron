@@ -52,6 +52,10 @@ public class mtronFluent<F extends Fluent<F>> extends MCode implements Fluent<F>
         return this.addInst(instB(mtronInstSet.START_TID, lst(obj)));
     }
 
+    public F apply_(final Obj obj) {
+        return this.addInst(instB(mtronInstSet.APPLY_TID, lst(obj)));
+    }
+
     public F block_(final Obj obj) {
         return this.addInst(instB(mtronInstSet.BLOCK_TID, lst(obj)));
     }
@@ -106,6 +110,10 @@ public class mtronFluent<F extends Fluent<F>> extends MCode implements Fluent<F>
 
     public F sum_() {
         return this.addInst(instB(mtronInstSet.SUM_TID, lst()));
+    }
+
+    public F prod_() {
+        return this.addInst(instB(mtronInstSet.PROD_TID, lst()));
     }
 
     public F cross_(final Obj obj) {
@@ -189,8 +197,16 @@ public class mtronFluent<F extends Fluent<F>> extends MCode implements Fluent<F>
             return new mtronFluent<F>().sum_();
         }
 
+        public static <F extends mtronFluent<F>> F prod_() {
+            return new mtronFluent<F>().prod_();
+        }
+
         public static <F extends mtronFluent<F>> F cross_(final Obj obj) {
             return new mtronFluent<F>().cross_(obj);
+        }
+
+        public static <F extends mtronFluent<F>> F apply_(final Obj obj) {
+            return new mtronFluent<F>().apply_(obj);
         }
 
         public static <F extends mtronFluent<F>> F get_(final Obj obj) {
