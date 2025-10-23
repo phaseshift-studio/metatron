@@ -67,6 +67,11 @@ public interface Objs extends Obj, Semiring.O<Objs> {
     }
 
     @Override
+    default Stream<Obj> elementStream() {
+        return this.stream().flatMap(Obj::elementStream);
+    }
+
+    @Override
     default Objs zero() {
         return MObjs.empty();
     }

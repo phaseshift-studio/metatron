@@ -18,6 +18,10 @@
 
 package studio.phaseshift.metatron.lang.obj;
 
+import studio.phaseshift.metatron.util.IteratorUtil;
+
+import java.util.stream.Stream;
+
 public interface Poly extends Obj {
 
     long count();
@@ -28,11 +32,15 @@ public interface Poly extends Obj {
 
     <O extends Obj> Iterable<O> elements();
 
+    default <O extends Obj> Stream<O> elementStream() {
+        return IteratorUtil.stream(this.elements());
+    }
+
     <O extends Obj> O at(final Obj key);
 
-   default Poly at(final Obj key, final Obj value) {
-       return this;
-   }
+    default Poly at(final Obj key, final Obj value) {
+        return this;
+    }
 
     default boolean has(final Obj key) {
         return !this.at(key).isNoObj();

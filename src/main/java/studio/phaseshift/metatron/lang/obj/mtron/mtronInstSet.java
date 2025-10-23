@@ -80,6 +80,7 @@ public class mtronInstSet extends MInstSet {
     public static final fURI REF_TID = INST_TID.extend("ref");
     public static final fURI SPLIT_TID = INST_TID.extend("split");
     public static final fURI MERGE_TID = INST_TID.extend("merge");
+    public static final fURI FILL_TID = INST_TID.extend("fill");
     public static final fURI RMERGE_TID = INST_TID.extend("rmerge");
     public static final fURI WITHIN_TID = INST_TID.extend("within");
     public static final fURI BLOCK_TID = INST_TID.extend("block");
@@ -164,7 +165,7 @@ public class mtronInstSet extends MInstSet {
                     final Obj rhsA = rhsList.get(i);
                     result.add(//(lhsA.isRec() && rhsA.isRec()) || (lhsA.isLst() && rhsA.isLst()) ?
                             crossPoly(lhsA, rhsA));// :
-                            //rhsA.apply(lhsA));
+                    //rhsA.apply(lhsA));
                 } else {
                     break;
                 }
@@ -179,7 +180,7 @@ public class mtronInstSet extends MInstSet {
                             found.set(true);
                             final Obj r = //((lValue.isRec() && rValue.isRec()) || (lValue.isLst() && rValue.isLst())) ?
                                     crossPoly(lValue, rValue);
-                                   // lValue.isPoly() ? NoObj.single() : rValue.apply(lValue);
+                            // lValue.isPoly() ? NoObj.single() : rValue.apply(lValue);
                             result.compute(rKey.apply(lKey), (k, v) -> null == v ? r : v.append(r));
                         }
                     }));
@@ -187,7 +188,7 @@ public class mtronInstSet extends MInstSet {
         } else if (!rhs.isCall() && (lhs.isPoly() || rhs.isPoly())) {
             return NoObj.single();
         } else {
-            return  rhs.apply(lhs);
+            return rhs.apply(lhs);
         }
     }
 
@@ -247,10 +248,10 @@ public class mtronInstSet extends MInstSet {
                 //
                 instC(MERGE_TID.dom(A.maybeSome()).rng(LST_TID), lst(T(LST_TID)), (lhs, inst) -> inst.arg(0).jvm(Stream.concat(lhs.stream(), inst.arg(0).lstValue().stream()).toList())),
                 instC(MERGE_TID.dom(REL_TID.maybeSome()).rng(REC_TID), lst(T(REC_TID)), (lhs, inst) -> inst.arg(0).jvm(Stream.concat(lhs.stream().map(Obj::as), inst.arg(0).<Rec>as().stream()).collect(Collectors.toMap(Rel::first, Rel::second, Obj::append, LinkedHashMap::new)))),
-                instC(MERGE_TID.dom(A).rng(A), lst(), (lhs, inst) -> lhs),
+                instC(MERGE_TID.dom(A.maybeSome()).rng(OBJS_ID), lst(), (lhs, inst) -> objs(lhs.elementStream())),
                 //
                 instC(MERGE_TID.dom(A.maybeSome()).rng(A.maybeSome()), lst(T(A.maybeSome())), (lhs, inst) -> objs(Stream.concat(lhs.stream(), inst.arg(0).stream()))),
-                instC(MERGE_TID.dom(A.maybeSome()).rng(A.maybeSome()), lst(), (lhs, inst) -> lhs),
+               // instC(MERGE_TID.dom(A.maybeSome()).rng(A.maybeSome()), lst(), (lhs, inst) -> lhs),
                 /// ///////////////////////////////////////////////////////////////////////////////////////////////////
                 instC(DOM_TID.dom(REL_TID).rng(ALL), lst(), (lhs, inst) -> lhs.relValue().get0()),
                 instC(RNG_TID.dom(REL_TID).rng(ALL.some()), lst(), (lhs, inst) -> lhs.relValue().get1()),

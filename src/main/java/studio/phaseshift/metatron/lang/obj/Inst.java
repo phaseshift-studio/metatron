@@ -218,82 +218,83 @@ public interface Inst extends Call {
 
     @Override
     default Inst resolve(final Obj lhs) {
+        if (null != this.f())
+            return this;
         final GraphittyLogger LOG = Graphitty.log(lhs);
-        final Resolution currentResolution = this.resolution();
-        LOG.trace("%s => %s in resolution state {{m}}%s{{/m}}", lhs, this, currentResolution);
-        if (currentResolution == Resolution.A) {
-            try {
-                final Inst resolved = Router.global().read(this.tid())
-                        .stream()
-                        .map(Obj::<Inst>as)
-                        .filter(i -> this.args().isRec() || i.args().isRec() || i.args().count() == this.args().count())
-                        .map(i -> this.hasDomOrRng() ? i.tid(this.tid()) : i)
-                        .map(i -> i.specify(lhs, this))
-                        .filter(i -> lhs.matches(i.dom()))
-                        .map(i -> {
-                            final Poly resolvedArgs = resolveArgs(this, i, lhs);
-                            if (null == resolvedArgs)
-                                return null; // TODO: backtrack the resolution to the outer inst to see if adjusting the coefficient can resolve the internal resolution
-                            return i.args(resolvedArgs);
-                        })
-                        .filter(i -> !Objects.isNull(i))
-                        //.map(i -> i.tid(i.tid().dom(lhs.tid())).vid(this.vid()))
-                        .map(Obj::<Inst>as)
-                        .map(i -> i.resolve(lhs)) // TODO: return resolve(lhs) if failing
-                        .map(i -> i.c(this.c()))
-                        .findFirst()
-                        .orElse(null);
-                if (null != resolved) {
-                    LOG.trace("resolution ({{m}}%s {{g}}=>{{/g}} %s{{/m}}): %s => %s", currentResolution, resolved.resolution(), lhs, resolved);
-                    return resolved;
-                }
-            } catch (final Exception e) {
-                this.logger().error(e);
+        LOG.trace("%s => %s in resolution state {{m}}%s{{/m}}", lhs, this, this.resolution());
+        try {
+            final Inst resolved = Router.global().read(this.tid())
+                    .stream()
+                    .map(Obj::<Inst>as)
+                    .filter(i -> this.args().isRec() || i.args().isRec() || i.args().count() == this.args().count())
+                    .map(i -> this.hasDomOrRng() ? i.tid(this.tid()) : i)
+                    .map(i -> i.specify(lhs, this))
+                    .filter(i -> lhs.matches(i.dom()))
+                    .map(i -> {
+                        final Poly resolvedArgs = resolveArgs(this, i, lhs);
+                        if (null == resolvedArgs)
+                            return null; // TODO: backtrack the resolution to the outer inst to see if adjusting the coefficient can resolve the internal resolution
+                        return i.args(resolvedArgs);
+                    })
+                    .filter(i -> !Objects.isNull(i))
+                    //.map(i -> i.tid(i.tid().dom(lhs.tid())).vid(this.vid()))
+                    .map(Obj::<Inst>as)
+                    .map(i -> i.resolve(lhs)) // TODO: return resolve(lhs) if failing
+                    .map(i -> i.c(this.c()))
+                    .findFirst()
+                    .orElse(null);
+            if (null != resolved) {
+                LOG.trace("resolution ({{m}}%s {{g}}=>{{/g}} %s{{/m}}): %s => %s", this.resolution(), resolved.resolution(), lhs, resolved);
+                return resolved;
             }
-            this.logger().trace("performing runtime resolution of %s => %s", lhs, this);
-            Obj resolved2 = Router.global().read(this.tid());//.c(this.c());
-            resolved2 = this.hasDomOrRng() ? resolved2.tid(this.tid()) : resolved2;
-            if (resolved2.isNoObj()) {
-                LOG.debug("%s could not be resolved in any space", this);
-                return NoObj.single();
-            } else if (!resolved2.isInst()) {
-                LOG.debug("unable to resolve %s to a single inst in %s", this.dom(lhs.type()), resolved2);
-                final Poly args = resolveArgs(this, this, lhs);
-                return null == args ? this : this.args(args);
-            } else {
-                LOG.debug("resolved %s from global router", resolved2);
-                return resolved2.<Inst>as().args(this.args()).c(this.c()); //.resolve(lhs);
-            }
-        } else { // Resolve.B
-            final boolean blocking = this.isBlocking();
-            if (!blocking && (!lhs.matches(this.dom()) || !(lhs.take(this.dom().c()).get0()).matches(this.dom())))
-                throw MTronException.of("{{m}}lhs obj{{/m}} does not match inst domain (resolve): %s {{r}}=/>{{/r}} %s", lhs, this);
-            final Poly cargs = this.args().isLst() ?
-                    lst(this.args().lstValue()
-                            .stream()
-                            .map(arg -> {
-                                if (blocking)
-                                    return arg;
-                                else {
-                                    final Obj r = arg.apply(lhs);
-                                    if (!arg.isCall() && !r.matches(arg)) {
-                                        LOG.error("unmatched inst arg in %s: %s ({{y}}lhs{{/y}}) {{g}}=>{{/g}} %s ({{y}}arg{{/y}}) {{r}}~!>{{/r}} %s ", this, lhs, arg, r);
-                                        return arg;
-                                    }
-                                    //throw MTronException.of("arg obj does not match inst arg: %s: %s {{r}}-/>{{/r}} %s", this, arg, r);
-                                    return r;
-                                }
-                            }).toList()) :
-                    rec(this.args().recValue().entrySet()
-                            .stream()
-                            .map(kv -> List.of(kv.getKey(), blocking ?
-                                    kv.getValue() :
-                                    kv.getValue().apply(lhs)))
-                            .collect(Collectors.toMap(kv -> kv.get(0), kv -> kv.get(1), Obj::append, LinkedHashMap::new)));
-            final Inst resolved = this.args(cargs);
-            LOG.trace("resolution ({{m}}%s {{g}}=>{{/g}} %s{{/m}}): %s => %s", currentResolution, resolved.resolution(), lhs, resolved);
-            return resolved;
+        } catch (final Exception e) {
+            this.logger().error(e);
         }
+        this.logger().trace("performing runtime resolution of %s => %s", lhs, this);
+        Obj resolved2 = Router.global().read(this.tid());//.c(this.c());
+        resolved2 = this.hasDomOrRng() ? resolved2.tid(this.tid()) : resolved2;
+        if (resolved2.isNoObj()) {
+            LOG.debug("%s could not be resolved in any space", this);
+            return NoObj.single();
+        } else if (!resolved2.isInst()) {
+            LOG.debug("unable to resolve %s to a single inst in %s", this.dom(lhs.type()), resolved2);
+            final Poly args = resolveArgs(this, this, lhs);
+            return null == args ? this : this.args(args);
+        } else {
+            LOG.debug("resolved %s from global router", resolved2);
+            return resolved2.<Inst>as().args(this.args()).c(this.c()); //.resolve(lhs);
+        }
+    }
+
+    default Inst applyArgs(final Obj lhs) {
+        final boolean blocking = this.isBlocking();
+        if (!blocking && (!lhs.matches(this.dom()) || !(lhs.take(this.dom().c()).get0()).matches(this.dom())))
+            throw MTronException.of("{{m}}lhs obj{{/m}} does not match inst domain (resolve): %s {{r}}=/>{{/r}} %s", lhs, this);
+        final Poly cargs = this.args().isLst() ?
+                lst(this.args().lstValue()
+                        .stream()
+                        .map(arg -> {
+                            if (blocking)
+                                return arg;
+                            else {
+                                final Obj r = arg.apply(lhs);
+                                if (!arg.isCall() && !r.matches(arg)) {
+                                    // LOG.error("unmatched inst arg in %s: %s ({{y}}lhs{{/y}}) {{g}}=>{{/g}} %s ({{y}}arg{{/y}}) {{r}}~!>{{/r}} %s ", this, lhs, arg, r);
+                                    return arg;
+                                }
+                                //throw MTronException.of("arg obj does not match inst arg: %s: %s {{r}}-/>{{/r}} %s", this, arg, r);
+                                return r;
+                            }
+                        }).toList()) :
+                rec(this.args().recValue().entrySet()
+                        .stream()
+                        .map(kv -> List.of(kv.getKey(), blocking ?
+                                kv.getValue() :
+                                kv.getValue().apply(lhs)))
+                        .collect(Collectors.toMap(kv -> kv.get(0), kv -> kv.get(1), Obj::append, LinkedHashMap::new)));
+        final Inst resolved = this.args(cargs);
+        //  LOG.trace("resolution ({{m}}%s {{g}}=>{{/g}} %s{{/m}}): %s => %s", currentResolution, resolved.resolution(), lhs, resolved);
+        return resolved;
     }
 
     @Override
@@ -316,7 +317,7 @@ public interface Inst extends Call {
             rhs = fail(MTronException.of("unable to resolve %s", cinst));
         try {
             if (!rhs.isFail() || cinst.isCatch()) {
-                rhs = cinst.f().apply(clhs, cinst);
+                rhs = cinst.f().apply(clhs, cinst.applyArgs(clhs));
                 Graphitty.log(cinst).trace("%s ({{m}}lhs{{/m}}) => %s ({{m}}inst{{/m}}) => %s ({{m}}rhs{{/m}}) evaluated {{g}}successfully{{/g}}", clhs, cinst, rhs);
             }
         } catch (final Exception e) {

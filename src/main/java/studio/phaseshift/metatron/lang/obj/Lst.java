@@ -27,6 +27,7 @@ import studio.phaseshift.metatron.util.MTronException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
+import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.lang.obj.mtron.MInt.jnt;
 import static studio.phaseshift.metatron.lang.obj.mtron.MLst.lst;
@@ -55,6 +56,10 @@ public interface Lst extends Poly, Semiring<Lst> {
     @Override
     default Iterable<Obj> elements() {
         return this.jvm();
+    }
+
+    default <O extends Obj> Stream<O> elementStream() {
+        return (Stream)IteratorUtil.stream(this.elements());
     }
 
     default Lst at(final Obj key, final Obj value) {

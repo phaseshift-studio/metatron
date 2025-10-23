@@ -139,6 +139,10 @@ public interface Obj extends Function<Obj, Obj>, Iterable<Obj>, Cloneable {
         return this.isNoObj() ? Stream.empty() : (Stream<O>) IteratorUtil.stream(this);
     }
 
+    default <O extends Obj> Stream<O> elementStream() {
+        return this.stream();
+    }
+
     default Obj tid(final fURI newTid) {
         return this.clone(this.jvm(), newTid, this.vid());
     }
