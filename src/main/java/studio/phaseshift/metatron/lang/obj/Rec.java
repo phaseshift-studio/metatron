@@ -21,9 +21,7 @@ package studio.phaseshift.metatron.lang.obj;
 
 import studio.phaseshift.metatron.algebra.Semiring;
 import studio.phaseshift.metatron.lang.fURI;
-import studio.phaseshift.metatron.lang.obj.mtron.MRel;
 import studio.phaseshift.metatron.util.IteratorUtil;
-import studio.phaseshift.metatron.util.Streamable;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -32,7 +30,6 @@ import java.util.stream.Stream;
 import static studio.phaseshift.metatron.lang.obj.mtron.MObjs.objs;
 import static studio.phaseshift.metatron.lang.obj.mtron.MRel.rel;
 import static studio.phaseshift.metatron.lang.obj.mtron.MUri.uri;
-import static studio.phaseshift.metatron.util.Tuple.Pair;
 
 public interface Rec extends Poly, Semiring<Rec> {
 
@@ -49,17 +46,18 @@ public interface Rec extends Poly, Semiring<Rec> {
 
     @Override
     default Stream<Obj> stream() {
-        return (Stream) IteratorUtil.stream(this.elements());
+        return this
+                .jvm()
+                .entrySet()
+                .stream()
+                .map(kv -> rel(kv.getKey(), kv.getValue()))
+                .map(r -> r.c(c -> c.mult(this.c())));
     }
 
 
     @Override
     default Iterable<Rel> elements() {
-        return () -> this
-                .jvm()
-                .entrySet()
-                .stream()
-                .map(kv -> (Rel) new MRel(Pair.with(kv.getKey(), kv.getValue()))).iterator();
+        return  this.stream().map(Obj::<Rel>as).toList();
     }
 
     @Override

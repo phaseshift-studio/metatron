@@ -83,5 +83,16 @@ public class LstTest extends MetatronObjTest {
         super.testCode(code, expected);
     }
 
+    @ParameterizedTest
+    @CsvSource(value = {
+            "lst{10}::[1,2,3]                                                                        % lst{10}::[1,2,3]",
+            "lst{10}::[1,2,3]>-                                                                      % {int{10}::1,int{10}::2,int{10}::3}",
+            "lst{10}::[1,2,3]>-.sum?int<=int{*}()                                                    % 60",
+
+    }, delimiter = '%')
+    public void testCoefficients(final String code, final String expected) {
+        super.testCode(code, expected);
+    }
+
 
 }

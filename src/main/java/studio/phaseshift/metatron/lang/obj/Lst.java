@@ -55,11 +55,11 @@ public interface Lst extends Poly, Semiring<Lst> {
 
     @Override
     default Iterable<Obj> elements() {
-        return this.jvm();
+        return this.elementStream().toList();
     }
 
     default <O extends Obj> Stream<O> elementStream() {
-        return (Stream)IteratorUtil.stream(this.elements());
+        return (Stream) IteratorUtil.stream(this.jvm()).map(e -> e.c(c -> c.mult(this.c())));
     }
 
     default Lst at(final Obj key, final Obj value) {

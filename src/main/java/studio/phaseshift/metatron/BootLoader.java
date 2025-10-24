@@ -52,9 +52,8 @@ public class BootLoader {
     public static final String HOST = "host";
     public static final String LOG_LEVEL = "log";
     public static final String VERBOSE = "verbose";
-    public static boolean TYPE_CHECK = true;
-
     private static final GraphittyLogger LOG = Graphitty.log(BootLoader.class);
+    public static boolean TYPE_CHECK = true;
     public static boolean BOOTING = true;
     public static Router ROUTER;
 
@@ -75,7 +74,7 @@ public class BootLoader {
         final Obj mode = args.getOrDefault("mode", uri("server"));
         fURI remoteAuthority = null;
         if (BOOTING) {
-          /// /// START OF BOOTING PROCESS /// /// allow boot description to be read from a mtron file
+            /// /// START OF BOOTING PROCESS /// /// allow boot description to be read from a mtron file
             try {
                 remoteAuthority = args.getOrDefault(HOST, uri("ws://" + InetAddress.getLocalHost().getHostName() + ".local" + ":" + 8887)).uriValue();
                 LOG.info("router server: %s", remoteAuthority);
@@ -102,9 +101,12 @@ public class BootLoader {
                     uri("prefix"), uri("/mqtt"),
                     uri("pattern"), uri("zigbee2mqtt/#")), f("/mnt/zigbee2mqtt")));*/
             Router.global().write(new mextInstSet(f("/mnt/lang/ext")));
-           // Router.global().write(new RemoteSpace(remoteAuthority,f("/shared/remote/#"), f("/mnt/shared/remote")));
+            // Router.global().write(new RemoteSpace(remoteAuthority,f("/shared/remote/#"), f("/mnt/shared/remote")));
             //Router.global().write(new KVSpace(fURI.of("/shared/#"), fURI.of("/mnt/shared")));
-           Router.global().write(RemoteSpace.open(f("ws://chibi.local:8888"), f("/shared/#"), f("/mnt/shared")));
+            if (remoteAuthority != null && !remoteAuthority.host().equals("chibi.local"))
+                Router.global().write(RemoteSpace.open(f("ws://chibi.local:8888"), f("/shared/#"), f("/mnt/shared")));
+            else
+                Router.global().write(new KVSpace(fURI.of("/shared/#"), fURI.of("/mnt/shared")));
             /// ///////////////////////////////////
             BOOTING = false;
             if (mode.equals(uri("server")))
