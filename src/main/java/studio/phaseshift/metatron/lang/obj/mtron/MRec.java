@@ -22,6 +22,8 @@ import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.NoObj;
 import studio.phaseshift.metatron.lang.obj.Obj;
 import studio.phaseshift.metatron.lang.obj.Rec;
+import studio.phaseshift.metatron.lang.obj.Rel;
+import studio.phaseshift.metatron.util.Streamable;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -61,7 +63,7 @@ public class MRec extends MObj implements Rec {
     @Override
     public Rec plus(final Rec objs) {
         final Map<Obj, Obj> newMap = new LinkedHashMap<>(this.recValue());
-        objs.stream().forEach(o -> newMap.compute(o.first(), (k, v) -> null == v ? o.second() : v.append(o.second())));
+        objs.elementStream().map(Obj::<Rel>as).forEach(o -> newMap.compute(o.first(), (k, v) -> null == v ? o.second() : v.append(o.second())));
         return this.jvm(newMap);
     }
 

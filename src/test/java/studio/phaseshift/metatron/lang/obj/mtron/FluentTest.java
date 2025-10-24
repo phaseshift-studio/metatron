@@ -30,7 +30,7 @@ public class FluentTest extends MetatronTest {
 
     @Test
     public void testSimpleFluency() {
-        assertEquals(jnt(11), start_(jnt(1)).plus_(jnt(10)).iterator().next());
+        assertEquals(jnt(11), start_(jnt(1)).plus_(jnt(10)).stream().iterator().next());
       //  assertEquals(jnt(110), start(jnt(10)).p1us(mult(jnt(10))).iterator().next());
       //  assertEquals(List.of(jnt(110), jnt(125)), start(jnt(10)).p1us(mult(jnt(10))).split(lst(List.<Obj>of(id(), plus(jnt(15))))).merge().merge().merge().toList()); // TODO: merging and toList with quantifies requires more reasoning on iteration
     }

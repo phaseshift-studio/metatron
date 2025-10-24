@@ -94,7 +94,7 @@ public class ObjByteBufferSerializer implements ObjSerializer<ByteBuffer> {
     public ByteBuffer writeLst(final Lst lst) {
         if (lst.isEmpty())
             return ByteBuffer.wrap(handleIds(lst, "[,]").getBytes());
-        final String internal = IteratorUtil.stream(lst.elements()).map(o -> new String(this.write(o).array())).reduce(",", (a, b) -> a + b + ",");
+        final String internal = lst.elementStream().map(o -> new String(this.write(o).array())).reduce(",", (a, b) -> a + b + ",");
         return ByteBuffer.wrap(handleIds(lst, "[" + internal.substring(1, internal.length() - 1) + "]").getBytes());
     }
 
@@ -107,7 +107,7 @@ public class ObjByteBufferSerializer implements ObjSerializer<ByteBuffer> {
     public ByteBuffer writeRec(final Rec rec) {
         if (rec.isEmpty())
             return ByteBuffer.wrap(handleIds(rec, "[=>]").getBytes());
-        final String internal = IteratorUtil.stream(rec.elements())
+        final String internal = rec.elementStream().map(Obj::<Rel>as)
                 .map(o -> new String(this.write(o.first()).array()) + " => " + new String(this.write(o.second()).array()))
                 .reduce(",", (a, b) -> a + b + ",");
 
@@ -116,7 +116,7 @@ public class ObjByteBufferSerializer implements ObjSerializer<ByteBuffer> {
 
     @Override
     public ByteBuffer writeInst(final Inst inst) {
-        final String internal = IteratorUtil.stream(inst.args().elements())
+        final String internal = inst.args().elementStream()
                 .map(o -> new String(this.write(o).array()))
                 .reduce(",", (a, b) -> a + b + ",");
         return ByteBuffer.wrap(handleIds(inst, "(" +

@@ -41,6 +41,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
+import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.lang.fURI.f;
 import static studio.phaseshift.metatron.lang.obj.mtron.MUri.uri;
@@ -242,8 +243,8 @@ public class MqttSpace extends MSpace<Map<Uri, Obj>> implements Space {
     }
 
     @Override
-    public Iterator<Obj> iterator() {
-        return this.cache.iterator();
+    public Stream<Obj> stream() {
+        return this.cache.stream();
     }
 
     @Override

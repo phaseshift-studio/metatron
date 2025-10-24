@@ -23,6 +23,7 @@ import studio.phaseshift.metatron.algebra.Semiring;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.mtron.MRel;
 import studio.phaseshift.metatron.util.IteratorUtil;
+import studio.phaseshift.metatron.util.Streamable;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -47,8 +48,8 @@ public interface Rec extends Poly, Semiring<Rec> {
     }
 
     @Override
-    default Stream<Rel> stream() {
-        return IteratorUtil.stream(this.elements());
+    default Stream<Obj> stream() {
+        return (Stream) IteratorUtil.stream(this.elements());
     }
 
 

@@ -124,9 +124,9 @@ public class mtronFluent<F extends Fluent<F>> extends MCode implements Fluent<F>
         return this.addInst(instB(mtronInstSet.GET_TID, lst(obj)));
     }
 
-    public List<Obj> toList() {
+    /*public List<Obj> toList() {
         return IteratorUtil.list(this.iterator());
-    }
+    }*/
 
     @Override
     public mtronFluent<F> clone(final Object jvm, final fURI tid, final fURI vid) {

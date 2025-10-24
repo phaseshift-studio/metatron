@@ -76,6 +76,28 @@ public class mgrphInstSet extends MInstSet {
         this.types().forEach(t -> Router.global().registerRewrite(f(t.tid().name()), t.tid()));
     }
 
+    private static String[] labelsAsUri(final Inst inst) {
+        return inst.args().isEmpty() ?
+                EMPTY_STRING_ARRAY :
+                inst.args().elementStream()
+                        .flatMap(Obj::<Obj>stream)
+                        .map(Obj::uriValue)
+                        .map(Object::toString)
+                        .toArray(String[]::new);
+
+    }
+
+    private static Object[] idsAsUri(final Inst inst) {
+        return inst.args().isEmpty() ?
+                EMPTY_STRING_ARRAY :
+                inst.args().elementStream()
+                        .flatMap(Obj::<Obj>stream)
+                        .map(Obj::jvm)
+                        .map(o -> o instanceof fURI ? ((fURI) o).name() : o)
+                        .toArray(Object[]::new);
+
+    }
+
     @Override
     public Set<Type> types() {
         return Set.of(T(GRAPH_TID), T(ELEMENT_TID), T(VERTEX_TID), T(EDGE_TID), T(PROPERTY_TID));
@@ -114,28 +136,5 @@ public class mgrphInstSet extends MInstSet {
                 instC(VALUES_TID.dom(GRPH_TID.extend(fURI.SINGLE)).rng(ALL.maybeSome()), lst(T(URI_TID.maybeSome())), (lhs, inst) -> objs(IteratorUtil.list((Iterator) lhs.<MElement>as().values(labelsAsUri(inst))))),
                 instC(PROPERTIES_TID.dom(GRPH_TID.extend(fURI.SINGLE)).rng(ALL.maybeSome()), lst(T(URI_TID.maybeSome())), (lhs, inst) -> objs(IteratorUtil.list((Iterator) lhs.<MElement>as().properties(labelsAsUri(inst)))))
         ).collect(Collectors.toSet());
-    }
-
-
-    private static String[] labelsAsUri(final Inst inst) {
-        return inst.args().isEmpty() ?
-                EMPTY_STRING_ARRAY :
-                IteratorUtil.stream(inst.args().elements())
-                        .flatMap(o -> IteratorUtil.stream(o.iterator()))
-                        .map(Obj::uriValue)
-                        .map(Object::toString)
-                        .toArray(String[]::new);
-
-    }
-
-    private static Object[] idsAsUri(final Inst inst) {
-        return inst.args().isEmpty() ?
-                EMPTY_STRING_ARRAY :
-                IteratorUtil.stream(inst.args().elements())
-                        .flatMap(o -> IteratorUtil.stream(o.iterator()))
-                        .map(Obj::jvm)
-                        .map(o -> o instanceof fURI ? ((fURI) o).name() : o)
-                        .toArray(Object[]::new);
-
     }
 }

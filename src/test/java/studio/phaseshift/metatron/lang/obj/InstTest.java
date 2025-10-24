@@ -50,8 +50,8 @@ public class InstTest extends MetatronObjTest {
         assertEquals(op, inst.tid().path());
         assertEquals(fURI.of(dom), inst.dom().tid());
         assertEquals(fURI.of(rng), inst.rng().tid());
-        assertEquals(op+"?dom="+dom + "&rng="+rng, furi.big().toString());
-        LOG.info("testing furi::rng<=dom: {{y}}%s{{g}}::{{b}}%s{{g}}<={{m}}%s{{X}}",furi.big(),furi.rng(),furi.dom());
+        assertEquals(op + "?dom=" + dom + "&rng=" + rng, furi.big().toString());
+        LOG.info("testing furi::rng<=dom: {{y}}%s{{g}}::{{b}}%s{{g}}<={{m}}%s{{X}}", furi.big(), furi.rng(), furi.dom());
     }
 
 
@@ -73,7 +73,7 @@ public class InstTest extends MetatronObjTest {
         final Inst defA = ObjParser.m_obj().parse(def).get();
         final Inst specA = ObjParser.m_obj().parse(spec).get();
         final Inst resolutionA = ObjParser.m_obj().parse(resolution).get();
-        final Inst resultA = defA.specify(lhsA, specA);
+        final Inst resultA = Inst.Helpers.specifyGenerics(lhsA, specA, defA);
         LOG.info("{{b}}%s{{/b}} resolution matches {{b}}%s{{/b}} specification", resultA.tid(), resolutionA.tid());
         final boolean match = resultA.tid().matches(resolutionA.tid());
         assertTrue(match);
@@ -103,7 +103,7 @@ public class InstTest extends MetatronObjTest {
                 Tuple.Pair.with(objs(jnt(2), jnt(3)), start_(jnt(1)).mult(plus_(jnt(1)).plus(plus_(jnt(2))))),
                 Tuple.Pair.with(objs(jnt(6).c(2L)), start_(jnt(2)).mult(plus_(jnt(4)).plus(mult_(jnt(3))))),
                 Tuple.Pair.with(objs(jnt(6), jnt(7)), start_(jnt(2)).mult(plus_(jnt(4)).mult(plus_(jnt(1))).plus(mult_(jnt(3))))),
-                 Tuple.Pair.with(objs(jnt(6), jnt(7)), start_(jnt(2)).mult(plus_(jnt(4)).mult(plus_(jnt(1))).plus(mult_(jnt(3))).plus(NoObj.single()))),
+                Tuple.Pair.with(objs(jnt(6), jnt(7)), start_(jnt(2)).mult(plus_(jnt(4)).mult(plus_(jnt(1))).plus(mult_(jnt(3))).plus(NoObj.single()))),
                 Tuple.Pair.with(NoObj.single(), start_(jnt(2)).mult(NoObj.single())),
                 Tuple.Pair.with(NoObj.single(), start_(jnt(2)).mult(plus_(jnt(4)).mult(plus_(jnt(1))).plus(mult_(jnt(3))).plus(NoObj.single())).mult(NoObj.single())))) {
             LOG.trace("\n\ntesting %s == %s", item.get1(), item.get0());

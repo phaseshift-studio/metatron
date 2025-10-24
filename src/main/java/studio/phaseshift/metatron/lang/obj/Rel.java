@@ -22,7 +22,7 @@ import studio.phaseshift.metatron.lang.fURI;
 
 import static studio.phaseshift.metatron.util.Tuple.Pair;
 
-public interface Rel extends Poly {
+public interface Rel extends Poly, Obj {
 
     @Override
     Rel clone(final Object jvm, final fURI tid, final fURI vid);

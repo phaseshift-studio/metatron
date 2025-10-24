@@ -177,45 +177,6 @@ public interface Inst extends Call {
                 this.tid().basePath().equals(mtronInstSet.CROSS_TID);
     }
 
-    default Inst specify(final Obj lhs, final Obj spec) {
-        final GraphittyLogger LOG = Graphitty.log(lhs);
-        final Map<fURI, fURI> generics = new HashMap<>();
-        Inst def = this;
-        if (def.dom().tid().cLess().isGeneric() && lhs.type().c().within(def.dom().c())) {
-            generics.put(def.dom().tid().cLess(), lhs.type().tid().cLess());
-            def = def.dom(lhs.type().c(def.dom().c()).as());
-        }
-        if (def.rng().tid().isGeneric() && generics.containsKey(def.rng().tid().cLess())) {
-            def = def.rng(T(generics.get(def.rng().tid().cLess()).c(def.rng().c().toString())));
-        }
-        if (!this.args().isEmpty() && this.args().isLst()) {
-            final List<Obj> newArgs = new ArrayList<>();
-            for (int i = 0; i < this.args().count(); i++) {
-                Obj argD = this.arg(i);
-                Obj argS = spec.isInst() ? spec.<Inst>as().arg(i) : spec;
-                if (argD.tid().cLess().isGeneric()) {
-                    final fURI lastBinding = generics.get(argD.tid().cLess());
-                    if (null != lastBinding && !argS.tid().cLess().matches(lastBinding))
-                        LOG.debug("existing generic doesn't match current usage: [{{m}}generic{{/m}}] %s [{{m}}past{{/m}}] %s [{{m}}present{{/m}}] %s", argS.tid(), lastBinding, argD.tid());
-                    generics.computeIfAbsent(argD.tid().cLess(), k -> argS.tid().cLess()); // beware of int[0] yielding noobj across all bindings
-                }
-                if (argD.isInst()) {
-                    argD = argD.<Inst>as().specify(lhs, argS);
-                } else if (argD.tid().cLess().isGeneric()) {
-                    argD = argD.tid(generics.getOrDefault(argD.tid().cLess(), argS.tid())).c(argD.c());
-                }
-                newArgs.add(argD);
-            }
-            def = def.args(lst(newArgs));
-        }
-
-        if (def.rng().tid().cLess().isGeneric()) {
-            def = def.rng(T(generics.getOrDefault(def.rng().tid().cLess(), spec.rng().tid()).c(def.rng().c().toString())));
-        }
-        LOG.trace("generic specification mapped %s => %s to %s via %s", lhs, spec, def, this);
-        return def;
-    }
-
     @Override
     default Inst resolve(final Obj lhs) {
         if (null != this.f())
@@ -228,7 +189,7 @@ public interface Inst extends Call {
                     .map(Obj::<Inst>as)
                     .filter(i -> this.args().isRec() || i.args().isRec() || i.args().count() == this.args().count())
                     .map(i -> this.hasDomOrRng() ? i.tid(this.tid()) : i)
-                    .map(i -> i.specify(lhs, this))
+                    .map(i -> Helpers.specifyGenerics(lhs,i,this))
                     .filter(i -> lhs.matches(i.dom()))
                     .map(i -> {
                         final Poly resolvedArgs = resolveArgs(this, i, lhs);
@@ -266,37 +227,6 @@ public interface Inst extends Call {
         }
     }
 
-    default Inst applyArgs(final Obj lhs) {
-        final boolean blocking = this.isBlocking();
-        if (!blocking && (!lhs.matches(this.dom()) || !(lhs.take(this.dom().c()).get0()).matches(this.dom())))
-            throw MTronException.of("{{m}}lhs obj{{/m}} does not match inst domain (resolve): %s {{r}}=/>{{/r}} %s", lhs, this);
-        final Poly cargs = this.args().isLst() ?
-                lst(this.args().lstValue()
-                        .stream()
-                        .map(arg -> {
-                            if (blocking)
-                                return arg;
-                            else {
-                                final Obj r = arg.apply(lhs);
-                                if (!arg.isCall() && !r.matches(arg)) {
-                                    // LOG.error("unmatched inst arg in %s: %s ({{y}}lhs{{/y}}) {{g}}=>{{/g}} %s ({{y}}arg{{/y}}) {{r}}~!>{{/r}} %s ", this, lhs, arg, r);
-                                    return arg;
-                                }
-                                //throw MTronException.of("arg obj does not match inst arg: %s: %s {{r}}-/>{{/r}} %s", this, arg, r);
-                                return r;
-                            }
-                        }).toList()) :
-                rec(this.args().recValue().entrySet()
-                        .stream()
-                        .map(kv -> List.of(kv.getKey(), blocking ?
-                                kv.getValue() :
-                                kv.getValue().apply(lhs)))
-                        .collect(Collectors.toMap(kv -> kv.get(0), kv -> kv.get(1), Obj::append, LinkedHashMap::new)));
-        final Inst resolved = this.args(cargs);
-        //  LOG.trace("resolution ({{m}}%s {{g}}=>{{/g}} %s{{/m}}): %s => %s", currentResolution, resolved.resolution(), lhs, resolved);
-        return resolved;
-    }
-
     @Override
     default Obj apply(final Obj lhs) {
         Obj clhs = lhs;
@@ -317,7 +247,7 @@ public interface Inst extends Call {
             rhs = fail(MTronException.of("unable to resolve %s", cinst));
         try {
             if (!rhs.isFail() || cinst.isCatch()) {
-                rhs = cinst.f().apply(clhs, cinst.applyArgs(clhs));
+                rhs = cinst.f().apply(clhs, Helpers.applyArgs(clhs, cinst));
                 Graphitty.log(cinst).trace("%s ({{m}}lhs{{/m}}) => %s ({{m}}inst{{/m}}) => %s ({{m}}rhs{{/m}}) evaluated {{g}}successfully{{/g}}", clhs, cinst, rhs);
             }
         } catch (final Exception e) {
@@ -382,6 +312,83 @@ public interface Inst extends Call {
         public String value() {
             return this.value;
         }
+    }
+
+    final class Helpers {
+        private Helpers() {
+            // do nothing
+        }
+
+        public static Inst applyArgs(final Obj lhs, final Inst inst) {
+            final boolean blocking = inst.isBlocking();
+            if (!blocking && (!lhs.matches(inst.dom()) || !(lhs.take(inst.dom().c()).get0()).matches(inst.dom())))
+                throw MTronException.of("{{m}}lhs obj{{/m}} does not match inst domain (resolve): %s {{r}}=/>{{/r}} %s", lhs, inst);
+            final Poly cargs = inst.args().isLst() ?
+                    lst(inst.args().lstValue()
+                            .stream()
+                            .map(arg -> {
+                                if (blocking)
+                                    return arg;
+                                else {
+                                    final Obj r = arg.apply(lhs);
+                                    if (!arg.isCall() && !r.matches(arg)) {
+                                        // LOG.error("unmatched inst arg in %s: %s ({{y}}lhs{{/y}}) {{g}}=>{{/g}} %s ({{y}}arg{{/y}}) {{r}}~!>{{/r}} %s ", this, lhs, arg, r);
+                                        return arg;
+                                    }
+                                    //throw MTronException.of("arg obj does not match inst arg: %s: %s {{r}}-/>{{/r}} %s", this, arg, r);
+                                    return r;
+                                }
+                            }).toList()) :
+                    rec(inst.args().recValue().entrySet()
+                            .stream()
+                            .map(kv -> List.of(kv.getKey(), blocking ?
+                                    kv.getValue() :
+                                    kv.getValue().apply(lhs)))
+                            .collect(Collectors.toMap(kv -> kv.get(0), kv -> kv.get(1), Obj::append, LinkedHashMap::new)));
+            final Inst resolved = inst.args(cargs);
+            //  LOG.trace("resolution ({{m}}%s {{g}}=>{{/g}} %s{{/m}}): %s => %s", currentResolution, resolved.resolution(), lhs, resolved);
+            return resolved;
+        }
+
+        public static Inst specifyGenerics(final Obj lhs, final Inst inst, final Obj userInst) {
+            final GraphittyLogger LOG = Graphitty.log(lhs);
+            final Map<fURI, fURI> generics = new HashMap<>();
+            Inst def = inst;
+            if (def.dom().tid().cLess().isGeneric() && lhs.type().c().within(def.dom().c())) {
+                generics.put(def.dom().tid().cLess(), lhs.type().tid().cLess());
+                def = def.dom(lhs.type().c(def.dom().c()).as());
+            }
+            if (def.rng().tid().isGeneric() && generics.containsKey(def.rng().tid().cLess())) {
+                def = def.rng(T(generics.get(def.rng().tid().cLess()).c(def.rng().c().toString())));
+            }
+            if (!inst.args().isEmpty() && inst.args().isLst()) {
+                final List<Obj> newArgs = new ArrayList<>();
+                for (int i = 0; i < inst.args().count(); i++) {
+                    Obj argD = inst.arg(i);
+                    Obj argS = userInst.isInst() ? userInst.<Inst>as().arg(i) : userInst;
+                    if (argD.tid().cLess().isGeneric()) {
+                        final fURI lastBinding = generics.get(argD.tid().cLess());
+                        if (null != lastBinding && !argS.tid().cLess().matches(lastBinding))
+                            LOG.debug("existing generic doesn't match current usage: [{{m}}generic{{/m}}] %s [{{m}}past{{/m}}] %s [{{m}}present{{/m}}] %s", argS.tid(), lastBinding, argD.tid());
+                        generics.computeIfAbsent(argD.tid().cLess(), k -> argS.tid().cLess()); // beware of int[0] yielding noobj across all bindings
+                    }
+                    if (argD.isInst()) {
+                        argD = Helpers.specifyGenerics(lhs, argD.<Inst>as(), argS);
+                    } else if (argD.tid().cLess().isGeneric()) {
+                        argD = argD.tid(generics.getOrDefault(argD.tid().cLess(), argS.tid())).c(argD.c());
+                    }
+                    newArgs.add(argD);
+                }
+                def = def.args(lst(newArgs));
+            }
+
+            if (def.rng().tid().cLess().isGeneric()) {
+                def = def.rng(T(generics.getOrDefault(def.rng().tid().cLess(), userInst.rng().tid()).c(def.rng().c().toString())));
+            }
+            LOG.trace("generic specification mapped %s => %s to %s via %s", lhs, userInst, def, inst);
+            return def;
+        }
+
     }
 
     final class f implements BiFunction<Obj, Inst, Obj> {

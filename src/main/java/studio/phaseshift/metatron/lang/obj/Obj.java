@@ -28,6 +28,7 @@ import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
+import studio.phaseshift.metatron.util.Streamable;
 
 import java.util.*;
 import java.util.function.Function;
@@ -39,7 +40,7 @@ import static studio.phaseshift.metatron.lang.obj.mtron.MType.T;
 import static studio.phaseshift.metatron.lang.obj.mtron.mtronInstSet.*;
 import static studio.phaseshift.metatron.util.Tuple.Pair;
 
-public interface Obj extends Function<Obj, Obj>, Iterable<Obj>, Cloneable {
+public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>, Cloneable {
 
     <J> J jvm();
 
@@ -135,12 +136,12 @@ public interface Obj extends Function<Obj, Obj>, Iterable<Obj>, Cloneable {
         return this.jvm();
     }
 
-    default <O extends Obj> Stream<O> stream() {
-        return this.isNoObj() ? Stream.empty() : (Stream<O>) IteratorUtil.stream(this);
+    default Stream<Obj> stream() {
+        return this.isNoObj() ? Stream.empty() : (Stream) IteratorUtil.stream(this);
     }
 
     default <O extends Obj> Stream<O> elementStream() {
-        return this.stream();
+        return (Stream) this.stream();
     }
 
     default Obj tid(final fURI newTid) {
