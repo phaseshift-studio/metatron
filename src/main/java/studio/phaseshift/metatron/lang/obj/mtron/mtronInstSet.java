@@ -226,6 +226,7 @@ public class mtronInstSet extends MInstSet {
                 /// ///////////////////////////////////////////////////////////////////////////////////////////////////
                 instC(SPLIT_TID.dom(ALL).rng(LST_TID), lst(T(LST_TID)), (lhs, inst) -> lst(inst.arg(0).elementStream().map(e -> e.apply(lhs)).toList())),
                 instC(SPLIT_TID.dom(ALL.maybeSome()).rng(LST_TID), lst(T(LST_TID)), (lhs, inst) -> lst(inst.arg(0).elementStream().map(e -> e.apply(lhs)).toList())),
+               // instC(SPLIT_TID.dom(REL_TID).rng(REC_TID), lst(T(REC_TID)), (lhs, inst) -> rec(lhs.<Rel>as().first(),lhs.<Rel>as().second())),
                 instC(SPLIT_TID.dom(ALL).rng(REL_TID), lst(T(REL_TID)), (lhs, inst) -> rel(inst.arg(0).<Rel>as().first().apply(lhs), inst.arg(0).<Rel>as().second().apply(lhs))),
                 instC(SPLIT_TID.dom(ALL).rng(REC_TID), lst(T(REC_TID)), (lhs, inst) -> rec(inst.arg(0).<Rec>as().elementStream().map(Obj::<Rel>as).map(e -> e.first().apply(lhs).choose(Obj::isNoObj, x -> null, x -> MRel.of(x, e.second().apply(lhs)))).filter(x -> !Objects.isNull(x)).collect(Collectors.toMap(a -> a.<Rel>as().first(), b -> b.<Rel>as().second(), Obj::append, LinkedHashMap<Obj, Obj>::new)))),
                 // todo: allow c to generic and then the above and below instructions can be made into a single generic c inst
@@ -346,7 +347,7 @@ public class mtronInstSet extends MInstSet {
                 instC(SELECT_TID.dom(REC_TID).rng(REC_TID.maybe()), lst(T(REC_TID)), (lhs, inst) -> {
                     return crossPoly(lhs, inst.arg(0));
                 }),
-                instC(WHERE_TID.dom(A).rng(A.maybe()), lst(T(A)), (lhs, inst) -> lhs.matches(inst.arg(0)) ? lhs : NoObj.single()),
+                instC(WHERE_TID.dom(ALL.maybe()).rng(ALL.maybe()), lst(T(ALL)), (lhs, inst) -> lhs.matches(inst.arg(0)) ? lhs : NoObj.single()),
                 instC(GROUP_TID.dom(REC_TID).rng(REC_TID), lst(T(REC_TID)), (lhs, inst) -> {
                     final Map<Obj, Obj> result = new LinkedHashMap<>();
                     final Map<Tuple.Pair<Obj, Obj>, Obj> resultK = new LinkedHashMap<>();

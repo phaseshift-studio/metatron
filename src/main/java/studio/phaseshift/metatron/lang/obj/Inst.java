@@ -46,21 +46,21 @@ public interface Inst extends Call {
 
     // /mtron/plus?dom=/mtron/int,rng=/mtron/int
 
-    private static Poly resolveArgs(final Inst source, final Inst target, final Obj lhs) {
-        final GraphittyLogger LOG = Graphitty.log(source);
-        if (target.args().isLst()) {
-            LOG.trace("processing lst args of %s", target);
+    private static Poly resolveArgs(final Inst apiInst, final Inst userInst, final Obj lhs) {
+        final GraphittyLogger LOG = Graphitty.log(apiInst);
+        if (userInst.args().isLst()) {
+            LOG.trace("processing lst args of %s", userInst);
             List<Obj> resolvedArgs = new ArrayList<>();
-            for (int i = 0; i < source.args().count(); i++) {
-                final Obj sObj = source.arg(i);
-                final Obj tObj = target.arg(i);
+            for (int i = 0; i < apiInst.args().count(); i++) {
+                final Obj sObj = apiInst.arg(i);
+                final Obj tObj = userInst.arg(i);
                 if (sObj.isCall()) {
                     final Inst firstInst = sObj.<Call>as().insts().get(0);
                     if (!firstInst.hasDomOrRng() && firstInst.tid().basePath().equals(FROM_TID)) { // from() is a side-effect and the type can't be known unless explcitly specified (need a way to denote side-effect insts).
                         resolvedArgs.add(sObj.resolve(lhs));
                     } else {
                         // TODO: is this necessary and if so, do the same for lst
-                        if (source.tid().name().equals(SPLIT_TID.name()) && sObj.isRec()) {
+                        if (apiInst.tid().name().equals(SPLIT_TID.name()) && sObj.isRec()) {
                             Rec sRecObj = rec(sObj.recValue().entrySet()
                                     .stream()
                                     .map(kv2 -> List.of(kv2.getKey().resolve(lhs), kv2.getValue().resolve(lhs)))
@@ -82,14 +82,14 @@ public interface Inst extends Call {
                 }
             }
             return lst(resolvedArgs);
-        } else if (target.args().isRec()) {
-            LOG.trace("processing rec args of %s", target);
+        } else if (userInst.args().isRec()) {
+            LOG.trace("processing rec args of %s", userInst);
             final AtomicInteger counter = new AtomicInteger(0);
-            return rec(target.args().recValue().entrySet()
+            return rec(userInst.args().recValue().entrySet()
                     .stream()
                     .map(kv -> {
                         // return List.of(kv.getKey(), kv.getValue().resolve(this.arg(kv.getKey().uriValue(), counter.getAndIncrement())));
-                        Obj this_arg = source.arg(kv.getKey().uriValue(), counter.getAndIncrement());
+                        Obj this_arg = apiInst.arg(kv.getKey().uriValue(), counter.getAndIncrement());
                         /*if (source.tid().basePath().equals(SPLIT_TID) && this_arg.isRec()) {
                             final Rec this_rec_arg = rec(this_arg.recValue().entrySet()
                                     .stream()
@@ -101,7 +101,7 @@ public interface Inst extends Call {
                     })
                     .collect(Collectors.toMap(kv -> kv.get(0), kv -> kv.get(1), Obj::append, LinkedHashMap::new)));
         } else
-            throw MTronException.of("inst args must be a lst or rec: %s", target);
+            throw MTronException.of("inst args must be a lst or rec: %s", userInst);
     }
 
     @Override
@@ -246,11 +246,11 @@ public interface Inst extends Call {
         }
         if (null == cinst.f())
             rhs = fail(MTronException.of("unable to resolve %s", cinst));
+        cinst = Helpers.applyArgs(clhs, cinst);
+        Router.stack().push(cinst.args());
         try {
-            cinst  =  Helpers.applyArgs(clhs, cinst);
-            Router.stack().push(cinst.args());
             if (!rhs.isFail() || cinst.isCatch()) {
-                rhs = Objs.trySingleton(cinst.f().apply(clhs,cinst));
+                rhs = Objs.trySingleton(cinst.f().apply(clhs, cinst));
                 Graphitty.log(cinst).trace("%s ({{m}}lhs{{/m}}) => %s ({{m}}inst{{/m}}) => %s ({{m}}rhs{{/m}}) evaluated {{g}}successfully{{/g}}", clhs, cinst, rhs);
             }
         } catch (final Exception e) {
@@ -390,7 +390,11 @@ public interface Inst extends Call {
             if (def.rng().tid().cLess().isGeneric()) {
                 def = def.rng(T(generics.getOrDefault(def.rng().tid().cLess(), userInst.rng().tid()).c(def.rng().c().toString())));
             }
-            // def = def.tid(Helpers.apiOrUser(def.tid(),userInst.tid(),generics));
+            ///  hail mary
+            if (def.dom().tid().isCLessGeneric()) {
+                def = def.dom(lhs.type().c(def.dom().c()).as());
+                def = def.tid(Helpers.apiOrUser(def.tid(), userInst.tid(), generics));
+            }
             LOG.trace("generic specification mapped %s => %s to %s via %s", lhs, userInst, def, apiInst);
             return def;
         }

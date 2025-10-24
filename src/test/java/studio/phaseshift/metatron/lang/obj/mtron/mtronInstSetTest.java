@@ -24,7 +24,6 @@ package studio.phaseshift.metatron.lang.obj.mtron;
 
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.MetatronTest;
 
 public class mtronInstSetTest extends MetatronTest {
@@ -53,7 +52,7 @@ public class mtronInstSetTest extends MetatronTest {
             "{1,2,3}>-[,]                                                           % [1,2,3]",
             "[1=>2,2=>3,3=>4]>-[=>]                                                 % [1=>2,2=>3,3=>4]",
             "[1=>2,2=>3,3=>4]>-.>-[=>]                                              % [1=>2,2=>3,3=>4]",
-            //"{1,2,3}>-noobj                                                         % {1,2,3}",
+            "{1,2,3}>-noobj                                                         % {1,2,3}",
             "{1,2,3}>-[noobj]                                                       % [1,2,3,noobj]",
             //"[1=>2,2=>3,3=>4]>-                                                     % {1=>2,2=>3,3=>4}",
             "[1=>2,2=>3,3=>4]>-.>-[noobj=>noobj]                                    % [1=>2,2=>3,3=>4]",
@@ -106,7 +105,8 @@ public class mtronInstSetTest extends MetatronTest {
             "{1,2,3,4}.sum{2}?int<=int{1,7}()                                       % int{2}::10",
             "{1,2,3,4}.sum{2}?int<=int{1,7}().sum()                                 % int::20",
             "{1,2,3,4}.sum{2}?int<=int{1,7}().sum()-<[_,_]>-.sum?int<=int{2}()      % int::40",
-            // "{1,2,3,4}.sum{2}?int<=int{1,7}().sum()-<[_._].>-{,}                    % int{2}::20",
+            "{1,2,3,4}.sum{2}?int<=int{1,7}().sum()-<[_,_].>-                       % int{2}::20",
+            "{1,2,3,4}.sum{2}?int<=int{1,7}().sum()-<[_,_].select([_,_])>-          % int{2}::20",
             "{1,2,3,4}.sum{2}?int<=int{1,7}().sum().id{2}()                         % int{2}::20",
             "{1,2,3,4,5,6}.sum?int<=int()                                           % {1,2,3,4,5,6}",
             "{int{2}::1,int{2}::2,int{2}::3}.sum?int<=int{2}()                      % {2,4,6}",
@@ -180,7 +180,32 @@ public class mtronInstSetTest extends MetatronTest {
             // dummy without ending comma so it's easier to add more test cases
             "1.plus(1)                                                              % 2"
     }, delimiter = '%')
-    public void testCross(final String code, final String expected) {
+    public void testGroup(final String code, final String expected) {
+        super.testCode(code, expected);
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "[a=>1,b=>2,c=>3].select([a=>_])                                                      % [a=>1]",
+            "{[a=>1],[b=>2],[c=>3]}.select([_=>_])                                                % {[a=>1],[b=>2],[c=>3]}",
+            "{[a=>1],[b=>2],[c=>3]}.select([_=>_]).where([_=>_])                                  % {[a=>1],[b=>2],[c=>3]}",
+            "{[a=>1],[b=>2],[c=>3]}.select([_=>_]).where([_=>is(gt(1))])                          % {[b=>2],[c=>3]}",
+            "{[a=>1],[2=>2],[c=>3]}.select([_=>_]).where([isa(uri::T[])=>_])                      % {[a=>1],[c=>3]}",
+            "{[a=>1],[2=>2],[c=>3]}.select([_=>_]).where([isa(uri::T[])=>is(gt(1))])              % {[c=>3]}",
+            "{[a=>1],[2=>2],[c=>3]}.select([_=>_]).where(noobj)                                   % noobj",
+            //"{[a=>1],[2=>2],[c=>3]}.select([_=>_]).where([noobj=>is(gt(1))])                      % noobj",
+            "[a=>1,b=>2,c=>3].select([z=>_])                                                      % noobj",
+            "[a=>1,b=>2,c=>3].select([isa(uri::T[])=>_])                                          % [a=>1,b=>2,c=>3]",
+            "[a=>1,b=>2,c=>3].select([isa(uri::T[])=>-<[_,_]])                                    % [a=>[1,1],b=>[2,2],c=>[3,3]]",
+            "[a=>1,b=>2,c=>3].select([isa(uri::T[])=>-<[_,_]>-])                                  % [a=>{1,1},b=>{2,2},c=>{3,3}]",
+            "[a=>1,b=>2,c=>3].select([isa(uri::T[])=>-<[_,_]>-.sum()])                            % [a=>2,b=>4,c=>6]",
+            "[a=>1,b=>2,c=>3].select([isa(uri::T[])=>-<[_,_]>-.sum()]).where([a=>is(gt(2))])      % noobj",
+            "[a=>1,b=>2,c=>3].select([isa(uri::T[])=>-<[_,_]>-.sum()]).where([a=>is(gt(1))])      % [a=>2,b=>4,c=>6]",
+            //"[a=>1,b=>2,c=>3]>-.-<[=>].where([_=>is(gt(1))])                                       % {[b=>4],[c=>6]}",
+            // dummy without ending comma so it's easier to add more test cases
+            "1.plus(1)                                                              % 2"
+    }, delimiter = '%')
+    public void testSelectWhere(final String code, final String expected) {
         super.testCode(code, expected);
     }
 }
