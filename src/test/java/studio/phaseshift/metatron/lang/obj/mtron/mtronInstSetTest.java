@@ -24,6 +24,7 @@ package studio.phaseshift.metatron.lang.obj.mtron;
 
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.MetatronTest;
 
 public class mtronInstSetTest extends MetatronTest {

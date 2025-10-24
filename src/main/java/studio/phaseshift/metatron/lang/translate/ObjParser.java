@@ -381,7 +381,7 @@ public class ObjParser {
                 generate_sugar_parser(LSHIFT_TID, of("<<"), 0),
                 generate_sugar_parser(PLUS_TID, of('+'), 1),
                 generate_sugar_parser(END_TID, of(';'), 0),
-                generate_sugar_parser(CROSS_TID, of("=="), 1)};
+                generate_sugar_parser(SELECT_TID, of("=="), 1)};
     }
 
     private static Parser generate_sugar_parser(final fURI tid, final Parser startToken, final int argCount) {

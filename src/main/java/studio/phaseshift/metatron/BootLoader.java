@@ -52,6 +52,7 @@ public class BootLoader {
     public static final String HOST = "host";
     public static final String LOG_LEVEL = "log";
     public static final String VERBOSE = "verbose";
+    public static boolean TYPE_CHECK = true;
 
     private static final GraphittyLogger LOG = Graphitty.log(BootLoader.class);
     public static boolean BOOTING = true;

@@ -28,6 +28,8 @@ import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
+import static studio.phaseshift.metatron.lang.obj.mtron.MObjs.objs;
+
 public interface Objs extends Obj, Semiring.O<Objs> {
 
     @Override
@@ -82,6 +84,10 @@ public interface Objs extends Obj, Semiring.O<Objs> {
         final Obj second = other instanceof Objs ? other.take() : other;
         final Semiring.O result = null == first ? (null == second ? this.zero() : (Semiring.O) second) : ((Semiring.O) first).plus((Semiring.O) second);
         return new MObjs(List.of(result, this, other));
+    }
+
+    static Obj trySingleton(final Obj obj) {
+      return obj.isObjs() ? objs(obj) : obj;
     }
 
     //  @Override

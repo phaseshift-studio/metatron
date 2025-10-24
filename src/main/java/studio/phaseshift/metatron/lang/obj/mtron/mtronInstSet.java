@@ -75,6 +75,7 @@ public class mtronInstSet extends MInstSet {
     public static final fURI PLUS_TID = INST_TID.extend("plus");
     public static final fURI MAP_TID = INST_TID.extend("map");
     public static final fURI FILTER_TID = INST_TID.extend("filter");
+    public static final fURI SIDE_TID = INST_TID.extend("side");
     public static final fURI TO_TID = INST_TID.extend("to");
     public static final fURI FROM_TID = INST_TID.extend("from");
     public static final fURI REF_TID = INST_TID.extend("ref");
@@ -104,7 +105,8 @@ public class mtronInstSet extends MInstSet {
     public static final fURI NOT_TID = INST_TID.extend("not");
     public static final fURI BARRIER_TID = INST_TID.extend("barrier");
     public static final fURI REIFY_TID = INST_TID.extend("reify");
-    public static final fURI CROSS_TID = INST_TID.extend("cross");
+    public static final fURI SELECT_TID = INST_TID.extend("select");
+    public static final fURI WHERE_TID = INST_TID.extend("where");
     public static final fURI GROUP_TID = INST_TID.extend("group");
     public static final fURI ELSE_TID = INST_TID.extend("else");
     public static final fURI END_TID = INST_TID.extend("end");
@@ -196,7 +198,7 @@ public class mtronInstSet extends MInstSet {
     public Set<Inst> insts() {
         return Stream.of(
                 instC(CATCH_TID.dom(ALL).rng(ALL), lst(T(ALL)), (lhs, inst) -> lhs.isFail() ? inst.arg(0).apply(lhs) : lhs),
-                instC(START_TID.dom(fURI.NOOBJ.zero()).rng(A.c(cInt.of(null, null).toString())), lst(T(A.maybeSome())), (lhs, inst) -> inst.arg(0)),
+                instC(START_TID.dom(fURI.NOOBJ.zero()).rng(A.maybeSome()), lst(T(A.maybeSome())), (lhs, inst) -> inst.arg(0)),
                 instC(END_TID.dom(OBJS_ID).rng(NOOBJ_TID.zero()), lst(), (lhs, inst) -> NoObj.single()),
                 instC(PRINT_TID.dom(ALL).rng(ALL), lst(T(OBJS_ID)), (lhs, inst) -> IteratorUtil.stream(inst.args().elements()).peek(o -> Graphitty.stdout().println(Graphitty.string(o))).filter(a -> false).findAny().orElse(lhs)),
                 instC(AT_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(T(URI_TID)), (lhs, inst) -> Router.global().read(inst.arg(0).uriValue()).vid(inst.arg(0).uriValue())),
@@ -206,6 +208,7 @@ public class mtronInstSet extends MInstSet {
                 instC(APPLY_TID.dom(ALL).rng(ALL), lst(T(ALL)), (lhs, inst) -> lhs.apply(inst.arg(0))),
                 instC(MAP_TID.dom(ALL).rng(A), lst(T(A)), (lhs, inst) -> inst.arg(0)),
                 instC(FILTER_TID.dom(A).rng(A.maybe()), lst(T(ALL.maybe())), (lhs, inst) -> inst.arg(0).isNoObj() ? NoObj.single() : lhs),
+                instC(SIDE_TID.dom(A).rng(A), lst(T(ALL)), (lhs, inst) -> Optional.of(inst.arg(0).apply(lhs)).map(x -> (Obj) null).orElse(lhs)),
                 instC(MAP_TID.dom(ALL).rng(ALL.maybe()), lst(T(ALL)), (lhs, inst) -> inst.arg(0)),
                 instC(TID_TID.dom(ALL).rng(URI_TID), lst(), (lhs, inst) -> lhs.tid().toUri()),
                 instC(VID_TID.dom(ALL).rng(ALL), lst(T(URI_TID)), (lhs, inst) -> lhs.vid(inst.arg(0).uriValue())),
@@ -242,7 +245,7 @@ public class mtronInstSet extends MInstSet {
                                 .collect(Collectors.toMap(Rel::first, Rel::second, Obj::append, LinkedHashMap::new)))),
                 instC(SPLIT_TID.dom(A.maybeSome()).rng(A.maybeSome()), lst(T(A.maybeSome())), (lhs, inst) -> objs(Stream.of(inst.arg(0)).map(o -> o.apply(lhs)))),
                 instC(SPLIT_TID.dom(ALL).rng(ALL.maybeSome()), lst(T(ALL.some())), (lhs, inst) -> objs(inst.arg(0).stream().map(o -> o.apply(lhs)))),
-                instC(SPLIT_TID.dom(ALL).rng(ALL.maybeSome()), lst(T(ALL)), (lhs, inst) -> inst.arg(0).apply(lhs)),
+                instC(SPLIT_TID.dom(ALL).rng(ALL.maybeSome()), lst(T(ALL)), (lhs, inst) -> objs(inst.arg(0).apply(lhs))),
                 /// ///////////////////////////////////////////////////////////////////////////////////////////////////
                 instC(MERGE_TID.dom(LST_TID).rng(OBJS_ID), lst(), (lhs, inst) -> objs(lhs.lstValue())),
                 instC(MERGE_TID.dom(REC_TID).rng(REL_TID.maybeSome()), lst(), (lhs, inst) -> objs(lhs.stream())),
@@ -334,25 +337,30 @@ public class mtronInstSet extends MInstSet {
                                                 "max", jnt(lhs.tid().cV().max())),
                                         "query", str(Optional.ofNullable(lhs.tid().query()).map(fURI.Query::toString).orElse(""))),
                                 "value", MObjFactory.of().create(lhs.jvm()))),
-                instC(CROSS_TID.dom(REL_TID).rng(REL_TID), lst(T(REL_TID)), (lhs, inst) ->
+                instC(SELECT_TID.dom(REL_TID).rng(REL_TID), lst(T(REL_TID)), (lhs, inst) ->
                         rel(inst.arg(0).<Rel>as().first().apply(lhs.<Rel>as().first()),
                                 inst.arg(0).<Rel>as().second().apply(lhs.<Rel>as().second()))),
-                instC(CROSS_TID.dom(LST_TID).rng(LST_TID.maybe()), lst(T(LST_TID)), (lhs, inst) -> {
+                instC(SELECT_TID.dom(LST_TID).rng(LST_TID.maybe()), lst(T(LST_TID)), (lhs, inst) -> {
                     return crossPoly(lhs, inst.arg(0));
                 }),
-                instC(CROSS_TID.dom(REC_TID).rng(REC_TID.maybe()), lst(T(REC_TID)), (lhs, inst) -> {
+                instC(SELECT_TID.dom(REC_TID).rng(REC_TID.maybe()), lst(T(REC_TID)), (lhs, inst) -> {
                     return crossPoly(lhs, inst.arg(0));
                 }),
+                instC(WHERE_TID.dom(A).rng(A.maybe()), lst(T(A)), (lhs, inst) -> lhs.matches(inst.arg(0)) ? lhs : NoObj.single()),
                 instC(GROUP_TID.dom(REC_TID).rng(REC_TID), lst(T(REC_TID)), (lhs, inst) -> {
                     final Map<Obj, Obj> result = new LinkedHashMap<>();
                     final Map<Tuple.Pair<Obj, Obj>, Obj> resultK = new LinkedHashMap<>();
                     final Map<Tuple.Pair<Obj, Obj>, Obj> resultV = new LinkedHashMap<>();
-                    final Map<Obj, Obj> lhsMap = lhs.recValue();
-                    final Map<Obj, Obj> rhsMap = inst.arg(0).recValue();
-                    lhsMap.forEach((lk, lv) -> {
-                        rhsMap.forEach((rk, rv) -> {
-                            resultK.compute(Tuple.Pair.with(rk, rv), (k, v) -> null == v ? lk : v.append(lk));
-                            resultV.compute(Tuple.Pair.with(rk, rv), (k, v) -> null == v ? lv : v.append(lv));
+                    lhs.iterator().forEachRemaining(l -> {
+                        final Map<Obj, Obj> lhsMap = l.recValue();
+                        inst.arg(0).iterator().forEachRemaining(r -> {
+                            final Map<Obj, Obj> rhsMap = r.recValue();
+                            lhsMap.forEach((lk, lv) -> {
+                                rhsMap.forEach((rk, rv) -> {
+                                    resultK.compute(Tuple.Pair.with(rk, rv), (k, v) -> null == v ? lk : v.append(lk));
+                                    resultV.compute(Tuple.Pair.with(rk, rv), (k, v) -> null == v ? lv : v.append(lv));
+                                });
+                            });
                         });
                     });
                     resultK.forEach((k, v) -> result.put(k.get0().apply(v), k.get1().apply(resultV.get(k))));

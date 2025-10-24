@@ -36,6 +36,7 @@ import studio.phaseshift.metatron.space.device.log.Log;
 import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.StringUtil;
 import studio.phaseshift.metatron.vm.MMachine;
+import studio.phaseshift.metatron.vm.Machine;
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;
@@ -46,6 +47,7 @@ import java.nio.file.Paths;
 import java.util.*;
 import java.util.function.BiConsumer;
 
+import static org.jline.keymap.KeyMap.alt;
 import static org.jline.keymap.KeyMap.ctrl;
 
 public class Console {
@@ -149,6 +151,7 @@ public class Console {
                         RESOLVE_MODE ? "\n".repeat(3) : "\n".repeat(1),
                         RESOLVE_MODE ? 3 : 1,
                         RESOLVE_MODE ? 3 : 1);
+                RESOLVE_MODE = false;
                 line = this.reader.readLine(Graphitty.string("{{FORM2}}mtron{{FORM1}}> ")).trim();
                 if (line.equals(":header"))
                     this.outputHeader();
@@ -227,7 +230,8 @@ public class Console {
         Graphitty.out(this.terminal.output(), """
                 . {{y&_}}r{{X&y}}esolve {{m}}[{{y}}ctrl-r{{m}}]{{X}}: automatic expression resolution
                 . {{y&_}}h{{X&y}}ide    {{m}}[{{y}}ctrl-h{{m}}]{{X}}: hide base type prefixes
-                . {{y&_}}q{{X&y}}uit    {{m}}[{{y}}ctrl-q{{m}}]{{X}}: leave the metatron
+                . t{{y&_}}y{{X&y}}ping  {{m}}[{{y}}ctrl-y{{m}}]{{X}}: typing checking
+                . {{y&_}}q{{X&y}}uit    {{m}}[{{y}}ctrl-t{{m}}]{{X}}: leave the metatron
                 
                 """);
     }
@@ -301,15 +305,25 @@ public class Console {
             this.addWidget("resolve-widget", this::resolveWidget);
             this.addWidget("define-widget", this::defineWidget);
             this.addWidget("hide-widget", this::hideWidget);
+            this.addWidget("typing-widget", this::typingWidget);
             getKeyMap().bind(new Reference("quit-widget"), ctrl('q'));
             getKeyMap().bind(new Reference("resolve-widget"), ctrl('r'));
             getKeyMap().bind(new Reference("define-widget"), ctrl('e'));
             getKeyMap().bind(new Reference("hide-widget"), ctrl('i'));
+            getKeyMap().bind(new Reference("typing-widget"), ctrl('y'));
             //   getKeyMap().bind(new Reference("detach-widget"), alt(key_down.name()));
         }
 
         private boolean quitWidget() {
             System.exit(0);
+            return true;
+        }
+
+        private boolean typingWidget() {
+            BootLoader.TYPE_CHECK = !BootLoader.TYPE_CHECK;
+            final int xLocation = terminal.getCursorPosition(System.out::print).getX() + 1;
+            Graphitty.out(terminal.output(), "\n{{-X-}}{{%s}}%s{{/%s}}{{X}} base type prefixes{{^1&|%d}}{{X}}", !BootLoader.TYPE_CHECK ? "y" : "g", !BootLoader.TYPE_CHECK ? "no type checking" : "typing checking", !BootLoader.TYPE_CHECK ? "y" : "g", xLocation);
+
             return true;
         }
 

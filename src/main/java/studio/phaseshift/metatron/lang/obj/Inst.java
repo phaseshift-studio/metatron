@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.lang.obj;
 
+import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.mtron.MType;
 import studio.phaseshift.metatron.lang.obj.mtron.c.cInt;
@@ -174,7 +175,7 @@ public interface Inst extends Call {
         return this.tid().basePath().equals(mtronInstSet.BLOCK_TID) ||
                 this.tid().basePath().equals(mtronInstSet.WITHIN_TID) ||
                 this.tid().basePath().equals(mtronInstSet.ISA_TID) ||
-                this.tid().basePath().equals(mtronInstSet.CROSS_TID);
+                this.tid().basePath().equals(mtronInstSet.SELECT_TID);
     }
 
     @Override
@@ -189,7 +190,7 @@ public interface Inst extends Call {
                     .map(Obj::<Inst>as)
                     .filter(i -> this.args().isRec() || i.args().isRec() || i.args().count() == this.args().count())
                     .map(i -> this.hasDomOrRng() ? i.tid(this.tid()) : i)
-                    .map(i -> Helpers.specifyGenerics(lhs,i,this))
+                    .map(i -> Helpers.bindGenerics(lhs, i, this))
                     .filter(i -> lhs.matches(i.dom()))
                     .map(i -> {
                         final Poly resolvedArgs = resolveArgs(this, i, lhs);
@@ -200,6 +201,7 @@ public interface Inst extends Call {
                     .filter(i -> !Objects.isNull(i))
                     //.map(i -> i.tid(i.tid().dom(lhs.tid())).vid(this.vid()))
                     .map(Obj::<Inst>as)
+                    .map(i -> i.isInitial() ? i.rng(i.arg(0).type()) : i) // TODO: only start()?
                     .map(i -> i.resolve(lhs)) // TODO: return resolve(lhs) if failing
                     .map(i -> i.c(this.c()))
                     .findFirst()
@@ -233,7 +235,7 @@ public interface Inst extends Call {
         Inst cinst = this.resolve(clhs);
         Obj rhs = NoObj.single();
         boolean modulateC = false;
-        if (!lhs.isFail() && !cinst.isBlocking() && !clhs.matches(cinst.dom())) {
+        if (BootLoader.TYPE_CHECK && !lhs.isFail() && !cinst.isBlocking() && !clhs.matches(cinst.dom())) {
             if (clhs.uniqueC().isOne() && !clhs.c().isOne()) { // && cinst.dom().c().within(cInt.SOME())) {
                 clhs = clhs.c(cInt::one);
                 cinst = this.resolve(clhs);
@@ -242,12 +244,13 @@ public interface Inst extends Call {
             if (!clhs.rng().matches(cinst.dom()))
                 rhs = fail(MTronException.of("{{m}}lhs obj{{/m}} does not match inst domain (apply): %s {{r}}=/>{{/r}} %s", clhs.rng(), cinst.dom()));
         }
-        Router.stack().push(cinst.args());
         if (null == cinst.f())
             rhs = fail(MTronException.of("unable to resolve %s", cinst));
         try {
+            cinst  =  Helpers.applyArgs(clhs, cinst);
+            Router.stack().push(cinst.args());
             if (!rhs.isFail() || cinst.isCatch()) {
-                rhs = cinst.f().apply(clhs, Helpers.applyArgs(clhs, cinst));
+                rhs = Objs.trySingleton(cinst.f().apply(clhs,cinst));
                 Graphitty.log(cinst).trace("%s ({{m}}lhs{{/m}}) => %s ({{m}}inst{{/m}}) => %s ({{m}}rhs{{/m}}) evaluated {{g}}successfully{{/g}}", clhs, cinst, rhs);
             }
         } catch (final Exception e) {
@@ -255,7 +258,7 @@ public interface Inst extends Call {
         } finally {
             Router.stack().pop();
         }
-        if (!rhs.isFail() && !rhs.matches(cinst.rng()))
+        if (BootLoader.TYPE_CHECK && !rhs.isFail() && !rhs.matches(cinst.rng()))
             rhs = fail(MTronException.of("{{m}}rhs obj{{/m}} (%s) {{r}}does not match{{/r}} {{m}}inst range{{/m}} (%s): %s", rhs, cinst.rng(), cinst));
         //final cInt cinstc = false && cinst.isReducing() ? cInt.ONE() : cinst.c();
         final cInt cc = cinst.c();
@@ -321,8 +324,10 @@ public interface Inst extends Call {
 
         public static Inst applyArgs(final Obj lhs, final Inst inst) {
             final boolean blocking = inst.isBlocking();
-            if (!blocking && (!lhs.matches(inst.dom()) || !(lhs.take(inst.dom().c()).get0()).matches(inst.dom())))
-                throw MTronException.of("{{m}}lhs obj{{/m}} does not match inst domain (resolve): %s {{r}}=/>{{/r}} %s", lhs, inst);
+            if (BootLoader.TYPE_CHECK) {
+                if (!blocking && (!lhs.matches(inst.dom()) || !(lhs.take(inst.dom().c()).get0()).matches(inst.dom())))
+                    throw MTronException.of("{{m}}lhs obj{{/m}} does not match inst domain (resolve): %s {{r}}=/>{{/r}} %s", lhs, inst);
+            }
             final Poly cargs = inst.args().isLst() ?
                     lst(inst.args().lstValue()
                             .stream()
@@ -330,7 +335,7 @@ public interface Inst extends Call {
                                 if (blocking)
                                     return arg;
                                 else {
-                                    final Obj r = arg.apply(lhs);
+                                    final Obj r = Objs.trySingleton(arg.apply(lhs));
                                     if (!arg.isCall() && !r.matches(arg)) {
                                         // LOG.error("unmatched inst arg in %s: %s ({{y}}lhs{{/y}}) {{g}}=>{{/g}} %s ({{y}}arg{{/y}}) {{r}}~!>{{/r}} %s ", this, lhs, arg, r);
                                         return arg;
@@ -350,10 +355,10 @@ public interface Inst extends Call {
             return resolved;
         }
 
-        public static Inst specifyGenerics(final Obj lhs, final Inst inst, final Obj userInst) {
+        public static Inst bindGenerics(final Obj lhs, final Inst apiInst, final Obj userInst) {
             final GraphittyLogger LOG = Graphitty.log(lhs);
             final Map<fURI, fURI> generics = new HashMap<>();
-            Inst def = inst;
+            Inst def = apiInst;
             if (def.dom().tid().cLess().isGeneric() && lhs.type().c().within(def.dom().c())) {
                 generics.put(def.dom().tid().cLess(), lhs.type().tid().cLess());
                 def = def.dom(lhs.type().c(def.dom().c()).as());
@@ -361,10 +366,10 @@ public interface Inst extends Call {
             if (def.rng().tid().isGeneric() && generics.containsKey(def.rng().tid().cLess())) {
                 def = def.rng(T(generics.get(def.rng().tid().cLess()).c(def.rng().c().toString())));
             }
-            if (!inst.args().isEmpty() && inst.args().isLst()) {
+            if (!apiInst.args().isEmpty() && apiInst.args().isLst()) {
                 final List<Obj> newArgs = new ArrayList<>();
-                for (int i = 0; i < inst.args().count(); i++) {
-                    Obj argD = inst.arg(i);
+                for (int i = 0; i < apiInst.args().count(); i++) {
+                    Obj argD = apiInst.arg(i);
                     Obj argS = userInst.isInst() ? userInst.<Inst>as().arg(i) : userInst;
                     if (argD.tid().cLess().isGeneric()) {
                         final fURI lastBinding = generics.get(argD.tid().cLess());
@@ -373,7 +378,7 @@ public interface Inst extends Call {
                         generics.computeIfAbsent(argD.tid().cLess(), k -> argS.tid().cLess()); // beware of int[0] yielding noobj across all bindings
                     }
                     if (argD.isInst()) {
-                        argD = Helpers.specifyGenerics(lhs, argD.<Inst>as(), argS);
+                        argD = Helpers.bindGenerics(lhs, argD.<Inst>as(), argS);
                     } else if (argD.tid().cLess().isGeneric()) {
                         argD = argD.tid(generics.getOrDefault(argD.tid().cLess(), argS.tid())).c(argD.c());
                     }
@@ -385,8 +390,33 @@ public interface Inst extends Call {
             if (def.rng().tid().cLess().isGeneric()) {
                 def = def.rng(T(generics.getOrDefault(def.rng().tid().cLess(), userInst.rng().tid()).c(def.rng().c().toString())));
             }
-            LOG.trace("generic specification mapped %s => %s to %s via %s", lhs, userInst, def, inst);
+            // def = def.tid(Helpers.apiOrUser(def.tid(),userInst.tid(),generics));
+            LOG.trace("generic specification mapped %s => %s to %s via %s", lhs, userInst, def, apiInst);
             return def;
+        }
+
+        private static fURI apiOrUser(final fURI apiInstTid, final fURI userInstTid, final Map<fURI, fURI> bindings) {
+            fURI result = apiInstTid;
+            if (userInstTid.hasDom()) {
+                if (apiInstTid.dom().isCLessGeneric())
+                    bindings.put(apiInstTid.dom().cLess(), userInstTid.dom().cLess());
+                result = result.dom(userInstTid.dom());
+
+            } else if (apiInstTid.dom().isCLessGeneric()) {
+                result = result.dom(bindings.getOrDefault(apiInstTid.dom().cLess(), apiInstTid.dom())).c(apiInstTid.dom().c());
+            }
+            /// /////
+            if (userInstTid.hasRng()) {
+                if (apiInstTid.rng().isCLessGeneric())
+                    bindings.put(apiInstTid.rng().cLess(), userInstTid.rng().cLess());
+                result = result.rng(userInstTid.rng());
+
+            } else if (apiInstTid.rng().isCLessGeneric()) {
+                result = result.rng(bindings.getOrDefault(apiInstTid.rng().cLess(), apiInstTid.rng())).c(apiInstTid.dom().c());
+            } else if (result.dom().isCLessGeneric()) {
+                result = result.dom(bindings.getOrDefault(result.dom().cLess(), result.dom())).c(result.dom().c());
+            }
+            return result;
         }
 
     }

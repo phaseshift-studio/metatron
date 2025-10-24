@@ -73,7 +73,7 @@ public class InstTest extends MetatronObjTest {
         final Inst defA = ObjParser.m_obj().parse(def).get();
         final Inst specA = ObjParser.m_obj().parse(spec).get();
         final Inst resolutionA = ObjParser.m_obj().parse(resolution).get();
-        final Inst resultA = Inst.Helpers.specifyGenerics(lhsA, specA, defA);
+        final Inst resultA = Inst.Helpers.bindGenerics(lhsA, specA, defA);
         LOG.info("{{b}}%s{{/b}} resolution matches {{b}}%s{{/b}} specification", resultA.tid(), resolutionA.tid());
         final boolean match = resultA.tid().matches(resolutionA.tid());
         assertTrue(match);

@@ -740,6 +740,10 @@ public class fURI implements Cloneable, Ring<fURI> {
         return this.path.size() == other.path.size() && this.send == other.send;
     }
 
+    public boolean isCLessGeneric() {
+        return this.cLess().isGeneric();
+    }
+
     public boolean isGeneric() {
         boolean acharacter = false;
         boolean acaps = false;

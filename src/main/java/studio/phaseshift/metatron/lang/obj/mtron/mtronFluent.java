@@ -23,7 +23,6 @@ import studio.phaseshift.metatron.lang.obj.Code;
 import studio.phaseshift.metatron.lang.obj.Fluent;
 import studio.phaseshift.metatron.lang.obj.Inst;
 import studio.phaseshift.metatron.lang.obj.Obj;
-import studio.phaseshift.metatron.util.IteratorUtil;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -117,7 +116,7 @@ public class mtronFluent<F extends Fluent<F>> extends MCode implements Fluent<F>
     }
 
     public F cross_(final Obj obj) {
-        return this.addInst(instB(mtronInstSet.CROSS_TID, lst(obj)));
+        return this.addInst(instB(mtronInstSet.SELECT_TID, lst(obj)));
     }
 
     public F get_(final Obj obj) {
