@@ -22,12 +22,12 @@ import org.apache.tinkerpop.gremlin.structure.*;
 import org.apache.tinkerpop.gremlin.structure.util.wrapped.WrappedProperty;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.Obj;
-import studio.phaseshift.metatron.lang.obj.mtron.MInt;
+import studio.phaseshift.metatron.lang.obj.Rel;
+import studio.phaseshift.metatron.lang.obj.Uri;
 import studio.phaseshift.metatron.lang.obj.mtron.MObj;
-import studio.phaseshift.metatron.lang.obj.mtron.MReal;
-import studio.phaseshift.metatron.lang.obj.mtron.MStr;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
+import studio.phaseshift.metatron.util.Tuple;
 
 import java.util.Iterator;
 
@@ -35,8 +35,9 @@ import static studio.phaseshift.metatron.lang.obj.mgrph.tp.mgrphInstSet.PROPERTY
 import static studio.phaseshift.metatron.lang.obj.mtron.MInt.jnt;
 import static studio.phaseshift.metatron.lang.obj.mtron.MReal.real;
 import static studio.phaseshift.metatron.lang.obj.mtron.MStr.str;
+import static studio.phaseshift.metatron.lang.obj.mtron.MUri.uri;
 
-public class MProperty<V> extends MObj implements Property<V>, WrappedProperty<Property<V>> {
+public class MProperty<V> extends MObj implements Property<V>, WrappedProperty<Property<V>>, Rel {
 
     public MProperty(final Property<V> property, final fURI tid) {
         super(property, tid, fURI.NULL);
@@ -44,6 +45,19 @@ public class MProperty<V> extends MObj implements Property<V>, WrappedProperty<P
 
     public static <V> MProperty<V> of(final Property<V> property) {
         return new MProperty<>(property, PROPERTY_TID);
+    }
+
+    public static <E, V> Iterator<E> makeProperties(final Iterator<Property<V>> properties) {
+        return (Iterator) IteratorUtil.map(properties, MProperty::of);
+    }
+
+    public static <V> Iterator<V> makeValues(final Iterator<Property<V>> properties) {
+        return IteratorUtil.map(MProperty.<Property<V>, V>makeProperties(properties), Property::value);
+    }
+
+    @Override
+    public Tuple.Pair<Obj,Obj> jvm() {
+        return Tuple.Pair.with(uri(this.getBaseProperty().key()), (Obj) this.value());
     }
 
     @Override
@@ -91,13 +105,5 @@ public class MProperty<V> extends MObj implements Property<V>, WrappedProperty<P
     @Override
     public Property<V> getBaseProperty() {
         return (Property<V>) this.jvm;
-    }
-
-    public static <E, V> Iterator<E> makeProperties(final Iterator<Property<V>> properties) {
-        return (Iterator) IteratorUtil.map(properties, MProperty::of);
-    }
-
-    public static <V> Iterator<V> makeValues(final Iterator<Property<V>> properties) {
-        return IteratorUtil.map(MProperty.<Property<V>, V>makeProperties(properties), Property::value);
     }
 }

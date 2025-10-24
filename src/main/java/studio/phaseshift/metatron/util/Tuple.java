@@ -19,10 +19,11 @@
 package studio.phaseshift.metatron.util;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 
-public abstract class Tuple {
+public abstract class Tuple implements Iterable<Object> {
 
     protected final List<Object> elements;
 
@@ -46,6 +47,10 @@ public abstract class Tuple {
 
     public String toString() {
         return this.elements.toString();
+    }
+
+    public Iterator<Object> iterator() {
+        return this.elements.iterator();
     }
 
     public static class Pair<A, B> extends Tuple {

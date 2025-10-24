@@ -188,7 +188,8 @@ public interface Inst extends Call {
             final Inst resolved = Router.global().read(this.tid())
                     .stream()
                     .map(Obj::<Inst>as)
-                    .filter(i -> this.args().isRec() || i.args().isRec() || i.args().count() == this.args().count())
+                    //.peek(i -> LOG.warn("%s ==?==> %s [%s]", this, i, this.args()))
+                    .filter(i -> (i.args().isEmpty() && this.arg(0).isNoObj()) || i.args().isRec() || i.args().isRec() || i.args().count() == this.args().count())
                     .map(i -> this.hasDomOrRng() ? i.tid(this.tid()) : i)
                     .map(i -> Helpers.bindGenerics(lhs, i, this))
                     .filter(i -> lhs.matches(i.dom()))
@@ -232,7 +233,7 @@ public interface Inst extends Call {
     @Override
     default Obj apply(final Obj lhs) {
         Obj clhs = lhs;
-        Inst cinst = this.resolve(clhs);
+        Inst cinst = this.args().isEmpty() ? this.args(lst(NoObj.single())).resolve(clhs) : this.resolve(clhs); // TODO: this isn't a general solution (multi slotted args won't work).
         Obj rhs = NoObj.single();
         boolean modulateC = false;
         if (BootLoader.TYPE_CHECK && !lhs.isFail() && !cinst.isBlocking() && !clhs.matches(cinst.dom())) {

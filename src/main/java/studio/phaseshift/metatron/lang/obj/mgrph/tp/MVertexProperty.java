@@ -23,6 +23,7 @@ import org.apache.tinkerpop.gremlin.structure.Vertex;
 import org.apache.tinkerpop.gremlin.structure.VertexProperty;
 import org.apache.tinkerpop.gremlin.structure.util.wrapped.WrappedVertexProperty;
 import studio.phaseshift.metatron.lang.fURI;
+import studio.phaseshift.metatron.lang.obj.Rel;
 import studio.phaseshift.metatron.util.IteratorUtil;
 
 import java.util.Iterator;
@@ -30,7 +31,7 @@ import java.util.Iterator;
 import static studio.phaseshift.metatron.lang.obj.mgrph.tp.mgrphInstSet.VERTEX_PROPERTY_TID;
 
 
-public class MVertexProperty<V> extends MProperty<V> implements VertexProperty<V>, WrappedVertexProperty<VertexProperty<V>> {
+public class MVertexProperty<V> extends MProperty<V> implements VertexProperty<V>, WrappedVertexProperty<VertexProperty<V>>, Rel {
 
     public MVertexProperty(final VertexProperty<V> vertexProperty) {
         super(vertexProperty, VERTEX_PROPERTY_TID);
