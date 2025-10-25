@@ -373,6 +373,7 @@ public class ObjParser {
                 generate_sugar_parser(RNG_TID, of(">>-"), 0),
                 generate_sugar_parser(MERGE_TID, of(">-"), 1),
                 generate_sugar_parser(MERGE_TID, of(">-"), 0),
+                generate_sugar_parser(CHOOSE_TID, of("-<|"), 1),
                 generate_sugar_parser(SPLIT_TID, of("-<"), 1),
                 generate_sugar_parser(REF_TID, of("->"), 1),
                 generate_sugar_parser(RSHIFT_TID, of(">>"), 1),

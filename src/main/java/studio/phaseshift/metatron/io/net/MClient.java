@@ -28,6 +28,7 @@ import org.java_websocket.drafts.Draft_6455;
 import org.java_websocket.handshake.ServerHandshake;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.Obj;
+import studio.phaseshift.metatron.space.Router;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
 import studio.phaseshift.metatron.ui.ObjSerializer;
@@ -47,7 +48,7 @@ public class MClient extends WebSocketClient implements Closeable {
 
     public MClient(final fURI authority, final Draft draft) {
         super(URI.create(authority.toString()), draft);
-        LOG = Graphitty.log(this);
+        LOG = Router.global().logger();
         this.serializer = new ObjByteBufferSerializer();
         this.authority = authority;
     }

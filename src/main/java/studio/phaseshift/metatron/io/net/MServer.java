@@ -23,6 +23,7 @@ import org.java_websocket.handshake.ClientHandshake;
 import org.java_websocket.server.WebSocketServer;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.Obj;
+import studio.phaseshift.metatron.space.Router;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
 import studio.phaseshift.metatron.ui.ObjSerializer;
@@ -39,7 +40,7 @@ import static studio.phaseshift.metatron.lang.fURI.f;
 public class MServer extends WebSocketServer implements Closeable {
 
     protected final fURI authority;
-    protected final GraphittyLogger LOG;
+    protected GraphittyLogger LOG;
     protected final ObjSerializer<ByteBuffer> serializer;
     protected Thread serverThread;
     protected List<FutureObj<?>> futures = new ArrayList<>();
@@ -56,6 +57,7 @@ public class MServer extends WebSocketServer implements Closeable {
     }
 
     public void start() {
+        LOG = Router.global().logger();
         final Runnable r = () -> {
             try (this) {
                 this.run();
@@ -97,7 +99,6 @@ public class MServer extends WebSocketServer implements Closeable {
     public void onOpen(final WebSocket ws, final ClientHandshake handshake) {
         ws.setAttachment(f("ws://" + ws.getRemoteSocketAddress()));
         LOG.debug("new connection from %s", ws.getRemoteSocketAddress());
-        // conn.send("Welcome to the server!"); //This method sends a message to the new client
         // broadcast("new connection: " + handshake.getResourceDescriptor()); //This method sends a message to all clients connected
     }
 
@@ -138,12 +139,12 @@ public class MServer extends WebSocketServer implements Closeable {
 
     @Override
     public void onError(final WebSocket conn, final Exception ex) {
-        LOG.error("an error occurred on connection %s: %s", conn.getRemoteSocketAddress(), ex);
+        LOG.error("an error occurred on connection %s: %s", null == conn ? "<not connected>" : conn.getRemoteSocketAddress(), ex);
     }
 
     @Override
     public void onStart() {
-        LOG.info("{{g}}starting{{/g}} %s node: %s", Graphitty.sillyPrint("mtron", true, true), this.getAddress());
+        LOG.info("{{g}}starting{{/g}} %s node: {{b}}%s{{/b}}", Graphitty.sillyPrint("mtron", true, true), this.getAddress());
     }
 
     public class MServerClient {

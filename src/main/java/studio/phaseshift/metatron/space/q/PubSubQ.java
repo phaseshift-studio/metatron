@@ -94,9 +94,9 @@ public class PubSubQ extends BaseQ {
                 mail.add(MMachine.of(obj, s.call().toCode()));
             });
             while (!mail.isEmpty()) {
-                final Machine monoid = mail.poll();
-                LOG.trace("processing mail: %s", monoid);
-                monoid.apply();
+                final Machine machine = mail.poll();
+                LOG.trace("processing mail: %s", machine);
+                machine.apply();
             }
             return Optional.of(obj);
         }

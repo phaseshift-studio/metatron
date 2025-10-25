@@ -21,6 +21,7 @@ package studio.phaseshift.metatron.space.remote;
 import studio.phaseshift.metatron.io.net.FutureObj;
 import studio.phaseshift.metatron.io.net.MClient;
 import studio.phaseshift.metatron.lang.fURI;
+import studio.phaseshift.metatron.lang.obj.Code;
 import studio.phaseshift.metatron.lang.obj.Inst;
 import studio.phaseshift.metatron.lang.obj.Obj;
 import studio.phaseshift.metatron.space.NullSpace;
@@ -63,17 +64,17 @@ public class RemoteSpace extends MSpace<MClient> {
 
     @Override
     public Obj read(final fURI vid) {
-        LOG.info("%s", vid.toUri());
         final Inst code = from_(vid.authority(null).scheme(null).toUri()).insts().get(0);//, vid.query("tag","abc"));
         LOG.info("performing remote read: %s", code);
         final FutureObj<Obj> future = this.jvm().sendRecv(code);
-        LOG.info("future read %s", future.get(10000));
-        return future.get(1);
+        return future;
     }
 
     @Override
     public Obj write(final fURI vid, final Obj obj) {
-        this.jvm().send(start_(obj).to_(vid.toUri()));
+        final Code code = start_(obj).to_(vid.toUri());
+        LOG.info("performing remote write: %s", code);
+        this.jvm().send(code);
         return obj;
     }
 

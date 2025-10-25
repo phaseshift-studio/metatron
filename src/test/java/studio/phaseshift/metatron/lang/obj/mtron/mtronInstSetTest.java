@@ -166,6 +166,21 @@ public class mtronInstSetTest extends MetatronTest {
         super.testCode(code, expected);
     }
 
+    @ParameterizedTest
+    @CsvSource(value = {
+            "1-<|[is(gt(0))=>plus(6),_=>plus(100)].rng()                              % 7",
+            "1-<|[is(gt(1))=>plus(6),_=>plus(100)].rng()                              % 101",
+            "1-<[is(gt(0))=>plus(6),_=>plus(100)].rng()                               % {7,101}",
+            "{1,2,3}-<|[is(gt(1))=>plus(6),_=>plus(100)].rng()                        % {101,8,9}",
+            "{1,2,3}-<[is(gt(1))=>plus(6),_=>plus(100)].rng()                         % {101,8,102,9,103}",
+            // dummy without ending comma so it's easier to add more test cases
+            "1.plus(1)                                                              % 2"
+    }, delimiter = '%')
+    public void testBranches(final String code, final String expected) {
+        super.testCode(code, expected);
+    }
+
+
 
     @ParameterizedTest
     @CsvSource(value = {

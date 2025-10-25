@@ -63,6 +63,10 @@ public class KVSpace extends MSpace<Map<fURI, Obj>> implements Space {
         super(new HashMap<>(), pattern, KVSPACE_TID, vid);
     }
 
+    public static KVSpace of(final fURI pattern, final fURI vid) {
+        return new KVSpace(pattern, vid);
+    }
+
 
     @Override
     public Obj read(final fURI vid) {

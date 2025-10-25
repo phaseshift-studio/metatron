@@ -78,7 +78,9 @@ public class mtronInstSet extends MInstSet {
     public static final fURI TO_TID = INST_TID.extend("to");
     public static final fURI FROM_TID = INST_TID.extend("from");
     public static final fURI REF_TID = INST_TID.extend("ref");
-    public static final fURI SPLIT_TID = INST_TID.extend("split");
+    public static final fURI SPLIT_TID = INST_TID.extend("split"); // -<
+    public static final fURI CHOOSE_TID = INST_TID.extend("choose"); // -<|
+    public static final fURI CHAIN_TID = INST_TID.extend("chain"); // -<;
     public static final fURI MERGE_TID = INST_TID.extend("merge");
     public static final fURI FILL_TID = INST_TID.extend("fill");
     public static final fURI RMERGE_TID = INST_TID.extend("rmerge");
@@ -246,6 +248,9 @@ public class mtronInstSet extends MInstSet {
                 instC(SPLIT_TID.dom(A.maybeSome()).rng(A.maybeSome()), lst(T(A.maybeSome())), (lhs, inst) -> objs(Stream.of(inst.arg(0)).map(o -> o.apply(lhs)))),
                 instC(SPLIT_TID.dom(ALL).rng(ALL.maybeSome()), lst(T(ALL.some())), (lhs, inst) -> objs(inst.arg(0).stream().map(o -> o.apply(lhs)))),
                 instC(SPLIT_TID.dom(ALL).rng(ALL.maybeSome()), lst(T(ALL)), (lhs, inst) -> objs(inst.arg(0).apply(lhs))),
+                /// ///////////////////////////////////////////////////////////////////////////////////////////////////
+                instC(CHOOSE_TID.dom(ALL).rng(REL_TID.maybe()), lst(T(REC_TID)), (lhs, inst) -> inst.arg(0).<Rec>as().elementStream().map(Obj::<Rel>as).map(e -> e.<Rel>jvm(Tuple.Pair.with(e.first().apply(lhs), e.second()))).filter(e -> !e.first().isNoObj()).findFirst().map(e -> e.<Obj>jvm(Tuple.Pair.with(e.first(), e.second().apply(lhs)))).orElse(NoObj.single())),
+
                 /// ///////////////////////////////////////////////////////////////////////////////////////////////////
                 instC(MERGE_TID.dom(LST_TID).rng(OBJS_ID), lst(), (lhs, inst) -> objs(lhs.lstValue())),
                 instC(MERGE_TID.dom(REC_TID).rng(REL_TID.maybeSome()), lst(), (lhs, inst) -> objs(lhs.stream())),

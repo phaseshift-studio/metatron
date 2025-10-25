@@ -30,6 +30,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
 
+import static studio.phaseshift.metatron.lang.obj.mtron.MFail.fail;
+import static studio.phaseshift.metatron.lang.obj.mtron.MStr.str;
 import static studio.phaseshift.metatron.lang.obj.mtron.mtronInstSet.MTRON_TID;
 
 
@@ -66,7 +68,8 @@ public class FutureObj<T extends Obj> extends MObj implements Future<T> {
 
     @Override
     public boolean cancel(final boolean mayInterruptIfRunning) {
-        return this.jvm().get() == null && (this.isCanceled = true);
+        this.jvm = fail(MTronException.of("future obj canceled"));
+        return this.isCanceled = true;
     }
 
     @Override
@@ -76,7 +79,7 @@ public class FutureObj<T extends Obj> extends MObj implements Future<T> {
 
     @Override
     public boolean isDone() {
-        return this.isCanceled || this.jvm != null;
+        return this.isCanceled || this.jvm().get() != null;
     }
 
 
@@ -96,7 +99,7 @@ public class FutureObj<T extends Obj> extends MObj implements Future<T> {
             if (null != this.jvm().get()) {
                 return this.jvm().get();
             }
-           // Thread.currentThread().wait(100);
+            // Thread.currentThread().wait(100);
         }
         return this.jvm().get();
     }
@@ -109,4 +112,16 @@ public class FutureObj<T extends Obj> extends MObj implements Future<T> {
         }
     }
 
+    @Override
+    public String toString() {
+        try {
+            return this.isDone() ? this.get().toString() : super.toString();
+        } catch (final Exception e) {
+            throw MTronException.of(e);
+        }
+    }
+
+    public Obj tryBaseObj() {
+        return this.isDone() ? this.jvm().get() : this;
+    }
 }

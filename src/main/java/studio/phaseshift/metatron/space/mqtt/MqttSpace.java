@@ -30,13 +30,12 @@ import studio.phaseshift.metatron.lang.obj.Uri;
 import studio.phaseshift.metatron.lang.translate.JSONTranslator;
 import studio.phaseshift.metatron.space.Qs;
 import studio.phaseshift.metatron.space.Space;
-import studio.phaseshift.metatron.space.mem.MSpace;
 import studio.phaseshift.metatron.space.mem.KVSpace;
+import studio.phaseshift.metatron.space.mem.MSpace;
 import studio.phaseshift.metatron.space.q.PubSubQ;
 import studio.phaseshift.metatron.ui.*;
 
 import java.nio.charset.StandardCharsets;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -66,6 +65,13 @@ public class MqttSpace extends MSpace<Map<Uri, Obj>> implements Space {
     Mqtt5Client client;
     Mqtt5BlockingClient.Mqtt5Publishes incomingMessages;
     KVSpace cache;
+
+    public MqttSpace(final fURI pattern, final fURI vid) {
+        this(Map.of(
+                uri("pattern"), pattern.basePath().toUri(),
+                uri("broker"), pattern.queryValue(f("broker"), fURI.class).basePath().toUri(),
+                uri("prefix"), pattern.queryValue(f("prefix"), fURI.class).basePath().toUri()), vid);
+    }
 
     public MqttSpace(final Map<Uri, Obj> config, final fURI vid) {
         super(config, config.containsKey(uri("prefix")) ?
@@ -140,6 +146,10 @@ public class MqttSpace extends MSpace<Map<Uri, Obj>> implements Space {
         this.init();
     }
 
+    public static MqttSpace of(final fURI pattern, final fURI vid) {
+        return new MqttSpace(pattern, vid);
+    }
+
     public MqttSpace clone(final Object jvm, final fURI tid, final fURI vid) {
         return this;
     }
@@ -211,7 +221,7 @@ public class MqttSpace extends MSpace<Map<Uri, Obj>> implements Space {
             return ret;
         Space.Helpers.resolveWrite(this, vid.basePath(), obj, (key, value) -> {
             this.send(vid, value);
-        },this.cache.directReader());
+        }, this.cache.directReader());
         return obj;
     }
 

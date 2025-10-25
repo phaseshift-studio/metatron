@@ -31,8 +31,10 @@ import studio.phaseshift.metatron.space.device.log.Log;
 import studio.phaseshift.metatron.space.fs.FileSpace;
 import studio.phaseshift.metatron.space.mem.KVSpace;
 import studio.phaseshift.metatron.space.mem.StackSpace;
+import studio.phaseshift.metatron.space.mqtt.MqttSpace;
 import studio.phaseshift.metatron.space.remote.RemoteSpace;
 import studio.phaseshift.metatron.space.router.MRouter;
+import studio.phaseshift.metatron.space.spaceInstSet;
 import studio.phaseshift.metatron.ui.Console;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
@@ -89,6 +91,7 @@ public class BootLoader {
             Router.global().write(new KVSpace(f("/mnt/#"), f("/mnt")));
             Router.global().write(new KVSpace(fURI.of("/sys/#"), fURI.of("/mnt/sys")));
             Router.global().write(new KVSpace(fURI.of("/usr/#"), fURI.of("/mnt/usr")));
+            Router.global().write(new spaceInstSet(f("/mnt/space")));
             Router.global().write(Router.global());
             Router.global().write(new StackSpace(f("+/#"), f("/sys/router/stack")));
             Router.global().write(new mtronInstSet(fURI.of("/mnt/lang/m")));
@@ -96,10 +99,7 @@ public class BootLoader {
             Router.global().write(new FileSpace(FileSystems.getDefault(), f("/home/#"), f("/mnt/fs")));
             Router.global().write(new MGraph(TinkerFactory.createModern(), f("/tp/#"), f("/mnt/tp")));
             Router.global().write(new mgrphInstSet(f("/mnt/lang/grph")));
-            /*Router.global().write(f("/mnt/zigbee2mqtt"), new MqttSpace(Map.of(
-                    uri("broker"), uri("mqtt://192.168.66.2:1883"),
-                    uri("prefix"), uri("/mqtt"),
-                    uri("pattern"), uri("zigbee2mqtt/#")), f("/mnt/zigbee2mqtt")));*/
+           // Router.global().write(f("/mnt/zigbee2mqtt"), new MqttSpace(f("zigbee2mqtt/#?broker=mqtt://192.168.66.2:1883&prefix=/mqtt"), f("/mnt/zigbee2mqtt")));
             Router.global().write(new mextInstSet(f("/mnt/lang/ext")));
             // Router.global().write(new RemoteSpace(remoteAuthority,f("/shared/remote/#"), f("/mnt/shared/remote")));
             //Router.global().write(new KVSpace(fURI.of("/shared/#"), fURI.of("/mnt/shared")));
