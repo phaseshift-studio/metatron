@@ -96,15 +96,15 @@ public abstract class MObj implements Obj, Cloneable {
         }
     }
 
-    public <O extends Obj> O clone(final Object jvm, final fURI newtid, final fURI newvid) {
-        if (!Objects.equals(jvm, this.jvm) || !newtid.equals(this.tid) || !Objects.equals(newvid, this.vid)) {
+    public <O extends Obj> O clone(final Object jvm, final fURI tid, final fURI vid) {
+        if (!Objects.equals(jvm, this.jvm) || !tid.equals(this.tid) || !Objects.equals(vid, this.vid)) {
             try {
                 final MObj clone = (MObj) this.clone();
                 clone.jvm = jvm;
-                clone.tid = newtid;
-                clone.vid = newvid;
-                this.check();
-                this.save();
+                clone.tid = tid;
+                clone.vid = vid;
+                clone.check();
+                clone.save();
                 return (O) clone;
             } catch (final Exception e) {
                 throw MTronException.of(e);
