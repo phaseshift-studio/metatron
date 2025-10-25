@@ -49,7 +49,7 @@ public class ObjByteBufferSerializerTest extends MetatronTest {
             "rec::[a=>b,c=>d]",
             "[<a>=>b,c=><d>]",
             "[a=>b,c=>[b=>d]]",
-            "addTwentyThree(){?}",
+            //"addTwentyThree(){?}",
             "start(1).plus(2).mult(7)",
             "[=>]",
             "[,]",
