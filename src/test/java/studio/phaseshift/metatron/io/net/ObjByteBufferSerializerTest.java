@@ -36,8 +36,7 @@ public class ObjByteBufferSerializerTest extends MetatronTest {
     @ParameterizedTest
     @CsvSource(value = {
             //obj
-            "noobj",
-            "int{0}::3",
+            "noobj", "int{0}::3",
             "true", "false", "1", "0", "-100", "12.355", "-12.35",
             "\"this is a string\"",
             "\"\"\"this is a multilinestring\"\"\"",
@@ -53,9 +52,12 @@ public class ObjByteBufferSerializerTest extends MetatronTest {
             "start(1).plus(2).mult(7)",
             "[=>]",
             "[,]",
+            "< >",
             "[a,[b,12,'abc'],[a=>b,c=>[c=>d]]]",
             "rec{0}::[a,[b,12,'abc'],[a=>b,c=>[c=>d]]]",
             "{1,2,3,4,5}",
+            "{true, false, 1,0, -100, 12.355, -12.35}",
+            "{true, false, {1,0}, {-100, 12.355, -12.35}}",
             "{,}"
     }, delimiter = '|')
     public void testKeyValue(final String objString) {

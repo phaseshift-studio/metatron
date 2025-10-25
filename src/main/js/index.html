@@ -1,0 +1,100 @@
+<!--
+  ~ Metatron: A Distributed Computing Language and Virtual Machine
+  ~ Copyright (C) 2025- PhaseShift Studio, LLC
+  ~
+  ~ This program is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>metatron client</title>
+    <link href="metatron.css"  rel="stylesheet" type="text/css"/>
+</head>
+<body>
+<h1>metatron portal</h1>
+<div>
+    metatron node: <input type="text" id="server_uri" placeholder="ws://localhost:8888" />
+    <button id="connect_button">connect</button>
+</div>
+<hr>
+<button id="send_button" disabled>send</button>
+<input type="text" id="client_obj" placeholder="enter obj" disabled/>
+<div id="server_obj"></div>
+
+<script>
+    var webSocket;
+    var output = document.getElementById("server_obj");
+    var connectBtn = document.getElementById("connect_button");
+    var sendBtn = document.getElementById("send_button");
+    var input = document.getElementById("client_obj");
+    var wsUrl = "ws://localhost.local:8888";
+
+    function connect() {
+        var wsUrl = server_uri.value
+        server_uri.disabled = true
+        if (webSocket !== undefined && webSocket.readyState !== WebSocket.CLOSED) {
+            return;
+        }
+
+        updateOutput("connecting to <code>" + wsUrl + "</code>");
+        webSocket = new WebSocket(wsUrl);
+
+        webSocket.onopen = function (event) {
+            updateOutput("connected");
+            connectBtn.disabled = true;
+            sendBtn.disabled = false;
+            input.disabled = false;
+        };
+
+        webSocket.onmessage = function (event) {
+            updateOutput(event.data);
+        };
+
+        webSocket.onclose = function (event) {
+            updateOutput("Connection Closed");
+            connectBtn.disabled = false;
+            sendBtn.disabled = true;
+            input.disabled = true;
+        };
+    }
+
+    function send() {
+        var text = input.value;
+        if (webSocket && webSocket.readyState === WebSocket.OPEN) {
+            webSocket.send(text);
+        }
+    }
+
+    function closeSocket() {
+        if (webSocket) {
+            webSocket.close();
+        }
+    }
+
+    function updateOutput(text) {
+        output.innerHTML += "<br>" + text;
+    }
+
+    connectBtn.addEventListener("click", connect);
+    sendBtn.addEventListener("click", send);
+    input.addEventListener("keypress", function(e) {
+        if (e.key === "Enter") {
+            send();
+        }
+    });
+</script>
+</body>
+</html>
