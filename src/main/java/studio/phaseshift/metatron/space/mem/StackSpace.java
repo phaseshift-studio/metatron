@@ -21,6 +21,7 @@ package studio.phaseshift.metatron.space.mem;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.Obj;
 import studio.phaseshift.metatron.lang.obj.Poly;
+import studio.phaseshift.metatron.space.Router;
 import studio.phaseshift.metatron.space.Space;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
@@ -33,7 +34,7 @@ import static studio.phaseshift.metatron.lang.obj.mtron.mtronInstSet.MTRON_SPACE
 public class StackSpace extends MSpace<LinkedList<KVSpace>> {
 
     public static final fURI STACKSPACE_TID = MTRON_SPACE_TID.extend("stack");
-    public static final String ARG_PREFIX = "a";
+    public static final String ARG_PREFIX = "";
 
     private final GraphittyLogger LOG = Graphitty.log(this);
     private final Space root;
@@ -71,6 +72,8 @@ public class StackSpace extends MSpace<LinkedList<KVSpace>> {
     @Override
     public Obj write(final fURI vid, final Obj obj) {
         LOG.trace("writing %s to %s in %s [{{y}}root{{/y}}: %s]", obj, vid, this.jvm, this.root.jvm());
+        if(obj.isUri() && obj.uriValue().equals(vid))
+            return obj;
         if (!this.jvm.isEmpty())
             this.jvm.get(0).write(vid, obj);
         this.root.write(vid, obj);
@@ -87,11 +90,15 @@ public class StackSpace extends MSpace<LinkedList<KVSpace>> {
 
     public void push(final Poly frame) {
         final KVSpace frameSpace = new KVSpace(pattern, STACKSPACE_TID.extend("d" + this.jvm.size()));
-        if (frame.isRec())
-            frame.recValue().forEach((key, value) -> frameSpace.write(key.uriValue(), value));
-        else {
+        if (frame.isRec()) {
+            frame.recValue().forEach((key, value) -> {
+                frameSpace.write(key.uriValue(), value);
+                Router.global().write(key.uriValue(), value);
+            });
+        } else {
             for (int i = 0; i < frame.lstValue().size(); i++) {
                 frameSpace.write(fURI.of(ARG_PREFIX + i), frame.lstValue().get(i));
+                Router.global().write(fURI.of(ARG_PREFIX + i), frame.lstValue().get(i));
             }
         }
         this.jvm.push(frameSpace);
