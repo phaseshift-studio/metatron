@@ -22,6 +22,7 @@ import org.java_websocket.WebSocket;
 import org.java_websocket.handshake.ClientHandshake;
 import org.java_websocket.server.WebSocketServer;
 import studio.phaseshift.metatron.lang.fURI;
+import studio.phaseshift.metatron.lang.obj.Fail;
 import studio.phaseshift.metatron.lang.obj.Obj;
 import studio.phaseshift.metatron.space.Router;
 import studio.phaseshift.metatron.ui.Graphitty;
@@ -36,12 +37,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static studio.phaseshift.metatron.lang.fURI.f;
+import static studio.phaseshift.metatron.lang.obj.mtron.MFail.fail;
 
 public class MServer extends WebSocketServer implements Closeable {
 
     protected final fURI authority;
-    protected GraphittyLogger LOG;
     protected final ObjSerializer<ByteBuffer> serializer;
+    protected GraphittyLogger LOG;
     protected Thread serverThread;
     protected List<FutureObj<?>> futures = new ArrayList<>();
 
@@ -83,6 +85,7 @@ public class MServer extends WebSocketServer implements Closeable {
 
     @Override
     public void close() {
+        LOG.info("closing %s node {{b}}%s{{/b}}", Graphitty.sillyPrint("mtron", true, true), this.authority);
         this.stop();
     }
 
@@ -121,18 +124,25 @@ public class MServer extends WebSocketServer implements Closeable {
         this.onObj(conn, obj);
     }
 
+    public void sendObj(final WebSocket conn, final Obj obj) {
+        conn.send(this.serializer.write(obj));
+    }
+
     public void onObj(final WebSocket conn, final Obj obj) {
         try {
-            LOG.trace("processing %s for %s", obj, conn);
-            Obj result = obj.apply().vid(null);
-           // final String tag = obj.vid() != null ? obj.vid().queryValue(f("tag"), String.class, null) : null;
+            LOG.trace("processing %s for {{b}}%s{{/b}}", obj, conn.getRemoteSocketAddress());
+            final Obj result = obj.apply().vid(null);
+            // final String tag = obj.vid() != null ? obj.vid().queryValue(f("tag"), String.class, null) : null;
             //if (tag != null) {
             //    fURI rvid = result.vid() == null ? f("/usr/temp?tag=" + tag) : result.vid().query("tag", tag);
             //    result = result.vid(rvid);
-           //     LOG.info("obj tagged: %s", result);
-           // }
-            conn.send(this.serializer.write(result));
+            //     LOG.info("obj tagged: %s", result);
+            // }
+            this.sendObj(conn, result);
+            if (result.isFail())
+                this.onError(conn, result.<Fail>as().jvmAs());
         } catch (final Exception e) {
+            this.sendObj(conn, fail(e));
             this.onError(conn, e);
         }
     }
@@ -144,7 +154,7 @@ public class MServer extends WebSocketServer implements Closeable {
 
     @Override
     public void onStart() {
-        LOG.info("{{g}}starting{{/g}} %s node: {{b}}%s{{/b}}", Graphitty.sillyPrint("mtron", true, true), this.getAddress());
+        LOG.info("starting %s node {{b}}%s{{/b}}", Graphitty.sillyPrint("mtron", true, true), this.authority);
     }
 
     public class MServerClient {

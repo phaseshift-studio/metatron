@@ -71,7 +71,7 @@ public class KVSpace extends MSpace<Map<fURI, Obj>> implements Space {
     @Override
     public Obj read(final fURI vid) {
         return this.qs().processPreRead(vid, vid).orElseGet(() -> {
-            Obj result = Helpers.resolveRead(this, vid, directReader);
+            Obj result = Helper.resolveRead(this, vid, directReader);
             return this.qs().processPostRead(vid, vid, result).orElse(result);
         });
     }
@@ -79,7 +79,7 @@ public class KVSpace extends MSpace<Map<fURI, Obj>> implements Space {
     @Override
     public Obj write(final fURI vid, final Obj obj) {
         return this.qs().processPreWrite(vid, vid, obj).orElseGet(() -> {
-            Space.Helpers.resolveWrite(this, vid.basePath(), obj, this.directWriter, this.directReader);
+            Helper.resolveWrite(this, vid.basePath(), obj, this.directWriter, this.directReader);
             return this.qs().processPostWrite(vid, vid, obj).orElse(this.qs().processQlessWrite(vid, vid, obj).orElse(obj));
         });
     }

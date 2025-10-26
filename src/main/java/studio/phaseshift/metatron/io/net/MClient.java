@@ -29,7 +29,6 @@ import org.java_websocket.handshake.ServerHandshake;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.Obj;
 import studio.phaseshift.metatron.space.Router;
-import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
 import studio.phaseshift.metatron.ui.ObjSerializer;
 
@@ -102,6 +101,7 @@ public class MClient extends WebSocketClient implements Closeable {
     @Override
     public void onError(final Exception ex) {
         LOG.error("an error occurred on connection: %s", ex);
+        this.futures.clear();
     }
 
     /// ////////////////////////////////////////////////////////////////////////////////////////
@@ -122,7 +122,7 @@ public class MClient extends WebSocketClient implements Closeable {
     }
 
     public void onObj(final Obj obj) {
-        LOG.trace("processing %s", obj);
+        LOG.trace("processing %s from {{b}}%s{{/b}}", obj, this.getRemoteSocketAddress());
         /*if (obj.vid() != null && obj.vid().hasQuery("tag")) {
             LOG.trace("processing tagged obj %s", obj.vid());
             final String tag = obj.vid().queryValue(f("tag"), String.class);

@@ -26,6 +26,8 @@ import studio.phaseshift.metatron.util.MTronException;
 
 import java.nio.ByteBuffer;
 
+import static studio.phaseshift.metatron.lang.obj.mtron.MStr.str;
+
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
@@ -55,19 +57,24 @@ public class ObjByteBufferSerializer implements ObjSerializer<ByteBuffer> {
         if (obj.isCode())
             return this.writeCode(obj.as());
         if (obj.isFail())
-            throw new UnsupportedOperationException("fail serialization not implemented yet");
+            return this.writeFail(obj.as());
         if (obj.isObjs())
             return this.writeObjs(obj.as());
         throw MTronException.of("unknown obj type: ", obj);
     }
 
     private String handleIds(final Obj obj, final String objString) {
-        return obj.tid() + "::" + objString + ((obj.vid() == null) ? "" : ("@<" + obj.vid() + ">"));
+        return (obj.tid() + "::" + objString + ((obj.vid() == null) ? "" : ("@<" + obj.vid() + ">"))).trim();
     }
 
     @Override
     public ByteBuffer writeBool(final Bool dool) {
         return ByteBuffer.wrap(handleIds(dool, dool.jvm().toString()).getBytes());
+    }
+
+    @Override
+    public ByteBuffer writeFail(final Fail fail) {
+        return ByteBuffer.wrap(handleIds(fail, "['" + fail.jvm().getMessage() + "']").getBytes());
     }
 
     @Override

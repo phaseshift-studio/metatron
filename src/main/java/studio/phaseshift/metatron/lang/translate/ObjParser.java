@@ -42,6 +42,7 @@ import static org.petitparser.parser.primitive.CharacterParser.digit;
 import static org.petitparser.parser.primitive.CharacterParser.of;
 import static org.petitparser.parser.primitive.CharacterParser.word;
 import static org.petitparser.parser.primitive.StringParser.of;
+import static studio.phaseshift.metatron.lang.obj.mtron.MFail.fail;
 import static studio.phaseshift.metatron.lang.obj.mtron.MLst.lst;
 import static studio.phaseshift.metatron.lang.obj.mtron.MObjs.objs;
 import static studio.phaseshift.metatron.lang.obj.mtron.MRec.rec;
@@ -70,6 +71,7 @@ public class ObjParser {
                 .map(t -> new MRel(Tuple.Pair.with(pick(t, 1), pick(t, 3)), pick(t, 0), pick(t, 4))));
         obj_no_code_parser.set(choice(
                 m_comment(),
+                m_fail(),
                 m_type(),
                 m_noobj(),
                 m_bool(),
@@ -84,6 +86,7 @@ public class ObjParser {
                 m_uri()));
         obj_parser.set(choice(
                 m_comment(),
+                m_fail(),
                 m_type(),
                 m_noobj(),
                 m_bool(),
@@ -98,6 +101,7 @@ public class ObjParser {
                 m_uri()));
         obj_rel_back_parser.set(choice(
                 m_comment(),
+                m_fail(),
                 m_type(),
                 m_noobj(),
                 m_bool(),
@@ -238,6 +242,10 @@ public class ObjParser {
                 .map(t -> ObjParser.<fURI>pick(t, 0).query(ObjParser.pick(t, 1)));
     }
 
+    public static Parser m_fail() {
+        return seq(of(FAIL_TID.toString()), opt(of("::"), "::"), of('['), lst_internal(), of(']'), m_vid_postfix())
+                .map(t -> fail(MTronException.of("%s", pick(t, 3).toString())));
+    }
 
     public static Parser m_call() {
         return choice(seq(of('('), m_code(), of(')')).map(t -> pick(t, 1)), m_code());

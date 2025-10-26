@@ -80,17 +80,17 @@ public abstract class MSpace<J> implements Space {
 
     @Override
     public String toString() {
-        return Space.Helpers.spaceToString(this);
+        return Helper.spaceToString(this);
     }
 
     @Override
     public int hashCode() {
-        return Space.Helpers.spaceHashCode(this);
+        return Helper.spaceHashCode(this);
     }
 
     @Override
     public boolean equals(final Object other) {
-        return Space.Helpers.spaceEquals(this, other);
+        return Helper.spaceEquals(this, other);
     }
 
     @Override

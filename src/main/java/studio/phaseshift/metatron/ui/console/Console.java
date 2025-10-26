@@ -27,9 +27,9 @@ import org.jline.utils.AttributedString;
 import org.jline.utils.AttributedStringBuilder;
 import org.jline.widget.Widgets;
 import studio.phaseshift.metatron.BootLoader;
-import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.NoObj;
 import studio.phaseshift.metatron.lang.obj.Obj;
+import studio.phaseshift.metatron.lang.obj.Rec;
 import studio.phaseshift.metatron.lang.obj.mtron.MObjs;
 import studio.phaseshift.metatron.lang.obj.mtron.mtronInstSet;
 import studio.phaseshift.metatron.lang.translate.ObjParser;
@@ -52,7 +52,6 @@ import java.util.*;
 import java.util.function.BiConsumer;
 
 import static org.jline.keymap.KeyMap.ctrl;
-import static studio.phaseshift.metatron.lang.fURI.f;
 
 public class Console implements Mode {
     private static final String METATRON_VERSION = "0.1-alpha";
@@ -65,7 +64,7 @@ public class Console implements Mode {
     private final LineReader reader;
     private Thread mainThread;
 
-    public Console(final Map<fURI, Obj> configuration) {
+    public Console(final Rec options) {
         try {
             final DefaultParser parser = new DefaultParser()
                     .quoteChars(new char[]{'\'', '"'})
@@ -89,17 +88,13 @@ public class Console implements Mode {
                     .variable(LineReader.SECONDARY_PROMPT_PATTERN, Graphitty.string("{{-X&v1&^1&FORM2}}    {{FORM1}}> {{X}}"))
                     .variable(LineReader.INDENTATION, 0)
                     .build();
-            configuration.forEach((k, v) -> {
-                if (k.equals(f("log")))
-                    Log.setSLF4J(v.uriValue().toString());
-            });
         } catch (final Exception e) {
             throw MTronException.of(e);
         }
     }
 
-    public static Console of(final Map<fURI, Obj> configuration) {
-        return new Console(configuration);
+    public static Console of(final Rec options) {
+        return new Console(options);
     }
 
     public void stop() {

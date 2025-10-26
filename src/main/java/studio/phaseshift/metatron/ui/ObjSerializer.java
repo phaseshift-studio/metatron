@@ -29,6 +29,10 @@ public interface ObjSerializer<T> {
 
     /// //////////////////////////////
 
+    default T writeFail(final Fail f) {
+        return this.write(f);
+    }
+
     default T writeBool(final Bool b) {
         return this.write(b);
     }

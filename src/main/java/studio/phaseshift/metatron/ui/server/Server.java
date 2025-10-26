@@ -19,23 +19,15 @@
 package studio.phaseshift.metatron.ui.server;
 
 import studio.phaseshift.metatron.BootLoader;
-import studio.phaseshift.metatron.lang.fURI;
-import studio.phaseshift.metatron.lang.obj.Obj;
-import studio.phaseshift.metatron.space.device.log.Log;
+import studio.phaseshift.metatron.lang.obj.Rec;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
 import studio.phaseshift.metatron.ui.Mode;
 import studio.phaseshift.metatron.util.MTronException;
 
-import java.io.BufferedReader;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Scanner;
-
-import static studio.phaseshift.metatron.lang.fURI.f;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -46,21 +38,17 @@ public class Server implements Mode {
     private Thread mainThread;
     private GraphittyLogger LOG;
 
-    protected Server(final Map<fURI, Obj> configuration) {
+    protected Server(final Rec options) {
         LOG = Graphitty.log(this);
-        configuration.forEach((k, v) -> {
-            if (k.equals(f("log")))
-                Log.setSLF4J(v.uriValue().toString());
-        });
     }
 
-    public static Server of(final Map<fURI, Obj> configuration) {
-        return new Server(configuration);
+    public static Server of(Rec options) {
+        return new Server(options);
     }
 
     public void run() throws IOException {
         LOG.none("""
-                                
+                
                                 \s
                 {{m}}                __          __                                                                \s
                   _____   _____/  |______ _/  |________  ____   ____     ______ ______________  __ ___________\s

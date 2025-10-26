@@ -53,8 +53,8 @@ public class MRouter implements Router {
 
     public MRouter(final fURI host, final fURI vid) {
         this.vid = vid;
+        LOG.info("local router {{b}}%s{{/b}}", this);
         this.server = new MServer(host);
-        LOG.info("{{y}}router{{/y}} loaded at {{b}}%s{{/b}} [addr: {{b}}%s{{/b}}]", this.vid, this.server.getAddress());
     }
 
     private static Obj appendOnRead(final boolean send, final Obj base, final Obj addition) {
@@ -69,7 +69,6 @@ public class MRouter implements Router {
         final List<fURI> list = this.spaces.values().stream().map(Space::vid).toList();
         list.forEach(this::removeSpace);
         this.spaces.clear();
-        LOG.info("closing server at %s", this.server.authority().toUri());
         this.server.stop();
 
     }
@@ -95,7 +94,7 @@ public class MRouter implements Router {
                     LOG.except("%s and %s have overlapping address spaces", space.pattern(), kv.getKey());
                 });
         this.spaces.put(space.pattern(), space);
-        Space.Helpers.spaceOpenLog(this, space);
+        Space.Helper.spaceOpenLog(this, space);
         //this.write(space.vid(), space);
     }
 
@@ -105,7 +104,7 @@ public class MRouter implements Router {
             try {
                 final Space space = this.spaces.remove(s.pattern());
                 if (null != space) {
-                    Space.Helpers.spaceCloseLog(this, space);
+                    Space.Helper.spaceCloseLog(this, space);
                     space.close();
                 }
             } catch (final Exception e) {
@@ -202,7 +201,7 @@ public class MRouter implements Router {
 
     @Override
     public Router clone(final Object jvm, final fURI tid, final fURI vid) {
-        Space.Helpers.noCloneWarning(this);
+        Space.Helper.noCloneWarning(this);
         return this;
     }
 

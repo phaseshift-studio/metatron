@@ -24,7 +24,6 @@ import org.apache.tinkerpop.gremlin.structure.*;
 import org.apache.tinkerpop.gremlin.structure.util.wrapped.WrappedGraph;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.Obj;
-import studio.phaseshift.metatron.space.Space;
 import studio.phaseshift.metatron.space.mem.MSpace;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
@@ -113,7 +112,7 @@ public class MGraph extends MSpace<Graph> implements Graph, WrappedGraph<Graph> 
 
     @Override
     public Obj read(final fURI vid) {
-        return Space.Helpers.resolveRead(this, vid, (key) -> {
+        return Helper.resolveRead(this, vid, (key) -> {
             //if (key.tail(this.vid.extend("/vertex/#")))
             //    return IteratorUtil.stream(this.mvertices()).collect(Collectors.toMap(MVertex::vid, v -> v));
             //else {
@@ -168,20 +167,5 @@ public class MGraph extends MSpace<Graph> implements Graph, WrappedGraph<Graph> 
     @Override
     public Graph getBaseGraph() {
         return this.graph;
-    }
-
-    @Override
-    public String toString() {
-        return Helper.objToString(this);
-    }
-
-    @Override
-    public int hashCode() {
-        return Helper.objHashCode(this);
-    }
-
-    @Override
-    public boolean equals(final Object other) {
-        return Helper.objEquals(this, other);
     }
 }

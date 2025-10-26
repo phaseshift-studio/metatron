@@ -25,11 +25,9 @@ import studio.phaseshift.metatron.lang.translate.ObjParser;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
 
-import java.util.Map;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.fail;
-import static studio.phaseshift.metatron.lang.fURI.f;
+import static studio.phaseshift.metatron.lang.obj.mtron.MRec.rec;
 import static studio.phaseshift.metatron.lang.obj.mtron.MUri.uri;
 
 public class MetatronTest {
@@ -38,7 +36,7 @@ public class MetatronTest {
 
     @BeforeAll
     public static void begin() {
-        BootLoader.load(Map.of(f("mode"), uri("testing")));
+        BootLoader.load(rec(uri("mode"), uri("testing")));
     }
 
     public void testMatches(final String lhs, final String rhs, final boolean matches) {

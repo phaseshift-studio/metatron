@@ -25,7 +25,6 @@ import studio.phaseshift.metatron.lang.obj.Rec;
 import studio.phaseshift.metatron.lang.obj.mext.mextInstSet;
 import studio.phaseshift.metatron.lang.obj.mgrph.tp.MGraph;
 import studio.phaseshift.metatron.lang.obj.mgrph.tp.mgrphInstSet;
-import studio.phaseshift.metatron.lang.obj.mtron.MRec;
 import studio.phaseshift.metatron.lang.obj.mtron.mtronInstSet;
 import studio.phaseshift.metatron.lang.translate.ObjParser;
 import studio.phaseshift.metatron.space.Router;
@@ -46,11 +45,9 @@ import studio.phaseshift.metatron.util.MTronException;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.nio.file.FileSystems;
-import java.util.HashMap;
-import java.util.Map;
 
 import static studio.phaseshift.metatron.lang.fURI.f;
-import static studio.phaseshift.metatron.lang.obj.mtron.MBool.bool;
+import static studio.phaseshift.metatron.lang.obj.mtron.MRec.rec;
 import static studio.phaseshift.metatron.lang.obj.mtron.MUri.uri;
 
 public class BootLoader {
@@ -67,30 +64,25 @@ public class BootLoader {
     public static Mode MODE;
 
     public static void main(final String[] args) throws IOException {
-        final Map<fURI, Obj> params = new HashMap<>();
-        for (final String arg : args) {
-            final String[] kv = arg.split("=");
-            params.put(f(kv[0].replace("--", "")), ObjParser.m_obj().parse(kv[1]).get());
-        }
-        if (params.getOrDefault(f("verbose"), bool(false)).jvm()) {
-            LOG.debug("boot parameters: %s", params);
-        }
-        GLOBAL = MRec.fromUriKeyed(params);
-        BootLoader.load(params);
+        Rec options = args.length > 0 ? ObjParser.m_rec().parse(args[0]).get() : rec();
+        Log.setSLF4J(options.has(uri("log")) ? options.at(uri("log")).uriValue().toString() : "TRACE");
+        LOG.debug("user options: %s", options);
+        GLOBAL = rec(uri("options"), options);
+        BootLoader.load(options);
     }
 
-    public static void load(final Map<fURI, Obj> args) {
+    public static void load(final Rec options) {
         Runtime.getRuntime().addShutdownHook(new Thread(BootLoader::close));
         fURI remoteAuthority = null;
         if (BOOTING) {
             /// /// START OF BOOTING PROCESS /// /// allow boot description to be read from a mtron file
             try {
-                remoteAuthority = args.getOrDefault(f(HOST), uri("ws://" + InetAddress.getLocalHost().getHostName() + ".local" + ":" + 8887)).uriValue();
+                remoteAuthority = options.at(HOST).orElse(uri("ws://" + InetAddress.getLocalHost().getHostName() + ".local" + ":" + 8887)).uriValue();
                 LOG.info("router server: %s", remoteAuthority);
             } catch (final Exception e) {
                 LOG.warn("booting metatron on a non-networked jvm");
             }
-            startMode(args);
+            startMode(options);
             ROUTER = new MRouter(remoteAuthority, f("/sys/router"));
             ROUTER.start();
             Router.global().write(new KVSpace(f("/mnt/#"), f("/mnt")));
@@ -120,16 +112,16 @@ public class BootLoader {
         }
     }
 
-    public static void startMode(final Map<fURI, Obj> args) {
-        final Obj mode = args.get(f("mode"));
+    public static void startMode(final Rec options) {
+        final Obj mode = options.at("mode");
         if (null == mode)
             throw MTronException.of("no mode specified (see --help)");
         else if (mode.uriValue().equals(f("testing")))
             MODE = Mode.NoOp.of();
         else if (mode.uriValue().equals(f("console")))
-            MODE = Console.of(args);
+            MODE = Console.of(options);
         else if (mode.uriValue().equals(f("server")))
-            MODE = Server.of(args);
+            MODE = Server.of(options);
         else
             throw MTronException.of("unknown mode %s (see --help)", mode.uriValue());
         MODE.start();

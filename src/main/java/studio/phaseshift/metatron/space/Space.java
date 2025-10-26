@@ -44,7 +44,7 @@ public interface Space extends Poly, Closeable {
 
     @Override
     default Space clone(final Object jvm, final fURI tid, final fURI vid) {
-        Space.Helpers.noCloneWarning(this);
+        Helper.noCloneWarning(this);
         return this;
     }
 
@@ -85,8 +85,7 @@ public interface Space extends Poly, Closeable {
 
     @Override
     default Obj apply(final Obj other) {
-        this.logger().info("%s applying %s", this, other);
-        return Space.Helpers.resolveApply(this, other);
+        return Helper.resolveApply(this, other);
     }
 
     @Override
@@ -109,7 +108,7 @@ public interface Space extends Poly, Closeable {
         return this.jvm();
     }
 
-    class Helpers {
+    class Helper {
 
         public static void spaceCloseLog(final Obj source, final Space space) {
             source.logger().info("closed space %s", space);
@@ -161,7 +160,7 @@ public interface Space extends Poly, Closeable {
                     }
                 });
             }
-            final Pair<fURI, Poly> base = Space.Helpers.locateBasePoly(space, vid);
+            final Pair<fURI, Poly> base = Helper.locateBasePoly(space, vid);
             if (null != base) {
                 final Poly poly = base.get1();
                 Graphitty.log(space).trace("base poly found at %s: %s", base.get0(), poly);
@@ -184,22 +183,22 @@ public interface Space extends Poly, Closeable {
             if (!current.isEmpty() && vid.isNode()) {
                 directWriter.accept(vid, obj);
             } else {
-                final Pair<fURI, Poly> base = Space.Helpers.locateBasePoly(space, vid);
+                final Pair<fURI, Poly> base = Helper.locateBasePoly(space, vid);
                 if (null == base) {
                     if (vid.isNode() || !obj.isPoly()) {
                         directWriter.accept(vid, obj);
                     } else if (obj.isRec()) { // branch
-                        obj.recValue().forEach((key, value) -> Helpers.resolveWrite(space, vid.extend(key.uriValue()), value, directWriter, directReader));
+                        obj.recValue().forEach((key, value) -> Helper.resolveWrite(space, vid.extend(key.uriValue()), value, directWriter, directReader));
                     } else if (obj.isLst()) {
                         for (int i = 0; i < obj.lstValue().size(); i++) { // branch
-                            Helpers.resolveWrite(space, vid.extend(String.valueOf(i)), obj.lstValue().get(i), directWriter, directReader);
+                            Helper.resolveWrite(space, vid.extend(String.valueOf(i)), obj.lstValue().get(i), directWriter, directReader);
                         }
                     }
                 } else if (vid.isNode() || !obj.isPoly()) {
                     if (base.get1().isRec())
-                        Space.Helpers.resolveWrite(space, base.get0(), base.get1().<Rec>as().at(uri(vid.removePrefix(base.get0())), obj), directWriter, directReader);
+                        Helper.resolveWrite(space, base.get0(), base.get1().<Rec>as().at(uri(vid.removePrefix(base.get0())), obj), directWriter, directReader);
                     else if (base.get1().isLst())
-                        Space.Helpers.resolveWrite(space, base.get0(), base.get1().<Lst>as().append(obj), directWriter, directReader);
+                        Helper.resolveWrite(space, base.get0(), base.get1().<Lst>as().append(obj), directWriter, directReader);
                     else {
                         //throw MTronException.of("unknown poly: %s %s %s", base.get1(), vid, obj);
                         directWriter.accept(vid, obj);
@@ -211,7 +210,7 @@ public interface Space extends Poly, Closeable {
                                 .stream()
                                 //.filter(kv -> nextStepAddr.extend(kv.getKey().uriValue()).matches(vid))
                                 //.forEach(kv -> submap.put(kv.getKey(), kv.getValue()));
-                                .forEach(kv -> Space.Helpers.resolveWrite(space, kv.getKey().uriValue(), kv.getValue(), directWriter, directReader));
+                                .forEach(kv -> Helper.resolveWrite(space, kv.getKey().uriValue(), kv.getValue(), directWriter, directReader));
                         // resolveWriter.accept(nextStepAddr, new MRec(submap, value.tid(), fURI.NULL));
 
                     } else {
@@ -219,7 +218,7 @@ public interface Space extends Poly, Closeable {
                     }
                 } else if (base.get1().isLst()) {
                     Lst newLst = base.get1().<Lst>as().at(uri(vid.removePrefix(base.get0()).pretract()), obj);
-                    Space.Helpers.resolveWrite(space, vid, newLst, directWriter, directReader);
+                    Helper.resolveWrite(space, vid, newLst, directWriter, directReader);
                 }
             }
         }

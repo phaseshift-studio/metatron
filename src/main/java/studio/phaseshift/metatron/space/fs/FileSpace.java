@@ -23,7 +23,6 @@ import studio.phaseshift.metatron.lang.obj.NoObj;
 import studio.phaseshift.metatron.lang.obj.Obj;
 import studio.phaseshift.metatron.lang.obj.Str;
 import studio.phaseshift.metatron.lang.obj.mtron.MRec;
-import studio.phaseshift.metatron.space.Space;
 import studio.phaseshift.metatron.space.mem.MSpace;
 import studio.phaseshift.metatron.util.MTronException;
 
@@ -52,7 +51,7 @@ public class FileSpace extends MSpace<FileSystem> {
 
     @Override
     public Obj read(final fURI vid) {
-        return Space.Helpers.resolveRead(this, vid, (key) -> {
+        return Helper.resolveRead(this, vid, (key) -> {
             if (key.equals(fURI.ALL))
                 throw MTronException.of("infinite nested walks on file system not allowed");
             else {
