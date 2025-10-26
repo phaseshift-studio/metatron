@@ -21,7 +21,6 @@ package studio.phaseshift.metatron.lang.obj;
 import studio.phaseshift.metatron.algebra.Ring;
 import studio.phaseshift.metatron.algebra.Semiring;
 import studio.phaseshift.metatron.lang.fURI;
-import studio.phaseshift.metatron.lang.obj.mtron.MObjs;
 import studio.phaseshift.metatron.lang.obj.mtron.MType;
 import studio.phaseshift.metatron.lang.obj.mtron.c.cInt;
 import studio.phaseshift.metatron.ui.Graphitty;
@@ -36,6 +35,7 @@ import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.lang.fURI.f;
+import static studio.phaseshift.metatron.lang.obj.mtron.MObjs.objs;
 import static studio.phaseshift.metatron.lang.obj.mtron.MType.T;
 import static studio.phaseshift.metatron.lang.obj.mtron.mtronInstSet.*;
 import static studio.phaseshift.metatron.util.Tuple.Pair;
@@ -47,6 +47,10 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
     fURI tid();
 
     fURI vid();
+
+    default boolean unique() {
+        return uniqueC().equals(cInt.ONE());
+    }
 
     default cInt uniqueC() {
         return cInt.ONE();
@@ -89,7 +93,9 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
     }
 
     default Pair<Obj, Obj> take(final Inst inst) {
-        if (inst.dom().isZero() || this.isNoObj())
+        if (!inst.tid().hasDom() || (this.uniqueC().equals(cInt.ONE()) && inst.dom().c().gt(cInt.ZERO())))
+            return Pair.with(this, NoObj.single());
+        else if (inst.dom().isZero() || this.isNoObj())
             return Pair.with(NoObj.single(), this);
         else if (this.c().within(inst.dom().c()))
             return Pair.with(this, NoObj.single());
@@ -175,7 +181,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
                 return NoObj.single();
             if (objs.size() == 1)
                 return objs.get(0);
-            return MObjs.objs(objs);
+            return objs(objs);
         }
     }
 

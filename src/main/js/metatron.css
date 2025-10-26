@@ -3,6 +3,8 @@ html {
   --text-color-light: #8cabd9;
 }
 
+background-color: #000000;
+
 html[data-theme='dark'] {
   --text-color-normal: hsl(210, 10%, 62%);
   --text-color-light: hsl(210, 15%, 35%);

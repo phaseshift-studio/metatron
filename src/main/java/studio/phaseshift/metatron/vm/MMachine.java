@@ -25,6 +25,7 @@ import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
 import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
+import studio.phaseshift.metatron.vm.util.RunningMonads;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -45,7 +46,7 @@ public class MMachine extends MObj implements Machine {
     }
 
     public static Machine of(final Code code) {
-        return new MMachine(Quartet.with(code, MObjs.empty(), MLst.of(new LinkedList<>()), MObjs.empty()), MTRON_MACH_TID, fURI.NULL);
+        return new MMachine(Quartet.with(code, RunningMonads.of(), MLst.of(new LinkedList<>()), MObjs.empty()), MTRON_MACH_TID, fURI.NULL);
     }
 
 
@@ -54,7 +55,7 @@ public class MMachine extends MObj implements Machine {
             final List<Inst> prepended = new ArrayList<>();
             prepended.add(MInst.instB(mtronInstSet.START_TID, MLst.of(start)));
             prepended.addAll(code.codeValue());
-            return new MMachine(Quartet.with(MCode.of(prepended), MObjs.empty(), MLst.of(new LinkedList<>()), MObjs.empty()), MTRON_MACH_TID, fURI.NULL);
+            return new MMachine(Quartet.with(MCode.of(prepended), RunningMonads.of(), MLst.of(new LinkedList<>()), MObjs.empty()), MTRON_MACH_TID, fURI.NULL);
         } else {
             return MMachine.of(code);
         }
@@ -82,7 +83,7 @@ public class MMachine extends MObj implements Machine {
         final Tuple.Pair<Obj, Obj> pair = monad.obj().take(monad.inst());
         if (!pair.get1().isNoObj())
             this.running().append(monad.obj(pair.get1()));
-        LOG.trace("   {{g}}=>{{/g}} splitting monad %s / %s", pair.get0(), pair.get1());
+        LOG.trace("   {{g}}=>{{/g}} splitting monad %s / %s (inst: %s)", pair.get0(), pair.get1(), monad.inst());
         return monad.obj(pair.get0());
     }
 

@@ -57,7 +57,7 @@ public interface Rec extends Poly, Semiring<Rec> {
 
     @Override
     default Iterable<Rel> elements() {
-        return  this.stream().map(Obj::<Rel>as).toList();
+        return this.stream().map(Obj::<Rel>as).toList();
     }
 
     @Override
@@ -126,13 +126,10 @@ public interface Rec extends Poly, Semiring<Rec> {
 
     @Override
     default Obj append(final Obj obj) {
-        //  return obj.choose(Obj::isNoObj, o -> this, os -> this.value(os.stream().collect(Collectors.toMap(o -> o.relValue().getValue0(), o -> relValue().getValue1(), (a, b) -> b, LinkedHashMap<Obj, Obj>::new));
         if (obj.isNoObj())
             return this;
-        final Map<Obj, Obj> map = new LinkedHashMap<>(this.recValue());
-        obj.stream().forEach(o -> map.compute(o.relValue().get0(), (k, v) -> null == v ? o.relValue().get1() : v.append(o.relValue().get1())));
-        return this.jvm(map);
-        //return this.value(obj.stream().collect(Collectors.toMap(o->o.relValue().getValue0(),o->relValue().getValue1(),(a,b)->a.append(b),LinkedHashMap<Obj,Obj>::new)));
-        //return this.value(map);
+        if (this.isNoObj())
+            return obj;
+        return objs(this, obj);
     }
 }

@@ -29,7 +29,6 @@ import studio.phaseshift.metatron.lang.obj.Rec;
 import studio.phaseshift.metatron.lang.obj.Uri;
 import studio.phaseshift.metatron.lang.obj.mtron.MLst;
 import studio.phaseshift.metatron.lang.obj.mtron.MRec;
-import studio.phaseshift.metatron.lang.obj.mtron.MUri;
 import studio.phaseshift.metatron.ui.GraphittyObjLogger;
 import studio.phaseshift.metatron.util.MTronException;
 
@@ -47,7 +46,7 @@ public class Log extends MRec {
     }
 
     protected Log(final fURI vid) {
-        super(Map.of(uri("level"), MRec.ofUriKeyed(
+        super(Map.of(uri("level"), MRec.fromUriKeyed(
                 "INFO", MLst.of(),
                 "DEBUG", MLst.of(),
                 "WARN", MLst.of(),

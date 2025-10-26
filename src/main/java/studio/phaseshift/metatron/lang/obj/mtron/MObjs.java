@@ -219,10 +219,15 @@ public class MObjs implements Objs {
     public Tuple.Pair<Obj, Obj> take(final Inst inst) {
         if (this.isNoObj())
             return Tuple.Pair.with(NoObj.single(), NoObj.single());
+            // else if(!inst.tid().hasDom())
+            //     return Tuple.Pair.with()
         else if (inst.dom().c().most().isZero())
             return Tuple.Pair.with(NoObj.single(), this);
         /// ////////////////////////////////////
-        if (inst.dom().c().isOne() || inst.dom().c().max() == null || this.c().lte(inst.dom().c().most()))
+        // inst.dom().c().isOne()
+        if ((this.uniqueC().equals(cInt.ONE()) && (!inst.tid().hasDom() || inst.dom().c().gte(cInt.ONE())))
+                || inst.dom().c().max() == null
+                || this.c().lte(inst.dom().c().most()))
             return Tuple.Pair.with(this, NoObj.single());
         /// ////////////////////////////////////
         cInt total = cInt.ZERO();

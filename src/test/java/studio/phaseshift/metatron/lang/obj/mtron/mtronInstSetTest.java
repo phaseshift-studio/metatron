@@ -202,7 +202,7 @@ public class mtronInstSetTest extends MetatronTest {
     @ParameterizedTest
     @CsvSource(value = {
             "[a=>1,b=>2,c=>3].select([a=>_])                                                                                             % [a=>1]",
-            "{[a=>1],[b=>2],[c=>3]}.select([_=>_])                                                                                       % {[a=>1],[b=>2],[c=>3]}",
+            "{[a=>1],[b=>2],[c=>3]}.select?rec{1}<=rec{1}([_=>_])                                                                                       % {[a=>1],[b=>2],[c=>3]}",
             "{[a=>1],[b=>2],[c=>3]}.select([_=>_]).where([_=>_])                                                                         % {[a=>1],[b=>2],[c=>3]}",
             "{[a=>1],[b=>2],[c=>3]}.select([_=>_]).where([_=>is(gt(1))])                                                                 % {[b=>2],[c=>3]}",
             "{[a=>1],[2=>2],[c=>3]}.select([_=>_]).where([isa(uri::T[])=>_])                                                             % {[a=>1],[c=>3]}",

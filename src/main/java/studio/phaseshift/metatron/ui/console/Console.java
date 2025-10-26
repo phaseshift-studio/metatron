@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.ui;
+package studio.phaseshift.metatron.ui.console;
 
 import org.jline.reader.*;
 import org.jline.reader.impl.DefaultParser;
@@ -27,16 +27,20 @@ import org.jline.utils.AttributedString;
 import org.jline.utils.AttributedStringBuilder;
 import org.jline.widget.Widgets;
 import studio.phaseshift.metatron.BootLoader;
+import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.NoObj;
 import studio.phaseshift.metatron.lang.obj.Obj;
 import studio.phaseshift.metatron.lang.obj.mtron.MObjs;
 import studio.phaseshift.metatron.lang.obj.mtron.mtronInstSet;
 import studio.phaseshift.metatron.lang.translate.ObjParser;
 import studio.phaseshift.metatron.space.device.log.Log;
+import studio.phaseshift.metatron.ui.Graphitty;
+import studio.phaseshift.metatron.ui.GraphittyLogger;
+import studio.phaseshift.metatron.ui.Mode;
+import studio.phaseshift.metatron.ui.ObjStringSerializer;
 import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.StringUtil;
 import studio.phaseshift.metatron.vm.MMachine;
-import studio.phaseshift.metatron.vm.Machine;
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;
@@ -47,10 +51,10 @@ import java.nio.file.Paths;
 import java.util.*;
 import java.util.function.BiConsumer;
 
-import static org.jline.keymap.KeyMap.alt;
 import static org.jline.keymap.KeyMap.ctrl;
+import static studio.phaseshift.metatron.lang.fURI.f;
 
-public class Console {
+public class Console implements Mode {
     private static final String METATRON_VERSION = "0.1-alpha";
 
     private static final GraphittyLogger LOG = Graphitty.log(Console.class);
@@ -59,65 +63,49 @@ public class Console {
     private static boolean RESOLVE_MODE = false;
     private final Terminal terminal;
     private final LineReader reader;
+    private Thread mainThread;
 
-    public Console(final Map<String, Obj> terminalArgs) throws IOException {
-        final DefaultParser parser = new DefaultParser()
-                .quoteChars(new char[]{'\'', '"'})
-                .lineCommentDelims(new String[]{"---"})
-                .eofOnUnclosedQuote(true)
-                .eofOnUnclosedBracket(DefaultParser.Bracket.CURLY, DefaultParser.Bracket.ROUND, DefaultParser.Bracket.SQUARE);
-        this.terminal = TerminalBuilder.builder().encoding(StandardCharsets.UTF_8).system(true)/*.signalHandler(Terminal.SignalHandler.SIG_IGN)*/.build();
-        this.outputHeader();
-        // this.terminal.handle(Terminal.Signal.WINCH) // TODO: signal handling on some CNTRL-?? to resolve (not evaluate) current expression
-        final History history = new DefaultHistory();
-        this.reader = LineReaderBuilder.builder()
-                .terminal(terminal)
-                .appName("metatron")
-                .history(history)
-                .highlighter(CustomHighlighters.of(this.terminal))
-                .parser(parser)
-                .variable(LineReader.HISTORY_FILE, Paths.get(".metatron.history"))
-                .option(LineReader.Option.AUTO_FRESH_LINE, true)
-                .option(LineReader.Option.HISTORY_IGNORE_DUPS, true)
-                .option(LineReader.Option.DISABLE_EVENT_EXPANSION, true)
-                .variable(LineReader.SECONDARY_PROMPT_PATTERN, Graphitty.string("{{-X&v1&^1&FORM2}}    {{FORM1}}> {{X}}"))
-                .variable(LineReader.INDENTATION, 0)
-                .build();
-        terminalArgs.forEach((k, v) -> {
-            if (k.equals("log"))
-                Log.setSLF4J(v.uriValue().toString());
-        });
-        // final AutosuggestionWidgets autosuggestionWidgets = new AutosuggestionWidgets(this.reader);
-        // autosuggestionWidgets.enable();
+    public Console(final Map<fURI, Obj> configuration) {
+        try {
+            final DefaultParser parser = new DefaultParser()
+                    .quoteChars(new char[]{'\'', '"'})
+                    .lineCommentDelims(new String[]{"---"})
+                    .eofOnUnclosedQuote(true)
+                    .eofOnUnclosedBracket(DefaultParser.Bracket.CURLY, DefaultParser.Bracket.ROUND, DefaultParser.Bracket.SQUARE);
+            this.terminal = TerminalBuilder.builder().encoding(StandardCharsets.UTF_8).system(true)/*.signalHandler(Terminal.SignalHandler.SIG_IGN)*/.build();
+            this.outputHeader();
+            // this.terminal.handle(Terminal.Signal.WINCH) // TODO: signal handling on some CNTRL-?? to resolve (not evaluate) current expression
+            final History history = new DefaultHistory();
+            this.reader = LineReaderBuilder.builder()
+                    .terminal(terminal)
+                    .appName("metatron")
+                    .history(history)
+                    .highlighter(CustomHighlighters.of(this.terminal))
+                    .parser(parser)
+                    .variable(LineReader.HISTORY_FILE, Paths.get(".metatron.history"))
+                    .option(LineReader.Option.AUTO_FRESH_LINE, true)
+                    .option(LineReader.Option.HISTORY_IGNORE_DUPS, true)
+                    .option(LineReader.Option.DISABLE_EVENT_EXPANSION, true)
+                    .variable(LineReader.SECONDARY_PROMPT_PATTERN, Graphitty.string("{{-X&v1&^1&FORM2}}    {{FORM1}}> {{X}}"))
+                    .variable(LineReader.INDENTATION, 0)
+                    .build();
+            configuration.forEach((k, v) -> {
+                if (k.equals(f("log")))
+                    Log.setSLF4J(v.uriValue().toString());
+            });
+        } catch (final Exception e) {
+            throw MTronException.of(e);
+        }
     }
 
-    public static void main(final String[] args) throws IOException {
-       /* final Map<String, String> params = new HashMap<>();
-        for (final String arg : args) {
-            final String[] kv = arg.split("=");
-            params.put(kv[0].replace("--", ""), kv[1]);
-        }
-        boolean reload = true;
-        while (reload) {
-            reload = false;
-            final Console console = new Console(params);
-            try {
-                console.run();
-            } catch (final Exception e) {
-                LOG.error("a %s error occurred. reloading the console.\n", Graphitty.sillyPrint("catastrophic", true, true));
-                BootLoader.close();
-                final String stackTrace = console.reader.readLine(Graphitty.string("{{WARN}}display stack trace {{FORM1}}[y/N]{{WARN}}?{{X}} "));
-                if (stackTrace.trim().equalsIgnoreCase("y"))
-                    e.printStackTrace();
-                reload = true;
-            }
-            console.stop();
-        }*/
+    public static Console of(final Map<fURI, Obj> configuration) {
+        return new Console(configuration);
     }
 
     public void stop() {
         try {
             this.terminal.close();
+            this.mainThread.interrupt();
         } catch (IOException e) {
             LOG.error(e);
         }
@@ -131,19 +119,19 @@ public class Console {
                 throw MTronException.of(e);
             }
         };
-        new Thread(console).start();
+        this.mainThread = new Thread(console);
+        this.mainThread.start();
+    }
+
+    @Override
+    public Optional<Thread> mainThread() {
+        return Optional.of(this.mainThread);
     }
 
     public void run() throws IOException {
+        Mode.waitForBoot();
         new CustomWidgets(this.reader);
         String line = "";
-        while (BootLoader.BOOTING) {
-            try {
-                Thread.sleep(10);
-            } catch (Exception e) {
-                throw MTronException.of(e);
-            }
-        }
         while (true) {
             try {
                 Obj result = null;

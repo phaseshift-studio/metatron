@@ -18,23 +18,22 @@
 
 package studio.phaseshift.metatron.lang.obj.mtron;
 
+import studio.phaseshift.metatron.algebra.Semiring;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.NoObj;
 import studio.phaseshift.metatron.lang.obj.Obj;
 import studio.phaseshift.metatron.lang.obj.Rec;
 import studio.phaseshift.metatron.lang.obj.Rel;
-import studio.phaseshift.metatron.util.Streamable;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import static studio.phaseshift.metatron.lang.obj.mtron.MStr.str;
 import static studio.phaseshift.metatron.lang.obj.mtron.MUri.uri;
 import static studio.phaseshift.metatron.lang.obj.mtron.mtronInstSet.REC_TID;
 
 public class MRec extends MObj implements Rec {
 
-    public static Rec EMPTY_REC = MRec.of(Map.of());
+    public static Rec EMPTY_REC = MRec.fromUriKeyed(Map.of());
 
     public MRec(final Map<Obj, Obj> value, final fURI tid, final fURI vid) {
         super(cleanMap(value), tid, vid);
@@ -45,15 +44,45 @@ public class MRec extends MObj implements Rec {
     }
 
     public static Rec rec(final Obj key, final Obj value, final Obj... kvs) {
-        return MRec.of(key, value, kvs);
+        final Map<Obj, Obj> map = new LinkedHashMap<>();
+        map.put(key, value);
+        for (int i = 0; i < kvs.length; i = i + 2) {
+            map.put(kvs[i], kvs[i + 1]);
+        }
+        return new MRec(map, REC_TID, fURI.NULL);
     }
 
     public static Rec rec(final Map<Obj, Obj> map) {
-        return MRec.of(cleanMap(map));
+        return new MRec(cleanMap(map), REC_TID, fURI.NULL);
     }
 
     public static Rec rec() {
-        return MRec.of(new LinkedHashMap<>());
+        return new MRec(new LinkedHashMap<>(), REC_TID, fURI.NULL);
+    }
+
+    public static Rec fromUriKeyed(final Object key, final Obj value, final Object... kvs) {
+        final Map<Obj, Obj> map = new LinkedHashMap<>();
+        map.put(uri(key.toString()), value);
+        for (int i = 0; i < kvs.length; i = i + 2) {
+            map.put(uri(kvs[i].toString()), (Obj) kvs[i + 1]);
+        }
+        return new MRec(map, REC_TID, fURI.NULL);
+    }
+
+    public static Rec fromUriKeyed(final Map<fURI, Obj> jvm) {
+        final Map<Obj, Obj> map = new LinkedHashMap<>();
+        for (final Map.Entry<fURI, Obj> kv : jvm.entrySet()) {
+            map.put(uri(kv.getKey()), kv.getValue());
+        }
+        return new MRec(map, REC_TID, fURI.NULL);
+    }
+
+    private static Map<Obj, Obj> cleanMap(final Map<Obj, Obj> jvm) {
+        if (jvm.containsKey(NoObj.single()))
+            jvm.remove(NoObj.single());
+        if (jvm.containsValue(NoObj.single()))
+            jvm.entrySet().stream().filter(kv -> kv.getValue().isNoObj()).map(Map.Entry::getKey).toList().forEach(jvm::remove);
+        return jvm;
     }
 
     public Rec clone() {
@@ -63,7 +92,7 @@ public class MRec extends MObj implements Rec {
     @Override
     public Rec plus(final Rec objs) {
         final Map<Obj, Obj> newMap = new LinkedHashMap<>(this.recValue());
-        objs.elementStream().map(Obj::<Rel>as).forEach(o -> newMap.compute(o.first(), (k, v) -> null == v ? o.second() : v.append(o.second())));
+        objs.stream().flatMap(Obj::<Obj>elementStream).map(Obj::<Rel>as).forEach(o -> newMap.compute(o.first(), (k, v) -> null == v ? o.second() : v.isSemiring() ? v.<Semiring.O>as().plus(o.second().as()) : v.append(o.second())));
         return this.jvm(newMap);
     }
 
@@ -71,7 +100,6 @@ public class MRec extends MObj implements Rec {
     public Rec zero() {
         return EMPTY_REC;
     }
-
 
     @Override
     public Rec clone(final Object jvm, final fURI tid, final fURI vid) {
@@ -95,51 +123,6 @@ public class MRec extends MObj implements Rec {
     @Override
     public Map<Obj, Obj> jvm() {
         return (Map<Obj, Obj>) this.jvm;
-    }
-
-    public static Rec of(final Map<Obj, Obj> value) {
-        return new MRec(value);
-    }
-
-    public static Rec of() {
-        return new MRec(new LinkedHashMap<>());
-    }
-
-    public static Rec of(final Map<Obj, Obj> value, final fURI tid) {
-        return new MRec(value, tid, fURI.NULL);
-    }
-
-    public static Rec of(final Obj key, final Obj value, final Obj... kv) {
-        final Map<Obj, Obj> map = new LinkedHashMap<>();
-        map.put(key, value);
-        for (int i = 0; i < kv.length; i = i + 2) {
-            map.put(kv[i], kv[i + 1]);
-        }
-        return MRec.of(map);
-    }
-
-    public static Rec ofUriKeyed(final Object... kv) {
-        final Map<Obj, Obj> map = new LinkedHashMap<>();
-        for (int i = 0; i < kv.length; i = i + 2) {
-            map.put(uri(kv[i].toString()), (Obj) kv[i + 1]);
-        }
-        return MRec.of(map);
-    }
-
-    public static Rec ofUriKeyed(final Map<String, String> value, final fURI tid) {
-        final Map<Obj, Obj> map = new LinkedHashMap<>();
-        for (final Map.Entry<String, String> kv : value.entrySet()) {
-            map.put(uri(kv.getKey()), str(kv.getValue()));
-        }
-        return MRec.of(map, tid);
-    }
-
-    private static Map<Obj, Obj> cleanMap(final Map<Obj, Obj> map) {
-        if (map.containsKey(NoObj.single()))
-            map.remove(NoObj.single());
-        if (map.containsValue(NoObj.single()))
-            map.entrySet().stream().filter(kv -> kv.getValue().isNoObj()).map(Map.Entry::getKey).toList().forEach(map::remove);
-        return map;
     }
 
     @Override

@@ -21,17 +21,19 @@ package studio.phaseshift.metatron.io.net;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.Obj;
 import studio.phaseshift.metatron.lang.obj.mtron.MObj;
+import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.time.Duration;
+import java.util.Iterator;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.lang.obj.mtron.MFail.fail;
-import static studio.phaseshift.metatron.lang.obj.mtron.MStr.str;
 import static studio.phaseshift.metatron.lang.obj.mtron.mtronInstSet.MTRON_TID;
 
 
@@ -40,13 +42,17 @@ import static studio.phaseshift.metatron.lang.obj.mtron.mtronInstSet.MTRON_TID;
  */
 public class FutureObj<T extends Obj> extends MObj implements Future<T> {
 
+    public static final int DEFAULT_TIMEOUT_MS = 2000;
     public static final fURI FUTURE_TID = MTRON_TID.extend("future");
 
     private final String tag;
     private boolean isCanceled;
 
     public FutureObj(final String tag) {
-        super(new AtomicReference<T>(), FUTURE_TID, fURI.NULL);
+        super();
+        this.jvm = new AtomicReference<T>();
+        this.tid = FUTURE_TID;
+        this.vid = fURI.NULL;
         this.tag = tag;
         this.isCanceled = false;
     }
@@ -55,15 +61,14 @@ public class FutureObj<T extends Obj> extends MObj implements Future<T> {
         return this.tag;
     }
 
-    public void setObj(final T obj) {
-        if (this.isCanceled)
-            throw MTronException.of("future obj has already been canceled");
-        this.jvm().set(obj);
-    }
-
     @Override
     public AtomicReference<T> jvm() {
         return (AtomicReference<T>) this.jvm;
+    }
+    public void setObj(final T obj) {
+        if (this.isCanceled)
+            throw MTronException.of("future obj has already been canceled");
+        ((AtomicReference<T>) this.jvm).set(obj);
     }
 
     @Override
@@ -79,29 +84,56 @@ public class FutureObj<T extends Obj> extends MObj implements Future<T> {
 
     @Override
     public boolean isDone() {
-        return this.isCanceled || this.jvm().get() != null;
+        return this.isCanceled || ((AtomicReference<T>) this.jvm).get() != null;
     }
 
+    @Override
+    public Iterator<Obj> iterator() {
+        try {
+            return this.get(DEFAULT_TIMEOUT_MS).iterator();
+        } catch (final Exception e) {
+            throw MTronException.of(e);
+        }
+    }
+
+    @Override
+    public <O extends Obj> O clone(final Object jvm, final fURI tid, final fURI vid) {
+        return this.get(DEFAULT_TIMEOUT_MS).clone(jvm, tid, vid);
+    }
+
+    @Override
+    public Stream<Obj> stream() {
+        return this.isNoObj() ? Stream.empty() : IteratorUtil.stream(this.iterator());
+    }
+
+    @Override
+    public <O extends Obj> Stream<O> elementStream() {
+        try {
+            return this.get(DEFAULT_TIMEOUT_MS).isPoly() ? this.get(DEFAULT_TIMEOUT_MS).elementStream() : (Stream) this.stream();
+        } catch (final Exception e) {
+            throw MTronException.of(e);
+        }
+    }
 
     @Override
     public T get() throws InterruptedException, ExecutionException {
         if (this.isCanceled)
             throw new InterruptedException("future has already been canceled");
-        if (null == this.jvm().get())
+        if (null == ((AtomicReference<T>) this.jvm).get())
             throw new ExecutionException(MTronException.of("future obj isn't manifest"));
-        return this.jvm().get();
+        return ((AtomicReference<T>) this.jvm).get();
     }
 
     @Override
     public T get(final long timeout, final TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
         final long endTime = unit.convert(Duration.ofMillis(timeout)) + System.currentTimeMillis();
         while (System.currentTimeMillis() < endTime) {
-            if (null != this.jvm().get()) {
-                return this.jvm().get();
+            if (null != ((AtomicReference<T>) this.jvm).get()) {
+                return ((AtomicReference<T>) this.jvm).get();
             }
             // Thread.currentThread().wait(100);
         }
-        return this.jvm().get();
+        return ((AtomicReference<T>) this.jvm).get();
     }
 
     public T get(final long timeoutMs) {
@@ -122,6 +154,6 @@ public class FutureObj<T extends Obj> extends MObj implements Future<T> {
     }
 
     public Obj tryBaseObj() {
-        return this.isDone() ? this.jvm().get() : this;
+        return this.isDone() ? ((AtomicReference<T>) this.jvm).get() : this;
     }
 }

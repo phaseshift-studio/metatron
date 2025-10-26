@@ -23,7 +23,6 @@ import studio.phaseshift.metatron.lang.obj.NoObj;
 import studio.phaseshift.metatron.lang.obj.Obj;
 import studio.phaseshift.metatron.lang.obj.Str;
 import studio.phaseshift.metatron.lang.obj.mtron.MRec;
-import studio.phaseshift.metatron.lang.obj.mtron.MStr;
 import studio.phaseshift.metatron.space.Space;
 import studio.phaseshift.metatron.space.mem.MSpace;
 import studio.phaseshift.metatron.util.MTronException;
@@ -42,7 +41,6 @@ import static studio.phaseshift.metatron.lang.fURI.f;
 import static studio.phaseshift.metatron.lang.obj.mtron.MStr.str;
 import static studio.phaseshift.metatron.lang.obj.mtron.MUri.uri;
 import static studio.phaseshift.metatron.lang.obj.mtron.mtronInstSet.MTRON_SPACE_TID;
-import static studio.phaseshift.metatron.lang.obj.mtron.mtronInstSet.MTRON_TID;
 
 public class FileSpace extends MSpace<FileSystem> {
 
@@ -71,7 +69,7 @@ public class FileSpace extends MSpace<FileSystem> {
                             return Files.list(vidPath)
                                     .collect(Collectors.toMap(
                                             p -> f(p.toString()),
-                                            p -> MRec.ofUriKeyed("name", str(p.getFileName().toString()), "permissions", str(MTronException.wrap(() -> Files.getPosixFilePermissions(p)).toString())), Obj::append, LinkedHashMap::new));
+                                            p -> MRec.fromUriKeyed("name", str(p.getFileName().toString()), "permissions", str(MTronException.wrap(() -> Files.getPosixFilePermissions(p)).toString())), Obj::append, LinkedHashMap::new));
                         } else {
                             final Str value = str(Files.readString(vidPath));
                             return Map.of(vid, value);

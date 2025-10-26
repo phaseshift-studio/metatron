@@ -33,6 +33,10 @@ public abstract class MObj implements Obj, Cloneable {
     protected fURI tid;
     protected fURI vid;
 
+    protected MObj() {
+        // for non-standard constructions
+    }
+
     public MObj(final Object jvm, final fURI tid, final fURI vid) {
         assert null != tid;
         this.jvm = jvm;
