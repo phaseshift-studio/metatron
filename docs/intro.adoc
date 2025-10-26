@@ -1,0 +1,11 @@
+= Introduction
+
+The introduction to metatron.
+
+```mtron
+1
+1-<[_]
+1-<[_=>_]
+1-<[_=>+2]
+1-<[_=>+2]>>-
+```

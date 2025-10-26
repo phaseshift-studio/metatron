@@ -54,6 +54,7 @@
         <snf4j.version>1.11.1</snf4j.version>
         <jakarta.version>2.0.0</jakarta.version>
         <jsoup.version>1.21.2</jsoup.version>
+        <asciidoctor.version>3.2.0</asciidoctor.version>
         <!-- LOGBACK PROPERTIES -->
     </properties>
     <dependencyManagement>
@@ -317,6 +318,37 @@
                                 </manifestEntries>
                             </archive>
                         </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.asciidoctor</groupId>
+                <artifactId>asciidoctor-maven-plugin</artifactId>
+                <version>${asciidoctor.version}</version>
+                <configuration>
+                    <sourceDirectory>${project.basedir}/docs</sourceDirectory>
+                    <outputDirectory>${project.build.directory}/docs</outputDirectory>
+                    <resources>
+                        <resource>
+                            <directory>${project.basedir}/docs</directory>
+                            <targetPath>${project.build.directory}/docs</targetPath>
+                            <excludes>
+                                <exclude>**/.txt</exclude>
+                            </excludes>
+                            <includes>
+                                <include>**/*.png</include>
+                                <include>**/*.svg</include>
+                            </includes>
+                        </resource>
+                    </resources>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>convert-to-html</id>
+                        <phase>site</phase>
+                        <goals>
+                            <goal>process-asciidoc</goal>
+                        </goals>
                     </execution>
                 </executions>
             </plugin>

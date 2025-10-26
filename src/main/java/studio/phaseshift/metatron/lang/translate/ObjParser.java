@@ -363,6 +363,7 @@ public class ObjParser {
                 generate_sugar_parser(List.of(IS_TID, GT_TID), of("?>"), 1),
                 generate_sugar_parser(List.of(IS_TID, LT_TID), of("?<"), 1),
                 generate_sugar_parser(List.of(IS_TID, NEQ_TID), of("?!="), 1),
+                generate_sugar_parser(ISA_TID, of("?"), 1),
                 generate_sugar_parser(AT_TID, of('@'), 1),
                 generate_sugar_parser(BARRIER_TID, of("-|"), 1),
                 generate_sugar_parser(BLOCK_TID, of('|'), 1),

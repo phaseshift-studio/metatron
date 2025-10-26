@@ -40,6 +40,7 @@ import static studio.phaseshift.metatron.lang.obj.mtron.MLst.lst;
 import static studio.phaseshift.metatron.lang.obj.mtron.MRec.rec;
 import static studio.phaseshift.metatron.lang.obj.mtron.MType.T;
 import static studio.phaseshift.metatron.lang.obj.mtron.mtronInstSet.*;
+import static studio.phaseshift.metatron.util.MTronException.mexcept;
 import static studio.phaseshift.metatron.util.Tuple.Triplet;
 
 public interface Inst extends Call {
@@ -243,10 +244,12 @@ public interface Inst extends Call {
                 modulateC = true;
             }
             if (!clhs.rng().matches(cinst.dom()))
-                rhs = fail(MTronException.of("{{m}}lhs obj{{/m}} does not match inst domain (apply): %s {{r}}=/>{{/r}} %s", clhs.rng(), cinst.dom()));
+                rhs = mexcept("inst resolution failure")
+                        .cause(mexcept("lhs {{m}}range{{/m}} does not match inst {{m}}domain{{/m}}: %s {{r}}=/>{{/r}} %s [%s]", clhs.rng(), cinst.dom(), cinst))
+                        .asFail();
         }
         if (null == cinst.f())
-            rhs = fail(MTronException.of("unable to resolve %s", cinst));
+            rhs = mexcept("inst resolution failure").cause(mexcept("unable to determine inst function: %s", cinst)).asFail();
         cinst = Helpers.applyArgs(clhs, cinst);
         Router.stack().push(cinst.args());
         try {
@@ -255,12 +258,14 @@ public interface Inst extends Call {
                 Graphitty.log(cinst).trace("%s ({{m}}lhs{{/m}}) => %s ({{m}}inst{{/m}}) => %s ({{m}}rhs{{/m}}) evaluated {{g}}successfully{{/g}}", clhs, cinst, rhs);
             }
         } catch (final Exception e) {
-            rhs = fail(e, "%s => %s evaluation error", clhs, cinst);
+            rhs = mexcept("inst evaluation failure").cause(e).asFail();
         } finally {
             Router.stack().pop();
         }
         if (BootLoader.TYPE_CHECK && !rhs.isFail() && !rhs.matches(cinst.rng()))
-            rhs = fail(MTronException.of("{{m}}rhs obj{{/m}} (%s) {{r}}does not match{{/r}} {{m}}inst range{{/m}} (%s): %s", rhs, cinst.rng(), cinst));
+            rhs = mexcept("inst resolution failure")
+                    .cause(mexcept("rhs {{m}}domain{{/m}} does not match inst {{m}}range{{/m}}: %s {{r}}=/>{{/r}} %s [%s]", rhs.dom(), cinst.rng(), cinst))
+                    .asFail();
         //final cInt cinstc = false && cinst.isReducing() ? cInt.ONE() : cinst.c();
         final cInt cc = cinst.c();
         //return false && rhs.isObjs() ? rhs : (modulateC ? rhs.c(c -> c.mult(lhs.c())) : rhs).c(c -> c.mult(cc));
@@ -325,10 +330,10 @@ public interface Inst extends Call {
 
         public static Inst applyArgs(final Obj lhs, final Inst inst) {
             final boolean blocking = inst.isBlocking();
-            if (BootLoader.TYPE_CHECK) {
+            /*if (BootLoader.TYPE_CHECK) {
                 if (!blocking && (!lhs.matches(inst.dom()) || !(lhs.take(inst.dom().c()).get0()).matches(inst.dom())))
                     throw MTronException.of("{{m}}lhs obj{{/m}} does not match inst domain (resolve): %s {{r}}=/>{{/r}} %s", lhs, inst);
-            }
+            }*/
             final Poly cargs = inst.args().isLst() ?
                     lst(inst.args().lstValue()
                             .stream()

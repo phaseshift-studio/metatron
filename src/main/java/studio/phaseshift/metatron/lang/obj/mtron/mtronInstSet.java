@@ -20,6 +20,7 @@ package studio.phaseshift.metatron.lang.obj.mtron;
 
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.*;
+import studio.phaseshift.metatron.lang.obj.mtron.c.cInt;
 import studio.phaseshift.metatron.space.Router;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.util.IteratorUtil;
@@ -96,6 +97,8 @@ public class mtronInstSet extends MInstSet {
     public static final fURI AT_TID = INST_TID.extend("at");
     public static final fURI IS_TID = INST_TID.extend("is");
     public static final fURI ISA_TID = INST_TID.extend("isa");
+    public static final fURI OR_TID = INST_TID.extend("or");
+    public static final fURI AND_TID = INST_TID.extend("and");
     public static final fURI IN_TID = INST_TID.extend("in");
     public static final fURI EQ_TID = INST_TID.extend("eq");
     public static final fURI NEQ_TID = INST_TID.extend("neq");
@@ -208,6 +211,7 @@ public class mtronInstSet extends MInstSet {
                 instC(HAS_TID.dom(REC_TID).rng(REC_TID.maybe()), lst(T(ALL)), (lhs, inst) -> IteratorUtil.stream(lhs.<Rec>as().elements()).map(Rel::first).anyMatch(r -> r.matches(inst.arg(0))) ? lhs : NoObj.single()),
                 instC(ID_TID.dom(A).rng(A), lst(), (lhs, inst) -> lhs),
                 instC(ID_TID.dom(A.maybeSome()).rng(A.maybeSome()), lst(), (lhs, inst) -> lhs),
+                instC(OR_TID.dom(A).rng(A.maybe()), lst(T(BOOL_TID).c(cInt::some)), (lhs, inst) -> objs(lhs.stream().filter(l -> inst.args().elementStream().anyMatch(a -> a.apply(l).boolValue())))),
                 instC(APPLY_TID.dom(ALL).rng(ALL), lst(T(ALL)), (lhs, inst) -> lhs.apply(inst.arg(0))),
                 instC(MAP_TID.dom(ALL).rng(A), lst(T(A)), (lhs, inst) -> inst.arg(0)),
                 instC(FILTER_TID.dom(A).rng(A.maybe()), lst(T(ALL.maybe())), (lhs, inst) -> inst.arg(0).isNoObj() ? NoObj.single() : lhs),

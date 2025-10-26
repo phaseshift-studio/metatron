@@ -19,9 +19,12 @@
 package studio.phaseshift.metatron.util;
 
 import org.apache.tinkerpop.gremlin.util.function.ThrowingSupplier;
+import studio.phaseshift.metatron.lang.obj.Fail;
 import studio.phaseshift.metatron.ui.Graphitty;
 
 import java.util.Arrays;
+
+import static studio.phaseshift.metatron.lang.obj.mtron.MFail.fail;
 
 public class MTronException extends RuntimeException {
 
@@ -72,6 +75,22 @@ public class MTronException extends RuntimeException {
         } catch (final Exception e) {
             return onException;
         }
+    }
+    
+    public static MTronException mexcept(final Object throwableOrformat, final Object... args) {
+        return throwableOrformat instanceof Throwable ?
+                new MTronException(Graphitty.string(((String) args[0]).formatted(Arrays.copyOfRange(args, 1, args.length))),
+                        (Throwable) throwableOrformat) :
+                new MTronException(Graphitty.string(throwableOrformat.toString().formatted(args)));
+    }
+
+    public MTronException cause(final Exception cause) {
+        this.initCause(cause);
+        return this;
+    }
+
+    public Fail asFail() {
+        return fail(this);
     }
 
     public String toString() {

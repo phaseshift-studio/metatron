@@ -1,0 +1,41 @@
+:imagesdir: ./images
+:favicon: {imagesdir}/favicon.ico
+:copyright: PhaseShift Studio
+:author: Marko A. Rodriguez
+:email: marko@markorodriguez.com
+:revnumber: 0.1
+:icons: font
+:icon-set: fas
+:stem: latexmath
+:source-highlighter: highlight.js
+:highlightjsdir: ./highlight
+:highlightjs-languages: mtron, html,bash,json
+:stylesheet: ./css/metatron.css
+// :linkcss:
+:data-uri:
+:toc-title: metatron
+:toc: left
+:toclevels: 4
+:license-url: https://www.gnu.org/licenses/agpl-3.0.html
+:license-title: AGPLv3
+:lang: en
+:docinfo: shared
+:max-width: 75%
+:app-name: metatron
+:version-label: 0.1-alpha
+:docname: metatron documentation
+:doctitle: metatron: a ring-oriented language and virtual machine
+
+= metatron: a ring-oriented language and virtual machine (v{revnumber})
+
+++++
+<script src="https://unpkg.com/highlightjs-copy/dist/highlightjs-copy.min.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/highlightjs-copy/dist/highlightjs-copy.min.css"/>
+++++
+
+image:metatron-character-small.png[width=140,float=left] **metatron** (pronounced _met-a-tron_) 
+
+https://github.com/phaseshift-studio/metatron[**source code**]
+
+
+include::intro.adoc[]

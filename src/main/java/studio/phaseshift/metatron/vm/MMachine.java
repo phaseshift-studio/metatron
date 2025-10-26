@@ -31,6 +31,7 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
+import static studio.phaseshift.metatron.util.MTronException.mexcept;
 import static studio.phaseshift.metatron.util.Tuple.Quartet;
 import static studio.phaseshift.metatron.vm.machInstSet.MTRON_MACH_TID;
 
@@ -125,7 +126,7 @@ public class MMachine extends MObj implements Machine {
                         LOG.trace("{{r}}====>{{/r}} killing monad %s", n);
                     }
                 } catch (final Exception e) {
-                    throw MTronException.of(e, "unable to evaluate %s", m);
+                    return mexcept("unable to evaluate %s", m).cause(e).asFail();
                 }
             } else if (!this.barriers().isEmpty()) {
                 final Monad barrier = this.barriers().<LinkedList<Monad>>jvmAs().poll();

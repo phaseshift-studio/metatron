@@ -158,7 +158,7 @@ public class ObjStringSerializer implements ObjSerializer<String> {
             generateTID(sb, obj.tid(), false);
             Throwable t = obj.<Fail>as().jvm();
             while (t != null) {
-                sb.append("{{r}}[{{/r}}").append(t.getMessage()).append("{{r}}]{{/r}}").append("\n\t ");
+                sb.append("{{r}}[{{X}}").append(t.getMessage()).append("{{r}}]{{X}}").append("\n\t ");
                 t = t.getCause();
             }
             sb.delete(sb.length() - 3, sb.length() - 1);
