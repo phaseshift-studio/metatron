@@ -3,7 +3,7 @@
 :copyright: PhaseShift Studio
 :author: Marko A. Rodriguez
 :email: marko@markorodriguez.com
-:revnumber: 0.1
+:revnumber: 0.1-alpha
 :icons: font
 :icon-set: fas
 :stem: latexmath
@@ -19,14 +19,17 @@
 :license-url: https://www.gnu.org/licenses/agpl-3.0.html
 :license-title: AGPLv3
 :lang: en
-:docinfo: shared
 :max-width: 85%
 :app-name: metatron
-:version-label: 0.1-alpha
+:version-label: ring-oriented computing
+:!revdate:
+:!revremark:
+:!revnumber:
 :docname: metatron documentation
 :doctitle: metatron
+:!author:
+:!email:
 
-= metatron
 
     mtron> ring-oriented computing
 
@@ -35,7 +38,7 @@
 <link rel="stylesheet" href="https://unpkg.com/highlightjs-copy/dist/highlightjs-copy.min.css"/>
 ++++
 
-image:metatron-character-small.png[width=150,float=left]
+image:metatron-character-small.png[width=175,float=left]
 image:github-icon.png[width=20,link=https://github.com/phaseshift-studio/metatron] source
 
 Metatron is a ring-oriented programming language and virtual machine. A https://en.wikipedia.org/wiki/Ring_(mathematics)[ring] is an __algebraic structure__ where elements of the structure can be composed using two binary operators `+` (plus) and `*` (mult). 
@@ -46,7 +49,6 @@ a*1 = a
 a-a = 0
 a*(b+c) = ab + ac 
 (b+c)*a = ba + ca
-
 ```
 
 include::intro.adoc[]

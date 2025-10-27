@@ -57,7 +57,7 @@ video {
 }
 
 a {
-  color: var(--primarycolor);
+  color: var(--linkcoloralternate);
 }
 
 .admonitionblock td.icon .icon-tip::before {
@@ -96,6 +96,10 @@ a {
 
 .sidebarblock {
   background: var(--sidebarbackground);
+}
+
+pre code {
+  color: var(--linkcoloralternate)
 }
 .literalblock pre, .listingblock pre:not(.highlight), .listingblock pre[class="highlight"], .listingblock pre[class^="highlight "], .listingblock pre.CodeRay, .listingblock pre.prettyprint {
   background: var(--sidebarbackground);
