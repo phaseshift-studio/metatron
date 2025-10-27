@@ -47,8 +47,12 @@ import java.net.InetAddress;
 import java.nio.file.FileSystems;
 
 import static studio.phaseshift.metatron.lang.fURI.f;
+import static studio.phaseshift.metatron.lang.obj.mtron.MObjs.objs;
 import static studio.phaseshift.metatron.lang.obj.mtron.MRec.rec;
+import static studio.phaseshift.metatron.lang.obj.mtron.MRel.rel;
+import static studio.phaseshift.metatron.lang.obj.mtron.MType.T;
 import static studio.phaseshift.metatron.lang.obj.mtron.MUri.uri;
+import static studio.phaseshift.metatron.lang.obj.mtron.mtronInstSet.REC_TID;
 
 public class BootLoader {
 
@@ -64,11 +68,37 @@ public class BootLoader {
     public static Mode MODE;
 
     public static void main(final String[] args) throws IOException {
-        Rec options = args.length > 0 ? ObjParser.m_rec().parse(args[0]).get() : rec();
-        Log.setSLF4J(options.has(uri("log")) ? options.at(uri("log")).uriValue().toString() : "TRACE");
-        LOG.debug("user options: %s", options);
-        GLOBAL = rec(uri("options"), options);
-        BootLoader.load(options);
+        if (args.length == 1 && args[0].equals("--help")) {
+            Graphitty.log(null).none("""
+                            
+                            %s: %s
+                              {{g}}({{X}}arguments must be provided as a single mtron %s{{g}}){{X}}
+                              %s
+                              {{r}}-----------------------------------------------{{/r}}
+                                %s
+                                %s
+                                %s
+                                
+                              example:
+                                %s
+                                
+                            """,
+                    Graphitty.sillyPrint("metatron", true, true),
+                    Graphitty.sillyPrint("ring-oriented computing",true,true),
+                    T(REC_TID),
+                    rec(uri("k1"), uri("v1"), uri("..."), uri("..."), uri("kn"), uri("vn")),
+                    rel(uri("log"), objs(uri("INFO"), uri("DEBUG"), uri("WARN"), uri("ERROR"), uri("TRACE"))),
+                    rel(uri("host"), uri("ws://localhost:8888")),
+                    rel(uri("mode"), objs(uri("server"), uri("console"))),
+                    "metatron '[log=>INFO,host=>ws://localhost:8888,mode=>console]'");
+            System.exit(0);
+        } else {
+            Rec options = args.length > 0 ? ObjParser.m_rec().parse(args[0]).get() : rec();
+            Log.setSLF4J(options.has(uri("log")) ? options.at(uri("log")).uriValue().toString() : "TRACE");
+            LOG.debug("user options: %s", options);
+            GLOBAL = rec(uri("options"), options);
+            BootLoader.load(options);
+        }
     }
 
     public static void load(final Rec options) {
