@@ -23,7 +23,7 @@ import studio.phaseshift.metatron.lang.obj.Obj;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public interface Semiring<R extends Semiring<R>> {
+public interface PlusMonoid<R extends PlusMonoid<R>> extends Monoid<R> {
 
     R plus(final R r);
 
@@ -33,13 +33,7 @@ public interface Semiring<R extends Semiring<R>> {
         return this.equals(this.zero());
     }
 
-    interface O<R extends Semiring.O<R>> extends Semiring<R>, Obj {
-        R plus(final R r);
+    interface O<R extends O<R>> extends PlusMonoid<R>, Obj {
 
-        R zero();
-
-        default boolean isZero() {
-            return Semiring.super.isZero();
-        }
     }
 }

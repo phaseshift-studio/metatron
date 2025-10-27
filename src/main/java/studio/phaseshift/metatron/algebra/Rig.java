@@ -23,8 +23,8 @@ import studio.phaseshift.metatron.lang.obj.Obj;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public interface Rig<R extends Rig<R>> extends Semiring<R>, Monoid<R> {
-    interface O<R extends Rig.O<R>> extends Rig<R>, Semiring.O<R>, Obj {
+public interface Rig<R extends Rig<R>> extends PlusMonoid<R>, MultMonoid<R> {
+    interface O<R extends Rig.O<R>> extends Rig<R>, PlusMonoid.O<R>, MultMonoid.O<R>, Obj {
 
     }
 }

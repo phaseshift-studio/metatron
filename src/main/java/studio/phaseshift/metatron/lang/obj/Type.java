@@ -18,10 +18,10 @@
 
 package studio.phaseshift.metatron.lang.obj;
 
-import studio.phaseshift.metatron.algebra.Semiring;
+import studio.phaseshift.metatron.algebra.PlusMonoid;
 import studio.phaseshift.metatron.lang.fURI;
 
-public interface Type extends Obj, Semiring<Type> {
+public interface Type extends Obj, PlusMonoid<Type> {
 
     @Override
     Type clone(final Object jvm, final fURI tid, final fURI vid);

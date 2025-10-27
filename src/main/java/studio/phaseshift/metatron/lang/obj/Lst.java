@@ -18,7 +18,7 @@
 
 package studio.phaseshift.metatron.lang.obj;
 
-import studio.phaseshift.metatron.algebra.Semiring;
+import studio.phaseshift.metatron.algebra.PlusMonoid;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.mtron.c.cInt;
 import studio.phaseshift.metatron.util.IteratorUtil;
@@ -34,7 +34,7 @@ import static studio.phaseshift.metatron.lang.obj.mtron.MLst.lst;
 import static studio.phaseshift.metatron.lang.obj.mtron.MObjs.objs;
 import static studio.phaseshift.metatron.lang.obj.mtron.MUri.uri;
 
-public interface Lst extends Poly, Semiring<Lst> {
+public interface Lst extends Poly, PlusMonoid.O<Lst> {
 
     @Override
     Lst clone(final Object jvm, final fURI tid, final fURI vid);

@@ -18,7 +18,7 @@
 
 package studio.phaseshift.metatron.lang.obj;
 
-import studio.phaseshift.metatron.algebra.Semiring;
+import studio.phaseshift.metatron.algebra.PlusMonoid;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.mtron.MObjs;
 import studio.phaseshift.metatron.lang.obj.mtron.c.cInt;
@@ -30,7 +30,11 @@ import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.lang.obj.mtron.MObjs.objs;
 
-public interface Objs extends Obj, Semiring.O<Objs> {
+public interface Objs extends Obj, PlusMonoid.O<Objs> {
+
+    static Obj trySingleton(final Obj obj) {
+        return obj.isObjs() ? objs(obj) : obj;
+    }
 
     @Override
     default Type rng() {
@@ -82,12 +86,8 @@ public interface Objs extends Obj, Semiring.O<Objs> {
     default Objs plus(final Objs other) {
         final Obj first = this.take();
         final Obj second = other instanceof Objs ? other.take() : other;
-        final Semiring.O result = null == first ? (null == second ? this.zero() : (Semiring.O) second) : ((Semiring.O) first).plus((Semiring.O) second);
+        final PlusMonoid.O<?> result = null == first ? (null == second ? this.zero() : (PlusMonoid.O<?>) second) : (PlusMonoid.O<?>) ((PlusMonoid.O) first).plus((PlusMonoid.O) second);
         return new MObjs(List.of(result, this, other));
-    }
-
-    static Obj trySingleton(final Obj obj) {
-      return obj.isObjs() ? objs(obj) : obj;
     }
 
     //  @Override

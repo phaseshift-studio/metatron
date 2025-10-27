@@ -19,7 +19,7 @@
 package studio.phaseshift.metatron.lang.obj;
 
 
-import studio.phaseshift.metatron.algebra.Semiring;
+import studio.phaseshift.metatron.algebra.PlusMonoid;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.util.IteratorUtil;
 
@@ -31,8 +31,8 @@ import static studio.phaseshift.metatron.lang.obj.mtron.MObjs.objs;
 import static studio.phaseshift.metatron.lang.obj.mtron.MRel.rel;
 import static studio.phaseshift.metatron.lang.obj.mtron.MUri.uri;
 
-public interface Rec extends Poly, Semiring<Rec> {
-
+public interface Rec extends Poly, PlusMonoid.O<Rec> {
+    
     @Override
     Rec clone(final Object jvm, final fURI tid, final fURI vid);
 

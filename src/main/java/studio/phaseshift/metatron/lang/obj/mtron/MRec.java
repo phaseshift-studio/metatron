@@ -18,7 +18,7 @@
 
 package studio.phaseshift.metatron.lang.obj.mtron;
 
-import studio.phaseshift.metatron.algebra.Semiring;
+import studio.phaseshift.metatron.algebra.PlusMonoid;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.NoObj;
 import studio.phaseshift.metatron.lang.obj.Obj;
@@ -92,7 +92,7 @@ public class MRec extends MObj implements Rec {
     @Override
     public Rec plus(final Rec objs) {
         final Map<Obj, Obj> newMap = new LinkedHashMap<>(this.recValue());
-        objs.stream().flatMap(Obj::<Obj>elementStream).map(Obj::<Rel>as).forEach(o -> newMap.compute(o.first(), (k, v) -> null == v ? o.second() : v.isSemiring() ? v.<Semiring.O>as().plus(o.second().as()) : v.append(o.second())));
+        objs.stream().flatMap(Obj::<Obj>elementStream).map(Obj::<Rel>as).forEach(o -> newMap.compute(o.first(), (k, v) -> null == v ? o.second() : v.isPlusMonoid() ? (Obj) v.<PlusMonoid.O>as().plus(o.second().<PlusMonoid.O>as()) : v.append(o.second())));
         return this.jvm(newMap);
     }
 

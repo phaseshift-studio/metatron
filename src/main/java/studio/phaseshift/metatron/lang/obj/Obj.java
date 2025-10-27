@@ -18,8 +18,9 @@
 
 package studio.phaseshift.metatron.lang.obj;
 
+import studio.phaseshift.metatron.algebra.MultMonoid;
+import studio.phaseshift.metatron.algebra.PlusMonoid;
 import studio.phaseshift.metatron.algebra.Ring;
-import studio.phaseshift.metatron.algebra.Semiring;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.mtron.MType;
 import studio.phaseshift.metatron.lang.obj.mtron.c.cInt;
@@ -318,10 +319,14 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
         return this instanceof Ring;
     }
 
-    default boolean isSemiring() {
-        return this instanceof Semiring;
+    default boolean isPlusMonoid() {
+        return this instanceof PlusMonoid;
     }
 
+    default boolean isMultMonoid() {
+        return this instanceof MultMonoid;
+    }
+    
     default boolean isRel() {
         return this instanceof Rel;
     }

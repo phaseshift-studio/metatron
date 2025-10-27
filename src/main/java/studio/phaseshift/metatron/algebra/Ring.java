@@ -31,7 +31,7 @@ public interface Ring<R extends Ring<R>> extends Rig<R> {
         return this.plus(r.neg());
     }
 
-    interface O<R extends O<R>> extends Ring<R>, Rig.O<R>, Obj {
+    interface O<R extends O<R>> extends Ring<R>,Obj {
         R neg();
 
         default R minus(final R r) {
