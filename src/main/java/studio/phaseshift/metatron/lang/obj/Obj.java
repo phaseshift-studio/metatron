@@ -227,9 +227,8 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
             return this.matches(rhs.dom()) && rhs.apply(this).matches(rhs.rng());// && rhs.apply(this).matches(rhs.rng());
         if (!this.c().within(rhs.c()))
             return false;
-        if (rhs.isType()) {
-            return (this.tid().matches(rhs.tid()) || this.baseType().matches(rhs.tid())) && (rhs.jvm() == null || this.isObjs() || !rhs.apply(this).isNoObj());
-        }
+        if (rhs.isType())
+            return rhs.tid().isGeneric() || ((this.tid().matches(rhs.tid()) || this.baseType().matches(rhs.tid())) && (rhs.jvm() == null || this.isObjs() || !rhs.apply(this).isNoObj()));
         return this.tid().matches(rhs.tid()) &&
                 Objects.equals(this.jvm(), rhs.jvm());
     }
