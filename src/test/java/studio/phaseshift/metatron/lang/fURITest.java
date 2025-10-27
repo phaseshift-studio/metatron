@@ -24,6 +24,8 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import studio.phaseshift.metatron.lang.translate.ObjParser;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
@@ -40,6 +42,7 @@ import static studio.phaseshift.metatron.lang.fURI.f;
 public class fURITest {
 
     private static final GraphittyLogger LOG = Graphitty.log(fURITest.class);
+    private static final Logger log = LoggerFactory.getLogger(fURITest.class);
 
     static Stream<Arguments> testSegmentsData() {
         return Stream.of(
@@ -356,7 +359,7 @@ public class fURITest {
     public void testHostOrSegment(final String a, final String b) {
         assertEquals(f(a).host(), b);
     }
-    
+
 
     @Test
     public void testPrepend() {
@@ -623,6 +626,17 @@ public class fURITest {
             "a/plus{4}|+/+|false",
             //"a/plus{4}|+/plus{4}|true", // TODO:?!? STRANGE!?!?
             //"/mtron/inst/plus{4}|/mtron/+/plus{4}|true" // TODO:?!? STRANGE!?!?
+            "/m/lst[A,B]|/m/lst[A,B]|true",
+            "xxx[A,B]|xxx[#,+]|true",
+            "xxx[ab,cd]|xxx[ab,cd{?}]|true",
+            "xxx[ab,cd]|xxx[ab{*},cd{?}]{?}|true",
+            "xxx[ab,cd{0}]|xxx[ab{*},cd{+}]{?}|false",
+            "xxx[ab,cd{0}]|xxx[ab{2},cd{0}]{?}|false",
+            "xxx[ab,cd]|xxx[ab{*},cd]{+}|true",
+            "/m/lst[ab,cd]|/m/lst[ab{*},cd]{+}|true",
+            "xxx[ab{2},cd{0}]|xxx[ab{1,3},cd{0}]{1,5}|true",
+            "xxx[ab{2},cd{1,3}]{2,3}|xxx[ab{1,3},cd{0,100}]{1,5}|true",
+            "xxx[ab{2},cd{1,3}]{2,3}|xxx[ab{1,3},cd{0,2}]{1,5}|false",
     }, delimiter = '|')
     void testMatches(final String a, final String b, final boolean shouldMatch) {
         final fURI furi1a = fURI.of(nullToEmpty(a));
@@ -631,6 +645,9 @@ public class fURITest {
         final fURI furi2a = doObjParser ? ObjParser.m_furi().parse(nullToEmpty(a)).get() : fURI.of(nullToEmpty(a));
         final fURI furi2b = doObjParser ? ObjParser.m_furi().parse(nullToEmpty(b)).get() : fURI.of(nullToEmpty(b));
         LOG.trace("testing: {{b}}%s{{/b}} %s {{b}}%s{{/b}}", furi1a, shouldMatch ? "{{g}}should match{{/g}}" : "{{r}}should not match{{/r}}", furi1b);
+        LOG.trace("testing: {{b}}%s{{/b}} %s {{b}}%s{{/b}}", furi2a, shouldMatch ? "{{g}}should match{{/g}}" : "{{r}}should not match{{/r}}", furi2b);
+        LOG.trace("testing: {{b}}%s{{/b}} %s {{b}}%s{{/b}}", furi1a, shouldMatch ? "{{g}}should match{{/g}}" : "{{r}}should not match{{/r}}", furi2b);
+        LOG.trace("testing: {{b}}%s{{/b}} %s {{b}}%s{{/b}}", furi2a, shouldMatch ? "{{g}}should match{{/g}}" : "{{r}}should not match{{/r}}", furi1b);
         assertEquals(furi1a, furi2a);
         if (shouldMatch) {
             assertTrue(furi1a.matches(furi1b));
@@ -675,7 +692,6 @@ public class fURITest {
         assertEquals(matches, furi2a.select(furi2b).toString());
         assertEquals(matches, furi1a.select(furi2b).toString());
         assertEquals(matches, furi2a.select(furi1b).toString());
-
     }
 
     private String nullToEmpty(final String s) {
@@ -690,4 +706,16 @@ public class fURITest {
         assertEquals(Map.of("sub", ""), fURI.of("http://meta.tron/query?sub").queryMap());
         //  assertEquals(fURI.of("http://meta.tron/query?a=1&b=2"), fURI.of("http://meta.tron/query").query(Map.of("a", "", "b", "2")));
     }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "a/b/c[int,int]{2}  |2               |[int, int]",
+            "a/b/c[A{2},B{3}]   |                |[A{2}, B{3}]"
+    }, delimiter = '|')
+    void testPoly(final String furi, final String c, final String typeParams) {
+        final fURI furiA = f(furi);
+        assertEquals(c, furiA.c());
+        assertEquals(typeParams, furiA.poly().toString());
+    }
+
 }

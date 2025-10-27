@@ -52,6 +52,7 @@ import static studio.phaseshift.metatron.util.Tuple.Triplet;
 
 public class ObjParser {
 
+    public static final SettableParser furi_parser = SettableParser.undefined();
     private static final GraphittyLogger LOG = Graphitty.log(ObjParser.class);
     private static final SettableParser obj_parser = SettableParser.undefined();
     private static final SettableParser obj_no_code_parser = SettableParser.undefined();
@@ -65,6 +66,14 @@ public class ObjParser {
     private static final String REDUCED_FURI_CHARS = "/%!#_@+:";
 
     static {
+
+        furi_parser.set(seq(word().or(seq(of("::").not(),
+                        anyOf(REDUCED_FURI_CHARS))).plus().flatten(),
+                opt(true ? m_furi_poly_type() : none(), null),
+                opt(true ? m_furi_coefficient() : none(), null),
+                opt(false ? m_furi_query() : none(), null)).map(t -> new fURI(pick(t, 0)).big().poly(pick(t, 1)).c(pick(t, 2)).query(pick(t, 3))));
+
+
         branch_parser.set(seq(opt(of("-<"), ""), of('{').trim(), m_code().separatedBy(of(',').trim()), of('}').trim()).pick(2)
                 .map(t -> split_(objs(((List) t).stream().filter(x -> x instanceof Call).toList())).tryToInst()));
         rel_parser.set(seq(m_type_prefix_opt_colon(REL_TID), obj_rel_back_parser, of("=>").trim(), m_obj(), m_vid_postfix())
@@ -186,7 +195,7 @@ public class ObjParser {
     }
 
     private static Parser m_furi_internal(final String furiCharacterSet, final boolean polynomial, final boolean coefficient, final boolean query) {
-        return seq(word().or(seq(of("::").not(),
+        return seq(word().or(seq(of("::").not(), of("[").not(),
                         anyOf(furiCharacterSet))).plus().flatten(),
                 opt(polynomial ? m_furi_poly_type() : none(), null),
                 opt(coefficient ? m_furi_coefficient() : none(), null),
@@ -203,8 +212,10 @@ public class ObjParser {
         return m_furi(furiCharacterSet, false, false);
     }*/
 
+
     public static Parser m_furi_poly_type() {
-        return seq(of('['), m_furi_no_query().separatedBy(of(',')), of(']')).map(t -> pick(t, 1));
+        return seq(of('['), furi_parser.separatedBy(of(',')), of(']'))
+                .map(t -> ((List) (pick(t, 1))).stream().filter(c -> !c.equals(',')).map(Object::toString).toList());
     }
 
     public static Parser m_furi_coefficient() {

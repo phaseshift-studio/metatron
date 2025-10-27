@@ -63,7 +63,7 @@ public class fURI implements Cloneable, Ring<fURI> {
     private boolean sstart;
     private boolean send;
 
-    private fURI(final String scheme, final String host, final int port, final boolean sstart, final List<String> path, final boolean send, final String query) {
+   /* private fURI(final String scheme, final String host, final int port, final boolean sstart, final List<String> path, final boolean send, final String query) {
         this.host = host;
         this.scheme = scheme;
         this.port = port;
@@ -72,7 +72,7 @@ public class fURI implements Cloneable, Ring<fURI> {
         this.sstart = sstart;
         this.send = send;
         this.poly = this.name().contains("[") ? Arrays.asList(this.name().substring(this.name().indexOf('[') + 1, this.name().indexOf(']')).split(",")) : null;
-    }
+    }*/
 
     private fURI(final String scheme, final String host, final int port, final boolean sstart, final List<String> path, final boolean send, final List<String> poly, final String query) {
         this.host = host;
@@ -123,7 +123,7 @@ public class fURI implements Cloneable, Ring<fURI> {
             this.scheme = null;
         }
         if (temp != -1) {
-            position = position+2;
+            position = position + 2;
             temp = uri.indexOf(SEGMENT_SPLIT_CHAR, position + 1);
             final String[] authority = uri.substring(position, -1 == temp ? uri.length() : temp).split(SCHEMA_END);
             if (temp == -1)
@@ -143,12 +143,14 @@ public class fURI implements Cloneable, Ring<fURI> {
             this.poly = null;
             return;
         }
+
         final int polyStart = uri.indexOf('[');
         final int polyEnd = polyStart == -1 ? -1 : uri.indexOf(']');
         this.path = Arrays.asList((polyStart == -1 ? uri.substring(position) : uri.substring(position, polyStart)).split(SEGMENT_SPLIT));
         if (polyStart != -1 && polyEnd != -1) {
             final String remaining = uri.substring(polyStart + 1, polyEnd);
-            this.poly = Arrays.asList(remaining.split(","));
+            final String[] splits = remaining.split("(?<!\\d),(?!\\d)");
+            this.poly = Arrays.asList(splits);
             this.path.set(this.path.size() - 1, this.path.get(this.path.size() - 1) + uri.substring(polyEnd + 1));
         } else {
             this.poly = null;
@@ -222,7 +224,7 @@ public class fURI implements Cloneable, Ring<fURI> {
     }
 
     public fURI poly(final List<String> poly) {
-        if (null == this.poly || poly.isEmpty() || Objects.equals(this.poly, poly))
+        if (null == poly || poly.isEmpty() || Objects.equals(this.poly, poly))
             return this;
         return new fURI(this.scheme, this.host, this.port, this.sstart, this.path, this.send, poly, Query.to(this.query));
 
@@ -282,11 +284,11 @@ public class fURI implements Cloneable, Ring<fURI> {
     }
 
     public fURI scheme(final String scheme) {
-        return new fURI(scheme, this.host, this.port, this.sstart, this.path, this.send, Query.to(this.query));
+        return new fURI(scheme, this.host, this.port, this.sstart, this.path, this.send, this.poly, Query.to(this.query));
     }
 
     public fURI path(final String path) {
-        return new fURI(this.scheme, this.host, this.port, path.charAt(0) == SEGMENT_SPLIT_CHAR, Arrays.asList(path.split("/")), path.charAt(path.length() - 1) == SEGMENT_SPLIT_CHAR, Query.to(this.query));
+        return new fURI(this.scheme, this.host, this.port, path.charAt(0) == SEGMENT_SPLIT_CHAR, Arrays.asList(path.split("/")), path.charAt(path.length() - 1) == SEGMENT_SPLIT_CHAR, this.poly, Query.to(this.query));
     }
 
     public String path() {
@@ -299,7 +301,7 @@ public class fURI implements Cloneable, Ring<fURI> {
     }
 
     public fURI segments(final List<String> segs) {
-        return new fURI(this.scheme, this.host, this.port, this.sstart, segs, this.send, Query.to(this.query));
+        return new fURI(this.scheme, this.host, this.port, this.sstart, segs, this.send, this.poly, Query.to(this.query));
     }
 
     public String scheme() {
@@ -349,7 +351,7 @@ public class fURI implements Cloneable, Ring<fURI> {
         final List<String> newPath = new ArrayList<>();
         newPath.addAll(Arrays.asList(segment.split(SEGMENT_SPLIT)));
         newPath.addAll(this.path);
-        return new fURI(this.scheme, this.host, this.port, !newPath.isEmpty() && null != this.host || segment.charAt(0) == SEGMENT_SPLIT_CHAR, newPath, !this.path.isEmpty() && this.send, Query.to(this.query));
+        return new fURI(this.scheme, this.host, this.port, !newPath.isEmpty() && null != this.host || segment.charAt(0) == SEGMENT_SPLIT_CHAR, newPath, !this.path.isEmpty() && this.send, this.poly, Query.to(this.query));
     }
 
     public fURI extend(final fURI extension) {
@@ -361,19 +363,19 @@ public class fURI implements Cloneable, Ring<fURI> {
         newPath.addAll(this.path);
         newPath.addAll(Arrays.asList(segment.split(SEGMENT_SPLIT)));
         newPath.removeIf(String::isEmpty);
-        return new fURI(this.scheme, this.host, this.port, (this.hasAuthority() && this.path.isEmpty()) || this.sstart, newPath, !segment.isEmpty() && (segment.charAt(segment.length() - 1) == SEGMENT_SPLIT_CHAR), Query.to(this.query));
+        return new fURI(this.scheme, this.host, this.port, (this.hasAuthority() && this.path.isEmpty()) || this.sstart, newPath, !segment.isEmpty() && (segment.charAt(segment.length() - 1) == SEGMENT_SPLIT_CHAR), this.poly, Query.to(this.query));
     }
 
     private fURI rePreTract(boolean retract, final int steps) {
         if (this.path.size() < steps)
-            return new fURI(this.scheme, this.host, this.port, false, Collections.emptyList(), false, Query.to(this.query));
+            return new fURI(this.scheme, this.host, this.port, false, Collections.emptyList(), false, this.poly, Query.to(this.query));
         final String coefficient = this.c();
         final fURI noc = this.cLess();
         final List<String> newPath = retract ? noc.path.subList(0, noc.path.size() - steps) : noc.path.subList(steps, noc.path.size());
         if (!newPath.isEmpty() && null != coefficient) {
             newPath.set(newPath.size() - 1, newPath.get(newPath.size() - 1) + "{" + coefficient + "}");
         }
-        return new fURI(this.scheme, this.host, this.port, this.sstart && !newPath.isEmpty(), newPath, this.send && !newPath.isEmpty(), Query.to(this.query));
+        return new fURI(this.scheme, this.host, this.port, this.sstart && !newPath.isEmpty(), newPath, this.send && !newPath.isEmpty(), this.poly, Query.to(this.query));
 
     }
 
@@ -470,19 +472,19 @@ public class fURI implements Cloneable, Ring<fURI> {
     }
 
     public fURI query(final String query) {
-        return new fURI(this.scheme, this.host, this.port, this.sstart, this.path, this.send, null == query || query.isEmpty() ? null : query);
+        return new fURI(this.scheme, this.host, this.port, this.sstart, this.path, this.send, this.poly, null == query || query.isEmpty() ? null : query);
     }
 
     public fURI query(final String key, final String value) {
         Map<String, String> appended = null == this.query ? new LinkedHashMap<>() : new LinkedHashMap<>(this.query.query);
         appended.put(key, value);
-        return new fURI(this.scheme, this.host, this.port, this.sstart, this.path, this.send, Query.to(Query.from(appended)));
+        return new fURI(this.scheme, this.host, this.port, this.sstart, this.path, this.send, this.poly, Query.to(Query.from(appended)));
     }
 
     public fURI removeQ(final String key) {
         Map<String, String> appended = null == this.query ? new LinkedHashMap<>() : new LinkedHashMap<>(this.query.query);
         appended.remove(key);
-        return new fURI(this.scheme, this.host, this.port, this.sstart, this.path, this.send, Query.to(Query.from(appended)));
+        return new fURI(this.scheme, this.host, this.port, this.sstart, this.path, this.send, this.poly, Query.to(Query.from(appended)));
     }
 
     public fURI query(final Object key, final Object value) {
@@ -490,7 +492,7 @@ public class fURI implements Cloneable, Ring<fURI> {
     }
 
     public fURI queryMap(final Map<String, String> kv) {
-        return new fURI(this.scheme, this.host, this.port, this.sstart, this.path, this.send, Query.to(Query.from(kv)));
+        return new fURI(this.scheme, this.host, this.port, this.sstart, this.path, this.send, this.poly, Query.to(Query.from(kv)));
     }
 
     public fURI zero() {
@@ -522,12 +524,12 @@ public class fURI implements Cloneable, Ring<fURI> {
             final List<String> segments = new ArrayList<>(this.path);
             String last = segments.remove(segments.size() - 1);
             segments.add(last.substring(0, last.indexOf("{")));
-            return new fURI(this.scheme, this.host, this.port, this.sstart, segments, this.send, Query.to(this.query));
+            return new fURI(this.scheme, this.host, this.port, this.sstart, segments, this.send, this.poly, Query.to(this.query));
         } else {
             final List<String> segments = new ArrayList<>(this.c(null).path);
             String last = segments.isEmpty() ? "" : segments.remove(segments.size() - 1);
             segments.add(last + "{" + cInt.of(coefficient) + "}");
-            return new fURI(this.scheme, this.host, this.port, this.sstart, segments, this.send, Query.to(this.query));
+            return new fURI(this.scheme, this.host, this.port, this.sstart, segments, this.send, this.poly, Query.to(this.query));
         }
     }
 
@@ -620,7 +622,7 @@ public class fURI implements Cloneable, Ring<fURI> {
     }
 
     public fURI qLess() {
-        return null == this.query ? this : new fURI(this.scheme, this.host, this.port, this.sstart, this.path, this.send, null);
+        return null == this.query ? this : new fURI(this.scheme, this.host, this.port, this.sstart, this.path, this.send, this.poly, null);
     }
 
     public <T> T queryValue(final fURI key, final Class<T> conversion, final T defaultValue) {
@@ -633,7 +635,7 @@ public class fURI implements Cloneable, Ring<fURI> {
     }
 
     public fURI path(final List<String> segments) {
-        return new fURI(this.scheme, this.host, this.port, this.sstart, segments, this.send, null == this.query ? null : this.query.toString());
+        return new fURI(this.scheme, this.host, this.port, this.sstart, segments, this.send, this.poly, null == this.query ? null : this.query.toString());
     }
 
     public boolean onlyMatches(final fURI other) {
@@ -712,6 +714,20 @@ public class fURI implements Cloneable, Ring<fURI> {
             return true;
         if (!c.within(d))
             return false;
+        if (!Objects.equals(this.poly, rhs.poly)) {
+            if (null != this.poly && null != rhs.poly) {
+                for (int i = 0; i < rhs.poly.size(); i++) {
+                    final fURI rp = f(rhs.poly.get(i));
+                    if (rp.equals(ALL))
+                        break;
+                    if (i >= this.poly.size())
+                        return false;
+                    final fURI lp = f(this.poly.get(i));
+                    if (!lp.matches(rp))
+                        return false;
+                }
+            }
+        }
         final fURI lhs = this.basePath();
         final fURI other = rhs.basePath();
         if (!other.hasPattern())
@@ -720,7 +736,7 @@ public class fURI implements Cloneable, Ring<fURI> {
             return false;
         if (this.host != null && (other.host == null || (!other.host.equals(ONE_WILD_STRING) && !this.host.equals(other.host))))
             return false;
-        if (!Objects.equals(other.host, ONE_WILD_STRING) || !(other.port <= -1))
+        if (!(other.port <= -1) || !Objects.equals(other.host, ONE_WILD_STRING))
             if (this.port != -1 && (other.port == -1 || (other.port != 0 && this.port != other.port)))
                 return false;
         if (other.toString().equals(ALL_WILD_STRING))
@@ -794,7 +810,7 @@ public class fURI implements Cloneable, Ring<fURI> {
         if (!this.send && !this.path.isEmpty())
             b.delete(b.length() - 1, b.length());
         if (this.poly != null)
-            b.append(this.poly);
+            b.append('[').append(this.poly.stream().reduce(",", (x, y) -> (x + ',' + y)).substring(2)).append(']');
         if (this.c() != null)
             b.append('{').append(this.c()).append('}');
 
