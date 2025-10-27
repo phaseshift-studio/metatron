@@ -35,7 +35,6 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import static studio.phaseshift.metatron.lang.obj.mtron.MFail.fail;
 import static studio.phaseshift.metatron.lang.obj.mtron.MLst.lst;
 import static studio.phaseshift.metatron.lang.obj.mtron.MRec.rec;
 import static studio.phaseshift.metatron.lang.obj.mtron.MType.T;
@@ -51,11 +50,13 @@ public interface Inst extends Call {
         final GraphittyLogger LOG = Graphitty.log(apiInst);
         if (userInst.args().isLst()) {
             LOG.trace("processing lst args of %s", userInst);
-            List<Obj> resolvedArgs = new ArrayList<>();
+            final List<Obj> resolvedArgs = new ArrayList<>();
             for (int i = 0; i < apiInst.args().count(); i++) {
                 final Obj sObj = apiInst.arg(i);
                 final Obj tObj = userInst.arg(i);
-                if (sObj.isCall()) {
+                if (apiInst.isBlocking()) {
+                    resolvedArgs.add(sObj);
+                } else if (sObj.isCall()) {
                     final Inst firstInst = sObj.<Call>as().insts().get(0);
                     if (!firstInst.hasDomOrRng() && firstInst.tid().basePath().equals(FROM_TID)) { // from() is a side-effect and the type can't be known unless explcitly specified (need a way to denote side-effect insts).
                         resolvedArgs.add(sObj.resolve(lhs));

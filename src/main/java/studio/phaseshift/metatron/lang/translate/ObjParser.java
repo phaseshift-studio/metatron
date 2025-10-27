@@ -122,7 +122,7 @@ public class ObjParser {
 
         rec_parser.set(seq(m_type_prefix_opt_colon(REC_TID), of('[').trim(), rec_internal(), of(']'), m_vid_postfix()).trim().map(t -> new MRec(pick(t, 2), pick(t, 0), pick(t, 4))));
 
-        inst_parser.set(choice(branch_parser, seq(
+        inst_parser.set(choice(/*branch_parser,*/ seq(
                 choice(m_inst_furi(), m_type_prefix_opt_colon(INST_TID)), // 0 inst_tid
                 seq(of('(').trim(), choice(rec_internal(), lst_internal(), of("")), of(')').trim()).pick(1), // 1 inst_args
                 opt(seq(of('{').trim(), choice(
@@ -366,7 +366,7 @@ public class ObjParser {
     /// //////////////////////////////////////////////////////////////////////////////////////////
     private static Parser[] ordered_sugar_parsers() {
         return new Parser[]{
-                branch_parser,
+                //branch_parser,
                 generate_sugar_parser(List.of(IS_TID, EQ_TID), of("?="), 1),
                 generate_sugar_parser(List.of(IS_TID, GT_TID), of("?>"), 1),
                 generate_sugar_parser(List.of(IS_TID, LT_TID), of("?<"), 1),

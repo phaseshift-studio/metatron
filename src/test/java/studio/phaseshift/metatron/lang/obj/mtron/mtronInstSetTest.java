@@ -80,9 +80,10 @@ public class mtronInstSetTest extends MetatronTest {
             //"{1,2,3}.map?int<=int{3}(1)                                             % int{3}::1",
             "{1,2,3}.map?int<=int(1)                                                % int{3}::1",
             "{1,2,3}-<1                                                             % 1",
-            "{1,2,3}-<[is(gt(1))=>_, is(gt(2))=>_]                                % [is(gt(1))=>{2,3},is(gt(2))=>3]",
+            "{1,2,3}-<[is(gt(1))=>_, is(gt(2))=>_]                                  % [is(gt(1))=>{2,3},is(gt(2))=>3]",
             "{1,2,3}-<{is(gt(1)), is(gt(2))}                                        % {2,3,3}",
-            //"{1,2,3}.split?int{*}<=int({is(gt(1)), is(gt(2))})                        % {2,3,3}",
+            "{1,2,3}.split({is(gt(1)), is(gt(2))})                                  % {int{2}::3,2}",
+            "{1,2,3}.split({is(gt(1)), is(gt(2)), 3})                               % {2,int{5}::3}",
             "{1,2,3}-<?lst{0,3}<=int([is(gt(1)), is(gt(2))])                        % {[noobj,noobj],[2,noobj],[3,3]}",
             "{1,2,3}-<?lst{0,3}<=int([is(gt(1)), is(gt(2))])>-                      % {2,3,3}",
             "{1,2,3}-<?lst{0,3}<=int([is(gt(1)), is(gt(2))])>-.>-[,]                % [2,int{2}::3]",
@@ -93,6 +94,8 @@ public class mtronInstSetTest extends MetatronTest {
             "{int{2}::1,int{3}::2,int{4}::3}.mult(10)                               % {int{2}::10,int{3}::20,int{4}::30}",
             "int{50}::10.mult(10)                                                   % int{50}::100",
             // COUNT/SUM //
+            //"{1,2,3}.sum().sum()                                                  % 6",
+            //"{1,2,3}._.sum()._.sum()._.sum()                                      % 6",
             "{1,2,3,4}.id{5}().count()                                              % 20",
             "{1,2,3,4}.id{3}().count()                                              % 12",
             "{1,2,3,4}.is(gt(5)).count()                                            % 0",
@@ -164,6 +167,13 @@ public class mtronInstSetTest extends MetatronTest {
             "{[1],[2,3],[1,3]}.sum()._/sum{2}?int<=int{*}()\\_.>-.sum()             % 20",
             "{[1,2],[3,4,5],[6,7,8]}.sum()._/sum?int<=int{*}()\\_.>-.sum{2}()       % int{2}::36",
             "{[1,2],[3,4,5],[6,7,8]}.sum()._/sum?int<=int{*}()\\_.>-.sum{2}().sum() % 72",
+            "{[1],[2],[3]}.sum()._/sum()\\_                                         % [6]",
+            "{[1],[2,3],[1,3]}.sum()._/sum()\\_.>-                                  % 10",
+            "{[1],[2,3],[1,3]}.sum()._/sum()\\_.merge{3,7}()                        % int{3,7}::10",
+            "{[1],[2,3],[1,3]}.sum()._/sum{2}()\\_.>-                               % int{2}::10",
+            "{[1],[2,3],[1,3]}.sum()._/sum{2}()\\_.>-.sum()                         % 20",
+            "{[1,2],[3,4,5],[6,7,8]}.sum()._/sum()\\_.>-.sum{2}()                   % int{2}::36",
+            "{[1,2],[3,4,5],[6,7,8]}.sum()._/sum()\\_.>-.sum{2}().sum()             % 72",
             // dummy without ending comma so it's easier to add more test cases
             "1.plus(1)                                                              % 2"
     }, delimiter = '%')
@@ -207,13 +217,15 @@ public class mtronInstSetTest extends MetatronTest {
     @ParameterizedTest
     @CsvSource(value = {
             "[a=>1,b=>2,c=>3].select([a=>_])                                                                                             % [a=>1]",
-            "{[a=>1],[b=>2],[c=>3]}.select?rec{1}<=rec{1}([_=>_])                                                                                       % {[a=>1],[b=>2],[c=>3]}",
+            "{[a=>1],[b=>2],[c=>3]}.select?rec{1}<=rec{1}([_=>_])                                                                        % {[a=>1],[b=>2],[c=>3]}",
             "{[a=>1],[b=>2],[c=>3]}.select([_=>_]).where([_=>_])                                                                         % {[a=>1],[b=>2],[c=>3]}",
             "{[a=>1],[b=>2],[c=>3]}.select([_=>_]).where([_=>is(gt(1))])                                                                 % {[b=>2],[c=>3]}",
             "{[a=>1],[2=>2],[c=>3]}.select([_=>_]).where([isa(uri::T[])=>_])                                                             % {[a=>1],[c=>3]}",
             "{[a=>1],[2=>2],[c=>3]}.select([_=>_]).where([isa(uri::T[])=>is(gt(1))])                                                     % {[c=>3]}",
             "{[a=>1],[2=>2],[c=>3]}.select([_=>_]).where(noobj)                                                                          % noobj",
-            //"{[a=>1],[2=>2],[c=>3]}.select([_=>_]).where([noobj=>is(gt(1))])                                                             % noobj",
+            "{[a=>1],[2=>2],[c=>3]}.select([_=>_]).where()                                                                               % noobj",
+            "{[a=>1],[2=>2],[c=>3]}.select([_=>_]).where([noobj=>is(gt(1))])                                                             % {[a=>1],[2=>2],[c=>3]}",
+            "{[a=>1],[2=>2],[c=>3]}.select([_=>_]).where([=>])                                                                           % {[a=>1],[2=>2],[c=>3]}",
             "[a=>1,b=>2,c=>3].select([z=>_])                                                                                             % noobj",
             "[a=>1,b=>2,c=>3].select([isa(uri::T[])=>_])                                                                                 % [a=>1,b=>2,c=>3]",
             "[a=>1,b=>2,c=>3].select([isa(uri::T[])=>-<[_,_]])                                                                           % [a=>[1,1],b=>[2,2],c=>[3,3]]",
