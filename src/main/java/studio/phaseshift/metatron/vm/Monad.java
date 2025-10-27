@@ -33,7 +33,7 @@ import java.util.function.Function;
 import static studio.phaseshift.metatron.lang.obj.mtron.MObjs.objs;
 import static studio.phaseshift.metatron.lang.obj.mtron.MType.T;
 import static studio.phaseshift.metatron.util.Tuple.Triplet;
-import static studio.phaseshift.metatron.vm.machInstSet.MTRON_MACH_MONAD_TID;
+import static studio.phaseshift.metatron.vm.machInstSet.MACH_MONAD_TID;
 
 public interface Monad extends Obj {
 
@@ -112,12 +112,12 @@ public interface Monad extends Obj {
 
     @Override
     default Type dom() {
-        return T(MTRON_MACH_MONAD_TID);
+        return T(MACH_MONAD_TID);
     } // TODO: is this what we need?
 
     @Override
     default Type rng() {
-        return T(MTRON_MACH_MONAD_TID);
+        return T(MACH_MONAD_TID);
     }
 
     @Override

@@ -24,6 +24,7 @@ import studio.phaseshift.metatron.algebra.Ring;
 import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.lang.obj.mtron.MType;
 import studio.phaseshift.metatron.lang.obj.mtron.c.cInt;
+import studio.phaseshift.metatron.space.Router;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
 import studio.phaseshift.metatron.util.IteratorUtil;
@@ -126,7 +127,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
     }
 
     default Type type() {
-        return MType.of(this.tid());
+        return MType.of(this.tid()); // null == Router.global() || this.isInst() ? MType.of(this.tid()) : Router.global().read(this.tid()).orElse(MType.of(this.tid()));
     }
 
     default GraphittyLogger logger() {
@@ -325,7 +326,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
     default boolean isMultMonoid() {
         return this instanceof MultMonoid;
     }
-    
+
     default boolean isRel() {
         return this instanceof Rel;
     }

@@ -48,6 +48,7 @@ public abstract class MObj implements Obj, Cloneable {
 
     protected boolean check() {
         if (!this.isNoObj() && !this.isType() && !this.matches(this.type())) {
+            //throw  MTronException.of("[{{r}}type error{{/r}}] %s is not a %s".formatted(this, this.type()));
             this.tid = FAIL_TID;
             this.vid = fURI.NULL;
             this.jvm = MTronException.of("[{{r}}type error{{/r}}] %s is not a %s".formatted(this, this.type()));

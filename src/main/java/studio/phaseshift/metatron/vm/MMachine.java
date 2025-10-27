@@ -33,7 +33,8 @@ import java.util.List;
 
 import static studio.phaseshift.metatron.util.MTronException.mexcept;
 import static studio.phaseshift.metatron.util.Tuple.Quartet;
-import static studio.phaseshift.metatron.vm.machInstSet.MTRON_MACH_TID;
+import static studio.phaseshift.metatron.vm.machInstSet.DROP_TID;
+import static studio.phaseshift.metatron.vm.machInstSet.MACH_TID;
 
 ;
 
@@ -47,7 +48,7 @@ public class MMachine extends MObj implements Machine {
     }
 
     public static Machine of(final Code code) {
-        return new MMachine(Quartet.with(code, RunningMonads.of(), MLst.of(new LinkedList<>()), MObjs.empty()), MTRON_MACH_TID, fURI.NULL);
+        return new MMachine(Quartet.with(code, RunningMonads.of(), MLst.of(new LinkedList<>()), MObjs.empty()), MACH_TID, fURI.NULL);
     }
 
 
@@ -56,7 +57,7 @@ public class MMachine extends MObj implements Machine {
             final List<Inst> prepended = new ArrayList<>();
             prepended.add(MInst.instB(mtronInstSet.START_TID, MLst.of(start)));
             prepended.addAll(code.codeValue());
-            return new MMachine(Quartet.with(MCode.of(prepended), RunningMonads.of(), MLst.of(new LinkedList<>()), MObjs.empty()), MTRON_MACH_TID, fURI.NULL);
+            return new MMachine(Quartet.with(MCode.of(prepended), RunningMonads.of(), MLst.of(new LinkedList<>()), MObjs.empty()), MACH_TID, fURI.NULL);
         } else {
             return MMachine.of(code);
         }
@@ -99,31 +100,35 @@ public class MMachine extends MObj implements Machine {
                 LOG.trace("   {{g}}=>{{/g}} processing monad %s [%s]", m, m.inst().isInitial() ? "initial" : "midway");
                 try {
                     final Monad x = this.split(m);
-                    final Monad n = x.apply(code.nextInst(x.inst()));
-                    LOG.trace(" {{g}}===>{{/g}} post-processing monad %s", n);
-                    if (n.inst().isBatching() && (!n.dead() || n.inst().dom().c().isNoObjable())) {
-                        if (n.inst().isGather()) {
-                            final Monad barrier = this.barriers().<LinkedList<Monad>>jvmAs().peek();
-                            LOG.trace("{{m}}====|{{/m}} appending living obj to barrier %s", n);
-                            if (null == barrier)
-                                throw MTronException.of("barrier should exist: %s", n.inst());
-                            barrier.obj().append(n.obj());
-                        } else {
-                            this.running().append(n);
-                        }
-                    } else if (!n.dead()) {
-                        if (n.halted()) {
-                            LOG.trace("{{y}}====>{{/y}} halting monad %s", n);
-                            n.obj().iterator().forEachRemaining(o -> this.halted().append(o));
-                        } else {
-                            LOG.trace("{{g}}====>{{/g}} propagating monad %s", n);
-                            n.obj().iterator().forEachRemaining(no -> this.running().append(n.obj(no)));
-                        }
-                    } else if (n.zombie() && n.inst().dom().c().isNoObjable()) {
-                        LOG.trace("{{c}}====>{{/c}} walking undead zombie monad %s", n);
-                        this.running().append(n);
+                    if (x.inst().tid().basePath().equals(DROP_TID)) {
+                        this.running().append(MMonad.of(x, code.nextInst(x.inst())));
                     } else {
-                        LOG.trace("{{r}}====>{{/r}} killing monad %s", n);
+                        final Monad n = x.apply(code.nextInst(x.inst()));
+                        LOG.trace(" {{g}}===>{{/g}} post-processing monad %s", n);
+                        if (n.inst().isBatching() && (!n.dead() || n.inst().dom().c().isNoObjable())) {
+                            if (n.inst().isGather()) {
+                                final Monad barrier = this.barriers().<LinkedList<Monad>>jvmAs().peek();
+                                LOG.trace("{{m}}====|{{/m}} appending living obj to barrier %s", n);
+                                if (null == barrier)
+                                    throw MTronException.of("barrier should exist: %s", n.inst());
+                                barrier.obj().append(n.obj());
+                            } else {
+                                this.running().append(n);
+                            }
+                        } else if (!n.dead()) {
+                            if (n.halted()) {
+                                LOG.trace("{{y}}====>{{/y}} halting monad %s", n);
+                                n.obj().iterator().forEachRemaining(o -> this.halted().append(o));
+                            } else {
+                                LOG.trace("{{g}}====>{{/g}} propagating monad %s", n);
+                                n.obj().iterator().forEachRemaining(no -> this.running().append(n.obj(no)));
+                            }
+                        } else if (n.zombie() && n.inst().dom().c().isNoObjable()) {
+                            LOG.trace("{{c}}====>{{/c}} walking undead zombie monad %s", n);
+                            this.running().append(n);
+                        } else {
+                            LOG.trace("{{r}}====>{{/r}} killing monad %s", n);
+                        }
                     }
                 } catch (final Exception e) {
                     return mexcept("unable to evaluate %s", m).cause(e).asFail();

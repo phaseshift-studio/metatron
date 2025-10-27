@@ -259,7 +259,7 @@ public interface Inst extends Call {
                 Graphitty.log(cinst).trace("%s ({{m}}lhs{{/m}}) => %s ({{m}}inst{{/m}}) => %s ({{m}}rhs{{/m}}) evaluated {{g}}successfully{{/g}}", clhs, cinst, rhs);
             }
         } catch (final Exception e) {
-            rhs = mexcept("inst evaluation failure").cause(e).asFail();
+            rhs = mexcept("inst evaluation failure [%s]", cinst).cause(e).asFail();
         } finally {
             Router.stack().pop();
         }

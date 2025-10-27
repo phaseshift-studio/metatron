@@ -53,6 +53,15 @@ public abstract class Tuple implements Iterable<Object> {
         return this.elements.iterator();
     }
 
+    public <T> T project(final int i) {
+        if (i >= this.elements.size())
+            throw MTronException.of("projection larger than tuple: %d < %d", this.elements.size(), i);
+        return (T) this.elements.get(i);
+    }
+
+    public abstract Tuple inject(final int i, final Object object);
+
+
     public static class Pair<A, B> extends Tuple {
 
         private Pair(List<Object> elements) {
@@ -73,6 +82,12 @@ public abstract class Tuple implements Iterable<Object> {
         public B get1() {
             return (B) this.elements.get(1);
         }
+
+        public Pair<A, B> inject(final int i, final Object object) {
+            final Pair<A, B> pair = new Pair<>(new ArrayList<>(this.elements));
+            pair.elements.set(i, object);
+            return pair;
+        }
     }
 
     public static class Triplet<A, B, C> extends Pair<A, B> {
@@ -91,6 +106,12 @@ public abstract class Tuple implements Iterable<Object> {
 
         public C get2() {
             return (C) this.elements.get(2);
+        }
+
+        public Triplet<A, B, C> inject(final int i, final Object object) {
+            final Triplet<A, B, C> triplet = new Triplet<>(new ArrayList<>(this.elements));
+            triplet.elements.set(i, object);
+            return triplet;
         }
     }
 
@@ -111,6 +132,12 @@ public abstract class Tuple implements Iterable<Object> {
 
         public D get3() {
             return (D) this.elements.get(3);
+        }
+
+        public Quartet<A, B, C, D> inject(final int i, final Object object) {
+            final Quartet<A, B, C, D> quartet = new Quartet<>(new ArrayList<>(this.elements));
+            quartet.elements.set(i, object);
+            return quartet;
         }
     }
 }

@@ -41,9 +41,9 @@ import studio.phaseshift.metatron.ui.Mode;
 import studio.phaseshift.metatron.ui.console.Console;
 import studio.phaseshift.metatron.ui.server.Server;
 import studio.phaseshift.metatron.util.MTronException;
+import studio.phaseshift.metatron.vm.machInstSet;
 
 import java.io.BufferedReader;
-import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.net.InetAddress;
@@ -131,8 +131,8 @@ public class BootLoader {
             if (options.has(uri("boot"))) {
                 try (final BufferedReader reader = new BufferedReader(new FileReader(options.at("boot").uriValue().toString()))) {
                     final List<String> lines = reader.lines().toList();
-                    final String source = lines.stream().reduce("",(a,b)->a + b + "\n");
-                    LOG.info("boot input: {{b}}%s{{/b}} {{g}}[{{y}}loc: %d{{/y}}]{{/g}}", options.at("boot").uriValue(),lines.size());
+                    final String source = lines.stream().reduce("", (a, b) -> a + b + "\n");
+                    LOG.info("boot input: {{b}}%s{{/b}} {{g}}[{{y}}loc: %d{{/y}}]{{/g}}", options.at("boot").uriValue(), lines.size());
                     LOG.info("boot result: %s", ObjParser.parse(source).apply());
                 } catch (final IOException e) {
                     LOG.error(e);
@@ -146,6 +146,7 @@ public class BootLoader {
             Router.global().write(new mgrphInstSet(f("/mnt/lang/grph")));
             // Router.global().write(f("/mnt/zigbee2mqtt"), new MqttSpace(f("zigbee2mqtt/#?broker=mqtt://192.168.66.2:1883&prefix=/mqtt"), f("/mnt/zigbee2mqtt")));
             Router.global().write(new mextInstSet(f("/mnt/lang/ext")));
+            Router.global().write(new machInstSet(f("/mnt/lang/mach")));
             // Router.global().write(new RemoteSpace(remoteAuthority,f("/shared/remote/#"), f("/mnt/shared/remote")));
             //Router.global().write(new KVSpace(fURI.of("/shared/#"), fURI.of("/mnt/shared")));
             if (remoteAuthority != null && !remoteAuthority.host().equals("chibi.local"))
