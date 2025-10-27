@@ -9,7 +9,7 @@
 :stem: latexmath
 :source-highlighter: highlight.js
 :highlightjsdir: ./highlight
-:highlightjs-languages: mtron, html,bash,json
+:highlightjs-languages: mtron,html,bash,json
 :stylesheet: ./css/metatron.css
 // :linkcss:
 :data-uri:
@@ -20,22 +20,33 @@
 :license-title: AGPLv3
 :lang: en
 :docinfo: shared
-:max-width: 75%
+:max-width: 85%
 :app-name: metatron
 :version-label: 0.1-alpha
 :docname: metatron documentation
-:doctitle: metatron: a ring-oriented language and virtual machine
+:doctitle: metatron
 
-= metatron: a ring-oriented language and virtual machine (v{revnumber})
+= metatron
+
+    mtron> ring-oriented computing
 
 ++++
 <script src="https://unpkg.com/highlightjs-copy/dist/highlightjs-copy.min.js"></script>
 <link rel="stylesheet" href="https://unpkg.com/highlightjs-copy/dist/highlightjs-copy.min.css"/>
 ++++
 
-image:metatron-character-small.png[width=140,float=left] **metatron** (pronounced _met-a-tron_) 
+image:metatron-character-small.png[width=150,float=left]
+image:github-icon.png[width=20,link=https://github.com/phaseshift-studio/metatron] source
 
-https://github.com/phaseshift-studio/metatron[**source code**]
+Metatron is a ring-oriented programming language and virtual machine. A https://en.wikipedia.org/wiki/Ring_(mathematics)[ring] is an __algebraic structure__ where elements of the structure can be composed using two binary operators `+` (plus) and `*` (mult). 
 
+```
+a+0 = a
+a*1 = a
+a-a = 0
+a*(b+c) = ab + ac 
+(b+c)*a = ba + ca
+
+```
 
 include::intro.adoc[]

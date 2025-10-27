@@ -12,7 +12,7 @@
     --light: #6C7293;
     --dark: #000000;
     --tertiarycolor:#4db6ac;
-    --sidebarbackground:#21252b;
+    --sidebarbackground:#191C24;
     --linkcolor:#f44336;
     --linkcoloralternate:#ff9800;
     --white:#FFFFFF;
@@ -23,7 +23,7 @@
 body{font-family: "Noto Sans",sans-serif;background-color: var(--maincolor);color:var(--white);}
 
 h1{color:var(--primarycolor) !important;font-family:"Noto Sans",sans-serif;}
-h2,h3,h4,h5,h6{color:var(--secondarycolor) !important;font-family:"Noto Sans",sans-serif;}
+h2,h3,h4,h5,h6{color:var(--primarycolor) !important;font-family:"Noto Sans",sans-serif;}
 .title{color:var(--white) !important;font-family:"Noto Sans",sans-serif;font-style: normal; font-weight: normal;}
 p{font-family: "Noto Sans",sans-serif ! important}
 #toc.toc2 a:link{color:var(--linkcolor);}
@@ -57,7 +57,7 @@ video {
 }
 
 a {
-  color: var(--secondarycolor);
+  color: var(--primarycolor);
 }
 
 .admonitionblock td.icon .icon-tip::before {
@@ -99,7 +99,7 @@ a {
 }
 .literalblock pre, .listingblock pre:not(.highlight), .listingblock pre[class="highlight"], .listingblock pre[class^="highlight "], .listingblock pre.CodeRay, .listingblock pre.prettyprint {
   background: var(--sidebarbackground);
-  color: var(--white);
+  color: var(--primarycolor);
 }
 
 #header .details {

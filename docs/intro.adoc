@@ -1,4 +1,4 @@
-= Introduction
+== introduction
 
 The introduction to metatron.
 
