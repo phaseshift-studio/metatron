@@ -42,9 +42,13 @@ import studio.phaseshift.metatron.ui.console.Console;
 import studio.phaseshift.metatron.ui.server.Server;
 import studio.phaseshift.metatron.util.MTronException;
 
+import java.io.BufferedReader;
+import java.io.FileInputStream;
+import java.io.FileReader;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.nio.file.FileSystems;
+import java.util.List;
 
 import static studio.phaseshift.metatron.lang.fURI.f;
 import static studio.phaseshift.metatron.lang.obj.mtron.MObjs.objs;
@@ -78,18 +82,20 @@ public class BootLoader {
                                 %s
                                 %s
                                 %s
-                                
+                                %s
+                            
                               example:
                                 %s
-                                
+                            
                             """,
                     Graphitty.sillyPrint("metatron", true, true),
-                    Graphitty.sillyPrint("ring-oriented computing",true,true),
+                    Graphitty.sillyPrint("ring-oriented computing", true, true),
                     T(REC_TID),
                     rec(uri("k1"), uri("v1"), uri("..."), uri("..."), uri("kn"), uri("vn")),
                     rel(uri("log"), objs(uri("INFO"), uri("DEBUG"), uri("WARN"), uri("ERROR"), uri("TRACE"))),
                     rel(uri("host"), uri("ws://localhost:8888")),
                     rel(uri("mode"), objs(uri("server"), uri("console"))),
+                    rel(uri("boot"), uri("./boot.mtron")),
                     "metatron '[log=>INFO,host=>ws://localhost:8888,mode=>console]'");
             System.exit(0);
         } else {
@@ -108,7 +114,6 @@ public class BootLoader {
             /// /// START OF BOOTING PROCESS /// /// allow boot description to be read from a mtron file
             try {
                 remoteAuthority = options.at(HOST).orElse(uri("ws://" + InetAddress.getLocalHost().getHostName() + ".local" + ":" + 8887)).uriValue();
-                LOG.info("router server: %s", remoteAuthority);
             } catch (final Exception e) {
                 LOG.warn("booting metatron on a non-networked jvm");
             }
@@ -122,6 +127,19 @@ public class BootLoader {
             Router.global().write(Router.global());
             Router.global().write(new StackSpace(f("+/#"), f("/sys/router/stack")));
             Router.global().write(new mtronInstSet(fURI.of("/mnt/lang/m")));
+            ///////////////////////////////////////////////////////////////
+            if (options.has(uri("boot"))) {
+                try (final BufferedReader reader = new BufferedReader(new FileReader(options.at("boot").uriValue().toString()))) {
+                    final List<String> lines = reader.lines().toList();
+                    final String source = lines.stream().reduce("",(a,b)->a + b + "\n");
+                    LOG.info("boot input: {{b}}%s{{/b}} {{g}}[{{y}}loc: %d{{/y}}]{{/g}}", options.at("boot").uriValue(),lines.size());
+                    LOG.info("boot result: %s", ObjParser.parse(source).apply());
+                } catch (final IOException e) {
+                    LOG.error(e);
+                    System.exit(0);
+                }
+            }
+            ///////////////////////////////////////////////////////////////
             Router.global().write(Log.of(f("/sys/log")));
             Router.global().write(new FileSpace(FileSystems.getDefault(), f("/home/#"), f("/mnt/fs")));
             Router.global().write(new MGraph(TinkerFactory.createModern(), f("/tp/#"), f("/mnt/tp")));
