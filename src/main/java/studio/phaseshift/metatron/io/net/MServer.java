@@ -80,7 +80,10 @@ public class MServer extends WebSocketServer implements Closeable {
     }
 
     public List<MServerClient> getRouters(final fURI pattern) {
-        return this.getConnections().stream().map(MServerClient::new).filter(msc -> msc.authority().matches(pattern)).toList();
+        // TODO: get clients from router (clients and server clients for complete bidirectional identity network)
+        final List<MServerClient> clients = this.getConnections().stream().map(MServerClient::new).filter(msc -> msc.authority().matches(pattern)).toList();
+        LOG.trace("locating remote routers for {{b}}%s{{/b}}: %s [%s]", pattern, clients, this.getConnections().stream().map(MServerClient::new).toList());
+        return clients;
     }
 
     @Override

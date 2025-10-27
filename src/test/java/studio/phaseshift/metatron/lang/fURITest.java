@@ -202,11 +202,11 @@ public class fURITest {
         //assertEquals(furi1a, furi2a); // TODO: important ssend issue
         assertEquals(furi1b, furi2b);
         if (expected.equals("ERROR")) {
-            LOG.trace("testing adding {{b}}%s{{/b}} and {{b}}%s{{/b}} = {{r}}ERROR{{/r}}", furi1a,furi1b);
+            LOG.trace("testing adding {{b}}%s{{/b}} and {{b}}%s{{/b}} = {{r}}ERROR{{/r}}", furi1a, furi1b);
             assertThrows(MTronException.class, () -> LOG.error("this shouldn't work: %s", furi1a.plus(furi1b)));
             assertThrows(MTronException.class, () -> furi2a.plus(furi2b));
         } else {
-            LOG.trace("testing adding {{b}}%s{{/b}} and {{b}}%s{{/b}} = {{b}}%s{{/b}}", furi1a,furi1b,furi1a.plus(furi1b));
+            LOG.trace("testing adding {{b}}%s{{/b}} and {{b}}%s{{/b}} = {{b}}%s{{/b}}", furi1a, furi1b, furi1a.plus(furi1b));
             assertEquals(fURI.of(expected), furi1a.plus(furi1b));
             assertEquals(fURI.of(expected), furi2a.plus(furi2b));
 
@@ -339,11 +339,24 @@ public class fURITest {
         assertEquals(scheme, f(furi).scheme());
     }
 
-    @Test
-    public void testHostOrSegment() {
-        assertEquals("fhatos.org", new fURI("http://fhatos.org/b").hostOrSegment());
-        assertEquals("a", new fURI("a/b/c/d").hostOrSegment());
+    @ParameterizedTest
+    @CsvSource(value = {
+            "/a/b/c                     |  ",
+            "a/b/c                      |  ",
+            "//x.com/a/b/c              |  x.com",
+            "//x/a/b/c                  |  x",
+            "//x:8080/a/b/c             |  x",
+            "//x.com                    |  x.com",
+            "//x                        |  x",
+            "http://x.com/a/b/c         |  x.com",
+            "http://x.com:80/a/b/c      |  x.com",
+            "mtron://lang/obj           |  lang",
+            "mtron:lang/obj             |  "
+    }, delimiter = '|')
+    public void testHostOrSegment(final String a, final String b) {
+        assertEquals(f(a).host(), b);
     }
+    
 
     @Test
     public void testPrepend() {
@@ -578,7 +591,38 @@ public class fURITest {
             //"/+/+/+|/mtron/+/+{?}|true",
             "/mtron/+/plus|/mtron/+/plus{?}|true",
             "/mtron/inst/plus|/mtron/+/plus{?}|true",
-            //"/mtron/inst/plus[4]|/mtron/+/plus[4]|true" // TODO:?!? STRANGE!?!?
+            "ws://metatron.org:1234/abc|ws://metatron.org:1234/abc|true",
+            "ws://metatron.org:1234/abc|ws://metatron.org:1234/#|true",
+            "ws://metatron.org:1234/abc|ws://+/abc|true",
+            "ws://metatron.org:1234/abc|ws://+:0/abc|true",
+            "ws://metatron.org:1234/abc|ws://+:1234/abc|true",
+            "ws://metatron.org:1234/abc|ws://another.org/abc|false",
+            "ws://metatron.org:1234/abc|//another.org/abc|false",
+            "ws://metatron.org:1234/abc|//metatron.org/abc|false",
+            "ws://metatron.org:1234/abc|//metatron.org:1234/abc|false",
+            "ws://metatron.org:1234/abc|http://metatron.org:1234/abc|false",
+            "ws://metatron.org:1234/abc|ws://metatron.org:1234/abc|true",
+            "ws://metatron.org:1234/abc|ws://metatron.org:4567/abc|false",
+            "metatron.org:1234|metatron.org:4567|false",
+            "metatron.org:1234|metatron.org:+|true",
+            "metatron.org:1234|+:+|true",
+            "ws://metatron.org:1234|ws://+:1234|true",
+            "ws://metatron.org:1234|http://metatron.org:1234|false",
+            "ws://metatron.org:1234|//metatron.org:1234|false",
+            "ws://metatron.org:1234|metatron.org:1234|false",
+            "metatron.org:1234|+:8888|false",
+            "ws://metatron.org:1234|ws://metatron.org:8888|false",
+            "ws://metatron.org:1234|+://+|true",
+            "//metatron.org:1234|//+|true",
+            "//metatron.org:1234|//+:1234|true",
+            "ws://metatron.org:1234|ws://+:1234|true",
+            "ws://metatron.org:1234|ws://+:5678|false",
+            "ws://metatron.org:1234|http://+:5678|false",
+            "ws://metatron.org:1234/abc|+://+/abc|true",
+            "a/plus{4}|+/+{4}|true",
+            "a/plus{4}|+/+|false",
+            //"a/plus{4}|+/plus{4}|true", // TODO:?!? STRANGE!?!?
+            //"/mtron/inst/plus{4}|/mtron/+/plus{4}|true" // TODO:?!? STRANGE!?!?
     }, delimiter = '|')
     void testMatches(final String a, final String b, final boolean shouldMatch) {
         final fURI furi1a = fURI.of(nullToEmpty(a));

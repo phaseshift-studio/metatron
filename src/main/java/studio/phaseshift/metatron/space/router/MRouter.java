@@ -36,6 +36,8 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static studio.phaseshift.metatron.BootLoader.BOOTING;
+import static studio.phaseshift.metatron.lang.obj.mtron.MObjs.objs;
+import static studio.phaseshift.metatron.lang.obj.mtron.MUri.uri;
 import static studio.phaseshift.metatron.lang.obj.mtron.mtronFluent.StartLess.from_;
 import static studio.phaseshift.metatron.lang.obj.mtron.mtronFluent.StartLess.start_;
 import static studio.phaseshift.metatron.lang.obj.mtron.mtronInstSet.MTRON_TID;
@@ -132,6 +134,9 @@ public class MRouter implements Router {
 
     @Override
     public Obj read(final fURI vid) {
+        if (vid.hasAuthority()) {
+            return objs(this.server.getRouters(vid.authority()).stream().map(v -> v.sendRecvObj(from_(uri(vid.authority(null).scheme(null))))));
+        }
         if (vid.isZero() || READ_AS_NOOBJ.contains(vid))
             return NoObj.single();
         if (vid.hasAuthority() && !vid.hasAuthority(this.server.authority())) {

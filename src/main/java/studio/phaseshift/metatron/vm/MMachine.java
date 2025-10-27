@@ -41,7 +41,7 @@ public class MMachine extends MObj implements Machine {
 
     private final GraphittyLogger LOG = Graphitty.log(this);
 
-    // code running barriers halted
+    // code / running / barriers / halted
     public MMachine(final Quartet<Code, Obj, Lst, Obj> value, final fURI tid, final fURI vid) {
         super(value, tid, vid);
     }

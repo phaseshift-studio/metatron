@@ -33,7 +33,7 @@ public interface PlusMonoid<R extends PlusMonoid<R>> extends Monoid<R> {
         return this.equals(this.zero());
     }
 
-    interface O<R extends O<R>> extends PlusMonoid<R>, Obj {
+    interface O<R extends O<R>> extends PlusMonoid<R>, Monoid.O<R>, Obj {
 
     }
 }

@@ -23,7 +23,7 @@ import studio.phaseshift.metatron.lang.obj.Obj;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public interface Ring<R extends Ring<R>> extends Rig<R> {
+public interface Ring<R extends Ring<R>> extends Rig<R>, PlusGroup<R> {
 
     R neg();
 
@@ -31,7 +31,7 @@ public interface Ring<R extends Ring<R>> extends Rig<R> {
         return this.plus(r.neg());
     }
 
-    interface O<R extends O<R>> extends Ring<R>,Obj {
+    interface O<R extends O<R>> extends Ring<R>, Rig.O<R>, Obj {
         R neg();
 
         default R minus(final R r) {

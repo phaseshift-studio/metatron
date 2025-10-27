@@ -33,7 +33,7 @@ public interface Monoid<R extends Monoid<R>> {
         return this.equals(this.identity());
     }*/
     
-    interface O<R extends Monoid.O<R>> extends Monoid<R>, Obj {
+    interface O<R extends O<R>> extends Monoid<R>, Obj {
 
     }
 }

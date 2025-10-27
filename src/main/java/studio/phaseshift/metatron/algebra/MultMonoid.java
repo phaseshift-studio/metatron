@@ -33,7 +33,7 @@ public interface MultMonoid<R extends MultMonoid<R>> extends Monoid<R> {
         return this.equals(this.one());
     }
 
-    interface O<R extends MultMonoid.O<R>> extends MultMonoid<R>, Obj {
+    interface O<R extends O<R>> extends MultMonoid<R>, Monoid.O<R>, Obj {
 
     }
 }

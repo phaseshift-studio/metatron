@@ -25,13 +25,7 @@ import studio.phaseshift.metatron.lang.obj.Obj;
  */
 public interface Group<R extends Group<R>> extends MultMonoid<R> {
 
-    R inv();
-
-    default R div(final R r) {
-        return this.mult(r.inv());
-    }
-
-    interface O<R extends Group.O<R>> extends Group<R>, MultMonoid.O<R>, Obj {
+    interface O<R extends O<R>> extends MultMonoid.O<R>, Monoid.O<R>, Obj {
 
     }
 }

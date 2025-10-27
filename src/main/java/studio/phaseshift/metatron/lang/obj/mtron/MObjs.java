@@ -46,7 +46,7 @@ public class MObjs implements Objs {
         this(flattenToMap(new LinkedHashMap<>(), jvm), vid);
     }
 
-    private MObjs(final Map<Obj, cInt> jvmAlternative, final fURI vid) {
+    protected MObjs(final Map<Obj, cInt> jvmAlternative, final fURI vid) {
         this.vid = vid;
         this.cstream = jvmAlternative;
     }

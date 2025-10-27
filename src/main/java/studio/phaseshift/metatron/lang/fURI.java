@@ -116,13 +116,14 @@ public class fURI implements Cloneable, Ring<fURI> {
         int i = uri.indexOf(SCHEMA_END);
         int temp = uri.indexOf(HOST_START);
         if (i != -1 && (temp == -1 || i < temp)) {
-            this.scheme = uri.substring(0, i);
-            position = i + 3;
+            this.scheme = 0 == i ? null : uri.substring(0, i);
+            position = i + 1;
         } else {
             i = 0;
             this.scheme = null;
         }
         if (temp != -1) {
+            position = position+2;
             temp = uri.indexOf(SEGMENT_SPLIT_CHAR, position + 1);
             final String[] authority = uri.substring(position, -1 == temp ? uri.length() : temp).split(SCHEMA_END);
             if (temp == -1)
@@ -715,6 +716,13 @@ public class fURI implements Cloneable, Ring<fURI> {
         final fURI other = rhs.basePath();
         if (!other.hasPattern())
             return lhs.equals(other);
+        if (this.scheme != null && (other.scheme == null || (!other.scheme.equals(ONE_WILD_STRING) && !this.scheme.equals(other.scheme))))
+            return false;
+        if (this.host != null && (other.host == null || (!other.host.equals(ONE_WILD_STRING) && !this.host.equals(other.host))))
+            return false;
+        if (!Objects.equals(other.host, ONE_WILD_STRING) || !(other.port <= -1))
+            if (this.port != -1 && (other.port == -1 || (other.port != 0 && this.port != other.port)))
+                return false;
         if (other.toString().equals(ALL_WILD_STRING))
             return true;
         if (this.isAbsolute() != other.isAbsolute())
