@@ -75,7 +75,7 @@ public class ObjStringSerializer implements ObjSerializer<String> {
         /// ///////////////////////////////////////////////////////////////
         /// ///////////////////////////////////////////////////////////////
         else if (obj instanceof final Inst inst) {
-            generateTID(sb, obj.tid(), false, false).append("{{g}}({{/g}}");
+            generateTID(sb, obj.tid(), false, false).append("{{g}}({{X}}");
             if (!inst.args().isEmpty()) {
                 boolean isLst = inst.args().isLst();
                 for (final Obj kv : inst.args().elements()) {
@@ -88,7 +88,7 @@ public class ObjStringSerializer implements ObjSerializer<String> {
             }
             return sb.append("{{g}}){")
                     .append(this.b.palette.valueC())
-                    .append(inst.resolution() == Inst.Resolution.A ? "{{r}}?{{/r}}" : ("{{y}}" + inst.f().toString()))
+                    .append(inst.resolution() == Inst.Resolution.A ? "{{r}}?{{X}}" : ("{{y}}" + inst.f().toString()))
                     .append("{{g}}}{{X}}")
                     //.append(this.b.ignoreRewrites ? "" : "{{X}}")
                     .toString();
@@ -177,7 +177,7 @@ public class ObjStringSerializer implements ObjSerializer<String> {
 
     private StringBuilder generateRec(final StringBuilder sb, final Rec rec, final int depth) {
         if (rec.isEmpty()) {
-            sb.append("{{g}}[=>]{{/g}}");
+            sb.append("{{g}}[=>]{{X}}");
         } else {
             boolean nested = rec.recValue().values().stream().anyMatch(Obj::isPoly);
             sb.append("{{g}}[");
