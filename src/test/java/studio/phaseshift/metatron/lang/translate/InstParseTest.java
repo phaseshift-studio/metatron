@@ -21,8 +21,9 @@ package studio.phaseshift.metatron.lang.translate;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.MetatronTest;
-import studio.phaseshift.metatron.lang.obj.Call;
-import studio.phaseshift.metatron.lang.obj.Obj;
+import studio.phaseshift.metatron.lang.mtron.mtronParser;
+import studio.phaseshift.metatron.lang.mtron.type.Call;
+import studio.phaseshift.metatron.lang.mtron.type.Obj;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -52,9 +53,9 @@ public class InstParseTest extends MetatronTest {
             //"/m/code[plus(1).plus(2)].plus([d,e,f])% [a,b,c,d,e,f]" (requires union())
     }, delimiter = '%')
     void testInstDefinitions(final String definition, final String usage, final String expected) {
-        Call def = ObjParser.<Call>eval(definition).next();
-        Obj use = ObjParser.eval(usage).next();
-        Obj exp = ObjParser.m_obj().parse(expected).get();
+        Call def = mtronParser.<Call>eval(definition).next();
+        Obj use = mtronParser.eval(usage).next();
+        Obj exp = mtronParser.m_obj().parse(expected).get();
         assertEquals(exp, use);
         //assertEquals(inst, ObjParser.eval(expression).next());
     }
@@ -77,7 +78,7 @@ public class InstParseTest extends MetatronTest {
             //"/m/code[plus(1).plus(2)].plus([d,e,f])% [a,b,c,d,e,f]" (requires union())
     }, delimiter = '%')
     void testPlusInst(final String expression, final String expectedResult) {
-        assertEquals(ObjParser.m_obj().parse(expectedResult).get(), ObjParser.eval(expression).next());
+        assertEquals(mtronParser.m_obj().parse(expectedResult).get(), mtronParser.eval(expression).next());
     }
 
     @ParameterizedTest
@@ -91,7 +92,7 @@ public class InstParseTest extends MetatronTest {
             //"{1,2,3}.plus(sum())-|id()                   % {2,4,6}"
     }, delimiter = '%')
     public void testCountInst(final String expression, final String expectedResult) {
-        assertEquals(ObjParser.m_obj().parse(expectedResult).get(), ObjParser.eval(expression).next());
+        assertEquals(mtronParser.m_obj().parse(expectedResult).get(), mtronParser.eval(expression).next());
     }
 
     @ParameterizedTest
@@ -118,7 +119,7 @@ public class InstParseTest extends MetatronTest {
             "[1,2,3]_/sum?int<=int{*}()\\_                % [6]",
     }, delimiter = '%')
     public void testSumInst(final String expression, final String expectedResult) {
-        assertEquals(ObjParser.m_obj().parse(expectedResult).get(), ObjParser.eval(expression).next());
+        assertEquals(mtronParser.m_obj().parse(expectedResult).get(), mtronParser.eval(expression).next());
     }
 
 }

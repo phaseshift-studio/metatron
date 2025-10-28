@@ -18,16 +18,15 @@
 
 package studio.phaseshift.metatron.space.router;
 
-import studio.phaseshift.metatron.io.net.FutureObj;
-import studio.phaseshift.metatron.io.net.MServer;
-import studio.phaseshift.metatron.lang.fURI;
-import studio.phaseshift.metatron.lang.obj.NoObj;
-import studio.phaseshift.metatron.lang.obj.Obj;
-import studio.phaseshift.metatron.lang.obj.mtron.MRel;
+import studio.phaseshift.metatron.furi.Qs;
+import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.lang.mtron.type.NoObj;
+import studio.phaseshift.metatron.lang.mtron.type.Obj;
+import studio.phaseshift.metatron.lang.mtron.type.impl.MRel;
 import studio.phaseshift.metatron.space.NullSpace;
-import studio.phaseshift.metatron.space.Qs;
 import studio.phaseshift.metatron.space.Router;
 import studio.phaseshift.metatron.space.Space;
+import studio.phaseshift.metatron.space.router.net.MServer;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
 import studio.phaseshift.metatron.util.MTronException;
@@ -36,22 +35,22 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static studio.phaseshift.metatron.BootLoader.BOOTING;
-import static studio.phaseshift.metatron.lang.obj.mtron.MObjs.objs;
-import static studio.phaseshift.metatron.lang.obj.mtron.MUri.uri;
-import static studio.phaseshift.metatron.lang.obj.mtron.mtronFluent.StartLess.from_;
-import static studio.phaseshift.metatron.lang.obj.mtron.mtronFluent.StartLess.start_;
-import static studio.phaseshift.metatron.lang.obj.mtron.mtronInstSet.MTRON_TID;
+import static studio.phaseshift.metatron.lang.mtron.mtronFluent.StartLess.from_;
+import static studio.phaseshift.metatron.lang.mtron.mtronFluent.StartLess.start_;
+import static studio.phaseshift.metatron.lang.mtron.mtronInstSet.MTRON_TID;
+import static studio.phaseshift.metatron.lang.mtron.type.impl.MObjs.objs;
+import static studio.phaseshift.metatron.lang.mtron.type.impl.MUri.uri;
 
 public class MRouter implements Router {
 
-    private static final fURI ROUTER_TID = MTRON_TID.extend("router");
+    public static final fURI ROUTER_TID = MTRON_TID.extend("router");
     private static final Set<fURI> READ_AS_NOOBJ = Set.of(fURI.ALL.maybeSome(), fURI.ALL.maybe(), fURI.ALL);
     private final GraphittyLogger LOG = Graphitty.log(this);
     private final Map<fURI, Space> spaces = new ConcurrentHashMap<>();
     private final Map<fURI, fURI> smallToBigRewrites = new HashMap<>();
     private final Map<fURI, fURI> bigToSmallRewrites = new HashMap<>();
     private fURI vid;
-    private MServer server;
+    private final MServer server;
 
     public MRouter(final fURI host, final fURI vid) {
         this.vid = vid;
@@ -61,6 +60,11 @@ public class MRouter implements Router {
 
     private static Obj appendOnRead(final boolean send, final Obj base, final Obj addition) {
         return addition.isNoObj() ? base : (send ? base.append(MRel.of(addition.vid().toUri(), addition)) : base.append(addition));
+    }
+
+    @Override
+    public MServer server() {
+        return this.server;
     }
 
     public void start() {
@@ -135,12 +139,12 @@ public class MRouter implements Router {
     @Override
     public Obj read(final fURI vid) {
         if (vid.hasAuthority()) {
-            return objs(this.server.getRouters(vid.authority()).stream().map(v -> v.sendRecvObj(from_(uri(vid.authority(null).scheme(null))))));
+            return objs(this.server.cluster(vid.authority()).map(v -> v.sendRecvObj(from_(uri(vid.authority(null).scheme(null))))));
         }
         if (vid.isZero() || READ_AS_NOOBJ.contains(vid))
             return NoObj.single();
         if (vid.hasAuthority() && !vid.hasAuthority(this.server.authority())) {
-            return this.server.getRouters(vid.authority().extend("#")).stream().map(msc -> {
+            return this.server.cluster(vid.authority().extend("#")).map(msc -> {
                 final FutureObj<Obj> future = msc.sendRecvObj(from_(vid.toUri()));
                 return future.get(5000);
             }).reduce(NoObj.single(), Obj::append);
@@ -160,7 +164,7 @@ public class MRouter implements Router {
             if (vid.hasAuthority(this.server.authority())) {
                 local = vid.scheme(null).authority(null);
             } else {
-                return this.server.getRouters(vid.authority().extend("#")).stream().map(msc -> {
+                return this.server.cluster(vid.authority().extend("#")).map(msc -> {
                     final FutureObj<Obj> future = msc.sendRecvObj(start_(obj).to_(vid.toUri()));
                     return future.get(5000);
                 }).reduce(NoObj.single(), Obj::append);
@@ -174,8 +178,8 @@ public class MRouter implements Router {
         if (obj instanceof Space && !(obj instanceof Router))
             this.addSpace((Space) obj);
         /// ///////////////////////////////////////////////
-        LOG.trace("writing %s to {{b}}%s{{/b}} at {{b}}%s{{X}}", obj, space.vidOrTid(), local);
-        return space.write(local, obj);
+        LOG.trace("writing %s {{g}}=>{{b}} %s{{X}} in %s", obj, local, space);
+        return space.write(local,obj);
     }
 
     @Override

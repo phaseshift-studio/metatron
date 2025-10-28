@@ -20,13 +20,10 @@ package studio.phaseshift.metatron.space.remote;
 
 import org.junit.jupiter.api.Test;
 import studio.phaseshift.metatron.MetatronTest;
-import studio.phaseshift.metatron.lang.obj.Obj;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static studio.phaseshift.metatron.lang.fURI.f;
-import static studio.phaseshift.metatron.lang.obj.mtron.MStr.str;
-import static studio.phaseshift.metatron.lang.obj.mtron.MUri.uri;
-import static studio.phaseshift.metatron.lang.obj.mtron.mtronFluent.StartLess.start_;
+import static studio.phaseshift.metatron.furi.fURI.f;
+import static studio.phaseshift.metatron.lang.mtron.type.impl.MUri.uri;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)

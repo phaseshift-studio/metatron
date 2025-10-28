@@ -18,9 +18,9 @@
 
 package studio.phaseshift.metatron.space.mem;
 
-import studio.phaseshift.metatron.lang.fURI;
-import studio.phaseshift.metatron.lang.obj.Obj;
-import studio.phaseshift.metatron.lang.obj.Poly;
+import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.lang.mtron.type.Obj;
+import studio.phaseshift.metatron.lang.mtron.type.Poly;
 import studio.phaseshift.metatron.space.Router;
 import studio.phaseshift.metatron.space.Space;
 import studio.phaseshift.metatron.ui.Graphitty;
@@ -29,7 +29,7 @@ import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.LinkedList;
 
-import static studio.phaseshift.metatron.lang.obj.mtron.mtronInstSet.MTRON_SPACE_TID;
+import static studio.phaseshift.metatron.lang.mtron.mtronInstSet.MTRON_SPACE_TID;
 
 public class StackSpace extends MSpace<LinkedList<KVSpace>> {
 

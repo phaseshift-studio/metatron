@@ -18,14 +18,16 @@
 
 package studio.phaseshift.metatron.space;
 
-import studio.phaseshift.metatron.lang.fURI;
-import studio.phaseshift.metatron.lang.obj.*;
+import studio.phaseshift.metatron.furi.Qs;
+import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.lang.mtron.type.*;
+
 
 import java.util.Map;
 import java.util.Set;
 
-import static studio.phaseshift.metatron.lang.obj.mtron.MType.T;
-import static studio.phaseshift.metatron.lang.obj.mtron.mtronInstSet.NOOBJ_TID;
+import static studio.phaseshift.metatron.lang.mtron.type.impl.MType.T;
+import static studio.phaseshift.metatron.lang.mtron.mtronInstSet.NOOBJ_TID;
 
 public final class NullSpace implements Space, InstSet {
 

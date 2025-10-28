@@ -22,20 +22,20 @@ import ch.qos.logback.classic.filter.ThresholdFilter;
 import ch.qos.logback.core.Appender;
 import org.slf4j.LoggerFactory;
 import org.slf4j.event.Level;
-import studio.phaseshift.metatron.lang.fURI;
-import studio.phaseshift.metatron.lang.obj.Lst;
-import studio.phaseshift.metatron.lang.obj.Obj;
-import studio.phaseshift.metatron.lang.obj.Rec;
-import studio.phaseshift.metatron.lang.obj.Uri;
-import studio.phaseshift.metatron.lang.obj.mtron.MLst;
-import studio.phaseshift.metatron.lang.obj.mtron.MRec;
+import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.lang.mtron.type.Lst;
+import studio.phaseshift.metatron.lang.mtron.type.Obj;
+import studio.phaseshift.metatron.lang.mtron.type.Rec;
+import studio.phaseshift.metatron.lang.mtron.type.Uri;
+import studio.phaseshift.metatron.lang.mtron.type.impl.MLst;
+import studio.phaseshift.metatron.lang.mtron.type.impl.MRec;
 import studio.phaseshift.metatron.ui.GraphittyObjLogger;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.lang.reflect.Field;
 import java.util.Map;
 
-import static studio.phaseshift.metatron.lang.obj.mtron.MUri.uri;
+import static studio.phaseshift.metatron.lang.mtron.type.impl.MUri.uri;
 
 public class Log extends MRec {
 

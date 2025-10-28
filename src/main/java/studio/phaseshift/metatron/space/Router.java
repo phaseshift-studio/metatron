@@ -19,9 +19,10 @@
 package studio.phaseshift.metatron.space;
 
 import studio.phaseshift.metatron.BootLoader;
-import studio.phaseshift.metatron.lang.fURI;
-import studio.phaseshift.metatron.lang.obj.Obj;
+import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.lang.mtron.type.Obj;
 import studio.phaseshift.metatron.space.mem.StackSpace;
+import studio.phaseshift.metatron.space.router.net.MServer;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.util.MTronException;
 
@@ -38,6 +39,8 @@ public interface Router extends Obj, Space, Closeable {
     static StackSpace stack() {
         return INST_STACK.get();
     }
+
+    MServer server();
 
     void start();
 

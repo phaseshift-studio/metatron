@@ -18,7 +18,8 @@
 
 package studio.phaseshift.metatron.ui;
 
-import studio.phaseshift.metatron.lang.obj.*;
+import studio.phaseshift.metatron.lang.mtron.type.*;
+
 import studio.phaseshift.metatron.util.MTronException;
 
 public interface ObjSerializer<T> {

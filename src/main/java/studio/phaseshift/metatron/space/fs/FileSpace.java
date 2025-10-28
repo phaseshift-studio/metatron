@@ -18,11 +18,11 @@
 
 package studio.phaseshift.metatron.space.fs;
 
-import studio.phaseshift.metatron.lang.fURI;
-import studio.phaseshift.metatron.lang.obj.NoObj;
-import studio.phaseshift.metatron.lang.obj.Obj;
-import studio.phaseshift.metatron.lang.obj.Str;
-import studio.phaseshift.metatron.lang.obj.mtron.MRec;
+import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.lang.mtron.type.NoObj;
+import studio.phaseshift.metatron.lang.mtron.type.Obj;
+import studio.phaseshift.metatron.lang.mtron.type.Str;
+import studio.phaseshift.metatron.lang.mtron.type.impl.MRec;
 import studio.phaseshift.metatron.space.mem.MSpace;
 import studio.phaseshift.metatron.util.MTronException;
 
@@ -36,10 +36,10 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static studio.phaseshift.metatron.lang.fURI.f;
-import static studio.phaseshift.metatron.lang.obj.mtron.MStr.str;
-import static studio.phaseshift.metatron.lang.obj.mtron.MUri.uri;
-import static studio.phaseshift.metatron.lang.obj.mtron.mtronInstSet.MTRON_SPACE_TID;
+import static studio.phaseshift.metatron.furi.fURI.f;
+import static studio.phaseshift.metatron.lang.mtron.type.impl.MStr.str;
+import static studio.phaseshift.metatron.lang.mtron.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.lang.mtron.mtronInstSet.MTRON_SPACE_TID;
 
 public class FileSpace extends MSpace<FileSystem> {
 

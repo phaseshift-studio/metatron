@@ -18,7 +18,7 @@
 
 package studio.phaseshift.metatron.algebra;
 
-import studio.phaseshift.metatron.lang.obj.Obj;
+import studio.phaseshift.metatron.lang.mtron.type.Obj;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)

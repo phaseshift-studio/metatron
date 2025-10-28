@@ -19,14 +19,15 @@
 package studio.phaseshift.metatron;
 
 import org.apache.tinkerpop.gremlin.tinkergraph.structure.TinkerFactory;
-import studio.phaseshift.metatron.lang.fURI;
-import studio.phaseshift.metatron.lang.obj.Obj;
-import studio.phaseshift.metatron.lang.obj.Rec;
-import studio.phaseshift.metatron.lang.obj.mext.mextInstSet;
-import studio.phaseshift.metatron.lang.obj.mgrph.tp.MGraph;
-import studio.phaseshift.metatron.lang.obj.mgrph.tp.mgrphInstSet;
-import studio.phaseshift.metatron.lang.obj.mtron.mtronInstSet;
-import studio.phaseshift.metatron.lang.translate.ObjParser;
+import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.lang.mach.inst.machInstSet;
+import studio.phaseshift.metatron.lang.mgrph.mgrphInstSet;
+import studio.phaseshift.metatron.lang.mgrph.tp.MGraph;
+import studio.phaseshift.metatron.lang.mtron.mtronInstSet;
+import studio.phaseshift.metatron.lang.mtron.mtronParser;
+import studio.phaseshift.metatron.lang.mtron.type.Obj;
+import studio.phaseshift.metatron.lang.mtron.type.Rec;
+import studio.phaseshift.metatron.lang.mvec.mvecInstSet;
 import studio.phaseshift.metatron.space.Router;
 import studio.phaseshift.metatron.space.device.log.Log;
 import studio.phaseshift.metatron.space.fs.FileSpace;
@@ -41,7 +42,6 @@ import studio.phaseshift.metatron.ui.Mode;
 import studio.phaseshift.metatron.ui.console.Console;
 import studio.phaseshift.metatron.ui.server.Server;
 import studio.phaseshift.metatron.util.MTronException;
-import studio.phaseshift.metatron.vm.machInstSet;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -50,13 +50,14 @@ import java.net.InetAddress;
 import java.nio.file.FileSystems;
 import java.util.List;
 
-import static studio.phaseshift.metatron.lang.fURI.f;
-import static studio.phaseshift.metatron.lang.obj.mtron.MObjs.objs;
-import static studio.phaseshift.metatron.lang.obj.mtron.MRec.rec;
-import static studio.phaseshift.metatron.lang.obj.mtron.MRel.rel;
-import static studio.phaseshift.metatron.lang.obj.mtron.MType.T;
-import static studio.phaseshift.metatron.lang.obj.mtron.MUri.uri;
-import static studio.phaseshift.metatron.lang.obj.mtron.mtronInstSet.REC_TID;
+import static studio.phaseshift.metatron.furi.fURI.f;
+import static studio.phaseshift.metatron.lang.mtron.mtronInstSet.REC_TID;
+import static studio.phaseshift.metatron.lang.mtron.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.lang.mtron.type.impl.MObjs.objs;
+import static studio.phaseshift.metatron.lang.mtron.type.impl.MRec.rec;
+import static studio.phaseshift.metatron.lang.mtron.type.impl.MRel.rel;
+import static studio.phaseshift.metatron.lang.mtron.type.impl.MType.T;
+import static studio.phaseshift.metatron.lang.mtron.type.impl.MUri.uri;
 
 public class BootLoader {
 
@@ -94,15 +95,16 @@ public class BootLoader {
                     rec(uri("k1"), uri("v1"), uri("..."), uri("..."), uri("kn"), uri("vn")),
                     rel(uri("log"), objs(uri("INFO"), uri("DEBUG"), uri("WARN"), uri("ERROR"), uri("TRACE"))),
                     rel(uri("host"), uri("ws://localhost:8888")),
+                    rel(uri("nodes"), lst(uri("ws://a.local:8888"), uri("ws://b.local:8888"), uri("..."))),
                     rel(uri("mode"), objs(uri("server"), uri("console"))),
                     rel(uri("boot"), uri("./boot.mtron")),
-                    "metatron '[log=>INFO,host=>ws://localhost:8888,mode=>console]'");
+                    "metatron '[mode=>console,log=>INFO,host=>ws://localhost:8888,nodes=>[ws://127.0.0.1:8887]]'");
             System.exit(0);
         } else {
-            Rec options = args.length > 0 ? ObjParser.m_rec().parse(args[0]).get() : rec();
+            Rec options = args.length > 0 ? mtronParser.m_rec().parse(args[0]).get() : rec();
             Log.setSLF4J(options.has(uri("log")) ? options.at(uri("log")).uriValue().toString() : "TRACE");
             LOG.debug("user options: %s", options);
-            GLOBAL = rec(uri("options"), options);
+            GLOBAL = options;
             BootLoader.load(options);
         }
     }
@@ -119,12 +121,12 @@ public class BootLoader {
             }
             startMode(options);
             ROUTER = new MRouter(remoteAuthority, f("/sys/router"));
-            ROUTER.start();
             Router.global().write(new KVSpace(f("/mnt/#"), f("/mnt")));
             Router.global().write(new KVSpace(fURI.of("/sys/#"), fURI.of("/mnt/sys")));
+            Router.global().write(Router.global());
+            ROUTER.start();
             Router.global().write(new KVSpace(fURI.of("/usr/#"), fURI.of("/mnt/usr")));
             Router.global().write(new spaceInstSet(f("/mnt/space")));
-            Router.global().write(Router.global());
             Router.global().write(new StackSpace(f("+/#"), f("/sys/router/stack")));
             Router.global().write(new mtronInstSet(fURI.of("/mnt/lang/m")));
             ///////////////////////////////////////////////////////////////
@@ -133,7 +135,7 @@ public class BootLoader {
                     final List<String> lines = reader.lines().toList();
                     final String source = lines.stream().reduce("", (a, b) -> a + b + "\n");
                     LOG.info("boot input: {{b}}%s{{/b}} {{g}}[{{y}}loc: %d{{/y}}]{{/g}}", options.at("boot").uriValue(), lines.size());
-                    LOG.info("boot result: %s", ObjParser.parse(source).apply());
+                    LOG.info("boot result: %s", mtronParser.parse(source).apply());
                 } catch (final IOException e) {
                     LOG.error(e);
                     System.exit(0);
@@ -145,7 +147,7 @@ public class BootLoader {
             Router.global().write(new MGraph(TinkerFactory.createModern(), f("/tp/#"), f("/mnt/tp")));
             Router.global().write(new mgrphInstSet(f("/mnt/lang/grph")));
             // Router.global().write(f("/mnt/zigbee2mqtt"), new MqttSpace(f("zigbee2mqtt/#?broker=mqtt://192.168.66.2:1883&prefix=/mqtt"), f("/mnt/zigbee2mqtt")));
-            Router.global().write(new mextInstSet(f("/mnt/lang/ext")));
+            Router.global().write(new mvecInstSet(f("/mnt/lang/ext")));
             Router.global().write(new machInstSet(f("/mnt/lang/mach")));
             // Router.global().write(new RemoteSpace(remoteAuthority,f("/shared/remote/#"), f("/mnt/shared/remote")));
             //Router.global().write(new KVSpace(fURI.of("/shared/#"), fURI.of("/mnt/shared")));
@@ -177,9 +179,9 @@ public class BootLoader {
     }
 
     public static void close() {
-        LOG.none(Graphitty.sillyPrint("\nshutting down the metatron\n", true, true));
         Router.global().close();
         MODE.stop();
         BOOTING = true;
+        LOG.none(Graphitty.sillyPrint("\nshutting down the metatron\n", true, true));
     }
 }

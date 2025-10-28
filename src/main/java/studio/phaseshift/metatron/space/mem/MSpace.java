@@ -18,15 +18,15 @@
 
 package studio.phaseshift.metatron.space.mem;
 
-import studio.phaseshift.metatron.lang.fURI;
-import studio.phaseshift.metatron.lang.obj.Obj;
-import studio.phaseshift.metatron.space.Qs;
+import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.lang.mtron.type.Obj;
+import studio.phaseshift.metatron.furi.Qs;
 import studio.phaseshift.metatron.space.Space;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
 import studio.phaseshift.metatron.util.MTronException;
 
-import static studio.phaseshift.metatron.lang.fURI.f;
+import static studio.phaseshift.metatron.furi.fURI.f;
 
 public abstract class MSpace<J> implements Space {
 

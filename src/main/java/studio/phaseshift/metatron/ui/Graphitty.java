@@ -18,7 +18,7 @@
 
 package studio.phaseshift.metatron.ui;
 
-import studio.phaseshift.metatron.lang.obj.Obj;
+import studio.phaseshift.metatron.lang.mtron.type.Obj;
 import studio.phaseshift.metatron.space.Router;
 import studio.phaseshift.metatron.util.MTronException;
 

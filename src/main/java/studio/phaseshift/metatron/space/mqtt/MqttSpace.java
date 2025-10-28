@@ -22,17 +22,17 @@ import com.hivemq.client.mqtt.MqttClient;
 import com.hivemq.client.mqtt.mqtt5.Mqtt5BlockingClient;
 import com.hivemq.client.mqtt.mqtt5.Mqtt5Client;
 import com.hivemq.client.mqtt.mqtt5.message.subscribe.Mqtt5RetainHandling;
-import studio.phaseshift.metatron.lang.Q;
-import studio.phaseshift.metatron.lang.fURI;
-import studio.phaseshift.metatron.lang.obj.NoObj;
-import studio.phaseshift.metatron.lang.obj.Obj;
-import studio.phaseshift.metatron.lang.obj.Uri;
-import studio.phaseshift.metatron.lang.translate.JSONTranslator;
-import studio.phaseshift.metatron.space.Qs;
+import studio.phaseshift.metatron.furi.Q;
+import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.lang.mtron.type.NoObj;
+import studio.phaseshift.metatron.lang.mtron.type.Obj;
+import studio.phaseshift.metatron.lang.mtron.type.Uri;
+import studio.phaseshift.metatron.lang.mweb.JSONTranslator;
+import studio.phaseshift.metatron.furi.Qs;
 import studio.phaseshift.metatron.space.Space;
 import studio.phaseshift.metatron.space.mem.KVSpace;
 import studio.phaseshift.metatron.space.mem.MSpace;
-import studio.phaseshift.metatron.space.q.PubSubQ;
+import studio.phaseshift.metatron.furi.q.PubSubQ;
 import studio.phaseshift.metatron.ui.*;
 
 import java.nio.charset.StandardCharsets;
@@ -42,9 +42,9 @@ import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Stream;
 
-import static studio.phaseshift.metatron.lang.fURI.f;
-import static studio.phaseshift.metatron.lang.obj.mtron.MUri.uri;
-import static studio.phaseshift.metatron.lang.obj.mtron.mtronInstSet.MTRON_SPACE_TID;
+import static studio.phaseshift.metatron.furi.fURI.f;
+import static studio.phaseshift.metatron.lang.mtron.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.lang.mtron.mtronInstSet.MTRON_SPACE_TID;
 
 
 public class MqttSpace extends MSpace<Map<Uri, Obj>> implements Space {

@@ -3,6 +3,8 @@
 /.mvn/
 /metatron/
 .metatron.history
+*.iml
+/.venv/
 
 # Compiled class file
 *.class

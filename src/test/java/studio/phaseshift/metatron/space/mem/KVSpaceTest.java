@@ -19,7 +19,7 @@
 package studio.phaseshift.metatron.space.mem;
 
 import org.junit.jupiter.api.BeforeAll;
-import studio.phaseshift.metatron.lang.fURI;
+import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.space.SpaceTest;
 
 public class KVSpaceTest extends SpaceTest {

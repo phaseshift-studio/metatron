@@ -19,8 +19,8 @@
 package studio.phaseshift.metatron.ui;
 
 import org.slf4j.event.Level;
-import studio.phaseshift.metatron.lang.fURI;
-import studio.phaseshift.metatron.lang.obj.Obj;
+import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.lang.mtron.type.Obj;
 import studio.phaseshift.metatron.space.Router;
 import studio.phaseshift.metatron.space.device.log.Log;
 

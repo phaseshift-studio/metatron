@@ -18,26 +18,25 @@
 
 package studio.phaseshift.metatron.space;
 
-import studio.phaseshift.metatron.lang.fURI;
-import studio.phaseshift.metatron.lang.obj.*;
-import studio.phaseshift.metatron.lang.obj.mtron.mtronInstSet;
+import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.lang.mtron.type.impl.MInstSet;
+import studio.phaseshift.metatron.lang.mtron.type.Inst;
+import studio.phaseshift.metatron.lang.mtron.type.NoObj;
+import studio.phaseshift.metatron.lang.mtron.type.Obj;
+import studio.phaseshift.metatron.lang.mtron.type.Type;
 import studio.phaseshift.metatron.space.mem.KVSpace;
 import studio.phaseshift.metatron.space.mqtt.MqttSpace;
-import studio.phaseshift.metatron.space.remote.RemoteSpace;
-import studio.phaseshift.metatron.util.MTronException;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static studio.phaseshift.metatron.lang.fURI.ALL;
-import static studio.phaseshift.metatron.lang.fURI.f;
-import static studio.phaseshift.metatron.lang.obj.mtron.MInst.instC;
-import static studio.phaseshift.metatron.lang.obj.mtron.MLst.lst;
-import static studio.phaseshift.metatron.lang.obj.mtron.MType.T;
-import static studio.phaseshift.metatron.lang.obj.mtron.mtronInstSet.URI_TID;
+import static studio.phaseshift.metatron.furi.fURI.ALL;
+import static studio.phaseshift.metatron.furi.fURI.f;
+import static studio.phaseshift.metatron.lang.mtron.type.impl.MInst.instC;
+import static studio.phaseshift.metatron.lang.mtron.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.lang.mtron.type.impl.MType.T;
+import static studio.phaseshift.metatron.lang.mtron.mtronInstSet.URI_TID;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)

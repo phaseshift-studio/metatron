@@ -19,7 +19,7 @@
 package studio.phaseshift.metatron.ui.server;
 
 import studio.phaseshift.metatron.BootLoader;
-import studio.phaseshift.metatron.lang.obj.Rec;
+import studio.phaseshift.metatron.lang.mtron.type.Rec;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
 import studio.phaseshift.metatron.ui.Mode;

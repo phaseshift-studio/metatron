@@ -18,15 +18,14 @@
 
 package studio.phaseshift.metatron.lang.translate;
 
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.MetatronTest;
-import studio.phaseshift.metatron.lang.obj.Obj;
+import studio.phaseshift.metatron.lang.mtron.mtronParser;
+import studio.phaseshift.metatron.lang.mtron.type.Obj;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static studio.phaseshift.metatron.lang.obj.mtron.MObjs.objs;
+import static studio.phaseshift.metatron.lang.mtron.type.impl.MObjs.objs;
 
 public class CodeParseTest extends MetatronTest {
 
@@ -41,7 +40,7 @@ public class CodeParseTest extends MetatronTest {
             "/m/int::2.plus(/m/int::5)% /m/int::7"
     }, delimiter = '%')
     void testStandardExpressions(final String expression, final String expectedResult) {
-        assertEquals(ObjParser.m_obj().parse(expectedResult).<Obj>get(), objs(()->ObjParser.eval(expression)));
+        assertEquals(mtronParser.m_obj().parse(expectedResult).<Obj>get(), objs(()-> mtronParser.eval(expression)));
     }
 
     @ParameterizedTest
@@ -49,7 +48,7 @@ public class CodeParseTest extends MetatronTest {
             "1-<[_,plus(1),3]% [1,2,3]",
     }, delimiter = '%')
     void testSugarExpressions(final String expression, final String expectedResult) {
-        assertEquals(ObjParser.m_obj().parse(expectedResult).get(), ObjParser.eval(expression).next());
+        assertEquals(mtronParser.m_obj().parse(expectedResult).get(), mtronParser.eval(expression).next());
     }
 
 

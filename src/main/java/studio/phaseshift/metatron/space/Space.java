@@ -18,12 +18,14 @@
 
 package studio.phaseshift.metatron.space;
 
-import studio.phaseshift.metatron.lang.fURI;
-import studio.phaseshift.metatron.lang.obj.*;
-import studio.phaseshift.metatron.lang.obj.mtron.MObjs;
-import studio.phaseshift.metatron.lang.obj.mtron.MRel;
+import studio.phaseshift.metatron.furi.Qs;
+import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.lang.mtron.type.*;
+
+import studio.phaseshift.metatron.lang.mtron.type.impl.MObjs;
+import studio.phaseshift.metatron.lang.mtron.type.impl.MRel;
 import studio.phaseshift.metatron.ui.Graphitty;
-import studio.phaseshift.metatron.vm.MMachine;
+import studio.phaseshift.metatron.lang.mach.type.impl.MMachine;
 
 import java.io.Closeable;
 import java.util.ArrayList;
@@ -33,7 +35,7 @@ import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
-import static studio.phaseshift.metatron.lang.obj.mtron.MUri.uri;
+import static studio.phaseshift.metatron.lang.mtron.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.Tuple.Pair;
 
 public interface Space extends Poly, Closeable {

@@ -14,7 +14,7 @@
     --tertiarycolor:#4db6ac;
     --sidebarbackground:#191C24;
     --linkcolor:#f44336;
-    --linkcoloralternate:#ff9800;
+    --linkcoloralternate:#CF7C00;
     --white:#FFFFFF;
 }
 
@@ -34,7 +34,7 @@ code{color:var(--linkcoloralternate);background-color: var(--sidebarbackground) 
 
 /* Table styles */
 th{background-color: var(--maincolor);color:var(--white) !important;}
-td{background-color: var(--maincolor);color: var(--linkcoloralternate) !important}
+td{background-color: var(--sidebarbackground);color: var(--linkcoloralternate) !important}
 
 
 #toc.toc2{background-color:var(--sidebarbackground);}

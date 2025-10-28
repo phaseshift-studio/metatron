@@ -18,43 +18,40 @@
 
 package studio.phaseshift.metatron.space.remote;
 
-import studio.phaseshift.metatron.io.net.FutureObj;
-import studio.phaseshift.metatron.io.net.MClient;
-import studio.phaseshift.metatron.lang.fURI;
-import studio.phaseshift.metatron.lang.obj.Code;
-import studio.phaseshift.metatron.lang.obj.Inst;
-import studio.phaseshift.metatron.lang.obj.Obj;
-import studio.phaseshift.metatron.space.NullSpace;
+import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.lang.mtron.type.Code;
+import studio.phaseshift.metatron.lang.mtron.type.Inst;
+import studio.phaseshift.metatron.lang.mtron.type.Obj;
 import studio.phaseshift.metatron.space.mem.MSpace;
-import studio.phaseshift.metatron.util.MTronException;
+import studio.phaseshift.metatron.space.router.FutureObj;
+import studio.phaseshift.metatron.space.router.net.MClient;
+import studio.phaseshift.metatron.space.router.net.MConnection;
+import studio.phaseshift.metatron.ui.Graphitty;
+import studio.phaseshift.metatron.ui.GraphittyLogger;
 
-import static studio.phaseshift.metatron.lang.obj.mtron.mtronFluent.StartLess.from_;
-import static studio.phaseshift.metatron.lang.obj.mtron.mtronFluent.StartLess.start_;
-import static studio.phaseshift.metatron.lang.obj.mtron.mtronInstSet.MTRON_SPACE_TID;
+import static studio.phaseshift.metatron.lang.mtron.mtronFluent.StartLess.from_;
+import static studio.phaseshift.metatron.lang.mtron.mtronFluent.StartLess.start_;
+import static studio.phaseshift.metatron.lang.mtron.mtronInstSet.MTRON_SPACE_TID;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class RemoteSpace extends MSpace<MClient> {
+public class RemoteSpace extends MSpace<MConnection> {
 
     public static final fURI REMOTE_TID = MTRON_SPACE_TID.extend("remote");
+    private final GraphittyLogger LOG;
 
     public RemoteSpace(final fURI authority, final fURI pattern, final fURI vid) {
-        super(new MClient(authority), pattern, REMOTE_TID, vid);
-        try {
-            LOG.info("connecting to {{b}}%s{{/b}}", this.jvm().authority());
-            this.jvm().connectBlocking();
-        } catch (final Exception e) {
-            throw MTronException.of(e, "unable to connect to remote space at %s", authority);
-        }
+        super(MClient.of(authority), pattern, REMOTE_TID, vid);
+        LOG = Graphitty.log(this);
     }
 
     public static RemoteSpace open(final fURI authority, final fURI pattern, final fURI vid) {
-        try {
-            return new RemoteSpace(authority, pattern, vid);
-        } catch (final MTronException e) {
-            return NullSpace.single();
-        }
+        //try {
+        return new RemoteSpace(authority, pattern, vid);
+        // } catch (final MTronException e) {
+        //     return NullSpace.single();
+        // }
     }
 
     @Override
@@ -67,7 +64,7 @@ public class RemoteSpace extends MSpace<MClient> {
     public Obj read(final fURI vid) {
         final Inst code = from_(vid.authority(null).scheme(null).toUri()).insts().get(0);//, vid.query("tag","abc"));
         LOG.info("performing remote read: %s", code);
-        final FutureObj<Obj> future = this.jvm().sendRecv(code);
+        final FutureObj<Obj> future = this.jvm().sendRecvObj(code);
         return future;
     }
 
@@ -75,14 +72,14 @@ public class RemoteSpace extends MSpace<MClient> {
     public Obj write(final fURI vid, final Obj obj) {
         final Code code = start_(obj).to_(vid.toUri());
         LOG.info("performing remote write: %s", code);
-        this.jvm().send(code);
+        this.jvm().sendObj(code);
         return obj;
     }
 
     @Override
     public Obj apply(final Obj obj) {
         LOG.info("performing remote apply: %s", obj);
-        final FutureObj<Obj> future = this.jvm().sendRecv(obj);
+        final FutureObj<Obj> future = this.jvm().sendRecvObj(obj);
         return future;
     }
 }

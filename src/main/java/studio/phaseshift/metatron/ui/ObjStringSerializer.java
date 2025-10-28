@@ -19,15 +19,16 @@
 package studio.phaseshift.metatron.ui;
 
 import org.petitparser.context.Result;
-import studio.phaseshift.metatron.lang.fURI;
-import studio.phaseshift.metatron.lang.obj.*;
-import studio.phaseshift.metatron.lang.translate.ObjParser;
+import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.lang.mtron.type.*;
+
+import studio.phaseshift.metatron.lang.mtron.mtronParser;
 
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import static studio.phaseshift.metatron.lang.obj.mtron.mtronInstSet.BASE_TYPES;
+import static studio.phaseshift.metatron.lang.mtron.mtronInstSet.BASE_TYPES;
 
 public class ObjStringSerializer implements ObjSerializer<String> {
 
@@ -244,7 +245,7 @@ public class ObjStringSerializer implements ObjSerializer<String> {
 
     @Override
     public Obj read(final String data) throws IllegalStateException {
-        Result result = ObjParser.m_obj().end().parse(data);
+        Result result = mtronParser.m_obj().end().parse(data);
         if (result.isFailure())
             throw new IllegalStateException(result.getMessage());
         return result.get();

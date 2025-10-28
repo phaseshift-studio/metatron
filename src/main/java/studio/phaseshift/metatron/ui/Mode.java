@@ -19,7 +19,6 @@
 package studio.phaseshift.metatron.ui;
 
 import studio.phaseshift.metatron.BootLoader;
-import studio.phaseshift.metatron.lang.fURI;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.Optional;

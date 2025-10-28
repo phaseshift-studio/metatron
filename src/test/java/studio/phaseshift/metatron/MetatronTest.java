@@ -19,16 +19,16 @@
 package studio.phaseshift.metatron;
 
 import org.junit.jupiter.api.BeforeAll;
-import studio.phaseshift.metatron.lang.obj.NoObj;
-import studio.phaseshift.metatron.lang.obj.Obj;
-import studio.phaseshift.metatron.lang.translate.ObjParser;
+import studio.phaseshift.metatron.lang.mtron.type.NoObj;
+import studio.phaseshift.metatron.lang.mtron.type.Obj;
+import studio.phaseshift.metatron.lang.mtron.mtronParser;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.fail;
-import static studio.phaseshift.metatron.lang.obj.mtron.MRec.rec;
-import static studio.phaseshift.metatron.lang.obj.mtron.MUri.uri;
+import static studio.phaseshift.metatron.lang.mtron.type.impl.MRec.rec;
+import static studio.phaseshift.metatron.lang.mtron.type.impl.MUri.uri;
 
 public class MetatronTest {
 
@@ -40,17 +40,17 @@ public class MetatronTest {
     }
 
     public void testMatches(final String lhs, final String rhs, final boolean matches) {
-        final Obj a = ObjParser.m_obj().parse(lhs).get();
-        final Obj b = ObjParser.m_obj().parse(rhs).get();
+        final Obj a = mtronParser.m_obj().parse(lhs).get();
+        final Obj b = mtronParser.m_obj().parse(rhs).get();
         final boolean m = a.matches(b);
         LOG.debug("testing %s matches %s: %s [expected:%s]", a, b, m, matches);
         assertEquals(matches, m);
     }
 
     public void testCode(final String lhs, final String code, final String expected) {
-        final Obj a = ObjParser.m_obj().parse(lhs).get();
-        final Obj b = ObjParser.m_obj().parse(code).get();
-        final Obj ex = ObjParser.m_obj().parse(expected).get();
+        final Obj a = mtronParser.m_obj().parse(lhs).get();
+        final Obj b = mtronParser.m_obj().parse(code).get();
+        final Obj ex = mtronParser.m_obj().parse(expected).get();
         final Obj actual = b.apply(a);
         LOG.debug("testing %s.%s => %s [expected:%s]", a, b, actual, ex);
         assertEquals(ex, actual);
@@ -59,7 +59,7 @@ public class MetatronTest {
     public void testCode(final String code, final String expected) {
         if (expected.trim().equals("<ERROR>")) {
             try {
-                final Obj cd = ObjParser.sugar_code().parse(code).get();
+                final Obj cd = mtronParser.sugar_code().parse(code).get();
                 final Obj actual = cd.apply(NoObj.single());
                 if (!(cd.isFail() || actual.isFail()))
                     fail(Graphitty.string("testing %s => %s [expected:%s]", cd, actual, expected));
@@ -67,8 +67,8 @@ public class MetatronTest {
                 LOG.debug("testing %s => %s", code, e.getMessage());
             }
         } else {
-            final Obj cd = ObjParser.m_code_or_obj().parse(code).get();
-            final Obj ex = ObjParser.m_obj().parse(expected).get();
+            final Obj cd = mtronParser.m_code_or_obj().parse(code).get();
+            final Obj ex = mtronParser.m_obj().parse(expected).get();
             final Obj actual = cd.apply(NoObj.single());
             LOG.debug("testing %s => %s [expected:%s]", cd, actual, ex);
             assertEquals(ex, actual);

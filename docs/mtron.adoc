@@ -1,0 +1,31 @@
+== mtron instruction set
+
+The core instruction set of metatron is `mtron`.
+
+[cols="1m,3m,4",separator="|"]
+|===
+|type |example |description
+
+|/m/bool | bool{2}::{true,false}   | a 2-member boolean type
+|/m/int  | int::123456             | a 64-bit integer type
+|/m/real | real::-123.456          | a 64-bit double type
+|/m/str  | str::'metatron'         | a string of characters
+|/m/uri  | uri::\<http://a/b/c>    | the infinite set of all uris
+|/m/lst  | lst::[1,2,3,4]          | a poly of ordered `objs`
+|/m/rec  | rec::[k1\=>v1,k2\=>v2]    | a poly of `obj` key/value pairs
+|/m/inst | plus?int\<=int::(2)     | a function mapping dom to rng
+|/m/code | a().b(c,d).e(f)         | a chain of nested `insts`
+|/m/type | int::T[is(gt(0))]       | a specification of constraint on a base-type
+|/m/fail | fail::[problem,error]   | a meta-`obj` accessible via `catch()`
+|===
+
+++++
+<!-- ./main_runner.out
+threadx[[ /
+  halt=>false, /
+  delay=>nat[0], /
+  loop=>from(|a,0).plus(1).to(a).print(_). /
+         [is(gt(10)) => |true.to(abc/halt)]>-]]@abc
+@abc.spawn()
+-->
+++++

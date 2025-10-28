@@ -21,8 +21,8 @@ package studio.phaseshift.metatron.space;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.MetatronTest;
-import studio.phaseshift.metatron.lang.obj.Obj;
-import studio.phaseshift.metatron.lang.translate.ObjParser;
+import studio.phaseshift.metatron.lang.mtron.type.Obj;
+import studio.phaseshift.metatron.lang.mtron.mtronParser;
 import studio.phaseshift.metatron.ui.Graphitty;
 
 import java.util.ArrayList;
@@ -85,9 +85,9 @@ public abstract class SpaceTest extends MetatronTest {
     void testMonoReadWrite(final String writeExpression, final String readExpression, final String resultExpression) {
         final Space space = SPACE.get();
         Router.global().addSpace(space);
-        final Obj writeObj = ObjParser.parse(writeExpression.equals(".") ? PREVIOUS_LINE.get(0) : writeExpression).apply();
-        final Obj readObj = ObjParser.parse(readExpression.equals(".") ? PREVIOUS_LINE.get(1) : readExpression).apply();
-        final Obj resultObj = ObjParser.parse(resultExpression.equals(".") ? PREVIOUS_LINE.get(2) : resultExpression).apply();
+        final Obj writeObj = mtronParser.parse(writeExpression.equals(".") ? PREVIOUS_LINE.get(0) : writeExpression).apply();
+        final Obj readObj = mtronParser.parse(readExpression.equals(".") ? PREVIOUS_LINE.get(1) : readExpression).apply();
+        final Obj resultObj = mtronParser.parse(resultExpression.equals(".") ? PREVIOUS_LINE.get(2) : resultExpression).apply();
         if (!writeExpression.equals("."))
             PREVIOUS_LINE.set(0, writeExpression);
         if (!readExpression.equals("."))

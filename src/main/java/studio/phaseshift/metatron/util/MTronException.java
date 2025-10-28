@@ -19,12 +19,12 @@
 package studio.phaseshift.metatron.util;
 
 import org.apache.tinkerpop.gremlin.util.function.ThrowingSupplier;
-import studio.phaseshift.metatron.lang.obj.Fail;
+import studio.phaseshift.metatron.lang.mtron.type.Fail;
 import studio.phaseshift.metatron.ui.Graphitty;
 
 import java.util.Arrays;
 
-import static studio.phaseshift.metatron.lang.obj.mtron.MFail.fail;
+import static studio.phaseshift.metatron.lang.mtron.type.impl.MFail.fail;
 
 public class MTronException extends RuntimeException {
 

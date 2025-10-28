@@ -27,12 +27,12 @@ import org.jline.utils.AttributedString;
 import org.jline.utils.AttributedStringBuilder;
 import org.jline.widget.Widgets;
 import studio.phaseshift.metatron.BootLoader;
-import studio.phaseshift.metatron.lang.obj.NoObj;
-import studio.phaseshift.metatron.lang.obj.Obj;
-import studio.phaseshift.metatron.lang.obj.Rec;
-import studio.phaseshift.metatron.lang.obj.mtron.MObjs;
-import studio.phaseshift.metatron.lang.obj.mtron.mtronInstSet;
-import studio.phaseshift.metatron.lang.translate.ObjParser;
+import studio.phaseshift.metatron.lang.mtron.type.NoObj;
+import studio.phaseshift.metatron.lang.mtron.type.Obj;
+import studio.phaseshift.metatron.lang.mtron.type.Rec;
+import studio.phaseshift.metatron.lang.mtron.type.impl.MObjs;
+import studio.phaseshift.metatron.lang.mtron.mtronInstSet;
+import studio.phaseshift.metatron.lang.mtron.mtronParser;
 import studio.phaseshift.metatron.space.device.log.Log;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
@@ -40,7 +40,7 @@ import studio.phaseshift.metatron.ui.Mode;
 import studio.phaseshift.metatron.ui.ObjStringSerializer;
 import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.StringUtil;
-import studio.phaseshift.metatron.vm.MMachine;
+import studio.phaseshift.metatron.lang.mach.type.impl.MMachine;
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;
@@ -143,7 +143,7 @@ public class Console implements Mode {
                 else if (line.startsWith(":log")) {
                     Log.setSLF4J(line.substring(4));
                 } else
-                    result = ObjParser.parse(line);
+                    result = mtronParser.parse(line);
 
                 if (null != result) {
                     (result.isNoObj() ?
@@ -238,7 +238,7 @@ public class Console implements Mode {
                             //builder.append(buffer);
                             //Graphitty.out(this.terminal.output(), "{{v1&-X&^1&|%d}}".formatted(9));
                         } else {
-                            final Obj o = ObjParser.parse(buffer);
+                            final Obj o = mtronParser.parse(buffer);
                             final int xLocation = this.terminal.getCursorPosition(System.out::print).getX() + 1;
                             // final int promptLength = 8; //"mtron> ".length() + 1;
                             builder.append(buffer);
@@ -323,7 +323,7 @@ public class Console implements Mode {
             String sourceKey = "B"; //reader.readLine(Graphitty.string("{{-X-}}\r{{m}}hotkey{{g}}:{{X}} "));
             getKeyMap().bind(new Reference(sourceName), ctrl(sourceKey.charAt(0)));
             this.addWidget(sourceName, () -> {
-                ObjParser.eval(sourceCode).forEachRemaining(System.out::println);
+                mtronParser.eval(sourceCode).forEachRemaining(System.out::println);
                 return true;
             });
             return true;
