@@ -1,6 +1,6 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
- * Copyright (C) 2025- PhaseShift Studio, LLC 
+ * Copyright (C) 2025- PhaseShift Studio, LLC
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -18,8 +18,46 @@
 
 package studio.phaseshift.metatron.lang.mweb;
 
+import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.lang.mtron.type.Inst;
+import studio.phaseshift.metatron.lang.mtron.type.Type;
+import studio.phaseshift.metatron.lang.mtron.type.impl.MInstSet;
+import studio.phaseshift.metatron.lang.mvec.mvecInstSet;
+
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import static studio.phaseshift.metatron.furi.fURI.f;
+import static studio.phaseshift.metatron.lang.mtron.type.impl.MType.T;
+
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class mwebInstSet {
+public class mwebInstSet extends MInstSet {
+
+    public static final fURI MWEB_TID = f("/mweb");
+    public static final fURI MWEB_INST_TID = MWEB_TID.extend("inst");
+    public static final fURI PAGE_TID = MWEB_TID.extend("page");
+    public static final fURI CSS_TID = MWEB_TID.extend("css");
+    private static final WebTranslator WEB_TRANSLATOR = new WebTranslator();
+    private static final JSONTranslator JSON_TRANSLATOR = new JSONTranslator();
+
+    public mwebInstSet(final fURI vid) {
+        super(MWEB_TID, vid);
+    }
+
+    public static mvecInstSet of(final fURI vid) {
+        return new mvecInstSet(vid);
+    }
+
+    @Override
+    public Set<Inst> insts() {
+        return Set.of();//Stream.of().collect(LinkedHashSet::new, LinkedHashSet::add, LinkedHashSet::addAll);
+    }
+
+    @Override
+    public Set<Type> types() {
+        return Stream.of(T(PAGE_TID), T(CSS_TID)).collect(Collectors.toSet());
+    }
 }

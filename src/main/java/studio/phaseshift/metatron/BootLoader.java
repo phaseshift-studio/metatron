@@ -28,6 +28,8 @@ import studio.phaseshift.metatron.lang.mtron.mtronParser;
 import studio.phaseshift.metatron.lang.mtron.type.Obj;
 import studio.phaseshift.metatron.lang.mtron.type.Rec;
 import studio.phaseshift.metatron.lang.mvec.mvecInstSet;
+import studio.phaseshift.metatron.lang.mweb.mwebInstSet;
+import studio.phaseshift.metatron.lang.mweb.mwebSpace;
 import studio.phaseshift.metatron.space.Router;
 import studio.phaseshift.metatron.space.device.log.Log;
 import studio.phaseshift.metatron.space.fs.FileSpace;
@@ -147,8 +149,10 @@ public class BootLoader {
             Router.global().write(new MGraph(TinkerFactory.createModern(), f("/tp/#"), f("/mnt/tp")));
             Router.global().write(new mgrphInstSet(f("/mnt/lang/grph")));
             // Router.global().write(f("/mnt/zigbee2mqtt"), new MqttSpace(f("zigbee2mqtt/#?broker=mqtt://192.168.66.2:1883&prefix=/mqtt"), f("/mnt/zigbee2mqtt")));
-            Router.global().write(new mvecInstSet(f("/mnt/lang/ext")));
+            Router.global().write(new mvecInstSet(f("/mnt/lang/mvec")));
             Router.global().write(new machInstSet(f("/mnt/lang/mach")));
+            Router.global().write(new mwebInstSet(f("/mnt/lang/mweb")));
+            Router.global().write(mwebSpace.of(f("http://127.0.0.1:8777"), f("/tmp/#"), f("/mnt/web")));
             // Router.global().write(new RemoteSpace(remoteAuthority,f("/shared/remote/#"), f("/mnt/shared/remote")));
             //Router.global().write(new KVSpace(fURI.of("/shared/#"), fURI.of("/mnt/shared")));
             if (remoteAuthority != null && !remoteAuthority.host().equals("chibi.local"))

@@ -20,6 +20,7 @@ package studio.phaseshift.metatron.space.router;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.mtron.type.impl.MObjs;
+import studio.phaseshift.metatron.space.router.net.MConnection;
 
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -28,7 +29,8 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class FutureObjs extends MObjs {
     
-    public FutureObjs(final fURI vid) {
+    public FutureObjs(final fURI vid, final MConnection conn) {
         super(new ConcurrentHashMap<>(), vid);
     }
+    
 }
