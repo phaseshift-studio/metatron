@@ -138,23 +138,23 @@ public class MRouter implements Router {
 
     @Override
     public Obj read(final fURI vid) {
-        if (vid.hasAuthority()) {
-            return objs(this.server.cluster(vid.authority()).map(v -> v.sendRecvObj(from_(uri(vid.authority(null).scheme(null))))));
-        }
+       // if (vid.hasAuthority()) {
+       //     return objs(this.server.cluster(vid.authority()).map(v -> v.sendRecvObj(from_(uri(vid.authority(null).scheme(null))))));
+       // }
         if (vid.isZero() || READ_AS_NOOBJ.contains(vid))
             return NoObj.single();
-        if (vid.hasAuthority() && !vid.hasAuthority(this.server.authority())) {
+       /* if (false && vid.hasAuthority() && !vid.hasAuthority(this.server.authority())) {
             return this.server.cluster(vid.authority().extend("#")).map(msc -> {
                 final FutureObj<Obj> future = msc.sendRecvObj(from_(vid.toUri()));
                 return future.get(5000);
             }).reduce(NoObj.single(), Obj::append);
-        } else {
-            final fURI local = vid.authority(null).scheme(null);
+        } else {*/
+            final fURI local = vid;//.authority(null).scheme(null);
             final Space space = this.getSpace(local);
             //if (null != space.vid() && !space.vid().segments().isEmpty())
             //    LOG.trace("reading {{b}}%s{{/b}} from {{b}}%s{{/b}}", vid, space.vid());
             return MRouter.appendOnRead(vid.isBranch(), space.read(vid), this.vid.onlyMatches(vid) ? this : NoObj.single());
-        }
+       // }
     }
 
     @Override

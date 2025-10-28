@@ -152,7 +152,7 @@ public class BootLoader {
             Router.global().write(new mvecInstSet(f("/mnt/lang/mvec")));
             Router.global().write(new machInstSet(f("/mnt/lang/mach")));
             Router.global().write(new mwebInstSet(f("/mnt/lang/mweb")));
-            Router.global().write(mwebSpace.of(f("http://127.0.0.1:8777"), f("/tmp/#"), f("/mnt/web")));
+            Router.global().write(mwebSpace.of(f("http://localhost:8777"), f("http://#"), f("/mnt/web")));
             // Router.global().write(new RemoteSpace(remoteAuthority,f("/shared/remote/#"), f("/mnt/shared/remote")));
             //Router.global().write(new KVSpace(fURI.of("/shared/#"), fURI.of("/mnt/shared")));
             if (remoteAuthority != null && !remoteAuthority.host().equals("chibi.local"))

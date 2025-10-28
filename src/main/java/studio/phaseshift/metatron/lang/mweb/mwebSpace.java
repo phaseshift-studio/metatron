@@ -21,7 +21,6 @@ package studio.phaseshift.metatron.lang.mweb;
 import com.sun.net.httpserver.HttpContext;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
-import org.apache.commons.text.StringEscapeUtils;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import studio.phaseshift.metatron.furi.fURI;
@@ -110,7 +109,8 @@ public class mwebSpace extends MSpace<HttpServer> {
     @Override
     public Obj read(final fURI vid) {
         try {
-            Document doc = Jsoup.connect(vid.toString()).get();
+            LOG.info("retrieving %s", vid);
+            final Document doc = Jsoup.connect(vid.toString()).ignoreContentType(true).get();
             LOG.debug("retrieved web page: %s", doc.location());
             return WEB_TRANSLATOR.translate(doc);
         } catch (final IOException e) {

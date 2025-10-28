@@ -637,6 +637,22 @@ public class fURITest {
             "xxx[ab{2},cd{0}]|xxx[ab{1,3},cd{0}]{1,5}|true",
             "xxx[ab{2},cd{1,3}]{2,3}|xxx[ab{1,3},cd{0,100}]{1,5}|true",
             "xxx[ab{2},cd{1,3}]{2,3}|xxx[ab{1,3},cd{0,2}]{1,5}|false",
+            "http://localhost:8080/abc|http://#|true",
+            "http://localhost:8080/abc|http://+:8081/+|false",
+            "http://localhost:8080/abc|http://+:8080/+|true",
+            "http://localhost:8080/abc|http://+:8081|false",
+            "http://localhost:8080/abc|http://+:8080|false",
+            "http://localhost:8080/abc|http://+/+|true",
+            "http://localhost:8080/abc|http://+/abc|true",
+            "http://localhost:8080/abc|http://+/xyz|false",
+            "http://localhost:8080/abc|http://localhost:8081|false",
+            "http://localhost:8080/abc|http://localhost:8080/#|true",
+            "http://localhost:8080/abc|//localhost:8080/#|false",
+            "/shared|http://#|false",
+            "http://localhost:8080|http://#|true",
+            "http://localhost:8080/|http://#|true",
+            "http://localhost:8080/abc|http://+/abc|true",
+            "http://localhost:8080|http://+/abc|false"
     }, delimiter = '|')
     void testMatches(final String a, final String b, final boolean shouldMatch) {
         final fURI furi1a = fURI.of(nullToEmpty(a));

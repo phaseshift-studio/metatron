@@ -1,6 +1,6 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
- * Copyright (C) 2025- PhaseShift Studio, LLC 
+ * Copyright (C) 2025- PhaseShift Studio, LLC
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -19,8 +19,8 @@
 package studio.phaseshift.metatron.furi;
 
 import studio.phaseshift.metatron.algebra.Ring;
-import studio.phaseshift.metatron.lang.mtron.type.Uri;
 import studio.phaseshift.metatron.furi.c.cInt;
+import studio.phaseshift.metatron.lang.mtron.type.Uri;
 import studio.phaseshift.metatron.space.Router;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.util.MTronException;
@@ -732,9 +732,13 @@ public class fURI implements Cloneable, Ring<fURI> {
         final fURI other = rhs.basePath();
         if (!other.hasPattern())
             return lhs.equals(other);
-        if (this.scheme != null && (other.scheme == null || (!other.scheme.equals(ONE_WILD_STRING) && !this.scheme.equals(other.scheme))))
+        if (Objects.equals(other.scheme, "#"))
+            return true;
+        if (!Objects.equals(this.scheme, other.scheme) && (other.scheme == null || (!other.scheme.equals(ONE_WILD_STRING))))
             return false;
-        if (this.host != null && (other.host == null || (!other.host.equals(ONE_WILD_STRING) && !this.host.equals(other.host))))
+        if (Objects.equals(other.host, "#"))
+            return true;
+        if (!Objects.equals(this.host, other.host) && (other.host == null || (!other.host.equals(ONE_WILD_STRING))))
             return false;
         if (!(other.port <= -1) || !Objects.equals(other.host, ONE_WILD_STRING))
             if (this.port != -1 && (other.port == -1 || (other.port != 0 && this.port != other.port)))
