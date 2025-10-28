@@ -18,7 +18,6 @@
 
 package studio.phaseshift.metatron.lang.mweb;
 
-import org.apache.tinkerpop.gremlin.util.iterator.IteratorUtils;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -40,17 +39,14 @@ import static studio.phaseshift.metatron.lang.mtron.type.impl.MUri.uri;
  */
 public class WebTranslator implements Translator<Obj, Document> {
 
-    private Rec readElement(final Element element, Rec rec) {
+
+    private Rec readElement(final Element element) {
         //Graphitty.log(this).warn(element);
-        AtomicReference<Rec> recX = new AtomicReference<>(rec);
-        element.getAllElements().stream().filter(e -> !e.equals(element)).forEach(e -> {
-            if (e.childrenSize() > 0)
-                recX.getAndUpdate(r -> r.put(uri(e.nodeName()), readElement(e, rec())));
-            //IteratorUtils.stream(e.attributes()).forEach(a -> recX.getAndUpdate(r -> r.put(uri(a.getKey()), str(a.getValue()))));
-            if (!e.text().isEmpty())
-                recX.getAndUpdate(r -> r.put(uri("text"), str(e.text())));
-        });
-        return recX.get();
+        final AtomicReference<Rec> recX = new AtomicReference<>(rec());
+        element.attributes().forEach(a -> recX.getAndUpdate(r -> r.put(uri(a.getKey()), str(a.getValue()))));
+        element.children().forEach(e -> recX.getAndUpdate(r -> r.put(uri(e.nodeName()), readElement(e))));
+        final String text = element.ownText();
+        return text.isEmpty() ? recX.get() : recX.updateAndGet(r -> r.put(uri("text"), str(text)));
     }
 
     private Element writeElement(final Rec rec, final Element element) {
@@ -65,8 +61,7 @@ public class WebTranslator implements Translator<Obj, Document> {
 
     @Override
     public Obj translate(final Document document) {
-        Rec rec = readElement(document, rec());
-        return rec;
+        return readElement(document);
     }
 
     @Override

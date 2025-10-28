@@ -20,7 +20,6 @@ package studio.phaseshift.metatron.lang.mweb;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.mtron.type.Inst;
-import studio.phaseshift.metatron.lang.mtron.type.Rec;
 import studio.phaseshift.metatron.lang.mtron.type.Type;
 import studio.phaseshift.metatron.lang.mtron.type.impl.MInstSet;
 
@@ -29,6 +28,8 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.furi.fURI.f;
+import static studio.phaseshift.metatron.lang.mtron.mtronFluent.StartLess.id_;
+import static studio.phaseshift.metatron.lang.mtron.mtronFluent.StartLess.isa_;
 import static studio.phaseshift.metatron.lang.mtron.mtronInstSet.URI_TID;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MRec.rec;
@@ -66,6 +67,6 @@ public class mwebInstSet extends MInstSet {
 
     @Override
     public Set<Type> types() {
-        return Stream.of(T(PAGE_TID), T(CSS_TID)).collect(Collectors.toSet());
+        return Stream.of(T(PAGE_TID, isa_(rec(uri("html"), rec(uri("head"), id_().tryToInst(), uri("body"), id_().tryToInst())))), T(CSS_TID)).collect(Collectors.toSet());
     }
 }
