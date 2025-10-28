@@ -1,6 +1,6 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
- * Copyright (C) 2025- PhaseShift Studio, LLC
+ * Copyright (C) 2025- PhaseShift Studio, LLC 
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -16,16 +16,18 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.space.mem;
+package studio.phaseshift.metatron.space.stack;
 
 import org.junit.jupiter.api.BeforeAll;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.space.SpaceTest;
 
-public class KVSpaceTest extends SpaceTest {
-
+/*
+ * @author Marko A. Rodriguez (http://markorodriguez.com)
+ */
+public class StackSpaceTest extends SpaceTest {
     @BeforeAll
     public static void setup() {
-        SPACE = () -> new KVSpace(fURI.of("/t/#"), fURI.of("/mnt/t"));
+        SPACE = () -> new StackSpace(fURI.of("/t/#"), fURI.of("/mnt/t"));
     }
 }

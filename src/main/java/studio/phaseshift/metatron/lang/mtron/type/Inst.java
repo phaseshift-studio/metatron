@@ -1,6 +1,6 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
- * Copyright (C) 2025- PhaseShift Studio, LLC 
+ * Copyright (C) 2025- PhaseShift Studio, LLC
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -19,10 +19,10 @@
 package studio.phaseshift.metatron.lang.mtron.type;
 
 import studio.phaseshift.metatron.BootLoader;
-import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.lang.mtron.type.impl.MType;
 import studio.phaseshift.metatron.furi.c.cInt;
+import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.mtron.mtronInstSet;
+import studio.phaseshift.metatron.lang.mtron.type.impl.MType;
 import studio.phaseshift.metatron.space.Router;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
@@ -35,10 +35,10 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import static studio.phaseshift.metatron.lang.mtron.mtronInstSet.*;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MType.T;
-import static studio.phaseshift.metatron.lang.mtron.mtronInstSet.*;
 import static studio.phaseshift.metatron.util.MTronException.mexcept;
 import static studio.phaseshift.metatron.util.Tuple.Triplet;
 
@@ -145,7 +145,7 @@ public interface Inst extends Call {
     default Obj arg(final int index) {
         return this.args().isLst() ?
                 (this.args().lstValue().size() > index ? this.args().lstValue().get(index) : NoObj.single()) :
-                IteratorUtil.index(this.args().elements().iterator(), index, NoObj.single());
+                IteratorUtil.index(this.args().elements().iterator(), index, NoObj.single()).<Rel>as().second();
     }
 
     @Override
@@ -155,6 +155,10 @@ public interface Inst extends Call {
 
     default Obj arg(final fURI key) {
         return this.args().<Rec>as().at(key.toUri());
+    }
+
+    default Obj arg(final String key) {
+        return this.args().<Rec>as().at(key);
     }
 
     default Obj arg(final fURI key, final int index) {
@@ -260,6 +264,7 @@ public interface Inst extends Call {
             }
         } catch (final Exception e) {
             rhs = mexcept("inst evaluation failure [%s]", cinst).cause(e).asFail();
+            e.printStackTrace();
         } finally {
             Router.stack().pop();
         }
@@ -353,7 +358,7 @@ public interface Inst extends Call {
                             }).toList()) :
                     rec(inst.args().recValue().entrySet()
                             .stream()
-                            .map(kv -> List.of(kv.getKey(), blocking ?
+                            .map(kv -> List.of(kv.getKey().apply(lhs), blocking ?
                                     kv.getValue() :
                                     kv.getValue().apply(lhs)))
                             .collect(Collectors.toMap(kv -> kv.get(0), kv -> kv.get(1), Obj::append, LinkedHashMap::new)));
@@ -373,26 +378,46 @@ public interface Inst extends Call {
             if (def.rng().tid().isGeneric() && generics.containsKey(def.rng().tid().cLess())) {
                 def = def.rng(T(generics.get(def.rng().tid().cLess()).c(def.rng().c().toString())));
             }
-            if (!apiInst.args().isEmpty() && apiInst.args().isLst()) {
-                final List<Obj> newArgs = new ArrayList<>();
-                for (int i = 0; i < apiInst.args().count(); i++) {
-                    Obj argD = apiInst.arg(i);
-                    Obj argS = userInst.isInst() ? userInst.<Inst>as().arg(i) : userInst;
-                    if (argD.tid().cLess().isGeneric()) {
-                        final fURI lastBinding = generics.get(argD.tid().cLess());
-                        if (null != lastBinding && !argS.tid().cLess().matches(lastBinding))
-                            LOG.debug("existing generic doesn't match current usage: [{{m}}generic{{/m}}] %s [{{m}}past{{/m}}] %s [{{m}}present{{/m}}] %s", argS.tid(), lastBinding, argD.tid());
-                        generics.computeIfAbsent(argD.tid().cLess(), k -> argS.tid().cLess()); // beware of int[0] yielding noobj across all bindings
+            if (!apiInst.args().isEmpty())
+                if (apiInst.args().isRec()) {
+                    final Map<Obj, Obj> newArgs = new LinkedHashMap<>();
+                    for (final Map.Entry<Obj, Obj> kv : apiInst.args().recValue().entrySet()) {
+                        Obj argD = kv.getValue();
+                        //  Obj argS = userInst.isInst() ? userInst.<Inst>as().arg(kv.getKey().uriValue()) : userInst;
+                        //if (argD.tid().cLess().isGeneric()) {
+                        //final fURI lastBinding = generics.get(argD.tid().cLess());
+                        //   if (null != lastBinding && !argS.tid().cLess().matches(lastBinding))
+                        //  LOG.debug("existing generic doesn't match current usage: [{{m}}generic{{/m}}] %s [{{m}}past{{/m}}] %s [{{m}}present{{/m}}] %s", argS.tid(), lastBinding, argD.tid());
+                        // generics.computeIfAbsent(argD.tid().cLess(), k -> argS.tid().cLess()); // beware of int[0] yielding noobj across all bindings
+                        //}
+                      /* if (argD.isInst()) {
+                            argD = Helpers.bindGenerics(lhs, argD.<Inst>as(), argS);
+                        } else if (argD.tid().cLess().isGeneric()) {
+                            argD = argD.tid(generics.getOrDefault(argD.tid().cLess(), argS.tid())).c(argD.c());
+                        }*/
+                        newArgs.put(kv.getKey(), argD);
                     }
-                    if (argD.isInst()) {
-                        argD = Helpers.bindGenerics(lhs, argD.<Inst>as(), argS);
-                    } else if (argD.tid().cLess().isGeneric()) {
-                        argD = argD.tid(generics.getOrDefault(argD.tid().cLess(), argS.tid())).c(argD.c());
+                    def = def.args(rec(newArgs));
+                } else if (apiInst.args().isLst()) {
+                    final List<Obj> newArgs = new ArrayList<>();
+                    for (int i = 0; i < apiInst.args().count(); i++) {
+                        Obj argD = apiInst.arg(i);
+                        Obj argS = userInst.isInst() ? userInst.<Inst>as().arg(i) : userInst;
+                        if (argD.tid().cLess().isGeneric()) {
+                            final fURI lastBinding = generics.get(argD.tid().cLess());
+                            if (null != lastBinding && !argS.tid().cLess().matches(lastBinding))
+                                LOG.debug("existing generic doesn't match current usage: [{{m}}generic{{/m}}] %s [{{m}}past{{/m}}] %s [{{m}}present{{/m}}] %s", argS.tid(), lastBinding, argD.tid());
+                            generics.computeIfAbsent(argD.tid().cLess(), k -> argS.tid().cLess()); // beware of int[0] yielding noobj across all bindings
+                        }
+                        if (argD.isInst()) {
+                            argD = Helpers.bindGenerics(lhs, argD.<Inst>as(), argS);
+                        } else if (argD.tid().cLess().isGeneric()) {
+                            argD = argD.tid(generics.getOrDefault(argD.tid().cLess(), argS.tid())).c(argD.c());
+                        }
+                        newArgs.add(argD);
                     }
-                    newArgs.add(argD);
+                    def = def.args(lst(newArgs));
                 }
-                def = def.args(lst(newArgs));
-            }
 
             if (def.rng().tid().cLess().isGeneric()) {
                 def = def.rng(T(generics.getOrDefault(def.rng().tid().cLess(), userInst.rng().tid()).c(def.rng().c().toString())));

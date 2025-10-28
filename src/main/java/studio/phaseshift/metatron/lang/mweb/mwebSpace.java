@@ -26,7 +26,7 @@ import org.jsoup.nodes.Document;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.mtron.type.Obj;
 import studio.phaseshift.metatron.space.Router;
-import studio.phaseshift.metatron.space.mem.MSpace;
+import studio.phaseshift.metatron.space.MSpace;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
 import studio.phaseshift.metatron.util.MTronException;
@@ -44,12 +44,12 @@ import static studio.phaseshift.metatron.lang.mweb.mwebInstSet.MWEB_TID;
  */
 public class mwebSpace extends MSpace<HttpServer> {
 
-    public static final fURI REMOTE_TID = MWEB_TID.extend("space/web");
+    public static final fURI WEB_TID = MWEB_TID.extend("space/web");
     private static final WebTranslator WEB_TRANSLATOR = new WebTranslator();
     private final GraphittyLogger LOG;
 
     public mwebSpace(final HttpServer server, final fURI pattern, final fURI vid) {
-        super(server, pattern, REMOTE_TID, vid);
+        super(server, pattern, WEB_TID, vid);
         LOG = Graphitty.log(this);
         final HttpContext context = server.createContext("/",
                 exchange -> {

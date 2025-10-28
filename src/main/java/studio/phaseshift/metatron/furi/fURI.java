@@ -730,6 +730,8 @@ public class fURI implements Cloneable, Ring<fURI> {
         }
         final fURI lhs = this.basePath();
         final fURI other = rhs.basePath();
+        if (other.toString().equals(ALL_WILD_STRING))
+            return true;
         if (!other.hasPattern())
             return lhs.equals(other);
         if (Objects.equals(other.scheme, "#"))
@@ -743,8 +745,6 @@ public class fURI implements Cloneable, Ring<fURI> {
         if (!(other.port <= -1) || !Objects.equals(other.host, ONE_WILD_STRING))
             if (this.port != -1 && (other.port == -1 || (other.port != 0 && this.port != other.port)))
                 return false;
-        if (other.toString().equals(ALL_WILD_STRING))
-            return true;
         if (this.isAbsolute() != other.isAbsolute())
             return false;
         if (this.sstart != other.sstart)

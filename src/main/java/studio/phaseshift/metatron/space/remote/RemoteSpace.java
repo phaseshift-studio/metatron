@@ -22,7 +22,7 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.mtron.type.Code;
 import studio.phaseshift.metatron.lang.mtron.type.Inst;
 import studio.phaseshift.metatron.lang.mtron.type.Obj;
-import studio.phaseshift.metatron.space.mem.MSpace;
+import studio.phaseshift.metatron.space.MSpace;
 import studio.phaseshift.metatron.space.router.FutureObj;
 import studio.phaseshift.metatron.space.router.net.MClient;
 import studio.phaseshift.metatron.space.router.net.MConnection;

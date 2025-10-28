@@ -33,7 +33,7 @@ import java.util.function.Function;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MType.T;
 import static studio.phaseshift.metatron.util.Tuple.Triplet;
-import static studio.phaseshift.metatron.lang.mach.inst.machInstSet.MACH_MONAD_TID;
+import static studio.phaseshift.metatron.lang.mach.machInstSet.MACH_MONAD_TID;
 
 public interface Monad extends Obj {
 

@@ -16,18 +16,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.space.mem;
-
-import org.junit.jupiter.api.BeforeAll;
-import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.space.SpaceTest;
+package studio.phaseshift.metatron.lang.mllm;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class StackSpaceTest extends SpaceTest {
-    @BeforeAll
-    public static void setup() {
-        SPACE = () -> new StackSpace(fURI.of("/t/#"), fURI.of("/mnt/t"));
-    }
+public class mllmInstSet {
 }

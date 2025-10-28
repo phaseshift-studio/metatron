@@ -30,8 +30,8 @@ import studio.phaseshift.metatron.lang.mtron.type.Uri;
 import studio.phaseshift.metatron.lang.mweb.JSONTranslator;
 import studio.phaseshift.metatron.furi.Qs;
 import studio.phaseshift.metatron.space.Space;
-import studio.phaseshift.metatron.space.mem.KVSpace;
-import studio.phaseshift.metatron.space.mem.MSpace;
+import studio.phaseshift.metatron.space.kv.KVSpace;
+import studio.phaseshift.metatron.space.MSpace;
 import studio.phaseshift.metatron.furi.q.PubSubQ;
 import studio.phaseshift.metatron.ui.*;
 

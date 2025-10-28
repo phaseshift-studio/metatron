@@ -29,7 +29,7 @@ import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
 
 import static studio.phaseshift.metatron.util.Tuple.Triplet;
-import static studio.phaseshift.metatron.lang.mach.inst.machInstSet.MACH_MONAD_TID;
+import static studio.phaseshift.metatron.lang.mach.machInstSet.MACH_MONAD_TID;
 
 // monoid, obj, inst, state
 public class MMonad extends MObj implements Monad {

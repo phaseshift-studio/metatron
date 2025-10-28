@@ -20,7 +20,7 @@ package studio.phaseshift.metatron;
 
 import org.apache.tinkerpop.gremlin.tinkergraph.structure.TinkerFactory;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.lang.mach.inst.machInstSet;
+import studio.phaseshift.metatron.lang.mach.machInstSet;
 import studio.phaseshift.metatron.lang.mgrph.mgrphInstSet;
 import studio.phaseshift.metatron.lang.mgrph.tp.MGraph;
 import studio.phaseshift.metatron.lang.mtron.mtronInstSet;
@@ -29,12 +29,11 @@ import studio.phaseshift.metatron.lang.mtron.type.Obj;
 import studio.phaseshift.metatron.lang.mtron.type.Rec;
 import studio.phaseshift.metatron.lang.mvec.mvecInstSet;
 import studio.phaseshift.metatron.lang.mweb.mwebInstSet;
-import studio.phaseshift.metatron.lang.mweb.mwebSpace;
 import studio.phaseshift.metatron.space.Router;
 import studio.phaseshift.metatron.space.device.log.Log;
 import studio.phaseshift.metatron.space.fs.FileSpace;
-import studio.phaseshift.metatron.space.mem.KVSpace;
-import studio.phaseshift.metatron.space.mem.StackSpace;
+import studio.phaseshift.metatron.space.kv.KVSpace;
+import studio.phaseshift.metatron.space.stack.StackSpace;
 import studio.phaseshift.metatron.space.remote.RemoteSpace;
 import studio.phaseshift.metatron.space.router.MRouter;
 import studio.phaseshift.metatron.space.spaceInstSet;
@@ -152,7 +151,7 @@ public class BootLoader {
             Router.global().write(new mvecInstSet(f("/mnt/lang/mvec")));
             Router.global().write(new machInstSet(f("/mnt/lang/mach")));
             Router.global().write(new mwebInstSet(f("/mnt/lang/mweb")));
-            Router.global().write(mwebSpace.of(f("http://localhost:8777"), f("http://#"), f("/mnt/web")));
+          //  Router.global().write(mwebSpace.of(f("http://localhost:8777"), f("http://#"), f("/mnt/web")));
             // Router.global().write(new RemoteSpace(remoteAuthority,f("/shared/remote/#"), f("/mnt/shared/remote")));
             //Router.global().write(new KVSpace(fURI.of("/shared/#"), fURI.of("/mnt/shared")));
             if (remoteAuthority != null && !remoteAuthority.host().equals("chibi.local"))

@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.lang.mach.inst;
+package studio.phaseshift.metatron.lang.mach;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.mtron.type.Inst;
@@ -43,6 +43,7 @@ import static studio.phaseshift.metatron.lang.mtron.mtronInstSet.INT_TID;
 public class machInstSet extends MInstSet {
 
     public static final fURI MACH_TID = f("/mach");
+    public static final fURI MACH_INE_TID = MACH_TID.extend("ine");
     public static final fURI MACH_MONAD_TID = MACH_TID.extend("monad");
     public static final fURI MACH_INST_TID = MACH_TID.extend("inst");
     public static final fURI DROP_TID = MACH_INST_TID.extend("drop");
@@ -60,7 +61,7 @@ public class machInstSet extends MInstSet {
 
     @Override
     public Set<Type> types() {
-        return Stream.of(T(MACH_TID), T(MACH_MONAD_TID)).collect(Collectors.toSet());
+        return Stream.of(T(MACH_INE_TID), T(MACH_MONAD_TID)).collect(Collectors.toSet());
     }
 
     @Override

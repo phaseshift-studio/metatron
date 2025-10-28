@@ -35,8 +35,8 @@ import java.util.List;
 
 import static studio.phaseshift.metatron.util.MTronException.mexcept;
 import static studio.phaseshift.metatron.util.Tuple.Quartet;
-import static studio.phaseshift.metatron.lang.mach.inst.machInstSet.DROP_TID;
-import static studio.phaseshift.metatron.lang.mach.inst.machInstSet.MACH_TID;
+import static studio.phaseshift.metatron.lang.mach.machInstSet.DROP_TID;
+import static studio.phaseshift.metatron.lang.mach.machInstSet.MACH_TID;
 
 ;
 

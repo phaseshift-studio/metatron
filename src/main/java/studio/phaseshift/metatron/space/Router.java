@@ -20,9 +20,10 @@ package studio.phaseshift.metatron.space;
 
 import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.lang.mtron.type.NoObj;
 import studio.phaseshift.metatron.lang.mtron.type.Obj;
-import studio.phaseshift.metatron.space.mem.StackSpace;
 import studio.phaseshift.metatron.space.router.net.MServer;
+import studio.phaseshift.metatron.space.stack.StackSpace;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.util.MTronException;
 
@@ -32,8 +33,20 @@ public interface Router extends Obj, Space, Closeable {
 
     ThreadLocal<StackSpace> INST_STACK = ThreadLocal.withInitial(() -> new StackSpace(fURI.of("+/#"), Router.global().vid().extend("stack")));
 
+    static boolean loaded() {
+        return null != BootLoader.ROUTER;
+    }
+
     static Router global() {
         return BootLoader.ROUTER;
+    }
+
+    static Obj readFromSpace(final fURI vid) {
+        return Router.loaded() ? BootLoader.ROUTER.read(vid) : NoObj.single();
+    }
+    
+    static Obj writeToSpace(final fURI vid, final Obj obj) {
+        return Router.loaded() ? BootLoader.ROUTER.write(vid,obj) : NoObj.single();
     }
 
     static StackSpace stack() {

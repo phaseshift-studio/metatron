@@ -1,6 +1,6 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
- * Copyright (C) 2025- PhaseShift Studio, LLC 
+ * Copyright (C) 2025- PhaseShift Studio, LLC
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -42,12 +42,12 @@ import static org.petitparser.parser.primitive.CharacterParser.digit;
 import static org.petitparser.parser.primitive.CharacterParser.of;
 import static org.petitparser.parser.primitive.CharacterParser.word;
 import static org.petitparser.parser.primitive.StringParser.of;
+import static studio.phaseshift.metatron.lang.mtron.mtronFluent.StartLess.split_;
+import static studio.phaseshift.metatron.lang.mtron.mtronInstSet.*;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MRec.rec;
-import static studio.phaseshift.metatron.lang.mtron.mtronFluent.StartLess.split_;
-import static studio.phaseshift.metatron.lang.mtron.mtronInstSet.*;
 import static studio.phaseshift.metatron.util.Tuple.Triplet;
 
 public class mtronParser {
@@ -129,11 +129,11 @@ public class mtronParser {
                 m_vid_postfix())
                 .map(t -> new MLst(pick(t, 2), pick(t, 0), pick(t, 4))));
 
-        rec_parser.set(seq(m_type_prefix_opt_colon(REC_TID), of('[').trim(), rec_internal(), of(']'), m_vid_postfix()).trim().map(t -> new MRec(pick(t, 2), pick(t, 0), pick(t, 4))));
+        rec_parser.set(seq(m_type_prefix_opt_colon(REC_TID), of('[').trim(), rec_internal(obj_rel_back_parser, obj_parser), of(']'), m_vid_postfix()).trim().map(t -> new MRec(pick(t, 2), pick(t, 0), pick(t, 4))));
 
         inst_parser.set(choice(/*branch_parser,*/ seq(
                 choice(m_inst_furi(), m_type_prefix_opt_colon(INST_TID)), // 0 inst_tid
-                seq(of('(').trim(), choice(rec_internal(), lst_internal(), of("")), of(')').trim()).pick(1), // 1 inst_args
+                seq(of('(').trim(), choice(rec_internal(m_uri(), obj_parser), lst_internal(), of("")), of(')').trim()).pick(1), // 1 inst_args
                 opt(seq(of('{').trim(), choice(
                                 of('?').map(t -> null),
                                 of("<j>").map(t -> null),
@@ -154,10 +154,10 @@ public class mtronParser {
         return choice(of(','), m_obj().separatedBy(of(',').trim())).map(t -> t.equals(',') ? List.of() : ((List) t).stream().filter(o -> o instanceof Obj).toList());
     }
 
-    public static Parser rec_internal() {
+    public static Parser rec_internal(final Parser keyParser, final Parser valueParser) {
         return choice(of("=>").trim(),
                 /*choice(seq(of('(').trim(), m_obj(), of("=>").trim(), m_obj(), of(')').trim()),*/
-                seq(obj_rel_back_parser, of("=>").trim(), m_obj()).separatedBy(of(',').trim()))
+                seq(keyParser, of("=>").trim(), valueParser).separatedBy(of(',').trim()))
                 .map(t -> t.equals("=>") ?
                         Map.of() :
                         ((List) t).stream()

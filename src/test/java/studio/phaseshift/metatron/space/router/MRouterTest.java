@@ -21,7 +21,7 @@ package studio.phaseshift.metatron.space.router;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import studio.phaseshift.metatron.lang.mtron.type.NoObj;
-import studio.phaseshift.metatron.space.mem.KVSpace;
+import studio.phaseshift.metatron.space.kv.KVSpace;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.furi.fURI.f;

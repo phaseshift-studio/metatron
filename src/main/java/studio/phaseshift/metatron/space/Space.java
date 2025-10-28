@@ -20,12 +20,11 @@ package studio.phaseshift.metatron.space;
 
 import studio.phaseshift.metatron.furi.Qs;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.lang.mach.type.impl.MMachine;
 import studio.phaseshift.metatron.lang.mtron.type.*;
-
 import studio.phaseshift.metatron.lang.mtron.type.impl.MObjs;
 import studio.phaseshift.metatron.lang.mtron.type.impl.MRel;
 import studio.phaseshift.metatron.ui.Graphitty;
-import studio.phaseshift.metatron.lang.mach.type.impl.MMachine;
 
 import java.io.Closeable;
 import java.util.ArrayList;
@@ -121,7 +120,8 @@ public interface Space extends Poly, Closeable {
         }
 
         public static String spaceToString(final Space space) {
-            return Graphitty.string("{{b}}" + space.tid() + "{{g}}::[{{c}}pattern:{{b}}" + space.pattern() + "{{g}}]@{{b}}" + space.vid() + "{{X}}");
+            return Obj.Helper.objToString(space);
+            //return Graphitty.string("{{b}}" + space.tid() + "{{g}}::[{{c}}pattern:{{b}}" + space.pattern() + "{{g}}]{{X}}");
         }
 
         public static int spaceHashCode(final Space space) {

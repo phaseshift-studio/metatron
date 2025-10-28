@@ -24,7 +24,7 @@ import studio.phaseshift.metatron.lang.mtron.type.Inst;
 import studio.phaseshift.metatron.lang.mtron.type.NoObj;
 import studio.phaseshift.metatron.lang.mtron.type.Obj;
 import studio.phaseshift.metatron.lang.mtron.type.Type;
-import studio.phaseshift.metatron.space.mem.KVSpace;
+import studio.phaseshift.metatron.space.kv.KVSpace;
 import studio.phaseshift.metatron.space.mqtt.MqttSpace;
 
 import java.util.Set;

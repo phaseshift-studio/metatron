@@ -20,16 +20,21 @@ package studio.phaseshift.metatron.lang.mweb;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.mtron.type.Inst;
+import studio.phaseshift.metatron.lang.mtron.type.Rec;
 import studio.phaseshift.metatron.lang.mtron.type.Type;
 import studio.phaseshift.metatron.lang.mtron.type.impl.MInstSet;
-import studio.phaseshift.metatron.lang.mvec.mvecInstSet;
 
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.furi.fURI.f;
+import static studio.phaseshift.metatron.lang.mtron.mtronInstSet.URI_TID;
+import static studio.phaseshift.metatron.lang.mtron.type.impl.MInst.instC;
+import static studio.phaseshift.metatron.lang.mtron.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MType.T;
+import static studio.phaseshift.metatron.lang.mtron.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.lang.mweb.mwebSpace.WEB_TID;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -47,13 +52,16 @@ public class mwebInstSet extends MInstSet {
         super(MWEB_TID, vid);
     }
 
-    public static mvecInstSet of(final fURI vid) {
-        return new mvecInstSet(vid);
+    public static mwebInstSet of(final fURI vid) {
+        return new mwebInstSet(vid);
     }
 
     @Override
     public Set<Inst> insts() {
-        return Set.of();//Stream.of().collect(LinkedHashSet::new, LinkedHashSet::add, LinkedHashSet::addAll);
+        return Set.of(instC(MWEB_INST_TID.extend("mweb").dom(URI_TID).rng(WEB_TID),
+                rec(uri("authority"), T(URI_TID), uri("pattern"), T(URI_TID)), (lhs, inst) -> {
+                    return mwebSpace.of(inst.arg("authority").uriValue(), inst.arg("pattern").uriValue(), fURI.NULL);
+                }));//Stream.of().collect(LinkedHashSet::new, LinkedHashSet::add, LinkedHashSet::addAll);
     }
 
     @Override

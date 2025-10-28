@@ -16,29 +16,16 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.lang.mgrph;
+package studio.phaseshift.metatron.space.kv;
 
-import org.apache.tinkerpop.gremlin.structure.Vertex;
+import org.junit.jupiter.api.BeforeAll;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.lang.mtron.type.Obj;
-import studio.phaseshift.metatron.space.mem.MSpace;
+import studio.phaseshift.metatron.space.SpaceTest;
 
-/*
- * @author Marko A. Rodriguez (http://markorodriguez.com)
- */
-public class VertexSpace extends MSpace<Vertex> {
+public class KVSpaceTest extends SpaceTest {
 
-    public VertexSpace(final Vertex vertex, final fURI pattern, final fURI tid, final fURI vid) {
-        super(vertex, pattern, tid, vid);
-    }
-
-    @Override
-    public Obj read(final fURI vid) {
-        return null;
-    }
-
-    @Override
-    public Obj write(final fURI vid, final Obj obj) {
-        return null;
+    @BeforeAll
+    public static void setup() {
+        SPACE = () -> new KVSpace(fURI.of("/t/#"), fURI.of("/mnt/t"));
     }
 }

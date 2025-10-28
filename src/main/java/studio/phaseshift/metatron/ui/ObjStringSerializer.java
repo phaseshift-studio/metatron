@@ -20,15 +20,17 @@ package studio.phaseshift.metatron.ui;
 
 import org.petitparser.context.Result;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.lang.mtron.type.*;
-
 import studio.phaseshift.metatron.lang.mtron.mtronParser;
+import studio.phaseshift.metatron.lang.mtron.type.*;
+import studio.phaseshift.metatron.space.Space;
 
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
 import static studio.phaseshift.metatron.lang.mtron.mtronInstSet.BASE_TYPES;
+import static studio.phaseshift.metatron.lang.mtron.type.impl.MRel.rel;
+import static studio.phaseshift.metatron.lang.mtron.type.impl.MUri.uri;
 
 public class ObjStringSerializer implements ObjSerializer<String> {
 
@@ -167,10 +169,17 @@ public class ObjStringSerializer implements ObjSerializer<String> {
         }
         /// ///////////////////////////////////////////////////////////////
         /// ///////////////////////////////////////////////////////////////
-        else
+        else if (BASE_TYPES.contains(obj.baseType()))
             return generateVID(generateTID(sb, obj.tid(), true)
                     .append(this.b.palette.valueC())
                     .append(null == obj.jvm() ? "" : (obj.isStr() ? "'" + obj.jvm().toString() + "'" : obj.jvm().toString()))
+                    .append(this.b.palette.form2C()), obj)
+                    .append(this.b.ignoreRewrites ? "" : "{{X}}")
+                    .toString();
+        else
+            return generateVID(generateTID(sb, obj.tid(), true)
+                    .append(this.b.palette.valueC())
+                    .append(obj instanceof Space ? rel(uri("pattern"), ((Space) obj).pattern().toUri()) : "")
                     .append(this.b.palette.form2C()), obj)
                     .append(this.b.ignoreRewrites ? "" : "{{X}}")
                     .toString();

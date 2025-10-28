@@ -1,6 +1,6 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
- * Copyright (C) 2025- PhaseShift Studio, LLC
+ * Copyright (C) 2025- PhaseShift Studio, LLC 
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -16,13 +16,15 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.space.mem;
+package studio.phaseshift.metatron.space.stack;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.mtron.type.Obj;
 import studio.phaseshift.metatron.lang.mtron.type.Poly;
+import studio.phaseshift.metatron.space.MSpace;
 import studio.phaseshift.metatron.space.Router;
 import studio.phaseshift.metatron.space.Space;
+import studio.phaseshift.metatron.space.kv.KVSpace;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
 import studio.phaseshift.metatron.util.MTronException;
@@ -84,7 +86,7 @@ public class StackSpace extends MSpace<LinkedList<KVSpace>> {
         final KVSpace frameSpace = this.jvm.pop();
         if (null == frameSpace)
             return false;
-        LOG.trace("popped frame {{_&r}}off{{/r&/_}} stack: %s [{{y}}depth{{/y}}: %d]", frameSpace.jvm, this.jvm.size());
+        LOG.trace("popped frame {{_&r}}off{{/r&/_}} stack: %s [{{y}}depth{{/y}}: %d]", frameSpace.jvm(), this.jvm.size());
         return true;
     }
 
@@ -102,6 +104,6 @@ public class StackSpace extends MSpace<LinkedList<KVSpace>> {
             }
         }
         this.jvm.push(frameSpace);
-        LOG.trace("pushed frame {{_&g}}on{{/g&/_}} stack: %s [{{y}}depth{{/y}}: %d]", frameSpace.jvm, this.jvm.size());
+        LOG.trace("pushed frame {{_&g}}on{{/g&/_}} stack: %s [{{y}}depth{{/y}}: %d]", frameSpace.jvm(), this.jvm.size());
     }
 }

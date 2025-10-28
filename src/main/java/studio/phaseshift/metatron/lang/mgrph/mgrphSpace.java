@@ -21,7 +21,7 @@ package studio.phaseshift.metatron.lang.mgrph;
 import org.apache.tinkerpop.gremlin.structure.Graph;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.mtron.type.Obj;
-import studio.phaseshift.metatron.space.mem.MSpace;
+import studio.phaseshift.metatron.space.MSpace;
 
 import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.lang.mtron.mtronInstSet.MTRON_SPACE_TID;
@@ -29,7 +29,7 @@ import static studio.phaseshift.metatron.lang.mtron.mtronInstSet.MTRON_SPACE_TID
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class GraphSpace extends MSpace<Graph> {
+public class mgrphSpace extends MSpace<Graph> {
 
     /**
      * /root/v/+                       => vertices
@@ -45,7 +45,7 @@ public class GraphSpace extends MSpace<Graph> {
     protected static final fURI E_V_ADJ_PATTERN = f("/v/+/");
 
 
-    public GraphSpace(final Graph graph, final fURI pattern, final fURI tid, final fURI vid) {
+    public mgrphSpace(final Graph graph, final fURI pattern, final fURI tid, final fURI vid) {
         super(graph, pattern, tid, vid);
     }
 
