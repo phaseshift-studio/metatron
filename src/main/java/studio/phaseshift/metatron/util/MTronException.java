@@ -18,7 +18,6 @@
 
 package studio.phaseshift.metatron.util;
 
-import org.apache.tinkerpop.gremlin.util.function.ThrowingSupplier;
 import studio.phaseshift.metatron.lang.mtron.type.Fail;
 import studio.phaseshift.metatron.ui.Graphitty;
 
@@ -69,6 +68,14 @@ public class MTronException extends RuntimeException {
         }
     }
 
+    public static void wrap(final ThrowingRunnable function) {
+        try {
+            function.run();
+        } catch (final Exception e) {
+            throw MTronException.of(e);
+        }
+    }
+
     public static <T> T wrap(final ThrowingSupplier<T> function, final T onException) {
         try {
             return function.get();
@@ -76,7 +83,7 @@ public class MTronException extends RuntimeException {
             return onException;
         }
     }
-    
+
     public static MTronException mexcept(final Object throwableOrformat, final Object... args) {
         return throwableOrformat instanceof Throwable ?
                 new MTronException(Graphitty.string(((String) args[0]).formatted(Arrays.copyOfRange(args, 1, args.length))),
@@ -95,5 +102,15 @@ public class MTronException extends RuntimeException {
 
     public String toString() {
         return this.getMessage();
+    }
+
+    @FunctionalInterface
+    public interface ThrowingSupplier<T> {
+        public T get() throws Exception;
+    }
+
+    @FunctionalInterface
+    public interface ThrowingRunnable {
+        public void run() throws Exception;
     }
 }

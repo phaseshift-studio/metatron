@@ -23,11 +23,15 @@ import studio.phaseshift.metatron.lang.mtron.type.Code;
 import studio.phaseshift.metatron.lang.mtron.type.Inst;
 import studio.phaseshift.metatron.lang.mtron.type.Obj;
 import studio.phaseshift.metatron.space.MSpace;
+import studio.phaseshift.metatron.space.Router;
 import studio.phaseshift.metatron.space.router.FutureObj;
 import studio.phaseshift.metatron.space.router.net.MClient;
 import studio.phaseshift.metatron.space.router.net.MConnection;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
+import studio.phaseshift.metatron.util.MTronException;
+
+import java.util.concurrent.TimeUnit;
 
 import static studio.phaseshift.metatron.lang.mtron.mtronFluent.StartLess.from_;
 import static studio.phaseshift.metatron.lang.mtron.mtronFluent.StartLess.start_;
@@ -38,6 +42,7 @@ import static studio.phaseshift.metatron.lang.mtron.mtronInstSet.MTRON_SPACE_TID
  */
 public class RemoteSpace extends MSpace<MConnection> {
 
+    public static final int RETRY_SECONDS = 5;
     public static final fURI REMOTE_TID = MTRON_SPACE_TID.extend("remote");
     private final GraphittyLogger LOG;
 
@@ -47,11 +52,15 @@ public class RemoteSpace extends MSpace<MConnection> {
     }
 
     public static RemoteSpace open(final fURI authority, final fURI pattern, final fURI vid) {
-        //try {
-        return new RemoteSpace(authority, pattern, vid);
-        // } catch (final MTronException e) {
-        //     return NullSpace.single();
-        // }
+        GraphittyLogger LOG = Graphitty.log(Router.global());
+        while (true) {
+            try {
+                return new RemoteSpace(authority, pattern, vid);
+            } catch (final Exception e) {
+                LOG.error("retrying connection in %d seconds: %s", RETRY_SECONDS, e);
+                MTronException.wrap(() -> TimeUnit.SECONDS.sleep(RETRY_SECONDS));
+            }
+        }
     }
 
     @Override

@@ -23,6 +23,7 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.mach.machInstSet;
 import studio.phaseshift.metatron.lang.mgrph.mgrphInstSet;
 import studio.phaseshift.metatron.lang.mgrph.tp.MGraph;
+import studio.phaseshift.metatron.lang.mllm.mollamaSpace;
 import studio.phaseshift.metatron.lang.mtron.mtronInstSet;
 import studio.phaseshift.metatron.lang.mtron.mtronParser;
 import studio.phaseshift.metatron.lang.mtron.type.Obj;
@@ -151,6 +152,7 @@ public class BootLoader {
             Router.global().write(new mvecInstSet(f("/mnt/lang/mvec")));
             Router.global().write(new machInstSet(f("/mnt/lang/mach")));
             Router.global().write(new mwebInstSet(f("/mnt/lang/mweb")));
+            Router.global().write(mollamaSpace.of(f("http://localhost:11434"),f("/ollama/#"),f("/mnt/ollama")));
           //  Router.global().write(mwebSpace.of(f("http://localhost:8777"), f("http://#"), f("/mnt/web")));
             // Router.global().write(new RemoteSpace(remoteAuthority,f("/shared/remote/#"), f("/mnt/shared/remote")));
             //Router.global().write(new KVSpace(fURI.of("/shared/#"), fURI.of("/mnt/shared")));

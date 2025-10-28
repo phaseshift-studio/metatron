@@ -53,7 +53,7 @@ public class MClient extends WebSocketClient implements MConnection {
         this.serializer = new ObjByteBufferSerializer();
         this.authority = authority;
         LOG.info("connecting to {{b}}%s{{/b}}", this.authority);
-        Router.global().write(Router.global().vid().extend("cluster"), new MObjs(this.authority.toUri()));
+        Router.writeToSpace(Router.global().vid().extend("cluster"), new MObjs(this.authority.toUri()));
     }
 
     public MClient(final fURI authority) {
@@ -118,7 +118,6 @@ public class MClient extends WebSocketClient implements MConnection {
     @Override
     public void onError(final Exception ex) {
         LOG.error("an error occurred on connection: %s", ex);
-        ex.printStackTrace();
         this.futures.clear();
     }
 
