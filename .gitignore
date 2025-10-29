@@ -5,7 +5,7 @@
 .metatron.history
 *.iml
 /.venv/
-
+__pycache__/
 # Compiled class file
 *.class
 

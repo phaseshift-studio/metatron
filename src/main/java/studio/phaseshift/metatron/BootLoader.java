@@ -41,8 +41,8 @@ import studio.phaseshift.metatron.space.spaceInstSet;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
 import studio.phaseshift.metatron.ui.Mode;
-import studio.phaseshift.metatron.ui.console.Console;
-import studio.phaseshift.metatron.ui.server.Server;
+import studio.phaseshift.metatron.ui.mode.console.Console;
+import studio.phaseshift.metatron.ui.mode.server.Server;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.io.BufferedReader;

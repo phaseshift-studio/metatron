@@ -1,4 +1,4 @@
-:imagesdir: ./images
+:imagesdir: ../../images
 :favicon: {imagesdir}/favicon.ico
 :copyright: PhaseShift Studio
 :author: Marko A. Rodriguez
@@ -8,9 +8,9 @@
 :icon-set: fas
 :stem: latexmath
 :source-highlighter: highlight.js
-:highlightjsdir: ./highlight
+:highlightjsdir: ../highlight
 :highlightjs-languages: mtron,html,bash,json
-:stylesheet: ./css/metatron.css
+:stylesheet: ../css/metatron.css
 // :linkcss:
 :data-uri:
 :toc-title: metatron
@@ -51,12 +51,13 @@ a*(b+c) = ab + ac
 (b+c)*a = ba + ca
 ```
 
-== Instruction Sets
 include::intro.adoc[]
-include::mtron.adoc[]
-include::mkv.adoc[]
-include::mweb.adoc[]
-include::mgrph.adoc[]
-include::mvec.adoc[]
-include::mllm.adoc[]
-include::mach.adoc[]
+
+== instruction sets
+include::instset/mtron.adoc[]
+include::instset/mkv.adoc[]
+include::instset/mweb.adoc[]
+include::instset/mgrph.adoc[]
+include::instset/mvec.adoc[]
+include::instset/mllm.adoc[]
+include::instset/mach.adoc[]

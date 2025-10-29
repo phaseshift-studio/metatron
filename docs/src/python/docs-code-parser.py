@@ -1,6 +1,18 @@
-# Copyright (c) 2023, Bas Nijholt
-# edited by Dogturd Stynx
-# All rights reserved.
+#  Metatron: A Distributed Computing Language and Virtual Machine
+#  Copyright (C) 2025- PhaseShift Studio, LLC
+# 
+#  This program is free software: you can redistribute it and/or modify
+#  it under the terms of the GNU Affero General Public License as published by
+#  the Free Software Foundation, either version 3 of the License, or
+#  (at your option) any later version.
+# 
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU Affero General Public License for more details.
+# 
+#  You should have received a copy of the GNU Affero General Public License
+#  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 mtron code runner for metatron documentation
 """
@@ -16,7 +28,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
-from ..colors import *
+from colors import *
+from runner.mytron import Mytron
 
 if TYPE_CHECKING:
     try:
@@ -36,6 +49,7 @@ else:  # pragma: no cover
     __version__ = pkg_resources.get_distribution("markdown-code-runner").version
 
 DEBUG: bool = os.environ.get("DEBUG", "0") == "1"
+mytron: Mytron = Mytron()
 
 
 def remove_html_comment(commented_text: str) -> str:
@@ -61,7 +75,7 @@ def execute_code(
             new_code.append(c)
         else:
             if cat:
-                new_code.append(new_code.pop().rstrip().removesuffix(" /\"") + "\n        " + c + "\"")
+                new_code.append(new_code.rstrip().removesuffix(" /\"") + "\n        " + c + "\"")
             else:
                 new_code.append("\"" + c + "\"")
         cat = c.endswith("/")
@@ -195,7 +209,7 @@ class ProcessingState:
             list,
         ), f"Output must be a list, not {type(self.output)}, line: {line}"
         pre_header = ["++++", ""]
-        post_header = ["[source,mmadt]", "----"]
+        post_header = ["[source,mtron]", "----"]
         new_output = []
         new_header = []
         for c in self.output:
@@ -219,7 +233,7 @@ class ProcessingState:
         self.new_lines.extend(new_header)
         self.new_lines.extend(post_header)
         self.new_lines.extend(new_output)
-        self.new_lines.pop()
+        # self.new_lines.pop()
         self.new_lines.extend(["----"])
         self.output = None  # Reset output after processing end of the output section
 
@@ -236,14 +250,11 @@ class ProcessingState:
                 to_execute.append(line)
         self.output = []
         self.output.extend(to_header)
-        x = execute_code(
-            to_execute,
-            self.context,
-            "bash",
-            output_file=self.backtick_options.get("filename"),
-            verbose=verbose,
-        )
-        for line in x:
+        result = []
+        to_execute.pop(0)
+        for line in to_execute:
+            result.append(mytron.exec(line))
+        for line in result:
             if -1 == line.find("[HIDDEN]"):
                 self.output.append(line)
         self.code = []

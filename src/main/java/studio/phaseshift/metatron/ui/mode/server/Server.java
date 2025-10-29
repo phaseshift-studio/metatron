@@ -1,6 +1,6 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
- * Copyright (C) 2025- PhaseShift Studio, LLC
+ * Copyright (C) 2025- PhaseShift Studio, LLC 
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.ui.server;
+package studio.phaseshift.metatron.ui.mode.server;
 
 import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.lang.mtron.type.Rec;
