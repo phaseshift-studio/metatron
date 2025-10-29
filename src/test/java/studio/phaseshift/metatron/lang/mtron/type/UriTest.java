@@ -1,6 +1,6 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
- * Copyright (C) 2025- PhaseShift Studio, LLC 
+ * Copyright (C) 2025- PhaseShift Studio, LLC
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -25,7 +25,7 @@ import studio.phaseshift.metatron.MetatronTest;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class UriTest extends MetatronTest  {
+public class UriTest extends MetatronTest {
 
     @Override
     @ParameterizedTest
@@ -37,11 +37,15 @@ public class UriTest extends MetatronTest  {
             "lst::<abc/def>                                               | <ERROR>",
             "lst::<abc/def>                                               | <ERROR>",
             "inst::<abc/def>                                              | <ERROR>",
-          //  "code::<abc/def>                                              | <ERROR>",
+            //  "code::<abc/def>                                            | <ERROR>",
             "uri::<http://webpage.com>                                    | <http://webpage.com>",
             "uri::<http://webpage.com>.type()                             | uri::T[]",
             "<http://webpage.com>.type()                                  | uri::T[]",
             "'http://webpage.com'.type()                                  | str::T[]",
+            //"a/b.plus(c/d)                                                | {a/b,c/d}",
+            "a/b.plus(noobj)                                              | a/b",
+            "a/b.mult(c/d)                                                | a/b/c/d",
+            "a/b.mult(noobj)                                              | noobj"
     }, delimiter = '|')
     public void testCode(final String code, final String expected) {
         super.testCode(code, expected);

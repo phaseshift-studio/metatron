@@ -53,7 +53,7 @@ public class fURI implements Cloneable, Ring<fURI> {
     public static final fURI RNG = fURI.of("rng");
     private static final fURI ONE = f(".").c("1");
     private static final fURI ZERO = f("").c("0");
-    public static final fURI NOOBJ = fURI.of("").zero();
+    public static final fURI NOOBJ = fURI.of("").c("0");
     private final String host;
     private final String scheme;
     private final int port;
@@ -327,7 +327,7 @@ public class fURI implements Cloneable, Ring<fURI> {
     }
 
     public fURI authority() {
-        return null == this.host ? null : f(this.scheme + "://" + this.host + (this.port == -1 ? "" : SCHEMA_END + this.port));
+        return null == this.host ? null : f(this.host + (this.port == -1 ? "" : SCHEMA_END + this.port));
         //return null == this.host ? null : this.host +;
     }
 
@@ -380,7 +380,7 @@ public class fURI implements Cloneable, Ring<fURI> {
     }
 
     public boolean isZero() {
-        return this.equals(fURI.NOOBJ) || this.cV().isZero();
+        return this.cV().isZero();
     }
 
     public fURI removeSubpath(final fURI subpath) {
@@ -561,7 +561,7 @@ public class fURI implements Cloneable, Ring<fURI> {
             cInt c1 = this.cV();
             cInt c2 = furi.cV();
             cInt c3 = c1.plus(c2);
-            Map<String, String> query = new LinkedHashMap<>();
+            final Map<String, String> query = new LinkedHashMap<>();
             query.putAll(this.queryMap());
             query.putAll(furi.queryMap());
             return this.c(c3.toString()).queryMap(query);
@@ -576,6 +576,8 @@ public class fURI implements Cloneable, Ring<fURI> {
             return furi;
         if (furi.isOne())
             return this;
+        if (this.isZero() || furi.isZero())
+            return this.zero();
         cInt c1 = this.cV();
         cInt c2 = furi.cV();
         cInt c3 = c1.mult(c2);
@@ -787,14 +789,16 @@ public class fURI implements Cloneable, Ring<fURI> {
     public boolean equals(final Object other) {
         return other instanceof fURI &&
                 //    this.toString().equals(other.toString());
-                this.sstart == ((fURI) other).sstart &&
-                Objects.equals(this.cLess().path, ((fURI) other).cLess().path) &&
-                this.send == ((fURI) other).send &&
-                Objects.equals(this.query, ((fURI) other).query) &&
-                Objects.equals(this.cV(), ((fURI) other).cV()) &&
-                Objects.equals(this.scheme, ((fURI) other).scheme) &&
-                Objects.equals(this.host, ((fURI) other).host) &&
-                Objects.equals(this.port, ((fURI) other).port);
+                ((this.isZero() && ((fURI) other).isZero())
+                        ||
+                        (this.sstart == ((fURI) other).sstart &&
+                                Objects.equals(this.cLess().path, ((fURI) other).cLess().path) &&
+                                this.send == ((fURI) other).send &&
+                                Objects.equals(this.query, ((fURI) other).query) &&
+                                Objects.equals(this.cV(), ((fURI) other).cV()) &&
+                                Objects.equals(this.scheme, ((fURI) other).scheme) &&
+                                Objects.equals(this.host, ((fURI) other).host) &&
+                                Objects.equals(this.port, ((fURI) other).port)));
     }
 
     public int hashCode() {

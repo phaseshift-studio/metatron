@@ -192,7 +192,7 @@ public class MServer extends WebSocketServer implements Closeable, Obj {
     }
 
     @Override
-    public <O extends Obj> O clone(Object jvm, fURI tid, fURI vid) {
+    public <O extends Obj> O clone(final Object jvm, final fURI tid, final fURI vid) {
         return null;
     }
 

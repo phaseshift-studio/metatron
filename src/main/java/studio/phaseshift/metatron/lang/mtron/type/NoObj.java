@@ -23,6 +23,7 @@ import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.util.IteratorUtil;
 
 import java.util.Iterator;
+import java.util.List;
 
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.util.Tuple.Triplet;
@@ -134,5 +135,30 @@ public final class NoObj implements Obj, Inst {
     @Override
     public Type rng() {
         return NoObj.single().type();
+    }
+    
+    @Override
+    public fURI uriValue() {
+        return fURI.NOOBJ;
+    }
+    
+    @Override
+    public Long intValue() {
+        return 0L;
+    }
+    
+    @Override
+    public String strValue() {
+        return "";
+    }
+    
+    @Override
+    public List<Obj> lstValue() {
+        return List.of();
+    }
+    
+    @Override
+    public Double realValue() {
+        return 0.0d;
     }
 }

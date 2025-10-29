@@ -18,45 +18,43 @@
 
 package studio.phaseshift.metatron.lang.mllm.type.impl;
 
-import dev.langchain4j.model.ollama.OllamaChatModel;
 import dev.langchain4j.model.ollama.OllamaModel;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.lang.mllm.mollamaSpace;
 import studio.phaseshift.metatron.lang.mllm.type.LLM;
-import studio.phaseshift.metatron.lang.mtron.type.impl.MObj;
-import studio.phaseshift.metatron.space.Router;
+import studio.phaseshift.metatron.lang.mtron.type.Obj;
+import studio.phaseshift.metatron.lang.mtron.type.impl.MRec;
+import studio.phaseshift.metatron.util.Tuple;
+
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 import static studio.phaseshift.metatron.furi.fURI.f;
-import static studio.phaseshift.metatron.lang.mtron.mtronInstSet.STR_TID;
-import static studio.phaseshift.metatron.lang.mtron.type.impl.MInst.instC;
-import static studio.phaseshift.metatron.lang.mtron.type.impl.MLst.lst;
-import static studio.phaseshift.metatron.lang.mtron.type.impl.MStr.str;
-import static studio.phaseshift.metatron.lang.mtron.type.impl.MType.T;
+import static studio.phaseshift.metatron.lang.mtron.type.impl.MInt.jnt;
+import static studio.phaseshift.metatron.lang.mtron.type.impl.MUri.uri;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class OLLM extends MObj implements LLM {
+public class OLLM extends MRec implements LLM {
 
     public static final fURI OLLM_TID = f("/mllm/ollm");
 
-    public OLLM(final OllamaModel model, final fURI tid, final fURI vid) {
-        super(model, tid, vid);
-        this.addInst(instC(f("chat").dom(this.tid()).rng(STR_TID.maybeSome()), lst(T(STR_TID)), (lhs, inst) -> {
-            return str(OllamaChatModel.builder().baseUrl(this.getOllamaEndpoint().toString()).modelName(this.jvm().getName()).build().chat(inst.arg(0).strValue()));
-        }));
+    public OLLM(final Tuple.Pair<OllamaModel, fURI> model, final fURI tid, final fURI vid) {
+        super(modelToRec(model), tid, vid);
     }
 
-    public static OLLM ollm(final OllamaModel model, final fURI tid, final fURI vid) {
+    private static Map<Obj, Obj> modelToRec(final Tuple.Pair<OllamaModel, fURI> model) {
+        return new LinkedHashMap<>() {{
+            put(uri("name"), uri(model.get0().getName()));
+            put(uri("host"), uri(model.get1()));
+            put(uri("size"), jnt(model.get0().getSize()));
+            put(uri("quant"), uri(model.get0().getDetails().getQuantizationLevel()));
+            put(uri("family"), uri(model.get0().getDetails().getFormat()));
+        }};
+    }
+
+    public static OLLM ollm(final Tuple.Pair<OllamaModel, fURI> model, final fURI tid, final fURI vid) {
         return new OLLM(model, tid, vid);
-    }
-
-    public fURI getOllamaEndpoint() {
-        return ((mollamaSpace) Router.global().getSpace(this.vid)).ollamaHost;
-    }
-
-    public OllamaModel jvm() {
-        return (OllamaModel) this.jvm;
     }
 
     public OLLM clone() {
@@ -64,10 +62,6 @@ public class OLLM extends MObj implements LLM {
     }
 
     public OLLM clone(final Object model, fURI tid, final fURI vid) {
-        return super.clone(model, tid, vid);
-    }
-
-    private fURI modelToVid(final OllamaModel model) {
-        return this.vid().retractPattern().extend(model.getModel().replace(":", "/"));
+        return (OLLM) super.clone(model, tid, vid);
     }
 }

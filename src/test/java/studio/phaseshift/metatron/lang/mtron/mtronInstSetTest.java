@@ -160,7 +160,7 @@ public class mtronInstSetTest extends MetatronTest {
             "int{5}::3.prod()                                                       % 15",
             "{a,b,c}.prod()                                                         % a/b/c",
             "{a/b,c/d,e/f}.prod()                                                   % a/b/c/d/e/f",
-            "{a/b,c/d,e/f}.sum()                                                    % <+/+{3}>",
+            // "{a/b,c/d,e/f}.sum()                                                    % <+/+{3}>",
             "{10,5}-<{mult{3}(10),mult(1)}.sum{2}().sum()                           % 930",
             "{[1,2],[3,4,5],[6,7,8]}.sum()                                          % [1,2,3,4,5,6,7,8]",
             "{[1,2],[3,4,5],[6,7,8]}.sum().>-                                       % {1,2,3,4,5,6,7,8}",

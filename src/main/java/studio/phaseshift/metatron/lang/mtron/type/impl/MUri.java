@@ -1,6 +1,6 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
- * Copyright (C) 2025- PhaseShift Studio, LLC 
+ * Copyright (C) 2025- PhaseShift Studio, LLC
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -24,10 +24,12 @@ import studio.phaseshift.metatron.lang.mtron.type.Uri;
 import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.lang.mtron.mtronInstSet.URI_TID;
 
-public class MUri extends MObj implements Uri{
+public class MUri extends MObj implements Uri {
 
-    public MUri(final fURI value, final fURI tid, final fURI vid) {
-        super(value, tid, vid);
+    public MUri(final fURI jvm, final fURI tid, final fURI vid) {
+        super(jvm, tid, vid);
+        if (jvm.isZero())
+            this.tid = this.tid.zero();
     }
 
     public static Uri uri(final String jvm) {
@@ -48,7 +50,10 @@ public class MUri extends MObj implements Uri{
 
     @Override
     public Uri clone(final Object jvm, final fURI tid, final fURI vid) {
-        return (Uri) super.clone(jvm, tid, vid);
+        MUri clone = super.clone(jvm, tid, vid);
+        if (clone.jvm().isZero())
+            clone.tid = clone.tid.zero();
+        return clone;
     }
 
     @Override

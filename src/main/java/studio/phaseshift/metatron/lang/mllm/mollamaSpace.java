@@ -20,17 +20,16 @@ package studio.phaseshift.metatron.lang.mllm;
 
 import dev.langchain4j.model.ollama.OllamaModel;
 import dev.langchain4j.model.ollama.OllamaModels;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.mllm.type.impl.OLLM;
-import studio.phaseshift.metatron.lang.mtron.type.NoObj;
 import studio.phaseshift.metatron.lang.mtron.type.Obj;
 import studio.phaseshift.metatron.space.MSpace;
-import studio.phaseshift.metatron.space.Space;
+import studio.phaseshift.metatron.space.kv.KVSpace;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
-
-import java.util.HashMap;
-import java.util.Map;
+import studio.phaseshift.metatron.util.Tuple;
 
 import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.lang.mllm.type.impl.OLLM.ollm;
@@ -39,11 +38,18 @@ import static studio.phaseshift.metatron.lang.mllm.type.impl.OLLM.ollm;
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public class mollamaSpace extends MSpace<OllamaModels> {
+    
 
+    // /m/obj
+    public static final fURI MTRON_SPACE_TID = f("/space");// MTRON_TID.extend("space");
+    
     public static final fURI MLLM_ID = f("/mllm");
+    public static final fURI MLLM_LANG_TID = MLLM_ID.extend("lang");
     public static final fURI MOLLAMA_SPACE = MLLM_ID.extend("space/mollama");
-    private final GraphittyLogger LOG = Graphitty.log(this);
+    private static final Logger log = LoggerFactory.getLogger(mollamaSpace.class);
     public final fURI ollamaHost;
+    private final GraphittyLogger LOG = Graphitty.log(this);
+    private final KVSpace internal = new KVSpace(this.pattern, fURI.NULL);
 
     public mollamaSpace(final OllamaModels models, final fURI ollamaHost, final fURI pattern, final fURI vid) {
         super(models, pattern, MOLLAMA_SPACE, vid);
@@ -63,17 +69,16 @@ public class mollamaSpace extends MSpace<OllamaModels> {
 
     @Override
     public Obj read(final fURI vid) {
-        return Space.Helper.resolveRead(this, vid, v -> {
-            final Map<fURI, Obj> results = new HashMap<>();
-            this.jvm.availableModels().content().stream().filter(m -> modelToVid(m).matches(v)).forEach(m -> {
-                results.put(modelToVid(m), ollm(m, OLLM.OLLM_TID, modelToVid(m)));
-            });
-            return results;
-        });
+        this.jvm.availableModels().content().stream()
+                .map(model -> ollm(Tuple.Pair.with(model, this.ollamaHost), OLLM.OLLM_TID, modelToVid(model)))
+                .filter(model -> model.vid().matches(pattern))
+                .forEach(model -> this.internal.write(model.vid(), model));
+        return this.internal.read(vid);
+
     }
 
     @Override
-    public Obj write(fURI vid, Obj obj) {
-        return NoObj.single();
+    public Obj write(final fURI vid, final Obj obj) {
+        return this.internal.write(vid, obj);
     }
 }

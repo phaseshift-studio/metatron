@@ -64,7 +64,7 @@ public class MClient extends WebSocketClient implements MConnection {
         return Router.global()
                 .server()
                 .cluster(clientAuthority)
-                .peek(c -> Router.global().logger().debug("reusing existing connecting to {{b}}%s{{/b}}", c.authority()))
+                .peek(c -> Router.global().logger().debug("reusing existing connection to {{b}}%s{{/b}}", c.authority()))
                 .findAny()
                 .orElseGet(() -> {
                     final MClient client = new MClient(clientAuthority);
@@ -117,7 +117,7 @@ public class MClient extends WebSocketClient implements MConnection {
 
     @Override
     public void onError(final Exception ex) {
-        LOG.error("an error occurred on connection: %s", ex);
+        LOG.error("an error occurred on connection: %s", ex.getMessage().toLowerCase());
         this.futures.clear();
     }
 
@@ -134,7 +134,7 @@ public class MClient extends WebSocketClient implements MConnection {
     public <O extends Obj> FutureObj<O> sendRecvObj(final Obj obj) {
         final Obj toSend = obj;
         //final Obj toSend = obj.vid(obj.vid() == null ? f("temp?tag=abc") : obj.vid().query("tag", "abc"));
-        LOG.trace("sending obj: %s", toSend);
+        LOG.trace("sending obj and awaiting future: %s", toSend);
         final FutureObj<Obj> future = new FutureObj<>("abc");
         this.futures.add(future);
         this.sendObj(toSend);

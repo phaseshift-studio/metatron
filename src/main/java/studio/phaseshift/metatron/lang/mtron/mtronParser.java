@@ -320,7 +320,7 @@ public class mtronParser {
     }
 
     public static Parser m_uri() {
-        return seq(m_type_prefix(URI_TID), m_furi(REDUCED_FURI_CHARS, true, true, true), m_vid_postfix()).map(t -> new MUri(pick(t, 1), pick(t, 0), pick(t, 2)));
+        return seq(m_type_prefix(URI_TID), m_furi(REDUCED_FURI_CHARS, true, true, true), m_vid_postfix()).map(t -> mtronParser.<fURI>pick(t, 0).isZero() ? NoObj.single() : new MUri(pick(t, 1), pick(t, 0), pick(t, 2)));
     }
 
     public static Parser m_rel() {
