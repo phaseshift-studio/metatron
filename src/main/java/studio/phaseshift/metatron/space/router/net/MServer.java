@@ -131,14 +131,14 @@ public class MServer extends WebSocketServer implements Closeable, Obj {
 
     @Override
     public void onMessage(final WebSocket conn, final String message) {
-        LOG.trace("received from %s string [length:%d]", conn, message.length());
+        LOG.trace("received from %s string [length:%d]", conn.getAttachment(), message.length());
         final Obj obj = this.serializer.read(ByteBuffer.wrap(message.getBytes()));
         this.onObj(conn, obj);
     }
 
     @Override
     public void onMessage(final WebSocket conn, final ByteBuffer message) {
-        LOG.trace("received from %s byte buffer [length:%d]", conn, message.array().length);
+        LOG.trace("received from %s byte buffer [length:%d]", conn.getAttachment(), message.array().length);
         final Obj obj = this.serializer.read(message);
         this.onObj(conn, obj);
     }
@@ -149,7 +149,7 @@ public class MServer extends WebSocketServer implements Closeable, Obj {
 
     public void onObj(final WebSocket conn, final Obj obj) {
         try {
-            LOG.trace("processing %s for {{b}}%s{{/b}}", obj, conn.getRemoteSocketAddress());
+            LOG.trace("processing %s for {{b}}%s{{/b}}", obj, conn.getAttachment());
             final Obj result = obj.apply().vid(null);
             // final String tag = obj.vid() != null ? obj.vid().queryValue(f("tag"), String.class, null) : null;
             //if (tag != null) {
@@ -168,7 +168,7 @@ public class MServer extends WebSocketServer implements Closeable, Obj {
 
     @Override
     public void onError(final WebSocket conn, final Exception ex) {
-        LOG.error("an error occurred on connection %s: %s", null == conn ? "<not connected>" : conn.getRemoteSocketAddress(), ex);
+        LOG.error("an error occurred on connection %s: %s", null == conn ? "<not connected>" : conn.getAttachment(), ex);
     }
 
     @Override
