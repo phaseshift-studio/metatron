@@ -24,6 +24,7 @@ import studio.phaseshift.metatron.algebra.Ring;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.mtron.type.impl.MType;
+import studio.phaseshift.metatron.space.Router;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
 import studio.phaseshift.metatron.util.IteratorUtil;
@@ -48,6 +49,11 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
     fURI tid();
 
     fURI vid();
+
+    default <F> F addInst(final Inst inst) {
+        Router.writeToSpace(inst.tid(), inst);
+        return (F) this;
+    }
 
     default boolean unique() {
         return uniqueC().equals(cInt.ONE());

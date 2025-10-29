@@ -21,6 +21,7 @@ package studio.phaseshift.metatron.lang.mllm;
 import dev.langchain4j.model.ollama.OllamaModel;
 import dev.langchain4j.model.ollama.OllamaModels;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.lang.mllm.type.impl.OLLM;
 import studio.phaseshift.metatron.lang.mtron.type.NoObj;
 import studio.phaseshift.metatron.lang.mtron.type.Obj;
 import studio.phaseshift.metatron.space.MSpace;
@@ -32,7 +33,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static studio.phaseshift.metatron.furi.fURI.f;
-import static studio.phaseshift.metatron.lang.mtron.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.lang.mllm.type.impl.OLLM.ollm;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -42,15 +43,17 @@ public class mollamaSpace extends MSpace<OllamaModels> {
     public static final fURI MLLM_ID = f("/mllm");
     public static final fURI MOLLAMA_SPACE = MLLM_ID.extend("space/mollama");
     private final GraphittyLogger LOG = Graphitty.log(this);
+    public final fURI ollamaHost;
 
-    public mollamaSpace(final OllamaModels models, final fURI pattern, final fURI vid) {
+    public mollamaSpace(final OllamaModels models, final fURI ollamaHost, final fURI pattern, final fURI vid) {
         super(models, pattern, MOLLAMA_SPACE, vid);
+        this.ollamaHost = ollamaHost;
         LOG.info("loading models: %s", models.availableModels().content().stream().map(OllamaModel::getModel).toList());
     }
 
     public static mollamaSpace of(final fURI ollamaHost, final fURI pattern, final fURI vid) {
         final OllamaModels models = OllamaModels.builder().baseUrl(ollamaHost.toString()).build();
-        return new mollamaSpace(models, pattern, vid);
+        return new mollamaSpace(models, ollamaHost, pattern, vid);
     }
 
 
@@ -63,7 +66,7 @@ public class mollamaSpace extends MSpace<OllamaModels> {
         return Space.Helper.resolveRead(this, vid, v -> {
             final Map<fURI, Obj> results = new HashMap<>();
             this.jvm.availableModels().content().stream().filter(m -> modelToVid(m).matches(v)).forEach(m -> {
-                results.put(modelToVid(m), uri(m.getModel()));
+                results.put(modelToVid(m), ollm(m, OLLM.OLLM_TID, modelToVid(m)));
             });
             return results;
         });
