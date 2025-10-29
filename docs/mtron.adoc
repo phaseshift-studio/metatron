@@ -1,4 +1,4 @@
-== mtron instruction set
+=== mtron instruction set
 
 The core instruction set of metatron is `mtron`.
 

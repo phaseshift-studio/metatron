@@ -1,4 +1,4 @@
-== mach instruction set
+=== mach instruction set
 
 The `mach` instruction set provides `objs` enabling the reflective processing of the executing virtual machine. In particular, `mach` (machine) and `monad` are accessible via the `insts` made available.
 

@@ -51,6 +51,12 @@ a*(b+c) = ab + ac
 (b+c)*a = ba + ca
 ```
 
+== Instruction Sets
 include::intro.adoc[]
 include::mtron.adoc[]
+include::mkv.adoc[]
+include::mweb.adoc[]
+include::mgrph.adoc[]
+include::mvec.adoc[]
+include::mllm.adoc[]
 include::mach.adoc[]
