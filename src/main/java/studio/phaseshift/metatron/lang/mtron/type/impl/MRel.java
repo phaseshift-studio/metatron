@@ -22,6 +22,8 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.mtron.type.Obj;
 import studio.phaseshift.metatron.lang.mtron.type.Rel;
 
+import java.util.stream.Stream;
+
 import static studio.phaseshift.metatron.lang.mtron.mtronInstSet.REL_TID;
 import static studio.phaseshift.metatron.util.Tuple.Pair;
 
@@ -56,4 +58,6 @@ public class MRel extends MObj implements Rel {
     public static Rel rel(final Obj dom, final Obj rng) {
         return MRel.of(dom,rng);
     }
+    
+    public Stream<Rel> indexedStream() { return Stream.of(this); }
 }

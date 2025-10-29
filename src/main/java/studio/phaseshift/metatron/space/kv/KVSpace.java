@@ -1,6 +1,6 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
- * Copyright (C) 2025- PhaseShift Studio, LLC 
+ * Copyright (C) 2025- PhaseShift Studio, LLC
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -21,8 +21,8 @@ package studio.phaseshift.metatron.space.kv;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.mtron.type.Obj;
 import studio.phaseshift.metatron.lang.mtron.type.impl.MRel;
-import studio.phaseshift.metatron.space.Space;
 import studio.phaseshift.metatron.space.MSpace;
+import studio.phaseshift.metatron.space.Space;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
 
@@ -32,7 +32,6 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 import static studio.phaseshift.metatron.lang.mtron.mtronInstSet.MTRON_SPACE_TID;
 
@@ -42,19 +41,28 @@ public class KVSpace extends MSpace<Map<fURI, Obj>> implements Space {
     public static final fURI KVSPACE_TID = MTRON_SPACE_TID.extend("kv");
     protected final GraphittyLogger LOG = Graphitty.log(this);
 
-    private final Function<fURI, Map<fURI, Obj>> directReader = (key) -> {
-        if (key.equals(fURI.ALL))
+    private final Function<fURI, Map<fURI, Obj>> directReader = (pattern) -> {
+        if (pattern.equals(fURI.ALL))
             return this.jvm;
         else {
-            if (key.hasPattern()) {
+            if (pattern.hasPattern()) {
                 return this.jvm
                         .entrySet()
                         .stream()
-                        .filter(kv -> kv.getKey().matches(key.asNode()))
-                        .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, Obj::append, LinkedHashMap::new));
+                        .map(kv -> {
+                            Map<fURI, Obj> partial = new LinkedHashMap<>();
+                            if (kv.getKey().matches(pattern.asNode()))
+                                partial.put(kv.getKey(), kv.getValue());
+                            if (kv.getValue().isPoly())
+                                Space.Helper.unrollPoly(partial, kv.getKey(), kv.getValue().as(), pattern.asNode());
+                            return partial;
+                        }).reduce(new LinkedHashMap<>(), (a, b) -> {
+                            a.putAll(b);
+                            return a;
+                        });
             } else {
-                final Obj value = this.jvm.get(key);
-                return null == value ? Map.of() : Map.of(key, value);
+                final Obj value = this.jvm.get(pattern);
+                return null == value ? Map.of() : Map.of(pattern, value);
             }
         }
     };

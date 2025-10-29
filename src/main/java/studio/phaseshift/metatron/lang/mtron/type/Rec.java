@@ -1,6 +1,6 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
- * Copyright (C) 2025- PhaseShift Studio, LLC 
+ * Copyright (C) 2025- PhaseShift Studio, LLC
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -32,7 +32,12 @@ import static studio.phaseshift.metatron.lang.mtron.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MUri.uri;
 
 public interface Rec extends Poly, PlusMonoid.O<Rec> {
-    
+
+    @Override
+    default Stream<Rel> indexedStream() {
+        return this.jvm().entrySet().stream().map(kv -> rel(kv.getKey(), kv.getValue())).map(r -> r.c(c -> c.mult(this.c())).as());
+    }
+
     @Override
     Rec clone(final Object jvm, final fURI tid, final fURI vid);
 

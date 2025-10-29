@@ -26,16 +26,24 @@ import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MObjs.objs;
+import static studio.phaseshift.metatron.lang.mtron.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MUri.uri;
 
 public interface Lst extends Poly, PlusMonoid.O<Lst> {
 
+    @Override
+    default Stream<Rel> indexedStream() {
+        final AtomicInteger i = new AtomicInteger(0);
+        return this.jvm().stream().map(e -> rel(jnt(i.getAndIncrement()), e)).map(r -> r.c(c -> c.mult(this.c())).as());
+    }
+    
     @Override
     Lst clone(final Object jvm, final fURI tid, final fURI vid);
 

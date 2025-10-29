@@ -22,6 +22,8 @@ import studio.phaseshift.metatron.util.IteratorUtil;
 
 import java.util.stream.Stream;
 
+import static studio.phaseshift.metatron.lang.mtron.type.impl.MRel.rel;
+
 public interface Poly extends Obj {
 
     long count();
@@ -48,5 +50,9 @@ public interface Poly extends Obj {
 
     default boolean has(final long index) {
         return index < this.count();
+    }
+    
+    default Stream<Rel> indexedStream() { 
+        return Stream.of(rel(this.vid().toUri(),this));
     }
 }

@@ -34,6 +34,7 @@ import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
+import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.Tuple.Pair;
 
@@ -146,11 +147,26 @@ public interface Space extends Poly, Closeable {
             }
         }
 
-        public static Obj resolveRead(final Space space, final fURI vid, final Function<fURI, Map<fURI, Obj>> directReader) { //final Map<fURI, Obj> store) {
+        public static Map<fURI, Obj> unrollPoly(final Map<fURI, Obj> result, final fURI polyvid, final Poly poly, final fURI pattern) {
+
+            poly.indexedStream()
+                    .filter(r -> r.second().isPoly() || polyvid.extend(f(r.first().jvm().toString())).matches(pattern))
+                    .forEach(r -> {
+                        final fURI key = polyvid.extend(f(r.first().jvm().toString()));
+                        if (!r.second().isPoly() || key.matches(pattern))
+                            result.put(key, r.second());
+                        if (r.second().isPoly())
+                            unrollPoly(result, key, r.second().as(), pattern);
+                    });
+
+            return result;
+        }
+
+        public static Obj resolveRead(final Space space, final fURI pattern, final Function<fURI, Map<fURI, Obj>> directReader) { //final Map<fURI, Obj> store) {
             final Map<Uri, Obj> map = new LinkedHashMap<>();
-            directReader.apply(vid).forEach((key, value) -> map.put(key.toUri(), value));
+            directReader.apply(pattern).forEach((key, value) -> map.put(key.toUri(), value));
             if (map.isEmpty()) {
-                directReader.apply(vid.isBranch() ? vid.extend(fURI.ONE_WILD_STRING) : vid.asNode()).forEach((key, value) -> {
+                directReader.apply(pattern.isBranch() ? pattern.extend(fURI.ONE_WILD_STRING) : pattern.asNode()).forEach((key, value) -> {
                     if (value.isRec()) {
                         value.recValue().forEach((key2, value2) -> map.put(uri(key.extend(key2.uriValue())), value2));
                     } else if (value.isLst()) {
@@ -162,18 +178,21 @@ public interface Space extends Poly, Closeable {
                     }
                 });
             }
-            final Pair<fURI, Poly> base = Helper.locateBasePoly(space, vid);
+            final Pair<fURI, Poly> base = Helper.locateBasePoly(space, pattern);
             if (null != base) {
                 final Poly poly = base.get1();
                 Graphitty.log(space).trace("base poly found at %s: %s", base.get0(), poly);
-                final fURI relativeVid = vid.removePrefix(base.get0()).asNode();
-                Graphitty.log(space).trace("searching for %s in base poly %s", relativeVid.toUri(), poly);
+                final fURI relativeVid = pattern.removePrefix(base.get0()).asNode();
+                unrollPoly(new LinkedHashMap<>(), base.get0(), poly.as(), pattern).entrySet().stream().forEach(kv -> {
+                    map.put(kv.getKey().toUri(), kv.getValue());
+                });
+               /* Graphitty.log(space).trace("searching for %s in base poly %s", relativeVid.toUri(), poly);
                 final Obj readObj = poly.at(relativeVid.toUri());
                 Graphitty.log(space).trace("located poly obj %s in %s", readObj, poly);
                 if (!readObj.isNoObj())
-                    map.put(vid.retractPattern().toUri(), readObj);
+                    map.put(vid.retractPattern().toUri(), readObj);*/
             }
-            if (vid.isNode()) {
+            if (pattern.isNode()) {
                 return MObjs.ofUsage(new ArrayList<>(map.values())); // TODO: no need to maintain a map, a list will do
             } else {
                 return MObjs.ofUsage(map.entrySet().stream().map(kv -> MRel.of(kv.getKey(), kv.getValue())));
