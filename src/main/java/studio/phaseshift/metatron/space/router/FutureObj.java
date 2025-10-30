@@ -107,9 +107,9 @@ public class FutureObj<T extends Obj> extends MObj implements Future<T> {
     }
 
     @Override
-    public <O extends Obj> Stream<O> elementStream() {
+    public <O extends Obj> Stream<O> elements() {
         try {
-            return this.get(DEFAULT_TIMEOUT_MS).isPoly() ? this.get(DEFAULT_TIMEOUT_MS).elementStream() : (Stream) this.stream();
+            return this.get(DEFAULT_TIMEOUT_MS).isPoly() ? this.get(DEFAULT_TIMEOUT_MS).elements() : (Stream) this.stream();
         } catch (final Exception e) {
             throw MTronException.of(e);
         }

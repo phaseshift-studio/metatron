@@ -83,7 +83,7 @@ public class mgrphInstSet extends MInstSet {
     private static String[] labelsAsUri(final Inst inst) {
         return inst.args().isEmpty() ?
                 EMPTY_STRING_ARRAY :
-                inst.args().elementStream()
+                inst.args().elements()
                         .flatMap(Obj::<Obj>stream)
                         .map(Obj::uriValue)
                         .map(Object::toString)
@@ -94,7 +94,7 @@ public class mgrphInstSet extends MInstSet {
     private static Object[] idsAsUri(final Inst inst) {
         return inst.args().isEmpty() ?
                 EMPTY_STRING_ARRAY :
-                inst.args().elementStream()
+                inst.args().elements()
                         .flatMap(Obj::<Obj>stream)
                         .map(Obj::jvm)
                         .map(o -> o instanceof fURI ? ((fURI) o).name() : o)

@@ -73,8 +73,8 @@ public interface Objs extends Obj, PlusMonoid.O<Objs> {
     }
 
     @Override
-    default Stream<Obj> elementStream() {
-        return this.stream().flatMap(Obj::elementStream);
+    default <O extends Obj> Stream<O> elements() {
+        return this.stream().flatMap(Obj::elements);
     }
 
     @Override

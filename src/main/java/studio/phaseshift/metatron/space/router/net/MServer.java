@@ -84,7 +84,7 @@ public class MServer extends WebSocketServer implements Closeable, Obj {
             this.serverThread = new Thread(r);
             this.serverThread.start();
             LOG.trace("server started: %s", this.getAddress());
-            BootLoader.GLOBAL.at("cluster").elementStream().filter(o -> !o.isNoObj()).forEach(n -> {
+            BootLoader.GLOBAL.at("cluster").elements().filter(o -> !o.isNoObj()).forEach(n -> {
                 final MConnection client = MClient.of(n.uriValue());
                 this.cluster.put(n.uriValue(), client);
             });

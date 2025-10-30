@@ -1,6 +1,6 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
- * Copyright (C) 2025- PhaseShift Studio, LLC 
+ * Copyright (C) 2025- PhaseShift Studio, LLC
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -37,6 +37,18 @@ public class MRel extends MObj implements Rel {
         this(value, REL_TID, fURI.NULL);
     }
 
+    public static Rel of(final Obj dom, final Obj rng) {
+        return new MRel(Pair.with(dom, rng));
+    }
+
+    public static Rel of(final Obj dom, final Obj rng, final fURI tid) {
+        return new MRel(Pair.with(dom, rng), tid, fURI.NULL);
+    }
+
+    public static Rel rel(final Obj dom, final Obj rng) {
+        return MRel.of(dom, rng);
+    }
+
     @Override
     public Rel clone(final Object jvm, final fURI tid, final fURI vid) {
         return (Rel) super.clone(jvm, tid, vid);
@@ -47,17 +59,7 @@ public class MRel extends MObj implements Rel {
         return (Pair<Obj, Obj>) this.jvm;
     }
 
-    public static Rel of(final Obj dom, final Obj rng) {
-        return new MRel(Pair.with(dom, rng));
+    public Stream<Rel> indexedStream() {
+        return Stream.of(this);
     }
-
-    public static Rel of(final Obj dom, final Obj rng, final fURI tid) {
-        return new MRel(Pair.with(dom, rng), tid, fURI.NULL);
-    }
-
-    public static Rel rel(final Obj dom, final Obj rng) {
-        return MRel.of(dom,rng);
-    }
-    
-    public Stream<Rel> indexedStream() { return Stream.of(this); }
 }

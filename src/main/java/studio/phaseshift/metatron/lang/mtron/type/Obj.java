@@ -153,7 +153,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
         return this.isNoObj() ? Stream.empty() : (Stream) IteratorUtil.stream(this);
     }
 
-    default <O extends Obj> Stream<O> elementStream() {
+    default <O extends Obj> Stream<O> elements() {
         return (Stream) this.stream();
     }
 

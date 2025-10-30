@@ -54,11 +54,11 @@ public class ObjStringSerializer implements ObjSerializer<String> {
             final Inst inst = call.as();
             sb.append(" ".repeat(leftMargin)).append("  ".repeat(depth)).append(inst).append("\n");
             if (null != inst.jvm()) {
-                for (final Obj arg : inst.args().elements()) {
+                inst.args().elements().forEach(arg -> {
                     if (arg.isCall() || arg.isObjs()) {
                         prettyPrintCode(sb, arg.as(), depth + 1, leftMargin);
                     }
-                }
+                });
             }
         } else if (!call.isNoObj() && call.isObjs()) {
             call.stream().forEach(o -> prettyPrintCode(sb, o, depth + 1, leftMargin));
@@ -81,12 +81,12 @@ public class ObjStringSerializer implements ObjSerializer<String> {
             generateTID(sb, obj.tid(), false, false).append("{{g}}({{X}}");
             if (!inst.args().isEmpty()) {
                 boolean isLst = inst.args().isLst();
-                for (final Obj kv : inst.args().elements()) {
+                inst.args().elements().forEach(kv -> {
                     sb.append(isLst ? kv : kv.<Rel>as().first());
                     if (!isLst)
                         sb.append("{{g}}=>").append(kv.<Rel>as().second());
                     sb.append("{{g}},");
-                }
+                });
                 sb.deleteCharAt(sb.length() - 1);
             }
             return sb.append("{{g}}){")

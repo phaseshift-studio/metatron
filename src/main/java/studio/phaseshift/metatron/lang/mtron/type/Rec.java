@@ -35,7 +35,7 @@ public interface Rec extends Poly, PlusMonoid.O<Rec> {
 
     @Override
     default Stream<Rel> indexedStream() {
-        return this.jvm().entrySet().stream().map(kv -> rel(kv.getKey(), kv.getValue())).map(r -> r.c(c -> c.mult(this.c())).as());
+        return this.jvm().entrySet().stream().map(kv -> rel(kv.getKey(), kv.getValue()).c(this.c()).as());
     }
 
     @Override
@@ -50,19 +50,8 @@ public interface Rec extends Poly, PlusMonoid.O<Rec> {
     }
 
     @Override
-    default Stream<Obj> stream() {
-        return this
-                .jvm()
-                .entrySet()
-                .stream()
-                .map(kv -> rel(kv.getKey(), kv.getValue()))
-                .map(r -> r.c(c -> c.mult(this.c())));
-    }
-
-
-    @Override
-    default Iterable<Rel> elements() {
-        return this.stream().map(Obj::<Rel>as).toList();
+    default Stream<Rel> elements() {
+        return this.recValue().entrySet().stream().map(kv -> rel(kv.getKey(), kv.getValue()).c(c -> c.mult(this.c())).as());
     }
 
     @Override

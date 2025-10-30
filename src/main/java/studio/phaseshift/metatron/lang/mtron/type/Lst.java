@@ -1,6 +1,6 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
- * Copyright (C) 2025- PhaseShift Studio, LLC 
+ * Copyright (C) 2025- PhaseShift Studio, LLC
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -19,8 +19,8 @@
 package studio.phaseshift.metatron.lang.mtron.type;
 
 import studio.phaseshift.metatron.algebra.PlusMonoid;
-import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.c.cInt;
+import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
@@ -41,9 +41,9 @@ public interface Lst extends Poly, PlusMonoid.O<Lst> {
     @Override
     default Stream<Rel> indexedStream() {
         final AtomicInteger i = new AtomicInteger(0);
-        return this.jvm().stream().map(e -> rel(jnt(i.getAndIncrement()), e)).map(r -> r.c(c -> c.mult(this.c())).as());
+        return this.jvm().stream().map(e -> rel(jnt(i.getAndIncrement()), e).c(c -> this.c()).as());
     }
-    
+
     @Override
     Lst clone(final Object jvm, final fURI tid, final fURI vid);
 
@@ -61,12 +61,7 @@ public interface Lst extends Poly, PlusMonoid.O<Lst> {
         return this.jvm(newList);
     }
 
-    @Override
-    default Iterable<Obj> elements() {
-        return this.elementStream().toList();
-    }
-
-    default <O extends Obj> Stream<O> elementStream() {
+    default <O extends Obj> Stream<O> elements() {
         return (Stream) IteratorUtil.stream(this.jvm()).map(e -> e.c(c -> c.mult(this.c())));
     }
 

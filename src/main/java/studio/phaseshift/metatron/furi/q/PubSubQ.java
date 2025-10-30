@@ -80,7 +80,7 @@ public class PubSubQ extends BaseQ {
         @Override
         public Optional<Obj> preRead(final fURI source, final fURI vid) {
             LOG.trace("evaluating {{y}}preread{{/y}}: %s", vid);
-            return subscriptions.elementStream().map(Obj::<Subscription>as).filter(s -> vid.basePath().matches(s.target())).map(Obj::<Obj>as).reduce(Obj::append);
+            return subscriptions.elements().map(Obj::<Subscription>as).filter(s -> vid.basePath().matches(s.target())).map(Obj::<Obj>as).reduce(Obj::append);
         }
     }
 
@@ -89,7 +89,7 @@ public class PubSubQ extends BaseQ {
         @Override
         public Optional<Obj> qlessWrite(final fURI source, final fURI vid, final Obj obj) {
             LOG.trace("evaluating {{y}}qless write{{/y}}: %s => %s", obj, vid);
-            subscriptions.elementStream().map(Obj::<Subscription>as).filter(s -> vid.basePath().matches(s.target())).forEach(s -> {
+            subscriptions.elements().map(Obj::<Subscription>as).filter(s -> vid.basePath().matches(s.target())).forEach(s -> {
                 LOG.debug("sending mail: (%s, %s)", obj, s);
                 mail.add(MMachine.of(obj, s.call().toCode()));
             });

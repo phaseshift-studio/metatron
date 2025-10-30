@@ -23,6 +23,7 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.mtron.type.Obj;
 
 import java.util.Collections;
+import java.util.stream.Stream;
 
 
 /*
@@ -53,9 +54,8 @@ public class MRealVec extends MVec<Double> {
     }
 
     @Override
-    public <O extends Obj> Iterable<O> elements() {
-        return Collections.emptyList();
-        //return this.value().
+    public <O extends Obj> Stream<O> elements() {
+        return Stream.empty();
     }
 
     @Override

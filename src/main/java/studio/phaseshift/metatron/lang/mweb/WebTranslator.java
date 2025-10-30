@@ -51,7 +51,7 @@ public class WebTranslator implements Translator<Obj, Document> {
 
     private Element writeElement(final Rec rec, final Element element) {
         //Graphitty.log(this).warn(rec);
-        rec.<Rel>elementStream().forEach(e -> {
+        rec.<Rel>elements().forEach(e -> {
             final Element newElement = new Element(e.first().uriValue().toString());
             element.appendChild(e.second().isRec() ? writeElement(e.second().as(), newElement) : newElement);
         });

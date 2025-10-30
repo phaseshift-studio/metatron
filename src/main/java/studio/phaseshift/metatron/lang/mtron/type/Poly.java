@@ -32,11 +32,7 @@ public interface Poly extends Obj {
         return 0 == this.count();
     }
 
-    <O extends Obj> Iterable<O> elements();
-
-    default <O extends Obj> Stream<O> elementStream() {
-        return IteratorUtil.stream(this.elements());
-    }
+     <O extends Obj> Stream<O> elements();
 
     <O extends Obj> O at(final Obj key);
 

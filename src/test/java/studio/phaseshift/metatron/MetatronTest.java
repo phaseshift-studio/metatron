@@ -19,6 +19,7 @@
 package studio.phaseshift.metatron;
 
 import org.junit.jupiter.api.BeforeAll;
+import studio.phaseshift.metatron.lang.mtron.type.Fail;
 import studio.phaseshift.metatron.lang.mtron.type.NoObj;
 import studio.phaseshift.metatron.lang.mtron.type.Obj;
 import studio.phaseshift.metatron.lang.mtron.mtronParser;
@@ -61,8 +62,14 @@ public class MetatronTest {
             try {
                 final Obj cd = mtronParser.sugar_code().parse(code).get();
                 final Obj actual = cd.apply(NoObj.single());
-                if (!(cd.isFail() || actual.isFail()))
+                if (!(cd.isFail() || actual.isFail())) {
+                    if(cd.isFail())
+                        cd.<Fail>as().jvm().printStackTrace();
+                    if(actual.isFail())
+                        actual.<Fail>as().jvm().printStackTrace();
                     fail(Graphitty.string("testing %s => %s [expected:%s]", cd, actual, expected));
+                    
+                }
             } catch (final Exception e) {
                 LOG.debug("testing %s => %s", code, e.getMessage());
             }

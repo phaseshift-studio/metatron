@@ -92,7 +92,7 @@ public class MRec extends MObj implements Rec {
     @Override
     public Rec plus(final Rec rhs) {
         final Map<Obj, Obj> newMap = new LinkedHashMap<>(this.recValue());
-        rhs.stream().flatMap(Obj::<Obj>elementStream).map(Obj::<Rel>as).forEach(o -> newMap.compute(o.first(), (k, v) -> null == v ? o.second() : v.isPlusMonoid() ? (Obj) v.<PlusMonoid.O>as().plus(o.second().<PlusMonoid.O>as()) : v.append(o.second())));
+        rhs.stream().flatMap(Obj::<Obj>elements).map(Obj::<Rel>as).forEach(o -> newMap.compute(o.first(), (k, v) -> null == v ? o.second() : v.isPlusMonoid() ? (Obj) v.<PlusMonoid.O>as().plus(o.second().<PlusMonoid.O>as()) : v.append(o.second())));
         return this.jvm(newMap);
     }
 
