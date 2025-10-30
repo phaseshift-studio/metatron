@@ -32,6 +32,7 @@ import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Streamable;
 
 import java.util.*;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
@@ -274,6 +275,11 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
         if (this.isNoObj())
             throw e;
         return (O) this;
+    }
+
+    default <O extends Obj> void ifExists(final Consumer<O> function) {
+        if (!this.isNoObj())
+            function.accept((O) this);
     }
 
     default <O extends Obj> O andIf(final Predicate<O> predicate) {

@@ -156,7 +156,7 @@ public class BootLoader {
             Router.writeToSpace(new mwebInstSet(f("/mnt/lang/mweb")));
             Router.writeToSpace(new mllmInstSet(f("/mnt/lang/mllm")));
             if (options.at("mode").equals(uri("console"))) {
-                Router.writeToSpace(mwebSpace.of(f("http://localhost:8777"), f("http://#"), f("/mnt/web")));
+                Router.writeToSpace(mwebSpace.of(f("http://localhost:8777"), rec(uri("routes"), rec(uri("/"), uri("examples/www/"))), f("http://#"), f("/mnt/web")));
                 Router.writeToSpace(mollamaSpace.of(f("http://localhost:11434"), f("/ollama/#"), f("/mnt/ollama")));
                 Router.writeToSpace(RemoteSpace.open(f("ws://chibi.local:8888"), f("/shared/#"), f("/mnt/shared")));
             } else if (options.at("mode").equals(uri("server")))

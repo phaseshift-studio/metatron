@@ -30,6 +30,7 @@ import java.util.stream.Stream;
 import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.lang.mtron.mtronFluent.StartLess.id_;
 import static studio.phaseshift.metatron.lang.mtron.mtronFluent.StartLess.isa_;
+import static studio.phaseshift.metatron.lang.mtron.mtronInstSet.REC_TID;
 import static studio.phaseshift.metatron.lang.mtron.mtronInstSet.URI_TID;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MRec.rec;
@@ -60,8 +61,8 @@ public class mwebInstSet extends MInstSet {
     @Override
     public Set<Inst> insts() {
         return Set.of(instC(MWEB_INST_TID.extend("mweb").dom(URI_TID).rng(WEB_TID),
-                rec(uri("authority"), T(URI_TID), uri("pattern"), T(URI_TID)), (lhs, inst) -> {
-                    return mwebSpace.of(inst.arg("authority").uriValue(), inst.arg("pattern").uriValue(), fURI.NULL);
+                rec(uri("host"), T(URI_TID), uri("routes"), T(REC_TID), uri("pattern"), T(URI_TID)), (lhs, inst) -> {
+                    return mwebSpace.of(inst.arg("authority").uriValue(), inst.arg("routes").as(), inst.arg("pattern").uriValue(), fURI.NULL);
                 }));//Stream.of().collect(LinkedHashSet::new, LinkedHashSet::add, LinkedHashSet::addAll);
     }
 
