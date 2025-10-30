@@ -19,7 +19,6 @@
 package studio.phaseshift.metatron.space.fs;
 
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.lang.mtron.type.NoObj;
 import studio.phaseshift.metatron.lang.mtron.type.Obj;
 import studio.phaseshift.metatron.lang.mtron.type.Str;
 import studio.phaseshift.metatron.lang.mtron.type.impl.MRec;
@@ -27,6 +26,7 @@ import studio.phaseshift.metatron.space.MSpace;
 import studio.phaseshift.metatron.space.Space;
 import studio.phaseshift.metatron.util.MTronException;
 
+import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.FileSystem;
 import java.nio.file.FileVisitOption;
@@ -34,6 +34,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.function.BiConsumer;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -52,7 +54,21 @@ public class FileSpace extends MSpace<FileSystem> {
 
     @Override
     public Obj read(final fURI vid) {
-        return Space.Helper.resolveRead(this, vid, (key) -> {
+        return Space.Helper.resolveRead(this, vid, this.directReader());
+    }
+
+    @Override
+    public Obj write(final fURI vid, final Obj obj) {
+        // return this.qs().processPreWrite(vid, vid, obj).orElseGet(() -> {
+        Space.Helper.resolveWrite(this, vid.basePath(), obj, this.directWriter(), this.directReader());
+        return obj;
+        //   return this.qs().processPostWrite(vid, vid, obj).orElse(this.qs().processQlessWrite(vid, vid, obj).orElse(obj));
+        // });
+    }
+
+    @Override
+    public Function<fURI, Map<fURI, Obj>> directReader() {
+        return (key) -> {
             if (key.equals(fURI.ALL))
                 throw MTronException.of("infinite nested walks on file system not allowed");
             else {
@@ -64,7 +80,7 @@ public class FileSpace extends MSpace<FileSystem> {
                     }
                 } else {
                     try {
-                        final Path vidPath = Path.of(vid.toString());
+                        final Path vidPath = Path.of(key.toString());
                         if (Files.isDirectory(vidPath)) {
                             return Files.list(vidPath)
                                     .collect(Collectors.toMap(
@@ -74,19 +90,37 @@ public class FileSpace extends MSpace<FileSystem> {
                             final Str value = str(Files.readString(vidPath));
                             return Map.of(vid, value);
                         }
-                    } catch (IOException e) {
+                    } catch (final IOException e) {
                         throw MTronException.of(e);
                     }
 
                 }
             }
-        });
-
-
+        };
     }
 
     @Override
-    public Obj write(fURI vid, Obj obj) {
-        return NoObj.noobj();
+    public BiConsumer<fURI, Obj> directWriter() {
+        return (pattern, obj) -> {
+            if (pattern.hasPattern()) {
+                this.directReader().apply(pattern).forEach((key, value) -> this.write(key, obj));
+            } else {
+                try {
+                    if (obj.isNoObj()) {
+                        Files.delete(Path.of(pattern.toString()));
+                    } else {
+                        final FileWriter writer = new FileWriter(pattern.toString());
+                        if (obj.isStr())
+                            writer.write(obj.strValue());
+                        else
+                            writer.write(obj.toString());
+                        writer.close();
+                    }
+                } catch (final Exception e) {
+                    throw MTronException.of(e);
+                }
+            }
+        };
     }
+
 }

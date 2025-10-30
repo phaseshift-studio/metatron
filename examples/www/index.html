@@ -22,56 +22,871 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>metatron web server example</title>
+    <style>
+        .flex-container {
+          display: flex;
+          width: 50%;
+        }
+        .panel {
+          flex: 1;
+          border: 0px solid #ccc;
+          padding: 0px;
+          margin: 0px;
+        }
+    </style>
 </head>
 <body style="background-color: #282c34;">
-<pre id="nenofhat" style="font-size:6pt; line-height:6pt; font-family: 'Courier New', monospace;">
+<div class="flex-container">
+    <div class="panel">
+        <pre id="nenofhat" style="font-size:6pt; line-height:6pt; font-family: 'Courier New', monospace;">
                               <span style="color: #FFFFFF;">▒</span>                                             
-                       <span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▒</span>      <span style="color: #FFFFFF;">▒</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">▒</span>                          <span style="color: #FFFFFF;">▒</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span> <span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span>      
-                      <span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▒</span>       <span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">▒</span>           <span style="color: #AAAAAA;">▓</span><span style="color: #AAAAAA;">▓</span><span style="color: #AAAAAA;">▓</span><span style="color: #AAAAAA;">▓</span><span style="color: #AAAAAA;">█</span><span style="color: #AAAAAA;">█</span> <span style="color: #AAAAAA;">█</span><span style="color: #AAAAAA;">█</span><span style="color: #AAAAAA;">▒</span><span style="color: #AAAAAA;">▓</span><span style="color: #AAAAAA;">▓</span><span style="color: #AAAAAA;">▓</span><span style="color: #AAAAAA;">▓</span><span style="color: #AAAAAA;">▓</span><span style="color: #AAAAAA;">▓</span><span style="color: #AAAAAA;">▓</span><span style="color: #AAAAAA;">▓</span><span style="color: #AAAAAA;">▓</span><span style="color: #AAAAAA;">█</span><span style="color: #AAAAAA;">█</span><span style="color: #AAAAAA;">▓</span><span style="color: #AAAAAA;">▓</span><span style="color: #AAAAAA;">█</span>  
-                      <span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">░</span>         <span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span>       <span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">▒</span><span style="color: #FFFFFF;">▓</span>       <span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▒</span> <span style="color: #FFFFFF;">▒</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">░</span>  
-                     <span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">░</span>   <span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▒</span><span style="color: #FFFFFF;">▒</span>  <span style="color: #FFFFFF;">▒</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span>   <span style="color: #FFFFFF;">▒</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">▒</span>           <span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span>     <span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span>  
-                     <span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span> <span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▒</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">▒</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▒</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span>              <span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span>      <span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span> 
-                     <span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">░</span><span style="color: #AAAAAA;">░</span><span style="color: #AAAAAA;">░</span><span style="color: #AAAAAA;">░</span><span style="color: #AAAAAA;">▓</span><span style="color: #AAAAAA;">▒</span><span style="color: #AAAAAA;">▒</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">▒</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span>           <span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">░</span>      <span style="color: #FFFFFF;">░</span> 
-        <span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▒</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▒</span><span style="color: #FFFFFF;">▓</span>   <span style="color: #FFFFFF;">▒</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">░</span><span style="color: #AAAAAA;">░</span><span style="color: #AAAAAA;">░</span><span style="color: #AAAAAA;">░</span><span style="color: #AAAAAA;">░</span><span style="color: #AAAAAA;">░</span><span style="color: #AAAAAA;">░</span><span style="color: #AAAAAA;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">▒</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▒</span>       <span style="color: #FFFFFF;">▒</span><span style="color: #FFFFFF;">▒</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span> <span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▒</span>     
-     <span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">░</span>    <span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▒</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">▒</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▒</span><span style="color: #FFFFFF;">░</span><span style="color: #AAAAAA;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #AAAAAA;">░</span><span style="color: #AAAAAA;">░</span><span style="color: #AAAAAA;">░</span><span style="color: #AAAAAA;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span>          <span style="color: #FFFFFF;">▒</span><span style="color: #FFFFFF;">▒</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▒</span><span style="color: #AAAAAA;">░</span>  
-    <span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">▓</span>          <span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">░</span><span style="color: #AAAAAA;">░</span><span style="color: #AAAAAA;">░</span><span style="color: #AAAAAA;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #AAAAAA;">░</span><span style="color: #AAAAAA;">░</span><span style="color: #AAAAAA; background-color: #AA0000;">░</span><span style="color: #AAAAAA; background-color: #AA0000;">░</span><span style="color: #AAAAAA; background-color: #AA0000;">░</span><span style="color: #AAAAAA;">░</span><span style="color: #AAAAAA;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">░</span>    <span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▒</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">▒</span>   <span style="color: #AAAAAA;">░</span><span style="color: #FFFFFF;">▒</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #AAAAAA;">░</span><span style="color: #AAAAAA;">░</span><span style="color: #AAAAAA;">░</span><span style="color: #AAAAAA;">░</span>
-   <span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFF00;"> </span><span style="color: #FFFF00;"> </span><span style="color: #FFFF00;"> </span><span style="color: #FFFF00;"> </span><span style="color: #FFFF00;"> </span><span style="color: #FFFF00;"> </span><span style="color: #FFFF00;"> </span><span style="color: #FFFF00;"> </span><span style="color: #FFFF00;"> </span><span style="color: #FFFF00;"> </span><span style="color: #FFFF00;"> </span><span style="color: #FFFF00;"> </span><span style="color: #FFFF00;"> </span><span style="color: #FFFF00;"> </span><span style="color: #FFFF00;"> </span><span style="color: #AAAAAA;">▒</span><span style="color: #AAAAAA;">▓</span><span style="color: #AAAAAA;">█</span><span style="color: #FFFF00;">░</span><span style="color: #AAAAAA;">░</span><span style="color: #AAAAAA; background-color: #AA0000;">░</span><span style="color: #AAAAAA; background-color: #AA0000;">▒</span><span style="color: #AAAAAA; background-color: #AA0000;">░</span><span style="color: #AAAAAA;">░</span><span style="color: #FFFF00;">░</span><span style="color: #AAAAAA;">░</span><span style="color: #AAAAAA;">░</span><span style="color: #AAAAAA; background-color: #AA0000;">░</span><span style="color: #AAAAAA; background-color: #AA0000;">░</span><span style="color: #AAAAAA;">░</span><span style="color: #FFFF00;">░</span><span style="color: #AAAAAA;">░</span><span style="color: #AAAAAA;">░</span><span style="color: #AAAAAA;">░</span><span style="color: #AAAAAA;">░</span><span style="color: #AAAAAA;">░</span><span style="color: #AAAAAA;">░</span><span style="color: #AAAAAA;">░</span><span style="color: #AAAAAA;">█</span><span style="color: #AAAAAA;">░</span><span style="color: #FFFF00;"> </span><span style="color: #FFFF00;"> </span><span style="color: #FFFF00;"> </span><span style="color: #FFFF00;"> </span><span style="color: #FFFF00;"> </span><span style="color: #AAAAAA;">▒</span><span style="color: #AAAAAA;">█</span><span style="color: #AAAAAA;">█</span><span style="color: #AAAAAA;">█</span><span style="color: #AAAAAA;">█</span><span style="color: #AAAAAA;">▒</span><span style="color: #FFFF00;"> </span><span style="color: #FFFF00;"> </span><span style="color: #FFFF00;"> </span><span style="color: #AAAAAA;">░</span><span style="color: #AAAAAA;">█</span><span style="color: #AAAAAA;">▒</span><span style="color: #AAAAAA;">░</span><span style="color: #AAAAAA;">▒</span><span style="color: #AAAAAA;">▒</span><span style="color: #AAAAAA;">▒</span><span style="color: #AAAAAA;">▒</span><span style="color: #AAAAAA;">▒</span><span style="color: #AAAAAA;">▒</span><span style="color: #AAAAAA;">▒</span><span style="color: #AAAAAA;">▒</span><span style="color: #AAAAAA;">▒</span><span style="color: #AAAAAA;">▒</span><span style="color: #AAAAAA;">▒</span><span style="color: #AAAAAA;">░</span>
- <span style="color: #FFFFFF;">▒</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▒</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span>    <span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">▒</span><span style="color: #FFFFFF;">▒</span>  <span style="color: #AAAAAA;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▒</span><span style="color: #FFFFFF;">░</span><span style="color: #AAAAAA;">░</span><span style="color: #AAAAAA;">▒</span><span style="color: #AAAAAA; background-color: #AA0000;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #AAAAAA;">░</span><span style="color: #AAAAAA;">▒</span><span style="color: #AAAAAA;">░</span><span style="color: #AAAAAA;">░</span><span style="color: #AAAAAA;">░</span><span style="color: #AAAAAA;">░</span><span style="color: #AAAAAA;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">▒</span><span style="color: #FFFFFF;">▓</span>        <span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">▒</span>  <span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▒</span>      <span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">▒</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span>
-<span style="color: #FFFFFF;">▒</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span>   <span style="color: #FFFFFF;">░</span>     <span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">░</span><span style="color: #AAAAAA;">░</span><span style="color: #AAAAAA;">░</span><span style="color: #AAAAAA;">░</span><span style="color: #AAAAAA;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #AAAAAA;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #AAAAAA;">░</span><span style="color: #AAAAAA;">░</span><span style="color: #AAAAAA;">░</span><span style="color: #FFFFFF;">▒</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">░</span>     <span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▒</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span>  <span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">░</span>            
-<span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">▓</span> <span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span>     <span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span>  <span style="color: #FFFFFF;">░</span>       <span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▒</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #AAAAAA;">░</span><span style="color: #AAAAAA;">░</span><span style="color: #AAAAAA;">░</span><span style="color: #AAAAAA;">░</span><span style="color: #AAAAAA;">░</span><span style="color: #AAAAAA;">░</span><span style="color: #AAAAAA;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">▒</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▒</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">▒</span> <span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▒</span>            
-<span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span>         <span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">▓</span> <span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">▒</span>         <span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #AAAAAA;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #AAAAAA;">░</span><span style="color: #AAAAAA;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #AAAAAA;">░</span><span style="color: #AAAAAA;">░</span><span style="color: #FFFFFF;">▒</span> <span style="color: #FFFFFF;">▒</span>          <span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span>            
-<span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▒</span>          <span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▒</span><span style="color: #FFFFFF;">░</span>            <span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">▒</span> <span style="color: #FFFFFF;">▒</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #AAAAAA;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #AAAAAA;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #AAAAAA;">░</span><span style="color: #AAAAAA;">░</span><span style="color: #FFFFFF;">░</span>       <span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span>             
-<span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▒</span>           <span style="color: #FFFFFF;">▒</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">░</span> <span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▒</span>     <span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▒</span>     <span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #AAAAAA;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #AAAAAA;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #AAAAAA;">░</span><span style="color: #FFFFFF;">░</span>  <span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▒</span>                   
-            <span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">░</span>       <span style="color: #FFFFFF;">▒</span><span style="color: #FFFFFF;">▓</span> <span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▒</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #AAAAAA;">░</span><span style="color: #AAAAAA;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">░</span>                   
-           <span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▒</span><span style="color: #FFFFFF;">▓</span> <span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▒</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #AAAAAA;">░</span><span style="color: #000000;"> </span><span style="color: #000000;"> </span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #AAAAAA;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">▓</span> <span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span>                  
-           <span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▒</span>       <span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span>      <span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">░</span><span style="color: #AAAAAA;">░</span><span style="color: #AAAAAA;">█</span><span style="color: #AAAAAA;">█</span><span style="color: #000000;"> </span><span style="color: #000000;"> </span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #AAAAAA;">░</span><span style="color: #FFFFFF;">░</span> <span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span> <span style="color: #FFFFFF;">░</span>                  
-           <span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">▓</span>              <span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">▒</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">░</span><span style="color: #AAAAAA;">░</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #AAAAAA;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #AAAAAA;">░</span><span style="color: #AAAAAA;">░</span><span style="color: #AAAAAA;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">▓</span>  <span style="color: #FFFFFF;">▓</span>                   
-           <span style="color: #FFFFFF;">▓</span>         <span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▒</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">▒</span><span style="color: #FFFFFF;">▒</span><span style="color: #AAAAAA;">░</span><span style="color: #AAAAAA;">░</span><span style="color: #AAAAAA;">░</span><span style="color: #AAAAAA;">░</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #AAAAAA;">▓</span><span style="color: #AAAAAA;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">░</span><span style="color: #AAAAAA;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #AAAAAA;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #AAAAAA;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▒</span><span style="color: #FFFFFF;">▓</span>                   
-                     <span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">▒</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▒</span><span style="color: #FFFFFF;">▒</span>   <span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">░</span>    <span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▒</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #AAAAAA;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span>  <span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span>                   
-                    <span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">▒</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">▓</span>    <span style="color: #FFFFFF;">░</span><span style="color: #AAAAAA;">░</span><span style="color: #AAAAAA;">░</span><span style="color: #AAAAAA;">░</span> <span style="color: #FFFFFF;">▓</span><span style="color: #AAAAAA;">░</span><span style="color: #FFFFFF;">▓</span>     <span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #AAAAAA;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #AAAAAA;">░</span><span style="color: #FFFFFF;">▓</span>  <span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">░</span>                   
-                  <span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">▒</span><span style="color: #FFFFFF;">▒</span> <span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">░</span>   <span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #AAAAAA;">░</span><span style="color: #AAAAAA;">░</span><span style="color: #000000;"> </span><span style="color: #000000;"> </span> <span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span> <span style="color: #FFFFFF;">░</span> <span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #AAAAAA;">░</span><span style="color: #AAAAAA;">░</span><span style="color: #AAAAAA;">░</span><span style="color: #AAAAAA;">░</span> <span style="color: #FFFFFF;">▒</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span>   <span style="color: #FFFFFF;">░</span>                
-                  <span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▒</span><span style="color: #FFFFFF;">▓</span>  <span style="color: #FFFFFF;">░</span>    <span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span>   <span style="color: #AAAAAA;">▓</span><span style="color: #AAAAAA;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #AAAAAA;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #AAAAAA;">░</span><span style="color: #FFFFFF;">▓</span><span style="color: #AAAAAA;">█</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span>  <span style="color: #FFFFFF;">▒</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span>                
-                   <span style="color: #FFFFFF;">▒</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">▒</span>    <span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #000000;"> </span><span style="color: #000000;"> </span><span style="color: #000000;"> </span><span style="color: #000000;"> </span><span style="color: #000000;"> </span><span style="color: #AAAAAA;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #AAAAAA;">▓</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">▓</span><span style="color: #AAAAAA;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">░</span>                 <span style="color: #000000;"> </span>
-                     <span style="color: #FFFFFF;">▒</span><span style="color: #FFFFFF;">▓</span>    <span style="color: #FFFFFF;">▒</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span>  <span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #AAAAAA;">▒</span>    <span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">░</span>                   
-                         <span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #AAAAAA;">░</span><span style="color: #AAAAAA;">▒</span><span style="color: #AAAAAA;">▒</span><span style="color: #AAAAAA;">▒</span><span style="color: #AAAAAA;">▒</span><span style="color: #FF5555;"> </span><span style="color: #FF5555;"> </span><span style="color: #FF5555;"> </span><span style="color: #FF5555;"> </span><span style="color: #FF5555;"> </span><span style="color: #FF5555;"> </span><span style="color: #FF5555;"> </span><span style="color: #FF5555;"> </span><span style="color: #FF5555;"> </span><span style="color: #FF5555;"> </span><span style="color: #FF5555;"> </span><span style="color: #FF5555;"> </span><span style="color: #FF5555;"> </span><span style="color: #FF5555;"> </span><span style="color: #FF5555;"> </span><span style="color: #FF5555;"> </span><span style="color: #FF5555;"> </span><span style="color: #FF5555;"> </span><span style="color: #FF5555;"> </span><span style="color: #000000;"> </span><span style="color: #000000;"> </span><span style="color: #000000;"> </span><span style="color: #000000;"> </span><span style="color: #000000;"> </span><span style="color: #000000;"> </span><span style="color: #000000;"> </span><span style="color: #000000;"> </span><span style="color: #000000;"> </span>
-                        <span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #AAAAAA;">▒</span><span style="color: #AAAAAA;">▒</span><span style="color: #AAAAAA;">▒</span><span style="color: #AAAAAA;">▓</span><span style="color: #AAAAAA;">░</span><span style="color: #AAAAAA;">░</span><span style="color: #AAAAAA;">░</span><span style="color: #AAAAAA;">░</span><span style="color: #AAAAAA;">░</span><span style="color: #AAAAAA;">░</span><span style="color: #AAAAAA;">░</span><span style="color: #AAAAAA;">░</span><span style="color: #AAAAAA;">▒</span><span style="color: #AAAAAA;">▒</span><span style="color: #AAAAAA;">█</span><span style="color: #000000;"> </span><span style="color: #000000;"> </span><span style="color: #000000;"> </span><span style="color: #55FF55;"> </span><span style="color: #55FF55;"> </span><span style="color: #55FF55;"> </span><span style="color: #55FF55;"> </span><span style="color: #55FF55;"> </span><span style="color: #55FF55;"> </span><span style="color: #55FF55;"> </span><span style="color: #55FF55;"> </span><span style="color: #55FF55;"> </span><span style="color: #55FF55;"> </span><span style="color: #55FF55;"> </span><span style="color: #55FF55;"> </span><span style="color: #55FF55;"> </span><span style="color: #55FF55;"> </span><span style="color: #55FF55;"> </span><span style="color: #55FF55;"> </span><span style="color: #55FF55;"> </span><span style="color: #55FF55;"> </span><span style="color: #55FF55;"> </span><span style="color: #55FF55;"> </span><span style="color: #55FF55;"> </span><span style="color: #55FF55;"> </span><span style="color: #55FF55;"> </span><span style="color: #55FF55;"> </span><span style="color: #55FF55;"> </span><span style="color: #55FF55;"> </span><span style="color: #55FF55;"> </span><span style="color: #55FF55;"> </span><span style="color: #55FF55;"> </span><span style="color: #55FF55;"> </span>
-                        <span style="color: #FFFFFF;">▒</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">░</span><span style="color: #AAAAAA;">▒</span><span style="color: #AAAAAA;">▒</span><span style="color: #AAAAAA;">▓</span><span style="color: #AAAAAA;">▒</span><span style="color: #AAAAAA;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #AAAAAA;">░</span><span style="color: #AAAAAA;">░</span><span style="color: #AAAAAA;">░</span><span style="color: #AAAAAA;">░</span><span style="color: #AAAAAA;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #AAAAAA;">▒</span><span style="color: #AAAAAA;">▒</span><span style="color: #AAAAAA;">▒</span>                                   
-                        <span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">░</span><span style="color: #AAAAAA;">░</span><span style="color: #AAAAAA;">░</span><span style="color: #AAAAAA;">░</span><span style="color: #AAAAAA;">░</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▒</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #AAAAAA;">░</span><span style="color: #AAAAAA;">░</span><span style="color: #AAAAAA;">▓</span><span style="color: #AAAAAA;">▓</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▒</span><span style="color: #AAAAAA;">▒</span><span style="color: #FFFFFF;">░</span>                                
-                         <span style="color: #FFFFFF;">▒</span><span style="color: #FFFFFF;">▓</span><span style="color: #AAAAAA;">░</span><span style="color: #AAAAAA;">░</span><span style="color: #AAAAAA;">░</span><span style="color: #AAAAAA;">░</span><span style="color: #AAAAAA;">░</span>        <span style="color: #FFFFFF;">▒</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">▒</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▒</span> <span style="color: #FFFFFF;">▓</span>                        
-                         <span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▒</span><span style="color: #FFFFFF;">▒</span><span style="color: #FFFFFF;">▓</span><span style="color: #AAAAAA;">░</span><span style="color: #AAAAAA;">░</span><span style="color: #AAAAAA;">░</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▒</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #AAAAAA;">▒</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span>                      
-                           <span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▒</span><span style="color: #AAAAAA;">▒</span><span style="color: #AAAAAA;">░</span><span style="color: #AAAAAA;">░</span><span style="color: #AAAAAA;">░</span><span style="color: #AAAAAA;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">▒</span><span style="color: #FFFFFF;">▒</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span>                     
-                             <span style="color: #AAAAAA;">█</span><span style="color: #AAAAAA;">▒</span><span style="color: #AAAAAA;">░</span><span style="color: #AAAAAA;">░</span><span style="color: #AAAAAA;">░</span><span style="color: #AAAAAA;">░</span><span style="color: #AAAAAA;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">▒</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▒</span><span style="color: #FFFFFF;">▒</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">░</span>                   
-                                  <span style="color: #AAAAAA;">█</span><span style="color: #AAAAAA;">▓</span><span style="color: #AAAAAA;">▓</span><span style="color: #AAAAAA;">▓</span><span style="color: #AAAAAA;">▓</span><span style="color: #AAAAAA;">█</span><span style="color: #AAAAAA;">█</span><span style="color: #AAAAAA;">█</span><span style="color: #AAAAAA;">█</span><span style="color: #AAAAAA;">█</span><span style="color: #AAAAAA;">█</span>                                   
-                                                  <span style="color: #000000;"> </span><span style="color: #000000;"> </span>                            
+                       <span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▒</span>      <span
+                style="color: #FFFFFF;">▒</span><span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">▒</span>                          <span style="color: #FFFFFF;">▒</span><span
+                style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span> <span
+                style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span>      
+                      <span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▒</span>       <span style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">▒</span>           <span
+                style="color: #AAAAAA;">▓</span><span style="color: #AAAAAA;">▓</span><span
+                style="color: #AAAAAA;">▓</span><span
+                style="color: #AAAAAA;">▓</span><span style="color: #AAAAAA;">█</span><span
+                style="color: #AAAAAA;">█</span> <span
+                style="color: #AAAAAA;">█</span><span style="color: #AAAAAA;">█</span><span
+                style="color: #AAAAAA;">▒</span><span
+                style="color: #AAAAAA;">▓</span><span style="color: #AAAAAA;">▓</span><span
+                style="color: #AAAAAA;">▓</span><span
+                style="color: #AAAAAA;">▓</span><span style="color: #AAAAAA;">▓</span><span
+                style="color: #AAAAAA;">▓</span><span
+                style="color: #AAAAAA;">▓</span><span style="color: #AAAAAA;">▓</span><span
+                style="color: #AAAAAA;">▓</span><span
+                style="color: #AAAAAA;">█</span><span style="color: #AAAAAA;">█</span><span
+                style="color: #AAAAAA;">▓</span><span
+                style="color: #AAAAAA;">▓</span><span style="color: #AAAAAA;">█</span>  
+                      <span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">░</span>         <span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span>       <span
+                style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">▒</span><span
+                style="color: #FFFFFF;">▓</span>       <span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▒</span> <span
+                style="color: #FFFFFF;">▒</span><span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">░</span>  
+                     <span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">░</span>   <span
+                style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▒</span><span
+                style="color: #FFFFFF;">▒</span>  <span
+                style="color: #FFFFFF;">▒</span><span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span>   <span
+                style="color: #FFFFFF;">▒</span><span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">▒</span>           <span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span>     <span
+                style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span>  
+                     <span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span> <span
+                style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▒</span><span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">▒</span><span
+                style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▒</span><span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span>              <span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span>      <span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span> 
+                     <span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">░</span><span
+                style="color: #AAAAAA;">░</span><span
+                style="color: #AAAAAA;">░</span><span style="color: #AAAAAA;">░</span><span
+                style="color: #AAAAAA;">▓</span><span
+                style="color: #AAAAAA;">▒</span><span style="color: #AAAAAA;">▒</span><span
+                style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">▒</span><span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span>           <span
+                style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">░</span>      <span
+                style="color: #FFFFFF;">░</span> 
+        <span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▒</span><span
+                style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▒</span><span style="color: #FFFFFF;">▓</span>   <span
+                style="color: #FFFFFF;">▒</span><span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">░</span><span style="color: #AAAAAA;">░</span><span
+                style="color: #AAAAAA;">░</span><span
+                style="color: #AAAAAA;">░</span><span style="color: #AAAAAA;">░</span><span
+                style="color: #AAAAAA;">░</span><span
+                style="color: #AAAAAA;">░</span><span style="color: #AAAAAA;">░</span><span
+                style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">▒</span><span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▒</span>       <span
+                style="color: #FFFFFF;">▒</span><span style="color: #FFFFFF;">▒</span><span
+                style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span> <span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▒</span>     
+     <span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">░</span>    <span
+                style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▒</span><span
+                style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">▒</span><span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▒</span><span
+                style="color: #FFFFFF;">░</span><span
+                style="color: #AAAAAA;">░</span><span style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span style="color: #AAAAAA;">░</span><span
+                style="color: #AAAAAA;">░</span><span
+                style="color: #AAAAAA;">░</span><span style="color: #AAAAAA;">░</span><span
+                style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span>          <span style="color: #FFFFFF;">▒</span><span
+                style="color: #FFFFFF;">▒</span><span style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▒</span><span
+                style="color: #AAAAAA;">░</span>  
+    <span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">▓</span>          <span
+                style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">░</span><span style="color: #AAAAAA;">░</span><span
+                style="color: #AAAAAA;">░</span><span
+                style="color: #AAAAAA;">░</span><span style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span style="color: #AAAAAA;">░</span><span
+                style="color: #AAAAAA;">░</span><span
+                style="color: #AAAAAA; background-color: #AA0000;">░</span><span
+                style="color: #AAAAAA; background-color: #AA0000;">░</span><span
+                style="color: #AAAAAA; background-color: #AA0000;">░</span><span style="color: #AAAAAA;">░</span><span
+                style="color: #AAAAAA;">░</span><span style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">░</span>    <span
+                style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▒</span><span style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">▒</span>   <span
+                style="color: #AAAAAA;">░</span><span style="color: #FFFFFF;">▒</span><span
+                style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span style="color: #AAAAAA;">░</span><span
+                style="color: #AAAAAA;">░</span><span
+                style="color: #AAAAAA;">░</span><span style="color: #AAAAAA;">░</span>
+   <span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">░</span><span style="color: #FFFF00;"> </span><span
+                style="color: #FFFF00;"> </span><span
+                style="color: #FFFF00;"> </span><span style="color: #FFFF00;"> </span><span
+                style="color: #FFFF00;"> </span><span
+                style="color: #FFFF00;"> </span><span style="color: #FFFF00;"> </span><span
+                style="color: #FFFF00;"> </span><span
+                style="color: #FFFF00;"> </span><span style="color: #FFFF00;"> </span><span
+                style="color: #FFFF00;"> </span><span
+                style="color: #FFFF00;"> </span><span style="color: #FFFF00;"> </span><span
+                style="color: #FFFF00;"> </span><span
+                style="color: #FFFF00;"> </span><span style="color: #AAAAAA;">▒</span><span
+                style="color: #AAAAAA;">▓</span><span
+                style="color: #AAAAAA;">█</span><span style="color: #FFFF00;">░</span><span
+                style="color: #AAAAAA;">░</span><span
+                style="color: #AAAAAA; background-color: #AA0000;">░</span><span
+                style="color: #AAAAAA; background-color: #AA0000;">▒</span><span
+                style="color: #AAAAAA; background-color: #AA0000;">░</span><span style="color: #AAAAAA;">░</span><span
+                style="color: #FFFF00;">░</span><span style="color: #AAAAAA;">░</span><span
+                style="color: #AAAAAA;">░</span><span
+                style="color: #AAAAAA; background-color: #AA0000;">░</span><span
+                style="color: #AAAAAA; background-color: #AA0000;">░</span><span style="color: #AAAAAA;">░</span><span
+                style="color: #FFFF00;">░</span><span style="color: #AAAAAA;">░</span><span
+                style="color: #AAAAAA;">░</span><span
+                style="color: #AAAAAA;">░</span><span style="color: #AAAAAA;">░</span><span
+                style="color: #AAAAAA;">░</span><span
+                style="color: #AAAAAA;">░</span><span style="color: #AAAAAA;">░</span><span
+                style="color: #AAAAAA;">█</span><span
+                style="color: #AAAAAA;">░</span><span style="color: #FFFF00;"> </span><span
+                style="color: #FFFF00;"> </span><span
+                style="color: #FFFF00;"> </span><span style="color: #FFFF00;"> </span><span
+                style="color: #FFFF00;"> </span><span
+                style="color: #AAAAAA;">▒</span><span style="color: #AAAAAA;">█</span><span
+                style="color: #AAAAAA;">█</span><span
+                style="color: #AAAAAA;">█</span><span style="color: #AAAAAA;">█</span><span
+                style="color: #AAAAAA;">▒</span><span
+                style="color: #FFFF00;"> </span><span style="color: #FFFF00;"> </span><span
+                style="color: #FFFF00;"> </span><span
+                style="color: #AAAAAA;">░</span><span style="color: #AAAAAA;">█</span><span
+                style="color: #AAAAAA;">▒</span><span
+                style="color: #AAAAAA;">░</span><span style="color: #AAAAAA;">▒</span><span
+                style="color: #AAAAAA;">▒</span><span
+                style="color: #AAAAAA;">▒</span><span style="color: #AAAAAA;">▒</span><span
+                style="color: #AAAAAA;">▒</span><span
+                style="color: #AAAAAA;">▒</span><span style="color: #AAAAAA;">▒</span><span
+                style="color: #AAAAAA;">▒</span><span
+                style="color: #AAAAAA;">▒</span><span style="color: #AAAAAA;">▒</span><span
+                style="color: #AAAAAA;">▒</span><span
+                style="color: #AAAAAA;">░</span>
+ <span style="color: #FFFFFF;">▒</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▒</span><span
+                style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span>    <span
+                style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">▒</span><span
+                style="color: #FFFFFF;">▒</span>  <span style="color: #AAAAAA;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▒</span><span
+                style="color: #FFFFFF;">░</span><span
+                style="color: #AAAAAA;">░</span><span style="color: #AAAAAA;">▒</span><span
+                style="color: #AAAAAA; background-color: #AA0000;">░</span><span style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span style="color: #AAAAAA;">░</span><span
+                style="color: #AAAAAA;">▒</span><span
+                style="color: #AAAAAA;">░</span><span style="color: #AAAAAA;">░</span><span
+                style="color: #AAAAAA;">░</span><span
+                style="color: #AAAAAA;">░</span><span style="color: #AAAAAA;">░</span><span
+                style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">▒</span><span style="color: #FFFFFF;">▓</span>        <span
+                style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">▒</span>  <span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▒</span>      <span style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">▒</span><span style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span>
+<span style="color: #FFFFFF;">▒</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span>   <span
+                style="color: #FFFFFF;">░</span>     <span style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">░</span><span
+                style="color: #AAAAAA;">░</span><span style="color: #AAAAAA;">░</span><span
+                style="color: #AAAAAA;">░</span><span
+                style="color: #AAAAAA;">░</span><span style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span
+                style="color: #AAAAAA;">░</span><span style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span
+                style="color: #AAAAAA;">░</span><span
+                style="color: #AAAAAA;">░</span><span style="color: #AAAAAA;">░</span><span
+                style="color: #FFFFFF;">▒</span><span
+                style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">░</span>     <span
+                style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▒</span><span
+                style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span>  <span
+                style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">░</span>            
+<span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">▓</span> <span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span>     <span
+                style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span>  <span style="color: #FFFFFF;">░</span>       <span
+                style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▒</span><span
+                style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span
+                style="color: #AAAAAA;">░</span><span style="color: #AAAAAA;">░</span><span
+                style="color: #AAAAAA;">░</span><span
+                style="color: #AAAAAA;">░</span><span style="color: #AAAAAA;">░</span><span
+                style="color: #AAAAAA;">░</span><span
+                style="color: #AAAAAA;">░</span><span style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">▒</span><span
+                style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▒</span><span style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">▒</span> <span
+                style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▒</span>            
+<span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span>         <span
+                style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">▓</span> <span
+                style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">▒</span>         <span
+                style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span style="color: #AAAAAA;">░</span><span
+                style="color: #FFFFFF;">░</span><span
+                style="color: #AAAAAA;">░</span><span style="color: #AAAAAA;">░</span><span
+                style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span
+                style="color: #AAAAAA;">░</span><span
+                style="color: #AAAAAA;">░</span><span style="color: #FFFFFF;">▒</span> <span
+                style="color: #FFFFFF;">▒</span>          <span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span>            
+<span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▒</span>          <span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▒</span><span
+                style="color: #FFFFFF;">░</span>            <span
+                style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">▒</span> <span
+                style="color: #FFFFFF;">▒</span><span style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span style="color: #AAAAAA;">░</span><span
+                style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span
+                style="color: #AAAAAA;">░</span><span style="color: #FFFFFF;">░</span><span
+                style="color: #AAAAAA;">░</span><span
+                style="color: #AAAAAA;">░</span><span style="color: #FFFFFF;">░</span>       <span
+                style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span>             
+<span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▒</span>           <span
+                style="color: #FFFFFF;">▒</span><span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">░</span> <span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▒</span>     <span
+                style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▒</span>     <span
+                style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span
+                style="color: #AAAAAA;">░</span><span
+                style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span
+                style="color: #AAAAAA;">░</span><span
+                style="color: #FFFFFF;">░</span><span style="color: #AAAAAA;">░</span><span
+                style="color: #FFFFFF;">░</span>  <span
+                style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▒</span>                   
+            <span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">░</span>       <span
+                style="color: #FFFFFF;">▒</span><span style="color: #FFFFFF;">▓</span> <span
+                style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▒</span><span
+                style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span
+                style="color: #AAAAAA;">░</span><span
+                style="color: #AAAAAA;">░</span><span style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">░</span>                   
+           <span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▒</span><span style="color: #FFFFFF;">▓</span> <span
+                style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▒</span><span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span
+                style="color: #AAAAAA;">░</span><span style="color: #000000;"> </span><span
+                style="color: #000000;"> </span><span
+                style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span
+                style="color: #AAAAAA;">░</span><span
+                style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">▓</span> <span
+                style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span>                  
+           <span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▒</span>       <span
+                style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span>      <span
+                style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">░</span><span
+                style="color: #AAAAAA;">░</span><span style="color: #AAAAAA;">█</span><span
+                style="color: #AAAAAA;">█</span><span
+                style="color: #000000;"> </span><span style="color: #000000;"> </span><span
+                style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span
+                style="color: #AAAAAA;">░</span><span style="color: #FFFFFF;">░</span> <span
+                style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span> <span
+                style="color: #FFFFFF;">░</span>                  
+           <span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">▓</span>              <span
+                style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">▒</span><span
+                style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">░</span><span
+                style="color: #AAAAAA;">░</span><span
+                style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span
+                style="color: #AAAAAA;">░</span><span
+                style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span
+                style="color: #AAAAAA;">░</span><span
+                style="color: #AAAAAA;">░</span><span style="color: #AAAAAA;">░</span><span
+                style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">▓</span>  <span style="color: #FFFFFF;">▓</span>                   
+           <span style="color: #FFFFFF;">▓</span>         <span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▒</span><span
+                style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">▒</span><span
+                style="color: #FFFFFF;">▒</span><span style="color: #AAAAAA;">░</span><span
+                style="color: #AAAAAA;">░</span><span
+                style="color: #AAAAAA;">░</span><span style="color: #AAAAAA;">░</span><span
+                style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span
+                style="color: #AAAAAA;">▓</span><span
+                style="color: #AAAAAA;">▓</span><span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">░</span><span style="color: #AAAAAA;">░</span><span
+                style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span style="color: #AAAAAA;">░</span><span
+                style="color: #FFFFFF;">░</span><span
+                style="color: #AAAAAA;">░</span><span style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▒</span><span
+                style="color: #FFFFFF;">▓</span>                   
+                     <span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">▒</span><span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▒</span><span
+                style="color: #FFFFFF;">▒</span>   <span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">░</span>    <span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▒</span><span style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span style="color: #AAAAAA;">░</span><span
+                style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span>  <span
+                style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span>                   
+                    <span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">▒</span><span
+                style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">▓</span>    <span
+                style="color: #FFFFFF;">░</span><span style="color: #AAAAAA;">░</span><span
+                style="color: #AAAAAA;">░</span><span
+                style="color: #AAAAAA;">░</span> <span style="color: #FFFFFF;">▓</span><span
+                style="color: #AAAAAA;">░</span><span style="color: #FFFFFF;">▓</span>     <span
+                style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span
+                style="color: #AAAAAA;">░</span><span
+                style="color: #FFFFFF;">░</span><span style="color: #AAAAAA;">░</span><span
+                style="color: #FFFFFF;">▓</span>  <span
+                style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">░</span>                   
+                  <span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">▒</span><span
+                style="color: #FFFFFF;">▒</span> <span style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">░</span>   <span
+                style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span
+                style="color: #AAAAAA;">░</span><span
+                style="color: #AAAAAA;">░</span><span style="color: #000000;"> </span><span
+                style="color: #000000;"> </span> <span
+                style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span> <span
+                style="color: #FFFFFF;">░</span> <span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span style="color: #AAAAAA;">░</span><span
+                style="color: #AAAAAA;">░</span><span
+                style="color: #AAAAAA;">░</span><span style="color: #AAAAAA;">░</span> <span
+                style="color: #FFFFFF;">▒</span><span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span>   <span
+                style="color: #FFFFFF;">░</span>                
+                  <span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▒</span><span
+                style="color: #FFFFFF;">▓</span>  <span style="color: #FFFFFF;">░</span>    <span
+                style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span>   <span
+                style="color: #AAAAAA;">▓</span><span style="color: #AAAAAA;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span
+                style="color: #AAAAAA;">▓</span><span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span style="color: #AAAAAA;">░</span><span
+                style="color: #FFFFFF;">▓</span><span
+                style="color: #AAAAAA;">█</span><span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span>  <span
+                style="color: #FFFFFF;">▒</span><span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span>                
+                   <span style="color: #FFFFFF;">▒</span><span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">▒</span>    <span
+                style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span
+                style="color: #000000;"> </span><span
+                style="color: #000000;"> </span><span style="color: #000000;"> </span><span
+                style="color: #000000;"> </span><span
+                style="color: #000000;"> </span><span style="color: #AAAAAA;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span
+                style="color: #AAAAAA;">▓</span><span
+                style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">▓</span><span style="color: #AAAAAA;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">░</span>                 <span
+                style="color: #000000;"> </span>
+                     <span style="color: #FFFFFF;">▒</span><span style="color: #FFFFFF;">▓</span>    <span
+                style="color: #FFFFFF;">▒</span><span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span>  <span
+                style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span style="color: #AAAAAA;">▒</span>    <span
+                style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">░</span>                   
+                         <span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span
+                style="color: #AAAAAA;">░</span><span
+                style="color: #AAAAAA;">▒</span><span style="color: #AAAAAA;">▒</span><span
+                style="color: #AAAAAA;">▒</span><span
+                style="color: #AAAAAA;">▒</span><span style="color: #FF5555;"> </span><span
+                style="color: #FF5555;"> </span><span
+                style="color: #FF5555;"> </span><span style="color: #FF5555;"> </span><span
+                style="color: #FF5555;"> </span><span
+                style="color: #FF5555;"> </span><span style="color: #FF5555;"> </span><span
+                style="color: #FF5555;"> </span><span
+                style="color: #FF5555;"> </span><span style="color: #FF5555;"> </span><span
+                style="color: #FF5555;"> </span><span
+                style="color: #FF5555;"> </span><span style="color: #FF5555;"> </span><span
+                style="color: #FF5555;"> </span><span
+                style="color: #FF5555;"> </span><span style="color: #FF5555;"> </span><span
+                style="color: #FF5555;"> </span><span
+                style="color: #FF5555;"> </span><span style="color: #FF5555;"> </span><span
+                style="color: #000000;"> </span><span
+                style="color: #000000;"> </span><span style="color: #000000;"> </span><span
+                style="color: #000000;"> </span><span
+                style="color: #000000;"> </span><span style="color: #000000;"> </span><span
+                style="color: #000000;"> </span><span
+                style="color: #000000;"> </span><span style="color: #000000;"> </span>
+                        <span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span
+                style="color: #AAAAAA;">▒</span><span style="color: #AAAAAA;">▒</span><span
+                style="color: #AAAAAA;">▒</span><span
+                style="color: #AAAAAA;">▓</span><span style="color: #AAAAAA;">░</span><span
+                style="color: #AAAAAA;">░</span><span
+                style="color: #AAAAAA;">░</span><span style="color: #AAAAAA;">░</span><span
+                style="color: #AAAAAA;">░</span><span
+                style="color: #AAAAAA;">░</span><span style="color: #AAAAAA;">░</span><span
+                style="color: #AAAAAA;">░</span><span
+                style="color: #AAAAAA;">▒</span><span style="color: #AAAAAA;">▒</span><span
+                style="color: #AAAAAA;">█</span><span
+                style="color: #000000;"> </span><span style="color: #000000;"> </span><span
+                style="color: #000000;"> </span><span
+                style="color: #55FF55;"> </span><span style="color: #55FF55;"> </span><span
+                style="color: #55FF55;"> </span><span
+                style="color: #55FF55;"> </span><span style="color: #55FF55;"> </span><span
+                style="color: #55FF55;"> </span><span
+                style="color: #55FF55;"> </span><span style="color: #55FF55;"> </span><span
+                style="color: #55FF55;"> </span><span
+                style="color: #55FF55;"> </span><span style="color: #55FF55;"> </span><span
+                style="color: #55FF55;"> </span><span
+                style="color: #55FF55;"> </span><span style="color: #55FF55;"> </span><span
+                style="color: #55FF55;"> </span><span
+                style="color: #55FF55;"> </span><span style="color: #55FF55;"> </span><span
+                style="color: #55FF55;"> </span><span
+                style="color: #55FF55;"> </span><span style="color: #55FF55;"> </span><span
+                style="color: #55FF55;"> </span><span
+                style="color: #55FF55;"> </span><span style="color: #55FF55;"> </span><span
+                style="color: #55FF55;"> </span><span
+                style="color: #55FF55;"> </span><span style="color: #55FF55;"> </span><span
+                style="color: #55FF55;"> </span><span
+                style="color: #55FF55;"> </span><span style="color: #55FF55;"> </span><span
+                style="color: #55FF55;"> </span>
+                        <span style="color: #FFFFFF;">▒</span><span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">░</span><span style="color: #AAAAAA;">▒</span><span
+                style="color: #AAAAAA;">▒</span><span
+                style="color: #AAAAAA;">▓</span><span style="color: #AAAAAA;">▒</span><span
+                style="color: #AAAAAA;">░</span><span
+                style="color: #FFFFFF;">░</span><span style="color: #AAAAAA;">░</span><span
+                style="color: #AAAAAA;">░</span><span
+                style="color: #AAAAAA;">░</span><span style="color: #AAAAAA;">░</span><span
+                style="color: #AAAAAA;">░</span><span
+                style="color: #FFFFFF;">░</span><span style="color: #AAAAAA;">▒</span><span
+                style="color: #AAAAAA;">▒</span><span
+                style="color: #AAAAAA;">▒</span>                                   
+                        <span style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">░</span><span style="color: #AAAAAA;">░</span><span
+                style="color: #AAAAAA;">░</span><span
+                style="color: #AAAAAA;">░</span><span style="color: #AAAAAA;">░</span><span
+                style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▒</span><span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span
+                style="color: #AAAAAA;">░</span><span style="color: #AAAAAA;">░</span><span
+                style="color: #AAAAAA;">▓</span><span
+                style="color: #AAAAAA;">▓</span><span style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▒</span><span
+                style="color: #AAAAAA;">▒</span><span
+                style="color: #FFFFFF;">░</span>                                
+                         <span style="color: #FFFFFF;">▒</span><span style="color: #FFFFFF;">▓</span><span
+                style="color: #AAAAAA;">░</span><span style="color: #AAAAAA;">░</span><span
+                style="color: #AAAAAA;">░</span><span
+                style="color: #AAAAAA;">░</span><span style="color: #AAAAAA;">░</span>        <span
+                style="color: #FFFFFF;">▒</span><span
+                style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">▒</span><span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▒</span> <span style="color: #FFFFFF;">▓</span>                        
+                         <span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▒</span><span
+                style="color: #FFFFFF;">▒</span><span style="color: #FFFFFF;">▓</span><span
+                style="color: #AAAAAA;">░</span><span
+                style="color: #AAAAAA;">░</span><span style="color: #AAAAAA;">░</span><span
+                style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▒</span><span
+                style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span
+                style="color: #AAAAAA;">▒</span><span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span>                      
+                           <span style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▒</span><span
+                style="color: #AAAAAA;">▒</span><span style="color: #AAAAAA;">░</span><span
+                style="color: #AAAAAA;">░</span><span
+                style="color: #AAAAAA;">░</span><span style="color: #AAAAAA;">░</span><span
+                style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">▒</span><span style="color: #FFFFFF;">▒</span><span
+                style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span>                     
+                             <span style="color: #AAAAAA;">█</span><span style="color: #AAAAAA;">▒</span><span
+                style="color: #AAAAAA;">░</span><span style="color: #AAAAAA;">░</span><span
+                style="color: #AAAAAA;">░</span><span
+                style="color: #AAAAAA;">░</span><span style="color: #AAAAAA;">░</span><span
+                style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">░</span><span
+                style="color: #FFFFFF;">░</span><span style="color: #FFFFFF;">▒</span><span
+                style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▒</span><span
+                style="color: #FFFFFF;">▒</span><span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">▓</span><span style="color: #FFFFFF;">▓</span><span
+                style="color: #FFFFFF;">░</span>                   
+                                  <span style="color: #AAAAAA;">█</span><span style="color: #AAAAAA;">▓</span><span
+                style="color: #AAAAAA;">▓</span><span style="color: #AAAAAA;">▓</span><span
+                style="color: #AAAAAA;">▓</span><span
+                style="color: #AAAAAA;">█</span><span style="color: #AAAAAA;">█</span><span
+                style="color: #AAAAAA;">█</span><span
+                style="color: #AAAAAA;">█</span><span style="color: #AAAAAA;">█</span><span
+                style="color: #AAAAAA;">█</span>                                   
+                                                  <span style="color: #000000;"> </span><span
+                style="color: #000000;"> </span>                            
         </pre>
-<pre style="color=#AAAAAA; font-size:20pt; line-height:20pt; font-family: 'Courier New', monospace;">
-<code>
+    </div>
+    <div class="panel">
+        <pre style="color=#AAAAAA; font-size:20pt; line-height:20pt; font-family: 'Courier New', monospace;">
+<code  style="color: red; font-weight: bold">
                __          __
- ______  _____/  |______ _/  |_________  ____   _____
-/      \/ __  \    __\__  \   __\_  __ \/  _ \ /     \
-|  Y Y  \  ___/|  |  / __  \  |  |  | \|  ( ) |   |   \
-|__|__| |_____ |__| (____  /__|  |__|   \____/|___| __|
+ ______  _____/  |______ _/  |_________  ____   ____
+/      \/ __  \    __\__  \   __\_  __ \/  _ \ /    \
+|  Y Y  \  ___/|  |  / __  \  |  |  | \|  ( ) |   |  |
+|__|__| |_____ |__| (____  /__|  |__|   \____/|___| _|
 </code>
 </pre>
+    </div>
+</div>
+<hr style="color: red;">
 </body>
 </html>

@@ -39,6 +39,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.concurrent.Executors;
 
+import static studio.phaseshift.metatron.lang.mtron.type.NoObj.noobj;
+import static studio.phaseshift.metatron.lang.mtron.type.impl.MFail.fail;
+import static studio.phaseshift.metatron.lang.mtron.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.lang.mweb.mwebInstSet.MWEB_TID;
 
@@ -48,12 +51,15 @@ import static studio.phaseshift.metatron.lang.mweb.mwebInstSet.MWEB_TID;
 public class mwebSpace extends MSpace<HttpServer> {
 
     public static final fURI WEB_TID = MWEB_TID.extend("space/web");
+    protected static final String ROUTE = "route";
     private static final WebTranslator WEB_TRANSLATOR = new WebTranslator();
     private final Rec routes;
 
     public mwebSpace(final Tuple.Pair<HttpServer, Rec> serverAndRoutes, final fURI pattern, final fURI vid) {
         super(serverAndRoutes.get0(), pattern, WEB_TID, vid);
-        (this.routes = serverAndRoutes.get1()).elements().forEach(r -> {
+        this.routes = serverAndRoutes.get1();
+        Router.writeToSpace(this.vid.extend(ROUTE), routes);
+        this.routes.elements().forEach(r -> {
             final HttpContext context = this.jvm().createContext(r.first().uriValue().toString(),
                     exchange -> {
                         final Path path = Path.of(r.second().uriValue().extend(exchange.getRequestURI().getPath()).toString());
@@ -92,7 +98,7 @@ public class mwebSpace extends MSpace<HttpServer> {
     public mwebSpace vid(final fURI vid) {
         if (null != vid) {
             Router.writeToSpace(vid.extend("host"), uri(jvm().getAddress().getAddress().toString()));
-            Router.writeToSpace(vid.extend("route"), this.routes);
+            Router.writeToSpace(vid.extend(ROUTE), this.routes);
         }
         return (mwebSpace) super.vid(vid);
     }
@@ -111,12 +117,43 @@ public class mwebSpace extends MSpace<HttpServer> {
             LOG.debug("retrieved web page: %s", doc.location());
             return WEB_TRANSLATOR.translate(doc);
         } catch (final IOException e) {
-            throw MTronException.of(e);
+            return fail(e);
         }
     }
 
     @Override
     public Obj write(final fURI vid, final Obj obj) {
+        if (obj.isNoObj()) {
+            try {
+                this.jvm().removeContext(vid.path());
+                LOG.info("removing route %s", vid.path());
+                Router.writeToSpace(this.vid().extend(ROUTE).extend(vid.path()), noobj());
+            } catch (final IllegalArgumentException e) {
+                // do nothing (no such context exists)
+            }
+        } else {
+            LOG.info("adding new route %s => %s", vid.path(), obj);
+            this.write(vid, noobj());
+            Router.writeToSpace(this.vid().extend(ROUTE), rec(uri(vid.path()), obj));
+            this.jvm().createContext(vid.path(), exchange -> {
+                String contentType = "text/plain";
+                exchange.getResponseHeaders().set("Content-Type", contentType == null ? "text/plain" : contentType);
+                final String result = Graphitty.strip(obj.apply(uri(exchange.getRequestURI().toString())).toString());
+                exchange.sendResponseHeaders(200, result.length());
+                LOG.info("sending %s [%s,%d bytes] per request from %s: %s", result, contentType, result.length(), exchange.getRemoteAddress(), exchange.getRequestURI());
+                try (//final InputStream is = new ByteArrayInputStream(result.getBytes());
+                     final OutputStream os = exchange.getResponseBody()) {
+                    os.write(result.getBytes());
+                    os.flush();
+                    /*byte[] buffer = new byte[8192]; // 8KB buffer
+                    int bytesRead;
+                    while ((bytesRead = is.read(buffer)) != -1) {
+                        os.write(buffer, 0, bytesRead);
+                        os.flush();
+                    }*/
+                }
+            });
+        }
         return obj;
     }
 
