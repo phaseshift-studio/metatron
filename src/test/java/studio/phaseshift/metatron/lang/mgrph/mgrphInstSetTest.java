@@ -18,12 +18,15 @@
 
 package studio.phaseshift.metatron.lang.mgrph;
 
+import org.apache.tinkerpop.gremlin.tinkergraph.structure.TinkerFactory;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.MetatronTest;
+import studio.phaseshift.metatron.lang.mgrph.tp.MGraph;
 import studio.phaseshift.metatron.space.Router;
 
+import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MUri.uri;
 
 /*
@@ -34,13 +37,15 @@ public class mgrphInstSetTest extends MetatronTest {
     @BeforeAll
     public static void begin() {
         MetatronTest.begin();
-        Router.global().write("g", uri("/mnt/tp"));
+        MGraph.of(TinkerFactory.createModern(), f("/tp/#"), f("/mnt/tp"));
+        Router.writeToSpace("g", uri("/mnt/tp"));
     }
 
 
     @Override
     @ParameterizedTest
     @CsvSource(value = {
+            "g -> /mnt/tp                                                              % /mnt/tp",
             "*(*g).V().count()                                                         % 6",
             "*(*g).E().count()                                                         % 6",
             "*(*g).V().outE().count()                                                  % 6",

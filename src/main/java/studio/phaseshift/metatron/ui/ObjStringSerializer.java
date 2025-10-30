@@ -179,7 +179,7 @@ public class ObjStringSerializer implements ObjSerializer<String> {
         else
             return generateVID(generateTID(sb, obj.tid(), true)
                     .append(this.b.palette.valueC())
-                    .append(obj instanceof Space ? rel(uri("pattern"), ((Space) obj).pattern().toUri()) : "")
+                    .append(obj instanceof Space ? rel(uri("pattern"), null == ((Space)obj).pattern() ? uri("pattern") : ((Space) obj).pattern().toUri()) : obj.jvm())
                     .append(this.b.palette.form2C()), obj)
                     .append(this.b.ignoreRewrites ? "" : "{{X}}")
                     .toString();

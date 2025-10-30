@@ -26,6 +26,7 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.mgrph.mgrphInstSet;
 import studio.phaseshift.metatron.lang.mtron.type.Obj;
 import studio.phaseshift.metatron.space.MSpace;
+import studio.phaseshift.metatron.space.Space;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
@@ -113,7 +114,7 @@ public class MGraph extends MSpace<Graph> implements Graph, WrappedGraph<Graph> 
 
     @Override
     public Obj read(final fURI vid) {
-        return Helper.resolveRead(this, vid, (key) -> {
+        return Space.Helper.resolveRead(this, vid, (key) -> {
             //if (key.tail(this.vid.extend("/vertex/#")))
             //    return IteratorUtil.stream(this.mvertices()).collect(Collectors.toMap(MVertex::vid, v -> v));
             //else {

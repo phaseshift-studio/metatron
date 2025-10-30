@@ -73,7 +73,7 @@ public final class NullSpace implements Space, InstSet {
 
     @Override
     public Obj read(final fURI vid) {
-        return NoObj.single();
+        return NoObj.noobj();
     }
 
     @Override

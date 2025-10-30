@@ -39,6 +39,7 @@ import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.lang.mtron.mtronInstSet.*;
+import static studio.phaseshift.metatron.lang.mtron.type.NoObj.noobj;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MType.T;
 import static studio.phaseshift.metatron.util.Tuple.Pair;
@@ -96,23 +97,23 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
             final Obj result = this.tid(this.tid().c(c.toString()));
             return Pair.with(result, remaining);
         } else {
-            return Pair.with(NoObj.single(), this);
+            return Pair.with(noobj(), this);
         }
     }
 
     default Pair<Obj, Obj> take(final Inst inst) {
         if (!inst.tid().hasDom() || (this.uniqueC().equals(cInt.ONE()) && inst.dom().c().gt(cInt.ZERO())))
-            return Pair.with(this, NoObj.single());
+            return Pair.with(this, noobj());
         else if (inst.dom().isZero() || this.isNoObj())
-            return Pair.with(NoObj.single(), this);
+            return Pair.with(noobj(), this);
         else if (this.c().within(inst.dom().c()))
-            return Pair.with(this, NoObj.single());
+            return Pair.with(this, noobj());
         else if (inst.dom().c().most().within(this.c()))
             return Pair.with(this.c(inst.dom().c().most()), this.c(c -> c.minus(inst.dom().c().most())));
         else if (inst.dom().c().least().within(this.c()))
             return Pair.with(this.c(inst.dom().c().min()), this.c(c -> c.minus(inst.dom().c().least())));
         else { // if the obj can't be split, just return it (will typically lead to an evaluation error)
-            return Pair.with(this, NoObj.single());
+            return Pair.with(this, noobj());
         }
     }
 
@@ -142,8 +143,8 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
 
     <O extends Obj> O clone(final Object jvm, final fURI tid, final fURI vid);
 
-    default <O extends Obj> O jvm(final Object newValue) {
-        return this.clone(newValue, this.tid(), this.vid());
+    default <O extends Obj> O jvm(final Object jvm) {
+        return this.clone(jvm, this.tid(), this.vid());
     }
 
     default <O> O jvmAs() {
@@ -158,16 +159,16 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
         return (Stream) this.stream();
     }
 
-    default Obj tid(final fURI newTid) {
-        return this.clone(this.jvm(), newTid, this.vid());
+    default Obj tid(final fURI tid) {
+        return this.clone(this.jvm(), tid, this.vid());
     }
 
-    default Obj tid(final String newTid) {
-        return this.tid(f(newTid));
+    default Obj tid(final String tid) {
+        return this.tid(f(tid));
     }
 
-    default Obj vid(final fURI newVid) {
-        return this.clone(this.jvm(), this.tid(), newVid);
+    default Obj vid(final fURI vid) {
+        return this.clone(this.jvm(), this.tid(), vid);
     }
 
     /*default boolean inSpace() {
@@ -186,7 +187,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
             if (!obj.isNoObj())
                 objs.add(obj);
             if (objs.isEmpty())
-                return NoObj.single();
+                return noobj();
             if (objs.size() == 1)
                 return objs.get(0);
             return objs(objs);
@@ -199,7 +200,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
     }
 
     default Obj apply() {
-        return this.apply(NoObj.single());
+        return this.apply(noobj());
     }
 
     default boolean matches(final Obj rhs) {
@@ -283,7 +284,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
     }
 
     default <O extends Obj> O andIf(final Predicate<O> predicate) {
-        return predicate.test((O) this) ? (O) this : (O) NoObj.single();
+        return predicate.test((O) this) ? (O) this : (O) noobj();
     }
 
     default <O extends Obj> O choose(final Predicate<Obj> predicate, final Function<Obj, O> trueBranch, final Function<Obj, O> falseBranch) {
@@ -445,7 +446,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
     class Helper {
 
         public static int objHashCode(final Obj obj) {
-            return obj.isNoObj() ? NoObj.single().hashCode() : obj.isInst() ? obj.tid().hashCode() : Objects.hash(obj.jvm(), obj.tid().cLess());
+            return obj.isNoObj() ? noobj().hashCode() : obj.isInst() ? obj.tid().hashCode() : Objects.hash(obj.jvm(), obj.tid().cLess());
         }
 
         public static boolean objEquals(final Obj obj, final Object other) {

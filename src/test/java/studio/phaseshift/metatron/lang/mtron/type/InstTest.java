@@ -104,9 +104,9 @@ public class InstTest extends MetatronObjTest {
                 Tuple.Pair.with(objs(jnt(2), jnt(3)), start_(jnt(1)).mult(plus_(jnt(1)).plus(plus_(jnt(2))))),
                 Tuple.Pair.with(objs(jnt(6).c(2L)), start_(jnt(2)).mult(plus_(jnt(4)).plus(mult_(jnt(3))))),
                 Tuple.Pair.with(objs(jnt(6), jnt(7)), start_(jnt(2)).mult(plus_(jnt(4)).mult(plus_(jnt(1))).plus(mult_(jnt(3))))),
-                Tuple.Pair.with(objs(jnt(6), jnt(7)), start_(jnt(2)).mult(plus_(jnt(4)).mult(plus_(jnt(1))).plus(mult_(jnt(3))).plus(NoObj.single()))),
-                Tuple.Pair.with(NoObj.single(), start_(jnt(2)).mult(NoObj.single())),
-                Tuple.Pair.with(NoObj.single(), start_(jnt(2)).mult(plus_(jnt(4)).mult(plus_(jnt(1))).plus(mult_(jnt(3))).plus(NoObj.single())).mult(NoObj.single())))) {
+                Tuple.Pair.with(objs(jnt(6), jnt(7)), start_(jnt(2)).mult(plus_(jnt(4)).mult(plus_(jnt(1))).plus(mult_(jnt(3))).plus(NoObj.noobj()))),
+                Tuple.Pair.with(NoObj.noobj(), start_(jnt(2)).mult(NoObj.noobj())),
+                Tuple.Pair.with(NoObj.noobj(), start_(jnt(2)).mult(plus_(jnt(4)).mult(plus_(jnt(1))).plus(mult_(jnt(3))).plus(NoObj.noobj())).mult(NoObj.noobj())))) {
             LOG.trace("\n\ntesting %s == %s", item.get1(), item.get0());
             assertEquals(item.get0(), item.get1().apply());
         }

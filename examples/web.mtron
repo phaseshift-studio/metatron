@@ -1,5 +1,5 @@
-mweb(authority => <http://localhost:8099>,
-     pattern   => <http://#>,
-     route => [
+mweb(host    => <http://localhost:8099>,
+     pattern => <http://#>,
+     route   => [
        / => examples/www
-     ]).to(/mnt/web)
+     ]).at(/mnt/web)

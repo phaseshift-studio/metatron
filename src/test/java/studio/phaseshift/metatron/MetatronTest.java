@@ -61,7 +61,7 @@ public class MetatronTest {
         if (expected.trim().equals("<ERROR>")) {
             try {
                 final Obj cd = mtronParser.sugar_code().parse(code).get();
-                final Obj actual = cd.apply(NoObj.single());
+                final Obj actual = cd.apply(NoObj.noobj());
                 if (!(cd.isFail() || actual.isFail())) {
                     if(cd.isFail())
                         cd.<Fail>as().jvm().printStackTrace();
@@ -76,7 +76,7 @@ public class MetatronTest {
         } else {
             final Obj cd = mtronParser.m_code_or_obj().parse(code).get();
             final Obj ex = mtronParser.m_obj().parse(expected).get();
-            final Obj actual = cd.apply(NoObj.single());
+            final Obj actual = cd.apply(NoObj.noobj());
             LOG.debug("testing %s => %s [expected:%s]", cd, actual, ex);
             assertEquals(ex, actual);
         }

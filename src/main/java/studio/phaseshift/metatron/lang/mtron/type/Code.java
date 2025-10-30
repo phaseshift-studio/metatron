@@ -41,7 +41,7 @@ public interface Code extends Call {
     List<Inst> jvm();
 
     default Inst inst(final int index) {
-        return index < this.jvm().size() ? this.jvm().get(index) : NoObj.single();
+        return index < this.jvm().size() ? this.jvm().get(index) : NoObj.noobj();
     }
 
     @Override
@@ -99,14 +99,14 @@ public interface Code extends Call {
     default Inst nextInst(final Inst inst) {
         final Inst nextInst = ((Supplier<Inst>) () -> {
             if (inst.isNoObj())
-                return NoObj.single();
+                return NoObj.noobj();
             boolean found = false;
             for (final Inst i : this.jvm()) {
                 if (found) return i;
                 if (i == inst) found = true;
             }
             //if (found) return this.value().get(this.value().size() - 1);
-            return NoObj.single();
+            return NoObj.noobj();
         }).get();
         this.logger().trace("fetching next inst: %s => %s", inst, nextInst);
         return nextInst;
@@ -138,7 +138,7 @@ public interface Code extends Call {
 
     @Override
     default Obj apply() {
-        return this.apply(NoObj.single());
+        return this.apply(NoObj.noobj());
     }
 
     @Override
@@ -146,7 +146,7 @@ public interface Code extends Call {
         final Call resolve = this.tryToInst().resolve(lhs);
         //if (!lhs.matches(resolve.dom()))
         //    throw MTronException.of("%s ({{m}}lhs{{/m}}) (%s) does not match {{m}}code domain{{/m}} (%s): %s", lhs, lhs.rng(), resolve.dom(), resolve);
-        final Obj rhs = (resolve.isCode()) ? objs(MMachine.of(lhs, resolve.as()).apply(NoObj.single())) : resolve.apply(lhs);
+        final Obj rhs = (resolve.isCode()) ? objs(MMachine.of(lhs, resolve.as()).apply(NoObj.noobj())) : resolve.apply(lhs);
         //if (!rhs.matches(call.rng()))
         //    throw MTronException.of("%s ({{m}}rhs{{/m}}) (%s) does not match {{m}}code range{{/m}} (%s): %s", rhs, rhs.rng(), call.rng(), this);
         return rhs;

@@ -27,6 +27,7 @@ import studio.phaseshift.metatron.space.NullSpace;
 import studio.phaseshift.metatron.space.Router;
 import studio.phaseshift.metatron.space.Space;
 import studio.phaseshift.metatron.space.router.net.MServer;
+import studio.phaseshift.metatron.space.stack.StackSpace;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
 import studio.phaseshift.metatron.util.MTronException;
@@ -35,11 +36,9 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static studio.phaseshift.metatron.BootLoader.BOOTING;
-import static studio.phaseshift.metatron.lang.mtron.mtronFluent.StartLess.from_;
+import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.lang.mtron.mtronFluent.StartLess.start_;
 import static studio.phaseshift.metatron.lang.mtron.mtronInstSet.MTRON_TID;
-import static studio.phaseshift.metatron.lang.mtron.type.impl.MObjs.objs;
-import static studio.phaseshift.metatron.lang.mtron.type.impl.MUri.uri;
 
 public class MRouter implements Router {
 
@@ -49,15 +48,16 @@ public class MRouter implements Router {
     private final Map<fURI, Space> spaces = new ConcurrentHashMap<>();
     private final Map<fURI, fURI> smallToBigRewrites = new HashMap<>();
     private final Map<fURI, fURI> bigToSmallRewrites = new HashMap<>();
-    private fURI vid;
     private final MServer server;
+    private fURI vid;
 
     public MRouter(final fURI host, final fURI vid) {
         this.vid = vid;
         LOG.info("local router {{b}}%s{{/b}}", this);
         this.server = new MServer(host);
+        this.spaces.put(f("+/#"), new StackSpace(f("+/#"), this.vid.extend("stack")));
     }
-
+    
     private static Obj appendOnRead(final boolean send, final Obj base, final Obj addition) {
         return addition.isNoObj() ? base : (send ? base.append(MRel.of(addition.vid().toUri(), addition)) : base.append(addition));
     }
@@ -92,26 +92,26 @@ public class MRouter implements Router {
         return temp;
     }
 
-    public void addSpace(final Space space) {
+    @Override
+    public void addSpace(final fURI pattern, final Space space) {
         this.spaces.entrySet().stream()
-                .filter(kv -> space.pattern().matches(kv.getKey()))
+                .filter(kv -> pattern.matches(kv.getKey()))
                 .findAny()
                 .ifPresent(kv -> {
-                    LOG.except("%s and %s have overlapping address spaces", space.pattern(), kv.getKey());
+                    LOG.error("%s and %s have overlapping address spaces", pattern, kv.getKey());
                 });
-        this.spaces.put(space.pattern(), space);
+        this.spaces.put(pattern, space);
         Space.Helper.spaceOpenLog(this, space);
         //this.write(space.vid(), space);
     }
 
     @Override
     public void removeSpace(final fURI vid) {
-        this.spaces.values().stream().filter(s -> vid.equals(s.vid())).findFirst().ifPresent(s -> {
+        this.spaces.values().stream().filter(s -> !Objects.isNull(s)).filter(s -> Objects.equals(vid, s.vid())).forEach(s -> {
             try {
                 final Space space = this.spaces.remove(s.pattern());
                 if (null != space) {
                     Space.Helper.spaceCloseLog(this, space);
-                    space.close();
                 }
             } catch (final Exception e) {
                 LOG.error(e);
@@ -138,23 +138,23 @@ public class MRouter implements Router {
 
     @Override
     public Obj read(final fURI vid) {
-       // if (vid.hasAuthority()) {
-       //     return objs(this.server.cluster(vid.authority()).map(v -> v.sendRecvObj(from_(uri(vid.authority(null).scheme(null))))));
-       // }
+        // if (vid.hasAuthority()) {
+        //     return objs(this.server.cluster(vid.authority()).map(v -> v.sendRecvObj(from_(uri(vid.authority(null).scheme(null))))));
+        // }
         if (vid.isZero() || READ_AS_NOOBJ.contains(vid))
-            return NoObj.single();
+            return NoObj.noobj();
        /* if (false && vid.hasAuthority() && !vid.hasAuthority(this.server.authority())) {
             return this.server.cluster(vid.authority().extend("#")).map(msc -> {
                 final FutureObj<Obj> future = msc.sendRecvObj(from_(vid.toUri()));
                 return future.get(5000);
             }).reduce(NoObj.single(), Obj::append);
         } else {*/
-            final fURI local = vid;//.authority(null).scheme(null);
-            final Space space = this.getSpace(local);
-            //if (null != space.vid() && !space.vid().segments().isEmpty())
-            //    LOG.trace("reading {{b}}%s{{/b}} from {{b}}%s{{/b}}", vid, space.vid());
-            return MRouter.appendOnRead(vid.isBranch(), space.read(vid), this.vid.onlyMatches(vid) ? this : NoObj.single());
-       // }
+        final fURI local = vid;//.authority(null).scheme(null);
+        final Space space = this.getSpace(local);
+        //if (null != space.vid() && !space.vid().segments().isEmpty())
+        //    LOG.trace("reading {{b}}%s{{/b}} from {{b}}%s{{/b}}", vid, space.vid());
+        return MRouter.appendOnRead(vid.isBranch(), space.read(vid), this.vid.onlyMatches(vid) ? this : NoObj.noobj());
+        // }
     }
 
     @Override
@@ -167,19 +167,13 @@ public class MRouter implements Router {
                 return this.server.cluster(vid.authority().extend("#")).map(msc -> {
                     final FutureObj<Obj> future = msc.sendRecvObj(start_(obj).to_(vid.toUri()));
                     return future.get(5000);
-                }).reduce(NoObj.single(), Obj::append);
+                }).reduce(NoObj.noobj(), Obj::append);
             }
         } else
             local = vid;
         final Space space = this.getSpace(local);
-        /// TOTAL HACK -- find a more elegant solution ///
-        if (obj.isNoObj() && !local.hasPattern())
-            this.removeSpace(local);
-        if (obj instanceof Space && !(obj instanceof Router))
-            this.addSpace((Space) obj);
-        /// ///////////////////////////////////////////////
         LOG.trace("writing %s {{g}}=>{{b}} %s{{X}} in %s", obj, local, space);
-        return space.write(local,obj);
+        return space.write(local, obj);
     }
 
     @Override
@@ -220,8 +214,8 @@ public class MRouter implements Router {
     }
 
     @Override
-    public Obj vid(final fURI furi) {
-        this.vid = furi;
+    public Obj vid(final fURI vid) {
+        this.vid = vid;
         return this;
     }
 

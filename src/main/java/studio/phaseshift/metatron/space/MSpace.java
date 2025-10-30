@@ -1,6 +1,6 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
- * Copyright (C) 2025- PhaseShift Studio, LLC 
+ * Copyright (C) 2025- PhaseShift Studio, LLC
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -18,48 +18,34 @@
 
 package studio.phaseshift.metatron.space;
 
+import studio.phaseshift.metatron.furi.Qs;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.mtron.type.Obj;
-import studio.phaseshift.metatron.furi.Qs;
+import studio.phaseshift.metatron.lang.mtron.type.impl.MObj;
 import studio.phaseshift.metatron.space.stack.StackSpace;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
-import studio.phaseshift.metatron.util.MTronException;
 
-import static studio.phaseshift.metatron.furi.fURI.f;
+import static studio.phaseshift.metatron.furi.Qs.EMPTY_QS;
 
-public abstract class MSpace<J> implements Space {
+public abstract class MSpace<J> extends MObj implements Space {
 
     protected final GraphittyLogger LOG;
-    protected final J jvm;
     protected final fURI pattern;
-    protected final fURI tid;
-    protected final fURI vid;
-    protected final Qs qs;
+    //protected final Qs qs;
 
     public MSpace(final J jvm, final fURI pattern, final fURI tid, final fURI vid) {
-        LOG = Graphitty.log(this);
-        this.jvm = jvm;
+        super(jvm, tid, vid);
         this.pattern = pattern;
-        this.tid = tid.big();
-        this.vid = vid;
-        if (!(this instanceof StackSpace)) {
-            if (null != vid)
-                this.qs = new Qs(f(""));
-            else this.qs = new Qs(f(""));
-        } else {
-            this.qs = null;
-        }
+        if (!(this instanceof StackSpace) && null != vid && Router.loaded() && !(this instanceof Router))
+            Router.global().addSpace(this.pattern, this);
+        LOG = Graphitty.log(this);
+        // this.qs = EMPTY_QS;
     }
 
     @Override
     public Qs qs() {
-        return this.qs;
-    }
-
-    @Override
-    public J jvm() {
-        return this.jvm;
+        return EMPTY_QS;
     }
 
     @Override
@@ -68,47 +54,34 @@ public abstract class MSpace<J> implements Space {
     }
 
     @Override
-    public fURI tid() {
-        return this.tid;
+    public J jvm() {
+        return (J) this.jvm;
     }
-
-    @Override
-    public fURI vid() {
-        return this.vid;
-    }
-
 
     @Override
     public String toString() {
-        return Helper.spaceToString(this);
+        return Space.Helper.spaceToString(this);
     }
 
     @Override
     public int hashCode() {
-        return Helper.spaceHashCode(this);
+        return Space.Helper.spaceHashCode(this);
     }
 
     @Override
     public boolean equals(final Object other) {
-        return Helper.spaceEquals(this, other);
+        return Space.Helper.spaceEquals(this, other);
     }
 
     @Override
-    public void close() {
-
+    public Obj vid(final fURI vid) {
+        if (null != vid)
+            Router.writeToSpace(vid.extend("pattern"), this.pattern().toUri());
+        return super.vid(vid);
     }
 
     @Override
-    public Space clone(final Object jvm, final fURI tid, final fURI vid) {
+    public Space clone() {
         return this;
-    }
-
-    @Override
-    public Obj clone() {
-        try {
-            return (Obj) super.clone();
-        } catch (final Exception e) {
-            throw MTronException.of(e);
-        }
     }
 }

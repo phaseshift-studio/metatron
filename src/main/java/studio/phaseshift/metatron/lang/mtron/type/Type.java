@@ -60,7 +60,7 @@ public interface Type extends Obj, PlusMonoid<Type> {
        //     return NoObj.single();
         return null == this.jvm() || obj.matches(this.jvm().apply(obj)) ?
                 obj :
-                NoObj.single();
+                NoObj.noobj();
     }
 
     @Override

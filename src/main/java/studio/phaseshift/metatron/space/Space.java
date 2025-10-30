@@ -33,6 +33,7 @@ import java.util.function.BiConsumer;
 import java.util.function.Function;
 
 import static studio.phaseshift.metatron.furi.fURI.f;
+import static studio.phaseshift.metatron.lang.mtron.type.NoObj.noobj;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.Tuple.Pair;
@@ -42,12 +43,6 @@ public interface Space extends Obj, Closeable {
     /// ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     /// ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     /// ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    @Override
-    default Space clone(final Object jvm, final fURI tid, final fURI vid) {
-        Helper.noCloneWarning(this);
-        return this;
-    }
 
     Qs qs();
 
@@ -75,6 +70,14 @@ public interface Space extends Obj, Closeable {
         return results;
     }
 
+    @Override
+    default void close() {
+        if (null != this.vid()) {
+            Router.global().write(this.vid().extend(fURI.ALL), noobj());
+            Router.global().removeSpace(this.vid());
+        }
+    }
+
     default Function<fURI, Map<fURI, Obj>> directReader() {
         return f -> Map.of();
     }
@@ -99,11 +102,7 @@ public interface Space extends Obj, Closeable {
         return (O) this.read(key.uriValue());
     }*/
 
-    @Override
-    default Obj vid(final fURI vid) {
-        throw new IllegalStateException("structs must umount to change value id (vid)");
-    }
-
+    
     /*@Override
     default <O extends Obj> Iterable<O> elements() {
         return this.jvm();
@@ -237,7 +236,7 @@ public interface Space extends Obj, Closeable {
 
         public static Pair<fURI, Poly> locateBasePoly(final Space space, final fURI furi) {
             fURI newFuri = furi.retract().asNode();
-            Obj obj = NoObj.single();
+            Obj obj = noobj();
             while (!newFuri.segments().isEmpty()) {
                 obj = space.read(newFuri);
                 if (!obj.isNoObj())

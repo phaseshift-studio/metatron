@@ -42,15 +42,19 @@ public interface Router extends Obj, Space, Closeable {
     }
 
     static Obj readFromSpace(final fURI vid) {
-        return Router.loaded() ? BootLoader.ROUTER.read(vid) : NoObj.single();
+        return Router.loaded() ? BootLoader.ROUTER.read(vid) : NoObj.noobj();
     }
 
     static Obj writeToSpace(final fURI vid, final Obj obj) {
-        return Router.loaded() ? BootLoader.ROUTER.write(vid, obj) : NoObj.single();
+        return Router.loaded() ? BootLoader.ROUTER.write(vid, obj) : NoObj.noobj();
     }
 
+    static Obj writeToSpace(final String vid, final Obj obj) {
+        return Router.loaded() ? BootLoader.ROUTER.write(vid, obj) : NoObj.noobj();
+    }
+    
     static Obj writeToSpace(final Obj obj) {
-        return Router.loaded() ? BootLoader.ROUTER.write(obj.vid(), obj) : NoObj.single();
+        return Router.loaded() ? BootLoader.ROUTER.write(obj.vid(), obj) : NoObj.noobj();
     }
 
 
@@ -105,7 +109,7 @@ public interface Router extends Obj, Space, Closeable {
 
     boolean hasSpaceFor(final fURI vid);
 
-    void addSpace(final Space space);
+    void addSpace(final fURI pattern, final Space space);
 
     void removeSpace(final fURI vid);
 

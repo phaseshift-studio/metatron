@@ -144,8 +144,8 @@ public interface Inst extends Call {
 
     default Obj arg(final int index) {
         return this.args().isLst() ?
-                (this.args().lstValue().size() > index ? this.args().lstValue().get(index) : NoObj.single()) :
-                IteratorUtil.index(this.args().elements().iterator(), index, NoObj.single()).<Rel>as().second();
+                (this.args().lstValue().size() > index ? this.args().lstValue().get(index) : NoObj.noobj()) :
+                IteratorUtil.index(this.args().elements().iterator(), index, NoObj.noobj()).<Rel>as().second();
     }
 
     @Override
@@ -229,7 +229,7 @@ public interface Inst extends Call {
         resolved2 = this.hasDomOrRng() ? resolved2.tid(this.tid()) : resolved2;
         if (resolved2.isNoObj()) {
             LOG.debug("%s could not be resolved in any space", this);
-            return NoObj.single();
+            return NoObj.noobj();
         } else if (!resolved2.isInst()) {
             LOG.debug("unable to resolve %s to a single inst in %s", this.dom(lhs.type()), resolved2);
             final Poly args = resolveArgs(this, this, lhs);
@@ -243,8 +243,8 @@ public interface Inst extends Call {
     @Override
     default Obj apply(final Obj lhs) {
         Obj clhs = lhs;
-        Inst cinst = this.args().isEmpty() ? this.args(lst(NoObj.single())).resolve(clhs) : this.resolve(clhs); // TODO: this isn't a general solution (multi slotted args won't work).
-        Obj rhs = NoObj.single();
+        Inst cinst = this.args().isEmpty() ? this.args(lst(NoObj.noobj())).resolve(clhs) : this.resolve(clhs); // TODO: this isn't a general solution (multi slotted args won't work).
+        Obj rhs = NoObj.noobj();
         boolean modulateC = false;
         if (BootLoader.TYPE_CHECK && !lhs.isFail()  && !clhs.matches(cinst.dom()) && lhs.unique()) {
             if (clhs.uniqueC().isOne() && !clhs.c().isOne()) { // && cinst.dom().c().within(cInt.SOME())) {
@@ -315,8 +315,8 @@ public interface Inst extends Call {
     }
 
     @Override
-    default Inst tid(final fURI newTid) {
-        return this.clone(this.jvm(), newTid, this.vid());
+    default Inst tid(final fURI tid) {
+        return this.clone(this.jvm(), tid, this.vid());
     }
 
     public enum Resolution {

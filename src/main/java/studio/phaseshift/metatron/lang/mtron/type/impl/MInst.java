@@ -52,15 +52,15 @@ public class MInst extends MObj implements Inst {
     }
 
     public static Inst instA(final fURI tid) {
-        return new MInst(Triplet.with(MLst.of(), null, NoObj.single()), tid, fURI.NULL);
+        return new MInst(Triplet.with(MLst.of(), null, NoObj.noobj()), tid, fURI.NULL);
     }
 
     public static Inst instB(final fURI tid, final Poly args) {
-        return new MInst(Triplet.with(args, null, NoObj.single()), tid, fURI.NULL);
+        return new MInst(Triplet.with(args, null, NoObj.noobj()), tid, fURI.NULL);
     }
 
     public static Inst instC(final fURI tid, final Poly args, final BiFunction<Obj, Inst, Obj> f) {
-        return new MInst(Triplet.with(args, Inst.f.of(f), NoObj.single()), tid, fURI.NULL);
+        return new MInst(Triplet.with(args, Inst.f.of(f), NoObj.noobj()), tid, fURI.NULL);
     }
 
     public static Inst instC(final fURI tid, final Poly args, final BiFunction<Obj, Inst, Obj> f, final Obj seed) {

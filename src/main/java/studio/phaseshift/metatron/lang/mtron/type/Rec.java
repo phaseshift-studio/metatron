@@ -55,8 +55,8 @@ public interface Rec extends Poly, PlusMonoid.O<Rec> {
     }
 
     @Override
-    default Rec jvm(final Object newValue) {
-        return this.clone(newValue, this.tid(), this.vid());
+    default Rec jvm(final Object jvm) {
+        return this.clone(jvm, this.tid(), this.vid());
     }
 
     default Rec at(final Obj key, final Obj value) {
@@ -86,7 +86,7 @@ public interface Rec extends Poly, PlusMonoid.O<Rec> {
     @Override
     default <O extends Obj> O at(final Obj key) {
         if (!key.isUri())
-            return (O) this.jvm().getOrDefault(key, NoObj.single());
+            return (O) this.jvm().getOrDefault(key, NoObj.noobj());
         else {
             final String step = key.uriValue().segments().get(0);
             Obj result;
@@ -96,7 +96,7 @@ public interface Rec extends Poly, PlusMonoid.O<Rec> {
             if (step.equals("+") || step.equals("#")) {
                 result = key.uriValue().isBranch() ? objs(this.recValue().entrySet().stream().map(kv -> rel(kv.getKey(), kv.getValue()))) : objs(this.recValue().values());
             } else {
-                final Obj temp = this.jvm().getOrDefault(uri(step), NoObj.single());
+                final Obj temp = this.jvm().getOrDefault(uri(step), NoObj.noobj());
                 result = key.uriValue().isBranch() ? rel(key.uriValue().asNode().toUri(), temp) : temp;
             }
             if (key.uriValue().segments().size() == 1) {

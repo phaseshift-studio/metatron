@@ -36,8 +36,8 @@ public final class NoObj implements Obj, Inst {
     private NoObj() {
         // singleton
     }
-
-    public static NoObj single() {
+    
+    public static NoObj noobj() {
         return NoObj.SINGLE;
     }
 
@@ -73,7 +73,7 @@ public final class NoObj implements Obj, Inst {
     }
 
     @Override
-    public NoObj vid(final fURI furi) {
+    public NoObj vid(final fURI vid) {
         return this;
     }
 
@@ -123,6 +123,11 @@ public final class NoObj implements Obj, Inst {
     }
 
     @Override
+    public f f() {
+        return f.of(o -> NoObj.noobj());
+    }
+    
+    @Override
     public Call plus(final Call rhs) { // a no-op branch
         return rhs;
     }
@@ -134,7 +139,7 @@ public final class NoObj implements Obj, Inst {
 
     @Override
     public Type rng() {
-        return NoObj.single().type();
+        return NoObj.noobj().type();
     }
     
     @Override

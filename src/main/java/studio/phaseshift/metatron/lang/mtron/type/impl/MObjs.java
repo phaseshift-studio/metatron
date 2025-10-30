@@ -26,7 +26,6 @@ import studio.phaseshift.metatron.lang.mtron.type.Obj;
 import studio.phaseshift.metatron.lang.mtron.type.Objs;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.util.IteratorUtil;
-import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
 
 import java.util.*;
@@ -62,7 +61,7 @@ public class MObjs implements Objs {
 
     private static Optional<Obj> tryToShrink(final Map<Obj, cInt> map) {
         if (map.isEmpty())
-            return Optional.of(NoObj.single());
+            return Optional.of(NoObj.noobj());
         if (1 == map.size())
             return Optional.of(map.entrySet().stream().map(kv -> kv.getKey().c(kv.getValue())).iterator().next());
         // if (map.keySet().stream().allMatch(Obj::isRing))
@@ -76,7 +75,7 @@ public class MObjs implements Objs {
     }
 
     public static Obj objs(final Obj... objs) {
-        return objs.length == 0 ? NoObj.single() : objs(List.of(objs));
+        return objs.length == 0 ? NoObj.noobj() : objs(List.of(objs));
     }
 
     public static Obj objs(final Iterable<Obj> objs) {
@@ -183,9 +182,9 @@ public class MObjs implements Objs {
     public Tuple.Pair<Obj, Obj> take(final cInt c) {
         final cInt currentC = this.c();
         if (c.isMaybeSome() || c.equals(currentC))
-            return Tuple.Pair.with(this, NoObj.single());
+            return Tuple.Pair.with(this, NoObj.noobj());
         if (c.isZero())
-            return Tuple.Pair.with(NoObj.single(), this);
+            return Tuple.Pair.with(NoObj.noobj(), this);
         Obj retrieved = MObjs.empty();
         Obj remaining = MObjs.empty();
         cInt total = cInt.ZERO();
@@ -205,17 +204,17 @@ public class MObjs implements Objs {
     @Override
     public Tuple.Pair<Obj, Obj> take(final Inst inst) {
         if (this.isNoObj())
-            return Tuple.Pair.with(NoObj.single(), NoObj.single());
+            return Tuple.Pair.with(NoObj.noobj(), NoObj.noobj());
             // else if(!inst.tid().hasDom())
             //     return Tuple.Pair.with()
         else if (inst.dom().c().most().isZero())
-            return Tuple.Pair.with(NoObj.single(), this);
+            return Tuple.Pair.with(NoObj.noobj(), this);
         /// ////////////////////////////////////
         // inst.dom().c().isOne()
         if ((this.uniqueC().equals(cInt.ONE()) && (!inst.tid().hasDom() || inst.dom().c().gte(cInt.ONE())))
                 || inst.dom().c().max() == null
                 || this.c().lte(inst.dom().c().most()))
-            return Tuple.Pair.with(this, NoObj.single());
+            return Tuple.Pair.with(this, NoObj.noobj());
         /// ////////////////////////////////////
         cInt total = cInt.ZERO();
         boolean done = false;
@@ -231,8 +230,8 @@ public class MObjs implements Objs {
                 remaining.put(kv.getKey(), kv.getValue());
             }
         }
-        final Obj takenObj = taken.isEmpty() ? NoObj.single() : taken.size() == 1 ? taken.entrySet().stream().map(kv -> kv.getKey().c(kv.getValue())).iterator().next() : new MObjs(taken, fURI.NULL);
-        final Obj remainingObj = remaining.isEmpty() ? NoObj.single() : remaining.size() == 1 ? remaining.entrySet().stream().map(kv -> kv.getKey().c(kv.getValue())).iterator().next() : new MObjs(remaining, this.vid);
+        final Obj takenObj = taken.isEmpty() ? NoObj.noobj() : taken.size() == 1 ? taken.entrySet().stream().map(kv -> kv.getKey().c(kv.getValue())).iterator().next() : new MObjs(taken, fURI.NULL);
+        final Obj remainingObj = remaining.isEmpty() ? NoObj.noobj() : remaining.size() == 1 ? remaining.entrySet().stream().map(kv -> kv.getKey().c(kv.getValue())).iterator().next() : new MObjs(remaining, this.vid);
         return Tuple.Pair.with(takenObj, remainingObj);
 
     }

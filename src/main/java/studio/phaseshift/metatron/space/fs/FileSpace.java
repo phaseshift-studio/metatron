@@ -24,6 +24,7 @@ import studio.phaseshift.metatron.lang.mtron.type.Obj;
 import studio.phaseshift.metatron.lang.mtron.type.Str;
 import studio.phaseshift.metatron.lang.mtron.type.impl.MRec;
 import studio.phaseshift.metatron.space.MSpace;
+import studio.phaseshift.metatron.space.Space;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.io.IOException;
@@ -37,9 +38,9 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.furi.fURI.f;
+import static studio.phaseshift.metatron.lang.mtron.mtronInstSet.MTRON_SPACE_TID;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MStr.str;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.lang.mtron.mtronInstSet.MTRON_SPACE_TID;
 
 public class FileSpace extends MSpace<FileSystem> {
 
@@ -51,7 +52,7 @@ public class FileSpace extends MSpace<FileSystem> {
 
     @Override
     public Obj read(final fURI vid) {
-        return Helper.resolveRead(this, vid, (key) -> {
+        return Space.Helper.resolveRead(this, vid, (key) -> {
             if (key.equals(fURI.ALL))
                 throw MTronException.of("infinite nested walks on file system not allowed");
             else {
@@ -86,6 +87,6 @@ public class FileSpace extends MSpace<FileSystem> {
 
     @Override
     public Obj write(fURI vid, Obj obj) {
-        return NoObj.single();
+        return NoObj.noobj();
     }
 }

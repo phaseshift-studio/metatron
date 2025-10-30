@@ -146,7 +146,7 @@ public class mtronParser {
                                 lst(mtronParser.<List<Obj>>pick(t, 1)) :
                                 rec(mtronParser.pick(t, 1)),
                         Inst.f.of(mtronParser.<Obj>pick(t, 2)),
-                        NoObj.single()), // todo: encode seed in parser
+                        NoObj.noobj()), // todo: encode seed in parser
                         pick(t, 0), pick(t, 3)))));
     }
 
@@ -172,7 +172,7 @@ public class mtronParser {
 
     public static <O extends Obj> O parse(final String code) {
         if (code.trim().isEmpty())
-            return (O) NoObj.single();
+            return (O) NoObj.noobj();
         final Result result = choice(sugar_code(), m_obj()).end().parse(code.trim());
         if (result.isFailure())
             LOG.except(result.getBuffer() + "\n" +
@@ -183,7 +183,7 @@ public class mtronParser {
     }
 
     public static Parser m_comment() {
-        return new SequenceParser(of("---").trim(), any().starGreedy(anyOf("\n\r").or(new EndOfInputParser("end of input")))).map(t -> NoObj.single());
+        return new SequenceParser(of("---").trim(), any().starGreedy(anyOf("\n\r").or(new EndOfInputParser("end of input")))).map(t -> NoObj.noobj());
     }
 
     public static Parser m_furi() {
@@ -267,7 +267,7 @@ public class mtronParser {
     }
 
     public static Parser m_noobj() {
-        return of("noobj").trim().map(t -> NoObj.single());
+        return of("noobj").trim().map(t -> NoObj.noobj());
     }
 
     public static Parser m_objs() {
@@ -320,7 +320,7 @@ public class mtronParser {
     }
 
     public static Parser m_uri() {
-        return seq(m_type_prefix(URI_TID), m_furi(REDUCED_FURI_CHARS, true, true, true), m_vid_postfix()).map(t -> mtronParser.<fURI>pick(t, 0).isZero() ? NoObj.single() : new MUri(pick(t, 1), pick(t, 0), pick(t, 2)));
+        return seq(m_type_prefix(URI_TID), m_furi(REDUCED_FURI_CHARS, true, true, true), m_vid_postfix()).map(t -> mtronParser.<fURI>pick(t, 0).isZero() ? NoObj.noobj() : new MUri(pick(t, 1), pick(t, 0), pick(t, 2)));
     }
 
     public static Parser m_rel() {
@@ -340,14 +340,14 @@ public class mtronParser {
     }
 
     public static Parser sugar_code() {
-        return seq(opt(obj_no_code_parser, NoObj.single()), opt(of(".").trim(), '.'), opt(m_code(), null), m_vid_postfix()).map(t -> {
+        return seq(opt(obj_no_code_parser, NoObj.noobj()), opt(of(".").trim(), '.'), opt(m_code(), null), m_vid_postfix()).map(t -> {
             final Obj first = mtronParser.<Call>pick(t, 0);
             final Obj second = mtronParser.pick(t, 2);
             if (null == second)
                 return first.isInst() && !first.isNoObj() ? MCode.of(List.of(first.as())) : first;
             final List<Inst> newCode = new ArrayList<>();
             if (!first.isNoObj() && !first.isInst())
-                newCode.add(new MInst(Triplet.with(lst(first.isInst() ? NoObj.single() : first), Inst.f.UNKNOWN, NoObj.single()), START_TID, fURI.NULL));
+                newCode.add(new MInst(Triplet.with(lst(first.isInst() ? NoObj.noobj() : first), Inst.f.UNKNOWN, NoObj.noobj()), START_TID, fURI.NULL));
             else if (first.isInst()) newCode.add(first.as());
             newCode.addAll(mtronParser.<Call>pick(t, 2).insts());
             return MCode.of(newCode, CODE_TID, pick(t, 3));

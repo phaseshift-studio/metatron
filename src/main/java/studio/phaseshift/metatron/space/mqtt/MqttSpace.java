@@ -23,16 +23,16 @@ import com.hivemq.client.mqtt.mqtt5.Mqtt5BlockingClient;
 import com.hivemq.client.mqtt.mqtt5.Mqtt5Client;
 import com.hivemq.client.mqtt.mqtt5.message.subscribe.Mqtt5RetainHandling;
 import studio.phaseshift.metatron.furi.Q;
+import studio.phaseshift.metatron.furi.Qs;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.furi.q.PubSubQ;
 import studio.phaseshift.metatron.lang.mtron.type.NoObj;
 import studio.phaseshift.metatron.lang.mtron.type.Obj;
 import studio.phaseshift.metatron.lang.mtron.type.Uri;
 import studio.phaseshift.metatron.lang.mweb.JSONTranslator;
-import studio.phaseshift.metatron.furi.Qs;
+import studio.phaseshift.metatron.space.MSpace;
 import studio.phaseshift.metatron.space.Space;
 import studio.phaseshift.metatron.space.kv.KVSpace;
-import studio.phaseshift.metatron.space.MSpace;
-import studio.phaseshift.metatron.furi.q.PubSubQ;
 import studio.phaseshift.metatron.ui.*;
 
 import java.nio.charset.StandardCharsets;
@@ -43,8 +43,8 @@ import java.util.concurrent.ExecutionException;
 import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.furi.fURI.f;
-import static studio.phaseshift.metatron.lang.mtron.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.lang.mtron.mtronInstSet.MTRON_SPACE_TID;
+import static studio.phaseshift.metatron.lang.mtron.type.impl.MUri.uri;
 
 
 public class MqttSpace extends MSpace<Map<Uri, Obj>> implements Space {
@@ -122,9 +122,9 @@ public class MqttSpace extends MSpace<Map<Uri, Obj>> implements Space {
                                                 final Obj result = obj.apply(o);
                                                 LOG.trace("subscription evaluation of %s => %s yielded %s", o, obj, result);
                                             } else {
-                                                cache.write(toMtronVid(p.getTopic().toString()), NoObj.single());
+                                                cache.write(toMtronVid(p.getTopic().toString()), NoObj.noobj());
                                                 final Obj result = obj.apply();
-                                                LOG.trace("subscription evaluation of %s => %s yielded %s", NoObj.single(), obj, result);
+                                                LOG.trace("subscription evaluation of %s => %s yielded %s", NoObj.noobj(), obj, result);
                                             }
                                         })
                                         .send()
@@ -196,7 +196,7 @@ public class MqttSpace extends MSpace<Map<Uri, Obj>> implements Space {
                             } else {
                                 this.cache.write(
                                         toMtronVid(p.getTopic().toString()),
-                                        NoObj.single());
+                                        NoObj.noobj());
                             }
                         } catch (final Exception e) {
                             LOG.error(e);
@@ -219,7 +219,7 @@ public class MqttSpace extends MSpace<Map<Uri, Obj>> implements Space {
         final Obj ret = this.qs().processPreWrite(vid, vid, obj).orElse(null);
         if (null != ret)
             return ret;
-        Helper.resolveWrite(this, vid.basePath(), obj, (key, value) -> {
+        Space.Helper.resolveWrite(this, vid.basePath(), obj, (key, value) -> {
             this.send(vid, value);
         }, this.cache.directReader());
         return obj;
@@ -244,7 +244,7 @@ public class MqttSpace extends MSpace<Map<Uri, Obj>> implements Space {
                         } else {
                             this.cache.write(
                                     toMtronVid(p.getPublish().getTopic().toString()),
-                                    NoObj.single());
+                                    NoObj.noobj());
                         }
                     }).get();
         } catch (InterruptedException | ExecutionException e) {

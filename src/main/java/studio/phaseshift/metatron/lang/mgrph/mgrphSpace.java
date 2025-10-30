@@ -48,12 +48,7 @@ public class mgrphSpace extends MSpace<Graph> {
     public mgrphSpace(final Graph graph, final fURI pattern, final fURI tid, final fURI vid) {
         super(graph, pattern, tid, vid);
     }
-
-    @Override
-    public Graph jvm() {
-        return this.jvm;
-    }
-
+    
     @Override
     public Obj read(final fURI vid) {
         final fURI subset = vid.removeSubpath(pattern.retractPattern());

@@ -42,7 +42,7 @@ public interface Call extends Obj, Ring<Call> {
 
     static Call from(final List<Inst> insts) {
         if (insts.isEmpty())
-            return NoObj.single();
+            return NoObj.noobj();
         else if (insts.size() == 1)
             return insts.get(0);
         else
@@ -52,7 +52,7 @@ public interface Call extends Obj, Ring<Call> {
     default Call tryToInst() {
         if (this.isCode()) {
             if (this.codeValue().isEmpty())
-                return NoObj.single();
+                return NoObj.noobj();
             else if (this.codeValue().size() == 1)
                 return this.codeValue().get(0);
         }
@@ -123,7 +123,7 @@ public interface Call extends Obj, Ring<Call> {
     @Override
     default Call mult(final Call rhs) {
         if (rhs.isZero() || this.isZero())
-            return NoObj.single();
+            return NoObj.noobj();
         if (rhs.isOne()) return this;
         if (this.isOne()) return rhs;
         final List<Inst> insts = new ArrayList<>(this.insts());
@@ -133,6 +133,6 @@ public interface Call extends Obj, Ring<Call> {
 
     @Override
     default Call zero() {
-        return NoObj.single();
+        return NoObj.noobj();
     }
 }

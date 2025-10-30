@@ -68,7 +68,7 @@ public class JSONTranslator implements Translator<Obj, JsonElement> {
     @Override
     public Obj translate(final JsonElement json) {
         if (json.isJsonNull())
-            return NoObj.single();
+            return NoObj.noobj();
         else if (json.isJsonPrimitive()) {
             final JsonPrimitive jp = (JsonPrimitive) json;
             if (jp.isBoolean())

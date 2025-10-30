@@ -48,7 +48,7 @@ public class MObjFactory implements ObjFactory {
     @Override
     public Obj create(final Object value) {
         if (null == value)
-            return NoObj.single();
+            return NoObj.noobj();
         if (value instanceof Obj)
             return (Obj) value;
         if (value instanceof Boolean)
@@ -106,7 +106,7 @@ public class MObjFactory implements ObjFactory {
         else if (Type.class.isAssignableFrom(objClass))
             return (O) new MType((Call) value, tid);
         else if (NoObj.class.isAssignableFrom(objClass))
-            return (O) NoObj.single();
+            return (O) NoObj.noobj();
         else
             throw MTronException.of("provided class has not obj equivalent: %s", objClass);
     }

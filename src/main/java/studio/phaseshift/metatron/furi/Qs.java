@@ -1,6 +1,6 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
- * Copyright (C) 2025- PhaseShift Studio, LLC 
+ * Copyright (C) 2025- PhaseShift Studio, LLC
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -29,16 +29,18 @@ import static studio.phaseshift.metatron.lang.mtron.mtronInstSet.MTRON_SPACE_TID
 
 public class Qs extends MLst {
 
+    public static final Qs EMPTY_QS = new Qs(null);
     public static final fURI QS_TID = MTRON_SPACE_TID.extend("qs");
-
     final List<Q> qs = new ArrayList<>();
 
     public Qs(final fURI spacevid) {
-        super(new ArrayList<>(), QS_TID, spacevid.extend("q"));
+        super(new ArrayList<>(), QS_TID, null == spacevid ? null : spacevid.extend("q"));
     }
 
     public Qs register(final Q q) {
-        this.qs.add(q);
+        if (this.vid != null) {
+            this.qs.add(q);
+        }
         return this;
     }
 

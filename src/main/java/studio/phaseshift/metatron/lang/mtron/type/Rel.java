@@ -58,7 +58,7 @@ public interface Rel extends Poly, Obj {
 
     @Override
     default <O extends Obj> O at(final Obj key) {
-        return (O) (this.first().matches(key) ? this.second() : NoObj.single());
+        return (O) (this.first().matches(key) ? this.second() : NoObj.noobj());
     }
 
     @Override

@@ -71,7 +71,7 @@ public class mollamaSpace extends MSpace<OllamaModels> {
 
     @Override
     public Obj read(final fURI vid) {
-        this.jvm.availableModels().content().stream()
+        this.jvm().availableModels().content().stream()
                 .map(model -> ollm(Tuple.Pair.with(model, this.ollamaHost), OLLM.OLLM_TID, modelToVid(model)))
                 .filter(model -> model.vid().matches(pattern))
                 .forEach(model -> this.internal.write(model.vid(), model));

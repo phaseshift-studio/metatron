@@ -43,7 +43,7 @@ public class StackSpace extends MSpace<LinkedList<KVSpace>> {
 
     public StackSpace(final fURI pattern, final fURI vid) {
         super(new LinkedList<>(), pattern, STACKSPACE_TID, vid);
-        this.root = new KVSpace(this.pattern, vid.extend("root"));
+        this.root = new KVSpace(this.pattern, null);
     }
 
     @Override
@@ -61,7 +61,7 @@ public class StackSpace extends MSpace<LinkedList<KVSpace>> {
         // if(vid.coefficientValue().isZero())
         //    return NoObj.single();
         boolean isArg = vid.toString().matches("a\\d+"); // skip first encounter of list arg variable as it's a variable to grab the variable
-        for (final KVSpace layer : this.jvm) {
+        for (final KVSpace layer : this.jvm()) {
             final Obj o = layer.read(vid.basePath());
             if (!o.isNoObj()) {
                 if (isArg) isArg = false;
@@ -76,22 +76,22 @@ public class StackSpace extends MSpace<LinkedList<KVSpace>> {
         LOG.trace("writing %s to %s in %s [{{y}}root{{/y}}: %s]", obj, vid, this.jvm, this.root.jvm());
         if(obj.isUri() && obj.uriValue().equals(vid))
             return obj;
-        if (!this.jvm.isEmpty())
-            this.jvm.get(0).write(vid, obj);
+        if (!this.jvm().isEmpty())
+            this.jvm().get(0).write(vid, obj);
         this.root.write(vid, obj);
         return obj;
     }
 
     public boolean pop() {
-        final KVSpace frameSpace = this.jvm.pop();
+        final KVSpace frameSpace = this.jvm().pop();
         if (null == frameSpace)
             return false;
-        LOG.trace("popped frame {{_&r}}off{{/r&/_}} stack: %s [{{y}}depth{{/y}}: %d]", frameSpace.jvm(), this.jvm.size());
+        LOG.trace("popped frame {{_&r}}off{{/r&/_}} stack: %s [{{y}}depth{{/y}}: %d]", frameSpace.jvm(), this.jvm().size());
         return true;
     }
 
     public void push(final Poly frame) {
-        final KVSpace frameSpace = new KVSpace(pattern, STACKSPACE_TID.extend("d" + this.jvm.size()));
+        final KVSpace frameSpace = new KVSpace(pattern, null);
         if (frame.isRec()) {
             frame.recValue().forEach((key, value) -> {
                 frameSpace.write(key.uriValue(), value);
@@ -103,7 +103,7 @@ public class StackSpace extends MSpace<LinkedList<KVSpace>> {
                 Router.global().write(fURI.of(ARG_PREFIX + i), frame.lstValue().get(i));
             }
         }
-        this.jvm.push(frameSpace);
-        LOG.trace("pushed frame {{_&g}}on{{/g&/_}} stack: %s [{{y}}depth{{/y}}: %d]", frameSpace.jvm(), this.jvm.size());
+        this.jvm().push(frameSpace);
+        LOG.trace("pushed frame {{_&g}}on{{/g&/_}} stack: %s [{{y}}depth{{/y}}: %d]", frameSpace.jvm(), this.jvm().size());
     }
 }

@@ -72,7 +72,7 @@ public class MMachine extends MObj implements Machine {
         for (final Inst inst : mach.code().jvm()) {
             if (inst.isInitial()) {
                 LOG.trace("  {{g}}==>{{/g}} creating {{y}}initial{{/y}} monad at %s", inst);
-                this.running().append(MMonad.of(NoObj.single(), inst));
+                this.running().append(MMonad.of(NoObj.noobj(), inst));
             } else if (inst.isGather()) {
                 // many-to-?
                 LOG.trace("  {{m}}==|{{/m}} creating {{y}}barrier{{/y}} monad at %s", inst);
@@ -95,7 +95,7 @@ public class MMachine extends MObj implements Machine {
     public Obj apply(final Obj lhs) {
         final Code code = this.resolve(lhs).code();
         if (this.running().c().isZero())
-            this.running().append(MMonad.of(NoObj.single(), code.insts().get(0)));
+            this.running().append(MMonad.of(NoObj.noobj(), code.insts().get(0)));
         while (true) {
             final Monad m = (Monad) this.running().take();
             if (null != m) {

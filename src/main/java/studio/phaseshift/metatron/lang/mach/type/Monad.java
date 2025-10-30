@@ -69,7 +69,7 @@ public interface Monad extends Obj {
     }
 
     @Override
-    Monad tid(final fURI furi);
+    Monad tid(final fURI tid);
 
     @Override
     default fURI tid() {

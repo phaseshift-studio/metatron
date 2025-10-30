@@ -58,8 +58,8 @@ public abstract class MObj implements Obj, Cloneable {
     }
 
     protected void save() {
-        if (null != vid && null != Router.global() && !this.isType())
-            Router.global().write(this.vid, this);
+        if (null != vid && !this.isType())
+            Router.writeToSpace(this);
     }
 
     @Override

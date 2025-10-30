@@ -78,9 +78,9 @@ public class MRec extends MObj implements Rec {
     }
 
     private static Map<Obj, Obj> cleanMap(final Map<Obj, Obj> jvm) {
-        if (jvm.containsKey(NoObj.single()))
-            jvm.remove(NoObj.single());
-        if (jvm.containsValue(NoObj.single()))
+        if (jvm.containsKey(NoObj.noobj()))
+            jvm.remove(NoObj.noobj());
+        if (jvm.containsValue(NoObj.noobj()))
             jvm.entrySet().stream().filter(kv -> kv.getValue().isNoObj()).map(Map.Entry::getKey).toList().forEach(jvm::remove);
         return jvm;
     }
@@ -126,8 +126,8 @@ public class MRec extends MObj implements Rec {
     }
 
     @Override
-    public Rec jvm(final Object value) {
-        return super.jvm(cleanMap((Map<Obj, Obj>) value));
+    public Rec jvm(final Object jvm) {
+        return super.jvm(cleanMap((Map<Obj, Obj>) jvm));
     }
 
     /*@Override

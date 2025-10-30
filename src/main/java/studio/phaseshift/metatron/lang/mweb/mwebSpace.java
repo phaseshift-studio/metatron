@@ -19,7 +19,6 @@
 package studio.phaseshift.metatron.lang.mweb;
 
 import com.sun.net.httpserver.HttpContext;
-import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -29,7 +28,6 @@ import studio.phaseshift.metatron.lang.mtron.type.Rec;
 import studio.phaseshift.metatron.space.MSpace;
 import studio.phaseshift.metatron.space.Router;
 import studio.phaseshift.metatron.ui.Graphitty;
-import studio.phaseshift.metatron.ui.GraphittyLogger;
 import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
 
@@ -51,33 +49,30 @@ public class mwebSpace extends MSpace<HttpServer> {
 
     public static final fURI WEB_TID = MWEB_TID.extend("space/web");
     private static final WebTranslator WEB_TRANSLATOR = new WebTranslator();
-    private final GraphittyLogger LOG;
+    private final Rec routes;
 
     public mwebSpace(final Tuple.Pair<HttpServer, Rec> serverAndRoutes, final fURI pattern, final fURI vid) {
         super(serverAndRoutes.get0(), pattern, WEB_TID, vid);
-        LOG = Graphitty.log(this);
-        serverAndRoutes.get1().at("routes").<Rec>ifExists(routes -> {
-            routes.elements().forEach(r -> {
-                final HttpContext context = this.jvm().createContext(r.first().uriValue().toString(),
-                        exchange -> {
-                            final Path path = Path.of(r.second().uriValue().extend(exchange.getRequestURI().getPath()).toString());
-                            final Path filePath = Files.isRegularFile(path) ? path : Path.of(path + "/index.html");
-                            final String contentType = Files.probeContentType(filePath);
-                            exchange.getResponseHeaders().set("Content-Type", contentType == null ? "application/octet-stream" : contentType);
-                            exchange.sendResponseHeaders(200, Files.size(filePath));
-                            LOG.info("sending %s [%s,%d bytes] per request from %s: %s", filePath, contentType, Files.size(filePath), exchange.getRemoteAddress(), exchange.getRequestURI());
-                            try (final InputStream is = Files.newInputStream(filePath);
-                                 final OutputStream os = exchange.getResponseBody()) {
-                                byte[] buffer = new byte[8192]; // 8KB buffer
-                                int bytesRead;
-                                while ((bytesRead = is.read(buffer)) != -1) {
-                                    os.write(buffer, 0, bytesRead);
-                                    os.flush();
-                                }
+        (this.routes = serverAndRoutes.get1()).elements().forEach(r -> {
+            final HttpContext context = this.jvm().createContext(r.first().uriValue().toString(),
+                    exchange -> {
+                        final Path path = Path.of(r.second().uriValue().extend(exchange.getRequestURI().getPath()).toString());
+                        final Path filePath = Files.isRegularFile(path) ? path : Path.of(path + "/index.html");
+                        final String contentType = Files.probeContentType(filePath);
+                        exchange.getResponseHeaders().set("Content-Type", contentType == null ? "application/octet-stream" : contentType);
+                        exchange.sendResponseHeaders(200, Files.size(filePath));
+                        LOG.info("sending %s [%s,%d bytes] per request from %s: %s", filePath, contentType, Files.size(filePath), exchange.getRemoteAddress(), exchange.getRequestURI());
+                        try (final InputStream is = Files.newInputStream(filePath);
+                             final OutputStream os = exchange.getResponseBody()) {
+                            byte[] buffer = new byte[8192]; // 8KB buffer
+                            int bytesRead;
+                            while ((bytesRead = is.read(buffer)) != -1) {
+                                os.write(buffer, 0, bytesRead);
+                                os.flush();
                             }
-                        });
-                LOG.info("http context loaded: %s => %s", uri(context.getPath()), r.second());
-            });
+                        }
+                    });
+            LOG.info("http context loaded: %s => %s", uri(context.getPath()), r.second());
         });
         this.jvm().setExecutor(Executors.newFixedThreadPool(4));
         Runtime.getRuntime().addShutdownHook(new Thread(this::close));
@@ -94,30 +89,19 @@ public class mwebSpace extends MSpace<HttpServer> {
         }
     }
 
-    private void handleResponse(final HttpExchange exchange, final String request) throws IOException {
-        LOG.info("retrieving page: %s", request);
-        final OutputStream outputStream = exchange.getResponseBody();
-        final StringBuilder htmlBuilder = new StringBuilder()
-                .append("<html>").
-                append("<body>").
-                append("<h1>").
-                append("metatron")
-                .append(request)
-                .append("</h1>")
-                .append("</body>")
-                .append("</html>");
-        final String htmlResponse = htmlBuilder.toString();
-        exchange.sendResponseHeaders(200, htmlResponse.length());
-        outputStream.write(htmlResponse.getBytes());
-        outputStream.flush();
-        outputStream.close();
+    public mwebSpace vid(final fURI vid) {
+        if (null != vid) {
+            Router.writeToSpace(vid.extend("host"), uri(jvm().getAddress().getAddress().toString()));
+            Router.writeToSpace(vid.extend("route"), this.routes);
+        }
+        return (mwebSpace) super.vid(vid);
     }
 
     @Override
     public void close() {
-        this.jvm().stop(1);
+        this.jvm().stop(0);
+        super.close();
     }
-
 
     @Override
     public Obj read(final fURI vid) {

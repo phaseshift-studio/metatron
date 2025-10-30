@@ -86,7 +86,7 @@ public class spaceInstSet extends MInstSet {
 
     @Override
     public Set<Obj> consts() {
-        return Stream.of(NoObj.single()).collect(Collectors.toSet());
+        return Stream.of(NoObj.noobj()).collect(Collectors.toSet());
     }
 
 }

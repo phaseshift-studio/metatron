@@ -38,12 +38,12 @@ public interface Objs extends Obj, PlusMonoid.O<Objs> {
 
     @Override
     default Type rng() {
-        return IteratorUtil.stream(this.jvm()).map(Obj::rng).reduce(NoObj.single().type(), Type::plus);
+        return IteratorUtil.stream(this.jvm()).map(Obj::rng).reduce(NoObj.noobj().type(), Type::plus);
     }
 
     @Override
     default Type dom() {
-        return IteratorUtil.stream(this.jvm()).map(Obj::dom).reduce(NoObj.single().type(), Type::plus);
+        return IteratorUtil.stream(this.jvm()).map(Obj::dom).reduce(NoObj.noobj().type(), Type::plus);
     }
 
     @Override

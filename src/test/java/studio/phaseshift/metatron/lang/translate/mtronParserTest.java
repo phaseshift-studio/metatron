@@ -42,7 +42,7 @@ public class mtronParserTest {
 
     @Test
     public void testCommentParse() {
-        assertEquals(NoObj.single(), mtronParser.parse("--- a comment"));
+        assertEquals(NoObj.noobj(), mtronParser.parse("--- a comment"));
     }
 
     @Test

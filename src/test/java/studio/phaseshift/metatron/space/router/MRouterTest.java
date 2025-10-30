@@ -21,6 +21,7 @@ package studio.phaseshift.metatron.space.router;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import studio.phaseshift.metatron.lang.mtron.type.NoObj;
+import studio.phaseshift.metatron.space.Router;
 import studio.phaseshift.metatron.space.kv.KVSpace;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -40,17 +41,14 @@ public class MRouterTest extends RouterTest {
     @Test
     public void testCloseSpace() {
         KVSpace mnt = new KVSpace(f("/mnt/#"), f("/mnt"));
-        MRouter router = new MRouter(f("ws://localhost:8889"),f("/mnt/sys/router"));
-        router.addSpace(mnt);
-        assertFalse(router.hasSpaceFor(f("/test/a")));
+        assertFalse(Router.global().hasSpaceFor(f("/test/a")));
         KVSpace test = new KVSpace(f("/test/#"), f("/mnt/test"));
-        assertFalse(router.hasSpaceFor(f("/test/a")));
-        router.addSpace(test);
-        assertTrue(router.hasSpaceFor(f("/test/a")));
-        router.write("/test/a", jnt(10));
-        assertEquals(jnt(10), router.read("/test/a"));
-        assertTrue(router.hasSpaceFor(f("/test/a")));
-        router.write("/mnt/test", NoObj.single());
-        assertFalse(router.hasSpaceFor(f("/test/a")));
+        assertTrue(Router.global().hasSpaceFor(f("/test/a")));
+        assertTrue(Router.global().hasSpaceFor(f("/test/a")));
+        Router.global().write("/test/a", jnt(10));
+        assertEquals(jnt(10), Router.global().read("/test/a"));
+        assertTrue(Router.global().hasSpaceFor(f("/test/a")));
+        Router.global().write("/mnt/test", NoObj.noobj());
+        assertFalse(Router.global().hasSpaceFor(f("/test/a")));
     }
 }
