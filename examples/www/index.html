@@ -34,6 +34,14 @@
           margin: 0px;
         }
     </style>
+    <script>
+        document.addEventListener("DOMContentLoaded", (event) => {
+            const script = document.createElement("script");
+            script.src = "metatron.js";
+            script.host = "ws://localhost:8887";
+            document.body.appendChild(script);
+        });
+    </script>
 </head>
 <body style="background-color: #282c34;">
 <div class="flex-container">
@@ -877,7 +885,7 @@
     </div>
     <div class="panel">
         <pre style="color=#AAAAAA; font-size:20pt; line-height:20pt; font-family: 'Courier New', monospace;">
-<code  style="color: red; font-weight: bold">
+<code style="color: red; font-weight: bold">
                __          __
  ______  _____/  |______ _/  |_________  ____   ____
 /      \/ __  \    __\__  \   __\_  __ \/  _ \ /    \
@@ -888,5 +896,17 @@
     </div>
 </div>
 <hr style="color: red;">
+<div>
+    <div>
+        <textarea style="text-align: left;" id="messageInput" rows="10" cols="40">
+enter metatron code here            
+        </textarea>
+    </div>
+    <div>
+        <button id="connectBtn">Connect</button>
+        <button id="sendBtn">Send Message</button>
+    </div>
+    <ul style="color:red;" id="messages"></ul>
+</div>
 </body>
 </html>
