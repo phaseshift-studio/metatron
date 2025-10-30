@@ -177,6 +177,10 @@ public interface Inst extends Call {
         return null == this.f() /*|| this.tid().isGeneric()*/ ? Resolution.A : Resolution.B;
     }
 
+    default boolean isResolved() {
+        return null != this.f();
+    }
+
     default boolean isBlocking() {
         return this.tid().basePath().equals(mtronInstSet.BLOCK_TID) ||
                 this.tid().basePath().equals(mtronInstSet.WITHIN_TID) ||
@@ -242,7 +246,7 @@ public interface Inst extends Call {
         Inst cinst = this.args().isEmpty() ? this.args(lst(NoObj.single())).resolve(clhs) : this.resolve(clhs); // TODO: this isn't a general solution (multi slotted args won't work).
         Obj rhs = NoObj.single();
         boolean modulateC = false;
-        if (BootLoader.TYPE_CHECK && !lhs.isFail() && !cinst.isBlocking() && !clhs.matches(cinst.dom()) && lhs.unique()) {
+        if (BootLoader.TYPE_CHECK && !lhs.isFail()  && !clhs.matches(cinst.dom()) && lhs.unique()) {
             if (clhs.uniqueC().isOne() && !clhs.c().isOne()) { // && cinst.dom().c().within(cInt.SOME())) {
                 clhs = clhs.c(cInt::one);
                 cinst = this.resolve(clhs);
@@ -270,7 +274,7 @@ public interface Inst extends Call {
         }
         if (BootLoader.TYPE_CHECK && !rhs.isFail() && !rhs.matches(cinst.rng()))
             rhs = mexcept("inst resolution failure")
-                    .cause(mexcept("rhs {{m}}domain{{/m}} does not match inst {{m}}range{{/m}}: %s {{r}}=/>{{/r}} %s [%s]", rhs.dom(), cinst.rng(), cinst))
+                    .cause(mexcept("rhs does not match inst {{m}}range{{/m}}: %s {{r}}=/>{{/r}} %s [%s]", rhs, cinst.rng(), cinst))
                     .asFail();
         //final cInt cinstc = false && cinst.isReducing() ? cInt.ONE() : cinst.c();
         final cInt cc = cinst.c();

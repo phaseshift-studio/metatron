@@ -116,7 +116,7 @@ public class InstParseTest extends MetatronTest {
             "{[,],[,],[1]}.sum()                          % [1]",
             "{[1],[2],[3]}.sum()                          % [1,2,3]",
             "{[1,2],[2,4],[3,2,2]}.sum()                  % [1,2,2,4,3,2,2]",
-            "[1,2,3]_/sum?int<=int{*}()\\_                % [6]",
+            "[1,2,3]_/sum()\\_                            % [6]",
     }, delimiter = '%')
     public void testSumInst(final String expression, final String expectedResult) {
         assertEquals(mtronParser.m_obj().parse(expectedResult).get(), mtronParser.eval(expression).next());
