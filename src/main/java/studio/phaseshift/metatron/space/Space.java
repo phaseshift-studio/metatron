@@ -22,12 +22,10 @@ import studio.phaseshift.metatron.furi.Qs;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.mach.type.impl.MMachine;
 import studio.phaseshift.metatron.lang.mtron.type.*;
-import studio.phaseshift.metatron.lang.mtron.type.impl.MObjs;
 import studio.phaseshift.metatron.lang.mtron.type.impl.MRel;
 import studio.phaseshift.metatron.ui.Graphitty;
 
 import java.io.Closeable;
-import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -35,10 +33,11 @@ import java.util.function.BiConsumer;
 import java.util.function.Function;
 
 import static studio.phaseshift.metatron.furi.fURI.f;
+import static studio.phaseshift.metatron.lang.mtron.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.Tuple.Pair;
 
-public interface Space extends Poly, Closeable {
+public interface Space extends Obj, Closeable {
 
     /// ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     /// ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -90,7 +89,7 @@ public interface Space extends Poly, Closeable {
         return Helper.resolveApply(this, other);
     }
 
-    @Override
+    /*@Override
     default long count() {
         return 0;
     }
@@ -98,17 +97,17 @@ public interface Space extends Poly, Closeable {
     @Override
     default <O extends Obj> O at(final Obj key) {
         return (O) this.read(key.uriValue());
-    }
+    }*/
 
     @Override
     default Obj vid(final fURI vid) {
         throw new IllegalStateException("structs must umount to change value id (vid)");
     }
 
-    @Override
+    /*@Override
     default <O extends Obj> Iterable<O> elements() {
         return this.jvm();
-    }
+    }*/
 
     class Helper {
 
@@ -148,7 +147,6 @@ public interface Space extends Poly, Closeable {
         }
 
         public static Map<fURI, Obj> unrollPoly(final Map<fURI, Obj> result, final fURI polyvid, final Poly poly, final fURI pattern) {
-
             poly.indexedStream()
                     .filter(r -> r.second().isPoly() || polyvid.extend(f(r.first().jvm().toString())).matches(pattern))
                     .forEach(r -> {
@@ -182,21 +180,13 @@ public interface Space extends Poly, Closeable {
             if (null != base) {
                 final Poly poly = base.get1();
                 Graphitty.log(space).trace("base poly found at %s: %s", base.get0(), poly);
-                final fURI relativeVid = pattern.removePrefix(base.get0()).asNode();
-                unrollPoly(new LinkedHashMap<>(), base.get0(), poly.as(), pattern).entrySet().stream().forEach(kv -> {
+                unrollPoly(new LinkedHashMap<>(), base.get0(), poly, pattern).entrySet().stream().forEach(kv -> {
                     map.put(kv.getKey().toUri(), kv.getValue());
                 });
-               /* Graphitty.log(space).trace("searching for %s in base poly %s", relativeVid.toUri(), poly);
-                final Obj readObj = poly.at(relativeVid.toUri());
-                Graphitty.log(space).trace("located poly obj %s in %s", readObj, poly);
-                if (!readObj.isNoObj())
-                    map.put(vid.retractPattern().toUri(), readObj);*/
             }
-            if (pattern.isNode()) {
-                return MObjs.ofUsage(new ArrayList<>(map.values())); // TODO: no need to maintain a map, a list will do
-            } else {
-                return MObjs.ofUsage(map.entrySet().stream().map(kv -> MRel.of(kv.getKey(), kv.getValue())));
-            }
+            return pattern.isNode() ?
+                    objs(map.values()) :
+                    objs(map.entrySet().stream().map(kv -> (Obj) MRel.of(kv.getKey(), kv.getValue())).toList());
         }
 
         public static void resolveWrite(final Space space, final fURI vid, final Obj obj, final BiConsumer<fURI, Obj> directWriter, final Function<fURI, Map<fURI, Obj>> directReader) {

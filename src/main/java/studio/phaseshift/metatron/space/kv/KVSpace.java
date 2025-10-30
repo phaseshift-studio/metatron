@@ -103,10 +103,10 @@ public class KVSpace extends MSpace<Map<fURI, Obj>> implements Space {
         return this.directWriter;
     }
 
-    @Override
+    /*@Override
     public long count() {
         return this.jvm.size();
-    }
+    }*/
 
     @Override
     public Iterator<Obj> iterator() {

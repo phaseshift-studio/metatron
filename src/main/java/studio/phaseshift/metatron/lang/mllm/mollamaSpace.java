@@ -25,6 +25,7 @@ import org.slf4j.LoggerFactory;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.mllm.type.impl.OLLM;
 import studio.phaseshift.metatron.lang.mtron.type.Obj;
+import studio.phaseshift.metatron.lang.mtron.type.impl.MUri;
 import studio.phaseshift.metatron.space.MSpace;
 import studio.phaseshift.metatron.space.kv.KVSpace;
 import studio.phaseshift.metatron.ui.Graphitty;
@@ -33,16 +34,17 @@ import studio.phaseshift.metatron.util.Tuple;
 
 import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.lang.mllm.type.impl.OLLM.ollm;
+import static studio.phaseshift.metatron.lang.mtron.type.impl.MLst.lst;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public class mollamaSpace extends MSpace<OllamaModels> {
-    
+
 
     // /m/obj
     public static final fURI MTRON_SPACE_TID = f("/space");// MTRON_TID.extend("space");
-    
+
     public static final fURI MLLM_ID = f("/mllm");
     public static final fURI MLLM_LANG_TID = MLLM_ID.extend("lang");
     public static final fURI MOLLAMA_SPACE = MLLM_ID.extend("space/mollama");
@@ -54,7 +56,7 @@ public class mollamaSpace extends MSpace<OllamaModels> {
     public mollamaSpace(final OllamaModels models, final fURI ollamaHost, final fURI pattern, final fURI vid) {
         super(models, pattern, MOLLAMA_SPACE, vid);
         this.ollamaHost = ollamaHost;
-        LOG.info("loading models: %s", models.availableModels().content().stream().map(OllamaModel::getModel).toList());
+        LOG.info("available models: %s", lst(models.availableModels().content().stream().map(OllamaModel::getModel).map(MUri::uri).map(m -> (Obj) m).toList()));
     }
 
     public static mollamaSpace of(final fURI ollamaHost, final fURI pattern, final fURI vid) {

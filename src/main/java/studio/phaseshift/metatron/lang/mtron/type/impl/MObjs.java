@@ -87,20 +87,7 @@ public class MObjs implements Objs {
     public static Obj objs(final Stream<Obj> objs) {
         return MObjs.objs(objs.toList());
     }
-
-    public static Obj ofUsage(final Object object) {
-        if (null == object)
-            return NoObj.single();
-        if (object instanceof Stream)
-            return ofUsage(((Stream) object).toList()); // TODO: strange....
-        if (object instanceof List)
-            return objs((List) object);
-        if (object instanceof Obj)
-            return (Obj) object;
-        throw MTronException.of("unknown object type: %s", object);
-
-    }
-
+    
     @Override
     public Obj resolve(final Obj obj) {
         return objs(flatten(this).map(o -> o.resolve(obj)));
