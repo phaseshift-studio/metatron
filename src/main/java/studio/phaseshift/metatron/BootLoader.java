@@ -31,14 +31,15 @@ import studio.phaseshift.metatron.lang.mtron.type.Obj;
 import studio.phaseshift.metatron.lang.mtron.type.Rec;
 import studio.phaseshift.metatron.lang.mvec.mvecInstSet;
 import studio.phaseshift.metatron.lang.mweb.mwebInstSet;
+import studio.phaseshift.metatron.lang.mweb.mwebSpace;
 import studio.phaseshift.metatron.space.Router;
 import studio.phaseshift.metatron.space.device.log.Log;
 import studio.phaseshift.metatron.space.fs.FileSpace;
 import studio.phaseshift.metatron.space.kv.KVSpace;
-import studio.phaseshift.metatron.space.stack.StackSpace;
 import studio.phaseshift.metatron.space.remote.RemoteSpace;
 import studio.phaseshift.metatron.space.router.MRouter;
 import studio.phaseshift.metatron.space.spaceInstSet;
+import studio.phaseshift.metatron.space.stack.StackSpace;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
 import studio.phaseshift.metatron.ui.Mode;
@@ -124,14 +125,14 @@ public class BootLoader {
             }
             startMode(options);
             ROUTER = new MRouter(remoteAuthority, f("/sys/router"));
-            Router.global().write(new KVSpace(f("/mnt/#"), f("/mnt")));
-            Router.global().write(new KVSpace(fURI.of("/sys/#"), fURI.of("/mnt/sys")));
-            Router.global().write(Router.global());
+            Router.writeToSpace(new KVSpace(f("/mnt/#"), f("/mnt")));
+            Router.writeToSpace(new KVSpace(fURI.of("/sys/#"), fURI.of("/mnt/sys")));
+            Router.writeToSpace(Router.global());
             ROUTER.start();
-            Router.global().write(new KVSpace(fURI.of("/usr/#"), fURI.of("/mnt/usr")));
-            Router.global().write(new spaceInstSet(f("/mnt/space")));
-            Router.global().write(new StackSpace(f("+/#"), f("/sys/router/stack")));
-            Router.global().write(new mtronInstSet(fURI.of("/mnt/lang/m")));
+            Router.writeToSpace(new KVSpace(fURI.of("/usr/#"), fURI.of("/mnt/usr")));
+            Router.writeToSpace(new spaceInstSet(f("/mnt/space")));
+            Router.writeToSpace(new StackSpace(f("+/#"), f("/sys/router/stack")));
+            Router.writeToSpace(new mtronInstSet(fURI.of("/mnt/lang/m")));
             ///////////////////////////////////////////////////////////////
             if (options.has(uri("boot"))) {
                 try (final BufferedReader reader = new BufferedReader(new FileReader(options.at("boot").uriValue().toString()))) {
@@ -145,23 +146,21 @@ public class BootLoader {
                 }
             }
             ///////////////////////////////////////////////////////////////
-            Router.global().write(Log.of(f("/sys/log")));
-            Router.global().write(new FileSpace(FileSystems.getDefault(), f("/home/#"), f("/mnt/fs")));
-            Router.global().write(new MGraph(TinkerFactory.createModern(), f("/tp/#"), f("/mnt/tp")));
-            Router.global().write(new mgrphInstSet(f("/mnt/lang/mgrph")));
+            Router.writeToSpace(Log.of(rec(options.at("log").orElse(uri("TRACE")), lst(uri("#"))), f("/sys/log")));
+            Router.writeToSpace(new FileSpace(FileSystems.getDefault(), f("/home/#"), f("/mnt/fs")));
+            Router.writeToSpace(new MGraph(TinkerFactory.createModern(), f("/tp/#"), f("/mnt/tp")));
+            Router.writeToSpace(new mgrphInstSet(f("/mnt/lang/mgrph")));
             // Router.global().write(f("/mnt/zigbee2mqtt"), new MqttSpace(f("zigbee2mqtt/#?broker=mqtt://192.168.66.2:1883&prefix=/mqtt"), f("/mnt/zigbee2mqtt")));
-            Router.global().write(new mvecInstSet(f("/mnt/lang/mvec")));
-            Router.global().write(new machInstSet(f("/mnt/lang/mach")));
-            Router.global().write(new mwebInstSet(f("/mnt/lang/mweb")));
-            Router.global().write(new mllmInstSet(f("/mnt/lang/mllm")));
-            Router.global().write(mollamaSpace.of(f("http://localhost:11434"),f("/ollama/#"),f("/mnt/ollama")));
-          //  Router.global().write(mwebSpace.of(f("http://localhost:8777"), f("http://#"), f("/mnt/web")));
-            // Router.global().write(new RemoteSpace(remoteAuthority,f("/shared/remote/#"), f("/mnt/shared/remote")));
-            //Router.global().write(new KVSpace(fURI.of("/shared/#"), fURI.of("/mnt/shared")));
-            if (remoteAuthority != null && !remoteAuthority.host().equals("chibi.local"))
-                Router.global().write(RemoteSpace.open(f("ws://chibi.local:8888"), f("/shared/#"), f("/mnt/shared")));
-            else
-                Router.global().write(new KVSpace(fURI.of("/shared/#"), fURI.of("/mnt/shared")));
+            Router.writeToSpace(new mvecInstSet(f("/mnt/lang/mvec")));
+            Router.writeToSpace(new machInstSet(f("/mnt/lang/mach")));
+            Router.writeToSpace(new mwebInstSet(f("/mnt/lang/mweb")));
+            Router.writeToSpace(new mllmInstSet(f("/mnt/lang/mllm")));
+            if (options.at("mode").equals(uri("console"))) {
+                Router.writeToSpace(mwebSpace.of(f("http://localhost:8777"), f("http://#"), f("/mnt/web")));
+                Router.writeToSpace(mollamaSpace.of(f("http://localhost:11434"), f("/ollama/#"), f("/mnt/ollama")));
+                Router.writeToSpace(RemoteSpace.open(f("ws://chibi.local:8888"), f("/shared/#"), f("/mnt/shared")));
+            } else if (options.at("mode").equals(uri("server")))
+                Router.writeToSpace(new KVSpace(fURI.of("/shared/#"), fURI.of("/mnt/shared")));
             /// ///////////////////////////////////
             BOOTING = false;
             /// /// END OF BOOTING PROCESS /// ///

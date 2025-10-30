@@ -326,7 +326,7 @@
                 <artifactId>asciidoctor-maven-plugin</artifactId>
                 <version>${asciidoctor.version}</version>
                 <configuration>
-                    <sourceDirectory>${project.basedir}/docs</sourceDirectory>
+                    <sourceDirectory>${project.basedir}/docs/src/adoc</sourceDirectory>
                     <outputDirectory>${project.build.directory}/docs</outputDirectory>
                     <resources>
                         <resource>
@@ -334,10 +334,12 @@
                             <targetPath>${project.build.directory}/docs</targetPath>
                             <excludes>
                                 <exclude>**/.txt</exclude>
+                                <exclude>**/.py</exclude>
                             </excludes>
                             <includes>
                                 <include>**/*.png</include>
                                 <include>**/*.svg</include>
+                                <include>**/*.adoc</include>
                             </includes>
                         </resource>
                     </resources>

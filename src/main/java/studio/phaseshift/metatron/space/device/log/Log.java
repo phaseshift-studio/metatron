@@ -27,7 +27,6 @@ import studio.phaseshift.metatron.lang.mtron.type.Lst;
 import studio.phaseshift.metatron.lang.mtron.type.Obj;
 import studio.phaseshift.metatron.lang.mtron.type.Rec;
 import studio.phaseshift.metatron.lang.mtron.type.Uri;
-import studio.phaseshift.metatron.lang.mtron.type.impl.MLst;
 import studio.phaseshift.metatron.lang.mtron.type.impl.MRec;
 import studio.phaseshift.metatron.ui.GraphittyObjLogger;
 import studio.phaseshift.metatron.util.MTronException;
@@ -45,22 +44,17 @@ public class Log extends MRec {
         super(log.recValue());
     }
 
-    protected Log(final fURI vid) {
-        super(Map.of(uri("level"), MRec.fromUriKeyed(
-                "INFO", MLst.of(),
-                "DEBUG", MLst.of(),
-                "WARN", MLst.of(),
-                "TRACE", MLst.of(uri("#")),
-                "ERROR", MLst.of())), LOG_TID, vid);
+    protected Log(final Rec levels, final fURI vid) {
+        super(Map.of(uri("level"), levels), LOG_TID, vid);
     }
 
     public static Log from(final Rec log) {
         return new Log(log);
     }
 
-    public static Log of(final fURI vid) {
+    public static Log of(final Rec levels, final fURI vid) {
         GraphittyObjLogger.setLogger(vid);
-        return new Log(vid);
+        return new Log(levels, vid);
     }
 
     public static Uri setSLF4J(final String level) {
@@ -88,7 +82,7 @@ public class Log extends MRec {
             ThresholdFilter filter = new ThresholdFilter();
             filter.setLevel(level.replace(":log", "").trim());
             filter.start();
-            if(appender != null)
+            if (appender != null)
                 root.getAppender("STDOUT").addFilter(filter);
             return uri(level);
         }

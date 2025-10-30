@@ -36,9 +36,10 @@ code{color:var(--linkcoloralternate);background-color: var(--sidebarbackground) 
 th{background-color: var(--maincolor);color:var(--white) !important;}
 td{background-color: var(--sidebarbackground);color: var(--linkcoloralternate) !important}
 
-
 #toc.toc2{background-color:var(--sidebarbackground);}
-#toctitle{color:var(--white);}
+#toctitle{
+    mask-image: linear-gradient(to bottom, var(--primarycolor), var(--tertiarycolor));
+}
 
 /* Responsiveness fixes */
 video {

@@ -44,10 +44,15 @@ public interface Router extends Obj, Space, Closeable {
     static Obj readFromSpace(final fURI vid) {
         return Router.loaded() ? BootLoader.ROUTER.read(vid) : NoObj.single();
     }
-    
+
     static Obj writeToSpace(final fURI vid, final Obj obj) {
-        return Router.loaded() ? BootLoader.ROUTER.write(vid,obj) : NoObj.single();
+        return Router.loaded() ? BootLoader.ROUTER.write(vid, obj) : NoObj.single();
     }
+
+    static Obj writeToSpace(final Obj obj) {
+        return Router.loaded() ? BootLoader.ROUTER.write(obj.vid(), obj) : NoObj.single();
+    }
+
 
     static StackSpace stack() {
         return INST_STACK.get();

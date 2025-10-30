@@ -62,8 +62,8 @@ public class mtronParser {
     private static final SettableParser rel_parser = SettableParser.undefined();
     private static final SettableParser obj_rel_back_parser = SettableParser.undefined();
     private static final SettableParser branch_parser = SettableParser.undefined();
-    private static final String FULL_FURI_CHARS = "/%!#_@+.: ";
-    private static final String REDUCED_FURI_CHARS = "/%!#_@+:";
+    private static final String FULL_FURI_CHARS = "/%!#_-@+.: ";
+    private static final String REDUCED_FURI_CHARS = "/%!#_-@+:";
 
     static {
 
