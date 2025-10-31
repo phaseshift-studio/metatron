@@ -38,7 +38,7 @@
 <link rel="stylesheet" href="https://unpkg.com/highlightjs-copy/dist/highlightjs-copy.min.css"/>
 ++++
 
-image:metatron-character-small.png[width=175,float=left]
+image:metatron-character-small.png[width=200,float=left]
 image:github-icon.png[width=20,link=https://github.com/phaseshift-studio/metatron] source
 
 [.metatron] can be understood as
@@ -52,7 +52,9 @@ To understand [.metatron] it is necessary to understand the core mtron language 
 
 ### metatron architecture
 
-The fundamental architecture of [.metatron] is realized as a network of coupled https://en.wikipedia.org/wiki/Ring_(mathematics)[algebraic rings] executing all levels of abstraction -- from the human-readable/writeable programming language, to the compiler that generates a sequence of instructions for the virtual machine to evaluate using a swarm of atomic monadic processors that ultimately read and write data identified by a ring-based id system supported by a heterogeneous set of data stores called __spaces__. Each of these components follows the axioms of an algebraic ring (or some subset algebra such as a monoid or group). 
+The fundamental architecture of [.metatron] is realized as a network of coupled https://en.wikipedia.org/wiki/Ring_(mathematics)[algebraic rings] executing all levels of abstraction -- from the human-readable/writeable programming language, to the compiler that generates a sequence of instructions for the virtual machine to evaluate using a swarm of atomic monadic processors that ultimately read and write data identified by a ring-based id system supported by a heterogeneous set of data stores called __spaces__. Each of these components follows the axioms of an algebraic ring (or some subset algebra such as a monoid or group).
+
+image:m-arch.svg[width=200,float=left]
 
 #### ring theory
 
