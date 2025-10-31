@@ -29,7 +29,7 @@
 :doctitle: metatron
 :!author:
 :!email:
-
+:L: latexmath
 
     mtron> ring-oriented computing
 
@@ -61,7 +61,49 @@ The fundamental architecture of [.metatron] is realized as a network of coupled 
 
 #### ring theory
 
-ring-oriented programming language and virtual machine.  where elements of the structure can be composed using two binary operators `+` (plus) and `*` (mult). 
+A ring is a set of elements latexmath:[R] along with two binary operators 
+
+[stem]
+++++
++\colon R \times R \rightarrow R
+++++
+and 
+[stem]
+++++
+*\colon R \times R \rightarrow R,
+++++
+where latexmath:[*] distributes over latexmath:[+] such that
+[latexmath]
+++++
+\begin{align*}
+a*(b+c) =\;& (a * b) + (a * c) \\
+        =\;& (ab)    + (ac) \\
+        =\;& ab      + ac
+\end{align*}
+++++
+Moreover, there are two unique elements in latexmath:[0 \in R] and latexmath:[1 \in R] such that
+[latexmath]
+++++
+\begin{align*}
+0 + a &= a & a + 0 &= a \\
+0 + a &= 0 & a + 0 &= 0 \\
+1 + a &= a & a + 1 &= a.
+\end{align*}
+++++
+Finally, every element latexmath:[a \in R], there is an inverse element latexmath:[-a \in R] such that
+[stem]
+++++
+\begin{align*}
+0 =\;& a + (-a) \\
+  =\;& a - a.
+\end{align*}
+++++
+These are the axioms of ring theory and for any collection of tokens, processes, constructions in computing that can be defined as such, form a ring. The ring that has significant usage in metatron is `fURI` (a "fhat" Uniform Resource Identifier). `fURI` is the set of identifies used to denote the type, cardinality, and location of an `obj` (object) in metatron. 
+
+#### fURI
+
+
+
 
 ```
 a+0 = a
