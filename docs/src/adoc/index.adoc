@@ -41,7 +41,22 @@
 image:metatron-character-small.png[width=175,float=left]
 image:github-icon.png[width=20,link=https://github.com/phaseshift-studio/metatron] source
 
-Metatron is a ring-oriented programming language and virtual machine. A https://en.wikipedia.org/wiki/Ring_(mathematics)[ring] is an __algebraic structure__ where elements of the structure can be composed using two binary operators `+` (plus) and `*` (mult). 
+[.metatron] can be understood as
+
+ 1. a multi-model [.red]*database query language*
+ 2. a data-oriented [.red]*operating system*.
+
+These capabilities are made salient by means of a unifying ring-oriented programming language and virtual machine. With these components, a large language model can be prompted to use a provided mtron query over multiple database (e.g. key/value, vector, graph), to then have the aggregated result inserted into various files across multiple machines (i.e in a jquery-esque manner), enabling a dynamically spawned web server to provide access via the browser. The ways in which [.metatron] can be used to generate, shape, relate and distribute data is endless. This flexibility is made possible by the integrated computing environment known as "the metatron." 
+
+To understand [.metatron] it is necessary to understand the core mtron language and the mechanics of the underlying virtual machine.
+
+### metatron architecture
+
+The fundamental architecture of [.metatron] is realized as a network of coupled https://en.wikipedia.org/wiki/Ring_(mathematics)[algebraic rings] executing all levels of abstraction -- from the human-readable/writeable programming language, to the compiler that generates a sequence of instructions for the virtual machine to evaluate using a swarm of atomic monadic processors that ultimately read and write data identified by a ring-based id system supported by a heterogeneous set of data stores called __spaces__. Each of these components follows the axioms of an algebraic ring (or some subset algebra such as a monoid or group). 
+
+#### ring theory
+
+ring-oriented programming language and virtual machine.  where elements of the structure can be composed using two binary operators `+` (plus) and `*` (mult). 
 
 ```
 a+0 = a

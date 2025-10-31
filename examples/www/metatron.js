@@ -49,10 +49,18 @@ var host = document.currentScript.host;
       const messageInput = document.getElementById("messageInput");
       const message = messageInput.value;
       if (message) {
-        socket.send(message);
+      const encoder = new TextEncoder('utf-8');
+        socket.send(encoder.encode(message));
         appendMessage(`sent: ${message}`);
         //messageInput.value = "";
       }
+    });
+
+    document.getElementById("messageInput").addEventListener("keydown", function(event) {
+        if (event.key === "Enter") {
+            event.preventDefault(); // Prevents default form submission if inside a form
+            document.getElementById("sendBtn").click(); // Triggers the button's click event
+        }
     });
 
     // Connect button functionality

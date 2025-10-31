@@ -7,7 +7,7 @@
 /* Change the values in root for quick customisation. If you want even more fine grain... venture further. */
 :root{
     --maincolor:#282c34;
-    --primarycolor: #EB1616;
+    --primarycolor: #991111;
     --secondarycolor: #191C24;
     --light: #6C7293;
     --dark: #000000;
@@ -16,6 +16,17 @@
     --linkcolor:#f44336;
     --linkcoloralternate:#CF7C00;
     --white:#FFFFFF;
+}
+
+/* roles */
+
+.red {
+  color:var(--primarycolor);
+}
+
+.metatron:before {
+  content:'metatron';
+  mask-image: linear-gradient(to bottom, var(--primarycolor), var(--tertiarycolor));
 }
 
 /* Text styles */
