@@ -59,7 +59,7 @@ To understand [.metatron] it is necessary to understand the core mtron language 
 
 The fundamental architecture of [.metatron] is realized as a network of coupled https://en.wikipedia.org/wiki/Ring_(mathematics)[algebraic rings] executing all levels of abstraction -- from the human-readable/writeable programming language, to the compiler that generates a sequence of instructions for the virtual machine to evaluate using a swarm of atomic monadic processors that ultimately read and write data identified by a ring-based id system supported by a heterogeneous set of data stores called __spaces__. Each of these components follows the axioms of an algebraic ring (or some subset algebra such as a monoid or group).
 
-#### ring theory
+#### algebraic ring theory
 
 A ring is a set of elements latexmath:[R] along with two binary operators 
 
@@ -72,7 +72,7 @@ and
 ++++
 *\colon R \times R \rightarrow R,
 ++++
-where latexmath:[*] distributes over latexmath:[+] such that
+where latexmath:[*] distributes over latexmath:[+] such that for latexmath:[a,b,c \in R],
 [latexmath]
 ++++
 \begin{align*}
@@ -81,7 +81,7 @@ a*(b+c) =\;& (a * b) + (a * c) \\
         =\;& ab      + ac
 \end{align*}
 ++++
-Moreover, there are two unique elements in latexmath:[0 \in R] and latexmath:[1 \in R] such that
+Moreover, latexmath:[R] contains two unique elements latexmath:[0 \in R] and latexmath:[1 \in R] such that, for any latexmath:[a \in R],
 [latexmath]
 ++++
 \begin{align*}
@@ -90,7 +90,7 @@ Moreover, there are two unique elements in latexmath:[0 \in R] and latexmath:[1 
 1 + a &= a & a + 1 &= a.
 \end{align*}
 ++++
-Finally, every element latexmath:[a \in R], there is an inverse element latexmath:[-a \in R] such that
+Finally, every element latexmath:[a \in R] has is an _inverse_ latexmath:[-a \in R] such that
 [stem]
 ++++
 \begin{align*}
@@ -98,7 +98,23 @@ Finally, every element latexmath:[a \in R], there is an inverse element latexmat
   =\;& a - a.
 \end{align*}
 ++++
-These are the axioms of ring theory and for any collection of tokens, processes, constructions in computing that can be defined as such, form a ring. The ring that has significant usage in metatron is `fURI` (a "fhat" Uniform Resource Identifier). `fURI` is the set of identifies used to denote the type, cardinality, and location of an `obj` (object) in metatron. 
+A ring is denoted
+[stem]
+++++
+<R,+,-,0,1>.
+++++
+
+These are the axioms of ring theory and any collection of tokens, processes, objects, identifiers, etc. that obey these rules form, by definition, a ring. 
+
+#### the rings of metatron
+
+There are many rings in metatron. Of particular importance is the ring fURI -- a "fhat" Uniform Resource Identifier. `fURIs` are used to denote the type, extension, and location of an `obj` (object) in metatron. In fact, an `obj` in metatron is composed of three elements, one data structure and 2 `fURIs`, where:
+++++
+\begin{align*}
+\texttt{obj} \in (\texttt{jvm} \times \texttt{tid} \times \texttt{vid}),
+\end{align*}
+++++
+where `jvm` is an object of the Java virtual machine, `tid` is a _type_ (class) `fURI` and `vid` is a _value_ (instance) `fURI`. Every `obj` in metatron has a form, a denotation of that form, and an reference to it's explicit location in metatron.
 
 #### fURI
 
