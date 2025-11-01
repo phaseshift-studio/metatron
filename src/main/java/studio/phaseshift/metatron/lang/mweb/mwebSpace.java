@@ -27,24 +27,29 @@ import studio.phaseshift.metatron.lang.mtron.type.Obj;
 import studio.phaseshift.metatron.lang.mtron.type.Rec;
 import studio.phaseshift.metatron.space.MSpace;
 import studio.phaseshift.metatron.space.Router;
+import studio.phaseshift.metatron.space.Space;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.concurrent.Executors;
+import java.util.function.Function;
 
 import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.lang.mtron.type.NoObj.noobj;
-import static studio.phaseshift.metatron.lang.mtron.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.lang.mweb.mwebInstSet.MWEB_TID;
+import static studio.phaseshift.metatron.lang.mweb.mwebInstSet.PAGE_TID;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -114,15 +119,24 @@ public class mwebSpace extends MSpace<HttpServer> {
     }
 
     @Override
+    public Function<fURI, Map<fURI, Obj>> directReader() {
+        return (pattern) -> {
+            LOG.info("retrieving %s", pattern);
+            try {
+                Map<fURI, Obj> partial = new LinkedHashMap<>();
+                final Document doc = Jsoup.connect(pattern.asNode().toString()).ignoreContentType(true).get();
+                final Obj docObj = WEB_TRANSLATOR.translate(doc).tid(PAGE_TID);
+                partial.put(pattern.asNode(), docObj);
+                return partial;
+            } catch (final Exception e) {
+                return Map.of();
+            }
+        };
+    }
+
+    @Override
     public Obj read(final fURI vid) {
-        try {
-            LOG.info("retrieving %s", vid);
-            final Document doc = Jsoup.connect(vid.toString()).ignoreContentType(true).get();
-            LOG.debug("retrieved web page: %s", doc.location());
-            return WEB_TRANSLATOR.translate(doc);
-        } catch (final IOException e) {
-            return fail(e);
-        }
+       return Space.Helper.resolveRead(this, vid, directReader());
     }
 
     @Override

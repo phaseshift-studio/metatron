@@ -1,6 +1,6 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
- * Copyright (C) 2025- PhaseShift Studio, LLC 
+ * Copyright (C) 2025- PhaseShift Studio, LLC
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -41,7 +41,7 @@ public class mkvSpace extends MSpace<Map<fURI, Obj>> implements Space {
 
     public static final fURI KVSPACE_TID = MTRON_SPACE_TID.extend("mkv");
     protected final GraphittyLogger LOG = Graphitty.log(this);
-    
+
     public mkvSpace(final fURI pattern, final fURI vid) {
         super(new HashMap<>(), pattern, KVSPACE_TID, vid);
     }
@@ -58,20 +58,20 @@ public class mkvSpace extends MSpace<Map<fURI, Obj>> implements Space {
 
     @Override
     public Obj read(final fURI vid) {
-      //  return this.qs().processPreRead(vid, vid).orElseGet(() -> {
-            Obj result = Space.Helper.resolveRead(this, vid, directReader());
-            return result;
-     //       return this.qs().processPostRead(vid, vid, result).orElse(result);
-     //   });
+        //  return this.qs().processPreRead(vid, vid).orElseGet(() -> {
+        Obj result = Space.Helper.resolveRead(this, vid, directReader());
+        return result;
+        //       return this.qs().processPostRead(vid, vid, result).orElse(result);
+        //   });
     }
 
     @Override
     public Obj write(final fURI vid, final Obj obj) {
-       // return this.qs().processPreWrite(vid, vid, obj).orElseGet(() -> {
-            Space.Helper.resolveWrite(this, vid.basePath(), obj, this.directWriter(), this.directReader());
-            return obj;
-         //   return this.qs().processPostWrite(vid, vid, obj).orElse(this.qs().processQlessWrite(vid, vid, obj).orElse(obj));
-       // });
+        // return this.qs().processPreWrite(vid, vid, obj).orElseGet(() -> {
+        Space.Helper.resolveWrite(this, vid.basePath(), obj, this.directWriter(), this.directReader());
+        return obj;
+        //   return this.qs().processPostWrite(vid, vid, obj).orElse(this.qs().processQlessWrite(vid, vid, obj).orElse(obj));
+        // });
     }
 
     @Override
@@ -81,20 +81,14 @@ public class mkvSpace extends MSpace<Map<fURI, Obj>> implements Space {
                 return this.jvm();
             else {
                 if (pattern.hasPattern()) {
-                    return this.jvm()
-                            .entrySet()
-                            .stream()
-                            .map(kv -> {
-                                Map<fURI, Obj> partial = new LinkedHashMap<>();
-                                if (kv.getKey().matches(pattern.asNode()))
-                                    partial.put(kv.getKey(), kv.getValue());
-                                if (kv.getValue().isPoly())
-                                    Space.Helper.unrollPoly(partial, kv.getKey(), kv.getValue().as(), pattern.asNode());
-                                return partial;
-                            }).reduce(new LinkedHashMap<>(), (a, b) -> {
-                                a.putAll(b);
-                                return a;
-                            });
+                    final Map<fURI, Obj> partial = new LinkedHashMap<>();
+                    this.jvm().forEach((key, value) -> {
+                        if (key.matches(pattern.asNode()))
+                            partial.put(key, value);
+                        if (value.isPoly())
+                            Space.Helper.unrollPoly(partial, key, value.as(), pattern.asNode());
+                    });
+                    return partial;
                 } else {
                     final Obj value = this.jvm().get(pattern);
                     return null == value ? Map.of() : Map.of(pattern, value);
