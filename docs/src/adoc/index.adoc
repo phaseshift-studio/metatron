@@ -95,8 +95,8 @@ Moreover, latexmath:[R] contains two unique elements latexmath:[0 \in R] and lat
 ++++
 \begin{align*}
 0 + a &= a & a + 0 &= a \\
-0 + a &= 0 & a + 0 &= 0 \\
-1 + a &= a & a + 1 &= a.
+0 * a &= 0 & a * 0 &= 0 \\
+1 * a &= a & a * 1 &= a.
 \end{align*}
 ++++
 Finally, every element latexmath:[a \in R] has is an _inverse_ latexmath:[-a \in R] such that
