@@ -81,6 +81,15 @@ a*(b+c) =\;& (a * b) + (a * c) \\
         =\;& ab      + ac
 \end{align*}
 ++++
+A useful corollary allows for an analogous transformation of polynomial rings, whereby
+[latexmath]
+++++
+\begin{align*}
+(a+b)*(c+d) =\;& ((a+b)*c) + ((a+b)*d) \\
+            =\;& (ac+bc) + (ad+bd) \\
+            =\;& ac+bc+ad+bd.
+\end{align*}
+++++
 Moreover, latexmath:[R] contains two unique elements latexmath:[0 \in R] and latexmath:[1 \in R] such that, for any latexmath:[a \in R],
 [latexmath]
 ++++
