@@ -78,10 +78,19 @@ where latexmath:[*] distributes over latexmath:[+] such that for latexmath:[a,b,
 \begin{align*}
 a*(b+c) =\;& (a * b) + (a * c) \\
         =\;& (ab)    + (ac) \\
-        =\;& ab      + ac
+        =\;& ab      + ac.
 \end{align*}
 ++++
-A useful corollary allows for an analogous transformation of polynomial rings, whereby
+Likewise,
+[latexmath]
+++++
+\begin{align*}
+(b+c)*a =\;& (b * a) + (c * a) \\
+        =\;& (ba)    + (ca) \\
+        =\;& ba      + ca.
+\end{align*}
+++++
+A useful corollary of the distributive nature of latexmath:[+] provides an equivalency for polynomial rings, whereby
 [latexmath]
 ++++
 \begin{align*}
@@ -90,7 +99,7 @@ A useful corollary allows for an analogous transformation of polynomial rings, w
             =\;& ac+bc+ad+bd.
 \end{align*}
 ++++
-Moreover, latexmath:[R] contains two unique elements latexmath:[0 \in R] and latexmath:[1 \in R] such that, for any latexmath:[a \in R],
+Every ring latexmath:[R] contains two unique elements latexmath:[0 \in R] and latexmath:[1 \in R] such that, for any latexmath:[a \in R],
 [latexmath]
 ++++
 \begin{align*}
@@ -99,21 +108,20 @@ Moreover, latexmath:[R] contains two unique elements latexmath:[0 \in R] and lat
 1 * a &= a & a * 1 &= a.
 \end{align*}
 ++++
-Finally, every element latexmath:[a \in R] has is an _inverse_ latexmath:[-a \in R] such that
-[stem]
+Finally, every element latexmath:[a \in R] has an _inverse_ latexmath:[-a \in R] such that
+[latexmath]
 ++++
 \begin{align*}
 0 =\;& a + (-a) \\
   =\;& a - a.
 \end{align*}
 ++++
-A ring is denoted
+The entire structure of a ring can be denoted
 [stem]
 ++++
-<R,+,-,0,1>.
+<R,+,-,0,1>,
 ++++
-
-These are the axioms of ring theory and any collection of tokens, processes, objects, identifiers, etc. that obey these rules form, by definition, a ring. 
+where each symbol is replaced by the corresponding operator and elements of the respective ring being defined. These are the axioms of ring theory. Any collection of tokens, processes, objects, identifiers, etc. that obey these rules form, by definition, a ring and can be manipulated by the stated equivalencies and their formal derivatives.
 
 #### the rings of metatron
 
