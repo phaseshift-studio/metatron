@@ -378,6 +378,9 @@ public class mtronParser {
     private static Parser[] ordered_sugar_parsers() {
         return new Parser[]{
                 //branch_parser,
+                generate_sugar_parser(WHERE_TID, of("?=="), 1),
+                generate_sugar_parser(GROUP_TID, of("%=="), 1),
+                generate_sugar_parser(SELECT_TID, of("=="), 1),
                 generate_sugar_parser(List.of(IS_TID, EQ_TID), of("?="), 1),
                 generate_sugar_parser(List.of(IS_TID, GT_TID), of("?>"), 1),
                 generate_sugar_parser(List.of(IS_TID, GTE_TID), of("?>="), 1),
@@ -403,8 +406,7 @@ public class mtronParser {
                 generate_sugar_parser(LSHIFT_TID, of("<<"), 1),
                 generate_sugar_parser(LSHIFT_TID, of("<<"), 0),
                 generate_sugar_parser(PLUS_TID, of('+'), 1),
-                generate_sugar_parser(END_TID, of(';'), 0),
-                generate_sugar_parser(SELECT_TID, of("=="), 1)};
+                generate_sugar_parser(END_TID, of(';'), 0)};
     }
 
     private static Parser generate_sugar_parser(final fURI tid, final Parser startToken, final int argCount) {
