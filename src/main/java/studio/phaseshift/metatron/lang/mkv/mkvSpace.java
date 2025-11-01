@@ -1,6 +1,6 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
- * Copyright (C) 2025- PhaseShift Studio, LLC
+ * Copyright (C) 2025- PhaseShift Studio, LLC 
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.space.kv;
+package studio.phaseshift.metatron.lang.mkv;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.mtron.type.Obj;
@@ -37,18 +37,17 @@ import java.util.function.Function;
 import static studio.phaseshift.metatron.lang.mtron.mtronInstSet.MTRON_SPACE_TID;
 
 
-public class KVSpace extends MSpace<Map<fURI, Obj>> implements Space {
+public class mkvSpace extends MSpace<Map<fURI, Obj>> implements Space {
 
-    public static final fURI KVSPACE_TID = MTRON_SPACE_TID.extend("kv");
+    public static final fURI KVSPACE_TID = MTRON_SPACE_TID.extend("mkv");
     protected final GraphittyLogger LOG = Graphitty.log(this);
-
-
-    public KVSpace(final fURI pattern, final fURI vid) {
+    
+    public mkvSpace(final fURI pattern, final fURI vid) {
         super(new HashMap<>(), pattern, KVSPACE_TID, vid);
     }
 
-    public static KVSpace of(final fURI pattern, final fURI vid) {
-        return new KVSpace(pattern, vid);
+    public static mkvSpace of(final fURI pattern, final fURI vid) {
+        return new mkvSpace(pattern, vid);
     }
 
     @Override

@@ -22,7 +22,6 @@ import studio.phaseshift.metatron.furi.Qs;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.mtron.type.Obj;
 import studio.phaseshift.metatron.lang.mtron.type.impl.MObj;
-import studio.phaseshift.metatron.space.stack.StackSpace;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
 
@@ -37,9 +36,9 @@ public abstract class MSpace<J> extends MObj implements Space {
     public MSpace(final J jvm, final fURI pattern, final fURI tid, final fURI vid) {
         super(jvm, tid, vid);
         this.pattern = pattern;
-        if (!(this instanceof StackSpace) && null != vid && Router.loaded() && !(this instanceof Router))
-            Router.global().addSpace(this.pattern, this);
         LOG = Graphitty.log(this);
+        //if (null != this.vid)
+        // Router.global().addSpace(this.pattern, this);
         // this.qs = EMPTY_QS;
     }
 
@@ -75,8 +74,10 @@ public abstract class MSpace<J> extends MObj implements Space {
 
     @Override
     public Obj vid(final fURI vid) {
-        if (null != vid)
+        if (null != vid) {
             Router.writeToSpace(vid.extend("pattern"), this.pattern().toUri());
+            Router.global().addSpace(this.pattern, this);
+        }
         return super.vid(vid);
     }
 

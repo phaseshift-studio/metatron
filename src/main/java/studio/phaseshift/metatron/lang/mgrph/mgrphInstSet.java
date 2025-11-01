@@ -28,6 +28,7 @@ import studio.phaseshift.metatron.lang.mtron.type.Inst;
 import studio.phaseshift.metatron.lang.mtron.type.impl.MInstSet;
 import studio.phaseshift.metatron.lang.mtron.type.Obj;
 import studio.phaseshift.metatron.lang.mtron.type.Type;
+import studio.phaseshift.metatron.lang.mvec.mvecInstSet;
 import studio.phaseshift.metatron.space.Router;
 import studio.phaseshift.metatron.util.IteratorUtil;
 
@@ -77,7 +78,11 @@ public class mgrphInstSet extends MInstSet {
 
     public mgrphInstSet(final fURI vid) {
         super(new HashMap<>(), MGRPH_TID, vid);
-        this.types().forEach(t -> Router.global().registerRewrite(f(t.tid().name()), t.tid()));
+       // this.types().forEach(t -> Router.global().registerRewrite(f(t.tid().name()), t.tid()));
+    }
+
+    public static mgrphInstSet of(final fURI vid) {
+        return new mgrphInstSet(vid);
     }
 
     private static String[] labelsAsUri(final Inst inst) {

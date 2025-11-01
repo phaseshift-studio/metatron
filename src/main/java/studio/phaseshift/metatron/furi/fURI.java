@@ -51,9 +51,9 @@ public class fURI implements Cloneable, Ring<fURI> {
     public static final fURI NULL = null;
     public static final fURI DOM = fURI.of("dom");
     public static final fURI RNG = fURI.of("rng");
+    public static final fURI NOOBJ = fURI.of("").c("0");
     private static final fURI ONE = f(".").c("1");
     private static final fURI ZERO = f("").c("0");
-    public static final fURI NOOBJ = fURI.of("").c("0");
     private final String host;
     private final String scheme;
     private final int port;
@@ -114,6 +114,8 @@ public class fURI implements Cloneable, Ring<fURI> {
 
         int position = 0;
         int i = uri.indexOf(SCHEMA_END);
+        int j = uri.indexOf(SEGMENT_SPLIT);
+        if (j != -1 && j < i) i = -1;
         int temp = uri.indexOf(HOST_START);
         if (i != -1 && (temp == -1 || i < temp)) {
             this.scheme = 0 == i ? null : uri.substring(0, i);
@@ -264,7 +266,7 @@ public class fURI implements Cloneable, Ring<fURI> {
 
     public fURI removePrefix(final fURI prefix) {
         String newPath = this.toString();
-        return new fURI(newPath.startsWith(prefix.toString()) ? newPath.substring(prefix.toString().length() + 1) : newPath);
+        return new fURI(newPath.startsWith(prefix.toString()) ? newPath.substring(prefix.toString().length()) : newPath);
     }
 
     public String name() {
@@ -293,7 +295,7 @@ public class fURI implements Cloneable, Ring<fURI> {
 
     public String path() {
         final String p = this.path.stream().reduce(this.sstart ? SEGMENT_SPLIT : EMPTY, (a, b) -> a + b + SEGMENT_SPLIT);
-        return this.send ? p : p.substring(0, p.length() - 1);
+        return this.send || p.isEmpty() ? p : p.substring(0, p.length() - 1);
     }
 
     public List<String> segments() {

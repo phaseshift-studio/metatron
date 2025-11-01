@@ -52,10 +52,10 @@ public class mvecInstSet extends MInstSet {
     public static final fURI CMPLX_TID = MVEC_TID.extend("cmplx");
     public static final fURI IMG_TID = MVEC_TID.extend("img");
     /// ////////////////////////////////////////////////////////////
-    public static final fURI MEXT_INST_TID = MVEC_TID.extend("inst");
-    public static final fURI DOT_TID = MEXT_INST_TID.extend("dot");
-    public static final fURI SQRT_TID = MEXT_INST_TID.extend("sqrt");
-    public static final fURI JSON_TID = MEXT_INST_TID.extend("json");
+    public static final fURI INST_TID = MVEC_TID.extend("inst");
+    public static final fURI DOT_TID = INST_TID.extend("dot");
+    public static final fURI SQRT_TID = INST_TID.extend("sqrt");
+    public static final fURI JSON_TID = INST_TID.extend("json");
     private static final JSONTranslator JSON_TRANSLATOR = new JSONTranslator();
 
     public mvecInstSet(final fURI vid) {

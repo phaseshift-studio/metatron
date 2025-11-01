@@ -20,12 +20,13 @@ package studio.phaseshift.metatron.space.kv;
 
 import org.junit.jupiter.api.BeforeAll;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.lang.mkv.mkvSpace;
 import studio.phaseshift.metatron.space.SpaceTest;
 
-public class KVSpaceTest extends SpaceTest {
+public class mkvSpaceTest extends SpaceTest {
 
     @BeforeAll
     public static void setup() {
-        SPACE = () -> new KVSpace(fURI.of("/t/#"), fURI.of("/mnt/t"));
+        SPACE = () -> new mkvSpace(fURI.of("/t/#"), fURI.of("/mnt/t"));
     }
 }

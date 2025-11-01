@@ -32,7 +32,7 @@ import studio.phaseshift.metatron.lang.mtron.type.Uri;
 import studio.phaseshift.metatron.lang.mweb.JSONTranslator;
 import studio.phaseshift.metatron.space.MSpace;
 import studio.phaseshift.metatron.space.Space;
-import studio.phaseshift.metatron.space.kv.KVSpace;
+import studio.phaseshift.metatron.lang.mkv.mkvSpace;
 import studio.phaseshift.metatron.ui.*;
 
 import java.nio.charset.StandardCharsets;
@@ -64,7 +64,7 @@ public class MqttSpace extends MSpace<Map<Uri, Obj>> implements Space {
     private final GraphittyLogger LOG = Graphitty.log(this);
     Mqtt5Client client;
     Mqtt5BlockingClient.Mqtt5Publishes incomingMessages;
-    KVSpace cache;
+    mkvSpace cache;
 
     public MqttSpace(final fURI pattern, final fURI vid) {
         this(Map.of(
@@ -82,7 +82,7 @@ public class MqttSpace extends MSpace<Map<Uri, Obj>> implements Space {
                         .orElseThrow(new IllegalArgumentException("config must have a pattern key")).uriValue(), MQTT_TID, vid);
         this.prefix = config.containsKey(uri("prefix")) ? config.get(uri("prefix")).uriValue() : null;
         LOG.info("{{y}}mtron{{g}}<=>{{y}}mqtt{{X}} mapping established: {{b}}%s {{g}}<=> ({{b}}%s {{g}}<=> {{b}}%s{{g}}){{X}}", this.pattern(), this.prefix, this.toMqttTopic(this.pattern()));
-        this.cache = new KVSpace(this.pattern(), this.vid.extend("cache"));
+        this.cache = new mkvSpace(this.pattern(), this.vid.extend("cache"));
         this.cache.qs().clear();
         this.qs = new Qs(this.vid);
         this.qs.register(new PubSubQ(this) {

@@ -1,6 +1,6 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
- * Copyright (C) 2025- PhaseShift Studio, LLC 
+ * Copyright (C) 2025- PhaseShift Studio, LLC
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -24,8 +24,8 @@ import studio.phaseshift.metatron.lang.mtron.type.Inst;
 import studio.phaseshift.metatron.lang.mtron.type.InstSet;
 import studio.phaseshift.metatron.lang.mtron.type.Obj;
 import studio.phaseshift.metatron.lang.mtron.type.Type;
-import studio.phaseshift.metatron.space.Router;
 import studio.phaseshift.metatron.space.MSpace;
+import studio.phaseshift.metatron.space.Router;
 
 import java.util.*;
 
@@ -49,6 +49,8 @@ public abstract class MInstSet extends MSpace<Map<fURI, Set<? extends Obj>>> imp
 
     public MInstSet(final Map<fURI, Set<? extends Obj>> value, final fURI tid, final fURI vid) {
         super(value, tid.extend(fURI.ALL), tid, vid);
+        if (!this.pattern.equals(f("+/#")) && Router.loaded() && !(this instanceof Router))
+           Router.global().addSpace(this.pattern, this);
         this.types().forEach(t -> this.write(t.tid(), t));
         this.consts().forEach(c -> this.write(c.vid(), c));
         this.insts().forEach(i -> this.write(i.tid(), i));
@@ -56,6 +58,7 @@ public abstract class MInstSet extends MSpace<Map<fURI, Set<? extends Obj>>> imp
         this.types().forEach(t -> Router.global().registerRewrite(f(t.tid().name()), t.tid()));
         this.consts().forEach(t -> Router.global().registerRewrite(f(t.vid().name()), t.vid()));
         this.insts().forEach(t -> Router.global().registerRewrite(f(t.tid().name()), t.tid().basePath()));
+        
     }
 
     @Override
@@ -89,6 +92,8 @@ public abstract class MInstSet extends MSpace<Map<fURI, Set<? extends Obj>>> imp
 
     @Override
     public Obj read(final fURI vid) {
+        if (Objects.equals(this.tid, vid))
+            return this;
         final fURI bigvid = vid.big();
         return objs(INST_TABLE.entrySet()
                 .stream()

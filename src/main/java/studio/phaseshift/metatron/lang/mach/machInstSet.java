@@ -45,11 +45,11 @@ public class machInstSet extends MInstSet {
     public static final fURI MACH_TID = f("/mach");
     public static final fURI MACH_INE_TID = MACH_TID.extend("ine");
     public static final fURI MACH_MONAD_TID = MACH_TID.extend("monad");
-    public static final fURI MACH_INST_TID = MACH_TID.extend("inst");
-    public static final fURI DROP_TID = MACH_INST_TID.extend("drop");
-    public static final fURI PROJECT_TID = MACH_INST_TID.extend("project"); // proj?
-    public static final fURI INJECT_TID = MACH_INST_TID.extend("inject"); // inj ?
-    public static final fURI EXPAND_TID = MACH_INST_TID.extend("expand"); // TODO: expand tuple body 
+    public static final fURI INST_TID = MACH_TID.extend("inst");
+    public static final fURI DROP_TID = INST_TID.extend("drop");
+    public static final fURI PROJECT_TID = INST_TID.extend("project"); // proj?
+    public static final fURI INJECT_TID = INST_TID.extend("inject"); // inj ?
+    public static final fURI EXPAND_TID = INST_TID.extend("expand"); // TODO: expand tuple body 
 
     public machInstSet(final fURI vid) {
         super(MACH_TID, vid);

@@ -85,7 +85,7 @@ public class Console implements Mode {
                     .option(LineReader.Option.AUTO_FRESH_LINE, true)
                     .option(LineReader.Option.HISTORY_IGNORE_DUPS, true)
                     .option(LineReader.Option.DISABLE_EVENT_EXPANSION, true)
-                    .variable(LineReader.SECONDARY_PROMPT_PATTERN, Graphitty.string("{{-X&v1&^1&FORM2}}    {{FORM1}}> {{X}}"))
+                    .variable(LineReader.SECONDARY_PROMPT_PATTERN, Graphitty.string("{{-X&v1&^1&m}}    {{g}}> {{X}}"))
                     .variable(LineReader.INDENTATION, 0)
                     .build();
         } catch (final Exception e) {
@@ -135,7 +135,7 @@ public class Console implements Mode {
                         RESOLVE_MODE ? 3 : 1,
                         RESOLVE_MODE ? 3 : 1);
                 RESOLVE_MODE = false;
-                line = this.reader.readLine(Graphitty.string("{{FORM2}}mtron{{FORM1}}> ")).trim();
+                line = this.reader.readLine(Graphitty.string("{{m}}mtron{{g}}> ")).trim();
                 if (line.equals(":header"))
                     this.outputHeader();
                 else if (line.equals(":quit"))
@@ -151,7 +151,7 @@ public class Console implements Mode {
                             result.isCode() ?
                                     MMachine.of(result.as()).apply() :
                                     result).stream().forEach(
-                            o -> Graphitty.out(this.terminal.output(), "{{-X-}}{{FORM2}}=={{FORM1}}>{{X}}%s\n".formatted(o)));
+                            o -> Graphitty.out(this.terminal.output(), "{{-X-}}{{m}}=={{g}}>{{X}}%s\n".formatted(o)));
                 }
             } catch (final UserInterruptException e) {
                 LOG.warn(Graphitty.sillyPrint("process interrupted", true, true));
@@ -164,7 +164,7 @@ public class Console implements Mode {
                     LOG.error("%s%s", ((0 == y++) ? "" : (" ".repeat(y) + "\\_")), x.getMessage());
                     x = x.getCause();
                 }
-                final String stackTrace = this.reader.readLine(Graphitty.string("{{WARN}}display stack trace {{FORM1}}[y/N]{{WARN}}?{{X}} "));
+                final String stackTrace = this.reader.readLine(Graphitty.string("{{y}}display stack trace {{g}}[y/N]{{y}}?{{X}} "));
                 if (stackTrace.trim().equalsIgnoreCase("y")) {
                     e.printStackTrace();
                 }

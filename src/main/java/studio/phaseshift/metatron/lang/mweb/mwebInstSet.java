@@ -45,7 +45,7 @@ import static studio.phaseshift.metatron.lang.mweb.mwebSpace.WEB_TID;
 public class mwebInstSet extends MInstSet {
 
     public static final fURI MWEB_TID = f("/mweb");
-    public static final fURI MWEB_INST_TID = MWEB_TID.extend("inst");
+    public static final fURI INST_TID = MWEB_TID.extend("inst");
     public static final fURI PAGE_TID = MWEB_TID.extend("page");
     public static final fURI CSS_TID = MWEB_TID.extend("css");
     private static final WebTranslator WEB_TRANSLATOR = new WebTranslator();
@@ -62,7 +62,7 @@ public class mwebInstSet extends MInstSet {
     @Override
     public Set<Inst> insts() {
         return Set.of(
-                instC(MWEB_INST_TID.extend("mweb").dom(ALL.maybe()).rng(WEB_TID), rec(uri("host"), T(URI_TID), uri("route"), T(REC_TID), uri("pattern"), T(URI_TID)), (lhs, inst) -> mwebSpace.of(inst.arg("host").uriValue(), inst.arg("route").as(), inst.arg("pattern").uriValue(), fURI.NULL)));
+                instC(INST_TID.extend("mweb").dom(ALL.maybe()).rng(WEB_TID), rec(uri("host"), T(URI_TID), uri("route"), T(REC_TID), uri("pattern"), T(URI_TID)), (lhs, inst) -> mwebSpace.of(inst.arg("host").uriValue(), inst.arg("route").as(), inst.arg("pattern").uriValue(), fURI.NULL)));
     }
 
     @Override

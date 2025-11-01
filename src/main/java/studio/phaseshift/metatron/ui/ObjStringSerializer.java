@@ -23,6 +23,7 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.mtron.mtronParser;
 import studio.phaseshift.metatron.lang.mtron.type.*;
 import studio.phaseshift.metatron.space.Space;
+import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.HashSet;
 import java.util.Map;
@@ -69,120 +70,124 @@ public class ObjStringSerializer implements ObjSerializer<String> {
 
     @Override
     public String write(final Obj obj) throws IllegalStateException {
-        final StringBuilder sb = new StringBuilder();
-        if (obj.isNoObj())
-            return sb.append(this.b.palette.errorC())
-                    .append("noobj")
-                    .append(this.b.ignoreRewrites ? "" : "{{X}}")
-                    .toString();
-        /// ///////////////////////////////////////////////////////////////
-        /// ///////////////////////////////////////////////////////////////
-        else if (obj instanceof final Inst inst) {
-            generateTID(sb, obj.tid(), false, false).append("{{g}}({{X}}");
-            if (!inst.args().isEmpty()) {
-                boolean isLst = inst.args().isLst();
-                inst.args().elements().forEach(kv -> {
-                    sb.append(isLst ? kv : kv.<Rel>as().first());
-                    if (!isLst)
-                        sb.append("{{g}}=>").append(kv.<Rel>as().second());
-                    sb.append("{{g}},");
-                });
-                sb.deleteCharAt(sb.length() - 1);
-            }
-            return sb.append("{{g}}){")
-                    .append(this.b.palette.valueC())
-                    .append(inst.resolution() == Inst.Resolution.A ? "{{r}}?{{X}}" : ("{{y}}" + inst.f().toString()))
-                    .append("{{g}}}{{X}}")
-                    //.append(this.b.ignoreRewrites ? "" : "{{X}}")
-                    .toString();
-        }
-        /// ///////////////////////////////////////////////////////////////
-        /// ///////////////////////////////////////////////////////////////
-        else if (obj instanceof final Rel rel) {
-            return generateTID(sb, obj.tid(), true).append(rel.first()).append(this.b.palette.formC())
-                    .append("=>")
-                    .append(rel.second())
-                    .append(this.b.ignoreRewrites ? "" : "{{X}}")
-                    .toString();
-        }
-        /// ///////////////////////////////////////////////////////////////
-        /// ///////////////////////////////////////////////////////////////
-        else if (obj instanceof final Lst lst) {
-            generateTID(sb, obj.tid(), true).append("{{g}}[").append(this.b.palette.valueC());
-            for (final Obj o : lst.jvm()) {
-                sb.append(o).append(this.b.palette.formC()).append(',');
-            }
-            if (!lst.jvm().isEmpty()) sb.deleteCharAt(sb.length() - 1);
-            else sb.append("{{g}},");
-            return generateVID(sb.append("{{g}}]"), lst).append(this.b.ignoreRewrites ? "" : "{{X}}").toString();
-        }
-        /// ///////////////////////////////////////////////////////////////
-        /// ///////////////////////////////////////////////////////////////
-        else if (obj instanceof final Objs objs) {
-            generateTID(sb, obj.tid(), true).append("{{g}}{").append(this.b.palette.valueC());
-            boolean found = false;
-            for (final Obj o : objs.jvm()) {
-                found = true;
-                sb.append(o).append("{{g}},");
-            }
-            if (found) sb.deleteCharAt(sb.length() - 1);
-            sb.append("{{g}}}");
-            return generateVID(sb, objs).append(this.b.ignoreRewrites ? "" : "{{X}}").toString();
-        }
-        /// ///////////////////////////////////////////////////////////////
-        /// ///////////////////////////////////////////////////////////////
-        else if (obj instanceof final Rec rec) {
-            if (rec.isEmpty()) {
-                sb.append("{{g}}[=>]{{X}}");
-            } else {
-                if (this.b.prettyPrint && rec.count() > 1) {
-                    this.generateRec(sb, rec, 0);
-                } else {
-                    generateTID(sb, obj.tid(), true).append("{{g}}[");
-                    for (final Map.Entry<Obj, Obj> o : rec.jvm().entrySet()) {
-                        sb.append(o.getKey()).append("{{g}}=>").append(o.getValue()).append("{{g}},");
-                    }
+        try {
+            final StringBuilder sb = new StringBuilder();
+            if (obj.isNoObj())
+                return sb.append(this.b.palette.errorC())
+                        .append("noobj")
+                        .append(this.b.ignoreRewrites ? "" : "{{X}}")
+                        .toString();
+            /// ///////////////////////////////////////////////////////////////
+            /// ///////////////////////////////////////////////////////////////
+            else if (obj instanceof final Inst inst) {
+                generateTID(sb, obj.tid(), false, false).append("{{g}}({{X}}");
+                if (!inst.args().isEmpty()) {
+                    boolean isLst = inst.args().isLst();
+                    inst.args().elements().forEach(kv -> {
+                        sb.append(isLst ? kv : kv.<Rel>as().first());
+                        if (!isLst)
+                            sb.append("{{g}}=>").append(kv.<Rel>as().second());
+                        sb.append("{{g}},");
+                    });
+                    sb.deleteCharAt(sb.length() - 1);
                 }
-                if (rec.count() == 1) sb.deleteCharAt(sb.length() - 1).append("{{g}}]");
+                return sb.append("{{g}}){")
+                        .append(this.b.palette.valueC())
+                        .append(inst.resolution() == Inst.Resolution.A ? "{{r}}?{{X}}" : ("{{y}}" + inst.f().toString()))
+                        .append("{{g}}}{{X}}")
+                        //.append(this.b.ignoreRewrites ? "" : "{{X}}")
+                        .toString();
             }
-            return generateVID(sb, rec).append(this.b.ignoreRewrites ? "" : "{{X}}").toString();
-        }
-        /// ///////////////////////////////////////////////////////////////
-        /// ///////////////////////////////////////////////////////////////
-        else if (obj instanceof Type) {
-            return generateTID(sb, obj.tid(), false)
-                    .append("{{r}}T{{g}}[{{y}}")
-                    .append(null == obj.jvm() ? "" : obj.jvm().toString())
-                    .append("{{g}}]{{X}}").toString();
-        }
-        /// ///////////////////////////////////////////////////////////////
-        /// ///////////////////////////////////////////////////////////////
-        else if (obj instanceof Fail) {
-            generateTID(sb, obj.tid(), false);
-            Throwable t = obj.<Fail>as().jvm();
-            while (t != null) {
-                sb.append("{{r}}[{{X}}").append(t.getMessage()).append("{{r}}]{{X}}").append("\n\t ");
-                t = t.getCause();
+            /// ///////////////////////////////////////////////////////////////
+            /// ///////////////////////////////////////////////////////////////
+            else if (obj instanceof final Rel rel) {
+                return generateTID(sb, obj.tid(), true).append(rel.first()).append(this.b.palette.formC())
+                        .append("=>")
+                        .append(rel.second())
+                        .append(this.b.ignoreRewrites ? "" : "{{X}}")
+                        .toString();
             }
-            sb.delete(sb.length() - 3, sb.length() - 1);
-            return sb.toString();
+            /// ///////////////////////////////////////////////////////////////
+            /// ///////////////////////////////////////////////////////////////
+            else if (obj instanceof final Lst lst) {
+                generateTID(sb, obj.tid(), true).append("{{g}}[").append(this.b.palette.valueC());
+                for (final Obj o : lst.jvm()) {
+                    sb.append(o).append(this.b.palette.formC()).append(',');
+                }
+                if (!lst.jvm().isEmpty()) sb.deleteCharAt(sb.length() - 1);
+                else sb.append("{{g}},");
+                return generateVID(sb.append("{{g}}]"), lst).append(this.b.ignoreRewrites ? "" : "{{X}}").toString();
+            }
+            /// ///////////////////////////////////////////////////////////////
+            /// ///////////////////////////////////////////////////////////////
+            else if (obj instanceof final Objs objs) {
+                generateTID(sb, obj.tid(), true).append("{{g}}{").append(this.b.palette.valueC());
+                boolean found = false;
+                for (final Obj o : objs.jvm()) {
+                    found = true;
+                    sb.append(o).append("{{g}},");
+                }
+                if (found) sb.deleteCharAt(sb.length() - 1);
+                sb.append("{{g}}}");
+                return generateVID(sb, objs).append(this.b.ignoreRewrites ? "" : "{{X}}").toString();
+            }
+            /// ///////////////////////////////////////////////////////////////
+            /// ///////////////////////////////////////////////////////////////
+            else if (obj instanceof final Rec rec) {
+                if (rec.isEmpty()) {
+                    sb.append("{{g}}[=>]{{X}}");
+                } else {
+                    if (this.b.prettyPrint && rec.count() > 1) {
+                        this.generateRec(sb, rec, 0);
+                    } else {
+                        generateTID(sb, obj.tid(), true).append("{{g}}[");
+                        for (final Map.Entry<Obj, Obj> o : rec.jvm().entrySet()) {
+                            sb.append(o.getKey()).append("{{g}}=>").append(o.getValue()).append("{{g}},");
+                        }
+                    }
+                    if (rec.count() == 1) sb.deleteCharAt(sb.length() - 1).append("{{g}}]");
+                }
+                return generateVID(sb, rec).append(this.b.ignoreRewrites ? "" : "{{X}}").toString();
+            }
+            /// ///////////////////////////////////////////////////////////////
+            /// ///////////////////////////////////////////////////////////////
+            else if (obj instanceof Type) {
+                return generateTID(sb, obj.tid(), false)
+                        .append("{{r}}T{{g}}[{{y}}")
+                        .append(null == obj.jvm() ? "" : obj.jvm().toString())
+                        .append("{{g}}]{{X}}").toString();
+            }
+            /// ///////////////////////////////////////////////////////////////
+            /// ///////////////////////////////////////////////////////////////
+            else if (obj instanceof Fail) {
+                generateTID(sb, obj.tid(), false);
+                Throwable t = obj.<Fail>as().jvm();
+                while (t != null) {
+                    sb.append("{{r}}[{{X}}").append(t.getMessage()).append("{{r}}]{{X}}").append("\n\t ");
+                    t = t.getCause();
+                }
+                sb.delete(sb.length() - 3, sb.length() - 1);
+                return sb.toString();
+            }
+            /// ///////////////////////////////////////////////////////////////
+            /// ///////////////////////////////////////////////////////////////
+            else if (BASE_TYPES.contains(obj.baseType()))
+                return generateVID(generateTID(sb, obj.tid(), true)
+                        .append(this.b.palette.valueC())
+                        .append(null == obj.jvm() ? "" : (obj.isStr() ? "'" + obj.jvm().toString() + "'" : obj.jvm().toString()))
+                        .append(this.b.palette.form2C()), obj)
+                        .append(this.b.ignoreRewrites ? "" : "{{X}}")
+                        .toString();
+            else
+                return generateVID(generateTID(sb, obj.tid(), true)
+                        .append(this.b.palette.valueC())
+                        .append(obj instanceof Space ? rel(uri("pattern"), null == ((Space) obj).pattern() ? uri("pattern") : ((Space) obj).pattern().toUri()) : obj.jvm())
+                        .append(this.b.palette.form2C()), obj)
+                        .append(this.b.ignoreRewrites ? "" : "{{X}}")
+                        .toString();
+        } catch (final Exception e) {
+            throw MTronException.of(e,"unable to parse %s",obj.tid());
         }
-        /// ///////////////////////////////////////////////////////////////
-        /// ///////////////////////////////////////////////////////////////
-        else if (BASE_TYPES.contains(obj.baseType()))
-            return generateVID(generateTID(sb, obj.tid(), true)
-                    .append(this.b.palette.valueC())
-                    .append(null == obj.jvm() ? "" : (obj.isStr() ? "'" + obj.jvm().toString() + "'" : obj.jvm().toString()))
-                    .append(this.b.palette.form2C()), obj)
-                    .append(this.b.ignoreRewrites ? "" : "{{X}}")
-                    .toString();
-        else
-            return generateVID(generateTID(sb, obj.tid(), true)
-                    .append(this.b.palette.valueC())
-                    .append(obj instanceof Space ? rel(uri("pattern"), null == ((Space)obj).pattern() ? uri("pattern") : ((Space) obj).pattern().toUri()) : obj.jvm())
-                    .append(this.b.palette.form2C()), obj)
-                    .append(this.b.ignoreRewrites ? "" : "{{X}}")
-                    .toString();
     }
 
     private StringBuilder generateRec(final StringBuilder sb, final Rec rec, final int depth) {

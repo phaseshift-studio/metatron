@@ -332,11 +332,14 @@ public class fURITest {
 
     @ParameterizedTest
     @CsvSource(value = {
-            "/a/b/c                  |  ",
-            "a/b/c                   |  ",
-            "http://x.com/a/b/c      |  http",
-            "mtron://lang/obj        |  mtron",
-            "mtron:lang/obj          |  mtron"
+            "/a/b/c                  | ",
+            "a/b/c                   | ",
+            "http://x.com/a/b/c      | http",
+            "mtron://lang/obj        | mtron",
+            "mtron:lang/obj          | mtron",
+            "./mtron:lang            | ",
+            "http:m:m:m              | http",
+            "m:m:m:m                 | m"
     }, delimiter = '|')
     public void testScheme(final String furi, final String scheme) {
         assertEquals(scheme, f(furi).scheme());

@@ -23,23 +23,19 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.mach.machInstSet;
 import studio.phaseshift.metatron.lang.mgrph.mgrphInstSet;
 import studio.phaseshift.metatron.lang.mgrph.tp.MGraph;
+import studio.phaseshift.metatron.lang.mkv.mkvInstSet;
+import studio.phaseshift.metatron.lang.mkv.mkvSpace;
 import studio.phaseshift.metatron.lang.mllm.mllmInstSet;
-import studio.phaseshift.metatron.lang.mllm.mollamaSpace;
 import studio.phaseshift.metatron.lang.mtron.mtronInstSet;
 import studio.phaseshift.metatron.lang.mtron.mtronParser;
 import studio.phaseshift.metatron.lang.mtron.type.Obj;
 import studio.phaseshift.metatron.lang.mtron.type.Rec;
 import studio.phaseshift.metatron.lang.mvec.mvecInstSet;
 import studio.phaseshift.metatron.lang.mweb.mwebInstSet;
-import studio.phaseshift.metatron.lang.mweb.mwebSpace;
 import studio.phaseshift.metatron.space.Router;
 import studio.phaseshift.metatron.space.device.log.Log;
 import studio.phaseshift.metatron.space.fs.FileSpace;
-import studio.phaseshift.metatron.space.kv.KVSpace;
-import studio.phaseshift.metatron.space.remote.RemoteSpace;
 import studio.phaseshift.metatron.space.router.MRouter;
-import studio.phaseshift.metatron.space.spaceInstSet;
-import studio.phaseshift.metatron.space.stack.StackSpace;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
 import studio.phaseshift.metatron.ui.Mode;
@@ -52,10 +48,12 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.nio.file.FileSystems;
+import java.util.Arrays;
 import java.util.List;
 
 import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.lang.mtron.mtronInstSet.REC_TID;
+import static studio.phaseshift.metatron.lang.mtron.type.NoObj.noobj;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MRec.rec;
@@ -66,8 +64,6 @@ import static studio.phaseshift.metatron.lang.mtron.type.impl.MUri.uri;
 public class BootLoader {
 
     public static final String HOST = "host";
-    public static final String LOG_LEVEL = "log";
-    public static final String VERBOSE = "verbose";
     private static final GraphittyLogger LOG = Graphitty.log(BootLoader.class);
     public static boolean TYPE_CHECK = true;
     public static boolean BOOTING = true;
@@ -75,6 +71,17 @@ public class BootLoader {
     public static Router ROUTER;
     public static Rec GLOBAL;
     public static Mode MODE;
+
+    static {
+        //Registry.singleton().register(mtronInstSet.INST_TID, () -> mtronInstSet.of(fURI.NULL));
+        Registry.singleton().register(mkvInstSet.MKV_TID, () -> mkvInstSet.of(fURI.NULL));
+        Registry.singleton().register(mwebInstSet.MWEB_TID, () -> mwebInstSet.of(fURI.NULL));
+        Registry.singleton().register(mgrphInstSet.MGRPH_TID, () -> mgrphInstSet.of(fURI.NULL));
+        Registry.singleton().register(mllmInstSet.MLLM_TID, () -> mllmInstSet.of(fURI.NULL));
+        Registry.singleton().register(mvecInstSet.MVEC_TID, () -> mvecInstSet.of(fURI.NULL));
+        Registry.singleton().register(machInstSet.MACH_TID, () -> machInstSet.of(fURI.NULL));
+        // Registry.singleton().register(miotInstSet.INST_TID, () -> miotInstSet.of(fURI.NULL));
+    }
 
     public static void main(final String[] args) throws IOException {
         if (args.length == 1 && args[0].equals("--help")) {
@@ -114,6 +121,8 @@ public class BootLoader {
     }
 
     public static void load(final Rec options) {
+        //Registry.singleton().register(mwebSpace.WEB_TID, f("/mnt/mweb"), mwebSpace::of);
+        //Router.readFromSpace(mwebInstSet.MWEB_INST_TID);
         Runtime.getRuntime().addShutdownHook(new Thread(BootLoader::close));
         fURI remoteAuthority = null;
         if (BOOTING) {
@@ -125,21 +134,28 @@ public class BootLoader {
             }
             startMode(options);
             ROUTER = new MRouter(remoteAuthority, f("/sys/router"));
-            Router.writeToSpace(new KVSpace(f("/mnt/#"), f("/mnt")));
-            Router.writeToSpace(new KVSpace(fURI.of("/sys/#"), fURI.of("/mnt/sys")));
+            mkvSpace.of(f("/mnt/#"), fURI.NULL).vid(f("/mnt"));
+            mkvSpace.of(f("/sys/#"), fURI.NULL).vid(f("/mnt/sys"));
             Router.writeToSpace(Router.global());
+            Router.writeToSpace(mtronInstSet.of(f("/mnt/lang/m")));
             ROUTER.start();
-            Router.writeToSpace(new KVSpace(fURI.of("/usr/#"), fURI.of("/mnt/usr")));
-            Router.writeToSpace(new spaceInstSet(f("/mnt/space")));
-          //  Router.writeToSpace(new StackSpace(f("+/#"), f("/sys/router/stack")));
-            Router.writeToSpace(new mtronInstSet(fURI.of("/mnt/lang/m")));
+            //  Router.writeToSpace(new mtronInstSet(fURI.of("/mnt/lang/m")));
             ///////////////////////////////////////////////////////////////
             if (options.has(uri("boot"))) {
+                LOG.none("\t{{r}}BEGIN:{{g}} evaluating provided boot loader: %s{{X}}\n", options.at(uri("boot")));
                 try (final BufferedReader reader = new BufferedReader(new FileReader(options.at("boot").uriValue().toString()))) {
                     final List<String> lines = reader.lines().toList();
                     final String source = lines.stream().reduce("", (a, b) -> a + b + "\n");
                     LOG.info("boot input: {{b}}%s{{/b}} {{g}}[{{y}}loc: %d{{/y}}]{{/g}}", options.at("boot").uriValue(), lines.size());
-                    LOG.info("boot result: %s", mtronParser.parse(source).apply());
+                    Arrays.stream(source.split(";"))
+                            .filter(s -> !s.trim().isEmpty())
+                            .map(s -> mtronParser.parse(s).resolve(noobj()))
+                            .filter(o -> !o.isNoObj())
+                            .forEach(o -> {
+                                LOG.info("boot compilation: %s", o);
+                                LOG.info("boot result: %s", o.apply());
+                            });
+                    LOG.none("\t{{r}}END:{{g}} evaluating provided boot loader: %s{{X}}\n", options.at(uri("boot")));
                 } catch (final IOException e) {
                     LOG.error(e);
                     System.exit(0);
@@ -149,18 +165,12 @@ public class BootLoader {
             Router.writeToSpace(Log.of(rec(options.at("log").orElse(uri("TRACE")), lst(uri("#"))), f("/sys/log")));
             Router.writeToSpace(new FileSpace(FileSystems.getDefault(), f("/home/#"), f("/mnt/fs")));
             Router.writeToSpace(new MGraph(TinkerFactory.createModern(), f("/tp/#"), f("/mnt/tp")));
-            Router.writeToSpace(new mgrphInstSet(f("/mnt/lang/mgrph")));
-            // Router.global().write(f("/mnt/zigbee2mqtt"), new MqttSpace(f("zigbee2mqtt/#?broker=mqtt://192.168.66.2:1883&prefix=/mqtt"), f("/mnt/zigbee2mqtt")));
-            Router.writeToSpace(new mvecInstSet(f("/mnt/lang/mvec")));
-            Router.writeToSpace(new machInstSet(f("/mnt/lang/mach")));
-            Router.writeToSpace(new mwebInstSet(f("/mnt/lang/mweb")));
-            Router.writeToSpace(new mllmInstSet(f("/mnt/lang/mllm")));
+            // new MqttSpace(f("zigbee2mqtt/#?broker=mqtt://192.168.66.2:1883&prefix=/mqtt"), f("/mnt/zigbee2mqtt")));
             if (options.at("mode").equals(uri("console"))) {
-                Router.writeToSpace(mwebSpace.of(f("http://localhost:8777"), rec(uri("/"), uri("examples/www/")), f("http://#"), f("/mnt/web")));
-                Router.writeToSpace(mollamaSpace.of(f("http://localhost:11434"), f("/ollama/#"), f("/mnt/ollama")));
-                Router.writeToSpace(RemoteSpace.open(f("ws://chibi.local:8888"), f("/shared/#"), f("/mnt/shared")));
+                //     Router.writeToSpace(mollamaSpace.of(f("http://localhost:11434"), f("/ollama/#"), f("/mnt/ollama")));
+                //     Router.writeToSpace(RemoteSpace.open(f("ws://chibi.local:8888"), f("/shared/#"), f("/mnt/shared")));
             } else if (options.at("mode").equals(uri("server")))
-                Router.writeToSpace(new KVSpace(fURI.of("/shared/#"), fURI.of("/mnt/shared")));
+                Router.writeToSpace(new mkvSpace(fURI.of("/shared/#"), fURI.of("/mnt/shared")));
             /// ///////////////////////////////////
             BOOTING = false;
             /// /// END OF BOOTING PROCESS /// ///

@@ -39,6 +39,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.concurrent.Executors;
 
+import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.lang.mtron.type.NoObj.noobj;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MRec.rec;
@@ -58,11 +59,13 @@ public class mwebSpace extends MSpace<HttpServer> {
     public mwebSpace(final Tuple.Pair<HttpServer, Rec> serverAndRoutes, final fURI pattern, final fURI vid) {
         super(serverAndRoutes.get0(), pattern, WEB_TID, vid);
         this.routes = serverAndRoutes.get1();
-        Router.writeToSpace(this.vid.extend(ROUTE), routes);
+        // Router.writeToSpace(this.vid.extend(ROUTE), routes);
         this.routes.elements().forEach(r -> {
             final HttpContext context = this.jvm().createContext(r.first().uriValue().toString(),
                     exchange -> {
-                        final Path path = Path.of(r.second().uriValue().extend(exchange.getRequestURI().getPath()).toString());
+                        //LOG.debug("using http context %s => %s => %s", exchange.getRequestURI(), exchange.getHttpContext().getPath(), r.second());
+                        final Path path = Path.of(r.second().uriValue().extend(f(exchange.getRequestURI().getPath()).removePrefix(r.first().uriValue())).toString());
+                        LOG.debug("resolving context to absolute path: %s => %s", uri(exchange.getRequestURI().toString()), uri(path.toAbsolutePath().toString()));
                         final Path filePath = Files.isRegularFile(path) ? path : Path.of(path + "/index.html");
                         final String contentType = Files.probeContentType(filePath);
                         exchange.getResponseHeaders().set("Content-Type", contentType == null ? "application/octet-stream" : contentType);
@@ -82,13 +85,14 @@ public class mwebSpace extends MSpace<HttpServer> {
         });
         this.jvm().setExecutor(Executors.newFixedThreadPool(4));
         Runtime.getRuntime().addShutdownHook(new Thread(this::close));
+        LOG.info("http contexts: %s", this.routes);
         this.jvm().start();
     }
 
     public static mwebSpace of(final fURI host, final Rec routes, final fURI pattern, final fURI vid) {
         try {
-            Graphitty.log(Router.global()).info("starting web server at %s:%d", host.host(), host.port());
             final HttpServer server = HttpServer.create(new InetSocketAddress(host.host(), host.port()), 0);
+            Graphitty.log(Router.global()).info("starting web server at %s:%d", host.host(), host.port());
             return new mwebSpace(Tuple.Pair.with(server, routes), pattern, vid);
         } catch (final IOException e) {
             throw MTronException.of(e);

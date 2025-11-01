@@ -133,7 +133,7 @@ public class mtronParser {
 
         inst_parser.set(choice(/*branch_parser,*/ seq(
                 choice(m_inst_furi(), m_type_prefix_opt_colon(INST_TID)), // 0 inst_tid
-                seq(of('(').trim(), choice(rec_internal(m_uri(), obj_parser), lst_internal(), of("")), of(')').trim()).pick(1), // 1 inst_args
+                seq(of('(').trim(), choice(rec_internal(m_uri(), obj_parser), lst_internal(), of("")).trim(), of(')').trim()).pick(1), // 1 inst_args
                 opt(seq(of('{').trim(), choice(
                                 of('?').map(t -> null),
                                 of("<j>").map(t -> null),
@@ -286,7 +286,7 @@ public class mtronParser {
     }
 
     public static Parser m_type_prefix_opt_colon(final fURI baseType) {
-        return opt(seq(m_furi(REDUCED_FURI_CHARS, true, true, true), opt(of("::").trim(), "::")).pick(0), baseType);
+        return opt(seq(m_furi(REDUCED_FURI_CHARS, true, true, true), opt(of("::"), "::").trim()).pick(0), baseType).trim();
     }
 
     public static Parser m_bool() {
@@ -419,9 +419,9 @@ public class mtronParser {
         return (argCount == 0 ?
                 seq(startToken.trim(), opt(seq(of('?'), m_furi_inst_dom_rng()).map(t -> pick(t, 1)), null)).map(t -> MInst.instB(instChain.get(0), lst(MInst.instA(instChain.get(1).query(pick(t, 1)))))) :
                 seq(startToken.trim(), opt(seq(of('?'), m_furi_inst_dom_rng()).map(t -> pick(t, 1)), null), choice(
-                        seq(of('('), m_obj(), of(')')).map(t -> mtronParser.<Obj>pick(t, 1)),
+                        seq(of('(').trim(), m_obj(), of(')').trim()).map(t -> mtronParser.<Obj>pick(t, 1)),
                         m_obj()), null == endToken ? of("") : endToken.trim())
-                        .map(t -> MInst.instB(instChain.get(0), lst(MInst.instB(instChain.get(1).query(pick(t, 1)), lst(mtronParser.<Obj>pick(t, 2)))))));
+                        .map(t -> MInst.instB(instChain.get(0), lst(MInst.instB(instChain.get(1).query(pick(t, 1)), lst(mtronParser.<Obj>pick(t, 2))))))).trim();
     }
 
     private static Parser generate_sugar_parser(final fURI tid, final Parser startToken, final int argCount, final Parser endToken) {

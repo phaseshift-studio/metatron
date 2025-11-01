@@ -19,15 +19,22 @@
 package studio.phaseshift.metatron;
 
 import org.junit.jupiter.api.BeforeAll;
+import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.lang.mach.machInstSet;
+import studio.phaseshift.metatron.lang.mkv.mkvSpace;
+import studio.phaseshift.metatron.lang.mtron.mtronInstSet;
 import studio.phaseshift.metatron.lang.mtron.type.Fail;
 import studio.phaseshift.metatron.lang.mtron.type.NoObj;
 import studio.phaseshift.metatron.lang.mtron.type.Obj;
 import studio.phaseshift.metatron.lang.mtron.mtronParser;
+import studio.phaseshift.metatron.lang.mvec.mvecInstSet;
+import studio.phaseshift.metatron.space.Router;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.fail;
+import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MUri.uri;
 
@@ -38,6 +45,10 @@ public class MetatronTest {
     @BeforeAll
     public static void begin() {
         BootLoader.load(rec(uri("mode"), uri("testing")));
+        mtronInstSet.of(f("/mnt/lang/m"));
+        machInstSet.of(f("/mnt/lang/mach"));
+        mvecInstSet.of(f("/mnt/lang/mvec"));
+        mkvSpace.of(f("/usr/#"), fURI.NULL).vid(f("/mnt/usr"));
     }
 
     public void testMatches(final String lhs, final String rhs, final boolean matches) {

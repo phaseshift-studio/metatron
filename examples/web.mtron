@@ -1,5 +1,16 @@
-mweb(host    => <http://localhost:8099>,
-     pattern => <http://#>,
-     route   => [
-       / => examples/www
-     ]).at(/mnt/web)
+/mnt/lang/mkv   -> */mkv;
+/mnt/lang/mweb  -> */mweb;
+/mnt/lang/mgrph -> */mgrph;
+/mnt/lang/mvec  -> */mvec;
+/mnt/lang/mach  -> */mach;
+/mnt/lang/mllm  -> */mllm;
+---------------------------
+mkv(pattern     => /usr/#).@/mnt/usr;
+mkv(pattern     => /shared/#).@/mnt/shared;
+mollama(host    => <http://localhost:11434>,
+        pattern => /ollama/#).@/mnt/ollama;
+mweb(host       => <http://localhost:8777>,
+     pattern    => <http://#>,
+     route      => [
+           /    => examples/www,
+       /docs    => target/docs]).@/mnt/web

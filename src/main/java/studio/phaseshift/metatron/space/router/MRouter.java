@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.space.router;
 
+import studio.phaseshift.metatron.Registry;
 import studio.phaseshift.metatron.furi.Qs;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.mtron.type.NoObj;
@@ -57,7 +58,7 @@ public class MRouter implements Router {
         this.server = new MServer(host);
         this.spaces.put(f("+/#"), new StackSpace(f("+/#"), this.vid.extend("stack")));
     }
-    
+
     private static Obj appendOnRead(final boolean send, final Obj base, final Obj addition) {
         return addition.isNoObj() ? base : (send ? base.append(MRel.of(addition.vid().toUri(), addition)) : base.append(addition));
     }
@@ -98,7 +99,7 @@ public class MRouter implements Router {
                 .filter(kv -> pattern.matches(kv.getKey()))
                 .findAny()
                 .ifPresent(kv -> {
-                    LOG.error("%s and %s have overlapping address spaces", pattern, kv.getKey());
+                    LOG.error("%s and %s have overlapping address spaces: %s <=> %s", pattern, kv.getKey(), space, kv.getValue());
                 });
         this.spaces.put(pattern, space);
         Space.Helper.spaceOpenLog(this, space);
@@ -130,6 +131,8 @@ public class MRouter implements Router {
                 .findAny();
         if (space.isPresent())
             return space.get();
+        else if (Registry.singleton().has(match))
+            return Registry.singleton().load(match);
         else if (!BOOTING)
             throw MTronException.of("no structure supports pattern %s", match.toUri(true));
         else

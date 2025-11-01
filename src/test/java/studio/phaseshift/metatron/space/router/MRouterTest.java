@@ -20,9 +20,10 @@ package studio.phaseshift.metatron.space.router;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.mtron.type.NoObj;
 import studio.phaseshift.metatron.space.Router;
-import studio.phaseshift.metatron.space.kv.KVSpace;
+import studio.phaseshift.metatron.lang.mkv.mkvSpace;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.furi.fURI.f;
@@ -40,9 +41,10 @@ public class MRouterTest extends RouterTest {
 
     @Test
     public void testCloseSpace() {
-        KVSpace mnt = new KVSpace(f("/mnt/#"), f("/mnt"));
+        mkvSpace mnt = new mkvSpace(f("/mnt/#"), f("/mnt"));
         assertFalse(Router.global().hasSpaceFor(f("/test/a")));
-        KVSpace test = new KVSpace(f("/test/#"), f("/mnt/test"));
+        mkvSpace test =  mkvSpace.of(f("/test/#"), fURI.NULL).vid(f("/mnt/test")).as();
+        Router.writeToSpace(test);
         assertTrue(Router.global().hasSpaceFor(f("/test/a")));
         assertTrue(Router.global().hasSpaceFor(f("/test/a")));
         Router.global().write("/test/a", jnt(10));
