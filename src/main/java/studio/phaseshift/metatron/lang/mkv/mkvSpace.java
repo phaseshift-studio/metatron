@@ -118,15 +118,7 @@ public class mkvSpace extends MSpace<Map<fURI, Obj>> implements Space {
     public Iterator<Obj> iterator() {
         return this.jvm().entrySet().stream().map(kv -> MRel.of(kv.getKey().toUri(), kv.getValue())).map(r -> (Obj) r).iterator();
     }
-
-
-
-
-
-
-
-
-
+    
     /*@Override
     public long count() {
         return this.jvm.size();

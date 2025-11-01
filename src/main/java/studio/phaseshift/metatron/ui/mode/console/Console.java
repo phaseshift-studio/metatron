@@ -244,7 +244,7 @@ public class Console implements Mode {
                             builder.append(buffer);
                             try {
                                 final String objString = o.toString();
-                                final String compiledString = o.isCode() ? o.resolve(NoObj.noobj()).toString() : null;
+                                final String compiledString = o.isCode() ? ObjStringSerializer.prettyPrintCode(o.resolve(NoObj.noobj()).as()) : null;
                                 final int yDistance = StringUtil.countLines(objString);
                                 final int yyDistance = null == compiledString ? 0 : (StringUtil.countLines(compiledString) + 1);
                                 Graphitty.out(this.terminal.output(), "{{v%d&-X-&Xv&|%d}}%s", yDistance, 8, objString);

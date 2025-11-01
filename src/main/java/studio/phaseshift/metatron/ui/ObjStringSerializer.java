@@ -46,6 +46,12 @@ public class ObjStringSerializer implements ObjSerializer<String> {
         return new Builder();
     }
 
+    public static String prettyPrintCode(final Call code) {
+        StringBuilder sb = new StringBuilder();
+        return prettyPrintCode(sb,code,0,8).toString();
+        
+    }
+    
     public static StringBuilder prettyPrintCode(final StringBuilder sb, final Obj call, final int depth, final int leftMargin) {
         if (call.isCode()) {
             for (final Inst inst : call.<Code>as().codeValue()) {

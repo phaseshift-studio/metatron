@@ -38,7 +38,9 @@ import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.furi.fURI.f;
+import static studio.phaseshift.metatron.lang.mtron.mtronFluent.StartLess.id_;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MBool.bool;
+import static studio.phaseshift.metatron.lang.mtron.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MLst.lst;
@@ -96,6 +98,7 @@ public class mtronInstSet extends MInstSet {
     public static final fURI VID_TID = INST_TID.extend("vid");
     public static final fURI TYPE_TID = INST_TID.extend("type");
     public static final fURI GET_TID = INST_TID.extend("get");
+    public static final fURI FAILURE_TID = INST_TID.extend("failure");
     public static final fURI AS_TID = INST_TID.extend("as");
     public static final fURI AT_TID = INST_TID.extend("at");
     public static final fURI IS_TID = INST_TID.extend("is");
@@ -199,7 +202,7 @@ public class mtronInstSet extends MInstSet {
         } else if (!rhs.isCall() && (lhs.isPoly() || rhs.isPoly())) {
             return NoObj.noobj();
         } else {
-            return rhs.apply(lhs);
+            return !rhs.isInstObj() ? rhs.apply(lhs) : id_().addInst(rhs.as()).apply(lhs); // TODO: hack to force type safe compilation
         }
     }
 
@@ -330,7 +333,7 @@ public class mtronInstSet extends MInstSet {
                 }),
                 instC(WITHIN_TID.dom(LST_TID).rng(LST_TID), lst(T(OBJS_ID)), (lhs, inst) -> lst(inst.arg(0).apply(objs(lhs.stream().flatMap(Obj::elements))).stream().toList())),
                 instC(WITHIN_TID.dom(REC_TID).rng(REC_TID), lst(T(OBJS_ID)), (lhs, inst) -> rec(lhs.elements().map(r -> inst.arg(0).apply(r).<Rel>as()).collect(Collectors.toMap(Rel::first, Rel::second, Obj::append, LinkedHashMap<Obj, Obj>::new)))),
-
+                instC(FAILURE_TID.dom(ALL.maybeSome()).rng(FAIL_TID), lst(T(ALL.maybe())), (lhs, inst) -> fail(MTronException.of("%s", inst.arg(0).toString()))),
                 instC(BARRIER_TID.dom(OBJS_ID).rng(OBJS_ID), lst(T(OBJS_ID)), (lhs, inst) -> inst.arg(0).apply(lhs)),
                 instC(COUNT_TID.dom(ALL.maybeSome()).rng(INT_TID), lst(), (lhs, inst) -> inst.seed().jvm(lhs.stream().reduce(inst.seed(), (a, b) -> jnt(a.intValue() + b.c().max())).intValue()/* * inst.c().max()*/), jnt(0)),
                 instC(SUM_TID.dom(INT_TID.maybeSome()).rng(INT_TID), lst(), (lhs, inst) -> inst.seed().jvm(lhs.stream().reduce(inst.seed(), (a, b) -> ((Int) a).plus((Int) b)).intValue()), jnt(0)),

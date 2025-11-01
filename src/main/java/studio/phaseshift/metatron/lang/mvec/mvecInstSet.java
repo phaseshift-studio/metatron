@@ -1,6 +1,6 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
- * Copyright (C) 2025- PhaseShift Studio, LLC 
+ * Copyright (C) 2025- PhaseShift Studio, LLC
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -20,11 +20,13 @@ package studio.phaseshift.metatron.lang.mvec;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.mtron.type.Inst;
-import studio.phaseshift.metatron.lang.mtron.type.impl.MInstSet;
+import studio.phaseshift.metatron.lang.mtron.type.Lst;
 import studio.phaseshift.metatron.lang.mtron.type.Obj;
 import studio.phaseshift.metatron.lang.mtron.type.Type;
+import studio.phaseshift.metatron.lang.mtron.type.impl.MInstSet;
 import studio.phaseshift.metatron.lang.mtron.type.impl.MType;
 import studio.phaseshift.metatron.lang.mweb.JSONTranslator;
+import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -33,12 +35,12 @@ import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.furi.fURI.f;
+import static studio.phaseshift.metatron.lang.mtron.mtronFluent.StartLess.*;
+import static studio.phaseshift.metatron.lang.mtron.mtronInstSet.*;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MReal.real;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MType.T;
-import static studio.phaseshift.metatron.lang.mtron.mtronFluent.StartLess.*;
-import static studio.phaseshift.metatron.lang.mtron.mtronInstSet.*;
 
 /*
 @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -80,6 +82,8 @@ public class mvecInstSet extends MInstSet {
                 instC(SQRT_TID.dom(REAL_TID).rng(REAL_TID), lst(), (lhs, inst) -> lhs.jvm(Math.sqrt(lhs.realValue()))),
                 instC(DOT_TID.dom(VEC_TID).rng(ALL), lst(T(VEC_TID)), (lhs, inst) -> {
                             Obj result = null;
+                            if (lhs.<Lst>as().count() != inst.arg(0).<Lst>as().count())
+                                throw MTronException.of("dot product requires equal length vecs: %d != %d", lhs.<Lst>as().count(), inst.arg(0).<Lst>as().count());
                             for (int i = 0; i < lhs.lstValue().size(); i++) {
                                 Obj pairwise = mult_(inst.arg(0).lstValue().get(i)).apply(lhs.lstValue().get(i));
                                 result = result == null ? pairwise : plus_(result).apply(pairwise);

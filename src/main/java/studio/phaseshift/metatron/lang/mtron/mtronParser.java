@@ -254,7 +254,7 @@ public class mtronParser {
     }
 
     public static Parser m_fail() {
-        return seq(of(FAIL_TID.toString()), opt(of("::"), "::"), of('['), lst_internal(), of(']'), m_vid_postfix())
+        return seq(choice(of(FAIL_TID.small().toString()), of(FAIL_TID.toString())), opt(of("::"), "::"), of('['), m_obj(), of(']'), m_vid_postfix())
                 .map(t -> fail(MTronException.of("%s", pick(t, 3).toString())));
     }
 
@@ -380,6 +380,8 @@ public class mtronParser {
                 //branch_parser,
                 generate_sugar_parser(List.of(IS_TID, EQ_TID), of("?="), 1),
                 generate_sugar_parser(List.of(IS_TID, GT_TID), of("?>"), 1),
+                generate_sugar_parser(List.of(IS_TID, GTE_TID), of("?>="), 1),
+                generate_sugar_parser(List.of(IS_TID, LTE_TID), of("?<="), 1),
                 generate_sugar_parser(List.of(IS_TID, LT_TID), of("?<"), 1),
                 generate_sugar_parser(List.of(IS_TID, NEQ_TID), of("?!="), 1),
                 generate_sugar_parser(ISA_TID, of("?"), 1),

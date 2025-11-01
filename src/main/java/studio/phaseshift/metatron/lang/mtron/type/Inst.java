@@ -246,7 +246,7 @@ public interface Inst extends Call {
         Inst cinst = this.args().isEmpty() ? this.args(lst(NoObj.noobj())).resolve(clhs) : this.resolve(clhs); // TODO: this isn't a general solution (multi slotted args won't work).
         Obj rhs = NoObj.noobj();
         boolean modulateC = false;
-        if (BootLoader.TYPE_CHECK && !lhs.isFail()  && !clhs.matches(cinst.dom()) && lhs.unique()) {
+        if (BootLoader.TYPE_CHECK && !lhs.isFail() && !clhs.matches(cinst.dom()) && lhs.unique()) {
             if (clhs.uniqueC().isOne() && !clhs.c().isOne()) { // && cinst.dom().c().within(cInt.SOME())) {
                 clhs = clhs.c(cInt::one);
                 cinst = this.resolve(clhs);
@@ -257,28 +257,30 @@ public interface Inst extends Call {
                         .cause(mexcept("lhs {{m}}range{{/m}} does not match inst {{m}}domain{{/m}}: %s {{r}}=/>{{/r}} %s [%s]", clhs.rng(), cinst.dom(), cinst))
                         .asFail();
         }
-        if (null == cinst.f())
-            rhs = mexcept("inst resolution failure").cause(mexcept("unable to determine inst function: %s", cinst)).asFail();
-        cinst = Helpers.applyArgs(clhs, cinst);
-        Router.stack().push(cinst.args());
-        try {
-            if (!rhs.isFail() || cinst.isCatch()) {
-                rhs = Objs.trySingleton(cinst.f().apply(clhs, cinst));
-                Graphitty.log(cinst).trace("%s ({{m}}lhs{{/m}}) => %s ({{m}}inst{{/m}}) => %s ({{m}}rhs{{/m}}) evaluated {{g}}successfully{{/g}}", clhs, cinst, rhs);
+        if (!clhs.isFail() || cinst.isCatch()) {
+            if (null == cinst.f())
+                rhs = mexcept("inst resolution failure").cause(mexcept("unable to determine inst function: %s", cinst)).asFail();
+            cinst = Helpers.applyArgs(clhs, cinst);
+            Router.stack().push(cinst.args());
+            try {
+                if (!clhs.isFail() || cinst.isCatch()) {
+                    rhs = Objs.trySingleton(cinst.f().apply(clhs, cinst));
+                    Graphitty.log(cinst).trace("%s ({{m}}lhs{{/m}}) => %s ({{m}}inst{{/m}}) => %s ({{m}}rhs{{/m}}) evaluated {{g}}successfully{{/g}}", clhs, cinst, rhs);
+                }
+            } catch (final Exception e) {
+                rhs = mexcept("apply failure: %s {{r}}=>{{X}} %s", clhs, cinst).cause(e).asFail();
+                //e.printStackTrace();
+            } finally {
+                Router.stack().pop();
             }
-        } catch (final Exception e) {
-            rhs = mexcept("inst evaluation failure [%s]", cinst).cause(e).asFail();
-            e.printStackTrace();
-        } finally {
-            Router.stack().pop();
+            if (BootLoader.TYPE_CHECK && !rhs.isFail() && !rhs.matches(cinst.rng()))
+                rhs = mexcept("inst resolution failure")
+                        .cause(mexcept("rhs does not match inst {{m}}range{{/m}}: %s {{r}}=/>{{/r}} %s [%s]", rhs, cinst.rng(), cinst))
+                        .asFail();
+        } else {
+            rhs = clhs; // propagate fail through inst unless it's a catch inst
         }
-        if (BootLoader.TYPE_CHECK && !rhs.isFail() && !rhs.matches(cinst.rng()))
-            rhs = mexcept("inst resolution failure")
-                    .cause(mexcept("rhs does not match inst {{m}}range{{/m}}: %s {{r}}=/>{{/r}} %s [%s]", rhs, cinst.rng(), cinst))
-                    .asFail();
-        //final cInt cinstc = false && cinst.isReducing() ? cInt.ONE() : cinst.c();
         final cInt cc = cinst.c();
-        //return false && rhs.isObjs() ? rhs : (modulateC ? rhs.c(c -> c.mult(lhs.c())) : rhs).c(c -> c.mult(cc));
         return modulateC ? rhs.c(c -> c.mult(lhs.c()).mult(cc)) : rhs.c(c -> c.mult(cc));
     }
 

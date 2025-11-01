@@ -23,6 +23,7 @@ import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
+import studio.phaseshift.metatron.util.StringUtil;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -100,6 +101,8 @@ public interface Lst extends Poly, PlusMonoid.O<Lst> {
             if (step.equals("+") || step.equals("#")) {
                 result = objs(this.elements());
             } else {
+                if (!StringUtil.isInt(step))
+                    throw MTronException.of("path segment is not an int: %s", step);
                 final Int k = jnt(Long.parseLong(step));
                 result = this.jvm().get(k.intValue().intValue());
             }

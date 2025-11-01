@@ -22,6 +22,7 @@ import studio.phaseshift.metatron.lang.mtron.type.Fail;
 import studio.phaseshift.metatron.ui.Graphitty;
 
 import java.util.Arrays;
+import java.util.Objects;
 
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MFail.fail;
 
@@ -104,6 +105,17 @@ public class MTronException extends RuntimeException {
         return this.getMessage();
     }
 
+    @Override
+    public boolean equals(final Object other) {
+        return other instanceof MTronException && this.getMessage().equals(((MTronException) other).getMessage());
+    }
+    
+    @Override
+    public int hashCode() {
+        return Objects.hash(this.getMessage());
+    }
+    
+    
     @FunctionalInterface
     public interface ThrowingSupplier<T> {
         public T get() throws Exception;

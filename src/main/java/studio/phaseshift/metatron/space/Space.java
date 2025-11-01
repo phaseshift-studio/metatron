@@ -22,7 +22,6 @@ import studio.phaseshift.metatron.furi.Qs;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.mach.type.impl.MMachine;
 import studio.phaseshift.metatron.lang.mtron.type.*;
-import studio.phaseshift.metatron.lang.mtron.type.impl.MRel;
 import studio.phaseshift.metatron.ui.Graphitty;
 
 import java.io.Closeable;
@@ -35,6 +34,7 @@ import java.util.function.Function;
 import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.lang.mtron.type.NoObj.noobj;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MObjs.objs;
+import static studio.phaseshift.metatron.lang.mtron.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.Tuple.Pair;
 
@@ -179,13 +179,11 @@ public interface Space extends Obj, Closeable {
             if (null != base) {
                 final Poly poly = base.get1();
                 Graphitty.log(space).trace("base poly found at %s: %s", base.get0(), poly);
-                unrollPoly(new LinkedHashMap<>(), base.get0(), poly, pattern).entrySet().stream().forEach(kv -> {
-                    map.put(kv.getKey().toUri(), kv.getValue());
-                });
+                unrollPoly(new LinkedHashMap<>(), base.get0(), poly, pattern).forEach((key, value) -> map.put(key.toUri(), value));
             }
             return pattern.isNode() ?
                     objs(map.values()) :
-                    objs(map.entrySet().stream().map(kv -> (Obj) MRel.of(kv.getKey(), kv.getValue())).toList());
+                    objs(map.entrySet().stream().map(kv -> (Obj) rel(kv.getKey(), kv.getValue())).toList());
         }
 
         public static void resolveWrite(final Space space, final fURI vid, final Obj obj, final BiConsumer<fURI, Obj> directWriter, final Function<fURI, Map<fURI, Obj>> directReader) {

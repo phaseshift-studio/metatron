@@ -1,6 +1,6 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
- * Copyright (C) 2025- PhaseShift Studio, LLC 
+ * Copyright (C) 2025- PhaseShift Studio, LLC
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -202,6 +202,19 @@ public class mtronInstSetTest extends MetatronTest {
         super.testCode(code, expected);
     }
 
+    @ParameterizedTest
+    @CsvSource(value = {
+            //"1.plus(1).failure('bad').plus(2).plus(3)                                 % fail::['bad']",
+            "1.plus(1).failure('bad').plus(2).catch(34).plus(3)                       % 37",
+            //  "1.plus(mult(failure('bad')))                                             % fail::['bad']",
+            //  "1.plus(mult(failure('bad'))).mult(23)                                    % fail::['bad']",
+            "1.plus(mult(failure('bad'))).mult(23).catch(34).plus(2)                  % 36",
+            // dummy without ending comma so it's easier to add more test cases
+            "1.plus(1)                                                                % 2"
+    }, delimiter = '%')
+    public void testFailureCatch(final String code, final String expected) {
+        super.testCode(code, expected);
+    }
 
 
     @ParameterizedTest

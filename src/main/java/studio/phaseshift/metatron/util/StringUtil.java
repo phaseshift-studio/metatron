@@ -19,11 +19,23 @@
 package studio.phaseshift.metatron.util;
 
 import java.util.function.Function;
+import java.util.regex.Pattern;
 
 public final class StringUtil {
 
+    private static final Pattern INT_PATTERN = Pattern.compile("-?\\d");
+    private static final Pattern REAL_PATTERN = Pattern.compile("-?\\d+(\\.\\d+)");
+
     private StringUtil() {
 
+    }
+
+    public static boolean isInt(final String s) {
+        return INT_PATTERN.matcher(s).matches();
+    }
+
+    public static boolean isReal(final String s) {
+        return REAL_PATTERN.matcher(s).matches();
     }
 
     public static int countLines(final String str) {
