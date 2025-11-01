@@ -47,7 +47,7 @@ import static studio.phaseshift.metatron.lang.mtron.type.impl.MUri.uri;
  */
 public class mllmInstSet extends MInstSet {
 
-    public static final fURI MLLM_TID = f("/m/llm");
+    public static final fURI MLLM_TID = f("/mllm");
     public static final fURI INST_TID = MLLM_TID.extend("inst");
 
     public static final fURI TOOL_TID = MLLM_TID.extend("tool");
