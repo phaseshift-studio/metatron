@@ -39,6 +39,7 @@ import java.util.stream.Stream;
 import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.lang.mtron.mtronFluent.StartLess.id_;
+import static studio.phaseshift.metatron.lang.mtron.type.NoObj.noobj;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MInst.instC;
@@ -161,7 +162,7 @@ public class mtronInstSet extends MInstSet {
 
     @Override
     public Set<Obj> consts() {
-        return Stream.of(NoObj.noobj()).collect(Collectors.toSet());
+        return Stream.of(noobj()).collect(Collectors.toSet());
     }
 
     private Obj crossPoly(Obj lhs, Obj rhs) {
@@ -184,7 +185,7 @@ public class mtronInstSet extends MInstSet {
                     break;
                 }
             }
-            return result.isEmpty() || !found.get() ? NoObj.noobj() : lhs.jvm(result);
+            return result.isEmpty() || !found.get() ? noobj() : lhs.jvm(result);
         } else if (lhs.isRec() && rhs.isRec()) {
             final Map<Obj, Obj> result = new LinkedHashMap<>();
             final AtomicBoolean found = new AtomicBoolean(false);
@@ -198,9 +199,9 @@ public class mtronInstSet extends MInstSet {
                             result.compute(rKey.apply(lKey), (k, v) -> null == v ? r : v.append(r));
                         }
                     }));
-            return result.isEmpty() || !found.get() ? NoObj.noobj() : lhs.jvm(result);
+            return result.isEmpty() || !found.get() ? noobj() : lhs.jvm(result);
         } else if (!rhs.isCall() && (lhs.isPoly() || rhs.isPoly())) {
-            return NoObj.noobj();
+            return noobj();
         } else {
             return !rhs.isInstObj() ? rhs.apply(lhs) : id_().addInst(rhs.as()).apply(lhs); // TODO: hack to force type safe compilation
         }
@@ -211,24 +212,24 @@ public class mtronInstSet extends MInstSet {
         return Stream.of(
                 instC(CATCH_TID.dom(ALL).rng(ALL.maybeSome()), lst(T(ALL.maybeSome())), (lhs, inst) -> lhs.isFail() ? inst.arg(0).apply(lhs) : lhs),
                 instC(START_TID.dom(fURI.NOOBJ.zero()).rng(A.maybeSome()), lst(T(A.maybeSome())), (lhs, inst) -> inst.arg(0)),
-                instC(END_TID.dom(OBJS_ID).rng(NOOBJ_TID.zero()), lst(), (lhs, inst) -> NoObj.noobj()),
+                instC(END_TID.dom(OBJS_ID).rng(NOOBJ_TID.zero()), lst(), (lhs, inst) -> noobj()),
                 instC(PRINT_TID.dom(ALL).rng(ALL), lst(T(OBJS_ID)), (lhs, inst) -> inst.args().elements().peek(o -> Graphitty.stdout().println(Graphitty.string(o))).filter(a -> false).findAny().orElse(lhs)),
                 instC(AT_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(T(URI_TID)), (lhs, inst) -> lhs.isNoObj() ? Router.readFromSpace(inst.arg(0).uriValue()).vid(inst.arg(0).uriValue()) : lhs.vid(inst.arg(0).uriValue())),
-                instC(HAS_TID.dom(REC_TID).rng(REC_TID.maybe()), lst(T(ALL)), (lhs, inst) -> lhs.<Rec>as().elements().map(Rel::first).anyMatch(r -> r.matches(inst.arg(0))) ? lhs : NoObj.noobj()),
+                instC(HAS_TID.dom(REC_TID).rng(REC_TID.maybe()), lst(T(ALL)), (lhs, inst) -> lhs.<Rec>as().elements().map(Rel::first).anyMatch(r -> r.matches(inst.arg(0))) ? lhs : noobj()),
                 instC(ID_TID.dom(A).rng(A), lst(), (lhs, inst) -> lhs),
                 instC(ID_TID.dom(A.maybeSome()).rng(A.maybeSome()), lst(), (lhs, inst) -> lhs),
                 instC(OR_TID.dom(A).rng(A.maybe()), lst(T(BOOL_TID).c(cInt::some)), (lhs, inst) -> objs(lhs.stream().filter(l -> inst.args().elements().anyMatch(a -> a.apply(l).boolValue())))),
                 instC(APPLY_TID.dom(ALL).rng(ALL), lst(T(ALL)), (lhs, inst) -> lhs.apply(inst.arg(0))),
                 instC(MAP_TID.dom(ALL).rng(A), lst(T(A)), (lhs, inst) -> inst.arg(0)),
-                instC(FILTER_TID.dom(A).rng(A.maybe()), lst(T(ALL.maybe())), (lhs, inst) -> inst.arg(0).isNoObj() ? NoObj.noobj() : lhs),
+                instC(FILTER_TID.dom(A).rng(A.maybe()), lst(T(ALL.maybe())), (lhs, inst) -> inst.arg(0).isNoObj() ? noobj() : lhs),
                 instC(SIDE_TID.dom(A).rng(A), lst(T(ALL)), (lhs, inst) -> Optional.of(inst.arg(0).apply(lhs)).map(x -> (Obj) null).orElse(lhs)),
                 instC(MAP_TID.dom(ALL).rng(ALL.maybe()), lst(T(ALL)), (lhs, inst) -> inst.arg(0)),
                 instC(TID_TID.dom(ALL).rng(URI_TID), lst(), (lhs, inst) -> lhs.tid().toUri()),
                 instC(VID_TID.dom(ALL).rng(ALL), lst(T(URI_TID)), (lhs, inst) -> lhs.vid(inst.arg(0).uriValue())),
-                instC(VID_TID.dom(ALL).rng(URI_TID), lst(), (lhs, inst) -> null == lhs.vid() ? NoObj.noobj() : lhs.vid().toUri()),
+                instC(VID_TID.dom(ALL).rng(URI_TID), lst(), (lhs, inst) -> null == lhs.vid() ? noobj() : lhs.vid().toUri()),
                 instC(ELSE_TID.dom(ALL.maybe()).rng(ALL), lst(T(ALL.maybe())), (lhs, inst) -> lhs.isNoObj() ? inst.arg(0) : lhs), // TODO: rec args needs resolution on generics connected
-                instC(IS_TID.dom(ALL.maybe()).rng(ALL.maybe()), lst(T(ALL)), (lhs, inst) -> inst.arg(0).boolValue() ? lhs : NoObj.noobj()), // TODO: generics are not working for some reason
-                instC(ISA_TID.dom(ALL.maybe()).rng(ALL.maybe()), lst(T(ALL)), (lhs, inst) -> lhs.matches(inst.arg(0)) ? lhs : NoObj.noobj()),
+                instC(IS_TID.dom(ALL.maybe()).rng(ALL.maybe()), lst(T(ALL)), (lhs, inst) -> inst.arg(0).boolValue() ? lhs : noobj()), // TODO: generics are not working for some reason
+                instC(ISA_TID.dom(ALL.maybe()).rng(ALL.maybe()), lst(T(ALL)), (lhs, inst) -> lhs.matches(inst.arg(0)) ? lhs : noobj()),
                 instC(IN_TID.dom(ALL.maybe()).rng(BOOL_TID), lst(T(ALL.maybe())), (lhs, inst) -> bool(lhs.matches(inst.arg(0)))),
                 instC(GET_TID.dom(REC_TID).rng(OBJS_ID), lst(T(URI_TID)), (lhs, inst) -> lhs.<Rec>as().at(inst.arg(0))),
                 instC(GET_TID.dom(LST_TID).rng(OBJS_ID), lst(T(INT_TID)), (lhs, inst) -> lhs.<Lst>as().at(inst.arg(0))),
@@ -251,7 +252,7 @@ public class mtronInstSet extends MInstSet {
                                         .map(rel -> rel.first()
                                                 .apply(o)
                                                 .andThen(oo -> oo.isNoObj() ?
-                                                        rel.second(NoObj.noobj()) :
+                                                        rel.second(noobj()) :
                                                         rel.second(rel.second().apply(o))).apply(o))//.choose(Obj::isNoObj, NoObj.single(), r -> rel.second(rel.second().apply(o))))
                                         .map(Obj::<Rel>as)
                                         .filter(p -> !p.first().isNoObj() && !p.second().isNoObj())
@@ -261,7 +262,7 @@ public class mtronInstSet extends MInstSet {
                 instC(SPLIT_TID.dom(ALL).rng(ALL.maybeSome()), lst(T(ALL.some())), (lhs, inst) -> objs(inst.arg(0).stream().map(o -> o.apply(lhs)))),
                 instC(SPLIT_TID.dom(ALL).rng(ALL.maybeSome()), lst(T(ALL)), (lhs, inst) -> objs(inst.arg(0).apply(lhs))),
                 /// ///////////////////////////////////////////////////////////////////////////////////////////////////
-                instC(CHOOSE_TID.dom(ALL).rng(REL_TID.maybe()), lst(T(REC_TID)), (lhs, inst) -> inst.arg(0).<Rec>as().elements().map(Obj::<Rel>as).map(e -> e.<Rel>jvm(Tuple.Pair.with(e.first().apply(lhs), e.second()))).filter(e -> !e.first().isNoObj()).findFirst().map(e -> e.<Obj>jvm(Tuple.Pair.with(e.first(), e.second().apply(lhs)))).orElse(NoObj.noobj())),
+                instC(CHOOSE_TID.dom(ALL).rng(REL_TID.maybe()), lst(T(REC_TID)), (lhs, inst) -> inst.arg(0).<Rec>as().elements().map(Obj::<Rel>as).map(e -> e.<Rel>jvm(Tuple.Pair.with(e.first().apply(lhs), e.second()))).filter(e -> !e.first().isNoObj()).findFirst().map(e -> e.<Obj>jvm(Tuple.Pair.with(e.first(), e.second().apply(lhs)))).orElse(noobj())),
 
                 /// ///////////////////////////////////////////////////////////////////////////////////////////////////
                 instC(MERGE_TID.dom(LST_TID).rng(OBJS_ID), lst(), (lhs, inst) -> objs(lhs.elements())),
@@ -361,24 +362,19 @@ public class mtronInstSet extends MInstSet {
                 instC(SELECT_TID.dom(LST_TID).rng(LST_TID.maybe()), lst(T(LST_TID)), (lhs, inst) -> crossPoly(lhs, inst.arg(0))),
                 //instC(SELECT_TID.dom(ALL).rng(REC_TID.maybe()), lst(T(REC_TID)), (lhs, inst) -> inst.arg(0).<Rec>as().jvm(inst.arg(0).<Rec>as().<Rel>elementStream().map(r -> Tuple.Pair.with(r.first().apply(lhs), r.second().apply(lhs))).collect(Collectors.toMap(Tuple.Pair::get0, Tuple.Pair::get1, Obj::append, LinkedHashMap::new)))),
                 // instC(SELECT_TID.dom(ALL).rng(LST_TID.maybe()), lst(T(LST_TID)), (lhs, inst) -> inst.arg(0).<Lst>as().jvm(inst.arg(0).<Lst>as().elementStream().map(r -> r.apply(lhs)).toList())),
-                instC(WHERE_TID.dom(ALL.maybe()).rng(ALL.maybe()), lst(T(ALL)), (lhs, inst) -> lhs.matches(inst.arg(0)) ? lhs : NoObj.noobj()),
-                instC(GROUP_TID.dom(REC_TID).rng(REC_TID), lst(T(REC_TID)), (lhs, inst) -> {
+                instC(WHERE_TID.dom(ALL.maybe()).rng(ALL.maybe()), lst(T(ALL)), (lhs, inst) -> lhs.matches(inst.arg(0)) ? lhs : noobj()),
+                instC(GROUP_TID.dom(ALL.maybeSome()).rng(REC_TID), lst(T(REC_TID)), (lhs, inst) -> {
                     final Map<Obj, Obj> result = new LinkedHashMap<>();
-                    final Map<Tuple.Pair<Obj, Obj>, Obj> resultK = new LinkedHashMap<>();
-                    final Map<Tuple.Pair<Obj, Obj>, Obj> resultV = new LinkedHashMap<>();
-                    lhs.iterator().forEachRemaining(l -> {
-                        final Map<Obj, Obj> lhsMap = l.recValue();
-                        inst.arg(0).iterator().forEachRemaining(r -> {
-                            final Map<Obj, Obj> rhsMap = r.recValue();
-                            lhsMap.forEach((lk, lv) -> {
-                                rhsMap.forEach((rk, rv) -> {
-                                    resultK.compute(Tuple.Pair.with(rk, rv), (k, v) -> null == v ? lk : v.append(lk));
-                                    resultV.compute(Tuple.Pair.with(rk, rv), (k, v) -> null == v ? lv : v.append(lv));
-                                });
-                            });
+                    lhs.stream().forEach(e -> {
+                        inst.arg(0).<Rec>as().elements().forEach(kv -> {
+                            final Obj kk = kv.first().isCall() ? kv.first().apply(e) : (e.matches(kv.first()) ? e : noobj());
+                            if (!kk.isNoObj()) {
+                                final Obj vv = kv.second().apply(e);
+                                if (!vv.isNoObj()) // TODO: stream through keys to get matching key for incur-append on grouping to the same key
+                                    result.compute(kk, (k, v) -> (v == null) ? vv : v.append(vv));
+                            }
                         });
                     });
-                    resultK.forEach((k, v) -> result.put(k.get0().apply(v), k.get1().apply(resultV.get(k))));
                     return rec(result);
                 })
 

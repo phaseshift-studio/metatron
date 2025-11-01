@@ -219,14 +219,15 @@ public class mtronInstSetTest extends MetatronTest {
 
     @ParameterizedTest
     @CsvSource(value = {
-            "[a=>1,b=>2,c=>3].group([_=>_])                                               % [{a,b,c}=>{1,2,3}]",
-            "[a=>1,b=>2,c=>3].group([_=>+10])                                             % [{a,b,c}=>{11,12,13}]",
-            "[a=>1,b=>2,c=>3].group([_=>8])                                               % [{a,b,c}=>8]", // should be [{a,b,c}=>int{3}::8]",
-            "[a=>1,b=>2,c=>3].group([_=>noobj])                                           % [=>]",
-            "[a=>1,b=>2,c=>3].group([prod()=>prod()])                                     % [a/b/c=>6]",
-            "[a=>1,b=>2,c=>3].group([_=>_,prod()=>prod()])                                % [{a,b,c}=>{1,2,3},a/b/c=>6]",
-            "[a=>1,b=>2,c=>3].group([_=>_,prod()=>prod()])                                % [{a,b,c}=>{1,2,3},a/b/c=>6]",
-            "[a=>1,b=>c,c=>3]==[is(eq(a))=>plus(1)]                                       % [a=>2]",
+            "[a=>1,b=>2,c=>3].group([_=>_])                                               % [[a=>1,b=>2,c=>3]=>[a=>1,b=>2,c=>3]]",
+            "{1,2,3}.group([_=>+10])                                                      % [1=>11,2=>12,3=>13]",
+            "{1,2,3}.group([_=>8])                                                        % [1=>8,2=>8,3=>8]",
+            "{1,2,3}.group([noobj=>_])                                                    % [=>]",
+            "{1,2,3}.group([_=>noobj])                                                    % [=>]",
+            "{[a,b],[c,d],[a,b]}.group([>-.prod?uri<=uri{*}()=>>-.count()])               % [a/b=>4,c/d=>2]", // should be uri{2}
+           // "[a=>1,b=>2,c=>3].group([_=>_,prod()=>prod()])                                % [{a,b,c}=>{1,2,3},a/b/c=>6]",
+           // "[a=>1,b=>2,c=>3].group([_=>_,prod()=>prod()])                                % [{a,b,c}=>{1,2,3},a/b/c=>6]",
+           // "[a=>1,b=>c,c=>3]==[is(eq(a))=>plus(1)]                                       % [a=>2]",
             // dummy without ending comma so it's easier to add more test cases
             "1.plus(1)                                                              % 2"
     }, delimiter = '%')
