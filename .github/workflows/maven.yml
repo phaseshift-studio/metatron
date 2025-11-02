@@ -21,8 +21,6 @@ jobs:
           cache: maven
       - name: Install with Maven
         run: mvn clean install --file pom.xml
-      - name: Package with Maven
-        run: mvn -B package --file pom.xml
       - name: Install Python Packages
         run: |
           python -m pip install --upgrade pip

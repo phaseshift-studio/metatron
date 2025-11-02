@@ -1,6 +1,6 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
- * Copyright (C) 2025- PhaseShift Studio, LLC 
+ * Copyright (C) 2025- PhaseShift Studio, LLC
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -63,12 +63,16 @@ public class Server implements Mode {
         input.lines().forEach(line -> {
             LOG.none("%s\n", line);
         });*/
-        final Scanner userInput = new Scanner(System.in);
-        while (true) {
-            LOG.none("{{m}}mtron{{g}}>{{X}} ");
-            final String line = userInput.nextLine();
-            if (line.trim().equals(":quit"))
-                break;
+        try {
+            final Scanner userInput = new Scanner(System.in);
+            while (true) {
+                LOG.none("{{m}}mtron{{g}}>{{X}} ");
+                final String line = userInput.nextLine();
+                if (line.trim().equals(":quit"))
+                    break;
+            }
+        } catch (final Exception e) {
+            MTronException.wrap(() -> Thread.currentThread().join());
         }
         BootLoader.close();
 
