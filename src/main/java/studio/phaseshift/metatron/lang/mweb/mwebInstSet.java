@@ -55,8 +55,8 @@ public class mwebInstSet extends MInstSet {
         super(MWEB_TID, vid);
     }
 
-    public static mwebInstSet of(final fURI vid) {
-        return new mwebInstSet(vid);
+    public static mwebInstSet create() {
+        return new mwebInstSet(fURI.NULL);
     }
 
     @Override

@@ -25,7 +25,7 @@ import studio.phaseshift.metatron.lang.mtron.type.InstSet;
 import studio.phaseshift.metatron.lang.mtron.type.Obj;
 import studio.phaseshift.metatron.lang.mtron.type.Type;
 import studio.phaseshift.metatron.space.MSpace;
-import studio.phaseshift.metatron.space.Router;
+import studio.phaseshift.metatron.lang.msys.Router;
 
 import java.util.*;
 

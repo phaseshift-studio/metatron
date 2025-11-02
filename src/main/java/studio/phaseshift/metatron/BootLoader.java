@@ -26,16 +26,17 @@ import studio.phaseshift.metatron.lang.mgrph.tp.MGraph;
 import studio.phaseshift.metatron.lang.mkv.mkvInstSet;
 import studio.phaseshift.metatron.lang.mkv.mkvSpace;
 import studio.phaseshift.metatron.lang.mllm.mllmInstSet;
+import studio.phaseshift.metatron.lang.msys.Router;
+import studio.phaseshift.metatron.lang.msys.impl.MRouter;
+import studio.phaseshift.metatron.lang.msys.msysInstSet;
 import studio.phaseshift.metatron.lang.mtron.mtronInstSet;
 import studio.phaseshift.metatron.lang.mtron.mtronParser;
 import studio.phaseshift.metatron.lang.mtron.type.Obj;
 import studio.phaseshift.metatron.lang.mtron.type.Rec;
 import studio.phaseshift.metatron.lang.mvec.mvecInstSet;
 import studio.phaseshift.metatron.lang.mweb.mwebInstSet;
-import studio.phaseshift.metatron.space.Router;
 import studio.phaseshift.metatron.space.device.log.Log;
 import studio.phaseshift.metatron.space.fs.FileSpace;
-import studio.phaseshift.metatron.space.router.MRouter;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
 import studio.phaseshift.metatron.ui.Mode;
@@ -74,12 +75,13 @@ public class BootLoader {
 
     static {
         //Registry.singleton().register(mtronInstSet.INST_TID, () -> mtronInstSet.of(fURI.NULL));
-        Registry.singleton().register(mkvInstSet.MKV_TID, () -> mkvInstSet.of(fURI.NULL));
-        Registry.singleton().register(mwebInstSet.MWEB_TID, () -> mwebInstSet.of(fURI.NULL));
-        Registry.singleton().register(mgrphInstSet.MGRPH_TID, () -> mgrphInstSet.of(fURI.NULL));
-        Registry.singleton().register(mllmInstSet.MLLM_TID, () -> mllmInstSet.of(fURI.NULL));
-        Registry.singleton().register(mvecInstSet.MVEC_TID, () -> mvecInstSet.of(fURI.NULL));
-        Registry.singleton().register(machInstSet.MACH_TID, () -> machInstSet.of(fURI.NULL));
+        Registry.singleton().register(msysInstSet.MSYS_TID, msysInstSet::create);
+        Registry.singleton().register(mkvInstSet.MKV_TID, mkvInstSet::create);
+        Registry.singleton().register(mwebInstSet.MWEB_TID, mwebInstSet::create);
+        Registry.singleton().register(mgrphInstSet.MGRPH_TID, mgrphInstSet::create);
+        Registry.singleton().register(mllmInstSet.MLLM_TID, mllmInstSet::create);
+        Registry.singleton().register(mvecInstSet.MVEC_TID, mvecInstSet::create);
+        Registry.singleton().register(machInstSet.MACH_TID, machInstSet::create);
         // Registry.singleton().register(miotInstSet.INST_TID, () -> miotInstSet.of(fURI.NULL));
     }
 
@@ -121,11 +123,9 @@ public class BootLoader {
     }
 
     public static void load(final Rec options) {
-        //Registry.singleton().register(mwebSpace.WEB_TID, f("/mnt/mweb"), mwebSpace::of);
-        //Router.readFromSpace(mwebInstSet.MWEB_INST_TID);
-        Runtime.getRuntime().addShutdownHook(new Thread(BootLoader::close));
-        fURI remoteAuthority = null;
         if (BOOTING) {
+            Runtime.getRuntime().addShutdownHook(new Thread(BootLoader::close));
+            fURI remoteAuthority = null;
             /// /// START OF BOOTING PROCESS /// /// allow boot description to be read from a mtron file
             try {
                 remoteAuthority = options.at(HOST).orElse(uri("ws://" + InetAddress.getLocalHost().getHostName() + ".local" + ":" + 8887)).uriValue();
@@ -133,11 +133,12 @@ public class BootLoader {
                 LOG.warn("booting metatron on a non-networked jvm");
             }
             startMode(options);
-            ROUTER = new MRouter(remoteAuthority, f("/sys/router"));
-            mkvSpace.of(f("/mnt/#"), fURI.NULL).vid(f("/mnt"));
-            mkvSpace.of(f("/sys/#"), fURI.NULL).vid(f("/mnt/sys"));
+            ROUTER = new MRouter(remoteAuthority);
+            mkvSpace.of(f("/mnt/#")).vid(f("/mnt"));
+            mkvSpace.of(f("/sys/#")).vid(f("/mnt/sys"));
+            ROUTER = (Router) ROUTER.vid(f("/sys/router"));
             Router.writeToSpace(Router.global());
-            Router.writeToSpace(mtronInstSet.of(f("/mnt/lang/m")));
+            Router.writeToSpace(mtronInstSet.create().vid(f("/mnt/lang/m")));
             ROUTER.start();
             //  Router.writeToSpace(new mtronInstSet(fURI.of("/mnt/lang/m")));
             ///////////////////////////////////////////////////////////////

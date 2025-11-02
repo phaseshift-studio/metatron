@@ -1,6 +1,6 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
- * Copyright (C) 2025- PhaseShift Studio, LLC 
+ * Copyright (C) 2025- PhaseShift Studio, LLC
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -18,41 +18,38 @@
 
 package studio.phaseshift.metatron.furi.q;
 
+import studio.phaseshift.metatron.furi.Q;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.lang.mach.type.Machine;
+import studio.phaseshift.metatron.lang.mach.type.impl.MMachine;
+import studio.phaseshift.metatron.lang.msys.Space;
 import studio.phaseshift.metatron.lang.mtron.type.Call;
 import studio.phaseshift.metatron.lang.mtron.type.Obj;
 import studio.phaseshift.metatron.lang.mtron.type.impl.MObj;
 import studio.phaseshift.metatron.lang.mtron.type.impl.MObjs;
-import studio.phaseshift.metatron.space.Space;
-import studio.phaseshift.metatron.ui.Graphitty;
-import studio.phaseshift.metatron.ui.GraphittyLogger;
-import studio.phaseshift.metatron.lang.mach.type.impl.MMachine;
-import studio.phaseshift.metatron.lang.mach.type.Machine;
 
 import java.util.LinkedList;
 import java.util.Optional;
 import java.util.Queue;
 
+import static studio.phaseshift.metatron.furi.Qs.QS_TID;
 import static studio.phaseshift.metatron.furi.fURI.f;
-import static studio.phaseshift.metatron.lang.mtron.mtronInstSet.MTRON_SPACE_TID;
 import static studio.phaseshift.metatron.util.Tuple.Triplet;
 
 public class PubSubQ extends BaseQ {
 
-    public static final fURI SUBSCRIPTION_TID = MTRON_SPACE_TID.extend("sub");
-    protected final GraphittyLogger LOG = Graphitty.log(this);
+    public static final fURI SUBSCRIPTION_TID = QS_TID.extend("sub");
     // <source,pattern,callback>
     protected final Obj subscriptions = MObjs.empty();
     protected final Queue<Machine> mail = new LinkedList<>();
 
     public PubSubQ(final Space space) {
         super(space, f("sub"), SUBSCRIPTION_TID);
-        this.onRead = new OnRead();
-        this.onWrite = new OnWrite();
+        this.onRead = new PubSubQ.OnRead();
+        this.onWrite = new PubSubQ.OnWrite();
     }
 
     public static class Subscription extends MObj {
-
 
         public Subscription(final fURI source, final fURI target, final Call call) {
             super(Triplet.with(source, target, call), SUBSCRIPTION_TID, fURI.NULL);
@@ -75,21 +72,21 @@ public class PubSubQ extends BaseQ {
         }
     }
 
-    public class OnRead extends BaseQ.OnRead {
+    public class OnRead implements Q.OnRead {
 
         @Override
         public Optional<Obj> preRead(final fURI source, final fURI vid) {
             LOG.trace("evaluating {{y}}preread{{/y}}: %s", vid);
-            return subscriptions.elements().map(Obj::<Subscription>as).filter(s -> vid.basePath().matches(s.target())).map(Obj::<Obj>as).reduce(Obj::append);
+            return subscriptions.stream().map(Obj::<Subscription>as).filter(s -> vid.basePath().matches(s.target())).map(Obj::<Obj>as).reduce(Obj::append);
         }
     }
 
-    public class OnWrite extends BaseQ.OnWrite {
+    public class OnWrite implements Q.OnWrite {
 
         @Override
         public Optional<Obj> qlessWrite(final fURI source, final fURI vid, final Obj obj) {
             LOG.trace("evaluating {{y}}qless write{{/y}}: %s => %s", obj, vid);
-            subscriptions.elements().map(Obj::<Subscription>as).filter(s -> vid.basePath().matches(s.target())).forEach(s -> {
+            subscriptions.stream().map(Obj::<Subscription>as).filter(s -> vid.basePath().matches(s.target())).forEach(s -> {
                 LOG.debug("sending mail: (%s, %s)", obj, s);
                 mail.add(MMachine.of(obj, s.call().toCode()));
             });

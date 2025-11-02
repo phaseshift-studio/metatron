@@ -18,10 +18,11 @@
 
 package studio.phaseshift.metatron.furi.q;
 
+import studio.phaseshift.metatron.furi.Q;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.mtron.type.Obj;
 import studio.phaseshift.metatron.lang.mtron.type.impl.MRec;
-import studio.phaseshift.metatron.space.Space;
+import studio.phaseshift.metatron.lang.msys.Space;
 import studio.phaseshift.metatron.lang.mkv.mkvSpace;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
@@ -68,7 +69,7 @@ public class DocQ extends BaseQ {
         }
     }
 
-    public class OnRead extends BaseQ.OnRead {
+    public class OnRead  implements Q.OnRead {
 
         @Override
         public Optional<Obj> preRead(final fURI source, final fURI vid) {
@@ -77,7 +78,7 @@ public class DocQ extends BaseQ {
         }
     }
 
-    public class OnWrite extends BaseQ.OnWrite {
+    public class OnWrite  implements Q.OnWrite {
 
         @Override
         public Optional<Obj> preWrite(final fURI source, final fURI vid, final Obj obj) {

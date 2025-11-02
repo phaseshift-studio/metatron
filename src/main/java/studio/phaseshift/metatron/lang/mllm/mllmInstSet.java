@@ -57,8 +57,8 @@ public class mllmInstSet extends MInstSet {
         super(MLLM_TID, vid);
     }
 
-    public static mllmInstSet of(final fURI vid) {
-        return new mllmInstSet(vid);
+    public static mllmInstSet create() {
+        return new mllmInstSet(fURI.NULL);
     }
 
     @Override
@@ -71,7 +71,7 @@ public class mllmInstSet extends MInstSet {
         return new LinkedHashSet<>(List.of(
                 instC(INST_TID.extend("mollama").dom(ALL.maybe()).rng(MOLLAMA_TID),
                         rec(uri("host"), T(URI_TID), uri("pattern"), T(URI_TID)),
-                        (lhs, inst) -> mollamaSpace.of(inst.arg("host").uriValue(), inst.arg("pattern").uriValue(), fURI.NULL)),
+                        (lhs, inst) -> mollamaSpace.of(inst.arg("host").uriValue(), inst.arg("pattern").uriValue())),
                 instC(INST_TID.extend("chat").dom(OLLM_TID).rng(STR_TID.maybeSome()), lst(T(STR_TID)),
                         (lhs, inst) -> str(OllamaChatModel.builder()
                                 .baseUrl(lhs.<Rec>as().at("host").uriValue().toString())

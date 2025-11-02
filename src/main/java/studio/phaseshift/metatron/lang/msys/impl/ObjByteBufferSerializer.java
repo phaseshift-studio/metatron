@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.space.router;
+package studio.phaseshift.metatron.lang.msys.impl;
 
 import studio.phaseshift.metatron.lang.mtron.type.*;
 

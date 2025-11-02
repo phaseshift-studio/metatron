@@ -22,7 +22,7 @@ import org.petitparser.context.Result;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.mtron.mtronParser;
 import studio.phaseshift.metatron.lang.mtron.type.*;
-import studio.phaseshift.metatron.space.Space;
+import studio.phaseshift.metatron.lang.msys.Space;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.HashSet;

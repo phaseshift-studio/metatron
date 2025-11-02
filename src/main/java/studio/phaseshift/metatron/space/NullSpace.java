@@ -20,6 +20,7 @@ package studio.phaseshift.metatron.space;
 
 import studio.phaseshift.metatron.furi.Qs;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.lang.msys.Space;
 import studio.phaseshift.metatron.lang.mtron.type.*;
 
 

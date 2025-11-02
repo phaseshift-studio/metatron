@@ -20,7 +20,7 @@ package studio.phaseshift.metatron.lang.mtron.type.impl;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.mtron.type.Obj;
-import studio.phaseshift.metatron.space.Router;
+import studio.phaseshift.metatron.lang.msys.Router;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.Objects;

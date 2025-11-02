@@ -24,8 +24,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.MetatronTest;
 import studio.phaseshift.metatron.lang.mgrph.tp.MGraph;
-import studio.phaseshift.metatron.lang.mtron.mtronInstSet;
-import studio.phaseshift.metatron.space.Router;
+import studio.phaseshift.metatron.lang.msys.Router;
 
 import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MUri.uri;
@@ -38,7 +37,7 @@ public class mgrphInstSetTest extends MetatronTest {
     @BeforeAll
     public static void begin() {
         MetatronTest.begin();
-        mgrphInstSet.of(f("/mnt/lang/mgraph"));
+        mgrphInstSet.create().vid(f("/mnt/lang/mgraph"));
         MGraph.of(TinkerFactory.createModern(), f("/tp/#"), f("/mnt/tp"));
         Router.writeToSpace("g", uri("/mnt/tp"));
     }

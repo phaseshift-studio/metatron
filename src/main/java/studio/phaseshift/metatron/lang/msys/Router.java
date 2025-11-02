@@ -16,22 +16,24 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.space;
+package studio.phaseshift.metatron.lang.msys;
 
 import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.lang.msys.impl.net.MServer;
 import studio.phaseshift.metatron.lang.mtron.type.NoObj;
 import studio.phaseshift.metatron.lang.mtron.type.Obj;
-import studio.phaseshift.metatron.space.router.net.MServer;
 import studio.phaseshift.metatron.space.stack.StackSpace;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.io.Closeable;
 
+import static studio.phaseshift.metatron.furi.fURI.f;
+
 public interface Router extends Obj, Space, Closeable {
 
-    ThreadLocal<StackSpace> INST_STACK = ThreadLocal.withInitial(() -> new StackSpace(fURI.of("+/#"), Router.global().vid().extend("stack")));
+    ThreadLocal<StackSpace> THREAD_STACK = ThreadLocal.withInitial(() -> new StackSpace(f("+/#")));
 
     static boolean loaded() {
         return null != BootLoader.ROUTER;
@@ -52,14 +54,14 @@ public interface Router extends Obj, Space, Closeable {
     static Obj writeToSpace(final String vid, final Obj obj) {
         return Router.loaded() ? BootLoader.ROUTER.write(vid, obj) : NoObj.noobj();
     }
-    
+
     static Obj writeToSpace(final Obj obj) {
         return Router.loaded() ? BootLoader.ROUTER.write(obj.vid(), obj) : NoObj.noobj();
     }
 
 
     static StackSpace stack() {
-        return INST_STACK.get();
+        return THREAD_STACK.get();
     }
 
     MServer server();

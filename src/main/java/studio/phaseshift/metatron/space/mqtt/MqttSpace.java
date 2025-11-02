@@ -31,7 +31,7 @@ import studio.phaseshift.metatron.lang.mtron.type.Obj;
 import studio.phaseshift.metatron.lang.mtron.type.Uri;
 import studio.phaseshift.metatron.lang.mweb.JSONTranslator;
 import studio.phaseshift.metatron.space.MSpace;
-import studio.phaseshift.metatron.space.Space;
+import studio.phaseshift.metatron.lang.msys.Space;
 import studio.phaseshift.metatron.lang.mkv.mkvSpace;
 import studio.phaseshift.metatron.ui.*;
 
@@ -84,7 +84,7 @@ public class MqttSpace extends MSpace<Map<Uri, Obj>> implements Space {
         LOG.info("{{y}}mtron{{g}}<=>{{y}}mqtt{{X}} mapping established: {{b}}%s {{g}}<=> ({{b}}%s {{g}}<=> {{b}}%s{{g}}){{X}}", this.pattern(), this.prefix, this.toMqttTopic(this.pattern()));
         this.cache = new mkvSpace(this.pattern(), this.vid.extend("cache"));
         this.cache.qs().clear();
-        this.qs = new Qs(this.vid);
+        this.qs = new Qs();
         this.qs.register(new PubSubQ(this) {
             @Override
             public Optional<Q.OnWrite> onWrite() {

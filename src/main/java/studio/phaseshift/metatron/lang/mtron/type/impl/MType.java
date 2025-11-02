@@ -21,7 +21,7 @@ package studio.phaseshift.metatron.lang.mtron.type.impl;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.mtron.type.Call;
 import studio.phaseshift.metatron.lang.mtron.type.Type;
-import studio.phaseshift.metatron.space.Router;
+import studio.phaseshift.metatron.lang.msys.Router;
 
 
 public class MType extends MObj implements Type {

@@ -1,6 +1,6 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
- * Copyright (C) 2025- PhaseShift Studio, LLC 
+ * Copyright (C) 2025- PhaseShift Studio, LLC
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -20,26 +20,28 @@ package studio.phaseshift.metatron.furi.q;
 
 import studio.phaseshift.metatron.furi.Q;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.lang.msys.Space;
 import studio.phaseshift.metatron.lang.mtron.type.Obj;
 import studio.phaseshift.metatron.lang.mtron.type.impl.MObj;
-import studio.phaseshift.metatron.space.Space;
+import studio.phaseshift.metatron.ui.Graphitty;
+import studio.phaseshift.metatron.ui.GraphittyLogger;
 
 import java.util.Optional;
-
-import static studio.phaseshift.metatron.furi.fURI.f;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public class BaseQ extends MObj implements Q {
 
+    protected final GraphittyLogger LOG;
     protected final Space space;
     protected OnRead onRead;
     protected OnWrite onWrite;
 
     public BaseQ(final Space space, final fURI queryPattern, final fURI tid) {
-        super(queryPattern, tid, f("/mnt/").extend("q").extend(tid));
+        super(queryPattern, tid, fURI.NULL);
         this.space = space;
+        LOG = Graphitty.log(this);
     }
 
     @Override
@@ -54,7 +56,7 @@ public class BaseQ extends MObj implements Q {
 
     @Override
     public fURI jvm() {
-        return (fURI) super.jvm();
+        return super.jvm();
     }
 
     @Override
@@ -65,36 +67,5 @@ public class BaseQ extends MObj implements Q {
     @Override
     public Obj clone() {
         return this;
-    }
-
-    public static class OnWrite implements Q.OnWrite {
-
-        @Override
-        public Optional<Obj> preWrite(fURI source, fURI vid, Obj obj) {
-            return Optional.empty();
-        }
-
-        @Override
-        public Optional<Obj> postWrite(final fURI source, final fURI vid, final Obj oldObj, final Obj newObj) {
-            return Optional.empty();
-        }
-
-        @Override
-        public Optional<Obj> qlessWrite(fURI source, fURI vid, Obj obj) {
-            return Optional.empty();
-        }
-    }
-
-    public static class OnRead implements Q.OnRead {
-
-        @Override
-        public Optional<Obj> preRead(fURI source, fURI vid) {
-            return Optional.empty();
-        }
-
-        @Override
-        public Optional<Obj> postRead(fURI source, fURI vid, Obj obj) {
-            return Optional.empty();
-        }
     }
 }

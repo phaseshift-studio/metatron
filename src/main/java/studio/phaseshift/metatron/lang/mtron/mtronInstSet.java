@@ -20,12 +20,12 @@ package studio.phaseshift.metatron.lang.mtron;
 
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.lang.msys.Router;
 import studio.phaseshift.metatron.lang.mtron.type.*;
 import studio.phaseshift.metatron.lang.mtron.type.impl.MInstSet;
 import studio.phaseshift.metatron.lang.mtron.type.impl.MObjFactory;
 import studio.phaseshift.metatron.lang.mtron.type.impl.MRec;
 import studio.phaseshift.metatron.lang.mtron.type.impl.MRel;
-import studio.phaseshift.metatron.space.Router;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
@@ -145,8 +145,8 @@ public class mtronInstSet extends MInstSet {
         super(MTRON_TID, vid);
     }
 
-    public static mtronInstSet of(final fURI vid) {
-        return new mtronInstSet(vid);
+    public static mtronInstSet create() {
+        return new mtronInstSet(fURI.NULL);
     }
 
     @Override
@@ -213,7 +213,7 @@ public class mtronInstSet extends MInstSet {
                 instC(CATCH_TID.dom(ALL).rng(ALL.maybeSome()), lst(T(ALL.maybeSome())), (lhs, inst) -> lhs.isFail() ? inst.arg(0).apply(lhs) : lhs),
                 instC(START_TID.dom(fURI.NOOBJ.zero()).rng(A.maybeSome()), lst(T(A.maybeSome())), (lhs, inst) -> inst.arg(0)),
                 instC(END_TID.dom(OBJS_ID).rng(NOOBJ_TID.zero()), lst(), (lhs, inst) -> noobj()),
-                instC(PRINT_TID.dom(ALL).rng(ALL), lst(T(OBJS_ID)), (lhs, inst) -> inst.args().elements().peek(o -> Graphitty.stdout().println(Graphitty.string(o))).filter(a -> false).findAny().orElse(lhs)),
+                instC(PRINT_TID.dom(ALL).rng(ALL), lst(T(OBJS_ID)), (lhs, inst) -> inst.args().elements().peek(o -> LOG.none("%s\n",o)).filter(a -> false).findAny().orElse(lhs)),
                 instC(AT_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(T(URI_TID)), (lhs, inst) -> lhs.isNoObj() ? Router.readFromSpace(inst.arg(0).uriValue()).vid(inst.arg(0).uriValue()) : lhs.vid(inst.arg(0).uriValue())),
                 instC(HAS_TID.dom(REC_TID).rng(REC_TID.maybe()), lst(T(ALL)), (lhs, inst) -> lhs.<Rec>as().elements().map(Rel::first).anyMatch(r -> r.matches(inst.arg(0))) ? lhs : noobj()),
                 instC(ID_TID.dom(A).rng(A), lst(), (lhs, inst) -> lhs),

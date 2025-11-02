@@ -23,12 +23,11 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.mach.machInstSet;
 import studio.phaseshift.metatron.lang.mkv.mkvSpace;
 import studio.phaseshift.metatron.lang.mtron.mtronInstSet;
+import studio.phaseshift.metatron.lang.mtron.mtronParser;
 import studio.phaseshift.metatron.lang.mtron.type.Fail;
 import studio.phaseshift.metatron.lang.mtron.type.NoObj;
 import studio.phaseshift.metatron.lang.mtron.type.Obj;
-import studio.phaseshift.metatron.lang.mtron.mtronParser;
 import studio.phaseshift.metatron.lang.mvec.mvecInstSet;
-import studio.phaseshift.metatron.space.Router;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
 
@@ -45,10 +44,10 @@ public class MetatronTest {
     @BeforeAll
     public static void begin() {
         BootLoader.load(rec(uri("mode"), uri("testing")));
-        mtronInstSet.of(f("/mnt/lang/m"));
-        machInstSet.of(f("/mnt/lang/mach"));
-        mvecInstSet.of(f("/mnt/lang/mvec"));
-        mkvSpace.of(f("/usr/#"), fURI.NULL).vid(f("/mnt/usr"));
+       // mtronInstSet.create().vid(f("/mnt/lang/m"));
+        machInstSet.create().vid(f("/mnt/lang/mach"));
+        mvecInstSet.create().vid(f("/mnt/lang/mvec"));
+        mkvSpace.of(f("/usr/#")).vid(f("/mnt/usr"));
     }
 
     public void testMatches(final String lhs, final String rhs, final boolean matches) {
@@ -74,12 +73,12 @@ public class MetatronTest {
                 final Obj cd = mtronParser.sugar_code().parse(code).get();
                 final Obj actual = cd.apply(NoObj.noobj());
                 if (!(cd.isFail() || actual.isFail())) {
-                    if(cd.isFail())
+                    if (cd.isFail())
                         cd.<Fail>as().jvm().printStackTrace();
-                    if(actual.isFail())
+                    if (actual.isFail())
                         actual.<Fail>as().jvm().printStackTrace();
                     fail(Graphitty.string("testing %s => %s [expected:%s]", cd, actual, expected));
-                    
+
                 }
             } catch (final Exception e) {
                 LOG.debug("testing %s => %s", code, e.getMessage());

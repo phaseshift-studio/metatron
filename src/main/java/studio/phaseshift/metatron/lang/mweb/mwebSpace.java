@@ -26,13 +26,12 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.mtron.type.Obj;
 import studio.phaseshift.metatron.lang.mtron.type.Rec;
 import studio.phaseshift.metatron.space.MSpace;
-import studio.phaseshift.metatron.space.Router;
-import studio.phaseshift.metatron.space.Space;
+import studio.phaseshift.metatron.lang.msys.Router;
+import studio.phaseshift.metatron.lang.msys.Space;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -45,6 +44,7 @@ import java.util.concurrent.Executors;
 import java.util.function.Function;
 
 import static studio.phaseshift.metatron.furi.fURI.f;
+import static studio.phaseshift.metatron.lang.msys.msysInstSet.SPACE_TID;
 import static studio.phaseshift.metatron.lang.mtron.type.NoObj.noobj;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MUri.uri;
@@ -56,7 +56,7 @@ import static studio.phaseshift.metatron.lang.mweb.mwebInstSet.PAGE_TID;
  */
 public class mwebSpace extends MSpace<HttpServer> {
 
-    public static final fURI WEB_TID = MWEB_TID.extend("space/web");
+    public static final fURI WEB_TID = SPACE_TID.extend("web");
     protected static final String ROUTE = "route";
     private static final WebTranslator WEB_TRANSLATOR = new WebTranslator();
     private final Rec routes;

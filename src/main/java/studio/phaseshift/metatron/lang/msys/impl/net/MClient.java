@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.space.router.net;
+package studio.phaseshift.metatron.lang.msys.impl.net;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -29,9 +29,9 @@ import org.java_websocket.handshake.ServerHandshake;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.mtron.type.Obj;
 import studio.phaseshift.metatron.lang.mtron.type.impl.MObjs;
-import studio.phaseshift.metatron.space.Router;
-import studio.phaseshift.metatron.space.router.FutureObj;
-import studio.phaseshift.metatron.space.router.ObjByteBufferSerializer;
+import studio.phaseshift.metatron.lang.msys.Router;
+import studio.phaseshift.metatron.lang.msys.impl.FutureObj;
+import studio.phaseshift.metatron.lang.msys.impl.ObjByteBufferSerializer;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
 import studio.phaseshift.metatron.ui.ObjSerializer;
 

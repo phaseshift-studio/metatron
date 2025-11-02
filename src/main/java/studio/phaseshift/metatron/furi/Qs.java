@@ -18,42 +18,48 @@
 
 package studio.phaseshift.metatron.furi;
 
+import studio.phaseshift.metatron.lang.msys.Router;
+import studio.phaseshift.metatron.lang.msys.msysInstSet;
 import studio.phaseshift.metatron.lang.mtron.type.Obj;
 import studio.phaseshift.metatron.lang.mtron.type.impl.MLst;
+import studio.phaseshift.metatron.ui.Graphitty;
+import studio.phaseshift.metatron.ui.GraphittyLogger;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
-
-import static studio.phaseshift.metatron.lang.mtron.mtronInstSet.MTRON_SPACE_TID;
 
 public class Qs extends MLst {
 
-    public static final Qs EMPTY_QS = new Qs(null);
-    public static final fURI QS_TID = MTRON_SPACE_TID.extend("qs");
-    final List<Q> qs = new ArrayList<>();
+    public static final fURI QS_TID = msysInstSet.SPACE_TID.extend("q");
+    private final GraphittyLogger LOG;
 
-    public Qs(final fURI spacevid) {
-        super(new ArrayList<>(), QS_TID, null == spacevid ? null : spacevid.extend("q"));
+    public Qs() {
+        super(new ArrayList<>(), QS_TID, fURI.NULL);
+        LOG = Graphitty.log(this);
     }
 
     public Qs register(final Q q) {
-        if (this.vid != null) {
-            this.qs.add(q);
-        }
+        LOG.info("registered q %s", q);
+        this.lstValue().add(q);
         return this;
     }
 
     public Qs clear() {
-        this.qs.clear();
+        this.lstValue().clear();
+        return this;
+    }
+
+    @Override
+    public Qs clone() {
         return this;
     }
 
     public Optional<Obj> processPreWrite(final fURI source, final fURI vid, final Obj obj) {
-        return this.qs.stream()
+        return this.<Q>elements()
                 .filter(q -> vid.hasQuery(q.jvm().toString()))
                 .map(Q::onWrite)
                 .filter(Optional::isPresent)
+                .peek(q -> Router.global().logger().trace("handling {{y}}pre write{{X}} of %s for %s %s", source, vid, obj))
                 .map(Optional::get)
                 .map(q -> q.preWrite(source, vid, obj))
                 .filter(Optional::isPresent)
@@ -62,10 +68,11 @@ public class Qs extends MLst {
     }
 
     public Optional<Obj> processPreRead(final fURI source, final fURI vid) {
-        return this.qs.stream()
+        return this.<Q>elements()
                 .filter(q -> vid.hasQuery(q.jvm().toString()))
                 .map(Q::onRead)
                 .filter(Optional::isPresent)
+                .peek(q -> Router.global().logger().trace("handling {{m}}pre read{{X}} of %s for %s", source, vid))
                 .map(Optional::get)
                 .map(q -> q.preRead(source, vid))
                 .filter(Optional::isPresent)
@@ -74,10 +81,11 @@ public class Qs extends MLst {
     }
 
     public Optional<Obj> processPostRead(final fURI source, final fURI vid, final Obj current) {
-        return this.qs.stream()
+        return this.<Q>elements()
                 .filter(q -> vid.hasQuery(q.jvm().toString()))
                 .map(Q::onRead)
                 .filter(Optional::isPresent)
+                .peek(q -> Router.global().logger().trace("handling {{c}}post read{{X}} of %s for %s", source, vid))
                 .map(Optional::get)
                 .map(q -> q.postRead(source, vid, current))
                 .filter(Optional::isPresent)
@@ -86,9 +94,10 @@ public class Qs extends MLst {
     }
 
     public Optional<Obj> processQlessWrite(final fURI source, final fURI vid, final Obj obj) {
-        return this.qs.stream()
+        return this.<Q>elements()
                 .map(Q::onWrite)
                 .filter(Optional::isPresent)
+                .peek(q -> LOG.trace("handling {{g}}qless write{{X}} of %s for %s", source, vid))
                 .map(Optional::get)
                 .map(q -> q.qlessWrite(source, vid, obj))
                 .filter(Optional::isPresent)
@@ -97,10 +106,11 @@ public class Qs extends MLst {
     }
 
     public Optional<Obj> processPostWrite(final fURI source, final fURI vid, final Obj obj) {
-        return this.qs.stream()
+        return this.<Q>elements()
                 .filter(q -> vid.hasQuery(q.jvm().toString()))
                 .map(Q::onWrite)
                 .filter(Optional::isPresent)
+                .peek(q -> Router.global().logger().trace("handling {{b}}post write{{X}} of %s for %s %s", source, vid, obj))
                 .map(Optional::get)
                 .map(q -> q.postWrite(source, vid, obj, obj))
                 .filter(Optional::isPresent)

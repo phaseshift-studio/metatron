@@ -64,8 +64,8 @@ public class mvecInstSet extends MInstSet {
         super(MVEC_TID, vid);
     }
 
-    public static mvecInstSet of(final fURI vid) {
-        return new mvecInstSet(vid);
+    public static mvecInstSet create() {
+        return new mvecInstSet(fURI.NULL);
     }
 
     @Override

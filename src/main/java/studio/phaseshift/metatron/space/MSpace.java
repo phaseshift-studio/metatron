@@ -20,31 +20,31 @@ package studio.phaseshift.metatron.space;
 
 import studio.phaseshift.metatron.furi.Qs;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.furi.q.PubSubQ;
+import studio.phaseshift.metatron.lang.msys.Router;
+import studio.phaseshift.metatron.lang.msys.Space;
 import studio.phaseshift.metatron.lang.mtron.type.Obj;
 import studio.phaseshift.metatron.lang.mtron.type.impl.MObj;
+import studio.phaseshift.metatron.space.stack.StackSpace;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
-
-import static studio.phaseshift.metatron.furi.Qs.EMPTY_QS;
 
 public abstract class MSpace<J> extends MObj implements Space {
 
     protected final GraphittyLogger LOG;
     protected final fURI pattern;
-    //protected final Qs qs;
+    protected final Qs qs;
 
     public MSpace(final J jvm, final fURI pattern, final fURI tid, final fURI vid) {
         super(jvm, tid, vid);
-        this.pattern = pattern;
         LOG = Graphitty.log(this);
-        //if (null != this.vid)
-        // Router.global().addSpace(this.pattern, this);
-        // this.qs = EMPTY_QS;
+        this.pattern = pattern;
+        this.qs = new Qs();
     }
 
     @Override
     public Qs qs() {
-        return EMPTY_QS;
+        return this.qs;
     }
 
     @Override
@@ -77,6 +77,8 @@ public abstract class MSpace<J> extends MObj implements Space {
         if (null != vid) {
             Router.writeToSpace(vid.extend("pattern"), this.pattern().toUri());
             Router.global().addSpace(this.pattern, this);
+            LOG.trace("registering: %s",this);
+            this.qs.register(new PubSubQ(this));
         }
         return super.vid(vid);
     }

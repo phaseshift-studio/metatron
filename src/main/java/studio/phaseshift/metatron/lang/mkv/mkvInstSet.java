@@ -22,8 +22,6 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.mtron.type.Inst;
 import studio.phaseshift.metatron.lang.mtron.type.Type;
 import studio.phaseshift.metatron.lang.mtron.type.impl.MInstSet;
-import studio.phaseshift.metatron.lang.mweb.JSONTranslator;
-import studio.phaseshift.metatron.lang.mweb.WebTranslator;
 
 import java.util.Set;
 
@@ -46,22 +44,23 @@ public class mkvInstSet extends MInstSet {
 
     public static final fURI MKV_TID = f("/mkv");
     public static final fURI INST_TID = MKV_TID.extend("inst");
+
     public mkvInstSet(final fURI vid) {
         super(MKV_TID, vid);
     }
 
-    public static mkvInstSet of(final fURI vid) {
-        return new mkvInstSet(vid);
+    public static mkvInstSet create() {
+        return new mkvInstSet(fURI.NULL);
     }
 
     @Override
     public Set<Inst> insts() {
         return Set.of(
-                instC(INST_TID.extend("mkv").dom(ALL.maybe()).rng(KVSPACE_TID), rec(uri("pattern"), T(URI_TID)), (lhs, inst) -> mkvSpace.of(inst.arg("pattern").uriValue(), fURI.NULL)));
+                instC(INST_TID.extend("mkv").dom(ALL.maybe()).rng(KVSPACE_TID), rec(uri("pattern"), T(URI_TID)), (lhs, inst) -> mkvSpace.of(inst.arg("pattern").uriValue())));
     }
 
-    @Override
-    public Set<Type> types() {
-        return Set.of(T(KVSPACE_TID));
-    }
+   // @Override
+//    public Set<Type> types() {
+  //      return Set.of(T(KVSPACE_TID));
+   // }
 }

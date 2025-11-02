@@ -1,6 +1,6 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
- * Copyright (C) 2025- PhaseShift Studio, LLC 
+ * Copyright (C) 2025- PhaseShift Studio, LLC
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -32,17 +32,27 @@ public interface Q extends Obj {
     Optional<OnRead> onRead();
 
     interface OnWrite {
-        Optional<Obj> preWrite(final fURI source, final fURI vid, final Obj obj);
+        default Optional<Obj> preWrite(final fURI source, final fURI vid, final Obj obj) {
+            return Optional.empty();
+        }
 
-        Optional<Obj> postWrite(final fURI source, final fURI vid, final Obj oldObj, final Obj newObj);
+        default Optional<Obj> postWrite(final fURI source, final fURI vid, final Obj oldObj, final Obj newObj) {
+            return Optional.empty();
+        }
 
-        Optional<Obj> qlessWrite(final fURI source, final fURI vid, final Obj obj);
+        default Optional<Obj> qlessWrite(final fURI source, final fURI vid, final Obj obj) {
+            return Optional.empty();
+        }
     }
 
     interface OnRead {
-        Optional<Obj> preRead(final fURI source, final fURI vid);
+        default Optional<Obj> preRead(final fURI source, final fURI vid) {
+            return Optional.empty();
+        }
 
-        Optional<Obj> postRead(final fURI source, final fURI vid, final Obj obj);
+        default Optional<Obj> postRead(final fURI source, final fURI vid, final Obj obj) {
+            return Optional.empty();
+        }
     }
 
 }

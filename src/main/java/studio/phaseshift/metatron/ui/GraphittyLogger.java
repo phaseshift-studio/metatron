@@ -67,8 +67,8 @@ public class GraphittyLogger extends LayoutBase<ILoggingEvent> {
     protected GraphittyLogger logLevel(final Level level, final Object f, final Object... args) {
         try {
             this.logger().makeLoggingEventBuilder(level).log(() -> this.makeMessage(true, f, args));
-        } catch (Exception e) {
-            System.out.println(e);
+        } catch (final Exception e) {
+            System.err.println(e);
         }
         return this;
     }

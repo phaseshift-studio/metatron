@@ -21,7 +21,7 @@ package studio.phaseshift.metatron.furi;
 import studio.phaseshift.metatron.algebra.Ring;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.lang.mtron.type.Uri;
-import studio.phaseshift.metatron.space.Router;
+import studio.phaseshift.metatron.lang.msys.Router;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.util.MTronException;
 

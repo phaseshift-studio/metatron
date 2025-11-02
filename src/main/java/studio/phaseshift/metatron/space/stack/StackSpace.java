@@ -1,6 +1,6 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
- * Copyright (C) 2025- PhaseShift Studio, LLC 
+ * Copyright (C) 2025- PhaseShift Studio, LLC
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -19,31 +19,30 @@
 package studio.phaseshift.metatron.space.stack;
 
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.lang.mkv.mkvSpace;
+import studio.phaseshift.metatron.lang.msys.Router;
+import studio.phaseshift.metatron.lang.msys.Space;
+import studio.phaseshift.metatron.lang.msys.msysInstSet;
 import studio.phaseshift.metatron.lang.mtron.type.Obj;
 import studio.phaseshift.metatron.lang.mtron.type.Poly;
 import studio.phaseshift.metatron.space.MSpace;
-import studio.phaseshift.metatron.space.Router;
-import studio.phaseshift.metatron.space.Space;
-import studio.phaseshift.metatron.lang.mkv.mkvSpace;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.LinkedList;
 
-import static studio.phaseshift.metatron.lang.mtron.mtronInstSet.MTRON_SPACE_TID;
-
 public class StackSpace extends MSpace<LinkedList<mkvSpace>> {
 
-    public static final fURI STACKSPACE_TID = MTRON_SPACE_TID.extend("stack");
+    public static final fURI STACK_TID = msysInstSet.SPACE_TID.extend("stack");
     public static final String ARG_PREFIX = "";
 
     private final GraphittyLogger LOG = Graphitty.log(this);
     private final Space root;
 
-    public StackSpace(final fURI pattern, final fURI vid) {
-        super(new LinkedList<>(), pattern, STACKSPACE_TID, vid);
-        this.root = new mkvSpace(this.pattern, null);
+    public StackSpace(final fURI pattern) {
+        super(new LinkedList<>(), pattern, STACK_TID, fURI.NULL);
+        this.root = mkvSpace.of(this.pattern);
     }
 
     @Override
@@ -74,7 +73,7 @@ public class StackSpace extends MSpace<LinkedList<mkvSpace>> {
     @Override
     public Obj write(final fURI vid, final Obj obj) {
         LOG.trace("writing %s to %s in %s [{{y}}root{{/y}}: %s]", obj, vid, this.jvm, this.root.jvm());
-        if(obj.isUri() && obj.uriValue().equals(vid))
+        if (obj.isUri() && obj.uriValue().equals(vid))
             return obj;
         if (!this.jvm().isEmpty())
             this.jvm().get(0).write(vid, obj);

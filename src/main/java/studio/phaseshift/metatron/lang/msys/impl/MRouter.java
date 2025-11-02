@@ -16,19 +16,19 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.space.router;
+package studio.phaseshift.metatron.lang.msys.impl;
 
 import studio.phaseshift.metatron.Registry;
 import studio.phaseshift.metatron.furi.Qs;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.lang.msys.Router;
+import studio.phaseshift.metatron.lang.msys.Space;
+import studio.phaseshift.metatron.lang.msys.impl.net.MServer;
+import studio.phaseshift.metatron.lang.msys.msysInstSet;
 import studio.phaseshift.metatron.lang.mtron.type.NoObj;
 import studio.phaseshift.metatron.lang.mtron.type.Obj;
 import studio.phaseshift.metatron.lang.mtron.type.impl.MRel;
 import studio.phaseshift.metatron.space.NullSpace;
-import studio.phaseshift.metatron.space.Router;
-import studio.phaseshift.metatron.space.Space;
-import studio.phaseshift.metatron.space.router.net.MServer;
-import studio.phaseshift.metatron.space.stack.StackSpace;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
 import studio.phaseshift.metatron.util.MTronException;
@@ -39,11 +39,10 @@ import java.util.concurrent.ConcurrentHashMap;
 import static studio.phaseshift.metatron.BootLoader.BOOTING;
 import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.lang.mtron.mtronFluent.StartLess.start_;
-import static studio.phaseshift.metatron.lang.mtron.mtronInstSet.MTRON_TID;
 
 public class MRouter implements Router {
 
-    public static final fURI ROUTER_TID = MTRON_TID.extend("router");
+    public static final fURI ROUTER_TID = msysInstSet.MSYS_TID.extend("router");
     private static final Set<fURI> READ_AS_NOOBJ = Set.of(fURI.ALL.maybeSome(), fURI.ALL.maybe(), fURI.ALL);
     private final GraphittyLogger LOG = Graphitty.log(this);
     private final Map<fURI, Space> spaces = new ConcurrentHashMap<>();
@@ -52,11 +51,11 @@ public class MRouter implements Router {
     private final MServer server;
     private fURI vid;
 
-    public MRouter(final fURI host, final fURI vid) {
-        this.vid = vid;
+    public MRouter(final fURI host) {
+        this.vid = fURI.NULL;
         LOG.info("local router {{b}}%s{{/b}}", this);
         this.server = new MServer(host);
-        this.spaces.put(f("+/#"), new StackSpace(f("+/#"), this.vid.extend("stack")));
+        //this.spaces.put(f("+/#"), new StackSpace(f("+/#"), this.vid.extend("stack")));
     }
 
     private static Obj appendOnRead(final boolean send, final Obj base, final Obj addition) {
@@ -131,6 +130,8 @@ public class MRouter implements Router {
                 .findAny();
         if (space.isPresent())
             return space.get();
+        else if (match.basePath().matches(f("+/#")))
+            return (S) THREAD_STACK.get();
         else if (Registry.singleton().has(match))
             return Registry.singleton().load(match);
         else if (!BOOTING)

@@ -22,7 +22,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.mtron.type.NoObj;
-import studio.phaseshift.metatron.space.Router;
+import studio.phaseshift.metatron.lang.msys.Router;
 import studio.phaseshift.metatron.lang.mkv.mkvSpace;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -43,7 +43,7 @@ public class MRouterTest extends RouterTest {
     public void testCloseSpace() {
         mkvSpace mnt = new mkvSpace(f("/mnt/#"), f("/mnt"));
         assertFalse(Router.global().hasSpaceFor(f("/test/a")));
-        mkvSpace test =  mkvSpace.of(f("/test/#"), fURI.NULL).vid(f("/mnt/test")).as();
+        mkvSpace test =  mkvSpace.of(f("/test/#")).vid(f("/mnt/test")).as();
         Router.writeToSpace(test);
         assertTrue(Router.global().hasSpaceFor(f("/test/a")));
         assertTrue(Router.global().hasSpaceFor(f("/test/a")));

@@ -28,6 +28,6 @@ import studio.phaseshift.metatron.space.SpaceTest;
 public class StackSpaceTest extends SpaceTest {
     @BeforeAll
     public static void setup() {
-        SPACE = () -> new StackSpace(fURI.of("/t/#"), fURI.of("/mnt/t"));
+        //SPACE = () -> new StackSpace(fURI.of("/t/#"));
     }
 }

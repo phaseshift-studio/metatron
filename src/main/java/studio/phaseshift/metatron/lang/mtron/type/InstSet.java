@@ -19,7 +19,7 @@
 package studio.phaseshift.metatron.lang.mtron.type;
 
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.space.Space;
+import studio.phaseshift.metatron.lang.msys.Space;
 
 import java.util.Set;
 

@@ -21,7 +21,7 @@ package studio.phaseshift.metatron.ui;
 import org.slf4j.event.Level;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.mtron.type.Obj;
-import studio.phaseshift.metatron.space.Router;
+import studio.phaseshift.metatron.lang.msys.Router;
 import studio.phaseshift.metatron.space.device.log.Log;
 
 import static org.slf4j.event.Level.*;
@@ -41,12 +41,11 @@ public class GraphittyObjLogger extends GraphittyLogger {
 
 
     private boolean doLog(final Level level) {
-        final Router router = Router.global();
-        if (null == router)
+        if (!Router.loaded())
             return true;
         else {
             if (!LOG_VID.isZero()) {
-                final Obj o = router.read(LOG_VID);
+                final Obj o = Router.global().read(LOG_VID);
                 if (o.isNoObj()) {
                     this.none("no space embedded logger found at %s\n", LOG_VID.toUri());
                     return true;

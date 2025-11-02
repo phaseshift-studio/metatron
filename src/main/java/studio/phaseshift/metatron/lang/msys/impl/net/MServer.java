@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.space.router.net;
+package studio.phaseshift.metatron.lang.msys.impl.net;
 
 import org.java_websocket.WebSocket;
 import org.java_websocket.handshake.ClientHandshake;
@@ -25,9 +25,9 @@ import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.mtron.type.Fail;
 import studio.phaseshift.metatron.lang.mtron.type.Obj;
-import studio.phaseshift.metatron.space.Router;
-import studio.phaseshift.metatron.space.router.FutureObj;
-import studio.phaseshift.metatron.space.router.ObjByteBufferSerializer;
+import studio.phaseshift.metatron.lang.msys.Router;
+import studio.phaseshift.metatron.lang.msys.impl.FutureObj;
+import studio.phaseshift.metatron.lang.msys.impl.ObjByteBufferSerializer;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
 import studio.phaseshift.metatron.ui.ObjSerializer;
@@ -45,7 +45,7 @@ import java.util.stream.Stream;
 import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MLst.lst;
-import static studio.phaseshift.metatron.space.router.MRouter.ROUTER_TID;
+import static studio.phaseshift.metatron.lang.msys.impl.MRouter.ROUTER_TID;
 
 public class MServer extends WebSocketServer implements Closeable, Obj {
 

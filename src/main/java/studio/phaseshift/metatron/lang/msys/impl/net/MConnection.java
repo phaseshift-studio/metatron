@@ -16,21 +16,24 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.space.router;
+package studio.phaseshift.metatron.lang.msys.impl.net;
 
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.lang.mtron.type.impl.MObjs;
-import studio.phaseshift.metatron.space.router.net.MConnection;
+import studio.phaseshift.metatron.lang.mtron.type.Obj;
+import studio.phaseshift.metatron.lang.msys.impl.FutureObj;
 
-import java.util.concurrent.ConcurrentHashMap;
+import java.io.Closeable;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class FutureObjs extends MObjs {
-    
-    public FutureObjs(final fURI vid, final MConnection conn) {
-        super(new ConcurrentHashMap<>(), vid);
-    }
-    
+public interface MConnection extends Closeable {
+
+    void sendObj(final Obj obj);
+
+    <O extends Obj> FutureObj<O> sendRecvObj(final Obj obj);
+
+    void close();
+
+    fURI authority();
 }

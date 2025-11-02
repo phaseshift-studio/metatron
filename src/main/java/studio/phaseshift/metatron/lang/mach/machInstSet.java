@@ -55,8 +55,8 @@ public class machInstSet extends MInstSet {
         super(MACH_TID, vid);
     }
 
-    public static machInstSet of(final fURI vid) {
-        return new machInstSet(vid);
+    public static machInstSet create() {
+        return new machInstSet(fURI.NULL);
     }
 
     @Override

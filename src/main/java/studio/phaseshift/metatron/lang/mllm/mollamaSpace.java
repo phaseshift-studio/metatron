@@ -32,6 +32,7 @@ import studio.phaseshift.metatron.util.Tuple;
 
 import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.lang.mllm.type.impl.OLLM.ollm;
+import static studio.phaseshift.metatron.lang.msys.msysInstSet.SPACE_TID;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MLst.lst;
 
 /*
@@ -40,7 +41,7 @@ import static studio.phaseshift.metatron.lang.mtron.type.impl.MLst.lst;
 public class mollamaSpace extends MSpace<OllamaModels> {
 
     public static final fURI MLLM_ID = f("/mllm");
-    public static final fURI MOLLAMA_TID = MLLM_ID.extend("space/mollama");
+    public static final fURI MOLLAMA_TID = SPACE_TID.extend("ollama");
     private final fURI ollamaHost;
     private final GraphittyLogger LOG = Graphitty.log(this);
     private final mkvSpace internal = new mkvSpace(this.pattern, fURI.NULL);
@@ -51,9 +52,9 @@ public class mollamaSpace extends MSpace<OllamaModels> {
         LOG.info("available models: %s", lst(models.availableModels().content().stream().map(OllamaModel::getModel).map(MUri::uri).map(m -> (Obj) m).toList()));
     }
 
-    public static mollamaSpace of(final fURI ollamaHost, final fURI pattern, final fURI vid) {
+    public static mollamaSpace of(final fURI ollamaHost, final fURI pattern) {
         final OllamaModels models = OllamaModels.builder().baseUrl(ollamaHost.toString()).build();
-        return new mollamaSpace(models, ollamaHost, pattern, vid);
+        return new mollamaSpace(models, ollamaHost, pattern, fURI.NULL);
     }
 
 

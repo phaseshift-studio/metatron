@@ -1,18 +1,20 @@
-:imagesdir: ../../images
-:favicon: {imagesdir}/favicon.ico
 :copyright: PhaseShift Studio
 :author: Marko A. Rodriguez
 :email: marko@markorodriguez.com
 :revnumber: 0.1-alpha
+:docdir: docs
+:imagesdir: ./images
+:favicon: {imagesdir}/favicon.ico
+:highlightjsdir: highlight
+:source-highlighter: ./highlight.js
+:highlightjs-languages: mtron,bash,json
+:stylesheet: ./css/metatron.css
 :icons: font
 :icon-set: fas
 :stem: latexmath
-:source-highlighter: highlight.js
-:highlightjsdir: ../highlight
-:highlightjs-languages: mtron,html,bash,json
-:stylesheet: ../css/metatron.css
 // :linkcss:
 :data-uri:
+:docinfo: shared
 :toc-title: metatron
 :toc: left
 :toclevels: 4
@@ -31,12 +33,12 @@
 :!email:
 :L: latexmath
 
-    mtron> ring-oriented computing
-
 ++++
 <script src="https://unpkg.com/highlightjs-copy/dist/highlightjs-copy.min.js"></script>
 <link rel="stylesheet" href="https://unpkg.com/highlightjs-copy/dist/highlightjs-copy.min.css"/>
 ++++
+
+    mtron> ring-oriented computing
 
 image:metatron-character-small.png[width=200,float=left]
 image:github-icon.png[width=20,link=https://github.com/phaseshift-studio/metatron] source
@@ -171,10 +173,10 @@ a*(b+c) = ab + ac
 include::intro.adoc[]
 
 == instruction sets
-include::instset/mtron.adoc[]
-include::instset/mkv.adoc[]
-include::instset/mweb.adoc[]
-include::instset/mgrph.adoc[]
-include::instset/mvec.adoc[]
-include::instset/mllm.adoc[]
-include::instset/mach.adoc[]
+include::mtron.adoc[]
+include::mkv.adoc[]
+include::mweb.adoc[]
+include::mgrph.adoc[]
+include::mvec.adoc[]
+include::mllm.adoc[]
+include::mach.adoc[]

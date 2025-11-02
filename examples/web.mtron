@@ -4,7 +4,6 @@
 /mnt/lang/mvec  -> */mvec;
 /mnt/lang/mach  -> */mach;
 /mnt/lang/mllm  -> */mllm;
----------------------------
 mkv(pattern     => /usr/#).@/mnt/usr;
 mkv(pattern     => /shared/#).@/mnt/shared;
 mollama(host    => <http://localhost:11434>,
