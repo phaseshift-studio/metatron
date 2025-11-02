@@ -72,6 +72,7 @@ public class Server implements Mode {
                     break;
             }
         } catch (final Exception e) {
+            LOG.error("unable to read user input (failback to ctrl-c to shutdown server): %s", e);
             MTronException.wrap(() -> Thread.currentThread().join());
         }
         BootLoader.close();
