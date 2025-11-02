@@ -177,14 +177,14 @@ public class ObjStringSerializer implements ObjSerializer<String> {
             }
             /// ///////////////////////////////////////////////////////////////
             /// ///////////////////////////////////////////////////////////////
-            else if (BASE_TYPES.contains(obj.baseType()))
+            else if (BASE_TYPES.contains(obj.type().tid().basePath())) {
                 return generateVID(generateTID(sb, obj.tid(), true)
                         .append(this.b.palette.valueC())
                         .append(null == obj.jvm() ? "" : (obj.isStr() ? "'" + obj.jvm().toString() + "'" : obj.jvm().toString()))
                         .append(this.b.palette.form2C()), obj)
                         .append(this.b.ignoreRewrites ? "" : "{{X}}")
                         .toString();
-            else
+            } else
                 return generateVID(generateTID(sb, obj.tid(), true)
                         .append(this.b.palette.valueC())
                         .append(obj instanceof Space ? rel(uri("pattern"), null == ((Space) obj).pattern() ? uri("pattern") : ((Space) obj).pattern().toUri()) : obj.jvm())

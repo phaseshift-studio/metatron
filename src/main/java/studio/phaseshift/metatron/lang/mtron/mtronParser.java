@@ -173,7 +173,7 @@ public class mtronParser {
     public static <O extends Obj> O parse(final String code) {
         if (code.trim().isEmpty())
             return (O) NoObj.noobj();
-        final Result result = choice(sugar_code(), m_obj()).end().parse(code.trim());
+        final Result result = seq(choice(sugar_code(), m_obj()), opt(m_comment(),null)).map(t -> pick(t, 0)).end().parse(code.trim());
         if (result.isFailure())
             LOG.except(result.getBuffer() + "\n" +
                     String.format("%" + (result.getPosition() + "[ERROR] [Console] ".length() + 3) + "s", "") +
@@ -267,7 +267,7 @@ public class mtronParser {
     }
 
     public static Parser m_noobj() {
-        return of("noobj").trim().map(t -> NoObj.noobj());
+        return seq(of("noobj"),opt(m_furi_coefficient(),null)).trim().map(t -> NoObj.noobj());
     }
 
     public static Parser m_objs() {

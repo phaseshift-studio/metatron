@@ -40,17 +40,17 @@ if TYPE_CHECKING:
 if sys.version_info >= (3, 8):  # pragma: no cover
     from importlib.metadata import PackageNotFoundError, version
 
-    try:
-        __version__ = version("markdown-code-runner")
-    except PackageNotFoundError:
-        __version__ = "unknown"
+    #try:
+    #    __version__ = version("docs-code-parser")
+    #except PackageNotFoundError:
+    __version__ = "3.9"
 else:  # pragma: no cover
 
     __version__ = pkg_resources.get_distribution("markdown-code-runner").version
 
 DEBUG: bool = os.environ.get("DEBUG", "0") == "1"
-mytron: Mytron = Mytron()
-
+mytron = Mytron()
+print(mytron)
 
 def remove_html_comment(commented_text: str) -> str:
     commented_text = commented_text.removesuffix(" -->")
@@ -238,7 +238,6 @@ class ProcessingState:
         self.output = None  # Reset output after processing end of the output section
 
     def _process_chicken_code(self, *, verbose: bool) -> None:
-        print(f"code: {self.code}")
         to_header = []
         to_execute = []
         for line in self.code:
@@ -252,11 +251,15 @@ class ProcessingState:
         self.output.extend(to_header)
         result = []
         to_execute.pop(0)
+        print(f"code: {to_execute}")
         for line in to_execute:
-            result.append(mytron.exec(line))
-        for line in result:
-            if -1 == line.find("[HIDDEN]"):
-                self.output.append(line)
+            result.append(f"mtron> {line}")
+            result.append(f"==>{mytron.exec(line)}")
+        #for line in result:
+        #    if -1 == line.find("[HIDDEN]"):
+        #        print(line)
+        self.output.extend(result)
+        print(self.output)
         self.code = []
         self.backtick_options = {}
 
@@ -343,11 +346,12 @@ def main() -> None:
         action="version",
         version=f"%(prog)s {__version__}",
     )
-
+    print(parser)
     args = parser.parse_args()
-
+    print("here")
     input_filepath = Path(args.input)
     output_filepath = Path(args.output) if args.output is not None else input_filepath
+    print(f"{input_filepath} => {output_filepath}")
     update_markdown_file(input_filepath, output_filepath, verbose=args.verbose)
 
 

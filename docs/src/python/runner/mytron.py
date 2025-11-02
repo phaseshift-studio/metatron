@@ -16,6 +16,7 @@
 import asyncio
 import websockets
 import logging
+import re
 logger = logging.getLogger(__name__)
 
 async def submit(ws, code):
@@ -26,7 +27,7 @@ async def submit(ws, code):
 
 
 class Mytron:
-    def __init__(self, host: str = "ws://chibi.local:8888"):
+    def __init__(self, host: str = "ws://localhost:8887"):
         self.host = host
         logger.info(f"connecting to {self.host}")
         self.ws = websockets.connect(self.host)
@@ -37,7 +38,9 @@ class Mytron:
         future = asyncio.get_event_loop().run_until_complete(submit(self.ws, code))
         result = str(future,'utf-8')
         print(f"recv: {result}")
+        result = re.sub(r"/m/([^:]*)::","", result)
         return result
+
 
 
 #mytron = Mytron()

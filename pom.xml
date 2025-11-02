@@ -322,11 +322,34 @@
                 </executions>
             </plugin>
             <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>3.6.2</version>
+                <executions>
+                    <execution>
+                        <id>run-python-script</id>
+                        <phase>site</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <executable>python</executable>
+                            <arguments>
+                                <argument>docs/src/python/docs-code-parser.py</argument>
+                                <argument>-o</argument>
+                                <argument>${project.basedir}/docs/src/build/index.adoc</argument>
+                                <argument>${project.basedir}/docs/src/adoc/index.adoc</argument>
+                            </arguments>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
                 <groupId>org.asciidoctor</groupId>
                 <artifactId>asciidoctor-maven-plugin</artifactId>
                 <version>${asciidoctor.version}</version>
                 <configuration>
-                    <sourceDirectory>${project.basedir}/docs/src/adoc</sourceDirectory>
+                    <sourceDirectory>${project.basedir}/docs/src/build</sourceDirectory>
                     <outputDirectory>${project.build.directory}/docs</outputDirectory>
                     <resources>
                         <resource>
@@ -337,6 +360,7 @@
                                 <exclude>**/.py</exclude>
                             </excludes>
                             <includes>
+                                <include>**/*.css</include>
                                 <include>**/*.png</include>
                                 <include>**/*.svg</include>
                                 <include>**/*.adoc</include>
