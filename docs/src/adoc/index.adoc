@@ -116,12 +116,12 @@ Finally, every element latexmath:[a \in R] has an _inverse_ latexmath:[-a \in R]
   =\;& a - a.
 \end{align*}
 ++++
-The entire structure of a ring can be denoted
+These are the axioms of ring theory. The entire structure of a ring is denoted
 [stem]
 ++++
-<R,+,-,0,1>,
+\langle R,+,-,0,1 \rangle,
 ++++
-where each symbol is replaced by the corresponding operator and elements of the respective ring being defined. These are the axioms of ring theory. Any collection of tokens, processes, objects, identifiers, etc. that obey these rules form, by definition, a ring and can be manipulated by the stated equivalencies and their formal derivatives.
+where each symbol is replaced by the corresponding operator and elements of the respective ring being defined. Any collection of tokens, processes, objects, identifiers, etc. that obey these rules form, by definition, a ring and can be manipulated by the stated equivalencies and their formal derivatives.
 
 #### the rings of metatron
 
@@ -135,13 +135,16 @@ where `jvm` is an object of the Java virtual machine, `tid` is a _type_ (class) 
 
 #### fURI
 
+[cols="5,7",frame="none",separator=🧱]
+|===
+a🧱
 ++++
 <!-- 🐖
-/m/int                --- <1>
-/m/int + /m/int       --- <2>
-/m/int + /m/int{-1}   --- <3>
-/m/int ⋅ /m/int       --- <4> 
-/m/int{2} ⋅ /m/int{3} --- <5>
+/m/int                  --- <1>
+/m/int + /m/int         --- <2>
+/m/int + /m/int{-1}     --- <3>
+/m/int ⋅ /m/int         --- <4> 
+/m/int{2} ⋅ /m/int{3}   --- <5>
 -->
 ++++
 
@@ -149,6 +152,13 @@ where `jvm` is an object of the Java virtual machine, `tid` is a _type_ (class) 
 <!-- 🐓 -->
 ++++
 
+a🧱
+
+<1> a single uri
+<2> the addition of two uris
+<3> the addition of a uri and its inverse.
+
+|===
 
 ```
 a+0 = a
