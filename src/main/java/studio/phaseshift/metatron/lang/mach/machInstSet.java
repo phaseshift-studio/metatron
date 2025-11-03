@@ -1,6 +1,6 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
- * Copyright (C) 2025- PhaseShift Studio, LLC 
+ * Copyright (C) 2025- PhaseShift Studio, LLC
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -18,24 +18,29 @@
 
 package studio.phaseshift.metatron.lang.mach;
 
+import studio.phaseshift.metatron.algebra.MultMonoid;
+import studio.phaseshift.metatron.algebra.PlusMonoid;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.lang.mtron.mtronInstSet;
 import studio.phaseshift.metatron.lang.mtron.type.Inst;
-import studio.phaseshift.metatron.lang.mtron.type.impl.MInstSet;
 import studio.phaseshift.metatron.lang.mtron.type.Type;
+import studio.phaseshift.metatron.lang.mtron.type.impl.MInstSet;
 import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
 
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.furi.fURI.f;
+import static studio.phaseshift.metatron.lang.mtron.mtronInstSet.INT_TID;
+import static studio.phaseshift.metatron.lang.mtron.type.impl.MInst.instB;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MType.T;
-import static studio.phaseshift.metatron.lang.mtron.mtronInstSet.INT_TID;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -50,6 +55,9 @@ public class machInstSet extends MInstSet {
     public static final fURI PROJECT_TID = INST_TID.extend("project"); // proj?
     public static final fURI INJECT_TID = INST_TID.extend("inject"); // inj ?
     public static final fURI EXPAND_TID = INST_TID.extend("expand"); // TODO: expand tuple body 
+    public static final fURI RING_ZERO_TID = INST_TID.extend("ring").extend("const").extend("zero");
+    public static final fURI RING_ONE_TID = INST_TID.extend("ring").extend("const").extend("one");
+    public static final fURI RING_BINARY = INST_TID.extend("ring").extend("op").extend("+");
 
     public machInstSet(final fURI vid) {
         super(MACH_TID, vid);
@@ -66,7 +74,11 @@ public class machInstSet extends MInstSet {
 
     @Override
     public Set<Inst> insts() {
-        return new LinkedHashSet<>(Set.of(
+        return new LinkedHashSet<>(List.of(
+                instC(RING_ZERO_TID.dom(A).rng(A), lst(), (lhs, inst) -> ((PlusMonoid.O<?>) lhs).zero()),
+                instC(RING_ONE_TID.dom(A).rng(A), lst(), (lhs, inst) -> ((MultMonoid.O<?>) lhs).one()),
+               // instC(RING_BINARY.dom(A).rng(ALL.dom(A).rng(A)), lst(), (lhs, inst) -> instB(mtronInstSet.INST_TID.extend(inst.tid().name()), lst(lhs.type())).resolve(lhs)),
+                //instC(RING_BINARY.dom(A).rng(ALL.dom(A).rng(A)), lst(T(A)), (lhs, inst) -> instB(mtronInstSet.INST_TID.extend(inst.tid().name()), inst.args()).apply(lhs)),
                 instC(DROP_TID.dom(ALL).rng(MACH_MONAD_TID), lst(), (lhs, inst) -> {
                     throw MTronException.of("placeholder error as machine should handle the drop");
                 }),
@@ -75,14 +87,16 @@ public class machInstSet extends MInstSet {
                         return lhs.<Tuple>jvmAs().project(inst.arg(0).intValue().intValue());
                     else if (inst.arg(0).intValue() == 0)
                         return lhs;
-                    else throw MTronException.of("projection larger than tuple: 1 < %d", inst.arg(0).intValue().intValue());
+                    else
+                        throw MTronException.of("projection larger than tuple: 1 < %d", inst.arg(0).intValue().intValue());
                 }),
-                instC(INJECT_TID.dom(ALL).rng(ALL), lst(T(INT_TID),T(ALL)), (lhs, inst) -> {
+                instC(INJECT_TID.dom(ALL).rng(ALL), lst(T(INT_TID), T(ALL)), (lhs, inst) -> {
                     if (lhs.jvm() instanceof Tuple)
                         return lhs.jvm(lhs.<Tuple>jvmAs().inject(inst.arg(0).intValue().intValue(), inst.arg(1)));
                     else if (inst.arg(0).intValue() == 0)
                         return lhs.jvm(inst.arg(1).jvm());
-                    else throw MTronException.of("injection larger than tuple: 1 < %d", inst.arg(0).intValue().intValue());
+                    else
+                        throw MTronException.of("injection larger than tuple: 1 < %d", inst.arg(0).intValue().intValue());
                 })
         ));
     }

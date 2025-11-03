@@ -21,9 +21,9 @@ package studio.phaseshift.metatron.lang.mtron.type;
 import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.lang.msys.Router;
 import studio.phaseshift.metatron.lang.mtron.mtronInstSet;
 import studio.phaseshift.metatron.lang.mtron.type.impl.MType;
-import studio.phaseshift.metatron.lang.msys.Router;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
 import studio.phaseshift.metatron.util.IteratorUtil;
@@ -49,38 +49,38 @@ public interface Inst extends Call {
     private static Poly resolveArgs(final Inst apiInst, final Inst userInst, final Obj lhs) {
         final GraphittyLogger LOG = Graphitty.log(apiInst);
         if (userInst.args().isLst()) {
-            LOG.trace("processing lst args of %s", userInst);
+            LOG.trace("resolving lst args of %s", userInst);
             final List<Obj> resolvedArgs = new ArrayList<>();
             for (int i = 0; i < apiInst.args().count(); i++) {
-                final Obj sObj = apiInst.arg(i);
-                final Obj tObj = userInst.arg(i);
+                final Obj apiArg = apiInst.arg(i);
+                final Obj userArg = userInst.arg(i);
                 if (apiInst.isBlocking()) {
-                    resolvedArgs.add(sObj);
-                } else if (sObj.isCall()) {
-                    final Inst firstInst = sObj.<Call>as().insts().get(0);
+                    resolvedArgs.add(apiArg);
+                } else if (apiArg.isCall()) {
+                    final Inst firstInst = apiArg.<Call>as().insts().get(0);
                     if (!firstInst.hasDomOrRng() && firstInst.tid().basePath().equals(FROM_TID)) { // from() is a side-effect and the type can't be known unless explcitly specified (need a way to denote side-effect insts).
-                        resolvedArgs.add(sObj.resolve(lhs));
+                        resolvedArgs.add(apiArg.resolve(lhs));
                     } else {
                         // TODO: is this necessary and if so, do the same for lst
-                        if (apiInst.tid().name().equals(SPLIT_TID.name()) && sObj.isRec()) {
-                            Rec sRecObj = rec(sObj.recValue().entrySet()
+                        if (apiInst.tid().name().equals(SPLIT_TID.name()) && apiArg.isRec()) {
+                            Rec sRecObj = rec(apiArg.recValue().entrySet()
                                     .stream()
                                     .map(kv2 -> List.of(kv2.getKey().resolve(lhs), kv2.getValue().resolve(lhs)))
                                     .collect(Collectors.toMap(kv2 -> kv2.get(0), kv2 -> kv2.get(1), Obj::append, LinkedHashMap::new)));
                             final Obj r = sRecObj.resolve(lhs);
-                            if (r.rng().matches(tObj))
+                            if (r.rng().matches(userArg))
                                 resolvedArgs.add(r);
                             else return null;
                         }
-                        final Obj r = sObj.resolve(lhs);
-                        if (r.rng().matches(tObj))
+                        final Obj r = apiArg.resolve(lhs);
+                        if (r.rng().matches(userArg)) // && userArg.rng().c().within(apiArg.c()))
                             resolvedArgs.add(r);
                         else return null;
                     }
                 } else {
-                    if (!sObj.matches(tObj))
+                    if (!apiArg.matches(userArg))
                         return null;
-                    resolvedArgs.add(sObj.resolve(lhs));
+                    resolvedArgs.add(apiArg.resolve(lhs));
                 }
             }
             return lst(resolvedArgs);

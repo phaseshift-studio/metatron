@@ -21,7 +21,7 @@ package studio.phaseshift.metatron.lang.mtron.type;
 import studio.phaseshift.metatron.algebra.Ring;
 import studio.phaseshift.metatron.furi.fURI;
 
-public interface Uri extends Mono, Ring<Uri> {
+public interface Uri extends Mono, Ring.O<Uri> {
 
     @Override
     Uri clone(final Object jvm, final fURI tid, final fURI vid);

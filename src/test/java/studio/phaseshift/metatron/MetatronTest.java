@@ -44,7 +44,7 @@ public class MetatronTest {
     @BeforeAll
     public static void begin() {
         BootLoader.load(rec(uri("mode"), uri("testing")));
-       // mtronInstSet.create().vid(f("/mnt/lang/m"));
+        mtronInstSet.create().vid(f("/mnt/lang/m"));
         machInstSet.create().vid(f("/mnt/lang/mach"));
         mvecInstSet.create().vid(f("/mnt/lang/mvec"));
         mkvSpace.of(f("/usr/#")).vid(f("/mnt/usr"));

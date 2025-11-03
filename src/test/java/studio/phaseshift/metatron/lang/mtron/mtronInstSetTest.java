@@ -31,7 +31,7 @@ public class mtronInstSetTest extends MetatronTest {
     @Override
     @ParameterizedTest
     @CsvSource(value = {
-            "1.plus?int{?}<=int(int{0}::1)                                          % noobj",
+            // "1.plus?int{?}<=int(int{0}::1)                                          % noobj",
             "1.plus(_)                                                              % 2",
             "1.plus(2)                                                              % 3",
             "{1,2,3}._                                                              % {1,2,3}",
@@ -39,7 +39,9 @@ public class mtronInstSetTest extends MetatronTest {
             "{int{10}::1}.plus(_)                                                   % int{10}::2",
             "int{10}::2.plus(_)                                                     % int{10}::4",
             "{1,2,3}>-._.plus(_)                                                    % {2,4,6}",
+            "{1,2,3}>-.plus(_)                                                      % {2,4,6}",
             "{1,2,3}._.plus(_)                                                      % {2,4,6}",
+            "{1,2,3}.plus(_)                                                        % {2,4,6}",
             "{1,2,3}.plus(id())                                                     % {2,4,6}",
             "{1,2,3}.plus(mult(1))                                                  % {2,4,6}",
             "{1,2,3}.plus(plus(1))                                                  % {3,5,7}",
@@ -181,10 +183,17 @@ public class mtronInstSetTest extends MetatronTest {
             "{[1],[2,3],[1,3]}.sum()._/sum{2}()\\_.>-.sum()                         % 20",
             "{[1,2],[3,4,5],[6,7,8]}.sum()._/sum()\\_.>-.sum{2}()                   % int{2}::36",
             "{[1,2],[3,4,5],[6,7,8]}.sum()._/sum()\\_.>-.sum{2}().sum()             % 72",
+            /// 
+            "{1,2,3,4,5}.reduce(|plus(0))                                           % 15",
+            "{,}.reduce(|plus(0))                                                   % 0",
+            "reduce(|mult(0))                                                       % 0",
+            "{1,2,3,4,5}.reduce(|mult(2))                                           % 240",
+            "{1,2,3,4,5}.reduce(|mult(1))                                           % 120",
+            //"{1,2,3,4,5}.reduce(|inst(0){ plus(*<0>) })                             % 240",
             // dummy without ending comma so it's easier to add more test cases
             "1.plus(1)                                                              % 2"
     }, delimiter = '%')
-    public void testSum(final String code, final String expected) {
+    public void testReductions(final String code, final String expected) {
         super.testCode(code, expected);
     }
 

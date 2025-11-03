@@ -1,6 +1,6 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
- * Copyright (C) 2025- PhaseShift Studio, LLC 
+ * Copyright (C) 2025- PhaseShift Studio, LLC
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -39,6 +39,36 @@ public class machInstSetTest extends MetatronTest {
             "1.plus(1)                                                                                   % 2"
     }, delimiter = '%')
     public void testCode(final String code, final String expected) {
+        super.testCode(code, expected);
+    }
+
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "1.zero()                                                                                    % 0",
+            "1.one()                                                                                     % 1",
+            // "a/b/c.zero()                                                                                % < >",
+            "a/b/c.one()                                                                                 % <.>",
+            "[1=>2,2=>3].zero()                                                                          % [=>]",
+            "[1,2,3].zero()                                                                              % [,]",
+            "[1=>2,2=>3].zero()                                                                          % [=>]",
+            "1.one()                                                                                     % 1",
+            "1.23.one()                                                                                  % 1.0",
+            "1.23.mult(one())                                                                            % 1.23",
+            "{1,1.23,[1=>2,3=>4],[1,2,3]}.zero()                                                         % {0,0.0,[=>],[,]}",
+            "{1,1.23,[1=>2,3=>4],[1,2,3]}.plus(zero())                                                   % {1,1.23,[1=>2,3=>4],[1,2,3]}",
+           // "{1,1.23,[1=>2,3=>4],[1,2,3]}.mult(zero())                                                   % {1,1.23,[1=>2,3=>4],[1,2,3]}",
+            "{1,1.23}.mult(one())                                                                        % {1,1.23}",
+            //"{1,1.23,[1=>2,3=>4],[1,2,3]}.</mach/inst/ring/op/plus>(zero())                              % {1,1.23,[1=>2,3=>4],[1,2,3]}",
+            //"{1,1.23,a/b/c}.</mach/inst/ring/op/mult>(one())                                             % {1,1.23,a/b/c}",
+            //"{1,2,3,4,5}.reduce(|</mach/inst/ring/op/plus>(0))                                       % 15",
+            "1.drop().project(0)                                                                         % 1",
+            "1.drop().inject(2,[loop=>0]).project(2)                                                     % [loop=>0]",
+            "1.drop().inject(2,[loop=>0]).inject(2,project(2)==[loop=>plus(1)]).project(2)               % [loop=>1]",
+            // dummy without ending comma so it's easier to add more test cases
+            "1.plus(1)                                                                                   % 2"
+    }, delimiter = '%')
+    public void testRingAlgebra(final String code, final String expected) {
         super.testCode(code, expected);
     }
 }

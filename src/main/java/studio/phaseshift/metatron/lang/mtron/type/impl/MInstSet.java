@@ -20,12 +20,12 @@ package studio.phaseshift.metatron.lang.mtron.type.impl;
 
 import org.petitparser.parser.Parser;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.lang.msys.Router;
 import studio.phaseshift.metatron.lang.mtron.type.Inst;
 import studio.phaseshift.metatron.lang.mtron.type.InstSet;
 import studio.phaseshift.metatron.lang.mtron.type.Obj;
 import studio.phaseshift.metatron.lang.mtron.type.Type;
 import studio.phaseshift.metatron.space.MSpace;
-import studio.phaseshift.metatron.lang.msys.Router;
 
 import java.util.*;
 
@@ -50,7 +50,7 @@ public abstract class MInstSet extends MSpace<Map<fURI, Set<? extends Obj>>> imp
     public MInstSet(final Map<fURI, Set<? extends Obj>> value, final fURI tid, final fURI vid) {
         super(value, tid.extend(fURI.ALL), tid, vid);
         if (!this.pattern.equals(f("+/#")) && Router.loaded() && !(this instanceof Router))
-           Router.global().addSpace(this.pattern, this);
+            Router.global().addSpace(this.pattern, this);
         this.types().forEach(t -> this.write(t.tid(), t));
         this.consts().forEach(c -> this.write(c.vid(), c));
         this.insts().forEach(i -> this.write(i.tid(), i));
@@ -58,7 +58,7 @@ public abstract class MInstSet extends MSpace<Map<fURI, Set<? extends Obj>>> imp
         this.types().forEach(t -> Router.global().registerRewrite(f(t.tid().name()), t.tid()));
         this.consts().forEach(t -> Router.global().registerRewrite(f(t.vid().name()), t.vid()));
         this.insts().forEach(t -> Router.global().registerRewrite(f(t.tid().name()), t.tid().basePath()));
-        
+
     }
 
     @Override
@@ -97,7 +97,7 @@ public abstract class MInstSet extends MSpace<Map<fURI, Set<? extends Obj>>> imp
         final fURI bigvid = vid.big();
         return objs(INST_TABLE.entrySet()
                 .stream()
-                .filter(kv -> kv.getKey().matches(bigvid.basePath()))
+                .filter(kv -> kv.getKey().bimatches(bigvid.basePath()))
                 .flatMap(kv -> kv.getValue().stream())
                 .filter(i -> !bigvid.hasDom() || i.dom().tid().bimatches(bigvid.dom()))
                 .filter(i -> !bigvid.hasRng() || i.rng().tid().bimatches(bigvid.rng()))
