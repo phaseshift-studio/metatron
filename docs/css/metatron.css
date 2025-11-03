@@ -40,7 +40,11 @@ p{font-family: "Noto Sans",sans-serif ! important}
 #toc.toc2 a:link{color:var(--linkcolor);}
 blockquote{color:var(--tertiarycolor) !important}
 .quoteblock{color:var(--white)}
-code{color:var(--linkcoloralternate);background-color: var(--sidebarbackground) !important}
+code{
+    color:var(--linkcoloralternate);
+    background-color: var(--sidebarbackground) !important;
+    border-radius: 0px;
+}
 
 
 /* Table styles */
@@ -111,11 +115,19 @@ a {
 }
 
 pre code {
-  color: var(--linkcoloralternate)
+  color: var(--linkcoloralternate);
 }
 .literalblock pre, .listingblock pre:not(.highlight), .listingblock pre[class="highlight"], .listingblock pre[class^="highlight "], .listingblock pre.CodeRay, .listingblock pre.prettyprint {
   background: var(--sidebarbackground);
   color: var(--primarycolor);
+}
+
+
+.literalblock pre, .listingblock>.content>pre:not(.highlight), .listingblock>.content>pre[class=highlight], .listingblock>.content>pre[class^="highlight "] {
+     background: var(--sidebarbackground);
+     color: var(--primarycolor);
+     margin: 0em !important;
+     padding: 1em !important;
 }
 
 #header .details {
@@ -123,4 +135,115 @@ pre code {
 }
 #header .details span.email a {
   color: var(--linkcoloralternate);
+}
+
+/******************************************************************/
+
+.hljs {
+    font-size: 90%;
+    display: block;
+    overflow: hidden;
+    padding: 0.5em;
+}
+
+.hljs-phaseshift-studio-header {
+    color: var(--secondarycolor) !important;
+    font-weight: bolder;
+}
+
+.hljs-fhatos-thrown,
+.hljs-mtron-noobj {
+    color: #ba3925;
+}
+
+.hljs-mtron-bool,
+.hljs-fhatos-sys-furi {
+    color: #d4de68;
+}
+
+.hljs-mtron-real,
+.hljs-mtron-int {
+    color: lightyellow;
+}
+
+.h {
+    color: #d4de68;
+    font-weight: bold !important;
+}
+
+.hljs-mtron-str {
+    color: #d4de68;
+    font-style: italic;
+}
+
+.hljs-punctuation,
+.hljs-mtron-rec,
+.hljs-mtron-furi-query {
+    color: #d4de68;
+    font-weight: bold;
+}
+
+.hljs-mtron-rec-key {
+    color: cyan;
+}
+
+#header .details,
+.hljs-mtron-form,
+.hljs-fhatos-prompt-begin {
+    color: var(--linkcolor);
+    font-weight: bold;
+}
+
+.hljs-fhatos-prompt-end {
+    color: green;
+}
+
+.hljs-fhatos-result-prefix {
+    color: var(--linkcolor);
+    font-weight: bold;
+}
+
+.hljs-mtron-pipe,
+.hljs-fhatos-log-info {
+    color: limegreen;
+}
+
+.hljs-fhatos-log-error {
+    color: #ba3925;
+}
+
+
+.hljs-mtron-sugar-inst,
+.hljs-mtron-inst-f-cpp,
+.hljs-fhatos-log-warn {
+    color: #c2aa2f;
+}
+
+.hljs-comment,
+.hljs-mtron-keyword,
+.hljs-mtron-uri,
+.hljs-mtron-type {
+    color: #1c72ff;
+}
+
+.hljs-mtron-doc-callout {
+    display: inline-block;
+    color: white;
+    background: #2d78e3 !important;
+    -webkit-border-radius: 100px;
+    -moz-border-radius: 100px;
+    -o-border-radius: 100px;
+    border-radius: 100px;
+    text-align: center;
+    width: 30px;
+    height: 30px;
+    font-size: 15px;
+    font-weight: bold;
+    line-height: 28px;
+    font-family: Arial;
+}
+
+.hljs-fos-docs-if-else-then-case-do,
+.hljs-mtron-comment {
+    color: #797979;
 }

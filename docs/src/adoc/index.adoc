@@ -57,11 +57,11 @@ ____
 
 To understand [.metatron] it is necessary to understand the core mtron language and the mechanics of the underlying virtual machine.
 
-### metatron architecture
+## metatron architecture
 
 The fundamental architecture of [.metatron] is realized as a network of coupled https://en.wikipedia.org/wiki/Ring_(mathematics)[algebraic rings] executing all levels of abstraction -- from the human-readable/writeable programming language, to the compiler that generates a sequence of instructions for the virtual machine to evaluate using a swarm of atomic monadic processors that ultimately read and write data identified by a ring-based id system supported by a heterogeneous set of data stores called __spaces__. Each of these components follows the axioms of an algebraic ring (or some subset algebra such as a monoid or group).
 
-#### algebraic ring theory
+### algebraic ring theory
 
 A ring is a set of elements latexmath:[R] along with two binary operators 
 
@@ -125,7 +125,7 @@ These are the axioms of ring theory. The entire structure of a ring is denoted
 ++++
 where each symbol is replaced by the corresponding operator and elements of the respective ring being defined. Any collection of tokens, processes, objects, identifiers, etc. that obey these rules form, by definition, a ring and can be manipulated by the stated equivalencies and their formal derivatives.
 
-#### the rings of metatron
+### the rings of metatron
 
 There are many rings in metatron. Of particular importance is the ring fURI -- a "fhat" Uniform Resource Identifier. `fURIs` are used to denote the type, extension, and location of an `obj` (object) in metatron. In fact, an `obj` in metatron is composed of three elements, one data structure and 2 `fURIs`, where:
 ++++
@@ -135,7 +135,7 @@ There are many rings in metatron. Of particular importance is the ring fURI -- a
 ++++
 where `jvm` is an object of the Java virtual machine, `tid` is a _type_ (class) `fURI` and `vid` is a _value_ (instance) `fURI`. Every `obj` in metatron has a form, a denotation of that form, and an reference to it's explicit location in metatron.
 
-#### fURI
+### fURI
 
 [cols="5,7",frame="none",separator=🧱]
 |===
@@ -162,13 +162,14 @@ a🧱
 
 |===
 
-```
+[source,mtron]
+----
 a+0 = a
 a*1 = a
 a-a = 0
 a*(b+c) = ab + ac 
 (b+c)*a = ba + ca
-```
+----
 
 include::intro.adoc[]
 
@@ -180,3 +181,16 @@ include::mgrph.adoc[]
 include::mvec.adoc[]
 include::mllm.adoc[]
 include::mach.adoc[]
+
+++++
+<script src="./highlight/highlight.min.js"></script>
+<script src="./highlight/languages/mtron.min.js"></script>
+<script src="./highlight/languages/bash.min.js"></script>
+<script src="./highlight/languages/json.min.js"></script>
+<script>
+if (!hljs.initHighlighting.called) {
+hljs.initHighlighting.called = true
+;[].slice.call(document.querySelectorAll('pre.highlight > code[data-lang]')).forEach(function (el) { hljs.highlightBlock(el) })
+}
+</script>
+++++
