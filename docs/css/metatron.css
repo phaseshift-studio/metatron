@@ -6,22 +6,32 @@
 /* CUSTOMISATIONS */
 /* Change the values in root for quick customisation. If you want even more fine grain... venture further. */
 :root{
+/*------------------------*/
+    --mblue:#005DB0;
+    --mdarkblue:#050e53;
+    --mmagenta:#483D8B;
+    --mred:#7e3200;
+    --mgreen:#008b6e;
+    --mdarkgray:#494554;
+    --mlightgray:#797585;
+    --myellow:#00c1e1;
+/*------------------------*/ 
     --maincolor:#282c34;
-    --primarycolor: #991111;
+    --primarycolor: var(--mred);
     --secondarycolor: #191C24;
     --light: #6C7293;
     --dark: #000000;
     --tertiarycolor:#4db6ac;
     --sidebarbackground:#191C24;
-    --linkcolor:#f44336;
-    --linkcoloralternate:#CF7C00;
+    --linkcolor:var(--mmagenta);
+    --linkcoloralternate:var(--mblue);
     --white:#FFFFFF;
 }
 
 /* roles */
 
 .red {
-  color:var(--primarycolor);
+  color:var(--mred);
 }
 
 .metatron:before {
@@ -153,17 +163,17 @@ pre code {
 
 .hljs-mtron-thrown,
 .hljs-mtron-noobj {
-    color: maroon;
+    color: var(--mred);
 }
 
 .hljs-mtron-bool,
 .hljs-mtron-sys-furi {
-    color: darkgoldenrod;
+    color: var(--myellow);
 }
 
 .hljs-mtron-real,
 .hljs-mtron-int {
-    color: darkgoldenrod;
+    color: var(--myellow);
 }
 
 .h {
@@ -172,57 +182,57 @@ pre code {
 }
 
 .hljs-mtron-str {
-    color: darkgoldenrod;
+    color: var(--myellow);
     font-style: italic;
 }
 
 .hljs-punctuation {
-  color: darkgreen;
+  color: var(--mgreen);
 }
 
 .hljs-mtron-rec,
 .hljs-mtron-furi-query {
-    color: darkgreen;
+    color: var(--mgreen);
     font-weight: bold;
 }
 
 .hljs-mtron-rec-key {
-    color: darkgoldenrod;
+    color: var(--myellow);
 }
 
 #header .details,
 .hljs-mtron-form {
-    color: darkgreen;
+    color: var(--mgreen);
 }
 
 .hljs-mtron-prompt-begin {
-    color: darkslateblue;
+    color: var(--mmagenta);
     font-weight: bold;
 }
 
 .hljs-mtron-prompt-end {
-    color: darkgreen;
+    color: var(--mgreen);
 }
 
 .hljs-mtron-result-prefix {
-    color: darkslateblue;
+    color: var(--mmagenta);
     font-weight: bold;
 }
 
 .hljs-mtron-pipe,
 .hljs-mtron-log-info {
-    color: darkgreen;
+    color: var(--mgreen);
 }
 
 .hljs-mtron-log-error {
-    color: maroon;
+    color: var(--mred);
 }
 
 
 .hljs-mtron-sugar-inst,
 .hljs-mtron-inst-f-cpp,
 .hljs-mtron-log-warn {
-    color: darkgoldenrod;
+    color: var(--myellow);
 }
 
 .hljs-comment,
@@ -230,23 +240,23 @@ pre code {
 .hljs-mtron-keyword,maro
 .hljs-mtron-uri,
 .hljs-mtron-type {
-    color: royalblue;
+    color: var(--mdarkblue);
 }
 
 .hljs-mtron-doc-callout {
     display: inline-block;
-    color: indianred;
-    background: darkslateblue !important;
+    color: var(--sidebarbackground);
+    background: var(--mmagenta) !important;
     -webkit-border-radius: 100px;
     -moz-border-radius: 100px;
     -o-border-radius: 100px;
     border-radius: 100px;
     text-align: center;
-    width: 25px;
-    height: 25px;
-    font-size: 12px;
+    width: 22px;
+    height: 22px;
+    font-size: 11px;
     font-weight: bold;
-    line-height: 25px;
+    line-height: 22px;
     font-family: Arial;
 }
 
