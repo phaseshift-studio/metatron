@@ -36,6 +36,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static studio.phaseshift.metatron.lang.mtron.mtronInstSet.*;
+import static studio.phaseshift.metatron.lang.mtron.type.NoObj.noobj;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MType.T;
@@ -144,8 +145,8 @@ public interface Inst extends Call {
 
     default Obj arg(final int index) {
         return this.args().isLst() ?
-                (this.args().lstValue().size() > index ? this.args().lstValue().get(index) : NoObj.noobj()) :
-                IteratorUtil.index(this.args().elements().iterator(), index, NoObj.noobj()).<Rel>as().second();
+                (this.args().lstValue().size() > index ? this.args().lstValue().get(index) : noobj()) :
+                IteratorUtil.index(this.args().elements().iterator(), index, noobj()).<Rel>as().second();
     }
 
     @Override
@@ -170,7 +171,7 @@ public interface Inst extends Call {
     }
 
     default Obj seed() {
-        return this.jvm().get2();
+        return null == this.jvm() ? noobj() : this.jvm().get2();
     }
 
     default Resolution resolution() {
@@ -229,7 +230,7 @@ public interface Inst extends Call {
         resolved2 = this.hasDomOrRng() ? resolved2.tid(this.tid()) : resolved2;
         if (resolved2.isNoObj()) {
             LOG.debug("%s could not be resolved in any space", this);
-            return NoObj.noobj();
+            return noobj();
         } else if (!resolved2.isInst()) {
             LOG.debug("unable to resolve %s to a single inst in %s", this.dom(lhs.type()), resolved2);
             final Poly args = resolveArgs(this, this, lhs);
@@ -243,8 +244,8 @@ public interface Inst extends Call {
     @Override
     default Obj apply(final Obj lhs) {
         Obj clhs = lhs;
-        Inst cinst = this.args().isEmpty() ? this.args(lst(NoObj.noobj())).resolve(clhs) : this.resolve(clhs); // TODO: this isn't a general solution (multi slotted args won't work).
-        Obj rhs = NoObj.noobj();
+        Inst cinst = this.args().isEmpty() ? this.args(lst(noobj())).resolve(clhs) : this.resolve(clhs); // TODO: this isn't a general solution (multi slotted args won't work).
+        Obj rhs = noobj();
         boolean modulateC = false;
         if (BootLoader.TYPE_CHECK && !lhs.isFail() && !clhs.matches(cinst.dom()) && lhs.unique()) {
             if (clhs.uniqueC().isOne() && !clhs.c().isOne()) { // && cinst.dom().c().within(cInt.SOME())) {
@@ -253,25 +254,25 @@ public interface Inst extends Call {
                 modulateC = true;
             }
             if (!clhs.rng().matches(cinst.dom()))
-                rhs = mexcept("inst resolution failure")
-                        .cause(mexcept("lhs {{m}}range{{/m}} does not match inst {{m}}domain{{/m}}: %s {{r}}=/>{{/r}} %s [%s]", clhs.rng(), cinst.dom(), cinst))
-                        .asFail();
+                throw mexcept("lhs {{m}}range{{/m}} does not match inst {{m}}domain{{/m}}: %s {{r}}=/>{{/r}} %s [%s]", clhs.rng(), cinst.dom(), cinst);
         }
         if (!clhs.isFail() || cinst.isCatch()) {
-            if (null == cinst.f())
-                rhs = mexcept("inst resolution failure").cause(mexcept("unable to determine inst function: %s", cinst)).asFail();
-            cinst = Helpers.applyArgs(clhs, cinst);
-            Router.stack().push(cinst.args());
             try {
-                if (!clhs.isFail() || cinst.isCatch()) {
+                if (null == cinst.f())
+                    throw mexcept("unable to determine inst function: %s", cinst);
+                cinst = Helpers.applyArgs(clhs, cinst);
+                Router.stack().push(cinst.args());
+                try {
                     rhs = Objs.trySingleton(cinst.f().apply(clhs, cinst));
                     Graphitty.log(cinst).trace("%s ({{m}}lhs{{/m}}) => %s ({{m}}inst{{/m}}) => %s ({{m}}rhs{{/m}}) evaluated {{g}}successfully{{/g}}", clhs, cinst, rhs);
+                } catch (final Exception e) {
+                    rhs = mexcept("apply failure: %s {{r}}=>{{X}} %s", clhs, cinst).cause(e).asFail();
+                    //e.printStackTrace();
+                } finally {
+                    Router.stack().pop();
                 }
             } catch (final Exception e) {
-                rhs = mexcept("apply failure: %s {{r}}=>{{X}} %s", clhs, cinst).cause(e).asFail();
-                //e.printStackTrace();
-            } finally {
-                Router.stack().pop();
+                rhs = e instanceof MTronException ? ((MTronException) e).asFail() : mexcept("unable to determine inst function: %s", cinst).asFail();
             }
             if (BootLoader.TYPE_CHECK && !rhs.isFail() && !rhs.matches(cinst.rng()))
                 rhs = mexcept("inst resolution failure")
