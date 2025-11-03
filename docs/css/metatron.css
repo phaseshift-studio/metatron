@@ -31,7 +31,7 @@
 
 /* Text styles */
 
-body{font-family: "Noto Sans",sans-serif;background-color: var(--maincolor);color:var(--white);}
+body{ font-family: "Noto Sans",sans-serif;background-color: var(--maincolor);color:var(--white);}
 
 h1{color:var(--primarycolor) !important;font-family:"Noto Sans",sans-serif;}
 h2,h3,h4,h5,h6{color:var(--primarycolor) !important;font-family:"Noto Sans",sans-serif;}
@@ -127,7 +127,8 @@ pre code {
      background: var(--sidebarbackground);
      color: var(--primarycolor);
      margin: 0em !important;
-     padding: 1em !important;
+     padding: 0.5em !important;
+     overflow: hidden !important; /* or else there is a y scrollbar on code blocks ?? */
 }
 
 #header .details {
@@ -142,7 +143,6 @@ pre code {
 .hljs {
     font-size: 90%;
     display: block;
-    overflow: hidden;
     padding: 0.5em;
 }
 
@@ -151,19 +151,19 @@ pre code {
     font-weight: bolder;
 }
 
-.hljs-fhatos-thrown,
+.hljs-mtron-thrown,
 .hljs-mtron-noobj {
-    color: #ba3925;
+    color: maroon;
 }
 
 .hljs-mtron-bool,
-.hljs-fhatos-sys-furi {
-    color: #d4de68;
+.hljs-mtron-sys-furi {
+    color: darkgoldenrod;
 }
 
 .hljs-mtron-real,
 .hljs-mtron-int {
-    color: lightyellow;
+    color: darkgoldenrod;
 }
 
 .h {
@@ -172,74 +172,81 @@ pre code {
 }
 
 .hljs-mtron-str {
-    color: #d4de68;
+    color: darkgoldenrod;
     font-style: italic;
 }
 
-.hljs-punctuation,
+.hljs-punctuation {
+  color: darkgreen;
+}
+
 .hljs-mtron-rec,
 .hljs-mtron-furi-query {
-    color: #d4de68;
+    color: darkgreen;
     font-weight: bold;
 }
 
 .hljs-mtron-rec-key {
-    color: cyan;
+    color: darkgoldenrod;
 }
 
 #header .details,
-.hljs-mtron-form,
-.hljs-fhatos-prompt-begin {
-    color: var(--linkcolor);
+.hljs-mtron-form {
+    color: darkgreen;
+}
+
+.hljs-mtron-prompt-begin {
+    color: darkslateblue;
     font-weight: bold;
 }
 
-.hljs-fhatos-prompt-end {
-    color: green;
+.hljs-mtron-prompt-end {
+    color: darkgreen;
 }
 
-.hljs-fhatos-result-prefix {
-    color: var(--linkcolor);
+.hljs-mtron-result-prefix {
+    color: darkslateblue;
     font-weight: bold;
 }
 
 .hljs-mtron-pipe,
-.hljs-fhatos-log-info {
-    color: limegreen;
+.hljs-mtron-log-info {
+    color: darkgreen;
 }
 
-.hljs-fhatos-log-error {
-    color: #ba3925;
+.hljs-mtron-log-error {
+    color: maroon;
 }
 
 
 .hljs-mtron-sugar-inst,
 .hljs-mtron-inst-f-cpp,
-.hljs-fhatos-log-warn {
-    color: #c2aa2f;
+.hljs-mtron-log-warn {
+    color: darkgoldenrod;
 }
 
 .hljs-comment,
 .hljs-mtron-keyword,
+.hljs-mtron-keyword,maro
 .hljs-mtron-uri,
 .hljs-mtron-type {
-    color: #1c72ff;
+    color: royalblue;
 }
 
 .hljs-mtron-doc-callout {
     display: inline-block;
-    color: white;
-    background: #2d78e3 !important;
+    color: indianred;
+    background: darkslateblue !important;
     -webkit-border-radius: 100px;
     -moz-border-radius: 100px;
     -o-border-radius: 100px;
     border-radius: 100px;
     text-align: center;
-    width: 30px;
-    height: 30px;
-    font-size: 15px;
+    width: 25px;
+    height: 25px;
+    font-size: 12px;
     font-weight: bold;
-    line-height: 28px;
+    line-height: 25px;
     font-family: Arial;
 }
 

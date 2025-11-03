@@ -9,6 +9,7 @@
 :source-highlighter: ./highlight.js
 :highlightjs-languages: mtron,bash,json
 :stylesheet: ./css/metatron.css
+:highlightjs-theme: monokai
 :icons: font
 :icon-set: fas
 :stem: latexmath
@@ -147,6 +148,8 @@ a🧱
 /m/int + /m/int{-1}     --- <3>
 /m/int ⋅ /m/int         --- <4> 
 /m/int{2} ⋅ /m/int{3}   --- <5>
+noobj
+'mtron'
 -->
 ++++
 
