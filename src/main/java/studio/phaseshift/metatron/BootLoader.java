@@ -22,6 +22,7 @@ import org.apache.tinkerpop.gremlin.tinkergraph.structure.TinkerFactory;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.mach.machInstSet;
 import studio.phaseshift.metatron.lang.mgrph.mgrphInstSet;
+import studio.phaseshift.metatron.lang.mgrph.mtron.TP3Translator;
 import studio.phaseshift.metatron.lang.mgrph.tp.MGraph;
 import studio.phaseshift.metatron.lang.mkv.mkvInstSet;
 import studio.phaseshift.metatron.lang.mkv.mkvSpace;
@@ -165,7 +166,9 @@ public class BootLoader {
             ///////////////////////////////////////////////////////////////
             Router.writeToSpace(Log.of(rec(options.at("log").orElse(uri("TRACE")), lst(uri("#"))), f("/sys/log")));
             Router.writeToSpace(new FileSpace(FileSystems.getDefault(), f("/home/#"), f("/mnt/fs")));
-            Router.writeToSpace(new MGraph(TinkerFactory.createModern(), f("/tp/#"), f("/mnt/tp")));
+            // Router.writeToSpace(new MGraph(TinkerFactory.createModern(), f("/tp/#"), f("/mnt/tp")));
+            //mkvSpace.of(f("/tp/#")).vid(f("/mnt/tp"));
+            //new TP3Translator(f("/tp")).translate(TinkerFactory.createModern());
             // new MqttSpace(f("zigbee2mqtt/#?broker=mqtt://192.168.66.2:1883&prefix=/mqtt"), f("/mnt/zigbee2mqtt")));
             if (options.at("mode").equals(uri("console"))) {
                 //     Router.writeToSpace(mollamaSpace.of(f("http://localhost:11434"), f("/ollama/#"), f("/mnt/ollama")));

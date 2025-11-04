@@ -40,7 +40,7 @@ public class CodeParseTest extends MetatronTest {
             "/m/int::2.plus(/m/int::5)% /m/int::7"
     }, delimiter = '%')
     void testStandardExpressions(final String expression, final String expectedResult) {
-        assertEquals(mtronParser.m_obj().parse(expectedResult).<Obj>get(), objs(()-> mtronParser.eval(expression)));
+        assertEquals(mtronParser.m_obj().parse(expectedResult).<Obj>get(), objs(mtronParser.eval(expression)));
     }
 
     @ParameterizedTest
@@ -48,7 +48,7 @@ public class CodeParseTest extends MetatronTest {
             "1-<[_,plus(1),3]% [1,2,3]",
     }, delimiter = '%')
     void testSugarExpressions(final String expression, final String expectedResult) {
-        assertEquals(mtronParser.m_obj().parse(expectedResult).get(), mtronParser.eval(expression).next());
+        assertEquals(mtronParser.m_obj().parse(expectedResult).get(), mtronParser.eval(expression).iterator().next());
     }
 
 

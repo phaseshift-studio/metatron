@@ -204,7 +204,7 @@ public interface Space extends Obj, Closeable {
                     }
                 } else if (vid.isNode() || !obj.isPoly()) {
                     if (base.get1().isRec())
-                        Helper.resolveWrite(space, base.get0(), base.get1().<Rec>as().at(uri(vid.removePrefix(base.get0())), obj), directWriter, directReader);
+                        Helper.resolveWrite(space, base.get0(), base.get1().<Rec>as().put(uri(vid.removePrefix(base.get0())), obj), directWriter, directReader);
                     else if (base.get1().isLst())
                         Helper.resolveWrite(space, base.get0(), base.get1().<Lst>as().append(obj), directWriter, directReader);
                     else {

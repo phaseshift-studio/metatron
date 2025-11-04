@@ -47,6 +47,10 @@ public interface Router extends Obj, Space, Closeable {
         return Router.loaded() ? BootLoader.ROUTER.read(vid) : NoObj.noobj();
     }
 
+    static Obj readFromSpace(final String vid) {
+        return Router.readFromSpace(f(vid));
+    }
+
     static Obj writeToSpace(final fURI vid, final Obj obj) {
         return Router.loaded() ? BootLoader.ROUTER.write(vid, obj) : NoObj.noobj();
     }

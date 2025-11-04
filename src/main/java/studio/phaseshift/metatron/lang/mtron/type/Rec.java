@@ -119,6 +119,17 @@ public interface Rec extends Poly, PlusMonoid.O<Rec> {
     }
 
     @Override
+    default Rec vid(final fURI vid) {
+        return (Rec) Poly.super.vid(vid);
+    }
+
+
+    @Override
+    default Rec tid(final fURI tid) {
+        return (Rec) Poly.super.tid(tid);
+    }
+
+    @Override
     default Obj append(final Obj obj) {
         if (obj.isNoObj())
             return this;

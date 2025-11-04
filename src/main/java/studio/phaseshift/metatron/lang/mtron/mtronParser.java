@@ -35,6 +35,7 @@ import studio.phaseshift.metatron.util.Tuple;
 
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static org.petitparser.parser.primitive.CharacterParser.any;
 import static org.petitparser.parser.primitive.CharacterParser.anyOf;
@@ -166,14 +167,14 @@ public class mtronParser {
                                 .collect(Collectors.toMap(kv -> pick(kv, 0), kv -> pick(kv, 2), Obj::append, LinkedHashMap::new)));
     }
 
-    public static <O extends Obj> Iterator<O> eval(final String code) {
-        return (Iterator) parse(code).apply().stream().iterator();
+    public static <O extends Obj> Stream<O> eval(final String code) {
+        return (Stream)parse(code).apply().<Obj>as().stream();
     }
 
     public static <O extends Obj> O parse(final String code) {
         if (code.trim().isEmpty())
             return (O) NoObj.noobj();
-        final Result result = seq(choice(sugar_code(), m_obj()), opt(m_comment(),null)).map(t -> pick(t, 0)).end().parse(code.trim());
+        final Result result = seq(choice(sugar_code(), m_obj()), opt(m_comment(), null)).map(t -> pick(t, 0)).end().parse(code.trim());
         if (result.isFailure())
             LOG.except(result.getBuffer() + "\n" +
                     String.format("%" + (result.getPosition() + "[ERROR] [Console] ".length() + 3) + "s", "") +
@@ -267,7 +268,7 @@ public class mtronParser {
     }
 
     public static Parser m_noobj() {
-        return seq(of("noobj"),opt(m_furi_coefficient(),null)).trim().map(t -> NoObj.noobj());
+        return seq(of("noobj"), opt(m_furi_coefficient(), null)).trim().map(t -> NoObj.noobj());
     }
 
     public static Parser m_objs() {
@@ -378,6 +379,7 @@ public class mtronParser {
     private static Parser[] ordered_sugar_parsers() {
         return new Parser[]{
                 //branch_parser,
+                generate_sugar_parser(RFROM_TID, of("^"), 1),
                 generate_sugar_parser(WHERE_TID, of("?=="), 1),
                 generate_sugar_parser(GROUP_TID, of("%=="), 1),
                 generate_sugar_parser(SELECT_TID, of("=="), 1),

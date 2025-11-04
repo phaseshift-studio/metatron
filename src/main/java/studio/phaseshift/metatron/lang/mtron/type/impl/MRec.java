@@ -86,7 +86,9 @@ public class MRec extends MObj implements Rec {
     }
 
     public Rec clone() {
-        return (Rec) super.clone();
+        final MRec clone = (MRec) super.clone();
+        clone.jvm = new LinkedHashMap<>(this.jvm());
+        return clone;
     }
 
     @Override

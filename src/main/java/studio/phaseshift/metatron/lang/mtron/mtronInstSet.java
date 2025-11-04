@@ -18,16 +18,11 @@
 
 package studio.phaseshift.metatron.lang.mtron;
 
-import studio.phaseshift.metatron.algebra.MultMonoid;
-import studio.phaseshift.metatron.algebra.PlusMonoid;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.msys.Router;
 import studio.phaseshift.metatron.lang.mtron.type.*;
-import studio.phaseshift.metatron.lang.mtron.type.impl.MInstSet;
-import studio.phaseshift.metatron.lang.mtron.type.impl.MObjFactory;
-import studio.phaseshift.metatron.lang.mtron.type.impl.MRec;
-import studio.phaseshift.metatron.lang.mtron.type.impl.MRel;
+import studio.phaseshift.metatron.lang.mtron.type.impl.*;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
@@ -43,7 +38,6 @@ import static studio.phaseshift.metatron.lang.mtron.mtronFluent.StartLess.id_;
 import static studio.phaseshift.metatron.lang.mtron.type.NoObj.noobj;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MFail.fail;
-import static studio.phaseshift.metatron.lang.mtron.type.impl.MInst.instB;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MLst.lst;
@@ -75,6 +69,7 @@ public class mtronInstSet extends MInstSet {
     public static final fURI CATCH_TID = INST_TID.extend("catch");
     public static final fURI APPLY_TID = INST_TID.extend("apply");
     public static final fURI START_TID = INST_TID.extend("start");
+    public static final fURI RFROM_TID = INST_TID.extend("rfrom");
     public static final fURI COUNT_TID = INST_TID.extend("count");
     public static final fURI SUM_TID = INST_TID.extend("sum");
     public static final fURI PROD_TID = INST_TID.extend("prod");
@@ -156,6 +151,15 @@ public class mtronInstSet extends MInstSet {
         return new mtronRewrites(mtronRewrites.REWRITE_TID, this.vid.extend("rewrite")).insts();
     }*/
 
+    private static Obj flatten(final Obj lhs, final Obj obj) {
+        return objs(obj.stream().flatMap(o -> {
+            if (o.isCall() && !o.isNoObj())
+                return flatten(o, o.apply(lhs)).stream();
+            else
+                return o.stream();
+        }));
+    }
+
     @Override
     public Set<Type> types() {
         return Stream.of(T(FAIL_TID), T(BOOL_TID), T(INT_TID), T(REAL_TID), T(STR_TID), T(URI_TID), T(LST_TID),
@@ -222,6 +226,23 @@ public class mtronInstSet extends MInstSet {
                 instC(ID_TID.dom(A.maybeSome()).rng(A.maybeSome()), lst(), (lhs, inst) -> lhs),
                 instC(OR_TID.dom(A).rng(A.maybe()), lst(T(BOOL_TID).c(cInt::some)), (lhs, inst) -> objs(lhs.stream().filter(l -> inst.args().elements().anyMatch(a -> a.apply(l).boolValue())))),
                 instC(APPLY_TID.dom(ALL).rng(ALL), lst(T(ALL)), (lhs, inst) -> lhs.apply(inst.arg(0))),
+               /* instC(RFROM_TID.dom(ALL.maybe()).rng(OBJS_ID), lst(T(URI_TID)), (lhs, inst) -> {
+                    Obj current = Router.global().read(inst.arg(0).uriValue());
+                    return flatten(lhs, current);
+                }),*/
+                instC(RFROM_TID.dom(ALL).rng(OBJS_ID), lst(T(ALL)), (lhs, inst) -> {
+                    Obj t = lhs;
+                    Obj emit = MObjs.empty();
+                    while (true) {
+                        LOG.info("%s",t);
+                        t = inst.arg(0).apply(t);
+                        if (t.isNoObj())
+                            break;
+                        else
+                            emit = emit.append(t);
+                    }
+                    return emit;
+                }),
                 instC(MAP_TID.dom(ALL).rng(A), lst(T(A)), (lhs, inst) -> inst.arg(0)),
                 instC(FILTER_TID.dom(A).rng(A.maybe()), lst(T(ALL.maybe())), (lhs, inst) -> inst.arg(0).isNoObj() ? noobj() : lhs),
                 instC(SIDE_TID.dom(A).rng(A), lst(T(ALL)), (lhs, inst) -> Optional.of(inst.arg(0).apply(lhs)).map(x -> (Obj) null).orElse(lhs)),

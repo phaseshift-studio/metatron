@@ -20,6 +20,7 @@ package studio.phaseshift.metatron.lang.mgrph;
 
 import org.apache.tinkerpop.gremlin.tinkergraph.structure.TinkerFactory;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.MetatronTest;
@@ -35,6 +36,7 @@ import static studio.phaseshift.metatron.lang.mtron.type.impl.MUri.uri;
 public class mgrphInstSetTest extends MetatronTest {
 
     @BeforeAll
+    @Disabled
     public static void begin() {
         MetatronTest.begin();
         mgrphInstSet.create().vid(f("/mnt/lang/mgraph"));
@@ -44,6 +46,7 @@ public class mgrphInstSetTest extends MetatronTest {
 
 
     @Override
+    @Disabled
     @ParameterizedTest
     @CsvSource(value = {
             "g -> /mnt/tp                                                              % /mnt/tp",

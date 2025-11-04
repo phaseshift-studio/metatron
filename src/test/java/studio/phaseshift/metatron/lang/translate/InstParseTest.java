@@ -53,8 +53,8 @@ public class InstParseTest extends MetatronTest {
             //"/m/code[plus(1).plus(2)].plus([d,e,f])% [a,b,c,d,e,f]" (requires union())
     }, delimiter = '%')
     void testInstDefinitions(final String definition, final String usage, final String expected) {
-        Call def = mtronParser.<Call>eval(definition).next();
-        Obj use = mtronParser.eval(usage).next();
+        Call def = mtronParser.<Call>eval(definition).iterator().next();
+        Obj use = mtronParser.eval(usage).iterator().next();
         Obj exp = mtronParser.m_obj().parse(expected).get();
         assertEquals(exp, use);
         //assertEquals(inst, ObjParser.eval(expression).next());
@@ -78,7 +78,7 @@ public class InstParseTest extends MetatronTest {
             //"/m/code[plus(1).plus(2)].plus([d,e,f])% [a,b,c,d,e,f]" (requires union())
     }, delimiter = '%')
     void testPlusInst(final String expression, final String expectedResult) {
-        assertEquals(mtronParser.m_obj().parse(expectedResult).get(), mtronParser.eval(expression).next());
+        assertEquals(mtronParser.m_obj().parse(expectedResult).get(), mtronParser.eval(expression).iterator().next());
     }
 
     @ParameterizedTest
@@ -92,7 +92,7 @@ public class InstParseTest extends MetatronTest {
             //"{1,2,3}.plus(sum())-|id()                   % {2,4,6}"
     }, delimiter = '%')
     public void testCountInst(final String expression, final String expectedResult) {
-        assertEquals(mtronParser.m_obj().parse(expectedResult).get(), mtronParser.eval(expression).next());
+        assertEquals(mtronParser.m_obj().parse(expectedResult).get(), mtronParser.eval(expression).iterator().next());
     }
 
     @ParameterizedTest
@@ -119,7 +119,7 @@ public class InstParseTest extends MetatronTest {
             "[1,2,3]_/sum()\\_                            % [6]",
     }, delimiter = '%')
     public void testSumInst(final String expression, final String expectedResult) {
-        assertEquals(mtronParser.m_obj().parse(expectedResult).get(), mtronParser.eval(expression).next());
+        assertEquals(mtronParser.m_obj().parse(expectedResult).get(), mtronParser.eval(expression).iterator().next());
     }
 
 }

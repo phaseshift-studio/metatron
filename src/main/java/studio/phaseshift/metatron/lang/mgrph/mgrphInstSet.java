@@ -1,6 +1,6 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
- * Copyright (C) 2025- PhaseShift Studio, LLC 
+ * Copyright (C) 2025- PhaseShift Studio, LLC
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -20,32 +20,23 @@ package studio.phaseshift.metatron.lang.mgrph;
 
 import org.apache.tinkerpop.gremlin.structure.Direction;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.lang.mgrph.tp.MEdge;
-import studio.phaseshift.metatron.lang.mgrph.tp.MElement;
-import studio.phaseshift.metatron.lang.mgrph.tp.MGraph;
-import studio.phaseshift.metatron.lang.mgrph.tp.MVertex;
+import studio.phaseshift.metatron.lang.mgrph.mtron.REdge;
+import studio.phaseshift.metatron.lang.mgrph.mtron.RVertex;
+import studio.phaseshift.metatron.lang.msys.Router;
 import studio.phaseshift.metatron.lang.mtron.type.Inst;
-import studio.phaseshift.metatron.lang.mtron.type.impl.MInstSet;
 import studio.phaseshift.metatron.lang.mtron.type.Obj;
 import studio.phaseshift.metatron.lang.mtron.type.Type;
-import studio.phaseshift.metatron.util.IteratorUtil;
+import studio.phaseshift.metatron.lang.mtron.type.impl.MInstSet;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import java.util.*;
 
-import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.furi.fURI.f;
+import static studio.phaseshift.metatron.lang.mtron.mtronInstSet.NOOBJ_TID;
+import static studio.phaseshift.metatron.lang.mtron.mtronInstSet.URI_TID;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MObjs.objs;
-import static studio.phaseshift.metatron.lang.mtron.type.impl.MStr.str;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MType.T;
-import static studio.phaseshift.metatron.lang.mtron.mtronInstSet.STR_TID;
-import static studio.phaseshift.metatron.lang.mtron.mtronInstSet.URI_TID;
 
 public class mgrphInstSet extends MInstSet {
 
@@ -76,7 +67,7 @@ public class mgrphInstSet extends MInstSet {
 
     public mgrphInstSet(final fURI vid) {
         super(new HashMap<>(), MGRPH_TID, vid);
-       // this.types().forEach(t -> Router.global().registerRewrite(f(t.tid().name()), t.tid()));
+        // this.types().forEach(t -> Router.global().registerRewrite(f(t.tid().name()), t.tid()));
     }
 
     public static mgrphInstSet create() {
@@ -117,8 +108,16 @@ public class mgrphInstSet extends MInstSet {
 
     @Override
     public Set<Inst> insts() {
+        return new LinkedHashSet<>(List.of(
+                instC(V_TID.dom(NOOBJ_TID.zero()).rng(VERTEX_TID.maybeSome()), lst(T(URI_TID.maybeSome())), (lhs, inst) -> objs(inst.arg(0).stream().flatMap(u -> Router.readFromSpace(u.uriValue()).stream()))),
+                instC(OUT_TID.dom(VERTEX_TID).rng(VERTEX_TID.maybeSome()), lst(T(URI_TID.maybeSome())), (lhs, inst) -> objs(lhs.<RVertex>as().vertices(Direction.OUT, objs(inst.args().elements())).map(Obj::as))),
+                instC(OUTE_TID.dom(VERTEX_TID).rng(EDGE_TID.maybeSome()), lst(T(URI_TID.maybeSome())), (lhs, inst) -> objs(lhs.<RVertex>as().edges(Direction.OUT, inst.arg(0)).map(Obj::as))),
+                instC(IN_TID.dom(VERTEX_TID).rng(VERTEX_TID.maybeSome()), lst(T(URI_TID.maybeSome())), (lhs, inst) -> objs(lhs.<RVertex>as().vertices(Direction.IN, inst.arg(0)).map(Obj::as))),
+                instC(INE_TID.dom(VERTEX_TID).rng(EDGE_TID.maybeSome()), lst(T(URI_TID.maybeSome())), (lhs, inst) -> objs(lhs.<RVertex>as().edges(Direction.IN, inst.arg(0)).map(Obj::as))),
+                instC(INV_TID.dom(EDGE_TID).rng(VERTEX_TID), lst(), (lhs, inst) -> objs(lhs.<REdge>as().vertices(Direction.IN).map(Obj::as))),
+                instC(OUTV_TID.dom(EDGE_TID).rng(VERTEX_TID), lst(), (lhs, inst) -> objs(lhs.<REdge>as().vertices(Direction.OUT).map(Obj::as)))));
         //G_TID, instC(G_TID.dom(fURI.NONE.zero()).rng(GRAPH_TID), lst(T(URI_TID)), (lhs, inst) -> Router.global().read(inst.arg(0).uriValue())),
-        return Stream.of(
+        /*return Stream.of(
                 instC(V_TID.dom(GRAPH_TID).rng(VERTEX_TID.maybeSome()), lst(T(ALL.maybeSome())), (lhs, inst) -> objs(IteratorUtil.list((Iterator) lhs.<MGraph>as().vertices(idsAsUri(inst))))),
                 instC(E_TID.dom(GRAPH_TID).rng(EDGE_TID.maybeSome()), lst(T(ALL.maybeSome())), (lhs, inst) -> objs(IteratorUtil.list((Iterator) lhs.<MGraph>as().edges(idsAsUri(inst))))),
                 instC(OUTE_TID.dom(VERTEX_TID).rng(EDGE_TID.maybeSome()), lst(T(URI_TID.maybeSome())), (lhs, inst) ->
@@ -145,6 +144,6 @@ public class mgrphInstSet extends MInstSet {
                 //instC(VALUES_TID.dom(GRPH_TID.extend(fURI.SINGLE)).rng(ALL.maybeSome()), lst(T(URI_TID.maybeSome())), (lhs, inst) -> objs(IteratorUtil.list((Iterator) lhs.<MElement>as().values(labelsAsUri(inst))))),
                 instC(VALUES_TID.dom(MGRPH_TID.extend(fURI.SINGLE)).rng(ALL.maybeSome()), lst(T(URI_TID.maybeSome())), (lhs, inst) -> objs(lhs.stream().flatMap(o -> IteratorUtil.stream((Iterator) o.<MElement>as().values(labelsAsUri(inst)))))),
                 instC(PROPERTIES_TID.dom(MGRPH_TID.extend(fURI.SINGLE)).rng(ALL.maybeSome()), lst(T(URI_TID.maybeSome())), (lhs, inst) -> objs(IteratorUtil.list((Iterator) lhs.<MElement>as().properties(labelsAsUri(inst)))))
-        ).collect(Collectors.toSet());
+        ).collect(Collectors.toSet());*/
     }
 }
