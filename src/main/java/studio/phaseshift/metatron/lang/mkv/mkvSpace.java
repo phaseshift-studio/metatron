@@ -21,14 +21,10 @@ package studio.phaseshift.metatron.lang.mkv;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.msys.Space;
 import studio.phaseshift.metatron.lang.mtron.type.Obj;
-import studio.phaseshift.metatron.lang.mtron.type.impl.MRel;
 import studio.phaseshift.metatron.space.MSpace;
-import studio.phaseshift.metatron.ui.Graphitty;
-import studio.phaseshift.metatron.ui.GraphittyLogger;
 import studio.phaseshift.metatron.util.Common;
 
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.function.BiConsumer;
@@ -40,7 +36,7 @@ import static studio.phaseshift.metatron.lang.msys.msysInstSet.SPACE_TID;
 public class mkvSpace extends MSpace<Map<fURI, Obj>> implements Space {
 
     public static final fURI KVSPACE_TID = SPACE_TID.extend("kv");
-    
+
     public mkvSpace(final fURI pattern, final fURI vid) {
         super(new HashMap<>(), pattern, KVSPACE_TID, vid);
     }
@@ -102,13 +98,13 @@ public class mkvSpace extends MSpace<Map<fURI, Obj>> implements Space {
             if (pattern.hasPattern()) {
                 this.directReader().apply(pattern).forEach((key, value) -> this.write(key, obj));
             } else {
+                final Obj current = this.jvm().get(pattern);
                 if (obj.isNoObj()) {
-                    final Obj current = this.jvm().get(pattern);
                     this.jvm().remove(pattern);
                     if (null != current)
                         Common.close(current);
                 } else
-                    this.jvm().put(pattern, obj);
+                    this.jvm().put(pattern, (null != current && (obj.isObjs() || current.isObjs())) ? current.append(obj) : obj);
             }
         };
     }

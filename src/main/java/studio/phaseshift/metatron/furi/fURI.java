@@ -20,8 +20,8 @@ package studio.phaseshift.metatron.furi;
 
 import studio.phaseshift.metatron.algebra.Ring;
 import studio.phaseshift.metatron.furi.c.cInt;
-import studio.phaseshift.metatron.lang.mtron.type.Uri;
 import studio.phaseshift.metatron.lang.msys.Router;
+import studio.phaseshift.metatron.lang.mtron.type.Uri;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.util.MTronException;
 
@@ -266,11 +266,24 @@ public class fURI implements Cloneable, Ring<fURI> {
 
     public fURI removePrefix(final fURI prefix) {
         String newPath = this.toString();
-        return new fURI(newPath.startsWith(prefix.toString()) ? newPath.substring(prefix.send ? prefix.toString().length() :  prefix.toString().length()+1) : newPath);
+        return new fURI(newPath.startsWith(prefix.toString()) ? newPath.substring(prefix.send ? prefix.toString().length() : prefix.toString().length() + 1) : newPath);
     }
 
     public String name() {
         return this.segments().isEmpty() ? EMPTY : this.qLess().segments().get(this.segments().size() - 1);
+    }
+
+    public fURI resolve() {
+        final List<String> newSegments = new ArrayList<>();
+        for (final String seg : this.segments()) {
+            if (seg.equals("."))
+                continue;
+            if (seg.equals("..") && !newSegments.isEmpty())
+                newSegments.remove(newSegments.size()-1);
+            else
+                newSegments.add(seg);
+        }
+        return this.path(newSegments);
     }
 
     public Uri toUri() {

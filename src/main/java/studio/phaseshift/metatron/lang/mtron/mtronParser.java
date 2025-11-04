@@ -33,9 +33,11 @@ import studio.phaseshift.metatron.ui.GraphittyLogger;
 import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import static org.petitparser.parser.primitive.CharacterParser.any;
 import static org.petitparser.parser.primitive.CharacterParser.anyOf;
@@ -167,8 +169,8 @@ public class mtronParser {
                                 .collect(Collectors.toMap(kv -> pick(kv, 0), kv -> pick(kv, 2), Obj::append, LinkedHashMap::new)));
     }
 
-    public static <O extends Obj> Stream<O> eval(final String code) {
-        return (Stream)parse(code).apply().<Obj>as().stream();
+    public static <O extends Obj> O eval(final String code) {
+        return (O) parse(code).apply();
     }
 
     public static <O extends Obj> O parse(final String code) {

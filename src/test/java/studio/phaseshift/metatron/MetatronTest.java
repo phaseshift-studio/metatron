@@ -22,6 +22,7 @@ import org.junit.jupiter.api.BeforeAll;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.mach.machInstSet;
 import studio.phaseshift.metatron.lang.mkv.mkvSpace;
+import studio.phaseshift.metatron.lang.msys.Router;
 import studio.phaseshift.metatron.lang.mtron.mtronInstSet;
 import studio.phaseshift.metatron.lang.mtron.mtronParser;
 import studio.phaseshift.metatron.lang.mtron.type.Fail;
@@ -30,6 +31,8 @@ import studio.phaseshift.metatron.lang.mtron.type.Obj;
 import studio.phaseshift.metatron.lang.mvec.mvecInstSet;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
+
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -65,6 +68,18 @@ public class MetatronTest {
         final Obj actual = b.apply(a);
         LOG.debug("testing %s.%s => %s [expected:%s]", a, b, actual, ex);
         assertEquals(ex, actual);
+    }
+
+    public void testSpace(final String stateCode, final String mutationCode, final Map<fURI, String> expected) {
+        final Obj stateResult = mtronParser.eval(stateCode);
+        final Obj mutationResult = mtronParser.eval(mutationCode);
+        LOG.debug("testing %s <= %s", stateResult, mutationResult);
+        expected.forEach((k, v) -> {
+            final Obj actual = Router.readFromSpace(k);
+            final Obj desired = mtronParser.eval(v);
+            LOG.debug("\t%s [expected] == %s [actual]", desired, actual);
+            assertEquals(desired, actual);
+        });
     }
 
     public void testCode(final String code, final String expected) {

@@ -26,6 +26,10 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.MetatronTest;
 
+import java.util.Map;
+
+import static studio.phaseshift.metatron.furi.fURI.f;
+
 public class mtronInstSetTest extends MetatronTest {
 
     @Override
@@ -183,7 +187,7 @@ public class mtronInstSetTest extends MetatronTest {
             "{[1],[2,3],[1,3]}.sum()._/sum{2}()\\_.>-.sum()                         % 20",
             "{[1,2],[3,4,5],[6,7,8]}.sum()._/sum()\\_.>-.sum{2}()                   % int{2}::36",
             "{[1,2],[3,4,5],[6,7,8]}.sum()._/sum()\\_.>-.sum{2}().sum()             % 72",
-            /// 
+            ///
             "{1,2,3,4,5}.reduce(|plus(0))                                           % 15",
             "{,}.reduce(|plus(0))                                                   % 0",
             "reduce(|mult(0))                                                       % 0",
@@ -227,12 +231,25 @@ public class mtronInstSetTest extends MetatronTest {
 
     @ParameterizedTest
     @CsvSource(value = {
-            "[b=>[c=>d]].to(a);start(34).to(a/b/c);start(a).*(_)                      % [b=>[c=>34]]",
-            // dummy without ending comma so it's easier to add more test cases
-            "1.plus(1)                                                                % 2"
+            "a -> [b=>[c=>d]]              % a/b/c -> 34                     % a            % [b=>[c=>34]]",
+            "a -> [b=>[c=>d]]              % a/b/c -> [f=>g]                 % a            % [b=>[c=>[f=>g]]]",
+            "a -> [b=>[c=>d]]              % a/b/c -> [f=>g]                 % a/b          % [c=>[f=>g]]",
+            "a -> [b=>[c=>d]]              % a/b/c -> [f=>g]                 % a/b/c        % [f=>g]",
+            "a -> [b=>[c=>d]]              % a/b/c -> [f=>g]                 % a/b/c/f      % g",
+            "a -> [b=>[c=>d]]              % <a/b/..> -> 22                  % a            % 22",
+            "a -> [b=>[c=>{1,2,3}]]        % <a/b/c> -> {4,5,6}              % a/b/c        % {1,2,3,4,5,6}",
+            "a -> [b=>[c=>{1,2,3}]]        % <a/b/c> -> {4,5,6}              % a            % [b=>[c=>{1,2,3,4,5,6}]]",
+            "a -> noobj                    % a -> noobj                      % a            % noobj",
+            "a -> {1,2,3,4}                % a -> {5,6,7}                    % a            % {1,2,3,4,5,6,7}",
+            "a -> noobj                    % a -> noobj                      % a            % noobj",
+            "a -> 1                        % a -> {2,3,4}                    % a            % {1,2,3,4}",
+            "a -> noobj                    % a -> noobj                      % a            % noobj",
+            "a -> {1,2,3}                  % a -> 4                          % a            % {1,2,3,4}",
+            "a -> noobj                    % a -> noobj                      % a            % noobj",
     }, delimiter = '%')
-    public void testPolySpace(final String code, final String expected) {
-        super.testCode(code, expected);
+    public void testPolySpace(final String stateCode, final String mutationCode, final String vid, final String expected) {
+        super.testSpace(stateCode, mutationCode, Map.of(f(vid), expected));
+
     }
 
 
@@ -244,9 +261,9 @@ public class mtronInstSetTest extends MetatronTest {
             "{1,2,3}.group([noobj=>_])                                                    % [=>]",
             "{1,2,3}.group([_=>noobj])                                                    % [=>]",
             "{[a,b],[c,d],[a,b]}.group([>-.prod?uri<=uri{*}()=>>-.count()])               % [a/b=>4,c/d=>2]", // should be uri{2}
-           // "[a=>1,b=>2,c=>3].group([_=>_,prod()=>prod()])                                % [{a,b,c}=>{1,2,3},a/b/c=>6]",
-           // "[a=>1,b=>2,c=>3].group([_=>_,prod()=>prod()])                                % [{a,b,c}=>{1,2,3},a/b/c=>6]",
-           // "[a=>1,b=>c,c=>3]==[is(eq(a))=>plus(1)]                                       % [a=>2]",
+            // "[a=>1,b=>2,c=>3].group([_=>_,prod()=>prod()])                                % [{a,b,c}=>{1,2,3},a/b/c=>6]",
+            // "[a=>1,b=>2,c=>3].group([_=>_,prod()=>prod()])                                % [{a,b,c}=>{1,2,3},a/b/c=>6]",
+            // "[a=>1,b=>c,c=>3]==[is(eq(a))=>plus(1)]                                       % [a=>2]",
             // dummy without ending comma so it's easier to add more test cases
             "1.plus(1)                                                              % 2"
     }, delimiter = '%')

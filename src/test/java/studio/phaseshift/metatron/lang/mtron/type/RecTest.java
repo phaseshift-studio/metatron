@@ -51,7 +51,7 @@ public class RecTest extends MetatronObjTest {
             "[a=>[b=>c],a/b/c=>[e=>f]]             | a/b/c                | [e=>f]",
             "[a=>[b=>c],a/b/c=>[e=>f]]             | a/b                  | c",
            // "[a=>[b=>c],a/b=>c]               | a/b                  | {c,c}",
-           // "[a=>[b=>c],a/b/c=>[e=>f]]             | a/b/c/               | [a/b/c=>[e=>f]]>-",
+           // "[a=>[b=>c],a/b/c=>[e=>f]]             | a/b/c/               | [a/b/c=>[e=>f]].>-{,}",
             "[a=>[b=>c,d=>[e=>f]]]                 | a                    | [b=>c,d=>[e=>f]]",
             "[a=>[b=>c,d=>[e=>f]]]                 | a/                   | /m/rel::a=>[b=>c,d=>[e=>f]]",
             "[a=>[b=>c,d=>[e=>f]]]                 | a/b                  | c",
@@ -59,8 +59,9 @@ public class RecTest extends MetatronObjTest {
             "[a=>[b=>c,d=>[e=>f]]]                 | a/d/e                | f",
             // "[a=>[b=>c,d=>[e=>f]]]                 | a/d/e/               | /m/rel::a/d/e=>f",
             "[a=>[b=>c,d=>[e=>f]]]                 | a/#                  | {c,[e=>f]}",
-            // "[a=>[b=>c,d=>[e=>f]]]                 | a/+                  | {c,[e=>f]}",
-            "[a=>[b=>c,d=>[e=>f]]]                 | a/+/e                | f"
+            "[a=>[b=>c,d=>[e=>f]]]                 | a/+                  | {c,[e=>f]}",
+            "[a=>[b=>c,d=>[e=>f]]]                 | a/+/e                | f",
+            "[a=>[b=>c,d=>[e=>{1,2,3,4}]]]          | a/+/e               | {1,2,3,4}"
     }, delimiter = '|')
     public void testKeyValue(final String rec, final String key, final String value) {
         Rec r = mtronParser.m_obj().parse(rec).get();

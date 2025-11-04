@@ -1,6 +1,6 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
- * Copyright (C) 2025- PhaseShift Studio, LLC 
+ * Copyright (C) 2025- PhaseShift Studio, LLC
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -90,6 +90,32 @@ public class fURITest {
         assertEquals(f, furi2.toString());
         assertEquals(furi1, furi2);
         assertEquals(furi1, fURI.of(furi1.toString()));
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "a/b/c         |  a/b/c",
+            "./b/c         |  b/c",
+            "a/./c         |  a/c",
+            "a/b/.         |  a/b",
+            "a/./.         |  a",
+            "a/././d       |  a/d",
+            "a/././d/      |  a/d/",
+            // "././.      |   ",
+            "a/b/..        |  a",
+            "a/../..       |  ..",
+            "./../../../.  |  ..",
+            "./../../a     |  a",
+            "a/./z/../b    | a/b",
+    }, delimiter = '|')
+    public void testResolve(final String f1, final String f2) {
+        final fURI furi1a = fURI.of(f1);
+        final fURI furi1b = fURI.of(f2);
+        final fURI furi2a = mtronParser.m_furi().parse(f1).get();
+        final fURI furi2b = mtronParser.m_furi().parse(f2).get();
+        LOG.info("testing {{b}}%s{{/b}} {{g}}=>{{/g}} {{b}}%s{{b}} resolution", furi1a, furi2b);
+        assertEquals(furi1a.resolve(), furi2b);
+        assertEquals(furi2a.resolve(), furi1b);
     }
 
     @ParameterizedTest

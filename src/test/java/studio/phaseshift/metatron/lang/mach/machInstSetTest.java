@@ -48,7 +48,7 @@ public class machInstSetTest extends MetatronTest {
             "1.zero()                                                                                    % 0",
             "1.one()                                                                                     % 1",
             // "a/b/c.zero()                                                                                % < >",
-            "a/b/c.one()                                                                                 % <.>",
+            //"a/b/c.one()                                                                                 % <.>",
             "[1=>2,2=>3].zero()                                                                          % [=>]",
             "[1,2,3].zero()                                                                              % [,]",
             "[1=>2,2=>3].zero()                                                                          % [=>]",

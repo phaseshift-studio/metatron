@@ -1,6 +1,6 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
- * Copyright (C) 2025- PhaseShift Studio, LLC 
+ * Copyright (C) 2025- PhaseShift Studio, LLC
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -28,8 +28,8 @@ import studio.phaseshift.metatron.lang.mtron.type.Rel;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import static studio.phaseshift.metatron.lang.mtron.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.lang.mtron.mtronInstSet.REC_TID;
+import static studio.phaseshift.metatron.lang.mtron.type.impl.MUri.uri;
 
 public class MRec extends MObj implements Rec {
 
@@ -113,12 +113,10 @@ public class MRec extends MObj implements Rec {
         if (k.segments().isEmpty())
             return this;
         final Map<Obj, Obj> map = new LinkedHashMap<>(this.recValue());
-        if (k.segments().size() == 1)
-            map.put(key, value);
-        else {
-            final Obj v = map.get(uri(k.segments().get(0)));
-            map.put(uri(k.segments().get(0)), (v.isRec() ? v.<Rec>as() : rec()).put(k.pretract().toUri(), value));
-        }
+        map.compute(uri(k.segments().get(0)), (k1, v) ->
+                k.segments().size() == 1 ?
+                        (null != v && v.isObjs() ? v.append(value) : value) :
+                        (null != v && v.isRec() ? v.<Rec>as() : rec()).put(k.pretract().toUri(), value));
         return this.jvm(map);
     }
 

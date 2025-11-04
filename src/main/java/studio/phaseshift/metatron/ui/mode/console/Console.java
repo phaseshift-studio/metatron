@@ -323,7 +323,7 @@ public class Console implements Mode {
             String sourceKey = "B"; //reader.readLine(Graphitty.string("{{-X-}}\r{{m}}hotkey{{g}}:{{X}} "));
             getKeyMap().bind(new Reference(sourceName), ctrl(sourceKey.charAt(0)));
             this.addWidget(sourceName, () -> {
-                mtronParser.eval(sourceCode).forEach(System.out::println);
+                mtronParser.eval(sourceCode).stream().forEach(System.out::println);
                 return true;
             });
             return true;

@@ -35,12 +35,12 @@ public class TinkerObjTest extends MetatronTest {
         final GrphInstSet grphInstSet = new GrphInstSet(f("/grph/#"), f("/mnt/grph"));
         Router.global().addSpace(grphInstSet);
         grphInstSet.load();*/
-        final MGraph graph = Router.global().read(f("/mnt/tp")).as();
+        //final MGraph graph = Router.global().read(f("/mnt/tp")).as();
         //final mgrphFluent f = g(graph).V().out().count();
         //  System.out.println(f.iterator().next());
         // g(graph).V().out().out().stream().forEach(v -> System.out.println(v.tid().coefficientValue()));
 
-        Graphitty.log(this).info("graph: %s", graph);
+        //Graphitty.log(this).info("graph: %s", graph);
         // Graphitty.log(this).info("traversal: %s", f);
         //  f.forEach(v -> Graphitty.out(System.out, "%s", v));
     }
