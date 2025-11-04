@@ -225,6 +225,16 @@ public class mtronInstSetTest extends MetatronTest {
         super.testCode(code, expected);
     }
 
+    @ParameterizedTest
+    @CsvSource(value = {
+            "[b=>[c=>d]].to(a);start(34).to(a/b/c);start(a).*(_)                      % [b=>[c=>34]]",
+            // dummy without ending comma so it's easier to add more test cases
+            "1.plus(1)                                                                % 2"
+    }, delimiter = '%')
+    public void testPolySpace(final String code, final String expected) {
+        super.testCode(code, expected);
+    }
+
 
     @ParameterizedTest
     @CsvSource(value = {

@@ -76,6 +76,7 @@ public class mtronInstSet extends MInstSet {
     public static final fURI REDUCE_TID = INST_TID.extend("reduce");
     public static final fURI MULT_TID = INST_TID.extend("mult");
     public static final fURI PLUS_TID = INST_TID.extend("plus");
+    public static final fURI MINUS_TID = INST_TID.extend("minus");
     public static final fURI MAP_TID = INST_TID.extend("map");
     public static final fURI FILTER_TID = INST_TID.extend("filter");
     public static final fURI SIDE_TID = INST_TID.extend("side");
@@ -339,6 +340,7 @@ public class mtronInstSet extends MInstSet {
                 instC(MULT_TID.dom(URI_TID).rng(URI_TID.maybe()), lst(T(URI_TID.maybe())), (lhs, inst) -> lhs.jvm(lhs.uriValue().mult(inst.arg(0).uriValue()))),
                 instC(MULT_TID.dom(LST_TID).rng(LST_TID), lst(T(LST_TID)), (lhs, inst) -> lhs.jvm(lhs.elements().flatMap(a -> inst.arg(0).elements().map(b -> MRel.of(a, b))).toList())),
                 // MULT_TID, MInst.instC(MULT_TID.dom(REC_TID).rng(REC_TID), lst(T(REC_TID)), (lhs, inst) -> lhs.value(Stream.concat(lhs.recValue().entrySet().stream(), inst.arg(0).recValue().entrySet().stream()).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (a, b) -> b)))),
+                instC(MINUS_TID.dom(INT_TID).rng(INT_TID), lst(T(INT_TID)), (lhs, inst) -> lhs.jvm(lhs.intValue() - inst.arg(0).intValue())),
                 /// ///////////////////////////////////////////////////////////////////////////////////////////////////
                 instC(TO_TID.dom(ALL.maybe()).rng(ALL.maybe()), lst(T(URI_TID)), (lhs, inst) -> Router.writeToSpace(inst.arg(0).uriValue(), lhs)),
                 instC(FROM_TID.dom(ALL.maybe()).rng(OBJS_ID), lst(T(URI_TID)), (lhs, inst) -> Router.readFromSpace(inst.arg(0).uriValue())),

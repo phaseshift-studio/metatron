@@ -154,8 +154,8 @@ public class BootLoader {
                             .map(s -> mtronParser.parse(s).resolve(noobj()))
                             .filter(o -> !o.isNoObj())
                             .forEach(o -> {
-                                LOG.info("boot compilation: %s", o);
-                                LOG.info("boot result: %s", o.apply());
+                                LOG.debug("boot compilation: %s", o);
+                                LOG.debug("boot result: %s", o.apply());
                             });
                     LOG.none("\t{{r}}END:{{g}} evaluating provided boot loader: %s{{X}}\n", options.at(uri("boot")));
                 } catch (final IOException e) {

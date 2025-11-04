@@ -408,6 +408,7 @@ public class mtronParser {
                 generate_sugar_parser(LSHIFT_TID, of("<<"), 1),
                 generate_sugar_parser(LSHIFT_TID, of("<<"), 0),
                 generate_sugar_parser(PLUS_TID, of('+'), 1),
+                generate_sugar_parser(MINUS_TID, of("-"), 1),
                 generate_sugar_parser(END_TID, of(';'), 0)};
     }
 

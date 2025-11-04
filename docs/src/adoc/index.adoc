@@ -102,7 +102,7 @@ A useful corollary of the distributive nature of latexmath:[+] provides an equiv
             =\;& ac+bc+ad+bd.
 \end{align*}
 ++++
-Every ring latexmath:[R] contains two unique elements latexmath:[0 \in R] and latexmath:[1 \in R] such that, for any latexmath:[a \in R],
+Every ring latexmath:[R] contains two unique elements latexmath:[0 \in R] and latexmath:[1 \in R] such that, for every latexmath:[a \in R],
 [latexmath]
 ++++
 \begin{align*}
@@ -111,14 +111,16 @@ Every ring latexmath:[R] contains two unique elements latexmath:[0 \in R] and la
 1 * a &= a & a * 1 &= a.
 \end{align*}
 ++++
-Finally, every element latexmath:[a \in R] has an _inverse_ latexmath:[-a \in R] such that
+Finally, every element latexmath:[a \in R] has an _inverse_ latexmath:[\text{-}a \in R], where
 [latexmath]
 ++++
 \begin{align*}
-0 =\;& a + (-a) \\
-  =\;& a - a.
+0 =\;& a + (\text{-}a) \\
+  =\;& a - a,
 \end{align*}
 ++++
+and no two elements share the same inverse: latexmath:[\forall a,b \in R: \text{-} a \neq \text{-} b].
+
 These are the axioms of ring theory. The entire structure of a ring is denoted
 [stem]
 ++++

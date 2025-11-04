@@ -266,7 +266,7 @@ public class fURI implements Cloneable, Ring<fURI> {
 
     public fURI removePrefix(final fURI prefix) {
         String newPath = this.toString();
-        return new fURI(newPath.startsWith(prefix.toString()) ? newPath.substring(prefix.toString().length()) : newPath);
+        return new fURI(newPath.startsWith(prefix.toString()) ? newPath.substring(prefix.send ? prefix.toString().length() :  prefix.toString().length()+1) : newPath);
     }
 
     public String name() {
