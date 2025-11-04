@@ -19,12 +19,14 @@
 package studio.phaseshift.metatron;
 
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.lang.mtron.type.Lst;
 import studio.phaseshift.metatron.lang.mtron.type.Obj;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Supplier;
 
+import static studio.phaseshift.metatron.lang.mtron.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MObjs.objs;
 
 /*
@@ -42,6 +44,11 @@ public final class Registry {
     public static Registry singleton() {
         return SINGLETON;
     }
+
+    public Lst registrants() {
+        return lst(REGISTRATION.keySet().stream().map(fURI::toUri).map(Obj::<Obj>as).toList());
+    }
+
 
     public void register(final fURI tid, final Supplier<Obj> obj) {
         REGISTRATION.put(tid, obj);

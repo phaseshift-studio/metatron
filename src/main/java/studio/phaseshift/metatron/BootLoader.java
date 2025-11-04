@@ -18,12 +18,9 @@
 
 package studio.phaseshift.metatron;
 
-import org.apache.tinkerpop.gremlin.tinkergraph.structure.TinkerFactory;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.mach.machInstSet;
 import studio.phaseshift.metatron.lang.mgrph.mgrphInstSet;
-import studio.phaseshift.metatron.lang.mgrph.mtron.TP3Translator;
-import studio.phaseshift.metatron.lang.mgrph.tp.MGraph;
 import studio.phaseshift.metatron.lang.mkv.mkvInstSet;
 import studio.phaseshift.metatron.lang.mkv.mkvSpace;
 import studio.phaseshift.metatron.lang.mllm.mllmInstSet;
@@ -63,10 +60,10 @@ import static studio.phaseshift.metatron.lang.mtron.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MType.T;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MUri.uri;
 
-public class BootLoader {
+public class BootLoader implements Obj {
 
     public static final String HOST = "host";
-    private static final GraphittyLogger LOG = Graphitty.log(BootLoader.class);
+    private static final GraphittyLogger LOG;
     public static boolean TYPE_CHECK = true;
     public static boolean BOOTING = true;
     /// ////////////////////////////////////////////////////////////////////////
@@ -75,6 +72,7 @@ public class BootLoader {
     public static Mode MODE;
 
     static {
+        LOG = Graphitty.log(new BootLoader());
         //Registry.singleton().register(mtronInstSet.INST_TID, () -> mtronInstSet.of(fURI.NULL));
         Registry.singleton().register(msysInstSet.MSYS_TID, msysInstSet::create);
         Registry.singleton().register(mkvInstSet.MKV_TID, mkvInstSet::create);
@@ -88,7 +86,7 @@ public class BootLoader {
 
     public static void main(final String[] args) throws IOException {
         if (args.length == 1 && args[0].equals("--help")) {
-            Graphitty.log(null).none("""
+            LOG.none("""
                             
                             %s: %s
                               {{g}}({{X}}arguments must be provided as a single mtron %s{{g}}){{X}}
@@ -134,12 +132,12 @@ public class BootLoader {
                 LOG.warn("booting metatron on a non-networked jvm");
             }
             startMode(options);
-            ROUTER = new MRouter(remoteAuthority);
+            LOG.info("available instruction sets: %s", Registry.singleton().registrants());
+            ROUTER = new MRouter(remoteAuthority, f("/sys/router"));
             mkvSpace.of(f("/mnt/#")).vid(f("/mnt"));
             mkvSpace.of(f("/sys/#")).vid(f("/mnt/sys"));
-            ROUTER = (Router) ROUTER.vid(f("/sys/router"));
+            mtronInstSet.create(f("/mnt/lang/m"));
             Router.writeToSpace(Router.global());
-            Router.writeToSpace(mtronInstSet.create().vid(f("/mnt/lang/m")));
             ROUTER.start();
             //  Router.writeToSpace(new mtronInstSet(fURI.of("/mnt/lang/m")));
             ///////////////////////////////////////////////////////////////
@@ -176,6 +174,7 @@ public class BootLoader {
             } else if (options.at("mode").equals(uri("server")))
                 Router.writeToSpace(new mkvSpace(fURI.of("/shared/#"), fURI.of("/mnt/shared")));
             /// ///////////////////////////////////
+            LOG.info("%s {{g}}successfully{{/g}} booted", Graphitty.sillyPrint("metatron", true, true));
             BOOTING = false;
             /// /// END OF BOOTING PROCESS /// ///
         } else {
@@ -199,9 +198,35 @@ public class BootLoader {
     }
 
     public static void close() {
+        BOOTING = true;
+        LOG.none("\n");
         Router.global().close();
         MODE.stop();
-        BOOTING = true;
-        LOG.none(Graphitty.sillyPrint("\nshutting down the metatron\n", true, true));
+        LOG.info("%s {{g}}successfully{{/g}} shutdown", Graphitty.sillyPrint("metatron", true, true));
+    }
+
+    @Override
+    public <J> J jvm() {
+        return null;
+    }
+
+    @Override
+    public fURI tid() {
+        return f("boot");
+    }
+
+    @Override
+    public fURI vid() {
+        return f("boot");
+    }
+
+    @Override
+    public <O extends Obj> O clone(Object jvm, fURI tid, fURI vid) {
+        return null;
+    }
+
+    @Override
+    public Obj clone() {
+        return null;
     }
 }

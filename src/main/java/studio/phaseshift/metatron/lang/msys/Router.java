@@ -130,7 +130,13 @@ public interface Router extends Obj, Space, Closeable {
 
     @Override
     default void close() {
-        this.jvm().forEach(s -> this.removeSpace(s.vid()));
+        this.jvm().forEach(s -> {
+            try {
+                this.removeSpace(s.vid());
+            } catch (final Exception e) {
+               // do nothing? System.out.println(Graphitty.string("[{{y}}WARN {{/T}}] %s", e.getMessage()));
+            }
+        });
     }
 
     class Helpers {

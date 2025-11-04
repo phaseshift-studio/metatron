@@ -146,6 +146,9 @@ public class mtronInstSet extends MInstSet {
     public static mtronInstSet create() {
         return new mtronInstSet(fURI.NULL);
     }
+    public static mtronInstSet create(final fURI vid) {
+        return new mtronInstSet(vid);
+    }
 
    /* @Override
     public Set<Inst> rewrites() {

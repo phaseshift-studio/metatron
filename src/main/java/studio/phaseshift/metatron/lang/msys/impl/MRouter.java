@@ -51,8 +51,8 @@ public class MRouter implements Router {
     private final MServer server;
     private fURI vid;
 
-    public MRouter(final fURI host) {
-        this.vid = fURI.NULL;
+    public MRouter(final fURI host, final fURI vid) {
+        this.vid = vid;
         LOG.info("local router {{b}}%s{{/b}}", this);
         this.server = new MServer(host);
         //this.spaces.put(f("+/#"), new StackSpace(f("+/#"), this.vid.extend("stack")));
@@ -218,7 +218,7 @@ public class MRouter implements Router {
     }
 
     @Override
-    public Obj vid(final fURI vid) {
+    public Router vid(final fURI vid) {
         this.vid = vid;
         return this;
     }
