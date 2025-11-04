@@ -22,12 +22,14 @@ import org.junit.jupiter.api.BeforeAll;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.space.SpaceTest;
 
+import static studio.phaseshift.metatron.furi.fURI.f;
+
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public class StackSpaceTest extends SpaceTest {
     @BeforeAll
     public static void setup() {
-        //SPACE = () -> new StackSpace(fURI.of("/t/#"));
+        SPACE = () -> new StackSpace(f("/t/#"));
     }
 }

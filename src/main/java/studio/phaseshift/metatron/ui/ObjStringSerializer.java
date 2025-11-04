@@ -20,9 +20,9 @@ package studio.phaseshift.metatron.ui;
 
 import org.petitparser.context.Result;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.lang.msys.Space;
 import studio.phaseshift.metatron.lang.mtron.mtronParser;
 import studio.phaseshift.metatron.lang.mtron.type.*;
-import studio.phaseshift.metatron.lang.msys.Space;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.HashSet;
@@ -48,10 +48,10 @@ public class ObjStringSerializer implements ObjSerializer<String> {
 
     public static String prettyPrintCode(final Call code) {
         StringBuilder sb = new StringBuilder();
-        return prettyPrintCode(sb,code,0,8).toString();
-        
+        return prettyPrintCode(sb, code, 0, 8).toString();
+
     }
-    
+
     public static StringBuilder prettyPrintCode(final StringBuilder sb, final Obj call, final int depth, final int leftMargin) {
         if (call.isCode()) {
             for (final Inst inst : call.<Code>as().codeValue()) {
@@ -148,7 +148,7 @@ public class ObjStringSerializer implements ObjSerializer<String> {
                     } else {
                         generateTID(sb, obj.tid(), true).append("{{g}}[");
                         for (final Map.Entry<Obj, Obj> o : rec.jvm().entrySet()) {
-                            sb.append(o.getKey()).append("{{g}}=>").append(o.getValue()).append("{{g}},");
+                            sb.append(o.getKey().isUri() ? ("{{b}}" + o.getKey().uriValue()) : o.getKey()).append("{{g}}=>").append(o.getValue()).append("{{g}},");
                         }
                     }
                     if (rec.count() == 1) sb.deleteCharAt(sb.length() - 1).append("{{g}}]");
@@ -192,7 +192,7 @@ public class ObjStringSerializer implements ObjSerializer<String> {
                         .append(this.b.ignoreRewrites ? "" : "{{X}}")
                         .toString();
         } catch (final Exception e) {
-            throw MTronException.of(e,"unable to parse %s",obj.tid());
+            throw MTronException.of(e, "unable to parse %s", obj.tid());
         }
     }
 
@@ -207,7 +207,7 @@ public class ObjStringSerializer implements ObjSerializer<String> {
             rec.recValue().forEach((k, v) -> {
                 if (nested)
                     sb.append(" ".repeat(depth * 2));
-                sb.append(write(k)).append("{{g}}=>");
+                sb.append(k.isUri() ? ("{{b}}" + k.uriValue()) : write(k)).append("{{g}}=>");
                 if (v.isRec()) {
                     this.generateRec(sb, v.as(), depth + 1);
                 } else

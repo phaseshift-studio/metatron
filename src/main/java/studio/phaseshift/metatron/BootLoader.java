@@ -185,7 +185,7 @@ public class BootLoader implements Obj {
     public static void startMode(final Rec options) {
         final Obj mode = options.at("mode");
         if (null == mode)
-            throw MTronException.of("no mode specified (see --help)");
+            throw MTronException.of("no mode specified (see --help): %s",options);
         else if (mode.uriValue().equals(f("testing")))
             MODE = Mode.NoOp.of();
         else if (mode.uriValue().equals(f("console")))
@@ -193,7 +193,7 @@ public class BootLoader implements Obj {
         else if (mode.uriValue().equals(f("server")))
             MODE = Server.of(options);
         else
-            throw MTronException.of("unknown mode %s (see --help)", mode.uriValue());
+            throw MTronException.of("unknown mode %s (see --help): %s", mode.uriValue(), options);
         MODE.start();
     }
 
