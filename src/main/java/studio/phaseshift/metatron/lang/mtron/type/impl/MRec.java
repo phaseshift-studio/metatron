@@ -105,7 +105,7 @@ public class MRec extends MObj implements Rec {
 
     @Override
     public Rec clone(final Object jvm, final fURI tid, final fURI vid) {
-        return (Rec) super.clone(jvm, tid, vid);
+        return super.clone(jvm, tid, vid);
     }
 
     public Rec put(final Obj key, final Obj value) {
