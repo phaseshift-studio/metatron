@@ -117,7 +117,7 @@ public interface Router extends Obj, Space, Closeable {
 
     boolean hasSpaceFor(final fURI vid);
 
-    void addSpace(final fURI pattern, final Space space);
+    void addSpace(final Space space);
 
     void removeSpace(final fURI vid);
 

@@ -106,7 +106,7 @@ public abstract class SpaceTest extends MetatronTest {
     }, delimiter = '%')
     void testMonoReadWrite(final String writeExpression, final String readExpression, final String expectedExpression) {
         final Space space = SPACE.get();
-        Router.global().addSpace(space.pattern(), space);
+        Router.global().addSpace(space);
         final Obj writeObj = mtronParser.parse(writeExpression.equals(".") ? PREVIOUS_LINE.get(0) : writeExpression).apply();
         final Obj readObj = mtronParser.parse(readExpression.equals(".") ? PREVIOUS_LINE.get(1) : readExpression).apply();
         final Obj resultObj = mtronParser.parse(expectedExpression.equals(".") ? PREVIOUS_LINE.get(2) : expectedExpression).apply();

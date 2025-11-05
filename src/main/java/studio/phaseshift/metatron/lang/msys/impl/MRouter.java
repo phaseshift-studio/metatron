@@ -92,14 +92,14 @@ public class MRouter extends MSpace<MServer> implements Router {
     }
 
     @Override
-    public void addSpace(final fURI pattern, final Space space) {
+    public void addSpace(final Space space) {
         this.jvm().entrySet().stream()
-                .filter(kv -> pattern.matches(kv.getKey().uriValue()))
+                .filter(kv -> space.pattern().matches(kv.getKey().uriValue()))
                 .findAny()
                 .ifPresent(kv -> {
-                    LOG.error("%s and %s have overlapping address spaces: %s <=> %s", pattern, kv.getKey(), space, kv.getValue());
+                    LOG.error("%s and %s have overlapping address spaces: %s <=> %s", space.pattern(), kv.getKey(), space, kv.getValue());
                 });
-        this.jvm().put(uri(pattern), space);
+        this.jvm().put(uri(space.pattern()), space);
         Space.Helper.spaceOpenLog(this, space);
         //this.write(space.vid(), space);
     }

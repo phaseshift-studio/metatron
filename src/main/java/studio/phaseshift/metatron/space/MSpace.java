@@ -80,7 +80,7 @@ public abstract class MSpace<SJVM> extends MRec implements Space {
     public Rec vid(final fURI vid) {
         if (null != vid) {
             this.vid = vid;
-            Router.global().addSpace(this.pattern, this);
+            Router.global().addSpace(this);
             Router.writeToSpace(vid,this);
             LOG.trace("registering: %s", this);
             this.qs.register(new PubSubQ(this));

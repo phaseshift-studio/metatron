@@ -47,7 +47,7 @@ public abstract class MInstSet extends MSpace<Map<fURI, Set<? extends Obj>>> imp
     public MInstSet(final fURI tid, final fURI vid) {
         super(new LinkedHashMap<>(), Map.of(uri("pattern"), uri(tid.extend(fURI.ALL))), tid.extend(fURI.ALL), tid, vid);
         if (!this.pattern.equals(f("+/#")) && Router.loaded() && !(this instanceof Router))
-            Router.global().addSpace(this.pattern, this);
+            Router.global().addSpace(this);
         this.types().forEach(t -> this.write(t.tid(), t));
         this.consts().forEach(c -> this.write(c.vid(), c));
         this.insts().forEach(i -> this.write(i.tid(), i));
