@@ -19,23 +19,25 @@
 package studio.phaseshift.metatron.space.remote;
 
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.lang.mtron.type.Code;
-import studio.phaseshift.metatron.lang.mtron.type.Inst;
-import studio.phaseshift.metatron.lang.mtron.type.Obj;
-import studio.phaseshift.metatron.space.MSpace;
 import studio.phaseshift.metatron.lang.msys.Router;
 import studio.phaseshift.metatron.lang.msys.impl.FutureObj;
 import studio.phaseshift.metatron.lang.msys.impl.net.MClient;
 import studio.phaseshift.metatron.lang.msys.impl.net.MConnection;
+import studio.phaseshift.metatron.lang.mtron.type.Code;
+import studio.phaseshift.metatron.lang.mtron.type.Inst;
+import studio.phaseshift.metatron.lang.mtron.type.Obj;
+import studio.phaseshift.metatron.space.MSpace;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
 import studio.phaseshift.metatron.util.MTronException;
 
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import static studio.phaseshift.metatron.lang.mtron.mtronFluent.StartLess.from_;
 import static studio.phaseshift.metatron.lang.mtron.mtronFluent.StartLess.start_;
 import static studio.phaseshift.metatron.lang.mtron.mtronInstSet.MTRON_SPACE_TID;
+import static studio.phaseshift.metatron.lang.mtron.type.impl.MUri.uri;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -47,33 +49,26 @@ public class RemoteSpace extends MSpace<MConnection> {
     private final GraphittyLogger LOG;
 
     public RemoteSpace(final fURI authority, final fURI pattern, final fURI vid) {
-        super(MClient.of(authority), pattern, REMOTE_TID, vid);
+        super(MClient.of(authority), Map.of(uri("pattern"), uri(pattern)), pattern, REMOTE_TID, vid);
         LOG = Graphitty.log(this);
     }
 
-    public static RemoteSpace open(final fURI authority, final fURI pattern, final fURI vid) {
-        GraphittyLogger LOG = Graphitty.log(Router.global());
+    public static RemoteSpace of(final fURI authority, final fURI pattern, final fURI vid) {
         while (true) {
             try {
                 return new RemoteSpace(authority, pattern, vid);
             } catch (final Exception e) {
-                LOG.error("retrying connection in %d seconds: %s", RETRY_SECONDS, e);
+                Graphitty.log(Router.global()).error("retrying connection in %d seconds: %s", RETRY_SECONDS, e);
                 MTronException.wrap(() -> TimeUnit.SECONDS.sleep(RETRY_SECONDS));
             }
         }
     }
 
     @Override
-    public void close() {
-        this.jvm().close();
-    }
-
-
-    @Override
     public Obj read(final fURI vid) {
         final Inst code = from_(vid.authority(null).scheme(null).toUri()).insts().get(0);//, vid.query("tag","abc"));
         LOG.info("performing remote read: %s", code);
-        final FutureObj<Obj> future = this.jvm().sendRecvObj(code);
+        final FutureObj<Obj> future = this.sjvm().sendRecvObj(code);
         return future;
     }
 
@@ -81,14 +76,14 @@ public class RemoteSpace extends MSpace<MConnection> {
     public Obj write(final fURI vid, final Obj obj) {
         final Code code = start_(obj).to_(vid.toUri());
         LOG.info("performing remote write: %s", code);
-        this.jvm().sendObj(code);
+        this.sjvm().sendObj(code);
         return obj;
     }
 
     @Override
     public Obj apply(final Obj obj) {
         LOG.info("performing remote apply: %s", obj);
-        final FutureObj<Obj> future = this.jvm().sendRecvObj(obj);
+        final FutureObj<Obj> future = this.sjvm().sendRecvObj(obj);
         return future;
     }
 }

@@ -31,23 +31,24 @@ import java.util.function.BiConsumer;
 import java.util.function.Function;
 
 import static studio.phaseshift.metatron.lang.msys.msysInstSet.SPACE_TID;
+import static studio.phaseshift.metatron.lang.mtron.type.impl.MUri.uri;
 
 
-public class mkvSpace extends MSpace<Map<fURI, Obj>> implements Space {
+public class mkvSpace extends MSpace<Map<fURI, Obj>> {
 
     public static final fURI KVSPACE_TID = SPACE_TID.extend("kv");
 
     public mkvSpace(final fURI pattern, final fURI vid) {
-        super(new HashMap<>(), pattern, KVSPACE_TID, vid);
+        super(new HashMap<>(), Map.of(uri("pattern"), uri(pattern)), pattern, KVSPACE_TID, vid);
     }
 
-    public static mkvSpace of(final fURI pattern) {
-        return new mkvSpace(pattern, fURI.NULL);
+    public static mkvSpace of(final fURI pattern, final fURI vid) {
+        return new mkvSpace(pattern, vid);
     }
 
     @Override
     public void close() {
-        this.jvm().values().forEach(Common::close);
+        this.sjvm().values().forEach(Common::close);
         super.close();
     }
 
@@ -73,11 +74,11 @@ public class mkvSpace extends MSpace<Map<fURI, Obj>> implements Space {
     public Function<fURI, Map<fURI, Obj>> directReader() {
         return (pattern) -> {
             if (pattern.equals(fURI.ALL))
-                return this.jvm();
+                return this.sjvm();
             else {
                 if (pattern.hasPattern()) {
                     final Map<fURI, Obj> partial = new LinkedHashMap<>();
-                    this.jvm().forEach((key, value) -> {
+                    this.sjvm().forEach((key, value) -> {
                         if (key.matches(pattern.asNode()))
                             partial.put(key, value);
                         if (value.isPoly())
@@ -85,7 +86,7 @@ public class mkvSpace extends MSpace<Map<fURI, Obj>> implements Space {
                     });
                     return partial;
                 } else {
-                    final Obj value = this.jvm().get(pattern);
+                    final Obj value = this.sjvm().get(pattern);
                     return null == value ? Map.of() : Map.of(pattern, value);
                 }
             }
@@ -98,13 +99,12 @@ public class mkvSpace extends MSpace<Map<fURI, Obj>> implements Space {
             if (pattern.hasPattern()) {
                 this.directReader().apply(pattern).forEach((key, value) -> this.write(key, obj));
             } else {
-                final Obj current = this.jvm().get(pattern);
+                final Obj current = this.sjvm().get(pattern);
                 if (obj.isNoObj()) {
-                    this.jvm().remove(pattern);
-                    if (null != current)
-                        Common.close(current);
+                    this.sjvm().remove(pattern);
+                    Common.close(current);
                 } else
-                    this.jvm().put(pattern, (null != current && (obj.isObjs() || current.isObjs())) ? current.append(obj) : obj);
+                    this.sjvm().put(pattern, (null != current && (obj.isObjs() || current.isObjs())) ? current.append(obj) : obj);
             }
         };
     }

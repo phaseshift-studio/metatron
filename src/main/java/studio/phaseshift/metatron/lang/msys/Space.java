@@ -23,6 +23,7 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.mach.type.impl.MMachine;
 import studio.phaseshift.metatron.lang.mtron.type.*;
 import studio.phaseshift.metatron.ui.Graphitty;
+import studio.phaseshift.metatron.util.Common;
 
 import java.io.Closeable;
 import java.util.LinkedHashMap;
@@ -38,7 +39,7 @@ import static studio.phaseshift.metatron.lang.mtron.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.Tuple.Pair;
 
-public interface Space extends Obj, Closeable {
+public interface Space extends Rec, Closeable {
 
     /// ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     /// ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -47,6 +48,8 @@ public interface Space extends Obj, Closeable {
     Qs qs();
 
     fURI pattern();
+
+    Object sjvm();
 
     default Obj read(final String vid) {
         return this.read(fURI.of(vid));
@@ -73,9 +76,10 @@ public interface Space extends Obj, Closeable {
     @Override
     default void close() {
         if (null != this.vid()) {
-            Router.global().write(this.vid().extend(fURI.ALL), noobj());
             Router.global().removeSpace(this.vid());
+            Router.global().write(this.vid().extend(fURI.ALL), noobj());
         }
+        Common.close(this.sjvm());
     }
 
     default Function<fURI, Map<fURI, Obj>> directReader() {

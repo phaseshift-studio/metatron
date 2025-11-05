@@ -66,7 +66,7 @@ public class mgrphInstSet extends MInstSet {
     public static final fURI LABEL_TID = INST_TID.extend("label");
 
     public mgrphInstSet(final fURI vid) {
-        super(new HashMap<>(), MGRPH_TID, vid);
+        super(MGRPH_TID, vid);
         // this.types().forEach(t -> Router.global().registerRewrite(f(t.tid().name()), t.tid()));
     }
 

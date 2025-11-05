@@ -50,7 +50,7 @@ public class MetatronTest {
         mtronInstSet.create().vid(f("/mnt/lang/m"));
         machInstSet.create().vid(f("/mnt/lang/mach"));
         mvecInstSet.create().vid(f("/mnt/lang/mvec"));
-        mkvSpace.of(f("/usr/#")).vid(f("/mnt/usr"));
+        mkvSpace.of(f("/usr/#"),fURI.NULL).vid(f("/mnt/usr"));
     }
 
     public void testMatches(final String lhs, final String rhs, final boolean matches) {

@@ -24,16 +24,21 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.mkv.mkvSpace;
 import studio.phaseshift.metatron.lang.mllm.type.impl.OLLM;
 import studio.phaseshift.metatron.lang.mtron.type.Obj;
+import studio.phaseshift.metatron.lang.mtron.type.Rec;
 import studio.phaseshift.metatron.lang.mtron.type.impl.MUri;
 import studio.phaseshift.metatron.space.MSpace;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
+import studio.phaseshift.metatron.util.Common;
 import studio.phaseshift.metatron.util.Tuple;
+
+import java.util.Map;
 
 import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.lang.mllm.type.impl.OLLM.ollm;
 import static studio.phaseshift.metatron.lang.msys.msysInstSet.SPACE_TID;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.lang.mtron.type.impl.MUri.uri;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -42,21 +47,22 @@ public class mollamaSpace extends MSpace<OllamaModels> {
 
     public static final fURI MLLM_ID = f("/mllm");
     public static final fURI MOLLAMA_TID = SPACE_TID.extend("ollama");
-    private final fURI ollamaHost;
     private final GraphittyLogger LOG = Graphitty.log(this);
     private final mkvSpace internal = new mkvSpace(this.pattern, fURI.NULL);
 
-    public mollamaSpace(final OllamaModels models, final fURI ollamaHost, final fURI pattern, final fURI vid) {
-        super(models, pattern, MOLLAMA_TID, vid);
-        this.ollamaHost = ollamaHost;
+    public mollamaSpace(final OllamaModels models, final Map<Obj, Obj> config, final fURI pattern, final fURI vid) {
+        super(models, config, pattern, MOLLAMA_TID, vid);
         LOG.info("available models: %s", lst(models.availableModels().content().stream().map(OllamaModel::getModel).map(MUri::uri).map(m -> (Obj) m).toList()));
     }
 
     public static mollamaSpace of(final fURI ollamaHost, final fURI pattern) {
         final OllamaModels models = OllamaModels.builder().baseUrl(ollamaHost.toString()).build();
-        return new mollamaSpace(models, ollamaHost, pattern, fURI.NULL);
+        return new mollamaSpace(models, Map.of(
+                uri("host"), ollamaHost.toUri(),
+                uri("pattern"), pattern.toUri()),
+                pattern,
+                fURI.NULL);
     }
-
 
     private fURI modelToVid(final OllamaModel model) {
         return this.pattern.retractPattern().extend(model.getModel().replace(":", "/"));
@@ -64,8 +70,8 @@ public class mollamaSpace extends MSpace<OllamaModels> {
 
     @Override
     public Obj read(final fURI vid) {
-        this.jvm().availableModels().content().stream()
-                .map(model -> ollm(Tuple.Pair.with(model, this.ollamaHost), OLLM.OLLM_TID, modelToVid(model)))
+        this.sjvm().availableModels().content().stream()
+                .map(model -> ollm(Tuple.Pair.with(model, this.jvm().get(uri("host")).uriValue()), OLLM.OLLM_TID, modelToVid(model)))
                 .filter(model -> model.vid().matches(pattern))
                 .forEach(model -> this.internal.write(model.vid(), model));
         return this.internal.read(vid);

@@ -23,28 +23,37 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.msys.Space;
 import studio.phaseshift.metatron.lang.mtron.type.*;
 
-
 import java.util.Map;
 import java.util.Set;
 
-import static studio.phaseshift.metatron.lang.mtron.type.impl.MType.T;
 import static studio.phaseshift.metatron.lang.mtron.mtronInstSet.NOOBJ_TID;
+import static studio.phaseshift.metatron.lang.mtron.type.impl.MType.T;
 
 public final class NullSpace implements Space, InstSet {
 
     private static final NullSpace INSTANCE = new NullSpace();
 
-    public static <S extends Space> S single() {
-        return (S) INSTANCE;
-    }
-
     private NullSpace() {
 
     }
 
+    public static <S extends Space> S single() {
+        return (S) INSTANCE;
+    }
+
     @Override
-    public Map jvm() {
+    public Space sjvm() {
+        return this;
+    }
+
+    @Override
+    public Map<Obj, Obj> jvm() {
         return Map.of();
+    }
+
+    @Override
+    public Rec put(Obj key, Obj value) {
+        return this;
     }
 
     @Override
@@ -114,7 +123,7 @@ public final class NullSpace implements Space, InstSet {
 
     @Override
     public boolean equals(final Object other) {
-        return Helper.spaceEquals(this, other);
+        return other instanceof NullSpace;
     }
 
     @Override
@@ -125,5 +134,10 @@ public final class NullSpace implements Space, InstSet {
     @Override
     public NullSpace clone() {
         return this;
+    }
+
+    @Override
+    public Rec plus(Rec objs) {
+        return null;
     }
 }

@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.space.mqtt;
+package studio.phaseshift.metatron.lang.miot;
 
 import com.hivemq.client.mqtt.MqttClient;
 import com.hivemq.client.mqtt.mqtt5.Mqtt5BlockingClient;
@@ -26,13 +26,12 @@ import studio.phaseshift.metatron.furi.Q;
 import studio.phaseshift.metatron.furi.Qs;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.PubSubQ;
+import studio.phaseshift.metatron.lang.mkv.mkvSpace;
+import studio.phaseshift.metatron.lang.msys.Space;
 import studio.phaseshift.metatron.lang.mtron.type.NoObj;
 import studio.phaseshift.metatron.lang.mtron.type.Obj;
-import studio.phaseshift.metatron.lang.mtron.type.Uri;
 import studio.phaseshift.metatron.lang.mweb.JSONTranslator;
 import studio.phaseshift.metatron.space.MSpace;
-import studio.phaseshift.metatron.lang.msys.Space;
-import studio.phaseshift.metatron.lang.mkv.mkvSpace;
 import studio.phaseshift.metatron.ui.*;
 
 import java.nio.charset.StandardCharsets;
@@ -40,14 +39,13 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
-import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.lang.mtron.mtronInstSet.MTRON_SPACE_TID;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MUri.uri;
 
 
-public class MqttSpace extends MSpace<Map<Uri, Obj>> implements Space {
+public class MqttSpace extends MSpace<Mqtt5Client> {
 
     private static final ObjSerializer<String> SERIALIZER = ObjStringSerializer
             .build()
@@ -66,20 +64,8 @@ public class MqttSpace extends MSpace<Map<Uri, Obj>> implements Space {
     Mqtt5BlockingClient.Mqtt5Publishes incomingMessages;
     mkvSpace cache;
 
-    public MqttSpace(final fURI pattern, final fURI vid) {
-        this(Map.of(
-                uri("pattern"), pattern.basePath().toUri(),
-                uri("broker"), pattern.queryValue(f("broker"), fURI.class).basePath().toUri(),
-                uri("prefix"), pattern.queryValue(f("prefix"), fURI.class).basePath().toUri()), vid);
-    }
-
-    public MqttSpace(final Map<Uri, Obj> config, final fURI vid) {
-        super(config, config.containsKey(uri("prefix")) ?
-                config.get(uri("prefix")).uriValue().extend(config
-                        .get(uri("pattern"))
-                        .orElseThrow(new IllegalArgumentException("config must have a pattern key")).uriValue()) :
-                config.get(uri("pattern"))
-                        .orElseThrow(new IllegalArgumentException("config must have a pattern key")).uriValue(), MQTT_TID, vid);
+    public MqttSpace(final Mqtt5Client client, final Map<Obj, Obj> config, final fURI pattern, final fURI vid) {
+        super(client, config, pattern, MQTT_TID, vid);
         this.prefix = config.containsKey(uri("prefix")) ? config.get(uri("prefix")).uriValue() : null;
         LOG.info("{{y}}mtron{{g}}<=>{{y}}mqtt{{X}} mapping established: {{b}}%s {{g}}<=> ({{b}}%s {{g}}<=> {{b}}%s{{g}}){{X}}", this.pattern(), this.prefix, this.toMqttTopic(this.pattern()));
         this.cache = new mkvSpace(this.pattern(), this.vid.extend("cache"));
@@ -146,17 +132,21 @@ public class MqttSpace extends MSpace<Map<Uri, Obj>> implements Space {
         this.init();
     }
 
-    public static MqttSpace of(final fURI pattern, final fURI vid) {
-        return new MqttSpace(pattern, vid);
-    }
-
-    public MqttSpace clone(final Object jvm, final fURI tid, final fURI vid) {
-        return this;
-    }
-
-    @Override
-    public Qs qs() {
-        return this.qs;
+    public static MqttSpace of(final Map<Obj, Obj> config, final fURI pattern, final fURI vid) {
+       /* if(!config.containsKey(uri("prefix")) ?
+                config.get(uri("prefix")).uriValue().extend(config
+                        .get(uri("pattern"))
+                        .orElseThrow(new IllegalArgumentException("config must have a pattern key")).uriValue()) :
+                config.get(uri("pattern"))
+                        .orElseThrow(new IllegalArgumentException("config must have a pattern key")).uriValue(),*/
+        final Mqtt5Client client = MqttClient.builder()
+                .identifier(UUID.randomUUID().toString())
+                .serverHost(config.get(uri("host")).uriValue().host())
+                .serverPort(config.get(uri("host")).uriValue().port())
+                .useMqttVersion5()
+                .build();
+        config.put(uri("pattern"), uri(pattern));
+        return new MqttSpace(client, config, pattern, vid);
     }
 
     private String toMqttTopic(final fURI vid) {
@@ -253,14 +243,9 @@ public class MqttSpace extends MSpace<Map<Uri, Obj>> implements Space {
     }
 
     @Override
-    public Stream<Obj> stream() {
-        return this.cache.stream();
-    }
-
-    @Override
     public void close() {
-        LOG.debug("closing %s", this);
         this.client.toBlocking().disconnect();
         this.cache.close();
+        super.close();
     }
 }

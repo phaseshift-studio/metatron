@@ -56,7 +56,7 @@ public class mkvInstSet extends MInstSet {
     @Override
     public Set<Inst> insts() {
         return Set.of(
-                instC(INST_TID.extend("mkv").dom(ALL.maybe()).rng(KVSPACE_TID), rec(uri("pattern"), T(URI_TID)), (lhs, inst) -> mkvSpace.of(inst.arg("pattern").uriValue())));
+                instC(INST_TID.extend("mkv").dom(ALL.maybe()).rng(KVSPACE_TID), rec(uri("pattern"), T(URI_TID)), (lhs, inst) -> mkvSpace.of(inst.arg("pattern").uriValue(), fURI.NULL)));
     }
 
    // @Override

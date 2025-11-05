@@ -28,6 +28,7 @@ import java.util.Map;
 import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MObjs.objs;
+import static studio.phaseshift.metatron.lang.mtron.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MUri.uri;
 
@@ -36,6 +37,11 @@ public interface Rec extends Poly, PlusMonoid.O<Rec> {
     @Override
     default Stream<Rel> indexedStream() {
         return this.jvm().entrySet().stream().map(kv -> rel(kv.getKey(), kv.getValue()).c(this.c()).as());
+    }
+
+    @Override
+    default Rec zero() {
+        return rec();
     }
 
     @Override

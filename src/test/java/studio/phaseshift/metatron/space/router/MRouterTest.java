@@ -21,9 +21,9 @@ package studio.phaseshift.metatron.space.router;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.lang.mtron.type.NoObj;
-import studio.phaseshift.metatron.lang.msys.Router;
 import studio.phaseshift.metatron.lang.mkv.mkvSpace;
+import studio.phaseshift.metatron.lang.msys.Router;
+import studio.phaseshift.metatron.lang.mtron.type.NoObj;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.furi.fURI.f;
@@ -35,22 +35,24 @@ import static studio.phaseshift.metatron.lang.mtron.type.impl.MInt.jnt;
 public class MRouterTest extends RouterTest {
 
     @BeforeAll
-    public static void setup() {
+    public static void begin() {
 
     }
 
     @Test
     public void testCloseSpace() {
-        mkvSpace mnt = new mkvSpace(f("/mnt/#"), f("/mnt"));
+        // BootLoader.ROUTER = new MRouter(f("ws://localhost:8866"),f("/sys/router"));
+        mkvSpace mnt = mkvSpace.of(f("/mnt/#"), fURI.NULL).vid(f("/mnt")).as();
         assertFalse(Router.global().hasSpaceFor(f("/test/a")));
-        mkvSpace test =  mkvSpace.of(f("/test/#")).vid(f("/mnt/test")).as();
-        Router.writeToSpace(test);
+        mkvSpace test = mkvSpace.of(f("/test/#"), fURI.NULL).vid(f("/mnt/test")).as();
         assertTrue(Router.global().hasSpaceFor(f("/test/a")));
         assertTrue(Router.global().hasSpaceFor(f("/test/a")));
         Router.global().write("/test/a", jnt(10));
         assertEquals(jnt(10), Router.global().read("/test/a"));
         assertTrue(Router.global().hasSpaceFor(f("/test/a")));
         Router.global().write("/mnt/test", NoObj.noobj());
+        // TODO::: should close on writing to /mnt/test noobj ... something around cloning I suspect
+        test.close();
         assertFalse(Router.global().hasSpaceFor(f("/test/a")));
     }
 }

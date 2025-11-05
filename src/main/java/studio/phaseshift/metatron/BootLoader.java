@@ -134,8 +134,8 @@ public class BootLoader implements Obj {
             startMode(options);
             LOG.info("available instruction sets: %s", Registry.singleton().registrants());
             ROUTER = new MRouter(remoteAuthority, f("/sys/router"));
-            mkvSpace.of(f("/mnt/#")).vid(f("/mnt"));
-            mkvSpace.of(f("/sys/#")).vid(f("/mnt/sys"));
+            mkvSpace.of(f("/mnt/#"),fURI.NULL).vid(f("/mnt"));
+            mkvSpace.of(f("/sys/#"),fURI.NULL).vid(f("/mnt/sys"));
             mtronInstSet.create(f("/mnt/lang/m"));
             Router.writeToSpace(Router.global());
             ROUTER.start();
@@ -162,8 +162,10 @@ public class BootLoader implements Obj {
                 }
             }
             ///////////////////////////////////////////////////////////////
-            Router.writeToSpace(Log.of(rec(options.at("log").orElse(uri("TRACE")), lst(uri("#"))), f("/sys/log")));
-            Router.writeToSpace(new FileSpace(FileSystems.getDefault(), f("/home/#"), f("/mnt/fs")));
+            final Obj log = Router.writeToSpace(Log.of(rec(options.at("log").orElse(uri("TRACE")), lst(uri("#"))), f("/sys/log")));
+            LOG.info("logging now handled by %s", log);
+
+            //Router.writeToSpace(new FileSpace(FileSystems.getDefault(), f("/home/#"), f("/mnt/fs")));
             // Router.writeToSpace(new MGraph(TinkerFactory.createModern(), f("/tp/#"), f("/mnt/tp")));
             //mkvSpace.of(f("/tp/#")).vid(f("/mnt/tp"));
             //new TP3Translator(f("/tp")).translate(TinkerFactory.createModern());
@@ -185,7 +187,7 @@ public class BootLoader implements Obj {
     public static void startMode(final Rec options) {
         final Obj mode = options.at("mode");
         if (null == mode)
-            throw MTronException.of("no mode specified (see --help): %s",options);
+            throw MTronException.of("no mode specified (see --help): %s", options);
         else if (mode.uriValue().equals(f("testing")))
             MODE = Mode.NoOp.of();
         else if (mode.uriValue().equals(f("console")))

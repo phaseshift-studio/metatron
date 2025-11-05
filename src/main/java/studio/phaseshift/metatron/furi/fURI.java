@@ -265,8 +265,10 @@ public class fURI implements Cloneable, Ring<fURI> {
     }
 
     public fURI removePrefix(final fURI prefix) {
-        String newPath = this.toString();
-        return new fURI(newPath.startsWith(prefix.toString()) ? newPath.substring(prefix.send ? prefix.toString().length() : prefix.toString().length() + 1) : newPath);
+        final String newPath = this.toString();
+        //return new fURI(newPath.startsWith(prefix.toString()) ? newPath.substring(prefix.send ? prefix.toString().length() +1 : prefix.toString().length()) : newPath);
+        return newPath.startsWith(prefix.toString()) ? new fURI(newPath.substring(prefix.toString().length())) : this;
+
     }
 
     public String name() {
@@ -279,7 +281,7 @@ public class fURI implements Cloneable, Ring<fURI> {
             if (seg.equals("."))
                 continue;
             if (seg.equals("..") && !newSegments.isEmpty())
-                newSegments.remove(newSegments.size()-1);
+                newSegments.remove(newSegments.size() - 1);
             else
                 newSegments.add(seg);
         }

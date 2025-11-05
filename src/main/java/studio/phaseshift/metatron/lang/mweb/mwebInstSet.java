@@ -20,6 +20,7 @@ package studio.phaseshift.metatron.lang.mweb;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.mtron.type.Inst;
+import studio.phaseshift.metatron.lang.mtron.type.Rec;
 import studio.phaseshift.metatron.lang.mtron.type.Type;
 import studio.phaseshift.metatron.lang.mtron.type.impl.MInstSet;
 
@@ -62,7 +63,7 @@ public class mwebInstSet extends MInstSet {
     @Override
     public Set<Inst> insts() {
         return Set.of(
-                instC(INST_TID.extend("mweb").dom(ALL.maybe()).rng(WEB_TID), rec(uri("host"), T(URI_TID), uri("route"), T(REC_TID), uri("pattern"), T(URI_TID)), (lhs, inst) -> mwebSpace.of(inst.arg("host").uriValue(), inst.arg("route").as(), inst.arg("pattern").uriValue(), fURI.NULL)));
+                instC(INST_TID.extend("mweb").dom(ALL.maybe()).rng(WEB_TID), rec(uri("host"), T(URI_TID), uri("route"), T(REC_TID), uri("pattern"), T(URI_TID)), (lhs, inst) -> mwebSpace.of(inst.arg("host").uriValue(), inst.arg("route").<Rec>as().jvm(), inst.arg("pattern").uriValue(), fURI.NULL)));
     }
 
     @Override

@@ -1,6 +1,6 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
- * Copyright (C) 2025- PhaseShift Studio, LLC 
+ * Copyright (C) 2025- PhaseShift Studio, LLC
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -22,6 +22,8 @@ import org.apache.tinkerpop.gremlin.structure.Graph;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.mtron.type.Obj;
 import studio.phaseshift.metatron.space.MSpace;
+
+import java.util.Map;
 
 import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.lang.mtron.mtronInstSet.MTRON_SPACE_TID;
@@ -46,9 +48,9 @@ public class mgrphSpace extends MSpace<Graph> {
 
 
     public mgrphSpace(final Graph graph, final fURI pattern, final fURI tid, final fURI vid) {
-        super(graph, pattern, tid, vid);
+        super(graph, Map.of(), pattern, tid, vid);
     }
-    
+
     @Override
     public Obj read(final fURI vid) {
         final fURI subset = vid.removeSubpath(pattern.retractPattern());

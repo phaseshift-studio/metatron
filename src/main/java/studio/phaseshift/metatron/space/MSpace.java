@@ -24,22 +24,26 @@ import studio.phaseshift.metatron.furi.q.PubSubQ;
 import studio.phaseshift.metatron.lang.msys.Router;
 import studio.phaseshift.metatron.lang.msys.Space;
 import studio.phaseshift.metatron.lang.mtron.type.Obj;
-import studio.phaseshift.metatron.lang.mtron.type.impl.MObj;
-import studio.phaseshift.metatron.space.stack.StackSpace;
+import studio.phaseshift.metatron.lang.mtron.type.Rec;
+import studio.phaseshift.metatron.lang.mtron.type.impl.MRec;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
 
-public abstract class MSpace<J> extends MObj implements Space {
+import java.util.Map;
 
-    protected final GraphittyLogger LOG;
+public abstract class MSpace<SJVM> extends MRec implements Space {
+
     protected final fURI pattern;
     protected final Qs qs;
+    protected SJVM sjvm;
+    protected GraphittyLogger LOG;
 
-    public MSpace(final J jvm, final fURI pattern, final fURI tid, final fURI vid) {
+    public MSpace(final SJVM sjvm, final Map<Obj, Obj> jvm, final fURI pattern, final fURI tid, final fURI vid) {
         super(jvm, tid, vid);
-        LOG = Graphitty.log(this);
+        this.sjvm = sjvm;
         this.pattern = pattern;
         this.qs = new Qs();
+        LOG = Graphitty.log(this);
     }
 
     @Override
@@ -53,8 +57,8 @@ public abstract class MSpace<J> extends MObj implements Space {
     }
 
     @Override
-    public J jvm() {
-        return (J) this.jvm;
+    public SJVM sjvm() {
+        return this.sjvm;
     }
 
     @Override
@@ -73,18 +77,24 @@ public abstract class MSpace<J> extends MObj implements Space {
     }
 
     @Override
-    public Obj vid(final fURI vid) {
+    public Rec vid(final fURI vid) {
         if (null != vid) {
-            Router.writeToSpace(vid.extend("pattern"), this.pattern().toUri());
+            this.vid = vid;
             Router.global().addSpace(this.pattern, this);
-            LOG.trace("registering: %s",this);
+            Router.writeToSpace(vid,this);
+            LOG.trace("registering: %s", this);
             this.qs.register(new PubSubQ(this));
         }
         return super.vid(vid);
     }
 
     @Override
-    public Space clone() {
+    public Rec clone() {
+        return this;
+    }
+
+    @Override
+    public Rec clone(final Object object, final fURI tid, final fURI vid) {
         return this;
     }
 }

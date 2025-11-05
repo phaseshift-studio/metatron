@@ -31,6 +31,7 @@ import java.util.*;
 
 import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MObjs.objs;
+import static studio.phaseshift.metatron.lang.mtron.type.impl.MUri.uri;
 
 public abstract class MInstSet extends MSpace<Map<fURI, Set<? extends Obj>>> implements InstSet {
 
@@ -44,11 +45,7 @@ public abstract class MInstSet extends MSpace<Map<fURI, Set<? extends Obj>>> imp
     protected final Map<fURI, Inst> REWRITE_TABLE = new LinkedHashMap<>();
 
     public MInstSet(final fURI tid, final fURI vid) {
-        this(new LinkedHashMap<>(), tid, vid);
-    }
-
-    public MInstSet(final Map<fURI, Set<? extends Obj>> value, final fURI tid, final fURI vid) {
-        super(value, tid.extend(fURI.ALL), tid, vid);
+        super(new LinkedHashMap<>(), Map.of(uri("pattern"), uri(tid.extend(fURI.ALL))), tid.extend(fURI.ALL), tid, vid);
         if (!this.pattern.equals(f("+/#")) && Router.loaded() && !(this instanceof Router))
             Router.global().addSpace(this.pattern, this);
         this.types().forEach(t -> this.write(t.tid(), t));
@@ -82,7 +79,7 @@ public abstract class MInstSet extends MSpace<Map<fURI, Set<? extends Obj>>> imp
     }
 
     @Override
-    public Map<fURI, Set<? extends Obj>> jvm() {
+    public Map<fURI, Set<? extends Obj>> sjvm() {
         return Map.of(
                 f("consts"), this.consts(),
                 f("types"), this.types(),

@@ -32,9 +32,7 @@ import static studio.phaseshift.metatron.lang.mtron.mtronInstSet.REC_TID;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MUri.uri;
 
 public class MRec extends MObj implements Rec {
-
-    public static Rec EMPTY_REC = MRec.fromUriKeyed(Map.of());
-
+    
     public MRec(final Map<Obj, Obj> value, final fURI tid, final fURI vid) {
         super(cleanMap(value), tid, vid);
     }
@@ -96,11 +94,6 @@ public class MRec extends MObj implements Rec {
         final Map<Obj, Obj> newMap = new LinkedHashMap<>(this.recValue());
         rhs.stream().flatMap(Obj::<Obj>elements).map(Obj::<Rel>as).forEach(o -> newMap.compute(o.first(), (k, v) -> null == v ? o.second() : v.isPlusMonoid() ? (Obj) v.<PlusMonoid.O>as().plus(o.second().<PlusMonoid.O>as()) : v.append(o.second())));
         return this.jvm(newMap);
-    }
-
-    @Override
-    public Rec zero() {
-        return EMPTY_REC;
     }
 
     @Override

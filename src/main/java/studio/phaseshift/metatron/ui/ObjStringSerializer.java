@@ -20,7 +20,6 @@ package studio.phaseshift.metatron.ui;
 
 import org.petitparser.context.Result;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.lang.msys.Space;
 import studio.phaseshift.metatron.lang.mtron.mtronParser;
 import studio.phaseshift.metatron.lang.mtron.type.*;
 import studio.phaseshift.metatron.util.MTronException;
@@ -30,8 +29,6 @@ import java.util.Map;
 import java.util.Set;
 
 import static studio.phaseshift.metatron.lang.mtron.mtronInstSet.BASE_TYPES;
-import static studio.phaseshift.metatron.lang.mtron.type.impl.MRel.rel;
-import static studio.phaseshift.metatron.lang.mtron.type.impl.MUri.uri;
 
 public class ObjStringSerializer implements ObjSerializer<String> {
 
@@ -144,6 +141,7 @@ public class ObjStringSerializer implements ObjSerializer<String> {
                     sb.append("{{g}}[=>]{{X}}");
                 } else {
                     if (this.b.prettyPrint && rec.count() > 1) {
+                        generateTID(sb, obj.tid(), true);
                         this.generateRec(sb, rec, 0);
                     } else {
                         generateTID(sb, obj.tid(), true).append("{{g}}[");
@@ -187,7 +185,7 @@ public class ObjStringSerializer implements ObjSerializer<String> {
             } else
                 return generateVID(generateTID(sb, obj.tid(), true)
                         .append(this.b.palette.valueC())
-                        .append(obj instanceof Space ? rel(uri("pattern"), null == ((Space) obj).pattern() ? uri("pattern") : ((Space) obj).pattern().toUri()) : obj.jvm())
+                        .append(obj.jvm().toString())
                         .append(this.b.palette.form2C()), obj)
                         .append(this.b.ignoreRewrites ? "" : "{{X}}")
                         .toString();

@@ -28,6 +28,7 @@ import studio.phaseshift.metatron.lang.mtron.type.impl.MRec;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
 
+import static studio.phaseshift.metatron.lang.mtron.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.util.Tuple.Triplet;
 import static studio.phaseshift.metatron.lang.mach.machInstSet.MACH_MONAD_TID;
 
@@ -42,7 +43,7 @@ public class MMonad extends MObj implements Monad {
     }
 
     public static Monad of(final Obj obj, final Inst inst) {
-        return new MMonad(Triplet.with(obj, inst, MRec.EMPTY_REC), MACH_MONAD_TID, fURI.NULL);
+        return new MMonad(Triplet.with(obj, inst, rec()), MACH_MONAD_TID, fURI.NULL);
     }
 
     @Override

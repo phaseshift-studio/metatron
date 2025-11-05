@@ -19,11 +19,11 @@
 package studio.phaseshift.metatron.space.fs;
 
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.lang.msys.Space;
 import studio.phaseshift.metatron.lang.mtron.type.Obj;
 import studio.phaseshift.metatron.lang.mtron.type.Str;
 import studio.phaseshift.metatron.lang.mtron.type.impl.MRec;
 import studio.phaseshift.metatron.space.MSpace;
-import studio.phaseshift.metatron.lang.msys.Space;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.io.FileWriter;
@@ -49,7 +49,7 @@ public class FileSpace extends MSpace<FileSystem> {
     public static final fURI FILESPACE_TID = MTRON_SPACE_TID.extend("fs");
 
     public FileSpace(final FileSystem fs, final fURI pattern, final fURI vid) {
-        super(fs, pattern, FILESPACE_TID, vid);
+        super(fs, Map.of(uri("pattern"), uri(pattern)), pattern, FILESPACE_TID, vid);
     }
 
     @Override

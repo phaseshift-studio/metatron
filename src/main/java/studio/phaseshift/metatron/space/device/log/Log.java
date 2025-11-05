@@ -38,6 +38,8 @@ import static studio.phaseshift.metatron.lang.mtron.type.impl.MUri.uri;
 
 public class Log extends MRec {
 
+    protected static final String LEVEL = "level";
+
     private static final fURI LOG_TID = fURI.of("/usr/log");
 
     public Log(final Obj log) {
@@ -45,7 +47,7 @@ public class Log extends MRec {
     }
 
     protected Log(final Rec levels, final fURI vid) {
-        super(Map.of(uri("level"), levels), LOG_TID, vid);
+        super(Map.of(uri(LEVEL), levels), LOG_TID, vid);
     }
 
     public static Log from(final Rec log) {
@@ -57,22 +59,26 @@ public class Log extends MRec {
         return new Log(levels, vid);
     }
 
+    public static Level getSLF4J() {
+        final ch.qos.logback.classic.Logger root = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME);
+        return org.slf4j.event.Level.valueOf(root.getLevel().toString());
+    }
+
     public static Uri setSLF4J(final String level) {
         final ch.qos.logback.classic.Logger root = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME);
         if (null == level || level.isEmpty()) {
             return uri(root.getAppender("STDOUT").getCopyOfAttachedFiltersList()
-                            .stream()
-                            .filter(x -> x instanceof ThresholdFilter)
-                            .map(x -> {
-                                try {
-                                    final Field field = x.getClass().getDeclaredField("level");
-                                    field.trySetAccessible();
-                                    return field.get(x).toString();
-                                } catch (final Exception e) {
-                                    throw MTronException.of(e);
-                                }
-                            }).findFirst().get()
-                    , fURI.dotPath(root.getClass().getCanonicalName()));
+                    .stream()
+                    .filter(x -> x instanceof ThresholdFilter)
+                    .map(x -> {
+                        try {
+                            final Field field = x.getClass().getDeclaredField(LEVEL);
+                            field.trySetAccessible();
+                            return field.get(x).toString();
+                        } catch (final Exception e) {
+                            throw MTronException.of(e);
+                        }
+                    }).findFirst().orElse("TRACE"), fURI.dotPath(root.getClass().getCanonicalName()));
         } else {
             final Appender<?> appender = root.getAppender("STDOUT");
             if (null != appender)

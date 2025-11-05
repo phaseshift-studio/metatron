@@ -1,6 +1,6 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
- * Copyright (C) 2025- PhaseShift Studio, LLC 
+ * Copyright (C) 2025- PhaseShift Studio, LLC
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -19,22 +19,21 @@
 package studio.phaseshift.metatron.lang.mtron;
 
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.lang.mtron.type.impl.MInstSet;
 import studio.phaseshift.metatron.lang.mtron.type.Call;
 import studio.phaseshift.metatron.lang.mtron.type.Code;
 import studio.phaseshift.metatron.lang.mtron.type.Inst;
 import studio.phaseshift.metatron.lang.mtron.type.Obj;
-
+import studio.phaseshift.metatron.lang.mtron.type.impl.MInstSet;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
 
 import java.util.*;
 import java.util.stream.Stream;
 
+import static studio.phaseshift.metatron.lang.mtron.mtronInstSet.MTRON_TID;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MType.T;
-import static studio.phaseshift.metatron.lang.mtron.mtronInstSet.MTRON_TID;
 import static studio.phaseshift.metatron.ui.ObjStringSerializer.prettyPrintCode;
 
 /*
@@ -47,7 +46,7 @@ public class mtronRewrites extends MInstSet {
     public static final fURI REWRITE_TYPER_TID = REWRITE_TID.extend("typer");
 
     public mtronRewrites(final fURI tid, final fURI vid) {
-        super(new HashMap<>(), tid, vid);
+        super(tid, vid);
 
     }
 
@@ -87,7 +86,7 @@ public class mtronRewrites extends MInstSet {
                             fullResolution = false;
                         }
                     }
-                    final Code resolved = this.jvm(resolvedInsts);
+                    final Code resolved = inst.arg(0).jvm(resolvedInsts);
                     LOG.debug("%s code:\n        [{{g}}COMPILED{{/g}}]\n%s", fullResolution ? "{{g}}resolved{{/g}}" : "{{y}}semi-resolved{{/y}}", prettyPrintCode(new StringBuilder(), resolved, 0, 7).toString());
                     return resolved;
                 }) // /+/call/A{*}

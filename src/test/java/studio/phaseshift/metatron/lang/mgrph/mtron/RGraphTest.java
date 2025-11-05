@@ -28,7 +28,7 @@ public class RGraphTest extends MetatronTest {
         mgrphInstSet.create().vid(f("/mnt/lang/mgraph"));
        // MGraph.of(TinkerFactory.createModern(), f("/tp/#"), f("/mnt/tp"));
        // Router.writeToSpace("g", uri("/mnt/tp"));
-        mkvSpace.of(f("/tp/#")).vid(f("/mnt/tp"));
+        mkvSpace.of(f("/tp/#"),fURI.NULL).vid(f("/mnt/tp"));
     }
 
 

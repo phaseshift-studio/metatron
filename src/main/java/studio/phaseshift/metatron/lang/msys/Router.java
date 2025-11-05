@@ -28,8 +28,10 @@ import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.io.Closeable;
+import java.util.Map;
 
 import static studio.phaseshift.metatron.furi.fURI.f;
+import static studio.phaseshift.metatron.lang.mtron.type.NoObj.noobj;
 
 public interface Router extends Obj, Space, Closeable {
 
@@ -44,7 +46,7 @@ public interface Router extends Obj, Space, Closeable {
     }
 
     static Obj readFromSpace(final fURI vid) {
-        return Router.loaded() ? BootLoader.ROUTER.read(vid) : NoObj.noobj();
+        return Router.loaded() ? BootLoader.ROUTER.read(vid) : noobj();
     }
 
     static Obj readFromSpace(final String vid) {
@@ -52,15 +54,15 @@ public interface Router extends Obj, Space, Closeable {
     }
 
     static Obj writeToSpace(final fURI vid, final Obj obj) {
-        return Router.loaded() ? BootLoader.ROUTER.write(vid, obj) : NoObj.noobj();
+        return Router.loaded() ? BootLoader.ROUTER.write(vid, obj) : noobj();
     }
 
     static Obj writeToSpace(final String vid, final Obj obj) {
-        return Router.loaded() ? BootLoader.ROUTER.write(vid, obj) : NoObj.noobj();
+        return Router.loaded() ? BootLoader.ROUTER.write(vid, obj) : noobj();
     }
 
     static Obj writeToSpace(final Obj obj) {
-        return Router.loaded() ? BootLoader.ROUTER.write(obj.vid(), obj) : NoObj.noobj();
+        return Router.loaded() ? BootLoader.ROUTER.write(obj.vid(), obj) : noobj();
     }
 
 
@@ -124,17 +126,14 @@ public interface Router extends Obj, Space, Closeable {
     fURI rewrite(final fURI furi, final boolean big);
 
     <S extends Space> S getSpace(final fURI vid);
-
-    @Override
-    Iterable<Space> jvm();
-
+    
     @Override
     default void close() {
-        this.jvm().forEach(s -> {
+        this.jvm().values().forEach(s -> {
             try {
                 this.removeSpace(s.vid());
             } catch (final Exception e) {
-               // do nothing? System.out.println(Graphitty.string("[{{y}}WARN {{/T}}] %s", e.getMessage()));
+                // do nothing? System.out.println(Graphitty.string("[{{y}}WARN {{/T}}] %s", e.getMessage()));
             }
         });
     }

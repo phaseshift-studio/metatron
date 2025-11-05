@@ -1,6 +1,6 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
- * Copyright (C) 2025- PhaseShift Studio, LLC 
+ * Copyright (C) 2025- PhaseShift Studio, LLC
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -24,9 +24,9 @@ import org.apache.tinkerpop.gremlin.structure.*;
 import org.apache.tinkerpop.gremlin.structure.util.wrapped.WrappedGraph;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.mgrph.mgrphInstSet;
+import studio.phaseshift.metatron.lang.msys.Space;
 import studio.phaseshift.metatron.lang.mtron.type.Obj;
 import studio.phaseshift.metatron.space.MSpace;
-import studio.phaseshift.metatron.lang.msys.Space;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
@@ -38,13 +38,14 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.furi.fURI.f;
+import static studio.phaseshift.metatron.lang.mtron.type.impl.MUri.uri;
 
 public class MGraph extends MSpace<Graph> implements Graph, WrappedGraph<Graph> {
 
     protected Graph graph;
 
     public MGraph(final Graph graph, final fURI pattern, final fURI vid) {
-        super(graph, pattern, mgrphInstSet.GRAPH_TID, vid);
+        super(graph, Map.of(uri("pattern"), uri(pattern)), pattern, mgrphInstSet.GRAPH_TID, vid);
         this.graph = graph;
         this.graph.configuration().addProperty("vid", vid);
         this.graph.configuration().addProperty("pattern", pattern);
@@ -105,11 +106,6 @@ public class MGraph extends MSpace<Graph> implements Graph, WrappedGraph<Graph> 
     @Override
     public Configuration configuration() {
         return this.graph.configuration();
-    }
-
-    @Override
-    public Graph jvm() {
-        return this.getBaseGraph();
     }
 
     @Override

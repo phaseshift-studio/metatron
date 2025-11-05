@@ -23,14 +23,12 @@ import com.sun.net.httpserver.HttpServer;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.lang.mtron.type.Obj;
-import studio.phaseshift.metatron.lang.mtron.type.Rec;
-import studio.phaseshift.metatron.space.MSpace;
 import studio.phaseshift.metatron.lang.msys.Router;
 import studio.phaseshift.metatron.lang.msys.Space;
+import studio.phaseshift.metatron.lang.mtron.type.Obj;
+import studio.phaseshift.metatron.space.MSpace;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.util.MTronException;
-import studio.phaseshift.metatron.util.Tuple;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -46,9 +44,7 @@ import java.util.function.Function;
 import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.lang.msys.msysInstSet.SPACE_TID;
 import static studio.phaseshift.metatron.lang.mtron.type.NoObj.noobj;
-import static studio.phaseshift.metatron.lang.mtron.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.lang.mweb.mwebInstSet.MWEB_TID;
 import static studio.phaseshift.metatron.lang.mweb.mwebInstSet.PAGE_TID;
 
 /*
@@ -59,14 +55,12 @@ public class mwebSpace extends MSpace<HttpServer> {
     public static final fURI WEB_TID = SPACE_TID.extend("web");
     protected static final String ROUTE = "route";
     private static final WebTranslator WEB_TRANSLATOR = new WebTranslator();
-    private final Rec routes;
 
-    public mwebSpace(final Tuple.Pair<HttpServer, Rec> serverAndRoutes, final fURI pattern, final fURI vid) {
-        super(serverAndRoutes.get0(), pattern, WEB_TID, vid);
-        this.routes = serverAndRoutes.get1();
+    public mwebSpace(final HttpServer server, final Map<Obj, Obj> config, final fURI pattern, final fURI vid) {
+        super(server, config, pattern, WEB_TID, vid);
         // Router.writeToSpace(this.vid.extend(ROUTE), routes);
-        this.routes.elements().forEach(r -> {
-            final HttpContext context = this.jvm().createContext(r.first().uriValue().toString(),
+        this.at(ROUTE).orElse(rec()).elements().forEach(r -> {
+            final HttpContext context = server.createContext(r.first().uriValue().toString(),
                     exchange -> {
                         //LOG.debug("using http context %s => %s => %s", exchange.getRequestURI(), exchange.getHttpContext().getPath(), r.second());
                         final Path path = Path.of(r.second().uriValue().extend(f(exchange.getRequestURI().getPath()).removePrefix(r.first().uriValue())).toString());
@@ -75,7 +69,7 @@ public class mwebSpace extends MSpace<HttpServer> {
                         final String contentType = Files.probeContentType(filePath);
                         exchange.getResponseHeaders().set("Content-Type", contentType == null ? "application/octet-stream" : contentType);
                         exchange.sendResponseHeaders(200, Files.size(filePath));
-                        LOG.info("sending %s [%s,%d bytes] per request from %s: %s", filePath, contentType, Files.size(filePath), exchange.getRemoteAddress(), exchange.getRequestURI());
+                        LOG.debug("sending %s [%s,%d bytes] per request from %s: %s", filePath, contentType, Files.size(filePath), exchange.getRemoteAddress(), exchange.getRequestURI());
                         try (final InputStream is = Files.newInputStream(filePath);
                              final OutputStream os = exchange.getResponseBody()) {
                             byte[] buffer = new byte[8192]; // 8KB buffer
@@ -86,35 +80,31 @@ public class mwebSpace extends MSpace<HttpServer> {
                             }
                         }
                     });
-            LOG.info("http context loaded: %s => %s", uri(context.getPath()), r.second());
+            LOG.info("http route attached: %s => %s", uri(context.getPath()), r.second());
         });
-        this.jvm().setExecutor(Executors.newFixedThreadPool(4));
+        Graphitty.log(Router.global()).info("starting web server at %s", this.at("host").uriValue().scheme("http").toUri());
+        server.setExecutor(Executors.newFixedThreadPool(4));
         Runtime.getRuntime().addShutdownHook(new Thread(this::close));
-        LOG.info("http contexts: %s", this.routes);
-        this.jvm().start();
+        LOG.info("available routes: %s", this.at(ROUTE));
+        server.start();
     }
 
-    public static mwebSpace of(final fURI host, final Rec routes, final fURI pattern, final fURI vid) {
+    public static mwebSpace of(final fURI host, final Map<Obj, Obj> routes, final fURI pattern, final fURI vid) {
         try {
             final HttpServer server = HttpServer.create(new InetSocketAddress(host.host(), host.port()), 0);
-            Graphitty.log(Router.global()).info("starting web server at %s:%d", host.host(), host.port());
-            return new mwebSpace(Tuple.Pair.with(server, routes), pattern, vid);
+            final Map<Obj, Obj> config = new LinkedHashMap<>();
+            config.put(uri("host"), host.toUri());
+            config.put(uri("pattern"), pattern.toUri());
+            config.put(uri("route"), rec(routes));
+            return (mwebSpace) new mwebSpace(server, config, pattern, vid).tid(WEB_TID);
         } catch (final IOException e) {
             throw MTronException.of(e);
         }
     }
 
-    public mwebSpace vid(final fURI vid) {
-        if (null != vid) {
-            Router.writeToSpace(vid.extend("host"), uri(jvm().getAddress().getAddress().toString()));
-            Router.writeToSpace(vid.extend(ROUTE), this.routes);
-        }
-        return (mwebSpace) super.vid(vid);
-    }
-
     @Override
     public void close() {
-        this.jvm().stop(0);
+        this.sjvm().stop(0);
         super.close();
     }
 
@@ -136,14 +126,14 @@ public class mwebSpace extends MSpace<HttpServer> {
 
     @Override
     public Obj read(final fURI vid) {
-       return Space.Helper.resolveRead(this, vid, directReader());
+        return Space.Helper.resolveRead(this, vid, directReader());
     }
 
     @Override
     public Obj write(final fURI vid, final Obj obj) {
         if (obj.isNoObj()) {
             try {
-                this.jvm().removeContext(vid.path());
+                this.sjvm().removeContext(vid.path());
                 LOG.info("removing route %s", vid.path());
                 Router.writeToSpace(this.vid().extend(ROUTE).extend(vid.path()), noobj());
             } catch (final IllegalArgumentException e) {
@@ -153,7 +143,7 @@ public class mwebSpace extends MSpace<HttpServer> {
             LOG.info("adding new route %s => %s", vid.path(), obj);
             this.write(vid, noobj());
             Router.writeToSpace(this.vid().extend(ROUTE), rec(uri(vid.path()), obj));
-            this.jvm().createContext(vid.path(), exchange -> {
+            this.sjvm().createContext(vid.path(), exchange -> {
                 String contentType = "text/plain";
                 exchange.getResponseHeaders().set("Content-Type", contentType == null ? "text/plain" : contentType);
                 final String result = Graphitty.strip(obj.apply(uri(exchange.getRequestURI().toString())).toString());
@@ -174,7 +164,7 @@ public class mwebSpace extends MSpace<HttpServer> {
         }
         return obj;
     }
-
+    
    /* @Override
     public Obj apply(final Obj obj) {
         LOG.info("performing remote apply: %s", obj);
