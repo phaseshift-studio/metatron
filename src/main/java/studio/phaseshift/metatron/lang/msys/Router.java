@@ -21,20 +21,21 @@ package studio.phaseshift.metatron.lang.msys;
 import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.msys.impl.net.MServer;
-import studio.phaseshift.metatron.lang.mtron.type.NoObj;
 import studio.phaseshift.metatron.lang.mtron.type.Obj;
+import studio.phaseshift.metatron.lang.mtron.type.Rec;
 import studio.phaseshift.metatron.space.stack.StackSpace;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.io.Closeable;
-import java.util.Map;
 
 import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.lang.mtron.type.NoObj.noobj;
+import static studio.phaseshift.metatron.lang.mtron.type.impl.MUri.uri;
 
 public interface Router extends Obj, Space, Closeable {
 
+    String SPACE = "space";
     ThreadLocal<StackSpace> THREAD_STACK = ThreadLocal.withInitial(() -> new StackSpace(f("+/#")));
 
     static boolean loaded() {
@@ -65,9 +66,12 @@ public interface Router extends Obj, Space, Closeable {
         return Router.loaded() ? BootLoader.ROUTER.write(obj.vid(), obj) : noobj();
     }
 
-
     static StackSpace stack() {
         return THREAD_STACK.get();
+    }
+
+    default Rec spaces() {
+        return this.jvm().get(uri(SPACE)).as();
     }
 
     MServer server();
@@ -126,12 +130,12 @@ public interface Router extends Obj, Space, Closeable {
     fURI rewrite(final fURI furi, final boolean big);
 
     <S extends Space> S getSpace(final fURI vid);
-    
+
     @Override
     default void close() {
-        this.jvm().values().forEach(s -> {
+        this.spaces().elements().forEach(s -> {
             try {
-                this.removeSpace(s.vid());
+                this.removeSpace(s.second().vid());
             } catch (final Exception e) {
                 // do nothing? System.out.println(Graphitty.string("[{{y}}WARN {{/T}}] %s", e.getMessage()));
             }
