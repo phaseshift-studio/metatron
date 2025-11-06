@@ -1,6 +1,6 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
- * Copyright (C) 2025- PhaseShift Studio, LLC 
+ * Copyright (C) 2025- PhaseShift Studio, LLC
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -19,13 +19,13 @@
 package studio.phaseshift.metatron.lang.mtron.type.impl;
 
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.lang.mtron.type.Obj;
 import studio.phaseshift.metatron.lang.msys.Router;
+import studio.phaseshift.metatron.lang.mtron.type.Fail;
+import studio.phaseshift.metatron.lang.mtron.type.Obj;
+import studio.phaseshift.metatron.lang.mtron.type.Type;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.Objects;
-
-import static studio.phaseshift.metatron.lang.mtron.mtronInstSet.FAIL_TID;
 
 public abstract class MObj implements Obj, Cloneable {
 
@@ -47,13 +47,8 @@ public abstract class MObj implements Obj, Cloneable {
     }
 
     protected boolean check() {
-        if (!this.isNoObj() && !this.isType() && !this.matches(this.type())) {
-            //throw  MTronException.of("[{{r}}type error{{/r}}] %s is not a %s".formatted(this, this.type()));
-            this.tid = FAIL_TID;
-            this.vid = fURI.NULL;
-            this.jvm = MTronException.of("[{{r}}type error{{/r}}] %s is not a %s".formatted(this, this.type()));
-            return false;
-        }
+        if (!this.isInstSet() && !this.isNoObj() && !this.isType() && !this.matches(this.type()))
+            throw MTronException.of("[{{r}}type error{{/r}}] %s is not a %s".formatted(this, this.type()));
         return true;
     }
 
@@ -102,10 +97,22 @@ public abstract class MObj implements Obj, Cloneable {
     }
 
     public <O extends Obj> O clone(final Object jvm, final fURI tid, final fURI vid) {
-        if (!Objects.equals(jvm, this.jvm) || !tid.equals(this.tid) || !Objects.equals(vid, this.vid)) {
+        Object realjvm = jvm;
+        if (!Objects.equals(tid, this.tid)) {
+            final Obj type = Router.readFromSpace(tid);
+            if (!type.isNoObj() && type.isType() && null != type.<Type>as().constructor()) {
+                Obj construction = type.<Type>as().constructor().apply(this);
+                if (construction.isFail())
+                    throw (MTronException) construction.<Fail>as().jvm();
+                else
+                    realjvm = construction.jvm();
+            }
+        }
+
+        if (!Objects.equals(realjvm, this.jvm) || !tid.equals(this.tid) || !Objects.equals(vid, this.vid)) {
             try {
                 final MObj clone = (MObj) this.clone();
-                clone.jvm = jvm;
+                clone.jvm = realjvm;
                 clone.tid = tid;
                 clone.vid = vid;
                 clone.check();

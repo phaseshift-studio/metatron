@@ -1,15 +1,14 @@
-/mnt/lang/mkv   -> */mkv;
-/mnt/lang/mweb  -> */mweb;
-/mnt/lang/mgrph -> */mgrph;
-/mnt/lang/mvec  -> */mvec;
-/mnt/lang/mach  -> */mach;
-/mnt/lang/mllm  -> */mllm;
-mkv(pattern     => /usr/#).@/mnt/usr;
-mkv(pattern     => /shared/#).@/mnt/shared;
-mollama(host    => <http://localhost:11434>,
-        pattern => /ollama/#).@/mnt/ollama;
-mweb(host       => <http://localhost:8777>,
-     pattern    => <http://#>,
-     route      => [
-           /    => examples/www,
-       /docs    => target/docs]).@/mnt/web
+/sys/lang/m/kv   -> */mkv;
+/sys/lang/m/web  -> */mweb;
+/sys/lang/m/grph -> */mgrph;
+/sys/lang/m/vec  -> */mvec;
+/sys/lang/m/ach  -> */mach;
+/sys/lang/m/llm  -> */mllm;
+---
+kv::[pattern     => /usr/#].@/sys/space/usr;
+kv::[pattern     => /shared/#].@/sys/space/shared;
+ollama::[host    => <http://localhost:11434>,
+                     pattern => /ollama/#].@/mnt/ollama;
+web::[host       => <http://localhost:8777>,
+      pattern    => <http://#>,
+      route      => [/ => examples/www]].@/sys/space/web

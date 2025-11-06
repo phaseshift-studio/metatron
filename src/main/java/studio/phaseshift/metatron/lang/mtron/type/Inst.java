@@ -120,13 +120,13 @@ public interface Inst extends Call {
     default Type dom() {
         final fURI domain = this.tid().dom();
         // return MType.of(domain);
-        return MType.of(domain);
+        return T(domain);
     }
 
     @Override
     default Type rng() {
         final fURI range = this.tid().rng();
-        return MType.of(range);
+        return T(range);
         //return MType.of(range);
     }
 

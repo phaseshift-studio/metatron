@@ -30,6 +30,7 @@ import static studio.phaseshift.metatron.lang.mtron.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MReal.real;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MStr.str;
+import static studio.phaseshift.metatron.lang.mtron.type.impl.MType.T;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.Tuple.Pair;
 import static studio.phaseshift.metatron.util.Tuple.Triplet;
@@ -104,7 +105,7 @@ public class MObjFactory implements ObjFactory {
         else if (Objs.class.isAssignableFrom(objClass))
             return (O) new MObjs((Iterable<Obj>) value, vid);
         else if (Type.class.isAssignableFrom(objClass))
-            return (O) new MType((Call) value, tid);
+            return (O) T(tid, null, (Call) value);
         else if (NoObj.class.isAssignableFrom(objClass))
             return (O) NoObj.noobj();
         else

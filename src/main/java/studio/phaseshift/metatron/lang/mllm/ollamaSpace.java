@@ -21,43 +21,58 @@ package studio.phaseshift.metatron.lang.mllm;
 import dev.langchain4j.model.ollama.OllamaModel;
 import dev.langchain4j.model.ollama.OllamaModels;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.lang.mkv.mkvSpace;
+import studio.phaseshift.metatron.lang.mkv.kvSpace;
 import studio.phaseshift.metatron.lang.mllm.type.impl.OLLM;
+import studio.phaseshift.metatron.lang.msys.Router;
+import studio.phaseshift.metatron.lang.msys.Space;
+import studio.phaseshift.metatron.lang.mtron.mtronInstSet;
 import studio.phaseshift.metatron.lang.mtron.type.Obj;
 import studio.phaseshift.metatron.lang.mtron.type.Rec;
+import studio.phaseshift.metatron.lang.mtron.type.Type;
 import studio.phaseshift.metatron.lang.mtron.type.impl.MUri;
 import studio.phaseshift.metatron.space.MSpace;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
-import studio.phaseshift.metatron.util.Common;
 import studio.phaseshift.metatron.util.Tuple;
 
 import java.util.Map;
 
-import static studio.phaseshift.metatron.furi.fURI.f;
+import static studio.phaseshift.metatron.furi.fURI.ALL;
+import static studio.phaseshift.metatron.lang.mllm.mllmInstSet.OLLAMA_TID;
 import static studio.phaseshift.metatron.lang.mllm.type.impl.OLLM.ollm;
-import static studio.phaseshift.metatron.lang.msys.msysInstSet.SPACE_TID;
+import static studio.phaseshift.metatron.lang.mtron.mtronFluent.StartLess.isa_;
+import static studio.phaseshift.metatron.lang.mtron.mtronInstSet.REC_TID;
+import static studio.phaseshift.metatron.lang.mtron.mtronInstSet.URI_TID;
+import static studio.phaseshift.metatron.lang.mtron.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.lang.mtron.type.impl.MType.T;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MUri.uri;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class mollamaSpace extends MSpace<OllamaModels> {
+public class ollamaSpace extends MSpace<OllamaModels> {
 
-    public static final fURI MLLM_ID = f("/mllm");
-    public static final fURI MOLLAMA_TID = SPACE_TID.extend("ollama");
+    protected static final Type OLLAMA_TYPE = T(OLLAMA_TID, null, instC(mtronInstSet.INST_TID.dom(ALL.maybe()).rng(OLLAMA_TID), lst(T(REC_TID, isa_(rec(uri(PATTERN), T(URI_TID), uri(HOST), T(URI_TID))))), (lhs, inst) -> {
+        final fURI pattern = inst.arg(0).<Rec>as().at(PATTERN).uriValue();
+        final fURI ollamaHost = inst.arg(0).<Rec>as().at(HOST).uriValue();
+        final OllamaModels models = OllamaModels.builder().baseUrl(ollamaHost.toString()).build();
+        final Space ollama = new ollamaSpace(models, inst.arg(0).jvm(), pattern, inst.arg(0).vid());
+        Router.global().addSpace(ollama);
+        return ollama;
+    }));
+
     private final GraphittyLogger LOG = Graphitty.log(this);
-    private final mkvSpace internal = new mkvSpace(this.pattern, fURI.NULL);
+    private final kvSpace internal = new kvSpace(this.pattern, fURI.NULL);
 
-    public mollamaSpace(final OllamaModels models, final Map<Obj, Obj> config, final fURI pattern, final fURI vid) {
-        super(models, config, pattern, MOLLAMA_TID, vid);
+    public ollamaSpace(final OllamaModels models, final Map<Obj, Obj> config, final fURI pattern, final fURI vid) {
+        super(models, config, pattern, OLLAMA_TID, vid);
         LOG.info("available models: %s", lst(models.availableModels().content().stream().map(OllamaModel::getModel).map(MUri::uri).map(m -> (Obj) m).toList()));
     }
 
-    public static mollamaSpace of(final fURI ollamaHost, final fURI pattern) {
+    public static ollamaSpace of(final fURI ollamaHost, final fURI pattern) {
         final OllamaModels models = OllamaModels.builder().baseUrl(ollamaHost.toString()).build();
-        return new mollamaSpace(models, Map.of(
+        return new ollamaSpace(models, Map.of(
                 uri("host"), ollamaHost.toUri(),
                 uri("pattern"), pattern.toUri()),
                 pattern,

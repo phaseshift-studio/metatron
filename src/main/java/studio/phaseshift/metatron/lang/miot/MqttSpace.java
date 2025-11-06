@@ -26,7 +26,7 @@ import studio.phaseshift.metatron.furi.Q;
 import studio.phaseshift.metatron.furi.Qs;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.PubSubQ;
-import studio.phaseshift.metatron.lang.mkv.mkvSpace;
+import studio.phaseshift.metatron.lang.mkv.kvSpace;
 import studio.phaseshift.metatron.lang.msys.Space;
 import studio.phaseshift.metatron.lang.mtron.type.NoObj;
 import studio.phaseshift.metatron.lang.mtron.type.Obj;
@@ -62,13 +62,13 @@ public class MqttSpace extends MSpace<Mqtt5Client> {
     private final GraphittyLogger LOG = Graphitty.log(this);
     Mqtt5Client client;
     Mqtt5BlockingClient.Mqtt5Publishes incomingMessages;
-    mkvSpace cache;
+    kvSpace cache;
 
     public MqttSpace(final Mqtt5Client client, final Map<Obj, Obj> config, final fURI pattern, final fURI vid) {
         super(client, config, pattern, MQTT_TID, vid);
         this.prefix = config.containsKey(uri("prefix")) ? config.get(uri("prefix")).uriValue() : null;
         LOG.info("{{y}}mtron{{g}}<=>{{y}}mqtt{{X}} mapping established: {{b}}%s {{g}}<=> ({{b}}%s {{g}}<=> {{b}}%s{{g}}){{X}}", this.pattern(), this.prefix, this.toMqttTopic(this.pattern()));
-        this.cache = new mkvSpace(this.pattern(), this.vid.extend("cache"));
+        this.cache = new kvSpace(this.pattern(), this.vid.extend("cache"));
         this.cache.qs().clear();
         this.qs = new Qs();
         this.qs.register(new PubSubQ(this) {

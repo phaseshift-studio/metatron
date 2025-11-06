@@ -51,6 +51,7 @@ import static studio.phaseshift.metatron.lang.mtron.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MRec.rec;
+import static studio.phaseshift.metatron.lang.mtron.type.impl.MType.T;
 import static studio.phaseshift.metatron.util.Tuple.Triplet;
 
 public class mtronParser {
@@ -83,8 +84,8 @@ public class mtronParser {
                 .map(t -> new MRel(Tuple.Pair.with(pick(t, 1), pick(t, 3)), pick(t, 0), pick(t, 4))));
         obj_no_code_parser.set(choice(
                 m_comment(),
-                m_fail(),
                 m_type(),
+                m_fail(),
                 m_noobj(),
                 m_bool(),
                 m_real(),
@@ -98,8 +99,8 @@ public class mtronParser {
                 m_uri()));
         obj_parser.set(choice(
                 m_comment(),
-                m_fail(),
                 m_type(),
+                m_fail(),
                 m_noobj(),
                 m_bool(),
                 m_real(),
@@ -113,8 +114,8 @@ public class mtronParser {
                 m_uri()));
         obj_rel_back_parser.set(choice(
                 m_comment(),
-                m_fail(),
                 m_type(),
+                m_fail(),
                 m_noobj(),
                 m_bool(),
                 m_real(),
@@ -132,11 +133,11 @@ public class mtronParser {
                 m_vid_postfix())
                 .map(t -> new MLst(pick(t, 2), pick(t, 0), pick(t, 4))));
 
-        rec_parser.set(seq(m_type_prefix_opt_colon(REC_TID), of('[').trim(), rec_internal(obj_rel_back_parser, obj_parser), of(']').trim(), m_vid_postfix()).trim().map(t -> new MRec(pick(t, 2), pick(t, 0), pick(t, 4))));
+        rec_parser.set(seq(m_type_prefix_opt_colon(REC_TID), of('[').trim(), rec_internal(obj_rel_back_parser, obj_parser), of(']').trim(), m_vid_postfix()).trim().map(t -> new MRec(pick(t, 2), REC_TID, pick(t, 4)).tid((fURI) pick(t, 0))));
 
         inst_parser.set(choice(/*branch_parser,*/ seq(
                 choice(m_inst_furi(), m_type_prefix_opt_colon(INST_TID)), // 0 inst_tid
-                seq(of('(').trim(), choice(rec_internal(m_uri(), obj_parser), lst_internal(), of("")).trim(), of(')').trim()).pick(1), // 1 inst_args
+                seq(of('(').trim(), choice(rec_internal(m_furi().map(t -> ((fURI) t).toUri()), obj_parser), lst_internal(), of("")).trim(), of(')').trim()).pick(1), // 1 inst_args
                 opt(seq(of('{').trim(), choice(
                                 of('?').map(t -> null),
                                 of("<j>").map(t -> null),
@@ -339,7 +340,10 @@ public class mtronParser {
     }
 
     public static Parser m_type() {
-        return seq(m_type_prefix(TYPE_TID), of("T["), opt(m_obj(), null), of("]")).map(t -> MType.of(pick(t, 2), pick(t, 0)));
+        return seq(m_type_prefix(TYPE_TID), of("T"),
+                opt(seq(of("["), opt(m_obj(), null), of("]")).map(t -> pick(t, 1)), null),
+                opt(seq(of("["), opt(m_obj(), null), of("]")).map(t -> pick(t, 1)), null))
+                .map(t -> T(pick(t, 0), pick(t, 2), pick(t, 3)));
     }
 
     public static Parser sugar_code() {

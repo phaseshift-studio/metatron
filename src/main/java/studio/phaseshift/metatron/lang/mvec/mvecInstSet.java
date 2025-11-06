@@ -95,6 +95,6 @@ public class mvecInstSet extends MInstSet {
 
     @Override
     public Set<Type> types() {
-        return Stream.of(T(VEC_TID, isa_(T(LST_TID))), MType.of(MTRX_TID), MType.of(CMPLX_TID)).collect(Collectors.toSet());
+        return Stream.of(T(VEC_TID, isa_(T(LST_TID))), T(MTRX_TID), T(CMPLX_TID)).collect(Collectors.toSet());
     }
 }

@@ -98,7 +98,7 @@ public class Log extends MRec {
         return ((Rec) this.jvm().get(uri("level"))).jvm()
                 .entrySet()
                 .stream()
-                .filter(kv -> Level.valueOf(kv.getKey().uriValue().toString()).compareTo(level) >= 0)
+                .filter(kv -> Level.valueOf(kv.getKey().uriValue().toString().toUpperCase()).compareTo(level) >= 0)
                 .flatMap(kv -> kv.getValue().<Lst>as().jvm().stream())
                 .anyMatch(v -> pattern.matches(v.uriValue()));
     }

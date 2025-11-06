@@ -23,7 +23,6 @@ import studio.phaseshift.metatron.algebra.PlusMonoid;
 import studio.phaseshift.metatron.algebra.Ring;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.lang.mtron.type.impl.MType;
 import studio.phaseshift.metatron.lang.msys.Router;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
@@ -134,7 +133,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
     }
 
     default Type type() {
-        return MType.of(this.tid()); // null == Router.global() || this.isInst() ? MType.of(this.tid()) : Router.global().read(this.tid()).orElse(MType.of(this.tid()));
+        return T(this.tid()); // null == Router.global() || this.isInst() ? MType.of(this.tid()) : Router.global().read(this.tid()).orElse(MType.of(this.tid()));
     }
 
     default GraphittyLogger logger() {
@@ -236,7 +235,10 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
         if (!this.c().within(rhs.c()))
             return false;
         if (rhs.isType())
-            return rhs.tid().isGeneric() || ((this.tid().matches(rhs.tid()) || this.baseType().matches(rhs.tid())) && (rhs.jvm() == null || this.isObjs() || !rhs.apply(this).isNoObj()));
+            return rhs.tid().isGeneric() ||
+                    ((this.tid().matches(rhs.tid()) ||
+                            this.baseType().equals(rhs.tid())) &&
+                            (rhs.<Type>as().predicate() == null || this.isObjs() || !rhs.<Type>as().predicate().apply(this).isNoObj()));
         return this.tid().matches(rhs.tid()) &&
                 Objects.equals(this.jvm(), rhs.jvm());
     }
@@ -361,6 +363,10 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
 
     default boolean isInstObj() {
         return this instanceof Inst && !this.isNoObj();
+    }
+
+    default boolean isInstSet() {
+        return this instanceof InstSet;
     }
 
     default boolean isObjs() {

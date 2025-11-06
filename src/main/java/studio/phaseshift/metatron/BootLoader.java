@@ -22,7 +22,7 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.mach.machInstSet;
 import studio.phaseshift.metatron.lang.mgrph.mgrphInstSet;
 import studio.phaseshift.metatron.lang.mkv.mkvInstSet;
-import studio.phaseshift.metatron.lang.mkv.mkvSpace;
+import studio.phaseshift.metatron.lang.mkv.kvSpace;
 import studio.phaseshift.metatron.lang.mllm.mllmInstSet;
 import studio.phaseshift.metatron.lang.msys.Router;
 import studio.phaseshift.metatron.lang.msys.impl.MRouter;
@@ -34,7 +34,6 @@ import studio.phaseshift.metatron.lang.mtron.type.Rec;
 import studio.phaseshift.metatron.lang.mvec.mvecInstSet;
 import studio.phaseshift.metatron.lang.mweb.mwebInstSet;
 import studio.phaseshift.metatron.space.device.log.Log;
-import studio.phaseshift.metatron.space.fs.FileSpace;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
 import studio.phaseshift.metatron.ui.Mode;
@@ -46,7 +45,6 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.net.InetAddress;
-import java.nio.file.FileSystems;
 import java.util.Arrays;
 import java.util.List;
 
@@ -74,13 +72,13 @@ public class BootLoader implements Obj {
     static {
         LOG = Graphitty.log(new BootLoader());
         //Registry.singleton().register(mtronInstSet.INST_TID, () -> mtronInstSet.of(fURI.NULL));
-        Registry.singleton().register(msysInstSet.MSYS_TID, msysInstSet::create);
-        Registry.singleton().register(mkvInstSet.MKV_TID, mkvInstSet::create);
-        Registry.singleton().register(mwebInstSet.MWEB_TID, mwebInstSet::create);
-        Registry.singleton().register(mgrphInstSet.MGRPH_TID, mgrphInstSet::create);
-        Registry.singleton().register(mllmInstSet.MLLM_TID, mllmInstSet::create);
-        Registry.singleton().register(mvecInstSet.MVEC_TID, mvecInstSet::create);
-        Registry.singleton().register(machInstSet.MACH_TID, machInstSet::create);
+        Registry.open().register(msysInstSet.MSYS_TID, msysInstSet::create);
+        Registry.open().register(mkvInstSet.MKV_TID, mkvInstSet::create);
+        Registry.open().register(mwebInstSet.MWEB_TID, mwebInstSet::create);
+        Registry.open().register(mgrphInstSet.MGRPH_TID, mgrphInstSet::create);
+        Registry.open().register(mllmInstSet.MLLM_TID, mllmInstSet::create);
+        Registry.open().register(mvecInstSet.MVEC_TID, mvecInstSet::create);
+        Registry.open().register(machInstSet.MACH_TID, machInstSet::create);
         // Registry.singleton().register(miotInstSet.INST_TID, () -> miotInstSet.of(fURI.NULL));
     }
 
@@ -113,7 +111,7 @@ public class BootLoader implements Obj {
                     "metatron '[mode=>console,log=>INFO,host=>ws://localhost:8888,nodes=>[ws://127.0.0.1:8887]]'");
             System.exit(0);
         } else {
-            Rec options = args.length > 0 ? mtronParser.m_rec().parse(args[0]).get() : rec();
+            Rec options = args.length > 0 ? mtronParser.parse(args[0]).as() : rec();
             Log.setSLF4J(options.has(uri("log")) ? options.at(uri("log")).uriValue().toString() : "TRACE");
             LOG.debug("user options: %s", options);
             GLOBAL = options;
@@ -132,10 +130,11 @@ public class BootLoader implements Obj {
                 LOG.warn("booting metatron on a non-networked jvm");
             }
             startMode(options);
-            LOG.info("available instruction sets: %s", Registry.singleton().registrants());
+            LOG.info("available instruction sets: %s", Registry.open().registrants());
             ROUTER = new MRouter(remoteAuthority, f("/sys/router"));
-            mkvSpace.of(f("/mnt/#"),fURI.NULL).vid(f("/mnt"));
-            mkvSpace.of(f("/sys/#"),fURI.NULL).vid(f("/mnt/sys"));
+            kvSpace.of(f("/mnt/#"), fURI.NULL).vid(f("/mnt"));
+            kvSpace.of(f("/msys/#"),fURI.NULL).vid(f("/mnt/msys"));
+            kvSpace.of(f("/sys/#"), fURI.NULL).vid(f("/mnt/sys"));
             mtronInstSet.create(f("/mnt/lang/m"));
             Router.writeToSpace(Router.global());
             ROUTER.start();
@@ -174,7 +173,7 @@ public class BootLoader implements Obj {
                 //     Router.writeToSpace(mollamaSpace.of(f("http://localhost:11434"), f("/ollama/#"), f("/mnt/ollama")));
                 //     Router.writeToSpace(RemoteSpace.open(f("ws://chibi.local:8888"), f("/shared/#"), f("/mnt/shared")));
             } else if (options.at("mode").equals(uri("server")))
-                Router.writeToSpace(new mkvSpace(fURI.of("/shared/#"), fURI.of("/mnt/shared")));
+                Router.writeToSpace(new kvSpace(fURI.of("/shared/#"), fURI.of("/mnt/shared")));
             /// ///////////////////////////////////
             LOG.info("%s {{g}}successfully{{/g}} booted", Graphitty.sillyPrint("metatron", true, true));
             BOOTING = false;

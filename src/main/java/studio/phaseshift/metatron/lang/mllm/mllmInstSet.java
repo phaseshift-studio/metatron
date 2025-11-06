@@ -29,18 +29,13 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
-import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.furi.fURI.f;
-import static studio.phaseshift.metatron.lang.mllm.mollamaSpace.MOLLAMA_TID;
 import static studio.phaseshift.metatron.lang.mllm.type.impl.OLLM.OLLM_TID;
 import static studio.phaseshift.metatron.lang.mtron.mtronInstSet.STR_TID;
-import static studio.phaseshift.metatron.lang.mtron.mtronInstSet.URI_TID;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MLst.lst;
-import static studio.phaseshift.metatron.lang.mtron.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MStr.str;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MType.T;
-import static studio.phaseshift.metatron.lang.mtron.type.impl.MUri.uri;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -49,7 +44,8 @@ public class mllmInstSet extends MInstSet {
 
     public static final fURI MLLM_TID = f("/mllm");
     public static final fURI INST_TID = MLLM_TID.extend("inst");
-
+    public static final fURI SPACE_TID = MLLM_TID.extend("space");
+    public static final fURI OLLAMA_TID = SPACE_TID.extend("ollama");
     public static final fURI TOOL_TID = MLLM_TID.extend("tool");
     public static final fURI MEMORY_TID = MLLM_TID.extend("memory");
 
@@ -63,15 +59,16 @@ public class mllmInstSet extends MInstSet {
 
     @Override
     public Set<Type> types() {
-        return Set.of(T(OLLM_TID), T(TOOL_TID), T(MEMORY_TID));
+        return Set.of(
+                T(OLLM_TID),
+                T(TOOL_TID),
+                T(MEMORY_TID),
+                ollamaSpace.OLLAMA_TYPE);
     }
 
     @Override
     public Set<Inst> insts() {
         return new LinkedHashSet<>(List.of(
-                instC(INST_TID.extend("mollama").dom(ALL.maybe()).rng(MOLLAMA_TID),
-                        rec(uri("host"), T(URI_TID), uri("pattern"), T(URI_TID)),
-                        (lhs, inst) -> mollamaSpace.of(inst.arg("host").uriValue(), inst.arg("pattern").uriValue())),
                 instC(INST_TID.extend("chat").dom(OLLM_TID).rng(STR_TID.maybeSome()), lst(T(STR_TID)),
                         (lhs, inst) -> str(OllamaChatModel.builder()
                                 .baseUrl(lhs.<Rec>as().at("host").uriValue().toString())

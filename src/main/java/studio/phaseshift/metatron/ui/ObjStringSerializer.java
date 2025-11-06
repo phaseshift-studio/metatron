@@ -156,10 +156,16 @@ public class ObjStringSerializer implements ObjSerializer<String> {
             /// ///////////////////////////////////////////////////////////////
             /// ///////////////////////////////////////////////////////////////
             else if (obj instanceof Type) {
-                return generateTID(sb, obj.tid(), false)
-                        .append("{{r}}T{{g}}[{{y}}")
-                        .append(null == obj.jvm() ? "" : obj.jvm().toString())
-                        .append("{{g}}]{{X}}").toString();
+                final Call predicate = ((Type) obj).predicate();
+                final Call constructor = ((Type) obj).constructor();
+                final String pred = predicate == null ? "{{y}}<X>{{/y}}" : write(predicate);
+                final String con = constructor == null ? "{{y}}<X>{{/y}}" : write(constructor);
+                generateTID(sb, obj.tid(), false).append("{{r}}T");
+                if (null != predicate)
+                    sb.append("{{g}}[").append(pred).append("{{g}}]");
+                if (null != constructor)
+                    sb.append("{{g}}[").append(con).append("{{g}}]");
+                return sb.append("{{X}}").toString();
             }
             /// ///////////////////////////////////////////////////////////////
             /// ///////////////////////////////////////////////////////////////

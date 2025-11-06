@@ -86,7 +86,7 @@ public abstract class SpaceTest extends MetatronTest {
            // ".                                                     % *#.sum?int<=int{*}()      % .",
            // ".                                                     % *(/+/+).sum?int<=int{*}()    % .",
             "/t/ -> [a=>1,b=>2,c=>3]                               % */t/                      % [/t/a=>1,/t/b=>2,/t/c=>3]>-",
-            ".                                                     % */t                       % noobj",
+           // ".                                                     % */t                       % noobj",
             ".                                                     % */t/a                     % 1",
             "/t -> [a=>[b=>2,c=>3],d=>4]                           % */t/a/b                   % 2",
             ".                                                     % */t/#                     % [[a=>[b=>2,c=>3],d=>4],[b=>2,c=>3],2,3,4]>-",

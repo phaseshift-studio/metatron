@@ -34,6 +34,7 @@ import studio.phaseshift.metatron.util.MTronException;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.lang.mtron.mtronFluent.StartLess.from_;
 import static studio.phaseshift.metatron.lang.mtron.mtronFluent.StartLess.start_;
 import static studio.phaseshift.metatron.lang.mtron.mtronInstSet.MTRON_SPACE_TID;
@@ -49,7 +50,7 @@ public class RemoteSpace extends MSpace<MConnection> {
     private final GraphittyLogger LOG;
 
     public RemoteSpace(final fURI authority, final fURI pattern, final fURI vid) {
-        super(MClient.of(authority), Map.of(uri("pattern"), uri(pattern)), pattern, REMOTE_TID, vid);
+        super(MClient.of(authority), Map.of(uri("pattern"), uri(pattern)), pattern, f("/msys/space/remote"), vid);
         LOG = Graphitty.log(this);
     }
 

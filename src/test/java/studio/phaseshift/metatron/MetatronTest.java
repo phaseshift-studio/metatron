@@ -21,7 +21,7 @@ package studio.phaseshift.metatron;
 import org.junit.jupiter.api.BeforeAll;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.mach.machInstSet;
-import studio.phaseshift.metatron.lang.mkv.mkvSpace;
+import studio.phaseshift.metatron.lang.mkv.kvSpace;
 import studio.phaseshift.metatron.lang.msys.Router;
 import studio.phaseshift.metatron.lang.mtron.mtronInstSet;
 import studio.phaseshift.metatron.lang.mtron.mtronParser;
@@ -50,7 +50,7 @@ public class MetatronTest {
         mtronInstSet.create().vid(f("/mnt/lang/m"));
         machInstSet.create().vid(f("/mnt/lang/mach"));
         mvecInstSet.create().vid(f("/mnt/lang/mvec"));
-        mkvSpace.of(f("/usr/#"),fURI.NULL).vid(f("/mnt/usr"));
+        kvSpace.of(f("/usr/#"),fURI.NULL).vid(f("/mnt/usr"));
     }
 
     public void testMatches(final String lhs, final String rhs, final boolean matches) {

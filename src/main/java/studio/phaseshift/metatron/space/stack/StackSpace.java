@@ -19,7 +19,7 @@
 package studio.phaseshift.metatron.space.stack;
 
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.lang.mkv.mkvSpace;
+import studio.phaseshift.metatron.lang.mkv.kvSpace;
 import studio.phaseshift.metatron.lang.msys.Router;
 import studio.phaseshift.metatron.lang.msys.Space;
 import studio.phaseshift.metatron.lang.msys.msysInstSet;
@@ -35,7 +35,7 @@ import java.util.Map;
 
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MUri.uri;
 
-public class StackSpace extends MSpace<LinkedList<mkvSpace>> {
+public class StackSpace extends MSpace<LinkedList<kvSpace>> {
 
     public static final fURI STACK_TID = msysInstSet.SPACE_TID.extend("stack");
     public static final String ARG_PREFIX = "";
@@ -45,7 +45,7 @@ public class StackSpace extends MSpace<LinkedList<mkvSpace>> {
 
     public StackSpace(final fURI pattern) {
         super(new LinkedList<>(), Map.of(uri("pattern"), uri(pattern)), pattern, STACK_TID, fURI.NULL);
-        this.root = mkvSpace.of(this.pattern, fURI.NULL);
+        this.root = kvSpace.of(this.pattern, fURI.NULL);
     }
 
     @Override
@@ -64,7 +64,7 @@ public class StackSpace extends MSpace<LinkedList<mkvSpace>> {
         // if(vid.coefficientValue().isZero())
         //    return NoObj.single();
         boolean isArg = vid.toString().matches("a\\d+"); // skip first encounter of list arg variable as it's a variable to grab the variable
-        for (final mkvSpace layer : this.sjvm()) {
+        for (final kvSpace layer : this.sjvm()) {
             final Obj o = layer.read(vid.basePath());
             if (!o.isNoObj()) {
                 if (isArg) isArg = false;
@@ -86,7 +86,7 @@ public class StackSpace extends MSpace<LinkedList<mkvSpace>> {
     }
 
     public boolean pop() {
-        final mkvSpace frameSpace = this.sjvm().pop();
+        final kvSpace frameSpace = this.sjvm().pop();
         if (null == frameSpace)
             return false;
         LOG.trace("popped frame {{_&r}}off{{/r&/_}} stack: %s [{{y}}depth{{/y}}: %d]", frameSpace.jvm(), this.sjvm().size());
@@ -94,7 +94,7 @@ public class StackSpace extends MSpace<LinkedList<mkvSpace>> {
     }
 
     public void push(final Poly frame) {
-        final mkvSpace frameSpace = new mkvSpace(pattern, null);
+        final kvSpace frameSpace = new kvSpace(pattern, null);
         if (frame.isRec()) {
             frame.recValue().forEach((key, value) -> {
                 frameSpace.write(key.uriValue(), value);

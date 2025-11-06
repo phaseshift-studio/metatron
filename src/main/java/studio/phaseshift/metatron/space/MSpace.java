@@ -93,8 +93,8 @@ public abstract class MSpace<SJVM> extends MRec implements Space {
         return this;
     }
 
-    @Override
+    /*@Override
     public Rec clone(final Object object, final fURI tid, final fURI vid) {
         return this;
-    }
+    }*/
 }

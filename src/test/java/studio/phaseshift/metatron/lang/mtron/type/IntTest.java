@@ -79,8 +79,8 @@ public class IntTest extends MetatronObjTest {
             //"{2,3}.is?int{*}<=int{*}(in?bool{+}<=int{*}(int{2}::T[]))   | {2,3}",
             "{1,2,3}.plus(1).plus(2)                                      | {4,5,6}",
             "{1,2,3}.plus(1).plus(2).mult(2)                              | {8,10,12}",
-            "{1,2,3}.plus(1).plus(2).mult(2).is(in(int::T[]))             | {8,10,12}",
-            "{1,2,3}.plus(1).plus(2).mult(2).is(in(str::T[]))             | noobj",
+            "{1,2,3}.plus(1).plus(2).mult(2).isa(int::T)                  | {8,10,12}",
+            "{1,2,3}.plus(1).plus(2).mult(2).is(in(str::T))             | noobj",
             "{int{-1}::1,int::1}                                          | noobj",
             // "start?int{-1,1}<=int{0}(int{-1}::1)>-{int::1}                | noobj"
     }, delimiter = '|')

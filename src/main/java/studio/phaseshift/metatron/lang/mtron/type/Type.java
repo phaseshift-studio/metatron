@@ -1,6 +1,6 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
- * Copyright (C) 2025- PhaseShift Studio, LLC 
+ * Copyright (C) 2025- PhaseShift Studio, LLC
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -20,6 +20,8 @@ package studio.phaseshift.metatron.lang.mtron.type;
 
 import studio.phaseshift.metatron.algebra.PlusMonoid;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.lang.mtron.mtronInstSet;
+import studio.phaseshift.metatron.util.Tuple;
 
 public interface Type extends Obj, PlusMonoid<Type> {
 
@@ -27,7 +29,7 @@ public interface Type extends Obj, PlusMonoid<Type> {
     Type clone(final Object jvm, final fURI tid, final fURI vid);
 
     @Override
-    Obj jvm();
+    Tuple.Pair<Call, Call> jvm();
 
     @Override
     default Type dom() {
@@ -54,11 +56,23 @@ public interface Type extends Obj, PlusMonoid<Type> {
         return null;
     }
 
+    default boolean isBaseType() {
+        return mtronInstSet.BASE_TYPES.contains(this.tid().basePath());
+    }
+
+    default Call constructor() {
+        return this.jvm().get1();
+    }
+
+    default Call predicate() {
+        return this.jvm().get0();
+    }
+
     @Override
     default Obj apply(final Obj obj) {
-       // if (!obj.rng().tid().matches(this.tid()))
-       //     return NoObj.single();
-        return null == this.jvm() || obj.matches(this.jvm().apply(obj)) ?
+        // if (!obj.rng().tid().matches(this.tid()))
+        //     return NoObj.single();
+        return null == this.predicate() || obj.matches(predicate().apply(obj)) ?
                 obj :
                 NoObj.noobj();
     }
@@ -69,13 +83,14 @@ public interface Type extends Obj, PlusMonoid<Type> {
             return other;
         if (other.isNoObj())
             return this;
-        fURI t = this.tid().plus(other.tid());
-        Obj value = null == this.jvm() ? other.jvm() : null == other.jvm() ? this.jvm() : this.jvm().<Call>as().plus(other.jvm().<Call>as());
-        return this.tid(t).jvm(value);
+        final fURI tidPlus = this.tid().plus(other.tid());
+        final Call constructor = null == this.constructor() ? other.constructor() : null == other.constructor() ? this.constructor() : this.constructor().plus(other.constructor());
+        final Call predicate = null == this.predicate() ? other.predicate() : null == other.predicate() ? this.predicate() : this.predicate().plus(other.predicate());
+        return this.clone(Tuple.Pair.with(constructor, predicate), tidPlus, tidPlus);
     }
 
     @Override
     default Type zero() {
-        return this.tid(this.tid().zero()).jvm(null);
+        return this.tid(this.tid().zero()).jvm(Tuple.Pair.with(null, null));
     }
 }

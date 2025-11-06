@@ -39,7 +39,7 @@ public class Qs extends MLst {
     }
 
     public Qs register(final Q q) {
-        LOG.info("registered q %s", q);
+        LOG.debug("registered q %s", q);
         this.lstValue().add(q);
         return this;
     }

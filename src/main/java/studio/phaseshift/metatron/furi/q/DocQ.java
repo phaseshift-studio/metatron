@@ -23,7 +23,7 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.mtron.type.Obj;
 import studio.phaseshift.metatron.lang.mtron.type.impl.MRec;
 import studio.phaseshift.metatron.lang.msys.Space;
-import studio.phaseshift.metatron.lang.mkv.mkvSpace;
+import studio.phaseshift.metatron.lang.mkv.kvSpace;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
 
@@ -51,7 +51,7 @@ public class DocQ extends BaseQ {
 
     public DocQ(final Space space) {
         super(space, f("doc"), DOC_TID);
-        this.docSpace = new mkvSpace(f("doc"), fURI.NULL);
+        this.docSpace = new kvSpace(f("doc"), fURI.NULL);
         this.onRead = new DocQ.OnRead();
         this.onWrite = new DocQ.OnWrite();
     }

@@ -19,8 +19,12 @@
 package studio.phaseshift.metatron.lang.mkv;
 
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.lang.msys.Router;
 import studio.phaseshift.metatron.lang.msys.Space;
+import studio.phaseshift.metatron.lang.mtron.mtronInstSet;
 import studio.phaseshift.metatron.lang.mtron.type.Obj;
+import studio.phaseshift.metatron.lang.mtron.type.Rec;
+import studio.phaseshift.metatron.lang.mtron.type.Type;
 import studio.phaseshift.metatron.space.MSpace;
 import studio.phaseshift.metatron.util.Common;
 
@@ -30,20 +34,33 @@ import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
-import static studio.phaseshift.metatron.lang.msys.msysInstSet.SPACE_TID;
+import static studio.phaseshift.metatron.furi.fURI.ALL;
+import static studio.phaseshift.metatron.furi.fURI.f;
+import static studio.phaseshift.metatron.lang.mtron.mtronFluent.StartLess.isa_;
+import static studio.phaseshift.metatron.lang.mtron.mtronInstSet.REC_TID;
+import static studio.phaseshift.metatron.lang.mtron.mtronInstSet.URI_TID;
+import static studio.phaseshift.metatron.lang.mtron.type.impl.MInst.instC;
+import static studio.phaseshift.metatron.lang.mtron.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.lang.mtron.type.impl.MType.T;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MUri.uri;
 
 
-public class mkvSpace extends MSpace<Map<fURI, Obj>> {
+public class kvSpace extends MSpace<Map<fURI, Obj>> {
 
-    public static final fURI KVSPACE_TID = SPACE_TID.extend("kv");
+    public static final fURI KV_TID = f("/msys/space/kv");
+    protected static final Type KV_TYPE = T(KV_TID, null, instC(mtronInstSet.INST_TID.dom(ALL.maybe()).rng(KV_TID), lst(T(REC_TID, isa_(rec(uri(PATTERN), T(URI_TID))))), (lhs, inst) -> {
+        final fURI pattern = inst.arg(0).<Rec>as().at(PATTERN).uriValue();
+        final Space space = new kvSpace(pattern, inst.arg(0).vid());
+        Router.global().addSpace(space);
+        return space;
+    }));
 
-    public mkvSpace(final fURI pattern, final fURI vid) {
-        super(new HashMap<>(), Map.of(uri("pattern"), uri(pattern)), pattern, KVSPACE_TID, vid);
+    public kvSpace(final fURI pattern, final fURI vid) {
+        super(new HashMap<>(), Map.of(uri(PATTERN), uri(pattern)), pattern, KV_TID, vid);
     }
 
-    public static mkvSpace of(final fURI pattern, final fURI vid) {
-        return new mkvSpace(pattern, vid);
+    public static kvSpace of(final fURI pattern, final fURI vid) {
+        return new kvSpace(pattern, vid);
     }
 
     @Override

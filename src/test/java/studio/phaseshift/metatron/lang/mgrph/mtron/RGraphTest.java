@@ -1,17 +1,12 @@
 package studio.phaseshift.metatron.lang.mgrph.mtron;
 
-import org.apache.tinkerpop.gremlin.structure.Direction;
-import org.apache.tinkerpop.gremlin.tinkergraph.structure.TinkerFactory;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import studio.phaseshift.metatron.MetatronTest;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.mgrph.mgrphInstSet;
-import studio.phaseshift.metatron.lang.mgrph.tp.MGraph;
-import studio.phaseshift.metatron.lang.mkv.mkvSpace;
+import studio.phaseshift.metatron.lang.mkv.kvSpace;
 import studio.phaseshift.metatron.lang.msys.Router;
-import studio.phaseshift.metatron.lang.mtron.mtronParser;
 
 import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.lang.mtron.mtronFluent.StartLess.from_;
@@ -28,7 +23,7 @@ public class RGraphTest extends MetatronTest {
         mgrphInstSet.create().vid(f("/mnt/lang/mgraph"));
        // MGraph.of(TinkerFactory.createModern(), f("/tp/#"), f("/mnt/tp"));
        // Router.writeToSpace("g", uri("/mnt/tp"));
-        mkvSpace.of(f("/tp/#"),fURI.NULL).vid(f("/mnt/tp"));
+        kvSpace.of(f("/tp/#"),fURI.NULL).vid(f("/mnt/tp"));
     }
 
 

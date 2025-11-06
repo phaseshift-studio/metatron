@@ -1,6 +1,6 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
- * Copyright (C) 2025- PhaseShift Studio, LLC 
+ * Copyright (C) 2025- PhaseShift Studio, LLC
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -20,20 +20,22 @@ package studio.phaseshift.metatron.lang.mtron.type;
 
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.lang.mtron.mtronParser;
 import studio.phaseshift.metatron.lang.MetatronObjTest;
+import studio.phaseshift.metatron.lang.msys.Router;
+import studio.phaseshift.metatron.lang.mtron.mtronParser;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static studio.phaseshift.metatron.furi.fURI.f;
+import static studio.phaseshift.metatron.lang.mtron.mtronInstSet.FAIL_TID;
+import static studio.phaseshift.metatron.lang.mtron.type.NoObj.noobj;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MType.T;
 
 public class TypeTest extends MetatronObjTest {
     private static final GraphittyLogger LOG = Graphitty.log(TypeTest.class);
-    
+    private static String LAST_TYPE_DEF = null;
+
     @ParameterizedTest
     @CsvSource(value = {
             // obj                | type                            | matches?
@@ -132,21 +134,21 @@ public class TypeTest extends MetatronObjTest {
     @ParameterizedTest
     @CsvSource(value = {
             // obj               | type                                         | matches?
-            "noobj               | noobj{0}::T[]                                | true",
-            "noobj               | abc{*}::T[]                                  | true",
-            "noobj               | abc{?}::T[]                                  | true",
-            "noobj               | abc{+}::T[]                                  | false",
-            "1                   | noobj::T[]                                   | false",
-            "1                   | str::T[]                                     | false",
-            "1                   | lst::T[]                                     | false",
-            "1                   | int::T[]                                     | true",
-            "'a_string'          | int::T[]                                     | false",
-            "213.0               | int::T[]                                     | false",
+            "noobj               | noobj{0}::T                                | true",
+            "noobj               | abc{*}::T                                  | true",
+            "noobj               | abc{?}::T                                  | true",
+            "noobj               | abc{+}::T                                  | false",
+            "1                   | noobj::T                                   | false",
+            "1                   | str::T                                     | false",
+            "1                   | lst::T                                     | false",
+            "1                   | int::T                                     | true",
+            "'a_string'          | int::T                                     | false",
+            "213.0               | int::T                                     | false",
             "1                   | int::T[is(eq(1))]                            | true",
             "1                   | int::T[is(eq(2))]                            | false",
             "{1,1}               | int{2}::T[is(eq({2,2}))]                     | false",
-           // "{1,1}               | int{2}::T[is(eq({1,1}))]                   | true",
-            "{1,1}               | int{2}::T[]                                  | true",
+            // "{1,1}               | int{2}::T[is(eq({1,1}))]                   | true",
+            "{1,1}               | int{2}::T                                  | true",
             "{1,1}               | int::T[is(gt(0))]                            | false",
             "{1,1}               | int{2}::T[is(gt(0))]                         | true",
             "1                   | int{2}::T[is(gt(0))]                         | false",
@@ -160,5 +162,46 @@ public class TypeTest extends MetatronObjTest {
         Type t = mtronParser.m_obj().parse(type).get();
         LOG.trace("testing %s %s %s", o, matches ? "{{g}}is a{{/g}}" : "{{r}}is not a{{/r}}", t);
         assertEquals(matches, o.matches(t));
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            // tid   |  typedef                                 | instance                                         | matches?
+            "person  % person::T[?[name=>?str::T,age=>?int::T]] % person::[name=>'enoch',age=>365]                 % true",
+            "person  % .                                        % person::7                                        % false",
+            "person  % .                                        % person::'a person'                               % false",
+            "person  % .                                        % person::[name=>'enoch']                          % false",
+            "person  % .                                        % person::[age=>333]                               % false",
+            "person  % .                                        % person::[=>]                                     % false",
+            "person  % .                                        % person::[name=>'a',age=>1,b=>2]                  % true",
+            "person  % .                                        % person::[name=>'a',age=>1,b=>noobj]              % true",
+            "person  % .                                        % person::[name=>'a',age=>1.2,b=>noobj]            % false"
+    },
+            delimiter = '%')
+    public void testTyping(final String tid, final String typeDef, final String instance, final boolean shouldSucceed) {
+        try {
+            Router.writeToSpace(tid, noobj());
+            Obj type = mtronParser.parse(typeDef.trim().equals(".") ? LAST_TYPE_DEF : typeDef.trim());
+            LAST_TYPE_DEF = typeDef.trim().equals(".") ? LAST_TYPE_DEF : typeDef.trim();
+            Router.writeToSpace(tid, type);
+            assertEquals(type, Router.readFromSpace(tid));
+            LOG.debug("testing %s %s %s", instance, shouldSucceed ? "{{g}}is a{{/g}}" : "{{r}}is not a{{/r}}", type);
+            try {
+                Obj inst = mtronParser.eval(instance.trim());
+                //LOG.debug("instance: %s", inst);
+                if (!shouldSucceed) {
+                    LOG.debug("instance: %s %s %s", inst.type(), inst.isFail(), inst.tid().equals(FAIL_TID));
+                    if (inst.tid().equals(FAIL_TID))
+                        assertFalse(shouldSucceed);
+                    else
+                        assertEquals(noobj(), inst);
+                }
+            } catch (final Exception e) {
+                assertFalse(shouldSucceed);
+            }
+            assertTrue(type.isType());
+        } finally {
+            Router.writeToSpace(tid, noobj());
+        }
     }
 }

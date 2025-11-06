@@ -25,7 +25,10 @@ import org.jsoup.nodes.Document;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.msys.Router;
 import studio.phaseshift.metatron.lang.msys.Space;
+import studio.phaseshift.metatron.lang.mtron.mtronInstSet;
 import studio.phaseshift.metatron.lang.mtron.type.Obj;
+import studio.phaseshift.metatron.lang.mtron.type.Rec;
+import studio.phaseshift.metatron.lang.mtron.type.Type;
 import studio.phaseshift.metatron.space.MSpace;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.util.MTronException;
@@ -41,22 +44,38 @@ import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.function.Function;
 
+import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.furi.fURI.f;
-import static studio.phaseshift.metatron.lang.msys.msysInstSet.SPACE_TID;
+import static studio.phaseshift.metatron.lang.mtron.mtronFluent.StartLess.isa_;
+import static studio.phaseshift.metatron.lang.mtron.mtronInstSet.REC_TID;
+import static studio.phaseshift.metatron.lang.mtron.mtronInstSet.URI_TID;
 import static studio.phaseshift.metatron.lang.mtron.type.NoObj.noobj;
+import static studio.phaseshift.metatron.lang.mtron.type.impl.MInst.instC;
+import static studio.phaseshift.metatron.lang.mtron.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.lang.mtron.type.impl.MType.T;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.lang.mweb.mwebInstSet.MWEB_TID;
 import static studio.phaseshift.metatron.lang.mweb.mwebInstSet.PAGE_TID;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class mwebSpace extends MSpace<HttpServer> {
+public class webSpace extends MSpace<HttpServer> {
 
-    public static final fURI WEB_TID = SPACE_TID.extend("web");
+
+    public static final fURI WEB_TID = MWEB_TID.extend("space").extend("web");
     protected static final String ROUTE = "route";
+    protected static final Type WEB_TYPE = T(WEB_TID, null, instC(mtronInstSet.INST_TID.dom(ALL.maybe()).rng(WEB_TID), lst(T(REC_TID, isa_(rec(uri(PATTERN), T(URI_TID), uri(HOST), T(URI_TID), uri(ROUTE), T(REC_TID))))), (lhs, inst) -> {
+        final fURI pattern = inst.arg(0).<Rec>as().at(PATTERN).uriValue();
+        final fURI host = inst.arg(0).<Rec>as().at(HOST).uriValue();
+        final Rec route = inst.arg(0).<Rec>as().at(ROUTE);
+        final webSpace space = webSpace.of(host, route.jvm(), pattern, inst.arg(0).vid());
+        Router.global().addSpace(space);
+        return space;
+    }));
     private static final WebTranslator WEB_TRANSLATOR = new WebTranslator();
 
-    public mwebSpace(final HttpServer server, final Map<Obj, Obj> config, final fURI pattern, final fURI vid) {
+    public webSpace(final HttpServer server, final Map<Obj, Obj> config, final fURI pattern, final fURI vid) {
         super(server, config, pattern, WEB_TID, vid);
         // Router.writeToSpace(this.vid.extend(ROUTE), routes);
         this.at(ROUTE).orElse(rec()).elements().forEach(r -> {
@@ -89,14 +108,14 @@ public class mwebSpace extends MSpace<HttpServer> {
         server.start();
     }
 
-    public static mwebSpace of(final fURI host, final Map<Obj, Obj> routes, final fURI pattern, final fURI vid) {
+    public static webSpace of(final fURI host, final Map<Obj, Obj> routes, final fURI pattern, final fURI vid) {
         try {
             final HttpServer server = HttpServer.create(new InetSocketAddress(host.host(), host.port()), 0);
             final Map<Obj, Obj> config = new LinkedHashMap<>();
-            config.put(uri("host"), host.toUri());
-            config.put(uri("pattern"), pattern.toUri());
-            config.put(uri("route"), rec(routes));
-            return (mwebSpace) new mwebSpace(server, config, pattern, vid).tid(WEB_TID);
+            config.put(uri(HOST), host.toUri());
+            config.put(uri(PATTERN), pattern.toUri());
+            config.put(uri(ROUTE), rec(routes));
+            return (webSpace) new webSpace(server, config, pattern, vid).tid(WEB_TID);
         } catch (final IOException e) {
             throw MTronException.of(e);
         }

@@ -30,15 +30,12 @@ import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.furi.fURI.f;
-import static studio.phaseshift.metatron.lang.mtron.mtronFluent.StartLess.id_;
-import static studio.phaseshift.metatron.lang.mtron.mtronFluent.StartLess.isa_;
 import static studio.phaseshift.metatron.lang.mtron.mtronInstSet.REC_TID;
 import static studio.phaseshift.metatron.lang.mtron.mtronInstSet.URI_TID;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MInst.instC;
-import static studio.phaseshift.metatron.lang.mtron.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MType.T;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.lang.mweb.mwebSpace.WEB_TID;
+import static studio.phaseshift.metatron.lang.mweb.webSpace.WEB_TID;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -63,11 +60,14 @@ public class mwebInstSet extends MInstSet {
     @Override
     public Set<Inst> insts() {
         return Set.of(
-                instC(INST_TID.extend("mweb").dom(ALL.maybe()).rng(WEB_TID), rec(uri("host"), T(URI_TID), uri("route"), T(REC_TID), uri("pattern"), T(URI_TID)), (lhs, inst) -> mwebSpace.of(inst.arg("host").uriValue(), inst.arg("route").<Rec>as().jvm(), inst.arg("pattern").uriValue(), fURI.NULL)));
+                instC(INST_TID.extend("mweb").dom(ALL.maybe()).rng(WEB_TID), rec(uri("host"), T(URI_TID), uri("route"), T(REC_TID), uri("pattern"), T(URI_TID)), (lhs, inst) -> webSpace.of(inst.arg("host").uriValue(), inst.arg("route").<Rec>as().jvm(), inst.arg("pattern").uriValue(), fURI.NULL)));
     }
 
     @Override
     public Set<Type> types() {
-        return Stream.of(T(PAGE_TID, isa_(rec(uri("html"), rec(uri("head"), id_().tryToInst(), uri("body"), id_().tryToInst())))), T(CSS_TID)).collect(Collectors.toSet());
+        return Stream.of(
+                webSpace.WEB_TYPE,
+                T(PAGE_TID),// start_(rec()), isa_(rec(uri("html"), rec(uri("head"), id_().tryToInst(), uri("body"), id_().tryToInst())))), 
+                T(CSS_TID)).collect(Collectors.toSet());
     }
 }
