@@ -43,9 +43,9 @@ import static studio.phaseshift.metatron.lang.mtron.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MReal.real;
-import static studio.phaseshift.metatron.lang.mtron.type.impl.MStr.str;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MType.T;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.util.Common.nullOrElse;
 
 public class mtronInstSet extends MInstSet {
 
@@ -307,10 +307,10 @@ public class mtronInstSet extends MInstSet {
                 instC(RNG_TID.dom(REL_TID).rng(ALL.some()), lst(), (lhs, inst) -> lhs.relValue().get1()),
                 instC(DOM_TID.dom(REC_TID).rng(OBJS_ID), lst(), (lhs, inst) -> objs(lhs.recValue().keySet())),
                 instC(RNG_TID.dom(REC_TID).rng(OBJS_ID), lst(), (lhs, inst) -> objs(lhs.recValue().values())),
-                instC(LSHIFT_TID.dom(URI_TID).rng(URI_TID), lst(T(INT_TID.maybe())), (lhs, inst) -> uri(lhs.uriValue().pretract(inst.arg(0).orElse(jnt(1)).intValue().intValue()))),
-                instC(RSHIFT_TID.dom(URI_TID).rng(URI_TID), lst(T(INT_TID.maybe())), (lhs, inst) -> uri(lhs.uriValue().retract(inst.arg(0).orElse(jnt(1)).intValue().intValue()))),
-                instC(LSHIFT_TID.dom(REC_TID).rng(OBJS_ID), lst(), (lhs, inst) -> objs(lhs.recValue().values())),
-                instC(RSHIFT_TID.dom(REC_TID).rng(OBJS_ID), lst(), (lhs, inst) -> objs(lhs.recValue().keySet())),
+                instC(RSHIFT_TID.dom(URI_TID).rng(URI_TID), lst(T(INT_TID.maybe())), (lhs, inst) -> uri(lhs.uriValue().pretract(inst.arg(0).orElse(jnt(1)).intValue().intValue()))),
+                instC(LSHIFT_TID.dom(URI_TID).rng(URI_TID), lst(T(INT_TID.maybe())), (lhs, inst) -> uri(lhs.uriValue().retract(inst.arg(0).orElse(jnt(1)).intValue().intValue()))),
+                instC(RSHIFT_TID.dom(REC_TID).rng(OBJS_ID), lst(), (lhs, inst) -> objs(lhs.recValue().values())),
+                instC(LSHIFT_TID.dom(REC_TID).rng(OBJS_ID), lst(), (lhs, inst) -> objs(lhs.recValue().keySet())),
                 /// ///////////////////////////////////////////////////////////////////////////////////////////////////
                 instC(NOT_TID.dom(ALL).rng(BOOL_TID), lst(T(BOOL_TID)), (lhs, inst) -> bool(!inst.arg(0).boolValue())),
                 instC(EQ_TID.dom(ALL).rng(BOOL_TID), lst(T(ALL)), (lhs, inst) -> bool(lhs.equals(inst.arg(0)))),
@@ -378,13 +378,33 @@ public class mtronInstSet extends MInstSet {
                 instC(PROD_TID.dom(URI_TID.maybeSome()).rng(URI_TID), lst(), (lhs, inst) -> lhs.stream().reduce(inst.seed(), (a, b) -> uri(a.uriValue().mult(b.uriValue()))), uri(".")),
                 instC(REIFY_TID.dom(ALL.maybe()).rng(REC_TID), lst(), (lhs, inst) ->
                         MRec.fromUriKeyed(
-                                "tid", MRec.fromUriKeyed(
-                                        "path", uri(lhs.tid().path()),
-                                        "c", MRec.fromUriKeyed(
-                                                "min", jnt(lhs.tid().cV().min()),
-                                                "max", jnt(lhs.tid().cV().max())),
-                                        "query", str(Optional.ofNullable(lhs.tid().query()).map(fURI.Query::toString).orElse(""))),
-                                "value", MObjFactory.of().create(lhs.jvm()))),
+                                "type", MRec.fromUriKeyed(
+                                        "tid", MRec.fromUriKeyed(
+                                                "scheme", nullOrElse(lhs.tid().scheme(), NoObj::noobj, MUri::uri),
+                                                "authority", nullOrElse(lhs.tid().hasAuthority() ? lhs.tid() : null, NoObj::noobj, z -> MRec.fromUriKeyed(
+                                                        "host", nullOrElse(z.host(), NoObj::noobj, MUri::uri),
+                                                        "port", nullOrElse(z.port() == -1 ? null : (long) lhs.tid().port(), NoObj::noobj, MInt::jnt)
+                                                )),
+                                                "path", uri(lhs.tid().path()),
+                                                "c", MRec.fromUriKeyed(
+                                                        "min", jnt(lhs.tid().cV().min()),
+                                                        "max", jnt(lhs.tid().cV().max())),
+                                                "q", nullOrElse(lhs.tid().query() == null ? null : lhs.tid().queryMap(), NoObj::noobj,
+                                                        q -> rec(q.entrySet().stream().collect(Collectors.toMap(a -> uri(a.getKey()), a -> uri(a.getValue()), (a, b) -> b, LinkedHashMap::new))))),
+                                        "obj", MRec.fromUriKeyed(
+                                                "value", lhs.type(),
+                                                "params", nullOrElse(lhs.type().predicate() == null && lhs.type().constructor() == null ? null : lhs, NoObj::noobj, t -> MRec.fromUriKeyed(
+                                                        "predicate", nullOrElse(t.type().predicate(), NoObj::noobj, r -> r),
+                                                        "constructor", nullOrElse(t.type().constructor(), NoObj::noobj, r -> r))))),
+                                "value", MRec.fromUriKeyed(
+                                        "vid", nullOrElse(lhs.vid(), NoObj::noobj, fURI::toUri),
+                                        "obj", MRec.fromUriKeyed(
+                                                "value", MObjFactory.of().create(lhs.jvm()),
+                                                "jvm", MRec.fromUriKeyed(
+                                                        "class", uri(lhs.jvm().getClass().getCanonicalName()),
+                                                        "projection", lhs.jvm() instanceof Tuple ?
+                                                                rec(IteratorUtil.indexedStream(lhs.<Tuple>jvmAs().iterator()).collect(Collectors.toMap(a -> jnt(a.get0()), a -> MObjFactory.of().create(a.get1()), (a, b) -> b, LinkedHashMap::new))) :
+                                                                rec(jnt(0), MObjFactory.of().create(lhs.jvm()))))))),
                 instC(SELECT_TID.dom(REC_TID).rng(REC_TID.maybe()), lst(T(REC_TID)), (lhs, inst) -> crossPoly(lhs, inst.arg(0))),
                 // instC(SELECT_TID.dom(REL_TID).rng(REL_TID), lst(T(REL_TID)), (lhs, inst) -> rel(inst.arg(0).<Rel>as().first().apply(lhs.<Rel>as().first()), inst.arg(0).<Rel>as().second().apply(lhs.<Rel>as().second()))),
                 instC(SELECT_TID.dom(LST_TID).rng(LST_TID.maybe()), lst(T(LST_TID)), (lhs, inst) -> crossPoly(lhs, inst.arg(0))),

@@ -19,6 +19,7 @@
 package studio.phaseshift.metatron.util;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.*;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
@@ -472,7 +473,12 @@ public final class IteratorUtil {
     }
 
     public static <T> Stream<T> stream(final Iterator<T> iterator) {
-        return (Stream) StreamSupport.stream(Spliterators.spliteratorUnknownSize(iterator, 1088), false).onClose(() -> CloseableIterator.closeIterator(iterator));
+        return StreamSupport.stream(Spliterators.spliteratorUnknownSize(iterator, Spliterator.SIZED | Spliterator.IMMUTABLE), false).onClose(() -> CloseableIterator.closeIterator(iterator));
+    }
+
+    public static <T> Stream<Tuple.Pair<Integer, T>> indexedStream(final Iterator<T> iterator) {
+        final AtomicInteger i = new AtomicInteger(0);
+        return StreamSupport.stream(Spliterators.spliteratorUnknownSize(iterator, Spliterator.SIZED | Spliterator.IMMUTABLE), false).map(t -> Tuple.Pair.with(i.getAndIncrement(), t)).onClose(() -> CloseableIterator.closeIterator(iterator));
     }
 
     public static <T> Stream<T> stream(final Iterable<T> iterable) {
@@ -530,6 +536,10 @@ public final class IteratorUtil {
             this.expansion = new LinkedList<>();
         }
 
+        public static <T> ExpandableIterator<T> of(final Iterator<T> baseIterator) {
+            return new ExpandableIterator<>(baseIterator);
+        }
+
         public T next() {
             return this.expansion.isEmpty() ? this.baseIterator.next() : this.expansion.remove();
         }
@@ -558,10 +568,6 @@ public final class IteratorUtil {
             final boolean hasNextNext = this.hasNext();
             this.push(t);
             return hasNextNext;
-        }
-
-        public static <T> ExpandableIterator<T> of(final Iterator<T> baseIterator) {
-            return new ExpandableIterator<>(baseIterator);
         }
 
     }

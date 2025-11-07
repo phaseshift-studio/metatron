@@ -175,7 +175,13 @@ public class TypeTest extends MetatronObjTest {
             "person  % .                                        % person::[=>]                                     % false",
             "person  % .                                        % person::[name=>'a',age=>1,b=>2]                  % true",
             "person  % .                                        % person::[name=>'a',age=>1,b=>noobj]              % true",
-            "person  % .                                        % person::[name=>'a',age=>1.2,b=>noobj]            % false"
+            "person  % .                                        % person::[name=>'a',age=>1.2,b=>noobj]            % false",
+            ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+            "nat     % int::T[is(gt(0))]                        % nat::23                                          % true",
+            "nat     % .                                        % nat::-23                                         % false",
+            "nat     % .                                        % nat::'a big number'                              % false",
+            "nat     % .                                        % nat::2 + 6                                       % true",
+            "nat     % .                                        % nat::2 + -6                                      % false",
     },
             delimiter = '%')
     public void testTyping(final String tid, final String typeDef, final String instance, final boolean shouldSucceed) {

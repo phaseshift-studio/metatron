@@ -19,6 +19,8 @@
 package studio.phaseshift.metatron.util;
 
 import java.io.Closeable;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -36,5 +38,11 @@ public final class Common {
         } catch (final Exception e) {
             throw MTronException.of(e);
         }
+    }
+
+    public static <A,B> B nullOrElse(final A object, final Supplier<B> ifNull, final Function<A, B> ifNotNull) {
+        if (null == object)
+            return ifNull.get();
+        return ifNotNull.apply(object);
     }
 }

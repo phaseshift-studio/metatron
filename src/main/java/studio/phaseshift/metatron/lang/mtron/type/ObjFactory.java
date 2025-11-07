@@ -1,6 +1,6 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
- * Copyright (C) 2025- PhaseShift Studio, LLC 
+ * Copyright (C) 2025- PhaseShift Studio, LLC
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -35,7 +35,9 @@ public interface ObjFactory {
 
     default <O extends Obj> O create(final Object value, final Class<O> objClass) {
         fURI tid;
-        if (Bool.class.isAssignableFrom(objClass))
+        if (null == value)
+            tid = NOOBJ_TID;
+        else if (Bool.class.isAssignableFrom(objClass))
             tid = BOOL_TID;
         else if (Int.class.isAssignableFrom(objClass))
             tid = INT_TID;
