@@ -28,7 +28,10 @@ import java.util.Map;
 
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MInt.jnt;
+import static studio.phaseshift.metatron.lang.mtron.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MReal.real;
+import static studio.phaseshift.metatron.lang.mtron.type.impl.MRec.rec;
+import static studio.phaseshift.metatron.lang.mtron.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MStr.str;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MType.T;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MUri.uri;
@@ -63,11 +66,11 @@ public class MObjFactory implements ObjFactory {
         else if (value instanceof fURI)
             return uri((fURI) value);
         else if (value instanceof List)
-            return new MLst((List<Obj>) value);
+            return lst((List<Obj>) value);
         else if (value instanceof Pair)
-            return new MRel((Pair<Obj, Obj>) value);
-        else if (value instanceof Rec)
-            return new MRec((Map<Obj, Obj>) value);
+            return rel((Pair<Obj, Obj>) value);
+        else if (value instanceof Map)
+            return rec((Map<Obj, Obj>) value);
             //else if (value instanceof Triplet)
             //    return new MInst((Triplet<Poly, Inst.f, Obj>) value);
             // else if (Code.class.isAssignableFrom(objClass))
@@ -77,7 +80,7 @@ public class MObjFactory implements ObjFactory {
             // else if (Type.class.isAssignableFrom(objClass))
             //     return (O) new MType((Obj) value, tid);
         else
-            throw MTronException.of("provided value has no corresponding obj: %s", value);
+            throw MTronException.of("provided jvm object has no corresponding obj: %s", value);
     }
 
     @Override

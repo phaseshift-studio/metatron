@@ -130,6 +130,9 @@ public class mtronInstSetTest extends MetatronTest {
             "{1,2,3,4}.sum{2}?int<=int{1,7}().sum()-<[_,_].select([_,_])>-          % int{2}::20",
             "{1,2,3,4}.sum{2}?int<=int{1,7}().sum().id{2}()                         % int{2}::20",
             "{1,2,3,4,5,6}.sum?int<=int()                                           % {1,2,3,4,5,6}",
+            "{1,2,3,4,5,6}-<[_]>-.sum()                                             % 21",
+            "{1,2,3,4,5,6}-<[_]>-.sum{2}()                                          % int{2}::21",
+            "{1,int{2}::2,3,4,5,6}-<[_]>-.sum{2}()                                  % int{2}::23",
             "{int{2}::1,int{2}::2,int{2}::3}.sum?int<=int{2}()                      % {2,4,6}",
             "{int{2}::1,int{2}::2,int{2}::3}.sum?int<=int{1,2}()                    % {2,4,6}",
             "{1,2,3,4}-<{count(),count()}                                           % int{2}::4",
@@ -260,10 +263,9 @@ public class mtronInstSetTest extends MetatronTest {
             "{1,2,3}.group([_=>8])                                                        % [1=>8,2=>8,3=>8]",
             "{1,2,3}.group([noobj=>_])                                                    % [=>]",
             "{1,2,3}.group([_=>noobj])                                                    % [=>]",
+            //"{[a,b],[c,d],[a,b]}.group([>-.prod()=>>-.count()])                           % [a/b=>4,c/d=>2]",
             "{[a,b],[c,d],[a,b]}.group([>-.prod?uri<=uri{*}()=>>-.count()])               % [a/b=>4,c/d=>2]", // should be uri{2}
-            // "[a=>1,b=>2,c=>3].group([_=>_,prod()=>prod()])                                % [{a,b,c}=>{1,2,3},a/b/c=>6]",
-            // "[a=>1,b=>2,c=>3].group([_=>_,prod()=>prod()])                                % [{a,b,c}=>{1,2,3},a/b/c=>6]",
-            // "[a=>1,b=>c,c=>3]==[is(eq(a))=>plus(1)]                                       % [a=>2]",
+            "[a=>1,b=>c,c=>3]==[is(eq(a))=>plus(1)]                                       % [a=>2]",
             // dummy without ending comma so it's easier to add more test cases
             "1.plus(1)                                                              % 2"
     }, delimiter = '%')

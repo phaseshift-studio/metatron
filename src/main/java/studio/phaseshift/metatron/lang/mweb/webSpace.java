@@ -20,6 +20,7 @@ package studio.phaseshift.metatron.lang.mweb;
 
 import com.sun.net.httpserver.HttpContext;
 import com.sun.net.httpserver.HttpServer;
+import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import studio.phaseshift.metatron.furi.fURI;
@@ -61,7 +62,7 @@ import static studio.phaseshift.metatron.lang.mweb.webInstSet.PAGE_TID;
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public class webSpace extends MSpace<HttpServer> {
-    
+
     public static final fURI WEB_TID = MWEB_TID.extend("space").extend("web");
     protected static final String ROUTE = "route";
     protected static final Type WEB_TYPE = T(WEB_TID, null, instC(mtronInstSet.INST_TID.dom(ALL.maybe()).rng(WEB_TID), lst(T(REC_TID, isa_(rec(uri(PATTERN), T(URI_TID), uri(HOST), T(URI_TID), uri(ROUTE), T(REC_TID))))), (lhs, inst) -> {
@@ -73,6 +74,7 @@ public class webSpace extends MSpace<HttpServer> {
         return space;
     }));
     private static final WebTranslator WEB_TRANSLATOR = new WebTranslator();
+    private static final JSONTranslator JSON_TRANSLATOR = new JSONTranslator();
 
     public webSpace(final HttpServer server, final Map<Obj, Obj> config, final fURI pattern, final fURI vid) {
         super(server, config, pattern, WEB_TID, vid);
@@ -114,7 +116,7 @@ public class webSpace extends MSpace<HttpServer> {
             config.put(uri(HOST), host.toUri());
             config.put(uri(PATTERN), pattern.toUri());
             config.put(uri(ROUTE), rec(routes));
-            return (webSpace) new webSpace(server, config, pattern, vid).tid(WEB_TID);
+            return new webSpace(server, config, pattern, vid).tid(WEB_TID);
         } catch (final IOException e) {
             throw MTronException.of(e);
         }
@@ -127,17 +129,30 @@ public class webSpace extends MSpace<HttpServer> {
     }
 
     @Override
+    public webSpace tid(final fURI tid) {
+        return (webSpace) super.tid(tid);
+    }
+
+    @Override
     public Function<fURI, Map<fURI, Obj>> directReader() {
         return (pattern) -> {
             LOG.debug("retrieving %s", pattern);
             try {
                 Map<fURI, Obj> partial = new LinkedHashMap<>();
-                final Document doc = Jsoup.connect(pattern.asNode().toString()).ignoreContentType(true).get();
-                final Obj docObj = WEB_TRANSLATOR.translate(doc).tid(PAGE_TID);
+                final Connection.Response response = Jsoup.connect(pattern.asNode().toString()).ignoreContentType(true).execute();
+                Obj docObj;
+                if (null != response.contentType() && response.contentType().equals("application/json")) {
+                    docObj = JSON_TRANSLATOR.translateString(response.body());
+                } else {
+                    final Document doc = response.streamParser().document();
+                    docObj = WEB_TRANSLATOR.translate(doc).tid(PAGE_TID);
+                }
                 partial.put(pattern.asNode(), docObj);
                 return partial;
             } catch (final Exception e) {
-                return Map.of();
+                if (e.getMessage().contains("no bytes"))
+                    return Map.of();
+                throw MTronException.of(e);
             }
         };
     }

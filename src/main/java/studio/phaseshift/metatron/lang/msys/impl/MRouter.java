@@ -41,6 +41,7 @@ import static studio.phaseshift.metatron.BootLoader.BOOTING;
 import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.lang.mtron.mtronFluent.StartLess.start_;
 import static studio.phaseshift.metatron.lang.mtron.type.NoObj.noobj;
+import static studio.phaseshift.metatron.lang.mtron.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MUri.uri;
 
 public class MRouter extends MSpace<MServer> implements Router {
@@ -59,7 +60,7 @@ public class MRouter extends MSpace<MServer> implements Router {
     }
 
     private static Obj appendOnRead(final boolean send, final Obj base, final Obj addition) {
-        return addition.isNoObj() ? base : (send ? base.append(MRel.of(addition.vid().toUri(), addition)) : base.append(addition));
+        return addition.isNoObj() ? base : (send ? base.append(rel(addition.vid().toUri(), addition)) : base.append(addition));
     }
 
     @Override

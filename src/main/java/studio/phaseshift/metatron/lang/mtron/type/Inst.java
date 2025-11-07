@@ -225,19 +225,24 @@ public interface Inst extends Call {
         } catch (final Exception e) {
             this.logger().error(e);
         }
-        this.logger().trace("performing runtime resolution of %s => %s", lhs, this);
-        Obj resolved2 = Router.global().read(this.tid());//.c(this.c());
-        resolved2 = this.hasDomOrRng() ? resolved2.tid(this.tid()) : resolved2;
+        // find all other insts of the same name 
+        // if they all have the same domain coefficient as the lhs obj, 
+        // then that can be hard coded into the compilation
+        Obj resolved2 = Router.readFromSpace(this.tid());
+        final List<cInt> uniqueDomains = resolved2.stream().map(v -> v.tid().dom().cV()).distinct().toList();
+        final Inst domainInst = (uniqueDomains.size() == 1 && uniqueDomains.get(0).equals(lhs.tid().cV())) ? this.dom(lhs.type()) : this;
+        this.logger().trace("performing runtime resolution of %s => %s", lhs, domainInst);
+        resolved2 = domainInst.hasDomOrRng() ? resolved2.tid(domainInst.tid()) : resolved2;
         if (resolved2.isNoObj()) {
-            LOG.debug("%s could not be resolved in any space", this);
+            LOG.debug("%s could not be resolved in any space", domainInst);
             return noobj();
         } else if (!resolved2.isInst()) {
-            LOG.debug("unable to resolve %s to a single inst in %s", this.dom(lhs.type()), resolved2);
-            final Poly args = resolveArgs(this, this, lhs);
-            return null == args ? this : this.args(args);
+            LOG.debug("unable to resolve %s to a single inst in %s", domainInst, resolved2);
+            final Poly args = resolveArgs(domainInst, domainInst, lhs);
+            return null == args ? domainInst : domainInst.args(args);
         } else {
             LOG.debug("resolved %s from global router", resolved2);
-            return resolved2.<Inst>as().args(this.args()).c(this.c()); //.resolve(lhs);
+            return resolved2.<Inst>as().args(domainInst.args()).c(domainInst.c()); //.resolve(lhs);
         }
     }
 

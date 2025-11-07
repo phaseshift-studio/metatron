@@ -98,23 +98,7 @@ public interface Space extends Rec, Closeable {
     default Obj apply(final Obj other) {
         return Helper.resolveApply(this, other);
     }
-
-    /*@Override
-    default long count() {
-        return 0;
-    }
-
-    @Override
-    default <O extends Obj> O at(final Obj key) {
-        return (O) this.read(key.uriValue());
-    }*/
-
     
-    /*@Override
-    default <O extends Obj> Iterable<O> elements() {
-        return this.jvm();
-    }*/
-
     class Helper {
 
         public static void spaceCloseLog(final Obj source, final Space space) {

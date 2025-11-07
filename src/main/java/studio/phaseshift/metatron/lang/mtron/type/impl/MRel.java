@@ -36,19 +36,15 @@ public class MRel extends MObj implements Rel {
     public MRel(final Pair<Obj, Obj> value) {
         this(value, REL_TID, fURI.NULL);
     }
-
-    public static Rel of(final Obj dom, final Obj rng) {
+    
+    public static Rel rel(final Obj dom, final Obj rng) {
         return new MRel(Pair.with(dom, rng));
     }
 
-    public static Rel of(final Obj dom, final Obj rng, final fURI tid) {
-        return new MRel(Pair.with(dom, rng), tid, fURI.NULL);
+    public static Rel rel(final Pair<Obj, Obj> pair) {
+        return new MRel(pair);
     }
-
-    public static Rel rel(final Obj dom, final Obj rng) {
-        return MRel.of(dom, rng);
-    }
-
+    
     @Override
     public Rel clone(final Object jvm, final fURI tid, final fURI vid) {
         return (Rel) super.clone(jvm, tid, vid);
