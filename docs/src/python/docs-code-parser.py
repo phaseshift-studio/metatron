@@ -348,7 +348,6 @@ def main() -> None:
     )
     print(parser)
     args = parser.parse_args()
-    print("here")
     input_filepath = Path(args.input)
     output_filepath = Path(args.output) if args.output is not None else input_filepath
     print(f"{input_filepath} => {output_filepath}")

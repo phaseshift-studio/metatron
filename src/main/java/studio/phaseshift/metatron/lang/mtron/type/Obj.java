@@ -45,6 +45,11 @@ import static studio.phaseshift.metatron.util.Tuple.Pair;
 
 public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>, Cloneable {
 
+    private static boolean typeInferenceMatch(final Obj lhs, final Type rhs) {
+        return lhs.tid().matches(rhs.tid()) ||
+                (rhs.isBaseType() && lhs.baseType().matches(rhs.tid())); // matches any abstract type to it's base type as long as within the coefficient boundaries
+    }
+
     <J> J jvm();
 
     fURI tid();
@@ -120,10 +125,6 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
         throw MTronException.of("%s can not be taken from", this);
     }
 
-   /* default Tuple.Pair<Obj, Obj> headTailsSplit(final Function<Obj, Object> partitioner) {
-        return Pair.with(this, NoObj.single());
-    }*/
-
     default Obj resolve(final Obj lhs) {
         return this;
     }
@@ -166,13 +167,13 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
         return this.tid(f(tid));
     }
 
-    default Obj vid(final fURI vid) {
-        return this.clone(this.jvm(), this.tid(), vid);
-    }
-
     /*default boolean inSpace() {
         return null != this.vid();
     }*/
+
+    default Obj vid(final fURI vid) {
+        return this.clone(this.jvm(), this.tid(), vid);
+    }
 
     default Obj append(final Obj obj) {
         if (obj.isNoObj())
@@ -226,18 +227,15 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
                         this.isFail() && base.equals(FAIL_TID))) {
             return false;
         }
-        if (this.isCall()) {
-            //return true;
+        if (this.isCall())
             return this.tid().cV().within(rhs.tid().cV()); // TODO: this is really flimsy.
-        }
         if (rhs.isCall())
             return this.matches(rhs.dom()) && rhs.apply(this).matches(rhs.rng());// && rhs.apply(this).matches(rhs.rng());
         if (!this.c().within(rhs.c()))
             return false;
         if (rhs.isType())
             return rhs.tid().isGeneric() ||
-                    ((this.tid().matches(rhs.tid()) ||
-                            this.baseType().equals(rhs.tid())) &&
+                    (typeInferenceMatch(this, rhs.as()) &&
                             (rhs.<Type>as().predicate() == null || this.isObjs() || !rhs.<Type>as().predicate().apply(this).isNoObj()));
         return this.tid().matches(rhs.tid()) &&
                 Objects.equals(this.jvm(), rhs.jvm());
@@ -262,6 +260,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
         else if (this.isStr()) return STR_TID.c(this.c().toString());
         else if (this.isUri()) return URI_TID.c(this.c().toString());
         else if (this.isLst()) return LST_TID.c(this.c().toString());
+        else if (this.isRec()) return REC_TID.c(this.c().toString());
         else if (this.isReal()) return REAL_TID.c(this.c().toString());
         else if (this.isInst()) return INST_TID.c(this.c().toString()).dom(this.dom().tid()).rng(this.rng().tid());
         else if (this.isCode()) return CODE_TID.c(this.c().toString());

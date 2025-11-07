@@ -32,7 +32,7 @@ import studio.phaseshift.metatron.lang.mtron.mtronParser;
 import studio.phaseshift.metatron.lang.mtron.type.Obj;
 import studio.phaseshift.metatron.lang.mtron.type.Rec;
 import studio.phaseshift.metatron.lang.mvec.mvecInstSet;
-import studio.phaseshift.metatron.lang.mweb.mwebInstSet;
+import studio.phaseshift.metatron.lang.mweb.webInstSet;
 import studio.phaseshift.metatron.space.device.log.Log;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
@@ -74,7 +74,7 @@ public class BootLoader implements Obj {
         //Registry.singleton().register(mtronInstSet.INST_TID, () -> mtronInstSet.of(fURI.NULL));
         Registry.open().register(msysInstSet.MSYS_TID, msysInstSet::create);
         Registry.open().register(mkvInstSet.MKV_TID, mkvInstSet::create);
-        Registry.open().register(mwebInstSet.MWEB_TID, mwebInstSet::create);
+        Registry.open().register(webInstSet.MWEB_TID, webInstSet::create);
         Registry.open().register(mgrphInstSet.MGRPH_TID, mgrphInstSet::create);
         Registry.open().register(mllmInstSet.MLLM_TID, mllmInstSet::create);
         Registry.open().register(mvecInstSet.MVEC_TID, mvecInstSet::create);

@@ -45,7 +45,7 @@ public abstract class MInstSet extends MSpace<Map<fURI, Set<? extends Obj>>> imp
     protected final Map<fURI, Inst> REWRITE_TABLE = new LinkedHashMap<>();
 
     public MInstSet(final fURI tid, final fURI vid) {
-        super(new LinkedHashMap<>(), Map.of(uri("pattern"), uri(tid.extend(fURI.ALL))), tid.extend(fURI.ALL), tid, vid);
+        super(new LinkedHashMap<>(), Map.of(uri(PATTERN), uri(tid.extend(fURI.ALL))), tid.extend(fURI.ALL), tid, vid);
         if (!this.pattern.equals(f("+/#")) && Router.loaded() && !(this instanceof Router))
             Router.global().addSpace(this);
         this.types().forEach(t -> this.write(t.tid(), t));

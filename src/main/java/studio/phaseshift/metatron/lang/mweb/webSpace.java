@@ -54,15 +54,14 @@ import static studio.phaseshift.metatron.lang.mtron.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MType.T;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.lang.mweb.mwebInstSet.MWEB_TID;
-import static studio.phaseshift.metatron.lang.mweb.mwebInstSet.PAGE_TID;
+import static studio.phaseshift.metatron.lang.mweb.webInstSet.MWEB_TID;
+import static studio.phaseshift.metatron.lang.mweb.webInstSet.PAGE_TID;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public class webSpace extends MSpace<HttpServer> {
-
-
+    
     public static final fURI WEB_TID = MWEB_TID.extend("space").extend("web");
     protected static final String ROUTE = "route";
     protected static final Type WEB_TYPE = T(WEB_TID, null, instC(mtronInstSet.INST_TID.dom(ALL.maybe()).rng(WEB_TID), lst(T(REC_TID, isa_(rec(uri(PATTERN), T(URI_TID), uri(HOST), T(URI_TID), uri(ROUTE), T(REC_TID))))), (lhs, inst) -> {
@@ -130,7 +129,7 @@ public class webSpace extends MSpace<HttpServer> {
     @Override
     public Function<fURI, Map<fURI, Obj>> directReader() {
         return (pattern) -> {
-            LOG.info("retrieving %s", pattern);
+            LOG.debug("retrieving %s", pattern);
             try {
                 Map<fURI, Obj> partial = new LinkedHashMap<>();
                 final Document doc = Jsoup.connect(pattern.asNode().toString()).ignoreContentType(true).get();

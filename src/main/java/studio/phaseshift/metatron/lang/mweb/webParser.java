@@ -21,5 +21,5 @@ package studio.phaseshift.metatron.lang.mweb;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class mwebParser {
+public class webParser {
 }

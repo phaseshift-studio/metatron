@@ -27,7 +27,7 @@ async def submit(ws, code):
 
 
 class Mytron:
-    def __init__(self, host: str = "ws://127.0.0.1:8887"):
+    def __init__(self, host: str = "ws://127.0.0.1:8999"):
         self.host = host
         logger.info(f"connecting to {self.host}")
         self.ws = websockets.connect(self.host)

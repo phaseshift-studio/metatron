@@ -176,6 +176,10 @@ public class TypeTest extends MetatronObjTest {
             "person  % .                                        % person::[name=>'a',age=>1,b=>2]                  % true",
             "person  % .                                        % person::[name=>'a',age=>1,b=>noobj]              % true",
             "person  % .                                        % person::[name=>'a',age=>1.2,b=>noobj]            % false",
+            "person  % .                                        % [name=>'base',age=>1]                            % true",
+            "person  % .                                        % [name=>'base']                                   % false",
+            "person  % .                                        % [name=>'base',age=>'the number one']             % false",
+            "person  % .                                        % [name=>'base',age=>1,another=>[a=>b]]            % true",
             ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
             "nat     % int::T[is(gt(0))]                        % nat::23                                          % true",
             "nat     % .                                        % nat::-23                                         % false",
@@ -198,6 +202,8 @@ public class TypeTest extends MetatronObjTest {
                     LOG.debug("instance: %s %s %s", inst.type(), inst.isFail(), inst.tid().equals(FAIL_TID));
                     if (inst.tid().equals(FAIL_TID))
                         assertFalse(shouldSucceed);
+                    else if (!inst.tid().equals(f(tid)))
+                        assertEquals(shouldSucceed, inst.matches(type)); // type checking for base types that are not :: specified
                     else
                         assertEquals(noobj(), inst);
                 }

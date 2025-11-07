@@ -11,4 +11,5 @@ ollama::[host    => <http://localhost:11434>,
                      pattern => /ollama/#].@/mnt/ollama;
 web::[host       => <http://localhost:8777>,
       pattern    => <http://#>,
-      route      => [/ => examples/www]].@/sys/space/web
+      route      => [/     => examples/www,
+                     /docs => target/docs ]].@/sys/space/web
