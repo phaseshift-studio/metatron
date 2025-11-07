@@ -23,6 +23,7 @@ import studio.phaseshift.metatron.lang.msys.Router;
 import studio.phaseshift.metatron.lang.mtron.type.Call;
 import studio.phaseshift.metatron.lang.mtron.type.Obj;
 import studio.phaseshift.metatron.lang.mtron.type.Type;
+import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
 
 import static studio.phaseshift.metatron.lang.mtron.mtronInstSet.BASE_TYPES;
@@ -38,6 +39,8 @@ public class MType extends MObj implements Type {
     public static Type T(final fURI tid) {
         if (!tid.hasPattern() && !BASE_TYPES.contains(tid.basePath()) && !tid.isGeneric() && Router.loaded()) {
             final Obj obj = Router.global().read(tid);
+           // if (obj.isNoObj())
+           //     throw MTronException.of("[{{r}}type error{{/r}}] %s is an undefined type", tid);
             if (obj.isType()) return obj.as();
         }
         return new MType(Tuple.Pair.with(null, null), tid);
@@ -50,16 +53,11 @@ public class MType extends MObj implements Type {
                 !Router.global().read(tid).isType()) ?
                 new MType(Tuple.Pair.with(null, null), tid) : Router.global().read(tid).tid(tid).as();*/
     }
-
-    public static Type T(final Call predicate) {
-        return new MType(Tuple.Pair.with(predicate, null), predicate.tid());
-    }
-
+    
     public static Type T(final fURI tid, final Call predicate) {
         return new MType(Tuple.Pair.with(predicate, null), tid);
     }
-
-
+    
     public static Type T(final fURI tid, final Call predicate, final Call constructor) {
         final Obj prev = Router.loaded() ? Router.readFromSpace(tid) : noobj();
         if (prev.isNoObj() || !prev.isType())

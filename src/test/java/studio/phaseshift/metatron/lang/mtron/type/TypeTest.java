@@ -182,8 +182,7 @@ public class TypeTest extends MetatronObjTest {
             "nat     % .                                        % nat::'a big number'                              % false",
             "nat     % .                                        % nat::2 + 6                                       % true",
             "nat     % .                                        % nat::2 + -6                                      % false",
-    },
-            delimiter = '%')
+    }, delimiter = '%')
     public void testTyping(final String tid, final String typeDef, final String instance, final boolean shouldSucceed) {
         try {
             Router.writeToSpace(tid, noobj());
