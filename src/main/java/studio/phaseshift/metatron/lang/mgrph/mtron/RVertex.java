@@ -2,8 +2,10 @@ package studio.phaseshift.metatron.lang.mgrph.mtron;
 
 import org.apache.tinkerpop.gremlin.structure.Direction;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.lang.mtron.type.Lst;
 import studio.phaseshift.metatron.lang.mtron.type.Obj;
 import studio.phaseshift.metatron.lang.mtron.type.Rec;
+import studio.phaseshift.metatron.lang.mtron.type.Rel;
 
 import java.util.stream.Stream;
 
@@ -28,14 +30,16 @@ public class RVertex extends RElement {
         return vertices.elements().map(Obj::<Rec>as).map(RVertex::new);
     }
 
-    public Stream<REdge> edges(final Direction direction, final Obj labels) {
-        return this.at(direction.name()).stream()
+    public Stream<REdge> edges(final Direction direction, final Lst labels) {
+        return this.at(direction.name()).elements()
+                .map(r -> ((Rel) r).second())
+                .flatMap(Obj::stream)
                 .flatMap(o -> o.apply(this).stream())
-                .flatMap(o -> labels.stream().flatMap(l -> o.<Rec>as().<Obj>at(l).stream()))
+                // .flatMap(o -> labels.stream().flatMap(label -> o.<Rec>as().at(label).stream()))
                 .map(r -> new REdge(r.as()));
     }
 
-    public Stream<RVertex> vertices(final Direction direction, final Obj labels) {
+    public Stream<RVertex> vertices(final Direction direction, final Lst labels) {
         return this.edges(direction, labels).flatMap(Obj::stream).map(Obj::<REdge>as).flatMap(r -> r.vertices(direction.opposite()));
     }
 }

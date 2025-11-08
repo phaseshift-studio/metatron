@@ -1,6 +1,6 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
- * Copyright (C) 2025- PhaseShift Studio, LLC 
+ * Copyright (C) 2025- PhaseShift Studio, LLC
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -32,6 +32,10 @@ public class MReal extends MObj implements Real {
 
     public static Real real(final Double jvm) {
         return new MReal(jvm, REAL_TID, fURI.NULL);
+    }
+
+    public static Real real(final Float jvm) {
+        return real(jvm.doubleValue());
     }
 
     public static Real real(final Double jvm, final fURI tid, final fURI vid) {

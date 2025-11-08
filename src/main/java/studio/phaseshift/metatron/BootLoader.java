@@ -18,11 +18,13 @@
 
 package studio.phaseshift.metatron;
 
+import org.apache.tinkerpop.gremlin.tinkergraph.structure.TinkerFactory;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.mach.machInstSet;
 import studio.phaseshift.metatron.lang.mgrph.mgrphInstSet;
-import studio.phaseshift.metatron.lang.mkv.mkvInstSet;
+import studio.phaseshift.metatron.lang.mgrph.mtron.TP3Translator;
 import studio.phaseshift.metatron.lang.mkv.kvSpace;
+import studio.phaseshift.metatron.lang.mkv.mkvInstSet;
 import studio.phaseshift.metatron.lang.mllm.mllmInstSet;
 import studio.phaseshift.metatron.lang.msys.Router;
 import studio.phaseshift.metatron.lang.msys.impl.MRouter;
@@ -133,7 +135,7 @@ public class BootLoader implements Obj {
             LOG.info("available instruction sets: %s", Registry.open().registrants());
             ROUTER = new MRouter(remoteAuthority, f("/sys/router"));
             kvSpace.of(f("/mnt/#"), fURI.NULL).vid(f("/mnt"));
-            kvSpace.of(f("/msys/#"),fURI.NULL).vid(f("/mnt/msys"));
+            kvSpace.of(f("/msys/#"), fURI.NULL).vid(f("/mnt/msys"));
             kvSpace.of(f("/sys/#"), fURI.NULL).vid(f("/mnt/sys"));
             mtronInstSet.create(f("/mnt/lang/m"));
             Router.writeToSpace(Router.global());
@@ -170,6 +172,8 @@ public class BootLoader implements Obj {
             //new TP3Translator(f("/tp")).translate(TinkerFactory.createModern());
             // new MqttSpace(f("zigbee2mqtt/#?broker=mqtt://192.168.66.2:1883&prefix=/mqtt"), f("/mnt/zigbee2mqtt")));
             if (options.at("mode").equals(uri("console"))) {
+                Router.global().addSpace(kvSpace.of(f("/tp/#"), f("/mnt/tp")));
+                TP3Translator.Builder.of(f("/tp/g")).create().translate(TinkerFactory.createModern());
                 //     Router.writeToSpace(mollamaSpace.of(f("http://localhost:11434"), f("/ollama/#"), f("/mnt/ollama")));
                 //     Router.writeToSpace(RemoteSpace.open(f("ws://chibi.local:8888"), f("/shared/#"), f("/mnt/shared")));
             } else if (options.at("mode").equals(uri("server")))

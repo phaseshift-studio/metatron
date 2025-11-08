@@ -1,6 +1,6 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
- * Copyright (C) 2025- PhaseShift Studio, LLC 
+ * Copyright (C) 2025- PhaseShift Studio, LLC
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -18,11 +18,10 @@
 
 package studio.phaseshift.metatron.lang.mtron.type;
 
-import studio.phaseshift.metatron.util.IteratorUtil;
-
 import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MRel.rel;
+import static studio.phaseshift.metatron.lang.mtron.type.impl.MUri.uri;
 
 public interface Poly extends Obj {
 
@@ -32,7 +31,7 @@ public interface Poly extends Obj {
         return 0 == this.count();
     }
 
-     <O extends Obj> Stream<O> elements();
+    <O extends Obj> Stream<O> elements();
 
     <O extends Obj> O at(final Obj key);
 
@@ -44,11 +43,15 @@ public interface Poly extends Obj {
         return !this.at(key).isNoObj();
     }
 
+    default boolean has(final String key) {
+        return this.has(uri(key));
+    }
+
     default boolean has(final long index) {
         return index < this.count();
     }
-    
-    default Stream<Rel> indexedStream() { 
-        return Stream.of(rel(this.vid().toUri(),this));
+
+    default Stream<Rel> indexedStream() {
+        return Stream.of(rel(this.vid().toUri(), this));
     }
 }

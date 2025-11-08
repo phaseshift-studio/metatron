@@ -257,11 +257,11 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
     default fURI baseType() {
         if (this.isBool()) return BOOL_TID.c(this.c().toString());
         else if (this.isInt()) return INT_TID.c(this.c().toString());
+        else if (this.isReal()) return REAL_TID.c(this.c().toString());
         else if (this.isStr()) return STR_TID.c(this.c().toString());
         else if (this.isUri()) return URI_TID.c(this.c().toString());
         else if (this.isLst()) return LST_TID.c(this.c().toString());
         else if (this.isRec()) return REC_TID.c(this.c().toString());
-        else if (this.isReal()) return REAL_TID.c(this.c().toString());
         else if (this.isInst()) return INST_TID.c(this.c().toString()).dom(this.dom().tid()).rng(this.rng().tid());
         else if (this.isCode()) return CODE_TID.c(this.c().toString());
         else if (this.isNoObj()) return NOOBJ_TID.c(this.c().toString());

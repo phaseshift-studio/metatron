@@ -38,7 +38,7 @@ public class MInst extends MObj implements Inst {
 
     @Override
     public Inst clone(final Object jvm, final fURI tid, final fURI vid) {
-        return (Inst) super.clone(jvm, tid, vid);
+        return super.clone(jvm, tid, vid);
     }
 
     @Override

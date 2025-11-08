@@ -1,6 +1,6 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
- * Copyright (C) 2025- PhaseShift Studio, LLC 
+ * Copyright (C) 2025- PhaseShift Studio, LLC
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -20,7 +20,6 @@ package studio.phaseshift.metatron.lang.mtron.type.impl;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.mtron.type.*;
-
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.List;
@@ -59,8 +58,12 @@ public class MObjFactory implements ObjFactory {
             return bool((Boolean) value);
         else if (value instanceof Long)
             return jnt((Long) value);
+        else if (value instanceof Integer)
+            return jnt((Integer) value);
         else if (value instanceof Double)
             return real((Double) value);
+        else if (value instanceof Float)
+            return real((Float) value);
         else if (value instanceof String)
             return str((String) value);
         else if (value instanceof fURI)

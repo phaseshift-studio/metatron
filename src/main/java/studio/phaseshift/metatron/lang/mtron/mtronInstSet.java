@@ -263,7 +263,7 @@ public class mtronInstSet extends MInstSet {
                 instC(GET_TID.dom(LST_TID).rng(OBJS_ID), lst(T(INT_TID)), (lhs, inst) -> lhs.<Lst>as().at(inst.arg(0))),
                 instC(GET_TID.dom(LST_TID).rng(OBJS_ID), lst(T(URI_TID)), (lhs, inst) -> lhs.<Lst>as().at(inst.arg(0))),
                 /// ///////////////////////////////////////////////////////////////////////////////////////////////////
-                instC(BLOCK_TID.dom(A.maybe()).rng(A.maybe()), lst(T(A)), (lhs, inst) -> inst.arg(0)),
+                instC(BLOCK_TID.dom(A.maybe()).rng(B), lst(T(B)), (lhs, inst) -> inst.arg(0)),
                 instC(SWAP_TID.dom(A).rng(B), lst(T(C)), (lhs, inst) -> lhs.apply(inst.arg(0))),
                 /// ///////////////////////////////////////////////////////////////////////////////////////////////////
                 instC(SPLIT_TID.dom(ALL).rng(LST_TID), lst(T(LST_TID)), (lhs, inst) -> lst(inst.arg(0).elements().map(e -> e.apply(lhs)).toList())),
@@ -352,15 +352,7 @@ public class mtronInstSet extends MInstSet {
                 instC(TYPE_TID.dom(A).rng(A), lst(), (lhs, inst) -> lhs.type()),
                 instC(TYPE_TID.dom(A.some()).rng(A.some()), lst(), (lhs, inst) -> objs(lhs).type()),
                 /// ///////////////////////////////////////////////////////////////////////////////////////////////////
-                instC(AS_TID.dom(OBJS_ID).rng(A), lst(T(A)), (lhs, inst) -> {
-                    final Type t = inst.arg(0).as();
-                    if (T(LST_TID).matches(t)) {
-                        if (lhs.isObjs()) {
-                            return lst(IteratorUtil.stream(lhs.objsValue()).toList());
-                        }
-                    }
-                    throw MTronException.of("unknown pair: %s %s", lhs, t);
-                }),
+                instC(AS_TID.dom(A).rng(B), lst(T(B)), (lhs, inst) -> lhs.tid(inst.arg(0).tid().c(lhs.tid().c()))),
                 instC(WITHIN_TID.dom(LST_TID).rng(LST_TID), lst(T(OBJS_ID)), (lhs, inst) -> lst(inst.arg(0).apply(objs(lhs.stream().flatMap(Obj::elements))).stream().toList())),
                 instC(WITHIN_TID.dom(REC_TID).rng(REC_TID), lst(T(OBJS_ID)), (lhs, inst) -> rec(lhs.elements().map(r -> inst.arg(0).apply(r).<Rel>as()).collect(Collectors.toMap(Rel::first, Rel::second, Obj::append, LinkedHashMap<Obj, Obj>::new)))),
                 instC(FAILURE_TID.dom(ALL.maybeSome()).rng(FAIL_TID), lst(T(ALL.maybe())), (lhs, inst) -> fail(MTronException.of("%s", inst.arg(0).toString()))),
