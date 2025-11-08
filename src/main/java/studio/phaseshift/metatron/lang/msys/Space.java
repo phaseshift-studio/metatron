@@ -80,9 +80,10 @@ public interface Space extends Rec, Closeable {
     default void close() {
         if (null != this.vid()) {
             Router.global().removeSpace(this.vid());
-            Router.global().write(this.vid().extend(fURI.ALL), noobj());
+            //Router.global().write(this.vid().extend(fURI.ALL), noobj());
         }
         Common.close(this.sjvm());
+        Common.close(this.jvm());
     }
 
     default Function<fURI, Map<fURI, Obj>> directReader() {
@@ -107,9 +108,9 @@ public interface Space extends Rec, Closeable {
 
         public static void spaceOpenLog(final Obj source, final Space space) {
             if (space instanceof InstSet)
-                source.logger().info("open inst set %s", space);
+                source.logger().info("opened inst set %s", space);
             else
-                source.logger().info("open space %s", space);
+                source.logger().info("opened space %s", space);
         }
 
         public static String spaceToString(final Space space) {
@@ -126,7 +127,7 @@ public interface Space extends Rec, Closeable {
         }
 
         public static void noCloneWarning(final Space space) {
-            Graphitty.log(space.getClass()).warn("the clone of a space is the space itself");
+            space.logger().warn("the clone of a space is the space itself");
         }
 
         public static Obj resolveApply(final Space space, final Obj rhs) {

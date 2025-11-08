@@ -19,7 +19,7 @@
 package studio.phaseshift.metatron.furi;
 
 import studio.phaseshift.metatron.lang.msys.Router;
-import studio.phaseshift.metatron.lang.msys.msysInstSet;
+import studio.phaseshift.metatron.lang.msys.sysInstSet;
 import studio.phaseshift.metatron.lang.mtron.type.Obj;
 import studio.phaseshift.metatron.lang.mtron.type.impl.MLst;
 import studio.phaseshift.metatron.ui.Graphitty;
@@ -30,7 +30,7 @@ import java.util.Optional;
 
 public class Qs extends MLst {
 
-    public static final fURI QS_TID = msysInstSet.SPACE_TID.extend("q");
+    public static final fURI QS_TID = sysInstSet.SPACE_TID.extend("q");
     private final GraphittyLogger LOG;
 
     public Qs() {

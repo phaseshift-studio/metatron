@@ -20,6 +20,7 @@ package studio.phaseshift.metatron.space.remote;
 
 import org.junit.jupiter.api.Test;
 import studio.phaseshift.metatron.MetatronTest;
+import studio.phaseshift.metatron.lang.msys.RemoteSpace;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static studio.phaseshift.metatron.furi.fURI.f;

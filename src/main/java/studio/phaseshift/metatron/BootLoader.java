@@ -28,7 +28,7 @@ import studio.phaseshift.metatron.lang.mkv.kvInstSet;
 import studio.phaseshift.metatron.lang.mllm.llmInstSet;
 import studio.phaseshift.metatron.lang.msys.Router;
 import studio.phaseshift.metatron.lang.msys.impl.MRouter;
-import studio.phaseshift.metatron.lang.msys.msysInstSet;
+import studio.phaseshift.metatron.lang.msys.sysInstSet;
 import studio.phaseshift.metatron.lang.mtron.mtronInstSet;
 import studio.phaseshift.metatron.lang.mtron.mtronParser;
 import studio.phaseshift.metatron.lang.mtron.type.Obj;
@@ -74,7 +74,7 @@ public class BootLoader implements Obj {
     static {
         LOG = Graphitty.log(new BootLoader());
         //Registry.singleton().register(mtronInstSet.INST_TID, () -> mtronInstSet.of(fURI.NULL));
-        Registry.open().register(msysInstSet.MSYS_TID, msysInstSet::create);
+        Registry.open().register(sysInstSet.MSYS_TID, sysInstSet::create);
         Registry.open().register(kvInstSet.MKV_TID, kvInstSet::create);
         Registry.open().register(webInstSet.MWEB_TID, webInstSet::create);
         Registry.open().register(grphInstSet.MGRPH_TID, grphInstSet::create);
@@ -136,15 +136,14 @@ public class BootLoader implements Obj {
             ROUTER = new MRouter(remoteAuthority, f("/sys/router"));
             kvInstSet.create();
             kvSpace.of(f("/mnt/#"), fURI.NULL).vid(f("/mnt"));
-            kvSpace.of(f("/msys/#"), fURI.NULL).vid(f("/mnt/msys"));
             kvSpace.of(f("/sys/#"), fURI.NULL).vid(f("/mnt/sys"));
-            mtronInstSet.create(f("/mnt/lang/m"));
+            mtronInstSet.create(f("/sys/lang/m"));
             Router.writeToSpace(Router.global());
             ROUTER.start();
             //  Router.writeToSpace(new mtronInstSet(fURI.of("/mnt/lang/m")));
             ///////////////////////////////////////////////////////////////
             if (options.has(uri("boot"))) {
-                LOG.none("\t{{r}}BEGIN:{{g}} evaluating provided boot loader: %s{{X}}\n", options.at(uri("boot")));
+                LOG.none("\t {{m}}BEGIN:{{g}} evaluating provided boot loader: %s{{X}}\n", options.at(uri("boot")));
                 try (final BufferedReader reader = new BufferedReader(new FileReader(options.at("boot").uriValue().toString()))) {
                     final List<String> lines = reader.lines().toList();
                     final String source = lines.stream().reduce("", (a, b) -> a + b + "\n");
@@ -157,7 +156,7 @@ public class BootLoader implements Obj {
                                 LOG.debug("boot compilation: %s", o);
                                 LOG.debug("boot result: %s", o.apply());
                             });
-                    LOG.none("\t{{r}}END:{{g}} evaluating provided boot loader: %s{{X}}\n", options.at(uri("boot")));
+                    LOG.none("\t {{m}}END:{{g}} evaluating provided boot loader: %s{{X}}\n", options.at(uri("boot")));
                 } catch (final IOException e) {
                     LOG.error(e);
                     System.exit(0);
@@ -175,7 +174,6 @@ public class BootLoader implements Obj {
             if (options.at("mode").equals(uri("console"))) {
                 Router.global().addSpace(kvSpace.of(f("/tp/#"), f("/mnt/tp")));
                 TP3Translator.Builder.of(f("/tp/g")).create().translate(TinkerFactory.createModern());
-                //     Router.writeToSpace(mollamaSpace.of(f("http://localhost:11434"), f("/ollama/#"), f("/mnt/ollama")));
                 //     Router.writeToSpace(RemoteSpace.open(f("ws://chibi.local:8888"), f("/shared/#"), f("/mnt/shared")));
             } else if (options.at("mode").equals(uri("server")))
                 Router.writeToSpace(new kvSpace(fURI.of("/shared/#"), fURI.of("/mnt/shared")));

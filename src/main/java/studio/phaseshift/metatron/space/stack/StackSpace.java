@@ -22,7 +22,7 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.mkv.kvSpace;
 import studio.phaseshift.metatron.lang.msys.Router;
 import studio.phaseshift.metatron.lang.msys.Space;
-import studio.phaseshift.metatron.lang.msys.msysInstSet;
+import studio.phaseshift.metatron.lang.msys.sysInstSet;
 import studio.phaseshift.metatron.lang.mtron.type.Obj;
 import studio.phaseshift.metatron.lang.mtron.type.Poly;
 import studio.phaseshift.metatron.space.MSpace;
@@ -37,7 +37,7 @@ import static studio.phaseshift.metatron.lang.mtron.type.impl.MUri.uri;
 
 public class StackSpace extends MSpace<LinkedList<kvSpace>> {
 
-    public static final fURI STACK_TID = msysInstSet.SPACE_TID.extend("stack");
+    public static final fURI STACK_TID = sysInstSet.SPACE_TID.extend("stack");
     public static final String ARG_PREFIX = "";
 
     private final GraphittyLogger LOG = Graphitty.log(this);

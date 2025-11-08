@@ -1,6 +1,6 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
- * Copyright (C) 2025- PhaseShift Studio, LLC 
+ * Copyright (C) 2025- PhaseShift Studio, LLC
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -23,11 +23,11 @@ import org.java_websocket.handshake.ClientHandshake;
 import org.java_websocket.server.WebSocketServer;
 import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.lang.mtron.type.Fail;
-import studio.phaseshift.metatron.lang.mtron.type.Obj;
 import studio.phaseshift.metatron.lang.msys.Router;
 import studio.phaseshift.metatron.lang.msys.impl.FutureObj;
 import studio.phaseshift.metatron.lang.msys.impl.ObjByteBufferSerializer;
+import studio.phaseshift.metatron.lang.mtron.type.Fail;
+import studio.phaseshift.metatron.lang.mtron.type.Obj;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
 import studio.phaseshift.metatron.ui.ObjSerializer;
@@ -43,13 +43,14 @@ import java.util.Map;
 import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.furi.fURI.f;
+import static studio.phaseshift.metatron.lang.msys.impl.MRouter.ROUTER_TID;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MLst.lst;
-import static studio.phaseshift.metatron.lang.msys.impl.MRouter.ROUTER_TID;
 
 public class MServer extends WebSocketServer implements Closeable, Obj {
 
     public static final fURI MSERVER_TID = ROUTER_TID.extend("server");
+    public static final String CLUSTER = "cluster";
 
     protected final fURI authority;
     protected final ObjSerializer<ByteBuffer> serializer;
@@ -84,12 +85,16 @@ public class MServer extends WebSocketServer implements Closeable, Obj {
             this.serverThread = new Thread(r);
             this.serverThread.start();
             LOG.trace("server started: %s", this.getAddress());
-            BootLoader.GLOBAL.at("cluster").elements().filter(o -> !o.isNoObj()).forEach(n -> {
-                final MConnection client = MClient.of(n.uriValue());
-                this.cluster.put(n.uriValue(), client);
+            BootLoader.GLOBAL.at(CLUSTER).elements().filter(o -> !o.isNoObj()).forEach(n -> {
+                try {
+                    final MConnection client = MClient.of(n.uriValue());
+                    this.cluster.put(n.uriValue(), client);
+                } catch (final Exception e) {
+                    LOG.error("unable to connect to cluster node {{b}}%s{{/b}}", n.uriValue());
+                }
             });
             Router.global().write(
-                    Router.global().vid().extend("cluster"),
+                    Router.global().vid().extend(CLUSTER),
                     lst((List) this.cluster.values().stream().map(x -> x.authority().toUri()).toList()));
         } catch (final Exception e) {
             // do nothing

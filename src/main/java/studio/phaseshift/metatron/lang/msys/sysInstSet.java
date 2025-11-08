@@ -15,18 +15,18 @@ import static studio.phaseshift.metatron.lang.mtron.type.impl.MType.T;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class msysInstSet extends MInstSet {
+public class sysInstSet extends MInstSet {
 
-    public static final fURI MSYS_TID = f("/msys");
+    public static final fURI MSYS_TID = f("/sys");
     public static final fURI ROUTER_TID = MSYS_TID.extend("router");
     public static final fURI SPACE_TID = MSYS_TID.extend("space");
 
-    public msysInstSet(final fURI vid) {
+    public sysInstSet(final fURI vid) {
         super(MSYS_TID, vid);
     }
 
-    public static msysInstSet create() {
-        return new msysInstSet(fURI.NULL);
+    public static sysInstSet create() {
+        return new sysInstSet(fURI.NULL);
     }
 
     @Override

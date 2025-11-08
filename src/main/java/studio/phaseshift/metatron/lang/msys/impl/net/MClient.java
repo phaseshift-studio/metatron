@@ -1,6 +1,6 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
- * Copyright (C) 2025- PhaseShift Studio, LLC 
+ * Copyright (C) 2025- PhaseShift Studio, LLC
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -27,11 +27,11 @@ import org.java_websocket.drafts.Draft;
 import org.java_websocket.drafts.Draft_6455;
 import org.java_websocket.handshake.ServerHandshake;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.lang.mtron.type.Obj;
-import studio.phaseshift.metatron.lang.mtron.type.impl.MObjs;
 import studio.phaseshift.metatron.lang.msys.Router;
 import studio.phaseshift.metatron.lang.msys.impl.FutureObj;
 import studio.phaseshift.metatron.lang.msys.impl.ObjByteBufferSerializer;
+import studio.phaseshift.metatron.lang.mtron.type.Obj;
+import studio.phaseshift.metatron.lang.mtron.type.impl.MObjs;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
 import studio.phaseshift.metatron.ui.ObjSerializer;
 
@@ -117,7 +117,7 @@ public class MClient extends WebSocketClient implements MConnection {
 
     @Override
     public void onError(final Exception ex) {
-        LOG.error("an error occurred on connection: %s", ex.getMessage().toLowerCase());
+        LOG.error("an error occurred with {{b}}%s{{/b}}: %s", this.authority, ex.getMessage().toLowerCase());
         this.futures.clear();
     }
 

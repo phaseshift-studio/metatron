@@ -16,10 +16,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.space.remote;
+package studio.phaseshift.metatron.lang.msys;
 
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.lang.msys.Router;
 import studio.phaseshift.metatron.lang.msys.impl.FutureObj;
 import studio.phaseshift.metatron.lang.msys.impl.net.MClient;
 import studio.phaseshift.metatron.lang.msys.impl.net.MConnection;
@@ -34,10 +33,9 @@ import studio.phaseshift.metatron.util.MTronException;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.lang.mtron.mtronFluent.StartLess.from_;
 import static studio.phaseshift.metatron.lang.mtron.mtronFluent.StartLess.start_;
-import static studio.phaseshift.metatron.lang.mtron.mtronInstSet.MTRON_SPACE_TID;
+import static studio.phaseshift.metatron.lang.mtron.mtronInstSet.MTRON_TID;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MUri.uri;
 
 /*
@@ -46,11 +44,11 @@ import static studio.phaseshift.metatron.lang.mtron.type.impl.MUri.uri;
 public class RemoteSpace extends MSpace<MConnection> {
 
     public static final int RETRY_SECONDS = 5;
-    public static final fURI REMOTE_TID = MTRON_SPACE_TID.extend("remote");
+    public static final fURI REMOTE_TID = MTRON_TID.extend("space").extend("remote");
     private final GraphittyLogger LOG;
 
     public RemoteSpace(final fURI authority, final fURI pattern, final fURI vid) {
-        super(MClient.of(authority), Map.of(uri("pattern"), uri(pattern)), pattern, f("/msys/space/remote"), vid);
+        super(MClient.of(authority), Map.of(uri("pattern"), uri(pattern)), pattern, REMOTE_TID, vid);
         LOG = Graphitty.log(this);
     }
 

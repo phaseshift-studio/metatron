@@ -22,7 +22,6 @@ import com.sun.net.httpserver.HttpContext;
 import com.sun.net.httpserver.HttpServer;
 import org.jsoup.Connection;
 import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.msys.Router;
 import studio.phaseshift.metatron.lang.msys.Space;
@@ -102,7 +101,7 @@ public class webSpace extends MSpace<HttpServer> {
                     });
             LOG.info("http route attached: %s => %s", uri(context.getPath()), r.second());
         });
-        Graphitty.log(Router.global()).info("starting web server at %s", this.at("host").uriValue().scheme("http").toUri());
+        LOG.info("starting web server at %s", this.at("host").uriValue().scheme("http").toUri());
         server.setExecutor(Executors.newFixedThreadPool(4));
         Runtime.getRuntime().addShutdownHook(new Thread(this::close));
         LOG.info("available routes: %s", this.at(ROUTE));
@@ -138,15 +137,11 @@ public class webSpace extends MSpace<HttpServer> {
         return (pattern) -> {
             LOG.debug("retrieving %s", pattern);
             try {
-                Map<fURI, Obj> partial = new LinkedHashMap<>();
+                final Map<fURI, Obj> partial = new LinkedHashMap<>();
                 final Connection.Response response = Jsoup.connect(pattern.asNode().toString()).ignoreContentType(true).execute();
-                Obj docObj;
-                if (null != response.contentType() && response.contentType().equals("application/json")) {
-                    docObj = JSON_TRANSLATOR.translateString(response.body());
-                } else {
-                    final Document doc = response.streamParser().document();
-                    docObj = WEB_TRANSLATOR.translate(doc).tid(PAGE_TID);
-                }
+                final Obj docObj = (null != response.contentType() && response.contentType().equals("application/json")) ?
+                        JSON_TRANSLATOR.translateString(response.body()) :
+                        WEB_TRANSLATOR.translate(response.parse()).tid(PAGE_TID);
                 partial.put(pattern.asNode(), docObj);
                 return partial;
             } catch (final Exception e) {
