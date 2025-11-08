@@ -26,12 +26,13 @@ import studio.phaseshift.metatron.space.MSpace;
 import java.util.Map;
 
 import static studio.phaseshift.metatron.furi.fURI.f;
+import static studio.phaseshift.metatron.lang.mgrph.grphInstSet.MGRPH_TID;
 import static studio.phaseshift.metatron.lang.mtron.mtronInstSet.MTRON_SPACE_TID;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class mgrphSpace extends MSpace<Graph> {
+public class grphSpace extends MSpace<Graph> {
 
     /**
      * /root/v/+                       => vertices
@@ -42,12 +43,12 @@ public class mgrphSpace extends MSpace<Graph> {
      * /root/v/{id}/vp/{key}           => vertex property by key
      * /root/v/{id}/vp/{key}/{key2}    => vertex property property by key
      */
-    public static final fURI GRAPHSPACE_TID = MTRON_SPACE_TID.extend("grph");
+    public static final fURI GRAPHSPACE_TID = MGRPH_TID.extend("space/grph");
     protected static final fURI V_PATTERN = f("/v/+");
     protected static final fURI E_V_ADJ_PATTERN = f("/v/+/");
 
 
-    public mgrphSpace(final Graph graph, final fURI pattern, final fURI tid, final fURI vid) {
+    public grphSpace(final Graph graph, final fURI pattern, final fURI tid, final fURI vid) {
         super(graph, Map.of(), pattern, tid, vid);
     }
 

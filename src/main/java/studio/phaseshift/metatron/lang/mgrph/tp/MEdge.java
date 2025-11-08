@@ -29,7 +29,7 @@ import studio.phaseshift.metatron.util.IteratorUtil;
 
 import java.util.Iterator;
 
-import static studio.phaseshift.metatron.lang.mgrph.mgrphInstSet.EDGE_TID;
+import static studio.phaseshift.metatron.lang.mgrph.grphInstSet.EDGE_TID;
 
 public class MEdge extends MElement implements Obj, Edge, WrappedEdge<Edge> {
 

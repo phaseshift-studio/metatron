@@ -28,7 +28,7 @@ import studio.phaseshift.metatron.util.IteratorUtil;
 
 import java.util.Iterator;
 
-import static studio.phaseshift.metatron.lang.mgrph.mgrphInstSet.VERTEX_PROPERTY_TID;
+import static studio.phaseshift.metatron.lang.mgrph.grphInstSet.VERTEX_PROPERTY_TID;
 
 
 public class MVertexProperty<V> extends MProperty<V> implements VertexProperty<V>, WrappedVertexProperty<VertexProperty<V>>, Rel {

@@ -43,9 +43,9 @@ import static studio.phaseshift.metatron.lang.mtron.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MType.T;
 
-public class mgrphInstSet extends MInstSet {
+public class grphInstSet extends MInstSet {
 
-    public static final fURI MGRPH_TID = f("/mgrph");
+    public static final fURI MGRPH_TID = f("/grph");
     public static final fURI GRAPH_TID = MGRPH_TID.extend("graph");
     public static final fURI ELEMENT_TID = MGRPH_TID.extend("element");
     public static final fURI VERTEX_TID = MGRPH_TID.extend("vertex");
@@ -70,13 +70,13 @@ public class mgrphInstSet extends MInstSet {
     public static final fURI PROPERTIES_TID = INST_TID.extend("properties");
     public static final fURI LABEL_TID = INST_TID.extend("label");
 
-    public mgrphInstSet(final fURI vid) {
+    public grphInstSet(final fURI vid) {
         super(MGRPH_TID, vid);
         // this.types().forEach(t -> Router.global().registerRewrite(f(t.tid().name()), t.tid()));
     }
 
-    public static mgrphInstSet create() {
-        return new mgrphInstSet(fURI.NULL);
+    public static grphInstSet create() {
+        return new grphInstSet(fURI.NULL);
     }
 
     private static String[] labelsAsUri(final Inst inst) {

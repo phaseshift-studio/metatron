@@ -33,13 +33,13 @@ import java.util.List;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MInst.instB;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MLst.lst;
 
-public class mgrphFluent<F extends Fluent<F>> extends mtronFluent<F> {
+public class grphFluent<F extends Fluent<F>> extends mtronFluent<F> {
 
-    protected mgrphFluent() {
+    protected grphFluent() {
         this(new ArrayList<>(), mtronInstSet.CODE_TID, null);
     }
 
-    protected mgrphFluent(final List<Inst> value, final fURI tid, final fURI vid) {
+    protected grphFluent(final List<Inst> value, final fURI tid, final fURI vid) {
         super(value, tid, vid);
     }
 
@@ -48,44 +48,44 @@ public class mgrphFluent<F extends Fluent<F>> extends mtronFluent<F> {
     }
 
     public F g(final MGraph graph) {
-        return this.addInst(instB(mgrphInstSet.G_TID, lst(graph)));
+        return this.addInst(instB(grphInstSet.G_TID, lst(graph)));
     }
 
     public F g(final Call call) {
-        return this.addInst(instB(mgrphInstSet.G_TID, lst(call)));
+        return this.addInst(instB(grphInstSet.G_TID, lst(call)));
     }
 
     public F V() {
-        return this.addInst(instB(mgrphInstSet.V_TID, lst()));
+        return this.addInst(instB(grphInstSet.V_TID, lst()));
     }
 
     public F out(final Obj... obj) {
-        return this.addInst(instB(mgrphInstSet.OUT_TID, lst(obj)));
+        return this.addInst(instB(grphInstSet.OUT_TID, lst(obj)));
     }
 
     public F outE(final Obj... obj) {
-        return this.addInst(instB(mgrphInstSet.OUTE_TID, lst(obj)));
+        return this.addInst(instB(grphInstSet.OUTE_TID, lst(obj)));
     }
 
     @Override
-    public mgrphFluent<F> clone(Object jvm, fURI tid, fURI vid) {
-        return new mgrphFluent<>(new ArrayList<>(this.jvm()), this.tid, this.vid);
+    public grphFluent<F> clone(Object jvm, fURI tid, fURI vid) {
+        return new grphFluent<>(new ArrayList<>(this.jvm()), this.tid, this.vid);
     }
 
     /// /////////////////////////////////////////////////////////////
 
     public static class StartLess {
 
-        public static <F extends mgrphFluent<F>> F g(final MGraph obj) {
-            return (F) new mgrphFluent<F>().start_(obj);
+        public static <F extends grphFluent<F>> F g(final MGraph obj) {
+            return (F) new grphFluent<F>().start_(obj);
         }
 
-        public static <F extends mgrphFluent<F>> F out(final Obj obj) {
-            return new mgrphFluent<F>().out(obj);
+        public static <F extends grphFluent<F>> F out(final Obj obj) {
+            return new grphFluent<F>().out(obj);
         }
 
-        public static <F extends mgrphFluent<F>> F outE(final Obj obj) {
-            return new mgrphFluent<F>().outE(obj);
+        public static <F extends grphFluent<F>> F outE(final Obj obj) {
+            return new grphFluent<F>().outE(obj);
         }
 
 

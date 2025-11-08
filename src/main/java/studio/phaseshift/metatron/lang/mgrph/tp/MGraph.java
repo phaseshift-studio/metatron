@@ -23,7 +23,7 @@ import org.apache.tinkerpop.gremlin.process.computer.GraphComputer;
 import org.apache.tinkerpop.gremlin.structure.*;
 import org.apache.tinkerpop.gremlin.structure.util.wrapped.WrappedGraph;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.lang.mgrph.mgrphInstSet;
+import studio.phaseshift.metatron.lang.mgrph.grphInstSet;
 import studio.phaseshift.metatron.lang.msys.Space;
 import studio.phaseshift.metatron.lang.mtron.type.Obj;
 import studio.phaseshift.metatron.space.MSpace;
@@ -45,7 +45,7 @@ public class MGraph extends MSpace<Graph> implements Graph, WrappedGraph<Graph> 
     protected Graph graph;
 
     public MGraph(final Graph graph, final fURI pattern, final fURI vid) {
-        super(graph, Map.of(uri("pattern"), uri(pattern)), pattern, mgrphInstSet.GRAPH_TID, vid);
+        super(graph, Map.of(uri("pattern"), uri(pattern)), pattern, grphInstSet.GRAPH_TID, vid);
         this.graph = graph;
         this.graph.configuration().addProperty("vid", vid);
         this.graph.configuration().addProperty("pattern", pattern);

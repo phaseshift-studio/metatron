@@ -98,7 +98,7 @@ public interface Space extends Rec, Closeable {
     default Obj apply(final Obj other) {
         return Helper.resolveApply(this, other);
     }
-    
+
     class Helper {
 
         public static void spaceCloseLog(final Obj source, final Space space) {
@@ -106,7 +106,10 @@ public interface Space extends Rec, Closeable {
         }
 
         public static void spaceOpenLog(final Obj source, final Space space) {
-            source.logger().info("open space %s", space);
+            if (space instanceof InstSet)
+                source.logger().info("open inst set %s", space);
+            else
+                source.logger().info("open space %s", space);
         }
 
         public static String spaceToString(final Space space) {

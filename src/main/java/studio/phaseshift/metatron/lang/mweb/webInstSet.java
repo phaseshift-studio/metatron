@@ -36,7 +36,7 @@ import static studio.phaseshift.metatron.lang.mtron.type.impl.MType.T;
  */
 public class webInstSet extends MInstSet {
 
-    public static final fURI MWEB_TID = f("/mweb");
+    public static final fURI MWEB_TID = f("/web");
     public static final fURI INST_TID = MWEB_TID.extend("inst");
     public static final fURI PAGE_TID = MWEB_TID.extend("page");
     public static final fURI CSS_TID = MWEB_TID.extend("css");

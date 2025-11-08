@@ -32,16 +32,16 @@ import static studio.phaseshift.metatron.lang.mtron.type.impl.MUri.uri;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class mkvInstSet extends MInstSet {
+public class kvInstSet extends MInstSet {
 
-    public static final fURI MKV_TID = f("/mkv");
+    public static final fURI MKV_TID = f("/kv");
     
-    public mkvInstSet(final fURI vid) {
+    public kvInstSet(final fURI vid) {
         super(MKV_TID, vid);
     }
 
-    public static mkvInstSet create() {
-        return new mkvInstSet(fURI.NULL);
+    public static kvInstSet create() {
+        return new kvInstSet(fURI.NULL);
     }
 
     /*@Override

@@ -30,7 +30,7 @@ import studio.phaseshift.metatron.util.IteratorUtil;
 
 import java.util.Iterator;
 
-import static studio.phaseshift.metatron.lang.mgrph.mgrphInstSet.VERTEX_TID;
+import static studio.phaseshift.metatron.lang.mgrph.grphInstSet.VERTEX_TID;
 
 public class MVertex extends MElement implements Obj, Vertex, WrappedVertex<Vertex> {
 

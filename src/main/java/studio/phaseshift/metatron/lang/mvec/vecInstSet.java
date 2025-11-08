@@ -24,7 +24,6 @@ import studio.phaseshift.metatron.lang.mtron.type.Lst;
 import studio.phaseshift.metatron.lang.mtron.type.Obj;
 import studio.phaseshift.metatron.lang.mtron.type.Type;
 import studio.phaseshift.metatron.lang.mtron.type.impl.MInstSet;
-import studio.phaseshift.metatron.lang.mtron.type.impl.MType;
 import studio.phaseshift.metatron.lang.mweb.JSONTranslator;
 import studio.phaseshift.metatron.util.MTronException;
 
@@ -45,9 +44,9 @@ import static studio.phaseshift.metatron.lang.mtron.type.impl.MType.T;
 /*
 @author Marko A. Rodriguez (http://markorodriguez.com)
 */
-public class mvecInstSet extends MInstSet {
+public class vecInstSet extends MInstSet {
 
-    public static final fURI MVEC_TID = f("/mvec");
+    public static final fURI MVEC_TID = f("/vec");
     public static final fURI VEC_TID = MVEC_TID.extend("vec");
     //public static final fURI RVEC_TID = MEXT_TID.extend("rvec");
     public static final fURI MTRX_TID = MVEC_TID.extend("mtrx");
@@ -60,12 +59,12 @@ public class mvecInstSet extends MInstSet {
     public static final fURI JSON_TID = INST_TID.extend("json");
     private static final JSONTranslator JSON_TRANSLATOR = new JSONTranslator();
 
-    public mvecInstSet(final fURI vid) {
+    public vecInstSet(final fURI vid) {
         super(MVEC_TID, vid);
     }
 
-    public static mvecInstSet create() {
-        return new mvecInstSet(fURI.NULL);
+    public static vecInstSet create() {
+        return new vecInstSet(fURI.NULL);
     }
 
     @Override

@@ -38,7 +38,7 @@ import studio.phaseshift.metatron.util.Tuple;
 import java.util.Map;
 
 import static studio.phaseshift.metatron.furi.fURI.ALL;
-import static studio.phaseshift.metatron.lang.mllm.mllmInstSet.OLLAMA_TID;
+import static studio.phaseshift.metatron.lang.mllm.llmInstSet.OLLAMA_TID;
 import static studio.phaseshift.metatron.lang.mllm.type.impl.OLLM.ollm;
 import static studio.phaseshift.metatron.lang.mtron.mtronFluent.StartLess.isa_;
 import static studio.phaseshift.metatron.lang.mtron.mtronInstSet.REC_TID;

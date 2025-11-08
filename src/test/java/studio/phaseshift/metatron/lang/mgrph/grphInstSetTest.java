@@ -33,13 +33,13 @@ import static studio.phaseshift.metatron.lang.mtron.type.impl.MUri.uri;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class mgrphInstSetTest extends MetatronTest {
+public class grphInstSetTest extends MetatronTest {
 
     @BeforeAll
     @Disabled
     public static void begin() {
         MetatronTest.begin();
-        mgrphInstSet.create().vid(f("/mnt/lang/mgraph"));
+        grphInstSet.create().vid(f("/mnt/lang/mgraph"));
         MGraph.of(TinkerFactory.createModern(), f("/tp/#"), f("/mnt/tp"));
         Router.writeToSpace("g", uri("/mnt/tp"));
     }

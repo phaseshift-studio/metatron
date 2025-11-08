@@ -30,7 +30,7 @@ import studio.phaseshift.metatron.util.Tuple;
 
 import java.util.Iterator;
 
-import static studio.phaseshift.metatron.lang.mgrph.mgrphInstSet.PROPERTY_TID;
+import static studio.phaseshift.metatron.lang.mgrph.grphInstSet.PROPERTY_TID;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MReal.real;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MStr.str;

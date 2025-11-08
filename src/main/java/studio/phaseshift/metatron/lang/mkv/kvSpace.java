@@ -47,7 +47,7 @@ import static studio.phaseshift.metatron.lang.mtron.type.impl.MUri.uri;
 
 public class kvSpace extends MSpace<Map<fURI, Obj>> {
 
-    public static final fURI KV_TID = f("/msys/space/kv");
+    public static final fURI KV_TID = f("/kv/space/kv");
     protected static final Type KV_TYPE = T(KV_TID, null, instC(mtronInstSet.INST_TID.dom(ALL.maybe()).rng(KV_TID), lst(T(REC_TID, isa_(rec(uri(PATTERN), T(URI_TID))))), (lhs, inst) -> {
         final fURI pattern = inst.arg(0).<Rec>as().at(PATTERN).uriValue();
         final Space space = new kvSpace(pattern, inst.arg(0).vid());

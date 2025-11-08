@@ -28,7 +28,7 @@ import studio.phaseshift.metatron.util.Tuple;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import static studio.phaseshift.metatron.furi.fURI.f;
+import static studio.phaseshift.metatron.lang.mllm.llmInstSet.MLLM_TID;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MUri.uri;
 
@@ -37,7 +37,7 @@ import static studio.phaseshift.metatron.lang.mtron.type.impl.MUri.uri;
  */
 public class OLLM extends MRec implements LLM {
 
-    public static final fURI OLLM_TID = f("/mllm/ollm");
+    public static final fURI OLLM_TID = MLLM_TID.extend("ollm");
 
     public OLLM(final Tuple.Pair<OllamaModel, fURI> model, final fURI tid, final fURI vid) {
         super(modelToRec(model), tid, vid);

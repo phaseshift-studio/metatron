@@ -28,7 +28,7 @@ import studio.phaseshift.metatron.lang.mtron.mtronParser;
 import studio.phaseshift.metatron.lang.mtron.type.Fail;
 import studio.phaseshift.metatron.lang.mtron.type.NoObj;
 import studio.phaseshift.metatron.lang.mtron.type.Obj;
-import studio.phaseshift.metatron.lang.mvec.mvecInstSet;
+import studio.phaseshift.metatron.lang.mvec.vecInstSet;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
 
@@ -49,7 +49,7 @@ public class MetatronTest {
         BootLoader.load(rec(uri("mode"), uri("testing")));
         mtronInstSet.create().vid(f("/mnt/lang/m"));
         machInstSet.create().vid(f("/mnt/lang/mach"));
-        mvecInstSet.create().vid(f("/mnt/lang/mvec"));
+        vecInstSet.create().vid(f("/mnt/lang/mvec"));
         kvSpace.of(f("/usr/#"),fURI.NULL).vid(f("/mnt/usr"));
     }
 

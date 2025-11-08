@@ -25,7 +25,7 @@ import studio.phaseshift.metatron.MetatronTest;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class mvecInstSetTest extends MetatronTest {
+public class vecInstSetTest extends MetatronTest {
 
     @Override
     @ParameterizedTest

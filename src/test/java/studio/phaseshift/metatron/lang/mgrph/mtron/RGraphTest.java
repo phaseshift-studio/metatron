@@ -4,7 +4,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import studio.phaseshift.metatron.MetatronTest;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.lang.mgrph.mgrphInstSet;
+import studio.phaseshift.metatron.lang.mgrph.grphInstSet;
 import studio.phaseshift.metatron.lang.mkv.kvSpace;
 import studio.phaseshift.metatron.lang.msys.Router;
 
@@ -20,7 +20,7 @@ public class RGraphTest extends MetatronTest {
     @BeforeAll
     public static void begin() {
         MetatronTest.begin();
-        mgrphInstSet.create().vid(f("/mnt/lang/mgraph"));
+        grphInstSet.create().vid(f("/mnt/lang/mgraph"));
        // MGraph.of(TinkerFactory.createModern(), f("/tp/#"), f("/mnt/tp"));
        // Router.writeToSpace("g", uri("/mnt/tp"));
         kvSpace.of(f("/tp/#"),fURI.NULL).vid(f("/mnt/tp"));
