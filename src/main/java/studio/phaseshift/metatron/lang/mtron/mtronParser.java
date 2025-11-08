@@ -148,7 +148,7 @@ public class mtronParser {
                 .map(t -> (Inst) new MInst(Triplet.with(
                         pick(t, 1).equals("") ? lst() : pick(t, 1) instanceof List ?
                                 lst(mtronParser.<List<Obj>>pick(t, 1)) :
-                                rec(mtronParser.pick(t, 1)),
+                                rec(mtronParser.<Map<Obj,Obj>>pick(t, 1)),
                         Inst.f.of(mtronParser.<Obj>pick(t, 2)),
                         NoObj.noobj()), // todo: encode seed in parser
                         pick(t, 0), pick(t, 3)))));

@@ -19,6 +19,7 @@
 package studio.phaseshift.metatron.lang.mllm;
 
 import dev.langchain4j.model.ollama.OllamaModel;
+import dev.langchain4j.model.ollama.OllamaModelCard;
 import dev.langchain4j.model.ollama.OllamaModels;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.mkv.kvSpace;
@@ -73,8 +74,8 @@ public class ollamaSpace extends MSpace<OllamaModels> {
     public static ollamaSpace of(final fURI ollamaHost, final fURI pattern) {
         final OllamaModels models = OllamaModels.builder().baseUrl(ollamaHost.toString()).build();
         return new ollamaSpace(models, Map.of(
-                uri("host"), ollamaHost.toUri(),
-                uri("pattern"), pattern.toUri()),
+                uri(HOST), ollamaHost.toUri(),
+                uri(PATTERN), pattern.toUri()),
                 pattern,
                 fURI.NULL);
     }
@@ -86,7 +87,7 @@ public class ollamaSpace extends MSpace<OllamaModels> {
     @Override
     public Obj read(final fURI vid) {
         this.sjvm().availableModels().content().stream()
-                .map(model -> ollm(Tuple.Pair.with(model, this.jvm().get(uri("host")).uriValue()), OLLM.OLLM_TID, modelToVid(model)))
+                .map(model -> ollm(Tuple.Triplet.with(model, this.sjvm().modelCard(model.getName()).content(), this.jvm().get(uri(HOST)).uriValue()), OLLM.OLLM_TID, modelToVid(model)))
                 .filter(model -> model.vid().matches(pattern))
                 .forEach(model -> this.internal.write(model.vid(), model));
         return this.internal.read(vid);

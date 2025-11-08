@@ -19,17 +19,23 @@
 package studio.phaseshift.metatron.lang.mllm.type.impl;
 
 import dev.langchain4j.model.ollama.OllamaModel;
+import dev.langchain4j.model.ollama.OllamaModelCard;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.mllm.type.LLM;
 import studio.phaseshift.metatron.lang.mtron.type.Obj;
+import studio.phaseshift.metatron.lang.mtron.type.ObjFactory;
+import studio.phaseshift.metatron.lang.mtron.type.Rel;
+import studio.phaseshift.metatron.lang.mtron.type.impl.MObjFactory;
 import studio.phaseshift.metatron.lang.mtron.type.impl.MRec;
 import studio.phaseshift.metatron.util.Tuple;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import static studio.phaseshift.metatron.lang.mllm.llmInstSet.MLLM_TID;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MInt.jnt;
+import static studio.phaseshift.metatron.lang.mtron.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MUri.uri;
 
 /*
@@ -39,21 +45,23 @@ public class OLLM extends MRec implements LLM {
 
     public static final fURI OLLM_TID = MLLM_TID.extend("ollm");
 
-    public OLLM(final Tuple.Pair<OllamaModel, fURI> model, final fURI tid, final fURI vid) {
+    public OLLM(final Tuple.Triplet<OllamaModel, OllamaModelCard, fURI> model, final fURI tid, final fURI vid) {
         super(modelToRec(model), tid, vid);
     }
 
-    private static Map<Obj, Obj> modelToRec(final Tuple.Pair<OllamaModel, fURI> model) {
+    private static Map<Obj, Obj> modelToRec(final Tuple.Triplet<OllamaModel, OllamaModelCard, fURI> model) {
         return new LinkedHashMap<>() {{
             put(uri("name"), uri(model.get0().getName()));
-            put(uri("host"), uri(model.get1()));
+            put(uri("host"), uri(model.get2()));
             put(uri("size"), jnt(model.get0().getSize()));
             put(uri("quant"), uri(model.get0().getDetails().getQuantizationLevel()));
             put(uri("family"), uri(model.get0().getDetails().getFormat()));
+            put(uri("card"), rec(model.get1().getModelInfo(), MObjFactory.of()));
         }};
+
     }
 
-    public static OLLM ollm(final Tuple.Pair<OllamaModel, fURI> model, final fURI tid, final fURI vid) {
+    public static OLLM ollm(final Tuple.Triplet<OllamaModel, OllamaModelCard, fURI> model, final fURI tid, final fURI vid) {
         return new OLLM(model, tid, vid);
     }
 

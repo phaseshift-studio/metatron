@@ -20,19 +20,19 @@ package studio.phaseshift.metatron.lang.mtron.type.impl;
 
 import studio.phaseshift.metatron.algebra.PlusMonoid;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.lang.mtron.type.NoObj;
-import studio.phaseshift.metatron.lang.mtron.type.Obj;
-import studio.phaseshift.metatron.lang.mtron.type.Rec;
-import studio.phaseshift.metatron.lang.mtron.type.Rel;
+import studio.phaseshift.metatron.lang.mtron.type.*;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.lang.mtron.mtronInstSet.REC_TID;
+import static studio.phaseshift.metatron.lang.mtron.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MUri.uri;
 
 public class MRec extends MObj implements Rec {
-    
+
     public MRec(final Map<Obj, Obj> value, final fURI tid, final fURI vid) {
         super(cleanMap(value), tid, vid);
     }
@@ -56,6 +56,15 @@ public class MRec extends MObj implements Rec {
 
     public static Rec rec() {
         return new MRec(new LinkedHashMap<>(), REC_TID, fURI.NULL);
+    }
+
+    public static Rec rec(final Stream<Rel> stream) {
+        MRec objs = new MRec(stream.collect(Collectors.toMap(Rel::first, Rel::second, (a, b) -> a.append(b), LinkedHashMap::new)));
+        return objs;
+    }
+
+    public static <K,V> Rec rec(final Map<K, V> map, final ObjFactory factory) {
+        return rec(map.entrySet().stream().map(kv -> rel(kv.getKey() instanceof String && !((String) kv.getKey()).contains(" ") ? uri((String) kv.getKey()) : factory.create(kv.getKey()), factory.create(kv.getValue()))));
     }
 
     public static Rec fromUriKeyed(final Object key, final Obj value, final Object... kvs) {

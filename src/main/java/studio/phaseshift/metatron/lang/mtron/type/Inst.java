@@ -39,6 +39,7 @@ import static studio.phaseshift.metatron.lang.mtron.mtronInstSet.*;
 import static studio.phaseshift.metatron.lang.mtron.type.NoObj.noobj;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MRec.rec;
+import static studio.phaseshift.metatron.lang.mtron.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MType.T;
 import static studio.phaseshift.metatron.util.MTronException.mexcept;
 import static studio.phaseshift.metatron.util.Tuple.Triplet;
@@ -66,8 +67,7 @@ public interface Inst extends Call {
                         if (apiInst.tid().name().equals(SPLIT_TID.name()) && apiArg.isRec()) {
                             Rec sRecObj = rec(apiArg.recValue().entrySet()
                                     .stream()
-                                    .map(kv2 -> List.of(kv2.getKey().resolve(lhs), kv2.getValue().resolve(lhs)))
-                                    .collect(Collectors.toMap(kv2 -> kv2.get(0), kv2 -> kv2.get(1), Obj::append, LinkedHashMap::new)));
+                                    .map(kv2 -> rel(kv2.getKey().resolve(lhs), kv2.getValue().resolve(lhs))));
                             final Obj r = sRecObj.resolve(lhs);
                             if (r.rng().matches(userArg))
                                 resolvedArgs.add(r);
@@ -100,9 +100,8 @@ public interface Inst extends Call {
                                     .collect(Collectors.toMap(kv2 -> kv2.get(0), kv2 -> kv2.get(1), Obj::append, LinkedHashMap::new)));
                             return List.of(kv.getKey(), kv.getValue().isCall() ? kv.getValue().apply(this_rec_arg) : this_rec_arg);
                         } else*/
-                        return List.of(kv.getKey(), kv.getValue().isCall() ? kv.getValue().apply(this_arg) : this_arg);
-                    })
-                    .collect(Collectors.toMap(kv -> kv.get(0), kv -> kv.get(1), Obj::append, LinkedHashMap::new)));
+                        return rel(kv.getKey(), kv.getValue().isCall() ? kv.getValue().apply(this_arg) : this_arg);
+                    }));
         } else
             throw MTronException.of("inst args must be a lst or rec: %s", userInst);
     }
@@ -370,10 +369,9 @@ public interface Inst extends Call {
                             }).toList()) :
                     rec(inst.args().recValue().entrySet()
                             .stream()
-                            .map(kv -> List.of(kv.getKey().apply(lhs), blocking ?
+                            .map(kv -> rel(kv.getKey().apply(lhs), blocking ?
                                     kv.getValue() :
-                                    kv.getValue().apply(lhs)))
-                            .collect(Collectors.toMap(kv -> kv.get(0), kv -> kv.get(1), Obj::append, LinkedHashMap::new)));
+                                    kv.getValue().apply(lhs))));
             final Inst resolved = inst.args(cargs);
             //  LOG.trace("resolution ({{m}}%s {{g}}=>{{/g}} %s{{/m}}): %s => %s", currentResolution, resolved.resolution(), lhs, resolved);
             return resolved;
