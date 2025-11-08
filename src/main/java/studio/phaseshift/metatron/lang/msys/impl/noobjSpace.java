@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.space;
+package studio.phaseshift.metatron.lang.msys.impl;
 
 import studio.phaseshift.metatron.furi.Qs;
 import studio.phaseshift.metatron.furi.fURI;
@@ -29,11 +29,11 @@ import java.util.Set;
 import static studio.phaseshift.metatron.lang.mtron.mtronInstSet.NOOBJ_TID;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MType.T;
 
-public final class NullSpace implements Space, InstSet {
+public final class noobjSpace implements Space, InstSet {
 
-    private static final NullSpace INSTANCE = new NullSpace();
+    private static final noobjSpace INSTANCE = new noobjSpace();
 
-    private NullSpace() {
+    private noobjSpace() {
 
     }
 
@@ -102,7 +102,7 @@ public final class NullSpace implements Space, InstSet {
     }
 
     @Override
-    public NullSpace clone(final Object jvm, final fURI tid, final fURI vid) {
+    public noobjSpace clone(final Object jvm, final fURI tid, final fURI vid) {
         return this;
     }
 
@@ -123,7 +123,7 @@ public final class NullSpace implements Space, InstSet {
 
     @Override
     public boolean equals(final Object other) {
-        return other instanceof NullSpace;
+        return other instanceof noobjSpace;
     }
 
     @Override
@@ -132,7 +132,7 @@ public final class NullSpace implements Space, InstSet {
     }
 
     @Override
-    public NullSpace clone() {
+    public noobjSpace clone() {
         return this;
     }
 

@@ -21,13 +21,12 @@ package studio.phaseshift.metatron.lang.mgrph;
 import org.apache.tinkerpop.gremlin.structure.Graph;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.mtron.type.Obj;
-import studio.phaseshift.metatron.space.MSpace;
+import studio.phaseshift.metatron.lang.msys.MSpace;
 
 import java.util.Map;
 
 import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.lang.mgrph.grphInstSet.MGRPH_TID;
-import static studio.phaseshift.metatron.lang.mtron.mtronInstSet.MTRON_SPACE_TID;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)

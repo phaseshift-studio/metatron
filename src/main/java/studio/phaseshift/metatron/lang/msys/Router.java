@@ -23,7 +23,7 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.msys.impl.net.MServer;
 import studio.phaseshift.metatron.lang.mtron.type.Obj;
 import studio.phaseshift.metatron.lang.mtron.type.Rec;
-import studio.phaseshift.metatron.space.stack.StackSpace;
+import studio.phaseshift.metatron.lang.msys.impl.stackSpace;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.util.MTronException;
 
@@ -36,7 +36,7 @@ import static studio.phaseshift.metatron.lang.mtron.type.impl.MUri.uri;
 public interface Router extends Obj, Space, Closeable {
 
     String SPACE = "space";
-    ThreadLocal<StackSpace> THREAD_STACK = ThreadLocal.withInitial(() -> new StackSpace(f("+/#")));
+    ThreadLocal<stackSpace> THREAD_STACK = ThreadLocal.withInitial(() -> new stackSpace(f("+/#")));
 
     static boolean loaded() {
         return null != BootLoader.ROUTER;
@@ -66,7 +66,7 @@ public interface Router extends Obj, Space, Closeable {
         return Router.loaded() ? BootLoader.ROUTER.write(obj) : noobj();
     }
 
-    static StackSpace stack() {
+    static stackSpace stack() {
         return THREAD_STACK.get();
     }
 

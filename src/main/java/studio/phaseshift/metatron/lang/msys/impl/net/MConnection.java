@@ -20,7 +20,6 @@ package studio.phaseshift.metatron.lang.msys.impl.net;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.mtron.type.Obj;
-import studio.phaseshift.metatron.lang.msys.impl.FutureObj;
 
 import java.io.Closeable;
 

@@ -16,11 +16,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.lang.msys.impl;
+package studio.phaseshift.metatron.lang.msys.impl.net;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.mtron.type.impl.MObjs;
-import studio.phaseshift.metatron.lang.msys.impl.net.MConnection;
 
 import java.util.concurrent.ConcurrentHashMap;
 

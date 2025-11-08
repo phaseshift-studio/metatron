@@ -31,7 +31,7 @@ import studio.phaseshift.metatron.lang.msys.Space;
 import studio.phaseshift.metatron.lang.mtron.type.NoObj;
 import studio.phaseshift.metatron.lang.mtron.type.Obj;
 import studio.phaseshift.metatron.lang.mweb.JSONTranslator;
-import studio.phaseshift.metatron.space.MSpace;
+import studio.phaseshift.metatron.lang.msys.MSpace;
 import studio.phaseshift.metatron.ui.*;
 
 import java.nio.charset.StandardCharsets;

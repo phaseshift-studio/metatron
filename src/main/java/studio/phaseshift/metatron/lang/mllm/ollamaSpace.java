@@ -19,7 +19,6 @@
 package studio.phaseshift.metatron.lang.mllm;
 
 import dev.langchain4j.model.ollama.OllamaModel;
-import dev.langchain4j.model.ollama.OllamaModelCard;
 import dev.langchain4j.model.ollama.OllamaModels;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.mkv.kvSpace;
@@ -31,7 +30,7 @@ import studio.phaseshift.metatron.lang.mtron.type.Obj;
 import studio.phaseshift.metatron.lang.mtron.type.Rec;
 import studio.phaseshift.metatron.lang.mtron.type.Type;
 import studio.phaseshift.metatron.lang.mtron.type.impl.MUri;
-import studio.phaseshift.metatron.space.MSpace;
+import studio.phaseshift.metatron.lang.msys.MSpace;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
 import studio.phaseshift.metatron.util.Tuple;

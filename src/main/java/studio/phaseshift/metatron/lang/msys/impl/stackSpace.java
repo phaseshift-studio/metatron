@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.space.stack;
+package studio.phaseshift.metatron.lang.msys.impl;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.mkv.kvSpace;
@@ -25,7 +25,7 @@ import studio.phaseshift.metatron.lang.msys.Space;
 import studio.phaseshift.metatron.lang.msys.sysInstSet;
 import studio.phaseshift.metatron.lang.mtron.type.Obj;
 import studio.phaseshift.metatron.lang.mtron.type.Poly;
-import studio.phaseshift.metatron.space.MSpace;
+import studio.phaseshift.metatron.lang.msys.MSpace;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
 import studio.phaseshift.metatron.util.MTronException;
@@ -35,7 +35,7 @@ import java.util.Map;
 
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MUri.uri;
 
-public class StackSpace extends MSpace<LinkedList<kvSpace>> {
+public class stackSpace extends MSpace<LinkedList<kvSpace>> {
 
     public static final fURI STACK_TID = sysInstSet.SPACE_TID.extend("stack");
     public static final String ARG_PREFIX = "";
@@ -43,7 +43,7 @@ public class StackSpace extends MSpace<LinkedList<kvSpace>> {
     private final GraphittyLogger LOG = Graphitty.log(this);
     private final Space root;
 
-    public StackSpace(final fURI pattern) {
+    public stackSpace(final fURI pattern) {
         super(new LinkedList<>(), Map.of(uri("pattern"), uri(pattern)), pattern, STACK_TID, fURI.NULL);
         this.root = kvSpace.of(this.pattern, fURI.NULL);
     }

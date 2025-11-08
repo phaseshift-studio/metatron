@@ -23,12 +23,11 @@ import studio.phaseshift.metatron.furi.Qs;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.msys.Router;
 import studio.phaseshift.metatron.lang.msys.Space;
+import studio.phaseshift.metatron.lang.msys.impl.net.FutureObj;
 import studio.phaseshift.metatron.lang.msys.impl.net.MServer;
 import studio.phaseshift.metatron.lang.msys.sysInstSet;
 import studio.phaseshift.metatron.lang.mtron.type.Obj;
-import studio.phaseshift.metatron.space.MSpace;
-import studio.phaseshift.metatron.space.NullSpace;
-import studio.phaseshift.metatron.space.stack.StackSpace;
+import studio.phaseshift.metatron.lang.msys.MSpace;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
 import studio.phaseshift.metatron.util.MTronException;
@@ -53,7 +52,7 @@ public class MRouter extends MSpace<MServer> implements Router {
     private fURI vid;
 
     public MRouter(final fURI host, final fURI vid) {
-        super(new MServer(host), new ConcurrentHashMap<>(Map.of(uri(SPACE), rec(new ConcurrentHashMap<>(Map.of(uri("+/#"), new StackSpace(f("+/#"))))))), f("#"), sysInstSet.MSYS_TID.extend("router"), vid);
+        super(new MServer(host), new ConcurrentHashMap<>(Map.of(uri(SPACE), rec(new ConcurrentHashMap<>(Map.of(uri("+/#"), new stackSpace(f("+/#"))))))), f("#"), sysInstSet.MSYS_TID.extend("router"), vid);
         this.vid = vid;
         LOG.info("local router {{b}}%s{{/b}}", this);
     }
@@ -125,7 +124,7 @@ public class MRouter extends MSpace<MServer> implements Router {
 
     public <S extends Space> S getSpace(final fURI match) {
         if (match.matches(fURI.NOOBJ))
-            return NullSpace.single();
+            return noobjSpace.single();
         //     final fURI mvid = this.smallToBigRewrites.getOrDefault(vid,vid);
         final Optional<S> space = this.spaces().jvm().values().stream()
                 .map(Obj::<Space>as)
@@ -141,7 +140,7 @@ public class MRouter extends MSpace<MServer> implements Router {
         else if (!BOOTING)
             throw MTronException.of("no structure supports pattern %s", match.toUri(true));
         else
-            return NullSpace.single();
+            return noobjSpace.single();
     }
 
     @Override

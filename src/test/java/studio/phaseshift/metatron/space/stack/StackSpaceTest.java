@@ -19,7 +19,7 @@
 package studio.phaseshift.metatron.space.stack;
 
 import org.junit.jupiter.api.BeforeAll;
-import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.lang.msys.impl.stackSpace;
 import studio.phaseshift.metatron.space.SpaceTest;
 
 import static studio.phaseshift.metatron.furi.fURI.f;
@@ -30,6 +30,6 @@ import static studio.phaseshift.metatron.furi.fURI.f;
 public class StackSpaceTest extends SpaceTest {
     @BeforeAll
     public static void setup() {
-        SPACE = () -> new StackSpace(f("/t/#"));
+        SPACE = () -> new stackSpace(f("/t/#"));
     }
 }

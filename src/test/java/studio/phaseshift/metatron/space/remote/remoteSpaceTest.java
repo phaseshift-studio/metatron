@@ -20,7 +20,7 @@ package studio.phaseshift.metatron.space.remote;
 
 import org.junit.jupiter.api.Test;
 import studio.phaseshift.metatron.MetatronTest;
-import studio.phaseshift.metatron.lang.msys.RemoteSpace;
+import studio.phaseshift.metatron.lang.msys.impl.remoteSpace;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static studio.phaseshift.metatron.furi.fURI.f;
@@ -29,7 +29,7 @@ import static studio.phaseshift.metatron.lang.mtron.type.impl.MUri.uri;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class RemoteSpaceTest extends MetatronTest {
+public class remoteSpaceTest extends MetatronTest {
 
     /* @AfterAll
     public static void end() {
@@ -38,7 +38,7 @@ public class RemoteSpaceTest extends MetatronTest {
 
     @Test
     public void testRemote() {
-        RemoteSpace remote = new RemoteSpace(f("ws://localhost:8887/"),f("/usr/#"), f("/mnt/ws/localhost/8887/usr"));
+        remoteSpace remote = new remoteSpace(f("ws://localhost:8887/"),f("/usr/#"), f("/mnt/ws/localhost/8887/usr"));
         /*assertEquals(str("hello world"), start_(str("hello world")).to_(uri("/usr/a")).apply());
         //final Obj obj = str("hello world").vid(f("ws://chibi.local:8887/usr/a"));
         final Obj a = remote.read("ws://localhost:8887/usr/a");

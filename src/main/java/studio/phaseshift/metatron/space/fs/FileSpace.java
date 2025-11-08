@@ -23,7 +23,7 @@ import studio.phaseshift.metatron.lang.msys.Space;
 import studio.phaseshift.metatron.lang.mtron.type.Obj;
 import studio.phaseshift.metatron.lang.mtron.type.Str;
 import studio.phaseshift.metatron.lang.mtron.type.impl.MRec;
-import studio.phaseshift.metatron.space.MSpace;
+import studio.phaseshift.metatron.lang.msys.MSpace;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.io.FileWriter;
