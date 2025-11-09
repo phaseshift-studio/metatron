@@ -1,6 +1,8 @@
 package studio.phaseshift.metatron.lang.msys;
 
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.lang.msys.impl.remoteSpace;
+import studio.phaseshift.metatron.lang.mtron.mtronInstSet;
 import studio.phaseshift.metatron.lang.mtron.type.Inst;
 import studio.phaseshift.metatron.lang.mtron.type.Type;
 import studio.phaseshift.metatron.lang.mtron.type.impl.MInstSet;
@@ -10,6 +12,8 @@ import java.util.List;
 import java.util.Set;
 
 import static studio.phaseshift.metatron.furi.fURI.f;
+import static studio.phaseshift.metatron.lang.msys.impl.remoteSpace.REMOTE_TID;
+import static studio.phaseshift.metatron.lang.mtron.type.impl.MInst.instB;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MType.T;
 
 /*
@@ -29,9 +33,13 @@ public class sysInstSet extends MInstSet {
         return new sysInstSet(fURI.NULL);
     }
 
+    public static sysInstSet create(final fURI vid) {
+        return new sysInstSet(vid);
+    }
+
     @Override
     public Set<Type> types() {
-        return Set.of(T(ROUTER_TID), T(SPACE_TID));
+        return Set.of(T(ROUTER_TID), T(SPACE_TID), remoteSpace.REMOTE_TYPE);
     }
 
     @Override

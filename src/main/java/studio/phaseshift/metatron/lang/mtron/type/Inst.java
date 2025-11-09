@@ -60,19 +60,17 @@ public interface Inst extends Call {
                     resolvedArgs.add(apiArg);
                 } else if (apiArg.isCall()) {
                     final Inst firstInst = apiArg.<Call>as().insts().get(0);
-                    if (!firstInst.hasDomOrRng() && firstInst.tid().basePath().equals(FROM_TID)) { // from() is a side-effect and the type can't be known unless explcitly specified (need a way to denote side-effect insts).
+                    if (!firstInst.hasDomAndRng() && (firstInst.tid().basePath().equals(FROM_TID))) { // from() is a side-effect and the type can't be known unless explcitly specified (need a way to denote side-effect insts).
                         resolvedArgs.add(apiArg.resolve(lhs));
-                    } else {
-                        // TODO: is this necessary and if so, do the same for lst
-                        if (apiInst.tid().name().equals(SPLIT_TID.name()) && apiArg.isRec()) {
-                            Rec sRecObj = rec(apiArg.recValue().entrySet()
-                                    .stream()
-                                    .map(kv2 -> rel(kv2.getKey().resolve(lhs), kv2.getValue().resolve(lhs))));
-                            final Obj r = sRecObj.resolve(lhs);
-                            if (r.rng().matches(userArg))
-                                resolvedArgs.add(r);
-                            else return null;
-                        }
+                    } /*else if (apiInst.tid().name().equals(SPLIT_TID.name()) && apiArg.isRec()) {
+                        Rec sRecObj = rec(apiArg.recValue().entrySet()
+                                .stream()
+                                .map(kv2 -> rel(kv2.getKey().resolve(lhs), kv2.getValue().resolve(lhs))));
+                        final Obj r = sRecObj.resolve(lhs);
+                        if (r.rng().matches(userArg))
+                            resolvedArgs.add(r);
+                        else return null;
+                    }*/ else {
                         final Obj r = apiArg.resolve(lhs);
                         if (r.rng().matches(userArg)) // && userArg.rng().c().within(apiArg.c()))
                             resolvedArgs.add(r);
@@ -91,15 +89,7 @@ public interface Inst extends Call {
             return rec(userInst.args().recValue().entrySet()
                     .stream()
                     .map(kv -> {
-                        // return List.of(kv.getKey(), kv.getValue().resolve(this.arg(kv.getKey().uriValue(), counter.getAndIncrement())));
                         Obj this_arg = apiInst.arg(kv.getKey().uriValue(), counter.getAndIncrement());
-                        /*if (source.tid().basePath().equals(SPLIT_TID) && this_arg.isRec()) {
-                            final Rec this_rec_arg = rec(this_arg.recValue().entrySet()
-                                    .stream()
-                                    .map(kv2 -> List.of(kv2.getKey().resolve(lhs), kv2.getValue().resolve(lhs)))
-                                    .collect(Collectors.toMap(kv2 -> kv2.get(0), kv2 -> kv2.get(1), Obj::append, LinkedHashMap::new)));
-                            return List.of(kv.getKey(), kv.getValue().isCall() ? kv.getValue().apply(this_rec_arg) : this_rec_arg);
-                        } else*/
                         return rel(kv.getKey(), kv.getValue().isCall() ? kv.getValue().apply(this_arg) : this_arg);
                     }));
         } else
@@ -200,7 +190,8 @@ public interface Inst extends Call {
                     .map(Obj::<Inst>as)
                     //.peek(i -> LOG.warn("%s ==?==> %s [%s]", this, i, this.args()))
                     .filter(i -> (i.args().isEmpty() && this.arg(0).isNoObj()) || i.args().isRec() || i.args().isRec() || i.args().count() == this.args().count())
-                    .map(i -> this.hasDomOrRng() ? i.tid(this.tid()) : i)
+                    .map(i -> this.hasDom() ? i.dom(this.dom()) : i)
+                    .map(i -> this.hasRng() ? i.rng(this.rng()) : i)
                     .map(i -> Helpers.bindGenerics(lhs, i, this))
                     .filter(i -> lhs.matches(i.dom()))
                     .map(i -> {
@@ -307,6 +298,10 @@ public interface Inst extends Call {
 
     default boolean isInitial() {
         return this.dom().c().isZero();// || this.dom().tid().coefficientValue().isQuestion();
+    }
+
+    default boolean isFilter() {
+        return this.dom().c().gte(cInt.ONE()) && this.rng().c().isMaybe() && this.dom().baseType().equals(this.rng().baseType());
     }
 
     default boolean isTerminal() {

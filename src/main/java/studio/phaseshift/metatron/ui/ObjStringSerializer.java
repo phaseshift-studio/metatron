@@ -120,7 +120,7 @@ public class ObjStringSerializer implements ObjSerializer<String> {
             /// ///////////////////////////////////////////////////////////////
             /// ///////////////////////////////////////////////////////////////
             else if (obj instanceof final Objs objs) {
-                generateTID(sb, obj.tid(), true).append("{{g}}{").append(this.b.palette.valueC());
+                generateTID(sb, obj.tid(), true).append("{{g}}{{{y}}");
                 boolean found = false;
                 for (final Obj o : objs.jvm()) {
                     found = true;

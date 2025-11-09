@@ -107,16 +107,16 @@ public class BootLoader implements Obj {
                     Graphitty.sillyPrint("ring-oriented computing", true, true),
                     T(REC_TID),
                     rec(uri("k1"), uri("v1"), uri("..."), uri("..."), uri("kn"), uri("vn")),
-                    rel(uri("log"), objs(uri("INFO"), uri("DEBUG"), uri("WARN"), uri("ERROR"), uri("TRACE"))),
+                    rel(uri("log"), objs(uri("info"), uri("debug"), uri("warn"), uri("error"), uri("trace"))),
                     rel(uri("host"), uri("ws://localhost:8888")),
                     rel(uri("nodes"), lst(uri("ws://a.local:8888"), uri("ws://b.local:8888"), uri("..."))),
                     rel(uri("mode"), objs(uri("server"), uri("console"))),
                     rel(uri("boot"), uri("./boot.mtron")),
-                    "metatron '[mode=>console,log=>INFO,host=>ws://localhost:8888,nodes=>[ws://127.0.0.1:8887]]'");
+                    "metatron '[mode=>console,log=>info,host=>ws://localhost:8888,nodes=>[ws://127.0.0.1:8887]]'");
             System.exit(0);
         } else {
             Rec options = args.length > 0 ? mtronParser.parse(args[0]).as() : rec();
-            Log.setSLF4J(options.has(uri("log")) ? options.at(uri("log")).uriValue().toString() : "TRACE");
+            Log.setSLF4J(options.has(uri("log")) ? options.at(uri("log")).uriValue().toString() : "trace");
             LOG.debug("user options: %s", options);
             GLOBAL = options;
             BootLoader.load(options);
@@ -139,7 +139,7 @@ public class BootLoader implements Obj {
             kvInstSet.create();
             kvSpace.of(f("/mnt/#"), fURI.NULL).vid(f("/mnt"));
             kvSpace.of(f("/sys/#"), fURI.NULL).vid(f("/mnt/sys"));
-            mtronInstSet.create(f("/sys/lang/m"));
+            mtronInstSet.create(f("/mnt/lang/m"));
             Router.writeToSpace(Router.global());
             ROUTER.start();
             //  Router.writeToSpace(new mtronInstSet(fURI.of("/mnt/lang/m")));
@@ -165,8 +165,8 @@ public class BootLoader implements Obj {
             //new TP3Translator(f("/tp")).translate(TinkerFactory.createModern());
             // new MqttSpace(f("zigbee2mqtt/#?broker=mqtt://192.168.66.2:1883&prefix=/mqtt"), f("/mnt/zigbee2mqtt")));
             if (options.at("mode").equals(uri("console"))) {
-                Router.global().addSpace(kvSpace.of(f("/tp/#"), f("/mnt/tp")));
-                TP3Translator.Builder.of(f("/tp/g")).create().translate(TinkerFactory.createModern());
+                Router.global().addSpace(kvSpace.of(f("/g/#"), f("/mnt/space/tp")));
+                TP3Translator.Builder.of(f("/g")).create().translate(TinkerFactory.createModern());
                 //     Router.writeToSpace(RemoteSpace.open(f("ws://chibi.local:8888"), f("/shared/#"), f("/mnt/shared")));
             } else if (options.at("mode").equals(uri("server")))
                 Router.writeToSpace(new kvSpace(fURI.of("/shared/#"), fURI.of("/mnt/shared")));

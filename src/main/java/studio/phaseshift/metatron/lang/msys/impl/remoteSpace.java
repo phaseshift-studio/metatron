@@ -18,15 +18,17 @@
 
 package studio.phaseshift.metatron.lang.msys.impl;
 
+import dev.langchain4j.model.ollama.OllamaModels;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.lang.mllm.ollamaSpace;
 import studio.phaseshift.metatron.lang.msys.MSpace;
 import studio.phaseshift.metatron.lang.msys.Router;
+import studio.phaseshift.metatron.lang.msys.Space;
 import studio.phaseshift.metatron.lang.msys.impl.net.FutureObj;
 import studio.phaseshift.metatron.lang.msys.impl.net.MClient;
 import studio.phaseshift.metatron.lang.msys.impl.net.MConnection;
-import studio.phaseshift.metatron.lang.mtron.type.Code;
-import studio.phaseshift.metatron.lang.mtron.type.Inst;
-import studio.phaseshift.metatron.lang.mtron.type.Obj;
+import studio.phaseshift.metatron.lang.mtron.mtronInstSet;
+import studio.phaseshift.metatron.lang.mtron.type.*;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
 import studio.phaseshift.metatron.util.MTronException;
@@ -34,9 +36,15 @@ import studio.phaseshift.metatron.util.MTronException;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-import static studio.phaseshift.metatron.lang.mtron.mtronFluent.StartLess.from_;
-import static studio.phaseshift.metatron.lang.mtron.mtronFluent.StartLess.start_;
-import static studio.phaseshift.metatron.lang.mtron.mtronInstSet.MTRON_TID;
+import static studio.phaseshift.metatron.furi.fURI.ALL;
+import static studio.phaseshift.metatron.lang.mllm.llmInstSet.OLLAMA_TID;
+import static studio.phaseshift.metatron.lang.msys.sysInstSet.MSYS_TID;
+import static studio.phaseshift.metatron.lang.mtron.mtronFluent.StartLess.*;
+import static studio.phaseshift.metatron.lang.mtron.mtronInstSet.*;
+import static studio.phaseshift.metatron.lang.mtron.mtronInstSet.URI_TID;
+import static studio.phaseshift.metatron.lang.mtron.type.impl.MInst.instC;
+import static studio.phaseshift.metatron.lang.mtron.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.lang.mtron.type.impl.MType.T;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MUri.uri;
 
 /*
@@ -45,11 +53,19 @@ import static studio.phaseshift.metatron.lang.mtron.type.impl.MUri.uri;
 public class remoteSpace extends MSpace<MConnection> {
 
     public static final int RETRY_SECONDS = 5;
-    public static final fURI REMOTE_TID = MTRON_TID.extend("space").extend("remote");
+    public static final fURI REMOTE_TID = MSYS_TID.extend("space").extend("remote");
     private final GraphittyLogger LOG;
 
+    public static final Type REMOTE_TYPE = T(REMOTE_TID, null, instC(mtronInstSet.INST_TID.dom(ALL.maybe()).rng(REMOTE_TID), lst(T(REC_TID, isa_(rec(uri(PATTERN), T(URI_TID), uri(HOST), T(URI_TID))))), (lhs, inst) -> {
+        final fURI pattern = inst.arg(0).<Rec>as().at(PATTERN).uriValue();
+        final fURI host = inst.arg(0).<Rec>as().at(HOST).uriValue();
+        final Space remote = new remoteSpace(host,pattern,inst.arg(0).vid());
+        Router.global().addSpace(remote);
+        return remote;
+    }));
+    
     public remoteSpace(final fURI authority, final fURI pattern, final fURI vid) {
-        super(MClient.of(authority), Map.of(uri("pattern"), uri(pattern)), pattern, REMOTE_TID, vid);
+        super(MClient.of(authority), Map.of(uri(PATTERN), uri(pattern)), pattern, REMOTE_TID, vid);
         LOG = Graphitty.log(this);
     }
 

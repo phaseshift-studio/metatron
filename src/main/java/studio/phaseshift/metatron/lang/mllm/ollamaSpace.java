@@ -95,6 +95,12 @@ public class ollamaSpace extends MSpace<OllamaModels> {
 
     @Override
     public Obj write(final fURI vid, final Obj obj) {
+        if (obj.isNoObj()) {
+            this.internal.read(vid).stream().filter(o -> o instanceof OLLM).map(Obj::<OLLM>as).forEach(o -> {
+                LOG.info("deleting ollama model: %s", o);
+                //this.sjvm().deleteModel(o.name());
+            });
+        }
         return this.internal.write(vid, obj);
     }
 }

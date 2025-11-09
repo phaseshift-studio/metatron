@@ -34,6 +34,8 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import static studio.phaseshift.metatron.lang.mllm.llmInstSet.MLLM_TID;
+import static studio.phaseshift.metatron.lang.msys.Space.HOST;
+import static studio.phaseshift.metatron.lang.msys.Space.NAME;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MUri.uri;
@@ -51,8 +53,8 @@ public class OLLM extends MRec implements LLM {
 
     private static Map<Obj, Obj> modelToRec(final Tuple.Triplet<OllamaModel, OllamaModelCard, fURI> model) {
         return new LinkedHashMap<>() {{
-            put(uri("name"), uri(model.get0().getName()));
-            put(uri("host"), uri(model.get2()));
+            put(uri(NAME), uri(model.get0().getName()));
+            put(uri(HOST), uri(model.get2()));
             put(uri("size"), jnt(model.get0().getSize()));
             put(uri("quant"), uri(model.get0().getDetails().getQuantizationLevel()));
             put(uri("family"), uri(model.get0().getDetails().getFormat()));
@@ -63,6 +65,10 @@ public class OLLM extends MRec implements LLM {
 
     public static OLLM ollm(final Tuple.Triplet<OllamaModel, OllamaModelCard, fURI> model, final fURI tid, final fURI vid) {
         return new OLLM(model, tid, vid);
+    }
+
+    public String name() {
+        return this.at(NAME).strValue();
     }
 
     public OLLM clone() {

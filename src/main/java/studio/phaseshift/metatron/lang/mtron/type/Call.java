@@ -1,6 +1,6 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
- * Copyright (C) 2025- PhaseShift Studio, LLC 
+ * Copyright (C) 2025- PhaseShift Studio, LLC
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -37,7 +37,19 @@ import static studio.phaseshift.metatron.lang.mtron.mtronInstSet.ID_TID;
 public interface Call extends Obj, Ring<Call> {
 
     default boolean hasDomOrRng() {
-        return this.tid().hasDom() || this.tid().hasRng();
+        return this.hasDom() || this.hasRng();
+    }
+
+    default boolean hasDomAndRng() {
+        return this.hasDom() && this.hasRng();
+    }
+
+    default boolean hasDom() {
+        return this.tid().hasDom();
+    }
+
+    default boolean hasRng() {
+        return this.tid().hasRng();
     }
 
     static Call from(final List<Inst> insts) {

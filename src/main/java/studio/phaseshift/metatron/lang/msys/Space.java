@@ -47,6 +47,7 @@ public interface Space extends Rec, Closeable {
 
     public static final String PATTERN = "pattern";
     public static final String HOST = "host";
+    public static final String NAME = "name";
 
     Qs qs();
 

@@ -24,9 +24,7 @@ import studio.phaseshift.metatron.lang.mgrph.mtron.REdge;
 import studio.phaseshift.metatron.lang.mgrph.mtron.RElement;
 import studio.phaseshift.metatron.lang.mgrph.mtron.RVertex;
 import studio.phaseshift.metatron.lang.msys.Router;
-import studio.phaseshift.metatron.lang.mtron.type.Inst;
-import studio.phaseshift.metatron.lang.mtron.type.Obj;
-import studio.phaseshift.metatron.lang.mtron.type.Type;
+import studio.phaseshift.metatron.lang.mtron.type.*;
 import studio.phaseshift.metatron.lang.mtron.type.impl.MInstSet;
 
 import java.util.HashSet;
@@ -37,7 +35,9 @@ import java.util.Set;
 import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.lang.mgrph.mtron.TP3Translator.LABEL;
+import static studio.phaseshift.metatron.lang.mgrph.mtron.TP3Translator.PROPS;
 import static studio.phaseshift.metatron.lang.mtron.mtronInstSet.*;
+import static studio.phaseshift.metatron.lang.mtron.type.NoObj.noobj;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MObjs.objs;
@@ -69,6 +69,7 @@ public class grphInstSet extends MInstSet {
     public static final fURI VALUES_TID = INST_TID.extend("values");
     public static final fURI PROPERTIES_TID = INST_TID.extend("properties");
     public static final fURI LABEL_TID = INST_TID.extend("label");
+    public static final fURI HAS_TID = INST_TID.extend("has");
 
     public grphInstSet(final fURI vid) {
         super(MGRPH_TID, vid);
@@ -115,13 +116,20 @@ public class grphInstSet extends MInstSet {
     public Set<Inst> insts() {
         return new LinkedHashSet<>(List.of(
                 instC(V_TID.dom(NOOBJ_TID.zero()).rng(VERTEX_TID.maybeSome()), lst(T(URI_TID.maybeSome())), (lhs, inst) -> objs(inst.arg(0).stream().flatMap(u -> Router.readFromSpace(u.uriValue()).stream()))),
+                instC(BOTH_TID.dom(VERTEX_TID).rng(VERTEX_TID.maybeSome()), lst(T(URI_TID.maybeSome())), (lhs, inst) -> objs(lhs.<RVertex>as().vertices(Direction.BOTH, inst.args().as()).map(Obj::as))),
+                instC(BOTHE_TID.dom(VERTEX_TID).rng(EDGE_TID.maybeSome()), lst(T(URI_TID.maybeSome())), (lhs, inst) -> objs(lhs.<RVertex>as().edges(Direction.BOTH, inst.args().as()).map(Obj::as))),
                 instC(OUT_TID.dom(VERTEX_TID).rng(VERTEX_TID.maybeSome()), lst(T(URI_TID.maybeSome())), (lhs, inst) -> objs(lhs.<RVertex>as().vertices(Direction.OUT, inst.args().as()).map(Obj::as))),
                 instC(OUTE_TID.dom(VERTEX_TID).rng(EDGE_TID.maybeSome()), lst(T(URI_TID.maybeSome())), (lhs, inst) -> objs(lhs.<RVertex>as().edges(Direction.OUT, inst.args().as()).map(Obj::as))),
                 instC(IN_TID.dom(VERTEX_TID).rng(VERTEX_TID.maybeSome()), lst(T(URI_TID.maybeSome())), (lhs, inst) -> objs(lhs.<RVertex>as().vertices(Direction.IN, inst.args().as()).map(Obj::as))),
                 instC(INE_TID.dom(VERTEX_TID).rng(EDGE_TID.maybeSome()), lst(T(URI_TID.maybeSome())), (lhs, inst) -> objs(lhs.<RVertex>as().edges(Direction.IN, inst.args().as()).map(Obj::as))),
                 instC(INV_TID.dom(EDGE_TID).rng(VERTEX_TID), lst(), (lhs, inst) -> objs(lhs.<REdge>as().vertices(Direction.IN).map(Obj::as))),
                 instC(OUTV_TID.dom(EDGE_TID).rng(VERTEX_TID), lst(), (lhs, inst) -> objs(lhs.<REdge>as().vertices(Direction.OUT).map(Obj::as))),
+                instC(BOTHV_TID.dom(EDGE_TID).rng(VERTEX_TID.c("2")), lst(), (lhs, inst) -> objs(lhs.<REdge>as().vertices(Direction.BOTH).map(Obj::as))),
                 instC(LABEL_TID.dom(REC_TID).rng(URI_TID), lst(), (lhs, inst) -> lhs.<RElement>as().at(LABEL)),
+                instC(HAS_TID.dom(VERTEX_TID).rng(VERTEX_TID.maybe()), lst(T(URI_TID), T(BOOL_TID)), (lhs, inst) -> inst.arg(1).apply(lhs.<RElement>as().<Rec>at(PROPS).at(inst.arg(0))).<Bool>as().boolValue() ? lhs : noobj()),
+                instC(HAS_TID.dom(EDGE_TID).rng(EDGE_TID.maybe()), lst(T(URI_TID), T(BOOL_TID)), (lhs, inst) -> inst.arg(1).apply(lhs.<RElement>as().<Rec>at(PROPS).at(inst.arg(0))).<Bool>as().boolValue() ? lhs : noobj()),
+                instC(HAS_TID.dom(VERTEX_TID).rng(VERTEX_TID.maybe()), lst(T(URI_TID)), (lhs, inst) -> lhs.<RElement>as().<Rec>at(PROPS).has(inst.arg(0)) ? lhs : noobj()),
+                instC(HAS_TID.dom(EDGE_TID).rng(EDGE_TID.maybe()), lst(T(URI_TID)), (lhs, inst) -> lhs.<RElement>as().<Rec>at(PROPS).has(inst.arg(0)) ? lhs : noobj()),
                 // TODO: why does values() and properties() require streaming objs when the doms are unit
                 instC(VALUES_TID.dom(REC_TID).rng(ALL.maybeSome()), lst(T(URI_TID.maybeSome())), (lhs, inst) -> objs(lhs.stream().flatMap(r -> r.<RElement>as().values(inst.arg(0))).map(Obj::as))),
                 instC(PROPERTIES_TID.dom(REC_TID).rng(REL_TID.maybeSome()), lst(T(URI_TID.maybeSome())), (lhs, inst) -> objs(lhs.stream().flatMap(r -> r.<RElement>as().properties(inst.arg(0))).map(Obj::as)))));

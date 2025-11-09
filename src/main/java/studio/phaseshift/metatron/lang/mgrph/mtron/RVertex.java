@@ -9,6 +9,8 @@ import studio.phaseshift.metatron.lang.mtron.type.Rel;
 
 import java.util.stream.Stream;
 
+import static studio.phaseshift.metatron.lang.mgrph.mtron.TP3Translator.LABEL;
+
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
@@ -31,11 +33,12 @@ public class RVertex extends RElement {
     }
 
     public Stream<REdge> edges(final Direction direction, final Lst labels) {
+        final boolean emptyLabels = labels.elements().noneMatch(e -> !e.isNoObj());
         return this.at(direction.name()).elements()
                 .map(r -> ((Rel) r).second())
                 .flatMap(Obj::stream)
-                .flatMap(o -> o.apply(this).stream())
-                // .flatMap(o -> labels.stream().flatMap(label -> o.<Rec>as().at(label).stream()))
+                .flatMap(o -> o.apply(this).<Rec>as().stream())
+                .filter(o -> emptyLabels || labels.elements().anyMatch(u -> o.<Rec>as().at(LABEL).uriValue().matches(u.uriValue())))
                 .map(r -> new REdge(r.as()));
     }
 

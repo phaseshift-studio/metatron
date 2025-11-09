@@ -71,8 +71,8 @@ public class llmInstSet extends MInstSet {
         return new LinkedHashSet<>(List.of(
                 instC(INST_TID.extend("chat").dom(OLLM_TID).rng(STR_TID.maybeSome()), lst(T(STR_TID)),
                         (lhs, inst) -> str(OllamaChatModel.builder()
-                                .baseUrl(lhs.<Rec>as().at("host").uriValue().toString())
-                                .modelName(lhs.<Rec>as().at("name").uriValue().toString())
+                                .baseUrl(lhs.<Rec>as().at(HOST).uriValue().toString())
+                                .modelName(lhs.<Rec>as().at(NAME).uriValue().toString())
                                 .build()
                                 .chat(inst.arg(0).strValue())))));
     }
