@@ -24,6 +24,7 @@ public class sysInstSet extends MInstSet {
     public static final fURI MSYS_TID = f("/sys");
     public static final fURI ROUTER_TID = MSYS_TID.extend("router");
     public static final fURI SPACE_TID = MSYS_TID.extend("space");
+    public static final fURI Q_TID = SPACE_TID.extend("q");
 
     public sysInstSet(final fURI vid) {
         super(MSYS_TID, vid);

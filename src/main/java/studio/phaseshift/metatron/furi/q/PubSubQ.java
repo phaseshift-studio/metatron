@@ -19,21 +19,34 @@
 package studio.phaseshift.metatron.furi.q;
 
 import studio.phaseshift.metatron.furi.Q;
+import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.mach.type.Machine;
 import studio.phaseshift.metatron.lang.mach.type.impl.MMachine;
 import studio.phaseshift.metatron.lang.msys.Space;
+import studio.phaseshift.metatron.lang.mtron.mtronInstSet;
 import studio.phaseshift.metatron.lang.mtron.type.Call;
 import studio.phaseshift.metatron.lang.mtron.type.Obj;
+import studio.phaseshift.metatron.lang.mtron.type.Type;
 import studio.phaseshift.metatron.lang.mtron.type.impl.MObj;
 import studio.phaseshift.metatron.lang.mtron.type.impl.MObjs;
 
 import java.util.LinkedList;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Queue;
 
 import static studio.phaseshift.metatron.furi.Qs.QS_TID;
+import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.furi.fURI.f;
+import static studio.phaseshift.metatron.lang.msys.Space.PATTERN;
+import static studio.phaseshift.metatron.lang.mtron.mtronFluent.StartLess.isa_;
+import static studio.phaseshift.metatron.lang.mtron.mtronInstSet.*;
+import static studio.phaseshift.metatron.lang.mtron.mtronInstSet.INST_TID;
+import static studio.phaseshift.metatron.lang.mtron.type.impl.MInst.instC;
+import static studio.phaseshift.metatron.lang.mtron.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.lang.mtron.type.impl.MType.T;
+import static studio.phaseshift.metatron.lang.mtron.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.Tuple.Triplet;
 
 public class PubSubQ extends BaseQ {
@@ -43,8 +56,15 @@ public class PubSubQ extends BaseQ {
     protected final Obj subscriptions = MObjs.empty();
     protected final Queue<Machine> mail = new LinkedList<>();
 
+    Type PUBSUB_TYPE = T(f("/sys/space/q/sub"), null, instC(mtronInstSet.INST_TID.dom(ALL.maybe()).rng(f("/sys/space/q/sub")),
+            lst(T(REC_TID, isa_(rec(uri(PATTERN), uri("sub"),
+                    uri(ON_WRITE), rec(uri(PRE_WRITE), T(INST_TID), uri(QLESS_WRITE), T(INST_TID)),
+                    uri(ON_READ), rec(uri(PRE_READ), T(INST_TID)))))), (lhs, inst) -> {
+                return lhs;
+            }));
+
     public PubSubQ(final Space space) {
-        super(space, f("sub"), SUBSCRIPTION_TID);
+        super(Map.of(), f("sub"), SUBSCRIPTION_TID);
         this.onRead = new PubSubQ.OnRead();
         this.onWrite = new PubSubQ.OnWrite();
     }

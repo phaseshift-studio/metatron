@@ -18,14 +18,41 @@
 
 package studio.phaseshift.metatron.furi;
 
+import studio.phaseshift.metatron.furi.c.cInt;
+import studio.phaseshift.metatron.lang.mtron.mtronInstSet;
 import studio.phaseshift.metatron.lang.mtron.type.Obj;
+import studio.phaseshift.metatron.lang.mtron.type.Rec;
+import studio.phaseshift.metatron.lang.mtron.type.Type;
 
 import java.util.Optional;
 
-public interface Q extends Obj {
+import static studio.phaseshift.metatron.furi.fURI.ALL;
+import static studio.phaseshift.metatron.furi.fURI.f;
+import static studio.phaseshift.metatron.lang.msys.Space.PATTERN;
+import static studio.phaseshift.metatron.lang.mtron.mtronFluent.StartLess.isa_;
+import static studio.phaseshift.metatron.lang.mtron.mtronInstSet.*;
+import static studio.phaseshift.metatron.lang.mtron.type.impl.MInst.instC;
+import static studio.phaseshift.metatron.lang.mtron.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.lang.mtron.type.impl.MRec.rec;
+import static studio.phaseshift.metatron.lang.mtron.type.impl.MType.T;
+import static studio.phaseshift.metatron.lang.mtron.type.impl.MUri.uri;
 
-    @Override
-    fURI jvm();
+public interface Q extends Rec {
+
+    fURI ON_WRITE = f("on_write");
+    fURI PRE_WRITE = f("pre_write");
+    fURI POST_WRITE = f("post_write");
+    fURI QLESS_WRITE = f("qless_write");
+    fURI ON_READ = f("on_read");
+    fURI PRE_READ = f("pre_read");
+    fURI POST_READ = f("post_read");
+    Type Q_TYPE = T(f("/sys/space/q"));/*, null, instC(mtronInstSet.INST_TID.dom(ALL.maybe()).rng(f("/sys/space/q")),
+            lst(T(REC_TID, isa_(rec(uri(PATTERN), T(URI_TID),
+                    uri(ON_WRITE), rec(uri(PRE_WRITE), T(INST_TID).c(cInt::maybe), uri(POST_WRITE), T(INST_TID).c(cInt::maybe), uri(QLESS_WRITE), T(INST_TID).c(cInt::maybe)),
+                    uri(ON_READ), rec(uri(PRE_READ), T(INST_TID).c(cInt::maybe), uri(POST_READ).c(cInt::maybe)))))), (lhs, inst) -> {
+                return lhs;
+            }));*/
+
 
     Optional<OnWrite> onWrite();
 

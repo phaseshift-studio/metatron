@@ -21,6 +21,7 @@ package studio.phaseshift.metatron.lang.msys;
 import studio.phaseshift.metatron.furi.Qs;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.PubSubQ;
+import studio.phaseshift.metatron.lang.mtron.type.Lst;
 import studio.phaseshift.metatron.lang.mtron.type.Obj;
 import studio.phaseshift.metatron.lang.mtron.type.Rec;
 import studio.phaseshift.metatron.lang.mtron.type.impl.MRec;
@@ -28,6 +29,8 @@ import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
 
 import java.util.Map;
+
+import static studio.phaseshift.metatron.furi.fURI.f;
 
 public abstract class MSpace<SJVM> extends MRec implements Space {
 
@@ -42,6 +45,15 @@ public abstract class MSpace<SJVM> extends MRec implements Space {
         this.pattern = pattern;
         this.qs = new Qs();
         LOG = Graphitty.log(this);
+    }
+    
+    @Override
+    public void onPut(final fURI key, final Obj value) {
+        if(key.matches(f("q"))) {
+            value.<Lst>as().elements().forEach(q -> {
+                this.qs.add(q);
+            });
+        }
     }
 
     @Override

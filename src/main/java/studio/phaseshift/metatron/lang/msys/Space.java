@@ -59,6 +59,9 @@ public interface Space extends Rec, Closeable {
         return this.read(fURI.of(vid));
     }
 
+    default void onPut(final fURI key, final Obj value) {
+    }
+
     Obj read(final fURI vid);
 
     default Obj write(final String vid, final Obj obj) {

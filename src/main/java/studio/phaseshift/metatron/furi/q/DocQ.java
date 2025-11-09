@@ -41,7 +41,7 @@ import static studio.phaseshift.metatron.lang.mtron.mtronInstSet.MTRON_SPACE_TID
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class DocQ extends BaseQ {
+public class DocQ {/*extends BaseQ {
 
     public static final fURI DOC_TID = MTRON_SPACE_TID.extend("doc");
     protected final GraphittyLogger LOG = Graphitty.log(this);
@@ -85,5 +85,5 @@ public class DocQ extends BaseQ {
             LOG.trace("evaluating {{y}}pree write{{/y}}: %s => %s", obj, vid);
             return Optional.of(docSpace.write(vid.qLess(), obj));
         }
-    }
+    }*/
 }

@@ -1,6 +1,6 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
- * Copyright (C) 2025- PhaseShift Studio, LLC 
+ * Copyright (C) 2025- PhaseShift Studio, LLC
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -112,10 +112,16 @@ public class JSONTranslator implements Translator<Obj, JsonElement> {
         try {
             if (obj.isNoObj())
                 return JsonNull.INSTANCE;
+            if (obj.isBool())
+                return new JsonPrimitive(obj.boolValue());
+            if (obj.isInt())
+                return new JsonPrimitive(obj.intValue());
+            if (obj.isReal())
+                return new JsonPrimitive(obj.realValue());
             if (obj.isUri())
-                return JsonParser.parseString(obj.uriValue().toString());
+                return new JsonPrimitive(obj.uriValue().toString());
             if (obj.isStr())
-                return JsonParser.parseString(obj.strValue());
+                return new JsonPrimitive(obj.strValue());
             if (!obj.isPoly() && !obj.isCall())
                 return JsonParser.parseString(this.serializer.write(obj));
             if (obj.isCall())

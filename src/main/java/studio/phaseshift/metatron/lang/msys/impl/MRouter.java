@@ -168,7 +168,7 @@ public class MRouter extends MSpace<MServer> implements Router {
     @Override
     public Obj write(final fURI vid, final Obj obj) {
         fURI local;
-        if (vid.hasAuthority()) {
+        /*if (vid.hasAuthority()) {
             if (vid.hasAuthority(this.server().authority())) {
                 local = vid.scheme(null).authority(null);
             } else {
@@ -177,7 +177,7 @@ public class MRouter extends MSpace<MServer> implements Router {
                     return future.get(5000);
                 }).reduce(noobj(), Obj::append);
             }
-        } else
+        } else*/
             local = vid;
 
         final Space space = this.getSpace(local);

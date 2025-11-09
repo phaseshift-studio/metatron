@@ -21,32 +21,44 @@ package studio.phaseshift.metatron.furi.q;
 import studio.phaseshift.metatron.furi.Q;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.msys.Space;
+import studio.phaseshift.metatron.lang.mtron.type.Inst;
 import studio.phaseshift.metatron.lang.mtron.type.Obj;
+import studio.phaseshift.metatron.lang.mtron.type.Rec;
 import studio.phaseshift.metatron.lang.mtron.type.impl.MObj;
+import studio.phaseshift.metatron.lang.mtron.type.impl.MRec;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Optional;
+
+import static studio.phaseshift.metatron.lang.msys.Space.PATTERN;
+import static studio.phaseshift.metatron.lang.mtron.type.NoObj.noobj;
+import static studio.phaseshift.metatron.lang.mtron.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.lang.mtron.type.impl.MUri.uri;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class BaseQ extends MObj implements Q {
+public class BaseQ extends MRec implements Q {
 
     protected final GraphittyLogger LOG;
-    protected final Space space;
     protected OnRead onRead;
     protected OnWrite onWrite;
+    protected final fURI queryPattern;
 
-    public BaseQ(final Space space, final fURI queryPattern, final fURI tid) {
-        super(queryPattern, tid, fURI.NULL);
-        this.space = space;
+    public BaseQ(final Map<Obj, Obj> jvm, final fURI queryPattern, final fURI tid) {
+        super(jvm, tid, fURI.NULL);
+        this.queryPattern = this.at(PATTERN).uriValue();
         LOG = Graphitty.log(this);
     }
 
     @Override
     public Optional<Q.OnWrite> onWrite() {
-        return Optional.ofNullable(this.onWrite);
+        return Optional.empty();
+        //return this.has(uri(ON_WRITE)) ? this.at(uri(ON_WRITE)).as() : Optional.empty();
+        //return Optional.ofNullable(this.onWrite);
     }
 
     @Override
@@ -55,17 +67,34 @@ public class BaseQ extends MObj implements Q {
     }
 
     @Override
-    public fURI jvm() {
-        return super.jvm();
-    }
-
-    @Override
     public BaseQ clone(Object jvm, fURI tid, fURI vid) {
         return this;
     }
 
     @Override
-    public Obj clone() {
+    public Rec clone() {
         return this;
+    }
+
+    public static class BaseOnWrite extends MRec implements Q.OnWrite {
+        public BaseOnWrite(final Inst preWrite, final Inst postWrite, final Inst qlessWrite) {
+            super(new LinkedHashMap<>(Map.of(uri(PRE_WRITE), preWrite, uri(POST_WRITE), postWrite, uri(QLESS_WRITE), qlessWrite)));
+        }
+
+        public Optional<Obj> preWrite(final fURI source, final fURI vid, final Obj obj) {
+            final Inst i = this.at(uri(PRE_WRITE)).as();
+            if (i.isNoObj()) return Optional.empty();
+            final Obj result = i.apply(lst(uri(source), uri(vid), obj));
+            return Optional.of(result);
+
+        }
+
+        public Optional<Obj> postWrite(final fURI source, final fURI vid, final Obj oldObj, final Obj newObj) {
+            return Optional.empty();
+        }
+
+        public Optional<Obj> qlessWrite(final fURI source, final fURI vid, final Obj obj) {
+            return Optional.empty();
+        }
     }
 }

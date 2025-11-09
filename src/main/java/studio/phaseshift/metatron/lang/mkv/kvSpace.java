@@ -19,6 +19,7 @@
 package studio.phaseshift.metatron.lang.mkv;
 
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.furi.q.PubSubQ;
 import studio.phaseshift.metatron.lang.msys.Router;
 import studio.phaseshift.metatron.lang.msys.Space;
 import studio.phaseshift.metatron.lang.mtron.mtronInstSet;
@@ -51,6 +52,7 @@ public class kvSpace extends MSpace<Map<fURI, Obj>> {
     protected static final Type KV_TYPE = T(KV_TID, null, instC(mtronInstSet.INST_TID.dom(ALL.maybe()).rng(KV_TID), lst(T(REC_TID, isa_(rec(uri(PATTERN), T(URI_TID))))), (lhs, inst) -> {
         final fURI pattern = inst.arg(0).<Rec>as().at(PATTERN).uriValue();
         final Space space = new kvSpace(pattern, inst.arg(0).vid());
+        //space.qs().add(new PubSubQ(space));
         Router.global().addSpace(space);
         return space;
     }));

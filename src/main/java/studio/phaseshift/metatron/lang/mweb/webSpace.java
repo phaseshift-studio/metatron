@@ -18,6 +18,9 @@
 
 package studio.phaseshift.metatron.lang.mweb;
 
+import com.google.gson.JsonElement;
+import com.google.gson.stream.JsonReader;
+import com.google.gson.stream.JsonWriter;
 import com.sun.net.httpserver.HttpContext;
 import com.sun.net.httpserver.HttpServer;
 import org.jsoup.Connection;
@@ -36,12 +39,18 @@ import studio.phaseshift.metatron.util.MTronException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.StringWriter;
 import java.net.InetSocketAddress;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.Executors;
+import java.util.function.BiConsumer;
 import java.util.function.Function;
 
 import static studio.phaseshift.metatron.furi.fURI.ALL;
@@ -51,8 +60,10 @@ import static studio.phaseshift.metatron.lang.mtron.mtronInstSet.REC_TID;
 import static studio.phaseshift.metatron.lang.mtron.mtronInstSet.URI_TID;
 import static studio.phaseshift.metatron.lang.mtron.type.NoObj.noobj;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MInst.instC;
+import static studio.phaseshift.metatron.lang.mtron.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MRel.rel;
+import static studio.phaseshift.metatron.lang.mtron.type.impl.MStr.str;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MType.T;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.lang.mweb.webInstSet.MWEB_TID;
@@ -154,13 +165,40 @@ public class webSpace extends MSpace<HttpServer> {
     }
 
     @Override
+    public BiConsumer<fURI, Obj> directWriter() {
+        return (pattern, obj) -> {
+            LOG.debug("writing %s", pattern);
+            try (AutoCloseable client = (AutoCloseable) HttpClient.newHttpClient()) {
+                final JsonElement json = JSON_TRANSLATOR.translate(obj);
+                final HttpRequest request = HttpRequest.newBuilder()
+                        .header("Content-Type", "application/json")
+                        .uri(URI.create(pattern.toString()))
+                        .POST(HttpRequest.BodyPublishers.ofString(json.toString()))
+                        .build();
+                final HttpResponse<String> response = ((HttpClient) client).send(request, HttpResponse.BodyHandlers.ofString());
+                if (null != response.body()) {
+                    LOG.info("response: %s", JSON_TRANSLATOR.translateString(response.body()));
+                } else {
+                    LOG.info("status code: %s", jnt(response.statusCode()));
+                }
+            } catch (final Exception e) {
+                throw MTronException.of(e);
+            }
+        };
+    }
+
+    @Override
     public Obj read(final fURI vid) {
         return Space.Helper.resolveRead(this, vid, directReader());
     }
 
     @Override
     public Obj write(final fURI vid, final Obj obj) {
-        if (obj.isNoObj()) {
+        //Space.Helper.resolveWrite(this, vid, obj, directWriter(), directReader());
+        directWriter().accept(vid,obj);
+        return obj;
+    }
+        /*if (obj.isNoObj()) {
             try {
                 this.sjvm().removeContext(vid.path());
                 LOG.info("removing route %s", vid.path());
@@ -187,12 +225,11 @@ public class webSpace extends MSpace<HttpServer> {
                     while ((bytesRead = is.read(buffer)) != -1) {
                         os.write(buffer, 0, bytesRead);
                         os.flush();
-                    }*/
+                    }
                 }
             });
         }
-        return obj;
-    }
+        return obj;*/
     
    /* @Override
     public Obj apply(final Obj obj) {
