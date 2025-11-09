@@ -123,7 +123,9 @@ public interface Space extends Rec, Closeable {
         }
 
         public static boolean spaceEquals(final Space space, final Object other) {
-            return other instanceof Space && ((Space) other).tid().equals(space.tid()) && ((Space) other).vid().equals(space.vid());
+            return other instanceof Space &&
+                    ((Space) other).tid().equals(space.tid()) &&
+                    (space.vid() != null && ((Space) other).vid() != null && ((Space) other).vid().equals(space.vid()));
         }
 
         public static void noCloneWarning(final Space space) {

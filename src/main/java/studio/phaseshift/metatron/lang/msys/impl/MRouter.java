@@ -160,7 +160,8 @@ public class MRouter extends MSpace<MServer> implements Router {
         final Space space = this.getSpace(local);
         //if (null != space.vid() && !space.vid().segments().isEmpty())
         //    LOG.trace("reading {{b}}%s{{/b}} from {{b}}%s{{/b}}", vid, space.vid());
-        return MRouter.appendOnRead(vid.isBranch(), space.read(vid), this.vid.onlyMatches(vid) ? this : noobj());
+        // return MRouter.appendOnRead(vid.isBranch(), space.read(vid), this.vid.onlyMatches(vid) ? this : noobj());
+        return space.read(vid);
         // }
     }
 

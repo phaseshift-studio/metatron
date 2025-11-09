@@ -31,6 +31,7 @@ public class MFail extends MObj implements Fail {
 
     public MFail(final Throwable t, final fURI tid, final fURI vid) {
         super(t, tid, vid);
+        //t.printStackTrace();
     }
 
     public static Fail fail(final Throwable t) {
