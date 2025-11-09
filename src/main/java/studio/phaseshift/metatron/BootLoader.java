@@ -47,6 +47,7 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.net.InetAddress;
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
 
@@ -63,6 +64,7 @@ import static studio.phaseshift.metatron.lang.mtron.type.impl.MUri.uri;
 public class BootLoader implements Obj {
 
     public static final String HOST = "host";
+    public static final String BOOT = "boot";
     private static final GraphittyLogger LOG;
     public static boolean TYPE_CHECK = true;
     public static boolean BOOTING = true;
@@ -142,28 +144,19 @@ public class BootLoader implements Obj {
             ROUTER.start();
             //  Router.writeToSpace(new mtronInstSet(fURI.of("/mnt/lang/m")));
             ///////////////////////////////////////////////////////////////
-            if (options.has(uri("boot"))) {
-                LOG.none("\t {{m}}BEGIN:{{g}} evaluating provided boot loader: %s{{X}}\n", options.at(uri("boot")));
-                try (final BufferedReader reader = new BufferedReader(new FileReader(options.at("boot").uriValue().toString()))) {
-                    final List<String> lines = reader.lines().toList();
-                    final String source = lines.stream().reduce("", (a, b) -> a + b + "\n");
-                    LOG.info("boot input: {{b}}%s{{/b}} {{g}}[{{y}}loc: %d{{/y}}]{{/g}}", options.at("boot").uriValue(), lines.size());
-                    Arrays.stream(source.split(";"))
-                            .filter(s -> !s.trim().isEmpty())
-                            .map(s -> mtronParser.parse(s).resolve(noobj()))
-                            .filter(o -> !o.isNoObj())
-                            .forEach(o -> {
-                                LOG.debug("boot compilation: %s", o);
-                                LOG.debug("boot result: %s", o.apply());
-                            });
-                    LOG.none("\t {{m}}END:{{g}} evaluating provided boot loader: %s{{X}}\n", options.at(uri("boot")));
+            if (options.has(uri(BOOT))) {
+                LOG.none("\t {{m}}BEGIN:{{g}} evaluating provided boot loader: {{b}}%s{{X}}\n", options.at(uri(BOOT)).uriValue());
+                try {
+                    final long count = mtronParser.eval(Path.of(options.at(BOOT).uriValue().toString()).toFile()).count();
+                    LOG.info("processed boot input: {{b}}%s{{/b}} {{g}}[{{y}}loc: %d{{/y}}]{{/g}}", options.at(BOOT).uriValue(), count);
                 } catch (final IOException e) {
                     LOG.error(e);
                     System.exit(0);
                 }
+                LOG.none("\t {{m}}END:{{g}} evaluating provided boot loader: {{b}}%s{{X}}\n", options.at(uri(BOOT)).uriValue());
             }
             ///////////////////////////////////////////////////////////////
-            final Obj log = Router.writeToSpace(Log.of(rec(options.at("log").orElse(uri("TRACE")), lst(uri("#"))), f("/sys/log")));
+            final Obj log = Router.writeToSpace(Log.of(rec(options.at("log").orElse(uri("trace")), lst(uri("#"))), f("/sys/log")));
             LOG.info("logging now handled by %s", log);
 
             //Router.writeToSpace(new FileSpace(FileSystems.getDefault(), f("/home/#"), f("/mnt/fs")));
@@ -216,21 +209,21 @@ public class BootLoader implements Obj {
 
     @Override
     public fURI tid() {
-        return f("boot");
+        return f(BOOT);
     }
 
     @Override
     public fURI vid() {
-        return f("boot");
+        return f(BOOT);
     }
 
     @Override
     public <O extends Obj> O clone(Object jvm, fURI tid, fURI vid) {
-        return null;
+        return (O) this;
     }
 
     @Override
     public Obj clone() {
-        return null;
+        return this;
     }
 }

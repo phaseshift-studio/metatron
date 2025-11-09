@@ -1,12 +1,12 @@
---- metatron example boot;
---- mount instruction sets;
+--- metatron example boot
+--- mount instruction sets
 /sys/lang/kv   -> */kv;
 /sys/lang/web  -> */web;
 /sys/lang/grph -> */grph;
 /sys/lang/vec  -> */vec;
 /sys/lang/mach -> */mach;
 /sys/lang/llm  -> */llm;
---- mount spaces;
+--- mount spaces
 kv::[pattern     => /usr/#].@/sys/space/usr;
 kv::[pattern     => /shared/#].@/sys/space/shared;
 ollama::[host    => <http://localhost:11434>,

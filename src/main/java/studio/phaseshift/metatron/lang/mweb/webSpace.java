@@ -52,6 +52,7 @@ import static studio.phaseshift.metatron.lang.mtron.mtronInstSet.URI_TID;
 import static studio.phaseshift.metatron.lang.mtron.type.NoObj.noobj;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.lang.mtron.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MType.T;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.lang.mweb.webInstSet.MWEB_TID;
@@ -99,7 +100,7 @@ public class webSpace extends MSpace<HttpServer> {
                             }
                         }
                     });
-            LOG.info("http route attached: %s => %s", uri(context.getPath()), r.second());
+            LOG.info("http route attached: %s", rel(uri(context.getPath()), r.second()));
         });
         LOG.info("starting web server at %s", this.at("host").uriValue().scheme("http").toUri());
         server.setExecutor(Executors.newFixedThreadPool(4));

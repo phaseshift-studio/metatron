@@ -33,11 +33,13 @@ import studio.phaseshift.metatron.ui.GraphittyLogger;
 import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
 
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static org.petitparser.parser.primitive.CharacterParser.any;
 import static org.petitparser.parser.primitive.CharacterParser.anyOf;
@@ -47,6 +49,7 @@ import static org.petitparser.parser.primitive.CharacterParser.word;
 import static org.petitparser.parser.primitive.StringParser.of;
 import static studio.phaseshift.metatron.lang.mtron.mtronFluent.StartLess.split_;
 import static studio.phaseshift.metatron.lang.mtron.mtronInstSet.*;
+import static studio.phaseshift.metatron.lang.mtron.type.NoObj.noobj;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.lang.mtron.type.impl.MObjs.objs;
@@ -148,7 +151,7 @@ public class mtronParser {
                 .map(t -> (Inst) new MInst(Triplet.with(
                         pick(t, 1).equals("") ? lst() : pick(t, 1) instanceof List ?
                                 lst(mtronParser.<List<Obj>>pick(t, 1)) :
-                                rec(mtronParser.<Map<Obj,Obj>>pick(t, 1)),
+                                rec(mtronParser.<Map<Obj, Obj>>pick(t, 1)),
                         Inst.f.of(mtronParser.<Obj>pick(t, 2)),
                         NoObj.noobj()), // todo: encode seed in parser
                         pick(t, 0), pick(t, 3)))));
@@ -445,6 +448,23 @@ public class mtronParser {
                         seq(of('('), m_obj(), of(')')).map(t -> mtronParser.<Obj>pick(t, 1)),
                         m_obj()), null == endToken ? of("") : endToken.trim())
                         .map(t -> MInst.instB(tid.query(pick(t, 1)), MLst.of(mtronParser.<Obj>pick(t, 2)))));
+    }
+
+    public static Stream<Obj> eval(final File file) throws IOException {
+        try (final FileReader read = new FileReader(file)) {
+            try (final BufferedReader reader = new BufferedReader(read)) {
+                final List<String> lines = reader.lines().toList();
+                final String source = lines.stream().reduce("", (a, b) -> a + b + "\n");
+                return Arrays.stream(source.split(";"))
+                        .filter(s -> !s.trim().isEmpty())
+                        .map(s -> Arrays.stream(s.split("\n"))
+                                .map(String::trim)
+                                .filter(t -> !t.startsWith("---"))
+                                .reduce("", (a, b) -> a + b + "\n"))
+                        .map(s -> mtronParser.parse(s).apply())
+                        .filter(o -> !o.isNoObj());
+            }
+        }
     }
 
     /// //////////////////////////////////////////////////////////////////////////////////////////
