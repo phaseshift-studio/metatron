@@ -72,16 +72,35 @@ import static studio.phaseshift.metatron.lang.net.web.webInstSet.PAGE_TID;
  */
 public class webSpace extends MSpace<HttpServer> {
 
+    public enum ContentType {
+        APPLICATION_JSON("application/json"),
+        AUDIO_WAV("media/"),
+        AUDIIO_MPEG("media/mpeg"),
+        APPLICATION_OCTET_STREAM("application/octet-stream");
+
+        final String value;
+
+        ContentType(final String value) {
+            this.value = value;
+        }
+
+        public static String VALUE = "Content-Type";
+    }
+
+    public static final String INDEX_HTML = "index.html";
+
     public static final fURI WEB_TID = MWEB_TID.extend("space").extend("web");
     protected static final String ROUTE = "route";
-    protected static final Type WEB_TYPE = T(WEB_TID, null, instC(mtronInstSet.INST_TID.dom(ALL.maybe()).rng(WEB_TID), lst(T(REC_TID, isa_(rec(uri(PATTERN), T(URI_TID), uri(HOST), T(URI_TID), uri(ROUTE), T(REC_TID))))), (lhs, inst) -> {
-        final fURI pattern = inst.arg(0).<Rec>as().at(PATTERN).uriValue();
-        final fURI host = inst.arg(0).<Rec>as().at(HOST).uriValue();
-        final Rec route = inst.arg(0).<Rec>as().at(ROUTE);
-        final webSpace space = webSpace.of(host, route.jvm(), pattern, inst.arg(0).vid());
-        Router.global().addSpace(space);
-        return space;
-    }));
+    protected static final Type WEB_TYPE = T(WEB_TID, null,
+            instC(mtronInstSet.INST_TID.dom(ALL.maybe()).rng(WEB_TID),
+                    lst(T(REC_TID, isa_(rec(uri(PATTERN), T(URI_TID), uri(HOST), T(URI_TID), uri(ROUTE), T(REC_TID))))), (lhs, inst) -> {
+                        final fURI pattern = inst.arg(0).<Rec>as().at(PATTERN).uriValue();
+                        final fURI host = inst.arg(0).<Rec>as().at(HOST).uriValue();
+                        final Rec route = inst.arg(0).<Rec>as().at(ROUTE);
+                        final webSpace space = webSpace.of(host, route.jvm(), pattern, inst.arg(0).vid());
+                        Router.global().addSpace(space);
+                        return space;
+                    }));
     private static final WebTranslator WEB_TRANSLATOR = new WebTranslator();
     private static final JSONTranslator JSON_TRANSLATOR = new JSONTranslator();
 
@@ -94,9 +113,9 @@ public class webSpace extends MSpace<HttpServer> {
                         //LOG.debug("using http context %s => %s => %s", exchange.getRequestURI(), exchange.getHttpContext().getPath(), r.second());
                         final Path path = Path.of(r.second().uriValue().extend(f(exchange.getRequestURI().getPath()).removePrefix(r.first().uriValue())).toString());
                         LOG.debug("resolving context to absolute path: %s => %s", uri(exchange.getRequestURI().toString()), uri(path.toAbsolutePath().toString()));
-                        final Path filePath = Files.isRegularFile(path) ? path : Path.of(path + "/index.html");
+                        final Path filePath = Files.isRegularFile(path) ? path : Path.of(path + "/" + INDEX_HTML);
                         final String contentType = Files.probeContentType(filePath);
-                        exchange.getResponseHeaders().set("Content-Type", contentType == null ? "application/octet-stream" : contentType);
+                        exchange.getResponseHeaders().set(ContentType.VALUE, contentType == null ? ContentType.APPLICATION_OCTET_STREAM.value : contentType);
                         exchange.sendResponseHeaders(200, Files.size(filePath));
                         LOG.debug("sending %s [%s,%d bytes] per request from %s: %s", filePath, contentType, Files.size(filePath), exchange.getRemoteAddress(), exchange.getRequestURI());
                         try (final InputStream is = Files.newInputStream(filePath);
@@ -111,7 +130,7 @@ public class webSpace extends MSpace<HttpServer> {
                     });
             LOG.info("http route attached: %s", rel(uri(context.getPath()), r.second()));
         });
-        LOG.info("starting web server at %s", this.at("host").uriValue().scheme("http").toUri());
+        LOG.info("starting web server at %s", this.at(HOST).uriValue().scheme(fURI.HTTP).toUri());
         server.setExecutor(Executors.newFixedThreadPool(4));
         Runtime.getRuntime().addShutdownHook(new Thread(this::close));
         LOG.info("available routes: %s", this.at(ROUTE));
@@ -148,7 +167,7 @@ public class webSpace extends MSpace<HttpServer> {
             LOG.debug("retrieving %s", pattern);
             try {
                 final Map<fURI, Obj> partial = new LinkedHashMap<>();
-                final Connection.Response response = Jsoup.connect(pattern.asNode().toString()).ignoreContentType(true).execute();
+                final Connection.Response response = Jsoup.connect(pattern.asNode().toString()).ignoreContentType(true).ignoreHttpErrors(true).execute();
                 final Obj docObj = (null != response.contentType() && response.contentType().equals("application/json")) ?
                         JSON_TRANSLATOR.translateString(response.body()) :
                         WEB_TRANSLATOR.translate(response.parse()).tid(PAGE_TID);
@@ -169,17 +188,17 @@ public class webSpace extends MSpace<HttpServer> {
             try (AutoCloseable client = (AutoCloseable) HttpClient.newHttpClient()) {
                 final JsonElement json = JSON_TRANSLATOR.translate(obj);
                 final HttpRequest request = HttpRequest.newBuilder()
-                        .header("Content-Type", "application/json")
+                        .header(ContentType.VALUE, ContentType.APPLICATION_JSON.value)
                         .uri(URI.create(pattern.toString()))
                         .POST(HttpRequest.BodyPublishers.ofString(json.toString()))
                         .build();
                 final HttpResponse<byte[]> response = ((HttpClient) client).send(request, HttpResponse.BodyHandlers.ofByteArray());
-                LOG.info("%s", response.headers().firstValue("Content-Type"));
-                final Optional<String> contentType = response.headers().firstValue("Content-Type");
+                LOG.info("%s", response.headers().firstValue(ContentType.VALUE));
+                final Optional<String> contentType = response.headers().firstValue(ContentType.VALUE);
                 if (contentType.isPresent()) {
                     if (contentType.get().startsWith("audio/")) {
                         return rec(uri("location"), bytes(ByteBuffer.wrap(response.body()))).tid(AUDIO_TID);
-                    } else if (contentType.get().equals("application/json")) {
+                    } else if (contentType.get().equals(ContentType.APPLICATION_JSON.value)) {
                         return JSON_TRANSLATOR.translateString(new String(response.body()));
                     }
                 }

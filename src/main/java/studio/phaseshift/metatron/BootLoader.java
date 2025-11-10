@@ -58,16 +58,20 @@ import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
 
 public class BootLoader implements Obj {
 
-    public static final String HOST = "host";
-    public static final String BOOT = "boot";
-    private static final GraphittyLogger LOG;
-    public static boolean TYPE_CHECK = true;
-    public static boolean BOOTING = true;
     /// ////////////////////////////////////////////////////////////////////////
+    /// the global variables that must be gc()'d on close
+    /// ////////////////////////////////////////////////////////////////////////
+    public static boolean BOOTING = true;
+    private static final GraphittyLogger LOG;
     public static Router ROUTER;
     public static Rec GLOBAL;
     public static Mode MODE;
+    /// ////////////////////////////////////////////////////////////////////////
 
+    public static final String HOST = "host";
+    public static final String BOOT = "boot";
+    public static boolean TYPE_CHECK = true;
+    
     static {
         LOG = Graphitty.log(new BootLoader());
         //Registry.singleton().register(mtronInstSet.INST_TID, () -> mtronInstSet.of(fURI.NULL));
@@ -194,6 +198,9 @@ public class BootLoader implements Obj {
         LOG.none("\n");
         Router.global().close();
         MODE.stop();
+        ROUTER = null;
+        GLOBAL = null;
+        System.gc();
         LOG.info("%s {{g}}successfully{{/g}} shutdown", Graphitty.sillyPrint("metatron", true, true));
     }
 

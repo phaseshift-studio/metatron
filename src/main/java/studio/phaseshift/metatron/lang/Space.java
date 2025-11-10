@@ -163,7 +163,7 @@ public interface Space extends Rec, Closeable {
         public static Obj resolveRead(final Space space, final fURI pattern, final Function<fURI, Map<fURI, Obj>> directReader) { //final Map<fURI, Obj> store) {
             final Map<Uri, Obj> map = new LinkedHashMap<>();
             directReader.apply(pattern).forEach((key, value) -> map.put(key.toUri(), value));
-            if (map.isEmpty()) {
+            if (map.isEmpty() && pattern.isBranch()) {
                 directReader.apply(pattern.isBranch() ? pattern.extend(fURI.ONE_WILD_STRING) : pattern.asNode()).forEach((key, value) -> {
                     if (value.isRec()) {
                         value.recValue().forEach((key2, value2) -> map.put(uri(key.extend(key2.uriValue())), value2));
@@ -235,13 +235,16 @@ public interface Space extends Rec, Closeable {
 
 
         public static Pair<fURI, Poly> locateBasePoly(final Space space, final fURI furi) {
+            boolean last = furi.segments().isEmpty();
             fURI newFuri = furi.retract().asNode();
             Obj obj = noobj();
-            while (!newFuri.segments().isEmpty()) {
+            while (!last) {
                 obj = space.read(newFuri);
                 if (!obj.isNoObj())
                     break;
+                last = newFuri.segments().isEmpty();
                 newFuri = newFuri.retract().asNode();
+                
             }
             return obj.isPoly() ? Pair.with(newFuri.retractPattern(), obj.as()) : null;
         }

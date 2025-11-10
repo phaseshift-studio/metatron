@@ -34,6 +34,9 @@ import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
 
 public class fURI implements Cloneable, Ring<fURI> {
 
+    public static final String HTTP = "http";
+    public static final String WS = "ws";
+    
     public static final String EMPTY = "";
     public static final String SEGMENT_SPLIT = "/";
     public static final char SEGMENT_SPLIT_CHAR = SEGMENT_SPLIT.charAt(0);
