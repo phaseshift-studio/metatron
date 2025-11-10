@@ -19,17 +19,15 @@
 package studio.phaseshift.metatron;
 
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.lang.msys.Router;
-import studio.phaseshift.metatron.lang.mtron.type.Lst;
-import studio.phaseshift.metatron.lang.mtron.type.Obj;
+import studio.phaseshift.metatron.lang.core.m.type.Lst;
+import studio.phaseshift.metatron.lang.core.m.type.Obj;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Supplier;
 
-import static studio.phaseshift.metatron.lang.mtron.type.NoObj.noobj;
-import static studio.phaseshift.metatron.lang.mtron.type.impl.MLst.lst;
-import static studio.phaseshift.metatron.lang.mtron.type.impl.MObjs.objs;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MObjs.objs;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)

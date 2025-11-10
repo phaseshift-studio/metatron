@@ -18,7 +18,7 @@
 
 package studio.phaseshift.metatron.util;
 
-import studio.phaseshift.metatron.lang.mtron.type.Objs;
+import studio.phaseshift.metatron.lang.core.m.type.Objs;
 
 import java.util.EmptyStackException;
 import java.util.Iterator;

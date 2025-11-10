@@ -20,11 +20,6 @@ package studio.phaseshift.metatron.lang.mgrph;
 
 import org.junit.jupiter.api.Test;
 import studio.phaseshift.metatron.MetatronTest;
-import studio.phaseshift.metatron.lang.mgrph.tp.MGraph;
-import studio.phaseshift.metatron.lang.msys.Router;
-import studio.phaseshift.metatron.ui.Graphitty;
-
-import static studio.phaseshift.metatron.furi.fURI.f;
 
 public class TinkerObjTest extends MetatronTest {
 

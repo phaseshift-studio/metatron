@@ -20,8 +20,8 @@ package studio.phaseshift.metatron.lang;
 
 import studio.phaseshift.metatron.MetatronTest;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.lang.mtron.type.Obj;
-import studio.phaseshift.metatron.lang.mtron.mtronParser;
+import studio.phaseshift.metatron.lang.core.m.type.Obj;
+import studio.phaseshift.metatron.lang.core.m.parser.mtronParser;
 import studio.phaseshift.metatron.util.Tuple;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;

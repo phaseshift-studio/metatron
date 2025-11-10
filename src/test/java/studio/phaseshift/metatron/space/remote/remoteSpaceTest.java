@@ -20,11 +20,11 @@ package studio.phaseshift.metatron.space.remote;
 
 import org.junit.jupiter.api.Test;
 import studio.phaseshift.metatron.MetatronTest;
-import studio.phaseshift.metatron.lang.msys.impl.remoteSpace;
+import studio.phaseshift.metatron.lang.net.remote.remoteSpace;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static studio.phaseshift.metatron.furi.fURI.f;
-import static studio.phaseshift.metatron.lang.mtron.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)

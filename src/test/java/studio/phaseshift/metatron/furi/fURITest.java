@@ -26,7 +26,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import studio.phaseshift.metatron.lang.mtron.mtronParser;
+import studio.phaseshift.metatron.lang.core.m.parser.mtronParser;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
 import studio.phaseshift.metatron.util.MTronException;

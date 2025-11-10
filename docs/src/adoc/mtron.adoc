@@ -1,6 +1,6 @@
 === mtron instruction set
 
-The core instruction set of metatron is `mtron`.
+The core instruction set of metatron is `m`.
 
 [cols="1m,3m,4",separator="|"]
 |===

@@ -18,10 +18,10 @@
 
 package studio.phaseshift.metatron.furi;
 
-import studio.phaseshift.metatron.lang.msys.Router;
-import studio.phaseshift.metatron.lang.msys.sysInstSet;
-import studio.phaseshift.metatron.lang.mtron.type.Obj;
-import studio.phaseshift.metatron.lang.mtron.type.impl.MLst;
+import studio.phaseshift.metatron.lang.sys.router.Router;
+import studio.phaseshift.metatron.lang.sys.sysInstSet;
+import studio.phaseshift.metatron.lang.core.m.type.Obj;
+import studio.phaseshift.metatron.lang.core.m.type.impl.MLst;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
 

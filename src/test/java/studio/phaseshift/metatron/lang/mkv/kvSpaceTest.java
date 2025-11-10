@@ -20,6 +20,7 @@ package studio.phaseshift.metatron.lang.mkv;
 
 import org.junit.jupiter.api.BeforeAll;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.lang.db.kv.kvSpace;
 import studio.phaseshift.metatron.space.SpaceTest;
 
 public class kvSpaceTest extends SpaceTest {

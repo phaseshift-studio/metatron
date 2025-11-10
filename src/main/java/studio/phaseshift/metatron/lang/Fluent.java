@@ -18,7 +18,7 @@
 
 package studio.phaseshift.metatron.lang;
 
-import studio.phaseshift.metatron.lang.mtron.type.Inst;
+import studio.phaseshift.metatron.lang.core.m.type.Inst;
 
 public interface Fluent<F extends Fluent<F>> {
 

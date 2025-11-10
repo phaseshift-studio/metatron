@@ -31,6 +31,7 @@ public class UriTest extends MetatronTest {
     @ParameterizedTest
     @CsvSource(value = {
             "bool::abc/def                                                | <ERROR>",
+            "bytes::<abc/def>                                             | <ERROR>",
             "int::<abc/def>                                               | <ERROR>",
             "real::<abc/def>                                              | <ERROR>",
             "str::<abc/def>                                               | <ERROR>",
@@ -39,9 +40,9 @@ public class UriTest extends MetatronTest {
             "inst::<abc/def>                                              | <ERROR>",
             //  "code::<abc/def>                                            | <ERROR>",
             "uri::<http://webpage.com>                                    | <http://webpage.com>",
-            "uri::<http://webpage.com>.type()                             | uri::T[]",
-            "<http://webpage.com>.type()                                  | uri::T[]",
-            "'http://webpage.com'.type()                                  | str::T[]",
+            "uri::<http://webpage.com>.type()                             | start(uri::T[])",
+            "<http://webpage.com>.type()                                  | start(uri::T[])",
+            "'http://webpage.com'.type()                                  | start(str::T[])",
             //"a/b.plus(c/d)                                                | {a/b,c/d}",
             "a/b.plus(noobj)                                              | a/b",
             "a/b.mult(c/d)                                                | a/b/c/d",

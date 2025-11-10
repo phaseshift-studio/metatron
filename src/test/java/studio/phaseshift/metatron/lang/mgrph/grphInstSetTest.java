@@ -24,11 +24,12 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.MetatronTest;
-import studio.phaseshift.metatron.lang.mgrph.tp.MGraph;
-import studio.phaseshift.metatron.lang.msys.Router;
+import studio.phaseshift.metatron.lang.db.grph.grphInstSet;
+import studio.phaseshift.metatron.lang.db.grph.tp.MGraph;
+import studio.phaseshift.metatron.lang.sys.router.Router;
 
 import static studio.phaseshift.metatron.furi.fURI.f;
-import static studio.phaseshift.metatron.lang.mtron.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)

@@ -21,9 +21,9 @@ package studio.phaseshift.metatron.lang.translate;
 import com.google.gson.JsonParser;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-import studio.phaseshift.metatron.lang.mtron.mtronParser;
-import studio.phaseshift.metatron.lang.mtron.type.Obj;
-import studio.phaseshift.metatron.lang.mweb.JSONTranslator;
+import studio.phaseshift.metatron.lang.core.m.parser.mtronParser;
+import studio.phaseshift.metatron.lang.core.m.type.Obj;
+import studio.phaseshift.metatron.lang.net.web.JSONTranslator;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 

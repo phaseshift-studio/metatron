@@ -21,9 +21,9 @@ package studio.phaseshift.metatron.space.router;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.MetatronTest;
-import studio.phaseshift.metatron.lang.msys.impl.net.ObjByteBufferSerializer;
-import studio.phaseshift.metatron.lang.mtron.type.Obj;
-import studio.phaseshift.metatron.lang.mtron.mtronParser;
+import studio.phaseshift.metatron.lang.sys.router.impl.ObjByteBufferSerializer;
+import studio.phaseshift.metatron.lang.core.m.type.Obj;
+import studio.phaseshift.metatron.lang.core.m.parser.mtronParser;
 
 import java.nio.ByteBuffer;
 

@@ -20,15 +20,18 @@ package studio.phaseshift.metatron.ui;
 
 import org.petitparser.context.Result;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.lang.mtron.mtronParser;
-import studio.phaseshift.metatron.lang.mtron.type.*;
+import studio.phaseshift.metatron.lang.core.m.parser.mtronParser;
+import studio.phaseshift.metatron.lang.core.m.type.*;
+
 import studio.phaseshift.metatron.util.MTronException;
 
+import java.nio.ByteBuffer;
 import java.util.HashSet;
+import java.util.HexFormat;
 import java.util.Map;
 import java.util.Set;
 
-import static studio.phaseshift.metatron.lang.mtron.mtronInstSet.BASE_TYPES;
+import static studio.phaseshift.metatron.lang.core.m.mtronInstSet.BASE_TYPES;
 
 public class ObjStringSerializer implements ObjSerializer<String> {
 
@@ -177,10 +180,19 @@ public class ObjStringSerializer implements ObjSerializer<String> {
             }
             /// ///////////////////////////////////////////////////////////////
             /// ///////////////////////////////////////////////////////////////
+            else if (obj.isBytes()) {
+                return generateTID(sb, obj.tid(), true)
+                        .append("{{c}}0x{{y}}")
+                        .append(HexFormat.of().formatHex(obj.<Bytes>as().jvm().array()))
+                        .append("{{X}}")
+                        .toString();
+            }
+            /// ///////////////////////////////////////////////////////////////
+            /// ///////////////////////////////////////////////////////////////
             else if (BASE_TYPES.contains(obj.type().tid().basePath())) {
                 return generateVID(generateTID(sb, obj.tid(), true)
                         .append("{{y}}")
-                        .append(null == obj.jvm() ? "" : (obj.isStr() ? "'" + obj.jvm().toString() + "'" : obj.jvm().toString()))
+                        .append(null == obj.jvm() ? "" : (obj.isStr() ? "{{c}}'{{y}}" + obj.jvm().toString() + "{{c}}'" : obj.jvm().toString()))
                         .append("{{m}}"), obj)
                         .append("{{X}}")
                         .toString();

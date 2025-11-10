@@ -18,24 +18,18 @@
 
 package studio.phaseshift.metatron.furi;
 
-import studio.phaseshift.metatron.furi.c.cInt;
-import studio.phaseshift.metatron.lang.mtron.mtronInstSet;
-import studio.phaseshift.metatron.lang.mtron.type.Obj;
-import studio.phaseshift.metatron.lang.mtron.type.Rec;
-import studio.phaseshift.metatron.lang.mtron.type.Type;
+import studio.phaseshift.metatron.lang.core.m.type.Obj;
+import studio.phaseshift.metatron.lang.core.m.type.Rec;
+import studio.phaseshift.metatron.lang.core.m.type.Type;
 
 import java.util.Optional;
 
-import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.furi.fURI.f;
-import static studio.phaseshift.metatron.lang.msys.Space.PATTERN;
-import static studio.phaseshift.metatron.lang.mtron.mtronFluent.StartLess.isa_;
-import static studio.phaseshift.metatron.lang.mtron.mtronInstSet.*;
-import static studio.phaseshift.metatron.lang.mtron.type.impl.MInst.instC;
-import static studio.phaseshift.metatron.lang.mtron.type.impl.MLst.lst;
-import static studio.phaseshift.metatron.lang.mtron.type.impl.MRec.rec;
-import static studio.phaseshift.metatron.lang.mtron.type.impl.MType.T;
-import static studio.phaseshift.metatron.lang.mtron.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MInst.instC;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MRec.rec;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MType.T;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
 
 public interface Q extends Rec {
 

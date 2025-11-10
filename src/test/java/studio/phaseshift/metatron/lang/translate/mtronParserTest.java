@@ -19,23 +19,26 @@
 package studio.phaseshift.metatron.lang.translate;
 
 import org.junit.jupiter.api.Test;
-import studio.phaseshift.metatron.lang.mtron.mtronParser;
-import studio.phaseshift.metatron.lang.mtron.type.NoObj;
-import studio.phaseshift.metatron.lang.mtron.type.Obj;
+import studio.phaseshift.metatron.lang.core.m.parser.mtronParser;
+import studio.phaseshift.metatron.lang.core.m.obj.NoObj;
+import studio.phaseshift.metatron.lang.core.m.type.Bytes;
+import studio.phaseshift.metatron.lang.core.m.type.Obj;
 import studio.phaseshift.metatron.util.MTronException;
 
+import java.util.HexFormat;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static studio.phaseshift.metatron.lang.mtron.type.impl.MBool.bool;
-import static studio.phaseshift.metatron.lang.mtron.type.impl.MInt.jnt;
-import static studio.phaseshift.metatron.lang.mtron.type.impl.MObjs.objs;
-import static studio.phaseshift.metatron.lang.mtron.type.impl.MReal.real;
-import static studio.phaseshift.metatron.lang.mtron.type.impl.MStr.str;
-import static studio.phaseshift.metatron.lang.mtron.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.lang.mtron.mtronInstSet.BOOL_TID;
-import static studio.phaseshift.metatron.lang.mtron.mtronParser.m_bool;
+import static org.junit.jupiter.api.Assertions.*;
+import static studio.phaseshift.metatron.lang.core.m.mtronInstSet.BYTES_TID;
+import static studio.phaseshift.metatron.lang.core.m.parser.mtronParser.m_bytes;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MBool.bool;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MInt.jnt;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MObjs.objs;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MReal.real;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MStr.str;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.lang.core.m.mtronInstSet.BOOL_TID;
+import static studio.phaseshift.metatron.lang.core.m.parser.mtronParser.m_bool;
 
 
 public class mtronParserTest {
@@ -50,6 +53,12 @@ public class mtronParserTest {
         assertEquals(BOOL_TID, m_bool().parse("true").<Obj>get().tid());
         assertEquals(bool(true), mtronParser.parse("true"));
         assertEquals(bool(false), mtronParser.parse("false"));
+    }
+
+    @Test
+    public void testBytesParse() {
+        assertEquals(BYTES_TID, m_bytes().parse("0xabc123").<Bytes>get().tid());
+        assertArrayEquals(HexFormat.of().parseHex("abc123"), m_bytes().parse("0xabc123").<Bytes>get().jvm().array());
     }
 
     @Test

@@ -18,12 +18,11 @@
 
 package studio.phaseshift.metatron.ui;
 
-import org.apache.commons.logging.impl.SLF4JLog;
 import org.slf4j.event.Level;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.lang.msys.Router;
-import studio.phaseshift.metatron.lang.mtron.type.Obj;
-import studio.phaseshift.metatron.space.device.log.Log;
+import studio.phaseshift.metatron.lang.sys.router.Router;
+import studio.phaseshift.metatron.lang.core.m.type.Obj;
+import studio.phaseshift.metatron.lang.util.logObj;
 
 import static org.slf4j.event.Level.*;
 import static studio.phaseshift.metatron.BootLoader.BOOTING;
@@ -53,9 +52,9 @@ public class GraphittyObjLogger extends GraphittyLogger {
                         this.none("no space embedded logger found at %s\n", LOG_VID.toUri());
                     return true;
                 } else
-                    return null == this.source || Log.from(o.as()).check(level, ((Obj) this.source).vidOrTid());
+                    return null == this.source || logObj.from(o.as()).check(level, ((Obj) this.source).vidOrTid());
             } else
-                return level.compareTo(Log.getSLF4J()) <= 0;
+                return level.compareTo(logObj.getSLF4J()) <= 0;
         }
         //   } catch(final Exception e) {
         //return false;

@@ -22,8 +22,12 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.lang.mtron.type.impl.MInst;
-import studio.phaseshift.metatron.lang.mtron.mtronParser;
+import studio.phaseshift.metatron.lang.core.m.type.Call;
+import studio.phaseshift.metatron.lang.core.m.type.Inst;
+import studio.phaseshift.metatron.lang.core.m.obj.NoObj;
+import studio.phaseshift.metatron.lang.core.m.type.Obj;
+import studio.phaseshift.metatron.lang.core.m.type.impl.MInst;
+import studio.phaseshift.metatron.lang.core.m.parser.mtronParser;
 import studio.phaseshift.metatron.lang.MetatronObjTest;
 import studio.phaseshift.metatron.util.Tuple;
 
@@ -31,9 +35,9 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static studio.phaseshift.metatron.lang.mtron.type.impl.MInt.jnt;
-import static studio.phaseshift.metatron.lang.mtron.type.impl.MObjs.objs;
-import static studio.phaseshift.metatron.lang.mtron.mtronFluent.StartLess.*;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MInt.jnt;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MObjs.objs;
+import static studio.phaseshift.metatron.lang.core.m.inst.mtronFluent.StartLess.*;
 
 public class InstTest extends MetatronObjTest {
 

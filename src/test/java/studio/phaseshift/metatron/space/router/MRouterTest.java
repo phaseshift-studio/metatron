@@ -21,13 +21,13 @@ package studio.phaseshift.metatron.space.router;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.lang.mkv.kvSpace;
-import studio.phaseshift.metatron.lang.msys.Router;
-import studio.phaseshift.metatron.lang.mtron.type.NoObj;
+import studio.phaseshift.metatron.lang.db.kv.kvSpace;
+import studio.phaseshift.metatron.lang.sys.router.Router;
+import studio.phaseshift.metatron.lang.core.m.obj.NoObj;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.furi.fURI.f;
-import static studio.phaseshift.metatron.lang.mtron.type.impl.MInt.jnt;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MInt.jnt;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)

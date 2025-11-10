@@ -27,20 +27,20 @@ import org.jline.utils.AttributedString;
 import org.jline.utils.AttributedStringBuilder;
 import org.jline.widget.Widgets;
 import studio.phaseshift.metatron.BootLoader;
-import studio.phaseshift.metatron.lang.mtron.type.NoObj;
-import studio.phaseshift.metatron.lang.mtron.type.Obj;
-import studio.phaseshift.metatron.lang.mtron.type.Rec;
-import studio.phaseshift.metatron.lang.mtron.type.impl.MObjs;
-import studio.phaseshift.metatron.lang.mtron.mtronInstSet;
-import studio.phaseshift.metatron.lang.mtron.mtronParser;
-import studio.phaseshift.metatron.space.device.log.Log;
+import studio.phaseshift.metatron.lang.core.m.obj.NoObj;
+import studio.phaseshift.metatron.lang.core.m.type.Obj;
+import studio.phaseshift.metatron.lang.core.m.type.Rec;
+import studio.phaseshift.metatron.lang.core.m.type.impl.MObjs;
+import studio.phaseshift.metatron.lang.core.m.mtronInstSet;
+import studio.phaseshift.metatron.lang.core.m.parser.mtronParser;
+import studio.phaseshift.metatron.lang.util.logObj;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
 import studio.phaseshift.metatron.ui.Mode;
 import studio.phaseshift.metatron.ui.ObjStringSerializer;
 import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.StringUtil;
-import studio.phaseshift.metatron.lang.mach.type.impl.MMachine;
+import studio.phaseshift.metatron.lang.core.mach.type.impl.MMachine;
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;
@@ -141,7 +141,7 @@ public class Console implements Mode {
                 else if (line.equals(":quit"))
                     break;
                 else if (line.startsWith(":log")) {
-                    Log.setSLF4J(line.substring(4));
+                    logObj.setSLF4J(line.substring(4));
                 } else
                     result = mtronParser.parse(line);
 

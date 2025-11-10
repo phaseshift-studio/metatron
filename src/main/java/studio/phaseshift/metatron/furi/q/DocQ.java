@@ -18,25 +18,7 @@
 
 package studio.phaseshift.metatron.furi.q;
 
-import studio.phaseshift.metatron.furi.Q;
-import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.lang.mtron.type.Obj;
-import studio.phaseshift.metatron.lang.mtron.type.impl.MRec;
-import studio.phaseshift.metatron.lang.msys.Space;
-import studio.phaseshift.metatron.lang.mkv.kvSpace;
-import studio.phaseshift.metatron.ui.Graphitty;
-import studio.phaseshift.metatron.ui.GraphittyLogger;
-
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.stream.Collectors;
-
-import static studio.phaseshift.metatron.furi.fURI.f;
-import static studio.phaseshift.metatron.lang.mtron.type.impl.MStr.str;
-import static studio.phaseshift.metatron.lang.mtron.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.lang.mtron.mtronInstSet.MTRON_SPACE_TID;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)

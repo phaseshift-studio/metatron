@@ -18,7 +18,8 @@
 
 package studio.phaseshift.metatron.ui;
 
-import studio.phaseshift.metatron.lang.mtron.type.*;
+import studio.phaseshift.metatron.lang.core.m.type.*;
+
 
 import studio.phaseshift.metatron.util.MTronException;
 

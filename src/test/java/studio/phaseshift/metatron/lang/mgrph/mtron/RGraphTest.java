@@ -4,14 +4,16 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import studio.phaseshift.metatron.MetatronTest;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.lang.mgrph.grphInstSet;
-import studio.phaseshift.metatron.lang.mkv.kvSpace;
-import studio.phaseshift.metatron.lang.msys.Router;
+import studio.phaseshift.metatron.lang.db.grph.grphInstSet;
+import studio.phaseshift.metatron.lang.db.grph.mtron.REdge;
+import studio.phaseshift.metatron.lang.db.grph.mtron.RVertex;
+import studio.phaseshift.metatron.lang.db.kv.kvSpace;
+import studio.phaseshift.metatron.lang.sys.router.Router;
 
 import static studio.phaseshift.metatron.furi.fURI.f;
-import static studio.phaseshift.metatron.lang.mtron.mtronFluent.StartLess.from_;
-import static studio.phaseshift.metatron.lang.mtron.type.impl.MRec.rec;
-import static studio.phaseshift.metatron.lang.mtron.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.lang.core.m.inst.mtronFluent.StartLess.from_;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MRec.rec;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)

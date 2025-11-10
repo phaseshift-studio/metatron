@@ -21,17 +21,19 @@ package studio.phaseshift.metatron.lang.mtron.type;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-import studio.phaseshift.metatron.lang.mtron.mtronParser;
+import studio.phaseshift.metatron.lang.core.m.parser.mtronParser;
 import studio.phaseshift.metatron.lang.MetatronObjTest;
+import studio.phaseshift.metatron.lang.core.m.type.Obj;
+import studio.phaseshift.metatron.lang.core.m.type.Rec;
 import studio.phaseshift.metatron.ui.Graphitty;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static studio.phaseshift.metatron.lang.mtron.type.impl.MInt.jnt;
-import static studio.phaseshift.metatron.lang.mtron.type.impl.MReal.real;
-import static studio.phaseshift.metatron.lang.mtron.type.impl.MRec.rec;
-import static studio.phaseshift.metatron.lang.mtron.type.impl.MStr.str;
-import static studio.phaseshift.metatron.lang.mtron.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MInt.jnt;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MReal.real;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MRec.rec;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MStr.str;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
 
 public class RecTest extends MetatronObjTest {
 
@@ -43,7 +45,7 @@ public class RecTest extends MetatronObjTest {
             "[a=>b]                                | a                    | /m/uri::b",
             "[a=>b]                                | a/                   | /m/rel::a=>b",
             "[a=>{b,c}]                            | a/                   | /m/rel::a=>{b,c}",
-            "[a=>noobj]                            | a/                   | /m/rel::a=>noobj",
+            "[a=>noobj]                            | a/                   | noobj",
             "[a=>noobj]                            | a                    | noobj",
             "[=>]                                  | a                    | noobj",
             "[1=>[2=>3]]                           | 1                    | [2=>3]",

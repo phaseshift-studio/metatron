@@ -18,13 +18,13 @@
 
 package studio.phaseshift.metatron.util;
 
-import studio.phaseshift.metatron.lang.mtron.type.Fail;
+import studio.phaseshift.metatron.lang.core.m.type.Fail;
 import studio.phaseshift.metatron.ui.Graphitty;
 
 import java.util.Arrays;
 import java.util.Objects;
 
-import static studio.phaseshift.metatron.lang.mtron.type.impl.MFail.fail;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MFail.fail;
 
 public class MTronException extends RuntimeException {
 
@@ -92,7 +92,7 @@ public class MTronException extends RuntimeException {
                 new MTronException(Graphitty.string(throwableOrformat.toString().formatted(args)));
     }
 
-    public MTronException cause(final Exception cause) {
+    public MTronException cause(final Throwable cause) {
         this.initCause(cause);
         return this;
     }
@@ -109,13 +109,13 @@ public class MTronException extends RuntimeException {
     public boolean equals(final Object other) {
         return other instanceof MTronException && this.getMessage().equals(((MTronException) other).getMessage());
     }
-    
+
     @Override
     public int hashCode() {
         return Objects.hash(this.getMessage());
     }
-    
-    
+
+
     @FunctionalInterface
     public interface ThrowingSupplier<T> {
         public T get() throws Exception;

@@ -20,15 +20,15 @@ package studio.phaseshift.metatron;
 
 import org.junit.jupiter.api.BeforeAll;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.lang.mach.machInstSet;
-import studio.phaseshift.metatron.lang.mkv.kvSpace;
-import studio.phaseshift.metatron.lang.msys.Router;
-import studio.phaseshift.metatron.lang.mtron.mtronInstSet;
-import studio.phaseshift.metatron.lang.mtron.mtronParser;
-import studio.phaseshift.metatron.lang.mtron.type.Fail;
-import studio.phaseshift.metatron.lang.mtron.type.NoObj;
-import studio.phaseshift.metatron.lang.mtron.type.Obj;
-import studio.phaseshift.metatron.lang.mvec.vecInstSet;
+import studio.phaseshift.metatron.lang.core.mach.machInstSet;
+import studio.phaseshift.metatron.lang.db.kv.kvSpace;
+import studio.phaseshift.metatron.lang.sys.router.Router;
+import studio.phaseshift.metatron.lang.core.m.mtronInstSet;
+import studio.phaseshift.metatron.lang.core.m.parser.mtronParser;
+import studio.phaseshift.metatron.lang.core.m.type.Fail;
+import studio.phaseshift.metatron.lang.core.m.obj.NoObj;
+import studio.phaseshift.metatron.lang.core.m.type.Obj;
+import studio.phaseshift.metatron.lang.db.vec.vecInstSet;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
 
@@ -37,8 +37,8 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.fail;
 import static studio.phaseshift.metatron.furi.fURI.f;
-import static studio.phaseshift.metatron.lang.mtron.type.impl.MRec.rec;
-import static studio.phaseshift.metatron.lang.mtron.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MRec.rec;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
 
 public class MetatronTest {
 
@@ -100,7 +100,7 @@ public class MetatronTest {
             }
         } else {
             final Obj cd = mtronParser.m_code_or_obj().parse(code).get();
-            final Obj ex = mtronParser.m_obj().parse(expected).get();
+            final Obj ex = mtronParser.eval(expected);
             final Obj actual = cd.apply(NoObj.noobj());
             LOG.debug("testing %s => %s [expected:%s]", cd, actual, ex);
             assertEquals(ex, actual);

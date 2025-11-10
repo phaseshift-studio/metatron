@@ -8,11 +8,14 @@
 /mnt/lang/mach -> */mach;
 /mnt/lang/llm  -> */llm;
 --- mount spaces
-kv::[pattern     => /usr/#].@/mnt/space/usr;
-kv::[pattern     => /shared/#].@/mnt/space/shared;
+    kv::[pattern => /usr/#]@/mnt/space/usr;
+    kv::[pattern => /shared/#]@/mnt/space/shared;
 ollama::[host    => <http://localhost:11434>,
-         pattern => /ollama/#].@/mnt/space/ollama;
-web::[host       => <http://localhost:8777>,
-      pattern    => <http://#>,
-      route      => [/     => examples/www,
-                     /docs => target/docs ]].@/mnt/space/web
+         pattern => /ollama/#]@/mnt/space/ollama;
+   web::[host    => <http://localhost:8777>,
+         pattern => <http://#>,
+         route   => [/     => examples/www,
+                     /docs => target/docs ]]@/mnt/space/web;
+  grph::[pattern => /g/#,
+         space   => kv::[pattern => /g/#],
+         load    => <tinkerpop-modern>]@/mnt/space/tp3

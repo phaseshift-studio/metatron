@@ -20,12 +20,10 @@ package studio.phaseshift.metatron.furi.q;
 
 import studio.phaseshift.metatron.furi.Q;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.lang.msys.Space;
-import studio.phaseshift.metatron.lang.mtron.type.Inst;
-import studio.phaseshift.metatron.lang.mtron.type.Obj;
-import studio.phaseshift.metatron.lang.mtron.type.Rec;
-import studio.phaseshift.metatron.lang.mtron.type.impl.MObj;
-import studio.phaseshift.metatron.lang.mtron.type.impl.MRec;
+import studio.phaseshift.metatron.lang.core.m.type.Inst;
+import studio.phaseshift.metatron.lang.core.m.type.Obj;
+import studio.phaseshift.metatron.lang.core.m.type.Rec;
+import studio.phaseshift.metatron.lang.core.m.type.impl.MRec;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
 
@@ -33,10 +31,9 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
 
-import static studio.phaseshift.metatron.lang.msys.Space.PATTERN;
-import static studio.phaseshift.metatron.lang.mtron.type.NoObj.noobj;
-import static studio.phaseshift.metatron.lang.mtron.type.impl.MLst.lst;
-import static studio.phaseshift.metatron.lang.mtron.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.lang.Space.PATTERN;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)

@@ -20,22 +20,22 @@ package studio.phaseshift.metatron;
 
 import org.apache.tinkerpop.gremlin.tinkergraph.structure.TinkerFactory;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.lang.mach.machInstSet;
-import studio.phaseshift.metatron.lang.mgrph.grphInstSet;
-import studio.phaseshift.metatron.lang.mgrph.mtron.TP3Translator;
-import studio.phaseshift.metatron.lang.mkv.kvSpace;
-import studio.phaseshift.metatron.lang.mkv.kvInstSet;
-import studio.phaseshift.metatron.lang.mllm.llmInstSet;
-import studio.phaseshift.metatron.lang.msys.Router;
-import studio.phaseshift.metatron.lang.msys.impl.MRouter;
-import studio.phaseshift.metatron.lang.msys.sysInstSet;
-import studio.phaseshift.metatron.lang.mtron.mtronInstSet;
-import studio.phaseshift.metatron.lang.mtron.mtronParser;
-import studio.phaseshift.metatron.lang.mtron.type.Obj;
-import studio.phaseshift.metatron.lang.mtron.type.Rec;
-import studio.phaseshift.metatron.lang.mvec.vecInstSet;
-import studio.phaseshift.metatron.lang.mweb.webInstSet;
-import studio.phaseshift.metatron.space.device.log.Log;
+import studio.phaseshift.metatron.lang.core.mach.machInstSet;
+import studio.phaseshift.metatron.lang.db.grph.grphInstSet;
+import studio.phaseshift.metatron.lang.db.grph.mtron.TP3Translator;
+import studio.phaseshift.metatron.lang.db.kv.kvSpace;
+import studio.phaseshift.metatron.lang.db.kv.kvInstSet;
+import studio.phaseshift.metatron.lang.ai.llm.llmInstSet;
+import studio.phaseshift.metatron.lang.sys.router.Router;
+import studio.phaseshift.metatron.lang.sys.router.impl.MRouter;
+import studio.phaseshift.metatron.lang.sys.sysInstSet;
+import studio.phaseshift.metatron.lang.core.m.mtronInstSet;
+import studio.phaseshift.metatron.lang.core.m.parser.mtronParser;
+import studio.phaseshift.metatron.lang.core.m.type.Obj;
+import studio.phaseshift.metatron.lang.core.m.type.Rec;
+import studio.phaseshift.metatron.lang.db.vec.vecInstSet;
+import studio.phaseshift.metatron.lang.net.web.webInstSet;
+import studio.phaseshift.metatron.lang.util.logObj;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
 import studio.phaseshift.metatron.ui.Mode;
@@ -43,23 +43,18 @@ import studio.phaseshift.metatron.ui.mode.console.Console;
 import studio.phaseshift.metatron.ui.mode.server.Server;
 import studio.phaseshift.metatron.util.MTronException;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.nio.file.Path;
-import java.util.Arrays;
-import java.util.List;
 
 import static studio.phaseshift.metatron.furi.fURI.f;
-import static studio.phaseshift.metatron.lang.mtron.mtronInstSet.REC_TID;
-import static studio.phaseshift.metatron.lang.mtron.type.NoObj.noobj;
-import static studio.phaseshift.metatron.lang.mtron.type.impl.MLst.lst;
-import static studio.phaseshift.metatron.lang.mtron.type.impl.MObjs.objs;
-import static studio.phaseshift.metatron.lang.mtron.type.impl.MRec.rec;
-import static studio.phaseshift.metatron.lang.mtron.type.impl.MRel.rel;
-import static studio.phaseshift.metatron.lang.mtron.type.impl.MType.T;
-import static studio.phaseshift.metatron.lang.mtron.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.lang.core.m.mtronInstSet.REC_TID;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MObjs.objs;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MRec.rec;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MRel.rel;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MType.T;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
 
 public class BootLoader implements Obj {
 
@@ -116,7 +111,7 @@ public class BootLoader implements Obj {
             System.exit(0);
         } else {
             Rec options = args.length > 0 ? mtronParser.parse(args[0]).as() : rec();
-            Log.setSLF4J(options.has(uri("log")) ? options.at(uri("log")).uriValue().toString() : "trace");
+            logObj.setSLF4J(options.has(uri("log")) ? options.at(uri("log")).uriValue().toString() : "trace");
             LOG.debug("user options: %s", options);
             GLOBAL = options;
             BootLoader.load(options);
@@ -156,7 +151,7 @@ public class BootLoader implements Obj {
                 LOG.none("\t {{m}}END:{{g}} evaluating provided boot loader: {{b}}%s{{X}}\n", options.at(uri(BOOT)).uriValue());
             }
             ///////////////////////////////////////////////////////////////
-            final Obj log = Router.writeToSpace(Log.of(rec(options.at("log").orElse(uri("trace")), lst(uri("#"))), f("/sys/log")));
+            final Obj log = Router.writeToSpace(logObj.of(rec(options.at("log").orElse(uri("trace")), lst(uri("#"))), f("/sys/log")));
             LOG.info("logging now handled by %s", log);
 
             //Router.writeToSpace(new FileSpace(FileSystems.getDefault(), f("/home/#"), f("/mnt/fs")));

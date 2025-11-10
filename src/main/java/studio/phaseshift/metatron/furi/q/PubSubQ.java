@@ -19,17 +19,16 @@
 package studio.phaseshift.metatron.furi.q;
 
 import studio.phaseshift.metatron.furi.Q;
-import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.lang.mach.type.Machine;
-import studio.phaseshift.metatron.lang.mach.type.impl.MMachine;
-import studio.phaseshift.metatron.lang.msys.Space;
-import studio.phaseshift.metatron.lang.mtron.mtronInstSet;
-import studio.phaseshift.metatron.lang.mtron.type.Call;
-import studio.phaseshift.metatron.lang.mtron.type.Obj;
-import studio.phaseshift.metatron.lang.mtron.type.Type;
-import studio.phaseshift.metatron.lang.mtron.type.impl.MObj;
-import studio.phaseshift.metatron.lang.mtron.type.impl.MObjs;
+import studio.phaseshift.metatron.lang.core.mach.type.Machine;
+import studio.phaseshift.metatron.lang.core.mach.type.impl.MMachine;
+import studio.phaseshift.metatron.lang.Space;
+import studio.phaseshift.metatron.lang.core.m.mtronInstSet;
+import studio.phaseshift.metatron.lang.core.m.type.Call;
+import studio.phaseshift.metatron.lang.core.m.type.Obj;
+import studio.phaseshift.metatron.lang.core.m.type.Type;
+import studio.phaseshift.metatron.lang.core.m.type.impl.MObj;
+import studio.phaseshift.metatron.lang.core.m.type.impl.MObjs;
 
 import java.util.LinkedList;
 import java.util.Map;
@@ -39,14 +38,14 @@ import java.util.Queue;
 import static studio.phaseshift.metatron.furi.Qs.QS_TID;
 import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.furi.fURI.f;
-import static studio.phaseshift.metatron.lang.msys.Space.PATTERN;
-import static studio.phaseshift.metatron.lang.mtron.mtronFluent.StartLess.isa_;
-import static studio.phaseshift.metatron.lang.mtron.mtronInstSet.*;
-import static studio.phaseshift.metatron.lang.mtron.mtronInstSet.INST_TID;
-import static studio.phaseshift.metatron.lang.mtron.type.impl.MInst.instC;
-import static studio.phaseshift.metatron.lang.mtron.type.impl.MLst.lst;
-import static studio.phaseshift.metatron.lang.mtron.type.impl.MType.T;
-import static studio.phaseshift.metatron.lang.mtron.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.lang.Space.PATTERN;
+import static studio.phaseshift.metatron.lang.core.m.inst.mtronFluent.StartLess.isa_;
+import static studio.phaseshift.metatron.lang.core.m.mtronInstSet.*;
+import static studio.phaseshift.metatron.lang.core.m.mtronInstSet.INST_TID;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MInst.instC;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MType.T;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.Tuple.Triplet;
 
 public class PubSubQ extends BaseQ {
