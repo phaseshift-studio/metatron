@@ -19,7 +19,7 @@
 package studio.phaseshift.metatron.lang.net.web;
 
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.lang.core.m.parser.mtronParser;
+import studio.phaseshift.metatron.lang.core.m.parser.mParser;
 import studio.phaseshift.metatron.lang.core.m.type.Type;
 import studio.phaseshift.metatron.lang.core.m.type.impl.MInstSet;
 
@@ -54,7 +54,7 @@ public class webInstSet extends MInstSet {
     public Set<Type> types() {
         return Stream.of(
                 webSpace.WEB_TYPE,
-                T(PAGE_TID, mtronParser.parse("?[html=>?[head=>_,body=>_]]")),
+                T(PAGE_TID, mParser.parse("?[html=>?[head=>_,body=>_]]")),
                 T(CSS_TID)).collect(Collectors.toSet());
     }
 }

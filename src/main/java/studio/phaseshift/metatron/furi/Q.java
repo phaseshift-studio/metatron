@@ -48,6 +48,8 @@ public interface Q extends Rec {
             }));*/
 
 
+    fURI pattern();
+    
     Optional<OnWrite> onWrite();
 
     Optional<OnRead> onRead();

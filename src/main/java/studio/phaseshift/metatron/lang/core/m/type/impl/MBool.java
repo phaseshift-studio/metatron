@@ -21,7 +21,7 @@ package studio.phaseshift.metatron.lang.core.m.type.impl;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.core.m.type.Bool;
 
-import static studio.phaseshift.metatron.lang.core.m.mtronInstSet.BOOL_TID;
+import static studio.phaseshift.metatron.lang.core.m.mInstSet.BOOL_TID;
 
 
 public class MBool extends MObj implements Bool {

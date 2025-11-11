@@ -19,7 +19,9 @@
 package studio.phaseshift.metatron.lang.core.m.type.impl;
 
 import org.petitparser.parser.Parser;
+import studio.phaseshift.metatron.furi.Qs;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.furi.q.DocQ;
 import studio.phaseshift.metatron.lang.sys.router.Router;
 import studio.phaseshift.metatron.lang.core.m.type.Inst;
 import studio.phaseshift.metatron.lang.core.m.type.InstSet;
@@ -92,36 +94,40 @@ public abstract class MInstSet extends MSpace<Map<fURI, Set<? extends Obj>>> imp
         if (Objects.equals(this.tid, vid))
             return this;
         final fURI bigvid = vid.big();
-        return objs(INST_TABLE.entrySet()
-                .stream()
-                .filter(kv -> kv.getKey().bimatches(bigvid.basePath()))
-                .flatMap(kv -> kv.getValue().stream())
-                .filter(i -> !bigvid.hasDom() || i.dom().tid().bimatches(bigvid.dom()))
-                .filter(i -> !bigvid.hasRng() || i.rng().tid().bimatches(bigvid.rng()))
-                .map(i -> i))
-                .append(objs(TYPE_TABLE.entrySet().stream().filter(kv -> kv.getKey().matches(bigvid)).map(Map.Entry::getValue)))
-                .append(objs(CONST_TABLE.entrySet().stream().filter(kv -> kv.getKey().matches(bigvid)).map(Map.Entry::getValue)));
+        return this.qs().processPreRead(this.vid, vid).orElse(
+                objs(INST_TABLE.entrySet()
+                        .stream()
+                        .filter(kv -> kv.getKey().bimatches(bigvid.basePath()))
+                        .flatMap(kv -> kv.getValue().stream())
+                        .filter(i -> !bigvid.hasDom() || i.dom().tid().bimatches(bigvid.dom()))
+                        .filter(i -> !bigvid.hasRng() || i.rng().tid().bimatches(bigvid.rng()))
+                        .map(i -> i))
+                        .append(objs(TYPE_TABLE.entrySet().stream().filter(kv -> kv.getKey().matches(bigvid)).map(Map.Entry::getValue)))
+                        .append(objs(CONST_TABLE.entrySet().stream().filter(kv -> kv.getKey().matches(bigvid)).map(Map.Entry::getValue))));
+
     }
 
     @Override
     public Obj write(final fURI vid, final Obj obj) {
-        if (obj.isInst()) {
-            final Inst inst = obj.as();
-            if (inst.dom().isCode()) {
-                REWRITE_TABLE.put(inst.tid(), inst);
+       return  this.qs().processPreWrite(this.vid, vid, obj).orElseGet(() -> {
+            if (obj.isInst()) {
+                final Inst inst = obj.as();
+                if (inst.dom().isCode()) {
+                    REWRITE_TABLE.put(inst.tid(), inst);
+                } else {
+                    Router.global().registerRewrite(fURI.of(vid.name()), vid);
+                    INST_TABLE
+                            .computeIfAbsent(inst.tid().basePath(), k -> new LinkedHashSet<>())
+                            .add(inst);
+                }
+            } else if (obj.isType()) {
+                TYPE_TABLE.put(vid, obj.as());
             } else {
-                Router.global().registerRewrite(fURI.of(vid.name()), vid);
-                INST_TABLE
-                        .computeIfAbsent(inst.tid().basePath(), k -> new LinkedHashSet<>())
-                        .add(inst);
+                CONST_TABLE.put(vid, obj);
+                // throw MTronException.of("inst set %s can only store insts, types, and rewrites: {{r}}!{{/r}} %s", this.simpeToString(), obj);
             }
-        } else if (obj.isType()) {
-            TYPE_TABLE.put(vid, obj.as());
-        } else {
-            CONST_TABLE.put(vid, obj);
-            // throw MTronException.of("inst set %s can only store insts, types, and rewrites: {{r}}!{{/r}} %s", this.simpeToString(), obj);
-        }
-        return obj;
+            return obj;
+        });
     }
 
     public List<Parser> sugars() {

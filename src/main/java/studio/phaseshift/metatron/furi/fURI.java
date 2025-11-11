@@ -503,6 +503,10 @@ public class fURI implements Cloneable, Ring<fURI> {
         return this.query != null && this.query.hasKey(key);
     }
 
+    public boolean hasQuery(final fURI key) {
+        return this.hasQuery(key.toString());
+    }
+
     public boolean hasDom() {
         return this.hasQuery(DOM.toString());
     }

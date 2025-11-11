@@ -24,7 +24,7 @@ import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.core.m.obj.NoObj;
 import studio.phaseshift.metatron.lang.core.m.type.impl.MInst;
-import studio.phaseshift.metatron.lang.core.m.parser.mtronParser;
+import studio.phaseshift.metatron.lang.core.m.parser.mParser;
 import studio.phaseshift.metatron.lang.MetatronObjTest;
 import studio.phaseshift.metatron.util.Tuple;
 
@@ -34,7 +34,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MObjs.objs;
-import static studio.phaseshift.metatron.lang.core.m.inst.mtronFluent.StartLess.*;
+import static studio.phaseshift.metatron.lang.core.m.inst.mFluent.StartLess.*;
 
 public class InstTest extends MetatronObjTest {
 
@@ -71,10 +71,10 @@ public class InstTest extends MetatronObjTest {
             // "noobj     % test?A{*]<=[0](A{*}::T[])        % test({1,2,3})    % test?int{3]<=[0](int{3}::T[])",
     }, delimiter = '%')
     public void testResolution(final String lhs, final String def, final String spec, final String resolution) {
-        final Obj lhsA = mtronParser.m_obj().parse(lhs).get();
-        final Inst defA = mtronParser.m_obj().parse(def).get();
-        final Inst specA = mtronParser.m_obj().parse(spec).get();
-        final Inst resolutionA = mtronParser.m_obj().parse(resolution).get();
+        final Obj lhsA = mParser.m_obj().parse(lhs).get();
+        final Inst defA = mParser.m_obj().parse(def).get();
+        final Inst specA = mParser.m_obj().parse(spec).get();
+        final Inst resolutionA = mParser.m_obj().parse(resolution).get();
         final Inst resultA = Inst.Helpers.bindGenerics(lhsA, specA, defA);
         LOG.info("{{b}}%s{{/b}} resolution matches {{b}}%s{{/b}} specification", resultA.tid(), resolutionA.tid());
         final boolean match = resultA.tid().matches(resolutionA.tid());

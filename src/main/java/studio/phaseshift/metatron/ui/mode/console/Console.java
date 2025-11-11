@@ -31,8 +31,8 @@ import studio.phaseshift.metatron.lang.core.m.obj.NoObj;
 import studio.phaseshift.metatron.lang.core.m.type.Obj;
 import studio.phaseshift.metatron.lang.core.m.type.Rec;
 import studio.phaseshift.metatron.lang.core.m.type.impl.MObjs;
-import studio.phaseshift.metatron.lang.core.m.mtronInstSet;
-import studio.phaseshift.metatron.lang.core.m.parser.mtronParser;
+import studio.phaseshift.metatron.lang.core.m.mInstSet;
+import studio.phaseshift.metatron.lang.core.m.parser.mParser;
 import studio.phaseshift.metatron.lang.util.logObj;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
@@ -143,7 +143,7 @@ public class Console implements Mode {
                 else if (line.startsWith(":log")) {
                     logObj.setSLF4J(line.substring(4));
                 } else
-                    result = mtronParser.parse(line);
+                    result = mParser.parse(line);
 
                 if (null != result) {
                     (result.isNoObj() ?
@@ -238,7 +238,7 @@ public class Console implements Mode {
                             //builder.append(buffer);
                             //Graphitty.out(this.terminal.output(), "{{v1&-X&^1&|%d}}".formatted(9));
                         } else {
-                            final Obj o = mtronParser.parse(buffer);
+                            final Obj o = mParser.parse(buffer);
                             final int xLocation = this.terminal.getCursorPosition(System.out::print).getX() + 1;
                             // final int promptLength = 8; //"mtron> ".length() + 1;
                             builder.append(buffer);
@@ -323,7 +323,7 @@ public class Console implements Mode {
             String sourceKey = "B"; //reader.readLine(Graphitty.string("{{-X-}}\r{{m}}hotkey{{g}}:{{X}} "));
             getKeyMap().bind(new Reference(sourceName), ctrl(sourceKey.charAt(0)));
             this.addWidget(sourceName, () -> {
-                mtronParser.eval(sourceCode).stream().forEach(System.out::println);
+                mParser.eval(sourceCode).stream().forEach(System.out::println);
                 return true;
             });
             return true;
@@ -332,7 +332,7 @@ public class Console implements Mode {
         private boolean hideWidget() {
             boolean hiding = ObjStringSerializer.HIDE_TIDS.isEmpty();
             if (hiding)
-                ObjStringSerializer.HIDE_TIDS.addAll(mtronInstSet.BASE_TYPES);
+                ObjStringSerializer.HIDE_TIDS.addAll(mInstSet.BASE_TYPES);
             else
                 ObjStringSerializer.HIDE_TIDS.clear();
             final int xLocation = terminal.getCursorPosition(System.out::print).getX() + 1;

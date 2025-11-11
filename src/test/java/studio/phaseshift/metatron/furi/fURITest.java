@@ -26,7 +26,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import studio.phaseshift.metatron.lang.core.m.parser.mtronParser;
+import studio.phaseshift.metatron.lang.core.m.parser.mParser;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
 import studio.phaseshift.metatron.util.MTronException;
@@ -85,7 +85,7 @@ public class fURITest {
     })
     public void testParse(final String f) {
         final fURI furi1 = fURI.of(f);
-        final fURI furi2 = mtronParser.m_furi().parse(f).get();
+        final fURI furi2 = mParser.m_furi().parse(f).get();
         assertEquals(f, furi1.toString());
         assertEquals(f, furi2.toString());
         assertEquals(furi1, furi2);
@@ -111,8 +111,8 @@ public class fURITest {
     public void testResolve(final String f1, final String f2) {
         final fURI furi1a = fURI.of(f1);
         final fURI furi1b = fURI.of(f2);
-        final fURI furi2a = mtronParser.m_furi().parse(f1).get();
-        final fURI furi2b = mtronParser.m_furi().parse(f2).get();
+        final fURI furi2a = mParser.m_furi().parse(f1).get();
+        final fURI furi2b = mParser.m_furi().parse(f2).get();
         LOG.info("testing {{b}}%s{{/b}} {{g}}=>{{/g}} {{b}}%s{{b}} resolution", furi1a, furi2b);
         assertEquals(furi1a.resolve(), furi2b);
         assertEquals(furi2a.resolve(), furi1b);
@@ -143,7 +143,7 @@ public class fURITest {
             assertEquals(isGeneric, furi1.isGeneric());
             return;
         }
-        final fURI furi2 = mtronParser.m_furi().parse(f).get();
+        final fURI furi2 = mParser.m_furi().parse(f).get();
         assertEquals(f, furi1.toString());
         assertEquals(f, furi2.toString());
         assertEquals(furi1, furi2);
@@ -202,7 +202,7 @@ public class fURITest {
             delimiter = '|')
     public void testQueryRead(final String f, final String queryMap) {
         final fURI furi1 = fURI.of(f);
-        final fURI furi2 = mtronParser.m_furi().parse(f).get();
+        final fURI furi2 = mParser.m_furi().parse(f).get();
         assertEquals(queryMap, furi1.queryMap().toString());
         assertEquals(queryMap, furi2.queryMap().toString());
         //assertEquals(f, furi1.toString());
@@ -226,8 +226,8 @@ public class fURITest {
     public void testPlus(final String f1, final String f2, final String expected) {
         final fURI furi1a = fURI.of(f1);
         final fURI furi1b = fURI.of(f2);
-        final fURI furi2a = mtronParser.m_furi().parse(f1).get();
-        final fURI furi2b = mtronParser.m_furi().parse(f2).get();
+        final fURI furi2a = mParser.m_furi().parse(f1).get();
+        final fURI furi2b = mParser.m_furi().parse(f2).get();
         //assertEquals(furi1a, furi2a); // TODO: important ssend issue
         assertEquals(furi1b, furi2b);
         if (expected.equals("ERROR")) {
@@ -255,8 +255,8 @@ public class fURITest {
     public void testMult(final String f1, final String f2, final String expected) {
         final fURI furi1a = fURI.of(f1);
         final fURI furi1b = fURI.of(f2);
-        final fURI furi2a = mtronParser.m_furi().parse(f1).get();
-        final fURI furi2b = mtronParser.m_furi().parse(f2).get();
+        final fURI furi2a = mParser.m_furi().parse(f1).get();
+        final fURI furi2b = mParser.m_furi().parse(f2).get();
         assertEquals(furi1a, furi2a);
         assertEquals(furi1b, furi2b);
         if (expected.equals("ERROR")) {
@@ -286,7 +286,7 @@ public class fURITest {
     }, delimiter = '|')
     public void testNeg(final String f1, final String expected) {
         final fURI furi1 = fURI.of(f1);
-        final fURI furi2 = mtronParser.m_furi().parse(f1).get();
+        final fURI furi2 = mParser.m_furi().parse(f1).get();
         //assertEquals(furi1a, furi2a); // TODO: important ssend issue
         assertEquals(furi1, furi2);
         if (expected.equals("ERROR")) {
@@ -705,8 +705,8 @@ public class fURITest {
         final fURI furi1a = fURI.of(nullToEmpty(a));
         final fURI furi1b = fURI.of(nullToEmpty(b));
         final boolean doObjParser = null != a && null != b && !a.equals("{0}");
-        final fURI furi2a = doObjParser ? mtronParser.m_furi().parse(nullToEmpty(a)).get() : fURI.of(nullToEmpty(a));
-        final fURI furi2b = doObjParser ? mtronParser.m_furi().parse(nullToEmpty(b)).get() : fURI.of(nullToEmpty(b));
+        final fURI furi2a = doObjParser ? mParser.m_furi().parse(nullToEmpty(a)).get() : fURI.of(nullToEmpty(a));
+        final fURI furi2b = doObjParser ? mParser.m_furi().parse(nullToEmpty(b)).get() : fURI.of(nullToEmpty(b));
         LOG.trace("testing: {{b}}%s{{/b}} %s {{b}}%s{{/b}}", furi1a, shouldMatch ? "{{g}}should match{{/g}}" : "{{r}}should not match{{/r}}", furi1b);
         LOG.trace("testing: {{b}}%s{{/b}} %s {{b}}%s{{/b}}", furi2a, shouldMatch ? "{{g}}should match{{/g}}" : "{{r}}should not match{{/r}}", furi2b);
         LOG.trace("testing: {{b}}%s{{/b}} %s {{b}}%s{{/b}}", furi1a, shouldMatch ? "{{g}}should match{{/g}}" : "{{r}}should not match{{/r}}", furi2b);
@@ -747,8 +747,8 @@ public class fURITest {
         final fURI furi1a = fURI.of(nullToEmpty(a));
         final fURI furi1b = fURI.of(nullToEmpty(b));
         final boolean doObjParser = null != a && null != b && !a.equals("[0]");
-        final fURI furi2a = doObjParser ? mtronParser.m_furi().parse(nullToEmpty(a)).get() : fURI.of(nullToEmpty(a));
-        final fURI furi2b = doObjParser ? mtronParser.m_furi().parse(nullToEmpty(b)).get() : fURI.of(nullToEmpty(b));
+        final fURI furi2a = doObjParser ? mParser.m_furi().parse(nullToEmpty(a)).get() : fURI.of(nullToEmpty(a));
+        final fURI furi2b = doObjParser ? mParser.m_furi().parse(nullToEmpty(b)).get() : fURI.of(nullToEmpty(b));
         LOG.trace("testing: {{b}}%s{{/b}} selects %s from {{b}}%s{{/b}}", furi2a, matches, furi1a);
         assertEquals(furi1a, furi2a);
         assertEquals(matches, furi1a.select(furi1b).toString());

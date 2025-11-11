@@ -35,10 +35,9 @@ import java.util.Set;
 
 import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.furi.fURI.f;
-import static studio.phaseshift.metatron.lang.db.grph.grphSpace.GRPH_TYPE;
 import static studio.phaseshift.metatron.lang.db.grph.mtron.TP3Translator.LABEL;
 import static studio.phaseshift.metatron.lang.db.grph.mtron.TP3Translator.PROPS;
-import static studio.phaseshift.metatron.lang.core.m.mtronInstSet.*;
+import static studio.phaseshift.metatron.lang.core.m.mInstSet.*;
 import static studio.phaseshift.metatron.lang.core.m.obj.NoObj.noobj;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;

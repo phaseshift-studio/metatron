@@ -21,7 +21,7 @@ package studio.phaseshift.metatron.lang;
 import studio.phaseshift.metatron.MetatronTest;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.core.m.type.Obj;
-import studio.phaseshift.metatron.lang.core.m.parser.mtronParser;
+import studio.phaseshift.metatron.lang.core.m.parser.mParser;
 import studio.phaseshift.metatron.util.Tuple;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -33,10 +33,10 @@ import static studio.phaseshift.metatron.furi.fURI.f;
 public abstract class MetatronObjTest extends MetatronTest {
 
     public void testTake(final String current, final String remove, final String retrieved, final String remaining) {
-        final Obj currentF = mtronParser.m_obj().parse(current).get();
+        final Obj currentF = mParser.m_obj().parse(current).get();
         final fURI removeF = f(remove);
-        final Obj retrievedF = mtronParser.m_obj().parse(retrieved).get();
-        final Obj remainingF = mtronParser.m_obj().parse(remaining).get();
+        final Obj retrievedF = mParser.m_obj().parse(retrieved).get();
+        final Obj remainingF = mParser.m_obj().parse(remaining).get();
         assertEquals(Tuple.Pair.with(retrievedF, remainingF), currentF.take(removeF.cV()));
     }
 }

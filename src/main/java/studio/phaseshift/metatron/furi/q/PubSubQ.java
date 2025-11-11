@@ -23,7 +23,7 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.core.mach.type.Machine;
 import studio.phaseshift.metatron.lang.core.mach.type.impl.MMachine;
 import studio.phaseshift.metatron.lang.Space;
-import studio.phaseshift.metatron.lang.core.m.mtronInstSet;
+import studio.phaseshift.metatron.lang.core.m.mInstSet;
 import studio.phaseshift.metatron.lang.core.m.type.Call;
 import studio.phaseshift.metatron.lang.core.m.type.Obj;
 import studio.phaseshift.metatron.lang.core.m.type.Type;
@@ -39,9 +39,9 @@ import static studio.phaseshift.metatron.furi.Qs.QS_TID;
 import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.lang.Space.PATTERN;
-import static studio.phaseshift.metatron.lang.core.m.inst.mtronFluent.StartLess.isa_;
-import static studio.phaseshift.metatron.lang.core.m.mtronInstSet.*;
-import static studio.phaseshift.metatron.lang.core.m.mtronInstSet.INST_TID;
+import static studio.phaseshift.metatron.lang.core.m.inst.mFluent.StartLess.isa_;
+import static studio.phaseshift.metatron.lang.core.m.mInstSet.*;
+import static studio.phaseshift.metatron.lang.core.m.mInstSet.INST_TID;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MType.T;
@@ -55,7 +55,7 @@ public class PubSubQ extends BaseQ {
     protected final Obj subscriptions = MObjs.empty();
     protected final Queue<Machine> mail = new LinkedList<>();
 
-    Type PUBSUB_TYPE = T(f("/sys/space/q/sub"), null, instC(mtronInstSet.INST_TID.dom(ALL.maybe()).rng(f("/sys/space/q/sub")),
+    Type PUBSUB_TYPE = T(f("/sys/space/q/sub"), null, instC(mInstSet.INST_TID.dom(ALL.maybe()).rng(f("/sys/space/q/sub")),
             lst(T(REC_TID, isa_(rec(uri(PATTERN), uri("sub"),
                     uri(ON_WRITE), rec(uri(PRE_WRITE), T(INST_TID), uri(QLESS_WRITE), T(INST_TID)),
                     uri(ON_READ), rec(uri(PRE_READ), T(INST_TID)))))), (lhs, inst) -> {

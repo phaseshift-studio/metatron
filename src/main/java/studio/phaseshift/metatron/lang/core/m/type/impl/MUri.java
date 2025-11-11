@@ -22,7 +22,7 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.core.m.type.Uri;
 
 import static studio.phaseshift.metatron.furi.fURI.f;
-import static studio.phaseshift.metatron.lang.core.m.mtronInstSet.URI_TID;
+import static studio.phaseshift.metatron.lang.core.m.mInstSet.URI_TID;
 
 public class MUri extends MObj implements Uri {
 

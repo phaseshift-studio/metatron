@@ -26,7 +26,7 @@ import org.jsoup.Jsoup;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.sys.router.Router;
 import studio.phaseshift.metatron.lang.Space;
-import studio.phaseshift.metatron.lang.core.m.mtronInstSet;
+import studio.phaseshift.metatron.lang.core.m.mInstSet;
 import studio.phaseshift.metatron.lang.core.m.type.Obj;
 import studio.phaseshift.metatron.lang.core.m.type.Rec;
 import studio.phaseshift.metatron.lang.core.m.type.Type;
@@ -55,9 +55,9 @@ import java.util.function.Function;
 import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.lang.ai.llm.type.impl.Audio.AUDIO_TID;
-import static studio.phaseshift.metatron.lang.core.m.inst.mtronFluent.StartLess.isa_;
-import static studio.phaseshift.metatron.lang.core.m.mtronInstSet.REC_TID;
-import static studio.phaseshift.metatron.lang.core.m.mtronInstSet.URI_TID;
+import static studio.phaseshift.metatron.lang.core.m.inst.mFluent.StartLess.isa_;
+import static studio.phaseshift.metatron.lang.core.m.mInstSet.REC_TID;
+import static studio.phaseshift.metatron.lang.core.m.mInstSet.URI_TID;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MBytes.bytes;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MInt.jnt;
@@ -123,7 +123,7 @@ public class webSpace extends MSpace<HttpServer> {
     public static final fURI WEB_TID = MWEB_TID.extend("space").extend("web");
     protected static final String ROUTE = "route";
     protected static final Type WEB_TYPE = T(WEB_TID, null,
-            instC(mtronInstSet.INST_TID.dom(ALL.maybe()).rng(WEB_TID),
+            instC(mInstSet.INST_TID.dom(ALL.maybe()).rng(WEB_TID),
                     lst(T(REC_TID, isa_(rec(uri(PATTERN), T(URI_TID), uri(HOST), T(URI_TID), uri(ROUTE), T(REC_TID))))), (lhs, inst) -> {
                         final fURI pattern = inst.arg(0).<Rec>as().at(PATTERN).uriValue();
                         final fURI host = inst.arg(0).<Rec>as().at(HOST).uriValue();

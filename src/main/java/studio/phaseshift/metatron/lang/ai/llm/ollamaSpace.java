@@ -25,7 +25,7 @@ import studio.phaseshift.metatron.lang.db.kv.kvSpace;
 import studio.phaseshift.metatron.lang.ai.llm.type.impl.OLLM;
 import studio.phaseshift.metatron.lang.sys.router.Router;
 import studio.phaseshift.metatron.lang.Space;
-import studio.phaseshift.metatron.lang.core.m.mtronInstSet;
+import studio.phaseshift.metatron.lang.core.m.mInstSet;
 import studio.phaseshift.metatron.lang.core.m.type.Obj;
 import studio.phaseshift.metatron.lang.core.m.type.Rec;
 import studio.phaseshift.metatron.lang.core.m.type.Type;
@@ -40,9 +40,9 @@ import java.util.Map;
 import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.lang.ai.llm.llmInstSet.OLLAMA_TID;
 import static studio.phaseshift.metatron.lang.ai.llm.type.impl.OLLM.ollm;
-import static studio.phaseshift.metatron.lang.core.m.inst.mtronFluent.StartLess.isa_;
-import static studio.phaseshift.metatron.lang.core.m.mtronInstSet.REC_TID;
-import static studio.phaseshift.metatron.lang.core.m.mtronInstSet.URI_TID;
+import static studio.phaseshift.metatron.lang.core.m.inst.mFluent.StartLess.isa_;
+import static studio.phaseshift.metatron.lang.core.m.mInstSet.REC_TID;
+import static studio.phaseshift.metatron.lang.core.m.mInstSet.URI_TID;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MType.T;
@@ -53,7 +53,7 @@ import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
  */
 public class ollamaSpace extends MSpace<OllamaModels> {
 
-    protected static final Type OLLAMA_TYPE = T(OLLAMA_TID, null, instC(mtronInstSet.INST_TID.dom(ALL.maybe()).rng(OLLAMA_TID), lst(T(REC_TID, isa_(rec(uri(PATTERN), T(URI_TID), uri(HOST), T(URI_TID))))), (lhs, inst) -> {
+    protected static final Type OLLAMA_TYPE = T(OLLAMA_TID, null, instC(mInstSet.INST_TID.dom(ALL.maybe()).rng(OLLAMA_TID), lst(T(REC_TID, isa_(rec(uri(PATTERN), T(URI_TID), uri(HOST), T(URI_TID))))), (lhs, inst) -> {
         final fURI pattern = inst.arg(0).<Rec>as().at(PATTERN).uriValue();
         final fURI ollamaHost = inst.arg(0).<Rec>as().at(HOST).uriValue();
         final OllamaModels models = OllamaModels.builder().baseUrl(ollamaHost.toString()).build();

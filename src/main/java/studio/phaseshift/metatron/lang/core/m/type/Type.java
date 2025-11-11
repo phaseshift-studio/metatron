@@ -20,7 +20,7 @@ package studio.phaseshift.metatron.lang.core.m.type;
 
 import studio.phaseshift.metatron.algebra.PlusMonoid;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.lang.core.m.mtronInstSet;
+import studio.phaseshift.metatron.lang.core.m.mInstSet;
 import studio.phaseshift.metatron.lang.core.m.obj.NoObj;
 import studio.phaseshift.metatron.util.Tuple;
 
@@ -58,7 +58,7 @@ public interface Type extends Obj, PlusMonoid<Type> {
     }
 
     default boolean isBaseType() {
-        return mtronInstSet.BASE_TYPES.contains(this.tid().basePath());
+        return mInstSet.BASE_TYPES.contains(this.tid().basePath());
     }
 
     default Call constructor() {

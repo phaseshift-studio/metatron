@@ -21,7 +21,7 @@ package studio.phaseshift.metatron.lang.core.m.type.impl;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.core.m.type.Str;
 
-import static studio.phaseshift.metatron.lang.core.m.mtronInstSet.STR_TID;
+import static studio.phaseshift.metatron.lang.core.m.mInstSet.STR_TID;
 
 
 public class MStr extends MObj implements Str {

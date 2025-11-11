@@ -28,6 +28,8 @@ import studio.phaseshift.metatron.ui.GraphittyLogger;
 import java.util.ArrayList;
 import java.util.Optional;
 
+import static studio.phaseshift.metatron.lang.core.m.obj.NoObj.noobj;
+
 public class Qs extends MLst {
 
     public static final fURI QS_TID = sysInstSet.SPACE_TID.extend("q");
@@ -59,7 +61,7 @@ public class Qs extends MLst {
                 .filter(q -> vid.hasQuery(q.jvm().toString()))
                 .map(Q::onWrite)
                 .filter(Optional::isPresent)
-                .peek(q -> Router.global().logger().trace("handling {{y}}pre write{{X}} of %s for %s %s", source, vid, obj))
+                .peek(q -> LOG.info("handling {{y}}pre write{{X}} of %s for %s %s", source, vid, obj))
                 .map(Optional::get)
                 .map(q -> q.preWrite(source, vid, obj))
                 .filter(Optional::isPresent)
@@ -69,53 +71,57 @@ public class Qs extends MLst {
 
     public Optional<Obj> processPreRead(final fURI source, final fURI vid) {
         return this.<Q>elements()
-                .filter(q -> vid.hasQuery(q.jvm().toString()))
+                .filter(q -> vid.hasQuery(q.pattern()))
                 .map(Q::onRead)
                 .filter(Optional::isPresent)
-                .peek(q -> Router.global().logger().trace("handling {{m}}pre read{{X}} of %s for %s", source, vid))
+                .peek(q -> LOG.debug("handling {{m}}pre read{{X}} of %s for %s", source, vid))
                 .map(Optional::get)
                 .map(q -> q.preRead(source, vid))
                 .filter(Optional::isPresent)
                 .map(Optional::get)
-                .reduce(Obj::append);
+                .reduce(Obj::append)
+                .filter(q -> !q.isNoObj());
     }
 
     public Optional<Obj> processPostRead(final fURI source, final fURI vid, final Obj current) {
         return this.<Q>elements()
-                .filter(q -> vid.hasQuery(q.jvm().toString()))
+                .filter(q -> vid.hasQuery(q.pattern()))
                 .map(Q::onRead)
                 .filter(Optional::isPresent)
-                .peek(q -> Router.global().logger().trace("handling {{c}}post read{{X}} of %s for %s", source, vid))
+                .peek(q -> LOG.debug("handling {{c}}post read{{X}} of %s for %s", source, vid))
                 .map(Optional::get)
                 .map(q -> q.postRead(source, vid, current))
                 .filter(Optional::isPresent)
                 .map(Optional::get)
-                .reduce(Obj::append);
+                .reduce(Obj::append)
+                .filter(q -> !q.isNoObj());
     }
 
     public Optional<Obj> processQlessWrite(final fURI source, final fURI vid, final Obj obj) {
         return this.<Q>elements()
                 .map(Q::onWrite)
                 .filter(Optional::isPresent)
-                .peek(q -> LOG.trace("handling {{g}}qless write{{X}} of %s for %s", source, vid))
+                .peek(q -> LOG.debug("handling {{g}}qless write{{X}} of %s for %s", source, vid))
                 .map(Optional::get)
                 .map(q -> q.qlessWrite(source, vid, obj))
                 .filter(Optional::isPresent)
                 .map(Optional::get)
-                .reduce(Obj::append);
+                .reduce(Obj::append)
+                .filter(q -> !q.isNoObj());
     }
 
     public Optional<Obj> processPostWrite(final fURI source, final fURI vid, final Obj obj) {
         return this.<Q>elements()
-                .filter(q -> vid.hasQuery(q.jvm().toString()))
+                .filter(q -> vid.hasQuery(q.pattern()))
                 .map(Q::onWrite)
                 .filter(Optional::isPresent)
-                .peek(q -> Router.global().logger().trace("handling {{b}}post write{{X}} of %s for %s %s", source, vid, obj))
+                .peek(q -> LOG.trace("handling {{b}}post write{{X}} of %s for %s %s", source, vid, obj))
                 .map(Optional::get)
                 .map(q -> q.postWrite(source, vid, obj, obj))
                 .filter(Optional::isPresent)
                 .map(Optional::get)
-                .reduce(Obj::append);
+                .reduce(Obj::append)
+                .filter(q -> !q.isNoObj());
     }
 
 }

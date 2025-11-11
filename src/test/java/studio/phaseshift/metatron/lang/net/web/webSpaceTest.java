@@ -6,14 +6,9 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.lang.core.m.mtronInstSet;
-import studio.phaseshift.metatron.lang.core.m.type.Obj;
-import studio.phaseshift.metatron.lang.core.mach.machInstSet;
+import studio.phaseshift.metatron.lang.core.m.mInstSet;
 import studio.phaseshift.metatron.lang.db.kv.kvSpace;
-import studio.phaseshift.metatron.lang.db.vec.vecInstSet;
 import studio.phaseshift.metatron.lang.sys.router.Router;
-import studio.phaseshift.metatron.lang.sys.router.impl.MRouter;
-import studio.phaseshift.metatron.space.SpaceTest;
 
 import java.util.Map;
 
@@ -33,7 +28,7 @@ public class webSpaceTest {
     @BeforeAll
     public static void setup() {
         BootLoader.load(rec(uri("mode"), uri("testing")));
-        mtronInstSet.create().vid(f("/mnt/lang/m"));
+        mInstSet.create().vid(f("/mnt/lang/m"));
         webInstSet.create().vid(f("/mnt/lang/web"));
         kvSpace.of(f("/usr/#"), fURI.NULL).vid(f("/mnt/usr"));
         final webSpace web = webSpace.of(f("http://localhost:8777"), Map.of(uri("/"), uri("src/test/resources/web/")), f("http://#"), f("/usr/web"));

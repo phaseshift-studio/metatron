@@ -24,7 +24,7 @@ import studio.phaseshift.metatron.lang.core.m.type.*;
 import studio.phaseshift.metatron.lang.core.m.type.impl.*;
 import studio.phaseshift.metatron.lang.core.mach.type.Machine;
 import studio.phaseshift.metatron.lang.core.mach.type.Monad;
-import studio.phaseshift.metatron.lang.core.m.mtronInstSet;
+import studio.phaseshift.metatron.lang.core.m.mInstSet;
 
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
@@ -59,7 +59,7 @@ public class MMachine extends MObj implements Machine {
     public static Machine of(final Obj start, final Code code) {
         if (!start.isNoObj()) {
             final List<Inst> prepended = new ArrayList<>();
-            prepended.add(MInst.instB(mtronInstSet.START_TID, MLst.of(start)));
+            prepended.add(MInst.instB(mInstSet.START_TID, MLst.of(start)));
             prepended.addAll(code.codeValue());
             return new MMachine(Quartet.with(MCode.of(prepended), RunningMonads.of(), MLst.of(new LinkedList<>()), MObjs.empty()), MACH_TID, fURI.NULL);
         } else {

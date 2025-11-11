@@ -21,7 +21,7 @@ package studio.phaseshift.metatron.lang.sys.router.impl;
 import studio.phaseshift.metatron.lang.core.m.type.*;
 
 
-import studio.phaseshift.metatron.lang.core.m.parser.mtronParser;
+import studio.phaseshift.metatron.lang.core.m.parser.mParser;
 import studio.phaseshift.metatron.ui.ObjSerializer;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
@@ -147,6 +147,6 @@ public class ObjByteBufferSerializer implements ObjSerializer<ByteBuffer> {
     @Override
     public Obj read(final ByteBuffer data) throws MTronException {
         // System.out.println(new String(data.array()));
-        return mtronParser.m_obj().parse(new String(data.array())).get();
+        return mParser.m_obj().parse(new String(data.array())).get();
     }
 }

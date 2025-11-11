@@ -22,13 +22,13 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.lang.MetatronObjTest;
 import studio.phaseshift.metatron.lang.sys.router.Router;
-import studio.phaseshift.metatron.lang.core.m.parser.mtronParser;
+import studio.phaseshift.metatron.lang.core.m.parser.mParser;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.furi.fURI.f;
-import static studio.phaseshift.metatron.lang.core.m.mtronInstSet.FAIL_TID;
+import static studio.phaseshift.metatron.lang.core.m.mInstSet.FAIL_TID;
 import static studio.phaseshift.metatron.lang.core.m.obj.NoObj.noobj;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MType.T;
 
@@ -118,7 +118,7 @@ public class TypeTest extends MetatronObjTest {
     }, delimiter = '|')
     public void testType(final String obj, final String typefURI, final boolean matches) {
         try {
-            Obj o = mtronParser.m_obj().parse(obj).get();
+            Obj o = mParser.m_obj().parse(obj).get();
             Type t = T(f(typefURI.trim()));
             LOG.debug("testing %s %s %s", o, matches ? "{{c}}in{{/c}}" : "{{c}}not in{{/c}}", t);
             assertEquals(matches, o.matches(t));
@@ -158,8 +158,8 @@ public class TypeTest extends MetatronObjTest {
     },
             delimiter = '|')
     public void testTypeObj(final String obj, final String type, final boolean matches) {
-        Obj o = mtronParser.m_obj().parse(obj).get();
-        Type t = mtronParser.m_obj().parse(type).get();
+        Obj o = mParser.m_obj().parse(obj).get();
+        Type t = mParser.m_obj().parse(type).get();
         LOG.trace("testing %s %s %s", o, matches ? "{{g}}is a{{/g}}" : "{{r}}is not a{{/r}}", t);
         assertEquals(matches, o.matches(t));
     }
@@ -190,13 +190,13 @@ public class TypeTest extends MetatronObjTest {
     public void testTyping(final String tid, final String typeDef, final String instance, final boolean shouldSucceed) {
         try {
             Router.writeToSpace(tid, noobj());
-            Obj type = mtronParser.parse(typeDef.trim().equals(".") ? LAST_TYPE_DEF : typeDef.trim());
+            Obj type = mParser.parse(typeDef.trim().equals(".") ? LAST_TYPE_DEF : typeDef.trim());
             LAST_TYPE_DEF = typeDef.trim().equals(".") ? LAST_TYPE_DEF : typeDef.trim();
             Router.writeToSpace(tid, type);
             assertEquals(type, Router.readFromSpace(tid));
             LOG.debug("testing %s %s %s", instance, shouldSucceed ? "{{g}}is a{{/g}}" : "{{r}}is not a{{/r}}", type);
             try {
-                Obj inst = mtronParser.eval(instance.trim());
+                Obj inst = mParser.eval(instance.trim());
                 //LOG.debug("instance: %s", inst);
                 if (!shouldSucceed) {
                     LOG.debug("instance: %s %s %s", inst.type(), inst.isFail(), inst.tid().equals(FAIL_TID));

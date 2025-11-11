@@ -21,7 +21,7 @@ package studio.phaseshift.metatron.lang.net.web;
 import com.google.gson.*;
 import com.google.gson.stream.JsonReader;
 import org.petitparser.context.Result;
-import studio.phaseshift.metatron.lang.core.m.parser.mtronParser;
+import studio.phaseshift.metatron.lang.core.m.parser.mParser;
 import studio.phaseshift.metatron.lang.core.m.obj.NoObj;
 import studio.phaseshift.metatron.lang.core.m.type.Obj;
 import studio.phaseshift.metatron.ui.*;
@@ -81,8 +81,8 @@ public class JSONTranslator implements Translator<Obj, JsonElement> {
             } else if (jp.isString()) {
                 final String jpstr = jp.getAsString();
                 try {
-                    final Result r = mtronParser.m_call().parse(jpstr);
-                    return r.isSuccess() ? r.get() : mtronParser.parse(jpstr);
+                    final Result r = mParser.m_call().parse(jpstr);
+                    return r.isSuccess() ? r.get() : mParser.parse(jpstr);
                     // if (jpstr.charAt(0) == '"' && jpstr.charAt(jpstr.length() - 1) == '"')
                     //     jpstr = jpstr.substring(1, jpstr.length() - 1);
                 } catch (Exception e) {

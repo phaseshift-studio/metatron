@@ -21,7 +21,7 @@ package studio.phaseshift.metatron.lang.core.m.type;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-import studio.phaseshift.metatron.lang.core.m.parser.mtronParser;
+import studio.phaseshift.metatron.lang.core.m.parser.mParser;
 import studio.phaseshift.metatron.lang.MetatronObjTest;
 import studio.phaseshift.metatron.ui.Graphitty;
 
@@ -64,9 +64,9 @@ public class RecTest extends MetatronObjTest {
             "[a=>[b=>c,d=>[e=>{1,2,3,4}]]]          | a/+/e               | {1,2,3,4}"
     }, delimiter = '|')
     public void testKeyValue(final String rec, final String key, final String value) {
-        Rec r = mtronParser.m_obj().parse(rec).get();
-        Obj k = mtronParser.m_obj().parse(key).get();
-        Obj v = mtronParser.m_obj().parse(value).get();
+        Rec r = mParser.m_obj().parse(rec).get();
+        Obj k = mParser.m_obj().parse(key).get();
+        Obj v = mParser.m_obj().parse(value).get();
         Obj actual = r.at(k);
         LOG.debug("testing %s at %s is %s [expected:%s]", k, r, actual, v);
         assertTrue(r.isRec());

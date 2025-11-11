@@ -21,7 +21,7 @@ package studio.phaseshift.metatron.lang.db.kv;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.sys.router.Router;
 import studio.phaseshift.metatron.lang.Space;
-import studio.phaseshift.metatron.lang.core.m.mtronInstSet;
+import studio.phaseshift.metatron.lang.core.m.mInstSet;
 import studio.phaseshift.metatron.lang.core.m.type.Obj;
 import studio.phaseshift.metatron.lang.core.m.type.Rec;
 import studio.phaseshift.metatron.lang.core.m.type.Type;
@@ -36,9 +36,9 @@ import java.util.function.Function;
 
 import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.furi.fURI.f;
-import static studio.phaseshift.metatron.lang.core.m.inst.mtronFluent.StartLess.isa_;
-import static studio.phaseshift.metatron.lang.core.m.mtronInstSet.REC_TID;
-import static studio.phaseshift.metatron.lang.core.m.mtronInstSet.URI_TID;
+import static studio.phaseshift.metatron.lang.core.m.inst.mFluent.StartLess.isa_;
+import static studio.phaseshift.metatron.lang.core.m.mInstSet.REC_TID;
+import static studio.phaseshift.metatron.lang.core.m.mInstSet.URI_TID;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MType.T;
@@ -48,7 +48,7 @@ import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
 public class kvSpace extends MSpace<Map<fURI, Obj>> {
 
     public static final fURI KV_TID = f("/kv/space/kv");
-    protected static final Type KV_TYPE = T(KV_TID, null, instC(mtronInstSet.INST_TID.dom(ALL.maybe()).rng(KV_TID), lst(T(REC_TID, isa_(rec(uri(PATTERN), T(URI_TID))))), (lhs, inst) -> {
+    protected static final Type KV_TYPE = T(KV_TID, null, instC(mInstSet.INST_TID.dom(ALL.maybe()).rng(KV_TID), lst(T(REC_TID, isa_(rec(uri(PATTERN), T(URI_TID))))), (lhs, inst) -> {
         final fURI pattern = inst.arg(0).<Rec>as().at(PATTERN).uriValue();
         final Space space = new kvSpace(pattern, inst.arg(0).vid());
         //space.qs().add(new PubSubQ(space));

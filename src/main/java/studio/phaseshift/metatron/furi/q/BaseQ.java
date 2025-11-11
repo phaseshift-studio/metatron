@@ -47,15 +47,18 @@ public class BaseQ extends MRec implements Q {
 
     public BaseQ(final Map<Obj, Obj> jvm, final fURI queryPattern, final fURI tid) {
         super(jvm, tid, fURI.NULL);
-        this.queryPattern = this.at(PATTERN).uriValue();
+        this.queryPattern = queryPattern;
         LOG = Graphitty.log(this);
     }
 
     @Override
+    public fURI pattern() {
+        return this.queryPattern;
+    }
+
+    @Override
     public Optional<Q.OnWrite> onWrite() {
-        return Optional.empty();
-        //return this.has(uri(ON_WRITE)) ? this.at(uri(ON_WRITE)).as() : Optional.empty();
-        //return Optional.ofNullable(this.onWrite);
+        return Optional.ofNullable(this.onWrite);
     }
 
     @Override

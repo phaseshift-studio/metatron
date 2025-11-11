@@ -39,7 +39,7 @@ import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.furi.fURI.f;
-import static studio.phaseshift.metatron.lang.core.m.mtronInstSet.*;
+import static studio.phaseshift.metatron.lang.core.m.mInstSet.*;
 import static studio.phaseshift.metatron.lang.core.m.obj.NoObj.noobj;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MType.T;

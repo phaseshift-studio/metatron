@@ -22,7 +22,6 @@ import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.sys.router.Router;
-import studio.phaseshift.metatron.lang.core.m.mtronInstSet;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
 import studio.phaseshift.metatron.util.IteratorUtil;
@@ -33,7 +32,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
-import static studio.phaseshift.metatron.lang.core.m.mtronInstSet.*;
+import static studio.phaseshift.metatron.lang.core.m.mInstSet.*;
 import static studio.phaseshift.metatron.lang.core.m.obj.NoObj.noobj;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MRec.rec;

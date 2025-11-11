@@ -3,7 +3,7 @@ package studio.phaseshift.metatron.lang.core.m.type;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.MetatronTest;
-import studio.phaseshift.metatron.lang.core.m.parser.mtronParser;
+import studio.phaseshift.metatron.lang.core.m.parser.mParser;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
 
@@ -31,8 +31,8 @@ public class NoObjTest extends MetatronTest {
             "'meta'|str{0}::'meta'|false"},
             delimiter = '|')
     public void testNoObj(final String o1, final String o2, final boolean match) {
-        final Obj obj1 = mtronParser.m_obj().parse(o1).get();
-        final Obj obj2 = mtronParser.m_obj().parse(o2).get();
+        final Obj obj1 = mParser.m_obj().parse(o1).get();
+        final Obj obj2 = mParser.m_obj().parse(o2).get();
         LOG.trace("testing %s %s %s", obj1, match ? "{{g}}equals{{/g}}" : "{{r}}not equals{{/r}}", obj2);
         if (match) {
             assertEquals(obj1, obj2);

@@ -20,6 +20,44 @@ package studio.phaseshift.metatron.ui;
 
 public class Markdown {
 
+    private final StringBuilder text;
+
+    public Markdown(final String text) {
+        this.text = new StringBuilder(text);
+    }
+
+    public Markdown() {
+        this.text = new StringBuilder();
+    }
+
+    public Markdown header(final int level, final String text) {
+        this.text.append("#".repeat(level)).append(" ").append(text);
+        return this;
+    }
+
+    public Markdown item(final int num, final String text) {
+        this.text.append(" ").append(num).append(". ").append(text);
+        return this;
+    }
+
+    public Markdown item(final String element, final String text) {
+        this.text.append(" ").append(element).append(": ").append(text);
+        return this;
+    }
+
+    public Markdown text(final String text) {
+        this.text.append(text);
+        return this;
+    }
+
+    public String toString() {
+        return this.text.toString();
+    }
+
+    public String markdownString() {
+        return markdown(this.text.toString());
+    }
+
     public static String markdown(final String md) {
         return md
                 // Bold

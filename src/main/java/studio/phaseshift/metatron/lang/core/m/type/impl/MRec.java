@@ -29,7 +29,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static studio.phaseshift.metatron.lang.core.m.mtronInstSet.REC_TID;
+import static studio.phaseshift.metatron.lang.core.m.mInstSet.REC_TID;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
 

@@ -24,7 +24,7 @@ import studio.phaseshift.metatron.MetatronTest;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
-import static studio.phaseshift.metatron.lang.core.m.inst.mtronFluent.StartLess.*;
+import static studio.phaseshift.metatron.lang.core.m.inst.mFluent.StartLess.*;
 
 public class FluentTest extends MetatronTest {
 

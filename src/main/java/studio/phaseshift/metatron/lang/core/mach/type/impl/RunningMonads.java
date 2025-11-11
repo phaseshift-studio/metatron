@@ -31,7 +31,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
 
-import static studio.phaseshift.metatron.lang.core.m.mtronInstSet.OBJS_TID;
+import static studio.phaseshift.metatron.lang.core.m.mInstSet.OBJS_TID;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)

@@ -29,8 +29,8 @@ import studio.phaseshift.metatron.lang.ai.llm.llmInstSet;
 import studio.phaseshift.metatron.lang.sys.router.Router;
 import studio.phaseshift.metatron.lang.sys.router.impl.MRouter;
 import studio.phaseshift.metatron.lang.sys.sysInstSet;
-import studio.phaseshift.metatron.lang.core.m.mtronInstSet;
-import studio.phaseshift.metatron.lang.core.m.parser.mtronParser;
+import studio.phaseshift.metatron.lang.core.m.mInstSet;
+import studio.phaseshift.metatron.lang.core.m.parser.mParser;
 import studio.phaseshift.metatron.lang.core.m.type.Obj;
 import studio.phaseshift.metatron.lang.core.m.type.Rec;
 import studio.phaseshift.metatron.lang.db.vec.vecInstSet;
@@ -48,7 +48,7 @@ import java.net.InetAddress;
 import java.nio.file.Path;
 
 import static studio.phaseshift.metatron.furi.fURI.f;
-import static studio.phaseshift.metatron.lang.core.m.mtronInstSet.REC_TID;
+import static studio.phaseshift.metatron.lang.core.m.mInstSet.REC_TID;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MRec.rec;
@@ -71,7 +71,7 @@ public class BootLoader implements Obj {
     public static final String HOST = "host";
     public static final String BOOT = "boot";
     public static boolean TYPE_CHECK = true;
-    
+
     static {
         LOG = Graphitty.log(new BootLoader());
         //Registry.singleton().register(mtronInstSet.INST_TID, () -> mtronInstSet.of(fURI.NULL));
@@ -114,7 +114,7 @@ public class BootLoader implements Obj {
                     "metatron '[mode=>console,log=>info,host=>ws://localhost:8888,nodes=>[ws://127.0.0.1:8887]]'");
             System.exit(0);
         } else {
-            Rec options = args.length > 0 ? mtronParser.parse(args[0]).as() : rec();
+            Rec options = args.length > 0 ? mParser.parse(args[0]).as() : rec();
             logObj.setSLF4J(options.has(uri("log")) ? options.at(uri("log")).uriValue().toString() : "trace");
             LOG.debug("user options: %s", options);
             GLOBAL = options;
@@ -138,7 +138,7 @@ public class BootLoader implements Obj {
             kvInstSet.create();
             kvSpace.of(f("/mnt/#"), fURI.NULL).vid(f("/mnt"));
             kvSpace.of(f("/sys/#"), fURI.NULL).vid(f("/mnt/sys"));
-            mtronInstSet.create(f("/mnt/lang/m"));
+            mInstSet.create(f("/mnt/lang/m"));
             Router.writeToSpace(Router.global());
             ROUTER.start();
             //  Router.writeToSpace(new mtronInstSet(fURI.of("/mnt/lang/m")));
@@ -146,7 +146,7 @@ public class BootLoader implements Obj {
             if (options.has(uri(BOOT))) {
                 LOG.none("\t {{m}}BEGIN:{{g}} evaluating provided boot loader: {{b}}%s{{X}}\n", options.at(uri(BOOT)).uriValue());
                 try {
-                    final long count = mtronParser.eval(Path.of(options.at(BOOT).uriValue().toString()).toFile()).count();
+                    final long count = mParser.eval(Path.of(options.at(BOOT).uriValue().toString()).toFile()).count();
                     LOG.info("processed boot input: {{b}}%s{{/b}} {{g}}[{{y}}loc: %d{{/y}}]{{/g}}", options.at(BOOT).uriValue(), count);
                 } catch (final IOException e) {
                     LOG.error(e);

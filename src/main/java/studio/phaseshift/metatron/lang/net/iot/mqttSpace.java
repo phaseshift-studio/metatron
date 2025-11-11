@@ -41,7 +41,7 @@ import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 
 import static studio.phaseshift.metatron.furi.fURI.f;
-import static studio.phaseshift.metatron.lang.core.m.mtronInstSet.MTRON_SPACE_TID;
+import static studio.phaseshift.metatron.lang.core.m.mInstSet.MTRON_SPACE_TID;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
 
 

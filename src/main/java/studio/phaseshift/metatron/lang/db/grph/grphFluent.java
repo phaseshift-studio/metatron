@@ -24,8 +24,8 @@ import studio.phaseshift.metatron.lang.core.m.type.Call;
 import studio.phaseshift.metatron.lang.Fluent;
 import studio.phaseshift.metatron.lang.core.m.type.Inst;
 import studio.phaseshift.metatron.lang.core.m.type.Obj;
-import studio.phaseshift.metatron.lang.core.m.inst.mtronFluent;
-import studio.phaseshift.metatron.lang.core.m.mtronInstSet;
+import studio.phaseshift.metatron.lang.core.m.inst.mFluent;
+import studio.phaseshift.metatron.lang.core.m.mInstSet;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,10 +33,10 @@ import java.util.List;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MInst.instB;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
 
-public class grphFluent<F extends Fluent<F>> extends mtronFluent<F> {
+public class grphFluent<F extends Fluent<F>> extends mFluent<F> {
 
     protected grphFluent() {
-        this(new ArrayList<>(), mtronInstSet.CODE_TID, null);
+        this(new ArrayList<>(), mInstSet.CODE_TID, null);
     }
 
     protected grphFluent(final List<Inst> value, final fURI tid, final fURI vid) {
@@ -44,7 +44,7 @@ public class grphFluent<F extends Fluent<F>> extends mtronFluent<F> {
     }
 
     public F start_(final Obj obj) {
-        return this.addInst(instB(mtronInstSet.START_TID, lst(obj)));
+        return this.addInst(instB(mInstSet.START_TID, lst(obj)));
     }
 
     public F g(final MGraph graph) {

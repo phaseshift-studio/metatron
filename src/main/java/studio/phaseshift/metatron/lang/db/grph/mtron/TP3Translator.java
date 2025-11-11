@@ -16,7 +16,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import static studio.phaseshift.metatron.lang.db.grph.grphInstSet.EDGE_TID;
 import static studio.phaseshift.metatron.lang.db.grph.grphInstSet.VERTEX_TID;
-import static studio.phaseshift.metatron.lang.core.m.mtronInstSet.FROM_TID;
+import static studio.phaseshift.metatron.lang.core.m.mInstSet.FROM_TID;
 import static studio.phaseshift.metatron.lang.core.m.obj.NoObj.noobj;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MInst.instB;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;

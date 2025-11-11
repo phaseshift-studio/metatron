@@ -1,7 +1,7 @@
 package studio.phaseshift.metatron.lang.ai.llm.type.impl;
 
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.lang.core.m.mtronInstSet;
+import studio.phaseshift.metatron.lang.core.m.mInstSet;
 import studio.phaseshift.metatron.lang.core.m.type.Bytes;
 import studio.phaseshift.metatron.lang.core.m.type.Obj;
 import studio.phaseshift.metatron.lang.core.m.type.Type;
@@ -16,9 +16,9 @@ import java.util.Map;
 
 import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.lang.ai.llm.llmInstSet.MLLM_TID;
-import static studio.phaseshift.metatron.lang.core.m.inst.mtronFluent.StartLess.isa_;
-import static studio.phaseshift.metatron.lang.core.m.mtronInstSet.REC_TID;
-import static studio.phaseshift.metatron.lang.core.m.mtronInstSet.URI_TID;
+import static studio.phaseshift.metatron.lang.core.m.inst.mFluent.StartLess.isa_;
+import static studio.phaseshift.metatron.lang.core.m.mInstSet.REC_TID;
+import static studio.phaseshift.metatron.lang.core.m.mInstSet.URI_TID;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MType.T;
@@ -30,7 +30,7 @@ import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
 public class Audio extends MRec {
 
     public static final fURI AUDIO_TID = MLLM_TID.extend("audio");
-    public static final Type AUDIO_TYPE = T(AUDIO_TID, null, instC(mtronInstSet.INST_TID.dom(ALL.maybe()).rng(AUDIO_TID), lst(T(REC_TID, isa_(rec(uri("location"), T(URI_TID))))), (lhs, inst) -> {
+    public static final Type AUDIO_TYPE = T(AUDIO_TID, null, instC(mInstSet.INST_TID.dom(ALL.maybe()).rng(AUDIO_TID), lst(T(REC_TID, isa_(rec(uri("location"), T(URI_TID))))), (lhs, inst) -> {
         return new Audio(lhs.jvm(), AUDIO_TID, lhs.vid());
     }));
 

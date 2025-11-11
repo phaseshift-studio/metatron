@@ -31,9 +31,9 @@ import java.util.function.Function;
 
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MObjs.objs;
-import static studio.phaseshift.metatron.lang.core.m.inst.mtronFluent.StartLess.split_;
-import static studio.phaseshift.metatron.lang.core.m.mtronInstSet.CODE_TID;
-import static studio.phaseshift.metatron.lang.core.m.mtronInstSet.ID_TID;
+import static studio.phaseshift.metatron.lang.core.m.inst.mFluent.StartLess.split_;
+import static studio.phaseshift.metatron.lang.core.m.mInstSet.CODE_TID;
+import static studio.phaseshift.metatron.lang.core.m.mInstSet.ID_TID;
 
 public interface Call extends Obj, Ring<Call> {
 

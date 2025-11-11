@@ -34,7 +34,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MFail.fail;
-import static studio.phaseshift.metatron.lang.core.m.mtronInstSet.MTRON_TID;
+import static studio.phaseshift.metatron.lang.core.m.mInstSet.MTRON_TID;
 
 
 /*
