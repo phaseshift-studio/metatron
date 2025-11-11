@@ -75,22 +75,22 @@ public class DocQ extends BaseQ {
             mark.header(2, "rng<=dom\n");
             mark.item("**dom**", inst.dom().toString()).text("\t *").text(this.at("dom").orElse(str("<n/a>")).strValue()).text("*\n");
             mark.item("**rng**", inst.rng().toString()).text("\t *").text(this.at("rng").orElse(str("<n/a>")).strValue()).text("*\n");
-            mark.header(2, "(args)\n");
-            this.at("args").orElse(rec()).jvm().forEach((key, value) -> mark.item(key.toString(), inst.arg(0).toString() + "\t *" + value.strValue() + "*\n"));
-            mark.header(2, "{function}\n");
+            mark.header(2, "(ar,gs)\n");
+            this.at("args").orElse(rec()).jvm().forEach((key, value) -> mark.item(key, inst.arg(0).toString() + "\t *" + value.strValue() + "*\n"));
+            mark.header(2, "{fun.cti.on}\n");
             mark.text(" ").text(inst.isResolved() ? "{{y}}" + inst.f().toString() + "{{X}}" : "{{{r}}?{{/r}}}").text("\n");
             mark.header(2, "description\n");
             mark.text(" *").text(this.at("desc").orElse(str("<no description>")).strValue()).text("*");
             return mark.markdownString();
         }
 
-        public static Doc doc(final Inst inst, final String domDesc, final String rngDesc, final Map<fURI, String> argDescription, final String description) {
+        public static Doc doc(final Inst inst, final String domDesc, final String rngDesc, final Map<Obj, String> argDescription, final String description) {
             return new Doc(rec(
                     uri("inst"), inst,
                     uri("dom"), str(domDesc),
                     uri("rng"), str(rngDesc),
                     uri("args"), new MRec(argDescription.entrySet().stream()
-                            .map(kv -> List.of(uri(kv.getKey()), str(kv.getValue())))
+                            .map(kv -> List.of(kv.getKey(), str(kv.getValue())))
                             .collect(Collectors.toMap(kv -> kv.get(0), kv -> kv.get(1), (a, b) -> b, LinkedHashMap::new))),
                     uri("desc"), str(description)).jvm(), DOC_TID, fURI.NULL);
         }

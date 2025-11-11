@@ -18,6 +18,8 @@
 
 package studio.phaseshift.metatron.ui;
 
+import studio.phaseshift.metatron.lang.core.m.type.Obj;
+
 public class Markdown {
 
     private final StringBuilder text;
@@ -42,6 +44,11 @@ public class Markdown {
 
     public Markdown item(final String element, final String text) {
         this.text.append(" ").append(element).append(": ").append(text);
+        return this;
+    }
+
+    public Markdown item(final Obj index, final String text) {
+        this.text.append(" ").append(index).append(index.isInt() ? ". " : ": ").append(text);
         return this;
     }
 
