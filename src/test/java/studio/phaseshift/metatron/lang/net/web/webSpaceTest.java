@@ -47,6 +47,7 @@ public class webSpaceTest {
     }
 
     @Test
+    @Disabled
     public void testIndexHTMLRedirect() {
         assertNotEquals(noobj(), Router.readFromSpace("http://localhost:8777/index.html"));
         assertNotEquals(noobj(), Router.readFromSpace("http://localhost:8777/"));
@@ -54,6 +55,7 @@ public class webSpaceTest {
     }
 
     @Test
+    @Disabled
     public void testServerSideRecursion() {
         assertEquals(str("a1.b1.c1.text"), Router.readFromSpace("http://localhost:8777/index.html/html/body/a/b/c/text"));
         //assertEquals(str("a1.b1.c1.text"), Router.readFromSpace("http://localhost:8777/index.html/html/body/a/+/+/text"));

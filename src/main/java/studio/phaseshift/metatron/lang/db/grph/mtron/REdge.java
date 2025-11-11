@@ -11,13 +11,9 @@ import java.util.stream.Stream;
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public class REdge extends RElement {
-
-    public REdge(final Rec edge, final fURI tid, final fURI vid) {
-        super(edge, tid, vid);
-    }
-
-    public REdge(final Rec edge) {
-        super(edge, edge.tid(), edge.vid());
+    
+    public REdge(final Obj edge) {
+        super(edge);
     }
 
     public static Stream<REdge> of(final Obj edges) {
@@ -26,6 +22,11 @@ public class REdge extends RElement {
 
     public Stream<RVertex> vertices(final Direction direction) {
         return this.at(direction.name()).stream().map(o -> o.apply(this)).map(Obj::<Rec>as).map(RVertex::of);
+    }
+
+    @Override
+    public REdge clone() {
+        return (REdge) super.clone();
     }
 
 }

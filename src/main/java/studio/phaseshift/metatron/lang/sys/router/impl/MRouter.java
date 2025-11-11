@@ -21,6 +21,8 @@ package studio.phaseshift.metatron.lang.sys.router.impl;
 import studio.phaseshift.metatron.Registry;
 import studio.phaseshift.metatron.furi.Qs;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.lang.core.m.type.Rec;
+import studio.phaseshift.metatron.lang.core.m.type.Uri;
 import studio.phaseshift.metatron.lang.util.noobjSpace;
 import studio.phaseshift.metatron.lang.core.mach.stackSpace;
 import studio.phaseshift.metatron.lang.sys.router.Router;
@@ -34,27 +36,36 @@ import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.BootLoader.BOOTING;
+import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.furi.fURI.f;
+import static studio.phaseshift.metatron.lang.core.m.mtronInstSet.MTRON_TID;
 import static studio.phaseshift.metatron.lang.core.m.obj.NoObj.noobj;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
 
 public class MRouter extends MSpace<MServer> implements Router {
 
+    public static final Uri PRIMARY = uri("primary");
     public static final fURI ROUTER_TID = sysInstSet.MSYS_TID.extend("router");
     private static final Set<fURI> READ_AS_NOOBJ = Set.of(fURI.ALL.maybeSome(), fURI.ALL.maybe(), fURI.ALL);
     private final GraphittyLogger LOG = Graphitty.log(this);
-    private final Map<fURI, fURI> smallToBigRewrites = new HashMap<>();
+    private final Map<fURI, Set<fURI>> smallToBigRewrites = new HashMap<>();
     private final Map<fURI, fURI> bigToSmallRewrites = new HashMap<>();
-    private fURI vid;
+    private fURI primary = MTRON_TID;
 
     public MRouter(final fURI host, final fURI vid) {
-        super(new MServer(host), new ConcurrentHashMap<>(Map.of(uri(SPACE), rec(new ConcurrentHashMap<>(Map.of(uri("+/#"), new stackSpace(f("+/#"))))))), f("#"), sysInstSet.MSYS_TID.extend("router"), vid);
-        this.vid = vid;
+        super(new MServer(host), new ConcurrentHashMap<>(Map.of(
+                        uri(PATTERN), uri(ALL),
+                        PRIMARY, uri(MTRON_TID),
+                        uri(SPACE), rec(new ConcurrentHashMap<>(Map.of(uri("+/#"), new stackSpace(f("+/#"))))))), f("#"),
+                sysInstSet.MSYS_TID.extend("router"),
+                vid);
         LOG.info("local router {{b}}%s{{/b}}", this);
     }
+
 
     private static Obj appendOnRead(final boolean send, final Obj base, final Obj addition) {
         return addition.isNoObj() ? base : (send ? base.append(rel(addition.vid().toUri(), addition)) : base.append(addition));
@@ -69,6 +80,12 @@ public class MRouter extends MSpace<MServer> implements Router {
         this.server().start();
     }
 
+    public Rec put(final Obj key, final Obj value) {
+        if (key.equals(PRIMARY))
+            this.primary = value.uriValue();
+        return super.put(key, value);
+    }
+
     public synchronized void close() {
         final List<fURI> list = this.spaces().jvm().values().stream().map(Obj::vid).toList();
         list.forEach(this::removeSpace);
@@ -77,13 +94,34 @@ public class MRouter extends MSpace<MServer> implements Router {
     }
 
     public void registerRewrite(final fURI small, final fURI big) {
-        this.smallToBigRewrites.put(small, big);
+        this.smallToBigRewrites.compute(small, (k, v) -> {
+            if (null == v) {
+                final Set<fURI> set = new HashSet<>();
+                set.add(big.basePath());
+                return set;
+            } else {
+                v.add(big.basePath());
+                return v;
+            }
+        });
         this.bigToSmallRewrites.put(big, small);
     }
 
     @Override
     public fURI rewrite(final fURI furi, final boolean big) {
-        fURI temp = (big ? this.smallToBigRewrites.getOrDefault(furi.basePath(), furi) : this.bigToSmallRewrites.getOrDefault(furi.basePath(), furi)).c(furi.c()).queryMap(furi.queryMap());
+        fURI temp;
+        if (big) {
+            final Set<fURI> set = this.smallToBigRewrites.getOrDefault(furi.basePath(), Set.of(furi));
+            if (set.size() > 1) {
+                final Iterator<fURI> furis = set.stream().filter(f -> f.hasPrefix(this.primary)).iterator();
+                temp = furis.hasNext() ? furis.next() : set.iterator().next();
+            } else {
+                temp = set.iterator().next();
+            }
+        } else {
+            temp = this.bigToSmallRewrites.getOrDefault(furi.basePath(), furi);
+        }
+        temp = temp.c(furi.c()).queryMap(furi.queryMap());
         temp = temp.hasDom() ? temp.dom(this.rewrite(temp.dom(), big)) : temp;
         temp = temp.hasRng() ? temp.rng(this.rewrite(temp.rng(), big)) : temp;
         return temp.resolve();
@@ -177,7 +215,7 @@ public class MRouter extends MSpace<MServer> implements Router {
                 }).reduce(noobj(), Obj::append);
             }
         } else*/
-            local = vid;
+        local = vid;
 
         final Space space = this.getSpace(local);
         LOG.trace("writing %s {{g}}=>{{b}} %s{{X}} in %s", obj, local, space);
@@ -195,16 +233,6 @@ public class MRouter extends MSpace<MServer> implements Router {
     }
 
     @Override
-    public fURI tid() {
-        return ROUTER_TID;
-    }
-
-    @Override
-    public fURI vid() {
-        return this.vid;
-    }
-
-    @Override
     public Router clone() {
         Space.Helper.noCloneWarning(this);
         return this;
@@ -212,6 +240,9 @@ public class MRouter extends MSpace<MServer> implements Router {
 
     @Override
     public Router clone(final Object jvm, final fURI tid, final fURI vid) {
+        this.jvm = jvm;
+        this.tid = tid;
+        this.vid = vid;
         return this;
     }
 

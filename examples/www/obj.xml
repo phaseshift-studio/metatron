@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<rec>
+    <kv>
+        <key type="int">24</key>
+        <value type="str">hello</value>
+    </kv>
+    <kv>
+        <key type="uri">abc</key>
+        <value type="lst">
+            <element type="int">0</element>
+            <element type="int">1</element>
+        </value>
+    </kv>
+</rec>

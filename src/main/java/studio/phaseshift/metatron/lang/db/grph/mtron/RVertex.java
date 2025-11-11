@@ -9,19 +9,17 @@ import studio.phaseshift.metatron.lang.core.m.type.Rel;
 
 import java.util.stream.Stream;
 
+import static studio.phaseshift.metatron.furi.fURI.f;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.lang.db.grph.mtron.TP3Translator.LABEL;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public class RVertex extends RElement {
-
-    public RVertex(final Rec vertex, final fURI tid, final fURI vid) {
-        super(vertex, tid, vid);
-    }
-
-    public RVertex(final Rec vertex) {
-        super(vertex, vertex.tid(), vertex.vid());
+    
+    public RVertex(final Obj vertex) {
+        super(vertex);
     }
 
     public static RVertex of(final Rec vertex) {
@@ -31,6 +29,18 @@ public class RVertex extends RElement {
     public static Stream<RVertex> of(final Obj vertices) {
         return vertices.elements().map(Obj::<Rec>as).map(RVertex::new);
     }
+    
+    /*@Override
+    public void drop() {
+        this.edges(Direction.OUT,lst()).map(e -> {
+            e.vertices(Direction.IN).forEach(adj -> {
+                adj.at(f(Direction.IN.name()).extend("/+/+").toUri()) {
+                    
+                }
+            });
+        })
+    }*/
+
 
     public Stream<REdge> edges(final Direction direction, final Lst labels) {
         final boolean emptyLabels = labels.elements().noneMatch(e -> !e.isNoObj());
@@ -44,5 +54,10 @@ public class RVertex extends RElement {
 
     public Stream<RVertex> vertices(final Direction direction, final Lst labels) {
         return this.edges(direction, labels).flatMap(Obj::stream).map(Obj::<REdge>as).flatMap(r -> r.vertices(direction.opposite()));
+    }
+
+    @Override
+    public RVertex clone() {
+        return (RVertex) super.clone();
     }
 }

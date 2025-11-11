@@ -36,7 +36,7 @@ public class fURI implements Cloneable, Ring<fURI> {
 
     public static final String HTTP = "http";
     public static final String WS = "ws";
-    
+
     public static final String EMPTY = "";
     public static final String SEGMENT_SPLIT = "/";
     public static final char SEGMENT_SPLIT_CHAR = SEGMENT_SPLIT.charAt(0);
@@ -210,18 +210,18 @@ public class fURI implements Cloneable, Ring<fURI> {
         return null != this.host && -1 != this.port;
     }
 
-    public boolean hasAuthority(final fURI authority) {
+   /* public boolean hasAuthority(final fURI authority) {
         if (null == authority)
             return null == this.host && -1 == this.port;
         return Objects.equals(authority.host, this.host) && Objects.equals(authority.port, this.port);
-    }
+    }*/
 
     public fURI big() {
-        return null == Router.global() ? this : Router.global().rewrite(this, true);
+        return Router.loaded() ? Router.global().rewrite(this, true) : this;
     }
 
     public fURI small() {
-        return null == Router.global() ? this : Router.global().rewrite(this, false);
+        return Router.loaded() ? Router.global().rewrite(this, false) : this;
     }
 
     public List<String> poly() {
@@ -269,10 +269,12 @@ public class fURI implements Cloneable, Ring<fURI> {
 
     public fURI removePrefix(final fURI prefix) {
         final String newPath = this.toString();
+        final String pre = prefix.toString();
         //return new fURI(newPath.startsWith(prefix.toString()) ? newPath.substring(prefix.send ? prefix.toString().length() +1 : prefix.toString().length()) : newPath);
-        return newPath.startsWith(prefix.toString()) ? new fURI(newPath.substring(prefix.toString().length())) : this;
+        return newPath.startsWith(pre) ? new fURI(newPath.substring(pre.length() + (newPath.charAt(pre.length()) == '/' ? 1 : 0))) : this;
 
     }
+
 
     public String name() {
         return this.segments().isEmpty() ? EMPTY : this.qLess().segments().get(this.segments().size() - 1);
@@ -406,6 +408,24 @@ public class fURI implements Cloneable, Ring<fURI> {
     public fURI removeSubpath(final fURI subpath) {
         String newPath = this.toString();
         return new fURI(newPath.replace(subpath.asBranch().toString(), EMPTY));
+    }
+
+    public boolean hasScheme() {
+        return null != this.scheme;
+    }
+
+    public boolean hasPrefix(final fURI prefix) {
+        if (prefix.hasScheme() && (!this.hasScheme() || !this.scheme.equals(prefix.scheme)))
+            return false;
+        if (prefix.hasAuthority() && (!this.hasAuthority() || !this.authority().matches(prefix.authority())))
+            return false;
+        for (int i = 0; i < prefix.path.size(); i++) {
+            if (this.pathLength() < i)
+                return false;
+            if (!this.segment(i).matches(prefix.segment(i)))
+                return false;
+        }
+        return true;
     }
 
     public fURI asAbsolute() {

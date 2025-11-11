@@ -389,6 +389,24 @@ public class fURITest {
         assertEquals(f(a).host(), b);
     }
 
+    @ParameterizedTest
+    @CsvSource(value = {
+            "/a/b/c                     |  /a       | true",
+            "a/b/c                      |  a        | true",
+            "/a/b/c                     |  a        | true",
+            "a/b/c                      |  /a       | true", // TODO: should authority-less furis check on start /?
+            "//x.com/a/b/c              |  x.com    | false",
+            "//x/a/b/c                  |  x        | false",
+            "a/b/c/d                    |  a        | true",
+            "a/b/c/d                    |  a/b/     | true",
+            "a/b/c/d                    |  a/+      | true",
+            "a/b/c/d                    |  a/d      | false",
+            "a/b/c/d                    |  a/+/c    | true",
+    }, delimiter = '|')
+    public void testHasPrefix(final String a, final String b, final boolean hasPrefix) {
+        assertEquals(hasPrefix, f(a).hasPrefix(f(b)));
+    }
+
 
     @Test
     public void testPrepend() {

@@ -44,6 +44,7 @@ import java.net.http.HttpResponse;
 import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -62,6 +63,7 @@ import static studio.phaseshift.metatron.lang.core.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MRel.rel;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.lang.net.web.webInstSet.MWEB_TID;
@@ -74,14 +76,43 @@ public class webSpace extends MSpace<HttpServer> {
 
     public enum ContentType {
         APPLICATION_JSON("application/json"),
-        AUDIO_WAV("media/"),
-        AUDIIO_MPEG("media/mpeg"),
-        APPLICATION_OCTET_STREAM("application/octet-stream");
-
+        APPLICATION_LD_JSON("application/ld+json"),
+        MEDIA("media/"),
+        MEDIA_MPEG("media/mpeg"),
+        APPLICATION_OCTET_STREAM("application/octet-stream"),
+        APPLICATION_ATOM_XML("application/atom+xml"),
+        APPLICATION_XML("application/xml"),
+        TEXT_HTML("text/html"),
+        TEXT_PLAIN("text/plain"),
+        APPLICATION_XHTML_XML("application/xhtml+xml");
         final String value;
 
         ContentType(final String value) {
             this.value = value;
+        }
+
+        public static ContentType of(final String contentType) {
+            return null == contentType ? TEXT_PLAIN : Arrays.stream(ContentType.values()).filter(ct -> (contentType.contains(ct.value))).findAny().orElse(TEXT_PLAIN);
+        }
+
+        public boolean isJson() {
+            return this.equals(APPLICATION_JSON) || this.equals(APPLICATION_LD_JSON);
+        }
+
+        public boolean isHtml() {
+            return this.equals(TEXT_HTML);
+        }
+
+        public boolean isXml() {
+            return this.equals(APPLICATION_ATOM_XML) || this.equals(APPLICATION_XHTML_XML) || this.equals(APPLICATION_XML);
+        }
+
+        public boolean isBinary() {
+            return this.equals(APPLICATION_OCTET_STREAM);
+        }
+
+        public boolean isPlain() {
+            return this.equals(TEXT_PLAIN);
         }
 
         public static String VALUE = "Content-Type";
@@ -167,11 +198,16 @@ public class webSpace extends MSpace<HttpServer> {
             LOG.debug("retrieving %s", pattern);
             try {
                 final Map<fURI, Obj> partial = new LinkedHashMap<>();
-                final Connection.Response response = Jsoup.connect(pattern.asNode().toString()).ignoreContentType(true).ignoreHttpErrors(true).execute();
-                final Obj docObj = (null != response.contentType() && response.contentType().equals("application/json")) ?
-                        JSON_TRANSLATOR.translateString(response.body()) :
-                        WEB_TRANSLATOR.translate(response.parse()).tid(PAGE_TID);
-                partial.put(pattern.asNode(), docObj);
+                final Connection.Response response = Jsoup.connect(pattern.toString()).ignoreContentType(true).ignoreHttpErrors(true).execute();
+                final ContentType contentType = ContentType.of(response.contentType());
+                final Obj docObj = contentType.isHtml() ?
+                        WEB_TRANSLATOR.translate(response.parse()).tid(PAGE_TID) :
+                        (contentType.isJson() ?
+                                JSON_TRANSLATOR.translateString(response.body()) :
+                                (contentType.isXml() ?
+                                        WEB_TRANSLATOR.translate(response.parse()) :
+                                        str(response.body())));
+                partial.put(pattern, docObj);
                 return partial;
             } catch (final Exception e) {
                 if (e.getMessage().contains("no bytes"))
@@ -185,7 +221,7 @@ public class webSpace extends MSpace<HttpServer> {
     public BiFunction<fURI, Obj, Obj> directWriter() {
         return (pattern, obj) -> {
             LOG.debug("writing %s", pattern);
-            try (AutoCloseable client = (AutoCloseable) HttpClient.newHttpClient()) {
+            try (final AutoCloseable client = (AutoCloseable) HttpClient.newHttpClient()) { // a true jvm bug!
                 final JsonElement json = JSON_TRANSLATOR.translate(obj);
                 final HttpRequest request = HttpRequest.newBuilder()
                         .header(ContentType.VALUE, ContentType.APPLICATION_JSON.value)
@@ -217,7 +253,7 @@ public class webSpace extends MSpace<HttpServer> {
     @Override
     public Obj write(final fURI vid, final Obj obj) {
         //Space.Helper.resolveWrite(this, vid, obj, directWriter(), directReader());
-        return directWriter().apply(vid, obj);
+        return this.directWriter().apply(vid, obj);
     }
         /*if (obj.isNoObj()) {
             try {

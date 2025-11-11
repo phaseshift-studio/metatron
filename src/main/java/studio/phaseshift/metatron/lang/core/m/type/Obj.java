@@ -23,6 +23,7 @@ import studio.phaseshift.metatron.algebra.PlusMonoid;
 import studio.phaseshift.metatron.algebra.Ring;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.lang.core.m.type.facade.FObj;
 import studio.phaseshift.metatron.lang.sys.router.Router;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
@@ -297,6 +298,13 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
 
     default <O extends Obj> O as() {
         return (O) this;
+    }
+
+    default <F extends FObj> F as(final Class<F> facade) {
+        if (facade.isAssignableFrom(this.getClass()))
+            return (F) this;
+        else
+            return MTronException.wrap(() -> facade.getConstructor(Obj.class).newInstance(this));
     }
 
     default <O extends Obj> boolean is(final Class<O> clazz) {
