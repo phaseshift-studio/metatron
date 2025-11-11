@@ -1,7 +1,6 @@
-package studio.phaseshift.metatron.lang.db.grph.mtron;
+package studio.phaseshift.metatron.lang.db.grph.type;
 
 import org.apache.tinkerpop.gremlin.structure.Direction;
-import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.core.m.type.Lst;
 import studio.phaseshift.metatron.lang.core.m.type.Obj;
 import studio.phaseshift.metatron.lang.core.m.type.Rec;
@@ -9,10 +8,9 @@ import studio.phaseshift.metatron.lang.core.m.type.Rel;
 
 import java.util.stream.Stream;
 
-import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.lang.db.grph.mtron.TP3Translator.LABEL;
+import static studio.phaseshift.metatron.lang.db.grph.type.TP3Translator.LABEL;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)

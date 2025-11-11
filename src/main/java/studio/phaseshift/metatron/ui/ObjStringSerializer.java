@@ -30,7 +30,7 @@ import java.util.HexFormat;
 import java.util.Map;
 import java.util.Set;
 
-import static studio.phaseshift.metatron.lang.core.m.mInstSet.BASE_TYPES;
+import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.BASE_TYPES;
 
 public class ObjStringSerializer implements ObjSerializer<String> {
 

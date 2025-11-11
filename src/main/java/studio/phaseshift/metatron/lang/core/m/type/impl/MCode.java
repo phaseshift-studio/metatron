@@ -25,7 +25,7 @@ import studio.phaseshift.metatron.lang.core.m.type.Obj;
 
 import java.util.List;
 
-import static studio.phaseshift.metatron.lang.core.m.mInstSet.CODE_TID;
+import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.CODE_TID;
 
 public class MCode extends MObj implements Code {
 

@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.lang.db.grph.tp;
+package studio.phaseshift.metatron.lang.db.grph.type.tp;
 
 import org.apache.tinkerpop.gremlin.structure.*;
 import org.apache.tinkerpop.gremlin.structure.util.wrapped.WrappedProperty;
@@ -30,7 +30,7 @@ import studio.phaseshift.metatron.util.Tuple;
 
 import java.util.Iterator;
 
-import static studio.phaseshift.metatron.lang.db.grph.grphInstSet.PROPERTY_TID;
+import static studio.phaseshift.metatron.lang.db.grph.inst.grphInstSet.PROPERTY_TID;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MReal.real;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MStr.str;

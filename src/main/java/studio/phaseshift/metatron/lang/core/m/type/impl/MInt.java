@@ -21,7 +21,7 @@ package studio.phaseshift.metatron.lang.core.m.type.impl;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.core.m.type.Int;
 
-import static studio.phaseshift.metatron.lang.core.m.mInstSet.INT_TID;
+import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.INT_TID;
 
 public class MInt extends MObj implements Int {
 

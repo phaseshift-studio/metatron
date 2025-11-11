@@ -7,9 +7,8 @@ import studio.phaseshift.metatron.lang.sys.router.Router;
 import java.util.List;
 import java.util.Map;
 
-import static studio.phaseshift.metatron.furi.fURI.f;
-import static studio.phaseshift.metatron.lang.core.m.mInstSet.CHOOSE_TID;
-import static studio.phaseshift.metatron.lang.core.m.mInstSet.IS_TID;
+import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.CHOOSE_TID;
+import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.IS_TID;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MInt.jnt;
 
 /*

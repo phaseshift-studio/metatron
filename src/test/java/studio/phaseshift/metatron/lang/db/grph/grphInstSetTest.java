@@ -24,7 +24,8 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.MetatronTest;
-import studio.phaseshift.metatron.lang.db.grph.tp.MGraph;
+import studio.phaseshift.metatron.lang.db.grph.inst.grphInstSet;
+import studio.phaseshift.metatron.lang.db.grph.type.tp.MGraph;
 import studio.phaseshift.metatron.lang.sys.router.Router;
 
 import static studio.phaseshift.metatron.furi.fURI.f;

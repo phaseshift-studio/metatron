@@ -25,7 +25,7 @@ import studio.phaseshift.metatron.lang.core.m.type.Obj;
 import studio.phaseshift.metatron.lang.core.m.type.Type;
 import studio.phaseshift.metatron.util.Tuple;
 
-import static studio.phaseshift.metatron.lang.core.m.mInstSet.BASE_TYPES;
+import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.BASE_TYPES;
 import static studio.phaseshift.metatron.lang.core.m.obj.NoObj.noobj;
 
 

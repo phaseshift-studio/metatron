@@ -28,7 +28,7 @@ import studio.phaseshift.metatron.ui.GraphittyLogger;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.furi.fURI.f;
-import static studio.phaseshift.metatron.lang.core.m.mInstSet.FAIL_TID;
+import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.FAIL_TID;
 import static studio.phaseshift.metatron.lang.core.m.obj.NoObj.noobj;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MType.T;
 

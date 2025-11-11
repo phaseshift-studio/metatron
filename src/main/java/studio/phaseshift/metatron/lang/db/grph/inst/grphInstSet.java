@@ -16,14 +16,15 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.lang.db.grph;
+package studio.phaseshift.metatron.lang.db.grph.inst;
 
 import org.apache.tinkerpop.gremlin.structure.Direction;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.core.m.type.*;
-import studio.phaseshift.metatron.lang.db.grph.mtron.REdge;
-import studio.phaseshift.metatron.lang.db.grph.mtron.RElement;
-import studio.phaseshift.metatron.lang.db.grph.mtron.RVertex;
+import studio.phaseshift.metatron.lang.db.grph.grphSpace;
+import studio.phaseshift.metatron.lang.db.grph.type.REdge;
+import studio.phaseshift.metatron.lang.db.grph.type.RElement;
+import studio.phaseshift.metatron.lang.db.grph.type.RVertex;
 import studio.phaseshift.metatron.lang.sys.router.Router;
 
 import studio.phaseshift.metatron.lang.core.m.type.impl.MInstSet;
@@ -35,9 +36,9 @@ import java.util.Set;
 
 import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.furi.fURI.f;
-import static studio.phaseshift.metatron.lang.db.grph.mtron.TP3Translator.LABEL;
-import static studio.phaseshift.metatron.lang.db.grph.mtron.TP3Translator.PROPS;
-import static studio.phaseshift.metatron.lang.core.m.mInstSet.*;
+import static studio.phaseshift.metatron.lang.db.grph.type.TP3Translator.LABEL;
+import static studio.phaseshift.metatron.lang.db.grph.type.TP3Translator.PROPS;
+import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.*;
 import static studio.phaseshift.metatron.lang.core.m.obj.NoObj.noobj;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;

@@ -16,16 +16,16 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.lang.db.grph;
+package studio.phaseshift.metatron.lang.db.grph.inst;
 
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.lang.db.grph.tp.MGraph;
+import studio.phaseshift.metatron.lang.db.grph.type.tp.MGraph;
 import studio.phaseshift.metatron.lang.core.m.type.Call;
 import studio.phaseshift.metatron.lang.Fluent;
 import studio.phaseshift.metatron.lang.core.m.type.Inst;
 import studio.phaseshift.metatron.lang.core.m.type.Obj;
 import studio.phaseshift.metatron.lang.core.m.inst.mFluent;
-import studio.phaseshift.metatron.lang.core.m.mInstSet;
+import studio.phaseshift.metatron.lang.core.m.inst.mInstSet;
 
 import java.util.ArrayList;
 import java.util.List;

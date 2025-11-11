@@ -1,16 +1,15 @@
-package studio.phaseshift.metatron.lang.db.grph.mtron;
+package studio.phaseshift.metatron.lang.db.grph.type;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.core.m.type.Obj;
 import studio.phaseshift.metatron.lang.core.m.type.Rec;
 import studio.phaseshift.metatron.lang.core.m.type.Rel;
 import studio.phaseshift.metatron.lang.core.m.type.facade.FRec;
-import studio.phaseshift.metatron.lang.core.m.type.impl.MRec;
 
 import java.util.stream.Stream;
 
-import static studio.phaseshift.metatron.lang.db.grph.mtron.TP3Translator.LABEL;
-import static studio.phaseshift.metatron.lang.db.grph.mtron.TP3Translator.PROPS;
+import static studio.phaseshift.metatron.lang.db.grph.type.TP3Translator.LABEL;
+import static studio.phaseshift.metatron.lang.db.grph.type.TP3Translator.PROPS;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)

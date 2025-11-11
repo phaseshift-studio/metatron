@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.lang.db.grph.tp;
+package studio.phaseshift.metatron.lang.db.grph.type.tp;
 
 import org.apache.tinkerpop.gremlin.structure.Direction;
 import org.apache.tinkerpop.gremlin.structure.Edge;
@@ -30,7 +30,7 @@ import studio.phaseshift.metatron.util.IteratorUtil;
 
 import java.util.Iterator;
 
-import static studio.phaseshift.metatron.lang.db.grph.grphInstSet.VERTEX_TID;
+import static studio.phaseshift.metatron.lang.db.grph.inst.grphInstSet.VERTEX_TID;
 
 public class MVertex extends MElement implements Obj, Vertex, WrappedVertex<Vertex> {
 

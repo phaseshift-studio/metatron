@@ -22,7 +22,7 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.core.m.type.Fail;
 import studio.phaseshift.metatron.util.MTronException;
 
-import static studio.phaseshift.metatron.lang.core.m.mInstSet.FAIL_TID;
+import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.FAIL_TID;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)

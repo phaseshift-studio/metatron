@@ -21,12 +21,12 @@ package studio.phaseshift.metatron.lang.db.grph;
 import org.apache.tinkerpop.gremlin.tinkergraph.structure.TinkerFactory;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.Space;
-import studio.phaseshift.metatron.lang.core.m.mInstSet;
+import studio.phaseshift.metatron.lang.core.m.inst.mInstSet;
 import studio.phaseshift.metatron.lang.core.m.type.Obj;
 import studio.phaseshift.metatron.lang.MSpace;
 import studio.phaseshift.metatron.lang.core.m.type.Rec;
 import studio.phaseshift.metatron.lang.core.m.type.Type;
-import studio.phaseshift.metatron.lang.db.grph.mtron.TP3Translator;
+import studio.phaseshift.metatron.lang.db.grph.type.TP3Translator;
 import studio.phaseshift.metatron.lang.db.kv.kvSpace;
 import studio.phaseshift.metatron.lang.sys.router.Router;
 import studio.phaseshift.metatron.lang.util.noobjSpace;
@@ -36,8 +36,8 @@ import java.util.Map;
 import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.lang.core.m.inst.mFluent.StartLess.isa_;
-import static studio.phaseshift.metatron.lang.core.m.mInstSet.REC_TID;
-import static studio.phaseshift.metatron.lang.core.m.mInstSet.URI_TID;
+import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.REC_TID;
+import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.URI_TID;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MType.T;
@@ -60,7 +60,7 @@ public class grphSpace extends MSpace<Space> {
     public static final fURI GRPH_TID = f("/grph/space/grph");
     protected static final fURI V_PATTERN = f("/v/+");
     protected static final fURI E_V_ADJ_PATTERN = f("/v/+/");
-    protected static final Type GRPH_TYPE = T(GRPH_TID, null, instC(mInstSet.INST_TID.dom(ALL.maybe()).rng(GRPH_TID), lst(T(REC_TID, isa_(rec(uri(PATTERN), T(URI_TID), uri("load"), T(URI_TID.maybe()), uri("space"), T(ALL))))), (lhs, inst) -> {
+    public static final Type GRPH_TYPE = T(GRPH_TID, null, instC(mInstSet.INST_TID.dom(ALL.maybe()).rng(GRPH_TID), lst(T(REC_TID, isa_(rec(uri(PATTERN), T(URI_TID), uri("load"), T(URI_TID.maybe()), uri("space"), T(ALL))))), (lhs, inst) -> {
         final fURI pattern = inst.arg(0).<Rec>as().at(PATTERN).uriValue();
         final fURI dataset = inst.arg(0).<Rec>as().at("load").uriValue();
         final Obj inner = inst.arg(0).<Rec>as().at("space");

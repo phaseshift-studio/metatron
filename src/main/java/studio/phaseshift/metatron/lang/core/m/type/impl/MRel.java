@@ -24,7 +24,7 @@ import studio.phaseshift.metatron.lang.core.m.type.Rel;
 
 import java.util.stream.Stream;
 
-import static studio.phaseshift.metatron.lang.core.m.mInstSet.REL_TID;
+import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.REL_TID;
 import static studio.phaseshift.metatron.util.Tuple.Pair;
 
 

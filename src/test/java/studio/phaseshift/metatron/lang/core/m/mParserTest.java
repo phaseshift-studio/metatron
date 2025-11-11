@@ -29,7 +29,7 @@ import java.util.HexFormat;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static studio.phaseshift.metatron.lang.core.m.mInstSet.BYTES_TID;
+import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.BYTES_TID;
 import static studio.phaseshift.metatron.lang.core.m.parser.mParser.m_bytes;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MInt.jnt;
@@ -37,7 +37,7 @@ import static studio.phaseshift.metatron.lang.core.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MReal.real;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.lang.core.m.mInstSet.BOOL_TID;
+import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.BOOL_TID;
 import static studio.phaseshift.metatron.lang.core.m.parser.mParser.m_bool;
 
 

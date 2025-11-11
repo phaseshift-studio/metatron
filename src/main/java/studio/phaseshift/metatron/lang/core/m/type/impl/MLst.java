@@ -24,7 +24,7 @@ import studio.phaseshift.metatron.lang.core.m.type.Obj;
 
 import java.util.List;
 
-import static studio.phaseshift.metatron.lang.core.m.mInstSet.LST_TID;
+import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.LST_TID;
 
 public class MLst extends MObj implements Lst {
 

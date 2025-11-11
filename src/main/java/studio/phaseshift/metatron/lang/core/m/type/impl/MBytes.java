@@ -5,7 +5,7 @@ import studio.phaseshift.metatron.lang.core.m.type.Bytes;
 
 import java.nio.ByteBuffer;
 
-import static studio.phaseshift.metatron.lang.core.m.mInstSet.BYTES_TID;
+import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.BYTES_TID;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)

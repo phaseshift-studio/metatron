@@ -30,7 +30,7 @@ import studio.phaseshift.metatron.ui.GraphittyLogger;
 import java.util.*;
 import java.util.stream.Stream;
 
-import static studio.phaseshift.metatron.lang.core.m.mInstSet.MTRON_TID;
+import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.MTRON_TID;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MType.T;

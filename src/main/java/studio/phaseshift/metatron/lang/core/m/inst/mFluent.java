@@ -19,7 +19,6 @@
 package studio.phaseshift.metatron.lang.core.m.inst;
 
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.lang.core.m.mInstSet;
 import studio.phaseshift.metatron.lang.core.m.type.Code;
 import studio.phaseshift.metatron.lang.Fluent;
 import studio.phaseshift.metatron.lang.core.m.type.Inst;
@@ -31,7 +30,7 @@ import java.util.List;
 
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MInst.instB;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
-import static studio.phaseshift.metatron.lang.core.m.mInstSet.ID_TID;
+import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.ID_TID;
 
 public class mFluent<F extends Fluent<F>> extends MCode implements Fluent<F>, Code {
 

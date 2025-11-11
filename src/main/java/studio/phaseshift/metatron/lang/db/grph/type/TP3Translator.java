@@ -1,4 +1,4 @@
-package studio.phaseshift.metatron.lang.db.grph.mtron;
+package studio.phaseshift.metatron.lang.db.grph.type;
 
 import org.apache.tinkerpop.gremlin.structure.Direction;
 import org.apache.tinkerpop.gremlin.structure.Element;
@@ -14,9 +14,9 @@ import studio.phaseshift.metatron.util.Translator;
 
 import java.util.concurrent.atomic.AtomicReference;
 
-import static studio.phaseshift.metatron.lang.db.grph.grphInstSet.EDGE_TID;
-import static studio.phaseshift.metatron.lang.db.grph.grphInstSet.VERTEX_TID;
-import static studio.phaseshift.metatron.lang.core.m.mInstSet.FROM_TID;
+import static studio.phaseshift.metatron.lang.db.grph.inst.grphInstSet.EDGE_TID;
+import static studio.phaseshift.metatron.lang.db.grph.inst.grphInstSet.VERTEX_TID;
+import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.FROM_TID;
 import static studio.phaseshift.metatron.lang.core.m.obj.NoObj.noobj;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MInst.instB;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
