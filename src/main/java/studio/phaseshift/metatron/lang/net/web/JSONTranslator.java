@@ -42,7 +42,7 @@ import static studio.phaseshift.metatron.lang.core.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
 
-public class JSONTranslator implements Translator<Obj, JsonElement> {
+public record JSONTranslator(ObjSerializer<String> serializer) implements Translator<Obj, JsonElement> {
 
     private static final GraphittyLogger LOG = Graphitty.log(JSONTranslator.class);
 
@@ -55,14 +55,8 @@ public class JSONTranslator implements Translator<Obj, JsonElement> {
             .ignoreRewrites(true)
             .create();
 
-    private final ObjSerializer<String> serializer;
-
     public JSONTranslator() {
         this(SERIALIZER);
-    }
-
-    public JSONTranslator(final ObjSerializer<String> serializer) {
-        this.serializer = serializer;
     }
 
     @Override

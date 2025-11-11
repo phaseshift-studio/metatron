@@ -30,6 +30,10 @@ public class RElement extends FRec {
         return this.at(LABEL).uriValue();
     }
 
+    public Object id() {
+        return this.vid();
+    }
+    
     public Stream<Obj> values(final Obj keys) {
         return this.properties(keys).map(Rel::second);
     }

@@ -27,15 +27,10 @@ import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class TP3Translator implements Translator<Obj, Graph> {
+public record TP3Translator(Builder builder) implements Translator<Obj, Graph> {
 
     public static final String LABEL = "LABEL";
     public static final String PROPS = "PROPS";
-    protected final Builder builder;
-
-    public TP3Translator(final Builder builder) {
-        this.builder = builder;
-    }
 
 
     private Rec addProperties(final Rec elementRec, final Element element) {
@@ -69,7 +64,7 @@ public class TP3Translator implements Translator<Obj, Graph> {
                     uri(Direction.OUT.name()), out.get()).
                     tid(VERTEX_TID).
                     vid(this.builder.root.extend("V").extend(tpV.id().toString()));
-            Router.writeToSpace(this.builder.root.extend("V").extend(tpV.id().toString()),RVertex.of(vertex));
+            Router.writeToSpace(this.builder.root.extend("V").extend(tpV.id().toString()), RVertex.of(vertex));
         });
         return Router.readFromSpace(this.builder.root.extend("+"));
     }
