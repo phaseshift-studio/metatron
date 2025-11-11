@@ -39,6 +39,10 @@ import java.net.URI;
 import java.nio.ByteBuffer;
 import java.util.LinkedList;
 import java.util.Queue;
+import java.util.concurrent.TimeUnit;
+
+import static studio.phaseshift.metatron.furi.fURI.f;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MObjs.objs;
 
 public class MClient extends WebSocketClient implements MConnection {
 
@@ -86,14 +90,7 @@ public class MClient extends WebSocketClient implements MConnection {
     }
 
     public void start() {
-        try {
-            while (!this.connectBlocking()) {
-                Thread.sleep(1000);
-                LOG.info("retrying connection to {{b}}%s{{X}}", this.remoteHost);
-            }
-        } catch (final Exception e) {
-            throw MTronException.of(e);
-        }
+        this.connect();
     }
 
     @Override
@@ -126,6 +123,18 @@ public class MClient extends WebSocketClient implements MConnection {
     public void onError(final Exception ex) {
         LOG.error("an error occurred with {{b}}%s{{/b}}: %s", this.remoteHost, ex.getMessage().toLowerCase());
         this.futures.clear();
+        if (!this.isOpen()) {
+            new Thread(() -> {
+                try {
+                    Thread.sleep(1000);
+                    LOG.info("retrying connection to {{b}}%s{{X}}", this.remoteHost);
+                    this.reconnectBlocking();
+                } catch (Exception e) {
+                    throw MTronException.of(e);
+                }
+
+            }).start();
+        }
     }
 
     /// ////////////////////////////////////////////////////////////////////////////////////////
@@ -139,8 +148,8 @@ public class MClient extends WebSocketClient implements MConnection {
 
     @Override
     public <O extends Obj> FutureObj<O> sendRecvObj(final Obj obj) {
-        final Obj toSend = obj.vid() == null ? obj : obj.vid(this.remoteHost().extend(obj.vid().path()));
-        //final Obj toSend = obj.vid(obj.vid() == null ? f("temp?tag=abc") : obj.vid().query("tag", "abc"));
+        Obj toSend = obj;// objs(obj.stream().map(x -> x.vid() == null ? x : x.vid(this.remoteHost().extend(x.vid().path()))));
+        toSend = toSend.vid(toSend.vid() == null ? f("temp?tag=abc") : toSend.vid().query("tag", "abc"));
         LOG.trace("sending obj and awaiting future: %s", toSend);
         final FutureObj<Obj> future = new FutureObj<>("abc");
         this.futures.add(future);

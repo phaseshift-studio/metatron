@@ -16,8 +16,7 @@ import studio.phaseshift.metatron.ui.GraphittyLogger;
 import java.util.Map;
 
 import static studio.phaseshift.metatron.furi.fURI.ALL;
-import static studio.phaseshift.metatron.lang.core.m.inst.mFluent.StartLess.from_;
-import static studio.phaseshift.metatron.lang.core.m.inst.mFluent.StartLess.isa_;
+import static studio.phaseshift.metatron.lang.core.m.inst.mFluent.StartLess.*;
 import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.REC_TID;
 import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.URI_TID;
 import static studio.phaseshift.metatron.lang.core.m.obj.NoObj.noobj;
@@ -49,7 +48,7 @@ public class clstrSpace extends MSpace<Map<fURI, MConnection>> {
     @Override
     public Obj read(final fURI vid) {
         return Router.global().server().cluster(vid).map(msc -> {
-            LOG.info("routing to cluster node {{b}}%s{{X}}", msc.remoteHost());
+            LOG.info("reading from cluster node {{b}}%s{{X}}", msc.remoteHost());
             final FutureObj<Obj> future = msc.sendRecvObj(from_(vid.scheme(null).authority(null).toUri()));
             return future.get(5000);
         }).reduce(noobj(), Obj::append);
@@ -57,7 +56,10 @@ public class clstrSpace extends MSpace<Map<fURI, MConnection>> {
 
     @Override
     public Obj write(final fURI vid, final Obj obj) {
-        LOG.info("writing to %s", vid);
+        Router.global().server().cluster(vid).forEach(msc -> {
+            LOG.info("writing to cluster node {{b}}%s{{X}}", msc.remoteHost());
+            msc.sendObj(start_(obj.vid(null)).to_(vid.scheme(null).authority(null).toUri()));
+        });
         return obj;
     }
 }
