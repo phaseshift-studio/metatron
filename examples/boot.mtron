@@ -17,4 +17,13 @@ ollama::[host    => <http://localhost:11434>,
          space   => kv::[pattern => /g/#],
          load    => <tinkerpop-modern>]@/mnt/space/tp3;
  clstr::[pattern => <ws://#>]@/mnt/space/clstr;
- start(1).plus(2).print(_)
+ *boot/options.print(_);
+ *boot/options/mode.-<|[is(eq(server))  => print('server mode'), 
+                        is(eq(console)) => print('client mode'), 
+                        _               => print('no mode provided')]
+
+
+---   web::[host    => <http://localhost:8777>,
+---         pattern => <http://#>,
+---         route   => [/     => examples/www,
+---                     /docs => target/docs ]]@/mnt/space/web];

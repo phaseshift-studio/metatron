@@ -37,6 +37,7 @@ import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.furi.fURI.f;
+import static studio.phaseshift.metatron.lang.core.m.inst.mFluent.StartLess.else_;
 import static studio.phaseshift.metatron.lang.core.m.inst.mFluent.StartLess.id_;
 import static studio.phaseshift.metatron.lang.core.m.obj.NoObj.noobj;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MBool.bool;
@@ -47,6 +48,7 @@ import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MReal.real;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MRel.rel;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.Common.nullOrElse;
@@ -133,6 +135,16 @@ public class mInstSet extends MInstSet {
     public static final fURI ALL_STAR = ALL.maybeSome();
     public static final fURI OBJS_TID = MTRON_TID.extend("objs");
     public static final fURI MATH_TID = MTRON_TID.extend("math");
+    public static final fURI URI_SCHEME_TID = MTRON_TID.extend("uri:scheme");
+    public static final fURI URI_PORT_TID = MTRON_TID.extend("uri:port");
+    public static final fURI URI_HOST_TID = MTRON_TID.extend("uri:host");
+    public static final fURI URI_PATH_TID = MTRON_TID.extend("uri:path");
+    public static final fURI URI_Q_TID = MTRON_TID.extend("uri:q");
+    public static final fURI URI_C_TID = MTRON_TID.extend("uri:c");
+    public static final fURI STR_SPLIT_TID = MTRON_TID.extend("str:split");
+    public static final fURI STR_LOWER_TID = MTRON_TID.extend("str:lower");
+    public static final fURI STR_UPPER_TID = MTRON_TID.extend("str:upper");
+    public static final fURI STR_CONTAINS_TID = MTRON_TID.extend("str:contains");
     public static final Set<fURI> BASE_TYPES = Set.of(
             FAIL_TID, BOOL_TID, BYTES_TID, INT_TID, REAL_TID,
             STR_TID, URI_TID, REL_TID,
@@ -353,6 +365,17 @@ public class mInstSet extends MInstSet {
                 instC(REF_TID.dom(ALL).rng(ALL_STAR), lst(T(ALL_STAR)), (lhs, inst) -> Router.writeToSpace(lhs.uriValue(), inst.arg(0))),
                 instC(TYPE_TID.dom(A).rng(A), lst(), (lhs, inst) -> lhs.type()),
                 instC(TYPE_TID.dom(A.some()).rng(A.some()), lst(), (lhs, inst) -> objs(lhs).type()),
+                /// ///////////////////////////////////////////////////////////////////////////////////////////////////
+                instC(URI_SCHEME_TID.dom(ALL).rng(URI_TID), lst(T(URI_TID)), (lhs, inst) -> uri(lhs.uriValue().scheme())),
+                instC(URI_PORT_TID.dom(ALL).rng(INT_TID), lst(T(URI_TID)), (lhs, inst) -> jnt(lhs.uriValue().port())),
+                instC(URI_HOST_TID.dom(ALL).rng(URI_TID), lst(T(URI_TID)), (lhs, inst) -> uri(lhs.uriValue().host())),
+                instC(URI_PATH_TID.dom(ALL).rng(URI_TID), lst(T(URI_TID)), (lhs, inst) -> uri(lhs.uriValue().path())),
+                instC(URI_Q_TID.dom(ALL).rng(REC_TID), lst(T(URI_TID)), (lhs, inst) -> rec(lhs.uriValue().queryMap().entrySet().stream().map(kv -> rel(uri(kv.getKey()), uri(kv.getValue()))))),
+                instC(URI_C_TID.dom(ALL).rng(LST_TID), lst(T(URI_TID)), (lhs, inst) -> lst(jnt(lhs.uriValue().cV().min()), jnt(lhs.uriValue().cV().max()))),
+                /// ///////////////////////////////////////////////////////////////////////////////////////////////////
+                instC(STR_SPLIT_TID.dom(ALL).rng(LST_TID), rec(uri("delim"), T(STR_TID), uri("string"), T(STR_TID)), (lhs, inst) -> lst(Stream.of(inst.arg("string").strValue().split(inst.arg("delim").strValue())).map(s -> str(s)).map(Obj::<Obj>as).toList())),
+                instC(STR_UPPER_TID.dom(ALL).rng(STR_TID), lst(T(STR_TID)), (lhs, inst) -> lhs.jvm(lhs.strValue().toUpperCase())),
+                instC(STR_LOWER_TID.dom(ALL).rng(STR_TID), lst(T(STR_TID)), (lhs, inst) -> lhs.jvm(lhs.strValue().toLowerCase())),
                 /// ///////////////////////////////////////////////////////////////////////////////////////////////////
                 instC(AS_TID.dom(A).rng(B), lst(T(B)), (lhs, inst) -> lhs.tid(inst.arg(0).tid().c(lhs.tid().c()))),
                 instC(WITHIN_TID.dom(LST_TID).rng(LST_TID), lst(T(ALL_STAR)), (lhs, inst) -> lst(inst.arg(0).apply(objs(lhs.stream().flatMap(Obj::elements))).stream().toList())),

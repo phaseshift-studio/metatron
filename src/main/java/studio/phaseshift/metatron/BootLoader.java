@@ -142,6 +142,7 @@ public class BootLoader implements Obj {
             kvSpace.of(f("/sys/#"), fURI.NULL).vid(f("/mnt/sys"));
             mInstSet.create(f("/mnt/lang/m"));
             Router.writeToSpace(Router.global());
+            Router.writeToSpace("boot/options",options);
             ROUTER.start();
             //  Router.writeToSpace(new mtronInstSet(fURI.of("/mnt/lang/m")));
             ///////////////////////////////////////////////////////////////
