@@ -1,21 +1,20 @@
 --- metatron example boot
 --- mount instruction sets
-/mnt/lang/sys  -> */sys;
-/mnt/lang/kv   -> */kv;
-/mnt/lang/web  -> */web;
-/mnt/lang/grph -> */grph;
-/mnt/lang/vec  -> */vec;
-/mnt/lang/mach -> */mach;
-/mnt/lang/llm  -> */llm;
+/mnt/lang/sys   -> */sys;
+/mnt/lang/kv    -> */kv;
+/mnt/lang/web   -> */web;
+/mnt/lang/grph  -> */grph;
+/mnt/lang/vec   -> */vec;
+/mnt/lang/mach  -> */mach;
+/mnt/lang/llm   -> */llm;
+/mnt/lang/clstr -> */clstr;
 --- mount spaces
     kv::[pattern => /usr/#]@/mnt/space/usr;
     kv::[pattern => /shared/#]@/mnt/space/shared;
 ollama::[host    => <http://localhost:11434>,
          pattern => /ollama/#]@/mnt/space/ollama;
-   web::[host    => <http://localhost:8777>,
-         pattern => <http://#>,
-         route   => [/     => examples/www,
-                     /docs => target/docs ]]@/mnt/space/web;
   grph::[pattern => /g/#,
          space   => kv::[pattern => /g/#],
-         load    => <tinkerpop-modern>]@/mnt/space/tp3
+         load    => <tinkerpop-modern>]@/mnt/space/tp3;
+ clstr::[pattern => <ws://#>]@/mnt/space/clstr;
+ start(1).plus(2).print(_)

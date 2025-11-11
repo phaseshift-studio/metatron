@@ -55,7 +55,7 @@ public class OLLM extends MRec implements LLM {
             put(uri("size"), jnt(model.get0().getSize()));
             put(uri("quant"), uri(model.get0().getDetails().getQuantizationLevel()));
             put(uri("family"), uri(model.get0().getDetails().getFormat()));
-            put(uri("card"), rec(model.get1().getModelInfo(), MObjFactory.of()));
+         //   put(uri("card"), rec(model.get1().getModelInfo(), MObjFactory.of()));
         }};
 
     }

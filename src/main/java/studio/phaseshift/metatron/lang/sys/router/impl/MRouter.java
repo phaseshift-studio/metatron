@@ -174,7 +174,7 @@ public class MRouter extends MSpace<MServer> implements Router {
         else if (Registry.open().has(match))
             return Registry.open().load(match);
         else if (!BOOTING)
-            throw MTronException.of("no structure supports pattern %s", match.toUri(true));
+            throw MTronException.of("no structure supports pattern %s", match.toUri(false));
         else
             return noobjSpace.single();
     }

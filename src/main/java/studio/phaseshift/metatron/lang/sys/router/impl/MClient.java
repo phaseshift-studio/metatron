@@ -32,7 +32,9 @@ import studio.phaseshift.metatron.lang.core.m.type.Obj;
 import studio.phaseshift.metatron.lang.core.m.type.impl.MObjs;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
 import studio.phaseshift.metatron.ui.ObjSerializer;
+import studio.phaseshift.metatron.util.MTronException;
 
+import java.io.IOException;
 import java.net.URI;
 import java.nio.ByteBuffer;
 import java.util.LinkedList;
@@ -43,26 +45,26 @@ public class MClient extends WebSocketClient implements MConnection {
     protected final GraphittyLogger LOG;
     protected final ObjSerializer<ByteBuffer> serializer;
     protected final Queue<FutureObj<Obj>> futures = new LinkedList<>();
-    protected final fURI authority;
+    protected final fURI remoteHost;
 
-    public MClient(final fURI authority, final Draft draft) {
-        super(URI.create(authority.toString()), draft);
+    public MClient(final fURI remoteHost, final Draft draft) {
+        super(URI.create(remoteHost.toString()), draft);
         LOG = Router.global().logger();
         this.serializer = new ObjByteBufferSerializer();
-        this.authority = authority;
-        LOG.info("connecting to {{b}}%s{{/b}}", this.authority);
-        Router.writeToSpace(Router.global().vid().extend("cluster"), new MObjs(this.authority.toUri()));
+        this.remoteHost = remoteHost;
+        LOG.info("connecting to {{b}}%s{{/b}}", this.remoteHost);
+        Router.writeToSpace(Router.global().vid().extend("cluster"), new MObjs(this.remoteHost.toUri()));
     }
 
-    public MClient(final fURI authority) {
-        this(authority, new Draft_6455());
+    public MClient(final fURI remoteHost) {
+        this(remoteHost, new Draft_6455());
     }
 
     public static MConnection of(final fURI clientAuthority) {
         return Router.global()
                 .server()
                 .cluster(clientAuthority)
-                .peek(c -> Router.global().logger().debug("reusing existing connection to {{b}}%s{{/b}}", c.authority()))
+                .peek(c -> Router.global().logger().debug("reusing existing connection to {{b}}%s{{/b}}", c.remoteHost()))
                 .findAny()
                 .orElseGet(() -> {
                     final MClient client = new MClient(clientAuthority);
@@ -79,12 +81,19 @@ public class MClient extends WebSocketClient implements MConnection {
         }
     }*/
 
-    public fURI authority() {
-        return this.authority;
+    public fURI remoteHost() {
+        return this.remoteHost;
     }
 
     public void start() {
-        this.connect();
+        try {
+            while (!this.connectBlocking()) {
+                Thread.sleep(1000);
+                LOG.info("retrying connection to {{b}}%s{{X}}", this.remoteHost);
+            }
+        } catch (final Exception e) {
+            throw MTronException.of(e);
+        }
     }
 
     @Override
@@ -115,7 +124,7 @@ public class MClient extends WebSocketClient implements MConnection {
 
     @Override
     public void onError(final Exception ex) {
-        LOG.error("an error occurred with {{b}}%s{{/b}}: %s", this.authority, ex.getMessage().toLowerCase());
+        LOG.error("an error occurred with {{b}}%s{{/b}}: %s", this.remoteHost, ex.getMessage().toLowerCase());
         this.futures.clear();
     }
 
@@ -130,7 +139,7 @@ public class MClient extends WebSocketClient implements MConnection {
 
     @Override
     public <O extends Obj> FutureObj<O> sendRecvObj(final Obj obj) {
-        final Obj toSend = obj;
+        final Obj toSend = obj.vid() == null ? obj : obj.vid(this.remoteHost().extend(obj.vid().path()));
         //final Obj toSend = obj.vid(obj.vid() == null ? f("temp?tag=abc") : obj.vid().query("tag", "abc"));
         LOG.trace("sending obj and awaiting future: %s", toSend);
         final FutureObj<Obj> future = new FutureObj<>("abc");

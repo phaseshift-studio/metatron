@@ -34,5 +34,5 @@ public interface MConnection extends Closeable {
 
     void close();
 
-    fURI authority();
+    fURI remoteHost();
 }

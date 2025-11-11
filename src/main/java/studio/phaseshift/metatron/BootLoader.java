@@ -26,6 +26,7 @@ import studio.phaseshift.metatron.lang.db.grph.type.TP3Translator;
 import studio.phaseshift.metatron.lang.db.kv.kvSpace;
 import studio.phaseshift.metatron.lang.db.kv.inst.kvInstSet;
 import studio.phaseshift.metatron.lang.ai.llm.llmInstSet;
+import studio.phaseshift.metatron.lang.net.clstr.clstrInstSet;
 import studio.phaseshift.metatron.lang.sys.router.Router;
 import studio.phaseshift.metatron.lang.sys.router.impl.MRouter;
 import studio.phaseshift.metatron.lang.sys.sysInstSet;
@@ -82,6 +83,7 @@ public class BootLoader implements Obj {
         Registry.open().register(llmInstSet.MLLM_TID, llmInstSet::create);
         Registry.open().register(vecInstSet.MVEC_TID, vecInstSet::create);
         Registry.open().register(machInstSet.MACH_TID, machInstSet::create);
+        Registry.open().register(clstrInstSet.MCLSTR_TID, clstrInstSet::create);
         // Registry.singleton().register(miotInstSet.INST_TID, () -> miotInstSet.of(fURI.NULL));
     }
 

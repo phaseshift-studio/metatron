@@ -41,6 +41,7 @@ import java.util.Map;
 import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.furi.fURI.f;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.lang.sys.router.impl.MRouter.ROUTER_TID;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
@@ -50,22 +51,22 @@ public class MServer extends WebSocketServer implements Closeable, Obj {
     public static final fURI MSERVER_TID = ROUTER_TID.extend("server");
     public static final String CLUSTER = "cluster";
 
-    protected final fURI authority;
+    protected final fURI host;
     protected final ObjSerializer<ByteBuffer> serializer;
     protected final Map<fURI, MConnection> cluster = new HashMap<>();
     protected GraphittyLogger LOG;
     protected Thread serverThread;
     protected List<FutureObj<?>> futures = new ArrayList<>();
 
-    public MServer(final fURI authority) {
-        super(new InetSocketAddress(authority.host(), authority.port()));
-        this.authority = authority;
+    public MServer(final fURI host) {
+        super(new InetSocketAddress(host.host(), host.port()));
+        this.host = host;
         LOG = Graphitty.log(this);
         this.serializer = new ObjByteBufferSerializer();
     }
 
-    public fURI authority() {
-        return this.authority;
+    public fURI host() {
+        return this.host;
     }
 
     public void start() {
@@ -93,7 +94,7 @@ public class MServer extends WebSocketServer implements Closeable, Obj {
             });
             Router.global().write(
                     Router.global().vid().extend(CLUSTER),
-                    lst((List) this.cluster.values().stream().map(x -> x.authority().toUri()).toList()));
+                    lst((List) this.cluster.values().stream().map(x -> x.remoteHost().toUri()).toList()));
         } catch (final Exception e) {
             // do nothing
         }
@@ -106,7 +107,7 @@ public class MServer extends WebSocketServer implements Closeable, Obj {
 
     @Override
     public void close() {
-        LOG.info("closing %s node {{b}}%s{{/b}}", Graphitty.sillyPrint("mtron", true, true), this.authority);
+        LOG.info("closing %s node {{b}}%s{{/b}}", Graphitty.sillyPrint("mtron", true, true), this.host);
         this.stop();
     }
 
@@ -152,8 +153,9 @@ public class MServer extends WebSocketServer implements Closeable, Obj {
 
     public void onObj(final WebSocket conn, final Obj obj) {
         try {
-            LOG.trace("processing %s for {{b}}%s{{/b}}", obj, conn.getAttachment());
-            final Obj result = obj.apply().vid(null);
+            LOG.debug("processing %s for {{b}}%s{{/b}}", obj, conn.getAttachment());
+            Obj result = obj.apply();
+            result = objs(result.stream().map(x -> x.vid() == null ? x : x.vid(this.host().extend(x.vid()))));
             // final String tag = obj.vid() != null ? obj.vid().queryValue(f("tag"), String.class, null) : null;
             //if (tag != null) {
             //    fURI rvid = result.vid() == null ? f("/usr/temp?tag=" + tag) : result.vid().query("tag", tag);
@@ -176,7 +178,7 @@ public class MServer extends WebSocketServer implements Closeable, Obj {
 
     @Override
     public void onStart() {
-        LOG.info("starting %s node {{b}}%s{{/b}}", Graphitty.sillyPrint("mtron", true, true), this.authority);
+        LOG.info("starting %s node {{b}}%s{{/b}}", Graphitty.sillyPrint("mtron", true, true), this.host);
     }
 
     @Override
@@ -230,7 +232,7 @@ public class MServer extends WebSocketServer implements Closeable, Obj {
         }
 
         @Override
-        public fURI authority() {
+        public fURI remoteHost() {
             return this.ws.getAttachment();
         }
     }

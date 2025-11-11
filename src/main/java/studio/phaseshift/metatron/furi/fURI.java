@@ -256,9 +256,9 @@ public class fURI implements Cloneable, Ring<fURI> {
         return base;
     }
 
-    public Uri toUri(final boolean schemaType) {
+    public Uri toUri(final boolean schemeType) {
         final String scheme = this.scheme();
-        return schemaType && null != scheme ?
+        return schemeType && null != scheme ?
                 uri(this.scheme(null), fURI.of(scheme)) :
                 uri(this);
     }

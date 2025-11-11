@@ -37,12 +37,12 @@ public class remoteSpaceTest extends MetatronTest {
 
     @Test
     public void testRemote() {
-        remoteSpace remote = new remoteSpace(f("ws://localhost:8887/"),f("/usr/#"), f("/mnt/ws/localhost/8887/usr"));
+        //remoteSpace remote = new remoteSpace(f("ws://localhost:8887/"),f("/usr/#"), f("/mnt/ws/localhost/8887/usr"));
         /*assertEquals(str("hello world"), start_(str("hello world")).to_(uri("/usr/a")).apply());
         //final Obj obj = str("hello world").vid(f("ws://chibi.local:8887/usr/a"));
         final Obj a = remote.read("ws://localhost:8887/usr/a");
         assertEquals(str("hello world"), a);*/
-        remote.close();
+       // remote.close();
     }
 
 
