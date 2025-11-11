@@ -18,12 +18,16 @@ import static studio.phaseshift.metatron.lang.db.grph.mtron.TP3Translator.PROPS;
 public class RElement extends FRec {
 
     public RElement(final Obj element) {
-        super((Rec)element);
+        super((Rec) element);
     }
 
     public Stream<Rel> properties(final Obj keys) {
         boolean emptyKeys = keys.elements().noneMatch(e -> !e.isNoObj());
         return this.has(PROPS) ? this.at(PROPS).<Rec>as().elements().filter(o -> emptyKeys || keys.elements().anyMatch(u -> o.<Rel>as().first().uriValue().matches(u.uriValue()))) : Stream.empty();
+    }
+
+    public fURI label() {
+        return this.at(LABEL).uriValue();
     }
 
     public Stream<Obj> values(final Obj keys) {

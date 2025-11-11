@@ -24,6 +24,10 @@ public class REdge extends RElement {
         return this.at(direction.name()).stream().map(o -> o.apply(this)).map(Obj::<Rec>as).map(RVertex::of);
     }
 
+    public String toString() {
+        return "{{y}}e{{g}}[{{b}}" + this.vertices(Direction.OUT).findFirst().get() + "{{g}}={{b}}" + this.label() + "{{g}}=>" + this.vertices(Direction.IN).findFirst().get() + "{{g}}]{{X}}";
+    }
+    
     @Override
     public REdge clone() {
         return (REdge) super.clone();

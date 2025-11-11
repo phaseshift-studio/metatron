@@ -67,7 +67,8 @@ public class TP3Translator implements Translator<Obj, Graph> {
                     uri(LABEL), uri(tpV.label()),
                     uri(PROPS), props.isEmpty() ? noobj() : props,
                     uri(Direction.OUT.name()), out.get()).
-                    tid(VERTEX_TID);
+                    tid(VERTEX_TID).
+                    vid(this.builder.root.extend("V").extend(tpV.id().toString()));
             Router.writeToSpace(this.builder.root.extend("V").extend(tpV.id().toString()),RVertex.of(vertex));
         });
         return Router.readFromSpace(this.builder.root.extend("+"));

@@ -11,6 +11,7 @@ import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.lang.db.grph.mtron.TP3Translator.LABEL;
 
 /*
@@ -28,6 +29,10 @@ public class RVertex extends RElement {
 
     public static Stream<RVertex> of(final Obj vertices) {
         return vertices.elements().map(Obj::<Rec>as).map(RVertex::new);
+    }
+    
+    public String toString() {
+        return "{{y}}v{{g}}[{{b}}" + this.vid() + "{{g}}]{{X}}"; 
     }
     
     /*@Override
