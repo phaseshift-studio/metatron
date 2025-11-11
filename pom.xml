@@ -55,6 +55,7 @@
         <jakarta.version>2.0.0</jakarta.version>
         <jsoup.version>1.21.2</jsoup.version>
         <asciidoctor.version>3.2.0</asciidoctor.version>
+        <exp4j.version>0.4.8</exp4j.version>
         <!-- LOGBACK PROPERTIES -->
     </properties>
     <dependencyManagement>
@@ -154,6 +155,11 @@
             <version>1.6.0</version>
         </dependency>
         <!-- UTILITIES -->
+        <dependency>
+            <groupId>net.objecthunter</groupId>
+            <artifactId>exp4j</artifactId>
+            <version>${exp4j.version}</version>
+        </dependency>
         <dependency>
             <groupId>com.google.code.gson</groupId>
             <artifactId>gson</artifactId>

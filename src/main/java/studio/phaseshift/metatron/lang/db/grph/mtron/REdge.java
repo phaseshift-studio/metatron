@@ -28,5 +28,6 @@ public class REdge extends RElement {
     public REdge clone() {
         return (REdge) super.clone();
     }
+    
 
 }

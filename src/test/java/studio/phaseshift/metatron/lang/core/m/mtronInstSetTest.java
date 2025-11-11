@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.lang.mtron;
+package studio.phaseshift.metatron.lang.core.m;
 
 /*
 @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -205,6 +205,22 @@ public class mtronInstSetTest extends MetatronTest {
             "1.plus(1)                                                              % 2"
     }, delimiter = '%')
     public void testReductions(final String code, final String expected) {
+        super.testCode(code, expected);
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "math('1+2')                                                            % 3.0",
+            "10.to(a).math('a^2')                                                   % 100.0",
+            "10.to(a).plus(10).to(b).math('a+b')                                    % 30.0",
+            "10.to(a).plus(10).to(b).math('(a+b)^2')                                % 900.0",
+            "1-<[plus(1).to(a),plus(2).to(b)]>-.math('a*b')                         % real{2}::6.0",
+            "1-<[to(a).math('a+a'),to(c).math('c+5')]                               % [2.0,6.0]",
+            "1-<[to(a).math('a+a'),to(c).math('c+5')]>-.sum?real<=real{*}()         % 8.0",
+            // dummy without ending comma so it's easier to add more test cases
+            "1.plus(1)                                                              % 2"
+    }, delimiter = '%')
+    public void testMath(final String code, final String expected) {
         super.testCode(code, expected);
     }
 

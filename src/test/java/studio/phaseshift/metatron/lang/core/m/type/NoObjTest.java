@@ -1,10 +1,9 @@
-package studio.phaseshift.metatron.lang.mtron.type;
+package studio.phaseshift.metatron.lang.core.m.type;
 
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.MetatronTest;
 import studio.phaseshift.metatron.lang.core.m.parser.mtronParser;
-import studio.phaseshift.metatron.lang.core.m.type.Obj;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
 

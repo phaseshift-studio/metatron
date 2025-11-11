@@ -18,11 +18,14 @@
 
 package studio.phaseshift.metatron.lang.core.m;
 
+import net.objecthunter.exp4j.Expression;
+import net.objecthunter.exp4j.ExpressionBuilder;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.core.m.obj.NoObj;
 import studio.phaseshift.metatron.lang.core.m.type.*;
 import studio.phaseshift.metatron.lang.core.m.type.impl.*;
+import studio.phaseshift.metatron.lang.core.m.util.MathUtil;
 import studio.phaseshift.metatron.lang.sys.router.Router;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
@@ -130,6 +133,7 @@ public class mtronInstSet extends MInstSet {
     public static final fURI NOOBJ_TID = fURI.of("");
     public static final fURI ALL_STAR = ALL.maybeSome();
     public static final fURI OBJS_TID = MTRON_TID.extend("objs");
+    public static final fURI MATH_TID = MTRON_TID.extend("math");
     public static final Set<fURI> BASE_TYPES = Set.of(
             FAIL_TID, BOOL_TID, BYTES_TID, INT_TID, REAL_TID,
             STR_TID, URI_TID, REL_TID,
@@ -415,6 +419,22 @@ public class mtronInstSet extends MInstSet {
                         });
                     });
                     return rec(result);
+                }),
+                instC(MATH_TID.dom(ALL.maybe()).rng(REAL_TID), lst(T(STR_TID)), (lhs, inst) -> {
+                    final String equation = inst.arg(0).strValue();
+                    final Set<String> variables = MathUtil.getVariables(equation);
+                    final double result = new ExpressionBuilder(equation)
+                            .variables(MathUtil.getVariables(equation))
+                            .build()
+                            .setVariables(variables.stream()
+                                    .map(var -> List.of(var, Router.readFromSpace(var).<Number>jvm().doubleValue()))
+                                    .collect(Collectors.toMap(
+                                            a -> a.get(0).toString(),
+                                            b -> (Double) b.get(1),
+                                            (a, b) -> b,
+                                            HashMap::new)))
+                            .evaluate();
+                    return real(result);
                 })
                 /*instC(FIND_TID.dom(REC_TID).rng(REL_TID.maybeSome()), lst(T(REL_TID.maybeSome())), (lhs, inst) -> {
                     final Obj a = inst.arg(0).as();

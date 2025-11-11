@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.lang.mtron;
+package studio.phaseshift.metatron.lang.core.m;
 
 import org.junit.jupiter.api.Test;
 import studio.phaseshift.metatron.MetatronTest;

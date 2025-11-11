@@ -300,11 +300,10 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
         return (O) this;
     }
 
-    default <F extends FObj> F as(final Class<F> facade) {
-        if (facade.isAssignableFrom(this.getClass()))
-            return (F) this;
-        else
-            return MTronException.wrap(() -> facade.getConstructor(Obj.class).newInstance(this));
+    default <F extends FObj<?>> F as(final Class<F> facade) {
+        return facade.isAssignableFrom(this.getClass()) ?
+                (F) this :
+                MTronException.wrap(() -> facade.getConstructor(Obj.class).newInstance(this));
     }
 
     default <O extends Obj> boolean is(final Class<O> clazz) {

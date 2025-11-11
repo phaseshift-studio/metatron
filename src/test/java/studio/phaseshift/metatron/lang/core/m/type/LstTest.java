@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.lang.mtron.type;
+package studio.phaseshift.metatron.lang.core.m.type;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -28,8 +28,6 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.lang.core.m.parser.mtronParser;
 import studio.phaseshift.metatron.lang.MetatronObjTest;
-import studio.phaseshift.metatron.lang.core.m.type.Lst;
-import studio.phaseshift.metatron.lang.core.m.type.Obj;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;

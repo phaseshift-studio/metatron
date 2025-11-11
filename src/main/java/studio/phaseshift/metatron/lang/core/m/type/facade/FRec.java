@@ -16,10 +16,6 @@ public class FRec extends FObj<Rec> implements Rec {
 
     }
 
-    public static final FRec frec(final Rec rec) {
-        return new FRec(rec);
-    }
-
     @Override
     public Rec put(final Obj key, final Obj value) {
         return this.clone(this.base.put(key, value), this.tid(), this.vid());
@@ -31,7 +27,7 @@ public class FRec extends FObj<Rec> implements Rec {
     }
 
     @Override
-    public Rec clone(Object jvm, fURI tid, fURI vid) {
+    public Rec clone(final Object jvm, final fURI tid, final fURI vid) {
         return super.clone(jvm, tid, vid);
     }
 
