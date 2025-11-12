@@ -48,8 +48,16 @@ import static studio.phaseshift.metatron.util.Tuple.Pair;
 public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>, Cloneable {
 
     private static boolean typeInferenceMatch(final Obj lhs, final Type rhs) {
-        return lhs.tid().matches(rhs.tid()) ||
-                (rhs.isBaseType() && lhs.baseType().matches(rhs.tid())); // matches any abstract type to it's base type as long as within the coefficient boundaries
+        if (lhs.tid().matches(rhs.tid()))
+            return true;
+        if(rhs.isBaseType())
+            return lhs.baseType().matches(rhs.tid()); // matches any abstract type to it's base type as long as within the coefficient boundaries
+        if(rhs.tid().isZero() && !lhs.isNoObj()) // TODO: hack because zero can be the empty string and noobj string. fix.
+            return false;
+        if (rhs.tid().hasPattern() && !lhs.tid().matches(rhs.tid()))
+            return false;
+        return null == rhs.predicate() || !rhs.predicate().apply(lhs).isNoObj();
+
     }
 
     <J> J jvm();
@@ -303,7 +311,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
     default <F extends FObj<?>> F as(final Class<F> facade) {
         return facade.isAssignableFrom(this.getClass()) ?
                 (F) this :
-                (F) objs(this.stream().map(x ->  MTronException.wrap(() -> (Obj) facade.getMethod("of", Obj.class).invoke(null, x))).map(Obj::<F>as));
+                (F) objs(this.stream().map(x -> MTronException.wrap(() -> (Obj) facade.getMethod("of", Obj.class).invoke(null, x))).map(Obj::<F>as));
     }
 
     default <O extends Obj> boolean is(final Class<O> clazz) {

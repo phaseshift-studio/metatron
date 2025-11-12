@@ -414,7 +414,7 @@ public class fURI implements Cloneable, Ring<fURI> {
     }
 
     public boolean isZero() {
-        return this.cV().isZero();
+        return this.cV().isZero() || this.path().equals("noobj");
     }
 
     public fURI removeSubpath(final fURI subpath) {
