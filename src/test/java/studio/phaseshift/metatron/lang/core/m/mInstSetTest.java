@@ -201,8 +201,18 @@ public class mInstSetTest extends MetatronTest {
             "{1,2,3,4,5}.reduce(|mult(1))                                           % 120",
             //"{1,2,3,4,5}.reduce(|inst(0){ plus(*<0>) })                             % 240",
             "{'a','b','c'}.>-' '                                                    % \"a b c\"",
+            "{'a','b','c'}>-' '                                                     % \"a b c\"",
             "'a b c'-<' '                                                           % {\"a\", \"b\", \"c\"}",
             "'a b c'-<' '>-' '                                                      % \"a b c\"",
+            "'a b c'.split(' ').merge(' ')                                          % \"a b c\"",
+            "{a,b,c}.>-/                                                            % a/b/c",
+            "{a,b,c}>-/                                                             % a/b/c",
+            "a/b/c.-</                                                              % {a, b, c}",
+            "a/b/c.-</.>-/                                                          % a/b/c",
+            "a/b/c.-</>-/                                                           % a/b/c",
+            "a/b/c.split(/).merge(/)                                                % a/b/c",
+            "a/b/c.split(/).merge(/).mult(<.>)                                      % a/b/c",
+            "a/b/c.split(/).merge(/).mult(<..>)                                     % a/b",
             // dummy without ending comma so it's easier to add more test cases
             "1.plus(1)                                                              % 2"
     }, delimiter = '%')

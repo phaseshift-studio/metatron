@@ -381,11 +381,23 @@ public class fURI implements Cloneable, Ring<fURI> {
     }
 
     public fURI extend(final String segment) {
-        final List<String> newPath = new ArrayList<>(this.path.size() + 1);
-        newPath.addAll(this.path);
-        newPath.addAll(Arrays.asList(segment.split(SEGMENT_SPLIT)));
-        newPath.removeIf(String::isEmpty);
-        return new fURI(this.scheme, this.host, this.port, (this.hasAuthority() && this.path.isEmpty()) || this.sstart, newPath, !segment.isEmpty() && (segment.charAt(segment.length() - 1) == SEGMENT_SPLIT_CHAR), this.poly, Query.to(this.query));
+        if (!segment.contains("..")) {
+            final List<String> newPath = new ArrayList<>(this.path.size() + 1);
+            newPath.addAll(this.path);
+            newPath.addAll(Arrays.asList(segment.split(SEGMENT_SPLIT)));
+            newPath.removeIf(String::isEmpty);
+            newPath.removeIf(s -> s.equals("."));
+            return new fURI(this.scheme, this.host, this.port, (this.hasAuthority() && this.path.isEmpty()) || this.sstart, newPath, !segment.isEmpty() && (segment.charAt(segment.length() - 1) == SEGMENT_SPLIT_CHAR), this.poly, Query.to(this.query));
+        } else {
+            final List<String> segments = new ArrayList<>(this.segments());
+            for (final String s : segment.split(SEGMENT_SPLIT)) {
+                if (!segments.isEmpty() && s.equals(".."))
+                    segments.remove(segments.size() - 1);
+                else if (!s.equals("."))
+                    segments.add(s);
+            }
+            return new fURI(this.scheme, this.host, this.port, (this.hasAuthority() && this.path.isEmpty()) || this.sstart, segments, !segment.isEmpty() && (segment.charAt(segment.length() - 1) == SEGMENT_SPLIT_CHAR), this.poly, Query.to(this.query));
+        }
     }
 
     private fURI rePreTract(boolean retract, final int steps) {

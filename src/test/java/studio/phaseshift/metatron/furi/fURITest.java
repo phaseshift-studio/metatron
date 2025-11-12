@@ -419,7 +419,9 @@ public class fURITest {
     public void testExtend() {
         assertEquals(new fURI("http://fhatos.org/a/b"), new fURI("http://fhatos.org/a").extend("b"));
         assertEquals(new fURI("http://fhatos.org/a/b/c/d"), new fURI("http://fhatos.org/a").extend("b/c/d"));
-        //assertEquals(new fURI("http://fhatos.org/a/b/d"), new fURI("http://fhatos.org/a").extend("b/./d"));
+        assertEquals(new fURI("http://fhatos.org/a/b"), new fURI("http://fhatos.org/a/b/c/d").extend(".././.."));
+        assertEquals(new fURI("http://fhatos.org/a/b"), new fURI("http://fhatos.org/a/b/c").extend("../z/.."));
+        assertEquals(new fURI("http://fhatos.org/a/b/d"), new fURI("http://fhatos.org/a").extend("b/./d"));
 
     }
 
