@@ -32,7 +32,6 @@ import static studio.phaseshift.metatron.furi.fURI.f;
 
 public class mInstSetTest extends MetatronTest {
 
-    @Override
     @ParameterizedTest
     @CsvSource(value = {
             // "1.plus?int{?}<=int(int{0}::1)                                          % noobj",
@@ -158,11 +157,11 @@ public class mInstSetTest extends MetatronTest {
             "{[1,2],[3,4,5],[6,7,8]}>-[,]==[>-,>-,>-]>-                             % {{1,2},{3,4,5},{6,7,8}}",
             "{[1,2],[3,4,5],[6,7,8]}>-[,]==[>-,>-,>-]>-                             % {1,2,3,4,5,6,7,8}",
             "{[1,2],[3,4,5],[6,7,8]}>-[,]==[>-,>-,>-]>-.count()                     % 8",
-            "*/m/inst/#.count()-<[is(gt(0))=>true,is(eq(0))=>false]>>-          % true",
+            "*/m/inst/#.count()-<[is(gt(0))=>true,is(eq(0))=>false]>>-              % true",
             // dummy without ending comma so it's easier to add more test cases
             "1.plus(1)                                                              % 2"
     }, delimiter = '%')
-    public void testCode(final String code, final String expected) {
+    public void testSplitMergeCode(final String code, final String expected) {
         super.testCode(code, expected);
     }
 
@@ -201,6 +200,9 @@ public class mInstSetTest extends MetatronTest {
             "{1,2,3,4,5}.reduce(|mult(2))                                           % 240",
             "{1,2,3,4,5}.reduce(|mult(1))                                           % 120",
             //"{1,2,3,4,5}.reduce(|inst(0){ plus(*<0>) })                             % 240",
+            "{'a','b','c'}.>-' '                                                    % \"a b c\"",
+            "'a b c'-<' '                                                           % {\"a\", \"b\", \"c\"}",
+            "'a b c'-<' '>-' '                                                      % \"a b c\"",
             // dummy without ending comma so it's easier to add more test cases
             "1.plus(1)                                                              % 2"
     }, delimiter = '%')

@@ -240,7 +240,7 @@ public class mInstSet extends MInstSet {
                         (lhs.<Rec>as().elements().map(Rel::first).anyMatch(r -> r.matches(inst.arg(0))) ? lhs : noobj())),
                 instC(HAS_TID.dom(LST_TID).rng(LST_TID.maybe()), lst(T(ALL)), (lhs, inst) -> lhs.<Lst>as().elements().anyMatch(r -> r.matches(inst.arg(0))) ? lhs : noobj()),
                 docWrap(
-                        instC(ID_TID.dom(A).rng(A), lst(), (lhs, inst) -> lhs), 
+                        instC(ID_TID.dom(A).rng(A), lst(), (lhs, inst) -> lhs),
                         "an obj", "an obj", Map.of(), "the identity function f(x)->x"),
                 instC(ID_TID.dom(A.maybeSome()).rng(A.maybeSome()), lst(), (lhs, inst) -> lhs),
                 instC(OR_TID.dom(A).rng(A.maybe()), lst(T(BOOL_TID).c(cInt::some)), (lhs, inst) -> objs(lhs.stream().filter(l -> inst.args().elements().anyMatch(a -> a.apply(l).boolValue())))),
@@ -301,6 +301,7 @@ public class mInstSet extends MInstSet {
                                         .filter(p -> !p.first().isNoObj() && !p.second().isNoObj())
                                         .map(Obj::<Rel>as))
                                 .collect(Collectors.toMap(Rel::first, Rel::second, Obj::append, LinkedHashMap::new)))),
+                instC(SPLIT_TID.dom(STR_TID).rng(STR_TID.some()), lst(T(STR_TID)), (lhs, inst) -> objs(Arrays.stream(lhs.strValue().split(inst.arg(0).strValue())).map(MStr::str))),
                 instC(SPLIT_TID.dom(A.maybeSome()).rng(A.maybeSome()), lst(T(A.maybeSome())), (lhs, inst) -> objs(Stream.of(inst.arg(0)).map(o -> o.apply(lhs)))),
                 instC(SPLIT_TID.dom(ALL).rng(ALL.maybeSome()), lst(T(ALL.some())), (lhs, inst) -> objs(inst.arg(0).stream().map(o -> o.apply(lhs)))),
                 instC(SPLIT_TID.dom(ALL).rng(ALL.maybeSome()), lst(T(ALL)), (lhs, inst) -> objs(inst.arg(0).apply(lhs))),
@@ -312,6 +313,7 @@ public class mInstSet extends MInstSet {
                 instC(MERGE_TID.dom(LST_TID).rng(ALL_STAR), lst(), (lhs, inst) -> objs(lhs.elements())),
                 instC(MERGE_TID.dom(REC_TID).rng(REL_TID.maybeSome()), lst(), (lhs, inst) -> objs(lhs.elements())),
                 instC(MERGE_TID.dom(REC_TID).rng(REC_TID), lst(T(REC_TID)), (lhs, inst) -> inst.arg(0).<Rec>as().plus(lhs.as())),//objs(lhs.elementStream())),
+                instC(MERGE_TID.dom(STR_TID.maybeSome()).rng(STR_TID), lst(T(STR_TID)), (lhs, inst) -> str(lhs.stream().map(Obj::<String>jvmAs).reduce((a, b) -> a + inst.arg(0).strValue() + b).orElse(""))),
                 //
                 instC(MERGE_TID.dom(A.maybeSome()).rng(LST_TID), lst(T(LST_TID)), (lhs, inst) -> inst.arg(0).jvm(Stream.concat(lhs.stream(), inst.arg(0).elements()).toList())),
                 instC(MERGE_TID.dom(REL_TID.maybeSome()).rng(REC_TID), lst(T(REC_TID)), (lhs, inst) -> inst.arg(0).jvm(Stream.concat(lhs.stream().map(Obj::as), inst.arg(0).<Rec>as().elements().map(Obj::<Rel>as)).collect(Collectors.toMap(Rel::first, Rel::second, Obj::append, LinkedHashMap::new)))),
@@ -380,7 +382,6 @@ public class mInstSet extends MInstSet {
                 instC(URI_Q_TID.dom(ALL).rng(REC_TID), lst(T(URI_TID)), (lhs, inst) -> rec(lhs.uriValue().queryMap().entrySet().stream().map(kv -> rel(uri(kv.getKey()), uri(kv.getValue()))))),
                 instC(URI_C_TID.dom(ALL).rng(LST_TID), lst(T(URI_TID)), (lhs, inst) -> lst(jnt(lhs.uriValue().cV().min()), jnt(lhs.uriValue().cV().max()))),
                 /// ///////////////////////////////////////////////////////////////////////////////////////////////////
-                instC(STR_SPLIT_TID.dom(ALL).rng(LST_TID), rec(uri("delim"), T(STR_TID), uri("string"), T(STR_TID)), (lhs, inst) -> lst(Stream.of(inst.arg("string").strValue().split(inst.arg("delim").strValue())).map(s -> str(s)).map(Obj::<Obj>as).toList())),
                 instC(STR_UPPER_TID.dom(ALL).rng(STR_TID), lst(T(STR_TID)), (lhs, inst) -> lhs.jvm(lhs.strValue().toUpperCase())),
                 instC(STR_LOWER_TID.dom(ALL).rng(STR_TID), lst(T(STR_TID)), (lhs, inst) -> lhs.jvm(lhs.strValue().toLowerCase())),
                 /// ///////////////////////////////////////////////////////////////////////////////////////////////////
