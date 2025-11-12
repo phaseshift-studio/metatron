@@ -74,7 +74,7 @@ public class grphSpace extends MSpace<Space> {
         super(inner, config, pattern, GRPH_TID, vid);
     }
 
-    private void start() {
+    public void start() {
         if (this.has("load")) {
             LOG.info("translating %s into grph space", uri("tinkerpop-modern"));
             final TP3Translator t = TP3Translator.Builder.of(this.pattern.retractPattern()).create();

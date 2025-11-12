@@ -31,9 +31,9 @@ public class REdge extends RElement {
         return this.vertices(Direction.OUT).iterator().next();
     }
 
-    public String toString() {
-        return "{{y}}e{{g}}[{{b}}" + this.outVertex() + "{{g}}={{b}}" + this.label() + "{{g}}=>" + this.inVertex() + "{{g}}]{{X}}";
-    }
+   /* public String toString() {
+        return "{{y}}e{{g}}[{{b}}" + this.at(Direction.OUT.name()).vid() + "{{g}}={{b}}" + this.label() + "{{g}}=>" + this.inVertex().vid() + "{{g}}]{{X}}";
+    }*/
 
     @Override
     public REdge clone() {

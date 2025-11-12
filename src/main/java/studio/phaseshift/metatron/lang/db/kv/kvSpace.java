@@ -51,7 +51,6 @@ public class kvSpace extends MSpace<Map<fURI, Obj>> {
     public static final Type KV_TYPE = T(KV_TID, null, instC(mInstSet.INST_TID.dom(ALL.maybe()).rng(KV_TID), lst(T(REC_TID, isa_(rec(uri(PATTERN), T(URI_TID))))), (lhs, inst) -> {
         final fURI pattern = inst.arg(0).<Rec>as().at(PATTERN).uriValue();
         final Space space = new kvSpace(pattern, inst.arg(0).vid());
-        //space.qs().add(new PubSubQ(space));
         Router.global().addSpace(space);
         return space;
     }));

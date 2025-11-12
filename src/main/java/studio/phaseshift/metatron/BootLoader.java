@@ -142,7 +142,7 @@ public class BootLoader implements Obj {
             kvSpace.of(f("/sys/#"), fURI.NULL).vid(f("/mnt/sys"));
             mInstSet.create(f("/mnt/lang/m"));
             Router.writeToSpace(Router.global());
-            Router.writeToSpace("boot/options",options);
+            Router.writeToSpace("boot/options", options);
             ROUTER.start();
             //  Router.writeToSpace(new mtronInstSet(fURI.of("/mnt/lang/m")));
             ///////////////////////////////////////////////////////////////
@@ -167,8 +167,6 @@ public class BootLoader implements Obj {
             //new TP3Translator(f("/tp")).translate(TinkerFactory.createModern());
             // new MqttSpace(f("zigbee2mqtt/#?broker=mqtt://192.168.66.2:1883&prefix=/mqtt"), f("/mnt/zigbee2mqtt")));
             if (options.at("mode").equals(uri("console"))) {
-                Router.global().addSpace(kvSpace.of(f("/g/#"), f("/mnt/space/tp")));
-                TP3Translator.Builder.of(f("/g")).create().translate(TinkerFactory.createModern());
                 //     Router.writeToSpace(RemoteSpace.open(f("ws://chibi.local:8888"), f("/shared/#"), f("/mnt/shared")));
             } else if (options.at("mode").equals(uri("server")))
                 Router.writeToSpace(new kvSpace(fURI.of("/shared/#"), fURI.of("/mnt/shared")));

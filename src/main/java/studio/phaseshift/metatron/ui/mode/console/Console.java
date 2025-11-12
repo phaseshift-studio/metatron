@@ -1,6 +1,6 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
- * Copyright (C) 2025- PhaseShift Studio, LLC 
+ * Copyright (C) 2025- PhaseShift Studio, LLC
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -50,6 +50,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.function.BiConsumer;
+import java.util.stream.Stream;
 
 import static org.jline.keymap.KeyMap.ctrl;
 
@@ -249,7 +250,12 @@ public class Console implements Mode {
                                 final int yyDistance = null == compiledString ? 0 : (StringUtil.countLines(compiledString) + 1);
                                 Graphitty.out(this.terminal.output(), "{{v%d&-X-&Xv&|%d}}%s", yDistance, 8, objString);
                                 if (null != compiledString) {
-                                    Graphitty.out(this.terminal.output(), "\n{{|%d}}{{r}}%s{{/r}}", 8, "-".repeat(Graphitty.strip(compiledString).length()));
+                                    Graphitty.out(this.terminal.output(), "\n{{|%d}}{{r}}%s{{/r}}", 8, "-"
+                                            .repeat(Math.min(this.terminal.getSize().getColumns(),
+                                                    Arrays.stream(Graphitty.strip(compiledString).split("\n"))
+                                                            .map(String::length)
+                                                            .max(Integer::compareTo)
+                                                            .orElse(0))));
                                     Graphitty.out(this.terminal.output(), "{{v%d&-X-&Xv&|%d}}%s", yyDistance, 8, compiledString);
                                 }
                                 Graphitty.out(this.terminal.output(), "{{^%d&|%d}}", yDistance + yyDistance, xLocation);

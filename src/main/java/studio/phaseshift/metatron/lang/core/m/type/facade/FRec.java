@@ -13,7 +13,6 @@ public class FRec extends FObj<Rec> implements Rec {
 
     public FRec(final Rec base) {
         super(base);
-
     }
 
     @Override
