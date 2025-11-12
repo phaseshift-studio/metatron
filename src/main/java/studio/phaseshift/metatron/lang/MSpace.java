@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.lang;
 
+import studio.phaseshift.metatron.furi.Q;
 import studio.phaseshift.metatron.furi.Qs;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.DocQ;
@@ -56,6 +57,13 @@ public abstract class MSpace<SJVM> extends MRec implements Space {
                 this.qs.add(q);
             });
         }
+    }
+    
+    @Override
+    public Space registerQ(final Q q) {
+        this.qs().jvm().add(q);
+        this.put("qs",this.qs);
+        return this;
     }
 
     @Override

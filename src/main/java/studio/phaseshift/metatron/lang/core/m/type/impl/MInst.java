@@ -19,11 +19,13 @@
 package studio.phaseshift.metatron.lang.core.m.type.impl;
 
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.furi.q.DocQ;
 import studio.phaseshift.metatron.lang.core.m.type.Inst;
 import studio.phaseshift.metatron.lang.core.m.obj.NoObj;
 import studio.phaseshift.metatron.lang.core.m.type.Obj;
 import studio.phaseshift.metatron.lang.core.m.type.Poly;
 import studio.phaseshift.metatron.furi.c.cInt;
+import studio.phaseshift.metatron.lang.sys.router.Router;
 
 import java.util.Objects;
 import java.util.function.BiFunction;
@@ -60,6 +62,11 @@ public class MInst extends MObj implements Inst {
     }
 
     public static Inst instC(final fURI tid, final Poly args, final BiFunction<Obj, Inst, Obj> f) {
+        return new MInst(Triplet.with(args, Inst.f.of(f), NoObj.noobj()), tid, fURI.NULL);
+    }
+
+    public static Inst instD(final fURI tid, final Poly args, final BiFunction<Obj, Inst, Obj> f, final DocQ.Doc doc) {
+        Router.writeToSpace(tid.query("doc"),doc);
         return new MInst(Triplet.with(args, Inst.f.of(f), NoObj.noobj()), tid, fURI.NULL);
     }
 

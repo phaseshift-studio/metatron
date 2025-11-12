@@ -45,7 +45,11 @@ public class mParserTest {
 
     @Test
     public void testCommentParse() {
-        assertEquals(NoObj.noobj(), mParser.parse("--- a comment"));
+        assertEquals(NoObj.noobj(), mParser.parse("[-- a comment"));
+        assertEquals(NoObj.noobj(), mParser.parse("[-- a comment --]"));
+       // assertThrows(Exception.class, () -> mParser.parse("[-- a comment\n\r\n\r --]"));
+        assertThrows(Exception.class, () -> mParser.parse("-- a comment\n\n --"));
+        assertEquals(NoObj.noobj(), mParser.parse("[--- a comment\n\n ---]"));
     }
 
     @Test

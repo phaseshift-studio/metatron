@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.lang;
 
+import studio.phaseshift.metatron.furi.Q;
 import studio.phaseshift.metatron.furi.Qs;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.core.m.type.*;
@@ -79,6 +80,11 @@ public interface Space extends Rec, Closeable {
             results[running++] = this.write((fURI) kv[i], (Obj) kv[i + 1]);
         }
         return results;
+    }
+
+    default Space registerQ(final Q q) {
+        this.at("qs").<Lst>as().add(q);
+        return this;
     }
 
     @Override
@@ -244,7 +250,7 @@ public interface Space extends Rec, Closeable {
                     break;
                 last = newFuri.segments().isEmpty();
                 newFuri = newFuri.retract().asNode();
-                
+
             }
             return obj.isPoly() ? Pair.with(newFuri.retractPattern(), obj.as()) : null;
         }

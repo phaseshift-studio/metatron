@@ -473,6 +473,10 @@ public interface Inst extends Call {
             this.func = func;
 
         }
+        
+        public boolean isLambda() {
+            return !(this.func instanceof Obj);
+        }
 
         private f(final Function<Obj, Obj> func) {
             this.bi = false;

@@ -42,6 +42,7 @@ import static studio.phaseshift.metatron.lang.Space.PATTERN;
 import static studio.phaseshift.metatron.lang.core.m.inst.mFluent.StartLess.isa_;
 import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.*;
 import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.INST_TID;
+import static studio.phaseshift.metatron.lang.core.m.obj.NoObj.noobj;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MType.T;
@@ -91,7 +92,11 @@ public class PubSubQ extends BaseQ {
         }
     }
 
-    public class OnRead implements Q.OnRead {
+    public class OnRead extends BaseOnRead {
+
+        public OnRead() {
+            super(noobj(), noobj());
+        }
 
         @Override
         public Optional<Obj> preRead(final fURI source, final fURI vid) {
@@ -100,7 +105,11 @@ public class PubSubQ extends BaseQ {
         }
     }
 
-    public class OnWrite implements Q.OnWrite {
+    public class OnWrite extends BaseOnWrite {
+
+        public OnWrite() {
+            super(noobj(), noobj(), noobj());
+        }
 
         @Override
         public Optional<Obj> qlessWrite(final fURI source, final fURI vid, final Obj obj) {

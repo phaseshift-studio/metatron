@@ -44,10 +44,7 @@ import java.net.http.HttpResponse;
 import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Arrays;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -107,6 +104,10 @@ public class webSpace extends MSpace<HttpServer> {
             return this.equals(APPLICATION_ATOM_XML) || this.equals(APPLICATION_XHTML_XML) || this.equals(APPLICATION_XML);
         }
 
+        public boolean isAudio() {
+            return List.of(MEDIA, MEDIA_MPEG).contains(this);
+        }
+
         public boolean isBinary() {
             return this.equals(APPLICATION_OCTET_STREAM);
         }
@@ -134,6 +135,7 @@ public class webSpace extends MSpace<HttpServer> {
                     }));
     private static final WebTranslator WEB_TRANSLATOR = new WebTranslator();
     private static final JSONTranslator JSON_TRANSLATOR = new JSONTranslator();
+    private static final AudioTranslator AUDIO_TRANSLATOR = new AudioTranslator();
 
     public webSpace(final HttpServer server, final Map<Obj, Obj> config, final fURI pattern, final fURI vid) {
         super(server, config, pattern, WEB_TID, vid);
@@ -146,6 +148,7 @@ public class webSpace extends MSpace<HttpServer> {
                         LOG.debug("resolving context to absolute path: %s => %s", uri(exchange.getRequestURI().toString()), uri(path.toAbsolutePath().toString()));
                         final Path filePath = Files.isRegularFile(path) ? path : Path.of(path + "/" + INDEX_HTML);
                         final String contentType = Files.probeContentType(filePath);
+                        LOG.debug("content-type: %s", contentType);
                         exchange.getResponseHeaders().set(ContentType.VALUE, contentType == null ? ContentType.APPLICATION_OCTET_STREAM.value : contentType);
                         exchange.sendResponseHeaders(200, Files.size(filePath));
                         LOG.debug("sending %s [%s,%d bytes] per request from %s: %s", filePath, contentType, Files.size(filePath), exchange.getRemoteAddress(), exchange.getRequestURI());
@@ -200,13 +203,16 @@ public class webSpace extends MSpace<HttpServer> {
                 final Map<fURI, Obj> partial = new LinkedHashMap<>();
                 final Connection.Response response = Jsoup.connect(pattern.toString()).ignoreContentType(true).ignoreHttpErrors(true).execute();
                 final ContentType contentType = ContentType.of(response.contentType());
+                LOG.debug("content-type: %s => %s", response.contentType(), contentType);
                 final Obj docObj = contentType.isHtml() ?
                         WEB_TRANSLATOR.translate(response.parse()).tid(PAGE_TID) :
                         (contentType.isJson() ?
                                 JSON_TRANSLATOR.translateString(response.body()) :
                                 (contentType.isXml() ?
                                         WEB_TRANSLATOR.translate(response.parse()) :
-                                        str(response.body())));
+                                        (contentType.isAudio() ?
+                                                AUDIO_TRANSLATOR.translate(response.bodyStream()) :
+                                                str(response.body()))));
                 partial.put(pattern, docObj);
                 return partial;
             } catch (final Exception e) {

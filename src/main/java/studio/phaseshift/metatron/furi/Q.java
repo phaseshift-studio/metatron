@@ -21,7 +21,9 @@ package studio.phaseshift.metatron.furi;
 import studio.phaseshift.metatron.lang.core.m.type.Obj;
 import studio.phaseshift.metatron.lang.core.m.type.Rec;
 import studio.phaseshift.metatron.lang.core.m.type.Type;
+import studio.phaseshift.metatron.lang.core.m.type.impl.MRec;
 
+import java.util.Map;
 import java.util.Optional;
 
 import static studio.phaseshift.metatron.furi.fURI.f;
@@ -49,12 +51,12 @@ public interface Q extends Rec {
 
 
     fURI pattern();
-    
+
     Optional<OnWrite> onWrite();
 
     Optional<OnRead> onRead();
 
-    interface OnWrite {
+    interface OnWrite extends Rec {
         default Optional<Obj> preWrite(final fURI source, final fURI vid, final Obj obj) {
             return Optional.empty();
         }
@@ -66,15 +68,85 @@ public interface Q extends Rec {
         default Optional<Obj> qlessWrite(final fURI source, final fURI vid, final Obj obj) {
             return Optional.empty();
         }
+
+        @Override
+        default Rec clone(final Object jvm, final fURI tid, final fURI vid) {
+            return this;
+        }
+
+        @Override
+        default Map<Obj, Obj> jvm() {
+            return Map.of();
+        }
+
+        @Override
+        default Rec put(final Obj key, final Obj value) {
+            return this;
+        }
+
+        @Override
+        default Rec plus(final Rec objs) {
+            return this;
+        }
+
+        @Override
+        default fURI tid() {
+            return f("/sys/space/q/on_write");
+        }
+
+        @Override
+        default fURI vid() {
+            return null;
+        }
+
+        @Override
+        default Obj clone() {
+            return this;
+        }
     }
 
-    interface OnRead {
+    interface OnRead extends Rec {
         default Optional<Obj> preRead(final fURI source, final fURI vid) {
             return Optional.empty();
         }
 
         default Optional<Obj> postRead(final fURI source, final fURI vid, final Obj obj) {
             return Optional.empty();
+        }
+
+        @Override
+        default Rec clone(final Object jvm, final fURI tid, final fURI vid) {
+            return this;
+        }
+
+        @Override
+        default Map<Obj, Obj> jvm() {
+            return Map.of();
+        }
+
+        @Override
+        default Rec put(final Obj key, final Obj value) {
+            return this;
+        }
+
+        @Override
+        default Rec plus(final Rec objs) {
+            return this;
+        }
+
+        @Override
+        default fURI tid() {
+            return f("/sys/space/q/on_read");
+        }
+
+        @Override
+        default fURI vid() {
+            return null;
+        }
+
+        @Override
+        default Obj clone() {
+            return this;
         }
     }
 

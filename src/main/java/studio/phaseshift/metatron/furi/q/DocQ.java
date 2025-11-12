@@ -18,15 +18,14 @@
 
 package studio.phaseshift.metatron.furi.q;
 
-import studio.phaseshift.metatron.furi.Q;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.lang.Space;
 import studio.phaseshift.metatron.lang.core.m.type.*;
 import studio.phaseshift.metatron.lang.core.m.type.impl.MRec;
 import studio.phaseshift.metatron.lang.sys.router.Router;
 import studio.phaseshift.metatron.lang.sys.sysInstSet;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
-import studio.phaseshift.metatron.ui.Markdown;
 
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -35,6 +34,8 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static studio.phaseshift.metatron.furi.fURI.f;
+import static studio.phaseshift.metatron.lang.Space.PATTERN;
+import static studio.phaseshift.metatron.lang.core.m.obj.NoObj.noobj;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
@@ -51,10 +52,54 @@ public class DocQ extends BaseQ {
 
 
     public DocQ() {
-        super(Map.of(uri("query"), uri("doc")), f("doc"), DOC_TID);
+        super(Map.of(uri(PATTERN), uri("doc")), f("doc"), DOC_TID);
         this.docSpace = new LinkedHashMap<>();
         this.onRead = new DocQ.OnRead();
         this.onWrite = new DocQ.OnWrite();
+        this.put(uri("on_read"), this.onRead);
+        this.put(uri("on_write"), this.onRead);
+    }
+
+    public static class Instiffy {
+        private final StringBuilder sb = new StringBuilder();
+
+
+        public Instiffy header(final int level, final String text) {
+            this.sb.append(" ".repeat(level)).append("{{_}}").append(text).append("{{X}}");
+            return this;
+        }
+
+        public Instiffy item(final int level, final int num, final String text) {
+            this.sb.append(" ".repeat(level)).append(" ").append("{{g}}").append(num).append(". {{b}}").append(text).append("{{X}}");
+            return this;
+        }
+
+        public Instiffy item(final int level, final String element, final String text) {
+            this.sb.append(" ".repeat(level)).append(" ").append("{{g}}").append(element).append(": {{b}}").append(text).append("{{X}}");
+            return this;
+        }
+
+        public Instiffy item(final int level, final Obj index, final String text) {
+            return index.isInt() ?
+                    this.item(level, index.intValue().intValue(), text) :
+                    this.item(level, index.toString(), text);
+        }
+
+        public Instiffy text(final String text) {
+            this.sb.append(text);
+            return this;
+        }
+
+        public Instiffy text(final int level, final String text) {
+            this.sb.append(" ".repeat(level)).append(text);
+            return this;
+        }
+
+        public String toString() {
+            return this.sb.toString();
+        }
+
+
     }
 
     public static class Doc extends MRec {
@@ -69,19 +114,42 @@ public class DocQ extends BaseQ {
 
         public String toString() {
             final Inst inst = this.at("inst").as();
-            Markdown mark = new Markdown();
-            mark.header(1, inst.toString()).text("\n");
+            final Instiffy insty = new Instiffy();
+            insty.header(0, uri(inst.tid()).toString()).text("\n");
             //  mark.header(2, this.at("inst").dom().toString()).text(this.at("dom").<Str>as().orElse(str("no dom desc")).toString());
-            mark.header(2, "rng<=dom\n");
-            mark.item("**dom**", inst.dom().toString()).text("\t *").text(this.at("dom").orElse(str("<n/a>")).strValue()).text("*\n");
-            mark.item("**rng**", inst.rng().toString()).text("\t *").text(this.at("rng").orElse(str("<n/a>")).strValue()).text("*\n");
-            mark.header(2, "(ar,gs)\n");
-            this.at("args").orElse(rec()).jvm().forEach((key, value) -> mark.item(key, inst.arg(0).toString() + "\t *" + value.strValue() + "*\n"));
-            mark.header(2, "{fun.cti.on}\n");
-            mark.text(" ").text(inst.isResolved() ? "{{y}}" + inst.f().toString() + "{{X}}" : "{{{r}}?{{/r}}}").text("\n");
-            mark.header(2, "description\n");
-            mark.text(" *").text(this.at("desc").orElse(str("<no description>")).strValue()).text("*");
-            return mark.markdownString();
+            insty.header(1, "{{_&b}}rng{{g}}<={{b}}dom{{X}}\n");
+            final int descColumn =
+                    Math.max(Math.max(
+                                    Graphitty.strip(inst.dom().toString()).length(),
+                                    Graphitty.strip(inst.rng().toString()).length()),
+                            this.at("args").orElse(rec()).jvm().entrySet().stream()
+                                    .map(kv -> Graphitty.strip(kv.getKey().toString()).length() + 2 +
+                                            Graphitty.strip(kv.getValue().toString()).length())
+                                    .min(Integer::compare)
+                                    .orElse(0)) + 5;
+            insty.item(2, "{{_&b}}dom{{X}}", inst.dom().toString()).text("{{|" + descColumn + "&c}}").text(this.at("dom").orElse(str("<n/a>")).strValue()).text("{{X}}\n");
+            insty.item(2, "{{_&b}}rng{{X}}", inst.rng().toString()).text("{{|" + descColumn + "&c}}").text(this.at("rng").orElse(str("<n/a>")).strValue()).text("{{X}}\n");
+            if (!this.at("args").orElse(rec()).isEmpty()) {
+                insty.header(1, "{{_&g}}({{b}}ar{{g}},{{b}}gs{{g}}){{X}}\n");
+                this.at("args").orElse(rec()).jvm().forEach((key, value) ->
+                        insty.item(2, key, inst.arg(0).toString())
+                                .text("{{|" + descColumn + "&c}}")
+                                .text(value.strValue())
+                                .text("{{X}}\n"));
+            }
+            insty.header(1, "{{_&g}}{{{b}}fun{{g}}.{{b}}cti{{g}}.{{b}}on{{g}}}{{X}}\n");
+            if (inst.isResolved()) {
+                if (inst.f().isLambda())
+                    insty.text(2, "{{y}}<j>").text("{{|" + descColumn + "&c}}").text("jvm implementation{{X}}");
+                else
+                    insty.text(2, inst.f().toString());
+            } else {
+                insty.text(2, "{{r}}no function specified{{/r}}");
+            }
+            insty.text("\n");
+            insty.header(1, "{{b}}description{{X}}\n");
+            insty.text(2, "{{c}}").text(this.at("desc").orElse(str("<no description>")).strValue()).text("{{X}}");
+            return insty.toString();
         }
 
         public static Doc doc(final Inst inst, final String domDesc, final String rngDesc, final Map<Obj, String> argDescription, final String description) {
@@ -95,9 +163,24 @@ public class DocQ extends BaseQ {
                     uri("desc"), str(description)).jvm(), DOC_TID, fURI.NULL);
         }
 
+        public static Inst docWrap(final Inst inst, final String domDesc, final String rngDesc, final Map<Obj, String> argDescription, final String description) {
+            final Doc doc = doc(inst, domDesc, rngDesc, argDescription, description);
+            final Space instSpace = Router.global().getSpace(inst.tid());
+            final Optional<DocQ> docq = instSpace.qs().jvm().stream().filter(q -> q instanceof DocQ).map(Obj::<DocQ>as).findAny();
+            if (docq.isEmpty())
+                instSpace.logger().warn("no doc query attachment mounted on %s for %s", instSpace, inst.tid());
+            else
+                docq.get().docSpace.put(inst.tid(), doc);
+            return inst;
+        }
+
     }
 
-    public class OnRead implements Q.OnRead {
+    public class OnRead extends BaseOnRead {
+
+        public OnRead() {
+            super(noobj(), noobj());
+        }
 
         @Override
         public Optional<Obj> preRead(final fURI source, final fURI vid) {
@@ -109,7 +192,11 @@ public class DocQ extends BaseQ {
         }
     }
 
-    public class OnWrite implements Q.OnWrite {
+    public class OnWrite extends BaseOnWrite {
+
+        public OnWrite() {
+            super(noobj(), noobj(), noobj());
+        }
 
         @Override
         public Optional<Obj> preWrite(final fURI source, final fURI vid, final Obj obj) {

@@ -68,12 +68,32 @@ public class BaseQ extends MRec implements Q {
 
     @Override
     public BaseQ clone(Object jvm, fURI tid, fURI vid) {
+        this.jvm = jvm;
         return this;
     }
 
     @Override
     public Rec clone() {
         return this;
+    }
+
+
+    public static class BaseOnRead extends MRec implements Q.OnRead {
+        public BaseOnRead(final Inst preRead, final Inst postRead) {
+            super(new LinkedHashMap<>(Map.of(uri(PRE_READ), preRead, uri(POST_READ), postRead)));
+        }
+
+        public Optional<Obj> preRead(final fURI source, final fURI vid) {
+            final Inst i = this.at(uri(PRE_READ)).as();
+            if (i.isNoObj()) return Optional.empty();
+            final Obj result = i.apply(lst(uri(source), uri(vid)));
+            return Optional.of(result);
+
+        }
+
+        public Optional<Obj> postRead(final fURI source, final fURI vid, final Obj obj) {
+            return Optional.empty();
+        }
     }
 
     public static class BaseOnWrite extends MRec implements Q.OnWrite {

@@ -194,7 +194,9 @@ public class mParser {
     }
 
     public static Parser m_comment() {
-        return new SequenceParser(of("---").trim(), any().starGreedy(anyOf("\n\r").or(new EndOfInputParser("end of input")))).map(t -> NoObj.noobj());
+        return choice(
+                seq(of("[--").trim(), any().starGreedy(anyOf("\n\r").or(new EndOfInputParser("end of input")))),
+                seq(of("[---"),any().starGreedy(anyOf("---]")))).map(t -> NoObj.noobj());
     }
 
     public static Parser m_furi() {
