@@ -31,6 +31,7 @@ import java.util.Map;
 import java.util.Set;
 
 import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.BASE_TYPES;
+import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.FROM_TID;
 
 public class ObjStringSerializer implements ObjSerializer<String> {
 
@@ -82,22 +83,26 @@ public class ObjStringSerializer implements ObjSerializer<String> {
             /// ///////////////////////////////////////////////////////////////
             /// ///////////////////////////////////////////////////////////////
             else if (obj instanceof final Inst inst) {
-                generateTID(sb, obj.tid(), false, false).append("{{g}}({{X}}");
-                if (!inst.args().isEmpty()) {
-                    boolean isLst = inst.args().isLst();
-                    inst.args().elements().forEach(kv -> {
-                        sb.append(isLst ? kv : kv.<Rel>as().first());
-                        if (!isLst)
-                            sb.append("{{g}}=>").append(kv.<Rel>as().second());
-                        sb.append("{{g}},");
-                    });
-                    sb.deleteCharAt(sb.length() - 1);
+                if (inst.tid().basePath().equals(FROM_TID)) {
+                    return sb.append("{{c}}*{{X}}").append(inst.arg(0)).toString();
+                } else {
+                    generateTID(sb, obj.tid(), false, false).append("{{g}}({{X}}");
+                    if (!inst.args().isEmpty()) {
+                        boolean isLst = inst.args().isLst();
+                        inst.args().elements().forEach(kv -> {
+                            sb.append(isLst ? kv : kv.<Rel>as().first());
+                            if (!isLst)
+                                sb.append("{{g}}=>").append(kv.<Rel>as().second());
+                            sb.append("{{g}},");
+                        });
+                        sb.deleteCharAt(sb.length() - 1);
+                    }
+                    return sb.append("{{g}}){{{y}}")
+                            .append(inst.resolution() == Inst.Resolution.A ? "{{r}}?{{X}}" : ("{{y}}" + inst.f().toString()))
+                            .append("{{g}}}{{X}}")
+                            //.append(this.b.ignoreRewrites ? "" : "{{X}}")
+                            .toString();
                 }
-                return sb.append("{{g}}){{{y}}")
-                        .append(inst.resolution() == Inst.Resolution.A ? "{{r}}?{{X}}" : ("{{y}}" + inst.f().toString()))
-                        .append("{{g}}}{{X}}")
-                        //.append(this.b.ignoreRewrites ? "" : "{{X}}")
-                        .toString();
             }
             /// ///////////////////////////////////////////////////////////////
             /// ///////////////////////////////////////////////////////////////

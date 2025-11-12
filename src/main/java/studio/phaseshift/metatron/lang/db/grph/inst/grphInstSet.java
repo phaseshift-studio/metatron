@@ -61,7 +61,7 @@ public class grphInstSet extends MInstSet {
     public static final fURI E_TID = INST_TID.extend("E");
     public static final fURI OUT_TID = INST_TID.extend("out");
     public static final fURI OUTE_TID = INST_TID.extend("outE");
-    public static final fURI IN_TID = INST_TID.extend("_in");
+    public static final fURI IN_TID = INST_TID.extend("in");
     public static final fURI INE_TID = INST_TID.extend("inE");
     public static final fURI BOTH_TID = INST_TID.extend("both");
     public static final fURI BOTHE_TID = INST_TID.extend("bothE");
@@ -118,22 +118,26 @@ public class grphInstSet extends MInstSet {
     public Set<Inst> insts() {
         return new LinkedHashSet<>(List.of(
                 instC(V_TID.dom(NOOBJ_TID.zero()).rng(VERTEX_TID.maybeSome()), lst(T(URI_TID.maybeSome())), (lhs, inst) -> objs(inst.arg(0).stream().flatMap(u -> Router.readFromSpace(u.uriValue()).stream()))),
-                instC(BOTH_TID.dom(VERTEX_TID).rng(VERTEX_TID.maybeSome()), lst(T(URI_TID.maybeSome())), (lhs, inst) -> objs(lhs.as(RVertex.class).vertices(Direction.BOTH, inst.args().as()).map(Obj::as))),
-                instC(BOTHE_TID.dom(VERTEX_TID).rng(EDGE_TID.maybeSome()), lst(T(URI_TID.maybeSome())), (lhs, inst) -> objs(lhs.as(RVertex.class).edges(Direction.BOTH, inst.args().as()).map(Obj::as))),
-                instC(OUT_TID.dom(VERTEX_TID).rng(VERTEX_TID.maybeSome()), lst(T(URI_TID.maybeSome())), (lhs, inst) -> objs(lhs.as(RVertex.class).vertices(Direction.OUT, inst.args().as()).map(Obj::as))),
-                instC(OUTE_TID.dom(VERTEX_TID).rng(EDGE_TID.maybeSome()), lst(T(URI_TID.maybeSome())), (lhs, inst) -> objs(lhs.as(RVertex.class).edges(Direction.OUT, inst.args().as()).map(Obj::as))),
-                instC(IN_TID.dom(VERTEX_TID).rng(VERTEX_TID.maybeSome()), lst(T(URI_TID.maybeSome())), (lhs, inst) -> objs(lhs.as(RVertex.class).vertices(Direction.IN, inst.args().as()).map(Obj::as))),
-                instC(INE_TID.dom(VERTEX_TID).rng(EDGE_TID.maybeSome()), lst(T(URI_TID.maybeSome())), (lhs, inst) -> objs(lhs.as(RVertex.class).edges(Direction.IN, inst.args().as()).map(Obj::as))),
-                instC(INV_TID.dom(EDGE_TID).rng(VERTEX_TID), lst(), (lhs, inst) -> objs(lhs.as(REdge.class).vertices(Direction.IN).map(Obj::as))),
-                instC(OUTV_TID.dom(EDGE_TID).rng(VERTEX_TID), lst(), (lhs, inst) -> objs(lhs.as(REdge.class).vertices(Direction.OUT).map(Obj::as))),
-                instC(BOTHV_TID.dom(EDGE_TID).rng(VERTEX_TID.c("2")), lst(), (lhs, inst) -> objs(lhs.as(REdge.class).vertices(Direction.BOTH).map(Obj::as))),
+                instC(BOTH_TID.dom(VERTEX_TID).rng(VERTEX_TID.maybeSome()), lst(T(URI_TID.maybeSome())), (lhs, inst) -> objs(lhs.stream().map(Obj::<Rec>as).flatMap(x -> RVertex.of(x).vertices(Direction.BOTH, inst.args().as()).map(Obj::as)))),
+                instC(BOTHE_TID.dom(VERTEX_TID).rng(EDGE_TID.maybeSome()), lst(T(URI_TID.maybeSome())), (lhs, inst) -> objs(lhs.stream().map(Obj::<Rec>as).flatMap(x -> RVertex.of(x).edges(Direction.BOTH, inst.args().as()).map(Obj::as)))),
+                instC(OUT_TID.dom(VERTEX_TID).rng(VERTEX_TID.maybeSome()), lst(T(URI_TID.maybeSome())), (lhs, inst) -> objs(lhs.stream().map(Obj::<Rec>as).flatMap(x -> RVertex.of(x).vertices(Direction.OUT, inst.args().as()).map(Obj::as)))),
+                instC(OUTE_TID.dom(VERTEX_TID).rng(EDGE_TID.maybeSome()), lst(T(URI_TID.maybeSome())), (lhs, inst) -> objs(lhs.stream().map(Obj::<Rec>as).flatMap(x -> RVertex.of(x).edges(Direction.OUT, inst.args().as()).map(Obj::as)))),
+                instC(IN_TID.dom(VERTEX_TID).rng(VERTEX_TID.maybeSome()), lst(T(URI_TID.maybeSome())), (lhs, inst) -> objs(lhs.stream().map(Obj::<Rec>as).flatMap(x -> RVertex.of(x).vertices(Direction.IN, inst.args().as()).map(Obj::as)))),
+                instC(INE_TID.dom(VERTEX_TID).rng(EDGE_TID.maybeSome()), lst(T(URI_TID.maybeSome())), (lhs, inst) -> objs(lhs.stream().map(Obj::<Rec>as).flatMap(x -> RVertex.of(x).edges(Direction.IN, inst.args().as()).map(Obj::as)))),
+                instC(INV_TID.dom(EDGE_TID).rng(VERTEX_TID), lst(), (lhs, inst) -> objs(lhs.stream().map(Obj::<Rec>as).flatMap(x -> REdge.of(x).vertices(Direction.IN)))),
+                instC(OUTV_TID.dom(EDGE_TID).rng(VERTEX_TID), lst(), (lhs, inst) -> objs(lhs.stream().map(Obj::<Rec>as).flatMap(x -> REdge.of(x).vertices(Direction.OUT)))),
+                instC(BOTHV_TID.dom(EDGE_TID).rng(VERTEX_TID.c("2")), lst(), (lhs, inst) -> objs(lhs.stream().map(Obj::<Rec>as).flatMap(x -> REdge.of(x).vertices(Direction.BOTH)))),
                 instC(LABEL_TID.dom(REC_TID).rng(URI_TID), lst(), (lhs, inst) -> lhs.<Rec>as().at(LABEL)),
                 instC(HAS_TID.dom(VERTEX_TID).rng(VERTEX_TID.maybe()), lst(T(URI_TID), T(BOOL_TID)), (lhs, inst) -> inst.arg(1).apply(lhs.as(RElement.class).<Rec>at(PROPS).at(inst.arg(0))).<Bool>as().boolValue() ? lhs : noobj()),
                 instC(HAS_TID.dom(EDGE_TID).rng(EDGE_TID.maybe()), lst(T(URI_TID), T(BOOL_TID)), (lhs, inst) -> inst.arg(1).apply(lhs.as(RElement.class).<Rec>at(PROPS).at(inst.arg(0))).<Bool>as().boolValue() ? lhs : noobj()),
-                instC(HAS_TID.dom(VERTEX_TID).rng(VERTEX_TID.maybe()), lst(T(URI_TID)), (lhs, inst) -> lhs.as(RElement.class).<Rec>at(PROPS).has(inst.arg(0)) ? lhs : noobj()),
+                instC(HAS_TID.dom(VERTEX_TID).rng(VERTEX_TID.maybe()), lst(T(URI_TID)), (lhs, inst) -> objs(lhs.stream().map(x -> x.as(RElement.class).<Rec>at(PROPS).has(inst.arg(0)) ? lhs : noobj()))),
                 instC(HAS_TID.dom(EDGE_TID).rng(EDGE_TID.maybe()), lst(T(URI_TID)), (lhs, inst) -> lhs.as(RElement.class).<Rec>at(PROPS).has(inst.arg(0)) ? lhs : noobj()),
                 // TODO: why does values() and properties() require streaming objs when the doms are unit
-                instC(VALUES_TID.dom(REC_TID).rng(ALL.maybeSome()), lst(T(URI_TID.maybeSome())), (lhs, inst) -> objs(lhs.stream().flatMap(r -> r.as(RElement.class).values(inst.arg(0))).map(Obj::as))),
-                instC(PROPERTIES_TID.dom(REC_TID).rng(REL_TID.maybeSome()), lst(T(URI_TID.maybeSome())), (lhs, inst) -> objs(lhs.stream().flatMap(r -> r.as(RElement.class).properties(inst.arg(0))).map(Obj::as)))));
+                instC(VALUES_TID.dom(VERTEX_TID).rng(ALL.maybeSome()), lst(T(URI_TID.maybeSome())), (lhs, inst) -> objs(lhs.stream().map(Obj::<Rec>as).flatMap(r -> RVertex.of(r).values(inst.arg(0))).map(Obj::as))),
+                instC(VALUES_TID.dom(EDGE_TID).rng(ALL.maybeSome()), lst(T(URI_TID.maybeSome())), (lhs, inst) -> objs(lhs.stream().map(Obj::<Rec>as).flatMap(r -> REdge.of(r).values(inst.arg(0))).map(Obj::as))),
+                instC(PROPERTIES_TID.dom(VERTEX_TID).rng(REL_TID.maybeSome()), lst(T(URI_TID.maybeSome())), (lhs, inst) -> objs(lhs.stream().map(Obj::<Rec>as).flatMap(r -> RVertex.of(r).properties(inst.arg(0))).map(Obj::as))),
+                instC(PROPERTIES_TID.dom(EDGE_TID).rng(REL_TID.maybeSome()), lst(T(URI_TID.maybeSome())), (lhs, inst) -> objs(lhs.stream().map(Obj::<Rec>as).flatMap(r -> REdge.of(r).properties(inst.arg(0))).map(Obj::as)))));
+
+
     }
 }

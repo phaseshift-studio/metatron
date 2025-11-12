@@ -8,6 +8,7 @@ import studio.phaseshift.metatron.lang.core.m.type.facade.FRec;
 
 import java.util.stream.Stream;
 
+import static studio.phaseshift.metatron.lang.db.grph.inst.grphInstSet.EDGE_TID;
 import static studio.phaseshift.metatron.lang.db.grph.type.TP3Translator.LABEL;
 import static studio.phaseshift.metatron.lang.db.grph.type.TP3Translator.PROPS;
 
@@ -20,9 +21,17 @@ public class RElement extends FRec {
         super((Rec) element);
     }
 
+    public static RElement of(final Rec obj) {
+        return (obj.tid().basePath().equals(EDGE_TID)) ? REdge.of(obj) : RVertex.of(obj);
+    }
+
     public Stream<Rel> properties(final Obj keys) {
         boolean emptyKeys = keys.elements().noneMatch(e -> !e.isNoObj());
-        return this.has(PROPS) ? this.at(PROPS).<Rec>as().elements().filter(o -> emptyKeys || keys.elements().anyMatch(u -> o.<Rel>as().first().uriValue().matches(u.uriValue()))) : Stream.empty();
+        return this.has(PROPS) ?
+                this.at(PROPS).<Rec>as()
+                        .elements()
+                        .filter(o -> emptyKeys || keys.elements().anyMatch(u -> o.<Rel>as().first().uriValue().matches(u.uriValue()))) :
+                Stream.empty();
     }
 
     public fURI label() {
@@ -32,7 +41,7 @@ public class RElement extends FRec {
     public Object id() {
         return this.vid();
     }
-    
+
     public Stream<Obj> values(final Obj keys) {
         return this.properties(keys).map(Rel::second);
     }

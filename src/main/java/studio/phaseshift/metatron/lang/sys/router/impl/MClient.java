@@ -121,15 +121,15 @@ public class MClient extends WebSocketClient implements MConnection {
 
     @Override
     public void onError(final Exception ex) {
-        LOG.error("an error occurred with {{b}}%s{{/b}}: %s", this.remoteHost, ex.getMessage().toLowerCase());
         this.futures.clear();
         if (!this.isOpen()) {
             new Thread(() -> {
                 try {
-                    Thread.sleep(1000);
-                    LOG.info("retrying connection to {{b}}%s{{X}}", this.remoteHost);
+                    Thread.sleep(2500);
+                    LOG.debug("retrying connection to {{b}}%s{{X}}", this.remoteHost);
                     this.reconnectBlocking();
                 } catch (Exception e) {
+                    LOG.error("an error occurred with {{b}}%s{{/b}}: %s", this.remoteHost, ex.getMessage().toLowerCase());
                     throw MTronException.of(e);
                 }
 

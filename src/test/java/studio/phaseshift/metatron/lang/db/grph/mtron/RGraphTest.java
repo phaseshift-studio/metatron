@@ -32,6 +32,7 @@ public class RGraphTest extends MetatronTest {
                 uri(PATTERN), uri("/g/#"),
                 uri("load"), uri("tinkerpop-modern")), f("/g/#"), f("/mnt/space/grph"));
         Router.global().addSpace(space);
+        Router.global().put(uri("primary"),uri("/grph"));
         space.start();
        /* Router.readFromSpace(f("/grph/space/grph")).<Type>as().constructor().apply(
                 rec(Map.of(
@@ -56,10 +57,20 @@ public class RGraphTest extends MetatronTest {
     @ParameterizedTest
     @CsvSource(value = {
             "*/g/V/+.count()                                                              % 6",
-            "*/g/V/+/OUT.count()                                                          % 6",
+            "*/g/V/+/OUT>>.count()                                                        % 6",
+            //"*/g/V/+/IN>>.count()                                                       % 6",
+            "*/g/V/+/PROPS>>.count()                                                      % 12",
             /// ///////////////////////////////////////////////////////////////////////////////
+            "*/g/V/1/OUT>>.count()                                                        % 3",
+            "*/g/V/1/IN>>.count()                                                         % 0",
+            "*/g/V/1/PROPS>>.count()                                                      % 2",
             "*/g/V/1.out().count()                                                        % 3",
             "*/g/V/1.outE().count()                                                       % 3",
+            "*/g/V/1.in().count()                                                         % 0",
+            "*/g/V/1.inE().count()                                                        % 0",
+            //"*/g/V/1.-<[_.outE(),_.inE()]>-.count()                                            % 3",
+            //  "*/g/V/1.both().count()                                                       % 3",
+            //  "*/g/V/1.bothE().count()                                                      % 3",
             "*/g/V/1.outE(knows).inV().count()                                            % 2",
             "*/g/V/1.outE().label()                                                       % {uri::created,uri{2}::knows}",
             "*/g/V/1.values()                                                             % {29,\"marko\"}",
@@ -68,12 +79,29 @@ public class RGraphTest extends MetatronTest {
             "*/g/V/1.properties(age)                                                      % [age=>29]>-",
             "*/g/V/1.values(name)                                                         % \"marko\"",
             /// ///////////////////////////////////////////////////////////////////////////////
+            "*/g/V/4.values(name)                                                         % \"josh\"",
+            "*/g/V/4.out().count()                                                        % 2",
+            "*/g/V/4.outE().count()                                                       % 2",
+            "*/g/V/4.in().count()                                                         % 1",
+            "*/g/V/4.inE().count()                                                        % 1",
+          //  "*/g/V/4.both().count()                                                       % 3",
+          //  "*/g/V/4.bothE().count()                                                      % 3",
+            /// ///////////////////////////////////////////////////////////////////////////////
             "*/g/V/+.out().count()                                                        % 6",
             "*/g/V/+.outE().count()                                                       % 6",
             "*/g/V/+.outE().inV().count()                                                 % 6",
-            //"*/g/V/+.outE().bothV().count()                                               % 12",
+          //  "*/g/V/+.-<[out()>-{,},in()>-{,}]>-.count()                                % 12",
+          //  "*/g/V/+.both().count()                                                       % 12",
+          //  "*/g/V/+.bothE().count()                                                      % 12",
             "*/g/V/+.out(knows).count()                                                   % 2",
             "*/g/V/+.outE(knows).inV().count()                                            % 2",
+            /// ///////////////////////////////////////////////////////////////////////////////
+            "*/g/V/1.out().out().values(name)                                             % {\"lop\",\"ripple\"}",
+            "*/g/V/1.out().out().values(lang)                                             % str{2}::\"java\"",
+         //   "*/g/V/+.out().out().values(name)                                             % {\"lop\",\"ripple\"}",
+         //   "*/g/V/+.out().out().values(lang)                                             % str{2}::\"java\"",
+            /// ///////////////////////////////////////////////////////////////////////////////
+            //"*/g.V/1.select(["
             // dummy without ending comma so it's easier to add more test cases
             "1.plus(1)                                                                    % 2"
     }, delimiter = '%')

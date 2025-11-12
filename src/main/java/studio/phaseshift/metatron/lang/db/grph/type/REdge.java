@@ -2,6 +2,7 @@ package studio.phaseshift.metatron.lang.db.grph.type;
 
 import org.apache.tinkerpop.gremlin.structure.Direction;
 import studio.phaseshift.metatron.lang.core.m.type.Obj;
+import studio.phaseshift.metatron.lang.core.m.type.Objs;
 import studio.phaseshift.metatron.lang.core.m.type.Rec;
 
 import java.util.stream.Stream;
@@ -11,16 +12,24 @@ import java.util.stream.Stream;
  */
 public class REdge extends RElement {
 
-    public REdge(final Obj edge) {
+    protected REdge(final Obj edge) {
         super(edge);
     }
 
+    public static REdge of(final Rec edge) {
+        return edge instanceof REdge ? (REdge) edge : new REdge(edge);
+    }
+
     public static Stream<REdge> of(final Obj edges) {
-        return edges.elements().map(Obj::<Rec>as).map(REdge::new);
+        return edges instanceof Objs ? edges.elements().map(Obj::<Rec>as).map(REdge::of) : Stream.of(REdge.of((Rec) edges));
     }
 
     public Stream<RVertex> vertices(final Direction direction) {
-        return this.at(direction.name()).stream().map(o -> o.apply(this)).map(Obj::<Rec>as).map(RVertex::of);
+        final Stream<RVertex> out = direction.equals(Direction.OUT) || direction.equals(Direction.BOTH) ?
+                this.at(Direction.OUT.name()).stream().map(o -> o.apply(this)).map(Obj::<Rec>as).map(RVertex::of) : Stream.empty();
+        final Stream<RVertex> in = direction.equals(Direction.IN) || direction.equals(Direction.BOTH) ?
+                this.at(Direction.IN.name()).stream().map(o -> o.apply(this)).map(Obj::<Rec>as).map(RVertex::of) : Stream.empty();
+        return Stream.concat(out, in);
     }
 
     public RVertex inVertex() {

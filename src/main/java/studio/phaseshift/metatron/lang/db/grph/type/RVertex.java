@@ -16,47 +16,47 @@ import static studio.phaseshift.metatron.lang.db.grph.type.TP3Translator.LABEL;
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public class RVertex extends RElement {
-    
+
     public RVertex(final Obj vertex) {
         super(vertex);
     }
 
     public static RVertex of(final Rec vertex) {
-        return new RVertex(vertex);
+        return vertex instanceof RVertex ? (RVertex) vertex : new RVertex(vertex);
     }
 
     public static Stream<RVertex> of(final Obj vertices) {
-        return vertices.elements().map(Obj::<Rec>as).map(RVertex::new);
+        return vertices.elements().map(Obj::<Rec>as).map(RVertex::of);
     }
-    
-    public String toString() {
-        return "{{y}}v{{g}}[{{b}}" + this.vid() + "{{g}}]{{X}}"; 
-    }
-    
-    /*@Override
-    public void drop() {
-        this.edges(Direction.OUT,lst()).map(e -> {
-            e.vertices(Direction.IN).forEach(adj -> {
-                adj.at(f(Direction.IN.name()).extend("/+/+").toUri()) {
-                    
-                }
-            });
-        })
-    }*/
 
+    public String toString() {
+        return "{{y}}v{{g}}[{{b}}" + this.vid() + "{{g}}]{{X}}";
+    }
 
     public Stream<REdge> edges(final Direction direction, final Lst labels) {
         final boolean emptyLabels = labels.elements().noneMatch(e -> !e.isNoObj());
-        return this.at(direction.name()).elements()
-                .map(r -> ((Rel) r).second())
-                .flatMap(Obj::stream)
-                .flatMap(o -> o.apply(this).<Rec>as().stream())
-                .filter(o -> emptyLabels || labels.elements().anyMatch(u -> o.<Rec>as().at(LABEL).uriValue().matches(u.uriValue())))
-                .map(r -> new REdge(r.as()));
+        final Stream<REdge> inE = direction.equals(Direction.IN) || direction.equals(Direction.BOTH) ?
+                this.at(Direction.IN.name()).elements()
+                        .map(r -> ((Rel) r).second())
+                        .flatMap(Obj::stream)
+                        .flatMap(o -> o.apply(this).<Rec>as().stream())
+                        .filter(o -> emptyLabels || labels.elements().anyMatch(u -> o.<Rec>as().at(LABEL).uriValue().matches(u.uriValue())))
+                        .map(r -> REdge.of(r.as())) : Stream.of();
+        final Stream<REdge> outE = direction.equals(Direction.OUT) || direction.equals(Direction.BOTH) ?
+                this.at(Direction.OUT.name()).elements()
+                        .map(r -> ((Rel) r).second())
+                        .flatMap(Obj::stream)
+                        .flatMap(o -> o.apply(this).<Rec>as().stream())
+                        .filter(o -> emptyLabels || labels.elements().anyMatch(u -> o.<Rec>as().at(LABEL).uriValue().matches(u.uriValue())))
+                        .map(r -> REdge.of(r.as())) : Stream.of();
+        return Stream.concat(inE, outE);
     }
 
     public Stream<RVertex> vertices(final Direction direction, final Lst labels) {
-        return this.edges(direction, labels).flatMap(Obj::stream).map(Obj::<REdge>as).flatMap(r -> r.vertices(direction.opposite()));
+        return this.edges(direction, labels)
+                .flatMap(Obj::stream)
+                .map(Obj::<REdge>as)
+                .flatMap(e -> e.vertices(direction.opposite()).map(Obj::as));
     }
 
     @Override
