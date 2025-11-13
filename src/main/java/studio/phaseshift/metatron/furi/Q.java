@@ -35,6 +35,10 @@ import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
 
 public interface Q extends Rec {
 
+    fURI Q_TID = f("/sys/space/q");
+    fURI ON_WRITE_TID = Q_TID.extend("on_write");
+    fURI ON_READ_TID = Q_TID.extend("on_read");
+    
     fURI ON_WRITE = f("on_write");
     fURI PRE_WRITE = f("pre_write");
     fURI POST_WRITE = f("post_write");

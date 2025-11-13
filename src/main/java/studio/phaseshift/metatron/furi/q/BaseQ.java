@@ -32,8 +32,10 @@ import java.util.Map;
 import java.util.Optional;
 
 import static studio.phaseshift.metatron.lang.Space.PATTERN;
+import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.REC_TID;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.util.Common.mutableMap;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -80,7 +82,7 @@ public class BaseQ extends MRec implements Q {
 
     public static class BaseOnRead extends MRec implements Q.OnRead {
         public BaseOnRead(final Inst preRead, final Inst postRead) {
-            super(new LinkedHashMap<>(Map.of(uri(PRE_READ), preRead, uri(POST_READ), postRead)));
+            super(mutableMap(uri(PRE_READ), preRead, uri(POST_READ), postRead),REC_TID,fURI.NULL);
         }
 
         public Optional<Obj> preRead(final fURI source, final fURI vid) {
@@ -98,7 +100,7 @@ public class BaseQ extends MRec implements Q {
 
     public static class BaseOnWrite extends MRec implements Q.OnWrite {
         public BaseOnWrite(final Inst preWrite, final Inst postWrite, final Inst qlessWrite) {
-            super(new LinkedHashMap<>(Map.of(uri(PRE_WRITE), preWrite, uri(POST_WRITE), postWrite, uri(QLESS_WRITE), qlessWrite)));
+            super(mutableMap(uri(PRE_WRITE), preWrite, uri(POST_WRITE), postWrite, uri(QLESS_WRITE), qlessWrite),REC_TID,fURI.NULL);
         }
 
         public Optional<Obj> preWrite(final fURI source, final fURI vid, final Obj obj) {

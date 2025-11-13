@@ -39,9 +39,9 @@ public class MRec extends MObj implements Rec {
         super(cleanMap(value), tid, vid);
     }
 
-    public MRec(final Map<Obj, Obj> value) {
+   /* public MRec(final Map<Obj, Obj> value) {
         this(value, REC_TID, fURI.NULL);
-    }
+    }*/
 
     public static Rec rec(final Obj key, final Obj value, final Obj... kvs) {
         final Map<Obj, Obj> map = new LinkedHashMap<>();
@@ -61,11 +61,10 @@ public class MRec extends MObj implements Rec {
     }
 
     public static Rec rec(final Stream<Rel> stream) {
-        MRec objs = new MRec(stream.collect(Collectors.toMap(Rel::first, Rel::second, (a, b) -> a.append(b), LinkedHashMap::new)));
-        return objs;
+        return new MRec(stream.collect(Collectors.toMap(Rel::first, Rel::second, (a, b) -> a.append(b), LinkedHashMap::new)), REC_TID, fURI.NULL);
     }
 
-    public static <K,V> Rec rec(final Map<K, V> map, final ObjFactory factory) {
+    public static <K, V> Rec rec(final Map<K, V> map, final ObjFactory factory) {
         return rec(map.entrySet().stream().map(kv -> rel(kv.getKey() instanceof String && !((String) kv.getKey()).contains(" ") ? uri((String) kv.getKey()) : factory.create(kv.getKey()), factory.create(kv.getValue()))));
     }
 
@@ -74,14 +73,6 @@ public class MRec extends MObj implements Rec {
         map.put(uri(key.toString()), value);
         for (int i = 0; i < kvs.length; i = i + 2) {
             map.put(uri(kvs[i].toString()), (Obj) kvs[i + 1]);
-        }
-        return new MRec(map, REC_TID, fURI.NULL);
-    }
-
-    public static Rec fromUriKeyed(final Map<fURI, Obj> jvm) {
-        final Map<Obj, Obj> map = new LinkedHashMap<>();
-        for (final Map.Entry<fURI, Obj> kv : jvm.entrySet()) {
-            map.put(uri(kv.getKey()), kv.getValue());
         }
         return new MRec(map, REC_TID, fURI.NULL);
     }

@@ -34,6 +34,7 @@ import studio.phaseshift.metatron.util.MTronException;
 import java.lang.reflect.Field;
 import java.util.Map;
 
+import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.REC_TID;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
 
 public class logObj extends MRec {
@@ -43,7 +44,7 @@ public class logObj extends MRec {
     private static final fURI LOG_TID = fURI.of("/usr/log");
 
     public logObj(final Obj log) {
-        super(log.recValue());
+        super(log.recValue(),REC_TID,fURI.NULL);
     }
 
     protected logObj(final Rec levels, final fURI vid) {

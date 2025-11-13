@@ -121,6 +121,10 @@ public interface Rec extends Poly, PlusMonoid.O<Rec> {
 
     Rec put(final Obj key, final Obj value);
 
+    default Rec put(final fURI key, final Obj value) {
+        return this.put(uri(key), value);
+    }
+
     default Rec put(final String key, final Obj value) {
         return this.put(uri(key), value);
     }

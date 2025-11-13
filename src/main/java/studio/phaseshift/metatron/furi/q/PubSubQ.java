@@ -47,6 +47,7 @@ import static studio.phaseshift.metatron.lang.core.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.util.Common.mutableMap;
 import static studio.phaseshift.metatron.util.Tuple.Triplet;
 
 public class PubSubQ extends BaseQ {
@@ -64,7 +65,7 @@ public class PubSubQ extends BaseQ {
             }));
 
     public PubSubQ(final Space space) {
-        super(Map.of(), f("sub"), SUBSCRIPTION_TID);
+        super(mutableMap(), f("sub"), SUBSCRIPTION_TID);
         this.onRead = new PubSubQ.OnRead();
         this.onWrite = new PubSubQ.OnWrite();
     }

@@ -37,27 +37,30 @@ import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.lang.Space.PATTERN;
 import static studio.phaseshift.metatron.lang.core.m.obj.NoObj.noobj;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MObjs.objs;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.util.Common.mutableMap;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public class DocQ extends BaseQ {
 
-    public static final fURI DOC_TID = sysInstSet.SPACE_TID.extend("q").extend("doc");
+    protected static final String DOC = "doc";
+    public static final fURI DOC_TID = Q_TID.extend(DOC);
     protected final GraphittyLogger LOG = Graphitty.log(this);
     // <source,pattern,callback>
     public final Map<fURI, Obj> docSpace;
 
 
     public DocQ() {
-        super(Map.of(uri(PATTERN), uri("doc")), f("doc"), DOC_TID);
+        super(mutableMap(uri(PATTERN), uri(DOC)), f(DOC), DOC_TID);
         this.docSpace = new LinkedHashMap<>();
         this.onRead = new DocQ.OnRead();
         this.onWrite = new DocQ.OnWrite();
-        this.put(uri("on_read"), this.onRead);
-        this.put(uri("on_write"), this.onRead);
+        super.put(ON_READ, this.onRead);
+        super.put(ON_WRITE, this.onRead);
     }
 
     public static class Instiffy {
@@ -157,9 +160,7 @@ public class DocQ extends BaseQ {
                     uri("inst"), inst,
                     uri("dom"), str(domDesc),
                     uri("rng"), str(rngDesc),
-                    uri("args"), new MRec(argDescription.entrySet().stream()
-                            .map(kv -> List.of(kv.getKey(), str(kv.getValue())))
-                            .collect(Collectors.toMap(kv -> kv.get(0), kv -> kv.get(1), (a, b) -> b, LinkedHashMap::new))),
+                    uri("args"), rec(argDescription.entrySet().stream().map(kv -> rel(kv.getKey(), str(kv.getValue())))),
                     uri("desc"), str(description)).jvm(), DOC_TID, fURI.NULL);
         }
 
@@ -184,7 +185,7 @@ public class DocQ extends BaseQ {
 
         @Override
         public Optional<Obj> preRead(final fURI source, final fURI vid) {
-            LOG.trace("evaluating {{y}}preread{{/y}}: %s", docSpace);
+            LOG.trace("evaluating {{y}}preread{{/y}}: %s", vid);
             return Optional.of(objs(docSpace.entrySet().stream()
                     .filter(kv -> kv.getKey().matches(vid))
                     .map(Map.Entry::getValue))
