@@ -40,9 +40,9 @@ if TYPE_CHECKING:
 if sys.version_info >= (3, 8):  # pragma: no cover
     from importlib.metadata import PackageNotFoundError, version
 
-    #try:
+    # try:
     #    __version__ = version("docs-code-parser")
-    #except PackageNotFoundError:
+    # except PackageNotFoundError:
     __version__ = "3.9"
 else:  # pragma: no cover
 
@@ -51,6 +51,7 @@ else:  # pragma: no cover
 DEBUG: bool = os.environ.get("DEBUG", "0") == "1"
 mytron = Mytron()
 print(mytron)
+
 
 def remove_html_comment(commented_text: str) -> str:
     commented_text = commented_text.removesuffix(" -->")
@@ -200,7 +201,7 @@ class ProcessingState:
         # remove code=> frame reference as it's an artifact of the console.eval() remote code evaluation
         c = re.sub('code=>\'.*?\',', "", c)
         # fix source code callouts
-        c = re.sub('--- <(?P<a>[0-9]+)>', r'// <\g<a>>', c)
+        c = re.sub('\[-- <(?P<a>[0-9]+)>', r'// <\g<a>>', c)
         return c
 
     def _process_output_start(self, line: str) -> None:
@@ -217,9 +218,7 @@ class ProcessingState:
                 new_header.append(c.removeprefix("[HEADER] "))
             else:
                 o = self._post_process_output(c, self.in_table)
-                if (o is not None and
-                        -1 == o.find("==>noobj") and
-                        -1 == o.find("thread spawned: loop?obj{?}<=console()")):
+                if o is not None and o is not "":
                     new_output.append(o)
         ###################################################################
         if not self.in_table:
@@ -254,8 +253,8 @@ class ProcessingState:
         print(f"code: {to_execute}")
         for line in to_execute:
             result.append(f"mtron> {line}")
-            result.append(f"==>{mytron.exec(line)}")
-        #for line in result:
+            result.append(f"{mytron.exec(line)}")
+        # for line in result:
         #    if -1 == line.find("[HIDDEN]"):
         #        print(line)
         self.output.extend(result)
@@ -300,19 +299,22 @@ def update_markdown_file(
     """Rewrite a Markdown file by executing and updating code blocks."""
     if isinstance(input_filepath, str):  # pragma: no cover
         input_filepath = Path(input_filepath)
-    with input_filepath.open() as f:
-        original_lines = [line.rstrip("\n") for line in f.readlines()]
-    if verbose:
-        print(f"Processing input file: {input_filepath}")
-    new_lines = process_markdown(original_lines, verbose=verbose)
-    updated_content = "\n".join(new_lines).rstrip() + "\n"
-    if verbose:
-        print(f"Writing output to: {output_filepath}")
-    output_filepath = (
-        input_filepath if output_filepath is None else Path(output_filepath)
-    )
-    with output_filepath.open("w") as f:
-        f.write(updated_content)
+    files = [f for f in os.listdir(input_filepath) if os.path.isfile(os.path.join(input_filepath, f))]
+    for file in files:
+        out_file = Path(f"{output_filepath}/{os.path.basename(file)}")
+        with Path(f"{input_filepath}/{file}").open() as f:
+            original_lines = [line.rstrip("\n") for line in f.readlines()]
+        if verbose:
+            print(f"Processing input file: {file}")
+        new_lines = process_markdown(original_lines, verbose=verbose)
+        updated_content = "\n".join(new_lines).rstrip()
+        if verbose:
+            print(f"Writing output to: {out_file}")
+        output_filepath = (
+            input_filepath if output_filepath is None else Path(output_filepath)
+        )
+        with out_file.open("w") as f:
+            f.write(updated_content)
     if verbose:
         print("Done!")
 

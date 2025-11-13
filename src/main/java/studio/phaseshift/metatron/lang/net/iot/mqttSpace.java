@@ -162,7 +162,7 @@ public class mqttSpace extends MSpace<Mqtt5Client> {
             this.client = MqttClient.builder()
                     .identifier(UUID.randomUUID().toString())
                     .serverHost(this.broker.host())
-                    .serverPort(this.broker.port(1883))
+                    .serverPort(this.broker.port() == -1 ? 1833 : this.broker.port())
                     .useMqttVersion5()
                     .build();
             this.client.toAsync()

@@ -17,7 +17,9 @@ import asyncio
 import websockets
 import logging
 import re
+
 logger = logging.getLogger(__name__)
+
 
 async def submit(ws, code):
     async with ws as websocket:
@@ -27,21 +29,25 @@ async def submit(ws, code):
 
 
 class Mytron:
-    def __init__(self, host: str = "ws://127.0.0.1:8889"):
+    def __init__(self, host: str = "ws://127.0.0.1:7777"):
         self.host = host
         logger.info(f"connecting to {self.host}")
         self.ws = websockets.connect(self.host)
         logger.info(f"connected to {self.host}")
 
     def exec(self, code: str) -> list:
+        new_code = f"start(\"{code}\").to(/web/docs/d)"
         print(f"send: {code}")
-        future = asyncio.get_event_loop().run_until_complete(submit(self.ws, code))
-        result = str(future,'utf-8')
+        future = asyncio.get_event_loop().run_until_complete(submit(self.ws, f"\"{code}\""))
+        result = str(future, 'utf-8').strip()
+        result = re.sub(r"/m/([^:]*)::", "", result)
+        result = result[1:-1]
         print(f"recv: {result}")
-        result = re.sub(r"/m/([^:]*)::","", result)
-        return result
+        result2 = ""
+        for a in str(result).split(sep="%%%"):
+            if a is not "noobj" and a is not "":
+                result2 = result2 + f"==>{a}\n"
+        return result2[0:-1]
 
-
-
-#mytron = Mytron()
-#mytron.exec("1")
+# mytron = Mytron()
+# mytron.exec("1")

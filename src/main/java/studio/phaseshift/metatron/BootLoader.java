@@ -18,24 +18,23 @@
 
 package studio.phaseshift.metatron;
 
-import org.apache.tinkerpop.gremlin.tinkergraph.structure.TinkerFactory;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.lang.core.mach.machInstSet;
-import studio.phaseshift.metatron.lang.db.grph.inst.grphInstSet;
-import studio.phaseshift.metatron.lang.db.grph.type.TP3Translator;
-import studio.phaseshift.metatron.lang.db.kv.kvSpace;
-import studio.phaseshift.metatron.lang.db.kv.inst.kvInstSet;
 import studio.phaseshift.metatron.lang.ai.llm.llmInstSet;
-import studio.phaseshift.metatron.lang.net.clstr.clstrInstSet;
-import studio.phaseshift.metatron.lang.sys.router.Router;
-import studio.phaseshift.metatron.lang.sys.router.impl.MRouter;
-import studio.phaseshift.metatron.lang.sys.sysInstSet;
 import studio.phaseshift.metatron.lang.core.m.inst.mInstSet;
 import studio.phaseshift.metatron.lang.core.m.parser.mParser;
 import studio.phaseshift.metatron.lang.core.m.type.Obj;
 import studio.phaseshift.metatron.lang.core.m.type.Rec;
+import studio.phaseshift.metatron.lang.core.mach.machInstSet;
+import studio.phaseshift.metatron.lang.db.grph.inst.grphInstSet;
+import studio.phaseshift.metatron.lang.db.kv.inst.kvInstSet;
+import studio.phaseshift.metatron.lang.db.kv.kvSpace;
 import studio.phaseshift.metatron.lang.db.vec.vecInstSet;
+import studio.phaseshift.metatron.lang.net.clstr.clstrInstSet;
+import studio.phaseshift.metatron.lang.net.web.docs.docSpace;
 import studio.phaseshift.metatron.lang.net.web.webInstSet;
+import studio.phaseshift.metatron.lang.sys.router.Router;
+import studio.phaseshift.metatron.lang.sys.router.impl.MRouter;
+import studio.phaseshift.metatron.lang.sys.sysInstSet;
 import studio.phaseshift.metatron.lang.util.logObj;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
@@ -166,7 +165,9 @@ public class BootLoader implements Obj {
             //mkvSpace.of(f("/tp/#")).vid(f("/mnt/tp"));
             //new TP3Translator(f("/tp")).translate(TinkerFactory.createModern());
             // new MqttSpace(f("zigbee2mqtt/#?broker=mqtt://192.168.66.2:1883&prefix=/mqtt"), f("/mnt/zigbee2mqtt")));
-            if (options.at("mode").equals(uri("console"))) {
+            if (options.at("mode").equals(uri("docs")))
+                docSpace.of(options.at(HOST).uriValue().port(7777));
+            else if (options.at("mode").equals(uri("console"))) {
                 //     Router.writeToSpace(RemoteSpace.open(f("ws://chibi.local:8888"), f("/shared/#"), f("/mnt/shared")));
             } else if (options.at("mode").equals(uri("server")))
                 Router.writeToSpace(new kvSpace(fURI.of("/shared/#"), fURI.of("/mnt/shared")));
@@ -188,6 +189,8 @@ public class BootLoader implements Obj {
         else if (mode.uriValue().equals(f("console")))
             MODE = Console.of(options);
         else if (mode.uriValue().equals(f("server")))
+            MODE = Server.of(options);
+        else if (mode.uriValue().equals(f("docs")))
             MODE = Server.of(options);
         else
             throw MTronException.of("unknown mode %s (see --help): %s", mode.uriValue(), options);

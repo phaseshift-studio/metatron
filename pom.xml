@@ -341,10 +341,10 @@
                         <configuration>
                             <executable>python</executable>
                             <arguments>
-                                <argument>docs/src/python/docs-code-parser.py</argument>
+                                <argument>docs/python/docs-code-parser.py</argument>
                                 <argument>-o</argument>
-                                <argument>${project.basedir}/docs/src/build/index.adoc</argument>
-                                <argument>${project.basedir}/docs/src/adoc/index.adoc</argument>
+                                <argument>${project.basedir}/docs</argument>
+                                <argument>${project.basedir}/docs/src</argument>
                             </arguments>
                         </configuration>
                     </execution>
@@ -359,7 +359,7 @@
                     <outputDirectory>${project.build.directory}/docs</outputDirectory>
                     <resources>
                         <resource>
-                            <directory>${project.basedir}/docs/</directory>
+                            <directory>${project.basedir}/docs</directory>
                             <targetPath>${project.build.directory}/docs</targetPath>
                             <excludes>
                                 <exclude>**/.txt</exclude>

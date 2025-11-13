@@ -144,7 +144,9 @@ public class webSpace extends MSpace<HttpServer> {
             final HttpContext context = server.createContext(r.first().uriValue().toString(),
                     exchange -> {
                         //LOG.debug("using http context %s => %s => %s", exchange.getRequestURI(), exchange.getHttpContext().getPath(), r.second());
-                        final Path path = Path.of(r.second().uriValue().extend(f(exchange.getRequestURI().getPath()).removePrefix(r.first().uriValue())).toString());
+                         Path path = Path.of(r.second().uriValue().extend(f(exchange.getRequestURI().getPath())).toString());
+                        if(!r.first().uriValue().equals(f("/")))
+                            path = Path.of(path.toString().substring(r.first().uriValue().toString().length()));
                         LOG.debug("resolving context to absolute path: %s => %s", uri(exchange.getRequestURI().toString()), uri(path.toAbsolutePath().toString()));
                         final Path filePath = Files.isRegularFile(path) ? path : Path.of(path + "/" + INDEX_HTML);
                         final String contentType = Files.probeContentType(filePath);

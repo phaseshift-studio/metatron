@@ -1,53 +1,10 @@
-:copyright: PhaseShift Studio
-:author: Marko A. Rodriguez
-:email: marko@markorodriguez.com
-:revnumber: 0.1-alpha
-:docdir: docs
-:imagesdir: ./images
-:favicon: {imagesdir}/favicon.ico
-:highlightjsdir: highlight
-:source-highlighter: ./highlight.js
-:highlightjs-languages: mtron,bash,json
-:stylesheet: ./css/metatron.css
-:highlightjs-theme: monokai
-:icons: font
-:icon-set: fas
-:stem: latexmath
-// :linkcss:
-:data-uri:
-:docinfo: shared
-:toc-title: metatron
-:toc: left
-:toclevels: 4
-:license-url: https://www.gnu.org/licenses/agpl-3.0.html
-:license-title: AGPLv3
-:lang: en
-:max-width: 85%
-:app-name: metatron
-:version-label: ring-oriented computing
-:!revdate:
-:!revremark:
-:!revnumber:
-:docname: metatron documentation
-:doctitle: metatron
-:!author:
-:!email:
-:L: latexmath
-
-++++
-<script src="https://unpkg.com/highlightjs-copy/dist/highlightjs-copy.min.js"></script>
-<link rel="stylesheet" href="https://unpkg.com/highlightjs-copy/dist/highlightjs-copy.min.css"/>
-++++
-
-    mtron> ring-oriented computing
-
 image:metatron-character-small.png[width=200,float=left]
 image:github-icon.png[width=20,link=https://github.com/phaseshift-studio/metatron] source
 
 [.metatron] can be understood as
 
- 1. a multi-model [.red]*database query language*
- 2. a data-oriented [.red]*operating system*.
+1. a multi-model [.red]*database query language*
+2. a data-oriented [.red]*operating system*.
 
 image:m-arch.svg[width=400,float=right] These representations are made salient by a ring-oriented programming language and virtual machine. As an example, within the metatron, an mtron-trained large language model is prompted to generate a multi-model expression to search multiple database (e.g. key/value, vector, graph), to then insert those results into a multiple web documents stored on multiple machines in a jQuery-esque manner, whereby a dynamically spawned web server then provides a single point of access to fetching the distributed documents to yield a single view via a browser.
 
@@ -64,13 +21,13 @@ The fundamental architecture of [.metatron] is realized as a network of coupled 
 
 ### algebraic ring theory
 
-A ring is a set of elements latexmath:[R] along with two binary operators 
+A ring is a set of elements latexmath:[R] along with two binary operators
 
 [stem]
 ++++
 +\colon R \times R \rightarrow R
 ++++
-and 
+and
 [stem]
 ++++
 *\colon R \times R \rightarrow R,
@@ -124,7 +81,7 @@ and no two elements share the same inverse: latexmath:[\forall a,b \in R: \text{
 These are the axioms of ring theory. The entire structure of a ring is denoted
 [stem]
 ++++
-\langle R,+,-,0,1 \rangle,
+\left(R,+,-,0,1\right),
 ++++
 where each symbol is replaced by the corresponding operator and elements of the respective ring being defined. Any collection of tokens, processes, objects, identifiers, etc. that obey these rules form, by definition, a ring and can be manipulated by the stated equivalencies and their formal derivatives.
 
@@ -133,10 +90,10 @@ where each symbol is replaced by the corresponding operator and elements of the 
 There are many rings in metatron. Of particular importance is the ring fURI -- a "fhat" Uniform Resource Identifier. `fURIs` are used to denote the type, extension, and location of an `obj` (object) in metatron. In fact, an `obj` in metatron is composed of three elements, one data structure and 2 `fURIs`, where:
 ++++
 \begin{align*}
-\texttt{obj} \in (\texttt{jvm} \times \texttt{tid} \times \texttt{vid}),
+\texttt{obj} \in \left(\texttt{jvm} \times \texttt{tid} \times \texttt{vid}\right),
 \end{align*}
 ++++
-where `jvm` is an object of the Java virtual machine, `tid` is a _type_ (class) `fURI` and `vid` is a _value_ (instance) `fURI`. Every `obj` in metatron has a form, a denotation of that form, and an reference to it's explicit location in metatron.
+where `jvm` is an object of the Java virtual machine, `tid` is a _type_ (class) `fURI` and `vid` is a _value_ (instance) `fURI`. Every `obj` in metatron has a form, a denotation of that form, and a reference to its explicit location in _space_.
 
 ### fURI
 
@@ -145,11 +102,11 @@ where `jvm` is an object of the Java virtual machine, `tid` is a _type_ (class) 
 a🧱
 ++++
 <!-- 🐖
-/m/int                  --- <1>
-/m/int + /m/int         --- <2>
-/m/int + /m/int{-1}     --- <3>
-/m/int ⋅ /m/int         --- <4> 
-/m/int{2} ⋅ /m/int{3}   --- <5>
+int               [-- <1>
+int + int         [-- <2>
+int + int{-1}     [-- <3>
+int ⋅ int         [-- <4> 
+int{2} ⋅ int{3}   [-- <5>
 noobj
 'mtron'
 -->
@@ -176,26 +133,23 @@ a*(b+c) = ab + ac
 (b+c)*a = ba + ca
 ----
 
-include::intro.adoc[]
+The introduction to metatron.
 
-== instruction sets
-include::mtron.adoc[]
-include::mkv.adoc[]
-include::mweb.adoc[]
-include::mgrph.adoc[]
-include::mvec.adoc[]
-include::mllm.adoc[]
-include::mach.adoc[]
+```mtron
+1
+1-<[_]
+1-<[_=>_]
+1-<[_=>+2]
+1-<[_=>+2]>>-
+```
 
 ++++
-<script src="./highlight/highlight.min.js"></script>
-<script src="./highlight/languages/mtron.min.js"></script>
-<script src="./highlight/languages/bash.min.js"></script>
-<script src="./highlight/languages/json.min.js"></script>
-<script>
-if (!hljs.initHighlighting.called) {
-hljs.initHighlighting.called = true
-;[].slice.call(document.querySelectorAll('pre.highlight > code[data-lang]')).forEach(function (el) { hljs.highlightBlock(el) })
-}
-</script>
+<!-- 🐖
+2 + 345
+565
+-->
+++++
+
+++++
+<!-- 🐓 -->
 ++++

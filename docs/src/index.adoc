@@ -1,0 +1,67 @@
+:copyright: PhaseShift Studio
+:author: Marko A. Rodriguez
+:email: marko@markorodriguez.com
+:revnumber: 0.1-alpha
+:docdir: docs
+:imagesdir: ./images
+:favicon: {imagesdir}/favicon.ico
+:highlightjsdir: highlight
+:source-highlighter: ./highlight.js
+:highlightjs-languages: mtron,bash,json
+:stylesheet: ./css/metatron.css
+:highlightjs-theme: monokai
+:icons: font
+:icon-set: fas
+:stem: latexmath
+// :linkcss:
+:data-uri:
+:docinfo: shared
+:toc-title: metatron
+:toc: left
+:toclevels: 4
+:license-url: https://www.gnu.org/licenses/agpl-3.0.html
+:license-title: AGPLv3
+:lang: en
+:max-width: 85%
+:app-name: metatron
+:version-label: ring-oriented computing
+:!revdate:
+:!revremark:
+:!revnumber:
+:docname: metatron documentation
+:doctitle: metatron
+:!author:
+:!email:
+:L: latexmath
+
+++++
+<script src="https://unpkg.com/highlightjs-copy/dist/highlightjs-copy.min.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/highlightjs-copy/dist/highlightjs-copy.min.css"/>
+++++
+
+    mtron> ring-oriented computing
+
+include::intro.adoc[]
+
+== instruction sets
+
+include::m.adoc[]
+include::mkv.adoc[]
+include::mweb.adoc[]
+include::mgrph.adoc[]
+include::mvec.adoc[]
+include::mllm.adoc[]
+include::mach.adoc[]
+
+++++
+<script src="../highlight/highlight.min.js"></script>
+<script src="../highlight/languages/mtron.min.js"></script>
+<script src="../highlight/languages/bash.min.js"></script>
+<script src="../highlight/languages/json.min.js"></script>
+<script>
+if (!hljs.initHighlighting.called) {
+hljs.initHighlighting.called = true
+;[].slice.call(document.querySelectorAll('pre.highlight > code[data-lang]')).forEach(function (el) { hljs.highlightBlock(el) })
+}
+</script>
+++++
