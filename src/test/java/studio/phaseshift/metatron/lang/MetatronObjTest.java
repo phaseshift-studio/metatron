@@ -22,10 +22,12 @@ import studio.phaseshift.metatron.MetatronTest;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.core.m.type.Obj;
 import studio.phaseshift.metatron.lang.core.m.parser.mParser;
+import studio.phaseshift.metatron.lang.sys.router.Router;
 import studio.phaseshift.metatron.util.Tuple;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static studio.phaseshift.metatron.furi.fURI.f;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -38,5 +40,6 @@ public abstract class MetatronObjTest extends MetatronTest {
         final Obj retrievedF = mParser.m_obj().parse(retrieved).get();
         final Obj remainingF = mParser.m_obj().parse(remaining).get();
         assertEquals(Tuple.Pair.with(retrievedF, remainingF), currentF.take(removeF.cV()));
+        Router.global().put(uri("primary"),uri("/m"));
     }
 }
