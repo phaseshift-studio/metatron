@@ -26,6 +26,7 @@ import studio.phaseshift.metatron.lang.sys.router.Router;
 import studio.phaseshift.metatron.lang.sys.sysInstSet;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
+import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -35,7 +36,9 @@ import java.util.stream.Collectors;
 
 import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.lang.Space.PATTERN;
+import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.INST_TID;
 import static studio.phaseshift.metatron.lang.core.m.obj.NoObj.noobj;
+import static studio.phaseshift.metatron.lang.core.m.type.Inst.*;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MStr.str;
@@ -47,6 +50,7 @@ import static studio.phaseshift.metatron.util.Common.mutableMap;
  */
 public class DocQ extends BaseQ {
 
+    public static final String DESC = "desc";
     protected static final String DOC = "doc";
     public static final fURI DOC_TID = Q_TID.extend(DOC);
     protected final GraphittyLogger LOG = Graphitty.log(this);
@@ -64,6 +68,9 @@ public class DocQ extends BaseQ {
     }
 
     public static class Instiffy {
+        public static final int DESC_WRAP = 35;
+        public static final int PADDING = 1;
+
         private final StringBuilder sb = new StringBuilder();
 
 
@@ -93,16 +100,57 @@ public class DocQ extends BaseQ {
             return this;
         }
 
+        public Instiffy clip(final int amount) {
+            if (amount > 0)
+                this.sb.delete(0, amount);
+            else
+                this.sb.delete(this.sb.length() + amount, this.sb.length() - 1);
+            return this;
+        }
+
+        public Instiffy rlastRow() {
+            int r = this.sb.lastIndexOf("\n");
+            int l = this.sb.lastIndexOf("\n", r);
+            if (r != -1) {
+                if (l != -1) {
+                    this.sb.delete(l, r);
+                } else {
+                    this.sb.delete(0, r);
+                }
+            } else {
+                this.sb.delete(l, 0);
+            }
+            return this;
+        }
+
+        public Instiffy rtrim() {
+            final String current = this.sb.toString();
+            this.sb.delete(0, this.sb.length() - 1);
+            this.sb.append(current.stripTrailing());
+            return this;
+        }
+
+        public Instiffy until(final char token, final int column) {
+            final String stripped = this.strippedString();
+            int length = column - (stripped.length() - (Math.max(stripped.lastIndexOf("\n"), 0)));
+            //  if (length < 0)
+            //throw MTronException.of("width of frame too large: " + length);
+            this.sb.append(("" + token).repeat(length < 0 ? column : length));
+            return this;
+        }
+
         public Instiffy text(final int level, final String text) {
             this.sb.append(" ".repeat(level)).append(text);
             return this;
         }
 
         public String toString() {
-            return this.sb.toString();
+            return this.sb.toString().replace("lhs", "{{~}}lhs{{X&c}}").replace("rhs", "{{~}}rhs{{X&c}}");
         }
 
-
+        public String strippedString() {
+            return Graphitty.strip(this.toString());
+        }
     }
 
     public static class Doc extends MRec {
@@ -112,56 +160,89 @@ public class DocQ extends BaseQ {
         }
 
         public static Doc empty(final Inst inst) {
-            return new Doc(Map.of(uri("inst"), inst), DOC_TID, fURI.NULL);
+            return new Doc(Map.of(uri(INST_TID.name()), inst), DOC_TID, fURI.NULL);
         }
 
         public String toString() {
-            final Inst inst = this.at("inst").as();
+            // ┌|├|┐|└|┘|│|┤|─|⋰|⋱|⮝|⮞|⮜|⮟
+            /**
+             * ┌───────────────────────────────────────────────────────────┐
+             * │ rng<=dom           ┌────────────────────────────────────┐ │
+             * │  dom: str::T    <──┤a str to split                      │ │
+             * │  rng: str{+}::T <──┤the components of the split lhs str │ │
+             * │ (ar,gs)            │                                    │ │
+             * │  0. str::T      <──┤a token to split on                 │ │
+             * │ {fun.cti.on}       │                                    │ │
+             * │  <j>            <──┤jvm implementation                  │ │
+             * │                    └────────────────────────────────────┘ │
+             * ├─description───────────────────────────────────────────────┤
+             * │    split the lhs string according to t                    │
+             * │    he token arg and emit a stream of s                    │
+             * │    plits                                                  │
+             * └───────────────────────────────────────────────────────────┘
+             */
+            final Inst inst = this.at(INST_TID.name()).as();
             final Instiffy insty = new Instiffy();
-            insty.header(0, uri(inst.tid()).toString()).text("\n");
-            //  mark.header(2, this.at("inst").dom().toString()).text(this.at("dom").<Str>as().orElse(str("no dom desc")).toString());
-            insty.header(1, "{{_&b}}rng{{g}}<={{b}}dom{{X}}\n");
-            final int descColumn =
-                    Math.max(Math.max(
-                                    Graphitty.strip(inst.dom().toString()).length(),
-                                    Graphitty.strip(inst.rng().toString()).length()),
-                            this.at("args").orElse(rec()).jvm().entrySet().stream()
-                                    .map(kv -> Graphitty.strip(kv.getKey().toString()).length() + 2 +
-                                            Graphitty.strip(kv.getValue().toString()).length())
-                                    .min(Integer::compare)
-                                    .orElse(0)) + 5;
-            insty.item(2, "{{_&b}}dom{{X}}", inst.dom().toString()).text("{{|" + descColumn + "&c}}").text(this.at("dom").orElse(str("<n/a>")).strValue()).text("{{X}}\n");
-            insty.item(2, "{{_&b}}rng{{X}}", inst.rng().toString()).text("{{|" + descColumn + "&c}}").text(this.at("rng").orElse(str("<n/a>")).strValue()).text("{{X}}\n");
-            if (!this.at("args").orElse(rec()).isEmpty()) {
-                insty.header(1, "{{_&g}}({{b}}ar{{g}},{{b}}gs{{g}}){{X}}\n");
-                this.at("args").orElse(rec()).jvm().forEach((key, value) ->
-                        insty.item(2, key, inst.arg(0).toString())
-                                .text("{{|" + descColumn + "&c}}")
+            final int lhsBorderColumn = Math.max(Math.max(
+                            Graphitty.strip(inst.dom().toString()).length() + 4,
+                            Graphitty.strip(inst.rng().toString()).length() + 4),
+                    this.at(ARGS).orElse(rec()).jvm().entrySet().stream()
+                            .map(kv -> Graphitty.strip(kv.getKey().toString()).length() + 4)
+                            .max(Integer::compare)
+                            .orElse(20));
+            final int rhsBorderColumn = Math.max(inst.tid().toString().length() + 4, Math.max(Math.max(
+                            this.at(DOM).orElse(str("<n/a>")).strValue().length() + 2,
+                            this.at(RNG).orElse(str("<n/a>")).strValue().length() + 2),
+                    this.at(ARGS).orElse(rec()).jvm().entrySet().stream()
+                            .map(kv -> Graphitty.strip(kv.getValue().toString()).length())
+                            .max(Integer::compare)
+                            .orElse(20)) + lhsBorderColumn) + 2; // 2 is padding
+            insty.text("\n{{m}}/--").text(inst.tid().toUri().toString()).text("{{m}}").until('-', rhsBorderColumn).text("/{{X}}\n");
+            insty.text("{{m}}|").text(" ").text("{{_&b}}rng{{g}}<={{b}}dom{{X}}").text("{{|" + rhsBorderColumn + "&m}}|{{X}}\n");
+            insty.text("{{m}}|").item(2, "{{_&b}}dom{{X}}", inst.dom().toString()).text("{{|" + lhsBorderColumn + "&c}}").text(this.at(DOM).orElse(str("<n/a>")).strValue()).text("{{|" + rhsBorderColumn + "&m}}|\n");
+            insty.text("{{m}}|").item(2, "{{_&b}}rng{{X}}", inst.rng().toString()).text("{{|" + lhsBorderColumn + "&c}}").text(this.at(RNG).orElse(str("<n/a>")).strValue()).text("{{|" + rhsBorderColumn + "&m}}|\n");
+            if (!this.at(ARGS).orElse(rec()).isEmpty()) {
+                insty.text("{{m}}| {{_&g}}({{b}}ar{{g}},{{b}}gs{{g}}){{X}}").text("{{|" + rhsBorderColumn + "&m}}|{{X}}\n");
+                this.at(ARGS).orElse(rec()).jvm().forEach((key, value) ->
+                        insty.text("{{m}}|").item(2, key, inst.arg(0).toString())
+                                .text("{{|" + lhsBorderColumn + "&c}}")
                                 .text(value.strValue())
-                                .text("{{X}}\n"));
+                                .text("{{|" + rhsBorderColumn + "&m}}|\n"));
             }
-            insty.header(1, "{{_&g}}{{{b}}fun{{g}}.{{b}}cti{{g}}.{{b}}on{{g}}}{{X}}\n");
+            insty.text("{{m}}| {{_&g}}{{{b}}fun{{g}}.{{b}}cti{{g}}.{{b}}on{{g}}}{{X}}").text("{{|" + rhsBorderColumn + "&m}}|{{X}}\n");
             if (inst.isResolved()) {
                 if (inst.f().isLambda())
-                    insty.text(2, "{{y}}<j>").text("{{|" + descColumn + "&c}}").text("jvm implementation{{X}}");
+                    insty.text("{{m}}|   {{y}}<j>").text("{{|" + lhsBorderColumn + "&c}}").text("jvm implementation").text("{{|" + rhsBorderColumn + "&m}}|{{X}}\n");
                 else
-                    insty.text(2, inst.f().toString());
+                    insty.text("{{m}}|   ").text(inst.f().toString()).text("{{|" + rhsBorderColumn + "&m}}|{{X}}\n");
             } else {
-                insty.text(2, "{{r}}no function specified{{/r}}");
+                insty.text("{{m}}|   {{r}}no function specified").text("{{|" + rhsBorderColumn + "&m}}|{{X}}\n");
             }
-            insty.text("\n");
-            insty.header(1, "{{b}}description{{X}}\n");
-            insty.text(2, "{{c}}").text(this.at("desc").orElse(str("<no description>")).strValue()).text("{{X}}");
+            insty.text("{{m}}|").until(' ', rhsBorderColumn).text("|{{X}}\n");
+            insty.text("{{m}}|--").text("{{b}}description{{m}}").until('-', rhsBorderColumn - 1).text("-|{{X}}\n");
+            String desc = this.at(DESC).orElse(str("<no description>")).strValue();
+            int lhs = 0;
+            int rowLength = Math.min(rhsBorderColumn - 6, desc.length()); // 6 to compensate for lhs padding in desc box
+            while (true) {
+                int rhs = Math.min(desc.length(), lhs + rowLength);
+                if (rhs < 1)
+                    break;
+                insty.text("{{m}}|  {{c}}").text(desc.substring(lhs, rhs).trim()).text("{{|" + rhsBorderColumn + "&m}}|{{X}}\n");
+                if (lhs + rowLength >= desc.length())
+                    break;
+                lhs = rhs;
+            }
+            insty.text("{{m}}").text("/").until('-', rhsBorderColumn).text("/{{X}}");
             return insty.toString();
         }
 
         public static Doc doc(final Inst inst, final String domDesc, final String rngDesc, final Map<Obj, String> argDescription, final String description) {
             return new Doc(rec(
-                    uri("inst"), inst,
-                    uri("dom"), str(domDesc),
-                    uri("rng"), str(rngDesc),
-                    uri("args"), rec(argDescription.entrySet().stream().map(kv -> rel(kv.getKey(), str(kv.getValue())))),
-                    uri("desc"), str(description)).jvm(), DOC_TID, fURI.NULL);
+                    uri(INST_TID.name()), inst,
+                    uri(DOM), str(domDesc),
+                    uri(RNG), str(rngDesc),
+                    uri(ARGS), rec(argDescription.entrySet().stream().map(kv -> rel(kv.getKey(), str(kv.getValue())))),
+                    uri(DESC), str(description)).jvm(), DOC_TID, fURI.NULL);
         }
 
         public static Inst docWrap(final Inst inst, final String domDesc, final String rngDesc, final Map<Obj, String> argDescription, final String description) {

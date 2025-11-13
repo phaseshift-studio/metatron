@@ -47,7 +47,7 @@ public class MRec extends MObj implements Rec {
         final Map<Obj, Obj> map = new LinkedHashMap<>();
         map.put(key, value);
         for (int i = 0; i < kvs.length; i = i + 2) {
-            if(!kvs[i].isNoObj() && !kvs[i].isNoObj())
+            if (!kvs[i].isNoObj() && !kvs[i].isNoObj())
                 map.put(kvs[i], kvs[i + 1]);
         }
         return new MRec(map, REC_TID, fURI.NULL);
@@ -73,7 +73,8 @@ public class MRec extends MObj implements Rec {
         final Map<Obj, Obj> map = new LinkedHashMap<>();
         map.put(uri(key.toString()), value);
         for (int i = 0; i < kvs.length; i = i + 2) {
-            map.put(uri(kvs[i].toString()), (Obj) kvs[i + 1]);
+            if (!((Obj) kvs[i + 1]).isNoObj())
+                map.put(uri(kvs[i].toString()), (Obj) kvs[i + 1]);
         }
         return new MRec(map, REC_TID, fURI.NULL);
     }

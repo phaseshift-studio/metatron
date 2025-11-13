@@ -20,6 +20,7 @@ package studio.phaseshift.metatron.lang.ai.llm;
 
 import dev.langchain4j.model.ollama.OllamaChatModel;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.lang.ai.llm.ollama.ollamaSpace;
 import studio.phaseshift.metatron.lang.ai.llm.type.impl.Audio;
 import studio.phaseshift.metatron.lang.core.m.type.Inst;
 import studio.phaseshift.metatron.lang.core.m.type.Rec;

@@ -44,6 +44,10 @@ import static studio.phaseshift.metatron.util.Tuple.Triplet;
 public interface Inst extends Call {
 
     // /mtron/plus?dom=/mtron/int,rng=/mtron/int
+    
+    String ARGS = "args";
+    String DOM = "dom";
+    String RNG = "rng";
 
     private static Poly resolveArgs(final Inst apiInst, final Inst userInst, final Obj lhs) {
         final GraphittyLogger LOG = Graphitty.log(apiInst);
