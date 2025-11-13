@@ -53,7 +53,7 @@ public class MRec extends MObj implements Rec {
     }
 
     public static Rec rec(final Map<Obj, Obj> map) {
-        return new MRec(cleanMap(map), REC_TID, fURI.NULL);
+        return new MRec(map, REC_TID, fURI.NULL);
     }
 
     public static Rec rec() {
