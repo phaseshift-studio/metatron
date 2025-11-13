@@ -31,7 +31,7 @@ public class machInstSetTest extends MetatronTest {
     @ParameterizedTest
     @CsvSource(value = {
             "1.drop().project(2)                                                                         % [=>]",
-            "1.drop().project(1).in(*drop)                                                               % true",
+            "1.drop().project(1)./m/inst/in(*drop)                                                               % true",
             "1.drop().project(0)                                                                         % 1",
             "1.drop().inject(2,[loop=>0]).project(2)                                                     % [loop=>0]",
             "1.drop().inject(2,[loop=>0]).inject(2,project(2)==[loop=>plus(1)]).project(2)               % [loop=>1]",
