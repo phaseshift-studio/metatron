@@ -176,13 +176,14 @@ public class mInstSet extends MInstSet {
 
     @Override
     public Set<Type> types() {
-        return Stream.of(T(FAIL_TID), T(BOOL_TID), T(BYTES_TID), T(INT_TID), T(REAL_TID), T(STR_TID), T(URI_TID), T(LST_TID),
-                T(REL_TID), T(REC_TID), T(INST_TID), T(OBJS_TID), T(NOOBJ_TID)).collect(Collectors.toSet());
+        return Stream.of(T(BOOL_TID), T(BYTES_TID), T(INT_TID), T(REAL_TID), T(STR_TID), T(URI_TID), T(LST_TID),
+                T(REL_TID), T(REC_TID), T(INST_TID), T(OBJS_TID), T(FAIL_TID), T(NOOBJ_TID))
+                .collect(LinkedHashSet::new, LinkedHashSet::add, LinkedHashSet::addAll);
     }
 
     @Override
     public Set<Obj> consts() {
-        return Stream.of(noobj()).collect(Collectors.toSet());
+        return Stream.of(noobj()).collect(LinkedHashSet::new, LinkedHashSet::add, LinkedHashSet::addAll);
     }
 
     private Obj crossPoly(Obj lhs, Obj rhs) {
@@ -518,7 +519,7 @@ public class mInstSet extends MInstSet {
                             }));
                     return lhs.jvm(result);
                 })*/
-        ).collect(LinkedHashSet::new, LinkedHashSet::add, LinkedHashSet::addAll);
+        ).sorted(Comparator.comparing(a -> a.tid().name())).collect(LinkedHashSet::new, LinkedHashSet::add, LinkedHashSet::addAll);
 
         //TODO: convert below to the pure write() model above
         // this.define(NOOBJ_TID, fURI.ANY.maybe(), fURI.ANY.maybe(), MLst.of(), (lhs, inst) -> lhs); // noobj is also an inst (no inst)

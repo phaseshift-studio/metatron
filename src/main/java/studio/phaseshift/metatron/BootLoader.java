@@ -191,7 +191,7 @@ public class BootLoader implements Obj {
         else if (mode.uriValue().equals(f("server")))
             MODE = Server.of(options);
         else if (mode.uriValue().equals(f("docs")))
-            MODE = Server.of(options);
+            MODE = Console.of(options);
         else
             throw MTronException.of("unknown mode %s (see --help): %s", mode.uriValue(), options);
         MODE.start();

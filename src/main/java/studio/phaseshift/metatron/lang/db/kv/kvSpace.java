@@ -43,6 +43,7 @@ import static studio.phaseshift.metatron.lang.core.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.util.Common.mutableMap;
 
 
 public class kvSpace extends MSpace<Map<fURI, Obj>> {
@@ -56,7 +57,7 @@ public class kvSpace extends MSpace<Map<fURI, Obj>> {
     }));
 
     public kvSpace(final fURI pattern, final fURI vid) {
-        super(new HashMap<>(), Map.of(uri(PATTERN), uri(pattern)), pattern, KV_TID, vid);
+        super(new HashMap<>(), mutableMap(uri(PATTERN), uri(pattern)), pattern, KV_TID, vid);
     }
 
     public static kvSpace of(final fURI pattern, final fURI vid) {

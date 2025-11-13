@@ -145,7 +145,7 @@ public class ObjStringSerializer implements ObjSerializer<String> {
                 } else {
                     if (this.b.prettyPrint && rec.count() > 1) {
                         generateTID(sb, obj.tid(), true);
-                        this.generateRec(sb, rec, 0);
+                        this.generateRec(sb, rec, 2);
                     } else {
                         generateTID(sb, obj.tid(), true).append("{{g}}[");
                         for (final Map.Entry<Obj, Obj> o : rec.jvm().entrySet()) {
@@ -222,7 +222,7 @@ public class ObjStringSerializer implements ObjSerializer<String> {
                 sb.append("\n");
             rec.recValue().forEach((k, v) -> {
                 if (nested)
-                    sb.append(" ".repeat(depth * 2));
+                    sb.append(" ".repeat((depth+1) * 2));
                 sb.append(k.isUri() ? ("{{b}}" + k.uriValue()) : write(k)).append("{{g}}=>");
                 if (v.isRec()) {
                     this.generateRec(sb, v.as(), depth + 1);

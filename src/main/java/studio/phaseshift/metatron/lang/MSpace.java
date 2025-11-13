@@ -31,9 +31,11 @@ import studio.phaseshift.metatron.lang.sys.router.Router;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import static studio.phaseshift.metatron.furi.fURI.f;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
 
 public abstract class MSpace<SJVM> extends MRec implements Space {
 
@@ -41,28 +43,45 @@ public abstract class MSpace<SJVM> extends MRec implements Space {
     protected final Qs qs;
     protected SJVM sjvm;
     protected GraphittyLogger LOG;
+    protected Status status = Status.active;
 
     public MSpace(final SJVM sjvm, final Map<Obj, Obj> jvm, final fURI pattern, final fURI tid, final fURI vid) {
-        super(jvm, tid, vid);
+        super(new HashMap<>(jvm), tid, vid);
         this.sjvm = sjvm;
         this.pattern = pattern;
         this.qs = new Qs();
+        this.jvm().put(uri(STATUS),uri(ACTIVE));
         LOG = Graphitty.log(this);
     }
-    
+
     @Override
     public void onPut(final fURI key, final Obj value) {
-        if(key.matches(f("q"))) {
+        if (key.matches(f("q"))) {
             value.<Lst>as().elements().forEach(q -> {
                 this.qs.add(q);
             });
+        } else if (key.matches(f(STATUS))) {
+            this.status = value.uriValue().matches(f(ACTIVE)) ? Status.active : Status.paused;
         }
     }
-    
+
     @Override
     public Space registerQ(final Q q) {
         this.qs().jvm().add(q);
-        this.put("qs",this.qs);
+        this.put("qs", this.qs);
+        return this;
+    }
+
+
+    @Override
+    public Status status() {
+        return this.status;
+    }
+
+    @Override
+    public Space status(Status status) {
+        Space.super.status(status);
+        this.status = status;
         return this;
     }
 
@@ -101,7 +120,7 @@ public abstract class MSpace<SJVM> extends MRec implements Space {
         if (null != vid) {
             this.vid = vid;
             Router.global().addSpace(this);
-            Router.writeToSpace(vid,this);
+            Router.writeToSpace(vid, this);
             LOG.trace("registering: %s", this);
             this.qs.register(new PubSubQ(this));
         }

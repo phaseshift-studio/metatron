@@ -5,148 +5,213 @@
 
 /* CUSTOMISATIONS */
 /* Change the values in root for quick customisation. If you want even more fine grain... venture further. */
-:root{
-/*------------------------*/
-    --mblue:#005DB0;
-    --mdarkblue:#050e53;
-    --mmagenta:#483D8B;
-    --mred:#7e3200;
-    --mgreen:#008b6e;
-    --mdarkgray:#494554;
-    --mlightgray:#797585;
-    --myellow:#00c1e1;
-/*------------------------*/ 
-    --maincolor:#282c34;
+:root {
+    /*------------------------*/
+    --mblue: #005DB0;
+    --mdarkblue: #050e53;
+    --mmagenta: #483D8B;
+    --mred: #7e3200;
+    --mgreen: #008b6e;
+    --mdarkgray: #494554;
+    --mlightgray: #797585;
+    --myellow: #00c1e1;
+    /*------------------------*/
+    --maincolor: #282c34;
     --primarycolor: var(--mred);
     --secondarycolor: #191C24;
     --light: #6C7293;
     --dark: #000000;
-    --tertiarycolor:#4db6ac;
-    --sidebarbackground:#191C24;
-    --linkcolor:var(--mmagenta);
-    --linkcoloralternate:var(--mblue);
-    --white:#FFFFFF;
+    --tertiarycolor: #4db6ac;
+    --sidebarbackground: #191C24;
+    --linkcolor: var(--mmagenta);
+    --linkcoloralternate: var(--mblue);
+    --white: #FFFFFF;
 }
 
 /* roles */
 
 .red {
-  color:var(--mred);
+    color: var(--mred);
 }
 
 .metatron:before {
-  content:'metatron';
-  mask-image: linear-gradient(to bottom, var(--primarycolor), var(--tertiarycolor));
+    content: 'metatron';
+    mask-image: linear-gradient(to bottom, var(--primarycolor), var(--tertiarycolor));
 }
 
 /* Text styles */
 
-body{ font-family: "Noto Sans",sans-serif;background-color: var(--maincolor);color:var(--white);}
+body {
+    font-family: "Noto Sans", sans-serif;
+    background-color: var(--maincolor);
+    color: var(--white);
+}
 
-h1{color:var(--primarycolor) !important;font-family:"Noto Sans",sans-serif;}
-h2,h3,h4,h5,h6{color:var(--primarycolor) !important;font-family:"Noto Sans",sans-serif;}
-.title{color:var(--white) !important;font-family:"Noto Sans",sans-serif;font-style: normal; font-weight: normal;}
-p{font-family: "Noto Sans",sans-serif ! important}
-#toc.toc2 a:link{color:var(--linkcolor);}
-blockquote{color:var(--tertiarycolor) !important}
-.quoteblock{color:var(--white)}
-code{
-    color:var(--linkcoloralternate);
+h1 {
+    color: var(--primarycolor) !important;
+    font-family: "Noto Sans", sans-serif;
+}
+
+h2, h3, h4, h5, h6 {
+    color: var(--primarycolor) !important;
+    font-family: "Noto Sans", sans-serif;
+}
+
+.title {
+    color: var(--mred) !important;
+    font-family: "Noto Sans", sans-serif;
+    font-style: normal;
+    font-weight: bold
+}
+
+p {
+    font-family: "Noto Sans", sans-serif ! important
+}
+
+#toc.toc2 a:link {
+    color: var(--linkcolor);
+}
+
+blockquote {
+    color: var(--tertiarycolor) !important
+}
+
+.quoteblock {
+    color: var(--white)
+}
+
+code {
+    color: var(--linkcoloralternate);
     background-color: var(--sidebarbackground) !important;
     border-radius: 0px;
 }
 
 
 /* Table styles */
-th{background-color: var(--maincolor);color:var(--white) !important;}
-td{background-color: var(--sidebarbackground);color: var(--linkcoloralternate) !important}
+th {
+    background-color: var(--maincolor);
+    color: var(--white) !important;
+}
 
-#toc.toc2{background-color:var(--sidebarbackground);}
-#toctitle{
+td {
+    background-color: var(--sidebarbackground);
+    color: var(--linkcoloralternate) !important
+}
+
+#toc.toc2 {
+    background-color: var(--sidebarbackground);
+}
+
+#toctitle {
     mask-image: linear-gradient(to bottom, var(--primarycolor), var(--tertiarycolor));
 }
 
 /* Responsiveness fixes */
 video {
-  max-width: 100%;
+    max-width: 100%;
 }
 
 @media all and (max-width: 600px) {
-  table {
-    width: 55vw!important;
-    font-size: 3vw;
-  }
+    table {
+        width: 55vw !important;
+        font-size: 3vw;
+    }
 }
 
 .exampleblock > .content {
-  background-color: var(--maincolor);
+    background-color: var(--maincolor);
 }
 
 a {
-  color: var(--linkcoloralternate);
+    color: var(--linkcoloralternate);
 }
 
 .admonitionblock td.icon .icon-tip::before {
-  text-shadow: none;
-  color: var(--white);
+    text-shadow: none;
+    color: var(--white);
 }
+
 .admonitionblock td.icon .icon-note::before {
-  color: var(--tertiarycolor);
+    color: var(--tertiarycolor);
 }
+
 .admonitionblock td.icon .icon-important::before {
-  color: var(--linkcolor);
+    color: var(--linkcolor);
 }
+
 /*.admonitionblock td.icon .icon-caution::before {
   color: var(--linkcoloralternate);
 }*/
 .admonitionblock td.icon .icon-warning::before {
-  color: var(--primarycolor);
+    color: var(--primarycolor);
 }
 
 #preamble > .sectionbody > .paragraph:first-of-type p {
-  color: var(--white);
+    color: var(--white);
 }
 
 .quoteblock blockquote::before {
-  color: var(--primarycolor);
+    color: var(--primarycolor);
 }
+
 .quoteblock .attribution cite, .verseblock .attribution cite {
-  color: var(--white);
+    color: var(--white);
 }
+
 .verseblock pre {
-  color: var(--white);
+    color: var(--white);
 }
+
 .quoteblock blockquote, .quoteblock blockquote p {
-  color: var(--white);
+    color: var(--white);
 }
 
 .sidebarblock {
-  background: var(--sidebarbackground);
+    background: var(--sidebarbackground);
 }
 
 pre code {
-  color: var(--linkcoloralternate);
+    color: var(--linkcoloralternate);
 }
+
 .literalblock pre, .listingblock pre:not(.highlight), .listingblock pre[class="highlight"], .listingblock pre[class^="highlight "], .listingblock pre.CodeRay, .listingblock pre.prettyprint {
-  background: var(--sidebarbackground);
-  color: var(--primarycolor);
+    background: var(--sidebarbackground);
+    color: var(--primarycolor);
 }
 
 
-.literalblock pre, .listingblock>.content>pre:not(.highlight), .listingblock>.content>pre[class=highlight], .listingblock>.content>pre[class^="highlight "] {
-     background: var(--sidebarbackground);
-     color: var(--primarycolor);
-     margin: 0em !important;
-     padding: 0.5em !important;
-     overflow: hidden !important; /* or else there is a y scrollbar on code blocks ?? */
+.literalblock pre, .listingblock > .content > pre:not(.highlight), .listingblock > .content > pre[class=highlight], .listingblock > .content > pre[class^="highlight "] {
+    background: var(--sidebarbackground);
+    color: var(--primarycolor);
+    margin: 0em !important;
+    padding: 0.5em !important;
+    font-size: 120%;
+    overflow: hidden !important; /* or else there is a y scrollbar on code blocks ?? */
 }
 
-#header .details {
-  color: var(--white);
+.title {
+    color: var(--linkcoloralternate);
+    font-size: 20px;
 }
-#header .details span.email a {
-  color: var(--linkcoloralternate);
+
+#header span.email a {
+    color: var(--linkcoloralternate);
 }
+
+.parchment {
+    position: relative;
+    display: flex;
+    /*width: 25%;
+    min-height: 200);*/
+    /* center page with absolute position */
+    /*top: 0%; left: 50%; transform: translate(-50%, 0);*/
+    margin: 0.25em 0;
+    padding: 0.25em;
+    box-shadow: 2px 3px 10px black, 0 0 60px #8a4d0f inset;
+    background: #fffef0;
+    filter: url(#wavy2);
+}
+
 
 /******************************************************************/
 
@@ -176,6 +241,12 @@ pre code {
     color: var(--myellow);
 }
 
+.hljs-mtron-type-prefix,
+.hljs-mtron-furi-query {
+    color: var(--mred);
+!important;
+}
+
 .h {
     color: #d4de68;
     font-weight: bold !important;
@@ -186,12 +257,15 @@ pre code {
     font-style: italic;
 }
 
-.hljs-punctuation {
-  color: var(--mgreen);
+.hljs-mtron-query {
+    color: var(--mblue);
 }
 
-.hljs-mtron-rec,
-.hljs-mtron-furi-query {
+.hljs-punctuation {
+    color: var(--mgreen);
+}
+
+.hljs-mtron-rec {
     color: var(--mgreen);
     font-weight: bold;
 }
@@ -200,7 +274,7 @@ pre code {
     color: var(--myellow);
 }
 
-#header .details,
+#header,
 .hljs-mtron-form {
     color: var(--mgreen);
 }
@@ -228,19 +302,25 @@ pre code {
     color: var(--mred);
 }
 
+.hljs-mtron-inst-f-jvm {
+    color: var(--mdarkblue);
+}
 
 .hljs-mtron-sugar-inst,
-.hljs-mtron-inst-f-cpp,
 .hljs-mtron-log-warn {
     color: var(--myellow);
 }
 
 .hljs-comment,
 .hljs-mtron-keyword,
-.hljs-mtron-keyword,maro
-.hljs-mtron-uri,
-.hljs-mtron-type {
-    color: var(--mdarkblue);
+.hljs-mtron-keyword,
+.hljs-mtron-type,
+.hljs-mtron-inst {
+    color: var(--tertiarycolor);
+}
+
+.hljs-mtron-uri {
+    color: var(--mblue);
 }
 
 .hljs-mtron-doc-callout {

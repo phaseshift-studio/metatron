@@ -301,22 +301,21 @@ def update_markdown_file(
         input_filepath = Path(input_filepath)
     files = [f for f in os.listdir(input_filepath) if os.path.isfile(os.path.join(input_filepath, f))]
     for file in files:
-        out_file = Path(f"{output_filepath}/{os.path.basename(file)}")
-        with Path(f"{input_filepath}/{file}").open() as f:
-            original_lines = [line.rstrip("\n") for line in f.readlines()]
-        if verbose:
-            print(f"Processing input file: {file}")
-        new_lines = process_markdown(original_lines, verbose=verbose)
-        updated_content = "\n".join(new_lines).rstrip()
-        if verbose:
-            print(f"Writing output to: {out_file}")
-        output_filepath = (
-            input_filepath if output_filepath is None else Path(output_filepath)
-        )
-        with out_file.open("w") as f:
-            f.write(updated_content)
+        if file.endswith(".adoc"):
+            out_file = Path(f"{output_filepath}/{os.path.basename(file)}")
+            with Path(f"{input_filepath}/{file}").open() as f:
+                original_lines = [line.rstrip("\n") for line in f.readlines()]
+            if verbose:
+                print(f"Processing input file: {file}")
+            new_lines = process_markdown(original_lines, verbose=verbose)
+            updated_content = "\n".join(new_lines).rstrip()
+            if verbose:
+                print(f"Writing output to: {out_file}")
+            output_filepath = (input_filepath if output_filepath is None else Path(output_filepath))
+            with out_file.open("w") as f:
+                f.write(updated_content)
     if verbose:
-        print("Done!")
+        print("done")
 
 
 def main() -> None:

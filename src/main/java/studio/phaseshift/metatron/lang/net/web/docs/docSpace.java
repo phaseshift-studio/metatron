@@ -37,15 +37,18 @@ public class docSpace extends MSpace<MServer> {
                 public void onObj(final WebSocket conn, final Obj obj) {
                     try {
                         LOG.info("processing doc request: %s", obj);
-                        String source = obj.strValue();
-                        Obj result = str(mParser.eval(source)
-                                .elements()
-                                .map(Obj::toString).map(Graphitty::strip)
-                                .reduce((a, b) -> a + "%%%" + b)
-                                .orElse(""));
-                        this.sendObj(conn, result);
-                        if (result.isFail())
-                            this.onError(conn, result.<Fail>as().jvmAs());
+                        final String source = obj.strValue();
+                        final Obj eval = mParser.eval(source);
+                        String result = eval.isObjs() ?
+                                eval.elements()
+                                        .map(Obj::toString)
+                                        .reduce((a, b) -> a + "%%%" + b)
+                                        .orElse("") :
+                                eval.toString();
+                        result = Graphitty.strip(result);
+                        this.sendObj(conn, str(result));
+                        if (eval.isFail())
+                            this.onError(conn, eval.<Fail>as().jvmAs());
                     } catch (final Exception e) {
                         this.sendObj(conn, fail(e));
                         this.onError(conn, e);

@@ -6,7 +6,7 @@ image:github-icon.png[width=20,link=https://github.com/phaseshift-studio/metatro
 1. a multi-model [.red]*database query language*
 2. a data-oriented [.red]*operating system*.
 
-image:m-arch.svg[width=400,float=right] These representations are made salient by a ring-oriented programming language and virtual machine. As an example, within the metatron, an mtron-trained large language model is prompted to generate a multi-model expression to search multiple database (e.g. key/value, vector, graph), to then insert those results into a multiple web documents stored on multiple machines in a jQuery-esque manner, whereby a dynamically spawned web server then provides a single point of access to fetching the distributed documents to yield a single view via a browser.
+image:m-arch.svg[width=500,float=right] These representations are made salient by a ring-oriented programming language and virtual machine. As an example, within the metatron, an mtron-trained large language model is prompted to generate a multi-model expression to search multiple database (e.g. key/value, vector, graph), to then insert those results into a multiple web documents stored on multiple machines in a jQuery-esque manner, whereby a dynamically spawned web server then provides a single point of access to fetching the distributed documents to yield a single view via a browser.
 
 [quote]
 ____
@@ -17,7 +17,7 @@ To understand [.metatron] it is necessary to understand the core mtron language 
 
 ## metatron architecture
 
-The fundamental architecture of [.metatron] is realized as a network of coupled https://en.wikipedia.org/wiki/Ring_(mathematics)[algebraic rings] executing all levels of abstraction -- from the human-readable/writeable programming language, to the compiler that generates a sequence of instructions for the virtual machine to evaluate using a swarm of atomic monadic processors that ultimately read and write data identified by a ring-based id system supported by a heterogeneous set of data stores called __spaces__. Each of these components follows the axioms of an algebraic ring (or some subset algebra such as a monoid or group).
+image:nenofhat-alchemy-laboratory.png[width=500,float=left,role="parchment"] The fundamental architecture of [.metatron] is realized as a network of coupled https://en.wikipedia.org/wiki/Ring_(mathematics)[algebraic rings] executing all levels of abstraction -- from the human-readable/writeable programming language, to the compiler that generates a sequence of instructions for the virtual machine to evaluate using a swarm of atomic monadic processors that ultimately read and write data identified by a ring-based id system supported by a heterogeneous set of data stores called __spaces__. Each of these components follows the axioms of an algebraic ring (or some subset algebra such as a monoid or group).
 
 ### algebraic ring theory
 

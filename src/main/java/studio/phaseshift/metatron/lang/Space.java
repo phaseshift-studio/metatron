@@ -50,6 +50,22 @@ public interface Space extends Rec, Closeable {
     public static final String PATTERN = "pattern";
     public static final String HOST = "host";
     public static final String NAME = "name";
+    public static final String STATUS = "status";
+    public static final String PAUSED = "paused";
+    public static final String ACTIVE = "active";
+
+    public enum Status {
+        paused,
+        active
+    }
+
+    default Status status() {
+        return Status.valueOf(this.at(STATUS).uriValue().toString());
+    }
+
+    default Space status(final Status status) {
+        return (Space) this.put(STATUS, uri(status.name()));
+    }
 
     Qs qs();
 
@@ -85,6 +101,10 @@ public interface Space extends Rec, Closeable {
     default Space registerQ(final Q q) {
         this.at("qs").<Lst>as().add(q);
         return this;
+    }
+
+    default Space pause() {
+        return (Space) this.put(STATUS, uri(PAUSED));
     }
 
     @Override

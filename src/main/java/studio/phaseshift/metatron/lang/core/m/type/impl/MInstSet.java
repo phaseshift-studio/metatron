@@ -19,7 +19,6 @@
 package studio.phaseshift.metatron.lang.core.m.type.impl;
 
 import org.petitparser.parser.Parser;
-import studio.phaseshift.metatron.furi.Qs;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.DocQ;
 import studio.phaseshift.metatron.lang.sys.router.Router;
@@ -30,10 +29,12 @@ import studio.phaseshift.metatron.lang.core.m.type.Type;
 import studio.phaseshift.metatron.lang.MSpace;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.util.Common.mutableMap;
 
 public abstract class MInstSet extends MSpace<Map<fURI, Set<? extends Obj>>> implements InstSet {
 
@@ -47,7 +48,7 @@ public abstract class MInstSet extends MSpace<Map<fURI, Set<? extends Obj>>> imp
     protected final Map<fURI, Inst> REWRITE_TABLE = new LinkedHashMap<>();
 
     public MInstSet(final fURI tid, final fURI vid) {
-        super(new LinkedHashMap<>(), Map.of(uri(PATTERN), uri(tid.extend(fURI.ALL))), tid.extend(fURI.ALL), tid, vid);
+        super(new LinkedHashMap<>(), mutableMap(uri(PATTERN), uri(tid.extend(fURI.ALL))), tid.extend(fURI.ALL), tid, vid);
         if (!this.pattern.equals(f("+/#")) && Router.loaded() && !(this instanceof Router))
             Router.global().addSpace(this);
         this.registerQ(new DocQ());
@@ -58,7 +59,16 @@ public abstract class MInstSet extends MSpace<Map<fURI, Set<? extends Obj>>> imp
         this.types().forEach(t -> Router.global().registerRewrite(f(t.tid().name()), t.tid()));
         this.consts().forEach(t -> Router.global().registerRewrite(f(t.vid().name()), t.vid()));
         this.insts().forEach(t -> Router.global().registerRewrite(f(t.tid().name()), t.tid().basePath()));
+    }
 
+    protected void sortJVM() {
+        final LinkedHashMap<Obj, Obj> sortedMap = this.jvm()
+                .entrySet()
+                .stream()
+                .sorted(Comparator.comparing(a -> a.getKey().toString()))
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (a, b) -> b, LinkedHashMap::new));
+        this.jvm().clear();
+        this.jvm().putAll(sortedMap);
     }
 
     @Override
@@ -110,7 +120,7 @@ public abstract class MInstSet extends MSpace<Map<fURI, Set<? extends Obj>>> imp
 
     @Override
     public Obj write(final fURI vid, final Obj obj) {
-       return  this.qs().processPreWrite(this.vid, vid, obj).orElseGet(() -> {
+        return this.qs().processPreWrite(this.vid, vid, obj).orElseGet(() -> {
             if (obj.isInst()) {
                 final Inst inst = obj.as();
                 if (inst.dom().isCode()) {

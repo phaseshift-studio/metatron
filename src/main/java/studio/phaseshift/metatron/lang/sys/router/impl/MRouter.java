@@ -164,6 +164,7 @@ public class MRouter extends MSpace<MServer> implements Router {
         //     final fURI mvid = this.smallToBigRewrites.getOrDefault(vid,vid);
         final Optional<S> space = this.spaces().jvm().values().stream()
                 .map(Obj::<Space>as)
+                .filter(s -> s.status().equals(Status.active))
                 .filter(s -> match.basePath().matches(s.pattern()))
                 .map(s -> (S) s)
                 .findAny();
@@ -174,7 +175,7 @@ public class MRouter extends MSpace<MServer> implements Router {
         else if (Registry.open().has(match))
             return Registry.open().load(match);
         else if (!BOOTING)
-            throw MTronException.of("no structure supports pattern %s", match.toUri(false));
+            throw MTronException.of("no active space supports pattern %s", match.toUri(false));
         else
             return noobjSpace.single();
     }

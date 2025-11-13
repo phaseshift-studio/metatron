@@ -40,12 +40,12 @@ class Mytron:
         print(f"send: {code}")
         future = asyncio.get_event_loop().run_until_complete(submit(self.ws, f"\"{code}\""))
         result = str(future, 'utf-8').strip()
-        result = re.sub(r"/m/([^:]*)::", "", result)
+        result = result.removeprefix("/m/str::")
         result = result[1:-1]
         print(f"recv: {result}")
         result2 = ""
         for a in str(result).split(sep="%%%"):
-            if a is not "noobj" and a is not "":
+            if a != "noobj" and a != "":
                 result2 = result2 + f"==>{a}\n"
         return result2[0:-1]
 

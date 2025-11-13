@@ -19,8 +19,12 @@
 package studio.phaseshift.metatron.util;
 
 import java.io.Closeable;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -44,5 +48,17 @@ public final class Common {
         if (null == object)
             return ifNull.get();
         return ifNotNull.apply(object);
+    }
+
+    public static <K, V> Map<K, V> mutableMap(final Object... args) {
+        return IntStream.iterate(0, i -> i < args.length, i -> i + 2)
+                .filter(i -> i + 1 < args.length)
+                .boxed()
+                .collect(Collectors.toMap(
+                        i -> (K) args[i],
+                        i -> (V) args[i + 1],
+                        (a, b) -> b,
+                        HashMap::new
+                ));
     }
 }

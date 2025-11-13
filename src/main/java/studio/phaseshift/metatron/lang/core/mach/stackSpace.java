@@ -30,10 +30,12 @@ import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
 import studio.phaseshift.metatron.util.MTronException;
 
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
 
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.util.Common.mutableMap;
 
 public class stackSpace extends MSpace<LinkedList<kvSpace>> {
 
@@ -44,7 +46,7 @@ public class stackSpace extends MSpace<LinkedList<kvSpace>> {
     private final Space root;
 
     public stackSpace(final fURI pattern) {
-        super(new LinkedList<>(), Map.of(uri("pattern"), uri(pattern)), pattern, STACK_TID, fURI.NULL);
+        super(new LinkedList<>(), mutableMap(uri("pattern"), uri(pattern)), pattern, STACK_TID, fURI.NULL);
         this.root = kvSpace.of(this.pattern, fURI.NULL);
     }
 
@@ -60,7 +62,7 @@ public class stackSpace extends MSpace<LinkedList<kvSpace>> {
 
     @Override
     public Obj read(final fURI vid) {
-        LOG.trace("reading {{b}}%s{{/b}} in %s [{{y}}root{{/y}}: %s]", vid, this.sjvm, this.root.jvm());
+        // LOG.trace("reading {{b}}%s{{/b}} in %s [{{y}}root{{/y}}: %s]", vid, this.sjvm, this.root.jvm());
         // if(vid.coefficientValue().isZero())
         //    return NoObj.single();
         boolean isArg = vid.toString().matches("a\\d+"); // skip first encounter of list arg variable as it's a variable to grab the variable

@@ -2,7 +2,6 @@
 :author: Marko A. Rodriguez
 :email: marko@markorodriguez.com
 :revnumber: 0.1-alpha
-:docdir: docs
 :imagesdir: ./images
 :favicon: {imagesdir}/favicon.ico
 :highlightjsdir: highlight
@@ -13,7 +12,7 @@
 :icons: font
 :icon-set: fas
 :stem: latexmath
-// :linkcss:
+:linkcss:
 :data-uri:
 :docinfo: shared
 :toc-title: metatron
@@ -54,10 +53,10 @@ include::mllm.adoc[]
 include::mach.adoc[]
 
 ++++
-<script src="../highlight/highlight.min.js"></script>
-<script src="../highlight/languages/mtron.min.js"></script>
-<script src="../highlight/languages/bash.min.js"></script>
-<script src="../highlight/languages/json.min.js"></script>
+<script src="./highlight/highlight.min.js"></script>
+<script src="./highlight/languages/mtron.min.js"></script>
+<script src="./highlight/languages/bash.min.js"></script>
+<script src="./highlight/languages/json.min.js"></script>
 <script>
 if (!hljs.initHighlighting.called) {
 hljs.initHighlighting.called = true

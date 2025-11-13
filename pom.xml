@@ -328,6 +328,34 @@
                 </executions>
             </plugin>
             <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-resources-plugin</artifactId>
+                <version>3.3.1</version>
+                <executions>
+                    <execution>
+                        <id>copy-resources</id>
+                        <phase>pre-site</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <outputDirectory>${project.build.directory}/temp</outputDirectory>
+                    <resources>
+                        <resource>
+                            <directory>${project.basedir}/docs</directory>
+                            <includes>
+                                <include>css/**</include>
+                                <include>highlight/**</include>
+                                <include>images/**</include>
+                            </includes>
+                            <filtering>true</filtering>
+                        </resource>
+                    </resources>
+                </configuration>
+            </plugin>
+            <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>exec-maven-plugin</artifactId>
                 <version>3.6.2</version>
@@ -343,8 +371,8 @@
                             <arguments>
                                 <argument>docs/python/docs-code-parser.py</argument>
                                 <argument>-o</argument>
+                                <argument>${project.build.directory}/temp</argument>
                                 <argument>${project.basedir}/docs</argument>
-                                <argument>${project.basedir}/docs/src</argument>
                             </arguments>
                         </configuration>
                     </execution>
@@ -355,9 +383,17 @@
                 <artifactId>asciidoctor-maven-plugin</artifactId>
                 <version>${asciidoctor.version}</version>
                 <configuration>
-                    <sourceDirectory>${project.basedir}/docs</sourceDirectory>
+                    <sourceDirectory>${project.build.directory}/temp</sourceDirectory>
                     <outputDirectory>${project.build.directory}/docs</outputDirectory>
                     <resources>
+                        <resource>
+                            <directory>${project.build.directory}/temp</directory>
+                            <targetPath>${project.build.directory}/docs</targetPath>
+                            <excludes>
+                                <exclude>**/.txt</exclude>
+                                <exclude>**/.py</exclude>
+                            </excludes>
+                        </resource>
                         <resource>
                             <directory>${project.basedir}/docs</directory>
                             <targetPath>${project.build.directory}/docs</targetPath>
