@@ -155,6 +155,8 @@ public class DocQ extends BaseQ {
 
     public static class Doc extends MRec {
 
+        private static final String NONE = "<none>";
+
         public Doc(final Map<Obj, Obj> value, final fURI tid, final fURI vid) {
             super(value, tid, vid);
         }
@@ -184,23 +186,24 @@ public class DocQ extends BaseQ {
             final Inst inst = this.at(INST_TID.name()).as();
             final Instiffy insty = new Instiffy();
             final int lhsBorderColumn = Math.max(Math.max(
-                            Graphitty.strip(inst.dom().toString()).length() + 4,
-                            Graphitty.strip(inst.rng().toString()).length() + 4),
+                            Graphitty.strip(inst.dom().toString()).length(),
+                            Graphitty.strip(inst.rng().toString()).length()),
                     this.at(ARGS).orElse(rec()).jvm().entrySet().stream()
-                            .map(kv -> Graphitty.strip(kv.getKey().toString()).length() + 4)
+                            .map(kv -> Graphitty.strip(kv.getKey().toString()).length() +
+                                    Graphitty.strip(kv.getValue().toString()).length())
+                            .min(Integer::compare)
+                            .orElse(20)) + 3;
+            final int rhsBorderColumn = Math.max(inst.tid().toString().length(), Math.max(Math.max(
+                            this.at(DOM).orElse(str(NONE)).strValue().length(),
+                            this.at(RNG).orElse(str(NONE)).strValue().length()),
+                    this.at(ARGS).orElse(rec()).jvm().values().stream()
+                            .map(obj -> Graphitty.strip(obj.toString()).length())
                             .max(Integer::compare)
-                            .orElse(20));
-            final int rhsBorderColumn = Math.max(inst.tid().toString().length() + 4, Math.max(Math.max(
-                            this.at(DOM).orElse(str("<n/a>")).strValue().length() + 2,
-                            this.at(RNG).orElse(str("<n/a>")).strValue().length() + 2),
-                    this.at(ARGS).orElse(rec()).jvm().entrySet().stream()
-                            .map(kv -> Graphitty.strip(kv.getValue().toString()).length())
-                            .max(Integer::compare)
-                            .orElse(20)) + lhsBorderColumn) + 2; // 2 is padding
+                            .orElse(20)) + lhsBorderColumn + 4);
             insty.text("\n{{m}}/--").text(inst.tid().toUri().toString()).text("{{m}}").until('-', rhsBorderColumn).text("/{{X}}\n");
             insty.text("{{m}}|").text(" ").text("{{_&b}}rng{{g}}<={{b}}dom{{X}}").text("{{|" + rhsBorderColumn + "&m}}|{{X}}\n");
-            insty.text("{{m}}|").item(2, "{{_&b}}dom{{X}}", inst.dom().toString()).text("{{|" + lhsBorderColumn + "&c}}").text(this.at(DOM).orElse(str("<n/a>")).strValue()).text("{{|" + rhsBorderColumn + "&m}}|\n");
-            insty.text("{{m}}|").item(2, "{{_&b}}rng{{X}}", inst.rng().toString()).text("{{|" + lhsBorderColumn + "&c}}").text(this.at(RNG).orElse(str("<n/a>")).strValue()).text("{{|" + rhsBorderColumn + "&m}}|\n");
+            insty.text("{{m}}|").text("  ").text("{{_&b}}dom{{X}}:").text(inst.dom().toString()).text("{{|" + lhsBorderColumn + "&c}}").text(this.at(DOM).orElse(str(NONE)).strValue()).text("{{|" + rhsBorderColumn + "&m}}|\n");
+            insty.text("{{m}}|").text("  ").text("{{_&b}}rng{{X}}:").text(inst.rng().toString()).text("{{|" + lhsBorderColumn + "&c}}").text(this.at(RNG).orElse(str(NONE)).strValue()).text("{{|" + rhsBorderColumn + "&m}}|\n");
             if (!this.at(ARGS).orElse(rec()).isEmpty()) {
                 insty.text("{{m}}| {{_&g}}({{b}}ar{{g}},{{b}}gs{{g}}){{X}}").text("{{|" + rhsBorderColumn + "&m}}|{{X}}\n");
                 this.at(ARGS).orElse(rec()).jvm().forEach((key, value) ->
@@ -216,7 +219,7 @@ public class DocQ extends BaseQ {
                 else
                     insty.text("{{m}}|   ").text(inst.f().toString()).text("{{|" + rhsBorderColumn + "&m}}|{{X}}\n");
             } else {
-                insty.text("{{m}}|   {{r}}no function specified").text("{{|" + rhsBorderColumn + "&m}}|{{X}}\n");
+                insty.text("{{m}}|   {{r}}").text(NONE).text("{{|" + rhsBorderColumn + "&m}}|{{X}}\n");
             }
             insty.text("{{m}}|").until(' ', rhsBorderColumn).text("|{{X}}\n");
             insty.text("{{m}}|--").text("{{b}}description{{m}}").until('-', rhsBorderColumn - 1).text("-|{{X}}\n");
