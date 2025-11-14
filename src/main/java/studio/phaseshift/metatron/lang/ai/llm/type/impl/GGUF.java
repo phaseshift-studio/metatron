@@ -2,18 +2,36 @@ package studio.phaseshift.metatron.lang.ai.llm.type.impl;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.core.m.type.Obj;
+import studio.phaseshift.metatron.lang.core.m.type.Rec;
+import studio.phaseshift.metatron.lang.core.m.type.Type;
+import studio.phaseshift.metatron.lang.core.m.type.Uri;
+import studio.phaseshift.metatron.lang.core.m.type.impl.MInt;
 import studio.phaseshift.metatron.lang.core.m.type.impl.MRec;
+import studio.phaseshift.metatron.lang.sys.router.Router;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
+import studio.phaseshift.metatron.util.Common;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.nio.file.Path;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import static studio.phaseshift.metatron.lang.Space.HOST;
+import static studio.phaseshift.metatron.lang.Space.NAME;
+import static studio.phaseshift.metatron.lang.ai.llm.llmInstSet.INST_TID;
 import static studio.phaseshift.metatron.lang.ai.llm.llmInstSet.LLM_TID;
+import static studio.phaseshift.metatron.lang.core.m.inst.mFluent.StartLess.from_;
+import static studio.phaseshift.metatron.lang.core.m.inst.mFluent.StartLess.isa_;
+import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.REC_TID;
+import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.URI_TID;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MInt.jnt;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MRel.rel;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.Common.mutableMap;
 import static studio.phaseshift.metatron.util.Common.mutableOrderedMap;
@@ -22,6 +40,11 @@ import static studio.phaseshift.metatron.util.Common.mutableOrderedMap;
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public class GGUF extends MRec {
+
+    public static final String SHAPE = "shape";
+    public static final String OFFSET = "offset";
+    public static final String GGML = "ggml";
+    public static final String TENSOR = "tensor";
 
     public static final fURI GGUF_TID = LLM_TID.extend("gguf");
     private com.llama4j.gguf.GGUF rawData;
@@ -33,26 +56,47 @@ public class GGUF extends MRec {
     public static final String SIZE = "size";
     protected final GraphittyLogger LOG = Graphitty.log(this);
 
-    public GGUF(final fURI location, final fURI tid, final fURI vid) {
-        super(mutableOrderedMap(), tid, vid);
-        final Path modelPath = Path.of(location.toString());
+    public static Type GGUF_TYPE = T(GGUF_TID,
+            instC(INST_TID.dom(fURI.ALL).rng(GGUF_TID),
+                    lst(rec(uri(FILE), T(URI_TID), uri(PATH), T(URI_TID))),
+                    (lhs, inst) -> {
+                        GGUF g = new GGUF(inst.arg(0).jvm(),
+                                REC_TID,
+                                fURI.NULL);
+                        g.tid = GGUF_TID;
+                        return g;
+                    }));
+
+    public GGUF(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
+        super(jvm, tid, vid);
+        final Path modelPath = Path.of(jvm.get(uri(PATH)).<Uri>as().uriValue().extend(jvm.get(uri(FILE)).<Uri>as().uriValue()).toString());
         try {
             LOG.debug("verifying model GGUF file: %s", modelPath);
             this.rawData = com.llama4j.gguf.GGUF.read(modelPath);
-            this.jvm().put(uri(FILE), uri(modelPath.getFileName().toString()));
+            // file and path come in constructor map
             this.jvm().put(uri(VERSION), jnt(this.rawData.getVersion()));
-            this.jvm().put(uri(PATH), uri(modelPath.getParent().toAbsolutePath().toString()));
+            this.jvm().put(uri(TENSOR), instC(INST_TID.dom(fURI.ALL).rng(REC_TID.maybeSome()), lst(), (lhs, inst) -> this.tensors()));
+        } catch (final ArrayIndexOutOfBoundsException e) {
+            throw MTronException.of("unable to verify corrupted ggruf file %s: %s", modelPath, e);
         } catch (final Exception e) {
-            LOG.error("unable to verify %s: %s", modelPath, e);
-            this.rawData = null;
+            throw MTronException.of("unable to verify %s: %s", modelPath, e);
         }
     }
 
+    public Rec tensors() {
+        return this.rawData.getTensors().stream().map(ti -> rec(
+                        uri(NAME), uri(ti.name()),
+                        uri(OFFSET), jnt(ti.offset()),
+                        uri(GGML), uri(ti.ggmlType().name()),
+                        uri(SHAPE), lst(Arrays.stream(ti.shape()).mapToObj(MInt::jnt).map(Obj::<Obj>as).toList())))
+                .map(r -> rel(r.at(NAME), r))
+                .collect(new Common.RecCollector());
+    }
+
     public static GGUF of(final fURI location, final fURI vid) {
-        try {
-            return new GGUF(location, GGUF_TID, vid);
-        } catch (final Exception e) {
-            throw MTronException.of(e);
-        }
+        final Path modelPath = Path.of(location.toString());
+        return new GGUF(mutableOrderedMap(
+                uri(FILE), uri(modelPath.getFileName().toString()),
+                uri(PATH), uri(modelPath.getParent().toAbsolutePath().toString())), GGUF_TID, vid);
     }
 }

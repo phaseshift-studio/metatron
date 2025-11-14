@@ -36,6 +36,7 @@ import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.furi.fURI.f;
@@ -50,9 +51,9 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
     private static boolean typeInferenceMatch(final Obj lhs, final Type rhs) {
         if (lhs.tid().matches(rhs.tid()))
             return true;
-        if(rhs.isBaseType())
+        if (rhs.isBaseType())
             return lhs.baseType().matches(rhs.tid()); // matches any abstract type to it's base type as long as within the coefficient boundaries
-        if(rhs.tid().isZero() && !lhs.isNoObj()) // TODO: hack because zero can be the empty string and noobj string. fix.
+        if (rhs.tid().isZero() && !lhs.isNoObj()) // TODO: hack because zero can be the empty string and noobj string. fix.
             return false;
         if (rhs.tid().hasPattern() && !lhs.tid().matches(rhs.tid()))
             return false;
@@ -283,6 +284,10 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
 
     default <O extends Obj> O orElse(final O other) {
         return this.isNoObj() ? other : (O) this;
+    }
+
+    default <O extends Obj> O orElseGet2(final Supplier<O> supplier) {
+        return supplier.get();
     }
 
     default <O extends Obj> O orElseThrow(final RuntimeException e) {

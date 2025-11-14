@@ -1,6 +1,6 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
- * Copyright (C) 2025- PhaseShift Studio, LLC 
+ * Copyright (C) 2025- PhaseShift Studio, LLC
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -60,6 +60,10 @@ public class mFluent<F extends Fluent<F>> extends MCode implements Fluent<F>, Co
         return this.addInst(instB(mInstSet.BLOCK_TID, lst(obj)));
     }
 
+    public F where_(final Obj obj) {
+        return this.addInst(instB(mInstSet.WHERE_TID, lst(obj)));
+    }
+
     public F plus_(final Obj obj) {
         return this.addInst(instB(mInstSet.PLUS_TID, lst(obj)));
     }
@@ -78,6 +82,10 @@ public class mFluent<F extends Fluent<F>> extends MCode implements Fluent<F>, Co
 
     public F isa_(final Obj obj) {
         return this.addInst(instB(mInstSet.ISA_TID, lst(obj)));
+    }
+
+    public F is_(final Obj obj) {
+        return this.addInst(instB(mInstSet.IS_TID, lst(obj)));
     }
 
     public F in_(final Obj obj) {
@@ -102,6 +110,10 @@ public class mFluent<F extends Fluent<F>> extends MCode implements Fluent<F>, Co
 
     public F to_(final Obj obj) {
         return this.addInst(instB(mInstSet.TO_TID, lst(obj)));
+    }
+
+    public F eq_(final Obj obj) {
+        return this.addInst(instB(mInstSet.EQ_TID, lst(obj)));
     }
 
     public F count_() {
@@ -137,6 +149,10 @@ public class mFluent<F extends Fluent<F>> extends MCode implements Fluent<F>, Co
 
     public static class StartLess {
 
+        public static <F extends mFluent<F>> F inst_(final Inst inst) {
+            return new mFluent<F>().addInst(inst);
+        }
+
         public static <F extends mFluent<F>> F start_(final Obj obj) {
             return new mFluent<F>().start_(obj);
         }
@@ -159,6 +175,14 @@ public class mFluent<F extends Fluent<F>> extends MCode implements Fluent<F>, Co
 
         public static <F extends mFluent<F>> F isa_(final Obj obj) {
             return new mFluent<F>().isa_(obj);
+        }
+
+        public static <F extends mFluent<F>> F is_(final Obj obj) {
+            return new mFluent<F>().is_(obj);
+        }
+
+        public static <F extends mFluent<F>> F where_(final Obj obj) {
+            return new mFluent<F>().where_(obj);
         }
 
         public static <F extends mFluent<F>> F in_(final Obj obj) {
@@ -199,6 +223,10 @@ public class mFluent<F extends Fluent<F>> extends MCode implements Fluent<F>, Co
 
         public static <F extends mFluent<F>> F prod_() {
             return new mFluent<F>().prod_();
+        }
+
+        public static <F extends mFluent<F>> F eq_(final Obj obj) {
+            return new mFluent<F>().eq_(obj);
         }
 
         public static <F extends mFluent<F>> F cross_(final Obj obj) {

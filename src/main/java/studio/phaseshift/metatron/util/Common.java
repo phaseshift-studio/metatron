@@ -18,14 +18,26 @@
 
 package studio.phaseshift.metatron.util;
 
+import studio.phaseshift.metatron.lang.core.m.type.Obj;
+import studio.phaseshift.metatron.lang.core.m.type.Rec;
+import studio.phaseshift.metatron.lang.core.m.type.Rel;
+import studio.phaseshift.metatron.lang.core.m.type.impl.MRec;
+
 import java.io.Closeable;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
+import java.util.function.BiConsumer;
+import java.util.function.BinaryOperator;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
+
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MRec.rec;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -61,6 +73,38 @@ public final class Common {
                         (a, b) -> b,
                         supplier
                 ));
+    }
+
+    public static class RecCollector implements Collector<Rel, Map<Obj, Obj>, Rec> {
+
+
+        @Override
+        public Supplier<Map<Obj, Obj>> supplier() {
+            return LinkedHashMap::new;
+        }
+
+        @Override
+        public BiConsumer<Map<Obj, Obj>, Rel> accumulator() {
+            return (a, b) -> a.compute(b.first(), (k, v) -> null == v ? b.second() : v.append(b.second()));
+        }
+
+        @Override
+        public BinaryOperator<Map<Obj, Obj>> combiner() {
+            return (a, b) -> {
+                a.putAll(b);
+                return a;
+            };
+        }
+
+        @Override
+        public Function<Map<Obj, Obj>, Rec> finisher() {
+            return MRec::rec;
+        }
+
+        @Override
+        public Set<Characteristics> characteristics() {
+            return Set.of();
+        }
     }
 
     public static <K, V> Map<K, V> mutableMap(final Object... args) {

@@ -1,6 +1,6 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
- * Copyright (C) 2025- PhaseShift Studio, LLC 
+ * Copyright (C) 2025- PhaseShift Studio, LLC
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -23,6 +23,7 @@ import studio.phaseshift.metatron.lang.core.m.type.Lst;
 import studio.phaseshift.metatron.lang.core.m.type.Obj;
 
 import java.util.List;
+import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.LST_TID;
 
@@ -34,6 +35,10 @@ public class MLst extends MObj implements Lst {
 
     public static Lst lst(final List<Obj> objs) {
         return MLst.of(objs);
+    }
+
+    public static Lst lst(final Stream<Obj> objs) {
+        return MLst.of(objs.toList());
     }
 
     public MLst(final List<Obj> jvm, final fURI tid, final fURI vid) {

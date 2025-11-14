@@ -37,6 +37,7 @@ import studio.phaseshift.metatron.lang.core.m.type.impl.MUri;
 import studio.phaseshift.metatron.lang.MSpace;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
+import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
 
 import java.util.Arrays;
@@ -49,6 +50,7 @@ import static studio.phaseshift.metatron.lang.ai.llm.type.impl.OLLM.ollm;
 import static studio.phaseshift.metatron.lang.core.m.inst.mFluent.StartLess.isa_;
 import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.REC_TID;
 import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.URI_TID;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
@@ -61,6 +63,13 @@ import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public class ollamaSpace extends MSpace<OllamaModels> {
+
+    public static final String SKILL = "skill";
+    public static final String GGUF_KEY = "gguf";
+    public static final String QUANT = "quant";
+    public static final String FAMILY = "family";
+    public static final String FROM = "FROM";
+
 
     public static final Type OLLAMA_TYPE = T(OLLAMA_TID, null, instC(mInstSet.INST_TID.dom(ALL.maybe()).rng(OLLAMA_TID), lst(T(REC_TID, isa_(rec(uri(PATTERN), T(URI_TID), uri(HOST), T(URI_TID))))), (lhs, inst) -> {
         final fURI pattern = inst.arg(0).<Rec>as().at(PATTERN).uriValue();
@@ -88,31 +97,48 @@ public class ollamaSpace extends MSpace<OllamaModels> {
                 fURI.NULL);
     }
 
-    private fURI modelToVid(final OllamaModel model) {
-        return this.pattern.retractPattern().extend(model.getModel().replace(":", "/"));
+    private fURI modelToVid(final String modelName) {
+        return this.pattern.retractPattern().extend(modelName.replace(":", "/"));
     }
 
     @Override
     public Obj read(final fURI vid) {
-        return this.qs().processPreRead(vid, vid).orElseGet(() -> {
+        final Obj result = this.internal.read(vid);
+        if (!result.isNoObj())
+            return result;
+        else {
             this.sjvm().availableModels().content().stream()
-                    .map(model -> ollm(Tuple.Pair.with(model, this.sjvm().modelCard(model.getName()).content()), OLLM.OLLM_TID, modelToVid(model)))
-                    .filter(model -> model.vid().matches(pattern))
-                    .forEach(model -> {
-                        final OllamaModelCard card = this.sjvm().modelCard(model.name()).content();
-                        model.put(uri("uses"), objs(card.getCapabilities().stream().map(MStr::str)));
-                        this.internal.write(model.vid(), model);
-                        final String modelFile = card.getModelfile();
-                        final String ggufFile = Arrays.stream(modelFile.split("\n")).map(String::trim).filter(line -> line.startsWith("FROM")).map(line -> line.replace("FROM ", "").trim()).findFirst().orElse(null);
-                        final GGUF gguf = GGUF.of(f(ggufFile), fURI.NULL);
-                        gguf.put(uri("quant"), uri(card.getDetails().getQuantizationLevel()));
-                        gguf.put(uri("family"), uri(card.getDetails().getFormat()));
-
-                        this.internal.write(model.vid().extend("guff"), gguf);
+                    .map(model -> {
+                        final OllamaModelCard card = this.sjvm().modelCard(model.getName()).content();
+                        final OLLM ollm = ollm(Tuple.Pair.with(model, card), OLLM.OLLM_TID, modelToVid(model.getName()));
+                        return Tuple.Pair.with(card, ollm);
+                    })
+                    .filter(pair -> pair.get1().vid().matches(pattern))
+                    .forEach(pair -> {
+                        try {
+                            final Obj gguf = this.internal.read(pair.get1().vid().extend(GGUF_KEY));
+                            if (gguf.isNoObj()) {
+                                this.internal.write(pair.get1().vid().extend(GGUF_KEY), fail(MTronException.of("temp")));
+                                LOG.info("onboarding ollm gguf into space: %s", pair.get1().vid().extend(GGUF_KEY));
+                                final String ggufFilePath = Arrays.stream(pair.get0().getModelfile().split("\n"))
+                                        .map(String::trim)
+                                        .filter(line -> line.startsWith(FROM))
+                                        .map(line -> line.replace(FROM, "").trim())
+                                        .findFirst()
+                                        .orElse(null);
+                                GGUF.of(f(ggufFilePath), pair.get1().vid().extend(GGUF_KEY))
+                                        .put(uri(QUANT), uri(pair.get0().getDetails().getQuantizationLevel())).<Rec>as()
+                                        .put(uri(FAMILY), uri(pair.get0().getDetails().getFormat())).as();
+                            }
+                        } catch (final Exception e) {
+                            LOG.warn(e);
+                            this.internal.write(pair.get1().vid().extend(GGUF_KEY), fail(e));
+                        }
                     });
             return this.internal.read(vid);
-        });
+        }
     }
+
 
     @Override
     public Obj write(final fURI vid, final Obj obj) {

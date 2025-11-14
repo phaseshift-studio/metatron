@@ -110,10 +110,10 @@ public class BootLoader implements Obj {
                     rec(uri("k1"), uri("v1"), uri("..."), uri("..."), uri("kn"), uri("vn")),
                     rel(uri("log"), objs(uri("info"), uri("debug"), uri("warn"), uri("error"), uri("trace"))),
                     rel(uri("host"), uri("ws://localhost:8888")),
-                    rel(uri("nodes"), lst(uri("ws://a.local:8888"), uri("ws://b.local:8888"), uri("..."))),
+                    rel(uri("cluster"), lst(uri("ws://a.local:8888"), uri("ws://b.local:8888"), uri("..."))),
                     rel(uri("mode"), objs(uri("server"), uri("console"))),
                     rel(uri("boot"), uri("./boot.mtron")),
-                    "metatron '[mode=>console,log=>info,host=>ws://localhost:8888,nodes=>[ws://127.0.0.1:8887]]'");
+                    "metatron '[boot=><examples/boot.mtron>,mode=>console,log=>info,host=><ws://localhost:8888>,cluster=>[<ws://127.0.0.1:8887>]]'");
             System.exit(0);
         } else {
             Rec options = args.length > 0 ? mParser.parse(args[0]).as() : rec();
@@ -135,7 +135,7 @@ public class BootLoader implements Obj {
                 LOG.warn("booting metatron on a non-networked jvm");
             }
             startMode(options);
-            LOG.info("available instruction sets: %s", Registry.open().registrants());
+            LOG.info("registered instruction sets: %s", Registry.open().registrants());
             ROUTER = new MRouter(remoteAuthority, f("/sys/router"));
             kvInstSet.create();
             kvSpace.of(f("/mnt/#"), fURI.NULL).vid(f("/mnt"));
@@ -166,7 +166,6 @@ public class BootLoader implements Obj {
             //mkvSpace.of(f("/tp/#")).vid(f("/mnt/tp"));
             //new TP3Translator(f("/tp")).translate(TinkerFactory.createModern());
             // new MqttSpace(f("zigbee2mqtt/#?broker=mqtt://192.168.66.2:1883&prefix=/mqtt"), f("/mnt/zigbee2mqtt")));
-            GGUF gguf = GGUF.of(f("/usr/share/ollama/.ollama/models/blobs/sha256-170370233dd5c5415250a2ecd5c71586352850729062ccef1496385647293868"),f("/ollama/gguf"));
             if (options.at("mode").equals(uri("docs")))
                 docSpace.of(options.at(HOST).uriValue().port(8885));
             else if (options.at("mode").equals(uri("console"))) {

@@ -22,6 +22,8 @@ import dev.langchain4j.model.ollama.OllamaChatModel;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.ai.llm.ollama.ollamaSpace;
 import studio.phaseshift.metatron.lang.ai.llm.type.impl.Audio;
+import studio.phaseshift.metatron.lang.ai.llm.type.impl.GGUF;
+import studio.phaseshift.metatron.lang.ai.llm.type.impl.OLLM;
 import studio.phaseshift.metatron.lang.core.m.type.Inst;
 import studio.phaseshift.metatron.lang.core.m.type.Rec;
 import studio.phaseshift.metatron.lang.core.m.type.Type;
@@ -64,18 +66,18 @@ public class llmInstSet extends MInstSet {
     @Override
     public Set<Type> types() {
         return Set.of(
-                T(OLLM_TID),
                 T(TOOL_TID),
                 T(MEMORY_TID),
                 ollamaSpace.OLLAMA_TYPE,
-                Audio.AUDIO_TYPE);
+                GGUF.GGUF_TYPE,
+                OLLM.OLLM_TYPE);
     }
 
     @Override
     public Set<Inst> insts() {
         return new LinkedHashSet<>(List.of(
                 instC(INST_TID.extend("play").dom(REC_TID).rng(AUDIO_TID), lst(), (lhs, inst) -> {
-                    new Audio(lhs.jvm(),AUDIO_TID,lhs.vid()).play();
+                    new Audio(lhs.jvm(), AUDIO_TID, lhs.vid()).play();
                     return lhs;
                 }),
                 instC(INST_TID.extend("chat").dom(OLLM_TID).rng(STR_TID.maybeSome()), lst(T(STR_TID)),

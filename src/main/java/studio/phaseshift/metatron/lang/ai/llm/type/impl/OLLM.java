@@ -20,21 +20,36 @@ package studio.phaseshift.metatron.lang.ai.llm.type.impl;
 
 import dev.langchain4j.model.ollama.OllamaModel;
 import dev.langchain4j.model.ollama.OllamaModelCard;
+import dev.langchain4j.model.ollama.OllamaModels;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.ai.llm.type.LLM;
 import studio.phaseshift.metatron.lang.core.m.type.Obj;
+import studio.phaseshift.metatron.lang.core.m.type.Rec;
+import studio.phaseshift.metatron.lang.core.m.type.Type;
+import studio.phaseshift.metatron.lang.core.m.type.Uri;
 import studio.phaseshift.metatron.lang.core.m.type.impl.MRec;
+import studio.phaseshift.metatron.lang.core.m.type.impl.MStr;
+import studio.phaseshift.metatron.lang.core.m.type.impl.MUri;
 import studio.phaseshift.metatron.lang.sys.router.Router;
+import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import static studio.phaseshift.metatron.lang.ai.llm.llmInstSet.INST_TID;
 import static studio.phaseshift.metatron.lang.ai.llm.llmInstSet.LLM_TID;
 import static studio.phaseshift.metatron.lang.Space.HOST;
 import static studio.phaseshift.metatron.lang.Space.NAME;
+import static studio.phaseshift.metatron.lang.core.m.inst.mFluent.StartLess.*;
+import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.URI_SCHEME_TID;
+import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.URI_TID;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MInst.*;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MInt.jnt;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MRel.rel;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
 
 /*
@@ -43,6 +58,22 @@ import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
 public class OLLM extends MRec implements LLM {
 
     public static final fURI OLLM_TID = LLM_TID.extend("ollm");
+    public static final String SKILL = "skill";
+
+    public static Type OLLM_TYPE = T(OLLM_TID, instC(INST_TID.dom(fURI.ALL).rng(OLLM_TID),
+            lst(rec(uri(NAME),
+                    T(URI_TID),
+                    uri(HOST),
+                    isa_(T(URI_TID)).where_(inst_(instB(URI_SCHEME_TID, lst(id_().<Obj>as()))).is_(eq_(uri("http")))))),
+            (lhs, inst) -> {
+                final String modelName = inst.arg(0).<Rec>as().at(uri(NAME)).uriValue().toString();
+                final OllamaModels models = OllamaModels.builder().baseUrl(inst.arg(0).<Rec>as().at(HOST).uriValue().toString()).build();
+                final OllamaModelCard card = models.modelCard(modelName).content();
+                final OllamaModel model = models.availableModels().content().stream().filter(m -> m.getName().equals(modelName)).findFirst().orElse(null);
+                if (null == model)
+                    throw MTronException.of("unknown card");
+                return new OLLM(Tuple.Pair.with(model, card), OLLM_TID, inst.arg(0).vid());
+            }));
 
     public OLLM(final Tuple.Pair<OllamaModel, OllamaModelCard> model, final fURI tid, final fURI vid) {
         super(modelToRec(model), tid, vid);
@@ -52,6 +83,7 @@ public class OLLM extends MRec implements LLM {
     private static Map<Obj, Obj> modelToRec(final Tuple.Pair<OllamaModel, OllamaModelCard> model) {
         return new LinkedHashMap<>() {{
             put(uri(NAME), uri(model.get0().getName()));
+            put(uri(SKILL), lst(model.get1().getCapabilities().stream().map(MUri::uri)));
         }};
 
     }
@@ -59,7 +91,7 @@ public class OLLM extends MRec implements LLM {
     public static OLLM ollm(final Tuple.Pair<OllamaModel, OllamaModelCard> model, final fURI tid, final fURI vid) {
         return new OLLM(model, tid, vid);
     }
-    
+
     public String name() {
         return this.at(NAME).uriValue().toString();
     }
