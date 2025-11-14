@@ -67,10 +67,14 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
 
     fURI vid();
 
-    default <F> F addInst(final Inst inst) {
+    default Obj lazyTid(final fURI tid) {
+        return this.tid(tid);
+    }
+
+    /*default <F> F addInst(final Inst inst) {
         Router.writeToSpace(inst.tid(), inst);
         return (F) this;
-    }
+    }*/
 
     default boolean unique() {
         return uniqueC().equals(cInt.ONE());

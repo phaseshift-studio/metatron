@@ -85,7 +85,7 @@ public class fileSpace extends MSpace<FileSystem> {
                             return Files.list(vidPath)
                                     .collect(Collectors.toMap(
                                             p -> f(p.toString()),
-                                            p -> MRec.fromUriKeyed("name", str(p.getFileName().toString()), "permissions", str(MTronException.wrap(() -> Files.getPosixFilePermissions(p)).toString())), Obj::append, LinkedHashMap::new));
+                                            p -> rec("name", str(p.getFileName().toString()), "permissions", str(MTronException.wrap(() -> Files.getPosixFilePermissions(p)).toString())), Obj::append, LinkedHashMap::new));
                         } else {
                             final Str value = str(Files.readString(vidPath));
                             return Map.of(vid, value);

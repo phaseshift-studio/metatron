@@ -22,13 +22,24 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.core.m.obj.NoObj;
 import studio.phaseshift.metatron.util.MTronException;
 
+import java.util.Optional;
+
 import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.*;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MFail.fail;
 
 public interface ObjFactory {
 
     <O extends Obj> O create(final Object value, final fURI tid, final fURI vid, final Class<O> objClass);
 
     Obj create(final Object value);
+
+    default Obj createOrFail(final Object value) {
+        try {
+            return this.create(value);
+        } catch (final Exception e) {
+            return fail(e);
+        }
+    }
 
     default <O extends Obj> O create(final Object value, final fURI tid, final Class<O> objClass) {
         return this.create(value, tid, fURI.NULL, objClass);

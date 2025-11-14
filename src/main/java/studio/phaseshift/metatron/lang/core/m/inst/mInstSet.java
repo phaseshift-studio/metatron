@@ -410,35 +410,34 @@ public class mInstSet extends MInstSet {
                 instC(PROD_TID.dom(INT_TID.maybeSome()).rng(INT_TID), lst(), (lhs, inst) -> inst.seed().jvm(lhs.stream().reduce(inst.seed(), (a, b) -> jnt(a.intValue() * (b.intValue() * b.c().max()))).intValue()/* * inst.c().max()*/), jnt(1)),
                 instC(PROD_TID.dom(REAL_TID.maybeSome()).rng(REAL_TID), lst(), (lhs, inst) -> lhs.stream().reduce(inst.seed(), (a, b) -> real(a.realValue() * (b.realValue() * b.c().max()))), real(1.0)),
                 instC(PROD_TID.dom(URI_TID.maybeSome()).rng(URI_TID), lst(), (lhs, inst) -> lhs.stream().reduce(inst.seed(), (a, b) -> uri(a.uriValue().mult(b.uriValue()))), uri(".")),
-                instC(REIFY_TID.dom(ALL.maybe()).rng(REC_TID), lst(), (lhs, inst) ->
-                        MRec.fromUriKeyed(
-                                "type", MRec.fromUriKeyed(
-                                        "tid", MRec.fromUriKeyed(
-                                                "scheme", nullOrElse(lhs.tid().scheme(), NoObj::noobj, MUri::uri),
-                                                "authority", nullOrElse(lhs.tid().hasAuthority() ? lhs.tid() : null, NoObj::noobj, z -> MRec.fromUriKeyed(
-                                                        "host", nullOrElse(z.host(), NoObj::noobj, MUri::uri),
-                                                        "port", nullOrElse(z.port() == -1 ? null : (long) lhs.tid().port(), NoObj::noobj, MInt::jnt)
-                                                )),
-                                                "path", uri(lhs.tid().path()),
-                                                "c", MRec.fromUriKeyed(
-                                                        "min", jnt(lhs.tid().cV().min()),
-                                                        "max", jnt(lhs.tid().cV().max())),
-                                                "q", nullOrElse(lhs.tid().query() == null ? null : lhs.tid().queryMap(), NoObj::noobj,
-                                                        q -> rec(q.entrySet().stream().map(kv -> rel(uri(kv.getKey()), uri(kv.getValue())))))),
-                                        "obj", MRec.fromUriKeyed(
-                                                "value", lhs.type(),
-                                                "params", nullOrElse(lhs.type().predicate() == null && lhs.type().constructor() == null ? null : lhs, NoObj::noobj, t -> MRec.fromUriKeyed(
-                                                        "predicate", nullOrElse(t.type().predicate(), NoObj::noobj, r -> r),
-                                                        "constructor", nullOrElse(t.type().constructor(), NoObj::noobj, r -> r))))),
-                                "value", MRec.fromUriKeyed(
-                                        "vid", nullOrElse(lhs.vid(), NoObj::noobj, fURI::toUri),
-                                        "obj", MRec.fromUriKeyed(
-                                                "value", MObjFactory.of().create(lhs.jvm()),
-                                                "jvm", MRec.fromUriKeyed(
-                                                        "class", uri(lhs.jvm().getClass().getCanonicalName()),
-                                                        "projection", lhs.jvm() instanceof Tuple ?
-                                                                rec(IteratorUtil.indexedStream(lhs.<Tuple>jvmAs().iterator()).map(p -> rel(jnt(p.get0()), MObjFactory.of().create(p.get1())))) :
-                                                                rec(jnt(0), MObjFactory.of().create(lhs.jvm()))))))),
+                instC(REIFY_TID.dom(ALL.maybe()).rng(REC_TID), lst(), (lhs, inst) -> rec(
+                        "type", rec(
+                                "tid", rec(
+                                        "scheme", nullOrElse(lhs.tid().scheme(), NoObj::noobj, MUri::uri),
+                                        "authority", nullOrElse(lhs.tid().hasAuthority() ? lhs.tid() : null, NoObj::noobj, z -> rec(
+                                                "host", nullOrElse(z.host(), NoObj::noobj, MUri::uri),
+                                                "port", nullOrElse(z.port() == -1 ? null : (long) lhs.tid().port(), NoObj::noobj, MInt::jnt)
+                                        )),
+                                        "path", uri(lhs.tid().path()),
+                                        "c", rec(
+                                                "min", jnt(lhs.tid().cV().min()),
+                                                "max", jnt(lhs.tid().cV().max())),
+                                        "q", nullOrElse(lhs.tid().query() == null ? null : lhs.tid().queryMap(), NoObj::noobj,
+                                                q -> rec(q.entrySet().stream().map(kv -> rel(uri(kv.getKey()), uri(kv.getValue())))))),
+                                "obj", rec(
+                                        "value", lhs.type(),
+                                        "params", nullOrElse(lhs.type().predicate() == null && lhs.type().constructor() == null ? null : lhs, NoObj::noobj, t -> rec(
+                                                "predicate", nullOrElse(t.type().predicate(), NoObj::noobj, r -> r),
+                                                "constructor", nullOrElse(t.type().constructor(), NoObj::noobj, r -> r))))),
+                        "value", rec(
+                                "vid", nullOrElse(lhs.vid(), NoObj::noobj, fURI::toUri),
+                                "obj", rec(
+                                        "value", MObjFactory.of().createOrFail(lhs.jvm()),
+                                        "jvm", rec(
+                                                "class", uri(lhs.jvm().getClass().getCanonicalName()),
+                                                "projection", lhs.jvm() instanceof Tuple ?
+                                                        rec(IteratorUtil.indexedStream(lhs.<Tuple>jvmAs().iterator()).map(p -> rel(jnt(p.get0()), MObjFactory.of().createOrFail(p.get1())))) :
+                                                        rec(jnt(0), MObjFactory.of().create(lhs.jvm()))))))),
                 instC(SELECT_TID.dom(REC_TID).rng(REC_TID.maybe()), lst(T(REC_TID)), (lhs, inst) -> crossPoly(lhs, inst.arg(0))),
                 // instC(SELECT_TID.dom(REL_TID).rng(REL_TID), lst(T(REL_TID)), (lhs, inst) -> rel(inst.arg(0).<Rel>as().first().apply(lhs.<Rel>as().first()), inst.arg(0).<Rel>as().second().apply(lhs.<Rel>as().second()))),
                 instC(SELECT_TID.dom(LST_TID).rng(LST_TID.maybe()), lst(T(LST_TID)), (lhs, inst) -> crossPoly(lhs, inst.arg(0))),

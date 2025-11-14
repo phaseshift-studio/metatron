@@ -33,6 +33,7 @@ import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.REC_TID;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MRel.rel;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
 
 public class MRec extends MObj implements Rec {
@@ -55,6 +56,17 @@ public class MRec extends MObj implements Rec {
         return new MRec(map, REC_TID, fURI.NULL);
     }
 
+    public static Rec rec(final String key, final Obj value, final Object... kvs) {
+        final Map<Obj, Obj> map = new LinkedHashMap<>();
+        map.put(uri(key), value);
+        for (int i = 0; i < kvs.length; i = i + 2) {
+            final Obj keyO = kvs[i] instanceof Obj ? (Obj) kvs[i] : (kvs[i] instanceof String || kvs[i] instanceof fURI ? uri(kvs[i].toString()) : MObjFactory.of().create(kvs[i]));
+            final Obj valueO = kvs[i + 1] instanceof Obj ? (Obj) kvs[i + 1] : (kvs[i + 1] instanceof String || kvs[i + 1] instanceof fURI ? uri(kvs[i + 1].toString()) : MObjFactory.of().create(kvs[i + 1]));
+            map.put(keyO, valueO);
+        }
+        return new MRec(map, REC_TID, fURI.NULL);
+    }
+
     public static Rec rec(final Map<Obj, Obj> map) {
         return new MRec(map, REC_TID, fURI.NULL);
     }
@@ -69,16 +81,6 @@ public class MRec extends MObj implements Rec {
 
     public static <K, V> Rec rec(final Map<K, V> map, final ObjFactory factory) {
         return rec(map.entrySet().stream().map(kv -> rel(kv.getKey() instanceof String && !((String) kv.getKey()).contains(" ") ? uri((String) kv.getKey()) : factory.create(kv.getKey()), factory.create(kv.getValue()))));
-    }
-
-    public static Rec fromUriKeyed(final Object key, final Obj value, final Object... kvs) {
-        final Map<Obj, Obj> map = new LinkedHashMap<>();
-        map.put(uri(key.toString()), value);
-        for (int i = 0; i < kvs.length; i = i + 2) {
-            if (!((Obj) kvs[i + 1]).isNoObj())
-                map.put(uri(kvs[i].toString()), (Obj) kvs[i + 1]);
-        }
-        return new MRec(map, REC_TID, fURI.NULL);
     }
 
     private static Map<Obj, Obj> cleanMap(final Map<Obj, Obj> jvm) {

@@ -37,6 +37,12 @@ public abstract class MObj implements Obj, Cloneable {
         // for non-standard constructions
     }
 
+    @Override
+    public Obj lazyTid(final fURI tid) {
+        this.tid = tid;
+        return this;
+    }
+
     public MObj(final Object jvm, final fURI tid, final fURI vid) {
         assert null != tid;
         this.jvm = jvm;

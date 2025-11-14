@@ -70,6 +70,7 @@ public class llmInstSet extends MInstSet {
                 T(MEMORY_TID),
                 ollamaSpace.OLLAMA_TYPE,
                 GGUF.GGUF_TYPE,
+                GGUF.TENSOR_REF_TYPE,
                 OLLM.OLLM_TYPE);
     }
 
