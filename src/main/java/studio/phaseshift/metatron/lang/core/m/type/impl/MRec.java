@@ -18,12 +18,14 @@
 
 package studio.phaseshift.metatron.lang.core.m.type.impl;
 
+import org.apache.commons.collections.CollectionUtils;
 import studio.phaseshift.metatron.algebra.PlusMonoid;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.core.m.obj.NoObj;
 import studio.phaseshift.metatron.lang.core.m.type.*;
 
 
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -80,10 +82,13 @@ public class MRec extends MObj implements Rec {
     }
 
     private static Map<Obj, Obj> cleanMap(final Map<Obj, Obj> jvm) {
-        if (jvm.containsKey(NoObj.noobj()))
+        try {
             jvm.remove(NoObj.noobj());
-        if (jvm.containsValue(NoObj.noobj()))
-            jvm.entrySet().stream().filter(kv -> kv.getValue().isNoObj()).map(Map.Entry::getKey).toList().forEach(jvm::remove);
+            if (jvm.containsValue(NoObj.noobj()))
+                jvm.entrySet().stream().filter(kv -> kv.getValue().isNoObj()).map(Map.Entry::getKey).toList().forEach(jvm::remove);
+        } catch (final UnsupportedOperationException e) {
+            // do nothing
+        }
         return jvm;
     }
 

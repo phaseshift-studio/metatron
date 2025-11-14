@@ -20,6 +20,7 @@ package studio.phaseshift.metatron.util;
 
 import java.io.Closeable;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -44,13 +45,13 @@ public final class Common {
         }
     }
 
-    public static <A,B> B nullOrElse(final A object, final Supplier<B> ifNull, final Function<A, B> ifNotNull) {
+    public static <A, B> B nullOrElse(final A object, final Supplier<B> ifNull, final Function<A, B> ifNotNull) {
         if (null == object)
             return ifNull.get();
         return ifNotNull.apply(object);
     }
 
-    public static <K, V> Map<K, V> mutableMap(final Object... args) {
+    private static <K, V> Map<K, V> mapBuilder(final Supplier<Map<K, V>> supplier, final Object... args) {
         return IntStream.iterate(0, i -> i < args.length, i -> i + 2)
                 .filter(i -> i + 1 < args.length)
                 .boxed()
@@ -58,7 +59,15 @@ public final class Common {
                         i -> (K) args[i],
                         i -> (V) args[i + 1],
                         (a, b) -> b,
-                        HashMap::new
+                        supplier
                 ));
+    }
+
+    public static <K, V> Map<K, V> mutableMap(final Object... args) {
+        return mapBuilder(HashMap::new, args);
+    }
+
+    public static <K, V> Map<K, V> mutableOrderedMap(final Object... args) {
+        return mapBuilder(LinkedHashMap::new, args);
     }
 }

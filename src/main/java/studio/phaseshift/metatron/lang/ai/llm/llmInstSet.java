@@ -46,15 +46,15 @@ import static studio.phaseshift.metatron.lang.core.m.type.impl.MType.T;
  */
 public class llmInstSet extends MInstSet {
 
-    public static final fURI MLLM_TID = f("/llm");
-    public static final fURI INST_TID = MLLM_TID.extend("inst");
-    public static final fURI SPACE_TID = MLLM_TID.extend("space");
+    public static final fURI LLM_TID = f("/llm");
+    public static final fURI INST_TID = LLM_TID.extend("inst");
+    public static final fURI SPACE_TID = LLM_TID.extend("space");
     public static final fURI OLLAMA_TID = SPACE_TID.extend("ollama");
-    public static final fURI TOOL_TID = MLLM_TID.extend("tool");
-    public static final fURI MEMORY_TID = MLLM_TID.extend("memory");
+    public static final fURI TOOL_TID = LLM_TID.extend("tool");
+    public static final fURI MEMORY_TID = LLM_TID.extend("memory");
 
     public llmInstSet(final fURI vid) {
-        super(MLLM_TID, vid);
+        super(LLM_TID, vid);
     }
 
     public static llmInstSet create() {

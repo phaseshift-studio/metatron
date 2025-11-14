@@ -20,6 +20,7 @@ package studio.phaseshift.metatron;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.ai.llm.llmInstSet;
+import studio.phaseshift.metatron.lang.ai.llm.type.impl.GGUF;
 import studio.phaseshift.metatron.lang.core.m.inst.mInstSet;
 import studio.phaseshift.metatron.lang.core.m.parser.mParser;
 import studio.phaseshift.metatron.lang.core.m.type.Obj;
@@ -79,7 +80,7 @@ public class BootLoader implements Obj {
         Registry.open().register(kvInstSet.MKV_TID, kvInstSet::create);
         Registry.open().register(webInstSet.MWEB_TID, webInstSet::create);
         Registry.open().register(grphInstSet.MGRPH_TID, grphInstSet::create);
-        Registry.open().register(llmInstSet.MLLM_TID, llmInstSet::create);
+        Registry.open().register(llmInstSet.LLM_TID, llmInstSet::create);
         Registry.open().register(vecInstSet.MVEC_TID, vecInstSet::create);
         Registry.open().register(machInstSet.MACH_TID, machInstSet::create);
         Registry.open().register(clstrInstSet.MCLSTR_TID, clstrInstSet::create);
@@ -165,6 +166,7 @@ public class BootLoader implements Obj {
             //mkvSpace.of(f("/tp/#")).vid(f("/mnt/tp"));
             //new TP3Translator(f("/tp")).translate(TinkerFactory.createModern());
             // new MqttSpace(f("zigbee2mqtt/#?broker=mqtt://192.168.66.2:1883&prefix=/mqtt"), f("/mnt/zigbee2mqtt")));
+            GGUF gguf = GGUF.of(f("/usr/share/ollama/.ollama/models/blobs/sha256-170370233dd5c5415250a2ecd5c71586352850729062ccef1496385647293868"),f("/ollama/gguf"));
             if (options.at("mode").equals(uri("docs")))
                 docSpace.of(options.at(HOST).uriValue().port(7777));
             else if (options.at("mode").equals(uri("console"))) {

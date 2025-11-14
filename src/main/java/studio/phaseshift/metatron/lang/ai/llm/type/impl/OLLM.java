@@ -21,19 +21,16 @@ package studio.phaseshift.metatron.lang.ai.llm.type.impl;
 import dev.langchain4j.model.ollama.OllamaModel;
 import dev.langchain4j.model.ollama.OllamaModelCard;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.lang.ai.llm.ollama.ollamaSpace;
 import studio.phaseshift.metatron.lang.ai.llm.type.LLM;
 import studio.phaseshift.metatron.lang.core.m.type.Obj;
-import studio.phaseshift.metatron.lang.core.m.type.impl.MObjFactory;
 import studio.phaseshift.metatron.lang.core.m.type.impl.MRec;
 import studio.phaseshift.metatron.lang.sys.router.Router;
-import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import static studio.phaseshift.metatron.lang.ai.llm.llmInstSet.MLLM_TID;
+import static studio.phaseshift.metatron.lang.ai.llm.llmInstSet.LLM_TID;
 import static studio.phaseshift.metatron.lang.Space.HOST;
 import static studio.phaseshift.metatron.lang.Space.NAME;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MInt.jnt;
@@ -45,7 +42,7 @@ import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
  */
 public class OLLM extends MRec implements LLM {
 
-    public static final fURI OLLM_TID = MLLM_TID.extend("ollm");
+    public static final fURI OLLM_TID = LLM_TID.extend("ollm");
 
     public OLLM(final Tuple.Pair<OllamaModel, OllamaModelCard> model, final fURI tid, final fURI vid) {
         super(modelToRec(model), tid, vid);
@@ -68,7 +65,7 @@ public class OLLM extends MRec implements LLM {
     }
     
     public String name() {
-        return this.at(NAME).strValue();
+        return this.at(NAME).uriValue().toString();
     }
 
     public OLLM clone() {

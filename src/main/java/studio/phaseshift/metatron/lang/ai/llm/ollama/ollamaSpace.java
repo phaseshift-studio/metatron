@@ -19,8 +19,11 @@
 package studio.phaseshift.metatron.lang.ai.llm.ollama;
 
 import dev.langchain4j.model.ollama.OllamaModel;
+import dev.langchain4j.model.ollama.OllamaModelCard;
 import dev.langchain4j.model.ollama.OllamaModels;
+import dev.langchain4j.model.output.Response;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.lang.ai.llm.type.impl.GGUF;
 import studio.phaseshift.metatron.lang.db.kv.kvSpace;
 import studio.phaseshift.metatron.lang.ai.llm.type.impl.OLLM;
 import studio.phaseshift.metatron.lang.sys.router.Router;
@@ -35,9 +38,11 @@ import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
 import studio.phaseshift.metatron.util.Tuple;
 
+import java.util.Arrays;
 import java.util.Map;
 
 import static studio.phaseshift.metatron.furi.fURI.ALL;
+import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.lang.ai.llm.llmInstSet.OLLAMA_TID;
 import static studio.phaseshift.metatron.lang.ai.llm.type.impl.OLLM.ollm;
 import static studio.phaseshift.metatron.lang.core.m.inst.mFluent.StartLess.isa_;
@@ -89,7 +94,13 @@ public class ollamaSpace extends MSpace<OllamaModels> {
             this.sjvm().availableModels().content().stream()
                     .map(model -> ollm(Tuple.Pair.with(model, this.sjvm().modelCard(model.getName()).content()), OLLM.OLLM_TID, modelToVid(model)))
                     .filter(model -> model.vid().matches(pattern))
-                    .forEach(model -> this.internal.write(model.vid(), model));
+                    .forEach(model -> {
+                        this.internal.write(model.vid(), model);
+                        final OllamaModelCard card = this.sjvm().modelCard(model.name()).content();
+                        final String modelFile = card.getModelfile();
+                        final String ggufFile = Arrays.stream(modelFile.split("\n")).map(String::trim).filter(line -> line.startsWith("FROM")).map(line->line.replace("FROM ","").trim()).findFirst().orElse(null);
+                        this.internal.write(model.vid().extend("guff"), GGUF.of(f(ggufFile), fURI.NULL));
+                    });
             return this.internal.read(vid);
         });
     }

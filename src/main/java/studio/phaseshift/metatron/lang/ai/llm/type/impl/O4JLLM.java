@@ -1,20 +1,16 @@
 package studio.phaseshift.metatron.lang.ai.llm.type.impl;
 
-import dev.langchain4j.model.ollama.OllamaModel;
-import dev.langchain4j.model.ollama.OllamaModelCard;
 import io.github.ollama4j.models.response.Model;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.ai.llm.type.LLM;
 import studio.phaseshift.metatron.lang.core.m.type.Obj;
 import studio.phaseshift.metatron.lang.core.m.type.impl.MRec;
-import studio.phaseshift.metatron.util.Tuple;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import static studio.phaseshift.metatron.lang.Space.HOST;
 import static studio.phaseshift.metatron.lang.Space.NAME;
-import static studio.phaseshift.metatron.lang.ai.llm.llmInstSet.MLLM_TID;
+import static studio.phaseshift.metatron.lang.ai.llm.llmInstSet.LLM_TID;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
 
@@ -23,7 +19,7 @@ import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
  */
 public class O4JLLM extends MRec implements LLM {
 
-    public static final fURI O4JLLM_TID = MLLM_TID.extend("o4jllm");
+    public static final fURI O4JLLM_TID = LLM_TID.extend("o4jllm");
 
     public O4JLLM(final Model model, final fURI tid, final fURI vid) {
         super(modelToRec(model), O4JLLM_TID, vid);
