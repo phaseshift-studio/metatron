@@ -28,6 +28,9 @@ public class GGUF extends MRec {
     public static final String VERSION = "version";
     public static final String PATH = "path";
     public static final String FILE = "file";
+    public static final String FAMILY = "family";
+    public static final String QUANT = "quant";
+    public static final String SIZE = "size";
     protected final GraphittyLogger LOG = Graphitty.log(this);
 
     public GGUF(final fURI location, final fURI tid, final fURI vid) {

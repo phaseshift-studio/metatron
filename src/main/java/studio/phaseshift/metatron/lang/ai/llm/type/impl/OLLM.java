@@ -52,10 +52,6 @@ public class OLLM extends MRec implements LLM {
     private static Map<Obj, Obj> modelToRec(final Tuple.Pair<OllamaModel, OllamaModelCard> model) {
         return new LinkedHashMap<>() {{
             put(uri(NAME), uri(model.get0().getName()));
-            put(uri("size"), jnt(model.get0().getSize()));
-            put(uri("quant"), uri(model.get0().getDetails().getQuantizationLevel()));
-            put(uri("family"), uri(model.get0().getDetails().getFormat()));
-            //   put(uri("card"), rec(model.get1().getModelInfo(), MObjFactory.of()));
         }};
 
     }

@@ -24,6 +24,7 @@ import dev.langchain4j.model.ollama.OllamaModels;
 import dev.langchain4j.model.output.Response;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.ai.llm.type.impl.GGUF;
+import studio.phaseshift.metatron.lang.core.m.type.impl.MStr;
 import studio.phaseshift.metatron.lang.db.kv.kvSpace;
 import studio.phaseshift.metatron.lang.ai.llm.type.impl.OLLM;
 import studio.phaseshift.metatron.lang.sys.router.Router;
@@ -49,7 +50,10 @@ import static studio.phaseshift.metatron.lang.core.m.inst.mFluent.StartLess.isa_
 import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.REC_TID;
 import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.URI_TID;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MInst.instC;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MObjs.objs;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
 
@@ -95,11 +99,16 @@ public class ollamaSpace extends MSpace<OllamaModels> {
                     .map(model -> ollm(Tuple.Pair.with(model, this.sjvm().modelCard(model.getName()).content()), OLLM.OLLM_TID, modelToVid(model)))
                     .filter(model -> model.vid().matches(pattern))
                     .forEach(model -> {
-                        this.internal.write(model.vid(), model);
                         final OllamaModelCard card = this.sjvm().modelCard(model.name()).content();
+                        model.put(uri("uses"), objs(card.getCapabilities().stream().map(MStr::str)));
+                        this.internal.write(model.vid(), model);
                         final String modelFile = card.getModelfile();
-                        final String ggufFile = Arrays.stream(modelFile.split("\n")).map(String::trim).filter(line -> line.startsWith("FROM")).map(line->line.replace("FROM ","").trim()).findFirst().orElse(null);
-                        this.internal.write(model.vid().extend("guff"), GGUF.of(f(ggufFile), fURI.NULL));
+                        final String ggufFile = Arrays.stream(modelFile.split("\n")).map(String::trim).filter(line -> line.startsWith("FROM")).map(line -> line.replace("FROM ", "").trim()).findFirst().orElse(null);
+                        final GGUF gguf = GGUF.of(f(ggufFile), fURI.NULL);
+                        gguf.put(uri("quant"), uri(card.getDetails().getQuantizationLevel()));
+                        gguf.put(uri("family"), uri(card.getDetails().getFormat()));
+
+                        this.internal.write(model.vid().extend("guff"), gguf);
                     });
             return this.internal.read(vid);
         });

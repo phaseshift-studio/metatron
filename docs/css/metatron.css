@@ -205,18 +205,46 @@ pre code {
     min-height: 200);*/
     /* center page with absolute position */
     /*top: 0%; left: 50%; transform: translate(-50%, 0);*/
-    margin: 0.25em 0;
-    padding: 0.25em;
-    box-shadow: 2px 3px 10px black, 0 0 60px #8a4d0f inset;
+    margin: 0.15em 0;
+    padding: 0.15em;
+    box-shadow: 1px 2px 5px black, 0 0 60px #8a4d0f inset;
     background: #fffef0;
     filter: url(#wavy2);
+}
+
+/* Marker styling */
+.circle {
+    position: relative;
+    margin: 0 40px;
+    color: #333;
+    text-decoration: none;
+    //line-height: 1em;
+    & svg {
+        position: absolute;
+        left: 0;
+        top: -50%;
+        right: 0;
+        margin-left: auto;
+        margin-right: auto;
+        pointer-events: none;
+    }
+    & path {
+        transition: stroke-dashoffset 300ms linear;
+        stroke-width: 2.0;
+        stroke: darkgreen;
+        fill: none;
+        stroke-linecap: round;
+    }
+    &:hover path{
+        stroke-dashoffset: 0;
+    }
 }
 
 
 /******************************************************************/
 
 .hljs {
-    font-size: 90%;
+    font-size: 95%;
     display: block;
     padding: 0.5em;
 }

@@ -178,7 +178,15 @@ public class mParser {
     }
 
     public static <O extends Obj> O eval(final String code) {
-        return (O) parse(code).apply();
+        return (O) objs(Arrays.stream(code.split(";"))
+                .filter(s -> !s.trim().isEmpty())
+                .map(s -> Arrays.stream(s.split("\n"))
+                        .map(String::trim)
+                        .filter(t -> !t.startsWith("[--"))
+                        .reduce("", (a, b) -> a + b + "\n"))
+                .map(s -> mParser.parse(s).apply())
+                .filter(o -> !o.isNoObj())
+                .map(Obj::as));
     }
 
     public static <O extends Obj> O parse(final String code) {
@@ -196,7 +204,7 @@ public class mParser {
     public static Parser m_comment() {
         return choice(
                 seq(of("[--").trim(), any().starGreedy(anyOf("\n\r").or(new EndOfInputParser("end of input")))),
-                seq(of("[---"),any().starGreedy(anyOf("---]")))).map(t -> NoObj.noobj());
+                seq(of("[---"), any().starGreedy(anyOf("---]")))).map(t -> NoObj.noobj());
     }
 
     public static Parser m_furi() {

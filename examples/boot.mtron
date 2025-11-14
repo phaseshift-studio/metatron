@@ -22,8 +22,8 @@ ollama::[host    => <http://localhost:11434>,
          load    => <tinkerpop-modern>]@/mnt/space/tp3;
  clstr::[pattern => <ws://#>]@/mnt/space/clstr;
  *boot/options.print(_);
- *boot/options/mode.-<|[is(eq(server))  => print('server mode'), 
-                        is(eq(console)) => print('client mode'), 
-                        _               => print('no mode provided')]
+ *boot/options/mode.-<|[?=server  => print('server mode'), 
+                        ?=console => print('client mode'), 
+                        _         => print(_,' mode')]
 
 

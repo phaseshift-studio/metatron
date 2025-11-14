@@ -216,7 +216,9 @@ public class ObjStringSerializer implements ObjSerializer<String> {
         if (rec.isEmpty()) {
             sb.append("{{g}}[=>]{{X}}");
         } else {
-            boolean nested = rec.recValue().values().stream().anyMatch(Obj::isPoly);
+            boolean nested =
+                    rec.recValue().values().stream().anyMatch(Obj::isPoly) ||
+                            rec.recValue().values().stream().filter(o -> !o.isPoly()).map(Obj::toString).map(String::length).reduce(0, Integer::sum) > (75 - depth);
             sb.append("{{g}}[");
             if (nested)
                 sb.append("\n");
