@@ -168,7 +168,7 @@ public class BootLoader implements Obj {
             // new MqttSpace(f("zigbee2mqtt/#?broker=mqtt://192.168.66.2:1883&prefix=/mqtt"), f("/mnt/zigbee2mqtt")));
             GGUF gguf = GGUF.of(f("/usr/share/ollama/.ollama/models/blobs/sha256-170370233dd5c5415250a2ecd5c71586352850729062ccef1496385647293868"),f("/ollama/gguf"));
             if (options.at("mode").equals(uri("docs")))
-                docSpace.of(options.at(HOST).uriValue().port(7777));
+                docSpace.of(options.at(HOST).uriValue().port(8885));
             else if (options.at("mode").equals(uri("console"))) {
                 //     Router.writeToSpace(RemoteSpace.open(f("ws://chibi.local:8888"), f("/shared/#"), f("/mnt/shared")));
             } else if (options.at("mode").equals(uri("server")))
