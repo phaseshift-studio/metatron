@@ -287,6 +287,22 @@
                             <goal>java</goal>
                         </goals>
                     </execution>
+                    <execution>
+                        <id>run-python-script</id>
+                        <phase>site</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <executable>python</executable>
+                            <arguments>
+                                <argument>docs/python/docs-code-parser.py</argument>
+                                <argument>-o</argument>
+                                <argument>${project.build.directory}/temp</argument>
+                                <argument>${project.basedir}/docs</argument>
+                            </arguments>
+                        </configuration>
+                    </execution>
                 </executions>
                 <configuration>
                     <mainClass>studio.phaseshift.metatron.BootLoader</mainClass>
@@ -366,29 +382,6 @@
                         </resource>
                     </resources>
                 </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>exec-maven-plugin</artifactId>
-                <version>3.6.2</version>
-                <executions>
-                    <execution>
-                        <id>run-python-script</id>
-                        <phase>site</phase>
-                        <goals>
-                            <goal>exec</goal>
-                        </goals>
-                        <configuration>
-                            <executable>python</executable>
-                            <arguments>
-                                <argument>docs/python/docs-code-parser.py</argument>
-                                <argument>-o</argument>
-                                <argument>${project.build.directory}/temp</argument>
-                                <argument>${project.basedir}/docs</argument>
-                            </arguments>
-                        </configuration>
-                    </execution>
-                </executions>
             </plugin>
             <plugin>
                 <groupId>org.asciidoctor</groupId>
