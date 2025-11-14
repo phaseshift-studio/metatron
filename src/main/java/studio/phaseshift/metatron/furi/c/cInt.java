@@ -1,6 +1,6 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
- * Copyright (C) 2025- PhaseShift Studio, LLC 
+ * Copyright (C) 2025- PhaseShift Studio, LLC
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -19,6 +19,7 @@
 package studio.phaseshift.metatron.furi.c;
 
 import studio.phaseshift.metatron.furi.C;
+import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.Objects;
 
@@ -27,6 +28,8 @@ public class cInt implements C<Long, cInt> {
     private final Long max;
 
     private cInt(final Long min, final Long max) {
+        if (null != min & null != max && min > max)
+            throw MTronException.of("c min is greater than c max: %s > %s", min, max);
         this.min = min;
         this.max = max;
     }
@@ -59,11 +62,19 @@ public class cInt implements C<Long, cInt> {
         return new cInt(exact, exact);
     }
 
+    public static cInt of(final Integer min, final Integer max) {
+        return new cInt(null == min ? null : min.longValue(), null == max ? null : max.longValue());
+    }
+
+    public static cInt of(final Integer exact) {
+        return cInt.of(null == exact ? null : exact.longValue());
+    }
+
     public static cInt of(final String parse) {
         if (parse.isEmpty())
             return cInt.of(1L);
         else if (parse.equals("**"))
-            return cInt.of(null, null);
+            return cInt.of(null, (Long) null);
         else if (parse.equals("*"))
             return cInt.of(0L, null);
         else if (parse.equals("?"))
@@ -79,7 +90,7 @@ public class cInt implements C<Long, cInt> {
         else {
             final String[] split = parse.split(",");
             if (parse.charAt(0) == ',')
-                return (1 == parse.length()) ? cInt.of(null, null) : cInt.of(null, Long.valueOf(split[1]));
+                return (1 == parse.length()) ? cInt.of(null, (Long) null) : cInt.of(null, Long.valueOf(split[1]));
             if (split.length == 1) return cInt.of(Long.valueOf(split[0]), null);
             return cInt.of(Long.valueOf(split[0]), Long.valueOf(split[1]));
         }
@@ -137,8 +148,15 @@ public class cInt implements C<Long, cInt> {
     }
 
     @Override
+    public cInt abs() {
+        return this.gte(this.zero()) ? this :
+                new cInt(this.min < 0 ? -1L * this.min : this.min,
+                        this.max < 0 ? -1L * this.max : this.max);
+    }
+
+    @Override
     public cInt any() {
-        return cInt.of(null, null);
+        return cInt.of(null, (Long) null);
     }
 
     @Override

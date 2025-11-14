@@ -358,9 +358,9 @@ public class fURI implements Cloneable, Ring<fURI> {
     }
 
     public fURI port(final int port) {
-        if(port == this.port)
+        if (port == this.port)
             return this;
-        return new fURI(this.scheme,this.host,port,this.sstart,this.path,this.send,this.poly,Query.to(this.query));
+        return new fURI(this.scheme, this.host, port, this.sstart, this.path, this.send, this.poly, Query.to(this.query));
     }
 
     public int port() {
@@ -563,6 +563,10 @@ public class fURI implements Cloneable, Ring<fURI> {
 
     public fURI maybe() {
         return this.c("?");
+    }
+
+    public fURI any() {
+        return this.c("**");
     }
 
     public fURI some() {
