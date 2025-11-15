@@ -103,7 +103,7 @@ def execute_code(
         )
         output = result.stdout.split("\n")
     else:
-        msg = "Specify 'output_file' for non-Python/Bash languages."
+        msg = "specify 'output_file' for non-Python/Bash languages."
         raise ValueError(msg)
 
     if verbose:
@@ -122,12 +122,13 @@ def _bold(text: str) -> str:
 
 @dataclass
 class ProcessingState:
-    """State of the processing of a Markdown file."""
+    """State of the processing of an asciidoc file."""
 
     section: Literal[
         "🐖",
         "👨‍🌾",
         "🐓",
+        "X",
     ] = "👨‍🌾"
     code: list[str] = field(default_factory=list)
     context: dict[str, Any] = field(default_factory=dict)
@@ -145,20 +146,25 @@ class ProcessingState:
         sep = "#" if bool(random.randint(0, 1)) else "*"
         return "[" + color + "]" + sep + to_color + sep + "​"
 
-    def random_fhat(self):
-        self.colors = ["red", "blue", "lime", "yellow", "fuchsia", "aqua"]
+    def random_metatron(self):
+        self.colors = ["red", "blue", "lime", "yellow", "fuchsia", "aqua", "green", "orange"]
         text = ""
-        text += self.random_color("f" if bool(random.randint(0, 1)) else "F")
-        text += self.random_color("h" if bool(random.randint(0, 1)) else "H")
+        text += self.random_color("m" if bool(random.randint(0, 1)) else "M")
+        text += self.random_color("e" if bool(random.randint(0, 1)) else "E")
+        text += self.random_color("t" if bool(random.randint(0, 1)) else "T")
         text += self.random_color("a" if bool(random.randint(0, 1)) else "A")
         text += self.random_color("t" if bool(random.randint(0, 1)) else "T")
+        text += self.random_color("r" if bool(random.randint(0, 1)) else "R")
         text += self.random_color("o" if bool(random.randint(0, 1)) else "O")
-        text += self.random_color("s" if bool(random.randint(0, 1)) else "S")
+        text += self.random_color("n" if bool(random.randint(0, 1)) else "N")
         self.colors = []
         return text
 
     def process_line(self, line: str, *, verbose: bool = False) -> None:
-        """Process a line of the Markdown file."""
+        """Process a line of the asciidoc file."""
+        if self.section == "X":
+            self.section = "👨‍🌾"
+            return
         if line.strip().startswith("|==="):
             self.in_table = not self.in_table
         ################################################################################
@@ -166,6 +172,7 @@ class ProcessingState:
                 line.lstrip().startswith("<!--") and
                 line.find("🐖") != -1):
             self.section = "🐖"
+            self.new_lines = self.new_lines[:-1]  # remove the ++++ wrapper
             self.code.append(remove_html_comment(line.strip()).replace("🐖", ""))
             if line.rstrip().endswith("-->"):
                 self._process_chicken_code(verbose=verbose)
@@ -173,24 +180,20 @@ class ProcessingState:
                 self.section = "🐓"
         elif self.section == "🐖":
             if line.lstrip() == "-->":
-                self.new_lines.append(line)
                 self._process_chicken_code(verbose=verbose)
                 self._process_output_start("")
                 self.section = "🐓"
             else:
                 self.code.append(line)
         ############################################
-        if self.section == "👨‍🌾" or self.section == "🐖":
-            if -1 != line.find("[mtron]"):
-                self.new_lines.append(line.replace("[mtron]", self.random_fhat()))
+        if self.section == "👨‍🌾":
+            if -1 != line.find("[metatron]"):
+                self.new_lines.append(line.replace("[metatron]", self.random_metatron()))
             else:
                 self.new_lines.append(line)
         elif self.section == "🐓":
-            if line == "<!-- 🐓 -->":
-                self.new_lines.append("")
-                self.new_lines.append("++++")
-                self.new_lines.append("<!-- 🐓 -->")
-                self.section = "👨‍🌾"
+            self.new_lines.append("")
+            self.section = "X"
 
     def _post_process_output(self, c: str, in_table: bool = True) -> str | None:
         if c.count("thrown at inst console") != 0:
@@ -201,15 +204,15 @@ class ProcessingState:
         # remove code=> frame reference as it's an artifact of the console.eval() remote code evaluation
         c = re.sub('code=>\'.*?\',', "", c)
         # fix source code callouts
-        c = re.sub('\[-- <(?P<a>[0-9]+)>', r'// <\g<a>>', c)
+        c = re.sub('\[-- <(?P<a>[0-9]+)>', r'​\g<a>​', c)
         return c
 
     def _process_output_start(self, line: str) -> None:
         assert isinstance(
             self.output,
             list,
-        ), f"Output must be a list, not {type(self.output)}, line: {line}"
-        pre_header = ["++++", ""]
+        ), f"output must be a list, not {type(self.output)}, line: {line}"
+        pre_header = [""]
         post_header = ["[source,mtron]", "----"]
         new_output = []
         new_header = []
@@ -218,7 +221,7 @@ class ProcessingState:
                 new_header.append(c.removeprefix("[HEADER] "))
             else:
                 o = self._post_process_output(c, self.in_table)
-                if o is not None and o is not "":
+                if o is not None and o != "":
                     new_output.append(o)
         ###################################################################
         if not self.in_table:
@@ -242,8 +245,6 @@ class ProcessingState:
         for line in self.code:
             if line.startswith("[HEADER]"):
                 to_header.append(line)
-            elif line.startswith("[HIDDEN]"):
-                to_execute.append(line.replace("[HIDDEN] ", "") + ";'[HIDDEN]'")
             else:
                 to_execute.append(line)
         self.output = []
@@ -259,51 +260,34 @@ class ProcessingState:
                 current = ""
         print(f"code: {final_code}")
         for line in final_code:
-            result.append(f"mtron> {'\n       '.join(line.split("%"))}") # the spaces are to shift right due to mtron> 
-            result.append(f"{mytron.exec(line.replace("%",""))}")
-        # for line in result:
-        #    if -1 == line.find("[HIDDEN]"):
-        #        print(line)
+            if -1 == line.find("[HIDDEN]"):
+                result.append(f"mtron> {'\n       '.join(line.split("%"))}")  # the spaces are to shift right due to mtron> 
+                result.append(f"{mytron.exec(line.replace("%", ""))}")
+            else:
+                mytron.exec(line.replace("%", "").replace("[HIDDEN]",""))
         self.output.extend(result)
         print(self.output)
         self.code = []
         self.backtick_options = {}
 
 
-def process_markdown(content: list[str], *, verbose: bool = False) -> list[str]:
-    """Executes code blocks in a list of Markdown-formatted strings and returns the modified list.
-
-    Parameters
-    ----------
-    content
-        A list of Markdown-formatted strings.
-    verbose
-        If True, print every line that is processed.
-
-    Returns
-    -------
-    list[str]
-        A modified list of Markdown-formatted strings with code block output inserted.
-    """
-    assert isinstance(content, list), "Input must be a list"
+def process_asciidoc(content: list[str], *, verbose: bool = False) -> list[str]:
+    assert isinstance(content, list), "input must be a list"
     state = ProcessingState()
-
     for i, line in enumerate(content):
         if verbose:
             nr = _bold(f"line {i:4d}")
             print(f"{nr}: {line}")
         state.process_line(line, verbose=verbose)
-
     return state.new_lines
 
 
-def update_markdown_file(
+def update_asciidoc_file(
         input_filepath: Path | str,
         output_filepath: Path | str | None = None,
         *,
         verbose: bool = False,
 ) -> None:
-    """Rewrite a Markdown file by executing and updating code blocks."""
     if isinstance(input_filepath, str):  # pragma: no cover
         input_filepath = Path(input_filepath)
     files = [f for f in os.listdir(input_filepath) if os.path.isfile(os.path.join(input_filepath, f))]
@@ -313,11 +297,11 @@ def update_markdown_file(
             with Path(f"{input_filepath}/{file}").open() as f:
                 original_lines = [line.rstrip("\n") for line in f.readlines()]
             if verbose:
-                print(f"Processing input file: {file}")
-            new_lines = process_markdown(original_lines, verbose=verbose)
+                print(f"processing input file: {file}")
+            new_lines = process_asciidoc(original_lines, verbose=verbose)
             updated_content = "\n".join(new_lines).rstrip()
             if verbose:
-                print(f"Writing output to: {out_file}")
+                print(f"writing output to: {out_file}")
             output_filepath = (input_filepath if output_filepath is None else Path(output_filepath))
             with out_file.open("w") as f:
                 f.write(updated_content)
@@ -328,18 +312,18 @@ def update_markdown_file(
 def main() -> None:
     """Parse command line arguments and run the script."""
     parser = argparse.ArgumentParser(
-        description="Automatically update Markdown files with code block output.",
+        description="Automatically update asciidoc files with code block output.",
     )
     parser.add_argument(
         "input",
         type=str,
-        help="Path to the input Markdown file.",
+        help="Path to the input asciidoc file.",
     )
     parser.add_argument(
         "-o",
         "--output",
         type=str,
-        help="Path to the output Markdown file. (default: overwrite input file)",
+        help="Path to the output asciidoc file. (default: overwrite input file)",
         default=None,
     )
     parser.add_argument(
@@ -359,7 +343,7 @@ def main() -> None:
     input_filepath = Path(args.input)
     output_filepath = Path(args.output) if args.output is not None else input_filepath
     print(f"{input_filepath} => {output_filepath}")
-    update_markdown_file(input_filepath, output_filepath, verbose=args.verbose)
+    update_asciidoc_file(input_filepath, output_filepath, verbose=args.verbose)
 
 
 if __name__ == "__main__":

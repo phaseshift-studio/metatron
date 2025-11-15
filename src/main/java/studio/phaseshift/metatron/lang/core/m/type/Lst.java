@@ -31,6 +31,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
+import static studio.phaseshift.metatron.lang.core.m.obj.NoObj.noobj;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MObjs.objs;
@@ -94,7 +95,7 @@ public interface Lst extends Poly, PlusMonoid.O<Lst> {
     @Override
     default <O extends Obj> O at(final Obj key) {
         if (key.isInt())
-            return (O) this.jvm().get(key.<Int>as().intValue().intValue());
+            return (O) ((this.jvm().size() > key.intValue()) ? this.jvm().get(key.<Int>as().intValue().intValue()) : noobj());
         else if (key.isUri()) {
             final String step = key.uriValue().segments().get(0);
             Obj result;

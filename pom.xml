@@ -297,6 +297,7 @@
                             <executable>python</executable>
                             <arguments>
                                 <argument>docs/python/docs-code-parser.py</argument>
+                                <argument>--verbose</argument>
                                 <argument>-o</argument>
                                 <argument>${project.build.directory}/temp</argument>
                                 <argument>${project.basedir}/docs</argument>
@@ -375,6 +376,7 @@
                             <directory>${project.basedir}/docs</directory>
                             <includes>
                                 <include>css/**</include>
+                                <include>javascript/**</include>
                                 <include>highlight/**</include>
                                 <include>images/**</include>
                             </includes>
@@ -389,18 +391,11 @@
                 <version>${asciidoctor.version}</version>
                 <configuration>
                     <sourceDirectory>${project.build.directory}/temp</sourceDirectory>
+                    <sourceDocumentName>index.adoc</sourceDocumentName>
                     <outputDirectory>${project.build.directory}/docs</outputDirectory>
                     <resources>
                         <resource>
                             <directory>${project.build.directory}/temp</directory>
-                            <targetPath>${project.build.directory}/docs</targetPath>
-                            <excludes>
-                                <exclude>**/.txt</exclude>
-                                <exclude>**/.py</exclude>
-                            </excludes>
-                        </resource>
-                        <resource>
-                            <directory>${project.basedir}/docs</directory>
                             <targetPath>${project.build.directory}/docs</targetPath>
                             <excludes>
                                 <exclude>**/.txt</exclude>

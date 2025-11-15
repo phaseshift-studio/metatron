@@ -1,6 +1,5 @@
 /* Asciidoctor default stylesheet | MIT License | https://asciidoctor.org */
 
-@import url(//fonts.googleapis.com/css?family=Noto+Sans);
 @import url(https://cdn.jsdelivr.net/gh/asciidoctor/asciidoctor@2.0/data/stylesheets/asciidoctor-default.css); /* Default asciidoc style framework - important */
 
 /* CUSTOMISATIONS */
@@ -41,31 +40,31 @@
 
 /* Text styles */
 
+html {
+    font-size: 18px;
+    font-family: sans-serif;
+}
+
 body {
-    font-family: ui-sans-serif, system-ui, sans-serif;
     background-color: var(--maincolor);
     color: var(--white);
 }
 
 h1 {
     color: var(--primarycolor) !important;
-    font-family: "Noto Sans", sans-serif;
+    font-family: sans-serif;
 }
 
 h2, h3, h4, h5, h6 {
     color: var(--primarycolor) !important;
-    font-family: "Noto Sans", sans-serif;
+    font-family: sans-serif;
 }
 
 .title {
     color: var(--mred) !important;
-    font-family: "Noto Sans", sans-serif;
+    font-family: sans-serif;
     font-style: normal;
     font-weight: bold
-}
-
-p {
-    font-family: "Noto Sans", sans-serif ! important
 }
 
 #toc.toc2 a:link {
@@ -185,13 +184,13 @@ pre code {
     color: var(--primarycolor);
     margin: 0em !important;
     padding: 0.5em !important;
-    font-size: 120%;
+    /*font-size: 120%*/;
     overflow: hidden !important; /* or else there is a y scrollbar on code blocks ?? */
 }
 
 .title {
     color: var(--linkcoloralternate);
-    font-size: 20px;
+    font-size: 120%;
 }
 
 #header span.email a {
@@ -218,7 +217,7 @@ pre code {
     margin: 0 40px;
     color: #333;
     text-decoration: none;
-    //line-height: 1em;
+    /* line-height: 1em; */
     & svg {
         position: absolute;
         left: 0;
@@ -230,7 +229,7 @@ pre code {
     }
     & path {
         transition: stroke-dashoffset 300ms linear;
-        stroke-width: 2.0;
+        stroke-width: 3.0;
         stroke: darkgreen;
         fill: none;
         stroke-linecap: round;
@@ -351,7 +350,7 @@ pre code {
     color: var(--mblue);
 }
 
-.hljs-mtron-doc-callout {
+.hljs-mtron-doc-callout, .conum {
     display: inline-block;
     color: var(--tertiarycolor);
     background: var(--mmagenta) !important;
@@ -360,12 +359,14 @@ pre code {
     -o-border-radius: 100px;
     border-radius: 100px;
     text-align: center;
-    width: 22px;
-    height: 22px;
-    font-size: 11px;
+    margin-right: 40px;
+    float: right;
+    width: 25px;
+    height: 25px;
+    font-size: 16px;
     font-weight: bold;
-    line-height: 22px;
-    font-family: Arial;
+    line-height: 25px;
+    /*font-family: Arial;*/
 }
 
 .hljs-fos-docs-if-else-then-case-do,

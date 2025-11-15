@@ -33,10 +33,6 @@ Every space has a _pattern_ denoting the subset of the `uri` it maintains. A bar
 -->
 ++++
 
-++++
-<!-- 🐓 -->
-++++
-
 1. `/mnt`: a space for mounting and managing spaces.
 2. `/m`: the core language instruction set of metatron.
 3. `/mach`: the core virtual machine instruction set of metatron.
@@ -57,10 +53,6 @@ noobj
 -->
 ++++
 
-++++
-<!-- 🐓 -->
-++++
-
 a🧱
 image:space-arch.svg[width=800,align=center]
 |===
@@ -77,10 +69,6 @@ where `*(uri)` is the sugar form of the instruction `from(uri)` and is perhaps t
 */mnt/lang/m
 -->
 ++++
-
-++++
-<!-- 🐓 -->
-++++
 ====
 
 ./m/#
@@ -93,9 +81,6 @@ where `*(uri)` is the sugar form of the instruction `from(uri)` and is perhaps t
 -->
 ++++
 
-++++
-<!-- 🐓 -->
-++++
 ====
 
 ****

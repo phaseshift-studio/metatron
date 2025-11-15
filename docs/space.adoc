@@ -14,10 +14,6 @@ from(/usr/neno)                               [-- <3>
 -->
 ++++
 
-++++
-<!-- 🐓 -->
-++++
-
 image:skull-candle.png[width=200,float=right]
 
 <1> A key/value (`kv`) space is created for handling the `/usr/#` subspace and is mounted at `/mnt/space/usr`.
@@ -31,10 +27,6 @@ The instructions `to` and `from` are used extensively. As such, they both have r
 /usr/neno -> [name=>'neno',age=>3]       [-- <2>
 */usr/neno                               [-- <3>
 -->
-++++
-
-++++
-<!-- 🐓 -->
 ++++
 
 == polys in space
@@ -60,10 +52,6 @@ a🧱
 */usr/neno/hobby/0                        [-- <5>
 */usr/neno/hobby/+                        [-- <6>
 -->
-++++
-
-++++
-<!-- 🐓 -->
 ++++
 
 a🧱
@@ -93,11 +81,11 @@ of unneeded data over the wire.
 
 === spatial embeddings
 
-mtron was designed to support the creation and manipulation of _abstract data types_ in a compact, fluid manner so as to
+[metatron] was designed to support the creation and manipulation of _abstract data types_ in a compact, fluid manner so as to
 allow the user to move smoothly between _multiple models_ across different spaces, each espousing a different perspective on
 the data their maintain: e.g., key/value, document, relational, vector, graph, and the various nooks and crannies between.
 
-mtron's URI addressing scheme makes it possible to _embed_ arbitrary data types into a space. This section will explore the following considerations when designing a _multi-model abstract data type_.
+[metatron]'s URI addressing scheme makes it possible to _embed_ arbitrary data types into a space. This section will explore the following considerations when designing a _multi-model abstract data type_.
 
 . **spatial encodings**
 . **schema encodings**
@@ -109,10 +97,6 @@ mtron's URI addressing scheme makes it possible to _embed_ arbitrary data types 
 <!-- 🐖 ./main_runner.out
 1.plus(2)
 -->
-++++
-
-++++
-<!-- 🐓 -->
 ++++
 
 image:nenofhat-bedroom.png[width=300,float=left,role="parchment"] A _matrix_ is an \$n \times m\$ data structure composed of \$n\$ vectors/row, each with \$m\$ elements/columns.
@@ -189,10 +173,6 @@ m/2/3 -> 11
 -->
 ++++
 
-++++
-<!-- 🐓 -->
-++++
-
 a🧱
 
 ++++
@@ -208,11 +188,7 @@ m/2 -> [8,9,10,11]
 -->
 ++++
 
-++++
-<!-- 🐓 -->
-++++
-
-image:newt-spacehelmet-old.png[width=200,float=left]
+image:newt-matrix.png[width=375,float=left]
 
 a🧱
 
@@ -226,12 +202,6 @@ m -> [[0,1,2,3],[4,5,6,7],[8,9,10,11]]
 *m/+/0       [-- <3>
 -->
 ++++
-
-++++
-<!-- 🐓 -->
-++++
-
-image:newt-spacehelmet.png[width=200,float=left]
 
 |===
 

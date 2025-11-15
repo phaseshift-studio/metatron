@@ -104,6 +104,7 @@ where `jvm` is an object of the Java virtual machine, `tid` is a _type_ (class) 
 a🧱
 ++++
 <!-- 🐖
+[HIDDEN] a -> 'abc'
 int               [-- <1>
 int + int         [-- <2>
 int + int{-1}     [-- <3>
@@ -112,10 +113,6 @@ int{2} ⋅ int{3}   [-- <5>
 noobj
 'mtron'
 -->
-++++
-
-++++
-<!-- 🐓 -->
 ++++
 
 a🧱
@@ -137,21 +134,111 @@ a*(b+c) = ab + ac
 
 The introduction to metatron.
 
-```mtron
-1
-1-<[_]
-1-<[_=>_]
-1-<[_=>+2]
-1-<[_=>+2]>>-
-```
+┌ ├ ┐ └ ┘ │ ┤ ─ ⋰ ⋱ ⮝ ⮞ ⮜ ⮟
+
+== programming idioms
+
+=== data types
+
+==== mono types
+
+==== poly types
+
+=== variables
+
+=== conditionals
+
+=== branching
+
+[cols="2,7,7",frame=rows,grid=rows,separator=🧱]
+|===
+a🧱
+
+conditional branching
+
+a🧱
 
 ++++
 <!-- 🐖
-2 + 345
-565
+{1,2}-<|[?>1 => +100, _ => +2]>>
 -->
 ++++
 
+a🧱
+
+[source,mtron]
+----
+       ┌──[?>1]──[+100]───┐
+{1,2}──┤    │             ├──{3,102}
+       └───[_]────[+2]────┘
+----
+
+a🧱
+
+scatter branching
+
+a🧱
+
 ++++
-<!-- 🐓 -->
+<!-- 🐖
+{1,2}-<|[?>1 => +100, _ => +2]>>
+-->
 ++++
+
+a🧱
+
+[source,mtron]
+----
+       ┌──[?>1]──[+100]───┐
+{1,2}──┤    │             ├──{3,102}
+       └───[_]────[+2]────┘
+----
+
+a🧱
+
+scatter branching
+
+a🧱
+
+++++
+<!-- 🐖
+{1,2}-<[?>1 => +100, _ => +2]>>
+-->
+++++
+
+a🧱
+
+[source,mtron]
+----
+       ┌──[?>1]──[+100]───┐
+{1,2}──┤                  ├──{3,102,4}
+       └───[_]────[+2]────┘
+----
+
+
+|===
+
+=== statements
+
+=== pattern matching
+
+==== select
+
+==== where
+
+++++
+<!-- 🐖
+x ->[a=>[b=>[1,2],c=>[3,4],f=>[5]]]
+*x==[_=>[_=>[_,_]]]
+*x==[_=>[_=>==?[_,_]]]
+*x==[_=>[_=>==?[_,?>3]]]
+*x==[_=>[z=>==?[_,?>3]]]
+*x==[z=>[_=>==?[_,?>3]]]
+-->
+++++
+
+=== barriers
+
+=== reflection
+
+
