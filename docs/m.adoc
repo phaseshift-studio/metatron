@@ -1,6 +1,6 @@
 === m instruction set
 
-image:neofhat-reading-by-candle-light-small.png[width=500,float=right,role="parchment"]
+image:neofhat-reading-by-candle-light.png[width=300,float=right,role="parchment"]
 
 The instruction set (`inst_set`) specifies a collection of reusable objects and functions and is what is commonly called 
 a _package_ (i.e. a library, an API, a module, etc.). In [metatron], an `inst_set` is defined as the 4-tuple

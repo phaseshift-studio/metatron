@@ -29,6 +29,7 @@ import java.util.HashSet;
 import java.util.HexFormat;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.BASE_TYPES;
 import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.FROM_TID;
@@ -220,11 +221,12 @@ public class ObjStringSerializer implements ObjSerializer<String> {
                     rec.recValue().values().stream().anyMatch(Obj::isPoly) ||
                             rec.recValue().values().stream().filter(o -> !o.isPoly()).map(Obj::toString).map(String::length).reduce(0, Integer::sum) > (75 - depth);
             sb.append("{{g}}[");
-            if (nested)
+            if (nested && depth > 2)
                 sb.append("\n");
+            AtomicBoolean first = new AtomicBoolean(true);
             rec.recValue().forEach((k, v) -> {
                 if (nested)
-                    sb.append(" ".repeat((depth+1) * 2));
+                    sb.append(" ".repeat(first.getAndSet(false) ? 0 : (depth < 3 ? 4 : (depth+1) * 2)));
                 sb.append(k.isUri() ? ("{{b}}" + k.uriValue()) : write(k)).append("{{g}}=>");
                 if (v.isRec()) {
                     this.generateRec(sb, v.as(), depth + 1);

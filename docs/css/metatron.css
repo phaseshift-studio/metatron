@@ -42,7 +42,7 @@
 /* Text styles */
 
 body {
-    font-family: "Noto Sans", sans-serif;
+    font-family: ui-sans-serif, system-ui, sans-serif;
     background-color: var(--maincolor);
     color: var(--white);
 }
@@ -353,7 +353,7 @@ pre code {
 
 .hljs-mtron-doc-callout {
     display: inline-block;
-    color: var(--sidebarbackground);
+    color: var(--tertiarycolor);
     background: var(--mmagenta) !important;
     -webkit-border-radius: 100px;
     -moz-border-radius: 100px;

@@ -17,7 +17,7 @@ ____
 
 To understand [.metatron] it is necessary to understand the core mtron language and the mechanics of the underlying virtual machine.
 
-## metatron architecture
+## architecture
 
 image:nenofhat-alchemy-laboratory.png[width=500,float=left,role="parchment marker"] The fundamental architecture of [.metatron] is realized as a network of coupled https://en.wikipedia.org/wiki/Ring_(mathematics)[algebraic rings] executing all levels of abstraction -- from the human-readable/writeable programming language, to the compiler that generates a sequence of instructions for the virtual machine to evaluate using a swarm of atomic monadic processors that ultimately read and write data identified by a ring-based id system supported by a heterogeneous set of data stores called __spaces__. Each of these components follows the axioms of an algebraic ring (or some subset algebra such as a monoid or group).
 

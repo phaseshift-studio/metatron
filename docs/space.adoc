@@ -1,10 +1,97 @@
 = space
 
-image:nenofhat-newt-dungeon-small.png[width=500,float=left,role="parchment"]  A _space_ is an `obj` that is responsible storing and processing a specified subset of the `uri` address space.
-Every space has a _pattern_ denoting the subset of the `uri` it maintains.
+image:nenofhat-newt-dungeon-small.png[width=500,float=left,role="parchment"]  A _space_ is an `obj` that is similar to a nested key/value `rec`, but it has other features that allow it to serve as a single point of entry to all data in the metatron. While everything is an `obj`, it's best to understand metatron as a collection of (potentially nested) spaces and the `objs` they contain.
 
+== referencing in space
 
-==== Embedding
+Every space can be read from and written to. However, a space is never accessed directly. Instead, any `from()` or `to()` instruction relies on the node's _router_ to determine how to resolve the `uri` being referenced. For instance:
+
+++++
+<!-- 🐖 ./main_runner.out
+kv::[pattern=>/usr/#]@/mnt/space/usr          [-- <1>
+[name=>'neno',age=>2].to(/usr/neno)           [-- <2>
+from(/usr/neno)                               [-- <3>
+-->
+++++
+
+++++
+<!-- 🐓 -->
+++++
+
+image:skull-candle.png[width=200,float=right]
+
+<1> A key/value (`kv`) space is created for handling the `/usr/#` subspace and is mounted at `/mnt/space/usr`.
+<1> The 2 `rel` `rec` is written to the space responsible for the local uri `/usr/neno`.
+<2> The router resolves `/usr/neno` to the responsible space and returns any `obj` stored at `/usr/neno`.
+
+The instructions `to` and `from` are used extensively. As such, they both have respective _sugar_ forms.
+
+++++
+<!-- 🐖 ./main_runner.out
+/usr/neno -> [name=>'neno',age=>3]       [-- <2>
+*/usr/neno                               [-- <3>
+-->
+++++
+
+++++
+<!-- 🐓 -->
+++++
+
+== polys in space
+
+mtron makes a distinction between `monos` and `polys`. A `mono` type is an type that can't be reduced to another `obj`.
+A `poly` on the hand, is an `obj` composed of other `objs`. There are two `polys` in mtron: `lst` and `rec`. Spaces become
+interesting when storing `polys`. The `/usr/neno` example will be expanded on to demonstrate the interplay between
+spaces and `polys`.
+
+[cols="5,5",frame=none,grid=none,separator=🧱]
+|===
+
+a🧱
+
+++++
+<!-- 🐖 ./main_runner.out
+/usr/neno -> [name=>'neno',               %
+              age=>3,                     %
+              hobby=>[floating,sleeping]] [-- <1>
+*/usr/neno                                [-- <2>
+*/usr/neno/age                            [-- <3>
+*/usr/neno/hobby                          [-- <4>
+*/usr/neno/hobby/0                        [-- <5>
+*/usr/neno/hobby/+                        [-- <6>
+-->
+++++
+
+++++
+<!-- 🐓 -->
+++++
+
+a🧱
+
+++++
+<div>
+<br/><br/><br/><br/><br/>
+</div>
+++++
+
+<1> adding a nested poly (`rec` with a `lst`) to the space.
+<2> retrieving the `rec` in full.
+<3> retrieving only the `age` relation of the `rec`.
+<4> retrieving the entire `hobby` `lst`.
+<5> retrieving only the first `hobby` of the `lst`.
+<6> retrieving all the `uris` of the `hobby` `lst`.
+
+|===
+
+The key feature of a space is that it will resolve the `uri` beyond the `obj` boundary and into the `obj` in order
+to only return the relevant required data. The `uri` is serves as navigational _push-down predicate_ allows a precise
+extraction of data from the space.
+
+Space blurs the boundaries of an `obj`. Encapsulation is but a thin veil when one has a sharp enough knife. It enables users to operate on their 
+encapsulated `obj` forms while at the same time providing the router an efficient means of reducing the marshalling 
+of unneeded data over the wire.
+
+=== spatial embeddings
 
 mtron was designed to support the creation and manipulation of _abstract data types_ in a compact, fluid manner so as to
 allow the user to move smoothly between _multiple models_ across different spaces, each espousing a different perspective on
@@ -16,7 +103,7 @@ mtron's URI addressing scheme makes it possible to _embed_ arbitrary data types 
 . **schema encodings**
 . **language encodings**
 
-===== Spatial Consideration when Embedding
+=== spatial consideration when embedding
 
 ++++
 <!-- 🐖 ./main_runner.out
@@ -28,11 +115,11 @@ mtron's URI addressing scheme makes it possible to _embed_ arbitrary data types 
 <!-- 🐓 -->
 ++++
 
-A _matrix_ is an \$n \times m\$ data structure composed of \$n\$ vectors/row, each with \$m\$ elements/columns.
+image:nenofhat-bedroom.png[width=300,float=left,role="parchment"] A _matrix_ is an \$n \times m\$ data structure composed of \$n\$ vectors/row, each with \$m\$ elements/columns.
 A relational database _table_ is an example of a matrix, where the entries typically span numeric and non-numeric data types.
 Three general approaches to embedding a matrix or table into a space are presented below, where each makes different space/time tradeoffs.
 
-[cols="5,5,5",frame=none,grid=none,subs="+macros",separator=🧱]
+[cols="5,5,8",frame=none,grid=none,subs="+macros",separator=🧱]
 |===
 
 ^a🧱
@@ -125,6 +212,8 @@ m/2 -> [8,9,10,11]
 <!-- 🐓 -->
 ++++
 
+image:newt-spacehelmet-old.png[width=200,float=left]
+
 a🧱
 
 ++++
@@ -141,6 +230,8 @@ m -> [[0,1,2,3],[4,5,6,7],[8,9,10,11]]
 ++++
 <!-- 🐓 -->
 ++++
+
+image:newt-spacehelmet.png[width=200,float=left]
 
 |===
 

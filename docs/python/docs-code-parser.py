@@ -181,8 +181,8 @@ class ProcessingState:
                 self.code.append(line)
         ############################################
         if self.section == "👨‍🌾" or self.section == "🐖":
-            if -1 != line.find("[fhatos]"):
-                self.new_lines.append(line.replace("[fhatos]", self.random_fhat()))
+            if -1 != line.find("[mtron]"):
+                self.new_lines.append(line.replace("[mtron]", self.random_fhat()))
             else:
                 self.new_lines.append(line)
         elif self.section == "🐓":
@@ -250,10 +250,17 @@ class ProcessingState:
         self.output.extend(to_header)
         result = []
         to_execute.pop(0)
-        print(f"code: {to_execute}")
+        final_code = []
+        current = ""
         for line in to_execute:
-            result.append(f"mtron> {line}")
-            result.append(f"{mytron.exec(line)}")
+            current = current + line
+            if not line.endswith("%"):
+                final_code.append(current)
+                current = ""
+        print(f"code: {final_code}")
+        for line in final_code:
+            result.append(f"mtron> {'\n       '.join(line.split("%"))}") # the spaces are to shift right due to mtron> 
+            result.append(f"{mytron.exec(line.replace("%",""))}")
         # for line in result:
         #    if -1 == line.find("[HIDDEN]"):
         #        print(line)
