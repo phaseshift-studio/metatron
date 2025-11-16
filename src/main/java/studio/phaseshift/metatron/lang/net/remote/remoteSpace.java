@@ -28,6 +28,8 @@ import studio.phaseshift.metatron.lang.sys.router.impl.MClient;
 import studio.phaseshift.metatron.lang.sys.router.impl.MConnection;
 import studio.phaseshift.metatron.lang.core.m.inst.mInstSet;
 
+import studio.phaseshift.metatron.lang.util.serial.ObjByteBufferSerializer;
+import studio.phaseshift.metatron.lang.util.serial.ObjStringSerializer;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
 import studio.phaseshift.metatron.util.MTronException;
@@ -57,13 +59,13 @@ public class remoteSpace extends MSpace<MConnection> {
     public static final Type REMOTE_TYPE = T(REMOTE_TID, null, instC(mInstSet.INST_TID.dom(ALL.maybe()).rng(REMOTE_TID), lst(T(REC_TID, isa_(rec(uri(PATTERN), T(URI_TID), uri(HOST), T(URI_TID))))), (lhs, inst) -> {
         final fURI pattern = inst.arg(0).<Rec>as().at(PATTERN).uriValue();
         final fURI host = inst.arg(0).<Rec>as().at(HOST).uriValue();
-        final Space remote = new remoteSpace(host,pattern,inst.arg(0).vid());
+        final Space remote = new remoteSpace(host, pattern, inst.arg(0).vid());
         Router.global().addSpace(remote);
         return remote;
     }));
-    
+
     public remoteSpace(final fURI authority, final fURI pattern, final fURI vid) {
-        super(MClient.of(authority), Map.of(uri(PATTERN), uri(pattern)), pattern, REMOTE_TID, vid);
+        super(MClient.of(authority, new ObjByteBufferSerializer()), Map.of(uri(PATTERN), uri(pattern)), pattern, REMOTE_TID, vid);
         LOG = Graphitty.log(this);
     }
 

@@ -16,15 +16,17 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.ui;
+package studio.phaseshift.metatron.lang.util.serial;
 
 import org.petitparser.context.Result;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.core.m.parser.mParser;
 import studio.phaseshift.metatron.lang.core.m.type.*;
 
+import studio.phaseshift.metatron.ui.Palette;
 import studio.phaseshift.metatron.util.MTronException;
 
+import java.nio.ByteBuffer;
 import java.util.HashSet;
 import java.util.HexFormat;
 import java.util.Map;
@@ -34,14 +36,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.BASE_TYPES;
 import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.FROM_TID;
 
-public class ObjStringSerializer implements ObjSerializer<String> {
+public record ObjStringSerializer(Builder b) implements ObjSerializer<String> {
 
     public static Set<fURI> HIDE_TIDS = new HashSet<>(BASE_TYPES);
-    private final Builder b;
-
-    private ObjStringSerializer(final Builder builder) {
-        this.b = builder;
-    }
 
     public static Builder build() {
         return new Builder();
@@ -51,6 +48,21 @@ public class ObjStringSerializer implements ObjSerializer<String> {
         StringBuilder sb = new StringBuilder();
         return prettyPrintCode(sb, code, 0, 8).toString();
 
+    }
+
+    @Override
+    public fURI tid() {
+        return OBJ_SERIAL_TID.extend("string");
+    }
+    
+    @Override
+    public ByteBuffer writeBytes(final Obj obj) {
+        return ByteBuffer.wrap(this.write(obj).getBytes());
+    }
+
+    @Override
+    public Obj readBytes(final ByteBuffer bytes) {
+        return this.read(new String(bytes.array()));
     }
 
     public static StringBuilder prettyPrintCode(final StringBuilder sb, final Obj call, final int depth, final int leftMargin) {
@@ -226,7 +238,7 @@ public class ObjStringSerializer implements ObjSerializer<String> {
             AtomicBoolean first = new AtomicBoolean(true);
             rec.recValue().forEach((k, v) -> {
                 if (nested)
-                    sb.append(" ".repeat(false && first.getAndSet(false) ? 0 : (depth*2)+1));
+                    sb.append(" ".repeat(false && first.getAndSet(false) ? 0 : (depth * 2) + 1));
                 sb.append(k.isUri() ? ("{{b}}" + k.uriValue()) : write(k)).append("{{g}}=>");
                 if (v.isRec()) {
                     this.generateRec(sb, v.as(), depth + 1);

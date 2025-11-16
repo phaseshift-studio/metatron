@@ -1,6 +1,6 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
- * Copyright (C) 2025- PhaseShift Studio, LLC 
+ * Copyright (C) 2025- PhaseShift Studio, LLC
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -20,6 +20,7 @@ package studio.phaseshift.metatron.lang.sys.router.impl;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.core.m.type.Obj;
+import studio.phaseshift.metatron.lang.util.serial.ObjSerializer;
 
 import java.io.Closeable;
 
@@ -28,6 +29,8 @@ import java.io.Closeable;
  */
 public interface MConnection extends Closeable {
 
+    <T> ObjSerializer<T> getSerializer();
+
     void sendObj(final Obj obj);
 
     <O extends Obj> FutureObj<O> sendRecvObj(final Obj obj);
@@ -35,4 +38,6 @@ public interface MConnection extends Closeable {
     void close();
 
     fURI remoteHost();
+
+
 }

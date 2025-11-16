@@ -31,15 +31,13 @@ import studio.phaseshift.metatron.lang.sys.router.Router;
 import studio.phaseshift.metatron.lang.core.m.type.Obj;
 import studio.phaseshift.metatron.lang.core.m.type.impl.MObjs;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
-import studio.phaseshift.metatron.ui.ObjSerializer;
+import studio.phaseshift.metatron.lang.util.serial.ObjSerializer;
 import studio.phaseshift.metatron.util.MTronException;
 
-import java.io.IOException;
 import java.net.URI;
 import java.nio.ByteBuffer;
 import java.util.LinkedList;
 import java.util.Queue;
-import java.util.concurrent.TimeUnit;
 
 import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MObjs.objs;
@@ -47,31 +45,33 @@ import static studio.phaseshift.metatron.lang.core.m.type.impl.MObjs.objs;
 public class MClient extends WebSocketClient implements MConnection {
 
     protected final GraphittyLogger LOG;
-    protected final ObjSerializer<ByteBuffer> serializer;
+    protected final ObjSerializer<?> serializer;
     protected final Queue<FutureObj<Obj>> futures = new LinkedList<>();
     protected final fURI remoteHost;
 
-    public MClient(final fURI remoteHost, final Draft draft) {
+    public MClient(final fURI remoteHost, final ObjSerializer<?> serializer, final Draft draft) {
         super(URI.create(remoteHost.toString()), draft);
         LOG = Router.global().logger();
-        this.serializer = new ObjByteBufferSerializer();
+        this.serializer = serializer;
         this.remoteHost = remoteHost;
         LOG.info("connecting to {{b}}%s{{/b}}", this.remoteHost);
         Router.writeToSpace(Router.global().vid().extend("cluster"), new MObjs(this.remoteHost.toUri()));
     }
 
-    public MClient(final fURI remoteHost) {
-        this(remoteHost, new Draft_6455());
+    public MClient(final fURI remoteHost, final ObjSerializer<?> serializer) {
+        this(remoteHost, serializer, new Draft_6455());
     }
 
-    public static MConnection of(final fURI clientAuthority) {
+    public static MConnection of(final fURI clientAuthority, final ObjSerializer<?> defaultSerializer) {
         return Router.global()
                 .server()
-                .cluster(clientAuthority)
+                .nodes()
+                .values()
+                .stream()
                 .peek(c -> Router.global().logger().debug("reusing existing connection to {{b}}%s{{/b}}", c.remoteHost()))
                 .findAny()
                 .orElseGet(() -> {
-                    final MClient client = new MClient(clientAuthority);
+                    final MClient client = new MClient(clientAuthority, defaultSerializer);
                     client.start();
                     return client;
                 });
@@ -106,15 +106,14 @@ public class MClient extends WebSocketClient implements MConnection {
     @Override
     public void onMessage(final String message) {
         LOG.trace("received string [length:%d]", message.length());
-        final Obj obj = this.serializer.read(ByteBuffer.wrap(message.getBytes()));
-        this.onObj(obj);
+        this.onMessage(ByteBuffer.wrap(message.getBytes()));
 
     }
 
     @Override
     public void onMessage(final ByteBuffer message) {
         LOG.trace("received byte buffer [length:%d]", message.array().length);
-        final Obj obj = this.serializer.read(message);
+        final Obj obj = this.serializer.readBytes(message);
         this.onObj(obj);
 
     }
@@ -137,11 +136,16 @@ public class MClient extends WebSocketClient implements MConnection {
         }
     }
 
+    @Override
+    public ObjSerializer<?> getSerializer() {
+        return this.serializer;
+    }
+
     /// ////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
     public void sendObj(final Obj obj) {
-        final ByteBuffer buffer = this.serializer.write(obj);
+        final ByteBuffer buffer = this.serializer.writeBytes(obj);
         this.send(buffer);
     }
 

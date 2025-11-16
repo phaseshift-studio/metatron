@@ -23,12 +23,16 @@ import org.java_websocket.handshake.ClientHandshake;
 import org.java_websocket.server.WebSocketServer;
 import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.lang.core.m.parser.mParser;
+import studio.phaseshift.metatron.lang.sys.router.Cluster;
 import studio.phaseshift.metatron.lang.sys.router.Router;
 import studio.phaseshift.metatron.lang.core.m.type.Fail;
 import studio.phaseshift.metatron.lang.core.m.type.Obj;
+import studio.phaseshift.metatron.lang.util.serial.ObjByteBufferSerializer;
+import studio.phaseshift.metatron.lang.util.serial.mParserObjSerializer;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
-import studio.phaseshift.metatron.ui.ObjSerializer;
+import studio.phaseshift.metatron.lang.util.serial.ObjSerializer;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.io.Closeable;
@@ -38,7 +42,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MObjs.objs;
@@ -46,13 +49,13 @@ import static studio.phaseshift.metatron.lang.sys.router.impl.MRouter.ROUTER_TID
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
 
-public class MServer extends WebSocketServer implements Closeable, Obj {
+public class MServer extends WebSocketServer implements Cluster, Closeable, Obj {
 
     public static final fURI MSERVER_TID = ROUTER_TID.extend("server");
     public static final String CLUSTER = "cluster";
 
     protected final fURI host;
-    protected final ObjSerializer<ByteBuffer> serializer;
+    protected final ObjSerializer<?> serializer;
     protected final Map<fURI, MConnection> cluster = new HashMap<>();
     protected GraphittyLogger LOG;
     protected Thread serverThread;
@@ -62,9 +65,10 @@ public class MServer extends WebSocketServer implements Closeable, Obj {
         super(new InetSocketAddress(host.host(), host.port()));
         this.host = host;
         LOG = Graphitty.log(this);
-        this.serializer = new ObjByteBufferSerializer();
+        this.serializer = MRouter.SERIALIZERS.get(f("/sys/serial/mparser"));
     }
 
+    @Override
     public fURI host() {
         return this.host;
     }
@@ -86,7 +90,7 @@ public class MServer extends WebSocketServer implements Closeable, Obj {
             LOG.trace("server started: %s", this.getAddress());
             BootLoader.GLOBAL.at(CLUSTER).elements().filter(o -> !o.isNoObj()).forEach(n -> {
                 try {
-                    final MConnection client = MClient.of(n.uriValue());
+                    final MConnection client = MClient.of(n.uriValue(), this.serializer);
                     this.cluster.put(n.uriValue(), client);
                 } catch (final Exception e) {
                     LOG.error("unable to connect to cluster node {{b}}%s{{/b}}", n.uriValue());
@@ -99,10 +103,6 @@ public class MServer extends WebSocketServer implements Closeable, Obj {
             // do nothing
         }
 
-    }
-
-    public Stream<MConnection> cluster(final fURI select) {
-        return this.cluster.entrySet().stream().filter(kv -> select.matches(kv.getKey())).map(Map.Entry::getValue);
     }
 
     @Override
@@ -136,24 +136,20 @@ public class MServer extends WebSocketServer implements Closeable, Obj {
     @Override
     public void onMessage(final WebSocket conn, final String message) {
         LOG.trace("received from %s string [length:%d]", conn.getAttachment(), message.length());
-        final Obj obj = this.serializer.read(ByteBuffer.wrap(message.getBytes()));
-        this.onObj(conn, obj);
+        this.onMessage(conn, ByteBuffer.wrap(message.getBytes()));
     }
 
     @Override
     public void onMessage(final WebSocket conn, final ByteBuffer message) {
         LOG.trace("received from %s byte buffer [length:%d]", conn.getAttachment(), message.array().length);
-        final Obj obj = this.serializer.read(message);
+        final Obj obj = mParser.parse(new String(message.array()));// this.serializer.read(message);
         this.onObj(conn, obj);
     }
 
-    public void sendObj(final WebSocket conn, final Obj obj) {
-        conn.send(this.serializer.write(obj));
-    }
 
     public void onObj(final WebSocket conn, final Obj obj) {
         try {
-            LOG.debug("processing %s for {{b}}%s{{/b}}", obj, conn.getAttachment());
+            LOG.trace("processing %s for {{b}}%s{{/b}}", obj, conn.getAttachment());
             Obj result = obj.apply();
             result = objs(result.stream().map(x -> x.vid() == null ? x : x.vid(this.host().extend(x.vid()))));
             // final String tag = obj.vid() != null ? obj.vid().queryValue(f("tag"), String.class, null) : null;
@@ -162,11 +158,12 @@ public class MServer extends WebSocketServer implements Closeable, Obj {
             //    result = result.vid(rvid);
             //     LOG.info("obj tagged: %s", result);
             // }
-            this.sendObj(conn, result);
+            conn.send(this.serializer.writeBytes(result));
+            //this.sendObj(conn, result);
             if (result.isFail())
                 this.onError(conn, result.<Fail>as().jvmAs());
         } catch (final Exception e) {
-            this.sendObj(conn, fail(e));
+            conn.send(this.serializer.writeBytes(fail(e)));
             this.onError(conn, e);
         }
     }
@@ -206,7 +203,12 @@ public class MServer extends WebSocketServer implements Closeable, Obj {
         return null;
     }
 
-    public class MServerClient implements MConnection {
+    @Override
+    public Map<fURI, MConnection> nodes() {
+        return this.cluster;
+    }
+
+   /* public class MServerClient implements MConnection {
         private final WebSocket ws;
 
         public MServerClient(final WebSocket ws) {
@@ -235,5 +237,5 @@ public class MServer extends WebSocketServer implements Closeable, Obj {
         public fURI remoteHost() {
             return this.ws.getAttachment();
         }
-    }
+    }*/
 }

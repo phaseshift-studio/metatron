@@ -1,6 +1,6 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
- * Copyright (C) 2025- PhaseShift Studio, LLC 
+ * Copyright (C) 2025- PhaseShift Studio, LLC
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -16,55 +16,49 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.lang.sys.router.impl;
+package studio.phaseshift.metatron.lang.util.serial;
 
+import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.lang.core.m.obj.NoObj;
 import studio.phaseshift.metatron.lang.core.m.type.*;
 
 
 import studio.phaseshift.metatron.lang.core.m.parser.mParser;
-import studio.phaseshift.metatron.ui.ObjSerializer;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public class ObjByteBufferSerializer implements ObjSerializer<ByteBuffer> {
+
+    private static final ByteBuffer NOOBJ_BYTES = ByteBuffer.wrap("noobj".getBytes());
+
     @Override
-    public ByteBuffer write(final Obj obj) throws MTronException {
-        if (obj.isNoObj())
-            return ByteBuffer.wrap("noobj".getBytes());
-        if (obj.isBool())
-            return this.writeBool(obj.as());
-        if (obj.isInt())
-            return this.writeInt(obj.as());
-        if (obj.isReal())
-            return this.writeReal(obj.as());
-        if (obj.isStr())
-            return this.writeStr(obj.as());
-        if (obj.isUri())
-            return this.writeUri(obj.as());
-        if (obj.isLst())
-            return this.writeLst(obj.as());
-        if (obj.isRec())
-            return this.writeRec(obj.as());
-        if (obj.isRel())
-            return this.writeRel(obj.as());
-        if (obj.isInst())
-            return this.writeInst(obj.as());
-        if (obj.isCode())
-            return this.writeCode(obj.as());
-        if (obj.isFail())
-            return this.writeFail(obj.as());
-        if (obj.isObjs())
-            return this.writeObjs(obj.as());
-        throw MTronException.of("unknown obj type: ", obj);
+    public fURI tid() {
+        return OBJ_SERIAL_TID.extend("bytes");
+    }
+
+    @Override
+    public ByteBuffer writeBytes(final Obj obj) {
+        return this.write(obj);
+    }
+
+    @Override
+    public Obj readBytes(final ByteBuffer bytes) {
+        return this.read(bytes);
     }
 
     private String handleIds(final Obj obj, final String objString) {
         return (obj.tid() + "::" + objString + ((obj.vid() == null) ? "" : ("@<" + obj.vid() + ">"))).trim();
+    }
+
+    @Override
+    public ByteBuffer writeNoObj(final NoObj noobj) {
+        return NOOBJ_BYTES;
     }
 
     @Override

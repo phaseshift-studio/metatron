@@ -16,20 +16,67 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.ui;
+package studio.phaseshift.metatron.lang.util.serial;
 
+import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.lang.core.m.obj.NoObj;
 import studio.phaseshift.metatron.lang.core.m.type.*;
 
 
 import studio.phaseshift.metatron.util.MTronException;
 
+import java.nio.ByteBuffer;
+
+import static studio.phaseshift.metatron.furi.fURI.f;
+
 public interface ObjSerializer<T> {
 
-    T write(final Obj obj) throws MTronException;
+    public static final fURI OBJ_SERIAL_TID = f("/sys/serial");
+    
+    ByteBuffer writeBytes(final Obj obj) throws MTronException;
+
+    Obj readBytes(final ByteBuffer bytes) throws MTronException;
+
+    fURI tid();
+
+    default T write(final Obj obj) throws MTronException {
+        if (obj instanceof NoObj)
+            return this.writeNoObj(obj.as());
+        else if (obj instanceof Fail)
+            return this.writeFail(obj.as());
+        else if (obj instanceof Bool)
+            return this.writeBool(obj.as());
+        else if (obj instanceof Int)
+            return this.writeInt(obj.as());
+        else if (obj instanceof Real)
+            return this.writeReal(obj.as());
+        else if (obj instanceof Str)
+            return this.writeStr(obj.as());
+        else if (obj instanceof Uri)
+            return this.writeUri(obj.as());
+        else if (obj instanceof Rel)
+            return this.writeRel(obj.as());
+        else if (obj instanceof Lst)
+            return this.writeLst(obj.as());
+        else if (obj instanceof Rec)
+            return this.writeRec(obj.as());
+        else if (obj instanceof Inst)
+            return this.writeInst(obj.as());
+        else if (obj instanceof Code)
+            return this.writeCode(obj.as());
+        else if (obj instanceof Objs)
+            return this.writeObjs(obj.as());
+        else
+            throw MTronException.of("unknown obj class: %s", obj.getClass());
+    }
 
     Obj read(final T data) throws MTronException;
 
     /// //////////////////////////////
+
+    default T writeNoObj(final NoObj n) {
+        return this.write(n);
+    }
 
     default T writeFail(final Fail f) {
         return this.write(f);

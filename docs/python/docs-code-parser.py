@@ -49,9 +49,6 @@ else:  # pragma: no cover
     __version__ = pkg_resources.get_distribution("markdown-code-runner").version
 
 DEBUG: bool = os.environ.get("DEBUG", "0") == "1"
-mytron = Mytron()
-print(mytron)
-
 
 def remove_html_comment(commented_text: str) -> str:
     commented_text = commented_text.removesuffix(" -->")
@@ -124,6 +121,7 @@ def _bold(text: str) -> str:
 class ProcessingState:
     """State of the processing of an asciidoc file."""
 
+    mtron: mytron = Mytron()
     section: Literal[
         "🐖",
         "👨‍🌾",
@@ -262,9 +260,9 @@ class ProcessingState:
         for line in final_code:
             if -1 == line.find("[HIDDEN]"):
                 result.append(f"mtron> {'\n       '.join(line.split("%"))}")  # the spaces are to shift right due to mtron> 
-                result.append(f"{mytron.exec(line.replace("%", ""))}")
+                result.append(f"{self.mtron.exec(line.replace("%", ""))}")
             else:
-                mytron.exec(line.replace("%", "").replace("[HIDDEN]",""))
+                self.mtron.exec(line.replace("%", "").replace("[HIDDEN]",""))
         self.output.extend(result)
         print(self.output)
         self.code = []
@@ -279,6 +277,7 @@ def process_asciidoc(content: list[str], *, verbose: bool = False) -> list[str]:
             nr = _bold(f"line {i:4d}")
             print(f"{nr}: {line}")
         state.process_line(line, verbose=verbose)
+    state.mtron.close()
     return state.new_lines
 
 

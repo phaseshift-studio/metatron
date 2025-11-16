@@ -33,7 +33,7 @@ public class InstParseTest extends MetatronTest {
     @CsvSource(value = {
             "|(/usr/abc?int<=int(){ map(6) }).to(/usr/abc)                                               % 2./usr/abc()                   % 6",
             "|(/usr/abc?int<=int(){ plus(_) }).to(/usr/abc)                                              % 2./usr/abc()                   % 4",
-            "|(/usr/abc?int<=int(a=>int::T){ mult(*a) }).to(/usr/abc)                                  % 2./usr/abc(a=>4)               % 8",
+            "/usr/abc -> |(/usr/abc?int<=int(a=>int::T){ mult(*a) })                                  % 2./usr/abc(a=>4)               % 8",
             "|(/usr/abc?int<=int(a=>int::T){ mult(*a) }).to(/usr/abc)                                  % 2./usr/abc(a=>/usr/abc(4))     % 16",
            // "|(/usr/abc?int<=int(a=>isa(int::T)){ mult(*a) }).to(/usr/abc)                             % 2./usr/abc(a=>4)               % 8",
             "|(/usr/abc?int<=int(a=>else(10)){ mult(*a) }).to(/usr/abc)                                  % 2./usr/abc()                   % 20",

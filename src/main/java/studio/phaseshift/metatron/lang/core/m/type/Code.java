@@ -31,7 +31,7 @@ import java.util.function.Supplier;
 
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MType.T;
-import static studio.phaseshift.metatron.ui.ObjStringSerializer.prettyPrintCode;
+import static studio.phaseshift.metatron.lang.util.serial.ObjStringSerializer.prettyPrintCode;
 
 public interface Code extends Call {
 

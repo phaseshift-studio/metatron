@@ -20,14 +20,23 @@ package studio.phaseshift.metatron.lang.net.web;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.core.m.parser.mParser;
+import studio.phaseshift.metatron.lang.core.m.type.Fail;
+import studio.phaseshift.metatron.lang.core.m.type.Inst;
+import studio.phaseshift.metatron.lang.core.m.type.Obj;
 import studio.phaseshift.metatron.lang.core.m.type.Type;
 import studio.phaseshift.metatron.lang.core.m.type.impl.MInstSet;
+import studio.phaseshift.metatron.ui.Graphitty;
 
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.furi.fURI.f;
+import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.STR_TID;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MFail.fail;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MInst.instC;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MType.T;
 
 /*
@@ -56,5 +65,22 @@ public class webInstSet extends MInstSet {
                 webSpace.WEB_TYPE,
                 T(PAGE_TID, mParser.parse("?[html=>?[head=>_,body=>_]]")),
                 T(CSS_TID)).collect(Collectors.toSet());
+    }
+
+    @Override
+    public Set<Inst> insts() {
+        return Set.of(instC(INST_TID.extend("doc").dom(STR_TID).rng(STR_TID), lst(), (lhs, inst) -> {
+            LOG.info("processing doc request: %s", lhs);
+            final String source = lhs.strValue();
+            final Obj eval = mParser.eval(source);
+            String result = eval.isObjs() ?
+                    eval.elements()
+                            .map(Obj::toString)
+                            .map(Graphitty::strip)
+                            .reduce((a, b) -> a + "%%%" + b)
+                            .orElse("") :
+                    Graphitty.strip(eval.toString());
+            return str(result);
+        }));
     }
 }

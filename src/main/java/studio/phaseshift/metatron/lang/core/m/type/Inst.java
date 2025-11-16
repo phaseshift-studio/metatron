@@ -193,7 +193,7 @@ public interface Inst extends Call {
                     .stream()
                     .map(Obj::<Inst>as)
                     //.peek(i -> LOG.warn("%s ==?==> %s [%s]", this, i, this.args()))
-                    .filter(i -> (i.args().isEmpty() && this.arg(0).isNoObj()) || i.args().isRec() || i.args().isRec() || i.args().count() == this.args().count())
+                    .filter(i -> (i.args().isEmpty() && this.arg(0).isNoObj()) || i.args().isRec() || i.args().count() == this.args().count())
                     .map(i -> this.hasDom() ? i.dom(this.dom()) : i)
                     .map(i -> this.hasRng() ? i.rng(this.rng()) : i)
                     .map(i -> Helpers.bindGenerics(lhs, i, this))
@@ -244,7 +244,7 @@ public interface Inst extends Call {
     default Obj apply(final Obj lhs) {
         Obj clhs = lhs;
         Inst cinst = this.args().isEmpty() ? this.args(lst(noobj())).resolve(clhs) : this.resolve(clhs); // TODO: this isn't a general solution (multi slotted args won't work).
-        Obj rhs = noobj();
+        Obj rhs;
         boolean modulateC = false;
         if (BootLoader.TYPE_CHECK && !lhs.isFail() && !clhs.matches(cinst.dom()) && lhs.unique()) {
             if (clhs.uniqueC().isOne() && !clhs.c().isOne()) { // && cinst.dom().c().within(cInt.SOME())) {

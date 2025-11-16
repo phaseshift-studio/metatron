@@ -30,6 +30,7 @@ import studio.phaseshift.metatron.lang.Space;
 import studio.phaseshift.metatron.lang.sys.sysInstSet;
 import studio.phaseshift.metatron.lang.core.m.type.Obj;
 import studio.phaseshift.metatron.lang.MSpace;
+import studio.phaseshift.metatron.lang.util.serial.Serializers;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
 import studio.phaseshift.metatron.util.MTronException;
@@ -47,6 +48,7 @@ import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
 
 public class MRouter extends MSpace<MServer> implements Router {
 
+    public static final Serializers SERIALIZERS = new Serializers();
     public static final Uri PRIMARY = uri("primary");
     public static final fURI ROUTER_TID = sysInstSet.MSYS_TID.extend("router");
     private static final Set<fURI> READ_AS_NOOBJ = Set.of(fURI.ALL.maybeSome(), fURI.ALL.maybe(), fURI.ALL);
@@ -63,6 +65,7 @@ public class MRouter extends MSpace<MServer> implements Router {
                 sysInstSet.MSYS_TID.extend("router"),
                 vid);
         LOG.info("local router {{b}}%s{{/b}}", this);
+        LOG.info("available serializers: %s", SERIALIZERS.getSerializers().jvm().keySet());
     }
 
 

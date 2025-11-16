@@ -34,7 +34,7 @@ import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.MTRON_TID;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MType.T;
-import static studio.phaseshift.metatron.ui.ObjStringSerializer.prettyPrintCode;
+import static studio.phaseshift.metatron.lang.util.serial.ObjStringSerializer.prettyPrintCode;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)

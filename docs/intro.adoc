@@ -146,6 +146,78 @@ The introduction to metatron.
 
 === variables
 
+[cols="1,8,4",frame=rows,grid=rows,separator=🧱]
+|===
+
+a🧱
+
+frame stack
+
+a🧱
+
+++++
+<!-- 🐖
+arg -> 23
+func -> |func?int<=str(arg=>?str::T){ _.-<''.is(eq(*arg)).count() }
+{'z','aa','abc'}.func(arg=>'a')
+*arg
+-->
+++++
+
+a🧱
+...
+
+a🧱
+
+thread cache
+
+a🧱
+
+++++
+<!-- 🐖
+a -> 0
+b -> 0
+{1,2,3}.to(a).plus(5).mult(*a).to(b)
+*a
+*b
+-->
+++++
+
+a🧱
+...
+
+a🧱
+
+local
+
+a🧱
+
+++++
+<!-- 🐖
+{1,2}-<|[?>1 => +100, _ => +2]>>
+-->
+++++
+
+a🧱
+...
+
+a🧱
+
+distributed
+
+a🧱
+
+++++
+<!-- 🐖
+{1,2}-<|[?>1 => +100, _ => +2]>>
+-->
+++++
+
+a🧱
+...
+
+|===
+
 === conditionals
 
 === branching

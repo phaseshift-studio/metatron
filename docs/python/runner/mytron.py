@@ -29,25 +29,26 @@ async def submit(ws, code):
 
 
 class Mytron:
-    def __init__(self, host: str = "ws://127.0.0.1:8885"):
+    def __init__(self, host: str = "ws://127.0.0.1:8999"):
         self.host = host
         logger.info(f"connecting to {self.host}")
         self.ws = websockets.connect(self.host)
         logger.info(f"connected to {self.host}")
 
     def exec(self, code: str) -> list:
-        new_code = f"start(\"{code}\").to(/web/docs/d)"
-        print(f"send: {code}")
-        future = asyncio.get_event_loop().run_until_complete(submit(self.ws, f"\"{code}\""))
+        doc_call: str = f"\"{code}\"./web/inst/doc()";
+        print(f"send: {doc_call}")
+        future = asyncio.get_event_loop().run_until_complete(submit(self.ws, f"{doc_call}"))
         result = str(future, 'utf-8').strip()
         result = result.removeprefix("/m/str::")
         result = result[1:-1]
         print(f"recv: {result}")
         result2 = ""
         for a in str(result).split(sep="%%%"):
+            a = a.strip()
             if a != "noobj" and a != "":
                 result2 = result2 + f"==>{a}\n"
         return result2[0:-1]
 
-# mytron = Mytron()
-# mytron.exec("1")
+    def close(self):
+        logger.info(f"closing websocket connection to {self.host}")
