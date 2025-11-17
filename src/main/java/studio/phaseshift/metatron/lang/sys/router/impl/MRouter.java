@@ -197,6 +197,11 @@ public class MRouter extends MSpace<MServer> implements Router {
             }).reduce(NoObj.single(), Obj::append);
         } else {*/
         final fURI local = vid;//.authority(null).scheme(null);
+       if(local.matches(f("+/#"))) {
+           final Obj stack = Router.stack().read(local.basePath());
+           if (!stack.isNoObj())
+               return stack;
+       }
         final Space space = this.getSpace(local);
         //if (null != space.vid() && !space.vid().segments().isEmpty())
         //    LOG.trace("reading {{b}}%s{{/b}} from {{b}}%s{{/b}}", vid, space.vid());

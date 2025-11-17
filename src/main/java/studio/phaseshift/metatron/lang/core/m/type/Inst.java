@@ -265,7 +265,7 @@ public interface Inst extends Call {
                     rhs = Objs.trySingleton(cinst.f().apply(clhs, cinst));
                     Graphitty.log(cinst).trace("%s ({{m}}lhs{{/m}}) => %s ({{m}}inst{{/m}}) => %s ({{m}}rhs{{/m}}) evaluated {{g}}successfully{{/g}}", clhs, cinst, rhs);
                 } catch (final Exception e) {
-                    rhs = mexcept("apply failure: %s {{r}}=>{{X}} %s", clhs, cinst).cause(e).asFail();
+                    rhs = mexcept("apply failure: %s {{r}}=>{{X}} %s [stack:%s]", clhs, cinst,Router.stack().sjvm()).cause(e).asFail();
                     //e.printStackTrace();
                 } finally {
                     Router.stack().pop();

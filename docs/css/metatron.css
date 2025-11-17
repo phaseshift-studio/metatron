@@ -50,6 +50,10 @@ body {
     color: var(--white);
 }
 
+strong {
+    color: var(--myellow);
+}
+
 h1 {
     color: var(--primarycolor) !important;
     font-family: sans-serif;
@@ -90,6 +94,10 @@ code {
 th {
     background-color: var(--maincolor);
     color: var(--white) !important;
+}
+
+.td-text {
+    background-color: var(--maincolor) !important;
 }
 
 td {

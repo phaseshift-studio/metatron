@@ -64,7 +64,7 @@ public class DocQ extends BaseQ {
         this.onRead = new DocQ.OnRead();
         this.onWrite = new DocQ.OnWrite();
         super.put(ON_READ, this.onRead);
-        super.put(ON_WRITE, this.onRead);
+        super.put(ON_WRITE, this.onWrite);
     }
 
     public static class Instiffy {
@@ -163,6 +163,14 @@ public class DocQ extends BaseQ {
 
         public static Doc empty(final Inst inst) {
             return new Doc(Map.of(uri(INST_TID.name()), inst), DOC_TID, fURI.NULL);
+        }
+
+        public Poly args() {
+            return this.at(ARGS);
+        }
+
+        public String description() {
+            return this.at(DESC).isNoObj() ? null : this.at(DESC).strValue();
         }
 
         public String toString() {

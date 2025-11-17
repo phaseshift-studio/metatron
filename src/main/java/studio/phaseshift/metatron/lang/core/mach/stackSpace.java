@@ -19,6 +19,7 @@
 package studio.phaseshift.metatron.lang.core.mach;
 
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.lang.core.m.type.Uri;
 import studio.phaseshift.metatron.lang.db.kv.kvSpace;
 import studio.phaseshift.metatron.lang.sys.router.Router;
 import studio.phaseshift.metatron.lang.Space;
@@ -32,10 +33,11 @@ import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.Stack;
 
+import static studio.phaseshift.metatron.lang.core.m.obj.NoObj.noobj;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.Common.mutableMap;
 
-public class stackSpace extends MSpace<Stack<kvSpace>> {
+public class stackSpace extends MSpace<Stack<Poly>> {
 
     public static final fURI STACK_TID = sysInstSet.SPACE_TID.extend("stack");
     public static final String ARG_PREFIX = "";
@@ -61,52 +63,39 @@ public class stackSpace extends MSpace<Stack<kvSpace>> {
     @Override
     public Obj read(final fURI vid) {
         // LOG.trace("reading {{b}}%s{{/b}} in %s [{{y}}root{{/y}}: %s]", vid, this.sjvm, this.root.jvm());
-        // if(vid.coefficientValue().isZero())
+        //if(vid.coefficientValue().isZero())
         //    return NoObj.single();
-        // boolean isArg = vid.toString().matches("a\\d+"); // skip first encounter of list arg variable as it's a variable to grab the variable
-        for (final kvSpace layer : this.sjvm()) {
-            final Obj o = layer.read(vid.basePath());
-            if (!o.isNoObj()) {
-                //  if (isArg) isArg = false;
-                /* else*/
+        boolean isArg = vid.toString().matches("\\d+"); // ensure lst args are not the top frame
+        for (int i = isArg ? 1 : 0; i < this.sjvm().size(); i++) {
+            final Poly layer = this.sjvm().get(i);
+            final Uri index = vid.basePath().toUri();
+            final Obj o = layer.at(index);
+            if (!o.isNoObj())
                 return o;
-            }
         }
         return this.root.read(vid);
-    }
+}
 
-    @Override
-    public Obj write(final fURI vid, final Obj obj) {
-        LOG.trace("writing %s to %s in %s [{{y}}root{{/y}}: %s]", obj, vid, this.sjvm, this.root.jvm());
-        // if (obj.isUri() && obj.uriValue().equals(vid))
-        //    return obj;
-        if (!this.sjvm().isEmpty())
-            this.sjvm().get(0).write(vid, obj);
-        else
-            this.root.write(vid, obj);
-        return obj;
-    }
+@Override
+public Obj write(final fURI vid, final Obj obj) {
+    LOG.trace("writing %s to %s in %s [{{y}}root{{/y}}: %s]", obj, vid, this.sjvm, this.root.jvm());
+    // if (obj.isUri() && obj.uriValue().equals(vid))
+    //    return obj;
+    //if (!this.sjvm().isEmpty())
+    //    this.sjvm().get(0).<Poly>as().at(vid.toUri(), obj);
+    // else
+    this.root.write(vid, obj);
+    return obj;
+}
 
-    public boolean pop() {
-        final kvSpace frameSpace = this.sjvm().pop();
-        LOG.trace("popped frame {{_&r}}off{{/r&/_}} stack: %s [{{y}}depth{{/y}}: %d]", frameSpace.sjvm(), this.sjvm().size());
-        return true;
-    }
+public boolean pop() {
+    final Poly frame = this.sjvm().pop();
+    LOG.trace("popped frame {{_&r}}off{{/r&/_}} stack: %s [{{y}}depth{{/y}}: %d]", frame, this.sjvm().size());
+    return true;
+}
 
-    public void push(final Poly frame) {
-        final kvSpace frameSpace = new kvSpace(pattern, null);
-        if (frame.isRec()) {
-            frame.recValue().forEach((key, value) -> {
-                frameSpace.write(key.uriValue(), value);
-                Router.global().write(key.uriValue(), value);
-            });
-        } else {
-            for (int i = 0; i < frame.lstValue().size(); i++) {
-                frameSpace.write(fURI.of(ARG_PREFIX + i), frame.lstValue().get(i));
-                Router.global().write(fURI.of(ARG_PREFIX + i), frame.lstValue().get(i));
-            }
-        }
-        this.sjvm().push(frameSpace);
-        LOG.trace("pushed frame {{_&g}}on{{/g&/_}} stack: %s [{{y}}depth{{/y}}: %d]", frameSpace.sjvm(), this.sjvm().size());
-    }
+public void push(final Poly frame) {
+    this.sjvm().push(frame);
+    LOG.trace("pushed frame {{_&g}}on{{/g&/_}} stack: %s [{{y}}depth{{/y}}: %d]", frame, this.sjvm().size());
+}
 }

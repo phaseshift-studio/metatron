@@ -31,7 +31,7 @@ import static studio.phaseshift.metatron.furi.fURI.f;
 
 public interface ObjSerializer<T> {
 
-    public static final fURI OBJ_SERIAL_TID = f("/sys/serial");
+    fURI OBJ_SERIAL_TID = f("/sys/serial");
 
     ByteBuffer writeBytes(final Obj obj) throws MTronException;
 

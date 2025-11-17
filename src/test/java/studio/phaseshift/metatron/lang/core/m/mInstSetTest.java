@@ -22,15 +22,30 @@ package studio.phaseshift.metatron.lang.core.m;
 @author Marko A. Rodriguez (http://markorodriguez.com)
 */
 
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.MetatronTest;
+import studio.phaseshift.metatron.furi.Q;
+import studio.phaseshift.metatron.furi.q.DocQ;
+import studio.phaseshift.metatron.furi.q.DocQTest;
+import studio.phaseshift.metatron.lang.core.m.inst.mInstSet;
+import studio.phaseshift.metatron.lang.sys.router.Router;
 
 import java.util.Map;
 
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static studio.phaseshift.metatron.furi.fURI.f;
 
 public class mInstSetTest extends MetatronTest {
+
+    @Test
+    public void testDocs() {
+        assertTrue(mInstSet.create().qs().elements().anyMatch(q -> q.<Q>as().pattern().equals(f("doc"))));
+        new DocQTest().analyzeDocs(mInstSet.create());
+
+
+    }
 
     @ParameterizedTest
     @CsvSource(value = {

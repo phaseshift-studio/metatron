@@ -61,16 +61,6 @@ public abstract class MInstSet extends MSpace<Map<fURI, Set<? extends Obj>>> imp
         this.insts().forEach(t -> Router.global().registerRewrite(f(t.tid().name()), t.tid().basePath()));
     }
 
-    protected void sortJVM() {
-        final LinkedHashMap<Obj, Obj> sortedMap = this.jvm()
-                .entrySet()
-                .stream()
-                .sorted(Comparator.comparing(a -> a.getKey().toString()))
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (a, b) -> b, LinkedHashMap::new));
-        this.jvm().clear();
-        this.jvm().putAll(sortedMap);
-    }
-
     @Override
     public Set<Obj> consts() {
         return new LinkedHashSet<>();

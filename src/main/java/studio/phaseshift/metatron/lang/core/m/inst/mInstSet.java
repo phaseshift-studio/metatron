@@ -21,6 +21,7 @@ package studio.phaseshift.metatron.lang.core.m.inst;
 import net.objecthunter.exp4j.ExpressionBuilder;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.furi.q.DocQ;
 import studio.phaseshift.metatron.lang.core.m.obj.NoObj;
 import studio.phaseshift.metatron.lang.core.m.type.*;
 import studio.phaseshift.metatron.lang.core.m.type.impl.*;
@@ -191,21 +192,42 @@ public class mInstSet extends MInstSet {
             final List<Obj> lhsList = lhs.lstValue();
             final List<Obj> rhsList = rhs.lstValue();
             final AtomicBoolean found = new AtomicBoolean(false);
+            int x = 0;
+            Long counter = 1L;
+            boolean reset = true;
             for (int i = 0; i < lhsList.size(); i++) {
-                if (rhsList.size() > i) {
+                if (rhsList.size() > x) {
                     found.set(true);
-                    final Obj rhsA = rhsList.get(i);
-                    if (rhsA.isInst() && rhsA.tid().equals(INST_TID)) {
-                        List<Obj> lstLHS = new ArrayList<>();
+                    final Obj rhsA = rhsList.get(x);
+                    if (rhsA.isInst() && rhsA.tid().basePath().equals(INST_TID)) {
+                        counter = counter == 1 && reset ? (rhsA.c().max() == null ? Long.MAX_VALUE : rhsA.c().max()) : counter;
+                        final List<Obj> lstLHS = new ArrayList<>();
+                        final List<Obj> rhsArgs = new ArrayList<>();
+                        final int argCount = (int) rhsA.<Inst>as().args().count();
                         for (int j = 0; j < rhsA.<Inst>as().args().count(); j++) {
-                            lstLHS.add(lhsList.get(i + j));
+                            final Obj element = lhsList.get(i + j);
+                            lstLHS.add(element);
+                            rhsArgs.add(rhsA.<Inst>as().arg(j).apply(element));
                         }
-                        Obj temp = rhsA.<Inst>as().apply(lst(lstLHS));
+
+                        Inst newInst = rhsA.<Inst>as().args(lst(rhsArgs));
+                        newInst = newInst.tid(newInst.tid().c("1"));
+                        // LOG.info("%s",newInst);
+                        Obj temp = newInst.apply(lst(lstLHS));
                         result.addAll(temp.elements().toList());
+                        i = (i + argCount) - 1;
                     } else {
                         result.add(//(lhsA.isRec() && rhsA.isRec()) || (lhsA.isLst() && rhsA.isLst()) ?
                                 crossPoly(lhsList.get(i), rhsA));// :
                     }
+                    if (--counter == 0) {
+                        reset = true;
+                        counter = 1L;
+                        x++;
+                    } else {
+                        reset = false;
+                    }
+
                     //rhsA.apply(lhsA));
                 } else {
                     break;

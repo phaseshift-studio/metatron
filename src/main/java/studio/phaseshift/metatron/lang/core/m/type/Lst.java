@@ -103,9 +103,10 @@ public interface Lst extends Poly, PlusMonoid.O<Lst> {
                 result = objs(this.elements());
             } else {
                 if (!StringUtil.isInt(step))
-                    throw MTronException.of("path segment is not an int: %s", step);
+                    return (O) noobj();
+                    //throw MTronException.of("path segment is not an int: %s", step);
                 final Int k = jnt(Long.parseLong(step));
-                result = this.jvm().get(k.intValue().intValue());
+                result = this.jvm().size() <= k.intValue().intValue() ? noobj() : this.jvm().get(k.intValue().intValue());
             }
             if (key.uriValue().segments().size() == 1) {
                 return (O) result;
