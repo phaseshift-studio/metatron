@@ -140,9 +140,126 @@ The introduction to metatron.
 
 === data types
 
+Every `obj` has the form:
+
+++++
+\begin{align*}
+\texttt{obj} = \left(\texttt{uri} \times X \times \texttt{uri} \right),
+\end{align*}
+++++
+where the first `uri` is the `tid` (_type identifier_), the last `uri` is the `vid` (_value identifier_), and 
+the middle `X` denotes the data type of the `obj` within the constructs of the underlying programming language's implementation.
+On the Java virtual machine, `X` is a `java.lang.Object`, where, for instance, the `X` of `/m/int` is `java.lang.Long`.
+
+The referent of an `obj's` `tid` is a `type` `obj` of the form
+++++
+\begin{align*}
+\texttt{type} = \left(\texttt{uri} \times \underbrace{\left(\texttt{code} \times \texttt{code}\right)}_{X} \times \texttt{uri} \right),
+\end{align*}
+++++
+where the `code` pair is composed of the type's 
+ 
+  1. **predicate**: `code` to determine if the `obj` meets the criteria of being the respective `type`, and
+  2. **constructor**: `code` to generate an instance of the `type`.
+
+Finally, of particular import, for a type, it is always the case that latexmath:[\forall t \in T : t_\texttt{tid} = t_\texttt{vid}]. 
+The significance of this equality will be made salient later in the documentation.
+
+To practically ground these concepts, a https://en.wikipedia.org/wiki/Natural_number[natural number] type is defined.
+
+++++
+<!--
+┌ ├ ┐ └ ┘ │ ┤ ─ ⋰ ⋱ ⮝ ⮞ ⮜ ⮟
+-->
+++++
+
+[source,mtron,role="center"]
+----
+          nat::T[?>0][-<|[?<0 => ⋅-1,_ => _]>>] 
+          │    │ │    │
+          │    │ │    └──────────── constructor
+          │    │ └───────────────── predicate
+          │    └─────────────────── type symbol
+          └──────────────────────── tid
+----
+
+A quick explaination of the type predicate and constructor `code` is as follows:
+
+  1. **predicate** [`?>0`]: is (`?`) greater than (`>`) 0.
+  2. **constructor** [`-<|[?<0 \=> ⋅-1,_ \=> \_]>>`]: if (`-<|`) less than (`<`) 0, then (`\=>`) multiply (`⋅`) by -1, else do (`\=>`) nothing (`_`). Yield the _range_ (`>>`) of the relation constructed (the specifics of `>>` will be discussed later).
+
+Example usage of the defined `nat` type is presented below.
+
+++++
+<!-- 🐖
+nat -> int::T[?>0][-<|[?<0 => ⋅-1,_ => _]>>]          [-- <1>
+*nat                                                  [-- <2>
+nat::2                                                [-- <3>
+nat::-2                                               [-- <4>
+2.as(nat::T)                                          [-- <5>
+-2.as(nat::T)                                         [-- <6>
+nat::2 ⋅ -1                                           [-- <7>
+-->
+++++
+
+<1> A natural number (`nat`) is a positive `int`. The predicate component of the type definition tests an `int` to 
+determine if it's a `nat` and the constructor component will generate a positive `int` given any `int` (i.e. the absolute value).
+<2> the `nat` _tid_ references the respective `nat` type `obj`.
+<2> 2 is an `nat`.
+<3> -2 is not a `nat`, but given the constructor, becomes a `nat`.
+
+
+While every `type` is an `obj`, not every `obj` is a `type`. Those `objs` that are not `types` are _instances_ of some `type`.
+This is the foundation for all other `objs` in [metatron].
+
 ==== mono types
 
+An `obj` that is not composed of other `objs` is a mono type and are exhaustively itemized in the table below.
+
+[cols="1,2,6",separator=|, options=header]
+|===
+| type    | jvm object   | description |
+`bytes`   | `ByteBuffer` | ... |
+`bool`    | `Boolean`    | ... |
+`int`     | `Long`       | ... |
+`real`    | `Double`     | ... |
+`str`     | `String`     | ... |
+`uri`     | `fURI`       | ... |
+|===
+
+The code below demonstrates the typical, expected uses of the mono types.
+
+====== bytes
+
+
+
+++++
+<!-- 🐖
+0xabcd + 0x1234
+-->
+++++
+
+
 ==== poly types
+
+
+==== call types
+
+=== instructions
+
+An `inst` is an `obj` of the form:
+
+++++
+\begin{align*}
+\texttt{inst} = \left(\texttt{uri} \times \left( \texttt{poly} \times \texttt{code} \right) \times \texttt{uri} \right),
+\end{align*}
+++++
+where each component is:
+
+  1. `uri`: the `inst` type (e.g. `/m/inst/plus`).
+  2. `poly`: the `inst` arguments which can either be a `lst` or a `rec`.
+  3. `code`: the `code` that defines the behavior or function of the `inst`.
+  4. `uri`: the `inst` location in space.
 
 === variables
 

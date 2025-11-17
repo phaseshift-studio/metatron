@@ -229,18 +229,18 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
         if (BASE_TYPES.contains(base) &&
                 !(this instanceof Objs) &&
                 !(this instanceof Type) &&
-                !(this instanceof Bool && base.equals(BOOL_TID) ||
-                        this.isBytes() && base.equals(BYTES_TID) ||
-                        this.isInt() && base.equals(INT_TID) ||
-                        this.isReal() && base.equals(REAL_TID) ||
-                        this.isStr() && base.equals(STR_TID) ||
-                        this.isUri() && base.equals(URI_TID) ||
-                        this.isRec() && base.equals(REC_TID) ||
-                        this.isLst() && base.equals(LST_TID) ||
-                        this.isRel() && base.equals(REL_TID) ||
-                        this.isInst() && base.equals(INST_TID) ||
-                        this.isCode() && base.equals(CODE_TID) ||
-                        this.isFail() && base.equals(FAIL_TID))) {
+                !((this.isBool() && base.equals(BOOL_TID)) ||
+                        (this.isBytes() && base.equals(BYTES_TID)) ||
+                        (this.isInt() && base.equals(INT_TID)) ||
+                        (this.isReal() && base.equals(REAL_TID)) ||
+                        (this.isStr() && base.equals(STR_TID)) ||
+                        (this.isUri() && base.equals(URI_TID)) ||
+                        (this.isRec() && base.equals(REC_TID)) ||
+                        (this.isLst() && base.equals(LST_TID)) ||
+                        (this.isRel() && base.equals(REL_TID)) ||
+                        (this.isInst() && base.equals(INST_TID)) ||
+                        (this.isCode() && base.equals(CODE_TID)) ||
+                        (this.isFail() && base.equals(FAIL_TID)))) {
             return false;
         }
         if (this.isCall())

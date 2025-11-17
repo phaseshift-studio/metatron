@@ -320,11 +320,11 @@ pre code {
     font-weight: bold;
 }
 
-.hljs-mtron-pipe,
 .hljs-mtron-log-info {
     color: var(--mgreen);
 }
 
+.hljs-mtron-pipe, 
 .hljs-mtron-log-error {
     color: var(--mred);
 }

@@ -32,7 +32,7 @@ import static studio.phaseshift.metatron.furi.fURI.f;
 public interface ObjSerializer<T> {
 
     public static final fURI OBJ_SERIAL_TID = f("/sys/serial");
-    
+
     ByteBuffer writeBytes(final Obj obj) throws MTronException;
 
     Obj readBytes(final ByteBuffer bytes) throws MTronException;
@@ -66,6 +66,8 @@ public interface ObjSerializer<T> {
             return this.writeCode(obj.as());
         else if (obj instanceof Objs)
             return this.writeObjs(obj.as());
+        else if (obj instanceof Type)
+            return this.writeType(obj.as());
         else
             throw MTronException.of("unknown obj class: %s", obj.getClass());
     }
@@ -126,8 +128,21 @@ public interface ObjSerializer<T> {
         return this.write(o);
     }
 
+    default T writeType(final Type t) {
+        return this.write(t);
+    }
+
 
     /// ////////////////////////////////
+
+    default Fail readFail(final T t) {
+        return (Fail) this.read(t);
+    }
+
+    /*default Bytes readBytes(final T t) {
+        return (Bytes) this.read(t);
+    }*/
+
 
     default Bool readBool(final T t) {
         return (Bool) this.read(t);

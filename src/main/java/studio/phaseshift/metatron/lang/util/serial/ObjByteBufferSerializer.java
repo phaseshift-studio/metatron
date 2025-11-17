@@ -24,6 +24,7 @@ import studio.phaseshift.metatron.lang.core.m.type.*;
 
 
 import studio.phaseshift.metatron.lang.core.m.parser.mParser;
+import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
@@ -68,7 +69,7 @@ public class ObjByteBufferSerializer implements ObjSerializer<ByteBuffer> {
 
     @Override
     public ByteBuffer writeFail(final Fail fail) {
-        return ByteBuffer.wrap(handleIds(fail, "['" + fail.jvm().getMessage() + "']").getBytes());
+        return ByteBuffer.wrap(handleIds(fail, "['" + Graphitty.strip(fail.jvm().getMessage()) + "']").getBytes());
     }
 
     @Override

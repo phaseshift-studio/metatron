@@ -89,7 +89,7 @@ public class mFluent<F extends Fluent<F>> extends MCode implements Fluent<F>, Co
     }
 
     public F in_(final Obj obj) {
-        return this.addInst(instB(mInstSet.IN_TID, lst(obj)));
+        return this.addInst(instB(mInstSet.MATCHES_TID, lst(obj)));
     }
 
     public F split_(final Obj obj) {

@@ -142,8 +142,13 @@ public class MServer extends WebSocketServer implements Cluster, Closeable, Obj 
     @Override
     public void onMessage(final WebSocket conn, final ByteBuffer message) {
         LOG.trace("received from %s byte buffer [length:%d]", conn.getAttachment(), message.array().length);
-        final Obj obj = mParser.parse(new String(message.array()));// this.serializer.read(message);
-        this.onObj(conn, obj);
+        try {
+            final Obj obj = this.serializer.readBytes(message);// this.serializer.read(message);
+            this.onObj(conn, obj);
+        } catch (final Exception e) {
+            this.onObj(conn, fail(e));
+        }
+
     }
 
 
@@ -162,6 +167,7 @@ public class MServer extends WebSocketServer implements Cluster, Closeable, Obj 
             //this.sendObj(conn, result);
             if (result.isFail())
                 this.onError(conn, result.<Fail>as().jvmAs());
+
         } catch (final Exception e) {
             conn.send(this.serializer.writeBytes(fail(e)));
             this.onError(conn, e);
@@ -200,7 +206,7 @@ public class MServer extends WebSocketServer implements Cluster, Closeable, Obj 
 
     @Override
     public Obj clone() {
-        return null;
+        return this;
     }
 
     @Override

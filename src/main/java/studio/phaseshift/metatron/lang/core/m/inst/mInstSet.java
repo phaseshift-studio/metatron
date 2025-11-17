@@ -21,7 +21,6 @@ package studio.phaseshift.metatron.lang.core.m.inst;
 import net.objecthunter.exp4j.ExpressionBuilder;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.furi.q.DocQ;
 import studio.phaseshift.metatron.lang.core.m.obj.NoObj;
 import studio.phaseshift.metatron.lang.core.m.type.*;
 import studio.phaseshift.metatron.lang.core.m.type.impl.*;
@@ -38,9 +37,7 @@ import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.furi.fURI.f;
-import static studio.phaseshift.metatron.furi.q.DocQ.Doc.doc;
 import static studio.phaseshift.metatron.furi.q.DocQ.Doc.docWrap;
-import static studio.phaseshift.metatron.lang.core.m.inst.mFluent.StartLess.else_;
 import static studio.phaseshift.metatron.lang.core.m.inst.mFluent.StartLess.id_;
 import static studio.phaseshift.metatron.lang.core.m.obj.NoObj.noobj;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MBool.bool;
@@ -114,7 +111,7 @@ public class mInstSet extends MInstSet {
     public static final fURI ISA_TID = INST_TID.extend("isa");
     public static final fURI OR_TID = INST_TID.extend("or");
     public static final fURI AND_TID = INST_TID.extend("and");
-    public static final fURI IN_TID = INST_TID.extend("in");
+    public static final fURI MATCHES_TID = INST_TID.extend("matches");
     public static final fURI EQ_TID = INST_TID.extend("eq");
     public static final fURI NEQ_TID = INST_TID.extend("neq");
     public static final fURI GT_TID = INST_TID.extend("gt");
@@ -197,10 +194,18 @@ public class mInstSet extends MInstSet {
             for (int i = 0; i < lhsList.size(); i++) {
                 if (rhsList.size() > i) {
                     found.set(true);
-                    final Obj lhsA = lhsList.get(i);
                     final Obj rhsA = rhsList.get(i);
-                    result.add(//(lhsA.isRec() && rhsA.isRec()) || (lhsA.isLst() && rhsA.isLst()) ?
-                            crossPoly(lhsA, rhsA));// :
+                    if (rhsA.isInst() && rhsA.tid().equals(INST_TID)) {
+                        List<Obj> lstLHS = new ArrayList<>();
+                        for (int j = 0; j < rhsA.<Inst>as().args().count(); j++) {
+                            lstLHS.add(lhsList.get(i + j));
+                        }
+                        Obj temp = rhsA.<Inst>as().apply(lst(lstLHS));
+                        result.addAll(temp.elements().toList());
+                    } else {
+                        result.add(//(lhsA.isRec() && rhsA.isRec()) || (lhsA.isLst() && rhsA.isLst()) ?
+                                crossPoly(lhsList.get(i), rhsA));// :
+                    }
                     //rhsA.apply(lhsA));
                 } else {
                     break;
@@ -275,7 +280,7 @@ public class mInstSet extends MInstSet {
                 docWrap(instC(IS_TID.dom(ALL.maybe()).rng(ALL.maybe()), lst(T(ALL)), (lhs, inst) -> inst.arg(0).boolValue() ? lhs : noobj()),
                         "any obj", "the lhs obj if arg is true", Map.of(jnt(0), "filter lhs if false"), "filters the lhs obj"), // TODO: generics are not working for some reason
                 instC(ISA_TID.dom(ALL.maybe()).rng(ALL.maybe()), lst(T(ALL)), (lhs, inst) -> lhs.matches(inst.arg(0)) ? lhs : noobj()),
-                instC(IN_TID.dom(ALL.maybe()).rng(BOOL_TID), lst(T(ALL.maybe())), (lhs, inst) -> bool(lhs.matches(inst.arg(0)))),
+                instC(MATCHES_TID.dom(ALL.maybe()).rng(BOOL_TID), lst(T(ALL.maybe())), (lhs, inst) -> bool(lhs.matches(inst.arg(0)))),
                 instC(GET_TID.dom(REC_TID).rng(ALL_STAR), lst(T(URI_TID)), (lhs, inst) -> lhs.<Rec>as().at(inst.arg(0))),
                 instC(GET_TID.dom(LST_TID).rng(ALL_STAR), lst(T(INT_TID)), (lhs, inst) -> lhs.<Lst>as().at(inst.arg(0))),
                 instC(GET_TID.dom(LST_TID).rng(ALL_STAR), lst(T(URI_TID)), (lhs, inst) -> lhs.<Lst>as().at(inst.arg(0))),
@@ -283,6 +288,8 @@ public class mInstSet extends MInstSet {
                 instC(BLOCK_TID.dom(A.maybe()).rng(B), lst(T(B)), (lhs, inst) -> inst.arg(0)),
                 instC(SWAP_TID.dom(A).rng(B), lst(T(C)), (lhs, inst) -> lhs.apply(inst.arg(0))),
                 /// ///////////////////////////////////////////////////////////////////////////////////////////////////
+                docWrap(instC(SPLIT_TID.dom(STR_TID).rng(STR_TID.some()), lst(T(STR_TID)), (lhs, inst) -> objs(Arrays.stream(lhs.strValue().split(inst.arg(0).strValue())).map(MStr::str))),
+                        "a str to split", "the components of the split lhs str", Map.of(jnt(0), "a token to split on"), "split the lhs string according to the token arg and emit a stream of splits"),
                 instC(SPLIT_TID.dom(ALL).rng(LST_TID), lst(T(LST_TID)), (lhs, inst) -> lst(inst.arg(0).elements().map(e -> e.apply(lhs)).toList())),
                 instC(SPLIT_TID.dom(ALL.maybeSome()).rng(LST_TID), lst(T(LST_TID)), (lhs, inst) -> lst(inst.arg(0).elements().map(e -> e.apply(lhs)).toList())),
                 // instC(SPLIT_TID.dom(REL_TID).rng(REC_TID), lst(T(REC_TID)), (lhs, inst) -> rec(lhs.<Rel>as().first(),lhs.<Rel>as().second())),
@@ -303,13 +310,10 @@ public class mInstSet extends MInstSet {
                                         .filter(p -> !p.first().isNoObj() && !p.second().isNoObj())
                                         .map(Obj::<Rel>as))
                                 .collect(Collectors.toMap(Rel::first, Rel::second, Obj::append, LinkedHashMap::new)))),
-                docWrap(instC(SPLIT_TID.dom(STR_TID).rng(STR_TID.some()), lst(T(STR_TID)), (lhs, inst) -> objs(Arrays.stream(lhs.strValue().split(inst.arg(0).strValue())).map(MStr::str))),
-                        "a str to split", "the components of the split lhs str", Map.of(jnt(0), "a token to split on"), "split the lhs string according to the token arg and emit a stream of splits"),
                 instC(SPLIT_TID.dom(URI_TID).rng(URI_TID.some()), lst(T(URI_TID)), (lhs, inst) -> objs(Arrays.stream(lhs.uriValue().toString().split(inst.arg(0).uriValue().toString())).map(MUri::uri))),
-
                 instC(SPLIT_TID.dom(A.maybeSome()).rng(A.maybeSome()), lst(T(A.maybeSome())), (lhs, inst) -> objs(Stream.of(inst.arg(0)).map(o -> o.apply(lhs)))),
                 instC(SPLIT_TID.dom(ALL).rng(ALL.maybeSome()), lst(T(ALL.some())), (lhs, inst) -> objs(inst.arg(0).stream().map(o -> o.apply(lhs)))),
-                instC(SPLIT_TID.dom(ALL).rng(ALL.maybeSome()), lst(T(ALL)), (lhs, inst) -> objs(inst.arg(0).apply(lhs))),
+                // instC(SPLIT_TID.dom(ALL).rng(ALL.maybeSome()), lst(T(ALL)), (lhs, inst) -> objs(inst.arg(0).apply(lhs))),
                 /// ///////////////////////////////////////////////////////////////////////////////////////////////////
                 docWrap(
                         instC(CHOOSE_TID.dom(ALL).rng(REL_TID.maybe()), lst(T(REC_TID)), (lhs, inst) -> inst.arg(0).<Rec>as().elements().map(Obj::<Rel>as).map(e -> e.<Rel>jvm(Tuple.Pair.with(e.first().apply(lhs), e.second()))).filter(e -> !e.first().isNoObj()).findFirst().map(e -> e.<Obj>jvm(Tuple.Pair.with(e.first(), e.second().apply(lhs)))).orElse(noobj())),

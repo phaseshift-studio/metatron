@@ -65,11 +65,6 @@ public class MInst extends MObj implements Inst {
         return new MInst(Triplet.with(args, Inst.f.of(f), NoObj.noobj()), tid, fURI.NULL);
     }
 
-    public static Inst instD(final fURI tid, final Poly args, final BiFunction<Obj, Inst, Obj> f, final DocQ.Doc doc) {
-        Router.writeToSpace(tid.query("doc"),doc);
-        return new MInst(Triplet.with(args, Inst.f.of(f), NoObj.noobj()), tid, fURI.NULL);
-    }
-
     public static Inst instC(final fURI tid, final Poly args, final BiFunction<Obj, Inst, Obj> f, final Obj seed) {
         return new MInst(Triplet.with(args, Inst.f.of(f), seed), tid, fURI.NULL);
     }

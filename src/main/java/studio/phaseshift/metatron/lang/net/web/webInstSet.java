@@ -26,6 +26,7 @@ import studio.phaseshift.metatron.lang.core.m.type.Obj;
 import studio.phaseshift.metatron.lang.core.m.type.Type;
 import studio.phaseshift.metatron.lang.core.m.type.impl.MInstSet;
 import studio.phaseshift.metatron.ui.Graphitty;
+import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -71,16 +72,20 @@ public class webInstSet extends MInstSet {
     public Set<Inst> insts() {
         return Set.of(instC(INST_TID.extend("doc").dom(STR_TID).rng(STR_TID), lst(), (lhs, inst) -> {
             LOG.info("processing doc request: %s", lhs);
-            final String source = lhs.strValue();
-            final Obj eval = mParser.eval(source);
-            String result = eval.isObjs() ?
-                    eval.elements()
-                            .map(Obj::toString)
-                            .map(Graphitty::strip)
-                            .reduce((a, b) -> a + "%%%" + b)
-                            .orElse("") :
-                    Graphitty.strip(eval.toString());
-            return str(result);
+            try {
+                final String source = lhs.strValue();
+                final Obj result = mParser.parse(source).apply();
+                final String resultString = result.isObjs() ?
+                        Graphitty.strip(result.elements()
+                                .map(Obj::toString)
+                                .map(Graphitty::strip)
+                                .reduce((a, b) -> a + "%%%" + b)
+                                .orElse("")) :
+                        Graphitty.strip(result.toString());
+                return str(resultString);
+            } catch (final Exception e) {
+                return str(Graphitty.strip(fail(e).toString()));
+            }
         }));
     }
 }

@@ -4,6 +4,7 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.core.m.obj.NoObj;
 import studio.phaseshift.metatron.lang.core.m.parser.mParser;
 import studio.phaseshift.metatron.lang.core.m.type.*;
+import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
@@ -44,8 +45,21 @@ public class mParserObjSerializer implements ObjSerializer<String> {
         return tidVid(n, "noobj");
     }
 
+    public String writeType(final Type t) {
+        String temp = t.tid() + "::T";
+        if (t.predicate() != null || t.constructor() != null) {
+            if (t.predicate() != null)
+                temp += temp + "[" + this.write(t.predicate()) + "]";
+            else
+                temp += temp + "[]";
+        }
+        if (t.constructor() != null)
+            temp += temp + "[" + this.write(t.constructor()) + "]";
+        return temp;
+    }
+
     public String writeFail(final Fail f) {
-        return tidVid(f, f.jvm().toString());
+        return Graphitty.strip(f.toString());
     }
 
     public String writeBool(final Bool b) {
@@ -66,19 +80,19 @@ public class mParserObjSerializer implements ObjSerializer<String> {
     }
 
     public String writeUri(final Uri u) {
-        return tidVid(u, "<" + u.uriValue() + ">");
+        return tidVid(u, "<" + u.uriValue().toString() + ">");
     }
 
     public String writeRel(final Rel r) {
-        return tidVid(r, r.first() + "=>" + r.second());
+        return tidVid(r, this.write(r.first()) + "=>" + this.write(r.second()));
     }
 
     public String writeLst(final Lst l) {
-        return tidVid(l, l.isEmpty() ? "[,]" : l.toString());
+        return tidVid(l, "[" + l.jvm().stream().map(this::write).reduce((a, b) -> a + "," + b).orElse(",") + "]");
     }
 
     public String writeRec(final Rec r) {
-        return tidVid(r, "[" + r.jvm().entrySet().stream().map(kv -> kv.getKey() + "=>" + kv.getValue()).reduce((a, b) -> a + "," + b).orElse("=>") + "]");
+        return tidVid(r, "[" + r.jvm().entrySet().stream().map(kv -> this.write(kv.getKey()) + "=>" + this.write(kv.getValue())).reduce((a, b) -> a + "," + b).orElse("=>") + "]");
     }
 
     public String writeInst(final Inst i) {
@@ -87,11 +101,11 @@ public class mParserObjSerializer implements ObjSerializer<String> {
     }
 
     public String writeCode(final Code c) {
-        return tidVid(c, c.jvm().stream().map(Obj::toString).reduce((a, b) -> a + "." + b).orElse(""));
+        return tidVid(c, c.jvm().stream().map(this::write).reduce((a, b) -> a + "." + b).orElse(""));
     }
 
     public String writeObjs(final Objs o) {
-        return tidVid(o, "{" + IteratorUtil.stream(o.jvm()).map(Obj::toString).reduce((a, b) -> a + "," + b).orElse("") + "}");
+        return tidVid(o, "{" + IteratorUtil.stream(o.jvm()).map(this::write).reduce((a, b) -> a + "," + b).orElse("") + "}");
     }
 
 
