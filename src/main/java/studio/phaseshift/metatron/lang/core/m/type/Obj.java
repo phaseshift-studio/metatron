@@ -24,6 +24,7 @@ import studio.phaseshift.metatron.algebra.Ring;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.core.m.type.facade.FObj;
+import studio.phaseshift.metatron.lang.core.m.type.impl.MObj;
 import studio.phaseshift.metatron.lang.sys.router.Router;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
@@ -66,15 +67,6 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
     fURI tid();
 
     fURI vid();
-
-    default Obj lazyTid(final fURI tid) {
-        return this.tid(tid);
-    }
-
-    /*default <F> F addInst(final Inst inst) {
-        Router.writeToSpace(inst.tid(), inst);
-        return (F) this;
-    }*/
 
     default boolean unique() {
         return uniqueC().equals(cInt.ONE());
@@ -252,7 +244,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
         if (rhs.isType())
             return rhs.tid().isGeneric() ||
                     (typeInferenceMatch(this, rhs.as()) &&
-                            (rhs.<Type>as().predicate() == null || this.isObjs() || !rhs.<Type>as().predicate().apply(this).isNoObj()));
+                            (rhs.<Type>as().predicate() == null || this.isObjs() || !rhs.apply(this).isNoObj()));
         return this.tid().matches(rhs.tid()) &&
                 Objects.equals(this.jvm(), rhs.jvm());
     }
@@ -489,6 +481,10 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
 
     Obj clone();
 
+    default void mutateSelf(final Object jvm, final fURI tid, final fURI vid) {
+        
+    }
+
     class Helper {
 
         public static int objHashCode(final Obj obj) {
@@ -512,6 +508,38 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
 
         public static String objToString(final Obj obj) {
             return Graphitty.string(obj);
+        }
+
+        public static void objCheckAndSave(final Obj obj) {
+            if (!obj.isInstSet() && !obj.isNoObj() && !obj.isType() && !obj.matches(obj.type()))
+                throw MTronException.of("[{{r}}type error{{/r}}] %s is not a %s".formatted(obj, obj.type()));
+            if (null != obj.vid() && !obj.isType())
+                Router.writeToSpace(obj);
+        }
+
+        public static <O extends Obj> O objClone(final Obj obj, final Object jvm, final fURI tid, final fURI vid) {
+            Object realjvm = jvm;
+            if (!Objects.equals(tid, obj.tid())) {
+                final Obj type = Router.readFromSpace(tid);
+                if (!type.isNoObj() && type.isType() && type.<Type>as().hasConstructor()) {
+                    Obj construction = type.<Type>as().constructor().apply(obj);
+                    if (construction.isFail())
+                        throw (MTronException) construction.<Fail>as().jvm();
+                    else
+                        realjvm = construction.jvm();
+                }
+            }
+            if (!Objects.equals(realjvm, obj.jvm()) || !tid.equals(obj.tid()) || !Objects.equals(vid, obj.vid())) {
+                try {
+                    final Obj clone = (Obj) obj.clone();
+                    clone.mutateSelf(realjvm, tid, vid);
+                    Obj.Helper.objCheckAndSave(clone);
+                    return (O) clone;
+                } catch (final Exception e) {
+                    throw MTronException.of(e);
+                }
+            }
+            return (O) obj;
         }
     }
 }

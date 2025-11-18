@@ -44,7 +44,7 @@ import static studio.phaseshift.metatron.util.Tuple.Triplet;
 public interface Inst extends Call {
 
     // /mtron/plus?dom=/mtron/int,rng=/mtron/int
-    
+
     String ARGS = "args";
     String DOM = "dom";
     String RNG = "rng";
@@ -210,6 +210,7 @@ public interface Inst extends Call {
                     .map(i -> i.isInitial() ? i.rng(i.arg(0).type()) : i) // TODO: only start()?
                     .map(i -> i.resolve(lhs)) // TODO: return resolve(lhs) if failing
                     .map(i -> i.c(this.c()))
+                    .map(i -> i.hasRng() ? i : i.rng(T(ALL_STAR)))
                     .findFirst()
                     .orElse(null);
             if (null != resolved) {
@@ -236,7 +237,8 @@ public interface Inst extends Call {
             return null == args ? domainInst : domainInst.args(args);
         } else {
             LOG.debug("resolved %s from global router", resolved2);
-            return resolved2.<Inst>as().args(domainInst.args()).c(domainInst.c()); //.resolve(lhs);
+            final Inst resolve2 = resolved2.<Inst>as().args(domainInst.args()).c(domainInst.c()); //.resolve(lhs);
+            return resolve2.hasRng() ? resolve2 : resolve2.rng(T(ALL_STAR));
         }
     }
 
@@ -265,7 +267,7 @@ public interface Inst extends Call {
                     rhs = Objs.trySingleton(cinst.f().apply(clhs, cinst));
                     Graphitty.log(cinst).trace("%s ({{m}}lhs{{/m}}) => %s ({{m}}inst{{/m}}) => %s ({{m}}rhs{{/m}}) evaluated {{g}}successfully{{/g}}", clhs, cinst, rhs);
                 } catch (final Exception e) {
-                    rhs = mexcept("apply failure: %s {{r}}=>{{X}} %s [stack:%s]", clhs, cinst,Router.stack().sjvm()).cause(e).asFail();
+                    rhs = mexcept("apply failure: %s {{r}}=>{{X}} %s [stack:%s]", clhs, cinst, Router.stack().sjvm()).cause(e).asFail();
                     //e.printStackTrace();
                 } finally {
                     Router.stack().pop();
@@ -477,7 +479,7 @@ public interface Inst extends Call {
             this.func = func;
 
         }
-        
+
         public boolean isLambda() {
             return !(this.func instanceof Obj);
         }

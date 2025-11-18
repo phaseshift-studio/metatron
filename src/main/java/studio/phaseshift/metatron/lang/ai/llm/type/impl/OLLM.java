@@ -42,8 +42,7 @@ import static studio.phaseshift.metatron.lang.ai.llm.llmInstSet.LLM_TID;
 import static studio.phaseshift.metatron.lang.Space.HOST;
 import static studio.phaseshift.metatron.lang.Space.NAME;
 import static studio.phaseshift.metatron.lang.core.m.inst.mFluent.StartLess.*;
-import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.URI_SCHEME_TID;
-import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.URI_TID;
+import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.*;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MInst.*;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
@@ -60,11 +59,10 @@ public class OLLM extends MRec implements LLM {
     public static final fURI OLLM_TID = LLM_TID.extend("ollm");
     public static final String SKILL = "skill";
 
-    public static Type OLLM_TYPE = T(OLLM_TID, instC(INST_TID.dom(fURI.ALL).rng(OLLM_TID),
-            lst(rec(uri(NAME),
+    public static Type OLLM_TYPE = T(OLLM_TID, isa_(rec(uri(NAME),
                     T(URI_TID),
-                    uri(HOST),
-                    isa_(T(URI_TID)).where_(inst_(instB(URI_SCHEME_TID, lst(id_().<Obj>as()))).is_(eq_(uri("http")))))),
+                    uri(SKILL),
+                    T(LST_TID))),instC(INST_TID.dom(ALL_STAR).rng(OLLM_TID),lst(),
             (lhs, inst) -> {
                 final String modelName = inst.arg(0).<Rec>as().at(uri(NAME)).uriValue().toString();
                 final OllamaModels models = OllamaModels.builder().baseUrl(inst.arg(0).<Rec>as().at(HOST).uriValue().toString()).build();

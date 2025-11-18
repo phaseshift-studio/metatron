@@ -49,6 +49,34 @@ public class mInstSetTest extends MetatronTest {
 
     @ParameterizedTest
     @CsvSource(value = {
+            "{1,2,3,4}.take(0)                                                              % {,}",
+            "{1,2,3,4}.take(1)                                                              % {1}",
+            "{1,2,3,4}.take(2)                                                              % {1,2}",
+            "{1,2,3,4}.take(3)                                                              % {1,2,3}",
+            "{1,2,3,4}.take(4)                                                              % {1,2,3,4}",
+            "{1,2,3,4}.take(5)                                                              % {1,2,3,4}",
+            "{int{4}::1,2,3,4}.take(5)                                                      % {int{4}::1,2}",
+            /// /////////////////////////////////////////////////////////////////////////////////////////////
+            "{1,2,3,4}.skip(0)                                                              % {1,2,3,4}",
+            "{1,2,3,4}.skip(1)                                                              % {2,3,4}",
+            "{1,2,3,4}.skip(2)                                                              % {3,4}",
+            "{1,2,3,4}.skip(3)                                                              % {4}",
+            "{1,2,3,4}.skip(4)                                                              % {,}",
+            "{1,2,3,4}.skip(5)                                                              % {,}",
+            "{int{4}::1,2,3,4}.skip(5)                                                      % {3,4}",
+            "{int{4}::1,2,3,4,5}.skip(5)                                                    % {3,4,5}",
+            /// ////////////////////////////////////////////////////////////////////////////////////////////
+            "{1,2,3,4,5}.skip(2).take(2)                                                    % {3,4}",
+            "{int{2}::1,2,3,4,5}.skip(2).take(2)                                            % {2,3}",
+            "{int{3}::1,2,3,4,5}.skip(2).take(2).count()                                    % 2",
+    }, delimiter = '%')
+    public void testSkipLimitCode(final String code, final String expected) {
+        super.testCode(code, expected);
+    }
+
+
+    @ParameterizedTest
+    @CsvSource(value = {
             // "1.plus?int{?}<=int(int{0}::1)                                          % noobj",
             "1.plus(_)                                                              % 2",
             "1.plus(2)                                                              % 3",

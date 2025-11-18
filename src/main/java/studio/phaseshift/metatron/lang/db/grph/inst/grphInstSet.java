@@ -36,6 +36,9 @@ import java.util.Set;
 
 import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.furi.fURI.f;
+import static studio.phaseshift.metatron.lang.core.m.inst.mFluent.StartLess.id_;
+import static studio.phaseshift.metatron.lang.core.m.inst.mFluent.StartLess.isa_;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.lang.db.grph.type.TP3Translator.LABEL;
 import static studio.phaseshift.metatron.lang.db.grph.type.TP3Translator.PROPS;
 import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.*;
@@ -51,8 +54,8 @@ public class grphInstSet extends MInstSet {
     public static final fURI GRAPH_TID = MGRPH_TID.extend("graph");
     public static final fURI ELEMENT_TID = MGRPH_TID.extend("element");
     public static final fURI VERTEX_TID = MGRPH_TID.extend("vertex");
-    public static final fURI VERTEX_PROPERTY_TID = MGRPH_TID.extend("vp");
-    public static final fURI PROPERTY_TID = MGRPH_TID.extend("p");
+    public static final fURI VERTEX_PROPERTY_TID = MGRPH_TID.extend("vproperty");
+    public static final fURI PROPERTY_TID = MGRPH_TID.extend("property");
     public static final fURI EDGE_TID = MGRPH_TID.extend("edge");
 
     public static final fURI INST_TID = MGRPH_TID.extend("inst");
@@ -106,7 +109,13 @@ public class grphInstSet extends MInstSet {
 
     @Override
     public Set<Type> types() {
-        return Set.of(T(GRAPH_TID), T(ELEMENT_TID), T(VERTEX_TID), T(EDGE_TID), T(PROPERTY_TID), grphSpace.GRPH_TYPE);
+        return Set.of(
+                T(GRAPH_TID),
+                T(ELEMENT_TID),
+                T(VERTEX_TID, null, instC(INST_TID.dom(ALL.maybe()).rng(VERTEX_TID), lst(), (lhs, inst) -> RVertex.of(lhs.as()))),
+                T(EDGE_TID, null, instC(INST_TID.dom(ALL.maybe()).rng(EDGE_TID), lst(), (lhs, inst) -> objs(lhs.stream().map(e -> REdge.of(e.as()))))),
+                T(PROPERTY_TID, isa_(rec(T(URI_TID), id_()))),
+                grphSpace.GRPH_TYPE);
     }
 
     @Override

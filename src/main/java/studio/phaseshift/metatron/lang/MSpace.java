@@ -50,24 +50,27 @@ public abstract class MSpace<SJVM> extends MRec implements Space {
         this.sjvm = sjvm;
         this.pattern = pattern;
         this.qs = new Qs();
+        this.qs.register(new PubSubQ());
+        this.jvm().put(uri("qs"),this.qs);
+        //this.registerQ(new PubSubQ());
         this.jvm().put(uri(STATUS),uri(ACTIVE));
         LOG = Graphitty.log(this);
     }
 
     @Override
     public void onPut(final fURI key, final Obj value) {
-        if (key.matches(f("q"))) {
+      /*  if (key.matches(f("q"))) {
             value.<Lst>as().elements().forEach(q -> {
                 this.qs.add(q);
             });
-        } else if (key.matches(f(STATUS))) {
+        } else*/ if (key.matches(f(STATUS))) {
             this.status = value.uriValue().matches(f(ACTIVE)) ? Status.active : Status.paused;
         }
     }
 
     @Override
     public Space registerQ(final Q q) {
-        this.qs().jvm().add(q);
+        this.qs.jvm().add(q);
         this.put("qs", this.qs);
         return this;
     }
@@ -121,8 +124,8 @@ public abstract class MSpace<SJVM> extends MRec implements Space {
             this.vid = vid;
             Router.global().addSpace(this);
             Router.writeToSpace(vid, this);
-            LOG.trace("registering: %s", this);
-            this.qs.register(new PubSubQ(this));
+           // LOG.trace("registering: %s", this);
+            //this.qs.register(new PubSubQ());
         }
         return super.vid(vid);
     }

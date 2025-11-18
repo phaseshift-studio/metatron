@@ -22,6 +22,7 @@ import dev.langchain4j.model.ollama.OllamaModel;
 import dev.langchain4j.model.ollama.OllamaModelCard;
 import dev.langchain4j.model.ollama.OllamaModels;
 import dev.langchain4j.model.output.Response;
+import io.github.ollama4j.Ollama;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.ai.llm.type.impl.GGUF;
 import studio.phaseshift.metatron.lang.core.m.type.impl.MStr;
@@ -37,6 +38,7 @@ import studio.phaseshift.metatron.lang.core.m.type.impl.MUri;
 import studio.phaseshift.metatron.lang.MSpace;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
+import studio.phaseshift.metatron.util.Common;
 import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
 
@@ -46,10 +48,12 @@ import java.util.Map;
 import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.lang.ai.llm.llmInstSet.OLLAMA_TID;
+import static studio.phaseshift.metatron.lang.ai.llm.type.impl.GGUF.SIZE;
 import static studio.phaseshift.metatron.lang.ai.llm.type.impl.OLLM.ollm;
 import static studio.phaseshift.metatron.lang.core.m.inst.mFluent.StartLess.isa_;
 import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.REC_TID;
 import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.URI_TID;
+import static studio.phaseshift.metatron.lang.core.m.obj.NoObj.noobj;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MInt.jnt;
@@ -119,23 +123,36 @@ public class ollamaSpace extends MSpace<OllamaModels> {
                             final Obj gguf = this.internal.read(pair.get1().vid().extend(GGUF_KEY));
                             if (gguf.isNoObj()) {
                                 this.internal.write(pair.get1().vid().extend(GGUF_KEY), fail(MTronException.of("temp")));
-                                LOG.info("onboarding ollm gguf into space: %s", pair.get1().vid().extend(GGUF_KEY));
                                 final String ggufFilePath = Arrays.stream(pair.get0().getModelfile().split("\n"))
                                         .map(String::trim)
                                         .filter(line -> line.startsWith(FROM))
                                         .map(line -> line.replace(FROM, "").trim())
                                         .findFirst()
                                         .orElse(null);
-                                GGUF.of(f(ggufFilePath), pair.get1().vid().extend(GGUF_KEY))
-                                        .put(uri(QUANT), uri(pair.get0().getDetails().getQuantizationLevel())).<Rec>as()
-                                        .put(uri(FAMILY), uri(pair.get0().getDetails().getFormat())).as();
+                                if (ggufFilePath != null) {
+                                    LOG.info("onboarding ollm gguf into space: %s", pair.get1().vid().extend(GGUF_KEY));
+                                    GGUF.of(f(ggufFilePath), pair.get1().vid().extend(GGUF_KEY))
+                                            .put(uri(SIZE), Common.isInt(pair.get0().getDetails().getParameterSize()) ? jnt(Long.parseLong(pair.get0().getDetails().getParameterSize())) : noobj())
+                                            .put(uri(QUANT), uri(pair.get0().getDetails().getQuantizationLevel())).<Rec>as()
+                                            .put(uri(FAMILY), uri(pair.get0().getDetails().getFormat())).as();
+                                }
                             }
                         } catch (final Exception e) {
                             LOG.warn(e);
                             this.internal.write(pair.get1().vid().extend(GGUF_KEY), fail(e));
                         }
                     });
-            return this.internal.read(vid);
+            final Obj result2 = this.internal.read(vid);
+            if (!result2.isNoObj())
+                return result2;
+            try {
+                LOG.info("pulling model: %s", vid.removePrefix(this.pattern.retractPattern()).toString());
+                final String version = vid.name();
+                new Ollama(this.at(HOST).uriValue().toString()).pullModel(vid.removePrefix(this.pattern.retractPattern()).retract().toString() + ":" + version);
+                return this.read(vid);
+            } catch (final Exception e) {
+                throw MTronException.of(e);
+            }
         }
     }
 

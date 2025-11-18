@@ -32,6 +32,7 @@ import java.util.function.BiConsumer;
 import java.util.function.BinaryOperator;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.regex.Pattern;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -43,6 +44,9 @@ import static studio.phaseshift.metatron.lang.core.m.type.impl.MRec.rec;
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public final class Common {
+
+    private static final Pattern INT_PATTERN = Pattern.compile("-?\\d");
+    private static final Pattern REAL_PATTERN = Pattern.compile("-?\\d+(\\.\\d+)");
 
     private Common() {
         // do nothing
@@ -73,6 +77,46 @@ public final class Common {
                         (a, b) -> b,
                         supplier
                 ));
+    }
+
+    public static boolean isInt(final String s) {
+        return INT_PATTERN.matcher(s).matches();
+    }
+
+    public static boolean isReal(final String s) {
+        return REAL_PATTERN.matcher(s).matches();
+    }
+
+    public static int countLines(final String str) {
+        final String[] lines = str.split("\r\n|\r|\n");
+        return lines.length;
+    }
+
+    public static String replaceGroups(String s, final String leftDelim, final String rightDelim,
+                                       final Function<String, String> replaceFunction) {
+        String ss = s;
+        int start_pos = 0;
+        while (true) {
+            // Find the start delimiter
+            start_pos = ss.indexOf(leftDelim, start_pos);
+            if (start_pos == -1) {
+                break; // No more delimiters found
+            }
+            // Find the end delimiter
+            int end_pos = ss.indexOf(rightDelim, start_pos + leftDelim.length());
+            if (end_pos == -1) {
+                break; // No matching end delimiter found
+            }
+            // Extract the substring between the delimiters
+            String substring = ss.substring(start_pos + leftDelim.length(), end_pos - (start_pos + leftDelim.length()));
+            // Apply the replacement function
+            String replacement = replaceFunction.apply(substring);
+            // Replace the substring in the original string
+            ss = ss.substring(0, start_pos) + replacement + ss.substring(end_pos - start_pos + rightDelim.length());
+            // Update the start position to continue scanning
+            start_pos = start_pos + replacement.length();
+        }
+        return ss;
     }
 
     public static class RecCollector implements Collector<Rel, Map<Obj, Obj>, Rec> {

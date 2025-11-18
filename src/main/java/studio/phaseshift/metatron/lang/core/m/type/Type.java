@@ -22,7 +22,12 @@ import studio.phaseshift.metatron.algebra.PlusMonoid;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.core.m.inst.mInstSet;
 import studio.phaseshift.metatron.lang.core.m.obj.NoObj;
+import studio.phaseshift.metatron.lang.sys.router.Router;
 import studio.phaseshift.metatron.util.Tuple;
+
+import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.INT_TID;
+import static studio.phaseshift.metatron.lang.core.m.obj.NoObj.noobj;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
 
 public interface Type extends Obj, PlusMonoid<Type> {
 
@@ -69,13 +74,27 @@ public interface Type extends Obj, PlusMonoid<Type> {
         return this.jvm().get0();
     }
 
+    default boolean hasPredicate() {
+        return null != this.jvm().get0();
+    }
+
+    default boolean hasConstructor() {
+        return null != this.jvm().get1();
+    }
+
     @Override
     default Obj apply(final Obj obj) {
         // if (!obj.rng().tid().matches(this.tid()))
         //     return NoObj.single();
+        if (!this.isBaseType()) {
+            Obj subType = Router.readFromSpace(this.tid());
+            if (!subType.equals(this))
+                if (subType.apply(obj).isNoObj())
+                    return noobj();
+        }
         return null == this.predicate() || obj.matches(predicate().apply(obj)) ?
                 obj :
-                NoObj.noobj();
+                noobj();
     }
 
     @Override

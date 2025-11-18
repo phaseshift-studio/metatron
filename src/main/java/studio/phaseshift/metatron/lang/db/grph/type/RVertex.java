@@ -1,10 +1,12 @@
 package studio.phaseshift.metatron.lang.db.grph.type;
 
 import org.apache.tinkerpop.gremlin.structure.Direction;
+import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.core.m.type.Lst;
 import studio.phaseshift.metatron.lang.core.m.type.Obj;
 import studio.phaseshift.metatron.lang.core.m.type.Rec;
 import studio.phaseshift.metatron.lang.core.m.type.Rel;
+import studio.phaseshift.metatron.lang.sys.router.Router;
 
 import java.util.stream.Stream;
 
@@ -17,12 +19,13 @@ import static studio.phaseshift.metatron.lang.db.grph.type.TP3Translator.LABEL;
  */
 public class RVertex extends RElement {
 
+
     public RVertex(final Obj vertex) {
         super(vertex);
     }
 
     public static RVertex of(final Rec vertex) {
-        return vertex instanceof RVertex ? (RVertex) vertex : new RVertex(vertex);
+        return vertex instanceof RVertex ? (RVertex) vertex : new RVertex(vertex.vid(null)).vid(vertex.vid()).as();
     }
 
     public static Stream<RVertex> of(final Obj vertices) {

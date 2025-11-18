@@ -64,7 +64,7 @@ public class PubSubQ extends BaseQ {
                 return lhs;
             }));
 
-    public PubSubQ(final Space space) {
+    public PubSubQ() {
         super(mutableMap(), f("sub"), SUBSCRIPTION_TID);
         this.onRead = new PubSubQ.OnRead();
         this.onWrite = new PubSubQ.OnWrite();
@@ -114,7 +114,7 @@ public class PubSubQ extends BaseQ {
 
         @Override
         public Optional<Obj> qlessWrite(final fURI source, final fURI vid, final Obj obj) {
-            LOG.trace("evaluating {{y}}qless write{{/y}}: %s => %s", obj, vid);
+            LOG.debug("evaluating {{y}}qless write{{/y}}: %s => %s", obj, vid);
             subscriptions.stream().map(Obj::<Subscription>as).filter(s -> vid.basePath().matches(s.target())).forEach(s -> {
                 LOG.debug("sending mail: (%s, %s)", obj, s);
                 mail.add(MMachine.of(obj, s.call().toCode()));
@@ -128,8 +128,25 @@ public class PubSubQ extends BaseQ {
         }
 
         @Override
+        public Optional<Obj> postWrite(final fURI source, final fURI vid, final Obj obj, final Obj obj2) {
+            LOG.debug("evaluating {{y}}postwrite{{/y}}: %s => %s", obj, vid);
+            if (vid.hasQuery("sub")) {
+                if (obj.isNoObj()) {
+                    subscriptions.append(new Subscription(source, vid.basePath(), obj.<Call>as()));
+                    //subscriptions.(s -> vid.basePath().matches(s.vid()));
+                } else if (obj.tid().basePath().equals(SUBSCRIPTION_TID)) {
+                    subscriptions.append(obj);
+                } else
+                    subscriptions.append(new Subscription(source, vid.basePath(), obj.as()));
+                LOG.debug("current subscriptions: %s", subscriptions);
+                return Optional.of(obj);
+            }
+            return Optional.empty();
+        }
+        
+        @Override
         public Optional<Obj> preWrite(final fURI source, final fURI vid, final Obj obj) {
-            LOG.trace("evaluating {{y}}prewrite{{/y}}: %s => %s", obj, vid);
+            LOG.debug("evaluating {{y}}prewrite{{/y}}: %s => %s", obj, vid);
             if (vid.hasQuery("sub")) {
                 if (obj.isNoObj()) {
                     subscriptions.append(new Subscription(source, vid.basePath(), obj.<Call>as()));

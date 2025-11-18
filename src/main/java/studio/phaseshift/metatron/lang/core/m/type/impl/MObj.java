@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.lang.core.m.type.impl;
 
+import io.reactivex.internal.functions.ObjectHelper;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.sys.router.Router;
 import studio.phaseshift.metatron.lang.core.m.type.Fail;
@@ -37,31 +38,22 @@ public abstract class MObj implements Obj, Cloneable {
         // for non-standard constructions
     }
 
-    @Override
-    public Obj lazyTid(final fURI tid) {
-        this.tid = tid;
-        return this;
-    }
-
     public MObj(final Object jvm, final fURI tid, final fURI vid) {
         assert null != tid;
-        this.jvm = jvm;
-        this.tid = tid.big();
-        this.vid = vid;
-        if (this.check())
-            this.save();
+        this.mutateSelf(jvm,tid.big(),vid);
+        Obj.Helper.objCheckAndSave(this);
     }
 
-    protected boolean check() {
+   /* protected boolean check() {
         if (!this.isInstSet() && !this.isNoObj() && !this.isType() && !this.matches(this.type()))
             throw MTronException.of("[{{r}}type error{{/r}}] %s is not a %s".formatted(this, this.type()));
         return true;
-    }
+    }*/
 
-    protected void save() {
+   /* protected void save() {
         if (null != vid && !this.isType())
             Router.writeToSpace(this);
-    }
+    }*/
 
     @Override
     public <J> J jvm() {
@@ -103,32 +95,7 @@ public abstract class MObj implements Obj, Cloneable {
     }
 
     public <O extends Obj> O clone(final Object jvm, final fURI tid, final fURI vid) {
-        Object realjvm = jvm;
-        if (!Objects.equals(tid, this.tid)) {
-            final Obj type = Router.readFromSpace(tid);
-            if (!type.isNoObj() && type.isType() && null != type.<Type>as().constructor()) {
-                Obj construction = type.<Type>as().constructor().apply(this);
-                if (construction.isFail())
-                    throw (MTronException) construction.<Fail>as().jvm();
-                else
-                    realjvm = construction.jvm();
-            }
-        }
-
-        if (!Objects.equals(realjvm, this.jvm) || !tid.equals(this.tid) || !Objects.equals(vid, this.vid)) {
-            try {
-                final MObj clone = (MObj) this.clone();
-                clone.jvm = realjvm;
-                clone.tid = tid;
-                clone.vid = vid;
-                clone.check();
-                clone.save();
-                return (O) clone;
-            } catch (final Exception e) {
-                throw MTronException.of(e);
-            }
-        }
-        return (O) this;
+        return Obj.Helper.objClone(this,jvm,tid,vid);
     }
 
     @Override
@@ -139,5 +106,12 @@ public abstract class MObj implements Obj, Cloneable {
         this.tid = fURI.NOOBJ;
         this.vid = fURI.NULL;
         return r;
+    }
+
+    @Override
+    public void mutateSelf(final Object jvm, final fURI tid, final fURI vid) {
+        this.jvm = jvm;
+        this.tid = tid;
+        this.vid = vid;
     }
 }

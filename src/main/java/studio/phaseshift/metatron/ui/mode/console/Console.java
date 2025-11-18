@@ -27,19 +27,21 @@ import org.jline.utils.AttributedString;
 import org.jline.utils.AttributedStringBuilder;
 import org.jline.widget.Widgets;
 import studio.phaseshift.metatron.BootLoader;
+import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.core.m.obj.NoObj;
 import studio.phaseshift.metatron.lang.core.m.type.Obj;
 import studio.phaseshift.metatron.lang.core.m.type.Rec;
 import studio.phaseshift.metatron.lang.core.m.type.impl.MObjs;
 import studio.phaseshift.metatron.lang.core.m.inst.mInstSet;
 import studio.phaseshift.metatron.lang.core.m.parser.mParser;
+import studio.phaseshift.metatron.lang.core.m.type.impl.MRec;
 import studio.phaseshift.metatron.lang.util.logObj;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
 import studio.phaseshift.metatron.ui.Mode;
 import studio.phaseshift.metatron.lang.util.serial.ObjStringSerializer;
+import studio.phaseshift.metatron.util.Common;
 import studio.phaseshift.metatron.util.MTronException;
-import studio.phaseshift.metatron.util.StringUtil;
 import studio.phaseshift.metatron.lang.core.mach.type.impl.MMachine;
 
 import java.io.BufferedReader;
@@ -52,11 +54,13 @@ import java.util.*;
 import java.util.function.BiConsumer;
 
 import static org.jline.keymap.KeyMap.ctrl;
+import static studio.phaseshift.metatron.furi.fURI.f;
 
-public class Console implements Mode {
+public class Console extends MRec implements Mode {
     private static final String METATRON_VERSION = "0.1-alpha";
 
-    private static final GraphittyLogger LOG = Graphitty.log(Console.class);
+    public static final fURI CONSOLE_TID = f("/sys/ui/console");
+    private final GraphittyLogger LOG = Graphitty.log(this);
     public static String HEADER_FILE = "./conf/ansi_headers.txt";
     public static String HEADER_SEPARATOR = "####################";
     private static boolean RESOLVE_MODE = false;
@@ -65,6 +69,7 @@ public class Console implements Mode {
     private Thread mainThread;
 
     public Console(final Rec options) {
+        super(options.jvm(), CONSOLE_TID, f("/mnt/ui/console"));
         try {
             final DefaultParser parser = new DefaultParser()
                     .quoteChars(new char[]{'\'', '"'})
@@ -161,7 +166,7 @@ public class Console implements Mode {
                 Throwable x = e;
                 int y = 0;
                 while (null != x) {
-                    LOG.error("%s%s", ((0 == y++) ? "" : (" ".repeat(y) + "\\_")), x.getMessage());
+                    LOG.error("\n%s%s", ((0 == y++) ? "" : (" ".repeat(y) + "\\_")), x.getMessage());
                     x = x.getCause();
                 }
                 final String stackTrace = this.reader.readLine(Graphitty.string("{{y}}display stack trace {{g}}[y/N]{{y}}?{{X}} "));
@@ -245,8 +250,8 @@ public class Console implements Mode {
                             try {
                                 final String objString = o.toString();
                                 final String compiledString = o.isCode() ? ObjStringSerializer.prettyPrintCode(o.resolve(NoObj.noobj()).as()) : null;
-                                final int yDistance = StringUtil.countLines(objString);
-                                final int yyDistance = null == compiledString ? 0 : (StringUtil.countLines(compiledString) + 1);
+                                final int yDistance = Common.countLines(objString);
+                                final int yyDistance = null == compiledString ? 0 : (Common.countLines(compiledString) + 1);
                                 Graphitty.out(this.terminal.output(), "{{v%d&-X-&Xv&|%d}}%s", yDistance, 8, objString);
                                 if (null != compiledString) {
                                     Graphitty.out(this.terminal.output(), "\n{{|%d}}{{r}}%s{{/r}}", 8, "-"

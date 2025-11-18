@@ -17,7 +17,7 @@ public class REdge extends RElement {
     }
 
     public static REdge of(final Rec edge) {
-        return edge instanceof REdge ? (REdge) edge : new REdge(edge);
+        return edge instanceof REdge ? (REdge) edge : new REdge(edge.vid(null)).vid(edge.vid()).as();
     }
 
     public static Stream<REdge> of(final Obj edges) {
@@ -32,17 +32,9 @@ public class REdge extends RElement {
         return Stream.concat(out, in);
     }
 
-    public RVertex inVertex() {
-        return this.vertices(Direction.IN).iterator().next();
+    public String toString() {
+        return "{{y}}e{{g}}[{{b}}" + this.at(Direction.OUT.name()) + "{{g}}={{b}}" + this.label() + "{{g}}=>" + this.at(Direction.IN.name()) + "{{g}}]{{X}}";
     }
-
-    public RVertex outVertex() {
-        return this.vertices(Direction.OUT).iterator().next();
-    }
-
-   /* public String toString() {
-        return "{{y}}e{{g}}[{{b}}" + this.at(Direction.OUT.name()).vid() + "{{g}}={{b}}" + this.label() + "{{g}}=>" + this.inVertex().vid() + "{{g}}]{{X}}";
-    }*/
 
     @Override
     public REdge clone() {

@@ -21,7 +21,6 @@ package studio.phaseshift.metatron.lang.core.m.inst;
 import net.objecthunter.exp4j.ExpressionBuilder;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.furi.q.DocQ;
 import studio.phaseshift.metatron.lang.core.m.obj.NoObj;
 import studio.phaseshift.metatron.lang.core.m.type.*;
 import studio.phaseshift.metatron.lang.core.m.type.impl.*;
@@ -120,6 +119,8 @@ public class mInstSet extends MInstSet {
     public static final fURI GTE_TID = INST_TID.extend("gte");
     public static final fURI LTE_TID = INST_TID.extend("lte");
     public static final fURI NOT_TID = INST_TID.extend("not");
+    public static final fURI TAKE_TID = INST_TID.extend("take");
+    public static final fURI SKIP_TID = INST_TID.extend("skip");
     public static final fURI BARRIER_TID = INST_TID.extend("barrier");
     public static final fURI REIFY_TID = INST_TID.extend("reify");
     public static final fURI SELECT_TID = INST_TID.extend("select");
@@ -237,16 +238,30 @@ public class mInstSet extends MInstSet {
         } else if (lhs.isRec() && rhs.isRec()) {
             final Map<Obj, Obj> result = new LinkedHashMap<>();
             final AtomicBoolean found = new AtomicBoolean(false);
-            lhs.recValue().forEach((lKey, lValue) ->
+            lhs.recValue().forEach((lKey, lValue) -> {
+                AtomicBoolean localFind = new AtomicBoolean(false);
+                rhs.recValue().forEach((rKey, rValue) -> {
+                    if (lKey.matches(rKey)) {
+                        found.set(true);
+                        localFind.set(true);
+                        final Obj r = //((lValue.isRec() && rValue.isRec()) || (lValue.isLst() && rValue.isLst())) ?
+                                crossPoly(lValue, rValue);
+                        // lValue.isPoly() ? NoObj.single() : rValue.apply(lValue);
+                        result.compute(rKey.apply(lKey), (k, v) -> null == v ? r : v.append(r));
+                    }
+                });
+                if(!localFind.get()) {
                     rhs.recValue().forEach((rKey, rValue) -> {
-                        if (lKey.matches(rKey)) {
+                        if (lKey.matches(rKey) || rKey.isCall()) {
                             found.set(true);
                             final Obj r = //((lValue.isRec() && rValue.isRec()) || (lValue.isLst() && rValue.isLst())) ?
                                     crossPoly(lValue, rValue);
                             // lValue.isPoly() ? NoObj.single() : rValue.apply(lValue);
                             result.compute(rKey.apply(lKey), (k, v) -> null == v ? r : v.append(r));
                         }
-                    }));
+                    });
+                }
+            });
             return result.isEmpty() || !found.get() ? noobj() : lhs.jvm(result);
         } else if (!rhs.isCall() && (lhs.isPoly() || rhs.isPoly())) {
             return noobj();
@@ -429,6 +444,8 @@ public class mInstSet extends MInstSet {
                 instC(SUM_TID.dom(LST_TID.maybeSome()).rng(LST_TID), lst(), (lhs, inst) -> inst.seed().jvm(lhs.stream().reduce(inst.seed(), (a, b) -> ((Lst) a).plus((Lst) b)).lstValue()), lst()),
                 instC(SUM_TID.dom(REAL_TID.maybeSome()).rng(REAL_TID), lst(), (lhs, inst) -> inst.seed().jvm(lhs.stream().reduce(inst.seed(), (a, b) -> ((Real) a).plus((Real) b)).realValue()), real(0.0)),
                 instC(SUM_TID.dom(URI_TID.maybeSome()).rng(URI_TID), lst(), (lhs, inst) -> inst.seed().jvm(lhs.stream().reduce(inst.seed(), (a, b) -> ((Uri) a).plus((Uri) b)).uriValue()), uri(fURI.NOOBJ)),
+                instC(SKIP_TID.dom(A.maybeSome()).rng(A.maybeSome()), lst(T(INT_TID)), (lhs, inst) -> lhs.take(cInt.of(inst.arg(0).intValue())).get1()), // retrieve
+                instC(TAKE_TID.dom(A.maybeSome()).rng(A.maybeSome()), lst(T(INT_TID)), (lhs, inst) -> lhs.take(cInt.of(inst.arg(0).intValue())).get0()), // remaining
                 //instC(SUM_TID.dom(A.maybeSome()).rng(A), lst(), (lhs, inst) -> ((Semiring.O)lhs).zero().jvm(IteratorUtil.reduce(lhs.iterator(), ((Semiring.O)lhs).zero(), (a, b) -> ((Semiring.O) a).plus((Semiring.O) b)).jvm()), uri(fURI.NOOBJ)),
                 //instC(SUM_TID.dom(A.maybeSome()).rng(A), lst(), (lhs, inst) -> IteratorUtil.reduce((Iterator)lhs.iterator(), lhs.<Semiring.O>as().zero(), (a, b) -> a.plus(b)), NoObj.single()),
                 //instC(SUM_TID.dom(REAL_TID.maybeSome()).rng(REAL_TID), lst(), (lhs, inst) -> IteratorUtil.reduce(lhs.iterator(), inst.seed(), (a, b) -> real(a.realValue() + (b.realValue() * b.c().max()))), real(0.0)),

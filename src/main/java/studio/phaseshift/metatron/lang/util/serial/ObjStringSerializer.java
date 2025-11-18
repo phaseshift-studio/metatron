@@ -140,7 +140,7 @@ public record ObjStringSerializer(Builder b) implements ObjSerializer<String> {
             /// ///////////////////////////////////////////////////////////////
             /// ///////////////////////////////////////////////////////////////
             else if (obj instanceof final Objs objs) {
-                generateTID(sb, obj.tid(), true).append("{{g}}{{{y}}");
+                generateTID(sb, obj.tid(), true).append("{{g}}{");
                 boolean found = false;
                 for (final Obj o : objs.jvm()) {
                     found = true;

@@ -81,7 +81,7 @@ public class MetatronTest {
             assertEquals(desired, actual);
         });
     }
-
+    
     public void testCode(final String code, final String expected) {
         if (expected.trim().equals("<ERROR>")) {
             try {

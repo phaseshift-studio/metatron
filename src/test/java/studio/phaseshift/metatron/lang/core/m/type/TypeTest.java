@@ -172,7 +172,7 @@ public class TypeTest extends MetatronObjTest {
     @ParameterizedTest
     @CsvSource(value = {
             // tid   |  typedef                                 | instance                                         | matches?
-            "person  % person::T[?[name=>?str::T,age=>?int::T]] % person::[name=>'enoch',age=>365]                 % true",
+            "person  % rec::T[?[name=>?str::T,age=>?int::T]]    % person::[name=>'enoch',age=>365]                 % true",
             "person  % .                                        % person::7                                        % false",
             "person  % .                                        % person::'a person'                               % false",
             "person  % .                                        % person::[name=>'enoch']                          % false",
@@ -205,6 +205,12 @@ public class TypeTest extends MetatronObjTest {
             "nat     % .                                        % -23.as(nat::T)                                   % true",
             "nat     % .                                        % 2.as(plus(6).as(nat::T))                         % true",
             "nat     % .                                        % 2.as(plus(-6).as(nat::T))                        % true",
+            ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+            "nat     % int::T[?>0]                              % nat::150                                          % true",
+            ".       % .                                        % nat::-150                                         % false",
+            "agenat  % nat::T[?<125]                            % agenat::150                                       % false",
+            ".       % .                                        % agenat::-1                                        % false",
+            ".       % .                                        % agenat::29                                        % true",
     }, delimiter = '%')
     public void testTyping(final String tid, final String typeDef, final String instance, final boolean shouldSucceed) {
         try {

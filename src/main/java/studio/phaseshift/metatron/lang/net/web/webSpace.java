@@ -24,6 +24,7 @@ import com.sun.net.httpserver.HttpServer;
 import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.lang.core.m.parser.mParser;
 import studio.phaseshift.metatron.lang.sys.router.Router;
 import studio.phaseshift.metatron.lang.Space;
 import studio.phaseshift.metatron.lang.core.m.inst.mInstSet;
@@ -79,6 +80,7 @@ public class webSpace extends MSpace<HttpServer> {
         APPLICATION_OCTET_STREAM("application/octet-stream"),
         APPLICATION_ATOM_XML("application/atom+xml"),
         APPLICATION_XML("application/xml"),
+        APPLICATION_MTRON("application/mtron"),
         TEXT_HTML("text/html"),
         TEXT_PLAIN("text/plain"),
         APPLICATION_XHTML_XML("application/xhtml+xml");
@@ -98,6 +100,10 @@ public class webSpace extends MSpace<HttpServer> {
 
         public boolean isHtml() {
             return this.equals(TEXT_HTML);
+        }
+
+        public boolean isMtron() {
+            return this.equals(APPLICATION_MTRON);
         }
 
         public boolean isXml() {
@@ -144,12 +150,12 @@ public class webSpace extends MSpace<HttpServer> {
             final HttpContext context = server.createContext(r.first().uriValue().toString(),
                     exchange -> {
                         //LOG.debug("using http context %s => %s => %s", exchange.getRequestURI(), exchange.getHttpContext().getPath(), r.second());
-                         Path path = Path.of(r.second().uriValue().extend(f(exchange.getRequestURI().getPath())).toString());
-                        if(!r.first().uriValue().equals(f("/")))
+                        Path path = Path.of(r.second().uriValue().extend(f(exchange.getRequestURI().getPath())).toString());
+                        if (!r.first().uriValue().equals(f("/")))
                             path = Path.of(path.toString().substring(r.first().uriValue().toString().length()));
                         LOG.debug("resolving context to absolute path: %s => %s", uri(exchange.getRequestURI().toString()), uri(path.toAbsolutePath().toString()));
                         final Path filePath = Files.isRegularFile(path) ? path : Path.of(path + "/" + INDEX_HTML);
-                        final String contentType = Files.probeContentType(filePath);
+                        final String contentType = exchange.getRequestURI().getPath().endsWith("mtron") ? ContentType.APPLICATION_MTRON.value : Files.probeContentType(filePath);
                         LOG.debug("content-type: %s", contentType);
                         exchange.getResponseHeaders().set(ContentType.VALUE, contentType == null ? ContentType.APPLICATION_OCTET_STREAM.value : contentType);
                         exchange.sendResponseHeaders(200, Files.size(filePath));
@@ -206,15 +212,17 @@ public class webSpace extends MSpace<HttpServer> {
                 final Connection.Response response = Jsoup.connect(pattern.toString()).ignoreContentType(true).ignoreHttpErrors(true).execute();
                 final ContentType contentType = ContentType.of(response.contentType());
                 LOG.debug("content-type: %s => %s", response.contentType(), contentType);
-                final Obj docObj = contentType.isHtml() ?
-                        WEB_TRANSLATOR.translate(response.parse()).tid(PAGE_TID) :
-                        (contentType.isJson() ?
-                                JSON_TRANSLATOR.translateString(response.body()) :
-                                (contentType.isXml() ?
-                                        WEB_TRANSLATOR.translate(response.parse()) :
-                                        (contentType.isAudio() ?
-                                                AUDIO_TRANSLATOR.translate(response.bodyStream()) :
-                                                str(response.body()))));
+                final Obj docObj = contentType.isMtron() ?
+                        mParser.parse(response.body()) :
+                        (contentType.isHtml() ?
+                                WEB_TRANSLATOR.translate(response.parse()).tid(PAGE_TID) :
+                                (contentType.isJson() ?
+                                        JSON_TRANSLATOR.translateString(response.body()) :
+                                        (contentType.isXml() ?
+                                                WEB_TRANSLATOR.translate(response.parse()) :
+                                                (contentType.isAudio() ?
+                                                        AUDIO_TRANSLATOR.translate(response.bodyStream()) :
+                                                        str(response.body())))));
                 partial.put(pattern, docObj);
                 return partial;
             } catch (final Exception e) {

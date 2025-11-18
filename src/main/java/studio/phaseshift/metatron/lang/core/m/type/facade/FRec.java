@@ -34,4 +34,12 @@ public class FRec extends FObj<Rec> implements Rec {
     public Map<Obj, Obj> jvm() {
         return this.base.jvm();
     }
+
+    public Rec vid(final fURI vid) {
+        return super.vid(vid).as();
+    }
+    
+    public Rec tid(final fURI tid) {
+        return super.tid(tid).as();
+    }
 }

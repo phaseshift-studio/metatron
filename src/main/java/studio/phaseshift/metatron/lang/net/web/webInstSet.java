@@ -25,6 +25,7 @@ import studio.phaseshift.metatron.lang.core.m.type.Inst;
 import studio.phaseshift.metatron.lang.core.m.type.Obj;
 import studio.phaseshift.metatron.lang.core.m.type.Type;
 import studio.phaseshift.metatron.lang.core.m.type.impl.MInstSet;
+import studio.phaseshift.metatron.lang.net.iot.mqttSpace;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.util.MTronException;
 
@@ -64,6 +65,7 @@ public class webInstSet extends MInstSet {
     public Set<Type> types() {
         return Stream.of(
                 webSpace.WEB_TYPE,
+                mqttSpace.MQTT_TYPE,
                 T(PAGE_TID, mParser.parse("?[html=>?[head=>_,body=>_]]")),
                 T(CSS_TID)).collect(Collectors.toSet());
     }

@@ -41,7 +41,7 @@ public class MTronException extends RuntimeException {
     }
 
     public static MTronException of(final Throwable cause) {
-        return new MTronException(cause);
+        return cause instanceof MTronException ? (MTronException) cause : new MTronException(cause.getMessage());
     }
 
     public static MTronException of(final Throwable cause, final String format, final Object... args) {
