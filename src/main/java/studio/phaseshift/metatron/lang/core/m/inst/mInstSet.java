@@ -215,7 +215,7 @@ public class mInstSet extends MInstSet {
                 Tuple.Triplet.with(Tuple.Pair.with("@", null), List.of(AT_TID), 1),
                 Tuple.Triplet.with(Tuple.Pair.with("|", null), List.of(BLOCK_TID), 1),
                 Tuple.Triplet.with(Tuple.Pair.with("_/", "\\_"), List.of(WITHIN_TID), 1),
-                Tuple.Triplet.with(Tuple.Pair.with("_", null), List.of(ID_TID), 1),
+                Tuple.Triplet.with(Tuple.Pair.with("_", null), List.of(ID_TID), 0),
                 Tuple.Triplet.with(Tuple.Pair.with("⋅", null), List.of(MULT_TID), 1),
                 Tuple.Triplet.with(Tuple.Pair.with("*", null), List.of(FROM_TID), 1),
                 Tuple.Triplet.with(Tuple.Pair.with(">>-", null), List.of(RNG_TID), 0),

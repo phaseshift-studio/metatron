@@ -49,16 +49,18 @@ public abstract class MInstSet extends MSpace<Map<fURI, Set<? extends Obj>>> imp
 
     public MInstSet(final fURI tid, final fURI vid) {
         super(new LinkedHashMap<>(), mutableMap(uri(Tokens.PATTERN), uri(tid.extend(fURI.ALL))), tid.extend(fURI.ALL), tid, vid);
-        if (!this.pattern.equals(f("+/#")) && Router.loaded() && !(this instanceof Router))
-            Router.global().addSpace(this);
-        this.registerQ(new DocQ());
-        this.types().forEach(t -> this.write(t.tid(), t));
-        this.consts().forEach(c -> this.write(c.vid(), c));
-        this.insts().forEach(i -> this.write(i.tid(), i));
-        this.rewrites().forEach(r -> this.write(r.tid(), r));
-        this.types().forEach(t -> Router.global().registerRewrite(f(t.tid().name()), t.tid()));
-        this.consts().forEach(t -> Router.global().registerRewrite(f(t.vid().name()), t.vid()));
-        this.insts().forEach(t -> Router.global().registerRewrite(f(t.tid().name()), t.tid().basePath()));
+        if (Router.loaded()) {
+            if (!this.pattern.equals(f("+/#")) && Router.loaded() && !(this instanceof Router))
+                Router.global().addSpace(this);
+            this.registerQ(new DocQ());
+            this.types().forEach(t -> this.write(t.tid(), t));
+            this.consts().forEach(c -> this.write(c.vid(), c));
+            this.insts().forEach(i -> this.write(i.tid(), i));
+            this.rewrites().forEach(r -> this.write(r.tid(), r));
+            this.types().forEach(t -> Router.global().registerRewrite(f(t.tid().name()), t.tid()));
+            this.consts().forEach(t -> Router.global().registerRewrite(f(t.vid().name()), t.vid()));
+            this.insts().forEach(t -> Router.global().registerRewrite(f(t.tid().name()), t.tid().basePath()));
+        }
     }
 
     @Override
@@ -131,7 +133,7 @@ public abstract class MInstSet extends MSpace<Map<fURI, Set<? extends Obj>>> imp
         });
     }
 
-    public Set<Tuple.Triplet<Tuple.Pair<String,String>,List<fURI>,Integer>> sugars() {
+    public Set<Tuple.Triplet<Tuple.Pair<String, String>, List<fURI>, Integer>> sugars() {
         return Set.of();
     }
 

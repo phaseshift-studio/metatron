@@ -23,6 +23,7 @@ import org.petitparser.parser.Parser;
 import org.petitparser.parser.combinators.*;
 import org.petitparser.parser.primitive.CharacterParser;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.lang.core.m.inst.mInstSet;
 import studio.phaseshift.metatron.lang.core.m.type.Call;
 import studio.phaseshift.metatron.lang.core.m.type.Fail;
 import studio.phaseshift.metatron.lang.core.m.type.Inst;
@@ -70,11 +71,23 @@ public class mParser {
     private static final SettableParser rel_parser = SettableParser.undefined();
     private static final SettableParser obj_rel_back_parser = SettableParser.undefined();
     private static final SettableParser branch_parser = SettableParser.undefined();
+    private static final SettableParser sugar_code_parser = SettableParser.undefined();
+    private static final Parser[] PARSERS;
+
     private static final String FULL_FURI_CHARS = "/%!#_-@+.: ";
     private static final String REDUCED_FURI_CHARS = "/%!#_-@+:";
 
     static {
-
+        final List<Parser> list =
+                mInstSet.create().sugars()
+                        .stream()
+                        .map(triplet ->
+                                generate_sugar_parser(triplet.get1(), of(triplet.get0().get0()),
+                                        triplet.get2(), null == triplet.get0().get1() ?
+                                                null :
+                                                of(triplet.get0().get1()))).toList();
+        PARSERS = new Parser[list.size()];
+        list.toArray(PARSERS);
         furi_parser.set(seq(word().or(seq(of("::").not(),
                         anyOf(REDUCED_FURI_CHARS))).plus().flatten(),
                 opt(true ? m_furi_poly_type() : none(), null),
@@ -159,6 +172,19 @@ public class mParser {
                         Inst.f.of(mParser.<Obj>pick(t, 2)),
                         NoObj.noobj()), // todo: encode seed in parser
                         pick(t, 0), pick(t, 3)))));
+
+        sugar_code_parser.set(seq(opt(obj_no_code_parser, NoObj.noobj()), opt(of(".").trim(), '.'), opt(m_code(), null), m_vid_postfix()).map(t -> {
+            final Obj first = mParser.<Call>pick(t, 0);
+            final Obj second = mParser.pick(t, 2);
+            if (null == second)
+                return first.isInst() && !first.isNoObj() ? MCode.of(List.of(first.as())) : first;
+            final List<Inst> newCode = new ArrayList<>();
+            if (!first.isNoObj() && !first.isInst())
+                newCode.add(new MInst(Triplet.with(lst(first.isInst() ? NoObj.noobj() : first), Inst.f.UNKNOWN, NoObj.noobj()), START_TID, fURI.NULL));
+            else if (first.isInst()) newCode.add(first.as());
+            newCode.addAll(mParser.<Call>pick(t, 2).insts());
+            return MCode.of(newCode, CODE_TID, pick(t, 3));
+        }));
     }
 
     public static Parser lst_internal() {
@@ -379,18 +405,7 @@ public class mParser {
     }
 
     public static Parser sugar_code() {
-        return seq(opt(obj_no_code_parser, NoObj.noobj()), opt(of(".").trim(), '.'), opt(m_code(), null), m_vid_postfix()).map(t -> {
-            final Obj first = mParser.<Call>pick(t, 0);
-            final Obj second = mParser.pick(t, 2);
-            if (null == second)
-                return first.isInst() && !first.isNoObj() ? MCode.of(List.of(first.as())) : first;
-            final List<Inst> newCode = new ArrayList<>();
-            if (!first.isNoObj() && !first.isInst())
-                newCode.add(new MInst(Triplet.with(lst(first.isInst() ? NoObj.noobj() : first), Inst.f.UNKNOWN, NoObj.noobj()), START_TID, fURI.NULL));
-            else if (first.isInst()) newCode.add(first.as());
-            newCode.addAll(mParser.<Call>pick(t, 2).insts());
-            return MCode.of(newCode, CODE_TID, pick(t, 3));
-        });
+        return sugar_code_parser;
     }
 
     public static Parser m_code_or_obj() {
@@ -408,49 +423,12 @@ public class mParser {
     }
 
     public static Parser m_inst() {
-        return choice(ordered_sugar_parsers()).or(inst_parser);
+        return choice(PARSERS).or(inst_parser);
     }
 
     /// //////////////////////////////////////////////////////////////////////////////////////////
     /// ///////////////////////////////////// SUGAR PARSERS //////////////////////////////////////
     /// //////////////////////////////////////////////////////////////////////////////////////////
-    private static Parser[] ordered_sugar_parsers() {
-        return new Parser[]{
-                //branch_parser,
-                generate_sugar_parser(RFROM_TID, of("^"), 1),
-                generate_sugar_parser(WHERE_TID, of("?=="), 1),
-                generate_sugar_parser(GROUP_TID, of("%=="), 1),
-                generate_sugar_parser(SELECT_TID, of("=="), 1),
-                generate_sugar_parser(MATCHES_TID, of("=~"), 1),
-                generate_sugar_parser(List.of(IS_TID, EQ_TID), of("?="), 1),
-                generate_sugar_parser(List.of(IS_TID, GT_TID), of("?>"), 1),
-                generate_sugar_parser(List.of(IS_TID, GTE_TID), of("?>="), 1),
-                generate_sugar_parser(List.of(IS_TID, LTE_TID), of("?<="), 1),
-                generate_sugar_parser(List.of(IS_TID, LT_TID), of("?<"), 1),
-                generate_sugar_parser(List.of(IS_TID, NEQ_TID), of("?!="), 1),
-                generate_sugar_parser(List.of(IS_TID, MATCHES_TID), of("?=~"), 1),
-                generate_sugar_parser(ISA_TID, of("?"), 1),
-                generate_sugar_parser(AT_TID, of('@'), 1),
-                generate_sugar_parser(BARRIER_TID, of("-|"), 1),
-                generate_sugar_parser(BLOCK_TID, of('|'), 1),
-                generate_sugar_parser(WITHIN_TID, of("_/"), 1, of("\\_")),
-                generate_sugar_parser(ID_TID, of('_'), 0),
-                generate_sugar_parser(MULT_TID, of('⋅'), 1),
-                generate_sugar_parser(FROM_TID, of('*'), 1),
-                generate_sugar_parser(RNG_TID, of(">>-"), 0),
-                generate_sugar_parser(MERGE_TID, of(">-"), 1),
-                generate_sugar_parser(MERGE_TID, of(">-"), 0),
-                generate_sugar_parser(CHOOSE_TID, of("-<|"), 1),
-                generate_sugar_parser(SPLIT_TID, of("-<"), 1),
-                generate_sugar_parser(REF_TID, of("->"), 1),
-                generate_sugar_parser(RSHIFT_TID, of(">>"), 1),
-                generate_sugar_parser(RSHIFT_TID, of(">>"), 0),
-                generate_sugar_parser(LSHIFT_TID, of("<<"), 1),
-                generate_sugar_parser(LSHIFT_TID, of("<<"), 0),
-                generate_sugar_parser(PLUS_TID, of('+'), 1),
-                generate_sugar_parser(MINUS_TID, of("-"), 1),
-                generate_sugar_parser(END_TID, of(';'), 0)};
-    }
 
     private static Parser generate_sugar_parser(final fURI tid, final Parser startToken, final int argCount) {
         return generate_sugar_parser(tid, startToken, argCount, null);
@@ -463,6 +441,9 @@ public class mParser {
 
     private static Parser generate_sugar_parser(final List<fURI> instChain, final Parser startToken, final int argCount, final Parser endToken) {
         // TODO: look into ExpressionBuilder for handling paren wrapping properly.
+        if (instChain.size() == 1) {
+            return null == endToken ? generate_sugar_parser(instChain.get(0), startToken, argCount) : generate_sugar_parser(instChain.get(0), startToken, argCount, endToken);
+        }
         return (argCount == 0 ?
                 seq(startToken.trim(), opt(seq(of('?'), m_furi_inst_dom_rng()).map(t -> pick(t, 1)), null)).map(t -> MInst.instB(instChain.get(0), lst(MInst.instA(instChain.get(1).query(pick(t, 1)))))) :
                 seq(startToken.trim(), opt(seq(of('?'), m_furi_inst_dom_rng()).map(t -> pick(t, 1)), null), choice(

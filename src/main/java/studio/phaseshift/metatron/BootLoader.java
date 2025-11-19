@@ -23,6 +23,7 @@ import studio.phaseshift.metatron.lang.Space;
 import studio.phaseshift.metatron.lang.ai.llm.llmInstSet;
 import studio.phaseshift.metatron.lang.core.m.inst.mInstSet;
 import studio.phaseshift.metatron.lang.core.m.parser.mParser;
+import studio.phaseshift.metatron.lang.core.m.type.Feature;
 import studio.phaseshift.metatron.lang.core.m.type.Obj;
 import studio.phaseshift.metatron.lang.core.m.type.Rec;
 import studio.phaseshift.metatron.lang.core.mach.machInstSet;
@@ -57,7 +58,7 @@ import static studio.phaseshift.metatron.lang.core.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
 
-public class BootLoader implements Rec {
+public class BootLoader implements Rec, Feature.SelfClone {
 
     /// ////////////////////////////////////////////////////////////////////////
     /// the global variables that must be gc()'d on close
@@ -217,13 +218,11 @@ public class BootLoader implements Rec {
 
     @Override
     public Rec clone(final Object jvm, final fURI tid, final fURI vid) {
-        LOG.warn("boot loader obj form can not be mutated");
-        return this;
+        return Feature.SelfClone.super.clone(jvm, tid, vid);
     }
 
     @Override
     public Obj clone() {
-        LOG.warn("boot loader can not be cloned");
-        return this;
+        return Feature.SelfClone.super.clone();
     }
 }

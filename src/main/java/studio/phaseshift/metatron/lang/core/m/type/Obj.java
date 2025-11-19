@@ -47,7 +47,7 @@ import static studio.phaseshift.metatron.lang.core.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.util.Tuple.Pair;
 
-public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>, Cloneable {
+public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>, Feature.Logging, Cloneable {
 
     private static boolean typeInferenceMatch(final Obj lhs, final Type rhs) {
         if (lhs.tid().matches(rhs.tid()))
@@ -142,10 +142,6 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
 
     default Type type() {
         return T(this.tid()); // null == Router.global() || this.isInst() ? MType.of(this.tid()) : Router.global().read(this.tid()).orElse(MType.of(this.tid()));
-    }
-
-    default GraphittyLogger logger() {
-        return Graphitty.log(this);
     }
 
     <O extends Obj> O clone(final Object jvm, final fURI tid, final fURI vid);

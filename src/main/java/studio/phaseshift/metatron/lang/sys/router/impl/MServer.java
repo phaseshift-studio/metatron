@@ -197,8 +197,8 @@ public class MServer extends WebSocketServer implements Cluster, Closeable, Obj 
     }
 
     @Override
-    public <O extends Obj> O clone(final Object jvm, final fURI tid, final fURI vid) {
-        return null;
+    public MServer clone(final Object jvm, final fURI tid, final fURI vid) {
+        return this;
     }
 
     @Override
