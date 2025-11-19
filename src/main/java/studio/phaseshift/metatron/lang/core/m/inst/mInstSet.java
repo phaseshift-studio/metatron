@@ -99,6 +99,7 @@ public class mInstSet extends MInstSet {
     public static final fURI FIND_TID = INST_TID.extend("find");
     public static final fURI RMERGE_TID = INST_TID.extend("rmerge");
     public static final fURI WITHIN_TID = INST_TID.extend("within");
+    public static final fURI AUTO_TID = INST_TID.extend("auto");
     public static final fURI BLOCK_TID = INST_TID.extend("block");
     public static final fURI RNG_TID = INST_TID.extend("rng");
     public static final fURI DOM_TID = INST_TID.extend("dom");
@@ -321,6 +322,7 @@ public class mInstSet extends MInstSet {
     @Override
     public Set<Inst> insts() {
         return new LinkedHashSet<>(List.of(
+                instC(AUTO_TID.dom(ALL.maybeSome()).rng(ALL.maybeSome()), lst(T(ALL.maybeSome())), (lhs, inst) -> objs(inst.arg(0).stream().flatMap(a -> lhs.stream().map(a::apply)).filter(ab -> !ab.isNoObj()))),
                 instC(CATCH_TID.dom(ALL).rng(ALL.maybeSome()), lst(T(ALL.maybeSome())), (lhs, inst) -> lhs.isFail() ? inst.arg(0).apply(lhs) : lhs),
                 docWrap(instC(START_TID.dom(fURI.NOOBJ.zero()).rng(A.maybeSome()), lst(T(A.maybeSome())), (lhs, inst) -> inst.arg(0)),
                         "noobj", "initial objs", Map.of(jnt(0), "initial objs"), "the initial function f()->x"),

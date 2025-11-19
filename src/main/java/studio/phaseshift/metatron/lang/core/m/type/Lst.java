@@ -95,7 +95,7 @@ public interface Lst extends Poly, PlusMonoid.O<Lst> {
     @Override
     default <O extends Obj> O at(final Obj key) {
         if (key.isInt())
-            return (O) ((this.jvm().size() > key.intValue()) ? this.jvm().get(key.<Int>as().intValue().intValue()) : noobj());
+            return (O) ((this.jvm().size() > key.intValue()) ? this.jvm().get(key.<Int>as().intValue().intValue()).autoResolve(key) : noobj());
         else if (key.isUri()) {
             final String step = key.uriValue().segments().get(0);
             Obj result;
@@ -106,12 +106,12 @@ public interface Lst extends Poly, PlusMonoid.O<Lst> {
                     return (O) noobj();
                     //throw MTronException.of("path segment is not an int: %s", step);
                 final Int k = jnt(Long.parseLong(step));
-                result = this.jvm().size() <= k.intValue().intValue() ? noobj() : this.jvm().get(k.intValue().intValue());
+                result = this.jvm().size() <= k.intValue().intValue() ? noobj() : this.jvm().get(k.intValue().intValue()).autoResolve(key);
             }
             if (key.uriValue().segments().size() == 1) {
                 return (O) result;
             } else {
-                return (O) objs(IteratorUtil.stream(result.iterator()).filter(Obj::isPoly).map(r -> r.<Poly>as().at(uri(key.<Uri>as().uriValue().pretract()))));
+                return (O) objs(IteratorUtil.stream(result.iterator()).filter(Obj::isPoly).map(r -> r.<Poly>as().at(uri(key.<Uri>as().uriValue().pretract())).autoResolve(key)));
             }
         } else {
             throw MTronException.of("unknown key for lst: %s", key);
@@ -126,8 +126,8 @@ public interface Lst extends Poly, PlusMonoid.O<Lst> {
     @Override
     default Lst plus(final Lst rhs) {
         final List<Obj> list = new ArrayList<>();
-        this.lstValue().stream().map(e -> e.c(c -> c.mult(this.c()))).forEach(list::add);
-        rhs.lstValue().stream().map(e -> e.c(c -> c.mult(rhs.c()))).forEach(list::add);
+        this.elements().map(e -> e.c(c -> c.mult(this.c()))).forEach(list::add);
+        rhs.elements().map(e -> e.c(c -> c.mult(rhs.c()))).forEach(list::add);
         return this.<Lst>jvm(list).c(cInt::one);
     }
 
@@ -142,8 +142,8 @@ public interface Lst extends Poly, PlusMonoid.O<Lst> {
             if (rhs.lstValue().size() > this.lstValue().size())
                 return false;
             for (int i = 0; i < rhs.lstValue().size(); i++) {
-                final Obj l = this.lstValue().get(i);
-                final Obj r = rhs.lstValue().get(i);
+                final Obj l = this.lstValue().get(i).autoResolve(this);
+                final Obj r = rhs.lstValue().get(i).autoResolve(this);
                 if (!l.matches(r))
                     return false;
             }

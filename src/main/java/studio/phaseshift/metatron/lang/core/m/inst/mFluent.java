@@ -28,6 +28,7 @@ import studio.phaseshift.metatron.lang.core.m.type.impl.MCode;
 import java.util.ArrayList;
 import java.util.List;
 
+import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.AUTO_TID;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MInst.instB;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.ID_TID;
@@ -106,6 +107,10 @@ public class mFluent<F extends Fluent<F>> extends MCode implements Fluent<F>, Co
 
     public F from_(final Obj obj) {
         return this.addInst(instB(mInstSet.FROM_TID, lst(obj)));
+    }
+
+    public F auto_(final Obj obj) {
+        return this.addInst(instB(mInstSet.AUTO_TID, lst(obj)));
     }
 
     public F to_(final Obj obj) {
@@ -205,6 +210,10 @@ public class mFluent<F extends Fluent<F>> extends MCode implements Fluent<F>, Co
             return new mFluent<F>().else_(obj);
         }
 
+        public static <F extends mFluent<F>> F auto_(final Obj obj) {
+            return new mFluent<F>().auto_(obj);
+        }
+
         public static <F extends mFluent<F>> F from_(final Obj obj) {
             return new mFluent<F>().from_(obj);
         }
@@ -239,6 +248,10 @@ public class mFluent<F extends Fluent<F>> extends MCode implements Fluent<F>, Co
 
         public static <F extends mFluent<F>> F get_(final Obj obj) {
             return new mFluent<F>().get_(obj);
+        }
+
+        public static Inst auto(final fURI pointer) {
+            return auto_(from_(pointer.toUri()).tryToInst()).tryToInst().as();
         }
     }
 }

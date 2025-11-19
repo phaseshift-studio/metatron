@@ -58,7 +58,7 @@ public interface Rec extends Poly, PlusMonoid.O<Rec> {
 
     @Override
     default Stream<Rel> elements() {
-        return this.recValue().entrySet().stream().map(kv -> rel(kv.getKey(), kv.getValue()).c(c -> c.mult(this.c())).as());
+        return this.recValue().entrySet().stream().map(kv -> rel(kv.getKey().autoResolve(this), kv.getValue().autoResolve(this)).c(c -> c.mult(this.c())).as());
     }
 
     @Override
@@ -79,10 +79,10 @@ public interface Rec extends Poly, PlusMonoid.O<Rec> {
     @Override
     default boolean matches(final Obj rhs) {
         if (rhs.isRec()) {
-            return rhs.recValue().entrySet().stream().allMatch(r ->
-                    this.recValue().entrySet().stream().anyMatch(l -> {
-                        if (l.getKey().matches(r.getKey()))
-                            return l.getValue().matches(r.getValue());
+            return rhs.elements().allMatch(r ->
+                    this.elements().anyMatch(l -> {
+                        if (l.first().matches(r.<Rel>as().first()))
+                            return l.second().matches(r.<Rel>as().second());
                         else return false;
                     }));
         } else {
@@ -93,19 +93,20 @@ public interface Rec extends Poly, PlusMonoid.O<Rec> {
     @Override
     default <O extends Obj> O at(final Obj key) {
         if (!key.isUri())
-            return (O) this.jvm().getOrDefault(key, NoObj.noobj());
+            return (O) this.jvm().getOrDefault(key, NoObj.noobj()).autoResolve(key);
         else {
             final String step = key.uriValue().segments().get(0);
             Obj result;
             final Uri asNode = uri(key.uriValue().asNode());
             if (this.recValue().containsKey(asNode))
-                return (O) (key.uriValue().isBranch() ? rel(asNode, this.recValue().get(asNode)) : this.recValue().get(asNode));
+                return (O) (key.uriValue().isBranch() ? rel(asNode, this.recValue().get(asNode)) : this.recValue().get(asNode)).autoResolve(this);
             if (step.equals("+") || step.equals("#")) {
-                result = key.uriValue().isBranch() ? objs(this.recValue().entrySet().stream().map(kv -> rel(kv.getKey(), kv.getValue()))) : objs(this.recValue().values());
+                result = key.uriValue().isBranch() ? objs((Stream)this.elements()) : objs(this.recValue().values().stream().map(v -> v.autoResolve(key)));
             } else {
-                final Obj temp = this.jvm().getOrDefault(uri(step), NoObj.noobj());
+                final Obj temp = this.jvm().getOrDefault(uri(step), NoObj.noobj()).autoResolve(key);
                 result = key.uriValue().isBranch() ? rel(key.uriValue().asNode().toUri(), temp) : temp;
             }
+            /// ///////////////////////////////////////////////////////////////////////////////////////////////////////
             if (key.uriValue().segments().size() == 1) {
                 return (O) result;
             } else {

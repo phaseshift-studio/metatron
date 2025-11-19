@@ -7,6 +7,8 @@ import studio.phaseshift.metatron.lang.core.m.type.Rec;
 
 import java.util.stream.Stream;
 
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
+
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
@@ -26,14 +28,14 @@ public class REdge extends RElement {
 
     public Stream<RVertex> vertices(final Direction direction) {
         final Stream<RVertex> out = direction.equals(Direction.OUT) || direction.equals(Direction.BOTH) ?
-                this.at(Direction.OUT.name()).stream().map(o -> o.apply(this)).map(Obj::<Rec>as).map(RVertex::of) : Stream.empty();
+                this.at(Direction.OUT.name()).stream().map(Obj::<Rec>as).map(RVertex::of) : Stream.empty();
         final Stream<RVertex> in = direction.equals(Direction.IN) || direction.equals(Direction.BOTH) ?
-                this.at(Direction.IN.name()).stream().map(o -> o.apply(this)).map(Obj::<Rec>as).map(RVertex::of) : Stream.empty();
+                this.at(Direction.IN.name()).stream().map(Obj::<Rec>as).map(RVertex::of) : Stream.empty();
         return Stream.concat(out, in);
     }
 
     public String toString() {
-        return "{{b}}e{{g}}" + (this.tid().cV().isOne() ? "" : ("{{{y}}" + this.tid().c() + "{{g}}}")) +"[{{b}}" + this.at(Direction.OUT.name()) + "{{g}}={{b}}" + this.label() + "{{g}}=>" + this.at(Direction.IN.name()) + "{{g}}]{{X}}";
+        return "{{b}}e{{g}}" + (this.tid().cV().isOne() ? "" : ("{{{y}}" + this.tid().c() + "{{g}}}")) + "[{{b}}" + this.jvm().get(uri(Direction.OUT.name())) + "{{g}}={{b}}" + this.label() + "{{g}}=>" + this.jvm().get(uri(Direction.IN.name())) + "{{g}}]{{X}}";
     }
 
     @Override

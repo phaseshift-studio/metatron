@@ -42,14 +42,12 @@ public class RVertex extends RElement {
                 this.at(Direction.IN.name()).elements()
                         .map(r -> ((Rel) r).second())
                         .flatMap(Obj::stream)
-                        .flatMap(o -> o.apply(this).<Rec>as().stream())
                         .filter(o -> emptyLabels || labels.elements().anyMatch(u -> o.<Rec>as().at(LABEL).uriValue().matches(u.uriValue())))
                         .map(r -> REdge.of(r.as())) : Stream.of();
         final Stream<REdge> outE = direction.equals(Direction.OUT) || direction.equals(Direction.BOTH) ?
                 this.at(Direction.OUT.name()).elements()
                         .map(r -> ((Rel) r).second())
                         .flatMap(Obj::stream)
-                        .flatMap(o -> o.apply(this).<Rec>as().stream())
                         .filter(o -> emptyLabels || labels.elements().anyMatch(u -> o.<Rec>as().at(LABEL).uriValue().matches(u.uriValue())))
                         .map(r -> REdge.of(r.as())) : Stream.of();
         return Stream.concat(inE, outE);

@@ -33,8 +33,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.BASE_TYPES;
-import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.FROM_TID;
+import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.*;
 
 public record ObjStringSerializer(Builder b) implements ObjSerializer<String> {
 
@@ -54,7 +53,7 @@ public record ObjStringSerializer(Builder b) implements ObjSerializer<String> {
     public fURI tid() {
         return OBJ_SERIAL_TID.extend("string");
     }
-    
+
     @Override
     public ByteBuffer writeBytes(final Obj obj) {
         return ByteBuffer.wrap(this.write(obj).getBytes());
@@ -96,8 +95,8 @@ public record ObjStringSerializer(Builder b) implements ObjSerializer<String> {
             /// ///////////////////////////////////////////////////////////////
             /// ///////////////////////////////////////////////////////////////
             else if (obj instanceof final Inst inst) {
-                if (inst.tid().basePath().equals(FROM_TID)) {
-                    return sb.append("{{c}}*{{X}}").append(inst.arg(0)).toString();
+                if (inst.tid().basePath().equals(AUTO_TID) && inst.arg(0).tid().equals(FROM_TID)) {
+                    return sb.append("{{c}}*{{X}}").append(inst.arg(0).<Inst>as().arg(0)).toString();
                 } else {
                     generateTID(sb, obj.tid(), false, false).append("{{g}}({{X}}");
                     if (!inst.args().isEmpty()) {

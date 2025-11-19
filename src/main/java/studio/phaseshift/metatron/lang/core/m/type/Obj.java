@@ -379,6 +379,14 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
         return this instanceof Inst;
     }
 
+    default Obj autoResolve(final Obj obj) {
+        return this.isInst() && this.tid().basePath().equals(AUTO_TID) ? this.apply(obj).autoResolve(obj) : this;
+    }
+
+    default Obj autoResolve() {
+        return this.autoResolve(noobj());
+    }
+
     default boolean isInstObj() {
         return this instanceof Inst && !this.isNoObj();
     }
@@ -478,7 +486,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
     Obj clone();
 
     default void mutateSelf(final Object jvm, final fURI tid, final fURI vid) {
-        
+
     }
 
     class Helper {
