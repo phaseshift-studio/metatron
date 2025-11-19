@@ -33,7 +33,7 @@ public class REdge extends RElement {
     }
 
     public String toString() {
-        return "{{y}}e{{g}}[{{b}}" + this.at(Direction.OUT.name()) + "{{g}}={{b}}" + this.label() + "{{g}}=>" + this.at(Direction.IN.name()) + "{{g}}]{{X}}";
+        return "{{b}}e{{g}}" + (this.tid().cV().isOne() ? "" : ("{{{y}}" + this.tid().c() + "{{g}}}")) +"[{{b}}" + this.at(Direction.OUT.name()) + "{{g}}={{b}}" + this.label() + "{{g}}=>" + this.at(Direction.IN.name()) + "{{g}}]{{X}}";
     }
 
     @Override

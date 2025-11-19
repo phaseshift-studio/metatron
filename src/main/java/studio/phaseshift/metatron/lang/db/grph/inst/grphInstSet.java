@@ -73,6 +73,7 @@ public class grphInstSet extends MInstSet {
     public static final fURI BOTHV_TID = INST_TID.extend("bothV");
     public static final fURI VALUES_TID = INST_TID.extend("values");
     public static final fURI PROPERTIES_TID = INST_TID.extend("properties");
+    
     public static final fURI LABEL_TID = INST_TID.extend("label");
     public static final fURI HAS_TID = INST_TID.extend("has");
 
@@ -110,10 +111,10 @@ public class grphInstSet extends MInstSet {
     @Override
     public Set<Type> types() {
         return Set.of(
-                T(GRAPH_TID),
+                T(GRAPH_TID, isa_(T(VERTEX_TID.maybeSome()))),
                 T(ELEMENT_TID),
                 T(VERTEX_TID, null, instC(INST_TID.dom(ALL.maybe()).rng(VERTEX_TID), lst(), (lhs, inst) -> RVertex.of(lhs.as()))),
-                T(EDGE_TID, null, instC(INST_TID.dom(ALL.maybe()).rng(EDGE_TID), lst(), (lhs, inst) -> objs(lhs.stream().map(e -> REdge.of(e.as()))))),
+                T(EDGE_TID, null, instC(INST_TID.dom(ALL.maybe()).rng(EDGE_TID), lst(), (lhs, inst) -> REdge.of(lhs.as()))),
                 T(PROPERTY_TID, isa_(rec(T(URI_TID), id_()))),
                 grphSpace.GRPH_TYPE);
     }
@@ -145,8 +146,11 @@ public class grphInstSet extends MInstSet {
                 instC(VALUES_TID.dom(VERTEX_TID).rng(ALL.maybeSome()), lst(T(URI_TID.maybeSome())), (lhs, inst) -> objs(lhs.stream().map(Obj::<Rec>as).flatMap(r -> RVertex.of(r).values(inst.arg(0))).map(Obj::as))),
                 instC(VALUES_TID.dom(EDGE_TID).rng(ALL.maybeSome()), lst(T(URI_TID.maybeSome())), (lhs, inst) -> objs(lhs.stream().map(Obj::<Rec>as).flatMap(r -> REdge.of(r).values(inst.arg(0))).map(Obj::as))),
                 instC(PROPERTIES_TID.dom(VERTEX_TID).rng(REL_TID.maybeSome()), lst(T(URI_TID.maybeSome())), (lhs, inst) -> objs(lhs.stream().map(Obj::<Rec>as).flatMap(r -> RVertex.of(r).properties(inst.arg(0))).map(Obj::as))),
-                instC(PROPERTIES_TID.dom(EDGE_TID).rng(REL_TID.maybeSome()), lst(T(URI_TID.maybeSome())), (lhs, inst) -> objs(lhs.stream().map(Obj::<Rec>as).flatMap(r -> REdge.of(r).properties(inst.arg(0))).map(Obj::as)))));
+                instC(PROPERTIES_TID.dom(EDGE_TID).rng(REL_TID.maybeSome()), lst(T(URI_TID.maybeSome())), (lhs, inst) -> objs(lhs.stream().map(Obj::<Rec>as).flatMap(r -> REdge.of(r).properties(inst.arg(0))).map(Obj::as))),
+                instC(PROPERTIES_TID.dom(A).rng(A), lst(T(REC_TID)), (lhs, inst) -> objs(lhs.stream().map(Obj::<Rec>as).peek(r -> inst.arg(0).<Rec>as().elements().forEach(kv -> RElement.of(r).property(kv.first().uriValue(), kv.second()))).map(r -> (r instanceof REdge ? REdge.of(r) : RVertex.of(r)))))));
+/*
+ instC(PROPERTIES_TID.dom(A).rng(A), lst(T(URI_TID), T(REC_TID)), (lhs, inst) -> objs(lhs.stream().map(Obj::<Rec>as).peek(r -> inst.arg(0).<Rec>as().elements().forEach(kv -> RElement.of(r).property(kv.first().uriValue(), kv.second()))).map(r -> (r instanceof REdge ? REdge.of(r) : RVertex.of(r)))))));
 
-
+ */
     }
 }

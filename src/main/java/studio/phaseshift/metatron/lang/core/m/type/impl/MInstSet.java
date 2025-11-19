@@ -27,6 +27,7 @@ import studio.phaseshift.metatron.lang.core.m.type.InstSet;
 import studio.phaseshift.metatron.lang.core.m.type.Obj;
 import studio.phaseshift.metatron.lang.core.m.type.Type;
 import studio.phaseshift.metatron.lang.MSpace;
+import studio.phaseshift.metatron.util.Tuple;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -131,8 +132,8 @@ public abstract class MInstSet extends MSpace<Map<fURI, Set<? extends Obj>>> imp
         });
     }
 
-    public List<Parser> sugars() {
-        return List.of();
+    public Set<Tuple.Triplet<Tuple.Pair<String,String>,List<fURI>,Integer>> sugars() {
+        return Set.of();
     }
 
 }

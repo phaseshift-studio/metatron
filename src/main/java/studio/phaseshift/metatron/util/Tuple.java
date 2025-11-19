@@ -140,4 +140,31 @@ public abstract class Tuple implements Iterable<Object> {
             return quartet;
         }
     }
+
+    public static class Quintet<A, B, C, D,E> extends Quartet<A, B, C,D> {
+
+        private Quintet(final List<Object> elements) {
+            super(elements);
+        }
+
+        public static <A, B, C, D,E> Quintet<A, B, C, D,E> with(final A a, final B b, final C c, final D d, final E e) {
+            final ArrayList<Object> list = new ArrayList<>();
+            list.add(a);
+            list.add(b);
+            list.add(c);
+            list.add(d);
+            list.add(e);
+            return new Quintet<>(list);
+        }
+
+        public E get4() {
+            return (E) this.elements.get(4);
+        }
+
+        public Quintet<A, B, C, D,E> inject(final int i, final Object object) {
+            final Quintet<A, B, C, D,E> quintet = new Quintet<>(new ArrayList<>(this.elements));
+            quintet.elements.set(i, object);
+            return quintet;
+        }
+    }
 }

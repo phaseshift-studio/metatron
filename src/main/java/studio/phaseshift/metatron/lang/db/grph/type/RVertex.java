@@ -33,7 +33,7 @@ public class RVertex extends RElement {
     }
 
     public String toString() {
-        return "{{y}}v{{g}}[{{b}}" + this.vid() + "{{g}}]{{X}}";
+        return "{{b}}v{{g}}" + (this.tid().cV().isOne() ? "" : ("{{{y}}" + this.tid().c() + "{{g}}}")) + "[{{y}}" + this.vid() + "{{g}}]{{X}}";
     }
 
     public Stream<REdge> edges(final Direction direction, final Lst labels) {

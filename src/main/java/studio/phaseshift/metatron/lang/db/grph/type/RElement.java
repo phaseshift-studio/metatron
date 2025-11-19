@@ -8,6 +8,8 @@ import studio.phaseshift.metatron.lang.core.m.type.facade.FRec;
 
 import java.util.stream.Stream;
 
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MRec.rec;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.lang.db.grph.inst.grphInstSet.EDGE_TID;
 import static studio.phaseshift.metatron.lang.db.grph.type.TP3Translator.LABEL;
 import static studio.phaseshift.metatron.lang.db.grph.type.TP3Translator.PROPS;
@@ -23,6 +25,13 @@ public class RElement extends FRec {
 
     public static RElement of(final Rec obj) {
         return (obj.tid().basePath().equals(EDGE_TID)) ? REdge.of(obj) : RVertex.of(obj);
+    }
+
+    public RElement property(final fURI key, final Obj value) {
+        final Rec props = this.at(PROPS).isNoObj() ? rec() : this.jvm().get(uri(PROPS)).as();
+        props.jvm().put(uri(key), value);
+        this.jvm().put(uri(PROPS), props);
+        return this;
     }
 
     public Stream<Rel> properties(final Obj keys) {

@@ -42,6 +42,7 @@ import static studio.phaseshift.metatron.lang.core.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.lang.sys.router.Router.SPACE;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -58,13 +59,12 @@ public class grphSpace extends MSpace<Space> {
      * /root/v/{id}/vp/{key}/{key2}    => vertex property property by key
      */
     public static final fURI GRPH_TID = f("/grph/space/grph");
-    protected static final fURI V_PATTERN = f("/v/+");
-    protected static final fURI E_V_ADJ_PATTERN = f("/v/+/");
-    public static final Type GRPH_TYPE = T(GRPH_TID, null, instC(mInstSet.INST_TID.dom(ALL.maybe()).rng(GRPH_TID), lst(T(REC_TID, isa_(rec(uri(PATTERN), T(URI_TID), uri("load"), T(URI_TID.maybe()), uri("space"), T(ALL))))), (lhs, inst) -> {
+    public static final String LOAD = "load";
+    public static final Type GRPH_TYPE = T(GRPH_TID, null, instC(mInstSet.INST_TID.dom(ALL.maybe()).rng(GRPH_TID), lst(T(REC_TID, isa_(rec(uri(PATTERN), T(URI_TID), uri(LOAD), T(URI_TID.maybe()), uri(SPACE), T(ALL))))), (lhs, inst) -> {
         final fURI pattern = inst.arg(0).<Rec>as().at(PATTERN).uriValue();
-        final fURI dataset = inst.arg(0).<Rec>as().at("load").uriValue();
-        final Obj inner = inst.arg(0).<Rec>as().at("space");
-        final grphSpace space = new grphSpace(inner.isNoObj() ? noobjSpace.single() : kvSpace.of(inner.<Rec>as().at(PATTERN).uriValue(),fURI.NULL), Map.of(uri(PATTERN), uri(PATTERN), uri("load"), uri(dataset)), pattern, inst.arg(0).vid());
+        final fURI dataset = inst.arg(0).<Rec>as().at(LOAD).uriValue();
+        final Obj inner = inst.arg(0).<Rec>as().at(SPACE);
+        final grphSpace space = new grphSpace(inner.isNoObj() ? noobjSpace.single() : new kvSpace(inner.<Rec>as().at(PATTERN).uriValue(), fURI.NULL), Map.of(uri(PATTERN), uri(pattern), uri(LOAD), uri(dataset)), pattern, inst.arg(0).vid());
         Router.global().addSpace(space);
         space.start();
         return space;

@@ -19,6 +19,7 @@
 package studio.phaseshift.metatron.lang.core.m.inst;
 
 import net.objecthunter.exp4j.ExpressionBuilder;
+import org.petitparser.parser.primitive.CharacterParser;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.core.m.obj.NoObj;
@@ -35,6 +36,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static org.petitparser.parser.primitive.StringParser.of;
 import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.furi.q.DocQ.Doc.docWrap;
@@ -168,21 +170,67 @@ public class mInstSet extends MInstSet {
     }
 
     public static mInstSet create(final fURI vid) {
-        final mInstSet s = new mInstSet(vid);
-        //mDocs.attach(s);
-        return s;
+        return new mInstSet(vid);
     }
 
     @Override
     public Set<Type> types() {
-        return Stream.of(T(BOOL_TID), T(BYTES_TID), T(INT_TID), T(REAL_TID), T(STR_TID), T(URI_TID), T(LST_TID),
-                        T(REL_TID), T(REC_TID), T(INST_TID), T(OBJS_TID), T(FAIL_TID), T(NOOBJ_TID))
-                .collect(LinkedHashSet::new, LinkedHashSet::add, LinkedHashSet::addAll);
+        return new LinkedHashSet<>(List.of(
+                T(BOOL_TID),
+                T(BYTES_TID),
+                T(INT_TID),
+                T(REAL_TID),
+                T(STR_TID),
+                T(URI_TID),
+                T(LST_TID),
+                T(REL_TID),
+                T(REC_TID),
+                T(INST_TID),
+                T(OBJS_TID),
+                T(FAIL_TID),
+                T(NOOBJ_TID)));
     }
 
     @Override
     public Set<Obj> consts() {
         return Stream.of(noobj()).collect(LinkedHashSet::new, LinkedHashSet::add, LinkedHashSet::addAll);
+    }
+
+    @Override
+    public Set<Tuple.Triplet<Tuple.Pair<String, String>, List<fURI>, Integer>> sugars() {
+        return new LinkedHashSet<>(List.of(
+                Tuple.Triplet.with(Tuple.Pair.with("^", null), List.of(RFROM_TID), 1),
+                Tuple.Triplet.with(Tuple.Pair.with("?==", null), List.of(WHERE_TID), 1),
+                Tuple.Triplet.with(Tuple.Pair.with("%==", null), List.of(GROUP_TID), 1),
+                Tuple.Triplet.with(Tuple.Pair.with("==", null), List.of(SELECT_TID), 1),
+                Tuple.Triplet.with(Tuple.Pair.with("=~", null), List.of(MATCHES_TID), 1),
+                Tuple.Triplet.with(Tuple.Pair.with("?=", null), List.of(IS_TID, EQ_TID), 1),
+                Tuple.Triplet.with(Tuple.Pair.with("?>", null), List.of(IS_TID, GT_TID), 1),
+                Tuple.Triplet.with(Tuple.Pair.with("?>=", null), List.of(IS_TID, GTE_TID), 1),
+                Tuple.Triplet.with(Tuple.Pair.with("?<=", null), List.of(IS_TID, LTE_TID), 1),
+                Tuple.Triplet.with(Tuple.Pair.with("?<", null), List.of(IS_TID, LT_TID), 1),
+                Tuple.Triplet.with(Tuple.Pair.with("?!=", null), List.of(IS_TID, NEQ_TID), 1),
+                Tuple.Triplet.with(Tuple.Pair.with("?=~", null), List.of(IS_TID, MATCHES_TID), 1),
+                Tuple.Triplet.with(Tuple.Pair.with("?", null), List.of(ISA_TID), 1),
+                Tuple.Triplet.with(Tuple.Pair.with("@", null), List.of(AT_TID), 1),
+                Tuple.Triplet.with(Tuple.Pair.with("|", null), List.of(BLOCK_TID), 1),
+                Tuple.Triplet.with(Tuple.Pair.with("_/", "\\_"), List.of(WITHIN_TID), 1),
+                Tuple.Triplet.with(Tuple.Pair.with("_", null), List.of(ID_TID), 1),
+                Tuple.Triplet.with(Tuple.Pair.with("⋅", null), List.of(MULT_TID), 1),
+                Tuple.Triplet.with(Tuple.Pair.with("*", null), List.of(FROM_TID), 1),
+                Tuple.Triplet.with(Tuple.Pair.with(">>-", null), List.of(RNG_TID), 0),
+                Tuple.Triplet.with(Tuple.Pair.with(">-", null), List.of(MERGE_TID), 1),
+                Tuple.Triplet.with(Tuple.Pair.with(">-", null), List.of(MERGE_TID), 0),
+                Tuple.Triplet.with(Tuple.Pair.with("-<|", null), List.of(CHOOSE_TID), 1),
+                Tuple.Triplet.with(Tuple.Pair.with("-<", null), List.of(SPLIT_TID), 1),
+                Tuple.Triplet.with(Tuple.Pair.with("->", null), List.of(REF_TID), 1),
+                Tuple.Triplet.with(Tuple.Pair.with(">>", null), List.of(RSHIFT_TID), 1),
+                Tuple.Triplet.with(Tuple.Pair.with(">>", null), List.of(RSHIFT_TID), 0),
+                Tuple.Triplet.with(Tuple.Pair.with("<<", null), List.of(LSHIFT_TID), 1),
+                Tuple.Triplet.with(Tuple.Pair.with("<<", null), List.of(LSHIFT_TID), 0),
+                Tuple.Triplet.with(Tuple.Pair.with("+", null), List.of(PLUS_TID), 1),
+                Tuple.Triplet.with(Tuple.Pair.with("-", null), List.of(MINUS_TID), 1),
+                Tuple.Triplet.with(Tuple.Pair.with(";", null), List.of(END_TID), 0)));
     }
 
     private Obj crossPoly(Obj lhs, Obj rhs) {
@@ -250,7 +298,7 @@ public class mInstSet extends MInstSet {
                         result.compute(rKey.apply(lKey), (k, v) -> null == v ? r : v.append(r));
                     }
                 });
-                if(!localFind.get()) {
+                if (!localFind.get()) {
                     rhs.recValue().forEach((rKey, rValue) -> {
                         if (lKey.matches(rKey) || rKey.isCall()) {
                             found.set(true);
@@ -272,11 +320,13 @@ public class mInstSet extends MInstSet {
 
     @Override
     public Set<Inst> insts() {
-        return Stream.of(
+        return new LinkedHashSet<>(List.of(
                 instC(CATCH_TID.dom(ALL).rng(ALL.maybeSome()), lst(T(ALL.maybeSome())), (lhs, inst) -> lhs.isFail() ? inst.arg(0).apply(lhs) : lhs),
-                instC(START_TID.dom(fURI.NOOBJ.zero()).rng(A.maybeSome()), lst(T(A.maybeSome())), (lhs, inst) -> inst.arg(0)),
+                docWrap(instC(START_TID.dom(fURI.NOOBJ.zero()).rng(A.maybeSome()), lst(T(A.maybeSome())), (lhs, inst) -> inst.arg(0)),
+                        "noobj", "initial objs", Map.of(jnt(0), "initial objs"), "the initial function f()->x"),
                 instC(END_TID.dom(ALL_STAR).rng(NOOBJ_TID.zero()), lst(), (lhs, inst) -> noobj()),
-                instC(PRINT_TID.dom(ALL).rng(ALL), lst(T(ALL_STAR)), (lhs, inst) -> inst.args().elements().peek(o -> LOG.none("%s\n", o)).filter(a -> false).findAny().orElse(lhs)),
+                docWrap(instC(PRINT_TID.dom(ALL).rng(ALL), lst(T(ALL_STAR)), (lhs, inst) -> inst.args().elements().peek(o -> LOG.none("%s\n", o)).filter(a -> false).findAny().orElse(lhs)),
+                        "the rhs obj", "the lhs obj", Map.of(jnt(0), "the obj to write to stdout"), "a side-effect function f(x)-|>x"),
                 instC(AT_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(T(URI_TID)), (lhs, inst) -> lhs.isNoObj() ? Router.readFromSpace(inst.arg(0).uriValue()).vid(inst.arg(0).uriValue()) : lhs.vid(inst.arg(0).uriValue())),
                 instC(HAS_TID.dom(REC_TID).rng(REC_TID.maybe()), lst(T(ALL)), (lhs, inst) -> inst.arg(0).isRel() ?
                         (lhs.<Rec>as().elements().anyMatch(r -> r.matches(inst.arg(0))) ? lhs : noobj()) :
@@ -284,8 +334,9 @@ public class mInstSet extends MInstSet {
                 instC(HAS_TID.dom(LST_TID).rng(LST_TID.maybe()), lst(T(ALL)), (lhs, inst) -> lhs.<Lst>as().elements().anyMatch(r -> r.matches(inst.arg(0))) ? lhs : noobj()),
                 docWrap(
                         instC(ID_TID.dom(A).rng(A), lst(), (lhs, inst) -> lhs),
-                        "an obj", "an obj", Map.of(), "the identity function f(x)->x"),
-                instC(ID_TID.dom(A.maybeSome()).rng(A.maybeSome()), lst(), (lhs, inst) -> lhs),
+                        "an rhs obj", "an lhs obj", Map.of(), "the obj identity function f(x)->x"),
+                docWrap(instC(ID_TID.dom(A.maybeSome()).rng(A.maybeSome()), lst(), (lhs, inst) -> lhs),
+                        "the rhs obj", "the lhs obj", Map.of(), "a objs barrier identity function f(X)->X"),
                 instC(OR_TID.dom(A).rng(A.maybe()), lst(T(BOOL_TID).c(cInt::some)), (lhs, inst) -> objs(lhs.stream().filter(l -> inst.args().elements().anyMatch(a -> a.apply(l).boolValue())))),
                 instC(APPLY_TID.dom(ALL).rng(ALL.maybeSome()), lst(T(ALL.maybeSome())), (lhs, inst) -> lhs.apply(inst.arg(0))),
                /* instC(RFROM_TID.dom(ALL.maybe()).rng(OBJS_ID), lst(T(URI_TID)), (lhs, inst) -> {
@@ -316,13 +367,15 @@ public class mInstSet extends MInstSet {
                         "maybe an obj", "the lhs obj else the arg obj", Map.of(jnt(0), "the rhs obj is the lhs is noobj"), "f(lhs)->lhs if lhs is an obj, else f(noobj)->arg"),// TODO: rec args needs resolution on generics connected
                 docWrap(instC(IS_TID.dom(ALL.maybe()).rng(ALL.maybe()), lst(T(ALL)), (lhs, inst) -> inst.arg(0).boolValue() ? lhs : noobj()),
                         "any obj", "the lhs obj if arg is true", Map.of(jnt(0), "filter lhs if false"), "filters the lhs obj"), // TODO: generics are not working for some reason
-                instC(ISA_TID.dom(ALL.maybe()).rng(ALL.maybe()), lst(T(ALL)), (lhs, inst) -> lhs.matches(inst.arg(0)) ? lhs : noobj()),
+                docWrap(instC(ISA_TID.dom(ALL.maybe()).rng(ALL.maybe()), lst(T(ALL)), (lhs, inst) -> lhs.matches(inst.arg(0)) ? lhs : noobj()),
+                        "an obj to match", "the unaltered obj if arg matches", Map.of(jnt(0), "filter lhs if doesn't match arg"), "a filter function f(x)->{0,x}"),
                 instC(MATCHES_TID.dom(ALL.maybe()).rng(BOOL_TID), lst(T(ALL.maybe())), (lhs, inst) -> bool(lhs.matches(inst.arg(0)))),
                 instC(GET_TID.dom(REC_TID).rng(ALL_STAR), lst(T(URI_TID)), (lhs, inst) -> lhs.<Rec>as().at(inst.arg(0))),
                 instC(GET_TID.dom(LST_TID).rng(ALL_STAR), lst(T(INT_TID)), (lhs, inst) -> lhs.<Lst>as().at(inst.arg(0))),
                 instC(GET_TID.dom(LST_TID).rng(ALL_STAR), lst(T(URI_TID)), (lhs, inst) -> lhs.<Lst>as().at(inst.arg(0))),
                 /// ///////////////////////////////////////////////////////////////////////////////////////////////////
-                instC(BLOCK_TID.dom(A.maybe()).rng(B), lst(T(B)), (lhs, inst) -> inst.arg(0)),
+                docWrap(instC(BLOCK_TID.dom(A.maybe()).rng(B), lst(T(B)), (lhs, inst) -> inst.arg(0)),
+                        "a blocked obj", "the unapplied arg", Map.of(jnt(0), "the rhs without evaluation"), "the lhs obj is halted and the arg is the rhs obj"),
                 instC(SWAP_TID.dom(A).rng(B), lst(T(C)), (lhs, inst) -> lhs.apply(inst.arg(0))),
                 /// ///////////////////////////////////////////////////////////////////////////////////////////////////
                 docWrap(instC(SPLIT_TID.dom(STR_TID).rng(STR_TID.some()), lst(T(STR_TID)), (lhs, inst) -> objs(Arrays.stream(lhs.strValue().split(inst.arg(0).strValue())).map(MStr::str))),
@@ -354,7 +407,7 @@ public class mInstSet extends MInstSet {
                 /// ///////////////////////////////////////////////////////////////////////////////////////////////////
                 docWrap(
                         instC(CHOOSE_TID.dom(ALL).rng(REL_TID.maybe()), lst(T(REC_TID)), (lhs, inst) -> inst.arg(0).<Rec>as().elements().map(Obj::<Rel>as).map(e -> e.<Rel>jvm(Tuple.Pair.with(e.first().apply(lhs), e.second()))).filter(e -> !e.first().isNoObj()).findFirst().map(e -> e.<Obj>jvm(Tuple.Pair.with(e.first(), e.second().apply(lhs)))).orElse(noobj())),
-                        "any obj", "the split as an objs", Map.of(jnt(0), "the branches"), "a branching inst"),
+                        "any obj", "the split as an objs", Map.of(jnt(0), "the branches"), "a branching function f(x):g(a)->a',g(b)->b',..."),
                 /// ///////////////////////////////////////////////////////////////////////////////////////////////////
                 instC(MERGE_TID.dom(LST_TID).rng(ALL_STAR), lst(), (lhs, inst) -> objs(lhs.elements())),
                 instC(MERGE_TID.dom(REC_TID).rng(REL_TID.maybeSome()), lst(), (lhs, inst) -> objs(lhs.elements())),
@@ -518,65 +571,7 @@ public class mInstSet extends MInstSet {
                             .evaluate();
                     return real(result);
                 })
-                /*instC(FIND_TID.dom(REC_TID).rng(REL_TID.maybeSome()), lst(T(REL_TID.maybeSome())), (lhs, inst) -> {
-                    final Obj a = inst.arg(0).as();
-                    return objs(lhs.<Rec>as().elements().flatMap(r -> a.stream()
-                            .map(Obj::<Rel>as)
-                            .filter(b -> b.first().matches(r.first()) && b.second().matches(r.second()))
-                            .map(b -> r.jvm(Tuple.Pair.with(r.first(), r.second().apply(b.second()))))));
-                })*/
-
-               /* instC(CROSS_TID.dom(LST_TID).rng(LST_TID), lst(T(LST_TID)), (lhs, inst) -> {
-                    final List<Obj> result = new ArrayList<>();
-                    final List<Obj> lhsList = lhs.lstValue();
-                    final List<Obj> rhsList = inst.arg(0).lstValue();
-                    for (int i = 0; i < lhsList.size(); i++) {
-                        if (rhsList.size() > i) {
-                            final Obj lhsA = lhsList.get(i);
-                            final Obj rhsA = rhsList.get(i);
-                            result.add(rhsA.apply(lhsA));
-                        } else {
-                            break;
-                        }
-                    }
-                    return lhs.jvm(result);
-                }),
-                instC(CROSS_TID.dom(REC_TID).rng(REC_TID), lst(T(REC_TID)), (lhs, inst) -> {
-                    final Map<Obj, Obj> result = new LinkedHashMap<>();
-                    lhs.recValue().forEach((lKey, lValue) -> inst.arg(0).recValue()
-                            .forEach((rKey, rValue) -> {
-                                if (lKey.matches(rKey)) {
-                                    final Obj r = rValue.apply(lValue);
-                                    result.compute(rKey.apply(lKey), (k, v) -> null == v ? r : v.append(r));
-                                }
-                            }));
-                    return lhs.jvm(result);
-                }),
-                instC(CROSS_TID.dom(REC_TID).rng(REC_TID), lst(T(REC_TID)), (lhs, inst) -> {
-                    final Map<Obj, Obj> result = new LinkedHashMap<>();
-                    lhs.recValue().forEach((lKey, lValue) -> inst.arg(0).recValue()
-                            .forEach((rKey, rValue) -> {
-                                if (lKey.matches(rKey)) {
-                                    final Obj r = rValue.apply(lValue);
-                                    result.compute(rKey.apply(lKey), (k, v) -> null == v ? r : v.append(r));
-                                }
-                            }));
-                    return lhs.jvm(result);
-                })*/
-        ).sorted(Comparator.comparing(a -> a.tid().name())).collect(LinkedHashSet::new, LinkedHashSet::add, LinkedHashSet::addAll);
-
-        //TODO: convert below to the pure write() model above
-        // this.define(NOOBJ_TID, fURI.ANY.maybe(), fURI.ANY.maybe(), MLst.of(), (lhs, inst) -> lhs); // noobj is also an inst (no inst)
-        /*
-        this.define(BARRIER_TID, fURI.ANY.any(), fURI.ANY.any(), MLst.of(ID__), (lhs, inst) -> inst.arg(0).apply(lhs), MObjs.of(List.of()));
-        this.define(AT_TID, fURI.ANY, fURI.ANY, MLst.of(ID__), (lhs, inst) -> lhs.vid(inst.arg(0).uriValue()));
-        this.define(DOM_TID, REC_TID, fURI.ANY, MLst.of(), (lhs, inst) -> MObjs.of(lhs.recValue().keySet()));
-        this.define(DOM_TID, REL_TID, fURI.ANY, MLst.of(), (lhs, inst) -> MObjs.of(lhs.relValue().getValue0()));
-        this.define(DOM_TID, fURI.ANY, fURI.ANY, MLst.of(), (lhs, inst) -> lhs);
-        this.define(RNG_TID, REC_TID, fURI.ANY, MLst.of(), (lhs, inst) -> MObjs.of(lhs.recValue().values()));
-        this.define(RNG_TID, REL_TID, fURI.ANY, MLst.of(), (lhs, inst) -> MObjs.of(lhs.relValue().getValue1()));
-        this.define(RNG_TID, fURI.ANY, fURI.ANY, MLst.of(), (lhs, inst) -> lhs);*/
-
+        ));
     }
 
 }
