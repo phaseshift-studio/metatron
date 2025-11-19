@@ -231,7 +231,8 @@ public class mInstSet extends MInstSet {
                 Tuple.Triplet.with(Tuple.Pair.with("<<", null), List.of(LSHIFT_TID), 0),
                 Tuple.Triplet.with(Tuple.Pair.with("+", null), List.of(PLUS_TID), 1),
                 Tuple.Triplet.with(Tuple.Pair.with("-", null), List.of(MINUS_TID), 1),
-                Tuple.Triplet.with(Tuple.Pair.with(";", null), List.of(END_TID), 0)));
+                Tuple.Triplet.with(Tuple.Pair.with(";", null), List.of(END_TID), 0),
+                Tuple.Triplet.with(Tuple.Pair.with("!*", null), List.of(AUTO_TID, FROM_TID), 1)));
     }
 
     private Obj crossPoly(Obj lhs, Obj rhs) {
