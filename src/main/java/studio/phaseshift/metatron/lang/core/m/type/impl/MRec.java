@@ -101,27 +101,8 @@ public class MRec extends MObj implements Rec {
     }
 
     @Override
-    public Rec plus(final Rec rhs) {
-        final Map<Obj, Obj> newMap = new LinkedHashMap<>(this.recValue());
-        rhs.stream().flatMap(Obj::<Obj>elements).map(Obj::<Rel>as).forEach(o -> newMap.compute(o.first(), (k, v) -> null == v ? o.second() : v.isPlusMonoid() ? (Obj) v.<PlusMonoid.O>as().plus(o.second().<PlusMonoid.O>as()) : v.append(o.second())));
-        return this.jvm(newMap);
-    }
-
-    @Override
     public Rec clone(final Object jvm, final fURI tid, final fURI vid) {
         return super.clone(jvm, tid, vid);
-    }
-
-    public Rec put(final Obj key, final Obj value) {
-        final fURI k = key.uriValue();
-        if (k.segments().isEmpty())
-            return this;
-        final Map<Obj, Obj> map = new LinkedHashMap<>(this.recValue());
-        map.compute(uri(k.segments().get(0)), (k1, v) ->
-                k.segments().size() == 1 ?
-                        (null != v && v.isObjs() ? v.append(value) : value) :
-                        (null != v && v.isRec() ? v.<Rec>as() : rec()).put(k.pretract().toUri(), value));
-        return this.jvm(map);
     }
 
     @Override

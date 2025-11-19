@@ -22,6 +22,7 @@ import ch.qos.logback.classic.filter.ThresholdFilter;
 import ch.qos.logback.core.Appender;
 import org.slf4j.LoggerFactory;
 import org.slf4j.event.Level;
+import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.core.m.type.Lst;
 import studio.phaseshift.metatron.lang.core.m.type.Obj;
@@ -39,8 +40,6 @@ import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
 
 public class logObj extends MRec {
 
-    protected static final String LEVEL = "level";
-
     private static final fURI LOG_TID = fURI.of("/usr/log");
 
     public logObj(final Obj log) {
@@ -48,7 +47,7 @@ public class logObj extends MRec {
     }
 
     protected logObj(final Rec levels, final fURI vid) {
-        super(Map.of(uri(LEVEL), levels), LOG_TID, vid);
+        super(Map.of(uri(Tokens.LEVEL), levels), LOG_TID, vid);
     }
 
     public static logObj from(final Rec log) {
@@ -73,7 +72,7 @@ public class logObj extends MRec {
                     .filter(x -> x instanceof ThresholdFilter)
                     .map(x -> {
                         try {
-                            final Field field = x.getClass().getDeclaredField(LEVEL);
+                            final Field field = x.getClass().getDeclaredField(Tokens.LEVEL);
                             field.trySetAccessible();
                             return field.get(x).toString();
                         } catch (final Exception e) {

@@ -22,14 +22,12 @@ import org.java_websocket.WebSocket;
 import org.java_websocket.handshake.ClientHandshake;
 import org.java_websocket.server.WebSocketServer;
 import studio.phaseshift.metatron.BootLoader;
+import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.lang.core.m.parser.mParser;
 import studio.phaseshift.metatron.lang.sys.router.Cluster;
 import studio.phaseshift.metatron.lang.sys.router.Router;
 import studio.phaseshift.metatron.lang.core.m.type.Fail;
 import studio.phaseshift.metatron.lang.core.m.type.Obj;
-import studio.phaseshift.metatron.lang.util.serial.ObjByteBufferSerializer;
-import studio.phaseshift.metatron.lang.util.serial.mParserObjSerializer;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
 import studio.phaseshift.metatron.lang.util.serial.ObjSerializer;
@@ -52,7 +50,6 @@ import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
 public class MServer extends WebSocketServer implements Cluster, Closeable, Obj {
 
     public static final fURI MSERVER_TID = ROUTER_TID.extend("server");
-    public static final String CLUSTER = "cluster";
 
     protected final fURI host;
     protected final ObjSerializer<?> serializer;
@@ -88,7 +85,7 @@ public class MServer extends WebSocketServer implements Cluster, Closeable, Obj 
             this.serverThread = new Thread(r);
             this.serverThread.start();
             LOG.trace("server started: %s", this.getAddress());
-            BootLoader.GLOBAL.at(CLUSTER).elements().filter(o -> !o.isNoObj()).forEach(n -> {
+            BootLoader.GLOBAL.at(Tokens.CLUSTER).elements().filter(o -> !o.isNoObj()).forEach(n -> {
                 try {
                     final MConnection client = MClient.of(n.uriValue(), this.serializer);
                     this.cluster.put(n.uriValue(), client);
@@ -97,7 +94,7 @@ public class MServer extends WebSocketServer implements Cluster, Closeable, Obj 
                 }
             });
             Router.global().write(
-                    Router.global().vid().extend(CLUSTER),
+                    Router.global().vid().extend(Tokens.CLUSTER),
                     lst((List) this.cluster.values().stream().map(x -> x.remoteHost().toUri()).toList()));
         } catch (final Exception e) {
             // do nothing

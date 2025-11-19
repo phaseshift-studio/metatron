@@ -9,7 +9,7 @@ import studio.phaseshift.metatron.lang.core.m.type.impl.MRec;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import static studio.phaseshift.metatron.lang.Space.NAME;
+import static studio.phaseshift.metatron.Tokens.NAME;
 import static studio.phaseshift.metatron.lang.ai.llm.llmInstSet.LLM_TID;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;

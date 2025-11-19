@@ -18,24 +18,21 @@
 
 package studio.phaseshift.metatron.furi.q;
 
+import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.Space;
 import studio.phaseshift.metatron.lang.core.m.type.*;
 import studio.phaseshift.metatron.lang.core.m.type.impl.MRec;
 import studio.phaseshift.metatron.lang.sys.router.Router;
-import studio.phaseshift.metatron.lang.sys.sysInstSet;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
-import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import static studio.phaseshift.metatron.furi.fURI.f;
-import static studio.phaseshift.metatron.lang.Space.PATTERN;
+import static studio.phaseshift.metatron.Tokens.PATTERN;
 import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.INST_TID;
 import static studio.phaseshift.metatron.lang.core.m.obj.NoObj.noobj;
 import static studio.phaseshift.metatron.lang.core.m.type.Inst.*;
@@ -50,16 +47,14 @@ import static studio.phaseshift.metatron.util.Common.mutableMap;
  */
 public class DocQ extends BaseQ {
 
-    public static final String DESC = "desc";
-    protected static final String DOC = "doc";
-    public static final fURI DOC_TID = Q_TID.extend(DOC);
+    public static final fURI DOC_TID = Q_TID.extend(Tokens.DOC);
     protected final GraphittyLogger LOG = Graphitty.log(this);
     // <source,pattern,callback>
     public final Map<fURI, Obj> docSpace;
 
 
     public DocQ() {
-        super(mutableMap(uri(PATTERN), uri(DOC)), f(DOC), DOC_TID);
+        super(mutableMap(uri(PATTERN), uri(Tokens.DOC)), f(Tokens.DOC), DOC_TID);
         this.docSpace = new LinkedHashMap<>();
         this.onRead = new DocQ.OnRead();
         this.onWrite = new DocQ.OnWrite();
@@ -170,7 +165,7 @@ public class DocQ extends BaseQ {
         }
 
         public String description() {
-            return this.at(DESC).isNoObj() ? null : this.at(DESC).strValue();
+            return this.at(Tokens.DESC).isNoObj() ? null : this.at(Tokens.DESC).strValue();
         }
 
         public String toString() {
@@ -231,7 +226,7 @@ public class DocQ extends BaseQ {
             }
             insty.text("{{m}}|").until(' ', rhsBorderColumn).text("|{{X}}\n");
             insty.text("{{m}}|--").text("{{b}}description{{m}}").until('-', rhsBorderColumn - 1).text("-|{{X}}\n");
-            String desc = this.at(DESC).orElse(str("<no description>")).strValue();
+            String desc = this.at(Tokens.DESC).orElse(str("<no description>")).strValue();
             int lhs = 0;
             int rowLength = Math.min(rhsBorderColumn - 6, desc.length()); // 6 to compensate for lhs padding in desc box
             while (true) {
@@ -253,7 +248,7 @@ public class DocQ extends BaseQ {
                     uri(DOM), str(domDesc),
                     uri(RNG), str(rngDesc),
                     uri(ARGS), rec(argDescription.entrySet().stream().map(kv -> rel(kv.getKey(), str(kv.getValue())))),
-                    uri(DESC), str(description)).jvm(), DOC_TID, fURI.NULL);
+                    uri(Tokens.DESC), str(description)).jvm(), DOC_TID, fURI.NULL);
         }
 
         public static Inst docWrap(final Inst inst, final String domDesc, final String rngDesc, final Map<Obj, String> argDescription, final String description) {

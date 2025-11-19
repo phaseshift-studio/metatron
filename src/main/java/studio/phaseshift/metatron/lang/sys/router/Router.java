@@ -19,6 +19,7 @@
 package studio.phaseshift.metatron.lang.sys.router;
 
 import studio.phaseshift.metatron.BootLoader;
+import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.Space;
 import studio.phaseshift.metatron.lang.sys.router.impl.MServer;
@@ -36,7 +37,6 @@ import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
 
 public interface Router extends Obj, Space, Closeable {
 
-    String SPACE = "space";
     ThreadLocal<stackSpace> THREAD_STACK = ThreadLocal.withInitial(() -> new stackSpace(f("+/#")));
 
     static boolean loaded() {
@@ -72,7 +72,7 @@ public interface Router extends Obj, Space, Closeable {
     }
 
     default Rec spaces() {
-        return this.jvm().get(uri(SPACE)).as();
+        return this.jvm().get(uri(Tokens.SPACE)).as();
     }
 
     MServer server();

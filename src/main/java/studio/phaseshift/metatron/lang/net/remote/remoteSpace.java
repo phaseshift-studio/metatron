@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.lang.net.remote;
 
+import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.core.m.type.*;
 import studio.phaseshift.metatron.lang.MSpace;
@@ -29,7 +30,6 @@ import studio.phaseshift.metatron.lang.sys.router.impl.MConnection;
 import studio.phaseshift.metatron.lang.core.m.inst.mInstSet;
 
 import studio.phaseshift.metatron.lang.util.serial.ObjByteBufferSerializer;
-import studio.phaseshift.metatron.lang.util.serial.ObjStringSerializer;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
 import studio.phaseshift.metatron.util.MTronException;
@@ -53,19 +53,19 @@ import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
 public class remoteSpace extends MSpace<MConnection> {
 
     public static final int RETRY_SECONDS = 5;
-    public static final fURI REMOTE_TID = MSYS_TID.extend("space").extend("remote");
+    public static final fURI REMOTE_TID = MSYS_TID.extend(Tokens.SPACE).extend("remote");
     private final GraphittyLogger LOG;
 
-    public static final Type REMOTE_TYPE = T(REMOTE_TID, null, instC(mInstSet.INST_TID.dom(ALL.maybe()).rng(REMOTE_TID), lst(T(REC_TID, isa_(rec(uri(PATTERN), T(URI_TID), uri(HOST), T(URI_TID))))), (lhs, inst) -> {
-        final fURI pattern = inst.arg(0).<Rec>as().at(PATTERN).uriValue();
-        final fURI host = inst.arg(0).<Rec>as().at(HOST).uriValue();
+    public static final Type REMOTE_TYPE = T(REMOTE_TID, null, instC(mInstSet.INST_TID.dom(ALL.maybe()).rng(REMOTE_TID), lst(T(REC_TID, isa_(rec(uri(Tokens.PATTERN), T(URI_TID), uri(Tokens.HOST), T(URI_TID))))), (lhs, inst) -> {
+        final fURI pattern = inst.arg(0).<Rec>as().at(Tokens.PATTERN).uriValue();
+        final fURI host = inst.arg(0).<Rec>as().at(Tokens.HOST).uriValue();
         final Space remote = new remoteSpace(host, pattern, inst.arg(0).vid());
         Router.global().addSpace(remote);
         return remote;
     }));
 
     public remoteSpace(final fURI authority, final fURI pattern, final fURI vid) {
-        super(MClient.of(authority, new ObjByteBufferSerializer()), Map.of(uri(PATTERN), uri(pattern)), pattern, REMOTE_TID, vid);
+        super(MClient.of(authority, new ObjByteBufferSerializer()), Map.of(uri(Tokens.PATTERN), uri(pattern)), pattern, REMOTE_TID, vid);
         LOG = Graphitty.log(this);
     }
 

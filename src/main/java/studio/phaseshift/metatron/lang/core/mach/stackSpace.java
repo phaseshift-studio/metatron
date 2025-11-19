@@ -18,10 +18,10 @@
 
 package studio.phaseshift.metatron.lang.core.mach;
 
+import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.core.m.type.Uri;
 import studio.phaseshift.metatron.lang.db.kv.kvSpace;
-import studio.phaseshift.metatron.lang.sys.router.Router;
 import studio.phaseshift.metatron.lang.Space;
 import studio.phaseshift.metatron.lang.sys.sysInstSet;
 import studio.phaseshift.metatron.lang.core.m.type.Obj;
@@ -33,7 +33,6 @@ import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.Stack;
 
-import static studio.phaseshift.metatron.lang.core.m.obj.NoObj.noobj;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.Common.mutableMap;
 
@@ -46,7 +45,7 @@ public class stackSpace extends MSpace<Stack<Poly>> {
     private final Space root;
 
     public stackSpace(final fURI pattern) {
-        super(new Stack<>(), mutableMap(uri(PATTERN), uri(pattern)), pattern, STACK_TID, fURI.NULL);
+        super(new Stack<>(), mutableMap(uri(Tokens.PATTERN), uri(pattern)), pattern, STACK_TID, fURI.NULL);
         this.root = kvSpace.of(this.pattern, fURI.NULL);
     }
 

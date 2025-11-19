@@ -19,6 +19,7 @@
 package studio.phaseshift.metatron.lang.ai.llm;
 
 import dev.langchain4j.model.ollama.OllamaChatModel;
+import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.ai.llm.ollama.ollamaSpace;
 import studio.phaseshift.metatron.lang.ai.llm.type.impl.Audio;
@@ -83,8 +84,8 @@ public class llmInstSet extends MInstSet {
                 }),
                 instC(INST_TID.extend("chat").dom(OLLM_TID).rng(STR_TID.maybeSome()), lst(T(STR_TID)),
                         (lhs, inst) -> str(OllamaChatModel.builder()
-                                .baseUrl(lhs.<Rec>as().at(HOST).uriValue().toString())
-                                .modelName(lhs.<Rec>as().at(NAME).uriValue().toString())
+                                .baseUrl(lhs.<Rec>as().at(Tokens.HOST).uriValue().toString())
+                                .modelName(lhs.<Rec>as().at(Tokens.NAME).uriValue().toString())
                                 .build()
                                 .chat(inst.arg(0).strValue())))));
     }

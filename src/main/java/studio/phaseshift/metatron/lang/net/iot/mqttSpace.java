@@ -22,6 +22,7 @@ import com.hivemq.client.mqtt.MqttClient;
 import com.hivemq.client.mqtt.mqtt5.Mqtt5BlockingClient;
 import com.hivemq.client.mqtt.mqtt5.Mqtt5Client;
 import com.hivemq.client.mqtt.mqtt5.message.subscribe.Mqtt5RetainHandling;
+import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.Q;
 import studio.phaseshift.metatron.furi.Qs;
 import studio.phaseshift.metatron.furi.fURI;
@@ -35,7 +36,6 @@ import studio.phaseshift.metatron.lang.core.m.obj.NoObj;
 import studio.phaseshift.metatron.lang.core.m.type.Obj;
 import studio.phaseshift.metatron.lang.net.web.JSONTranslator;
 import studio.phaseshift.metatron.lang.MSpace;
-import studio.phaseshift.metatron.lang.net.web.webSpace;
 import studio.phaseshift.metatron.lang.sys.router.Router;
 import studio.phaseshift.metatron.lang.util.serial.ObjSerializer;
 import studio.phaseshift.metatron.lang.util.serial.ObjStringSerializer;
@@ -68,16 +68,15 @@ public class mqttSpace extends MSpace<Mqtt5Client> {
             .prettyPrint(false)
             .ignoreRewrites(true)
             .create();
-    public static final String PREFIX = "prefix";
     public static fURI MQTT_TID = MWEB_TID.extend("space").extend("mqtt");
     public static final Type MQTT_TYPE = T(MQTT_TID, null,
             instC(mInstSet.INST_TID.dom(ALL.maybe()).rng(MQTT_TID),
-                    lst(T(REC_TID, isa_(rec(uri(PATTERN), T(URI_TID), uri(HOST), T(URI_TID), uri(PREFIX), T(URI_TID))))), (lhs, inst) -> {
-                        final fURI pattern = inst.arg(0).<Rec>as().at(PATTERN).uriValue();
-                        final fURI host = inst.arg(0).<Rec>as().at(HOST).uriValue();
-                        final fURI prefix = inst.arg(0).<Rec>as().at(PREFIX).uriValue();
+                    lst(T(REC_TID, isa_(rec(uri(Tokens.PATTERN), T(URI_TID), uri(Tokens.HOST), T(URI_TID), uri(Tokens.PREFIX), T(URI_TID))))), (lhs, inst) -> {
+                        final fURI pattern = inst.arg(0).<Rec>as().at(Tokens.PATTERN).uriValue();
+                        final fURI host = inst.arg(0).<Rec>as().at(Tokens.HOST).uriValue();
+                        final fURI prefix = inst.arg(0).<Rec>as().at(Tokens.PREFIX).uriValue();
                         // final Rec route = inst.arg(0).<Rec>as().at(ROUTE);
-                        final mqttSpace space = mqttSpace.of(mutableMap(uri(HOST), uri(host), uri(PREFIX), uri(prefix)), pattern, inst.arg(0).vid());
+                        final mqttSpace space = mqttSpace.of(mutableMap(uri(Tokens.HOST), uri(host), uri(Tokens.PREFIX), uri(prefix)), pattern, inst.arg(0).vid());
                         Router.global().addSpace(space);
                         return space;
                     }));
@@ -92,7 +91,7 @@ public class mqttSpace extends MSpace<Mqtt5Client> {
 
     public mqttSpace(final Mqtt5Client client, final Map<Obj, Obj> config, final fURI pattern, final fURI vid) {
         super(client, config, pattern, MQTT_TID, vid);
-        this.prefix = config.containsKey(uri(PREFIX)) ? config.get(uri(PREFIX)).uriValue() : null;
+        this.prefix = config.containsKey(uri(Tokens.PREFIX)) ? config.get(uri(Tokens.PREFIX)).uriValue() : null;
         LOG.info("{{y}}mtron{{g}}<=>{{y}}mqtt{{X}} mapping established: {{b}}%s {{g}}<=> ({{b}}%s {{g}}<=> {{b}}%s{{g}}){{X}}", this.pattern(), this.prefix, this.toMqttTopic(this.pattern()));
         this.cache = new kvSpace(this.pattern(), this.vid.extend("cache"));
         this.cache.qs().clear();
@@ -154,7 +153,7 @@ public class mqttSpace extends MSpace<Mqtt5Client> {
                 });
             }
         });
-        this.broker = config.get(uri(HOST)).orElseThrow(new IllegalArgumentException("config must have a host key")).uriValue();
+        this.broker = config.get(uri(Tokens.HOST)).orElseThrow(new IllegalArgumentException("config must have a host key")).uriValue();
         this.init();
     }
 
@@ -167,11 +166,11 @@ public class mqttSpace extends MSpace<Mqtt5Client> {
                         .orElseThrow(new IllegalArgumentException("config must have a pattern key")).uriValue(),*/
         final Mqtt5Client client = MqttClient.builder()
                 .identifier(UUID.randomUUID().toString())
-                .serverHost(config.get(uri(HOST)).uriValue().host())
-                .serverPort(config.get(uri(HOST)).uriValue().port())
+                .serverHost(config.get(uri(Tokens.HOST)).uriValue().host())
+                .serverPort(config.get(uri(Tokens.HOST)).uriValue().port())
                 .useMqttVersion5()
                 .build();
-        config.put(uri(PATTERN), uri(pattern));
+        config.put(uri(Tokens.PATTERN), uri(pattern));
         return new mqttSpace(client, config, pattern, vid);
     }
 

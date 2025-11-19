@@ -19,6 +19,7 @@
 package studio.phaseshift.metatron;
 
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.lang.Space;
 import studio.phaseshift.metatron.lang.ai.llm.llmInstSet;
 import studio.phaseshift.metatron.lang.core.m.inst.mInstSet;
 import studio.phaseshift.metatron.lang.core.m.parser.mParser;
@@ -45,6 +46,7 @@ import studio.phaseshift.metatron.util.MTronException;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.nio.file.Path;
+import java.util.Map;
 
 import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.REC_TID;
@@ -55,7 +57,7 @@ import static studio.phaseshift.metatron.lang.core.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
 
-public class BootLoader implements Obj {
+public class BootLoader implements Rec {
 
     /// ////////////////////////////////////////////////////////////////////////
     /// the global variables that must be gc()'d on close
@@ -65,10 +67,6 @@ public class BootLoader implements Obj {
     public static Router ROUTER;
     public static Rec GLOBAL;
     public static Mode MODE;
-    /// ////////////////////////////////////////////////////////////////////////
-
-    public static final String HOST = "host";
-    public static final String BOOT = "boot";
     public static boolean TYPE_CHECK = true;
 
     static {
@@ -128,7 +126,7 @@ public class BootLoader implements Obj {
             fURI remoteAuthority = null;
             /// /// START OF BOOTING PROCESS /// /// allow boot description to be read from a mtron file
             try {
-                remoteAuthority = options.at(HOST).orElse(uri("ws://" + InetAddress.getLocalHost().getHostName() + ".local" + ":" + 8887)).uriValue();
+                remoteAuthority = options.at(Tokens.HOST).orElse(uri("ws://" + InetAddress.getLocalHost().getHostName() + ".local" + ":" + 8887)).uriValue();
             } catch (final Exception e) {
                 LOG.warn("booting metatron on a non-networked jvm");
             }
@@ -142,33 +140,28 @@ public class BootLoader implements Obj {
             Router.writeToSpace(Router.global());
             Router.writeToSpace("boot/options", options);
             ROUTER.start();
-            //  Router.writeToSpace(new mtronInstSet(fURI.of("/mnt/lang/m")));
             ///////////////////////////////////////////////////////////////
-            if (options.has(uri(BOOT))) {
-                LOG.none("\t {{m}}BEGIN:{{g}} evaluating provided boot loader: {{b}}%s{{X}}\n", options.at(uri(BOOT)).uriValue());
+            if (options.has(uri(Tokens.BOOT))) {
+                LOG.none("\t {{m}}BEGIN:{{g}} evaluating provided boot loader: {{b}}%s{{X}}\n", options.at(uri(Tokens.BOOT)).uriValue());
                 try {
-                    final long count = mParser.eval(Path.of(options.at(BOOT).uriValue().toString()).toFile()).count();
-                    LOG.info("processed boot input: {{b}}%s{{/b}} {{g}}[{{y}}loc: %d{{/y}}]{{/g}}", options.at(BOOT).uriValue(), count);
+                    final long count = mParser.eval(Path.of(options.at(Tokens.BOOT).uriValue().toString()).toFile()).count();
+                    LOG.info("processed boot input: {{b}}%s{{/b}} {{g}}[{{y}}loc: %d{{/y}}]{{/g}}", options.at(Tokens.BOOT).uriValue(), count);
                 } catch (final IOException e) {
                     LOG.error(e);
                     System.exit(0);
                 }
-                LOG.none("\t {{m}}END:{{g}} evaluating provided boot loader: {{b}}%s{{X}}\n", options.at(uri(BOOT)).uriValue());
+                LOG.none("\t {{m}}END:{{g}} evaluating provided boot loader: {{b}}%s{{X}}\n", options.at(uri(Tokens.BOOT)).uriValue());
             }
             ///////////////////////////////////////////////////////////////
             final Obj log = Router.writeToSpace(logObj.of(rec(options.at("log").orElse(uri("trace")), lst(uri("#"))), f("/sys/log")));
             LOG.info("logging now handled by %s", log);
-
             //Router.writeToSpace(new FileSpace(FileSystems.getDefault(), f("/home/#"), f("/mnt/fs")));
             // Router.writeToSpace(new MGraph(TinkerFactory.createModern(), f("/tp/#"), f("/mnt/tp")));
             //mkvSpace.of(f("/tp/#")).vid(f("/mnt/tp"));
             //new TP3Translator(f("/tp")).translate(TinkerFactory.createModern());
             // new MqttSpace(f("zigbee2mqtt/#?broker=mqtt://192.168.66.2:1883&prefix=/mqtt"), f("/mnt/zigbee2mqtt")));
-            if (options.at("mode").equals(uri("docs"))) {
-                // do nothing
-            } else if (options.at("mode").equals(uri("console"))) {
-                //     Router.writeToSpace(RemoteSpace.open(f("ws://chibi.local:8888"), f("/shared/#"), f("/mnt/shared")));
-            } else if (options.at("mode").equals(uri("server")))
+            //     Router.writeToSpace(RemoteSpace.open(f("ws://chibi.local:8888"), f("/shared/#"), f("/mnt/shared")));
+            if (options.at("mode").equals(uri("server")))
                 Router.writeToSpace(new kvSpace(fURI.of("/shared/#"), fURI.of("/mnt/shared")));
             /// ///////////////////////////////////
             LOG.info("%s {{g}}successfully{{/g}} booted", Graphitty.sillyPrint("metatron", true, true));
@@ -208,27 +201,29 @@ public class BootLoader implements Obj {
     }
 
     @Override
-    public <J> J jvm() {
-        return null;
+    public Map<Obj, Obj> jvm() {
+        return GLOBAL.jvm();
     }
 
     @Override
     public fURI tid() {
-        return f(BOOT);
+        return f(Tokens.BOOT);
     }
 
     @Override
     public fURI vid() {
-        return f(BOOT);
+        return f(Tokens.BOOT);
     }
 
     @Override
-    public <O extends Obj> O clone(Object jvm, fURI tid, fURI vid) {
-        return (O) this;
+    public Rec clone(final Object jvm, final fURI tid, final fURI vid) {
+        LOG.warn("boot loader obj form can not be mutated");
+        return this;
     }
 
     @Override
     public Obj clone() {
+        LOG.warn("boot loader can not be cloned");
         return this;
     }
 }

@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.lang.db.kv;
 
+import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.sys.router.Router;
 import studio.phaseshift.metatron.lang.Space;
@@ -49,15 +50,15 @@ import static studio.phaseshift.metatron.util.Common.mutableMap;
 public class kvSpace extends MSpace<Map<fURI, Obj>> {
 
     public static final fURI KV_TID = f("/kv/space/kv");
-    public static final Type KV_TYPE = T(KV_TID, null, instC(mInstSet.INST_TID.dom(ALL.maybe()).rng(KV_TID), lst(T(REC_TID, isa_(rec(uri(PATTERN), T(URI_TID))))), (lhs, inst) -> {
-        final fURI pattern = inst.arg(0).<Rec>as().at(PATTERN).uriValue();
+    public static final Type KV_TYPE = T(KV_TID, null, instC(mInstSet.INST_TID.dom(ALL.maybe()).rng(KV_TID), lst(T(REC_TID, isa_(rec(uri(Tokens.PATTERN), T(URI_TID))))), (lhs, inst) -> {
+        final fURI pattern = inst.arg(0).<Rec>as().at(Tokens.PATTERN).uriValue();
         final Space space = new kvSpace(pattern, inst.arg(0).vid());
         Router.global().addSpace(space);
         return space;
     }));
 
     public kvSpace(final fURI pattern, final fURI vid) {
-        super(new HashMap<>(), mutableMap(uri(PATTERN), uri(pattern)), pattern, KV_TID, vid);
+        super(new HashMap<>(), mutableMap(uri(Tokens.PATTERN), uri(pattern)), pattern, KV_TID, vid);
     }
 
     public static kvSpace of(final fURI pattern, final fURI vid) {

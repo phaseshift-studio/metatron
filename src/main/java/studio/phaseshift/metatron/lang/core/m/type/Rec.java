@@ -115,11 +115,28 @@ public interface Rec extends Poly, PlusMonoid.O<Rec> {
         }
     }
 
+    default Rec put(final Obj key, final Obj value) {
+        final fURI k = key.uriValue();
+        if (k.segments().isEmpty())
+            return this;
+        final Map<Obj, Obj> map = new LinkedHashMap<>(this.recValue());
+        map.compute(uri(k.segments().get(0)), (k1, v) ->
+                k.segments().size() == 1 ?
+                        (null != v && v.isObjs() ? v.append(value) : value) :
+                        (null != v && v.isRec() ? v.<Rec>as() : rec()).put(k.pretract().toUri(), value));
+        return this.jvm(map);
+    }
+
+    @Override
+    default Rec plus(final Rec rhs) {
+        final Map<Obj, Obj> newMap = new LinkedHashMap<>(this.recValue());
+        rhs.stream().flatMap(Obj::<Obj>elements).map(Obj::<Rel>as).forEach(o -> newMap.compute(o.first(), (k, v) -> null == v ? o.second() : v.isPlusMonoid() ? (Obj) v.<PlusMonoid.O>as().plus(o.second().<PlusMonoid.O>as()) : v.append(o.second())));
+        return this.jvm(newMap);
+    }
+
     default <O extends Obj> O at(final String key) {
         return this.at(uri(key));
     }
-
-    Rec put(final Obj key, final Obj value);
 
     default Rec put(final fURI key, final Obj value) {
         return this.put(uri(key), value);

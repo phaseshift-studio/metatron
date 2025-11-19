@@ -18,12 +18,11 @@
 
 package studio.phaseshift.metatron.lang;
 
+import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.Q;
 import studio.phaseshift.metatron.furi.Qs;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.furi.q.DocQ;
 import studio.phaseshift.metatron.furi.q.PubSubQ;
-import studio.phaseshift.metatron.lang.core.m.type.Lst;
 import studio.phaseshift.metatron.lang.core.m.type.Obj;
 import studio.phaseshift.metatron.lang.core.m.type.Rec;
 import studio.phaseshift.metatron.lang.core.m.type.impl.MRec;
@@ -53,7 +52,7 @@ public abstract class MSpace<SJVM> extends MRec implements Space {
         this.qs.register(new PubSubQ());
         this.jvm().put(uri("qs"),this.qs);
         //this.registerQ(new PubSubQ());
-        this.jvm().put(uri(STATUS),uri(ACTIVE));
+        this.jvm().put(uri(Tokens.STATUS),uri(Tokens.ACTIVE));
         LOG = Graphitty.log(this);
     }
 
@@ -63,8 +62,8 @@ public abstract class MSpace<SJVM> extends MRec implements Space {
             value.<Lst>as().elements().forEach(q -> {
                 this.qs.add(q);
             });
-        } else*/ if (key.matches(f(STATUS))) {
-            this.status = value.uriValue().matches(f(ACTIVE)) ? Status.active : Status.paused;
+        } else*/ if (key.matches(f(Tokens.STATUS))) {
+            this.status = value.uriValue().matches(f(Tokens.ACTIVE)) ? Status.active : Status.paused;
         }
     }
 

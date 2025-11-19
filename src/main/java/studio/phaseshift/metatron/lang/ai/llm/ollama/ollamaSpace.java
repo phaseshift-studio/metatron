@@ -21,11 +21,10 @@ package studio.phaseshift.metatron.lang.ai.llm.ollama;
 import dev.langchain4j.model.ollama.OllamaModel;
 import dev.langchain4j.model.ollama.OllamaModelCard;
 import dev.langchain4j.model.ollama.OllamaModels;
-import dev.langchain4j.model.output.Response;
 import io.github.ollama4j.Ollama;
+import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.ai.llm.type.impl.GGUF;
-import studio.phaseshift.metatron.lang.core.m.type.impl.MStr;
 import studio.phaseshift.metatron.lang.db.kv.kvSpace;
 import studio.phaseshift.metatron.lang.ai.llm.type.impl.OLLM;
 import studio.phaseshift.metatron.lang.sys.router.Router;
@@ -59,7 +58,6 @@ import static studio.phaseshift.metatron.lang.core.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MObjs.objs;
-import static studio.phaseshift.metatron.lang.core.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
 
@@ -68,16 +66,10 @@ import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
  */
 public class ollamaSpace extends MSpace<OllamaModels> {
 
-    public static final String SKILL = "skill";
-    public static final String GGUF_KEY = "gguf";
-    public static final String QUANT = "quant";
-    public static final String FAMILY = "family";
-    public static final String FROM = "FROM";
 
-
-    public static final Type OLLAMA_TYPE = T(OLLAMA_TID, null, instC(mInstSet.INST_TID.dom(ALL.maybe()).rng(OLLAMA_TID), lst(T(REC_TID, isa_(rec(uri(PATTERN), T(URI_TID), uri(HOST), T(URI_TID))))), (lhs, inst) -> {
-        final fURI pattern = inst.arg(0).<Rec>as().at(PATTERN).uriValue();
-        final fURI ollamaHost = inst.arg(0).<Rec>as().at(HOST).uriValue();
+    public static final Type OLLAMA_TYPE = T(OLLAMA_TID, null, instC(mInstSet.INST_TID.dom(ALL.maybe()).rng(OLLAMA_TID), lst(T(REC_TID, isa_(rec(uri(Tokens.PATTERN), T(URI_TID), uri(Tokens.HOST), T(URI_TID))))), (lhs, inst) -> {
+        final fURI pattern = inst.arg(0).<Rec>as().at(Tokens.PATTERN).uriValue();
+        final fURI ollamaHost = inst.arg(0).<Rec>as().at(Tokens.HOST).uriValue();
         final OllamaModels models = OllamaModels.builder().baseUrl(ollamaHost.toString()).build();
         final Space ollama = new ollamaSpace(models, inst.arg(0).jvm(), pattern, inst.arg(0).vid());
         Router.global().addSpace(ollama);
@@ -95,8 +87,8 @@ public class ollamaSpace extends MSpace<OllamaModels> {
     public static ollamaSpace of(final fURI ollamaHost, final fURI pattern) {
         final OllamaModels models = OllamaModels.builder().baseUrl(ollamaHost.toString()).build();
         return new ollamaSpace(models, Map.of(
-                uri(HOST), ollamaHost.toUri(),
-                uri(PATTERN), pattern.toUri()),
+                uri(Tokens.HOST), ollamaHost.toUri(),
+                uri(Tokens.PATTERN), pattern.toUri()),
                 pattern,
                 fURI.NULL);
     }
@@ -120,26 +112,26 @@ public class ollamaSpace extends MSpace<OllamaModels> {
                     .filter(pair -> pair.get1().vid().matches(pattern))
                     .forEach(pair -> {
                         try {
-                            final Obj gguf = this.internal.read(pair.get1().vid().extend(GGUF_KEY));
+                            final Obj gguf = this.internal.read(pair.get1().vid().extend(Tokens.GGUF_KEY));
                             if (gguf.isNoObj()) {
-                                this.internal.write(pair.get1().vid().extend(GGUF_KEY), fail(MTronException.of("temp")));
+                                this.internal.write(pair.get1().vid().extend(Tokens.GGUF_KEY), fail(MTronException.of("temp")));
                                 final String ggufFilePath = Arrays.stream(pair.get0().getModelfile().split("\n"))
                                         .map(String::trim)
-                                        .filter(line -> line.startsWith(FROM))
-                                        .map(line -> line.replace(FROM, "").trim())
+                                        .filter(line -> line.startsWith(Tokens.FROM))
+                                        .map(line -> line.replace(Tokens.FROM, "").trim())
                                         .findFirst()
                                         .orElse(null);
                                 if (ggufFilePath != null) {
-                                    LOG.info("onboarding ollm gguf into space: %s", pair.get1().vid().extend(GGUF_KEY));
-                                    GGUF.of(f(ggufFilePath), pair.get1().vid().extend(GGUF_KEY))
+                                    LOG.info("onboarding ollm gguf into space: %s", pair.get1().vid().extend(Tokens.GGUF_KEY));
+                                    GGUF.of(f(ggufFilePath), pair.get1().vid().extend(Tokens.GGUF_KEY))
                                             .put(uri(SIZE), Common.isInt(pair.get0().getDetails().getParameterSize()) ? jnt(Long.parseLong(pair.get0().getDetails().getParameterSize())) : noobj())
-                                            .put(uri(QUANT), uri(pair.get0().getDetails().getQuantizationLevel())).<Rec>as()
-                                            .put(uri(FAMILY), uri(pair.get0().getDetails().getFormat())).as();
+                                            .put(uri(Tokens.QUANT), uri(pair.get0().getDetails().getQuantizationLevel())).<Rec>as()
+                                            .put(uri(Tokens.FAMILY), uri(pair.get0().getDetails().getFormat())).as();
                                 }
                             }
                         } catch (final Exception e) {
                             LOG.warn(e);
-                            this.internal.write(pair.get1().vid().extend(GGUF_KEY), fail(e));
+                            this.internal.write(pair.get1().vid().extend(Tokens.GGUF_KEY), fail(e));
                         }
                     });
             final Obj result2 = this.internal.read(vid);
@@ -148,7 +140,7 @@ public class ollamaSpace extends MSpace<OllamaModels> {
             try {
                 LOG.info("pulling model: %s", vid.removePrefix(this.pattern.retractPattern()).toString());
                 final String version = vid.name();
-                new Ollama(this.at(HOST).uriValue().toString()).pullModel(vid.removePrefix(this.pattern.retractPattern()).retract().toString() + ":" + version);
+                new Ollama(this.at(Tokens.HOST).uriValue().toString()).pullModel(vid.removePrefix(this.pattern.retractPattern()).retract().toString() + ":" + version);
                 return this.read(vid);
             } catch (final Exception e) {
                 throw MTronException.of(e);

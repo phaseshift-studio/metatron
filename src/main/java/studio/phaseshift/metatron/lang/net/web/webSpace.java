@@ -23,6 +23,7 @@ import com.sun.net.httpserver.HttpContext;
 import com.sun.net.httpserver.HttpServer;
 import org.jsoup.Connection;
 import org.jsoup.Jsoup;
+import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.core.m.parser.mParser;
 import studio.phaseshift.metatron.lang.sys.router.Router;
@@ -131,9 +132,9 @@ public class webSpace extends MSpace<HttpServer> {
     protected static final String ROUTE = "route";
     protected static final Type WEB_TYPE = T(WEB_TID, null,
             instC(mInstSet.INST_TID.dom(ALL.maybe()).rng(WEB_TID),
-                    lst(T(REC_TID, isa_(rec(uri(PATTERN), T(URI_TID), uri(HOST), T(URI_TID), uri(ROUTE), T(REC_TID))))), (lhs, inst) -> {
-                        final fURI pattern = inst.arg(0).<Rec>as().at(PATTERN).uriValue();
-                        final fURI host = inst.arg(0).<Rec>as().at(HOST).uriValue();
+                    lst(T(REC_TID, isa_(rec(uri(Tokens.PATTERN), T(URI_TID), uri(Tokens.HOST), T(URI_TID), uri(ROUTE), T(REC_TID))))), (lhs, inst) -> {
+                        final fURI pattern = inst.arg(0).<Rec>as().at(Tokens.PATTERN).uriValue();
+                        final fURI host = inst.arg(0).<Rec>as().at(Tokens.HOST).uriValue();
                         final Rec route = inst.arg(0).<Rec>as().at(ROUTE);
                         final webSpace space = webSpace.of(host, route.jvm(), pattern, inst.arg(0).vid());
                         Router.global().addSpace(space);
@@ -172,7 +173,7 @@ public class webSpace extends MSpace<HttpServer> {
                     });
             LOG.info("http route attached: %s", rel(uri(context.getPath()), r.second()));
         });
-        LOG.info("starting web server at %s", this.at(HOST).uriValue().scheme(fURI.HTTP).toUri());
+        LOG.info("starting web server at %s", this.at(Tokens.HOST).uriValue().scheme(Tokens.HTTP).toUri());
         server.setExecutor(Executors.newFixedThreadPool(4));
         Runtime.getRuntime().addShutdownHook(new Thread(this::close));
         LOG.info("available routes: %s", this.at(ROUTE));
@@ -183,8 +184,8 @@ public class webSpace extends MSpace<HttpServer> {
         try {
             final HttpServer server = HttpServer.create(new InetSocketAddress(host.host(), host.port()), 0);
             final Map<Obj, Obj> config = new LinkedHashMap<>();
-            config.put(uri(HOST), host.toUri());
-            config.put(uri(PATTERN), pattern.toUri());
+            config.put(uri(Tokens.HOST), host.toUri());
+            config.put(uri(Tokens.PATTERN), pattern.toUri());
             config.put(uri(ROUTE), rec(routes));
             return new webSpace(server, config, pattern, vid).tid(WEB_TID);
         } catch (final IOException e) {

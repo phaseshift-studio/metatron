@@ -19,6 +19,7 @@
 package studio.phaseshift.metatron.lang.sys.router.impl;
 
 import studio.phaseshift.metatron.Registry;
+import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.Qs;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.core.m.type.Rec;
@@ -59,9 +60,9 @@ public class MRouter extends MSpace<MServer> implements Router {
 
     public MRouter(final fURI host, final fURI vid) {
         super(new MServer(host), new ConcurrentHashMap<>(Map.of(
-                        uri(PATTERN), uri(ALL),
+                        uri(Tokens.PATTERN), uri(ALL),
                         PRIMARY, uri(MTRON_TID),
-                        uri(SPACE), rec(new ConcurrentHashMap<>(Map.of(uri("+/#"), new stackSpace(f("+/#"))))))), f("#"),
+                        uri(Tokens.SPACE), rec(new ConcurrentHashMap<>(Map.of(uri("+/#"), new stackSpace(f("+/#"))))))), f("#"),
                 sysInstSet.MSYS_TID.extend("router"),
                 vid);
         LOG.info("local router {{b}}%s{{/b}}", this);

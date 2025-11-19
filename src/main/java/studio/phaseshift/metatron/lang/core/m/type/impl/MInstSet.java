@@ -18,7 +18,7 @@
 
 package studio.phaseshift.metatron.lang.core.m.type.impl;
 
-import org.petitparser.parser.Parser;
+import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.DocQ;
 import studio.phaseshift.metatron.lang.sys.router.Router;
@@ -30,7 +30,6 @@ import studio.phaseshift.metatron.lang.MSpace;
 import studio.phaseshift.metatron.util.Tuple;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MObjs.objs;
@@ -49,7 +48,7 @@ public abstract class MInstSet extends MSpace<Map<fURI, Set<? extends Obj>>> imp
     protected final Map<fURI, Inst> REWRITE_TABLE = new LinkedHashMap<>();
 
     public MInstSet(final fURI tid, final fURI vid) {
-        super(new LinkedHashMap<>(), mutableMap(uri(PATTERN), uri(tid.extend(fURI.ALL))), tid.extend(fURI.ALL), tid, vid);
+        super(new LinkedHashMap<>(), mutableMap(uri(Tokens.PATTERN), uri(tid.extend(fURI.ALL))), tid.extend(fURI.ALL), tid, vid);
         if (!this.pattern.equals(f("+/#")) && Router.loaded() && !(this instanceof Router))
             Router.global().addSpace(this);
         this.registerQ(new DocQ());

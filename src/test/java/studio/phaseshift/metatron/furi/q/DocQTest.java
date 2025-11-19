@@ -4,8 +4,7 @@ import studio.phaseshift.metatron.MetatronTest;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.lang.core.m.type.*;
 
-import static studio.phaseshift.metatron.furi.q.DocQ.DESC;
-import static studio.phaseshift.metatron.lang.core.m.type.impl.MStr.str;
+import static studio.phaseshift.metatron.Tokens.DESC;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)

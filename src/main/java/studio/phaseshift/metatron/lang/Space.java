@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.lang;
 
+import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.Q;
 import studio.phaseshift.metatron.furi.Qs;
 import studio.phaseshift.metatron.furi.fURI;
@@ -43,28 +44,17 @@ import static studio.phaseshift.metatron.util.Tuple.Pair;
 
 public interface Space extends Rec, Closeable {
 
-    /// ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    /// ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    /// ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    public static final String PATTERN = "pattern";
-    public static final String HOST = "host";
-    public static final String NAME = "name";
-    public static final String STATUS = "status";
-    public static final String PAUSED = "paused";
-    public static final String ACTIVE = "active";
-
     public enum Status {
         paused,
         active
     }
 
     default Status status() {
-        return Status.valueOf(this.at(STATUS).uriValue().toString());
+        return Status.valueOf(this.at(Tokens.STATUS).uriValue().toString());
     }
 
     default Space status(final Status status) {
-        return (Space) this.put(STATUS, uri(status.name()));
+        return (Space) this.put(Tokens.STATUS, uri(status.name()));
     }
 
     Qs qs();
@@ -104,7 +94,7 @@ public interface Space extends Rec, Closeable {
     }
 
     default Space pause() {
-        return (Space) this.put(STATUS, uri(PAUSED));
+        return (Space) this.put(Tokens.STATUS, uri(Tokens.PAUSED));
     }
 
     @Override

@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.furi;
 
+import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.algebra.Ring;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.lang.sys.router.Router;
@@ -34,10 +35,6 @@ import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
 
 public class fURI implements Cloneable, Ring<fURI> {
 
-    public static final String HTTP = "http";
-    public static final String WS = "ws";
-
-    public static final String EMPTY = "";
     public static final String SEGMENT_SPLIT = "/";
     public static final char SEGMENT_SPLIT_CHAR = SEGMENT_SPLIT.charAt(0);
     public static final String KVS_SPLIT = "&";
@@ -246,7 +243,7 @@ public class fURI implements Cloneable, Ring<fURI> {
             else
                 break;
         }
-        fURI base = fURI.of(common.stream().reduce(this.sstart ? SEGMENT_SPLIT : EMPTY, (a, b) -> a + b + SEGMENT_SPLIT));
+        fURI base = fURI.of(common.stream().reduce(this.sstart ? SEGMENT_SPLIT : Tokens.EMPTY, (a, b) -> a + b + SEGMENT_SPLIT));
         if (other.path.size() != this.path.size())
             return base.extend(ALL);
         final int extensionCount = maxLength - common.size();
@@ -277,7 +274,7 @@ public class fURI implements Cloneable, Ring<fURI> {
 
 
     public String name() {
-        return this.segments().isEmpty() ? EMPTY : this.qLess().segments().get(this.segments().size() - 1);
+        return this.segments().isEmpty() ? Tokens.EMPTY : this.qLess().segments().get(this.segments().size() - 1);
     }
 
     public fURI resolve() {
@@ -314,7 +311,7 @@ public class fURI implements Cloneable, Ring<fURI> {
     }
 
     public String path() {
-        final String p = this.path.stream().reduce(this.sstart ? SEGMENT_SPLIT : EMPTY, (a, b) -> a + b + SEGMENT_SPLIT);
+        final String p = this.path.stream().reduce(this.sstart ? SEGMENT_SPLIT : Tokens.EMPTY, (a, b) -> a + b + SEGMENT_SPLIT);
         return this.send || p.isEmpty() ? p : p.substring(0, p.length() - 1);
     }
 
@@ -421,7 +418,7 @@ public class fURI implements Cloneable, Ring<fURI> {
 
     public fURI removeSubpath(final fURI subpath) {
         String newPath = this.toString();
-        return new fURI(newPath.replace(subpath.asBranch().toString(), EMPTY));
+        return new fURI(newPath.replace(subpath.asBranch().toString(), Tokens.EMPTY));
     }
 
     public boolean hasScheme() {
@@ -869,7 +866,7 @@ public class fURI implements Cloneable, Ring<fURI> {
     }
 
     public String toString() {
-        final StringBuilder b = new StringBuilder(null == this.scheme ? EMPTY : this.scheme + SCHEMA_END);
+        final StringBuilder b = new StringBuilder(null == this.scheme ? Tokens.EMPTY : this.scheme + SCHEMA_END);
         if (null != this.host)
             b.append(HOST_START).append(this.host).append(this.port == -1 ? "" : (":" + this.port));
         if (this.sstart)
@@ -914,7 +911,7 @@ public class fURI implements Cloneable, Ring<fURI> {
             return null == queryString || queryString.trim().isEmpty() ? null :
                     new Query(Stream.of(queryString.split(KVS_SPLIT))
                             .map(kv -> kv.split(KV_SPLIT))
-                            .collect(Collectors.toMap(kv -> kv[0], kv -> kv.length == 1 ? EMPTY : kv[1], (a, b) -> b, LinkedHashMap::new)));
+                            .collect(Collectors.toMap(kv -> kv[0], kv -> kv.length == 1 ? Tokens.EMPTY : kv[1], (a, b) -> b, LinkedHashMap::new)));
         }
 
         public static String to(final Query query) {
@@ -958,7 +955,7 @@ public class fURI implements Cloneable, Ring<fURI> {
             if (query.isEmpty())
                 return "";
             final StringBuilder sb = new StringBuilder();
-            this.query.forEach((key, value) -> sb.append(key).append(null == value || value.isEmpty() ? EMPTY : KV_SPLIT + value).append(KVS_SPLIT));
+            this.query.forEach((key, value) -> sb.append(key).append(null == value || value.isEmpty() ? Tokens.EMPTY : KV_SPLIT + value).append(KVS_SPLIT));
             sb.deleteCharAt(sb.length() - 1);
             return sb.toString();
         }
