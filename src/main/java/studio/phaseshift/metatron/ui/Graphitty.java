@@ -137,10 +137,20 @@ public class Graphitty {
     }
 
     public static String string(final String f, final Object... args) {
-        final ByteArrayOutputStream out = new ByteArrayOutputStream();
-        final Graphitty temp = new Graphitty(out);
-        temp.parseDSL(f.formatted(args));
-        return out.toString();
+        try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+            final Graphitty temp = new Graphitty(out);
+            temp.parseDSL(f.formatted(args));
+            return out.toString();
+        } catch (final Exception e) {
+            try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+                final Graphitty temp = new Graphitty(out);
+                temp.parseDSL(f.replace("%", "%%").formatted(args));
+                return out.toString();
+            } catch (final Exception e2) {
+                System.out.println("graphitty error processing: " + f);
+                throw MTronException.of(e);
+            }
+        }
     }
 
     public static String string(final Obj obj) {
