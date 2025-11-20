@@ -59,7 +59,7 @@ public class Qs extends MLst {
 
     public Optional<Obj> processPreWrite(final fURI source, final fURI vid, final Obj obj) {
         return this.<Q>elements()
-                .filter(q -> vid.hasQuery(q.jvm().toString()))
+                .filter(q -> vid.hasQuery(q.pattern()))
                 .map(Q::onWrite)
                 .filter(Optional::isPresent)
                 .peek(q -> LOG.info("handling {{y}}pre write{{X}} of %s for %s %s", source, vid, obj))

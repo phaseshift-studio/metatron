@@ -83,7 +83,6 @@ public class mqttSpace extends MSpace<Mqtt5Client> {
     protected final fURI broker;
     protected final fURI prefix;
     final JSONTranslator jsonTranslator = new JSONTranslator(SERIALIZER);
-    final Qs qs;
     private final GraphittyLogger LOG = Graphitty.log(this);
     Mqtt5Client client;
     Mqtt5BlockingClient.Mqtt5Publishes incomingMessages;
@@ -95,64 +94,8 @@ public class mqttSpace extends MSpace<Mqtt5Client> {
         LOG.info("{{y}}mtron{{g}}<=>{{y}}mqtt{{X}} mapping established: {{b}}%s {{g}}<=> ({{b}}%s {{g}}<=> {{b}}%s{{g}}){{X}}", this.pattern(), this.prefix, this.toMqttTopic(this.pattern()));
         this.cache = new kvSpace(this.pattern(), this.vid.extend("cache"));
         this.cache.qs().clear();
-        this.qs = new Qs();
-        this.qs.register(new PubSubQ() {
-            @Override
-            public Optional<Q.OnWrite> onWrite() {
-                return Optional.of(new PubSubQ.OnWrite() {
-                    @Override
-                    public Optional<Obj> qlessWrite(final fURI source, final fURI vid, final Obj obj) {
-                        return Optional.empty();
-                    }
-
-                    @Override
-                    public Optional<Obj> preWrite(final fURI source, final fURI vid, final Obj obj) {
-                        LOG.trace("evaluating {{y}}prewrite{{/y}}: %s => %s", obj, vid);
-                        if (vid.hasQuery("sub")) {
-                            if (obj.isNoObj()) {
-                                client.toAsync()
-                                        .unsubscribeWith()
-                                        .topicFilter(toMqttTopic(vid.basePath()))
-                                        .send().
-                                        whenComplete((m, e) -> {
-                                            if (null != e)
-                                                LOG.error(e);
-                                            else
-                                                LOG.debug("unsubscribed from %s", m);
-                                        });
-                            } else {
-                                client.toAsync()
-                                        .subscribeWith()
-                                        .topicFilter(toMqttTopic(vid.basePath()))
-                                        .callback(p -> {
-                                            LOG.debug("received %s", p);
-                                            if (p.getPayload().isPresent()) {
-                                                final String json = StandardCharsets.UTF_8.decode(p.getPayload().get()).toString();
-                                                final Obj o = jsonTranslator.translateString(json);
-                                                cache.write(toMtronVid(p.getTopic().toString()), o);
-                                                final Obj result = obj.apply(o);
-                                                LOG.trace("subscription evaluation of %s => %s yielded %s", o, obj, result);
-                                            } else {
-                                                cache.write(toMtronVid(p.getTopic().toString()), NoObj.noobj());
-                                                final Obj result = obj.apply();
-                                                LOG.trace("subscription evaluation of %s => %s yielded %s", NoObj.noobj(), obj, result);
-                                            }
-                                        })
-                                        .send()
-                                        .whenComplete((m, e) -> {
-                                            if (null != e)
-                                                LOG.error(e);
-                                            else
-                                                LOG.debug("subscribed to %s", m);
-                                        });
-                            }
-                            return super.preWrite(source, vid, obj);
-                        }
-                        return Optional.empty();
-                    }
-                });
-            }
-        });
+        this.qs.clear();
+        this.qs.register(new MqttPubSubQ(this));
         this.broker = config.get(uri(Tokens.HOST)).orElseThrow(new IllegalArgumentException("config must have a host key")).uriValue();
         this.init();
     }
@@ -174,11 +117,11 @@ public class mqttSpace extends MSpace<Mqtt5Client> {
         return new mqttSpace(client, config, pattern, vid);
     }
 
-    private String toMqttTopic(final fURI vid) {
+    protected String toMqttTopic(final fURI vid) {
         return null == this.prefix ? vid.toString() : vid.removePrefix(this.prefix).toString();
     }
 
-    private fURI toMtronVid(final String topic) {
+    protected fURI toMtronVid(final String topic) {
         return null == this.prefix ? f(topic) : this.prefix.extend(topic);
     }
 
