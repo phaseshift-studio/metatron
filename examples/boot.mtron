@@ -1,5 +1,5 @@
-[-- metatron example boot --]
-[-- mount instruction sets --]
+[-- metatron example boot --];
+[-- mount instruction sets --];
 /mnt/lang/sys   -> */sys;
 /mnt/lang/kv    -> */kv;
 /mnt/lang/web   -> */web;
@@ -8,8 +8,8 @@
 /mnt/lang/mach  -> */mach;
 /mnt/lang/llm   -> */llm;
 /mnt/lang/clstr -> */clstr;
-[-- mount spaces --]
-    kv::[pattern => /usr/#]@/mnt/space/usr;
+[-- mount spaces --];
+    kv::[pattern => </usr/#>]@/mnt/space/usr;
     kv::[pattern => /shared/#]@/mnt/space/shared;
     web::[host   => <http://localhost:8777>,
          pattern => <http://#>,
@@ -17,13 +17,6 @@
                      /docs => target/docs ]]@/mnt/space/web;
 ollama::[host    => <http://localhost:11434>,
          pattern => /ollama/#]@/mnt/space/ollama;
-  grph::[pattern => /g/#,
-         space   => kv::[pattern => /g/#],
-         load    => <tinkerpop-modern>]@/mnt/space/tp3;
- clstr::[pattern => <ws://#>]@/mnt/space/clstr;
-  mqtt::[pattern => /mqtt/zigbee2mqtt/#,
-         host    => <mqtt://chibi.local:1883>,
-         prefix  => </mqtt/>]@/mnt/space/mqtt;  
  *boot/options.print(_);
  *boot/options/mode.-<|[?=server  => print('server mode'), 
                         ?=console => print('client mode'), 

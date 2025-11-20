@@ -63,6 +63,13 @@ public interface Lst extends Poly, PlusMonoid.O<Lst> {
         return this.jvm(newList);
     }
 
+    default Lst addMutate(final Obj obj) {
+        final ArrayList<Obj> newList = new ArrayList<>(this.lstValue());
+        newList.add(obj);
+        this.mutateSelf(newList, this.tid(), this.vid());
+        return this;
+    }
+
     default <O extends Obj> Stream<O> elements() {
         return (Stream) IteratorUtil.stream(this.jvm()).map(e -> e.c(c -> c.mult(this.c())));
     }
@@ -104,7 +111,7 @@ public interface Lst extends Poly, PlusMonoid.O<Lst> {
             } else {
                 if (!Common.isInt(step))
                     return (O) noobj();
-                    //throw MTronException.of("path segment is not an int: %s", step);
+                //throw MTronException.of("path segment is not an int: %s", step);
                 final Int k = jnt(Long.parseLong(step));
                 result = this.jvm().size() <= k.intValue().intValue() ? noobj() : this.jvm().get(k.intValue().intValue()).autoResolve(key);
             }

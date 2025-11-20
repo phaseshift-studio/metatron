@@ -11,6 +11,8 @@ import java.util.List;
 import java.util.Set;
 
 import static studio.phaseshift.metatron.furi.fURI.f;
+import static studio.phaseshift.metatron.furi.q.DocQ.DOCQ_TYPE;
+import static studio.phaseshift.metatron.furi.q.PubSubQ.SUBQ_TYPE;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MType.T;
 
 /*
@@ -37,7 +39,7 @@ public class sysInstSet extends MInstSet {
 
     @Override
     public Set<Type> types() {
-        return Set.of(T(ROUTER_TID), T(SPACE_TID), remoteSpace.REMOTE_TYPE);
+        return Set.of(T(ROUTER_TID), T(SPACE_TID), remoteSpace.REMOTE_TYPE, DOCQ_TYPE,SUBQ_TYPE);
     }
 
     @Override

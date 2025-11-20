@@ -18,7 +18,11 @@
 
 package studio.phaseshift.metatron.furi.q;
 
+import studio.phaseshift.metatron.Tokens;
+import studio.phaseshift.metatron.furi.Q;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.lang.Space;
+import studio.phaseshift.metatron.lang.core.m.type.Rec;
 import studio.phaseshift.metatron.lang.core.mach.type.Machine;
 import studio.phaseshift.metatron.lang.core.mach.type.impl.MMachine;
 import studio.phaseshift.metatron.lang.core.m.inst.mInstSet;
@@ -27,6 +31,9 @@ import studio.phaseshift.metatron.lang.core.m.type.Obj;
 import studio.phaseshift.metatron.lang.core.m.type.Type;
 import studio.phaseshift.metatron.lang.core.m.type.impl.MObj;
 import studio.phaseshift.metatron.lang.core.m.type.impl.MObjs;
+import studio.phaseshift.metatron.lang.db.kv.kvSpace;
+import studio.phaseshift.metatron.lang.sys.router.Router;
+import studio.phaseshift.metatron.ui.Graphitty;
 
 import java.util.LinkedList;
 import java.util.Optional;
@@ -49,22 +56,33 @@ import static studio.phaseshift.metatron.util.Tuple.Triplet;
 
 public class PubSubQ extends BaseQ {
 
-    public static final fURI SUBSCRIPTION_TID = QS_TID.extend("sub");
+    public static final fURI SUBQ_TID = Q_TID.extend("subq");
+    public static final fURI SUBSCRIPTION_TID = SUBQ_TID.extend("sub");
     // <source,pattern,callback>
     protected final Obj subscriptions = MObjs.empty();
     protected final Queue<Machine> mail = new LinkedList<>();
 
-    Type PUBSUB_TYPE = T(f("/sys/space/q/sub"), null, instC(mInstSet.INST_TID.dom(ALL.maybe()).rng(f("/sys/space/q/sub")),
-            lst(T(REC_TID, isa_(rec(uri(PATTERN), uri("sub"),
-                    uri(ON_WRITE), rec(uri(PRE_WRITE), T(INST_TID), uri(QLESS_WRITE), T(INST_TID)),
-                    uri(ON_READ), rec(uri(PRE_READ), T(INST_TID)))))), (lhs, inst) -> {
-                return lhs;
-            }));
+    public static final Type SUBQ_TYPE = T(SUBQ_TID, null, instC(mInstSet.INST_TID.dom(ALL.maybe()).rng(SUBQ_TID), lst(isa_(rec()).tryToInst()), (lhs, inst) -> {
+        final Q q = new PubSubQ();
+        return q;
+    }));
 
     public PubSubQ() {
-        super(mutableMap(), f("sub"), SUBSCRIPTION_TID);
+        super(mutableMap(), f("sub"), SUBQ_TID);
         this.onRead = new PubSubQ.OnRead();
         this.onWrite = new PubSubQ.OnWrite();
+    }
+
+    public PubSubQ clone() {
+        return (PubSubQ) super.clone();
+    }
+
+    public PubSubQ clone(final Object jvm, final fURI tid, final fURI vid) {
+        final PubSubQ clone = this.clone();
+        clone.jvm = jvm;
+        clone.tid = tid;
+        clone.vid = vid;
+        return clone;
     }
 
     public static class Subscription extends MObj {
@@ -140,7 +158,7 @@ public class PubSubQ extends BaseQ {
             }
             return Optional.empty();
         }
-        
+
         @Override
         public Optional<Obj> preWrite(final fURI source, final fURI vid, final Obj obj) {
             LOG.debug("evaluating {{y}}prewrite{{/y}}: %s => %s", obj, vid);

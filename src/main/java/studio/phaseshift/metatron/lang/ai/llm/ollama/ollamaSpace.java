@@ -23,6 +23,7 @@ import dev.langchain4j.model.ollama.OllamaModelCard;
 import dev.langchain4j.model.ollama.OllamaModels;
 import io.github.ollama4j.Ollama;
 import studio.phaseshift.metatron.Tokens;
+import studio.phaseshift.metatron.furi.Q;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.ai.llm.type.impl.GGUF;
 import studio.phaseshift.metatron.lang.db.kv.kvSpace;
@@ -151,7 +152,7 @@ public class ollamaSpace extends MSpace<OllamaModels> {
 
     @Override
     public Obj write(final fURI vid, final Obj obj) {
-        return this.qs().processPreWrite(vid, vid, obj).orElseGet(() -> {
+        return Q.Helper.processPreWrite(this.qs(), vid, vid, obj).orElseGet(() -> {
             if (obj.isNoObj()) {
                 this.internal.read(vid).stream().filter(o -> o instanceof OLLM).map(Obj::<OLLM>as).forEach(o -> {
                     LOG.info("deleting ollama model: %s", o);

@@ -19,6 +19,8 @@
 package studio.phaseshift.metatron.lang.db.kv;
 
 import studio.phaseshift.metatron.Tokens;
+import studio.phaseshift.metatron.furi.Q;
+import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.sys.router.Router;
 import studio.phaseshift.metatron.lang.Space;
@@ -38,8 +40,7 @@ import java.util.function.Function;
 import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.lang.core.m.inst.mFluent.StartLess.isa_;
-import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.REC_TID;
-import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.URI_TID;
+import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.*;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MType.T;
@@ -50,12 +51,18 @@ import static studio.phaseshift.metatron.util.Common.mutableMap;
 public class kvSpace extends MSpace<Map<fURI, Obj>> {
 
     public static final fURI KV_TID = f("/kv/space/kv");
-    public static final Type KV_TYPE = T(KV_TID, null, instC(mInstSet.INST_TID.dom(ALL.maybe()).rng(KV_TID), lst(T(REC_TID, isa_(rec(uri(Tokens.PATTERN), T(URI_TID))))), (lhs, inst) -> {
-        final fURI pattern = inst.arg(0).<Rec>as().at(Tokens.PATTERN).uriValue();
-        final Space space = new kvSpace(pattern, inst.arg(0).vid());
+    public static final Type KV_TYPE = T(KV_TID, null, instC(mInstSet.INST_TID.dom(ALL.maybe()).rng(KV_TID), lst(isa_(rec(uri(Tokens.PATTERN), T(URI_TID)/*, uri(Tokens.Q).c(cInt::maybe), T(LST_TID.maybe())*/)).tryToInst()), (lhs, inst) -> {
+       // final fURI pattern = inst.arg(0).<Rec>as().at(Tokens.PATTERN).uriValue();
+        final Space space = new kvSpace(inst.arg(0).<Rec>as().jvm(), inst.args().vid());
         Router.global().addSpace(space);
         return space;
     }));
+
+
+    public kvSpace(final Map<Obj, Obj> config, final fURI vid) {
+        super(new HashMap<>(), config, config.get(uri(Tokens.PATTERN)).uriValue(), KV_TID, vid);
+    }
+
 
     public kvSpace(final fURI pattern, final fURI vid) {
         super(new HashMap<>(), mutableMap(uri(Tokens.PATTERN), uri(pattern)), pattern, KV_TID, vid);
@@ -73,19 +80,19 @@ public class kvSpace extends MSpace<Map<fURI, Obj>> {
 
     @Override
     public Obj read(final fURI vid) {
-        return this.qs().processPreRead(vid, vid).orElseGet(() -> {
+        return Q.Helper.processPreRead(this.qs(), vid, vid).orElseGet(() -> {
             Obj result = Space.Helper.resolveRead(this, vid.basePath(), directReader());
             //return result;
-            return this.qs().processPostRead(vid, vid, result).orElse(result);
+            return Q.Helper.processPostRead(this.qs(), vid, vid, result).orElse(result);
         });
     }
 
     @Override
     public Obj write(final fURI vid, final Obj obj) {
-        return this.qs().processPreWrite(vid, vid, obj).orElseGet(() -> {
+        return Q.Helper.processPreWrite(this.qs(), vid, vid, obj).orElseGet(() -> {
             Space.Helper.resolveWrite(this, vid.basePath(), obj, this.directWriter(), this.directReader());
             //return obj;
-            return this.qs().processPostWrite(vid, vid, obj).orElse(this.qs().processQlessWrite(vid, vid, obj).orElse(obj));
+            return Q.Helper.processPostWrite(this.qs(), vid, vid, obj).orElse(Q.Helper.processQlessWrite(this.qs(), vid, vid, obj).orElse(obj));
         });
     }
 

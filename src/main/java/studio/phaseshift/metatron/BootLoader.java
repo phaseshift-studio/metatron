@@ -72,7 +72,7 @@ public class BootLoader implements Rec, Feature.SelfClone {
 
     static {
         LOG = Graphitty.log(new BootLoader());
-        //Registry.singleton().register(mtronInstSet.INST_TID, () -> mtronInstSet.of(fURI.NULL));
+        //Registry.singleton().register(mInstSet.INST_TID, () -> mInstSet.of(fURI.NULL));
         Registry.open().register(sysInstSet.MSYS_TID, sysInstSet::create);
         Registry.open().register(kvInstSet.MKV_TID, kvInstSet::create);
         Registry.open().register(webInstSet.MWEB_TID, webInstSet::create);
@@ -132,12 +132,13 @@ public class BootLoader implements Rec, Feature.SelfClone {
                 LOG.warn("booting metatron on a non-networked jvm");
             }
             startMode(options);
-            LOG.info("registered instruction sets: %s", Registry.open().registrants());
+            LOG.info("known instruction sets: %s", Registry.open().registrants());
             ROUTER = new MRouter(remoteAuthority, f("/sys/router"));
+            sysInstSet.create();
             kvInstSet.create();
             kvSpace.of(f("/mnt/#"), fURI.NULL).vid(f("/mnt"));
-            kvSpace.of(f("/sys/#"), fURI.NULL).vid(f("/mnt/sys"));
-            mInstSet.create(f("/mnt/lang/m"));
+            //kvSpace.of(f("/sys/#"), fURI.NULL).vid(f("/mnt/sys"));
+            Router.writeToSpace(mInstSet.create(f("/mnt/lang/m")));
             Router.writeToSpace(Router.global());
             Router.writeToSpace("boot/options", options);
             ROUTER.start();

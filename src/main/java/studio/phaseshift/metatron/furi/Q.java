@@ -18,12 +18,16 @@
 
 package studio.phaseshift.metatron.furi;
 
+import studio.phaseshift.metatron.lang.Space;
+import studio.phaseshift.metatron.lang.core.m.type.Lst;
 import studio.phaseshift.metatron.lang.core.m.type.Obj;
 import studio.phaseshift.metatron.lang.core.m.type.Rec;
 import studio.phaseshift.metatron.lang.core.m.type.Type;
 import studio.phaseshift.metatron.lang.core.m.type.impl.MRec;
 
+import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 
 import static studio.phaseshift.metatron.furi.fURI.f;
@@ -38,7 +42,7 @@ public interface Q extends Rec {
     fURI Q_TID = f("/sys/space/q");
     fURI ON_WRITE_TID = Q_TID.extend("on_write");
     fURI ON_READ_TID = Q_TID.extend("on_read");
-    
+
     fURI ON_WRITE = f("on_write");
     fURI PRE_WRITE = f("pre_write");
     fURI POST_WRITE = f("post_write");
@@ -152,6 +156,98 @@ public interface Q extends Rec {
         default Obj clone() {
             return this;
         }
+    }
+
+    final class Helper {
+
+        public static String qToString(final Q q) {
+            return Obj.Helper.objToString(q);
+            //return Graphitty.string("{{b}}" + space.tid() + "{{g}}::[{{c}}pattern:{{b}}" + space.pattern() + "{{g}}]{{X}}");
+        }
+
+        public static int qHashCode(final Q q) {
+            return Objects.hash(q.tid(), q.vid(), q.pattern());
+        }
+
+        public static boolean qEquals(final Q q, final Object other) {
+            return other instanceof Space &&
+                    ((Q) other).tid().equals(q.tid()) &&
+                    (q.vid() != null && ((Q) other).vid() != null && ((Q) other).vid().equals(q.vid()));
+        }
+
+        public static Optional<Obj> processPreWrite(final Lst qs, final fURI source, final fURI vid, final Obj obj) {
+            return qs.<Q>elements()
+                    .filter(q -> vid.hasQuery(q.pattern()))
+                    .map(Q::onWrite)
+                    .filter(Optional::isPresent)
+                    // .peek(q -> LOG.info("handling {{y}}pre write{{X}} of %s for %s %s", source, vid, obj))
+                    .map(Optional::get)
+                    .map(q -> q.preWrite(source, vid, obj))
+                    .filter(Optional::isPresent)
+                    .map(Optional::get)
+                    .reduce(Obj::append);
+        }
+
+        public static Optional<Obj> processPreRead(final Lst qs, final fURI source, final fURI vid) {
+            return qs.<Q>elements()
+                    .filter(q -> vid.hasQuery(q.pattern()))
+                    .map(Q::onRead)
+                    .filter(Optional::isPresent)
+                    //.peek(q -> LOG.debug("handling {{m}}pre read{{X}} of %s for %s", source, vid))
+                    .map(Optional::get)
+                    .map(q -> q.preRead(source, vid))
+                    .filter(Optional::isPresent)
+                    .map(Optional::get)
+                    .reduce(Obj::append)
+                    .filter(q -> !q.isNoObj());
+        }
+
+        public static Optional<Obj> processPostRead(final Lst qs, final fURI source, final fURI vid, final Obj current) {
+            return qs.<Q>elements()
+                    .filter(q -> vid.hasQuery(q.pattern()))
+                    .map(Q::onRead)
+                    .filter(Optional::isPresent)
+                    // .peek(q -> LOG.debug("handling {{c}}post read{{X}} of %s for %s", source, vid))
+                    .map(Optional::get)
+                    .map(q -> q.postRead(source, vid, current))
+                    .filter(Optional::isPresent)
+                    .map(Optional::get)
+                    .reduce(Obj::append)
+                    .filter(q -> !q.isNoObj());
+        }
+
+        public static Optional<Obj> processQlessWrite(final Lst qs, final fURI source, final fURI vid, final Obj obj) {
+            return qs.<Q>elements()
+                    .map(Q::onWrite)
+                    .filter(Optional::isPresent)
+                    // .peek(q -> LOG.debug("handling {{g}}qless write{{X}} of %s for %s", source, vid))
+                    .map(Optional::get)
+                    .map(q -> q.qlessWrite(source, vid, obj))
+                    .filter(Optional::isPresent)
+                    .map(Optional::get)
+                    .reduce(Obj::append)
+                    .filter(q -> !q.isNoObj());
+        }
+
+        public static Optional<Obj> processPostWrite(final Lst qs, final fURI source, final fURI vid, final Obj obj) {
+            return qs.<Q>elements()
+                    .filter(q -> vid.hasQuery(q.pattern()))
+                    .map(Q::onWrite)
+                    .filter(Optional::isPresent)
+                    //.peek(q -> LOG.trace("handling {{b}}post write{{X}} of %s for %s %s", source, vid, obj))
+                    .map(Optional::get)
+                    .map(q -> q.postWrite(source, vid, obj, obj))
+                    .filter(Optional::isPresent)
+                    .map(Optional::get)
+                    .reduce(Obj::append)
+                    .filter(q -> !q.isNoObj());
+        }
+
+        private Helper() {
+            // do nothing
+        }
+
+
     }
 
 }

@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.furi.q;
 
+import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.Q;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.core.m.type.Inst;
@@ -27,11 +28,15 @@ import studio.phaseshift.metatron.lang.core.m.type.impl.MRec;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
 
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import static studio.phaseshift.metatron.lang.core.m.inst.mFluent.StartLess.start_;
 import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.REC_TID;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.Common.mutableMap;
 
@@ -47,8 +52,24 @@ public class BaseQ extends MRec implements Q {
 
     public BaseQ(final Map<Obj, Obj> jvm, final fURI queryPattern, final fURI tid) {
         super(jvm, tid, fURI.NULL);
+        this.jvm().put(uri(Tokens.PATTERN), uri(queryPattern));
         this.queryPattern = queryPattern;
         LOG = Graphitty.log(this);
+    }
+
+    @Override
+    public String toString() {
+        return Q.Helper.qToString(this);
+    }
+
+    @Override
+    public int hashCode() {
+        return Q.Helper.qHashCode(this);
+    }
+
+    @Override
+    public boolean equals(final Object other) {
+        return Q.Helper.qEquals(this, other);
     }
 
     @Override
@@ -67,20 +88,23 @@ public class BaseQ extends MRec implements Q {
     }
 
     @Override
-    public BaseQ clone(Object jvm, fURI tid, fURI vid) {
-        this.jvm = jvm;
-        return this;
+    public BaseQ clone(final Object jvm, final fURI tid, final fURI vid) {
+        final BaseQ clone = (BaseQ) this.clone();
+        clone.jvm = jvm;
+        clone.tid = tid;
+        clone.vid = vid;
+        return clone;
     }
 
     @Override
     public Rec clone() {
-        return this;
+        return super.clone();
     }
 
 
     public static class BaseOnRead extends MRec implements Q.OnRead {
         public BaseOnRead(final Inst preRead, final Inst postRead) {
-            super(mutableMap(uri(PRE_READ), preRead, uri(POST_READ), postRead),REC_TID,fURI.NULL);
+            super(mutableMap(uri(PRE_READ), preRead, uri(POST_READ), postRead), REC_TID, fURI.NULL);
         }
 
         public Optional<Obj> preRead(final fURI source, final fURI vid) {
@@ -98,7 +122,7 @@ public class BaseQ extends MRec implements Q {
 
     public static class BaseOnWrite extends MRec implements Q.OnWrite {
         public BaseOnWrite(final Inst preWrite, final Inst postWrite, final Inst qlessWrite) {
-            super(mutableMap(uri(PRE_WRITE), preWrite, uri(POST_WRITE), postWrite, uri(QLESS_WRITE), qlessWrite),REC_TID,fURI.NULL);
+            super(mutableMap(uri(PRE_WRITE), preWrite, uri(POST_WRITE), postWrite, uri(QLESS_WRITE), qlessWrite), REC_TID, fURI.NULL);
         }
 
         public Optional<Obj> preWrite(final fURI source, final fURI vid, final Obj obj) {

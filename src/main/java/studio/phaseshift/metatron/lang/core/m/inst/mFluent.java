@@ -52,6 +52,10 @@ public class mFluent<F extends Fluent<F>> extends MCode implements Fluent<F>, Co
     public F start_(final Obj obj) {
         return this.addInst(instB(mInstSet.START_TID, lst(obj)));
     }
+    
+    public F as_(final Obj obj) {
+        return this.addInst(instB(mInstSet.AS_TID, lst(obj)));
+    }
 
     public F apply_(final Obj obj) {
         return this.addInst(instB(mInstSet.APPLY_TID, lst(obj)));
@@ -160,6 +164,10 @@ public class mFluent<F extends Fluent<F>> extends MCode implements Fluent<F>, Co
 
         public static <F extends mFluent<F>> F start_(final Obj obj) {
             return new mFluent<F>().start_(obj);
+        }
+
+        public static <F extends mFluent<F>> F as_(final Obj obj) {
+            return new mFluent<F>().as_(obj);
         }
 
         public static <F extends mFluent<F>> F block_(final Obj obj) {

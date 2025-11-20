@@ -23,10 +23,13 @@ import com.google.gson.stream.JsonReader;
 import org.petitparser.context.Result;
 import studio.phaseshift.metatron.lang.core.m.parser.mParser;
 import studio.phaseshift.metatron.lang.core.m.obj.NoObj;
+import studio.phaseshift.metatron.lang.core.m.type.Bytes;
+import studio.phaseshift.metatron.lang.core.m.type.Fail;
 import studio.phaseshift.metatron.lang.core.m.type.Obj;
 import studio.phaseshift.metatron.lang.util.serial.ObjSerializer;
 import studio.phaseshift.metatron.lang.util.serial.ObjStringSerializer;
 import studio.phaseshift.metatron.ui.*;
+import studio.phaseshift.metatron.util.Common;
 import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Translator;
 
@@ -108,6 +111,10 @@ public record JSONTranslator(ObjSerializer<String> serializer) implements Transl
         try {
             if (obj.isNoObj())
                 return JsonNull.INSTANCE;
+            if (obj.isFail())
+                return new JsonPrimitive(obj.failValue().getMessage()); // todo: this is weak
+            if (obj.isBytes())
+                return new JsonPrimitive(obj.<Bytes>as().toHexString());
             if (obj.isBool())
                 return new JsonPrimitive(obj.boolValue());
             if (obj.isInt())
@@ -145,9 +152,7 @@ public record JSONTranslator(ObjSerializer<String> serializer) implements Transl
             reader.setStrictness(Strictness.LENIENT);
             return this.translate(JsonParser.parseReader(reader));
         } catch (final Exception e) {
-            // LOG.error(e);
-            // return NoObj.single();
-            throw new IllegalArgumentException(json, e);
+            throw MTronException.of(e);
         }
     }
 }

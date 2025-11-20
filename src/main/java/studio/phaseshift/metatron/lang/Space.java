@@ -30,6 +30,7 @@ import studio.phaseshift.metatron.util.Common;
 
 import java.io.Closeable;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.BiFunction;
@@ -37,6 +38,7 @@ import java.util.function.Function;
 
 import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.lang.core.m.obj.NoObj.noobj;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
@@ -57,7 +59,9 @@ public interface Space extends Rec, Closeable {
         return (Space) this.put(Tokens.STATUS, uri(status.name()));
     }
 
-    Qs qs();
+    default Lst qs() {
+        return this.jvm().getOrDefault(uri(Tokens.Q), lst()).as();
+    }
 
     fURI pattern();
 
@@ -86,11 +90,6 @@ public interface Space extends Rec, Closeable {
             results[running++] = this.write((fURI) kv[i], (Obj) kv[i + 1]);
         }
         return results;
-    }
-
-    default Space registerQ(final Q q) {
-        this.at("qs").<Lst>as().add(q);
-        return this;
     }
 
     default Space pause() {

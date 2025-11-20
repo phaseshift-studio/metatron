@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.lang.net.iot;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hivemq.client.mqtt.MqttClient;
 import com.hivemq.client.mqtt.mqtt5.Mqtt5BlockingClient;
 import com.hivemq.client.mqtt.mqtt5.Mqtt5Client;
@@ -28,6 +29,7 @@ import studio.phaseshift.metatron.furi.Qs;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.PubSubQ;
 import studio.phaseshift.metatron.lang.core.m.inst.mInstSet;
+import studio.phaseshift.metatron.lang.core.m.type.ObjFactory;
 import studio.phaseshift.metatron.lang.core.m.type.Rec;
 import studio.phaseshift.metatron.lang.core.m.type.Type;
 import studio.phaseshift.metatron.lang.db.kv.kvSpace;
@@ -93,9 +95,7 @@ public class mqttSpace extends MSpace<Mqtt5Client> {
         this.prefix = config.containsKey(uri(Tokens.PREFIX)) ? config.get(uri(Tokens.PREFIX)).uriValue() : null;
         LOG.info("{{y}}mtron{{g}}<=>{{y}}mqtt{{X}} mapping established: {{b}}%s {{g}}<=> ({{b}}%s {{g}}<=> {{b}}%s{{g}}){{X}}", this.pattern(), this.prefix, this.toMqttTopic(this.pattern()));
         this.cache = new kvSpace(this.pattern(), this.vid.extend("cache"));
-        this.cache.qs().clear();
-        this.qs.clear();
-        this.qs.register(new MqttPubSubQ(this));
+        this.qs().addMutate(new MqttPubSubQ(this));
         this.broker = config.get(uri(Tokens.HOST)).orElseThrow(new IllegalArgumentException("config must have a host key")).uriValue();
         this.init();
     }
@@ -137,7 +137,7 @@ public class mqttSpace extends MSpace<Mqtt5Client> {
                     .connectWith()
                     .cleanStart(false)
                     .send()
-                    .whenComplete((a, b) -> LOG.info("connected %s", a))
+                    .whenComplete((a, b) -> LOG.info("{{g}}connected{{X}} %s", a))
                     .get();
             this.client.toAsync()
                     .subscribeWith()
@@ -174,7 +174,7 @@ public class mqttSpace extends MSpace<Mqtt5Client> {
 
     @Override
     public Obj write(final fURI vid, final Obj obj) {
-        final Obj ret = this.qs().processPreWrite(vid, vid, obj).orElse(null);
+        final Obj ret = Q.Helper.processPreWrite(this.qs(), vid, vid, obj).orElse(null);
         if (null != ret)
             return ret;
         Space.Helper.resolveWrite(this, vid.basePath(), obj, (key, value) -> {

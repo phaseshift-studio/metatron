@@ -30,14 +30,12 @@ public class MTronException extends RuntimeException {
 
     private MTronException(final String message) {
         super(Graphitty.string(message));
+      //  this.printStackTrace();
     }
 
     private MTronException(final String message, final Throwable cause) {
         super(Graphitty.string(message), cause);
-    }
-
-    private MTronException(final Throwable cause) {
-        super(cause);
+      // this.printStackTrace();
     }
 
     public static MTronException of(final Throwable cause) {
@@ -118,11 +116,11 @@ public class MTronException extends RuntimeException {
 
     @FunctionalInterface
     public interface ThrowingSupplier<T> {
-        public T get() throws Exception;
+        T get() throws Exception;
     }
 
     @FunctionalInterface
     public interface ThrowingRunnable {
-        public void run() throws Exception;
+        void run() throws Exception;
     }
 }

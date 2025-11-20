@@ -5,6 +5,7 @@ import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 
 import java.nio.ByteBuffer;
+import java.util.HexFormat;
 
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MBytes.bytes;
 
@@ -47,6 +48,10 @@ public interface Bytes extends Mono, PlusMonoid<Bytes> {
         buffer.put(rhs.jvm().duplicate());
         buffer.flip();
         return this.jvm(buffer);
+    }
+
+    default String toHexString() {
+        return "0x" + HexFormat.of().formatHex(this.jvm().array());
     }
 
 

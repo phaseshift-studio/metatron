@@ -9,6 +9,8 @@ public final class Tokens {
         // do nothing
     }
 
+    public static final String Q = "q";
+    public static final String SUB = "sub";
     public static final String PATTERN = "pattern";
     public static final String HOST = "host";
     public static final String NAME = "name";

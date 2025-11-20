@@ -23,6 +23,7 @@ import studio.phaseshift.metatron.furi.Q;
 import studio.phaseshift.metatron.furi.Qs;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.PubSubQ;
+import studio.phaseshift.metatron.lang.core.m.type.Lst;
 import studio.phaseshift.metatron.lang.core.m.type.Obj;
 import studio.phaseshift.metatron.lang.core.m.type.Rec;
 import studio.phaseshift.metatron.lang.core.m.type.impl.MRec;
@@ -34,12 +35,12 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static studio.phaseshift.metatron.furi.fURI.f;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
 
 public abstract class MSpace<SJVM> extends MRec implements Space {
 
     protected final fURI pattern;
-    protected final Qs qs;
     protected SJVM sjvm;
     protected GraphittyLogger LOG;
     protected Status status = Status.active;
@@ -48,11 +49,7 @@ public abstract class MSpace<SJVM> extends MRec implements Space {
         super(new HashMap<>(jvm), tid, vid);
         this.sjvm = sjvm;
         this.pattern = pattern;
-        this.qs = new Qs();
-        this.qs.register(new PubSubQ());
-        this.jvm().put(uri("qs"),this.qs);
-        //this.registerQ(new PubSubQ());
-        this.jvm().put(uri(Tokens.STATUS),uri(Tokens.ACTIVE));
+        this.jvm().put(uri(Tokens.STATUS), uri(Tokens.ACTIVE));
         LOG = Graphitty.log(this);
     }
 
@@ -62,19 +59,12 @@ public abstract class MSpace<SJVM> extends MRec implements Space {
             value.<Lst>as().elements().forEach(q -> {
                 this.qs.add(q);
             });
-        } else*/ if (key.matches(f(Tokens.STATUS))) {
+        } else*/
+        if (key.matches(f(Tokens.STATUS))) {
             this.status = value.uriValue().matches(f(Tokens.ACTIVE)) ? Status.active : Status.paused;
         }
     }
-
-    @Override
-    public Space registerQ(final Q q) {
-        this.qs.jvm().add(q);
-        this.put("qs", this.qs);
-        return this;
-    }
-
-
+    
     @Override
     public Status status() {
         return this.status;
@@ -86,12 +76,7 @@ public abstract class MSpace<SJVM> extends MRec implements Space {
         this.status = status;
         return this;
     }
-
-    @Override
-    public Qs qs() {
-        return this.qs;
-    }
-
+    
     @Override
     public fURI pattern() {
         return this.pattern;
@@ -123,7 +108,7 @@ public abstract class MSpace<SJVM> extends MRec implements Space {
             this.vid = vid;
             Router.global().addSpace(this);
             Router.writeToSpace(vid, this);
-           // LOG.trace("registering: %s", this);
+            // LOG.trace("registering: %s", this);
             //this.qs.register(new PubSubQ());
         }
         return super.vid(vid);

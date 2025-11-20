@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.furi.q;
 
+import org.apache.tinkerpop.gremlin.structure.Graph;
 import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.Space;
@@ -31,14 +32,19 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
 
+import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.Tokens.PATTERN;
+import static studio.phaseshift.metatron.lang.core.m.inst.mFluent.StartLess.isa_;
 import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.INST_TID;
 import static studio.phaseshift.metatron.lang.core.m.obj.NoObj.noobj;
 import static studio.phaseshift.metatron.lang.core.m.type.Inst.*;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MInst.instC;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MStr.str;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.Common.mutableMap;
 
@@ -47,19 +53,22 @@ import static studio.phaseshift.metatron.util.Common.mutableMap;
  */
 public class DocQ extends BaseQ {
 
-    public static final fURI DOC_TID = Q_TID.extend(Tokens.DOC);
+
+    public static final fURI DOCQ_TID = Q_TID.extend("docq");
+    public static final fURI DOC_TID = DOCQ_TID.extend(Tokens.DOC);
+    public static final Type DOCQ_TYPE = T(DOCQ_TID, null, instC(INST_TID.dom(ALL.maybe()).rng(DOCQ_TID), lst(isa_(rec()).tryToInst()), (lhs, inst) -> new DocQ()));
     protected final GraphittyLogger LOG = Graphitty.log(this);
     // <source,pattern,callback>
     public final Map<fURI, Obj> docSpace;
 
 
     public DocQ() {
-        super(mutableMap(uri(PATTERN), uri(Tokens.DOC)), f(Tokens.DOC), DOC_TID);
+        super(mutableMap(uri(PATTERN), uri(Tokens.DOC)), f(Tokens.DOC), DOCQ_TID);
         this.docSpace = new LinkedHashMap<>();
         this.onRead = new DocQ.OnRead();
         this.onWrite = new DocQ.OnWrite();
-        super.put(ON_READ, this.onRead);
-        super.put(ON_WRITE, this.onWrite);
+        //  super.put(ON_READ, this.onRead);
+        //  super.put(ON_WRITE, this.onWrite);
     }
 
     public static class Instiffy {
@@ -254,7 +263,8 @@ public class DocQ extends BaseQ {
         public static Inst docWrap(final Inst inst, final String domDesc, final String rngDesc, final Map<Obj, String> argDescription, final String description) {
             final Doc doc = doc(inst, domDesc, rngDesc, argDescription, description);
             final Space instSpace = Router.global().getSpace(inst.tid());
-            final Optional<DocQ> docq = instSpace.qs().jvm().stream().filter(q -> q instanceof DocQ).map(Obj::<DocQ>as).findAny();
+            Graphitty.log(instSpace).info("qs: %s", instSpace.qs());
+            final Optional<DocQ> docq = instSpace.qs().jvm().stream().filter(q -> q.tid().basePath().equals(DOCQ_TID)).map(Obj::<DocQ>as).findAny();
             if (docq.isEmpty())
                 instSpace.logger().warn("no doc query attachment mounted on %s for %s", instSpace, inst.tid());
             else

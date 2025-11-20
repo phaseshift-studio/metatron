@@ -19,19 +19,18 @@
 package studio.phaseshift.metatron.lang.core.m.type.impl;
 
 import studio.phaseshift.metatron.Tokens;
+import studio.phaseshift.metatron.furi.Q;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.DocQ;
+import studio.phaseshift.metatron.lang.core.m.type.*;
 import studio.phaseshift.metatron.lang.sys.router.Router;
-import studio.phaseshift.metatron.lang.core.m.type.Inst;
-import studio.phaseshift.metatron.lang.core.m.type.InstSet;
-import studio.phaseshift.metatron.lang.core.m.type.Obj;
-import studio.phaseshift.metatron.lang.core.m.type.Type;
 import studio.phaseshift.metatron.lang.MSpace;
 import studio.phaseshift.metatron.util.Tuple;
 
 import java.util.*;
 
 import static studio.phaseshift.metatron.furi.fURI.f;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.Common.mutableMap;
@@ -48,11 +47,10 @@ public abstract class MInstSet extends MSpace<Map<fURI, Set<? extends Obj>>> imp
     protected final Map<fURI, Inst> REWRITE_TABLE = new LinkedHashMap<>();
 
     public MInstSet(final fURI tid, final fURI vid) {
-        super(new LinkedHashMap<>(), mutableMap(uri(Tokens.PATTERN), uri(tid.extend(fURI.ALL))), tid.extend(fURI.ALL), tid, vid);
+        super(new LinkedHashMap<>(), mutableMap(uri(Tokens.PATTERN), uri(tid.extend(fURI.ALL)), uri(Tokens.Q), lst(new DocQ())), tid.extend(fURI.ALL), tid, vid);
         if (Router.loaded()) {
-            if (!this.pattern.equals(f("+/#")) && Router.loaded() && !(this instanceof Router))
+            if (!this.pattern.equals(f("+/#")) && !(this instanceof Router))
                 Router.global().addSpace(this);
-            this.registerQ(new DocQ());
             this.types().forEach(t -> this.write(t.tid(), t));
             this.consts().forEach(c -> this.write(c.vid(), c));
             this.insts().forEach(i -> this.write(i.tid(), i));
@@ -97,7 +95,7 @@ public abstract class MInstSet extends MSpace<Map<fURI, Set<? extends Obj>>> imp
         if (Objects.equals(this.tid, vid))
             return this;
         final fURI bigvid = vid.big();
-        return this.qs().processPreRead(this.vid, vid).orElse(
+        return Q.Helper.processPreRead(this.qs(), this.vid, vid).orElse(
                 objs(INST_TABLE.entrySet()
                         .stream()
                         .filter(kv -> kv.getKey().bimatches(bigvid.basePath()))
@@ -112,7 +110,7 @@ public abstract class MInstSet extends MSpace<Map<fURI, Set<? extends Obj>>> imp
 
     @Override
     public Obj write(final fURI vid, final Obj obj) {
-        return this.qs().processPreWrite(this.vid, vid, obj).orElseGet(() -> {
+        return Q.Helper.processPreWrite(this.qs(), this.vid, vid, obj).orElseGet(() -> {
             if (obj.isInst()) {
                 final Inst inst = obj.as();
                 if (inst.dom().isCode()) {
