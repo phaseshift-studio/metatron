@@ -1,13 +1,16 @@
 package studio.phaseshift.metatron.lang.db.grph.type;
 
 import org.apache.tinkerpop.gremlin.structure.Direction;
+import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.core.m.type.Obj;
 import studio.phaseshift.metatron.lang.core.m.type.Objs;
 import studio.phaseshift.metatron.lang.core.m.type.Rec;
 
 import java.util.stream.Stream;
 
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.lang.db.grph.type.TP3Translator.LABEL;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -20,6 +23,10 @@ public class REdge extends RElement {
 
     public static REdge of(final Rec edge) {
         return edge instanceof REdge ? (REdge) edge : new REdge(edge.vid(null)).vid(edge.vid()).as();
+    }
+
+    public static REdge of(final String label, final fURI outVertex, final fURI inVertex, final Object... keyValues) {
+        return REdge.of(rec(uri(LABEL), uri(label), uri(Direction.OUT.name()), uri(outVertex), uri(Direction.IN.name()), uri(inVertex)));
     }
 
     public static Stream<REdge> of(final Obj edges) {

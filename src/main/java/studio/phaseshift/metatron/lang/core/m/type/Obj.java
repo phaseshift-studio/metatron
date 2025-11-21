@@ -155,7 +155,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
     }
 
     default Stream<Obj> stream() {
-        return this.isNoObj() ? Stream.empty() : (Stream) IteratorUtil.stream(this);
+        return this.isNoObj() ? Stream.empty() : IteratorUtil.stream(this);
     }
 
     default <O extends Obj> Stream<O> elements() {
@@ -166,7 +166,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
         if (this.tid().basePath().equals(tid))
             return this.tid().equals(tid) ? this : this.clone(this.jvm(), tid, this.vid());
         if (BASE_TYPES.contains(tid.basePath()) && this instanceof FObj<?>) // unwrap a facade
-            return ((FObj<?>) this).base().tid(tid);
+            return ((FObj<?>) this).base().tid(tid).vid(this.vid());
         return this.clone(this.jvm(), tid, this.vid());
     }
 
@@ -282,10 +282,6 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
         return this.isNoObj() ? other : (O) this;
     }
 
-    default <O extends Obj> O orElseGet2(final Supplier<O> supplier) {
-        return supplier.get();
-    }
-
     default <O extends Obj> O orElseThrow(final RuntimeException e) {
         if (this.isNoObj())
             throw e;
@@ -389,6 +385,10 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
 
     default Obj autoResolve() {
         return this.autoResolve(noobj());
+    }
+
+    default boolean isAutoResolve() {
+        return this.isInst() && this.tid().basePath().equals(AUTO_TID);
     }
 
     default boolean isInstObj() {

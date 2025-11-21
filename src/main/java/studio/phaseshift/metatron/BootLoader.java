@@ -180,7 +180,7 @@ public class BootLoader implements Rec, Feature.SelfClone {
             throw MTronException.of("no mode specified (see --help): %s", options);
         else if (mode.uriValue().equals(f("testing")))
             MODE = Mode.NoOp.of();
-        else if (mode.uriValue().equals(f("console")))
+        else if (mode.uriValue().equals(f("console")) || mode.isNoObj())
             MODE = Console.of(options);
         else if (mode.uriValue().equals(f("server")))
             MODE = Server.of(options);
