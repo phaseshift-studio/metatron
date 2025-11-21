@@ -22,7 +22,9 @@ package studio.phaseshift.metatron.lang.core.m.type;
 import studio.phaseshift.metatron.algebra.PlusMonoid;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.core.m.obj.NoObj;
+import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.util.IteratorUtil;
+import studio.phaseshift.metatron.util.Tuple;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -79,12 +81,12 @@ public interface Rec extends Poly, PlusMonoid.O<Rec> {
     @Override
     default boolean matches(final Obj rhs) {
         if (rhs.isRec()) {
-            return rhs.elements().allMatch(r ->
-                    this.elements().anyMatch(l -> {
-                        if (l.first().matches(r.<Rel>as().first()))
-                            return l.second().matches(r.<Rel>as().second());
-                        else return false;
-                    }));
+            return rhs.elements().allMatch(r -> {
+                final boolean found = this.elements()
+                        .map(l -> Tuple.Pair.with(l.first().matches(r.<Rel>as().first()), l.second().matches(r.<Rel>as().second())))
+                        .anyMatch(pair -> pair.get0() && pair.get1());
+                return found || (r.<Rel>as().first().c().isZeroable() && this.elements().noneMatch(l -> l.first().matches(r.<Rel>as().first())));
+            });
         } else {
             return Poly.super.matches(rhs);
         }
@@ -101,7 +103,7 @@ public interface Rec extends Poly, PlusMonoid.O<Rec> {
             if (this.recValue().containsKey(asNode))
                 return (O) (key.uriValue().isBranch() ? rel(asNode, this.recValue().get(asNode)) : this.recValue().get(asNode)).autoResolve(this);
             if (step.equals("+") || step.equals("#")) {
-                result = key.uriValue().isBranch() ? objs((Stream)this.elements()) : objs(this.recValue().values().stream().map(v -> v.autoResolve(key)));
+                result = key.uriValue().isBranch() ? objs((Stream) this.elements()) : objs(this.recValue().values().stream().map(v -> v.autoResolve(key)));
             } else {
                 final Obj temp = this.jvm().getOrDefault(uri(step), NoObj.noobj()).autoResolve(key);
                 result = key.uriValue().isBranch() ? rel(key.uriValue().asNode().toUri(), temp) : temp;

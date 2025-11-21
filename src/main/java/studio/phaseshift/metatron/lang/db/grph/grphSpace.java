@@ -20,6 +20,7 @@ package studio.phaseshift.metatron.lang.db.grph;
 
 import org.apache.tinkerpop.gremlin.tinkergraph.structure.TinkerFactory;
 import studio.phaseshift.metatron.Tokens;
+import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.Space;
 import studio.phaseshift.metatron.lang.core.m.inst.mInstSet;
@@ -34,6 +35,7 @@ import studio.phaseshift.metatron.lang.util.noobjSpace;
 
 import java.util.Map;
 
+import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.lang.core.m.inst.mFluent.StartLess.isa_;
@@ -43,7 +45,7 @@ import static studio.phaseshift.metatron.lang.core.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.Tokens.SPACE;
+import static studio.phaseshift.metatron.lang.db.kv.kvSpace.KV_TID;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -60,15 +62,20 @@ public class grphSpace extends MSpace<Space> {
      * /root/v/{id}/vp/{key}/{key2}    => vertex property property by key
      */
     public static final fURI GRPH_TID = f("/grph/space/grph");
-    public static final Type GRPH_TYPE = T(GRPH_TID, null, instC(mInstSet.INST_TID.dom(ALL.maybe()).rng(GRPH_TID), lst(T(REC_TID, isa_(rec(uri(Tokens.PATTERN), T(URI_TID), uri(Tokens.LOAD), T(URI_TID.maybe()), uri(SPACE), T(ALL))))), (lhs, inst) -> {
-        final fURI pattern = inst.arg(0).<Rec>as().at(Tokens.PATTERN).uriValue();
-        final fURI dataset = inst.arg(0).<Rec>as().at(Tokens.LOAD).uriValue();
-        final Obj inner = inst.arg(0).<Rec>as().at(SPACE);
-        final grphSpace space = new grphSpace(inner.isNoObj() ? noobjSpace.single() : new kvSpace(inner.<Rec>as().at(Tokens.PATTERN).uriValue(), fURI.NULL), Map.of(uri(Tokens.PATTERN), uri(pattern), uri(Tokens.LOAD), uri(dataset)), pattern, inst.arg(0).vid());
-        Router.global().addSpace(space);
-        space.start();
-        return space;
-    }));
+    public static final Type GRPH_TYPE = T(GRPH_TID, null, instC(mInstSet.INST_TID.dom(ALL.maybe()).rng(GRPH_TID),
+            lst(isa_(rec(uri(PATTERN), T(URI_TID),
+                    uri(SPACE).c(cInt.MAYBE()), T(KV_TID),
+                    uri(LOAD), T(URI_TID)))
+                    .tryToInst()), (lhs, inst) -> {
+                final fURI pattern = inst.arg(0).<Rec>as().at(PATTERN).uriValue();
+                final fURI dataset = inst.arg(0).<Rec>as().at(LOAD).uriValue();
+                final Obj inner = inst.arg(0).<Rec>as().at(SPACE);
+                final grphSpace space = new grphSpace(inner.isNoObj() ? noobjSpace.single() : 
+                        new kvSpace(inner.<Rec>as().at(PATTERN).uriValue(), fURI.NULL), Map.of(uri(PATTERN), uri(pattern), uri(LOAD), uri(dataset)), pattern, inst.arg(0).vid());
+                Router.global().addSpace(space);
+                space.start();
+                return space;
+            }));
 
     public grphSpace(final Space inner, final Map<Obj, Obj> config, final fURI pattern, final fURI vid) {
         super(inner, config, pattern, GRPH_TID, vid);

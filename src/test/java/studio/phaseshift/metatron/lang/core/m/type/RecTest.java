@@ -102,6 +102,15 @@ public class RecTest extends MetatronObjTest {
             "[a=>b,c=>[d=>2]]                      | str::T                                     | false",
             "[a=>b,c=>[d=>2]]                      | rec::T[is(rng().count().eq(2))]            | true",
             "[a=>b,c=>[d=>2]]                      | rec::T[is(rng().count().eq(3))]            | false",
+            "noobj                                 | ?str::T                                    | false",
+            "noobj                                 | str{?}::T                                  | true",
+            "[a=>2]                                | [a=>int::T,b=>?str::T]                     | false",
+            "[a=>2]                                | [a=>int::T,uri{?}::b=>str::T]              | true",
+            "[=>]                                  | [a=>int::T,uri{?}::b=>str::T]              | false",
+            "[=>]                                  | [uri{?}::a=>int::T,uri{?}::b=>str::T]      | true",
+            "[a=>'bad']                            | [uri{?}::a=>int::T,uri{?}::b=>str::T]      | false",
+            "[a=>2,b=>0]                           | [uri{?}::a=>int::T,uri{?}::b=>str::T]      | false",
+            
     }, delimiter = '|')
     public void testMatches(final String recA, final String recB, final boolean matches) {
         super.testMatches(recA, recB, matches);

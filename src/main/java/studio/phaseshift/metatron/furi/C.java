@@ -67,7 +67,7 @@ public interface C<T extends Comparable<T>, D extends C<T, D>> extends Comparabl
     default boolean signeq(final D rhs) {
         return this.gt(zero()) == rhs.gt(zero());
     }
-    
+
     D abs();
 
     /// ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -122,6 +122,10 @@ public interface C<T extends Comparable<T>, D extends C<T, D>> extends Comparabl
 
     default boolean isMaybe() {
         return Objects.equals(this, this.maybe());
+    }
+
+    default boolean isZeroable() {
+        return this.zero().within((D) this);
     }
 
     default boolean isZero() {
