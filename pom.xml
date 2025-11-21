@@ -454,6 +454,16 @@
                             <arg>jdk.incubator.vector</arg>
                             <arg>-XDsun-misc-unsafe-memory-access=allow</arg>
                             <arg>-XDenable-native-access=ALL-UNNAMED</arg>
+                            <arg>--add-opens=java.base/java.io=ALL-UNNAMED</arg>
+                            <arg>--add-opens=java.base/java.nio=ALL-UNNAMED</arg>
+                            <arg>--add-opens=java.base/sun.nio.cs=ALL-UNNAMED</arg>
+                            <arg>--add-opens=java.base/java.lang=ALL-UNNAMED</arg>
+                            <arg>--add-opens=java.base/java.lang.invoke=ALL-UNNAMED</arg>
+                            <arg>--add-opens=java.base/java.lang.reflect=ALL-UNNAMED</arg>
+                            <arg>--add-opens=java.base/java.util=ALL-UNNAMED</arg>
+                            <arg>--add-opens=java.base/java.util.concurrent=ALL-UNNAMED</arg>
+                            <arg>--add-opens=java.base/java.util.concurrent.atomic=ALL-UNNAMED</arg>
+                            <arg>--add-opens=java.base/java.net=ALL-UNNAMED</arg>
                             <!--<arg>-XDlogback.configurationFile=file:./conf/logback.xml</arg>-->
                         </compilerArgs>
                     </configuration>
@@ -463,10 +473,28 @@
                     <artifactId>maven-surefire-plugin</artifactId>
                     <version>3.5.4</version>
                     <configuration>
+                        <argLine>
+                            --sun-misc-unsafe-memory-access=allow
+                            --enable-native-access=ALL-UNNAMED
+                            --add-modules jdk.incubator.vector
+                            --add-opens java.base/java.util.concurrent.atomic=ALL-UNNAMED
+                            --add-opens java.base/java.io=ALL-UNNAMED
+                            --add-opens java.base/java.nio=ALL-UNNAMED
+                            --add-opens java.base/sun.nio.cs=ALL-UNNAMED
+                            --add-opens java.base/java.lang=ALL-UNNAMED
+                            --add-opens java.base/java.lang.invoke=ALL-UNNAMED
+                            --add-opens java.base/java.lang.reflect=ALL-UNNAMED
+                            --add-opens java.base/java.util=ALL-UNNAMED
+                            --add-opens java.base/java.util.concurrent=ALL-UNNAMED
+                            --add-opens java.base/java.net=ALL-UNNAMED
+                            --add-opens java.base/java.util.concurrent.atomic=ALL-UNNAMED
+                        </argLine>
                         <systemPropertyVariables>
-                            <logback.configurationFile>${basedir}/src/test/resources/logback-testing.xml
+                            <logback.configurationFile>
+                                ${basedir}/src/test/resources/logback-testing.xml
                             </logback.configurationFile>
                         </systemPropertyVariables>
+
                     </configuration>
                 </plugin>
                 <plugin>
