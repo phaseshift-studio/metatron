@@ -163,6 +163,10 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
     }
 
     default Obj tid(final fURI tid) {
+        if (this.tid().basePath().equals(tid))
+            return this.tid().equals(tid) ? this : this.clone(this.jvm(), tid, this.vid());
+        if (BASE_TYPES.contains(tid.basePath()) && this instanceof FObj<?>) // unwrap a facade
+            return ((FObj<?>) this).base().tid(tid);
         return this.clone(this.jvm(), tid, this.vid());
     }
 
@@ -413,6 +417,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
 
 
     String xxxValue = "%s is a %s, not a %s";
+
     default Throwable failValue() {
         if (this.isFail())
             return this.jvm();
@@ -531,19 +536,21 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
 
         public static <O extends Obj> O objClone(final Obj obj, final Object jvm, final fURI tid, final fURI vid) {
             Object realjvm = jvm;
+            Obj clone = null;
+            if (BASE_TYPES.contains(tid.basePath()) && obj instanceof FObj<?>)
+                return ((FObj<?>) obj).base().clone(jvm instanceof Obj ? ((Obj) jvm).jvm() : jvm, tid, vid);
             if (!Objects.equals(tid, obj.tid())) {
                 final Obj type = Router.readFromSpace(tid);
                 if (!type.isNoObj() && type.isType() && type.<Type>as().hasConstructor()) {
-                    Obj construction = type.<Type>as().constructor().apply(obj);
-                    if (construction.isFail())
-                        throw (MTronException) construction.<Fail>as().jvm();
-                    else
-                        realjvm = construction.jvm();
+                    clone = type.<Type>as().constructor().apply(obj);
+                    if (clone.isFail())
+                        throw (MTronException) clone.<Fail>as().jvm();
+                    realjvm = clone.jvm();
                 }
             }
             if (!Objects.equals(realjvm, obj.jvm()) || !tid.equals(obj.tid()) || !Objects.equals(vid, obj.vid())) {
                 try {
-                    final Obj clone = (Obj) obj.clone();
+                    clone = null == clone ? obj.clone() : clone;
                     clone.mutateSelf(realjvm, tid, vid);
                     Obj.Helper.objCheckAndSave(clone);
                     return (O) clone;

@@ -53,24 +53,17 @@ public record TP3Translator(Builder builder) implements Translator<Obj, Graph> {
     public Obj translate(final Graph graph) {
         graph.vertices().forEachRemaining(tpV -> {
             final AtomicReference<Rec> out = new AtomicReference<>(rec());
-            tpV.edges(Direction.OUT).forEachRemaining(tpE -> {
-                final REdge edge = createEdge(tpE);
-                out.set(out.get().put(uri(tpE.label()), out.get().at(uri(tpE.label())).orElse(objs()).append(edge)));
-            });
+            tpV.edges(Direction.OUT).forEachRemaining(tpE -> out.set(out.get().put(uri(tpE.label()), out.get().at(uri(tpE.label())).orElse(objs()).append(createEdge(tpE)))));
             final AtomicReference<Rec> in = new AtomicReference<>(rec());
-            tpV.edges(Direction.IN).forEachRemaining(tpE -> {
-                final REdge edge = createEdge(tpE);
-                in.set(in.get().put(uri(tpE.label()), in.get().at(uri(tpE.label())).orElse(objs()).append(edge)));
-            });
+            tpV.edges(Direction.IN).forEachRemaining(tpE -> in.set(in.get().put(uri(tpE.label()), in.get().at(uri(tpE.label())).orElse(objs()).append(createEdge(tpE)))));
             final Rec props = addProperties(rec(), tpV);
-            final Rec vertex = RVertex.of(rec(
+            Router.writeToSpace(this.builder.root.extend("V").extend(tpV.id().toString()), RVertex.of(rec(
                     uri(LABEL), uri(tpV.label()),
                     uri(PROPS), props.isEmpty() ? noobj() : props,
                     uri(Direction.OUT.name()), out.get().isEmpty() ? noobj() : out.get(),
                     uri(Direction.IN.name()), in.get().isEmpty() ? noobj() : in.get())
                     .tid(VERTEX_TID)
-                    .vid(this.builder.root.extend("V").extend(tpV.id().toString())));
-            Router.writeToSpace(this.builder.root.extend("V").extend(tpV.id().toString()), vertex);
+                    .vid(this.builder.root.extend("V").extend(tpV.id().toString()))));
         });
         return Router.readFromSpace(this.builder.root.extend("+"));
     }

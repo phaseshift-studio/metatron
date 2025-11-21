@@ -54,10 +54,28 @@ public class RVertex extends RElement {
     }
 
     public Stream<RVertex> vertices(final Direction direction, final Lst labels) {
-        return this.edges(direction, labels)
+        final boolean emptyLabels = labels.elements().noneMatch(e -> !e.isNoObj());
+        final Stream<RVertex> inV = direction.equals(Direction.IN) || direction.equals(Direction.BOTH) ?
+                this.at(Direction.IN.name()).elements()
+                        .map(r -> ((Rel) r).second())
+                        .flatMap(Obj::stream)
+                        .filter(o -> emptyLabels || labels.elements().anyMatch(u -> o.<Rec>as().at(LABEL).uriValue().matches(u.uriValue())))
+                        .map(r -> REdge.of(r.as()))
+                        .flatMap(r -> r.vertices(Direction.OUT)) : Stream.of();
+        final Stream<RVertex> outV = direction.equals(Direction.OUT) || direction.equals(Direction.BOTH) ?
+                this.at(Direction.OUT.name()).elements()
+                        .map(r -> ((Rel) r).second())
+                        .flatMap(Obj::stream)
+                        .filter(o -> emptyLabels || labels.elements().anyMatch(u -> o.<Rec>as().at(LABEL).uriValue().matches(u.uriValue())))
+                        .map(r -> REdge.of(r.as()))
+                        .flatMap(r -> r.vertices(Direction.IN)) : Stream.of();
+        return Stream.concat(inV, outV);
+        
+        
+       /* return this.edges(direction, labels)
                 .flatMap(Obj::stream)
                 .map(Obj::<REdge>as)
-                .flatMap(e -> e.vertices(direction.opposite()).map(Obj::as));
+                .flatMap(e -> e.vertices(direction.opposite()).map(Obj::as));*/
     }
 
     @Override

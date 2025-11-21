@@ -73,9 +73,9 @@ public class FObj<O extends Obj> implements Obj {
         try {
             final FObj<O> clone = (FObj<O>) super.clone();
             clone.base = this.base.clone(jvm, this.base.tid(), null);
-            clone.mutateSelf(clone.base,tid,null);
-          return clone.vid(vid).as();
-         //   return (O) clone;
+            clone.mutateSelf(clone.base, tid, null);
+            return clone.vid(vid).as();
+            //   return (O) clone;
         } catch (final CloneNotSupportedException e) {
             throw MTronException.of(e);
         }
@@ -98,9 +98,9 @@ public class FObj<O extends Obj> implements Obj {
 
     @Override
     public void mutateSelf(final Object jvm, final fURI tid, final fURI vid) {
-        this.base = (O) jvm;
+        this.base = jvm instanceof Obj ? (O) jvm : this.base.jvm(jvm);
         this.vid = vid;
-        this.base.mutateSelf(this.base.jvm(),tid,null);
+        this.base.mutateSelf(this.base.jvm(), tid, fURI.NULL);
     }
 
 }

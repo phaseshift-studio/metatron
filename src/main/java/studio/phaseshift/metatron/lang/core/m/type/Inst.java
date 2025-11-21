@@ -174,6 +174,7 @@ public interface Inst extends Call {
 
     default boolean isBlocking() {
         return this.tid().basePath().equals(BLOCK_TID) ||
+                this.tid().basePath().equals(AS_TID) ||
                 this.tid().basePath().equals(WITHIN_TID) ||
                 this.tid().basePath().equals(ISA_TID) ||
                 this.tid().basePath().equals(SELECT_TID) ||
