@@ -116,6 +116,7 @@ public class RGraphTest extends MetatronTest {
             "*/g/V/1.out().out().values(lang)                                             % str{2}::'java'",
             //  "g.V().out().out().values(name)                                             % {\"lop\",\"ripple\"}",
             //  "g.V().out().out().values(lang)                                             % str{2}::\"java\"",
+            "g.V().out(knows).out(created).values().group([cc?A{*}<=A{*}(1)=>count()])         % ['lop'=>1,'java'=>2,'ripple'=>1]"
             /// ///////////////////////////////////////////////////////////////////////////////
     }, delimiter = '%')
     public void testCode(final String code, final String expected) {
