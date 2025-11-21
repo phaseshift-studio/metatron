@@ -73,7 +73,7 @@ public class grphInstSet extends MInstSet {
     public static final fURI BOTHV_TID = INST_TID.extend("bothV");
     public static final fURI VALUES_TID = INST_TID.extend("values");
     public static final fURI PROPERTIES_TID = INST_TID.extend("properties");
-    
+
     public static final fURI LABEL_TID = INST_TID.extend("label");
     public static final fURI HAS_TID = INST_TID.extend("has");
 
@@ -127,7 +127,8 @@ public class grphInstSet extends MInstSet {
     @Override
     public Set<Inst> insts() {
         return new LinkedHashSet<>(List.of(
-                instC(V_TID.dom(NOOBJ_TID.zero()).rng(VERTEX_TID.maybeSome()), lst(T(URI_TID.maybeSome())), (lhs, inst) -> objs(inst.arg(0).stream().flatMap(u -> Router.readFromSpace(u.uriValue()).stream()))),
+                instC(V_TID.dom(URI_TID).rng(VERTEX_TID.maybeSome()), lst(), (lhs, inst) -> Router.readFromSpace(f("/" + lhs.uriValue()).extend("V/+"))),
+                //instC(V_TID.dom(NOOBJ_TID.zero()).rng(VERTEX_TID.maybeSome()), lst(T(URI_TID.maybeSome())), (lhs, inst) -> objs(inst.arg(0).stream().flatMap(u -> Router.readFromSpace(u.uriValue()).stream()))),
                 instC(BOTH_TID.dom(VERTEX_TID).rng(VERTEX_TID.maybeSome()), lst(T(URI_TID.maybeSome())), (lhs, inst) -> objs(lhs.stream().map(Obj::<Rec>as).flatMap(x -> RVertex.of(x).vertices(Direction.BOTH, inst.args().as()).map(Obj::as)))),
                 instC(BOTHE_TID.dom(VERTEX_TID).rng(EDGE_TID.maybeSome()), lst(T(URI_TID.maybeSome())), (lhs, inst) -> objs(lhs.stream().map(Obj::<Rec>as).flatMap(x -> RVertex.of(x).edges(Direction.BOTH, inst.args().as()).map(Obj::as)))),
                 instC(OUT_TID.dom(VERTEX_TID).rng(VERTEX_TID.maybeSome()), lst(T(URI_TID.maybeSome())), (lhs, inst) -> objs(lhs.stream().map(Obj::<Rec>as).flatMap(x -> RVertex.of(x).vertices(Direction.OUT, inst.args().as()).map(Obj::as)))),

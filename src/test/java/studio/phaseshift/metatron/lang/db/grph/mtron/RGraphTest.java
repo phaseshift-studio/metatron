@@ -54,7 +54,7 @@ public class RGraphTest extends MetatronTest {
     @Override
     @ParameterizedTest
     @CsvSource(value = {
-            "*/g/V/+.count()                                                              % 6",
+            "g.V().count()                                                              % 6",
             "*/g/V/+/OUT>>.count()                                                        % 6",
             "*/g/V/+/IN>>.count()                                                         % 6",
             "*/g/V/+/PROPS>>.count()                                                      % 12",
@@ -83,8 +83,8 @@ public class RGraphTest extends MetatronTest {
             "*/g/V/1.values(name)                                                         % \"marko\"",
             "*/g/V/1.label()                                                              % person",
             /// ///////////////////////////////////////////////////////////////////////////////
-            "*/g/V/+.label()                                                              % {person,person,person,person,software,software}",
-            // "*/g/V/+.label().group([_=>_])==[_=>count()]                                  % [person=>4,software=>2]",
+            "g.V().label()                                                              % {person,person,person,person,software,software}",
+            // "g.V().label().group([_=>_])==[_=>count()]                                  % [person=>4,software=>2]",
             /// ///////////////////////////////////////////////////////////////////////////////
             "*/g/V/4.values(name)                                                         % \"josh\"",
             "*/g/V/4.out().count()                                                        % 2",
@@ -97,25 +97,25 @@ public class RGraphTest extends MetatronTest {
             "*/g/V/4.bothE().outV().count()                                               % 3",
             "*/g/V/4.bothE().bothV().count()                                              % 6",
             /// ///////////////////////////////////////////////////////////////////////////////
-            "*/g/V/+.out().count()                                                        % 6",
-            "*/g/V/+.outE().count()                                                       % 6",
-            "*/g/V/+.outE().inV().count()                                                 % 6",
-            //  "*/g/V/+.-<[out()>-{,},in()>-{,}]>-.count()                                % 12",
-            "*/g/V/+.both().count()                                                       % 12",
-            "*/g/V/+.bothE().count()                                                      % 12",
-            //"*/g/V/+.bothE().inV().count()                                                      % 12",
-            "*/g/V/+.bothE().outV().count()                                                      % 12",
-            //"*/g/V/+.bothE().bothV().count()                                                      % 24",
-            "*/g/V/+.out(knows).count()                                                   % 2",
-            "*/g/V/+.outE(knows).inV().count()                                            % 2",
+            "g.V().out().count()                                                        % 6",
+            "g.V().outE().count()                                                       % 6",
+            "g.V().outE().inV().count()                                                 % 6",
+            //  "g.V().-<[out()>-{,},in()>-{,}]>-.count()                                % 12",
+            "g.V().both().count()                                                       % 12",
+            "g.V().bothE().count()                                                      % 12",
+            //"g.V().bothE().inV().count()                                                      % 12",
+            "g.V().bothE().outV().count()                                                      % 12",
+            //"g.V().bothE().bothV().count()                                                      % 24",
+            "g.V().out(knows).count()                                                   % 2",
+            "g.V().outE(knows).inV().count()                                            % 2",
             /// ///////////////////////////////////////////////////////////////////////////////
             "*/g/V/1.out().out().values(name)                                             % {'lop','ripple'}",
             "{*/g/V/1/LABEL,*/g/V/1/LABEL}                                                % uri{2}::person",
         //    "{*/g/V/1,*/g/V/1}.label()                                                    % uri{2}::person",
          //   "{*/g/V/1,*/g/V/1}.out().out().values(name)                                   % {str{2}::'lop',str{2}::'ripple'}",
             "*/g/V/1.out().out().values(lang)                                             % str{2}::'java'",
-            //  "*/g/V/+.out().out().values(name)                                             % {\"lop\",\"ripple\"}",
-            //  "*/g/V/+.out().out().values(lang)                                             % str{2}::\"java\"",
+            //  "g.V().out().out().values(name)                                             % {\"lop\",\"ripple\"}",
+            //  "g.V().out().out().values(lang)                                             % str{2}::\"java\"",
             /// ///////////////////////////////////////////////////////////////////////////////
     }, delimiter = '%')
     public void testCode(final String code, final String expected) {
