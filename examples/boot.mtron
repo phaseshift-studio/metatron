@@ -20,6 +20,11 @@ ollama::[host    => <http://localhost:11434>,
   grph::[pattern => /g/#,
          space   => kv::[pattern => /g/#],
          load    => <tinkerpop-modern>]@/mnt/space/tp3;
+ clstr::[pattern => <ws://#>]@/mnt/space/clstr;
+  mqtt::[pattern => /mqtt/zigbee2mqtt/#,
+         host    => <mqtt://chibi.local:1883>,
+         prefix  => </mqtt/>,
+         q       => [subq::[pattern=>sub]]]@/mnt/space/mqtt;
  *boot/options.print(_);
  *boot/options/mode.-<|[?=server  => print('server mode'), 
                         ?=console => print('client mode'), 

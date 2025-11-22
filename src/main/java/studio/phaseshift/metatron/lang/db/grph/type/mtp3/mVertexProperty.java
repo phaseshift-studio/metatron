@@ -49,7 +49,7 @@ public class mVertexProperty<V> implements VertexProperty<V>, WrappedVertexPrope
     public V value() throws NoSuchElementException {
         if (this.property.isNoObj() || this.property.second().isNoObj())
             throw new NoSuchElementException();
-        return this.property.second().jvm();
+        return  this.property.second().jvm() instanceof Long ? (V)(Integer)((Long) this.property.second().jvm()).intValue() : this.property.second().jvm();
 
     }
 

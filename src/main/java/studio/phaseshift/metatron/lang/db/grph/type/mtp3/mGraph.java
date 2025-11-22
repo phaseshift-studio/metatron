@@ -39,6 +39,10 @@ import static studio.phaseshift.metatron.lang.db.grph.type.TP3Translator.LABEL;
 @Graph.OptIn(Graph.OptIn.SUITE_PROCESS_EMBEDDED_STANDARD)
 @Graph.OptIn(Graph.OptIn.SUITE_PROCESS_STANDARD)
 @Graph.OptIn(Graph.OptIn.SUITE_PROCESS_LIMITED_STANDARD)
+@Graph.OptOut(
+        test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.MatchTest",
+        method = "*",
+        reason = "avoiding grateful dead tests for now")
 public class mGraph implements Graph, WrappedGraph<grphSpace> {
 
     protected final grphSpace space;

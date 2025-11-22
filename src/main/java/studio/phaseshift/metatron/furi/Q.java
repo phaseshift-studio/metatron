@@ -176,7 +176,7 @@ public interface Q extends Rec {
         }
 
         public static Optional<Obj> processPreWrite(final Lst qs, final fURI source, final fURI vid, final Obj obj) {
-            return qs.<Q>elements()
+            return vid.hasQuery() && !qs.isEmpty() ? qs.<Q>elements()
                     .filter(q -> vid.hasQuery(q.pattern()))
                     .map(Q::onWrite)
                     .filter(Optional::isPresent)
@@ -185,11 +185,11 @@ public interface Q extends Rec {
                     .map(q -> q.preWrite(source, vid, obj))
                     .filter(Optional::isPresent)
                     .map(Optional::get)
-                    .reduce(Obj::append);
+                    .reduce(Obj::append) : Optional.empty();
         }
 
         public static Optional<Obj> processPreRead(final Lst qs, final fURI source, final fURI vid) {
-            return qs.<Q>elements()
+            return vid.hasQuery() && !qs.isEmpty() ? qs.<Q>elements()
                     .filter(q -> vid.hasQuery(q.pattern()))
                     .map(Q::onRead)
                     .filter(Optional::isPresent)
@@ -199,11 +199,11 @@ public interface Q extends Rec {
                     .filter(Optional::isPresent)
                     .map(Optional::get)
                     .reduce(Obj::append)
-                    .filter(q -> !q.isNoObj());
+                    .filter(q -> !q.isNoObj()) : Optional.empty();
         }
 
         public static Optional<Obj> processPostRead(final Lst qs, final fURI source, final fURI vid, final Obj current) {
-            return qs.<Q>elements()
+            return vid.hasQuery() && !qs.isEmpty() ? qs.<Q>elements()
                     .filter(q -> vid.hasQuery(q.pattern()))
                     .map(Q::onRead)
                     .filter(Optional::isPresent)
@@ -213,7 +213,7 @@ public interface Q extends Rec {
                     .filter(Optional::isPresent)
                     .map(Optional::get)
                     .reduce(Obj::append)
-                    .filter(q -> !q.isNoObj());
+                    .filter(q -> !q.isNoObj()) : Optional.empty();
         }
 
         public static Optional<Obj> processQlessWrite(final Lst qs, final fURI source, final fURI vid, final Obj obj) {
@@ -230,7 +230,7 @@ public interface Q extends Rec {
         }
 
         public static Optional<Obj> processPostWrite(final Lst qs, final fURI source, final fURI vid, final Obj obj) {
-            return qs.<Q>elements()
+            return vid.hasQuery() && !qs.isEmpty() ? qs.<Q>elements()
                     .filter(q -> vid.hasQuery(q.pattern()))
                     .map(Q::onWrite)
                     .filter(Optional::isPresent)
@@ -240,7 +240,7 @@ public interface Q extends Rec {
                     .filter(Optional::isPresent)
                     .map(Optional::get)
                     .reduce(Obj::append)
-                    .filter(q -> !q.isNoObj());
+                    .filter(q -> !q.isNoObj()) : Optional.empty();
         }
 
         private Helper() {

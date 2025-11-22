@@ -32,7 +32,7 @@ public class mProperty<V> implements Property<V>, WrappedProperty<Rel> {
 
     @Override
     public V value() throws NoSuchElementException {
-        return this.property.second().jvm();
+        return this.property.second().jvm() instanceof Long ? (V)(Integer)((Long) this.property.second().jvm()).intValue() : this.property.second().jvm();
     }
 
     @Override

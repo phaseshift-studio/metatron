@@ -37,7 +37,8 @@ public class mVertex extends mElement implements Vertex, WrappedVertex<RVertex> 
 
     @Override
     public String toString() {
-        return StringFactory.vertexString(this);
+        //  return StringFactory.vertexString(this);
+        return this.getBaseVertex().base().toString();
     }
 
     @Override
@@ -67,9 +68,9 @@ public class mVertex extends mElement implements Vertex, WrappedVertex<RVertex> 
         Router.writeToSpace(this.getBaseVertex());
 
         RVertex vertex2 = ((mVertex) inVertex).getBaseVertex();
-        final Rec directedEdges2 = vertex2.jvm().getOrDefault(uri(Direction.OUT.name()), rec()).as();
+        final Rec directedEdges2 = vertex2.jvm().getOrDefault(uri(Direction.IN.name()), rec()).as();
         final Obj labeledEdges2 = directedEdges2.jvm().getOrDefault(uri(label), MObjs.empty()).as();
-        vertex2.jvm().put(uri(Direction.OUT.name()), directedEdges2.put(uri(label), labeledEdges2.append(re.clone())));
+        vertex2.jvm().put(uri(Direction.IN.name()), directedEdges2.put(uri(label), labeledEdges2.append(re.clone())));
         Router.writeToSpace(vertex2);
 
         return mEdge.of(this.graph, re);

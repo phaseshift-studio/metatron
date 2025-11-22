@@ -11,6 +11,8 @@ import studio.phaseshift.metatron.lang.core.m.type.Obj;
 import studio.phaseshift.metatron.lang.db.grph.grphSpace;
 import studio.phaseshift.metatron.lang.db.grph.type.mtp3.*;
 import studio.phaseshift.metatron.lang.sys.router.Router;
+import studio.phaseshift.metatron.ui.Graphitty;
+import studio.phaseshift.metatron.ui.GraphittyLogger;
 
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -28,14 +30,16 @@ import static studio.phaseshift.metatron.lang.core.m.type.impl.MRec.rec;
  */
 public class mGraphProvider extends AbstractGraphProvider {
 
-    private static final Set<Class> IMPLEMENTATION = new HashSet<Class>() {{
+    protected static final GraphittyLogger LOG = Graphitty.log(mGraphProvider.class);
+
+    private static final Set<Class> IMPLEMENTATION = new HashSet<>() {{
         add(mEdge.class);
         add(mElement.class);
         add(mGraph.class);
-        //add(TinkerGraphVariables.class);
+        add(mVariables.class);
         add(mProperty.class);
         add(mVertex.class);
-        //add(TinkerVertexProperty.class);
+        add(mVertexProperty.class);
     }};
 
     static {
