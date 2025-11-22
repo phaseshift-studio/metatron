@@ -19,11 +19,7 @@
 package studio.phaseshift.metatron.lang;
 
 import studio.phaseshift.metatron.Tokens;
-import studio.phaseshift.metatron.furi.Q;
-import studio.phaseshift.metatron.furi.Qs;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.furi.q.PubSubQ;
-import studio.phaseshift.metatron.lang.core.m.type.Lst;
 import studio.phaseshift.metatron.lang.core.m.type.Obj;
 import studio.phaseshift.metatron.lang.core.m.type.Rec;
 import studio.phaseshift.metatron.lang.core.m.type.impl.MRec;
@@ -35,7 +31,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static studio.phaseshift.metatron.furi.fURI.f;
-import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
 
 public abstract class MSpace<SJVM> extends MRec implements Space {
@@ -64,7 +59,7 @@ public abstract class MSpace<SJVM> extends MRec implements Space {
             this.status = value.uriValue().matches(f(Tokens.ACTIVE)) ? Status.active : Status.paused;
         }
     }
-    
+
     @Override
     public Status status() {
         return this.status;
@@ -76,7 +71,7 @@ public abstract class MSpace<SJVM> extends MRec implements Space {
         this.status = status;
         return this;
     }
-    
+
     @Override
     public fURI pattern() {
         return this.pattern;
@@ -85,21 +80,6 @@ public abstract class MSpace<SJVM> extends MRec implements Space {
     @Override
     public SJVM sjvm() {
         return this.sjvm;
-    }
-
-    @Override
-    public String toString() {
-        return Space.Helper.spaceToString(this);
-    }
-
-    @Override
-    public int hashCode() {
-        return Space.Helper.spaceHashCode(this);
-    }
-
-    @Override
-    public boolean equals(final Object other) {
-        return Space.Helper.spaceEquals(this, other);
     }
 
     @Override
@@ -116,11 +96,22 @@ public abstract class MSpace<SJVM> extends MRec implements Space {
 
     @Override
     public Rec clone() {
+        Space.Helper.noCloneWarning(this);
         return this;
     }
 
-    /*@Override
-    public Rec clone(final Object object, final fURI tid, final fURI vid) {
-        return this;
-    }*/
+    @Override
+    public String toString() {
+        return Space.Helper.spaceToString(this);
+    }
+
+    @Override
+    public int hashCode() {
+        return Space.Helper.spaceHashCode(this);
+    }
+
+    @Override
+    public boolean equals(final Object other) {
+        return Space.Helper.spaceEquals(this, other);
+    }
 }

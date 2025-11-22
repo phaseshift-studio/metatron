@@ -62,7 +62,10 @@ public class RGraphTest extends MetatronTest {
             "*/g/V/1/OUT>>.count()                                                        % 3",
             "*/g/V/1/IN>>.count()                                                         % 0",
             "*/g/V/1/PROPS>>.count()                                                      % 2",
+            "*/g/V/+.values(age).sum()                                                    % 123",
+            //"g.V().values(age).sum()                                                      % 123",
             "*/g/V/1.label()                                                              % person",
+            "*/g/V/1.-<[_,_]_/count()\\_>-                                                % 2",
             "*/g/V/1.label()-<[_,_]_/count()\\_>-                                         % 2",
             "*/g/V/1.out().count()                                                        % 3",
             "*/g/V/1.outE().count()                                                       % 3",
@@ -83,7 +86,8 @@ public class RGraphTest extends MetatronTest {
             "*/g/V/1.values(name)                                                         % \"marko\"",
             "*/g/V/1.label()                                                              % person",
             /// ///////////////////////////////////////////////////////////////////////////////
-            "g.V().label()                                                              % {person,person,person,person,software,software}",
+            "g.V().label()                                                                % {person,person,person,person,software,software}",
+            "g.V().values(name)                                                           % {'marko', 'peter', 'josh', 'lop', 'ripple', 'vadas'}",
             // "g.V().label().group([_=>_])==[_=>count()]                                  % [person=>4,software=>2]",
             /// ///////////////////////////////////////////////////////////////////////////////
             "*/g/V/4.values(name)                                                         % \"josh\"",

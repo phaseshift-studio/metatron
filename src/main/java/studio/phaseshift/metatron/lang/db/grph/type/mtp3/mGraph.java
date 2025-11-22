@@ -9,12 +9,15 @@ import org.apache.tinkerpop.gremlin.structure.util.wrapped.WrappedGraph;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.core.m.type.Obj;
 import studio.phaseshift.metatron.lang.core.m.type.Rec;
+import studio.phaseshift.metatron.lang.core.m.type.Uri;
 import studio.phaseshift.metatron.lang.core.m.type.impl.MObjFactory;
 import studio.phaseshift.metatron.lang.db.grph.grphSpace;
 import studio.phaseshift.metatron.lang.db.grph.inst.grphInstSet;
+import studio.phaseshift.metatron.lang.db.grph.type.REdge;
 import studio.phaseshift.metatron.lang.db.grph.type.RVertex;
 import studio.phaseshift.metatron.lang.db.kv.kvSpace;
 import studio.phaseshift.metatron.lang.sys.router.Router;
+import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
@@ -24,9 +27,9 @@ import static studio.phaseshift.metatron.Tokens.PATTERN;
 import static studio.phaseshift.metatron.Tokens.SPACE;
 import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MRec.rec;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.lang.db.grph.type.TP3Translator.LABEL;
-import static studio.phaseshift.metatron.lang.db.grph.type.TP3Translator.PROPS;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -41,6 +44,11 @@ public class mGraph implements Graph, WrappedGraph<grphSpace> {
     protected final grphSpace space;
     protected final mVariables variables;
     protected long counter;
+    protected final fURI baseURI;
+    protected final fURI baseVertexURI;
+    protected final fURI baseEdgeURI;
+
+    public static final String PROPS = "PROPS";
 
     protected Map<Obj, Obj> configurationToMap(final Configuration configuration) {
         final Map<Obj, Obj> map = new LinkedHashMap<>();
@@ -67,20 +75,38 @@ public class mGraph implements Graph, WrappedGraph<grphSpace> {
         } else {
             throw MTronException.of("obj is not a grph space: %s", s);
         }
+        Router.global().addSpace(this.space);
         this.variables = new mVariables(this.space);
+        this.baseURI = this.getBaseGraph().pattern().retractPattern();
+        this.baseVertexURI = this.baseURI.extend("V");
+        this.baseEdgeURI = this.baseURI.extend("E");
+    }
+
+    protected final fURI makeVertexID(final Object id) {
+        final fURI temp = id instanceof fURI ? (fURI) id : (id instanceof Uri ? ((Uri) id).uriValue() : f(id.toString()));
+        return temp.hasPrefix(this.baseVertexURI) ? temp : this.baseVertexURI.extend(temp);
+    }
+
+    protected final fURI makeEdgeID(final Object id) {
+        final fURI temp = id instanceof fURI ? (fURI) id : (id instanceof Uri ? ((Uri) id).uriValue() : f(id.toString()));
+        return temp.hasPrefix(this.baseEdgeURI) ? temp : this.baseEdgeURI.extend(temp);
     }
 
     @Override
     public Vertex addVertex(final Object... keyValues) {
         ElementHelper.legalPropertyKeyValueArray(keyValues);
-        final fURI vid = (fURI) ElementHelper.getIdValue(keyValues).orElse(f("tp" + counter++));
+        final fURI vid = ElementHelper.getIdValue(keyValues).map(this::makeVertexID).orElseGet(() -> makeVertexID("v" + counter++));
         final fURI label = f(ElementHelper.getLabelValue(keyValues).orElse(Vertex.DEFAULT_LABEL));
         final Rec props = rec();
         for (int i = 0; i < keyValues.length; i = i + 2) {
-            if (keyValues[i] != T.id && keyValues[i] != T.label)
-                props.jvm().put(uri(keyValues[i].toString()), MObjFactory.of().create(keyValues[i + 1]));
+            if (keyValues[i] != T.id && keyValues[i] != T.label) {
+                final Uri key = uri(keyValues[i].toString());
+                final Obj value = MObjFactory.of().create(keyValues[i + 1]);
+                props.jvm().put(key, value);
+            }
         }
-        return this.space.write(vid, (Obj) mVertex.of(RVertex.of(rec(uri(PROPS), props, uri(LABEL), uri(label)).vid(vid)))).as();
+        final RVertex rv = this.getBaseGraph().write(vid, RVertex.of(rec(uri(PROPS), props, uri(LABEL), uri(label)).vid(vid))).as();
+        return mVertex.of(this, rv);
     }
 
     @Override
@@ -95,24 +121,44 @@ public class mGraph implements Graph, WrappedGraph<grphSpace> {
 
     @Override
     public Iterator<Vertex> vertices(final Object... vertexIds) {
-        return 0 == vertexIds.length ?
-                Router.global().read(this.space.pattern().retractPattern().extend("V/+")).stream().flatMap(RVertex::of).map(mVertex::of).map(m -> (Vertex) m).iterator() :
-                Arrays.stream(vertexIds).map(vertexId -> Router.global().read(this.space.pattern().retractPattern().extend("V").extend(vertexId.toString()))).flatMap(RVertex::of).map(mVertex::of).map(m -> (Vertex) m).iterator();
+        return (0 == vertexIds.length ?
+                Router.readFromSpace(this.baseVertexURI.extend("+"))
+                        .stream() :
+                Arrays.stream(vertexIds)
+                        .map(this::makeVertexID)
+                        .map(Router::readFromSpace))
+                .flatMap(Obj::stream)
+                .map(Obj::<Rec>as)
+                .map(RVertex::of)
+                .map(rv -> mVertex.of(this, rv))
+                .map(mv -> (Vertex) mv)
+                .iterator();
     }
 
     @Override
     public Iterator<Edge> edges(final Object... edgeIds) {
-        return IteratorUtil.of();
+        return (0 == edgeIds.length ?
+                Router.readFromSpace(this.baseEdgeURI.extend("+"))
+                        .stream() :
+                Arrays.stream(edgeIds)
+                        .map(this::makeEdgeID)
+                        .map(Router::readFromSpace))
+                .flatMap(Obj::stream)
+                .map(Obj::<Rec>as)
+                .map(REdge::of)
+                .map(re -> mEdge.of(this, re))
+                .map(me -> (Edge) me)
+                .iterator();
     }
 
     @Override
     public Transaction tx() {
-        return null;
+        return Transaction.NO_OP;
     }
 
     @Override
     public void close() throws Exception {
-        this.space.close();
+        this.getBaseGraph().close();
     }
 
     @Override
@@ -123,8 +169,13 @@ public class mGraph implements Graph, WrappedGraph<grphSpace> {
     @Override
     public Configuration configuration() {
         final BaseConfiguration configuration = new BaseConfiguration();
-        this.space.jvm().forEach((key, value) -> configuration.setProperty(key.uriValue().toString(), value));
+        this.getBaseGraph().jvm().forEach((key, value) -> configuration.setProperty(key.uriValue().toString(), value));
         return configuration;
+    }
+
+    @Override
+    public Features features() {
+        return new mFeatures(this);
     }
 
     @Override

@@ -5,12 +5,19 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.core.m.type.Obj;
 import studio.phaseshift.metatron.lang.core.m.type.Objs;
 import studio.phaseshift.metatron.lang.core.m.type.Rec;
+import studio.phaseshift.metatron.lang.core.m.type.Uri;
+import studio.phaseshift.metatron.lang.core.m.type.impl.MObjFactory;
+import studio.phaseshift.metatron.lang.db.grph.type.mtp3.mGraph;
 
+import java.util.Arrays;
 import java.util.stream.Stream;
 
+import static studio.phaseshift.metatron.furi.fURI.f;
+import static studio.phaseshift.metatron.lang.core.m.inst.mFluent.StartLess.auto;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.lang.db.grph.type.TP3Translator.LABEL;
+import static studio.phaseshift.metatron.lang.db.grph.type.mtp3.mGraph.PROPS;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -26,7 +33,7 @@ public class REdge extends RElement {
     }
 
     public static REdge of(final String label, final fURI outVertex, final fURI inVertex, final Object... keyValues) {
-        return REdge.of(rec(uri(LABEL), uri(label), uri(Direction.OUT.name()), uri(outVertex), uri(Direction.IN.name()), uri(inVertex)));
+        return REdge.of(rec(uri(LABEL), uri(label), uri(Direction.OUT.name()), auto(outVertex), uri(Direction.IN.name()), auto(inVertex)));
     }
 
     public static Stream<REdge> of(final Obj edges) {

@@ -15,17 +15,17 @@ import java.util.Iterator;
  */
 public class mEdge extends mElement implements Edge, WrappedEdge<REdge> {
 
-    public mEdge(final REdge edge) {
-        super(edge);
+    public mEdge(final mGraph graph, final REdge edge) {
+        super(graph, edge);
     }
 
-    public static mEdge of(final REdge edge) {
-        return new mEdge(edge);
+    public static mEdge of(final mGraph graph, final REdge edge) {
+        return new mEdge(graph, edge);
     }
 
     @Override
     public Iterator<Vertex> vertices(Direction direction) {
-        return this.getBaseEdge().vertices(direction).map(mVertex::of).map(v -> (Vertex) v).iterator();
+        return this.getBaseEdge().vertices(direction).map(v -> mVertex.of(this.graph, v)).map(v -> (Vertex) v).iterator();
     }
 
     @Override

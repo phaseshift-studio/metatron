@@ -97,7 +97,6 @@ public class grphSpace extends MSpace<Space> {
     @Override
     public Obj write(final fURI vid, final Obj obj) {
         if (vid.equals(this.pattern.retractPattern())) {
-
             return obj;
         } else {
             return this.sjvm.write(vid, obj);
@@ -106,7 +105,8 @@ public class grphSpace extends MSpace<Space> {
 
 
     public void clear() {
-        ((kvSpace) this.sjvm()).sjvm().clear();
+        ((kvSpace) this.sjvm()).close();
+        this.sjvm = kvSpace.of(this.pattern, fURI.NULL);
     }
 
 }
