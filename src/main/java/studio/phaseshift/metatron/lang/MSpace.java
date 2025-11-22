@@ -96,7 +96,7 @@ public abstract class MSpace<SJVM> extends MRec implements Space {
 
     @Override
     public Rec clone() {
-        Space.Helper.noCloneWarning(this);
+        //Space.Helper.noCloneWarning(this);
         return this;
     }
 

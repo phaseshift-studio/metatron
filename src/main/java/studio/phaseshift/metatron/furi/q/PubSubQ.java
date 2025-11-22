@@ -18,11 +18,8 @@
 
 package studio.phaseshift.metatron.furi.q;
 
-import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.Q;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.lang.Space;
-import studio.phaseshift.metatron.lang.core.m.type.Rec;
 import studio.phaseshift.metatron.lang.core.mach.type.Machine;
 import studio.phaseshift.metatron.lang.core.mach.type.impl.MMachine;
 import studio.phaseshift.metatron.lang.core.m.inst.mInstSet;
@@ -31,26 +28,18 @@ import studio.phaseshift.metatron.lang.core.m.type.Obj;
 import studio.phaseshift.metatron.lang.core.m.type.Type;
 import studio.phaseshift.metatron.lang.core.m.type.impl.MObj;
 import studio.phaseshift.metatron.lang.core.m.type.impl.MObjs;
-import studio.phaseshift.metatron.lang.db.kv.kvSpace;
-import studio.phaseshift.metatron.lang.sys.router.Router;
-import studio.phaseshift.metatron.ui.Graphitty;
 
 import java.util.LinkedList;
 import java.util.Optional;
 import java.util.Queue;
 
-import static studio.phaseshift.metatron.furi.Qs.QS_TID;
 import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.furi.fURI.f;
-import static studio.phaseshift.metatron.Tokens.PATTERN;
 import static studio.phaseshift.metatron.lang.core.m.inst.mFluent.StartLess.isa_;
-import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.*;
-import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.INST_TID;
 import static studio.phaseshift.metatron.lang.core.m.obj.NoObj.noobj;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MType.T;
-import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.Common.mutableMap;
 import static studio.phaseshift.metatron.util.Tuple.Triplet;
 

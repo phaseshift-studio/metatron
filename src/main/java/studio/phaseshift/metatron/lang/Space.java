@@ -19,8 +19,6 @@
 package studio.phaseshift.metatron.lang;
 
 import studio.phaseshift.metatron.Tokens;
-import studio.phaseshift.metatron.furi.Q;
-import studio.phaseshift.metatron.furi.Qs;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.core.m.type.*;
 import studio.phaseshift.metatron.lang.core.mach.type.impl.MMachine;
@@ -30,7 +28,6 @@ import studio.phaseshift.metatron.util.Common;
 
 import java.io.Closeable;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.BiFunction;

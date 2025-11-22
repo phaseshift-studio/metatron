@@ -20,7 +20,6 @@ package studio.phaseshift.metatron.lang.sys.router.impl;
 
 import studio.phaseshift.metatron.Registry;
 import studio.phaseshift.metatron.Tokens;
-import studio.phaseshift.metatron.furi.Qs;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.core.m.type.Rec;
 import studio.phaseshift.metatron.lang.core.m.type.Uri;
@@ -253,11 +252,6 @@ public class MRouter extends MSpace<MServer> implements Router {
         this.tid = tid;
         this.vid = vid;
         return this;
-    }
-
-    @Override
-    public Qs qs() {
-        return null;
     }
 
     @Override

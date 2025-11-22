@@ -263,7 +263,6 @@ public class DocQ extends BaseQ {
         public static Inst docWrap(final Inst inst, final String domDesc, final String rngDesc, final Map<Obj, String> argDescription, final String description) {
             final Doc doc = doc(inst, domDesc, rngDesc, argDescription, description);
             final Space instSpace = Router.global().getSpace(inst.tid());
-            Graphitty.log(instSpace).info("qs: %s", instSpace.qs());
             final Optional<DocQ> docq = instSpace.qs().jvm().stream().filter(q -> q.tid().basePath().equals(DOCQ_TID)).map(Obj::<DocQ>as).findAny();
             if (docq.isEmpty())
                 instSpace.logger().warn("no doc query attachment mounted on %s for %s", instSpace, inst.tid());

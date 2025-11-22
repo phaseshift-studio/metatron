@@ -18,7 +18,6 @@
 
 package studio.phaseshift.metatron.lang.util;
 
-import studio.phaseshift.metatron.furi.Qs;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.core.m.obj.NoObj;
 import studio.phaseshift.metatron.lang.core.m.type.*;
@@ -106,11 +105,6 @@ public final class noobjSpace implements Space, InstSet {
     @Override
     public noobjSpace clone(final Object jvm, final fURI tid, final fURI vid) {
         return this;
-    }
-
-    @Override
-    public Qs qs() {
-        return null;
     }
 
     @Override
