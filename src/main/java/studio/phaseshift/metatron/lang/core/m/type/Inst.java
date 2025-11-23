@@ -120,16 +120,11 @@ public interface Inst extends Call {
         //return MType.of(range);
     }
 
-    default Poly args() {
+    default Poly<?,?> args() {
         return this.jvm().get0();
     }
 
-    default Inst args(final Function<Poly, Poly> redefine) {
-        return this.args(redefine.apply(this.args()));
-    }
-
-
-    default Inst args(final Poly args) {
+    default Inst args(final Poly<?,?> args) {
         return this.clone(Triplet.with(args, this.f(), this.seed()), this.tid(), this.vid());
     }
 

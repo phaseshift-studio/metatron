@@ -207,6 +207,11 @@ public class MServer extends WebSocketServer implements Cluster, Closeable, Obj 
     }
 
     @Override
+    public MServer self(final Object jvm, final fURI tid, final fURI vid) {
+        return this;
+    }
+
+    @Override
     public Map<fURI, MConnection> nodes() {
         return this.cluster;
     }

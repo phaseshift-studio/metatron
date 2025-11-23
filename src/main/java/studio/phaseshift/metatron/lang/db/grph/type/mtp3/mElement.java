@@ -2,22 +2,18 @@ package studio.phaseshift.metatron.lang.db.grph.type.mtp3;
 
 import org.apache.tinkerpop.gremlin.structure.Element;
 import org.apache.tinkerpop.gremlin.structure.Graph;
-import org.apache.tinkerpop.gremlin.structure.Property;
-import org.apache.tinkerpop.gremlin.structure.util.ElementHelper;
 import org.apache.tinkerpop.gremlin.structure.util.wrapped.WrappedElement;
 import studio.phaseshift.metatron.lang.core.m.type.Lst;
 import studio.phaseshift.metatron.lang.core.m.type.Obj;
-import studio.phaseshift.metatron.lang.core.m.type.Rel;
 import studio.phaseshift.metatron.lang.core.m.type.Uri;
-import studio.phaseshift.metatron.lang.core.m.type.impl.MRec;
 import studio.phaseshift.metatron.lang.db.grph.type.RElement;
 
-import java.util.Iterator;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 
+import static studio.phaseshift.metatron.lang.core.m.type.Lst.MUTABLE;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.lang.db.grph.type.mtp3.mGraph.PROPS;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -29,11 +25,11 @@ public abstract class mElement implements Element, WrappedElement<RElement> {
 
 
     protected Obj stringToUriLabels(final String[] labels) {
-        final Lst uris = lst();
+        final List<Obj> uris = new ArrayList<>();
         for (final String label : labels) {
-            uris.addMutate(uri(label));
+            uris.add(uri(label));
         }
-        return uris;
+        return lst(uris);
     }
 
     /*protected String[] uriToStringLabels(final Uri[] labels) {

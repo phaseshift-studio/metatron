@@ -1,16 +1,9 @@
 package studio.phaseshift.metatron.lang.core.m.type.facade;
 
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.lang.core.m.type.Fail;
 import studio.phaseshift.metatron.lang.core.m.type.Obj;
-import studio.phaseshift.metatron.lang.core.m.type.Type;
-import studio.phaseshift.metatron.lang.db.grph.type.RVertex;
 import studio.phaseshift.metatron.lang.sys.router.Router;
 import studio.phaseshift.metatron.util.MTronException;
-
-import java.util.Objects;
-
-import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.REC_TID;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -73,7 +66,7 @@ public class FObj<O extends Obj> implements Obj {
         try {
             final FObj<O> clone = (FObj<O>) super.clone();
             clone.base = this.base.clone(jvm, this.base.tid(), null);
-            clone.mutateSelf(clone.base, tid, null);
+            clone.self(clone.base, tid, null);
             return clone.vid(vid).as();
             //   return (O) clone;
         } catch (final CloneNotSupportedException e) {
@@ -97,10 +90,12 @@ public class FObj<O extends Obj> implements Obj {
     }
 
     @Override
-    public void mutateSelf(final Object jvm, final fURI tid, final fURI vid) {
+    public FObj<O> self(final Object jvm, final fURI tid, final fURI vid) {
         this.base = jvm instanceof Obj ? (O) jvm : this.base.jvm(jvm);
         this.vid = vid;
-        this.base.mutateSelf(this.base.jvm(), tid, fURI.NULL);
+        this.base.self(this.base.jvm(), tid, fURI.NULL);
+        return this;
     }
+
 
 }

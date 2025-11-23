@@ -90,37 +90,8 @@ public class mqttSpace extends MSpace<Mqtt5Client> {
         this.prefix = config.containsKey(uri(Tokens.PREFIX)) ? config.get(uri(Tokens.PREFIX)).uriValue() : null;
         LOG.info("{{y}}mtron{{g}}<=>{{y}}mqtt{{X}} mapping established: {{b}}%s {{g}}<=> ({{b}}%s {{g}}<=> {{b}}%s{{g}}){{X}}", this.pattern(), this.prefix, this.toMqttTopic(this.pattern()));
         this.cache = new kvSpace(this.pattern(), this.vid.extend("cache"));
-        this.qs().addMutate(new MqttPubSubQ(this));
+        this.put(Tokens.Q, lst(this.qs().add(new MqttPubSubQ(this), IMMUTABLE)));
         this.broker = config.get(uri(Tokens.HOST)).orElseThrow(new IllegalArgumentException("config must have a host key")).uriValue();
-        this.init();
-    }
-
-    public static mqttSpace of(final Map<Obj, Obj> config, final fURI pattern, final fURI vid) {
-       /* if(!config.containsKey(uri("prefix")) ?
-                config.get(uri("prefix")).uriValue().extend(config
-                        .get(uri("pattern"))
-                        .orElseThrow(new IllegalArgumentException("config must have a pattern key")).uriValue()) :
-                config.get(uri("pattern"))
-                        .orElseThrow(new IllegalArgumentException("config must have a pattern key")).uriValue(),*/
-        final Mqtt5Client client = MqttClient.builder()
-                .identifier(UUID.randomUUID().toString())
-                .serverHost(config.get(uri(Tokens.HOST)).uriValue().host())
-                .serverPort(config.get(uri(Tokens.HOST)).uriValue().port())
-                .useMqttVersion5()
-                .build();
-        config.put(uri(Tokens.PATTERN), uri(pattern));
-        return new mqttSpace(client, config, pattern, vid);
-    }
-
-    protected String toMqttTopic(final fURI vid) {
-        return null == this.prefix ? vid.toString() : vid.removePrefix(this.prefix).toString();
-    }
-
-    protected fURI toMtronVid(final String topic) {
-        return null == this.prefix ? f(topic) : this.prefix.extend(topic);
-    }
-
-    public void init() {
         try {
             this.client = MqttClient.builder()
                     .identifier(UUID.randomUUID().toString())
@@ -161,6 +132,26 @@ public class mqttSpace extends MSpace<Mqtt5Client> {
             throw new IllegalStateException(e);
         }
     }
+
+    public static mqttSpace of(final Map<Obj, Obj> config, final fURI pattern, final fURI vid) {
+        final Mqtt5Client client = MqttClient.builder()
+                .identifier(UUID.randomUUID().toString())
+                .serverHost(config.get(uri(Tokens.HOST)).uriValue().host())
+                .serverPort(config.get(uri(Tokens.HOST)).uriValue().port())
+                .useMqttVersion5()
+                .build();
+        config.put(uri(Tokens.PATTERN), uri(pattern));
+        return new mqttSpace(client, config, pattern, vid);
+    }
+
+    protected String toMqttTopic(final fURI vid) {
+        return null == this.prefix ? vid.toString() : vid.removePrefix(this.prefix).toString();
+    }
+
+    protected fURI toMtronVid(final String topic) {
+        return null == this.prefix ? f(topic) : this.prefix.extend(topic);
+    }
+    
 
     @Override
     public Obj read(final fURI vid) {

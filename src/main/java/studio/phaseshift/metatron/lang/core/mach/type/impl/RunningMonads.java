@@ -119,6 +119,12 @@ public class RunningMonads implements Obj {
     }
 
     @Override
+    public RunningMonads self(Object jvm, fURI tid, fURI vid) {
+        return this;
+    }
+
+
+    @Override
     public Iterator<Obj> iterator() {
         return (Iterator) this.instIndex.values().iterator();
     }

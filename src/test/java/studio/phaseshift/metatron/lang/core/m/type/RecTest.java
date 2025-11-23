@@ -1,6 +1,6 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
- * Copyright (C) 2025- PhaseShift Studio, LLC 
+ * Copyright (C) 2025- PhaseShift Studio, LLC
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -27,6 +27,8 @@ import studio.phaseshift.metatron.ui.Graphitty;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static studio.phaseshift.metatron.lang.core.m.type.Poly.IMMUTABLE;
+import static studio.phaseshift.metatron.lang.core.m.type.Poly.MUTABLE;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MReal.real;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MRec.rec;
@@ -50,8 +52,8 @@ public class RecTest extends MetatronObjTest {
             "[1=>[2=>3]]                           | 2                    | noobj",
             "[a=>[b=>c],a/b/c=>[e=>f]]             | a/b/c                | [e=>f]",
             "[a=>[b=>c],a/b/c=>[e=>f]]             | a/b                  | c",
-           // "[a=>[b=>c],a/b=>c]               | a/b                  | {c,c}",
-           // "[a=>[b=>c],a/b/c=>[e=>f]]             | a/b/c/               | [a/b/c=>[e=>f]].>-{,}",
+            // "[a=>[b=>c],a/b=>c]               | a/b                  | {c,c}",
+            // "[a=>[b=>c],a/b/c=>[e=>f]]             | a/b/c/               | [a/b/c=>[e=>f]].>-{,}",
             "[a=>[b=>c,d=>[e=>f]]]                 | a                    | [b=>c,d=>[e=>f]]",
             "[a=>[b=>c,d=>[e=>f]]]                 | a/                   | /m/rel::a=>[b=>c,d=>[e=>f]]",
             "[a=>[b=>c,d=>[e=>f]]]                 | a/b                  | c",
@@ -110,7 +112,7 @@ public class RecTest extends MetatronObjTest {
             "[=>]                                  | [uri{?}::a=>int::T,uri{?}::b=>str::T]      | true",
             "[a=>'bad']                            | [uri{?}::a=>int::T,uri{?}::b=>str::T]      | false",
             "[a=>2,b=>0]                           | [uri{?}::a=>int::T,uri{?}::b=>str::T]      | false",
-            
+
     }, delimiter = '|')
     public void testMatches(final String recA, final String recB, final boolean matches) {
         super.testMatches(recA, recB, matches);
@@ -124,9 +126,9 @@ public class RecTest extends MetatronObjTest {
             "[noobj=>7]                                                                              % [=>]",
             "[a=>1,a=>1,b=>2,a=>1,b=>2]                                                              % [a=>int{3}::1,b=>int{2}::2]",
             "[a=>1,a=>1,b=>2,a=>1,b=>2,b=>3]                                                         % [a=>int{3}::1,b=>{int{2}::2,3}]",
-           // "[a=>1,a=>1,b=>[1=>2],a=>1,b=>[1=>2],b=>[2=>3]]                                          % [a=>int{3}::1,b=>[1=>int{2}::2,2=>3]]",
-           // "[a=>1,a=>1,b=>[1=>2],a=>1,b=>[1=>2],b=>[2=>3],b=>[1=>'a']]                              % [a=>int{3}::1,b=>[1=>{int{2}::2,'a'},2=>3]]",
-           // "[a=>int{3}::1,b=>[1=>2],b=>[1=>2],b=>[2=>3],b=>[1=>'a']]                                % [a=>int{3}::1,b=>[1=>{int{2}::2,'a'},2=>3]]",
+            // "[a=>1,a=>1,b=>[1=>2],a=>1,b=>[1=>2],b=>[2=>3]]                                          % [a=>int{3}::1,b=>[1=>int{2}::2,2=>3]]",
+            // "[a=>1,a=>1,b=>[1=>2],a=>1,b=>[1=>2],b=>[2=>3],b=>[1=>'a']]                              % [a=>int{3}::1,b=>[1=>{int{2}::2,'a'},2=>3]]",
+            // "[a=>int{3}::1,b=>[1=>2],b=>[1=>2],b=>[2=>3],b=>[1=>'a']]                                % [a=>int{3}::1,b=>[1=>{int{2}::2,'a'},2=>3]]",
             //"[a=>int{3}::1,b=>[1=>[2=>'a']],b=>[1=>[2=>'b']],b=>[1=>[2=>'c']],b=>[1=>[7=>7]]]        % [a=>int{3}::1,b=>[1=>[2=>{'a','b','c'},7=>7]]]",
             //"[a=>int{3}::1,b=>[1=>[2=>'b']],b=>[1=>[2=>'c']],b=>[1=>[7=>7]],b=>[1=>[7=>int{-1}::7]]] % [a=>int{3}::1,b=>[1=>[2=>{'b','c'}]]]",
             "[a=>is(gt(0)),a=>is(gt(2)),b=>3]                                                        % [a=>-<{is(gt(0)),is(gt(2))},b=>3]",
@@ -180,5 +182,33 @@ public class RecTest extends MetatronObjTest {
         /// ///
         r = r.put("d", real(1.0));
         assertEquals(1.0, r.at("d").realValue(), 0.001);
+    }
+
+    @Test
+    public void testMutableImmutable() {
+        Rec r1 = rec(uri("a"), jnt(1), uri("b"), rec(uri("c"), jnt(3)));
+        Rec r2 = r1.put(uri("b"), jnt(22), IMMUTABLE);
+        Rec r3 = r1.at(uri("b")).<Rec>as().put(uri("d"), jnt(33), IMMUTABLE);
+        Rec r4 = r1.put(uri("b"), r1.at(uri("b")).<Rec>as().put(uri("d"), jnt(33)), IMMUTABLE);
+        super.testEquals(rec(uri("a"), jnt(1), uri("b"), rec(uri("c"), jnt(3))), r1, true);
+        super.testEquals(rec(uri("a"), jnt(1), uri("b"), jnt(22)), r2, true);
+        super.testEquals(rec(uri("c"), jnt(3), uri("d"), jnt(33)), r3, true);
+        super.testEquals(rec(uri("a"), jnt(1), uri("b"), rec(uri("c"), jnt(3), uri("d"), jnt(33))), r4, true);
+        /// //
+        Rec rr1 = rec(uri("a"), jnt(1), uri("b"), rec(uri("c"), jnt(3)));
+        Rec s1 = rec(uri("a"), jnt(1), uri("b"), rec(uri("c"), jnt(3)));
+        super.testEquals(r1, s1, true);
+        Rec s2 = r1.put(uri("b"), jnt(22), MUTABLE);
+        super.testEquals(r2, s2, true);
+        Rec s3 = s1.at(uri("b")).<Rec>as().put(uri("d"), jnt(33), MUTABLE);
+        super.testEquals(r3, s3, true);
+        Rec s4 = rr1.clone().<Rec>as().put(uri("b"), rr1.at(uri("b")).clone().<Rec>as().put(uri("d"), jnt(33), IMMUTABLE), MUTABLE);
+        super.testEquals(r4, s4, true);
+        super.testEquals(rec(uri("a"), jnt(1), uri("b"), rec(uri("c"), jnt(3))), rr1, true);
+        super.testEquals(rec(uri("a"), jnt(1), uri("b"), jnt(22)), s2, true);
+        super.testEquals(rec(uri("c"), jnt(3), uri("d"), jnt(33)), s3, true);
+        super.testEquals(rec(uri("a"), jnt(1), uri("b"), rec(uri("c"), jnt(3), uri("d"), jnt(33))), s4, true);
+
+
     }
 }

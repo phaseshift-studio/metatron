@@ -5,6 +5,7 @@ import studio.phaseshift.metatron.lang.core.m.type.Obj;
 import studio.phaseshift.metatron.lang.core.m.type.Rec;
 import studio.phaseshift.metatron.lang.core.m.type.Rel;
 import studio.phaseshift.metatron.lang.core.m.type.facade.FRec;
+import studio.phaseshift.metatron.lang.core.m.type.impl.MRec;
 
 import java.util.stream.Stream;
 
@@ -28,9 +29,7 @@ public class RElement extends FRec {
     }
 
     public RElement property(final fURI key, final Obj value) {
-        final Rec props = this.at(PROPS).isNoObj() ? rec() : this.jvm().get(uri(PROPS)).as();
-        props.jvm().put(uri(key), value);
-        this.jvm().put(uri(PROPS), props);
+        this.put(uri(PROPS), this.at(uri(PROPS)).orSupply(MRec::rec).put(uri(key), value), MUTABLE);
         return this;
     }
 

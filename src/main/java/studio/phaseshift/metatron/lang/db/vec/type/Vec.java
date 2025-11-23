@@ -18,11 +18,19 @@
 
 package studio.phaseshift.metatron.lang.db.vec.type;
 
+import studio.phaseshift.metatron.lang.core.m.type.Obj;
 import studio.phaseshift.metatron.lang.core.m.type.Poly;
+
+import java.util.Vector;
+import java.util.function.BiFunction;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public interface Vec extends Poly {
+public interface Vec extends Poly<Vec, Vector<?>> {
 
+    @Override
+    default Vec at(final Obj key, final Obj value, final BiFunction<Poly<?, ?>, Object, Poly<?, ?>> operation) {
+        return this;
+    }
 }

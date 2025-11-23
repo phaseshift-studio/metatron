@@ -22,12 +22,12 @@ package studio.phaseshift.metatron.lang.core.m.type;
 import studio.phaseshift.metatron.algebra.PlusMonoid;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.core.m.obj.NoObj;
-import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.Tuple;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.function.BiFunction;
 import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MObjs.objs;
@@ -35,7 +35,7 @@ import static studio.phaseshift.metatron.lang.core.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
 
-public interface Rec extends Poly, PlusMonoid.O<Rec> {
+public interface Rec extends Poly<Rec, Map<Obj, Obj>>, PlusMonoid.O<Rec> {
 
     @Override
     default Stream<Rel> indexedStream() {
@@ -68,14 +68,8 @@ public interface Rec extends Poly, PlusMonoid.O<Rec> {
         return this.clone(jvm, this.tid(), this.vid());
     }
 
-    default Rec at(final Obj key, final Obj value) {
-        final Map<Obj, Obj> newMap = new LinkedHashMap<>();
-        newMap.putAll(this.recValue());
-        if (value.isNoObj())
-            newMap.remove(key);
-        else
-            newMap.put(key, value);
-        return this.clone(newMap, this.tid(), this.vid());
+    default Rec at(final Obj key, final Obj value, final BiFunction<Poly<?,?>, Object, Poly<?,?>> operation) {
+        return this.put(key, value, operation);
     }
 
     @Override
@@ -119,6 +113,10 @@ public interface Rec extends Poly, PlusMonoid.O<Rec> {
     }
 
     default Rec put(final Obj key, final Obj value) {
+        return this.put(key, value, (BiFunction) IMMUTABLE);
+    }
+
+    default Rec put(final Obj key, final Obj value, final BiFunction<Poly<?,?>, Object, Poly<?,?>> operation) {
         final fURI k = key.uriValue();
         if (k.segments().isEmpty())
             return this;
@@ -126,8 +124,8 @@ public interface Rec extends Poly, PlusMonoid.O<Rec> {
         map.compute(uri(k.segments().get(0)), (k1, v) ->
                 k.segments().size() == 1 ?
                         (null != v && v.isObjs() ? v.append(value) : value) :
-                        (null != v && v.isRec() ? v.<Rec>as() : rec()).put(k.pretract().toUri(), value));
-        return this.jvm(map);
+                        (null != v && v.isRec() ? v.<Rec>as() : rec()).put(k.pretract().toUri(), value, operation));
+        return (Rec) operation.apply(this, map);
     }
 
     @Override
@@ -168,4 +166,7 @@ public interface Rec extends Poly, PlusMonoid.O<Rec> {
             return obj;
         return objs(this, obj);
     }
+
+    @Override
+    Rec self(final Object jvm, final fURI tid, final fURI vid);
 }

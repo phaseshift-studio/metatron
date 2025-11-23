@@ -158,7 +158,7 @@ public interface Space extends Rec, Closeable {
             }
         }
 
-        public static Map<fURI, Obj> unrollPoly(final Map<fURI, Obj> result, final fURI polyvid, final Poly poly, final fURI pattern) {
+        public static Map<fURI, Obj> unrollPoly(final Map<fURI, Obj> result, final fURI polyvid, final Poly<?,?> poly, final fURI pattern) {
             poly.indexedStream()
                     .filter(r -> r.second().isPoly() || polyvid.extend(f(r.first().jvm().toString())).matches(pattern))
                     .forEach(r -> {
@@ -238,7 +238,7 @@ public interface Space extends Rec, Closeable {
                         return directWriter.apply(vid, obj);
                     }
                 } else if (base.get1().isLst()) {
-                    Lst newLst = base.get1().<Lst>as().at(uri(vid.removePrefix(base.get0()).pretract()), obj);
+                    Lst newLst = base.get1().<Lst>as().at(uri(vid.removePrefix(base.get0()).pretract()), obj, Lst.IMMUTABLE);
                     Helper.resolveWrite(space, vid, newLst, directWriter, directReader);
                 }
             }

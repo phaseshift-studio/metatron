@@ -24,10 +24,8 @@ import studio.phaseshift.metatron.algebra.Ring;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.core.m.type.facade.FObj;
-import studio.phaseshift.metatron.lang.core.m.type.impl.MObj;
 import studio.phaseshift.metatron.lang.sys.router.Router;
 import studio.phaseshift.metatron.ui.Graphitty;
-import studio.phaseshift.metatron.ui.GraphittyLogger;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Streamable;
@@ -282,6 +280,10 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
         return this.isNoObj() ? other : (O) this;
     }
 
+    default <O extends Obj> O orSupply(final Supplier<O> other) {
+        return this.isNoObj() ? other.get() : (O) this;
+    }
+
     default <O extends Obj> O orElseThrow(final RuntimeException e) {
         if (this.isNoObj())
             throw e;
@@ -498,9 +500,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
 
     Obj clone();
 
-    default void mutateSelf(final Object jvm, final fURI tid, final fURI vid) {
-
-    }
+    <O extends Obj> O self(final Object jvm, final fURI tid, final fURI vid);
 
     class Helper {
 
@@ -533,7 +533,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
             if (null != obj.vid() && !obj.isType())
                 Router.writeToSpace(obj);
         }
-
+       
         public static <O extends Obj> O objClone(final Obj obj, final Object jvm, final fURI tid, final fURI vid) {
             Object realjvm = jvm;
             Obj clone = null;
@@ -551,7 +551,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
             if (!Objects.equals(realjvm, obj.jvm()) || !tid.equals(obj.tid()) || !Objects.equals(vid, obj.vid())) {
                 try {
                     clone = null == clone ? obj.clone() : clone;
-                    clone.mutateSelf(realjvm, tid, vid);
+                    clone.self(realjvm, tid, vid);
                     Obj.Helper.objCheckAndSave(clone);
                     return (O) clone;
                 } catch (final Exception e) {

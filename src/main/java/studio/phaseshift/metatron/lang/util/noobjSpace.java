@@ -133,7 +133,12 @@ public final class noobjSpace implements Space, InstSet {
     }
 
     @Override
-    public Rec plus(Rec objs) {
-        return null;
+    public Rec plus(final Rec objs) {
+        return this;
+    }
+
+    @Override
+    public Rec self(final Object jvm, final fURI tid, final fURI vid) {
+        return this;
     }
 }

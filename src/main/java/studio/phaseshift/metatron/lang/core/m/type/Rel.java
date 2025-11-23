@@ -20,12 +20,14 @@ package studio.phaseshift.metatron.lang.core.m.type;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.core.m.obj.NoObj;
+import studio.phaseshift.metatron.util.Tuple;
 
+import java.util.function.BiFunction;
 import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.util.Tuple.Pair;
 
-public interface Rel extends Poly, Obj {
+public interface Rel extends Poly<Rel, Tuple.Pair<Obj,Obj>>, Obj {
 
     @Override
     Rel clone(final Object jvm, final fURI tid, final fURI vid);
@@ -62,6 +64,11 @@ public interface Rel extends Poly, Obj {
         return (O) (this.first().matches(key) ? this.second() : NoObj.noobj());
     }
 
+    @Override
+    default Rel at(final Obj first, final Obj second, final BiFunction operation) {
+        return (Rel) operation.apply(this, Pair.with(first,second));
+    }
+    
     @Override
     default <O extends Obj> Stream<O> elements() {
         return Stream.of(this.first().c(c -> c.mult(this.c())).as(), this.second().c(c -> c.mult(this.c())).as());

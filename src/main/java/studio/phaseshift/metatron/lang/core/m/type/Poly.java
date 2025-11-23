@@ -18,12 +18,18 @@
 
 package studio.phaseshift.metatron.lang.core.m.type;
 
+import java.util.Map;
+import java.util.function.BiFunction;
 import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
 
-public interface Poly extends Obj {
+public interface Poly<P extends Poly<P, J>, J> extends Obj {
+
+    BiFunction<Poly<?, ?>, Object, Poly<?, ?>> MUTABLE = (poly, jvm) -> poly.self(jvm, poly.tid(), poly.vid());
+
+    BiFunction<Poly<?, ?>, Object, Poly<?, ?>> IMMUTABLE = (poly, jvm) -> poly.clone(jvm, poly.tid(), poly.vid());
 
     long count();
 
@@ -35,9 +41,12 @@ public interface Poly extends Obj {
 
     <O extends Obj> O at(final Obj key);
 
-    default Poly at(final Obj key, final Obj value) {
-        return this;
+    default P at(final Obj key, final Obj value) {
+        return this.at(key, value, IMMUTABLE);
     }
+
+
+    P at(final Obj key, final Obj value, final BiFunction<Poly<?, ?>, Object, Poly<?, ?>> operation);
 
     default boolean has(final Obj key) {
         return !this.at(key).isNoObj();

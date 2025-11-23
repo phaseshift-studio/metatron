@@ -34,8 +34,7 @@ import studio.phaseshift.metatron.ui.GraphittyLogger;
 
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.fail;
+import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
@@ -50,7 +49,7 @@ public class MetatronTest {
         mInstSet.create().vid(f("/mnt/lang/m"));
         machInstSet.create().vid(f("/mnt/lang/mach"));
         vecInstSet.create().vid(f("/mnt/lang/mvec"));
-        kvSpace.of(f("/usr/#"),fURI.NULL).vid(f("/mnt/usr"));
+        kvSpace.of(f("/usr/#"), fURI.NULL).vid(f("/mnt/usr"));
     }
 
     public void testMatches(final String lhs, final String rhs, final boolean matches) {
@@ -70,6 +69,15 @@ public class MetatronTest {
         assertEquals(ex, actual);
     }
 
+
+    public void testEquals(final Obj a, final Obj b, final boolean equals) {
+        LOG.debug("testing %s == %s [expected:%s]", a, b, equals);
+        if (equals)
+            assertEquals(a, b);
+        else
+            assertNotEquals(a, b);
+    }
+
     public void testSpace(final String stateCode, final String mutationCode, final Map<fURI, String> expected) {
         final Obj stateResult = mParser.eval(stateCode);
         final Obj mutationResult = mParser.eval(mutationCode);
@@ -81,7 +89,7 @@ public class MetatronTest {
             assertEquals(desired, actual);
         });
     }
-    
+
     public void testCode(final String code, final String expected) {
         if (expected.trim().equals("<ERROR>")) {
             try {

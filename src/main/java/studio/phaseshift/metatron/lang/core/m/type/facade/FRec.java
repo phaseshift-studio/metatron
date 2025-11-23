@@ -31,6 +31,11 @@ public class FRec extends FObj<Rec> implements Rec {
     }
 
     @Override
+    public FRec self(final Object jvm, final fURI tid, final fURI vid) {
+        return (FRec) super.self(jvm, tid, vid);
+    }
+
+    @Override
     public Map<Obj, Obj> jvm() {
         return this.base.jvm();
     }
@@ -38,7 +43,7 @@ public class FRec extends FObj<Rec> implements Rec {
     public Rec vid(final fURI vid) {
         return super.vid(vid).as();
     }
-    
+
     public Rec tid(final fURI tid) {
         return super.tid(tid).as();
     }

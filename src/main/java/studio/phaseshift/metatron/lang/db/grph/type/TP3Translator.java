@@ -65,6 +65,18 @@ public record TP3Translator(Builder builder) implements Translator<Obj, Graph> {
                     .tid(VERTEX_TID)
                     .vid(this.builder.root.extend("V").extend(tpV.id().toString()))));
         });
+        /*
+              graph.edges().forEachRemaining(tpE -> {
+            Router.writeToSpace(Router.readFromSpace(this.builder.root.extend("V").extend(tpE.outVertex().id().toString()))
+                    .stream()
+                    .map(v -> v.as(RVertex.class))
+                    .map(v -> {
+                        v.edge(tpE.label(), this.builder.root.extend("V").extend(tpE.inVertex().id().toString()),
+                                IteratorUtil.stream(tpE.properties()).map(p -> rel(uri(p.key()), MObjFactory.of().create(p.value()))).collect(new Common.RecCollector()));
+                        return v;
+                    }).iterator().next());
+        });
+         */
         return Router.readFromSpace(this.builder.root.extend("+"));
     }
 

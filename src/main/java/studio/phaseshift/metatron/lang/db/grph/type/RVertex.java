@@ -11,6 +11,7 @@ import studio.phaseshift.metatron.lang.sys.router.Router;
 import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.lang.db.grph.type.TP3Translator.LABEL;
 
@@ -34,6 +35,21 @@ public class RVertex extends RElement {
 
     public String toString() {
         return "{{b}}v{{g}}" + (this.tid().cV().isOne() ? "" : ("{{{y}}" + this.tid().c() + "{{g}}}")) + "[{{y}}" + this.vid() + "{{g}}]{{X}}";
+    }
+
+    public REdge edge(final String label, final fURI inVertex, final Rec props) {
+        final REdge e = REdge.of(label, this.vid, inVertex, props.elements().flatMap(rel -> Stream.of(rel.first(), rel.second())).toArray());
+        this.at(Direction.OUT.name())
+                .orSupply(() -> (Rec) this.put(uri(Direction.OUT.name()), rec(), MUTABLE).at(uri(Direction.OUT.name())))
+                .at(uri(label))
+                .orSupply(() -> this.put(uri(label), rec(), MUTABLE).at(uri(label)))
+                .append(e);
+        Router.readFromSpace(inVertex).<Rec>as().at(Direction.IN.name())
+                .orSupply(() -> (Rec) this.put(uri(Direction.IN.name()), rec(), MUTABLE).at(uri(Direction.IN.name())))
+                .at(uri(label))
+                .orSupply(() -> this.put(uri(label), rec(), MUTABLE).at(uri(label)))
+                .append(e);
+        return e;
     }
 
     public Stream<REdge> edges(final Direction direction, final Lst labels) {

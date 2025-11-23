@@ -18,15 +18,9 @@
 
 package studio.phaseshift.metatron.lang.core.m.type.impl;
 
-import io.reactivex.internal.functions.ObjectHelper;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.lang.sys.router.Router;
-import studio.phaseshift.metatron.lang.core.m.type.Fail;
 import studio.phaseshift.metatron.lang.core.m.type.Obj;
-import studio.phaseshift.metatron.lang.core.m.type.Type;
 import studio.phaseshift.metatron.util.MTronException;
-
-import java.util.Objects;
 
 public abstract class MObj implements Obj, Cloneable {
 
@@ -40,7 +34,7 @@ public abstract class MObj implements Obj, Cloneable {
 
     public MObj(final Object jvm, final fURI tid, final fURI vid) {
         assert null != tid;
-        this.mutateSelf(jvm,tid.big(),vid);
+        this.self(jvm,tid.big(),vid);
         Obj.Helper.objCheckAndSave(this);
     }
 
@@ -109,9 +103,10 @@ public abstract class MObj implements Obj, Cloneable {
     }
 
     @Override
-    public void mutateSelf(final Object jvm, final fURI tid, final fURI vid) {
+    public <O extends Obj> O self(final Object jvm, final fURI tid, final fURI vid) {
         this.jvm = jvm;
         this.tid = tid;
         this.vid = vid;
+        return (O) this;
     }
 }

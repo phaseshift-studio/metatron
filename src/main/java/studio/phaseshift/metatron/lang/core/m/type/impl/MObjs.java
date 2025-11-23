@@ -1,6 +1,6 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
- * Copyright (C) 2025- PhaseShift Studio, LLC 
+ * Copyright (C) 2025- PhaseShift Studio, LLC
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -34,7 +34,7 @@ import java.util.stream.Stream;
 
 public class MObjs implements Objs {
 
-    private final Map<Obj, cInt> cstream; // <obj{1}, coeff{+}>
+    private Map<Obj, cInt> cstream; // <obj{1}, coeff{+}>
     private fURI vid;
 
     public MObjs(final Iterable<Obj> jvm) {
@@ -86,7 +86,7 @@ public class MObjs implements Objs {
     public static Obj objs(final Stream<Obj> objs) {
         return MObjs.objs(objs.toList());
     }
-    
+
     @Override
     public Obj resolve(final Obj obj) {
         return objs(flatten(this).map(o -> o.resolve(obj)));
@@ -294,5 +294,12 @@ public class MObjs implements Objs {
             throw MTronException.of(e);
         }*/
         return (Objs) this.clone(this.jvm(), this.tid(), this.vid);
+    }
+
+    @Override
+    public Objs self(final Object jvm,final fURI tid, final fURI vid) {
+        this.cstream = flattenToMap(new LinkedHashMap<>(), (Iterable<Obj>) jvm);
+        this.vid = vid;
+        return this;
     }
 }

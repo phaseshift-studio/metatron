@@ -109,6 +109,11 @@ public final class NoObj implements Obj, Inst {
     }
 
     @Override
+    public NoObj self(Object jvm, fURI tid, fURI vid) {
+        return this;
+    }
+
+    @Override
     public cInt uniqueC() {
         return cInt.of(0L);
     }

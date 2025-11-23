@@ -20,8 +20,10 @@ package studio.phaseshift.metatron.lang.core.m.type.impl;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.core.m.type.Obj;
+import studio.phaseshift.metatron.lang.core.m.type.Poly;
 import studio.phaseshift.metatron.lang.core.m.type.Rel;
 
+import java.util.function.BiFunction;
 import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.REL_TID;
@@ -59,6 +61,7 @@ public class MRel extends MObj implements Rel {
     public Pair<Obj, Obj> jvm() {
         return (Pair<Obj, Obj>) this.jvm;
     }
+    
 
     public Stream<Rel> indexedStream() {
         return Stream.of(this);

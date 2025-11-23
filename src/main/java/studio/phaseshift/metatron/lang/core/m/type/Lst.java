@@ -28,6 +28,7 @@ import studio.phaseshift.metatron.util.MTronException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
@@ -38,7 +39,7 @@ import static studio.phaseshift.metatron.lang.core.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
 
-public interface Lst extends Poly, PlusMonoid.O<Lst> {
+public interface Lst extends Poly<Lst, List<Obj>>, PlusMonoid.O<Lst> {
 
     @Override
     default Stream<Rel> indexedStream() {
@@ -58,23 +59,20 @@ public interface Lst extends Poly, PlusMonoid.O<Lst> {
     }
 
     default Lst add(final Obj obj) {
-        final ArrayList<Obj> newList = new ArrayList<>(this.lstValue());
-        newList.add(obj);
-        return this.jvm(newList);
+        return this.add(obj, IMMUTABLE);
     }
 
-    default Lst addMutate(final Obj obj) {
+    default Lst add(final Obj obj, final BiFunction<Poly<?, ?>, Object, Poly<?, ?>> operation) {
         final ArrayList<Obj> newList = new ArrayList<>(this.lstValue());
         newList.add(obj);
-        this.mutateSelf(newList, this.tid(), this.vid());
-        return this;
+        return (Lst) operation.apply(this, newList);
     }
 
     default <O extends Obj> Stream<O> elements() {
         return (Stream) IteratorUtil.stream(this.jvm()).map(e -> e.c(c -> c.mult(this.c())));
     }
 
-    default Lst at(final Obj key, final Obj value) {
+    default Lst at(final Obj key, final Obj value, final BiFunction operation) {
         if (key.isInt()) {
             final ArrayList<Obj> newList = new ArrayList<>(this.lstValue());
             if (value.isNoObj())
@@ -85,11 +83,13 @@ public interface Lst extends Poly, PlusMonoid.O<Lst> {
         } else if (key.isUri()) {
             final Int k = jnt(Long.parseLong(key.uriValue().segments().get(0)));
             if (key.uriValue().segments().size() == 1) {
-                return this.at(k, value);
+                return this.at(k, value, operation);
             } else {
                 final Obj v = this.jvm().get(k.intValue().intValue());
-                if (v.isPoly()) {
-                    return this.at(k, v.<Poly>as().at(uri(key.<Uri>as().uriValue().pretract()), value));
+                if (v.isLst()) {
+                    return this.at(k, v.<Lst>as().at(uri(key.<Uri>as().uriValue().pretract()), value, operation), operation).as();
+                } else if (v.isRec()) {
+                    return this.at(k, v.<Rec>as().at(uri(key.<Uri>as().uriValue().pretract()), value, operation), operation).as();
                 } else {
                     throw MTronException.of("unknown key value for lst: %s => %s", key, value);
                 }

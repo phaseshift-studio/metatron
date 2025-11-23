@@ -106,6 +106,11 @@ public class MRec extends MObj implements Rec {
     }
 
     @Override
+    public Rec self(final Object jvm, final fURI tid, final fURI vid) {
+        return super.self(jvm, tid, vid);
+    }
+    
+    @Override
     public Map<Obj, Obj> jvm() {
         return (Map<Obj, Obj>) this.jvm;
     }

@@ -208,6 +208,11 @@ public class BootLoader implements Rec, Feature.SelfClone {
     }
 
     @Override
+    public Rec self(final Object jvm, final fURI tid, final fURI vid) {
+        return this;
+    }
+
+    @Override
     public fURI tid() {
         return f(Tokens.BOOT);
     }
@@ -226,4 +231,5 @@ public class BootLoader implements Rec, Feature.SelfClone {
     public Obj clone() {
         return Feature.SelfClone.super.clone();
     }
+    
 }
