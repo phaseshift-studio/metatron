@@ -30,6 +30,7 @@ import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
 
+import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
@@ -329,8 +330,8 @@ public class mInstSet extends MInstSet {
                         "noobj", "initial objs", Map.of(jnt(0), "initial objs"), "the initial function f()->x"),
                 docWrap(instC(END_TID.dom(ALL_STAR).rng(NOOBJ_TID.zero()), lst(), (lhs, inst) -> noobj()),
                         "terminal objs", "noobj", Map.of(), "the terminal function f(x)->0"),
-                docWrap(instC(PRINT_TID.dom(ALL).rng(ALL), lst(T(ALL_STAR)), (lhs, inst) -> inst.args().elements().peek(o -> LOG.none("%s\n", o)).filter(a -> false).findAny().orElse(lhs)),
-                        "the rhs obj", "the lhs obj", Map.of(jnt(0), "the obj to write to stdout"), "a side-effect function f(x)-|>x"),
+                docWrap(instC(PRINT_TID.dom(ALL).rng(ALL), lst(T(ALL_STAR)), (lhs, inst) -> inst.args().elements().peek(o -> LOG.none("%s", o.isStr() ? o.strValue() : o)).filter(a -> false).findAny().orElse(lhs).stream().peek(o -> LOG.none("\n")).iterator().next()),
+                        "the rhs obj", "the lhs obj", Map.of(jnt(0), "concatenated args followed by newline written to stdout"), "a side-effect function f(x)-|>x"),
                 instC(AT_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(T(URI_TID)), (lhs, inst) -> lhs.isNoObj() ? Router.readFromSpace(inst.arg(0).uriValue()).vid(inst.arg(0).uriValue()) : lhs.vid(inst.arg(0).uriValue())),
                 instC(HAS_TID.dom(REC_TID).rng(REC_TID.maybe()), lst(T(ALL)), (lhs, inst) -> inst.arg(0).isRel() ?
                         (lhs.<Rec>as().elements().anyMatch(r -> r.matches(inst.arg(0))) ? lhs : noobj()) :
@@ -364,9 +365,12 @@ public class mInstSet extends MInstSet {
                 instC(FILTER_TID.dom(A).rng(A.maybe()), lst(T(ALL.maybe())), (lhs, inst) -> inst.arg(0).isNoObj() ? noobj() : lhs),
                 instC(SIDE_TID.dom(A).rng(A), lst(T(ALL)), (lhs, inst) -> Optional.of(inst.arg(0).apply(lhs)).map(x -> (Obj) null).orElse(lhs)),
                 instC(MAP_TID.dom(ALL).rng(ALL.maybe()), lst(T(ALL)), (lhs, inst) -> inst.arg(0)),
-                instC(TID_TID.dom(ALL).rng(URI_TID), lst(), (lhs, inst) -> lhs.tid().toUri()),
-                instC(VID_TID.dom(ALL).rng(ALL), lst(T(URI_TID)), (lhs, inst) -> lhs.vid(inst.arg(0).uriValue())),
-                instC(VID_TID.dom(ALL).rng(URI_TID.maybe()), lst(), (lhs, inst) -> null == lhs.vid() ? noobj() : lhs.vid().toUri()),
+                docWrap(instC(TID_TID.dom(ALL).rng(URI_TID), lst(), (lhs, inst) -> lhs.tid().toUri()),
+                        "any obj", "the lhs obj type id", Map.of(), "the geometric location of the lhs obj [equivalent to f(x) ~ vid(type())]"),
+                docWrap(instC(VID_TID.dom(A).rng(A), lst(T(URI_TID)), (lhs, inst) -> lhs.vid(inst.arg(0).uriValue())),
+                        "any obj", "a spatial location for the lhs obj", Map.of(jnt(0), "the value id for the lhs obj"), "specifies the spatial location of the lhs obj"),
+                docWrap(instC(VID_TID.dom(ALL).rng(URI_TID.maybe()), lst(), (lhs, inst) -> null == lhs.vid() ? noobj() : lhs.vid().toUri()),
+                        "any obj", "the lhs obj value id", Map.of(), "the spatial location of the lhs obj"),
                 docWrap(instC(ELSE_TID.dom(ALL.maybe()).rng(ALL), lst(T(ALL.maybe())), (lhs, inst) -> lhs.isNoObj() ? inst.arg(0) : lhs),
                         "maybe an obj", "the lhs obj else the arg obj", Map.of(jnt(0), "the rhs obj is the lhs is noobj"), "f(lhs)->lhs if lhs is an obj, else f(noobj)->arg"),// TODO: rec args needs resolution on generics connected
                 docWrap(instC(IS_TID.dom(ALL.maybe()).rng(ALL.maybe()), lst(T(ALL)), (lhs, inst) -> inst.arg(0).boolValue() ? lhs : noobj()),
@@ -432,12 +436,14 @@ public class mInstSet extends MInstSet {
                 instC(RNG_TID.dom(REL_TID).rng(ALL.some()), lst(), (lhs, inst) -> lhs.relValue().get1()),
                 instC(DOM_TID.dom(REC_TID).rng(ALL_STAR), lst(), (lhs, inst) -> objs(lhs.recValue().keySet())),
                 instC(RNG_TID.dom(REC_TID).rng(ALL_STAR), lst(), (lhs, inst) -> objs(lhs.recValue().values())),
+                instC(LSHIFT_TID.dom(BYTES_TID).rng(BYTES_TID), lst(T(BYTES_TID.maybe())), (lhs, inst) -> lhs.<Bytes>as().shift(inst.arg(0).orElse(MBytes.bytes(ByteBuffer.wrap(new byte[]{0}))).c(cInt::neg).as())),
+                instC(RSHIFT_TID.dom(BYTES_TID).rng(BYTES_TID), lst(T(BYTES_TID.maybe())), (lhs, inst) -> lhs.<Bytes>as().shift(inst.arg(0).orElse(MBytes.bytes(ByteBuffer.wrap(new byte[]{0}))).as())),
                 instC(LSHIFT_TID.dom(REL_TID).rng(ALL_STAR), lst(), (lhs, inst) -> lhs.<Rel>as().first()),
                 instC(RSHIFT_TID.dom(REL_TID).rng(ALL_STAR), lst(), (lhs, inst) -> lhs.<Rel>as().second()),
                 instC(LSHIFT_TID.dom(REC_TID).rng(ALL_STAR), lst(), (lhs, inst) -> objs(lhs.<Rec>as().elements().map(Rel::first))),
                 instC(RSHIFT_TID.dom(REC_TID).rng(ALL_STAR), lst(), (lhs, inst) -> objs(lhs.<Rec>as().elements().map(Rel::second))),
-                instC(RSHIFT_TID.dom(URI_TID).rng(URI_TID), lst(T(INT_TID.maybe())), (lhs, inst) -> uri(lhs.uriValue().pretract(inst.arg(0).orElse(jnt(1)).intValue().intValue()))),
-                instC(LSHIFT_TID.dom(URI_TID).rng(URI_TID), lst(T(INT_TID.maybe())), (lhs, inst) -> uri(lhs.uriValue().retract(inst.arg(0).orElse(jnt(1)).intValue().intValue()))),
+                instC(RSHIFT_TID.dom(URI_TID).rng(URI_TID), lst(T(INT_TID.maybe())), (lhs, inst) -> uri(lhs.uriValue().retract(inst.arg(0).orElse(jnt(1)).intValue().intValue()))),
+                instC(LSHIFT_TID.dom(URI_TID).rng(URI_TID), lst(T(INT_TID.maybe())), (lhs, inst) -> uri(lhs.uriValue().pretract(inst.arg(0).orElse(jnt(1)).intValue().intValue()))),
                 instC(RSHIFT_TID.dom(REC_TID).rng(ALL_STAR), lst(), (lhs, inst) -> objs(lhs.recValue().values())),
                 instC(LSHIFT_TID.dom(REC_TID).rng(ALL_STAR), lst(), (lhs, inst) -> objs(lhs.recValue().keySet())),
                 /// ///////////////////////////////////////////////////////////////////////////////////////////////////

@@ -22,6 +22,7 @@ import studio.phaseshift.metatron.Registry;
 import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.core.m.type.Rec;
+import studio.phaseshift.metatron.lang.core.m.type.Rel;
 import studio.phaseshift.metatron.lang.core.m.type.Uri;
 import studio.phaseshift.metatron.lang.util.noobjSpace;
 import studio.phaseshift.metatron.lang.core.mach.stackSpace;
@@ -68,11 +69,6 @@ public class MRouter extends MSpace<MServer> implements Router {
         LOG.info("available serializers: %s", SERIALIZERS.getSerializers().jvm().keySet());
     }
 
-
-    private static Obj appendOnRead(final boolean send, final Obj base, final Obj addition) {
-        return addition.isNoObj() ? base : (send ? base.append(rel(addition.vid().toUri(), addition)) : base.append(addition));
-    }
-
     @Override
     public MServer server() {
         return this.sjvm();
@@ -89,7 +85,7 @@ public class MRouter extends MSpace<MServer> implements Router {
     }
 
     public synchronized void close() {
-        final List<fURI> list = this.spaces().jvm().values().stream().map(Obj::vid).toList();
+        final List<fURI> list = this.spaces().elements().map(Rel::second).map(Obj::vid).toList();
         list.forEach(this::removeSpace);
         this.server().stop();
 
@@ -131,14 +127,15 @@ public class MRouter extends MSpace<MServer> implements Router {
 
     @Override
     public void addSpace(final Space space) {
-        this.spaces().jvm().values().stream()
+        this.spaces()
+                .elements()
+                .map(Rel::second)
                 .map(Obj::<Space>as)
                 .filter(s -> space.pattern().bimatches(s.pattern()))
                 .findAny()
                 .ifPresent(s -> {
                     LOG.error("%s and %s have overlapping address spaces: %s <=> %s", space.pattern(), s.pattern(), space, s);
                 });
-
         this.spaces().jvm().put(null == space.vid() ? space.pattern().toUri() : space.vid().toUri(), space);
         Space.Helper.spaceOpenLog(this, space);
 
@@ -147,7 +144,7 @@ public class MRouter extends MSpace<MServer> implements Router {
 
     @Override
     public void removeSpace(final fURI vid) {
-        this.spaces().jvm().values().stream().map(Obj::<Space>as).filter(s -> Objects.equals(vid, s.vid())).forEach(s -> {
+        this.spaces().elements().map(Rel::second).map(Obj::<Space>as).filter(s -> Objects.equals(vid, s.vid())).forEach(s -> {
             try {
                 if (null != s.vid()) {
                     final Space space = (Space) this.spaces().jvm().remove(s.vid().toUri());
@@ -165,7 +162,7 @@ public class MRouter extends MSpace<MServer> implements Router {
         if (match.matches(fURI.NOOBJ))
             return noobjSpace.single();
         //     final fURI mvid = this.smallToBigRewrites.getOrDefault(vid,vid);
-        final Optional<S> space = this.spaces().jvm().values().stream()
+        final Optional<S> space = this.spaces().jvm().values().stream() // using jvm() for speed (given the heavy use of this method)
                 .map(Obj::<Space>as)
                 .filter(s -> s.status().equals(Status.active))
                 .filter(s -> match.basePath().matches(s.pattern()))
@@ -185,6 +182,8 @@ public class MRouter extends MSpace<MServer> implements Router {
 
     @Override
     public Obj read(final fURI vid) {
+        //if (vid.matches(this.vid.extend("space/#")))
+        //    return this.at(vid.toUri());
         // if (vid.hasAuthority()) {
         //     return objs(this.server.cluster(vid.authority()).map(v -> v.sendRecvObj(from_(uri(vid.authority(null).scheme(null))))));
         // }
@@ -197,11 +196,11 @@ public class MRouter extends MSpace<MServer> implements Router {
             }).reduce(NoObj.single(), Obj::append);
         } else {*/
         final fURI local = vid;//.authority(null).scheme(null);
-       if(local.matches(f("+/#"))) {
-           final Obj stack = Router.stack().read(local.basePath());
-           if (!stack.isNoObj())
-               return stack;
-       }
+        if (local.matches(f("+/#"))) {
+            final Obj stack = Router.stack().read(local.basePath());
+            if (!stack.isNoObj())
+                return stack;
+        }
         final Space space = this.getSpace(local);
         //if (null != space.vid() && !space.vid().segments().isEmpty())
         //    LOG.trace("reading {{b}}%s{{/b}} from {{b}}%s{{/b}}", vid, space.vid());
@@ -237,7 +236,7 @@ public class MRouter extends MSpace<MServer> implements Router {
 
     @Override
     public MRouter apply(final Obj other) {
-        return null;
+        return this;
     }
 
     @Override
@@ -255,13 +254,17 @@ public class MRouter extends MSpace<MServer> implements Router {
     }
 
     @Override
-    public Router vid(final fURI vid) {
-        this.vid = vid;
-        return this;
+    public boolean equals(final Object other) {
+        return Space.Helper.spaceEquals(this, other);
+    }
+
+    @Override
+    public int hashCode() {
+        return Space.Helper.spaceHashCode(this);
     }
 
     @Override
     public String toString() {
-        return Router.Helpers.routerToString(this);
+        return Router.Helper.routerToString(this);
     }
 }

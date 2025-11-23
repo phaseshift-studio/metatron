@@ -45,7 +45,7 @@ import static studio.phaseshift.metatron.lang.core.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.util.Tuple.Pair;
 
-public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>, Feature.Logging, Cloneable {
+public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>, Feature.HasLogger, Cloneable {
 
     private static boolean typeInferenceMatch(final Obj lhs, final Type rhs) {
         if (lhs.tid().matches(rhs.tid()))

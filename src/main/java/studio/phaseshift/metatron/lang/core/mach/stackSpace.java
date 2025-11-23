@@ -80,8 +80,8 @@ public Obj write(final fURI vid, final Obj obj) {
     LOG.trace("writing %s to %s in %s [{{y}}root{{/y}}: %s]", obj, vid, this.sjvm, this.root.jvm());
     // if (obj.isUri() && obj.uriValue().equals(vid))
     //    return obj;
-    //if (!this.sjvm().isEmpty())
-    //    this.sjvm().get(0).<Poly>as().at(vid.toUri(), obj);
+    if (!this.sjvm().isEmpty())
+       this.sjvm().get(0).<Poly>as().at(vid.toUri(), obj);
     // else
     this.root.write(vid, obj);
     return obj;

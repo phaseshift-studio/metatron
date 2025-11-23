@@ -389,4 +389,24 @@ public class mInstSetTest extends MetatronTest {
     public void testSelectWhere(final String code, final String expected) {
         super.testCode(code, expected);
     }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "0x123456<<                                                                                                % 0x345600",
+            "0x123456>>                                                                                                % 0x001234",
+            "0x123456<<0x00                                                                                            % 0x345600",
+            "0x123456>>0x00                                                                                            % 0x001234",
+            "0x123456<<0xaf                                                                                            % 0x3456af",
+            "0x123456>>0xaf                                                                                            % 0xaf1234",
+            "0x123456<<0xaf01                                                                                          % 0x56af01",
+            "0x123456>>0xaf01                                                                                          % 0xaf0112",
+            /// ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+            "a/b/c<<                                                                                                   % b/c",
+            "a/b/c<<2                                                                                                  % c",
+            "a/b/c>>                                                                                                   % a/b",
+            "a/b/c>>2                                                                                                  % a",
+    }, delimiter = '%')
+    public void testShift(final String code, final String expected) {
+        super.testCode(code, expected);
+    }
 }

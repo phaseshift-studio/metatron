@@ -120,11 +120,11 @@ public interface Inst extends Call {
         //return MType.of(range);
     }
 
-    default Poly<?,?> args() {
+    default Poly<?, ?> args() {
         return this.jvm().get0();
     }
 
-    default Inst args(final Poly<?,?> args) {
+    default Inst args(final Poly<?, ?> args) {
         return this.clone(Triplet.with(args, this.f(), this.seed()), this.tid(), this.vid());
     }
 
@@ -158,7 +158,7 @@ public interface Inst extends Call {
     default Obj seed() {
         return null == this.jvm() ? noobj() : this.jvm().get2();
     }
-    
+
     default boolean isResolved() {
         return null != this.f();
     }
@@ -451,8 +451,7 @@ public interface Inst extends Call {
         public static f UNKNOWN = null;
         final Object func;
         private final boolean bi;
-
-
+        
         private f(final BiFunction<Obj, Inst, Obj> func) {
             this.bi = true;
             this.func = func;

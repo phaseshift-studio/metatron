@@ -1,32 +1,32 @@
 [-- metatron example boot --];
 [-- mount instruction sets --];
-/mnt/lang/sys   -> */sys;
-/mnt/lang/kv    -> */kv;
-/mnt/lang/web   -> */web;
-/mnt/lang/grph  -> */grph;
-/mnt/lang/vec   -> */vec;
-/mnt/lang/mach  -> */mach;
-/mnt/lang/llm   -> */llm;
-/mnt/lang/clstr -> */clstr;
+/sys/router/lang/sys   -> */sys;
+/sys/router/lang/kv    -> */kv;
+/sys/router/lang/web   -> */web;
+/sys/router/lang/grph  -> */grph;
+/sys/router/lang/vec   -> */vec;
+/sys/router/lang/mach  -> */mach;
+/sys/router/lang/llm   -> */llm;
+/sys/router/lang/clstr -> */clstr;
 [-- mount spaces --];
-    kv::[pattern => </usr/#>]@/mnt/space/usr;
-    kv::[pattern => /shared/#]@/mnt/space/shared;
+    kv::[pattern => </usr/#>]@/sys/router/space/usr;
+    kv::[pattern => /shared/#]@/sys/router/space/shared;
     web::[host   => <http://localhost:8777>,
          pattern => <http://#>,
          route   => [/     => examples/www,
-                     /docs => target/docs ]]@/mnt/space/web;
+                     /docs => target/docs ]]@/sys/router/space/web;
 ollama::[host    => <http://localhost:11434>,
-         pattern => /ollama/#]@/mnt/space/ollama;
+         pattern => /ollama/#]@/sys/router/space/ollama;
   grph::[pattern => /g/#,
          space   => kv::[pattern => /g/#],
-         load    => <tinkerpop-modern>]@/mnt/space/tp3;
- clstr::[pattern => <ws://#>]@/mnt/space/clstr;
+         load    => <tinkerpop-modern>]@/sys/router/space/tp3;
+ clstr::[pattern => <ws://#>]@/sys/router/space/clstr;
   mqtt::[pattern => /mqtt/zigbee2mqtt/#,
          host    => <mqtt://chibi.local:1883>,
-         prefix  => </mqtt/>]@/mnt/space/mqtt;
- *boot/options.print(_);
- *boot/options/mode.-<|[?=server  => print('server mode'), 
-                        ?=console => print('client mode'), 
-                        _         => print(_,' mode')]
+         prefix  => </mqtt/>]@/sys/router/space/mqtt;
+ *boot/options/mode.-<|[?=server  => print('\n\t{{g}}-<{{c}}server mode{{g}}>-{{X}}'), 
+                        ?=console => print('\n\t{{g}}-<{{c}}client mode{{g}}>-{{X}}'), 
+                        _         => print(_,'\n\t')];
+ *boot/options.print(_)
 
 

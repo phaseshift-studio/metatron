@@ -54,5 +54,20 @@ public interface Bytes extends Mono, PlusMonoid<Bytes> {
         return "0x" + HexFormat.of().formatHex(this.jvm().array());
     }
 
+    default Bytes shift(final Bytes rhs) {
+        final ByteBuffer buffer = ByteBuffer.allocate(this.jvm().capacity());
+        if (rhs.c().isPos()) {
+            buffer.put(rhs.jvm());
+            buffer.put(this.jvm().duplicate().slice(0,this.jvm().capacity() - rhs.jvm().array().length));
+        } else if (rhs.c().isNeg()) {
+            buffer.put(this.jvm().duplicate().position(rhs.bytesValue().remaining()));
+            buffer.put(rhs.jvm());
+        } else {
+            return this;
+        }
+        buffer.flip();
+        return this.jvm(buffer);
+    }
+
 
 }

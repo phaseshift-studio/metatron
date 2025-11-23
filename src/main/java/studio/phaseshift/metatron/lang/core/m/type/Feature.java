@@ -9,14 +9,14 @@ import studio.phaseshift.metatron.ui.GraphittyLogger;
  */
 public interface Feature {
 
-    interface Logging {
+    interface HasLogger {
 
         default GraphittyLogger logger() {
             return Graphitty.log(this);
         }
     }
     
-    interface SelfClone extends Logging {
+    interface SelfClone extends HasLogger {
 
         default <O extends Obj> O clone(final Object jvm, final fURI tid, final fURI vid) {
             this.logger().warn("this obj doesn't support pure cloning");
