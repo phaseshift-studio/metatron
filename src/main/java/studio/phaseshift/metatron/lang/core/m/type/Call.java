@@ -111,7 +111,7 @@ public interface Call extends Obj, Ring<Call> {
 
     @Override
     default boolean isOne() {
-        return this.equals(this.one());
+        return this.tryToInst().equals(this.one());
     }
 
     @Override

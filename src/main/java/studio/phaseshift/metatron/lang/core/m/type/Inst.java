@@ -158,11 +158,7 @@ public interface Inst extends Call {
     default Obj seed() {
         return null == this.jvm() ? noobj() : this.jvm().get2();
     }
-
-    default Resolution resolution() {
-        return null == this.f() /*|| this.tid().isGeneric()*/ ? Resolution.A : Resolution.B;
-    }
-
+    
     default boolean isResolved() {
         return null != this.f();
     }
@@ -184,7 +180,7 @@ public interface Inst extends Call {
         if (null != this.f())
             return this;
         final GraphittyLogger LOG = Graphitty.log(lhs);
-        LOG.trace("%s => %s in resolution state {{m}}%s{{/m}}", lhs, this, this.resolution());
+        LOG.trace("%s => %s is %s resolved", lhs, this, this.isResolved() ? "" : "not");
         try {
             final Inst resolved = Router.global().read(this.tid())
                     .stream()
@@ -211,7 +207,7 @@ public interface Inst extends Call {
                     .findFirst()
                     .orElse(null);
             if (null != resolved) {
-                LOG.trace("resolution ({{m}}%s {{g}}=>{{/g}} %s{{/m}}): %s => %s", this.resolution(), resolved.resolution(), lhs, resolved);
+                LOG.trace("%s => %s is %s resolved", lhs, resolved, resolved.isResolved() ? "" : "not");
                 return resolved;
             }
         } catch (final Exception e) {
@@ -322,20 +318,6 @@ public interface Inst extends Call {
     @Override
     default Inst tid(final fURI tid) {
         return this.clone(this.jvm(), tid, this.vid());
-    }
-
-    public enum Resolution {
-        A("f"), B("f(a)"), C("f(a)->b");
-
-        final String value;
-
-        Resolution(final String value) {
-            this.value = value;
-        }
-
-        public String value() {
-            return this.value;
-        }
     }
 
     final class Helpers {

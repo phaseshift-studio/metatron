@@ -110,7 +110,7 @@ public record ObjStringSerializer(Builder b) implements ObjSerializer<String> {
                         sb.deleteCharAt(sb.length() - 1);
                     }
                     return sb.append("{{g}}){{{y}}")
-                            .append(inst.resolution() == Inst.Resolution.A ? "{{r}}?{{X}}" : ("{{y}}" + inst.f().toString()))
+                            .append(inst.isResolved() ? ("{{y}}" + inst.f().toString()) : "{{r}}?{{X}}")
                             .append("{{g}}}{{X}}")
                             //.append(this.b.ignoreRewrites ? "" : "{{X}}")
                             .toString();
