@@ -21,6 +21,7 @@ package studio.phaseshift.metatron.lang.ai.llm.type.impl;
 import dev.langchain4j.model.ollama.OllamaModel;
 import dev.langchain4j.model.ollama.OllamaModelCard;
 import dev.langchain4j.model.ollama.OllamaModels;
+import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.ai.llm.type.LLM;
 import studio.phaseshift.metatron.lang.core.m.type.Obj;
@@ -41,6 +42,7 @@ import static studio.phaseshift.metatron.Tokens.HOST;
 import static studio.phaseshift.metatron.Tokens.NAME;
 import static studio.phaseshift.metatron.lang.core.m.inst.mFluent.StartLess.*;
 import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.*;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MInst.*;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MObjs.objs;
@@ -55,11 +57,16 @@ public class OLLM extends MRec implements LLM {
 
     public static final fURI OLLM_TID = LLM_TID.extend("ollm");
     public static final String SKILL = "skill";
+    public static final String THINK = "think";
+    public static final String TOOL = "tool";
+    public static final String THINKING = "thinking";
 
     public static Type OLLM_TYPE = T(OLLM_TID, isa_(rec(uri(NAME),
-                    T(URI_TID),
-                    uri(SKILL),
-                    T(LST_TID))),instC(INST_TID.dom(ALL_STAR).rng(OLLM_TID),lst(),
+            T(URI_TID),
+            uri(SKILL),
+            T(LST_TID),
+            uri(THINK).c(cInt::maybe),
+            T(BOOL_TID))), instC(INST_TID.dom(ALL_STAR).rng(OLLM_TID), lst(),
             (lhs, inst) -> {
                 final String modelName = inst.arg(0).<Rec>as().at(uri(NAME)).uriValue().toString();
                 final OllamaModels models = OllamaModels.builder().baseUrl(inst.arg(0).<Rec>as().at(HOST).uriValue().toString()).build();
@@ -78,6 +85,7 @@ public class OLLM extends MRec implements LLM {
     private static Map<Obj, Obj> modelToRec(final Tuple.Pair<OllamaModel, OllamaModelCard> model) {
         return new LinkedHashMap<>() {{
             put(uri(NAME), uri(model.get0().getName()));
+            put(uri(THINK), bool(model.get1().getCapabilities().contains(THINKING)));
             put(uri(SKILL), lst(model.get1().getCapabilities().stream().map(MUri::uri)));
         }};
 

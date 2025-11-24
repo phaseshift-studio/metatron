@@ -23,6 +23,7 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.core.m.parser.mParser;
 import studio.phaseshift.metatron.lang.core.m.type.*;
 
+import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.Palette;
 import studio.phaseshift.metatron.util.MTronException;
 
@@ -241,8 +242,12 @@ public record ObjStringSerializer(Builder b) implements ObjSerializer<String> {
                 sb.append(k.isUri() ? ("{{b}}" + k.uriValue()) : write(k)).append("{{g}}=>");
                 if (v.isRec()) {
                     this.generateRec(sb, v.as(), depth + 1);
-                } else
-                    sb.append(write(v));
+                } else {
+                    if (v.isStr() && v.strValue().length() > b.strClip) {
+                        sb.append(write(v.jvm(v.strValue().substring(0, b.strClip) + Graphitty.sillyPrint("...",true,false))));
+                    } else
+                        sb.append(write(v));
+                }
                 sb.append("{{g}},");
                 if (nested)
                     sb.append("\n");
@@ -300,10 +305,16 @@ public record ObjStringSerializer(Builder b) implements ObjSerializer<String> {
         private Palette palette = Palette.STANDARD;
         private boolean withColonSugar;
         private boolean ignoreRewrites;
+        private int strClip = 50;
         private boolean prettyPrint = true;
         private Set<fURI> hideTypes = new HashSet<>();
 
         private Builder() {
+        }
+
+        public Builder strClip(final int clipSize) {
+            this.strClip = clipSize;
+            return this;
         }
 
         public Builder palette(final Palette palette) {

@@ -104,48 +104,18 @@ public class ollamaSpace extends MSpace<OllamaModels> {
         if (!result.isNoObj())
             return result;
         else {
-            this.sjvm().availableModels().content().stream()
-                    .map(model -> {
-                        final OllamaModelCard card = this.sjvm().modelCard(model.getName()).content();
-                        final OLLM ollm = ollm(Tuple.Pair.with(model, card), OLLM.OLLM_TID, modelToVid(model.getName()));
-                        return Tuple.Pair.with(card, ollm);
-                    })
-                    .filter(pair -> pair.get1().vid().matches(pattern))
-                    .forEach(pair -> {
-                        try {
-                            final Obj gguf = this.internal.read(pair.get1().vid().extend(Tokens.GGUF_KEY));
-                            if (gguf.isNoObj()) {
-                                this.internal.write(pair.get1().vid().extend(Tokens.GGUF_KEY), fail(MTronException.of("temp")));
-                                final String ggufFilePath = Arrays.stream(pair.get0().getModelfile().split("\n"))
-                                        .map(String::trim)
-                                        .filter(line -> line.startsWith(Tokens.FROM))
-                                        .map(line -> line.replace(Tokens.FROM, "").trim())
-                                        .findFirst()
-                                        .orElse(null);
-                                if (ggufFilePath != null) {
-                                    LOG.info("onboarding ollm gguf into space: %s", pair.get1().vid().extend(Tokens.GGUF_KEY));
-                                    GGUF.of(f(ggufFilePath), pair.get1().vid().extend(Tokens.GGUF_KEY))
-                                            .put(uri(SIZE), Common.isInt(pair.get0().getDetails().getParameterSize()) ? jnt(Long.parseLong(pair.get0().getDetails().getParameterSize())) : noobj())
-                                            .put(uri(Tokens.QUANT), uri(pair.get0().getDetails().getQuantizationLevel())).<Rec>as()
-                                            .put(uri(Tokens.FAMILY), uri(pair.get0().getDetails().getFormat())).as();
-                                }
-                            }
-                        } catch (final Exception e) {
-                            LOG.warn(e);
-                            this.internal.write(pair.get1().vid().extend(Tokens.GGUF_KEY), fail(e));
-                        }
-                    });
+            this.findModel(vid);
             final Obj result2 = this.internal.read(vid);
             if (!result2.isNoObj())
                 return result2;
             try {
-                LOG.info("pulling model: %s", vid.removePrefix(this.pattern.retractPattern()).toString());
+                LOG.info("attempting to pull model: {{y}}%s{{X}}", vid.removePrefix(this.pattern.retractPattern()).toString());
                 final String version = vid.name();
                 new Ollama(this.at(Tokens.HOST).uriValue().toString()).pullModel(vid.removePrefix(this.pattern.retractPattern()).retract().toString() + ":" + version);
-                return this.read(vid);
             } catch (final Exception e) {
-                throw MTronException.of(e);
+                LOG.warn(e.getMessage());
             }
+            return this.internal.read(vid);
         }
     }
 
@@ -161,5 +131,39 @@ public class ollamaSpace extends MSpace<OllamaModels> {
             }
             return this.internal.write(vid, obj);
         });
+    }
+
+    private void findModel(final fURI modelPattern) {
+        this.sjvm().availableModels().content().stream()
+                .map(model -> {
+                    final OllamaModelCard card = this.sjvm().modelCard(model.getName()).content();
+                    final OLLM ollm = ollm(Tuple.Pair.with(model, card), OLLM.OLLM_TID, modelToVid(model.getName()));
+                    return Tuple.Pair.with(card, ollm);
+                })
+                .filter(pair -> pair.get1().vid().matches(modelPattern))
+                .forEach(pair -> {
+                    try {
+                        final Obj gguf = this.internal.read(pair.get1().vid().extend(Tokens.GGUF_KEY));
+                        if (gguf.isNoObj()) {
+                            this.internal.write(pair.get1().vid().extend(Tokens.GGUF_KEY), fail(MTronException.of("temp")));
+                            final String ggufFilePath = Arrays.stream(pair.get0().getModelfile().split("\n"))
+                                    .map(String::trim)
+                                    .filter(line -> line.startsWith(Tokens.FROM))
+                                    .map(line -> line.replace(Tokens.FROM, "").trim())
+                                    .findFirst()
+                                    .orElse(null);
+                            if (ggufFilePath != null) {
+                                LOG.info("onboarding ollm gguf into space: %s", pair.get1().vid().extend(Tokens.GGUF_KEY));
+                                GGUF.of(f(ggufFilePath), pair.get1().vid().extend(Tokens.GGUF_KEY))
+                                        .put(uri(SIZE), Common.isInt(pair.get0().getDetails().getParameterSize()) ? jnt(Long.parseLong(pair.get0().getDetails().getParameterSize())) : noobj())
+                                        .put(uri(Tokens.QUANT), uri(pair.get0().getDetails().getQuantizationLevel())).<Rec>as()
+                                        .put(uri(Tokens.FAMILY), uri(pair.get0().getDetails().getFormat())).as();
+                            }
+                        }
+                    } catch (final Exception e) {
+                        LOG.warn(e);
+                        this.internal.write(pair.get1().vid().extend(Tokens.GGUF_KEY), fail(e));
+                    }
+                });
     }
 }
