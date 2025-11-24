@@ -1,15 +1,22 @@
 package studio.phaseshift.metatron.lang.db.grph.mtp3;
 
+import io.cucumber.java.be.I;
 import org.apache.commons.configuration2.Configuration;
 import org.apache.tinkerpop.gremlin.AbstractGraphProvider;
 import org.apache.tinkerpop.gremlin.GraphProvider;
 import org.apache.tinkerpop.gremlin.LoadGraphWith;
 import org.apache.tinkerpop.gremlin.structure.Graph;
+import org.apache.tinkerpop.gremlin.structure.io.Io;
+import org.apache.tinkerpop.gremlin.structure.io.IoRegistry;
 import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.Tokens;
+import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.core.m.type.Obj;
 import studio.phaseshift.metatron.lang.db.grph.grphSpace;
+import studio.phaseshift.metatron.lang.db.grph.inst.grphInstSet;
 import studio.phaseshift.metatron.lang.db.grph.type.mtp3.*;
+import studio.phaseshift.metatron.lang.db.kv.inst.kvInstSet;
+import studio.phaseshift.metatron.lang.db.kv.kvSpace;
 import studio.phaseshift.metatron.lang.sys.router.Router;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
@@ -40,10 +47,13 @@ public class mGraphProvider extends AbstractGraphProvider {
         add(mProperty.class);
         add(mVertex.class);
         add(mVertexProperty.class);
+        add(fURI.class);
     }};
 
     static {
         BootLoader.load(rec());
+        kvInstSet.create();
+        grphInstSet.create();
     }
 
 
@@ -60,11 +70,14 @@ public class mGraphProvider extends AbstractGraphProvider {
 
     @Override
     public Map<String, Object> getBaseConfiguration(final String graphName, final Class<?> test, final String testMethodName, final LoadGraphWith.GraphData loadGraphWith) {
+        Router.global().addSpace(kvSpace.of(f("/mnt/#"), f("/sys/router/space/kv")));
         final Map<String, Object> config = new LinkedHashMap<>();
-        config.put("gremlin.graph", f(mGraph.class.getCanonicalName()));
+        config.put(Graph.GRAPH, f(mGraph.class.getCanonicalName()));
         config.put(SPACE, f("/mnt/test/mtp3"));
         config.put(PATTERN, f("/test/g/#"));
         config.put(NAME, f(graphName));
+        config.put("guice.injector-source", f("studio.phaseshift.metatron.lang.db.grph.mtp3.mGraphFeatureTest$WorldInjectorSource"));
+        config.put(IoRegistry.IO_REGISTRY, f(mIoRegistry.class.getCanonicalName()));
         return config;
 
     }

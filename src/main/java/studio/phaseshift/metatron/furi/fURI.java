@@ -74,6 +74,10 @@ public class fURI implements Cloneable, Ring<fURI> {
         this.poly = this.name().contains("[") ? Arrays.asList(this.name().substring(this.name().indexOf('[') + 1, this.name().indexOf(']')).split(",")) : null;
     }*/
 
+    public fURI() {
+        this(null, null, -1, false, null, false, null, null);
+    }
+
     private fURI(final String scheme, final String host, final int port, final boolean sstart, final List<String> path, final boolean send, final List<String> poly, final String query) {
         this.host = host;
         this.scheme = scheme;

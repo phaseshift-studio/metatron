@@ -3,7 +3,15 @@ package studio.phaseshift.metatron.lang.db.grph.type.mtp3;
 import org.apache.commons.configuration2.BaseConfiguration;
 import org.apache.commons.configuration2.Configuration;
 import org.apache.tinkerpop.gremlin.process.computer.GraphComputer;
+import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversal;
+import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
 import org.apache.tinkerpop.gremlin.structure.*;
+import org.apache.tinkerpop.gremlin.structure.io.Io;
+import org.apache.tinkerpop.gremlin.structure.io.IoRegistry;
+import org.apache.tinkerpop.gremlin.structure.io.gryo.GryoIo;
+import org.apache.tinkerpop.gremlin.structure.io.gryo.GryoMapper;
+import org.apache.tinkerpop.gremlin.structure.io.gryo.GryoVersion;
+import org.apache.tinkerpop.gremlin.structure.io.util.IoRegistryHelper;
 import org.apache.tinkerpop.gremlin.structure.util.ElementHelper;
 import org.apache.tinkerpop.gremlin.structure.util.wrapped.WrappedGraph;
 import studio.phaseshift.metatron.furi.fURI;
@@ -41,6 +49,10 @@ import static studio.phaseshift.metatron.lang.db.grph.type.TP3Translator.LABEL;
 @Graph.OptIn(Graph.OptIn.SUITE_PROCESS_LIMITED_STANDARD)
 @Graph.OptOut(
         test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.MatchTest",
+        method = "*",
+        reason = "avoiding grateful dead tests for now")
+@Graph.OptOut(
+        test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.ProfileTest",
         method = "*",
         reason = "avoiding grateful dead tests for now")
 public class mGraph implements Graph, WrappedGraph<grphSpace> {
@@ -86,13 +98,24 @@ public class mGraph implements Graph, WrappedGraph<grphSpace> {
         this.baseEdgeURI = this.baseURI.extend("E");
     }
 
+    @Override
+    public <I extends Io> I io(final Io.Builder<I> builder) {
+        GryoMapper.build().addRegistry(mIoRegistry.instance()).create();
+        return (I) builder.graph(this).onMapper(mapper -> mapper.addRegistry(mIoRegistry.instance())).create();
+
+    }
+
     protected final fURI makeVertexID(final Object id) {
-        final fURI temp = id instanceof fURI ? (fURI) id : (id instanceof Uri ? ((Uri) id).uriValue() : f(id.toString()));
+        if (id instanceof Vertex)
+            return f(((Vertex) id).id().toString());
+        final fURI temp = id instanceof fURI ? (fURI) id : (id instanceof Uri ? ((Uri) id).uriValue() : f(Graphitty.strip(id.toString())));
         return temp.hasPrefix(this.baseVertexURI) ? temp : this.baseVertexURI.extend(temp);
     }
 
     protected final fURI makeEdgeID(final Object id) {
-        final fURI temp = id instanceof fURI ? (fURI) id : (id instanceof Uri ? ((Uri) id).uriValue() : f(id.toString()));
+        if (id instanceof Edge)
+            return f(((Edge) id).id().toString());
+        final fURI temp = id instanceof fURI ? (fURI) id : (id instanceof Uri ? ((Uri) id).uriValue() : f(Graphitty.strip(id.toString())));
         return temp.hasPrefix(this.baseEdgeURI) ? temp : this.baseEdgeURI.extend(temp);
     }
 

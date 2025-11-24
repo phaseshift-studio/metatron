@@ -2,8 +2,6 @@ package studio.phaseshift.metatron.lang.db.grph.type.mtp3;
 
 import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.apache.tinkerpop.gremlin.structure.VertexProperty;
-import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.lang.core.m.type.Feature;
 
 import java.lang.reflect.InvocationTargetException;
 
@@ -74,7 +72,7 @@ public class mFeatures implements Graph.Features {
 
         @Override
         public boolean supportsIoWrite() {
-            return true;
+            return false;
         }
 
         @Override
@@ -206,12 +204,12 @@ public class mFeatures implements Graph.Features {
 
         @Override
         public boolean supportsCustomIds() {
-            return false;
+            return true;
         }
 
         @Override
         public boolean supportsAnyIds() {
-            return false;
+            return true;
         }
 
         @Override

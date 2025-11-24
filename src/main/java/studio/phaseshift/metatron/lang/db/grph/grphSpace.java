@@ -71,7 +71,7 @@ public class grphSpace extends MSpace<Space> {
                 final fURI dataset = inst.arg(0).<Rec>as().at(LOAD).uriValue();
                 final Obj inner = inst.arg(0).<Rec>as().at(SPACE);
                 final grphSpace space = new grphSpace(inner.isNoObj() ? noobjSpace.single() :
-                        new kvSpace(inner.<Rec>as().at(PATTERN).uriValue(), inst.arg(0).vid()), Map.of(uri(PATTERN), uri(pattern), uri(LOAD), uri(dataset)), pattern, inst.arg(0).vid());
+                        new kvSpace(inner.<Rec>as().at(PATTERN).uriValue(), fURI.NULL), Map.of(uri(PATTERN), uri(pattern), uri(LOAD), uri(dataset)), pattern, inst.arg(0).vid());
                 Router.global().addSpace(space);
                 space.start();
                 return space;
