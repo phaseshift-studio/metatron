@@ -256,7 +256,7 @@ public class Console extends MRec implements Mode {
                 else if (line.equals(":quit"))
                     break;
                 else if (line.equals(":clear")) {
-                    Graphitty.out(this.terminal.output(), "{{XX}}{{@}}");
+                    Graphitty.out(this.terminal.output(), "{{XX&@}}");
                 } else if (line.startsWith(":log")) {
                     logObj.setSLF4J(line.substring(4));
                 } else if (line.startsWith(":top")) {

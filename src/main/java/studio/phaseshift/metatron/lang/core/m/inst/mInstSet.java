@@ -499,6 +499,7 @@ public class mInstSet extends MInstSet {
                 /// ///////////////////////////////////////////////////////////////////////////////////////////////////
                 instC(CC_TID.dom(A).rng(INT_TID), lst(), (lhs, inst) -> jnt(lhs.c().max())),
                 instC(CC_TID.dom(A).rng(A.maybeSome()), lst(T(INT_TID)), (lhs, inst) -> lhs.c(inst.arg(0).intValue())),
+                instC(AS_TID.dom(BYTES_TID).rng(STR_TID), lst(T(STR_TID)), (lhs, inst) -> str(new String(lhs.bytesValue().array()))),
                 instC(AS_TID.dom(A).rng(B), lst(T(B)), (lhs, inst) -> lhs.matches(inst.arg(0)) ? lhs.tid(inst.arg(0).tid()).c(c -> c.mult(inst.arg(0).c())) : MTronException.of("%s is not a %s", lhs, inst.arg(0)).asFail()),
                 instC(WITHIN_TID.dom(LST_TID).rng(LST_TID), lst(T(ALL_STAR)), (lhs, inst) -> lst(inst.arg(0).apply(objs(lhs.stream().flatMap(Obj::elements))).stream().toList())),
                 instC(WITHIN_TID.dom(REC_TID).rng(REC_TID), lst(T(ALL_STAR)), (lhs, inst) -> rec(lhs.elements().map(r -> inst.arg(0).apply(r).<Rel>as()))),

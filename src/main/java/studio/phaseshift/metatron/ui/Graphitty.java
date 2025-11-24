@@ -35,7 +35,6 @@ public class Graphitty {
 
     public static final String RULE_SEPARATOR = "&";
     public static final Map<String, String> CURSOR_REWRITES = new LinkedHashMap<>();
-    public static final Map<String, String> OBJ_REWRITES = new LinkedHashMap<>();
     private static final Graphitty GRAPHITTY_STDOUT = new Graphitty(System.out);
 
     static {
@@ -94,17 +93,6 @@ public class Graphitty {
         // CURSOR_REWRITES.put("X", "\033[{{<}}D");
     }
 
-    static {
-        OBJ_REWRITES.put("DEBUG", "{{y}}");
-        OBJ_REWRITES.put("INFO", "{{g}}");
-        OBJ_REWRITES.put("WARN", "{{y}}");
-        OBJ_REWRITES.put("ERROR", "{{r}}");
-        OBJ_REWRITES.put("TYPE", "{{b}}");
-        OBJ_REWRITES.put("VALUE", "{{y}}");
-        OBJ_REWRITES.put("FORM1", "{{g}}");
-        OBJ_REWRITES.put("FORM2", "{{m}}");
-    }
-
     private final OutputStream out;
     private final Map<String, String> rewrites;
     private final Stack<String> rewriteStack = new Stack<>();
@@ -115,7 +103,6 @@ public class Graphitty {
         this.rewrites = new HashMap<>();
         this.rewrites.putAll(Graphitty.COLOR_REWRITES);
         this.rewrites.putAll(Graphitty.CURSOR_REWRITES);
-        this.rewrites.putAll(Graphitty.OBJ_REWRITES);
         this.rewrites.putAll(rewrites);
     }
 

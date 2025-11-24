@@ -18,38 +18,60 @@
 
 package studio.phaseshift.metatron.lang.sys.fs;
 
+import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.Space;
-import studio.phaseshift.metatron.lang.core.m.type.Obj;
-import studio.phaseshift.metatron.lang.core.m.type.Str;
-import studio.phaseshift.metatron.lang.core.m.type.impl.MRec;
+import studio.phaseshift.metatron.lang.core.m.type.*;
 import studio.phaseshift.metatron.lang.MSpace;
+import studio.phaseshift.metatron.lang.core.m.type.impl.MRec;
+import studio.phaseshift.metatron.lang.db.kv.kvSpace;
+import studio.phaseshift.metatron.lang.sys.router.Router;
 import studio.phaseshift.metatron.util.MTronException;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.nio.file.FileSystem;
-import java.nio.file.FileVisitOption;
-import java.nio.file.Files;
-import java.nio.file.Path;
+import java.nio.ByteBuffer;
+import java.nio.file.*;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.furi.fURI.f;
-import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.MTRON_SPACE_TID;
+import static studio.phaseshift.metatron.lang.core.m.inst.mFluent.StartLess.*;
+import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.*;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MBytes.bytes;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MInst.instC;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MStr.str;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.lang.sys.sysInstSet.SPACE_TID;
+import static studio.phaseshift.metatron.util.Common.mutableMap;
+import static studio.phaseshift.metatron.util.Common.mutableOrderedMap;
 
 public class fileSpace extends MSpace<FileSystem> {
 
-    public static final fURI FILESPACE_TID = MTRON_SPACE_TID.extend("fs");
+    public static final fURI FS_TID = SPACE_TID.extend("fs");
+    public static final Type FS_TYPE = T(FS_TID, isa_(rec()), instC(INST_TID.dom(ALL.maybe()).rng(FS_TID), lst(isa_(rec(uri(Tokens.PATTERN), T(URI_TID))).tryToInst()), (lhs, inst) -> {
+        final fURI pattern = inst.arg(0).<Rec>as().at(Tokens.PATTERN).uriValue();
+        final Space space = new fileSpace(FileSystems.getDefault(), inst.arg(0).<Rec>as().jvm(), pattern, inst.arg(0).vid());
+        Router.global().addSpace(space);
+        return space;
+    }));
+    public static final fURI FILE_TID = FS_TID.extend("file");
+    public static final fURI DIR_TID = FS_TID.extend("dir");
+    public static final Type FILE_TYPE = T(FILE_TID, isa_(rec()));
+    // public static final Type DIR_TYPE =
 
-    public fileSpace(final FileSystem fs, final fURI pattern, final fURI vid) {
-        super(fs, Map.of(uri("pattern"), uri(pattern)), pattern, FILESPACE_TID, vid);
+    public fileSpace(final FileSystem fs, final Map<Obj, Obj> jvm, final fURI pattern, final fURI vid) {
+        super(fs, jvm, pattern, FS_TID, vid);
     }
 
     @Override
@@ -66,10 +88,28 @@ public class fileSpace extends MSpace<FileSystem> {
         // });
     }
 
+    private static Rec makeFile(final Path path) {
+        return new MRec(new LinkedHashMap<Obj, Obj>(Map.of(
+                uri(Tokens.NAME), uri(path.getFileName().toString()),
+                uri("permissions"), lst(MTronException.wrap(() -> (List) Files.getPosixFilePermissions(path).stream().map(x -> uri(x.toString())).toList())),
+                uri("data"), auto_(instC(INST_TID.dom(ALL.maybe()).rng(BYTES_TID), lst(T(URI_TID)), (lhs, inst) -> {
+                    try {
+                        final File file = path.toFile();
+                        final byte[] data = new byte[(int) file.length()];
+                        try (final FileInputStream fis = new FileInputStream(file)) {
+                            fis.read(data);
+                        }
+                        return bytes(ByteBuffer.wrap(data));
+                    } catch (final Exception e) {
+                        throw MTronException.of(e);
+                    }
+                })).tryToInst())), FILE_TID, fURI.NULL);
+    }
+
     @Override
     public Function<fURI, Map<fURI, Obj>> directReader() {
         return (key) -> {
-            if (key.equals(fURI.ALL))
+            if (key.equals(ALL))
                 throw MTronException.of("infinite nested walks on file system not allowed");
             else {
                 if (key.hasPattern()) {
@@ -85,15 +125,13 @@ public class fileSpace extends MSpace<FileSystem> {
                             return Files.list(vidPath)
                                     .collect(Collectors.toMap(
                                             p -> f(p.toString()),
-                                            p -> rec("name", str(p.getFileName().toString()), "permissions", str(MTronException.wrap(() -> Files.getPosixFilePermissions(p)).toString())), Obj::append, LinkedHashMap::new));
+                                            fileSpace::makeFile, Obj::append, LinkedHashMap::new));
                         } else {
-                            final Str value = str(Files.readString(vidPath));
-                            return Map.of(vid, value);
+                            return Map.of(f(vidPath.toString()), makeFile(vidPath));
                         }
                     } catch (final IOException e) {
                         throw MTronException.of(e);
                     }
-
                 }
             }
         };
