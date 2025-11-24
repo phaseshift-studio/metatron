@@ -332,13 +332,13 @@ public class mParser {
     }
 
     public static Parser m_fail() {
-        return seq(m_type_prefix(FAIL_TID), of('!'), seq(of('['), m_obj(), of(']')).map(t -> pick(t, 1)).plus(), m_vid_postfix())
+        return seq(choice(of("fail"), of(FAIL_TID.toString())), opt(of("::"), "::"), seq(of('['), m_obj(), of(']')).map(t -> pick(t, 1)).plus(), m_vid_postfix())
                 .map(t -> {
                     final Object test = pick(t, 2);
-                    final List<Obj> objs = (List) (test instanceof List ? test : List.of(test));
+                    final List<Obj> objs = test instanceof List ? ((List) test) : (List) List.of(test);
                     Fail root = null;
                     for (final Obj obj : objs) {
-                        final Fail f = fail(MTronException.of(Graphitty.strip(obj.toString())));
+                        final Fail f = fail(MTronException.of(obj.toString()));
                         root = root == null ? f : root.plus(f);
                     }
                     return root.vid(pick(t, 3));

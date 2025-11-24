@@ -109,7 +109,7 @@ public class MMachine extends MObj implements Machine {
                     } else {
                         final Monad n = x.apply(code.nextInst(x.inst()));
                         LOG.trace(" {{g}}===>{{/g}} post-processing monad %s", n);
-                        if (n.inst().isBatching() && (!n.dead() || n.inst().dom().c().isNoObjable())) {
+                        if (n.inst().isBatching() && (!n.dead() || n.inst().dom().c().isZeroable())) {
                             if (n.inst().isGather()) {
                                 final Monad barrier = this.barriers().<LinkedList<Monad>>jvmAs().peek();
                                 LOG.trace("{{m}}====|{{/m}} appending living obj to barrier %s", n);
@@ -127,7 +127,7 @@ public class MMachine extends MObj implements Machine {
                                 LOG.trace("{{g}}====>{{/g}} propagating monad %s", n);
                                 n.obj().iterator().forEachRemaining(no -> this.running().append(n.obj(no)));
                             }
-                        } else if (n.zombie() && n.inst().dom().c().isNoObjable()) {
+                        } else if (n.zombie() && n.inst().dom().c().isZeroable()) {
                             LOG.trace("{{c}}====>{{/c}} walking undead zombie monad %s", n);
                             this.running().append(n);
                         } else {

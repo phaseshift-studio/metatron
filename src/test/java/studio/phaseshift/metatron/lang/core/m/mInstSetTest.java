@@ -121,12 +121,12 @@ public class mInstSetTest extends MetatronTest {
             "{1,2,3}-<?lst<=int{*}([,])                                             % [,]",
             "{1,2,3}-<?lst{*}<=int([_])                                             % {[1],[2],[3]}",
             "{1,2,3}-<?lst<=int{*}([_])                                             % [{1,2,3}]",
-            //"{1,2,3}-<?rec<=int{*}([=>])                                        % [=>]",
+            //"{1,2,3}-<?rec<=int{*}([=>])                                          % [=>]",
             "{1,2,3}-<noobj                                                         % noobj",
             "{1,2,3}-<[noobj]                                                       % [noobj]",
             "{1,2,3}-<[noobj=>noobj]                                                % [=>]",
-            //"{1,2,3}.map?int<=real(1)                                             % <FAIL>",
-            //"{1,2,3}.map?int<=int{3}(1)                                             % int{3}::1",
+            "{1,2,3}.map?int<=real(1)                                               % <ERROR>",
+            //"{1,2,3}.map?int<=int{3}(1)                                           % int{3}::1",
             "{1,2,3}.map?int<=int(1)                                                % int{3}::1",
             "{1,2,3}-<1                                                             % 1",
             "{1,2,3}-<1                                                             % 1",
@@ -295,10 +295,12 @@ public class mInstSetTest extends MetatronTest {
 
     @ParameterizedTest
     @CsvSource(value = {
-            //"1.plus(1).failure('bad').plus(2).plus(3)                                 % fail::['bad']",
+            "fail::['bad']['really bad']['oh no'].catch('okay now')                   % \"okay now\"",
+            "fail::['bad']['really bad']['oh no'].plus('okay now')                    % fail::['bad']['really bad']['oh no']",
+            "1.plus(1).failure('bad').plus(2).plus(3)                                 % fail::['bad']",
             "1.plus(1).failure('bad').plus(2).catch(34).plus(3)                       % 37",
-            //  "1.plus(mult(failure('bad')))                                             % fail::['bad']",
-            //  "1.plus(mult(failure('bad'))).mult(23)                                    % fail::['bad']",
+            //"1.plus(map(failure('bad')))                                               % fail::['bad']",
+            //"1.plus(map(failure('bad'))).mult(23)                                      % fail::['bad']",
             "1.plus(mult(failure('bad'))).mult(23).catch(34).plus(2)                  % 36",
             // dummy without ending comma so it's easier to add more test cases
             "1.plus(1)                                                                % 2"
@@ -405,6 +407,12 @@ public class mInstSetTest extends MetatronTest {
             "a/b/c<<2                                                                                                  % c",
             "a/b/c>>                                                                                                   % a/b",
             "a/b/c>>2                                                                                                  % a",
+            /// ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+            "[1,2,3,4]<<                                                                                               % [2,3,4]",
+            "[1,2,3,4]<<1                                                                                              % [2,3,4]",
+            "[1,2,3,4]<<2                                                                                              % [3,4]",
+            "[1,2,3,4]>>                                                                                               % [1,2,3]",
+            "[1,2,3,4]>>2                                                                                              % [1,2]",
     }, delimiter = '%')
     public void testShift(final String code, final String expected) {
         super.testCode(code, expected);

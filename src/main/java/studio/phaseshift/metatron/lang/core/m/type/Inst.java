@@ -49,52 +49,49 @@ public interface Inst extends Call {
     String DOM = "dom";
     String RNG = "rng";
 
-    private static Poly resolveArgs(final Inst apiInst, final Inst userInst, final Obj lhs) {
-        final GraphittyLogger LOG = Graphitty.log(apiInst);
-        if (userInst.args().isLst()) {
-            LOG.trace("resolving lst args of %s", userInst);
+    private static Poly resolveArgs(final Inst userInst, final Inst apiInst, final Obj lhs) {
+        final GraphittyLogger LOG = Graphitty.log(userInst);
+        if (apiInst.args().isLst()) {
+            LOG.trace("resolving lst args of %s", apiInst);
             final List<Obj> resolvedArgs = new ArrayList<>();
             for (int i = 0; i < apiInst.args().count(); i++) {
+                final Obj usrArg = userInst.arg(i);
                 final Obj apiArg = apiInst.arg(i);
-                final Obj userArg = userInst.arg(i);
-                if (apiInst.isBlocking()) {
-                    resolvedArgs.add(apiArg);
-                } else if (apiArg.isCall()) {
-                    final Inst firstInst = apiArg.<Call>as().insts().get(0);
+                if (userInst.isBlocking()) {
+                    resolvedArgs.add(usrArg);
+                } else if (apiArg.isCall() && usrArg.isNoObj()) { // used for default args (when user arg is noobj)
+                    final Obj r = apiArg.apply(usrArg).resolve(lhs);
+                    if (r.rng().matches(apiArg))
+                        resolvedArgs.add(r);
+                    else return null;
+                } else if (usrArg.isObjCall()) {
+                    final Inst firstInst = usrArg.<Call>as().insts().get(0);
                     if (!firstInst.hasDomAndRng() && (firstInst.tid().basePath().equals(FROM_TID))) { // from() is a side-effect and the type can't be known unless explcitly specified (need a way to denote side-effect insts).
-                        resolvedArgs.add(apiArg.resolve(lhs));
-                    } /*else if (apiInst.tid().name().equals(SPLIT_TID.name()) && apiArg.isRec()) {
-                        Rec sRecObj = rec(apiArg.recValue().entrySet()
-                                .stream()
-                                .map(kv2 -> rel(kv2.getKey().resolve(lhs), kv2.getValue().resolve(lhs))));
-                        final Obj r = sRecObj.resolve(lhs);
-                        if (r.rng().matches(userArg))
-                            resolvedArgs.add(r);
-                        else return null;
-                    }*/ else {
-                        final Obj r = apiArg.resolve(lhs);
-                        if (r.rng().matches(userArg)) // && userArg.rng().c().within(apiArg.c()))
+                        resolvedArgs.add(usrArg.resolve(lhs));
+                    } else {
+                        final Obj r = usrArg.resolve(lhs);
+                        if (r.rng().matches(apiArg)) // && userArg.rng().c().within(apiArg.c()))
                             resolvedArgs.add(r);
                         else return null;
                     }
                 } else {
-                    if (!apiArg.matches(userArg))
+                    if (!usrArg.matches(apiArg))
                         return null;
-                    resolvedArgs.add(apiArg.resolve(lhs));
+                    resolvedArgs.add(usrArg.resolve(lhs));
                 }
             }
             return lst(resolvedArgs);
-        } else if (userInst.args().isRec()) {
-            LOG.trace("processing rec args of %s", userInst);
+        } else if (apiInst.args().isRec()) {
+            LOG.trace("processing rec args of %s", apiInst);
             final AtomicInteger counter = new AtomicInteger(0);
-            return rec(userInst.args().recValue().entrySet()
+            return rec(apiInst.args().recValue().entrySet()
                     .stream()
                     .map(kv -> {
-                        Obj this_arg = apiInst.arg(kv.getKey().uriValue(), counter.getAndIncrement());
+                        Obj this_arg = userInst.arg(kv.getKey().uriValue(), counter.getAndIncrement());
                         return rel(kv.getKey(), kv.getValue().isCall() ? kv.getValue().apply(this_arg) : this_arg);
                     }));
         } else
-            throw MTronException.of("inst args must be a lst or rec: %s", userInst);
+            throw MTronException.of("inst args must be a lst or rec: %s", apiInst);
     }
 
     @Override
@@ -186,7 +183,7 @@ public interface Inst extends Call {
                     .stream()
                     .map(Obj::<Inst>as)
                     //.peek(i -> LOG.warn("%s ==?==> %s [%s]", this, i, this.args()))
-                    .filter(i -> (i.args().isEmpty() && this.arg(0).isNoObj()) || i.args().isRec() || i.args().count() == this.args().count())
+                    .filter(i -> (i.args().isEmpty() && this.arg(0).isNoObj()) || i.args().isRec() || i.args().count() >= this.args().count())
                     .map(i -> this.hasDom() ? i.dom(this.dom()) : i)
                     .map(i -> this.hasRng() ? i.rng(this.rng()) : i)
                     .map(i -> Helpers.bindGenerics(lhs, i, this))
@@ -451,7 +448,7 @@ public interface Inst extends Call {
         public static f UNKNOWN = null;
         final Object func;
         private final boolean bi;
-        
+
         private f(final BiFunction<Obj, Inst, Obj> func) {
             this.bi = true;
             this.func = func;

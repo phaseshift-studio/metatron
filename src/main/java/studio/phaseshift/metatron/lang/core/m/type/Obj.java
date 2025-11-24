@@ -353,6 +353,10 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
         return this instanceof Call;
     }
 
+    default boolean isObjCall() {
+        return this instanceof Call && !this.isNoObj();
+    }
+
     default boolean isRing() {
         return this instanceof Ring;
     }
@@ -533,7 +537,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
             if (null != obj.vid() && !obj.isType())
                 Router.writeToSpace(obj);
         }
-       
+
         public static <O extends Obj> O objClone(final Obj obj, final Object jvm, final fURI tid, final fURI vid) {
             Object realjvm = jvm;
             Obj clone = null;
