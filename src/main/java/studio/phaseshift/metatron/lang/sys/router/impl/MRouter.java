@@ -21,15 +21,12 @@ package studio.phaseshift.metatron.lang.sys.router.impl;
 import studio.phaseshift.metatron.Registry;
 import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.lang.core.m.type.Rec;
-import studio.phaseshift.metatron.lang.core.m.type.Rel;
-import studio.phaseshift.metatron.lang.core.m.type.Uri;
+import studio.phaseshift.metatron.lang.core.m.type.*;
 import studio.phaseshift.metatron.lang.util.noobjSpace;
 import studio.phaseshift.metatron.lang.core.mach.stackSpace;
 import studio.phaseshift.metatron.lang.sys.router.Router;
 import studio.phaseshift.metatron.lang.Space;
 import studio.phaseshift.metatron.lang.sys.sysInstSet;
-import studio.phaseshift.metatron.lang.core.m.type.Obj;
 import studio.phaseshift.metatron.lang.MSpace;
 import studio.phaseshift.metatron.lang.util.serial.Serializers;
 import studio.phaseshift.metatron.ui.Graphitty;
@@ -67,6 +64,11 @@ public class MRouter extends MSpace<MServer> implements Router {
                 vid);
         LOG.info("local router {{b}}%s{{/b}}", this);
         LOG.info("available serializers: %s", SERIALIZERS.getSerializers().jvm().keySet());
+    }
+
+
+    private static Obj appendOnRead(final boolean send, final Obj base, final Obj addition) {
+        return addition.isNoObj() ? base : (send ? base.append(rel(addition.vid().toUri(), addition)) : base.append(addition));
     }
 
     @Override
@@ -127,9 +129,11 @@ public class MRouter extends MSpace<MServer> implements Router {
 
     @Override
     public void addSpace(final Space space) {
-        this.spaces()
-                .elements()
-                .map(Rel::second)
+       // if (this.vid != null && !(space instanceof InstSet) && (space.vid() == null || !space.vid().matches(this.vid.extend(ALL)))) {
+       //     LOG.warn("space not indexed by global router: %s", space);
+       //     return;
+       // }
+        this.spaces().jvm().values().stream()
                 .map(Obj::<Space>as)
                 .filter(s -> space.pattern().bimatches(s.pattern()))
                 .findAny()
@@ -236,7 +240,7 @@ public class MRouter extends MSpace<MServer> implements Router {
 
     @Override
     public MRouter apply(final Obj other) {
-        return this;
+        return null;
     }
 
     @Override
@@ -258,6 +262,7 @@ public class MRouter extends MSpace<MServer> implements Router {
         return Space.Helper.spaceEquals(this, other);
     }
 
+    
     @Override
     public int hashCode() {
         return Space.Helper.spaceHashCode(this);

@@ -1,6 +1,6 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
- * Copyright (C) 2025- PhaseShift Studio, LLC 
+ * Copyright (C) 2025- PhaseShift Studio, LLC
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -62,9 +62,9 @@ public interface Machine extends Call, Ring<Call> {
         // two machines executing in parallel
         final boolean otherMachine = other instanceof Machine;
         return this.clone(Tuple.Quartet.with(this.jvm().get0().plus(otherMachine ? other.<Machine>as().jvm().get0() : other.jvm()),
-                otherMachine ? this.jvm().get1().append(other.<Machine>as().jvm().get1()) : this.jvm().get1(),
-                otherMachine ? this.jvm().get2().append(other.<Machine>as().jvm().get2()) : this.jvm().get2(),
-                otherMachine ? this.jvm().get3().append(other.<Machine>as().jvm().get3()) : this.jvm().get3()),
+                        otherMachine ? this.jvm().get1().append(other.<Machine>as().jvm().get1()) : this.jvm().get1(),
+                        otherMachine ? this.jvm().get2().append(other.<Machine>as().jvm().get2()) : this.jvm().get2(),
+                        otherMachine ? this.jvm().get3().append(other.<Machine>as().jvm().get3()) : this.jvm().get3()),
                 this.tid().plus(other.tid()), this.vid());
     }
 
@@ -88,6 +88,26 @@ public interface Machine extends Call, Ring<Call> {
     @Override
     default Type rng() {
         return this.code().rng();
+    }
+
+    public static class Helper {
+        private Helper() {
+            // do nothing
+        }
+
+        public static String machToString(final Machine mach) {
+            return Obj.Helper.objToString(mach);
+        }
+
+        public static int machHashCode(final Machine mach) {
+            return Obj.Helper.objHashCode(mach);
+        }
+
+        public static boolean machEquals(final Machine mach, final Object other) {
+            return Obj.Helper.objEquals(mach, other);
+        }
+
+
     }
 
 }

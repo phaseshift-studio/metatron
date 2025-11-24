@@ -40,9 +40,9 @@ public class grphInstSetTest extends MetatronTest {
     @Disabled
     public static void begin() {
         MetatronTest.begin();
-        grphInstSet.create().vid(f("/mnt/lang/mgraph"));
-        MGraph.of(TinkerFactory.createModern(), f("/tp/#"), f("/mnt/tp"));
-        Router.writeToSpace("g", uri("/mnt/tp"));
+        grphInstSet.create().vid(f("/sys/router/lang/grph"));
+        MGraph.of(TinkerFactory.createModern(), f("/tp/#"), f("/sys/router/space/tp"));
+        Router.writeToSpace("g", uri("/sys/router/space/tp"));
     }
 
 
@@ -50,7 +50,7 @@ public class grphInstSetTest extends MetatronTest {
     @Disabled
     @ParameterizedTest
     @CsvSource(value = {
-            "g -> /mnt/tp                                                              % /mnt/tp",
+            "g -> /sys/router/space/tp                                                 % /sys/router/space/tp",
             "*(*g).V().count()                                                         % 6",
             "*(*g).E().count()                                                         % 6",
             "*(*g).V().outE().count()                                                  % 6",

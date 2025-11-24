@@ -1,6 +1,6 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
- * Copyright (C) 2025- PhaseShift Studio, LLC 
+ * Copyright (C) 2025- PhaseShift Studio, LLC
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -177,6 +177,21 @@ public class MMachine extends MObj implements Machine {
     @Override
     public Machine clone(Object jvm, fURI tid, fURI vid) {
         return new MMachine((Quartet<Code, Obj, Lst, Obj>) jvm, tid, vid);
+    }
+
+    @Override
+    public String toString() {
+        return Machine.Helper.machToString(this);
+    }
+
+    @Override
+    public int hashCode() {
+        return Machine.Helper.machHashCode(this);
+    }
+
+    @Override
+    public boolean equals(final Object other) {
+        return Machine.Helper.machEquals(this, other);
     }
 
 }

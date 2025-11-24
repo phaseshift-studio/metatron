@@ -19,7 +19,6 @@
 package studio.phaseshift.metatron;
 
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.lang.Space;
 import studio.phaseshift.metatron.lang.ai.llm.llmInstSet;
 import studio.phaseshift.metatron.lang.core.m.inst.mInstSet;
 import studio.phaseshift.metatron.lang.core.m.parser.mParser;
@@ -66,7 +65,7 @@ public class BootLoader implements Rec, Feature.SelfClone {
     public static boolean BOOTING = true;
     private static final GraphittyLogger LOG;
     public static Router ROUTER;
-    public static Rec GLOBAL;
+    public static Rec OPTIONS;
     public static Mode MODE;
     public static boolean TYPE_CHECK = true;
 
@@ -116,7 +115,7 @@ public class BootLoader implements Rec, Feature.SelfClone {
             Rec options = args.length > 0 ? mParser.parse(args[0]).as() : rec();
             logObj.setSLF4J(options.has(uri("log")) ? options.at(uri("log")).uriValue().toString() : "trace");
             LOG.debug("user options: %s", options);
-            GLOBAL = options;
+            OPTIONS = options;
             BootLoader.load(options);
         }
     }
@@ -135,12 +134,10 @@ public class BootLoader implements Rec, Feature.SelfClone {
             LOG.info("known instruction sets: %s", Registry.open().registrants());
             ROUTER = new MRouter(remoteAuthority, f("/sys/router"));
             sysInstSet.create();
-            kvInstSet.create();
-            kvSpace.of(f("/mnt/#"), fURI.NULL).vid(f("/mnt"));
-            //kvSpace.of(f("/sys/#"), fURI.NULL).vid(f("/mnt/sys"));
-            Router.writeToSpace(mInstSet.create(f("/mnt/lang/m")));
+            kvSpace.of(f("/sys/#"),f("/sys"));
+            Router.writeToSpace(mInstSet.create(f("/sys/router/lang/m")));
             Router.writeToSpace(Router.global());
-            Router.writeToSpace("boot/options", options);
+            Router.writeToSpace(f("boot/option"), options);
             ROUTER.start();
             ///////////////////////////////////////////////////////////////
             if (options.has(uri(Tokens.BOOT))) {
@@ -163,8 +160,8 @@ public class BootLoader implements Rec, Feature.SelfClone {
             //new TP3Translator(f("/tp")).translate(TinkerFactory.createModern());
             // new MqttSpace(f("zigbee2mqtt/#?broker=mqtt://192.168.66.2:1883&prefix=/mqtt"), f("/mnt/zigbee2mqtt")));
             //     Router.writeToSpace(RemoteSpace.open(f("ws://chibi.local:8888"), f("/shared/#"), f("/mnt/shared")));
-            if (options.at("mode").equals(uri("server")))
-                Router.writeToSpace(new kvSpace(fURI.of("/shared/#"), fURI.of("/mnt/shared")));
+            //if (options.at("mode").equals(uri("server")))
+            //    Router.writeToSpace(new kvSpace(fURI.of("/shared/#"), fURI.of("/mnt/shared")));
             /// ///////////////////////////////////
             LOG.info("%s {{g}}successfully{{/g}} booted", Graphitty.sillyPrint("metatron", true, true));
             BOOTING = false;
@@ -197,14 +194,14 @@ public class BootLoader implements Rec, Feature.SelfClone {
         Router.global().close();
         MODE.stop();
         ROUTER = null;
-        GLOBAL = null;
+        OPTIONS = null;
         System.gc();
         LOG.info("%s {{g}}successfully{{/g}} shutdown", Graphitty.sillyPrint("metatron", true, true));
     }
 
     @Override
     public Map<Obj, Obj> jvm() {
-        return GLOBAL.jvm();
+        return OPTIONS.jvm();
     }
 
     @Override
@@ -231,5 +228,5 @@ public class BootLoader implements Rec, Feature.SelfClone {
     public Obj clone() {
         return Feature.SelfClone.super.clone();
     }
-    
+
 }

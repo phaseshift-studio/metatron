@@ -22,8 +22,11 @@ import studio.phaseshift.metatron.algebra.MultMonoid;
 import studio.phaseshift.metatron.algebra.PlusMonoid;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.core.m.type.Inst;
+import studio.phaseshift.metatron.lang.core.m.type.Obj;
 import studio.phaseshift.metatron.lang.core.m.type.Type;
+import studio.phaseshift.metatron.lang.core.m.type.impl.MCode;
 import studio.phaseshift.metatron.lang.core.m.type.impl.MInstSet;
+import studio.phaseshift.metatron.lang.core.mach.type.impl.MMachine;
 import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
 
@@ -36,6 +39,7 @@ import java.util.stream.Stream;
 import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.INT_TID;
+import static studio.phaseshift.metatron.lang.core.m.obj.NoObj.noobj;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MType.T;
@@ -71,11 +75,16 @@ public class machInstSet extends MInstSet {
     }
 
     @Override
+    public Set<Obj> consts() {
+        return Set.of(MMachine.of(noobj(), MCode.of(List.of())).vid(f("/sys/mach/proc").extend(""+Thread.currentThread().getId())));
+    }
+
+    @Override
     public Set<Inst> insts() {
         return new LinkedHashSet<>(List.of(
                 instC(RING_ZERO_TID.dom(A).rng(A), lst(), (lhs, inst) -> ((PlusMonoid.O<?>) lhs).zero()),
                 instC(RING_ONE_TID.dom(A).rng(A), lst(), (lhs, inst) -> ((MultMonoid.O<?>) lhs).one()),
-               // instC(RING_BINARY.dom(A).rng(ALL.dom(A).rng(A)), lst(), (lhs, inst) -> instB(mtronInstSet.INST_TID.extend(inst.tid().name()), lst(lhs.type())).resolve(lhs)),
+                // instC(RING_BINARY.dom(A).rng(ALL.dom(A).rng(A)), lst(), (lhs, inst) -> instB(mtronInstSet.INST_TID.extend(inst.tid().name()), lst(lhs.type())).resolve(lhs)),
                 //instC(RING_BINARY.dom(A).rng(ALL.dom(A).rng(A)), lst(T(A)), (lhs, inst) -> instB(mtronInstSet.INST_TID.extend(inst.tid().name()), inst.args()).apply(lhs)),
                 instC(DROP_TID.dom(ALL).rng(MACH_MONAD_TID), lst(), (lhs, inst) -> {
                     throw MTronException.of("placeholder error as machine should handle the drop");

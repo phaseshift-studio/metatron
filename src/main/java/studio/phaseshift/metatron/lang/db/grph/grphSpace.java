@@ -71,7 +71,7 @@ public class grphSpace extends MSpace<Space> {
                 final fURI dataset = inst.arg(0).<Rec>as().at(LOAD).uriValue();
                 final Obj inner = inst.arg(0).<Rec>as().at(SPACE);
                 final grphSpace space = new grphSpace(inner.isNoObj() ? noobjSpace.single() :
-                        new kvSpace(inner.<Rec>as().at(PATTERN).uriValue(), fURI.NULL), Map.of(uri(PATTERN), uri(pattern), uri(LOAD), uri(dataset)), pattern, inst.arg(0).vid());
+                        new kvSpace(inner.<Rec>as().at(PATTERN).uriValue(), inst.arg(0).vid()), Map.of(uri(PATTERN), uri(pattern), uri(LOAD), uri(dataset)), pattern, inst.arg(0).vid());
                 Router.global().addSpace(space);
                 space.start();
                 return space;
@@ -96,16 +96,17 @@ public class grphSpace extends MSpace<Space> {
 
     @Override
     public Obj write(final fURI vid, final Obj obj) {
-        if (vid.equals(this.pattern.retractPattern())) {
+        /*if (vid.equals(this.pattern.retractPattern())) {
             return obj;
-        } else {
+        } else {*/
             return this.sjvm.write(vid, obj);
-        }
+        //}
     }
 
 
     public void clear() {
-        ((kvSpace) this.sjvm()).close();
+        LOG.info("clearing {{b}}%s{{X}}",this.pattern);
+        this.sjvm().close();
         this.sjvm = kvSpace.of(this.pattern, fURI.NULL);
     }
 

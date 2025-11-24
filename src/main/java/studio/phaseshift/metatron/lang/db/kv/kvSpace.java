@@ -53,7 +53,7 @@ public class kvSpace extends MSpace<Map<fURI, Obj>> {
     public static final fURI KV_TID = f("/kv/space/kv");
     public static final Type KV_TYPE = T(KV_TID, null, instC(mInstSet.INST_TID.dom(ALL.maybe()).rng(KV_TID), lst(isa_(rec(uri(Tokens.PATTERN), T(URI_TID)/*, uri(Tokens.Q).c(cInt::maybe), T(LST_TID.maybe())*/)).tryToInst()), (lhs, inst) -> {
        // final fURI pattern = inst.arg(0).<Rec>as().at(Tokens.PATTERN).uriValue();
-        final Space space = new kvSpace(inst.arg(0).<Rec>as().jvm(), inst.args().vid());
+        final Space space = new kvSpace(inst.arg(0).<Rec>as().jvm(), inst.arg(0).vid());
         Router.global().addSpace(space);
         return space;
     }));

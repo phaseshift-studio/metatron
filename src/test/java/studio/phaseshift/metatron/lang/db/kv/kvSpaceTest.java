@@ -26,6 +26,6 @@ public class kvSpaceTest extends SpaceTest {
 
     @BeforeAll
     public static void setup() {
-       SPACE = () -> new kvSpace(fURI.of("/t/#"), fURI.of("/mnt/t"));
+       SPACE = () -> new kvSpace(fURI.of("/t/#"), fURI.of("/sys/router/space/t"));
     }
 }

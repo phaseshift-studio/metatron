@@ -13,6 +13,7 @@ import studio.phaseshift.metatron.lang.sys.router.Router;
 
 import java.util.Map;
 
+import static studio.phaseshift.metatron.Tokens.SPACE;
 import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.Tokens.PATTERN;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MRec.rec;
@@ -25,10 +26,11 @@ public class RGraphTest extends MetatronTest {
     @BeforeAll
     public static void begin() {
         MetatronTest.begin();
-        grphInstSet.create().vid(f("/mnt/lang/grph"));
+        grphInstSet.create().vid(f("/sys/lang/grph"));
         grphSpace space = new grphSpace(kvSpace.of(f("/g/#"), fURI.NULL), Map.of(
+                uri(SPACE), kvSpace.of(f("/g/#"), fURI.NULL),
                 uri(PATTERN), uri("/g/#"),
-                uri("load"), uri("tinkerpop-modern")), f("/g/#"), f("/mnt/space/grph"));
+                uri("load"), uri("tinkerpop-modern")), f("/g/#"), f("/sys/space/grph"));
         Router.global().addSpace(space);
         Router.global().put(uri("primary"), uri("/grph"));
         space.start();
@@ -46,7 +48,7 @@ public class RGraphTest extends MetatronTest {
 
     @Test
     public void testBasic() {
-        LOG.info(Router.readFromSpace("/mnt/space/grph/#"));
+        LOG.info(Router.readFromSpace("/sys/router/space/grph/#"));
         LOG.info(Router.readFromSpace("/grph/#"));
         LOG.info(Router.readFromSpace("/g/V/#"));
     }

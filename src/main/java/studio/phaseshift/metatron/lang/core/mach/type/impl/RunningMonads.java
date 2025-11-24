@@ -1,6 +1,6 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
- * Copyright (C) 2025- PhaseShift Studio, LLC 
+ * Copyright (C) 2025- PhaseShift Studio, LLC
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -132,5 +132,20 @@ public class RunningMonads implements Obj {
     @Override
     public Stream<Obj> stream() {
         return (Stream) this.instIndex.values().stream();
+    }
+
+    @Override
+    public String toString() {
+        return Helper.objToString(this);
+    }
+
+    @Override
+    public int hashCode() {
+        return Helper.objHashCode(this);
+    }
+
+    @Override
+    public boolean equals(final Object other) {
+        return Helper.objEquals(this, other);
     }
 }

@@ -21,6 +21,7 @@ package studio.phaseshift.metatron;
 import org.junit.jupiter.api.BeforeAll;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.core.mach.machInstSet;
+import studio.phaseshift.metatron.lang.db.kv.inst.kvInstSet;
 import studio.phaseshift.metatron.lang.db.kv.kvSpace;
 import studio.phaseshift.metatron.lang.sys.router.Router;
 import studio.phaseshift.metatron.lang.core.m.inst.mInstSet;
@@ -46,10 +47,11 @@ public class MetatronTest {
     @BeforeAll
     public static void begin() {
         BootLoader.load(rec(uri("mode"), uri("testing")));
-        mInstSet.create().vid(f("/mnt/lang/m"));
-        machInstSet.create().vid(f("/mnt/lang/mach"));
-        vecInstSet.create().vid(f("/mnt/lang/mvec"));
-        kvSpace.of(f("/usr/#"), fURI.NULL).vid(f("/mnt/usr"));
+        kvInstSet.create().vid(f("/sys/lang/kv"));
+        mInstSet.create().vid(f("/sys/lang/m"));
+        machInstSet.create().vid(f("/sys/lang/mach"));
+        vecInstSet.create().vid(f("/sys/lang/vec"));
+        kvSpace.of(f("/usr/#"), fURI.NULL).vid(f("/sys/space/usr"));
     }
 
     public void testMatches(final String lhs, final String rhs, final boolean matches) {
