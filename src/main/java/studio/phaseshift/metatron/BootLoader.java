@@ -39,7 +39,7 @@ import studio.phaseshift.metatron.lang.util.logObj;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
 import studio.phaseshift.metatron.ui.Mode;
-import studio.phaseshift.metatron.ui.mode.console.Console;
+import studio.phaseshift.metatron.lang.sys.console.Console;
 import studio.phaseshift.metatron.ui.mode.server.Server;
 import studio.phaseshift.metatron.util.MTronException;
 
@@ -72,7 +72,7 @@ public class BootLoader implements Rec, Feature.SelfClone {
     static {
         LOG = Graphitty.log(new BootLoader());
         //Registry.singleton().register(mInstSet.INST_TID, () -> mInstSet.of(fURI.NULL));
-        Registry.open().register(sysInstSet.MSYS_TID, sysInstSet::create);
+        Registry.open().register(sysInstSet.SYS_TID, sysInstSet::create);
         Registry.open().register(kvInstSet.MKV_TID, kvInstSet::create);
         Registry.open().register(webInstSet.MWEB_TID, webInstSet::create);
         Registry.open().register(grphInstSet.MGRPH_TID, grphInstSet::create);
@@ -130,7 +130,7 @@ public class BootLoader implements Rec, Feature.SelfClone {
             } catch (final Exception e) {
                 LOG.warn("booting metatron on a non-networked jvm");
             }
-            startMode(options);
+           // startMode(options);
             LOG.info("known instruction sets: %s", Registry.open().registrants());
             ROUTER = new MRouter(remoteAuthority, f("/sys/router"));
             sysInstSet.create();
@@ -185,14 +185,14 @@ public class BootLoader implements Rec, Feature.SelfClone {
             MODE = Console.of(options);
         else
             throw MTronException.of("unknown mode %s (see --help): %s", mode.uriValue(), options);
-        MODE.start();
+       // MODE.start();
     }
 
     public static void close() {
         BOOTING = true;
         LOG.none("\n");
         Router.global().close();
-        MODE.stop();
+        //MODE.stop();
         ROUTER = null;
         OPTIONS = null;
         System.gc();

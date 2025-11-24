@@ -5,6 +5,7 @@ import studio.phaseshift.metatron.lang.net.remote.remoteSpace;
 import studio.phaseshift.metatron.lang.core.m.type.Inst;
 import studio.phaseshift.metatron.lang.core.m.type.Type;
 import studio.phaseshift.metatron.lang.core.m.type.impl.MInstSet;
+import studio.phaseshift.metatron.lang.sys.console.Console;
 
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -20,13 +21,13 @@ import static studio.phaseshift.metatron.lang.core.m.type.impl.MType.T;
  */
 public class sysInstSet extends MInstSet {
 
-    public static final fURI MSYS_TID = f("/sys");
-    public static final fURI ROUTER_TID = MSYS_TID.extend("router");
-    public static final fURI SPACE_TID = MSYS_TID.extend("space");
+    public static final fURI SYS_TID = f("/sys");
+    public static final fURI ROUTER_TID = SYS_TID.extend("router");
+    public static final fURI SPACE_TID = SYS_TID.extend("space");
     public static final fURI Q_TID = SPACE_TID.extend("q");
 
     public sysInstSet(final fURI vid) {
-        super(MSYS_TID, vid);
+        super(SYS_TID, vid);
     }
 
     public static sysInstSet create() {
@@ -39,7 +40,11 @@ public class sysInstSet extends MInstSet {
 
     @Override
     public Set<Type> types() {
-        return Set.of(T(ROUTER_TID), T(SPACE_TID), remoteSpace.REMOTE_TYPE, DOCQ_TYPE,SUBQ_TYPE);
+        return Set.of(
+                T(ROUTER_TID), 
+                T(SPACE_TID),
+                Console.CONSOLE_TYPE,
+                remoteSpace.REMOTE_TYPE, DOCQ_TYPE,SUBQ_TYPE);
     }
 
     @Override

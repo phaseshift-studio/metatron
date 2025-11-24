@@ -24,9 +24,10 @@ ollama::[host    => <http://localhost:11434>,
   mqtt::[pattern => /mqtt/zigbee2mqtt/#,
          host    => <mqtt://chibi.local:1883>,
          prefix  => </mqtt/>]@/sys/router/space/mqtt;
- *boot/option/mode.-<|[?=server   => print('\n\t{{g}}-<{{c}}server mode{{g}}>-{{X}}'), 
-                        ?=console => print('\n\t{{g}}-<{{c}}client mode{{g}}>-{{X}}'), 
-                        _         => print(_,'\n\t')];
- *boot/option.print(_)
-
+ console::[=>]
+ [-- *boot/option/mode.-<|[?=server   => print('\n\t{{g}}-<{{c}}server mode{{g}}>-{{X}}'), 
+ [--                       ?=console => print('\n\t{{g}}-<{{c}}client mode{{g}}>-{{X}}').map(console::[=>]), 
+ [--                      _         => print(_,'\n\t')];
+ [--*boot/option.print(_)
+ 
 

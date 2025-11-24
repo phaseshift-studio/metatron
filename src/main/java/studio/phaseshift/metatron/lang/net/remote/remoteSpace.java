@@ -38,7 +38,7 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import static studio.phaseshift.metatron.furi.fURI.ALL;
-import static studio.phaseshift.metatron.lang.sys.sysInstSet.MSYS_TID;
+import static studio.phaseshift.metatron.lang.sys.sysInstSet.SYS_TID;
 import static studio.phaseshift.metatron.lang.core.m.inst.mFluent.StartLess.*;
 import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.*;
 import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.URI_TID;
@@ -53,7 +53,7 @@ import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
 public class remoteSpace extends MSpace<MConnection> {
 
     public static final int RETRY_SECONDS = 5;
-    public static final fURI REMOTE_TID = MSYS_TID.extend(Tokens.SPACE).extend("remote");
+    public static final fURI REMOTE_TID = SYS_TID.extend(Tokens.SPACE).extend("remote");
     private final GraphittyLogger LOG;
 
     public static final Type REMOTE_TYPE = T(REMOTE_TID, null, instC(mInstSet.INST_TID.dom(ALL.maybe()).rng(REMOTE_TID), lst(T(REC_TID, isa_(rec(uri(Tokens.PATTERN), T(URI_TID), uri(Tokens.HOST), T(URI_TID))))), (lhs, inst) -> {
