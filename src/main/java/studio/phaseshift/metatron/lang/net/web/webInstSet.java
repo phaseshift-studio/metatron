@@ -20,14 +20,12 @@ package studio.phaseshift.metatron.lang.net.web;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.core.m.parser.mParser;
-import studio.phaseshift.metatron.lang.core.m.type.Fail;
 import studio.phaseshift.metatron.lang.core.m.type.Inst;
 import studio.phaseshift.metatron.lang.core.m.type.Obj;
 import studio.phaseshift.metatron.lang.core.m.type.Type;
 import studio.phaseshift.metatron.lang.core.m.type.impl.MInstSet;
 import studio.phaseshift.metatron.lang.net.iot.mqttSpace;
 import studio.phaseshift.metatron.ui.Graphitty;
-import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -58,7 +56,7 @@ public class webInstSet extends MInstSet {
     }
 
     public static webInstSet create() {
-        return new webInstSet(fURI.NULL);
+        return new webInstSet(fURI.fnull);
     }
 
     @Override

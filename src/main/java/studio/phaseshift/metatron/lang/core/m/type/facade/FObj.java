@@ -93,7 +93,7 @@ public class FObj<O extends Obj> implements Obj {
     public FObj<O> self(final Object jvm, final fURI tid, final fURI vid) {
         this.base = jvm instanceof Obj ? (O) jvm : this.base.jvm(jvm);
         this.vid = vid;
-        this.base.self(this.base.jvm(), tid, fURI.NULL);
+        this.base.self(this.base.jvm(), tid, fURI.fnull);
         return this;
     }
 

@@ -64,7 +64,7 @@ public class vecInstSet extends MInstSet {
     }
 
     public static vecInstSet create() {
-        return new vecInstSet(fURI.NULL);
+        return new vecInstSet(fURI.fnull);
     }
 
     @Override

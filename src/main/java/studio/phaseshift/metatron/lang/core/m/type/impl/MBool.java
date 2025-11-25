@@ -1,6 +1,6 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
- * Copyright (C) 2025- PhaseShift Studio, LLC 
+ * Copyright (C) 2025- PhaseShift Studio, LLC
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -27,11 +27,15 @@ import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.BOOL_TID;
 public class MBool extends MObj implements Bool {
 
     public MBool(final Boolean jvm, final fURI tid, final fURI vid) {
-        super(jvm, tid, vid);
+        super(jvm, null == tid ? BOOL_TID : tid, vid);
+    }
+
+    public static Bool bool(final Boolean jvm, final fURI tid, final fURI vid) {
+        return new MBool(jvm, tid, vid);
     }
 
     public static Bool bool(final Boolean jvm) {
-        return new MBool(jvm, BOOL_TID, fURI.NULL);
+        return bool(jvm, BOOL_TID, fURI.fnull);
     }
 
     @Override

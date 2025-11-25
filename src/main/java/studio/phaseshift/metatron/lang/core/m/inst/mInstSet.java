@@ -168,7 +168,7 @@ public class mInstSet extends MInstSet {
     }
 
     public static mInstSet create() {
-        return create(fURI.NULL);
+        return create(fURI.fnull);
     }
 
     public static mInstSet create(final fURI vid) {

@@ -42,7 +42,7 @@ public class kvInstSet extends MInstSet {
     }
 
     public static kvInstSet create() {
-        return new kvInstSet(fURI.NULL);
+        return new kvInstSet(fURI.fnull);
     }
 
     /*@Override

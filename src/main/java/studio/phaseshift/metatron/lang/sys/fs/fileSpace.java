@@ -24,7 +24,6 @@ import studio.phaseshift.metatron.lang.Space;
 import studio.phaseshift.metatron.lang.core.m.type.*;
 import studio.phaseshift.metatron.lang.MSpace;
 import studio.phaseshift.metatron.lang.core.m.type.impl.MRec;
-import studio.phaseshift.metatron.lang.db.kv.kvSpace;
 import studio.phaseshift.metatron.lang.sys.router.Router;
 import studio.phaseshift.metatron.util.MTronException;
 
@@ -49,12 +48,9 @@ import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.*;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MBytes.bytes;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
-import static studio.phaseshift.metatron.lang.core.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.lang.sys.sysInstSet.SPACE_TID;
-import static studio.phaseshift.metatron.util.Common.mutableMap;
-import static studio.phaseshift.metatron.util.Common.mutableOrderedMap;
 
 public class fileSpace extends MSpace<FileSystem> {
 
@@ -103,7 +99,7 @@ public class fileSpace extends MSpace<FileSystem> {
                     } catch (final Exception e) {
                         throw MTronException.of(e);
                     }
-                })).tryToInst())), FILE_TID, fURI.NULL);
+                })).tryToInst())), FILE_TID, fURI.fnull);
     }
 
     @Override

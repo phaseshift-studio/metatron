@@ -225,6 +225,42 @@ public record ObjStringSerializer(Builder b) implements ObjSerializer<String> {
         }
     }
 
+    private StringBuilder generateLst(final StringBuilder sb, final Lst lst, final int depth) {
+        if (lst.isEmpty()) {
+            sb.append("{{g}}[,]{{X}}");
+        } else {
+            boolean nested =
+                    lst.elements().anyMatch(Obj::isPoly) ||
+                            lst.elements().filter(o -> !o.isPoly()).map(Obj::toString).map(String::length).reduce(0, Integer::sum) > (75 - depth);
+            sb.append("{{g}}[");
+            if (nested)
+                sb.append("\n");
+            AtomicBoolean first = new AtomicBoolean(true);
+            lst.elements().forEach(v -> {
+                if (nested)
+                    sb.append(" ".repeat(false && first.getAndSet(false) ? 0 : (depth * 2) + 1));
+                if (v.isRec()) {
+                    this.generateRec(sb, v.as(), depth + 1);
+                } else if (v.isLst()) {
+                    this.generateLst(sb, v.as(), depth + 1);
+                } else {
+                    if (v.isStr() && v.strValue().length() > b.strClip) {
+                        sb.append(write(v.jvm(v.strValue().substring(0, b.strClip) + Graphitty.sillyPrint("...", true, false))));
+                    } else
+                        sb.append(write(v));
+                }
+                sb.append("{{g}},");
+                if (nested)
+                    sb.append("\n");
+            });
+            if (nested)
+                sb.deleteCharAt(sb.length() - 1);
+            sb.deleteCharAt(sb.length() - 1);
+            sb.append("{{g}}]");
+        }
+        return sb;
+    }
+
     private StringBuilder generateRec(final StringBuilder sb, final Rec rec, final int depth) {
         if (rec.isEmpty()) {
             sb.append("{{g}}[=>]{{X}}");
@@ -242,9 +278,11 @@ public record ObjStringSerializer(Builder b) implements ObjSerializer<String> {
                 sb.append(k.isUri() ? ("{{b}}" + k.uriValue()) : write(k)).append("{{g}}=>");
                 if (v.isRec()) {
                     this.generateRec(sb, v.as(), depth + 1);
+                } else if (v.isLst()) {
+                    this.generateLst(sb, v.as(), depth + 1);
                 } else {
                     if (v.isStr() && v.strValue().length() > b.strClip) {
-                        sb.append(write(v.jvm(v.strValue().substring(0, b.strClip) + Graphitty.sillyPrint("...",true,false))));
+                        sb.append(write(v.jvm(v.strValue().substring(0, b.strClip) + Graphitty.sillyPrint("...", true, false))));
                     } else
                         sb.append(write(v));
                 }

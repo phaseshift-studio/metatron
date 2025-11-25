@@ -21,6 +21,7 @@ package studio.phaseshift.metatron.lang.core.m.type;
 import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.lang.core.m.parser.mParser;
 import studio.phaseshift.metatron.lang.sys.router.Router;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
@@ -464,7 +465,16 @@ public interface Inst extends Call {
             this.func = func;
         }
 
+        private f(final String func) {
+            this.bi = false;
+            this.func = mParser.parse(func);
+        }
+
         public static f of(final BiFunction<Obj, Inst, Obj> func) {
+            return null == func ? null : new f(func);
+        }
+
+        public static f of(final String func) {
             return null == func ? null : new f(func);
         }
 

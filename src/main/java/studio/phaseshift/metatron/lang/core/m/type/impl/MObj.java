@@ -98,7 +98,7 @@ public abstract class MObj implements Obj, Cloneable {
             return null;
         final Obj r = this.clone();
         this.tid = fURI.NOOBJ;
-        this.vid = fURI.NULL;
+        this.vid = fURI.fnull;
         return r;
     }
 

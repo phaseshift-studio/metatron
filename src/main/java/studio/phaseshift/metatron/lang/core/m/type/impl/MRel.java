@@ -20,10 +20,8 @@ package studio.phaseshift.metatron.lang.core.m.type.impl;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.core.m.type.Obj;
-import studio.phaseshift.metatron.lang.core.m.type.Poly;
 import studio.phaseshift.metatron.lang.core.m.type.Rel;
 
-import java.util.function.BiFunction;
 import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.REL_TID;
@@ -32,17 +30,21 @@ import static studio.phaseshift.metatron.util.Tuple.Pair;
 
 public class MRel extends MObj implements Rel {
     public MRel(final Pair<Obj, Obj> value, final fURI tid, final fURI vid) {
-        super(value, tid, vid);
+        super(value, null == tid ? REL_TID : tid, vid);
     }
 
     public MRel(final Pair<Obj, Obj> value) {
-        this(value, REL_TID, fURI.NULL);
+        this(value, REL_TID, fURI.fnull);
         if (value.get0().isNoObj() || value.get1().isNoObj())
             this.tid = this.tid().c("0");
     }
 
     public static Rel rel(final Obj dom, final Obj rng) {
-        return new MRel(Pair.with(dom, rng));
+        return  rel(dom, rng, REL_TID, fURI.fnull);
+    }
+
+    public static Rel rel(final Obj dom, final Obj rng, final fURI tid, final fURI vid) {
+        return new MRel(Pair.with(dom, rng), tid, vid);
     }
 
     public static Rel rel(final Pair<Obj, Obj> pair) {
@@ -61,7 +63,7 @@ public class MRel extends MObj implements Rel {
     public Pair<Obj, Obj> jvm() {
         return (Pair<Obj, Obj>) this.jvm;
     }
-    
+
 
     public Stream<Rel> indexedStream() {
         return Stream.of(this);

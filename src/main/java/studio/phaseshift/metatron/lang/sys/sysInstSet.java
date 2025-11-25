@@ -7,18 +7,15 @@ import studio.phaseshift.metatron.lang.core.m.type.Type;
 import studio.phaseshift.metatron.lang.core.m.type.impl.MInstSet;
 import studio.phaseshift.metatron.lang.sys.console.Console;
 import studio.phaseshift.metatron.lang.sys.fs.fileSpace;
-import studio.phaseshift.metatron.ui.Graphitty;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static studio.phaseshift.metatron.furi.fURI.NOOBJ;
 import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.furi.q.DocQ.DOCQ_TYPE;
 import static studio.phaseshift.metatron.furi.q.DocQ.Doc.docWrap;
 import static studio.phaseshift.metatron.furi.q.PubSubQ.SUBQ_TYPE;
 import static studio.phaseshift.metatron.lang.core.m.inst.mFluent.StartLess.isa_;
-import static studio.phaseshift.metatron.lang.core.m.inst.mFluent.StartLess.map_;
 import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.*;
 import static studio.phaseshift.metatron.lang.core.m.obj.NoObj.noobj;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MInst.instC;
@@ -41,7 +38,7 @@ public class sysInstSet extends MInstSet {
     }
 
     public static sysInstSet create() {
-        return new sysInstSet(fURI.NULL);
+        return new sysInstSet(fURI.fnull);
     }
 
     public static sysInstSet create(final fURI vid) {

@@ -68,6 +68,11 @@ public final class Common {
     }
 
     private static <K, V> Map<K, V> mapBuilder(final Supplier<Map<K, V>> supplier, final Object... args) {
+        if (args.length == 1 && args[0] instanceof Map) {
+            final Map<K, V> map = supplier.get();
+            map.putAll((Map<K, V>) args[0]);
+            return map;
+        }
         return IntStream.iterate(0, i -> i < args.length, i -> i + 2)
                 .filter(i -> i + 1 < args.length)
                 .boxed()

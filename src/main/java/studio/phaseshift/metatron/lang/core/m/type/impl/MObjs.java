@@ -80,7 +80,7 @@ public class MObjs implements Objs {
 
     public static Obj objs(final Iterable<Obj> objs) {
         final Map<Obj, cInt> map = new LinkedHashMap<>();
-        return tryToShrink(flattenToMap(map, objs)).orElseGet(() -> new MObjs(map, fURI.NULL));
+        return tryToShrink(flattenToMap(map, objs)).orElseGet(() -> new MObjs(map, fURI.fnull));
     }
 
     public static Obj objs(final Stream<Obj> objs) {
@@ -230,7 +230,7 @@ public class MObjs implements Objs {
                 remaining.put(kv.getKey(), kv.getValue());
             }
         }
-        final Obj takenObj = taken.isEmpty() ? NoObj.noobj() : taken.size() == 1 ? taken.entrySet().stream().map(kv -> kv.getKey().c(kv.getValue())).iterator().next() : new MObjs(taken, fURI.NULL);
+        final Obj takenObj = taken.isEmpty() ? NoObj.noobj() : taken.size() == 1 ? taken.entrySet().stream().map(kv -> kv.getKey().c(kv.getValue())).iterator().next() : new MObjs(taken, fURI.fnull);
         final Obj remainingObj = remaining.isEmpty() ? NoObj.noobj() : remaining.size() == 1 ? remaining.entrySet().stream().map(kv -> kv.getKey().c(kv.getValue())).iterator().next() : new MObjs(remaining, this.vid);
         return Tuple.Pair.with(takenObj, remainingObj);
 

@@ -18,7 +18,6 @@
 
 package studio.phaseshift.metatron.furi.q;
 
-import org.apache.tinkerpop.gremlin.structure.Graph;
 import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.Space;
@@ -166,7 +165,7 @@ public class DocQ extends BaseQ {
         }
 
         public static Doc empty(final Inst inst) {
-            return new Doc(Map.of(uri(INST_TID.name()), inst), DOC_TID, fURI.NULL);
+            return new Doc(Map.of(uri(INST_TID.name()), inst), DOC_TID, fURI.fnull);
         }
 
         public Poly args() {
@@ -257,7 +256,7 @@ public class DocQ extends BaseQ {
                     uri(DOM), str(domDesc),
                     uri(RNG), str(rngDesc),
                     uri(ARGS), rec(argDescription.entrySet().stream().map(kv -> rel(kv.getKey(), str(kv.getValue())))),
-                    uri(Tokens.DESC), str(description)).jvm(), DOC_TID, fURI.NULL);
+                    uri(Tokens.DESC), str(description)).jvm(), DOC_TID, fURI.fnull);
         }
 
         public static Inst docWrap(final Inst inst, final String domDesc, final String rngDesc, final Map<Obj, String> argDescription, final String description) {

@@ -77,7 +77,7 @@ public class PubSubQ extends BaseQ {
     public static class Subscription extends MObj {
 
         public Subscription(final fURI source, final fURI target, final Call call) {
-            super(Triplet.with(source, target, call), SUBSCRIPTION_TID, fURI.NULL);
+            super(Triplet.with(source, target, call), SUBSCRIPTION_TID, fURI.fnull);
         }
 
         public Triplet<fURI, fURI, Call> jvm() {

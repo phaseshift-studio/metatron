@@ -35,7 +35,7 @@ import static studio.phaseshift.metatron.lang.db.grph.inst.grphInstSet.VERTEX_TI
 public class MVertex extends MElement implements Obj, Vertex, WrappedVertex<Vertex> {
 
     protected MVertex(final Vertex vertex) {
-        super(vertex, VERTEX_TID, fURI.NULL);
+        super(vertex, VERTEX_TID, fURI.fnull);
     }
 
     public static MVertex of(final Vertex vertex) {
@@ -70,7 +70,7 @@ public class MVertex extends MElement implements Obj, Vertex, WrappedVertex<Vert
 
     @Override
     public fURI vid() {
-        return fURI.NULL; //this.graph().configuration().get(fURI.class, "pattern").retractPattern().extend("vertex").extend(this.value().id().toString());
+        return fURI.fnull; //this.graph().configuration().get(fURI.class, "pattern").retractPattern().extend("vertex").extend(this.value().id().toString());
     }
 
     @Override

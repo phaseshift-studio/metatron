@@ -51,7 +51,7 @@ public class MetatronTest {
         mInstSet.create().vid(f("/sys/lang/m"));
         machInstSet.create().vid(f("/sys/lang/mach"));
         vecInstSet.create().vid(f("/sys/lang/vec"));
-        kvSpace.of(f("/usr/#"), fURI.NULL).vid(f("/sys/space/usr"));
+        kvSpace.of(f("/usr/#"), fURI.fnull).vid(f("/sys/space/usr"));
     }
 
     public void testMatches(final String lhs, final String rhs, final boolean matches) {

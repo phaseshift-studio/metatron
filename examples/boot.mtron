@@ -16,14 +16,18 @@
           route   => [/     => examples/www,
                       /docs => target/docs ]]@/sys/router/space/web;
  ollama::[host    => <http://localhost:11434>,
-          pattern => /ollama/#]@/sys/router/space/ollama;
+          pattern => /ollama/#,
+          store   => mqtt::[pattern => /mqtt/ollama/#,
+                            host    => <mqtt://chibi.local:1883>,
+                            prefix  => /mqtt/]@/sys/router/space/ollama/mqtt]@/sys/router/space/ollama;
    grph::[pattern => /g/#,
           space   => kv::[pattern => /g/#],
           load    => <tinkerpop-modern>]@/sys/router/space/tp3;
   clstr::[pattern => <ws://#>]@/sys/router/space/clstr;
-   mqtt::[pattern => /mqtt/#,
+   mqtt::[pattern => /mqtt/zigbee2mqtt/#,
           host    => <mqtt://chibi.local:1883>,
-          prefix  => </mqtt/>]@/sys/router/space/mqtt;
+          prefix  => </mqtt>]@/sys/router/space/mqtt/zigbee2mqtt;
+   
      fs::[pattern => </home/#>]@/sys/router/space/fs;
 console::[        => ];
  [-- *boot/option/mode.-<|[?=server   => print('\n\t{{g}}-<{{c}}server mode{{g}}>-{{X}}'), 

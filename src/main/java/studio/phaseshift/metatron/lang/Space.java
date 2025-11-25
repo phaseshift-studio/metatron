@@ -229,6 +229,7 @@ public interface Space extends Rec, Closeable {
                         obj.recValue()
                                 .entrySet()
                                 .stream()
+                                .filter(kv -> !kv.getValue().isNoObj())
                                 //.filter(kv -> nextStepAddr.extend(kv.getKey().uriValue()).matches(vid))
                                 //.forEach(kv -> submap.put(kv.getKey(), kv.getValue()));
                                 .forEach(kv -> Helper.resolveWrite(space, kv.getKey().uriValue(), kv.getValue(), directWriter, directReader));

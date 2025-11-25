@@ -13,11 +13,15 @@ import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.BYTES_TID;
 public class MBytes extends MObj implements Bytes {
 
     public MBytes(final ByteBuffer jvm, final fURI tid, final fURI vid) {
-        super(jvm, tid, vid);
+        super(jvm, null == tid ? BYTES_TID : tid, vid);
     }
 
     public static Bytes bytes(final ByteBuffer jvm) {
-        return new MBytes(jvm, BYTES_TID, fURI.NULL);
+        return bytes(jvm, BYTES_TID, fURI.fnull);
+    }
+
+    public static Bytes bytes(final ByteBuffer jvm, final fURI tid, final fURI vid) {
+        return new MBytes(jvm, tid, vid);
     }
 
     @Override

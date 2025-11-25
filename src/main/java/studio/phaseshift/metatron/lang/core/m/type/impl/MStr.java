@@ -1,6 +1,6 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
- * Copyright (C) 2025- PhaseShift Studio, LLC 
+ * Copyright (C) 2025- PhaseShift Studio, LLC
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -27,7 +27,11 @@ import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.STR_TID;
 public class MStr extends MObj implements Str {
 
     public static Str str(final String jvm) {
-        return new MStr(jvm,STR_TID,fURI.NULL);
+        return str(jvm, STR_TID, fURI.fnull);
+    }
+
+    public static Str str(final String jvm, final fURI tid, final fURI vid) {
+        return new MStr(jvm, null == tid ? STR_TID : tid, vid);
     }
 
     public MStr(final String value, final fURI tid, final fURI vid) {
@@ -35,7 +39,7 @@ public class MStr extends MObj implements Str {
     }
 
     public MStr(final String value) {
-        this(value, STR_TID, fURI.NULL);
+        this(value, STR_TID, fURI.fnull);
     }
 
     @Override

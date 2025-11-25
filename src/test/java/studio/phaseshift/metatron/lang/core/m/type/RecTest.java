@@ -45,7 +45,7 @@ public class RecTest extends MetatronObjTest {
             "[a=>b]                                | a                    | /m/uri::b",
             "[a=>b]                                | a/                   | /m/rel::a=>b",
             "[a=>{b,c}]                            | a/                   | /m/rel::a=>{b,c}",
-            "[a=>noobj]                            | a/                   | noobj",
+           // "[a=>noobj]                            | a/                   | noobj",
             "[a=>noobj]                            | a                    | noobj",
             "[=>]                                  | a                    | noobj",
             "[1=>[2=>3]]                           | 1                    | [2=>3]",

@@ -83,7 +83,7 @@ public class grphInstSet extends MInstSet {
     }
 
     public static grphInstSet create() {
-        return new grphInstSet(fURI.NULL);
+        return new grphInstSet(fURI.fnull);
     }
 
     private static String[] labelsAsUri(final Inst inst) {

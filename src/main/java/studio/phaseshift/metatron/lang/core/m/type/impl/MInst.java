@@ -1,6 +1,6 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
- * Copyright (C) 2025- PhaseShift Studio, LLC 
+ * Copyright (C) 2025- PhaseShift Studio, LLC
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -19,22 +19,23 @@
 package studio.phaseshift.metatron.lang.core.m.type.impl;
 
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.furi.q.DocQ;
 import studio.phaseshift.metatron.lang.core.m.type.Inst;
 import studio.phaseshift.metatron.lang.core.m.obj.NoObj;
 import studio.phaseshift.metatron.lang.core.m.type.Obj;
 import studio.phaseshift.metatron.lang.core.m.type.Poly;
 import studio.phaseshift.metatron.furi.c.cInt;
-import studio.phaseshift.metatron.lang.sys.router.Router;
 
+import java.util.List;
 import java.util.Objects;
 import java.util.function.BiFunction;
 
+import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.INST_TID;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.util.Tuple.Triplet;
 
 public class MInst extends MObj implements Inst {
     public MInst(final Triplet<Poly, Inst.f, Obj> jvm, final fURI tid, final fURI vid) {
-        super(jvm, tid, vid);
+        super(jvm, null == tid ? INST_TID : tid, vid);
     }
 
 
@@ -54,19 +55,23 @@ public class MInst extends MObj implements Inst {
     }
 
     public static Inst instA(final fURI tid) {
-        return new MInst(Triplet.with(MLst.of(), null, NoObj.noobj()), tid, fURI.NULL);
+        return new MInst(Triplet.with(lst(List.of()), null, NoObj.noobj()), tid, fURI.fnull);
     }
 
     public static Inst instB(final fURI tid, final Poly args) {
-        return new MInst(Triplet.with(args, null, NoObj.noobj()), tid, fURI.NULL);
+        return new MInst(Triplet.with(args, null, NoObj.noobj()), tid, fURI.fnull);
     }
 
     public static Inst instC(final fURI tid, final Poly args, final BiFunction<Obj, Inst, Obj> f) {
-        return new MInst(Triplet.with(args, Inst.f.of(f), NoObj.noobj()), tid, fURI.NULL);
+        return new MInst(Triplet.with(args, Inst.f.of(f), NoObj.noobj()), tid, fURI.fnull);
     }
 
     public static Inst instC(final fURI tid, final Poly args, final BiFunction<Obj, Inst, Obj> f, final Obj seed) {
-        return new MInst(Triplet.with(args, Inst.f.of(f), seed), tid, fURI.NULL);
+        return new MInst(Triplet.with(args, Inst.f.of(f), seed), tid, fURI.fnull);
+    }
+
+    public static Inst instC(final fURI tid, final Poly args, final String code) {
+        return new MInst(Triplet.with(args, Inst.f.of(code), NoObj.noobj()), tid, fURI.fnull);
     }
 
     @Override
@@ -80,7 +85,7 @@ public class MInst extends MObj implements Inst {
         return (other instanceof Inst) &&
                 Objects.equals(this.tid, ((Obj) other).tid()) &&
                 Objects.equals(this.args(), ((Inst) other).args()) &&
-                Objects.equals(this.f(), ((Inst)other).f()) &&
+                Objects.equals(this.f(), ((Inst) other).f()) &&
                 Objects.equals(this.vid, ((Obj) other).vid());
         /*Objects.equals(this.value,((Obj) other).value())*/
     }

@@ -52,7 +52,7 @@ public class FutureObj<T extends Obj> extends MObj implements Future<T> {
         super();
         this.jvm = new AtomicReference<T>();
         this.tid = FUTURE_TID;
-        this.vid = fURI.NULL;
+        this.vid = fURI.fnull;
         this.tag = tag;
         this.isCanceled = false;
     }

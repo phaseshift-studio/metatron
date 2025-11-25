@@ -45,8 +45,8 @@ public class stackSpace extends MSpace<Stack<Poly>> {
     private final Space root;
 
     public stackSpace(final fURI pattern) {
-        super(new Stack<>(), mutableMap(uri(Tokens.PATTERN), uri(pattern)), pattern, STACK_TID, fURI.NULL);
-        this.root = kvSpace.of(this.pattern, fURI.NULL);
+        super(new Stack<>(), mutableMap(uri(Tokens.PATTERN), uri(pattern)), pattern, STACK_TID, fURI.fnull);
+        this.root = kvSpace.of(this.pattern, fURI.fnull);
     }
 
     @Override

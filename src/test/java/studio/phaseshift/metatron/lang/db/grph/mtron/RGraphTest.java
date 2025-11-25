@@ -27,8 +27,8 @@ public class RGraphTest extends MetatronTest {
     public static void begin() {
         MetatronTest.begin();
         grphInstSet.create().vid(f("/sys/lang/grph"));
-        grphSpace space = new grphSpace(kvSpace.of(f("/g/#"), fURI.NULL), Map.of(
-                uri(SPACE), kvSpace.of(f("/g/#"), fURI.NULL),
+        grphSpace space = new grphSpace(kvSpace.of(f("/g/#"), fURI.fnull), Map.of(
+                uri(SPACE), kvSpace.of(f("/g/#"), fURI.fnull),
                 uri(PATTERN), uri("/g/#"),
                 uri("load"), uri("tinkerpop-modern")), f("/g/#"), f("/sys/space/grph"));
         Router.global().addSpace(space);

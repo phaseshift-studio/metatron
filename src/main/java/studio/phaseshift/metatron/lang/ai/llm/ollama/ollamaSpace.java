@@ -45,6 +45,7 @@ import studio.phaseshift.metatron.util.Tuple;
 import java.util.Arrays;
 import java.util.Map;
 
+import static studio.phaseshift.metatron.Tokens.STORE;
 import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.lang.ai.llm.llmInstSet.OLLAMA_TID;
@@ -67,21 +68,27 @@ import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
  */
 public class ollamaSpace extends MSpace<OllamaModels> {
 
-
-    public static final Type OLLAMA_TYPE = T(OLLAMA_TID, null, instC(mInstSet.INST_TID.dom(ALL.maybe()).rng(OLLAMA_TID), lst(T(REC_TID, isa_(rec(uri(Tokens.PATTERN), T(URI_TID), uri(Tokens.HOST), T(URI_TID))))), (lhs, inst) -> {
-        final fURI pattern = inst.arg(0).<Rec>as().at(Tokens.PATTERN).uriValue();
-        final fURI ollamaHost = inst.arg(0).<Rec>as().at(Tokens.HOST).uriValue();
-        final OllamaModels models = OllamaModels.builder().baseUrl(ollamaHost.toString()).build();
-        final Space ollama = new ollamaSpace(models, inst.arg(0).jvm(), pattern, inst.arg(0).vid());
-        Router.global().addSpace(ollama);
-        return ollama;
-    }));
+    public static final Type OLLAMA_TYPE =
+            T(OLLAMA_TID, null,
+                    instC(mInstSet.INST_TID.dom(ALL.maybe()).rng(OLLAMA_TID),
+                            lst(T(REC_TID, isa_(rec(
+                                    uri(Tokens.PATTERN), T(URI_TID),
+                                    uri(Tokens.HOST), T(URI_TID),
+                                    uri(STORE).maybe(), T(REC_TID))))), (lhs, inst) -> {
+                                final fURI pattern = inst.arg(0).<Rec>as().at(Tokens.PATTERN).uriValue();
+                                final fURI ollamaHost = inst.arg(0).<Rec>as().at(Tokens.HOST).uriValue();
+                                final OllamaModels models = OllamaModels.builder().baseUrl(ollamaHost.toString()).build();
+                                final Space ollama = new ollamaSpace(models, inst.arg(0).jvm(), pattern, inst.arg(0).vid());
+                                Router.global().addSpace(ollama);
+                                return ollama;
+                            }));
 
     private final GraphittyLogger LOG = Graphitty.log(this);
-    private final kvSpace internal = new kvSpace(this.pattern, fURI.NULL);
+    private final Space internal;
 
     public ollamaSpace(final OllamaModels models, final Map<Obj, Obj> config, final fURI pattern, final fURI vid) {
         super(models, config, pattern, OLLAMA_TID, vid);
+        this.internal = (Space) (config.containsKey(uri(STORE)) ? config.get(uri(STORE)) : new kvSpace(pattern, fURI.fnull));
         LOG.info("available models: %s", lst(models.availableModels().content().stream().map(OllamaModel::getModel).map(MUri::uri).map(m -> (Obj) m).toList()));
     }
 
@@ -89,9 +96,10 @@ public class ollamaSpace extends MSpace<OllamaModels> {
         final OllamaModels models = OllamaModels.builder().baseUrl(ollamaHost.toString()).build();
         return new ollamaSpace(models, Map.of(
                 uri(Tokens.HOST), ollamaHost.toUri(),
-                uri(Tokens.PATTERN), pattern.toUri()),
+                uri(Tokens.PATTERN), pattern.toUri(),
+                uri(Tokens.STORE), new kvSpace(pattern, fURI.fnull)),
                 pattern,
-                fURI.NULL);
+                fURI.fnull);
     }
 
     private fURI modelToVid(final String modelName) {

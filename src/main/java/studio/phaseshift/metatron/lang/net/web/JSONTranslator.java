@@ -21,33 +21,45 @@ package studio.phaseshift.metatron.lang.net.web;
 import com.google.gson.*;
 import com.google.gson.stream.JsonReader;
 import org.petitparser.context.Result;
+import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.core.m.parser.mParser;
 import studio.phaseshift.metatron.lang.core.m.obj.NoObj;
-import studio.phaseshift.metatron.lang.core.m.type.Bytes;
-import studio.phaseshift.metatron.lang.core.m.type.Fail;
-import studio.phaseshift.metatron.lang.core.m.type.Obj;
+import studio.phaseshift.metatron.lang.core.m.type.*;
 import studio.phaseshift.metatron.lang.util.serial.ObjSerializer;
 import studio.phaseshift.metatron.lang.util.serial.ObjStringSerializer;
 import studio.phaseshift.metatron.ui.*;
-import studio.phaseshift.metatron.util.Common;
 import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Translator;
 
 import java.io.StringReader;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import static studio.phaseshift.metatron.furi.fURI.f;
+import static studio.phaseshift.metatron.furi.fURI.fnull;
+import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.*;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MBool.bool;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MBytes.bytes;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MReal.real;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MRec.rec;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MStr.str;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
 
 public record JSONTranslator(ObjSerializer<String> serializer) implements Translator<Obj, JsonElement> {
+
+    public static final String TID_KEY = "_tid";
+    public static final String VID_KEY = "_vid";
+    public static final String BID_KEY = "_bid";
+    public static final String VALUE_KEY = "_value";
+
 
     private static final GraphittyLogger LOG = Graphitty.log(JSONTranslator.class);
 
@@ -68,79 +80,123 @@ public record JSONTranslator(ObjSerializer<String> serializer) implements Transl
     public Obj translate(final JsonElement json) {
         if (json.isJsonNull())
             return NoObj.noobj();
-        else if (json.isJsonPrimitive()) {
-            final JsonPrimitive jp = (JsonPrimitive) json;
+
+        final fURI tid = json.isJsonObject() && json.getAsJsonObject().has(TID_KEY) ? f(json.getAsJsonObject().get(TID_KEY).getAsString()) : null;
+        final fURI bid = json.isJsonObject() && json.getAsJsonObject().has(BID_KEY) ? f(json.getAsJsonObject().get(BID_KEY).getAsString()) : null == tid ? null : tid.basePath();
+        final fURI vid = false && json.isJsonObject() && json.getAsJsonObject().has(VID_KEY) ? f(json.getAsJsonObject().get(VID_KEY).getAsString()) : null;
+        final JsonElement value = null == bid ? json : json.getAsJsonObject().get(VALUE_KEY);
+        if (value.isJsonPrimitive()) {
+            final JsonPrimitive jp = (JsonPrimitive) value;
             if (jp.isBoolean())
-                return bool(jp.getAsBoolean());
+                return bool(jp.getAsBoolean(), tid, vid);
             else if (jp.isNumber()) {
                 if (jp.getAsString().contains("."))
-                    return real(jp.getAsDouble());
+                    return real(jp.getAsDouble(), tid, vid);
                 else
-                    return jnt(jp.getAsLong());
+                    return jnt(jp.getAsLong(), tid, vid);
             } else if (jp.isString()) {
                 final String jpstr = jp.getAsString();
                 try {
-                    final Result r = mParser.m_call().parse(jpstr);
-                    return r.isSuccess() ? r.get() : mParser.parse(jpstr);
-                    // if (jpstr.charAt(0) == '"' && jpstr.charAt(jpstr.length() - 1) == '"')
-                    //     jpstr = jpstr.substring(1, jpstr.length() - 1);
+                    if (null != bid) {
+                        if (bid.equals(BYTES_TID)) {
+                            return bytes(ByteBuffer.wrap(jpstr.getBytes()), tid, vid);
+                        } else if (bid.equals(STR_TID)) {
+                            return str(jpstr, tid, vid);
+                        } else if (bid.equals(CODE_TID)) {
+                            return mParser.parse(jpstr).vid(vid);
+                        } else if (bid.equals(INST_TID)) {
+                            return mParser.parse(jpstr).<Call>as().tryToInst().vid(vid);
+                        } else if (bid.equals(FAIL_TID)) {
+                            return fail(MTronException.of(jpstr)).vid(vid);
+                        }
+                    }
+                    return uri(f(jpstr), tid, vid);
                 } catch (Exception e) {
                     return str(jpstr);
                 }
             }
-        } else if (json.isJsonArray()) {
-            final JsonArray jp = (JsonArray) json;
-            final List<Obj> list = new ArrayList<>();
-            for (var j : jp.getAsJsonArray()) {
-                list.add(translate(j));
+        } else if (value.isJsonArray()) {
+            final JsonArray jp = (JsonArray) value;
+            if (null != bid && bid.equals(REL_TID)) {
+                return rel(translate(jp.get(0)), translate(jp.get(1)), tid, vid);
+            } else if (null != bid && bid.toString().equals("/m/type")) {
+                return T(tid, (Call) translate(jp.get(0)), (Call) translate(jp.get(1)));
+            } else {
+                final List<Obj> list = new ArrayList<>();
+                for (var j : jp.getAsJsonArray()) {
+                    list.add(translate(j));
+                }
+                return lst(list, tid, vid);
             }
-            return lst(list);
-        } else if (json.isJsonObject()) {
-            final JsonObject jp = (JsonObject) json;
+        } else if (value.isJsonObject()) {
+            final JsonObject jp = (JsonObject) value;
             final Map<Obj, Obj> map = new LinkedHashMap<>();
             for (var kv : jp.getAsJsonObject().asMap().entrySet()) {
-                map.put(uri(kv.getKey()), translate(kv.getValue()));
+                final Obj v = translate(kv.getValue());
+                final Uri k = uri(kv.getKey());
+                if (!k.isNoObj() && !v.isNoObj())
+                    map.put(k, v);
             }
-            return rec(map);
+            return rec(map, tid, vid);
         }
         throw new IllegalStateException("unknown type: " + json + "::" + json.getAsInt());
     }
 
     @Override
     public JsonElement translate(final Obj obj) {
+        JsonElement element;
         try {
             if (obj.isNoObj())
                 return JsonNull.INSTANCE;
-            if (obj.isFail())
-                return new JsonPrimitive(obj.failValue().getMessage()); // todo: this is weak
-            if (obj.isBytes())
-                return new JsonPrimitive(obj.<Bytes>as().toHexString());
-            if (obj.isBool())
-                return new JsonPrimitive(obj.boolValue());
-            if (obj.isInt())
-                return new JsonPrimitive(obj.intValue());
-            if (obj.isReal())
-                return new JsonPrimitive(obj.realValue());
-            if (obj.isUri())
-                return new JsonPrimitive(obj.uriValue().toString());
-            if (obj.isStr())
-                return new JsonPrimitive(obj.strValue());
-            if (!obj.isPoly() && !obj.isCall())
-                return JsonParser.parseString(this.serializer.write(obj));
-            if (obj.isCall())
-                return new JsonPrimitive(Graphitty.strip(SERIALIZER.write(obj)));
-            if (obj.isLst()) {
+            else if (obj.isFail())
+                element = new JsonPrimitive(obj.failValue().getMessage()); // todo: this is weak
+            else if (obj.isBytes())
+                element = new JsonPrimitive(obj.<Bytes>as().toHexString());
+            else if (obj.isBool())
+                element = new JsonPrimitive(obj.boolValue());
+            else if (obj.isInt())
+                element = new JsonPrimitive(obj.intValue());
+            else if (obj.isReal())
+                element = new JsonPrimitive(obj.realValue());
+            else if (obj.isUri())
+                element = new JsonPrimitive(obj.uriValue().toString());
+            else if (obj.isStr())
+                element = new JsonPrimitive(obj.strValue());
+                //else if (!obj.isPoly() && !obj.isCall())
+                //    element = JsonParser.parseString(this.serializer.write(obj));
+            else if (obj.isCall())
+                element = new JsonPrimitive(Graphitty.strip(SERIALIZER.write(obj.<Call>as().tryToInst())));
+            else if (obj.isRel()) {
+                final JsonArray array = new JsonArray();
+                array.add(translate(obj.<Rel>as().first()));
+                array.add(translate(obj.<Rel>as().second()));
+                element = array;
+            } else if (obj.isType()) {
+                final JsonArray array = new JsonArray();
+                //array.add(new JsonPrimitive(obj.tid().toString()));
+                array.add(translate(obj.<Type>as().predicate()));
+                array.add(translate(obj.<Type>as().constructor()));
+                element = array;
+            } else if (obj.isLst()) {
                 JsonArray array = new JsonArray();
                 obj.lstValue().forEach(o -> array.add(translate(o)));
-                return array;
-            }
-            if (obj.isRec()) {
+                element = array;
+            } else if (obj.isRec()) {
                 JsonObject object = new JsonObject();
                 obj.recValue().forEach((key, value) -> object.add(key.uriValue().toString(), translate(value)));
-                return object;
+                element = object;
             } else
                 throw MTronException.of("could not parse %s to json", obj);
-
+            if (!obj.type().isBaseType() || obj.isType() || obj.isStr() || obj.isObjCall() || obj.isFail() || obj.isRel()) {
+                final JsonObject typedObj = new JsonObject();
+                typedObj.add(BID_KEY, new JsonPrimitive(obj.isType() ? "/m/type" : (obj.isCode() ? CODE_TID.toString() : (obj.isInst() ? INST_TID.toString() : obj.baseType().basePath().toString()))));
+                // if (!obj.type().isBaseType())
+                typedObj.add(TID_KEY, new JsonPrimitive(obj.tid().toString()));
+                typedObj.add(VALUE_KEY, element);
+                return typedObj;
+            } else {
+                return element;
+            }
         } catch (final Exception e) {
             throw MTronException.of(e, "could not parse to json: %s", obj);
         }

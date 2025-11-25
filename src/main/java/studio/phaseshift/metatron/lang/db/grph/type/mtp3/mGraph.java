@@ -3,15 +3,9 @@ package studio.phaseshift.metatron.lang.db.grph.type.mtp3;
 import org.apache.commons.configuration2.BaseConfiguration;
 import org.apache.commons.configuration2.Configuration;
 import org.apache.tinkerpop.gremlin.process.computer.GraphComputer;
-import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversal;
-import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
 import org.apache.tinkerpop.gremlin.structure.*;
 import org.apache.tinkerpop.gremlin.structure.io.Io;
-import org.apache.tinkerpop.gremlin.structure.io.IoRegistry;
-import org.apache.tinkerpop.gremlin.structure.io.gryo.GryoIo;
 import org.apache.tinkerpop.gremlin.structure.io.gryo.GryoMapper;
-import org.apache.tinkerpop.gremlin.structure.io.gryo.GryoVersion;
-import org.apache.tinkerpop.gremlin.structure.io.util.IoRegistryHelper;
 import org.apache.tinkerpop.gremlin.structure.util.ElementHelper;
 import org.apache.tinkerpop.gremlin.structure.util.wrapped.WrappedGraph;
 import studio.phaseshift.metatron.furi.fURI;
@@ -26,7 +20,6 @@ import studio.phaseshift.metatron.lang.db.grph.type.RVertex;
 import studio.phaseshift.metatron.lang.db.kv.kvSpace;
 import studio.phaseshift.metatron.lang.sys.router.Router;
 import studio.phaseshift.metatron.ui.Graphitty;
-import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.*;
@@ -85,7 +78,7 @@ public class mGraph implements Graph, WrappedGraph<grphSpace> {
         final fURI pattern = f(configuration.getProperty(PATTERN).toString());
         final Obj s = Router.global().read(spacevid);
         if (s.isNoObj()) {
-            this.space = new grphSpace(kvSpace.of(pattern, fURI.NULL), configurationToMap(configuration), pattern, spacevid);
+            this.space = new grphSpace(kvSpace.of(pattern, fURI.fnull), configurationToMap(configuration), pattern, spacevid);
         } else if (s instanceof grphSpace) {
             this.space = (grphSpace) s;
         } else {

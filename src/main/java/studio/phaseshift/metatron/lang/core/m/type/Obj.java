@@ -60,6 +60,10 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
 
     }
 
+    default <O extends Obj> O maybe() {
+        return (O) this.c(cInt::maybe);
+    }
+
     <J> J jvm();
 
     fURI tid();
@@ -284,20 +288,20 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
         return this.isNoObj() ? other.get() : (O) this;
     }
 
-    default <O extends Obj> O orElseThrow(final RuntimeException e) {
+    default <O extends Obj> O orThrow(final RuntimeException e) {
         if (this.isNoObj())
             throw e;
         return (O) this;
     }
 
-    default <O extends Obj> void ifExists(final Consumer<O> function) {
+    /*default <O extends Obj> void ifExists(final Consumer<O> function) {
         if (!this.isNoObj())
             function.accept((O) this);
     }
 
     default <O extends Obj> O andIf(final Predicate<O> predicate) {
         return predicate.test((O) this) ? (O) this : (O) noobj();
-    }
+    }*/
 
     default <O extends Obj> O choose(final Predicate<Obj> predicate, final Function<Obj, O> trueBranch, final Function<Obj, O> falseBranch) {
         return predicate.test(this) ? trueBranch.apply(this) : falseBranch.apply(this);
@@ -340,7 +344,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
     default boolean isReal() {
         return this instanceof Real;
     }
-
+    
     default boolean isStr() {
         return this instanceof Str;
     }

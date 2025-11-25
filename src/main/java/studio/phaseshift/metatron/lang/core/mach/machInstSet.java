@@ -66,7 +66,7 @@ public class machInstSet extends MInstSet {
     }
 
     public static machInstSet create() {
-        return new machInstSet(fURI.NULL);
+        return new machInstSet(fURI.fnull);
     }
 
     @Override

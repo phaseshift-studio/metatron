@@ -67,7 +67,7 @@ public class GGUF extends MRec {
             this.rawData = com.llama4j.gguf.GGUF.read(modelPath);
             // file and path come in constructor map
             this.jvm().put(uri(VERSION), jnt(this.rawData.getVersion()));
-            this.jvm().put(uri(TENSOR), instC(mInstSet.INST_TID.dom(ALL.maybe()).rng(REC_TID.maybeSome()), lst(), (lhs, inst) -> this.tensors()));
+            //this.jvm().put(uri(TENSOR),  instC(mInstSet.INST_TID.dom(ALL.maybe()).rng(REC_TID.maybeSome()), lst(), (lhs, inst) -> this.tensors()));
         } catch (final ArrayIndexOutOfBoundsException e) {
             throw MTronException.of("unable to verify corrupted ggruf file %s: %s", modelPath, e);
         } catch (final Exception e) {

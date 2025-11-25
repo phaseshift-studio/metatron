@@ -1,17 +1,10 @@
 package studio.phaseshift.metatron.lang.net.clstr;
 
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.lang.core.m.parser.mParser;
 import studio.phaseshift.metatron.lang.core.m.type.Type;
 import studio.phaseshift.metatron.lang.core.m.type.impl.MInstSet;
-import studio.phaseshift.metatron.lang.net.web.JSONTranslator;
-import studio.phaseshift.metatron.lang.net.web.WebTranslator;
-import studio.phaseshift.metatron.lang.net.web.webInstSet;
-import studio.phaseshift.metatron.lang.net.web.webSpace;
 
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MType.T;
@@ -28,7 +21,7 @@ public class clstrInstSet extends MInstSet {
     }
 
     public static clstrInstSet create() {
-        return new clstrInstSet(fURI.NULL);
+        return new clstrInstSet(fURI.fnull);
     }
 
     @Override

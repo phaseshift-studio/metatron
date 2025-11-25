@@ -18,9 +18,6 @@
 
 package studio.phaseshift.metatron.lang.ai.llm;
 
-import dev.langchain4j.model.chat.request.ChatRequest;
-import dev.langchain4j.model.ollama.OllamaChatModel;
-import dev.langchain4j.model.ollama.OllamaChatRequestParameters;
 import io.github.ollama4j.Ollama;
 import io.github.ollama4j.models.chat.*;
 import io.github.ollama4j.models.generate.OllamaGenerateTokenHandler;
@@ -35,7 +32,6 @@ import studio.phaseshift.metatron.lang.core.m.type.Inst;
 import studio.phaseshift.metatron.lang.core.m.type.Rec;
 import studio.phaseshift.metatron.lang.core.m.type.Type;
 import studio.phaseshift.metatron.lang.core.m.type.impl.MInstSet;
-import studio.phaseshift.metatron.lang.core.m.type.impl.MObjs;
 import studio.phaseshift.metatron.lang.sys.router.Router;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.util.MTronException;
@@ -73,7 +69,7 @@ public class llmInstSet extends MInstSet {
     }
 
     public static llmInstSet create() {
-        return new llmInstSet(fURI.NULL);
+        return new llmInstSet(fURI.fnull);
     }
 
     @Override

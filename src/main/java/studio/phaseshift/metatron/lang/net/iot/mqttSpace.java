@@ -19,11 +19,11 @@
 package studio.phaseshift.metatron.lang.net.iot;
 
 import com.hivemq.client.mqtt.MqttClient;
-import com.hivemq.client.mqtt.mqtt5.Mqtt5BlockingClient;
 import com.hivemq.client.mqtt.mqtt5.Mqtt5Client;
 import com.hivemq.client.mqtt.mqtt5.message.subscribe.Mqtt5RetainHandling;
 import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.Q;
+import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.core.m.inst.mInstSet;
 import studio.phaseshift.metatron.lang.core.m.type.Rec;
@@ -40,10 +40,12 @@ import studio.phaseshift.metatron.lang.util.serial.ObjStringSerializer;
 import studio.phaseshift.metatron.ui.*;
 
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 
+import static studio.phaseshift.metatron.Tokens.PATTERN;
 import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.lang.core.m.inst.mFluent.StartLess.isa_;
@@ -68,30 +70,32 @@ public class mqttSpace extends MSpace<Mqtt5Client> {
     public static fURI MQTT_TID = MWEB_TID.extend("space").extend("mqtt");
     public static final Type MQTT_TYPE = T(MQTT_TID, null,
             instC(mInstSet.INST_TID.dom(ALL.maybe()).rng(MQTT_TID),
-                    lst(T(REC_TID, isa_(rec(uri(Tokens.PATTERN), T(URI_TID), uri(Tokens.HOST), T(URI_TID), uri(Tokens.PREFIX), T(URI_TID))))), (lhs, inst) -> {
-                        final fURI pattern = inst.arg(0).<Rec>as().at(Tokens.PATTERN).uriValue();
+                    lst(T(REC_TID, isa_(rec(
+                            uri(PATTERN), T(URI_TID),
+                            uri(Tokens.HOST), T(URI_TID),
+                            uri(Tokens.PREFIX), T(URI_TID),
+                            uri(Tokens.Q).c(cInt::maybe), isa_(T(LST_TID)))))), (lhs, inst) -> {
+                        final fURI pattern = inst.arg(0).<Rec>as().at(PATTERN).uriValue();
                         final fURI host = inst.arg(0).<Rec>as().at(Tokens.HOST).uriValue();
                         final fURI prefix = inst.arg(0).<Rec>as().at(Tokens.PREFIX).uriValue();
                         // final Rec route = inst.arg(0).<Rec>as().at(ROUTE);
-                        final mqttSpace space = mqttSpace.of(mutableMap(uri(Tokens.HOST), uri(host), uri(Tokens.PREFIX), uri(prefix)), pattern, inst.arg(0).vid());
+                        final mqttSpace space = mqttSpace.of(mutableMap(uri(PATTERN), uri(pattern), uri(Tokens.HOST), uri(host), uri(Tokens.PREFIX), uri(prefix)), inst.arg(0).vid());
                         Router.global().addSpace(space);
                         return space;
                     }));
     protected final fURI broker;
     protected final fURI prefix;
-    final JSONTranslator jsonTranslator = new JSONTranslator(SERIALIZER);
-    private final GraphittyLogger LOG = Graphitty.log(this);
-    Mqtt5Client client;
-    Mqtt5BlockingClient.Mqtt5Publishes incomingMessages;
-    kvSpace cache;
+    protected final JSONTranslator jsonTranslator = new JSONTranslator(SERIALIZER);
+    protected final Mqtt5Client client;
+    protected final kvSpace cache;
 
-    public mqttSpace(final Mqtt5Client client, final Map<Obj, Obj> config, final fURI pattern, final fURI vid) {
-        super(client, config, pattern, MQTT_TID, vid);
+    public mqttSpace(final Mqtt5Client client, final Map<Obj, Obj> config, final fURI vid) {
+        super(client, config, config.get(uri(PATTERN)).uriValue(), MQTT_TID, vid);
         this.prefix = config.containsKey(uri(Tokens.PREFIX)) ? config.get(uri(Tokens.PREFIX)).uriValue() : null;
         LOG.info("{{y}}mtron{{g}}<=>{{y}}mqtt{{X}} mapping established: {{b}}%s {{g}}<=> ({{b}}%s {{g}}<=> {{b}}%s{{g}}){{X}}", this.pattern(), this.prefix, this.toMqttTopic(this.pattern()));
         this.cache = new kvSpace(this.pattern(), this.vid.extend("cache"));
-        this.put(Tokens.Q, lst(this.qs().add(new MqttPubSubQ(this), IMMUTABLE)));
-        this.broker = config.get(uri(Tokens.HOST)).orElseThrow(new IllegalArgumentException("config must have a host key")).uriValue();
+        this.put(uri(Tokens.Q), lst(List.of(new MqttPubSubQ(this))), IMMUTABLE);
+        this.broker = config.get(uri(Tokens.HOST)).orThrow(new IllegalArgumentException("config must have a host key")).uriValue();
         try {
             this.client = MqttClient.builder()
                     .identifier(UUID.randomUUID().toString())
@@ -127,21 +131,26 @@ public class mqttSpace extends MSpace<Mqtt5Client> {
                         }
                     })
                     .send()
+                    .whenComplete((a, b) -> {
+                        if (null != b)
+                            LOG.error(b);
+                        else
+                            LOG.info("synchronized with mqtt topic: %s", toMqttTopic(this.pattern));
+                    })
                     .get();
         } catch (final Exception e) {
             throw new IllegalStateException(e);
         }
     }
 
-    public static mqttSpace of(final Map<Obj, Obj> config, final fURI pattern, final fURI vid) {
+    public static mqttSpace of(final Map<Obj, Obj> config, final fURI vid) {
         final Mqtt5Client client = MqttClient.builder()
                 .identifier(UUID.randomUUID().toString())
                 .serverHost(config.get(uri(Tokens.HOST)).uriValue().host())
                 .serverPort(config.get(uri(Tokens.HOST)).uriValue().port())
                 .useMqttVersion5()
                 .build();
-        config.put(uri(Tokens.PATTERN), uri(pattern));
-        return new mqttSpace(client, config, pattern, vid);
+        return new mqttSpace(client, config, vid);
     }
 
     protected String toMqttTopic(final fURI vid) {
@@ -151,7 +160,7 @@ public class mqttSpace extends MSpace<Mqtt5Client> {
     protected fURI toMtronVid(final String topic) {
         return null == this.prefix ? f(topic) : this.prefix.extend(topic);
     }
-    
+
 
     @Override
     public Obj read(final fURI vid) {

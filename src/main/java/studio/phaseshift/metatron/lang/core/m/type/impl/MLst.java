@@ -30,28 +30,28 @@ import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.LST_TID;
 public class MLst extends MObj implements Lst {
 
     public static Lst lst(final Obj... objs) {
-        return MLst.of(objs);
+        return objs.length == 0 ? EMPTY_LST : new MLst(List.of(objs), LST_TID, fURI.fnull);
     }
 
     public static Lst lst(final List<Obj> objs) {
-        return MLst.of(objs);
+        return lst(objs, LST_TID, fURI.fnull);
+    }
+
+    public static Lst lst(final List<Obj> objs, final fURI tid, final fURI vid) {
+        return new MLst(objs, tid, vid);
     }
 
     public static Lst lst(final Stream<Obj> objs) {
-        return MLst.of(objs.toList());
+        return lst(objs.toList());
     }
 
     public MLst(final List<Obj> jvm, final fURI tid, final fURI vid) {
-        super(jvm, tid, vid);
+        super(jvm, null == tid ? LST_TID : tid, vid);
     }
-
-    public MLst(final List<Obj> jvm) {
-        this(jvm, LST_TID, fURI.NULL);
-    }
-
+    
     @Override
     public Lst clone(final Object jvm, final fURI tid, final fURI vid) {
-        return (Lst) super.clone(jvm, tid, vid);
+        return super.clone(jvm, tid, vid);
     }
 
     @Override
@@ -59,17 +59,11 @@ public class MLst extends MObj implements Lst {
         return (List<Obj>) this.jvm;
     }
 
-    private static final Lst EMPTY_LST = new MLst(List.of(), LST_TID, fURI.NULL);
-
-    public static Lst of(final Obj... args) {
-        return args.length == 0 ? EMPTY_LST : new MLst(List.of(args));
+    @Override
+    public Lst jvm(final Object jvm) {
+        return this.clone(jvm, this.tid(), this.vid());
     }
 
-    public static Lst of(final List<Obj> objs) {
-        return new MLst(objs);
-    }
+    private static final Lst EMPTY_LST = new MLst(List.of(), LST_TID, fURI.fnull);
 
-    public static Lst of(final List<Obj> objs, final fURI tid) {
-        return new MLst(objs, tid, fURI.NULL);
-    }
 }

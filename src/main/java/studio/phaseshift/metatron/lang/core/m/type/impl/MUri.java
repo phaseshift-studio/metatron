@@ -27,25 +27,29 @@ import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.URI_TID;
 public class MUri extends MObj implements Uri {
 
     public MUri(final fURI jvm, final fURI tid, final fURI vid) {
-        super(jvm, tid, vid);
+        super(jvm, null == tid ? URI_TID : tid, vid);
         if (jvm.isZero())
             this.tid = this.tid.zero();
     }
 
     public static Uri uri(final String jvm) {
-        return new MUri(f(jvm), URI_TID, fURI.NULL);
+        return new MUri(f(jvm), URI_TID, fURI.fnull);
     }
 
     public static Uri uri(final fURI jvm) {
-        return new MUri(jvm, URI_TID, fURI.NULL);
+        return new MUri(jvm, URI_TID, fURI.fnull);
     }
 
     public static Uri uri(final fURI jvm, final fURI tid) {
-        return new MUri(jvm, tid, fURI.NULL);
+        return uri(jvm, tid, fURI.fnull);
+    }
+
+    public static Uri uri(final fURI jvm, final fURI tid, final fURI vid) {
+        return new MUri(jvm, tid, vid);
     }
 
     public static Uri uri(final String jvm, final fURI tid) {
-        return new MUri(f(jvm), tid, fURI.NULL);
+        return new MUri(f(jvm), tid, fURI.fnull);
     }
 
     @Override

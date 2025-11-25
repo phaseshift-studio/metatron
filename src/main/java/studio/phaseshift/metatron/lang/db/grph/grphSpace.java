@@ -19,7 +19,6 @@
 package studio.phaseshift.metatron.lang.db.grph;
 
 import org.apache.tinkerpop.gremlin.tinkergraph.structure.TinkerFactory;
-import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.Space;
@@ -39,7 +38,6 @@ import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.lang.core.m.inst.mFluent.StartLess.isa_;
-import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.REC_TID;
 import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.URI_TID;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
@@ -71,7 +69,7 @@ public class grphSpace extends MSpace<Space> {
                 final fURI dataset = inst.arg(0).<Rec>as().at(LOAD).uriValue();
                 final Obj inner = inst.arg(0).<Rec>as().at(SPACE);
                 final grphSpace space = new grphSpace(inner.isNoObj() ? noobjSpace.single() :
-                        new kvSpace(inner.<Rec>as().at(PATTERN).uriValue(), fURI.NULL), Map.of(uri(PATTERN), uri(pattern), uri(LOAD), uri(dataset)), pattern, inst.arg(0).vid());
+                        new kvSpace(inner.<Rec>as().at(PATTERN).uriValue(), fURI.fnull), Map.of(uri(PATTERN), uri(pattern), uri(LOAD), uri(dataset)), pattern, inst.arg(0).vid());
                 Router.global().addSpace(space);
                 space.start();
                 return space;
@@ -107,7 +105,7 @@ public class grphSpace extends MSpace<Space> {
     public void clear() {
         LOG.info("clearing {{b}}%s{{X}}",this.pattern);
         this.sjvm().close();
-        this.sjvm = kvSpace.of(this.pattern, fURI.NULL);
+        this.sjvm = kvSpace.of(this.pattern, fURI.fnull);
     }
 
 }

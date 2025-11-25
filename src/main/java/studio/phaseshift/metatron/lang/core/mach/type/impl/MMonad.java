@@ -42,7 +42,7 @@ public class MMonad extends MObj implements Monad {
     }
 
     public static Monad of(final Obj obj, final Inst inst) {
-        return new MMonad(Triplet.with(obj, inst, rec()), MACH_MONAD_TID, fURI.NULL);
+        return new MMonad(Triplet.with(obj, inst, rec()), MACH_MONAD_TID, fURI.fnull);
     }
 
     @Override

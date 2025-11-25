@@ -48,7 +48,7 @@ public class fURI implements Cloneable, Ring<fURI> {
     public static final String ONE_WILD_STRING = String.valueOf(ONE_WILD_CHAR);
     public static final fURI ALL = fURI.of(ALL_WILD_CHAR);
     public static final fURI SINGLE = fURI.of(ONE_WILD_CHAR);
-    public static final fURI NULL = null;
+    public static final fURI fnull = null;
     public static final fURI DOM = fURI.of("dom");
     public static final fURI RNG = fURI.of("rng");
     public static final fURI NOOBJ = fURI.of("").c("0");

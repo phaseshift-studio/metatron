@@ -39,7 +39,7 @@ import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
 public class MProperty<V> extends MObj implements Property<V>, WrappedProperty<Property<V>>, Rel {
 
     public MProperty(final Property<V> property, final fURI tid) {
-        super(property, tid, fURI.NULL);
+        super(property, tid, fURI.fnull);
     }
 
     public static <V> MProperty<V> of(final Property<V> property) {

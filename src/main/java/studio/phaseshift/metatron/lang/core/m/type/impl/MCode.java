@@ -1,6 +1,6 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
- * Copyright (C) 2025- PhaseShift Studio, LLC 
+ * Copyright (C) 2025- PhaseShift Studio, LLC
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -30,11 +30,11 @@ import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.CODE_TID;
 public class MCode extends MObj implements Code {
 
     public MCode(final List<Inst> jvm, final fURI tid, final fURI vid) {
-        super(jvm, tid, vid);
+        super(jvm, null == tid ? CODE_TID : tid, vid);
     }
 
     public static Code of(final List<Inst> insts) {
-        return new MCode(insts, CODE_TID, fURI.NULL);
+        return new MCode(insts, CODE_TID, fURI.fnull);
     }
 
     public static Code of(final List<Inst> insts, final fURI tid, final fURI vid) {

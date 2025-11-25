@@ -30,12 +30,12 @@ import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.FAIL_TID;
 public class MFail extends MObj implements Fail {
 
     public MFail(final Throwable t, final fURI tid, final fURI vid) {
-        super(t, tid, vid);
+        super(t, null == tid ? FAIL_TID : tid, vid);
         //t.printStackTrace();
     }
 
     public static Fail fail(final Throwable t) {
-        return new MFail(t, FAIL_TID, fURI.NULL);
+        return new MFail(t, FAIL_TID, fURI.fnull);
     }
 
     public static Fail fail(final Throwable t, final String format, final Object... args) {

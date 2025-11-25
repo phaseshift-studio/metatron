@@ -59,10 +59,10 @@ public class MType extends MObj implements Type {
     public static Type T(final fURI tid, final Call predicate, final Call constructor) {
         final Obj prev = Router.loaded() ? Router.readFromSpace(tid) : noobj();
         if (prev.isNoObj() || !prev.isType())
-            return new MType(Tuple.Pair.with(predicate, constructor), tid);
+            return new MType(Tuple.Pair.with(null == predicate || predicate.isNoObj() ? null : predicate, null == constructor || constructor.isNoObj() ? null : constructor), tid);
         else {
-            final Call pre = null == predicate ? prev.<Type>as().predicate() : predicate;
-            final Call con = null == constructor ? prev.<Type>as().constructor() : constructor;
+            final Call pre = null == predicate || predicate.isNoObj() ? prev.<Type>as().predicate() : predicate;
+            final Call con = null == constructor || constructor.isNoObj() ? prev.<Type>as().constructor() : constructor;
             return new MType(Tuple.Pair.with(pre, con), tid);
         }
     }

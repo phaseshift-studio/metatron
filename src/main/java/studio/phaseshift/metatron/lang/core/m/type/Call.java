@@ -76,7 +76,7 @@ public interface Call extends Obj, Ring<Call> {
         if (this.isCode())
             return (Code) this;
         else
-            return new MCode(List.of(this.as()), CODE_TID, fURI.NULL);
+            return new MCode(List.of(this.as()), CODE_TID, fURI.fnull);
     }
 
     default List<Inst> insts() {

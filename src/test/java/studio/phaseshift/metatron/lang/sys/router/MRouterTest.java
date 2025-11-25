@@ -41,9 +41,9 @@ public class MRouterTest extends RouterTest {
     @Test
     public void testCloseSpace() {
         // BootLoader.ROUTER = new MRouter(f("ws://localhost:8866"),f("/sys/router"));
-        kvSpace mnt = kvSpace.of(f("/mnt/#"), fURI.NULL).vid(f("/mnt")).as();
+        kvSpace mnt = kvSpace.of(f("/mnt/#"), fURI.fnull).vid(f("/mnt")).as();
         assertFalse(Router.global().hasSpaceFor(f("/test/a")));
-        kvSpace test = kvSpace.of(f("/test/#"), fURI.NULL).vid(f("/mnt/test")).as();
+        kvSpace test = kvSpace.of(f("/test/#"), fURI.fnull).vid(f("/mnt/test")).as();
         assertTrue(Router.global().hasSpaceFor(f("/test/a")));
         assertTrue(Router.global().hasSpaceFor(f("/test/a")));
         Router.global().write("/test/a", jnt(10));

@@ -113,6 +113,7 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>>, PlusMonoid.O<Rec> {
     }
 
     default Rec put(final Obj key, final Obj value) {
+        if(key.isNoObj()) return this;
         return this.put(key, value, (BiFunction) IMMUTABLE);
     }
 
@@ -123,7 +124,7 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>>, PlusMonoid.O<Rec> {
         final Map<Obj, Obj> map = new LinkedHashMap<>(this.recValue());
         map.compute(uri(k.segments().get(0)), (k1, v) ->
                 k.segments().size() == 1 ?
-                        (null != v && v.isObjs() ? v.append(value) : value) :
+                        (value.isNoObj()? null : (null != v && v.isObjs() ? v.append(value) : value)) :
                         (null != v && v.isRec() ? v.<Rec>as() : rec()).put(k.pretract().toUri(), value, operation));
         return (Rec) operation.apply(this, map);
     }

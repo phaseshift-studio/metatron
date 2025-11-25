@@ -22,8 +22,6 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.core.m.obj.NoObj;
 import studio.phaseshift.metatron.util.MTronException;
 
-import java.util.Optional;
-
 import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.*;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MFail.fail;
 
@@ -42,7 +40,7 @@ public interface ObjFactory {
     }
 
     default <O extends Obj> O create(final Object value, final fURI tid, final Class<O> objClass) {
-        return this.create(value, tid, fURI.NULL, objClass);
+        return this.create(value, tid, fURI.fnull, objClass);
     }
 
     default <O extends Obj> O create(final Object value, final Class<O> objClass) {
@@ -77,7 +75,7 @@ public interface ObjFactory {
             tid = fURI.NOOBJ;
         else
             throw MTronException.of("unable to convert to requested obj class: %s", objClass);
-        return this.create(value, tid, fURI.NULL, objClass);
+        return this.create(value, tid, fURI.fnull, objClass);
     }
 
 }

@@ -1,6 +1,6 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
- * Copyright (C) 2025- PhaseShift Studio, LLC 
+ * Copyright (C) 2025- PhaseShift Studio, LLC
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -32,9 +32,18 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static studio.phaseshift.metatron.furi.fURI.NOOBJ;
+import static studio.phaseshift.metatron.furi.fURI.f;
+import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.*;
+import static studio.phaseshift.metatron.lang.core.m.obj.NoObj.noobj;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MInt.jnt;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.lang.core.m.inst.mFluent.StartLess.*;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MStr.str;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MType.T;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
 
 public class InstTest extends MetatronObjTest {
 
@@ -99,15 +108,23 @@ public class InstTest extends MetatronObjTest {
     }
 
     @Test
+    public void testInstFCode() {
+        Inst i = instC(f("dosomething"), lst(T(INT_TID), T(INST_TID)), "*b.plus(*a)");
+        assertEquals(jnt(4), i.args(rec(uri("a"), jnt(1), uri("b"), jnt(3))).resolve(noobj()).apply());
+        //i = instC(f("dosomething"), lst(T(INT_TID), T(STR_TID)), "*b.-<''>-.count().plus(*a)");
+        //assertEquals(jnt(4), i.args(rec(uri("a"), jnt(1), uri("b"), str("abc"))).resolve(noobj()).apply());
+    }
+
+    @Test
     public void testRingAlgebra() {
         for (Tuple.Pair<? extends Obj, Call> item : List.of(
                 Tuple.Pair.with(jnt(3), start_(jnt(1)).mult(plus_(jnt(2)))),
                 Tuple.Pair.with(objs(jnt(2), jnt(3)), start_(jnt(1)).mult(plus_(jnt(1)).plus(plus_(jnt(2))))),
                 Tuple.Pair.with(objs(jnt(6).c(2L)), start_(jnt(2)).mult(plus_(jnt(4)).plus(mult_(jnt(3))))),
                 Tuple.Pair.with(objs(jnt(6), jnt(7)), start_(jnt(2)).mult(plus_(jnt(4)).mult(plus_(jnt(1))).plus(mult_(jnt(3))))),
-                Tuple.Pair.with(objs(jnt(6), jnt(7)), start_(jnt(2)).mult(plus_(jnt(4)).mult(plus_(jnt(1))).plus(mult_(jnt(3))).plus(NoObj.noobj()))),
-                Tuple.Pair.with(NoObj.noobj(), start_(jnt(2)).mult(NoObj.noobj())),
-                Tuple.Pair.with(NoObj.noobj(), start_(jnt(2)).mult(plus_(jnt(4)).mult(plus_(jnt(1))).plus(mult_(jnt(3))).plus(NoObj.noobj())).mult(NoObj.noobj())))) {
+                Tuple.Pair.with(objs(jnt(6), jnt(7)), start_(jnt(2)).mult(plus_(jnt(4)).mult(plus_(jnt(1))).plus(mult_(jnt(3))).plus(noobj()))),
+                Tuple.Pair.with(noobj(), start_(jnt(2)).mult(noobj())),
+                Tuple.Pair.with(noobj(), start_(jnt(2)).mult(plus_(jnt(4)).mult(plus_(jnt(1))).plus(mult_(jnt(3))).plus(noobj())).mult(noobj())))) {
             LOG.trace("\n\ntesting %s == %s", item.get1(), item.get0());
             assertEquals(item.get0(), item.get1().apply());
         }

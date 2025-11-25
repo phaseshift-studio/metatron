@@ -30,7 +30,7 @@ public class webSpaceTest {
         BootLoader.load(rec(uri("mode"), uri("testing")));
         mInstSet.create().vid(f("/sys/router/lang/m"));
         webInstSet.create().vid(f("/sys/router/lang/web"));
-        kvSpace.of(f("/usr/#"), fURI.NULL).vid(f("/sys/router/space/usr"));
+        kvSpace.of(f("/usr/#"), fURI.fnull).vid(f("/sys/router/space/usr"));
         final webSpace web = webSpace.of(f("http://localhost:8777"), Map.of(uri("/"), uri("src/test/resources/web/")), f("http://#"), f("/usr/web"));
         Router.global().addSpace(web);
     }

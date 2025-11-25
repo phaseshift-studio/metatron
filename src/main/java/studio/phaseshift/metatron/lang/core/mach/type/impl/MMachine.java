@@ -35,6 +35,7 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.util.MTronException.mexcept;
 import static studio.phaseshift.metatron.util.Tuple.Quartet;
 import static studio.phaseshift.metatron.lang.core.mach.machInstSet.DROP_TID;
@@ -52,16 +53,16 @@ public class MMachine extends MObj implements Machine {
     }
 
     public static Machine of(final Code code) {
-        return new MMachine(Quartet.with(code, RunningMonads.of(), MLst.of(new LinkedList<>()), MObjs.empty()), MACH_TID, fURI.NULL);
+        return new MMachine(Quartet.with(code, RunningMonads.of(), lst(new LinkedList<>()), MObjs.empty()), MACH_TID, fURI.fnull);
     }
 
 
     public static Machine of(final Obj start, final Code code) {
         if (!start.isNoObj()) {
             final List<Inst> prepended = new ArrayList<>();
-            prepended.add(MInst.instB(mInstSet.START_TID, MLst.of(start)));
+            prepended.add(MInst.instB(mInstSet.START_TID, lst(start)));
             prepended.addAll(code.codeValue());
-            return new MMachine(Quartet.with(MCode.of(prepended), RunningMonads.of(), MLst.of(new LinkedList<>()), MObjs.empty()), MACH_TID, fURI.NULL);
+            return new MMachine(Quartet.with(MCode.of(prepended), RunningMonads.of(),lst(new LinkedList<>()), MObjs.empty()), MACH_TID, fURI.fnull);
         } else {
             return MMachine.of(code);
         }

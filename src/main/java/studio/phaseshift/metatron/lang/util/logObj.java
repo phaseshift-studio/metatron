@@ -43,7 +43,7 @@ public class logObj extends MRec {
     private static final fURI LOG_TID = fURI.of("/usr/log");
 
     public logObj(final Obj log) {
-        super(log.recValue(),REC_TID,fURI.NULL);
+        super(log.recValue(),REC_TID,fURI.fnull);
     }
 
     protected logObj(final Rec levels, final fURI vid) {

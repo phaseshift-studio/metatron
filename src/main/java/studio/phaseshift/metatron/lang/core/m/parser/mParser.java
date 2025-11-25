@@ -67,7 +67,7 @@ public class mParser {
     private static final SettableParser obj_no_code_parser = SettableParser.undefined();
     private static final SettableParser lst_parser = SettableParser.undefined();
     private static final SettableParser rec_parser = SettableParser.undefined();
-    private static final SettableParser inst_parser = SettableParser.undefined();
+    public static final SettableParser inst_parser = SettableParser.undefined();
     private static final SettableParser rel_parser = SettableParser.undefined();
     private static final SettableParser obj_rel_back_parser = SettableParser.undefined();
     private static final SettableParser branch_parser = SettableParser.undefined();
@@ -180,7 +180,7 @@ public class mParser {
                 return first.isInst() && !first.isNoObj() ? MCode.of(List.of(first.as())) : first;
             final List<Inst> newCode = new ArrayList<>();
             if (!first.isNoObj() && !first.isInst())
-                newCode.add(new MInst(Triplet.with(lst(first.isInst() ? NoObj.noobj() : first), Inst.f.UNKNOWN, NoObj.noobj()), START_TID, fURI.NULL));
+                newCode.add(new MInst(Triplet.with(lst(first.isInst() ? NoObj.noobj() : first), Inst.f.UNKNOWN, NoObj.noobj()), START_TID, fURI.fnull));
             else if (first.isInst()) newCode.add(first.as());
             newCode.addAll(mParser.<Call>pick(t, 2).insts());
             return MCode.of(newCode, CODE_TID, pick(t, 3));
@@ -459,7 +459,7 @@ public class mParser {
                 seq(startToken.trim(), opt(seq(of('?'), m_furi_inst_dom_rng()).map(t -> pick(t, 1)), null), choice(
                         seq(of('('), m_obj(), of(')')).map(t -> mParser.<Obj>pick(t, 1)),
                         m_obj()), null == endToken ? of("") : endToken.trim())
-                        .map(t -> MInst.instB(tid.query(pick(t, 1)), MLst.of(mParser.<Obj>pick(t, 2)))));
+                        .map(t -> MInst.instB(tid.query(pick(t, 1)), lst(mParser.<Obj>pick(t, 2)))));
     }
 
     public static Stream<Obj> eval(final File file) throws IOException {

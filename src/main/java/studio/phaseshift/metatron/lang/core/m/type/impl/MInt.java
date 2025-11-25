@@ -1,6 +1,6 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
- * Copyright (C) 2025- PhaseShift Studio, LLC 
+ * Copyright (C) 2025- PhaseShift Studio, LLC
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -21,16 +21,21 @@ package studio.phaseshift.metatron.lang.core.m.type.impl;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.core.m.type.Int;
 
+import static studio.phaseshift.metatron.furi.fURI.fnull;
 import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.INT_TID;
 
 public class MInt extends MObj implements Int {
 
     public MInt(final Long jvm, final fURI tid, final fURI vid) {
-        super(jvm, tid, vid);
+        super(jvm, null == tid ? INT_TID : tid, vid);
     }
 
     public static Int jnt(final long jvm) {
-        return new MInt(jvm,INT_TID,fURI.NULL);
+        return jnt(jvm, INT_TID, fnull);
+    }
+
+    public static Int jnt(final long jvm, final fURI tid, final fURI vid) {
+        return new MInt(jvm, tid, vid);
     }
 
     @Override
