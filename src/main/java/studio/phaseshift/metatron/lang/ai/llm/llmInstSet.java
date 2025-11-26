@@ -28,10 +28,9 @@ import studio.phaseshift.metatron.lang.ai.llm.ollama.ollamaSpace;
 import studio.phaseshift.metatron.lang.ai.llm.type.impl.Audio;
 import studio.phaseshift.metatron.lang.ai.llm.type.impl.GGUF;
 import studio.phaseshift.metatron.lang.ai.llm.type.impl.OLLM;
-import studio.phaseshift.metatron.lang.core.m.type.Inst;
-import studio.phaseshift.metatron.lang.core.m.type.Rec;
-import studio.phaseshift.metatron.lang.core.m.type.Type;
+import studio.phaseshift.metatron.lang.core.m.type.*;
 import studio.phaseshift.metatron.lang.core.m.type.impl.MInstSet;
+import studio.phaseshift.metatron.lang.core.m.type.impl.MObjs;
 import studio.phaseshift.metatron.lang.sys.router.Router;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.util.MTronException;
@@ -133,7 +132,7 @@ public class llmInstSet extends MInstSet {
                                 }
                                 if (thinking)
                                     LOG.none("\n");
-                                final Rec history = rec(
+                                final Rec last = rec(
                                         "request", inst.arg(0),
                                         "response", rec(
                                                 "text", str(response.toString()),
@@ -142,7 +141,7 @@ public class llmInstSet extends MInstSet {
                                                 "load", jnt(result.getResponseModel().getLoadDuration()),
                                                 "eval", jnt(result.getResponseModel().getEvalDuration()),
                                                 "total", jnt(result.getResponseModel().getTotalDuration())));
-                                Router.global().read(lhs.vid().extend("history")).orElse(lst()).plus(lst(history)).vid(lhs.vid().extend("history"));
+                                Router.writeToSpace(lhs.vid().extend("history/"), new MObjs(List.of(last)));
                                 return str(response.toString());
                             } catch (final Exception e) {
                                 throw MTronException.of(e);

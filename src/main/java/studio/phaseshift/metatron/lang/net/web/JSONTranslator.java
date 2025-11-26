@@ -25,6 +25,7 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.core.m.parser.mParser;
 import studio.phaseshift.metatron.lang.core.m.obj.NoObj;
 import studio.phaseshift.metatron.lang.core.m.type.*;
+import studio.phaseshift.metatron.lang.sys.router.Router;
 import studio.phaseshift.metatron.lang.util.serial.ObjSerializer;
 import studio.phaseshift.metatron.lang.util.serial.ObjStringSerializer;
 import studio.phaseshift.metatron.ui.*;
@@ -46,6 +47,7 @@ import static studio.phaseshift.metatron.lang.core.m.type.impl.MBytes.bytes;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MReal.real;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MRel.rel;
@@ -80,53 +82,56 @@ public record JSONTranslator(ObjSerializer<String> serializer) implements Transl
     public Obj translate(final JsonElement json) {
         if (json.isJsonNull())
             return NoObj.noobj();
-
-        final fURI tid = json.isJsonObject() && json.getAsJsonObject().has(TID_KEY) ? f(json.getAsJsonObject().get(TID_KEY).getAsString()) : null;
-        final fURI bid = json.isJsonObject() && json.getAsJsonObject().has(BID_KEY) ? f(json.getAsJsonObject().get(BID_KEY).getAsString()) : null == tid ? null : tid.basePath();
-        final fURI vid = false && json.isJsonObject() && json.getAsJsonObject().has(VID_KEY) ? f(json.getAsJsonObject().get(VID_KEY).getAsString()) : null;
+        Obj obj = null;
+        final fURI tid = json.isJsonObject() && json.getAsJsonObject().has(TID_KEY) ? Router.global().rewrite(f(json.getAsJsonObject().get(TID_KEY).getAsString()), true) : null;
+        final fURI bid = json.isJsonObject() && json.getAsJsonObject().has(BID_KEY) ? Router.global().rewrite(f(json.getAsJsonObject().get(BID_KEY).getAsString()), true) : null == tid ? null : tid.basePath();
+        final fURI vid = json.isJsonObject() && json.getAsJsonObject().has(VID_KEY) ? f(json.getAsJsonObject().get(VID_KEY).getAsString()) : null;
         final JsonElement value = null == bid ? json : json.getAsJsonObject().get(VALUE_KEY);
         if (value.isJsonPrimitive()) {
             final JsonPrimitive jp = (JsonPrimitive) value;
             if (jp.isBoolean())
-                return bool(jp.getAsBoolean(), tid, vid);
+                obj = bool(jp.getAsBoolean(), tid, fnull);
             else if (jp.isNumber()) {
                 if (jp.getAsString().contains("."))
-                    return real(jp.getAsDouble(), tid, vid);
+                    obj = real(jp.getAsDouble(), tid, fnull);
                 else
-                    return jnt(jp.getAsLong(), tid, vid);
+                    obj = jnt(jp.getAsLong(), tid, fnull);
             } else if (jp.isString()) {
                 final String jpstr = jp.getAsString();
                 try {
                     if (null != bid) {
                         if (bid.equals(BYTES_TID)) {
-                            return bytes(ByteBuffer.wrap(jpstr.getBytes()), tid, vid);
+                            obj = bytes(ByteBuffer.wrap(jpstr.getBytes()), tid, fnull);
                         } else if (bid.equals(STR_TID)) {
-                            return str(jpstr, tid, vid);
+                            obj = str(jpstr, tid, fnull);
                         } else if (bid.equals(CODE_TID)) {
-                            return mParser.parse(jpstr).vid(vid);
+                            obj = mParser.parse(jpstr);
                         } else if (bid.equals(INST_TID)) {
-                            return mParser.parse(jpstr).<Call>as().tryToInst().vid(vid);
+                            obj = mParser.parse(jpstr).<Call>as().tryToInst().vid(fnull);
                         } else if (bid.equals(FAIL_TID)) {
-                            return fail(MTronException.of(jpstr)).vid(vid);
+                            obj = fail(MTronException.of(jpstr));
                         }
                     }
-                    return uri(f(jpstr), tid, vid);
+                    if (null == obj)
+                        obj = uri(f(jpstr), tid, fnull);
                 } catch (Exception e) {
-                    return str(jpstr);
+                    throw MTronException.of(e);
                 }
             }
         } else if (value.isJsonArray()) {
             final JsonArray jp = (JsonArray) value;
             if (null != bid && bid.equals(REL_TID)) {
-                return rel(translate(jp.get(0)), translate(jp.get(1)), tid, vid);
+                obj = rel(translate(jp.get(0)), translate(jp.get(1)), tid, fnull);
             } else if (null != bid && bid.toString().equals("/m/type")) {
-                return T(tid, (Call) translate(jp.get(0)), (Call) translate(jp.get(1)));
+                obj = T(tid, (Call) translate(jp.get(0)), (Call) translate(jp.get(1)));
             } else {
                 final List<Obj> list = new ArrayList<>();
                 for (var j : jp.getAsJsonArray()) {
                     list.add(translate(j));
                 }
-                return lst(list, tid, vid);
+                obj = null != bid && bid.equals(OBJS_TID) ?
+                        objs(list) :
+                        lst(list, tid, fnull);
             }
         } else if (value.isJsonObject()) {
             final JsonObject jp = (JsonObject) value;
@@ -137,9 +142,11 @@ public record JSONTranslator(ObjSerializer<String> serializer) implements Transl
                 if (!k.isNoObj() && !v.isNoObj())
                     map.put(k, v);
             }
-            return rec(map, tid, vid);
+            obj = rec(map, tid, fnull);
         }
-        throw new IllegalStateException("unknown type: " + json + "::" + json.getAsInt());
+        if (null == obj)
+            throw new IllegalStateException("unknown type: " + json + "::" + json.getAsInt());
+        return null == vid ? obj : obj.self(obj.jvm(), obj.tid(), vid);
     }
 
     @Override
@@ -177,22 +184,25 @@ public record JSONTranslator(ObjSerializer<String> serializer) implements Transl
                 array.add(translate(obj.<Type>as().predicate()));
                 array.add(translate(obj.<Type>as().constructor()));
                 element = array;
-            } else if (obj.isLst()) {
+            } else if (obj.isLst() || obj.isObjs()) {
                 JsonArray array = new JsonArray();
-                obj.lstValue().forEach(o -> array.add(translate(o)));
+                obj.<Iterable<Obj>>jvm().forEach(o -> array.add(translate(o)));
                 element = array;
             } else if (obj.isRec()) {
                 JsonObject object = new JsonObject();
                 obj.recValue().forEach((key, value) -> object.add(key.uriValue().toString(), translate(value)));
                 element = object;
             } else
-                throw MTronException.of("could not parse %s to json", obj);
-            if (!obj.type().isBaseType() || obj.isType() || obj.isStr() || obj.isObjCall() || obj.isFail() || obj.isRel()) {
+                throw MTronException.of("could not parse %s to json: %s", obj.tid(), obj);
+            /// ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+            if (!obj.type().isBaseType() || obj.isObjs() || obj.isType() || obj.isStr() || obj.isObjCall() || obj.isFail() || obj.isRel()) {
                 final JsonObject typedObj = new JsonObject();
-                typedObj.add(BID_KEY, new JsonPrimitive(obj.isType() ? "/m/type" : (obj.isCode() ? CODE_TID.toString() : (obj.isInst() ? INST_TID.toString() : obj.baseType().basePath().toString()))));
+                typedObj.add(BID_KEY, new JsonPrimitive(Router.global().rewrite(obj.isType() ? f("/m/type") : (obj.isObjs() ? OBJS_TID : (obj.isCode() ? CODE_TID : (obj.isInst() ? INST_TID : obj.baseType().basePath()))), true).toString()));
                 // if (!obj.type().isBaseType())
-                typedObj.add(TID_KEY, new JsonPrimitive(obj.tid().toString()));
+                typedObj.add(TID_KEY, new JsonPrimitive(Router.global().rewrite(obj.tid(), true).toString()));
                 typedObj.add(VALUE_KEY, element);
+                if (null != obj.vid())
+                    typedObj.add(VID_KEY, new JsonPrimitive(obj.vid().toString()));
                 return typedObj;
             } else {
                 return element;

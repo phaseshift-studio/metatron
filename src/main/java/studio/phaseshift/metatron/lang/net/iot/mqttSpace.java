@@ -189,7 +189,7 @@ public class mqttSpace extends MSpace<Mqtt5Client> {
                     .retain(true)
                     .send()
                     .whenComplete((p, t) -> {
-                        LOG.info("caching %s", p.getPublish());
+                        LOG.trace("caching %s", p.getPublish());
                         if (p.getPublish().getPayload().isPresent()) {
                             final String json = StandardCharsets.UTF_8.decode(p.getPublish().getPayload().get()).toString();
                             this.cache.write(

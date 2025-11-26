@@ -344,7 +344,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
     default boolean isReal() {
         return this instanceof Real;
     }
-    
+
     default boolean isStr() {
         return this instanceof Str;
     }
@@ -539,7 +539,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
             if (!obj.isInstSet() && !obj.isNoObj() && !obj.isType() && !obj.matches(obj.type()))
                 throw MTronException.of("[{{r}}type error{{/r}}] %s is not a %s".formatted(obj, obj.type()));
             if (null != obj.vid() && !obj.isType())
-                Router.writeToSpace(obj);
+                Router.writeToSpace(obj.vid(), obj);
         }
 
         public static <O extends Obj> O objClone(final Obj obj, final Object jvm, final fURI tid, final fURI vid) {

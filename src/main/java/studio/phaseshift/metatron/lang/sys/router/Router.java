@@ -64,7 +64,7 @@ public interface Router extends Obj, Space, Closeable {
     }
 
     static Obj writeToSpace(final Obj obj) {
-        return Router.loaded() ? BootLoader.ROUTER.write(obj) : noobj();
+        return writeToSpace(obj.vid(), obj);
     }
 
     static stackSpace stack() {

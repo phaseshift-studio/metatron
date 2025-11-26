@@ -26,6 +26,7 @@ import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.Q;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.ai.llm.type.impl.GGUF;
+import studio.phaseshift.metatron.lang.core.m.obj.NoObj;
 import studio.phaseshift.metatron.lang.db.kv.kvSpace;
 import studio.phaseshift.metatron.lang.ai.llm.type.impl.OLLM;
 import studio.phaseshift.metatron.lang.sys.router.Router;
@@ -46,8 +47,7 @@ import java.util.Arrays;
 import java.util.Map;
 
 import static studio.phaseshift.metatron.Tokens.STORE;
-import static studio.phaseshift.metatron.furi.fURI.ALL;
-import static studio.phaseshift.metatron.furi.fURI.f;
+import static studio.phaseshift.metatron.furi.fURI.*;
 import static studio.phaseshift.metatron.lang.ai.llm.llmInstSet.OLLAMA_TID;
 import static studio.phaseshift.metatron.lang.ai.llm.type.impl.GGUF.SIZE;
 import static studio.phaseshift.metatron.lang.ai.llm.type.impl.OLLM.ollm;
@@ -67,6 +67,8 @@ import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public class ollamaSpace extends MSpace<OllamaModels> {
+
+    protected final fURI internalPrefix;
 
     public static final Type OLLAMA_TYPE =
             T(OLLAMA_TID, null,
@@ -88,7 +90,8 @@ public class ollamaSpace extends MSpace<OllamaModels> {
 
     public ollamaSpace(final OllamaModels models, final Map<Obj, Obj> config, final fURI pattern, final fURI vid) {
         super(models, config, pattern, OLLAMA_TID, vid);
-        this.internal = (Space) (config.containsKey(uri(STORE)) ? config.get(uri(STORE)) : new kvSpace(pattern, fURI.fnull));
+        this.internal = (Space) (config.containsKey(uri(STORE)) ? config.get(uri(STORE)) : new kvSpace(pattern, fnull));
+        this.internalPrefix = this.internal.at(Tokens.PREFIX).orElse(uri("")).uriValue();
         LOG.info("available models: %s", lst(models.availableModels().content().stream().map(OllamaModel::getModel).map(MUri::uri).map(m -> (Obj) m).toList()));
     }
 
@@ -97,9 +100,9 @@ public class ollamaSpace extends MSpace<OllamaModels> {
         return new ollamaSpace(models, Map.of(
                 uri(Tokens.HOST), ollamaHost.toUri(),
                 uri(Tokens.PATTERN), pattern.toUri(),
-                uri(Tokens.STORE), new kvSpace(pattern, fURI.fnull)),
+                uri(Tokens.STORE), new kvSpace(pattern, fnull)),
                 pattern,
-                fURI.fnull);
+                fnull);
     }
 
     private fURI modelToVid(final String modelName) {
@@ -108,12 +111,12 @@ public class ollamaSpace extends MSpace<OllamaModels> {
 
     @Override
     public Obj read(final fURI vid) {
-        final Obj result = this.internal.read(vid);
+        final Obj result = this.internal.read(internalMapping(vid, false));
         if (!result.isNoObj())
             return result;
         else {
             this.findModel(vid);
-            final Obj result2 = this.internal.read(vid);
+            final Obj result2 = this.internal.read(internalMapping(vid, false));
             if (!result2.isNoObj())
                 return result2;
             try {
@@ -123,8 +126,15 @@ public class ollamaSpace extends MSpace<OllamaModels> {
             } catch (final Exception e) {
                 LOG.warn(e.getMessage());
             }
-            return this.internal.read(vid);
+            return this.internal.read(internalMapping(vid, false));
         }
+    }
+
+    protected fURI internalMapping(final fURI furi, final boolean internalToExternal) {
+        if (internalToExternal)
+            return furi.removePrefix(this.internalPrefix);
+        else
+            return this.internalPrefix.extend(furi);
     }
 
 
@@ -132,12 +142,12 @@ public class ollamaSpace extends MSpace<OllamaModels> {
     public Obj write(final fURI vid, final Obj obj) {
         return Q.Helper.processPreWrite(this.qs(), vid, vid, obj).orElseGet(() -> {
             if (obj.isNoObj()) {
-                this.internal.read(vid).stream().filter(o -> o instanceof OLLM).map(Obj::<OLLM>as).forEach(o -> {
+                this.internal.read(internalMapping(vid, false)).stream().filter(o -> o instanceof OLLM).map(Obj::<OLLM>as).forEach(o -> {
                     LOG.info("deleting ollama model: %s", o);
                     //this.sjvm().deleteModel(o.name());
                 });
             }
-            return this.internal.write(vid, obj);
+            return this.internal.write(internalMapping(vid, false), obj);
         });
     }
 
@@ -151,9 +161,9 @@ public class ollamaSpace extends MSpace<OllamaModels> {
                 .filter(pair -> pair.get1().vid().matches(modelPattern))
                 .forEach(pair -> {
                     try {
-                        final Obj gguf = this.internal.read(pair.get1().vid().extend(Tokens.GGUF_KEY));
+                        final Obj gguf = this.internal.read(internalMapping(pair.get1().vid().extend(Tokens.GGUF_KEY), false));
                         if (gguf.isNoObj()) {
-                            this.internal.write(pair.get1().vid().extend(Tokens.GGUF_KEY), fail(MTronException.of("temp")));
+                            this.internal.write(internalMapping(pair.get1().vid().extend(Tokens.GGUF_KEY), false), fail(MTronException.of("temp")));
                             final String ggufFilePath = Arrays.stream(pair.get0().getModelfile().split("\n"))
                                     .map(String::trim)
                                     .filter(line -> line.startsWith(Tokens.FROM))
@@ -162,15 +172,15 @@ public class ollamaSpace extends MSpace<OllamaModels> {
                                     .orElse(null);
                             if (ggufFilePath != null) {
                                 LOG.info("onboarding ollm gguf into space: %s", pair.get1().vid().extend(Tokens.GGUF_KEY));
-                                GGUF.of(f(ggufFilePath), pair.get1().vid().extend(Tokens.GGUF_KEY))
-                                        .put(uri(SIZE), Common.isInt(pair.get0().getDetails().getParameterSize()) ? jnt(Long.parseLong(pair.get0().getDetails().getParameterSize())) : noobj())
-                                        .put(uri(Tokens.QUANT), uri(pair.get0().getDetails().getQuantizationLevel())).<Rec>as()
-                                        .put(uri(Tokens.FAMILY), uri(pair.get0().getDetails().getFormat())).as();
+                                GGUF.of(f(ggufFilePath),
+                                        null,// pair.get1().vid().extend(Tokens.GGUF_KEY),Common.isInt(pair.get0().getDetails().getParameterSize()) ? Long.parseLong(pair.get0().getDetails().getParameterSize())) : noobj()))
+                                        f(pair.get0().getDetails().getQuantizationLevel()),
+                                        f(pair.get0().getDetails().getFormat()), pair.get1().vid().extend(Tokens.GGUF_KEY));
                             }
                         }
                     } catch (final Exception e) {
                         LOG.warn(e);
-                        this.internal.write(pair.get1().vid().extend(Tokens.GGUF_KEY), fail(e));
+                        this.internal.write(internalMapping(pair.get1().vid().extend(Tokens.GGUF_KEY), false), fail(e));
                     }
                 });
     }

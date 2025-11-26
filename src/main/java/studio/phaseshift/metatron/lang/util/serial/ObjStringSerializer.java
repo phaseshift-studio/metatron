@@ -129,13 +129,17 @@ public record ObjStringSerializer(Builder b) implements ObjSerializer<String> {
             /// ///////////////////////////////////////////////////////////////
             /// ///////////////////////////////////////////////////////////////
             else if (obj instanceof final Lst lst) {
-                generateTID(sb, obj.tid(), true).append("{{g}}[{{y}}");
-                for (final Obj o : lst.jvm()) {
-                    sb.append(o).append("{{g}},");
+                if (this.b.prettyPrint && lst.count() > 1) {
+                    this.generateLst(sb, lst, 2);
+                } else {
+                    generateTID(sb, obj.tid(), true).append("{{g}}[{{y}}");
+                    for (final Obj o : lst.jvm()) {
+                        sb.append(o).append("{{g}},");
+                    }
+                    if (!lst.jvm().isEmpty()) sb.deleteCharAt(sb.length() - 1);
+                    else sb.append("{{g}}],");
                 }
-                if (!lst.jvm().isEmpty()) sb.deleteCharAt(sb.length() - 1);
-                else sb.append("{{g}},");
-                return generateVID(sb.append("{{g}}]"), lst).append("{{X}}").toString();
+                return generateVID(sb, lst).append("{{X}}").toString();
             }
             /// ///////////////////////////////////////////////////////////////
             /// ///////////////////////////////////////////////////////////////
@@ -157,7 +161,6 @@ public record ObjStringSerializer(Builder b) implements ObjSerializer<String> {
                     sb.append("{{g}}[=>]{{X}}");
                 } else {
                     if (this.b.prettyPrint && rec.count() > 1) {
-                        generateTID(sb, obj.tid(), true);
                         this.generateRec(sb, rec, 2);
                     } else {
                         generateTID(sb, obj.tid(), true).append("{{g}}[");
@@ -226,6 +229,7 @@ public record ObjStringSerializer(Builder b) implements ObjSerializer<String> {
     }
 
     private StringBuilder generateLst(final StringBuilder sb, final Lst lst, final int depth) {
+        generateTID(sb, lst.tid(), true);
         if (lst.isEmpty()) {
             sb.append("{{g}}[,]{{X}}");
         } else {
@@ -262,6 +266,7 @@ public record ObjStringSerializer(Builder b) implements ObjSerializer<String> {
     }
 
     private StringBuilder generateRec(final StringBuilder sb, final Rec rec, final int depth) {
+        generateTID(sb, rec.tid(), true);
         if (rec.isEmpty()) {
             sb.append("{{g}}[=>]{{X}}");
         } else {

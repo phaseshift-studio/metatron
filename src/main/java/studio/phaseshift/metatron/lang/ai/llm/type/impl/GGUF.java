@@ -2,16 +2,14 @@ package studio.phaseshift.metatron.lang.ai.llm.type.impl;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.core.m.inst.mInstSet;
-import studio.phaseshift.metatron.lang.core.m.type.Obj;
-import studio.phaseshift.metatron.lang.core.m.type.Rec;
-import studio.phaseshift.metatron.lang.core.m.type.Type;
-import studio.phaseshift.metatron.lang.core.m.type.Uri;
+import studio.phaseshift.metatron.lang.core.m.type.*;
 import studio.phaseshift.metatron.lang.core.m.type.impl.MInt;
 import studio.phaseshift.metatron.lang.core.m.type.impl.MRec;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
 import studio.phaseshift.metatron.util.Common;
 import studio.phaseshift.metatron.util.MTronException;
+import studio.phaseshift.metatron.util.Tuple;
 
 import java.nio.file.Path;
 import java.util.Arrays;
@@ -85,10 +83,17 @@ public class GGUF extends MRec {
                 .collect(new Common.RecCollector());
     }
 
-    public static GGUF of(final fURI location, final fURI vid) {
+    public static GGUF of(final fURI location, final Tuple.Pair<Long, Long> size, final fURI quantization, final fURI family, final fURI vid) {
         final Path modelPath = Path.of(location.toString());
-        return new GGUF(mutableOrderedMap(
+        final Map<Obj, Obj> map = mutableOrderedMap(
                 uri(FILE), uri(modelPath.getFileName().toString()),
-                uri(PATH), uri(modelPath.getParent().toAbsolutePath().toString())), GGUF_TID, vid);
+                uri(PATH), uri(modelPath.getParent().toAbsolutePath().toString()));
+        if (null != size)
+            map.put(uri(SIZE), lst(jnt(size.get0()), jnt(size.get1())));
+        if (null != quantization)
+            map.put(uri(QUANT), uri(quantization));
+        if (null != family)
+            map.put(uri(FAMILY), uri(family));
+        return new GGUF(map, GGUF_TID, vid);
     }
 }
