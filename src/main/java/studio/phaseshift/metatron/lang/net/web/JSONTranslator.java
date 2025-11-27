@@ -42,6 +42,7 @@ import java.util.Map;
 import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.furi.fURI.fnull;
 import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.*;
+import static studio.phaseshift.metatron.lang.core.m.obj.NoObj.noobj;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MBytes.bytes;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MFail.fail;
@@ -81,7 +82,7 @@ public record JSONTranslator(ObjSerializer<String> serializer) implements Transl
     @Override
     public Obj translate(final JsonElement json) {
         if (json.isJsonNull())
-            return NoObj.noobj();
+            return noobj();
         Obj obj = null;
         final fURI tid = json.isJsonObject() && json.getAsJsonObject().has(TID_KEY) ? Router.global().rewrite(f(json.getAsJsonObject().get(TID_KEY).getAsString()), true) : null;
         final fURI bid = json.isJsonObject() && json.getAsJsonObject().has(BID_KEY) ? Router.global().rewrite(f(json.getAsJsonObject().get(BID_KEY).getAsString()), true) : null == tid ? null : tid.basePath();
@@ -115,7 +116,8 @@ public record JSONTranslator(ObjSerializer<String> serializer) implements Transl
                     if (null == obj)
                         obj = uri(f(jpstr), tid, fnull);
                 } catch (Exception e) {
-                    throw MTronException.of(e);
+                   LOG.debug("ignoring unparseable element: %s", jp);
+                   return noobj();
                 }
             }
         } else if (value.isJsonArray()) {
