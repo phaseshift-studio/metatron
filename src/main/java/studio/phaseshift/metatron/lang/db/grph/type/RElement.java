@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -25,9 +25,9 @@ import studio.phaseshift.metatron.lang.core.m.type.Rel;
 import studio.phaseshift.metatron.lang.core.m.type.facade.FRec;
 import studio.phaseshift.metatron.lang.core.m.type.impl.MRec;
 
+import java.util.Objects;
 import java.util.stream.Stream;
 
-import static studio.phaseshift.metatron.lang.core.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.lang.db.grph.inst.grphInstSet.EDGE_TID;
 import static studio.phaseshift.metatron.lang.db.grph.type.TP3Translator.LABEL;
@@ -77,5 +77,10 @@ public class RElement extends FRec {
     @Override
     public RElement clone() {
         return (RElement) super.clone();
+    }
+
+    @Override
+    public boolean equals(final Object other) {
+        return other instanceof Obj && this.vid() != null && Objects.equals(this.vid(), ((Obj) other).vid());
     }
 }

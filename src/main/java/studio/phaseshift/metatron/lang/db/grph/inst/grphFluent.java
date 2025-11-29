@@ -48,23 +48,23 @@ public class grphFluent<F extends Fluent<F>> extends mFluent<F> {
     }
 
     public F g(final MGraph graph) {
-        return this.addInst(instB(grphInstSet.G_TID, lst(graph)));
+        return this.addInst(instB(grphInstSet.G_INST_TID, lst(graph)));
     }
 
     public F g(final Call call) {
-        return this.addInst(instB(grphInstSet.G_TID, lst(call)));
+        return this.addInst(instB(grphInstSet.G_INST_TID, lst(call)));
     }
 
     public F V() {
-        return this.addInst(instB(grphInstSet.V_TID, lst()));
+        return this.addInst(instB(grphInstSet.V_INST_TID, lst()));
     }
 
     public F out(final Obj... obj) {
-        return this.addInst(instB(grphInstSet.OUT_TID, lst(obj)));
+        return this.addInst(instB(grphInstSet.OUT_INST_TID, lst(obj)));
     }
 
     public F outE(final Obj... obj) {
-        return this.addInst(instB(grphInstSet.OUTE_TID, lst(obj)));
+        return this.addInst(instB(grphInstSet.OUTE_INST_TID, lst(obj)));
     }
 
     @Override

@@ -62,12 +62,12 @@ public class grphSpace extends MSpace<Space> {
     public static final fURI GRPH_TID = f("/grph/space/grph");
     public static final Type GRPH_TYPE = T(GRPH_TID, null, instC(mInstSet.INST_TID.dom(ALL.maybe()).rng(GRPH_TID),
             lst(isa_(rec(uri(PATTERN), T(URI_TID),
-                    uri(SPACE).c(cInt.MAYBE()), T(KV_TID),
+                    uri(STORE).c(cInt.MAYBE()), T(KV_TID),
                     uri(LOAD), T(URI_TID)))
                     .tryToInst()), (lhs, inst) -> {
                 final fURI pattern = inst.arg(0).<Rec>as().at(PATTERN).uriValue();
                 final fURI dataset = inst.arg(0).<Rec>as().at(LOAD).uriValue();
-                final Obj inner = inst.arg(0).<Rec>as().at(SPACE);
+                final Obj inner = inst.arg(0).<Rec>as().at(STORE);
                 final grphSpace space = new grphSpace(inner.isNoObj() ? noobjSpace.single() :
                         new kvSpace(inner.<Rec>as().at(PATTERN).uriValue(), fURI.fnull), Map.of(uri(PATTERN), uri(pattern), uri(LOAD), uri(dataset)), pattern, inst.arg(0).vid());
                 Router.global().addSpace(space);

@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -19,8 +19,8 @@
 package studio.phaseshift.metatron.lang.core.m.inst;
 
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.lang.core.m.type.Code;
 import studio.phaseshift.metatron.lang.Fluent;
+import studio.phaseshift.metatron.lang.core.m.type.Code;
 import studio.phaseshift.metatron.lang.core.m.type.Inst;
 import studio.phaseshift.metatron.lang.core.m.type.Obj;
 import studio.phaseshift.metatron.lang.core.m.type.impl.MCode;
@@ -28,9 +28,9 @@ import studio.phaseshift.metatron.lang.core.m.type.impl.MCode;
 import java.util.ArrayList;
 import java.util.List;
 
+import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.ID_INST_TID;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MInst.instB;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
-import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.ID_INST_TID;
 
 public class mFluent<F extends Fluent<F>> extends MCode implements Fluent<F>, Code {
 
@@ -51,7 +51,7 @@ public class mFluent<F extends Fluent<F>> extends MCode implements Fluent<F>, Co
     public F start_(final Obj obj) {
         return this.addInst(instB(mInstSet.START_INST_TID, lst(obj)));
     }
-    
+
     public F as_(final Obj obj) {
         return this.addInst(instB(mInstSet.AS_INST_TID, lst(obj)));
     }
@@ -147,6 +147,13 @@ public class mFluent<F extends Fluent<F>> extends MCode implements Fluent<F>, Co
     /*public List<Obj> toList() {
         return IteratorUtil.list(this.iterator());
     }*/
+
+    public F domrng(final fURI dom, final fURI rng) {
+        final Inst last = this.insts().remove(this.insts().size() - 1);
+        this.insts().add(last.tid(last.tid().dom(dom).rng(rng)));
+        this.logger().info(this.insts());
+        return (F) this;
+    }
 
     @Override
     public mFluent<F> clone(final Object jvm, final fURI tid, final fURI vid) {

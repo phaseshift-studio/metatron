@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -23,21 +23,22 @@ import org.apache.tinkerpop.gremlin.structure.Edge;
 import org.apache.tinkerpop.gremlin.structure.Element;
 import org.apache.tinkerpop.gremlin.structure.Graph;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.lang.core.m.type.*;
-import studio.phaseshift.metatron.lang.sys.router.Router;
+import studio.phaseshift.metatron.lang.core.m.type.Obj;
+import studio.phaseshift.metatron.lang.core.m.type.Rec;
 import studio.phaseshift.metatron.lang.core.m.type.impl.MObjFactory;
+import studio.phaseshift.metatron.lang.sys.router.Router;
 import studio.phaseshift.metatron.util.Translator;
 
 import java.util.concurrent.atomic.AtomicReference;
 
-import static studio.phaseshift.metatron.lang.core.m.inst.mFluent.StartLess.*;
-import static studio.phaseshift.metatron.lang.db.grph.inst.grphInstSet.EDGE_TID;
-import static studio.phaseshift.metatron.lang.db.grph.inst.grphInstSet.VERTEX_TID;
+import static studio.phaseshift.metatron.lang.core.m.inst.mFluent.StartLess.auto;
 import static studio.phaseshift.metatron.lang.core.m.obj.NoObj.noobj;
-import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.lang.db.grph.inst.grphInstSet.EDGE_TID;
+import static studio.phaseshift.metatron.lang.db.grph.inst.grphInstSet.VERTEX_TID;
+import static studio.phaseshift.metatron.util.Common.mutableOrderedMap;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -54,14 +55,14 @@ public record TP3Translator(Builder builder) implements Translator<Obj, Graph> {
         return props.get();
     }
 
-    private REdge createEdge(final Edge tpEdge) {
+    private Rec createEdge(final Edge tpEdge) {
         final Rec props = addProperties(rec(), tpEdge);
-        return REdge.of(rec(
-                uri(LABEL), uri(tpEdge.label()),
-                uri(PROPS), props.isEmpty() ? noobj() : props,
-                uri(Direction.OUT.name()), auto(this.builder.root.extend("V").extend(tpEdge.outVertex().id().toString())),
-                uri(Direction.IN.name()), auto(this.builder.root.extend("V").extend(tpEdge.inVertex().id().toString()))).
-                tid(EDGE_TID));
+        return rec(mutableOrderedMap(uri(LABEL), uri(tpEdge.label()),
+                        uri(PROPS), props.isEmpty() ? noobj() : props,
+                        uri(Direction.OUT.name()), auto(this.builder.root.extend("V").extend(tpEdge.outVertex().id().toString())),
+                        uri(Direction.IN.name()), auto(this.builder.root.extend("V").extend(tpEdge.inVertex().id().toString()))),
+                EDGE_TID,fURI.fnull);
+                //this.builder.root.extend("E").extend(tpEdge.id().toString()));
     }
 
     @Override
@@ -72,13 +73,12 @@ public record TP3Translator(Builder builder) implements Translator<Obj, Graph> {
             final AtomicReference<Rec> in = new AtomicReference<>(rec());
             tpV.edges(Direction.IN).forEachRemaining(tpE -> in.set(in.get().put(uri(tpE.label()), in.get().at(uri(tpE.label())).orElse(objs()).append(createEdge(tpE)))));
             final Rec props = addProperties(rec(), tpV);
-            Router.writeToSpace(this.builder.root.extend("V").extend(tpV.id().toString()), RVertex.of(rec(
-                    uri(LABEL), uri(tpV.label()),
-                    uri(PROPS), props.isEmpty() ? noobj() : props,
-                    uri(Direction.OUT.name()), out.get().isEmpty() ? noobj() : out.get(),
-                    uri(Direction.IN.name()), in.get().isEmpty() ? noobj() : in.get())
-                    .tid(VERTEX_TID)
-                    .vid(this.builder.root.extend("V").extend(tpV.id().toString()))));
+            rec(mutableOrderedMap(uri(LABEL), uri(tpV.label()),
+                            uri(PROPS), props.isEmpty() ? noobj() : props,
+                            uri(Direction.OUT.name()), out.get().isEmpty() ? noobj() : out.get(),
+                            uri(Direction.IN.name()), in.get().isEmpty() ? noobj() : in.get()),
+                    VERTEX_TID,
+                    this.builder.root.extend("V").extend(tpV.id().toString()));
         });
         /*
               graph.edges().forEachRemaining(tpE -> {

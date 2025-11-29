@@ -67,7 +67,7 @@ public class REdge extends RElement {
     }
 
     public String toString() {
-        return "{{b}}e{{g}}" + (this.tid().cV().isOne() ? "" : ("{{{y}}" + this.tid().c() + "{{g}}}")) + "[{{b}}" + this.jvm().get(uri(Direction.OUT.name())) + "{{g}}={{b}}" + this.label() + "{{g}}=>" + this.jvm().get(uri(Direction.IN.name())) + "{{g}}]{{X}}";
+        return "{{b}}e{{g}}[{{y}}" + this.vid() + "{{g}}]" + (this.tid().cV().isOne() ? "" : ("{{{y}}" + this.tid().c() + "{{g}}}")) + "[{{b}}" + this.jvm().get(uri(Direction.OUT.name())) + "{{g}}={{b}}" + this.label() + "{{g}}=>" + this.jvm().get(uri(Direction.IN.name())) + "{{g}}]{{X}}";
     }
 
     @Override
