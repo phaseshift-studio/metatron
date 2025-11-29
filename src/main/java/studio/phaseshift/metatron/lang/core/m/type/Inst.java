@@ -67,7 +67,7 @@ public interface Inst extends Call {
                     else return null;
                 } else if (usrArg.isObjCall()) {
                     final Inst firstInst = usrArg.<Call>as().insts().get(0);
-                    if (!firstInst.hasDomAndRng() && (firstInst.tid().basePath().equals(FROM_TID))) { // from() is a side-effect and the type can't be known unless explcitly specified (need a way to denote side-effect insts).
+                    if (!firstInst.hasDomAndRng() && (firstInst.tid().basePath().equals(FROM_INST_TID))) { // from() is a side-effect and the type can't be known unless explcitly specified (need a way to denote side-effect insts).
                         resolvedArgs.add(usrArg.resolve(lhs));
                     } else {
                         final Obj r = usrArg.resolve(lhs);
@@ -162,15 +162,15 @@ public interface Inst extends Call {
     }
 
     default boolean isBlocking() {
-        return this.tid().basePath().equals(BLOCK_TID) ||
+        return this.tid().basePath().equals(BLOCK_INST_TID) ||
                 // this.tid().basePath().equals(AUTO_TID) ||
-                this.tid().basePath().equals(AS_TID) ||
-                this.tid().basePath().equals(WITHIN_TID) ||
-                this.tid().basePath().equals(ISA_TID) ||
-                this.tid().basePath().equals(SELECT_TID) ||
-                this.tid().basePath().equals(WHERE_TID) ||
-                this.tid().basePath().equals(GROUP_TID) ||
-                this.tid().basePath().equals(CATCH_TID);
+                this.tid().basePath().equals(AS_INST_TID) ||
+                this.tid().basePath().equals(WITHIN_INST_TID) ||
+                this.tid().basePath().equals(ISA_INST_TID) ||
+                this.tid().basePath().equals(SELECT_INST_TID) ||
+                this.tid().basePath().equals(WHERE_INST_TID) ||
+                this.tid().basePath().equals(GROUP_INST_TID) ||
+                this.tid().basePath().equals(CATCH_INST_TID);
     }
 
     @Override
@@ -278,7 +278,7 @@ public interface Inst extends Call {
     }
 
     default boolean isCatch() {
-        return this.tid().basePath().equals(CATCH_TID);
+        return this.tid().basePath().equals(CATCH_INST_TID);
     }
 
     default boolean isGather() {
@@ -310,7 +310,7 @@ public interface Inst extends Call {
     }
 
     default boolean isBranching() {
-        return this.tid().basePath().equals(SPLIT_TID);
+        return this.tid().basePath().equals(SPLIT_INST_TID);
     }
 
     @Override

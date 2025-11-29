@@ -44,7 +44,7 @@ public class grphFluent<F extends Fluent<F>> extends mFluent<F> {
     }
 
     public F start_(final Obj obj) {
-        return this.addInst(instB(mInstSet.START_TID, lst(obj)));
+        return this.addInst(instB(mInstSet.START_INST_TID, lst(obj)));
     }
 
     public F g(final MGraph graph) {

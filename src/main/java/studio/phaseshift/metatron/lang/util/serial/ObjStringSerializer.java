@@ -96,7 +96,7 @@ public record ObjStringSerializer(Builder b) implements ObjSerializer<String> {
             /// ///////////////////////////////////////////////////////////////
             /// ///////////////////////////////////////////////////////////////
             else if (obj instanceof final Inst inst) {
-                if (inst.tid().basePath().equals(AUTO_TID) && inst.arg(0).tid().equals(FROM_TID)) {
+                if (inst.tid().basePath().equals(AUTO_INST_TID) && inst.arg(0).tid().equals(FROM_INST_TID)) {
                     return sb.append("{{c}}*{{X}}").append(inst.arg(0).<Inst>as().arg(0)).toString();
                 } else {
                     generateTID(sb, obj.tid(), false, false).append("{{g}}({{X}}");

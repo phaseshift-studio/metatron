@@ -13,12 +13,9 @@ import studio.phaseshift.metatron.util.Translator;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static studio.phaseshift.metatron.lang.core.m.inst.mFluent.StartLess.*;
-import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.AUTO_TID;
 import static studio.phaseshift.metatron.lang.db.grph.inst.grphInstSet.EDGE_TID;
 import static studio.phaseshift.metatron.lang.db.grph.inst.grphInstSet.VERTEX_TID;
-import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.FROM_TID;
 import static studio.phaseshift.metatron.lang.core.m.obj.NoObj.noobj;
-import static studio.phaseshift.metatron.lang.core.m.type.impl.MInst.instB;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MRec.rec;

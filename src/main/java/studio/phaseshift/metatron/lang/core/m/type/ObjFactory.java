@@ -70,7 +70,7 @@ public interface ObjFactory {
         else if (Objs.class.isAssignableFrom(objClass))
             tid = OBJS_TID;
         else if (Type.class.isAssignableFrom(objClass))
-            tid = TYPE_TID;
+            tid = TYPE_INST_TID;
         else if (NoObj.class.isAssignableFrom(objClass))
             tid = fURI.NOOBJ;
         else

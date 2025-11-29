@@ -76,7 +76,7 @@ public class vecInstSet extends MInstSet {
     public Set<Inst> insts() {
         return Stream.of(
                 instC(JSON_TID.dom(STR_TID).rng(ALL), lst(), (lhs, inst) -> JSON_TRANSLATOR.translateString(lhs.strValue())),
-                instC(PLUS_TID.dom(VEC_TID).rng(VEC_TID), lst(T(VEC_TID)), (lhs, inst) -> cross_(inst.arg(0)).apply(lhs)),
+                instC(PLUS_INST_TID.dom(VEC_TID).rng(VEC_TID), lst(T(VEC_TID)), (lhs, inst) -> cross_(inst.arg(0)).apply(lhs)),
                 //  instC(PLUS_TID.dom(RVEC_TID).rng(RVEC_TID), lst(T(RVEC_TID)), (lhs, inst) -> lhs.value(lhs.<MRealVec>as().value().add(inst.arg(0).<MRealVec>as().value()))),
                 instC(SQRT_TID.dom(REAL_TID).rng(REAL_TID), lst(), (lhs, inst) -> lhs.jvm(Math.sqrt(lhs.realValue()))),
                 instC(DOT_TID.dom(VEC_TID).rng(ALL), lst(T(VEC_TID)), (lhs, inst) -> {

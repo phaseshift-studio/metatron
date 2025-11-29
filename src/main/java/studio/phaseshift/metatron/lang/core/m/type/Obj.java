@@ -32,7 +32,6 @@ import studio.phaseshift.metatron.util.Streamable;
 
 import java.nio.ByteBuffer;
 import java.util.*;
-import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -390,7 +389,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
     }
 
     default Obj autoResolve(final Obj obj) {
-        return this.isInst() && this.tid().basePath().equals(AUTO_TID) ? this.apply(obj).autoResolve(obj) : this;
+        return this.isInst() && this.tid().basePath().equals(AUTO_INST_TID) ? this.apply(obj).autoResolve(obj) : this;
     }
 
     default Obj autoResolve() {
@@ -398,7 +397,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
     }
 
     default boolean isAutoResolve() {
-        return this.isInst() && this.tid().basePath().equals(AUTO_TID);
+        return this.isInst() && this.tid().basePath().equals(AUTO_INST_TID);
     }
 
     default boolean isInstObj() {

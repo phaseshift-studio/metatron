@@ -33,7 +33,7 @@ import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.lang.core.m.inst.mFluent.StartLess.split_;
 import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.CODE_TID;
-import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.ID_TID;
+import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.ID_INST_TID;
 
 public interface Call extends Obj, Ring<Call> {
 
@@ -106,7 +106,7 @@ public interface Call extends Obj, Ring<Call> {
 
     @Override
     default Call one() {
-        return MInst.instB(ID_TID, lst());
+        return MInst.instB(ID_INST_TID, lst());
     }
 
     @Override

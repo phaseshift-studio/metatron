@@ -60,7 +60,7 @@ public class MMachine extends MObj implements Machine {
     public static Machine of(final Obj start, final Code code) {
         if (!start.isNoObj()) {
             final List<Inst> prepended = new ArrayList<>();
-            prepended.add(MInst.instB(mInstSet.START_TID, lst(start)));
+            prepended.add(MInst.instB(mInstSet.START_INST_TID, lst(start)));
             prepended.addAll(code.codeValue());
             return new MMachine(Quartet.with(MCode.of(prepended), RunningMonads.of(),lst(new LinkedList<>()), MObjs.empty()), MACH_TID, fURI.fnull);
         } else {

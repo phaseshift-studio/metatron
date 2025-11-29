@@ -28,10 +28,9 @@ import studio.phaseshift.metatron.lang.core.m.type.impl.MCode;
 import java.util.ArrayList;
 import java.util.List;
 
-import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.AUTO_TID;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MInst.instB;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
-import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.ID_TID;
+import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.ID_INST_TID;
 
 public class mFluent<F extends Fluent<F>> extends MCode implements Fluent<F>, Code {
 
@@ -50,99 +49,99 @@ public class mFluent<F extends Fluent<F>> extends MCode implements Fluent<F>, Co
 
 
     public F start_(final Obj obj) {
-        return this.addInst(instB(mInstSet.START_TID, lst(obj)));
+        return this.addInst(instB(mInstSet.START_INST_TID, lst(obj)));
     }
     
     public F as_(final Obj obj) {
-        return this.addInst(instB(mInstSet.AS_TID, lst(obj)));
+        return this.addInst(instB(mInstSet.AS_INST_TID, lst(obj)));
     }
 
     public F apply_(final Obj obj) {
-        return this.addInst(instB(mInstSet.APPLY_TID, lst(obj)));
+        return this.addInst(instB(mInstSet.APPLY_INST_TID, lst(obj)));
     }
 
     public F block_(final Obj obj) {
-        return this.addInst(instB(mInstSet.BLOCK_TID, lst(obj)));
+        return this.addInst(instB(mInstSet.BLOCK_INST_TID, lst(obj)));
     }
 
     public F where_(final Obj obj) {
-        return this.addInst(instB(mInstSet.WHERE_TID, lst(obj)));
+        return this.addInst(instB(mInstSet.WHERE_INST_TID, lst(obj)));
     }
 
     public F plus_(final Obj obj) {
-        return this.addInst(instB(mInstSet.PLUS_TID, lst(obj)));
+        return this.addInst(instB(mInstSet.PLUS_INST_TID, lst(obj)));
     }
 
     public F mult_(final Obj obj) {
-        return this.addInst(instB(mInstSet.MULT_TID, lst(obj)));
+        return this.addInst(instB(mInstSet.MULT_INST_TID, lst(obj)));
     }
 
     public F map_(final Obj obj) {
-        return this.addInst(instB(mInstSet.MAP_TID, lst(obj)));
+        return this.addInst(instB(mInstSet.MAP_INST_TID, lst(obj)));
     }
 
     public F id_() {
-        return this.addInst(instB(ID_TID, lst()));
+        return this.addInst(instB(ID_INST_TID, lst()));
     }
 
     public F isa_(final Obj obj) {
-        return this.addInst(instB(mInstSet.ISA_TID, lst(obj)));
+        return this.addInst(instB(mInstSet.ISA_INST_TID, lst(obj)));
     }
 
     public F is_(final Obj obj) {
-        return this.addInst(instB(mInstSet.IS_TID, lst(obj)));
+        return this.addInst(instB(mInstSet.IS_INST_TID, lst(obj)));
     }
 
     public F in_(final Obj obj) {
-        return this.addInst(instB(mInstSet.MATCHES_TID, lst(obj)));
+        return this.addInst(instB(mInstSet.MATCHES_INST_TID, lst(obj)));
     }
 
     public F split_(final Obj obj) {
-        return this.addInst(instB(mInstSet.SPLIT_TID, lst(obj)));
+        return this.addInst(instB(mInstSet.SPLIT_INST_TID, lst(obj)));
     }
 
     public F merge_() {
-        return this.addInst(instB(mInstSet.MERGE_TID, lst()));
+        return this.addInst(instB(mInstSet.MERGE_INST_TID, lst()));
     }
 
     public F else_(final Obj obj) {
-        return this.addInst(instB(mInstSet.ELSE_TID, lst(obj)));
+        return this.addInst(instB(mInstSet.ELSE_INST_TID, lst(obj)));
     }
 
     public F from_(final Obj obj) {
-        return this.addInst(instB(mInstSet.FROM_TID, lst(obj)));
+        return this.addInst(instB(mInstSet.FROM_INST_TID, lst(obj)));
     }
 
     public F auto_(final Obj obj) {
-        return this.addInst(instB(mInstSet.AUTO_TID, lst(obj)));
+        return this.addInst(instB(mInstSet.AUTO_INST_TID, lst(obj)));
     }
 
     public F to_(final Obj obj) {
-        return this.addInst(instB(mInstSet.TO_TID, lst(obj)));
+        return this.addInst(instB(mInstSet.TO_INST_TID, lst(obj)));
     }
 
     public F eq_(final Obj obj) {
-        return this.addInst(instB(mInstSet.EQ_TID, lst(obj)));
+        return this.addInst(instB(mInstSet.EQ_INST_TID, lst(obj)));
     }
 
     public F count_() {
-        return this.addInst(instB(mInstSet.COUNT_TID, lst()));
+        return this.addInst(instB(mInstSet.COUNT_INST_TID, lst()));
     }
 
     public F sum_() {
-        return this.addInst(instB(mInstSet.SUM_TID, lst()));
+        return this.addInst(instB(mInstSet.SUM_INST_TID, lst()));
     }
 
     public F prod_() {
-        return this.addInst(instB(mInstSet.PROD_TID, lst()));
+        return this.addInst(instB(mInstSet.PROD_INST_TID, lst()));
     }
 
     public F cross_(final Obj obj) {
-        return this.addInst(instB(mInstSet.SELECT_TID, lst(obj)));
+        return this.addInst(instB(mInstSet.SELECT_INST_TID, lst(obj)));
     }
 
     public F get_(final Obj obj) {
-        return this.addInst(instB(mInstSet.GET_TID, lst(obj)));
+        return this.addInst(instB(mInstSet.GET_INST_TID, lst(obj)));
     }
 
     /*public List<Obj> toList() {

@@ -180,7 +180,7 @@ public class mParser {
                 return first.isInst() && !first.isNoObj() ? MCode.of(List.of(first.as())) : first;
             final List<Inst> newCode = new ArrayList<>();
             if (!first.isNoObj() && !first.isInst())
-                newCode.add(new MInst(Triplet.with(lst(first.isInst() ? NoObj.noobj() : first), Inst.f.UNKNOWN, NoObj.noobj()), START_TID, fURI.fnull));
+                newCode.add(new MInst(Triplet.with(lst(first.isInst() ? NoObj.noobj() : first), Inst.f.UNKNOWN, NoObj.noobj()), START_INST_TID, fURI.fnull));
             else if (first.isInst()) newCode.add(first.as());
             newCode.addAll(mParser.<Call>pick(t, 2).insts());
             return MCode.of(newCode, CODE_TID, pick(t, 3));
@@ -398,7 +398,7 @@ public class mParser {
     }
 
     public static Parser m_type() {
-        return seq(m_type_prefix(TYPE_TID), of("T"),
+        return seq(m_type_prefix(TYPE_INST_TID), of("T"),
                 opt(seq(of("["), opt(m_obj(), null), of("]")).map(t -> pick(t, 1)), null),
                 opt(seq(of("["), opt(m_obj(), null), of("]")).map(t -> pick(t, 1)), null))
                 .map(t -> T(pick(t, 0), pick(t, 2), pick(t, 3)));
