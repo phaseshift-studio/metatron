@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -22,26 +22,23 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.lang.core.m.obj.NoObj;
-import studio.phaseshift.metatron.lang.core.m.type.impl.MInst;
-import studio.phaseshift.metatron.lang.core.m.parser.mParser;
 import studio.phaseshift.metatron.lang.MetatronObjTest;
+import studio.phaseshift.metatron.lang.core.m.parser.mParser;
+import studio.phaseshift.metatron.lang.core.m.type.impl.MInst;
 import studio.phaseshift.metatron.util.Tuple;
 
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static studio.phaseshift.metatron.furi.fURI.NOOBJ;
 import static studio.phaseshift.metatron.furi.fURI.f;
+import static studio.phaseshift.metatron.lang.core.m.inst.mFluent.StartLess.*;
 import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.*;
 import static studio.phaseshift.metatron.lang.core.m.obj.NoObj.noobj;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MObjs.objs;
-import static studio.phaseshift.metatron.lang.core.m.inst.mFluent.StartLess.*;
-import static studio.phaseshift.metatron.lang.core.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
 
@@ -71,13 +68,13 @@ public class InstTest extends MetatronObjTest {
             "1         % test?str<=int()                  % test()           % test?str<=int()",
             "1         % test?str<=A()                    % test()           % test?str<=int()",
             "1         % test?A<=A()                      % test()           % test?int<=int()",
-            "1         % test?A<=A(A::T[])                % test(2)          % test?int<=int(int::T[])",
-            "1         % test?A<=A(A::T[])                % test(plus(2))    % test?int<=int(plus::T[])",
-            "{1,2}     % test?A{*}<=A{*}(A{*}::T[])       % test({3,4})      % test?int{4}<=int{2}(int{2}::T[])",
-            "{1,2}     % test?A{+}<=A{+}(A{+}::T[])       % test({3,4})      % test?int{4}<=int{2}(int{2}::T[])",
-            "{1,2}     % test?A{*}<=A{+}(A{*}::T[])       % test({3,4})      % test?int{4}<=int{2}(int{2}::T[])"
-            //  "noobj     % test?A<=[0](A::T[])              % test(3)          % test?int<=[0](int::T[])",
-            // "noobj     % test?A{*]<=[0](A{*}::T[])        % test({1,2,3})    % test?int{3]<=[0](int{3}::T[])",
+            "1         % test?A<=A(A::T)                  % test(2)          % test?int<=int(int::T)",
+            "1         % test?A<=A(A::T)                  % test(plus(2))    % test?int<=int(plus::T)",
+            "{1,2}     % test?A{*}<=A{*}(A{*}::T)         % test({3,4})      % test?int{4}<=int{2}(int{2}::T)",
+            "{1,2}     % test?A{+}<=A{+}(A{+}::T)         % test({3,4})      % test?int{4}<=int{2}(int{2}::T)",
+            "{1,2}     % test?A{*}<=A{+}(A{*}::T)         % test({3,4})      % test?int{4}<=int{2}(int{2}::T)",
+            "noobj     % test?A<=A{0}(A::T)               % test(3)          % test?int<=int{0}(int::T)",
+            "noobj     % test?A{*}<=A{0}(A{*}::T)         % test({1,2,3})    % test?int{3}<=int{0}(int{3}::T)",
     }, delimiter = '%')
     public void testResolution(final String lhs, final String def, final String spec, final String resolution) {
         final Obj lhsA = mParser.m_obj().parse(lhs).get();

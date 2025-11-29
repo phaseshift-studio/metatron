@@ -129,6 +129,7 @@ public record ObjStringSerializer(Builder b) implements ObjSerializer<String> {
             else if (obj instanceof final Lst lst) {
                 if (this.b.prettyPrint && lst.count() > 1) {
                     this.generateLst(sb, lst, 2);
+                    return sb.toString();
                 } else {
                     generateTID(sb, obj.tid(), true).append("{{g}}[{{y}}");
                     for (final Obj o : lst.jvm()) {
@@ -159,6 +160,7 @@ public record ObjStringSerializer(Builder b) implements ObjSerializer<String> {
                 } else {
                     if (this.b.prettyPrint && rec.count() > 1) {
                         this.generateRec(sb, rec, 2);
+                        return sb.toString();
                     } else {
                         generateTID(sb, obj.tid(), true).append("{{g}}[");
                         for (final Map.Entry<Obj, Obj> o : rec.jvm().entrySet()) {

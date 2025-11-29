@@ -35,6 +35,8 @@ import java.util.Map;
 import static studio.phaseshift.metatron.Tokens.SPACE;
 import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.Tokens.PATTERN;
+import static studio.phaseshift.metatron.lang.core.m.inst.mFluent.StartLess.auto;
+import static studio.phaseshift.metatron.lang.core.m.inst.mFluent.StartLess.auto_;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
 
@@ -53,6 +55,7 @@ public class RGraphTest extends MetatronTest {
                 uri("load"), uri("tinkerpop-modern")), f("/g/#"), f("/sys/space/grph"));
         Router.global().addSpace(space);
         Router.global().put(uri("primary"), uri("/grph"));
+        Router.global().write("g",auto(f("/g")));
         space.start();
        /* Router.readFromSpace(f("/grph/space/grph")).<Type>as().constructor().apply(
                 rec(Map.of(

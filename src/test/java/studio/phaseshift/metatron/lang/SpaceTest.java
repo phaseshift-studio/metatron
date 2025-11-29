@@ -85,7 +85,7 @@ public abstract class SpaceTest extends MetatronTest {
            // ".                                                     % *#.sum?int<=int{*}()      % .",
            // ".                                                     % *(/+/+).sum?int<=int{*}()    % .",
             "/t/ -> [a=>1,b=>2,c=>3]                               % */t/                      % [/t/a=>1,/t/b=>2,/t/c=>3]>-",
-           // ".                                                     % */t                       % noobj",
+            ".                                                     % */t                       % noobj",
             ".                                                     % */t/a                     % 1",
             "/t -> [a=>[b=>2,c=>3],d=>4]                           % */t/a/b                   % 2",
             ".                                                     % */t/#                     % [[a=>[b=>2,c=>3],d=>4],[b=>2,c=>3],2,3,4]>-",
@@ -99,9 +99,12 @@ public abstract class SpaceTest extends MetatronTest {
        //     ".                                                     % */t/+/+/#                 % [[b=>2,c=>3],2,3,4]>-",
             ".                                                     % */t/a/                    % [/t/a/b=>2,/t/a/c=>3]>-",
             ".                                                     % */t/a/+                   % {2,3}",
-            ".                                                     % */t/a/+/                  % [/t/a/b=>2,/t/a/c=>3]>-"
-            //"1.vid(abc)                                            % *abc                     % 1@abc",
-            //"[1@a,2@b,3@c]@d.map(10).vid(b)                        % *d                       % [1@a,10@b,3@c]@d"
+            ".                                                     % */t/a/+/                  % [/t/a/b=>2,/t/a/c=>3]>-",
+            "1.vid(abc)                                            % *abc                     % 1@abc",
+            "[1@a,2@b,3@c]@d.map(10).vid(b)                        % *d                       % [1@a,10@b,3@c]@d",
+            "[1@a,2@b,3@c]@d.map(10@b)                             % *d                       % [1@a,10@b,3@c]@d",
+            "[1@a,2@b,3@c]@d.map(*b + 10@b)                        % *d                       % [1@a,12@b,3@c]@d",
+            "[1@a,2@b,3@c]@d.map(*b + 10@b).to(d)                  % *d                       % 12@d"
     }, delimiter = '%')
     void testMonoReadWrite(final String writeExpression, final String readExpression, final String expectedExpression) {
         final Space space = SPACE.get();

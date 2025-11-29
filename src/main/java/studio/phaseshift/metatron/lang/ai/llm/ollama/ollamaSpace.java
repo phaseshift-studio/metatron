@@ -66,9 +66,9 @@ import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class ollamaSpace extends MSpace<OllamaModels> {
+public class ollamaSpace {//extends MSpace<OllamaModels> {
 
-    protected final fURI internalPrefix;
+   /* protected final fURI internalPrefix;
 
     public static final Type OLLAMA_TYPE =
             T(OLLAMA_TID, null,
@@ -77,8 +77,8 @@ public class ollamaSpace extends MSpace<OllamaModels> {
                                     uri(Tokens.PATTERN), T(URI_TID),
                                     uri(Tokens.HOST), T(URI_TID),
                                     uri(STORE).maybe(), T(REC_TID))))), (lhs, inst) -> {
-                                final fURI pattern = inst.arg(0).<Rec>as().at(Tokens.PATTERN).uriValue();
-                                final fURI ollamaHost = inst.arg(0).<Rec>as().at(Tokens.HOST).uriValue();
+                                final fURI pattern = inst.arg(0).orElse(rec()).<Rec>as().at(Tokens.PATTERN).uriValue();
+                                final fURI ollamaHost = inst.arg(0).orElse(rec()).<Rec>as().at(Tokens.HOST).uriValue();
                                 final OllamaModels models = OllamaModels.builder().baseUrl(ollamaHost.toString()).build();
                                 final Space ollama = new ollamaSpace(models, inst.arg(0).jvm(), pattern, inst.arg(0).vid());
                                 Router.global().addSpace(ollama);

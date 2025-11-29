@@ -128,6 +128,7 @@ public class mqttSpace extends MSpace<Mqtt5Client> {
                             }
                         } catch (final Exception e) {
                             LOG.error(e);
+                            e.printStackTrace();
                         }
                     })
                     .send()
