@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
- * Copyright (C) 2025- PhaseShift Studio, LLC
- *
+ *  Copyright (C) 2025- PhaseShift Studio, LLC
+ *  
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *
+ *  
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -25,19 +25,19 @@ import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.Q;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.lang.MSpace;
+import studio.phaseshift.metatron.lang.Space;
 import studio.phaseshift.metatron.lang.core.m.inst.mInstSet;
+import studio.phaseshift.metatron.lang.core.m.obj.NoObj;
+import studio.phaseshift.metatron.lang.core.m.type.Obj;
 import studio.phaseshift.metatron.lang.core.m.type.Rec;
 import studio.phaseshift.metatron.lang.core.m.type.Type;
 import studio.phaseshift.metatron.lang.db.kv.kvSpace;
-import studio.phaseshift.metatron.lang.Space;
-import studio.phaseshift.metatron.lang.core.m.obj.NoObj;
-import studio.phaseshift.metatron.lang.core.m.type.Obj;
 import studio.phaseshift.metatron.lang.net.web.JSONTranslator;
-import studio.phaseshift.metatron.lang.MSpace;
 import studio.phaseshift.metatron.lang.sys.router.Router;
 import studio.phaseshift.metatron.lang.util.serial.ObjSerializer;
 import studio.phaseshift.metatron.lang.util.serial.ObjStringSerializer;
-import studio.phaseshift.metatron.ui.*;
+import studio.phaseshift.metatron.ui.Palette;
 
 import java.nio.charset.StandardCharsets;
 import java.util.List;
@@ -164,7 +164,11 @@ public class mqttSpace extends MSpace<Mqtt5Client> {
 
     @Override
     public Obj read(final fURI vid) {
-        return this.cache.read(vid);
+        final Obj ret = Q.Helper.processPreRead(this.qs(), vid, vid).orElse(null);
+        if (null != ret)
+            return ret;
+        final Obj result = this.cache.read(vid.qLess());
+        return Q.Helper.processPostRead(this.qs(), vid, vid, result).orElse(result);
     }
 
     @Override
@@ -172,11 +176,11 @@ public class mqttSpace extends MSpace<Mqtt5Client> {
         final Obj ret = Q.Helper.processPreWrite(this.qs(), vid, vid, obj).orElse(null);
         if (null != ret)
             return ret;
-        Space.Helper.resolveWrite(this, vid.basePath(), obj, (key, value) -> {
-            this.send(vid, value);
+        final Obj result = Space.Helper.resolveWrite(this, vid.basePath(), obj, (key, value) -> {
+            this.send(vid.qLess(), value);
             return value;
         }, this.cache.directReader());
-        return obj;
+        return Q.Helper.processPostWrite(this.qs(), vid, vid, result).orElse(Q.Helper.processQlessWrite(this.qs(), vid, vid, obj).orElse(result));
     }
 
     private void send(final fURI vid, final Obj obj) {
