@@ -38,20 +38,24 @@ import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
  */
 @Disabled
 public class mqttSpaceTest extends SpaceTest {
+    
+    
     @BeforeAll
     public static void setup() {
         webInstSet.create();
+        MoquetteServer.run();;
         SPACE = () -> {
             try {
+               
                 final mqttSpace space = mqttSpace.of(Map.of(
                         uri(HOST), uri("mqtt://127.0.0.1:1883"),
                         uri(PREFIX), uri("/"),
                         uri(PATTERN), uri("/t/#")), fURI.of("/sys/router/space/t"));
                 space.directWriter().apply(f("#"),noobj());
                 return space;
-            } catch (IllegalStateException e) {
+            } catch (Exception e) {
                 Graphitty.log(mqttSpaceTest.class).warn("skipping test as no test server is running");
-                assumeTrue(false);
+              //  assumeTrue(false);
                 return null;
             }
         };
