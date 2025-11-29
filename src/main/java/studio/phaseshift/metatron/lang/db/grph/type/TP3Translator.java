@@ -29,6 +29,7 @@ import studio.phaseshift.metatron.lang.core.m.type.impl.MObjFactory;
 import studio.phaseshift.metatron.lang.sys.router.Router;
 import studio.phaseshift.metatron.util.Translator;
 
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static studio.phaseshift.metatron.lang.core.m.inst.mFluent.StartLess.auto;
@@ -57,7 +58,7 @@ public record TP3Translator(Builder builder) implements Translator<Obj, Graph> {
 
     private Rec createEdge(final Edge tpEdge) {
         final Rec props = addProperties(rec(), tpEdge);
-        return rec(mutableOrderedMap(uri(LABEL), uri(tpEdge.label()),
+        return rec(Map.of(uri(LABEL), uri(tpEdge.label()),
                         uri(PROPS), props.isEmpty() ? noobj() : props,
                         uri(Direction.OUT.name()), auto(this.builder.root.extend("V").extend(tpEdge.outVertex().id().toString())),
                         uri(Direction.IN.name()), auto(this.builder.root.extend("V").extend(tpEdge.inVertex().id().toString()))),
@@ -69,11 +70,11 @@ public record TP3Translator(Builder builder) implements Translator<Obj, Graph> {
     public Obj translate(final Graph graph) {
         graph.vertices().forEachRemaining(tpV -> {
             final AtomicReference<Rec> out = new AtomicReference<>(rec());
-            tpV.edges(Direction.OUT).forEachRemaining(tpE -> out.set(out.get().put(uri(tpE.label()), out.get().at(uri(tpE.label())).orElse(objs()).append(createEdge(tpE)))));
+            tpV.edges(Direction.OUT).forEachRemaining(tpE -> out.set(out.get().put(uri(tpE.label()), out.get().at(uri(tpE.label())).append(createEdge(tpE)))));
             final AtomicReference<Rec> in = new AtomicReference<>(rec());
-            tpV.edges(Direction.IN).forEachRemaining(tpE -> in.set(in.get().put(uri(tpE.label()), in.get().at(uri(tpE.label())).orElse(objs()).append(createEdge(tpE)))));
+            tpV.edges(Direction.IN).forEachRemaining(tpE -> in.set(in.get().put(uri(tpE.label()), in.get().at(uri(tpE.label())).append(createEdge(tpE)))));
             final Rec props = addProperties(rec(), tpV);
-            rec(mutableOrderedMap(uri(LABEL), uri(tpV.label()),
+            rec(Map.of(uri(LABEL), uri(tpV.label()),
                             uri(PROPS), props.isEmpty() ? noobj() : props,
                             uri(Direction.OUT.name()), out.get().isEmpty() ? noobj() : out.get(),
                             uri(Direction.IN.name()), in.get().isEmpty() ? noobj() : in.get()),

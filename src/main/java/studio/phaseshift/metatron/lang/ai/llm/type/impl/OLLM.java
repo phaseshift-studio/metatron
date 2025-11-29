@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -29,24 +29,21 @@ import studio.phaseshift.metatron.lang.core.m.type.Rec;
 import studio.phaseshift.metatron.lang.core.m.type.Type;
 import studio.phaseshift.metatron.lang.core.m.type.impl.MRec;
 import studio.phaseshift.metatron.lang.core.m.type.impl.MUri;
-import studio.phaseshift.metatron.lang.sys.router.Router;
 import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import static studio.phaseshift.metatron.lang.ai.llm.llmInstSet.INST_TID;
-import static studio.phaseshift.metatron.lang.ai.llm.llmInstSet.LLM_TID;
 import static studio.phaseshift.metatron.Tokens.HOST;
 import static studio.phaseshift.metatron.Tokens.NAME;
-import static studio.phaseshift.metatron.lang.core.m.inst.mFluent.StartLess.*;
+import static studio.phaseshift.metatron.lang.ai.llm.llmInstSet.INST_TID;
+import static studio.phaseshift.metatron.lang.ai.llm.llmInstSet.LLM_TID;
+import static studio.phaseshift.metatron.lang.core.m.inst.mFluent.StartLess.isa_;
 import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.*;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MBool.bool;
-import static studio.phaseshift.metatron.lang.core.m.type.impl.MInst.*;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
-import static studio.phaseshift.metatron.lang.core.m.type.impl.MObjs.objs;
-import static studio.phaseshift.metatron.lang.core.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
 
@@ -79,7 +76,6 @@ public class OLLM extends MRec implements LLM {
 
     public OLLM(final Tuple.Pair<OllamaModel, OllamaModelCard> model, final fURI tid, final fURI vid) {
         super(modelToRec(model), tid, vid);
-        this.put(uri(HOST), Router.global().getSpace(this.vid).at(HOST));
     }
 
     private static Map<Obj, Obj> modelToRec(final Tuple.Pair<OllamaModel, OllamaModelCard> model) {
@@ -91,8 +87,9 @@ public class OLLM extends MRec implements LLM {
 
     }
 
-    public static OLLM ollm(final Tuple.Pair<OllamaModel, OllamaModelCard> model, final fURI tid, final fURI vid) {
-        return new OLLM(model, tid, vid);
+    public static OLLM ollm(final fURI host, final Tuple.Pair<OllamaModel, OllamaModelCard> model, final fURI tid, final fURI vid) {
+        final OLLM ollm = new OLLM(model, tid, vid);
+        return ollm.put(uri(HOST), uri(host), MUTABLE).as();
     }
 
     public String name() {

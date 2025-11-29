@@ -24,10 +24,7 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.core.m.type.impl.MBytes;
 
 import java.nio.ByteBuffer;
-import java.util.HexFormat;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 import static studio.phaseshift.metatron.lang.core.m.inst.mFluent.StartLess.isa_;
 import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.*;
@@ -105,6 +102,15 @@ public interface Bytes extends Mono, PlusMonoid<Bytes> {
                     instC(RSHIFT_INST_TID.dom(BYTES_TID).rng(BYTES_TID), lst(isa_(T(BYTES_TID)).else_(MBytes.bytes(ByteBuffer.wrap(new byte[]{0}))).tryToInst()), (lhs, inst) -> lhs.<Bytes>as().shift(inst.arg(0).as())),
                     instC(PLUS_INST_TID.dom(BYTES_TID).rng(BYTES_TID), lst(T(BYTES_TID)), (lhs, inst) -> lhs.<Bytes>as().plus(inst.arg(0).as())),
                     instC(AS_INST_TID.dom(BYTES_TID).rng(STR_TID), lst(T(STR_TID)), (lhs, inst) -> str(new String(lhs.bytesValue().array())))
+                   /* instC(SUM_INST_TID.dom(BYTES_TID.maybeSome()).rng(BYTES_TID), lst(), (lhs,inst) -> lhs.elements().reduce(bytes(ByteBuffer.allocate((int)lhs.stream().count())),(a,b) -> bytes(a.bytesValue().put(b.bytesValue())))),
+                    instC(SPLIT_INST_TID.dom(BYTES_TID).rng(LST_TID), lst(T(LST_TID)), (lhs, inst) -> {
+                        final List<Bytes> list = new ArrayList<>();
+                        byte[] bb = lhs.<Bytes>as().jvm().array();
+                        for (byte b : bb) {
+                            list.add(bytes(ByteBuffer.wrap(new byte[]{b})));
+                        }
+                        return lst((List)list);
+                    })*/
             ));
         }
     }

@@ -115,7 +115,7 @@ public class ollamaSpace extends MSpace<OllamaModels> {
         if (!result.isNoObj())
             return result;
         else {
-            this.findModel(vid);
+         //   this.findModel(vid);
             final Obj result2 = this.internal.read(internalMapping(vid, false));
             if (!result2.isNoObj())
                 return result2;
@@ -151,7 +151,7 @@ public class ollamaSpace extends MSpace<OllamaModels> {
         });
     }
 
-    private void findModel(final fURI modelPattern) {
+    /*private void findModel(final fURI modelPattern) {
         this.sjvm().availableModels().content().stream()
                 .map(model -> {
                     final OllamaModelCard card = this.sjvm().modelCard(model.getName()).content();
@@ -182,6 +182,6 @@ public class ollamaSpace extends MSpace<OllamaModels> {
                         LOG.warn(e);
                         this.internal.write(internalMapping(pair.get1().vid().extend(Tokens.GGUF_KEY), false), fail(e));
                     }
-                });
-    }
+                });*/
+    //}
 }

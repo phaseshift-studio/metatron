@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -22,19 +22,17 @@ import org.petitparser.context.Result;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.core.m.parser.mParser;
 import studio.phaseshift.metatron.lang.core.m.type.*;
-
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.Palette;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.nio.ByteBuffer;
-import java.util.HashSet;
-import java.util.HexFormat;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.*;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MBytes.bytes;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MStr.str;
 
 public record ObjStringSerializer(Builder b) implements ObjSerializer<String> {
 
@@ -137,9 +135,8 @@ public record ObjStringSerializer(Builder b) implements ObjSerializer<String> {
                         sb.append(o).append("{{g}},");
                     }
                     if (!lst.jvm().isEmpty()) sb.deleteCharAt(sb.length() - 1);
-                    else sb.append("{{g}}],");
                 }
-                return generateVID(sb, lst).append("{{X}}").toString();
+                return generateVID(sb.append("{{g}}]"), lst).append("{{X}}").toString();
             }
             /// ///////////////////////////////////////////////////////////////
             /// ///////////////////////////////////////////////////////////////
@@ -201,11 +198,14 @@ public record ObjStringSerializer(Builder b) implements ObjSerializer<String> {
             /// ///////////////////////////////////////////////////////////////
             /// ///////////////////////////////////////////////////////////////
             else if (obj.isBytes()) {
-                return generateTID(sb, obj.tid(), true)
-                        .append("{{c}}0x{{y}}")
-                        .append(HexFormat.of().formatHex(obj.<Bytes>as().jvm().array()))
-                        .append("{{X}}")
-                        .toString();
+                generateTID(sb, obj.tid(), true);
+                if (obj.bytesValue().capacity() > b.strClip) {
+                    this.writeClip(sb, obj);
+                } else {
+                    sb.append("{{c}}0x{{y}}").append(HexFormat.of().formatHex(obj.<Bytes>as().jvm().array()));
+                }
+
+                return sb.append("{{X}}").toString();
             }
             /// ///////////////////////////////////////////////////////////////
             /// ///////////////////////////////////////////////////////////////
@@ -228,6 +228,19 @@ public record ObjStringSerializer(Builder b) implements ObjSerializer<String> {
         }
     }
 
+    private StringBuilder writeClip(final StringBuilder sb, final Obj obj) {
+        if (obj.isStr() && obj.strValue().length() > b.strClip) {
+            sb.append(write(str(obj.strValue().substring(0, b.strClip - 1))));
+            sb.append(Graphitty.sillyPrint("...", true, false));
+        } else if (obj.isBytes() && obj.bytesValue().capacity() > b.strClip) {
+            byte[] bb = Arrays.copyOf(obj.bytesValue().array(), b.strClip - 1);
+            sb.append(write(bytes(ByteBuffer.wrap(bb))));
+            sb.append(Graphitty.sillyPrint("...", true, false));
+        } else
+            sb.append(write(obj));
+        return sb;
+    }
+
     private StringBuilder generateLst(final StringBuilder sb, final Lst lst, final int depth) {
         generateTID(sb, lst.tid(), true);
         if (lst.isEmpty()) {
@@ -248,10 +261,7 @@ public record ObjStringSerializer(Builder b) implements ObjSerializer<String> {
                 } else if (v.isLst()) {
                     this.generateLst(sb, v.as(), depth + 1);
                 } else {
-                    if (v.isStr() && v.strValue().length() > b.strClip) {
-                        sb.append(write(v.jvm(v.strValue().substring(0, b.strClip) + Graphitty.sillyPrint("...", true, false))));
-                    } else
-                        sb.append(write(v));
+                    this.writeClip(sb, v);
                 }
                 sb.append("{{g}},");
                 if (nested)
@@ -262,7 +272,7 @@ public record ObjStringSerializer(Builder b) implements ObjSerializer<String> {
             sb.deleteCharAt(sb.length() - 1);
             sb.append("{{g}}]");
         }
-        return sb;
+        return generateVID(sb, lst);
     }
 
     private StringBuilder generateRec(final StringBuilder sb, final Rec rec, final int depth) {
@@ -286,10 +296,7 @@ public record ObjStringSerializer(Builder b) implements ObjSerializer<String> {
                 } else if (v.isLst()) {
                     this.generateLst(sb, v.as(), depth + 1);
                 } else {
-                    if (v.isStr() && v.strValue().length() > b.strClip) {
-                        sb.append(write(v.jvm(v.strValue().substring(0, b.strClip) + Graphitty.sillyPrint("...", true, false))));
-                    } else
-                        sb.append(write(v));
+                    this.writeClip(sb, v);
                 }
                 sb.append("{{g}},");
                 if (nested)
@@ -300,7 +307,7 @@ public record ObjStringSerializer(Builder b) implements ObjSerializer<String> {
             sb.deleteCharAt(sb.length() - 1);
             sb.append("{{g}}]");
         }
-        return sb;
+        return generateVID(sb, rec);
     }
 
     private StringBuilder generateVID(final StringBuilder sb, final Obj obj) {

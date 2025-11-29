@@ -81,8 +81,8 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>>, PlusMonoid.O<Rec> {
     @Override
     default boolean matches(final Obj rhs) {
         if (rhs.isRec()) {
-            if (true)
-                return rhs.isRec() || this.tid().basePath().equals(rhs.tid().basePath());
+           // if (true)
+           //     return rhs.isRec() || this.tid().basePath().equals(rhs.tid().basePath());
             return rhs.elements().allMatch(r -> {
                 final boolean found = this.elements()
                         .map(l -> Tuple.Pair.with(l.first().matches(r.<Rel>as().first()), l.second().matches(r.<Rel>as().second())))

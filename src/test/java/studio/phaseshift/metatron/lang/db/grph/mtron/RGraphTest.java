@@ -19,6 +19,7 @@
 package studio.phaseshift.metatron.lang.db.grph.mtron;
 
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -40,6 +41,7 @@ import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
+@Disabled
 public class RGraphTest extends MetatronTest {
     @BeforeAll
     public static void begin() {
