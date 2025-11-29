@@ -20,6 +20,15 @@ package studio.phaseshift.metatron.lang.core.m.type;
 
 import studio.phaseshift.metatron.furi.fURI;
 
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
+
+import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.*;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MInst.instC;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MType.T;
+
 public interface Bool extends Mono {
     @Override
     Bool clone(final Object jvm, final fURI tid, final fURI vid);
@@ -37,6 +46,17 @@ public interface Bool extends Mono {
 
     default Bool vid(final fURI vid) {
         return this.clone(this.jvm(), this.tid(), vid);
+    }
+    
+    public static final class BoolType {
+        
+        public static Set<Inst> insts() {
+            return new LinkedHashSet<>(List.of(
+                    instC(PLUS_INST_TID.dom(BOOL_TID).rng(BOOL_TID), lst(T(BOOL_TID)), (lhs, inst) -> lhs.jvm(lhs.boolValue() || inst.arg(0).boolValue())),
+                    instC(MULT_INST_TID.dom(BOOL_TID).rng(BOOL_TID), lst(T(BOOL_TID)), (lhs, inst) -> lhs.jvm(lhs.boolValue() && inst.arg(0).boolValue()))
+            ));
+        }
+        
     }
 
 }

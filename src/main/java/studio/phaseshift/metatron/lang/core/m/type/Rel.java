@@ -22,12 +22,22 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.core.m.obj.NoObj;
 import studio.phaseshift.metatron.util.Tuple;
 
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.function.BiFunction;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static studio.phaseshift.metatron.furi.fURI.ALL;
+import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.*;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MInst.instC;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.util.Tuple.Pair;
 
-public interface Rel extends Poly<Rel, Tuple.Pair<Obj,Obj>>, Obj {
+public interface Rel extends Poly<Rel, Tuple.Pair<Obj, Obj>>, Obj {
 
     @Override
     Rel clone(final Object jvm, final fURI tid, final fURI vid);
@@ -66,9 +76,9 @@ public interface Rel extends Poly<Rel, Tuple.Pair<Obj,Obj>>, Obj {
 
     @Override
     default Rel at(final Obj first, final Obj second, final BiFunction operation) {
-        return (Rel) operation.apply(this, Pair.with(first,second));
+        return (Rel) operation.apply(this, Pair.with(first, second));
     }
-    
+
     @Override
     default <O extends Obj> Stream<O> elements() {
         return Stream.of(this.first().c(c -> c.mult(this.c())).as(), this.second().c(c -> c.mult(this.c())).as());
@@ -82,5 +92,20 @@ public interface Rel extends Poly<Rel, Tuple.Pair<Obj,Obj>>, Obj {
     default Type rng() {
         return this.value().getValue1().rng();
     }*/
+
+    public static final class RelType {
+
+        public static Set<Inst> insts() {
+            return new LinkedHashSet<>(List.of(
+                    instC(MERGE_INST_TID.dom(REL_TID.maybeSome()).rng(REC_TID), lst(T(REC_TID)), (lhs, inst) -> inst.arg(0).jvm(Stream.concat(lhs.stream().map(Obj::as), inst.arg(0).<Rec>as().elements().map(Obj::<Rel>as)).collect(Collectors.toMap(Rel::first, Rel::second, Obj::append, LinkedHashMap::new)))),
+                    instC(DOM_INST_TID.dom(REL_TID).rng(ALL), lst(), (lhs, inst) -> lhs.relValue().get0()),
+                    instC(RNG_INST_TID.dom(REL_TID).rng(ALL.some()), lst(), (lhs, inst) -> lhs.relValue().get1()),
+                    instC(LSHIFT_INST_TID.dom(REL_TID).rng(ALL_STAR), lst(), (lhs, inst) -> lhs.<Rel>as().first()),
+                    instC(RSHIFT_INST_TID.dom(REL_TID).rng(ALL_STAR), lst(), (lhs, inst) -> lhs.<Rel>as().second())
+            ));
+
+
+        }
+    }
 
 }

@@ -3,11 +3,21 @@ package studio.phaseshift.metatron.lang.core.m.type;
 import studio.phaseshift.metatron.algebra.PlusMonoid;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.lang.core.m.type.impl.MBytes;
 
 import java.nio.ByteBuffer;
 import java.util.HexFormat;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
 
+import static studio.phaseshift.metatron.lang.core.m.inst.mFluent.StartLess.isa_;
+import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.*;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MBytes.bytes;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MInst.instC;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MStr.str;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MType.T;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -58,7 +68,7 @@ public interface Bytes extends Mono, PlusMonoid<Bytes> {
         final ByteBuffer buffer = ByteBuffer.allocate(this.jvm().capacity());
         if (rhs.c().isPos()) {
             buffer.put(rhs.jvm());
-            buffer.put(this.jvm().duplicate().slice(0,this.jvm().capacity() - rhs.jvm().array().length));
+            buffer.put(this.jvm().duplicate().slice(0, this.jvm().capacity() - rhs.jvm().array().length));
         } else if (rhs.c().isNeg()) {
             buffer.put(this.jvm().duplicate().position(rhs.bytesValue().remaining()));
             buffer.put(rhs.jvm());
@@ -67,6 +77,18 @@ public interface Bytes extends Mono, PlusMonoid<Bytes> {
         }
         buffer.flip();
         return this.jvm(buffer);
+    }
+
+    public static final class BytesType {
+
+        public static Set<Inst> insts() {
+            return new LinkedHashSet<>(List.of(
+                    instC(LSHIFT_INST_TID.dom(BYTES_TID).rng(BYTES_TID), lst(isa_(T(BYTES_TID)).else_(MBytes.bytes(ByteBuffer.wrap(new byte[]{0}))).tryToInst()), (lhs, inst) -> lhs.<Bytes>as().shift(inst.arg(0).c(cInt::neg).as())),
+                    instC(RSHIFT_INST_TID.dom(BYTES_TID).rng(BYTES_TID), lst(isa_(T(BYTES_TID)).else_(MBytes.bytes(ByteBuffer.wrap(new byte[]{0}))).tryToInst()), (lhs, inst) -> lhs.<Bytes>as().shift(inst.arg(0).as())),
+                    instC(PLUS_INST_TID.dom(BYTES_TID).rng(BYTES_TID), lst(T(BYTES_TID)), (lhs, inst) -> lhs.<Bytes>as().plus(inst.arg(0).as())),
+                    instC(AS_INST_TID.dom(BYTES_TID).rng(STR_TID), lst(T(STR_TID)), (lhs, inst) -> str(new String(lhs.bytesValue().array())))
+            ));
+        }
     }
 
 

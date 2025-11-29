@@ -1,6 +1,6 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
- * Copyright (C) 2025- PhaseShift Studio, LLC 
+ * Copyright (C) 2025- PhaseShift Studio, LLC
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -18,15 +18,20 @@
 
 package studio.phaseshift.metatron.lang.core.m.obj;
 
-import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.c.cInt;
+import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.core.m.type.*;
 import studio.phaseshift.metatron.util.IteratorUtil;
 
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 
+import static studio.phaseshift.metatron.furi.q.DocQ.Doc.docWrap;
+import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.START_INST_TID;
+import static studio.phaseshift.metatron.lang.core.m.type.InstSet.A;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MInst.instC;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.util.Tuple.Triplet;
 
 public final class NoObj implements Obj, Inst {
@@ -37,7 +42,7 @@ public final class NoObj implements Obj, Inst {
     private NoObj() {
         // singleton
     }
-    
+
     public static NoObj noobj() {
         return NoObj.SINGLE;
     }
@@ -132,7 +137,7 @@ public final class NoObj implements Obj, Inst {
     public f f() {
         return f.of(o -> NoObj.noobj());
     }
-    
+
     @Override
     public Call plus(final Call rhs) { // a no-op branch
         return rhs;
@@ -147,29 +152,38 @@ public final class NoObj implements Obj, Inst {
     public Type rng() {
         return NoObj.noobj().type();
     }
-    
+
     @Override
     public fURI uriValue() {
         return fURI.NOOBJ;
     }
-    
+
     @Override
     public Long intValue() {
         return 0L;
     }
-    
+
     @Override
     public String strValue() {
         return "";
     }
-    
+
     @Override
     public List<Obj> lstValue() {
         return List.of();
     }
-    
+
     @Override
     public Double realValue() {
         return 0.0d;
+    }
+
+    public static final class NoObjType {
+        public static Set<Inst> insts() {
+            return new LinkedHashSet<>(List.of(
+                    docWrap(instC(START_INST_TID.dom(fURI.NOOBJ.zero()).rng(A.maybeSome()), lst(T(A.maybeSome())), (lhs, inst) -> inst.arg(0)),
+                            "noobj", "initial objs", Map.of(jnt(0), "initial objs"), "the initial function f()->x")
+                    ));
+        }
     }
 }
