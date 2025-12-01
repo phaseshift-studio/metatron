@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -173,8 +173,8 @@ public interface Lst extends Poly<Lst, List<Obj>>, PlusMonoid.O<Lst> {
             return new LinkedHashSet<>(List.of(
                     instC(PLUS_INST_TID.dom(LST_TID).rng(LST_TID), lst(T(LST_TID)), (lhs, inst) -> lhs.jvm(Stream.concat(lhs.elements(), inst.arg(0).elements()).toList())),
                     instC(MULT_INST_TID.dom(LST_TID).rng(LST_TID), lst(T(LST_TID)), (lhs, inst) -> lhs.jvm(lhs.elements().flatMap(a -> inst.arg(0).elements().map(b -> rel(a, b))).toList())),
-                    instC(LSHIFT_INST_TID.dom(LST_TID).rng(LST_TID), lst(isa_(T(INT_TID)).else_(jnt(1))), (lhs, inst) -> lhs.jvm(lhs.<Lst>as().indexedStream().filter(r -> r.first().intValue() >= inst.arg(0).intValue()).map(Rel::second).toList())),
-                    instC(RSHIFT_INST_TID.dom(LST_TID).rng(LST_TID), lst(isa_(T(INT_TID)).else_(jnt(1))), (lhs, inst) -> lhs.jvm(lhs.<Lst>as().indexedStream().filter(r -> r.first().intValue() < (lhs.lstValue().size() - inst.arg(0).intValue())).map(Rel::second).toList())),
+                    instC(LSHIFT_INST_TID.dom(LST_TID).rng(LST_TID), lst(isa_(T(INT_TID)).else_(jnt(1))), (lhs, inst) -> objs(lhs.stream().filter(Obj::isLst).map(l -> l.jvm(lhs.<Lst>as().indexedStream().filter(r -> r.first().intValue() >= inst.arg(0).intValue()).map(Rel::second).toList())))),
+                    instC(RSHIFT_INST_TID.dom(LST_TID).rng(LST_TID), lst(isa_(T(INT_TID)).else_(jnt(1))), (lhs, inst) -> objs(lhs.stream().filter(Obj::isLst).map(l -> l.jvm(lhs.<Lst>as().indexedStream().filter(r -> r.first().intValue() < (lhs.lstValue().size() - inst.arg(0).intValue())).map(Rel::second).toList())))),
                     instC(MERGE_INST_TID.dom(LST_TID).rng(ALL_STAR), lst(), (lhs, inst) -> objs(lhs.elements())),
                     instC(GET_INST_TID.dom(LST_TID).rng(ALL_STAR), lst(T(INT_TID)), (lhs, inst) -> lhs.<Lst>as().at(inst.arg(0))),
                     instC(GET_INST_TID.dom(LST_TID).rng(ALL_STAR), lst(T(URI_TID)), (lhs, inst) -> lhs.<Lst>as().at(inst.arg(0))),

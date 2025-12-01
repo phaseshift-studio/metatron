@@ -178,10 +178,10 @@ public class mqttSpace extends MSpace<Mqtt5Client> {
         if (null != ret)
             return ret;
         final Obj result = Space.Helper.resolveWrite(this, vid.basePath(), obj, (key, value) -> {
-            this.send(vid.qLess(), value);
+            this.send(vid.qLess(), value.c(cInt.ONE()));
             return value;
         }, this.cache.directReader());
-        return Q.Helper.processPostWrite(this.qs(), vid, vid, result).orElse(Q.Helper.processQlessWrite(this.qs(), vid, vid, obj).orElse(result));
+        return Q.Helper.processPostWrite(this.qs(), vid, vid, result).orElse(Q.Helper.processQlessWrite(this.qs(), vid, vid, obj.c(cInt.ONE())).orElse(result));
     }
 
     private void send(final fURI vid, final Obj obj) {

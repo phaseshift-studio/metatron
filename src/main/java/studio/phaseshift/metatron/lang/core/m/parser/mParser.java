@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -24,10 +24,10 @@ import org.petitparser.parser.combinators.*;
 import org.petitparser.parser.primitive.CharacterParser;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.core.m.inst.mInstSet;
+import studio.phaseshift.metatron.lang.core.m.obj.NoObj;
 import studio.phaseshift.metatron.lang.core.m.type.Call;
 import studio.phaseshift.metatron.lang.core.m.type.Fail;
 import studio.phaseshift.metatron.lang.core.m.type.Inst;
-import studio.phaseshift.metatron.lang.core.m.obj.NoObj;
 import studio.phaseshift.metatron.lang.core.m.type.Obj;
 import studio.phaseshift.metatron.lang.core.m.type.impl.*;
 import studio.phaseshift.metatron.ui.Graphitty;
@@ -71,7 +71,6 @@ public class mParser {
     private static final SettableParser rel_parser = SettableParser.undefined();
     private static final SettableParser obj_rel_back_parser = SettableParser.undefined();
     private static final SettableParser branch_parser = SettableParser.undefined();
-    private static final SettableParser sugar_code_parser = SettableParser.undefined();
     private static final Parser[] PARSERS;
 
     private static final String FULL_FURI_CHARS = "/%!#_-@+.: ";
@@ -90,13 +89,13 @@ public class mParser {
         list.toArray(PARSERS);
         furi_parser.set(seq(word().or(seq(of("::").not(),
                         anyOf(REDUCED_FURI_CHARS))).plus().flatten(),
-                opt(true ? m_furi_poly_type() : none(), null),
-                opt(true ? m_furi_coefficient() : none(), null),
-                opt(false ? m_furi_query() : none(), null)).map(t -> new fURI(pick(t, 0)).big().poly(pick(t, 1)).c(pick(t, 2)).query(pick(t, 3))));
+                opt(m_furi_poly_type(), null),
+                opt(m_furi_coefficient(), null),
+                opt(none(), null)).map(t -> new fURI(pick(t, 0)).big().poly(pick(t, 1)).c(pick(t, 2)).query(pick(t, 3))));
 
 
         branch_parser.set(seq(opt(of("-<"), ""), of('{').trim(), m_code().separatedBy(of(',').trim()), of('}').trim()).pick(2)
-                .map(t -> split_(objs(((List) t).stream().filter(x -> x instanceof Call).toList())).tryToInst()));
+                .map(t -> split_(objs(((List) t).stream().filter(x -> x instanceof Call))).tryToInst()));
         rel_parser.set(seq(m_type_prefix_opt_colon(REL_TID), obj_rel_back_parser, of("=>").trim(), m_obj(), m_vid_postfix())
                 .map(t -> new MRel(Tuple.Pair.with(pick(t, 1), pick(t, 3)), pick(t, 0), pick(t, 4))));
         obj_no_code_parser.set(choice(
@@ -153,11 +152,11 @@ public class mParser {
                 m_vid_postfix())
                 .map(t -> new MLst(pick(t, 2), pick(t, 0), pick(t, 4))));
 
-        rec_parser.set(seq(m_type_prefix_opt_colon(REC_TID), of('[').trim(), rec_internal(obj_rel_back_parser, obj_parser), of(']').trim(), m_vid_postfix()).trim().map(t -> new MRec(pick(t, 2), REC_TID, pick(t, 4)).tid((fURI) pick(t, 0))));
+        rec_parser.set(seq(m_type_prefix_opt_colon(REC_TID), of('[').trim(), rec_internal(obj_rel_back_parser, m_inst_arg(MAP_INST_TID)), of(']').trim(), m_vid_postfix()).trim().map(t -> new MRec(pick(t, 2), REC_TID, pick(t, 4)).tid((fURI) pick(t, 0))));
 
         inst_parser.set(choice(/*branch_parser,*/ seq(
                 choice(m_inst_furi(), m_type_prefix_opt_colon(INST_TID)), // 0 inst_tid
-                seq(of('(').trim(), choice(rec_internal(m_furi().map(t -> ((fURI) t).toUri()), obj_parser), lst_internal(), of("")).trim(), of(')').trim()).pick(1), // 1 inst_args
+                seq(of('(').trim(), choice(rec_internal(m_furi().map(t -> ((fURI) t).toUri()), m_inst_arg(MAP_INST_TID)), lst_internal(), of("")).trim(), of(')').trim()).pick(1), // 1 inst_args
                 opt(seq(of('{').trim(), choice(
                                 of('?').map(t -> null),
                                 of("<j>").map(t -> null),
@@ -172,23 +171,25 @@ public class mParser {
                         Inst.f.of(mParser.<Obj>pick(t, 2)),
                         NoObj.noobj()), // todo: encode seed in parser
                         pick(t, 0), pick(t, 3)))));
+    }
 
-        sugar_code_parser.set(seq(opt(obj_no_code_parser, NoObj.noobj()), opt(of(".").trim(), '.'), opt(m_code(), null), m_vid_postfix()).map(t -> {
-            final Obj first = mParser.<Call>pick(t, 0);
+    public static Parser m_inst_arg(final fURI headtid) {
+        return seq(opt(obj_no_code_parser, NoObj.noobj()), opt(of(".").trim(), '.'), opt(m_code(), null), m_vid_postfix()).map(t -> {
+            final Obj first = mParser.pick(t, 0);
             final Obj second = mParser.pick(t, 2);
             if (null == second)
-                return first.isInst() && !first.isNoObj() ? MCode.of(List.of(first.as())) : first;
+                return first;
             final List<Inst> newCode = new ArrayList<>();
             if (!first.isNoObj() && !first.isInst())
-                newCode.add(new MInst(Triplet.with(lst(first.isInst() ? NoObj.noobj() : first), Inst.f.UNKNOWN, NoObj.noobj()), START_INST_TID, fURI.fnull));
+                newCode.add(new MInst(Triplet.with(lst(first.isInst() ? NoObj.noobj() : first), Inst.f.UNKNOWN, NoObj.noobj()), headtid, fURI.fnull));
             else if (first.isInst()) newCode.add(first.as());
             newCode.addAll(mParser.<Call>pick(t, 2).insts());
-            return MCode.of(newCode, CODE_TID, pick(t, 3));
-        }));
+            return MCode.of(newCode, CODE_TID, pick(t, 3)).tryToInst();
+        });
     }
 
     public static Parser lst_internal() {
-        return choice(of(','), m_obj().separatedBy(of(',').trim())).map(t -> t.equals(',') ? List.of() : ((List) t).stream().filter(o -> o instanceof Obj).toList());
+        return choice(of(','), m_inst_arg(MAP_INST_TID).separatedBy(of(',').trim())).map(t -> t.equals(',') ? List.of() : ((List) t).stream().filter(o -> o instanceof Obj).toList());
     }
 
     public static Parser rec_internal(final Parser keyParser, final Parser valueParser) {
@@ -218,7 +219,7 @@ public class mParser {
     public static <O extends Obj> O parse(final String code) {
         if (code.trim().isEmpty())
             return (O) NoObj.noobj();
-        final Result result = seq(choice(sugar_code(), m_obj()), opt(m_comment(), null)).map(t -> pick(t, 0)).end().parse(code.trim());
+        final Result result = seq(choice(m_inst_arg(START_INST_TID), m_obj()), opt(m_comment(), null)).map(t -> pick(t, 0)).end().parse(code.trim());
         if (result.isFailure())
             LOG.except(result.getBuffer() + "\n" +
                     String.format("%" + (result.getPosition() + "[ERROR] [Console] ".length() + 3) + "s", "") +
@@ -254,11 +255,6 @@ public class mParser {
                 seq(of('<'), m_furi_internal(FULL_FURI_CHARS, polynomial, coefficient, query), of('>')).pick(1),
                 m_furi_internal(furiCharacterSet, polynomial, coefficient, query));
     }
-
-    /*public static Parser m_furi_base_path(final String furiCharacterSet) {
-        return m_furi(furiCharacterSet, false, false);
-    }*/
-
 
     public static Parser m_furi_poly_type() {
         return seq(of('['), furi_parser.separatedBy(of(',')), of(']'))
@@ -315,7 +311,7 @@ public class mParser {
     public static Parser m_objs() {
         return choice(
                 seq(of('{').trim(), of(',').trim(), of('}').trim()),
-                seq(of('{').trim(), m_obj().separatedBy(of(',').trim()), of('}').trim()).pick(1))
+                seq(of('{').trim(), m_inst_arg(MAP_INST_TID).separatedBy(of(',').trim()), of('}').trim()).pick(1))
                 .map(t -> objs(((List) t).stream().filter(x -> x instanceof Obj).toList()));
     }
 
@@ -404,16 +400,8 @@ public class mParser {
                 .map(t -> T(pick(t, 0), pick(t, 2), pick(t, 3)));
     }
 
-    public static Parser sugar_code() {
-        return sugar_code_parser;
-    }
-
-    public static Parser m_code_or_obj() {
-        return choice(sugar_code(), m_obj());
-    }
-
     public static Parser m_code() {
-        return seq(opt(of(CODE_TID.toString() + "::|["), CODE_TID + "::|["), m_inst().separatedBy(opt(of('.').trim(), '.')), opt(of("]|"), "]|"), m_vid_postfix())
+        return seq(opt(of(CODE_TID +"::{{"),CODE_TID + "::{{"), m_inst().separatedBy(opt(of('.').trim(), '.')), opt(of("}}"),"}}"), m_vid_postfix())
                 .map(t -> ((List<Object>) pick(t, 1)).size() == 1 ?
                         ((List<Inst>) pick(t, 1)).get(0) :
                         new MCode((List) ((List<Object>) pick(t, 1))
@@ -432,11 +420,6 @@ public class mParser {
 
     private static Parser generate_sugar_parser(final fURI tid, final Parser startToken, final int argCount) {
         return generate_sugar_parser(tid, startToken, argCount, null);
-    }
-
-
-    private static Parser generate_sugar_parser(final List<fURI> instChain, final Parser startToken, final int argCount) {
-        return generate_sugar_parser(instChain, startToken, argCount, null);
     }
 
     private static Parser generate_sugar_parser(final List<fURI> instChain, final Parser startToken, final int argCount, final Parser endToken) {

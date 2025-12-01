@@ -46,10 +46,10 @@ import java.util.stream.Stream;
 import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.furi.q.DocQ.Doc.docWrap;
+import static studio.phaseshift.metatron.lang.core.m.inst.mFluent.StartLess.*;
 import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.*;
 import static studio.phaseshift.metatron.lang.core.m.obj.NoObj.noobj;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MBool.bool;
-import static studio.phaseshift.metatron.lang.core.m.type.impl.MBytes.bytes;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MInt.jnt;
@@ -236,6 +236,8 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
             return true;
         else if (rhs.isNoObj())
             return false;
+        // if (rhs.isUri() && this.isUri())
+        //  return this.uriValue().matches(rhs.uriValue());
         final fURI base = this.tid().basePath();
         if (BASE_TYPES.contains(base) &&
                 !(this instanceof Objs) &&
@@ -593,7 +595,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
         public static Set<Inst> insts() {
             return new LinkedHashSet<>(List.of(
                     instC(TO_STR_INST_TID.dom(A.maybe()).rng(STR_TID.maybe()), lst(), (lhs, inst) -> str(lhs.toString())),
-                    instC(AUTO_INST_TID.dom(ALL.maybeSome()).rng(ALL.maybeSome()), lst(T(ALL.maybeSome())), (lhs, inst) -> objs(inst.arg(0).stream().flatMap(a -> lhs.stream().map(a::apply)).filter(ab -> !ab.isNoObj()))),
+                    instC(AUTO_INST_TID.dom(ALL.maybe()).rng(ALL.maybe()), lst(T(ALL.maybe())), (lhs, inst) -> inst.arg(0).apply(lhs)),
                     instC(CATCH_INST_TID.dom(ALL).rng(ALL.maybeSome()), lst(T(ALL.maybeSome())), (lhs, inst) -> lhs.isFail() ? inst.arg(0).apply(lhs) : lhs),
                     docWrap(instC(END_INST_TID.dom(ALL_STAR).rng(NOOBJ_TID.zero()), lst(), (lhs, inst) -> noobj()),
                             "terminal objs", "noobj", Map.of(), "the terminal function f(x)->0"),
@@ -722,7 +724,9 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
                             });
                         });
                         return rec(result);
-                    })
+                    }),
+                   instC(RSHIFT_INST_TID.dom(ALL).rng(ALL.maybe()), lst(isa_(T(INT_TID)).else_(jnt(1))), (lhs, inst) -> objs(lhs.stream().filter(o -> o.isUri() ||o.isLst() || o.isRec()).map(o -> rshift_(jnt(0)).apply(o))),
+                   instC(LSHIFT_INST_TID.dom(ALL).rng(ALL.maybe()), lst(isa_(T(INT_TID)).else_(jnt(1))), (lhs, inst) -> objs(lhs.stream().filter(o -> o.isUri() ||o.isLst() || o.isRec()).map(o -> lshift_(jnt(0)).apply(o)))))
             ));
         }
     }

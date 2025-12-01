@@ -35,43 +35,36 @@ package studio.phaseshift.metatron.lang.net.iot;
  */
 
 import io.moquette.broker.Server;
-import io.moquette.interception.AbstractInterceptHandler;
-import io.moquette.interception.messages.InterceptPublishMessage;
 import studio.phaseshift.metatron.lang.sys.router.Router;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.Properties;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
-
 /**
  * Simple example of how to embed the broker in another project
  *
  */
 public final class MoquetteServer {
-    
+
     public static void run() {
-        try {
-            new Thread(() -> {
-                try {
-                    final Server mqttBroker = new Server();
-                    mqttBroker.startServer(new Properties());
-                    Graphitty.log(Router.global()).info("mqtt broker started press [CTRL+C] to stop");
-                    Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-                        Graphitty.log(Router.global()).info("stopping broker");
-                        mqttBroker.stopServer();
-                        Graphitty.log(Router.global()).info("broker stopped");
-                    }));
-                } catch (final Exception e) {
-                    throw MTronException.of(e);
-                }
-            }).start();
-        } catch (final Exception e) {
-            throw MTronException.of(e);
-        }
+        new Thread(() -> {
+            try {
+                final Server mqttBroker = new Server();
+                mqttBroker.startServer(new Properties());
+                Graphitty.log(Router.global()).info("mqtt broker started press [CTRL+C] to stop");
+                Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+                    Graphitty.log(Router.global()).info("stopping broker");
+                    mqttBroker.stopServer();
+                    Graphitty.log(Router.global()).info("broker stopped");
+                }));
+            } catch (final Exception e) {
+                throw MTronException.of(e);
+            }
+        }).start();
     }
 
     private MoquetteServer() {
+        // do nothing
     }
 }

@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -21,7 +21,6 @@ package studio.phaseshift.metatron.lang.core.m.type;
 import studio.phaseshift.metatron.algebra.PlusMonoid;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.lang.core.m.type.impl.MBytes;
 
 import java.nio.ByteBuffer;
 import java.util.*;
@@ -30,6 +29,7 @@ import static studio.phaseshift.metatron.lang.core.m.inst.mFluent.StartLess.isa_
 import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.*;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MBytes.bytes;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MInst.instC;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MType.T;
@@ -98,8 +98,8 @@ public interface Bytes extends Mono, PlusMonoid<Bytes> {
 
         public static Set<Inst> insts() {
             return new LinkedHashSet<>(List.of(
-                    instC(LSHIFT_INST_TID.dom(BYTES_TID).rng(BYTES_TID), lst(isa_(T(BYTES_TID)).else_(MBytes.bytes(ByteBuffer.wrap(new byte[]{0}))).tryToInst()), (lhs, inst) -> lhs.<Bytes>as().shift(inst.arg(0).c(cInt::neg).as())),
-                    instC(RSHIFT_INST_TID.dom(BYTES_TID).rng(BYTES_TID), lst(isa_(T(BYTES_TID)).else_(MBytes.bytes(ByteBuffer.wrap(new byte[]{0}))).tryToInst()), (lhs, inst) -> lhs.<Bytes>as().shift(inst.arg(0).as())),
+                    instC(LSHIFT_INST_TID.dom(BYTES_TID).rng(BYTES_TID), lst(isa_(T(BYTES_TID)).else_(jnt(1)).tryToInst()), (lhs, inst) -> lhs.jvm(ByteBuffer.wrap(Arrays.copyOfRange(lhs.bytesValue().array(), inst.arg(0).intValue().intValue(), lhs.bytesValue().array().length)))),
+                    instC(RSHIFT_INST_TID.dom(BYTES_TID).rng(BYTES_TID), lst(isa_(T(BYTES_TID)).else_(jnt(1)).tryToInst()), (lhs, inst) -> lhs.jvm(ByteBuffer.wrap(Arrays.copyOf(lhs.bytesValue().array(), lhs.bytesValue().array().length - inst.arg(0).intValue().intValue())))),
                     instC(PLUS_INST_TID.dom(BYTES_TID).rng(BYTES_TID), lst(T(BYTES_TID)), (lhs, inst) -> lhs.<Bytes>as().plus(inst.arg(0).as())),
                     instC(AS_INST_TID.dom(BYTES_TID).rng(STR_TID), lst(T(STR_TID)), (lhs, inst) -> str(new String(lhs.bytesValue().array())))
                    /* instC(SUM_INST_TID.dom(BYTES_TID.maybeSome()).rng(BYTES_TID), lst(), (lhs,inst) -> lhs.elements().reduce(bytes(ByteBuffer.allocate((int)lhs.stream().count())),(a,b) -> bytes(a.bytesValue().put(b.bytesValue())))),

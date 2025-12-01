@@ -37,6 +37,7 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.furi.fURI.f;
+import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.START_INST_TID;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
 
@@ -95,7 +96,7 @@ public class MetatronTest {
     public void testCode(final String code, final String expected) {
         if (expected.trim().equals("<ERROR>")) {
             try {
-                final Obj cd = mParser.sugar_code().parse(code).get();
+                final Obj cd = mParser.m_inst_arg(START_INST_TID).parse(code).get();
                 final Obj actual = cd.apply(NoObj.noobj());
                 if (!(cd.isFail() || actual.isFail())) {
                     if (cd.isFail())
@@ -109,7 +110,7 @@ public class MetatronTest {
                 LOG.debug("testing %s => %s", code, e.getMessage());
             }
         } else {
-            final Obj cd = mParser.m_code_or_obj().parse(code).get();
+            final Obj cd = mParser.m_inst_arg(START_INST_TID).parse(code).get();
             final Obj ex = mParser.eval(expected);
             final Obj actual = cd.apply(NoObj.noobj());
             LOG.debug("testing %s => %s [expected:%s]", cd, actual, ex);

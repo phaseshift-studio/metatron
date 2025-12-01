@@ -239,12 +239,12 @@ public interface Inst extends Call {
         Inst cinst = this.args().isEmpty() ? this.args(lst(noobj())).resolve(clhs) : this.resolve(clhs); // TODO: this isn't a general solution (multi slotted args won't work).
         Obj rhs;
         boolean modulateC = false;
-        if (BootLoader.TYPE_CHECK && !lhs.isFail() && !clhs.matches(cinst.dom()) && lhs.unique()) {
-            if (clhs.uniqueC().isOne() && !clhs.c().isOne()) { // && cinst.dom().c().within(cInt.SOME())) {
+        if (BootLoader.TYPE_CHECK && !lhs.isFail() && !clhs.matches(cinst.dom()) && clhs.unique()) {
+           // if (clhs.uniqueC().isOne() && !clhs.c().isOne()) { // && cinst.dom().c().within(cInt.SOME())) {
                 clhs = clhs.c(cInt::one);
                 cinst = this.resolve(clhs);
                 modulateC = true;
-            }
+          //  }
             if (!clhs.rng().matches(cinst.dom()))
                 throw mexcept("lhs {{m}}range{{/m}} does not match inst {{m}}domain{{/m}}: %s {{r}}=/>{{/r}} %s [%s]", clhs.rng(), cinst.dom(), cinst);
         }

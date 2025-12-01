@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -29,7 +29,9 @@ import java.util.Set;
 
 import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.furi.fURI.f;
+import static studio.phaseshift.metatron.lang.core.m.inst.mFluent.StartLess.isa_;
 import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.*;
+import static studio.phaseshift.metatron.lang.core.m.obj.NoObj.noobj;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
@@ -98,8 +100,8 @@ public interface Uri extends Mono, Ring.O<Uri> {
             return new LinkedHashSet<>(List.of(
                     instC(SPLIT_INST_TID.dom(URI_TID).rng(URI_TID.some()), lst(T(URI_TID)), (lhs, inst) -> objs(Arrays.stream(lhs.uriValue().toString().split(inst.arg(0).uriValue().toString())).map(MUri::uri))),
                     instC(MERGE_INST_TID.dom(URI_TID.maybeSome()).rng(URI_TID), lst(T(URI_TID)), (lhs, inst) -> uri(lhs.stream().map(Obj::uriValue).reduce((a, b) -> a.extend(inst.arg(0).uriValue()).extend(b)).orElse(f("noobj")))),
-                    instC(RSHIFT_INST_TID.dom(URI_TID).rng(URI_TID), lst(T(INT_TID.maybe())), (lhs, inst) -> uri(lhs.uriValue().retract(inst.arg(0).orElse(jnt(1)).intValue().intValue()))),
-                    instC(LSHIFT_INST_TID.dom(URI_TID).rng(URI_TID), lst(T(INT_TID.maybe())), (lhs, inst) -> uri(lhs.uriValue().pretract(inst.arg(0).orElse(jnt(1)).intValue().intValue()))),
+                    instC(RSHIFT_INST_TID.dom(URI_TID).rng(URI_TID), lst(isa_(T(INT_TID)).else_(jnt(1))), (lhs, inst) -> lhs.jvm(lhs.uriValue().retract(inst.arg(0).intValue().intValue()))),
+                    instC(LSHIFT_INST_TID.dom(URI_TID).rng(URI_TID), lst(isa_(T(INT_TID)).else_(jnt(1))), (lhs, inst) -> lhs.jvm(lhs.uriValue().pretract(inst.arg(0).intValue().intValue()))),
                     instC(PLUS_INST_TID.dom(URI_TID).rng(URI_TID.maybe()), lst(T(URI_TID.maybe())), (lhs, inst) -> lhs.jvm(lhs.uriValue().plus(inst.arg(0).uriValue()))),
                     instC(MULT_INST_TID.dom(URI_TID).rng(URI_TID.maybe()), lst(T(URI_TID.maybe())), (lhs, inst) -> lhs.jvm(lhs.uriValue().mult(inst.arg(0).uriValue()))),
                     instC(SUM_INST_TID.dom(URI_TID.maybeSome()).rng(URI_TID), lst(), (lhs, inst) -> inst.seed().jvm(lhs.stream().reduce(inst.seed(), (a, b) -> ((Uri) a).plus((Uri) b)).uriValue()), uri(fURI.NOOBJ)),
