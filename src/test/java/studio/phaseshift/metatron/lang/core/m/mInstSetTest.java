@@ -149,7 +149,7 @@ public class mInstSetTest extends MetatronTest {
             "{1,2,3}>-.id?A<=A().-<[_,_,_]                                          % {[1,1,1],[2,2,2],[3,3,3]}",
             "[a=>1,b=>2,c=>3]>-.-<|[<<=>>>.is(gt(0))]                               % [a=>1,b=>2,c=>3]>-",
             "[a=>1,b=>2,c=>3]>-.-<|[<<=>>>.is(gt(2))]                               % [c=>3]>-",
-            //"{1,2,3}>-.id?().-<[_,_,_]                                              % {[1,1,1],[2,2,2],[3,3,3]}",
+            //"{1,2,3}-<[_,_,_]                                              % {[1,1,1],[2,2,2],[3,3,3]}",
             // MULT //
             "{1,2,3}.mult(10)                                                       % {int{1}::10,int{1}::20,int{1}::30}",
             "{int{2}::1,int{3}::2,int{4}::3}.mult(10)                               % {int{2}::10,int{3}::20,int{4}::30}",
@@ -203,8 +203,6 @@ public class mInstSetTest extends MetatronTest {
             "{[1,2],[3,4,5],[6,7,8]}>-[,]==[>-,>-,>-]>-                             % {1,2,3,4,5,6,7,8}",
             "{[1,2],[3,4,5],[6,7,8]}>-[,]==[>-,>-,>-]>-.count()                     % 8",
             "*/m/inst/#.count()-<[is(gt(0))=>true,is(eq(0))=>false]>>-              % true",
-            // dummy without ending comma so it's easier to add more test cases
-            "1.plus(1)                                                              % 2"
     }, delimiter = '%')
     public void testSplitMergeCode(final String code, final String expected) {
         super.testCode(code, expected);
@@ -245,7 +243,9 @@ public class mInstSetTest extends MetatronTest {
             "reduce(|mult(0))                                                       % 0",
             "{1,2,3,4,5}.reduce(|mult(2))                                           % 240",
             "{1,2,3,4,5}.reduce(|mult(1))                                           % 120",
-            //"{1,2,3,4,5}.reduce(|inst(0){ plus(*<0>) })                             % 240",
+            "{1,2,3,4,5}.reduce(|inst(2){ mult(*<0>) })                             % 240",
+            "{1,2,3,4,5}.reduce(|inst(1){ mult(*<0>) })                             % 120",
+            "{1,2,3,4,5}.reduce(|inst(0){ plus(*<0>) })                             % 15",
             "{'a','b','c'}.>-' '                                                    % \"a b c\"",
             "{'a','b','c'}>-' '                                                     % \"a b c\"",
             "'a b c'-<' '                                                           % {\"a\", \"b\", \"c\"}",
@@ -259,8 +259,6 @@ public class mInstSetTest extends MetatronTest {
             "a/b/c.split(/).merge(/)                                                % a/b/c",
             "a/b/c.split(/).merge(/).mult(<.>)                                      % a/b/c",
             "a/b/c.split(/).merge(/).mult(<..>)                                     % a/b",
-            // dummy without ending comma so it's easier to add more test cases
-            "1.plus(1)                                                              % 2"
     }, delimiter = '%')
     public void testReductions(final String code, final String expected) {
         super.testCode(code, expected);
@@ -275,8 +273,6 @@ public class mInstSetTest extends MetatronTest {
             "1-<[plus(1).to(a),plus(2).to(b)]>-.math('a*b')                         % real{2}::6.0",
             "1-<[to(a).math('a+a'),to(c).math('c+5')]                               % [2.0,6.0]",
             "1-<[to(a).math('a+a'),to(c).math('c+5')]>-.sum?real<=real{*}()         % 8.0",
-            // dummy without ending comma so it's easier to add more test cases
-            "1.plus(1)                                                              % 2"
     }, delimiter = '%')
     public void testMath(final String code, final String expected) {
         super.testCode(code, expected);
@@ -290,8 +286,6 @@ public class mInstSetTest extends MetatronTest {
             "{1,2,3}-<|[is(gt(1))=>1.plus(5),_=>9.plus(89.plus(3))].rng()             % {101,6,6}",
             "{1,2,3}-<|[is(gt(1))=>plus(6),_=>plus(100)].rng()                        % {101,8,9}",
             "{1,2,3}-<[is(gt(1))=>plus(6),_=>plus(100)].rng()                         % {101,8,102,9,103}",
-            // dummy without ending comma so it's easier to add more test cases
-            "1.plus(1)                                                              % 2"
     }, delimiter = '%')
     public void testBranches(final String code, final String expected) {
         super.testCode(code, expected);
@@ -306,8 +300,6 @@ public class mInstSetTest extends MetatronTest {
             //"1.plus(map(failure('bad')))                                               % fail::['bad']",
             //"1.plus(map(failure('bad'))).mult(23)                                      % fail::['bad']",
             "1.plus(mult(failure('bad'))).mult(23).catch(34).plus(2)                  % 36",
-            // dummy without ending comma so it's easier to add more test cases
-            "1.plus(1)                                                                % 2"
     }, delimiter = '%')
     public void testFailureCatch(final String code, final String expected) {
         super.testCode(code, expected);
@@ -389,8 +381,6 @@ public class mInstSetTest extends MetatronTest {
             "[1,[2=>5],3].select([-<[_,_]>-.sum()-<[_],select[_=>plus(2)],plus(7)]).where([isa(lst::T[]),[_=>is(gt(6))],is(gt(3))])      % [[2],[2=>7],10]",
             //"[1,[2=>5],3].select([-<[_,_]>-.sum()-<[_]>-,select[_=>plus(2)],plus(7)]).where([isa(int::T[]),[_=>is(gt(6))],is(gt(3))])  % [2,[2=>7],10]",
             //"[a=>1,b=>2,c=>3]>-.-<[=>].where([_=>is(gt(1))])                                                                 % {[b=>4],[c=>6]}",
-            // dummy without ending comma so it's easier to add more test cases
-            "1.plus(1)                                                              % 2"
     }, delimiter = '%')
     public void testSelectWhere(final String code, final String expected) {
         super.testCode(code, expected);
