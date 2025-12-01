@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -19,13 +19,15 @@
 package studio.phaseshift.metatron.lang.core.mach.type.impl;
 
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.lang.core.m.inst.mInstSet;
 import studio.phaseshift.metatron.lang.core.m.obj.NoObj;
 import studio.phaseshift.metatron.lang.core.m.type.*;
-import studio.phaseshift.metatron.lang.core.m.type.impl.*;
+import studio.phaseshift.metatron.lang.core.m.type.impl.MCode;
+import studio.phaseshift.metatron.lang.core.m.type.impl.MInst;
+import studio.phaseshift.metatron.lang.core.m.type.impl.MObj;
+import studio.phaseshift.metatron.lang.core.m.type.impl.MObjs;
 import studio.phaseshift.metatron.lang.core.mach.type.Machine;
 import studio.phaseshift.metatron.lang.core.mach.type.Monad;
-import studio.phaseshift.metatron.lang.core.m.inst.mInstSet;
-
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
 import studio.phaseshift.metatron.util.MTronException;
@@ -35,11 +37,12 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
+import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.CODE_TID;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
-import static studio.phaseshift.metatron.util.MTronException.mexcept;
-import static studio.phaseshift.metatron.util.Tuple.Quartet;
 import static studio.phaseshift.metatron.lang.core.mach.machInstSet.DROP_TID;
 import static studio.phaseshift.metatron.lang.core.mach.machInstSet.MACH_TID;
+import static studio.phaseshift.metatron.util.MTronException.mexcept;
+import static studio.phaseshift.metatron.util.Tuple.Quartet;
 
 ;
 
@@ -52,8 +55,8 @@ public class MMachine extends MObj implements Machine {
         super(value, tid, vid);
     }
 
-    public static Machine of(final Code code) {
-        return new MMachine(Quartet.with(code, RunningMonads.of(), lst(new LinkedList<>()), MObjs.empty()), MACH_TID, fURI.fnull);
+    public static Machine of(final Call code) {
+        return new MMachine(Quartet.with(code.isInst() ? new MCode(List.of(code.as()), CODE_TID, fURI.fnull) : code.as(), RunningMonads.of(), lst(new LinkedList<>()), MObjs.empty()), MACH_TID, fURI.fnull);
     }
 
 
@@ -62,7 +65,7 @@ public class MMachine extends MObj implements Machine {
             final List<Inst> prepended = new ArrayList<>();
             prepended.add(MInst.instB(mInstSet.START_INST_TID, lst(start)));
             prepended.addAll(code.codeValue());
-            return new MMachine(Quartet.with(MCode.of(prepended), RunningMonads.of(),lst(new LinkedList<>()), MObjs.empty()), MACH_TID, fURI.fnull);
+            return new MMachine(Quartet.with(MCode.of(prepended), RunningMonads.of(), lst(new LinkedList<>()), MObjs.empty()), MACH_TID, fURI.fnull);
         } else {
             return MMachine.of(code);
         }

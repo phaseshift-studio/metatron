@@ -274,7 +274,7 @@ public class Console extends MRec implements Mode {
                 if (null != result) {
                     (result.isNoObj() ?
                             MObjs.empty() :
-                            result.isCode() ?
+                            result.isObjCall() ?
                                     MMachine.of(result.as()).apply() :
                                     result).stream().forEach(
                             o -> Graphitty.out(this.terminal.output(), "{{-X-}}{{m}}=={{g}}>{{X}}%s\n".formatted(o)));
