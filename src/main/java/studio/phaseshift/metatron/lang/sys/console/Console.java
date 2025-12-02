@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -19,11 +19,14 @@
 package studio.phaseshift.metatron.lang.sys.console;
 
 import org.jline.builtins.Commands;
+import org.jline.builtins.Completers;
 import org.jline.builtins.TTop;
 import org.jline.keymap.BindingReader;
 import org.jline.keymap.KeyMap;
 import org.jline.reader.*;
+import org.jline.reader.impl.DefaultHighlighter;
 import org.jline.reader.impl.DefaultParser;
+import org.jline.reader.impl.completer.StringsCompleter;
 import org.jline.reader.impl.history.DefaultHistory;
 import org.jline.terminal.Attributes;
 import org.jline.terminal.Size;
@@ -33,22 +36,22 @@ import org.jline.utils.*;
 import org.jline.widget.Widgets;
 import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.lang.core.m.inst.mInstSet;
 import studio.phaseshift.metatron.lang.core.m.obj.NoObj;
+import studio.phaseshift.metatron.lang.core.m.parser.mParser;
 import studio.phaseshift.metatron.lang.core.m.type.Obj;
 import studio.phaseshift.metatron.lang.core.m.type.Rec;
 import studio.phaseshift.metatron.lang.core.m.type.Type;
 import studio.phaseshift.metatron.lang.core.m.type.impl.MObjs;
-import studio.phaseshift.metatron.lang.core.m.inst.mInstSet;
-import studio.phaseshift.metatron.lang.core.m.parser.mParser;
 import studio.phaseshift.metatron.lang.core.m.type.impl.MRec;
+import studio.phaseshift.metatron.lang.core.mach.type.impl.MMachine;
 import studio.phaseshift.metatron.lang.util.logObj;
+import studio.phaseshift.metatron.lang.util.serial.ObjStringSerializer;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
 import studio.phaseshift.metatron.ui.Mode;
-import studio.phaseshift.metatron.lang.util.serial.ObjStringSerializer;
 import studio.phaseshift.metatron.util.Common;
 import studio.phaseshift.metatron.util.MTronException;
-import studio.phaseshift.metatron.lang.core.mach.type.impl.MMachine;
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;
@@ -115,7 +118,11 @@ public class Console extends MRec implements Mode {
                     .option(LineReader.Option.DISABLE_EVENT_EXPANSION, true)
                     .variable(LineReader.SECONDARY_PROMPT_PATTERN, Graphitty.string("{{-X&v1&^1&m}}    {{g}}> {{X}}"))
                     .variable(LineReader.INDENTATION, 0)
+                    //.completer(new MCompleter())
                     .build();
+            //reader.unsetOpt(LineReader.Option.INSERT_TAB);
+
+
         } catch (final Exception e) {
             throw MTronException.of(e);
         }
@@ -423,7 +430,7 @@ public class Console extends MRec implements Mode {
             getKeyMap().bind(new Reference("quit-widget"), ctrl('q'));
             getKeyMap().bind(new Reference("resolve-widget"), ctrl('r'));
             getKeyMap().bind(new Reference("define-widget"), ctrl('e'));
-            getKeyMap().bind(new Reference("hide-widget"), ctrl('i'));
+            getKeyMap().bind(new Reference("hide-widget"), ctrl('h'));
             getKeyMap().bind(new Reference("typing-widget"), ctrl('y'));
             //   getKeyMap().bind(new Reference("detach-widget"), alt(key_down.name()));
         }
