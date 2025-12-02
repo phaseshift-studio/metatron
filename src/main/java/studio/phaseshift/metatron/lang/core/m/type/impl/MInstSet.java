@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -22,9 +22,12 @@ import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.Q;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.DocQ;
-import studio.phaseshift.metatron.lang.core.m.type.*;
-import studio.phaseshift.metatron.lang.sys.router.Router;
 import studio.phaseshift.metatron.lang.MSpace;
+import studio.phaseshift.metatron.lang.core.m.type.Inst;
+import studio.phaseshift.metatron.lang.core.m.type.InstSet;
+import studio.phaseshift.metatron.lang.core.m.type.Obj;
+import studio.phaseshift.metatron.lang.core.m.type.Type;
+import studio.phaseshift.metatron.lang.sys.router.Router;
 import studio.phaseshift.metatron.util.Tuple;
 
 import java.util.*;
@@ -32,6 +35,7 @@ import java.util.*;
 import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MObjs.objs;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.Common.mutableMap;
 
@@ -102,10 +106,19 @@ public abstract class MInstSet extends MSpace<Map<fURI, Set<? extends Obj>>> imp
                         .flatMap(kv -> kv.getValue().stream())
                         .filter(i -> !bigvid.hasDom() || i.dom().tid().bimatches(bigvid.dom()))
                         .filter(i -> !bigvid.hasRng() || i.rng().tid().bimatches(bigvid.rng()))
-                        .map(i -> i))
-                        .append(objs(TYPE_TABLE.entrySet().stream().filter(kv -> kv.getKey().matches(bigvid)).map(Map.Entry::getValue)))
-                        .append(objs(CONST_TABLE.entrySet().stream().filter(kv -> kv.getKey().matches(bigvid)).map(Map.Entry::getValue))));
-
+                        .map(i -> vid.isNode() ? i : rel(i.tid().toUri(), i)))
+                        .append(objs(TYPE_TABLE.entrySet()
+                                .stream()
+                                .filter(kv -> kv.getKey().matches(bigvid))
+                                .map(kv -> vid.isNode() ?
+                                        kv.getValue() :
+                                        rel(kv.getKey().toUri(), kv.getValue()))))
+                        .append(objs(CONST_TABLE.entrySet()
+                                .stream()
+                                .filter(kv -> kv.getKey().matches(bigvid))
+                                .map(kv -> vid.isNode() ?
+                                        kv.getValue() :
+                                        rel(kv.getKey().toUri(), kv.getValue())))));
     }
 
     @Override
@@ -117,9 +130,7 @@ public abstract class MInstSet extends MSpace<Map<fURI, Set<? extends Obj>>> imp
                     REWRITE_TABLE.put(inst.tid(), inst);
                 } else {
                     Router.global().registerRewrite(fURI.of(vid.name()), vid);
-                    INST_TABLE
-                            .computeIfAbsent(inst.tid().basePath(), k -> new LinkedHashSet<>())
-                            .add(inst);
+                    INST_TABLE.computeIfAbsent(inst.tid().basePath(), k -> new LinkedHashSet<>()).add(inst);
                 }
             } else if (obj.isType()) {
                 TYPE_TABLE.put(vid, obj.as());

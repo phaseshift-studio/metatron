@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -39,15 +39,14 @@ import studio.phaseshift.metatron.lang.util.logObj;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
 import studio.phaseshift.metatron.ui.Mode;
-import studio.phaseshift.metatron.lang.sys.console.Console;
-import studio.phaseshift.metatron.ui.mode.server.Server;
-import studio.phaseshift.metatron.util.MTronException;
 
 import java.io.IOException;
 import java.net.InetAddress;
 import java.nio.file.Path;
 import java.util.Map;
 
+import static studio.phaseshift.metatron.Tokens.WS;
+import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.REC_TID;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
@@ -56,6 +55,8 @@ import static studio.phaseshift.metatron.lang.core.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.lang.sys.sysInstSet.ROUTER_TID;
+import static studio.phaseshift.metatron.lang.sys.sysInstSet.SYS_TID;
 
 public class BootLoader implements Rec, Feature.SelfClone {
 
@@ -72,7 +73,7 @@ public class BootLoader implements Rec, Feature.SelfClone {
     static {
         LOG = Graphitty.log(new BootLoader());
         //Registry.singleton().register(mInstSet.INST_TID, () -> mInstSet.of(fURI.NULL));
-        Registry.open().register(sysInstSet.SYS_TID, sysInstSet::create);
+        Registry.open().register(SYS_TID, sysInstSet::create);
         Registry.open().register(kvInstSet.MKV_TID, kvInstSet::create);
         Registry.open().register(webInstSet.MWEB_TID, webInstSet::create);
         Registry.open().register(grphInstSet.MGRPH_TID, grphInstSet::create);
@@ -122,19 +123,19 @@ public class BootLoader implements Rec, Feature.SelfClone {
 
     public static void load(final Rec options) {
         if (BOOTING) {
+            LOG.info("%s", Graphitty.sillyPrint("booting metatron", true, true));
             Runtime.getRuntime().addShutdownHook(new Thread(BootLoader::close));
             fURI remoteAuthority = null;
             /// /// START OF BOOTING PROCESS /// /// allow boot description to be read from a mtron file
             try {
-                remoteAuthority = options.at(Tokens.HOST).orElse(uri("ws://" + InetAddress.getLocalHost().getHostName() + ".local" + ":" + 8887)).uriValue();
+                remoteAuthority = options.at(Tokens.HOST).orElse(uri(WS + "://" + InetAddress.getLocalHost().getHostName() + ".local" + ":" + 8887)).uriValue();
             } catch (final Exception e) {
                 LOG.warn("booting metatron on a non-networked jvm");
             }
-           // startMode(options);
-            LOG.info("known instruction sets: %s", Registry.open().registrants());
-            ROUTER = new MRouter(remoteAuthority, f("/sys/router"));
+            LOG.info("accessible instruction sets: %s", Registry.open().registrants());
+            ROUTER = new MRouter(remoteAuthority, ROUTER_TID);
             sysInstSet.create();
-            kvSpace.of(f("/sys/#"),f("/sys"));
+            kvSpace.of(SYS_TID.extend(ALL), SYS_TID);
             Router.writeToSpace(mInstSet.create(f("/sys/router/lang/m")));
             Router.writeToSpace(Router.global());
             Router.writeToSpace(f("boot/option"), options);
@@ -152,47 +153,22 @@ public class BootLoader implements Rec, Feature.SelfClone {
                 LOG.none("\t {{m}}END:{{g}} evaluating provided boot loader: {{b}}%s{{X}}\n", options.at(uri(Tokens.BOOT)).uriValue());
             }
             ///////////////////////////////////////////////////////////////
-            final Obj log = Router.writeToSpace(logObj.of(rec(options.at("log").orElse(uri("trace")), lst(uri("#"))), f("/sys/log")));
+            final Obj log = Router.writeToSpace(logObj.of(rec(options.at("log").orElse(uri("trace")), lst(uri(ALL))), SYS_TID.extend("log")));
             LOG.info("logging now handled by %s", log);
-            //Router.writeToSpace(new FileSpace(FileSystems.getDefault(), f("/home/#"), f("/mnt/fs")));
-            // Router.writeToSpace(new MGraph(TinkerFactory.createModern(), f("/tp/#"), f("/mnt/tp")));
-            //mkvSpace.of(f("/tp/#")).vid(f("/mnt/tp"));
-            //new TP3Translator(f("/tp")).translate(TinkerFactory.createModern());
-            // new MqttSpace(f("zigbee2mqtt/#?broker=mqtt://192.168.66.2:1883&prefix=/mqtt"), f("/mnt/zigbee2mqtt")));
-            //     Router.writeToSpace(RemoteSpace.open(f("ws://chibi.local:8888"), f("/shared/#"), f("/mnt/shared")));
-            //if (options.at("mode").equals(uri("server")))
-            //    Router.writeToSpace(new kvSpace(fURI.of("/shared/#"), fURI.of("/mnt/shared")));
             /// ///////////////////////////////////
             LOG.info("%s {{g}}successfully{{/g}} booted", Graphitty.sillyPrint("metatron", true, true));
             BOOTING = false;
+            System.gc();
             /// /// END OF BOOTING PROCESS /// ///
         } else {
             LOG.warn("boot processes previously completed -- ignoring request to boot");
         }
     }
 
-    public static void startMode(final Rec options) {
-        final Obj mode = options.at("mode");
-        if (null == mode)
-            throw MTronException.of("no mode specified (see --help): %s", options);
-        else if (mode.uriValue().equals(f("testing")))
-            MODE = Mode.NoOp.of();
-        else if (mode.uriValue().equals(f("console")) || mode.isNoObj())
-            MODE = Console.of(options);
-        else if (mode.uriValue().equals(f("server")))
-            MODE = Server.of(options);
-        else if (mode.uriValue().equals(f("docs")))
-            MODE = Console.of(options);
-        else
-            throw MTronException.of("unknown mode %s (see --help): %s", mode.uriValue(), options);
-       // MODE.start();
-    }
-
     public static void close() {
         BOOTING = true;
         LOG.none("\n");
         Router.global().close();
-        //MODE.stop();
         ROUTER = null;
         OPTIONS = null;
         System.gc();
