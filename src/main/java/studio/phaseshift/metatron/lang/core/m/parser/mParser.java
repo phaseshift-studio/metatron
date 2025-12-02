@@ -50,6 +50,7 @@ import static org.petitparser.parser.primitive.CharacterParser.digit;
 import static org.petitparser.parser.primitive.CharacterParser.of;
 import static org.petitparser.parser.primitive.CharacterParser.word;
 import static org.petitparser.parser.primitive.StringParser.of;
+import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.lang.core.m.inst.mFluent.StartLess.split_;
 import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.*;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MFail.fail;
@@ -124,7 +125,7 @@ public class mParser {
                 m_real(),
                 m_int(),
                 m_str(),
-                m_call(),
+                m_code(),
                 m_rec(),
                 m_rel(),
                 m_objs(),
@@ -140,7 +141,7 @@ public class mParser {
                 m_real(),
                 m_int(),
                 m_str(),
-                m_call(),
+                m_code(),
                 m_rec(),
                 m_objs(),
                 m_lst(),
@@ -154,7 +155,7 @@ public class mParser {
 
         rec_parser.set(seq(m_type_prefix_opt_colon(REC_TID), of('[').trim(), rec_internal(obj_rel_back_parser, m_inst_arg(MAP_INST_TID)), of(']').trim(), m_vid_postfix()).trim().map(t -> new MRec(pick(t, 2), REC_TID, pick(t, 4)).tid((fURI) pick(t, 0))));
 
-        inst_parser.set(choice(/*branch_parser,*/ seq(
+        inst_parser.set(seq(
                 choice(m_inst_furi(), m_type_prefix_opt_colon(INST_TID)), // 0 inst_tid
                 seq(of('(').trim(), choice(rec_internal(m_furi().map(t -> ((fURI) t).toUri()), m_inst_arg(MAP_INST_TID)), lst_internal(), of("")).trim(), of(')').trim()).pick(1), // 1 inst_args
                 opt(seq(of('{').trim(), choice(
@@ -170,7 +171,7 @@ public class mParser {
                                 rec(mParser.<Map<Obj, Obj>>pick(t, 1)),
                         Inst.f.of(mParser.<Obj>pick(t, 2)),
                         NoObj.noobj()), // todo: encode seed in parser
-                        pick(t, 0), pick(t, 3)))));
+                        pick(t, 0), pick(t, 3))));
     }
 
     public static Parser m_inst_arg(final fURI headtid) {
@@ -284,20 +285,16 @@ public class mParser {
 
     public static Parser m_furi_inst_dom_rng() {
         return seq(
-                m_furi(REDUCED_FURI_CHARS, true, true, false),
+                opt(m_furi(REDUCED_FURI_CHARS, true, true, false), ALL),
                 of("<=").trim(),
-                m_furi(REDUCED_FURI_CHARS, true, true, false))
-                .map(t -> "dom=%s&rng=%s".formatted(pick(t, 2).toString(), pick(t, 0).toString()));
+                opt(m_furi(REDUCED_FURI_CHARS, true, true, false), ALL))
+                .map(t -> "dom=%s&rng=%s".formatted(pick(t, 2), pick(t, 0)));
     }
 
 
     public static Parser m_inst_furi() {
         return seq(m_furi(REDUCED_FURI_CHARS, true, true, false), opt(m_furi_query(), ""), opt(of("::").trim(), "::"))
                 .map(t -> mParser.<fURI>pick(t, 0).query(mParser.pick(t, 1)));
-    }
-
-    public static Parser m_call() {
-        return choice(seq(of('('), m_code(), of(')')).map(t -> pick(t, 1)), m_code());
     }
 
     public static Parser m_obj() {
@@ -401,7 +398,7 @@ public class mParser {
     }
 
     public static Parser m_code() {
-        return seq(opt(of(CODE_TID +"::{{"),CODE_TID + "::{{"), m_inst().separatedBy(opt(of('.').trim(), '.')), opt(of("}}"),"}}"), m_vid_postfix())
+        return seq(opt(of(CODE_TID + "::{{"), CODE_TID + "::{{"), m_inst().separatedBy(opt(of('.').trim(), '.')), opt(of("}}"), "}}"), m_vid_postfix())
                 .map(t -> ((List<Object>) pick(t, 1)).size() == 1 ?
                         ((List<Inst>) pick(t, 1)).get(0) :
                         new MCode((List) ((List<Object>) pick(t, 1))
