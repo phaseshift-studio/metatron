@@ -65,6 +65,8 @@
         <ollama4j.version>1.1.5</ollama4j.version>
         <guice.version>4.2.3</guice.version>
         <moquette.version>0.18.0</moquette.version>
+        <docker.image.prefix>metatron</docker.image.prefix>
+        <dockerfile-maven.version>1.4.13</dockerfile-maven.version>
         <!-- LOGBACK PROPERTIES -->
     </properties>
     <dependencyManagement>
@@ -397,6 +399,24 @@
                             <filtering>true</filtering>
                         </resource>
                     </resources>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>com.spotify</groupId>
+                <artifactId>dockerfile-maven-plugin</artifactId>
+                <version>${dockerfile-maven.version}</version>
+                <executions>
+                    <execution>
+                        <id>default</id>
+                        <goals>
+                            <goal>build</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <repository>metatron</repository>
+                    <tag>latest</tag>
+                    <contextDirectory>${project.basedir}</contextDirectory>
                 </configuration>
             </plugin>
             <plugin>

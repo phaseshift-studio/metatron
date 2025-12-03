@@ -1,0 +1,7 @@
+#!/usr/bin/sh
+
+if [ $# -eq 0 ]; then
+  set -- "[host=><ws://127.0.0.1:8999>,cluster=>{,},boot=><examples/docker.mtron>,log=>info]"
+fi
+echo "metatron-docker entrypoint arguments: $*"
+docker run -it -p 8999:8999 metatron "$@"
