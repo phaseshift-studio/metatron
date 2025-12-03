@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -33,8 +33,10 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
+import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.*;
 import static studio.phaseshift.metatron.lang.core.m.obj.NoObj.noobj;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MRel.rel;
@@ -49,6 +51,7 @@ public interface Inst extends Call {
     String ARGS = "args";
     String DOM = "dom";
     String RNG = "rng";
+    String OBJ = "obj";
 
     private static Poly resolveArgs(final Inst userInst, final Inst apiInst, final Obj lhs) {
         final GraphittyLogger LOG = Graphitty.log(userInst);
@@ -240,11 +243,11 @@ public interface Inst extends Call {
         Obj rhs;
         boolean modulateC = false;
         if (BootLoader.TYPE_CHECK && !lhs.isFail() && !clhs.matches(cinst.dom()) && clhs.unique()) {
-           // if (clhs.uniqueC().isOne() && !clhs.c().isOne()) { // && cinst.dom().c().within(cInt.SOME())) {
-                clhs = clhs.c(cInt::one);
-                cinst = this.resolve(clhs);
-                modulateC = true;
-          //  }
+            // if (clhs.uniqueC().isOne() && !clhs.c().isOne()) { // && cinst.dom().c().within(cInt.SOME())) {
+            clhs = clhs.c(cInt::one);
+            cinst = this.resolve(clhs);
+            modulateC = true;
+            //  }
             if (!clhs.rng().matches(cinst.dom()))
                 throw mexcept("lhs {{m}}range{{/m}} does not match inst {{m}}domain{{/m}}: %s {{r}}=/>{{/r}} %s [%s]", clhs.rng(), cinst.dom(), cinst);
         }
@@ -492,6 +495,15 @@ public interface Inst extends Call {
         @Override
         public String toString() {
             return this.func instanceof Obj ? this.func.toString() : "<j>";
+        }
+    }
+
+    public static final class InstType {
+
+        public static Set<Inst> insts() {
+            return new LinkedHashSet<>(List.of(
+                    instC(LIFT_INST_TID.dom(ALL).rng(ALL), lst(T(ALL)), (lhs, inst) -> inst.arg(0).<Inst>as().args(lhs.<Poly>as()))
+            ));
         }
     }
 }

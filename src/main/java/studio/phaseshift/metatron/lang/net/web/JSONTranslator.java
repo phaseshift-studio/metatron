@@ -41,6 +41,8 @@ import java.util.Map;
 
 import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.furi.fURI.fnull;
+import static studio.phaseshift.metatron.lang.core.m.inst.mFluent.StartLess.auto;
+import static studio.phaseshift.metatron.lang.core.m.inst.mFluent.StartLess.auto_;
 import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.*;
 import static studio.phaseshift.metatron.lang.core.m.obj.NoObj.noobj;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MBool.bool;
@@ -109,6 +111,9 @@ public record JSONTranslator(ObjSerializer<String> serializer) implements Transl
                             obj = mParser.parse(jpstr);
                         } else if (bid.equals(INST_TID)) {
                             obj = mParser.parse(jpstr).<Call>as().tryToInst().vid(fnull);
+                            if(null != tid && tid.equals(AUTO_INST_TID)) {
+                                obj = auto_(obj).tryToInst();
+                            }
                         } else if (bid.equals(FAIL_TID)) {
                             obj = fail(MTronException.of(jpstr));
                         }
@@ -124,7 +129,7 @@ public record JSONTranslator(ObjSerializer<String> serializer) implements Transl
             final JsonArray jp = (JsonArray) value;
             if (null != bid && bid.equals(REL_TID)) {
                 obj = rel(translate(jp.get(0)), translate(jp.get(1)), tid, fnull);
-            } else if (null != bid && bid.toString().equals("/m/type")) {
+            } else if (null != bid && bid.equals(TYPE_TID)) {
                 obj = T(tid, (Call) translate(jp.get(0)), (Call) translate(jp.get(1)));
             } else {
                 final List<Obj> list = new ArrayList<>();

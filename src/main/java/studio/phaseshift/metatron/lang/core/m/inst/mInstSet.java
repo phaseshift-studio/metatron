@@ -83,6 +83,7 @@ public class mInstSet extends MInstSet {
     public static final fURI FIND_TID = INST_TID.extend("find");
     public static final fURI RMERGE_TID = INST_TID.extend("rmerge");
     public static final fURI WITHIN_INST_TID = INST_TID.extend("within");
+    public static final fURI LIFT_INST_TID = INST_TID.extend("lift");
     public static final fURI AUTO_INST_TID = INST_TID.extend("auto");
     public static final fURI BLOCK_INST_TID = INST_TID.extend("block");
     public static final fURI RNG_INST_TID = INST_TID.extend("rng");
@@ -217,6 +218,7 @@ public class mInstSet extends MInstSet {
                 Tuple.Triplet.with(Tuple.Pair.with("-", null), List.of(MINUS_INST_TID), 1),
                 Tuple.Triplet.with(Tuple.Pair.with(";", null), List.of(END_INST_TID), 0),
                 Tuple.Triplet.with(Tuple.Pair.with("(", ")"), List.of(GET_INST_TID), 1),
+                Tuple.Triplet.with(Tuple.Pair.with("^", null), List.of(LIFT_INST_TID), 1),
                 Tuple.Triplet.with(Tuple.Pair.with("!*", null), List.of(AUTO_INST_TID, FROM_INST_TID), 1)));
     }
 
@@ -320,6 +322,7 @@ public class mInstSet extends MInstSet {
         set.addAll(Rel.RelType.insts());
         set.addAll(Rec.RecType.insts());
         set.addAll(Lst.LstType.insts());
+        set.addAll(Inst.InstType.insts());
         set.addAll(Obj.ObjType.insts());
         return set;
     }

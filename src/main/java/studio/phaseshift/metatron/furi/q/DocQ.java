@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -21,7 +21,10 @@ package studio.phaseshift.metatron.furi.q;
 import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.Space;
-import studio.phaseshift.metatron.lang.core.m.type.*;
+import studio.phaseshift.metatron.lang.core.m.type.Inst;
+import studio.phaseshift.metatron.lang.core.m.type.Obj;
+import studio.phaseshift.metatron.lang.core.m.type.Poly;
+import studio.phaseshift.metatron.lang.core.m.type.Type;
 import studio.phaseshift.metatron.lang.core.m.type.impl.MRec;
 import studio.phaseshift.metatron.lang.sys.router.Router;
 import studio.phaseshift.metatron.ui.Graphitty;
@@ -31,9 +34,10 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
 
+import static studio.phaseshift.metatron.Tokens.DESC;
+import static studio.phaseshift.metatron.Tokens.PATTERN;
 import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.furi.fURI.f;
-import static studio.phaseshift.metatron.Tokens.PATTERN;
 import static studio.phaseshift.metatron.lang.core.m.inst.mFluent.StartLess.isa_;
 import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.INST_TID;
 import static studio.phaseshift.metatron.lang.core.m.obj.NoObj.noobj;
@@ -164,8 +168,8 @@ public class DocQ extends BaseQ {
             super(value, tid, vid);
         }
 
-        public static Doc empty(final Inst inst) {
-            return new Doc(Map.of(uri(INST_TID.name()), inst), DOC_TID, fURI.fnull);
+        public static Doc empty(final Obj obj) {
+            return new Doc(Map.of(uri("name"), obj), DOC_TID, fURI.fnull);
         }
 
         public Poly args() {
@@ -194,7 +198,8 @@ public class DocQ extends BaseQ {
              * │    plits                                                  │
              * └───────────────────────────────────────────────────────────┘
              */
-            final Inst inst = this.at(INST_TID.name()).as();
+            final Obj inst = this.at(OBJ);
+            
             final Instiffy insty = new Instiffy();
             final int lhsBorderColumn = Math.max(Math.max(
                             Graphitty.strip(inst.dom().toString()).length(),
@@ -215,20 +220,20 @@ public class DocQ extends BaseQ {
             insty.text("{{m}}|").text(" ").text("{{_&b}}rng{{g}}<={{b}}dom{{X}}").text("{{|" + rhsBorderColumn + "&m}}|{{X}}\n");
             insty.text("{{m}}|").text("  ").text("{{_&b}}dom{{X}}:").text(inst.dom().toString()).text("{{|" + lhsBorderColumn + "&c}}").text(this.at(DOM).orElse(str(NONE)).strValue()).text("{{|" + rhsBorderColumn + "&m}}|\n");
             insty.text("{{m}}|").text("  ").text("{{_&b}}rng{{X}}:").text(inst.rng().toString()).text("{{|" + lhsBorderColumn + "&c}}").text(this.at(RNG).orElse(str(NONE)).strValue()).text("{{|" + rhsBorderColumn + "&m}}|\n");
-            if (!this.at(ARGS).orElse(rec()).isEmpty()) {
+            if (inst.isInst() && !this.at(ARGS).orElse(rec()).isEmpty()) {
                 insty.text("{{m}}| {{_&g}}({{b}}ar{{g}},{{b}}gs{{g}}){{X}}").text("{{|" + rhsBorderColumn + "&m}}|{{X}}\n");
                 this.at(ARGS).orElse(rec()).jvm().forEach((key, value) ->
-                        insty.text("{{m}}|").item(2, key, inst.arg(0).toString())
+                        insty.text("{{m}}|").item(2, key, inst.<Inst>as().arg(0).toString())
                                 .text("{{|" + lhsBorderColumn + "&c}}")
                                 .text(value.strValue())
                                 .text("{{|" + rhsBorderColumn + "&m}}|\n"));
             }
             insty.text("{{m}}| {{_&g}}{{{b}}fun{{g}}.{{b}}cti{{g}}.{{b}}on{{g}}}{{X}}").text("{{|" + rhsBorderColumn + "&m}}|{{X}}\n");
-            if (inst.isResolved()) {
-                if (inst.f().isLambda())
+            if (inst.isInst() && inst.<Inst>as().isResolved()) {
+                if (inst.<Inst>as().f().isLambda())
                     insty.text("{{m}}|   {{y}}<j>").text("{{|" + lhsBorderColumn + "&c}}").text("jvm implementation").text("{{|" + rhsBorderColumn + "&m}}|{{X}}\n");
                 else
-                    insty.text("{{m}}|   ").text(inst.f().toString()).text("{{|" + rhsBorderColumn + "&m}}|{{X}}\n");
+                    insty.text("{{m}}|   ").text(inst.<Inst>as().f().toString()).text("{{|" + rhsBorderColumn + "&m}}|{{X}}\n");
             } else {
                 insty.text("{{m}}|   {{r}}").text(NONE).text("{{|" + rhsBorderColumn + "&m}}|{{X}}\n");
             }
@@ -252,11 +257,20 @@ public class DocQ extends BaseQ {
 
         public static Doc doc(final Inst inst, final String domDesc, final String rngDesc, final Map<Obj, String> argDescription, final String description) {
             return new Doc(rec(
-                    uri(INST_TID.name()), inst,
+                    uri(OBJ), inst,
                     uri(DOM), str(domDesc),
                     uri(RNG), str(rngDesc),
                     uri(ARGS), rec(argDescription.entrySet().stream().map(kv -> rel(kv.getKey(), str(kv.getValue())))),
-                    uri(Tokens.DESC), str(description)).jvm(), DOC_TID, fURI.fnull);
+                    uri(DESC), str(description)).jvm(), DOC_TID, fURI.fnull);
+        }
+
+        public static Doc doc(final Type type, final String domDesc, final String rngDesc, final Map<Obj, String> argDescription, final String description) {
+            return new Doc(rec(
+                    uri(OBJ), type,
+                    uri(DOM), null == domDesc ? noobj() : str(domDesc),
+                    uri(RNG), null == rngDesc ? noobj() : str(rngDesc),
+                    uri(ARGS), rec(argDescription.entrySet().stream().map(kv -> rel(kv.getKey(), str(kv.getValue())))),
+                    uri(DESC), str(description)).jvm(), DOC_TID, fURI.fnull);
         }
 
         public static Inst docWrap(final Inst inst, final String domDesc, final String rngDesc, final Map<Obj, String> argDescription, final String description) {
@@ -268,6 +282,17 @@ public class DocQ extends BaseQ {
             else
                 docq.get().docSpace.put(inst.tid(), doc);
             return inst;
+        }
+
+        public static Type docWrap(final Type type, final String domDesc, final String rngDesc, final Map<Obj, String> argDescription, final String description) {
+            final Doc doc = doc(type, domDesc, rngDesc, argDescription, description);
+            final Space instSpace = Router.global().getSpace(type.tid());
+            final Optional<DocQ> docq = instSpace.qs().jvm().stream().filter(q -> q.tid().basePath().equals(DOCQ_TID)).map(Obj::<DocQ>as).findAny();
+            if (docq.isEmpty())
+                instSpace.logger().warn("no doc query attachment mounted on %s for %s", instSpace, type.tid());
+            else
+                docq.get().docSpace.put(type.tid(), doc);
+            return type;
         }
 
     }
@@ -284,7 +309,7 @@ public class DocQ extends BaseQ {
             return Optional.of(objs(docSpace.entrySet().stream()
                     .filter(kv -> kv.getKey().matches(vid))
                     .map(Map.Entry::getValue))
-                    .orElse(objs(Router.readFromSpace(vid.removeQ("doc")).stream().map(Obj::<Inst>as).map(Doc::empty))));
+                    .orElse(objs(Router.readFromSpace(vid.removeQ("doc")).stream().map(Doc::empty))));
         }
     }
 

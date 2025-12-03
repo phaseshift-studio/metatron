@@ -513,6 +513,12 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
         throw MTronException.of(xxxValue, this, tid().toUri(), REL_TID.toUri());
     }
 
+    default Tuple.Triplet<Poly<?,?>, Inst.f, Obj> instValue() {
+        if (this.isInst())
+            return this.jvm();
+        throw MTronException.of(xxxValue, this, tid().toUri(), INST_TID.toUri());
+    }
+    
     default List<Inst> codeValue() {
         if (this.isCode())
             return this.jvm();
