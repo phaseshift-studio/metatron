@@ -26,6 +26,8 @@ import studio.phaseshift.metatron.lang.core.m.type.Obj;
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 
+import static studio.phaseshift.metatron.Tokens.SUB;
+
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
@@ -49,7 +51,7 @@ public class MqttPubSubQ extends PubSubQ {
         @Override
         public Optional<Obj> preWrite(final fURI source, final fURI vid, final Obj obj) {
             LOG.trace("evaluating {{y}}prewrite{{/y}}: %s => %s", obj, vid);
-            if (vid.hasQuery("sub")) {
+            if (vid.hasQuery(SUB)) {
                 if (obj.isNoObj()) {
                     space.client.toAsync()
                             .unsubscribeWith()

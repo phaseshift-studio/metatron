@@ -18,12 +18,17 @@
 
 package studio.phaseshift.metatron.lang.ai.llm.type.impl;
 
+import dev.langchain4j.agent.tool.P;
+import dev.langchain4j.agent.tool.Tool;
+import dev.langchain4j.agent.tool.ToolSpecification;
+import dev.langchain4j.model.chat.request.json.JsonObjectSchema;
 import dev.langchain4j.model.ollama.OllamaModel;
 import dev.langchain4j.model.ollama.OllamaModelCard;
 import dev.langchain4j.model.ollama.OllamaModels;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.ai.llm.type.LLM;
+import studio.phaseshift.metatron.lang.core.m.parser.mParser;
 import studio.phaseshift.metatron.lang.core.m.type.Obj;
 import studio.phaseshift.metatron.lang.core.m.type.Rec;
 import studio.phaseshift.metatron.lang.core.m.type.Type;
@@ -102,5 +107,28 @@ public class OLLM extends MRec implements LLM {
 
     public OLLM clone(final Object model, fURI tid, final fURI vid) {
         return (OLLM) super.clone(model, tid, vid);
+    }
+
+    public static final ToolSpecification toolSpecification = ToolSpecification.builder()
+            .name("mtron")
+            .description("evaluate an metatron expression")
+            .parameters(JsonObjectSchema.builder()
+                    .addStringProperty("code", "metatron code to evaluate")
+                    .required("code")
+                    .build())
+            .build();
+
+    public static class MetatronTools {
+
+        public MetatronTools() {
+            
+        }
+        
+        @Tool("executes metatron code and returns an obj result")
+        Obj evaluate(
+                @P("the metatron code to evaluate") String code
+        ) {
+            return mParser.eval(code);
+        }
     }
 }

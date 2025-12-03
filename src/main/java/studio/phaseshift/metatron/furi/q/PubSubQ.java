@@ -33,6 +33,7 @@ import java.util.LinkedList;
 import java.util.Optional;
 import java.util.Queue;
 
+import static studio.phaseshift.metatron.Tokens.SUB;
 import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.lang.core.m.inst.mFluent.StartLess.isa_;
@@ -57,7 +58,7 @@ public class PubSubQ extends BaseQ {
     }));
 
     public PubSubQ() {
-        super(mutableMap(), f("sub"), SUBQ_TID);
+        super(mutableMap(), f(SUB), SUBQ_TID);
         this.onRead = new PubSubQ.OnRead();
         this.onWrite = new PubSubQ.OnWrite();
     }

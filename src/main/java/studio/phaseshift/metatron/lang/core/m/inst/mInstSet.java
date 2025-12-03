@@ -218,6 +218,7 @@ public class mInstSet extends MInstSet {
                 Tuple.Triplet.with(Tuple.Pair.with("-", null), List.of(MINUS_INST_TID), 1),
                 Tuple.Triplet.with(Tuple.Pair.with(";", null), List.of(END_INST_TID), 0),
                 Tuple.Triplet.with(Tuple.Pair.with("(", ")"), List.of(GET_INST_TID), 1),
+                Tuple.Triplet.with(Tuple.Pair.with("./", null), List.of(GET_INST_TID), 1),
                 Tuple.Triplet.with(Tuple.Pair.with("^", null), List.of(LIFT_INST_TID), 1),
                 Tuple.Triplet.with(Tuple.Pair.with("!*", null), List.of(AUTO_INST_TID, FROM_INST_TID), 1)));
     }
