@@ -19,8 +19,6 @@
 package studio.phaseshift.metatron.lang.ai.llm;
 
 import dev.langchain4j.model.ollama.OllamaModels;
-import dev.langchain4j.service.AiServiceContext;
-import dev.langchain4j.service.AiServices;
 import io.github.ollama4j.Ollama;
 import io.github.ollama4j.models.chat.OllamaChatMessageRole;
 import io.github.ollama4j.models.chat.OllamaChatRequest;
@@ -30,7 +28,6 @@ import io.github.ollama4j.models.generate.OllamaGenerateTokenHandler;
 import io.github.ollama4j.models.request.ThinkMode;
 import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.lang.ai.llm.ollama.ollamaSpace;
 import studio.phaseshift.metatron.lang.ai.llm.type.impl.Audio;
 import studio.phaseshift.metatron.lang.ai.llm.type.impl.GGUF;
 import studio.phaseshift.metatron.lang.ai.llm.type.impl.OLLM;
@@ -53,10 +50,9 @@ import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.furi.fURI.fnull;
 import static studio.phaseshift.metatron.lang.ai.llm.type.impl.Audio.AUDIO_TID;
 import static studio.phaseshift.metatron.lang.ai.llm.type.impl.OLLM.*;
-import static studio.phaseshift.metatron.lang.core.m.inst.mFluent.StartLess.*;
+import static studio.phaseshift.metatron.lang.core.m.inst.mFluent.StartLess.isa_;
 import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.*;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MBool.bool;
-import static studio.phaseshift.metatron.lang.core.m.type.impl.MInst.instA;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
@@ -133,7 +129,7 @@ public class llmInstSet extends MInstSet {
                                 final boolean toolUse = lhs.<Rec>as().at(TOOL).orElse(bool(false)).boolValue();
                                 final boolean thinking = lhs.<Rec>as().at(THINK).orElse(bool(false)).boolValue();
                                 final String model = lhs.<Rec>as().at(Tokens.NAME).uriValue().toString();
-                                
+
                                 final OllamaChatRequest chatRequest =
                                         OllamaChatRequest.builder()
                                                 .withModel(model)
@@ -144,9 +140,7 @@ public class llmInstSet extends MInstSet {
                                 final StringBuilder response = new StringBuilder();
 
                                 final OllamaGenerateTokenHandler thinkingStreamHandler =
-                                        (s) -> {
-                                            LOG.none("{{m}}%s{{X}}", s);
-                                        };
+                                        (s) -> LOG.none("{{m}}%s{{X}}", s);
 
                                 final OllamaGenerateTokenHandler responseStreamHandler =
                                         (s) -> {
