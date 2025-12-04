@@ -52,6 +52,20 @@ public class mInstSetTest extends InstSetTest {
 
     @ParameterizedTest
     @CsvSource(value = {
+            "'123'.regex('\\d')                                                             % ['1','2','3']",
+            "'abcd'.regex('[a-z]{2}')                                                       % ['ab','cd']",
+            "'ab3cd'.regex('([a-z]+)(\\d?)([a-z]?)')                                        % ['ab3c','d']",
+            "'ab3cd'.regex('(?<a>[a-z]+)(?<b>\\d?)(?<c>[a-z]?)')                            % ['ab3c','d']",
+            "'ab3cd'.regex('\\d*')                                                          % ['','','3','','','']",
+            "'ab3cd'.regex('\\d+')                                                          % ['3']",
+            "'ab3cd'.regex('\\d{2}')                                                        % [,]",
+    }, delimiter = '%')
+    public void testStrCode(final String code, final String expected) {
+        super.testCode(code, expected);
+    }
+    
+    @ParameterizedTest
+    @CsvSource(value = {
             "{1,2,3,4}.take(0)                                                              % {,}",
             "{1,2,3,4}.take(1)                                                              % {1}",
             "{1,2,3,4}.take(2)                                                              % {1,2}",

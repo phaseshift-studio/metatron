@@ -30,10 +30,11 @@ import java.util.Set;
 import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.lang.core.m.inst.mFluent.StartLess.get_;
-import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.URI_TID;
+import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.*;
 import static studio.phaseshift.metatron.lang.core.m.obj.NoObj.noobj;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.lang.db.grph.inst.grphInstSet.*;
@@ -64,7 +65,10 @@ public class m1Vertex {
                     //
                     instC(OUTV_INST_TID.dom(EDGE_TID).rng(VERTEX_TID), lst(), (lhs, inst) -> get_(uri(Direction.OUT.name())).apply(lhs)),
                     instC(INV_INST_TID.dom(EDGE_TID).rng(VERTEX_TID), lst(), (lhs, inst) -> get_(uri(Direction.IN.name())).apply(lhs)),
-                    instC(VALUES_INST_TID.dom(ALL).rng(ALL.maybeSome()), lst(T(URI_TID.maybeSome())), (lhs, inst) -> get_(uri(f(PROPS).extend(inst.arg(0).isNoObj() ? f("+") : inst.arg(0).uriValue()))).apply(lhs))
+                    instC(VALUES_INST_TID.dom(ALL).rng(ALL.maybeSome()), lst(T(URI_TID.maybeSome())), (lhs, inst) -> get_(uri(f(PROPS).extend(inst.arg(0).isNoObj() ? f("+") : inst.arg(0).uriValue()))).apply(lhs)),
+                    instC(VERTEX_TID.extend("inst/as").dom(VERTEX_TID).rng(STR_TID), lst(T(STR_TID)), (inst, lhs) -> {
+                        return str("{{y}}v{{g}}[{{b}}" + lhs.vid() + "{{g}}]");
+                    })
                     // instC(PROPERTIES_INST_TID.dom(ALL.maybeSome()).rng(ALL.maybeSome()), lst(T(URI_TID.maybeSome())), (lhs, inst) -> get_(uri(PROPS))(inst.arg(0)).apply(lhs))
             ));
         }

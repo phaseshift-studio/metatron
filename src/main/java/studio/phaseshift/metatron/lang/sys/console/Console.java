@@ -289,7 +289,7 @@ public class Console extends MRec implements Mode {
                             result.isObjCall() ?
                                     MMachine.of(result.as()).apply() :
                                     result).stream().forEach(
-                            o -> Graphitty.out(this.terminal.output(), "{{-X-}}{{m}}=={{g}}>{{X}}%s\n".formatted(o)));
+                            o -> Graphitty.out(this.terminal.output(), "{{-X-}}{{m}}=={{g}}>{{X}}%s\n".formatted(o.toString())));
                 }
             } catch (final UserInterruptException e) {
                 LOG.warn(Graphitty.sillyPrint("process interrupted", true, true));
