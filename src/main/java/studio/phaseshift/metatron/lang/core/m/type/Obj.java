@@ -569,7 +569,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
         }
 
         public static void objCheckAndSave(final Obj obj, final Object jvm, final fURI tid, final fURI vid) {
-            final boolean save = !Objects.equals(obj.vid(), vid) ||  !Objects.equals(obj.tid().basePath(), tid.basePath()) || !Objects.equals(obj.jvm(), jvm);
+            final boolean save = !Objects.equals(obj.vid(), vid) || !Objects.equals(obj.tid().basePath(), tid.basePath()) || !Objects.equals(obj.jvm(), jvm);
             obj.self(jvm, tid, vid);
             if (save)
                 Obj.Helper.objCheckAndSave(obj);
@@ -592,7 +592,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
             if (!Objects.equals(realjvm, obj.jvm()) || !tid.equals(obj.tid()) || !Objects.equals(vid, obj.vid())) {
                 try {
                     clone = null == clone ? obj.clone() : clone;
-                    Obj.Helper.objCheckAndSave(clone,jvm,tid.big(),vid);
+                    Obj.Helper.objCheckAndSave(clone, jvm, tid.big(), vid);
                     return (O) clone;
                 } catch (final Exception e) {
                     throw MTronException.of(e);
@@ -678,8 +678,10 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
                     instC(URI_PORT_TID.dom(ALL).rng(INT_TID), lst(T(URI_TID)), (lhs, inst) -> jnt(lhs.uriValue().port())),
                     instC(URI_Q_TID.dom(ALL).rng(REC_TID), lst(T(URI_TID)), (lhs, inst) -> rec(lhs.uriValue().queryMap().entrySet().stream().map(kv -> rel(uri(kv.getKey()), uri(kv.getValue()))))),
                     instC(URI_C_TID.dom(ALL).rng(LST_TID), lst(T(URI_TID)), (lhs, inst) -> lst(jnt(lhs.uriValue().cV().min()), jnt(lhs.uriValue().cV().max()))),
-                    instC(CC_INST_TID.dom(A).rng(INT_TID), lst(), (lhs, inst) -> jnt(lhs.c().max())),
-                    instC(CC_INST_TID.dom(A).rng(A.maybeSome()), lst(T(INT_TID)), (lhs, inst) -> lhs.c(inst.arg(0).intValue())),
+                    docWrap(instC(CC_INST_TID.dom(A.maybeSome()).rng(INT_TID), lst(), (lhs, inst) -> jnt(lhs.c().max())),
+                            "any obj", "the lhs obj coefficient", Map.of(), "maps an obj to it's coefficient with a function f(lhs^c)->c"),
+                    docWrap(instC(CC_INST_TID.dom(A.maybeSome()).rng(A.maybeSome()), lst(T(INT_TID)), (lhs, inst) -> lhs.c(inst.arg(0).intValue())),
+                            "any obj", "the lhs obj with new coefficient", Map.of(jnt(0),"a coefficient for lhs obj"), "sets the coefficient of the lhs obj via f(lhs,c)->lhs^c"),
                     instC(AS_INST_TID.dom(A).rng(B), lst(T(B)), (lhs, inst) -> lhs.matches(inst.arg(0)) ? lhs.tid(inst.arg(0).tid()).c(c -> c.mult(inst.arg(0).c())) : MTronException.of("%s is not a %s", lhs, inst.arg(0)).asFail()),
                     instC(FAILURE_INST_TID.dom(ALL.maybeSome()).rng(FAIL_TID), lst(T(ALL.maybe())), (lhs, inst) -> fail(MTronException.of("%s", inst.arg(0).toString()))),
                     //instC(BARRIER_TID.dom(ALL_STAR).rng(ALL_STAR), lst(T(ALL_STAR)), (lhs, inst) -> inst.arg(0).apply(lhs)),
