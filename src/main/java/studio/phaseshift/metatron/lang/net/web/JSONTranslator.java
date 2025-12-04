@@ -202,7 +202,7 @@ public record JSONTranslator(ObjSerializer<String> serializer) implements Transl
             } else
                 throw MTronException.of("could not parse %s to json: %s", obj.tid(), obj);
             /// ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-            if (!obj.type().isBaseType() || obj.isObjs() || obj.isType() || obj.isStr() || obj.isObjCall() || obj.isFail() || obj.isRel()) {
+            if (!obj.type().isBaseType() || obj.isObjs() || obj.isType() ||  obj.isObjCall() || obj.isFail() || obj.isRel()) {
                 final JsonObject typedObj = new JsonObject();
                 typedObj.add(BID_KEY, new JsonPrimitive(Router.global().rewrite(obj.isType() ? TYPE_TID : (obj.isObjs() ? OBJS_TID : (obj.isCode() ? CODE_TID : (obj.isInst() ? INST_TID : obj.baseType().basePath()))), true).toString()));
                 // if (!obj.type().isBaseType())

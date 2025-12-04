@@ -17,7 +17,7 @@
                       /docs => target/docs ]]@/sys/router/space/web;
    grph::[pattern => /g/#,
           store   => kv::[pattern => /g/#],
-          load    => <tinkerpop-modern>]@/sys/router/space/tp3;
+          :load    => <tinkerpop-modern>]@/sys/router/space/tp3;
   clstr::[pattern => <ws://#>]@/sys/router/space/clstr;
    mqtt::[pattern => /mqtt/zigbee2mqtt/#,
           host    => <mqtt://chibi.local:1883>,

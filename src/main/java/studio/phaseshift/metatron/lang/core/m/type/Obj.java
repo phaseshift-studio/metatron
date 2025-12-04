@@ -513,12 +513,12 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
         throw MTronException.of(xxxValue, this, tid().toUri(), REL_TID.toUri());
     }
 
-    default Tuple.Triplet<Poly<?,?>, Inst.f, Obj> instValue() {
+    default Tuple.Triplet<Poly<?, ?>, Inst.f, Obj> instValue() {
         if (this.isInst())
             return this.jvm();
         throw MTronException.of(xxxValue, this, tid().toUri(), INST_TID.toUri());
     }
-    
+
     default List<Inst> codeValue() {
         if (this.isCode())
             return this.jvm();
@@ -568,6 +568,13 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
                 Router.writeToSpace(obj.vid(), obj);
         }
 
+        public static void objCheckAndSave(final Obj obj, final Object jvm, final fURI tid, final fURI vid) {
+            final boolean save = !Objects.equals(obj.vid(), vid) ||  !Objects.equals(obj.tid().basePath(), tid.basePath()) || !Objects.equals(obj.jvm(), jvm);
+            obj.self(jvm, tid, vid);
+            if (save)
+                Obj.Helper.objCheckAndSave(obj);
+        }
+
         public static <O extends Obj> O objClone(final Obj obj, final Object jvm, final fURI tid, final fURI vid) {
             Object realjvm = jvm;
             Obj clone = null;
@@ -585,8 +592,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
             if (!Objects.equals(realjvm, obj.jvm()) || !tid.equals(obj.tid()) || !Objects.equals(vid, obj.vid())) {
                 try {
                     clone = null == clone ? obj.clone() : clone;
-                    clone.self(realjvm, tid, vid);
-                    Obj.Helper.objCheckAndSave(clone);
+                    Obj.Helper.objCheckAndSave(clone,jvm,tid.big(),vid);
                     return (O) clone;
                 } catch (final Exception e) {
                     throw MTronException.of(e);
@@ -605,7 +611,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
                     instC(CATCH_INST_TID.dom(ALL).rng(ALL.maybeSome()), lst(T(ALL.maybeSome())), (lhs, inst) -> lhs.isFail() ? inst.arg(0).apply(lhs) : lhs),
                     docWrap(instC(END_INST_TID.dom(ALL_STAR).rng(NOOBJ_TID.zero()), lst(), (lhs, inst) -> noobj()),
                             "terminal objs", "noobj", Map.of(), "the terminal function f(x)->0"),
-                    docWrap(instC(PRINT_INST_TID.dom(ALL).rng(ALL), lst(T(ALL_STAR)), (lhs, inst) -> inst.args().elements().peek(o -> lhs.logger().none("%s", o.isStr() ? o.strValue() : o)).filter(a -> false).findAny().orElse(lhs).stream().peek(o -> o.logger().none("\n")).iterator().next()),
+                    docWrap(instC(PRINT_INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(T(ALL_STAR)), (lhs, inst) -> inst.args().elements().peek(o -> inst.logger().none("%s", o.isStr() ? o.strValue() : o)).filter(a -> false).findAny().orElse(lhs).stream().peek(o -> inst.logger().none("\n")).iterator().next()),
                             "the rhs obj", "the lhs obj", Map.of(jnt(0), "concatenated args followed by newline written to stdout"), "a side-effect function f(x)-|>x"),
                     instC(AT_INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(T(URI_TID)), (lhs, inst) -> lhs.isNoObj() ? Router.readFromSpace(inst.arg(0).uriValue()).vid(inst.arg(0).uriValue()) : lhs.vid(inst.arg(0).uriValue())),
                     docWrap(instC(ID_INST_TID.dom(A).rng(A), lst(), (lhs, inst) -> lhs),
@@ -731,8 +737,8 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
                         });
                         return rec(result);
                     }),
-                   instC(RSHIFT_INST_TID.dom(ALL).rng(ALL.maybe()), lst(isa_(T(INT_TID)).else_(jnt(1))), (lhs, inst) -> objs(lhs.stream().filter(o -> o.isUri() ||o.isLst() || o.isRec()).map(o -> rshift_(jnt(0)).apply(o))),
-                   instC(LSHIFT_INST_TID.dom(ALL).rng(ALL.maybe()), lst(isa_(T(INT_TID)).else_(jnt(1))), (lhs, inst) -> objs(lhs.stream().filter(o -> o.isUri() ||o.isLst() || o.isRec()).map(o -> lshift_(jnt(0)).apply(o)))))
+                    instC(RSHIFT_INST_TID.dom(ALL).rng(ALL.maybe()), lst(isa_(T(INT_TID)).else_(jnt(1))), (lhs, inst) -> objs(lhs.stream().filter(o -> o.isUri() || o.isLst() || o.isRec()).map(o -> rshift_(jnt(0)).apply(o))),
+                            instC(LSHIFT_INST_TID.dom(ALL).rng(ALL.maybe()), lst(isa_(T(INT_TID)).else_(jnt(1))), (lhs, inst) -> objs(lhs.stream().filter(o -> o.isUri() || o.isLst() || o.isRec()).map(o -> lshift_(jnt(0)).apply(o)))))
             ));
         }
     }

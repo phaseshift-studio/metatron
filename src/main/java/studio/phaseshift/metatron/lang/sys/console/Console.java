@@ -83,7 +83,7 @@ public class Console extends MRec implements Mode {
     private final GraphittyLogger LOG = Graphitty.log(this);
     public static String HEADER_FILE = "./conf/ansi_headers.txt";
     public static String HEADER_SEPARATOR = "####################";
-    private static boolean RESOLVE_MODE = false;
+    protected boolean RESOLVE_MODE = false;
     private final Terminal terminal;
     private final LineReader reader;
     private Thread mainThread;
@@ -99,7 +99,8 @@ public class Console extends MRec implements Mode {
         try {
             final DefaultParser parser = new DefaultParser()
                     .quoteChars(new char[]{'\'', '"'})
-                    .lineCommentDelims(new String[]{"---"})
+                    .lineCommentDelims(new String[]{"[--", "--]"})
+                    .blockCommentDelims(new DefaultParser.BlockCommentDelims("[===", "===]"))
                     .eofOnUnclosedQuote(true)
                     .eofOnUnclosedBracket(DefaultParser.Bracket.CURLY, DefaultParser.Bracket.ROUND, DefaultParser.Bracket.SQUARE);
             this.terminal = TerminalBuilder.builder().encoding(StandardCharsets.UTF_8).system(true)/*.signalHandler(Terminal.SignalHandler.SIG_IGN)*/.build();
@@ -118,7 +119,7 @@ public class Console extends MRec implements Mode {
                     .option(LineReader.Option.DISABLE_EVENT_EXPANSION, true)
                     .variable(LineReader.SECONDARY_PROMPT_PATTERN, Graphitty.string("{{-X&v1&^1&m}}    {{g}}> {{X}}"))
                     .variable(LineReader.INDENTATION, 0)
-                    //.completer(new MCompleter())
+                    .completer(new MCompleter(this))
                     .build();
             //reader.unsetOpt(LineReader.Option.INSERT_TAB);
 
@@ -358,51 +359,8 @@ public class Console extends MRec implements Mode {
 
         private CustomHighlighters(final Terminal terminal) {
             this.terminal = terminal;
-            // auto compilation
-            /*this.highlighters.add((builder,buffer) -> {
-               if(!buffer.isEmpty())
-                  builder.append(buffer.replaceAll("\\(",Graphitty.string("{{g}}({{/g}}")).replaceAll("\\)",Graphitty.string("{{g}}){{/g}}")));
-            })*/
-            ;
             this.highlighters.add((builder, buffer) -> {
-                if (RESOLVE_MODE) {
-                    try {
-                        if (buffer.isEmpty()) {
-                            //builder.append(buffer);
-                            //Graphitty.out(this.terminal.output(), "{{v1&-X&^1&|%d}}".formatted(9));
-                        } else {
-                            final Obj o = mParser.parse(buffer);
-                            final int xLocation = this.terminal.getCursorPosition(System.out::print).getX() + 1;
-                            // final int promptLength = 8; //"mtron> ".length() + 1;
-                            builder.append(buffer);
-                            try {
-                                final String objString = o.toString();
-                                final String compiledString = o.isCode() ? ObjStringSerializer.prettyPrintCode(o.resolve(NoObj.noobj()).as()) : null;
-                                final int yDistance = Common.countLines(objString);
-                                final int yyDistance = null == compiledString ? 0 : (Common.countLines(compiledString) + 1);
-                                Graphitty.out(this.terminal.output(), "{{v%d&-X-&Xv&|%d}}%s", yDistance, 8, objString);
-                                if (null != compiledString) {
-                                    Graphitty.out(this.terminal.output(), "\n{{|%d}}{{r}}%s{{/r}}", 8, "-"
-                                            .repeat(Math.min(this.terminal.getSize().getColumns(),
-                                                    Arrays.stream(Graphitty.strip(compiledString).split("\n"))
-                                                            .map(String::length)
-                                                            .max(Integer::compareTo)
-                                                            .orElse(0))));
-                                    Graphitty.out(this.terminal.output(), "{{v%d&-X-&Xv&|%d}}%s", yyDistance, 8, compiledString);
-                                }
-                                Graphitty.out(this.terminal.output(), "{{^%d&|%d}}", yDistance + yyDistance, xLocation);
-                            } catch (Exception e) {
-                                // do nothing
-                            }
-                        }
-
-                    } catch (final Exception e) {
-                        // console expression doesn't compile yet
-                        builder.append(buffer);
-                    }
-                } else {
                     builder.append(buffer);
-                }
             });
         }
 
@@ -424,12 +382,10 @@ public class Console extends MRec implements Mode {
             super(reader);
             this.addWidget("quit-widget", this::quitWidget);
             this.addWidget("resolve-widget", this::resolveWidget);
-            this.addWidget("define-widget", this::defineWidget);
             this.addWidget("hide-widget", this::hideWidget);
             this.addWidget("typing-widget", this::typingWidget);
             getKeyMap().bind(new Reference("quit-widget"), ctrl('q'));
             getKeyMap().bind(new Reference("resolve-widget"), ctrl('r'));
-            getKeyMap().bind(new Reference("define-widget"), ctrl('e'));
             getKeyMap().bind(new Reference("hide-widget"), ctrl('h'));
             getKeyMap().bind(new Reference("typing-widget"), ctrl('y'));
             //   getKeyMap().bind(new Reference("detach-widget"), alt(key_down.name()));
@@ -451,19 +407,6 @@ public class Console extends MRec implements Mode {
         private boolean resolveWidget() {
             RESOLVE_MODE = !RESOLVE_MODE;
             //LOG.none("{{@&v1&-X}}switched %s auto-resolution mode{{^1&/@}}", RESOLVE_MODE ? "{{g}}on{{/g}}" : "{{y}}off{{/y}}");
-            return true;
-        }
-
-        private boolean defineWidget() {
-            String sourceCode = reader.getBuffer().toString();
-            reader.getBuffer().clear();
-            String sourceName = "stuff"; // reader.readLine(/*Graphitty.string("{{-X-}}\r{{m}}name{{g}}:{{X}} "*/);
-            String sourceKey = "B"; //reader.readLine(Graphitty.string("{{-X-}}\r{{m}}hotkey{{g}}:{{X}} "));
-            getKeyMap().bind(new Reference(sourceName), ctrl(sourceKey.charAt(0)));
-            this.addWidget(sourceName, () -> {
-                mParser.eval(sourceCode).stream().forEach(System.out::println);
-                return true;
-            });
             return true;
         }
 

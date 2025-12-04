@@ -113,7 +113,7 @@ public class BootLoader implements Rec, Feature.SelfClone {
                     "metatron '[boot=><examples/boot.mtron>,mode=>console,log=>info,host=><ws://localhost:8888>,cluster=>[<ws://127.0.0.1:8887>]]'");
             System.exit(0);
         } else {
-            Rec options = args.length > 0 ? mParser.parse(args[0]).as() : rec();
+            final Rec options = args.length > 0 ? mParser.parse(args[0]).as() : rec();
             logObj.setSLF4J(options.has(uri("log")) ? options.at(uri("log")).uriValue().toString() : "trace");
             LOG.debug("user options: %s", options);
             OPTIONS = options;
