@@ -19,14 +19,11 @@
 package studio.phaseshift.metatron.lang.sys.console;
 
 import org.jline.builtins.Commands;
-import org.jline.builtins.Completers;
 import org.jline.builtins.TTop;
 import org.jline.keymap.BindingReader;
 import org.jline.keymap.KeyMap;
 import org.jline.reader.*;
-import org.jline.reader.impl.DefaultHighlighter;
 import org.jline.reader.impl.DefaultParser;
-import org.jline.reader.impl.completer.StringsCompleter;
 import org.jline.reader.impl.history.DefaultHistory;
 import org.jline.terminal.Attributes;
 import org.jline.terminal.Size;
@@ -37,7 +34,6 @@ import org.jline.widget.Widgets;
 import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.core.m.inst.mInstSet;
-import studio.phaseshift.metatron.lang.core.m.obj.NoObj;
 import studio.phaseshift.metatron.lang.core.m.parser.mParser;
 import studio.phaseshift.metatron.lang.core.m.type.Obj;
 import studio.phaseshift.metatron.lang.core.m.type.Rec;
@@ -50,7 +46,6 @@ import studio.phaseshift.metatron.lang.util.serial.ObjStringSerializer;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
 import studio.phaseshift.metatron.ui.Mode;
-import studio.phaseshift.metatron.util.Common;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.io.BufferedReader;
@@ -135,9 +130,10 @@ public class Console extends MRec implements Mode {
 
     public void stop() {
         try {
+            this.reader.getBuffer().clear();
             this.terminal.close();
             this.mainThread.interrupt();
-        } catch (IOException e) {
+        } catch (final IOException e) {
             LOG.error(e);
         }
     }
@@ -152,6 +148,14 @@ public class Console extends MRec implements Mode {
         };
         this.mainThread = new Thread(console);
         this.mainThread.start();
+    }
+
+    public Terminal getTerminal() {
+        return this.terminal;
+    }
+
+    public LineReader getReader() {
+        return this.reader;
     }
 
     private static class OptionSelector {
@@ -360,7 +364,7 @@ public class Console extends MRec implements Mode {
         private CustomHighlighters(final Terminal terminal) {
             this.terminal = terminal;
             this.highlighters.add((builder, buffer) -> {
-                    builder.append(buffer);
+                builder.append(buffer);
             });
         }
 
@@ -380,33 +384,30 @@ public class Console extends MRec implements Mode {
 
         private CustomWidgets(final LineReader reader) {
             super(reader);
-            this.addWidget("quit-widget", this::quitWidget);
-            this.addWidget("resolve-widget", this::resolveWidget);
+            this.addWidget("quit-widget", () -> {
+                System.exit(0);
+                return true;
+            });
+            this.addWidget("resolve-widget", () -> RESOLVE_MODE = !RESOLVE_MODE);
+            this.addWidget("editor-widget", () -> Editor.of(Console.this, reader.getBuffer().toString()));
             this.addWidget("hide-widget", this::hideWidget);
             this.addWidget("typing-widget", this::typingWidget);
+            /// ///////////////////////////////////////////////////////////////////////////////////////////
             getKeyMap().bind(new Reference("quit-widget"), ctrl('q'));
             getKeyMap().bind(new Reference("resolve-widget"), ctrl('r'));
             getKeyMap().bind(new Reference("hide-widget"), ctrl('h'));
             getKeyMap().bind(new Reference("typing-widget"), ctrl('y'));
+            getKeyMap().bind(new Reference("editor-widget"), ctrl('e'));
             //   getKeyMap().bind(new Reference("detach-widget"), alt(key_down.name()));
         }
 
-        private boolean quitWidget() {
-            System.exit(0);
-            return true;
-        }
+      
 
         private boolean typingWidget() {
             BootLoader.TYPE_CHECK = !BootLoader.TYPE_CHECK;
             final int xLocation = terminal.getCursorPosition(System.out::print).getX() + 1;
             Graphitty.out(terminal.output(), "\n{{-X-}}{{%s}}%s{{/%s}}{{X}} base type prefixes{{^1&|%d}}{{X}}", !BootLoader.TYPE_CHECK ? "y" : "g", !BootLoader.TYPE_CHECK ? "no type checking" : "typing checking", !BootLoader.TYPE_CHECK ? "y" : "g", xLocation);
 
-            return true;
-        }
-
-        private boolean resolveWidget() {
-            RESOLVE_MODE = !RESOLVE_MODE;
-            //LOG.none("{{@&v1&-X}}switched %s auto-resolution mode{{^1&/@}}", RESOLVE_MODE ? "{{g}}on{{/g}}" : "{{y}}off{{/y}}");
             return true;
         }
 
