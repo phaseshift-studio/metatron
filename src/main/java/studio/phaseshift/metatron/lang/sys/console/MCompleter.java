@@ -56,31 +56,40 @@ public class MCompleter implements Completer {
                     }
                 }
             } else {
-                final Obj x = mParser.eval(buffer.toString());
-                x.stream().forEach(obj -> {
-                    if (obj instanceof Rec) {
-                        candidates.addAll(obj.<Rec>as().elements().filter(r -> r.first().isUri()).map(r -> new Candidate(
-                                "*" + r.first().uriValue().toString(),
-                                Graphitty.string(r.first().toString()),
-                                null,
-                                null,
-                                "/",
-                                null,
-                                true)).toList());
-                    } else if (obj instanceof Rel) {
-                        candidates.addAll(obj.<Rel>as().stream().map(Obj::<Rel>as).filter(r -> r.first().isUri()).map(r -> new Candidate(
-                                "*" + r.first().uriValue().toString(),
-                                Graphitty.string(r.first().toString()),
-                                null,
-                                null,
-                                "/",
-                                null,
-                                true)).toList());
-                    }
-                });
+                final Obj results = mParser.eval(buffer.toString());
+                results.forEach(obj -> candidates.addAll(makeCandidate(obj,results.unique())));
             }
         } catch (final Exception e) {
             // do nothing
+        }
+    }
+
+    private List<Candidate> makeCandidate(final Obj obj, final boolean unique) {
+        if (obj.isRec()) {
+            return obj.<Rec>as().elements()
+                    .filter(r -> r.first().isUri())
+                    .map(r -> new Candidate(
+                            "/" + r.first().uriValue().toString(),
+                            Graphitty.string(r.first().toString()),
+                            r.first().uriValue().toString(),
+                            Graphitty.string(r.second().toString()),
+                            "/",
+                            r.first().uriValue().toString(),
+                            !r.second().isPoly())).toList();
+        } else if (obj.isRel()) {
+            return obj.<Rel>as().stream()
+                    .map(Obj::<Rel>as)
+                    .filter(r -> r.first().isUri())
+                    .map(r -> new Candidate(
+                            "*" + r.first().uriValue().toString(),
+                            Graphitty.string(r.first().toString()),
+                            r.first().uriValue().toString(),
+                            Graphitty.string(r.second().toString()),
+                            "/",
+                            r.first().uriValue().toString(),
+                            !r.second().isPoly())).toList();
+        } else {
+            return List.of();
         }
     }
 }
