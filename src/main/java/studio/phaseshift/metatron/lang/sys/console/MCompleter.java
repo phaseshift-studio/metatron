@@ -21,6 +21,7 @@ package studio.phaseshift.metatron.lang.sys.console;
 import org.jline.reader.*;
 import studio.phaseshift.metatron.lang.core.m.obj.NoObj;
 import studio.phaseshift.metatron.lang.core.m.parser.mParser;
+import studio.phaseshift.metatron.lang.core.m.type.Code;
 import studio.phaseshift.metatron.lang.core.m.type.Obj;
 import studio.phaseshift.metatron.lang.core.m.type.Rec;
 import studio.phaseshift.metatron.lang.core.m.type.Rel;
@@ -48,16 +49,17 @@ public class MCompleter implements Completer {
                 if (!buffer.toString().isEmpty()) {
                     final Obj o = mParser.parse(buffer.toString());
                     if (o.isCode()) {
-                        final String pretty = Graphitty.string(ObjStringSerializer.prettyPrintCode(o.resolve(NoObj.noobj()).as()));
+                        Code code = o.resolve(NoObj.noobj()).as();
+                        final String pretty = Graphitty.string(ObjStringSerializer.prettyPrintCode(code));
                         final int length = Arrays.stream(pretty.split("\n")).map(Graphitty::strip).map(String::length).max(Integer::compareTo).orElse(0);
                         candidates.add(new Candidate("", pretty, null, null, "", null, false));
-                        candidates.add(new Candidate(" ", " ", null, null, "", null, false));
+                        candidates.add(new Candidate(" ", new Profile(code).toString(), null, null, "", null, true));
                         //candidates.add(new Candidate(" ", Graphitty.string("{{r}}" + "_".repeat(length) + "{{X}}"), null, null, " ", null, false));
                     }
                 }
             } else {
                 final Obj results = mParser.eval(buffer.toString());
-                results.forEach(obj -> candidates.addAll(makeCandidate(obj,results.unique())));
+                results.forEach(obj -> candidates.addAll(makeCandidate(obj, results.unique())));
             }
         } catch (final Exception e) {
             // do nothing
