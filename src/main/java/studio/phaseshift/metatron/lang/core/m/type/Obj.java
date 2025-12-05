@@ -148,7 +148,9 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
     }
 
     default Obj take() {
-        throw MTronException.of("%s can not be taken from", this);
+        final Obj clone = this.clone();
+        this.self(this.jvm(), this.tid().c("0"), this.vid());
+        return clone;
     }
 
     default Obj resolve(final Obj lhs) {
@@ -681,7 +683,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
                     docWrap(instC(CC_INST_TID.dom(A.maybeSome()).rng(INT_TID), lst(), (lhs, inst) -> jnt(lhs.c().max())),
                             "any obj", "the lhs obj coefficient", Map.of(), "maps an obj to it's coefficient with a function f(lhs^c)->c"),
                     docWrap(instC(CC_INST_TID.dom(A.maybeSome()).rng(A.maybeSome()), lst(T(INT_TID)), (lhs, inst) -> lhs.c(inst.arg(0).intValue())),
-                            "any obj", "the lhs obj with new coefficient", Map.of(jnt(0),"a coefficient for lhs obj"), "sets the coefficient of the lhs obj via f(lhs,c)->lhs^c"),
+                            "any obj", "the lhs obj with new coefficient", Map.of(jnt(0), "a coefficient for lhs obj"), "sets the coefficient of the lhs obj via f(lhs,c)->lhs^c"),
                     instC(AS_INST_TID.dom(A).rng(B), lst(T(B)), (lhs, inst) -> lhs.matches(inst.arg(0)) ? lhs.tid(inst.arg(0).tid()).c(c -> c.mult(inst.arg(0).c())) : MTronException.of("%s is not a %s", lhs, inst.arg(0)).asFail()),
                     instC(FAILURE_INST_TID.dom(ALL.maybeSome()).rng(FAIL_TID), lst(T(ALL.maybe())), (lhs, inst) -> fail(MTronException.of("%s", inst.arg(0).toString()))),
                     //instC(BARRIER_TID.dom(ALL_STAR).rng(ALL_STAR), lst(T(ALL_STAR)), (lhs, inst) -> inst.arg(0).apply(lhs)),

@@ -41,10 +41,10 @@
     </licenses>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <maven.compiler.source>17</maven.compiler.source>
-        <maven.compiler.target>17</maven.compiler.target>
-        <maven.compiler.release>17</maven.compiler.release>
-        <java.version>17</java.version>
+        <maven.compiler.source>22</maven.compiler.source>
+        <maven.compiler.target>22</maven.compiler.target>
+        <maven.compiler.release>22</maven.compiler.release>
+        <java.version>22</java.version>
         <!-- DEPENDENCY VERSIONS -->
         <langchain4j.version>1.9.1</langchain4j.version>
         <langgraph4j.version>1.6.1</langgraph4j.version>

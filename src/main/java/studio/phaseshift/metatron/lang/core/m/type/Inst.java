@@ -41,6 +41,7 @@ import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MType.T;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.MTronException.mexcept;
 import static studio.phaseshift.metatron.util.Tuple.Triplet;
 
@@ -254,7 +255,7 @@ public interface Inst extends Call {
         if (!clhs.isFail() || cinst.isCatch()) {
             try {
                 if (null == cinst.f())
-                    throw mexcept("unable to determine inst function: %s", cinst);
+                    throw mexcept("unable to determine inst function: %s{{g}}::{{r}}T{{X}} => %s", uri(clhs.tid()),  cinst);
                 cinst = Helpers.applyArgs(clhs, cinst);
                 Router.stack().push(cinst.args());
                 try {

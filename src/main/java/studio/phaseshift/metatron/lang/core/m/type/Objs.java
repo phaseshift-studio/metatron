@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -19,16 +19,17 @@
 package studio.phaseshift.metatron.lang.core.m.type;
 
 import studio.phaseshift.metatron.algebra.PlusMonoid;
+import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.core.m.obj.NoObj;
 import studio.phaseshift.metatron.lang.core.m.type.impl.MObjs;
-import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.util.IteratorUtil;
 
 import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
+import static studio.phaseshift.metatron.lang.core.m.obj.NoObj.noobj;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MObjs.objs;
 
 public interface Objs extends Obj, PlusMonoid.O<Objs> {
@@ -45,6 +46,15 @@ public interface Objs extends Obj, PlusMonoid.O<Objs> {
     @Override
     default Type dom() {
         return IteratorUtil.stream(this.jvm()).map(Obj::dom).reduce(NoObj.noobj().type(), Type::plus);
+    }
+
+    @Override
+    default Obj autoResolve(final Obj obj) {
+        return objs(this.stream().map(x -> x.autoResolve(obj)));
+    }
+
+    default Obj autoResolve() {
+        return this.autoResolve(noobj());
     }
 
     @Override
@@ -86,7 +96,7 @@ public interface Objs extends Obj, PlusMonoid.O<Objs> {
     @Override
     default Objs plus(final Objs other) {
         final Obj first = this.take();
-        final Obj second = other instanceof Objs ? other.take() : other;
+        final Obj second = other.take();
         final PlusMonoid.O<?> result = null == first ? (null == second ? this.zero() : (PlusMonoid.O<?>) second) : (PlusMonoid.O<?>) ((PlusMonoid.O) first).plus((PlusMonoid.O) second);
         return new MObjs(List.of(result, this, other));
     }

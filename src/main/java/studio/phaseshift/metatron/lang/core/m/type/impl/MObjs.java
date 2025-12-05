@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -19,12 +19,12 @@
 package studio.phaseshift.metatron.lang.core.m.type.impl;
 
 import studio.phaseshift.metatron.furi.C;
+import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.lang.core.m.type.Inst;
 import studio.phaseshift.metatron.lang.core.m.obj.NoObj;
+import studio.phaseshift.metatron.lang.core.m.type.Inst;
 import studio.phaseshift.metatron.lang.core.m.type.Obj;
 import studio.phaseshift.metatron.lang.core.m.type.Objs;
-import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.Tuple;
 
@@ -34,7 +34,7 @@ import java.util.stream.Stream;
 
 public class MObjs implements Objs {
 
-    private Map<Obj, cInt> cstream; // <obj{1}, coeff{+}>
+    private LinkedHashMap<Obj, cInt> cstream; // <obj{1}, coeff{+}>
     private fURI vid;
 
     public MObjs(final Iterable<Obj> jvm) {
@@ -47,14 +47,14 @@ public class MObjs implements Objs {
 
     protected MObjs(final Map<Obj, cInt> jvmAlternative, final fURI vid) {
         this.vid = vid;
-        this.cstream = jvmAlternative;
+        this.cstream = jvmAlternative instanceof LinkedHashMap<Obj, cInt> ? (LinkedHashMap<Obj, cInt>) jvmAlternative : new LinkedHashMap<>(jvmAlternative);
     }
 
     private static Stream<Obj> flatten(final Iterable<Obj> objs) {
         return IteratorUtil.stream(objs).flatMap(o -> o.isObjs() ? flatten(o.objsValue()) : Stream.of(o)).filter(o -> !o.isNoObj());
     }
 
-    private static Map<Obj, cInt> flattenToMap(final Map<Obj, cInt> map, final Iterable<Obj> objs) {
+    private static LinkedHashMap<Obj, cInt> flattenToMap(final LinkedHashMap<Obj, cInt> map, final Iterable<Obj> objs) {
         flatten(objs).forEach(o -> map.compute(o.c(C::one), (lng, it) -> null == it ? o.c() : it.plus(o.c())));
         return map;
     }
@@ -79,7 +79,7 @@ public class MObjs implements Objs {
     }
 
     public static Obj objs(final Iterable<Obj> objs) {
-        final Map<Obj, cInt> map = new LinkedHashMap<>();
+        final LinkedHashMap<Obj, cInt> map = new LinkedHashMap<>();
         return tryToShrink(flattenToMap(map, objs)).orElseGet(() -> new MObjs(map, fURI.fnull));
     }
 
@@ -146,13 +146,8 @@ public class MObjs implements Objs {
 
     @Override
     public Obj take() {
-        for (final Obj key : this.cstream.keySet()) {
-            final cInt value = this.cstream.remove(key);
-            if (null == value)
-                return key;
-            else if (!value.isZero()) return key.c(value);
-        }
-        return null;
+        final Map.Entry<Obj, cInt> entry = this.cstream.pollFirstEntry();
+        return null == entry ? null : null == entry.getValue() ? entry.getKey() : entry.getKey().c(entry.getValue());
     }
 
    /* @Override
@@ -297,7 +292,7 @@ public class MObjs implements Objs {
     }
 
     @Override
-    public Objs self(final Object jvm,final fURI tid, final fURI vid) {
+    public Objs self(final Object jvm, final fURI tid, final fURI vid) {
         this.cstream = flattenToMap(new LinkedHashMap<>(), (Iterable<Obj>) jvm);
         this.vid = vid;
         return this;

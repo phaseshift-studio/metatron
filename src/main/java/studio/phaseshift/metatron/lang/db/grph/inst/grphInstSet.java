@@ -24,23 +24,16 @@ import studio.phaseshift.metatron.lang.core.m.type.Obj;
 import studio.phaseshift.metatron.lang.core.m.type.Type;
 import studio.phaseshift.metatron.lang.core.m.type.impl.MInstSet;
 import studio.phaseshift.metatron.lang.db.grph.grphSpace;
-import studio.phaseshift.metatron.lang.db.grph.type.REdge;
-import studio.phaseshift.metatron.lang.db.grph.type.RVertex;
 import studio.phaseshift.metatron.lang.db.grph.type.mtron.m1Vertex;
-import studio.phaseshift.metatron.lang.sys.router.Router;
 
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
-import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.lang.core.m.inst.mFluent.StartLess.id_;
 import static studio.phaseshift.metatron.lang.core.m.inst.mFluent.StartLess.isa_;
-import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.REC_TID;
 import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.URI_TID;
-import static studio.phaseshift.metatron.lang.core.m.type.impl.MInst.instC;
-import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MType.T;
 
 public class grphInstSet extends MInstSet {
@@ -107,7 +100,7 @@ public class grphInstSet extends MInstSet {
     public Set<Type> types() {
         return Set.of(
                 T(GRAPH_TID, isa_(T(VERTEX_TID.maybeSome()))),
-                T(ELEMENT_TID),
+                T(ELEMENT_TID, isa_(rec())),
                 T(VERTEX_TID),//, null, instC(INST_TID.dom(ALL.maybe()).rng(VERTEX_TID), lst(), (lhs, inst) -> RVertex.of(lhs.as()))),
                 T(EDGE_TID),//, null, instC(INST_TID.dom(ALL.maybe()).rng(EDGE_TID), lst(), (lhs, inst) -> REdge.of(lhs.as()))),
                 T(PROPERTY_TID, isa_(rec(T(URI_TID), id_()))),
@@ -121,8 +114,8 @@ public class grphInstSet extends MInstSet {
 
     @Override
     public Set<Inst> insts() {
-      //  Router.global().write(VERTEX_TID,T(REC_TID));
-      //  Router.global().write(EDGE_TID,T(REC_TID));
+        //  Router.global().write(VERTEX_TID,T(REC_TID));
+        //  Router.global().write(EDGE_TID,T(REC_TID));
         final Set<Inst> set = new LinkedHashSet<>();
         set.addAll(m1Vertex.m1VertexType.insts());
         return set;
