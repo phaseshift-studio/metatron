@@ -40,6 +40,7 @@ import studio.phaseshift.metatron.lang.util.serial.ObjStringSerializer;
 import studio.phaseshift.metatron.ui.Palette;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -177,11 +178,12 @@ public class mqttSpace extends MSpace<Mqtt5Client> {
         final Obj ret = Q.Helper.processPreWrite(this.qs(), vid, vid, obj).orElse(null);
         if (null != ret)
             return ret;
-        final Obj result = Space.Helper.resolveWrite(this, vid.basePath(), obj, (key, value) -> {
+        this.send(vid,obj);
+       /* final Obj result = Space.Helper.resolveWrite(this, vid.basePath(), obj, (key, value) -> {
             this.send(vid.qLess(), value.c(cInt.ONE()));
             return value;
-        }, this.cache.directReader());
-        return Q.Helper.processPostWrite(this.qs(), vid, vid, result).orElse(Q.Helper.processQlessWrite(this.qs(), vid, vid, obj.c(cInt.ONE())).orElse(result));
+        }, this.cache.directReader());*/
+        return Q.Helper.processPostWrite(this.qs(), vid, vid, obj).orElse(Q.Helper.processQlessWrite(this.qs(), vid, vid, obj.c(cInt.ONE())).orElse(obj));
     }
 
     private void send(final fURI vid, final Obj obj) {
@@ -194,7 +196,7 @@ public class mqttSpace extends MSpace<Mqtt5Client> {
                     .retain(true)
                     .send()
                     .whenComplete((p, t) -> {
-                        LOG.trace("caching %s", p.getPublish());
+                        LOG.trace("caching %s[%s]", p.getPublish(), new String(p.getPublish().getPayloadAsBytes()));
                         if (p.getPublish().getPayload().isPresent()) {
                             final String json = StandardCharsets.UTF_8.decode(p.getPublish().getPayload().get()).toString();
                             this.cache.write(

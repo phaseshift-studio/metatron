@@ -21,7 +21,7 @@
   clstr::[pattern => <ws://#>]@/sys/router/space/clstr;
    mqtt::[pattern => /mqtt/zigbee2mqtt/#,
           host    => <mqtt://chibi.local:1883>,
-          prefix  => </mqtt>]@/sys/router/space/mqtt/zigbee2mqtt;
+          prefix  => </mqtt/>]@/sys/router/space/mqtt/zigbee2mqtt;
      fs::[pattern => </home/#>]@/sys/router/space/fs;
  ollama::[host    => <http://localhost:11434>]@/usr/ai;   
 console::[        => ];

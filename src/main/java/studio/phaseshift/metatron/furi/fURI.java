@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -21,8 +21,8 @@ package studio.phaseshift.metatron.furi;
 import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.algebra.Ring;
 import studio.phaseshift.metatron.furi.c.cInt;
-import studio.phaseshift.metatron.lang.sys.router.Router;
 import studio.phaseshift.metatron.lang.core.m.type.Uri;
+import studio.phaseshift.metatron.lang.sys.router.Router;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.util.MTronException;
 
@@ -272,8 +272,11 @@ public class fURI implements Cloneable, Ring<fURI> {
         final String newPath = this.toString();
         final String pre = prefix.toString();
         //return new fURI(newPath.startsWith(prefix.toString()) ? newPath.substring(prefix.send ? prefix.toString().length() +1 : prefix.toString().length()) : newPath);
-        return newPath.startsWith(pre) ? new fURI(newPath.substring(pre.length() + (newPath.charAt(pre.length()) == '/' ? 1 : 0))) : this;
-
+        if (!newPath.startsWith(pre))
+            return this;
+        final fURI newURI = new fURI(newPath.substring(pre.length() + (newPath.charAt(pre.length()) == '/' ? 1 : 0)));
+        newURI.sstart = !prefix.send;
+        return newURI;
     }
 
 
