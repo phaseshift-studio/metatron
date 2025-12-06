@@ -20,15 +20,15 @@ package studio.phaseshift.metatron.lang.net.web;
 
 import com.google.gson.*;
 import com.google.gson.stream.JsonReader;
-import org.petitparser.context.Result;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.core.m.parser.mParser;
-import studio.phaseshift.metatron.lang.core.m.obj.NoObj;
 import studio.phaseshift.metatron.lang.core.m.type.*;
 import studio.phaseshift.metatron.lang.sys.router.Router;
 import studio.phaseshift.metatron.lang.util.serial.ObjSerializer;
 import studio.phaseshift.metatron.lang.util.serial.ObjStringSerializer;
-import studio.phaseshift.metatron.ui.*;
+import studio.phaseshift.metatron.ui.Graphitty;
+import studio.phaseshift.metatron.ui.GraphittyLogger;
+import studio.phaseshift.metatron.ui.Palette;
 import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Translator;
 
@@ -41,7 +41,6 @@ import java.util.Map;
 
 import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.furi.fURI.fnull;
-import static studio.phaseshift.metatron.lang.core.m.inst.mFluent.StartLess.auto;
 import static studio.phaseshift.metatron.lang.core.m.inst.mFluent.StartLess.auto_;
 import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.*;
 import static studio.phaseshift.metatron.lang.core.m.obj.NoObj.noobj;
@@ -111,7 +110,7 @@ public record JSONTranslator(ObjSerializer<String> serializer) implements Transl
                             obj = mParser.parse(jpstr);
                         } else if (bid.equals(INST_TID)) {
                             obj = mParser.parse(jpstr).<Call>as().tryToInst().vid(fnull);
-                            if(null != tid && tid.equals(AUTO_INST_TID)) {
+                            if (null != tid && tid.equals(AUTO_INST_TID)) {
                                 obj = auto_(obj).tryToInst();
                             }
                         } else if (bid.equals(FAIL_TID)) {
@@ -202,7 +201,7 @@ public record JSONTranslator(ObjSerializer<String> serializer) implements Transl
             } else
                 throw MTronException.of("could not parse %s to json: %s", obj.tid(), obj);
             /// ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-            if (!obj.type().isBaseType() || obj.isObjs() || obj.isType() ||  obj.isObjCall() || obj.isFail() || obj.isRel()) {
+            if (!obj.type().isBaseType() || obj.isObjs() || obj.isType() || obj.isObjCall() || obj.isFail() || obj.isRel()) {
                 final JsonObject typedObj = new JsonObject();
                 typedObj.add(BID_KEY, new JsonPrimitive(Router.global().rewrite(obj.isType() ? TYPE_TID : (obj.isObjs() ? OBJS_TID : (obj.isCode() ? CODE_TID : (obj.isInst() ? INST_TID : obj.baseType().basePath()))), true).toString()));
                 // if (!obj.type().isBaseType())

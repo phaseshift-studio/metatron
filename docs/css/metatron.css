@@ -226,6 +226,7 @@ pre code {
     color: #333;
     text-decoration: none;
     /* line-height: 1em; */
+
     & svg {
         position: absolute;
         left: 0;
@@ -235,6 +236,7 @@ pre code {
         margin-right: auto;
         pointer-events: none;
     }
+
     & path {
         transition: stroke-dashoffset 300ms linear;
         stroke-width: 3.0;
@@ -242,7 +244,8 @@ pre code {
         fill: none;
         stroke-linecap: round;
     }
-    &:hover path{
+
+    &:hover path {
         stroke-dashoffset: 0;
     }
 }
@@ -332,7 +335,7 @@ pre code {
     color: var(--mgreen);
 }
 
-.hljs-mtron-pipe, 
+.hljs-mtron-pipe,
 .hljs-mtron-log-error {
     color: var(--mred);
 }

@@ -2,27 +2,32 @@
 
 image:neofhat-reading-by-candle-light.png[width=300,float=right,role="parchment"]
 
-The instruction set (`inst_set`) specifies a collection of reusable objects and functions and is what is commonly called 
-a _package_ (i.e. a library, an API, a module, etc.). In [metatron], an `inst_set` is defined as the 4-tuple
+The instruction set (`inst_set`) specifies a collection of reusable objects and functions and is what is commonly called a _package_ (i.e. a library, an API, a module, etc.).
+In [metatron], an `inst_set` is defined as the 4-tuple
 
 ++++
 \begin{align*}
 \texttt{inst_set} \in \left(\texttt{TYPE} \times \texttt{INST} \times \texttt{REWRITE} \times \texttt{PARSER}\right),
 \end{align*}
 ++++
-where each component of the tuple is a set of the specified kind. To function properly, [metatron] requires, a minimum,
-two instruction sets: `m` and `mach`. This section will discuss `m`.
 
-The core instruction set of metatron is `m`. `m` has two manifestations. First, it is an `obj` in and of itself can be
-referred to as such. The referent to `m` as an instruction set is `/mnt/lang/m`. Second, `m` is also a collection of
-`objs` which are accessible at `/m/#`. These two referents point to two different metatron _spaces_. +
+where each component of the tuple is a set of the specified kind.
+To function properly, [metatron] requires, a minimum, two instruction sets: `m` and `mach`.
+This section will discuss `m`.
+
+The core instruction set of metatron is `m`. `m` has two manifestations.
+First, it is an `obj` in and of itself can be referred to as such.
+The referent to `m` as an instruction set is `/mnt/lang/m`.
+Second, `m` is also a collection of
+`objs` which are accessible at `/m/#`.
+These two referents point to two different metatron _spaces_. +
 
 .space
 [#space]
 ****
 A _space_ is an `obj` that is responsible storing and processing a specified subset of the `uri` address space.
-Every space has a _pattern_ denoting the subset of the `uri` it maintains. A barebones boot of metatron reveals
-3 spaces and their patterns.
+Every space has a _pattern_ denoting the subset of the `uri` it maintains.
+A barebones boot of metatron reveals 3 spaces and their patterns.
 
 
 ++++
@@ -57,9 +62,8 @@ a🧱
 image:space-arch.svg[width=800,align=center]
 |===
 
-
-The components of `m` are available at `/m/#`. To dereference the pattern `/m/#/`, `\*` is used,
-where `*(uri)` is the sugar form of the instruction `from(uri)` and is perhaps the most important instruction in [metatron].
+The components of `m` are available at `/m/#`.
+To dereference the pattern `/m/#/`, `\*` is used, where `*(uri)` is the sugar form of the instruction `from(uri)` and is perhaps the most important instruction in [metatron].
 
 ./mnt/lang/m
 [%collapsible%open]

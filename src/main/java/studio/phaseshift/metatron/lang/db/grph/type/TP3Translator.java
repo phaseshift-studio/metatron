@@ -34,12 +34,10 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import static studio.phaseshift.metatron.lang.core.m.inst.mFluent.StartLess.auto;
 import static studio.phaseshift.metatron.lang.core.m.obj.NoObj.noobj;
-import static studio.phaseshift.metatron.lang.core.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.lang.db.grph.inst.grphInstSet.EDGE_TID;
 import static studio.phaseshift.metatron.lang.db.grph.inst.grphInstSet.VERTEX_TID;
-import static studio.phaseshift.metatron.util.Common.mutableOrderedMap;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -62,8 +60,8 @@ public record TP3Translator(Builder builder) implements Translator<Obj, Graph> {
                         uri(PROPS), props.isEmpty() ? noobj() : props,
                         uri(Direction.OUT.name()), auto(this.builder.root.extend("V").extend(tpEdge.outVertex().id().toString())),
                         uri(Direction.IN.name()), auto(this.builder.root.extend("V").extend(tpEdge.inVertex().id().toString()))),
-                EDGE_TID,fURI.fnull);
-                //this.builder.root.extend("E").extend(tpEdge.id().toString()));
+                EDGE_TID, fURI.fnull);
+        //this.builder.root.extend("E").extend(tpEdge.id().toString()));
     }
 
     @Override

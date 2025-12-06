@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -34,7 +34,7 @@ import static studio.phaseshift.metatron.lang.db.grph.inst.grphInstSet.EDGE_TID;
 public class MEdge extends MElement implements Obj, Edge, WrappedEdge<Edge> {
 
     protected MEdge(final Edge edge) {
-        super(edge,EDGE_TID,fURI.fnull);
+        super(edge, EDGE_TID, fURI.fnull);
     }
 
     public static MEdge of(final Edge edge) {
@@ -72,8 +72,8 @@ public class MEdge extends MElement implements Obj, Edge, WrappedEdge<Edge> {
 
     @Override
     public fURI vid() {
-     return fURI.fnull;
-      //  return ((MVertex) this.outVertex()).vid().extend("outE").extend(this.label()).extend(this.value().id().toString());
+        return fURI.fnull;
+        //  return ((MVertex) this.outVertex()).vid().extend("outE").extend(this.label()).extend(this.value().id().toString());
         //return this.graph().configuration().get(fURI.class, "pattern").retractPattern().extend("edge").extend(this.element.id().toString());
     }
 

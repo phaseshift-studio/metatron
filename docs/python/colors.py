@@ -1,4 +1,3 @@
-
 """ ANSI color codes """
 BLACK = '\u001b[0;30m'
 RED = '\u001b[0;31m'

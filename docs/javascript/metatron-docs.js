@@ -1,4 +1,4 @@
-$(document).ready(function() {
+$(document).ready(function () {
     // wait for document to load
 });
 
@@ -68,7 +68,7 @@ jQuery(function () {
             // Set path attributes and styles
             $(path)
                 .attr({
-                    d: circlePath(-0.15,0.05,150,190,0.05,0.3)
+                    d: circlePath(-0.15, 0.05, 150, 190, 0.05, 0.3)
                 })
                 .attr({
                     "stroke-dasharray": pathLength,

@@ -8,18 +8,21 @@ image:github-icon.png[width=20,link=https://github.com/phaseshift-studio/metatro
 1. a multi-model [.red]*database query language*
 2. a data-oriented [.red]*operating system*.
 
-image:m-arch.svg[width=500,float=right] These representations are made salient by a ring-oriented programming language and virtual machine. As an example, within the metatron, an mtron-trained large language model is prompted to generate a multi-model expression to search multiple database (e.g. key/value, vector, graph), to then insert those results into a multiple web documents stored on multiple machines in a jQuery-esque manner, whereby a dynamically spawned web server then provides a single point of access to fetching the distributed documents to yield a single view via a browser.
+image:m-arch.svg[width=500,float=right] These representations are made salient by a ring-oriented programming language and virtual machine.
+As an example, within the metatron, an mtron-trained large language model is prompted to generate a multi-model expression to search multiple database (e.g. key/value, vector, graph), to then insert those results into a multiple web documents stored on multiple machines in a jQuery-esque manner, whereby a dynamically spawned web server then provides a single point of access to fetching the distributed documents to yield a single view via a browser.
 
 [quote]
 ____
-The ways in which metatron can be used to generate, shape, relate and distribute data is endless. This flexibility is made possible by the integrated computing environment known as 'the metatron.'
+The ways in which metatron can be used to generate, shape, relate and distribute data is endless.
+This flexibility is made possible by the integrated computing environment known as 'the metatron.'
 ____
 
 To understand [.metatron] it is necessary to understand the core mtron language and the mechanics of the underlying virtual machine.
 
 ## architecture
 
-image:nenofhat-alchemy-laboratory.png[width=500,float=left,role="parchment marker"] The fundamental architecture of [.metatron] is realized as a network of coupled https://en.wikipedia.org/wiki/Ring_(mathematics)[algebraic rings] executing all levels of abstraction -- from the human-readable/writeable programming language, to the compiler that generates a sequence of instructions for the virtual machine to evaluate using a swarm of atomic monadic processors that ultimately read and write data identified by a ring-based id system supported by a heterogeneous set of data stores called __spaces__. Each of these components follows the axioms of an algebraic ring (or some subset algebra such as a monoid or group).
+image:nenofhat-alchemy-laboratory.png[width=500,float=left,role="parchment marker"] The fundamental architecture of [.metatron] is realized as a network of coupled https://en.wikipedia.org/wiki/Ring_(mathematics)[algebraic rings] executing all levels of abstraction -- from the human-readable/writeable programming language, to the compiler that generates a sequence of instructions for the virtual machine to evaluate using a swarm of atomic monadic processors that ultimately read and write data identified by a ring-based id system supported by a heterogeneous set of data stores called __spaces__.
+Each of these components follows the axioms of an algebraic ring (or some subset algebra such as a monoid or group).
 
 ### algebraic ring theory
 
@@ -29,12 +32,16 @@ A ring is a set of elements latexmath:[R] along with two binary operators
 ++++
 +\colon R \times R \rightarrow R
 ++++
+
 and
+
 [stem]
 ++++
 *\colon R \times R \rightarrow R,
 ++++
+
 where latexmath:[*] distributes over latexmath:[+] such that for latexmath:[a,b,c \in R],
+
 [latexmath]
 ++++
 \begin{align*}
@@ -43,7 +50,9 @@ a*(b+c) =\;& (a * b) + (a * c) \\
         =\;& ab      + ac.
 \end{align*}
 ++++
+
 Likewise,
+
 [latexmath]
 ++++
 \begin{align*}
@@ -52,7 +61,9 @@ Likewise,
         =\;& ba      + ca.
 \end{align*}
 ++++
+
 A useful corollary of the distributive nature of latexmath:[+] provides an equivalency for polynomial rings, whereby
+
 [latexmath]
 ++++
 \begin{align*}
@@ -61,7 +72,9 @@ A useful corollary of the distributive nature of latexmath:[+] provides an equiv
             =\;& ac+bc+ad+bd.
 \end{align*}
 ++++
+
 Every ring latexmath:[R] contains two unique elements latexmath:[0 \in R] and latexmath:[1 \in R] such that, for every latexmath:[a \in R],
+
 [latexmath]
 ++++
 \begin{align*}
@@ -70,7 +83,9 @@ Every ring latexmath:[R] contains two unique elements latexmath:[0 \in R] and la
 1 * a &= a & a * 1 &= a.
 \end{align*}
 ++++
+
 Finally, every element latexmath:[a \in R] has an _inverse_ latexmath:[\text{-}a \in R], where
+
 [latexmath]
 ++++
 \begin{align*}
@@ -78,24 +93,34 @@ Finally, every element latexmath:[a \in R] has an _inverse_ latexmath:[\text{-}a
   =\;& a - a,
 \end{align*}
 ++++
+
 and no two elements share the same inverse: latexmath:[\forall a,b \in R: \text{-} a \neq \text{-} b].
 
-These are the axioms of ring theory. The entire structure of a ring is denoted
+These are the axioms of ring theory.
+The entire structure of a ring is denoted
+
 [stem]
 ++++
 \left(R,+,-,0,1\right),
 ++++
-where each symbol is replaced by the corresponding operator and elements of the respective ring being defined. Any collection of tokens, processes, objects, identifiers, etc. that obey these rules form, by definition, a ring and can be manipulated by the stated equivalencies and their formal derivatives.
+
+where each symbol is replaced by the corresponding operator and elements of the respective ring being defined.
+Any collection of tokens, processes, objects, identifiers, etc. that obey these rules form, by definition, a ring and can be manipulated by the stated equivalencies and their formal derivatives.
 
 ### the rings of metatron
 
-There are many rings in metatron. Of particular importance is the ring fURI -- a "fhat" Uniform Resource Identifier. `fURIs` are used to denote the type, extension, and location of an `obj` (object) in metatron. In fact, an `obj` in metatron is composed of three elements, one data structure and 2 `fURIs`, where:
+There are many rings in metatron.
+Of particular importance is the ring fURI -- a "fhat" Uniform Resource Identifier. `fURIs` are used to denote the type, extension, and location of an `obj` (object) in metatron.
+In fact, an `obj` in metatron is composed of three elements, one data structure and 2 `fURIs`, where:
+
 ++++
 \begin{align*}
 \texttt{obj} \in \left(\texttt{jvm} \times \texttt{tid} \times \texttt{vid}\right),
 \end{align*}
 ++++
-where `jvm` is an object of the Java virtual machine, `tid` is a _type_ (class) `fURI` and `vid` is a _value_ (instance) `fURI`. Every `obj` in metatron has a form, a denotation of that form, and a reference to its explicit location in _space_.
+
+where `jvm` is an object of the Java virtual machine, `tid` is a _type_ (class) `fURI` and `vid` is a _value_ (instance) `fURI`.
+Every `obj` in metatron has a form, a denotation of that form, and a reference to its explicit location in _space_.
 
 ### fURI
 
@@ -147,22 +172,24 @@ Every `obj` has the form:
 \texttt{obj} = \left(\texttt{uri} \times X \times \texttt{uri} \right),
 \end{align*}
 ++++
-where the first `uri` is the `tid` (_type identifier_), the last `uri` is the `vid` (_value identifier_), and 
-the middle `X` denotes the data type of the `obj` within the constructs of the underlying programming language's implementation.
+
+where the first `uri` is the `tid` (_type identifier_), the last `uri` is the `vid` (_value identifier_), and the middle `X` denotes the data type of the `obj` within the constructs of the underlying programming language's implementation.
 On the Java virtual machine, `X` is a `java.lang.Object`, where, for instance, the `X` of `/m/int` is `java.lang.Long`.
 
 The referent of an `obj's` `tid` is a `type` `obj` of the form
+
 ++++
 \begin{align*}
 \texttt{type} = \left(\texttt{uri} \times \underbrace{\left(\texttt{code} \times \texttt{code}\right)}_{X} \times \texttt{uri} \right),
 \end{align*}
 ++++
-where the `code` pair is composed of the type's 
- 
-  1. **predicate**: `code` to determine if the `obj` meets the criteria of being the respective `type`, and
-  2. **constructor**: `code` to generate an instance of the `type`.
 
-Finally, of particular import, for a type, it is always the case that latexmath:[\forall t \in T : t_\texttt{tid} = t_\texttt{vid}]. 
+where the `code` pair is composed of the type's
+
+1. **predicate**: `code` to determine if the `obj` meets the criteria of being the respective `type`, and
+2. **constructor**: `code` to generate an instance of the `type`.
+
+Finally, of particular import, for a type, it is always the case that latexmath:[\forall t \in T : t_\texttt{tid} = t_\texttt{vid}].
 The significance of this equality will be made salient later in the documentation.
 
 To practically ground these concepts, a https://en.wikipedia.org/wiki/Natural_number[natural number] type is defined.
@@ -185,8 +212,9 @@ To practically ground these concepts, a https://en.wikipedia.org/wiki/Natural_nu
 
 A quick explaination of the type predicate and constructor `code` is as follows:
 
-  1. **predicate** [`?>0`]: is (`?`) greater than (`>`) 0.
-  2. **constructor** [`-<|[?<0 \=> ⋅-1,_ \=> \_]>>`]: if (`-<|`) less than (`<`) 0, then (`\=>`) multiply (`⋅`) by -1, else do (`\=>`) nothing (`_`). Yield the _range_ (`>>`) of the relation constructed (the specifics of `>>` will be discussed later).
+1. **predicate** [`?>0`]: is (`?`) greater than (`>`) 0.
+2. **constructor** [`-<|[?<0 \=> ⋅-1,_ \=> \_]>>`]: if (`-<|`) less than (`<`) 0, then (`\=>`) multiply (`⋅`) by -1, else do (`\=>`) nothing (`_`).
+Yield the _range_ (`>>`) of the relation constructed (the specifics of `>>` will be discussed later).
 
 Example usage of the defined `nat` type is presented below.
 
@@ -202,21 +230,21 @@ nat::2 ⋅ -1                                           [-- <7>
 -->
 ++++
 
-<1> A natural number (`nat`) is a positive `int`. The predicate component of the type definition tests an `int` to 
-determine if it's a `nat` and the constructor component will generate a positive `int` given any `int` (i.e. the absolute value).
+<1> A natural number (`nat`) is a positive `int`.
+The predicate component of the type definition tests an `int` to determine if it's a `nat` and the constructor component will generate a positive `int` given any `int` (i.e. the absolute value).
 <2> the `nat` _tid_ references the respective `nat` type `obj`.
 <2> 2 is an `nat`.
 <3> -2 is not a `nat`, but given the constructor, becomes a `nat`.
 
-
-While every `type` is an `obj`, not every `obj` is a `type`. Those `objs` that are not `types` are _instances_ of some `type`.
+While every `type` is an `obj`, not every `obj` is a `type`.
+Those `objs` that are not `types` are _instances_ of some `type`.
 This is the foundation for all other `objs` in [metatron].
 
 ==== mono types
 
 An `obj` that is not composed of other `objs` is a mono type and are exhaustively itemized in the table below.
 
-[cols="1,2,6",separator=|, options=header]
+[cols="1,2,6",separator=|,options=header]
 |===
 | type    | jvm object   | description |
 `bytes`   | `ByteBuffer` | ... |
@@ -231,17 +259,13 @@ The code below demonstrates the typical, expected uses of the mono types.
 
 ====== bytes
 
-
-
 ++++
 <!-- 🐖
 0xabcd + 0x1234
 -->
 ++++
 
-
 ==== poly types
-
 
 ==== call types
 
@@ -254,12 +278,13 @@ An `inst` is an `obj` of the form:
 \texttt{inst} = \left(\texttt{uri} \times \left( \texttt{poly} \times \texttt{code} \right) \times \texttt{uri} \right),
 \end{align*}
 ++++
+
 where each component is:
 
-  1. `uri`: the `inst` type (e.g. `/m/inst/plus`).
-  2. `poly`: the `inst` arguments which can either be a `lst` or a `rec`.
-  3. `code`: the `code` that defines the behavior or function of the `inst`.
-  4. `uri`: the `inst` location in space.
+1. `uri`: the `inst` type (e.g. `/m/inst/plus`).
+2. `poly`: the `inst` arguments which can either be a `lst` or a `rec`.
+3. `code`: the `code` that defines the behavior or function of the `inst`.
+4. `uri`: the `inst` location in space.
 
 === variables
 

@@ -20,16 +20,13 @@ package studio.phaseshift.metatron.lang.sys.console;
 
 import org.jline.builtins.Commands;
 import org.jline.builtins.TTop;
-import org.jline.keymap.BindingReader;
-import org.jline.keymap.KeyMap;
 import org.jline.reader.*;
 import org.jline.reader.impl.DefaultParser;
 import org.jline.reader.impl.history.DefaultHistory;
-import org.jline.terminal.Attributes;
-import org.jline.terminal.Size;
 import org.jline.terminal.Terminal;
 import org.jline.terminal.TerminalBuilder;
-import org.jline.utils.*;
+import org.jline.utils.AttributedString;
+import org.jline.utils.AttributedStringBuilder;
 import org.jline.widget.Widgets;
 import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.furi.fURI;
@@ -58,7 +55,6 @@ import java.util.*;
 import java.util.function.BiConsumer;
 
 import static org.jline.keymap.KeyMap.ctrl;
-import static org.jline.keymap.KeyMap.key;
 import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.lang.core.m.inst.mFluent.StartLess.isa_;
@@ -157,7 +153,7 @@ public class Console extends MRec implements Mode {
     public LineReader getReader() {
         return this.reader;
     }
-    
+
     @Override
     public Optional<Thread> mainThread() {
         return Optional.of(this.mainThread);
@@ -313,7 +309,6 @@ public class Console extends MRec implements Mode {
             //   getKeyMap().bind(new Reference("detach-widget"), alt(key_down.name()));
         }
 
-      
 
         private boolean typingWidget() {
             BootLoader.TYPE_CHECK = !BootLoader.TYPE_CHECK;

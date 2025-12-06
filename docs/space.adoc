@@ -1,10 +1,14 @@
 = space
 
-image:nenofhat-newt-dungeon-small.png[width=500,float=left,role="parchment"]  A _space_ is an `obj` that is similar to a nested key/value `rec`, but it has other features that allow it to serve as a single point of entry to all data in the metatron. While everything is an `obj`, it's best to understand metatron as a collection of (potentially nested) spaces and the `objs` they contain.
+image:nenofhat-newt-dungeon-small.png[width=500,float=left,role="parchment"]  A _space_ is an `obj` that is similar to a nested key/value `rec`, but it has other features that allow it to serve as a single point of entry to all data in the metatron.
+While everything is an `obj`, it's best to understand metatron as a collection of (potentially nested) spaces and the `objs` they contain.
 
 == referencing in space
 
-Every space can be read from and written to. However, a space is never accessed directly. Instead, any `from()` or `to()` instruction relies on the node's _router_ to determine how to resolve the `uri` being referenced. For instance:
+Every space can be read from and written to.
+However, a space is never accessed directly.
+Instead, any `from()` or `to()` instruction relies on the node's _router_ to determine how to resolve the `uri` being referenced.
+For instance:
 
 ++++
 <!-- 🐖 ./main_runner.out
@@ -20,7 +24,8 @@ image:skull-candle.png[width=200,float=right]
 <1> The 2 `rel` `rec` is written to the space responsible for the local uri `/usr/neno`.
 <2> The router resolves `/usr/neno` to the responsible space and returns any `obj` stored at `/usr/neno`.
 
-The instructions `to` and `from` are used extensively. As such, they both have respective _sugar_ forms.
+The instructions `to` and `from` are used extensively.
+As such, they both have respective _sugar_ forms.
 
 ++++
 <!-- 🐖 ./main_runner.out
@@ -31,10 +36,12 @@ The instructions `to` and `from` are used extensively. As such, they both have r
 
 == polys in space
 
-mtron makes a distinction between `monos` and `polys`. A `mono` type is an type that can't be reduced to another `obj`.
-A `poly` on the hand, is an `obj` composed of other `objs`. There are two `polys` in mtron: `lst` and `rec`. Spaces become
-interesting when storing `polys`. The `/usr/neno` example will be expanded on to demonstrate the interplay between
-spaces and `polys`.
+mtron makes a distinction between `monos` and `polys`.
+A `mono` type is an type that can't be reduced to another `obj`.
+A `poly` on the hand, is an `obj` composed of other `objs`.
+There are two `polys` in mtron: `lst` and `rec`.
+Spaces become interesting when storing `polys`.
+The `/usr/neno` example will be expanded on to demonstrate the interplay between spaces and `polys`.
 
 [cols="5,5",frame=none,grid=none,separator=🧱]
 |===
@@ -71,21 +78,19 @@ a🧱
 
 |===
 
-The key feature of a space is that it will resolve the `uri` beyond the `obj` boundary and into the `obj` in order
-to only return the relevant required data. The `uri` is serves as navigational _push-down predicate_ allows a precise
-extraction of data from the space.
+The key feature of a space is that it will resolve the `uri` beyond the `obj` boundary and into the `obj` in order to only return the relevant required data.
+The `uri` is serves as navigational _push-down predicate_ allows a precise extraction of data from the space.
 
-Space blurs the boundaries of an `obj`. Encapsulation is but a thin veil when one has a sharp enough knife. It enables users to operate on their 
-encapsulated `obj` forms while at the same time providing the router an efficient means of reducing the marshalling 
-of unneeded data over the wire.
+Space blurs the boundaries of an `obj`.
+Encapsulation is but a thin veil when one has a sharp enough knife.
+It enables users to operate on their encapsulated `obj` forms while at the same time providing the router an efficient means of reducing the marshalling of unneeded data over the wire.
 
 === spatial embeddings
 
-[metatron] was designed to support the creation and manipulation of _abstract data types_ in a compact, fluid manner so as to
-allow the user to move smoothly between _multiple models_ across different spaces, each espousing a different perspective on
-the data their maintain: e.g., key/value, document, relational, vector, graph, and the various nooks and crannies between.
+[metatron] was designed to support the creation and manipulation of _abstract data types_ in a compact, fluid manner so as to allow the user to move smoothly between _multiple models_ across different spaces, each espousing a different perspective on the data their maintain: e.g., key/value, document, relational, vector, graph, and the various nooks and crannies between.
 
-[metatron]'s URI addressing scheme makes it possible to _embed_ arbitrary data types into a space. This section will explore the following considerations when designing a _multi-model abstract data type_.
+[metatron]'s URI addressing scheme makes it possible to _embed_ arbitrary data types into a space.
+This section will explore the following considerations when designing a _multi-model abstract data type_.
 
 . **spatial encodings**
 . **schema encodings**

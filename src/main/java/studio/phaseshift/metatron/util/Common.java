@@ -81,7 +81,7 @@ public final class Common {
                 ));
     }
 
-    public static Obj loop(final Obj lhs, final Function<Obj,Obj> loopFunction, final int times) {
+    public static Obj loop(final Obj lhs, final Function<Obj, Obj> loopFunction, final int times) {
         Obj result = lhs;
         for (int i = 0; i < times; i++) {
             result = loopFunction.apply(result);

@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -32,12 +32,10 @@ import studio.phaseshift.metatron.lang.sys.router.Router;
 
 import java.util.Map;
 
+import static studio.phaseshift.metatron.Tokens.PATTERN;
 import static studio.phaseshift.metatron.Tokens.SPACE;
 import static studio.phaseshift.metatron.furi.fURI.f;
-import static studio.phaseshift.metatron.Tokens.PATTERN;
 import static studio.phaseshift.metatron.lang.core.m.inst.mFluent.StartLess.auto;
-import static studio.phaseshift.metatron.lang.core.m.inst.mFluent.StartLess.auto_;
-import static studio.phaseshift.metatron.lang.core.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
 
 /*
@@ -55,7 +53,7 @@ public class RGraphTest extends MetatronTest {
                 uri("load"), uri("tinkerpop-modern")), f("/g/#"), f("/sys/space/grph"));
         Router.global().addSpace(space);
         Router.global().put(uri("primary"), uri("/grph"));
-        Router.global().write("g",auto(f("/g")));
+        Router.global().write("g", auto(f("/g")));
         space.start();
        /* Router.readFromSpace(f("/grph/space/grph")).<Type>as().constructor().apply(
                 rec(Map.of(
@@ -140,8 +138,8 @@ public class RGraphTest extends MetatronTest {
             /// ///////////////////////////////////////////////////////////////////////////////
             "*/g/V/1.out().out().values(name)                                             % {'lop','ripple'}",
             "{*/g/V/1/LABEL,*/g/V/1/LABEL}                                                % uri{2}::person",
-        //    "{*/g/V/1,*/g/V/1}.label()                                                    % uri{2}::person",
-         //   "{*/g/V/1,*/g/V/1}.out().out().values(name)                                   % {str{2}::'lop',str{2}::'ripple'}",
+            //    "{*/g/V/1,*/g/V/1}.label()                                                    % uri{2}::person",
+            //   "{*/g/V/1,*/g/V/1}.out().out().values(name)                                   % {str{2}::'lop',str{2}::'ripple'}",
             "*/g/V/1.out().out().values(lang)                                             % str{2}::'java'",
             //  "g.V().out().out().values(name)                                             % {\"lop\",\"ripple\"}",
             //  "g.V().out().out().values(lang)                                             % str{2}::\"java\"",

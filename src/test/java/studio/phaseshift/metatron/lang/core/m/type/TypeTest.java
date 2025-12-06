@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -21,8 +21,8 @@ package studio.phaseshift.metatron.lang.core.m.type;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.lang.MetatronObjTest;
-import studio.phaseshift.metatron.lang.sys.router.Router;
 import studio.phaseshift.metatron.lang.core.m.parser.mParser;
+import studio.phaseshift.metatron.lang.sys.router.Router;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
 
@@ -147,7 +147,7 @@ public class TypeTest extends MetatronObjTest {
             "1                   | int::T[is(eq(1))]                            | true",
             "1                   | int::T[is(eq(2))]                            | false",
             "{1,1}               | int{2}::T[is(eq({2,2}))]                     | false",
-           // "{1,1}               | int{2}::T[?={1,1}]                     | true",
+            // "{1,1}               | int{2}::T[?={1,1}]                     | true",
             "{1,2}               | int{2}::T                                     | true",
             // "{1,1}               | int{2}::T[is(eq({1,1}))]                   | true",
             "{1,1}               | int{2}::T                                  | true",
@@ -155,7 +155,7 @@ public class TypeTest extends MetatronObjTest {
             "{1,1}               | int{2}::T[is(gt(0))]                         | true",
             "1                   | int{2}::T[is(gt(0))]                         | false",
             "{0,0}               | int{2}::T[is(gt(0))]                         | false",
-             "{2,3}               | int{2}::T[is(gt(1))]                         | true",
+            "{2,3}               | int{2}::T[is(gt(1))]                         | true",
             //"{0,1}               | int{2}::T[is(gt(0))]                         | false",
             "{0,0}               | int{2}::T[is(gt(1))]                         | false",
             //"{0,-1}               | int{2}::T[is(gt(1))]                         | false",

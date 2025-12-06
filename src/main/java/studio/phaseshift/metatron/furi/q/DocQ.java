@@ -199,7 +199,7 @@ public class DocQ extends BaseQ {
              * └───────────────────────────────────────────────────────────┘
              */
             final Obj inst = this.at(OBJ);
-            
+
             final Instiffy insty = new Instiffy();
             final int lhsBorderColumn = Math.max(Math.max(
                             Graphitty.strip(inst.dom().toString()).length(),

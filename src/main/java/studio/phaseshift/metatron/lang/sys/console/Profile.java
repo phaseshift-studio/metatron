@@ -34,7 +34,7 @@ public class Profile {
     public Profile(final Code code) {
         this.code = code;
     }
-    
+
     public String toString() {
         final Table table = new Table(List.of("op", "dom", "rng"));
         code.codeValue().forEach(i -> {

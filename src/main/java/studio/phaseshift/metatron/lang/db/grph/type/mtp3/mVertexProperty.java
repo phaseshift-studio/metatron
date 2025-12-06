@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -67,7 +67,7 @@ public class mVertexProperty<V> implements VertexProperty<V>, WrappedVertexPrope
     public V value() throws NoSuchElementException {
         if (this.property.isNoObj() || this.property.second().isNoObj())
             throw new NoSuchElementException();
-        return  this.property.second().jvm() instanceof Long ? (V)(Integer)((Long) this.property.second().jvm()).intValue() : this.property.second().jvm();
+        return this.property.second().jvm() instanceof Long ? (V) (Integer) ((Long) this.property.second().jvm()).intValue() : this.property.second().jvm();
 
     }
 

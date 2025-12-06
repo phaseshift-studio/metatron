@@ -50,6 +50,7 @@ else:  # pragma: no cover
 
 DEBUG: bool = os.environ.get("DEBUG", "0") == "1"
 
+
 def remove_html_comment(commented_text: str) -> str:
     commented_text = commented_text.removesuffix(" -->")
     return commented_text.replace("<!-- ", "")
@@ -259,10 +260,11 @@ class ProcessingState:
         print(f"code: {final_code}")
         for line in final_code:
             if -1 == line.find("[HIDDEN]"):
-                result.append(f"mtron> {'\n       '.join(line.split("%"))}")  # the spaces are to shift right due to mtron> 
+                result.append(
+                    f"mtron> {'\n       '.join(line.split("%"))}")  # the spaces are to shift right due to mtron> 
                 result.append(f"{self.mtron.exec(line.replace("%", ""))}")
             else:
-                self.mtron.exec(line.replace("%", "").replace("[HIDDEN]",""))
+                self.mtron.exec(line.replace("%", "").replace("[HIDDEN]", ""))
         self.output.extend(result)
         print(self.output)
         self.code = []

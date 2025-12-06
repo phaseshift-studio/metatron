@@ -58,7 +58,7 @@ public class Subscriptions {
         this.terminal = console.getTerminal();
         this.bindingReader = new BindingReader(terminal.reader());
         lines.add(Graphitty.sillyPrint("select space", true, true));
-        Table table = new Table(List.of("vid","pattern"));
+        Table table = new Table(List.of("vid", "pattern"));
         Router.global().spaces().elements().forEach(r -> {
             table.addRow(List.of(r.<Rel>as().first().toString(), r.<Rel>as().second().<Space>as().pattern()));
         });
@@ -70,7 +70,7 @@ public class Subscriptions {
         for (int i = 0; i < this.lines.size(); i++) {
             final String line = this.lines.get(i);
             if (i == cursorRow)
-                out.add(Graphitty.string(line.replaceFirst("\\|","{{r}}>{{X}}") + "{{X}}\n"));
+                out.add(Graphitty.string(line.replaceFirst("\\|", "{{r}}>{{X}}") + "{{X}}\n"));
             else
                 out.add(Graphitty.string(line + "{{X}}\n"));
         }

@@ -26,7 +26,6 @@ import studio.phaseshift.metatron.furi.Q;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.MSpace;
-import studio.phaseshift.metatron.lang.Space;
 import studio.phaseshift.metatron.lang.core.m.inst.mInstSet;
 import studio.phaseshift.metatron.lang.core.m.obj.NoObj;
 import studio.phaseshift.metatron.lang.core.m.type.Obj;
@@ -40,7 +39,6 @@ import studio.phaseshift.metatron.lang.util.serial.ObjStringSerializer;
 import studio.phaseshift.metatron.ui.Palette;
 
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -178,7 +176,7 @@ public class mqttSpace extends MSpace<Mqtt5Client> {
         final Obj ret = Q.Helper.processPreWrite(this.qs(), vid, vid, obj).orElse(null);
         if (null != ret)
             return ret;
-        this.send(vid,obj);
+        this.send(vid, obj);
        /* final Obj result = Space.Helper.resolveWrite(this, vid.basePath(), obj, (key, value) -> {
             this.send(vid.qLess(), value.c(cInt.ONE()));
             return value;

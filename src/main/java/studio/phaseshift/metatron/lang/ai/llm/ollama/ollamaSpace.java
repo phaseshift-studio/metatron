@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -17,51 +17,6 @@
  */
 
 package studio.phaseshift.metatron.lang.ai.llm.ollama;
-
-import dev.langchain4j.model.ollama.OllamaModel;
-import dev.langchain4j.model.ollama.OllamaModelCard;
-import dev.langchain4j.model.ollama.OllamaModels;
-import io.github.ollama4j.Ollama;
-import studio.phaseshift.metatron.Tokens;
-import studio.phaseshift.metatron.furi.Q;
-import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.lang.ai.llm.type.impl.GGUF;
-import studio.phaseshift.metatron.lang.core.m.obj.NoObj;
-import studio.phaseshift.metatron.lang.db.kv.kvSpace;
-import studio.phaseshift.metatron.lang.ai.llm.type.impl.OLLM;
-import studio.phaseshift.metatron.lang.sys.router.Router;
-import studio.phaseshift.metatron.lang.Space;
-import studio.phaseshift.metatron.lang.core.m.inst.mInstSet;
-import studio.phaseshift.metatron.lang.core.m.type.Obj;
-import studio.phaseshift.metatron.lang.core.m.type.Rec;
-import studio.phaseshift.metatron.lang.core.m.type.Type;
-import studio.phaseshift.metatron.lang.core.m.type.impl.MUri;
-import studio.phaseshift.metatron.lang.MSpace;
-import studio.phaseshift.metatron.ui.Graphitty;
-import studio.phaseshift.metatron.ui.GraphittyLogger;
-import studio.phaseshift.metatron.util.Common;
-import studio.phaseshift.metatron.util.MTronException;
-import studio.phaseshift.metatron.util.Tuple;
-
-import java.util.Arrays;
-import java.util.Map;
-
-import static studio.phaseshift.metatron.Tokens.STORE;
-import static studio.phaseshift.metatron.furi.fURI.*;
-import static studio.phaseshift.metatron.lang.ai.llm.llmInstSet.OLLAMA_TID;
-import static studio.phaseshift.metatron.lang.ai.llm.type.impl.GGUF.SIZE;
-import static studio.phaseshift.metatron.lang.ai.llm.type.impl.OLLM.ollm;
-import static studio.phaseshift.metatron.lang.core.m.inst.mFluent.StartLess.isa_;
-import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.REC_TID;
-import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.URI_TID;
-import static studio.phaseshift.metatron.lang.core.m.obj.NoObj.noobj;
-import static studio.phaseshift.metatron.lang.core.m.type.impl.MFail.fail;
-import static studio.phaseshift.metatron.lang.core.m.type.impl.MInst.instC;
-import static studio.phaseshift.metatron.lang.core.m.type.impl.MInt.jnt;
-import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
-import static studio.phaseshift.metatron.lang.core.m.type.impl.MObjs.objs;
-import static studio.phaseshift.metatron.lang.core.m.type.impl.MType.T;
-import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)

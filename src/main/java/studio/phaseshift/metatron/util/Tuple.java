@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -141,13 +141,13 @@ public abstract class Tuple implements Iterable<Object> {
         }
     }
 
-    public static class Quintet<A, B, C, D,E> extends Quartet<A, B, C,D> {
+    public static class Quintet<A, B, C, D, E> extends Quartet<A, B, C, D> {
 
         private Quintet(final List<Object> elements) {
             super(elements);
         }
 
-        public static <A, B, C, D,E> Quintet<A, B, C, D,E> with(final A a, final B b, final C c, final D d, final E e) {
+        public static <A, B, C, D, E> Quintet<A, B, C, D, E> with(final A a, final B b, final C c, final D d, final E e) {
             final ArrayList<Object> list = new ArrayList<>();
             list.add(a);
             list.add(b);
@@ -161,8 +161,8 @@ public abstract class Tuple implements Iterable<Object> {
             return (E) this.elements.get(4);
         }
 
-        public Quintet<A, B, C, D,E> inject(final int i, final Object object) {
-            final Quintet<A, B, C, D,E> quintet = new Quintet<>(new ArrayList<>(this.elements));
+        public Quintet<A, B, C, D, E> inject(final int i, final Object object) {
+            final Quintet<A, B, C, D, E> quintet = new Quintet<>(new ArrayList<>(this.elements));
             quintet.elements.set(i, object);
             return quintet;
         }

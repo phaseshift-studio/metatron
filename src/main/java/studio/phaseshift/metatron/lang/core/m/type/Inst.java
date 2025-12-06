@@ -255,7 +255,7 @@ public interface Inst extends Call {
         if (!clhs.isFail() || cinst.isCatch()) {
             try {
                 if (null == cinst.f())
-                    throw mexcept("unable to determine inst function: %s{{g}}::{{r}}T{{X}} => %s", uri(clhs.tid()),  cinst);
+                    throw mexcept("unable to determine inst function: %s{{g}}::{{r}}T{{X}} => %s", uri(clhs.tid()), cinst);
                 cinst = Helpers.applyArgs(clhs, cinst);
                 Router.stack().push(cinst.args());
                 try {

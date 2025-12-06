@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -19,8 +19,8 @@
 package studio.phaseshift.metatron.lang.core.m;
 
 import org.junit.jupiter.api.Test;
-import studio.phaseshift.metatron.lang.core.m.parser.mParser;
 import studio.phaseshift.metatron.lang.core.m.obj.NoObj;
+import studio.phaseshift.metatron.lang.core.m.parser.mParser;
 import studio.phaseshift.metatron.lang.core.m.type.Bytes;
 import studio.phaseshift.metatron.lang.core.m.type.Obj;
 import studio.phaseshift.metatron.util.MTronException;
@@ -29,7 +29,9 @@ import java.util.HexFormat;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.BOOL_TID;
 import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.BYTES_TID;
+import static studio.phaseshift.metatron.lang.core.m.parser.mParser.m_bool;
 import static studio.phaseshift.metatron.lang.core.m.parser.mParser.m_bytes;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MInt.jnt;
@@ -37,8 +39,6 @@ import static studio.phaseshift.metatron.lang.core.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MReal.real;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.BOOL_TID;
-import static studio.phaseshift.metatron.lang.core.m.parser.mParser.m_bool;
 
 
 public class mParserTest {
@@ -47,7 +47,7 @@ public class mParserTest {
     public void testCommentParse() {
         assertEquals(NoObj.noobj(), mParser.parse("[-- a comment"));
         assertEquals(NoObj.noobj(), mParser.parse("[-- a comment --]"));
-       // assertThrows(Exception.class, () -> mParser.parse("[-- a comment\n\r\n\r --]"));
+        // assertThrows(Exception.class, () -> mParser.parse("[-- a comment\n\r\n\r --]"));
         assertThrows(Exception.class, () -> mParser.parse("-- a comment\n\n --"));
         assertEquals(NoObj.noobj(), mParser.parse("[--- a comment\n\n ---]"));
     }

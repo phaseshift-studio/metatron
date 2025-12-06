@@ -121,9 +121,9 @@ public class OLLM extends MRec implements LLM {
     public static class MetatronTools {
 
         public MetatronTools() {
-            
+
         }
-        
+
         @Tool("executes metatron code and returns an obj result")
         Obj evaluate(
                 @P("the metatron code to evaluate") String code

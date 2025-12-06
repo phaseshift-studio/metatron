@@ -135,7 +135,7 @@ public class mFluent<F extends Fluent<F>> extends MCode implements Fluent<F>, Co
     public F prod_() {
         return this.addInst(instB(mInstSet.PROD_INST_TID, lst()));
     }
-    
+
     public F select_(final Obj obj) {
         return this.addInst(instB(mInstSet.SELECT_INST_TID, lst(obj)));
     }

@@ -63,7 +63,7 @@ public class mInstSetTest extends InstSetTest {
     public void testStrCode(final String code, final String expected) {
         super.testCode(code, expected);
     }
-    
+
     @ParameterizedTest
     @CsvSource(value = {
             "{1,2,3,4}.take(0)                                                              % {,}",
