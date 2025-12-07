@@ -3,6 +3,7 @@
 /sys/router/lang/sys   -> */sys;
 /sys/router/lang/kv    -> */kv;
 /sys/router/lang/web   -> */web;
+/sys/router/lang/iot   -> */iot;
 /sys/router/lang/grph  -> */grph;
 /sys/router/lang/vec   -> */vec;
 /sys/router/lang/mach  -> */mach;

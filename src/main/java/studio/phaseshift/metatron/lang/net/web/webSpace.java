@@ -65,8 +65,8 @@ import static studio.phaseshift.metatron.lang.core.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.lang.net.web.webInstSet.MWEB_TID;
 import static studio.phaseshift.metatron.lang.net.web.webInstSet.PAGE_TID;
+import static studio.phaseshift.metatron.lang.net.web.webInstSet.WEB_TID;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -128,10 +128,10 @@ public class webSpace extends MSpace<HttpServer> {
 
     public static final String INDEX_HTML = "index.html";
 
-    public static final fURI WEB_TID = MWEB_TID.extend("space").extend("web");
+    public static final fURI WEB_SPACE_TID = WEB_TID.extend("space").extend("web");
     protected static final String ROUTE = "route";
-    protected static final Type WEB_TYPE = T(WEB_TID, null,
-            instC(mInstSet.INST_TID.dom(ALL.maybe()).rng(WEB_TID),
+    protected static final Type WEB_TYPE = T(WEB_SPACE_TID, null,
+            instC(mInstSet.INST_TID.dom(ALL.maybe()).rng(WEB_SPACE_TID),
                     lst(T(REC_TID, isa_(rec(uri(Tokens.PATTERN), T(URI_TID), uri(Tokens.HOST), T(URI_TID), uri(ROUTE), T(REC_TID))))), (lhs, inst) -> {
                         final fURI pattern = inst.arg(0).<Rec>as().at(Tokens.PATTERN).uriValue();
                         final fURI host = inst.arg(0).<Rec>as().at(Tokens.HOST).uriValue();
@@ -145,7 +145,7 @@ public class webSpace extends MSpace<HttpServer> {
     private static final AudioTranslator AUDIO_TRANSLATOR = new AudioTranslator();
 
     public webSpace(final HttpServer server, final Map<Obj, Obj> config, final fURI pattern, final fURI vid) {
-        super(server, config, pattern, WEB_TID, vid);
+        super(server, config, pattern, WEB_SPACE_TID, vid);
         // Router.writeToSpace(this.vid.extend(ROUTE), routes);
         this.at(ROUTE).orElse(rec()).elements().forEach(r -> {
             final HttpContext context = server.createContext(r.first().uriValue().toString(),
@@ -187,7 +187,7 @@ public class webSpace extends MSpace<HttpServer> {
             config.put(uri(Tokens.HOST), host.toUri());
             config.put(uri(Tokens.PATTERN), pattern.toUri());
             config.put(uri(ROUTE), rec(routes));
-            return new webSpace(server, config, pattern, vid).tid(WEB_TID);
+            return new webSpace(server, config, pattern, vid).tid(WEB_SPACE_TID);
         } catch (final IOException e) {
             throw MTronException.of(e);
         }

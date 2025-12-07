@@ -24,10 +24,7 @@ import studio.phaseshift.metatron.lang.core.m.type.Rel;
 import studio.phaseshift.metatron.lang.core.m.type.impl.MRec;
 
 import java.io.Closeable;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.function.BinaryOperator;
 import java.util.function.Function;
@@ -62,6 +59,10 @@ public final class Common {
         if (null == object)
             return ifNull.get();
         return ifNotNull.apply(object);
+    }
+
+    public static String indent(final String s, final int spaces) {
+        return Arrays.stream(s.split("\n")).map(r -> " ".repeat(spaces) + r).reduce((a, b) -> a + b + "\n").orElse("").trim();
     }
 
     private static <K, V> Map<K, V> mapBuilder(final Supplier<Map<K, V>> supplier, final Object... args) {
@@ -165,7 +166,15 @@ public final class Common {
         return mapBuilder(HashMap::new, args);
     }
 
+    public static <K, V> Map<K, V> immutableMap(final Object... args) {
+        return Map.copyOf(mapBuilder(HashMap::new, args));
+    }
+
     public static <K, V> Map<K, V> mutableOrderedMap(final Object... args) {
         return mapBuilder(LinkedHashMap::new, args);
+    }
+
+    public static <K, V> Map<K, V> immutableOrderedMap(final Object... args) {
+        return Map.copyOf(mapBuilder(LinkedHashMap::new, args));
     }
 }

@@ -183,17 +183,18 @@ public interface Q extends Rec {
         }
 
         public static Optional<Obj> processPreRead(final Lst qs, final fURI source, final fURI vid) {
-            return vid.hasQuery() && !qs.isEmpty() ? qs.<Q>elements()
-                    .filter(q -> vid.hasQuery(q.pattern()))
-                    .map(Q::onRead)
-                    .filter(Optional::isPresent)
-                    //.peek(q -> LOG.debug("handling {{m}}pre read{{X}} of %s for %s", source, vid))
-                    .map(Optional::get)
-                    .map(q -> q.preRead(source, vid))
-                    .filter(Optional::isPresent)
-                    .map(Optional::get)
-                    .reduce(Obj::append)
-                    .filter(q -> !q.isNoObj()) : Optional.empty();
+            return vid.hasQuery() && !qs.isEmpty() ?
+                    qs.<Q>elements()
+                            .filter(q -> vid.hasQuery(q.pattern()))
+                            .map(Q::onRead)
+                            .filter(Optional::isPresent)
+                            //.peek(q -> LOG.debug("handling {{m}}pre read{{X}} of %s for %s", source, vid))
+                            .map(Optional::get)
+                            .map(q -> q.preRead(source, vid))
+                            .filter(Optional::isPresent)
+                            .map(Optional::get)
+                            .reduce(Obj::append) :
+                    Optional.empty();
         }
 
         public static Optional<Obj> processPostRead(final Lst qs, final fURI source, final fURI vid, final Obj current) {

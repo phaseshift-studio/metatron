@@ -33,6 +33,7 @@ import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.furi.q.DocQ.DOCQ_TYPE;
 import static studio.phaseshift.metatron.furi.q.DocQ.Doc.docWrap;
 import static studio.phaseshift.metatron.furi.q.PubSubQ.SUBQ_TYPE;
+import static studio.phaseshift.metatron.furi.q.PubSubQ.SUBSCRIPTION_TYPE;
 import static studio.phaseshift.metatron.lang.core.m.inst.mFluent.StartLess.isa_;
 import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.*;
 import static studio.phaseshift.metatron.lang.core.m.obj.NoObj.noobj;
@@ -72,7 +73,10 @@ public class sysInstSet extends MInstSet {
                 fileSpace.FS_TYPE,
                 fileSpace.FILE_TYPE,
                 T(fileSpace.DIR_TID),
-                remoteSpace.REMOTE_TYPE, DOCQ_TYPE, SUBQ_TYPE);
+                remoteSpace.REMOTE_TYPE,
+                SUBSCRIPTION_TYPE,
+                DOCQ_TYPE, 
+                SUBQ_TYPE);
     }
 
     @Override

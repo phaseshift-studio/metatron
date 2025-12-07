@@ -20,15 +20,24 @@ package studio.phaseshift.metatron.lang.net.iot;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.furi.q.PubSubQ;
 import studio.phaseshift.metatron.lang.SpaceTest;
+import studio.phaseshift.metatron.lang.core.m.parser.mParser;
+import studio.phaseshift.metatron.lang.core.m.type.Obj;
 import studio.phaseshift.metatron.lang.net.web.webInstSet;
+import studio.phaseshift.metatron.lang.sys.router.Router;
 import studio.phaseshift.metatron.ui.Graphitty;
 
 import java.util.Map;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.f;
+import static studio.phaseshift.metatron.furi.q.PubSubQ.SUBSCRIPTION_TID;
 import static studio.phaseshift.metatron.lang.core.m.obj.NoObj.noobj;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
 
@@ -43,12 +52,11 @@ public class mqttSpaceTest extends SpaceTest {
     public static void setup() {
         webInstSet.create();
         MoquetteServer.run();
-        ;
         SPACE = () -> {
             try {
-
+mParser.eval("*/iot");
                 final mqttSpace space = mqttSpace.of(Map.of(
-                        uri(HOST), uri("mqtt://127.0.0.1:1883"),
+                        uri(HOST), uri("mqtt://127.0.0.1:1882"),
                         uri(PREFIX), uri("/"),
                         uri(PATTERN), uri("/t/#")), fURI.of("/sys/router/space/t"));
                 space.directWriter().apply(f("#"), noobj());
@@ -59,6 +67,20 @@ public class mqttSpaceTest extends SpaceTest {
                 return null;
             }
         };
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "/t/a?sub -> sub::[src=>a,tgt=>/t/a,on_recv=><abc>->3]                            % /t/a -> 4                       % *abc.?=3",
+            "/t/b?sub -> sub::[src=>a,tgt=>/t/b,on_recv=><abc>->4]                            % /t/b -> 3                       % *abc.?=4",
+    }, delimiter = '%')
+    public void testSubscriptions(final String subscription, final String write, final String check) {
+        Router.global().addSpace(SPACE.get());
+        final PubSubQ.Subscription sub = mParser.eval(subscription);
+        assertEquals(SUBSCRIPTION_TID, sub.tid());
+        final Obj writeObj = mParser.eval(write);
+        final Obj checkObj = mParser.eval(check);
+        assertNotEquals(noobj(), checkObj);
     }
 
 }

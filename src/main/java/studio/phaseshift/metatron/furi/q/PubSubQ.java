@@ -23,26 +23,31 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.core.m.inst.mInstSet;
 import studio.phaseshift.metatron.lang.core.m.type.Call;
 import studio.phaseshift.metatron.lang.core.m.type.Obj;
+import studio.phaseshift.metatron.lang.core.m.type.Rec;
 import studio.phaseshift.metatron.lang.core.m.type.Type;
-import studio.phaseshift.metatron.lang.core.m.type.impl.MObj;
 import studio.phaseshift.metatron.lang.core.m.type.impl.MObjs;
+import studio.phaseshift.metatron.lang.core.m.type.impl.MRec;
 import studio.phaseshift.metatron.lang.core.mach.type.Machine;
 import studio.phaseshift.metatron.lang.core.mach.type.impl.MMachine;
+import studio.phaseshift.metatron.util.Common;
+import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Optional;
 import java.util.Queue;
 
-import static studio.phaseshift.metatron.Tokens.SUB;
+import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.lang.core.m.inst.mFluent.StartLess.isa_;
+import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.*;
 import static studio.phaseshift.metatron.lang.core.m.obj.NoObj.noobj;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MType.T;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.Common.mutableMap;
-import static studio.phaseshift.metatron.util.Tuple.Triplet;
 
 public class PubSubQ extends BaseQ {
 
@@ -56,6 +61,8 @@ public class PubSubQ extends BaseQ {
         final Q q = new PubSubQ();
         return q;
     }));
+
+    public static final Type SUBSCRIPTION_TYPE = T(SUBSCRIPTION_TID, isa_(rec(SRC, T(URI_TID), TGT, T(URI_TID), ON_RECV, T(ALL))), instC(INST_TID.dom(ALL_STAR).rng(SUBSCRIPTION_TID), lst(), (lhs, inst) -> new Subscription(lhs.<Rec>as())));
 
     public PubSubQ() {
         super(mutableMap(), f(SUB), SUBQ_TID);
@@ -75,26 +82,29 @@ public class PubSubQ extends BaseQ {
         return clone;
     }
 
-    public static class Subscription extends MObj {
+    public static class Subscription extends MRec {
 
-        public Subscription(final fURI source, final fURI target, final Call call) {
-            super(Triplet.with(source, target, call), SUBSCRIPTION_TID, fURI.fnull);
+        public Subscription(final Rec prerec) {
+            super(prerec.jvm(), SUBSCRIPTION_TID, fURI.fnull);
         }
 
-        public Triplet<fURI, fURI, Call> jvm() {
-            return super.jvm();
+        public Subscription(final fURI source, final fURI target, final Call call) {
+            super(Common.immutableOrderedMap(
+                    uri(SRC), uri(source),
+                    uri(TGT), uri(target),
+                    uri(ON_RECV), call), SUBSCRIPTION_TID, fURI.fnull);
         }
 
         public fURI source() {
-            return this.jvm().get0();
+            return this.at(SRC).uriValue();
         }
 
         public fURI target() {
-            return this.jvm().get1();
+            return this.at(TGT).uriValue();
         }
 
         public Call call() {
-            return this.jvm().get2();
+            return this.at(ON_RECV);
         }
     }
 
@@ -106,8 +116,11 @@ public class PubSubQ extends BaseQ {
 
         @Override
         public Optional<Obj> preRead(final fURI source, final fURI vid) {
-            LOG.trace("evaluating {{y}}preread{{/y}}: %s", vid);
-            return subscriptions.stream().map(Obj::<Subscription>as).filter(s -> vid.basePath().matches(s.target())).map(Obj::<Obj>as).reduce(Obj::append);
+            if (vid.hasQuery(SUB)) {
+                LOG.trace("evaluating {{y}}preread{{/y}}: %s", vid);
+                return Optional.of(subscriptions.stream().map(Obj::<Subscription>as).filter(s -> vid.basePath().matches(s.target())).map(Obj::<Obj>as).reduce(Obj::append).orElse(noobj()));
+            }
+            return Optional.empty();
         }
     }
 
@@ -126,6 +139,8 @@ public class PubSubQ extends BaseQ {
             });
             while (!mail.isEmpty()) {
                 final Machine machine = mail.poll();
+                if(null == machine)
+                    break;
                 LOG.trace("processing mail: %s", machine);
                 machine.apply();
             }
@@ -135,7 +150,7 @@ public class PubSubQ extends BaseQ {
         @Override
         public Optional<Obj> postWrite(final fURI source, final fURI vid, final Obj obj, final Obj obj2) {
             LOG.debug("evaluating {{y}}postwrite{{/y}}: %s => %s", obj, vid);
-            if (vid.hasQuery("sub")) {
+            if (vid.hasQuery(SUB)) {
                 if (obj.isNoObj()) {
                     subscriptions.append(new Subscription(source, vid.basePath(), obj.<Call>as()));
                     //subscriptions.(s -> vid.basePath().matches(s.vid()));
@@ -152,16 +167,20 @@ public class PubSubQ extends BaseQ {
         @Override
         public Optional<Obj> preWrite(final fURI source, final fURI vid, final Obj obj) {
             LOG.debug("evaluating {{y}}prewrite{{/y}}: %s => %s", obj, vid);
-            if (vid.hasQuery("sub")) {
+            if (vid.hasQuery(SUB)) {
+                Obj ret = noobj();
                 if (obj.isNoObj()) {
-                    subscriptions.append(new Subscription(source, vid.basePath(), obj.<Call>as()));
+                    subscriptions.self(List.of(), subscriptions.tid(), subscriptions.vid());
                     //subscriptions.(s -> vid.basePath().matches(s.vid()));
-                } else if (obj.tid().basePath().equals(SUBSCRIPTION_TID)) {
-                    subscriptions.append(obj);
-                } else
-                    subscriptions.append(new Subscription(source, vid.basePath(), obj.as()));
+                } else if (obj.matches(SUBSCRIPTION_TYPE)) {
+                    subscriptions.append(obj.tid(SUBSCRIPTION_TID));
+                    ret = obj;
+                } else {
+                    ret = new Subscription(source, vid.basePath(), obj.as());
+                    subscriptions.append(ret);
+                }
                 LOG.debug("current subscriptions: %s", subscriptions);
-                return Optional.of(obj);
+                return Optional.of(ret);
             }
             return Optional.empty();
         }

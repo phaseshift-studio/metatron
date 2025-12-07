@@ -31,6 +31,7 @@ import studio.phaseshift.metatron.lang.db.kv.inst.kvInstSet;
 import studio.phaseshift.metatron.lang.db.kv.kvSpace;
 import studio.phaseshift.metatron.lang.db.vec.vecInstSet;
 import studio.phaseshift.metatron.lang.net.clstr.clstrInstSet;
+import studio.phaseshift.metatron.lang.net.iot.iotInstSet;
 import studio.phaseshift.metatron.lang.net.web.webInstSet;
 import studio.phaseshift.metatron.lang.sys.router.Router;
 import studio.phaseshift.metatron.lang.sys.router.impl.MRouter;
@@ -38,7 +39,6 @@ import studio.phaseshift.metatron.lang.sys.sysInstSet;
 import studio.phaseshift.metatron.lang.util.logObj;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
-import studio.phaseshift.metatron.ui.Mode;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -67,7 +67,6 @@ public class BootLoader implements Rec, Feature.SelfClone {
     private static final GraphittyLogger LOG;
     public static Router ROUTER;
     public static Rec OPTIONS;
-    public static Mode MODE;
     public static boolean TYPE_CHECK = true;
 
     static {
@@ -75,7 +74,8 @@ public class BootLoader implements Rec, Feature.SelfClone {
         //Registry.singleton().register(mInstSet.INST_TID, () -> mInstSet.of(fURI.NULL));
         Registry.open().register(SYS_TID, sysInstSet::create);
         Registry.open().register(kvInstSet.MKV_TID, kvInstSet::create);
-        Registry.open().register(webInstSet.MWEB_TID, webInstSet::create);
+        Registry.open().register(webInstSet.WEB_TID, webInstSet::create);
+        Registry.open().register(iotInstSet.IOT_TID, iotInstSet::create);
         Registry.open().register(grphInstSet.MGRPH_TID, grphInstSet::create);
         Registry.open().register(llmInstSet.LLM_TID, llmInstSet::create);
         Registry.open().register(vecInstSet.MVEC_TID, vecInstSet::create);

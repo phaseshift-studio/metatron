@@ -20,13 +20,13 @@ package studio.phaseshift.metatron.lang.net.iot;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.PubSubQ;
-import studio.phaseshift.metatron.lang.core.m.obj.NoObj;
 import studio.phaseshift.metatron.lang.core.m.type.Obj;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 
 import static studio.phaseshift.metatron.Tokens.SUB;
+import static studio.phaseshift.metatron.lang.core.m.obj.NoObj.noobj;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -53,16 +53,16 @@ public class MqttPubSubQ extends PubSubQ {
             LOG.trace("evaluating {{y}}prewrite{{/y}}: %s => %s", obj, vid);
             if (vid.hasQuery(SUB)) {
                 if (obj.isNoObj()) {
-                    space.client.toAsync()
+                    LOG.info("unsubscribed from {{y}}%s{{X}}\n\t%s", vid.basePath(), space.client.toBlocking()
                             .unsubscribeWith()
                             .topicFilter(space.toMqttTopic(vid.basePath()))
-                            .send().
-                            whenComplete((m, e) -> {
+                            .send());
+                            /*whenComplete((m, e) -> {
                                 if (null != e)
                                     LOG.error(e);
                                 else
-                                    LOG.debug("unsubscribed from %s", m);
-                            });
+                                    LOG.info("unsubscribed from %s", m);
+                            });*/
                 } else {
                     space.client.toAsync()
                             .subscribeWith()
@@ -73,12 +73,14 @@ public class MqttPubSubQ extends PubSubQ {
                                     final String json = StandardCharsets.UTF_8.decode(p.getPayload().get()).toString();
                                     final Obj o = space.jsonTranslator.translateString(json);
                                     space.cache.write(space.toMtronVid(p.getTopic().toString()), o);
-                                    final Obj result = obj.apply(o);
-                                    LOG.debug("subscription evaluation of %s => %s yielded %s", o, obj, result);
+                                    super.qlessWrite(source, vid, o);
+                                    //final Obj result = obj.apply(o);
+                                    //LOG.debug("subscription evaluation of %s => %s yielded %s", o, obj, result);
                                 } else {
-                                    space.cache.write(space.toMtronVid(p.getTopic().toString()), NoObj.noobj());
-                                    final Obj result = obj.apply();
-                                    LOG.debug("subscription evaluation of %s => %s yielded %s", NoObj.noobj(), obj, result);
+                                    space.cache.write(space.toMtronVid(p.getTopic().toString()), noobj());
+                                    super.qlessWrite(source, vid, noobj());
+                                    //final Obj result = obj.apply();
+                                    //LOG.debug("subscription evaluation of %s => %s yielded %s", NoObj.noobj(), obj, result);
                                 }
                             })
                             .send()
@@ -86,12 +88,11 @@ public class MqttPubSubQ extends PubSubQ {
                                 if (null != e)
                                     LOG.error(e);
                                 else
-                                    LOG.debug("subscribed to %s", m);
+                                    LOG.info("subscribed to {{y}}%s{{X}}\n\t%s", vid.basePath(), m);
                             });
                 }
-                return super.preWrite(source, vid, obj);
             }
-            return Optional.empty();
+            return super.preWrite(source, vid, obj);
         }
     }
 }

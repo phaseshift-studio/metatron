@@ -217,6 +217,18 @@ public class mParser {
                 .map(Obj::as));
     }
 
+    public static <O extends Obj> O parseByLine(final String code) {
+        return (O) objs(Arrays.stream(code.split(";"))
+                .filter(s -> !s.trim().isEmpty())
+                .map(s -> Arrays.stream(s.split("\n"))
+                        .map(String::trim)
+                        .filter(t -> !t.startsWith("[--"))
+                        .reduce("", (a, b) -> a + b + "\n"))
+                .map(s -> mParser.parse(s).<Obj>as())
+                .filter(o -> !o.isNoObj())
+                .map(Obj::as));
+    }
+
     public static <O extends Obj> O parse(final String code) {
         if (code.trim().isEmpty())
             return (O) NoObj.noobj();

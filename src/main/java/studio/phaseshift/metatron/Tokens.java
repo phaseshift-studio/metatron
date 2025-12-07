@@ -53,6 +53,9 @@ public final class Tokens {
     public static final String FROM = "FROM";
     public static final String CLUSTER = "cluster";
     public static final String BOOT = "boot";
+    public static final String SRC = "src";
+    public static final String TGT = "tgt";
+    public static final String ON_RECV = "on_recv";
 
 
 }

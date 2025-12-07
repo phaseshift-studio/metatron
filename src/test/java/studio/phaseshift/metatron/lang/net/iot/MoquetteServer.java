@@ -35,10 +35,14 @@ package studio.phaseshift.metatron.lang.net.iot;
  */
 
 import io.moquette.broker.Server;
+import io.moquette.broker.config.IConfig;
+import io.moquette.broker.config.MemoryConfig;
+import org.apache.commons.configuration2.Configuration;
 import studio.phaseshift.metatron.lang.sys.router.Router;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.util.MTronException;
 
+import java.util.Map;
 import java.util.Properties;
 
 /**
@@ -51,7 +55,9 @@ public final class MoquetteServer {
         new Thread(() -> {
             try {
                 final Server mqttBroker = new Server();
-                mqttBroker.startServer(new Properties());
+                io.moquette.broker.config.MemoryConfig config = new MemoryConfig(new Properties());
+                config.setProperty("port","1882");
+                mqttBroker.startServer(config);
                 Graphitty.log(Router.global()).info("mqtt broker started press [CTRL+C] to stop");
                 Runtime.getRuntime().addShutdownHook(new Thread(() -> {
                     Graphitty.log(Router.global()).info("stopping broker");

@@ -45,15 +45,15 @@ import static studio.phaseshift.metatron.lang.core.m.type.impl.MType.T;
  */
 public class webInstSet extends MInstSet {
 
-    public static final fURI MWEB_TID = f("/web");
-    public static final fURI INST_TID = MWEB_TID.extend("inst");
-    public static final fURI PAGE_TID = MWEB_TID.extend("page");
-    public static final fURI CSS_TID = MWEB_TID.extend("css");
+    public static final fURI WEB_TID = f("/web");
+    public static final fURI INST_TID = WEB_TID.extend("inst");
+    public static final fURI PAGE_TID = WEB_TID.extend("page");
+    public static final fURI CSS_TID = WEB_TID.extend("css");
     private static final WebTranslator WEB_TRANSLATOR = new WebTranslator();
     private static final JSONTranslator JSON_TRANSLATOR = new JSONTranslator();
 
     public webInstSet(final fURI vid) {
-        super(MWEB_TID, vid);
+        super(WEB_TID, vid);
     }
 
     public static webInstSet create() {
@@ -64,7 +64,6 @@ public class webInstSet extends MInstSet {
     public Set<Type> types() {
         return Stream.of(
                 webSpace.WEB_TYPE,
-                mqttSpace.MQTT_TYPE,
                 ZigbeeObj.ZIGBEE_TYPE,
                 T(PAGE_TID, mParser.parse("?[html=>?[head=>_,body=>_]]")),
                 T(CSS_TID)).collect(Collectors.toSet());

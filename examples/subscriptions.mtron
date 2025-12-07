@@ -1,0 +1,14 @@
+/sys/router/lang/sys   -> */sys;
+/sys/router/lang/kv    -> */kv;
+/sys/router/lang/iot   -> */iot;
+[--- mqtt broker ---];
+mqtt::[pattern => /mqtt/zigbee2mqtt/#,
+       host    => <mqtt://chibi.local:1883>,
+       prefix  => </mqtt/>]@/sys/router/space/mqtt/zigbee2mqtt;
+mqtt::[pattern => /mqtt/mtron/#,
+       host    => <mqtt://chibi.local:1883>,
+       prefix  => </mqtt/>]@/sys/router/space/mqtt/mtron;
+[-- objs --];
+button::true@/mqtt/mtron/button1;
+[-- subscriptions --];
+[-- /mqtt/mtron/button1?sub -> ||(map(/mqtt/zigbee2mqtt/office_lamp_light/set).->(*</mqtt/zigbee2mqtt/office_lamp_light/state>.-<|[is(eq(ON)) => OFF, _ => ON]>-[=>].>>)) --];

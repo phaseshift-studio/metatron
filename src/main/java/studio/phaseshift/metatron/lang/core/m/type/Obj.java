@@ -24,6 +24,7 @@ import studio.phaseshift.metatron.algebra.Ring;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.core.m.obj.NoObj;
+import studio.phaseshift.metatron.lang.core.m.parser.mParser;
 import studio.phaseshift.metatron.lang.core.m.type.facade.FObj;
 import studio.phaseshift.metatron.lang.core.m.type.impl.MInt;
 import studio.phaseshift.metatron.lang.core.m.type.impl.MObjFactory;
@@ -579,23 +580,23 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
 
         public static <O extends Obj> O objClone(final Obj obj, final Object jvm, final fURI tid, final fURI vid) {
             Object realjvm = jvm;
-            Obj clone = null;
+
             if (BASE_TYPES.contains(tid.basePath()) && obj instanceof FObj<?>)
                 return ((FObj<?>) obj).base().clone(jvm instanceof Obj ? ((Obj) jvm).jvm() : jvm, tid, vid);
             if (!Objects.equals(tid, obj.tid())) {
                 final Obj type = Router.readFromSpace(tid);
                 if (!type.isNoObj() && type.isType() && type.<Type>as().hasConstructor()) {
-                    clone = type.<Type>as().constructor().apply(obj);
+                    final Obj clone = type.<Type>as().constructor().apply(obj);
                     if (clone.isFail())
                         throw (MTronException) clone.<Fail>as().jvm();
-                    realjvm = clone.jvm();
+                    return (O) clone;
                 }
             }
             if (!Objects.equals(realjvm, obj.jvm()) || !tid.equals(obj.tid()) || !Objects.equals(vid, obj.vid())) {
                 try {
-                    clone = null == clone ? obj.clone() : clone;
+                    final O clone = (O) obj.clone();
                     Obj.Helper.objCheckAndSave(clone, jvm, tid.big(), vid);
-                    return (O) clone;
+                    return clone;
                 } catch (final Exception e) {
                     throw MTronException.of(e);
                 }
@@ -675,11 +676,13 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
                     instC(TO_INST_TID.dom(ALL.maybe()).rng(ALL.maybe()), lst(T(URI_TID)), (lhs, inst) -> Router.writeToSpace(inst.arg(0).uriValue(), lhs)),
                     instC(FROM_INST_TID.dom(ALL.maybe()).rng(ALL_STAR), lst(T(URI_TID)), (lhs, inst) -> Router.readFromSpace(inst.arg(0).uriValue())),
                     instC(REF_INST_TID.dom(ALL).rng(ALL_STAR), lst(T(ALL_STAR)), (lhs, inst) -> Router.writeToSpace(lhs.uriValue(), inst.arg(0))),
+                    instC(THREAD_INST_TID.dom(A).rng(A), lst(T(ALL)), (lhs, inst) -> {
+                        MTronException.wrap(() -> new Thread(() -> inst.arg(0).apply(lhs)).start());
+                        return lhs;
+                    }),
+                    instC(SOURCE_INST_TID.dom(ALL).rng(ALL.maybeSome()), lst(T(STR_TID)), (lhs, inst) -> mParser.parseByLine(inst.arg(0).strValue())),
                     instC(TYPE_INST_TID.dom(A).rng(A), lst(), (lhs, inst) -> lhs.type()),
                     instC(TYPE_INST_TID.dom(A.some()).rng(A.some()), lst(), (lhs, inst) -> objs(lhs).type()),
-                    instC(URI_PORT_TID.dom(ALL).rng(INT_TID), lst(T(URI_TID)), (lhs, inst) -> jnt(lhs.uriValue().port())),
-                    instC(URI_Q_TID.dom(ALL).rng(REC_TID), lst(T(URI_TID)), (lhs, inst) -> rec(lhs.uriValue().queryMap().entrySet().stream().map(kv -> rel(uri(kv.getKey()), uri(kv.getValue()))))),
-                    instC(URI_C_TID.dom(ALL).rng(LST_TID), lst(T(URI_TID)), (lhs, inst) -> lst(jnt(lhs.uriValue().cV().min()), jnt(lhs.uriValue().cV().max()))),
                     docWrap(instC(CC_INST_TID.dom(A.maybeSome()).rng(INT_TID), lst(), (lhs, inst) -> jnt(lhs.c().max())),
                             "any obj", "the lhs obj coefficient", Map.of(), "maps an obj to it's coefficient with a function f(lhs^c)->c"),
                     docWrap(instC(CC_INST_TID.dom(A.maybeSome()).rng(A.maybeSome()), lst(T(INT_TID)), (lhs, inst) -> lhs.c(inst.arg(0).intValue())),
