@@ -27,6 +27,9 @@ import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
+
+import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.CODE_TID;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -94,7 +97,7 @@ public class ObjByteBufferSerializer implements ObjSerializer<ByteBuffer> {
     public ByteBuffer writeLst(final Lst lst) {
         if (lst.isEmpty())
             return ByteBuffer.wrap(handleIds(lst, "[,]").getBytes());
-        final String internal = lst.elements().map(o -> new String(this.write(o).array())).reduce(",", (a, b) -> a + b + ",");
+        final String internal = lst.lstValue().stream().map(o -> new String(this.write(o).array())).reduce(",", (a, b) -> a + b + ",");
         return ByteBuffer.wrap(handleIds(lst, "[" + internal.substring(1, internal.length() - 1) + "]").getBytes());
     }
 
@@ -107,8 +110,8 @@ public class ObjByteBufferSerializer implements ObjSerializer<ByteBuffer> {
     public ByteBuffer writeRec(final Rec rec) {
         if (rec.isEmpty())
             return ByteBuffer.wrap(handleIds(rec, "[=>]").getBytes());
-        final String internal = rec.elements().map(Obj::<Rel>as)
-                .map(o -> new String(this.write(o.first()).array()) + " => " + new String(this.write(o.second()).array()))
+        final String internal = rec.recValue().entrySet().stream()
+                .map(o -> new String(this.write(o.getKey()).array()) + " => " + new String(this.write(o.getValue()).array()))
                 .reduce(",", (a, b) -> a + b + ",");
 
         return ByteBuffer.wrap(handleIds(rec, "[" + internal.substring(1, internal.length() - 1) + "]").getBytes());
@@ -120,15 +123,15 @@ public class ObjByteBufferSerializer implements ObjSerializer<ByteBuffer> {
                 .map(o -> new String(this.write(o).array()))
                 .reduce(",", (a, b) -> a + b + ",");
         return ByteBuffer.wrap(handleIds(inst, "(" +
-                (internal.length() == 1 ? "" : internal.substring(1, internal.length() - 1)) + ")" + (inst.f() == null ? "" : "{" + inst.f() + "}")).getBytes());
+                (inst.args().isEmpty() ? "" : internal.substring(1, internal.length() - 1)) + ")" + (inst.f() == null ? "" : "{" + inst.f() + "}")).getBytes());
     }
 
     @Override
     public ByteBuffer writeCode(final Code code) {
-        final Obj t = code.tryToInst();
-        if (t.isInst()) return this.writeInst(t.as());
+      //  final Obj t = code.tryToInst();
+      //  if (t.isInst()) return this.writeInst(t.as());
         final String internal = IteratorUtil.stream(code.insts()).map(i -> new String(this.writeInst(i).array())).reduce(".", (a, b) -> a + b + ".");
-        return ByteBuffer.wrap(handleIds(code, "|[" + internal.substring(1, internal.length() - 1) + "|]").getBytes());
+        return ByteBuffer.wrap((CODE_TID.toString() + "::|[" + internal.substring(1, internal.length() - 1) + "]|").getBytes());
     }
 
     @Override
@@ -140,6 +143,6 @@ public class ObjByteBufferSerializer implements ObjSerializer<ByteBuffer> {
     @Override
     public Obj read(final ByteBuffer data) throws MTronException {
         // System.out.println(new String(data.array()));
-        return mParser.m_obj().parse(new String(data.array())).get();
+        return mParser.m_obj().parse(new String(data.array(), StandardCharsets.UTF_8)).get();
     }
 }

@@ -11,7 +11,6 @@ print("{{r}}------------\n{{g}}*{{y}}boot/option{{X}}: ",
 /sys/router/lang/vec   -> */vec;
 /sys/router/lang/mach  -> */mach;
 /sys/router/lang/llm   -> */llm;
-/sys/router/lang/clstr -> */clstr;
 [-- mount spaces --];
      kv::[pattern => /usr/#]@/sys/router/space/usr;
      kv::[pattern => /shared/#]@/sys/router/space/shared;
@@ -22,7 +21,6 @@ print("{{r}}------------\n{{g}}*{{y}}boot/option{{X}}: ",
    grph::[pattern => /g/#,
           store   => kv::[pattern => /g/#],
           :load    => <tinkerpop-modern>]@/sys/router/space/tp3;
-  cluster::[pattern => <ws://+/#>]@/sys/router/space/cluster;
    mqtt::[pattern => /mqtt/zigbee2mqtt/#,
           host    => <mqtt://chibi.local:1883>,
           prefix  => </mqtt/>]@/sys/router/space/mqtt/zigbee2mqtt;

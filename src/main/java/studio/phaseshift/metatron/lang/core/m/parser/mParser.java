@@ -126,6 +126,7 @@ public class mParser {
                 m_real(),
                 m_int(),
                 m_str(),
+                inst_parser,
                 m_code(),
                 m_rec(),
                 m_rel(),
@@ -411,13 +412,13 @@ public class mParser {
     }
 
     public static Parser m_code() {
-        return seq(opt(of(CODE_TID + "::|["), CODE_TID + "::|["), m_inst().separatedBy(opt(of('.').trim(), '.')), opt(of("]|"), "]|"), m_vid_postfix())
-                .map(t -> ((List<Object>) pick(t, 1)).size() == 1 ?
-                        ((List<Inst>) pick(t, 1)).get(0) :
-                        new MCode((List) ((List<Object>) pick(t, 1))
+        return seq(m_type_prefix(CODE_TID), opt(of("|["), "|["), m_inst().separatedBy(opt(of('.').trim(), '.')), opt(of("]|"), "]|"), m_vid_postfix())
+                .map(t -> ((List<Object>) pick(t, 2)).size() == 1 ?
+                        ((List<Inst>) pick(t, 2)).get(0) :
+                        new MCode((List) ((List<Object>) pick(t, 2))
                                 .stream()
                                 .filter(x -> x instanceof Inst)
-                                .toList(), CODE_TID, pick(t, 3)));
+                                .toList(), pick(t, 0), pick(t, 4)));
     }
 
     public static Parser m_inst() {

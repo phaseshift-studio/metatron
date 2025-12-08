@@ -204,8 +204,13 @@ public class fURI implements Cloneable, Ring<fURI> {
     }
 
     public fURI authority(final fURI authority) {
-        return new fURI(null, null == authority ? null : authority.host, null == authority ? -1 : authority.port, this.sstart, this.path, this.send, this.poly, this.query == null ? null : this.query.toString());
+        return new fURI(this.scheme, null == authority ? null : authority.host, null == authority ? -1 : authority.port, this.sstart, this.path, this.send, this.poly, this.query == null ? null : this.query.toString());
     }
+
+    public fURI localize() {
+        return new fURI(null, null, -1, false, this.path, this.send, this.poly, null == this.query ? null : this.query.toString());
+    }
+
 
     public boolean hasAuthority() {
         return null != this.host && -1 != this.port;

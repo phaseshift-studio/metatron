@@ -42,6 +42,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import static studio.phaseshift.metatron.BootLoader.BOOTING;
 import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.furi.fURI.f;
+import static studio.phaseshift.metatron.lang.core.m.inst.mFluent.StartLess.from_;
+import static studio.phaseshift.metatron.lang.core.m.inst.mFluent.StartLess.start_;
 import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.MTRON_TID;
 import static studio.phaseshift.metatron.lang.core.m.obj.NoObj.noobj;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MRel.rel;
@@ -189,19 +191,11 @@ public class MRouter extends MSpace<MServer> implements Router {
 
     @Override
     public Obj read(final fURI vid) {
-        //if (vid.matches(this.vid.extend("space/#")))
-        //    return this.at(vid.toUri());
-        // if (vid.hasAuthority()) {
-        //     return objs(this.server.cluster(vid.authority()).map(v -> v.sendRecvObj(from_(uri(vid.authority(null).scheme(null))))));
-        // }
         if (vid.isZero() || READ_AS_NOOBJ.contains(vid))
             return noobj();
-       /* if (false && vid.hasAuthority() && !vid.hasAuthority(this.server.authority())) {
-            return this.server.cluster(vid.authority().extend("#")).map(msc -> {
-                final FutureObj<Obj> future = msc.sendRecvObj(from_(vid.toUri()));
-                return future.get(5000);
-            }).reduce(NoObj.single(), Obj::append);
-        } else {*/
+        if (vid.hasAuthority())
+            return this.server().sendRecv((a,b)->true, vid, from_(vid.localize().toUri()).tryToInst());
+        /// ///////////////////
         final fURI local = vid;//.authority(null).scheme(null);
         if (local.matches(f("+/#"))) {
             final Obj stack = Router.stack().read(local.basePath());
@@ -209,31 +203,19 @@ public class MRouter extends MSpace<MServer> implements Router {
                 return stack;
         }
         final Space space = this.getSpace(local);
-        //if (null != space.vid() && !space.vid().segments().isEmpty())
-        //    LOG.trace("reading {{b}}%s{{/b}} from {{b}}%s{{/b}}", vid, space.vid());
-        // return MRouter.appendOnRead(vid.isBranch(), space.read(vid), this.vid.onlyMatches(vid) ? this : noobj());
-        return space.read(vid);
-        // }
+        return space.read(local);
     }
 
     @Override
     public Obj write(final fURI vid, final Obj obj) {
-        fURI local;
-        /*if (vid.hasAuthority()) {
-            if (vid.hasAuthority(this.server().authority())) {
-                local = vid.scheme(null).authority(null);
-            } else {
-                return this.server().cluster(vid.authority().extend("#")).map(msc -> {
-                    final FutureObj<Obj> future = msc.sendRecvObj(start_(obj).to_(vid.toUri()));
-                    return future.get(5000);
-                }).reduce(noobj(), Obj::append);
-            }
-        } else*/
-        local = vid;
-
-        final Space space = this.getSpace(local);
-        LOG.trace("writing %s {{g}}=>{{b}} %s{{X}} in %s", obj, local, space);
-        return space.write(local, obj);
+        if (vid.hasAuthority()) {
+            this.server().send((a,b)->true,vid, start_(obj.vid(null)).to_(vid.localize().toUri()).tryToInst());
+            return obj;
+        }
+        /// ///////////////
+        final Space space = this.getSpace(vid);
+        LOG.trace("writing %s {{g}}=>{{b}} %s{{X}} in %s", obj, vid, space);
+        return space.write(vid, obj);
     }
 
     @Override
