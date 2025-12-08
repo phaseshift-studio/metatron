@@ -80,7 +80,7 @@ public class BootLoader implements Rec, Feature.SelfClone {
         Registry.open().register(llmInstSet.LLM_TID, llmInstSet::create);
         Registry.open().register(vecInstSet.MVEC_TID, vecInstSet::create);
         Registry.open().register(machInstSet.MACH_TID, machInstSet::create);
-        Registry.open().register(clstrInstSet.MCLSTR_TID, clstrInstSet::create);
+        Registry.open().register(clstrInstSet.CLSTR_TID, clstrInstSet::create);
         // Registry.singleton().register(miotInstSet.INST_TID, () -> miotInstSet.of(fURI.NULL));
     }
 
@@ -144,7 +144,7 @@ public class BootLoader implements Rec, Feature.SelfClone {
             if (options.has(uri(Tokens.BOOT))) {
                 LOG.none("\t {{m}}BEGIN:{{g}} evaluating provided boot loader: {{b}}%s{{X}}\n", options.at(uri(Tokens.BOOT)).uriValue());
                 try {
-                    final long count = mParser.eval(Path.of(options.at(Tokens.BOOT).uriValue().toString()).toFile()).count();
+                    final long count = mParser.eval(Path.of(options.at(Tokens.BOOT).uriValue().toString()).toFile(), e -> LOG.error("%s\n%s", e.getCause() == null ? e.getMessage() : e.getCause().getMessage(), e)).count();
                     LOG.info("processed boot input: {{b}}%s{{/b}} {{g}}[{{y}}loc: %d{{/y}}]{{/g}}", options.at(Tokens.BOOT).uriValue(), count);
                 } catch (final IOException e) {
                     LOG.error(e);

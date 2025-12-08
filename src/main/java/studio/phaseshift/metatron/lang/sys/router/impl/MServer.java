@@ -28,6 +28,7 @@ import studio.phaseshift.metatron.lang.core.m.type.Fail;
 import studio.phaseshift.metatron.lang.core.m.type.Obj;
 import studio.phaseshift.metatron.lang.sys.router.Cluster;
 import studio.phaseshift.metatron.lang.sys.router.Router;
+import studio.phaseshift.metatron.lang.util.serial.ObjByteBufferSerializer;
 import studio.phaseshift.metatron.lang.util.serial.ObjSerializer;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
@@ -62,7 +63,7 @@ public class MServer extends WebSocketServer implements Cluster, Closeable, Obj 
         super(new InetSocketAddress(host.host(), host.port()));
         this.host = host;
         LOG = Graphitty.log(this);
-        this.serializer = MRouter.SERIALIZERS.get(f("/sys/serial/mparser"));
+        this.serializer = MRouter.SERIALIZERS.get(ObjByteBufferSerializer.OBJ_BYTE_BUFFER_SERIALIZER_TID);
     }
 
     @Override

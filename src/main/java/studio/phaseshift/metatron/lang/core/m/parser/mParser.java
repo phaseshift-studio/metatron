@@ -24,7 +24,6 @@ import org.petitparser.parser.combinators.*;
 import org.petitparser.parser.primitive.CharacterParser;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.core.m.inst.mInstSet;
-import studio.phaseshift.metatron.lang.core.m.obj.NoObj;
 import studio.phaseshift.metatron.lang.core.m.type.Call;
 import studio.phaseshift.metatron.lang.core.m.type.Fail;
 import studio.phaseshift.metatron.lang.core.m.type.Inst;
@@ -41,6 +40,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.*;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -53,6 +53,7 @@ import static org.petitparser.parser.primitive.StringParser.of;
 import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.lang.core.m.inst.mFluent.StartLess.split_;
 import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.*;
+import static studio.phaseshift.metatron.lang.core.m.obj.NoObj.noobj;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MObjs.objs;
@@ -170,19 +171,19 @@ public class mParser {
                                 lst(mParser.<List<Obj>>pick(t, 1)) :
                                 rec(mParser.<Map<Obj, Obj>>pick(t, 1)),
                         Inst.f.of(mParser.<Obj>pick(t, 2)),
-                        NoObj.noobj()), // todo: encode seed in parser
+                        noobj()), // todo: encode seed in parser
                         pick(t, 0), pick(t, 3))));
     }
 
     public static Parser m_inst_arg(final fURI headtid) {
-        return seq(opt(obj_no_code_parser, NoObj.noobj()), opt(of(".").trim(), '.'), opt(m_code(), null), m_vid_postfix()).map(t -> {
+        return seq(opt(obj_no_code_parser, noobj()), opt(of(".").trim(), '.'), opt(m_code(), null), m_vid_postfix()).map(t -> {
             final Obj first = mParser.pick(t, 0);
             final Obj second = mParser.pick(t, 2);
             if (null == second)
                 return first;
             final List<Inst> newCode = new ArrayList<>();
             if (!first.isNoObj() && !first.isInst())
-                newCode.add(new MInst(Triplet.with(lst(first.isInst() ? NoObj.noobj() : first), Inst.f.UNKNOWN, NoObj.noobj()), headtid, fURI.fnull));
+                newCode.add(new MInst(Triplet.with(lst(first.isInst() ? noobj() : first), Inst.f.UNKNOWN, noobj()), headtid, fURI.fnull));
             else if (first.isInst()) newCode.add(first.as());
             newCode.addAll(mParser.<Call>pick(t, 2).insts());
             return MCode.of(newCode, CODE_TID, pick(t, 3)).tryToInst();
@@ -231,7 +232,7 @@ public class mParser {
 
     public static <O extends Obj> O parse(final String code) {
         if (code.trim().isEmpty())
-            return (O) NoObj.noobj();
+            return (O) noobj();
         final Result result = seq(choice(m_inst_arg(START_INST_TID), m_obj()), opt(m_comment(), null)).map(t -> pick(t, 0)).end().parse(code.trim());
         if (result.isFailure())
             LOG.except(result.getBuffer() + "\n" +
@@ -244,7 +245,7 @@ public class mParser {
     public static Parser m_comment() {
         return choice(
                 seq(of("[--").trim(), any().starGreedy(anyOf("\n\r").or(new EndOfInputParser("end of input")))),
-                seq(of("[---"), any().starGreedy(anyOf("---]")))).map(t -> NoObj.noobj());
+                seq(of("[---"), any().starGreedy(anyOf("---]")))).map(t -> noobj());
     }
 
     public static Parser m_furi() {
@@ -314,7 +315,7 @@ public class mParser {
     }
 
     public static Parser m_noobj() {
-        return seq(of("noobj"), opt(m_furi_coefficient(), null)).trim().map(t -> NoObj.noobj());
+        return seq(of("noobj"), opt(m_furi_coefficient(), null)).trim().map(t -> noobj());
     }
 
     public static Parser m_objs() {
@@ -387,7 +388,7 @@ public class mParser {
     }
 
     public static Parser m_uri() {
-        return seq(m_type_prefix(URI_TID), m_furi(REDUCED_FURI_CHARS, true, true, true), m_vid_postfix()).map(t -> mParser.<fURI>pick(t, 0).isZero() ? NoObj.noobj() : new MUri(pick(t, 1), pick(t, 0), pick(t, 2)));
+        return seq(m_type_prefix(URI_TID), m_furi(REDUCED_FURI_CHARS, true, true, true), m_vid_postfix()).map(t -> mParser.<fURI>pick(t, 0).isZero() ? noobj() : new MUri(pick(t, 1), pick(t, 0), pick(t, 2)));
     }
 
     public static Parser m_rel() {
@@ -410,7 +411,7 @@ public class mParser {
     }
 
     public static Parser m_code() {
-        return seq(opt(of(CODE_TID + "::{{"), CODE_TID + "::{{"), m_inst().separatedBy(opt(of('.').trim(), '.')), opt(of("}}"), "}}"), m_vid_postfix())
+        return seq(opt(of(CODE_TID + "::|["), CODE_TID + "::|["), m_inst().separatedBy(opt(of('.').trim(), '.')), opt(of("]|"), "]|"), m_vid_postfix())
                 .map(t -> ((List<Object>) pick(t, 1)).size() == 1 ?
                         ((List<Inst>) pick(t, 1)).get(0) :
                         new MCode((List) ((List<Object>) pick(t, 1))
@@ -454,7 +455,7 @@ public class mParser {
                         .map(t -> MInst.instB(tid.query(pick(t, 1)), lst(mParser.<Obj>pick(t, 2)))));
     }
 
-    public static Stream<Obj> eval(final File file) throws IOException {
+    public static Stream<Obj> eval(final File file, final Consumer<Exception> exhandler) throws IOException {
         try (final FileReader read = new FileReader(file)) {
             try (final BufferedReader reader = new BufferedReader(read)) {
                 final List<String> lines = reader.lines().toList();
@@ -465,7 +466,14 @@ public class mParser {
                                 .map(String::trim)
                                 .filter(t -> !t.startsWith("---"))
                                 .reduce("", (a, b) -> a + b + "\n"))
-                        .map(s -> mParser.parse(s).apply())
+                        .map(s -> {
+                            try {
+                                return mParser.parse(s).apply();
+                            } catch (final Exception e) {
+                                exhandler.accept(e);
+                                return noobj();
+                            }
+                        })
                         .filter(o -> !o.isNoObj());
             }
         }

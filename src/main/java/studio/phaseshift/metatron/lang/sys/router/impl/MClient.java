@@ -48,17 +48,18 @@ public class MClient extends WebSocketClient implements MConnection {
     protected final Queue<FutureObj<Obj>> futures = new LinkedList<>();
     protected final fURI remoteHost;
 
-    public MClient(final fURI remoteHost, final ObjSerializer<?> serializer, final Draft draft) {
-        super(URI.create(remoteHost.toString()), draft);
+    public MClient(final fURI remoteAuthority, final ObjSerializer<?> serializer, final Draft draft) {
+        super(URI.create(remoteAuthority.toString()), draft);
         LOG = Router.global().logger();
+        assert serializer != null;
         this.serializer = serializer;
-        this.remoteHost = remoteHost;
+        this.remoteHost = remoteAuthority;
         LOG.info("connecting to {{b}}%s{{/b}}", this.remoteHost);
         Router.writeToSpace(Router.global().vid().extend("cluster"), new MObjs(this.remoteHost.toUri()));
     }
 
-    public MClient(final fURI remoteHost, final ObjSerializer<?> serializer) {
-        this(remoteHost, serializer, new Draft_6455());
+    public MClient(final fURI remoteAuthority, final ObjSerializer<?> serializer) {
+        this(remoteAuthority, serializer, new Draft_6455());
     }
 
     public static MConnection of(final fURI clientAuthority, final ObjSerializer<?> defaultSerializer) {
@@ -152,8 +153,8 @@ public class MClient extends WebSocketClient implements MConnection {
     @Override
     public <O extends Obj> FutureObj<O> sendRecvObj(final Obj obj) {
         Obj toSend = obj;// objs(obj.stream().map(x -> x.vid() == null ? x : x.vid(this.remoteHost().extend(x.vid().path()))));
-        toSend = toSend.vid(toSend.vid() == null ? f("temp?tag=abc") : toSend.vid().query("tag", "abc"));
-        LOG.trace("sending obj and awaiting future: %s", toSend);
+        //toSend = toSend.vid(toSend.vid() == null ? f("temp?tag=abc") : toSend.vid().query("tag", "abc"));
+        //LOG.trace("sending obj and awaiting future: %s", toSend);
         final FutureObj<Obj> future = new FutureObj<>("abc");
         this.futures.add(future);
         this.sendObj(toSend);

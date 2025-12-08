@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.lang.net.web;
 
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.gson.JsonElement;
 import com.sun.net.httpserver.HttpContext;
 import com.sun.net.httpserver.HttpServer;
@@ -35,7 +36,6 @@ import studio.phaseshift.metatron.lang.core.m.type.Type;
 import studio.phaseshift.metatron.lang.sys.router.Router;
 import studio.phaseshift.metatron.util.MTronException;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
@@ -147,37 +147,43 @@ public class webSpace extends MSpace<HttpServer> {
     public webSpace(final HttpServer server, final Map<Obj, Obj> config, final fURI pattern, final fURI vid) {
         super(server, config, pattern, WEB_SPACE_TID, vid);
         // Router.writeToSpace(this.vid.extend(ROUTE), routes);
-        this.at(ROUTE).orElse(rec()).elements().forEach(r -> {
-            final HttpContext context = server.createContext(r.first().uriValue().toString(),
-                    exchange -> {
-                        //LOG.debug("using http context %s => %s => %s", exchange.getRequestURI(), exchange.getHttpContext().getPath(), r.second());
-                        Path path = Path.of(r.second().uriValue().extend(f(exchange.getRequestURI().getPath())).toString());
-                        if (!r.first().uriValue().equals(f("/")))
-                            path = Path.of(path.toString().substring(r.first().uriValue().toString().length()));
-                        LOG.debug("resolving context to absolute path: %s => %s", uri(exchange.getRequestURI().toString()), uri(path.toAbsolutePath().toString()));
-                        final Path filePath = Files.isRegularFile(path) ? path : Path.of(path + "/" + INDEX_HTML);
-                        final String contentType = exchange.getRequestURI().getPath().endsWith("mtron") ? ContentType.APPLICATION_MTRON.value : Files.probeContentType(filePath);
-                        LOG.debug("content-type: %s", contentType);
-                        exchange.getResponseHeaders().set(ContentType.VALUE, contentType == null ? ContentType.APPLICATION_OCTET_STREAM.value : contentType);
-                        exchange.sendResponseHeaders(200, Files.size(filePath));
-                        LOG.debug("sending %s [%s,%d bytes] per request from %s: %s", filePath, contentType, Files.size(filePath), exchange.getRemoteAddress(), exchange.getRequestURI());
-                        try (final InputStream is = Files.newInputStream(filePath);
-                             final OutputStream os = exchange.getResponseBody()) {
-                            byte[] buffer = new byte[8192]; // 8KB buffer
-                            int bytesRead;
-                            while ((bytesRead = is.read(buffer)) != -1) {
-                                os.write(buffer, 0, bytesRead);
-                                os.flush();
+        try {
+            this.at(ROUTE).orElse(rec()).elements().forEach(r -> {
+                final HttpContext context = server.createContext(r.first().uriValue().toString(),
+                        exchange -> {
+                            //LOG.debug("using http context %s => %s => %s", exchange.getRequestURI(), exchange.getHttpContext().getPath(), r.second());
+                            Path path = Path.of(r.second().uriValue().extend(f(exchange.getRequestURI().getPath())).toString());
+                            if (!r.first().uriValue().equals(f("/")))
+                                path = Path.of(path.toString().substring(r.first().uriValue().toString().length()));
+                            LOG.debug("resolving context to absolute path: %s => %s", uri(exchange.getRequestURI().toString()), uri(path.toAbsolutePath().toString()));
+                            final Path filePath = Files.isRegularFile(path) ? path : Path.of(path + "/" + INDEX_HTML);
+                            final String contentType = exchange.getRequestURI().getPath().endsWith("mtron") ? ContentType.APPLICATION_MTRON.value : Files.probeContentType(filePath);
+                            LOG.debug("content-type: %s", contentType);
+                            exchange.getResponseHeaders().set(ContentType.VALUE, contentType == null ? ContentType.APPLICATION_OCTET_STREAM.value : contentType);
+                            exchange.sendResponseHeaders(200, Files.size(filePath));
+                            LOG.debug("sending %s [%s,%d bytes] per request from %s: %s", filePath, contentType, Files.size(filePath), exchange.getRemoteAddress(), exchange.getRequestURI());
+                            try (final InputStream is = Files.newInputStream(filePath);
+                                 final OutputStream os = exchange.getResponseBody()) {
+                                byte[] buffer = new byte[8192]; // 8KB buffer
+                                int bytesRead;
+                                while ((bytesRead = is.read(buffer)) != -1) {
+                                    os.write(buffer, 0, bytesRead);
+                                    os.flush();
+                                }
                             }
-                        }
-                    });
-            LOG.info("http route attached: %s", rel(uri(context.getPath()), r.second()));
-        });
-        LOG.info("starting web server at %s", this.at(Tokens.HOST).uriValue().scheme(Tokens.HTTP).toUri());
-        server.setExecutor(Executors.newFixedThreadPool(4));
-        Runtime.getRuntime().addShutdownHook(new Thread(this::close));
-        LOG.info("available routes: %s", this.at(ROUTE));
-        server.start();
+                        });
+                LOG.info("http route attached: %s", rel(uri(context.getPath()), r.second()));
+            });
+
+            LOG.info("starting web server at %s", this.at(Tokens.HOST).uriValue().scheme(Tokens.HTTP).toUri());
+            server.setExecutor(Executors.newFixedThreadPool(4, new ThreadFactoryBuilder().setUncaughtExceptionHandler((a, b) -> LOG.error("%s %s", a, b)).build()));
+            Runtime.getRuntime().addShutdownHook(new Thread(this::close));
+            LOG.info("available routes: %s", this.at(ROUTE));
+            server.start();
+        } catch (final Exception e) {
+            LOG.error(MTronException.of(e));
+            LOG.warn("%s server not started", this);
+        }
     }
 
     public static webSpace of(final fURI host, final Map<Obj, Obj> routes, final fURI pattern, final fURI vid) {
@@ -188,7 +194,7 @@ public class webSpace extends MSpace<HttpServer> {
             config.put(uri(Tokens.PATTERN), pattern.toUri());
             config.put(uri(ROUTE), rec(routes));
             return new webSpace(server, config, pattern, vid).tid(WEB_SPACE_TID);
-        } catch (final IOException e) {
+        } catch (final Exception e) {
             throw MTronException.of(e);
         }
     }

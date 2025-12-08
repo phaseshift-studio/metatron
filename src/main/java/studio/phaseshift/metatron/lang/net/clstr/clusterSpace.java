@@ -34,43 +34,44 @@ import studio.phaseshift.metatron.ui.GraphittyLogger;
 import java.util.Map;
 import java.util.function.BiPredicate;
 
+import static studio.phaseshift.metatron.Tokens.ACTIVE;
 import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.lang.core.m.inst.mFluent.StartLess.*;
 import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.REC_TID;
 import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.URI_TID;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.lang.net.clstr.clstrInstSet.MCLSTR_TID;
+import static studio.phaseshift.metatron.lang.net.clstr.clstrInstSet.CLSTR_TID;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class clstrSpace extends MSpace<BiPredicate<fURI, MConnection>> {
+public class clusterSpace extends MSpace<BiPredicate<fURI, MConnection>> {
 
-    public static final fURI CLSTR_TID = MCLSTR_TID.extend(Tokens.SPACE).extend("clstr");
+    public static final fURI CLUSTER_SPACE_TID = CLSTR_TID.extend(Tokens.SPACE).extend("cluster");
     public final GraphittyLogger LOG = Graphitty.log(this);
-
-    public static final Type CLSTR_TYPE = T(REC_TID, null, instC(mInstSet.INST_TID.dom(ALL.maybe()).rng(CLSTR_TID),
-            lst(T(REC_TID, isa_(rec(uri(Tokens.PATTERN), T(URI_TID))))), (lhs, inst) -> {
-                final Space space = new clstrSpace((f, c) -> true, inst.arg(0).<Rec>as().at(Tokens.PATTERN).uriValue(), inst.arg(0).vid());
+    public static final Type CLUSTER_SPACE_TYPE = T(CLUSTER_SPACE_TID, null, instC(mInstSet.INST_TID.dom(ALL.maybe()).rng(CLUSTER_SPACE_TID),
+            lst(T(REC_TID,isa_(rec(uri(Tokens.PATTERN), T(URI_TID))).tryToInst())), (lhs, inst) -> {
+                final Space space = new clusterSpace((f, c) -> true, inst.arg(0).<Rec>as().put(uri(ACTIVE),bool(true),MUTABLE).jvm(),inst.arg(0).<Rec>as().at(Tokens.PATTERN).uriValue(), inst.arg(0).vid());
                 Router.global().addSpace(space);
                 return space;
             }));
 
-    public clstrSpace(final BiPredicate<fURI, MConnection> hash, final fURI pattern, final fURI vid) {
-        super(hash, Map.of(uri(Tokens.PATTERN), uri(pattern)), pattern, CLSTR_TID, vid);
+    public clusterSpace(final BiPredicate<fURI, MConnection> hash, final Map<Obj,Obj> jvm, final fURI pattern, final fURI vid) {
+        super(hash, jvm, pattern, CLUSTER_SPACE_TID, vid);
     }
 
     @Override
     public Obj read(final fURI vid) {
-        return Router.global().server().sendRecv(this.sjvm, vid, from_(vid.toUri()));
+        return Router.global().server().sendRecv(this.sjvm, vid, from_(uri(vid.path().substring(1))).tryToInst());
     }
 
     @Override
     public Obj write(final fURI vid, final Obj obj) {
-        Router.global().server().send(this.sjvm, vid, start_(obj.vid(null)).to_(vid.toUri()));
+        Router.global().server().send(this.sjvm, vid, start_(obj.vid(null)).to_(uri(vid.path().substring(1))).tryToInst());
         return obj;
     }
 }

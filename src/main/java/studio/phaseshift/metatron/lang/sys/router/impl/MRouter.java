@@ -171,7 +171,7 @@ public class MRouter extends MSpace<MServer> implements Router {
         //     final fURI mvid = this.smallToBigRewrites.getOrDefault(vid,vid);
         final Optional<S> space = this.spaces().jvm().values().stream() // using jvm() for speed (given the heavy use of this method)
                 .map(Obj::<Space>as)
-                .filter(s -> s.status().equals(Status.active))
+                //.filter(s -> s.status().equals(Status.active))
                 .filter(s -> match.basePath().matches(s.pattern()))
                 .map(s -> (S) s)
                 .findAny();

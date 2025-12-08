@@ -31,10 +31,11 @@ import static studio.phaseshift.metatron.furi.fURI.f;
  */
 public class clstrInstSet extends MInstSet {
 
-    public static final fURI MCLSTR_TID = f("/clstr");
+    public static final fURI CLSTR_TID = f("/clstr");
+    public static final fURI INST_TID = CLSTR_TID.extend("inst");
 
     public clstrInstSet(final fURI vid) {
-        super(MCLSTR_TID, vid);
+        super(CLSTR_TID, vid);
     }
 
     public static clstrInstSet create() {
@@ -43,6 +44,6 @@ public class clstrInstSet extends MInstSet {
 
     @Override
     public Set<Type> types() {
-        return Set.of(clstrSpace.CLSTR_TYPE);
+        return Set.of(clusterSpace.CLUSTER_SPACE_TYPE);
     }
 }

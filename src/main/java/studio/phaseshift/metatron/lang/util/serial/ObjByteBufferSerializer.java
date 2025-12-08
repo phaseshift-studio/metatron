@@ -33,6 +33,7 @@ import java.nio.ByteBuffer;
  */
 public class ObjByteBufferSerializer implements ObjSerializer<ByteBuffer> {
 
+    public static final fURI OBJ_BYTE_BUFFER_SERIALIZER_TID = OBJ_SERIAL_TID.extend("bytes");
     private static final ByteBuffer NOOBJ_BYTES = ByteBuffer.wrap("noobj".getBytes());
 
     @Override
@@ -127,7 +128,7 @@ public class ObjByteBufferSerializer implements ObjSerializer<ByteBuffer> {
         final Obj t = code.tryToInst();
         if (t.isInst()) return this.writeInst(t.as());
         final String internal = IteratorUtil.stream(code.insts()).map(i -> new String(this.writeInst(i).array())).reduce(".", (a, b) -> a + b + ".");
-        return ByteBuffer.wrap(handleIds(code, "{{" + internal.substring(1, internal.length() - 1) + "}}").getBytes());
+        return ByteBuffer.wrap(handleIds(code, "|[" + internal.substring(1, internal.length() - 1) + "|]").getBytes());
     }
 
     @Override
