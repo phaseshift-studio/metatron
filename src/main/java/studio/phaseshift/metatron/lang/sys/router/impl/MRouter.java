@@ -194,7 +194,7 @@ public class MRouter extends MSpace<MServer> implements Router {
         if (vid.isZero() || READ_AS_NOOBJ.contains(vid))
             return noobj();
         if (vid.hasAuthority())
-            return this.server().sendRecv((a,b)->true, vid, from_(vid.localize().toUri()).tryToInst());
+            return this.server().sendRecv((a,b)->a.authority().matches(b.remoteHost().authority()), vid, from_(vid.localize().toUri()).tryToInst());
         /// ///////////////////
         final fURI local = vid;//.authority(null).scheme(null);
         if (local.matches(f("+/#"))) {
@@ -209,7 +209,7 @@ public class MRouter extends MSpace<MServer> implements Router {
     @Override
     public Obj write(final fURI vid, final Obj obj) {
         if (vid.hasAuthority()) {
-            this.server().send((a,b)->true,vid, start_(obj.vid(null)).to_(vid.localize().toUri()).tryToInst());
+            this.server().send((a,b)->a.authority().matches(b.remoteHost().authority()),vid, start_(obj.vid(null)).to_(vid.localize().toUri()).tryToInst());
             return obj;
         }
         /// ///////////////

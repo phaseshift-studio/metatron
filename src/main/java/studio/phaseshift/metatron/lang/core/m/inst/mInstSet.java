@@ -55,6 +55,7 @@ public class mInstSet extends MInstSet {
     public static final fURI TYPE_TID = MTRON_TID.extend("type");
     /// ////////////////////////////////////////////////////////
     public static final fURI ID_INST_TID = INST_TID.extend("id");
+    public static final fURI EXPLAIN_INST_TID = INST_TID.extend("explain");
     public static final fURI TO_STR_INST_TID = INST_TID.extend("tostr");
     public static final fURI HAS_INST_TID = INST_TID.extend("has");
     public static final fURI CATCH_INST_TID = INST_TID.extend("catch");

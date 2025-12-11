@@ -37,11 +37,11 @@ public class NoObjTest extends MetatronTest {
 
     @ParameterizedTest
     @CsvSource(value = {
-            "noobj|noobj|true",
-            "noobj|10|false",
-            "noobj|int{0}::10|true",
-            "noobj{2}|noobj{1233}|true",
-            "noobj{3}|noobj|true",
+            "noobj | noobj|true",
+            "noobj | 10|false",
+            "noobj               | int{0}::10|true",
+            "noobj{2}            |noobj{1233}|true",
+            "noobj{3}            |noobj|true",
             "noobj{4}|str{4}::'meta'|false",
             "noobj{4}|str{0}::'tron'|true",
             "str{4}::'meta'|str{0}::'tron'|false",

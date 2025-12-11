@@ -52,6 +52,6 @@ public class Profile {
         } //else {
         //table.addRow(List.of(obj.tid().toUri(), obj.dom(), obj.rng()));
         //}
-        return Graphitty.string(table.toString());
+        return table.toString();
     }
 }

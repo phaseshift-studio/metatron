@@ -65,7 +65,7 @@ import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.lang.sys.sysInstSet.SYS_TID;
 
-public class Console extends MRec implements Mode {
+public class Console extends MRec {
 
     public static final fURI CONSOLE_TID = SYS_TID.extend("console");
 
@@ -153,12 +153,7 @@ public class Console extends MRec implements Mode {
     public LineReader getReader() {
         return this.reader;
     }
-
-    @Override
-    public Optional<Thread> mainThread() {
-        return Optional.of(this.mainThread);
-    }
-
+    
     public void run() throws Exception {
         Mode.waitForBoot();
         new CustomWidgets(this.reader);
@@ -166,11 +161,7 @@ public class Console extends MRec implements Mode {
         while (true) {
             try {
                 Obj result = null;
-                Graphitty.out(this.terminal.output(), "%s{{v%d&^%d&Xv}}",
-                        RESOLVE_MODE ? "\n".repeat(3) : "\n".repeat(1),
-                        RESOLVE_MODE ? 3 : 1,
-                        RESOLVE_MODE ? 3 : 1);
-                RESOLVE_MODE = false;
+                //Graphitty.out(this.terminal.output(), "%s{{v%d&^%d&Xv}}","\n");
                 line = this.reader.readLine(Graphitty.string("{{m}}mtron{{g}}> ")).trim();
                 if (line.equals(":header"))
                     this.outputHeader();
@@ -183,7 +174,7 @@ public class Console extends MRec implements Mode {
                 } else if (line.startsWith(":top")) {
                     TTop.ttop(terminal, System.out, System.err, new String[0]);
                 } else if (line.startsWith(":box")) {
-                    LOG.none(Box.wrap(line.substring(4).trim(),List.of("|","|","-","-")));
+                    LOG.none(new Box(line.substring(4).trim(),List.of("|","|","-","-")));
                 } else if (line.startsWith(":less")) {
                     Commands.less(terminal, System.in, System.out, System.err, Paths.get(""), new String[0]);
                 } else if (line.startsWith(":select")) {
@@ -298,13 +289,11 @@ public class Console extends MRec implements Mode {
                 System.exit(0);
                 return true;
             });
-            this.addWidget("resolve-widget", () -> RESOLVE_MODE = !RESOLVE_MODE);
             this.addWidget("editor-widget", () -> Editor.of(Console.this, reader.getBuffer().toString()));
             this.addWidget("hide-widget", this::hideWidget);
             this.addWidget("typing-widget", this::typingWidget);
             /// ///////////////////////////////////////////////////////////////////////////////////////////
             getKeyMap().bind(new Reference("quit-widget"), ctrl('q'));
-            getKeyMap().bind(new Reference("resolve-widget"), ctrl('r'));
             getKeyMap().bind(new Reference("hide-widget"), ctrl('h'));
             getKeyMap().bind(new Reference("typing-widget"), ctrl('y'));
             getKeyMap().bind(new Reference("editor-widget"), ctrl('e'));

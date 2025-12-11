@@ -48,11 +48,13 @@ public class MCompleter implements Completer {
                 final Obj o = mParser.parse(buffer.toString());
                 if (o.isCode()) {
                     Code code = o.resolve(NoObj.noobj()).as();
-                    final String pretty = Graphitty.string(Box.wrap(ObjStringSerializer.prettyPrintCode(code,0),List.of("{{b}}|{{X}}","{{b}}|{{X}}","{{b}}-{{X}}","{{b}}-{{X}}")));
+                    final String pretty = Graphitty.string(
+                            new Box(ObjStringSerializer.prettyPrintCode(code, 0), List.of("{{b}}|{{X}}", "{{b}}|{{X}}", "{{b}}-{{X}}", "{{b}}-{{X}}")).right(
+                                    new Box(new Profile(code).toString(),List.of("{{b}}|{{X}}", "{{b}}|{{X}}", "{{b}}-{{X}}", "{{b}}-{{X}}"))).toString());
                     //final int length = Arrays.stream(pretty.split("\n")).map(Graphitty::strip).map(String::length).max(Integer::compareTo).orElse(0);
                     candidates.add(new Candidate("", pretty, null, null, "", null, false));
                     //candidates.addAll(new Profile(code).candidates());
-                    candidates.add(new Candidate(" ", new Profile(code).toString(), null, null, "", null, true));
+                    candidates.add(new Candidate(" ", Graphitty.string(new Box(new Profile(code).toString(),Box.BASIC_BORDER).toString()), null, null, "", null, true));
                     //candidates.add(new Candidate(" ", Graphitty.string("{{r}}" + "_".repeat(length) + "{{X}}"), null, null, " ", null, false));
                 }
             } else {

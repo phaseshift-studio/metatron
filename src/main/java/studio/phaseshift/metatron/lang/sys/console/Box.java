@@ -28,13 +28,48 @@ import java.util.List;
  */
 public class Box {
 
-    private Box() {
+    protected final String body;
+    protected final List<String> lrtb;
 
+    public static final List<String> NO_BORDER = List.of(" "," "," "," ");
+    public static final List<String> BASIC_BORDER = List.of("|","|","-","-");
+
+    public Box(final String body, final List<String> lrtb) {
+        this.body = body;
+        this.lrtb = lrtb;
     }
 
+    public int width() {
+        return Graphitty.strip(this.toString().split("\n")[0]).length();
+    }
 
-    public static String wrap(final String text, final List<String> lrtb) {
-        final List<String> lines = Arrays.asList(text.replace("\\n","\n").split("\\r?\\n", -1));
+    public int height() {
+        return this.toString().split("\n").length;
+    }
+
+    public String row(final int r) {
+        return this.toString().split("\n")[r];
+    }
+
+    public Box right(final Box box) {
+        final StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < Math.max(this.height(), box.height()); i++) {
+            if (i < this.height()) {
+                sb.append(this.row(i));
+            } else {
+                sb.append(" ".repeat(this.width()));
+            }
+            if (i < box.height()) {
+                sb.append(" ").append(box.row(i));
+            }
+            sb.append("\n");
+        }
+        sb.deleteCharAt(sb.length() - 1);
+        return new Box(sb.toString(), List.of("|", "|", "-", "-"));
+    }
+
+    public String toString() {
+        final List<String> lines = Arrays.asList(this.body.replace("\\n", "\n").split("\\r?\\n", -1));
         final int maxLen = lines.stream()
                 .map(Graphitty::strip)
                 .mapToInt(String::length)
@@ -42,15 +77,15 @@ public class Box {
                 .orElse(0);
 
         final StringBuilder sb = new StringBuilder();
-        sb.append("+%s+".formatted(lrtb.get(2).repeat(maxLen))).append('\n');
+        sb.append("+%s+".formatted(this.lrtb.get(2).repeat(maxLen))).append('\n');
         for (final String line : lines) {
-            sb.append(lrtb.get(0))
+            sb.append(this.lrtb.get(0))
                     .append(line)
                     .append(" ".repeat(maxLen - Graphitty.strip(line).length()))
-                    .append(lrtb.get(1))
+                    .append(this.lrtb.get(1))
                     .append('\n');
         }
-        sb.append("+%s+".formatted(lrtb.get(3).repeat(maxLen))).append("\n");
+        sb.append("+%s+".formatted(this.lrtb.get(3).repeat(maxLen))).append("\n");
         return sb.toString();
     }
 

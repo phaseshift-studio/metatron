@@ -29,6 +29,7 @@ import studio.phaseshift.metatron.lang.core.m.type.facade.FObj;
 import studio.phaseshift.metatron.lang.core.m.type.impl.MInt;
 import studio.phaseshift.metatron.lang.core.m.type.impl.MObjFactory;
 import studio.phaseshift.metatron.lang.core.m.type.impl.MUri;
+import studio.phaseshift.metatron.lang.sys.console.Profile;
 import studio.phaseshift.metatron.lang.sys.router.Router;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.util.IteratorUtil;
@@ -609,6 +610,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
 
         public static Set<Inst> insts() {
             return new LinkedHashSet<>(List.of(
+                    instC(EXPLAIN_INST_TID.dom(ALL.maybe()).rng(STR_TID), lst(T(CODE_TID)), (lhs,inst) -> str(new Profile(inst.arg(0).as()).toString())),
                     instC(TO_STR_INST_TID.dom(A.maybe()).rng(STR_TID.maybe()), lst(), (lhs, inst) -> str(lhs.toString())),
                     instC(AUTO_INST_TID.dom(ALL.maybe()).rng(ALL.maybe()), lst(T(ALL.maybe())), (lhs, inst) -> inst.arg(0).apply(lhs)),
                     instC(CATCH_INST_TID.dom(ALL).rng(ALL.maybeSome()), lst(T(ALL.maybeSome())), (lhs, inst) -> lhs.isFail() ? inst.arg(0).apply(lhs) : lhs),

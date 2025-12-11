@@ -41,7 +41,7 @@ public class Table {
     }
 
     private String addSpace(final List<Integer> widths, final int index, final Object entry) {
-        return " ".repeat(1 + Math.abs(widths.get(index) - Graphitty.strip(entry.toString()).length()));
+        return " ".repeat(1 + Math.abs(widths.get(index) - Graphitty.strip(entry.toString().trim()).length()));
     }
 
     public String toString() {
@@ -63,6 +63,6 @@ public class Table {
             }
             sb.append("\n");
         });
-        return sb.toString();
+        return sb.deleteCharAt(sb.length()-1).toString();
     }
 }
