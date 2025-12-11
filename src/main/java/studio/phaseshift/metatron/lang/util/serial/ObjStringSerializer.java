@@ -43,8 +43,13 @@ public record ObjStringSerializer(Builder b) implements ObjSerializer<String> {
     }
 
     public static String prettyPrintCode(final Call code) {
+        return prettyPrintCode(code, 8);
+
+    }
+
+    public static String prettyPrintCode(final Call code, final int leftMargin) {
         StringBuilder sb = new StringBuilder();
-        return prettyPrintCode(sb, code, 0, 8).toString();
+        return prettyPrintCode(sb, code, 0, leftMargin).toString().trim();
 
     }
 

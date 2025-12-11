@@ -18,7 +18,8 @@
 
 package studio.phaseshift.metatron.lang.sys.console;
 
-import studio.phaseshift.metatron.lang.core.m.type.Code;
+import studio.phaseshift.metatron.lang.core.m.type.Inst;
+import studio.phaseshift.metatron.lang.core.m.type.Obj;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.Table;
 
@@ -29,17 +30,28 @@ import java.util.List;
  */
 public class Profile {
 
-    protected final Code code;
+    protected final Obj obj;
 
-    public Profile(final Code code) {
-        this.code = code;
+    public Profile(final Obj obj) {
+        this.obj = obj;
     }
 
     public String toString() {
-        final Table table = new Table(List.of("op", "dom", "rng"));
-        code.codeValue().forEach(i -> {
-            table.addRow(List.of("{{b}}" + i.tid().name(), i.dom(), i.rng()));
-        });
+        final Table table = new Table(List.of("op", "dom", "rng", "desc"));
+        if (obj.isCode()) {
+            obj.codeValue().forEach(i -> {
+                final String back = i.hasf() && !i.dom().tid().hasPattern() ? "{{b}}" : "{{y}}";
+                table.addRow(List.of(back + i.tid().name(), i.dom(), i.rng(), "{{m}}" + Inst.Form.of(i).toString()));
+                /*if (!i.args().isEmpty()) {
+                    final Table arg = new Table(List.of(""));
+                    i.args().forEach(a -> arg.addRow(List.of(new Profile(a).toString())));
+                    table.addRow(List.of("","",arg));
+                }*/
+
+            });
+        } //else {
+        //table.addRow(List.of(obj.tid().toUri(), obj.dom(), obj.rng()));
+        //}
         return Graphitty.string(table.toString());
     }
 }

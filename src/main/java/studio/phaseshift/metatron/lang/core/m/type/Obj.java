@@ -262,7 +262,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
         if (this.isCall())
             return this.tid().cV().within(rhs.tid().cV()); // TODO: this is really flimsy.
         if (rhs.isCall())
-            return this.matches(rhs.dom()) && rhs.apply(this).matches(rhs.rng());// && rhs.apply(this).matches(rhs.rng());
+            return this.matches(rhs.dom()) && rhs.apply(this).matches(rhs.rng());
         if (!this.c().within(rhs.c()))
             return false;
         if (rhs.isType())
@@ -635,7 +635,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
                             "any obj", "the lhs obj value id", Map.of(), "the spatial location of the lhs obj"),
                     docWrap(instC(ELSE_INST_TID.dom(ALL.maybe()).rng(ALL), lst(T(ALL.maybe())), (lhs, inst) -> lhs.isNoObj() ? inst.arg(0) : lhs),
                             "maybe an obj", "the lhs obj else the arg obj", Map.of(jnt(0), "the rhs obj is the lhs is noobj"), "f(lhs)->lhs if lhs is an obj, else f(noobj)->arg"),// TODO: rec args needs resolution on generics connected
-                    docWrap(instC(IS_INST_TID.dom(ALL.maybe()).rng(ALL.maybe()), lst(T(ALL)), (lhs, inst) -> inst.arg(0).boolValue() ? lhs : noobj()),
+                    docWrap(instC(IS_INST_TID.dom(A).rng(A.maybe()), lst(T(BOOL_TID)), (lhs, inst) -> inst.arg(0).boolValue() ? lhs : noobj()),
                             "any obj", "the lhs obj if arg is true", Map.of(jnt(0), "filter lhs if false"), "filters the lhs obj"), // TODO: generics are not working for some reason
                     docWrap(instC(ISA_INST_TID.dom(ALL.maybe()).rng(ALL.maybe()), lst(T(ALL)), (lhs, inst) -> lhs.matches(inst.arg(0)) ? lhs : noobj()),
                             "an obj to match", "the unaltered obj if arg matches", Map.of(jnt(0), "filter lhs if doesn't match arg"), "a filter function f(x)->{0,x}"),

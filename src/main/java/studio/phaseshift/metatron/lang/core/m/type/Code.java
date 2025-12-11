@@ -23,6 +23,7 @@ import studio.phaseshift.metatron.lang.core.m.obj.NoObj;
 import studio.phaseshift.metatron.lang.core.mach.type.impl.MMachine;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
+import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -63,25 +64,25 @@ public interface Code extends Call {
         Obj token = lhs.type();
         //LOG.none("%s", token.rng());
         final List<Inst> resolvedCode = new ArrayList<>();
-        fURI dom = null;
-        fURI rng = null;
         boolean fullResolution = true;
         for (final Inst inst : this.jvm()) {
             try {
                 LOG.trace("   {{g}}=>{{/g}} resolving %s => %s", token, inst);
                 final Inst resolvedInst = inst.resolve(token);
-                if (null == dom)
-                    dom = resolvedInst.tid().query().get(fURI.DOM.toString(), fURI.class);
-                rng = resolvedInst.tid().query().get(fURI.RNG.toString(), fURI.class);
-                resolvedCode.add(resolvedInst);
-                token = resolvedInst.rng();
-                if (resolvedInst.isInitial()) {
-                    LOG.trace("  {{g}}==>{{/g}} marking {{y}}initial{{/y}} at %s", resolvedInst);
-                    token = resolvedInst.arg(0).type();
-                    //this.running().append(MMonad.of(NoObj.single(), instB));
-                } else if (resolvedInst.isGather()) {
-                    // many-to-?
-                    LOG.trace("  {{m}}==|{{/m}} marking {{y}}barrier{{/y}} at %s", resolvedInst);
+                if (!resolvedInst.hasDom()) {
+                   resolvedCode.add(inst);
+                   token = inst.hasRng() ? inst.rng() : token;
+                } else {
+                    resolvedCode.add(resolvedInst);
+                    token = resolvedInst.rng();
+                    if (resolvedInst.isInitial()) {
+                        LOG.trace("  {{g}}==>{{/g}} marking {{y}}initial{{/y}} at %s", resolvedInst);
+                        token = resolvedInst.arg(0).type();
+                        //this.running().append(MMonad.of(NoObj.single(), instB));
+                    } else if (resolvedInst.isGather()) {
+                        // many-to-?
+                        LOG.trace("  {{m}}==|{{/m}} marking {{y}}barrier{{/y}} at %s", resolvedInst);
+                    }
                 }
                 token = token.c(c -> c.mult(resolvedInst.c()));
             } catch (final Exception e) {

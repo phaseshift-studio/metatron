@@ -108,7 +108,7 @@ public class Console extends MRec implements Mode {
                     .option(LineReader.Option.AUTO_FRESH_LINE, true)
                     .option(LineReader.Option.HISTORY_IGNORE_DUPS, true)
                     .option(LineReader.Option.DISABLE_EVENT_EXPANSION, true)
-                    .variable(LineReader.SECONDARY_PROMPT_PATTERN, Graphitty.string("{{-X&v1&^1&m}}    {{g}}> {{X}}"))
+                    .variable(LineReader.SECONDARY_PROMPT_PATTERN, Graphitty.string("{{-X&v1&^1&m}}     {{g}}| {{X}}"))
                     .variable(LineReader.INDENTATION, 0)
                     .completer(new MCompleter(this))
                     .build();
@@ -182,6 +182,8 @@ public class Console extends MRec implements Mode {
                     logObj.setSLF4J(line.substring(4));
                 } else if (line.startsWith(":top")) {
                     TTop.ttop(terminal, System.out, System.err, new String[0]);
+                } else if (line.startsWith(":box")) {
+                    LOG.none(Box.wrap(line.substring(4).trim(),List.of("|","|","-","-")));
                 } else if (line.startsWith(":less")) {
                     Commands.less(terminal, System.in, System.out, System.err, Paths.get(""), new String[0]);
                 } else if (line.startsWith(":select")) {

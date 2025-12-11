@@ -21,18 +21,23 @@ package studio.phaseshift.metatron.lang.core.m.type;
 import studio.phaseshift.metatron.algebra.Ring;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
+import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.*;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MObjs.objs;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MReal.real;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MType.T;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
 
 public interface Int extends Mono, Ring.O<Int> {
 
@@ -88,6 +93,15 @@ public interface Int extends Mono, Ring.O<Int> {
 
         public static Set<Inst> insts() {
             return new LinkedHashSet<>(List.of(
+                    instC(AS_INST_TID.dom(INT_TID).rng(A), lst(T(A)), (lhs, inst) -> {
+                        if (inst.arg(0).matches(T(REAL_TID)))
+                            return real(lhs.intValue().doubleValue(), inst.arg(0).tid(), lhs.vid());
+                        else if (inst.arg(0).matches(T(STR_TID)))
+                            return str(lhs.intValue().toString(), inst.arg(0).tid(), lhs.vid());
+                        else if (inst.arg(0).matches(T(URI_TID)))
+                            return uri(f(lhs.intValue().toString()), inst.arg(0).tid(), lhs.vid());
+                        else throw MTronException.of("unknown conversion for %s => %s", lhs.tid(), inst.arg(0).tid());
+                    }),
                     instC(MULT_INST_TID.dom(INT_TID).rng(INT_TID), lst(T(INT_TID)), (lhs, inst) -> lhs.jvm(lhs.intValue() * inst.arg(0).intValue())),
                     instC(MINUS_INST_TID.dom(INT_TID).rng(INT_TID), lst(T(INT_TID)), (lhs, inst) -> lhs.jvm(lhs.intValue() - inst.arg(0).intValue())),
                     instC(PLUS_INST_TID.dom(INT_TID).rng(INT_TID), lst(T(INT_TID)), (lhs, inst) -> lhs.jvm(lhs.intValue() + inst.arg(0).intValue())),

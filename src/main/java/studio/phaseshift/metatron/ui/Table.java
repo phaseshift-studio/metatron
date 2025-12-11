@@ -19,6 +19,7 @@
 package studio.phaseshift.metatron.ui;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /*
@@ -48,7 +49,7 @@ public class Table {
         final List<Integer> widths = new ArrayList<>();
         for (int i = 0; i < this.headers.size(); i++) {
             final int ii = i;
-            widths.add(Math.max(this.headers.get(i).length(), this.table.stream().map(row -> Graphitty.strip(row.get(ii).toString()).length()).max(Integer::compareTo).orElse(0)));
+            widths.add(Math.max(this.headers.get(i).length(), this.table.stream().map(row -> Graphitty.strip(row.get(ii).toString())).flatMap(s -> Arrays.stream(s.split("\n"))).map(String::length).max(Integer::compareTo).orElse(0)));
         }
         sb.append("{{g}}|{{X}}");
         for (int i = 0; i < this.headers.size(); i++) {

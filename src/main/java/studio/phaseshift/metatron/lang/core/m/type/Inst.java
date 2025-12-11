@@ -47,12 +47,51 @@ import static studio.phaseshift.metatron.util.Tuple.Triplet;
 
 public interface Inst extends Call {
 
-    // /mtron/plus?dom=/mtron/int,rng=/mtron/int
-
     String ARGS = "args";
     String DOM = "dom";
     String RNG = "rng";
     String OBJ = "obj";
+
+    enum Form {
+        initial,
+        terminal,
+        fork,
+        join,
+        reducer,
+        gather,
+        scatter,
+        catcher,
+        filter,
+        mapper,
+        flatmapper,
+        standard;
+
+        public static Form of(final Inst inst) {
+            if (inst.isInitial())
+                return initial;
+            if (inst.isTerminal())
+                return terminal;
+            if (inst.isBranching())
+                return fork;
+            if (inst.isJoining())
+                return join;
+            if (inst.isReducing())
+                return reducer;
+            if (inst.isGather())
+                return gather;
+            if (inst.isScatter())
+                return scatter;
+            if (inst.isCatch())
+                return catcher;
+            if (inst.isFilter())
+                return filter;
+            if (inst.isMap())
+                return mapper;
+            if (inst.isFlatMap())
+                return flatmapper;
+            return standard;
+        }
+    }
 
     private static Poly resolveArgs(final Inst userInst, final Inst apiInst, final Obj lhs) {
         final GraphittyLogger LOG = Graphitty.log(userInst);
@@ -157,6 +196,10 @@ public interface Inst extends Call {
         return null == this.jvm() ? null : this.jvm().get1();
     }
 
+    default boolean hasf() {
+        return null != this.jvm() || null == this.jvm().get1();
+    }
+
     default Obj seed() {
         return null == this.jvm() ? noobj() : this.jvm().get2();
     }
@@ -187,25 +230,26 @@ public interface Inst extends Call {
             final Inst resolved = Router.global().read(this.tid())
                     .stream()
                     .map(Obj::<Inst>as)
-                    //.peek(i -> LOG.warn("%s ==?==> %s [%s]", this, i, this.args()))
                     .filter(i -> (i.args().isEmpty() && this.arg(0).isNoObj()) || i.args().isRec() || i.args().count() >= this.args().count())
                     .map(i -> this.hasDom() ? i.dom(this.dom()) : i)
                     .map(i -> this.hasRng() ? i.rng(this.rng()) : i)
                     .map(i -> Helpers.bindGenerics(lhs, i, this))
                     .filter(i -> lhs.matches(i.dom()))
+                    //.filter(i -> lhs.matches(i.dom()) || (Form.of(i).equals(Form.mapper) && lhs.unique() && lhs.c(cInt.ONE()).matches(i.dom())))
+                    //.map(i -> lhs.isType() && !lhs.isNoObj() && i.tid().dom().hasPattern() ? i.dom(lhs.as()) : i)
+                    //.map(i -> i.dom(i.dom().c(lhs.c()).as()).<Inst>as())
+                    //.map(i -> !lhs.matches(i.dom())  ? i.dom(lhs.type()).rng(i.rng().c(c->c.mult(lhs.c())).as()) : i)
                     .map(i -> {
-                        final Poly resolvedArgs = resolveArgs(this, i, lhs);
+                        final Poly<?, ?> resolvedArgs = resolveArgs(this, i, lhs);
                         if (null == resolvedArgs)
                             return null; // TODO: backtrack the resolution to the outer inst to see if adjusting the coefficient can resolve the internal resolution
                         return i.args(resolvedArgs);
                     })
+
                     .filter(i -> !Objects.isNull(i))
-                    //.map(i -> i.tid(i.tid().dom(lhs.tid())).vid(this.vid()))
-                    .map(Obj::<Inst>as)
                     .map(i -> i.isInitial() ? i.rng(i.arg(0).type()) : i) // TODO: only start()?
-                    .map(i -> i.resolve(lhs)) // TODO: return resolve(lhs) if failing
+                    //.map(i -> lhs.isType() ?  i.dom(lhs.c(i.dom().c()).as()).<Inst>as() : i)
                     .map(i -> i.c(this.c()))
-                    .map(i -> i.hasRng() ? i : i.rng(T(ALL_STAR)))
                     .findFirst()
                     .orElse(null);
             if (null != resolved) {
@@ -294,7 +338,7 @@ public interface Inst extends Call {
     }
 
     default boolean isScatter() {
-        return this.rng().c().isOne();
+        return this.dom().c().gt(cInt.ONE()) && this.rng().c().isOne();
     }
 
     default boolean isInitial() {
@@ -302,7 +346,15 @@ public interface Inst extends Call {
     }
 
     default boolean isFilter() {
-        return this.dom().c().gte(cInt.ONE()) && this.rng().c().isMaybe() && this.dom().baseType().equals(this.rng().baseType());
+        return this.dom().c().isOne() && this.rng().c().isMaybe() && this.dom().tid().basePath().equals(this.rng().tid().basePath());
+    }
+
+    default boolean isMap() {
+        return this.dom().c().isOne() && this.rng().c().isOne();
+    }
+
+    default boolean isFlatMap() {
+        return this.dom().c().isOne() && this.rng().c().isMaybeSome();
     }
 
     default boolean isTerminal() {
@@ -315,6 +367,11 @@ public interface Inst extends Call {
 
     default boolean isBranching() {
         return this.tid().basePath().equals(SPLIT_INST_TID);
+    }
+
+
+    default boolean isJoining() {
+        return this.tid().basePath().equals(MERGE_INST_TID);
     }
 
     @Override
@@ -367,7 +424,7 @@ public interface Inst extends Call {
                 generics.put(def.dom().tid().cLess(), lhs.type().tid().cLess());
                 def = def.dom(lhs.type().c(def.dom().c()).as());
             }
-            if (def.rng().tid().isGeneric() && generics.containsKey(def.rng().tid().cLess())) {
+            if (def.rng().tid().cLess().isGeneric() && generics.containsKey(def.rng().tid().cLess())) {
                 def = def.rng(T(generics.get(def.rng().tid().cLess()).c(def.rng().c().toString())));
             }
             if (!apiInst.args().isEmpty())
