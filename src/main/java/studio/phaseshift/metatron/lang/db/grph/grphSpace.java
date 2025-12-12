@@ -30,6 +30,7 @@ import studio.phaseshift.metatron.lang.db.grph.type.TP3Translator;
 import studio.phaseshift.metatron.lang.db.kv.kvSpace;
 import studio.phaseshift.metatron.lang.sys.router.Router;
 import studio.phaseshift.metatron.lang.util.noobjSpace;
+import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.Map;
 
@@ -81,9 +82,17 @@ public class grphSpace extends MSpace<Space> {
 
     public void start() {
         if (this.has(LOAD)) {
-            LOG.info("translating %s into grph space", uri("tinkerpop-modern"));
+            final fURI dataset = this.at(LOAD).uriValue();
+            LOG.info("translating %s into grph space", this.at(LOAD));
             final TP3Translator t = TP3Translator.Builder.of(this.pattern.retractPattern()).create();
-            t.translate(TinkerFactory.createModern());
+            if (dataset.equals(f("modern")))
+                t.translate(TinkerFactory.createModern());
+            else if (dataset.equals(f("grateful")))
+                t.translate(TinkerFactory.createGratefulDead());
+            else if (dataset.equals(f("airroutes")))
+                t.translate(TinkerFactory.createAirRoutes());
+            else
+                throw MTronException.of("unknown dataset: %s", this.at(LOAD));
         }
     }
 
