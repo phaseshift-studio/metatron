@@ -18,7 +18,11 @@ jobs:
           curl -f -s -L -o ijhttp.zip https://jb.gg/ijhttp/latest
           unzip -nq ijhttp.zip -d target
           rm ijhttp.zip
-          echo "target/ijhttp" >> $GITHUB_PATH
+          echo "/home/runner/work/metatron/metatron/target/ijhttp" >> $GITHUB_PATH
+          echo "---- full path ----
+          echo "/home/runner/work/metatron/metatron/target/ijhttp --help"
+          echo "---- relative path ----
+          echo "ijhttp --help"
       - name: Setup OpenJDK 24
         uses: actions/setup-java@v4
         with:
