@@ -47,6 +47,8 @@ public class MClient extends WebSocketClient implements MConnection {
     protected final ObjSerializer<?> serializer;
     protected final Queue<FutureObj<Obj>> futures = new LinkedList<>();
     protected final fURI remoteHost;
+    private  long totalBytesSent = 0L;
+    private  long totalBytesReceived = 0L;
 
     public MClient(final fURI remoteAuthority, final ObjSerializer<?> serializer, final Draft draft) {
         super(URI.create(remoteAuthority.toString()), draft);
@@ -89,6 +91,16 @@ public class MClient extends WebSocketClient implements MConnection {
         return this.remoteHost;
     }
 
+    @Override
+    public long totalBytesSent() {
+        return this.totalBytesSent;
+    }
+
+    @Override
+    public long totalBytesReceived() {
+        return this.totalBytesReceived;
+    }
+
     public void start() {
         this.connect();
     }
@@ -113,6 +125,7 @@ public class MClient extends WebSocketClient implements MConnection {
     @Override
     public void onMessage(final ByteBuffer message) {
         LOG.trace("received byte buffer [length:%d]", message.array().length);
+        this.totalBytesReceived += message.array().length;
         final Obj obj = this.serializer.readBytes(message);
         this.onObj(obj);
 
@@ -147,6 +160,7 @@ public class MClient extends WebSocketClient implements MConnection {
     public void sendObj(final Obj obj) {
         final ByteBuffer buffer = this.serializer.writeBytes(obj);
         this.send(buffer);
+        this.totalBytesSent += buffer.array().length;
     }
 
 

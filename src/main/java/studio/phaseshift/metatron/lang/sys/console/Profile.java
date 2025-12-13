@@ -18,9 +18,9 @@
 
 package studio.phaseshift.metatron.lang.sys.console;
 
+import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.lang.core.m.type.Inst;
 import studio.phaseshift.metatron.lang.core.m.type.Obj;
-import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.Table;
 
 import java.util.List;
@@ -37,18 +37,32 @@ public class Profile {
     }
 
     public String toString() {
-        final Table table = new Table(List.of("op", "dom", "rng", "desc"));
+        final Table table = new Table(List.of("op", "dom", "rng", "desc", "c_dom", "c_rng"));
         if (obj.isCode()) {
-            obj.codeValue().forEach(i -> {
+            cInt dom = cInt.ONE();
+            cInt rng = cInt.ONE();
+            boolean first = true;
+            for (final Inst i : obj.codeValue()) {
+                dom = first ? i.dom().c() : rng;
+                boolean inDom = i.dom().c().lte(rng);
+                rng = first ? i.rng().c() : i.rng().c().mult(dom);
+                first = false;
                 final String back = i.hasf() && !i.dom().tid().hasPattern() ? "{{b}}" : "{{y}}";
-                table.addRow(List.of(back + i.tid().name(), i.dom(), i.rng(), "{{m}}" + Inst.Form.of(i).toString()));
+                table.addRow(List.of(
+                        back + i.tid().name(),
+                        i.dom(),
+                        i.rng(),
+                        "{{m}}" + Inst.Form.of(i).toString(),
+                        "{{g}}{{{" + (inDom ? "y" : "r") + "}}" + dom.toString() + "{{g}}}{{X}}",
+                        "{{g}}{{{y}}" + rng.toString() + "{{g}}}{{X}}"));
                 /*if (!i.args().isEmpty()) {
                     final Table arg = new Table(List.of(""));
                     i.args().forEach(a -> arg.addRow(List.of(new Profile(a).toString())));
                     table.addRow(List.of("","",arg));
                 }*/
 
-            });
+            }
+            ;
         } //else {
         //table.addRow(List.of(obj.tid().toUri(), obj.dom(), obj.rng()));
         //}

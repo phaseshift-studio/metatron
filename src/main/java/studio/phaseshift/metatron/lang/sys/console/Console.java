@@ -27,6 +27,8 @@ import org.jline.terminal.Terminal;
 import org.jline.terminal.TerminalBuilder;
 import org.jline.utils.AttributedString;
 import org.jline.utils.AttributedStringBuilder;
+import org.jline.utils.AttributedStyle;
+import org.jline.utils.Status;
 import org.jline.widget.Widgets;
 import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.furi.fURI;
@@ -38,6 +40,7 @@ import studio.phaseshift.metatron.lang.core.m.type.Type;
 import studio.phaseshift.metatron.lang.core.m.type.impl.MObjs;
 import studio.phaseshift.metatron.lang.core.m.type.impl.MRec;
 import studio.phaseshift.metatron.lang.core.mach.type.impl.MMachine;
+import studio.phaseshift.metatron.lang.sys.router.Router;
 import studio.phaseshift.metatron.lang.util.logObj;
 import studio.phaseshift.metatron.lang.util.serial.ObjStringSerializer;
 import studio.phaseshift.metatron.ui.Graphitty;
@@ -77,6 +80,7 @@ public class Console extends MRec {
     protected boolean RESOLVE_MODE = false;
     private final Terminal terminal;
     private final LineReader reader;
+    private final Status status;
     private Thread mainThread;
 
     public static final Type CONSOLE_TYPE = T(CONSOLE_TID, isa_(rec()), instC(INST_TID.dom(ALL.maybe()).rng(CONSOLE_TID), lst(T(REC_TID)), (lhs, inst) -> {
@@ -98,6 +102,7 @@ public class Console extends MRec {
             this.outputHeader();
             // this.terminal.handle(Terminal.Signal.WINCH) // TODO: signal handling on some CNTRL-?? to resolve (not evaluate) current expression
             final History history = new DefaultHistory();
+            this.status = Status.getStatus(this.terminal);
             this.reader = LineReaderBuilder.builder()
                     .terminal(terminal)
                     .appName("metatron")
@@ -160,6 +165,7 @@ public class Console extends MRec {
         String line = "";
         while (true) {
             try {
+                this.updateStatus();
                 Obj result = null;
                 //Graphitty.out(this.terminal.output(), "%s{{v%d&^%d&Xv}}","\n");
                 line = this.reader.readLine(Graphitty.string("{{m}}mtron{{g}}> ")).trim();
@@ -181,6 +187,9 @@ public class Console extends MRec {
                     final Subscriptions selector = new Subscriptions(this);
                     final String selected = selector.select();
                     LOG.info("space selected: %s", selected);
+                } else if (line.startsWith(":profile")) {
+                    Profile p = new Profile(mParser.parse(line.substring(8).trim()).as());
+                    this.reader.printAbove(Graphitty.string(p.toString()));
                 } else
                     result = mParser.parse(line);
 
@@ -209,6 +218,27 @@ public class Console extends MRec {
         }
         this.terminal.close();
         System.exit(0);
+    }
+
+    protected void updateStatus() {
+        /*
+                        new AttributedStringBuilder()
+                        .style(AttributedStyle.DEFAULT.background(AttributedStyle.BLUE).foreground(AttributedStyle.WHITE)  )
+                        .append(Router.global().server().host().toString())
+                        .append("[connections: ")
+                        .append(String.valueOf(Router.global().server().nodes().size())).append("]")
+                        .append("[bytes >:").append(String.valueOf(Router.global().server().totalBytesSent())).append("]")
+                        .append("[bytes <:").append(String.valueOf(Router.global().server().totalBytesReceived())).append("]")
+                        .toAttributedString()));
+         */
+        this.status.update(List.of(
+                new AttributedStringBuilder()
+                        .ansiAppend( Graphitty.string("{{-X-&[b]&w}} %s", Router.global().server().host()))
+                        .ansiAppend(Graphitty.string(" [connections: {{c}}%d{{[b]&w}}]", Router.global().server().nodes().size()))
+                        .ansiAppend(Graphitty.string(" [bytes >: {{c}}%d{{[b]&w}}]", Router.global().server().totalBytesSent()))
+                        .ansiAppend(Graphitty.string(" [bytes <: {{c}}%d{{[b]&w}}]", Router.global().server().totalBytesReceived()))
+                        .append(Graphitty.string("{{[b]}}%s"," ".repeat(200)))
+                        .toAttributedString()));
     }
 
     protected void outputHeader() {

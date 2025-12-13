@@ -58,6 +58,8 @@ public class MServer extends WebSocketServer implements Cluster, Closeable, Obj 
     protected GraphittyLogger LOG;
     protected Thread serverThread;
     protected List<FutureObj<?>> futures = new ArrayList<>();
+    private long totalBytesSent = 0L;
+    private long totalBytesReceived = 0L;
 
     public MServer(final fURI host) {
         super(new InetSocketAddress(host.host(), host.port()));
@@ -103,10 +105,23 @@ public class MServer extends WebSocketServer implements Cluster, Closeable, Obj 
 
     }
 
+    public <T> ObjSerializer<T> getSerializer() {
+        return (ObjSerializer<T>) this.serializer;
+    }
+
     @Override
     public void close() {
         LOG.info("closing %s node {{b}}%s{{/b}}", Graphitty.sillyPrint("mtron", true, true), this.host);
         this.stop();
+    }
+
+    
+    public long totalBytesSent() {
+        return this.totalBytesSent;
+    }
+    
+    public long totalBytesReceived() {
+        return this.totalBytesReceived;
     }
 
     @Override
@@ -140,6 +155,7 @@ public class MServer extends WebSocketServer implements Cluster, Closeable, Obj 
     @Override
     public void onMessage(final WebSocket conn, final ByteBuffer message) {
         LOG.trace("received from %s byte buffer [length:%d]", conn.getAttachment(), message.array().length);
+        this.totalBytesReceived += message.array().length;
         try {
             final Obj obj = this.serializer.readBytes(message);// this.serializer.read(message);
             this.onObj(conn, obj);
@@ -161,13 +177,17 @@ public class MServer extends WebSocketServer implements Cluster, Closeable, Obj 
             //    result = result.vid(rvid);
             //     LOG.info("obj tagged: %s", result);
             // }
-            conn.send(this.serializer.writeBytes(result));
+            final ByteBuffer bytes = this.serializer.writeBytes(result);
+            conn.send(bytes);
+            this.totalBytesSent += bytes.array().length;
             //this.sendObj(conn, result);
             if (result.isFail())
                 this.onError(conn, result.<Fail>as().jvmAs());
 
         } catch (final Exception e) {
-            conn.send(this.serializer.writeBytes(fail(e)));
+            final ByteBuffer bytes = this.serializer.writeBytes(fail(e));
+            conn.send(bytes);
+            this.totalBytesReceived += bytes.array().length;
             this.onError(conn, e);
         }
     }

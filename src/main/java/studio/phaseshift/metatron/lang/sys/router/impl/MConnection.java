@@ -38,6 +38,10 @@ public interface MConnection extends Closeable {
     void close();
 
     fURI remoteHost();
+    
+    public long totalBytesSent();
+    public long totalBytesReceived();
+
 
 
 }
