@@ -163,7 +163,7 @@ public class mParser {
                 opt(seq(of('{').trim(), choice(
                                 of('?').map(t -> null),
                                 of("<j>").map(t -> null),
-                                m_code()),
+                                m_inst_arg(MAP_INST_TID)),
                         of('}').trim()).pick(1), null),
                 m_vid_postfix()) //  inst_code
                 // inst_seed []

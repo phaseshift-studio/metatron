@@ -86,6 +86,13 @@ public class mInstSetTest extends InstSetTest {
             "{1,2,3,4,5}.skip(2).take(2)                                                    % {3,4}",
             "{int{2}::1,2,3,4,5}.skip(2).take(2)                                            % {2,3}",
             "{int{3}::1,2,3,4,5}.skip(2).take(2).count()                                    % 2",
+            /// ////////////////////////////////////////////////////////////////////////////////////////////
+            "{1,1}.inst?int<=int{2}(){ sum() }                                              % 2",
+            "{1,1,1,1}.inst?int<=int{2}(){ sum() }                                          % int{2}::2",
+            "{1,1,2,3}.inst?int<=int{2}(){ sum() }                                          % {2,5}",
+            "{1,1,2,2,3,5}.inst?int<=int{2}(){ sum() }                                      % {2,4,8}",
+            "{1,1,2,2,3,5,7}.inst?int<=int{2}(){ sum() }.catch(10)                          % {2,4,8,10}",
+            "{1,1,2,2,3,3,4,4}.inst?int<=int{2}(){ sum() }.catch(10)                        % {2,4,6,8}",
     }, delimiter = '%')
     public void testSkipLimitCode(final String code, final String expected) {
         super.testCode(code, expected);
@@ -94,9 +101,10 @@ public class mInstSetTest extends InstSetTest {
 
     @ParameterizedTest
     @CsvSource(value = {
-            // "1.plus?int{?}<=int(int{0}::1)                                          % noobj",
+           // "1.plus?int{?}<=int(int{-1}::1)                                         % noobj",
             "1.plus(_)                                                              % 2",
             "1.plus(2)                                                              % 3",
+            "1.plus(1.plus(1))                                                      % 3",
             "{1,2,3}._                                                              % {1,2,3}",
             "{1,2,3}.plus(2)                                                        % {3,4,5}",
             "{int{10}::1}.plus(_)                                                   % int{10}::2",
@@ -140,12 +148,15 @@ public class mInstSetTest extends InstSetTest {
             "{1,2,3}-<?lst<=int{*}([,])                                             % [,]",
             "{1,2,3}-<?lst{*}<=int([_])                                             % {[1],[2],[3]}",
             "{1,2,3}-<?lst<=int{*}([_])                                             % [{1,2,3}]",
-            //"{1,2,3}-<?rec<=int{*}([=>])                                          % [=>]",
+            //"{1,2,3}-<?rec<=int{3}([=>])                                            % [=>]",
+            //"{1,2,3}-<?rec<=int{*}([=>])                                            % [=>]",
             "{1,2,3}-<noobj                                                         % noobj",
             "{1,2,3}-<[noobj]                                                       % [noobj]",
             "{1,2,3}-<[noobj=>noobj]                                                % [=>]",
             "{1,2,3}.map?int<=real(1)                                               % <ERROR>",
-            //"{1,2,3}.map?int<=int{3}(1)                                           % int{3}::1",
+            "{1,2,3}.inst?int<=int{3}(){1}                                          % 1",
+            "{1,2,3}.inst{3}?int<=int{3}(){1}                                       % int{3}::1",
+            "{int{2}::1,int{2}::2,int{2}::3}.inst{3}?int<=int{3}(){1}               % int{6}::1",
             "{1,2,3}.map?int<=int(1)                                                % int{3}::1",
             "{1,2,3}-<1                                                             % 1",
             "{1,2,3}-<1                                                             % 1",
@@ -171,12 +182,14 @@ public class mInstSetTest extends InstSetTest {
             "{1,2,3}>-.id?A<=A().-<[_,_,_]                                          % {[1,1,1],[2,2,2],[3,3,3]}",
             "[a=>1,b=>2,c=>3]>-.-<|[<<=>>>.is(gt(0))]                               % [a=>1,b=>2,c=>3]>-",
             "[a=>1,b=>2,c=>3]>-.-<|[<<=>>>.is(gt(2))]                               % [c=>3]>-",
-            //"{1,2,3}-<[_,_,_]                                              % {[1,1,1],[2,2,2],[3,3,3]}",
+            "{1,2,3}.-<?lst<=int([_,_,_])                                           % {[1,1,1],[2,2,2],[3,3,3]}",
             // MULT //
             "{1,2,3}.mult(10)                                                       % {int{1}::10,int{1}::20,int{1}::30}",
             "{int{2}::1,int{3}::2,int{4}::3}.mult(10)                               % {int{2}::10,int{3}::20,int{4}::30}",
             "int{50}::10.mult(10)                                                   % int{50}::100",
             // COUNT/SUM //
+            "{1,2,3}.sum().prod()                                                   % 6",
+            "{1,2,3}.prod().sum()                                                   % 6",
             //"{1,2,3}.sum().sum()                                                  % 6",
             //"{1,2,3}._.sum()._.sum()._.sum()                                      % 6",
             "{1,2,3,4}.id{5}().count()                                              % 20",

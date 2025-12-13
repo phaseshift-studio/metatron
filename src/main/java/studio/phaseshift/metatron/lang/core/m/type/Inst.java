@@ -36,6 +36,7 @@ import java.util.function.Function;
 import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.*;
 import static studio.phaseshift.metatron.lang.core.m.obj.NoObj.noobj;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MRec.rec;
@@ -294,12 +295,12 @@ public interface Inst extends Call {
             modulateC = true;
             //  }
             if (!clhs.rng().matches(cinst.dom()))
-                throw mexcept("lhs {{m}}range{{/m}} does not match inst {{m}}domain{{/m}}: %s {{r}}=/>{{/r}} %s [%s]", clhs.rng(), cinst.dom(), cinst);
+                return fail(mexcept("lhs {{m}}range{{/m}} does not match inst {{m}}domain{{/m}}: %s {{r}}=/>{{/r}} %s [%s]", clhs.rng(), cinst.dom(), cinst));
         }
         if (!clhs.isFail() || cinst.isCatch()) {
             try {
                 if (null == cinst.f())
-                    throw mexcept("unable to determine inst function: %s{{g}}::{{r}}T{{X}} => %s", uri(clhs.tid()), cinst);
+                    return fail(mexcept("unable to determine inst function: %s{{g}}::{{r}}T{{X}} => %s", uri(clhs.tid()), cinst));
                 cinst = Helpers.applyArgs(clhs, cinst);
                 Router.stack().push(cinst.args());
                 try {

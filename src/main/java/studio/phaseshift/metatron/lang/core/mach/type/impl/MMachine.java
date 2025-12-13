@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.lang.core.mach.type.impl;
 
+import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.core.m.inst.mInstSet;
 import studio.phaseshift.metatron.lang.core.m.obj.NoObj;
@@ -38,6 +39,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.CODE_TID;
+import static studio.phaseshift.metatron.lang.core.m.obj.NoObj.noobj;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.lang.core.mach.machInstSet.DROP_TID;
 import static studio.phaseshift.metatron.lang.core.mach.machInstSet.MACH_TID;
@@ -78,7 +80,7 @@ public class MMachine extends MObj implements Machine {
         for (final Inst inst : mach.code().jvm()) {
             if (inst.isInitial()) {
                 LOG.trace("  {{g}}==>{{/g}} creating {{y}}initial{{/y}} monad at %s", inst);
-                this.running().append(MMonad.of(NoObj.noobj(), inst));
+                this.running().append(MMonad.of(noobj(), inst));
             } else if (inst.isGather()) {
                 // many-to-?
                 LOG.trace("  {{m}}==|{{/m}} creating {{y}}barrier{{/y}} monad at %s", inst);
@@ -90,7 +92,9 @@ public class MMachine extends MObj implements Machine {
     }
 
     protected Monad split(final Monad monad) {
-        final Tuple.Pair<Obj, Obj> pair = monad.obj().take(monad.inst());
+        if(monad.obj().unique() && monad.inst().dom().c().isOne() || monad.inst().dom().c().isAny())
+            return monad;
+        final Tuple.Pair<Obj, Obj> pair = monad.obj().take(cInt.of(monad.inst().dom().c().max()));
         if (!pair.get1().isNoObj())
             this.running().append(monad.obj(pair.get1()));
         LOG.trace("   {{g}}=>{{/g}} splitting monad %s / %s (inst: %s)", pair.get0(), pair.get1(), monad.inst());
@@ -101,7 +105,7 @@ public class MMachine extends MObj implements Machine {
     public Obj apply(final Obj lhs) {
         final Code code = this.resolve(lhs).code();
         if (this.running().c().isZero())
-            this.running().append(MMonad.of(NoObj.noobj(), code.insts().get(0)));
+            this.running().append(MMonad.of(noobj(), code.insts().getFirst()));
         while (true) {
             final Monad m = (Monad) this.running().take();
             if (null != m) {

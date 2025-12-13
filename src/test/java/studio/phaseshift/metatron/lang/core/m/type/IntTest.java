@@ -94,7 +94,7 @@ public class IntTest extends MetatronObjTest {
             "int{4,10}::1       %int{3}       %int{3}::1          %int{1,7}::1",
             "int{10}::1         %int{10}      %int{10}::1         %int{0}::1",
             "int{10}::1         %int{10}      %int{10}::1         %noobj",
-            "int{10}::1         %int{11}      %int{0}::1          %int{10}::1",
+            "int{10}::1         %int{11}      %int{10}::1         %noobj",
             "int{0}::1          %int{0}       %int{0}::1          %int{0}::1",
             "int{10}::1         %int{0}       %int{0}::1          %int{10}::1",
             "int{10}::1         %int{-5}      %int{-5}::1         %int{15}::1",

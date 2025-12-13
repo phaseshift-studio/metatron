@@ -124,29 +124,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
     }
 
     default Pair<Obj, Obj> take(final cInt c) {
-        if (c.lte(this.tid().cV())) {
-            final Obj remaining = this.tid(this.tid().c(this.tid().cV().minus(c).toString()));
-            final Obj result = this.tid(this.tid().c(c.toString()));
-            return Pair.with(result, remaining);
-        } else {
-            return Pair.with(noobj(), this);
-        }
-    }
-
-    default Pair<Obj, Obj> take(final Inst inst) {
-        if (!inst.tid().hasDom() || (this.uniqueC().equals(cInt.ONE()) && inst.dom().c().gt(cInt.ZERO())))
-            return Pair.with(this, noobj());
-        else if (inst.dom().isZero() || this.isNoObj())
-            return Pair.with(noobj(), this);
-        else if (this.c().within(inst.dom().c()))
-            return Pair.with(this, noobj());
-        else if (inst.dom().c().most().within(this.c()))
-            return Pair.with(this.c(inst.dom().c().most()), this.c(c -> c.minus(inst.dom().c().most())));
-        else if (inst.dom().c().least().within(this.c()))
-            return Pair.with(this.c(inst.dom().c().min()), this.c(c -> c.minus(inst.dom().c().least())));
-        else { // if the obj can't be split, just return it (will typically lead to an evaluation error)
-            return Pair.with(this, noobj());
-        }
+        return this.c().gte(c) ? Pair.with(this.c(c), this.c(this.c().minus(c))) : Pair.with(this, noobj());
     }
 
     default Obj take() {
@@ -580,10 +558,8 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
         }
 
         public static <O extends Obj> O objClone(final Obj obj, final Object jvm, final fURI tid, final fURI vid) {
-            Object realjvm = jvm;
-
-            if (BASE_TYPES.contains(tid.basePath()) && obj instanceof FObj<?>)
-                return ((FObj<?>) obj).base().clone(jvm instanceof Obj ? ((Obj) jvm).jvm() : jvm, tid, vid);
+            //if (BASE_TYPES.contains(tid.basePath()) && obj instanceof FObj<?>)
+            //    return ((FObj<?>) obj).base().clone(jvm instanceof Obj ? ((Obj) jvm).jvm() : jvm, tid, vid);
             if (!Objects.equals(tid, obj.tid())) {
                 final Obj type = Router.readFromSpace(tid);
                 if (!type.isNoObj() && type.isType() && type.<Type>as().hasConstructor()) {
@@ -593,7 +569,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
                     return (O) clone;
                 }
             }
-            if (!Objects.equals(realjvm, obj.jvm()) || !tid.equals(obj.tid()) || !Objects.equals(vid, obj.vid())) {
+            if (!Objects.equals(jvm, obj.jvm()) || !tid.equals(obj.tid()) || !Objects.equals(vid, obj.vid())) {
                 try {
                     final O clone = (O) obj.clone();
                     Obj.Helper.objCheckAndSave(clone, jvm, tid.big(), vid);
@@ -610,7 +586,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
 
         public static Set<Inst> insts() {
             return new LinkedHashSet<>(List.of(
-                    instC(EXPLAIN_INST_TID.dom(ALL.maybe()).rng(STR_TID), lst(T(CODE_TID)), (lhs,inst) -> str(new Profile(inst.arg(0).as()).toString())),
+                    instC(EXPLAIN_INST_TID.dom(ALL.maybe()).rng(STR_TID), lst(T(CODE_TID)), (lhs, inst) -> str(new Profile(inst.arg(0).as()).toString())),
                     instC(TO_STR_INST_TID.dom(A.maybe()).rng(STR_TID.maybe()), lst(), (lhs, inst) -> str(lhs.toString())),
                     instC(AUTO_INST_TID.dom(ALL.maybe()).rng(ALL.maybe()), lst(T(ALL.maybe())), (lhs, inst) -> inst.arg(0).apply(lhs)),
                     instC(CATCH_INST_TID.dom(ALL).rng(ALL.maybeSome()), lst(T(ALL.maybeSome())), (lhs, inst) -> lhs.isFail() ? inst.arg(0).apply(lhs) : lhs),

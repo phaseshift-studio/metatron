@@ -96,10 +96,7 @@ public abstract class MObj implements Obj, Cloneable {
     public Obj take() {
         if (this.isNoObj())
             return null;
-        final Obj r = this.clone();
-        this.tid = fURI.NOOBJ;
-        this.vid = fURI.fnull;
-        return r;
+        return this;
     }
 
     @Override

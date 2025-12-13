@@ -22,7 +22,6 @@ import studio.phaseshift.metatron.furi.C;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.core.m.obj.NoObj;
-import studio.phaseshift.metatron.lang.core.m.type.Inst;
 import studio.phaseshift.metatron.lang.core.m.type.Obj;
 import studio.phaseshift.metatron.lang.core.m.type.Objs;
 import studio.phaseshift.metatron.util.IteratorUtil;
@@ -180,55 +179,25 @@ public class MObjs implements Objs {
             return Tuple.Pair.with(this, NoObj.noobj());
         if (c.isZero())
             return Tuple.Pair.with(NoObj.noobj(), this);
-        Obj retrieved = MObjs.empty();
-        Obj remaining = MObjs.empty();
+        final List<Obj> retrieved = new ArrayList<>();
+        final List<Obj> remaining = new ArrayList<>();
         cInt total = cInt.ZERO();
         for (Map.Entry<Obj, cInt> entry : this.cstream.entrySet()) {
-            if (total.equals(c))
-                remaining = remaining.append(entry.getKey().c(entry.getValue()));
-            else if (total.plus(entry.getValue()).lte(c)) {
-                retrieved = retrieved.append(entry.getKey().c(entry.getValue()));
-                total = total.plus(entry.getValue());
+            final cInt toTake = c.minus(total);
+            if (toTake.gt(c.zero())) {
+                if (entry.getValue().lte(toTake)) {
+                    retrieved.add(entry.getKey().c(entry.getValue()));
+                    total = total.plus(entry.getValue());
+                } else {
+                    remaining.add(entry.getKey().c(entry.getValue().minus(toTake)));
+                    retrieved.add(entry.getKey().c(toTake));
+                    total = total.plus(toTake);
+                }
             } else {
-                remaining = remaining.append(entry.getKey().c(entry.getValue()));
+                remaining.add(entry.getKey().c(entry.getValue()));
             }
         }
-        return Tuple.Pair.with(retrieved, remaining);
-    }
-
-    @Override
-    public Tuple.Pair<Obj, Obj> take(final Inst inst) {
-        if (this.isNoObj())
-            return Tuple.Pair.with(NoObj.noobj(), NoObj.noobj());
-            // else if(!inst.tid().hasDom())
-            //     return Tuple.Pair.with()
-        else if (inst.dom().c().most().isZero())
-            return Tuple.Pair.with(NoObj.noobj(), this);
-        /// ////////////////////////////////////
-        // inst.dom().c().isOne()
-        if ((this.uniqueC().equals(cInt.ONE()) && (!inst.tid().hasDom() || inst.dom().c().gte(cInt.ONE())))
-                || inst.dom().c().max() == null
-                || this.c().lte(inst.dom().c().most()))
-            return Tuple.Pair.with(this, NoObj.noobj());
-        /// ////////////////////////////////////
-        cInt total = cInt.ZERO();
-        boolean done = false;
-        final Map<Obj, cInt> taken = new HashMap<>();
-        final Map<Obj, cInt> remaining = new HashMap<>();
-        for (final Map.Entry<Obj, cInt> kv : this.cstream.entrySet()) {
-            if (!done) {
-                taken.put(kv.getKey(), kv.getValue());
-                total = total.plus(kv.getValue());
-                if (total.gte(inst.dom().c()))
-                    done = true;
-            } else {
-                remaining.put(kv.getKey(), kv.getValue());
-            }
-        }
-        final Obj takenObj = taken.isEmpty() ? NoObj.noobj() : taken.size() == 1 ? taken.entrySet().stream().map(kv -> kv.getKey().c(kv.getValue())).iterator().next() : new MObjs(taken, fURI.fnull);
-        final Obj remainingObj = remaining.isEmpty() ? NoObj.noobj() : remaining.size() == 1 ? remaining.entrySet().stream().map(kv -> kv.getKey().c(kv.getValue())).iterator().next() : new MObjs(remaining, this.vid);
-        return Tuple.Pair.with(takenObj, remainingObj);
-
+        return Tuple.Pair.with(objs(retrieved), objs(remaining));
     }
 
     @Override
