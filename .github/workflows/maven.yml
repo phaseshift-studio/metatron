@@ -13,12 +13,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Download ijhttp
-        run: curl -f -s -L -o ijhttp.zip https://jb.gg/ijhttp/latest
-      - name: Unpack ijhttp
-        run: unzip -nq ijhttp.zip -d target
-      - name: Remove ijhttp.zip
-        run: rm ijhttp.zip
+      - name: Install ijhttp
+        run: | 
+          curl -f -s -L -o ijhttp.zip https://jb.gg/ijhttp/latest
+          unzip -nq ijhttp.zip -d target/ijhttp
+          rm ijhttp.zip
+          echo "target/ijhttp" >> $GITHUB_PATH
       - name: Setup OpenJDK 24
         uses: actions/setup-java@v4
         with:
