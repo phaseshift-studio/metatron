@@ -408,7 +408,7 @@
                 <executions>
                     <execution>
                         <configuration>
-                            <environmentFile>${project.basedir}/src/test/resources/ijhttp/public-env.json</environmentFile>
+                            <environmentFile>${project.basedir}/src/test/resources/ijhttp/http-client.env.json</environmentFile>
                             <environmentName>dev</environmentName>
                             <files>
                                 <file>${project.basedir}/src/test/resources/ijhttp/mtron-server.http</file>
