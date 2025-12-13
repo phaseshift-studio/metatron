@@ -24,10 +24,10 @@ jobs:
           curl -f -s -L -o ijhttp.zip https://jb.gg/ijhttp/latest
           unzip -nq ijhttp.zip -d target
           rm ijhttp.zip
-          ls -all
-          echo "/home/runner/work/metatron/metatron/target/ijhttp" >> $GITHUB_PATH
+          ls -all target/ijhttp
+          echo "${GITHUB_WORKSPACE}/target/ijhttp" >> $GITHUB_PATH
           echo "---- full path ----"
-          /home/runner/work/metatron/metatron/target/ijhttp/ijhttp --version
+          target/ijhttp/ijhttp --version
           echo "---- relative path ----"
           ijhttp --version
       - name: Install with Maven
