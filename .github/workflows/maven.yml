@@ -26,6 +26,7 @@ jobs:
           rm ijhttp.zip
           ls -all target/ijhttp
           echo "${GITHUB_WORKSPACE}/target/ijhttp" >> $GITHUB_PATH
+          export PATH=$PATH:"${GITHUB_WORKSPACE}/target/ijhttp"
           echo "---- full path ----"
           target/ijhttp/ijhttp --version
           echo "---- relative path ----"
