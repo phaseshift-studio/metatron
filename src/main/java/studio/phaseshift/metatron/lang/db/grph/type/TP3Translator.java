@@ -27,10 +27,11 @@ import studio.phaseshift.metatron.lang.core.m.type.Obj;
 import studio.phaseshift.metatron.lang.core.m.type.Rec;
 import studio.phaseshift.metatron.lang.core.m.type.impl.MObjFactory;
 import studio.phaseshift.metatron.lang.sys.router.Router;
+import studio.phaseshift.metatron.lang.sys.router.impl.MRouter;
 import studio.phaseshift.metatron.util.Translator;
 
+import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicReference;
 
 import static studio.phaseshift.metatron.lang.core.m.inst.mFluent.StartLess.auto;
 import static studio.phaseshift.metatron.lang.core.m.obj.NoObj.noobj;
@@ -38,6 +39,7 @@ import static studio.phaseshift.metatron.lang.core.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.lang.db.grph.inst.grphInstSet.EDGE_TID;
 import static studio.phaseshift.metatron.lang.db.grph.inst.grphInstSet.VERTEX_TID;
+import static studio.phaseshift.metatron.util.Common.mutableMap;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -48,16 +50,16 @@ public record TP3Translator(Builder builder) implements Translator<Obj, Graph> {
     public static final String PROPS = "PROPS";
 
 
-    private Rec addProperties(final Rec elementRec, final Element element) {
-        final AtomicReference<Rec> props = new AtomicReference<>(elementRec);
-        element.properties().forEachRemaining(tpP -> props.set(props.get().put(uri(tpP.key()), MObjFactory.of().create(tpP.value()))));
-        return props.get();
+    private Map<Obj, Obj> createProperties(final Element element) {
+        final Map<Obj, Obj> props = new LinkedHashMap<>();
+        element.properties().forEachRemaining(tpP -> props.put(uri(tpP.key()), MObjFactory.of().create(tpP.value())));
+        return props;
     }
 
     private Rec createEdge(final Edge tpEdge) {
-        final Rec props = addProperties(rec(), tpEdge);
+        final Map<Obj, Obj> props = createProperties(tpEdge);
         return rec(Map.of(uri(LABEL), uri(tpEdge.label()),
-                        uri(PROPS), props.isEmpty() ? noobj() : props,
+                        uri(PROPS), props.isEmpty() ? noobj() : rec(props),
                         uri(Direction.OUT.name()), auto(this.builder.root.extend("V").extend(tpEdge.outVertex().id().toString())),
                         uri(Direction.IN.name()), auto(this.builder.root.extend("V").extend(tpEdge.inVertex().id().toString()))),
                 EDGE_TID, fURI.fnull);
@@ -67,17 +69,18 @@ public record TP3Translator(Builder builder) implements Translator<Obj, Graph> {
     @Override
     public Obj translate(final Graph graph) {
         graph.vertices().forEachRemaining(tpV -> {
-            final AtomicReference<Rec> out = new AtomicReference<>(rec());
-            tpV.edges(Direction.OUT).forEachRemaining(tpE -> out.set(out.get().put(uri(tpE.label()), out.get().at(uri(tpE.label())).append(createEdge(tpE)))));
-            final AtomicReference<Rec> in = new AtomicReference<>(rec());
-            tpV.edges(Direction.IN).forEachRemaining(tpE -> in.set(in.get().put(uri(tpE.label()), in.get().at(uri(tpE.label())).append(createEdge(tpE)))));
-            final Rec props = addProperties(rec(), tpV);
-            rec(Map.of(uri(LABEL), uri(tpV.label()),
-                            uri(PROPS), props.isEmpty() ? noobj() : props,
-                            uri(Direction.OUT.name()), out.get().isEmpty() ? noobj() : out.get(),
-                            uri(Direction.IN.name()), in.get().isEmpty() ? noobj() : in.get()),
+            final Map<Obj, Obj> out = mutableMap();
+            tpV.edges(Direction.OUT).forEachRemaining(tpE -> out.compute(uri(tpE.label()), (k, v) -> null == v ? createEdge(tpE) : v.append(createEdge(tpE))));
+            final Map<Obj, Obj> in = mutableMap();
+            tpV.edges(Direction.IN).forEachRemaining(tpE -> out.compute(uri(tpE.label()), (k, v) -> null == v ? createEdge(tpE) : v.append(createEdge(tpE))));
+            final Map<Obj, Obj> props = createProperties(tpV);
+            Router.writeToSpace(this.builder.root.extend("V").extend(tpV.id().toString()), rec(Map.of(uri(LABEL), uri(tpV.label()),
+                            uri(PROPS), props.isEmpty() ? noobj() : rec(props),
+                            uri(Direction.OUT.name()), out.isEmpty() ? noobj() : rec(out),
+                            uri(Direction.IN.name()), in.isEmpty() ? noobj() : rec(in)),
                     VERTEX_TID,
-                    this.builder.root.extend("V").extend(tpV.id().toString()));
+                    fURI.fnull));
+                    //this.builder.root.extend("V").extend(tpV.id().toString()));
         });
         /*
               graph.edges().forEachRemaining(tpE -> {

@@ -52,4 +52,28 @@ public class UriTest extends MetatronTest {
         super.testCode(code, expected);
     }
 
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "a.pow(0)                         % <.>",
+            "/a.pow(1)                        % /a",
+            "/a/.pow(1)                       % /a/",
+            "/a/.pow(2)                       % /a/a/",
+            "a.pow(2)                         % a/a",
+            "a.pow(3)                         % a/a/a",
+            "a/b.pow(2)                       % a/b/a/b",
+            "a/b.pow(3)                       % a/b/a/b/a/b",
+            "a/b.pow(3)                       % a/b/a/b/a/b",
+            "a/b/c.pow(2)                     % a/b/c/a/b/c",
+            "a/b/c.pow(3)                     % a/b/c/a/b/c/a/b/c",
+            "a/b/c/.pow(3)                    % a/b/c/a/b/c/a/b/c/",
+            "/a/b/c/.pow(3)                   % /a/b/c/a/b/c/a/b/c/",
+            "a/b/c/d.pow(2)                   % a/b/c/d/a/b/c/d",
+            "a/b/c/d.pow(3)                   % a/b/c/d/a/b/c/d/a/b/c/d",
+            "<a/b/../c/d>.pow(3)              % a/c/d/a/c/d/a/c/d",
+    }, delimiter = '%')
+    public void testMath(final String code, final String expected) {
+        super.testCode(code, expected);
+    }
+    
 }

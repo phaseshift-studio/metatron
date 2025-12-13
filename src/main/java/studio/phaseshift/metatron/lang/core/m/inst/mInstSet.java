@@ -66,6 +66,7 @@ public class mInstSet extends MInstSet {
     public static final fURI SUM_INST_TID = INST_TID.extend("sum");
     public static final fURI CC_INST_TID = INST_TID.extend("cc");
     public static final fURI PROD_INST_TID = INST_TID.extend("prod");
+    public static final fURI POW_INST_TID = INST_TID.extend("pow");
     public static final fURI REDUCE_INST_TID = INST_TID.extend("reduce");
     public static final fURI MULT_INST_TID = INST_TID.extend("mult");
     public static final fURI PLUS_INST_TID = INST_TID.extend("plus");

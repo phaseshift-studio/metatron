@@ -20,7 +20,7 @@ print("{{r}}------------\n{{g}}*{{y}}boot/option{{X}}: ",
                       /docs => target/docs ]]@/sys/router/space/web;
    grph::[pattern => /g/#,
           store   => kv::[pattern => /g/#],
-          :load    => modern]@/sys/router/space/tp3;
+          :load    => grateful]@/sys/router/space/tp3;
    mqtt::[pattern => /mqtt/zigbee2mqtt/#,
           host    => <mqtt://chibi.local:1883>,
           prefix  => </mqtt/>]@/sys/router/space/mqtt/zigbee2mqtt;

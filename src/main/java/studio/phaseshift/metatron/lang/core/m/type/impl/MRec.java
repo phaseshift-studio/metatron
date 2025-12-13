@@ -23,6 +23,7 @@ import studio.phaseshift.metatron.lang.core.m.type.Obj;
 import studio.phaseshift.metatron.lang.core.m.type.ObjFactory;
 import studio.phaseshift.metatron.lang.core.m.type.Rec;
 import studio.phaseshift.metatron.lang.core.m.type.Rel;
+import studio.phaseshift.metatron.util.Common;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -75,13 +76,13 @@ public class MRec extends MObj implements Rec {
     }
 
     public static Rec rec(final Stream<Rel> stream) {
-        return rec(stream.collect(Collectors.toMap(Rel::first, Rel::second, (a, b) -> a.append(b), LinkedHashMap::new)), REC_TID, fURI.fnull);
+        return stream.collect(new Common.RecCollector(REC_TID, fURI.fnull));
     }
 
     public static <K, V> Rec rec(final Map<K, V> map, final ObjFactory factory) {
         return rec(map.entrySet().stream()
-                //  .filter(kv -> !(kv.getKey() instanceof Obj) || !((Obj) kv.getKey()).isNoObj())
-                //  .filter(kv -> !(kv.getValue() instanceof Obj) || !((Obj) kv.getValue()).isNoObj())
+                 //.filter(kv -> !(kv.getKey() instanceof Obj) || !((Obj) kv.getKey()).isNoObj())
+                 // .filter(kv -> !(kv.getValue() instanceof Obj) || !((Obj) kv.getValue()).isNoObj())
                 .map(kv -> rel(kv.getKey() instanceof String && !((String) kv.getKey()).contains(" ") ? uri((String) kv.getKey()) : factory.create(kv.getKey()), factory.create(kv.getValue()))));
     }
 

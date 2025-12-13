@@ -61,6 +61,16 @@ public class IntTest extends MetatronObjTest {
     public void testCode(final String lhs, final String code, final String expected) {
         super.testCode(lhs, code, expected);
     }
+    
+    @ParameterizedTest
+    @CsvSource(value = {
+            "2.pow(4)                          % 16",
+            "2.pow(4).plus(1)                  % 17",
+            "2.pow(4).plus(1).mult(2)          % 34",
+    }, delimiter = '%')
+    public void testMath(final String code, final String expected) {
+        super.testCode(code, expected);
+    }
 
     @ParameterizedTest
     @CsvSource(value = {

@@ -18,10 +18,10 @@
 
 package studio.phaseshift.metatron.util;
 
+import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.core.m.type.Obj;
 import studio.phaseshift.metatron.lang.core.m.type.Rec;
 import studio.phaseshift.metatron.lang.core.m.type.Rel;
-import studio.phaseshift.metatron.lang.core.m.type.impl.MRec;
 
 import java.io.Closeable;
 import java.util.*;
@@ -33,6 +33,9 @@ import java.util.regex.Pattern;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+
+import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.REC_TID;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MRec.rec;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -132,6 +135,18 @@ public final class Common {
 
     public static class RecCollector implements Collector<Rel, Map<Obj, Obj>, Rec> {
 
+        final fURI vid;
+        final fURI tid;
+
+        public RecCollector() {
+            this.vid = null;
+            this.tid = REC_TID;
+        }
+
+        public RecCollector(final fURI tid, final fURI vid) {
+            this.tid = tid;
+            this.vid = vid;
+        }
 
         @Override
         public Supplier<Map<Obj, Obj>> supplier() {
@@ -140,7 +155,7 @@ public final class Common {
 
         @Override
         public BiConsumer<Map<Obj, Obj>, Rel> accumulator() {
-            return (a, b) -> a.compute(b.first(), (k, v) -> null == v ? b.second() : v.append(b.second()));
+            return (a, b) -> a.compute(b.first(), (k, v) -> b.isNoObj() ? v : (null == v ? b.second() : v.append(b.second())));
         }
 
         @Override
@@ -153,7 +168,7 @@ public final class Common {
 
         @Override
         public Function<Map<Obj, Obj>, Rec> finisher() {
-            return MRec::rec;
+            return m -> rec(m, this.tid, this.vid);
         }
 
         @Override

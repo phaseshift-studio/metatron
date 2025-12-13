@@ -255,14 +255,12 @@ public record ObjStringSerializer(Builder b) implements ObjSerializer<String> {
         } else {
             boolean nested =
                     lst.elements().anyMatch(Obj::isPoly) ||
-                            lst.elements().filter(o -> !o.isPoly()).map(Obj::toString).map(String::length).reduce(0, Integer::sum) > (75 - depth);
+                            lst.elements().filter(o -> !o.isPoly()).map(Obj::toString).map(Graphitty::strip).map(String::length).reduce(0, Integer::sum) > (30 - depth);
             sb.append("{{g}}[");
-            if (nested)
-                sb.append("\n");
             AtomicBoolean first = new AtomicBoolean(true);
             lst.elements().forEach(v -> {
-                if (nested)
-                    sb.append(" ".repeat(false && first.getAndSet(false) ? 0 : (depth * 2) + 1));
+                if (nested && !first.getAndSet(false))
+                    sb.append(" ".repeat(depth + 2));
                 if (v.isRec()) {
                     this.generateRec(sb, v.as(), depth + 1);
                 } else if (v.isLst()) {

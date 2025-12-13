@@ -153,7 +153,7 @@ public class Console extends MRec {
     public LineReader getReader() {
         return this.reader;
     }
-    
+
     public void run() throws Exception {
         Mode.waitForBoot();
         new CustomWidgets(this.reader);
@@ -174,7 +174,7 @@ public class Console extends MRec {
                 } else if (line.startsWith(":top")) {
                     TTop.ttop(terminal, System.out, System.err, new String[0]);
                 } else if (line.startsWith(":box")) {
-                    LOG.none(new Box(line.substring(4).trim(),List.of("|","|","-","-")));
+                    LOG.none(new Box(line.substring(4).trim(), Box.BASIC_BORDER));
                 } else if (line.startsWith(":less")) {
                     Commands.less(terminal, System.in, System.out, System.err, Paths.get(""), new String[0]);
                 } else if (line.startsWith(":select")) {
@@ -187,10 +187,8 @@ public class Console extends MRec {
                 if (null != result) {
                     (result.isNoObj() ?
                             MObjs.empty() :
-                            result.isObjCall() ?
-                                    MMachine.of(result.as()).apply() :
-                                    result).stream().forEach(
-                            o -> Graphitty.out(this.terminal.output(), "{{-X-}}{{m}}=={{g}}>{{X}}%s\n".formatted(o.toString())));
+                            result.isObjCall() ? MMachine.of(result.as()).apply() : result).stream()
+                            .forEach(o -> Graphitty.out(this.terminal.output(), "{{-X-}}{{m}}=={{g}}>{{X}}%s\n".formatted(o.toString())));
                 }
             } catch (final UserInterruptException e) {
                 LOG.warn(Graphitty.sillyPrint("process interrupted", true, true));
@@ -239,8 +237,8 @@ public class Console extends MRec {
             this.terminal.writer().print(Graphitty.string(randomHeader));
             this.terminal.writer().flush();
         } catch (final Exception e) {
-            this.terminal.writer().println("...an exception has occurred.");
-            this.terminal.writer().println("      ...this doesn't bode well for your time in the meTaRon: " + e);
+            this.terminal.writer().println("...a fundamental boot exception has occurred.");
+            this.terminal.writer().println("      ...this does not bode well for your time in the meTaRon: " + e);
             this.terminal.writer().println(" __  __  ____  ____   __   ____  ____  _____  _  _ \n" +
                     "(  \\/  )( ___)(_  _) /__\\ (_  _)(  _ \\(  _  )( \\( )\n" +
                     " )    (  )__)   )(  /(__)\\  )(   )   / )(_)(  )  ( \n" +
@@ -305,7 +303,6 @@ public class Console extends MRec {
             BootLoader.TYPE_CHECK = !BootLoader.TYPE_CHECK;
             final int xLocation = terminal.getCursorPosition(System.out::print).getX() + 1;
             Graphitty.out(terminal.output(), "\n{{-X-}}{{%s}}%s{{/%s}}{{X}} base type prefixes{{^1&|%d}}{{X}}", !BootLoader.TYPE_CHECK ? "y" : "g", !BootLoader.TYPE_CHECK ? "no type checking" : "typing checking", !BootLoader.TYPE_CHECK ? "y" : "g", xLocation);
-
             return true;
         }
 
