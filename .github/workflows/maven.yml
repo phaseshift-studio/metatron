@@ -16,7 +16,7 @@ jobs:
       - name: Install ijhttp
         run: | 
           curl -f -s -L -o ijhttp.zip https://jb.gg/ijhttp/latest
-          unzip -nq ijhttp.zip -d target/ijhttp
+          unzip -nq ijhttp.zip -d target
           rm ijhttp.zip
           echo "target/ijhttp" >> $GITHUB_PATH
       - name: Setup OpenJDK 24
