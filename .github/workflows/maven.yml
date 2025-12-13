@@ -22,8 +22,8 @@ jobs:
       - name: Install ijhttp
         run: | 
           curl -f -s -L -o ijhttp.zip https://jb.gg/ijhttp/latest
-          unzip ijhttp.zip -d ./tmp
-          mv ./tmp/*/* ./target
+          unzip -q ijhttp.zip -d ./tmp
+          mv ./tmp/*/* target
           rm ijhttp.zip
           ls -all target
           export PATH=$PATH:"${GITHUB_WORKSPACE}/target"
