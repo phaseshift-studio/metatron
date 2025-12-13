@@ -1,0 +1,2 @@
+
+WEBSOCKET ws://{{host}}:{{port}}

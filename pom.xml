@@ -402,6 +402,30 @@
                 </configuration>
             </plugin>
             <plugin>
+                <groupId>uk.bot-by.maven-plugin</groupId>
+                <artifactId>ijhttp-maven-plugin</artifactId>
+                <version>1.0.0</version>
+                <executions>
+                    <execution>
+                        <configuration>
+                            <environmentFile>${project.basedir}/src/test/resources/ijhttp/public-env.json</environmentFile>
+                            <environmentName>dev</environmentName>
+                            <files>
+                                <file>${project.basedir}/src/test/resources/ijhttp/mtron-server.http</file>
+                            </files>
+                            <logLevel>HEADERS</logLevel>
+                            <report>true</report>
+                            <workingDirectory>target</workingDirectory>
+                        </configuration>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <id>simple-run-with-report</id>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
                 <groupId>com.spotify</groupId>
                 <artifactId>dockerfile-maven-plugin</artifactId>
                 <version>${dockerfile-maven.version}</version>
