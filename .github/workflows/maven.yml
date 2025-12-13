@@ -23,6 +23,7 @@ jobs:
         run: | 
           curl -f -s -L -o ijhttp.zip https://jb.gg/ijhttp/latest
           unzip -q ijhttp.zip -d ./tmp
+          mkdir "${GITHUB_WORKSPACE}/target"
           mv ./tmp/*/* "${GITHUB_WORKSPACE}/target"
           rm ijhttp.zip
           ls -all target
