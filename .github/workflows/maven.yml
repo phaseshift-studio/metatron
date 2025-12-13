@@ -27,9 +27,9 @@ jobs:
           ls -all
           echo "/home/runner/work/metatron/metatron/target/ijhttp" >> $GITHUB_PATH
           echo "---- full path ----"
-          /home/runner/work/metatron/metatron/target/ijhttp/ijhttp --help
+          /home/runner/work/metatron/metatron/target/ijhttp/ijhttp --version
           echo "---- relative path ----"
-          ijhttp --help
+          ijhttp --version
       - name: Install with Maven
         run: mvn clean install --file pom.xml
       - name: Install Python Packages
