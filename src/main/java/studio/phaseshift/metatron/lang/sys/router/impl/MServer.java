@@ -123,6 +123,14 @@ public class MServer extends WebSocketServer implements Cluster, Closeable, Obj 
     public long totalBytesReceived() {
         return this.totalBytesReceived;
     }
+    
+    public void incrTotalByteReceived(final long bytes) {
+        this.totalBytesReceived += bytes;
+    }
+    
+    public void incrTotalByteSent(final long bytes) {
+        this.totalBytesSent += bytes;
+    }
 
     @Override
     public void stop() {

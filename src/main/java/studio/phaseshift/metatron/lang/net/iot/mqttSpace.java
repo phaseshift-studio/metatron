@@ -115,6 +115,7 @@ public class mqttSpace extends MSpace<Mqtt5Client> {
                     .callback(p -> {
                         try {
                             LOG.debug("received %s", p);
+                            Router.global().server().incrTotalByteReceived(p.getPayload().isPresent() ? p.getPayloadAsBytes().length : 0);
                             if (p.getPayload().isPresent()) {
                                 final String json = StandardCharsets.UTF_8.decode(p.getPayload().get()).toString();
                                 this.cache.write(
@@ -186,14 +187,19 @@ public class mqttSpace extends MSpace<Mqtt5Client> {
 
     private void send(final fURI vid, final Obj obj) {
         try {
+            final byte[] payload = obj.isNoObj() ? new byte[0] : this.jsonTranslator.translate(obj).toString().getBytes();
+            if (vid.hasQuery(Tokens.SUB))
+                return;
             this.client
                     .toAsync()
                     .publishWith()
                     .topic(toMqttTopic(vid))
-                    .payload(obj.isNoObj() ? new byte[0] : this.jsonTranslator.translate(obj).toString().getBytes())
+                    .payload(payload)
                     .retain(true)
                     .send()
                     .whenComplete((p, t) -> {
+                        Router.global().server().incrTotalByteSent(payload.length);
+                        Router.global().server().incrTotalByteReceived(p.getPublish().getPayload().isPresent() ? p.getPublish().getPayloadAsBytes().length : 0);
                         LOG.trace("caching %s[%s]", p.getPublish(), new String(p.getPublish().getPayloadAsBytes()));
                         if (p.getPublish().getPayload().isPresent()) {
                             final String json = StandardCharsets.UTF_8.decode(p.getPublish().getPayload().get()).toString();

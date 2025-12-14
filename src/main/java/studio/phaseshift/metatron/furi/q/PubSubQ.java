@@ -30,7 +30,6 @@ import studio.phaseshift.metatron.lang.core.m.type.impl.MRec;
 import studio.phaseshift.metatron.lang.core.mach.type.Machine;
 import studio.phaseshift.metatron.lang.core.mach.type.impl.MMachine;
 import studio.phaseshift.metatron.util.Common;
-import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -62,7 +61,15 @@ public class PubSubQ extends BaseQ {
         return q;
     }));
 
-    public static final Type SUBSCRIPTION_TYPE = T(SUBSCRIPTION_TID, isa_(rec(SRC, T(URI_TID), TGT, T(URI_TID), ON_RECV, T(ALL))), instC(INST_TID.dom(ALL_STAR).rng(SUBSCRIPTION_TID), lst(), (lhs, inst) -> new Subscription(lhs.<Rec>as())));
+    public static final Type SUBSCRIPTION_TYPE = T(SUBSCRIPTION_TID, isa_(rec(SRC, T(URI_TID), TGT, T(URI_TID), ON_RECV, T(ALL))), instC(INST_TID.dom(ALL_STAR).rng(SUBSCRIPTION_TID), lst(), (lhs, inst) -> {
+        if (lhs instanceof Subscription) {
+            return lhs.as();
+        } else if (lhs.isRec()) {
+            return new Subscription(lhs.<Rec>as());
+        } else {
+            return new Subscription(f("/mqtt/test/#"), f("/mqtt/test/#"), lhs.<Call>as());
+        }
+    }));
 
     public PubSubQ() {
         super(mutableMap(), f(SUB), SUBQ_TID);
@@ -139,7 +146,7 @@ public class PubSubQ extends BaseQ {
             });
             while (!mail.isEmpty()) {
                 final Machine machine = mail.poll();
-                if(null == machine)
+                if (null == machine)
                     break;
                 LOG.trace("processing mail: %s", machine);
                 machine.apply();
@@ -164,7 +171,7 @@ public class PubSubQ extends BaseQ {
             return Optional.empty();
         }
 
-        @Override
+      /*  @Override
         public Optional<Obj> preWrite(final fURI source, final fURI vid, final Obj obj) {
             LOG.debug("evaluating {{y}}prewrite{{/y}}: %s => %s", obj, vid);
             if (vid.hasQuery(SUB)) {
@@ -183,6 +190,6 @@ public class PubSubQ extends BaseQ {
                 return Optional.of(ret);
             }
             return Optional.empty();
-        }
+        }*/
     }
 }

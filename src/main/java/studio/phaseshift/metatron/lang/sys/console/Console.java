@@ -27,9 +27,8 @@ import org.jline.terminal.Terminal;
 import org.jline.terminal.TerminalBuilder;
 import org.jline.utils.AttributedString;
 import org.jline.utils.AttributedStringBuilder;
-import org.jline.utils.AttributedStyle;
-import org.jline.utils.Status;
 import org.jline.widget.Widgets;
+import org.slf4j.event.Level;
 import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.core.m.inst.mInstSet;
@@ -40,13 +39,13 @@ import studio.phaseshift.metatron.lang.core.m.type.Type;
 import studio.phaseshift.metatron.lang.core.m.type.impl.MObjs;
 import studio.phaseshift.metatron.lang.core.m.type.impl.MRec;
 import studio.phaseshift.metatron.lang.core.mach.type.impl.MMachine;
-import studio.phaseshift.metatron.lang.sys.router.Router;
 import studio.phaseshift.metatron.lang.util.logObj;
 import studio.phaseshift.metatron.lang.util.serial.ObjStringSerializer;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
 import studio.phaseshift.metatron.ui.Mode;
 import studio.phaseshift.metatron.util.MTronException;
+import studio.phaseshift.metatron.util.Threadable;
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;
@@ -68,7 +67,7 @@ import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.lang.sys.sysInstSet.SYS_TID;
 
-public class Console extends MRec {
+public class Console extends MRec implements Threadable, Runnable {
 
     public static final fURI CONSOLE_TID = SYS_TID.extend("console");
 
@@ -80,8 +79,8 @@ public class Console extends MRec {
     protected boolean RESOLVE_MODE = false;
     private final Terminal terminal;
     private final LineReader reader;
-    private final Status status;
-    private Thread mainThread;
+    private StatusLine status;
+    private final Thread thread;
 
     public static final Type CONSOLE_TYPE = T(CONSOLE_TID, isa_(rec()), instC(INST_TID.dom(ALL.maybe()).rng(CONSOLE_TID), lst(T(REC_TID)), (lhs, inst) -> {
         final Console console = new Console(inst.arg(0).as());
@@ -102,7 +101,6 @@ public class Console extends MRec {
             this.outputHeader();
             // this.terminal.handle(Terminal.Signal.WINCH) // TODO: signal handling on some CNTRL-?? to resolve (not evaluate) current expression
             final History history = new DefaultHistory();
-            this.status = Status.getStatus(this.terminal);
             this.reader = LineReaderBuilder.builder()
                     .terminal(terminal)
                     .appName("metatron")
@@ -117,8 +115,8 @@ public class Console extends MRec {
                     .variable(LineReader.INDENTATION, 0)
                     .completer(new MCompleter(this))
                     .build();
-            //reader.unsetOpt(LineReader.Option.INSERT_TAB);
-
+            this.status = new StatusLine(this, "{{b}}loading...{{X}}");
+            this.thread = new Thread(this);
 
         } catch (final Exception e) {
             throw MTronException.of(e);
@@ -131,24 +129,13 @@ public class Console extends MRec {
 
     public void stop() {
         try {
+            this.status.stop();
             this.reader.getBuffer().clear();
             this.terminal.close();
-            this.mainThread.interrupt();
+            Threadable.super.stop();
         } catch (final IOException e) {
             LOG.error(e);
         }
-    }
-
-    public void start() {
-        final Runnable console = () -> {
-            try {
-                this.run();
-            } catch (final Exception e) {
-                throw MTronException.of(e);
-            }
-        };
-        this.mainThread = new Thread(console);
-        this.mainThread.start();
     }
 
     public Terminal getTerminal() {
@@ -159,13 +146,13 @@ public class Console extends MRec {
         return this.reader;
     }
 
-    public void run() throws Exception {
+    public void run() {
         Mode.waitForBoot();
+        this.status.start();
         new CustomWidgets(this.reader);
         String line = "";
-        while (true) {
+        while (!this.thread.isInterrupted()) {
             try {
-                this.updateStatus();
                 Obj result = null;
                 //Graphitty.out(this.terminal.output(), "%s{{v%d&^%d&Xv}}","\n");
                 line = this.reader.readLine(Graphitty.string("{{m}}mtron{{g}}> ")).trim();
@@ -175,6 +162,7 @@ public class Console extends MRec {
                     break;
                 else if (line.equals(":clear")) {
                     Graphitty.out(this.terminal.output(), "{{XX&@}}");
+                    this.status.refresh();
                 } else if (line.startsWith(":log")) {
                     logObj.setSLF4J(line.substring(4));
                 } else if (line.startsWith(":top")) {
@@ -187,6 +175,8 @@ public class Console extends MRec {
                     final Subscriptions selector = new Subscriptions(this);
                     final String selected = selector.select();
                     LOG.info("space selected: %s", selected);
+                } else if (line.startsWith(":state")) {
+                    this.status.setState(Level.valueOf(line.substring(6).trim().toUpperCase()));
                 } else if (line.startsWith(":profile")) {
                     Profile p = new Profile(mParser.parse(line.substring(8).trim()).as());
                     this.reader.printAbove(Graphitty.string(p.toString()));
@@ -215,30 +205,15 @@ public class Console extends MRec {
                     e.printStackTrace();
                 }
             }
+            this.status.refresh();
         }
-        this.terminal.close();
+        try {
+            this.terminal.close();
+        } catch (final IOException e) {
+            LOG.error(e);
+        }
+        this.stop();
         System.exit(0);
-    }
-
-    protected void updateStatus() {
-        /*
-                        new AttributedStringBuilder()
-                        .style(AttributedStyle.DEFAULT.background(AttributedStyle.BLUE).foreground(AttributedStyle.WHITE)  )
-                        .append(Router.global().server().host().toString())
-                        .append("[connections: ")
-                        .append(String.valueOf(Router.global().server().nodes().size())).append("]")
-                        .append("[bytes >:").append(String.valueOf(Router.global().server().totalBytesSent())).append("]")
-                        .append("[bytes <:").append(String.valueOf(Router.global().server().totalBytesReceived())).append("]")
-                        .toAttributedString()));
-         */
-        this.status.update(List.of(
-                new AttributedStringBuilder()
-                        .ansiAppend( Graphitty.string("{{-X-&[b]&w}} %s", Router.global().server().host()))
-                        .ansiAppend(Graphitty.string(" [connections: {{c}}%d{{[b]&w}}]", Router.global().server().nodes().size()))
-                        .ansiAppend(Graphitty.string(" [bytes >: {{c}}%d{{[b]&w}}]", Router.global().server().totalBytesSent()))
-                        .ansiAppend(Graphitty.string(" [bytes <: {{c}}%d{{[b]&w}}]", Router.global().server().totalBytesReceived()))
-                        .append(Graphitty.string("{{[b]}}%s"," ".repeat(200)))
-                        .toAttributedString()));
     }
 
     protected void outputHeader() {
@@ -286,6 +261,11 @@ public class Console extends MRec {
                 """);
     }
 
+    @Override
+    public Thread getThread() {
+        return this.thread;
+    }
+
     static class CustomHighlighters implements Highlighter {
         private final Terminal terminal;
         private final List<BiConsumer<AttributedStringBuilder, String>> highlighters = new ArrayList<>();
@@ -314,6 +294,7 @@ public class Console extends MRec {
         private CustomWidgets(final LineReader reader) {
             super(reader);
             this.addWidget("quit-widget", () -> {
+                Console.this.stop();
                 System.exit(0);
                 return true;
             });

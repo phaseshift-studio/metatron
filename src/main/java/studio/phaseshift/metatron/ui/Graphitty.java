@@ -241,9 +241,7 @@ public class Graphitty {
                                     if (!rulePiece.substring(1).equals("0"))
                                         r = this.rewrites.get("" + rulePiece.charAt(0)).replace("{{" + rulePiece.charAt(0) + "}}", rulePiece.substring(1));
                                 }
-                                if (null == r)
-                                    throw new IllegalStateException("unknown rule: %s\n\t%s".formatted(rulePiece, buffer));
-                                this.parseDSL(r);
+                                if (null != r) this.parseDSL(r);
                             }
                         });
                     }
