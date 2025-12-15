@@ -18,14 +18,17 @@
 
 package studio.phaseshift.metatron.util;
 
+import java.io.Closeable;
+
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public interface Threadable {
+public interface Threadable extends Closeable {
 
     Thread getThread();
 
-    default void stop() {
+    @Override
+    default void close() {
         this.interrupt();
     }
 

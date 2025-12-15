@@ -44,6 +44,7 @@ import studio.phaseshift.metatron.lang.util.serial.ObjStringSerializer;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
 import studio.phaseshift.metatron.ui.Mode;
+import studio.phaseshift.metatron.ui.Table;
 import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Threadable;
 
@@ -65,6 +66,7 @@ import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.REC_TID;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MType.T;
+import static studio.phaseshift.metatron.lang.sys.console.Box.BASIC_BORDER;
 import static studio.phaseshift.metatron.lang.sys.sysInstSet.SYS_TID;
 
 public class Console extends MRec implements Threadable, Runnable {
@@ -76,7 +78,6 @@ public class Console extends MRec implements Threadable, Runnable {
     private final GraphittyLogger LOG = Graphitty.log(this);
     public static String HEADER_FILE = "./conf/ansi_headers.txt";
     public static String HEADER_SEPARATOR = "####################";
-    protected boolean RESOLVE_MODE = false;
     private final Terminal terminal;
     private final LineReader reader;
     private StatusLine status;
@@ -127,12 +128,13 @@ public class Console extends MRec implements Threadable, Runnable {
         return new Console(options);
     }
 
-    public void stop() {
+    @Override
+    public void close() {
         try {
-            this.status.stop();
+            this.status.close();
             this.reader.getBuffer().clear();
             this.terminal.close();
-            Threadable.super.stop();
+            Threadable.super.close();
         } catch (final IOException e) {
             LOG.error(e);
         }
@@ -163,12 +165,18 @@ public class Console extends MRec implements Threadable, Runnable {
                 else if (line.equals(":clear")) {
                     Graphitty.out(this.terminal.output(), "{{XX&@}}");
                     this.status.refresh();
+                } else if (line.equals(":help")) {
+                    Graphitty.out(this.terminal.output(), new Box(new Table(
+                            List.of("name", "short", "description"))
+                            .addRow(List.of("space walk", "<tab>", "explore spaces"))
+                            .addRow(List.of("introspect", "<space><tab>", "analyze machine"))
+                            .addRow(List.of("header", "random header", "random header")).toString(), Box.coloredBorder(BASIC_BORDER, "b")).toString());
                 } else if (line.startsWith(":log")) {
                     logObj.setSLF4J(line.substring(4));
                 } else if (line.startsWith(":top")) {
                     TTop.ttop(terminal, System.out, System.err, new String[0]);
                 } else if (line.startsWith(":box")) {
-                    LOG.none(new Box(line.substring(4).trim(), Box.BASIC_BORDER));
+                    LOG.none(new Box(line.substring(4).trim(), BASIC_BORDER));
                 } else if (line.startsWith(":less")) {
                     Commands.less(terminal, System.in, System.out, System.err, Paths.get(""), new String[0]);
                 } else if (line.startsWith(":select")) {
@@ -177,9 +185,6 @@ public class Console extends MRec implements Threadable, Runnable {
                     LOG.info("space selected: %s", selected);
                 } else if (line.startsWith(":state")) {
                     this.status.setState(Level.valueOf(line.substring(6).trim().toUpperCase()));
-                } else if (line.startsWith(":profile")) {
-                    Profile p = new Profile(mParser.parse(line.substring(8).trim()).as());
-                    this.reader.printAbove(Graphitty.string(p.toString()));
                 } else
                     result = mParser.parse(line);
 
@@ -205,14 +210,13 @@ public class Console extends MRec implements Threadable, Runnable {
                     e.printStackTrace();
                 }
             }
-            this.status.refresh();
         }
         try {
             this.terminal.close();
         } catch (final IOException e) {
             LOG.error(e);
         }
-        this.stop();
+        this.close();
         System.exit(0);
     }
 
@@ -251,14 +255,8 @@ public class Console extends MRec implements Threadable, Runnable {
             this.terminal.writer().printf("\t\t\tby PhaseShift Studio (%s)\n", Calendar.getInstance().get(Calendar.YEAR));
             this.terminal.flush();
         }
-        LOG.none("\t{{b}}ve{{y}}rs{{m}}ion {{y}}%s{{X}}\n\n", METATRON_VERSION);
-        Graphitty.out(this.terminal.output(), """
-                . {{y&_}}r{{X&y}}esolve {{m}}[{{y}}ctrl-r{{m}}]{{X}}: automatic expression resolution
-                . {{y&_}}h{{X&y}}ide    {{m}}[{{y}}ctrl-h{{m}}]{{X}}: hide base type prefixes
-                . t{{y&_}}y{{X&y}}ping  {{m}}[{{y}}ctrl-y{{m}}]{{X}}: typing checking
-                . {{y&_}}q{{X&y}}uit    {{m}}[{{y}}ctrl-t{{m}}]{{X}}: leave the metatron
-                
-                """);
+        LOG.none("\t{{b}}ve{{y}}rs{{m}}ion {{y}}%s{{X}}\n", METATRON_VERSION);
+        Graphitty.out(this.terminal.output(), "   {{m}}:help{{X}} for console features\n\n");
     }
 
     @Override
@@ -294,7 +292,7 @@ public class Console extends MRec implements Threadable, Runnable {
         private CustomWidgets(final LineReader reader) {
             super(reader);
             this.addWidget("quit-widget", () -> {
-                Console.this.stop();
+                Console.this.close();
                 System.exit(0);
                 return true;
             });
@@ -306,7 +304,6 @@ public class Console extends MRec implements Threadable, Runnable {
             getKeyMap().bind(new Reference("hide-widget"), ctrl('h'));
             getKeyMap().bind(new Reference("typing-widget"), ctrl('y'));
             getKeyMap().bind(new Reference("editor-widget"), ctrl('e'));
-            //   getKeyMap().bind(new Reference("detach-widget"), alt(key_down.name()));
         }
 
 

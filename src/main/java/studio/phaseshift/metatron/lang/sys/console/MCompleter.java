@@ -47,15 +47,11 @@ public class MCompleter implements Completer {
             if (!buffer.toString().isEmpty() && buffer.toString().charAt(buffer.toString().length() - 1) == ' ') {
                 final Obj o = mParser.parse(buffer.toString());
                 if (o.isCode()) {
-                    Code code = o.resolve(NoObj.noobj()).as();
+                    final Code code = o.resolve(NoObj.noobj()).as();
                     final String pretty = Graphitty.string(
-                            new Box(ObjStringSerializer.prettyPrintCode(code, 0), List.of("{{b}}|{{X}}", "{{b}}|{{X}}", "{{b}}-{{X}}", "{{b}}-{{X}}")).right(
-                                    new Box(new Profile(code).toString(),List.of("{{b}}|{{X}}", "{{b}}|{{X}}", "{{b}}-{{X}}", "{{b}}-{{X}}"))).toString());
-                    //final int length = Arrays.stream(pretty.split("\n")).map(Graphitty::strip).map(String::length).max(Integer::compareTo).orElse(0);
+                            new Box(ObjStringSerializer.prettyPrintCode(code, 0), Box.BASIC_BORDER)
+                                    .bottom(new Box(new Profile(code).toString(), Box.BASIC_BORDER)).toString());
                     candidates.add(new Candidate("", pretty, null, null, "", null, false));
-                    //candidates.addAll(new Profile(code).candidates());
-                    candidates.add(new Candidate(" ", Graphitty.string(new Box(new Profile(code).toString(),Box.BASIC_BORDER).toString()), null, null, "", null, true));
-                    //candidates.add(new Candidate(" ", Graphitty.string("{{r}}" + "_".repeat(length) + "{{X}}"), null, null, " ", null, false));
                 }
             } else {
                 final Obj results = mParser.eval(buffer.toString());

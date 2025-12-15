@@ -33,6 +33,7 @@ import studio.phaseshift.metatron.lang.util.serial.ObjSerializer;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
 import studio.phaseshift.metatron.util.MTronException;
+import studio.phaseshift.metatron.util.Threadable;
 
 import java.io.Closeable;
 import java.net.InetSocketAddress;
@@ -48,7 +49,7 @@ import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.lang.sys.router.impl.MRouter.ROUTER_TID;
 
-public class MServer extends WebSocketServer implements Cluster, Closeable, Obj {
+public class MServer extends WebSocketServer implements Cluster, Closeable, Obj, Threadable {
 
     public static final fURI MSERVER_TID = ROUTER_TID.extend("server");
 
@@ -56,7 +57,7 @@ public class MServer extends WebSocketServer implements Cluster, Closeable, Obj 
     protected final ObjSerializer<?> serializer;
     protected final Map<fURI, MConnection> cluster = new HashMap<>();
     protected GraphittyLogger LOG;
-    protected Thread serverThread;
+    protected Thread thread;
     protected List<FutureObj<?>> futures = new ArrayList<>();
     private long totalBytesSent = 0L;
     private long totalBytesReceived = 0L;
@@ -85,8 +86,8 @@ public class MServer extends WebSocketServer implements Cluster, Closeable, Obj 
             }
         };
         try {
-            this.serverThread = new Thread(r);
-            this.serverThread.start();
+            this.thread = new Thread(r);
+            this.thread.start();
             LOG.trace("server started: %s", this.getAddress());
             BootLoader.OPTIONS.at(Tokens.CLUSTER).elements().filter(o -> !o.isNoObj()).forEach(n -> {
                 try {
@@ -110,9 +111,19 @@ public class MServer extends WebSocketServer implements Cluster, Closeable, Obj 
     }
 
     @Override
+    public Thread getThread() {
+        return this.thread;
+    }
+
+    @Override
     public void close() {
         LOG.info("closing %s node {{b}}%s{{/b}}", Graphitty.sillyPrint("mtron", true, true), this.host);
-        this.stop();
+        try {
+            this.cluster.values().stream().toList().forEach(MConnection::close);
+            super.stop(1000);
+        } catch (final Exception e) {
+            throw MTronException.of(e);
+        }
     }
 
     
@@ -132,15 +143,7 @@ public class MServer extends WebSocketServer implements Cluster, Closeable, Obj 
         this.totalBytesSent += bytes;
     }
 
-    @Override
-    public void stop() {
-        try {
-            this.cluster.values().stream().toList().forEach(MConnection::close);
-            super.stop(1000);
-        } catch (final Exception e) {
-            throw MTronException.of(e);
-        }
-    }
+
 
     @Override
     public void onOpen(final WebSocket ws, final ClientHandshake handshake) {

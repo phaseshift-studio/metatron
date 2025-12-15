@@ -31,8 +31,13 @@ public class Box {
     protected final String body;
     protected final List<String> lrtb;
 
-    public static final List<String> NO_BORDER = List.of(" "," "," "," ");
-    public static final List<String> BASIC_BORDER = List.of("|","|","-","-");
+    public static final List<String> NO_BORDER = List.of(" ", " ", " ", " ", "", "", "", "");
+    public static final List<String> BASIC_BORDER = List.of("|", "|", "-", "-", "+", "+", "+", "+");
+    public static final List<String> DOUBLE_BORDER = List.of("||", "||", "=", "=", "//", "\\\\", "//", "\\\\");
+
+    public static List<String> coloredBorder(final List<String> border, final String color) {
+        return border.stream().map(s -> Graphitty.string("{{%s}}%s{{X}}", color, s)).toList();
+    }
 
     public Box(final String body, final List<String> lrtb) {
         this.body = body;
@@ -51,6 +56,10 @@ public class Box {
         return this.toString().split("\n")[r];
     }
 
+    public Box bottom(final Box box) {
+        return new Box(this.toString().trim() + "\n" + box.toString().trim(), box.lrtb);
+    }
+
     public Box right(final Box box) {
         final StringBuilder sb = new StringBuilder();
         for (int i = 0; i < Math.max(this.height(), box.height()); i++) {
@@ -65,7 +74,7 @@ public class Box {
             sb.append("\n");
         }
         sb.deleteCharAt(sb.length() - 1);
-        return new Box(sb.toString(), List.of("|", "|", "-", "-"));
+        return new Box(sb.toString(), box.lrtb);
     }
 
     public String toString() {
@@ -77,7 +86,7 @@ public class Box {
                 .orElse(0);
 
         final StringBuilder sb = new StringBuilder();
-        sb.append("+%s+".formatted(this.lrtb.get(2).repeat(maxLen))).append('\n');
+        sb.append("%s%s%s".formatted(this.lrtb.get(4), this.lrtb.get(2).repeat(maxLen), this.lrtb.get(5))).append('\n');
         for (final String line : lines) {
             sb.append(this.lrtb.get(0))
                     .append(line)
@@ -85,7 +94,7 @@ public class Box {
                     .append(this.lrtb.get(1))
                     .append('\n');
         }
-        sb.append("+%s+".formatted(this.lrtb.get(3).repeat(maxLen))).append("\n");
+        sb.append("%s%s%s".formatted(this.lrtb.get(6), this.lrtb.get(3).repeat(maxLen), this.lrtb.get(7))).append("\n");
         return sb.toString();
     }
 

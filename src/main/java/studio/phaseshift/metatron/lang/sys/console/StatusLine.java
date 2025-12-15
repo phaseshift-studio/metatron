@@ -34,7 +34,7 @@ import static org.slf4j.event.Level.*;
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public class StatusLine implements Threadable, Runnable {
-    
+
     private AttributedString line;
     private Level state = INFO;
     private final Status status;
@@ -51,8 +51,11 @@ public class StatusLine implements Threadable, Runnable {
     }
 
     public void refresh() {
-        this.status.redraw();
+        this.status.reset();
+        this.status.suspend();
+        this.status.update(List.of());
         this.status.update(List.of(this.line));
+        this.status.restore();
         this.status.redraw();
     }
 
@@ -72,9 +75,9 @@ public class StatusLine implements Threadable, Runnable {
                     .ansiAppend(Graphitty.string(" [bytes <: {{M}}%d{{[" + color + "]&w}}]", Router.global().server().totalBytesReceived()))
                     .append(Graphitty.string("{{[" + color + "]}}%s", " ".repeat(200)))
                     .toAttributedString();
-            if (!temp.equals(this.line)) {
+            if (!this.line.equals(temp)) {
                 this.line = temp;
-                this.status.update(List.of(temp));
+                this.status.update(List.of(this.line));
             }
         }
         this.status.close();

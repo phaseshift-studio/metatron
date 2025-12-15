@@ -94,7 +94,7 @@ public class MRouter extends MSpace<MServer> implements Router {
     public synchronized void close() {
         final List<fURI> list = this.spaces().elements().map(Rel::second).map(Obj::vid).toList();
         list.forEach(this::removeSpace);
-        this.server().stop();
+        this.server().close();
 
     }
 
