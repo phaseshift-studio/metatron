@@ -21,6 +21,7 @@ package studio.phaseshift.metatron.lang.sys.console;
 import org.jline.builtins.Nano;
 import org.jline.builtins.Options;
 import studio.phaseshift.metatron.lang.core.m.type.Obj;
+import studio.phaseshift.metatron.lang.util.serial.ObjStringSerializer;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.util.MTronException;
 
@@ -37,9 +38,13 @@ public class Editor {
 
     public static boolean of(final Console console, final Object object) {
         try {
-            Options options = Options.compile(Nano.usage()).parse(new String[]{"--tabsize=2", "--tabstospaces", "--tempfile", "--autoindent"});
+            Options options = Options.compile(Nano.usage()).parse(new String[]{"--tabsize=2", "--tabstospaces", "--tempfile", "--autoindent", "--syntax=mtron", "--emptyline"});
             final Nano nano = new Nano(console.getTerminal(), Paths.get(""), options);
-            final File objFile = object instanceof Obj ? Editor.createSourceFile(Graphitty.strip(object.toString())) : Editor.createSourceFile(object.toString());
+            final File objFile = object instanceof File ?
+                    (File) object :
+                    (object instanceof Obj ?
+                            Editor.createSourceFile(Graphitty.strip(object.toString())) :
+                            Editor.createSourceFile(object.toString()));
             nano.title = Graphitty.sillyPrint("metatron", false, true);
             nano.open(objFile.getPath());
             nano.run();
@@ -66,10 +71,21 @@ public class Editor {
         }
     } */
 
-    private static File createSourceFile(final String source) {
+    public static File createSourceFile(final String source) {
         try {
             File objFile = File.createTempFile("console-", ".mtron");
             Files.writeString(objFile.toPath(), source);
+            return objFile;
+        } catch (final Exception e) {
+            throw MTronException.of(e);
+        }
+    }
+
+    public static File createTempFile(final Obj obj) {
+        try {
+            final File objFile = File.createTempFile("console-", ".mtron");
+            final ObjStringSerializer serializer = ObjStringSerializer.build().prettyPrint(true).create();
+            Files.writeString(objFile.toPath(), Graphitty.strip(serializer.write(obj)));
             return objFile;
         } catch (final Exception e) {
             throw MTronException.of(e);

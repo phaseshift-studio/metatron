@@ -87,7 +87,7 @@ public class fileSpace extends MSpace<FileSystem> {
         // });
     }
 
-    private static Rec makeFile(final Path path) {
+    public static Rec makeFile(final Path path) {
         return new MRec(new LinkedHashMap<Obj, Obj>(Map.of(
                 uri(Tokens.NAME), uri(path.getFileName().toString()),
                 uri("permissions"), lst(MTronException.wrap(() -> (List) Files.getPosixFilePermissions(path).stream().map(x -> uri(x.toString())).toList())),

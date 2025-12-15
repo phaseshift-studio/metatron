@@ -1,0 +1,28 @@
+## metatron 1.0-alpha
+#
+syntax "mtron" ".*\.(mtron)$"
+comment "#"
+
+color blue "\<(obj|bytes|bool|int|real|str|uri|rel|lst|rec|code|inst)\>"
+color red "\<(noobj|T)\>"
+color yellow "\<(true|false)\>"
+
+## comments
+# color green "^([--).*|[[:space:]].*$"
+
+# bytes,int,real
+icolor yellow "\b(([1-9][0-9]+)|0+)\.[0-9]+\b" "\b[1-9][0-9]*\b" "\b0[0-7]*\b" "\b0x[1-9a-f][0-9a-f]*\b"
+
+# str
+color yellow "['][^']*[^\\][']" "[']{3}.*[^\\][']{3}"
+color yellow "["][^"]*[^\\]["]" "["]{3}.*[^\\]["]{3}"
+
+# structural tokens
+icolor green "=>" "->"
+color green "[(){}]" "\[" "\]"
+
+#sugar
+color green "[.:;,+*|=!\%@]" "<<" ">>"
+
+#icolor cyan "\?\w+"
+#icolor green " \w+:"

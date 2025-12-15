@@ -21,7 +21,9 @@ package studio.phaseshift.metatron.lang.core.m.type;
 import studio.phaseshift.metatron.algebra.Ring;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.core.m.type.impl.MUri;
+import studio.phaseshift.metatron.lang.sys.fs.fileSpace;
 
+import java.nio.file.Path;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -36,6 +38,7 @@ import static studio.phaseshift.metatron.lang.core.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.lang.sys.fs.fileSpace.FILE_TID;
 
 public interface Uri extends Mono, Ring.O<Uri> {
 
@@ -96,6 +99,7 @@ public interface Uri extends Mono, Ring.O<Uri> {
 
         public static Set<Inst> insts() {
             return new LinkedHashSet<>(List.of(
+                    instC(AS_INST_TID.dom(URI_TID).rng(FILE_TID), lst(T(FILE_TID)), (lhs, inst) -> fileSpace.makeFile(Path.of(lhs.uriValue().toString()))),
                     instC(AS_INST_TID.dom(URI_TID).rng(STR_TID), lst(T(STR_TID)), (lhs, inst) -> str(lhs.uriValue().toString())),
                     instC(SPLIT_INST_TID.dom(URI_TID).rng(URI_TID.some()), lst(T(URI_TID)), (lhs, inst) -> objs(Arrays.stream(lhs.uriValue().toString().split(inst.arg(0).uriValue().toString())).map(MUri::uri))),
                     instC(MERGE_INST_TID.dom(URI_TID.maybeSome()).rng(URI_TID), lst(T(URI_TID)), (lhs, inst) -> uri(lhs.stream().map(Obj::uriValue).reduce((a, b) -> a.extend(inst.arg(0).uriValue()).extend(b)).orElse(f("noobj")))),

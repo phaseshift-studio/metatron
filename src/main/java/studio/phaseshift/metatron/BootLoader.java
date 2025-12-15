@@ -43,8 +43,10 @@ import studio.phaseshift.metatron.ui.GraphittyLogger;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Map;
 
+import static studio.phaseshift.metatron.Tokens.BOOT;
 import static studio.phaseshift.metatron.Tokens.WS;
 import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.furi.fURI.f;
@@ -114,6 +116,9 @@ public class BootLoader implements Rec, Feature.SelfClone {
             System.exit(0);
         } else {
             final Rec options = args.length > 0 ? mParser.parse(args[0]).as() : rec();
+            if (options.has(BOOT)) {
+                options.put(uri(BOOT), f(Paths.get("").toAbsolutePath().normalize().toString()).extend(options.at(BOOT).uriValue()).toUri(), MUTABLE);
+            }
             logObj.setSLF4J(options.has(uri("log")) ? options.at(uri("log")).uriValue().toString() : "trace");
             LOG.debug("user options: %s", options);
             OPTIONS = options;

@@ -24,11 +24,19 @@ import studio.phaseshift.metatron.lang.core.m.type.Type;
 import studio.phaseshift.metatron.lang.core.m.type.impl.MInstSet;
 import studio.phaseshift.metatron.lang.net.remote.remoteSpace;
 import studio.phaseshift.metatron.lang.sys.console.Console;
+import studio.phaseshift.metatron.lang.sys.console.Editor;
 import studio.phaseshift.metatron.lang.sys.fs.fileSpace;
+import studio.phaseshift.metatron.lang.util.serial.ObjSerializer;
+import studio.phaseshift.metatron.lang.util.serial.ObjStringSerializer;
+import studio.phaseshift.metatron.util.MTronException;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.furi.q.DocQ.DOCQ_TYPE;
 import static studio.phaseshift.metatron.furi.q.DocQ.Doc.docWrap;
@@ -75,13 +83,23 @@ public class sysInstSet extends MInstSet {
                 T(fileSpace.DIR_TID),
                 remoteSpace.REMOTE_TYPE,
                 SUBSCRIPTION_TYPE,
-                DOCQ_TYPE, 
+                DOCQ_TYPE,
                 SUBQ_TYPE);
     }
 
     @Override
     public Set<Inst> insts() {
         return new LinkedHashSet<>(List.of(
+                instC(SYS_TID.extend("inst").extend("nano").dom(ALL).rng(ALL), lst(), (lhs, inst) -> {
+                    try {
+                        final File file = Editor.createTempFile(lhs);
+                        Editor.of(Console.LOCAL_INSTANCE, file);
+                        final ObjSerializer<String> serializer = ObjStringSerializer.build().prettyPrint(true).create();
+                        return serializer.read(Files.readString(file.toPath()));
+                    } catch (final IOException e) {
+                        throw MTronException.of(e);
+                    }
+                }),
                 docWrap(instC(SYS_TID.extend("inst").extend("less").dom(STR_TID).rng(NOOBJ_TID.zero()), lst(isa_(T(INT_TID)).else_(jnt(10))), (lhs, inst) -> {
                     Scanner scanner = new Scanner(System.in);
                     final int pageSize = inst.arg(0).orElse(jnt(100)).intValue().intValue();

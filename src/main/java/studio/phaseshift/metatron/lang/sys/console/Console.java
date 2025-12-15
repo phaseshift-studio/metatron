@@ -19,7 +19,11 @@
 package studio.phaseshift.metatron.lang.sys.console;
 
 import org.jline.builtins.Commands;
+import org.jline.builtins.ConfigurationPath;
 import org.jline.builtins.TTop;
+import org.jline.console.SystemRegistry;
+import org.jline.console.impl.Builtins;
+import org.jline.console.impl.SystemRegistryImpl;
 import org.jline.reader.*;
 import org.jline.reader.impl.DefaultParser;
 import org.jline.reader.impl.history.DefaultHistory;
@@ -53,9 +57,11 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.function.BiConsumer;
+import java.util.function.Supplier;
 
 import static org.jline.keymap.KeyMap.ctrl;
 import static studio.phaseshift.metatron.furi.fURI.ALL;
@@ -82,10 +88,12 @@ public class Console extends MRec implements Threadable, Runnable {
     private final LineReader reader;
     private StatusLine status;
     private final Thread thread;
+    public static Console LOCAL_INSTANCE = null;
 
     public static final Type CONSOLE_TYPE = T(CONSOLE_TID, isa_(rec()), instC(INST_TID.dom(ALL.maybe()).rng(CONSOLE_TID), lst(T(REC_TID)), (lhs, inst) -> {
         final Console console = new Console(inst.arg(0).as());
         console.start();
+        LOCAL_INSTANCE = console;
         return console;
     }));
 
@@ -117,6 +125,18 @@ public class Console extends MRec implements Threadable, Runnable {
                     .completer(new MCompleter(this))
                     .build();
             this.status = new StatusLine(this, "{{b}}loading...{{X}}");
+
+            ConfigurationPath configPath = new ConfigurationPath(
+                    Paths.get("/pub/metatron"),                           // application-wide settings
+                    Paths.get(System.getProperty("user.home"), ".metatron") // user-specific settings
+            );
+
+            Supplier<Path> workDir = () -> Paths.get("");
+            Builtins builtins = new Builtins(workDir, configPath, null);
+            SystemRegistry systemRegistry = new SystemRegistryImpl(parser, terminal, workDir, configPath);
+            systemRegistry.setCommandRegistries(builtins);
+            
+            
             this.thread = new Thread(this);
 
         } catch (final Exception e) {
