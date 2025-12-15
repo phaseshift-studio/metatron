@@ -53,7 +53,7 @@ public class Table {
         }
         sb.append("{{g}}|{{X}}");
         for (int i = 0; i < this.headers.size(); i++) {
-            sb.append("{{y}}").append(this.headers.get(i)).append(this.addSpace(widths, i, this.headers.get(i))).append("{{g}}|");
+            sb.append("{{c}}").append(this.headers.get(i)).append(this.addSpace(widths, i, this.headers.get(i))).append("{{g}}|");
         }
         sb.append("{{X}}\n");
         this.table.forEach(row -> {
