@@ -20,6 +20,7 @@ package studio.phaseshift.metatron.lang.sys.router.impl;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.core.m.type.Obj;
+import studio.phaseshift.metatron.lang.sys.router.IOStat;
 import studio.phaseshift.metatron.lang.util.serial.ObjSerializer;
 
 import java.io.Closeable;
@@ -38,10 +39,8 @@ public interface MConnection extends Closeable {
     void close();
 
     fURI remoteHost();
-    
-    public long totalBytesSent();
-    public long totalBytesReceived();
 
+    IOStat stats();
 
 
 }

@@ -59,18 +59,6 @@ public class Editor {
         }
     }
 
-   /* private static File createObjFile(final Obj obj) {
-        try {
-            ObjStringSerializer serializer = ObjStringSerializer.build().prettyPrint(true).create();
-            final String bb = serializer.write(obj);
-            File objFile = File.createTempFile("console-", ".mtron");
-            Files.writeString(objFile.toPath(), Graphitty.strip(bb));
-            return objFile;
-        } catch (final Exception e) {
-            throw MTronException.of(e);
-        }
-    } */
-
     public static File createSourceFile(final String source) {
         try {
             File objFile = File.createTempFile("console-", ".mtron");
@@ -81,7 +69,7 @@ public class Editor {
         }
     }
 
-    public static File createTempFile(final Obj obj) {
+    public static File createObjFile(final Obj obj) {
         try {
             final File objFile = File.createTempFile("console-", ".mtron");
             final ObjStringSerializer serializer = ObjStringSerializer.build().prettyPrint(true).create();

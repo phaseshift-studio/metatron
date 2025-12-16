@@ -26,6 +26,7 @@ import studio.phaseshift.metatron.lang.core.m.type.Obj;
 import studio.phaseshift.metatron.lang.core.m.type.Rec;
 import studio.phaseshift.metatron.lang.core.m.type.Rel;
 import studio.phaseshift.metatron.lang.util.serial.ObjStringSerializer;
+import studio.phaseshift.metatron.ui.Box;
 import studio.phaseshift.metatron.ui.Graphitty;
 
 import java.util.List;

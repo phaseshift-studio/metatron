@@ -27,6 +27,7 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.core.m.type.Fail;
 import studio.phaseshift.metatron.lang.core.m.type.Obj;
 import studio.phaseshift.metatron.lang.sys.router.Cluster;
+import studio.phaseshift.metatron.lang.sys.router.IOStat;
 import studio.phaseshift.metatron.lang.sys.router.Router;
 import studio.phaseshift.metatron.lang.util.serial.ObjByteBufferSerializer;
 import studio.phaseshift.metatron.lang.util.serial.ObjSerializer;
@@ -59,8 +60,7 @@ public class MServer extends WebSocketServer implements Cluster, Closeable, Obj,
     protected GraphittyLogger LOG;
     protected Thread thread;
     protected List<FutureObj<?>> futures = new ArrayList<>();
-    private long totalBytesSent = 0L;
-    private long totalBytesReceived = 0L;
+    private IOStat ioStat = new IOStat();
 
     public MServer(final fURI host) {
         super(new InetSocketAddress(host.host(), host.port()));
@@ -126,24 +126,9 @@ public class MServer extends WebSocketServer implements Cluster, Closeable, Obj,
         }
     }
 
-    
-    public long totalBytesSent() {
-        return this.totalBytesSent;
+    public IOStat stats() {
+        return this.ioStat;
     }
-    
-    public long totalBytesReceived() {
-        return this.totalBytesReceived;
-    }
-    
-    public void incrTotalByteReceived(final long bytes) {
-        this.totalBytesReceived += bytes;
-    }
-    
-    public void incrTotalByteSent(final long bytes) {
-        this.totalBytesSent += bytes;
-    }
-
-
 
     @Override
     public void onOpen(final WebSocket ws, final ClientHandshake handshake) {
@@ -166,7 +151,7 @@ public class MServer extends WebSocketServer implements Cluster, Closeable, Obj,
     @Override
     public void onMessage(final WebSocket conn, final ByteBuffer message) {
         LOG.trace("received from %s byte buffer [length:%d]", conn.getAttachment(), message.array().length);
-        this.totalBytesReceived += message.array().length;
+        this.ioStat.incrTotalByteReceived(message.array().length);
         try {
             final Obj obj = this.serializer.readBytes(message);// this.serializer.read(message);
             this.onObj(conn, obj);
@@ -190,7 +175,7 @@ public class MServer extends WebSocketServer implements Cluster, Closeable, Obj,
             // }
             final ByteBuffer bytes = this.serializer.writeBytes(result);
             conn.send(bytes);
-            this.totalBytesSent += bytes.array().length;
+            this.ioStat.incrTotalByteSent(bytes.array().length);
             //this.sendObj(conn, result);
             if (result.isFail())
                 this.onError(conn, result.<Fail>as().jvmAs());
@@ -198,7 +183,7 @@ public class MServer extends WebSocketServer implements Cluster, Closeable, Obj,
         } catch (final Exception e) {
             final ByteBuffer bytes = this.serializer.writeBytes(fail(e));
             conn.send(bytes);
-            this.totalBytesReceived += bytes.array().length;
+            this.ioStat.incrTotalByteReceived(bytes.array().length);
             this.onError(conn, e);
         }
     }

@@ -143,8 +143,8 @@ public record JSONTranslator(ObjSerializer<String> serializer) implements Transl
             final JsonObject jp = (JsonObject) value;
             final Map<Obj, Obj> map = new LinkedHashMap<>();
             for (var kv : jp.getAsJsonObject().asMap().entrySet()) {
-                final Obj v = translate(kv.getValue());
                 final Uri k = uri(kv.getKey());
+                final Obj v = translate(kv.getValue());
                 if (!k.isNoObj() && !v.isNoObj())
                     map.put(k, v);
             }

@@ -29,8 +29,6 @@ import org.jline.reader.impl.DefaultParser;
 import org.jline.reader.impl.history.DefaultHistory;
 import org.jline.terminal.Terminal;
 import org.jline.terminal.TerminalBuilder;
-import org.jline.utils.AttributedString;
-import org.jline.utils.AttributedStringBuilder;
 import org.jline.widget.Widgets;
 import org.slf4j.event.Level;
 import studio.phaseshift.metatron.BootLoader;
@@ -45,10 +43,7 @@ import studio.phaseshift.metatron.lang.core.m.type.impl.MRec;
 import studio.phaseshift.metatron.lang.core.mach.type.impl.MMachine;
 import studio.phaseshift.metatron.lang.util.logObj;
 import studio.phaseshift.metatron.lang.util.serial.ObjStringSerializer;
-import studio.phaseshift.metatron.ui.Graphitty;
-import studio.phaseshift.metatron.ui.GraphittyLogger;
-import studio.phaseshift.metatron.ui.Mode;
-import studio.phaseshift.metatron.ui.Table;
+import studio.phaseshift.metatron.ui.*;
 import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Threadable;
 
@@ -60,7 +55,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
-import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 
 import static org.jline.keymap.KeyMap.ctrl;
@@ -72,8 +66,8 @@ import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.REC_TID;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MType.T;
-import static studio.phaseshift.metatron.lang.sys.console.Box.BASIC_BORDER;
 import static studio.phaseshift.metatron.lang.sys.sysInstSet.SYS_TID;
+import static studio.phaseshift.metatron.ui.Box.BASIC_BORDER;
 
 public class Console extends MRec implements Threadable, Runnable {
 
@@ -86,7 +80,8 @@ public class Console extends MRec implements Threadable, Runnable {
     public static String HEADER_SEPARATOR = "####################";
     private final Terminal terminal;
     private final LineReader reader;
-    private StatusLine status;
+    private final StatusLine status;
+    // private SyntaxHighlighter highlighter;
     private final Thread thread;
     public static Console LOCAL_INSTANCE = null;
 
@@ -106,15 +101,14 @@ public class Console extends MRec implements Threadable, Runnable {
                     .blockCommentDelims(new DefaultParser.BlockCommentDelims("[===", "===]"))
                     .eofOnUnclosedQuote(true)
                     .eofOnUnclosedBracket(DefaultParser.Bracket.CURLY, DefaultParser.Bracket.ROUND, DefaultParser.Bracket.SQUARE);
-            this.terminal = TerminalBuilder.builder().encoding(StandardCharsets.UTF_8).system(true)/*.signalHandler(Terminal.SignalHandler.SIG_IGN)*/.build();
+            this.terminal = TerminalBuilder.builder().encoding(StandardCharsets.UTF_8).system(true).build();
             this.outputHeader();
-            // this.terminal.handle(Terminal.Signal.WINCH) // TODO: signal handling on some CNTRL-?? to resolve (not evaluate) current expression
-            final History history = new DefaultHistory();
+            //this.highlighter = SyntaxHighlighter.build(Paths.get("./conf/mtron.nanorc"), "mtron");
             this.reader = LineReaderBuilder.builder()
                     .terminal(terminal)
                     .appName("metatron")
-                    .history(history)
-                    .highlighter(CustomHighlighters.of(this.terminal))
+                    .history(new DefaultHistory())
+                    //.highlighter(new CustomHighlighters(this))
                     .parser(parser)
                     .variable(LineReader.HISTORY_FILE, Paths.get(".metatron.history"))
                     .option(LineReader.Option.AUTO_FRESH_LINE, true)
@@ -124,21 +118,19 @@ public class Console extends MRec implements Threadable, Runnable {
                     .variable(LineReader.INDENTATION, 0)
                     .completer(new MCompleter(this))
                     .build();
+            new CustomWidgets(this.reader);
             this.status = new StatusLine(this, "{{b}}loading...{{X}}");
 
-            ConfigurationPath configPath = new ConfigurationPath(
+            final ConfigurationPath configPath = new ConfigurationPath(
                     Paths.get("/pub/metatron"),                           // application-wide settings
-                    Paths.get(System.getProperty("user.home"), ".metatron") // user-specific settings
+                    Paths.get(System.getProperty("user.home"), "software/metatron/conf") // user-specific settings
             );
 
-            Supplier<Path> workDir = () -> Paths.get("");
-            Builtins builtins = new Builtins(workDir, configPath, null);
+            final Supplier<Path> workDir = () -> Paths.get("");
+            final Builtins builtins = new Builtins(workDir, configPath, null);
             SystemRegistry systemRegistry = new SystemRegistryImpl(parser, terminal, workDir, configPath);
             systemRegistry.setCommandRegistries(builtins);
-            
-            
             this.thread = new Thread(this);
-
         } catch (final Exception e) {
             throw MTronException.of(e);
         }
@@ -171,7 +163,6 @@ public class Console extends MRec implements Threadable, Runnable {
     public void run() {
         Mode.waitForBoot();
         this.status.start();
-        new CustomWidgets(this.reader);
         String line = "";
         while (!this.thread.isInterrupted()) {
             try {
@@ -229,6 +220,7 @@ public class Console extends MRec implements Threadable, Runnable {
                 if (stackTrace.trim().equalsIgnoreCase("y")) {
                     e.printStackTrace();
                 }
+
             }
         }
         try {
@@ -282,29 +274,6 @@ public class Console extends MRec implements Threadable, Runnable {
     @Override
     public Thread getThread() {
         return this.thread;
-    }
-
-    static class CustomHighlighters implements Highlighter {
-        private final Terminal terminal;
-        private final List<BiConsumer<AttributedStringBuilder, String>> highlighters = new ArrayList<>();
-
-        private CustomHighlighters(final Terminal terminal) {
-            this.terminal = terminal;
-            this.highlighters.add((builder, buffer) -> {
-                builder.append(buffer);
-            });
-        }
-
-        public static Highlighter of(final Terminal terminal) {
-            return new CustomHighlighters(terminal);
-        }
-
-        @Override
-        public AttributedString highlight(final LineReader reader, final String buffer) {
-            final AttributedStringBuilder builder = new AttributedStringBuilder();
-            this.highlighters.forEach(highlighter -> highlighter.accept(builder, buffer));
-            return builder.toAttributedString();
-        }
     }
 
     class CustomWidgets extends Widgets {

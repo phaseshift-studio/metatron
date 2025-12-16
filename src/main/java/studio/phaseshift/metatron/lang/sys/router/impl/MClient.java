@@ -29,6 +29,7 @@ import org.java_websocket.handshake.ServerHandshake;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.core.m.type.Obj;
 import studio.phaseshift.metatron.lang.core.m.type.impl.MObjs;
+import studio.phaseshift.metatron.lang.sys.router.IOStat;
 import studio.phaseshift.metatron.lang.sys.router.Router;
 import studio.phaseshift.metatron.lang.util.serial.ObjSerializer;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
@@ -39,16 +40,13 @@ import java.nio.ByteBuffer;
 import java.util.LinkedList;
 import java.util.Queue;
 
-import static studio.phaseshift.metatron.furi.fURI.f;
-
 public class MClient extends WebSocketClient implements MConnection {
 
     protected final GraphittyLogger LOG;
     protected final ObjSerializer<?> serializer;
     protected final Queue<FutureObj<Obj>> futures = new LinkedList<>();
     protected final fURI remoteHost;
-    private  long totalBytesSent = 0L;
-    private  long totalBytesReceived = 0L;
+    private IOStat ioStat = new IOStat();
 
     public MClient(final fURI remoteAuthority, final ObjSerializer<?> serializer, final Draft draft) {
         super(URI.create(remoteAuthority.toString()), draft);
@@ -87,18 +85,13 @@ public class MClient extends WebSocketClient implements MConnection {
         }
     }*/
 
+    @Override
+    public IOStat stats() {
+        return this.ioStat;
+    }
+
     public fURI remoteHost() {
         return this.remoteHost;
-    }
-
-    @Override
-    public long totalBytesSent() {
-        return this.totalBytesSent;
-    }
-
-    @Override
-    public long totalBytesReceived() {
-        return this.totalBytesReceived;
     }
 
     public void start() {
@@ -125,7 +118,7 @@ public class MClient extends WebSocketClient implements MConnection {
     @Override
     public void onMessage(final ByteBuffer message) {
         LOG.trace("received byte buffer [length:%d]", message.array().length);
-        this.totalBytesReceived += message.array().length;
+        this.ioStat.incrTotalByteReceived(message.array().length);
         final Obj obj = this.serializer.readBytes(message);
         this.onObj(obj);
 
@@ -160,7 +153,7 @@ public class MClient extends WebSocketClient implements MConnection {
     public void sendObj(final Obj obj) {
         final ByteBuffer buffer = this.serializer.writeBytes(obj);
         this.send(buffer);
-        this.totalBytesSent += buffer.array().length;
+        this.ioStat.incrTotalByteSent(buffer.array().length);
     }
 
 

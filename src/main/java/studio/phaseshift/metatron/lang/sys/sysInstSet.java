@@ -19,6 +19,7 @@
 package studio.phaseshift.metatron.lang.sys;
 
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.lang.core.m.parser.mParser;
 import studio.phaseshift.metatron.lang.core.m.type.Inst;
 import studio.phaseshift.metatron.lang.core.m.type.Type;
 import studio.phaseshift.metatron.lang.core.m.type.impl.MInstSet;
@@ -28,6 +29,7 @@ import studio.phaseshift.metatron.lang.sys.console.Editor;
 import studio.phaseshift.metatron.lang.sys.fs.fileSpace;
 import studio.phaseshift.metatron.lang.util.serial.ObjSerializer;
 import studio.phaseshift.metatron.lang.util.serial.ObjStringSerializer;
+import studio.phaseshift.metatron.lang.util.serial.mParserObjSerializer;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.io.File;
@@ -90,12 +92,12 @@ public class sysInstSet extends MInstSet {
     @Override
     public Set<Inst> insts() {
         return new LinkedHashSet<>(List.of(
-                instC(SYS_TID.extend("inst").extend("nano").dom(ALL).rng(ALL), lst(), (lhs, inst) -> {
+                instC(SYS_TID.extend("inst").extend("nano").dom(ALL.maybe()).rng(ALL.maybe()), lst(), (lhs, inst) -> {
                     try {
-                        final File file = Editor.createTempFile(lhs);
+                        final File file = Editor.createObjFile(lhs);
                         Editor.of(Console.LOCAL_INSTANCE, file);
-                        final ObjSerializer<String> serializer = ObjStringSerializer.build().prettyPrint(true).create();
-                        return serializer.read(Files.readString(file.toPath()));
+                        final ObjSerializer<String> serializer = new mParserObjSerializer();
+                        return mParser.parse(Files.readString(file.toPath()).trim());
                     } catch (final IOException e) {
                         throw MTronException.of(e);
                     }
