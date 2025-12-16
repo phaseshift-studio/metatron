@@ -44,6 +44,7 @@ import studio.phaseshift.metatron.lang.core.mach.type.impl.MMachine;
 import studio.phaseshift.metatron.lang.util.logObj;
 import studio.phaseshift.metatron.lang.util.serial.ObjStringSerializer;
 import studio.phaseshift.metatron.ui.*;
+import studio.phaseshift.metatron.util.Common;
 import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Threadable;
 
@@ -163,6 +164,7 @@ public class Console extends MRec implements Threadable, Runnable {
     public void run() {
         Mode.waitForBoot();
         this.status.start();
+        Common.sleepThread(50);
         String line = "";
         while (!this.thread.isInterrupted()) {
             try {

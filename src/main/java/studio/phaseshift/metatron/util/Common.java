@@ -49,6 +49,14 @@ public final class Common {
         // do nothing
     }
 
+    public static void sleepThread(final long millis) {
+        try {
+            Thread.sleep(millis);
+        } catch (final InterruptedException e) {
+            throw MTronException.of(e);
+        }
+    }
+    
     public static void close(final Object object) {
         try {
             if (object instanceof Closeable)
