@@ -4,6 +4,7 @@ print("{{r}}------------\n{{g}}*{{y}}boot/args{{X}}: ",
      "\n{{r}}------------{{X}}\n");
 [-- mount instruction sets --];
 /sys/router/lang/sys   -> */sys;
+/sys/router/lang/fs    -> */fs;
 /sys/router/lang/kv    -> */kv;
 /sys/router/lang/web   -> */web;
 /sys/router/lang/iot   -> */iot;
@@ -24,7 +25,7 @@ print("{{r}}------------\n{{g}}*{{y}}boot/args{{X}}: ",
    mqtt::[pattern => /mqtt/#,
           host    => <mqtt://chibi.local:1883>,
           prefix  => /mqtt/]@/sys/router/space/mqtt;
-     fs::[pattern => </home/#>]@/sys/router/space/fs;
+     fs::[pattern => /home/#]@/sys/router/space/fs;
  ollama::[host    => <http://localhost:11434>]@/usr/ai;   
 console::[        => ];
  [-- *boot/args/mode.-<|[?=server   => print('\n\t{{g}}-<{{c}}server mode{{g}}>-{{X}}'), 

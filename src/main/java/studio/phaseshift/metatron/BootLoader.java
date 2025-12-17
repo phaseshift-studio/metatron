@@ -152,10 +152,10 @@ public class BootLoader implements Rec, Feature.SelfClone {
             LOG.info("accessible instruction sets: %s", Registry.open().registrants());
             ROUTER = new MRouter(remoteAuthority, ROUTER_TID);
             sysInstSet.create();
-            fsInstSet.create();
             kvSpace.of(SYS_INSTSET_TID.extend(ALL), SYS_INSTSET_TID);
             Router.writeToSpace(mInstSet.create(f("/sys/router/lang/m")));
             Router.writeToSpace(Router.global());
+          fsInstSet.create();
             Router.writeToSpace(f("boot/args"), args);
             ROUTER.start();
             ///////////////////////////////////////////////////////////////

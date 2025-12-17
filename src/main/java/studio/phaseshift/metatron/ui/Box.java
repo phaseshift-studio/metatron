@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -20,12 +20,15 @@ package studio.phaseshift.metatron.ui;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
+import java.util.stream.Stream;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public class Box {
 
+    protected final String title;
     protected final String body;
     protected final List<String> lrtb;
 
@@ -38,6 +41,11 @@ public class Box {
     }
 
     public Box(final String body, final List<String> lrtb) {
+        this(null, body, lrtb);
+    }
+
+    public Box(final String title, final String body, final List<String> lrtb) {
+        this.title = title;
         this.body = body;
         this.lrtb = lrtb;
     }
@@ -77,14 +85,14 @@ public class Box {
 
     public String toString() {
         final List<String> lines = Arrays.asList(this.body.replace("\\n", "\n").split("\\r?\\n", -1));
-        final int maxLen = lines.stream()
+        final int maxLen = Stream.concat(Stream.of(this.title).filter(Objects::nonNull), lines.stream())
                 .map(Graphitty::strip)
                 .mapToInt(String::length)
                 .max()
                 .orElse(0);
 
         final StringBuilder sb = new StringBuilder();
-        sb.append("%s%s%s".formatted(this.lrtb.get(4), this.lrtb.get(2).repeat(maxLen), this.lrtb.get(5))).append('\n');
+        sb.append("%s%s%s%s".formatted(this.lrtb.get(4), null == this.title ? "" : this.title, this.lrtb.get(2).repeat(null == this.title ? maxLen : maxLen - Graphitty.strip(this.title).length()), this.lrtb.get(5))).append('\n');
         for (final String line : lines) {
             sb.append(this.lrtb.get(0))
                     .append(line)

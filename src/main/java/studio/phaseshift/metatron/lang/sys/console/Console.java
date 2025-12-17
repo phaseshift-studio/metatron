@@ -179,7 +179,7 @@ public class Console extends MRec implements Threadable, Runnable {
                     Graphitty.out(this.terminal.output(), "{{XX&@}}");
                     this.status.refresh();
                 } else if (line.equals(":help")) {
-                    Graphitty.out(this.terminal.output(), new Box(new Table(
+                    Graphitty.out(this.terminal.output(), new Box("{{c}}help menu{{X}}", new Table(
                             List.of("name", "short", "description"))
                             .addRow(List.of("space walk", "<tab>", "explore spaces"))
                             .addRow(List.of("introspect", "<space><tab>", "analyze machine"))

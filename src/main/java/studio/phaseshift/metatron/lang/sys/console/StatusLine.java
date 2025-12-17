@@ -70,11 +70,11 @@ public class StatusLine implements Threadable, Runnable {
                 color = "b";
             if (Router.loaded()) {
                 final AttributedString temp = new AttributedStringBuilder()
-                        .ansiAppend(Graphitty.string("{{-X-&[" + color + "]&w}} %s", Router.global().server().host()))
-                        .ansiAppend(Graphitty.string(" [connections: {{M}}%d{{[" + color + "]&w}}]", Router.global().server().nodes().size()))
-                        .ansiAppend(Graphitty.string(" [bytes >: {{M}}%d{{[" + color + "]&w}}]", Router.global().server().stats().getBytesSent()))
-                        .ansiAppend(Graphitty.string(" [bytes <: {{M}}%d{{[" + color + "]&w}}]", Router.global().server().stats().getBytesReceived()))
-                        .append(Graphitty.string("{{[" + color + "]}}%s", " ".repeat(200)))
+                        .ansiAppend(Graphitty.string("{{[" + color + "]&w}} %s", Router.global().server().host()))
+                        .ansiAppend(Graphitty.string("{{g}}|{{w}}nodes:{{m}}%d{{[" + color + "]&w}}", Router.global().server().nodes().size()))
+                        .ansiAppend(Graphitty.string("{{g}}|{{w}}in:{{m}}%d{{[" + color + "]&w}}", Router.global().server().stats().getBytesSent()))
+                        .ansiAppend(Graphitty.string("{{g}}|{{w}}out:{{m}}%d{{[" + color + "]&w}}", Router.global().server().stats().getBytesReceived()))
+                        .append(Graphitty.string("{{g}}|{{[" + color + "]}}%s", " ".repeat(200)))
                         .toAttributedString();
                 if (!this.line.equals(temp)) {
                     this.line = temp;

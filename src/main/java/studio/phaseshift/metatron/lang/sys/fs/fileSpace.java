@@ -65,7 +65,6 @@ public class fileSpace extends MSpace<FileSystem> {
         Router.global().addSpace(space);
         return space;
     }));
-    // public static final Type DIR_TYPE =
 
     public fileSpace(final FileSystem fs, final Map<Obj, Obj> jvm, final fURI pattern, final fURI vid) {
         super(fs, jvm, pattern, FS_TID, vid);
@@ -143,13 +142,12 @@ public class fileSpace extends MSpace<FileSystem> {
             } else {
                 try {
                     if (obj.isNoObj()) {
-                        Files.delete(Path.of(pattern.toString()));
+                        throw MTronException.of("deleting files currently not supported", pattern);
+                        //   Files.delete(Path.of(pattern.toString()));
                     } else {
                         final FileWriter writer = new FileWriter(pattern.toString());
-                        if (obj.isStr())
-                            writer.write(obj.strValue());
-                        else
-                            writer.write(obj.toString());
+                        writer.write(obj.isStr() ? obj.strValue() : obj.toString());
+                        writer.flush();
                         writer.close();
                     }
                 } catch (final Exception e) {

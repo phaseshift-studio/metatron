@@ -39,7 +39,7 @@ public class Graphitty {
 
     static {
         COLOR_REWRITES.put("X", "\033[m");  // reset
-        COLOR_REWRITES.put("k", "\033[30m"); // red
+        COLOR_REWRITES.put("k", "\033[30m"); // black
         COLOR_REWRITES.put("r", "\033[31m"); // red
         COLOR_REWRITES.put("g", "\033[32m"); // green
         COLOR_REWRITES.put("y", "\033[33m");  // yellow

@@ -55,10 +55,23 @@ public abstract class MInstSet extends MSpace<Map<fURI, Set<? extends Obj>>> imp
         if (Router.loaded()) {
             if (!this.pattern.equals(f("+/#")) && !(this instanceof Router))
                 Router.global().addSpace(this);
-            this.types().forEach(t -> this.write(t.tid(), t));
-            this.consts().forEach(c -> this.write(c.vid(), c));
-            this.insts().forEach(i -> this.write(i.tid(), i));
-            this.rewrites().forEach(r -> this.write(r.tid(), r));
+            this.types().forEach(t -> {
+                if (t.tid().matches(this.pattern)) this.write(t.tid(), t);
+                else Router.writeToSpace(t.tid(), t);
+            });
+            this.consts().forEach(c -> {
+                if (c.vid().matches(this.pattern)) this.write(c.vid(), c);
+                else Router.writeToSpace(c.vid(), c);
+            });
+            this.insts().forEach(i -> {
+                if (i.tid().matches(this.pattern)) this.write(i.tid(), i);
+                else Router.writeToSpace(i.tid(), i);
+            });
+            this.rewrites().forEach(r -> {
+                if (r.tid().matches(this.pattern)) this.write(r.tid(), r);
+                else Router.writeToSpace(r.tid(), r);
+            });
+            /// //////////////////////////////////////////////////////////////////////////////////////////////
             this.types().forEach(t -> Router.global().registerRewrite(f(t.tid().name()), t.tid()));
             this.consts().forEach(t -> Router.global().registerRewrite(f(t.vid().name()), t.vid()));
             this.insts().forEach(t -> Router.global().registerRewrite(f(t.tid().name()), t.tid().basePath()));
