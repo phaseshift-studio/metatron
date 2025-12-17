@@ -66,7 +66,7 @@ import static studio.phaseshift.metatron.lang.core.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.lang.net.web.webInstSet.PAGE_TID;
-import static studio.phaseshift.metatron.lang.net.web.webInstSet.WEB_TID;
+import static studio.phaseshift.metatron.lang.net.web.webInstSet.WEB_INSTSET_TID;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -128,7 +128,7 @@ public class webSpace extends MSpace<HttpServer> {
 
     public static final String INDEX_HTML = "index.html";
 
-    public static final fURI WEB_SPACE_TID = WEB_TID.extend("space").extend("web");
+    public static final fURI WEB_SPACE_TID = WEB_INSTSET_TID.extend("space").extend("web");
     protected static final String ROUTE = "route";
     protected static final Type WEB_TYPE = T(WEB_SPACE_TID, null,
             instC(mInstSet.INST_TID.dom(ALL.maybe()).rng(WEB_SPACE_TID),

@@ -38,15 +38,15 @@ import static studio.phaseshift.metatron.lang.core.m.type.impl.MType.T;
 
 public class grphInstSet extends MInstSet {
 
-    public static final fURI MGRPH_TID = f("/grph");
-    public static final fURI GRAPH_TID = MGRPH_TID.extend("graph");
-    public static final fURI ELEMENT_TID = MGRPH_TID.extend("element");
-    public static final fURI VERTEX_TID = MGRPH_TID.extend("vertex");
-    public static final fURI VERTEX_PROPERTY_TID = MGRPH_TID.extend("vproperty");
-    public static final fURI PROPERTY_TID = MGRPH_TID.extend("property");
-    public static final fURI EDGE_TID = MGRPH_TID.extend("edge");
+    public static final fURI GRPH_INSTSET_TID = f("/grph");
+    public static final fURI GRAPH_TID = GRPH_INSTSET_TID.extend("graph");
+    public static final fURI ELEMENT_TID = GRPH_INSTSET_TID.extend("element");
+    public static final fURI VERTEX_TID = GRPH_INSTSET_TID.extend("vertex");
+    public static final fURI VERTEX_PROPERTY_TID = GRPH_INSTSET_TID.extend("vproperty");
+    public static final fURI PROPERTY_TID = GRPH_INSTSET_TID.extend("property");
+    public static final fURI EDGE_TID = GRPH_INSTSET_TID.extend("edge");
 
-    public static final fURI INST_TID = MGRPH_TID.extend("inst");
+    public static final fURI INST_TID = GRPH_INSTSET_TID.extend("inst");
     public static final fURI G_INST_TID = INST_TID.extend("g");
     public static final fURI V_INST_TID = INST_TID.extend("V");
     public static final fURI E_INST_TID = INST_TID.extend("E");
@@ -66,7 +66,7 @@ public class grphInstSet extends MInstSet {
     public static final fURI HAS_INST_TID = INST_TID.extend("has");
 
     public grphInstSet(final fURI vid) {
-        super(MGRPH_TID, vid);
+        super(GRPH_INSTSET_TID, vid);
         // this.types().forEach(t -> Router.global().registerRewrite(f(t.tid().name()), t.tid()));
     }
 

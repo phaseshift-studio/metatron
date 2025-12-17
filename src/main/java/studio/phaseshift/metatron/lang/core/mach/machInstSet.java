@@ -49,10 +49,10 @@ import static studio.phaseshift.metatron.lang.core.m.type.impl.MType.T;
  */
 public class machInstSet extends MInstSet {
 
-    public static final fURI MACH_TID = f("/mach");
-    public static final fURI MACH_INE_TID = MACH_TID.extend("ine");
-    public static final fURI MACH_MONAD_TID = MACH_TID.extend("monad");
-    public static final fURI INST_TID = MACH_TID.extend("inst");
+    public static final fURI MACH_INSTSET_TID = f("/mach");
+    public static final fURI MACH_INE_TID = MACH_INSTSET_TID.extend("ine");
+    public static final fURI MACH_MONAD_TID = MACH_INSTSET_TID.extend("monad");
+    public static final fURI INST_TID = MACH_INSTSET_TID.extend("inst");
     public static final fURI DROP_TID = INST_TID.extend("drop");
     public static final fURI PROJECT_TID = INST_TID.extend("project"); // proj?
     public static final fURI INJECT_TID = INST_TID.extend("inject"); // inj ?
@@ -62,7 +62,7 @@ public class machInstSet extends MInstSet {
     public static final fURI RING_BINARY = INST_TID.extend("ring").extend("op").extend("+");
 
     public machInstSet(final fURI vid) {
-        super(MACH_TID, vid);
+        super(MACH_INSTSET_TID, vid);
     }
 
     public static machInstSet create() {

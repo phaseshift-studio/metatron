@@ -44,14 +44,14 @@ import static studio.phaseshift.metatron.lang.core.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.lang.net.clstr.clstrInstSet.CLSTR_TID;
+import static studio.phaseshift.metatron.lang.net.clstr.clstrInstSet.CLSTR_INSTSET_TID;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public class clusterSpace extends MSpace<BiPredicate<fURI, MConnection>> {
 
-    public static final fURI CLUSTER_SPACE_TID = CLSTR_TID.extend(Tokens.SPACE).extend("cluster");
+    public static final fURI CLUSTER_SPACE_TID = CLSTR_INSTSET_TID.extend(Tokens.SPACE).extend("cluster");
     public final GraphittyLogger LOG = Graphitty.log(this);
     public static final Type CLUSTER_SPACE_TYPE = T(CLUSTER_SPACE_TID, null, instC(mInstSet.INST_TID.dom(ALL.maybe()).rng(CLUSTER_SPACE_TID),
             lst(T(REC_TID,isa_(rec(uri(Tokens.PATTERN), T(URI_TID))).tryToInst())), (lhs, inst) -> {

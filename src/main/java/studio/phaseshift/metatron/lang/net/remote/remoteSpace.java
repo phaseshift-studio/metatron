@@ -44,7 +44,7 @@ import static studio.phaseshift.metatron.lang.core.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.lang.sys.sysInstSet.SYS_TID;
+import static studio.phaseshift.metatron.lang.sys.sysInstSet.SYS_INSTSET_TID;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -52,7 +52,7 @@ import static studio.phaseshift.metatron.lang.sys.sysInstSet.SYS_TID;
 public class remoteSpace extends MSpace<MConnection> {
 
     public static final int RETRY_SECONDS = 5;
-    public static final fURI REMOTE_TID = SYS_TID.extend(Tokens.SPACE).extend("remote");
+    public static final fURI REMOTE_TID = SYS_INSTSET_TID.extend(Tokens.SPACE).extend("remote");
     private final GraphittyLogger LOG;
 
     public static final Type REMOTE_TYPE = T(REMOTE_TID, null, instC(mInstSet.INST_TID.dom(ALL.maybe()).rng(REMOTE_TID), lst(T(REC_TID, isa_(rec(uri(Tokens.PATTERN), T(URI_TID), uri(Tokens.HOST), T(URI_TID))))), (lhs, inst) -> {

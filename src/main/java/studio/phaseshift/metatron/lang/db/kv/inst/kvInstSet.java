@@ -32,10 +32,10 @@ import static studio.phaseshift.metatron.furi.fURI.f;
  */
 public class kvInstSet extends MInstSet {
 
-    public static final fURI MKV_TID = f("/kv");
+    public static final fURI KV_INSTSET_TID = f("/kv");
 
     public kvInstSet(final fURI vid) {
-        super(MKV_TID, vid);
+        super(KV_INSTSET_TID, vid);
     }
 
     public static kvInstSet create() {

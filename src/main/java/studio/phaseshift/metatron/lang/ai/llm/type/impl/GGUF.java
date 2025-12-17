@@ -36,7 +36,7 @@ import java.util.Arrays;
 import java.util.Map;
 
 import static studio.phaseshift.metatron.Tokens.NAME;
-import static studio.phaseshift.metatron.lang.ai.llm.llmInstSet.LLM_TID;
+import static studio.phaseshift.metatron.lang.ai.llm.llmInstSet.LLM_INSTSET_TID;
 import static studio.phaseshift.metatron.lang.core.m.inst.mFluent.StartLess.isa_;
 import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.INT_TID;
 import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.URI_TID;
@@ -58,7 +58,7 @@ public class GGUF extends MRec {
     public static final String GGML = "ggml";
     public static final String TENSOR = "tensor";
 
-    public static final fURI GGUF_TID = LLM_TID.extend("gguf");
+    public static final fURI GGUF_TID = LLM_INSTSET_TID.extend("gguf");
     public static final fURI TENSOR_REF_TID = GGUF_TID.extend("tensor_ref");
     private com.llama4j.gguf.GGUF rawData;
     public static final String VERSION = "version";

@@ -67,12 +67,12 @@ import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.REC_TID;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MType.T;
-import static studio.phaseshift.metatron.lang.sys.sysInstSet.SYS_TID;
+import static studio.phaseshift.metatron.lang.sys.sysInstSet.SYS_INSTSET_TID;
 import static studio.phaseshift.metatron.ui.Box.BASIC_BORDER;
 
 public class Console extends MRec implements Threadable, Runnable {
 
-    public static final fURI CONSOLE_TID = SYS_TID.extend("console");
+    public static final fURI CONSOLE_TID = SYS_INSTSET_TID.extend("console");
 
     private static final String METATRON_VERSION = "0.1-alpha";
 

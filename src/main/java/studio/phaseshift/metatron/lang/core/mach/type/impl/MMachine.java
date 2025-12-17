@@ -21,7 +21,6 @@ package studio.phaseshift.metatron.lang.core.mach.type.impl;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.core.m.inst.mInstSet;
-import studio.phaseshift.metatron.lang.core.m.obj.NoObj;
 import studio.phaseshift.metatron.lang.core.m.type.*;
 import studio.phaseshift.metatron.lang.core.m.type.impl.MCode;
 import studio.phaseshift.metatron.lang.core.m.type.impl.MInst;
@@ -42,7 +41,7 @@ import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.CODE_TID;
 import static studio.phaseshift.metatron.lang.core.m.obj.NoObj.noobj;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.lang.core.mach.machInstSet.DROP_TID;
-import static studio.phaseshift.metatron.lang.core.mach.machInstSet.MACH_TID;
+import static studio.phaseshift.metatron.lang.core.mach.machInstSet.MACH_INSTSET_TID;
 import static studio.phaseshift.metatron.util.MTronException.mexcept;
 import static studio.phaseshift.metatron.util.Tuple.Quartet;
 
@@ -58,7 +57,7 @@ public class MMachine extends MObj implements Machine {
     }
 
     public static Machine of(final Call code) {
-        return new MMachine(Quartet.with(code.isInst() ? new MCode(List.of(code.as()), CODE_TID, fURI.fnull) : code.as(), RunningMonads.of(), lst(new LinkedList<>()), MObjs.empty()), MACH_TID, fURI.fnull);
+        return new MMachine(Quartet.with(code.isInst() ? new MCode(List.of(code.as()), CODE_TID, fURI.fnull) : code.as(), RunningMonads.of(), lst(new LinkedList<>()), MObjs.empty()), MACH_INSTSET_TID, fURI.fnull);
     }
 
 
@@ -67,7 +66,7 @@ public class MMachine extends MObj implements Machine {
             final List<Inst> prepended = new ArrayList<>();
             prepended.add(MInst.instB(mInstSet.START_INST_TID, lst(start)));
             prepended.addAll(code.codeValue());
-            return new MMachine(Quartet.with(MCode.of(prepended), RunningMonads.of(), lst(new LinkedList<>()), MObjs.empty()), MACH_TID, fURI.fnull);
+            return new MMachine(Quartet.with(MCode.of(prepended), RunningMonads.of(), lst(new LinkedList<>()), MObjs.empty()), MACH_INSTSET_TID, fURI.fnull);
         } else {
             return MMachine.of(code);
         }

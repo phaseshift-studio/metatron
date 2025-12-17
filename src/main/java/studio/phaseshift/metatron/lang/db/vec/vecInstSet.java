@@ -46,21 +46,21 @@ import static studio.phaseshift.metatron.lang.core.m.type.impl.MType.T;
 */
 public class vecInstSet extends MInstSet {
 
-    public static final fURI MVEC_TID = f("/vec");
-    public static final fURI VEC_TID = MVEC_TID.extend("vec");
+    public static final fURI VEC_INSTSET_TID = f("/vec");
+    public static final fURI VEC_TID = VEC_INSTSET_TID.extend("vec");
     //public static final fURI RVEC_TID = MEXT_TID.extend("rvec");
-    public static final fURI MTRX_TID = MVEC_TID.extend("mtrx");
-    public static final fURI CMPLX_TID = MVEC_TID.extend("cmplx");
-    public static final fURI IMG_TID = MVEC_TID.extend("img");
+    public static final fURI MTRX_TID = VEC_INSTSET_TID.extend("mtrx");
+    public static final fURI CMPLX_TID = VEC_INSTSET_TID.extend("cmplx");
+    public static final fURI IMG_TID = VEC_INSTSET_TID.extend("img");
     /// ////////////////////////////////////////////////////////////
-    public static final fURI INST_TID = MVEC_TID.extend("inst");
+    public static final fURI INST_TID = VEC_INSTSET_TID.extend("inst");
     public static final fURI DOT_TID = INST_TID.extend("dot");
     public static final fURI SQRT_TID = INST_TID.extend("sqrt");
     public static final fURI JSON_TID = INST_TID.extend("json");
     private static final JSONTranslator JSON_TRANSLATOR = new JSONTranslator();
 
     public vecInstSet(final fURI vid) {
-        super(MVEC_TID, vid);
+        super(VEC_INSTSET_TID, vid);
     }
 
     public static vecInstSet create() {

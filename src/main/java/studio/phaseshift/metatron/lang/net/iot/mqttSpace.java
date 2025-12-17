@@ -53,7 +53,7 @@ import static studio.phaseshift.metatron.lang.core.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.lang.net.iot.iotInstSet.IOT_TID;
+import static studio.phaseshift.metatron.lang.net.iot.iotInstSet.IOT_INSTSET_TID;
 import static studio.phaseshift.metatron.util.Common.mutableMap;
 
 
@@ -66,7 +66,7 @@ public class mqttSpace extends MSpace<Mqtt5Client> {
             .prettyPrint(false)
             .ignoreRewrites(true)
             .create();
-    public static fURI MQTT_TID = IOT_TID.extend("space").extend("mqtt");
+    public static fURI MQTT_TID = IOT_INSTSET_TID.extend("space").extend("mqtt");
     public static final Type MQTT_TYPE = T(MQTT_TID, null,
             instC(mInstSet.INST_TID.dom(ALL.maybe()).rng(MQTT_TID),
                     lst(T(REC_TID, isa_(rec(

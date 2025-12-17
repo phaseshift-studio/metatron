@@ -40,11 +40,11 @@ import static studio.phaseshift.metatron.lang.net.iot.type.Button.BUTTON_TID;
  */
 public class iotInstSet extends MInstSet {
 
-    public static final fURI IOT_TID = f("/iot");
-    public static final fURI INST_TID = IOT_TID.extend("inst");
+    public static final fURI IOT_INSTSET_TID = f("/iot");
+    public static final fURI INST_TID = IOT_INSTSET_TID.extend("inst");
 
     public iotInstSet(final fURI vid) {
-        super(IOT_TID, vid);
+        super(IOT_INSTSET_TID, vid);
     }
 
     public static iotInstSet create() {

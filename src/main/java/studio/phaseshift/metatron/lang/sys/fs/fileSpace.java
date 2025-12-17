@@ -53,6 +53,7 @@ import static studio.phaseshift.metatron.lang.core.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.lang.sys.fs.fsInstSet.FILE_TID;
 import static studio.phaseshift.metatron.lang.sys.sysInstSet.SPACE_TID;
 
 public class fileSpace extends MSpace<FileSystem> {
@@ -64,9 +65,6 @@ public class fileSpace extends MSpace<FileSystem> {
         Router.global().addSpace(space);
         return space;
     }));
-    public static final fURI FILE_TID = FS_TID.extend("file");
-    public static final fURI DIR_TID = FS_TID.extend("dir");
-    public static final Type FILE_TYPE = T(FILE_TID, isa_(rec()));
     // public static final Type DIR_TYPE =
 
     public fileSpace(final FileSystem fs, final Map<Obj, Obj> jvm, final fURI pattern, final fURI vid) {
@@ -89,6 +87,7 @@ public class fileSpace extends MSpace<FileSystem> {
 
     public static Rec makeFile(final Path path) {
         return new MRec(new LinkedHashMap<Obj, Obj>(Map.of(
+                uri(Tokens.PATTERN), uri(path.toString()),
                 uri(Tokens.NAME), uri(path.getFileName().toString()),
                 uri("permissions"), lst(MTronException.wrap(() -> (List) Files.getPosixFilePermissions(path).stream().map(x -> uri(x.toString())).toList())),
                 uri("data"), auto_(instC(INST_TID.dom(ALL.maybe()).rng(BYTES_TID), lst(T(URI_TID)), (lhs, inst) -> {

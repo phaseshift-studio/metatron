@@ -38,7 +38,7 @@ import static studio.phaseshift.metatron.lang.core.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.lang.sys.fs.fileSpace.FILE_TID;
+import static studio.phaseshift.metatron.lang.sys.fs.fsInstSet.FILE_TID;
 
 public interface Uri extends Mono, Ring.O<Uri> {
 

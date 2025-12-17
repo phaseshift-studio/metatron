@@ -75,8 +75,8 @@ public class mParser {
     private static final SettableParser branch_parser = SettableParser.undefined();
     private static final Parser[] PARSERS;
 
-    private static final String FULL_FURI_CHARS = "/%!#_-@+.: ";
-    private static final String REDUCED_FURI_CHARS = "/%!#_-@+:";
+    private static final String FULL_FURI_CHARS = "/%$!#_-@+.: ";
+    private static final String REDUCED_FURI_CHARS = "/%$!#_-@+:";
 
     static {
         final List<Parser> list =

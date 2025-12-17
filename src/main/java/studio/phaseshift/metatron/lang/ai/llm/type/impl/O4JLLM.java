@@ -28,7 +28,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import static studio.phaseshift.metatron.Tokens.NAME;
-import static studio.phaseshift.metatron.lang.ai.llm.llmInstSet.LLM_TID;
+import static studio.phaseshift.metatron.lang.ai.llm.llmInstSet.LLM_INSTSET_TID;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
 
@@ -37,7 +37,7 @@ import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
  */
 public class O4JLLM extends MRec implements LLM {
 
-    public static final fURI O4JLLM_TID = LLM_TID.extend("o4jllm");
+    public static final fURI O4JLLM_TID = LLM_INSTSET_TID.extend("o4jllm");
 
     public O4JLLM(final Model model, final fURI tid, final fURI vid) {
         super(modelToRec(model), O4JLLM_TID, vid);

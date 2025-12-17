@@ -25,7 +25,6 @@ import studio.phaseshift.metatron.lang.core.m.type.Obj;
 import studio.phaseshift.metatron.lang.core.m.type.Type;
 import studio.phaseshift.metatron.lang.core.m.type.impl.MInstSet;
 import studio.phaseshift.metatron.lang.net.iot.ZigbeeObj;
-import studio.phaseshift.metatron.lang.net.iot.mqttSpace;
 import studio.phaseshift.metatron.ui.Graphitty;
 
 import java.util.Set;
@@ -45,15 +44,15 @@ import static studio.phaseshift.metatron.lang.core.m.type.impl.MType.T;
  */
 public class webInstSet extends MInstSet {
 
-    public static final fURI WEB_TID = f("/web");
-    public static final fURI INST_TID = WEB_TID.extend("inst");
-    public static final fURI PAGE_TID = WEB_TID.extend("page");
-    public static final fURI CSS_TID = WEB_TID.extend("css");
+    public static final fURI WEB_INSTSET_TID = f("/web");
+    public static final fURI INST_TID = WEB_INSTSET_TID.extend("inst");
+    public static final fURI PAGE_TID = WEB_INSTSET_TID.extend("page");
+    public static final fURI CSS_TID = WEB_INSTSET_TID.extend("css");
     private static final WebTranslator WEB_TRANSLATOR = new WebTranslator();
     private static final JSONTranslator JSON_TRANSLATOR = new JSONTranslator();
 
     public webInstSet(final fURI vid) {
-        super(WEB_TID, vid);
+        super(WEB_INSTSET_TID, vid);
     }
 
     public static webInstSet create() {
