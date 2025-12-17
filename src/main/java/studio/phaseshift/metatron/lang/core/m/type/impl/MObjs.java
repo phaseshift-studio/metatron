@@ -33,7 +33,7 @@ import java.util.stream.Stream;
 
 public class MObjs implements Objs {
 
-    private LinkedHashMap<Obj, cInt> cstream; // <obj{1}, coeff{+}>
+    private Map<Obj, cInt> cstream; // <obj{1}, coeff{+}>
     private fURI vid;
 
     public MObjs(final Iterable<Obj> jvm) {
@@ -41,19 +41,19 @@ public class MObjs implements Objs {
     }
 
     public MObjs(final Iterable<Obj> jvm, final fURI vid) {
-        this(flattenToMap(new LinkedHashMap<>(), jvm), vid);
+        this(flattenToMap(Collections.synchronizedMap(new LinkedHashMap<>()), jvm), vid);
     }
 
     protected MObjs(final Map<Obj, cInt> jvmAlternative, final fURI vid) {
         this.vid = vid;
-        this.cstream = jvmAlternative instanceof LinkedHashMap<Obj, cInt> ? (LinkedHashMap<Obj, cInt>) jvmAlternative : new LinkedHashMap<>(jvmAlternative);
+        this.cstream = jvmAlternative instanceof LinkedHashMap<Obj, cInt> ? (LinkedHashMap<Obj, cInt>) jvmAlternative : Collections.synchronizedMap(new LinkedHashMap<>(jvmAlternative));
     }
 
     private static Stream<Obj> flatten(final Iterable<Obj> objs) {
         return IteratorUtil.stream(objs).flatMap(o -> o.isObjs() ? flatten(o.objsValue()) : Stream.of(o)).filter(o -> !o.isNoObj());
     }
 
-    private static LinkedHashMap<Obj, cInt> flattenToMap(final LinkedHashMap<Obj, cInt> map, final Iterable<Obj> objs) {
+    private static Map<Obj, cInt> flattenToMap(final Map<Obj, cInt> map, final Iterable<Obj> objs) {
         flatten(objs).forEach(o -> map.compute(o.c(C::one), (lng, it) -> null == it ? o.c() : it.plus(o.c())));
         return map;
     }
@@ -78,7 +78,7 @@ public class MObjs implements Objs {
     }
 
     public static Obj objs(final Iterable<Obj> objs) {
-        final LinkedHashMap<Obj, cInt> map = new LinkedHashMap<>();
+        final Map<Obj, cInt> map = Collections.synchronizedMap(new LinkedHashMap<>());
         return tryToShrink(flattenToMap(map, objs)).orElseGet(() -> new MObjs(map, fURI.fnull));
     }
 
@@ -106,31 +106,7 @@ public class MObjs implements Objs {
     public Iterable<Obj> jvm() {
         return this.cstream.entrySet().stream().map(kv -> kv.getValue().isOne() ? kv.getKey() : kv.getKey().c(kv.getValue())).toList();
     }
-
-
-  /*  public <O extends Obj> O take(final fURI selector) {
-        while (this.cstream.keySet().iterator().hasNext()) {
-            final O key = (O) this.cstream.keySet().iterator().next();
-            final cInt value = this.cstream.get(key);
-            if (null == value) {
-                this.cstream.remove(key);
-                return key;
-            } else if (value.within(selector.cV())) {
-                final cInt newValue = value.minus(selector.cV());
-                if (newValue.isZeroOrNeg())
-                    this.cstream.remove(key);
-                else
-                    this.cstream.put(key, newValue);
-                return (O) key.tid(key.tid().c(selector.c()));
-            } else {
-                throw MTronException.of("can't remove given selector: %s", selector);
-            }
-
-            //else if (!value.isZero()) return (O) key.tid(key.tid().coefficient(value.toString()));
-        }
-        return null;
-    }*/
-
+    
     @Override
     public cInt c() {
         return this.cstream.values().stream().reduce(cInt.ZERO(), cInt::plus);
@@ -142,36 +118,13 @@ public class MObjs implements Objs {
         this.cstream.keySet().forEach(obj -> this.cstream.computeIfPresent(obj, (k, v) -> func.apply(v)));
         return this;
     }
-
+    
     @Override
     public Obj take() {
-        final Map.Entry<Obj, cInt> entry = this.cstream.pollFirstEntry();
+        final Map.Entry<Obj, cInt> entry = ((LinkedHashMap<Obj, cInt>) this.cstream).pollFirstEntry();
         return null == entry ? null : null == entry.getValue() ? entry.getKey() : entry.getKey().c(entry.getValue());
     }
-
-   /* @Override
-    public Tuple.Pair<Obj, Obj> headTailsSplit(final Function<Obj, Object> partitioner) {
-        Obj head = null;
-        final Map<Obj, cInt> tail = new LinkedHashMap<>();
-        Object part = null;
-        for (final Map.Entry<Obj, cInt> kv : this.cstream.entrySet()) {
-            final Obj next = kv.getKey().c(kv.getValue());
-            final Object nextPart = partitioner.apply(next);
-            if (null == part)
-                part = nextPart;
-            if (Objects.equals(part, nextPart)) {
-                head = (null == head) ? next : head.append(next);
-            } else {
-                tail.put(kv.getKey(), kv.getValue());
-            }
-        }
-        final Obj headObj = null == head ? NoObj.single() : head;
-        final Obj tailObj = tail.isEmpty() ? NoObj.single() : tail.size() == 1 ? tail.entrySet().stream().map(kv -> kv.getKey().c(kv.getValue())).iterator().next() : new MObjs(tail, this.vid);
-        //Graphitty.log(this).info("SPLIT: %s ::  %s", headObj, tailObj);
-        return Tuple.Pair.with(headObj, tailObj);
-    }*/
-
-
+    
     @Override
     public Tuple.Pair<Obj, Obj> take(final cInt c) {
         final cInt currentC = this.c();
@@ -252,11 +205,6 @@ public class MObjs implements Objs {
 
     @Override
     public Objs clone() {
-       /* try {
-            return (Objs) super.clone();
-        } catch (final Exception e) {
-            throw MTronException.of(e);
-        }*/
         return (Objs) this.clone(this.jvm(), this.tid(), this.vid);
     }
 
