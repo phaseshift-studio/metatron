@@ -18,9 +18,15 @@
 
 package studio.phaseshift.metatron.lang.core.m.type;
 
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.lang.MetatronObjTest;
+import studio.phaseshift.metatron.util.IteratorUtil;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static studio.phaseshift.metatron.lang.core.m.obj.NoObj.noobj;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MInt.jnt;
 
 public class ObjsTest extends MetatronObjTest {
 
@@ -38,5 +44,27 @@ public class ObjsTest extends MetatronObjTest {
     }, delimiter = '|')
     public void testTake(final String current, final String remove, final String retrieved, final String remaining) {
         super.testTake(current, remove, retrieved, remaining);
+    }
+
+    @Test
+    public void testObjsGrowth() {
+        Obj objs = noobj();
+        for (int i = 0; i < 10000; i++) {
+            objs = objs.append(jnt(i));
+        }
+        assertEquals(10000, objs.uniqueC().max().intValue());
+        assertEquals(10000, objs.c().min().intValue());
+        assertEquals(10000, objs.c().max().intValue());
+        assertEquals(10000,objs.stream().count());
+        assertEquals(10000,IteratorUtil.count(objs.<Iterable<Obj>>jvm()));
+        /// ///////////////////////////////////////////////////////////////
+        objs = noobj();
+        for (int i = 0; i < 10000; i++) {
+            objs = objs.append(jnt(1));
+        }
+        assertEquals(1, objs.uniqueC().max().intValue());
+        assertEquals(10000, objs.c().min().intValue());
+        assertEquals(10000, objs.c().max().intValue());
+        assertEquals(1,objs.stream().count());
     }
 }

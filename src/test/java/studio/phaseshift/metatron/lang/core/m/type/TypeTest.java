@@ -100,7 +100,8 @@ public class TypeTest extends MetatronObjTest {
             "{int{2}::1,int{2}::4}| int{3,5}                        | true",
             "{int{2}::1,int{2}::4}| int{4}                          | true",
             "{int{2}::1,int{2}::4}| int{3}                          | false",
-            "{/m/int{2}::1,2} | /m/int{3}                   | true", // TODO: think this through more carefully
+            "{/m/int{2}::1,2}     | /m/int{3}                   | true", 
+            "{int{2}::1,2}        | /m/int{3}                   | true",
             "noobj                | #{0}                            | true",
             "noobj                | #{0,0}                          | true",
             "noobj                | #{?}                            | true",

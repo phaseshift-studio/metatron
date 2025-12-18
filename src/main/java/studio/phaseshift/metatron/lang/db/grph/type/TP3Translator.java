@@ -49,7 +49,6 @@ public record TP3Translator(Builder builder) implements Translator<Obj, Graph> {
     public static final String LABEL = "LABEL";
     public static final String PROPS = "PROPS";
 
-
     private Map<Obj, Obj> createProperties(final Element element) {
         final Map<Obj, Obj> props = new LinkedHashMap<>();
         element.properties().forEachRemaining(tpP -> props.put(uri(tpP.key()), MObjFactory.of().create(tpP.value())));
@@ -116,6 +115,10 @@ public record TP3Translator(Builder builder) implements Translator<Obj, Graph> {
             return new Builder(root);
         }
 
+        /*public Builder indexVertices(final fURI indexRoot, final String key) {
+            
+        }*/
+        
         public Builder pointerToProps(final boolean b) {
             this.pointerToProps = b;
             return this;

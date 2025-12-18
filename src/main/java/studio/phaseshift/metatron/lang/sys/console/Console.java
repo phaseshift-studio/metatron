@@ -41,6 +41,7 @@ import studio.phaseshift.metatron.lang.core.m.type.Type;
 import studio.phaseshift.metatron.lang.core.m.type.impl.MObjs;
 import studio.phaseshift.metatron.lang.core.m.type.impl.MRec;
 import studio.phaseshift.metatron.lang.core.mach.type.impl.MMachine;
+import studio.phaseshift.metatron.lang.sys.fs.fileSpace;
 import studio.phaseshift.metatron.lang.util.logObj;
 import studio.phaseshift.metatron.lang.util.serial.ObjStringSerializer;
 import studio.phaseshift.metatron.ui.*;
@@ -79,6 +80,7 @@ public class Console extends MRec implements Threadable, Runnable {
     private final GraphittyLogger LOG = Graphitty.log(this);
     public static String HEADER_FILE = "./conf/ansi_headers.txt";
     public static String HEADER_SEPARATOR = "####################";
+    public static Path HISTORY_FILE = Paths.get(".metatron.history");
     private final Terminal terminal;
     private final LineReader reader;
     private final StatusLine status;
@@ -95,6 +97,7 @@ public class Console extends MRec implements Threadable, Runnable {
 
     public Console(final Rec options) {
         super(options.jvm(), CONSOLE_TID, f("/sys/obj/console"));
+        this.put("history", fileSpace.makeFile(Path.of(HISTORY_FILE.toString())));
         try {
             final DefaultParser parser = new DefaultParser()
                     .quoteChars(new char[]{'\'', '"'})
@@ -111,7 +114,7 @@ public class Console extends MRec implements Threadable, Runnable {
                     .history(new DefaultHistory())
                     //.highlighter(new CustomHighlighters(this))
                     .parser(parser)
-                    .variable(LineReader.HISTORY_FILE, Paths.get(".metatron.history"))
+                    .variable(LineReader.HISTORY_FILE, HISTORY_FILE)
                     .option(LineReader.Option.AUTO_FRESH_LINE, true)
                     .option(LineReader.Option.HISTORY_IGNORE_DUPS, true)
                     .option(LineReader.Option.DISABLE_EVENT_EXPANSION, true)
