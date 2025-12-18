@@ -14,92 +14,95 @@
 #  You should have received a copy of the GNU Affero General Public License
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import time
-from simple import MQTTClient
-import ubinascii
-import machine
-import micropython
-import network
-import esp
 import _thread
-from colors import *
-import graphitty
+import esp
+import machine
+import network
+import sys
+import time
 
-print(graphitty.string("""
-{{b}}MicroPython \r
-{{y}} _____ ______   _______  _________  ________  _________  ________  ________  ________ \r
-{{r}}|\   _ \  _   \|\  ___ \|\___   ___\\   __  \|\___   ___\\   __  \|\   __  \|\   ___  \ \r
-{{y}}\ \  \\\__\ \  \ \   __/\|___ \  \_\ \  \|\  \|___ \  \_\ \  \|\  \ \  \|\  \ \  \\ \  \ \r
-{{r}} \ \  \\|__| \  \ \  \_|/__  \ \  \ \ \   __  \   \ \  \ \ \   _  _\ \  \\\  \ \  \\ \  \ \r
-{{y}}  \ \  \    \ \  \ \  \_|\ \  \ \  \ \ \  \ \  \   \ \  \ \ \  \\  \\ \  \\\  \ \  \\ \  \ \r
-{{r}}   \ \__\    \ \__\ \_______\  \ \__\ \ \__\ \__\   \ \__\ \ \__\\ _\\ \_______\ \__\\ \__\ \r
-{{y}}    \|__|     \|__|\|_______|   \|__|  \|__|\|__|    \|__|  \|__|\|__|\|_______|\|__| \|__| \r
-                                                        {{g}}A PhaseShift Studio Production{{X}}
-"""))
+import metatron.util.graphitty as graphitty
+from metatron.mqtt_space import MqttSpace
+from metatron.util.furi import f
+from metatron.util.furi import fURI
+from metatron.util.graphitty import LOG
+import json
 
-
-import secrets
+from metatron.util.translators import JSONTranslator
 
 esp.osdebug(None)
 import gc
+
+print(graphitty.string("""
+{{g}}        /^\/^\                                                     
+{{g}}      _|__|  {{w}}O{{g}}|                                                    
+{{r}}\/ {{g}} /{{y}}~{{g}}     \_/ \                                                  
+{{r}} \_{{g}}|__________/ \  {{y}}{{~}}PhaseShift Studio Presents{{X}}                                                 
+{{g}}     \_______    \               __        __                   
+{{g}}             `\   \__ ___  ___  / /_____ _{{y}}/ /__________  ____   
+{{g}}              |   __ `__ \/ _ \/ {{y}}__/ __ `/ __/ ___/ __ \/ __ \  
+{{g}}             /   / / / / {{c}}/  __/ /_/ /_/ / /_/ /  / /_/ / / / /  
+{{g}}            /___/ {{b}}/_/ /_/\___/\__/\__,_/\__/_/   \____/_/ /_/{{X}}                                                             
+"""))
+
+sys.ps1 = graphitty.string("{{m}}mtron{{g}}>{{X}} ")
+sys.ps2 = graphitty.string("{{m}}     {{g}}>{{X}} ")
+
+LOG.info("loading secrets configuration")
+from secrets import *
+
 gc.collect()
+##########################################################
 
-ssid = 'Rodkins-2G'
-password = 'puppymama'
-mqtt_server = 'chibi.local'
-#mqtt_user = 'REPLACE_WITH_YOUR_MQTT_USERNAME'
-#mqtt_pass = 'REPLACE_WITH_YOUR_MQTT_PASSWORD'
 
-#EXAMPLE IP ADDRESS
-#mqtt_server = '192.168.1.144'
-client_id = ubinascii.hexlify(machine.unique_id())
-topic_sub = b'zigbee2mqtt/office/lamp_light/#'
-topic_pub = b'hello'
-
-last_message = 0
-message_interval = 5
-counter = 0
-
+###### WIFI CONNECTION ######
 station = network.WLAN(network.STA_IF)
-
 station.active(True)
-station.connect(ssid, password)
-
-while station.isconnected() == False:
+station.connect(secrets['ssid'], secrets['password'])
+LOG.info("connecting to {{y}}{}{{X}} wifi", secrets['ssid'])
+while not station.isconnected():
     pass
+LOG.info("connected to {{y}}{}{{X}} as {{y}}{}", secrets['ssid'], str(station.ifconfig()))
 
-print('Connection successful')
-print(station.ifconfig())
 
-# Complete project details at https://RandomNerdTutorials.com/micropython-programming-with-esp32-and-esp8266/
+#############################
 
 def sub_cb(topic, msg):
     print((topic, msg))
 
+
+mqtt_space: MqttSpace | None = None
+
+
+def _callback(furi, obj):
+    global mqtt_space
+    mqtt_space._callback(furi, obj)
+
+
 def connect_and_subscribe():
-    global client_id, mqtt_server, topic_sub
-    client = MQTTClient(client_id, mqtt_server)
-    client.set_callback(sub_cb)
-    client.connect()
-    client.subscribe(topic_sub)
-    print('Connected to %s MQTT broker, subscribed to %s topic' % (mqtt_server, topic_sub))
-    return client
+    global mqtt_space
+    mqtt_space = MqttSpace(f("zigbee2mqtt/office/lamp_light/#"), f("/sys/router/space/mqtt"))
+    mqtt_space.start(_callback)
+    LOG.info("connected to {{y}}{}{{X}} broker", secrets['broker'])
+    return mqtt_space
+
 
 def restart_and_reconnect():
-    print('Failed to connect to MQTT broker. Reconnecting...')
+    LOG.error("attempting reconnection to {{y}}{}{{X}} broker", secrets['broker'])
     time.sleep(10)
     machine.reset()
 
-try:
-    client = connect_and_subscribe()
-except OSError as e:
-    restart_and_reconnect()
 
-def th_func():
+LOG.info("metatron boot process complete")
+
+
+def main_thread_function():
+    mqtt_space = connect_and_subscribe()
     try:
         while True:
-            client.check_msg()
+            mqtt_space.loop()
     except OSError as e:
         restart_and_reconnect()
 
-_thread.start_new_thread(th_func, ())
+
+_thread.start_new_thread(main_thread_function, ())

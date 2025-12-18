@@ -14,12 +14,18 @@
 #  You should have received a copy of the GNU Affero General Public License
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from graphitty import *
+from requests import request
+from urllib.parse import urlparse
 
-LOG.info("{{m}}loading secrets configuration{{X}}")
-secrets = {
-    'ssid': 'Rodkins-2G',
-    'pw': 'puppymama',
-    'broker': 'chibi.local',
-    'port': 1883
-}
+class ESP32Space:
+
+    def __init__(self, vid:urlparse):
+       self.vid = vid
+       self.jvm = {}
+    
+    def write(self, vid:urlparse, obj:object):
+        self.jvm[vid] = obj
+    
+    def read(self, vid:urlparse) -> object:
+        return self.jvm[vid]
+    

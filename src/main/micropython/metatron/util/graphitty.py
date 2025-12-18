@@ -14,10 +14,10 @@ YELLOW = '\u001b[1;33m'
 LIGHT_BLUE = '\u001b[1;34m'
 LIGHT_PURPLE = '\u001b[1;35m'
 # LIGHT_CYAN = "\u001b[1;36m"
-# LIGHT_WHITE = "\u001b[1;37m"
+WHITE = "\u001b[1;37m"
 BOLD = '\u001b[1m'
 # FAINT = "\u001b[2m"
-# ITALIC = "\u001b[3m"
+ITALIC = "\u001b[3m"
 # UNDERLINE = "\u001b[4m"
 # BLINK = "\u001b[5m"
 # NEGATIVE = "\u001b[7m"
@@ -25,9 +25,7 @@ BOLD = '\u001b[1m'
 NC = '\u001b[0m'
 
 
-def string(s: str, args=None):
-    if args is None:
-        args = []
+def string(s: str, *args):
     return (s.
             replace("{{y}}", YELLOW).
             replace("{{m}}", MAGENTA).
@@ -36,31 +34,28 @@ def string(s: str, args=None):
             replace("{{r}}", RED).
             replace("{{g}}", GREEN).
             replace("{{k}}", BLACK).
+            replace("{{w}}", WHITE).
             replace("{{X}}", NC).
-            format(*args))
+            replace("{{~}}", ITALIC)).format(*args)
 
 
 class LOG:
     @staticmethod
-    def info(s: str, args=None):
-        if args is None:
-            args = []
-        print(f"{GREEN}[INFO ]{NC} {string(s, args)}")
+    def info(s: str, *args):
+        print(f"[{GREEN}INFO {NC}] {string(s, *args)}{NC}")
 
     @staticmethod
-    def debug(s: str, args=None):
-        if args is None:
-            args = []
-        print(f"{YELLOW}[DEBUG]{NC} {string(s, args)}")
+    def debug(s: str, *args):
+        print(f"[{YELLOW}DEBUG{NC}] {string(s, *args)}{NC}")
 
     @staticmethod
-    def error(s: str, args=None):
-        if args is None:
-            args = []
-        print(f"{RED}[ERROR]{NC} {string(s, args)}")
+    def error(s: str, *args):
+        print(f"[{RED}ERROR{NC}] {string(s, *args)}{NC}")
 
     @staticmethod
-    def warn(s: str, args=None):
-        if args is None:
-            args = []
-        print(f"{YELLOW}[WARN ]{NC} {string(s, args)}")
+    def warn(s: str, *args):
+        print(f"[{YELLOW}WARN {NC}] {string(s, *args)}{NC}")
+
+    @staticmethod
+    def none(s: str, *args):
+        print(f"{string(s, *args)}{NC}")

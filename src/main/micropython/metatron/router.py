@@ -13,3 +13,11 @@
 # 
 #  You should have received a copy of the GNU Affero General Public License
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+class Router:
+    
+    def __init__(self):
+        self.vids = {}
+    
+    def register(self, vid:urlparse, space:ESP32Space):
+        self.vids[vid] = space  
