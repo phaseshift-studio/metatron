@@ -56,7 +56,7 @@
         <jline.version>3.30.6</jline.version>
         <logback.version>1.5.22</logback.version>
         <slf4j.version>2.0.17</slf4j.version>
-        <hive.version>1.3.11</hive.version>
+        <hive.version>1.3.12</hive.version>
         <jakarta.version>2.0.0</jakarta.version>
         <jsoup.version>1.21.2</jsoup.version>
         <asciidoctor.version>3.2.0</asciidoctor.version>
@@ -404,7 +404,7 @@
             <plugin>
                 <groupId>uk.bot-by.maven-plugin</groupId>
                 <artifactId>ijhttp-maven-plugin</artifactId>
-                <version>1.0.0</version>
+                <version>1.0.1</version>
                 <executions>
                     <execution>
                         <configuration>
