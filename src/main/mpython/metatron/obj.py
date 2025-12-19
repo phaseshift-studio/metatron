@@ -36,7 +36,10 @@ class Obj:
     def __init__(self, pvm, tid, vid=None):
         self.pvm = pvm
         self.tid = f(str(tid))  # if isinstance(tid, fURI) else f(str(tid))
-        self.vid = vid if vid is None else f(str(vid))  # or isinstance(vid, fURI) else f(str(vid))
+        self.vid = None
+        if vid is not None:
+            self.vid = f(str(vid))
+            args['router'].write(self.vid, self)
 
     def pvm(self, pvm):
         return self.clone(pvm=pvm)
@@ -53,11 +56,11 @@ class Obj:
                               vid if vid is not None else self.vid)
 
     def __repr__(self):
-        ret = str(self.pvm)
+        ret = "" + str(self.pvm)
         if self.tid not in BASE_TYPES:
-            ret = f"{self.tid}::" + ret
+            ret = str(self.tid) + "::" + ret
         if self.vid is not None:
-            ret += f"@{self.vid}"
+            ret = ret + "@" + str(self.vid)
         return ret
 
     def encode(self) -> str:
@@ -119,7 +122,10 @@ class Rec(Obj):
         return self.pvm[key]
 
     def __setitem__(self, key, value):
+        key = key if isinstance(key,Obj) else uri(f(str(key)))
         self.pvm[key] = value
+        if self.vid is not None:
+            args['router'].write(self.vid.extend(str(key.pvm)), args['translator'].toObj(value))
 
     # def encode(self) -> str:
     #    if len(self.pvm) == 0:

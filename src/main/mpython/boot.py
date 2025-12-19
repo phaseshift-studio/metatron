@@ -24,16 +24,16 @@ import time
 
 import metatron.util.graphitty as graphitty
 from metatron.mqtt_space import MqttSpace
-from metatron.util.furi import f
-from metatron.util.graphitty import LOG
 from metatron.obj import *
-from metatron.util.translators import PythonTranslator
-from metatron.util.args import args
 from metatron.router import Router
-from metatron.mfluent import m
+from metatron.soc.esp32.wemos_d1_mini import WemosD1Mini
+from metatron.util.args import args
+from metatron.util.graphitty import LOG
+from metatron.util.translators import PythonTranslator
+from metatron.util.furi import f
 
 args["router"] = Router()
-args["translator"] = PythonTranslator() 
+args["translator"] = PythonTranslator()
 
 esp.osdebug(None)
 import gc
@@ -59,20 +59,20 @@ secrets = json.load(open("secrets.json"))
 gc.collect()
 ##########################################################
 
-
 ###### WIFI CONNECTION ######
-station = network.WLAN(network.STA_IF)
-station.active(True)
-station.connect(secrets['ssid'], secrets['password'])
+wlan = network.WLAN(network.STA_IF)
+wlan.active(True)
+wlan.config(dhcp_hostname=secrets['host'])
+wlan.connect(secrets['ssid'], secrets['password'])
 LOG.info("connecting to {{y}}{}{{X}} wifi", secrets['ssid'])
-while not station.isconnected():
+while not wlan.isconnected():
     pass
-LOG.info("connected to {{y}}{}{{X}} as {{y}}{}", secrets['ssid'], str(station.ifconfig()))
-
+LOG.info("connected to {{y}}{}{{X}} as {{y}}{}\n\t{}", secrets['ssid'], wlan.config('hostname'), str(wlan.ifconfig()))
 
 #############################
 
 mqtt_space: MqttSpace | None = None
+
 
 def _callback(furi, obj):
     global mqtt_space
@@ -96,8 +96,13 @@ def restart_and_reconnect():
 
 
 LOG.info("metatron boot process complete")
+
+
+soc = None
 def main_thread_function():
+    global soc
     mqtt_space = connect_and_subscribe()
+    soc = WemosD1Mini(vid=f(wlan.config('hostname')))
     try:
         while True:
             mqtt_space.loop()

@@ -16,8 +16,7 @@
 
 import json
 
-from metatron.obj import Int,Rec,Bool,Lst,Real,Str,Uri
-from metatron.util.furi import f
+from metatron.obj import Int, Rec, Bool, Lst, Real, Str, Uri, Obj
 
 
 class PythonTranslator:
@@ -31,6 +30,8 @@ class PythonTranslator:
     def toObj(py_obj: Any) -> Obj:
         if py_obj is None:
             return None
+        if isinstance(py_obj, Obj):
+            return py_obj
         if isinstance(py_obj, bool):
             return Bool(py_obj, py_obj)
         if isinstance(py_obj, int):
@@ -45,9 +46,7 @@ class PythonTranslator:
             return Lst(py_obj, py_obj)
         if isinstance(py_obj, bytes):
             return Uri(py_obj, py_obj)
-        else:
-            return py_obj
-        # return Obj(py_obj, f("/m/obj"))
+        raise TypeError("unknown obj type: ", type(py_obj))
 
 
 class JSONTranslator:

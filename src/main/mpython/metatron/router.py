@@ -14,7 +14,7 @@
 #  You should have received a copy of the GNU Affero General Public License
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from metatron.util.furi import fURI
+from metatron.util.furi import fURI,f
 
 
 class Router:
@@ -28,7 +28,7 @@ class Router:
     def read(self, vid):
         vid = vid if isinstance(vid, fURI) else fURI(vid)
         for key, value in self.spaces.items():
-            if vid.matches(key):
+            if vid.matches(f("#")):
                 return value.read(vid)
         raise Exception(f"no registered space supports {vid}")
 
@@ -36,6 +36,6 @@ class Router:
     def write(self, vid,obj):
         vid = vid if isinstance(vid, fURI) else fURI(vid)
         for key, value in self.spaces.items():
-            if vid.matches(key):
+            if vid.matches(f("#")):
                 return value.write(vid,obj)
         raise Exception(f"no registered space supports {vid}")
