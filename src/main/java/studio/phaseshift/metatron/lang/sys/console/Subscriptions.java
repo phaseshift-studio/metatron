@@ -28,6 +28,7 @@ import org.jline.utils.InfoCmp;
 import studio.phaseshift.metatron.lang.Space;
 import studio.phaseshift.metatron.lang.core.m.type.Rel;
 import studio.phaseshift.metatron.lang.sys.router.Router;
+import studio.phaseshift.metatron.ui.Box;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.Table;
 
@@ -36,6 +37,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import static org.jline.keymap.KeyMap.key;
+import static studio.phaseshift.metatron.furi.fURI.f;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -50,6 +52,7 @@ public class Subscriptions {
     private final Console console;
     private final Terminal terminal;
     private final List<String> lines = new ArrayList<>();
+    private final Table table;
     private final Size size = new Size();
     private final BindingReader bindingReader;
 
@@ -58,7 +61,7 @@ public class Subscriptions {
         this.terminal = console.getTerminal();
         this.bindingReader = new BindingReader(terminal.reader());
         lines.add(Graphitty.sillyPrint("select space", true, true));
-        Table table = new Table(List.of("vid", "pattern"));
+        this.table = new Table(List.of("vid", "pattern"));
         Router.global().spaces().elements().forEach(r -> {
             table.addRow(List.of(r.<Rel>as().first().toString(), r.<Rel>as().second().<Space>as().pattern()));
         });
@@ -111,6 +114,16 @@ public class Subscriptions {
                         break;
                     case EXIT:
                         return this.lines.get(selectRow);
+                }
+                Router.global().logger().none(Graphitty.erase(25));
+                final String location = this.table.rows().get(selectRow - 2).get(0).toString();
+                if (!location.contains("lang") && !location.contains("#")) {
+                    try {
+                        String space = Graphitty.strip(this.table.rows().get(selectRow - 2).get(1).toString().trim());
+                        Router.global().logger().none(Graphitty.floating(new Box("{{m}}subscriptions{{X}}", Router.global().read(f(space).query("sub")).toString(), Box.BASIC_BORDER).toString()));
+                    } catch (final Exception e) {
+                        // do nothing
+                    }
                 }
             }
         } finally {

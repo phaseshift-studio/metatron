@@ -69,19 +69,15 @@ public class MqttPubSubQ extends PubSubQ {
                             .topicFilter(space.toMqttTopic(vid.basePath()))
                             .callback(p -> {
                                 LOG.trace("received %s", p);
+                                final fURI t = space.toMtronVid(p.getTopic().toString());
+                                Obj o;
                                 if (p.getPayload().isPresent()) {
                                     final String json = StandardCharsets.UTF_8.decode(p.getPayload().get()).toString();
-                                    final Obj o = space.jsonTranslator.translateString(json);
-                                    space.cache.write(space.toMtronVid(p.getTopic().toString()), o);
-                                    super.qlessWrite(source, vid, o);
-                                    //final Obj result = obj.apply(o);
-                                    //LOG.debug("subscription evaluation of %s => %s yielded %s", o, obj, result);
-                                } else {
-                                    space.cache.write(space.toMtronVid(p.getTopic().toString()), noobj());
-                                    super.qlessWrite(source, vid, noobj());
-                                    //final Obj result = obj.apply();
-                                    //LOG.debug("subscription evaluation of %s => %s yielded %s", NoObj.noobj(), obj, result);
-                                }
+                                    o = space.jsonTranslator.translateString(json);
+                                } else
+                                    o = noobj();
+                                space.cache.write(t, o);
+                                super.qlessWrite(source, t, o);
                             })
                             .send()
                             .whenComplete((m, e) -> {

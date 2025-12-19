@@ -17,10 +17,9 @@
 import json
 import machine
 import ubinascii
-# import umqtt.simple as MQTTClient
-from simple import MQTTClient
-import metatron.util.args as args
+from umqtt.simple import MQTTClient
 
+import metatron.util.args as args
 from metatron.obj import *
 from metatron.util.furi import fURI
 from metatron.util.graphitty import LOG
@@ -33,14 +32,15 @@ class MqttSpace:
         self.tid = "/iot/space/mqtt"
         self.cache = {}
         self.pattern = pattern
+        self.subscriptions = {}
         self.client = MQTTClient(ubinascii.hexlify(machine.unique_id()) if vid is None else str(self.vid),
                                  json.load(open("secrets.json"))['broker'])
 
     def start(self, callback):
         self.client.set_callback(callback)
         self.client.connect()
-        self.client.subscribe(str(self.pattern), 0)
-        LOG.info("subscribed to {{y}}{}{{X}}", self.pattern)
+        self.client.subscribe(str(self.pattern))
+        self.cache[self.pattern] = lambda f,o: self.cache.__setitem__(f,o)
 
     def loop(self):
         self.client.check_msg()
@@ -61,6 +61,11 @@ class MqttSpace:
                     return value
         return self.cache.get(vid)
 
+    def subscribe(self, vid, f):
+        self.client.subscribe(str(vid))
+        self.subscriptions[vid] = f
+        LOG.info("subscribed to {{y}}{}{{X}}", self.pattern)
+
     def write(self, vid, obj):
         vid = vid if isinstance(vid, fURI) else fURI(vid)
         obj = obj if isinstance(obj, Obj) else args["translator"].toObj(obj)
@@ -69,7 +74,11 @@ class MqttSpace:
 
     def _callback(self, furi, obj):
         vid = fURI(furi.decode())
-        self.cache[vid] = JSONTranslator.toObj(obj.decode())
+        obj2 = JSONTranslator.toObj(obj.decode())
+        for pattern, func in self.subscriptions.items():
+            if pattern.matches(vid) or vid.matches(pattern):
+                # LOG.debug("using subscription {{y}}{}{{X}} for {{y}}{}", str(key), str(vid))
+                func(vid, obj2)
 
     def __repr__(self):
         return str(self.tid) + "[" + self.client.server + "]"

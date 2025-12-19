@@ -26,7 +26,7 @@ import studio.phaseshift.metatron.lang.sys.router.Router;
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public interface SoC extends Rec {
-    
+   
    default void gpio(final Int pin, final Int value) {
        Router.global().write(this.tid().extend(pin.intValue().toString()),value);
    }

@@ -46,7 +46,7 @@ class LOG:
 
     @staticmethod
     def debug(s: str, *args):
-        print(f"[{YELLOW}DEBUG{NC}] {string(s, *args)}{NC}")
+        print(f"[{CYAN}DEBUG{NC}] {string(s, *args)}{NC}")
 
     @staticmethod
     def error(s: str, *args):

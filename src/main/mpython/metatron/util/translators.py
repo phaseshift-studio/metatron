@@ -33,19 +33,19 @@ class PythonTranslator:
         if isinstance(py_obj, Obj):
             return py_obj
         if isinstance(py_obj, bool):
-            return Bool(py_obj, py_obj)
+            return Bool(py_obj)
         if isinstance(py_obj, int):
-            return Int(py_obj, py_obj)
+            return Int(py_obj)
         if isinstance(py_obj, float):
-            return Real(py_obj, py_obj)
+            return Real(py_obj)
         if isinstance(py_obj, str):
-            return Str(py_obj, py_obj)
+            return Str(py_obj)
         if isinstance(py_obj, dict):
-            return Rec(py_obj, py_obj)
+            return Rec(py_obj)
         if isinstance(py_obj, list):
-            return Lst(py_obj, py_obj)
+            return Lst(py_obj)
         if isinstance(py_obj, bytes):
-            return Uri(py_obj, py_obj)
+            return Uri(py_obj)
         raise TypeError("unknown obj type: ", type(py_obj))
 
 
@@ -58,4 +58,4 @@ class JSONTranslator:
     @staticmethod
     def toObj(json_str: str) -> Obj:
         py_obj = json.loads(json_str)
-        return PythonTranslator.toObj(py_obj)
+        return py_obj

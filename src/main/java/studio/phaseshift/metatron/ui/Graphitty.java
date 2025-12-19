@@ -123,6 +123,22 @@ public class Graphitty {
         return GRAPHITTY_STDOUT;
     }
 
+    public static String erase(int depth) {
+        return "{{X-&v1}}".repeat(Math.max(0, depth)) + "{{^" + depth + "}}";
+    }
+
+    public static String floating(final String f) {
+        final String strip = Graphitty.strip(f);
+        List<Integer> backs = Arrays.stream(strip.split("\n")).map(String::length).toList();
+        StringBuilder ret = new StringBuilder();
+        int i = 0;
+        for (final String line : f.split("\n")) {
+            ret.append(line).append("{{v1&<").append(backs.get(i)).append("}}");
+        }
+        ret.append("{{^").append(backs.size()).append("}}");
+        return ret.toString();
+    }
+
     public static String string(final String f, final Object... args) {
         try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
             final Graphitty temp = new Graphitty(out);

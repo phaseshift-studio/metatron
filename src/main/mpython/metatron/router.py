@@ -25,6 +25,13 @@ class Router:
     def register(self, space):
         self.spaces[space.pattern] = space
 
+    def get_space(self, vid):
+        vid = vid if isinstance(vid, fURI) else fURI(vid)
+        for key, value in self.spaces.items():
+            if vid.matches(f("#")):
+                return value
+        raise Exception(f"no registered space supports {vid}")
+        
     def read(self, vid):
         vid = vid if isinstance(vid, fURI) else fURI(vid)
         for key, value in self.spaces.items():

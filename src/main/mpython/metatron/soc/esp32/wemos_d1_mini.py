@@ -14,29 +14,11 @@
 #  You should have received a copy of the GNU Affero General Public License
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from machine import Pin
-
-from metatron.obj import Rec, jnt, Int
+from metatron.soc.esp32.esp32 import ESP32
 from metatron.util.furi import f
 
 WEMOS_D1_MINI_TID = f("/soc/esp32/wemos_d1_mini")
 
-
-class WemosD1Mini(Rec):
+class WemosD1Mini(ESP32):
     def __init__(self, vid=None):
-        Rec.__init__(self, {
-            jnt(1): jnt(Pin(1).value()),
-            jnt(2): jnt(Pin(2).value()),
-            jnt(3): jnt(Pin(3).value())}, WEMOS_D1_MINI_TID, vid)
-
-    def __getitem__(self, key):
-        key = key if isinstance(key, Int) else Int(key)
-        value = Int(Pin(key.pvm).value())
-        self.pvm[key] = value
-        return value
-
-    def __setitem__(self, key, value):
-        key = key if isinstance(key, Int) else Int(key)
-        value = value if isinstance(value, Int) else Int(int(value))
-        Pin(key.pvm, Pin.OUT).value(value.pvm)
-        self.pvm[key] = value
+        ESP32.__init__(self, WEMOS_D1_MINI_TID, vid)

@@ -26,15 +26,17 @@ import studio.phaseshift.metatron.lang.core.m.type.impl.MInstSet;
 import studio.phaseshift.metatron.lang.net.remote.remoteSpace;
 import studio.phaseshift.metatron.lang.sys.console.Console;
 import studio.phaseshift.metatron.lang.sys.console.Editor;
-import studio.phaseshift.metatron.lang.sys.fs.fileSpace;
 import studio.phaseshift.metatron.lang.util.serial.ObjSerializer;
 import studio.phaseshift.metatron.lang.util.serial.mParserObjSerializer;
+import studio.phaseshift.metatron.util.Common;
 import studio.phaseshift.metatron.util.MTronException;
 
+import java.awt.*;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.*;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static studio.phaseshift.metatron.furi.fURI.ALL;
@@ -88,6 +90,14 @@ public class sysInstSet extends MInstSet {
     @Override
     public Set<Inst> insts() {
         return new LinkedHashSet<>(List.of(
+                instC(SYS_INSTSET_TID.extend("inst").extend("beep").dom(A.maybe()).rng(A.maybe()), lst(isa_(T(INT_TID)).else_(jnt(10))), (lhs, inst) -> {
+                            for (int i = 0; i < inst.arg(0).intValue().intValue();i++) {
+                                Toolkit.getDefaultToolkit().beep();
+                                Common.sleepThread(15);
+                            }
+                            return lhs;
+                        }
+                ),
                 instC(SYS_INSTSET_TID.extend("inst").extend("nano").dom(ALL.maybe()).rng(ALL.maybe()), lst(), (lhs, inst) -> {
                     try {
                         final File file = Editor.createObjFile(lhs);

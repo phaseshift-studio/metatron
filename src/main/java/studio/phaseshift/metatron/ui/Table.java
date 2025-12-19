@@ -40,6 +40,18 @@ public class Table {
         return this;
     }
 
+    public List<List<Object>> rows() {
+        return this.table;
+    }
+
+    public List<Object> cols(int col) {
+        final List<Object> column = new ArrayList<>();
+        for (int i = 0; i < this.table.size(); i++) {
+            column.add(this.table.get(i).get(col));
+        }
+        return column;
+    }
+
     private String addSpace(final List<Integer> widths, final int index, final Object entry) {
         return " ".repeat(1 + Math.abs(widths.get(index) - Graphitty.strip(entry.toString().trim()).length()));
     }
@@ -63,6 +75,6 @@ public class Table {
             }
             sb.append("\n");
         });
-        return sb.deleteCharAt(sb.length()-1).toString();
+        return sb.deleteCharAt(sb.length() - 1).toString();
     }
 }

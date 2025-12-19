@@ -125,7 +125,7 @@ public class PubSubQ extends BaseQ {
         public Optional<Obj> preRead(final fURI source, final fURI vid) {
             if (vid.hasQuery(SUB)) {
                 LOG.trace("evaluating {{y}}preread{{/y}}: %s", vid);
-                return Optional.of(subscriptions.stream().map(Obj::<Subscription>as).filter(s -> vid.basePath().matches(s.target())).map(Obj::<Obj>as).reduce(Obj::append).orElse(noobj()));
+                return Optional.of(subscriptions.stream().map(Obj::<Subscription>as).filter(s -> vid.basePath().bimatches(s.target())).map(Obj::<Obj>as).reduce(Obj::append).orElse(noobj()));
             }
             return Optional.empty();
         }
@@ -142,7 +142,7 @@ public class PubSubQ extends BaseQ {
             LOG.debug("evaluating {{y}}qless write{{/y}}: %s => %s", obj, vid);
             subscriptions.stream().map(Obj::<Subscription>as).filter(s -> vid.basePath().matches(s.target())).forEach(s -> {
                 LOG.debug("sending mail: (%s, %s)", obj, s);
-                mail.add(MMachine.of(obj, s.call().toCode()));
+                mail.add(MMachine.of(lst(List.of(vid.basePath().toUri(), obj)), s.call().toCode()));
             });
             while (!mail.isEmpty()) {
                 final Machine machine = mail.poll();
