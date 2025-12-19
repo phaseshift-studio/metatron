@@ -16,6 +16,7 @@
 
 import _thread
 import esp
+import json
 import machine
 import network
 import sys
@@ -24,11 +25,15 @@ import time
 import metatron.util.graphitty as graphitty
 from metatron.mqtt_space import MqttSpace
 from metatron.util.furi import f
-from metatron.util.furi import fURI
 from metatron.util.graphitty import LOG
-import json
+from metatron.obj import *
+from metatron.util.translators import PythonTranslator
+from metatron.util.args import args
+from metatron.router import Router
+from metatron.mfluent import m
 
-from metatron.util.translators import JSONTranslator
+args["router"] = Router()
+args["translator"] = PythonTranslator() 
 
 esp.osdebug(None)
 import gc
@@ -49,7 +54,7 @@ sys.ps1 = graphitty.string("{{m}}mtron{{g}}>{{X}} ")
 sys.ps2 = graphitty.string("{{m}}     {{g}}>{{X}} ")
 
 LOG.info("loading secrets configuration")
-from secrets import *
+secrets = json.load(open("secrets.json"))
 
 gc.collect()
 ##########################################################
@@ -67,12 +72,7 @@ LOG.info("connected to {{y}}{}{{X}} as {{y}}{}", secrets['ssid'], str(station.if
 
 #############################
 
-def sub_cb(topic, msg):
-    print((topic, msg))
-
-
 mqtt_space: MqttSpace | None = None
-
 
 def _callback(furi, obj):
     global mqtt_space
@@ -82,20 +82,20 @@ def _callback(furi, obj):
 def connect_and_subscribe():
     global mqtt_space
     mqtt_space = MqttSpace(f("zigbee2mqtt/office/lamp_light/#"), f("/sys/router/space/mqtt"))
+    args["router"].register(mqtt_space)
     mqtt_space.start(_callback)
-    LOG.info("connected to {{y}}{}{{X}} broker", secrets['broker'])
+    LOG.info("connected to {{y}}{}{{X}} broker", mqtt_space.client.server)
     return mqtt_space
 
 
 def restart_and_reconnect():
-    LOG.error("attempting reconnection to {{y}}{}{{X}} broker", secrets['broker'])
+    global mqtt_space
+    LOG.error("attempting reconnection to {{y}}{}{{X}} broker", mqtt_space.client.server)
     time.sleep(10)
     machine.reset()
 
 
 LOG.info("metatron boot process complete")
-
-
 def main_thread_function():
     mqtt_space = connect_and_subscribe()
     try:

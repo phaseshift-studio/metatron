@@ -16,18 +16,20 @@
 
 import json
 
-from metatron.obj import Obj, Bool, Int, Real, Str, Uri, Rec, Lst
+from metatron.obj import Int,Rec,Bool,Lst,Real,Str,Uri
 from metatron.util.furi import f
 
 
 class PythonTranslator:
     @staticmethod
-    def write(obj: Obj) -> Any:
+    def fromObj(obj: Obj) -> Any:
+        if obj is None:
+            return None
         return obj.pvm
 
     @staticmethod
-    def read(py_obj: Any) -> Obj:
-        if (py_obj is None):
+    def toObj(py_obj: Any) -> Obj:
+        if py_obj is None:
             return None
         if isinstance(py_obj, bool):
             return Bool(py_obj, py_obj)
@@ -43,16 +45,18 @@ class PythonTranslator:
             return Lst(py_obj, py_obj)
         if isinstance(py_obj, bytes):
             return Uri(py_obj, py_obj)
-        return Obj(py_obj, f("/m/obj"))
+        else:
+            return py_obj
+        # return Obj(py_obj, f("/m/obj"))
 
 
 class JSONTranslator:
 
     @staticmethod
-    def write(obj: Obj) -> str:
-        return json.dumps(PythonTranslator.write(obj))
+    def fromObj(obj: Obj) -> str:
+        return json.dumps(PythonTranslator.fromObj(obj))
 
     @staticmethod
-    def read(json_str: str) -> Obj:
+    def toObj(json_str: str) -> Obj:
         py_obj = json.loads(json_str)
-        return PythonTranslator.read(py_obj)
+        return PythonTranslator.toObj(py_obj)

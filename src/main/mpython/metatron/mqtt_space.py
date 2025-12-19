@@ -14,16 +14,17 @@
 #  You should have received a copy of the GNU Affero General Public License
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import json
 import machine
 import ubinascii
-import umqtt.simple as MQTTClient
+# import umqtt.simple as MQTTClient
 from simple import MQTTClient
+import metatron.util.args as args
 
-from metatron.obj import Obj
+from metatron.obj import *
 from metatron.util.furi import fURI
 from metatron.util.graphitty import LOG
 from metatron.util.translators import JSONTranslator
-from secrets import secrets
 
 
 class MqttSpace:
@@ -33,7 +34,7 @@ class MqttSpace:
         self.cache = {}
         self.pattern = pattern
         self.client = MQTTClient(ubinascii.hexlify(machine.unique_id()) if vid is None else str(self.vid),
-                                 secrets['broker'])
+                                 json.load(open("secrets.json"))['broker'])
 
     def start(self, callback):
         self.client.set_callback(callback)
@@ -52,16 +53,23 @@ class MqttSpace:
             self.client.unsubscribe(str(self.pattern))
             self.client.subscribe(str(self.pattern), 0)
 
-    def read(self, vid: fURI) -> Obj:
+    def read(self, vid) -> Obj:
+        vid = vid if isinstance(vid, fURI) else fURI(vid)
+        if vid.has_pattern():
+            for key, value in self.cache.items():
+                if vid.matches(key):
+                    return value
         return self.cache.get(vid)
 
-    def write(self, vid: fURI, obj: Obj):
+    def write(self, vid, obj):
+        vid = vid if isinstance(vid, fURI) else fURI(vid)
+        obj = obj if isinstance(obj, Obj) else args["translator"].toObj(obj)
         self.cache[vid] = obj
-        self.client.publish(str(vid), JSONTranslator.write(obj), True)
+        self.client.publish(str(vid), JSONTranslator.fromObj(obj), True)
 
     def _callback(self, furi, obj):
         vid = fURI(furi.decode())
-        self.cache[vid] = JSONTranslator.read(obj.decode())
+        self.cache[vid] = JSONTranslator.toObj(obj.decode())
 
     def __repr__(self):
-        return str(self.tid) + "[" + secrets['broker'] + "]"
+        return str(self.tid) + "[" + self.client.server + "]"

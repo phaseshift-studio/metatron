@@ -14,18 +14,28 @@
 #  You should have received a copy of the GNU Affero General Public License
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from requests import request
-from urllib.parse import urlparse
+from metatron.util.furi import fURI
 
-class ESP32Space:
 
-    def __init__(self, vid:urlparse):
-       self.vid = vid
-       self.jvm = {}
-    
-    def write(self, vid:urlparse, obj:object):
-        self.jvm[vid] = obj
-    
-    def read(self, vid:urlparse) -> object:
-        return self.jvm[vid]
-    
+class Router:
+
+    def __init__(self):
+        self.spaces = {}
+
+    def register(self, space):
+        self.spaces[space.pattern] = space
+
+    def read(self, vid):
+        vid = vid if isinstance(vid, fURI) else fURI(vid)
+        for key, value in self.spaces.items():
+            if vid.matches(key):
+                return value.read(vid)
+        raise Exception(f"no registered space supports {vid}")
+
+
+    def write(self, vid,obj):
+        vid = vid if isinstance(vid, fURI) else fURI(vid)
+        for key, value in self.spaces.items():
+            if vid.matches(key):
+                return value.write(vid,obj)
+        raise Exception(f"no registered space supports {vid}")
