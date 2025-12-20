@@ -76,19 +76,8 @@ public class MServer extends WebSocketServer implements Cluster, Closeable, Obj,
 
     public void start() {
         LOG = Router.global().logger();
-        final Runnable r = () -> {
-            while (!this.thread.isInterrupted()) {
-                try (this) {
-                    this.run();
-                } catch (final Exception e) {
-                    if (!(e.getCause() instanceof InterruptedException)) {
-                        throw MTronException.of(e);
-                    }
-                }
-            }
-        };
         try {
-            this.thread = new Thread(r);
+            this.thread = new Thread(this);
             this.thread.start();
             LOG.trace("server started: %s", this.getAddress());
             BootLoader.ARGS.at(Tokens.CLUSTER).elements().filter(o -> !o.isNoObj()).forEach(n -> {
