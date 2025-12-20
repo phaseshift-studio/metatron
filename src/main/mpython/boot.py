@@ -24,16 +24,15 @@ import time
 
 import metatron.util.graphitty as graphitty
 from metatron.mqtt_space import MqttSpace
-from metatron.obj import *
 from metatron.router import Router
 from metatron.soc.esp32.wemos_d1_mini import WemosD1Mini
-from metatron.util.args import args
-from metatron.util.graphitty import LOG
-from metatron.util.translators import PythonTranslator
 from metatron.util.furi import f
+from metatron.util.graphitty import LOG
+from metatron.util.mach import mach
+from metatron.util.translators import PythonTranslator
 
-args["router"] = Router()
-args["translator"] = PythonTranslator()
+mach["router"] = Router()
+mach["translator"] = PythonTranslator()
 
 esp.osdebug(None)
 import gc
@@ -54,11 +53,18 @@ sys.ps1 = graphitty.string("{{m}}mtron{{g}}>{{X}} ")
 sys.ps2 = graphitty.string("{{m}}     {{g}}>{{X}} ")
 
 LOG.info("loading secrets configuration")
-secrets = json.load(open("secrets.json"))
+secrets = {}
+try:
+    secrets = json.load(open("secrets.json"))
+except FileNotFoundError:
+    LOG.error("secrets.json not found")
+except json.JSONDecodeError as e:
+    LOG.error("secrets.json is invalid json: {}", e)
+except Exception as e:
+    LOG.error("unexpected error loading secrets: {}", e)
 
 gc.collect()
 ##########################################################
-
 ###### WIFI CONNECTION ######
 wlan = network.WLAN(network.STA_IF)
 wlan.active(True)
@@ -68,9 +74,8 @@ LOG.info("connecting to {{y}}{}{{X}} wifi", secrets['ssid'])
 while not wlan.isconnected():
     pass
 LOG.info("connected to {{y}}{}{{X}} as {{y}}{}\n\t{}", secrets['ssid'], wlan.config('hostname'), str(wlan.ifconfig()))
-
 #############################
-
+##########################################################
 mqtt_space: MqttSpace | None = None
 
 
@@ -79,35 +84,27 @@ def _callback(furi, obj):
     mqtt_space._callback(furi, obj)
 
 
-def connect_and_subscribe():
-    global mqtt_space
-    mqtt_space = MqttSpace(f("zigbee2mqtt/office/lamp_light/#"), f("/sys/router/space/mqtt"))
-    args["router"].register(mqtt_space)
-    mqtt_space.start(_callback)
-    LOG.info("connected to {{y}}{}{{X}} broker", mqtt_space.client.server)
-    return mqtt_space
-
-
-def restart_and_reconnect():
-    global mqtt_space
-    LOG.error("attempting reconnection to {{y}}{}{{X}} broker", mqtt_space.client.server)
-    time.sleep(10)
-    machine.reset()
-
-
-LOG.info("metatron boot process complete")
-
-
 soc = None
 def main_thread_function():
-    global soc
-    mqtt_space = connect_and_subscribe()
+    
+    global soc, mqtt_space
+    try:
+        mqtt_space = MqttSpace(f("microtron/#"), f("/sys/router/space/mqtt"))
+        mach["router"].register(mqtt_space)
+        mqtt_space.start(_callback)
+        LOG.info("connected to {{y}}{}{{X}} broker", mqtt_space.client.server)
+    except OSError:
+        LOG.error("unable to connect to {{y}}{}{{X}} broker", mach["broker"])
+
     soc = WemosD1Mini(vid=f(wlan.config('hostname')))
     try:
         while True:
             mqtt_space.loop()
-    except OSError as e:
-        restart_and_reconnect()
+    except OSError:
+        LOG.error("attempting reconnection to {{y}}{}{{X}} broker", mqtt_space.client.server)
+        time.sleep(10)
+        machine.reset()
 
 
+LOG.info("metatron boot process complete")
 _thread.start_new_thread(main_thread_function, ())

@@ -14,7 +14,7 @@
 #  You should have received a copy of the GNU Affero General Public License
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import metatron.util.args as args
+import metatron.util.mach as args
 
 
 class fURI:
@@ -65,10 +65,10 @@ class fURI:
         return hash(self.__str__())
 
     def __gt__(self, other):
-        return args.args["router"].write(self, other)
+        return args.mach["router"].write(self, other)
 
     def __invert__(self):
-        return args.args["router"].read(self)
+        return args.mach["router"].read(self)
 
 
 def f(furi: str) -> fURI:

@@ -27,22 +27,22 @@ class Router:
 
     def get_space(self, vid):
         vid = vid if isinstance(vid, fURI) else fURI(vid)
-        for key, value in self.spaces.items():
-            if vid.matches(f("#")):
-                return value
+        for pattern, space in self.spaces.items():
+            if vid.matches(pattern):
+                return space
         raise Exception(f"no registered space supports {vid}")
         
     def read(self, vid):
         vid = vid if isinstance(vid, fURI) else fURI(vid)
-        for key, value in self.spaces.items():
-            if vid.matches(f("#")):
-                return value.read(vid)
+        for pattern, space in self.spaces.items():
+            if vid.matches(pattern):
+                return space.read(vid)
         raise Exception(f"no registered space supports {vid}")
 
 
     def write(self, vid,obj):
         vid = vid if isinstance(vid, fURI) else fURI(vid)
-        for key, value in self.spaces.items():
-            if vid.matches(f("#")):
-                return value.write(vid,obj)
+        for pattern, space in self.spaces.items():
+            if vid.matches(pattern):
+                return space.write(vid,obj)
         raise Exception(f"no registered space supports {vid}")

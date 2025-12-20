@@ -141,6 +141,7 @@ public interface Router extends Obj, Space, Closeable {
                 // do nothing? System.out.println(Graphitty.string("[{{y}}WARN {{/T}}] %s", e.getMessage()));
             }
         });
+        this.server().close();
     }
 
     class Helper {

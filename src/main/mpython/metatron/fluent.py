@@ -18,37 +18,43 @@ from metatron.obj import INST_TID
 from metatron.obj import Inst, Code
 
 
-class mFluent:
+class Fluent:
     def __init__(self):
         self.insts = []
 
-    def _add_inst(self, opcode, *args) -> "mFluent":
+    def _add_inst(self, opcode, *args) -> "Fluent":
         self.insts.extend([Inst(list(args), INST_TID.extend(opcode))])
         return self
 
-    def start(self, *args) -> "mFluent":
+    def start_(self, *args) -> "Fluent":
         return self._add_inst("start", *args)
 
-    def split_(self, *args) -> "mFluent":
+    def split_(self, *args) -> "Fluent":
         return self._add_inst("split", *args)
 
-    def merge_(self, *args) -> "mFluent":
+    def merge_(self, *args) -> "Fluent":
         return self._add_inst("merge", *args)
 
-    def plus_(self, *args) -> "mFluent":
+    def plus_(self, *args) -> "Fluent":
         return self._add_inst("plus", *args)
 
-    def minus_(self, *args) -> "mFluent":
+    def minus_(self, *args) -> "Fluent":
         return self._add_inst("minus", *args)
 
-    def mult_(self, *args) -> "mFluent":
+    def mult_(self, *args) -> "Fluent":
         return self._add_inst("mult", *args)
 
-    def from_(self, *args) -> "mFluent":
+    def from_(self, *args) -> "Fluent":
         return self._add_inst("from", *args)
 
-    def to_(self, *args) -> "mFluent":
+    def to_(self, *args) -> "Fluent":
         return self._add_inst("to", *args)
+
+    def id_(self, *args) -> "Fluent":
+        return self._add_inst("id", *args)
+
+    def print_(self, *args) -> "Fluent":
+        return self._add_inst("print", *args)
 
     def _code(self) -> Code:
         return Code(self.insts)
@@ -57,5 +63,5 @@ class mFluent:
         return Code(self.insts).__repr__()
 
 
-def m(*args) -> mFluent:
-    return mFluent().start(*args)
+def m(*args) -> Fluent:
+    return Fluent().start_(*args)

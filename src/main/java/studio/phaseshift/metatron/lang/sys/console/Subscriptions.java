@@ -95,11 +95,13 @@ public class Subscriptions {
             keyMap.bind(Operation.FORWARD_ONE_LINE, key(terminal, InfoCmp.Capability.key_down));
             keyMap.bind(Operation.BACKWARD_ONE_LINE, key(terminal, InfoCmp.Capability.key_up));
             keyMap.bind(Operation.EXIT, "\r");
+            int end = lines.stream().map(Graphitty::strip).map(String::length).max(Integer::compareTo).orElse(0) + 2;
+            Router.global().logger().none(Graphitty.string("{{.}}"));
             while (true) {
                 display.resize(size.getRows(), size.getColumns());
                 display.updateAnsi(
                         displayLines(selectRow),
-                        size.cursorPos(0, lines.get(0).length()));
+                        size.cursorPos(0, end));
                 Operation op = bindingReader.readBinding(keyMap);
                 switch (op) {
                     case FORWARD_ONE_LINE:
@@ -113,6 +115,7 @@ public class Subscriptions {
                             selectRow = lines.size() - 1;
                         break;
                     case EXIT:
+                        Router.global().logger().none(Graphitty.string("{{*}}"));
                         return this.lines.get(selectRow);
                 }
                 Router.global().logger().none(Graphitty.erase(25));

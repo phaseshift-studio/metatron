@@ -14,7 +14,7 @@
 #  You should have received a copy of the GNU Affero General Public License
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from metatron.util.args import args
+from metatron.util.mach import mach
 from metatron.util.furi import f
 from metatron.util.furi import fURI
 
@@ -39,7 +39,7 @@ class Obj:
         self.vid = None
         if vid is not None:
             self.vid = f(str(vid))
-            args['router'].write(self.vid, self)
+            mach['router'].write(self.vid, self)
 
     def pvm(self, pvm):
         return self.clone(pvm=pvm)
@@ -68,7 +68,6 @@ class Obj:
 
     def __str__(self):
         return self.__repr__()
-
 
 class Bytes(Obj):
     def __init__(self, pvm: bytes, tid=BYTES_TID, vid=None):
@@ -104,7 +103,7 @@ class Lst(Obj):
     def __init__(self, pvm: list, tid=LST_TID, vid=None):
         obj_list = []
         for item in pvm:
-            obj_list.append(args["translator"].toObj(item))
+            obj_list.append(mach["translator"].toObj(item))
         Obj.__init__(self, obj_list, tid, vid)
 
     def __getitem__(self, key):
@@ -122,10 +121,10 @@ class Rec(Obj):
         return self.pvm[key]
 
     def __setitem__(self, key, value):
-        key = key if isinstance(key,Obj) else uri(f(str(key)))
+        key = key if isinstance(key, Obj) else uri(f(str(key)))
         self.pvm[key] = value
         if self.vid is not None:
-            args['router'].write(self.vid.extend(str(key.pvm)), args['translator'].toObj(value))
+            mach['router'].write(self.vid.extend(str(key.pvm)), mach['translator'].toObj(value))
 
     # def encode(self) -> str:
     #    if len(self.pvm) == 0:

@@ -19,7 +19,7 @@ import machine
 import ubinascii
 from umqtt.simple import MQTTClient
 
-import metatron.util.args as args
+import metatron.util.mach as args
 from metatron.obj import *
 from metatron.util.furi import fURI
 from metatron.util.graphitty import LOG
@@ -68,17 +68,17 @@ class MqttSpace:
 
     def write(self, vid, obj):
         vid = vid if isinstance(vid, fURI) else fURI(vid)
-        obj = obj if isinstance(obj, Obj) else args["translator"].toObj(obj)
+        obj = obj if isinstance(obj, Obj) else mach["translator"].toObj(obj)
         self.cache[vid] = obj
         self.client.publish(str(vid), JSONTranslator.fromObj(obj), True)
 
     def _callback(self, furi, obj):
-        vid = fURI(furi.decode())
+        furi2 = f(furi.decode())
         obj2 = JSONTranslator.toObj(obj.decode())
         for pattern, func in self.subscriptions.items():
-            if pattern.matches(vid) or vid.matches(pattern):
+            if pattern.matches(furi2) or furi2.matches(pattern):
                 # LOG.debug("using subscription {{y}}{}{{X}} for {{y}}{}", str(key), str(vid))
-                func(vid, obj2)
+                func(furi2, obj2)
 
     def __repr__(self):
         return str(self.tid) + "[" + self.client.server + "]"

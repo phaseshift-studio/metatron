@@ -14,10 +14,10 @@
 #  You should have received a copy of the GNU Affero General Public License
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from machine import Pin
+from machine import Pin, PWM
 
 from metatron.obj import Rec, Int
-from metatron.util.args import args
+from metatron.util.mach import mach
 from metatron.util.graphitty import LOG
 
 class SoC(Rec):
@@ -30,7 +30,7 @@ class SoC(Rec):
                 LOG.warn("ignoring unsupported pin {}", i)
         Rec.__init__(self, pins, tid, vid)
         if vid is not None:
-            args['router'].get_space(vid).subscribe(vid.extend("+"), lambda f, o: Pin(int(f.name()),Pin.OUT).value(o if isinstance(o,int) else o.pvm))
+            mach['router'].get_space(vid).subscribe(vid.extend("+"), lambda f, o: Pin(int(f.name()), Pin.OUT).value(o if isinstance(o, int) else o.pvm))
         
 
     def __getitem__(self, key):
@@ -45,4 +45,4 @@ class SoC(Rec):
         Pin(key if isinstance(key, int) else key.pvm, Pin.OUT).value(value.pvm)
         self.pvm[key] = value
         if self.vid is not None:
-            args['router'].write(self.vid.extend(str(key)),value)
+            mach['router'].write(self.vid.extend(str(key)), value)
