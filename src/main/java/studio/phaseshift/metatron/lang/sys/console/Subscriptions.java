@@ -31,9 +31,8 @@ import studio.phaseshift.metatron.lang.sys.router.Router;
 import studio.phaseshift.metatron.ui.Box;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.Table;
+import studio.phaseshift.metatron.util.IteratorUtil;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import static org.jline.keymap.KeyMap.key;
@@ -51,7 +50,7 @@ public class Subscriptions {
 
     private final Console console;
     private final Terminal terminal;
-    private final List<String> lines = new ArrayList<>();
+    //private final List<String> lines = new ArrayList<>();
     private final Table table;
     private final Size size = new Size();
     private final BindingReader bindingReader;
@@ -60,15 +59,15 @@ public class Subscriptions {
         this.console = console;
         this.terminal = console.getTerminal();
         this.bindingReader = new BindingReader(terminal.reader());
-        lines.add(Graphitty.sillyPrint("select space", true, true));
+        // lines.add(Graphitty.sillyPrint("select space", true, true));
         this.table = new Table(List.of("vid", "pattern"));
         Router.global().spaces().elements().forEach(r -> {
             table.addRow(List.of(r.<Rel>as().first().toString(), r.<Rel>as().second().<Space>as().pattern()));
         });
-        lines.addAll(Arrays.asList(table.toString().split("\n")));
+        //lines.addAll(Arrays.asList(table.toString().split("\n")));
     }
 
-    private List<String> displayLines(int cursorRow) {
+    /*private List<String> displayLines(int cursorRow) {
         List<String> out = new ArrayList<>();
         for (int i = 0; i < this.lines.size(); i++) {
             final String line = this.lines.get(i);
@@ -78,7 +77,7 @@ public class Subscriptions {
                 out.add(Graphitty.string(line + "{{X}}\n"));
         }
         return out;
-    }
+    }*/
 
     public String select() {
         Display display = new Display(terminal, true);
@@ -90,39 +89,42 @@ public class Subscriptions {
             size.copy(terminal.getSize());
             display.clear();
             display.reset();
-            int selectRow = 2;
+            int selectRow = 0;
             KeyMap<Operation> keyMap = new KeyMap<>();
             keyMap.bind(Operation.FORWARD_ONE_LINE, key(terminal, InfoCmp.Capability.key_down));
             keyMap.bind(Operation.BACKWARD_ONE_LINE, key(terminal, InfoCmp.Capability.key_up));
             keyMap.bind(Operation.EXIT, "\r");
-            int end = lines.stream().map(Graphitty::strip).map(String::length).max(Integer::compareTo).orElse(0) + 2;
             Router.global().logger().none(Graphitty.string("{{.}}"));
             while (true) {
                 display.resize(size.getRows(), size.getColumns());
+                final int selectRowFinal = selectRow;
                 display.updateAnsi(
-                        displayLines(selectRow),
-                        size.cursorPos(0, end));
+                        IteratorUtil.indexedStream(this.table.formattedRows().iterator())
+                                .map(s -> ((s.get0() == selectRowFinal) ? "{{r}}>{{X}}" : " ") + s.get1())
+                                .map(Graphitty::string)
+                                .toList(),
+                        size.cursorPos(0, this.table.formattedWidth() + 2));
                 Operation op = bindingReader.readBinding(keyMap);
                 switch (op) {
                     case FORWARD_ONE_LINE:
                         selectRow++;
-                        if (selectRow > lines.size() - 1)
-                            selectRow = 2;
+                        if (selectRow > this.table.rows().size() - 1)
+                            selectRow = 0;
                         break;
                     case BACKWARD_ONE_LINE:
                         selectRow--;
-                        if (selectRow < 2)
-                            selectRow = lines.size() - 1;
+                        if (selectRow < 0)
+                            selectRow = this.table.rows().size() - 1;
                         break;
                     case EXIT:
                         Router.global().logger().none(Graphitty.string("{{*}}"));
-                        return this.lines.get(selectRow);
+                        return this.table.row(selectRow).toString();
                 }
                 Router.global().logger().none(Graphitty.erase(25));
-                final String location = this.table.rows().get(selectRow - 2).get(0).toString();
+                final String location = this.table.entry(selectRow, 0).toString();
                 if (!location.contains("lang") && !location.contains("#")) {
                     try {
-                        String space = Graphitty.strip(this.table.rows().get(selectRow - 2).get(1).toString().trim());
+                        String space = Graphitty.strip(this.table.entry(selectRow, 1).toString().trim());
                         Router.global().logger().none(Graphitty.floating(new Box("{{m}}subscriptions{{X}}", Router.global().read(f(space).query("sub")).toString(), Box.BASIC_BORDER).toString()));
                     } catch (final Exception e) {
                         // do nothing

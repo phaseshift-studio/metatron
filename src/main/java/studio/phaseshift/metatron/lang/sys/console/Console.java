@@ -68,6 +68,7 @@ import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.REC_TID;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MType.T;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.lang.sys.sysInstSet.SYS_INSTSET_TID;
 import static studio.phaseshift.metatron.ui.Box.BASIC_BORDER;
 
@@ -97,7 +98,8 @@ public class Console extends MRec implements Threadable, Runnable {
 
     public Console(final Rec options) {
         super(options.jvm(), CONSOLE_TID, f("/sys/obj/console"));
-        this.put("history", fileSpace.makeFile(Path.of(HISTORY_FILE.toString())));
+        this.put(uri("history"), fileSpace.makeFile(Path.of(HISTORY_FILE.toString())), MUTABLE);
+        this.put(uri("headers"), fileSpace.makeFile(Path.of(HEADER_FILE)),MUTABLE);
         try {
             final DefaultParser parser = new DefaultParser()
                     .quoteChars(new char[]{'\'', '"'})
@@ -162,6 +164,10 @@ public class Console extends MRec implements Threadable, Runnable {
 
     public LineReader getReader() {
         return this.reader;
+    }
+
+    public StatusLine getStatus() {
+        return this.status;
     }
 
     public void run() {

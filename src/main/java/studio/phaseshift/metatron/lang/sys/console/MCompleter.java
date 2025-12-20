@@ -19,17 +19,17 @@
 package studio.phaseshift.metatron.lang.sys.console;
 
 import org.jline.reader.*;
-import studio.phaseshift.metatron.lang.core.m.obj.NoObj;
 import studio.phaseshift.metatron.lang.core.m.parser.mParser;
-import studio.phaseshift.metatron.lang.core.m.type.Code;
-import studio.phaseshift.metatron.lang.core.m.type.Obj;
-import studio.phaseshift.metatron.lang.core.m.type.Rec;
-import studio.phaseshift.metatron.lang.core.m.type.Rel;
+import studio.phaseshift.metatron.lang.core.m.type.*;
+import studio.phaseshift.metatron.lang.sys.router.Router;
 import studio.phaseshift.metatron.lang.util.serial.ObjStringSerializer;
 import studio.phaseshift.metatron.ui.Box;
 import studio.phaseshift.metatron.ui.Graphitty;
 
 import java.util.List;
+
+import static studio.phaseshift.metatron.furi.fURI.f;
+import static studio.phaseshift.metatron.lang.core.m.obj.NoObj.noobj;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -45,10 +45,18 @@ public class MCompleter implements Completer {
     public void complete(LineReader reader, ParsedLine commandLine, final List<Candidate> candidates) {
         try {
             final Buffer buffer = reader.getBuffer();
-            if (!buffer.toString().isEmpty() && buffer.toString().charAt(buffer.toString().length() - 1) == ' ') {
+            if (!buffer.toString().isEmpty() && buffer.toString().endsWith(". ")) {
+                final String b = buffer.toString().substring(0, buffer.toString().length() - 2);
+                final Obj o = mParser.parse(b);
+                if (o.isCode()) {
+                    final Inst lastInst = o.resolve(noobj()).codeValue().getLast();
+                    final Obj insts = Router.readFromSpace(f("/m/inst/#?dom=" + lastInst.tid().rng()));
+                    insts.forEach(i -> candidates.add(new Candidate(i.<Inst>as().tid().basePath() + "(",Graphitty.string(i.toString()),null,null,"",null,false)));
+                }
+            } else if (!buffer.toString().isEmpty() && buffer.toString().charAt(buffer.toString().length() - 1) == ' ') {
                 final Obj o = mParser.parse(buffer.toString());
                 if (o.isCode()) {
-                    final Code code = o.resolve(NoObj.noobj()).as();
+                    final Code code = o.resolve(noobj()).as();
                     final String pretty = Graphitty.string(
                             new Box(ObjStringSerializer.prettyPrintCode(code, 0), Box.BASIC_BORDER)
                                     .bottom(new Box(new Profile(code).toString(), Box.BASIC_BORDER)).toString());
