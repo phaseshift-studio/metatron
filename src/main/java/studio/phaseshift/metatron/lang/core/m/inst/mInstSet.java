@@ -38,9 +38,7 @@ import static studio.phaseshift.metatron.lang.core.m.type.impl.MType.T;
 public class mInstSet extends MInstSet {
 
     public static final fURI MTRON_TID = f("/m");
-    public static final fURI MTRON_LANG_TID = MTRON_TID.extend("lang");
     // /m/obj
-    public static final fURI MTRON_SPACE_TID = f("/space");// MTRON_TID.extend("space");
     public static final fURI FAIL_TID = MTRON_TID.extend("fail");
     public static final fURI BOOL_TID = MTRON_TID.extend("bool");
     public static final fURI BYTES_TID = MTRON_TID.extend("bytes");

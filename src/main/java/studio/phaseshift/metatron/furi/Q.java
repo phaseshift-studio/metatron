@@ -33,7 +33,7 @@ import static studio.phaseshift.metatron.lang.core.m.type.impl.MType.T;
 
 public interface Q extends Rec {
 
-    fURI Q_TID = f("/sys/space/q");
+    fURI Q_TID = f("/sys/type/space/q");
     fURI ON_WRITE_TID = Q_TID.extend("on_write");
     fURI ON_READ_TID = Q_TID.extend("on_read");
 

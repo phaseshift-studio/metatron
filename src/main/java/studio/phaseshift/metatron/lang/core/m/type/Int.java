@@ -94,6 +94,8 @@ public interface Int extends Mono, Ring.O<Int> {
         public static Set<Inst> insts() {
             return new LinkedHashSet<>(List.of(
                     instC(AS_INST_TID.dom(INT_TID).rng(A), lst(T(A)), (lhs, inst) -> {
+                        if (inst.arg(0).matches(T(INT_TID)))
+                            return lhs;
                         if (inst.arg(0).matches(T(REAL_TID)))
                             return real(lhs.intValue().doubleValue(), inst.arg(0).tid(), lhs.vid());
                         else if (inst.arg(0).matches(T(STR_TID)))

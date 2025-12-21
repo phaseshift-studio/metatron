@@ -268,6 +268,7 @@ public class mParser {
     public static Parser m_furi(final String furiCharacterSet, final boolean polynomial, final boolean coefficient, final boolean query) {
         return choice(
                 seq(of('<'), m_furi_internal(FULL_FURI_CHARS, polynomial, coefficient, query), of('>')).pick(1),
+                seq(of("<>")).map(t -> new fURI("")),
                 m_furi_internal(furiCharacterSet, polynomial, coefficient, query));
     }
 

@@ -122,7 +122,7 @@ public class Subscriptions {
                 }
                 Router.global().logger().none(Graphitty.erase(25));
                 final String location = this.table.entry(selectRow, 0).toString();
-                if (!location.contains("lang") && !location.contains("#")) {
+                if (!location.contains("mod") && !location.contains("#")) {
                     try {
                         String space = Graphitty.strip(this.table.entry(selectRow, 1).toString().trim());
                         Router.global().logger().none(Graphitty.floating(new Box("{{m}}subscriptions{{X}}", Router.global().read(f(space).query("sub")).toString(), Box.BASIC_BORDER).toString()));

@@ -69,6 +69,7 @@ public class Graphitty {
         COLOR_REWRITES.put("~", "\033[3m"); // italics
         COLOR_REWRITES.put("_", "\033[4m"); // underline
         COLOR_REWRITES.put("-", "\033[9m"); // strikethrough
+        COLOR_REWRITES.put("BEL", "\\a");
     }
 
     static {

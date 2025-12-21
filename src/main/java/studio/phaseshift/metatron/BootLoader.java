@@ -68,8 +68,7 @@ import static studio.phaseshift.metatron.lang.net.clstr.clstrInstSet.CLSTR_INSTS
 import static studio.phaseshift.metatron.lang.net.iot.iotInstSet.IOT_INSTSET_TID;
 import static studio.phaseshift.metatron.lang.net.web.webInstSet.WEB_INSTSET_TID;
 import static studio.phaseshift.metatron.lang.sys.fs.fsInstSet.FS_INSTSET_TID;
-import static studio.phaseshift.metatron.lang.sys.sysInstSet.ROUTER_TID;
-import static studio.phaseshift.metatron.lang.sys.sysInstSet.SYS_INSTSET_TID;
+import static studio.phaseshift.metatron.lang.sys.sysInstSet.*;
 
 public class BootLoader implements Rec, Feature.SelfClone {
 
@@ -85,7 +84,7 @@ public class BootLoader implements Rec, Feature.SelfClone {
     static {
         LOG = Graphitty.log(new BootLoader());
         //Registry.singleton().register(mInstSet.INST_TID, () -> mInstSet.of(fURI.NULL));
-        Registry.open().register(SYS_INSTSET_TID, sysInstSet::create);
+        Registry.open().register(SYS_TID, sysInstSet::create);
         Registry.open().register(FS_INSTSET_TID, fsInstSet::create);
         Registry.open().register(KV_INSTSET_TID, kvInstSet::create);
         Registry.open().register(WEB_INSTSET_TID, webInstSet::create);
@@ -150,12 +149,12 @@ public class BootLoader implements Rec, Feature.SelfClone {
                 LOG.warn("booting metatron on a non-networked jvm");
             }
             LOG.info("accessible instruction sets: %s", Registry.open().registrants());
-            ROUTER = new MRouter(remoteAuthority, ROUTER_TID);
-            sysInstSet.create();
-            kvSpace.of(SYS_INSTSET_TID.extend(ALL), SYS_INSTSET_TID);
-            Router.writeToSpace(mInstSet.create(f("/sys/router/lang/m")));
+            ROUTER = new MRouter(remoteAuthority, SYS_OBJ_TID.extend("router"));
+            new sysInstSet(SYS_TID.extend("mod/sys"));
+            kvSpace.of(f("/sys/#"), null);
+            Router.writeToSpace(mInstSet.create(f("/sys/mod/m")));
             Router.writeToSpace(Router.global());
-            fsInstSet.create();
+            Router.writeToSpace(new fsInstSet(f("/sys/mod/fs")));
             Router.writeToSpace(f("boot/args"), args);
             ROUTER.start();
             ///////////////////////////////////////////////////////////////
@@ -173,7 +172,7 @@ public class BootLoader implements Rec, Feature.SelfClone {
                 LOG.none("\t {{m}}END:{{g}} evaluating provided boot loader: {{b}}%s{{X}}\n", args.at(uri(Tokens.BOOT)).uriValue());
             }
             ///////////////////////////////////////////////////////////////
-            final Obj log = Router.writeToSpace(logObj.of(rec(args.at("log").orElse(uri("trace")), lst(uri(ALL))), SYS_INSTSET_TID.extend("log")));
+            final Obj log = Router.writeToSpace(logObj.of(rec(args.at("log").orElse(uri("trace")), lst(uri(ALL))), SYS_TID.extend("log")));
             LOG.info("logging now handled by %s", log);
             /// ///////////////////////////////////
             LOG.info("%s {{g}}successfully{{/g}} booted", Graphitty.sillyPrint("metatron", true, true));

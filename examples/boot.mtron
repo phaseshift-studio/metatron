@@ -3,29 +3,32 @@ print("{{r}}------------\n{{g}}*{{y}}boot/args{{X}}: ",
       *boot/args, 
      "\n{{r}}------------{{X}}\n");
 [-- mount instruction sets --];
-/sys/router/lang/sys   -> */sys;
-/sys/router/lang/fs    -> */fs;
-/sys/router/lang/kv    -> */kv;
-/sys/router/lang/web   -> */web;
-/sys/router/lang/iot   -> */iot;
-/sys/router/lang/grph  -> */grph;
-/sys/router/lang/vec   -> */vec;
-/sys/router/lang/mach  -> */mach;
-/sys/router/lang/llm   -> */llm;
+/sys/mod/sys   -> */sys;
+/sys/mod/fs    -> */fs;
+/sys/mod/kv    -> */kv;
+/sys/mod/web   -> */web;
+/sys/mod/iot   -> */iot;
+/sys/mod/grph  -> */grph;
+/sys/mod/vec   -> */vec;
+/sys/mod/mach  -> */mach;
+/sys/mod/llm   -> */llm;
 [-- mount spaces --];
-     kv::[pattern => /usr/#]@/sys/router/space/usr;
-     kv::[pattern => /shared/#]@/sys/router/space/shared;
+     kv::[pattern => /usr/#]@/sys/space/usr;
+     kv::[pattern => /shared/#]@/sys/space/shared;
     web::[host    => <http://localhost:8777>,
           pattern => http://#,
           route   => [/     => examples/www,
-                      /docs => target/docs ]]@/sys/router/space/web;
+                      /docs => target/docs ]]@/sys/space/web;
    grph::[pattern => /g/#,
           store   => kv::[pattern => /g/#],
-          :load   => grateful]@/sys/router/space/tp3;
+          :load   => grateful]@/sys/space/tp3;
    mqtt::[pattern => /mqtt/#,
           host    => <mqtt://chibi.local:1883>,
-          prefix  => /mqtt/]@/sys/router/space/mqtt;
-     fs::[pattern => /home/#]@/sys/router/space/fs;
+          prefix  => /mqtt/]@/sys/space/mqtt;
+    mqtt::[pattern  => /zigbee2mqtt/#,
+             host   => <mqtt://chibi.local:1883>,
+             prefix => <>]@/sys/space/zigbee2mqtt;
+     fs::[pattern => /home/#]@/sys/space/fs;
  ollama::[host    => <http://localhost:11434>]@/usr/ai;   
 console::[        => ];
  [-- *boot/args/mode.-<|[?=server   => print('\n\t{{g}}-<{{c}}server mode{{g}}>-{{X}}'), 

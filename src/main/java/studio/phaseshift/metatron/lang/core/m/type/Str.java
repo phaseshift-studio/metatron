@@ -20,6 +20,7 @@ package studio.phaseshift.metatron.lang.core.m.type;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.core.m.type.impl.MStr;
+import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.*;
 import java.util.regex.MatchResult;
@@ -33,8 +34,10 @@ import static studio.phaseshift.metatron.lang.core.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MObjs.objs;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MReal.real;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MType.T;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
 
 public interface Str extends Mono {
 
@@ -61,6 +64,17 @@ public interface Str extends Mono {
 
         public static Set<Inst> insts() {
             return new LinkedHashSet<>(List.of(
+                    instC(AS_INST_TID.dom(STR_TID).rng(A), lst(T(A)), (lhs, inst) -> {
+                        if (inst.arg(0).matches(T(URI_TID)))
+                            return uri(lhs.strValue());
+                        else if (inst.arg(0).matches(T(INT_TID)))
+                            return jnt(Long.parseLong(lhs.strValue()));
+                        else if (inst.arg(0).matches(T(REAL_TID)))
+                            return real(Double.parseDouble(lhs.strValue()));
+                        else if (inst.arg(0).matches(T(STR_TID)))
+                            return lhs;
+                        else throw MTronException.of("unknown conversion for %s => %s", lhs.tid(), inst.arg(0).tid());
+                    }),
                     docWrap(instC(SPLIT_INST_TID.dom(STR_TID).rng(STR_TID.some()), lst(T(STR_TID)), (lhs, inst) -> objs(Arrays.stream(lhs.strValue().split(inst.arg(0).strValue())).map(MStr::str))),
                             "a str to split", "the components of the split lhs str", Map.of(jnt(0), "a token to split on"), "split the lhs string according to the token arg and emit a stream of splits"),
                     docWrap(instC(SPLIT_INST_TID.dom(STR_TID).rng(LST_TID), lst(T(STR_TID)), (lhs, inst) -> lst((List) Arrays.stream(lhs.strValue().split(inst.arg(0).strValue())).map(MStr::str).toList())),

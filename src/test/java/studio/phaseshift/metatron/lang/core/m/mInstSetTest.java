@@ -101,7 +101,7 @@ public class mInstSetTest extends InstSetTest {
 
     @ParameterizedTest
     @CsvSource(value = {
-           // "1.plus?int{?}<=int(int{-1}::1)                                         % noobj",
+            // "1.plus?int{?}<=int(int{-1}::1)                                         % noobj",
             "1.plus(_)                                                              % 2",
             "1.plus(2)                                                              % 3",
             "1.plus(1.plus(1))                                                      % 3",
@@ -481,6 +481,24 @@ public class mInstSetTest extends InstSetTest {
             "[a=>1,b=>2,c=>[d=>3,e=>[f=>4]]]>>4                                                                        % {,}",
     }, delimiter = '%')
     public void testShift(final String code, final String expected) {
+        super.testCode(code, expected);
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "1.as(int::T)                                                                                                % 1",
+            "1.as(str::T)                                                                                                % \"1\"",
+            "1.as(real::T)                                                                                               % 1.0",
+            /// /////////////////////////////////////
+            "1.0.as(int::T)                                                                                              % 1",
+            "1.23.as(int::T)                                                                                             % 1",
+            /// /////////////////////////////////////
+            "\"/a/b/c\".as(uri::T)                                                                                       % /a/b/c",
+            "\"1\".as(int::T)                                                                                            % 1",
+            /// /////////////////////////////////////
+            "/a/b/c.as(str::T)                                                                                           % \"/a/b/c\""
+    }, delimiter = '%')
+    public void testAs(final String code, final String expected) {
         super.testCode(code, expected);
     }
 }

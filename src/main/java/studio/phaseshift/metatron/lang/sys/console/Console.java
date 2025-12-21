@@ -20,9 +20,11 @@ package studio.phaseshift.metatron.lang.sys.console;
 
 import org.jline.builtins.Commands;
 import org.jline.builtins.ConfigurationPath;
+import org.jline.builtins.SyntaxHighlighter;
 import org.jline.builtins.TTop;
 import org.jline.console.SystemRegistry;
 import org.jline.console.impl.Builtins;
+import org.jline.console.impl.SystemHighlighter;
 import org.jline.console.impl.SystemRegistryImpl;
 import org.jline.reader.*;
 import org.jline.reader.impl.DefaultParser;
@@ -59,6 +61,7 @@ import java.nio.file.Paths;
 import java.util.*;
 import java.util.function.Supplier;
 
+import static org.jline.keymap.KeyMap.alt;
 import static org.jline.keymap.KeyMap.ctrl;
 import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.furi.fURI.f;
@@ -69,12 +72,12 @@ import static studio.phaseshift.metatron.lang.core.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.lang.sys.sysInstSet.SYS_INSTSET_TID;
+import static studio.phaseshift.metatron.lang.sys.sysInstSet.SYS_TYPE_TID;
 import static studio.phaseshift.metatron.ui.Box.BASIC_BORDER;
 
 public class Console extends MRec implements Threadable, Runnable {
 
-    public static final fURI CONSOLE_TID = SYS_INSTSET_TID.extend("console");
+    public static final fURI CONSOLE_TID = SYS_TYPE_TID.extend("console");
 
     private static final String METATRON_VERSION = "0.1-alpha";
 
@@ -99,7 +102,7 @@ public class Console extends MRec implements Threadable, Runnable {
     public Console(final Rec options) {
         super(options.jvm(), CONSOLE_TID, f("/sys/obj/console"));
         this.put(uri("history"), fileSpace.makeFile(Path.of(HISTORY_FILE.toString())), MUTABLE);
-        this.put(uri("headers"), fileSpace.makeFile(Path.of(HEADER_FILE)),MUTABLE);
+        this.put(uri("headers"), fileSpace.makeFile(Path.of(HEADER_FILE)), MUTABLE);
         try {
             final DefaultParser parser = new DefaultParser()
                     .quoteChars(new char[]{'\'', '"'})
@@ -109,12 +112,20 @@ public class Console extends MRec implements Threadable, Runnable {
                     .eofOnUnclosedBracket(DefaultParser.Bracket.CURLY, DefaultParser.Bracket.ROUND, DefaultParser.Bracket.SQUARE);
             this.terminal = TerminalBuilder.builder().encoding(StandardCharsets.UTF_8).system(true).build();
             this.outputHeader();
-            //this.highlighter = SyntaxHighlighter.build(Paths.get("./conf/mtron.nanorc"), "mtron");
+            /*final Supplier<Path> workDir = () -> Paths.get(".");
+            final ConfigurationPath configPath = new ConfigurationPath(
+                    Paths.get("./conf"),  // application-wide settings
+                    Paths.get("/home/killswitch/software/metatron/conf") // user-specific settings
+            );
+            final Builtins builtins = new Builtins(workDir, configPath, null);
+            SystemRegistry systemRegistry = new SystemRegistryImpl(parser, terminal, workDir, configPath);
+            systemRegistry.setCommandRegistries(builtins);
+            final SyntaxHighlighter syntaxHighlighter = SyntaxHighlighter.build(configPath.getConfig("mtron.nanorc"), "mtron");//SyntaxHighlighter.build(Paths.get("./conf/mtron.nanorc"), "mtron");*/
             this.reader = LineReaderBuilder.builder()
                     .terminal(terminal)
                     .appName("metatron")
                     .history(new DefaultHistory())
-                    //.highlighter(new CustomHighlighters(this))
+                    //.highlighter(new SystemHighlighter(syntaxHighlighter, syntaxHighlighter, syntaxHighlighter))
                     .parser(parser)
                     .variable(LineReader.HISTORY_FILE, HISTORY_FILE)
                     .option(LineReader.Option.AUTO_FRESH_LINE, true)
@@ -126,16 +137,6 @@ public class Console extends MRec implements Threadable, Runnable {
                     .build();
             new CustomWidgets(this.reader);
             this.status = new StatusLine(this, "{{b}}loading...{{X}}");
-
-            final ConfigurationPath configPath = new ConfigurationPath(
-                    Paths.get("/pub/metatron"),                           // application-wide settings
-                    Paths.get(System.getProperty("user.home"), "software/metatron/conf") // user-specific settings
-            );
-
-            final Supplier<Path> workDir = () -> Paths.get("");
-            final Builtins builtins = new Builtins(workDir, configPath, null);
-            SystemRegistry systemRegistry = new SystemRegistryImpl(parser, terminal, workDir, configPath);
-            systemRegistry.setCommandRegistries(builtins);
             this.thread = new Thread(this);
         } catch (final Exception e) {
             throw MTronException.of(e);
@@ -291,19 +292,24 @@ public class Console extends MRec implements Threadable, Runnable {
 
         private CustomWidgets(final LineReader reader) {
             super(reader);
-            this.addWidget("quit-widget", () -> {
-                Console.this.close();
-                System.exit(0);
-                return true;
-            });
-            this.addWidget("editor-widget", () -> Editor.of(Console.this, reader.getBuffer().toString()));
             this.addWidget("hide-widget", this::hideWidget);
             this.addWidget("typing-widget", this::typingWidget);
-            /// ///////////////////////////////////////////////////////////////////////////////////////////
-            getKeyMap().bind(new Reference("quit-widget"), ctrl('q'));
             getKeyMap().bind(new Reference("hide-widget"), ctrl('h'));
             getKeyMap().bind(new Reference("typing-widget"), ctrl('y'));
-            getKeyMap().bind(new Reference("editor-widget"), ctrl('e'));
+            /// /////////////////////////////////////////////////////
+            getKeyMap().bind((Widget)
+                    () -> Editor.of(Console.this, reader.getBuffer().toString()), ctrl('e'));
+            getKeyMap().bind((Widget)
+                    () -> {
+                        Console.this.reader.getBuffer().write("\n");
+                        return true;
+                    }, alt('\n'));
+            getKeyMap().bind((Widget)
+                    () -> {
+                        Console.this.close();
+                        System.exit(0);
+                        return true;
+                    }, ctrl('q'));
         }
 
 

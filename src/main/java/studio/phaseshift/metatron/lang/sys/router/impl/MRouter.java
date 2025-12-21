@@ -53,7 +53,7 @@ public class MRouter extends MSpace<MServer> implements Router {
 
     public static final Serializers SERIALIZERS = new Serializers();
     public static final Uri PRIMARY = uri("primary");
-    public static final fURI ROUTER_TID = sysInstSet.SYS_INSTSET_TID.extend("router");
+    public static final fURI ROUTER_TID = sysInstSet.SYS_TYPE_TID.extend("router");
     private static final Set<fURI> READ_AS_NOOBJ = Set.of(fURI.ALL.maybeSome(), fURI.ALL.maybe(), fURI.ALL);
     private final GraphittyLogger LOG = Graphitty.log(this);
     private final Map<fURI, Set<fURI>> smallToBigRewrites = new HashMap<>();
@@ -65,7 +65,7 @@ public class MRouter extends MSpace<MServer> implements Router {
                         uri(Tokens.PATTERN), uri(ALL),
                         PRIMARY, uri(MTRON_TID),
                         uri(Tokens.SPACE), rec(new ConcurrentHashMap<>(Map.of(uri("+/#"), new stackSpace(f("+/#"))))))), f("#"),
-                sysInstSet.SYS_INSTSET_TID.extend("router"),
+                ROUTER_TID,
                 vid);
         LOG.info("local router {{b}}%s{{/b}}", this);
         LOG.info("available serializers: %s", SERIALIZERS.getSerializers().jvm().keySet());
@@ -194,7 +194,7 @@ public class MRouter extends MSpace<MServer> implements Router {
         if (vid.isZero() || READ_AS_NOOBJ.contains(vid))
             return noobj();
         if (vid.hasAuthority())
-            return this.server().sendRecv((a,b)->a.authority().matches(b.remoteHost().authority()), vid, from_(vid.localize().toUri()).tryToInst());
+            return this.server().sendRecv((a, b) -> a.authority().matches(b.remoteHost().authority()), vid, from_(vid.localize().toUri()).tryToInst());
         /// ///////////////////
         final fURI local = vid;//.authority(null).scheme(null);
         if (local.matches(f("+/#"))) {
@@ -209,7 +209,7 @@ public class MRouter extends MSpace<MServer> implements Router {
     @Override
     public Obj write(final fURI vid, final Obj obj) {
         if (vid.hasAuthority()) {
-            this.server().send((a,b)->a.authority().matches(b.remoteHost().authority()),vid, start_(obj.vid(null)).to_(vid.localize().toUri()).tryToInst());
+            this.server().send((a, b) -> a.authority().matches(b.remoteHost().authority()), vid, start_(obj.vid(null)).to_(vid.localize().toUri()).tryToInst());
             return obj;
         }
         /// ///////////////

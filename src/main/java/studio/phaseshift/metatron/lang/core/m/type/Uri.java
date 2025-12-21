@@ -22,6 +22,7 @@ import studio.phaseshift.metatron.algebra.Ring;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.core.m.type.impl.MUri;
 import studio.phaseshift.metatron.lang.sys.fs.fileSpace;
+import studio.phaseshift.metatron.util.MTronException;
 
 import java.nio.file.Path;
 import java.util.*;
@@ -99,8 +100,15 @@ public interface Uri extends Mono, Ring.O<Uri> {
 
         public static Set<Inst> insts() {
             return new LinkedHashSet<>(List.of(
-                    instC(AS_INST_TID.dom(URI_TID).rng(FILE_TID), lst(T(FILE_TID)), (lhs, inst) -> fileSpace.makeFile(Path.of(lhs.uriValue().toString()))),
-                    instC(AS_INST_TID.dom(URI_TID).rng(STR_TID), lst(T(STR_TID)), (lhs, inst) -> str(lhs.uriValue().toString())),
+                    instC(AS_INST_TID.dom(URI_TID).rng(A), lst(T(A)), (lhs, inst) -> {
+                        if (inst.arg(0).matches(T(FILE_TID)))
+                            return fileSpace.makeFile(Path.of(lhs.uriValue().toString()));
+                        else if (inst.arg(0).matches(T(STR_TID)))
+                            return str(lhs.uriValue().toString());
+                        else if (inst.arg(0).matches(T(URI_TID)))
+                            return lhs;
+                        else throw MTronException.of("unknown conversion for %s => %s", lhs.tid(), inst.arg(0).tid());
+                    }),
                     instC(SPLIT_INST_TID.dom(URI_TID).rng(URI_TID.some()), lst(T(URI_TID)), (lhs, inst) -> objs(Arrays.stream(lhs.uriValue().toString().split(inst.arg(0).uriValue().toString())).map(MUri::uri))),
                     instC(MERGE_INST_TID.dom(URI_TID.maybeSome()).rng(URI_TID), lst(T(URI_TID)), (lhs, inst) -> uri(lhs.stream().map(Obj::uriValue).reduce((a, b) -> a.extend(inst.arg(0).uriValue()).extend(b)).orElse(f("noobj")))),
                     instC(RSHIFT_INST_TID.dom(URI_TID).rng(URI_TID), lst(isa_(T(INT_TID)).else_(jnt(1))), (lhs, inst) -> lhs.jvm(lhs.uriValue().retract(inst.arg(0).intValue().intValue()))),

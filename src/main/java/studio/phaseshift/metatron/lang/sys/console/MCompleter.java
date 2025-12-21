@@ -51,7 +51,7 @@ public class MCompleter implements Completer {
                 if (o.isCode()) {
                     final Inst lastInst = o.resolve(noobj()).codeValue().getLast();
                     final Obj insts = Router.readFromSpace(f("/m/inst/#?dom=" + lastInst.tid().rng()));
-                    insts.forEach(i -> candidates.add(new Candidate(i.<Inst>as().tid().basePath() + "(",Graphitty.string(i.toString()),null,null,"",null,false)));
+                    insts.forEach(i -> candidates.add(new Candidate(i.<Inst>as().tid().basePath() + "(" + (i.<Inst>as().args().isEmpty() ? ")" : ""), Graphitty.string(i.toString()), null, null, "", null, false)));
                 }
             } else if (!buffer.toString().isEmpty() && buffer.toString().charAt(buffer.toString().length() - 1) == ' ') {
                 final Obj o = mParser.parse(buffer.toString());
