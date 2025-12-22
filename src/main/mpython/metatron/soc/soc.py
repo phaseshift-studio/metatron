@@ -16,9 +16,8 @@
 
 import network
 
-from metatron.obj import Rec, Int, uri
+from metatron.obj import Rec, Int
 from metatron.soc.device.device import Device
-from metatron.util.furi import f
 from metatron.util.graphitty import LOG
 from metatron.util.mach import mach
 
@@ -34,5 +33,5 @@ class SoC(Rec):
         key = device.tid.name()
         if key in self.__dict__:
             LOG.warn("overriding already existing {{y}}{}{{X}} at {{y}}{}{{X}}", device.tid, device.tid.name())
-        setattr(self,key,device)
+        setattr(self, key, device)
         LOG.info("device {{y}}{}{{X}} loaded", device.tid)

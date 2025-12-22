@@ -20,9 +20,7 @@ package studio.phaseshift.metatron.lang.core.m.type.impl;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.core.m.type.Obj;
-import studio.phaseshift.metatron.lang.core.m.type.Type;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiPredicate;
@@ -32,9 +30,9 @@ import java.util.function.Function;
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public class Optimizations {
- 
-  public static final Map<fURI, BiPredicate<Obj,Obj>> optimizedEquals = new ConcurrentHashMap<>();
-  public static final Map<fURI, Function<Obj,Long>> optimizedHashCode = new ConcurrentHashMap<>();
-  
-  
+
+    public static final Map<fURI, BiPredicate<Obj, Obj>> optimizedEquals = new ConcurrentHashMap<>();
+    public static final Map<fURI, Function<Obj, Long>> optimizedHashCode = new ConcurrentHashMap<>();
+
+
 }

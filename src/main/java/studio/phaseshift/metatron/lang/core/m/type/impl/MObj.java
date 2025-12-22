@@ -22,9 +22,6 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.core.m.type.Obj;
 import studio.phaseshift.metatron.util.MTronException;
 
-import java.util.function.BiPredicate;
-import java.util.function.Function;
-
 public abstract class MObj implements Obj, Cloneable {
 
     protected Object jvm;

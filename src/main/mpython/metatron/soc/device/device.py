@@ -13,10 +13,10 @@
 # 
 #  You should have received a copy of the GNU Affero General Public License
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>.
-from metatron.obj import Obj, Rec
+from metatron.obj import Rec
 
 
 class Device(Rec):
-    def __init__(self,soc_vid,pvm:dict,tid,vid=None):
-        Rec.__init__(self,pvm,tid,vid)
+    def __init__(self, soc_vid, pvm: dict, tid, vid=None):
+        Rec.__init__(self, pvm, tid, vid)
         self.soc_vid = soc_vid
