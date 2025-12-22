@@ -21,11 +21,7 @@ package studio.phaseshift.metatron.furi.q;
 import studio.phaseshift.metatron.furi.Q;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.core.m.inst.mInstSet;
-import studio.phaseshift.metatron.lang.core.m.type.Call;
-import studio.phaseshift.metatron.lang.core.m.type.Obj;
-import studio.phaseshift.metatron.lang.core.m.type.Rec;
-import studio.phaseshift.metatron.lang.core.m.type.Type;
-import studio.phaseshift.metatron.lang.core.m.type.impl.MObjs;
+import studio.phaseshift.metatron.lang.core.m.type.*;
 import studio.phaseshift.metatron.lang.core.m.type.impl.MRec;
 import studio.phaseshift.metatron.lang.core.mach.type.Machine;
 import studio.phaseshift.metatron.lang.core.mach.type.impl.MMachine;
@@ -53,7 +49,7 @@ public class PubSubQ extends BaseQ {
     public static final fURI SUBQ_TID = Q_TID.extend("subq");
     public static final fURI SUBSCRIPTION_TID = SUBQ_TID.extend("sub");
     // <source,pattern,callback>
-    protected final Obj subscriptions = MObjs.empty();
+    protected final Rec subscriptions = rec();
     protected final Queue<Machine> mail = new LinkedList<>();
 
     public static final Type SUBQ_TYPE = T(SUBQ_TID, null, instC(mInstSet.INST_TID.dom(ALL.maybe()).rng(SUBQ_TID), lst(isa_(rec()).tryToInst()), (lhs, inst) -> {
@@ -125,7 +121,7 @@ public class PubSubQ extends BaseQ {
         public Optional<Obj> preRead(final fURI source, final fURI vid) {
             if (vid.hasQuery(SUB)) {
                 LOG.trace("evaluating {{y}}preread{{/y}}: %s", vid);
-                return Optional.of(subscriptions.stream().map(Obj::<Subscription>as).filter(s -> vid.basePath().bimatches(s.target())).map(Obj::<Obj>as).reduce(Obj::append).orElse(noobj()));
+                return Optional.of(subscriptions.elements().map(Rel::second).map(Obj::<Subscription>as).filter(s -> vid.basePath().bimatches(s.target())).map(Obj::<Obj>as).reduce(Obj::append).orElse(noobj()));
             }
             return Optional.empty();
         }
@@ -140,9 +136,9 @@ public class PubSubQ extends BaseQ {
         @Override
         public Optional<Obj> qlessWrite(final fURI source, final fURI vid, final Obj obj) {
             LOG.debug("evaluating {{y}}qless write{{/y}}: %s => %s", obj, vid);
-            subscriptions.stream().map(Obj::<Subscription>as).filter(s -> vid.basePath().matches(s.target())).forEach(s -> {
+            subscriptions.elements().map(Rel::second).map(Obj::<Subscription>as).filter(s -> vid.matches(s.target())).forEach(s -> {
                 LOG.debug("sending mail: (%s, %s)", obj, s);
-                mail.add(MMachine.of(lst(List.of(vid.basePath().toUri(), obj)), s.call().toCode()));
+                mail.add(MMachine.of(lst(List.of(vid.toUri(), obj)), s.call().toCode()));
             });
             while (!mail.isEmpty()) {
                 final Machine machine = mail.poll();
@@ -159,12 +155,11 @@ public class PubSubQ extends BaseQ {
             LOG.debug("evaluating {{y}}postwrite{{/y}}: %s => %s", obj, vid);
             if (vid.hasQuery(SUB)) {
                 if (obj.isNoObj()) {
-                    subscriptions.append(new Subscription(source, vid.basePath(), obj.<Call>as()));
-                    //subscriptions.(s -> vid.basePath().matches(s.vid()));
+                    subscriptions.jvm().remove(vid.basePath().toUri());
                 } else if (obj.tid().basePath().equals(SUBSCRIPTION_TID)) {
-                    subscriptions.append(obj);
+                    subscriptions.jvm().put(vid.basePath().toUri(), new Subscription(obj.as()));
                 } else
-                    subscriptions.append(new Subscription(source, vid.basePath(), obj.as()));
+                    subscriptions.jvm().put(vid.basePath().toUri(), new Subscription(source, vid.basePath(), obj.as()));
                 LOG.debug("current subscriptions: %s", subscriptions);
                 return Optional.of(obj);
             }

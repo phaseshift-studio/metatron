@@ -103,7 +103,7 @@ class Lst(Obj):
     def __init__(self, pvm: list, tid=LST_TID, vid=None):
         obj_list = []
         for item in pvm:
-            obj_list.append(mach["translator"].toObj(item))
+            obj_list.append(mach["translator"].to_obj(item))
         Obj.__init__(self, obj_list, tid, vid)
 
     def __getitem__(self, key):
@@ -124,7 +124,7 @@ class Rec(Obj):
         key = key if isinstance(key, Obj) else uri(f(str(key)))
         self.pvm[key] = value
         if self.vid is not None:
-            mach['router'].write(self.vid.extend(str(key.pvm)), mach['translator'].toObj(value))
+            mach['router'].write(self.vid.extend(str(key.pvm)), mach['translator'].to_obj(value))
 
     # def encode(self) -> str:
     #    if len(self.pvm) == 0:

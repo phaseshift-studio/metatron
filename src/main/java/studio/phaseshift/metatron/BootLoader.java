@@ -38,7 +38,7 @@ import studio.phaseshift.metatron.lang.sys.fs.fsInstSet;
 import studio.phaseshift.metatron.lang.sys.router.Router;
 import studio.phaseshift.metatron.lang.sys.router.impl.MRouter;
 import studio.phaseshift.metatron.lang.sys.sysInstSet;
-import studio.phaseshift.metatron.lang.util.logObj;
+import studio.phaseshift.metatron.lang.util.LogObj;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
 
@@ -68,7 +68,8 @@ import static studio.phaseshift.metatron.lang.net.clstr.clstrInstSet.CLSTR_INSTS
 import static studio.phaseshift.metatron.lang.net.iot.iotInstSet.IOT_INSTSET_TID;
 import static studio.phaseshift.metatron.lang.net.web.webInstSet.WEB_INSTSET_TID;
 import static studio.phaseshift.metatron.lang.sys.fs.fsInstSet.FS_INSTSET_TID;
-import static studio.phaseshift.metatron.lang.sys.sysInstSet.*;
+import static studio.phaseshift.metatron.lang.sys.sysInstSet.SYS_OBJ_TID;
+import static studio.phaseshift.metatron.lang.sys.sysInstSet.SYS_TID;
 
 public class BootLoader implements Rec, Feature.SelfClone {
 
@@ -130,7 +131,7 @@ public class BootLoader implements Rec, Feature.SelfClone {
             if (userArgs.has(BOOT)) {
                 userArgs.put(uri(BOOT), f(Paths.get("").toAbsolutePath().normalize().toString()).extend(userArgs.at(BOOT).uriValue()).toUri(), MUTABLE);
             }
-            logObj.setSLF4J(userArgs.has(uri("log")) ? userArgs.at(uri("log")).uriValue().toString() : "trace");
+            LogObj.setSLF4J(userArgs.has(uri("log")) ? userArgs.at(uri("log")).uriValue().toString() : "trace");
             LOG.debug("user options: %s", userArgs);
             ARGS = userArgs;
             BootLoader.load(userArgs);
@@ -172,7 +173,7 @@ public class BootLoader implements Rec, Feature.SelfClone {
                 LOG.none("\t {{m}}END:{{g}} evaluating provided boot loader: {{b}}%s{{X}}\n", args.at(uri(Tokens.BOOT)).uriValue());
             }
             ///////////////////////////////////////////////////////////////
-            final Obj log = Router.writeToSpace(logObj.of(rec(args.at("log").orElse(uri("trace")), lst(uri(ALL))), SYS_TID.extend("log")));
+            final Obj log = Router.writeToSpace(LogObj.of(rec(args.at("log").orElse(uri("trace")), lst(uri(ALL))), SYS_OBJ_TID.extend("log")));
             LOG.info("logging now handled by %s", log);
             /// ///////////////////////////////////
             LOG.info("%s {{g}}successfully{{/g}} booted", Graphitty.sillyPrint("metatron", true, true));

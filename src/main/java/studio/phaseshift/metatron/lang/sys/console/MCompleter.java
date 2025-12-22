@@ -78,10 +78,10 @@ public class MCompleter implements Completer {
                     .map(r -> new Candidate(
                             "/" + r.first().uriValue().toString(),
                             Graphitty.string(r.first().toString()),
-                            r.first().uriValue().toString(),
-                            Graphitty.string(r.second().toString()),
+                            null, //r.first().uriValue().toString(),
+                            null,
                             "/",
-                            r.first().uriValue().toString(),
+                            null,
                             !r.second().isPoly())).toList();
         } else if (obj.isRel()) {
             return obj.<Rel>as().stream()
@@ -90,10 +90,10 @@ public class MCompleter implements Completer {
                     .map(r -> new Candidate(
                             "*" + r.first().uriValue().toString(),
                             Graphitty.string(r.first().toString()),
-                            r.first().uriValue().toString(),
-                            Graphitty.string(r.second().toString()),
+                            null, //r.first().uriValue().toString(),
+                            null,
                             "/",
-                            r.first().uriValue().toString(),
+                            null,
                             !r.second().isPoly())).toList();
         } else {
             return List.of();

@@ -37,26 +37,27 @@ import java.util.Map;
 
 import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.REC_TID;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.lang.sys.sysInstSet.SYS_TYPE_TID;
 
-public class logObj extends MRec {
+public class LogObj extends MRec {
 
-    private static final fURI LOG_TID = fURI.of("/usr/log");
+    private static final fURI LOG_TID = SYS_TYPE_TID.extend("log");
 
-    public logObj(final Obj log) {
-        super(log.recValue(), REC_TID, fURI.fnull);
+    public LogObj(final Obj log) {
+        super(log.recValue(), LOG_TID, fURI.fnull);
     }
 
-    protected logObj(final Rec levels, final fURI vid) {
+    protected LogObj(final Rec levels, final fURI vid) {
         super(Map.of(uri(Tokens.LEVEL), levels), LOG_TID, vid);
     }
 
-    public static logObj from(final Rec log) {
-        return new logObj(log);
+    public static LogObj from(final Rec log) {
+        return new LogObj(log);
     }
 
-    public static logObj of(final Rec levels, final fURI vid) {
+    public static LogObj of(final Rec levels, final fURI vid) {
         GraphittyObjLogger.setLogger(vid);
-        return new logObj(levels, vid);
+        return new LogObj(levels, vid);
     }
 
     public static Level getSLF4J() {

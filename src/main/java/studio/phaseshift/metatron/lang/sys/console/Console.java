@@ -19,13 +19,7 @@
 package studio.phaseshift.metatron.lang.sys.console;
 
 import org.jline.builtins.Commands;
-import org.jline.builtins.ConfigurationPath;
-import org.jline.builtins.SyntaxHighlighter;
 import org.jline.builtins.TTop;
-import org.jline.console.SystemRegistry;
-import org.jline.console.impl.Builtins;
-import org.jline.console.impl.SystemHighlighter;
-import org.jline.console.impl.SystemRegistryImpl;
 import org.jline.reader.*;
 import org.jline.reader.impl.DefaultParser;
 import org.jline.reader.impl.history.DefaultHistory;
@@ -44,7 +38,7 @@ import studio.phaseshift.metatron.lang.core.m.type.impl.MObjs;
 import studio.phaseshift.metatron.lang.core.m.type.impl.MRec;
 import studio.phaseshift.metatron.lang.core.mach.type.impl.MMachine;
 import studio.phaseshift.metatron.lang.sys.fs.fileSpace;
-import studio.phaseshift.metatron.lang.util.logObj;
+import studio.phaseshift.metatron.lang.util.LogObj;
 import studio.phaseshift.metatron.lang.util.serial.ObjStringSerializer;
 import studio.phaseshift.metatron.ui.*;
 import studio.phaseshift.metatron.util.Common;
@@ -59,7 +53,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
-import java.util.function.Supplier;
 
 import static org.jline.keymap.KeyMap.alt;
 import static org.jline.keymap.KeyMap.ctrl;
@@ -195,7 +188,7 @@ public class Console extends MRec implements Threadable, Runnable {
                             .addRow(List.of("introspect", "<space><tab>", "analyze machine"))
                             .addRow(List.of("header", "random header", "random header")).toString(), Box.coloredBorder(BASIC_BORDER, "b")).toString());
                 } else if (line.startsWith(":log")) {
-                    logObj.setSLF4J(line.substring(4));
+                    LogObj.setSLF4J(line.substring(4));
                 } else if (line.startsWith(":top")) {
                     TTop.ttop(terminal, System.out, System.err, new String[0]);
                 } else if (line.startsWith(":box")) {

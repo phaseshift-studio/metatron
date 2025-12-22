@@ -19,8 +19,10 @@ import esp
 import json
 import machine
 import network
+import os
 import sys
 import time
+import webrepl
 
 import metatron.util.graphitty as graphitty
 from metatron.mqtt_space import MqttSpace
@@ -30,10 +32,9 @@ from metatron.util.furi import f
 from metatron.util.graphitty import LOG
 from metatron.util.mach import mach
 from metatron.util.translators import PythonTranslator
-
+webrepl.start(password="mtron")
 mach["router"] = Router()
 mach["translator"] = PythonTranslator()
-
 esp.osdebug(None)
 import gc
 
@@ -65,7 +66,6 @@ except Exception as e:
 
 gc.collect()
 ##########################################################
-###### WIFI CONNECTION ######
 wlan = network.WLAN(network.STA_IF)
 wlan.active(True)
 wlan.config(dhcp_hostname=secrets['host'])
@@ -74,29 +74,27 @@ LOG.info("connecting to {{y}}{}{{X}} wifi", secrets['ssid'])
 while not wlan.isconnected():
     pass
 LOG.info("connected to {{y}}{}{{X}} as {{y}}{}\n\t{}", secrets['ssid'], wlan.config('hostname'), str(wlan.ifconfig()))
-#############################
 ##########################################################
-mqtt_space: MqttSpace | None = None
-
-
-def _callback(furi, obj):
-    global mqtt_space
-    mqtt_space._callback(furi, obj)
-
 
 soc = None
+
 def main_thread_function():
-    
-    global soc, mqtt_space
+    global soc
     try:
-        mqtt_space = MqttSpace(f("microtron/#"), f("/sys/router/space/mqtt"))
+        mqtt_space = MqttSpace(f("microtron/#"), f("/sys/space/mqtt"))
         mach["router"].register(mqtt_space)
-        mqtt_space.start(_callback)
+        mqtt_space.start()
         LOG.info("connected to {{y}}{}{{X}} broker", mqtt_space.client.server)
+        mqtt_space.connect_esphome({"ip": wlan.ifconfig()[0],
+                                    "platform": sys.platform,
+                                    "version": os.uname().release,
+                                    "name": "microtron",
+                                    "friendly_name": "microtron"})
     except OSError:
         LOG.error("unable to connect to {{y}}{}{{X}} broker", mach["broker"])
 
     soc = WemosD1Mini(vid=f(wlan.config('hostname')))
+    gc.collect()
     try:
         while True:
             mqtt_space.loop()
@@ -107,4 +105,5 @@ def main_thread_function():
 
 
 LOG.info("metatron boot process complete")
+_thread.stack_size(6 * 1024)
 _thread.start_new_thread(main_thread_function, ())

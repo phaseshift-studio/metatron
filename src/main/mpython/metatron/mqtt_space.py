@@ -13,34 +13,30 @@
 # 
 #  You should have received a copy of the GNU Affero General Public License
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
+import gc
 import json
 import machine
 import ubinascii
 from umqtt.simple import MQTTClient
 
-import metatron.util.mach as args
 from metatron.obj import *
 from metatron.util.furi import fURI
 from metatron.util.graphitty import LOG
 from metatron.util.translators import JSONTranslator
 
-
-class MqttSpace:
+class MqttSpace(Obj):
     def __init__(self, pattern: fURI, vid: fURI = None):
-        self.vid = vid
-        self.tid = "/iot/space/mqtt"
-        self.cache = {}
+        Obj.__init__(self, f("/iot/space/mqtt"), vid)
         self.pattern = pattern
+        self.cache = {}
         self.subscriptions = {}
         self.client = MQTTClient(ubinascii.hexlify(machine.unique_id()) if vid is None else str(self.vid),
                                  json.load(open("secrets.json"))['broker'])
 
-    def start(self, callback):
-        self.client.set_callback(callback)
+    def start(self):
+        self.client.set_callback(self._callback)
         self.client.connect()
-        self.client.subscribe(str(self.pattern))
-        self.cache[self.pattern] = lambda f,o: self.cache.__setitem__(f,o)
+        self.subscribe(self.pattern, lambda furi, obj: self.cache.__setitem__(furi, obj))
 
     def loop(self):
         self.client.check_msg()
@@ -50,9 +46,10 @@ class MqttSpace:
         if len(self.cache) > 100:
             LOG.warn("flushing {{y}}{}{{X}} cache", self)
             self.cache = {}
-            self.client.unsubscribe(str(self.pattern))
-            self.client.subscribe(str(self.pattern), 0)
-
+            self.unsubscribe(str(self.pattern))
+            self.subscribe(str(self.pattern), lambda furi, obj: self.cache.__setitem__(furi, obj))
+            gc.collect()
+            
     def read(self, vid) -> Obj:
         vid = vid if isinstance(vid, fURI) else fURI(vid)
         if vid.has_pattern():
@@ -66,19 +63,36 @@ class MqttSpace:
         self.subscriptions[vid] = f
         LOG.info("subscribed to {{y}}{}{{X}}", self.pattern)
 
+    def unsubscribe(self, vid):
+        # self.client.(str(vid))
+        self.subscriptions.pop(vid)
+        LOG.info("unsubscribed to {{y}}{}{{X}}", self.pattern)
+
     def write(self, vid, obj):
         vid = vid if isinstance(vid, fURI) else fURI(vid)
-        obj = obj if isinstance(obj, Obj) else mach["translator"].toObj(obj)
-        self.cache[vid] = obj
-        self.client.publish(str(vid), JSONTranslator.fromObj(obj), True)
+        obj = obj if isinstance(obj, Obj) else mach["translator"].to_obj(obj)
+        if obj is not None:
+            self.cache[vid] = obj
+        else:
+            self.cache.pop(vid)
+        self.client.publish(str(vid), JSONTranslator.from_obj(obj), True)
 
     def _callback(self, furi, obj):
         furi2 = f(furi.decode())
-        obj2 = JSONTranslator.toObj(obj.decode())
+        obj2 = JSONTranslator.to_obj(obj.decode())
         for pattern, func in self.subscriptions.items():
             if pattern.matches(furi2) or furi2.matches(pattern):
                 # LOG.debug("using subscription {{y}}{}{{X}} for {{y}}{}", str(key), str(vid))
                 func(furi2, obj2)
 
+    def connect_esphome(self, merge, template: str = 'esphome.json'):
+        profile = json.load(open(template)) | merge
+        for k, v in profile.items():
+            if v == 'XXX':
+                raise ValueError("merged profile data must not contain XXX:", profile)
+        self.client.publish("esphome/discover/" + profile['name'], json.dumps(profile), True)
+        LOG.info("published esphome discovery: ", profile)
+
     def __repr__(self):
-        return str(self.tid) + "[" + self.client.server + "]"
+        return str(self.tid) + "::[" + self.client.server + "]" + (
+            ("@" + str(self.vid)) if self.vid is not None else "")

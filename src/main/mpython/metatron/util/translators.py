@@ -17,17 +17,33 @@
 import json
 
 from metatron.obj import Int, Rec, Bool, Lst, Real, Str, Uri, Obj
+from metatron.util.graphitty import LOG
 
 
 class PythonTranslator:
     @staticmethod
-    def fromObj(obj: Obj) -> Any:
+    def from_obj(obj: Obj) -> Any:
         if obj is None:
             return None
-        return obj.pvm
+        if isinstance(obj, Obj):
+            pvm = obj.pvm
+            if isinstance(pvm, dict):
+                new_pvm = {}
+                for k, v in pvm.items():
+                    new_pvm[PythonTranslator.from_obj(k)] = PythonTranslator.from_obj(v)
+                return new_pvm
+            elif isinstance(pvm, list):
+                new_pvm = []
+                for i in pvm.items():
+                    new_pvm.append(PythonTranslator.from_obj(i))
+                return new_pvm
+            else:
+                return pvm
+        else:
+            return obj
 
     @staticmethod
-    def toObj(py_obj: Any) -> Obj:
+    def to_obj(py_obj: Any) -> Obj:
         if py_obj is None:
             return None
         if isinstance(py_obj, Obj):
@@ -52,10 +68,14 @@ class PythonTranslator:
 class JSONTranslator:
 
     @staticmethod
-    def fromObj(obj: Obj) -> str:
-        return json.dumps(PythonTranslator.fromObj(obj))
+    def from_obj(obj: Obj) -> str:
+        return json.dumps(PythonTranslator.from_obj(obj) if isinstance(obj, Obj) else obj)
 
     @staticmethod
-    def toObj(json_str: str) -> Obj:
-        py_obj = json.loads(json_str)
+    def to_obj(json_str: str) -> Obj:
+        try:
+            py_obj = json.loads(json_str)
+        except Exception as e:
+            LOG.error("{}: {}", e, json_str)
+            return Str(json_str)
         return py_obj

@@ -44,6 +44,7 @@ import studio.phaseshift.metatron.util.Tuple;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static studio.phaseshift.metatron.Tokens.HOST;
 import static studio.phaseshift.metatron.furi.fURI.f;
@@ -68,7 +69,7 @@ public class llmInstSet extends MInstSet {
     public static final fURI LLM_INSTSET_TID = f("/llm");
     public static final fURI INST_TID = LLM_INSTSET_TID.extend("inst");
     public static final fURI SPACE_TID = LLM_INSTSET_TID.extend("space");
-    public static final fURI OLLAMA_TID = SPACE_TID.extend("ollama");
+    public static final fURI OLLAMA_TID = LLM_INSTSET_TID.extend("type/ollama");
     public static final fURI TOOL_TID = LLM_INSTSET_TID.extend("tool");
     public static final fURI MEMORY_TID = LLM_INSTSET_TID.extend("memory");
     public static final String MODEL = "model";
@@ -138,25 +139,31 @@ public class llmInstSet extends MInstSet {
                                                 .withUseTools(toolUse)
                                                 .build();
                                 final StringBuilder response = new StringBuilder();
-
                                 final OllamaGenerateTokenHandler thinkingStreamHandler =
-                                        (s) -> LOG.none("{{m}}%s{{X}}", s);
+                                        (s) -> {
+                                            Router.global().server().stats().incrTotalBytesRecv(s.getBytes().length);
+                                            LOG.none("{{m}}%s{{X}}", s);
+                                        };
 
+                                final AtomicBoolean start = new AtomicBoolean(thinking);
                                 final OllamaGenerateTokenHandler responseStreamHandler =
                                         (s) -> {
+                                            if (start.getAndSet(false))
+                                                LOG.none("\n");
                                             LOG.none("{{y}}%s{{X}}", s);
+                                            Router.global().server().stats().incrTotalBytesRecv(s.getBytes().length);
                                             response.append(s);
                                         };
 
                                 if (thinking)
                                     LOG.none(Graphitty.sillyPrint("thinking...\n", true, true));
+                                Router.global().server().stats().incrTotalBytesSent(lhs.strValue().getBytes().length);
                                 final OllamaChatResult result =
                                         new Ollama(host).chat(chatRequest, new OllamaChatStreamObserver(thinking ? thinkingStreamHandler : null, responseStreamHandler));
                                 while (!result.getResponseModel().isDone()) {
                                     Thread.sleep(100);
                                 }
-                                if (thinking)
-                                    LOG.none("\n");
+                                LOG.none("\n");
                                 final Rec last = rec(
                                         "request", inst.arg(0),
                                         "response", rec(
@@ -166,11 +173,13 @@ public class llmInstSet extends MInstSet {
                                                 "load", jnt(result.getResponseModel().getLoadDuration()),
                                                 "eval", jnt(result.getResponseModel().getEvalDuration()),
                                                 "total", jnt(result.getResponseModel().getTotalDuration())));
-                                if (lhs.vid() == null)
+                               /* if (lhs.vid() == null)
                                     lhs.<Rec>as().put(uri("history"), lhs.<Rec>as().at("history").orElse(lst()).add(last, MUTABLE), MUTABLE);
                                 else
                                     Router.writeToSpace(lhs.vid().extend("history"), Router.readFromSpace(lhs.vid().extend("history")).orElse(lst()).add(last, MUTABLE));
+                                */
                                 return str(response.toString());
+
                             } catch (final Exception e) {
                                 throw MTronException.of(e);
                             }

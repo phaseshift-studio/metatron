@@ -115,7 +115,7 @@ public class mqttSpace extends MSpace<Mqtt5Client> {
                     .callback(p -> {
                         try {
                             LOG.debug("received %s", p);
-                            Router.global().server().stats().incrTotalByteReceived(p.getPayload().isPresent() ? p.getPayloadAsBytes().length : 0);
+                            Router.global().server().stats().incrTotalBytesRecv(p.getPayload().isPresent() ? p.getPayloadAsBytes().length : 0);
                             if (p.getPayload().isPresent()) {
                                 final String json = StandardCharsets.UTF_8.decode(p.getPayload().get()).toString();
                                 this.cache.write(
@@ -198,8 +198,8 @@ public class mqttSpace extends MSpace<Mqtt5Client> {
                     .retain(true)
                     .send()
                     .whenComplete((p, t) -> {
-                        Router.global().server().stats().incrTotalByteSent(payload.length);
-                        Router.global().server().stats().incrTotalByteReceived(p.getPublish().getPayload().isPresent() ? p.getPublish().getPayloadAsBytes().length : 0);
+                        Router.global().server().stats().incrTotalBytesSent(payload.length);
+                        /*Router.global().server().stats().incrTotalBytesRecv(p.getPublish().getPayload().isPresent() ? p.getPublish().getPayloadAsBytes().length : 0);
                         LOG.trace("caching %s[%s]", p.getPublish(), new String(p.getPublish().getPayloadAsBytes()));
                         if (p.getPublish().getPayload().isPresent()) {
                             final String json = StandardCharsets.UTF_8.decode(p.getPublish().getPayload().get()).toString();
@@ -210,7 +210,7 @@ public class mqttSpace extends MSpace<Mqtt5Client> {
                             this.cache.write(
                                     toMtronVid(p.getPublish().getTopic().toString()),
                                     NoObj.noobj());
-                        }
+                        }*/
                     }).get();
         } catch (InterruptedException | ExecutionException e) {
             throw new IllegalArgumentException(e);

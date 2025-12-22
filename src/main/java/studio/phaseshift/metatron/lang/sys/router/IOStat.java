@@ -26,11 +26,11 @@ public class IOStat {
     public long totalBytesSent = 0L;
     public long totalBytesReceived = 0L;
     
-    public void incrTotalByteReceived(final long bytes) {
+    public void incrTotalBytesRecv(final long bytes) {
         this.totalBytesReceived += bytes;
     }
     
-    public void incrTotalByteSent(final long bytes) {
+    public void incrTotalBytesSent(final long bytes) {
         this.totalBytesSent += bytes;
     }   
     
@@ -38,7 +38,7 @@ public class IOStat {
         return this.totalBytesSent;
     }
     
-    public long getBytesReceived() {
+    public long getBytesRecv() {
         return this.totalBytesReceived;
     } 
     

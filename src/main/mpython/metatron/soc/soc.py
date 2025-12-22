@@ -14,35 +14,23 @@
 #  You should have received a copy of the GNU Affero General Public License
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from machine import Pin, PWM
+import network
+from machine import Pin
 
-from metatron.obj import Rec, Int
-from metatron.util.mach import mach
+from metatron.obj import Rec, Int, Uri
+from metatron.soc.device.gpio import GPIO
+from metatron.soc.device.pwm import Pwm
+from metatron.util.furi import f
 from metatron.util.graphitty import LOG
+from metatron.util.mach import mach
+
 
 class SoC(Rec):
-    def __init__(self, pin_range: range, tid, vid=None):
-        pins = {}
-        for i in pin_range:
-            try:
-                pins[i] = Pin(i).value()
-            except Exception as e:
-                LOG.warn("ignoring unsupported pin {}", i)
-        Rec.__init__(self, pins, tid, vid)
-        if vid is not None:
-            mach['router'].get_space(vid).subscribe(vid.extend("+"), lambda f, o: Pin(int(f.name()), Pin.OUT).value(o if isinstance(o, int) else o.pvm))
-        
-
-    def __getitem__(self, key):
-        key = key if isinstance(key, Int) else Int(key)
-        value = Int(Pin(key.pvm).value())
-        self.pvm[key] = value
-        return value
-    
-    
-    def __setitem__(self, key, value):
-        value = value if isinstance(value, Int) else Int(value)
-        Pin(key if isinstance(key, int) else key.pvm, Pin.OUT).value(value.pvm)
-        self.pvm[key] = value
+    def __init__(self, gpio_range: range, tid, vid=None):
+        Rec.__init__(self, {"pwm":Pwm(vid), "gpio": GPIO(gpio_range, vid)}, tid, vid)
         if self.vid is not None:
-            mach['router'].write(self.vid.extend(str(key)), value)
+            mach['router'].get_space(self.vid).subscribe(self.vid.extend("gpio/+"),
+                                                         lambda f, o: Pin(int(f.name()), Pin.OUT).value(
+                                                             o if isinstance(o, int) else o.pvm))
+            mach['router'].write(self.vid.extend('sensor/wifi_signal/state'), Int(network.WLAN().status('rssi')))
+            mach['router'].write(self.vid.extend('status'), "online")

@@ -29,7 +29,8 @@ print("{{r}}------------\n{{g}}*{{y}}boot/args{{X}}: ",
              host   => <mqtt://chibi.local:1883>,
              prefix => <>]@/sys/space/zigbee2mqtt;
      fs::[pattern => /home/#]@/sys/space/fs;
- ollama::[host    => <http://localhost:11434>]@/usr/ai;   
+     kv::[pattern => /usr/ai/#]@/sys/space/ai;
+     /usr/ai/ollama -> ollama::[host => <http://localhost:11434>, model => |load()];
 console::[        => ];
  [-- *boot/args/mode.-<|[?=server   => print('\n\t{{g}}-<{{c}}server mode{{g}}>-{{X}}'), 
  [--                       ?=console => print('\n\t{{g}}-<{{c}}client mode{{g}}>-{{X}}').map(console::[=>]), 

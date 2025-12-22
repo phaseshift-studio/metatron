@@ -53,16 +53,20 @@ public class MqttPubSubQ extends PubSubQ {
             LOG.trace("evaluating {{y}}prewrite{{/y}}: %s => %s", obj, vid);
             if (vid.hasQuery(SUB)) {
                 if (obj.isNoObj()) {
-                    LOG.info("unsubscribed from {{y}}%s{{X}}\n\t%s", vid.basePath(), space.client.toBlocking()
+                    space.client.toAsync()
                             .unsubscribeWith()
                             .topicFilter(space.toMqttTopic(vid.basePath()))
-                            .send());
-                            /*whenComplete((m, e) -> {
+                            .send()
+                            .whenComplete((m, e) -> {
                                 if (null != e)
                                     LOG.error(e);
-                                else
-                                    LOG.info("unsubscribed from %s", m);
-                            });*/
+                                else {
+                                    // super.qlessWrite(source, vid, noobj());
+                                    // space.cache.write(vid, noobj());
+                                    // subscriptions = subscriptions.stream().filter(x -> !x.<Subscription>as().target().bimatches(vid.qLess())).reduce(noobj(), (a, b) -> a.append(b));
+                                    LOG.info("unsubscribed from {{y}}%s{{X}}\n\t%s", vid.basePath(), m);
+                                }
+                            });
                 } else {
                     space.client.toAsync()
                             .subscribeWith()
@@ -78,7 +82,7 @@ public class MqttPubSubQ extends PubSubQ {
                                     o = noobj();
                                 super.qlessWrite(source, t, o);
                                 space.cache.write(t, o);
-                               
+
                             })
                             .send()
                             .whenComplete((m, e) -> {

@@ -42,8 +42,7 @@ import java.util.Map;
 
 import static studio.phaseshift.metatron.Tokens.HOST;
 import static studio.phaseshift.metatron.Tokens.NAME;
-import static studio.phaseshift.metatron.lang.ai.llm.llmInstSet.INST_TID;
-import static studio.phaseshift.metatron.lang.ai.llm.llmInstSet.LLM_INSTSET_TID;
+import static studio.phaseshift.metatron.lang.ai.llm.llmInstSet.OLLAMA_TID;
 import static studio.phaseshift.metatron.lang.core.m.inst.mFluent.StartLess.isa_;
 import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.*;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MBool.bool;
@@ -57,7 +56,7 @@ import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
  */
 public class OLLM extends MRec implements LLM {
 
-    public static final fURI OLLM_TID = LLM_INSTSET_TID.extend("ollm");
+    public static final fURI OLLM_TID = OLLAMA_TID.extend("type/ollama/ollm");
     public static final String SKILL = "skill";
     public static final String THINK = "think";
     public static final String TOOL = "tool";
