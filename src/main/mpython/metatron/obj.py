@@ -14,9 +14,9 @@
 #  You should have received a copy of the GNU Affero General Public License
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from metatron.util.mach import mach
 from metatron.util.furi import f
 from metatron.util.furi import fURI
+from metatron.util.mach import mach
 
 BYTES_TID = f("/m/bytes")
 BOOL_TID = f("/m/bool")
@@ -69,6 +69,13 @@ class Obj:
     def __str__(self):
         return self.__repr__()
 
+    def __hash__(self):
+        return hash(self.pvm)
+
+    def __eq__(self, other):
+        return isinstance(other, Obj) and self.tid == other.tid and self.pvm == other.pvm
+
+
 class Bytes(Obj):
     def __init__(self, pvm: bytes, tid=BYTES_TID, vid=None):
         Obj.__init__(self, pvm, tid, vid)
@@ -118,13 +125,14 @@ class Rec(Obj):
         Obj.__init__(self, pvm, tid, vid)
 
     def __getitem__(self, key):
+        key = mach["translator"].to_obj(key)
         return self.pvm[key]
 
     def __setitem__(self, key, value):
-        key = key if isinstance(key, Obj) else uri(f(str(key)))
+        key = mach["translator"].to_obj(key)
         self.pvm[key] = value
         if self.vid is not None:
-            mach['router'].write(self.vid.extend(str(key.pvm)), mach['translator'].to_obj(value))
+            mach['router'].write(self.vid.extend(str(key)), mach['translator'].to_obj(value))
 
     # def encode(self) -> str:
     #    if len(self.pvm) == 0:

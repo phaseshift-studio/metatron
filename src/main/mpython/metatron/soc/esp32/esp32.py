@@ -20,4 +20,4 @@ from metatron.soc.soc import SoC
 
 class ESP32(SoC):
     def __init__(self, tid, vid=None):
-        SoC.__init__(self, range(0, 34), tid, vid)
+        SoC.__init__(self, tid, vid)

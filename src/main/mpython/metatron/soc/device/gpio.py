@@ -15,25 +15,30 @@
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 from machine import Pin
 
-from metatron.obj import Rec, Int
+from metatron.obj import Int
+from metatron.soc.device.device import Device
 from metatron.util.furi import f
 from metatron.util.graphitty import LOG
 from metatron.util.mach import mach
 
 GPIO_TID = f("/soc/gpio")
 
-class GPIO(Rec):
+
+class Gpio(Device):
     def __init__(self, pin_range: range, soc_vid, vid=None):
-        self.soc_vid = soc_vid
         pins = {}
         for i in pin_range:
             try:
                 pins[i] = Pin(i).value()
-                if self.soc_vid is not None:
-                    mach['router'].write(self.soc_vid.extend('gpio').extend(str(i)), Int(pins[i]))
+                if soc_vid is not None:
+                    mach['router'].write(soc_vid.extend('gpio').extend(str(i)), Int(pins[i]))
             except Exception as e:
                 LOG.warn("ignoring unsupported pin {}", i)
-        Rec.__init__(self, pins, GPIO_TID, vid)
+        Device.__init__(self, soc_vid, pins, GPIO_TID, vid)
+        if soc_vid is not None:
+            mach['router'].get_space(soc_vid).subscribe(soc_vid.extend("gpio/+"),
+                                                        lambda f, o: Pin(int(f.name()), Pin.OUT).value(
+                                                            o if isinstance(o, int) else o.pvm))
 
     def __getitem__(self, key):
         key = key if isinstance(key, Int) else Int(key)
@@ -46,4 +51,4 @@ class GPIO(Rec):
         Pin(key if isinstance(key, int) else key.pvm, Pin.OUT).value(value.pvm)
         self.pvm[key] = value
         if self.soc_vid is not None:
-            mach['router'].write( self.soc_vid.extend('gpio').extend(str(key)), value)
+            mach['router'].write(self.soc_vid.extend('gpio').extend(str(key)), value)

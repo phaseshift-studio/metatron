@@ -21,12 +21,18 @@ package studio.phaseshift.metatron.lang.db.grph.type.mtron;
 import org.apache.tinkerpop.gremlin.structure.Direction;
 import studio.phaseshift.metatron.lang.core.m.type.Inst;
 import studio.phaseshift.metatron.lang.core.m.type.Obj;
+import studio.phaseshift.metatron.lang.core.m.type.Rec;
+import studio.phaseshift.metatron.lang.core.m.type.Uri;
+import studio.phaseshift.metatron.lang.core.m.type.impl.Optimizations;
 import studio.phaseshift.metatron.lang.sys.router.Router;
 
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
+import static org.apache.tinkerpop.gremlin.structure.Direction.IN;
+import static org.apache.tinkerpop.gremlin.structure.Direction.OUT;
 import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.lang.core.m.inst.mFluent.StartLess.get_;
@@ -39,6 +45,7 @@ import static studio.phaseshift.metatron.lang.core.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.lang.db.grph.inst.grphInstSet.*;
+import static studio.phaseshift.metatron.lang.db.grph.type.TP3Translator.LABEL;
 import static studio.phaseshift.metatron.lang.db.grph.type.TP3Translator.PROPS;
 
 /*
@@ -46,9 +53,18 @@ import static studio.phaseshift.metatron.lang.db.grph.type.TP3Translator.PROPS;
  */
 public class m1Vertex {
 
+    private static final Uri OUT_URI = uri(OUT.name());
+    private static final Uri IN_URI = uri(IN.name());
+    private static final Uri PLUS_URI = uri(f("+"));
 
     public static final class m1VertexType {
         public static Set<Inst> insts() {
+            Optimizations.optimizedEquals.put(VERTEX_TID, (a, b) -> b.tid().basePath().equals(a.tid().basePath()) && a.vid() != null && Objects.equals(a.vid(), b.vid()));
+            Optimizations.optimizedEquals.put(EDGE_TID, (a, b) ->
+                    b.tid().basePath().equals(a.tid().basePath())
+                            && a.<Rec>as().at(LABEL).equals(b.<Rec>as().at(LABEL))
+                            && a.<Rec>as().jvm().get(uri(OUT.name())).equals(b.<Rec>as().jvm().get(uri(OUT.name())))
+                            && a.<Rec>as().jvm().get(uri(IN.name())).equals(b.<Rec>as().jvm().get(uri(IN.name()))));
             return new LinkedHashSet<>(List.of(
                     instC(V_INST_TID.dom(URI_TID).rng(VERTEX_TID.maybeSome()), lst(T(URI_TID.maybeSome())), (lhs, inst) ->
                             inst.arg(0).isNoObj() ?
@@ -58,13 +74,18 @@ public class m1Vertex {
                                             inst.args().elements().map(i -> Router.global().read(lhs.uriValue().extend("V").extend(i.uriValue()))).reduce(Obj::append).orElse(noobj())),
                     //instC(BOTH_INST_TID.dom(VERTEX_TID.maybeSome()).rng(VERTEX_TID.maybeSome()), lst(T(URI_TID.maybeSome())), (lhs, inst) -> split_(lst(instB(OUT_INST_TID, lst(inst.arg(0))), instB(IN_INST_TID, lst(inst.arg(0))))).merge_().apply(lhs)),
                     //instC(BOTHE_INST_TID.dom(VERTEX_TID.maybeSome()).rng(EDGE_TID.maybeSome()), lst(T(URI_TID.maybeSome())), (lhs, inst) -> split_(lst(instB(OUTE_INST_TID, lst(inst.arg(0))), instB(INE_INST_TID, lst(inst.arg(0))))).merge_().apply(lhs)),
-                    instC(OUT_INST_TID.dom(VERTEX_TID).rng(VERTEX_TID.maybeSome()), lst(T(URI_TID.maybeSome())), (lhs, inst) -> get_(uri(f(Direction.OUT.name()).extend(inst.arg(0).isNoObj() ? f("+") : inst.arg(0).uriValue()).extend(Direction.IN.name()))).apply(lhs)),
-                    instC(OUTE_INST_TID.dom(VERTEX_TID).rng(EDGE_TID.maybeSome()), lst(T(URI_TID.maybeSome())), (lhs, inst) -> get_(uri(f(Direction.OUT.name()).extend(inst.arg(0).isNoObj() ? f("+") : inst.arg(0).uriValue()))).apply(lhs)),
+                    instC(OUT_INST_TID.dom(VERTEX_TID).rng(VERTEX_TID.maybeSome()), lst(T(URI_TID.maybeSome())), (lhs, inst) -> get_(uri(f(OUT.name()).extend(inst.arg(0).isNoObj() ? f("+") : inst.arg(0).uriValue()).extend(Direction.IN.name()))).apply(lhs)),
+                    instC(OUTE_INST_TID.dom(VERTEX_TID).rng(EDGE_TID.maybeSome()), lst(T(URI_TID.maybeSome())), (lhs, inst) -> {
+                        Obj edges = lhs.<Rec>as().at(OUT_URI).orElse(rec()).at(inst.arg(0).isNoObj() ? PLUS_URI : inst.arg(0));
+                       // Obj edges = get_(uri(f(OUT.name()).extend(inst.arg(0).isNoObj() ? f("+") : inst.arg(0).uriValue()))).apply(lhs);
+                        Router.global().logger().none(".");
+                        return edges;
+                    }),
                     //
-                    instC(IN_INST_TID.dom(VERTEX_TID).rng(VERTEX_TID.maybeSome()), lst(T(URI_TID.maybeSome())), (lhs, inst) -> get_(uri(f(Direction.IN.name()).extend(inst.arg(0).isNoObj() ? f("+") : inst.arg(0).uriValue()).extend(Direction.OUT.name()))).apply(lhs)),
+                    instC(IN_INST_TID.dom(VERTEX_TID).rng(VERTEX_TID.maybeSome()), lst(T(URI_TID.maybeSome())), (lhs, inst) -> get_(uri(f(Direction.IN.name()).extend(inst.arg(0).isNoObj() ? f("+") : inst.arg(0).uriValue()).extend(OUT.name()))).apply(lhs)),
                     instC(INE_INST_TID.dom(VERTEX_TID).rng(EDGE_TID.maybeSome()), lst(T(URI_TID.maybeSome())), (lhs, inst) -> get_(uri(f(Direction.IN.name()).extend(inst.arg(0).isNoObj() ? f("+") : inst.arg(0).uriValue()))).apply(lhs)),
                     //
-                    instC(OUTV_INST_TID.dom(EDGE_TID).rng(VERTEX_TID), lst(), (lhs, inst) -> get_(uri(Direction.OUT.name())).apply(lhs)),
+                    instC(OUTV_INST_TID.dom(EDGE_TID).rng(VERTEX_TID), lst(), (lhs, inst) -> get_(uri(OUT.name())).apply(lhs)),
                     instC(INV_INST_TID.dom(EDGE_TID).rng(VERTEX_TID), lst(), (lhs, inst) -> get_(uri(Direction.IN.name())).apply(lhs)),
                     instC(VALUES_INST_TID.dom(ALL).rng(ALL.maybeSome()), lst(T(URI_TID.maybeSome())), (lhs, inst) -> get_(uri(f(PROPS).extend(inst.arg(0).isNoObj() ? f("+") : inst.arg(0).uriValue()))).apply(lhs)),
                     instC(VERTEX_TID.extend("inst/as").dom(VERTEX_TID).rng(STR_TID), lst(T(STR_TID)), (inst, lhs) -> {

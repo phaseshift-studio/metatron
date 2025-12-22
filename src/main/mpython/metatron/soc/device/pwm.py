@@ -13,27 +13,24 @@
 # 
 #  You should have received a copy of the GNU Affero General Public License
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>.
-import machine
+import time
 from machine import PWM
 from machine import Pin
 
-import time
-from metatron.obj import Rec, Int
+from metatron.obj import Int
+from metatron.soc.device.device import Device
 from metatron.util.furi import f
-from metatron.util.graphitty import LOG
 from metatron.util.mach import mach
 
 PWM_TID = f("/soc/pwm")
 
 
-class Pwm(Rec):
+class Pwm(Device):
     def __init__(self, soc_vid, vid=None):
-        self.soc_vid = soc_vid
         pins = {}
-        LOG.info("pwm loaded")
-        Rec.__init__(self, pins, PWM_TID, vid)
+        Device.__init__(self, soc_vid, pins, PWM_TID, vid)
 
-    def fade(self, key, start=0,end=1023, interval=16, sleep_ms=50):
+    def fade(self, key, start=0, end=1023, interval=16, sleep_ms=50):
         key = key if isinstance(key, Int) else Int(key)
         for duty_cycle in range(start, end, interval if start < end else -interval):
             self[key] = duty_cycle
@@ -52,4 +49,3 @@ class Pwm(Rec):
         self.pvm[key] = value
         if self.soc_vid is not None:
             mach['router'].write(self.soc_vid.extend('pwm').extend(str(key)), value)
-    

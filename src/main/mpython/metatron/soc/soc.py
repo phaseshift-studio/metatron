@@ -15,22 +15,24 @@
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import network
-from machine import Pin
 
-from metatron.obj import Rec, Int, Uri
-from metatron.soc.device.gpio import GPIO
-from metatron.soc.device.pwm import Pwm
+from metatron.obj import Rec, Int, uri
+from metatron.soc.device.device import Device
 from metatron.util.furi import f
 from metatron.util.graphitty import LOG
 from metatron.util.mach import mach
 
 
 class SoC(Rec):
-    def __init__(self, gpio_range: range, tid, vid=None):
-        Rec.__init__(self, {"pwm":Pwm(vid), "gpio": GPIO(gpio_range, vid)}, tid, vid)
+    def __init__(self, tid, vid=None):
+        Rec.__init__(self, {}, tid, vid)
         if self.vid is not None:
-            mach['router'].get_space(self.vid).subscribe(self.vid.extend("gpio/+"),
-                                                         lambda f, o: Pin(int(f.name()), Pin.OUT).value(
-                                                             o if isinstance(o, int) else o.pvm))
             mach['router'].write(self.vid.extend('sensor/wifi_signal/state'), Int(network.WLAN().status('rssi')))
             mach['router'].write(self.vid.extend('status'), "online")
+
+    def attach(self, device: Device):
+        key = device.tid.name()
+        if key in self.__dict__:
+            LOG.warn("overriding already existing {{y}}{}{{X}} at {{y}}{}{{X}}", device.tid, device.tid.name())
+        setattr(self,key,device)
+        LOG.info("device {{y}}{}{{X}} loaded", device.tid)

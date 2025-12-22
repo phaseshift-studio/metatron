@@ -27,6 +27,8 @@ import webrepl
 import metatron.util.graphitty as graphitty
 from metatron.mqtt_space import MqttSpace
 from metatron.router import Router
+from metatron.soc.device.gpio import Gpio
+from metatron.soc.device.pwm import Pwm
 from metatron.soc.esp32.wemos_d1_mini import WemosD1Mini
 from metatron.util.furi import f
 from metatron.util.graphitty import LOG
@@ -93,7 +95,12 @@ def main_thread_function():
     except OSError:
         LOG.error("unable to connect to {{y}}{}{{X}} broker", mach["broker"])
 
-    soc = WemosD1Mini(vid=f(wlan.config('hostname')))
+    #####################################################################################################
+    soc_vid = f(wlan.config('hostname'))
+    soc = WemosD1Mini(vid=soc_vid)
+    soc.attach(Gpio(range(0, 35), soc_vid))
+    soc.attach(Pwm(soc_vid))
+    #####################################################################################################
     gc.collect()
     try:
         while True:

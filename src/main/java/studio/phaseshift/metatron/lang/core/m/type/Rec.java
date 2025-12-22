@@ -102,7 +102,8 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>>, PlusMonoid.O<Rec> {
         if (!key.isUri())
             return (O) this.jvm().getOrDefault(key, NoObj.noobj()).autoResolve(key);
         else {
-            final String step = key.uriValue().segments().get(0);
+            final boolean singleSegment = key.uriValue().segments().size() == 1;
+            final String step = singleSegment ? key.uriValue().toString() : key.uriValue().segments().get(0);
             Obj result;
             final Uri asNode = uri(key.uriValue().asNode());
             if (this.recValue().containsKey(asNode))
@@ -114,7 +115,7 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>>, PlusMonoid.O<Rec> {
                 result = key.uriValue().isBranch() ? rel(key.uriValue().asNode().toUri(), temp) : temp;
             }
             /// ///////////////////////////////////////////////////////////////////////////////////////////////////////
-            if (key.uriValue().segments().size() == 1) {
+            if (singleSegment) {
                 return (O) result;
             } else {
                 final fURI nextKey = key.uriValue().isBranch() ? key.<Uri>as().uriValue().pretract().asBranch() : key.<Uri>as().uriValue().pretract();

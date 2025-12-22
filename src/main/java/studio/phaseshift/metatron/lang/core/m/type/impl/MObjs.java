@@ -35,7 +35,7 @@ public class MObjs implements Objs {
 
     private Map<Obj, cInt> cstream; // <obj{1}, coeff{+}>
     private fURI vid;
-
+    
     public MObjs(final Iterable<Obj> jvm) {
         this(jvm, null);
     }

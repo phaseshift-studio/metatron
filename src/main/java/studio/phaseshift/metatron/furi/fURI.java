@@ -464,12 +464,16 @@ public class fURI implements Cloneable, Ring<fURI> {
     }
 
     public fURI asNode() {
+        if (!this.send)
+            return this;
         fURI clone = this.clone();
         clone.send = false;
         return clone;
     }
 
     public fURI asBranch() {
+        if (this.send)
+            return this;
         fURI clone = this.clone();
         clone.send = true;
         return clone;

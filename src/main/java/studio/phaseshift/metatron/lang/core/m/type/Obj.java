@@ -29,6 +29,7 @@ import studio.phaseshift.metatron.lang.core.m.type.facade.FObj;
 import studio.phaseshift.metatron.lang.core.m.type.impl.MInt;
 import studio.phaseshift.metatron.lang.core.m.type.impl.MObjFactory;
 import studio.phaseshift.metatron.lang.core.m.type.impl.MUri;
+import studio.phaseshift.metatron.lang.core.m.type.impl.Optimizations;
 import studio.phaseshift.metatron.lang.sys.console.Profile;
 import studio.phaseshift.metatron.lang.sys.router.Router;
 import studio.phaseshift.metatron.ui.Graphitty;
@@ -39,6 +40,7 @@ import studio.phaseshift.metatron.util.Tuple;
 
 import java.nio.ByteBuffer;
 import java.util.*;
+import java.util.function.BiPredicate;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -524,9 +526,16 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
         }
 
         public static boolean objEquals(final Obj obj, final Object other) {
+            if (!(other instanceof Obj))
+                return false;
+            if (obj.vid() != null && obj.vid().equals(((Obj) other).vid()))
+                return true;
+            final BiPredicate<Obj, Obj> opt = Optimizations.optimizedEquals.get(obj.tid().basePath());
+            if (null != opt)
+                return opt.test(obj, (Obj) other);
             return other instanceof Obj &&
                     ((obj.isNoObj() && ((Obj) other).isNoObj()) ||
-                            (obj.vid() != null && Objects.equals(obj.vid(), ((Obj) other).vid())) ||
+                            (obj.vid() != null && Objects.equals(obj.vid(),((Obj)other).vid())) ||
                             (Objects.equals(obj.tid(), ((Obj) other).tid()) &&
                                     //Objects.equals(obj.vid(), ((Obj) other).vid()) && // TODO: ??
                                     Objects.equals(obj.jvm(), ((Obj) other).jvm())));
@@ -665,7 +674,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
                             "any obj", "the lhs obj coefficient", Map.of(), "maps an obj to it's coefficient with a function f(lhs^c)->c"),
                     docWrap(instC(CC_INST_TID.dom(A.maybeSome()).rng(A.maybeSome()), lst(T(INT_TID)), (lhs, inst) -> lhs.c(inst.arg(0).intValue())),
                             "any obj", "the lhs obj with new coefficient", Map.of(jnt(0), "a coefficient for lhs obj"), "sets the coefficient of the lhs obj via f(lhs,c)->lhs^c"),
-                  //  instC(AS_INST_TID.dom(A).rng(B), lst(T(B)), (lhs, inst) -> lhs.matches(inst.arg(0)) ? lhs.tid(inst.arg(0).tid()).c(c -> c.mult(inst.arg(0).c())) : MTronException.of("%s is not a %s", lhs, inst.arg(0)).asFail()),
+                    //  instC(AS_INST_TID.dom(A).rng(B), lst(T(B)), (lhs, inst) -> lhs.matches(inst.arg(0)) ? lhs.tid(inst.arg(0).tid()).c(c -> c.mult(inst.arg(0).c())) : MTronException.of("%s is not a %s", lhs, inst.arg(0)).asFail()),
                     instC(FAILURE_INST_TID.dom(ALL.maybeSome()).rng(FAIL_TID), lst(T(ALL.maybe())), (lhs, inst) -> fail(MTronException.of("%s", inst.arg(0).toString()))),
                     //instC(BARRIER_TID.dom(ALL_STAR).rng(ALL_STAR), lst(T(ALL_STAR)), (lhs, inst) -> inst.arg(0).apply(lhs)),
                     instC(COUNT_INST_TID.dom(ALL.maybeSome()).rng(INT_TID), lst(), (lhs, inst) -> inst.seed().jvm(lhs.stream().reduce(inst.seed(), (a, b) -> jnt(a.intValue() + b.c().max())).intValue()/* * inst.c().max()*/), jnt(0)),

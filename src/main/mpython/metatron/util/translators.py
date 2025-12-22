@@ -17,6 +17,7 @@
 import json
 
 from metatron.obj import Int, Rec, Bool, Lst, Real, Str, Uri, Obj
+from metatron.util.furi import fURI
 from metatron.util.graphitty import LOG
 
 
@@ -60,6 +61,8 @@ class PythonTranslator:
             return Rec(py_obj)
         if isinstance(py_obj, list):
             return Lst(py_obj)
+        if isinstance(py_obj, fURI):
+            return Uri(py_obj)
         if isinstance(py_obj, bytes):
             return Uri(py_obj)
         raise TypeError("unknown obj type: ", type(py_obj))
