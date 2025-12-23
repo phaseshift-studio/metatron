@@ -20,25 +20,34 @@ from metatron.soc.device.device import Device
 from metatron.util.furi import f
 from metatron.util.graphitty import LOG
 from metatron.util.mach import mach
+import machine
 
 GPIO_TID = f("/soc/gpio")
 
 
+def _set_gpio(device, pin, value):
+    value = mach['translator'].to_obj(value)
+    #if pin not in device.pvm.keys() or device.pvm[pin] != value:
+    Pin(mach['translator'].from_obj(pin), Pin.OUT).value(mach['translator'].from_obj(value))
+    device.pvm[pin] = value
+    LOG.info("gpio {{y}}{}{{X}} set to {{b}}{}", pin, value)
+
 class Gpio(Device):
     def __init__(self, pin_range: range, soc_vid, vid=None):
+        has_id = soc_vid is not None    
         pins = {}
-        for i in pin_range:
-            try:
-                pins[i] = Pin(i).value()
-                if soc_vid is not None:
-                    mach['router'].write(soc_vid.extend('gpio').extend(str(i)), Int(pins[i]))
-            except Exception as e:
-                LOG.warn("ignoring unsupported pin {}", i)
+        #for i in pin_range:
+           # try:
+                #pins[i] = Pin(i).value()
+                #if has_id:
+                #    mach['router'].write(soc_vid.extend('gpio').extend(str(i)), Int(pins[i]))
+           # except Exception as e:
+           #     LOG.warn("ignoring unsupported pin {}", i)
         Device.__init__(self, soc_vid, pins, GPIO_TID, vid)
-        if soc_vid is not None:
-            mach['router'].get_space(soc_vid).subscribe(soc_vid.extend("gpio/+"),
-                                                        lambda f, o: Pin(int(f.name()), Pin.OUT).value(
-                                                            o if isinstance(o, int) else o.pvm))
+        if has_id:
+            mach['router'].get_space(soc_vid).subscribe(soc_vid.extend("gpio").extend("+"),
+                                                        lambda key, value: _set_gpio(self, int(key.name()), value))
+
 
     def __getitem__(self, key):
         key = key if isinstance(key, Int) else Int(key)
@@ -47,8 +56,6 @@ class Gpio(Device):
         return value
 
     def __setitem__(self, key, value):
-        value = value if isinstance(value, Int) else Int(value)
-        Pin(key if isinstance(key, int) else key.pvm, Pin.OUT).value(value.pvm)
-        self.pvm[key] = value
+        Gpio._set_gpio(self, key, value)
         if self.soc_vid is not None:
             mach['router'].write(self.soc_vid.extend('gpio').extend(str(key)), value)

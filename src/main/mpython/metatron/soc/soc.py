@@ -14,20 +14,26 @@
 #  You should have received a copy of the GNU Affero General Public License
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import machine
 import network
 
+import metatron.util.graphitty
 from metatron.obj import Rec, Int
 from metatron.soc.device.device import Device
-from metatron.util.graphitty import LOG
+from metatron.util.graphitty import LOG, string, strip
 from metatron.util.mach import mach
 
 
 class SoC(Rec):
     def __init__(self, tid, vid=None):
         Rec.__init__(self, {}, tid, vid)
+        metatron.util.graphitty.log_behavior = lambda level, s, *args: mach['router'].write(self.vid.extend('log'),
+                                                                                            f"[{level}] {strip(string(s, *args))}")
+        self['status'] = 'online'
         if self.vid is not None:
+            mach['router'].get_space(self.vid).subscribe(self.vid.extend('status'),
+                                                         lambda key, value: machine.reset() if value == 'offline' else "")
             mach['router'].write(self.vid.extend('sensor/wifi_signal/state'), Int(network.WLAN().status('rssi')))
-            mach['router'].write(self.vid.extend('status'), "online")
 
     def attach(self, device: Device):
         key = device.tid.name()

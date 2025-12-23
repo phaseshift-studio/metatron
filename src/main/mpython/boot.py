@@ -112,5 +112,5 @@ def main_thread_function():
 
 
 LOG.info("metatron boot process complete")
-_thread.stack_size(6 * 1024)
+_thread.stack_size(7 * 1024)
 _thread.start_new_thread(main_thread_function, ())

@@ -39,6 +39,19 @@ def string(s: str, *args):
             replace("{{~}}", ITALIC)).format(*args)
 
 
+def strip(s: str) -> str:
+    return str(s.replace(YELLOW, "").
+            replace(MAGENTA, "").
+            replace(CYAN, "").
+            replace(BLUE, "").
+            replace(RED, "").
+            replace(GREEN, "").
+            replace(BLACK, "").
+            replace(WHITE, "").
+            replace(NC, "").
+            replace(ITALIC, ""))
+
+
 log_behavior = None
 
 
@@ -46,23 +59,23 @@ class LOG:
     @staticmethod
     def _generic_log(level: str, color: str, s: str, *args):
         print(f"[{color}{level} {NC}] {string(s, *args)}{NC}")
-        if log_behavior is not None: log_behavior(level)
+        if log_behavior is not None: log_behavior(level, s, *args)
 
     @staticmethod
     def info(s: str, *args):
-        LOG._generic_log("INFO",GREEN,s,*args)
+        LOG._generic_log("INFO", GREEN, s, *args)
 
     @staticmethod
     def debug(s: str, *args):
-        LOG._generic_log("DEBUG",CYAN,s,*args)
+        LOG._generic_log("DEBUG", CYAN, s, *args)
 
     @staticmethod
     def error(s: str, *args):
-        LOG._generic_log("ERROR",RED,s,*args)
+        LOG._generic_log("ERROR", RED, s, *args)
 
     @staticmethod
     def warn(s: str, *args):
-        LOG._generic_log("WARN",YELLOW,s,*args)
+        LOG._generic_log("WARN", YELLOW, s, *args)
 
     @staticmethod
     def none(s: str, *args):

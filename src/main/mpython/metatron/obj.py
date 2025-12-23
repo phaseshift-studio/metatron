@@ -35,10 +35,10 @@ BASE_TYPES = [BYTES_TID, BOOL_TID, INT_TID, REAL_TID, STR_TID, URI_TID, LST_TID,
 class Obj:
     def __init__(self, pvm, tid, vid=None):
         self.pvm = pvm
-        self.tid = f(str(tid))  # if isinstance(tid, fURI) else f(str(tid))
+        self.tid = tid if isinstance(tid, fURI) else f(tid)
         self.vid = None
         if vid is not None:
-            self.vid = f(str(vid))
+            self.vid = vid if isinstance(vid, fURI) else f(vid)
             mach['router'].write(self.vid, self)
 
     def pvm(self, pvm):

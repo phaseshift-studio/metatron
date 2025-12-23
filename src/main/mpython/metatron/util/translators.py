@@ -45,7 +45,7 @@ class PythonTranslator:
 
     @staticmethod
     def to_obj(py_obj: Any) -> Obj:
-        if py_obj is None:
+        if py_obj is None: # or py_obj == "":
             return None
         if isinstance(py_obj, Obj):
             return py_obj
@@ -72,10 +72,14 @@ class JSONTranslator:
 
     @staticmethod
     def from_obj(obj: Obj) -> str:
+        if obj is None:
+            return ""
         return json.dumps(PythonTranslator.from_obj(obj) if isinstance(obj, Obj) else obj)
 
     @staticmethod
     def to_obj(json_str: str) -> Obj:
+        if json_str is None or json_str == "":
+            return None
         try:
             py_obj = json.loads(json_str)
         except Exception as e:

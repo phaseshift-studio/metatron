@@ -58,31 +58,35 @@ class MqttSpace(Obj):
                     return value
         return self.cache.get(vid)
 
-    def subscribe(self, vid, f):
-        self.client.subscribe(str(vid))
-        self.subscriptions[vid] = f
-        LOG.info("subscribed to {{y}}{}{{X}}", self.pattern)
+    def subscribe(self, furi, func):
+        self.client.subscribe(str(furi))
+        self.subscriptions[furi] = func
+        LOG.info("subscribed to {{y}}{}{{X}}", furi)
 
-    def unsubscribe(self, vid):
+    def unsubscribe(self, furi):
         # self.client.(str(vid))
-        self.subscriptions.pop(vid)
-        LOG.info("unsubscribed to {{y}}{}{{X}}", self.pattern)
+        self.subscriptions.pop(furi)
+        LOG.info("unsubscribed to {{y}}{}{{X}}", furi)
 
     def write(self, vid, obj):
         vid = vid if isinstance(vid, fURI) else fURI(vid)
-        obj = obj if isinstance(obj, Obj) else mach["translator"].to_obj(obj)
-        if obj is not None:
-            self.cache[vid] = obj
+        if obj is None:
+            self.client.publish(str(vid), "", True)
         else:
-            self.cache.pop(vid)
-        self.client.publish(str(vid), JSONTranslator.from_obj(obj), True)
+            obj = obj if isinstance(obj, Obj) else mach["translator"].to_obj(obj)
+            if obj is not None:
+                self.cache[vid] = obj
+            elif vid in self.cache.keys():
+                self.cache.pop(vid)
+            self.client.publish(str(vid), JSONTranslator.from_obj(obj), True)
 
     def _callback(self, furi, obj):
+        # LOG.debug("subscriptions: {}", self.subscriptions)
         furi2 = f(furi.decode())
         obj2 = JSONTranslator.to_obj(obj.decode())
         for pattern, func in self.subscriptions.items():
-            if pattern.matches(furi2) or furi2.matches(pattern):
-                # LOG.debug("using subscription {{y}}{}{{X}} for {{y}}{}", str(key), str(vid))
+            if furi2.matches(pattern):
+                #LOG.debug("using subscription {{y}}{}", pattern)
                 func(furi2, obj2)
 
     def connect_esphome(self, merge, template: str = 'esphome.json'):
