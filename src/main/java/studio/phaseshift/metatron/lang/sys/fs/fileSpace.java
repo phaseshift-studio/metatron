@@ -96,7 +96,7 @@ public class fileSpace extends MSpace<FileSystem> {
         return new MRec(new LinkedHashMap<Obj, Obj>(Map.of(
                 uri(Tokens.PATTERN), uri(path.toString()),
                 uri(Tokens.NAME), uri(path.getFileName().toString()),
-                uri("permissions"), lst(MTronException.wrap(() -> (List) Files.getPosixFilePermissions(path).stream().map(x -> uri(x.toString())).toList()))),
+                uri("permissions"), lst(MTronException.wrap(() -> (List) Files.getPosixFilePermissions(path).stream().map(x -> uri(x.toString())).toList())))),
                 FILE_TID, fURI.fnull);
     }
 
