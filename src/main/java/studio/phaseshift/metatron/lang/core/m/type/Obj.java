@@ -68,19 +68,6 @@ import static studio.phaseshift.metatron.util.Tuple.Pair;
 
 public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>, Feature.HasLogger, Cloneable {
 
-    private static boolean typeInferenceMatch(final Obj lhs, final Type rhs) {
-        if (lhs.tid().matches(rhs.tid()))
-            return true;
-        if (rhs.isBaseType())
-            return lhs.baseType().matches(rhs.tid()); // matches any abstract type to it's base type as long as within the coefficient boundaries
-        if (rhs.tid().isZero() && !lhs.isNoObj()) // TODO: hack because zero can be the empty string and noobj string. fix.
-            return false;
-        if (rhs.tid().hasPattern() && !lhs.tid().matches(rhs.tid()))
-            return false;
-        return null == rhs.predicate() || !rhs.predicate().apply(lhs).isNoObj();
-
-    }
-
     default <O extends Obj> O maybe() {
         return (O) this.c(cInt::maybe);
     }
@@ -119,10 +106,6 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
 
     default Obj c(final Long exact) {
         return this.c(cInt.of(exact));
-    }
-
-    default Obj c(final Long min, final Long max) {
-        return this.c(cInt.of(min, max));
     }
 
     default Pair<Obj, Obj> take(final cInt c) {
@@ -176,10 +159,6 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
     default Obj tid(final String tid) {
         return this.tid(f(tid));
     }
-
-    /*default boolean inSpace() {
-        return null != this.vid();
-    }*/
 
     default Obj vid(final fURI vid) {
         return this.clone(this.jvm(), this.tid(), vid);
@@ -248,7 +227,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
             return false;
         if (rhs.isType())
             return rhs.tid().isGeneric() ||
-                    (typeInferenceMatch(this, rhs.as()) &&
+                    (Helper.typeInferenceMatch(this, rhs.as()) &&
                             (rhs.<Type>as().predicate() == null || this.isObjs() || !rhs.apply(this).isNoObj()));
         return this.tid().matches(rhs.tid()) &&
                 Objects.equals(this.jvm(), rhs.jvm());
@@ -297,27 +276,12 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
         return (O) this;
     }
 
-    /*default <O extends Obj> void ifExists(final Consumer<O> function) {
-        if (!this.isNoObj())
-            function.accept((O) this);
-    }
-
-    default <O extends Obj> O andIf(final Predicate<O> predicate) {
-        return predicate.test((O) this) ? (O) this : (O) noobj();
-    }*/
-
     default <O extends Obj> O choose(final Predicate<Obj> predicate, final Function<Obj, O> trueBranch, final Function<Obj, O> falseBranch) {
         return predicate.test(this) ? trueBranch.apply(this) : falseBranch.apply(this);
     }
 
     default <O extends Obj> O as() {
         return (O) this;
-    }
-
-    default <F extends FObj<?>> F as(final Class<F> facade) {
-        return facade.isAssignableFrom(this.getClass()) ?
-                (F) this :
-                (F) objs(this.stream().map(x -> MTronException.wrap(() -> (Obj) facade.getMethod("of", Obj.class).invoke(null, x))).map(Obj::<F>as));
     }
 
     default <O extends Obj> boolean is(final Class<O> clazz) {
@@ -521,6 +485,19 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
 
     class Helper {
 
+        public static boolean typeInferenceMatch(final Obj lhs, final Type rhs) {
+            if (lhs.tid().matches(rhs.tid()))
+                return true;
+            if (rhs.isBaseType())
+                return lhs.baseType().matches(rhs.tid()); // matches any abstract type to it's base type as long as within the coefficient boundaries
+            if (rhs.tid().isZero() && !lhs.isNoObj()) // TODO: hack because zero can be the empty string and noobj string. fix.
+                return false;
+            if (rhs.tid().hasPattern() && !lhs.tid().matches(rhs.tid()))
+                return false;
+            return null == rhs.predicate() || !rhs.predicate().apply(lhs).isNoObj();
+
+        }
+
         public static int objHashCode(final Obj obj) {
             return obj.isNoObj() ? noobj().hashCode() : obj.isInst() ? obj.tid().hashCode() : Objects.hash(obj.jvm(), obj.tid().cLess());
         }
@@ -535,7 +512,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
                 return opt.test(obj, (Obj) other);
             return other instanceof Obj &&
                     ((obj.isNoObj() && ((Obj) other).isNoObj()) ||
-                            (obj.vid() != null && Objects.equals(obj.vid(),((Obj)other).vid())) ||
+                            (obj.vid() != null && Objects.equals(obj.vid(), ((Obj) other).vid())) ||
                             (Objects.equals(obj.tid(), ((Obj) other).tid()) &&
                                     //Objects.equals(obj.vid(), ((Obj) other).vid()) && // TODO: ??
                                     Objects.equals(obj.jvm(), ((Obj) other).jvm())));

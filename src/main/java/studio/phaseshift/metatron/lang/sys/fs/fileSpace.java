@@ -26,14 +26,17 @@ import studio.phaseshift.metatron.lang.core.m.type.Obj;
 import studio.phaseshift.metatron.lang.core.m.type.Rec;
 import studio.phaseshift.metatron.lang.core.m.type.Type;
 import studio.phaseshift.metatron.lang.core.m.type.impl.MRec;
+import studio.phaseshift.metatron.lang.core.m.type.impl.MRel;
 import studio.phaseshift.metatron.lang.sys.router.Router;
+import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileWriter;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -51,6 +54,7 @@ import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.*;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MBytes.bytes;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.lang.sys.fs.fsInstSet.FILE_TID;
@@ -66,20 +70,28 @@ public class fileSpace extends MSpace<FileSystem> {
         return space;
     }));
 
+
+    public static fileSpace of(final fURI pattern, final fURI vid) {
+        return new fileSpace(FileSystems.getDefault(), Map.of(), pattern, vid);
+    }
+
     public fileSpace(final FileSystem fs, final Map<Obj, Obj> jvm, final fURI pattern, final fURI vid) {
         super(fs, jvm, pattern, FS_TID, vid);
     }
 
     @Override
     public Obj read(final fURI vid) {
-        return Space.Helper.resolveRead(this, vid, this.directReader());
+        //return Space.Helper.resolveRead(this, vid, this.directReader());
+        return objs(this.directReader().apply(vid).entrySet().stream().map(kv -> vid.isNode() ? kv.getValue() : MRel.rel(uri(kv.getKey()), kv.getValue())));
     }
 
     @Override
     public Obj write(final fURI vid, final Obj obj) {
         // return this.qs().processPreWrite(vid, vid, obj).orElseGet(() -> {
-        Space.Helper.resolveWrite(this, vid.basePath(), obj, this.directWriter(), this.directReader());
-        return obj;
+        return this.directWriter().apply(vid, obj);
+
+        //Space.Helper.resolveWrite(this, vid.basePath(), obj, this.directWriter(), this.directReader());
+        //return obj;
         //   return this.qs().processPostWrite(vid, vid, obj).orElse(this.qs().processQlessWrite(vid, vid, obj).orElse(obj));
         // });
     }
@@ -145,8 +157,14 @@ public class fileSpace extends MSpace<FileSystem> {
                         throw MTronException.of("deleting files currently not supported", pattern);
                         //   Files.delete(Path.of(pattern.toString()));
                     } else {
-                        final FileWriter writer = new FileWriter(pattern.toString());
-                        writer.write(obj.isStr() ? obj.strValue() : obj.toString());
+                        LOG.info("writing %s to %s", obj, pattern);
+                        final FileOutputStream writer = new FileOutputStream(pattern.toString());
+                        if (obj.isBytes())
+                            writer.write(obj.bytesValue().array());
+                        else if (obj.isStr())
+                            writer.write(obj.strValue().getBytes(StandardCharsets.UTF_8));
+                        else
+                            writer.write(Graphitty.strip(obj.toString()).getBytes(StandardCharsets.UTF_8));
                         writer.flush();
                         writer.close();
                     }

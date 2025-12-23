@@ -235,6 +235,7 @@ public interface Inst extends Call {
                     .map(i -> this.hasDom() ? i.dom(this.dom()) : i)
                     .map(i -> this.hasRng() ? i.rng(this.rng()) : i)
                     .map(i -> Helpers.bindGenerics(lhs, i, this))
+                    .filter(i -> !Objects.isNull(i))
                     .filter(i -> lhs.matches(i.dom()))
                     //.filter(i -> lhs.matches(i.dom()) || (Form.of(i).equals(Form.mapper) && lhs.unique() && lhs.c(cInt.ONE()).matches(i.dom())))
                     //.map(i -> lhs.isType() && !lhs.isNoObj() && i.tid().dom().hasPattern() ? i.dom(lhs.as()) : i)
@@ -420,13 +421,13 @@ public interface Inst extends Call {
         public static Inst bindGenerics(final Obj lhs, final Inst apiInst, final Obj userInst) {
             final GraphittyLogger LOG = Graphitty.log(lhs);
             final Map<fURI, fURI> generics = new HashMap<>();
-            Inst def = apiInst;
-            if (def.dom().tid().cLess().isGeneric() && lhs.type().c().within(def.dom().c())) {
-                generics.put(def.dom().tid().cLess(), lhs.type().tid().cLess());
-                def = def.dom(lhs.type().c(def.dom().c()).as());
+            Inst apiInstTemp = apiInst;
+            if (apiInstTemp.dom().tid().isCLessGeneric() && lhs.type().c().within(apiInstTemp.dom().c())) {
+                generics.put(apiInstTemp.dom().tid().cLess(), lhs.type().tid().cLess());
+                apiInstTemp = apiInstTemp.dom(lhs.type().c(apiInstTemp.dom().c()).as());
             }
-            if (def.rng().tid().cLess().isGeneric() && generics.containsKey(def.rng().tid().cLess())) {
-                def = def.rng(T(generics.get(def.rng().tid().cLess()).c(def.rng().c().toString())));
+            if (apiInstTemp.rng().tid().isCLessGeneric() && generics.containsKey(apiInstTemp.rng().tid().cLess())) {
+                apiInstTemp = apiInstTemp.rng(T(generics.get(apiInstTemp.rng().tid().cLess()).c(apiInstTemp.rng().c().toString())));
             }
             if (!apiInst.args().isEmpty())
                 if (apiInst.args().isRec()) {
@@ -447,38 +448,44 @@ public interface Inst extends Call {
                         }*/
                         newArgs.put(kv.getKey(), argD);
                     }
-                    def = def.args(rec(newArgs));
+                    apiInstTemp = apiInstTemp.args(rec(newArgs));
                 } else if (apiInst.args().isLst()) {
-                    final List<Obj> newArgs = new ArrayList<>();
+                    final List<Obj> resolvedArgs = new ArrayList<>();
                     for (int i = 0; i < apiInst.args().count(); i++) {
-                        Obj argD = apiInst.arg(i);
-                        Obj argS = userInst.isInst() ? userInst.<Inst>as().arg(i) : userInst;
-                        if (argD.tid().cLess().isGeneric()) {
-                            final fURI lastBinding = generics.get(argD.tid().cLess());
-                            if (null != lastBinding && !argS.tid().cLess().matches(lastBinding))
-                                LOG.debug("existing generic doesn't match current usage: [{{m}}generic{{/m}}] %s [{{m}}past{{/m}}] %s [{{m}}present{{/m}}] %s", argS.tid(), lastBinding, argD.tid());
-                            generics.computeIfAbsent(argD.tid().cLess(), k -> argS.tid().cLess()); // beware of int[0] yielding noobj across all bindings
+                        Obj apiArg = apiInst.arg(i);
+                        Obj userArg = userInst.isInst() ? userInst.<Inst>as().arg(i) : userInst;
+                        if (apiArg.tid().isGeneric()) {
+                            final fURI lastBinding = generics.get(apiArg.tid().cLess());
+                            if (null != lastBinding && !userArg.tid().matches(lastBinding))
+                                LOG.debug("existing generic doesn't match current usage: [{{m}}generic{{/m}}] %s [{{m}}past{{/m}}] %s [{{m}}present{{/m}}] %s", userArg.tid(), lastBinding, apiArg.tid());
+                            generics.computeIfAbsent(apiArg.tid().cLess(), k -> userArg.tid().cLess()); // beware of int[0] yielding noobj across all bindings
+                        } 
+                        if (apiArg.isInst()) { // todo: isCall()?
+                            apiArg = Helpers.bindGenerics(lhs, apiArg.<Inst>as(), userArg);
+                        } else {
+                            if (apiArg.tid().isCLessGeneric())
+                                apiArg = apiArg.tid(generics.getOrDefault(apiArg.tid().cLess(), userArg.tid())).c(apiArg.c());
+                            //LOG.warn(apiArg + "----" + userArg);
+                            if (null != apiArg && !apiArg.isCall() && !userArg.tid().cLess().isGeneric() && !userArg.matches(apiArg)) {
+                                // TODO: isClessGeneric() and cLess.isGeneric() behave differently
+                                return null;
+                            }
                         }
-                        if (argD.isInst()) {
-                            argD = Helpers.bindGenerics(lhs, argD.<Inst>as(), argS);
-                        } else if (argD.tid().cLess().isGeneric()) {
-                            argD = argD.tid(generics.getOrDefault(argD.tid().cLess(), argS.tid())).c(argD.c());
-                        }
-                        newArgs.add(argD);
+                        resolvedArgs.add(apiArg);
                     }
-                    def = def.args(lst(newArgs));
+                    apiInstTemp = apiInstTemp.args(lst(resolvedArgs));
                 }
 
-            if (def.rng().tid().cLess().isGeneric()) {
-                def = def.rng(T(generics.getOrDefault(def.rng().tid().cLess(), userInst.rng().tid()).c(def.rng().c().toString())));
+            if (apiInstTemp.rng().tid().cLess().isGeneric()) {
+                apiInstTemp = apiInstTemp.rng(T(generics.getOrDefault(apiInstTemp.rng().tid().cLess(), userInst.rng().tid()).c(apiInstTemp.rng().c().toString())));
             }
             ///  hail mary
-            if (def.dom().tid().isCLessGeneric()) {
-                def = def.dom(lhs.type().c(def.dom().c()).as());
-                def = def.tid(Helpers.apiOrUser(def.tid(), userInst.tid(), generics));
+            if (apiInstTemp.dom().tid().isCLessGeneric()) {
+                apiInstTemp = apiInstTemp.dom(lhs.type().c(apiInstTemp.dom().c()).as());
+                apiInstTemp = apiInstTemp.tid(Helpers.apiOrUser(apiInstTemp.tid(), userInst.tid(), generics));
             }
-            LOG.trace("generic specification mapped %s => %s to %s via %s", lhs, userInst, def, apiInst);
-            return def;
+            LOG.trace("generic specification mapped %s => %s to %s via %s", lhs, userInst, apiInstTemp, apiInst);
+            return apiInstTemp;
         }
 
         private static fURI apiOrUser(final fURI apiInstTid, final fURI userInstTid, final Map<fURI, fURI> bindings) {
