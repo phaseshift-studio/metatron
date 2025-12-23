@@ -73,6 +73,6 @@ public class fsInstSet extends MInstSet {
         return new LinkedHashSet<>(List.of(
                 instC(AS_INST_TID.dom(FILE_TID).rng(BYTES_TID), lst(T(BYTES_TID)), (lhs, inst) -> lhs.<Rec>as().at("data")),
                 instC(AS_INST_TID.dom(URI_TID).rng(FILE_TID), lst(T(FILE_TID)), (lhs, inst) -> fileSpace.makeFile(Path.of(lhs.uriValue().toString()))),
-                instC(AS_INST_TID.dom(BYTES_TID).rng(IMAGE_TID), lst(T(IMAGE_TID)), (lhs, inst) -> str(ImageHelper.convertToAscii(lhs.bytesValue())))));
+                instC(AS_INST_TID.dom(BYTES_TID).rng(IMAGE_TID), lst(T(IMAGE_TID)), (lhs, inst) -> str(ImageHelper.convertToAscii(lhs.bytesValue())).tid(IMAGE_TID.c(lhs.tid().c())))));
     }
 }
