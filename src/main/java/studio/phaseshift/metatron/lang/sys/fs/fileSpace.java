@@ -31,11 +31,8 @@ import studio.phaseshift.metatron.lang.sys.router.Router;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.util.MTronException;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.util.LinkedHashMap;
@@ -48,10 +45,9 @@ import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.furi.fURI.f;
-import static studio.phaseshift.metatron.lang.core.m.inst.mFluent.StartLess.auto_;
 import static studio.phaseshift.metatron.lang.core.m.inst.mFluent.StartLess.isa_;
-import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.*;
-import static studio.phaseshift.metatron.lang.core.m.type.impl.MBytes.bytes;
+import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.INST_TID;
+import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.URI_TID;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MObjs.objs;
@@ -100,19 +96,8 @@ public class fileSpace extends MSpace<FileSystem> {
         return new MRec(new LinkedHashMap<Obj, Obj>(Map.of(
                 uri(Tokens.PATTERN), uri(path.toString()),
                 uri(Tokens.NAME), uri(path.getFileName().toString()),
-                uri("permissions"), lst(MTronException.wrap(() -> (List) Files.getPosixFilePermissions(path).stream().map(x -> uri(x.toString())).toList())),
-                uri("data"), auto_(instC(INST_TID.dom(ALL.maybe()).rng(BYTES_TID), lst(T(URI_TID)), (lhs, inst) -> {
-                    try {
-                        final File file = path.toFile();
-                        final byte[] data = new byte[(int) file.length()];
-                        try (final FileInputStream fis = new FileInputStream(file)) {
-                            fis.read(data);
-                        }
-                        return bytes(ByteBuffer.wrap(data));
-                    } catch (final Exception e) {
-                        throw MTronException.of(e);
-                    }
-                })).tryToInst())), FILE_TID, fURI.fnull);
+                uri("permissions"), lst(MTronException.wrap(() -> (List) Files.getPosixFilePermissions(path).stream().map(x -> uri(x.toString())).toList()))),
+                FILE_TID, fURI.fnull);
     }
 
     @Override

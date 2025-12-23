@@ -23,8 +23,13 @@ import studio.phaseshift.metatron.lang.core.m.type.Inst;
 import studio.phaseshift.metatron.lang.core.m.type.Rec;
 import studio.phaseshift.metatron.lang.core.m.type.Type;
 import studio.phaseshift.metatron.lang.core.m.type.impl.MInstSet;
+import studio.phaseshift.metatron.util.MTronException;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.nio.ByteBuffer;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -33,6 +38,7 @@ import static studio.phaseshift.metatron.Tokens.PATTERN;
 import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.lang.core.m.inst.mFluent.StartLess.isa_;
 import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.*;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MBytes.bytes;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MStr.str;
@@ -71,7 +77,18 @@ public class fsInstSet extends MInstSet {
     @Override
     public Set<Inst> insts() {
         return new LinkedHashSet<>(List.of(
-                instC(AS_INST_TID.dom(FILE_TID).rng(BYTES_TID), lst(T(BYTES_TID)), (lhs, inst) -> lhs.<Rec>as().at("data")),
+                instC(AS_INST_TID.dom(FILE_TID).rng(BYTES_TID), lst(T(BYTES_TID)), (lhs, inst) -> {
+                    try {
+                        final File file = Paths.get(lhs.<Rec>as().at(PATTERN).uriValue().toString()).toFile();
+                        final byte[] data = new byte[(int) file.length()];
+                        try (final FileInputStream fis = new FileInputStream(file)) {
+                            fis.read(data);
+                        }
+                        return bytes(ByteBuffer.wrap(data));
+                    } catch (final Exception e) {
+                        throw MTronException.of(e);
+                    }
+                }),
                 instC(AS_INST_TID.dom(URI_TID).rng(FILE_TID), lst(T(FILE_TID)), (lhs, inst) -> fileSpace.makeFile(Path.of(lhs.uriValue().toString()))),
                 instC(AS_INST_TID.dom(BYTES_TID).rng(IMAGE_TID), lst(T(IMAGE_TID)), (lhs, inst) -> str(ImageHelper.convertToAscii(lhs.bytesValue())).tid(IMAGE_TID.c(lhs.tid().c())))));
     }
