@@ -26,6 +26,7 @@ import org.jline.terminal.Terminal;
 import org.jline.utils.Display;
 import org.jline.utils.InfoCmp;
 import studio.phaseshift.metatron.lang.Space;
+import studio.phaseshift.metatron.lang.core.m.type.InstSet;
 import studio.phaseshift.metatron.lang.core.m.type.Rel;
 import studio.phaseshift.metatron.lang.sys.router.Router;
 import studio.phaseshift.metatron.ui.Box;
@@ -33,7 +34,7 @@ import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.Table;
 import studio.phaseshift.metatron.util.IteratorUtil;
 
-import java.util.List;
+import java.util.*;
 
 import static org.jline.keymap.KeyMap.key;
 import static studio.phaseshift.metatron.furi.fURI.f;
@@ -43,42 +44,38 @@ import static studio.phaseshift.metatron.furi.fURI.f;
  */
 public class Subscriptions {
     private enum Operation {
-        FORWARD_ONE_LINE,
-        BACKWARD_ONE_LINE,
+        DOWN_ROW,
+        UP_ROW,
+        RIGHT_COL,
+        LEFT_COL,
         EXIT
     }
 
     private final Console console;
     private final Terminal terminal;
-    //private final List<String> lines = new ArrayList<>();
-    private final Table table;
     private final Size size = new Size();
     private final BindingReader bindingReader;
-
+    private final Map<String,Table> states = new LinkedHashMap<>();
+    
     public Subscriptions(Console console) {
         this.console = console;
         this.terminal = console.getTerminal();
-        this.bindingReader = new BindingReader(terminal.reader());
-        // lines.add(Graphitty.sillyPrint("select space", true, true));
-        this.table = new Table(List.of("vid", "pattern"));
-        Router.global().spaces().elements().forEach(r -> {
-            table.addRow(List.of(r.<Rel>as().first().toString(), r.<Rel>as().second().<Space>as().pattern()));
+        /// ///////////////////////////////////////////////////////
+        final Table spaceTable = new Table(List.of("vid","pattern"));
+        Router.global().spaces().elements().filter(r -> !(r.second() instanceof InstSet)).forEach(r -> {
+            spaceTable.addRow(List.of(r.<Rel>as().first().toString(), r.<Rel>as().second().<Space>as().pattern()));
         });
-        //lines.addAll(Arrays.asList(table.toString().split("\n")));
+        this.states.put("space",spaceTable);
+        /// ///////////////////////////////////////////////////////
+        final Table instTable = new Table(List.of("vid","pattern"));
+        Router.global().spaces().elements().filter(r -> r.second() instanceof InstSet).forEach(r -> {
+            instTable.addRow(List.of(r.<Rel>as().first().toString(), r.<Rel>as().second().<Space>as().pattern()));
+        });
+        this.states.put("inst",instTable);
+        ///  states: machines and clusters
+        this.bindingReader = new BindingReader(terminal.reader());
     }
-
-    /*private List<String> displayLines(int cursorRow) {
-        List<String> out = new ArrayList<>();
-        for (int i = 0; i < this.lines.size(); i++) {
-            final String line = this.lines.get(i);
-            if (i == cursorRow)
-                out.add(Graphitty.string(line.replaceFirst("\\|", "{{r}}>{{X}}") + "{{X}}\n"));
-            else
-                out.add(Graphitty.string(line + "{{X}}\n"));
-        }
-        return out;
-    }*/
-
+    
     public String select() {
         Display display = new Display(terminal, true);
         Attributes attr = terminal.enterRawMode();
@@ -90,41 +87,64 @@ public class Subscriptions {
             display.clear();
             display.reset();
             int selectRow = 0;
+            int selectCol = 0;
             KeyMap<Operation> keyMap = new KeyMap<>();
-            keyMap.bind(Operation.FORWARD_ONE_LINE, key(terminal, InfoCmp.Capability.key_down));
-            keyMap.bind(Operation.BACKWARD_ONE_LINE, key(terminal, InfoCmp.Capability.key_up));
+            keyMap.bind(Operation.DOWN_ROW, key(terminal, InfoCmp.Capability.key_down));
+            keyMap.bind(Operation.UP_ROW, key(terminal, InfoCmp.Capability.key_up));
+            keyMap.bind(Operation.RIGHT_COL, key(terminal, InfoCmp.Capability.key_right));
+            keyMap.bind(Operation.LEFT_COL, key(terminal, InfoCmp.Capability.key_left));
             keyMap.bind(Operation.EXIT, "\r");
             Router.global().logger().none(Graphitty.string("{{.}}"));
             while (true) {
                 display.resize(size.getRows(), size.getColumns());
                 final int selectRowFinal = selectRow;
-                display.updateAnsi(
-                        IteratorUtil.indexedStream(this.table.formattedRows().iterator())
-                                .map(s -> ((s.get0() == selectRowFinal) ? "{{r}}>{{X}}" : " ") + s.get1())
+                final int selectColFinal = selectCol;
+                final List<String> currentStateDisplay = new ArrayList<>();
+                final String selectedState = new ArrayList<>(this.states.keySet()).get(selectCol);
+                /// ///////////////////////////////////////////////////////////////////////////////////////////////
+                currentStateDisplay.add(Graphitty.string(IteratorUtil.indexedStream(this.states.keySet().iterator())
+                        .map(s -> ((s.get0() == selectColFinal) ? "{{c}}" : "{{y}}") + s.get1() + "{{X}}")
+                        .map(Graphitty::string)
+                        .reduce("",(a,b)->a + "{{g}} | {{X}}" + b)));
+                currentStateDisplay.addAll(
+                        IteratorUtil.indexedStream(this.states.get(selectedState).formattedRows().iterator())
+                                .map(s -> ((s.get0() == selectRowFinal) ? "{{c}}>{{X}}" : " ") + s.get1())
                                 .map(Graphitty::string)
-                                .toList(),
-                        size.cursorPos(0, this.table.formattedWidth() + 2));
+                                .toList());
+                /// ////////////////////////////////////////////////////////////////////////////////////////////////
+                display.updateAnsi(currentStateDisplay,
+                        size.cursorPos(1, this.states.get(selectedState).formattedWidth() + 2));
                 Operation op = bindingReader.readBinding(keyMap);
                 switch (op) {
-                    case FORWARD_ONE_LINE:
+                    case RIGHT_COL:
+                        selectCol++;
+                        if (selectCol > this.states.size() - 1)
+                            selectCol = 0;
+                        break;
+                    case LEFT_COL:
+                        selectCol--;
+                        if (selectCol < 0)
+                            selectCol = this.states.size() - 1;
+                        break;
+                    case DOWN_ROW:
                         selectRow++;
-                        if (selectRow > this.table.rows().size() - 1)
+                        if (selectRow > this.states.get(selectedState).rows().size() - 1)
                             selectRow = 0;
                         break;
-                    case BACKWARD_ONE_LINE:
+                    case UP_ROW:
                         selectRow--;
                         if (selectRow < 0)
-                            selectRow = this.table.rows().size() - 1;
+                            selectRow = this.states.get(selectedState).rows().size() - 1;
                         break;
                     case EXIT:
                         Router.global().logger().none(Graphitty.string("{{*}}"));
-                        return this.table.row(selectRow).toString();
+                        return this.states.get(selectedState).row(selectRow).toString();
                 }
                 Router.global().logger().none(Graphitty.erase(25));
-                final String location = this.table.entry(selectRow, 0).toString();
+                final String location = this.states.get(selectedState).entry(selectRow, 0).toString();
                 if (!location.contains("mod") && !location.contains("#")) {
                     try {
-                        String space = Graphitty.strip(this.table.entry(selectRow, 1).toString().trim());
+                        String space = Graphitty.strip(this.states.get(selectedState).entry(selectRow, 1).toString().trim());
                         Router.global().logger().none(Graphitty.floating(new Box("{{m}}subscriptions{{X}}", Router.global().read(f(space).query("sub")).toString(), Box.BASIC_BORDER).toString()));
                     } catch (final Exception e) {
                         // do nothing
