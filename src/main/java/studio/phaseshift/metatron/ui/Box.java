@@ -29,6 +29,7 @@ import java.util.stream.Stream;
 public class Box {
 
     protected final String title;
+    protected final List<String> options;
     protected final String body;
     protected final List<String> lrtb;
 
@@ -45,9 +46,14 @@ public class Box {
     }
 
     public Box(final String title, final String body, final List<String> lrtb) {
+        this(title, null, body, lrtb);
+    }
+
+    public Box(final String title, final List<String> options, final String body, final List<String> lrtb) {
         this.title = title;
         this.body = body;
         this.lrtb = lrtb;
+        this.options = options;
     }
 
     public int width() {
@@ -63,7 +69,11 @@ public class Box {
     }
 
     public Box bottom(final Box box) {
-        return new Box(this.toString().trim() + "\n" + box.toString().trim(), box.lrtb);
+        return this.bottom(null, box);
+    }
+
+    public Box bottom(final List<String> options, final Box box) {
+        return new Box(null, options, this.toString().trim() + "\n" + box.toString().trim(), box.lrtb);
     }
 
     public Box right(final Box box) {
@@ -93,6 +103,9 @@ public class Box {
 
         final StringBuilder sb = new StringBuilder();
         sb.append("%s%s%s%s".formatted(this.lrtb.get(4), null == this.title ? "" : this.title, this.lrtb.get(2).repeat(null == this.title ? maxLen : maxLen - Graphitty.strip(this.title).length()), this.lrtb.get(5))).append('\n');
+        if (null != options) {
+            sb.append(this.lrtb.get(0)).append(this.options).append(" ".repeat(maxLen - Graphitty.strip(this.options.toString()).length())).append(this.lrtb.get(1)).append('\n');
+        }
         for (final String line : lines) {
             sb.append(this.lrtb.get(0))
                     .append(line)

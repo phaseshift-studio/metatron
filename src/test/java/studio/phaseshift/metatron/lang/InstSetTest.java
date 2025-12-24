@@ -39,11 +39,12 @@ public abstract class InstSetTest extends MetatronTest {
 
     @Test
     public void testReadResult() {
+        // TODO: I have no idea what this test is testing...??!
         this.space.read(space.pattern() + "/").forEach(o -> {
             assertTrue(o.isRel());
             assertTrue(o.<Rel>as().first().uriValue().matches(this.space.pattern()));
             if (o.<Rel>as().second().isInst()) {
-                assertEquals(o.<Rel>as().first().uriValue(), o.<Rel>as().second().tid());
+                assertEquals(o.<Rel>as().jvm().get0().uriValue(), o.<Rel>as().jvm().get1().tid());
             }
         });
         assertTrue(this.space.read(this.space.pattern()).stream().anyMatch(o -> !o.isInst()));

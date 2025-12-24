@@ -21,6 +21,7 @@ package studio.phaseshift.metatron.lang.sys.console;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.lang.core.m.type.Inst;
 import studio.phaseshift.metatron.lang.core.m.type.Obj;
+import studio.phaseshift.metatron.lang.sys.router.Router;
 import studio.phaseshift.metatron.ui.Table;
 
 import java.util.List;
@@ -37,7 +38,7 @@ public class Profile {
     }
 
     public String toString() {
-        final Table table = new Table(List.of("op", "dom", "rng", "desc", "c_dom", "c_rng"));
+        final Table table = new Table(List.of("op", "dom", "rng","f", "desc", "c_dom", "c_rng"));
         if (obj.isCode()) {
             cInt dom = cInt.ONE();
             cInt rng = cInt.ONE();
@@ -45,13 +46,14 @@ public class Profile {
             for (final Inst i : obj.codeValue()) {
                 dom = first ? i.dom().c() : rng;
                 boolean inDom = i.dom().c().lte(rng);
-                rng = first ? i.rng().c() : i.rng().c().mult(dom);
+                rng = (Inst.Form.of(i) == Inst.Form.reducer) ? cInt.ONE() : (first ? i.rng().c() : i.rng().c().mult(dom));
                 first = false;
-                final String back = i.hasf() && !i.dom().tid().hasPattern() ? "{{b}}" : "{{y}}";
+                boolean found = !Router.global().read(i.tid().basePath()).isNoObj();
                 table.addRow(List.of(
-                        back + i.tid().name(),
+                        (found ? "{{b}}" : "{{r}}") + i.tid().name(),
                         i.dom(),
                         i.rng(),
+                        i.hasf() ? (i.f().isLambda() ?  "{{y}}<j>" : "{{y}}<m>" ): "{{r}}<?>",
                         "{{m}}" + Inst.Form.of(i).toString(),
                         "{{g}}{{{" + (inDom ? "y" : "r") + "}}" + dom.toString() + "{{g}}}{{X}}",
                         "{{g}}{{{y}}" + rng.toString() + "{{g}}}{{X}}"));

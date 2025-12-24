@@ -54,19 +54,19 @@ public interface Rel extends Poly<Rel, Tuple.Pair<Obj, Obj>>, Obj {
     /// /////////////////////////////////////////////////////////
 
     default Obj first() {
-        return this.jvm().get0();
+        return  this.jvm().get0().autoResolve(this);
     }
 
     default Obj second() {
-        return this.jvm().get1();
+        return this.jvm().get1().autoResolve(this);
     }
 
     default Rel first(final Obj key) {
-        return this.jvm(Pair.with(key, this.second()));
+        return this.jvm(Pair.with(key, this.jvm().get1()));
     }
 
     default Rel second(final Obj value) {
-        return this.jvm(Pair.with(this.first(), value));
+        return this.jvm(Pair.with(this.jvm().get0(), value));
     }
 
     @Override
@@ -81,7 +81,7 @@ public interface Rel extends Poly<Rel, Tuple.Pair<Obj, Obj>>, Obj {
 
     @Override
     default <O extends Obj> Stream<O> elements() {
-        return Stream.of(this.first().c(c -> c.mult(this.c())).as(), this.second().c(c -> c.mult(this.c())).as());
+        return Stream.of(this.jvm().get0().c(c -> c.mult(this.c())).as(), this.jvm().get1().c(c -> c.mult(this.c())).as());
     }
 
 
@@ -97,6 +97,7 @@ public interface Rel extends Poly<Rel, Tuple.Pair<Obj, Obj>>, Obj {
 
         public static Set<Inst> insts() {
             return new LinkedHashSet<>(List.of(
+                    instC(AS_INST_TID.dom(REL_TID).rng(REC_TID), lst(T(REC_TID)), (lhs, inst) -> rec(lhs.<Rel>as().first(), lhs.<Rel>as().second())),
                     instC(MERGE_INST_TID.dom(REL_TID.maybeSome()).rng(REC_TID), lst(T(REC_TID)), (lhs, inst) -> inst.arg(0).jvm(Stream.concat(lhs.stream().map(Obj::as), inst.arg(0).<Rec>as().elements().map(Obj::<Rel>as)).collect(Collectors.toMap(Rel::first, Rel::second, Obj::append, LinkedHashMap::new)))),
                     instC(DOM_INST_TID.dom(REL_TID).rng(ALL), lst(), (lhs, inst) -> lhs.relValue().get0()),
                     instC(RNG_INST_TID.dom(REL_TID).rng(ALL.some()), lst(), (lhs, inst) -> lhs.relValue().get1()),

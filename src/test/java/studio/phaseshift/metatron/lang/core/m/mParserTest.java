@@ -19,6 +19,8 @@
 package studio.phaseshift.metatron.lang.core.m;
 
 import org.junit.jupiter.api.Test;
+import org.petitparser.parser.Parser;
+import org.petitparser.tools.ExpressionBuilder;
 import studio.phaseshift.metatron.lang.core.m.obj.NoObj;
 import studio.phaseshift.metatron.lang.core.m.parser.mParser;
 import studio.phaseshift.metatron.lang.core.m.type.Bytes;
@@ -29,14 +31,15 @@ import java.util.HexFormat;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.petitparser.parser.primitive.StringParser.of;
 import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.BOOL_TID;
 import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.BYTES_TID;
-import static studio.phaseshift.metatron.lang.core.m.parser.mParser.m_bool;
-import static studio.phaseshift.metatron.lang.core.m.parser.mParser.m_bytes;
+import static studio.phaseshift.metatron.lang.core.m.parser.mParser.*;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MReal.real;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
 
@@ -51,7 +54,7 @@ public class mParserTest {
         assertThrows(Exception.class, () -> mParser.parse("-- a comment\n\n --"));
         assertEquals(NoObj.noobj(), mParser.parse("[--- a comment\n\n ---]"));
     }
-
+    
     @Test
     public void testBoolParse() {
         assertEquals(BOOL_TID, m_bool().parse("true").<Obj>get().tid());
@@ -99,5 +102,12 @@ public class mParserTest {
         assertEquals(uri("http://metatron.com?a=a/b/c&b=a"), mParser.parse("<http://metatron.com?a=a/b/c&b=a>"));
         assertThrows(MTronException.class, () -> mParser.parse("/metatron.com?a&b")); // TODO: this will be needed moving forward with monad distribution and uri authorities
         assertEquals(uri("metatron/com?a&b"), mParser.parse("metatron/com?a&b"));
+    }
+
+    @Test
+    public void testRelParse() {
+        assertEquals(rel(uri("a"),uri("b")).jvm(), mParser.parse("a => b").jvm());
+        assertEquals(rel(jnt(1),uri("b")).jvm(), mParser.parse("1 => b").jvm());
+        assertEquals(rel(jnt(1),real(4.3)).jvm(), mParser.parse("1 => 4.3").jvm());
     }
 }

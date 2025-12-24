@@ -24,15 +24,11 @@ import org.petitparser.parser.combinators.*;
 import org.petitparser.parser.primitive.CharacterParser;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.core.m.inst.mInstSet;
-import studio.phaseshift.metatron.lang.core.m.type.Call;
-import studio.phaseshift.metatron.lang.core.m.type.Fail;
-import studio.phaseshift.metatron.lang.core.m.type.Inst;
-import studio.phaseshift.metatron.lang.core.m.type.Obj;
+import studio.phaseshift.metatron.lang.core.m.type.*;
 import studio.phaseshift.metatron.lang.core.m.type.impl.*;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
 import studio.phaseshift.metatron.util.MTronException;
-import studio.phaseshift.metatron.util.Tuple;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -58,6 +54,7 @@ import static studio.phaseshift.metatron.lang.core.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MRec.rec;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.util.Tuple.Triplet;
 
@@ -98,28 +95,29 @@ public class mParser {
 
         branch_parser.set(seq(opt(of("-<"), ""), of('{').trim(), m_code().separatedBy(of(',').trim()), of('}').trim()).pick(2)
                 .map(t -> split_(objs(((List) t).stream().filter(x -> x instanceof Call))).tryToInst()));
-        rel_parser.set(seq(m_type_prefix_opt_colon(REL_TID), obj_rel_back_parser, of("=>").trim(), m_obj(), m_vid_postfix())
-                .map(t -> new MRel(Tuple.Pair.with(pick(t, 1), pick(t, 3)), pick(t, 0), pick(t, 4))));
+        rel_parser.set(obj_rel_back_parser.seq(of("=>").trim().seq(m_obj())).map(t -> rel(pick(t, 0), pick(pick(t, 1), 1))));
         obj_no_code_parser.set(choice(
                 m_comment(),
-                m_type(),
+                m_rec(),
+                m_rel(),
                 m_fail(),
+                m_type(),
                 m_noobj(),
                 m_bytes(),
                 m_bool(),
                 m_real(),
                 m_int(),
                 m_str(),
-                m_rec(),
-                m_rel(),
                 m_objs(),
                 m_lst(),
                 m_inst(),
                 m_uri()));
         obj_parser.set(choice(
                 m_comment(),
-                m_type(),
+                m_rec(),
+                m_rel(),
                 m_fail(),
+                m_type(),
                 m_noobj(),
                 m_bytes(),
                 m_bool(),
@@ -128,8 +126,6 @@ public class mParser {
                 m_str(),
                 inst_parser,
                 m_code(),
-                m_rec(),
-                m_rel(),
                 m_objs(),
                 m_lst(),
                 m_uri()));
@@ -177,7 +173,10 @@ public class mParser {
     }
 
     public static Parser m_inst_arg(final fURI headtid) {
-        return seq(opt(obj_no_code_parser, noobj()), opt(of(".").trim(), '.'), opt(m_code(), null), m_vid_postfix()).map(t -> {
+        return m_inst_arg(obj_no_code_parser,headtid);
+    }
+    public static Parser m_inst_arg(final Parser objParser, final fURI headtid) {
+        return seq(opt(objParser, noobj()), opt(of(".").trim(), '.'), opt(m_code(), null), m_vid_postfix()).map(t -> {
             final Obj first = mParser.pick(t, 0);
             final Obj second = mParser.pick(t, 2);
             if (null == second)

@@ -59,7 +59,7 @@ public class MCompleter implements Completer {
                     final Code code = o.resolve(noobj()).as();
                     final String pretty = Graphitty.string(
                             new Box(ObjStringSerializer.prettyPrintCode(code, 0), Box.BASIC_BORDER)
-                                    .bottom(new Box(new Profile(code).toString(), Box.BASIC_BORDER)).toString());
+                                    .bottom(List.of("compile", "optimize"), new Box(new Profile(code).toString(), Box.BASIC_BORDER)).toString());
                     candidates.add(new Candidate("", pretty, null, null, "", null, false));
                 }
             } else {

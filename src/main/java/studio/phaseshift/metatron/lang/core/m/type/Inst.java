@@ -198,7 +198,7 @@ public interface Inst extends Call {
     }
 
     default boolean hasf() {
-        return null != this.jvm() || null == this.jvm().get1();
+        return null != this.jvm() && null != this.jvm().get1();
     }
 
     default Obj seed() {

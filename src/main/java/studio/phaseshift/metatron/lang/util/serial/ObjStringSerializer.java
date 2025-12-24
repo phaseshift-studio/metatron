@@ -95,7 +95,7 @@ public record ObjStringSerializer(Builder b) implements ObjSerializer<String> {
         try {
             final StringBuilder sb = new StringBuilder();
             if (obj.isNoObj())
-                return sb.append("{{r}}noobj{{X}}").toString();
+                return sb.append("{{m}}noobj{{X}}").toString();
             /// ///////////////////////////////////////////////////////////////
             /// ///////////////////////////////////////////////////////////////
             else if (obj instanceof final Inst inst) {
@@ -123,9 +123,10 @@ public record ObjStringSerializer(Builder b) implements ObjSerializer<String> {
             /// ///////////////////////////////////////////////////////////////
             /// ///////////////////////////////////////////////////////////////
             else if (obj instanceof final Rel rel) {
-                return generateTID(sb, obj.tid(), true).append(rel.first().isUri() ? ("{{b}}" + rel.first().uriValue()) : rel.first())
+                return generateTID(sb, obj.tid(), true)
+                        .append(rel.jvm().get0())
                         .append("{{g}}=>")
-                        .append(rel.second())
+                        .append(rel.jvm().get1())
                         .append("{{X}}")
                         .toString();
             }
@@ -183,7 +184,7 @@ public record ObjStringSerializer(Builder b) implements ObjSerializer<String> {
                 final Call constructor = ((Type) obj).constructor();
                 final String pred = predicate == null ? "{{y}}<X>{{X}}" : write(predicate);
                 final String con = constructor == null ? "{{y}}<X>{{X}}" : write(constructor);
-                generateTID(sb, obj.tid(), false).append("{{r}}T");
+                generateTID(sb, obj.tid(), false).append("{{m}}T");
                 if (null != predicate)
                     sb.append("{{g}}[{{X}}").append(pred).append("{{g}}]{{X}}");
                 if (null != constructor)
