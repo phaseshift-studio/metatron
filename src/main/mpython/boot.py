@@ -25,10 +25,12 @@ import time
 import webrepl
 
 import metatron.util.graphitty as graphitty
+import metatron.util.homeassistant
 from metatron.mqtt_space import MqttSpace
 from metatron.router import Router
 from metatron.soc.device.gpio import Gpio
 from metatron.soc.device.pwm import Pwm
+from metatron.soc.device.wifi import Wifi
 from metatron.soc.esp32.wemos_d1_mini import WemosD1Mini
 from metatron.util.furi import f
 from metatron.util.graphitty import LOG
@@ -49,8 +51,8 @@ print(graphitty.string("""
 {{g}}             `\   \__ ___  ___  / /_____ _{{y}}/ /__________  ____   
 {{g}}              |   __ `__ \/ _ \/ {{y}}__/ __ `/ __/ ___/ __ \/ __ \  
 {{g}}             /   / / / / {{c}}/  __/ /_/ /_/ / /_/ /  / /_/ / / / /  
-{{g}}            /___/ {{b}}/_/ /_/\___/\__/\__,_/\__/_/   \____/_/ /_/{{X}}                                                             
-"""))
+{{g}}            /___/ {{b}}/_/ /_/\___/\__/\__,_/\__/_/   \____/_/ /_/{{X}}"""))
+print(graphitty.string("\t\t\t{{b}}{}{{X}}\n",os.uname().machine))
 
 sys.ps1 = graphitty.string("{{m}}mtron{{g}}>{{X}} ")
 sys.ps2 = graphitty.string("{{m}}     {{g}}>{{X}} ")
@@ -67,18 +69,10 @@ except Exception as e:
     LOG.error("unexpected error loading secrets: {}", e)
 
 gc.collect()
-##########################################################
-wlan = network.WLAN(network.STA_IF)
-wlan.active(True)
-wlan.config(dhcp_hostname=secrets['host'])
-wlan.connect(secrets['ssid'], secrets['password'])
-LOG.info("connecting to {{y}}{}{{X}} wifi", secrets['ssid'])
-while not wlan.isconnected():
-    pass
-LOG.info("connected to {{y}}{}{{X}} as {{y}}{}\n\t{}", secrets['ssid'], wlan.config('hostname'), str(wlan.ifconfig()))
-##########################################################
 
+wifi = Wifi(secrets['ssid'],secrets['password'],secrets['host'])
 soc = None
+import uhome
 
 def main_thread_function():
     global soc
@@ -87,7 +81,7 @@ def main_thread_function():
         mach["router"].register(mqtt_space)
         mqtt_space.start()
         LOG.info("connected to {{y}}{}{{X}} broker", mqtt_space.client.server)
-        mqtt_space.connect_esphome({"ip": wlan.ifconfig()[0],
+        mqtt_space.connect_esphome({"ip": wifi.ipaddr(),
                                     "platform": sys.platform,
                                     "version": os.uname().release,
                                     "name": "microtron",
@@ -96,10 +90,17 @@ def main_thread_function():
         LOG.error("unable to connect to {{y}}{}{{X}} broker", mach["broker"])
 
     #####################################################################################################
-    soc_vid = f(wlan.config('hostname'))
+    soc_vid = f(wifi.host())
     soc = WemosD1Mini(vid=soc_vid)
+    soc.attach(wifi)
     soc.attach(Gpio(range(0, 35), soc_vid))
     soc.attach(Pwm(soc_vid))
+    #####################################################################################################
+    ha = metatron.util.homeassistant.HomeAssistant(soc)
+    ha.connect()
+    ha.register_sensor("signal_strength", wifi,lambda d: f"{d.strength():.0f}", device_class="signal_strength", unit_of_measurement='dBm', entity_category="diagnostic")
+    ha.update(wifi)
+    ha.update()
     #####################################################################################################
     gc.collect()
     try:

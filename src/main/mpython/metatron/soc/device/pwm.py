@@ -51,7 +51,7 @@ class Pwm(Device):
             PWM(Pin(mach['translator'].from_obj(pin), Pin.OUT)).duty(mach['translator'].from_obj(duty))
             device.pvm[pin] = duty
             if do_log:
-                LOG.info("pwm {{y}}{}{{X}} set to {{b}}{}", pin, duty)
+                LOG.debug("pwm {{y}}{}{{X}} set to {{b}}{}", pin, duty)
 
     def __getitem__(self, key):
         key = key if isinstance(key, Int) else Int(key)

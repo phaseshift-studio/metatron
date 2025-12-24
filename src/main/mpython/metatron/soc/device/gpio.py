@@ -24,14 +24,6 @@ import machine
 
 GPIO_TID = f("/soc/gpio")
 
-
-def _set_gpio(device, pin, value):
-    value = mach['translator'].to_obj(value)
-    #if pin not in device.pvm.keys() or device.pvm[pin] != value:
-    Pin(mach['translator'].from_obj(pin), Pin.OUT).value(mach['translator'].from_obj(value))
-    device.pvm[pin] = value
-    LOG.info("gpio {{y}}{}{{X}} set to {{b}}{}", pin, value)
-
 class Gpio(Device):
     def __init__(self, pin_range: range, soc_vid, vid=None):
         has_id = soc_vid is not None    
@@ -46,9 +38,20 @@ class Gpio(Device):
         Device.__init__(self, soc_vid, pins, GPIO_TID, vid)
         if has_id:
             mach['router'].get_space(soc_vid).subscribe(soc_vid.extend("gpio").extend("+"),
-                                                        lambda key, value: _set_gpio(self, int(key.name()), value))
+                                                        lambda key, value: Gpio._set_gpio(self, int(key.name()), value))
 
 
+
+    @staticmethod
+    def _set_gpio(device, pin, value, do_log = True):
+        value = mach['translator'].to_obj(value)
+        #if pin not in device.pvm.keys() or device.pvm[pin] != value:
+        Pin(mach['translator'].from_obj(pin), Pin.OUT).value(mach['translator'].from_obj(value))
+        device.pvm[pin] = value
+        if do_log:
+            LOG.debug("gpio {{y}}{}{{X}} set to {{b}}{}", pin, value)
+        
+    
     def __getitem__(self, key):
         key = key if isinstance(key, Int) else Int(key)
         value = Int(Pin(key.pvm).value())

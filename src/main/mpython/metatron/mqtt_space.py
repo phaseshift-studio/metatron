@@ -31,7 +31,7 @@ class MqttSpace(Obj):
         self.cache = {}
         self.subscriptions = {}
         self.client = MQTTClient(ubinascii.hexlify(machine.unique_id()) if vid is None else str(self.vid),
-                                 json.load(open("secrets.json"))['broker'])
+                                 json.load(open("secrets.json"))['broker'],keepalive=60)
 
     def start(self):
         self.client.set_callback(self._callback)

@@ -23,7 +23,6 @@ from metatron.soc.device.device import Device
 from metatron.util.graphitty import LOG, string, strip
 from metatron.util.mach import mach
 
-
 class SoC(Rec):
     def __init__(self, tid, vid=None):
         Rec.__init__(self, {}, tid, vid)

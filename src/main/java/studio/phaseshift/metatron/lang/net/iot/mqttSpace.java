@@ -30,6 +30,7 @@ import studio.phaseshift.metatron.lang.core.m.inst.mInstSet;
 import studio.phaseshift.metatron.lang.core.m.obj.NoObj;
 import studio.phaseshift.metatron.lang.core.m.type.Obj;
 import studio.phaseshift.metatron.lang.core.m.type.Rec;
+import studio.phaseshift.metatron.lang.core.m.type.Rel;
 import studio.phaseshift.metatron.lang.core.m.type.Type;
 import studio.phaseshift.metatron.lang.db.kv.kvSpace;
 import studio.phaseshift.metatron.lang.net.web.JSONTranslator;
@@ -177,7 +178,10 @@ public class mqttSpace extends MSpace<Mqtt5Client> {
         final Obj ret = Q.Helper.processPreWrite(this.qs(), vid, vid, obj).orElse(null);
         if (null != ret)
             return ret;
-        this.send(vid, obj);
+        if (vid.hasPattern()) {
+            this.read(vid.asBranch()).stream().map(r -> r.<Rel>as().first()).forEach(u -> this.write(u.uriValue(),obj));
+        } else
+            this.send(vid, obj);
        /* final Obj result = Space.Helper.resolveWrite(this, vid.basePath(), obj, (key, value) -> {
             this.send(vid.qLess(), value.c(cInt.ONE()));
             return value;
