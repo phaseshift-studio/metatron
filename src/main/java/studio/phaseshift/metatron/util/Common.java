@@ -109,6 +109,10 @@ public final class Common {
         return REAL_PATTERN.matcher(s).matches();
     }
 
+    public static <T> Supplier<T> lambda(final Supplier<T> object) {
+        return object;
+    }
+    
     public static int countLines(final String str) {
         final String[] lines = str.split("\r\n|\r|\n");
         return lines.length;

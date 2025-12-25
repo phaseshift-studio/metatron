@@ -28,6 +28,8 @@ import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 public class GraphittyLogger extends LayoutBase<ILoggingEvent> {
     private static final Map<String, String> COLORS = new HashMap<>() {{
@@ -58,10 +60,16 @@ public class GraphittyLogger extends LayoutBase<ILoggingEvent> {
         return this.source instanceof Obj ? ((Obj) this.source).vidOrTid().basePath().toString() : (this.source instanceof Class ? ((Class<?>) this.source).getSimpleName() : this.source.getClass().getSimpleName());
     }
 
+
+    public static boolean isLambda(Object obj) {
+        return obj.getClass().toString().contains("$$Lambda$");
+    }
+
     private String makeMessage(final boolean metadata, final Object f, final Object... args) {
+        Object[] args2 = args.length == 0 ? new Object[0] : Stream.of(args).map(x -> isLambda(x) ? ((Supplier<?>) x).get() : x).toArray();
         return metadata ?
-                Graphitty.string("[{{b}}%s{{/b}}] %s".formatted(toSourceString(), args.length == 0 ? toStringOrNull(f) : toStringOrNull(f).formatted(args))) :
-                Graphitty.string(args.length == 0 ? toStringOrNull(f) : toStringOrNull(f).formatted(args));
+                Graphitty.string("[{{b}}%s{{/b}}] %s".formatted(toSourceString(), args.length == 0 ? toStringOrNull(f) : toStringOrNull(f).formatted(args2))) :
+                Graphitty.string(args.length == 0 ? toStringOrNull(f) : toStringOrNull(f).formatted(args2));
     }
 
     protected GraphittyLogger logLevel(final Level level, final Object f, final Object... args) {

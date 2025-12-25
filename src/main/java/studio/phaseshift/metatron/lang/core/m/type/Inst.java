@@ -22,9 +22,11 @@ import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.core.m.parser.mParser;
+import studio.phaseshift.metatron.lang.sys.console.Profile;
 import studio.phaseshift.metatron.lang.sys.router.Router;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
+import studio.phaseshift.metatron.util.Common;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
@@ -205,8 +207,9 @@ public interface Inst extends Call {
         return null == this.jvm() ? noobj() : this.jvm().get2();
     }
 
-    default boolean isResolved() {
-        return null != this.f();
+    default boolean isResolved(final boolean nested) {
+        boolean resolved = this.hasf();
+        return (!nested || !resolved) ? resolved : this.<Inst>as().args().elements().allMatch(c -> c.isResolved(true));
     }
 
     default boolean isBlocking() {
@@ -223,10 +226,10 @@ public interface Inst extends Call {
 
     @Override
     default Inst resolve(final Obj lhs) {
-        if (null != this.f())
+        if (this.hasf())
             return this;
         final GraphittyLogger LOG = Graphitty.log(lhs);
-        LOG.trace("%s => %s is %s resolved", lhs, this, this.isResolved() ? "" : "not");
+        LOG.trace("%s => %s is %s resolved", lhs, this, Common.lambda(() -> this.isResolved(false) ? "" : "not"));
         try {
             final Inst resolved = Router.global().read(this.tid())
                     .stream()
@@ -255,7 +258,7 @@ public interface Inst extends Call {
                     .findFirst()
                     .orElse(null);
             if (null != resolved) {
-                LOG.trace("%s => %s is %s resolved", lhs, resolved, resolved.isResolved() ? "" : "not");
+                LOG.trace("%s => %s is %s resolved", lhs, resolved, Common.lambda(() -> resolved.isResolved(false) ? "" : "not"));
                 return resolved;
             }
         } catch (final Exception e) {
@@ -459,7 +462,7 @@ public interface Inst extends Call {
                             if (null != lastBinding && !userArg.tid().matches(lastBinding))
                                 LOG.debug("existing generic doesn't match current usage: [{{m}}generic{{/m}}] %s [{{m}}past{{/m}}] %s [{{m}}present{{/m}}] %s", userArg.tid(), lastBinding, apiArg.tid());
                             generics.computeIfAbsent(apiArg.tid().cLess(), k -> userArg.tid().cLess()); // beware of int[0] yielding noobj across all bindings
-                        } 
+                        }
                         if (apiArg.isInst()) { // todo: isCall()?
                             apiArg = Helpers.bindGenerics(lhs, apiArg.<Inst>as(), userArg);
                         } else {

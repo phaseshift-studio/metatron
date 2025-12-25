@@ -23,7 +23,6 @@ import studio.phaseshift.metatron.lang.core.m.obj.NoObj;
 import studio.phaseshift.metatron.lang.core.mach.type.impl.MMachine;
 import studio.phaseshift.metatron.ui.Graphitty;
 import studio.phaseshift.metatron.ui.GraphittyLogger;
-import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -44,6 +43,11 @@ public interface Code extends Call {
 
     default Inst inst(final int index) {
         return index < this.jvm().size() ? this.jvm().get(index) : NoObj.noobj();
+    }
+
+    @Override
+    default boolean isResolved(final boolean nested) {
+        return this.<Code>as().<Inst>elements().allMatch(x -> x.isResolved(nested));
     }
 
     @Override
@@ -70,8 +74,8 @@ public interface Code extends Call {
                 LOG.trace("   {{g}}=>{{/g}} resolving %s => %s", token, inst);
                 final Inst resolvedInst = inst.resolve(token);
                 if (!resolvedInst.hasDom()) {
-                   resolvedCode.add(inst);
-                   token = inst.hasRng() ? inst.rng() : token;
+                    resolvedCode.add(inst);
+                    token = inst.hasRng() ? inst.rng() : token;
                 } else {
                     resolvedCode.add(resolvedInst);
                     token = resolvedInst.rng();

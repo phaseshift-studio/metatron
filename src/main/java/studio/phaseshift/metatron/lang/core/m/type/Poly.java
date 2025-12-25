@@ -62,4 +62,9 @@ public interface Poly<P extends Poly<P, J>, J> extends Obj {
     default Stream<Rel> indexedStream() {
         return Stream.of(rel(this.vid().toUri(), this));
     }
+
+    @Override
+    default boolean isResolved(final boolean nested) {
+        return this.elements().allMatch(x -> x.isResolved(nested));
+    }
 }

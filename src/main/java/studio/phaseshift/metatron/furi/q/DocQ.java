@@ -229,7 +229,7 @@ public class DocQ extends BaseQ {
                                 .text("{{|" + rhsBorderColumn + "&m}}|\n"));
             }
             insty.text("{{m}}| {{_&g}}{{{b}}fun{{g}}.{{b}}cti{{g}}.{{b}}on{{g}}}{{X}}").text("{{|" + rhsBorderColumn + "&m}}|{{X}}\n");
-            if (inst.isInst() && inst.<Inst>as().isResolved()) {
+            if (inst.isInst() && inst.<Inst>as().isResolved(false)) {
                 if (inst.<Inst>as().f().isLambda())
                     insty.text("{{m}}|   {{y}}<j>").text("{{|" + lhsBorderColumn + "&c}}").text("jvm implementation").text("{{|" + rhsBorderColumn + "&m}}|{{X}}\n");
                 else

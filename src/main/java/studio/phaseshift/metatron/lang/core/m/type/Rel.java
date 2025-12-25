@@ -46,6 +46,11 @@ public interface Rel extends Poly<Rel, Tuple.Pair<Obj, Obj>>, Obj {
     Pair<Obj, Obj> jvm();
 
     @Override
+    default boolean isResolved(final boolean nested) {
+        return this.jvm().get0().isResolved(nested) && this.jvm().get1().isResolved(nested);
+    }
+
+    @Override
     default long count() {
         return 2;
     }
@@ -54,7 +59,7 @@ public interface Rel extends Poly<Rel, Tuple.Pair<Obj, Obj>>, Obj {
     /// /////////////////////////////////////////////////////////
 
     default Obj first() {
-        return  this.jvm().get0().autoResolve(this);
+        return this.jvm().get0().autoResolve(this);
     }
 
     default Obj second() {

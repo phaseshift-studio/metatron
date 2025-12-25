@@ -71,7 +71,7 @@ public record ObjStringSerializer(Builder b) implements ObjSerializer<String> {
     public static StringBuilder prettyPrintCode(final StringBuilder sb, final Obj call, final int depth, final int leftMargin) {
         if (call.isCode()) {
             for (final Inst inst : call.<Code>as().codeValue()) {
-                prettyPrintCode(sb, inst, depth + 1, leftMargin);
+                prettyPrintCode(sb, inst, depth, leftMargin);
             }
         } else if (!call.isNoObj() && call.isInst()) {
             final Inst inst = call.as();
@@ -114,7 +114,7 @@ public record ObjStringSerializer(Builder b) implements ObjSerializer<String> {
                         sb.deleteCharAt(sb.length() - 1);
                     }
                     return sb.append("{{g}}){{{y}}")
-                            .append(inst.isResolved() ? ("{{y}}" + inst.f().toString()) : "{{r}}?{{X}}")
+                            .append(inst.isResolved(false) ? ("{{y}}" + inst.f().toString()) : "{{r}}?{{X}}")
                             .append("{{g}}}{{X}}")
                             //.append(this.b.ignoreRewrites ? "" : "{{X}}")
                             .toString();

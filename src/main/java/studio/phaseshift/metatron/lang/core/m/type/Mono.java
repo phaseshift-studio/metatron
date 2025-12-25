@@ -19,4 +19,9 @@
 package studio.phaseshift.metatron.lang.core.m.type;
 
 public interface Mono extends Obj {
+    
+    @Override
+    default boolean isResolved(final boolean nested) {
+        return true;
+    }
 }

@@ -78,6 +78,11 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
 
     fURI vid();
 
+
+    default boolean isResolved(final boolean nested) {
+        return true;
+    }
+
     default boolean unique() {
         return uniqueC().equals(cInt.ONE());
     }

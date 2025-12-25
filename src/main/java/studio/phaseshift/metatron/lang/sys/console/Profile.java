@@ -22,6 +22,7 @@ import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.lang.core.m.type.Inst;
 import studio.phaseshift.metatron.lang.core.m.type.Obj;
 import studio.phaseshift.metatron.lang.sys.router.Router;
+import studio.phaseshift.metatron.ui.Dimensions;
 import studio.phaseshift.metatron.ui.Table;
 
 import java.util.List;
@@ -29,16 +30,14 @@ import java.util.List;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class Profile {
+public class Profile implements Dimensions {
 
     protected final Obj obj;
+    protected final Table table;
 
     public Profile(final Obj obj) {
         this.obj = obj;
-    }
-
-    public String toString() {
-        final Table table = new Table(List.of("op", "dom", "rng","f", "desc", "c_dom", "c_rng"));
+        this.table = new Table(List.of("op", "dom", "rng", "f", "args", "desc", "c_dom", "c_rng"));
         if (obj.isCode()) {
             cInt dom = cInt.ONE();
             cInt rng = cInt.ONE();
@@ -49,11 +48,12 @@ public class Profile {
                 rng = (Inst.Form.of(i) == Inst.Form.reducer) ? cInt.ONE() : (first ? i.rng().c() : i.rng().c().mult(dom));
                 first = false;
                 boolean found = !Router.global().read(i.tid().basePath()).isNoObj();
-                table.addRow(List.of(
+                this.table.addRow(List.of(
                         (found ? "{{b}}" : "{{r}}") + i.tid().name(),
                         i.dom(),
                         i.rng(),
-                        i.hasf() ? (i.f().isLambda() ?  "{{y}}<j>" : "{{y}}<m>" ): "{{r}}<?>",
+                        i.hasf() ? (i.f().isLambda() ? "{{y}}<j>" : "{{y}}<m>") : "{{r}}<?>",
+                        i.args().elements().allMatch(x -> x.isResolved(true)) ? "{{y}}<,>" : "{{r}}<?,?>",
                         "{{m}}" + Inst.Form.of(i).toString(),
                         "{{g}}{{{" + (inDom ? "y" : "r") + "}}" + dom.toString() + "{{g}}}{{X}}",
                         "{{g}}{{{y}}" + rng.toString() + "{{g}}}{{X}}"));
@@ -68,6 +68,24 @@ public class Profile {
         } //else {
         //table.addRow(List.of(obj.tid().toUri(), obj.dom(), obj.rng()));
         //}
-        return table.toString();
+    }
+
+    public String toString() {
+        return this.table.toString();
+    }
+
+    @Override
+    public int width() {
+        return this.table.width();
+    }
+
+    @Override
+    public int height() {
+        return this.table.height();
+    }
+
+    @Override
+    public String rowString(int i) {
+        return this.table.rowString(i);
     }
 }

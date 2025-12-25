@@ -25,6 +25,7 @@ import studio.phaseshift.metatron.lang.sys.router.Router;
 import studio.phaseshift.metatron.lang.util.serial.ObjStringSerializer;
 import studio.phaseshift.metatron.ui.Box;
 import studio.phaseshift.metatron.ui.Graphitty;
+import studio.phaseshift.metatron.ui.Separator;
 
 import java.util.List;
 
@@ -57,9 +58,13 @@ public class MCompleter implements Completer {
                 final Obj o = mParser.parse(buffer.toString());
                 if (o.isCode()) {
                     final Code code = o.resolve(noobj()).as();
+                    final Profile profile = new Profile(code);
                     final String pretty = Graphitty.string(
                             new Box(ObjStringSerializer.prettyPrintCode(code, 0), Box.BASIC_BORDER)
-                                    .bottom(List.of("compile", "optimize"), new Box(new Profile(code).toString(), Box.BASIC_BORDER)).toString());
+                                    .bottom(new Separator(" ", profile),Box.NO_BORDER)
+                                    .bottom(new Separator("{{c}}-", profile),Box.NO_BORDER)
+                                    .bottom(new Separator(" ", profile),Box.NO_BORDER)
+                                    .bottom(profile,Box.BASIC_BORDER).toString());
                     candidates.add(new Candidate("", pretty, null, null, "", null, false));
                 }
             } else {

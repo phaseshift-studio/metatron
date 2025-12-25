@@ -18,6 +18,8 @@
 
 package studio.phaseshift.metatron.ui;
 
+import studio.phaseshift.metatron.util.Tuple;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -25,13 +27,21 @@ import java.util.List;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class Table {
+public class Table implements Dimensions {
 
     protected final List<String> headers;
+    protected final List<Tuple.Pair<String, Runnable>> menu;
     protected final List<List<Object>> table;
+
+    public Table(final List<String> headers, final List<Tuple.Pair<String, Runnable>> menu) {
+        this.headers = headers;
+        this.menu = menu;
+        this.table = new ArrayList<>();
+    }
 
     public Table(final List<String> headers) {
         this.headers = headers;
+        this.menu = null;
         this.table = new ArrayList<>();
     }
 
@@ -42,6 +52,10 @@ public class Table {
 
     public List<Object> row(final int index) {
         return this.rows().get(index);
+    }
+
+    public String rowString(final int index) {
+        return this.rows().get(index).toString();
     }
 
     public List<List<Object>> rows() {
@@ -56,20 +70,25 @@ public class Table {
         return column;
     }
 
-    public List<Integer> formattedWidths() {
+    public List<Integer> formattedWidths(final List<String> rowesque) {
         final List<Integer> widths = new ArrayList<>();
-        for (int i = 0; i < this.headers.size(); i++) {
+        for (int i = 0; i < rowesque.size(); i++) {
             final int ii = i;
-            widths.add(Math.max(this.headers.get(i).length(), this.table.stream().map(row -> Graphitty.strip(row.get(ii).toString())).flatMap(s -> Arrays.stream(s.split("\n"))).map(String::length).max(Integer::compareTo).orElse(0)));
+            widths.add(Math.max(rowesque.get(i).length(), this.table.stream().map(row -> Graphitty.strip(row.size() > ii ? row.get(ii).toString() : "")).flatMap(s -> Arrays.stream(s.split("\n"))).map(String::length).max(Integer::compareTo).orElse(0)));
         }
         return widths;
     }
 
     public String formattedRow(final int index) {
-        final List<Integer> widths = this.formattedWidths();
+        final List<Integer> widths = null == this.headers ? new ArrayList<>() : this.formattedWidths(this.headers);
+        if (widths.size() < this.row(0).size()) {
+            for (int i = 0; i < this.row(0).size() - widths.size(); i++) {
+                widths.add(1);
+            }
+        }
         final StringBuilder sb = new StringBuilder();
         sb.append("{{g}}|{{X}}");
-        for (int i = 0; i < this.headers.size(); i++) {
+        for (int i = 0; i < this.row(index).size(); i++) {
             sb.append(this.entry(index, i).toString()).append(this.addSpace(widths, i, this.entry(index, i))).append("{{g}}|{{X}}");
         }
         return sb.toString();
@@ -98,12 +117,22 @@ public class Table {
 
     public String toString() {
         final StringBuilder sb = new StringBuilder();
-        final List<Integer> widths = this.formattedWidths();
-        sb.append("{{g}}|{{X}}");
-        for (int i = 0; i < this.headers.size(); i++) {
-            sb.append("{{c}}").append(this.headers.get(i)).append(this.addSpace(widths, i, this.headers.get(i))).append("{{g}}|");
+        if (null != this.headers) {
+            final List<Integer> widths = this.formattedWidths(this.headers);
+            sb.append("{{g}}|{{X}}");
+            for (int i = 0; i < this.headers.size(); i++) {
+                sb.append("{{c}}").append(this.headers.get(i)).append(this.addSpace(widths, i, this.headers.get(i))).append("{{g}}|");
+            }
+            sb.append("{{X}}\n");
         }
-        sb.append("{{X}}\n");
+        if (null != this.menu) {
+            final List<Integer> widths = this.formattedWidths(this.menu.stream().map(Tuple.Pair::get0).toList());
+            sb.append("{{g}}|{{X}}");
+            for (int i = 0; i < this.menu.size(); i++) {
+                sb.append("{{c}}").append(this.menu.get(i).get0()).append(this.addSpace(widths, i, this.menu.get(i).get0())).append("{{g}}|");
+            }
+            sb.append("{{X}}\n");
+        }
         sb.append(formattedRows().stream().map(row -> row + "\n").reduce("", (a, b) -> a + b));
         return sb.deleteCharAt(sb.length() - 1).toString();
     }

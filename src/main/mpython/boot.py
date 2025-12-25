@@ -89,7 +89,6 @@ def main_thread_function():
                                     "friendly_name": secrets['host']})
     except OSError:
         LOG.error("unable to connect to {{y}}{}{{X}} broker", mach["broker"])
-
     #####################################################################################################
     soc_vid = f(wifi.host())
     soc = WemosD1Mini(vid=soc_vid)
@@ -106,16 +105,25 @@ def main_thread_function():
         lambda s: f"{s.memory['free']}").device_class("data_size").unit_of_measurement("B").create()
     ha.register(soc.vid.extend('memory/alloc')).sensor().diagnostic().on_read(
         lambda s: f"{s.memory['alloc']}").device_class("data_size").unit_of_measurement("B").create()
-    for i in [[0, 5], [1, 23], [2, 19], [3, 18]]:
-        (ha.register(soc.vid.extend(f'pwm/light_{i[0]}')).
+    counter = 0
+
+    def make_read_lambda(index):
+        return lambda s: s.pwm[index]
+
+    def make_write_lambda(index):
+        return lambda s, v: s.pwm.__setitem__(index, v)
+
+    for i in [5, 23, 19, 18]:
+        (ha.register(soc.vid.extend(f'pwm/light_{counter}')).
          number().
          config().
-         on_read(lambda s: s.pwm[i[1]]).
-         on_write(lambda s, v: s.pwm.__setitem__(i[1], v)).
+         on_read(make_read_lambda(i)).
+         on_write(make_write_lambda(i)).
          icon("mdi:light-flood-up").
          device_class("power_factor").
          unit_of_measurement('pwm').
          min_max(0, 1023).create())
+        counter = counter + 1
     ha.announce()
     ha.update(f("#"))
     #####################################################################################################

@@ -41,4 +41,9 @@ public interface Fail extends Obj, PlusMonoid<Fail> {
     default Fail tid(final fURI tid) {
         return this.clone(this.jvm(), tid, this.vid());
     }
+    
+    @Override
+    default boolean isResolved(final boolean nested) {
+        return true;
+    }
 }

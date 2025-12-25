@@ -34,6 +34,11 @@ public interface Machine extends Call, Ring<Call> {
     // code, running, barriers, halted
     @Override
     Tuple.Quartet<Code, Obj, Lst, Obj> jvm();
+    
+    @Override
+    default boolean isResolved(final boolean nested) {
+        return this.code().isResolved(nested);
+    }
 
     default Obj halted() {
         return this.jvm().get3();

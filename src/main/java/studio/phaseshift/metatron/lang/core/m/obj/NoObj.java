@@ -48,6 +48,11 @@ public final class NoObj implements Obj, Inst {
     }
 
     @Override
+    public boolean isResolved(final boolean nested) {
+        return true;
+    }
+
+    @Override
     public Triplet jvm() {
         return null;
     }

@@ -48,6 +48,11 @@ public interface Space extends Rec, Closeable {
         active
     }
 
+    @Override
+    default boolean isResolved(final boolean nested) {
+        return true;
+    }
+
     default Status status() {
         return Status.valueOf(this.at(Tokens.STATUS).uriValue().toString());
     }
