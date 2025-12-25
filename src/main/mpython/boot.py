@@ -104,6 +104,8 @@ def main_thread_function():
         lambda s: f"{s.wifi.strength():.0f}").device_class("signal_strength").unit_of_measurement('dBm').create()
     ha.register(soc.vid.extend('memory/free')).sensor().diagnostic().on_read(
         lambda s: f"{s.memory['free']}").device_class("data_size").unit_of_measurement("B").create()
+    ha.register(soc.vid.extend('memory/alloc')).sensor().diagnostic().on_read(
+        lambda s: f"{s.memory['alloc']}").device_class("data_size").unit_of_measurement("B").create()
     for i in [[0, 5], [1, 23], [2, 19], [3, 18]]:
         (ha.register(soc.vid.extend(f'pwm/light_{i[0]}')).
          number().
