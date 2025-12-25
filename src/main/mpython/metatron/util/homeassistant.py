@@ -16,29 +16,108 @@
 
 import uhome
 
-import metatron.soc.soc
 from metatron.soc.soc import SoC
-from metatron.util.mach import mach
+from metatron.util.furi import fURI
+from metatron.util.graphitty import LOG
+from metatron.util.mach import router
+from metatron.util.translators import JSONTranslator
 
 
 class HomeAssistant:
-    def __init__(self, soc: SoC):
+    def __init__(self, soc: SoC, prefix='homeassistant'):
         self.soc = soc
-        self.device = uhome.Device(soc.vid.name())
-        self.entities= {}
-        
-    def connect(self):
-        self.device.connect(mach['router'].get_space(self.soc.vid).client)
+        self.device = uhome.Device(soc.vid.name(),discovery_prefix=prefix)
+        self.entities = {}
 
-    def register_sensor(self, name:str, device, update, **kwargs):
-        self.entities[device.tid.name()] = [uhome.Sensor(self.device, name, **kwargs),update]
-        
-    def register_number(self, name:str, device,update, **kwargs):
-        self.entities[device.tid.name()] = [uhome.Number(self.device, name, **kwargs),update]
-        
-    def update(self,device=None):
-        if device is None:
-            self.device.discover_all()
+    def connect(self):
+        self.device.connect(router().get_space(self.soc.vid).client)
+
+    def register(self, entity_vid):
+        return _Form(entity_vid, self)
+
+    def update(self, entity_pattern: fURI):
+        for k, v in self.entities.items():
+            if k.matches(entity_pattern):
+                v[0].publish(v[1](self.soc))
+
+    def announce(self):
+        self.device.discover_all()
+
+    def loop(self):
+        self.device.loop()
+
+
+class _Form:
+    def __init__(self, entity_vid, ha: HomeAssistant):
+        self.entity_vid = entity_vid
+        self.ha = ha
+
+    def number(self):
+        return _Builder(self.ha, self.entity_vid, "number")
+
+    def sensor(self):
+        return _Builder(self.ha, self.entity_vid, "sensor")
+
+
+class _Builder:
+    entity_vid = None
+    write_f = None
+    read_f = None
+    kind = None
+    ha = None
+    settings = {}
+
+    def __init__(self, ha: HomeAssistant, entity_vid, kind: str):
+        self.ha = ha
+        self.kind = kind
+        self.entity_vid = entity_vid
+
+    def primary(self) -> '_Builder':
+        return self
+
+    def diagnostic(self) -> '_Builder':
+        self.settings['entity_category'] = 'diagnostic'
+        return self
+
+    def config(self) -> '_Builder':
+        self.settings['entity_category'] = 'config'
+        return self
+
+    def on_read(self, func: function) -> '_Builder':
+        self.read_f = func
+        return self
+
+    def on_write(self, func: function) -> '_Builder':
+        self.write_f = func
+        return self
+
+    def icon(self, icon) -> '_Builder':
+        self.settings['icon'] = icon
+        return self
+
+    def min_max(self, minimum: int, maximum: int) -> '_Builder':
+        self.settings['min'] = minimum
+        self.settings['max'] = maximum
+        return self
+
+    def unit_of_measurement(self, uofm: str) -> '_Builder':
+        self.settings['unit_of_measurement'] = uofm
+        return self
+
+    def device_class(self, dc: str) -> '_Builder':
+        self.settings['device_class'] = dc
+        return self
+
+    def create(self):
+        LOG.info("registering {{y}}{}{{X}} as a {{b}}{} {{c}}{}", self.entity_vid, self.kind,
+                 self.settings['entity_category'])
+        if self.kind == "sensor":
+            self.ha.entities[self.entity_vid] = [uhome.Sensor(self.ha.device, self.entity_vid.name(), **self.settings),
+                                                 self.read_f, self.write_f]
+        elif self.kind == "number":
+            entity = uhome.Number(self.ha.device, self.entity_vid.name(), **self.settings)
+            if self.write_f is not None:
+                entity.set_action(lambda v: self.write_f(self.ha.soc, JSONTranslator.to_obj(v)))
+            self.ha.entities[self.entity_vid] = [entity, self.read_f, self.write_f]
         else:
-            registration = self.entities[device.tid.name()]
-            registration[0].publish(registration[1](device))
+            raise RuntimeError(f'{self.kind} is current not supported')

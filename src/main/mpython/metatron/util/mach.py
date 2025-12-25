@@ -17,3 +17,9 @@
 mach = {"translator": None,
         "router": None}
 
+def router():
+        return mach['router']
+
+def translator():
+        return mach['translator']
+

@@ -15,6 +15,7 @@
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from metatron.util.furi import fURI,f
+from metatron.util.mach import translator
 
 
 class Router:
@@ -44,5 +45,5 @@ class Router:
         vid = vid if isinstance(vid, fURI) else fURI(vid)
         for pattern, space in self.spaces.items():
             if vid.matches(pattern):
-                return space.write(vid,obj)
+                return space.write(vid,translator().to_obj(obj))
         raise Exception(f"no registered space supports {vid}")

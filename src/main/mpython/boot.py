@@ -18,7 +18,6 @@ import _thread
 import esp
 import json
 import machine
-import network
 import os
 import sys
 import time
@@ -29,6 +28,7 @@ import metatron.util.homeassistant
 from metatron.mqtt_space import MqttSpace
 from metatron.router import Router
 from metatron.soc.device.gpio import Gpio
+from metatron.soc.device.memory import Memory
 from metatron.soc.device.pwm import Pwm
 from metatron.soc.device.wifi import Wifi
 from metatron.soc.esp32.wemos_d1_mini import WemosD1Mini
@@ -36,6 +36,7 @@ from metatron.util.furi import f
 from metatron.util.graphitty import LOG
 from metatron.util.mach import mach
 from metatron.util.translators import PythonTranslator
+
 webrepl.start(password="mtron")
 mach["router"] = Router()
 mach["translator"] = PythonTranslator()
@@ -52,7 +53,7 @@ print(graphitty.string("""
 {{g}}              |   __ `__ \/ _ \/ {{y}}__/ __ `/ __/ ___/ __ \/ __ \  
 {{g}}             /   / / / / {{c}}/  __/ /_/ /_/ / /_/ /  / /_/ / / / /  
 {{g}}            /___/ {{b}}/_/ /_/\___/\__/\__,_/\__/_/   \____/_/ /_/{{X}}"""))
-print(graphitty.string("\t\t\t{{b}}{}{{X}}\n",os.uname().machine))
+print(graphitty.string("\t\t\t{{b}}{}{{X}}\n", os.uname().machine))
 
 sys.ps1 = graphitty.string("{{m}}mtron{{g}}>{{X}} ")
 sys.ps2 = graphitty.string("{{m}}     {{g}}>{{X}} ")
@@ -70,22 +71,22 @@ except Exception as e:
 
 gc.collect()
 
-wifi = Wifi(secrets['ssid'],secrets['password'],secrets['host'])
+wifi = Wifi(secrets['ssid'], secrets['password'], secrets['host'])
 soc = None
-import uhome
+
 
 def main_thread_function():
     global soc
     try:
-        mqtt_space = MqttSpace(f("microtron/#"), f("/sys/space/mqtt"))
+        mqtt_space = MqttSpace(f(f"{secrets['host']}/#"), f("/sys/space/mqtt"))
         mach["router"].register(mqtt_space)
         mqtt_space.start()
         LOG.info("connected to {{y}}{}{{X}} broker", mqtt_space.client.server)
         mqtt_space.connect_esphome({"ip": wifi.ipaddr(),
                                     "platform": sys.platform,
                                     "version": os.uname().release,
-                                    "name": "microtron",
-                                    "friendly_name": "microtron"})
+                                    "name": secrets['host'],
+                                    "friendly_name": secrets['host']})
     except OSError:
         LOG.error("unable to connect to {{y}}{}{{X}} broker", mach["broker"])
 
@@ -95,17 +96,32 @@ def main_thread_function():
     soc.attach(wifi)
     soc.attach(Gpio(range(0, 35), soc_vid))
     soc.attach(Pwm(soc_vid))
+    soc.attach(Memory(soc_vid))
     #####################################################################################################
-    ha = metatron.util.homeassistant.HomeAssistant(soc)
+    ha = metatron.util.homeassistant.HomeAssistant(soc, secrets.get("homeassistant", {}).get("prefix", "homeassistant"))
     ha.connect()
-    ha.register_sensor("signal_strength", wifi,lambda d: f"{d.strength():.0f}", device_class="signal_strength", unit_of_measurement='dBm', entity_category="diagnostic")
-    ha.update(wifi)
-    ha.update()
+    ha.register(soc.vid.extend('wifi/signal')).sensor().diagnostic().on_read(
+        lambda s: f"{s.wifi.strength():.0f}").device_class("signal_strength").unit_of_measurement('dBm').create()
+    ha.register(soc.vid.extend('memory/free')).sensor().diagnostic().on_read(
+        lambda s: f"{s.memory['free']}").device_class("data_size").unit_of_measurement("B").create()
+    for i in [[0, 5], [1, 23], [2, 19], [3, 18]]:
+        (ha.register(soc.vid.extend(f'pwm/light_{i[0]}')).
+         number().
+         config().
+         on_read(lambda s: s.pwm[i[1]]).
+         on_write(lambda s, v: s.pwm.__setitem__(i[1], v)).
+         icon("mdi:light-flood-up").
+         device_class("power_factor").
+         unit_of_measurement('pwm').
+         min_max(0, 1023).create())
+    ha.announce()
+    ha.update(f("#"))
     #####################################################################################################
     gc.collect()
     try:
         while True:
             mqtt_space.loop()
+            ha.loop()
     except OSError:
         LOG.error("attempting reconnection to {{y}}{}{{X}} broker", mqtt_space.client.server)
         time.sleep(10)
@@ -113,5 +129,6 @@ def main_thread_function():
 
 
 LOG.info("metatron boot process complete")
-_thread.stack_size(7 * 1024)
+if "stack_kb" in secrets.keys():
+    _thread.stack_size(secrets["stack_kb"] * 1024)
 _thread.start_new_thread(main_thread_function, ())

@@ -24,7 +24,7 @@ class fURI:
         self.path = uri.split("/")
 
     def extend(self, segment: str) -> "fURI":
-        new_path = self.path + [segment]
+        new_path = self.path + segment.split('/')
         new_furi = fURI("")
         new_furi.path = new_path
         new_furi.sstart = self.sstart

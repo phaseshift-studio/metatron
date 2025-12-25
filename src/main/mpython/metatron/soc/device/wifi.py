@@ -15,10 +15,13 @@
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import network
 
+from metatron.obj import Int
 from metatron.soc.device.device import Device
 from metatron.util.furi import f
 from metatron.util.graphitty import LOG
 from metatron.util.homeassistant import HomeAssistant
+from metatron.util.mach import router
+
 
 class Wifi(Device):
     def __init__(self, ssid:str,password:str,host:str):
@@ -29,9 +32,11 @@ class Wifi(Device):
         self.wlan.connect(ssid, password)
         LOG.info("connecting to {{y}}{}{{X}} wifi", ssid)
         while not self.wlan.isconnected():
+            print('.',end="")
             pass
+        print("")
         LOG.info("connected to {{y}}{}{{X}} as {{y}}{}\n\t{}",ssid, self.wlan.config('hostname'), str(self.wlan.ifconfig()))  
-        Device.__init__(self,f(self.host()),{},f("/soc/device/wifi"))
+        Device.__init__(self,f(self.host()),{},f("/soc/device/wifi"),"wifi")
    
     def ipaddr(self) -> str:
         return self.wlan.ifconfig()[0]

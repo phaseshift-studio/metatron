@@ -25,35 +25,35 @@ ITALIC = "\u001b[3m"
 NC = '\u001b[0m'
 
 
-def string(s: str, *args):
-    return (s.
-            replace("{{y}}", YELLOW).
-            replace("{{m}}", MAGENTA).
-            replace("{{c}}", CYAN).
-            replace("{{b}}", BLUE).
-            replace("{{r}}", RED).
-            replace("{{g}}", GREEN).
-            replace("{{k}}", BLACK).
-            replace("{{w}}", WHITE).
-            replace("{{X}}", NC).
-            replace("{{~}}", ITALIC)).format(*args)
+def string(s: str, *args) -> str:
+    s = s.replace("{{y}}", YELLOW)
+    s = s.replace("{{m}}", MAGENTA)
+    s = s.replace("{{c}}", CYAN)
+    s = s.replace("{{b}}", BLUE)
+    s = s.replace("{{r}}", RED)
+    s = s.replace("{{g}}", GREEN)
+    s = s.replace("{{k}}", BLACK)
+    s = s.replace("{{w}}", WHITE)
+    s = s.replace("{{X}}", NC)
+    s = s.replace("{{~}}", ITALIC)
+    s = s.format(*args)
+    return s
 
 
 def strip(s: str) -> str:
-    return str(s.replace(YELLOW, "").
-            replace(MAGENTA, "").
-            replace(CYAN, "").
-            replace(BLUE, "").
-            replace(RED, "").
-            replace(GREEN, "").
-            replace(BLACK, "").
-            replace(WHITE, "").
-            replace(NC, "").
-            replace(ITALIC, ""))
-
+    s = s.replace(YELLOW, "")
+    s = s.replace(MAGENTA, "")
+    s = s.replace(CYAN, "")
+    s = s.replace(BLUE, "")
+    s = s.replace(RED, "")
+    s = s.replace(GREEN, "")
+    s = s.replace(BLACK, "")
+    s = s.replace(WHITE, "")
+    s = s.replace(NC, "")
+    s = s.replace(ITALIC, "")
+    return s
 
 log_behavior = None
-
 
 class LOG:
     @staticmethod

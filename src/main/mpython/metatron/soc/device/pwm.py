@@ -17,24 +17,24 @@ import time
 from machine import PWM
 from machine import Pin
 
-from metatron.obj import Int
+from metatron.obj import Int, jnt
 from metatron.soc.device.device import Device
 from metatron.util.furi import f
-from metatron.util.mach import mach
+from metatron.util.mach import mach, router, translator
 from metatron.util.graphitty import LOG
 
 PWM_TID = f("/soc/pwm")
 
 
 class Pwm(Device):
-    def __init__(self, soc_vid, vid=None):
-        Device.__init__(self, soc_vid, {}, PWM_TID, vid)
+    def __init__(self, soc_vid, name="pwm"):
+        Device.__init__(self, soc_vid, {}, PWM_TID, name)
         has_id = soc_vid is not None
         if has_id:
             for i in range(0,35):
-                mach['router'].write(soc_vid.extend('pwm').extend(str(i)),None)
+                router().write(soc_vid.extend(name).extend(str(i)),None)
         if has_id:
-            mach['router'].get_space(soc_vid).subscribe(soc_vid.extend("pwm").extend("+"),
+            router().get_space(soc_vid).subscribe(soc_vid.extend(name).extend("+"),
                                                         lambda key, value: Pwm._set_pwm(self, int(key.name()), value,False))
 
     def fade(self, key, start=0, end=1023, interval=16, sleep_ms=50):
@@ -46,9 +46,9 @@ class Pwm(Device):
 
     @staticmethod
     def _set_pwm(device, pin, duty, do_log = True):
-        duty = mach['translator'].to_obj(duty)
+        duty = jnt(0) if duty is None else translator().to_obj(duty)
         if pin not in device.pvm.keys() or  device.pvm[pin] != duty:
-            PWM(Pin(mach['translator'].from_obj(pin), Pin.OUT)).duty(mach['translator'].from_obj(duty))
+            PWM(Pin(translator().from_obj(pin), Pin.OUT)).duty(translator().from_obj(duty))
             device.pvm[pin] = duty
             if do_log:
                 LOG.debug("pwm {{y}}{}{{X}} set to {{b}}{}", pin, duty)
@@ -62,4 +62,4 @@ class Pwm(Device):
     def __setitem__(self, key, value):
         Pwm._set_pwm(self, key,value)
         if self.soc_vid is not None:
-            mach['router'].write(self.soc_vid.extend('pwm').extend(str(key)), value)
+            router().write(self.soc_vid.extend(self.name).extend(str(key)), value)
