@@ -1,8 +1,7 @@
-#!/usr/bin/sh
+#!/bin/sh
 
 java -Dlogback.configurationFile=conf/logback.xml \
     --add-opens=java.base/java.util.concurrent.atomic=ALL-UNNAMED \
-    --sun-misc-unsafe-memory-access=allow \
     --enable-native-access=ALL-UNNAMED \
     -cp target/metatron-0.1-SNAPSHOT-jar-with-dependencies.jar \
         studio.phaseshift.metatron.BootLoader "$@"

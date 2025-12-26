@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/sh
 #
 # Metatron: A Distributed Computing Language and Virtual Machine
 #  Copyright (C) 2025- PhaseShift Studio, LLC
