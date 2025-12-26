@@ -26,7 +26,7 @@ from metatron.util.translators import JSONTranslator
 class HomeAssistant:
     def __init__(self, soc: SoC, prefix='homeassistant'):
         self.soc = soc
-        self.device = uhome.Device(soc.vid.name(),discovery_prefix=prefix)
+        self.device = uhome.Device(soc.vid.name(), discovery_prefix=prefix)
         self.entities = {}
 
     def connect(self):
@@ -90,6 +90,10 @@ class _Builder:
 
     def on_write(self, func: function) -> '_Builder':
         self.write_f = func
+        return self
+
+    def mode(self, mode: str) -> '_Builder':
+        self.settings['mode'] = mode
         return self
 
     def icon(self, icon) -> '_Builder':

@@ -120,6 +120,7 @@ def main_thread_function():
          icon("mdi:light-flood-up").
          device_class("power_factor").
          unit_of_measurement('pwm').
+         mode("slider").
          min_max(0, 1023).create())
         counter = counter + 1
     ha.announce()
