@@ -31,7 +31,12 @@ class fURI:
         new_furi.send = segment.endswith("/")
         return new_furi
 
+    def bimatches(self, other: "fURI") -> bool:
+        return self.matches(other) or other.matches(self)
+
     def matches(self, other: "fURI") -> bool:
+        if str(other) == "#":
+            return True
         other_len = len(other.path)
         for i in range(len(self.path)):
             if other_len < i + 1:

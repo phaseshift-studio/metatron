@@ -15,34 +15,38 @@
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import network
 
-from metatron.obj import Int
 from metatron.soc.device.device import Device
 from metatron.util.furi import f
 from metatron.util.graphitty import LOG
-from metatron.util.homeassistant import HomeAssistant
 from metatron.util.mach import router
+
+WIFI_TID = f("/soc/wifi")
 
 
 class Wifi(Device):
-    def __init__(self, ssid:str,password:str,host:str):
-        self.ha = None
-        self.wlan = network.WLAN(network.STA_IF)
-        self.wlan.active(True)
-        self.wlan.config(dhcp_hostname=host)
-        self.wlan.connect(ssid, password)
+    @staticmethod
+    def connect(ssid: str, password: str, host: str):
         LOG.info("connecting to {{y}}{}{{X}} wifi", ssid)
-        while not self.wlan.isconnected():
-            print('.',end="")
+        wlan = network.WLAN(network.STA_IF)
+        wlan.active(True)
+        network.hostname(host)
+        wlan.connect(ssid, password)
+        while not wlan.isconnected():
             pass
-        print("")
-        LOG.info("connected to {{y}}{}{{X}} as {{y}}{}\n\t{}",ssid, self.wlan.config('hostname'), str(self.wlan.ifconfig()))  
-        Device.__init__(self,f(self.host()),{},f("/soc/device/wifi"),"wifi")
-   
+        LOG.info("connected to {{y}}{}{{X}} as {{y}}{}\n\t{}", ssid, wlan.config('hostname'), str(wlan.ifconfig()))
+        return wlan
+
+    def __init__(self, wlan: network.WLAN, soc_vid, name:str = "wifi"):
+        self.wlan = wlan
+        Device.__init__(self, soc_vid, {}, WIFI_TID, name)
+        if self.soc_vid is not None:
+            router().write(self.soc_vid.extend(name).extend("state"), network.WLAN().status('rssi'))
+
     def ipaddr(self) -> str:
         return self.wlan.ifconfig()[0]
 
     def host(self) -> str:
         return self.wlan.config('hostname')
-    
+
     def strength(self):
         return self.wlan.status('rssi')

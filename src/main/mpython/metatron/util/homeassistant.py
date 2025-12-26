@@ -17,7 +17,7 @@
 import uhome
 
 from metatron.soc.soc import SoC
-from metatron.util.furi import fURI
+from metatron.util.furi import fURI, f
 from metatron.util.graphitty import LOG
 from metatron.util.mach import router
 from metatron.util.translators import JSONTranslator
@@ -35,16 +35,17 @@ class HomeAssistant:
     def register(self, entity_vid):
         return _Form(entity_vid, self)
 
-    def update(self, entity_pattern: fURI):
+    def update(self, entity_pattern: fURI = f("#")):
         for k, v in self.entities.items():
             if k.matches(entity_pattern):
-                v[0].publish(v[1](self.soc))
+                v[0].publish(JSONTranslator.from_obj(v[1](self.soc)))
 
     def announce(self):
         self.device.discover_all()
 
     def loop(self):
         self.device.loop()
+        # self.update()
 
 
 class _Form:

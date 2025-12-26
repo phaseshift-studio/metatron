@@ -16,6 +16,7 @@
 
 from metatron.util.furi import fURI,f
 from metatron.util.mach import translator
+from metatron.util.translators import JSONTranslator
 
 
 class Router:
@@ -29,7 +30,7 @@ class Router:
     def get_space(self, vid):
         vid = vid if isinstance(vid, fURI) else fURI(vid)
         for pattern, space in self.spaces.items():
-            if vid.matches(pattern):
+            if vid.bimatches(pattern):
                 return space
         raise Exception(f"no registered space supports {vid}")
         
@@ -42,8 +43,8 @@ class Router:
 
 
     def write(self, vid,obj):
-        vid = vid if isinstance(vid, fURI) else fURI(vid)
+        vid = vid if isinstance(vid, fURI) else f(str(vid))
         for pattern, space in self.spaces.items():
             if vid.matches(pattern):
-                return space.write(vid,translator().to_obj(obj))
+                return space.write(vid,obj)
         raise Exception(f"no registered space supports {vid}")

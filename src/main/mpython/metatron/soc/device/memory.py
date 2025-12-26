@@ -36,7 +36,7 @@ class Memory(Device):
             raise KeyError(key)
     
     def broadcast(self, key):
-        micropython.mem_info(True)
+        micropython.mem_info(False)
         if self.soc_vid is not None:
             stats = {
                 "free": gc.mem_free(),

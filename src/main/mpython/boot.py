@@ -34,7 +34,7 @@ from metatron.soc.device.wifi import Wifi
 from metatron.soc.esp32.wemos_d1_mini import WemosD1Mini
 from metatron.util.furi import f
 from metatron.util.graphitty import LOG
-from metatron.util.mach import mach
+from metatron.util.mach import mach, router
 from metatron.util.translators import PythonTranslator
 
 webrepl.start(password="mtron")
@@ -71,31 +71,36 @@ except Exception as e:
 
 gc.collect()
 
-wifi = Wifi(secrets['ssid'], secrets['password'], secrets['host'])
+wlan = Wifi.connect(secrets['ssid'], secrets['password'], secrets['host'])
 soc = None
 
+def make_read_lambda(index):
+    return lambda s: s.pwm[index]
+
+def make_write_lambda(index):
+    return lambda s, v: s.pwm.__setitem__(index, v)
 
 def main_thread_function():
     global soc
     try:
         mqtt_space = MqttSpace(f(f"{secrets['host']}/#"), f("/sys/space/mqtt"))
-        mach["router"].register(mqtt_space)
+        router().register(mqtt_space)
         mqtt_space.start()
         LOG.info("connected to {{y}}{}{{X}} broker", mqtt_space.client.server)
-        mqtt_space.connect_esphome({"ip": wifi.ipaddr(),
-                                    "platform": sys.platform,
-                                    "version": os.uname().release,
-                                    "name": secrets['host'],
-                                    "friendly_name": secrets['host']})
+        # mqtt_space.connect_esphome({"ip": wifi.ipaddr(),
+        #                            "platform": sys.platform,
+        #                            "version": os.uname().release,
+        #                            "name": secrets['host'],
+        #                            "friendly_name": secrets['host']})
     except OSError:
         LOG.error("unable to connect to {{y}}{}{{X}} broker", mach["broker"])
     #####################################################################################################
-    soc_vid = f(wifi.host())
+    soc_vid = f(secrets['host'])
     soc = WemosD1Mini(vid=soc_vid)
-    soc.attach(wifi)
+    soc.attach(Wifi(wlan,soc_vid))
+    soc.attach(Memory(soc_vid))
     soc.attach(Gpio(range(0, 35), soc_vid))
     soc.attach(Pwm(soc_vid))
-    soc.attach(Memory(soc_vid))
     #####################################################################################################
     ha = metatron.util.homeassistant.HomeAssistant(soc, secrets.get("homeassistant", {}).get("prefix", "homeassistant"))
     ha.connect()
@@ -106,13 +111,6 @@ def main_thread_function():
     ha.register(soc.vid.extend('memory/alloc')).sensor().diagnostic().on_read(
         lambda s: f"{s.memory['alloc']}").device_class("data_size").unit_of_measurement("B").create()
     counter = 0
-
-    def make_read_lambda(index):
-        return lambda s: s.pwm[index]
-
-    def make_write_lambda(index):
-        return lambda s, v: s.pwm.__setitem__(index, v)
-
     for i in [5, 23, 19, 18]:
         (ha.register(soc.vid.extend(f'pwm/light_{counter}')).
          number().
@@ -125,17 +123,16 @@ def main_thread_function():
          min_max(0, 1023).create())
         counter = counter + 1
     ha.announce()
-    ha.update(f("#"))
+    ha.update()
     #####################################################################################################
     gc.collect()
-    try:
-        while True:
+    while True:
+        try:
             mqtt_space.loop()
             ha.loop()
-    except OSError:
-        LOG.error("attempting reconnection to {{y}}{}{{X}} broker", mqtt_space.client.server)
-        time.sleep(10)
-        machine.reset()
+        except Exception as ex:
+            print("resetting due to main loop error", ex)
+            machine.reset()
 
 
 LOG.info("metatron boot process complete")

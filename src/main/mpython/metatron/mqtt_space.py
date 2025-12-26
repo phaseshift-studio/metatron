@@ -22,7 +22,9 @@ from umqtt.simple import MQTTClient
 from metatron.obj import *
 from metatron.util.furi import fURI
 from metatron.util.graphitty import LOG
+from metatron.util.mach import translator
 from metatron.util.translators import JSONTranslator
+
 
 class MqttSpace(Obj):
     def __init__(self, pattern: fURI, vid: fURI = None):
@@ -30,13 +32,24 @@ class MqttSpace(Obj):
         self.pattern = pattern
         self.cache = {}
         self.subscriptions = {}
-        self.client = MQTTClient(ubinascii.hexlify(machine.unique_id()) if vid is None else str(self.vid),
-                                 json.load(open("secrets.json"))['broker'],keepalive=60)
+        self.broker = json.load(open("secrets.json"))['broker']
+        self.port = json.load(open("secrets.json")).get('port', 1883)
+        self.client = MQTTClient(
+            client_id=ubinascii.hexlify(machine.unique_id()) if self.vid is None else str(self.vid),
+            server=self.broker,
+            port=self.port,
+            keepalive=60)
+
+    def disconnect(self):
+        self.client.disconnect()
 
     def start(self):
-        self.client.set_callback(self._callback)
-        self.client.connect()
-        self.subscribe(self.pattern, lambda furi, obj: self.cache.__setitem__(furi, obj))
+        try:
+            self.client.set_callback(self._callback)
+            self.client.connect()
+            self.subscribe(self.pattern, lambda furi, obj: self.cache.__setitem__(furi, obj))
+        except Exception as e:
+            LOG.error("unable to connect with {{y}}{}{{X}}: {}", self.broker, e)
 
     def loop(self):
         self.client.check_msg()
@@ -49,7 +62,7 @@ class MqttSpace(Obj):
             self.unsubscribe(str(self.pattern))
             self.subscribe(str(self.pattern), lambda furi, obj: self.cache.__setitem__(furi, obj))
             gc.collect()
-            
+
     def read(self, vid) -> Obj:
         vid = vid if isinstance(vid, fURI) else fURI(vid)
         if vid.has_pattern():
@@ -72,13 +85,15 @@ class MqttSpace(Obj):
         vid = vid if isinstance(vid, fURI) else fURI(vid)
         if obj is None:
             self.client.publish(str(vid), "", True)
-        else:
-            obj = obj if isinstance(obj, Obj) else mach["translator"].to_obj(obj)
-            if obj is not None:
-                self.cache[vid] = obj
-            elif vid in self.cache.keys():
+            if vid in self.cache.keys():
                 self.cache.pop(vid)
-            self.client.publish(str(vid), JSONTranslator.from_obj(obj), True)
+        else:
+            obj = obj if isinstance(obj, Obj) else translator().to_obj(obj)
+            self.cache[vid] = obj
+            try:
+                self.client.publish(str(vid), JSONTranslator.from_obj(obj), True)
+            except Exception as e:
+                LOG.error("unable to write to {{y}}{}{{X}}: {}", self.broker, e)
 
     def _callback(self, furi, obj):
         # LOG.debug("subscriptions: {}", self.subscriptions)
@@ -86,7 +101,7 @@ class MqttSpace(Obj):
         obj2 = JSONTranslator.to_obj(obj.decode())
         for pattern, func in self.subscriptions.items():
             if furi2.matches(pattern):
-                #LOG.debug("using subscription {{y}}{}", pattern)
+                # LOG.debug("using subscription {{y}}{}", pattern)
                 func(furi2, obj2)
 
     def connect_esphome(self, merge, template: str = 'esphome.json'):

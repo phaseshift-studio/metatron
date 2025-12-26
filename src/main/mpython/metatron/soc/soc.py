@@ -33,11 +33,10 @@ class SoC(Rec):
         if self.vid is not None:
             router().get_space(self.vid).subscribe(self.vid.extend('status'),
                                                    lambda key, value: machine.reset() if value == 'offline' else "")
-            router().write(self.vid.extend('wifi/state'), network.WLAN().status('rssi'))
 
     def attach(self, device: Device):
         key = device.tid.name()
         if key in self.__dict__:
             LOG.warn("overriding already existing {{y}}{}{{X}} at {{y}}{}{{X}}", device.tid, device.tid.name())
         setattr(self, key, device)
-        LOG.info("device {{y}}{}{{X}} loaded", device.tid)
+        LOG.info("device {{y}}{}{{X}} loaded as {{b}}{}", device.tid, device.name)

@@ -38,7 +38,7 @@ class Gpio(Device):
         Device.__init__(self, soc_vid, pins, GPIO_TID, name)
         if has_id:
             router().get_space(soc_vid).subscribe(soc_vid.extend(self.name).extend("+"),
-                                                  lambda vid, value: Gpio._set_gpio(self, int(vid.name()), value))
+                                                  lambda vid, value: Gpio._set_gpio(self, int(vid.name()), value, False))
 
     @staticmethod
     def _set_gpio(device, pin, value, do_log=True):
