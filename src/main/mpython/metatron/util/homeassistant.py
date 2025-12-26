@@ -14,7 +14,7 @@
 #  You should have received a copy of the GNU Affero General Public License
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import uhome
+from lib import uhome
 
 from metatron.soc.soc import SoC
 from metatron.util.furi import fURI, f

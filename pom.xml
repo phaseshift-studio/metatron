@@ -65,7 +65,6 @@
         <ollama4j.version>1.1.5</ollama4j.version>
         <guice.version>7.0.0</guice.version>
         <moquette.version>0.18.0</moquette.version>
-        <docker.image.prefix>metatron</docker.image.prefix>
         <dockerfile-maven.version>1.4.13</dockerfile-maven.version>
         <!-- LOGBACK PROPERTIES -->
     </properties>
@@ -438,8 +437,8 @@
                     </execution>
                 </executions>
                 <configuration>
-                    <repository>metatron</repository>
-                    <tag>latest</tag>
+                    <repository>${project.artifactId}</repository>
+                    <tag>${project.version}</tag>
                     <contextDirectory>${project.basedir}</contextDirectory>
                     <dockerfile>Dockerfile</dockerfile>
                 </configuration>

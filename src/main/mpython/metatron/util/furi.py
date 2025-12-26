@@ -47,7 +47,7 @@ class fURI:
                 continue
             if self.path[i] != other.path[i]:
                 return False
-        return True
+        return len(self.path) == other_len or (len(self.path) + 1 == other_len and other.path[other_len-1] == "#")
 
     def has_pattern(self) -> bool:
         return "#" in self.path or "+" in self.path

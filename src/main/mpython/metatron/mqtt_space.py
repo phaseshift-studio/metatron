@@ -47,7 +47,7 @@ class MqttSpace(Obj):
         try:
             self.client.set_callback(self._callback)
             self.client.connect()
-            self.subscribe(self.pattern, lambda furi, obj: self.cache.__setitem__(furi, obj))
+            self.subscribe(self.pattern, lambda furi, obj: self.cache.__setitem__(furi, obj) if obj is not None else self.cache.pop(furi) if furi in self.cache.keys() else None)
         except Exception as e:
             LOG.error("unable to connect with {{y}}{}{{X}}: {}", self.broker, e)
 
@@ -60,18 +60,21 @@ class MqttSpace(Obj):
             LOG.warn("flushing {{y}}{}{{X}} cache", self)
             self.cache = {}
             self.unsubscribe(str(self.pattern))
-            self.subscribe(str(self.pattern), lambda furi, obj: self.cache.__setitem__(furi, obj))
+            self.subscribe(self.pattern, lambda furi, obj: self.cache.__setitem__(furi, obj) if obj is not None else self.cache.pop(furi) if furi in self.cache.keys() else None)
             gc.collect()
 
     def read(self, vid) -> Obj:
         vid = vid if isinstance(vid, fURI) else fURI(vid)
         if vid.has_pattern():
+            result = {} if vid.send else []
             for key, value in self.cache.items():
-                if vid.matches(key):
-                    return value
+                if key.matches(vid):
+                    result.__setitem__(key,value) if vid.send else result.append(value)
+            return None if 0 == len(result) else result
         return self.cache.get(vid)
 
     def subscribe(self, furi, func):
+        furi = furi if isinstance(furi, fURI) else fURI(furi)
         self.client.subscribe(str(furi))
         self.subscriptions[furi] = func
         LOG.info("subscribed to {{y}}{}{{X}}", furi)
@@ -88,21 +91,24 @@ class MqttSpace(Obj):
             if vid in self.cache.keys():
                 self.cache.pop(vid)
         else:
-            obj = obj if isinstance(obj, Obj) else translator().to_obj(obj)
+            obj = translator().to_obj(obj)
             self.cache[vid] = obj
-            try:
-                self.client.publish(str(vid), JSONTranslator.from_obj(obj), True)
-            except Exception as e:
-                LOG.error("unable to write to {{y}}{}{{X}}: {}", self.broker, e)
+            self.client.publish(str(vid), JSONTranslator.from_obj(obj), True)
+        return obj
 
     def _callback(self, furi, obj):
-        # LOG.debug("subscriptions: {}", self.subscriptions)
+        #print("subscriptions: {}", self.subscriptions)
         furi2 = f(furi.decode())
         obj2 = JSONTranslator.to_obj(obj.decode())
-        for pattern, func in self.subscriptions.items():
-            if furi2.matches(pattern):
-                # LOG.debug("using subscription {{y}}{}", pattern)
-                func(furi2, obj2)
+        if obj2 is None or obj is None:
+            if furi2 in self.cache.keys():
+                self.cache.pop(furi2)
+        else:
+            for pattern, func in self.subscriptions.items():
+                if furi2.matches(pattern):
+                    # LOG.debug("using subscription {{y}}{}", pattern)
+                    func(furi2, obj2)
+            
 
     def connect_esphome(self, merge, template: str = 'esphome.json'):
         profile = json.load(open(template)) | merge

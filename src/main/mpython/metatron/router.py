@@ -48,3 +48,9 @@ class Router:
             if vid.matches(pattern):
                 return space.write(vid,obj)
         raise Exception(f"no registered space supports {vid}")
+    
+    def __repr__(self):
+        return "router::[spaces:" + str(len(self.spaces)) + "]"
+    
+    def __str__(self):
+        return self.__repr__()

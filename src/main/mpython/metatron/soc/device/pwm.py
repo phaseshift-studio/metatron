@@ -35,7 +35,7 @@ class Pwm(Device):
                 router().write(soc_vid.extend(name).extend(str(i)),None)
         if has_id:
             router().get_space(soc_vid).subscribe(soc_vid.extend(name).extend("+"),
-                                                        lambda key, value: Pwm._set_pwm(self, int(key.name()), value,False))
+                                                        lambda key, value: Pwm._set_pwm(self, int(key.name()), value,True))
 
     def fade(self, key, start=0, end=1023, interval=16, sleep_ms=50):
         key = key if isinstance(key, Int) else Int(key)
