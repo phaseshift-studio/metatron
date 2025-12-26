@@ -33,6 +33,7 @@ import studio.phaseshift.metatron.util.Common;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
@@ -59,12 +60,12 @@ public class kvSpace extends MSpace<Map<fURI, Obj>> {
 
 
     public kvSpace(final Map<Obj, Obj> config, final fURI vid) {
-        super(new HashMap<>(), config, config.get(uri(Tokens.PATTERN)).uriValue(), KV_TID, vid);
+        super(new ConcurrentHashMap<>(), config, config.get(uri(Tokens.PATTERN)).uriValue(), KV_TID, vid);
     }
 
 
     public kvSpace(final fURI pattern, final fURI vid) {
-        super(new HashMap<>(), mutableMap(uri(Tokens.PATTERN), uri(pattern)), pattern, KV_TID, vid);
+        super(new ConcurrentHashMap<>(), mutableMap(uri(Tokens.PATTERN), uri(pattern)), pattern, KV_TID, vid);
     }
 
     public static kvSpace of(final fURI pattern, final fURI vid) {
