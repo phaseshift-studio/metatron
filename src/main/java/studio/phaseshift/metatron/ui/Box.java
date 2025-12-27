@@ -32,10 +32,6 @@ public class Box implements Dimensions {
     protected final List<String> options;
     protected final String body;
     protected final Border border;
-    
-    public static List<String> coloredBorder(final Border border, final String color) {
-        return Arrays.stream(border.toString().split("")).map(s -> Graphitty.string("{{%s}}%s{{X}}", color, s)).toList();
-    }
 
     public Box(final String body, final Border border) {
         this(null, body, border);

@@ -23,53 +23,84 @@ package studio.phaseshift.metatron.ui;
  */
 public interface Stylable<T extends Stylable<T>> {
 
-    Style style();
+    default Style<T> style() {
+        return new Style<>((T) this);
+    }
 
-    T style(final Style style);
+    T style(final Style<T> style);
 
-    class Style {
+    class Style<T extends Stylable<T>> {
+        public T stylable;
 
         public Border border = Border.none;
         public String background = "";
         public String foreground = "";
         public Dimensions attachment = null;
         public String divider = "";
+        public String body = "";
+        public int leftMargin = 0;
+        public int rightMargin = 0;
+        public int topMargin = 0;
+        public int bottomMargin = 0;
+        public boolean onAttachment = false;
 
-        private Style() {
-
+        protected Style(final T stylable) {
+            this.stylable = stylable;
         }
 
-        public static Style build() {
-            return new Style();
-        }
-
-        public Style border(final Border border) {
+        public Style<T> border(final Border border) {
             this.border = border;
             return this;
         }
 
 
-        public Style background(final String bg) {
+        public Style<T> background(final String bg) {
             this.background = bg;
             return this;
         }
 
 
-        public Style foreground(final String fg) {
+        public Style<T> foreground(final String fg) {
             this.foreground = fg;
             return this;
         }
 
 
-        public Style attachment(final Dimensions attachment) {
+        public Style<T> attachment(final Dimensions attachment) {
             this.attachment = attachment;
             return this;
         }
-        
-        public Style divider(final String divider) {
+
+        public Style<T> onAttachment(final boolean onAttach) {
+            this.onAttachment = onAttach;
+            return this;
+        }
+
+        public Style<T> divider(final String divider) {
             this.divider = divider;
             return this;
         }
 
+        public Style<T> textBody(final String body) {
+            this.body = body;
+            return this;
+        }
+
+        public Style<T> margin(final int left, final int right) {
+            this.leftMargin = left;
+            this.rightMargin = right;
+            return this;
+        }
+
+        public Style<T> marginTopBottom(final int top, final int bottom) {
+            this.topMargin = top;
+            this.bottomMargin = bottom;
+            return this;
+        }
+
+        public T apply() {
+            this.stylable.style(this);
+            return this.stylable;
+        }
     }
 }

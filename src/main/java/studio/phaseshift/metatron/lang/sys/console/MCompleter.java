@@ -58,16 +58,17 @@ public class MCompleter implements Completer {
                 if (o.isCode()) {
                     final Code code = o.resolve(noobj()).as();
                     final Profile profile = new Profile(code);
-                    final BarMenu menu = new BarMenu(List.of(Tuple.Pair.with("compile",()->System.out.println("compiling...")), Tuple.Pair.with("optimize", () -> System.out.println("optimizing..."))))
-                            .style(Stylable.Style.build()
-                                    .background("{{[b]&w}}")
-                                    .attachment(profile)
-                                    .divider("{{g}}|")
-                                    .border(Border.simple.color("{{g}}")));
-                    final String pretty = Graphitty.string(
-                            new Box(ObjStringSerializer.prettyPrintCode(code, 0), Border.simple.margin(2,2).color("{{c}}"))
-                                    .bottom(new Separator("-", menu).color("{{y}}"),Border.none)
-                                    .bottom(menu,Border.simple.color("{{r}}")).toString());
+                    final Box mainBox = new Box(ObjStringSerializer.prettyPrintCode(code, 0), Border.simple.margin(2, 2).style().foreground("{{c}}").apply())
+                            .bottom(new Separator("-", profile).color("{{y}}"), Border.none)
+                            .bottom(profile, Border.simple.margin(2, 2).style().foreground("{{r}}").apply());
+                    final BarMenu menu = new BarMenu(List.of(Tuple.Pair.with("compile", () -> System.out.println("compiling...")), Tuple.Pair.with("optimize", () -> System.out.println("optimizing..."))))
+                            .style()
+                            .background("{{[b]&w}}")
+                            .attachment(mainBox)
+                            .onAttachment(true)
+                            .divider("{{g}}|")
+                            .border(Border.simple.style().foreground("{{g}}").apply()).apply();
+                    final String pretty = Graphitty.string(menu.toString());
                     candidates.add(new Candidate("", pretty, null, null, "", null, false));
                 }
             } else {

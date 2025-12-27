@@ -20,6 +20,7 @@ package studio.phaseshift.metatron.ui;
 
 import studio.phaseshift.metatron.util.Tuple;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /*
@@ -29,8 +30,8 @@ public class BarMenu implements Dimensions, Stylable<BarMenu> {
 
     private final List<Tuple.Pair<String, Runnable>> options;
     private int currentActive = 0;
-    private Style style = Style.build();
-    
+    private Style<BarMenu> style = this.style();
+
     public BarMenu(final List<Tuple.Pair<String, Runnable>> options) {
         this.options = options;
     }
@@ -39,10 +40,19 @@ public class BarMenu implements Dimensions, Stylable<BarMenu> {
     public String toString() {
         String top = this.options.stream().map(Tuple.Pair::get0).reduce(this.style.background + this.style.border.leftSide(), (a, b) -> a + (this.style.background + " " + this.style.background + b + " " + this.style.divider));
         top = top.substring(0, top.length() - this.style.divider.length());
-        top =  top + (this.style.background + this.style.divider + "{{X}}");
+        top = top + (this.style.background + this.style.divider + "{{X}}");
         final int topLength = Graphitty.strip(top).length();
         top = top + (this.style.background + " ".repeat(this.style.attachment.width() - topLength - Graphitty.strip(this.style.border.rightSide()).length())) + this.style.border.rightSide() + "{{X}}";
-        return null == this.style.attachment ? top : (top + "\n" + this.style.attachment);
+        if (null == this.style.attachment)
+            return top;
+        final String attachmentString = this.style.attachment.toString();
+        if (this.style.onAttachment) {
+            final List<String> attachmentList = List.of(attachmentString.split("\n"));
+            return top + "\n" + attachmentList.subList(1,attachmentList.size()).stream().reduce("",(a,b) -> a + b + "\n");
+        }
+        else
+            return top + "\n" + attachmentString;
+
     }
 
 
@@ -52,23 +62,12 @@ public class BarMenu implements Dimensions, Stylable<BarMenu> {
     }
 
     @Override
-    public int height() {
-        return Dimensions.super.height();
-    }
-
-    @Override
     public String rowString(int i) {
         return i == 0 ? this.toString() : "";
     }
 
-
     @Override
-    public Style style() {
-        return this.style;
-    }
-
-    @Override
-    public BarMenu style(final Style style) {
+    public BarMenu style(final Style<BarMenu> style) {
         this.style = style;
         return this;
     }

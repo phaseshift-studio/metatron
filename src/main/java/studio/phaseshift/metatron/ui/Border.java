@@ -19,12 +19,11 @@
 package studio.phaseshift.metatron.ui;
 
 import java.util.Arrays;
-import java.util.List;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public interface Border extends Colorable<Border> {
+public interface Border extends Stylable<Border> {
 
     String border();
 
@@ -60,15 +59,15 @@ public interface Border extends Colorable<Border> {
         return this.border().split(";")[7];
     }
 
-    default Border color(final String graphitty) {
-        final String colorBorder = Arrays.stream(border().split(";")).map(b -> graphitty + b + "{{X}}").reduce((a, b) -> a + ";" + b).orElseThrow();
+    default Border style(final Style style) {
+        final String colorBorder = Arrays.stream(border().split(";")).map(b -> style.foreground + b + "{{X}}").reduce((a, b) -> a + ";" + b).orElseThrow();
         return () -> colorBorder;
     }
 
     default Border margin(int left, int right) {
         final String marginBorder =
                 this.topLeftCorner() + this.topSide().repeat(left) + ";" +
-                        this.topSide().repeat(right)  + this.topRightCorner()  + ";" +
+                        this.topSide().repeat(right) + this.topRightCorner() + ";" +
                         this.bottomLeftCorner() + this.bottomSide().repeat(left) + ";" +
                         this.bottomSide().repeat(right) + this.bottomRightCorner() + ";" +
                         this.leftSide() + " ".repeat(left) + ";" +
@@ -79,8 +78,8 @@ public interface Border extends Colorable<Border> {
     }
 
     Border simple = () -> "+;+;+;+;|;|;-;-";
-    
-    Border thick = () ->  "[];[];[];[];||;||;=;=";
+
+    Border thick = () -> "[];[];[];[];||;||;=;=";
 
     Border none = () -> " ; ; ; ; ; ; ; ";
 
