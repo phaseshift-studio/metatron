@@ -23,9 +23,8 @@ import studio.phaseshift.metatron.lang.core.m.parser.mParser;
 import studio.phaseshift.metatron.lang.core.m.type.*;
 import studio.phaseshift.metatron.lang.sys.router.Router;
 import studio.phaseshift.metatron.lang.util.serial.ObjStringSerializer;
-import studio.phaseshift.metatron.ui.Box;
-import studio.phaseshift.metatron.ui.Graphitty;
-import studio.phaseshift.metatron.ui.Separator;
+import studio.phaseshift.metatron.ui.*;
+import studio.phaseshift.metatron.util.Tuple;
 
 import java.util.List;
 
@@ -59,12 +58,16 @@ public class MCompleter implements Completer {
                 if (o.isCode()) {
                     final Code code = o.resolve(noobj()).as();
                     final Profile profile = new Profile(code);
+                    final BarMenu menu = new BarMenu(List.of(Tuple.Pair.with("compile",()->System.out.println("compiling...")), Tuple.Pair.with("optimize", () -> System.out.println("optimizing..."))))
+                            .style(Stylable.Style.build()
+                                    .background("{{[b]&w}}")
+                                    .attachment(profile)
+                                    .divider("{{g}}|")
+                                    .border(Border.simple.color("{{g}}")));
                     final String pretty = Graphitty.string(
-                            new Box(ObjStringSerializer.prettyPrintCode(code, 0), Box.BASIC_BORDER)
-                                    .bottom(new Separator(" ", profile),Box.NO_BORDER)
-                                    .bottom(new Separator("{{c}}-", profile),Box.NO_BORDER)
-                                    .bottom(new Separator(" ", profile),Box.NO_BORDER)
-                                    .bottom(profile,Box.BASIC_BORDER).toString());
+                            new Box(ObjStringSerializer.prettyPrintCode(code, 0), Border.simple.margin(2,2).color("{{c}}"))
+                                    .bottom(new Separator("-", menu).color("{{y}}"),Border.none)
+                                    .bottom(menu,Border.simple.color("{{r}}")).toString());
                     candidates.add(new Candidate("", pretty, null, null, "", null, false));
                 }
             } else {

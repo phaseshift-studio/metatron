@@ -66,7 +66,6 @@ import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.lang.sys.sysInstSet.SYS_TYPE_TID;
-import static studio.phaseshift.metatron.ui.Box.BASIC_BORDER;
 
 public class Console extends MRec implements Threadable, Runnable {
 
@@ -186,13 +185,13 @@ public class Console extends MRec implements Threadable, Runnable {
                             List.of("name", "short", "description"))
                             .addRow(List.of("space walk", "<tab>", "explore spaces"))
                             .addRow(List.of("introspect", "<space><tab>", "analyze machine"))
-                            .addRow(List.of("header", "random header", "random header")).toString(), Box.coloredBorder(BASIC_BORDER, "b")).toString());
+                            .addRow(List.of("header", "random header", "random header")).toString(), Border.simple).toString());
                 } else if (line.startsWith(":log")) {
                     LogObj.setSLF4J(line.substring(4));
                 } else if (line.startsWith(":top")) {
                     TTop.ttop(terminal, System.out, System.err, new String[0]);
                 } else if (line.startsWith(":box")) {
-                    LOG.none(new Box(line.substring(4).trim(), BASIC_BORDER));
+                    LOG.none(new Box(line.substring(4).trim(), Border.simple));
                 } else if (line.startsWith(":less")) {
                     Commands.less(terminal, System.in, System.out, System.err, Paths.get(""), new String[0]);
                 } else if (line.startsWith(":select")) {

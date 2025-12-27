@@ -74,6 +74,8 @@ gc.collect()
 wlan = Wifi.connect(secrets['ssid'], secrets['password'], secrets['host'])
 soc = None
 
+from metatron.mserver import MServer
+
 def make_read_lambda(index):
     return lambda s: s.pwm[index]
 
@@ -135,8 +137,10 @@ def main_thread_function():
             print("resetting due to main loop error", ex)
             machine.reset()
 
-
 LOG.info("metatron boot process complete")
 if "stack_kb" in secrets.keys():
     _thread.stack_size(secrets["stack_kb"] * 1024)
 _thread.start_new_thread(main_thread_function, ())
+
+server = MServer()
+server.start()

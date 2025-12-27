@@ -31,37 +31,33 @@ public class Box implements Dimensions {
     protected final String title;
     protected final List<String> options;
     protected final String body;
-    protected final List<String> lrtb;
-
-    public static final List<String> NO_BORDER = List.of("", "", "", "", "", "", "", "");
-    public static final List<String> BASIC_BORDER = List.of("|", "|", "-", "-", "+", "+", "+", "+");
-    public static final List<String> DOUBLE_BORDER = List.of("||", "||", "=", "=", "//", "\\\\", "//", "\\\\");
-
-    public static List<String> coloredBorder(final List<String> border, final String color) {
-        return border.stream().map(s -> Graphitty.string("{{%s}}%s{{X}}", color, s)).toList();
+    protected final Border border;
+    
+    public static List<String> coloredBorder(final Border border, final String color) {
+        return Arrays.stream(border.toString().split("")).map(s -> Graphitty.string("{{%s}}%s{{X}}", color, s)).toList();
     }
 
-    public Box(final String body, final List<String> lrtb) {
-        this(null, body, lrtb);
+    public Box(final String body, final Border border) {
+        this(null, body, border);
     }
 
-    public Box(final String title, final String body, final List<String> lrtb) {
-        this(title, null, body, lrtb);
+    public Box(final String title, final String body, final Border border) {
+        this(title, null, body, border);
     }
 
-    public Box(final String title, final List<String> options, final String body, final List<String> lrtb) {
+    public Box(final String title, final List<String> options, final String body, final Border border) {
         this.title = title;
         this.body = body;
-        this.lrtb = lrtb;
+        this.border = border;
         this.options = options;
     }
 
-    public Box bottom(final Dimensions dims, final List<String> border) {
+    public Box bottom(final Dimensions dims, final Border border) {
         return this.bottom(null, dims, border);
     }
 
-    public Box bottom(final List<String> options, final Dimensions dims, final List<String> border) {
-        return new Box(null, options, this.toString() + "\n" + dims.toString(), border);
+    public Box bottom(final List<String> options, final Dimensions dims, final Border border) {
+        return new Box(null, options, this + "\n" + dims.toString(), border);
     }
 
     public Box right(final Dimensions dims) {
@@ -78,7 +74,7 @@ public class Box implements Dimensions {
             sb.append("\n");
         }
         sb.deleteCharAt(sb.length() - 1);
-        return new Box(sb.toString(), this.lrtb);
+        return new Box(sb.toString(), this.border);
     }
 
     public String toString() {
@@ -90,22 +86,22 @@ public class Box implements Dimensions {
                 .orElse(0);
 
         final StringBuilder sb = new StringBuilder();
-        final String top = "%s%s".formatted(null == this.title ? "" : this.title, this.lrtb.get(2).repeat(null == this.title ? maxLen : maxLen - Graphitty.strip(this.title).length())).trim();
+        final String top = "%s%s".formatted(null == this.title ? "" : this.title, this.border.topSide().toString().repeat(null == this.title ? maxLen : maxLen - Graphitty.strip(this.title).length())).trim();
         if (!top.isEmpty())
-            sb.append(this.lrtb.get(4)).append(top).append(this.lrtb.get(5)).append('\n');
+            sb.append(this.border.topLeftCorner()).append(top).append(this.border.topRightCorner()).append('\n');
         if (null != options) {
-            sb.append(this.lrtb.get(0)).append(this.options).append(" ".repeat(maxLen - Graphitty.strip(this.options.toString()).length())).append(this.lrtb.get(1)).append('\n');
+            sb.append(this.border.leftSide()).append(this.options).append(" ".repeat(maxLen - Graphitty.strip(this.options.toString()).length())).append(this.border.rightSide()).append('\n');
         }
         for (final String line : lines) {
-            sb.append(this.lrtb.get(0))
+            sb.append(this.border.leftSide())
                     .append(line)
                     .append(" ".repeat(maxLen - Graphitty.strip(line).length()))
-                    .append(this.lrtb.get(1))
+                    .append(this.border.rightSide())
                     .append('\n');
         }
-        final String bottom = this.lrtb.get(3).repeat(maxLen).trim();
+        final String bottom = this.border.bottomSide().toString().repeat(maxLen).trim();
         if (!bottom.isEmpty())
-            sb.append(this.lrtb.get(6)).append(bottom).append(this.lrtb.get(7)).append("\n");
+            sb.append(this.border.bottomLeftCorner()).append(bottom).append(this.border.bottomRightCorner()).append("\n");
         return sb.toString();
     }
 }
