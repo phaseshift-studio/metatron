@@ -1,3 +1,6 @@
+
+abc?dom=2&rng=3(noobj){?}
+
 [-- metatron example boot --];
 print("{{r}}------------\n{{g}}*{{y}}boot/args{{X}}: ",
       *boot/args, 

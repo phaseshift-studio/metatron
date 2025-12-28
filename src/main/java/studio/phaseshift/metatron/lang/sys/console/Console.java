@@ -19,7 +19,13 @@
 package studio.phaseshift.metatron.lang.sys.console;
 
 import org.jline.builtins.Commands;
+import org.jline.builtins.ConfigurationPath;
+import org.jline.builtins.SyntaxHighlighter;
 import org.jline.builtins.TTop;
+import org.jline.console.SystemRegistry;
+import org.jline.console.impl.Builtins;
+import org.jline.console.impl.SystemHighlighter;
+import org.jline.console.impl.SystemRegistryImpl;
 import org.jline.reader.*;
 import org.jline.reader.impl.DefaultParser;
 import org.jline.reader.impl.history.DefaultHistory;
@@ -46,14 +52,12 @@ import studio.phaseshift.metatron.util.Common;
 import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Threadable;
 
-import java.io.BufferedReader;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.function.Supplier;
 
 import static org.jline.keymap.KeyMap.alt;
 import static org.jline.keymap.KeyMap.ctrl;
@@ -82,7 +86,8 @@ public class Console extends MRec implements Threadable, Runnable {
     private final Terminal terminal;
     private final LineReader reader;
     private final StatusLine status;
-    // private SyntaxHighlighter highlighter;
+    private final ConfigurationPath configurations;
+    private SyntaxHighlighter highlighter;
     private final Thread thread;
     public static Console LOCAL_INSTANCE = null;
 
@@ -106,20 +111,21 @@ public class Console extends MRec implements Threadable, Runnable {
                     .eofOnUnclosedBracket(DefaultParser.Bracket.CURLY, DefaultParser.Bracket.ROUND, DefaultParser.Bracket.SQUARE);
             this.terminal = TerminalBuilder.builder().encoding(StandardCharsets.UTF_8).system(true).build();
             this.outputHeader();
-            /*final Supplier<Path> workDir = () -> Paths.get(".");
-            final ConfigurationPath configPath = new ConfigurationPath(
-                    Paths.get("./conf"),  // application-wide settings
-                    Paths.get("/home/killswitch/software/metatron/conf") // user-specific settings
+            final Supplier<Path> currentDir = () -> Paths.get("");
+            this.configurations = new ConfigurationPath(
+                    Paths.get("conf"),                                      // application-wide settings
+                    Paths.get(System.getProperty("user.home"), ".metatron") // user-specific settings
             );
-            final Builtins builtins = new Builtins(workDir, configPath, null);
-            SystemRegistry systemRegistry = new SystemRegistryImpl(parser, terminal, workDir, configPath);
+
+            Builtins builtins = new Builtins(currentDir, this.configurations, null);
+            SystemRegistry systemRegistry = new SystemRegistryImpl(parser, terminal, currentDir, this.configurations);
             systemRegistry.setCommandRegistries(builtins);
-            final SyntaxHighlighter syntaxHighlighter = SyntaxHighlighter.build(configPath.getConfig("mtron.nanorc"), "mtron");//SyntaxHighlighter.build(Paths.get("./conf/mtron.nanorc"), "mtron");*/
+            this.highlighter = SyntaxHighlighter.build(this.configurations.getConfig("jnanorc"), "mtron");//SyntaxHighlighter.build(Paths.get("./conf/mtron.nanorc"), "mtron");*/
             this.reader = LineReaderBuilder.builder()
                     .terminal(terminal)
                     .appName("metatron")
                     .history(new DefaultHistory())
-                    //.highlighter(new SystemHighlighter(syntaxHighlighter, syntaxHighlighter, syntaxHighlighter))
+                    .highlighter(new SystemHighlighter(this.highlighter, this.highlighter, this.highlighter)) // TODO: command/args/lang
                     .parser(parser)
                     .variable(LineReader.HISTORY_FILE, HISTORY_FILE)
                     .option(LineReader.Option.AUTO_FRESH_LINE, true)
@@ -165,6 +171,10 @@ public class Console extends MRec implements Threadable, Runnable {
         return this.status;
     }
 
+    public ConfigurationPath getConfigurations() {
+        return this.configurations;
+    }
+
     public void run() {
         while (BOOTING) {
             Common.sleepThread(10);
@@ -193,9 +203,9 @@ public class Console extends MRec implements Threadable, Runnable {
                 } else if (line.startsWith(":log")) {
                     LogObj.setSLF4J(line.substring(4));
                 } else if (line.startsWith(":top")) {
-                    TTop.ttop(terminal, System.out, System.err, new String[0]);
+                    TTop.ttop(terminal, new PrintStream(terminal.output()), System.err, new String[0]);
                 } else if (line.startsWith(":less")) {
-                    Commands.less(terminal, System.in, System.out, System.err, Paths.get(""), new String[0]);
+                    Commands.less(terminal, terminal.input(), new PrintStream(terminal.output()), System.err, Paths.get(""), new String[0]);
                 } else if (line.startsWith(":select")) {
                     final Subscriptions selector = new Subscriptions(this);
                     final String selected = selector.select();
@@ -209,7 +219,9 @@ public class Console extends MRec implements Threadable, Runnable {
                     (result.isNoObj() ?
                             MObjs.empty() :
                             result.isObjCall() ? MMachine.of(result.as()).apply() : result).stream()
-                            .forEach(o -> Graphitty.out(this.terminal.output(), "{{-X-}}{{m}}=={{g}}>{{X}}%s\n".formatted(o.toString())));
+                            .forEach(o -> {
+                                Graphitty.out(this.terminal.output(), "{{-X-}}{{m}}=={{g}}>{{X}}%s\n".formatted(this.highlighter.highlight(Graphitty.strip(o.toString())).toAnsi()));
+                            });
                 }
             } catch (final UserInterruptException e) {
                 LOG.warn(Graphitty.sillyPrint("process interrupted", true, true));

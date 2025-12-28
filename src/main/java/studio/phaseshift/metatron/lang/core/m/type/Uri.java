@@ -107,7 +107,7 @@ public interface Uri extends Mono, Ring.O<Uri> {
                             return str(lhs.uriValue().toString());
                         else if (inst.arg(0).matches(T(URI_TID)))
                             return lhs;
-                        else throw MTronException.of("unknown conversion for %s => %s", lhs.tid(), inst.arg(0).tid());
+                        else throw MTronException.of("no defined conversion for %s => %s", lhs.tid(), inst.arg(0).tid());
                     }),
                 // TODO:    instC(SPLIT_INST_TID.dom(URI_TID).rng(LST_TID.some()), lst(T(URI_TID)), (lhs, inst) -> lst(Arrays.stream(lhs.uriValue().toString().split(inst.arg(0).uriValue().toString())).map(MUri::uri))),
                 instC(SPLIT_INST_TID.dom(URI_TID).rng(URI_TID.some()), lst(T(URI_TID)), (lhs, inst) -> objs(Arrays.stream(lhs.uriValue().toString().split(inst.arg(0).uriValue().toString())).map(MUri::uri))),

@@ -73,7 +73,7 @@ public interface Str extends Mono {
                             return real(Double.parseDouble(lhs.strValue()));
                         else if (inst.arg(0).matches(T(STR_TID)))
                             return lhs;
-                        else throw MTronException.of("unknown conversion for %s => %s", lhs.tid(), inst.arg(0).tid());
+                        else throw MTronException.of("no defined conversion for %s => %s", lhs.tid(), inst.arg(0).tid());
                     }),
                     docWrap(instC(SPLIT_INST_TID.dom(STR_TID).rng(STR_TID.some()), lst(T(STR_TID)), (lhs, inst) -> objs(Arrays.stream(lhs.strValue().split(inst.arg(0).strValue())).map(MStr::str))),
                             "a str to split", "the components of the split lhs str", Map.of(jnt(0), "a token to split on"), "split the lhs string according to the token arg and emit a stream of splits"),

@@ -38,8 +38,13 @@ public class Editor {
 
     public static boolean of(final Console console, final Object object) {
         try {
-            Options options = Options.compile(Nano.usage()).parse(new String[]{"--tabsize=2", "--tabstospaces", "--tempfile", "--autoindent", "--syntax=mtron", "--emptyline"});
-            final Nano nano = new Nano(console.getTerminal(), Paths.get(""), options);
+            Options options = Options.compile(Nano.usage()).parse(new String[]{
+                    "--tabsize=2", 
+                    "--tabstospaces", 
+                    "--tempfile",
+                    "--autoindent",
+                    "--emptyline"});
+            final Nano nano = new Nano(console.getTerminal(), Paths.get(""), options, console.getConfigurations());
             final File objFile = object instanceof File ?
                     (File) object :
                     (object instanceof Obj ?
@@ -47,6 +52,7 @@ public class Editor {
                             Editor.createSourceFile(object.toString()));
             nano.title = Graphitty.sillyPrint("metatron", false, true);
             nano.open(objFile.getPath());
+            nano.smoothScrolling = true;
             nano.run();
             try (final BufferedReader reader = new BufferedReader(new FileReader(objFile))) {
                 final String content = reader.lines().reduce((a, b) -> a + b + "\n").orElse("").trim();

@@ -102,7 +102,7 @@ public interface Int extends Mono, Ring.O<Int> {
                             return str(lhs.intValue().toString(), inst.arg(0).tid(), lhs.vid());
                         else if (inst.arg(0).matches(T(URI_TID)))
                             return uri(f(lhs.intValue().toString()), inst.arg(0).tid(), lhs.vid());
-                        else throw MTronException.of("unknown conversion for %s => %s", lhs.tid(), inst.arg(0).tid());
+                        else throw MTronException.of("no defined conversion for %s => %s", lhs.tid(), inst.arg(0).tid());
                     }),
                     instC(MULT_INST_TID.dom(INT_TID).rng(INT_TID), lst(T(INT_TID)), (lhs, inst) -> lhs.jvm(lhs.intValue() * inst.arg(0).intValue())),
                     instC(MINUS_INST_TID.dom(INT_TID).rng(INT_TID), lst(T(INT_TID)), (lhs, inst) -> lhs.jvm(lhs.intValue() - inst.arg(0).intValue())),

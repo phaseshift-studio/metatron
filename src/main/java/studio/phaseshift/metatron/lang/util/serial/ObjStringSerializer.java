@@ -91,13 +91,23 @@ public record ObjStringSerializer(Builder b) implements ObjSerializer<String> {
 
     @Override
     public String write(final Obj obj) throws IllegalStateException {
+        return Graphitty.strip(this.temp(obj));
+    }
+
+    public String temp(final Obj obj) {
         try {
             final StringBuilder sb = new StringBuilder();
             if (obj.isNoObj())
                 return sb.append("{{m}}noobj{{X}}").toString();
             /// ///////////////////////////////////////////////////////////////
             /// ///////////////////////////////////////////////////////////////
-            else if (obj instanceof final Inst inst) {
+            else if (obj instanceof final Code code) {
+                generateTID(sb, obj.tid(), true, true);
+                return generateVID(sb
+                        .append(code.insts().stream()
+                                .map(Inst::toString).reduce("", (a, b) -> a + "." + b).substring(1)), code)
+                        .toString();
+            } else if (obj instanceof final Inst inst) {
                 if (inst.tid().basePath().equals(AUTO_INST_TID) && inst.arg(0).tid().equals(FROM_INST_TID)) {
                     return sb.append("{{c}}*{{X}}").append(inst.arg(0).<Inst>as().arg(0)).toString();
                 } else {
@@ -212,14 +222,27 @@ public record ObjStringSerializer(Builder b) implements ObjSerializer<String> {
                     sb.append("{{c}}0x{{y}}").append(HexFormat.of().formatHex(obj.<Bytes>as().jvm().array()));
                 }
 
-                return sb.append("{{X}}").toString();
+                return generateVID(sb, obj).append("{{X}}").toString();
+            }
+            /// ///////////////////////////////////////////////////////////////
+            /// ///////////////////////////////////////////////////////////////
+            else if (obj.isStr()) {
+                final String objStr = obj.strValue();
+                final String quotes = objStr.contains("\"") || objStr.contains("\n") || objStr.contains("'") ? "\"\"\"" : "'";
+                return generateVID(generateTID(sb, obj.tid(), true)
+                        .append("{{c}}")
+                        .append(quotes)
+                        .append("{{y}}")
+                        .append(objStr)
+                        .append("{{c}}")
+                        .append(quotes), obj).append("{{X}}").toString();
             }
             /// ///////////////////////////////////////////////////////////////
             /// ///////////////////////////////////////////////////////////////
             else if (BASE_TYPES.contains(obj.type().tid().basePath())) {
                 return generateVID(generateTID(sb, obj.tid(), true)
                         .append("{{y}}")
-                        .append(null == obj.jvm() ? "" : (obj.isStr() ? "{{c}}'{{y}}" + obj.jvm().toString() + "{{c}}'" : obj.jvm().toString()))
+                        .append(null == obj.jvm() ? "" : obj.jvm().toString())
                         .append("{{m}}"), obj)
                         .append("{{X}}")
                         .toString();
@@ -261,16 +284,7 @@ public record ObjStringSerializer(Builder b) implements ObjSerializer<String> {
             lst.elements().forEach(v -> {
                 if (nested && !first.getAndSet(false))
                     sb.append(" ".repeat(depth + 2));
-                if (v.isRec()) {
-                    this.generateRec(sb, v.as(), depth + 1);
-                } else if (v.isLst()) {
-                    this.generateLst(sb, v.as(), depth + 1);
-                } else {
-                    this.writeClip(sb, v);
-                }
-                sb.append("{{g}},");
-                if (nested)
-                    sb.append("\n");
+                this.processNestedPoly(sb, depth, nested, v);
             });
             if (nested)
                 sb.deleteCharAt(sb.length() - 1);
@@ -296,16 +310,7 @@ public record ObjStringSerializer(Builder b) implements ObjSerializer<String> {
                 if (nested)
                     sb.append(" ".repeat(false && first.getAndSet(false) ? 0 : (depth * 2) + 1));
                 sb.append(k.isUri() ? ("{{b}}" + k.uriValue()) : write(k)).append("{{g}}=>");
-                if (v.isRec()) {
-                    this.generateRec(sb, v.as(), depth + 1);
-                } else if (v.isLst()) {
-                    this.generateLst(sb, v.as(), depth + 1);
-                } else {
-                    this.writeClip(sb, v);
-                }
-                sb.append("{{g}},");
-                if (nested)
-                    sb.append("\n");
+                this.processNestedPoly(sb, depth, nested, v);
             });
             if (nested)
                 sb.deleteCharAt(sb.length() - 1);
@@ -313,6 +318,19 @@ public record ObjStringSerializer(Builder b) implements ObjSerializer<String> {
             sb.append("{{g}}]");
         }
         return generateVID(sb, rec);
+    }
+
+    private void processNestedPoly(final StringBuilder sb, final int depth, final boolean nested, final Obj v) {
+        if (v.isRec()) {
+            this.generateRec(sb, v.as(), depth + 1);
+        } else if (v.isLst()) {
+            this.generateLst(sb, v.as(), depth + 1);
+        } else {
+            this.writeClip(sb, v);
+        }
+        sb.append("{{g}},");
+        if (nested)
+            sb.append("\n");
     }
 
     private StringBuilder generateVID(final StringBuilder sb, final Obj obj) {
@@ -358,7 +376,7 @@ public record ObjStringSerializer(Builder b) implements ObjSerializer<String> {
     public static final class Builder {
         private boolean withColonSugar;
         private boolean ignoreRewrites;
-        private int strClip = 50;
+        private int strClip = 40;
         private boolean prettyPrint = true;
         private Set<fURI> hideTypes = new HashSet<>();
 

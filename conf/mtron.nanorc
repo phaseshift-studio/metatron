@@ -1,29 +1,42 @@
-## metatron 1.0-alpha
+## metatron 1.0-alpha ##################################
+# @author Marko A. Rodriguez <http://markorodriguez.com>
 #
+# created for JLine nano syntax highlighter
+#  only color, icolor, and syntax commands supported
+
 syntax "mtron" ".*\.(mtron)$"
-comment "#"
 
-color blue "\<(obj|bytes|bool|int|real|str|uri|rel|lst|rec|code|inst)\>"
-color red "\<(noobj|T)\>"
+# assume everything is a uri
+color blue ".*"
+
+# inst arguments
+# icolor yellow "\((.|[^\)])*\)"
+
+# common sugars
+color green "[.:;,+*|=!\%@]" "<<" ">>" "<=" "=>" "->" ">-" "-<"
+
+# color blue "\<(obj|bytes|bool|int|real|str|uri|rel|lst|rec|code|inst)\>"
+color magenta "\<(noobj|T)\>"
 color yellow "\<(true|false)\>"
-color yellow "\<?\>"
-
-## comments
-# color green "^([--).*|[[:space:]].*$"
-
-# bytes,int,real
-icolor yellow "\b(([1-9][0-9]+)|0+)\.[0-9]+\b" "\b[1-9][0-9]*\b" "\b0[0-7]*\b" "\b0x[1-9a-f][0-9a-f]*\b"
-
-# str
-color yellow "['][^']*[^\\][']" "[']{3}.*[^\\][']{3}"
-color yellow "["][^"]*[^\\]["]" "["]{3}.*[^\\]["]{3}"
-
-# structural tokens
-icolor green "=>" "->" ">-" "-<"
+color yellow "\?"
+color yellow "&"
+color cyan "\<dom|rng\>"
+color yellow "\{.\}"
+color red "\{\?\}"
+# common structural tokens
 color green "[(){}]" "\[" "\]"
-
-#sugar
-color green "[.:;,+*|=!\%@]" "<<" ">>"
-
-#icolor cyan "\?\w+"
-#icolor green " \w+:"
+### bytes
+icolor yellow "0x[1-9a-f][0-9a-f]*"
+### int,real
+icolor yellow "(([1-9][0-9]+)|0+)\.[0-9]+" "[1-9][0-9]*" "0[0-7]*"
+### < > wrapped uris
+icolor yellow "<(.|[^>])*>"
+color cyan "0x"
+### str
+color yellow "\"[^\"]*\""
+color yellow "[''][^']*[^\\][']"
+color yellow start="\"\"\"" end="\"\"\""
+color yellow start="'''" end="'''"
+### comments
+color gray "(\[--).*$"
+color gray start="\[==" end="==\]"

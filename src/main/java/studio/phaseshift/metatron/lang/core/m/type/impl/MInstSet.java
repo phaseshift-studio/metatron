@@ -45,10 +45,10 @@ public abstract class MInstSet extends MSpace<Map<fURI, Set<? extends Obj>>> imp
 
     /// /////////////////////////////////////////////////////////////////////////////////////////
 
-    protected final Map<fURI, Set<Inst>> INST_TABLE = new LinkedHashMap<>();
-    protected final Map<fURI, Type> TYPE_TABLE = new LinkedHashMap<>();
-    protected final Map<fURI, Obj> CONST_TABLE = new LinkedHashMap<>();
-    protected final Map<fURI, Inst> REWRITE_TABLE = new LinkedHashMap<>();
+    protected final Map<fURI, Set<Inst>> INST_TABLE = Collections.synchronizedMap(new LinkedHashMap<>());
+    protected final Map<fURI, Type> TYPE_TABLE = Collections.synchronizedMap(new LinkedHashMap<>());
+    protected final Map<fURI, Obj> CONST_TABLE = Collections.synchronizedMap(new LinkedHashMap<>());
+    protected final Map<fURI, Inst> REWRITE_TABLE = Collections.synchronizedMap(new LinkedHashMap<>());
 
     public MInstSet(final fURI tid, final fURI vid) {
         super(new LinkedHashMap<>(), mutableMap(uri(Tokens.PATTERN), uri(tid.extend(fURI.ALL)), uri(Tokens.Q), lst(new DocQ())), tid.extend(fURI.ALL), tid, vid);
@@ -115,23 +115,24 @@ public abstract class MInstSet extends MSpace<Map<fURI, Set<? extends Obj>>> imp
         return Q.Helper.processPreRead(this.qs(), this.vid, vid).orElse(
                 objs(INST_TABLE.entrySet()
                         .stream()
-                        .filter(kv -> kv.getKey().bimatches(bigvid.basePath()))
+                        .filter(kv -> kv.getKey().bimatches(bigvid.basePath().asNode()))
                         .flatMap(kv -> kv.getValue().stream())
                         .filter(i -> !bigvid.hasDom() || i.dom().tid().bimatches(bigvid.dom()))
                         .filter(i -> !bigvid.hasRng() || i.rng().tid().bimatches(bigvid.rng()))
                         .map(i -> vid.isNode() ? i : rel(i.tid().toUri(), i)))
                         .append(objs(TYPE_TABLE.entrySet()
                                 .stream()
-                                .filter(kv -> kv.getKey().matches(bigvid))
+                                .filter(kv -> kv.getKey().matches(bigvid.asNode()))
                                 .map(kv -> vid.isNode() ?
                                         kv.getValue() :
                                         rel(kv.getKey().toUri(), kv.getValue()))))
                         .append(objs(CONST_TABLE.entrySet()
                                 .stream()
-                                .filter(kv -> kv.getKey().matches(bigvid))
+                                .filter(kv -> kv.getKey().matches(bigvid.asNode()))
                                 .map(kv -> vid.isNode() ?
                                         kv.getValue() :
                                         rel(kv.getKey().toUri(), kv.getValue())))));
+
     }
 
     @Override
@@ -147,6 +148,9 @@ public abstract class MInstSet extends MSpace<Map<fURI, Set<? extends Obj>>> imp
                 }
             } else if (obj.isType()) {
                 TYPE_TABLE.put(vid, obj.as());
+            } else if (obj.isNoObj()) {
+                final Set<Inst> insts = INST_TABLE.get(vid.basePath());
+                insts.removeIf(i -> i.tid().matches(vid));
             } else {
                 CONST_TABLE.put(vid, obj);
                 // throw MTronException.of("inst set %s can only store insts, types, and rewrites: {{r}}!{{/r}} %s", this.simpeToString(), obj);
