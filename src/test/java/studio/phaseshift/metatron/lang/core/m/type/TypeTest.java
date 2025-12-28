@@ -23,8 +23,8 @@ import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.lang.MetatronObjTest;
 import studio.phaseshift.metatron.lang.core.m.parser.mParser;
 import studio.phaseshift.metatron.lang.sys.router.Router;
-import studio.phaseshift.metatron.ui.Graphitty;
-import studio.phaseshift.metatron.ui.GraphittyLogger;
+import studio.phaseshift.metatron.ui.graphitty.Graphitty;
+import studio.phaseshift.metatron.ui.graphitty.GraphittyLogger;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.furi.fURI.f;

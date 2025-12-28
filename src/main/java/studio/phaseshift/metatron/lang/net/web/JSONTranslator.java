@@ -26,9 +26,8 @@ import studio.phaseshift.metatron.lang.core.m.type.*;
 import studio.phaseshift.metatron.lang.sys.router.Router;
 import studio.phaseshift.metatron.lang.util.serial.ObjSerializer;
 import studio.phaseshift.metatron.lang.util.serial.ObjStringSerializer;
-import studio.phaseshift.metatron.ui.Graphitty;
-import studio.phaseshift.metatron.ui.GraphittyLogger;
-import studio.phaseshift.metatron.ui.Palette;
+import studio.phaseshift.metatron.ui.graphitty.Graphitty;
+import studio.phaseshift.metatron.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Translator;
 
@@ -71,7 +70,6 @@ public record JSONTranslator(ObjSerializer<String> serializer) implements Transl
             .build()
             .simpleColon(true)
             // .hideTypesMatching(MTRON_CORE_TYPES)
-            .palette(Palette.NO_COLOR)
             .prettyPrint(false)
             .ignoreRewrites(true)
             .create();

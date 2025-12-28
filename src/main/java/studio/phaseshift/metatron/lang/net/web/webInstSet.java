@@ -25,7 +25,7 @@ import studio.phaseshift.metatron.lang.core.m.type.Obj;
 import studio.phaseshift.metatron.lang.core.m.type.Type;
 import studio.phaseshift.metatron.lang.core.m.type.impl.MInstSet;
 import studio.phaseshift.metatron.lang.net.iot.ZigbeeObj;
-import studio.phaseshift.metatron.ui.Graphitty;
+import studio.phaseshift.metatron.ui.graphitty.Graphitty;
 
 import java.util.Set;
 import java.util.stream.Collectors;

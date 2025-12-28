@@ -28,8 +28,8 @@ import studio.phaseshift.metatron.lang.core.m.type.Rec;
 import studio.phaseshift.metatron.lang.core.m.type.Type;
 import studio.phaseshift.metatron.lang.sys.router.Router;
 import studio.phaseshift.metatron.lang.sys.router.impl.MConnection;
-import studio.phaseshift.metatron.ui.Graphitty;
-import studio.phaseshift.metatron.ui.GraphittyLogger;
+import studio.phaseshift.metatron.ui.graphitty.Graphitty;
+import studio.phaseshift.metatron.ui.graphitty.GraphittyLogger;
 
 import java.util.Map;
 import java.util.function.BiPredicate;

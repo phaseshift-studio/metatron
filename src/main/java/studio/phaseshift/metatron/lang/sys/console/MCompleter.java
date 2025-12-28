@@ -20,11 +20,12 @@ package studio.phaseshift.metatron.lang.sys.console;
 
 import org.jline.reader.*;
 import studio.phaseshift.metatron.lang.core.m.parser.mParser;
-import studio.phaseshift.metatron.lang.core.m.type.*;
+import studio.phaseshift.metatron.lang.core.m.type.Inst;
+import studio.phaseshift.metatron.lang.core.m.type.Obj;
+import studio.phaseshift.metatron.lang.core.m.type.Rec;
+import studio.phaseshift.metatron.lang.core.m.type.Rel;
 import studio.phaseshift.metatron.lang.sys.router.Router;
-import studio.phaseshift.metatron.lang.util.serial.ObjStringSerializer;
-import studio.phaseshift.metatron.ui.*;
-import studio.phaseshift.metatron.util.Tuple;
+import studio.phaseshift.metatron.ui.graphitty.Graphitty;
 
 import java.util.List;
 
@@ -55,22 +56,8 @@ public class MCompleter implements Completer {
                 }
             } else if (!buffer.toString().isEmpty() && buffer.toString().charAt(buffer.toString().length() - 1) == ' ') {
                 final Obj o = mParser.parse(buffer.toString());
-                if (o.isCode()) {
-                    final Code code = o.resolve(noobj()).as();
-                    final Profile profile = new Profile(code);
-                    final Box mainBox = new Box(ObjStringSerializer.prettyPrintCode(code, 0), Border.simple.margin(2, 2).style().foreground("{{c}}").apply())
-                            .bottom(new Separator("-", profile).color("{{y}}"), Border.none)
-                            .bottom(profile, Border.simple.margin(2, 2).style().foreground("{{r}}").apply());
-                    final BarMenu menu = new BarMenu(List.of(Tuple.Pair.with("compile", () -> System.out.println("compiling...")), Tuple.Pair.with("optimize", () -> System.out.println("optimizing..."))))
-                            .style()
-                            .background("{{[b]&w}}")
-                            .attachment(mainBox)
-                            .onAttachment(true)
-                            .divider("{{g}}|")
-                            .border(Border.simple.style().foreground("{{g}}").apply()).apply();
-                    final String pretty = Graphitty.string(menu.toString());
-                    candidates.add(new Candidate("", pretty, null, null, "", null, false));
-                }
+                if (o.isCode())
+                    candidates.add(new Candidate("", new Explain(o.as()).toGraphitty(), null, null, "", null, false));
             } else {
                 final Obj results = mParser.eval(buffer.toString());
                 results.forEach(obj -> candidates.addAll(makeCandidate(obj, results.unique())));

@@ -24,8 +24,8 @@ import studio.phaseshift.metatron.lang.core.m.type.Obj;
 import studio.phaseshift.metatron.lang.core.m.type.Rec;
 import studio.phaseshift.metatron.lang.core.m.type.impl.MObj;
 import studio.phaseshift.metatron.lang.core.mach.type.Monad;
-import studio.phaseshift.metatron.ui.Graphitty;
-import studio.phaseshift.metatron.ui.GraphittyLogger;
+import studio.phaseshift.metatron.ui.graphitty.Graphitty;
+import studio.phaseshift.metatron.ui.graphitty.GraphittyLogger;
 
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.lang.core.mach.machInstSet.MACH_MONAD_TID;

@@ -22,7 +22,7 @@ import org.jline.builtins.Nano;
 import org.jline.builtins.Options;
 import studio.phaseshift.metatron.lang.core.m.type.Obj;
 import studio.phaseshift.metatron.lang.util.serial.ObjStringSerializer;
-import studio.phaseshift.metatron.ui.Graphitty;
+import studio.phaseshift.metatron.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.io.BufferedReader;

@@ -24,7 +24,7 @@ import studio.phaseshift.metatron.lang.core.m.type.Bytes;
 import studio.phaseshift.metatron.lang.core.m.type.Obj;
 import studio.phaseshift.metatron.lang.core.m.type.Type;
 import studio.phaseshift.metatron.lang.core.m.type.impl.MRec;
-import studio.phaseshift.metatron.ui.Graphitty;
+import studio.phaseshift.metatron.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.util.MTronException;
 
 import javax.sound.sampled.*;

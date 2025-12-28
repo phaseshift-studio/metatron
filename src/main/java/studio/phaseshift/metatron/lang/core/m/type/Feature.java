@@ -19,8 +19,8 @@
 package studio.phaseshift.metatron.lang.core.m.type;
 
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.ui.Graphitty;
-import studio.phaseshift.metatron.ui.GraphittyLogger;
+import studio.phaseshift.metatron.ui.graphitty.Graphitty;
+import studio.phaseshift.metatron.ui.graphitty.GraphittyLogger;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)

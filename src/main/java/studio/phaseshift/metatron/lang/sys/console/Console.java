@@ -27,9 +27,7 @@ import org.jline.terminal.Terminal;
 import org.jline.terminal.TerminalBuilder;
 import org.jline.widget.Widgets;
 import org.slf4j.event.Level;
-import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.lang.core.m.inst.mInstSet;
 import studio.phaseshift.metatron.lang.core.m.parser.mParser;
 import studio.phaseshift.metatron.lang.core.m.type.Obj;
 import studio.phaseshift.metatron.lang.core.m.type.Rec;
@@ -39,8 +37,11 @@ import studio.phaseshift.metatron.lang.core.m.type.impl.MRec;
 import studio.phaseshift.metatron.lang.core.mach.type.impl.MMachine;
 import studio.phaseshift.metatron.lang.sys.fs.fileSpace;
 import studio.phaseshift.metatron.lang.util.LogObj;
-import studio.phaseshift.metatron.lang.util.serial.ObjStringSerializer;
-import studio.phaseshift.metatron.ui.*;
+import studio.phaseshift.metatron.ui.Border;
+import studio.phaseshift.metatron.ui.graphitty.Graphitty;
+import studio.phaseshift.metatron.ui.graphitty.GraphittyLogger;
+import studio.phaseshift.metatron.ui.widget.Panel;
+import studio.phaseshift.metatron.ui.widget.Table;
 import studio.phaseshift.metatron.util.Common;
 import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Threadable;
@@ -56,6 +57,7 @@ import java.util.*;
 
 import static org.jline.keymap.KeyMap.alt;
 import static org.jline.keymap.KeyMap.ctrl;
+import static studio.phaseshift.metatron.BootLoader.BOOTING;
 import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.lang.core.m.inst.mFluent.StartLess.isa_;
@@ -164,7 +166,9 @@ public class Console extends MRec implements Threadable, Runnable {
     }
 
     public void run() {
-        Mode.waitForBoot();
+        while (BOOTING) {
+            Common.sleepThread(10);
+        }
         this.status.start();
         Common.sleepThread(50);
         String line = "";
@@ -181,7 +185,7 @@ public class Console extends MRec implements Threadable, Runnable {
                     Graphitty.out(this.terminal.output(), "{{XX&@}}");
                     this.status.refresh();
                 } else if (line.equals(":help")) {
-                    Graphitty.out(this.terminal.output(), new Box("{{c}}help menu{{X}}", new Table(
+                    Graphitty.out(this.terminal.output(), new Panel("{{c}}help menu{{X}}", new Table(
                             List.of("name", "short", "description"))
                             .addRow(List.of("space walk", "<tab>", "explore spaces"))
                             .addRow(List.of("introspect", "<space><tab>", "analyze machine"))
@@ -190,8 +194,6 @@ public class Console extends MRec implements Threadable, Runnable {
                     LogObj.setSLF4J(line.substring(4));
                 } else if (line.startsWith(":top")) {
                     TTop.ttop(terminal, System.out, System.err, new String[0]);
-                } else if (line.startsWith(":box")) {
-                    LOG.none(new Box(line.substring(4).trim(), Border.simple));
                 } else if (line.startsWith(":less")) {
                     Commands.less(terminal, System.in, System.out, System.err, Paths.get(""), new String[0]);
                 } else if (line.startsWith(":select")) {
@@ -284,13 +286,12 @@ public class Console extends MRec implements Threadable, Runnable {
 
         private CustomWidgets(final LineReader reader) {
             super(reader);
-            this.addWidget("hide-widget", this::hideWidget);
-            this.addWidget("typing-widget", this::typingWidget);
-            getKeyMap().bind(new Reference("hide-widget"), ctrl('h'));
-            getKeyMap().bind(new Reference("typing-widget"), ctrl('y'));
-            /// /////////////////////////////////////////////////////
+            /*getKeyMap().bind((Widget) () -> {
+                new MCompleter(Console.this).complete(reader, null, new ArrayList<>());
+                return true;
+            },"\t");*/
             getKeyMap().bind((Widget)
-                    () -> Editor.of(Console.this, reader.getBuffer().toString()), ctrl('e'));
+                    () -> Editor.of(Console.this, reader.getBuffer().toString()), ctrl('y'));
             getKeyMap().bind((Widget)
                     () -> {
                         Console.this.reader.getBuffer().write("\n");
@@ -302,25 +303,6 @@ public class Console extends MRec implements Threadable, Runnable {
                         System.exit(0);
                         return true;
                     }, ctrl('q'));
-        }
-
-
-        private boolean typingWidget() {
-            BootLoader.TYPE_CHECK = !BootLoader.TYPE_CHECK;
-            final int xLocation = terminal.getCursorPosition(System.out::print).getX() + 1;
-            Graphitty.out(terminal.output(), "\n{{-X-}}{{%s}}%s{{/%s}}{{X}} base type prefixes{{^1&|%d}}{{X}}", !BootLoader.TYPE_CHECK ? "y" : "g", !BootLoader.TYPE_CHECK ? "no type checking" : "typing checking", !BootLoader.TYPE_CHECK ? "y" : "g", xLocation);
-            return true;
-        }
-
-        private boolean hideWidget() {
-            boolean hiding = ObjStringSerializer.HIDE_TIDS.isEmpty();
-            if (hiding)
-                ObjStringSerializer.HIDE_TIDS.addAll(mInstSet.BASE_TYPES);
-            else
-                ObjStringSerializer.HIDE_TIDS.clear();
-            final int xLocation = terminal.getCursorPosition(System.out::print).getX() + 1;
-            Graphitty.out(terminal.output(), "\n{{-X-}}{{%s}}%s{{/%s}}{{X}} base type prefixes{{^1&|%d}}{{X}}", hiding ? "y" : "g", hiding ? "hiding" : "showing", hiding ? "y" : "g", xLocation);
-            return true;
         }
     }
 }

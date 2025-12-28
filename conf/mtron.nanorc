@@ -6,6 +6,7 @@ comment "#"
 color blue "\<(obj|bytes|bool|int|real|str|uri|rel|lst|rec|code|inst)\>"
 color red "\<(noobj|T)\>"
 color yellow "\<(true|false)\>"
+color yellow "\<?\>"
 
 ## comments
 # color green "^([--).*|[[:space:]].*$"

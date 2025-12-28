@@ -16,49 +16,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.ui;
-
-import studio.phaseshift.metatron.BootLoader;
-import studio.phaseshift.metatron.util.MTronException;
-
-import java.util.Optional;
+package studio.phaseshift.metatron.ui.widget;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public interface Mode {
-
-    static void waitForBoot() {
-        while (BootLoader.BOOTING) {
-            try {
-                Thread.sleep(10);
-            } catch (Exception e) {
-                throw MTronException.of(e);
-            }
-        }
-    }
-
-    void start();
-
-    void stop();
-
-    Optional<Thread> mainThread();
-
-    public class NoOp implements Mode {
-        public static Mode of() {
-            return new NoOp();
-        }
-
-        public void start() {
-
-        }
-
-        public void stop() {
-
-        }
-
-        public Optional<Thread> mainThread() {
-            return Optional.empty();
-        }
-    }
+public class Label {
 }

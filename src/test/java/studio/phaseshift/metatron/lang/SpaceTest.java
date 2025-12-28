@@ -24,7 +24,7 @@ import studio.phaseshift.metatron.MetatronTest;
 import studio.phaseshift.metatron.lang.core.m.parser.mParser;
 import studio.phaseshift.metatron.lang.core.m.type.Obj;
 import studio.phaseshift.metatron.lang.sys.router.Router;
-import studio.phaseshift.metatron.ui.Graphitty;
+import studio.phaseshift.metatron.ui.graphitty.Graphitty;
 
 import java.util.ArrayList;
 import java.util.List;

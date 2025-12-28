@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *
+ *  
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *
+ *  
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -16,7 +16,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.ui;
+package studio.phaseshift.metatron.ui.widget;
+
+import studio.phaseshift.metatron.ui.Border;
+import studio.phaseshift.metatron.ui.Widget;
+import studio.phaseshift.metatron.ui.graphitty.Graphitty;
 
 import java.util.Arrays;
 import java.util.List;
@@ -26,37 +30,37 @@ import java.util.stream.Stream;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class Box implements Dimensions {
+public class Panel implements Widget {
 
     protected final String title;
     protected final List<String> options;
     protected final String body;
     protected final Border border;
 
-    public Box(final String body, final Border border) {
+    public Panel(final String body, final Border border) {
         this(null, body, border);
     }
 
-    public Box(final String title, final String body, final Border border) {
+    public Panel(final String title, final String body, final Border border) {
         this(title, null, body, border);
     }
 
-    public Box(final String title, final List<String> options, final String body, final Border border) {
+    public Panel(final String title, final List<String> options, final String body, final Border border) {
         this.title = title;
         this.body = body;
         this.border = border;
         this.options = options;
     }
 
-    public Box bottom(final Dimensions dims, final Border border) {
+    public Panel bottom(final Widget dims, final Border border) {
         return this.bottom(null, dims, border);
     }
 
-    public Box bottom(final List<String> options, final Dimensions dims, final Border border) {
-        return new Box(null, options, this + "\n" + dims.toString(), border);
+    public Panel bottom(final List<String> options, final Widget dims, final Border border) {
+        return new Panel(null, options, this + "\n" + dims.toString(), border);
     }
 
-    public Box right(final Dimensions dims) {
+    public Panel right(final Widget dims) {
         final StringBuilder sb = new StringBuilder();
         for (int i = 0; i < Math.max(this.height(), dims.height()); i++) {
             if (i < this.height()) {
@@ -70,7 +74,7 @@ public class Box implements Dimensions {
             sb.append("\n");
         }
         sb.deleteCharAt(sb.length() - 1);
-        return new Box(sb.toString(), this.border);
+        return new Panel(sb.toString(), this.border);
     }
 
     public String toString() {

@@ -23,7 +23,7 @@ import org.jline.utils.AttributedStringBuilder;
 import org.jline.utils.Status;
 import org.slf4j.event.Level;
 import studio.phaseshift.metatron.lang.sys.router.Router;
-import studio.phaseshift.metatron.ui.Graphitty;
+import studio.phaseshift.metatron.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.util.Threadable;
 
 import java.util.List;

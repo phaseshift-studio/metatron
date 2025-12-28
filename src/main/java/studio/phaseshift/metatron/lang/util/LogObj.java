@@ -29,13 +29,12 @@ import studio.phaseshift.metatron.lang.core.m.type.Obj;
 import studio.phaseshift.metatron.lang.core.m.type.Rec;
 import studio.phaseshift.metatron.lang.core.m.type.Uri;
 import studio.phaseshift.metatron.lang.core.m.type.impl.MRec;
-import studio.phaseshift.metatron.ui.GraphittyObjLogger;
+import studio.phaseshift.metatron.ui.graphitty.GraphittyObjLogger;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.lang.reflect.Field;
 import java.util.Map;
 
-import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.REC_TID;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.lang.sys.sysInstSet.SYS_TYPE_TID;
 

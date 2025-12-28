@@ -35,9 +35,6 @@ import studio.phaseshift.metatron.lang.core.m.type.Type;
 import studio.phaseshift.metatron.lang.db.kv.kvSpace;
 import studio.phaseshift.metatron.lang.net.web.JSONTranslator;
 import studio.phaseshift.metatron.lang.sys.router.Router;
-import studio.phaseshift.metatron.lang.util.serial.ObjSerializer;
-import studio.phaseshift.metatron.lang.util.serial.ObjStringSerializer;
-import studio.phaseshift.metatron.ui.Palette;
 
 import java.nio.charset.StandardCharsets;
 import java.util.List;
@@ -60,13 +57,6 @@ import static studio.phaseshift.metatron.util.Common.mutableMap;
 
 public class mqttSpace extends MSpace<Mqtt5Client> {
 
-    private static final ObjSerializer<String> SERIALIZER = ObjStringSerializer
-            .build()
-            .simpleColon(true)
-            .palette(Palette.NO_COLOR)
-            .prettyPrint(false)
-            .ignoreRewrites(true)
-            .create();
     public static fURI MQTT_TID = IOT_INSTSET_TID.extend("space").extend("mqtt");
     public static final Type MQTT_TYPE = T(MQTT_TID, null,
             instC(mInstSet.INST_TID.dom(ALL.maybe()).rng(MQTT_TID),
@@ -85,7 +75,7 @@ public class mqttSpace extends MSpace<Mqtt5Client> {
                     }));
     protected final fURI broker;
     protected final fURI prefix;
-    protected final JSONTranslator jsonTranslator = new JSONTranslator(SERIALIZER);
+    protected final JSONTranslator jsonTranslator = new JSONTranslator();
     protected final Mqtt5Client client;
     protected final kvSpace cache;
 
@@ -179,7 +169,7 @@ public class mqttSpace extends MSpace<Mqtt5Client> {
         if (null != ret)
             return ret;
         if (vid.hasPattern()) {
-            this.read(vid.asBranch()).stream().map(r -> r.<Rel>as().first()).forEach(u -> this.write(u.uriValue(),obj));
+            this.read(vid.asBranch()).stream().map(r -> r.<Rel>as().first()).forEach(u -> this.write(u.uriValue(), obj));
         } else
             this.send(vid, obj);
        /* final Obj result = Space.Helper.resolveWrite(this, vid.basePath(), obj, (key, value) -> {

@@ -18,12 +18,14 @@
 
 package studio.phaseshift.metatron.ui;
 
+import studio.phaseshift.metatron.ui.graphitty.Graphitty;
+
 import java.util.Arrays;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public interface Dimensions {
+public interface Widget {
 
     default int width() {
         return Arrays.stream(this.toString().split("\n")).map(Graphitty::strip).map(String::length).max(Integer::compareTo).orElse(0);
@@ -32,15 +34,26 @@ public interface Dimensions {
     default int height() {
         return this.toString().split("\n").length;
     }
+    
+    default int rowCount() {
+        return this.height();
+    }
+    default int columnCount() {
+        return this.width();
+    }
 
     default String rowString(int i) {
         return this.toString().split("\n")[i];
     }
+    
+    default String toGraphitty() {
+        return Graphitty.string(this.toString());
+    }
 
-    public static class StringDimensions implements Dimensions {
+    public static class StringWidget implements Widget {
         final String string;
 
-        public StringDimensions(final String string) {
+        public StringWidget(final String string) {
             this.string = string;
         }
 

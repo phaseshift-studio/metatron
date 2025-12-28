@@ -31,21 +31,25 @@ public interface Stylable<T extends Stylable<T>> {
 
     class Style<T extends Stylable<T>> {
         public T stylable;
-
         public Border border = Border.none;
         public String background = "";
         public String foreground = "";
-        public Dimensions attachment = null;
+        public Widget attachment = null;
         public String divider = "";
         public String body = "";
         public int leftMargin = 0;
         public int rightMargin = 0;
         public int topMargin = 0;
         public int bottomMargin = 0;
-        public boolean onAttachment = false;
+        public boolean overlapAttachment = false;
+        public String pointer = "";
 
         protected Style(final T stylable) {
             this.stylable = stylable;
+        }
+
+        public static <T extends Stylable<T>> Style<T> empty() {
+            return new Style<>(null);
         }
 
         public Style<T> border(final Border border) {
@@ -53,6 +57,11 @@ public interface Stylable<T extends Stylable<T>> {
             return this;
         }
 
+        
+        public Style<T> pointer(final String pointer) {
+            this.pointer = pointer;
+            return this;
+        }
 
         public Style<T> background(final String bg) {
             this.background = bg;
@@ -66,13 +75,9 @@ public interface Stylable<T extends Stylable<T>> {
         }
 
 
-        public Style<T> attachment(final Dimensions attachment) {
+        public Style<T> attachment(final Widget attachment, final boolean overlap) {
             this.attachment = attachment;
-            return this;
-        }
-
-        public Style<T> onAttachment(final boolean onAttach) {
-            this.onAttachment = onAttach;
+            this.overlapAttachment = overlap;
             return this;
         }
 
@@ -86,17 +91,20 @@ public interface Stylable<T extends Stylable<T>> {
             return this;
         }
 
+        public Style<T> margin(final int left, final int right, final int top, final int bottom) {
+            this.leftMargin = left;
+            this.rightMargin = right;
+            this.topMargin = top;
+            this.bottomMargin = bottom;
+            return this;
+        }
+
         public Style<T> margin(final int left, final int right) {
             this.leftMargin = left;
             this.rightMargin = right;
             return this;
         }
 
-        public Style<T> marginTopBottom(final int top, final int bottom) {
-            this.topMargin = top;
-            this.bottomMargin = bottom;
-            return this;
-        }
 
         public T apply() {
             this.stylable.style(this);

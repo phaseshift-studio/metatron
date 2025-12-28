@@ -32,7 +32,7 @@ import studio.phaseshift.metatron.lang.core.m.type.impl.MUri;
 import studio.phaseshift.metatron.lang.core.m.type.impl.Optimizations;
 import studio.phaseshift.metatron.lang.sys.console.Profile;
 import studio.phaseshift.metatron.lang.sys.router.Router;
-import studio.phaseshift.metatron.ui.Graphitty;
+import studio.phaseshift.metatron.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Streamable;

@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *
+ *  
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *
+ *  
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -16,17 +16,19 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.ui;
+package studio.phaseshift.metatron.ui.widget;
 
+import studio.phaseshift.metatron.ui.Widget;
+import studio.phaseshift.metatron.ui.graphitty.Graphitty;
+import studio.phaseshift.metatron.ui.Stylable;
 import studio.phaseshift.metatron.util.Tuple;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class BarMenu implements Dimensions, Stylable<BarMenu> {
+public class BarMenu implements Widget, Stylable<BarMenu> {
 
     private final List<Tuple.Pair<String, Runnable>> options;
     private int currentActive = 0;
@@ -46,7 +48,7 @@ public class BarMenu implements Dimensions, Stylable<BarMenu> {
         if (null == this.style.attachment)
             return top;
         final String attachmentString = this.style.attachment.toString();
-        if (this.style.onAttachment) {
+        if (this.style.overlapAttachment) {
             final List<String> attachmentList = List.of(attachmentString.split("\n"));
             return top + "\n" + attachmentList.subList(1,attachmentList.size()).stream().reduce("",(a,b) -> a + b + "\n");
         }

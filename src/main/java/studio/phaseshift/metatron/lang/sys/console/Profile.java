@@ -22,15 +22,15 @@ import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.lang.core.m.type.Inst;
 import studio.phaseshift.metatron.lang.core.m.type.Obj;
 import studio.phaseshift.metatron.lang.sys.router.Router;
-import studio.phaseshift.metatron.ui.Dimensions;
-import studio.phaseshift.metatron.ui.Table;
+import studio.phaseshift.metatron.ui.Widget;
+import studio.phaseshift.metatron.ui.widget.Table;
 
 import java.util.List;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class Profile implements Dimensions {
+public class Profile implements Widget {
 
     protected final Obj obj;
     protected final Table table;

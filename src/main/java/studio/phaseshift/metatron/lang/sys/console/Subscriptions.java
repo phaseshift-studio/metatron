@@ -30,9 +30,9 @@ import studio.phaseshift.metatron.lang.core.m.type.InstSet;
 import studio.phaseshift.metatron.lang.core.m.type.Rel;
 import studio.phaseshift.metatron.lang.sys.router.Router;
 import studio.phaseshift.metatron.ui.Border;
-import studio.phaseshift.metatron.ui.Box;
-import studio.phaseshift.metatron.ui.Graphitty;
-import studio.phaseshift.metatron.ui.Table;
+import studio.phaseshift.metatron.ui.widget.Panel;
+import studio.phaseshift.metatron.ui.graphitty.Graphitty;
+import studio.phaseshift.metatron.ui.widget.Table;
 import studio.phaseshift.metatron.util.IteratorUtil;
 
 import java.util.*;
@@ -146,7 +146,7 @@ public class Subscriptions {
                 if (!location.contains("mod") && !location.contains("#")) {
                     try {
                         String space = Graphitty.strip(this.states.get(selectedState).entry(selectRow, 1).toString().trim());
-                        Router.global().logger().none(Graphitty.floating(new Box("{{m}}subscriptions{{X}}", Router.global().read(f(space).query("sub")).toString(), Border.simple).toString()));
+                        Router.global().logger().none(Graphitty.floating(new Panel("{{m}}subscriptions{{X}}", Router.global().read(f(space).query("sub")).toString(), Border.simple).toString()));
                     } catch (final Exception e) {
                         // do nothing
                     }

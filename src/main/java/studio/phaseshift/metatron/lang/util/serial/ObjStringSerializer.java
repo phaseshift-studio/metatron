@@ -22,8 +22,7 @@ import org.petitparser.context.Result;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.core.m.parser.mParser;
 import studio.phaseshift.metatron.lang.core.m.type.*;
-import studio.phaseshift.metatron.ui.Graphitty;
-import studio.phaseshift.metatron.ui.Palette;
+import studio.phaseshift.metatron.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.nio.ByteBuffer;
@@ -357,8 +356,6 @@ public record ObjStringSerializer(Builder b) implements ObjSerializer<String> {
     }
 
     public static final class Builder {
-
-        private Palette palette = Palette.STANDARD;
         private boolean withColonSugar;
         private boolean ignoreRewrites;
         private int strClip = 50;
@@ -373,10 +370,6 @@ public record ObjStringSerializer(Builder b) implements ObjSerializer<String> {
             return this;
         }
 
-        public Builder palette(final Palette palette) {
-            this.palette = palette;
-            return this;
-        }
 
         public Builder hideTypeMatching(final fURI pattern) {
             this.hideTypes.add(pattern);
