@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.ui.widget;
 
+import studio.phaseshift.metatron.lang.sys.console.Highlighter;
 import studio.phaseshift.metatron.ui.Widget;
 import studio.phaseshift.metatron.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.util.Tuple;
@@ -91,7 +92,9 @@ public class Table implements Widget {
         final StringBuilder sb = new StringBuilder();
         sb.append("{{g}}|{{X}}");
         for (int i = 0; i < this.row(index).size(); i++) {
-            sb.append(this.entry(index, i).toString()).append(this.addSpace(widths, i, this.entry(index, i))).append("{{g}}|{{X}}");
+            final String high = Highlighter.singleton().highlight(this.entry(index, i));
+            final String low = Graphitty.strip(this.entry(index, i).toString());
+            sb.append(high).append(this.addSpace(widths, i, low)).append("{{g}}|{{X}}");
         }
         return sb.toString();
     }

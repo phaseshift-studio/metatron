@@ -38,6 +38,7 @@ import static studio.phaseshift.metatron.lang.core.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MReal.real;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MType.T;
 
 public interface Real extends Mono, Ring.O<Real> {
@@ -95,6 +96,7 @@ public interface Real extends Mono, Ring.O<Real> {
         public static Set<Inst> insts() {
             return new LinkedHashSet<>(List.of(
                     instC(AS_INST_TID.dom(REAL_TID).rng(INT_TID), lst(T(INT_TID)), (lhs, inst) -> jnt(lhs.realValue().longValue(), inst.arg(0).tid(), lhs.vid())),
+                    instC(AS_INST_TID.dom(REAL_TID).rng(STR_TID), lst(T(STR_TID)), (lhs, inst) -> str(String.valueOf(lhs.realValue()), inst.arg(0).tid(), lhs.vid())),
                     instC(GT_INST_TID.dom(REAL_TID).rng(BOOL_TID), lst(T(REAL_TID)), (lhs, inst) -> bool(lhs.realValue() > inst.arg(0).realValue())),
                     instC(GTE_INST_TID.dom(REAL_TID).rng(BOOL_TID), lst(T(REAL_TID)), (lhs, inst) -> bool(lhs.realValue() >= inst.arg(0).realValue())),
                     instC(LT_INST_TID.dom(REAL_TID).rng(BOOL_TID), lst(T(REAL_TID)), (lhs, inst) -> bool(lhs.realValue() < inst.arg(0).realValue())),

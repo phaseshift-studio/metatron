@@ -48,12 +48,12 @@ public class mParserObjSerializer implements ObjSerializer<String> {
     }
 
     @Override
-    public ByteBuffer writeBytes(final Obj obj) {
+    public ByteBuffer outputBytes(final Obj obj) {
         return ByteBuffer.wrap(this.write(obj).getBytes(StandardCharsets.UTF_8));
     }
 
     @Override
-    public Obj readBytes(final ByteBuffer bytes) {
+    public Obj inputBytes(final ByteBuffer bytes) {
         return this.read(new String(bytes.array(), StandardCharsets.UTF_8));
     }
 

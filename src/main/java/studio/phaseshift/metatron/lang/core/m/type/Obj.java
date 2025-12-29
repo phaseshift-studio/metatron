@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.lang.core.m.type;
 
+import org.jline.utils.AttributedString;
 import studio.phaseshift.metatron.algebra.MultMonoid;
 import studio.phaseshift.metatron.algebra.PlusMonoid;
 import studio.phaseshift.metatron.algebra.Ring;
@@ -30,8 +31,11 @@ import studio.phaseshift.metatron.lang.core.m.type.impl.MInt;
 import studio.phaseshift.metatron.lang.core.m.type.impl.MObjFactory;
 import studio.phaseshift.metatron.lang.core.m.type.impl.MUri;
 import studio.phaseshift.metatron.lang.core.m.type.impl.Optimizations;
+import studio.phaseshift.metatron.lang.sys.console.Console;
+import studio.phaseshift.metatron.lang.sys.console.Highlighter;
 import studio.phaseshift.metatron.lang.sys.console.Profile;
 import studio.phaseshift.metatron.lang.sys.router.Router;
+import studio.phaseshift.metatron.lang.util.serial.ObjStringSerializer;
 import studio.phaseshift.metatron.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
@@ -531,7 +535,12 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
         }
 
         public static String objToString(final Obj obj) {
-            return Graphitty.string(obj);
+           // return Graphitty.string(obj);
+            return Highlighter.singleton().highlight(obj);
+        }
+
+        public static String highlight(final Obj obj) {
+            return Highlighter.singleton().highlight(obj);
         }
 
         public static void objCheckAndSave(final Obj obj) {
@@ -577,6 +586,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
 
         public static Set<Inst> insts() {
             return new LinkedHashSet<>(List.of(
+                    instC(AS_INST_TID.dom(A).rng(A),lst(T(A)),(lhs,inst)->lhs.tid(inst.arg(0).tid())),
                     instC(EXPLAIN_INST_TID.dom(ALL.maybe()).rng(STR_TID), lst(T(CODE_TID)), (lhs, inst) -> str(new Profile(inst.arg(0).as()).toString())),
                     instC(TO_STR_INST_TID.dom(A.maybe()).rng(STR_TID.maybe()), lst(), (lhs, inst) -> str(lhs.toString())),
                     instC(AUTO_INST_TID.dom(ALL.maybe()).rng(ALL.maybe()), lst(T(ALL.maybe())), (lhs, inst) -> inst.arg(0).apply(lhs)),

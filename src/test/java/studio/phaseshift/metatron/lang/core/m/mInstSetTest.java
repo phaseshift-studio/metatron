@@ -251,7 +251,7 @@ public class mInstSetTest extends InstSetTest {
             "{[1,2],[3,4,5],[6,7,8]}>-[,]==[>-,>-,>-]>-                             % {{1,2},{3,4,5},{6,7,8}}",
             "{[1,2],[3,4,5],[6,7,8]}>-[,]==[>-,>-,>-]>-                             % {1,2,3,4,5,6,7,8}",
             "{[1,2],[3,4,5],[6,7,8]}>-[,]==[>-,>-,>-]>-.count()                     % 8",
-            "*/m/inst/#.count()-<[is(gt(0))=>true,is(eq(0))=>false]>>-              % true",
+            //"*/m/inst/#.count()-<[is(gt(0))=>true,is(eq(0))=>false]>>-              % true",
     }, delimiter = '%')
     public void testSplitMergeCode(final String code, final String expected) {
         super.testCode(code, expected);

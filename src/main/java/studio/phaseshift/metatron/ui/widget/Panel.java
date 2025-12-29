@@ -86,7 +86,7 @@ public class Panel implements Widget {
                 .orElse(0);
 
         final StringBuilder sb = new StringBuilder();
-        final String top = "%s%s".formatted(null == this.title ? "" : this.title, this.border.topSide().toString().repeat(null == this.title ? maxLen : maxLen - Graphitty.strip(this.title).length())).trim();
+        final String top = "%s%s".formatted(null == this.title ? "" : this.title, this.border.topSide().repeat(null == this.title ? maxLen : maxLen - Graphitty.strip(this.title).length())).trim();
         if (!top.isEmpty())
             sb.append(this.border.topLeftCorner()).append(top).append(this.border.topRightCorner()).append('\n');
         if (null != options) {

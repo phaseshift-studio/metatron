@@ -45,12 +45,12 @@ public class ObjByteBufferSerializer implements ObjSerializer<ByteBuffer> {
     }
 
     @Override
-    public ByteBuffer writeBytes(final Obj obj) {
+    public ByteBuffer outputBytes(final Obj obj) {
         return this.write(obj);
     }
 
     @Override
-    public Obj readBytes(final ByteBuffer bytes) {
+    public Obj inputBytes(final ByteBuffer bytes) {
         return this.read(bytes);
     }
 

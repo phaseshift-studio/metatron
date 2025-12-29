@@ -146,7 +146,7 @@ public interface Router extends Obj, Space, Closeable {
 
     class Helper {
         public static String routerToString(final Router router) {
-            return Graphitty.string("{{b}}" + router.tid() + "{{g}}::[{{b}}pattern{{g}}=>{{y}}#{{g}}]@{{b}}" + router.vid() + "{{X}}");
+            return router.tid() + "::[pattern=>#]@" + router.vid();
         }
     }
 }

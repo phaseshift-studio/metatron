@@ -82,7 +82,7 @@ public class mqttSpace extends MSpace<Mqtt5Client> {
     public mqttSpace(final Mqtt5Client client, final Map<Obj, Obj> config, final fURI vid) {
         super(client, config, config.get(uri(PATTERN)).uriValue(), MQTT_TID, vid);
         this.prefix = config.containsKey(uri(Tokens.PREFIX)) ? config.get(uri(Tokens.PREFIX)).uriValue() : null;
-        LOG.info("{{y}}mtron{{g}}<=>{{y}}mqtt{{X}} mapping established: {{b}}%s {{g}}<=> ({{b}}%s {{g}}<=> {{b}}%s{{g}}){{X}}", this.pattern(), this.prefix, this.toMqttTopic(this.pattern()));
+        LOG.info("{{y}}mtron{{g}}<=>{{y}}mqtt{{X}} mapping established: %s {{g}}<=> ({{b}}%s {{g}}<=>{{X}} %s{{g}}){{X}}", this.pattern().toUri(), this.prefix.toUri(), uri(this.toMqttTopic(this.pattern())));
         this.cache = new kvSpace(this.pattern(), this.vid.extend("cache"));
         this.put(uri(Tokens.Q), lst(List.of(new MqttPubSubQ(this))), IMMUTABLE);
         this.broker = config.get(uri(Tokens.HOST)).orThrow(new IllegalArgumentException("config must have a host key")).uriValue();
@@ -127,7 +127,7 @@ public class mqttSpace extends MSpace<Mqtt5Client> {
                         if (null != b)
                             LOG.error(b);
                         else
-                            LOG.info("synchronized with mqtt topic: %s", toMqttTopic(this.pattern));
+                            LOG.info("synchronized with mqtt topic: %s", uri(toMqttTopic(this.pattern)));
                     })
                     .get();
         } catch (final Exception e) {

@@ -19,10 +19,12 @@
 package studio.phaseshift.metatron.lang.sys.console;
 
 import studio.phaseshift.metatron.lang.core.m.type.Code;
+import studio.phaseshift.metatron.lang.util.serial.ObjCleanStringSerializer;
 import studio.phaseshift.metatron.lang.util.serial.ObjStringSerializer;
 import studio.phaseshift.metatron.ui.Border;
 import studio.phaseshift.metatron.ui.Stylable;
 import studio.phaseshift.metatron.ui.Widget;
+import studio.phaseshift.metatron.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.ui.widget.BarMenu;
 import studio.phaseshift.metatron.ui.widget.Panel;
 import studio.phaseshift.metatron.ui.widget.Separator;
@@ -54,7 +56,7 @@ public class Explain implements Widget, Stylable<Explain> {
     public String toString() {
         final Code code = this.code.resolve(noobj()).as();
         final Profile profile = new Profile(code);
-        final Panel mainBox = new Panel(ObjStringSerializer.prettyPrintCode(code, 0), Border.simple.margin(2, 2).style().foreground("{{c}}").apply())
+        final Panel mainBox = new Panel(Highlighter.singleton().highlight(ObjCleanStringSerializer.prettyPrintCode(code)), Border.simple.margin(2, 2).style().foreground("{{c}}").apply())
                 .bottom(new Separator("-", profile).color("{{y}}"), Border.none)
                 .bottom(profile, Border.simple.margin(2, 2).style().foreground("{{r}}").apply());
         final BarMenu menu = new BarMenu(List.of(Tuple.Pair.with("compile", () -> System.out.println("compiling...")), Tuple.Pair.with("optimize", () -> System.out.println("optimizing..."))))

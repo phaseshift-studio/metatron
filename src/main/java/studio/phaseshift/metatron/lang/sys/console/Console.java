@@ -20,11 +20,9 @@ package studio.phaseshift.metatron.lang.sys.console;
 
 import org.jline.builtins.Commands;
 import org.jline.builtins.ConfigurationPath;
-import org.jline.builtins.SyntaxHighlighter;
 import org.jline.builtins.TTop;
 import org.jline.console.SystemRegistry;
 import org.jline.console.impl.Builtins;
-import org.jline.console.impl.SystemHighlighter;
 import org.jline.console.impl.SystemRegistryImpl;
 import org.jline.reader.*;
 import org.jline.reader.impl.DefaultParser;
@@ -37,6 +35,7 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.core.m.parser.mParser;
 import studio.phaseshift.metatron.lang.core.m.type.Obj;
 import studio.phaseshift.metatron.lang.core.m.type.Rec;
+import studio.phaseshift.metatron.lang.core.m.type.Rel;
 import studio.phaseshift.metatron.lang.core.m.type.Type;
 import studio.phaseshift.metatron.lang.core.m.type.impl.MObjs;
 import studio.phaseshift.metatron.lang.core.m.type.impl.MRec;
@@ -76,9 +75,9 @@ import static studio.phaseshift.metatron.lang.sys.sysInstSet.SYS_TYPE_TID;
 public class Console extends MRec implements Threadable, Runnable {
 
     public static final fURI CONSOLE_TID = SYS_TYPE_TID.extend("console");
-
-    private static final String METATRON_VERSION = "0.1-alpha";
-
+    public static final String METATRON_VERSION = "0.1-alpha";
+    public static final String MTRON = "mtron";
+    public static final String MTRON_NANORC = "mtron.nanorc";
     private final GraphittyLogger LOG = Graphitty.log(this);
     public static String HEADER_FILE = "./conf/ansi_headers.txt";
     public static String HEADER_SEPARATOR = "####################";
@@ -86,8 +85,11 @@ public class Console extends MRec implements Threadable, Runnable {
     private final Terminal terminal;
     private final LineReader reader;
     private final StatusLine status;
-    private final ConfigurationPath configurations;
-    private SyntaxHighlighter highlighter;
+    private final static ConfigurationPath configurations = new ConfigurationPath(
+            Paths.get("conf"),                                     // application-wide settings
+            Paths.get(System.getProperty("user.home"), ".metatron") // user-specific settings
+    );
+    private final Highlighter highlighter;
     private final Thread thread;
     public static Console LOCAL_INSTANCE = null;
 
@@ -112,20 +114,15 @@ public class Console extends MRec implements Threadable, Runnable {
             this.terminal = TerminalBuilder.builder().encoding(StandardCharsets.UTF_8).system(true).build();
             this.outputHeader();
             final Supplier<Path> currentDir = () -> Paths.get("");
-            this.configurations = new ConfigurationPath(
-                    Paths.get("conf"),                                      // application-wide settings
-                    Paths.get(System.getProperty("user.home"), ".metatron") // user-specific settings
-            );
-
-            Builtins builtins = new Builtins(currentDir, this.configurations, null);
-            SystemRegistry systemRegistry = new SystemRegistryImpl(parser, terminal, currentDir, this.configurations);
+            final Builtins builtins = new Builtins(currentDir, Console.configurations, null);
+            SystemRegistry systemRegistry = new SystemRegistryImpl(parser, terminal, currentDir, Console.configurations);
             systemRegistry.setCommandRegistries(builtins);
-            this.highlighter = SyntaxHighlighter.build(this.configurations.getConfig("jnanorc"), "mtron");//SyntaxHighlighter.build(Paths.get("./conf/mtron.nanorc"), "mtron");*/
+            this.highlighter = Highlighter.singleton(); //SyntaxHighlighter.build(Console.configurations.getConfig("jnanorc"), "mtron");//SyntaxHighlighter.build(Paths.get("./conf/mtron.nanorc"), "mtron");*/
             this.reader = LineReaderBuilder.builder()
                     .terminal(terminal)
                     .appName("metatron")
                     .history(new DefaultHistory())
-                    .highlighter(new SystemHighlighter(this.highlighter, this.highlighter, this.highlighter)) // TODO: command/args/lang
+                    .highlighter(this.highlighter) // TODO: command/args/lang
                     .parser(parser)
                     .variable(LineReader.HISTORY_FILE, HISTORY_FILE)
                     .option(LineReader.Option.AUTO_FRESH_LINE, true)
@@ -172,7 +169,7 @@ public class Console extends MRec implements Threadable, Runnable {
     }
 
     public ConfigurationPath getConfigurations() {
-        return this.configurations;
+        return Console.configurations;
     }
 
     public void run() {
@@ -220,9 +217,33 @@ public class Console extends MRec implements Threadable, Runnable {
                             MObjs.empty() :
                             result.isObjCall() ? MMachine.of(result.as()).apply() : result).stream()
                             .forEach(o -> {
-                                Graphitty.out(this.terminal.output(), "{{-X-}}{{m}}=={{g}}>{{X}}%s\n".formatted(this.highlighter.highlight(Graphitty.strip(o.toString())).toAnsi()));
+                                this.highlighter.highlightToOut(this.terminal.output(), "{{-X-}}{{m}}=={{g}}>{{X}}");
+                                this.highlighter.highlightToOut(this.terminal.output(), o);
+                                this.highlighter.highlightToOut(this.terminal.output(), "\n");
                             });
                 }
+                
+                /*if (null != result && !result.isNoObj()) {
+                    fURI key = f("xxx");
+                    for (Obj o : (result.isObjCall() ? MMachine.of(result.as()).apply() : result).stream().toList()) {
+                        if (o.isRel() && o.<Rel>as().jvm().get0().isUri()) {
+                            Rel rel = o.<Rel>as();
+                            if (!rel.jvm().get0().uriValue().retract().equals(key)) {
+                                key = rel.jvm().get0().uriValue().retract();
+                                this.highlighter.highlightToOut(this.terminal.output(), "{{_&y}}%s{{X}}".formatted(rel.jvm().get0().uriValue().retract()));
+                                this.highlighter.highlightToOut(this.terminal.output(), "\n");
+                            }
+                            this.highlighter.highlightToOut(this.terminal.output(), "{{-X-}}{{m}}=={{g}}>{{X}}");
+                            this.highlighter.highlightToOut(this.terminal.output(), rel.jvm().get0().uriValue().name());
+                            this.highlighter.highlightToOut(this.terminal.output(), "{{g}}=>{{X}}");
+                            this.highlighter.highlightToOut(this.terminal.output(), rel.jvm().get1());
+                        } else {
+                            this.highlighter.highlightToOut(this.terminal.output(), "{{-X-}}{{m}}=={{g}}>{{X}}");
+                            this.highlighter.highlightToOut(this.terminal.output(), o);
+                        }
+                        this.terminal.output().write("\n".getBytes(StandardCharsets.UTF_8));
+                    }
+                }*/
             } catch (final UserInterruptException e) {
                 LOG.warn(Graphitty.sillyPrint("process interrupted", true, true));
             } catch (final EndOfFileException e) {

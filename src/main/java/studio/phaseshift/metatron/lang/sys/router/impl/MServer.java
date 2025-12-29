@@ -144,7 +144,7 @@ public class MServer extends WebSocketServer implements Cluster, Closeable, Obj,
         LOG.trace("received from %s byte buffer [length:%d]", conn.getAttachment(), message.array().length);
         this.ioStat.incrTotalBytesRecv(message.array().length);
         try {
-            final Obj obj = this.serializer.readBytes(message);// this.serializer.read(message);
+            final Obj obj = this.serializer.inputBytes(message);// this.serializer.read(message);
             this.onObj(conn, obj);
         } catch (final Exception e) {
             this.onObj(conn, fail(e));
@@ -164,7 +164,7 @@ public class MServer extends WebSocketServer implements Cluster, Closeable, Obj,
             //    result = result.vid(rvid);
             //     LOG.info("obj tagged: %s", result);
             // }
-            final ByteBuffer bytes = this.serializer.writeBytes(result);
+            final ByteBuffer bytes = this.serializer.outputBytes(result);
             conn.send(bytes);
             this.ioStat.incrTotalBytesSent(bytes.array().length);
             //this.sendObj(conn, result);
@@ -172,7 +172,7 @@ public class MServer extends WebSocketServer implements Cluster, Closeable, Obj,
                 this.onError(conn, result.<Fail>as().jvmAs());
 
         } catch (final Exception e) {
-            final ByteBuffer bytes = this.serializer.writeBytes(fail(e));
+            final ByteBuffer bytes = this.serializer.outputBytes(fail(e));
             conn.send(bytes);
             this.ioStat.incrTotalBytesRecv(bytes.array().length);
             this.onError(conn, e);

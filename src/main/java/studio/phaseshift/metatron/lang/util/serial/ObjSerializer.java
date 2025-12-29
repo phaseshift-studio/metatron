@@ -21,58 +21,56 @@ package studio.phaseshift.metatron.lang.util.serial;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.core.m.obj.NoObj;
 import studio.phaseshift.metatron.lang.core.m.type.*;
+import studio.phaseshift.metatron.lang.core.mach.type.Machine;
+import studio.phaseshift.metatron.lang.core.mach.type.Monad;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.nio.ByteBuffer;
 
 import static studio.phaseshift.metatron.furi.fURI.f;
+import static studio.phaseshift.metatron.lang.core.m.obj.NoObj.noobj;
 
 public interface ObjSerializer<T> {
 
     fURI OBJ_SERIAL_TID = f("/sys/serial");
 
-    ByteBuffer writeBytes(final Obj obj) throws MTronException;
+    ByteBuffer outputBytes(final Obj obj) throws MTronException;
 
-    Obj readBytes(final ByteBuffer bytes) throws MTronException;
+    Obj inputBytes(final ByteBuffer bytes) throws MTronException;
 
     fURI tid();
 
     default T write(final Obj obj) throws MTronException {
-        if (obj instanceof NoObj)
-            return this.writeNoObj(obj.as());
-        else if (obj instanceof Fail)
-            return this.writeFail(obj.as());
-        else if (obj instanceof Bool)
-            return this.writeBool(obj.as());
-        else if (obj instanceof Int)
-            return this.writeInt(obj.as());
-        else if (obj instanceof Real)
-            return this.writeReal(obj.as());
-        else if (obj instanceof Str)
-            return this.writeStr(obj.as());
-        else if (obj instanceof Uri)
-            return this.writeUri(obj.as());
-        else if (obj instanceof Rel)
-            return this.writeRel(obj.as());
-        else if (obj instanceof Lst)
-            return this.writeLst(obj.as());
-        else if (obj instanceof Rec)
-            return this.writeRec(obj.as());
-        else if (obj instanceof Inst)
-            return this.writeInst(obj.as());
-        else if (obj instanceof Code)
-            return this.writeCode(obj.as());
-        else if (obj instanceof Objs)
-            return this.writeObjs(obj.as());
-        else if (obj instanceof Type)
-            return this.writeType(obj.as());
-        else
-            throw MTronException.of("unknown obj class: %s", obj.getClass());
+        return switch (obj) {
+            case null -> this.writeNoObj(noobj());
+            case NoObj objs -> this.writeNoObj(obj.as());
+            case Bytes objs -> this.writeBytes(obj.as());
+            case Fail objs -> this.writeFail(obj.as());
+            case Bool objs -> this.writeBool(obj.as());
+            case Int objs -> this.writeInt(obj.as());
+            case Real objs -> this.writeReal(obj.as());
+            case Str objs -> this.writeStr(obj.as());
+            case Uri objs -> this.writeUri(obj.as());
+            case Rel objs -> this.writeRel(obj.as());
+            case Lst objs -> this.writeLst(obj.as());
+            case Rec objs -> this.writeRec(obj.as());
+            case Inst objs -> this.writeInst(obj.as());
+            case Code objs -> this.writeCode(obj.as());
+            case Objs objs -> this.writeObjs(obj.as());
+            case Type objs -> this.writeType(obj.as());
+            case Monad objs -> this.writeMonad(obj.as());
+            case Machine objs -> this.writeMachine(obj.as());
+            default -> throw MTronException.of("unknown obj class: %s", obj.getClass());
+        };
     }
 
     Obj read(final T data) throws MTronException;
 
     /// //////////////////////////////
+
+    default T writeBytes(final Bytes b) {
+        return this.write(b);
+    }
 
     default T writeNoObj(final NoObj n) {
         return this.write(n);
@@ -128,6 +126,14 @@ public interface ObjSerializer<T> {
 
     default T writeType(final Type t) {
         return this.write(t);
+    }
+
+    default T writeMonad(final Monad m) {
+        return this.write(m);
+    }
+
+    default T writeMachine(final Machine m) {
+        return this.write(m);
     }
 
 

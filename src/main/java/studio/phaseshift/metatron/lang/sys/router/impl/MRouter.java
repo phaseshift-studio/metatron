@@ -46,6 +46,7 @@ import static studio.phaseshift.metatron.lang.core.m.inst.mFluent.StartLess.from
 import static studio.phaseshift.metatron.lang.core.m.inst.mFluent.StartLess.start_;
 import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.MTRON_TID;
 import static studio.phaseshift.metatron.lang.core.m.obj.NoObj.noobj;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
 
@@ -67,8 +68,8 @@ public class MRouter extends MSpace<MServer> implements Router {
                         uri(Tokens.SPACE), rec(new ConcurrentHashMap<>(Map.of(uri("+/#"), new stackSpace(f("+/#"))))))), f("#"),
                 ROUTER_TID,
                 vid);
-        LOG.info("local router {{b}}%s{{/b}}", this);
-        LOG.info("available serializers: %s", SERIALIZERS.getSerializers().jvm().keySet());
+        LOG.info("local router %s", this);
+        LOG.info("available serializers: %s", lst(SERIALIZERS.getSerializers().recValue().keySet().stream().toList()));
     }
 
 

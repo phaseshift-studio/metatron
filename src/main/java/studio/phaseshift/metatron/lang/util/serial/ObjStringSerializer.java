@@ -58,12 +58,12 @@ public record ObjStringSerializer(Builder b) implements ObjSerializer<String> {
     }
 
     @Override
-    public ByteBuffer writeBytes(final Obj obj) {
+    public ByteBuffer outputBytes(final Obj obj) {
         return ByteBuffer.wrap(this.write(obj).getBytes());
     }
 
     @Override
-    public Obj readBytes(final ByteBuffer bytes) {
+    public Obj inputBytes(final ByteBuffer bytes) {
         return this.read(new String(bytes.array()));
     }
 

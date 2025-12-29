@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.ui;
 
+import studio.phaseshift.metatron.lang.sys.console.Highlighter;
 import studio.phaseshift.metatron.ui.graphitty.Graphitty;
 
 import java.util.Arrays;
@@ -46,8 +47,8 @@ public interface Widget {
         return this.toString().split("\n")[i];
     }
     
-    default String toGraphitty() {
-        return Graphitty.string(this.toString());
+    default String highlight() {
+        return Highlighter.singleton().highlight(this.toString());
     }
 
     public static class StringWidget implements Widget {

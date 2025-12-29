@@ -3,34 +3,53 @@
 #
 # created for JLine nano syntax highlighter
 #  only color, icolor, and syntax commands supported
+#  design principle: 
+#   highlight as a single uri and then convert sub components into more refined obj highlights
+#   necessary as a uri is any parse that isn't some other obj type
 
 syntax "mtron" ".*\.(mtron)$"
 
 # assume everything is a uri
 color blue ".*"
-
-# inst arguments
-# icolor yellow "\((.|[^\)])*\)"
-
-# common sugars
-color green "[.:;,+*|=!\%@]" "<<" ">>" "<=" "=>" "->" ">-" "-<"
-
-# color blue "\<(obj|bytes|bool|int|real|str|uri|rel|lst|rec|code|inst)\>"
-color magenta "\<(noobj|T)\>"
-color yellow "\<(true|false)\>"
+### qs
 color yellow "\?"
 color yellow "&"
-color cyan "\<dom|rng\>"
+# q keys
+color cyan "\<dom=|rng=\>"
+color green "="
+# f (j,m,?)
 color yellow "\{.\}"
 color red "\{\?\}"
+### noobj 
+color magenta "noobj"
+### type
+color magenta "::T"
+color green "::"
+### bool
+color yellow "(true)|(false)"
+### int
+color yellow "[1-9][0-9]*"
+### real
+color yellow "(([1-9][0-9]+)|0+)\.[0-9]+"
+# common sugars
+color green "[.:;,+*|=!\%@]" "<<" ">>" "<=" "=>" "->" ">-" "-<"
+# post sugars
+color yellow "\{.{1}\}" "\{[0-9]*,?[0-9]*\}"
 # common structural tokens
 color green "[(){}]" "\[" "\]"
+### uri numbers
+icolor blue "[a-z|/][0-9]+"
+# uri ip
+color blue "[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}(:)?[0-9]*"
+# uri schema
+icolor blue "(a-z)*(://)([0-9]|[a-z]|\.|-|_)+(:)?[0-9]*(/)?([a-z]|/)*"
+# rec/rel key
+icolor cyan "([a-z]|[0-9]|/|_)+=>"
+color green "=>"
+# uri wrapped
+color yellow "<(.|[^>])*>"
 ### bytes
-icolor yellow "0x[1-9a-f][0-9a-f]*"
-### int,real
-icolor yellow "(([1-9][0-9]+)|0+)\.[0-9]+" "[1-9][0-9]*" "0[0-7]*"
-### < > wrapped uris
-icolor yellow "<(.|[^>])*>"
+icolor yellow "0x([0-9]|[a-f])+"
 color cyan "0x"
 ### str
 color yellow "\"[^\"]*\""

@@ -185,20 +185,4 @@ public class MMachine extends MObj implements Machine {
     public Machine clone(Object jvm, fURI tid, fURI vid) {
         return new MMachine((Quartet<Code, Obj, Lst, Obj>) jvm, tid, vid);
     }
-
-    @Override
-    public String toString() {
-        return Machine.Helper.machToString(this);
-    }
-
-    @Override
-    public int hashCode() {
-        return Machine.Helper.machHashCode(this);
-    }
-
-    @Override
-    public boolean equals(final Object other) {
-        return Machine.Helper.machEquals(this, other);
-    }
-
 }

@@ -16,29 +16,17 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.lang.sys.console;
+package studio.phaseshift.metatron.lang.core.m.util;
 
-import org.jline.builtins.SyntaxHighlighter;
-import org.jline.reader.Highlighter;
-import org.jline.reader.LineReader;
-import org.jline.utils.AttributedString;
-
-import java.nio.file.Paths;
+import studio.phaseshift.metatron.lang.core.m.type.Obj;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class MHighlighter implements Highlighter {
-    private final Console console;
-    private final SyntaxHighlighter highlighter;
-  
-    private MHighlighter(final Console console) {
-        this.console = console;
-        this.highlighter = SyntaxHighlighter.build(Paths.get("/home/killswitch/software/metatron/conf/mtron.nanorc"), "mtron");
-    }
-
-    @Override
-    public AttributedString highlight(final LineReader reader, final String buffer) {
-        return this.highlighter.highlight(reader.getBuffer().toString());
-    }
+public interface ObjRender {
+    
+    String complete(final Obj obj);
+    String compact(final Obj obj);
+    String micro(final Obj obj);
+    
 }

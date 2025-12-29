@@ -21,7 +21,6 @@ package studio.phaseshift.metatron.lang.core.m.type;
 import studio.phaseshift.metatron.algebra.Ring;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -93,17 +92,9 @@ public interface Int extends Mono, Ring.O<Int> {
 
         public static Set<Inst> insts() {
             return new LinkedHashSet<>(List.of(
-                    instC(AS_INST_TID.dom(INT_TID).rng(A), lst(T(A)), (lhs, inst) -> {
-                        if (inst.arg(0).matches(T(INT_TID)))
-                            return lhs;
-                        if (inst.arg(0).matches(T(REAL_TID)))
-                            return real(lhs.intValue().doubleValue(), inst.arg(0).tid(), lhs.vid());
-                        else if (inst.arg(0).matches(T(STR_TID)))
-                            return str(lhs.intValue().toString(), inst.arg(0).tid(), lhs.vid());
-                        else if (inst.arg(0).matches(T(URI_TID)))
-                            return uri(f(lhs.intValue().toString()), inst.arg(0).tid(), lhs.vid());
-                        else throw MTronException.of("no defined conversion for %s => %s", lhs.tid(), inst.arg(0).tid());
-                    }),
+                    instC(AS_INST_TID.dom(INT_TID).rng(REAL_TID), lst(T(REAL_TID)), (lhs, inst) -> real(lhs.intValue().doubleValue(), inst.arg(0).tid(), lhs.vid())),
+                    instC(AS_INST_TID.dom(INT_TID).rng(STR_TID), lst(T(STR_TID)), (lhs, inst) -> str(lhs.intValue().toString(), inst.arg(0).tid(), lhs.vid())),
+                    instC(AS_INST_TID.dom(INT_TID).rng(URI_TID), lst(T(URI_TID)), (lhs, inst) -> uri(f(lhs.intValue().toString()), inst.arg(0).tid(), lhs.vid())),
                     instC(MULT_INST_TID.dom(INT_TID).rng(INT_TID), lst(T(INT_TID)), (lhs, inst) -> lhs.jvm(lhs.intValue() * inst.arg(0).intValue())),
                     instC(MINUS_INST_TID.dom(INT_TID).rng(INT_TID), lst(T(INT_TID)), (lhs, inst) -> lhs.jvm(lhs.intValue() - inst.arg(0).intValue())),
                     instC(PLUS_INST_TID.dom(INT_TID).rng(INT_TID), lst(T(INT_TID)), (lhs, inst) -> lhs.jvm(lhs.intValue() + inst.arg(0).intValue())),

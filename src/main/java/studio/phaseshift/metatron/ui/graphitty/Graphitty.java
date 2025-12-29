@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.ui.graphitty;
 
+import org.jline.utils.AttributedString;
 import studio.phaseshift.metatron.lang.core.m.type.Obj;
 import studio.phaseshift.metatron.lang.sys.router.Router;
 import studio.phaseshift.metatron.lang.util.serial.ObjStringSerializer;
@@ -140,6 +141,13 @@ public class Graphitty {
         return ret.toString();
     }
 
+    public String writeToString(final String f, final Object... args) {
+        this.parseDSL(f.formatted(args));
+        final String result = ((ByteArrayOutputStream) this.out).toString();
+        ((ByteArrayOutputStream) this.out).reset();
+        return result;
+    }
+
     public static String string(final String f, final Object... args) {
         try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
             final Graphitty temp = new Graphitty(out);
@@ -160,7 +168,7 @@ public class Graphitty {
     public static String string(final Obj obj) {
         return ObjStringSerializer.build().create().write(obj);
     }
-
+    
     public static String sillyPrint(final String text, final boolean rainbow, final boolean rollercoaster) {
         final Random random = new Random();
         final String colors = "rgbmcy";
@@ -181,7 +189,7 @@ public class Graphitty {
         final ByteArrayOutputStream out = new ByteArrayOutputStream();
         final Graphitty temp = new Graphitty(out);
         temp.ansiOn = false;
-        temp.parseDSL(string);
+        temp.parseDSL(AttributedString.stripAnsi(string));
         return out.toString();
     }
 

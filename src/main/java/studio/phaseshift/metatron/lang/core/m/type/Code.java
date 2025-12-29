@@ -21,6 +21,7 @@ package studio.phaseshift.metatron.lang.core.m.type;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.core.m.obj.NoObj;
 import studio.phaseshift.metatron.lang.core.mach.type.impl.MMachine;
+import studio.phaseshift.metatron.lang.util.serial.ObjCleanStringSerializer;
 import studio.phaseshift.metatron.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.ui.graphitty.GraphittyLogger;
 
@@ -64,7 +65,7 @@ public interface Code extends Call {
         // process bcode inst pipeline
         //this.code = Rewriter({Rewriter::by(), Rewriter::explain()}).apply(this.code);
         // setup global behavior around barriers, initials, and terminals
-        LOG.debug("resolving code:\n        [{{y}}PREPILED{{/y}}] %s {{g}}=>{{/g}}\n%s", lhs, prettyPrintCode(new StringBuilder(), this, 0, 7).toString());
+        LOG.debug("resolving code:\n        [{{y}}PREPILED{{/y}}] %s {{g}}=>{{/g}}\n%s", lhs, ObjCleanStringSerializer.prettyPrintCode(this));
         Obj token = lhs.type();
         //LOG.none("%s", token.rng());
         final List<Inst> resolvedCode = new ArrayList<>();
@@ -97,7 +98,7 @@ public interface Code extends Call {
             }
         }
         final Code resolved = this.jvm(resolvedCode);
-        LOG.debug("%s code:\n        [{{g}}COMPILED{{/g}}]\n%s", fullResolution ? "{{g}}resolved{{/g}}" : "{{y}}semi-resolved{{/y}}", prettyPrintCode(new StringBuilder(), resolved, 0, 7).toString());
+        LOG.debug("%s code:\n        [{{g}}COMPILED{{/g}}]\n%s", fullResolution ? "{{g}}resolved{{/g}}" : "{{y}}semi-resolved{{/y}}", ObjCleanStringSerializer.prettyPrintCode(resolved));
         return resolved;
 
     }

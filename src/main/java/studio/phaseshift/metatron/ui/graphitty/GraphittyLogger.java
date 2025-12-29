@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -24,6 +24,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.event.Level;
 import studio.phaseshift.metatron.lang.core.m.type.Obj;
+import studio.phaseshift.metatron.lang.sys.console.Highlighter;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.HashMap;
@@ -40,7 +41,7 @@ public class GraphittyLogger extends LayoutBase<ILoggingEvent> {
         put("TRACE", "c");
     }};
 
-    private enum OtherLevel {NONE, EXCEPT}
+    public enum OtherLevel {NONE, EXCEPT}
 
     protected final Object source;
 
@@ -53,6 +54,8 @@ public class GraphittyLogger extends LayoutBase<ILoggingEvent> {
     }
 
     private static String toStringOrNull(final Object o) {
+        if (o instanceof Obj)
+            return Obj.Helper.highlight((Obj) o);
         return null == o ? "null" : o.toString();
     }
 
@@ -66,7 +69,11 @@ public class GraphittyLogger extends LayoutBase<ILoggingEvent> {
     }
 
     private String makeMessage(final boolean metadata, final Object f, final Object... args) {
-        Object[] args2 = args.length == 0 ? new Object[0] : Stream.of(args).map(x -> isLambda(x) ? ((Supplier<?>) x).get() : x).toArray();
+        final Object[] args2 = args.length == 0 ? new Object[0] :
+                Stream.of(args)
+                        .map(x -> isLambda(x) ? ((Supplier<?>) x).get() : x)
+                        .map(x -> x instanceof Obj || x instanceof String ? Highlighter.singleton().highlight(x) : x)
+                        .toArray();
         return metadata ?
                 Graphitty.string("[{{b}}%s{{/b}}] %s".formatted(toSourceString(), args.length == 0 ? toStringOrNull(f) : toStringOrNull(f).formatted(args2))) :
                 Graphitty.string(args.length == 0 ? toStringOrNull(f) : toStringOrNull(f).formatted(args2));
