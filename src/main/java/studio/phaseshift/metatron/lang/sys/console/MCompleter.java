@@ -57,7 +57,7 @@ public class MCompleter implements Completer {
             } else if (!buffer.toString().isEmpty() && buffer.toString().charAt(buffer.toString().length() - 1) == ' ') {
                 final Obj o = mParser.parse(buffer.toString());
                 if (o.isCode())
-                    candidates.add(new Candidate("", new Explain(o.as()).highlight(), null, null, "", null, false));
+                    candidates.add(new Candidate("", new Explain(o.as()).format(), null, null, "", null, false));
             } else {
                 final Obj results = mParser.eval(buffer.toString());
                 results.forEach(obj -> candidates.addAll(makeCandidate(obj, results.unique())));

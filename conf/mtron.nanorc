@@ -46,8 +46,6 @@ icolor blue "(a-z)*(://)([0-9]|[a-z]|\.|-|_)+(:)?[0-9]*(/)?([a-z]|/)*"
 # rec/rel key
 icolor cyan "([a-z]|[0-9]|/|_)+=>"
 color green "=>"
-# uri wrapped
-color yellow "<(.|[^>])*>"
 ### bytes
 icolor yellow "0x([0-9]|[a-f])+"
 color cyan "0x"

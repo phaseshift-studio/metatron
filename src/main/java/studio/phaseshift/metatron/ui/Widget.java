@@ -29,7 +29,7 @@ import java.util.Arrays;
 public interface Widget {
 
     default int width() {
-        return Arrays.stream(this.toString().split("\n")).map(Graphitty::strip).map(String::length).max(Integer::compareTo).orElse(0);
+        return Arrays.stream(this.toString().split("\n")).map(Highlighter::visualLength).max(Integer::compareTo).orElse(0);
     }
 
     default int height() {
@@ -47,8 +47,8 @@ public interface Widget {
         return this.toString().split("\n")[i];
     }
     
-    default String highlight() {
-        return Highlighter.singleton().highlight(this.toString());
+    default String format() {
+        return Highlighter.format(this.toString());
     }
 
     public static class StringWidget implements Widget {

@@ -25,11 +25,8 @@ import org.jline.utils.AttributedString;
 import studio.phaseshift.metatron.lang.core.m.type.Obj;
 import studio.phaseshift.metatron.lang.util.serial.ObjCleanStringSerializer;
 import studio.phaseshift.metatron.ui.graphitty.Graphitty;
-import studio.phaseshift.metatron.util.MTronException;
 
 import java.io.ByteArrayOutputStream;
-import java.io.OutputStream;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -51,6 +48,9 @@ public class Highlighter implements org.jline.reader.Highlighter {
 
     private static final Highlighter INSTANCE = new Highlighter(SyntaxHighlighter.build(Highlighter.configurations.getConfig("jnanorc"), "mtron"));
 
+    public static Highlighter single() {
+        return INSTANCE;
+    }
 
     private Highlighter(final SyntaxHighlighter syntaxHighlighter) {
         this.syntaxHighlighter = syntaxHighlighter;
@@ -58,23 +58,22 @@ public class Highlighter implements org.jline.reader.Highlighter {
         this.graphitty = new Graphitty(Map.of(), out);
     }
 
-    public static Highlighter singleton() {
-        return INSTANCE;
+    public static String format(final Object object) {
+        return INSTANCE.highlight(object);
+    }
+
+    public static String unformat(final String string) {
+        return Graphitty.strip(string);
+    }
+
+    public static int visualLength(final String string) {
+        return Highlighter.unformat(string).length();
     }
 
     public String highlight(final Object object) {
         if (object instanceof Obj)
             return this.highlight(null, this.serializer.write((Obj) object)).toAnsi();
         else return this.graphitty.writeToString(this.highlight(null, object.toString()).toAnsi());
-    }
-
-    public void highlightToOut(final OutputStream out, final Object object) {
-        String s = this.highlight(object);
-        try {
-            out.write(s.getBytes(StandardCharsets.UTF_8));
-        } catch (final Exception e) {
-            throw MTronException.of(e);
-        }
     }
 
     @Override

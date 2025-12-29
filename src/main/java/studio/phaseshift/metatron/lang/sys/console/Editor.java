@@ -48,7 +48,7 @@ public class Editor {
             final File objFile = object instanceof File ?
                     (File) object :
                     (object instanceof Obj ?
-                            Editor.createSourceFile(Graphitty.strip(object.toString())) :
+                            Editor.createSourceFile(Highlighter.unformat(object.toString())) :
                             Editor.createSourceFile(object.toString()));
             nano.title = Graphitty.sillyPrint("metatron", false, true);
             nano.open(objFile.getPath());
@@ -79,7 +79,7 @@ public class Editor {
         try {
             final File objFile = File.createTempFile("console-", ".mtron");
             final ObjStringSerializer serializer = ObjStringSerializer.build().prettyPrint(true).create();
-            Files.writeString(objFile.toPath(), Graphitty.strip(serializer.write(obj)));
+            Files.writeString(objFile.toPath(), Highlighter.unformat(serializer.write(obj)));
             return objFile;
         } catch (final Exception e) {
             throw MTronException.of(e);

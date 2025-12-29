@@ -26,6 +26,7 @@ import studio.phaseshift.metatron.lang.core.m.type.Obj;
 import studio.phaseshift.metatron.lang.core.m.type.Poly;
 import studio.phaseshift.metatron.lang.core.m.type.Type;
 import studio.phaseshift.metatron.lang.core.m.type.impl.MRec;
+import studio.phaseshift.metatron.lang.sys.console.Highlighter;
 import studio.phaseshift.metatron.lang.sys.router.Router;
 import studio.phaseshift.metatron.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.ui.graphitty.GraphittyLogger;
@@ -156,7 +157,7 @@ public class DocQ extends BaseQ {
         }
 
         public String strippedString() {
-            return Graphitty.strip(this.toString());
+            return Highlighter.unformat(this.toString());
         }
     }
 
@@ -202,18 +203,18 @@ public class DocQ extends BaseQ {
 
             final Instiffy insty = new Instiffy();
             final int lhsBorderColumn = Math.max(Math.max(
-                            Graphitty.strip(inst.dom().toString()).length(),
-                            Graphitty.strip(inst.rng().toString()).length()),
+                            Highlighter.visualLength(inst.dom().toString()),
+                            Highlighter.visualLength(inst.rng().toString())),
                     this.at(ARGS).orElse(rec()).jvm().entrySet().stream()
-                            .map(kv -> Graphitty.strip(kv.getKey().toString()).length() +
-                                    Graphitty.strip(kv.getValue().toString()).length())
+                            .map(kv ->Highlighter.visualLength(kv.getKey().toString()) +
+                                   Highlighter.visualLength(kv.getValue().toString()))
                             .min(Integer::compare)
                             .orElse(20)) + 3;
             final int rhsBorderColumn = Math.max(inst.tid().toString().length(), Math.max(Math.max(
                             this.at(DOM).orElse(str(NONE)).strValue().length(),
                             this.at(RNG).orElse(str(NONE)).strValue().length()),
                     this.at(ARGS).orElse(rec()).jvm().values().stream()
-                            .map(obj -> Graphitty.strip(obj.toString()).length())
+                            .map(obj -> Highlighter.visualLength(obj.toString()))
                             .max(Integer::compare)
                             .orElse(20)) + lhsBorderColumn + 4);
             insty.text("\n{{m}}/--").text(inst.tid().toUri().toString()).text("{{m}}").until('-', rhsBorderColumn).text("/{{X}}\n");

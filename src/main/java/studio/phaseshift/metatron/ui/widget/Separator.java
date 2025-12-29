@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.ui.widget;
 
+import studio.phaseshift.metatron.lang.sys.console.Highlighter;
 import studio.phaseshift.metatron.ui.Colorable;
 import studio.phaseshift.metatron.ui.Widget;
 import studio.phaseshift.metatron.ui.graphitty.Graphitty;
@@ -47,7 +48,7 @@ public class Separator implements Widget, Colorable<Separator> {
 
     @Override
     public String toString() {
-        int tokenWidth = Graphitty.strip(this.sepToken).length();
+        int tokenWidth = Highlighter.visualLength(this.sepToken);
         return this.sepToken.repeat((int) ((float) this.coupledWidth.width() / (float) tokenWidth)) + "{{X}}";
     }
 

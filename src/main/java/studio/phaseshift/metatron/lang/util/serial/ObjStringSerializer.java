@@ -22,6 +22,7 @@ import org.petitparser.context.Result;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.core.m.parser.mParser;
 import studio.phaseshift.metatron.lang.core.m.type.*;
+import studio.phaseshift.metatron.lang.sys.console.Highlighter;
 import studio.phaseshift.metatron.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.util.MTronException;
 
@@ -91,7 +92,7 @@ public record ObjStringSerializer(Builder b) implements ObjSerializer<String> {
 
     @Override
     public String write(final Obj obj) throws IllegalStateException {
-        return Graphitty.strip(this.temp(obj));
+        return Highlighter.unformat(this.temp(obj));
     }
 
     public String temp(final Obj obj) {
@@ -278,7 +279,7 @@ public record ObjStringSerializer(Builder b) implements ObjSerializer<String> {
         } else {
             boolean nested =
                     lst.elements().anyMatch(Obj::isPoly) ||
-                            lst.elements().filter(o -> !o.isPoly()).map(Obj::toString).map(Graphitty::strip).map(String::length).reduce(0, Integer::sum) > (30 - depth);
+                            lst.elements().filter(o -> !o.isPoly()).map(Obj::toString).map(Highlighter::visualLength).reduce(0, Integer::sum) > (30 - depth);
             sb.append("{{g}}[");
             AtomicBoolean first = new AtomicBoolean(true);
             lst.elements().forEach(v -> {

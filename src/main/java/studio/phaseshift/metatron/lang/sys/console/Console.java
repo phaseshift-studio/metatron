@@ -117,7 +117,7 @@ public class Console extends MRec implements Threadable, Runnable {
             final Builtins builtins = new Builtins(currentDir, Console.configurations, null);
             SystemRegistry systemRegistry = new SystemRegistryImpl(parser, terminal, currentDir, Console.configurations);
             systemRegistry.setCommandRegistries(builtins);
-            this.highlighter = Highlighter.singleton(); //SyntaxHighlighter.build(Console.configurations.getConfig("jnanorc"), "mtron");//SyntaxHighlighter.build(Paths.get("./conf/mtron.nanorc"), "mtron");*/
+            this.highlighter = Highlighter.single();
             this.reader = LineReaderBuilder.builder()
                     .terminal(terminal)
                     .appName("metatron")
@@ -154,6 +154,10 @@ public class Console extends MRec implements Threadable, Runnable {
         } catch (final IOException e) {
             LOG.error(e);
         }
+    }
+    
+    public void write(final Object object) {
+        this.terminal.writer().write(Highlighter.format(object));
     }
 
     public Terminal getTerminal() {
@@ -217,9 +221,9 @@ public class Console extends MRec implements Threadable, Runnable {
                             MObjs.empty() :
                             result.isObjCall() ? MMachine.of(result.as()).apply() : result).stream()
                             .forEach(o -> {
-                                this.highlighter.highlightToOut(this.terminal.output(), "{{-X-}}{{m}}=={{g}}>{{X}}");
-                                this.highlighter.highlightToOut(this.terminal.output(), o);
-                                this.highlighter.highlightToOut(this.terminal.output(), "\n");
+                                this.write("{{-X-}}{{m}}=={{g}}>{{X}}");
+                                this.write(o);
+                                this.write("\n");
                             });
                 }
                 

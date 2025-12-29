@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.ui.widget;
 
+import studio.phaseshift.metatron.lang.sys.console.Highlighter;
 import studio.phaseshift.metatron.ui.Widget;
 import studio.phaseshift.metatron.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.ui.Stylable;
@@ -43,8 +44,8 @@ public class BarMenu implements Widget, Stylable<BarMenu> {
         String top = this.options.stream().map(Tuple.Pair::get0).reduce(this.style.background + this.style.border.leftSide(), (a, b) -> a + (this.style.background + " " + this.style.background + b + " " + this.style.divider));
         top = top.substring(0, top.length() - this.style.divider.length());
         top = top + (this.style.background + this.style.divider + "{{X}}");
-        final int topLength = Graphitty.strip(top).length();
-        top = top + (this.style.background + " ".repeat(this.style.attachment.width() - topLength - Graphitty.strip(this.style.border.rightSide()).length())) + this.style.border.rightSide() + "{{X}}";
+        final int topLength = Highlighter.visualLength(top);
+        top = top + (this.style.background + " ".repeat(this.style.attachment.width() - topLength - Highlighter.visualLength(this.style.border.rightSide()))) + this.style.border.rightSide() + "{{X}}";
         if (null == this.style.attachment)
             return top;
         final String attachmentString = this.style.attachment.toString();

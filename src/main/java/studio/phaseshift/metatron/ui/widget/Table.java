@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -19,8 +19,8 @@
 package studio.phaseshift.metatron.ui.widget;
 
 import studio.phaseshift.metatron.lang.sys.console.Highlighter;
+import studio.phaseshift.metatron.ui.Stylable;
 import studio.phaseshift.metatron.ui.Widget;
-import studio.phaseshift.metatron.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.util.Tuple;
 
 import java.util.ArrayList;
@@ -30,11 +30,12 @@ import java.util.List;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class Table implements Widget {
+public class Table implements Widget, Stylable<Table> {
 
     protected final List<String> headers;
     protected final List<Tuple.Pair<String, Runnable>> menu;
     protected final List<List<Object>> table;
+    protected Style<Table> style = Style.empty();
 
     public Table(final List<String> headers, final List<Tuple.Pair<String, Runnable>> menu) {
         this.headers = headers;
@@ -77,7 +78,7 @@ public class Table implements Widget {
         final List<Integer> widths = new ArrayList<>();
         for (int i = 0; i < rowesque.size(); i++) {
             final int ii = i;
-            widths.add(Math.max(rowesque.get(i).length(), this.table.stream().map(row -> Graphitty.strip(row.size() > ii ? row.get(ii).toString() : "")).flatMap(s -> Arrays.stream(s.split("\n"))).map(String::length).max(Integer::compareTo).orElse(0)));
+            widths.add(Math.max(rowesque.get(i).length(), this.table.stream().map(row -> Highlighter.unformat(row.size() > ii ? row.get(ii).toString() : "")).flatMap(s -> Arrays.stream(s.split("\n"))).map(String::length).max(Integer::compareTo).orElse(0)));
         }
         return widths;
     }
@@ -90,17 +91,19 @@ public class Table implements Widget {
             }
         }
         final StringBuilder sb = new StringBuilder();
-        sb.append("{{g}}|{{X}}");
+        sb.append(this.style.divider);
         for (int i = 0; i < this.row(index).size(); i++) {
-            final String high = Highlighter.singleton().highlight(this.entry(index, i));
-            final String low = Graphitty.strip(this.entry(index, i).toString());
-            sb.append(high).append(this.addSpace(widths, i, low)).append("{{g}}|{{X}}");
+            final String high = Highlighter.format(this.entry(index, i));
+            final String low = Highlighter.unformat(this.entry(index, i).toString());
+            sb.append(high)
+                    .append(this.addSpace(widths, i, low))
+                    .append(this.style.divider);
         }
         return sb.toString();
     }
 
     public int formattedWidth() {
-        return this.formattedRows().stream().map(Graphitty::strip).map(String::length).max(Integer::compareTo).orElse(0);
+        return this.formattedRows().stream().map(Highlighter::visualLength).max(Integer::compareTo).orElse(0);
     }
 
 
@@ -117,28 +120,52 @@ public class Table implements Widget {
     }
 
     private String addSpace(final List<Integer> widths, final int index, final Object entry) {
-        return " ".repeat(1 + Math.abs(widths.get(index) - Graphitty.strip(entry.toString().trim()).length()));
+        return " ".repeat(1 + Math.abs(widths.get(index) - Highlighter.visualLength(entry.toString().trim())));
     }
 
     public String toString() {
         final StringBuilder sb = new StringBuilder();
         if (null != this.headers) {
             final List<Integer> widths = this.formattedWidths(this.headers);
-            sb.append("{{g}}|{{X}}");
+            sb.append(this.style.background)
+                    .append(this.style.divider)
+                    .append(this.style.foreground)
+                    .append(this.style.background);
             for (int i = 0; i < this.headers.size(); i++) {
-                sb.append("{{c}}").append(this.headers.get(i)).append(this.addSpace(widths, i, this.headers.get(i))).append("{{g}}|");
+                sb.append(this.style.foreground)
+                        .append(this.headers.get(i))
+                        .append(this.addSpace(widths, i, this.headers.get(i)))
+                        .append(this.style.divider)
+                        .append(this.style.foreground);
             }
             sb.append("{{X}}\n");
         }
         if (null != this.menu) {
             final List<Integer> widths = this.formattedWidths(this.menu.stream().map(Tuple.Pair::get0).toList());
-            sb.append("{{g}}|{{X}}");
+            sb.append(this.style.divider)
+                    .append(this.style.foreground);
             for (int i = 0; i < this.menu.size(); i++) {
-                sb.append("{{c}}").append(this.menu.get(i).get0()).append(this.addSpace(widths, i, this.menu.get(i).get0())).append("{{g}}|");
+                sb.append(this.style.foreground)
+                        .append(this.menu.get(i).get0())
+                        .append(this.addSpace(widths, i, this.menu.get(i).get0()))
+                        .append(this.style.divider)
+                        .append(this.style.foreground);
             }
             sb.append("{{X}}\n");
         }
-        sb.append(formattedRows().stream().map(row -> row + "\n").reduce("", (a, b) -> a + b));
+        sb.append(formattedRows().stream().map(row -> row + "{{X}}\n").reduce("", (a, b) -> a + b));
         return sb.deleteCharAt(sb.length() - 1).toString();
+    }
+
+    @Override
+    public Table style(final Style<Table> style) {
+        this.style = style;
+        if (this.style.foreground.isEmpty())
+            this.style.foreground = "{{w}}";
+        if (this.style.background.isEmpty())
+            this.style.background = "{{[X]}}";
+        if (this.style.divider.isEmpty())
+            this.style.divider = "{{g}}|";
+        return this;
     }
 }

@@ -56,7 +56,7 @@ public class Profile implements Widget {
                         i.args().elements().allMatch(x -> x.isResolved(true)) ? "{{y}}<,>" : "{{r}}<?,?>",
                         "{{m}}" + Inst.Form.of(i).toString(),
                         "{{g}}{{{" + (inDom ? "y" : "r") + "}}" + dom.toString() + "{{g}}}{{X}}",
-                        "{{g}}{{{y}}" + rng.toString() + "{{g}}}{{X}}"));
+                        "{{g}}{{{y}}" + rng.toString() + "{{g}}}{{X}}")).style().background("{{[b]}}").foreground("{{y}}").divider("{{r}}|").apply();
                 /*if (!i.args().isEmpty()) {
                     final Table arg = new Table(List.of(""));
                     i.args().forEach(a -> arg.addRow(List.of(new Profile(a).toString())));

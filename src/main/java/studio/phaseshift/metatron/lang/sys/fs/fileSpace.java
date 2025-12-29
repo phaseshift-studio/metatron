@@ -27,6 +27,7 @@ import studio.phaseshift.metatron.lang.core.m.type.Rec;
 import studio.phaseshift.metatron.lang.core.m.type.Type;
 import studio.phaseshift.metatron.lang.core.m.type.impl.MRec;
 import studio.phaseshift.metatron.lang.core.m.type.impl.MRel;
+import studio.phaseshift.metatron.lang.sys.console.Highlighter;
 import studio.phaseshift.metatron.lang.sys.router.Router;
 import studio.phaseshift.metatron.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.util.MTronException;
@@ -149,7 +150,7 @@ public class fileSpace extends MSpace<FileSystem> {
                         else if (obj.isStr())
                             writer.write(obj.strValue().getBytes(StandardCharsets.UTF_8));
                         else
-                            writer.write(Graphitty.strip(obj.toString()).getBytes(StandardCharsets.UTF_8));
+                            writer.write(Highlighter.unformat(obj.toString()).getBytes(StandardCharsets.UTF_8));
                         writer.flush();
                         writer.close();
                     }

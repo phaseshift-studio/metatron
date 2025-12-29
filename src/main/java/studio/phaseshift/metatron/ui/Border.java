@@ -23,7 +23,7 @@ import java.util.Arrays;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public interface Border extends Stylable<Border> {
+public interface Border {
 
     String border();
 
@@ -59,8 +59,8 @@ public interface Border extends Stylable<Border> {
         return this.border().split(";")[7];
     }
 
-    default Border style(final Style style) {
-        final String colorBorder = Arrays.stream(border().split(";")).map(b -> style.foreground + b + "{{X}}").reduce((a, b) -> a + ";" + b).orElseThrow();
+    default Border foreground(final String color) {
+        final String colorBorder = Arrays.stream(this.border().split(";")).map(b -> color + b + "{{X}}").reduce((a, b) -> a + ";" + b).orElseThrow();
         return () -> colorBorder;
     }
 
@@ -73,7 +73,7 @@ public interface Border extends Stylable<Border> {
                         this.leftSide() + " ".repeat(left) + ";" +
                         " ".repeat(right) + this.rightSide() + ";" +
                         this.topSide() + ";" +
-                        this.bottomSide() + ";";
+                        this.bottomSide();
         return () -> marginBorder;
     }
 

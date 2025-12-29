@@ -535,14 +535,9 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
         }
 
         public static String objToString(final Obj obj) {
-           // return Graphitty.string(obj);
-            return Highlighter.singleton().highlight(obj);
+            return Highlighter.format(obj);
         }
-
-        public static String highlight(final Obj obj) {
-            return Highlighter.singleton().highlight(obj);
-        }
-
+        
         public static void objCheckAndSave(final Obj obj) {
             if (!obj.isInstSet() && !obj.isNoObj() && !obj.isType() && !obj.matches(obj.type()))
                 throw MTronException.of("[{{r}}type error{{/r}}] %s is not a %s".formatted(obj, obj.type()));

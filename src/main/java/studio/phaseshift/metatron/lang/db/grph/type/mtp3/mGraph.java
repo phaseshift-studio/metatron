@@ -36,6 +36,7 @@ import studio.phaseshift.metatron.lang.db.grph.inst.grphInstSet;
 import studio.phaseshift.metatron.lang.db.grph.type.REdge;
 import studio.phaseshift.metatron.lang.db.grph.type.RVertex;
 import studio.phaseshift.metatron.lang.db.kv.kvSpace;
+import studio.phaseshift.metatron.lang.sys.console.Highlighter;
 import studio.phaseshift.metatron.lang.sys.router.Router;
 import studio.phaseshift.metatron.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.util.MTronException;
@@ -121,14 +122,14 @@ public class mGraph implements Graph, WrappedGraph<grphSpace> {
     protected final fURI makeVertexID(final Object id) {
         if (id instanceof Vertex)
             return f(((Vertex) id).id().toString());
-        final fURI temp = id instanceof fURI ? (fURI) id : (id instanceof Uri ? ((Uri) id).uriValue() : f(Graphitty.strip(id.toString())));
+        final fURI temp = id instanceof fURI ? (fURI) id : (id instanceof Uri ? ((Uri) id).uriValue() : f(Highlighter.unformat(id.toString())));
         return temp.hasPrefix(this.baseVertexURI) ? temp : this.baseVertexURI.extend(temp);
     }
 
     protected final fURI makeEdgeID(final Object id) {
         if (id instanceof Edge)
             return f(((Edge) id).id().toString());
-        final fURI temp = id instanceof fURI ? (fURI) id : (id instanceof Uri ? ((Uri) id).uriValue() : f(Graphitty.strip(id.toString())));
+        final fURI temp = id instanceof fURI ? (fURI) id : (id instanceof Uri ? ((Uri) id).uriValue() : f(Highlighter.unformat(id.toString())));
         return temp.hasPrefix(this.baseEdgeURI) ? temp : this.baseEdgeURI.extend(temp);
     }
 

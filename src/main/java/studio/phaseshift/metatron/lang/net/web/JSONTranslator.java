@@ -23,6 +23,7 @@ import com.google.gson.stream.JsonReader;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.core.m.parser.mParser;
 import studio.phaseshift.metatron.lang.core.m.type.*;
+import studio.phaseshift.metatron.lang.sys.console.Highlighter;
 import studio.phaseshift.metatron.lang.sys.router.Router;
 import studio.phaseshift.metatron.lang.util.serial.ObjSerializer;
 import studio.phaseshift.metatron.lang.util.serial.ObjStringSerializer;
@@ -176,7 +177,7 @@ public record JSONTranslator(ObjSerializer<String> serializer) implements Transl
                 //else if (!obj.isPoly() && !obj.isCall())
                 //    element = JsonParser.parseString(this.serializer.write(obj));
             else if (obj.isCall())
-                element = new JsonPrimitive(Graphitty.strip(SERIALIZER.write(obj.<Call>as().tryToInst())));
+                element = new JsonPrimitive(Highlighter.unformat(SERIALIZER.write(obj.<Call>as().tryToInst())));
             else if (obj.isRel()) {
                 final JsonArray array = new JsonArray();
                 array.add(translate(obj.<Rel>as().first()));

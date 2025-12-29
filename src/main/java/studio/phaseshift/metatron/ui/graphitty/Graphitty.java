@@ -58,7 +58,7 @@ public class Graphitty {
         COLOR_REWRITES.put("[m]", "\033[45m"); // magenta
         COLOR_REWRITES.put("[c]", "\033[46m"); // cyan
         COLOR_REWRITES.put("[w]", "\033[47m"); // white
-        COLOR_REWRITES.put("[d]", "\033[49m"); // default
+        COLOR_REWRITES.put("[X]", "\033[49m"); // default
         /// //
         COLOR_REWRITES.put("R", "\033[1;31m"); // bold red
         COLOR_REWRITES.put("G", "\033[1;32m"); // bold green

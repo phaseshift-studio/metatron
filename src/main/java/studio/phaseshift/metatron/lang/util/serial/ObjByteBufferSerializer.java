@@ -22,6 +22,7 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.core.m.obj.NoObj;
 import studio.phaseshift.metatron.lang.core.m.parser.mParser;
 import studio.phaseshift.metatron.lang.core.m.type.*;
+import studio.phaseshift.metatron.lang.sys.console.Highlighter;
 import studio.phaseshift.metatron.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
@@ -70,7 +71,7 @@ public class ObjByteBufferSerializer implements ObjSerializer<ByteBuffer> {
 
     @Override
     public ByteBuffer writeFail(final Fail fail) {
-        return ByteBuffer.wrap(handleIds(fail, "['" + Graphitty.strip(fail.jvm().getMessage()) + "']").getBytes());
+        return ByteBuffer.wrap(handleIds(fail, "['" + Highlighter.unformat(fail.jvm().getMessage()) + "']").getBytes());
     }
 
     @Override

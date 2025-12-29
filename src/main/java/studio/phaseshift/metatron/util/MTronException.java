@@ -19,6 +19,7 @@
 package studio.phaseshift.metatron.util;
 
 import studio.phaseshift.metatron.lang.core.m.type.Fail;
+import studio.phaseshift.metatron.lang.sys.console.Highlighter;
 import studio.phaseshift.metatron.ui.graphitty.Graphitty;
 
 import java.util.Arrays;
@@ -45,7 +46,7 @@ public class MTronException extends RuntimeException {
             try {
                 return new MTronException(cause.getMessage());
             } catch(final Throwable e) {
-                return new MTronException(Graphitty.strip(cause.getMessage()));
+                return new MTronException(Highlighter.unformat(cause.getMessage()));
             }
         }
     }

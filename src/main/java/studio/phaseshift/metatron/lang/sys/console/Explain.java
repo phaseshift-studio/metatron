@@ -56,15 +56,15 @@ public class Explain implements Widget, Stylable<Explain> {
     public String toString() {
         final Code code = this.code.resolve(noobj()).as();
         final Profile profile = new Profile(code);
-        final Panel mainBox = new Panel(Highlighter.singleton().highlight(ObjCleanStringSerializer.prettyPrintCode(code)), Border.simple.margin(2, 2).style().foreground("{{c}}").apply())
+        final Panel mainBox = new Panel(Highlighter.format(ObjCleanStringSerializer.prettyPrintCode(code).stripTrailing()), Border.simple.margin(2, 2).foreground("{{c}}"))
                 .bottom(new Separator("-", profile).color("{{y}}"), Border.none)
-                .bottom(profile, Border.simple.margin(2, 2).style().foreground("{{r}}").apply());
+                .bottom(profile, Border.simple.margin(2, 2).foreground("{{b}}"));
         final BarMenu menu = new BarMenu(List.of(Tuple.Pair.with("compile", () -> System.out.println("compiling...")), Tuple.Pair.with("optimize", () -> System.out.println("optimizing..."))))
                 .style()
                 .background("{{[b]&w}}")
                 .attachment(mainBox, true)
                 .divider("{{g}}|")
-                .border(Border.simple.style().foreground("{{g}}").apply()).apply();
+                .border(Border.simple.foreground("{{g}}")).apply();
         return menu.toString();
     }
 }

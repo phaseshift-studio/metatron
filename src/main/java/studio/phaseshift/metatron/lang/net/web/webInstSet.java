@@ -25,6 +25,7 @@ import studio.phaseshift.metatron.lang.core.m.type.Obj;
 import studio.phaseshift.metatron.lang.core.m.type.Type;
 import studio.phaseshift.metatron.lang.core.m.type.impl.MInstSet;
 import studio.phaseshift.metatron.lang.net.iot.ZigbeeObj;
+import studio.phaseshift.metatron.lang.sys.console.Highlighter;
 import studio.phaseshift.metatron.ui.graphitty.Graphitty;
 
 import java.util.Set;
@@ -76,15 +77,15 @@ public class webInstSet extends MInstSet {
                 final String source = lhs.strValue();
                 final Obj result = mParser.parse(source).apply();
                 final String resultString = result.isObjs() ?
-                        Graphitty.strip(result.elements()
+                        Highlighter.format(result.elements()
                                 .map(Obj::toString)
-                                .map(Graphitty::strip)
+                                .map(Highlighter::unformat)
                                 .reduce((a, b) -> a + "%%%" + b)
                                 .orElse("")) :
-                        Graphitty.strip(result.toString());
+                        Highlighter.unformat(result.toString());
                 return str(resultString);
             } catch (final Exception e) {
-                return str(Graphitty.strip(fail(e).toString()));
+                return str(Highlighter.unformat(fail(e).toString()));
             }
         }));
     }

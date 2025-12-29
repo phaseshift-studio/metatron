@@ -25,6 +25,7 @@ import studio.phaseshift.metatron.lang.core.m.parser.mParser;
 import studio.phaseshift.metatron.lang.core.m.type.*;
 import studio.phaseshift.metatron.lang.core.mach.type.Machine;
 import studio.phaseshift.metatron.lang.core.mach.type.Monad;
+import studio.phaseshift.metatron.lang.sys.console.Highlighter;
 import studio.phaseshift.metatron.lang.sys.router.Router;
 import studio.phaseshift.metatron.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.util.IteratorUtil;
@@ -95,7 +96,7 @@ public class ObjCleanStringSerializer implements ObjSerializer<String> {
 
     @Override
     public String writeFail(final Fail fail) {
-        return handleIds(fail, "['" + Graphitty.strip(fail.jvm().getMessage()) + "']");
+        return handleIds(fail, "['" + Highlighter.unformat(fail.jvm().getMessage()) + "']");
     }
 
     @Override

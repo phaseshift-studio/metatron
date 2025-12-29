@@ -55,7 +55,7 @@ public class GraphittyLogger extends LayoutBase<ILoggingEvent> {
 
     private static String toStringOrNull(final Object o) {
         if (o instanceof Obj)
-            return Obj.Helper.highlight((Obj) o);
+            return Highlighter.format(o);
         return null == o ? "null" : o.toString();
     }
 
@@ -72,7 +72,7 @@ public class GraphittyLogger extends LayoutBase<ILoggingEvent> {
         final Object[] args2 = args.length == 0 ? new Object[0] :
                 Stream.of(args)
                         .map(x -> isLambda(x) ? ((Supplier<?>) x).get() : x)
-                        .map(x -> x instanceof Obj || x instanceof String ? Highlighter.singleton().highlight(x) : x)
+                        .map(x -> x instanceof Obj || x instanceof String ? Highlighter.format(x) : x)
                         .toArray();
         return metadata ?
                 Graphitty.string("[{{b}}%s{{/b}}] %s".formatted(toSourceString(), args.length == 0 ? toStringOrNull(f) : toStringOrNull(f).formatted(args2))) :

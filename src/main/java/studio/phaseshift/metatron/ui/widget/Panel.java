@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -18,9 +18,9 @@
 
 package studio.phaseshift.metatron.ui.widget;
 
+import studio.phaseshift.metatron.lang.sys.console.Highlighter;
 import studio.phaseshift.metatron.ui.Border;
 import studio.phaseshift.metatron.ui.Widget;
-import studio.phaseshift.metatron.ui.graphitty.Graphitty;
 
 import java.util.Arrays;
 import java.util.List;
@@ -80,26 +80,25 @@ public class Panel implements Widget {
     public String toString() {
         final List<String> lines = Arrays.asList(this.body.replace("\\n", "\n").split("\\r?\\n", -1));
         final int maxLen = Stream.concat(Stream.of(this.title).filter(Objects::nonNull), lines.stream())
-                .map(Graphitty::strip)
-                .mapToInt(String::length)
-                .max()
+                .map(Highlighter::visualLength)
+                .max(Integer::compareTo)
                 .orElse(0);
 
         final StringBuilder sb = new StringBuilder();
-        final String top = "%s%s".formatted(null == this.title ? "" : this.title, this.border.topSide().repeat(null == this.title ? maxLen : maxLen - Graphitty.strip(this.title).length())).trim();
+        final String top = "%s%s".formatted(null == this.title ? "" : this.title, this.border.topSide().repeat(null == this.title ? maxLen : maxLen - Highlighter.visualLength(this.title))).stripTrailing();
         if (!top.isEmpty())
             sb.append(this.border.topLeftCorner()).append(top).append(this.border.topRightCorner()).append('\n');
         if (null != options) {
-            sb.append(this.border.leftSide()).append(this.options).append(" ".repeat(maxLen - Graphitty.strip(this.options.toString()).length())).append(this.border.rightSide()).append('\n');
+            sb.append(this.border.leftSide()).append(this.options).append(" ".repeat(maxLen - Highlighter.visualLength(this.options.toString()))).append(this.border.rightSide()).append('\n');
         }
         for (final String line : lines) {
             sb.append(this.border.leftSide())
                     .append(line)
-                    .append(" ".repeat(maxLen - Graphitty.strip(line).length()))
+                    .append(" ".repeat(maxLen - Highlighter.visualLength(line)))
                     .append(this.border.rightSide())
-                    .append('\n');
+                    .append("{{X}}\n");
         }
-        final String bottom = this.border.bottomSide().toString().repeat(maxLen).trim();
+        final String bottom = this.border.bottomSide().repeat(maxLen).stripTrailing();
         if (!bottom.isEmpty())
             sb.append(this.border.bottomLeftCorner()).append(bottom).append(this.border.bottomRightCorner()).append("\n");
         return sb.toString();
