@@ -48,7 +48,7 @@ public abstract class MObj implements Obj, Cloneable {
         if (null != vid && !this.isType())
             Router.writeToSpace(this);
     }*/
-
+    
     @Override
     public <J> J jvm() {
         return (J) this.jvm;

@@ -24,7 +24,10 @@ import org.petitparser.parser.combinators.*;
 import org.petitparser.parser.primitive.CharacterParser;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.core.m.inst.mInstSet;
-import studio.phaseshift.metatron.lang.core.m.type.*;
+import studio.phaseshift.metatron.lang.core.m.type.Call;
+import studio.phaseshift.metatron.lang.core.m.type.Fail;
+import studio.phaseshift.metatron.lang.core.m.type.Inst;
+import studio.phaseshift.metatron.lang.core.m.type.Obj;
 import studio.phaseshift.metatron.lang.core.m.type.impl.*;
 import studio.phaseshift.metatron.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.ui.graphitty.GraphittyLogger;
@@ -46,7 +49,6 @@ import static org.petitparser.parser.primitive.CharacterParser.digit;
 import static org.petitparser.parser.primitive.CharacterParser.of;
 import static org.petitparser.parser.primitive.CharacterParser.word;
 import static org.petitparser.parser.primitive.StringParser.of;
-import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.lang.core.m.inst.mFluent.StartLess.split_;
 import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.*;
 import static studio.phaseshift.metatron.lang.core.m.obj.NoObj.noobj;
@@ -299,10 +301,24 @@ public class mParser {
 
     public static Parser m_furi_inst_dom_rng() {
         return seq(
-                opt(m_furi(REDUCED_FURI_CHARS, true, true, false), ALL),
+                opt(m_furi(REDUCED_FURI_CHARS, true, true, false), null),
                 of("<=").trim(),
-                opt(m_furi(REDUCED_FURI_CHARS, true, true, false), ALL))
-                .map(t -> "dom=%s&rng=%s".formatted(pick(t, 2), pick(t, 0)));
+                opt(m_furi(REDUCED_FURI_CHARS, true, true, false), null))
+                .map(t -> {
+                    String domrng = "";
+                    final fURI dom = pick(t, 2);
+                    final fURI rng = pick(t, 0);
+                    if (null != dom)
+                        domrng = "dom=" + dom;
+                    if (null != rng) {
+                        if (null != dom)
+                            domrng = domrng + "&";
+                        domrng = domrng + "rng=" + rng;
+                    }
+                    return domrng;
+                });
+
+
     }
 
 

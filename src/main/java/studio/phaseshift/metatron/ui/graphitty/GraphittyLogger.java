@@ -98,23 +98,23 @@ public class GraphittyLogger extends LayoutBase<ILoggingEvent> {
     }
 
     public GraphittyLogger info(final Object f, final Object... args) {
-        return this.logLevel(Level.INFO, f, args);
+        return this.logger().isEnabledForLevel(Level.INFO) ? this.logLevel(Level.INFO, f, args) : this;
     }
 
     public GraphittyLogger debug(final Object f, final Object... args) {
-        return this.logLevel(Level.DEBUG, f, args);
+        return this.logger().isEnabledForLevel(Level.DEBUG) ? this.logLevel(Level.DEBUG, f, args) : this;
     }
 
     public GraphittyLogger warn(final Object f, final Object... args) {
-        return this.logLevel(Level.WARN, f, args);
+        return this.logger().isEnabledForLevel(Level.WARN) ? this.logLevel(Level.WARN, f, args) : this;
     }
 
     public GraphittyLogger trace(final Object f, final Object... args) {
-        return this.logLevel(Level.TRACE, f, args);
+        return this.logger().isEnabledForLevel(Level.TRACE) ? this.logLevel(Level.TRACE, f, args) : this;
     }
 
     public GraphittyLogger error(final Object f, final Object... args) {
-        return this.logLevel(Level.ERROR, f, args);
+        return this.logger().isEnabledForLevel(Level.ERROR) ? this.logLevel(Level.ERROR, f, args) : this;
     }
 
     /// ///////////////////////////////

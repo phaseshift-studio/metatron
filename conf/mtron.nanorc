@@ -14,9 +14,6 @@ color blue ".*"
 ### qs
 color yellow "\?"
 color yellow "&"
-# q keys
-color cyan "(dom=)|(rng=)"
-color green "="
 # f (j,m,?)
 color yellow "\{.\}"
 color red "\{\?\}"
@@ -24,34 +21,34 @@ color red "\{\?\}"
 color magenta "noobj"
 ### type
 color magenta "::T"
-color green "::"
 ### bool
 color yellow "(true)|(false)"
 ### int
-color yellow "[1-9][0-9]*"
+color yellow "(0)|([1-9][0-9]*)"
 ### real
 color yellow "(([1-9][0-9]+)|0+)\.[0-9]+"
 # common sugars
 color green "[.:;,+*|=!\%@]" "<<" ">>" "<=" "=>" "->" ">-" "-<"
-# post sugars
+# uri coefficients
 color yellow "\{.{1}\}" "\{[0-9]*,?[0-9]*\}"
 # common structural tokens
 color green "[(){}]" "\[" "\]"
-### uri numbers
-icolor blue "[a-z|/][0-9]+"
 # uri ip
 color blue "[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}(:)?[0-9]*"
-# uri schema
-icolor blue "(a-z)*(://)([0-9]|[a-z]|\.|-|_)+(:)?[0-9]*(/)?([a-z]|/)*"
-# rec/rel key
+# uri slash or schema
+icolor blue "(/|([a-z]*(://))|[a-z])([0-9]|[a-z]|\.|-|_)+(:)?[0-9]*(/)?([a-z]|/|\_|[0-9])*"
+# rec/rel uri key
 icolor cyan "([a-z]|[0-9]|/|_)+=>"
 color green "=>"
+# q keys
+color cyan "(dom=)|(rng=)"
+color green "="
 ### bytes
 icolor yellow "0x([0-9]|[a-f])+"
-color cyan "0x"
+color yellow,underline "0x"
 ### str
-color yellow "\"[^\"]*\""
-color yellow "[''][^']*[^\\][']"
+color yellow "[\"][^\"]*[\"]"
+color yellow "['][^']*[']"
 color yellow start="\"\"\"" end="\"\"\""
 color yellow start="'''" end="'''"
 ### comments

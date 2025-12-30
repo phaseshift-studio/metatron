@@ -234,11 +234,12 @@ public interface Inst extends Call {
                     .stream()
                     .map(Obj::<Inst>as)
                     .filter(i -> (i.args().isEmpty() && this.arg(0).isNoObj()) || i.args().isRec() || i.args().count() >= this.args().count())
+                    .filter(i -> !lhs.isInst() || (i.dom().baseType().equals(INST_TID)))
                     .map(i -> this.hasDom() ? i.dom(this.dom()) : i)
                     .map(i -> this.hasRng() ? i.rng(this.rng()) : i)
-                    .map(i -> Helpers.bindGenerics(lhs, i, this))
+                    .map(i -> lhs.isInst() ? i : Helpers.bindGenerics(lhs, i, this))
                     .filter(i -> !Objects.isNull(i))
-                    .filter(i -> lhs.matches(i.dom()))
+                    .filter(i -> lhs.isInst() || lhs.matches(i.dom()))
                     //.filter(i -> lhs.matches(i.dom()) || (Form.of(i).equals(Form.mapper) && lhs.unique() && lhs.c(cInt.ONE()).matches(i.dom())))
                     //.map(i -> lhs.isType() && !lhs.isNoObj() && i.tid().dom().hasPattern() ? i.dom(lhs.as()) : i)
                     //.map(i -> i.dom(i.dom().c(lhs.c()).as()).<Inst>as())
@@ -571,10 +572,11 @@ public interface Inst extends Call {
     }
 
     public static final class InstType {
-
         public static Set<Inst> insts() {
             return new LinkedHashSet<>(List.of(
                     instC(LIFT_INST_TID.dom(ALL).rng(ALL), lst(T(ALL)), (lhs, inst) -> inst.arg(0).<Inst>as().args(lhs.<Poly>as()))
+                    //instC(LSHIFT_INST_TID.dom(ALL).rng(ALL), lst(), (lhs, inst) -> lhs.dom()),
+                    //instC(RSHIFT_INST_TID.dom(ALL).rng(ALL), lst(), (lhs, inst) -> lhs.rng())
             ));
         }
     }

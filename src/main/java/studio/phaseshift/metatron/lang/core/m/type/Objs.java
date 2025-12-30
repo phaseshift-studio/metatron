@@ -98,7 +98,7 @@ public interface Objs extends Obj, PlusMonoid.O<Objs> {
         final Obj first = this.take();
         final Obj second = other.take();
         final PlusMonoid.O<?> result = null == first ? (null == second ? this.zero() : (PlusMonoid.O<?>) second) : (PlusMonoid.O<?>) ((PlusMonoid.O) first).plus((PlusMonoid.O) second);
-        return new MObjs(List.of(result, this, other));
+        return new MObjs(List.of(result, this, other),null);
     }
 
     //  @Override

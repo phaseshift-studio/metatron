@@ -89,7 +89,7 @@ public class GraphittyObjLogger extends GraphittyLogger {
 
     @Override
     public GraphittyObjLogger trace(final Object f, final Object... args) {
-        if (doLog(TRACE)) super.logLevel(TRACE, f, args);
+        //if (doLog(TRACE)) super.logLevel(TRACE, f, args);
         return this;
     }
 

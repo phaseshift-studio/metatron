@@ -34,12 +34,15 @@ public class cInt implements C<Long, cInt> {
         this.max = max;
     }
 
+    public static final cInt C_ZERO = cInt.of(0L);
+    public static final cInt C_ONE = cInt.of(1L);
+    
     public static cInt ZERO() {
-        return cInt.of(0L);
+        return C_ZERO;
     }
 
     public static cInt ONE() {
-        return cInt.of(1L);
+        return C_ONE;
     }
 
     public static cInt SOME() {
@@ -97,6 +100,18 @@ public class cInt implements C<Long, cInt> {
 
     }
 
+    static final Long LONG_ZERO = 0L;
+
+    @Override
+    public boolean isZero() {
+        return LONG_ZERO.equals(this.max) && LONG_ZERO.equals(this.min);
+    }
+
+    @Override
+    public boolean isMaybeSome() {
+        return LONG_ZERO.equals(this.min) && null == this.max; 
+    }
+
     @Override
     public Long min() {
         return this.min;
@@ -113,6 +128,15 @@ public class cInt implements C<Long, cInt> {
         final Long newMax = (null == this.max || null == rhs.max) ? null : (this.max + rhs.max);
         return null == newMin && null == newMax ? new cInt(0L, 0L) : new cInt(newMin, newMax);
     }
+
+    
+    /*@Override
+    public cInt minus(final cInt rhs) {
+        final Long newMin = (null == this.min || null == rhs.min) ? null : (this.min - rhs.min);
+        final Long newMax = (null == this.max || null == rhs.max) ? null : (this.max - rhs.max);
+        return null == newMin && null == newMax ? new cInt(0L, 0L) : new cInt(newMin, newMax);
+    }*/
+
 
     @Override
     public cInt neg() {

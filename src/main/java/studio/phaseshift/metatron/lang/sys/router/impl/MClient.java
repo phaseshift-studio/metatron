@@ -37,7 +37,9 @@ import studio.phaseshift.metatron.util.MTronException;
 
 import java.net.URI;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Queue;
 
 public class MClient extends WebSocketClient implements MConnection {
@@ -55,7 +57,7 @@ public class MClient extends WebSocketClient implements MConnection {
         this.serializer = serializer;
         this.remoteHost = remoteAuthority;
         LOG.info("connecting to {{b}}%s{{/b}}", this.remoteHost);
-        Router.writeToSpace(Router.global().vid().extend("cluster"), new MObjs(this.remoteHost.toUri()));
+        Router.writeToSpace(Router.global().vid().extend("cluster"), new MObjs(new ArrayList<>(List.of(this.remoteHost.toUri()))));
     }
 
     public MClient(final fURI remoteAuthority, final ObjSerializer<?> serializer) {

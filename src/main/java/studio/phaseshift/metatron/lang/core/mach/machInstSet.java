@@ -74,10 +74,10 @@ public class machInstSet extends MInstSet {
         return Stream.of(T(MACH_INE_TID), T(MACH_MONAD_TID)).collect(Collectors.toSet());
     }
 
-    @Override
+   /* @Override
     public Set<Obj> consts() {
-        return Set.of(MMachine.of(noobj(), MCode.of(List.of())).vid(f("/sys/mach/proc").extend("" + Thread.currentThread().getId())));
-    }
+        return Set.of(MMachine.of(noobj(), MCode.of(List.of())).vid(f("/sys/mach/proc")));//f("/sys/mach/proc").extend("" + Thread.currentThread().getId())));
+    }*/
 
     @Override
     public Set<Inst> insts() {

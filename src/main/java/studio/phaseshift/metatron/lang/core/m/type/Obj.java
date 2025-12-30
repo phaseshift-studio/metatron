@@ -494,6 +494,8 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
         private static final ObjSerializer<String> SERIALIZER = new ObjCleanStringSerializer();
 
         public static boolean typeInferenceMatch(final Obj lhs, final Type rhs) {
+            if (lhs.isInst() && rhs.tid().equals(INST_TID))
+                return true;// lhs.c().within(rhs.c());
             if (lhs.tid().matches(rhs.tid()))
                 return true;
             if (rhs.isBaseType())
@@ -507,7 +509,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
         }
 
         public static int objHashCode(final Obj obj) {
-            return obj.isNoObj() ? noobj().hashCode() : obj.isInst() ? obj.tid().hashCode() : Objects.hash(obj.jvm(), obj.tid().cLess());
+            return Objects.hash((Object) obj.jvm()); /*obj.isNoObj() ? noobj().hashCode() : obj.isInst() ? obj.tid().hashCode() : Objects.hash(obj.jvm(), obj.tid().cLess());*/
         }
 
         public static boolean objEquals(final Obj obj, final Object other) {
@@ -580,9 +582,8 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
 
         public static Set<Inst> insts() {
             return new LinkedHashSet<>(List.of(
-                    instC(AS_INST_TID.dom(A).rng(A), lst(T(A)), (lhs, inst) -> lhs.tid(inst.arg(0).tid())),
-                    instC(EXPLAIN_INST_TID.dom(ALL.maybe()).rng(STR_TID), lst(T(CODE_TID)), (lhs, inst) -> str(new Profile(inst.arg(0).as()).toString())),
-                    instC(TO_STR_INST_TID.dom(A.maybe()).rng(STR_TID.maybe()), lst(), (lhs, inst) -> str(lhs.toString())),
+                    instC(AS_INST_TID.dom(A).rng(A), lst(T(A)), (lhs, inst) -> lhs.clone(lhs.jvm(), inst.arg(0).tid(), lhs.vid())),
+                    instC(EXPLAIN_INST_TID.dom(CODE_TID).rng(STR_TID), lst(), (lhs, inst) -> str(new Profile(inst.arg(0)).toString())),
                     instC(AUTO_INST_TID.dom(ALL.maybe()).rng(ALL.maybe()), lst(T(ALL.maybe())), (lhs, inst) -> inst.arg(0).apply(lhs)),
                     instC(CATCH_INST_TID.dom(ALL).rng(ALL.maybeSome()), lst(T(ALL.maybeSome())), (lhs, inst) -> lhs.isFail() ? inst.arg(0).apply(lhs) : lhs),
                     docWrap(instC(END_INST_TID.dom(ALL_STAR).rng(NOOBJ_TID.zero()), lst(), (lhs, inst) -> noobj()),

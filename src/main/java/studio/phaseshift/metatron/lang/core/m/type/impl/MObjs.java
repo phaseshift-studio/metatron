@@ -21,7 +21,6 @@ package studio.phaseshift.metatron.lang.core.m.type.impl;
 import studio.phaseshift.metatron.furi.C;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.lang.core.m.obj.NoObj;
 import studio.phaseshift.metatron.lang.core.m.type.Obj;
 import studio.phaseshift.metatron.lang.core.m.type.Objs;
 import studio.phaseshift.metatron.util.IteratorUtil;
@@ -31,151 +30,220 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
+import static studio.phaseshift.metatron.lang.core.m.obj.NoObj.noobj;
+
 public class MObjs implements Objs {
 
-    private Map<Obj, cInt> cstream; // <obj{1}, coeff{+}>
     private fURI vid;
-    
-    public MObjs(final Iterable<Obj> jvm) {
+    private cInt count = null;
+    private List<Obj> jvm;
+
+    public MObjs(final List<Obj> jvm) {
         this(jvm, null);
     }
 
-    public MObjs(final Iterable<Obj> jvm, final fURI vid) {
-        this(flattenToMap(Collections.synchronizedMap(new LinkedHashMap<>()), jvm), vid);
-    }
-
-    protected MObjs(final Map<Obj, cInt> jvmAlternative, final fURI vid) {
+    public MObjs(final List<Obj> jvm, final fURI vid) {
+        this.jvm = flatten(jvm);
         this.vid = vid;
-        this.cstream = jvmAlternative instanceof LinkedHashMap<Obj, cInt> ? (LinkedHashMap<Obj, cInt>) jvmAlternative : Collections.synchronizedMap(new LinkedHashMap<>(jvmAlternative));
     }
 
-    private static Stream<Obj> flatten(final Iterable<Obj> objs) {
-        return IteratorUtil.stream(objs).flatMap(o -> o.isObjs() ? flatten(o.objsValue()) : Stream.of(o)).filter(o -> !o.isNoObj());
+    @Override
+    public boolean isNoObj() {
+        return this.jvm.isEmpty();
     }
 
-    private static Map<Obj, cInt> flattenToMap(final Map<Obj, cInt> map, final Iterable<Obj> objs) {
-        flatten(objs).forEach(o -> map.compute(o.c(C::one), (lng, it) -> null == it ? o.c() : it.plus(o.c())));
-        return map;
+    private MObjs computeC() {
+        if (null == count) {
+            this.count = cInt.ZERO();
+            for (final Obj o : this.jvm) {
+                this.count = this.count.plus(o.c());
+            }
+        }
+        return this;
     }
 
-    private static Optional<Obj> tryToShrink(final Map<Obj, cInt> map) {
-        if (map.isEmpty())
-            return Optional.of(NoObj.noobj());
-        if (1 == map.size())
-            return Optional.of(map.entrySet().stream().map(kv -> kv.getKey().c(kv.getValue())).iterator().next());
-        // if (map.keySet().stream().allMatch(Obj::isRing))
-        //    return (Optional) map.entrySet().stream().map(a -> (Call) a.getKey().c(a.getValue())).reduce((a, b)->(Call)a.append(b));
-        //return Optional.of(MInst.instB(SPLIT_TID, lst(map.entrySet().stream().map(a -> a.getKey().c(a.getValue())).toList())));
-        return Optional.empty();
+    private List<Obj> flatten(final List<Obj> list) {
+        final List<Obj> flat = new ArrayList<>();
+        count = cInt.ZERO();
+        for (final Obj o : list) {
+            if (!o.isNoObj()) {
+                count = count.plus(o.c());
+                if (o.isObjs()) {
+                    flat.addAll(flatten((List<Obj>) o.objsValue()));
+                } else {
+                    flat.add(o);
+                }
+            }
+        }
+        return flat;
+    }
+
+   /* public Obj done() {
+        return this.attemptBulk(true).tryToShrink();
+    }*/
+
+    private MObjs attemptBulk(final boolean force) {
+        if (force || this.jvm.size() > 10) {
+            final Map<Obj, cInt> map = new LinkedHashMap<>();
+            this.jvm.forEach(o -> map.merge(o.c(C::one), o.c(), cInt::plus));
+            this.jvm = new ArrayList<>();
+            map.forEach((k, v) -> this.jvm.add(k.c(v)));
+            assert this.jvm.size() == map.size();
+            map.clear();
+        }
+        return this;
+
+    }
+
+    private Obj tryToShrink() {
+        if (this.jvm.isEmpty())
+            return noobj();
+        if (1 == this.jvm.size())
+            return this.jvm.getFirst();
+        return this;
     }
 
     public static Objs empty() {
-        return new MObjs(new LinkedList<>()); // a noobj that can be appended
+        return new MObjs(new ArrayList<>(), null); // a noobj that can be appended
     }
 
     public static Obj objs(final Obj... objs) {
-        return objs.length == 0 ? NoObj.noobj() : objs(List.of(objs));
+        return objs(new ArrayList<Obj>(List.of(objs)));
     }
 
     public static Obj objs(final Iterable<Obj> objs) {
-        final Map<Obj, cInt> map = Collections.synchronizedMap(new LinkedHashMap<>());
-        return tryToShrink(flattenToMap(map, objs)).orElseGet(() -> new MObjs(map, fURI.fnull));
+        final List<Obj> temp = new ArrayList<>();
+        IteratorUtil.fill(objs.iterator(), temp);
+        return objs(temp);
+    }
+
+    public static Obj objs(final List<Obj> objs) {
+        if (objs.isEmpty()) return noobj();
+        if (objs.size() == 1) return objs.getFirst();
+        //final List<Obj> internal = new ArrayList<>(objs);
+        return new MObjs(objs, null).attemptBulk(true).tryToShrink();
     }
 
     public static Obj objs(final Stream<Obj> objs) {
-        return MObjs.objs(objs.toList());
+        return objs(new ArrayList<Obj>(objs.toList()));
     }
 
     @Override
     public Obj resolve(final Obj obj) {
-        return objs(flatten(this).map(o -> o.resolve(obj)));
+        return this.clone(new ArrayList<>(this.jvm.stream().map(o -> o.resolve(obj)).toList()), null, this.vid);
     }
 
     @Override
     public Obj append(final Obj obj) {
         if (obj.isNoObj()) return this;
-        return tryToShrink(flattenToMap(this.cstream, obj)).orElse(this);
+
+        this.count = this.computeC().count.plus(obj.c());
+        if (obj instanceof Objs)
+            IteratorUtil.fill(((Iterable<Obj>) obj.jvm()).iterator(), this.jvm);
+        else {
+            this.jvm.add(obj);
+        }
+        return tryToShrink();
     }
 
     @Override
     public cInt uniqueC() {
-        return cInt.of((long) this.cstream.size());
+        /*Map<Obj, cInt> map = new LinkedHashMap<>();
+        this.jvm.stream().map(x -> Tuple.Pair.with(x.c(cInt.ONE()), x.c())).filter(x -> !x.get1().isZero()).forEach(x -> map.compute(x.get0(), (k, v) -> v == null ? x.get1() : v.plus(x.get1())));
+        this.jvm.clear();
+        map.forEach((k, v) -> this.jvm.add(k.c(v)));*/
+        return cInt.of(this.jvm.size());
     }
 
     @Override
     public Iterable<Obj> jvm() {
-        return this.cstream.entrySet().stream().map(kv -> kv.getValue().isOne() ? kv.getKey() : kv.getKey().c(kv.getValue())).toList();
+        return this.jvm;
     }
-    
+
     @Override
     public cInt c() {
-        return this.cstream.values().stream().reduce(cInt.ZERO(), cInt::plus);
+        return this.computeC().count;
+        //   return this.jvm.stream().map(Obj::c).reduce(cInt.ZERO(), cInt::plus);
     }
 
     @Override
     public Obj c(final Function<cInt, cInt> func) {
-        // throw MTronException.of("can not update the c of an objs programmatically: %s", this);
-        this.cstream.keySet().forEach(obj -> this.cstream.computeIfPresent(obj, (k, v) -> func.apply(v)));
-        return this;
+        this.jvm = new ArrayList<Obj>(this.jvm.stream().map(obj -> obj.c(func)).toList());
+        return tryToShrink();
     }
-    
+
     @Override
     public Obj take() {
-        final Map.Entry<Obj, cInt> entry = ((LinkedHashMap<Obj, cInt>) this.cstream).pollFirstEntry();
-        return null == entry ? null : null == entry.getValue() ? entry.getKey() : entry.getKey().c(entry.getValue());
+        final Obj temp = this.jvm.isEmpty() ? null : this.jvm.removeFirst();
+        this.count = temp == null ? cInt.ZERO() : this.computeC().count.minus(temp.c());
+        return temp;
     }
-    
+
     @Override
     public Tuple.Pair<Obj, Obj> take(final cInt c) {
-        final cInt currentC = this.c();
-        if (c.isMaybeSome() || c.equals(currentC))
-            return Tuple.Pair.with(this, NoObj.noobj());
         if (c.isZero())
-            return Tuple.Pair.with(NoObj.noobj(), this);
+            return Tuple.Pair.with(noobj(), this);
+        if (c.isMaybeSome() || Objects.equals(c.max(), this.c().max())) {
+            this.count = cInt.ZERO();
+            return Tuple.Pair.with(this, noobj());
+        }
         final List<Obj> retrieved = new ArrayList<>();
         final List<Obj> remaining = new ArrayList<>();
         cInt total = cInt.ZERO();
-        for (Map.Entry<Obj, cInt> entry : this.cstream.entrySet()) {
+        this.count = cInt.ZERO();
+        for (Obj entry : this.jvm) {
             final cInt toTake = c.minus(total);
+            final cInt entryC = entry.c();
             if (toTake.gt(c.zero())) {
-                if (entry.getValue().lte(toTake)) {
-                    retrieved.add(entry.getKey().c(entry.getValue()));
-                    total = total.plus(entry.getValue());
+                if (entryC.lte(toTake)) {
+                    retrieved.add(entry);
+                    total = total.plus(entryC);
                 } else {
-                    remaining.add(entry.getKey().c(entry.getValue().minus(toTake)));
-                    retrieved.add(entry.getKey().c(toTake));
+                    final cInt t = entryC.minus(toTake);
+                    this.count = this.count.plus(t);
+                    remaining.add(entry.c(t));
+                    retrieved.add(entry.c(toTake));
                     total = total.plus(toTake);
                 }
             } else {
-                remaining.add(entry.getKey().c(entry.getValue()));
+                this.count = this.count.plus(entry.c());
+                remaining.add(entry);
             }
         }
+        this.jvm = remaining;
         return Tuple.Pair.with(objs(retrieved), objs(remaining));
+    }
+
+    @Override
+    public Stream<Obj> stream() {
+        return this.jvm.stream();
+    }
+
+    @Override
+    public Iterator<Obj> iterator() {
+        return this.jvm.iterator();
     }
 
     @Override
     public fURI tid() {
         try {
-            return this.cstream.entrySet()
+            return this.jvm
                     .stream()
-                    .filter(kv -> !kv.getValue().isZero())
-                    .map(kv -> kv.getKey().c(kv.getValue()))
                     .map(Obj::tid)
                     .reduce(fURI::plus)
                     .orElse(fURI.NOOBJ);
         } catch (final Exception e) {
-            return this.cstream.entrySet()
+            return this.jvm
                     .stream()
-                    .filter(kv -> !kv.getValue().isZero())
-                    .map(kv -> kv.getKey().c(kv.getValue()))
                     .map(Obj::tid).reduce(fURI::commonRoot)
                     .orElse(fURI.NOOBJ);
         }
     }
 
     @Override
-    public Objs vid(final fURI vid) {
-        return new MObjs(this.jvm(), vid);
+    public Obj vid(final fURI vid) {
+        final MObjs temp = new MObjs(new ArrayList<Obj>(this.jvm), vid);
+        return temp.tryToShrink();
     }
 
     @Override
@@ -185,7 +253,7 @@ public class MObjs implements Objs {
 
     @Override
     public Obj clone(final Object jvm, final fURI tid, final fURI vid) {
-        return objs(flatten((Iterable<Obj>) jvm));
+        return objs(this.jvm).vid(vid);
     }
 
     @Override
@@ -195,22 +263,38 @@ public class MObjs implements Objs {
 
     @Override
     public int hashCode() {
-        return Objects.hash(this.cstream, this.vid);
+        return Objects.hash(this.jvm.size(), this.vid);
     }
 
     @Override
     public boolean equals(final Object other) {
-        return other instanceof MObjs && Objects.equals(this.vid, ((MObjs) other).vid) && Objects.equals(this.cstream, ((MObjs) other).cstream);
+        final Obj a;
+        final Obj b;
+        a = this.attemptBulk(true).tryToShrink();
+        if (other instanceof MObjs) {
+            b = (((MObjs) other).attemptBulk(true).tryToShrink()); // TODO: might require attemptBulk(true)
+        } else {
+            b = (Obj) other;
+        }
+        if (a instanceof MObjs && b instanceof MObjs) {
+            return new HashSet<>(a.jvm()).equals(new HashSet<>(b.jvm()));
+        }/* else if (a instanceof MObjs) {
+            return b.equals(((MObjs) a).attemptBulk(true).tryToShrink());
+        } else if (b instanceof MObjs) {
+            return a.equals(((MObjs) b).attemptBulk(true).tryToShrink());
+        }*/ else {
+            return b.equals(a);
+        }
     }
 
     @Override
     public Objs clone() {
-        return (Objs) this.clone(this.jvm(), this.tid(), this.vid);
+        return (Objs) this.clone(this.jvm, this.tid(), this.vid);
     }
 
     @Override
     public Objs self(final Object jvm, final fURI tid, final fURI vid) {
-        this.cstream = flattenToMap(new LinkedHashMap<>(), (Iterable<Obj>) jvm);
+        this.jvm = (List<Obj>) jvm;
         this.vid = vid;
         return this;
     }

@@ -35,7 +35,6 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.core.m.parser.mParser;
 import studio.phaseshift.metatron.lang.core.m.type.Obj;
 import studio.phaseshift.metatron.lang.core.m.type.Rec;
-import studio.phaseshift.metatron.lang.core.m.type.Rel;
 import studio.phaseshift.metatron.lang.core.m.type.Type;
 import studio.phaseshift.metatron.lang.core.m.type.impl.MObjs;
 import studio.phaseshift.metatron.lang.core.m.type.impl.MRec;
@@ -136,7 +135,7 @@ public class Console extends MRec implements Threadable, Runnable {
             /// ///////////////////////////////////////////////////////
             this.put(uri("history"), fileSpace.makeFile(Path.of(HISTORY_FILE.toString())), MUTABLE);
             this.put(uri("header"), fileSpace.makeFile(Path.of(HEADER_FILE)), MUTABLE);
-            this.put(uri("output"), instC(INST_TID.dom(ALL).rng(NOOBJ),lst(T(ALL)), (lhs,inst) -> {
+            this.put(uri("output"), instC(INST_TID.dom(ALL).rng(NOOBJ), lst(T(ALL)), (lhs, inst) -> {
                 this.reader.printAbove(Highlighter.format(inst.arg(0)));
                 return noobj();
             }));
@@ -160,7 +159,7 @@ public class Console extends MRec implements Threadable, Runnable {
             LOG.error(e);
         }
     }
-    
+
     public void write(final Object object) {
         this.terminal.writer().write(Highlighter.format(object));
     }
@@ -218,18 +217,20 @@ public class Console extends MRec implements Threadable, Runnable {
                     LOG.info("space selected: %s", selected);
                 } else if (line.startsWith(":state")) {
                     this.status.setState(Level.valueOf(line.substring(6).trim().toUpperCase()));
-                } else
+                } else {
+                    long startTime = System.currentTimeMillis();
                     result = mParser.parse(line);
-
-                if (null != result) {
-                    (result.isNoObj() ?
-                            MObjs.empty() :
-                            result.isObjCall() ? MMachine.of(result.as()).apply() : result).stream()
-                            .forEach(o -> {
-                                this.write("{{-X-}}{{m}}=={{g}}>{{X}}");
-                                this.write(o);
-                                this.write("\n");
-                            });
+                    if (null != result) {
+                        (result.isNoObj() ?
+                                MObjs.empty() :
+                                result.isObjCall() ? MMachine.of(result.as()).apply() : result).stream()
+                                .forEach(o -> {
+                                    this.write("{{-X-}}{{m}}=={{g}}>{{X}}");
+                                    this.write(o);
+                                    this.write("\n");
+                                });
+                    }
+                    this.status.setLastExecutionTime(System.currentTimeMillis() - startTime);
                 }
                 
                 /*if (null != result && !result.isNoObj()) {

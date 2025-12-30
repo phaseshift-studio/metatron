@@ -38,11 +38,11 @@ public class Profile implements Widget {
     public Profile(final Obj obj) {
         this.obj = obj;
         this.table = new Table(List.of("op", "dom", "rng", "f", "args", "desc", "c_dom", "c_rng"));
-        if (obj.isCode()) {
+        if (obj.isObjCall()) {
             cInt dom = cInt.ONE();
             cInt rng = cInt.ONE();
             boolean first = true;
-            for (final Inst i : obj.codeValue()) {
+            for (final Inst i : obj.isCode() ? obj.codeValue() : List.of(obj.<Inst>as())) {
                 dom = first ? i.dom().c() : rng;
                 boolean inDom = i.dom().c().lte(rng);
                 rng = (Inst.Form.of(i) == Inst.Form.reducer) ? cInt.ONE() : (first ? i.rng().c() : i.rng().c().mult(dom));

@@ -37,13 +37,19 @@ public class StatusLine implements Threadable, Runnable {
 
     private AttributedString line;
     private Level state = INFO;
+    private long lastExecutionTime = 0;
     private final Status status;
     private final Thread thread;
+
 
     public StatusLine(final Console console, final String line) {
         this.line = new AttributedStringBuilder().append(line).toAttributedString();
         this.status = Status.getStatus(console.getTerminal());
         this.thread = new Thread(this);
+    }
+
+    public void setLastExecutionTime(final long lastExecutionTime) {
+        this.lastExecutionTime = lastExecutionTime;
     }
 
     public void setState(final Level state) {
@@ -70,10 +76,11 @@ public class StatusLine implements Threadable, Runnable {
                 color = "b";
             if (Router.loaded()) {
                 final AttributedString temp = new AttributedStringBuilder()
-                        .ansiAppend(Graphitty.string("{{[" + color + "]&w}} %s", Router.global().server().host()))
-                        .ansiAppend(Graphitty.string("{{g}}|{{w}}nodes:{{m}}%d{{[" + color + "]&w}}", Router.global().server().nodes().size()))
-                        .ansiAppend(Graphitty.string("{{g}}|{{w}}in:{{m}}%d{{[" + color + "]&w}}", Router.global().server().stats().getBytesRecv()))
-                        .ansiAppend(Graphitty.string("{{g}}|{{w}}out:{{m}}%d{{[" + color + "]&w}}", Router.global().server().stats().getBytesSent()))
+                        .ansiAppend(Graphitty.string("{{[" + color + "]&y}} %s", Router.global().server().host()))
+                        .ansiAppend(Graphitty.string("{{g}}|{{w}}nodes:{{y}}%d{{[" + color + "]&w}}", Router.global().server().nodes().size()))
+                        .ansiAppend(Graphitty.string("{{g}}|{{w}}in:{{y}}%d{{[" + color + "]&w}}", Router.global().server().stats().getBytesRecv()))
+                        .ansiAppend(Graphitty.string("{{g}}|{{w}}out:{{y}}%d{{[" + color + "]&w}}", Router.global().server().stats().getBytesSent()))
+                        .ansiAppend(Graphitty.string("{{g}}|{{w}}execution time (ms):{{y}}%d{{[" + color + "]&w}}", this.lastExecutionTime))
                         .append(Graphitty.string("{{g}}|{{[" + color + "]}}%s", " ".repeat(200)))
                         .toAttributedString();
                 if (!this.line.equals(temp)) {

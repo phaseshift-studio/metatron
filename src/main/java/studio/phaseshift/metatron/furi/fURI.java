@@ -30,6 +30,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static studio.phaseshift.metatron.furi.c.cInt.C_ONE;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
 
 
@@ -597,12 +598,12 @@ public class fURI implements Cloneable, Ring<fURI> {
             if (this.path.get(this.path.size() - 1).indexOf('{') == -1)
                 return this;
             final List<String> segments = new ArrayList<>(this.path);
-            String last = segments.remove(segments.size() - 1);
+            String last = segments.removeLast();
             segments.add(last.substring(0, last.indexOf("{")));
             return new fURI(this.scheme, this.host, this.port, this.sstart, segments, this.send, this.poly, Query.to(this.query));
         } else {
             final List<String> segments = new ArrayList<>(this.c(null).path);
-            String last = segments.isEmpty() ? "" : segments.remove(segments.size() - 1);
+            String last = segments.isEmpty() ? "" : segments.removeLast();
             segments.add(last + "{" + cInt.of(coefficient) + "}");
             return new fURI(this.scheme, this.host, this.port, this.sstart, segments, this.send, this.poly, Query.to(this.query));
         }
@@ -610,17 +611,19 @@ public class fURI implements Cloneable, Ring<fURI> {
 
     public cInt cV() {
         if (this.c() == null)
-            return cInt.of(1L);
+            return C_ONE;
         return cInt.of(this.c());
     }
 
     public String c() {
         if (this.path.isEmpty())
             return null;
-        final String last = this.path.get(this.path.size() - 1);
+        final String last = this.path.getLast();
         final int left = last.indexOf('{');
+        if (left == -1)
+            return null;
         final int right = last.indexOf('}');
-        if (left == -1 && right == -1)
+        if (right == -1)
             return null;
         else if (left > right)
             throw MTronException.of("malformed coefficient: %s", last);

@@ -42,7 +42,6 @@ import studio.phaseshift.metatron.lang.sys.ui.uiInstSet;
 import studio.phaseshift.metatron.lang.util.LogObj;
 import studio.phaseshift.metatron.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.ui.graphitty.GraphittyLogger;
-import studio.phaseshift.metatron.util.MTronException;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -131,19 +130,17 @@ public class BootLoader implements Rec, Feature.SelfClone {
                     "metatron '[boot=><examples/boot.mtron>,mode=>console,log=>info,host=><ws://localhost:8888>,cluster=>[<ws://127.0.0.1:8887>]]'");
             System.exit(0);
         } else {
-            final Rec userArgs = args.length > 0 ? mParser.parse(args[0]).as() : rec();
-            if (userArgs.has(BOOT)) {
-                userArgs.put(uri(BOOT), f(Paths.get("").toAbsolutePath().normalize().toString()).extend(userArgs.at(BOOT).uriValue()).toUri(), MUTABLE);
-            }
-            LogObj.setSLF4J(userArgs.has(uri("log")) ? userArgs.at(uri("log")).uriValue().toString() : "trace");
-            LOG.debug("user options: %s", userArgs);
-            ARGS = userArgs;
-            BootLoader.load(userArgs);
+            ARGS = args.length > 0 ? mParser.parse(args[0]).as() : rec();
+            BootLoader.load(ARGS);
         }
     }
 
     public static void load(final Rec args) {
         if (BOOTING) {
+            LOG.debug("user-provided args: %s", args);
+            if (args.has(BOOT))
+                args.put(uri(BOOT), f(Paths.get("").toAbsolutePath().normalize().toString()).extend(args.at(BOOT).uriValue()).toUri(), MUTABLE);
+            LogObj.setSLF4J(args.has(uri("log")) ? args.at(uri("log")).uriValue().toString() : "info");
             LOG.info("%s", Graphitty.sillyPrint("booting metatron", true, true));
             Runtime.getRuntime().addShutdownHook(new Thread(BootLoader::close));
             fURI remoteAuthority = null;
@@ -155,8 +152,8 @@ public class BootLoader implements Rec, Feature.SelfClone {
             }
             LOG.info("accessible instruction sets: %s", Registry.open().registrants());
             ROUTER = new MRouter(remoteAuthority, SYS_OBJ_TID.extend("router"));
-            new sysInstSet(SYS_TID.extend("mod/sys"));
             kvSpace.of(f("/sys/#"), null);
+            new sysInstSet(SYS_TID.extend("mod/sys"));
             Router.writeToSpace(mInstSet.create(f("/sys/mod/m")));
             Router.writeToSpace(Router.global());
             Router.writeToSpace(new fsInstSet(f("/sys/mod/fs")));

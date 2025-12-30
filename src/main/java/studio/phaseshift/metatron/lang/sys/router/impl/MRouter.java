@@ -68,7 +68,7 @@ public class MRouter extends MSpace<MServer> implements Router {
                         uri(Tokens.SPACE), rec(new ConcurrentHashMap<>(Map.of(uri("+/#"), new stackSpace(f("+/#"))))))), f("#"),
                 ROUTER_TID,
                 vid);
-        LOG.info("local router %s", this);
+        LOG.info("local router at %s", this.vid.toUri());
         LOG.info("available serializers: %s", lst(SERIALIZERS.getSerializers().recValue().keySet().stream().toList()));
     }
 

@@ -110,7 +110,7 @@ public class MObjFactory implements ObjFactory {
         else if (Code.class.isAssignableFrom(objClass))
             return (O) new MCode((List<Inst>) value, tid, vid);
         else if (Objs.class.isAssignableFrom(objClass))
-            return (O) new MObjs((Iterable<Obj>) value, vid);
+            return (O) new MObjs((List<Obj>) value, vid);
         else if (Type.class.isAssignableFrom(objClass))
             return (O) T(tid, null, (Call) value);
         else if (NoObj.class.isAssignableFrom(objClass))
