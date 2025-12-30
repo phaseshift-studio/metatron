@@ -198,6 +198,7 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>>, PlusMonoid.O<Rec> {
                     instC(RSHIFT_INST_TID.dom(REC_TID).rng(ALL_STAR), lst(isa_(T(INT_TID)).else_(jnt(1))), (lhs, inst) -> Common.loop(lhs, o -> objs(o.stream().filter(Obj::isRec).flatMap(r -> r.<Rec>as().elements().map(Rel::second))), inst.arg(0).intValue().intValue())),
                     instC(LSHIFT_INST_TID.dom(REC_TID).rng(ALL_STAR), lst(isa_(T(INT_TID)).else_(jnt(1))), (lhs, inst) -> Common.loop(lhs, o -> objs(o.stream().filter(Obj::isRec).flatMap(r -> r.<Rec>as().elements().map(Rel::first))), inst.arg(0).intValue().intValue())),
                     instC(PLUS_INST_TID.dom(REC_TID).rng(REC_TID), lst(T(REC_TID)), (lhs, inst) -> lhs.jvm(Stream.concat(lhs.<Rec>as().elements(), inst.arg(0).<Rec>as().elements().map(Obj::<Rel>as)).collect(Collectors.toMap(Rel::first, Rel::second, Obj::append, LinkedHashMap::new)))),
+                    instC(MPLUS_INST_TID.dom(REC_TID).rng(REC_TID), lst(T(REC_TID)), (lhs, inst) -> inst.arg(0).<Rec>as().elements().map(Obj::<Obj>as).reduce(lhs.<Rec>as(), (a, b) -> a.<Rec>as().put(((Rel) b).first(), ((Rel) b).second(), MUTABLE))),
                     instC(SELECT_INST_TID.dom(REC_TID).rng(REC_TID.maybe()), lst(T(REC_TID)), (lhs, inst) -> crossPoly(lhs, inst.arg(0))),
                     instC(WITHIN_INST_TID.dom(REC_TID).rng(REC_TID), lst(T(ALL_STAR)), (lhs, inst) -> rec(lhs.elements().map(r -> inst.arg(0).apply(r).<Rel>as())))
             ));

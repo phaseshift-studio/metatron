@@ -38,6 +38,7 @@ import studio.phaseshift.metatron.lang.sys.fs.fsInstSet;
 import studio.phaseshift.metatron.lang.sys.router.Router;
 import studio.phaseshift.metatron.lang.sys.router.impl.MRouter;
 import studio.phaseshift.metatron.lang.sys.sysInstSet;
+import studio.phaseshift.metatron.lang.sys.ui.uiInstSet;
 import studio.phaseshift.metatron.lang.util.LogObj;
 import studio.phaseshift.metatron.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.ui.graphitty.GraphittyLogger;
@@ -71,6 +72,7 @@ import static studio.phaseshift.metatron.lang.net.web.webInstSet.WEB_INSTSET_TID
 import static studio.phaseshift.metatron.lang.sys.fs.fsInstSet.FS_INSTSET_TID;
 import static studio.phaseshift.metatron.lang.sys.sysInstSet.SYS_OBJ_TID;
 import static studio.phaseshift.metatron.lang.sys.sysInstSet.SYS_TID;
+import static studio.phaseshift.metatron.lang.sys.ui.uiInstSet.UI_INSTSET_TID;
 
 public class BootLoader implements Rec, Feature.SelfClone {
 
@@ -96,6 +98,7 @@ public class BootLoader implements Rec, Feature.SelfClone {
         Registry.open().register(VEC_INSTSET_TID, vecInstSet::create);
         Registry.open().register(MACH_INSTSET_TID, machInstSet::create);
         Registry.open().register(CLSTR_INSTSET_TID, clstrInstSet::create);
+        Registry.open().register(UI_INSTSET_TID, uiInstSet::create);
         // Registry.singleton().register(miotInstSet.INST_TID, () -> miotInstSet.of(fURI.NULL));
     }
 

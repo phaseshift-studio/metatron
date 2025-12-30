@@ -68,6 +68,7 @@ public class mInstSet extends MInstSet {
     public static final fURI REDUCE_INST_TID = INST_TID.extend("reduce");
     public static final fURI MULT_INST_TID = INST_TID.extend("mult");
     public static final fURI PLUS_INST_TID = INST_TID.extend("plus");
+    public static final fURI MPLUS_INST_TID = INST_TID.extend("mplus");
     public static final fURI MINUS_INST_TID = INST_TID.extend("minus");
     public static final fURI MAP_INST_TID = INST_TID.extend("map");
     public static final fURI FILTER_INST_TID = INST_TID.extend("filter");
@@ -217,6 +218,7 @@ public class mInstSet extends MInstSet {
                 Tuple.Triplet.with(Tuple.Pair.with(">>", null), List.of(RSHIFT_INST_TID), 0),
                 Tuple.Triplet.with(Tuple.Pair.with("<<", null), List.of(LSHIFT_INST_TID), 1),
                 Tuple.Triplet.with(Tuple.Pair.with("<<", null), List.of(LSHIFT_INST_TID), 0),
+                Tuple.Triplet.with(Tuple.Pair.with("++", null), List.of(MPLUS_INST_TID), 1),
                 Tuple.Triplet.with(Tuple.Pair.with("+", null), List.of(PLUS_INST_TID), 1),
                 Tuple.Triplet.with(Tuple.Pair.with("-", null), List.of(MINUS_INST_TID), 1),
                 Tuple.Triplet.with(Tuple.Pair.with(";", null), List.of(END_INST_TID), 0),

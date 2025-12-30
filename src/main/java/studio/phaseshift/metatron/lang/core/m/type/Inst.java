@@ -389,6 +389,10 @@ public interface Inst extends Call {
         }
 
         public static Inst applyArgs(final Obj lhs, final Inst inst) {
+            if (inst.args().isRec() && inst.args().<Rec>as().elements().noneMatch(r -> r.first().isObjCall() || r.second().isObjCall() || r.first().isType() || r.second().isType()))
+                return inst;
+            else if (inst.args().isLst() && inst.args().<Lst>as().elements().noneMatch(e -> e.isObjCall() || e.isType()))
+                return inst;
             final boolean blocking = inst.isBlocking();
             /*if (BootLoader.TYPE_CHECK) {
                 if (!blocking && (!lhs.matches(inst.dom()) || !(lhs.take(inst.dom().c()).get0()).matches(inst.dom())))

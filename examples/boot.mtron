@@ -15,6 +15,7 @@ print("{{r}}------------\n{{g}}*{{y}}boot/args{{X}}: ",
 /sys/mod/vec   -> */vec;
 /sys/mod/mach  -> */mach;
 /sys/mod/llm   -> */llm;
+/sys/mod/ui    -> */ui;
 [-- mount spaces --];
      kv::[pattern => /usr/#]@/sys/space/usr;
      kv::[pattern => /shared/#]@/sys/space/shared;

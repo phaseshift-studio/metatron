@@ -15,7 +15,7 @@ color blue ".*"
 color yellow "\?"
 color yellow "&"
 # q keys
-color cyan "\<dom=|rng=\>"
+color cyan "(dom=)|(rng=)"
 color green "="
 # f (j,m,?)
 color yellow "\{.\}"

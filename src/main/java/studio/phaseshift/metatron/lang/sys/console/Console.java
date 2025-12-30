@@ -61,11 +61,11 @@ import java.util.function.Supplier;
 import static org.jline.keymap.KeyMap.alt;
 import static org.jline.keymap.KeyMap.ctrl;
 import static studio.phaseshift.metatron.BootLoader.BOOTING;
-import static studio.phaseshift.metatron.furi.fURI.ALL;
-import static studio.phaseshift.metatron.furi.fURI.f;
+import static studio.phaseshift.metatron.furi.fURI.*;
 import static studio.phaseshift.metatron.lang.core.m.inst.mFluent.StartLess.isa_;
 import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.INST_TID;
 import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.REC_TID;
+import static studio.phaseshift.metatron.lang.core.m.obj.NoObj.noobj;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MType.T;
@@ -102,8 +102,6 @@ public class Console extends MRec implements Threadable, Runnable {
 
     public Console(final Rec options) {
         super(options.jvm(), CONSOLE_TID, f("/sys/obj/console"));
-        this.put(uri("history"), fileSpace.makeFile(Path.of(HISTORY_FILE.toString())), MUTABLE);
-        this.put(uri("headers"), fileSpace.makeFile(Path.of(HEADER_FILE)), MUTABLE);
         try {
             final DefaultParser parser = new DefaultParser()
                     .quoteChars(new char[]{'\'', '"'})
@@ -135,6 +133,13 @@ public class Console extends MRec implements Threadable, Runnable {
             new CustomWidgets(this.reader);
             this.status = new StatusLine(this, "{{b}}loading...{{X}}");
             this.thread = new Thread(this);
+            /// ///////////////////////////////////////////////////////
+            this.put(uri("history"), fileSpace.makeFile(Path.of(HISTORY_FILE.toString())), MUTABLE);
+            this.put(uri("header"), fileSpace.makeFile(Path.of(HEADER_FILE)), MUTABLE);
+            this.put(uri("output"), instC(INST_TID.dom(ALL).rng(NOOBJ),lst(T(ALL)), (lhs,inst) -> {
+                this.reader.printAbove(Highlighter.format(inst.arg(0)));
+                return noobj();
+            }));
         } catch (final Exception e) {
             throw MTronException.of(e);
         }
