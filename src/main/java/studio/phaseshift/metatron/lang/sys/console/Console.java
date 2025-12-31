@@ -36,10 +36,13 @@ import studio.phaseshift.metatron.lang.core.m.parser.mParser;
 import studio.phaseshift.metatron.lang.core.m.type.Obj;
 import studio.phaseshift.metatron.lang.core.m.type.Rec;
 import studio.phaseshift.metatron.lang.core.m.type.Type;
+import studio.phaseshift.metatron.lang.core.m.type.impl.MObj;
 import studio.phaseshift.metatron.lang.core.m.type.impl.MObjs;
 import studio.phaseshift.metatron.lang.core.m.type.impl.MRec;
+import studio.phaseshift.metatron.lang.core.m.type.reflect.ReflectRec;
 import studio.phaseshift.metatron.lang.core.mach.type.impl.MMachine;
 import studio.phaseshift.metatron.lang.sys.fs.fileSpace;
+import studio.phaseshift.metatron.lang.sys.router.Router;
 import studio.phaseshift.metatron.lang.util.LogObj;
 import studio.phaseshift.metatron.ui.Border;
 import studio.phaseshift.metatron.ui.graphitty.Graphitty;
@@ -67,11 +70,12 @@ import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.REC_TID;
 import static studio.phaseshift.metatron.lang.core.m.obj.NoObj.noobj;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.lang.sys.sysInstSet.SYS_TYPE_TID;
 
-public class Console extends MRec implements Threadable, Runnable {
+public class Console extends MObj implements Threadable, Runnable, ReflectRec {
 
     public static final fURI CONSOLE_TID = SYS_TYPE_TID.extend("console");
     public static final String METATRON_VERSION = "0.1-alpha";
@@ -96,9 +100,32 @@ public class Console extends MRec implements Threadable, Runnable {
         final Console console = new Console(inst.arg(0).as());
         console.start();
         LOCAL_INSTANCE = console;
+        Router.global().write(f("/sys/obj/console"),console);
         return console;
     }));
 
+    @Override
+    public Rec self(Object jvm, fURI tid, fURI vid) {
+        return this;
+    }
+
+    @Override
+    public Rec clone(Object jvm, fURI tid, fURI vid) {
+        return this;
+    }
+
+    @Override
+    public fURI tid() {
+        return CONSOLE_TID;
+    }
+    
+    
+
+    @Override
+    public Map<Obj,Obj> jvm() {
+        return Map.of();
+    }
+    
     public Console(final Rec options) {
         super(options.jvm(), CONSOLE_TID, f("/sys/obj/console"));
         try {

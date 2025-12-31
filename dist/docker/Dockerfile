@@ -52,4 +52,4 @@ RUN chmod +x bin/entrypoint.sh
 EXPOSE 8999
 EXPOSE 8777
 # ARG option="[host=><ws://127.0.0.1:8999>,cluster=>{,},boot=><examples/docker.mtron>,log=>info]"
-ENTRYPOINT ["bin/entrypoint.sh"]
+ENTRYPOINT ["bin/metatron", "$@"]

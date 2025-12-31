@@ -1,13 +1,10 @@
-
-abc?dom=2&rng=3(noobj){?}
-
 [-- metatron example boot --];
 print("{{r}}------------\n{{g}}*{{y}}boot/args{{X}}: ",
       *boot/args, 
      "\n{{r}}------------{{X}}\n");
 [-- mount instruction sets --];
-/sys/mod/sys   -> */sys;
-/sys/mod/fs    -> */fs;
+[--/sys/mod/sys   -> */sys;
+[--/sys/mod/fs    -> */fs;
 /sys/mod/kv    -> */kv;
 /sys/mod/web   -> */web;
 /sys/mod/iot   -> */iot;
@@ -29,12 +26,13 @@ print("{{r}}------------\n{{g}}*{{y}}boot/args{{X}}: ",
    mqtt::[pattern => /mqtt/#,
           host    => <mqtt://chibi.local:1883>,
           prefix  => /mqtt/]@/sys/space/mqtt;
-    mqtt::[pattern  => /zigbee2mqtt/#,
-             host   => <mqtt://chibi.local:1883>,
-             prefix => <>]@/sys/space/zigbee2mqtt;
+   mqtt::[pattern => /zigbee2mqtt/#,
+          host    => <mqtt://chibi.local:1883>,
+          prefix  => <>]@/sys/space/zigbee2mqtt;
      fs::[pattern => /home/#]@/sys/space/fs;
      kv::[pattern => /usr/ai/#]@/sys/space/ai;
-     /usr/ai/ollama -> ollama::[host => <http://localhost:11434>, model => |load()];
+ ollama::[host    => <http://localhost:11434>, 
+          model   => |load()]@/usr/ai/ollama;
 console::[        => ];
  [-- *boot/args/mode.-<|[?=server   => print('\n\t{{g}}-<{{c}}server mode{{g}}>-{{X}}'), 
  [--                       ?=console => print('\n\t{{g}}-<{{c}}client mode{{g}}>-{{X}}').map(console::[=>]), 

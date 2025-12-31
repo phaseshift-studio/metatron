@@ -38,11 +38,11 @@ color blue "[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}(:)?[0-9]*"
 # uri slash or schema
 icolor blue "(/|([a-z]*(://))|[a-z])([0-9]|[a-z]|\.|-|_)+(:)?[0-9]*(/)?([a-z]|/|\_|[0-9])*"
 # rec/rel uri key
-icolor cyan "([a-z]|[0-9]|/|_)+=>"
+icolor cyan "([a-z]|[0-9]|/|_|#|\+)+=>"
 color green "=>"
 # q keys
 color cyan "(dom=)|(rng=)"
-color green "="
+color green "=" "::"
 ### bytes
 icolor yellow "0x([0-9]|[a-f])+"
 color yellow,underline "0x"
