@@ -26,10 +26,13 @@ import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.*;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MFail.fail;
 
 public interface ObjFactory {
+    <O extends Obj> O create(final Object value, final fURI tid, final fURI vid);
 
     <O extends Obj> O create(final Object value, final fURI tid, final fURI vid, final Class<O> objClass);
 
-    Obj create(final Object value);
+    default Obj create(final Object value) {
+        return this.create(value, null, null);
+    }
 
     default Obj createOrFail(final Object value) {
         try {
@@ -37,10 +40,6 @@ public interface ObjFactory {
         } catch (final Exception e) {
             return fail(e);
         }
-    }
-
-    default <O extends Obj> O create(final Object value, final fURI tid, final Class<O> objClass) {
-        return this.create(value, tid, fURI.fnull, objClass);
     }
 
     default <O extends Obj> O create(final Object value, final Class<O> objClass) {

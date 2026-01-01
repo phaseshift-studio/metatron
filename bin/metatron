@@ -1,5 +1,7 @@
 #!/bin/sh
 
+set -e
+
 java -Dlogback.configurationFile=conf/logback.xml \
     --add-opens=java.base/java.util.concurrent.atomic=ALL-UNNAMED \
     --enable-native-access=ALL-UNNAMED \

@@ -39,6 +39,8 @@ import static studio.phaseshift.metatron.util.Tuple.Pair;
 
 public interface Rel extends Poly<Rel, Tuple.Pair<Obj, Obj>>, Obj {
 
+    Type REL_TYPE = T(REL_TID);
+
     @Override
     Rel clone(final Object jvm, final fURI tid, final fURI vid);
 

@@ -42,7 +42,7 @@ public class MObjFactory implements ObjFactory {
 
     private static final MObjFactory SINGLETON = new MObjFactory();
 
-    private MObjFactory() {
+    protected MObjFactory() {
     }
 
     public static ObjFactory of() {
@@ -50,31 +50,31 @@ public class MObjFactory implements ObjFactory {
     }
 
     @Override
-    public Obj create(final Object value) {
+    public <O extends Obj> O create(final Object value, final fURI tid, final fURI vid) {
         if (null == value)
-            return NoObj.noobj();
+            return (O) NoObj.noobj();
         if (value instanceof Obj)
-            return (Obj) value;
+            return (O) value;
         if (value instanceof Boolean)
-            return bool((Boolean) value);
+            return (O) bool((Boolean) value, tid, vid);
         else if (value instanceof Long)
-            return jnt((Long) value);
+            return (O) jnt((Long) value, tid, vid);
         else if (value instanceof Integer)
-            return jnt((Integer) value);
+            return (O) jnt((Integer) value, tid, vid);
         else if (value instanceof Double)
-            return real((Double) value);
+            return (O) real((Double) value, tid, vid);
         else if (value instanceof Float)
-            return real((Float) value);
+            return (O) real((Float) value, tid, vid);
         else if (value instanceof String)
-            return str((String) value);
+            return (O) str((String) value, tid, vid);
         else if (value instanceof fURI)
-            return uri((fURI) value);
+            return (O) uri((fURI) value, tid, vid);
         else if (value instanceof List)
-            return lst((List<Obj>) value);
+            return (O) lst((List<Obj>) value, tid, vid);
         else if (value instanceof Pair)
-            return rel((Pair<Obj, Obj>) value);
+            return (O) rel((Pair<Obj, Obj>) value, tid, vid);
         else if (value instanceof Map)
-            return rec((Map<Obj, Obj>) value);
+            return (O) rec((Map<Obj, Obj>) value, tid, vid);
             //else if (value instanceof Triplet)
             //    return new MInst((Triplet<Poly, Inst.f, Obj>) value);
             // else if (Code.class.isAssignableFrom(objClass))

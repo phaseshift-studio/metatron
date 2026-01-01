@@ -690,7 +690,7 @@ public class fURI implements Cloneable, Ring<fURI> {
     }
 
     public fURI dom(final fURI domain) {
-        return this.query(DOM, domain);
+        return null == domain ? this.removeQ(DOM.toString()) : this.query(DOM, domain);
     }
 
     public fURI rng() {
@@ -698,7 +698,7 @@ public class fURI implements Cloneable, Ring<fURI> {
     }
 
     public fURI rng(final fURI range) {
-        return this.query(RNG, range);
+        return null == range ? this.removeQ(RNG.toString()) : this.query(RNG, range);
     }
 
     public fURI qLess() {

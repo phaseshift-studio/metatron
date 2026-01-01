@@ -133,7 +133,7 @@ public class mInstSet extends MInstSet {
     public static final fURI URI_PORT_TID = MTRON_TID.extend("uri:port");
     public static final fURI URI_HOST_TID = MTRON_TID.extend("uri:host");
     public static final fURI URI_PATH_TID = MTRON_TID.extend("uri:path");
-    public static final fURI URI_Q_TID = MTRON_TID.extend("uri:q");
+    public static final fURI Q_INST_TID = INST_TID.extend("q");
     public static final fURI URI_C_TID = MTRON_TID.extend("uri:c");
     public static final fURI STR_SPLIT_TID = MTRON_TID.extend("str:split");
     public static final fURI STR_LOWER_TID = MTRON_TID.extend("str:lower");

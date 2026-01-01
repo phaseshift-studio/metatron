@@ -38,6 +38,7 @@ import static studio.phaseshift.metatron.Tokens.PATTERN;
 import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.lang.core.m.inst.mFluent.StartLess.*;
 import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.*;
+import static studio.phaseshift.metatron.lang.core.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MBytes.bytes;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
@@ -53,6 +54,7 @@ public class fsInstSet extends MInstSet {
 
     public static final fURI FS_INSTSET_TID = fURI.of("/fs");
     public static final fURI FILE_TID = FS_INSTSET_TID.extend("file");
+    public static final String FILE_TID_STRING = "/fs/file";
     public static final fURI IMAGE_TID = FS_INSTSET_TID.extend("image");
 
     public fsInstSet(final fURI vid) {
@@ -68,9 +70,9 @@ public class fsInstSet extends MInstSet {
         return Set.of(
                 FS_TYPE,
                 T(IMAGE_TID),
-                T(FILE_TID, isa_(rec(uri(PATTERN), T(URI_TID))), 
-                        instC(INST_TID.dom(ALL.maybe()).rng(FILE_TID), lst(T(REC_TID)), 
-                                (lhs, inst) -> fileSpace.makeFile(Path.of(inst.arg(0).<Rec>as().at(PATTERN).uriValue().toString())))));
+                T(FILE_TID, isa_(URI_TYPE), 
+                        instC(INST_TID.dom(ALL.maybe()).rng(FILE_TID), lst(T(URI_TID)), 
+                                (lhs, inst) -> fileSpace.makeFile(Path.of(inst.arg(0).uriValue().toString())))));
 
     }
 
@@ -79,13 +81,14 @@ public class fsInstSet extends MInstSet {
         return new LinkedHashSet<>(List.of(
                 instC(AS_INST_TID.dom(FILE_TID).rng(BYTES_TID), lst(T(BYTES_TID)), (lhs, inst) -> {
                     try {
-                        final File file = Paths.get(lhs.<Rec>as().at(PATTERN).uriValue().toString()).toFile();
+                        final File file = Paths.get(lhs.uriValue().basePath().toString()).toFile();
                         final byte[] data = new byte[(int) file.length()];
                         try (final FileInputStream fis = new FileInputStream(file)) {
                             fis.read(data);
                         }
                         return bytes(ByteBuffer.wrap(data));
                     } catch (final Exception e) {
+                        e.printStackTrace();
                         throw MTronException.of(e);
                     }
                 }),

@@ -42,6 +42,10 @@ public class MReal extends MObj implements Real {
         return new MReal(jvm, tid, vid);
     }
 
+    public static Real real(final Float jvm, final fURI tid, final fURI vid) {
+        return real(jvm.doubleValue(), tid, vid);
+    }
+
     public static Real of(final double jvm) {
         return new MReal(jvm, REAL_TID, fURI.fnull);
     }

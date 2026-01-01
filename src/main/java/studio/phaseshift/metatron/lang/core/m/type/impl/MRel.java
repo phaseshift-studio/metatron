@@ -47,6 +47,10 @@ public class MRel extends MObj implements Rel {
         return new MRel(Pair.with(dom, rng), tid, vid);
     }
 
+    public static Rel rel(final Pair<Obj, Obj> pair, final fURI tid, final fURI vid) {
+        return new MRel(pair, tid, vid);
+    }
+
     public static Rel rel(final Pair<Obj, Obj> pair) {
         return new MRel(pair);
     }

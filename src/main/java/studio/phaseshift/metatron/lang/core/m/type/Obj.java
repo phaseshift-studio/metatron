@@ -54,8 +54,10 @@ import static studio.phaseshift.metatron.furi.q.DocQ.Doc.docWrap;
 import static studio.phaseshift.metatron.lang.core.m.inst.mFluent.StartLess.*;
 import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.*;
 import static studio.phaseshift.metatron.lang.core.m.obj.NoObj.noobj;
+import static studio.phaseshift.metatron.lang.core.m.type.Rel.REL_TYPE;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MFail.fail;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MInst.instB;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
@@ -494,8 +496,8 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
         private static final ObjSerializer<String> SERIALIZER = new ObjCleanStringSerializer();
 
         public static boolean typeInferenceMatch(final Obj lhs, final Type rhs) {
-            if (lhs.isInst() && rhs.tid().equals(INST_TID))
-                return true;// lhs.c().within(rhs.c());
+            //if (lhs.isInst() && rhs.tid().equals(INST_TID))
+            //    return true;// lhs.c().within(rhs.c());
             if (lhs.tid().matches(rhs.tid()))
                 return true;
             if (rhs.isBaseType())
@@ -579,9 +581,26 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
     }
 
     public static final class ObjType {
+        /*private static Obj recurssiveAs(final Obj current, final Rel path) {
+            try {
+                System.out.println("here: " + path.first() + "--------------" + path.second());
+                return instB(AS_INST_TID
+                                .dom(path.second().isRel() ? REL_TID : null)
+                                .rng(path.second().isRel() ? REL_TID : null),
+                        (lst(path.second()))).apply(
+                                instB(AS_INST_TID
+                                                .dom(path.second().isRel() ? REL_TID : null)
+                                                .rng(path.second().isRel() ? REL_TID : null),
+                                        (lst(path.first()))).apply(current));
+            } catch (Exception e) {
+                e.printStackTrace();
+                throw MTronException.of(e);
+            }
+        }*/
 
         public static Set<Inst> insts() {
             return new LinkedHashSet<>(List.of(
+                    // instC(AS_INST_TID.dom(REL_TID).rng(REL_TID), lst(REL_TYPE), (lhs, inst) -> recurssiveAs(lhs, inst.arg(0).as())),
                     instC(AS_INST_TID.dom(A).rng(A), lst(T(A)), (lhs, inst) -> lhs.clone(lhs.jvm(), inst.arg(0).tid(), lhs.vid())),
                     instC(EXPLAIN_INST_TID.dom(CODE_TID).rng(STR_TID), lst(), (lhs, inst) -> str(new Profile(inst.arg(0)).toString())),
                     instC(AUTO_INST_TID.dom(ALL.maybe()).rng(ALL.maybe()), lst(T(ALL.maybe())), (lhs, inst) -> inst.arg(0).apply(lhs)),

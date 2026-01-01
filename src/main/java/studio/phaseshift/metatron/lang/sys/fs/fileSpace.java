@@ -25,19 +25,18 @@ import studio.phaseshift.metatron.lang.Space;
 import studio.phaseshift.metatron.lang.core.m.type.Obj;
 import studio.phaseshift.metatron.lang.core.m.type.Rec;
 import studio.phaseshift.metatron.lang.core.m.type.Type;
-import studio.phaseshift.metatron.lang.core.m.type.impl.MRec;
+import studio.phaseshift.metatron.lang.core.m.type.Uri;
 import studio.phaseshift.metatron.lang.core.m.type.impl.MRel;
 import studio.phaseshift.metatron.lang.sys.console.Highlighter;
 import studio.phaseshift.metatron.lang.sys.router.Router;
-import studio.phaseshift.metatron.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
+import java.nio.file.attribute.PosixFilePermissions;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -93,13 +92,14 @@ public class fileSpace extends MSpace<FileSystem> {
         // });
     }
 
-    public static Rec makeFile(final Path path) {
-        return new MRec(new LinkedHashMap<Obj, Obj>(Map.of(
-                uri(Tokens.PATTERN), uri(path.toString()),
-                uri(Tokens.NAME), uri(path.getFileName().toString()),
-                uri("permissions"), lst(MTronException.wrap(() -> (List) Files.getPosixFilePermissions(path).stream().map(x -> uri(x.toString())).toList())))),
-                FILE_TID, fURI.fnull);
+    public static Uri makeFile(final Path path) {
+        try {
+            return uri(f(path.toString()).query("p", PosixFilePermissions.toString(Files.getPosixFilePermissions(path))), FILE_TID, null);
+        } catch (final Exception e) {
+            throw MTronException.of(e);
+        }
     }
+
 
     @Override
     public Function<fURI, Map<fURI, Obj>> directReader() {
