@@ -19,8 +19,6 @@ color yellow "\{.\}"
 color red "\{\?\}"
 ### noobj 
 color magenta "noobj"
-### type
-color magenta "::T"
 ### bool
 color yellow "(true)|(false)"
 ### int
@@ -54,3 +52,7 @@ color yellow start="'''" end="'''"
 ### comments
 color gray "(\[--).*$"
 color gray start="\[==" end="==\]"
+### type
+color magenta "::T"
+### fail
+color red "([a-z]|[0-9]|/)*fail::"

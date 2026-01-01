@@ -24,6 +24,7 @@ import studio.phaseshift.metatron.lang.core.m.obj.NoObj;
 import studio.phaseshift.metatron.lang.core.m.type.Inst;
 import studio.phaseshift.metatron.lang.core.m.type.Obj;
 import studio.phaseshift.metatron.lang.core.m.type.Poly;
+import studio.phaseshift.metatron.util.TriFunction;
 
 import java.util.List;
 import java.util.Objects;

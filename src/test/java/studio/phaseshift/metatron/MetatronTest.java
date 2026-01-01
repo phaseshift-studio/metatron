@@ -100,9 +100,9 @@ public class MetatronTest {
                 final Obj actual = cd.apply(NoObj.noobj());
                 if (!(cd.isFail() || actual.isFail())) {
                     if (cd.isFail())
-                        cd.<Fail>as().jvm().printStackTrace();
+                        cd.<Fail>as().message().printStackTrace();
                     if (actual.isFail())
-                        actual.<Fail>as().jvm().printStackTrace();
+                        actual.<Fail>as().message().printStackTrace();
                     fail(Graphitty.string("testing %s => %s [expected:%s]", cd, actual, expected));
 
                 }

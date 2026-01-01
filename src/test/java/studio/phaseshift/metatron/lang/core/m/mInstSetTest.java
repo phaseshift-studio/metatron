@@ -340,14 +340,27 @@ public class mInstSetTest extends InstSetTest {
         super.testCode(code, expected);
     }
 
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "1.repeat(plus(1),10))                                                                % 11",
+            "1.repeat(plus(1),10).repeat(minus(1),11)                                             % 0",
+            "1.repeat(10,10)                                                                      % 10",
+            "1.repeat(10,0)                                                                       % 1",
+            "{1,2}.repeat(plus(1),10)                                                             % {11,12}",
+    }, delimiter = '%')
+    public void testRepeat(final String code, final String expected) {
+        super.testCode(code, expected);
+    }
+    
     @ParameterizedTest
     @CsvSource(value = {
             "fail::['bad']['really bad']['oh no'].catch('okay now')                   % \"okay now\"",
             "fail::['bad']['really bad']['oh no'].plus('okay now')                    % fail::['bad']['really bad']['oh no']",
             "1.plus(1).failure('bad').plus(2).plus(3)                                 % fail::['bad']",
             "1.plus(1).failure('bad').plus(2).catch(34).plus(3)                       % 37",
-            //"1.plus(map(failure('bad')))                                               % fail::['bad']",
-            //"1.plus(map(failure('bad'))).mult(23)                                      % fail::['bad']",
+            "1.plus('a').catch(cause())                                               % noobj",
+            "1.plus('a').catch(failure('bad'))                                        % fail::['bad']",
             "1.plus(mult(failure('bad'))).mult(23).catch(34).plus(2)                  % 36",
     }, delimiter = '%')
     public void testFailureCatch(final String code, final String expected) {

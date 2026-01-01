@@ -78,7 +78,7 @@ public class JRec extends MObj implements Rec {
     }
 
     protected final List<Field> findField(final Obj key) {
-        String javaName = key.isStr() ? key.<Str>as().strValue() : key.isUri() ? key.<Uri>as().uriValue().toString() : null;
+        String javaName = key.isStr() ? key.strValue() : key.isUri() ? key.uriValue().toString() : null;
         if (null == javaName)
             return List.of();
         boolean allWildcard = javaName.endsWith("#");

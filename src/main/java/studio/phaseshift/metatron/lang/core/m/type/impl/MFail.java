@@ -20,7 +20,9 @@ package studio.phaseshift.metatron.lang.core.m.type.impl;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.core.m.type.Fail;
+import studio.phaseshift.metatron.util.FastNoSuchElementException;
 import studio.phaseshift.metatron.util.MTronException;
+import studio.phaseshift.metatron.util.Tuple;
 
 import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.FAIL_TID;
 
@@ -29,17 +31,26 @@ import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.FAIL_TID;
  */
 public class MFail extends MObj implements Fail {
 
-    public MFail(final Throwable t, final fURI tid, final fURI vid) {
-        super(t, null == tid ? FAIL_TID : tid, vid);
+    public MFail(Tuple.Pair<Throwable, Fail> jvm, final fURI tid, final fURI vid) {
+        super(jvm, null == tid ? FAIL_TID : tid, vid);
         //t.printStackTrace();
     }
 
+    public static Fail fail(final Throwable t, final Fail cause) {
+        return new MFail(Tuple.Pair.with(t, cause), FAIL_TID, fURI.fnull);
+    }
+
     public static Fail fail(final Throwable t) {
-        return new MFail(t, FAIL_TID, fURI.fnull);
+        return new MFail(Tuple.Pair.with(t, null), FAIL_TID, fURI.fnull);
     }
 
     public static Fail fail(final Throwable t, final String format, final Object... args) {
         return fail(MTronException.of(t, format, args));
+    }
+
+    @Override
+    public Fail caught() {
+        return this instanceof MCaughtFail ? this : new MCaughtFail(this);
     }
 
     @Override
@@ -48,17 +59,28 @@ public class MFail extends MObj implements Fail {
     }
 
     @Override
-    public Throwable jvm() {
+    public Tuple.Pair<Throwable, Fail> jvm() {
         return super.jvm();
     }
 
     @Override
     public Fail plus(final Fail rhs) {
-        return fail(rhs.jvm().initCause(this.jvm()));
+        return fail(this.jvm().get0(), rhs);
     }
 
     @Override
     public Fail zero() {
-        return null;
+        return fail(FastNoSuchElementException.instance(), null);
+    }
+
+    public static class MCaughtFail extends MFail implements CaughtFail {
+
+        protected MCaughtFail(Fail jvm) {
+            super(Tuple.Pair.with(jvm.message(), jvm.cause().map(MCaughtFail::new).orElse(null)), jvm.tid(), null);
+        }
+
+        public boolean isFail() {
+            return false;
+        }
     }
 }

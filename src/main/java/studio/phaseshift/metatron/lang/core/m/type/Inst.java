@@ -220,6 +220,7 @@ public interface Inst extends Call {
                 this.tid().basePath().equals(SELECT_INST_TID) ||
                 this.tid().basePath().equals(WHERE_INST_TID) ||
                 this.tid().basePath().equals(GROUP_INST_TID) ||
+                this.tid().basePath().equals(REPEAT_INST_TID) ||
                 this.tid().basePath().equals(CATCH_INST_TID);
     }
 
@@ -292,26 +293,26 @@ public interface Inst extends Call {
         Inst cinst = this.args().isEmpty() ? this.args(lst(noobj())).resolve(clhs) : this.resolve(clhs); // TODO: this isn't a general solution (multi slotted args won't work).
         Obj rhs;
         boolean modulateC = false;
-        if (BootLoader.TYPE_CHECK && !lhs.isFail() && !clhs.matches(cinst.dom()) && clhs.unique()) {
+        if (BootLoader.TYPE_CHECK && !lhs.isFail() && !lhs.isCaughtFail() && !clhs.matches(cinst.dom()) && clhs.unique()) {
             // if (clhs.uniqueC().isOne() && !clhs.c().isOne()) { // && cinst.dom().c().within(cInt.SOME())) {
             clhs = clhs.c(cInt::one);
             cinst = this.resolve(clhs);
             modulateC = true;
             //  }
             if (!clhs.rng().matches(cinst.dom()))
-                return fail(mexcept("lhs {{m}}range{{/m}} does not match inst {{m}}domain{{/m}}: %s {{r}}=/>{{/r}} %s [%s]", clhs.rng(), cinst.dom(), cinst));
+                return fail(mexcept("lhs range does not match inst domain: %s => %s [%s]", clhs.rng(), cinst.dom(), cinst));
         }
         if (!clhs.isFail() || cinst.isCatch()) {
             try {
                 if (null == cinst.f())
-                    return fail(mexcept("unable to determine inst function: %s{{g}}::{{r}}T{{X}} => %s", uri(clhs.tid()), cinst));
+                    return fail(mexcept("unable to determine inst function: %s => %s", uri(clhs.tid()), cinst));
                 cinst = Helpers.applyArgs(clhs, cinst);
                 Router.stack().push(cinst.args());
                 try {
                     rhs = Objs.trySingleton(cinst.f().apply(clhs, cinst));
-                    Graphitty.log(cinst).trace("%s ({{m}}lhs{{/m}}) => %s ({{m}}inst{{/m}}) => %s ({{m}}rhs{{/m}}) evaluated {{g}}successfully{{/g}}", clhs, cinst, rhs);
+                    Graphitty.log(cinst).trace("%s (lhs) => %s (inst) => %s (rhs) evaluated successfully", clhs, cinst, rhs);
                 } catch (final Exception e) {
-                    rhs = mexcept("apply failure: %s {{r}}=>{{X}} %s {{m}}stack:{{X}}%s", clhs, cinst, Router.stack().sjvm().toString()).cause(e).asFail();
+                    rhs = fail(e, mexcept("apply failure: %s => %s [stack:%s]", clhs, cinst, Router.stack().sjvm().toString()).asFail());
                     //e.printStackTrace();
                 } finally {
                     Router.stack().pop();
@@ -319,9 +320,9 @@ public interface Inst extends Call {
             } catch (final Exception e) {
                 rhs = e instanceof MTronException ? ((MTronException) e).asFail() : mexcept("unable to evaluate inst function: %s", cinst).cause(e).asFail();
             }
-            if (BootLoader.TYPE_CHECK && !rhs.isFail() && !rhs.matches(cinst.rng()))
+            if (BootLoader.TYPE_CHECK && !rhs.isFail() && !lhs.isCaughtFail() && !rhs.matches(cinst.rng()))
                 rhs = mexcept("inst resolution failure")
-                        .cause(mexcept("rhs does not match inst {{m}}range{{/m}}: %s {{r}}=/>{{/r}} %s [%s]", rhs, cinst.rng(), cinst))
+                        .cause(mexcept("rhs does not match inst range: %s => %s [%s]", rhs, cinst.rng(), cinst))
                         .asFail();
         } else {
             rhs = clhs; // propagate fail through inst unless it's a catch inst

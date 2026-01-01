@@ -161,7 +161,7 @@ public record JSONTranslator(ObjSerializer<String> serializer) implements Transl
             if (obj.isNoObj())
                 return JsonNull.INSTANCE;
             else if (obj.isFail())
-                element = new JsonPrimitive(obj.failValue().getMessage()); // todo: this is weak
+                element = new JsonPrimitive(obj.failValue().get0().getMessage()); // todo: this is weak
             else if (obj.isBytes())
                 element = new JsonPrimitive(obj.<Bytes>as().toHexString());
             else if (obj.isBool())

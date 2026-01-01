@@ -88,7 +88,6 @@ public class fsInstSet extends MInstSet {
                         }
                         return bytes(ByteBuffer.wrap(data));
                     } catch (final Exception e) {
-                        e.printStackTrace();
                         throw MTronException.of(e);
                     }
                 }),

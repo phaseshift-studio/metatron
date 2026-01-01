@@ -95,6 +95,7 @@ public class mInstSet extends MInstSet {
     public static final fURI GET_INST_TID = INST_TID.extend("get");
     public static final fURI FAILURE_INST_TID = INST_TID.extend("failure");
     public static final fURI AS_INST_TID = INST_TID.extend("as");
+    public static final fURI REPEAT_INST_TID = INST_TID.extend("repeat");
     public static final fURI AT_INST_TID = INST_TID.extend("at");
     public static final fURI IS_INST_TID = INST_TID.extend("is");
     public static final fURI ISA_INST_TID = INST_TID.extend("isa");
@@ -222,7 +223,7 @@ public class mInstSet extends MInstSet {
                 Tuple.Triplet.with(Tuple.Pair.with("+", null), List.of(PLUS_INST_TID), 1),
                 Tuple.Triplet.with(Tuple.Pair.with("-", null), List.of(MINUS_INST_TID), 1),
                 Tuple.Triplet.with(Tuple.Pair.with(";", null), List.of(END_INST_TID), 0),
-              //  Tuple.Triplet.with(Tuple.Pair.with("(", ")"), List.of(GET_INST_TID), 1),
+                //  Tuple.Triplet.with(Tuple.Pair.with("(", ")"), List.of(GET_INST_TID), 1),
                 Tuple.Triplet.with(Tuple.Pair.with("./", null), List.of(GET_INST_TID), 1),
                 Tuple.Triplet.with(Tuple.Pair.with("^", null), List.of(LIFT_INST_TID), 1),
                 Tuple.Triplet.with(Tuple.Pair.with("!*", null), List.of(AUTO_INST_TID, FROM_INST_TID), 1)));
@@ -318,6 +319,7 @@ public class mInstSet extends MInstSet {
     @Override
     public Set<Inst> insts() {
         final Set<Inst> set = new LinkedHashSet<>();
+        set.addAll(Fail.FailType.insts());
         set.addAll(NoObj.NoObjType.insts());
         set.addAll(Bytes.BytesType.insts());
         set.addAll(Bool.BoolType.insts());

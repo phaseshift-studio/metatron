@@ -21,17 +21,16 @@ package studio.phaseshift.metatron.lang.jre;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.core.m.type.Obj;
 import studio.phaseshift.metatron.lang.core.m.type.impl.MObjFactory;
+import studio.phaseshift.metatron.lang.sys.fs.fileSpace;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.lang.reflect.Field;
-import java.util.Map;
+import java.nio.file.Path;
 
-import static studio.phaseshift.metatron.Tokens.PATTERN;
 import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.furi.fURI.fnull;
 import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.STR_TID;
 import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.URI_TID;
-import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.lang.sys.fs.fsInstSet.FILE_TID;
 
 /*
@@ -56,7 +55,7 @@ public class JObjFactory extends MObjFactory {
 
     public Obj create(final Field field, final Object value, final fURI vid) {
         final ObjField annotation = field.getAnnotation(ObjField.class);
-        final fURI tid = annotation.tid().equals("noobj") ? f(value.getClass().getCanonicalName().replace(".", "/")) : f(annotation.tid());
+        final fURI tid = (null == annotation || annotation.tid().equals("noobj")) ? f(value.getClass().getCanonicalName().replace(".", "/")) : f(annotation.tid());
         //final fURI basetid = annotation.basetid().equals("noobj") ? null : f(annotation.basetid());
         Object newValue = value;
         if (tid.equals(STR_TID)) {
@@ -64,7 +63,7 @@ public class JObjFactory extends MObjFactory {
         } else if (tid.equals(URI_TID)) {
             newValue = f(value.toString());
         } else if (tid.equals(FILE_TID))
-            newValue = Map.of(uri(PATTERN), uri(value.toString()));
+            return fileSpace.makeFile(Path.of(value.toString()));
         return create(newValue, tid, vid);
     }
 

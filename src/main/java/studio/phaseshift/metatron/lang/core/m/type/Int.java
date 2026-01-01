@@ -40,6 +40,8 @@ import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
 
 public interface Int extends Mono, Ring.O<Int> {
 
+    Type INT_TYPE = T(INT_TID);
+
     @Override
     Int clone(final Object jvm, final fURI tid, final fURI vid);
 

@@ -26,10 +26,7 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.core.m.obj.NoObj;
 import studio.phaseshift.metatron.lang.core.m.parser.mParser;
 import studio.phaseshift.metatron.lang.core.m.type.facade.FObj;
-import studio.phaseshift.metatron.lang.core.m.type.impl.MInt;
-import studio.phaseshift.metatron.lang.core.m.type.impl.MObjFactory;
-import studio.phaseshift.metatron.lang.core.m.type.impl.MUri;
-import studio.phaseshift.metatron.lang.core.m.type.impl.Optimizations;
+import studio.phaseshift.metatron.lang.core.m.type.impl.*;
 import studio.phaseshift.metatron.lang.sys.console.Profile;
 import studio.phaseshift.metatron.lang.sys.router.Router;
 import studio.phaseshift.metatron.lang.util.serial.ObjCleanStringSerializer;
@@ -54,10 +51,9 @@ import static studio.phaseshift.metatron.furi.q.DocQ.Doc.docWrap;
 import static studio.phaseshift.metatron.lang.core.m.inst.mFluent.StartLess.*;
 import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.*;
 import static studio.phaseshift.metatron.lang.core.m.obj.NoObj.noobj;
-import static studio.phaseshift.metatron.lang.core.m.type.Rel.REL_TYPE;
+import static studio.phaseshift.metatron.lang.core.m.type.Int.INT_TYPE;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MFail.fail;
-import static studio.phaseshift.metatron.lang.core.m.type.impl.MInst.instB;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
@@ -224,7 +220,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
                         (this.isRel() && base.equals(REL_TID)) ||
                         (this.isInst() && base.equals(INST_TID)) ||
                         (this.isCode() && base.equals(CODE_TID)) ||
-                        (this.isFail() && base.equals(FAIL_TID)))) {
+                        (this.isFail() || this.isCaughtFail() && base.equals(FAIL_TID)))) {
             return false;
         }
         if (this.isCall())
@@ -302,6 +298,10 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
 
     default boolean isFail() {
         return this instanceof Fail;
+    }
+
+    default boolean isCaughtFail() {
+        return this instanceof MFail.MCaughtFail;
     }
 
     default boolean isBool() {
@@ -403,8 +403,8 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
 
     String xxxValue = "%s is a %s, not a %s";
 
-    default Throwable failValue() {
-        if (this.isFail())
+    default Pair<Throwable, Fail> failValue() {
+        if (this.isFail() || this.isCaughtFail())
             return this.jvm();
         throw MTronException.of(xxxValue, this, tid().toUri(), FAIL_TID.toUri());
     }
@@ -563,7 +563,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
                 if (!type.isNoObj() && type.isType() && type.<Type>as().hasConstructor()) {
                     final Obj clone = type.<Type>as().constructor().apply(obj);
                     if (clone.isFail())
-                        throw (MTronException) clone.<Fail>as().jvm();
+                        throw MTronException.of(clone.<Fail>as().jvm().get0());
                     return (O) clone;
                 }
             }
@@ -602,9 +602,17 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
             return new LinkedHashSet<>(List.of(
                     // instC(AS_INST_TID.dom(REL_TID).rng(REL_TID), lst(REL_TYPE), (lhs, inst) -> recurssiveAs(lhs, inst.arg(0).as())),
                     instC(AS_INST_TID.dom(A).rng(A), lst(T(A)), (lhs, inst) -> lhs.clone(lhs.jvm(), inst.arg(0).tid(), lhs.vid())),
+                    instC(REPEAT_INST_TID.dom(A).rng(A), lst(T(ALL), INT_TYPE), (lhs, inst) -> {
+                        Obj current = lhs;
+                        final int times = inst.arg(1).apply(current).intValue().intValue();
+                        for (int i = 1; i <= times; i++) {
+                            current = inst.arg(0).apply(current);
+                        }
+                        return current;
+                    }),
                     instC(EXPLAIN_INST_TID.dom(CODE_TID).rng(STR_TID), lst(), (lhs, inst) -> str(new Profile(inst.arg(0)).toString())),
                     instC(AUTO_INST_TID.dom(ALL.maybe()).rng(ALL.maybe()), lst(T(ALL.maybe())), (lhs, inst) -> inst.arg(0).apply(lhs)),
-                    instC(CATCH_INST_TID.dom(ALL).rng(ALL.maybeSome()), lst(T(ALL.maybeSome())), (lhs, inst) -> lhs.isFail() ? inst.arg(0).apply(lhs) : lhs),
+                    instC(CATCH_INST_TID.dom(ALL).rng(ALL.maybeSome()), lst(T(ALL.maybeSome())), (lhs, inst) -> lhs.isFail() ? inst.arg(0).apply(lhs.<Fail>as().caught()) : lhs),
                     docWrap(instC(END_INST_TID.dom(ALL_STAR).rng(NOOBJ_TID.zero()), lst(), (lhs, inst) -> noobj()),
                             "terminal objs", "noobj", Map.of(), "the terminal function f(x)->0"),
                     docWrap(instC(PRINT_INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(T(ALL_STAR)), (lhs, inst) -> inst.args().elements().peek(o -> inst.logger().none("%s", o.isStr() ? o.strValue() : o)).filter(a -> false).findAny().orElse(lhs).stream().peek(o -> inst.logger().none("\n")).iterator().next()),

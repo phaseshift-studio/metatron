@@ -40,12 +40,12 @@ public class MTronException extends RuntimeException {
     }
 
     public static MTronException of(final Throwable cause) {
-        if(cause instanceof MTronException)
+        if (cause instanceof MTronException)
             return (MTronException) cause;
         else {
             try {
                 return new MTronException(cause.getMessage());
-            } catch(final Throwable e) {
+            } catch (final Throwable e) {
                 return new MTronException(Highlighter.unformat(cause.getMessage()));
             }
         }
@@ -105,7 +105,7 @@ public class MTronException extends RuntimeException {
     }
 
     public Fail asFail() {
-        return fail(this);
+        return fail(this, null);
     }
 
     public String toString() {

@@ -22,8 +22,6 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.core.m.obj.NoObj;
 import studio.phaseshift.metatron.lang.core.m.parser.mParser;
 import studio.phaseshift.metatron.lang.core.m.type.*;
-import studio.phaseshift.metatron.lang.sys.console.Highlighter;
-import studio.phaseshift.metatron.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
@@ -71,7 +69,7 @@ public class ObjByteBufferSerializer implements ObjSerializer<ByteBuffer> {
 
     @Override
     public ByteBuffer writeFail(final Fail fail) {
-        return ByteBuffer.wrap(handleIds(fail, "['" + Highlighter.unformat(fail.jvm().getMessage()) + "']").getBytes());
+        return ByteBuffer.wrap(handleIds(fail, "['" + fail.jvm().get0().getMessage() + (null == fail.failValue().get1() ? "" : ("," + this.writeFail(fail.jvm().get1()))) + "']").getBytes());
     }
 
     @Override
@@ -129,8 +127,8 @@ public class ObjByteBufferSerializer implements ObjSerializer<ByteBuffer> {
 
     @Override
     public ByteBuffer writeCode(final Code code) {
-      //  final Obj t = code.tryToInst();
-      //  if (t.isInst()) return this.writeInst(t.as());
+        //  final Obj t = code.tryToInst();
+        //  if (t.isInst()) return this.writeInst(t.as());
         final String internal = IteratorUtil.stream(code.insts()).map(i -> new String(this.writeInst(i).array())).reduce(".", (a, b) -> a + b + ".");
         return ByteBuffer.wrap((CODE_TID.toString() + "::|[" + internal.substring(1, internal.length() - 1) + "]|").getBytes());
     }

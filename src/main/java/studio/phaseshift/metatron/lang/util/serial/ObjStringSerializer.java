@@ -205,7 +205,7 @@ public record ObjStringSerializer(Builder b) implements ObjSerializer<String> {
             /// ///////////////////////////////////////////////////////////////
             else if (obj instanceof Fail) {
                 generateTID(sb, obj.tid(), false);
-                Throwable t = obj.<Fail>as().jvm();
+                Throwable t = obj.<Fail>as().jvm().get0();
                 while (t != null) {
                     sb.append("{{r}}[{{X}}").append(t.getMessage()).append("{{r}}]{{X}}").append("\n\t ");
                     t = t.getCause();

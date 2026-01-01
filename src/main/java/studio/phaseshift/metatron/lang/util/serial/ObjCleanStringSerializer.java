@@ -25,9 +25,7 @@ import studio.phaseshift.metatron.lang.core.m.parser.mParser;
 import studio.phaseshift.metatron.lang.core.m.type.*;
 import studio.phaseshift.metatron.lang.core.mach.type.Machine;
 import studio.phaseshift.metatron.lang.core.mach.type.Monad;
-import studio.phaseshift.metatron.lang.sys.console.Highlighter;
 import studio.phaseshift.metatron.lang.sys.router.Router;
-import studio.phaseshift.metatron.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
@@ -81,9 +79,9 @@ public class ObjCleanStringSerializer implements ObjSerializer<String> {
         } else {
             sb.append("0x").append(HexFormat.of().formatHex(bytes.<Bytes>as().jvm().array()));
         }
-        return this.handleIds(bytes,sb.toString());
+        return this.handleIds(bytes, sb.toString());
     }
-    
+
     @Override
     public String writeNoObj(final NoObj noobj) {
         return NOOBJ_STRING;
@@ -96,7 +94,10 @@ public class ObjCleanStringSerializer implements ObjSerializer<String> {
 
     @Override
     public String writeFail(final Fail fail) {
-        return handleIds(fail, "['" + Highlighter.unformat(fail.jvm().getMessage()) + "']");
+        final StringBuilder sb = new StringBuilder();
+        sb.append(handleIds(fail, "[" + fail.message().getMessage() + "]"));
+        fail.cause().ifPresent(c -> sb.append("\n    \\_").append(this.writeFail(c)));
+        return sb.toString();
     }
 
     @Override
@@ -166,7 +167,7 @@ public class ObjCleanStringSerializer implements ObjSerializer<String> {
 
     @Override
     public String writeObjs(final Objs objs) {
-        final String internal = IteratorUtil.stream(objs.objsValue()).map(this::write).reduce("", (a, b) -> a +"," + b);
+        final String internal = IteratorUtil.stream(objs.objsValue()).map(this::write).reduce("", (a, b) -> a + "," + b);
         return "{" + internal.substring(1) + "}";
     }
 
@@ -200,7 +201,7 @@ public class ObjCleanStringSerializer implements ObjSerializer<String> {
     }
 
     private StringBuilder handleTID(final StringBuilder sb, final Obj obj, final boolean hideBaseTID) {
-        if (hideBaseTID && BASE_TYPES.contains(obj.tid()))
+        if (!obj.isFail() && !obj.isCaughtFail() && hideBaseTID && BASE_TYPES.contains(obj.tid()))
             return sb;
         sb.append(Router.global().rewrite(obj.tid(), false));
         if (!obj.isInst())
@@ -314,6 +315,6 @@ public class ObjCleanStringSerializer implements ObjSerializer<String> {
 
     public static String prettyPrintCode(final Call code) {
         final StringBuilder sb = new StringBuilder();
-        return new ObjCleanStringSerializer().prettyPrintCode(sb,code, 0).toString();
+        return new ObjCleanStringSerializer().prettyPrintCode(sb, code, 0).toString();
     }
 }
