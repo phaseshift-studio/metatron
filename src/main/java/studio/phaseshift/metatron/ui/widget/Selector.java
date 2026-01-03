@@ -18,120 +18,147 @@
 
 package studio.phaseshift.metatron.ui.widget;
 
+import org.jline.keymap.BindingReader;
+import org.jline.keymap.KeyMap;
+import org.jline.terminal.Attributes;
 import org.jline.terminal.Size;
 import org.jline.terminal.Terminal;
+import org.jline.utils.Display;
+import org.jline.utils.InfoCmp;
+import studio.phaseshift.metatron.lang.sys.console.Console;
+import studio.phaseshift.metatron.ui.Stylable;
 import studio.phaseshift.metatron.ui.Widget;
+import studio.phaseshift.metatron.ui.graphitty.Graphitty;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Consumer;
+
+import static org.jline.keymap.KeyMap.key;
+import static studio.phaseshift.metatron.ui.widget.Selector.Operation.*;
+
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class Selector implements Widget {
+public class Selector implements Widget, Stylable<Selector> {
 
-    private enum Operation {
+    protected enum Operation {
         DOWN_ROW,
         UP_ROW,
         RIGHT_COL,
         LEFT_COL,
-        EXIT
+        SELECTED
     }
 
-    private final Widget base;
-    private int current;
-    private Terminal terminal;
-    private final Size size = new Size();
-    private int rows = 0;
-    private int cols = 0;
-
-    public Selector(final Terminal terminal, final Widget base) {
-        this.terminal = terminal;
-        this.base = base;
+    public boolean running() {
+        return this.running;
     }
 
-   /* public void run() {
+    protected boolean running = false;
+    protected Style<Selector> style = Style.empty();
+    private Consumer<Integer> onSelect = i -> {
+        Graphitty.log(this).none("{{|0&v1}}{{m}}selected{{X}}: %s{{|0&^1}}", i);
+    };
+    private Consumer<Integer> onBrowse = i -> {
+        Graphitty.log(this).none("{{|0&v1}}{{m}}browsed{{X}}: %s{{|0&^1}}", i);
+    };
+
+    @Override
+    public Selector style(final Style<Selector> style) {
+        this.style = style;
+        return this;
+    }
+
+
+    public Selector() {
+    }
+
+    public Selector onSelect(final Consumer<Integer> onSelect) {
+        this.onSelect = onSelect;
+        return this;
+    }
+
+    public Selector onBrowse(final Consumer<Integer> onBrowse) {
+        this.onBrowse = onBrowse;
+        ;
+        return this;
+    }
+
+    public String toString() {
+        return this.style.attachment.toString();
+    }
+
+
+    public void run() {
+        final Terminal terminal = Console.getTerminal();
         Display display = new Display(terminal, true);
+        BindingReader bindingReader = new BindingReader(terminal.reader());
         Attributes attr = terminal.enterRawMode();
         try {
-            terminal.puts(InfoCmp.Capability.enter_ca_mode);
+            //terminal.puts(InfoCmp.Capability.enter_ca_mode);
             terminal.puts(InfoCmp.Capability.keypad_xmit);
             terminal.writer().flush();
-            size.copy(terminal.getSize());
-            display.clear();
+            Size size = new Size(terminal.getSize().getColumns(), terminal.getSize().getRows());
+            //display.clear();
             display.reset();
-            int selectRow = 0;
+            int selectRow = style.lowRowRange;
             int selectCol = 0;
             KeyMap<Operation> keyMap = new KeyMap<>();
             keyMap.bind(DOWN_ROW, key(terminal, InfoCmp.Capability.key_down));
             keyMap.bind(UP_ROW, key(terminal, InfoCmp.Capability.key_up));
             keyMap.bind(RIGHT_COL, key(terminal, InfoCmp.Capability.key_right));
             keyMap.bind(LEFT_COL, key(terminal, InfoCmp.Capability.key_left));
-            keyMap.bind(EXIT, "\r");
-            Router.global().logger().none(Graphitty.string("{{.}}"));
+            keyMap.bind(SELECTED, "\r");
+            Graphitty.log(this).none("{{^%s}}", style.attachment.rowCount());
             while (true) {
                 display.resize(size.getRows(), size.getColumns());
                 final int selectRowFinal = selectRow;
                 final int selectColFinal = selectCol;
                 final List<String> currentStateDisplay = new ArrayList<>();
-                final String selectedState = this.base.rowString(selectCol);
                 /// ///////////////////////////////////////////////////////////////////////////////////////////////
-                /*currentStateDisplay.add(Graphitty.string(IteratorUtil.indexedStream(this.states.keySet().iterator())
-                        .map(s -> ((s.get0() == selectColFinal) ? "{{c}}" : "{{y}}") + s.get1() + "{{X}}")
-                        .map(Graphitty::string)
-                        .reduce("",(a,b)->a + "{{g}} | {{X}}" + b)));
-                currentStateDisplay.addAll(
-                                IntStream.range(0, this.base.height()).map(i -> (i == selectRow ? "{{r}}>{{X}}" : "") + this.base.rowString(i))
-
-                                        .formattedRows().iterator())
-                        .map(s -> ((s.get0() == selectRowFinal) ? "{{c}}>{{X}}" : " ") + s.get1())
-                        .map(Graphitty::string)
-                        .toList());
+                for (int i = 0; i < this.style.attachment.rowCount(); i++) {
+                    currentStateDisplay.add(Graphitty.string(" ".repeat(style.leftMargin) + (i == selectRowFinal ? this.style.pointer : " ".repeat(Graphitty.viewLength(this.style.pointer))) + this.style.attachment.rowString(i) + "{{|0}}"));
+                }
                 /// ////////////////////////////////////////////////////////////////////////////////////////////////
-               // display.updateAnsi(currentStateDisplay,
-               //         size.cursorPos(1, this.rowString(selectRow).formattedWidth() + 2));
-                Operation op = terminal.readBinding(keyMap);
+                display.updateAnsi(currentStateDisplay, size.cursorPos(0, 0));
+                Operation op = bindingReader.readBinding(keyMap);
+                Graphitty.log(this).none("{{.}}"); // hide cursor
                 switch (op) {
                     case RIGHT_COL:
                         selectCol++;
-                        if (selectCol > this.base.columnCount() - 1)
+                        if (selectCol > this.style.attachment.columnCount() - 1)
                             selectCol = 0;
                         break;
                     case LEFT_COL:
                         selectCol--;
                         if (selectCol < 0)
-                            selectCol = this.base.columnCount() - 1;
+                            selectCol = this.style.attachment.columnCount() - 1;
                         break;
                     case DOWN_ROW:
                         selectRow++;
-                        if (selectRow > this.base.rowCount() - 1)
-                            selectRow = 0;
+                        if (selectRow > this.style.highRowRange - 1)
+                            selectRow = this.style.lowRowRange;
                         break;
                     case UP_ROW:
                         selectRow--;
-                        if (selectRow < 0)
-                            selectRow = this.base.rowCount() - 1;
+                        if (selectRow < this.style.lowRowRange)
+                            selectRow = this.style.highRowRange - 1;
                         break;
-                    case EXIT:
-                        Router.global().logger().none(Graphitty.string("{{*}}"));
-                        return this.base.rowString(selectRow).toString();
+                    case SELECTED:
+                        this.onSelect.accept(selectRow);
+                        return;
                 }
-                Router.global().logger().none(Graphitty.erase(25));
-                final String location = this.states.get(selectedState).entry(selectRow, 0).toString();
-                if (!location.contains("mod") && !location.contains("#")) {
-                    try {
-                        String space = Graphitty.strip(this.states.get(selectedState).entry(selectRow, 1).toString().trim());
-                        Router.global().logger().none(Graphitty.floating(new Panel("{{m}}subscriptions{{X}}", Router.global().read(f(space).query("sub")).toString(), Border.simple).toString()));
-                    } catch (final Exception e) {
-                        // do nothing
-                    }
-                }
+                //this.onBrowse.accept(selectRow);
             }
+        } catch (final Exception e) {
+            e.printStackTrace();
         } finally {
             terminal.setAttributes(attr);
             terminal.puts(InfoCmp.Capability.exit_ca_mode);
             terminal.puts(InfoCmp.Capability.keypad_local);
             terminal.writer().flush();
+            Graphitty.log(this).none("{{*}}"); // show cursor
         }
     }
-}*/
-
-
 }

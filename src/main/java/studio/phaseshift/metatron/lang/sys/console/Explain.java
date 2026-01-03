@@ -20,13 +20,12 @@ package studio.phaseshift.metatron.lang.sys.console;
 
 import studio.phaseshift.metatron.lang.core.m.type.Code;
 import studio.phaseshift.metatron.lang.util.serial.ObjCleanStringSerializer;
-import studio.phaseshift.metatron.lang.util.serial.ObjStringSerializer;
 import studio.phaseshift.metatron.ui.Border;
 import studio.phaseshift.metatron.ui.Stylable;
 import studio.phaseshift.metatron.ui.Widget;
-import studio.phaseshift.metatron.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.ui.widget.BarMenu;
 import studio.phaseshift.metatron.ui.widget.Panel;
+import studio.phaseshift.metatron.ui.widget.Selector;
 import studio.phaseshift.metatron.ui.widget.Separator;
 import studio.phaseshift.metatron.util.Tuple;
 
@@ -41,9 +40,25 @@ public class Explain implements Widget, Stylable<Explain> {
 
     private Style<Explain> style = Style.empty();
     private final Code code;
+    private final Selector selector;
+    private final Panel mainBox;
+    private final BarMenu menu;
 
     public Explain(final Code code) {
-        this.code = code;
+        this.style = this.style().border(Border.simple.foreground("{{m}}"));
+        this.code = code.resolve(noobj()).as();
+        Profile profile = new Profile(this.code);
+        profile.table.style().headerDivider("{{[b]}} ").apply();
+        this.selector = new Selector().style().margin(1, 1).pointer("{{r}}>{{X}}").attachment(profile, true).rowRange(1, profile.table.rowCount()).apply();
+        this.mainBox = new Panel(Highlighter.format(ObjCleanStringSerializer.prettyPrintCode(code).stripTrailing())).style().border(Border.simple.margin(2, 2).foreground("{{c}}")).apply()
+                .bottom(new Separator("-", profile).color("{{y}}"))
+                .bottom(this.selector);
+        this.menu = new BarMenu(List.of(Tuple.Pair.with("compile", () -> System.out.println("compiling...")), Tuple.Pair.with("optimize", () -> System.out.println("optimizing..."))))
+                .style()
+                .background("{{[b]&w}}")
+                .attachment(mainBox, true)
+                .divider("{{g}}|")
+                .border(Border.simple.foreground("{{g}}")).apply();
     }
 
     @Override
@@ -52,19 +67,12 @@ public class Explain implements Widget, Stylable<Explain> {
         return this;
     }
 
+    public void run() {
+        this.selector.run();
+    }
+
     @Override
     public String toString() {
-        final Code code = this.code.resolve(noobj()).as();
-        final Profile profile = new Profile(code);
-        final Panel mainBox = new Panel(Highlighter.format(ObjCleanStringSerializer.prettyPrintCode(code).stripTrailing()), Border.simple.margin(2, 2).foreground("{{c}}"))
-                .bottom(new Separator("-", profile).color("{{y}}"), Border.none)
-                .bottom(profile, Border.simple.margin(2, 2).foreground("{{b}}"));
-        final BarMenu menu = new BarMenu(List.of(Tuple.Pair.with("compile", () -> System.out.println("compiling...")), Tuple.Pair.with("optimize", () -> System.out.println("optimizing..."))))
-                .style()
-                .background("{{[b]&w}}")
-                .attachment(mainBox, true)
-                .divider("{{g}}|")
-                .border(Border.simple.foreground("{{g}}")).apply();
-        return menu.toString();
+        return "{{.}}" + menu.toString();
     }
 }

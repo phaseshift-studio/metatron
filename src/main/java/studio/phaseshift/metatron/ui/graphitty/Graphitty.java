@@ -168,7 +168,7 @@ public class Graphitty {
     public static String string(final Obj obj) {
         return ObjStringSerializer.build().create().write(obj);
     }
-    
+
     public static String sillyPrint(final String text, final boolean rainbow, final boolean rollercoaster) {
         final Random random = new Random();
         final String colors = "rgbmcy";
@@ -191,6 +191,10 @@ public class Graphitty {
         temp.ansiOn = false;
         temp.parseDSL(AttributedString.stripAnsi(string));
         return out.toString();
+    }
+
+    public static int viewLength(final String string) {
+        return strip(string).length();
     }
 
     public void removeRewrites(final Map<String, String> deadRewrites) {
@@ -298,17 +302,6 @@ public class Graphitty {
         return this;
     }
 
-   /*static String strip(final String s) {
-        var a = new String();
-        final var b = StringPrinter(a);
-        var ansi = Ansi < StringPrinter > (b);
-        ansi.ansi_switch(false);
-        ansi.print(s.c_str());
-        ansi.flush();
-        var ret = String(ansi.get_printer().get());
-        return ret;
-    }*/
-
     public Graphitty flush() {
         try {
             this.out.flush();
@@ -319,11 +312,6 @@ public class Graphitty {
     }
 
     /// ///////////////////////
-
-    public void clearLine() {
-        if (this.ansiOn)
-            this.print("\033[2K");
-    }
 
     public void newLine() {
         if (this.ansiOn)
@@ -337,35 +325,5 @@ public class Graphitty {
             this.print('\t');
         else
             this.print("\t");
-    }
-
-    /*
-    ESC[H	moves cursor to home position (0, 0)
-    ESC[{line};{column}H
-    ESC[{line};{column}f	moves cursor to line #, column #
-    ESC[#A	moves cursor up # lines
-    ESC[#B	moves cursor down # lines
-    ESC[#C	moves cursor right # columns
-    ESC[#D	moves cursor left # columns
-    ESC[#E	moves cursor to beginning of next line, # lines down
-    ESC[#F	moves cursor to beginning of previous line, # lines up
-    ESC[#G	moves cursor to column #
-    ESC[6n	request cursor position (reports as ESC[#;#R)
-    ESC M	moves cursor one line up, scrolling if needed
-    ESC 7	save cursor position (DEC)
-    ESC 8	restores the cursor to the last saved position (DEC)
-    ESC[s	save cursor position (SCO)
-    ESC[u	restores the cursor to the last saved position (SCO)*/
-
-    /// //////////// CURSOR MOVEMENT ///////////////
-
-    public void teleport(final int row, final int column) {
-        if (this.ansiOn) {
-            this.print("\033[");
-            this.print(Objects.toString(row));
-            this.print(';');
-            this.print(Objects.toString(column));
-            this.print('H');
-        }
     }
 }

@@ -31,14 +31,18 @@ public interface Widget {
     default int width() {
         return Arrays.stream(this.toString().split("\n")).map(Highlighter::visualLength).max(Integer::compareTo).orElse(0);
     }
-
+    
+    default void cursor(boolean on){
+        Graphitty.log(this).none(on ? "{{*}}" : "{{.}}");
+    }
     default int height() {
         return this.toString().split("\n").length;
     }
-    
+
     default int rowCount() {
         return this.height();
     }
+
     default int columnCount() {
         return this.width();
     }
@@ -46,9 +50,13 @@ public interface Widget {
     default String rowString(int i) {
         return this.toString().split("\n")[i];
     }
-    
+
     default String format() {
         return Highlighter.format(this.toString());
+    }
+
+    default boolean running() {
+        return false;
     }
 
     public static class StringWidget implements Widget {

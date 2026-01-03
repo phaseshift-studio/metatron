@@ -400,6 +400,57 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
         return this instanceof Type;
     }
 
+    default Bool asBool() {
+        return (Bool) this;
+    }
+
+    default Bytes asBytes() {
+        return (Bytes) this;
+    }
+
+    default Int asInt() {
+        return (Int) this;
+    }
+
+    default Real asReal() {
+        return (Real) this;
+    }
+
+    default Str asStr() {
+        return (Str) this;
+    }
+
+    default Uri asUri() {
+        return (Uri) this;
+    }
+
+    default Rec asRec() {
+        return (Rec) this;
+    }
+
+    default Lst asLst() {
+        return (Lst) this;
+    }
+
+    default Rel asRel() {
+        return (Rel) this;
+    }
+
+    default Inst asInst() {
+        return (Inst) this;
+    }
+
+    default Code asCode() {
+        return (Code) this;
+    }
+
+    default Type asType() {
+        return (Type) this;
+    }
+
+    default Objs asObjs() {
+        return (Objs) this;
+    }
 
     String xxxValue = "%s is a %s, not a %s";
 
@@ -485,6 +536,15 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
         if (this.isType())
             return this.jvm();
         throw MTronException.of(xxxValue, this, tid().toUri(), fURI.of("<type>").toUri());
+    }
+
+    default String toCleanString() {
+        if (this.isStr())
+            return this.strValue();
+        if (this.isUri())
+            return this.uriValue().toString();
+        else
+            return this.toString();
     }
 
     Obj clone();
@@ -622,7 +682,8 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
                             "an rhs obj", "an lhs obj", Map.of(), "the obj identity function f(x)->x"),
                     docWrap(instC(ID_INST_TID.dom(A.maybeSome()).rng(A.maybeSome()), lst(), (lhs, inst) -> lhs),
                             "the rhs obj", "the lhs obj", Map.of(), "a objs barrier identity function f(X)->X"),
-                    instC(OR_INST_TID.dom(A).rng(A.maybe()), lst(T(BOOL_TID).c(cInt::some)), (lhs, inst) -> objs(lhs.stream().filter(l -> inst.args().elements().anyMatch(a -> a.apply(l).boolValue())))),
+                    instC(AND_INST_TID.dom(A).rng(BOOL_TID), lst(T(BOOL_TID).c(cInt::some)), (lhs, inst) -> bool(inst.args().elements().map(Obj::asBool).allMatch(Obj::boolValue))),
+                    instC(OR_INST_TID.dom(A).rng(BOOL_TID), lst(T(BOOL_TID).c(cInt::some)), (lhs, inst) -> bool(inst.args().elements().map(Obj::asBool).anyMatch(Obj::boolValue))),
                     instC(APPLY_INST_TID.dom(ALL).rng(ALL.maybeSome()), lst(T(ALL.maybeSome())), (lhs, inst) -> lhs.apply(inst.arg(0))),
                     instC(MAP_INST_TID.dom(ALL).rng(A), lst(T(A)), (lhs, inst) -> inst.arg(0)),
                     instC(FILTER_INST_TID.dom(A).rng(A.maybe()), lst(T(ALL.maybe())), (lhs, inst) -> inst.arg(0).isNoObj() ? noobj() : lhs),

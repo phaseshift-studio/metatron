@@ -61,11 +61,11 @@ public interface Rel extends Poly<Rel, Tuple.Pair<Obj, Obj>>, Obj {
     /// /////////////////////////////////////////////////////////
 
     default Obj first() {
-        return this.jvm().get0().autoResolve(this);
+        return this.jvm().get0();//.autoResolve(this);
     }
 
     default Obj second() {
-        return this.jvm().get1().autoResolve(this);
+        return this.jvm().get1();//.autoResolve(this);
     }
 
     default Rel first(final Obj key) {

@@ -58,9 +58,9 @@ public class Table implements Widget, Stylable<Table> {
         return this.rows().get(index);
     }
 
-    public String rowString(final int index) {
+   /* public String rowString(final int index) {
         return this.rows().get(index).toString();
-    }
+    }*/
 
     public List<List<Object>> rows() {
         return this.table;
@@ -124,19 +124,20 @@ public class Table implements Widget, Stylable<Table> {
     }
 
     public String toString() {
+        if (this.style.headerDivider.isEmpty() && !this.style.divider.isEmpty())
+            this.style.headerDivider = " ".repeat(Highlighter.visualLength(this.style.divider));
         final StringBuilder sb = new StringBuilder();
         if (null != this.headers) {
             final List<Integer> widths = this.formattedWidths(this.headers);
             sb.append(this.style.background)
-                    .append(this.style.divider)
                     .append(this.style.foreground)
-                    .append(this.style.background);
+                    .append(this.style.headerDivider);
             for (int i = 0; i < this.headers.size(); i++) {
-                sb.append(this.style.foreground)
-                        .append(this.headers.get(i))
+                sb.append(this.headers.get(i))
+                        //.append(this.style.background)
+                        .append(this.style.foreground)
                         .append(this.addSpace(widths, i, this.headers.get(i)))
-                        .append(this.style.divider)
-                        .append(this.style.foreground);
+                        .append(this.style.headerDivider);
             }
             sb.append("{{X}}\n");
         }

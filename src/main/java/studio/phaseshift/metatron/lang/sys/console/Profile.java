@@ -22,7 +22,9 @@ import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.lang.core.m.type.Inst;
 import studio.phaseshift.metatron.lang.core.m.type.Obj;
 import studio.phaseshift.metatron.lang.sys.router.Router;
+import studio.phaseshift.metatron.ui.Stylable;
 import studio.phaseshift.metatron.ui.Widget;
+import studio.phaseshift.metatron.ui.widget.Selector;
 import studio.phaseshift.metatron.ui.widget.Table;
 
 import java.util.List;
@@ -30,10 +32,11 @@ import java.util.List;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class Profile implements Widget {
+public class Profile implements Widget, Stylable<Profile> {
 
     protected final Obj obj;
     protected final Table table;
+    protected Style<Profile> style = Style.empty();
 
     public Profile(final Obj obj) {
         this.obj = obj;
@@ -48,6 +51,7 @@ public class Profile implements Widget {
                 rng = (Inst.Form.of(i) == Inst.Form.reducer) ? cInt.ONE() : (first ? i.rng().c() : i.rng().c().mult(dom));
                 first = false;
                 boolean found = !Router.global().read(i.tid().basePath()).isNoObj();
+                
                 this.table.addRow(List.of(
                         (found ? "{{b}}" : "{{r}}") + i.tid().name(),
                         i.dom(),
@@ -64,7 +68,6 @@ public class Profile implements Widget {
                 }*/
 
             }
-            ;
         } //else {
         //table.addRow(List.of(obj.tid().toUri(), obj.dom(), obj.rng()));
         //}
@@ -87,5 +90,15 @@ public class Profile implements Widget {
     @Override
     public String rowString(int i) {
         return this.table.rowString(i);
+    }
+
+    public Table table() {
+        return this.table;
+    }
+    
+    @Override
+    public Profile style(final Style<Profile> style) {
+        this.style = style;
+        return this;
     }
 }

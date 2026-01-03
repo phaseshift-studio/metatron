@@ -35,7 +35,7 @@ import java.util.Arrays;
 import java.util.HexFormat;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.BASE_TYPES;
+import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.*;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MBytes.bytes;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MStr.str;
 
@@ -150,6 +150,10 @@ public class ObjCleanStringSerializer implements ObjSerializer<String> {
 
     @Override
     public String writeInst(final Inst inst) {
+        if (inst.tid().basePath().equals(AUTO_INST_TID))
+            return "!" + this.write(inst.arg(0));
+        if (inst.tid().basePath().equals(FROM_INST_TID))
+            return "*" + this.write(inst.arg(0));
         final String internal = inst.args().elements()
                 .map(this::write)
                 .reduce(",", (a, b) -> a + b + ",");

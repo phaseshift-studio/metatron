@@ -29,6 +29,7 @@ import studio.phaseshift.metatron.lang.core.mach.machInstSet;
 import studio.phaseshift.metatron.lang.db.grph.inst.grphInstSet;
 import studio.phaseshift.metatron.lang.db.kv.inst.kvInstSet;
 import studio.phaseshift.metatron.lang.db.kv.kvSpace;
+import studio.phaseshift.metatron.lang.db.tabl.tablInstSet;
 import studio.phaseshift.metatron.lang.db.vec.vecInstSet;
 import studio.phaseshift.metatron.lang.net.clstr.clstrInstSet;
 import studio.phaseshift.metatron.lang.net.iot.iotInstSet;
@@ -64,6 +65,7 @@ import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.lang.core.mach.machInstSet.MACH_INSTSET_TID;
 import static studio.phaseshift.metatron.lang.db.grph.inst.grphInstSet.GRPH_INSTSET_TID;
 import static studio.phaseshift.metatron.lang.db.kv.inst.kvInstSet.KV_INSTSET_TID;
+import static studio.phaseshift.metatron.lang.db.tabl.tablInstSet.TABL_INSTSET_TID;
 import static studio.phaseshift.metatron.lang.db.vec.vecInstSet.VEC_INSTSET_TID;
 import static studio.phaseshift.metatron.lang.net.clstr.clstrInstSet.CLSTR_INSTSET_TID;
 import static studio.phaseshift.metatron.lang.net.iot.iotInstSet.IOT_INSTSET_TID;
@@ -98,6 +100,7 @@ public class BootLoader implements Rec, Feature.SelfClone {
         Registry.open().register(MACH_INSTSET_TID, machInstSet::create);
         Registry.open().register(CLSTR_INSTSET_TID, clstrInstSet::create);
         Registry.open().register(UI_INSTSET_TID, uiInstSet::create);
+        Registry.open().register(TABL_INSTSET_TID, tablInstSet::create);
         // Registry.singleton().register(miotInstSet.INST_TID, () -> miotInstSet.of(fURI.NULL));
     }
 

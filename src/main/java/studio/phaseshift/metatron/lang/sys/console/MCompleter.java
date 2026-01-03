@@ -28,6 +28,7 @@ import studio.phaseshift.metatron.lang.sys.router.Router;
 import studio.phaseshift.metatron.ui.graphitty.Graphitty;
 
 import java.util.List;
+import java.util.function.Supplier;
 
 import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.lang.core.m.obj.NoObj.noobj;
@@ -42,7 +43,7 @@ public class MCompleter implements Completer {
     public MCompleter(final Console console) {
         this.console = console;
     }
-
+    
     public void complete(LineReader reader, ParsedLine commandLine, final List<Candidate> candidates) {
         try {
             final Buffer buffer = reader.getBuffer();

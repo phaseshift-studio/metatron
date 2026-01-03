@@ -20,6 +20,7 @@ package studio.phaseshift.metatron.ui.widget;
 
 import studio.phaseshift.metatron.lang.sys.console.Highlighter;
 import studio.phaseshift.metatron.ui.Border;
+import studio.phaseshift.metatron.ui.Stylable;
 import studio.phaseshift.metatron.ui.Widget;
 
 import java.util.Arrays;
@@ -30,34 +31,29 @@ import java.util.stream.Stream;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class Panel implements Widget {
+public class Panel implements Widget, Stylable<Panel> {
 
     protected final String title;
-    protected final List<String> options;
     protected final String body;
-    protected final Border border;
+    protected Style<Panel> style = Style.empty();
 
-    public Panel(final String body, final Border border) {
-        this(null, body, border);
+
+    public Panel(final String body) {
+        this(null, body);
     }
-
-    public Panel(final String title, final String body, final Border border) {
-        this(title, null, body, border);
-    }
-
-    public Panel(final String title, final List<String> options, final String body, final Border border) {
+    
+    public Panel(final String title, final String body) {
         this.title = title;
         this.body = body;
-        this.border = border;
-        this.options = options;
     }
 
-    public Panel bottom(final Widget dims, final Border border) {
-        return this.bottom(null, dims, border);
+    public Panel style(final Style<Panel> style) {
+        this.style = style;
+        return this;
     }
-
-    public Panel bottom(final List<String> options, final Widget dims, final Border border) {
-        return new Panel(null, options, this + "\n" + dims.toString(), border);
+    
+    public Panel bottom(final Widget dims) {
+        return new Panel(null, this + "\n" + dims.toString());
     }
 
     public Panel right(final Widget dims) {
@@ -74,10 +70,11 @@ public class Panel implements Widget {
             sb.append("\n");
         }
         sb.deleteCharAt(sb.length() - 1);
-        return new Panel(sb.toString(), this.border);
+        return new Panel(sb.toString()).style().border(this.style.border).apply();
     }
 
     public String toString() {
+        
         final List<String> lines = Arrays.asList(this.body.replace("\\n", "\n").split("\\r?\\n", -1));
         final int maxLen = Stream.concat(Stream.of(this.title).filter(Objects::nonNull), lines.stream())
                 .map(Highlighter::visualLength)
@@ -85,22 +82,19 @@ public class Panel implements Widget {
                 .orElse(0);
 
         final StringBuilder sb = new StringBuilder();
-        final String top = "%s%s".formatted(null == this.title ? "" : this.title, this.border.topSide().repeat(null == this.title ? maxLen : maxLen - Highlighter.visualLength(this.title))).stripTrailing();
+        final String top = "%s%s".formatted(null == this.title ? "" : this.title, this.style.border.topSide().repeat(null == this.title ? maxLen : maxLen - Highlighter.visualLength(this.title))).stripTrailing();
         if (!top.isEmpty())
-            sb.append(this.border.topLeftCorner()).append(top).append(this.border.topRightCorner()).append('\n');
-        if (null != options) {
-            sb.append(this.border.leftSide()).append(this.options).append(" ".repeat(maxLen - Highlighter.visualLength(this.options.toString()))).append(this.border.rightSide()).append('\n');
-        }
+            sb.append(this.style.border.topLeftCorner()).append(top).append(this.style.border.topRightCorner()).append('\n');
         for (final String line : lines) {
-            sb.append(this.border.leftSide())
+            sb.append(this.style.border.leftSide())
                     .append(line)
                     .append(" ".repeat(maxLen - Highlighter.visualLength(line)))
-                    .append(this.border.rightSide())
+                    .append(this.style.border.rightSide())
                     .append("{{X}}\n");
         }
-        final String bottom = this.border.bottomSide().repeat(maxLen).stripTrailing();
+        final String bottom = this.style.border.bottomSide().repeat(maxLen).stripTrailing();
         if (!bottom.isEmpty())
-            sb.append(this.border.bottomLeftCorner()).append(bottom).append(this.border.bottomRightCorner()).append("\n");
+            sb.append(this.style.border.bottomLeftCorner()).append(bottom).append(this.style.border.bottomRightCorner()).append("\n");
         return sb.toString();
     }
 }

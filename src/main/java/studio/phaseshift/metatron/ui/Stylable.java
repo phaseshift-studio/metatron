@@ -35,7 +35,9 @@ public interface Stylable<T extends Stylable<T>> {
         public String background = "";
         public String foreground = "";
         public Widget attachment = null;
+        public Widget parent = null;
         public String divider = "";
+        public String headerDivider = "";
         public String body = "";
         public int leftMargin = 0;
         public int rightMargin = 0;
@@ -43,6 +45,10 @@ public interface Stylable<T extends Stylable<T>> {
         public int bottomMargin = 0;
         public boolean overlapAttachment = false;
         public String pointer = "";
+        public int lowRowRange = 0;
+        public int highRowRange = Integer.MAX_VALUE;
+        public int lowColRange = 0;
+        public int highColRange = Integer.MAX_VALUE;
 
         protected Style(final T stylable) {
             this.stylable = stylable;
@@ -57,7 +63,18 @@ public interface Stylable<T extends Stylable<T>> {
             return this;
         }
 
-        
+        public Style<T> rowRange(final int low, final int high) {
+            this.lowRowRange = low;
+            this.highRowRange = high;
+            return this;
+        }
+
+        public Style<T> colRange(final int low, final int high) {
+            this.lowColRange = low;
+            this.highColRange = high;
+            return this;
+        }
+
         public Style<T> pointer(final String pointer) {
             this.pointer = pointer;
             return this;
@@ -78,6 +95,11 @@ public interface Stylable<T extends Stylable<T>> {
         public Style<T> attachment(final Widget attachment, final boolean overlap) {
             this.attachment = attachment;
             this.overlapAttachment = overlap;
+            return this;
+        }
+
+        public Style<T> headerDivider(final String divider) {
+            this.headerDivider = divider;
             return this;
         }
 

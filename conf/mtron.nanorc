@@ -19,8 +19,6 @@ color yellow "\{.\}"
 color red "\{\?\}"
 ### noobj 
 color magenta "noobj"
-### bool
-color yellow "(true)|(false)"
 ### int
 color yellow "(0)|([1-9][0-9]*)"
 ### real
@@ -44,6 +42,8 @@ color green "=" "::"
 ### bytes
 icolor yellow "0x([0-9]|[a-f])+"
 color yellow,underline "0x"
+### bool
+color yellow "(true)|(false)"
 ### str
 color yellow "[\"][^\"]*[\"]"
 color yellow "['][^']*[']"
@@ -56,3 +56,5 @@ color gray start="\[==" end="==\]"
 color magenta "::T"
 ### fail
 color red "([a-z]|[0-9]|/)*fail::"
+### auto
+color yellow "!\*"

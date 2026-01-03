@@ -13,6 +13,7 @@ print("{{r}}------------\n{{g}}*{{y}}boot/args{{X}}: ",
 /sys/mod/mach  -> */mach;
 /sys/mod/llm   -> */llm;
 /sys/mod/ui    -> */ui;
+/sys/mod/tabl  -> */tabl;
 [-- mount spaces --];
      kv::[pattern => /usr/#]@/sys/space/usr;
      kv::[pattern => /shared/#]@/sys/space/shared;
@@ -22,13 +23,18 @@ print("{{r}}------------\n{{g}}*{{y}}boot/args{{X}}: ",
                       /docs => target/docs ]]@/sys/space/web;
    grph::[pattern => /g/#,
           store   => kv::[pattern => /g/#],
-          :load   => grateful]@/sys/space/tp3;
+          :load   => modern]@/sys/space/tp3;
    mqtt::[pattern => /mqtt/#,
           host    => <mqtt://chibi.local:1883>,
           prefix  => /mqtt/]@/sys/space/mqtt;
    mqtt::[pattern => /zigbee2mqtt/#,
           host    => <mqtt://chibi.local:1883>,
           prefix  => <>]@/sys/space/zigbee2mqtt;
+   tabl::[pattern => /postgres/#,
+          host    => <postgresql://localhost:5432/world>,
+          user    => admin,
+          pass    => "admin",
+          prefix  => </postgres/>]@/sys/space/postgres;
      fs::[pattern => /home/#]@/sys/space/fs;
      kv::[pattern => /usr/ai/#]@/sys/space/ai;
  ollama::[host    => <http://localhost:11434>, 

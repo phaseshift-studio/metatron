@@ -100,7 +100,7 @@ public class mInstSet extends MInstSet {
     public static final fURI IS_INST_TID = INST_TID.extend("is");
     public static final fURI ISA_INST_TID = INST_TID.extend("isa");
     public static final fURI OR_INST_TID = INST_TID.extend("or");
-    public static final fURI AND_TID = INST_TID.extend("and");
+    public static final fURI AND_INST_TID = INST_TID.extend("and");
     public static final fURI MATCHES_INST_TID = INST_TID.extend("matches");
     public static final fURI EQ_INST_TID = INST_TID.extend("eq");
     public static final fURI NEQ_INST_TID = INST_TID.extend("neq");

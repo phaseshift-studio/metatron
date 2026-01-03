@@ -146,7 +146,7 @@ public class Subscriptions {
                 if (!location.contains("mod") && !location.contains("#")) {
                     try {
                         String space  = Highlighter.unformat(this.states.get(selectedState).entry(selectRow, 1).toString().trim());
-                        Router.global().logger().none(Graphitty.floating(new Panel("{{m}}subscriptions{{X}}", Router.global().read(f(space).query("sub")).toString(), Border.simple).toString()));
+                        Router.global().logger().none(Graphitty.floating(new Panel("{{m}}subscriptions{{X}}", Router.global().read(f(space).query("sub")).toString()).style().border(Border.simple).apply().toString()));
                     } catch (final Exception e) {
                         // do nothing
                     }

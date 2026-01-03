@@ -29,6 +29,7 @@ import org.jline.reader.impl.DefaultParser;
 import org.jline.reader.impl.history.DefaultHistory;
 import org.jline.terminal.Terminal;
 import org.jline.terminal.TerminalBuilder;
+import org.jline.utils.InfoCmp;
 import org.jline.widget.Widgets;
 import org.slf4j.event.Level;
 import studio.phaseshift.metatron.furi.fURI;
@@ -59,8 +60,7 @@ import java.nio.file.Paths;
 import java.util.*;
 import java.util.function.Supplier;
 
-import static org.jline.keymap.KeyMap.alt;
-import static org.jline.keymap.KeyMap.ctrl;
+import static org.jline.keymap.KeyMap.*;
 import static studio.phaseshift.metatron.BootLoader.BOOTING;
 import static studio.phaseshift.metatron.furi.fURI.*;
 import static studio.phaseshift.metatron.lang.core.m.inst.mFluent.StartLess.isa_;
@@ -88,17 +88,16 @@ public class Console extends JRec implements Threadable, Runnable {
     public static String HEADER_FILE = "./conf/ansi_headers.txt";
     @ObjField(tid = FILE_TID_STRING)
     public static Path HISTORY_FILE = Paths.get(".metatron.history");
-    
+
     private final GraphittyLogger LOG = Graphitty.log(this);
     public static String HEADER_SEPARATOR = "####################";
-    private final Terminal terminal;
+    private static Terminal terminal;
     private final LineReader reader;
     private final StatusLine status;
     private final static ConfigurationPath configurations = new ConfigurationPath(
             Paths.get("conf"),                                     // application-wide settings
             Paths.get(System.getProperty("user.home"), ".metatron") // user-specific settings
     );
-    private final Highlighter highlighter;
     private final Thread thread;
     public static Console LOCAL_INSTANCE = null;
 
@@ -119,18 +118,18 @@ public class Console extends JRec implements Threadable, Runnable {
                     .blockCommentDelims(new DefaultParser.BlockCommentDelims("[===", "===]"))
                     .eofOnUnclosedQuote(true)
                     .eofOnUnclosedBracket(DefaultParser.Bracket.CURLY, DefaultParser.Bracket.ROUND, DefaultParser.Bracket.SQUARE);
-            this.terminal = TerminalBuilder.builder().encoding(StandardCharsets.UTF_8).system(true).build();
+            Console.terminal = TerminalBuilder.builder().encoding(StandardCharsets.UTF_8).system(true).build();
             this.outputHeader();
             final Supplier<Path> currentDir = () -> Paths.get("");
             final Builtins builtins = new Builtins(currentDir, Console.configurations, null);
             SystemRegistry systemRegistry = new SystemRegistryImpl(parser, terminal, currentDir, Console.configurations);
             systemRegistry.setCommandRegistries(builtins);
-            this.highlighter = Highlighter.single();
+            Highlighter highlighter = Highlighter.single();
             this.reader = LineReaderBuilder.builder()
                     .terminal(terminal)
                     .appName("metatron")
                     .history(new DefaultHistory())
-                    .highlighter(this.highlighter) // TODO: command/args/lang
+                    .highlighter(highlighter) // TODO: command/args/lang
                     .parser(parser)
                     .variable(LineReader.HISTORY_FILE, HISTORY_FILE)
                     .option(LineReader.Option.AUTO_FRESH_LINE, true)
@@ -138,7 +137,7 @@ public class Console extends JRec implements Threadable, Runnable {
                     .option(LineReader.Option.DISABLE_EVENT_EXPANSION, true)
                     .variable(LineReader.SECONDARY_PROMPT_PATTERN, Graphitty.string("{{-X&v1&^1&m}}     {{g}}| {{X}}"))
                     .variable(LineReader.INDENTATION, 0)
-                    .completer(new MCompleter(this))
+                  //  .completer(new MCompleter(this))
                     .build();
             new CustomWidgets(this.reader);
             this.status = new StatusLine(this, "{{b}}loading...{{X}}");
@@ -164,7 +163,7 @@ public class Console extends JRec implements Threadable, Runnable {
         try {
             this.status.close();
             this.reader.getBuffer().clear();
-            this.terminal.close();
+            terminal.close();
             Threadable.super.close();
         } catch (final IOException e) {
             LOG.error(e);
@@ -172,11 +171,11 @@ public class Console extends JRec implements Threadable, Runnable {
     }
 
     public void write(final Object object) {
-        this.terminal.writer().write(Highlighter.format(object));
+        terminal.writer().write(Highlighter.format(object));
     }
 
-    public Terminal getTerminal() {
-        return this.terminal;
+    public static Terminal getTerminal() {
+        return Console.terminal;
     }
 
     public LineReader getReader() {
@@ -208,14 +207,14 @@ public class Console extends JRec implements Threadable, Runnable {
                 else if (line.equals(":quit"))
                     break;
                 else if (line.equals(":clear")) {
-                    Graphitty.out(this.terminal.output(), "{{XX&@}}");
+                    Graphitty.out(terminal.output(), "{{XX&@}}");
                     this.status.refresh();
                 } else if (line.equals(":help")) {
-                    Graphitty.out(this.terminal.output(), new Panel("{{c}}help menu{{X}}", new Table(
+                    Graphitty.out(terminal.output(), new Panel("{{c}}help menu{{X}}", new Table(
                             List.of("name", "short", "description"))
                             .addRow(List.of("space walk", "<tab>", "explore spaces"))
                             .addRow(List.of("introspect", "<space><tab>", "analyze machine"))
-                            .addRow(List.of("header", "random header", "random header")).toString(), Border.simple).toString());
+                            .addRow(List.of("header", "random header", "random header")).toString()).style().border(Border.simple.foreground("{{b}}")).apply().toString());
                 } else if (line.startsWith(":log")) {
                     LogObj.setSLF4J(line.substring(4));
                 } else if (line.startsWith(":top")) {
@@ -284,7 +283,7 @@ public class Console extends JRec implements Threadable, Runnable {
             }
         }
         try {
-            this.terminal.close();
+            terminal.close();
         } catch (final IOException e) {
             LOG.error(e);
         }
@@ -315,20 +314,20 @@ public class Console extends JRec implements Threadable, Runnable {
             final String randomHeaderTitle = new ArrayList<>(headers.keySet()).get(new Random().nextInt(headers.size()));
             final String randomHeader = headers.get(randomHeaderTitle);
             if (null == randomHeader) throw new IllegalArgumentException("<unknown header: " + randomHeaderTitle + ">");
-            this.terminal.writer().print(Graphitty.string(randomHeader));
-            this.terminal.writer().flush();
+            terminal.writer().print(Graphitty.string(randomHeader));
+            terminal.writer().flush();
         } catch (final Exception e) {
-            this.terminal.writer().println("...a fundamental boot exception has occurred.");
-            this.terminal.writer().println("      ...this does not bode well for your time in the meTaRon: " + e);
-            this.terminal.writer().println(" __  __  ____  ____   __   ____  ____  _____  _  _ \n" +
+            terminal.writer().println("...a fundamental boot exception has occurred.");
+            terminal.writer().println("      ...this does not bode well for your time in the meTaRon: " + e);
+            terminal.writer().println(" __  __  ____  ____   __   ____  ____  _____  _  _ \n" +
                     "(  \\/  )( ___)(_  _) /__\\ (_  _)(  _ \\(  _  )( \\( )\n" +
                     " )    (  )__)   )(  /(__)\\  )(   )   / )(_)(  )  ( \n" +
                     "(_/\\/\\_)(____) (__)(__)(__)(__) (_)\\_)(_____)(_)\\_)");
-            this.terminal.writer().printf("\t\t\tby PhaseShift Studio (%s)\n", Calendar.getInstance().get(Calendar.YEAR));
-            this.terminal.flush();
+            terminal.writer().printf("\t\t\tby PhaseShift Studio (%s)\n", Calendar.getInstance().get(Calendar.YEAR));
+            terminal.flush();
         }
         LOG.none("\t{{b}}ve{{y}}rs{{m}}ion {{y}}%s{{X}}\n", METATRON_VERSION);
-        Graphitty.out(this.terminal.output(), "   {{m}}:help{{X}} for console features\n\n");
+        Graphitty.out(terminal.output(), "   {{m}}:help{{X}} for console features\n\n");
     }
 
     @Override
@@ -357,6 +356,42 @@ public class Console extends JRec implements Threadable, Runnable {
                         System.exit(0);
                         return true;
                     }, ctrl('q'));
+            getKeyMap().bind((Widget) () -> {
+                try {
+                    final Obj code = mParser.parse(this.reader.getBuffer().toString());
+                    if (code.isCode()) {
+                        final Explain explain = new Explain(code.as());
+                        terminal.writer().print("\n" + explain.format());
+                        explain.run();
+                    }
+                } catch (final Exception e) {
+                    // do nothing 
+                }
+                return true;
+            }, key(Console.terminal, InfoCmp.Capability.tab));
+            getKeyMap().bind((Widget) () -> {
+                try {
+                    final Obj code = mParser.parse(this.reader.getBuffer().toString());
+                    if (code.isCode()) {
+                        final CodeTable codeTable = new CodeTable(code.as());
+                        terminal.writer().print("\n" + codeTable.format());
+                        codeTable.run();
+                    }
+                } catch (final Exception e) {
+                    // do nothing 
+                }
+
+                return true;
+            }, key(Console.terminal, InfoCmp.Capability.key_f1));
+            getKeyMap().bind((Widget) () -> {
+                try {
+                   LOG.info("f2 pushed");
+                } catch (final Exception e) {
+                    // do nothing 
+                }
+
+                return true;
+            }, key(Console.terminal, InfoCmp.Capability.key_f2));
         }
     }
 }

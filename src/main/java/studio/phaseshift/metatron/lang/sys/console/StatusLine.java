@@ -81,7 +81,7 @@ public class StatusLine implements Threadable, Runnable {
                         .ansiAppend(Graphitty.string("{{g}}|{{w}}in:{{y}}%d{{[" + color + "]&w}}", Router.global().server().stats().getBytesRecv()))
                         .ansiAppend(Graphitty.string("{{g}}|{{w}}out:{{y}}%d{{[" + color + "]&w}}", Router.global().server().stats().getBytesSent()))
                         .ansiAppend(Graphitty.string("{{g}}|{{w}}execution time (ms):{{y}}%d{{[" + color + "]&w}}", this.lastExecutionTime))
-                        .append(Graphitty.string("{{g}}|{{[" + color + "]}}%s", " ".repeat(200)))
+                        .append(Graphitty.string("{{g}}|{{[" + color + "]}}%s.", " ".repeat(200)))
                         .toAttributedString();
                 if (!this.line.equals(temp)) {
                     this.line = temp;

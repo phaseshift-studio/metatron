@@ -46,6 +46,7 @@
         <maven.compiler.release>22</maven.compiler.release>
         <java.version>22</java.version>
         <!-- DEPENDENCY VERSIONS -->
+        <postgres.version>42.7.7</postgres.version>
         <langchain4j.version>1.9.1</langchain4j.version>
         <langgraph4j.version>1.6.1</langgraph4j.version>
         <junit.version>5.11.0</junit.version>
@@ -104,6 +105,12 @@
         </dependencies>
     </dependencyManagement>
     <dependencies>
+        <!-- POSTGRES -->
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <version>${postgres.version}</version>
+        </dependency>
         <!-- LANGCHAIN -->
         <dependency>
             <groupId>dev.langchain4j</groupId>
