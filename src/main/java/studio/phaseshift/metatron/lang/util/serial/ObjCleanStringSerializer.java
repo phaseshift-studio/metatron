@@ -26,6 +26,7 @@ import studio.phaseshift.metatron.lang.core.m.type.*;
 import studio.phaseshift.metatron.lang.core.mach.type.Machine;
 import studio.phaseshift.metatron.lang.core.mach.type.Monad;
 import studio.phaseshift.metatron.lang.sys.router.Router;
+import studio.phaseshift.metatron.util.Common;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
@@ -118,7 +119,7 @@ public class ObjCleanStringSerializer implements ObjSerializer<String> {
     @Override
     public String writeUri(final Uri uri) {
         final String uriString = uri.jvm().toString();
-        final boolean wrap = uriString.contains(" ") || uriString.contains(".");
+        final boolean wrap = uriString.contains(" ") || uriString.contains(".") || (!uriString.isEmpty() && Common.isInt(uriString.substring(0, 1)));
         return handleIds(uri, wrap ? ("<" + uriString + ">") : uriString);
     }
 

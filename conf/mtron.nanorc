@@ -17,8 +17,6 @@ color yellow "&"
 # f (j,m,?)
 color yellow "\{.\}"
 color red "\{\?\}"
-### noobj 
-color magenta "noobj"
 ### int
 color yellow "(0)|([1-9][0-9]*)"
 ### real
@@ -37,7 +35,7 @@ icolor blue "(/|([a-z]*(://))|[a-z])([0-9]|[a-z]|\.|-|_)+(:)?[0-9]*(/)?([a-z]|/|
 icolor yellow "\.[0-9]+E[-+]?[0-9]+"
 # rec/rel uri key
 icolor cyan "([a-z]|[0-9]|/|_|#|\+)+=>"
-color green "=>"
+color green "=>" "<" ">"
 ### bytes
 icolor yellow "0x([0-9]|[a-f])+"
 color yellow,underline "0x"
@@ -53,6 +51,8 @@ color gray "(\[--).*$"
 color gray start="\[==" end="==\]"
 ### type
 color magenta "::T"
+### noobj 
+color magenta "noobj"
 # q keys
 color cyan "(dom=)|(rng=)"
 color green "=" "::"
