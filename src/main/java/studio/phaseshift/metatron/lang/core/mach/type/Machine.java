@@ -23,6 +23,8 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.core.m.type.*;
 import studio.phaseshift.metatron.util.Tuple;
 
+import java.util.function.Consumer;
+
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
@@ -34,7 +36,7 @@ public interface Machine extends Call, Ring<Call> {
     // code, running, barriers, halted
     @Override
     Tuple.Quartet<Code, Obj, Lst, Obj> jvm();
-    
+
     @Override
     default boolean isResolved(final boolean nested) {
         return this.code().isResolved(nested);
@@ -58,6 +60,19 @@ public interface Machine extends Call, Ring<Call> {
 
     default Machine code(final Code code) {
         return this.clone(Tuple.Quartet.with(code, this.running(), this.barriers(), this.halted()), this.tid(), this.vid());
+    }
+
+    Machine onHalt(final Consumer<Obj> halted);
+
+    Consumer<Obj> onHalt();
+
+    default void processHalted(final Obj halted) {
+        final Consumer<Obj> h = this.onHalt();
+        if (null != h)
+            h.accept(halted);
+        else
+            this.halted().append(halted);
+        
     }
 
     @Override

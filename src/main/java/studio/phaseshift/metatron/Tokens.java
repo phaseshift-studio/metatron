@@ -58,6 +58,7 @@ public final class Tokens {
     public static final String SRC = "src";
     public static final String TGT = "tgt";
     public static final String ON_RECV = "on_recv";
+    public static final String HOSTNAME = "HOSTNAME";
 
 
 }

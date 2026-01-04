@@ -1,15 +1,33 @@
 name: metatron
-description: "computing within a universal address space"
+description: "distributed object mesh"
 version: "0.1-SNAPSHOT"
-url: https://metatron.phaseshift.studio
+url: http://metatron.phaseshift.studio
 slug: metatron
-panel_icon: "mdi:network"
+web_ui: http://localhost:8777/
+panel_icon: mdi:network
 stdin: true
+startup: system
+ingress: true
+ingress_entry: dashboard/
+hassio_role: default
+hassio_api: true
 init: false
+show_in_sidebar: true
 host_network: true
+host_uts: true
+ports:
+  8999/tcp: 8999
+  8777/tcp: 8777
 arch:
   - aarch64
   - amd64
   - armhf
   - armv7
   - i386
+options:
+  log_level: info
+  args: "[host=><ws://127.0.0.1:8999>,cluster=>{,},boot=><examples/docker.mtron>,log=info]" 
+schema:
+  log_level: list(trace|debug|info|warn|error)
+  args: str
+

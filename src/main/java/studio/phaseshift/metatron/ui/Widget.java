@@ -18,6 +18,8 @@
 
 package studio.phaseshift.metatron.ui;
 
+import org.jline.utils.InfoCmp;
+import studio.phaseshift.metatron.lang.sys.console.Console;
 import studio.phaseshift.metatron.lang.sys.console.Highlighter;
 import studio.phaseshift.metatron.ui.graphitty.Graphitty;
 
@@ -31,10 +33,13 @@ public interface Widget {
     default int width() {
         return Arrays.stream(this.toString().split("\n")).map(Highlighter::visualLength).max(Integer::compareTo).orElse(0);
     }
-    
-    default void cursor(boolean on){
-        Graphitty.log(this).none(on ? "{{*}}" : "{{.}}");
+
+    static void cursorOffOn(final Runnable runnable) {
+        Graphitty.log(Widget.class).none("{{.}}");
+        runnable.run();
+        Graphitty.log(Widget.class).none("{{*}}");
     }
+
     default int height() {
         return this.toString().split("\n").length;
     }

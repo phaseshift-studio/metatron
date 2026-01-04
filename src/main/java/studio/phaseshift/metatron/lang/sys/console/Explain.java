@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.lang.sys.console;
 
+import org.jline.utils.InfoCmp;
 import studio.phaseshift.metatron.lang.core.m.type.Code;
 import studio.phaseshift.metatron.lang.util.serial.ObjCleanStringSerializer;
 import studio.phaseshift.metatron.ui.Border;
@@ -45,6 +46,7 @@ public class Explain implements Widget, Stylable<Explain> {
     private final BarMenu menu;
 
     public Explain(final Code code) {
+
         this.style = this.style().border(Border.simple.foreground("{{m}}"));
         this.code = code.resolve(noobj()).as();
         Profile profile = new Profile(this.code);
@@ -58,7 +60,7 @@ public class Explain implements Widget, Stylable<Explain> {
                 .background("{{[b]&w}}")
                 .attachment(mainBox, true)
                 .divider("{{g}}|")
-                .border(Border.simple.foreground("{{g}}")).apply();
+                .border(Border.simple.foreground("{{g}}")).margin(2, 2).apply();
     }
 
     @Override
@@ -68,7 +70,7 @@ public class Explain implements Widget, Stylable<Explain> {
     }
 
     public void run() {
-        this.selector.run();
+        Widget.cursorOffOn(this.selector::run);
     }
 
     @Override

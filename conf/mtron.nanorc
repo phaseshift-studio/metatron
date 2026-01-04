@@ -22,7 +22,7 @@ color magenta "noobj"
 ### int
 color yellow "(0)|([1-9][0-9]*)"
 ### real
-color yellow "(([1-9][0-9]+)|0+)\.[0-9]+"
+icolor yellow "(([1-9][0-9]+)|0+)\.[0-9]+(E[-+]?[0-9]+)?"
 # common sugars
 color green "[.:;,+*|=!\%@]" "<<" ">>" "<=" "=>" "->" ">-" "-<"
 # uri coefficients
@@ -33,12 +33,11 @@ color green "[(){}]" "\[" "\]"
 color blue "[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}(:)?[0-9]*"
 # uri slash or schema
 icolor blue "(/|([a-z]*(://))|[a-z])([0-9]|[a-z]|\.|-|_)+(:)?[0-9]*(/)?([a-z]|/|\_|[0-9])*"
+# real exponent
+icolor yellow "\.[0-9]+E[-+]?[0-9]+"
 # rec/rel uri key
 icolor cyan "([a-z]|[0-9]|/|_|#|\+)+=>"
 color green "=>"
-# q keys
-color cyan "(dom=)|(rng=)"
-color green "=" "::"
 ### bytes
 icolor yellow "0x([0-9]|[a-f])+"
 color yellow,underline "0x"
@@ -54,7 +53,11 @@ color gray "(\[--).*$"
 color gray start="\[==" end="==\]"
 ### type
 color magenta "::T"
+# q keys
+color cyan "(dom=)|(rng=)"
+color green "=" "::"
 ### fail
 color red "([a-z]|[0-9]|/)*fail::"
-### auto
-color yellow "!\*"
+### auto resolve
+color yellow "!\*" "\{<j>\}"
+color green "\{|\}" 

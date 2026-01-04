@@ -1,9 +1,4 @@
-FROM eclipse-temurin:22
+FROM docker.phaseshift.studio/metatron:0.1-SNAPSHOT
 
-COPY / /metatron/
-WORKDIR /metatron
-RUN ls
-RUN echo "checking metatron directory"
-RUN chmod -R 775 .
-RUN chmod a+x bin/metatron
-ENTRYPOINT [ "bin/metatron"  ]
+ENTRYPOINT ["bin/metatron", "[host=><ws://127.0.0.1:8999>,cluster=>{,},boot=><examples/docker.mtron>,log=>info]"]
+

@@ -73,6 +73,17 @@ public class mInstSetTest extends InstSetTest {
             "'ab3cd'.regex('\\d*')                                                          % ['','','3','','','']",
             "'ab3cd'.regex('\\d+')                                                          % ['3']",
             "'ab3cd'.regex('\\d{2}')                                                        % [,]",
+            /// ////////////////////////////////////////////////////////////////////////////////////////////////////
+            "'ab3cd'.has('ab.')                                                             % true",
+            "'ab3cd'.has('bb')                                                              % false",
+            "{'abc3d','aaa'}.has('a\\.')                                                    % bool{2}::false",
+            "{'abc3d','aaa'}.has('a.')                                                      % bool{2}::true",
+            "{'abc3d','aaa'}.has('a(b)?(a|c).?')                                            % bool{2}::true",
+            "{'abc3d','aaa'}.has('b.')                                                      % {true,false}",
+            "{'abc3d','aaa'}.has('c.')                                                      % {true,false}",
+            "{'abc3d','aaa'}.has('d.')                                                      % bool{2}::false",
+            "{'abc3d','aaa'}.has('d.?')                                                     % {true,false}",
+            "{'abc3d','aaa'}.has('e.')                                                      % bool{2}::false",
     }, delimiter = '%')
     public void testStrCode(final String code, final String expected) {
         super.testCode(code, expected);

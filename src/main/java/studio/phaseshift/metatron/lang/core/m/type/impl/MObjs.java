@@ -34,6 +34,8 @@ import static studio.phaseshift.metatron.lang.core.m.obj.NoObj.noobj;
 
 public class MObjs implements Objs {
 
+    public static final int BULK_TRIGGER = 10000;
+    
     private fURI vid;
     private cInt count = null;
     private List<Obj> jvm;
@@ -83,7 +85,7 @@ public class MObjs implements Objs {
     }*/
 
     private MObjs attemptBulk(final boolean force) {
-        if (force || this.jvm.size() > 10) {
+        if (force || this.jvm.size() > BULK_TRIGGER) {
             final Map<Obj, cInt> map = new LinkedHashMap<>();
             this.jvm.forEach(o -> map.merge(o.c(C::one), o.c(), cInt::plus));
             this.jvm = new ArrayList<>();
@@ -112,15 +114,23 @@ public class MObjs implements Objs {
     }
 
     public static Obj objs(final Iterable<Obj> objs) {
-        final List<Obj> temp = new ArrayList<>();
-        IteratorUtil.fill(objs.iterator(), temp);
-        return objs(temp);
+        final Iterator<Obj> itty = objs.iterator();
+        if(!itty.hasNext())
+            return noobj();
+        final Obj o = itty.next();
+        if(!itty.hasNext())
+            return o;
+        else {
+            final List<Obj> temp = new ArrayList<>();
+            temp.add(o);
+            IteratorUtil.fill(itty, temp);
+            return new MObjs(temp, null).attemptBulk(true).tryToShrink();
+        }
     }
 
     public static Obj objs(final List<Obj> objs) {
         if (objs.isEmpty()) return noobj();
         if (objs.size() == 1) return objs.getFirst();
-        //final List<Obj> internal = new ArrayList<>(objs);
         return new MObjs(objs, null).attemptBulk(true).tryToShrink();
     }
 

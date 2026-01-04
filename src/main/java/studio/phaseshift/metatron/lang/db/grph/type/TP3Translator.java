@@ -71,7 +71,7 @@ public record TP3Translator(Builder builder) implements Translator<Obj, Graph> {
             final Map<Obj, Obj> out = mutableMap();
             tpV.edges(Direction.OUT).forEachRemaining(tpE -> out.compute(uri(tpE.label()), (k, v) -> null == v ? createEdge(tpE) : v.append(createEdge(tpE))));
             final Map<Obj, Obj> in = mutableMap();
-            tpV.edges(Direction.IN).forEachRemaining(tpE -> out.compute(uri(tpE.label()), (k, v) -> null == v ? createEdge(tpE) : v.append(createEdge(tpE))));
+            tpV.edges(Direction.IN).forEachRemaining(tpE -> in.compute(uri(tpE.label()), (k, v) -> null == v ? createEdge(tpE) : v.append(createEdge(tpE))));
             final Map<Obj, Obj> props = createProperties(tpV);
             Router.writeToSpace(this.builder.root.extend("V").extend(tpV.id().toString()), rec(Map.of(uri(LABEL), uri(tpV.label()),
                             uri(PROPS), props.isEmpty() ? noobj() : rec(props),

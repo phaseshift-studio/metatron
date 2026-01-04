@@ -30,7 +30,6 @@ import studio.phaseshift.metatron.lang.core.m.type.Type;
 import studio.phaseshift.metatron.lang.sys.router.Router;
 import studio.phaseshift.metatron.util.Common;
 
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -74,7 +73,7 @@ public class kvSpace extends MSpace<Map<fURI, Obj>> {
 
     @Override
     public void close() {
-        this.sjvm().values().forEach(Common::close);
+        this.sjvm().values().stream().filter(o -> o != Router.global()).filter(o -> o != this).forEach(Common::close);
         super.close();
     }
 

@@ -74,7 +74,7 @@ public class m1Vertex {
                                             inst.args().elements().map(i -> Router.global().read(lhs.uriValue().extend("V").extend(i.uriValue()))).reduce(Obj::append).orElse(noobj())),
                     //instC(BOTH_INST_TID.dom(VERTEX_TID.maybeSome()).rng(VERTEX_TID.maybeSome()), lst(T(URI_TID.maybeSome())), (lhs, inst) -> split_(lst(instB(OUT_INST_TID, lst(inst.arg(0))), instB(IN_INST_TID, lst(inst.arg(0))))).merge_().apply(lhs)),
                     //instC(BOTHE_INST_TID.dom(VERTEX_TID.maybeSome()).rng(EDGE_TID.maybeSome()), lst(T(URI_TID.maybeSome())), (lhs, inst) -> split_(lst(instB(OUTE_INST_TID, lst(inst.arg(0))), instB(INE_INST_TID, lst(inst.arg(0))))).merge_().apply(lhs)),
-                    instC(OUT_INST_TID.dom(VERTEX_TID).rng(VERTEX_TID.maybeSome()), lst(T(URI_TID.maybeSome())), (lhs, inst) -> get_(uri(f(OUT.name()).extend(inst.arg(0).isNoObj() ? f("+") : inst.arg(0).uriValue()).extend(Direction.IN.name()))).apply(lhs)),
+                    instC(OUT_INST_TID.dom(VERTEX_TID).rng(VERTEX_TID.maybeSome()), lst(T(URI_TID.maybeSome())), (lhs, inst) -> lhs.asRec().at(uri(f(OUT.name()).extend(inst.arg(0).isNoObj() ? f("+") : inst.arg(0).uriValue()).extend(Direction.IN.name())))),
                     instC(OUTE_INST_TID.dom(VERTEX_TID).rng(EDGE_TID.maybeSome()), lst(T(URI_TID.maybeSome())), (lhs, inst) -> {
                         Obj edges = lhs.<Rec>as().at(OUT_URI).orElse(rec()).at(inst.arg(0).isNoObj() ? PLUS_URI : inst.arg(0));
                        // Obj edges = get_(uri(f(OUT.name()).extend(inst.arg(0).isNoObj() ? f("+") : inst.arg(0).uriValue()))).apply(lhs);

@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron;
 
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.core.m.inst.mInstSet;
@@ -30,6 +31,7 @@ import studio.phaseshift.metatron.lang.db.kv.inst.kvInstSet;
 import studio.phaseshift.metatron.lang.db.kv.kvSpace;
 import studio.phaseshift.metatron.lang.db.vec.vecInstSet;
 import studio.phaseshift.metatron.lang.sys.router.Router;
+import studio.phaseshift.metatron.lang.util.LogObj;
 import studio.phaseshift.metatron.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.ui.graphitty.GraphittyLogger;
 
@@ -47,12 +49,18 @@ public class MetatronTest {
 
     @BeforeAll
     public static void begin() {
-        BootLoader.load(rec(uri("mode"), uri("testing")));
+        BootLoader.load(rec(uri("log"), uri(LogObj.getSLF4J().toString().toLowerCase())));
         kvInstSet.create().vid(f("/sys/lang/kv"));
-        mInstSet.create().vid(f("/sys/lang/m"));
-        machInstSet.create().vid(f("/sys/lang/mach"));
+        //mInstSet.create().vid(f("/sys/lang/m"));
+        //machInstSet.create().vid(f("/sys/lang/mach"));
         vecInstSet.create().vid(f("/sys/lang/vec"));
         kvSpace.of(f("/usr/#"), fURI.fnull).vid(f("/sys/space/usr"));
+    }
+
+    @AfterAll
+    public static void end() {
+        System.out.println("shutting down test");
+        BootLoader.close();
     }
 
     public void testMatches(final String lhs, final String rhs, final boolean matches) {

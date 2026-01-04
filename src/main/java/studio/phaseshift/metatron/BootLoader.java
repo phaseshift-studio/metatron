@@ -146,14 +146,19 @@ public class BootLoader implements Rec, Feature.SelfClone {
             LogObj.setSLF4J(args.has(uri("log")) ? args.at(uri("log")).uriValue().toString() : "info");
             LOG.info("%s", Graphitty.sillyPrint("booting metatron", true, true));
             Runtime.getRuntime().addShutdownHook(new Thread(BootLoader::close));
+            LOG.info("accessible instruction sets: %s", Registry.open().registrants());
             fURI remoteAuthority = null;
             /// /// START OF BOOTING PROCESS /// /// allow boot description to be read from a mtron file
+            String hostname = null;
             try {
-                remoteAuthority = args.at(Tokens.HOST).orElse(uri(WS + "://" + InetAddress.getLocalHost().getHostName() + ".local" + ":" + 8887)).uriValue();
+                hostname = InetAddress.getLocalHost().getHostName();
             } catch (final Exception e) {
-                LOG.warn("booting metatron on a non-networked jvm");
+                hostname = System.getenv(Tokens.HOSTNAME);
             }
-            LOG.info("accessible instruction sets: %s", Registry.open().registrants());
+            if (null == hostname)
+                LOG.warn("booting metatron on a non-networked jvm");
+            else
+                remoteAuthority = args.at(Tokens.HOST).orElse(uri(WS + "://" + hostname + ".local" + ":" + 8887)).uriValue();
             ROUTER = new MRouter(remoteAuthority, SYS_OBJ_TID.extend("router"));
             kvSpace.of(f("/sys/#"), null);
             new sysInstSet(SYS_TID.extend("mod/sys"));
@@ -190,13 +195,18 @@ public class BootLoader implements Rec, Feature.SelfClone {
     }
 
     public static void close() {
-        BOOTING = true;
-        LOG.none("\n");
-        Router.global().close();
-        ROUTER = null;
-        ARGS = null;
-        System.gc();
-        LOG.info("%s {{g}}successfully{{/g}} shutdown", Graphitty.sillyPrint("metatron", true, true));
+        try {
+            BOOTING = true;
+            LOG.none("\n");
+            if (Router.loaded())
+                Router.global().close();
+            ROUTER = null;
+            ARGS = null;
+            System.gc();
+            LOG.info("%s {{g}}successfully{{/g}} shutdown", Graphitty.sillyPrint("metatron", true, true));
+        } catch (final Exception e) {
+            LOG.error("%s {{r}}unsuccessfully{{/r}} shutdown:\n\t", Graphitty.sillyPrint("metatron", true, true), e);
+        }
     }
 
     @Override

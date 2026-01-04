@@ -36,7 +36,7 @@ public class cInt implements C<Long, cInt> {
 
     public static final cInt C_ZERO = cInt.of(0L);
     public static final cInt C_ONE = cInt.of(1L);
-    
+    public static final cInt C_SOME = cInt.of(1L, null);
     public static cInt ZERO() {
         return C_ZERO;
     }

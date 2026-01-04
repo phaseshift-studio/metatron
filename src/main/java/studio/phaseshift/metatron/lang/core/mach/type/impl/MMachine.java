@@ -36,6 +36,7 @@ import studio.phaseshift.metatron.util.Tuple;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.function.Consumer;
 
 import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.CODE_TID;
 import static studio.phaseshift.metatron.lang.core.m.obj.NoObj.noobj;
@@ -50,6 +51,7 @@ import static studio.phaseshift.metatron.util.Tuple.Quartet;
 public class MMachine extends MObj implements Machine {
 
     private final GraphittyLogger LOG = Graphitty.log(this);
+    private Consumer<Obj> onHalt = null;
 
     // code / running / barriers / halted
     public MMachine(final Quartet<Code, Obj, Lst, Obj> value, final fURI tid, final fURI vid) {
@@ -57,7 +59,16 @@ public class MMachine extends MObj implements Machine {
     }
 
     public static Machine of(final Call code) {
-        return new MMachine(Quartet.with(code.isInst() ? new MCode(List.of(code.as()), CODE_TID, fURI.fnull) : code.as(), RunningMonads.of(), lst(new LinkedList<>()), MObjs.empty()), MACH_INSTSET_TID, fURI.fnull);
+        return new MMachine(Quartet.with(code.isInst() ? new MCode(List.of(code.as()), CODE_TID, fURI.fnull) : code.as(), ListMonad.of(), lst(new LinkedList<>()), MObjs.empty()), MACH_INSTSET_TID, fURI.fnull);
+    }
+
+    public Machine onHalt(final Consumer<Obj> onHalt) {
+        this.onHalt = onHalt;
+        return this;
+    }
+
+    public Consumer<Obj> onHalt() {
+        return this.onHalt;
     }
 
 
@@ -129,7 +140,8 @@ public class MMachine extends MObj implements Machine {
                         } else if (!n.dead()) {
                             if (n.halted()) {
                                 LOG.trace("{{y}}====>{{/y}} halting monad %s", n);
-                                n.obj().iterator().forEachRemaining(o -> this.halted().append(o));
+                               // n.obj().iterator().forEachRemaining(this::processHalted);
+                                n.obj().iterator().forEachRemaining(no -> this.halted().append(no));
                             } else {
                                 LOG.trace("{{g}}====>{{/g}} propagating monad %s", n);
                                 n.obj().iterator().forEachRemaining(no -> this.running().append(n.obj(no)));

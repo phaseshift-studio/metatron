@@ -44,6 +44,7 @@ import static studio.phaseshift.metatron.ui.widget.Selector.Operation.*;
 public class Selector implements Widget, Stylable<Selector> {
 
     protected enum Operation {
+        QUIT,
         DOWN_ROW,
         UP_ROW,
         RIGHT_COL,
@@ -105,6 +106,7 @@ public class Selector implements Widget, Stylable<Selector> {
             int selectRow = style.lowRowRange;
             int selectCol = 0;
             KeyMap<Operation> keyMap = new KeyMap<>();
+            keyMap.bind(QUIT, key(terminal, InfoCmp.Capability.tab));
             keyMap.bind(DOWN_ROW, key(terminal, InfoCmp.Capability.key_down));
             keyMap.bind(UP_ROW, key(terminal, InfoCmp.Capability.key_up));
             keyMap.bind(RIGHT_COL, key(terminal, InfoCmp.Capability.key_right));
@@ -123,7 +125,6 @@ public class Selector implements Widget, Stylable<Selector> {
                 /// ////////////////////////////////////////////////////////////////////////////////////////////////
                 display.updateAnsi(currentStateDisplay, size.cursorPos(0, 0));
                 Operation op = bindingReader.readBinding(keyMap);
-                Graphitty.log(this).none("{{.}}"); // hide cursor
                 switch (op) {
                     case RIGHT_COL:
                         selectCol++;
@@ -146,7 +147,10 @@ public class Selector implements Widget, Stylable<Selector> {
                             selectRow = this.style.highRowRange - 1;
                         break;
                     case SELECTED:
+                        //Graphitty.log(this).none("{{v%s}}",4);
                         this.onSelect.accept(selectRow);
+                        return;
+                    case QUIT:
                         return;
                 }
                 //this.onBrowse.accept(selectRow);

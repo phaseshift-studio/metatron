@@ -51,9 +51,7 @@ public class CodeTable implements Widget, Stylable<CodeTable> {
     }
     
     public void run() {
-        this.cursor(false);
-        this.selector.run();
-        this.cursor(true);
+       Widget.cursorOffOn(this.selector::run);
     }
 
     public String toString() {

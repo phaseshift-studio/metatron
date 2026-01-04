@@ -231,7 +231,7 @@ public interface Inst extends Call {
         final GraphittyLogger LOG = Graphitty.log(lhs);
         LOG.trace("%s => %s is %s resolved", lhs, this, Common.lambda(() -> this.isResolved(false) ? "" : "not"));
         try {
-            final Inst resolved = Router.global().read(this.tid())
+            final Inst resolved = Router.global().read(this.tid().basePath())
                     .stream()
                     .map(Obj::<Inst>as)
                     .filter(i -> (i.args().isEmpty() && this.arg(0).isNoObj()) || i.args().isRec() || i.args().count() >= this.args().count())

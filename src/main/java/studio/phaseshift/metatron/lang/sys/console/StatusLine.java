@@ -24,6 +24,7 @@ import org.jline.utils.Status;
 import org.slf4j.event.Level;
 import studio.phaseshift.metatron.lang.sys.router.Router;
 import studio.phaseshift.metatron.ui.graphitty.Graphitty;
+import studio.phaseshift.metatron.util.Common;
 import studio.phaseshift.metatron.util.Threadable;
 
 import java.util.List;
@@ -37,6 +38,7 @@ public class StatusLine implements Threadable, Runnable {
 
     private AttributedString line;
     private Level state = INFO;
+    private long startTime = 0;
     private long lastExecutionTime = 0;
     private final Status status;
     private final Thread thread;
@@ -46,6 +48,24 @@ public class StatusLine implements Threadable, Runnable {
         this.line = new AttributedStringBuilder().append(line).toAttributedString();
         this.status = Status.getStatus(console.getTerminal());
         this.thread = new Thread(this);
+    }
+
+    public void startTimer() {
+        this.startTime = System.currentTimeMillis();
+    }
+
+    public void stopTimer() {
+        this.lastExecutionTime = System.currentTimeMillis() - this.startTime;
+        this.startTime = 0;
+    }
+
+    private long runningTime() {
+        if (0 == this.startTime) {
+            return this.lastExecutionTime;
+        } else {
+            final long time = System.currentTimeMillis() - this.startTime;
+            return time;
+        }
     }
 
     public void setLastExecutionTime(final long lastExecutionTime) {
@@ -80,7 +100,7 @@ public class StatusLine implements Threadable, Runnable {
                         .ansiAppend(Graphitty.string("{{g}}|{{w}}nodes:{{y}}%d{{[" + color + "]&w}}", Router.global().server().nodes().size()))
                         .ansiAppend(Graphitty.string("{{g}}|{{w}}in:{{y}}%d{{[" + color + "]&w}}", Router.global().server().stats().getBytesRecv()))
                         .ansiAppend(Graphitty.string("{{g}}|{{w}}out:{{y}}%d{{[" + color + "]&w}}", Router.global().server().stats().getBytesSent()))
-                        .ansiAppend(Graphitty.string("{{g}}|{{w}}execution time (ms):{{y}}%d{{[" + color + "]&w}}", this.lastExecutionTime))
+                        .ansiAppend(Graphitty.string("{{g}}|{{w}}running time (ms):{{y}}%,d{{[" + color + "]&w}}", this.runningTime()))
                         .append(Graphitty.string("{{g}}|{{[" + color + "]}}%s.", " ".repeat(200)))
                         .toAttributedString();
                 if (!this.line.equals(temp)) {
@@ -88,6 +108,7 @@ public class StatusLine implements Threadable, Runnable {
                     this.status.update(List.of(this.line));
                 }
             }
+            Common.sleepThread(250);
         }
         this.status.close();
     }

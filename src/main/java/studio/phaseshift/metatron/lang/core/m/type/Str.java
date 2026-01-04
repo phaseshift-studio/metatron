@@ -20,7 +20,6 @@ package studio.phaseshift.metatron.lang.core.m.type;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.core.m.type.impl.MStr;
-import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.*;
 import java.util.regex.MatchResult;
@@ -82,7 +81,9 @@ public interface Str extends Mono {
                     instC(LTE_INST_TID.dom(STR_TID).rng(BOOL_TID), lst(T(STR_TID)), (lhs, inst) -> bool(lhs.intValue().compareTo(inst.arg(0).intValue()) <= 0)),
                     instC(PLUS_INST_TID.dom(STR_TID).rng(STR_TID), lst(T(STR_TID)), (lhs, inst) -> lhs.jvm(lhs.strValue() + inst.arg(0).strValue())),
                     instC(STR_UPPER_TID.dom(ALL).rng(STR_TID), lst(T(STR_TID)), (lhs, inst) -> lhs.jvm(lhs.strValue().toUpperCase())),
-                    instC(STR_LOWER_TID.dom(ALL).rng(STR_TID), lst(T(STR_TID)), (lhs, inst) -> lhs.jvm(lhs.strValue().toLowerCase()))
+                    instC(STR_LOWER_TID.dom(ALL).rng(STR_TID), lst(T(STR_TID)), (lhs, inst) -> lhs.jvm(lhs.strValue().toLowerCase())),
+                    docWrap(instC(HAS_INST_TID.dom(STR_TID).rng(BOOL_TID), lst(T(STR_TID)), (lhs, inst) -> bool(REGEX_CACHE.compute(inst.arg(0).strValue(), (k, v) -> null == v ? Pattern.compile(k) : v).matcher(lhs.strValue()).find())),
+                            "an str to check", "whether the domain matches arg", Map.of(jnt(0), "the regex for matching"), "check whether the lhs str matches the regex arg")
             ));
         }
     }

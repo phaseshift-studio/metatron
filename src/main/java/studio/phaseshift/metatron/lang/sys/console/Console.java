@@ -228,19 +228,23 @@ public class Console extends JRec implements Threadable, Runnable {
                 } else if (line.startsWith(":state")) {
                     this.status.setState(Level.valueOf(line.substring(6).trim().toUpperCase()));
                 } else {
-                    long startTime = System.currentTimeMillis();
+                    this.status.startTimer();
                     result = mParser.parse(line);
                     if (null != result) {
                         (result.isNoObj() ?
                                 MObjs.empty() :
-                                result.isObjCall() ? MMachine.of(result.as()).apply() : result).stream()
+                                result.isObjCall() ? MMachine.of(result.as()).onHalt(o -> {
+                                    this.write("{{-X-}}{{m}}=={{g}}>{{X}}");
+                                    this.write(o);
+                                    this.write("\n");
+                                }).apply() : result).stream()
                                 .forEach(o -> {
                                     this.write("{{-X-}}{{m}}=={{g}}>{{X}}");
                                     this.write(o);
                                     this.write("\n");
                                 });
                     }
-                    this.status.setLastExecutionTime(System.currentTimeMillis() - startTime);
+                    this.status.stopTimer();
                 }
                 
                 /*if (null != result && !result.isNoObj()) {

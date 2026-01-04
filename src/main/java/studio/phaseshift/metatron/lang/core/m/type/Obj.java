@@ -744,7 +744,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
                     }),
                     instC(SOURCE_INST_TID.dom(ALL).rng(ALL.maybeSome()), lst(T(STR_TID)), (lhs, inst) -> mParser.parseByLine(inst.arg(0).strValue())),
                     instC(TYPE_INST_TID.dom(A).rng(A), lst(), (lhs, inst) -> lhs.type()),
-                    instC(TYPE_INST_TID.dom(A.some()).rng(A.some()), lst(), (lhs, inst) -> objs(lhs).type()),
+                    //instC(TYPE_INST_TID.dom(A.some()).rng(A.some()), lst(), (lhs, inst) -> objs(lhs).type()),
                     docWrap(instC(CC_INST_TID.dom(A.maybeSome()).rng(INT_TID), lst(), (lhs, inst) -> jnt(lhs.c().max())),
                             "any obj", "the lhs obj coefficient", Map.of(), "maps an obj to it's coefficient with a function f(lhs^c)->c"),
                     docWrap(instC(CC_INST_TID.dom(A.maybeSome()).rng(A.maybeSome()), lst(T(INT_TID)), (lhs, inst) -> lhs.c(inst.arg(0).intValue())),
@@ -806,9 +806,8 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
                         });
                         return rec(result);
                     }),
-                    instC(RSHIFT_INST_TID.dom(ALL).rng(ALL.maybe()), lst(isa_(T(INT_TID)).else_(jnt(1))), (lhs, inst) -> objs(lhs.stream().filter(o -> o.isUri() || o.isLst() || o.isRec()).map(o -> rshift_(jnt(0)).apply(o))),
-                            instC(LSHIFT_INST_TID.dom(ALL).rng(ALL.maybe()), lst(isa_(T(INT_TID)).else_(jnt(1))), (lhs, inst) -> objs(lhs.stream().filter(o -> o.isUri() || o.isLst() || o.isRec()).map(o -> lshift_(jnt(0)).apply(o)))))
-            ));
+                    instC(RSHIFT_INST_TID.dom(ALL).rng(ALL.maybe()), lst(isa_(T(INT_TID)).else_(jnt(1))), (lhs, inst) -> objs(lhs.stream().filter(o -> o.isUri() || o.isLst() || o.isRec()).map(o -> rshift_(jnt(0)).apply(o)))),
+                    instC(LSHIFT_INST_TID.dom(ALL).rng(ALL.maybe()), lst(isa_(T(INT_TID)).else_(jnt(1))), (lhs, inst) -> objs(lhs.stream().filter(o -> o.isUri() || o.isLst() || o.isRec()).map(o -> lshift_(jnt(0)).apply(o))))));
         }
     }
 }
