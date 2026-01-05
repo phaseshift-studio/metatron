@@ -21,8 +21,6 @@ package studio.phaseshift.metatron.lang.jre;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.core.m.type.Obj;
 import studio.phaseshift.metatron.lang.core.m.type.Rec;
-import studio.phaseshift.metatron.lang.core.m.type.Str;
-import studio.phaseshift.metatron.lang.core.m.type.Uri;
 import studio.phaseshift.metatron.lang.core.m.type.impl.MObj;
 import studio.phaseshift.metatron.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.ui.graphitty.GraphittyLogger;
@@ -30,10 +28,13 @@ import studio.phaseshift.metatron.util.MTronException;
 
 import java.lang.reflect.Field;
 import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MObjs.objs;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -41,9 +42,11 @@ import static studio.phaseshift.metatron.lang.core.m.type.impl.MObjs.objs;
 public class JRec extends MObj implements Rec {
 
     protected final GraphittyLogger LOG = Graphitty.log(this);
+    protected final Map<Obj, Obj> sjvm;
 
-    public JRec(final Object jvm, final fURI tid, final fURI vid) {
+    public JRec(final Object jvm, final Map<Obj, Obj> sjvm, final fURI tid, final fURI vid) {
         super(jvm, tid, vid);
+        this.sjvm = new LinkedHashMap<>(sjvm);
     }
 
 
@@ -54,12 +57,17 @@ public class JRec extends MObj implements Rec {
 
     @Override
     public <O extends Obj> O at(final Obj key) {
-        return (O) objs(this.findField(key).stream().map(f -> JObjFactory.single().create(f, MTronException.wrap(() -> f.get(this.jvm)), null)));
+        return (O) objs(this.findField(key).stream().map(f -> {
+            final O temp = (O) JObjFactory.single().create(f, MTronException.wrap(() -> f.get(this.jvm)), null);
+            this.sjvm.put(key, temp);
+            return temp;
+        }));
     }
 
     @Override
     public JRec put(final Obj key, final Obj value) {
         try {
+            this.sjvm.put(key, value);
             this.findField(key).forEach(f -> MTronException.wrap(() -> f.set(this.jvm, value.jvm())));
             return this;
         } catch (final Exception e) {
@@ -69,7 +77,11 @@ public class JRec extends MObj implements Rec {
 
     @Override
     public Map<Obj, Obj> jvm() {
-        return Map.of();
+        final Map<Obj, Obj> base = null == this.sjvm ? new LinkedHashMap<>() : this.sjvm;
+        //return this.cache;
+        final Map<Obj, Obj> temp = new LinkedHashMap<>(this.findField(uri("#")).stream().collect(Collectors.toMap(f -> uri(f.getName()), f -> JObjFactory.single().create(MTronException.wrap(() -> f.get(this.jvm))))));
+        temp.putAll(base);
+        return temp;
     }
 
     @Override
@@ -82,10 +94,10 @@ public class JRec extends MObj implements Rec {
         if (null == javaName)
             return List.of();
         boolean allWildcard = javaName.endsWith("#");
-        if (allWildcard)
-            javaName = javaName.substring(0, javaName.length() - 2);
+        //if (allWildcard)
+        //    javaName = javaName.substring(0, javaName.length() - 2);
         //javaName = javaName.replace('.', '/');
         final String finalJavaName = javaName;
-        return Arrays.stream(this.getClass().getFields()).filter(f -> allWildcard ? f.getName().startsWith(finalJavaName) : f.getName().equals(finalJavaName)).toList();
+        return Arrays.stream(this.getClass().getFields()).filter(f -> f.getAnnotation(ObjField.class) != null).filter(f -> allWildcard || f.getName().equals(finalJavaName)).toList();
     }
 }

@@ -74,7 +74,7 @@ gc.collect()
 wlan = Wifi.connect(secrets['ssid'], secrets['password'], secrets['host'])
 soc = None
 
-from metatron.mserver import MServer
+# from metatron.mserver import MServer
 
 def make_read_lambda(index):
     return lambda s: s.pwm[index]
@@ -123,7 +123,7 @@ def main_thread_function():
          device_class("power_factor").
          unit_of_measurement('pwm').
          mode("slider").
-         min_max(0, 1023).create())
+         min_max(0, 255).create())
         counter = counter + 1
     ha.announce()
     ha.update()
@@ -142,5 +142,5 @@ if "stack_kb" in secrets.keys():
     _thread.stack_size(secrets["stack_kb"] * 1024)
 _thread.start_new_thread(main_thread_function, ())
 
-server = MServer()
-server.start()
+#server = MServer()
+#Sserver.start()

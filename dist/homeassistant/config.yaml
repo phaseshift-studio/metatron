@@ -3,13 +3,10 @@ description: "distributed object mesh"
 version: "0.1-SNAPSHOT"
 url: http://metatron.phaseshift.studio
 slug: metatron
-web_ui: http://localhost:8777/
+web_ui: http://0.0.0.0:8777/
 panel_icon: mdi:network
 stdin: true
 startup: system
-ingress: true
-ingress_entry: dashboard/
-hassio_role: default
 hassio_api: true
 init: false
 show_in_sidebar: true
@@ -25,9 +22,14 @@ arch:
   - armv7
   - i386
 options:
+  host: ws://0.0.0.0:8999
+  cluster: []
   log_level: info
   args: "[host=><ws://127.0.0.1:8999>,cluster=>{,},boot=><examples/docker.mtron>,log=info]" 
 schema:
+  host: url
+  cluster:
+    - type: url
   log_level: list(trace|debug|info|warn|error)
   args: str
 

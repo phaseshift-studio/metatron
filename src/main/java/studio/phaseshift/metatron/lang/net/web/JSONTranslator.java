@@ -223,7 +223,7 @@ public record JSONTranslator(ObjSerializer<String> serializer) implements Transl
             reader.setStrictness(Strictness.LENIENT);
             return this.translate(JsonParser.parseReader(reader));
         } catch (final Exception e) {
-            throw MTronException.of(e);
+            throw MTronException.of("unable to parse: %s (%s)", json, e);
         }
     }
 }

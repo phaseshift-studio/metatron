@@ -23,6 +23,7 @@ import studio.phaseshift.metatron.lang.core.m.obj.NoObj;
 import studio.phaseshift.metatron.lang.core.m.type.*;
 import studio.phaseshift.metatron.lang.core.mach.type.Machine;
 import studio.phaseshift.metatron.lang.core.mach.type.Monad;
+import studio.phaseshift.metatron.lang.sys.router.impl.FutureObj;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.nio.ByteBuffer;
@@ -60,6 +61,7 @@ public interface ObjSerializer<T> {
             case Type objs -> this.writeType(obj.as());
             case Monad objs -> this.writeMonad(obj.as());
             case Machine objs -> this.writeMachine(obj.as());
+            case FutureObj<?> objs -> this.write(objs.get(5000));
             default -> throw MTronException.of("unknown obj class: %s", obj.getClass());
         };
     }

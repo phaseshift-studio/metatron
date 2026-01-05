@@ -41,7 +41,6 @@ import studio.phaseshift.metatron.lang.core.m.type.impl.MObjs;
 import studio.phaseshift.metatron.lang.core.mach.type.impl.MMachine;
 import studio.phaseshift.metatron.lang.jre.JRec;
 import studio.phaseshift.metatron.lang.jre.ObjField;
-import studio.phaseshift.metatron.lang.sys.fs.fileSpace;
 import studio.phaseshift.metatron.lang.sys.router.Router;
 import studio.phaseshift.metatron.lang.util.LogObj;
 import studio.phaseshift.metatron.ui.Border;
@@ -62,16 +61,15 @@ import java.util.function.Supplier;
 
 import static org.jline.keymap.KeyMap.*;
 import static studio.phaseshift.metatron.BootLoader.BOOTING;
-import static studio.phaseshift.metatron.furi.fURI.*;
+import static studio.phaseshift.metatron.furi.fURI.ALL;
+import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.lang.core.m.inst.mFluent.StartLess.isa_;
 import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.INST_TID;
 import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.REC_TID;
-import static studio.phaseshift.metatron.lang.core.m.obj.NoObj.noobj;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MType.T;
-import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.lang.sys.fs.fsInstSet.FILE_TID_STRING;
 import static studio.phaseshift.metatron.lang.sys.sysInstSet.SYS_TYPE_TID;
 
@@ -110,7 +108,8 @@ public class Console extends JRec implements Threadable, Runnable {
     }));
 
     public Console(final Rec options) {
-        super(options.jvm(), CONSOLE_TID, f("/sys/obj/console"));
+        super(null, options.jvm(), CONSOLE_TID, f("/sys/obj/console"));
+        this.jvm = this;
         try {
             final DefaultParser parser = new DefaultParser()
                     .quoteChars(new char[]{'\'', '"'})
@@ -137,18 +136,11 @@ public class Console extends JRec implements Threadable, Runnable {
                     .option(LineReader.Option.DISABLE_EVENT_EXPANSION, true)
                     .variable(LineReader.SECONDARY_PROMPT_PATTERN, Graphitty.string("{{-X&v1&^1&m}}     {{g}}| {{X}}"))
                     .variable(LineReader.INDENTATION, 0)
-                  //  .completer(new MCompleter(this))
+                    //  .completer(new MCompleter(this))
                     .build();
             new CustomWidgets(this.reader);
             this.status = new StatusLine(this, "{{b}}loading...{{X}}");
             this.thread = new Thread(this);
-            /// ///////////////////////////////////////////////////////
-            this.put(uri("history"), fileSpace.makeFile(Path.of(HISTORY_FILE.toString())), MUTABLE);
-            this.put(uri("header"), fileSpace.makeFile(Path.of(HEADER_FILE)), MUTABLE);
-            this.put(uri("output"), instC(INST_TID.dom(ALL).rng(NOOBJ), lst(T(ALL)), (lhs, inst) -> {
-                this.reader.printAbove(Highlighter.format(inst.arg(0)));
-                return noobj();
-            }));
         } catch (final Exception e) {
             throw MTronException.of(e);
         }
@@ -172,6 +164,10 @@ public class Console extends JRec implements Threadable, Runnable {
 
     public void write(final Object object) {
         terminal.writer().write(Highlighter.format(object));
+    }
+
+    public void writeAbove(final Object object) {
+        reader.printAbove(Highlighter.format(object));
     }
 
     public static Terminal getTerminal() {
@@ -389,7 +385,7 @@ public class Console extends JRec implements Threadable, Runnable {
             }, key(Console.terminal, InfoCmp.Capability.key_f1));
             getKeyMap().bind((Widget) () -> {
                 try {
-                   LOG.info("f2 pushed");
+                    LOG.info("f2 pushed");
                 } catch (final Exception e) {
                     // do nothing 
                 }

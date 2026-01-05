@@ -133,6 +133,8 @@ public class BootLoader implements Rec, Feature.SelfClone {
                     "metatron '[boot=><examples/boot.mtron>,mode=>console,log=>info,host=><ws://localhost:8888>,cluster=>[<ws://127.0.0.1:8887>]]'");
             System.exit(0);
         } else {
+            if (args.length > 0)
+                LOG.none("unparsed boot args: %s", args[0]);
             ARGS = args.length > 0 ? mParser.parse(args[0]).as() : rec();
             BootLoader.load(ARGS);
         }
