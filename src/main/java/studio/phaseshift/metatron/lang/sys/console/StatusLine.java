@@ -25,6 +25,7 @@ import org.slf4j.event.Level;
 import studio.phaseshift.metatron.lang.sys.router.Router;
 import studio.phaseshift.metatron.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.util.Common;
+import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Threadable;
 
 import java.util.List;
@@ -108,7 +109,11 @@ public class StatusLine implements Threadable, Runnable {
                     this.status.update(List.of(this.line));
                 }
             }
-            Common.sleepThread(250);
+            try {
+                Common.sleepThread(250);
+            } catch (final MTronException e) {
+                // do nothing
+            }
         }
         this.status.close();
     }

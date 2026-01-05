@@ -25,6 +25,7 @@ import studio.phaseshift.metatron.lang.Space;
 import studio.phaseshift.metatron.lang.core.m.type.Obj;
 import studio.phaseshift.metatron.lang.core.m.type.Rec;
 import studio.phaseshift.metatron.lang.core.mach.stackSpace;
+import studio.phaseshift.metatron.lang.jre.ObjField;
 import studio.phaseshift.metatron.lang.sys.router.impl.MServer;
 import studio.phaseshift.metatron.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.util.MTronException;
@@ -70,7 +71,7 @@ public interface Router extends Obj, Space, Closeable {
     static stackSpace stack() {
         return THREAD_STACK.get();
     }
-
+    
     default Rec spaces() {
         return this.jvm().get(uri(Tokens.SPACE)).as();
     }
@@ -129,11 +130,12 @@ public interface Router extends Obj, Space, Closeable {
     void registerRewrite(final fURI small, final fURI big);
 
     fURI rewrite(final fURI furi, final boolean big);
-
+    
     <S extends Space> S getSpace(final fURI vid);
 
     @Override
     default void close() {
+        this.server().close();
         this.spaces().elements().forEach(s -> {
             try {
                 this.removeSpace(s.second().vid());
@@ -141,7 +143,7 @@ public interface Router extends Obj, Space, Closeable {
                 // do nothing? System.out.println(Graphitty.string("[{{y}}WARN {{/T}}] %s", e.getMessage()));
             }
         });
-        this.server().close();
+       
     }
 
     class Helper {

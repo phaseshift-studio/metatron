@@ -81,7 +81,7 @@ public class remoteSpace extends MSpace<MConnection> {
 
     @Override
     public Obj read(final fURI vid) {
-        final Inst code = from_(vid.authority(null).scheme(null).toUri()).insts().get(0);//, vid.query("tag","abc"));
+        final Inst code = from_(vid.authority(null).scheme(null).toUri()).insts().getFirst();//, vid.query("tag","abc"));
         LOG.info("performing remote read: %s", code);
         final FutureObj<Obj> future = this.sjvm().sendRecvObj(code);
         return future;

@@ -32,6 +32,7 @@ import studio.phaseshift.metatron.lang.db.kv.kvSpace;
 import studio.phaseshift.metatron.lang.db.tabl.tablInstSet;
 import studio.phaseshift.metatron.lang.db.vec.vecInstSet;
 import studio.phaseshift.metatron.lang.net.clstr.clstrInstSet;
+import studio.phaseshift.metatron.lang.net.clstr.clusterSpace;
 import studio.phaseshift.metatron.lang.net.iot.iotInstSet;
 import studio.phaseshift.metatron.lang.net.web.webInstSet;
 import studio.phaseshift.metatron.lang.sys.fs.fileSpace;
@@ -126,15 +127,15 @@ public class BootLoader implements Rec, Feature.SelfClone {
                     T(REC_TID),
                     rec(uri("k1"), uri("v1"), uri("..."), uri("..."), uri("kn"), uri("vn")),
                     rel(uri("log"), objs(uri("info"), uri("debug"), uri("warn"), uri("error"), uri("trace"))),
-                    rel(uri("host"), uri("ws://localhost:8888")),
+                    rel(uri("host"), uri("ws://0.0.0.0:8888")),
                     rel(uri("cluster"), lst(uri("ws://a.local:8888"), uri("ws://b.local:8888"), uri("..."))),
                     rel(uri("mode"), objs(uri("server"), uri("console"))),
                     rel(uri("boot"), uri("./boot.mtron")),
-                    "metatron '[boot=><examples/boot.mtron>,mode=>console,log=>info,host=><ws://localhost:8888>,cluster=>[<ws://127.0.0.1:8887>]]'");
+                    "metatron '[boot=><examples/boot.mtron>,mode=>console,log=>info,host=><ws://0.0.0.0:8888>,cluster=>[<ws://localhost:8888>]]'");
             System.exit(0);
         } else {
             if (args.length > 0)
-                LOG.none("unparsed boot args: %s", args[0]);
+                LOG.info("unparsed boot args: %s", args[0]);
             ARGS = args.length > 0 ? mParser.parse(args[0]).as() : rec();
             BootLoader.load(ARGS);
         }
@@ -142,7 +143,7 @@ public class BootLoader implements Rec, Feature.SelfClone {
 
     public static void load(final Rec args) {
         if (BOOTING) {
-            LOG.debug("user-provided args: %s", args);
+            LOG.debug("parsed boot args: %s", args);
             if (args.has(BOOT))
                 args.put(uri(BOOT), f(Paths.get("").toAbsolutePath().normalize().toString()).extend(args.at(BOOT).uriValue()).toUri(), MUTABLE);
             LogObj.setSLF4J(args.has(uri("log")) ? args.at(uri("log")).uriValue().toString() : "info");
@@ -168,6 +169,7 @@ public class BootLoader implements Rec, Feature.SelfClone {
             Router.writeToSpace(Router.global());
             Router.writeToSpace(new fsInstSet(f("/sys/mod/fs")));
             Router.writeToSpace(f("boot/args"), args);
+ 
             ROUTER.start();
             ///////////////////////////////////////////////////////////////
             if (args.has(uri(Tokens.BOOT))) {

@@ -26,6 +26,7 @@ import studio.phaseshift.metatron.util.MTronException;
 
 import java.time.Duration;
 import java.util.Iterator;
+import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -45,10 +46,10 @@ public class FutureObj<T extends Obj> extends MObj implements Future<T> {
     public static final int DEFAULT_TIMEOUT_MS = 2000;
     public static final fURI FUTURE_TID = MTRON_TID.extend("future");
 
-    private final String tag;
+    private final UUID tag;
     private boolean isCanceled;
 
-    public FutureObj(final String tag) {
+    public FutureObj(final UUID tag) {
         super();
         this.jvm = new AtomicReference<T>();
         this.tid = FUTURE_TID;
@@ -57,7 +58,7 @@ public class FutureObj<T extends Obj> extends MObj implements Future<T> {
         this.isCanceled = false;
     }
 
-    public String tag() {
+    public UUID tag() {
         return this.tag;
     }
 
@@ -154,7 +155,26 @@ public class FutureObj<T extends Obj> extends MObj implements Future<T> {
         }
     }
 
+    @Override
+    public Obj resolve(final Obj lhs) {
+        return this.get(3000).resolve(lhs);
+    }
+
+    @Override
+    public Obj apply(final Obj lhs) {
+        return this.get(3000).apply(lhs);
+    }
+
+
     public Obj tryBaseObj() {
         return this.isDone() ? ((AtomicReference<T>) this.jvm).get() : this;
+    }
+
+    public static <O extends Obj> O resolveFuture(final Obj future) {
+        try {
+            return future instanceof FutureObj ? ((FutureObj<O>) future).get(3000) : (O) future;
+        } catch (final Exception e) {
+            throw MTronException.of(e);
+        }
     }
 }

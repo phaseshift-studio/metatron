@@ -27,4 +27,5 @@ import java.lang.annotation.RetentionPolicy;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface ObjField {
     String tid() default "noobj";
+    String typecast() default "";
 }

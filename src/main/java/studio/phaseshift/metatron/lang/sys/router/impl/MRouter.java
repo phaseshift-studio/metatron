@@ -93,11 +93,10 @@ public class MRouter extends MSpace<MServer> implements Router {
     }
 
     public synchronized void close() {
+        this.server().close();
         final List<fURI> list = this.spaces().elements().map(Rel::second).map(Obj::vid).toList();
         list.forEach(this::removeSpace);
         this.spaces().jvm().clear();
-        this.server().close();
-
     }
 
     public void registerRewrite(final fURI small, final fURI big) {

@@ -40,6 +40,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.function.Consumer;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -175,8 +176,9 @@ public class mParser {
     }
 
     public static Parser m_inst_arg(final fURI headtid) {
-        return m_inst_arg(obj_no_code_parser,headtid);
+        return m_inst_arg(obj_no_code_parser, headtid);
     }
+
     public static Parser m_inst_arg(final Parser objParser, final fURI headtid) {
         return seq(opt(objParser, noobj()), opt(of(".").trim(), '.'), opt(m_code(), null), m_vid_postfix()).map(t -> {
             final Obj first = mParser.pick(t, 0);
@@ -472,16 +474,28 @@ public class mParser {
                         .map(t -> MInst.instB(tid.query(pick(t, 1)), lst(mParser.<Obj>pick(t, 2)))));
     }
 
+
+    public static final Pattern BLOCK_COMMENT_PATTERN = Pattern.compile("(\\[==).*?(==])", Pattern.DOTALL);
+    public static final Pattern LINE_COMMENT_PATTERN = Pattern.compile("(\\[--).*");
+
+    public static String removeBlockComments(final String source) {
+        return BLOCK_COMMENT_PATTERN.matcher(source).replaceAll("");
+    }
+
+    public static String removeLineComments(final String line) {
+        return LINE_COMMENT_PATTERN.matcher(line).replaceAll("");
+    }
+
     public static Stream<Obj> eval(final File file, final Consumer<Exception> exhandler) throws IOException {
         try (final FileReader read = new FileReader(file)) {
             try (final BufferedReader reader = new BufferedReader(read)) {
                 final List<String> lines = reader.lines().toList();
-                final String source = lines.stream().reduce("", (a, b) -> a + b + "\n");
+                final String source = removeBlockComments(lines.stream().reduce("", (a, b) -> a + b + "\n"));
                 return Arrays.stream(source.split(";"))
+                        .map(mParser::removeLineComments)
                         .filter(s -> !s.trim().isEmpty())
                         .map(s -> Arrays.stream(s.split("\n"))
                                 .map(String::trim)
-                                .filter(t -> !t.startsWith("---"))
                                 .reduce("", (a, b) -> a + b + "\n"))
                         .map(s -> {
                             try {

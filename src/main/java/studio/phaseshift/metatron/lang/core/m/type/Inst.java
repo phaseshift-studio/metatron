@@ -23,6 +23,7 @@ import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.core.m.parser.mParser;
 import studio.phaseshift.metatron.lang.sys.router.Router;
+import studio.phaseshift.metatron.lang.sys.router.impl.FutureObj;
 import studio.phaseshift.metatron.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.util.Common;
@@ -101,8 +102,12 @@ public interface Inst extends Call {
             LOG.trace("resolving lst args of %s", apiInst);
             final List<Obj> resolvedArgs = new ArrayList<>();
             for (int i = 0; i < apiInst.args().count(); i++) {
-                final Obj usrArg = userInst.arg(i);
-                final Obj apiArg = apiInst.arg(i);
+                if (userInst.arg(i) instanceof FutureObj)
+                    System.out.println(userInst.arg(i) + " is a future");
+                if (apiInst.arg(i) instanceof FutureObj)
+                    System.out.println(apiInst.arg(i) + " is a future");
+                final Obj usrArg = FutureObj.resolveFuture(userInst.arg(i));
+                final Obj apiArg = FutureObj.resolveFuture(apiInst.arg(i));
                 if (userInst.isBlocking()) {
                     resolvedArgs.add(usrArg);
                 } else if (apiArg.isCall() && usrArg.isNoObj()) { // used for default args (when user arg is noobj)
@@ -289,7 +294,7 @@ public interface Inst extends Call {
 
     @Override
     default Obj apply(final Obj lhs) {
-        Obj clhs = lhs;
+        Obj clhs = FutureObj.resolveFuture(lhs);
         Inst cinst = this.args().isEmpty() ? this.args(lst(noobj())).resolve(clhs) : this.resolve(clhs); // TODO: this isn't a general solution (multi slotted args won't work).
         Obj rhs;
         boolean modulateC = false;
@@ -309,11 +314,11 @@ public interface Inst extends Call {
                 cinst = Helpers.applyArgs(clhs, cinst);
                 Router.stack().push(cinst.args());
                 try {
-                    rhs = Objs.trySingleton(cinst.f().apply(clhs, cinst));
+                    rhs = Objs.trySingleton(FutureObj.resolveFuture(cinst.f().apply(clhs, cinst)));
                     Graphitty.log(cinst).trace("%s (lhs) => %s (inst) => %s (rhs) evaluated successfully", clhs, cinst, rhs);
                 } catch (final Exception e) {
                     rhs = fail(e, mexcept("apply failure: %s => %s [stack:%s]", clhs, cinst, Router.stack().sjvm().toString()).asFail());
-                    //e.printStackTrace();
+                    // e.printStackTrace();
                 } finally {
                     Router.stack().pop();
                 }
@@ -391,10 +396,10 @@ public interface Inst extends Call {
         }
 
         public static Inst applyArgs(final Obj lhs, final Inst inst) {
-            if (inst.args().isRec() && inst.args().<Rec>as().elements().noneMatch(r -> r.first().isObjCall() || r.second().isObjCall() || r.first().isType() || r.second().isType()))
+          /*  if (inst.args().isRec() && inst.args().<Rec>as().elements().noneMatch(r -> r.second() instanceof FutureObj || r.first() instanceof FutureObj || r.first().isObjCall() || r.second().isObjCall() || r.first().isType() || r.second().isType()))
                 return inst;
-            else if (inst.args().isLst() && inst.args().<Lst>as().elements().noneMatch(e -> e.isObjCall() || e.isType()))
-                return inst;
+            else if (inst.args().isLst() && inst.args().<Lst>as().elements().noneMatch(e -> e instanceof FutureObj || e.isObjCall() || e.isType()))
+                return inst;*/
             final boolean blocking = inst.isBlocking();
             /*if (BootLoader.TYPE_CHECK) {
                 if (!blocking && (!lhs.matches(inst.dom()) || !(lhs.take(inst.dom().c()).get0()).matches(inst.dom())))
@@ -403,6 +408,7 @@ public interface Inst extends Call {
             final Poly cargs = inst.args().isLst() ?
                     lst(inst.args().lstValue()
                             .stream()
+                            .map(FutureObj::<Obj>resolveFuture)
                             .map(arg -> {
                                 if (blocking)
                                     return arg;

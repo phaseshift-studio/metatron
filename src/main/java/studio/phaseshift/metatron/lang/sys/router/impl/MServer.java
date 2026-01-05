@@ -26,6 +26,7 @@ import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.core.m.type.Fail;
 import studio.phaseshift.metatron.lang.core.m.type.Obj;
+import studio.phaseshift.metatron.lang.jre.ObjField;
 import studio.phaseshift.metatron.lang.sys.router.Cluster;
 import studio.phaseshift.metatron.lang.sys.router.IOStat;
 import studio.phaseshift.metatron.lang.sys.router.Router;
@@ -38,6 +39,7 @@ import studio.phaseshift.metatron.util.Threadable;
 
 import java.io.Closeable;
 import java.net.InetSocketAddress;
+import java.net.ServerSocket;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -56,6 +58,7 @@ public class MServer extends WebSocketServer implements Cluster, Closeable, Obj,
 
     protected final fURI host;
     protected final ObjSerializer<?> serializer;
+    @ObjField(tid = "cluster")
     protected final Map<fURI, MConnection> cluster = new HashMap<>();
     protected GraphittyLogger LOG;
     protected Thread thread;
@@ -80,7 +83,7 @@ public class MServer extends WebSocketServer implements Cluster, Closeable, Obj,
             this.thread = new Thread(this);
             this.thread.start();
             LOG.trace("server started: %s", this.getAddress());
-            BootLoader.ARGS.at(Tokens.CLUSTER).elements().filter(o -> !o.isNoObj()).forEach(n -> {
+            BootLoader.ARGS.at(Tokens.CLUSTER).elements().filter(o -> !o.isNoObj()).distinct().forEach(n -> {
                 try {
                     final MConnection client = MClient.of(n.uriValue(), this.serializer);
                     this.cluster.put(n.uriValue(), client);
@@ -110,10 +113,12 @@ public class MServer extends WebSocketServer implements Cluster, Closeable, Obj,
     public void close() {
         LOG.info("closing %s node {{b}}%s{{/b}}", Graphitty.sillyPrint("mtron", true, true), this.host);
         try {
-            this.cluster.values().stream().toList().forEach(MConnection::close);
             super.stop(1000);
+            this.cluster.values().stream().toList().forEach(MConnection::close);
         } catch (final Exception e) {
             throw MTronException.of(e);
+        } finally {
+            super.getConnections().stream().toList().forEach(WebSocket::close);
         }
     }
 
@@ -157,7 +162,7 @@ public class MServer extends WebSocketServer implements Cluster, Closeable, Obj,
         try {
             LOG.trace("processing %s for {{b}}%s{{/b}}", obj, conn.getAttachment());
             Obj result = obj.apply();
-            result = objs(result.stream().map(x -> x.vid() == null ? x : x.vid(this.host().extend(x.vid()))));
+            result = objs(result.stream().map(x -> x.vid() == null ? x : x.vid(null))); // x.vid(this.host().extend(x.vid()))));
             // final String tag = obj.vid() != null ? obj.vid().queryValue(f("tag"), String.class, null) : null;
             //if (tag != null) {
             //    fURI rvid = result.vid() == null ? f("/usr/temp?tag=" + tag) : result.vid().query("tag", tag);
