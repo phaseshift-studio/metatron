@@ -21,15 +21,12 @@ package studio.phaseshift.metatron;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.lang.core.m.inst.mInstSet;
 import studio.phaseshift.metatron.lang.core.m.obj.NoObj;
 import studio.phaseshift.metatron.lang.core.m.parser.mParser;
 import studio.phaseshift.metatron.lang.core.m.type.Fail;
 import studio.phaseshift.metatron.lang.core.m.type.Obj;
-import studio.phaseshift.metatron.lang.core.mach.machInstSet;
 import studio.phaseshift.metatron.lang.db.kv.inst.kvInstSet;
 import studio.phaseshift.metatron.lang.db.kv.kvSpace;
-import studio.phaseshift.metatron.lang.db.vec.vecInstSet;
 import studio.phaseshift.metatron.lang.sys.router.Router;
 import studio.phaseshift.metatron.lang.util.LogObj;
 import studio.phaseshift.metatron.ui.graphitty.Graphitty;
@@ -53,13 +50,11 @@ public class MetatronTest {
         kvInstSet.create().vid(f("/sys/lang/kv"));
         //mInstSet.create().vid(f("/sys/lang/m"));
         //machInstSet.create().vid(f("/sys/lang/mach"));
-        vecInstSet.create().vid(f("/sys/lang/vec"));
         kvSpace.of(f("/usr/#"), fURI.fnull).vid(f("/sys/space/usr"));
     }
 
     @AfterAll
     public static void end() {
-        System.out.println("shutting down test");
         BootLoader.close();
     }
 

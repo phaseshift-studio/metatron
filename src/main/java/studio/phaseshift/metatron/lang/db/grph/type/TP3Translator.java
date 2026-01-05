@@ -46,6 +46,7 @@ import static studio.phaseshift.metatron.util.Common.mutableMap;
  */
 public record TP3Translator(Builder builder) implements Translator<Obj, Graph> {
 
+    public static final String ID = "ID";
     public static final String LABEL = "LABEL";
     public static final String PROPS = "PROPS";
 
@@ -73,7 +74,9 @@ public record TP3Translator(Builder builder) implements Translator<Obj, Graph> {
             final Map<Obj, Obj> in = mutableMap();
             tpV.edges(Direction.IN).forEachRemaining(tpE -> in.compute(uri(tpE.label()), (k, v) -> null == v ? createEdge(tpE) : v.append(createEdge(tpE))));
             final Map<Obj, Obj> props = createProperties(tpV);
-            Router.writeToSpace(this.builder.root.extend("V").extend(tpV.id().toString()), rec(Map.of(uri(LABEL), uri(tpV.label()),
+            Router.writeToSpace(this.builder.root.extend("V").extend(tpV.id().toString()), rec(
+                    Map.of(uri(ID), uri(tpV.id().toString()),
+                            uri(LABEL), uri(tpV.label()),
                             uri(PROPS), props.isEmpty() ? noobj() : rec(props),
                             uri(Direction.OUT.name()), out.isEmpty() ? noobj() : rec(out),
                             uri(Direction.IN.name()), in.isEmpty() ? noobj() : rec(in)),

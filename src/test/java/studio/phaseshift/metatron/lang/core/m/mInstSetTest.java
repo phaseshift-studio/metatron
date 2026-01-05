@@ -29,9 +29,12 @@ import studio.phaseshift.metatron.furi.Q;
 import studio.phaseshift.metatron.furi.q.DocQTest;
 import studio.phaseshift.metatron.lang.InstSetTest;
 import studio.phaseshift.metatron.lang.core.m.inst.mInstSet;
+import studio.phaseshift.metatron.lang.core.m.parser.mParser;
+import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.Map;
 
+import static org.junit.Assert.fail;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static studio.phaseshift.metatron.furi.fURI.f;
 
@@ -362,6 +365,13 @@ public class mInstSetTest extends InstSetTest {
     }, delimiter = '%')
     public void testRepeat(final String code, final String expected) {
         super.testCode(code, expected);
+        long current = System.currentTimeMillis();
+        mParser.eval("1.repeat(plus(1),35000)");
+        long time = System.currentTimeMillis() - current;
+        if(time > 1500)
+            throw MTronException.of("repeat took too long: %s --- inst resolution isn't being cached", time);
+        else
+            LOG.warn("repeat took %s (inst resolution is being cached)", time);
     }
     
     @ParameterizedTest

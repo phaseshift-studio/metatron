@@ -239,7 +239,7 @@ public interface Inst extends Call {
             final Inst resolved = Router.global().read(this.tid().basePath())
                     .stream()
                     .map(Obj::<Inst>as)
-                    .filter(i -> (i.args().isEmpty() && this.arg(0).isNoObj()) || i.args().isRec() || i.args().count() >= this.args().count())
+                    .filter(i -> (i.args().isEmpty() && this.arg(0).isNoObj()) || i.args().isRec() || i.args().count() >= this.args().count()) // TODO: check which recs are default
                     .filter(i -> !lhs.isInst() || (i.dom().baseType().equals(INST_TID)))
                     .map(i -> this.hasDom() ? i.dom(this.dom()) : i)
                     .map(i -> this.hasRng() ? i.rng(this.rng()) : i)
@@ -262,6 +262,7 @@ public interface Inst extends Call {
                     //.map(i -> lhs.isType() ?  i.dom(lhs.c(i.dom().c()).as()).<Inst>as() : i)
                     .map(i -> i.c(this.c()))
                     .findFirst()
+                    // .map(i -> i.args().isEmpty() ? i.args(lst(noobj())).resolve(lhs) : i.resolve(lhs))
                     .orElse(null);
             if (null != resolved) {
                 LOG.trace("%s => %s is %s resolved", lhs, resolved, Common.lambda(() -> resolved.isResolved(false) ? "" : "not"));
@@ -295,7 +296,10 @@ public interface Inst extends Call {
     @Override
     default Obj apply(final Obj lhs) {
         Obj clhs = FutureObj.resolveFuture(lhs);
+        boolean reself = !this.args().isEmpty() && this.args().argElements().noneMatch(e -> e.vid() != null || e.isInst());
         Inst cinst = this.args().isEmpty() ? this.args(lst(noobj())).resolve(clhs) : this.resolve(clhs); // TODO: this isn't a general solution (multi slotted args won't work).
+        if (reself)
+            this.self(Triplet.with(cinst.args(), cinst.f(), cinst.seed()), cinst.tid(), cinst.vid());
         Obj rhs;
         boolean modulateC = false;
         if (BootLoader.TYPE_CHECK && !lhs.isFail() && !lhs.isCaughtFail() && !clhs.matches(cinst.dom()) && clhs.unique()) {

@@ -51,7 +51,7 @@ import static studio.phaseshift.metatron.util.Tuple.Quartet;
 public class MMachine extends MObj implements Machine {
 
     private final GraphittyLogger LOG = Graphitty.log(this);
-    private Consumer<Obj> onHalt = null;
+    private Consumer<Obj> onHalt = o -> this.halted().append(o);
 
     // code / running / barriers / halted
     public MMachine(final Quartet<Code, Obj, Lst, Obj> value, final fURI tid, final fURI vid) {
@@ -141,7 +141,7 @@ public class MMachine extends MObj implements Machine {
                             if (n.halted()) {
                                 LOG.trace("{{y}}====>{{/y}} halting monad %s", n);
                                // n.obj().iterator().forEachRemaining(this::processHalted);
-                                n.obj().iterator().forEachRemaining(no -> this.halted().append(no));
+                                this.onHalt().accept(n.obj());
                             } else {
                                 LOG.trace("{{g}}====>{{/g}} propagating monad %s", n);
                                 n.obj().iterator().forEachRemaining(no -> this.running().append(n.obj(no)));

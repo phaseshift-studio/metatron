@@ -18,15 +18,24 @@
 
 package studio.phaseshift.metatron.lang.db.vec;
 
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.MetatronTest;
+
+import static studio.phaseshift.metatron.furi.fURI.f;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public class vecInstSetTest extends MetatronTest {
-
+    
+    @BeforeAll
+    public static void begin() {
+        MetatronTest.begin();
+        vecInstSet.create().vid(f("/sys/lang/vec"));
+    }
+    
     @Override
     @ParameterizedTest
     @CsvSource(value = {

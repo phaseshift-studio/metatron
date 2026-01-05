@@ -39,7 +39,7 @@ public class grphInstSetTest extends MetatronTest {
     @BeforeAll
     @Disabled
     public static void begin() {
-        MetatronTest.begin();
+   //     MetatronTest.begin();
         grphInstSet.create().vid(f("/sys/router/lang/grph"));
         MGraph.of(TinkerFactory.createModern(), f("/tp/#"), f("/sys/router/space/tp"));
         Router.writeToSpace("g", uri("/sys/router/space/tp"));

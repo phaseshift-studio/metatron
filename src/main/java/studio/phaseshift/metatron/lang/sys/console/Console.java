@@ -37,7 +37,6 @@ import studio.phaseshift.metatron.lang.core.m.parser.mParser;
 import studio.phaseshift.metatron.lang.core.m.type.Obj;
 import studio.phaseshift.metatron.lang.core.m.type.Rec;
 import studio.phaseshift.metatron.lang.core.m.type.Type;
-import studio.phaseshift.metatron.lang.core.m.type.impl.MObjs;
 import studio.phaseshift.metatron.lang.core.mach.type.impl.MMachine;
 import studio.phaseshift.metatron.lang.jre.JRec;
 import studio.phaseshift.metatron.lang.jre.ObjField;
@@ -226,44 +225,22 @@ public class Console extends JRec implements Threadable, Runnable {
                 } else {
                     this.status.startTimer();
                     result = mParser.parse(line);
-                    if (null != result) {
-                        (result.isNoObj() ?
-                                MObjs.empty() :
-                                result.isObjCall() ? MMachine.of(result.as()).onHalt(o -> {
-                                    this.write("{{-X-}}{{m}}=={{g}}>{{X}}");
-                                    this.write(o);
-                                    this.write("\n");
-                                }).apply() : result).stream()
-                                .forEach(o -> {
-                                    this.write("{{-X-}}{{m}}=={{g}}>{{X}}");
-                                    this.write(o);
-                                    this.write("\n");
-                                });
-                    }
-                    this.status.stopTimer();
-                }
-                
-                /*if (null != result && !result.isNoObj()) {
-                    fURI key = f("xxx");
-                    for (Obj o : (result.isObjCall() ? MMachine.of(result.as()).apply() : result).stream().toList()) {
-                        if (o.isRel() && o.<Rel>as().jvm().get0().isUri()) {
-                            Rel rel = o.<Rel>as();
-                            if (!rel.jvm().get0().uriValue().retract().equals(key)) {
-                                key = rel.jvm().get0().uriValue().retract();
-                                this.highlighter.highlightToOut(this.terminal.output(), "{{_&y}}%s{{X}}".formatted(rel.jvm().get0().uriValue().retract()));
-                                this.highlighter.highlightToOut(this.terminal.output(), "\n");
-                            }
-                            this.highlighter.highlightToOut(this.terminal.output(), "{{-X-}}{{m}}=={{g}}>{{X}}");
-                            this.highlighter.highlightToOut(this.terminal.output(), rel.jvm().get0().uriValue().name());
-                            this.highlighter.highlightToOut(this.terminal.output(), "{{g}}=>{{X}}");
-                            this.highlighter.highlightToOut(this.terminal.output(), rel.jvm().get1());
+                    if (null != result && !result.isNoObj()) {
+                        if (result.isObjCall()) {
+                            MMachine.of(result.as()).onHalt(o -> {
+                                this.write("{{-X-}}{{m}}=={{g}}>{{X}}");
+                                this.write(o);
+                                this.write("\n");
+                            }).apply();
                         } else {
-                            this.highlighter.highlightToOut(this.terminal.output(), "{{-X-}}{{m}}=={{g}}>{{X}}");
-                            this.highlighter.highlightToOut(this.terminal.output(), o);
+                            result.stream().forEach(o -> {
+                                this.write("{{-X-}}{{m}}=={{g}}>{{X}}");
+                                this.write(o);
+                                this.write("\n");
+                            });
                         }
-                        this.terminal.output().write("\n".getBytes(StandardCharsets.UTF_8));
                     }
-                }*/
+                }
             } catch (final UserInterruptException e) {
                 LOG.warn(Graphitty.sillyPrint("process interrupted", true, true));
             } catch (final EndOfFileException e) {
@@ -279,7 +256,8 @@ public class Console extends JRec implements Threadable, Runnable {
                 if (stackTrace.trim().equalsIgnoreCase("y")) {
                     e.printStackTrace();
                 }
-
+            } finally {
+                this.status.stopTimer();
             }
         }
         try {
@@ -313,7 +291,8 @@ public class Console extends JRec implements Threadable, Runnable {
                 headers.put(headerTitle, current.toString());
             final String randomHeaderTitle = new ArrayList<>(headers.keySet()).get(new Random().nextInt(headers.size()));
             final String randomHeader = headers.get(randomHeaderTitle);
-            if (null == randomHeader) throw new IllegalArgumentException("<unknown header: " + randomHeaderTitle + ">");
+            if (null == randomHeader)
+                throw new IllegalArgumentException("<unknown header: " + randomHeaderTitle + ">");
             terminal.writer().print(Graphitty.string(randomHeader));
             terminal.writer().flush();
         } catch (final Exception e) {

@@ -38,6 +38,10 @@ public interface Poly<P extends Poly<P, J>, J> extends Obj {
 
     <O extends Obj> Stream<O> elements();
 
+    default <O extends Obj> Stream<O> argElements() {
+        return this.elements().map(e -> (O) (e instanceof Rel ? ((Rel) e).second() : e));
+    }
+
     <O extends Obj> O at(final Obj key);
 
     default P at(final Obj key, final Obj value) {
