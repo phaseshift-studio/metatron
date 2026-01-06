@@ -25,7 +25,5 @@ import java.lang.annotation.RetentionPolicy;
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 @Retention(RetentionPolicy.RUNTIME)
-public @interface ObjField {
-    String tid() default "noobj";
-    String typecast() default "";
+public @interface ObjReflection {
 }

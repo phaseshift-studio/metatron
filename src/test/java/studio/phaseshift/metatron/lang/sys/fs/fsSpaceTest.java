@@ -28,6 +28,9 @@ import studio.phaseshift.metatron.lang.core.m.parser.mParser;
 import studio.phaseshift.metatron.lang.core.m.type.Obj;
 import studio.phaseshift.metatron.lang.sys.router.Router;
 
+import java.nio.file.FileSystems;
+import java.util.Map;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static studio.phaseshift.metatron.furi.fURI.f;
@@ -46,7 +49,7 @@ public class fsSpaceTest extends SpaceTest {
         SPACE = () -> {
             //try {
             mParser.eval("*/fs");
-            final fileSpace space = fileSpace.of(f("/tmp/#"), f("/sys/space/fs"));
+            final fileSpace space = fileSpace.of(FileSystems.getDefault(), Map.of(), f("/tmp/#"), f("/sys/space/fs"));
             // space.directWriter().apply(f("#"), noobj());
             return space;
             //  } catch (Exception e) {

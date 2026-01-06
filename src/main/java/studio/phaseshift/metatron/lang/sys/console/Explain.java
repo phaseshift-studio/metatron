@@ -51,14 +51,15 @@ public class Explain implements Widget, Stylable<Explain> {
         this.code = code.resolve(noobj()).as();
         Profile profile = new Profile(this.code);
         profile.table.style().headerDivider("{{[b]}} ").apply();
-        this.selector = new Selector().style().margin(1, 1).pointer("{{r}}>{{X}}").attachment(profile, true).rowRange(1, profile.table.rowCount()).apply();
+        this.selector = new Selector().style().margin(1, 1).pointer("{{r}}>{{X}}").attachment(profile, false).rowRange(1, profile.table.rowCount()).apply();
         this.mainBox = new Panel(Highlighter.format(ObjCleanStringSerializer.prettyPrintCode(code).stripTrailing())).style().border(Border.simple.margin(2, 2).foreground("{{c}}")).apply()
                 .bottom(new Separator("-", profile).color("{{y}}"))
-                .bottom(this.selector);
+                .bottom(this.selector)
+                .style().border(Border.simple.foreground("{{m}}")).apply();
         this.menu = new BarMenu(List.of(Tuple.Pair.with("compile", () -> System.out.println("compiling...")), Tuple.Pair.with("optimize", () -> System.out.println("optimizing..."))))
                 .style()
                 .background("{{[b]&w}}")
-                .attachment(mainBox, true)
+                .attachment(mainBox, false)
                 .divider("{{g}}|")
                 .border(Border.simple.foreground("{{g}}")).margin(2, 2).apply();
     }

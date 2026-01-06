@@ -28,6 +28,8 @@ import studio.phaseshift.metatron.lang.core.m.type.Rec;
 import studio.phaseshift.metatron.lang.core.m.type.Rel;
 import studio.phaseshift.metatron.lang.core.m.type.Uri;
 import studio.phaseshift.metatron.lang.core.mach.stackSpace;
+import studio.phaseshift.metatron.lang.jre.ObjFieldReflection;
+import studio.phaseshift.metatron.lang.jre.ObjReflection;
 import studio.phaseshift.metatron.lang.sys.router.Router;
 import studio.phaseshift.metatron.lang.sys.sysInstSet;
 import studio.phaseshift.metatron.lang.util.noobjSpace;
@@ -47,9 +49,11 @@ import static studio.phaseshift.metatron.lang.core.m.inst.mFluent.StartLess.star
 import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.MTRON_TID;
 import static studio.phaseshift.metatron.lang.core.m.obj.NoObj.noobj;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
 
+@ObjReflection
 public class MRouter extends MSpace<MServer> implements Router {
 
     public static final Serializers SERIALIZERS = new Serializers();
@@ -57,7 +61,12 @@ public class MRouter extends MSpace<MServer> implements Router {
     public static final fURI ROUTER_TID = sysInstSet.SYS_TYPE_TID.extend("router");
     private static final Set<fURI> READ_AS_NOOBJ = Set.of(fURI.ALL.maybeSome(), fURI.ALL.maybe(), fURI.ALL);
     private final GraphittyLogger LOG = Graphitty.log(this);
+    @ObjFieldReflection(tid="/m/str")
+    public static final String test = "testes";
+    
+    @ObjFieldReflection
     private final Map<fURI, Set<fURI>> smallToBigRewrites = new HashMap<>();
+    @ObjFieldReflection
     private final Map<fURI, fURI> bigToSmallRewrites = new HashMap<>();
     private fURI primary = MTRON_TID;
 
@@ -68,6 +77,7 @@ public class MRouter extends MSpace<MServer> implements Router {
                         uri(Tokens.SPACE), rec(new ConcurrentHashMap<>(Map.of(uri("+/#"), new stackSpace(f("+/#"))))))), f("#"),
                 ROUTER_TID,
                 vid);
+        
         LOG.info("local router at %s", this.vid.toUri());
         LOG.info("available serializers: %s", lst(SERIALIZERS.getSerializers().recValue().keySet().stream().toList()));
     }

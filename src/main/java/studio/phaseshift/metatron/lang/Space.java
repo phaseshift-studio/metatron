@@ -153,6 +153,14 @@ public interface Space extends Rec, Closeable {
         public static void noCloneWarning(final Space space) {
             space.logger().warn("the clone of a space is the space itself");
         }
+        
+        public static String toNativeSpace(final fURI vid, final fURI prefix) {
+                return null == prefix ? vid.toString() : vid.toString().replaceFirst(prefix.toString(), "");
+        }
+        
+        public static fURI fromNativeSpace(final String vid, final fURI prefix) {
+            return null == prefix ? f(vid) : f(prefix + vid);
+        }
 
         public static Obj resolveApply(final Space space, final Obj rhs) {
             if (rhs.isCode()) {

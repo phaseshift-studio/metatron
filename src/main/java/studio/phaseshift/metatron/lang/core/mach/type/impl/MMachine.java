@@ -77,7 +77,7 @@ public class MMachine extends MObj implements Machine {
             final List<Inst> prepended = new ArrayList<>();
             prepended.add(MInst.instB(mInstSet.START_INST_TID, lst(start)));
             prepended.addAll(code.codeValue());
-            return new MMachine(Quartet.with(MCode.of(prepended), RunningMonads.of(), lst(new LinkedList<>()), MObjs.empty()), MACH_INSTSET_TID, fURI.fnull);
+            return new MMachine(Quartet.with(MCode.of(prepended), ListMonad.of(), lst(new LinkedList<>()), MObjs.empty()), MACH_INSTSET_TID, fURI.fnull);
         } else {
             return MMachine.of(code);
         }
@@ -141,7 +141,7 @@ public class MMachine extends MObj implements Machine {
                             if (n.halted()) {
                                 LOG.trace("{{y}}====>{{/y}} halting monad %s", n);
                                // n.obj().iterator().forEachRemaining(this::processHalted);
-                                this.onHalt().accept(n.obj());
+                                n.obj().iterator().forEachRemaining(this.onHalt());
                             } else {
                                 LOG.trace("{{g}}====>{{/g}} propagating monad %s", n);
                                 n.obj().iterator().forEachRemaining(no -> this.running().append(n.obj(no)));

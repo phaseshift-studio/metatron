@@ -22,6 +22,8 @@ package studio.phaseshift.metatron.lang.core.m.type;
 import studio.phaseshift.metatron.algebra.PlusMonoid;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.core.m.obj.NoObj;
+import studio.phaseshift.metatron.lang.jre.ObjFieldReflection;
+import studio.phaseshift.metatron.lang.jre.ObjReflection;
 import studio.phaseshift.metatron.util.Common;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.Tuple;
@@ -103,11 +105,16 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>>, PlusMonoid.O<Rec> {
             return (O) this.jvm().getOrDefault(key, NoObj.noobj()).autoResolve(key);
         else {
             final boolean singleSegment = key.uriValue().segments().size() == 1;
-            final String step = singleSegment ? key.uriValue().toString() : key.uriValue().segments().get(0);
+            final String step = singleSegment ? key.uriValue().toString() : key.uriValue().segments().getFirst();
             Obj result;
             final Uri asNode = uri(key.uriValue().asNode());
             if (this.recValue().containsKey(asNode))
                 return (O) (key.uriValue().isBranch() ? rel(asNode, this.recValue().get(asNode)) : this.recValue().get(asNode)).autoResolve(this);
+            if (null != this.getClass().getAnnotation(ObjReflection.class)) {
+                final O reflectObj = ObjFieldReflection.Helper.recAt(this, step);
+                if (!reflectObj.isNoObj())
+                    return reflectObj;
+            }
             if (step.equals("+") || step.equals("#")) {
                 result = key.uriValue().isBranch() ? objs((Stream) this.elements()) : objs(this.recValue().values().stream().map(v -> v.autoResolve(key)));
             } else {
@@ -190,7 +197,7 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>>, PlusMonoid.O<Rec> {
                     instC(HAS_INST_TID.dom(REC_TID).rng(REC_TID.maybe()), lst(T(ALL)), (lhs, inst) -> inst.arg(0).isRel() ?
                             (lhs.<Rec>as().elements().anyMatch(r -> r.matches(inst.arg(0))) ? lhs : noobj()) :
                             (lhs.<Rec>as().elements().map(Rel::first).anyMatch(r -> r.matches(inst.arg(0))) ? lhs : noobj())),
-                    instC(HAS_INST_TID.dom(REC_TID).rng(REC_TID.maybe()), lst(T(ALL),T(BOOL_TID)), (lhs, inst) -> inst.arg(1).apply(lhs.asRec().at(inst.arg(0))).boolValue() ? lhs : noobj()),
+                    instC(HAS_INST_TID.dom(REC_TID).rng(REC_TID.maybe()), lst(T(ALL), T(BOOL_TID)), (lhs, inst) -> inst.arg(1).apply(lhs.asRec().at(inst.arg(0))).boolValue() ? lhs : noobj()),
                     instC(GET_INST_TID.dom(REC_TID).rng(ALL_STAR), lst(T(URI_TID)), (lhs, inst) -> objs(lhs.stream().map(r -> r.<Rec>as().at(inst.arg(0))))),
                     instC(MERGE_INST_TID.dom(REC_TID).rng(REL_TID.maybeSome()), lst(), (lhs, inst) -> objs(lhs.elements())),
                     instC(MERGE_INST_TID.dom(REC_TID).rng(REC_TID), lst(T(REC_TID)), (lhs, inst) -> inst.arg(0).<Rec>as().plus(lhs.as())),//objs(lhs.elementStream())),

@@ -26,7 +26,7 @@ import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.core.m.type.Fail;
 import studio.phaseshift.metatron.lang.core.m.type.Obj;
-import studio.phaseshift.metatron.lang.jre.ObjField;
+import studio.phaseshift.metatron.lang.jre.ObjFieldReflection;
 import studio.phaseshift.metatron.lang.sys.router.Cluster;
 import studio.phaseshift.metatron.lang.sys.router.IOStat;
 import studio.phaseshift.metatron.lang.sys.router.Router;
@@ -39,7 +39,6 @@ import studio.phaseshift.metatron.util.Threadable;
 
 import java.io.Closeable;
 import java.net.InetSocketAddress;
-import java.net.ServerSocket;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -58,7 +57,7 @@ public class MServer extends WebSocketServer implements Cluster, Closeable, Obj,
 
     protected final fURI host;
     protected final ObjSerializer<?> serializer;
-    @ObjField(tid = "cluster")
+    @ObjFieldReflection(tid = "cluster")
     protected final Map<fURI, MConnection> cluster = new HashMap<>();
     protected GraphittyLogger LOG;
     protected Thread thread;

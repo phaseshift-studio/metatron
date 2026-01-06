@@ -151,6 +151,7 @@ public class Selector implements Widget, Stylable<Selector> {
                         this.onSelect.accept(selectRow);
                         return;
                     case QUIT:
+                        terminal.writer().println();
                         return;
                 }
                 //this.onBrowse.accept(selectRow);

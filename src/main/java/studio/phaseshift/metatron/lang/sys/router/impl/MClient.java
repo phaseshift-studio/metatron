@@ -29,7 +29,6 @@ import org.java_websocket.handshake.ServerHandshake;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.core.m.type.Obj;
 import studio.phaseshift.metatron.lang.core.m.type.impl.MObjs;
-import studio.phaseshift.metatron.lang.jre.ObjField;
 import studio.phaseshift.metatron.lang.sys.router.IOStat;
 import studio.phaseshift.metatron.lang.sys.router.Router;
 import studio.phaseshift.metatron.lang.util.serial.ObjSerializer;
@@ -45,7 +44,7 @@ public class MClient extends WebSocketClient implements MConnection {
 
     protected final GraphittyLogger LOG;
     protected final ObjSerializer<?> serializer;
-    protected final Map<UUID,FutureObj<Obj>> futures = new HashMap<>();
+    protected final Map<UUID, FutureObj<Obj>> futures = new HashMap<>();
     private static final UUID UNITY_UUID = UUID.randomUUID();
     protected final fURI remoteHost;
     private IOStat ioStat = new IOStat();
@@ -104,7 +103,7 @@ public class MClient extends WebSocketClient implements MConnection {
     public void close() {
         super.close(WebSocket.NORMAL_CLOSURE);
     }
-    
+
     @Override
     public void onOpen(final ServerHandshake handshake) {
         LOG.debug("new connection opened: %s", handshake.getHttpStatusMessage());
@@ -158,6 +157,7 @@ public class MClient extends WebSocketClient implements MConnection {
 
     @Override
     public void sendObj(final Obj obj) {
+        //LOG.trace("sendObj futures: %s", this.futures);
         final ByteBuffer buffer = this.serializer.outputBytes(obj);
         this.send(buffer);
         this.ioStat.incrTotalBytesSent(buffer.array().length);
@@ -171,6 +171,7 @@ public class MClient extends WebSocketClient implements MConnection {
         //LOG.trace("sending obj and awaiting future: %s", toSend);
         final FutureObj<Obj> future = new FutureObj<>(UNITY_UUID);
         this.futures.put(future.tag(), future);
+        //LOG.trace("sendRecvObj futures: %s", this.futures);
         this.sendObj(toSend);
         return (FutureObj<O>) future;
     }
@@ -186,12 +187,13 @@ public class MClient extends WebSocketClient implements MConnection {
                 f.setObj(obj.vid(obj.vid().removeQ("tag")));
             }
         } else {*/
-        final FutureObj<Obj> future = this.futures.get(UNITY_UUID);
+        LOG.trace("onObj futures: %s", this.futures);
+        final FutureObj<Obj> future = this.futures.remove(UNITY_UUID);
         if (null != future) {
             future.setObj(obj);
             LOG.trace("processing future obj %s", future);
         } else
-            LOG.error("no future obj found for %s", obj);
+            LOG.trace("no future obj found for %s", obj);
         //}
     }
 

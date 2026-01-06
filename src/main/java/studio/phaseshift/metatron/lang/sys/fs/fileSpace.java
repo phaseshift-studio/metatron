@@ -43,6 +43,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static studio.phaseshift.metatron.Tokens.USER_HOME;
 import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.lang.core.m.inst.mFluent.StartLess.isa_;
@@ -61,18 +62,23 @@ public class fileSpace extends MSpace<FileSystem> {
     public static final fURI FS_TID = SPACE_TID.extend("fs");
     public static final Type FS_TYPE = T(FS_TID, isa_(rec()), instC(INST_TID.dom(ALL.maybe()).rng(FS_TID), lst(isa_(rec(uri(Tokens.PATTERN), T(URI_TID))).tryToInst()), (lhs, inst) -> {
         final fURI pattern = inst.arg(0).<Rec>as().at(Tokens.PATTERN).uriValue();
-        final Space space = new fileSpace(FileSystems.getDefault(), inst.arg(0).<Rec>as().jvm(), pattern, inst.arg(0).vid());
+        final Space space = fileSpace.of(FileSystems.getDefault(), inst.arg(0).<Rec>as().jvm(), pattern, inst.arg(0).vid());
         Router.global().addSpace(space);
         return space;
     }));
 
 
-    public static fileSpace of(final fURI pattern, final fURI vid) {
-        return new fileSpace(FileSystems.getDefault(), Map.of(), pattern, vid);
+    private final fURI prefix;
+    private final fURI prepend;
+
+    public static fileSpace of(final FileSystem sjvm, final Map<Obj, Obj> jvm, final fURI pattern, final fURI vid) {
+        return new fileSpace(sjvm, jvm, pattern, vid);
     }
 
-    public fileSpace(final FileSystem fs, final Map<Obj, Obj> jvm, final fURI pattern, final fURI vid) {
-        super(fs, jvm, pattern, FS_TID, vid);
+    private fileSpace(final FileSystem sjvm, final Map<Obj, Obj> jvm, final fURI pattern, final fURI vid) {
+        super(sjvm, jvm, pattern, FS_TID, vid);
+        this.prefix = f(jvm.getOrDefault(uri(Tokens.PREFIX), uri("")).uriValue().toString().replace("~", System.getProperty(USER_HOME)));
+        this.prepend = f(jvm.getOrDefault(uri(Tokens.PREPEND), uri("")).uriValue().toString().replace("~", System.getProperty(USER_HOME)));
     }
 
     @Override
@@ -108,21 +114,21 @@ public class fileSpace extends MSpace<FileSystem> {
                 throw MTronException.of("infinite nested walks on file system not allowed");
             else {
                 if (key.hasPattern()) {
-                    try (Stream<Path> walk = Files.walk(Path.of(this.pattern.retractPattern().toString()), vid.segments().size(), FileVisitOption.FOLLOW_LINKS)) {
-                        return walk.map(p -> f(p.toString())).filter(p -> p.matches(vid)).collect(Collectors.toMap(p -> p, p -> uri(p.toString()), Obj::append, LinkedHashMap::new));
+                    try (Stream<Path> walk = Files.walk(Path.of(this.prepend + Space.Helper.toNativeSpace(key.retractPattern(), this.prefix)), vid.segments().size(), FileVisitOption.FOLLOW_LINKS)) {
+                        return walk.map(p -> f(p.toString())).filter(p -> p.matches(f(Space.Helper.toNativeSpace(p, this.prefix)))).collect(Collectors.toMap(p -> p, p -> uri(p.toString()), Obj::append, LinkedHashMap::new));
                     } catch (IOException e) {
                         throw MTronException.of(e);
                     }
                 } else {
                     try {
-                        final Path vidPath = Path.of(key.toString());
+                        final Path vidPath = Path.of(this.prepend + Space.Helper.toNativeSpace(key, this.prefix));
                         if (Files.isDirectory(vidPath)) {
                             return Files.list(vidPath)
                                     .collect(Collectors.toMap(
                                             p -> f(p.toString()),
                                             fileSpace::makeFile, Obj::append, LinkedHashMap::new));
                         } else {
-                            return Map.of(f(vidPath.toString()), makeFile(vidPath));
+                            return Map.of(Space.Helper.fromNativeSpace(vidPath.toString().replace(this.prepend.toString(), ""), this.prefix), makeFile(vidPath));
                         }
                     } catch (final IOException e) {
                         throw MTronException.of(e);

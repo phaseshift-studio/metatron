@@ -20,6 +20,7 @@ package studio.phaseshift.metatron.lang.net.iot;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.PubSubQ;
+import studio.phaseshift.metatron.lang.Space;
 import studio.phaseshift.metatron.lang.core.m.type.Obj;
 
 import java.nio.charset.StandardCharsets;
@@ -55,7 +56,7 @@ public class MqttPubSubQ extends PubSubQ {
                 if (obj.isNoObj()) {
                     space.client.toAsync()
                             .unsubscribeWith()
-                            .topicFilter(space.toMqttTopic(vid.basePath()))
+                            .topicFilter(Space.Helper.toNativeSpace(vid.basePath(), space.prefix))
                             .send()
                             .whenComplete((m, e) -> {
                                 if (null != e)
@@ -70,10 +71,10 @@ public class MqttPubSubQ extends PubSubQ {
                 } else {
                     space.client.toAsync()
                             .subscribeWith()
-                            .topicFilter(space.toMqttTopic(vid.basePath()))
+                            .topicFilter(Space.Helper.toNativeSpace(vid.basePath(), space.prefix))
                             .callback(p -> {
                                 LOG.trace("received %s", p);
-                                final fURI t = space.toMtronVid(p.getTopic().toString());
+                                final fURI t = Space.Helper.fromNativeSpace(p.getTopic().toString(), space.prefix);
                                 Obj o;
                                 if (p.getPayload().isPresent()) {
                                     final String json = StandardCharsets.UTF_8.decode(p.getPayload().get()).toString();

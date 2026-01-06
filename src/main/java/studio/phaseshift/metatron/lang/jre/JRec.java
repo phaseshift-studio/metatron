@@ -48,10 +48,16 @@ public class JRec extends MObj implements Rec {
         super(jvm, tid, vid);
         this.sjvm = new LinkedHashMap<>(sjvm);
     }
+    
+    public JRec(final Map<Obj,Obj> sjvm, final fURI tid, final fURI vid) {
+        super(null,tid,vid);
+        this.jvm = this;
+        this.sjvm = new LinkedHashMap<>(sjvm);
+    }
 
 
     @Override
-    public JRec clone(final Object jvm, final fURI tid, final fURI vid) {
+    public Rec clone(final Object jvm, final fURI tid, final fURI vid) {
         return super.clone(jvm, tid, vid);
     }
 
@@ -65,7 +71,7 @@ public class JRec extends MObj implements Rec {
     }
 
     @Override
-    public JRec put(final Obj key, final Obj value) {
+    public Rec put(final Obj key, final Obj value) {
         try {
             this.sjvm.put(key, value);
             this.findField(key).forEach(f -> MTronException.wrap(() -> f.set(this.jvm, value.jvm())));
@@ -85,7 +91,7 @@ public class JRec extends MObj implements Rec {
     }
 
     @Override
-    public JRec self(Object jvm, fURI tid, fURI vid) {
+    public Rec self(Object jvm, fURI tid, fURI vid) {
         return super.self(jvm, tid, vid);
     }
 
@@ -98,6 +104,6 @@ public class JRec extends MObj implements Rec {
         //    javaName = javaName.substring(0, javaName.length() - 2);
         //javaName = javaName.replace('.', '/');
         final String finalJavaName = javaName;
-        return Arrays.stream(this.getClass().getFields()).filter(f -> f.getAnnotation(ObjField.class) != null).filter(f -> allWildcard || f.getName().equals(finalJavaName)).toList();
+        return Arrays.stream(this.getClass().getDeclaredFields()).filter(f -> f.getAnnotation(ObjFieldReflection.class) != null).filter(f -> allWildcard || f.getName().equals(finalJavaName)).toList();
     }
 }

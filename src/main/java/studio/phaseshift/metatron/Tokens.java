@@ -41,6 +41,8 @@ public final class Tokens {
     public static final String SPACE = "space";
     public static final String STORE = "store";
     public static final String PREFIX = "prefix";
+    public static final String USER_HOME = "user.home";
+    public static final String PREPEND = "prepend";
     public static final String LOAD = ":load";
     public static final String HTTP = "http";
     public static final String WS = "ws";

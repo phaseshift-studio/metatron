@@ -55,7 +55,7 @@ public class JObjFactory extends MObjFactory {
     }
 
     public Obj create(final Field field, final Object value, final fURI vid) {
-        final ObjField annotation = field.getAnnotation(ObjField.class);
+        final ObjFieldReflection annotation = field.getAnnotation(ObjFieldReflection.class);
         final fURI tid = (null == annotation || annotation.tid().equals("noobj")) ? f(value.getClass().getCanonicalName().replace(".", "/")) : f(annotation.tid());
         //final fURI basetid = annotation.basetid().equals("noobj") ? null : f(annotation.basetid());
         Object newValue = value;

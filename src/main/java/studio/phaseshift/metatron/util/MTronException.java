@@ -44,9 +44,9 @@ public class MTronException extends RuntimeException {
             return (MTronException) cause;
         else {
             try {
-                return new MTronException(cause.getMessage());
+                return new MTronException(cause.getClass().getSimpleName() + ": " + cause.getMessage());
             } catch (final Throwable e) {
-                return new MTronException(Highlighter.unformat(cause.getMessage()));
+                return new MTronException(cause.getClass().getSimpleName() + ": " + Highlighter.unformat(cause.getMessage()));
             }
         }
     }

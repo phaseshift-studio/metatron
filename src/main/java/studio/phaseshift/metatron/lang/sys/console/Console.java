@@ -39,7 +39,7 @@ import studio.phaseshift.metatron.lang.core.m.type.Rec;
 import studio.phaseshift.metatron.lang.core.m.type.Type;
 import studio.phaseshift.metatron.lang.core.mach.type.impl.MMachine;
 import studio.phaseshift.metatron.lang.jre.JRec;
-import studio.phaseshift.metatron.lang.jre.ObjField;
+import studio.phaseshift.metatron.lang.jre.ObjFieldReflection;
 import studio.phaseshift.metatron.lang.sys.router.Router;
 import studio.phaseshift.metatron.lang.util.LogObj;
 import studio.phaseshift.metatron.ui.Border;
@@ -75,15 +75,15 @@ import static studio.phaseshift.metatron.lang.sys.sysInstSet.SYS_TYPE_TID;
 public class Console extends JRec implements Threadable, Runnable {
 
     public static final fURI CONSOLE_TID = SYS_TYPE_TID.extend("console");
-    @ObjField(tid = "/m/uri")
+    @ObjFieldReflection(tid = "/m/uri")
     public static final String METATRON_VERSION = "0.1-alpha";
-    @ObjField(tid = "/m/uri")
+    @ObjFieldReflection(tid = "/m/uri")
     public static final String MTRON = "mtron";
-    @ObjField(tid = FILE_TID_STRING)
+    @ObjFieldReflection(tid = FILE_TID_STRING)
     public static final String MTRON_NANORC = "mtron.nanorc";
-    @ObjField(tid = FILE_TID_STRING)
+    @ObjFieldReflection(tid = FILE_TID_STRING)
     public static String HEADER_FILE = "./conf/ansi_headers.txt";
-    @ObjField(tid = FILE_TID_STRING)
+    @ObjFieldReflection(tid = FILE_TID_STRING)
     public static Path HISTORY_FILE = Paths.get(".metatron.history");
 
     private final GraphittyLogger LOG = Graphitty.log(this);
@@ -226,19 +226,17 @@ public class Console extends JRec implements Threadable, Runnable {
                     this.status.startTimer();
                     result = mParser.parse(line);
                     if (null != result && !result.isNoObj()) {
-                        if (result.isObjCall()) {
-                            MMachine.of(result.as()).onHalt(o -> {
-                                this.write("{{-X-}}{{m}}=={{g}}>{{X}}");
-                                this.write(o);
-                                this.write("\n");
-                            }).apply();
-                        } else {
-                            result.stream().forEach(o -> {
-                                this.write("{{-X-}}{{m}}=={{g}}>{{X}}");
-                                this.write(o);
-                                this.write("\n");
-                            });
-                        }
+                        (result.isObjCall() ?
+                                MMachine.of(result.as()).onHalt(o -> {
+                                    this.write("{{-X-}}{{m}}=={{g}}>{{X}}");
+                                    this.write(o);
+                                    this.write("\n");
+                                }).apply()
+                                : result).stream().forEach(o -> {
+                            this.write("{{-X-}}{{m}}=={{g}}>{{X}}");
+                            this.write(o);
+                            this.write("\n");
+                        });
                     }
                 }
             } catch (final UserInterruptException e) {
@@ -337,6 +335,7 @@ public class Console extends JRec implements Threadable, Runnable {
                     }, ctrl('q'));
             getKeyMap().bind((Widget) () -> {
                 try {
+                    final String s = this.reader.getBuffer().toString();
                     final Obj code = mParser.parse(this.reader.getBuffer().toString());
                     if (code.isCode()) {
                         final Explain explain = new Explain(code.as());
