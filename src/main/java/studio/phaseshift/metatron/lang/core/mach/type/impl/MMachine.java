@@ -37,6 +37,7 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.CODE_TID;
 import static studio.phaseshift.metatron.lang.core.m.obj.NoObj.noobj;
@@ -52,6 +53,7 @@ public class MMachine extends MObj implements Machine {
 
     private final GraphittyLogger LOG = Graphitty.log(this);
     private Consumer<Obj> onHalt = o -> this.halted().append(o);
+    public static Supplier<Obj> RUNNING_SUPPLIER = ListMonad::of;
 
     // code / running / barriers / halted
     public MMachine(final Quartet<Code, Obj, Lst, Obj> value, final fURI tid, final fURI vid) {
@@ -59,7 +61,7 @@ public class MMachine extends MObj implements Machine {
     }
 
     public static Machine of(final Call code) {
-        return new MMachine(Quartet.with(code.isInst() ? new MCode(List.of(code.as()), CODE_TID, fURI.fnull) : code.as(), ListMonad.of(), lst(new LinkedList<>()), MObjs.empty()), MACH_INSTSET_TID, fURI.fnull);
+        return new MMachine(Quartet.with(code.isInst() ? new MCode(List.of(code.as()), CODE_TID, fURI.fnull) : code.as(), RUNNING_SUPPLIER.get(), lst(new LinkedList<>()), MObjs.empty()), MACH_INSTSET_TID, fURI.fnull);
     }
 
     public Machine onHalt(final Consumer<Obj> onHalt) {
@@ -77,7 +79,7 @@ public class MMachine extends MObj implements Machine {
             final List<Inst> prepended = new ArrayList<>();
             prepended.add(MInst.instB(mInstSet.START_INST_TID, lst(start)));
             prepended.addAll(code.codeValue());
-            return new MMachine(Quartet.with(MCode.of(prepended), ListMonad.of(), lst(new LinkedList<>()), MObjs.empty()), MACH_INSTSET_TID, fURI.fnull);
+            return new MMachine(Quartet.with(MCode.of(prepended), RUNNING_SUPPLIER.get(), lst(new LinkedList<>()), MObjs.empty()), MACH_INSTSET_TID, fURI.fnull);
         } else {
             return MMachine.of(code);
         }

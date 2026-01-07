@@ -58,7 +58,7 @@ public class ListMonad implements Obj {
     @Override
     public Obj take() {
         return this.jvm.isEmpty() ? null : this.jvm.removeFirst();
-    }
+    } // TODO: explore removeLast() as a way of simulating chained iterators
 
     @Override
     public <J> J jvm() {
