@@ -31,10 +31,14 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.furi.fURI.ALL;
+import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.*;
+import static studio.phaseshift.metatron.lang.core.m.obj.NoObj.noobj;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MType.T;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.Tuple.Pair;
 
 public interface Rel extends Poly<Rel, Tuple.Pair<Obj, Obj>>, Obj {
@@ -76,10 +80,34 @@ public interface Rel extends Poly<Rel, Tuple.Pair<Obj, Obj>>, Obj {
         return this.jvm(Pair.with(this.jvm().get0(), value));
     }
 
-    @Override
     default <O extends Obj> O at(final Obj key) {
-        return (O) (this.first().matches(key) ? this.second() : NoObj.noobj());
+        if (key.isUri()) {
+            final boolean singleSegment = key.uriValue().segments().size() == 1;
+            final String step = singleSegment ? key.uriValue().toString() : key.uriValue().segments().getFirst();
+            O result;
+            final Uri asNode = uri(key.uriValue().asNode());
+            if (this.first().matches(asNode))
+                return (O) (key.uriValue().isBranch() ? rel(asNode, this.second()) : this.second()).autoResolve(this);
+            else {
+                final Obj temp = (this.first().matches(uri(f(step).asNode())) ? this.second() : NoObj.noobj()).autoResolve(key);
+                result = (O) (key.uriValue().isBranch() ? rel(key.uriValue().asNode().toUri(), temp) : temp);
+            }
+            /// ///////////////////////////////////////////////////////////////////////////////////////////////////////
+            if (singleSegment) {
+                return result;
+            } else {
+                final fURI nextKey = key.uriValue().isBranch() ? key.uriValue().pretract().asBranch() : key.uriValue().pretract();
+                return (O) (this.second().isPoly() ? this.second().<Poly>as().at(uri(nextKey)) : noobj());
+            }
+        } else {
+            return (O) (this.first().matches(key) ? this.second() : noobj());
+        }
     }
+
+    /*@Override
+    default <O extends Obj> O at(final Obj key) {
+        return (O) (this.first().matches(key) ? this.second() : noobj());
+    }*/
 
     @Override
     default Rel at(final Obj first, final Obj second, final BiFunction operation) {
@@ -109,7 +137,8 @@ public interface Rel extends Poly<Rel, Tuple.Pair<Obj, Obj>>, Obj {
                     instC(DOM_INST_TID.dom(REL_TID).rng(ALL), lst(), (lhs, inst) -> lhs.relValue().get0()),
                     instC(RNG_INST_TID.dom(REL_TID).rng(ALL.some()), lst(), (lhs, inst) -> lhs.relValue().get1()),
                     instC(LSHIFT_INST_TID.dom(REL_TID).rng(ALL_STAR), lst(), (lhs, inst) -> lhs.<Rel>as().first()),
-                    instC(RSHIFT_INST_TID.dom(REL_TID).rng(ALL_STAR), lst(), (lhs, inst) -> lhs.<Rel>as().second())
+                    instC(RSHIFT_INST_TID.dom(REL_TID).rng(ALL_STAR), lst(), (lhs, inst) -> lhs.<Rel>as().second()),
+                    instC(GET_INST_TID.dom(REL_TID).rng(A.maybe()), lst(T(ALL)), (lhs, inst) -> lhs.<Rel>as().at(inst.arg(0)))
             ));
 
 

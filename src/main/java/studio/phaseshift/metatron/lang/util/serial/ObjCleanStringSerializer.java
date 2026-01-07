@@ -141,7 +141,12 @@ public class ObjCleanStringSerializer implements ObjSerializer<String> {
 
     @Override
     public String writeRel(final Rel rel) {
-        return handleIds(rel, this.write(rel.jvm().get0()) + "=>" + this.write(rel.jvm().get1()));
+        final boolean firstRel = rel.first().isRel();
+        final boolean secondRel = rel.second().isRel();
+        return handleIds(rel,
+                (firstRel ? "(" : "") + this.write(rel.jvm().get0()) + (firstRel ? ")" : "") +
+                        "=>" +
+                        (secondRel ? "(" : "") + this.write(rel.jvm().get1()) + (secondRel ? ")" : ""));
     }
 
     @Override

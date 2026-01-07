@@ -111,21 +111,23 @@ public interface Lst extends Poly<Lst, List<Obj>>, PlusMonoid.O<Lst> {
         if (key.isInt())
             return (O) ((this.jvm().size() > key.intValue()) ? this.jvm().get(key.<Int>as().intValue().intValue()).autoResolve(key) : noobj());
         else if (key.isUri()) {
-            final String step = key.uriValue().segments().get(0);
-            Obj result;
+            final String step = key.uriValue().segments().getFirst();
+            Stream<Obj> result;
             if (step.equals("+") || step.equals("#")) {
-                result = objs(this.elements());
+                result = this.elements();
             } else {
                 if (!Common.isInt(step))
                     return (O) noobj();
                 //throw MTronException.of("path segment is not an int: %s", step);
                 final Int k = jnt(Long.parseLong(step));
-                result = this.jvm().size() <= k.intValue().intValue() ? noobj() : this.jvm().get(k.intValue().intValue()).autoResolve(key);
+                if (this.jvm().size() <= k.intValue().intValue())
+                    return (O) noobj();
+                result = Stream.of(this.jvm().get(k.intValue().intValue()));
             }
             if (key.uriValue().segments().size() == 1) {
-                return (O) result;
+                return (O) objs(result.map(e -> e.autoResolve(key)).filter(x -> !x.isNoObj()));
             } else {
-                return (O) objs(IteratorUtil.stream(result.iterator()).filter(Obj::isPoly).map(r -> r.<Poly>as().at(uri(key.<Uri>as().uriValue().pretract())).autoResolve(key)));
+                return (O) objs(result.map(e -> e.autoResolve(key)).filter(x -> !x.isNoObj()).filter(Obj::isPoly).map(r -> r.<Poly>as().at(uri(key.<Uri>as().uriValue().pretract()))));
             }
         } else {
             throw MTronException.of("unknown key for lst: %s", key);

@@ -118,6 +118,15 @@ public class RecTest extends MetatronObjTest {
         super.testMatches(recA, recB, matches);
     }
 
+    @ParameterizedTest
+    @CsvSource(value = {
+            "[a=>[knows=>[b=>[knows=>c]]]]../<a/+/b/knows>                                           % c",
+            "(a=>(knows=>(b=>(knows=>c))))../<a/+/b/knows>                                           % c"
+    }, delimiter = '%')
+    public void testRecRelBehaviors(final String code, final String expected) {
+        super.testCode(code, expected);
+    }
+
     @Override
     @ParameterizedTest
     @CsvSource(value = {

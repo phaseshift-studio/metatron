@@ -134,6 +134,8 @@ public class mParser {
                 m_uri()));
         obj_rel_back_parser.set(choice(
                 m_comment(),
+                m_rec(),
+                seq(of('(').trim(), m_rel(), of(')').trim()).map(t -> pick(t, 1)),
                 m_type(),
                 m_fail(),
                 m_noobj(),
@@ -143,7 +145,6 @@ public class mParser {
                 m_int(),
                 m_str(),
                 m_code(),
-                m_rec(),
                 m_objs(),
                 m_lst(),
                 m_uri()));
@@ -156,14 +157,34 @@ public class mParser {
 
         rec_parser.set(seq(m_type_prefix_opt_colon(REC_TID), of('[').trim(), rec_internal(obj_rel_back_parser, m_inst_arg(MAP_INST_TID)), of(']').trim(), m_vid_postfix()).trim().map(t -> new MRec(pick(t, 2), REC_TID, pick(t, 4)).tid((fURI) pick(t, 0))));
 
-        inst_parser.set(seq(
+        inst_parser.set(choice(m_inst_c(), m_inst_b()));
+
+    }
+
+    public static Parser m_inst_b() {
+        return seq(
+                m_inst_furi(), // 0 inst_tid
+                seq(of('(').trim(), choice(rec_internal(m_furi().map(t -> ((fURI) t).toUri()), m_inst_arg(MAP_INST_TID)), lst_internal(), of("")).trim(), of(')').trim()).pick(1), // 1 inst_args
+                m_vid_postfix()) //  inst_code
+                // inst_seed []
+                .map(t -> (Inst) new MInst(Triplet.with(
+                        pick(t, 1).equals("") ? lst() : pick(t, 1) instanceof List ?
+                                lst(mParser.<List<Obj>>pick(t, 1)) :
+                                rec(mParser.<Map<Obj, Obj>>pick(t, 1)),
+                        null,
+                        noobj()), // todo: encode seed in parser
+                        pick(t, 0), pick(t, 2)));
+    }
+
+    public static Parser m_inst_c() {
+        return seq(
                 choice(m_inst_furi(), m_type_prefix_opt_colon(INST_TID)), // 0 inst_tid
                 seq(of('(').trim(), choice(rec_internal(m_furi().map(t -> ((fURI) t).toUri()), m_inst_arg(MAP_INST_TID)), lst_internal(), of("")).trim(), of(')').trim()).pick(1), // 1 inst_args
-                opt(seq(of('{').trim(), choice(
+                seq(of('{').trim(), choice(
                                 of('?').map(t -> null),
                                 of("<j>").map(t -> null),
                                 m_inst_arg(MAP_INST_TID)),
-                        of('}').trim()).pick(1), null),
+                        of('}').trim()).pick(1),
                 m_vid_postfix()) //  inst_code
                 // inst_seed []
                 .map(t -> (Inst) new MInst(Triplet.with(
@@ -172,11 +193,15 @@ public class mParser {
                                 rec(mParser.<Map<Obj, Obj>>pick(t, 1)),
                         Inst.f.of(mParser.<Obj>pick(t, 2)),
                         noobj()), // todo: encode seed in parser
-                        pick(t, 0), pick(t, 3))));
+                        pick(t, 0), pick(t, 3)));
+    }
+
+    public static Parser m_paren_wrap(final Parser parser) {
+        return choice(seq(of('(').trim(), parser, of(')').trim()).map(t -> pick(t, 1)), parser);
     }
 
     public static Parser m_inst_arg(final fURI headtid) {
-        return m_inst_arg(obj_no_code_parser, headtid);
+        return m_inst_arg(m_paren_wrap(obj_no_code_parser), headtid);
     }
 
     public static Parser m_inst_arg(final Parser objParser, final fURI headtid) {
@@ -330,7 +355,7 @@ public class mParser {
     }
 
     public static Parser m_obj() {
-        return obj_parser;
+        return m_paren_wrap(obj_parser);
     }
 
     public static Parser m_noobj() {
