@@ -29,10 +29,7 @@ import studio.phaseshift.metatron.lang.MSpace;
 import studio.phaseshift.metatron.lang.Space;
 import studio.phaseshift.metatron.lang.core.m.inst.mInstSet;
 import studio.phaseshift.metatron.lang.core.m.obj.NoObj;
-import studio.phaseshift.metatron.lang.core.m.type.Obj;
-import studio.phaseshift.metatron.lang.core.m.type.Rec;
-import studio.phaseshift.metatron.lang.core.m.type.Rel;
-import studio.phaseshift.metatron.lang.core.m.type.Type;
+import studio.phaseshift.metatron.lang.core.m.type.*;
 import studio.phaseshift.metatron.lang.db.kv.kvSpace;
 import studio.phaseshift.metatron.lang.net.web.JSONTranslator;
 import studio.phaseshift.metatron.lang.sys.router.Router;
@@ -63,13 +60,13 @@ public class mqttSpace extends MSpace<Mqtt5Client> {
                     lst(T(REC_TID, isa_(rec(
                             uri(PATTERN), T(URI_TID),
                             uri(Tokens.HOST), T(URI_TID),
-                            uri(Tokens.PREFIX), T(URI_TID),
+                            uri(Tokens.REWRITE), T(REL_TID),
                             uri(Tokens.Q).c(cInt::maybe), isa_(T(LST_TID)))))), (lhs, inst) -> {
-                        final fURI pattern = inst.arg(0).<Rec>as().at(PATTERN).uriValue();
-                        final fURI host = inst.arg(0).<Rec>as().at(Tokens.HOST).uriValue();
-                        final fURI prefix = inst.arg(0).<Rec>as().at(Tokens.PREFIX).uriValue();
+                        final Uri pattern = inst.arg(0).<Rec>as().at(PATTERN).asUri();
+                        final Uri host = inst.arg(0).<Rec>as().at(Tokens.HOST).asUri();
+                        final Rel rewrite = inst.arg(0).<Rec>as().at(Tokens.REWRITE).asRel();
                         // final Rec route = inst.arg(0).<Rec>as().at(ROUTE);
-                        final mqttSpace space = mqttSpace.of(mutableMap(uri(PATTERN), uri(pattern), uri(Tokens.HOST), uri(host), uri(Tokens.PREFIX), uri(prefix)), inst.arg(0).vid());
+                        final mqttSpace space = mqttSpace.of(mutableMap(uri(PATTERN), pattern, uri(Tokens.HOST), host, uri(Tokens.REWRITE), rewrite), inst.arg(0).vid());
                         Router.global().addSpace(space);
                         return space;
                     }));
@@ -81,7 +78,7 @@ public class mqttSpace extends MSpace<Mqtt5Client> {
 
     public mqttSpace(final Mqtt5Client client, final Map<Obj, Obj> config, final fURI vid) {
         super(client, config, config.get(uri(PATTERN)).uriValue(), MQTT_TID, vid);
-        this.prefix = config.containsKey(uri(Tokens.PREFIX)) ? config.get(uri(Tokens.PREFIX)).uriValue() : null;
+        this.prefix = config.containsKey(uri(Tokens.REWRITE)) ? config.get(uri(Tokens.REWRITE)).asRel().first().uriValue() : null;
         LOG.info("{{y}}mtron{{g}}<=>{{y}}mqtt{{X}} mapping established: %s {{g}}<=> ({{b}}%s {{g}}<=>{{X}} %s{{g}}){{X}}", this.pattern().toUri(), this.prefix, uri(Space.Helper.toNativeSpace(this.pattern(), this.prefix)));
         this.cache = new kvSpace(this.pattern(), this.vid.extend("cache"));
         this.put(uri(Tokens.Q), lst(List.of(new MqttPubSubQ(this))), IMMUTABLE);

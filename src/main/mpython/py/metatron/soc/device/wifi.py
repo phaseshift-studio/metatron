@@ -33,7 +33,7 @@ class Wifi(Device):
         wlan.connect(ssid, password)
         while not wlan.isconnected():
             pass
-        LOG.info("connected to {{y}}{}{{X}} as {{y}}{}\n\t{}", ssid, wlan.config('hostname'), str(wlan.ifconfig()))
+        LOG.info("connected to {{y}}{}{{X}} as {{y}}{}.local\n\t{}", ssid, wlan.config('hostname'), str(wlan.ifconfig()))
         return wlan
 
     def __init__(self, wlan: network.WLAN, soc_vid, name:str = "wifi"):

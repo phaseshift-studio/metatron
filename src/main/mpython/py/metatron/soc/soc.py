@@ -15,7 +15,6 @@
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import machine
-import network
 
 import metatron.util.graphitty
 from metatron.obj import Rec
@@ -39,4 +38,9 @@ class SoC(Rec):
         if key in self.__dict__:
             LOG.warn("overriding already existing {{y}}{}{{X}} at {{y}}{}{{X}}", device.tid, device.tid.name())
         setattr(self, key, device)
-        LOG.info("device {{y}}{}{{X}} loaded as {{b}}{}", device.tid, device.name)
+        LOG.info("device {{y}}{}{{g}}::{{m}}T{{X}} loaded as {{b}}{}", device.tid, device.name)
+
+
+class Architecture:
+    def loop(self):
+        pass

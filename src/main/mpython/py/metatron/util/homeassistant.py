@@ -30,6 +30,7 @@ class HomeAssistant:
         self.entities = {}
 
     def connect(self):
+        LOG.info("connecting to {{b}}HomeAssistant{{X}} via {{c}}MQTT{{X}}")
         self.device.connect(router().get_space(self.soc.vid).client)
 
     def register(self, entity_vid):

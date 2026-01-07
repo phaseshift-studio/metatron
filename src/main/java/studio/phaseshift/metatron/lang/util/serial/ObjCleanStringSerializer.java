@@ -119,7 +119,14 @@ public class ObjCleanStringSerializer implements ObjSerializer<String> {
     @Override
     public String writeUri(final Uri uri) {
         final String uriString = uri.jvm().toString();
-        final boolean wrap = uriString.contains(" ") || uriString.contains(".") || (!uriString.isEmpty() && Common.isInt(uriString.substring(0, 1)));
+        final boolean wrap =
+                uriString.isEmpty() ||
+                        Common.isInt(uriString.substring(0, 1)) ||
+                        uriString.contains(" ") ||
+                        uriString.contains(".") ||
+                        uriString.contains(",") ||
+                        uriString.contains("(") ||
+                        uriString.contains(")");
         return handleIds(uri, wrap ? ("<" + uriString + ">") : uriString);
     }
 
@@ -258,7 +265,7 @@ public class ObjCleanStringSerializer implements ObjSerializer<String> {
             rec.recValue().forEach((k, v) -> {
                 if (nested)
                     sb.append(" ".repeat(false && first.getAndSet(false) ? 0 : (depth * 2) + 1));
-                sb.append(k.isUri() ? k.uriValue() : write(k)).append("=>");
+                sb.append(write(k)).append("=>");
                 this.processNestedPoly(sb, depth, nested, v);
             });
             if (nested)

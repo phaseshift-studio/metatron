@@ -13,3 +13,15 @@
 # 
 #  You should have received a copy of the GNU Affero General Public License
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+from arch.walltron import Walltron
+
+
+# this function determines which machine architecture is flashed to hardware
+# update this function accordingly with calls to constructors from different
+# architectures in arch
+
+######################################################################
+# IMPORTANT: do not change the signature of the deploy() and always
+# return an Architecture object with a loop() method
+def deploy(secrets: dict):
+    return Walltron(secrets)

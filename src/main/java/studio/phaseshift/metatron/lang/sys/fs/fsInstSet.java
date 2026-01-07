@@ -20,7 +20,6 @@ package studio.phaseshift.metatron.lang.sys.fs;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.core.m.type.Inst;
-import studio.phaseshift.metatron.lang.core.m.type.Rec;
 import studio.phaseshift.metatron.lang.core.m.type.Type;
 import studio.phaseshift.metatron.lang.core.m.type.impl.MInstSet;
 import studio.phaseshift.metatron.util.MTronException;
@@ -34,17 +33,17 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
-import static studio.phaseshift.metatron.Tokens.PATTERN;
 import static studio.phaseshift.metatron.furi.fURI.ALL;
-import static studio.phaseshift.metatron.lang.core.m.inst.mFluent.StartLess.*;
+import static studio.phaseshift.metatron.lang.core.m.inst.mFluent.StartLess.else_;
+import static studio.phaseshift.metatron.lang.core.m.inst.mFluent.StartLess.isa_;
 import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.*;
 import static studio.phaseshift.metatron.lang.core.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MBytes.bytes;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MReal.real;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MType.T;
-import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.lang.sys.fs.fileSpace.FS_TYPE;
 
 /*
@@ -70,8 +69,8 @@ public class fsInstSet extends MInstSet {
         return Set.of(
                 FS_TYPE,
                 T(IMAGE_TID),
-                T(FILE_TID, isa_(URI_TYPE), 
-                        instC(INST_TID.dom(ALL.maybe()).rng(FILE_TID), lst(T(URI_TID)), 
+                T(FILE_TID, isa_(URI_TYPE),
+                        instC(INST_TID.dom(ALL.maybe()).rng(FILE_TID), lst(T(URI_TID)),
                                 (lhs, inst) -> fileSpace.makeFile(Path.of(inst.arg(0).uriValue().toString())))));
 
     }
@@ -92,6 +91,8 @@ public class fsInstSet extends MInstSet {
                     }
                 }),
                 instC(AS_INST_TID.dom(URI_TID).rng(FILE_TID), lst(T(FILE_TID)), (lhs, inst) -> fileSpace.makeFile(Path.of(lhs.uriValue().toString()))),
-                instC(AS_INST_TID.dom(BYTES_TID).rng(IMAGE_TID), lst(T(IMAGE_TID)), (lhs, inst) -> str(ImageHelper.convertToAscii(lhs.bytesValue())).tid(IMAGE_TID.c(lhs.tid().c())))));
+                instC(AS_INST_TID.dom(BYTES_TID).rng(IMAGE_TID), lst(T(IMAGE_TID), else_(real(1.0d))), 
+                        (lhs, inst) -> str(ImageHelper.convertToAscii(lhs.bytesValue(), inst.arg(1).realValue())).tid(IMAGE_TID))));
+
     }
 }

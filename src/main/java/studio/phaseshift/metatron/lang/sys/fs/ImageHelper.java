@@ -29,13 +29,14 @@ import java.nio.ByteBuffer;
 
 public class ImageHelper {
 
-    public static String convertToAscii(final ByteBuffer buffer) {
+    public static String convertToAscii(final ByteBuffer buffer, final double scale) {
         final StringBuilder sb = new StringBuilder("\n");
         try {
             final BufferedImage img = ImageIO.read(new ByteArrayInputStream(buffer.array()));
             double pixelValue;
-            for (int i = 0; i < img.getHeight(); i++) {
-                for (int j = 0; j < img.getWidth(); j++) {
+            int incr = (int) Math.round(1.0d / scale);
+            for (int i = 0; i < img.getHeight(); i = i + incr) {
+                for (int j = 0; j < img.getWidth(); j = j + incr) {
                     final Color pixelColor = new Color(img.getRGB(j, i));
                     pixelValue = (pixelColor.getRed() * 0.30) +
                             (pixelColor.getBlue() * 0.59) +

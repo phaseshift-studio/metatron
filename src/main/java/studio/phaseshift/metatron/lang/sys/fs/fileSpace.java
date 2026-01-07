@@ -22,10 +22,7 @@ import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.MSpace;
 import studio.phaseshift.metatron.lang.Space;
-import studio.phaseshift.metatron.lang.core.m.type.Obj;
-import studio.phaseshift.metatron.lang.core.m.type.Rec;
-import studio.phaseshift.metatron.lang.core.m.type.Type;
-import studio.phaseshift.metatron.lang.core.m.type.Uri;
+import studio.phaseshift.metatron.lang.core.m.type.*;
 import studio.phaseshift.metatron.lang.core.m.type.impl.MRel;
 import studio.phaseshift.metatron.lang.sys.console.Highlighter;
 import studio.phaseshift.metatron.lang.sys.router.Router;
@@ -52,6 +49,7 @@ import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.URI_TID;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MObjs.objs;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.lang.sys.fs.fsInstSet.FILE_TID;
@@ -77,14 +75,15 @@ public class fileSpace extends MSpace<FileSystem> {
 
     private fileSpace(final FileSystem sjvm, final Map<Obj, Obj> jvm, final fURI pattern, final fURI vid) {
         super(sjvm, jvm, pattern, FS_TID, vid);
-        this.prefix = f(jvm.getOrDefault(uri(Tokens.PREFIX), uri("")).uriValue().toString().replace("~", System.getProperty(USER_HOME)));
-        this.prepend = f(jvm.getOrDefault(uri(Tokens.PREPEND), uri("")).uriValue().toString().replace("~", System.getProperty(USER_HOME)));
+        final Rel rewrite = jvm.getOrDefault(uri(Tokens.REWRITE), rel(uri(""),uri(""))).asRel();
+        this.prefix = f(rewrite.first().uriValue().toString().replace("~", System.getProperty(USER_HOME)));
+        this.prepend = f(rewrite.second().uriValue().toString().replace("~", System.getProperty(USER_HOME)));
     }
 
     @Override
     public Obj read(final fURI vid) {
         //return Space.Helper.resolveRead(this, vid, this.directReader());
-        return objs(this.directReader().apply(vid).entrySet().stream().map(kv -> vid.isNode() ? kv.getValue() : MRel.rel(uri(kv.getKey()), kv.getValue())));
+        return objs(this.directReader().apply(vid).entrySet().stream().map(kv -> vid.isNode() ? kv.getValue() : rel(uri(kv.getKey()), kv.getValue())));
     }
 
     @Override

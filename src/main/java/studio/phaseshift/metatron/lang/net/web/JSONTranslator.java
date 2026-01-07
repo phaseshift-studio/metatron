@@ -116,8 +116,12 @@ public record JSONTranslator(ObjSerializer<String> serializer) implements Transl
                             obj = fail(MTronException.of(jpstr));
                         }
                     }
-                    if (null == obj)
-                        obj = uri(f(jpstr), tid, fnull);
+                    if (null == obj) {
+                        if (jpstr.contains(" ") || jpstr.contains(")") || jpstr.contains("("))
+                            obj = str(jpstr, tid, fnull);
+                        else
+                            obj = uri(f(jpstr), tid, fnull);
+                    }
                 } catch (Exception e) {
                     LOG.debug("ignoring unparseable element: %s", jp);
                     return noobj();

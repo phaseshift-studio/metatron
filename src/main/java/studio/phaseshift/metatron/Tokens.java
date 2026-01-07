@@ -27,6 +27,7 @@ public final class Tokens {
         // do nothing
     }
 
+    public static final String REWRITE = "rewrite";
     public static final String Q = "q";
     public static final String SUB = "sub";
     public static final String PATTERN = "pattern";

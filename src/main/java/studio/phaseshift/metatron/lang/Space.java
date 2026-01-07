@@ -28,7 +28,6 @@ import studio.phaseshift.metatron.util.Common;
 
 import java.io.Closeable;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.BiFunction;
@@ -101,7 +100,7 @@ public interface Space extends Rec, Closeable {
 
     @Override
     default void close() {
-        if (null != this.vid()) {
+        if (Router.loaded() && null != this.vid()) {
             Router.global().removeSpace(this.vid());
             //Router.global().write(this.vid().extend(fURI.ALL), noobj());
         }
@@ -153,11 +152,11 @@ public interface Space extends Rec, Closeable {
         public static void noCloneWarning(final Space space) {
             space.logger().warn("the clone of a space is the space itself");
         }
-        
+
         public static String toNativeSpace(final fURI vid, final fURI prefix) {
-                return null == prefix ? vid.toString() : vid.toString().replaceFirst(prefix.toString(), "");
+            return null == prefix ? vid.toString() : vid.toString().replaceFirst(prefix.toString(), "");
         }
-        
+
         public static fURI fromNativeSpace(final String vid, final fURI prefix) {
             return null == prefix ? f(vid) : f(prefix + vid);
         }

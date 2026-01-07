@@ -435,7 +435,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
     default Rel asRel() {
         return (Rel) this;
     }
-
+    
     default Inst asInst() {
         return (Inst) this;
     }
@@ -451,7 +451,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
     default Objs asObjs() {
         return (Objs) this;
     }
-
+    
     String xxxValue = "%s is a %s, not a %s";
 
     default Pair<Throwable, Fail> failValue() {
