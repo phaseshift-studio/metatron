@@ -50,15 +50,19 @@ import static org.petitparser.parser.primitive.CharacterParser.digit;
 import static org.petitparser.parser.primitive.CharacterParser.of;
 import static org.petitparser.parser.primitive.CharacterParser.word;
 import static org.petitparser.parser.primitive.StringParser.of;
+import static studio.phaseshift.metatron.furi.fURI.ALL;
+import static studio.phaseshift.metatron.lang.core.m.inst.mFluent.StartLess.from_;
 import static studio.phaseshift.metatron.lang.core.m.inst.mFluent.StartLess.split_;
 import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.*;
 import static studio.phaseshift.metatron.lang.core.m.obj.NoObj.noobj;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MFail.fail;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MType.T;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.Tuple.Triplet;
 
 public class mParser {
@@ -80,13 +84,14 @@ public class mParser {
 
     static {
         final List<Parser> list =
-                mInstSet.create().sugars()
+                new ArrayList<>(mInstSet.create().sugars()
                         .stream()
                         .map(triplet ->
                                 generate_sugar_parser(triplet.get1(), of(triplet.get0().get0()),
                                         triplet.get2(), null == triplet.get0().get1() ?
                                                 null :
-                                                of(triplet.get0().get1()))).toList();
+                                                of(triplet.get0().get1()))).toList());
+        list.addFirst(seq(of('*').trim(), digit().plus().flatten()).map(t -> from_(uri(pick(t,1).toString())))); // sugar for *0 vs. *<0>
         PARSERS = new Parser[list.size()];
         list.toArray(PARSERS);
         furi_parser.set(seq(word().or(seq(of("::").not(),
@@ -94,10 +99,7 @@ public class mParser {
                 opt(m_furi_poly_type(), null),
                 opt(m_furi_coefficient(), null),
                 opt(none(), null)).map(t -> new fURI(pick(t, 0)).big().poly(pick(t, 1)).c(pick(t, 2)).query(pick(t, 3))));
-
-
-        branch_parser.set(seq(opt(of("-<"), ""), of('{').trim(), m_code().separatedBy(of(',').trim()), of('}').trim()).pick(2)
-                .map(t -> split_(objs(((List) t).stream().filter(x -> x instanceof Call))).tryToInst()));
+        
         rel_parser.set(obj_rel_back_parser.seq(of("=>").trim().seq(m_obj())).map(t -> rel(pick(t, 0), pick(pick(t, 1), 1))));
         obj_no_code_parser.set(choice(
                 m_comment(),
