@@ -69,13 +69,19 @@ def strip(s: str) -> str:
     s = s.replace(ITALIC, "")
     return s
 
+
 log_behavior = None
+log_level = "info"
+
 
 class LOG:
+    levels = ["trace", "info", "debug", "warn", "error"]
+
     @staticmethod
     def _generic_log(level: str, color: str, s: str, *args):
-        print(f"[{color}{level} {NC}] {string(s, *args)}{NC}")
-        if log_behavior is not None: log_behavior(level, s, *args)
+        if LOG.levels.index(log_level) >= LOG.levels.index(level.lower()):
+            print(f"[{color}{level} {NC}] {string(s, *args)}{NC}")
+            if log_behavior is not None: log_behavior(level, s, *args)
 
     @staticmethod
     def info(s: str, *args):

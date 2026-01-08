@@ -54,6 +54,8 @@ mach["router"] = Router()
 mach["translator"] = PythonTranslator()
 esp.osdebug(None)
 secrets = load_secrets("secrets.json")
+LOG.log_level = secrets.get("log", "info")
+LOG.info("log level {{g}}{}{{X}}",LOG.log_level)
 mtron =deploy(secrets)
 
 def main_thread_function():
