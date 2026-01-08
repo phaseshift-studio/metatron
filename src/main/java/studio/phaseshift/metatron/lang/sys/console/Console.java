@@ -27,7 +27,6 @@ import org.jline.console.impl.SystemRegistryImpl;
 import org.jline.reader.*;
 import org.jline.reader.impl.DefaultParser;
 import org.jline.reader.impl.history.DefaultHistory;
-import org.jline.terminal.Cursor;
 import org.jline.terminal.Terminal;
 import org.jline.terminal.TerminalBuilder;
 import org.jline.utils.InfoCmp;
@@ -46,6 +45,8 @@ import studio.phaseshift.metatron.lang.util.LogObj;
 import studio.phaseshift.metatron.ui.Border;
 import studio.phaseshift.metatron.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.ui.graphitty.GraphittyLogger;
+import studio.phaseshift.metatron.ui.widget.Card;
+import studio.phaseshift.metatron.ui.widget.Grid;
 import studio.phaseshift.metatron.ui.widget.Panel;
 import studio.phaseshift.metatron.ui.widget.Table;
 import studio.phaseshift.metatron.util.Common;
@@ -213,6 +214,14 @@ public class Console extends JRec implements Threadable, Runnable {
                             .addRow(List.of("header", "random header", "random header")).toString()).style().border(Border.simple.foreground("{{b}}")).apply().toString());
                 } else if (line.startsWith(":log")) {
                     LogObj.setSLF4J(line.substring(4));
+                } else if (line.startsWith(":card")) {
+                    final List<String> parts = List.of(line.substring(5).split("\\|"));
+                    final Card card = new Card(parts.getFirst(), parts.size() > 1 ? parts.subList(1, parts.size()).stream().reduce("", (a, b) -> a + b + "\n") : "").style().border(Border.simple.foreground("{{b}}")).background("{{[y]}}").foreground("{{c}}").margin(1, 1).apply();
+                    final Card card2 = new Card(parts.getFirst(), parts.size() > 1 ? parts.subList(1, parts.size()).stream().reduce("", (a, b) -> a + b + "\n") : "").style().border(Border.simple.foreground("{{b}}")).background("{{[y]}}").foreground("{{c}}").margin(1, 1).apply();
+                    final Card card3 = new Card(parts.getFirst(), parts.size() > 1 ? parts.subList(1, parts.size()).stream().reduce("", (a, b) -> a + b + "\n") : "").style().border(Border.simple.foreground("{{b}}")).background("{{[y]}}").foreground("{{c}}").margin(1, 1).apply();
+                    final Card card4 = new Card(parts.getFirst(), parts.size() > 1 ? parts.subList(1, parts.size()).stream().reduce("", (a, b) -> a + b + "\n") : "").style().border(Border.simple.foreground("{{b}}")).background("{{[y]}}").foreground("{{c}}").margin(1, 1).apply();
+                    final Grid grid = new Grid(List.of(card, card2, card3, card4), 2);
+                    terminal.writer().write(Highlighter.format(grid.toString()));
                 } else if (line.startsWith(":top")) {
                     TTop.ttop(terminal, new PrintStream(terminal.output()), System.err, new String[0]);
                 } else if (line.startsWith(":less")) {
@@ -345,7 +354,8 @@ public class Console extends JRec implements Threadable, Runnable {
                         explain.run();
                     }
                 } catch (final Exception e) {
-                    // do nothing 
+                    // do nothing
+                    e.printStackTrace();
                 }
                 return true;
             }, key(Console.terminal, InfoCmp.Capability.tab));

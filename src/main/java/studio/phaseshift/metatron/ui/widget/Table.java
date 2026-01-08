@@ -30,12 +30,11 @@ import java.util.List;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class Table implements Widget, Stylable<Table> {
+public class Table extends AbstractWidget<Table> {
 
     protected final List<String> headers;
     protected final List<Tuple.Pair<String, Runnable>> menu;
     protected final List<List<Object>> table;
-    protected Style<Table> style = Style.empty();
 
     public Table(final List<String> headers, final List<Tuple.Pair<String, Runnable>> menu) {
         this.headers = headers;
@@ -57,10 +56,6 @@ public class Table implements Widget, Stylable<Table> {
     public List<Object> row(final int index) {
         return this.rows().get(index);
     }
-
-   /* public String rowString(final int index) {
-        return this.rows().get(index).toString();
-    }*/
 
     public List<List<Object>> rows() {
         return this.table;
@@ -152,7 +147,7 @@ public class Table implements Widget, Stylable<Table> {
                         .append(this.style.divider)
                         .append(this.style.foreground);
             }
-            sb.append("{{X}}\n");
+            sb.append("{{X}}");
         }
         sb.append(formattedRows().stream().map(row -> row + "{{X}}\n").reduce("", (a, b) -> a + b));
         return sb.deleteCharAt(sb.length() - 1).toString();

@@ -24,6 +24,7 @@ import studio.phaseshift.metatron.lang.core.m.type.Obj;
 import studio.phaseshift.metatron.lang.sys.router.Router;
 import studio.phaseshift.metatron.ui.Stylable;
 import studio.phaseshift.metatron.ui.Widget;
+import studio.phaseshift.metatron.ui.widget.AbstractWidget;
 import studio.phaseshift.metatron.ui.widget.Selector;
 import studio.phaseshift.metatron.ui.widget.Table;
 
@@ -32,11 +33,10 @@ import java.util.List;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class Profile implements Widget, Stylable<Profile> {
+public class Profile extends AbstractWidget<Profile> {
 
     protected final Obj obj;
     protected final Table table;
-    protected Style<Profile> style = Style.empty();
 
     public Profile(final Obj obj) {
         this.obj = obj;
@@ -96,9 +96,4 @@ public class Profile implements Widget, Stylable<Profile> {
         return this.table;
     }
     
-    @Override
-    public Profile style(final Style<Profile> style) {
-        this.style = style;
-        return this;
-    }
 }

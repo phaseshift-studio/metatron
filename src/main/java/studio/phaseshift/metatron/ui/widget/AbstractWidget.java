@@ -16,12 +16,19 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.ui;
+package studio.phaseshift.metatron.ui.widget;
+
+import studio.phaseshift.metatron.ui.Widget;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public interface Colorable<T extends Colorable<T>> {
-
-    T color(final String graphitty);
+public abstract class AbstractWidget<W extends AbstractWidget<W>> implements Widget<W> {
+    
+    protected Style<W> style = Style.empty();
+    
+    public W style(final Style<W> style) {
+        this.style = style;
+        return (W) this;
+    }
 }

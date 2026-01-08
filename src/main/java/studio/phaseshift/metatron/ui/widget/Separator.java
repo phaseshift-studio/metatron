@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -19,15 +19,13 @@
 package studio.phaseshift.metatron.ui.widget;
 
 import studio.phaseshift.metatron.lang.sys.console.Highlighter;
-import studio.phaseshift.metatron.ui.Colorable;
 import studio.phaseshift.metatron.ui.Widget;
-import studio.phaseshift.metatron.ui.graphitty.Graphitty;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class Separator implements Widget, Colorable<Separator> {
-
+public class Separator extends AbstractWidget<Separator> {
+    
     private final String sepToken;
     private final Widget coupledWidth;
 
@@ -53,7 +51,8 @@ public class Separator implements Widget, Colorable<Separator> {
     }
 
     @Override
-    public Separator color(final String graphitty) {
-        return new Separator(graphitty + this.sepToken + "{{X}}", this.coupledWidth);
+    public Separator style(final Style<Separator> style) {
+        this.style = style;
+        return new Separator(style.foreground + this.sepToken + "{{X}}", this.coupledWidth);
     }
 }

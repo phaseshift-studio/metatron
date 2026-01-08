@@ -29,11 +29,10 @@ import java.util.List;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class BarMenu implements Widget, Stylable<BarMenu> {
+public class BarMenu extends AbstractWidget<BarMenu> {
 
     private final List<Tuple.Pair<String, Runnable>> options;
     private int currentActive = 0;
-    private Style<BarMenu> style = this.style();
 
     public BarMenu(final List<Tuple.Pair<String, Runnable>> options) {
         this.options = options;
@@ -67,11 +66,5 @@ public class BarMenu implements Widget, Stylable<BarMenu> {
     @Override
     public String rowString(int i) {
         return i == 0 ? this.toString() : "";
-    }
-
-    @Override
-    public BarMenu style(final Style<BarMenu> style) {
-        this.style = style;
-        return this;
     }
 }

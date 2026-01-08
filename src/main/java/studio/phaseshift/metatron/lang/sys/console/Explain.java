@@ -18,16 +18,11 @@
 
 package studio.phaseshift.metatron.lang.sys.console;
 
-import org.jline.utils.InfoCmp;
 import studio.phaseshift.metatron.lang.core.m.type.Code;
 import studio.phaseshift.metatron.lang.util.serial.ObjCleanStringSerializer;
 import studio.phaseshift.metatron.ui.Border;
-import studio.phaseshift.metatron.ui.Stylable;
 import studio.phaseshift.metatron.ui.Widget;
-import studio.phaseshift.metatron.ui.widget.BarMenu;
-import studio.phaseshift.metatron.ui.widget.Panel;
-import studio.phaseshift.metatron.ui.widget.Selector;
-import studio.phaseshift.metatron.ui.widget.Separator;
+import studio.phaseshift.metatron.ui.widget.*;
 import studio.phaseshift.metatron.util.Tuple;
 
 import java.util.List;
@@ -37,9 +32,8 @@ import static studio.phaseshift.metatron.lang.core.m.obj.NoObj.noobj;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class Explain implements Widget, Stylable<Explain> {
+public class Explain extends AbstractWidget<Explain> {
 
-    private Style<Explain> style = Style.empty();
     private final Code code;
     private final Selector selector;
     private final Panel mainBox;
@@ -53,7 +47,7 @@ public class Explain implements Widget, Stylable<Explain> {
         profile.table.style().headerDivider("{{[b]}} ").apply();
         this.selector = new Selector().style().margin(1, 1).pointer("{{r}}>{{X}}").attachment(profile, false).rowRange(1, profile.table.rowCount()).apply();
         this.mainBox = new Panel(Highlighter.format(ObjCleanStringSerializer.prettyPrintCode(code).stripTrailing())).style().border(Border.simple.margin(2, 2).foreground("{{c}}")).apply()
-                .bottom(new Separator("-", profile).color("{{y}}"))
+                .bottom(new Separator("-", profile).style().foreground("{{y}}").apply())
                 .bottom(this.selector)
                 .style().border(Border.simple.foreground("{{m}}")).apply();
         this.menu = new BarMenu(List.of(Tuple.Pair.with("compile", () -> System.out.println("compiling...")), Tuple.Pair.with("optimize", () -> System.out.println("optimizing..."))))
@@ -62,12 +56,6 @@ public class Explain implements Widget, Stylable<Explain> {
                 .attachment(mainBox, false)
                 .divider("{{g}}|")
                 .border(Border.simple.foreground("{{g}}")).margin(2, 2).apply();
-    }
-
-    @Override
-    public Explain style(final Style<Explain> style) {
-        this.style = style;
-        return this;
     }
 
     public void run() {

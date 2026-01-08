@@ -31,13 +31,11 @@ import java.util.stream.Stream;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class Panel implements Widget, Stylable<Panel> {
+public class Panel extends AbstractWidget<Panel> {
 
     protected final String title;
     protected final String body;
-    protected Style<Panel> style = Style.empty();
-
-
+    
     public Panel(final String body) {
         this(null, body);
     }
@@ -45,11 +43,6 @@ public class Panel implements Widget, Stylable<Panel> {
     public Panel(final String title, final String body) {
         this.title = title;
         this.body = body;
-    }
-
-    public Panel style(final Style<Panel> style) {
-        this.style = style;
-        return this;
     }
     
     public Panel bottom(final Widget dims) {

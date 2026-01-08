@@ -28,10 +28,10 @@ import java.util.Arrays;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public interface Widget {
+public interface Widget<W extends Widget<W>> extends Stylable<W> {
 
     default int width() {
-        return Arrays.stream(this.toString().split("\n")).map(Highlighter::visualLength).max(Integer::compareTo).orElse(0);
+        return Arrays.stream(this.format().split("\n")).map(Highlighter::visualLength).max(Integer::compareTo).orElse(0);
     }
 
     static void cursorOffOn(final Runnable runnable) {
@@ -41,7 +41,7 @@ public interface Widget {
     }
 
     default int height() {
-        return this.toString().split("\n").length;
+        return this.format().split("\n").length;
     }
 
     default int rowCount() {
@@ -53,7 +53,7 @@ public interface Widget {
     }
 
     default String rowString(int i) {
-        return this.toString().split("\n")[i];
+        return this.format().split("\n")[i];
     }
 
     default String format() {
@@ -64,16 +64,4 @@ public interface Widget {
         return false;
     }
 
-    public static class StringWidget implements Widget {
-        final String string;
-
-        public StringWidget(final String string) {
-            this.string = string;
-        }
-
-        @Override
-        public String toString() {
-            return this.string;
-        }
-    }
 }

@@ -26,7 +26,6 @@ import org.jline.terminal.Terminal;
 import org.jline.utils.Display;
 import org.jline.utils.InfoCmp;
 import studio.phaseshift.metatron.lang.sys.console.Console;
-import studio.phaseshift.metatron.ui.Stylable;
 import studio.phaseshift.metatron.ui.Widget;
 import studio.phaseshift.metatron.ui.graphitty.Graphitty;
 
@@ -41,7 +40,7 @@ import static studio.phaseshift.metatron.ui.widget.Selector.Operation.*;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class Selector implements Widget, Stylable<Selector> {
+public class Selector extends AbstractWidget<Selector> {
 
     protected enum Operation {
         QUIT,
@@ -57,21 +56,13 @@ public class Selector implements Widget, Stylable<Selector> {
     }
 
     protected boolean running = false;
-    protected Style<Selector> style = Style.empty();
     private Consumer<Integer> onSelect = i -> {
         Graphitty.log(this).none("{{|0&v1}}{{m}}selected{{X}}: %s{{|0&^1}}", i);
     };
     private Consumer<Integer> onBrowse = i -> {
         Graphitty.log(this).none("{{|0&v1}}{{m}}browsed{{X}}: %s{{|0&^1}}", i);
     };
-
-    @Override
-    public Selector style(final Style<Selector> style) {
-        this.style = style;
-        return this;
-    }
-
-
+    
     public Selector() {
     }
 
@@ -82,7 +73,6 @@ public class Selector implements Widget, Stylable<Selector> {
 
     public Selector onBrowse(final Consumer<Integer> onBrowse) {
         this.onBrowse = onBrowse;
-        ;
         return this;
     }
 

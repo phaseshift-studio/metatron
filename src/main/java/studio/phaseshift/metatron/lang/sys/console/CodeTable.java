@@ -23,6 +23,7 @@ import studio.phaseshift.metatron.lang.util.serial.ObjCleanStringSerializer;
 import studio.phaseshift.metatron.ui.Border;
 import studio.phaseshift.metatron.ui.Stylable;
 import studio.phaseshift.metatron.ui.Widget;
+import studio.phaseshift.metatron.ui.widget.AbstractWidget;
 import studio.phaseshift.metatron.ui.widget.Panel;
 import studio.phaseshift.metatron.ui.widget.Selector;
 import studio.phaseshift.metatron.ui.widget.Table;
@@ -32,11 +33,10 @@ import java.util.List;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class CodeTable implements Widget, Stylable<CodeTable> {
+public class CodeTable extends AbstractWidget<CodeTable> {
     protected final Code code;
     protected final Table table;
     protected final Selector selector;
-    protected Style<CodeTable> style = Style.empty();
     protected Panel panel;
 
     public CodeTable(final Code code) {
@@ -66,11 +66,5 @@ public class CodeTable implements Widget, Stylable<CodeTable> {
     @Override
     public int height() {
         return this.panel.height();
-    }
-
-    @Override
-    public CodeTable style(final Style<CodeTable> style) {
-        this.style = style;
-        return this;
     }
 }
