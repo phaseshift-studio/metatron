@@ -77,6 +77,10 @@ public class StatusLine implements Threadable, Runnable {
         this.state = state;
     }
 
+    public void redraw() {
+        this.status.update(List.of());
+        this.status.update(List.of(this.line));
+    }
     public void refresh() {
         this.status.reset();
         this.status.suspend();

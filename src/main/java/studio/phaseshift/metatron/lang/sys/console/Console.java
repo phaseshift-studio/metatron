@@ -27,6 +27,7 @@ import org.jline.console.impl.SystemRegistryImpl;
 import org.jline.reader.*;
 import org.jline.reader.impl.DefaultParser;
 import org.jline.reader.impl.history.DefaultHistory;
+import org.jline.terminal.Cursor;
 import org.jline.terminal.Terminal;
 import org.jline.terminal.TerminalBuilder;
 import org.jline.utils.InfoCmp;
@@ -256,6 +257,7 @@ public class Console extends JRec implements Threadable, Runnable {
                 }
             } finally {
                 this.status.stopTimer();
+                this.status.redraw();
             }
         }
         try {

@@ -56,7 +56,7 @@ public class MqttPubSubQ extends PubSubQ {
                 if (obj.isNoObj()) {
                     space.client.toAsync()
                             .unsubscribeWith()
-                            .topicFilter(Space.Helper.toNativeSpace(vid.basePath(), space.prefix))
+                            .topicFilter(Space.Helper.toNativeSpace(vid.basePath(), space.rewrite))
                             .send()
                             .whenComplete((m, e) -> {
                                 if (null != e)
@@ -71,10 +71,10 @@ public class MqttPubSubQ extends PubSubQ {
                 } else {
                     space.client.toAsync()
                             .subscribeWith()
-                            .topicFilter(Space.Helper.toNativeSpace(vid.basePath(), space.prefix))
+                            .topicFilter(Space.Helper.toNativeSpace(vid.basePath(), space.rewrite))
                             .callback(p -> {
                                 LOG.trace("received %s", p);
-                                final fURI t = Space.Helper.fromNativeSpace(p.getTopic().toString(), space.prefix);
+                                final fURI t = Space.Helper.fromNativeSpace(p.getTopic().toString(), space.rewrite);
                                 Obj o;
                                 if (p.getPayload().isPresent()) {
                                     final String json = StandardCharsets.UTF_8.decode(p.getPayload().get()).toString();
