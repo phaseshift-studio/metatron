@@ -19,21 +19,20 @@ import esp
 import gc
 import json
 import machine
+import network
 import os
 import sys
 import time
-import network
 
-from arch.deploy import deploy
-import metatron.soc.device.wifi
 import metatron.util.graphitty as graphitty
-from arch.walltron import Walltron
+from arch.deploy import deploy
 from metatron.router import Router
 from metatron.util.common import load_secrets
 from metatron.util.graphitty import LOG
 from metatron.util.mach import mach
 from metatron.util.translators import PythonTranslator
 
+esp.osdebug(None)
 ###############################################################################
 sys.ps1 = graphitty.string("{{m}}mtron{{g}}>{{X}} ")
 sys.ps2 = graphitty.string("{{m}}     {{g}}>{{X}} ")
@@ -47,29 +46,28 @@ print(graphitty.string("""
 {{g}}              |   __ `__ \/ _ \/ {{y}}__/ __ `/ __/ ___/ __ \/ __ \  
 {{g}}             /   / / / / {{c}}/  __/ /_/ /_/ / /_/ /  / /_/ / / / /  
 {{g}}            /___/ {{b}}/_/ /_/\___/\__/\__,_/\__/_/   \____/_/ /_/{{X}}"""))
-print(graphitty.string("\t\t\t{{b}}{}{{X}}\n", os.uname().machine))
+print(graphitty.string("\t\t\t{{b}}on {}{{X}}\n", os.uname().machine))
 ###############################################################################
-
 mach["router"] = Router()
 mach["translator"] = PythonTranslator()
-esp.osdebug(None)
+
 secrets = load_secrets("secrets.json")
 LOG.log_level = secrets.get("log", "info")
-LOG.info("log level {{g}}{}{{X}}",LOG.log_level)
-mtron =deploy(secrets)
+LOG.info("log level {{g}}{}{{X}}", LOG.log_level)
+mtron = deploy(secrets)
+
 
 def main_thread_function():
     global mtron
     gc.collect()
     LOG.none("\n")
-    LOG.info("metatron boot process complete")
+    LOG.info("{{y}}{}{{X}} boot process complete", mtron.soc.vid)
     while True:
         try:
             mtron.loop()
         except Exception as ex:
             print("resetting due to unhandled main loop error", ex)
             machine.reset()
-
 
 if "stack_kb" in secrets.keys():
     _thread.stack_size(secrets["stack_kb"] * 1024)

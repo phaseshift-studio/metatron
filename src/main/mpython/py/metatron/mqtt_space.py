@@ -39,21 +39,24 @@ class MqttSpace(Obj):
             server=self.broker,
             port=self.port,
             keepalive=60)
-
+        
     def disconnect(self):
         self.client.disconnect()
 
-    def start(self):
+    def start(self) -> 'MqttSpace':
         try:
             self.client.set_callback(self._callback)
             self.client.connect()
-            self.subscribe(self.pattern, lambda furi, obj: self.cache.__setitem__(furi, obj) if obj is not None else self.cache.pop(furi) if furi in self.cache.keys() else None)
+            LOG.info("connected to {{y}}{}{{X}} broker", self.client.server)
+            self.subscribe(self.pattern, lambda furi, obj: self.cache.__setitem__(furi, obj) if obj is not None else self.cache.pop(furi) if furi in self.cache.keys() else None)      
         except Exception as e:
             LOG.error("unable to connect with {{y}}{}{{X}}: {}", self.broker, e)
+        return self
 
+    
     def loop(self):
-        self.client.check_msg()
-        self._cache_flush()
+            self.client.check_msg()
+            self._cache_flush()
 
     def _cache_flush(self):
         if len(self.cache) > 100:

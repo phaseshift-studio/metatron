@@ -34,39 +34,23 @@ from metatron.soc.esp32.wemos_d1_mini import WemosD1Mini
 from metatron.soc.soc import Architecture
 from metatron.util.common import make_pwm_read_lambda, make_pwm_write_lambda
 from metatron.util.furi import f
-from metatron.util.graphitty import LOG
 from metatron.util.mach import router
+from metatron.util.homeassistant import HomeAssistant
 
 
 class Walltron(Architecture):
     def __init__(self, secrets: dict):
-        LOG.info("loading secrets configuration")
-        wlan = Wifi.connect(secrets['ssid'], secrets['password'], secrets['host'])
-        try:
-            self.mqtt_space = MqttSpace(f(f"{secrets['host']}/#"), f("/sys/space/mqtt"))
-            router().register(self.mqtt_space)
-            self.mqtt_space.start()
-            LOG.info("connected to {{y}}{}{{X}} broker", self.mqtt_space.client.server)
-            # self.mqtt_space.connect_esphome({"ip": wifi.ipaddr(),
-            #                            "platform": sys.platform,
-            #                            "version": os.uname().release,
-            #                            "name": secrets['host'],
-            #                            "friendly_name": secrets['host']})
-            # webrepl.start(password="mtron")
-        except OSError:
-            LOG.error("unable to connect to {{y}}{}{{X}} broker ({{y}}resetting machine{{X}})", secrets["broker"])
-            machine.reset()
+        Architecture.__init__(self, secrets)
+        router().register(MqttSpace(f(f"{secrets['host']}/#"), f("/sys/space/mqtt")).start())
         #####################################################################################################
-        soc_vid = f(secrets['host'])
-        self.soc = WemosD1Mini(vid=soc_vid)
-        self.soc.attach(Wifi(wlan, soc_vid))
-        self.soc.attach(Memory(soc_vid))
-        self.soc.attach(Gpio(range(0, 35), soc_vid))
-        self.soc.attach(Pwm(soc_vid))
+        self.soc = WemosD1Mini(vid=self.soc_vid)
+        self.soc.attach(Wifi(wlan=self.wlan, soc_vid=self.soc_vid))
+        self.soc.attach(Memory(soc_vid=self.soc_vid))
+        self.soc.attach(Gpio(pin_range=range(0, 35), soc_vid=self.soc_vid))
+        self.soc.attach(Pwm(soc_vid=self.soc_vid))
         #####################################################################################################
-        self.ha = metatron.util.homeassistant.HomeAssistant(self.soc, secrets.get("homeassistant", {}).get("prefix",
-                                                                                                           "homeassistant"))
-        self.ha.connect()
+        self.ha = HomeAssistant(self.soc, secrets.get("homeassistant", {}).get("prefix", "homeassistant"))
+        self.soc.attach(self.ha)
         self.ha.register(self.soc.vid.extend('wifi/signal')).sensor().diagnostic().on_read(
             lambda s: f"{s.wifi.strength():.0f}").device_class("signal_strength").unit_of_measurement('dBm').create()
         self.ha.register(self.soc.vid.extend('memory/free')).sensor().diagnostic().on_read(
@@ -90,11 +74,4 @@ class Walltron(Architecture):
         self.ha.update()
 
     def loop(self):
-        self.mqtt_space.loop()
-        self.ha.loop()
-
-    def __repr__(self):
-        return self.soc.__repr__()
-
-    def __srt__(self):
-        return self.__repr__()
+        self.soc.loop()

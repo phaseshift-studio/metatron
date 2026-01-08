@@ -49,6 +49,10 @@ class Router:
                 return space.write(vid,obj)
         raise Exception(f"no registered space supports {vid}")
     
+    def loop(self):
+        for space in self.spaces.values():
+            space.loop()
+    
     def __repr__(self):
         return "router::[spaces:" + str(len(self.spaces)) + "]"
     

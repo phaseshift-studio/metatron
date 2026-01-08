@@ -19,6 +19,8 @@ import machine
 import metatron.util.graphitty
 from metatron.obj import Rec
 from metatron.soc.device.device import Device
+from metatron.soc.device.wifi import Wifi
+from metatron.util.furi import f
 from metatron.util.graphitty import LOG, string, strip
 from metatron.util.mach import router
 
@@ -26,6 +28,7 @@ from metatron.util.mach import router
 class SoC(Rec):
     def __init__(self, tid, vid=None):
         Rec.__init__(self, {}, tid, vid)
+        self.loopers = []
         metatron.util.graphitty.log_behavior = lambda level, s, *args: router().write(self.vid.extend('log'),
                                                                                       f"[{level}] {strip(string(s, *args))}")
         self['status'] = 'online'
@@ -38,9 +41,30 @@ class SoC(Rec):
         if key in self.__dict__:
             LOG.warn("overriding already existing {{y}}{}{{X}} at {{y}}{}{{X}}", device.tid, device.tid.name())
         setattr(self, key, device)
+        if hasattr(device, "loop"):
+            self.loopers.append(device)
         LOG.info("device {{y}}{}{{g}}::{{m}}T{{X}} loaded as {{b}}{}", device.tid, device.name)
 
+    def loop(self):
+        router().loop()
+        for looper in self.loopers:
+            looper.loop()
 
 class Architecture:
+
+    def __init__(self, secrets: dict):
+        self.secrets = secrets
+        self.soc = None
+        self.wlan = Wifi.connect(secrets['ssid'], secrets['password'], secrets['host'])
+        self.soc_vid = f(secrets['host'])
+
     def loop(self):
-        pass
+        for looper in self.loopers:
+            looper.loop()
+
+    def __repr__(self):
+        return self.soc.__repr__()
+
+    def __srt__(self):
+        return self.__repr__()
+

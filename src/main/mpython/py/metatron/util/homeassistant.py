@@ -15,6 +15,7 @@
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from lib import uhome
+from metatron.soc.device.device import Device
 
 from metatron.soc.soc import SoC
 from metatron.util.furi import fURI, f
@@ -23,13 +24,12 @@ from metatron.util.mach import router
 from metatron.util.translators import JSONTranslator
 
 
-class HomeAssistant:
+class HomeAssistant(Device):
     def __init__(self, soc: SoC, prefix='homeassistant'):
+        Device.__init__(self, soc.vid, {}, f("/soc/homeassistant"),"homeassistant")
         self.soc = soc
         self.device = uhome.Device(soc.vid.name(), discovery_prefix=prefix)
         self.entities = {}
-
-    def connect(self):
         LOG.info("connecting to {{b}}HomeAssistant{{X}} via {{c}}MQTT{{X}}")
         self.device.connect(router().get_space(self.soc.vid).client)
 
