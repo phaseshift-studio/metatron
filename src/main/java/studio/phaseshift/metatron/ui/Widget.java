@@ -18,12 +18,11 @@
 
 package studio.phaseshift.metatron.ui;
 
-import org.jline.utils.InfoCmp;
-import studio.phaseshift.metatron.lang.sys.console.Console;
 import studio.phaseshift.metatron.lang.sys.console.Highlighter;
 import studio.phaseshift.metatron.ui.graphitty.Graphitty;
 
 import java.util.Arrays;
+import java.util.List;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -36,16 +35,17 @@ public interface Widget<W extends Widget<W>> extends Stylable<W> {
 
 
     void run();
+
     void close();
-    
+
     static void cursorOffOn(final Runnable runnable) {
         Graphitty.log(Widget.class).none("{{.}}");
         runnable.run();
         Graphitty.log(Widget.class).none("{{*}}");
     }
 
-     void display();
-    
+    void display();
+
     default int height() {
         return this.format().split("\n").length;
     }
@@ -56,6 +56,10 @@ public interface Widget<W extends Widget<W>> extends Stylable<W> {
 
     default int columnCount() {
         return this.width();
+    }
+
+    default List<String> rowStrings() {
+        return Arrays.asList(this.format().split("\n"));
     }
 
     default String rowString(int i) {

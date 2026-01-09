@@ -39,8 +39,8 @@ public class Editor {
     public static boolean of(final Console console, final Object object) {
         try {
             Options options = Options.compile(Nano.usage()).parse(new String[]{
-                    "--tabsize=2", 
-                    "--tabstospaces", 
+                    "--tabsize=2",
+                    "--tabstospaces",
                     "--tempfile",
                     "--autoindent",
                     "--emptyline"});

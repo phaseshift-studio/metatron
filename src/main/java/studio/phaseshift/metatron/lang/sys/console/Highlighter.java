@@ -62,6 +62,10 @@ public class Highlighter implements org.jline.reader.Highlighter {
         return INSTANCE.highlight(object);
     }
 
+    public static String format(final String f, final Object... args) {
+        return INSTANCE.highlight(f.formatted(args));
+    }
+
     public static String unformat(final String string) {
         return Graphitty.strip(string);
     }

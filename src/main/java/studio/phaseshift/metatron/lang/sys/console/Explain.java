@@ -18,8 +18,8 @@
 
 package studio.phaseshift.metatron.lang.sys.console;
 
-import org.jline.terminal.Size;
 import studio.phaseshift.metatron.lang.core.m.type.Code;
+import studio.phaseshift.metatron.lang.core.m.type.Inst;
 import studio.phaseshift.metatron.lang.util.serial.ObjCleanStringSerializer;
 import studio.phaseshift.metatron.ui.Border;
 import studio.phaseshift.metatron.ui.Widget;
@@ -27,7 +27,7 @@ import studio.phaseshift.metatron.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.ui.widget.*;
 import studio.phaseshift.metatron.util.Tuple;
 
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.List;
 
 import static studio.phaseshift.metatron.lang.core.m.obj.NoObj.noobj;
@@ -44,12 +44,21 @@ public class Explain extends AbstractWidget<Explain> {
     private final BarMenu menu;
 
     public Explain(final Code code) {
-        this.cursor = Console.getTerminal().getCursorPosition(i -> {});
+        this.cursor = Console.getTerminal().getCursorPosition(i -> {
+        });
         this.style = this.style().border(Border.simple.foreground("{{m}}"));
         this.code = code.resolve(noobj()).as();
         this.profile = new Profile(this.code);
         this.profile.table.style().headerDivider("{{[b]}} ").apply();
-        this.selector = new Selector().style().pointer("{{r}}>{{X}}").attachment(profile, false).rowRange(1, profile.table.rowCount()).apply();
+        this.selector = new Selector().style().pointer("{{r}}>{{X}}").attachment(profile, false).rowRange(1, profile.table.rowCount()).apply()
+                .onBrowse((s,i) -> {
+                    final Inst si = code.codeValue().get(i - 1);
+                    final Card card = new Card(si.tid().toString(), si.toString()).style().border(Border.simple.foreground("{{b}}")).background("{{[g]}}").foreground("{{y}}").margin(1, 1).apply();
+                    final List<String> rows = new ArrayList<>(s.rowStrings());
+                    rows.addAll(card.rowStrings());
+                    terminal.writer().write(Highlighter.format("{{|0&v%s&Xv}}" + card.format() + "{{^%s&<%s}}{{^%s}}", profile.height() +1, card.height(), card.width()+1, profile.height()));
+                    
+                });
         this.mainBox = new Panel(Highlighter.format(ObjCleanStringSerializer.prettyPrintCode(code).stripTrailing())).style().border(Border.simple.margin(2, 2).foreground("{{c}}")).apply()
                 .bottom(this.selector)
                 .style().border(Border.simple.foreground("{{m}}")).apply();

@@ -264,14 +264,14 @@ public class mParser {
         final Result result = seq(choice(m_inst_arg(START_INST_TID), m_obj()), opt(m_comment(), null)).map(t -> pick(t, 0)).end().parse(code.trim());
         if (result.isFailure())
             LOG.except(result.getBuffer() + "\n" +
-                    String.format("%" + (result.getPosition() + "[ERROR] [Console] ".length() + 3) + "s", "") + "^ " + result.getMessage() + "\n");
+                    String.format("%" + result.getPosition() + "s", "") + "^ " + result.getMessage() + "\n");
         return result.get();
     }
 
     public static Parser m_comment() {
         return choice(
                 seq(of("[--").trim(), any().starGreedy(anyOf("\n\r").or(new EndOfInputParser("end of input")))),
-                seq(of("[---"), any().starGreedy(anyOf("---]")))).map(t -> noobj());
+                seq(of("[==").trim(), any().starGreedy(of("==]")),of("==]"))).map(t -> noobj());
     }
 
     public static Parser m_furi() {

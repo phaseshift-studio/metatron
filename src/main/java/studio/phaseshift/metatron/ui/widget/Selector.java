@@ -27,6 +27,7 @@ import studio.phaseshift.metatron.ui.graphitty.Graphitty;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 import static org.jline.keymap.KeyMap.key;
@@ -52,22 +53,18 @@ public class Selector extends AbstractWidget<Selector> {
     }
 
     protected boolean running = false;
-    private Consumer<Integer> onSelect = i -> {
-        Graphitty.log(this).none("{{|0&v1}}{{m}}selected{{X}}: %s{{|0&^1}}", i);
-    };
-    private Consumer<Integer> onBrowse = i -> {
-        Graphitty.log(this).none("{{|0&v1}}{{m}}browsed{{X}}: %s{{|0&^1}}", i);
-    };
+    protected BiConsumer<Selector, Integer> onSelect = null;
+    protected BiConsumer<Selector, Integer> onBrowse = null;
 
     public Selector() {
     }
 
-    public Selector onSelect(final Consumer<Integer> onSelect) {
+    public Selector onSelect(final BiConsumer<Selector, Integer> onSelect) {
         this.onSelect = onSelect;
         return this;
     }
 
-    public Selector onBrowse(final Consumer<Integer> onBrowse) {
+    public Selector onBrowse(final BiConsumer<Selector, Integer> onBrowse) {
         this.onBrowse = onBrowse;
         return this;
     }
@@ -126,14 +123,15 @@ public class Selector extends AbstractWidget<Selector> {
                             selectRow = this.style.highRowRange - 1;
                         break;
                     case SELECTED:
-                        //Graphitty.log(this).none("{{v%s}}",4);
-                        this.onSelect.accept(selectRow);
+                        if(null != this.onSelect)
+                            this.onSelect.accept(this,selectRow);
                         return;
                     case QUIT:
                         terminal.writer().println();
                         return;
                 }
-                //this.onBrowse.accept(selectRow);
+                if(null != this.onBrowse)
+                    this.onBrowse.accept(this,selectRow);
             }
         } catch (final Exception e) {
             e.printStackTrace();
