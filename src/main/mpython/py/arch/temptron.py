@@ -25,7 +25,7 @@ import webrepl
 
 import metatron.util.graphitty as graphitty
 import metatron.util.homeassistant
-from metatron.mqtt_space import MqttSpace
+from metatron.space.mqtt_space import MqttSpace
 from metatron.soc.device.gpio import Gpio
 from metatron.soc.device.memory import Memory
 from metatron.soc.device.pwm import Pwm
@@ -33,7 +33,7 @@ from metatron.soc.device.wifi import Wifi
 from metatron.soc.esp32.wemos_d1_mini import WemosD1Mini
 from metatron.soc.soc import Architecture
 from metatron.util.common import make_pwm_read_lambda, make_pwm_write_lambda
-from metatron.util.furi import f
+from metatron.furi import f
 from metatron.util.graphitty import LOG
 from metatron.util.mach import router
 

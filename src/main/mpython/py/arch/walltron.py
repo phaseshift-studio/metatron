@@ -23,9 +23,7 @@ import sys
 import time
 import webrepl
 
-import metatron.util.graphitty as graphitty
-import metatron.util.homeassistant
-from metatron.mqtt_space import MqttSpace
+from metatron.space.mqtt_space import MqttSpace
 from metatron.soc.device.gpio import Gpio
 from metatron.soc.device.memory import Memory
 from metatron.soc.device.pwm import Pwm
@@ -33,7 +31,7 @@ from metatron.soc.device.wifi import Wifi
 from metatron.soc.esp32.wemos_d1_mini import WemosD1Mini
 from metatron.soc.soc import Architecture
 from metatron.util.common import make_pwm_read_lambda, make_pwm_write_lambda
-from metatron.util.furi import f
+from metatron.furi import f
 from metatron.util.mach import router
 from metatron.util.homeassistant import HomeAssistant
 
@@ -44,10 +42,10 @@ class Walltron(Architecture):
         router().register(MqttSpace(f(f"{secrets['host']}/#"), f("/sys/space/mqtt")).start())
         #####################################################################################################
         self.soc = WemosD1Mini(vid=self.soc_vid)
-        self.soc.attach(Wifi(wlan=self.wlan, soc_vid=self.soc_vid))
-        self.soc.attach(Memory(soc_vid=self.soc_vid))
-        self.soc.attach(Gpio(pin_range=range(0, 35), soc_vid=self.soc_vid))
-        self.soc.attach(Pwm(soc_vid=self.soc_vid))
+        self.soc.attach(Wifi(wlan=self.wlan, secrets=self.secrets, soc_vid=self.soc_vid).start())
+        self.soc.attach(Memory(soc_vid=self.soc_vid).start())
+        self.soc.attach(Gpio(pin_range=range(0, 35), soc_vid=self.soc_vid).start())
+        self.soc.attach(Pwm(soc_vid=self.soc_vid).start())
         #####################################################################################################
         self.ha = HomeAssistant(self.soc, secrets.get("homeassistant", {}).get("prefix", "homeassistant"))
         self.soc.attach(self.ha)
@@ -75,3 +73,4 @@ class Walltron(Architecture):
 
     def loop(self):
         self.soc.loop()
+        router().loop()

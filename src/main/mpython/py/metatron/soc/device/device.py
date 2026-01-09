@@ -22,12 +22,14 @@ class Device(Rec):
         Rec.__init__(self, pvm, tid)
         self.soc_vid = soc_vid
         self.name = name
-        #if self.soc_vid is not None:
-        #    try:
-        #        router().get_space(soc_vid).subscribe(soc_vid.extend(name).extend('get'),lambda s,k: self.broadcast(k))
-        #    except Exception as e:
-        #        pass
 
+    def start(self) -> 'Device':
+        return self
+
+    def stop(self):
+        router().unsubscribe(self.soc_vid.extend(self.name).extend("+"))
+        router().write(self.soc_vid.extend(self.name), None)
+    
     def broadcast(self,key):
         if self.vid is not None:
             router().write(self.vid, self.pvm if key == "" else self.pvm[key])

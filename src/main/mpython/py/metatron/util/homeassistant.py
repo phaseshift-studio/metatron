@@ -18,7 +18,7 @@ from lib import uhome
 from metatron.soc.device.device import Device
 
 from metatron.soc.soc import SoC
-from metatron.util.furi import fURI, f
+from metatron.furi import fURI, f
 from metatron.util.graphitty import LOG
 from metatron.util.mach import router
 from metatron.util.translators import JSONTranslator

@@ -14,9 +14,7 @@
 #  You should have received a copy of the GNU Affero General Public License
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from metatron.util.furi import fURI,f
-from metatron.util.mach import translator
-from metatron.util.translators import JSONTranslator
+from metatron.furi import fURI,f
 
 
 class Router:
@@ -49,9 +47,25 @@ class Router:
                 return space.write(vid,obj)
         raise Exception(f"no registered space supports {vid}")
     
+    def subscribe(self, vid, func):
+        vid = vid if isinstance(vid, fURI) else f(str(vid))
+        for pattern, space in self.spaces.items():
+            if vid.matches(pattern):
+                return space.subscribe(vid, func)
+        raise Exception(f"no registered space supports {vid}")
+    
+    def unsubscribe(self, vid):
+        vid = vid if isinstance(vid, fURI) else f(str(vid))
+        for pattern, space in self.spaces.items():
+            if vid.matches(pattern):
+                space.unsubscribe(vid)
+                return
+        raise Exception(f"no registered space supports {vid}")
+    
     def loop(self):
         for space in self.spaces.values():
-            space.loop()
+            if hasattr(space, "loop"):
+                space.loop()
     
     def __repr__(self):
         return "router::[spaces:" + str(len(self.spaces)) + "]"

@@ -19,8 +19,8 @@ from machine import Pin
 
 from metatron.obj import Int, jnt
 from metatron.soc.device.device import Device
-from metatron.util.furi import f
-from metatron.util.mach import mach, router, translator
+from metatron.furi import f
+from metatron.util.mach import router, translator
 from metatron.util.graphitty import LOG
 
 PWM_TID = f("/soc/pwm")
@@ -29,13 +29,16 @@ PWM_TID = f("/soc/pwm")
 class Pwm(Device):
     def __init__(self, soc_vid, name="pwm"):
         Device.__init__(self, soc_vid, {}, PWM_TID, name)
-        has_id = soc_vid is not None
+    
+    def start(self) -> 'Pwm':
+        has_id = self.soc_vid is not None
         if has_id:
             for i in range(0,35):
-                router().write(soc_vid.extend(name).extend(str(i)),None)
+                router().write(self.soc_vid.extend(self.name).extend(str(i)),None)
         if has_id:
-            router().get_space(soc_vid).subscribe(soc_vid.extend(name).extend("+"),
-                                                        lambda key, value: Pwm._set_pwm(self, int(key.name()), value,True))
+            router().get_space(self.soc_vid).subscribe(self.soc_vid.extend(self.name).extend("+"),
+                                                      lambda key, value: Pwm._set_pwm(self, int(key.name()), value,True))
+        return self
 
     def fade(self, key, start=0, end=1023, interval=16, sleep_ms=50):
         key = key if isinstance(key, Int) else Int(key)

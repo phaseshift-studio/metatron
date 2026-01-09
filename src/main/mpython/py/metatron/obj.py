@@ -14,8 +14,8 @@
 #  You should have received a copy of the GNU Affero General Public License
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from metatron.util.furi import f
-from metatron.util.furi import fURI
+from metatron.furi import f
+from metatron.furi import fURI
 from metatron.util.mach import mach
 
 BYTES_TID = f("/m/bytes")

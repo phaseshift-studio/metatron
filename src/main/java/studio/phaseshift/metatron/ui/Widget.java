@@ -34,12 +34,18 @@ public interface Widget<W extends Widget<W>> extends Stylable<W> {
         return Arrays.stream(this.format().split("\n")).map(Highlighter::visualLength).max(Integer::compareTo).orElse(0);
     }
 
+
+    void run();
+    void close();
+    
     static void cursorOffOn(final Runnable runnable) {
         Graphitty.log(Widget.class).none("{{.}}");
         runnable.run();
         Graphitty.log(Widget.class).none("{{*}}");
     }
 
+     void display();
+    
     default int height() {
         return this.format().split("\n").length;
     }

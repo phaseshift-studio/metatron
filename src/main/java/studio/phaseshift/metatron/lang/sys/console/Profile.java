@@ -22,10 +22,7 @@ import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.lang.core.m.type.Inst;
 import studio.phaseshift.metatron.lang.core.m.type.Obj;
 import studio.phaseshift.metatron.lang.sys.router.Router;
-import studio.phaseshift.metatron.ui.Stylable;
-import studio.phaseshift.metatron.ui.Widget;
 import studio.phaseshift.metatron.ui.widget.AbstractWidget;
-import studio.phaseshift.metatron.ui.widget.Selector;
 import studio.phaseshift.metatron.ui.widget.Table;
 
 import java.util.List;
@@ -51,7 +48,7 @@ public class Profile extends AbstractWidget<Profile> {
                 rng = (Inst.Form.of(i) == Inst.Form.reducer) ? cInt.ONE() : (first ? i.rng().c() : i.rng().c().mult(dom));
                 first = false;
                 boolean found = !Router.global().read(i.tid().basePath()).isNoObj();
-                
+
                 this.table.addRow(List.of(
                         (found ? "{{b}}" : "{{r}}") + i.tid().name(),
                         i.dom(),
@@ -95,5 +92,4 @@ public class Profile extends AbstractWidget<Profile> {
     public Table table() {
         return this.table;
     }
-    
 }

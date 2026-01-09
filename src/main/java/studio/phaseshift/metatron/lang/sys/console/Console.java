@@ -260,7 +260,7 @@ public class Console extends JRec implements Threadable, Runnable {
                     LOG.error("\n%s%s", ((0 == y++) ? "" : (" ".repeat(y) + "\\_")), x.getMessage());
                     x = x.getCause();
                 }
-                final String stackTrace = this.reader.readLine(Graphitty.string("{{y}}display stack trace {{g}}[y/N]{{y}}?{{X}} "));
+                final String stackTrace = this.reader.readLine(Highlighter.format("{{y}}display stack trace {{g}}[y/N]{{y}}?{{X}} "));
                 if (stackTrace.trim().equalsIgnoreCase("y")) {
                     e.printStackTrace();
                 }
@@ -352,6 +352,7 @@ public class Console extends JRec implements Threadable, Runnable {
                         final Explain explain = new Explain(code.as());
                         terminal.writer().print("\n" + explain.format());
                         explain.run();
+                        explain.close();
                     }
                 } catch (final Exception e) {
                     // do nothing

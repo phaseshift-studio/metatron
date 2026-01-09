@@ -22,17 +22,19 @@ import studio.phaseshift.metatron.algebra.PlusMonoid;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.util.Tuple;
 
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.FAIL_TID;
+import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.REC_TID;
 import static studio.phaseshift.metatron.lang.core.m.obj.NoObj.noobj;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MInst.instC;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MRec.rec;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MType.T;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -76,7 +78,18 @@ public interface Fail extends Obj, PlusMonoid<Fail> {
 
         public static Set<Inst> insts() {
             return new LinkedHashSet<>(List.of(
-                    instC(f("/m/inst/cause").dom(FAIL_TID).rng(FAIL_TID.maybe()), lst(), (lhs, inst) -> lhs.<Fail>as().cause().map(x -> (Obj) x).orElse(noobj())) // necessary cause of type casting
+                    instC(f("/m/inst/cause").dom(FAIL_TID).rng(FAIL_TID.maybe()), lst(), (lhs, inst) -> lhs.<Fail>as().cause().map(x -> (Obj) x).orElse(noobj())), // necessary cause of type casting
+                    instC(f("/m/inst/native").dom(FAIL_TID).rng(REC_TID), lst(), (lhs, inst) -> {
+                        final StackTraceElement[] element = lhs.<Fail>as().message().getStackTrace();
+                        final Map<Obj, Obj> throwable = new LinkedHashMap<>();
+                        throwable.put(uri("message"), str(lhs.<Fail>as().message().getMessage()));
+                        if (element.length > 0) {
+                            throwable.put(uri("class"), uri(element[0].getClassName().replace(".", "/")));
+                            throwable.put(uri("method"), uri(element[0].getMethodName().replace(".", "/")));
+                            throwable.put(uri("line"), jnt(element[0].getLineNumber()));
+                        }
+                        return rec(throwable);
+                    }) // necessary cause of type casting
             ));
 
         }

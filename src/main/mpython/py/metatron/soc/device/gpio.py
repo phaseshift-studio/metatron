@@ -15,9 +15,9 @@
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 from machine import Pin
 
+from metatron.furi import f
 from metatron.obj import Int, jnt
 from metatron.soc.device.device import Device
-from metatron.util.furi import f
 from metatron.util.graphitty import LOG
 from metatron.util.mach import translator, router
 
@@ -26,19 +26,14 @@ GPIO_TID = f("/soc/gpio")
 
 class Gpio(Device):
     def __init__(self, pin_range: range, soc_vid, name="gpio"):
-        has_id = soc_vid is not None
-        pins = {}
-        # for i in pin_range:
-        # try:
-        # pins[i] = Pin(i).value()
-        # if has_id:
-        #    mach['router'].write(soc_vid.extend('gpio').extend(str(i)), Int(pins[i]))
-        # except Exception as e:
-        #     LOG.warn("ignoring unsupported pin {}", i)
-        Device.__init__(self, soc_vid, pins, GPIO_TID, name)
-        if has_id:
-            router().get_space(soc_vid).subscribe(soc_vid.extend(self.name).extend("+"),
-                                                  lambda vid, value: Gpio._set_gpio(self, int(vid.name()), value, False))
+        Device.__init__(self, soc_vid, {}, GPIO_TID, name)
+
+    def start(self) -> 'Gpio':
+        if self.soc_vid is not None:
+            router().subscribe(self.soc_vid.extend(self.name).extend("+"),
+                                                       lambda vid, value: Gpio._set_gpio(self, int(vid.name()), value,
+                                                                                         False))
+        return self
 
     @staticmethod
     def _set_gpio(device, pin, value, do_log=True):

@@ -20,7 +20,7 @@ import metatron.util.graphitty
 from metatron.obj import Rec
 from metatron.soc.device.device import Device
 from metatron.soc.device.wifi import Wifi
-from metatron.util.furi import f
+from metatron.furi import f
 from metatron.util.graphitty import LOG, string, strip
 from metatron.util.mach import router
 
@@ -43,7 +43,15 @@ class SoC(Rec):
         setattr(self, key, device)
         if hasattr(device, "loop"):
             self.loopers.append(device)
-        LOG.info("device {{y}}{}{{g}}::{{m}}T{{X}} loaded as {{b}}{}", device.tid, device.name)
+        LOG.info("device {{y}}{}{{g}}::{{m}}T{{X}} attached as {{b}}{}", device.tid, device.name)
+
+    def detach(self, device: Device):
+        if device in self.loopers:
+            self.loopers.remove(device)
+        if hasattr(self, device.tid.name()):
+            delattr(self,device.tid.name())
+        device.stop()
+        LOG.info("device {{y}}{}{{g}}::{{m}}T{{X}} detached as {{b}}{}", device.tid, device.name)
 
     def loop(self):
         router().loop()
@@ -57,10 +65,6 @@ class Architecture:
         self.soc = None
         self.wlan = Wifi.connect(secrets['ssid'], secrets['password'], secrets['host'])
         self.soc_vid = f(secrets['host'])
-
-    def loop(self):
-        for looper in self.loopers:
-            looper.loop()
 
     def __repr__(self):
         return self.soc.__repr__()

@@ -22,6 +22,7 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.PubSubQ;
 import studio.phaseshift.metatron.lang.Space;
 import studio.phaseshift.metatron.lang.core.m.type.Obj;
+import studio.phaseshift.metatron.lang.sys.router.Router;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
@@ -59,9 +60,11 @@ public class MqttPubSubQ extends PubSubQ {
                             .topicFilter(Space.Helper.toNativeSpace(vid.basePath(), space.rewrite))
                             .send()
                             .whenComplete((m, e) -> {
-                                if (null != e)
+                                if (null != e) {
+                                    Router.global().server().stats().incrTotalBytesRecv(e.toString().length());
                                     LOG.error(e);
-                                else {
+                                } else {
+                                    Router.global().server().stats().incrTotalBytesRecv(m.toString().length());
                                     // super.qlessWrite(source, vid, noobj());
                                     // space.cache.write(vid, noobj());
                                     // subscriptions = subscriptions.stream().filter(x -> !x.<Subscription>as().target().bimatches(vid.qLess())).reduce(noobj(), (a, b) -> a.append(b));
@@ -77,6 +80,7 @@ public class MqttPubSubQ extends PubSubQ {
                                 final fURI t = Space.Helper.fromNativeSpace(p.getTopic().toString(), space.rewrite);
                                 Obj o;
                                 if (p.getPayload().isPresent()) {
+                                    Router.global().server().stats().incrTotalBytesRecv(p.toString().length());
                                     final String json = StandardCharsets.UTF_8.decode(p.getPayload().get()).toString();
                                     o = space.jsonTranslator.translateString(json);
                                 } else

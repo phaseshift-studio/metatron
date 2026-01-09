@@ -50,13 +50,10 @@ import static org.petitparser.parser.primitive.CharacterParser.digit;
 import static org.petitparser.parser.primitive.CharacterParser.of;
 import static org.petitparser.parser.primitive.CharacterParser.word;
 import static org.petitparser.parser.primitive.StringParser.of;
-import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.lang.core.m.inst.mFluent.StartLess.from_;
-import static studio.phaseshift.metatron.lang.core.m.inst.mFluent.StartLess.split_;
 import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.*;
 import static studio.phaseshift.metatron.lang.core.m.obj.NoObj.noobj;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MFail.fail;
-import static studio.phaseshift.metatron.lang.core.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MRec.rec;
@@ -91,7 +88,7 @@ public class mParser {
                                         triplet.get2(), null == triplet.get0().get1() ?
                                                 null :
                                                 of(triplet.get0().get1()))).toList());
-        list.addFirst(seq(of('*').trim(), digit().plus().flatten()).map(t -> from_(uri(pick(t,1).toString())))); // sugar for *0 vs. *<0>
+        list.addFirst(seq(of('*').trim(), digit().plus().flatten()).map(t -> from_(uri(pick(t, 1).toString())))); // sugar for *0 vs. *<0>
         PARSERS = new Parser[list.size()];
         list.toArray(PARSERS);
         furi_parser.set(seq(word().or(seq(of("::").not(),
@@ -99,7 +96,7 @@ public class mParser {
                 opt(m_furi_poly_type(), null),
                 opt(m_furi_coefficient(), null),
                 opt(none(), null)).map(t -> new fURI(pick(t, 0)).big().poly(pick(t, 1)).c(pick(t, 2)).query(pick(t, 3))));
-        
+
         rel_parser.set(obj_rel_back_parser.seq(of("=>").trim().seq(m_obj())).map(t -> rel(pick(t, 0), pick(pick(t, 1), 1))));
         obj_no_code_parser.set(choice(
                 m_comment(),
@@ -267,9 +264,7 @@ public class mParser {
         final Result result = seq(choice(m_inst_arg(START_INST_TID), m_obj()), opt(m_comment(), null)).map(t -> pick(t, 0)).end().parse(code.trim());
         if (result.isFailure())
             LOG.except(result.getBuffer() + "\n" +
-                    String.format("%" + (result.getPosition() + "[ERROR] [Console] ".length() + 3) + "s", "") +
-                    "{{b}}^ {{r}}" +
-                    result.getMessage() + "{{X}}\n");
+                    String.format("%" + (result.getPosition() + "[ERROR] [Console] ".length() + 3) + "s", "") + "^ " + result.getMessage() + "\n");
         return result.get();
     }
 

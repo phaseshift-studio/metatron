@@ -17,7 +17,7 @@
 import json
 
 from metatron.obj import Int, Rec, Bool, Lst, Real, Str, Uri, Obj
-from metatron.util.furi import fURI
+from metatron.furi import fURI
 from metatron.util.graphitty import LOG
 
 

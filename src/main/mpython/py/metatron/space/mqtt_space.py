@@ -20,7 +20,7 @@ import ubinascii
 from umqtt.simple import MQTTClient
 
 from metatron.obj import *
-from metatron.util.furi import fURI
+from metatron.furi import fURI
 from metatron.util.graphitty import LOG
 from metatron.util.mach import translator
 from metatron.util.translators import JSONTranslator
@@ -55,9 +55,13 @@ class MqttSpace(Obj):
 
     
     def loop(self):
+        try:
             self.client.check_msg()
             self._cache_flush()
-
+        except Exception as e:
+            self.disconnect()
+            self.start()
+            
     def _cache_flush(self):
         if len(self.cache) > 100:
             LOG.warn("flushing {{y}}{}{{X}} cache", self)
@@ -73,7 +77,7 @@ class MqttSpace(Obj):
             for key, value in self.cache.items():
                 if key.matches(vid):
                     result.__setitem__(key,value) if vid.send else result.append(value)
-            return None if 0 == len(result) else result
+            return None if 0 is len(result) else result
         return self.cache.get(vid)
 
     def subscribe(self, furi, func):
@@ -84,8 +88,10 @@ class MqttSpace(Obj):
 
     def unsubscribe(self, furi):
         # self.client.(str(vid))
-        self.subscriptions.pop(furi)
-        LOG.info("unsubscribed to {{y}}{}{{X}}", furi)
+        if furi in self.subscriptions.keys():
+            self.client.unsubscribe(str(furi))
+            self.subscriptions.pop(furi)
+            LOG.info("unsubscribed from {{y}}{}{{X}}", furi)
 
     def write(self, vid, obj):
         vid = vid if isinstance(vid, fURI) else fURI(vid)

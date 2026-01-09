@@ -20,13 +20,9 @@ package studio.phaseshift.metatron.ui.widget;
 
 import org.jline.keymap.BindingReader;
 import org.jline.keymap.KeyMap;
-import org.jline.terminal.Attributes;
-import org.jline.terminal.Size;
 import org.jline.terminal.Terminal;
-import org.jline.utils.Display;
 import org.jline.utils.InfoCmp;
 import studio.phaseshift.metatron.lang.sys.console.Console;
-import studio.phaseshift.metatron.ui.Widget;
 import studio.phaseshift.metatron.ui.graphitty.Graphitty;
 
 import java.util.ArrayList;
@@ -62,7 +58,7 @@ public class Selector extends AbstractWidget<Selector> {
     private Consumer<Integer> onBrowse = i -> {
         Graphitty.log(this).none("{{|0&v1}}{{m}}browsed{{X}}: %s{{|0&^1}}", i);
     };
-    
+
     public Selector() {
     }
 
@@ -82,17 +78,10 @@ public class Selector extends AbstractWidget<Selector> {
 
 
     public void run() {
+        super.run();
         final Terminal terminal = Console.getTerminal();
-        Display display = new Display(terminal, true);
-        BindingReader bindingReader = new BindingReader(terminal.reader());
-        Attributes attr = terminal.enterRawMode();
         try {
-            //terminal.puts(InfoCmp.Capability.enter_ca_mode);
-            terminal.puts(InfoCmp.Capability.keypad_xmit);
-            terminal.writer().flush();
-            Size size = new Size(terminal.getSize().getColumns(), terminal.getSize().getRows());
-            //display.clear();
-            display.reset();
+            final BindingReader bindingReader = new BindingReader(terminal.reader());
             int selectRow = style.lowRowRange;
             int selectCol = 0;
             KeyMap<Operation> keyMap = new KeyMap<>();
@@ -102,7 +91,7 @@ public class Selector extends AbstractWidget<Selector> {
             keyMap.bind(RIGHT_COL, key(terminal, InfoCmp.Capability.key_right));
             keyMap.bind(LEFT_COL, key(terminal, InfoCmp.Capability.key_left));
             keyMap.bind(SELECTED, "\r");
-            Graphitty.log(this).none("{{^%s}}", style.attachment.rowCount());
+            Graphitty.log(this).none("{{^%s}}", style.attachment.rowCount()+1);
             while (true) {
                 display.resize(size.getRows(), size.getColumns());
                 final int selectRowFinal = selectRow;
@@ -148,12 +137,6 @@ public class Selector extends AbstractWidget<Selector> {
             }
         } catch (final Exception e) {
             e.printStackTrace();
-        } finally {
-            terminal.setAttributes(attr);
-            terminal.puts(InfoCmp.Capability.exit_ca_mode);
-            terminal.puts(InfoCmp.Capability.keypad_local);
-            terminal.writer().flush();
-            Graphitty.log(this).none("{{*}}"); // show cursor
         }
     }
 }

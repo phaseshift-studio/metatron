@@ -65,9 +65,15 @@ def main_thread_function():
     while True:
         try:
             mtron.loop()
+        except OSError as e:
+            if e.errno is 113:  # ECONNABORTED
+                mtron.soc.wifi.reconnect(mtron.secrets['ssid'], mtron.secrets['password'], mtron.secrets['host'])
+            else:
+                break
         except Exception as ex:
-            print("resetting due to unhandled main loop error", ex)
-            machine.reset()
+            print("resetting due to unhandled main loop error",ex)
+            break    
+    machine.reset()
 
 if "stack_kb" in secrets.keys():
     _thread.stack_size(secrets["stack_kb"] * 1024)

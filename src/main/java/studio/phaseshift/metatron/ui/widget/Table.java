@@ -119,10 +119,10 @@ public class Table extends AbstractWidget<Table> {
     }
 
     public String toString() {
-        if (this.style.headerDivider.isEmpty() && !this.style.divider.isEmpty())
-            this.style.headerDivider = " ".repeat(Highlighter.visualLength(this.style.divider));
         final StringBuilder sb = new StringBuilder();
         if (null != this.headers) {
+            if (this.style.headerDivider.isEmpty() && !this.style.divider.isEmpty())
+                this.style.headerDivider = " ".repeat(Highlighter.visualLength(this.style.divider));
             final List<Integer> widths = this.formattedWidths(this.headers);
             sb.append(this.style.background)
                     .append(this.style.foreground)
