@@ -60,7 +60,6 @@ public class MServer extends WebSocketServer implements Cluster, Closeable, Obj,
     @ObjFieldReflection(tid = "cluster")
     protected final Map<fURI, MConnection> cluster = new HashMap<>();
     protected GraphittyLogger LOG;
-    protected Thread thread;
     protected List<FutureObj<?>> futures = new ArrayList<>();
     private IOStat ioStat = new IOStat();
 
@@ -76,11 +75,11 @@ public class MServer extends WebSocketServer implements Cluster, Closeable, Obj,
         return this.host;
     }
 
+    @Override
     public void start() {
         LOG = Router.global().logger();
         try {
-            this.thread = new Thread(this);
-            this.thread.start();
+            super.start();
             LOG.trace("server started: %s", this.getAddress());
             BootLoader.ARGS.at(Tokens.CLUSTER).elements().filter(o -> !o.isNoObj()).distinct().forEach(n -> {
                 try {
@@ -99,15 +98,22 @@ public class MServer extends WebSocketServer implements Cluster, Closeable, Obj,
 
     }
 
-    public <T> ObjSerializer<T> getSerializer() {
-        return (ObjSerializer<T>) this.serializer;
+    private boolean interrupted = false;
+
+    @Override
+    public boolean isInterrupted() {
+        return this.interrupted;
     }
 
     @Override
-    public Thread getThread() {
-        return this.thread;
+    public void interrupt() {
+        this.interrupted = true;
     }
 
+    public <T> ObjSerializer<T> getSerializer() {
+        return (ObjSerializer<T>) this.serializer;
+    }
+    
     @Override
     public void close() {
         LOG.info("closing %s node {{b}}%s{{/b}}", Graphitty.sillyPrint("mtron", true, true), this.host);

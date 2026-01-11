@@ -26,10 +26,12 @@ import studio.phaseshift.metatron.lang.core.m.type.Rec;
 import studio.phaseshift.metatron.lang.core.m.type.Rel;
 import studio.phaseshift.metatron.lang.sys.router.Router;
 
+import java.util.Map;
 import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.lang.db.grph.inst.grphInstSet.VERTEX_TID;
 import static studio.phaseshift.metatron.lang.db.grph.type.TP3Translator.LABEL;
 
 /*
@@ -38,12 +40,12 @@ import static studio.phaseshift.metatron.lang.db.grph.type.TP3Translator.LABEL;
 public class RVertex extends RElement {
 
 
-    public RVertex(final Obj vertex) {
-        super(vertex);
+    public RVertex(final Map<Obj,Obj> vertex) {
+        super(vertex,VERTEX_TID);
     }
 
     public static RVertex of(final Rec vertex) {
-        return vertex instanceof RVertex ? (RVertex) vertex : new RVertex(vertex.vid(null)).vid(vertex.vid()).as();
+        return vertex instanceof RVertex ? (RVertex) vertex : new RVertex(vertex.jvm()).vid(vertex.vid()).as();
     }
 
     public static Stream<RVertex> of(final Obj vertices) {

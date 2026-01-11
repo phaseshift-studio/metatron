@@ -24,9 +24,7 @@ import studio.phaseshift.metatron.lang.core.m.type.Inst;
 import studio.phaseshift.metatron.lang.core.m.type.Obj;
 import studio.phaseshift.metatron.lang.core.m.type.Type;
 import studio.phaseshift.metatron.lang.core.m.type.impl.MInstSet;
-import studio.phaseshift.metatron.lang.net.iot.ZigbeeObj;
 import studio.phaseshift.metatron.lang.sys.console.Highlighter;
-import studio.phaseshift.metatron.ui.graphitty.Graphitty;
 
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -64,7 +62,6 @@ public class webInstSet extends MInstSet {
     public Set<Type> types() {
         return Stream.of(
                 webSpace.WEB_TYPE,
-                ZigbeeObj.ZIGBEE_TYPE,
                 T(PAGE_TID, mParser.parse("?[html=>?[head=>_,body=>_]]")),
                 T(CSS_TID)).collect(Collectors.toSet());
     }

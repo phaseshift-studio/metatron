@@ -23,11 +23,12 @@ import studio.phaseshift.metatron.lang.core.m.type.Inst;
 import studio.phaseshift.metatron.lang.util.serial.ObjCleanStringSerializer;
 import studio.phaseshift.metatron.ui.Border;
 import studio.phaseshift.metatron.ui.Widget;
-import studio.phaseshift.metatron.ui.graphitty.Graphitty;
-import studio.phaseshift.metatron.ui.widget.*;
+import studio.phaseshift.metatron.ui.widget.AbstractWidget;
+import studio.phaseshift.metatron.ui.widget.BarMenu;
+import studio.phaseshift.metatron.ui.widget.Panel;
+import studio.phaseshift.metatron.ui.widget.Selector;
 import studio.phaseshift.metatron.util.Tuple;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import static studio.phaseshift.metatron.lang.core.m.obj.NoObj.noobj;
@@ -49,15 +50,10 @@ public class Explain extends AbstractWidget<Explain> {
         this.style = this.style().border(Border.simple.foreground("{{m}}"));
         this.code = code.resolve(noobj()).as();
         this.profile = new Profile(this.code);
-        this.profile.table.style().headerDivider("{{[b]}} ").apply();
-        this.selector = new Selector().style().pointer("{{r}}>{{X}}").attachment(profile, false).rowRange(1, profile.table.rowCount()).apply()
-                .onBrowse((s,i) -> {
+        this.profile.instTable.style().headerDivider("{{[b]}} ").apply();
+        this.selector = new Selector().style().pointer("{{r}}>{{X}}").attachment(profile, false).rowRange(1, profile.instTable.rowCount()).apply()
+                .onBrowse((s, i) -> {
                     final Inst si = code.codeValue().get(i - 1);
-                    final Card card = new Card(si.tid().toString(), si.toString()).style().border(Border.simple.foreground("{{b}}")).background("{{[g]}}").foreground("{{y}}").margin(1, 1).apply();
-                    final List<String> rows = new ArrayList<>(s.rowStrings());
-                    rows.addAll(card.rowStrings());
-                    terminal.writer().write(Highlighter.format("{{|0&v%s&Xv}}" + card.format() + "{{^%s&<%s}}{{^%s}}", profile.height() +1, card.height(), card.width()+1, profile.height()));
-                    
                 });
         this.mainBox = new Panel(Highlighter.format(ObjCleanStringSerializer.prettyPrintCode(code).stripTrailing())).style().border(Border.simple.margin(2, 2).foreground("{{c}}")).apply()
                 .bottom(this.selector)
@@ -75,6 +71,15 @@ public class Explain extends AbstractWidget<Explain> {
         super.run();
         Widget.cursorOffOn(this.selector::run);
         this.terminal.writer().flush();
+    }
+    
+    @Override
+    public void close() {
+        this.selector.close();
+        this.menu.close();
+        this.mainBox.close();
+        this.profile.close();
+        super.close();
     }
 
     @Override

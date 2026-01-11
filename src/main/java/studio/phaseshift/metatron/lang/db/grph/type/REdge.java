@@ -24,11 +24,12 @@ import studio.phaseshift.metatron.lang.core.m.type.Obj;
 import studio.phaseshift.metatron.lang.core.m.type.Objs;
 import studio.phaseshift.metatron.lang.core.m.type.Rec;
 
+import java.util.Map;
 import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.lang.core.m.inst.mFluent.StartLess.auto;
-import static studio.phaseshift.metatron.lang.core.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.lang.db.grph.inst.grphInstSet.EDGE_TID;
 import static studio.phaseshift.metatron.lang.db.grph.type.TP3Translator.LABEL;
 
 /*
@@ -36,12 +37,12 @@ import static studio.phaseshift.metatron.lang.db.grph.type.TP3Translator.LABEL;
  */
 public class REdge extends RElement {
 
-    protected REdge(final Obj edge) {
-        super(edge);
+    protected REdge(final Map<Obj, Obj> edge) {
+        super(edge, EDGE_TID);
     }
 
     public static REdge of(final Rec edge) {
-        return edge instanceof REdge ? (REdge) edge : new REdge(edge.vid(null)).vid(edge.vid()).as();
+        return edge instanceof REdge ? (REdge) edge : new REdge(edge.jvm()).vid(edge.vid()).as();
     }
 
     public static REdge of(final String label, final fURI outVertex, final fURI inVertex, final Object... keyValues) {

@@ -37,10 +37,9 @@ class SoC(Rec):
                                                    lambda key, value: machine.reset() if value == 'offline' else "")
 
     def attach(self, device: Device):
-        key = device.tid.name()
-        if key in self.__dict__:
-            LOG.warn("overriding already existing {{y}}{}{{X}} at {{y}}{}{{X}}", device.tid, device.tid.name())
-        setattr(self, key, device)
+        if device.name in self.__dict__:
+            LOG.warn("overriding already existing {{y}}{}{{X}} at {{y}}{}{{X}}", device.tid, device.name)
+        setattr(self, device.name, device)
         if hasattr(device, "loop"):
             self.loopers.append(device)
         LOG.info("device {{y}}{}{{g}}::{{m}}T{{X}} attached as {{b}}{}", device.tid, device.name)
@@ -48,13 +47,12 @@ class SoC(Rec):
     def detach(self, device: Device):
         if device in self.loopers:
             self.loopers.remove(device)
-        if hasattr(self, device.tid.name()):
-            delattr(self,device.tid.name())
+        if hasattr(self, device.name):
+            delattr(self,device.name)
         device.stop()
         LOG.info("device {{y}}{}{{g}}::{{m}}T{{X}} detached as {{b}}{}", device.tid, device.name)
 
     def loop(self):
-        router().loop()
         for looper in self.loopers:
             looper.loop()
 
@@ -66,9 +64,12 @@ class Architecture:
         self.wlan = Wifi.connect(secrets['ssid'], secrets['password'], secrets['host'])
         self.soc_vid = f(secrets['host'])
 
+    def loop(self):
+        self.soc.loop()
+
     def __repr__(self):
         return self.soc.__repr__()
 
-    def __srt__(self):
+    def __str__(self):
         return self.__repr__()
 

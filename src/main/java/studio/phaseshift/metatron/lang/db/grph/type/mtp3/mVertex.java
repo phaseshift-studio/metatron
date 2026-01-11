@@ -56,7 +56,7 @@ public class mVertex extends mElement implements Vertex, WrappedVertex<RVertex> 
     @Override
     public String toString() {
         //  return StringFactory.vertexString(this);
-        return this.getBaseVertex().base().toString();
+        return this.getBaseVertex().toString();
     }
 
     @Override

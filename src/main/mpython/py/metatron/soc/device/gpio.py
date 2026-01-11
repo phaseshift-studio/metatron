@@ -23,7 +23,6 @@ from metatron.util.mach import translator, router
 
 GPIO_TID = f("/soc/gpio")
 
-
 class Gpio(Device):
     def __init__(self, pin_range: range, soc_vid, name="gpio"):
         Device.__init__(self, soc_vid, {}, GPIO_TID, name)

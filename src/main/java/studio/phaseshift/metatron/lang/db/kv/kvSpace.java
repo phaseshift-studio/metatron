@@ -74,6 +74,7 @@ public class kvSpace extends MSpace<Map<fURI, Obj>> {
     @Override
     public void close() {
         this.sjvm().values().stream().filter(o -> o != Router.global()).filter(o -> o != this).forEach(Common::close);
+        Router.global().removeSpace(this.vid());
         super.close();
     }
 

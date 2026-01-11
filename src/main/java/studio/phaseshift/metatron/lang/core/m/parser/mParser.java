@@ -271,7 +271,7 @@ public class mParser {
     public static Parser m_comment() {
         return choice(
                 seq(of("[--").trim(), any().starGreedy(anyOf("\n\r").or(new EndOfInputParser("end of input")))),
-                seq(of("[==").trim(), any().starGreedy(of("==]")),of("==]"))).map(t -> noobj());
+                seq(of("[==").trim(), any().starGreedy(of("==]")), of("==]"))).map(t -> noobj());
     }
 
     public static Parser m_furi() {
@@ -476,14 +476,14 @@ public class mParser {
     private static Parser generate_sugar_parser(final List<fURI> instChain, final Parser startToken, final int argCount, final Parser endToken) {
         // TODO: look into ExpressionBuilder for handling paren wrapping properly.
         if (instChain.size() == 1) {
-            return null == endToken ? generate_sugar_parser(instChain.get(0), startToken, argCount) : generate_sugar_parser(instChain.get(0), startToken, argCount, endToken);
+            return null == endToken ? generate_sugar_parser(instChain.getFirst(), startToken, argCount) : generate_sugar_parser(instChain.getFirst(), startToken, argCount, endToken);
         }
         return (argCount == 0 ?
-                seq(startToken.trim(), opt(seq(of('?'), m_furi_inst_dom_rng()).map(t -> pick(t, 1)), null)).map(t -> MInst.instB(instChain.get(0), lst(MInst.instA(instChain.get(1).query(pick(t, 1)))))) :
+                seq(startToken.trim(), opt(seq(of('?'), m_furi_inst_dom_rng()).map(t -> pick(t, 1)), null)).map(t -> MInst.instB(instChain.getFirst(), lst(MInst.instA(instChain.get(1).query(pick(t, 1)))))) :
                 seq(startToken.trim(), opt(seq(of('?'), m_furi_inst_dom_rng()).map(t -> pick(t, 1)), null), choice(
                         seq(of('(').trim(), m_obj(), of(')').trim()).map(t -> mParser.<Obj>pick(t, 1)),
                         m_obj()), null == endToken ? of("") : endToken.trim())
-                        .map(t -> MInst.instB(instChain.get(0), lst(MInst.instB(instChain.get(1).query(pick(t, 1)), lst(mParser.<Obj>pick(t, 2))))))).trim();
+                        .map(t -> MInst.instB(instChain.getFirst(), lst(MInst.instB(instChain.get(1).query(pick(t, 1)), lst(mParser.<Obj>pick(t, 2))))))).trim();
     }
 
     private static Parser generate_sugar_parser(final fURI tid, final Parser startToken, final int argCount, final Parser endToken) {

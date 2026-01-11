@@ -31,9 +31,8 @@ import studio.phaseshift.metatron.lang.db.kv.inst.kvInstSet;
 import studio.phaseshift.metatron.lang.db.kv.kvSpace;
 import studio.phaseshift.metatron.lang.db.tabl.tablInstSet;
 import studio.phaseshift.metatron.lang.db.vec.vecInstSet;
+import studio.phaseshift.metatron.lang.iot.iotInstSet;
 import studio.phaseshift.metatron.lang.net.clstr.clstrInstSet;
-import studio.phaseshift.metatron.lang.net.clstr.clusterSpace;
-import studio.phaseshift.metatron.lang.net.iot.iotInstSet;
 import studio.phaseshift.metatron.lang.net.web.webInstSet;
 import studio.phaseshift.metatron.lang.sys.fs.fileSpace;
 import studio.phaseshift.metatron.lang.sys.fs.fsInstSet;
@@ -49,7 +48,10 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import static studio.phaseshift.metatron.Tokens.BOOT;
 import static studio.phaseshift.metatron.Tokens.WS;
@@ -68,8 +70,8 @@ import static studio.phaseshift.metatron.lang.db.grph.inst.grphInstSet.GRPH_INST
 import static studio.phaseshift.metatron.lang.db.kv.inst.kvInstSet.KV_INSTSET_TID;
 import static studio.phaseshift.metatron.lang.db.tabl.tablInstSet.TABL_INSTSET_TID;
 import static studio.phaseshift.metatron.lang.db.vec.vecInstSet.VEC_INSTSET_TID;
+import static studio.phaseshift.metatron.lang.iot.iotInstSet.IOT_INSTSET_TID;
 import static studio.phaseshift.metatron.lang.net.clstr.clstrInstSet.CLSTR_INSTSET_TID;
-import static studio.phaseshift.metatron.lang.net.iot.iotInstSet.IOT_INSTSET_TID;
 import static studio.phaseshift.metatron.lang.net.web.webInstSet.WEB_INSTSET_TID;
 import static studio.phaseshift.metatron.lang.sys.fs.fsInstSet.FS_INSTSET_TID;
 import static studio.phaseshift.metatron.lang.sys.sysInstSet.SYS_OBJ_TID;
@@ -86,6 +88,7 @@ public class BootLoader implements Rec, Feature.SelfClone {
     public static Router ROUTER;
     public static Rec ARGS;
     public static boolean TYPE_CHECK = true;
+    private static final ExecutorService EXECUTOR = Executors.newFixedThreadPool(5);
 
     static {
         LOG = Graphitty.log(new BootLoader());
@@ -103,6 +106,10 @@ public class BootLoader implements Rec, Feature.SelfClone {
         Registry.open().register(UI_INSTSET_TID, uiInstSet::create);
         Registry.open().register(TABL_INSTSET_TID, tablInstSet::create);
         // Registry.singleton().register(miotInstSet.INST_TID, () -> miotInstSet.of(fURI.NULL));
+    }
+
+    public static ExecutorService getExecutor() {
+        return EXECUTOR;
     }
 
     public static void main(final String[] args) throws IOException {
@@ -169,7 +176,7 @@ public class BootLoader implements Rec, Feature.SelfClone {
             Router.writeToSpace(Router.global());
             Router.writeToSpace(new fsInstSet(f("/sys/mod/fs")));
             Router.writeToSpace(f("boot/args"), args);
- 
+
             ROUTER.start();
             ///////////////////////////////////////////////////////////////
             if (args.has(uri(Tokens.BOOT))) {
@@ -206,6 +213,7 @@ public class BootLoader implements Rec, Feature.SelfClone {
                 Router.global().close();
             ROUTER = null;
             ARGS = null;
+            EXECUTOR.shutdownNow();
             System.gc();
             LOG.info("%s {{g}}successfully{{/g}} shutdown", Graphitty.sillyPrint("metatron", true, true));
         } catch (final Exception e) {

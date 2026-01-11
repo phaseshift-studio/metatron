@@ -29,7 +29,7 @@ from arch.deploy import deploy
 from metatron.router import Router
 from metatron.util.common import load_secrets
 from metatron.util.graphitty import LOG
-from metatron.util.mach import mach
+from metatron.util.mach import mach, router
 from metatron.util.translators import PythonTranslator
 
 esp.osdebug(None)
@@ -64,6 +64,7 @@ def main_thread_function():
     LOG.info("{{y}}{}{{X}} boot process complete", mtron.soc.vid)
     while True:
         try:
+            router().loop()
             mtron.loop()
         except OSError as e:
             if e.errno is 113:  # ECONNABORTED

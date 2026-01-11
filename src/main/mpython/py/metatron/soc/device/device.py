@@ -18,7 +18,7 @@ from metatron.util.mach import router
 
 
 class Device(Rec):
-    def __init__(self, soc_vid, pvm: dict, tid, name:str):
+    def __init__(self, soc_vid, pvm: dict, tid, name: str):
         Rec.__init__(self, pvm, tid)
         self.soc_vid = soc_vid
         self.name = name
@@ -26,10 +26,10 @@ class Device(Rec):
     def start(self) -> 'Device':
         return self
 
-    def stop(self):
+    def stop(self) -> 'Device':
         router().unsubscribe(self.soc_vid.extend(self.name).extend("+"))
         router().write(self.soc_vid.extend(self.name), None)
-    
-    def broadcast(self,key):
+
+    def broadcast(self, key):
         if self.vid is not None:
             router().write(self.vid, self.pvm if key == "" else self.pvm[key])

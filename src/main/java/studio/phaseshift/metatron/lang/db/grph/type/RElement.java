@@ -22,24 +22,25 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.core.m.type.Obj;
 import studio.phaseshift.metatron.lang.core.m.type.Rec;
 import studio.phaseshift.metatron.lang.core.m.type.Rel;
-import studio.phaseshift.metatron.lang.core.m.type.facade.FRec;
 import studio.phaseshift.metatron.lang.core.m.type.impl.MRec;
 
+import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.lang.db.grph.inst.grphInstSet.EDGE_TID;
+import static studio.phaseshift.metatron.lang.db.grph.inst.grphInstSet.VERTEX_TID;
 import static studio.phaseshift.metatron.lang.db.grph.type.TP3Translator.LABEL;
 import static studio.phaseshift.metatron.lang.db.grph.type.TP3Translator.PROPS;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class RElement extends FRec {
+public class RElement extends MRec {
 
-    public RElement(final Obj element) {
-        super((Rec) element);
+    public RElement(final Map<Obj, Obj> element, final fURI tid) {
+        super(element, tid, fURI.fnull);
     }
 
     public static RElement of(final Rec obj) {

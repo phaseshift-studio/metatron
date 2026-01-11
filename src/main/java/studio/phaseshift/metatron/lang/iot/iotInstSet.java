@@ -16,16 +16,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.lang.net.iot.esp32;
+package studio.phaseshift.metatron.lang.iot;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.core.m.type.Inst;
 import studio.phaseshift.metatron.lang.core.m.type.Type;
 import studio.phaseshift.metatron.lang.core.m.type.impl.MInstSet;
-import studio.phaseshift.metatron.lang.net.iot.ZigbeeObj;
-import studio.phaseshift.metatron.lang.net.iot.iotInstSet;
-import studio.phaseshift.metatron.lang.net.iot.mqttSpace;
-import studio.phaseshift.metatron.lang.net.iot.type.Button;
+import studio.phaseshift.metatron.lang.iot.mqtt.mqttSpace;
 
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
@@ -34,20 +31,18 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static studio.phaseshift.metatron.lang.core.m.type.impl.MType.T;
-import static studio.phaseshift.metatron.lang.net.iot.iotInstSet.IOT_INSTSET_TID;
-import static studio.phaseshift.metatron.lang.net.iot.type.Button.BUTTON_TID;
+import static studio.phaseshift.metatron.furi.fURI.f;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class espInstSet extends MInstSet {
+public class iotInstSet extends MInstSet {
 
-    public static final fURI ESP_INST_SET = IOT_INSTSET_TID.extend("esp");
-    public static final fURI INST_TID = ESP_INST_SET.extend("inst");
+    public static final fURI IOT_INSTSET_TID = f("/iot");
+    public static final fURI INST_TID = IOT_INSTSET_TID.extend("inst");
 
-    public espInstSet(final fURI vid) {
-        super(ESP_INST_SET, vid);
+    public iotInstSet(final fURI vid) {
+        super(IOT_INSTSET_TID, vid);
     }
 
     public static iotInstSet create() {
@@ -57,15 +52,12 @@ public class espInstSet extends MInstSet {
     @Override
     public Set<Type> types() {
         return Stream.of(
-                mqttSpace.MQTT_TYPE,
-                ZigbeeObj.ZIGBEE_TYPE,
-                T(BUTTON_TID)).collect(Collectors.toSet());
+                mqttSpace.MQTT_TYPE).collect(Collectors.toSet());
     }
 
     @Override
     public Set<Inst> insts() {
         final List<Inst> insts = new ArrayList<>();
-        insts.addAll(Button.ButtonType.insts());
         return new LinkedHashSet<>(insts);
     }
 }

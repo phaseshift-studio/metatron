@@ -59,8 +59,13 @@ class MqttSpace(Obj):
             self.client.check_msg()
             self._cache_flush()
         except Exception as e:
-            self.disconnect()
-            self.start()
+            try:
+                LOG.error("broker {{y}}{}{{X}} error: {}", self.broker, e)
+                self.disconnect()
+                self.start()
+            except Exception as e2:
+                LOG.error("unable to reconnect with {{y}}{}{{X}}: {}", self.broker, e2)
+                raise e2
             
     def _cache_flush(self):
         if len(self.cache) > 100:
@@ -130,3 +135,6 @@ class MqttSpace(Obj):
     def __repr__(self):
         return str(self.tid) + "::[" + self.client.server + "]" + (
             ("@" + str(self.vid)) if self.vid is not None else "")
+    
+    def __str__(self):
+        return self.__repr__()

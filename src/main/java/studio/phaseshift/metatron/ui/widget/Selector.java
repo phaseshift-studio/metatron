@@ -28,7 +28,6 @@ import studio.phaseshift.metatron.ui.graphitty.Graphitty;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BiConsumer;
-import java.util.function.Consumer;
 
 import static org.jline.keymap.KeyMap.key;
 import static studio.phaseshift.metatron.ui.widget.Selector.Operation.*;
@@ -88,7 +87,7 @@ public class Selector extends AbstractWidget<Selector> {
             keyMap.bind(RIGHT_COL, key(terminal, InfoCmp.Capability.key_right));
             keyMap.bind(LEFT_COL, key(terminal, InfoCmp.Capability.key_left));
             keyMap.bind(SELECTED, "\r");
-            Graphitty.log(this).none("{{^%s}}", style.attachment.rowCount()+1);
+            Graphitty.log(this).none("{{^%s}}", style.attachment.rowCount() + 1);
             while (true) {
                 display.resize(size.getRows(), size.getColumns());
                 final int selectRowFinal = selectRow;
@@ -123,15 +122,17 @@ public class Selector extends AbstractWidget<Selector> {
                             selectRow = this.style.highRowRange - 1;
                         break;
                     case SELECTED:
-                        if(null != this.onSelect)
-                            this.onSelect.accept(this,selectRow);
+                        if (null != this.onSelect)
+                            this.onSelect.accept(this, selectRow);
+                        else
+                            this.close();
                         return;
                     case QUIT:
                         terminal.writer().println();
                         return;
                 }
-                if(null != this.onBrowse)
-                    this.onBrowse.accept(this,selectRow);
+                if (null != this.onBrowse)
+                    this.onBrowse.accept(this, selectRow);
             }
         } catch (final Exception e) {
             e.printStackTrace();

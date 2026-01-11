@@ -181,7 +181,7 @@ public interface Q extends Rec {
                     .map(Optional::get)
                     .reduce(Obj::append) : Optional.empty();
         }
-
+        
         public static Optional<Obj> processPreRead(final Lst qs, final fURI source, final fURI vid) {
             return vid.hasQuery() && !qs.isEmpty() ?
                     qs.<Q>elements()

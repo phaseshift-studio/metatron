@@ -33,23 +33,28 @@ import java.util.List;
 public class Table extends AbstractWidget<Table> {
 
     protected final List<String> headers;
-    protected final List<Tuple.Pair<String, Runnable>> menu;
+   // protected final List<Tuple.Pair<String, Runnable>> menu;
     protected final List<List<Object>> table;
 
-    public Table(final List<String> headers, final List<Tuple.Pair<String, Runnable>> menu) {
+   /* public Table(final List<String> headers, final List<Tuple.Pair<String, Runnable>> menu) {
         this.headers = headers;
         this.menu = menu;
         this.table = new ArrayList<>();
-    }
+    }*/
 
     public Table(final List<String> headers) {
         this.headers = headers;
-        this.menu = null;
+       // this.menu = null;
         this.table = new ArrayList<>();
     }
 
     public Table addRow(final List<Object> entries) {
         this.table.add(entries);
+        return this;
+    }
+
+    public Table clear() {
+        this.table.clear();
         return this;
     }
 
@@ -136,7 +141,7 @@ public class Table extends AbstractWidget<Table> {
             }
             sb.append("{{X}}\n");
         }
-        if (null != this.menu) {
+        /*if (null != this.menu) {
             final List<Integer> widths = this.formattedWidths(this.menu.stream().map(Tuple.Pair::get0).toList());
             sb.append(this.style.divider)
                     .append(this.style.foreground);
@@ -148,7 +153,7 @@ public class Table extends AbstractWidget<Table> {
                         .append(this.style.foreground);
             }
             sb.append("{{X}}");
-        }
+        }*/
         sb.append(formattedRows().stream().map(row -> row + "{{X}}\n").reduce("", (a, b) -> a + b));
         return sb.deleteCharAt(sb.length() - 1).toString();
     }

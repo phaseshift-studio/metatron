@@ -25,9 +25,7 @@ import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.core.m.obj.NoObj;
 import studio.phaseshift.metatron.lang.core.m.parser.mParser;
-import studio.phaseshift.metatron.lang.core.m.type.facade.FObj;
 import studio.phaseshift.metatron.lang.core.m.type.impl.*;
-import studio.phaseshift.metatron.lang.sys.console.Profile;
 import studio.phaseshift.metatron.lang.sys.router.Router;
 import studio.phaseshift.metatron.lang.util.serial.ObjCleanStringSerializer;
 import studio.phaseshift.metatron.lang.util.serial.ObjSerializer;
@@ -155,8 +153,6 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
     default Obj tid(final fURI tid) {
         if (this.tid().basePath().equals(tid))
             return this.tid().equals(tid) ? this : this.clone(this.jvm(), tid, this.vid());
-        if (BASE_TYPES.contains(tid.basePath()) && this instanceof FObj<?>) // unwrap a facade
-            return ((FObj<?>) this).base().tid(tid).vid(this.vid());
         return this.clone(this.jvm(), tid, this.vid());
     }
 
@@ -670,7 +666,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
                         }
                         return current;
                     }),
-                    instC(EXPLAIN_INST_TID.dom(CODE_TID).rng(STR_TID), lst(), (lhs, inst) -> str(new Profile(inst.arg(0)).toString())),
+                   // instC(EXPLAIN_INST_TID.dom(CODE_TID).rng(STR_TID), lst(), (lhs, inst) -> str(new Profile(inst.arg(0)).toString())),
                     instC(AUTO_INST_TID.dom(ALL.maybe()).rng(ALL.maybe()), lst(T(ALL.maybe())), (lhs, inst) -> inst.arg(0).apply(lhs)),
                     instC(CATCH_INST_TID.dom(ALL).rng(ALL.maybeSome()), lst(T(ALL.maybeSome())), (lhs, inst) -> lhs.isFail() ? inst.arg(0).apply(lhs.<Fail>as().caught()) : lhs),
                     docWrap(instC(END_INST_TID.dom(ALL_STAR).rng(NOOBJ_TID.zero()), lst(), (lhs, inst) -> noobj()),

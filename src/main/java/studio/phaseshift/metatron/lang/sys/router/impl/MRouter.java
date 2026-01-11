@@ -170,7 +170,7 @@ public class MRouter extends MSpace<MServer> implements Router {
                     final Space space = (Space) this.spaces().jvm().remove(s.vid().toUri());
                     if (null != space) {
                         Space.Helper.spaceCloseLog(this, space);
-                        space.close();
+                        //space.close();
                     }
                 }
             } catch (final Exception e) {

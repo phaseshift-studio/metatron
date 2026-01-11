@@ -16,12 +16,22 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.lang.net.iot.esp32.type.impl;
+package studio.phaseshift.metatron.lang.iot;
 
-import studio.phaseshift.metatron.lang.core.m.type.impl.MRec;
+import studio.phaseshift.metatron.lang.core.m.type.Int;
+import studio.phaseshift.metatron.lang.core.m.type.Rec;
+import studio.phaseshift.metatron.lang.sys.router.Router;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class MESP32 { //extends MRec {
+public interface SoC extends Rec {
+   
+   default void gpio(final Int pin, final Int value) {
+       Router.global().write(this.tid().extend(pin.intValue().toString()),value);
+   }
+   
+   default Int gpio(final Int pin) {
+      return Router.global().read(this.tid().extend(pin.intValue().toString())).as();
+   }
 }

@@ -19,10 +19,11 @@
 package studio.phaseshift.metatron.lang.sys.console;
 
 import studio.phaseshift.metatron.furi.c.cInt;
+import studio.phaseshift.metatron.lang.core.m.type.Call;
 import studio.phaseshift.metatron.lang.core.m.type.Inst;
-import studio.phaseshift.metatron.lang.core.m.type.Obj;
 import studio.phaseshift.metatron.lang.sys.router.Router;
 import studio.phaseshift.metatron.ui.widget.AbstractWidget;
+import studio.phaseshift.metatron.ui.widget.Selector;
 import studio.phaseshift.metatron.ui.widget.Table;
 
 import java.util.List;
@@ -32,64 +33,59 @@ import java.util.List;
  */
 public class Profile extends AbstractWidget<Profile> {
 
-    protected final Obj obj;
-    protected final Table table;
+    protected Call call;
+    protected Table instTable;
 
-    public Profile(final Obj obj) {
-        this.obj = obj;
-        this.table = new Table(List.of("op", "dom", "rng", "f", "args", "desc", "c_dom", "c_rng"));
-        if (obj.isObjCall()) {
-            cInt dom = cInt.ONE();
-            cInt rng = cInt.ONE();
-            boolean first = true;
-            for (final Inst i : obj.isCode() ? obj.codeValue() : List.of(obj.<Inst>as())) {
-                dom = first ? i.dom().c() : rng;
-                boolean inDom = i.dom().c().lte(rng);
-                rng = (Inst.Form.of(i) == Inst.Form.reducer) ? cInt.ONE() : (first ? i.rng().c() : i.rng().c().mult(dom));
-                first = false;
-                boolean found = !Router.global().read(i.tid().basePath()).isNoObj();
+    public Profile(final Call call) {
+        this.setCall(call);
 
-                this.table.addRow(List.of(
-                        (found ? "{{b}}" : "{{r}}") + i.tid().name(),
-                        i.dom(),
-                        i.rng(),
-                        i.hasf() ? (i.f().isLambda() ? "{{y}}<j>" : "{{y}}<m>") : "{{r}}<?>",
-                        i.args().elements().allMatch(x -> x.isResolved(true)) ? "{{y}}<,>" : "{{r}}<?,?>",
-                        "{{m}}" + Inst.Form.of(i).toString(),
-                        "{{g}}{{{" + (inDom ? "y" : "r") + "}}" + dom.toString() + "{{g}}}{{X}}",
-                        "{{g}}{{{y}}" + rng.toString() + "{{g}}}{{X}}")).style().background("{{[b]}}").foreground("{{y}}").divider("{{r}}|").apply();
-                /*if (!i.args().isEmpty()) {
-                    final Table arg = new Table(List.of(""));
-                    i.args().forEach(a -> arg.addRow(List.of(new Profile(a).toString())));
-                    table.addRow(List.of("","",arg));
-                }*/
+    }
 
-            }
-        } //else {
-        //table.addRow(List.of(obj.tid().toUri(), obj.dom(), obj.rng()));
-        //}
+    public Profile setCall(final Call call) {
+        this.call = call;
+        this.instTable = new Table(List.of("op", "dom", "rng", "f", "args", "desc", "c_dom", "c_rng"));
+        cInt dom = cInt.ONE();
+        cInt rng = cInt.ONE();
+        boolean first = true;
+        for (final Inst i : call.insts()) {
+            dom = first ? i.dom().c() : rng;
+            boolean inDom = i.dom().c().lte(rng);
+            rng = (Inst.Form.of(i) == Inst.Form.reducer) ? cInt.ONE() : (first ? i.rng().c() : i.rng().c().mult(dom));
+            first = false;
+            boolean found = !Router.global().read(i.tid().basePath()).isNoObj();
+            this.instTable.addRow(List.of(
+                    (found ? "{{b}}" : "{{r}}") + i.tid().name(),
+                    i.dom(),
+                    i.rng(),
+                    i.hasf() ? (i.f().isLambda() ? "{{y}}<j>" : "{{y}}<m>") : "{{r}}<?>",
+                    i.args().elements().allMatch(x -> x.isResolved(true)) ? "{{y}}<,>" : "{{r}}<?,?>",
+                    "{{m}}" + Inst.Form.of(i).toString(),
+                    "{{g}}{{{" + (inDom ? "y" : "r") + "}}" + dom.toString() + "{{g}}}{{X}}",
+                    "{{g}}{{{y}}" + rng.toString() + "{{g}}}{{X}}")).style().background("{{[b]}}").foreground("{{y}}").divider("{{r}}|").apply();
+        }
+        return this;
     }
 
     public String toString() {
-        return this.table.toString();
+        return this.instTable.toString();
     }
 
     @Override
     public int width() {
-        return this.table.width();
+        return this.instTable.width();
     }
 
     @Override
     public int height() {
-        return this.table.height();
+        return this.instTable.height();
     }
 
     @Override
     public String rowString(int i) {
-        return this.table.rowString(i);
+        return this.instTable.rowString(i);
     }
 
     public Table table() {
-        return this.table;
+        return this.instTable;
     }
 }

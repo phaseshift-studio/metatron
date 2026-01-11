@@ -18,14 +18,14 @@
 
 package studio.phaseshift.metatron.util;
 
+import studio.phaseshift.metatron.BootLoader;
+
 import java.io.Closeable;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public interface Threadable extends Closeable {
-
-    Thread getThread();
+public interface Threadable extends Closeable, Runnable {
 
     @Override
     default void close() {
@@ -33,24 +33,10 @@ public interface Threadable extends Closeable {
     }
 
     default void start() {
-        if (null != this.getThread())
-            this.getThread().start();
-        else throw MTronException.of(new IllegalStateException("no thread available"));
+        BootLoader.getExecutor().submit(this);
     }
 
-    default void interrupt() {
-        if (null != this.getThread())
-            this.getThread().interrupt();
-        else throw MTronException.of(new IllegalStateException("no thread available"));
-    }
+    boolean isInterrupted();
 
-    default void join() {
-        if (null != this.getThread()) {
-            try {
-                this.getThread().join();
-            } catch (final InterruptedException e) {
-                throw MTronException.of(e);
-            }
-        }
-    }
+    void interrupt();
 }

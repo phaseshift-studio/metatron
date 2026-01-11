@@ -100,11 +100,7 @@ public interface Space extends Rec, Closeable {
 
     @Override
     default void close() {
-        if (Router.loaded() && null != this.vid()) {
-            Router.global().removeSpace(this.vid());
-            //Router.global().write(this.vid().extend(fURI.ALL), noobj());
-        }
-        Common.close(this.sjvm());
+        //Common.close(this.sjvm());
         Common.close(this.jvm());
     }
 

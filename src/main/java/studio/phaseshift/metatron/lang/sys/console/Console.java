@@ -97,8 +97,8 @@ public class Console extends JRec implements Threadable, Runnable {
             Paths.get("conf"),                                     // application-wide settings
             Paths.get(System.getProperty("user.home"), ".metatron") // user-specific settings
     );
-    private final Thread thread;
     public static Console LOCAL_INSTANCE = null;
+    public MMachine machine = null;
 
     public static final Type CONSOLE_TYPE = T(CONSOLE_TID, isa_(rec()), instC(INST_TID.dom(ALL.maybe()).rng(CONSOLE_TID), lst(T(REC_TID)), (lhs, inst) -> {
         final Console console = new Console(inst.arg(0).as());
@@ -118,7 +118,12 @@ public class Console extends JRec implements Threadable, Runnable {
                     .blockCommentDelims(new DefaultParser.BlockCommentDelims("[===", "===]"))
                     .eofOnUnclosedQuote(true)
                     .eofOnUnclosedBracket(DefaultParser.Bracket.CURLY, DefaultParser.Bracket.ROUND, DefaultParser.Bracket.SQUARE);
-            Console.terminal = TerminalBuilder.builder().encoding(StandardCharsets.UTF_8).system(true).build();
+            Console.terminal = TerminalBuilder.builder().signalHandler(signal -> {
+                if (signal == Terminal.Signal.INT) {
+                    if (null != this.machine)
+                        this.machine.interrupt();
+                }
+            }).encoding(StandardCharsets.UTF_8).system(true).build();
             this.outputHeader();
             final Supplier<Path> currentDir = () -> Paths.get("");
             final Builtins builtins = new Builtins(currentDir, Console.configurations, null);
@@ -141,7 +146,6 @@ public class Console extends JRec implements Threadable, Runnable {
                     .build();
             new CustomWidgets(this.reader);
             this.status = new StatusLine(this, "{{b}}loading...{{X}}");
-            this.thread = new Thread(this);
         } catch (final Exception e) {
             throw MTronException.of(e);
         }
@@ -163,12 +167,20 @@ public class Console extends JRec implements Threadable, Runnable {
         }
     }
 
-    public void write(final Object object) {
-        terminal.writer().write(Highlighter.format(object));
+    private boolean interrupted = false;
+
+    @Override
+    public boolean isInterrupted() {
+        return this.interrupted;
     }
 
-    public void writeAbove(final Object object) {
-        reader.printAbove(Highlighter.format(object));
+    @Override
+    public void interrupt() {
+        this.interrupted = true;
+    }
+
+    public void write(final Object object) {
+        terminal.writer().write(Highlighter.format(object));
     }
 
     public static Terminal getTerminal() {
@@ -187,18 +199,23 @@ public class Console extends JRec implements Threadable, Runnable {
         return Console.configurations;
     }
 
+    protected void printResult(final Obj result) {
+        result.stream().forEach(o -> {
+            this.write("{{-X-}}{{m}}=={{g}}>{{X}}");
+            this.write(o);
+            this.write("\n");
+        });
+    }
+
     public void run() {
         while (BOOTING) {
             Common.sleepThread(10);
         }
         this.status.start();
         Common.sleepThread(50);
-        String line = "";
-        while (!this.thread.isInterrupted()) {
+        while (!this.isInterrupted()) {
             try {
-                Obj result = null;
-                //Graphitty.out(this.terminal.output(), "%s{{v%d&^%d&Xv}}","\n");
-                line = this.reader.readLine(Graphitty.string("{{m}}mtron{{g}}> ")).trim();
+                final String line = this.reader.readLine(Graphitty.string("{{m}}mtron{{g}}> ")).trim();
                 if (line.equals(":header"))
                     this.outputHeader();
                 else if (line.equals(":quit"))
@@ -211,7 +228,7 @@ public class Console extends JRec implements Threadable, Runnable {
                             List.of("name", "short", "description"))
                             .addRow(List.of("space walk", "<tab>", "explore spaces"))
                             .addRow(List.of("introspect", "<space><tab>", "analyze machine"))
-                            .addRow(List.of("header", "random header", "random header")).toString()).style().border(Border.simple.foreground("{{b}}")).apply().toString());
+                            .addRow(List.of("header", "random header", "random header")).style().headerDivider("{{[b]}} ").apply().toString()).style().border(Border.simple.foreground("{{b}}")).apply().toString());
                 } else if (line.startsWith(":log")) {
                     LogObj.setSLF4J(line.substring(4));
                 } else if (line.startsWith(":card")) {
@@ -234,22 +251,22 @@ public class Console extends JRec implements Threadable, Runnable {
                     this.status.setState(Level.valueOf(line.substring(6).trim().toUpperCase()));
                 } else {
                     this.status.startTimer();
-                    result = mParser.parse(line);
-                    if (null != result && !result.isNoObj()) {
-                        (result.isObjCall() ?
-                                MMachine.of(result.as()).onHalt(o -> {
-                                    this.write("{{-X-}}{{m}}=={{g}}>{{X}}");
-                                    this.write(o);
-                                    this.write("\n");
-                                }).apply()
-                                : result).stream().forEach(o -> {
-                            this.write("{{-X-}}{{m}}=={{g}}>{{X}}");
-                            this.write(o);
-                            this.write("\n");
-                        });
+                    final Obj parseResult = mParser.parse(line);
+                    if (null != parseResult && !parseResult.isNoObj()) {
+                        final Obj computeResult;
+                        if (!parseResult.isObjCall())
+                            computeResult = parseResult;
+                        else {
+                            this.machine = (MMachine) MMachine.of(parseResult.as()).onHalt(this::printResult);
+                            computeResult = this.machine.apply();
+                        }
+                        computeResult.stream().forEach(this::printResult);
                     }
+                    this.machine = null;
                 }
             } catch (final UserInterruptException e) {
+                if (null != this.machine)
+                    this.machine.interrupt();
                 LOG.warn(Graphitty.sillyPrint("process interrupted", true, true));
             } catch (final EndOfFileException e) {
                 System.exit(0);
@@ -268,11 +285,6 @@ public class Console extends JRec implements Threadable, Runnable {
                 this.status.stopTimer();
                 this.status.redraw();
             }
-        }
-        try {
-            terminal.close();
-        } catch (final IOException e) {
-            LOG.error(e);
         }
         this.close();
         System.exit(0);
@@ -318,11 +330,6 @@ public class Console extends JRec implements Threadable, Runnable {
         Graphitty.out(terminal.output(), "   {{m}}:help{{X}} for console features\n\n");
     }
 
-    @Override
-    public Thread getThread() {
-        return this.thread;
-    }
-
     class CustomWidgets extends Widgets {
 
         private CustomWidgets(final LineReader reader) {
@@ -356,7 +363,7 @@ public class Console extends JRec implements Threadable, Runnable {
                     }
                 } catch (final Exception e) {
                     // do nothing
-                    e.printStackTrace();
+                    // Se.printStackTrace();
                 }
                 return true;
             }, key(Console.terminal, InfoCmp.Capability.tab));

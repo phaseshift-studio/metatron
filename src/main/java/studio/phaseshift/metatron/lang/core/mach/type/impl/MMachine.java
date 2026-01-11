@@ -54,6 +54,7 @@ public class MMachine extends MObj implements Machine {
     private final GraphittyLogger LOG = Graphitty.log(this);
     private Consumer<Obj> onHalt = o -> this.halted().append(o);
     public static Supplier<Obj> RUNNING_SUPPLIER = ListMonad::of;
+    public boolean interrupted = false;
 
     // code / running / barriers / halted
     public MMachine(final Quartet<Code, Obj, Lst, Obj> value, final fURI tid, final fURI vid) {
@@ -104,7 +105,7 @@ public class MMachine extends MObj implements Machine {
     }
 
     protected Monad split(final Monad monad) {
-        if(monad.obj().unique() && monad.inst().dom().c().isOne() || monad.inst().dom().c().isAny())
+        if (monad.obj().unique() && monad.inst().dom().c().isOne() || monad.inst().dom().c().isAny())
             return monad;
         final Tuple.Pair<Obj, Obj> pair = monad.obj().take(cInt.of(monad.inst().dom().c().max()));
         if (!pair.get1().isNoObj())
@@ -113,12 +114,16 @@ public class MMachine extends MObj implements Machine {
         return monad.obj(pair.get0());
     }
 
+    public void interrupt() {
+        this.interrupted = true;
+    }
+
     @Override
     public Obj apply(final Obj lhs) {
         final Code code = this.resolve(lhs).code();
         if (this.running().c().isZero())
             this.running().append(MMonad.of(noobj(), code.insts().getFirst()));
-        while (true) {
+        while (!this.interrupted) {
             final Monad m = (Monad) this.running().take();
             if (null != m) {
                 LOG.trace("   {{g}}=>{{/g}} processing monad %s [%s]", m, m.inst().isInitial() ? "initial" : "midway");
@@ -142,7 +147,7 @@ public class MMachine extends MObj implements Machine {
                         } else if (!n.dead()) {
                             if (n.halted()) {
                                 LOG.trace("{{y}}====>{{/y}} halting monad %s", n);
-                               // n.obj().iterator().forEachRemaining(this::processHalted);
+                                // n.obj().iterator().forEachRemaining(this::processHalted);
                                 n.obj().iterator().forEachRemaining(this.onHalt());
                             } else {
                                 LOG.trace("{{g}}====>{{/g}} propagating monad %s", n);
@@ -186,8 +191,11 @@ public class MMachine extends MObj implements Machine {
                 break;
             }
         }
-        //return this;
-        return this.halted();
+        if (this.interrupted) {
+            LOG.warn(Graphitty.sillyPrint("process interrupted", true, true));
+            return noobj();
+        } else
+            return this.halted();
     }
 
     @Override

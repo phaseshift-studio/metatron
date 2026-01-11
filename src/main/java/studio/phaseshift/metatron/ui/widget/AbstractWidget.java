@@ -54,11 +54,11 @@ public abstract class AbstractWidget<W extends AbstractWidget<W>> implements Wid
 
     @Override
     public void run() {
-        this.display = new Display(Console.getTerminal(), true);
+        this.display = new Display(this.terminal, false);
         this.attributes = this.terminal.enterRawMode();
         this.terminal.puts(InfoCmp.Capability.keypad_xmit);
         this.terminal.writer().flush();
-        this.size = new Size(Console.getTerminal().getSize().getColumns(), this.terminal.getSize().getRows());
+        this.size = new Size(this.terminal.getSize().getColumns(), this.terminal.getSize().getRows());
         //  this.display();
     }
 

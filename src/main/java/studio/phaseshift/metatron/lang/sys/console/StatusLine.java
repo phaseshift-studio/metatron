@@ -35,20 +35,19 @@ import static org.slf4j.event.Level.*;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class StatusLine implements Threadable, Runnable {
+public class StatusLine implements Threadable {
 
     private AttributedString line;
     private Level state = INFO;
     private long startTime = 0;
     private long lastExecutionTime = 0;
     private final Status status;
-    private final Thread thread;
+    private boolean interrupted = false;
 
 
     public StatusLine(final Console console, final String line) {
         this.line = new AttributedStringBuilder().append(line).toAttributedString();
         this.status = Status.getStatus(console.getTerminal());
-        this.thread = new Thread(this);
     }
 
     public void startTimer() {
@@ -68,11 +67,7 @@ public class StatusLine implements Threadable, Runnable {
             return time;
         }
     }
-
-    public void setLastExecutionTime(final long lastExecutionTime) {
-        this.lastExecutionTime = lastExecutionTime;
-    }
-
+    
     public void setState(final Level state) {
         this.state = state;
     }
@@ -91,7 +86,7 @@ public class StatusLine implements Threadable, Runnable {
     }
 
     public void run() {
-        while (!this.thread.isInterrupted()) {
+        while (!this.isInterrupted()) {
             final String color;
             if (this.state.equals(WARN))
                 color = "y";
@@ -103,9 +98,9 @@ public class StatusLine implements Threadable, Runnable {
                 final AttributedString temp = new AttributedStringBuilder()
                         .ansiAppend(Graphitty.string("{{[" + color + "]&y}} %s", Router.global().server().host()))
                         .ansiAppend(Graphitty.string("{{g}}|{{w}}nodes:{{y}}%d{{[" + color + "]&w}}", Router.global().server().nodes().size()))
-                        .ansiAppend(Graphitty.string("{{g}}|{{w}}in:{{y}}%d{{[" + color + "]&w}}", Router.global().server().stats().getBytesRecv()))
-                        .ansiAppend(Graphitty.string("{{g}}|{{w}}out:{{y}}%d{{[" + color + "]&w}}", Router.global().server().stats().getBytesSent()))
-                        .ansiAppend(Graphitty.string("{{g}}|{{w}}running time (ms):{{y}}%,d{{[" + color + "]&w}}", this.runningTime()))
+                        .ansiAppend(Graphitty.string("{{g}}|{{w}}in:{{y}}%d{{[" + color + "]}} bytes", Router.global().server().stats().getBytesRecv()))
+                        .ansiAppend(Graphitty.string("{{g}}|{{w}}out:{{y}}%d{{[" + color + "]}} bytes", Router.global().server().stats().getBytesSent()))
+                        .ansiAppend(Graphitty.string("{{g}}|{{w}}running time:{{y}}%,d{{[" + color + "]}} ms", this.runningTime()))
                         .append(Graphitty.string("{{g}}|{{[" + color + "]}}%s.", " ".repeat(200)))
                         .toAttributedString();
                 if (!this.line.equals(temp)) {
@@ -122,8 +117,14 @@ public class StatusLine implements Threadable, Runnable {
         this.status.close();
     }
 
+
     @Override
-    public Thread getThread() {
-        return this.thread;
+    public boolean isInterrupted() {
+        return this.interrupted;
+    }
+
+    @Override
+    public void interrupt() {
+        this.interrupted = true;
     }
 }
