@@ -33,9 +33,9 @@ SSD1306_TID = f("/soc/ssd1306")
 
 
 class Ssd1306(Device):
-    def __init__(self, i2c, addr, height, width, soc_vid, name='ssd1306'):
+    def __init__(self, i2c: Device, addr, height:int, width:int, soc_vid, name='ssd1306'):
         Device.__init__(self, soc_vid, {'addr': addr, 'width': width, 'height': height}, SSD1306_TID, name)
-        self.i2c = i2c
+        self.i2c = i2c.pvm
         self.addr = addr
         self.temp = bytearray(2)
         # Add an extra byte to the data buffer to hold an I2C data/command byte
@@ -126,24 +126,24 @@ class Ssd1306(Device):
     def clear(self, show=True):
         self.fill(0, show)
 
-    def fill(self, col: int=1, show=True):
+    def fill(self, col: int = 1, show=True):
         self.framebuf.fill(col)
         if show:
             self.show()
 
-    def pixel(self, x: int, y: int, col: int=1, show=True):
+    def pixel(self, x: int, y: int, col: int = 1, show=True):
         self.framebuf.pixel(x, y, col)
         if show:
             self.show()
 
-    def square(self, x: int, y: int, size: int, col: int=1, show: bool = True):
+    def square(self, x: int, y: int, size: int, col: int = 1, show: bool = True):
         for i in range(x, x + size):
             for j in range(y, y + size):
                 self.framebuf.pixel(i, j, col)
         if show:
             self.show()
 
-    def circle(self, x0: int, y0: int, radius: int, col: int=1, show: bool = True):
+    def circle(self, x0: int, y0: int, radius: int, col: int = 1, show: bool = True):
         x = radius
         y = 0
         err = 0
@@ -181,7 +181,7 @@ class Ssd1306(Device):
         if show:
             self.show()
 
-    def text(self, text: str, x: int, y: int, col: int=1, show: bool = True):
+    def text(self, text: str, x: int, y: int, col: int = 1, show: bool = True):
         self.framebuf.text(text, x, y, col)
         if show:
             self.show()

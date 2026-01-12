@@ -49,5 +49,5 @@ class Walltron(Architecture):
         self.soc.attach(Gpio(pin_range=range(0, 35), soc_vid=self.soc_vid).start())
         self.soc.attach(Pwm(soc_vid=self.soc_vid).start())
         self.soc.attach(I2c(scl_pin=22, sda_pin=21, soc_vid=self.soc_vid).start())
-        self.soc.attach(Ssd1306(i2c=machine.I2C(sda=machine.Pin(21), scl=machine.Pin(22)), addr=0x3c, height=64, width=128, soc_vid=self.soc_vid, name="oled").start())
+        self.soc.attach(Ssd1306(i2c=self.soc.i2c, addr=0x3c, height=64, width=128, soc_vid=self.soc_vid, name="oled").start())
         #####################################################################################################

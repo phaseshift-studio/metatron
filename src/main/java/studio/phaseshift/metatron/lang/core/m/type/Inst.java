@@ -238,6 +238,7 @@ public interface Inst extends Call {
         try {
             final Inst resolved = Router.global().read(this.tid().basePath())
                     .stream()
+                    .map(i -> i.isInst() ? i : instC(this.tid().dom(lhs.tid()).rng(ALL.maybeSome()), this.args(), (lhs2, inst) -> Router.global().write(this.tid(), this.args())))
                     .map(Obj::<Inst>as)
                     .filter(i -> (i.args().isEmpty() && this.arg(0).isNoObj()) || i.args().isRec() || i.args().count() >= this.args().count()) // TODO: check which recs are default
                     .filter(i -> !lhs.isInst() || (i.dom().baseType().equals(INST_TID)))
@@ -258,7 +259,7 @@ public interface Inst extends Call {
                     })
 
                     .filter(i -> !Objects.isNull(i))
-                    .map(i -> i.isInitial() ? i.rng(i.arg(0).type()) : i) // TODO: only start()?
+                    .map(i -> i.isInitial() && !i.hasRng() ? i.rng(i.arg(0).type()) : i) // TODO: only start()?
                     //.map(i -> lhs.isType() ?  i.dom(lhs.c(i.dom().c()).as()).<Inst>as() : i)
                     .map(i -> i.c(this.c()))
                     .findFirst()

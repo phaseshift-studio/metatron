@@ -25,10 +25,11 @@ from metatron.util.graphitty import LOG
 from metatron.util.mach import translator
 from metatron.util.translators import JSONTranslator
 
+MQTT_SPACE_TID = f("/iot/space/mqtt")
 
 class MqttSpace(Obj):
     def __init__(self, pattern: fURI, vid: fURI = None):
-        Obj.__init__(self, f("/iot/space/mqtt"), vid)
+        Obj.__init__(self, MQTT_SPACE_TID, vid)
         self.pattern = pattern
         self.cache = {}
         self.subscriptions = {}
