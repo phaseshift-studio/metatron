@@ -80,7 +80,7 @@ public class stackSpace extends MSpace<Stack<Poly>> {
         // if (obj.isUri() && obj.uriValue().equals(vid))
         //    return obj;
         if (!this.sjvm().isEmpty())
-            this.sjvm().get(0).<Poly>as().at(vid.toUri(), obj);
+            this.sjvm().getFirst().<Poly>as().at(vid.toUri(), obj);
         // else
         this.root.write(vid, obj);
         return obj;

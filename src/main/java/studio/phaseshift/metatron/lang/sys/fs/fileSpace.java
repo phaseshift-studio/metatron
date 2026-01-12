@@ -19,25 +19,28 @@
 package studio.phaseshift.metatron.lang.sys.fs;
 
 import studio.phaseshift.metatron.Tokens;
+import studio.phaseshift.metatron.furi.Q;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.MSpace;
 import studio.phaseshift.metatron.lang.Space;
 import studio.phaseshift.metatron.lang.core.m.type.*;
 import studio.phaseshift.metatron.lang.sys.console.Highlighter;
 import studio.phaseshift.metatron.lang.sys.router.Router;
+import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
+import studio.phaseshift.metatron.util.Tuple.Pair;
 
+import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.nio.file.attribute.PosixFilePermissions;
-import java.util.LinkedHashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.Tokens.USER_HOME;
@@ -48,7 +51,6 @@ import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.INST_TID;
 import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.URI_TID;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
-import static studio.phaseshift.metatron.lang.core.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
@@ -74,22 +76,33 @@ public class fileSpace extends MSpace<FileSystem> {
 
     private fileSpace(final FileSystem sjvm, final Map<Obj, Obj> jvm, final fURI pattern, final fURI vid) {
         super(sjvm, jvm, pattern, FS_TID, vid);
-        final Rel rewrite =  jvm.getOrDefault(uri(Tokens.REWRITE), rel(uri(""), uri(""))).asRel();
+        final Rel rewrite = jvm.getOrDefault(uri(Tokens.REWRITE), rel(uri(""), uri(""))).asRel();
         final String prefix = rewrite.first().uriValue().toString().replace("~", System.getProperty(USER_HOME));
         final String prepend = rewrite.second().uriValue().toString().replace("~", System.getProperty(USER_HOME));
-        this.rewrite = Tuple.Pair.with(prefix,prepend);
+        this.rewrite = Tuple.Pair.with(prefix, prepend);
     }
 
     @Override
     public Obj read(final fURI vid) {
+        return Q.Helper.processPreRead(this.qs(), vid, vid).orElseGet(() -> {
+            Obj result = Space.Helper.resolveRead(this, vid.basePath(), directReader());
+            //return result;
+            return Q.Helper.processPostRead(this.qs(), vid, vid, result).orElse(result);
+        });
+
         //return Space.Helper.resolveRead(this, vid, this.directReader());
-        return objs(this.directReader().apply(vid).entrySet().stream().map(kv -> vid.isNode() ? kv.getValue() : rel(uri(kv.getKey()), kv.getValue())));
+        // return objs(this.directReader().apply(vid).entrySet().stream().map(kv -> vid.isNode() ? kv.getValue() : rel(uri(kv.getKey()), kv.getValue())));
     }
 
     @Override
     public Obj write(final fURI vid, final Obj obj) {
-        // return this.qs().processPreWrite(vid, vid, obj).orElseGet(() -> {
-        return this.directWriter().apply(vid, obj);
+        return Q.Helper.processPreWrite(this.qs(), vid, vid, obj).orElseGet(() -> {
+            Space.Helper.resolveWrite(this, vid.basePath(), obj, this.directWriter(), this.directReader());
+            //return obj;
+            return Q.Helper.processPostWrite(this.qs(), vid, vid, obj).orElse(Q.Helper.processQlessWrite(this.qs(), vid, vid, obj).orElse(obj));
+        });
+        //   return this.qs().processPreWrite(vid, vid, obj).orElseGet(() -> {
+        //  return this.directWriter().apply(vid, obj);
 
         //Space.Helper.resolveWrite(this, vid.basePath(), obj, this.directWriter(), this.directReader());
         //return obj;
@@ -107,15 +120,17 @@ public class fileSpace extends MSpace<FileSystem> {
 
 
     @Override
-    public Function<fURI, Map<fURI, Obj>> directReader() {
+    public Function<fURI, Iterator<Tuple.Pair<fURI, Obj>>> directReader() {
         return (key) -> {
             if (key.equals(ALL))
                 throw MTronException.of("infinite nested walks on file system not allowed");
             else {
                 if (key.hasPattern()) {
-                    try (Stream<fURI> walk = Files.walk(Path.of(Space.Helper.toNativeSpace(key.retractPattern(), this.rewrite)), vid.hasPattern() ? Integer.MAX_VALUE : vid.segments().size() + 1, FileVisitOption.FOLLOW_LINKS)
-                            .map(p -> Space.Helper.fromNativeSpace(p.toAbsolutePath().toString(), this.rewrite)).filter(p -> p.matches(key))) {
-                        return walk.collect(Collectors.toMap(p -> p, fURI::toUri, Obj::append, LinkedHashMap::new));
+                    try (final Stream<fURI> walk = Files
+                            .walk(Path.of(Space.Helper.toNativeSpace(key.retractPattern(), this.rewrite)), vid.hasPattern() ? Integer.MAX_VALUE : vid.segments().size() + 1, FileVisitOption.FOLLOW_LINKS)
+                            .map(p -> Space.Helper.fromNativeSpace(p.toAbsolutePath().toString(), this.rewrite))
+                            .filter(p -> p.matches(key))) {
+                        return walk.map(kv -> Pair.<fURI, Obj>with(kv, kv.toUri())).iterator();
                     } catch (IOException e) {
                         throw MTronException.of(e);
                     }
@@ -123,12 +138,9 @@ public class fileSpace extends MSpace<FileSystem> {
                     try {
                         final Path vidPath = Path.of(Space.Helper.toNativeSpace(key, this.rewrite));
                         if (Files.isDirectory(vidPath)) {
-                            return Files.list(vidPath)
-                                    .collect(Collectors.toMap(
-                                            p -> f(p.toString()),
-                                            fileSpace::makeFile, Obj::append, LinkedHashMap::new));
+                            return Files.list(vidPath).map(p -> Pair.<fURI, Obj>with(f(p.toString()), makeFile(p))).iterator();
                         } else {
-                            return Map.of(Space.Helper.fromNativeSpace(vidPath.toString(), this.rewrite), makeFile(vidPath));
+                            return IteratorUtil.of(Pair.with(Space.Helper.fromNativeSpace(vidPath.toString(), this.rewrite), makeFile(vidPath)));
                         }
                     } catch (final IOException e) {
                         throw MTronException.of(e);
@@ -142,7 +154,7 @@ public class fileSpace extends MSpace<FileSystem> {
     public BiFunction<fURI, Obj, Obj> directWriter() {
         return (pattern, obj) -> {
             if (pattern.hasPattern()) {
-                this.directReader().apply(pattern).forEach((key, value) -> this.write(key, obj));
+                this.directReader().apply(pattern).forEachRemaining(kv -> this.write(kv.get0(), kv.get1()));
             } else {
                 try {
                     if (obj.isNoObj()) {
@@ -150,7 +162,9 @@ public class fileSpace extends MSpace<FileSystem> {
                         //   Files.delete(Path.of(pattern.toString()));
                     } else {
                         LOG.info("writing %s to %s", obj, pattern);
-                        final FileOutputStream writer = new FileOutputStream(pattern.toString());
+                        final File file = new File(pattern.toString());
+                        file.createNewFile();
+                        final FileOutputStream writer = new FileOutputStream(file);
                         if (obj.isBytes())
                             writer.write(obj.bytesValue().array());
                         else if (obj.isStr())

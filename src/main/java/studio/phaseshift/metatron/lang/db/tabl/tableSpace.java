@@ -31,11 +31,14 @@ import studio.phaseshift.metatron.lang.core.m.type.Type;
 import studio.phaseshift.metatron.lang.sys.router.Router;
 import studio.phaseshift.metatron.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.ui.graphitty.GraphittyLogger;
+import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
+import studio.phaseshift.metatron.util.Tuple;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.function.Function;
@@ -102,7 +105,7 @@ public class tableSpace extends MSpace<Connection> {
     }
 
 
-    public Function<fURI, Map<fURI, Obj>> directReader() {
+    public Function<fURI, Iterator<Tuple.Pair<fURI,Obj>>> directReader() {
         return (pattern) -> {
             try {
                 final Map<fURI, Obj> results = new LinkedHashMap<>();
@@ -126,7 +129,7 @@ public class tableSpace extends MSpace<Connection> {
                     // Convert ResultSet to MRec and add to results
                 }
 
-                return results;
+                return IteratorUtil.of();
             } catch (final Exception e) {
                 throw MTronException.of(e);
             }

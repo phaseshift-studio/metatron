@@ -46,7 +46,7 @@ color yellow "(true)|(false)"
 color yellow "[\"][^\"]*[\"]"
 color yellow "['][^']*[']"
 color yellow start="\"\"\"" end="\"\"\""
-color yellow start="'''" end="'''"
+# color yellow start="'''" end="'''"
 ### type
 color magenta "::T"
 ### noobj 
@@ -61,5 +61,5 @@ color red "([a-z]|[0-9]|/)*fail::"
 color yellow "!\*" "\{<j>\}"
 color green "\{|\}" 
 ### comments
-color gray "\[--([^(--\])]*(--\])?|[^(--\])]*$)"
+color gray start="\[--" end="--\]"
 color gray start="\[==" end="==\]"

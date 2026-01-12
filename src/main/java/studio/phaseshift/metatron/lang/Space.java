@@ -22,14 +22,13 @@ import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.core.m.type.*;
 import studio.phaseshift.metatron.lang.core.mach.type.impl.MMachine;
-import studio.phaseshift.metatron.lang.sys.router.Router;
 import studio.phaseshift.metatron.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.util.Common;
+import studio.phaseshift.metatron.util.IteratorUtil;
+import studio.phaseshift.metatron.util.Tuple;
 
 import java.io.Closeable;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
@@ -104,8 +103,8 @@ public interface Space extends Rec, Closeable {
         Common.close(this.jvm());
     }
 
-    default Function<fURI, Map<fURI, Obj>> directReader() {
-        return f -> Map.of();
+    default Function<fURI, Iterator<Pair<fURI, Obj>>> directReader() {
+        return f -> IteratorUtil.of();
     }
 
     default BiFunction<fURI, Obj, Obj> directWriter() {
@@ -149,12 +148,12 @@ public interface Space extends Rec, Closeable {
             space.logger().warn("the clone of a space is the space itself");
         }
 
-        public static String toNativeSpace(final fURI vid, final Pair<String,String> rewrite) {
+        public static String toNativeSpace(final fURI vid, final Pair<String, String> rewrite) {
             return null == rewrite ? vid.toString() : rewrite.get1() + vid.toString().replaceFirst(rewrite.get0(), "");
         }
 
-        public static fURI fromNativeSpace(final String vid, final Pair<String,String> rewrite) {
-            return null == rewrite ? f(vid) : f(rewrite.get0() +  vid.replaceFirst(rewrite.get1(),""));
+        public static fURI fromNativeSpace(final String vid, final Pair<String, String> rewrite) {
+            return null == rewrite ? f(vid) : f(rewrite.get0() + vid.replaceFirst(rewrite.get1(), ""));
         }
 
         public static Obj resolveApply(final Space space, final Obj rhs) {
@@ -167,33 +166,33 @@ public interface Space extends Rec, Closeable {
             }
         }
 
-        public static Map<fURI, Obj> unrollPoly(final Map<fURI, Obj> result, final fURI polyvid, final Poly<?, ?> poly, final fURI pattern) {
+        public static List<Pair<fURI, Obj>> unrollPoly(final fURI polyvid, final Poly<?, ?> poly, final fURI pattern) {
+            final List<Pair<fURI, Obj>> results = new ArrayList<>();
             poly.indexedStream()
                     .filter(r -> r.second().isPoly() || polyvid.extend(f(r.first().jvm().toString())).matches(pattern))
                     .forEach(r -> {
                         final fURI key = polyvid.extend(f(r.first().jvm().toString()));
                         if (!r.second().isPoly() || key.matches(pattern))
-                            result.put(key, r.second());
-                        if (r.second().isPoly())
-                            unrollPoly(result, key, r.second().as(), pattern);
+                            results.add(Pair.with(key, r.second()));
+                        else if (r.second().isPoly())
+                            results.addAll(unrollPoly(key, r.second().as(), pattern));
                     });
-
-            return result;
+            return results;
         }
 
-        public static Obj resolveRead(final Space space, final fURI pattern, final Function<fURI, Map<fURI, Obj>> directReader) { //final Map<fURI, Obj> store) {
-            final Map<Uri, Obj> map = new LinkedHashMap<>();
-            directReader.apply(pattern).forEach((key, value) -> map.put(key.toUri(), value));
-            if (map.isEmpty() && pattern.isBranch()) {
-                directReader.apply(pattern.isBranch() ? pattern.extend(fURI.ONE_WILD_STRING) : pattern.asNode()).forEach((key, value) -> {
-                    if (value.isRec()) {
-                        value.recValue().forEach((key2, value2) -> map.put(uri(key.extend(key2.uriValue())), value2));
-                    } else if (value.isLst()) {
-                        for (int i = 0; i < value.lstValue().size(); i++) {
-                            map.put(uri(String.valueOf(i)), value.lstValue().get(i));
+        public static Obj resolveRead(final Space space, final fURI pattern, final Function<fURI, Iterator<Tuple.Pair<fURI, Obj>>> directReader) { //final Map<fURI, Obj> store) {
+            final Set<Pair<Uri, Obj>> listing = new HashSet<>();
+            directReader.apply(pattern).forEachRemaining(kv -> listing.add(Pair.with(kv.get0().toUri(), kv.get1())));
+            if (listing.isEmpty() && pattern.isBranch()) {
+                directReader.apply(pattern.isBranch() ? pattern.extend(fURI.ONE_WILD_STRING) : pattern.asNode()).forEachRemaining(kv -> {
+                    if (kv.get1().isRec()) {
+                        kv.get1().recValue().forEach((key2, value2) -> listing.add(Pair.with(uri(kv.get0().extend(key2.uriValue())), value2)));
+                    } else if (kv.get1().isLst()) {
+                        for (int i = 0; i < kv.get1().lstValue().size(); i++) {
+                            listing.add(Pair.with(uri(String.valueOf(i)), kv.get1().lstValue().get(i)));
                         }
                     } else {
-                        map.put(key.toUri(), value);
+                        listing.add(Pair.with(kv.get0().toUri(), kv.get1()));
                     }
                 });
             }
@@ -201,16 +200,16 @@ public interface Space extends Rec, Closeable {
             if (null != base) {
                 final Poly poly = base.get1();
                 Graphitty.log(space).trace("base poly found at %s: %s", base.get0(), poly);
-                unrollPoly(new LinkedHashMap<>(), base.get0(), poly, pattern).forEach((key, value) -> map.put(key.toUri(), value));
+                unrollPoly(base.get0(), poly, pattern).forEach(kv -> listing.add(Pair.with(kv.get0().toUri(), kv.get1())));
             }
             return pattern.isNode() ?
-                    objs(map.values()) :
-                    objs(map.entrySet().stream().map(kv -> (Obj) rel(kv.getKey(), kv.getValue())).toList());
+                    objs(listing.stream().map(Pair::get1)) :
+                    objs(listing.stream().map(kv -> rel(kv.get0(), kv.get1())));
         }
 
-        public static Obj resolveWrite(final Space space, final fURI vid, final Obj obj, final BiFunction<fURI, Obj, Obj> directWriter, final Function<fURI, Map<fURI, Obj>> directReader) {
-            final Map<fURI, Obj> current = directReader.apply(vid);
-            if (!current.isEmpty() && vid.isNode()) {
+        public static Obj resolveWrite(final Space space, final fURI vid, final Obj obj, final BiFunction<fURI, Obj, Obj> directWriter, final Function<fURI, Iterator<Tuple.Pair<fURI, Obj>>> directReader) {
+            final Iterator<Tuple.Pair<fURI, Obj>> current = directReader.apply(vid);
+            if (current.hasNext() && vid.isNode()) {
                 return directWriter.apply(vid, obj);
             } else {
                 final Pair<fURI, Poly> base = Helper.locateBasePoly(space, vid);

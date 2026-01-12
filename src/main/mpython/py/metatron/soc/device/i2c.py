@@ -18,7 +18,6 @@ import machine
 from metatron.furi import f
 from metatron.soc.device.device import Device
 from metatron.util.graphitty import LOG
-from metatron.util.mach import router
 
 I2C_TID = f("/soc/i2c")
 
@@ -28,7 +27,6 @@ class I2c(Device):
         Device.__init__(self, soc_vid, machine.I2C(sda=machine.Pin(sda_pin), scl=machine.Pin(scl_pin)), I2C_TID, name)
 
     def start(self) -> 'I2c':
-        devices = self.pvm.scan()
-        for device in devices:
+        for device in self.pvm.scan():
             LOG.info("located i2c device at {{y}}{}", hex(device))
         return self

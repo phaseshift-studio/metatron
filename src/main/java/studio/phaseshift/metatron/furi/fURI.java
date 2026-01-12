@@ -158,7 +158,7 @@ public class fURI implements Cloneable, Ring<fURI> {
             final String remaining = uri.substring(polyStart + 1, polyEnd);
             final String[] splits = remaining.split("(?<!\\d),(?!\\d)");
             this.poly = Arrays.asList(splits);
-            this.path.set(this.path.size() - 1, this.path.get(this.path.size() - 1) + uri.substring(polyEnd + 1));
+            this.path.set(this.path.size() - 1, this.path.getLast() + uri.substring(polyEnd + 1));
         } else {
             this.poly = null;
         }
@@ -295,8 +295,8 @@ public class fURI implements Cloneable, Ring<fURI> {
         for (final String seg : this.segments()) {
             if (seg.equals("."))
                 continue;
-            if (seg.equals("..") && !newSegments.isEmpty())
-                newSegments.remove(newSegments.size() - 1);
+            if (seg.equals("..") && !newSegments.isEmpty() && !newSegments.getLast().equals(".."))
+                newSegments.removeLast();
             else
                 newSegments.add(seg);
         }
@@ -345,7 +345,7 @@ public class fURI implements Cloneable, Ring<fURI> {
             return this;
         fURI r = this;
         while (!r.segments().isEmpty()) {
-            final String end = r.segments().get(r.segments().size() - 1);
+            final String end = r.segments().getLast();
             if (end.length() == 1 && (end.equals(ALL.toString()) || end.equals(SINGLE.toString())))
                 r = r.retract();
             else
@@ -355,7 +355,7 @@ public class fURI implements Cloneable, Ring<fURI> {
     }
 
     public String hostOrSegment() {
-        return null != this.authority() ? this.host : this.path.get(0);
+        return null != this.authority() ? this.host : this.path.getFirst();
     }
 
     public fURI authority() {
@@ -403,12 +403,12 @@ public class fURI implements Cloneable, Ring<fURI> {
         } else {
             final List<String> segments = new ArrayList<>(this.segments());
             for (final String s : segment.split(SEGMENT_SPLIT)) {
-                if (!segments.isEmpty() && s.equals(".."))
-                    segments.remove(segments.size() - 1);
+                if (!segments.isEmpty() && s.equals("..") && !segments.getLast().endsWith(".."))
+                    segments.removeLast();
                 else if (!s.equals("."))
                     segments.add(s);
             }
-            return new fURI(this.scheme, this.host, this.port, (this.hasAuthority() && this.path.isEmpty()) || this.sstart, segments, !segment.isEmpty() && (segment.charAt(segment.length() - 1) == SEGMENT_SPLIT_CHAR), this.poly, Query.to(this.query));
+            return new fURI(this.scheme, this.host, this.port, (this.hasAuthority() && this.path.isEmpty()) || this.sstart, segments, segment.charAt(segment.length() - 1) == SEGMENT_SPLIT_CHAR, this.poly, Query.to(this.query));
         }
     }
 
@@ -419,7 +419,7 @@ public class fURI implements Cloneable, Ring<fURI> {
         final fURI noc = this.cLess();
         final List<String> newPath = retract ? noc.path.subList(0, noc.path.size() - steps) : noc.path.subList(steps, noc.path.size());
         if (!newPath.isEmpty() && null != coefficient) {
-            newPath.set(newPath.size() - 1, newPath.get(newPath.size() - 1) + "{" + coefficient + "}");
+            newPath.set(newPath.size() - 1, newPath.getLast() + "{" + coefficient + "}");
         }
         return new fURI(this.scheme, this.host, this.port, this.sstart && !newPath.isEmpty(), newPath, this.send && !newPath.isEmpty(), this.poly, Query.to(this.query));
 
@@ -499,7 +499,7 @@ public class fURI implements Cloneable, Ring<fURI> {
     public fURI tail(final int steps) {
         final List<String> tail = new ArrayList<>();
         for (int i = 0; i < steps; i++) {
-            tail.add(0, this.segments().get(this.segments().size() - (i + 1)));
+            tail.addFirst(this.segments().get(this.segments().size() - (i + 1)));
         }
         return this.segments(tail);
     }
@@ -595,7 +595,7 @@ public class fURI implements Cloneable, Ring<fURI> {
         if (null == coefficient || coefficient.isEmpty() || cInt.of(coefficient).isOne()) {
             if (this.path.isEmpty())
                 return this;
-            if (this.path.get(this.path.size() - 1).indexOf('{') == -1)
+            if (this.path.getLast().indexOf('{') == -1)
                 return this;
             final List<String> segments = new ArrayList<>(this.path);
             String last = segments.removeLast();
@@ -831,8 +831,8 @@ public class fURI implements Cloneable, Ring<fURI> {
             return false;
         if (Objects.equals(other.host, ALL_WILD_STRING))
             return true;
-        if (!Objects.equals(this.host, other.host) && !Objects.equals(other.host, ONE_WILD_STRING))
-            return false;
+        //if (!Objects.equals(this.host, other.host) && !Objects.equals(other.host, ONE_WILD_STRING))
+        //    return false;
         //if (this.path.isEmpty() && other.toString().contains("#"))
         //   return true;
         for (int i = 0; i < other.path.size(); i++) {

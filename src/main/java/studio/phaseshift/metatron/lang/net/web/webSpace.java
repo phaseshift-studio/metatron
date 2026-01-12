@@ -34,7 +34,9 @@ import studio.phaseshift.metatron.lang.core.m.type.Obj;
 import studio.phaseshift.metatron.lang.core.m.type.Rec;
 import studio.phaseshift.metatron.lang.core.m.type.Type;
 import studio.phaseshift.metatron.lang.sys.router.Router;
+import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
+import studio.phaseshift.metatron.util.Tuple;
 
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -211,11 +213,10 @@ public class webSpace extends MSpace<HttpServer> {
     }
 
     @Override
-    public Function<fURI, Map<fURI, Obj>> directReader() {
+    public Function<fURI, Iterator<Tuple.Pair<fURI, Obj>>> directReader() {
         return (pattern) -> {
             LOG.debug("retrieving %s", pattern);
             try {
-                final Map<fURI, Obj> partial = new LinkedHashMap<>();
                 final Connection.Response response = Jsoup.connect(pattern.toString()).ignoreContentType(true).ignoreHttpErrors(true).execute();
                 final ContentType contentType = ContentType.of(response.contentType());
                 LOG.debug("content-type: %s => %s", response.contentType(), contentType);
@@ -230,11 +231,10 @@ public class webSpace extends MSpace<HttpServer> {
                                                 (contentType.isAudio() ?
                                                         AUDIO_TRANSLATOR.translate(response.bodyStream()) :
                                                         str(response.body())))));
-                partial.put(pattern, docObj);
-                return partial;
+                return IteratorUtil.of(Tuple.Pair.with(pattern, docObj));
             } catch (final Exception e) {
                 if (e.getMessage().contains("no bytes"))
-                    return Map.of();
+                    return IteratorUtil.of();
                 throw MTronException.of(e);
             }
         };

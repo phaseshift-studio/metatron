@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -33,9 +33,10 @@ import static studio.phaseshift.metatron.lang.core.m.obj.NoObj.noobj;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
+
 public class MqttPubSubQ extends PubSubQ {
 
-    private final mqttSpace space;
+    protected final mqttSpace space;
 
     public MqttPubSubQ(final mqttSpace space) {
         super();
@@ -55,7 +56,7 @@ public class MqttPubSubQ extends PubSubQ {
             LOG.trace("evaluating {{y}}prewrite{{/y}}: %s => %s", obj, vid);
             if (vid.hasQuery(SUB)) {
                 if (obj.isNoObj()) {
-                    space.client.toAsync()
+                    space.sjvm().toAsync()
                             .unsubscribeWith()
                             .topicFilter(Space.Helper.toNativeSpace(vid.basePath(), space.rewrite))
                             .send()
@@ -72,7 +73,7 @@ public class MqttPubSubQ extends PubSubQ {
                                 }
                             });
                 } else {
-                    space.client.toAsync()
+                    space.sjvm().toAsync()
                             .subscribeWith()
                             .topicFilter(Space.Helper.toNativeSpace(vid.basePath(), space.rewrite))
                             .callback(p -> {

@@ -29,12 +29,12 @@ import studio.phaseshift.metatron.lang.core.m.type.Obj;
 import studio.phaseshift.metatron.lang.db.grph.inst.grphInstSet;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
+import studio.phaseshift.metatron.util.Tuple;
 
-import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.furi.fURI.f;
@@ -114,28 +114,28 @@ public class MGraph extends MSpace<Graph> implements Graph, WrappedGraph<Graph> 
             //if (key.tail(this.vid.extend("/vertex/#")))
             //    return IteratorUtil.stream(this.mvertices()).collect(Collectors.toMap(MVertex::vid, v -> v));
             //else {
-            final Map<fURI, Obj> map = new HashMap<>();
+            final List<Tuple.Pair<fURI, Obj>> results = new ArrayList<>();
             if (vid.bimatches(f("/+/vertex/+"))) {
                 final String selector = vid.tail(1).asNode().asRelative().toString();
                 if (selector.equals(fURI.ONE_WILD_STRING) || selector.equals(fURI.ALL_WILD_STRING)) {
-                    IteratorUtil.stream(this.mvertices()).collect(Collectors.toMap(MVertex::vid, v -> v, Obj::append, () -> map));
+                    IteratorUtil.stream(this.mvertices()).forEach(v -> results.add(Tuple.Pair.with(v.vid(), v)));
                 } else {
-                    IteratorUtil.findFirst(this.mvertices(vid)).ifPresent(v -> map.put(v.vid(), v));
+                    IteratorUtil.findFirst(this.mvertices(vid)).ifPresent(v -> results.add(Tuple.Pair.with(v.vid(), v)));
                 }
             }
             if (vid.bimatches(f("/+/vertex/+/outE/+/+"))) {
                 final List<String> selector = vid.select(f("/+/vertex/+/outE/+/+"));
                 if (!f(selector.get(3)).hasPattern()) {
-                    IteratorUtil.stream(this.edges(Long.parseLong(selector.get(3)))).map(e -> (MEdge) e).collect(Collectors.toMap(MEdge::vid, v -> v, (a, b) -> b, () -> map));
+                    IteratorUtil.stream(this.edges(Long.parseLong(selector.get(3)))).map(e -> (MEdge) e).forEach(e -> results.add(Tuple.Pair.with(e.vid(), e)));
                 } else if (selector.get(1).equals(fURI.ONE_WILD_STRING) || selector.get(1).equals(fURI.ALL_WILD_STRING)) {
                     if (selector.get(3).equals(fURI.ONE_WILD_STRING) || selector.get(3).equals(fURI.ALL_WILD_STRING)) {
-                        IteratorUtil.stream(this.mvertices()).flatMap(v -> IteratorUtil.stream(v.edges(Direction.OUT))).map(e -> (MEdge) e).filter(e -> f(e.label()).matches(f(selector.get(2)))).collect(Collectors.toMap(MEdge::vid, v -> v, (a, b) -> b, () -> map));
+                        IteratorUtil.stream(this.mvertices()).flatMap(v -> IteratorUtil.stream(v.edges(Direction.OUT))).map(e -> (MEdge) e).filter(e -> f(e.label()).matches(f(selector.get(2)))).forEach(e -> results.add(Tuple.Pair.with(e.vid(), e)));
                     }
                 } else {
-                    IteratorUtil.stream(this.mvertices(vid.head(3))).flatMap(v -> IteratorUtil.stream(v.edges(Direction.OUT))).map(e -> (MEdge) e).filter(e -> f(e.label()).matches(f(selector.get(2)))).collect(Collectors.toMap(MEdge::vid, v -> v, (a, b) -> b, () -> map));
+                    IteratorUtil.stream(this.mvertices(vid.head(3))).flatMap(v -> IteratorUtil.stream(v.edges(Direction.OUT))).map(e -> (MEdge) e).filter(e -> f(e.label()).matches(f(selector.get(2)))).forEach(e -> results.add(Tuple.Pair.with(e.vid(), e)));
                 }
             }
-            return map;
+            return results.iterator();
         });
     }
 

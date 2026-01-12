@@ -103,7 +103,9 @@ public class ObjCleanStringSerializer implements ObjSerializer<String> {
 
     @Override
     public String writeStr(final Str str) {
-        return handleIds(str, "'" + str.jvm() + "'");
+        final String string = str.jvm();
+        final String quotes = string.contains("\n") ? "\"\"\"" : string.contains("'") ? "\"" : "'";
+        return handleIds(str, quotes + string + quotes);
     }
 
     @Override

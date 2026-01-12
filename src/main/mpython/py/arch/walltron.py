@@ -22,6 +22,7 @@ import os
 import sys
 import time
 import webrepl
+from machine import Pin, SoftSPI
 
 from metatron.soc.device.i2c import I2c
 from metatron.soc.device.ssd1306 import Ssd1306
@@ -51,3 +52,11 @@ class Walltron(Architecture):
         self.soc.attach(I2c(scl_pin=22, sda_pin=21, soc_vid=self.soc_vid).start())
         self.soc.attach(Ssd1306(i2c=self.soc.i2c, addr=0x3c, height=64, width=128, soc_vid=self.soc_vid, name="oled").start())
         #####################################################################################################
+        from lib.mfrc522 import MFRC522
+        sck = Pin(18, Pin.OUT)
+        mosi = Pin(23, Pin.OUT)
+        miso = Pin(19, Pin.OUT)
+        spi = SoftSPI(baudrate=100000, polarity=0, phase=0, sck=sck, mosi=mosi, miso=miso)
+        
+        sda = Pin(5, Pin.OUT)
+        reader = MFRC522(spi,sda)

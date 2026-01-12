@@ -29,8 +29,12 @@ import studio.phaseshift.metatron.lang.core.m.type.Rec;
 import studio.phaseshift.metatron.lang.core.m.type.Type;
 import studio.phaseshift.metatron.lang.sys.router.Router;
 import studio.phaseshift.metatron.util.Common;
+import studio.phaseshift.metatron.util.IteratorUtil;
+import studio.phaseshift.metatron.util.Tuple;
 
-import java.util.LinkedHashMap;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiFunction;
@@ -97,23 +101,23 @@ public class kvSpace extends MSpace<Map<fURI, Obj>> {
     }
 
     @Override
-    public Function<fURI, Map<fURI, Obj>> directReader() {
+    public Function<fURI, Iterator<Tuple.Pair<fURI, Obj>>> directReader() {
         return (pattern) -> {
             if (pattern.equals(fURI.ALL))
-                return this.sjvm();
+                return this.sjvm().entrySet().stream().map(kv -> Tuple.Pair.with(kv.getKey(), kv.getValue())).iterator();
             else {
                 if (pattern.hasPattern()) {
-                    final Map<fURI, Obj> partial = new LinkedHashMap<>();
+                    final List<Tuple.Pair<fURI, Obj>> partial = new ArrayList<>();
                     this.sjvm().forEach((key, value) -> {
                         if (key.matches(pattern.asNode()))
-                            partial.put(key, value);
+                            partial.add(Tuple.Pair.with(key, value));
                         if (value.isPoly())
-                            Space.Helper.unrollPoly(partial, key, value.as(), pattern.asNode());
+                            partial.addAll(Space.Helper.unrollPoly(key, value.as(), pattern.asNode()));
                     });
-                    return partial;
+                    return partial.iterator();
                 } else {
                     final Obj value = this.sjvm().get(pattern);
-                    return null == value ? Map.of() : Map.of(pattern, value);
+                    return null == value ? IteratorUtil.of() : IteratorUtil.of(Tuple.Pair.with(pattern, value));
                 }
             }
         };
@@ -123,7 +127,7 @@ public class kvSpace extends MSpace<Map<fURI, Obj>> {
     public BiFunction<fURI, Obj, Obj> directWriter() {
         return (pattern, obj) -> {
             if (pattern.hasPattern()) {
-                this.directReader().apply(pattern).forEach((key, value) -> this.write(key, obj));
+                this.directReader().apply(pattern).forEachRemaining(kv -> this.write(kv.get0(), obj));
             } else {
                 final Obj current = this.sjvm().get(pattern);
                 if (obj.isNoObj()) {

@@ -369,11 +369,16 @@ public class Console extends JRec implements Threadable, Runnable {
             }, key(Console.terminal, InfoCmp.Capability.tab));
             getKeyMap().bind((Widget) () -> {
                 try {
-                    final Obj code = mParser.parse(this.reader.getBuffer().toString());
-                    if (code.isCode()) {
-                        final CodeTable codeTable = new CodeTable(code.as());
+                    final Obj parsedObj = mParser.parse(this.reader.getBuffer().toString());
+                    if (parsedObj.isCode()) {
+                        final CodeTable codeTable = new CodeTable(parsedObj.as());
                         terminal.writer().print("\n" + codeTable.format());
                         codeTable.run();
+                    } else if(parsedObj.isType()) {
+                        final TypeTable typeTable = new TypeTable(parsedObj.asType());
+                        terminal.writer().print("\n" + typeTable.format());
+                        typeTable.run();
+                        
                     }
                 } catch (final Exception e) {
                     // do nothing 

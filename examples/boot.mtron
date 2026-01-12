@@ -2,7 +2,7 @@
 print("{{r}}------------\n{{g}}*{{y}}boot/args{{X}}: ",
       *boot/args, 
      "\n{{r}}------------{{X}}\n");
-[-- mount instruction sets --];
+[== mount instruction sets ==];
 [--/sys/mod/sys   -> */sys;
 [--/sys/mod/fs    -> */fs;
 /sys/mod/kv    -> */kv;

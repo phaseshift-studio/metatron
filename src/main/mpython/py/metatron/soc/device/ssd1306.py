@@ -5,7 +5,7 @@ import math
 import time
 
 from metatron.furi import f, fURI
-from metatron.obj import Obj, Rec
+from metatron.obj import Obj, Rec, Lst
 from metatron.soc.device.device import Device
 from metatron.util.graphitty import LOG
 from metatron.util.mach import router
@@ -85,15 +85,20 @@ class Ssd1306(Device):
     def _process_cmd(device: 'Ssd1306', vid: fURI, value: Obj):
         if hasattr(device, vid.name()):
             try:
-                args = {}
-                if isinstance(value, Rec):
-                    for key, val in value.pvm.items():
+                value = value.pvm if isinstance(value, Obj) else value
+                if isinstance(value, dict):
+                    args = {}
+                    for key, val in value.items():
                         key = key if isinstance(key, str) else str(key)
                         args[key] = val.pvm if isinstance(val, Obj) else val
-                else:
-                    args = value
-                LOG.info("calling {{y}}{}{{X}} with {}", vid.name(), args)
-                getattr(device, vid.name())(**args)
+                    LOG.info("calling {{y}}{}{{X}} with {}", vid.name(), args)
+                    getattr(device, vid.name())(**args)
+                elif isinstance(value,list):
+                    args = []
+                    for val in value:
+                        args.append(val.pvm if isinstance(val, Obj) else val)
+                    LOG.info("calling {{y}}{}{{X}} with {}", vid.name(), args)
+                    getattr(device, vid.name())(*args)  
             except Exception as e:
                 LOG.error("error calling method {{r}}{}{{X}} on {{y}}{}{{X}}: {}", vid.name(), vid, e)
         else:

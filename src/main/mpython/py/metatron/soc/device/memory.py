@@ -38,6 +38,16 @@ class Memory(Device):
                                lambda vid, value: exec(f"{vid.name()}={value}"))
         return self
 
+    def __getitem__(self, key):
+        key = key if isinstance(key, str) else str(key)
+        if key == "free":
+            return gc.mem_free()
+        elif key == "alloc":
+            return gc.mem_alloc()
+        else:
+            LOG.warn("use direct virtual machine access for {{y}}{}", key)
+            return None
+
     def __setitem__(self, key, value):
         key = key if isinstance(key, str) else str(key)
         router().write(self.soc_vid.extend(self.name).extend(key), value)

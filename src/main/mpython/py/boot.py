@@ -66,11 +66,11 @@ def main_thread_function():
         try:
             router().loop()
             mtron.loop()
-        except OSError as e:
-            if e.errno is 113:  # ECONNABORTED
-                mtron.soc.wifi.reconnect(mtron.secrets['ssid'], mtron.secrets['password'], mtron.secrets['host'])
-            else:
-                break
+        #except OSError as e:
+        #    if e.errno is 113:  # ECONNABORTED
+        #        mtron.soc.wifi.reconnect(mtron.secrets['ssid'], mtron.secrets['password'], mtron.secrets['host'])
+        #    else:
+        #        break
         except Exception as ex:
             print("resetting due to unhandled main loop error",ex)
             break    

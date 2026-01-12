@@ -104,8 +104,8 @@ public class fURITest {
             // "././.      |   ",
             "a/b/..        |  a",
             "a/../..       |  ..",
-            "./../../../.  |  ..",
-            "./../../a     |  a",
+            "./../../../.  |  ../../..",
+            "./../../a     |  ../../a",
             "a/./z/../b    | a/b",
     }, delimiter = '|')
     public void testResolve(final String f1, final String f2) {
