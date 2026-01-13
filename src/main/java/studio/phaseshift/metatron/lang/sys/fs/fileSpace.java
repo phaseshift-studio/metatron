@@ -43,6 +43,7 @@ import java.nio.file.attribute.PosixFilePermissions;
 import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.Tokens.USER_HOME;
@@ -122,6 +123,16 @@ public class fileSpace extends MSpace<FileSystem> {
         }
     }
 
+    private Uri makeRewriteFile(final Path path) {
+        try {
+            return uri(Space.Helper.fromNativeSpace(path.toString(), this.rewrite).query("p", PosixFilePermissions.toString(Files.getPosixFilePermissions(path))), FILE_TID, null);
+        } catch (final NoSuchFileException e) {
+            return uri("").c(cInt.ZERO()).asUri();
+        } catch (final Exception e) {
+            throw MTronException.of(e);
+        }
+    }
+
 
     @Override
     public Function<fURI, Iterator<Tuple.Pair<fURI, Obj>>> directReader() {
@@ -130,23 +141,26 @@ public class fileSpace extends MSpace<FileSystem> {
                 throw MTronException.of("infinite nested walks on file system not allowed");
             else {
                 if (key.hasPattern()) {
-                    try (final Stream<fURI> walk = Files
-                            .walk(Path.of(Space.Helper.toNativeSpace(key.retractPattern(), this.rewrite)), vid.hasPattern() ? Integer.MAX_VALUE : vid.segments().size() + 1, FileVisitOption.FOLLOW_LINKS)
-                            .map(p -> Space.Helper.fromNativeSpace(p.toAbsolutePath().toString(), this.rewrite))
-                            .filter(p -> p.matches(key))) {
-                        return walk.map(kv -> Pair.<fURI, Obj>with(kv, kv.toUri())).iterator();
-                    } catch (NoSuchFileException e) {
-                        return IteratorUtil.of();
+                    try (final Stream<Path> walk = Files.walk(Path.of(Space.Helper.toNativeSpace(key.retractPattern(), this.rewrite)), vid.hasPattern() ? Integer.MAX_VALUE : vid.segments().size() + 1, FileVisitOption.FOLLOW_LINKS)) {
+                        return walk
+                                .filter(p -> Space.Helper.fromNativeSpace(p.toString(), this.rewrite).matches(key))
+                                .map(this::makeRewriteFile)
+                                .collect(Collectors.toMap(p -> p, p -> p, Obj::append, LinkedHashMap::new))
+                                .entrySet()
+                                .stream()
+                                .map(kv -> Pair.with(kv.getKey().uriValue(), kv.getValue()))
+                                .iterator();
                     } catch (IOException e) {
                         throw MTronException.of(e);
                     }
+
                 } else {
                     try {
                         final Path vidPath = Path.of(Space.Helper.toNativeSpace(key, this.rewrite));
                         if (Files.isDirectory(vidPath)) {
-                            return Files.list(vidPath).map(p -> Pair.<fURI, Obj>with(f(p.toString()), makeFile(p))).iterator();
+                            return Files.list(vidPath).map(p -> Pair.<fURI, Obj>with(f(p.toString()), makeRewriteFile(p))).iterator();
                         } else {
-                            return IteratorUtil.of(Pair.with(Space.Helper.fromNativeSpace(vidPath.toString(), this.rewrite), makeFile(vidPath)));
+                            return IteratorUtil.of(Pair.with(Space.Helper.fromNativeSpace(vidPath.toString(), this.rewrite), makeRewriteFile(vidPath)));
                         }
                     } catch (final NoSuchFileException e) {
                         return IteratorUtil.of();
