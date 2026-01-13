@@ -24,7 +24,7 @@ import studio.phaseshift.metatron.lang.core.m.type.Lst;
 import studio.phaseshift.metatron.lang.core.m.type.Obj;
 import studio.phaseshift.metatron.lang.core.m.type.Type;
 import studio.phaseshift.metatron.lang.core.m.type.impl.MInstSet;
-import studio.phaseshift.metatron.lang.net.web.JSONTranslator;
+import studio.phaseshift.metatron.lang.translator.JSONTranslator;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.LinkedHashSet;
@@ -56,7 +56,7 @@ public class vecInstSet extends MInstSet {
     public static final fURI INST_TID = VEC_INSTSET_TID.extend("inst");
     public static final fURI DOT_TID = INST_TID.extend("dot");
     public static final fURI SQRT_TID = INST_TID.extend("sqrt");
-    public static final fURI JSON_TID = INST_TID.extend("json");
+    //public static final fURI JSON_TID = INST_TID.extend("json");
     private static final JSONTranslator JSON_TRANSLATOR = new JSONTranslator();
 
     public vecInstSet(final fURI vid) {
@@ -75,7 +75,7 @@ public class vecInstSet extends MInstSet {
     @Override
     public Set<Inst> insts() {
         return Stream.of(
-                instC(JSON_TID.dom(STR_TID).rng(ALL), lst(), (lhs, inst) -> JSON_TRANSLATOR.translateString(lhs.strValue())),
+              //  instC(JSON_TID.dom(STR_TID).rng(ALL), lst(), (lhs, inst) -> JSON_TRANSLATOR.parse(lhs.strValue())),
                 instC(PLUS_INST_TID.dom(VEC_TID).rng(VEC_TID), lst(T(VEC_TID)), (lhs, inst) -> cross_(inst.arg(0)).apply(lhs)),
                 //  instC(PLUS_TID.dom(RVEC_TID).rng(RVEC_TID), lst(T(RVEC_TID)), (lhs, inst) -> lhs.value(lhs.<MRealVec>as().value().add(inst.arg(0).<MRealVec>as().value()))),
                 instC(SQRT_TID.dom(REAL_TID).rng(REAL_TID), lst(), (lhs, inst) -> lhs.jvm(Math.sqrt(lhs.realValue()))),

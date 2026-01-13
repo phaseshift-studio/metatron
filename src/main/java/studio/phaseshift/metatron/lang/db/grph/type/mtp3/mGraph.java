@@ -38,7 +38,6 @@ import studio.phaseshift.metatron.lang.db.grph.type.RVertex;
 import studio.phaseshift.metatron.lang.db.kv.kvSpace;
 import studio.phaseshift.metatron.lang.sys.console.Highlighter;
 import studio.phaseshift.metatron.lang.sys.router.Router;
-import studio.phaseshift.metatron.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.Arrays;
@@ -51,7 +50,7 @@ import static studio.phaseshift.metatron.Tokens.SPACE;
 import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.lang.db.grph.type.TP3Translator.LABEL;
+import static studio.phaseshift.metatron.lang.translator.TP3Translator.LABEL;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)

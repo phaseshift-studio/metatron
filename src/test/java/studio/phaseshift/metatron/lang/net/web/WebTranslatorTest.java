@@ -21,6 +21,7 @@ package studio.phaseshift.metatron.lang.net.web;
 import org.junit.jupiter.api.Test;
 import studio.phaseshift.metatron.MetatronTest;
 import studio.phaseshift.metatron.lang.core.m.type.Rec;
+import studio.phaseshift.metatron.lang.translator.WebTranslator;
 
 import java.io.File;
 

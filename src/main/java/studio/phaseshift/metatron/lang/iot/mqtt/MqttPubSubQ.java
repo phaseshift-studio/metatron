@@ -83,7 +83,7 @@ public class MqttPubSubQ extends PubSubQ {
                                 if (p.getPayload().isPresent()) {
                                     Router.global().server().stats().incrTotalBytesRecv(p.toString().length());
                                     final String json = StandardCharsets.UTF_8.decode(p.getPayload().get()).toString();
-                                    o = space.jsonTranslator.translateString(json);
+                                    o = space.jsonTranslator.parse(json);
                                 } else
                                     o = noobj();
                                 super.qlessWrite(source, t, o);

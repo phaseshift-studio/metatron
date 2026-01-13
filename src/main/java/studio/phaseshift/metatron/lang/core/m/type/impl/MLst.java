@@ -22,6 +22,7 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.core.m.type.Lst;
 import studio.phaseshift.metatron.lang.core.m.type.Obj;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -30,7 +31,7 @@ import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.LST_TID;
 public class MLst extends MObj implements Lst {
 
     public static Lst lst(final Obj... objs) {
-        return objs.length == 0 ? EMPTY_LST : new MLst(List.of(objs), LST_TID, fURI.fnull);
+        return new MLst(new ArrayList<>(List.of(objs)), LST_TID, fURI.fnull);
     }
 
     public static Lst lst(final List<Obj> objs) {

@@ -20,6 +20,9 @@ package studio.phaseshift.metatron.lang.core.m.type;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.core.m.type.impl.MStr;
+import studio.phaseshift.metatron.lang.translator.JSONTranslator;
+import studio.phaseshift.metatron.lang.translator.WebTranslator;
+import studio.phaseshift.metatron.lang.translator.XMLTranslator;
 
 import java.util.*;
 import java.util.regex.MatchResult;

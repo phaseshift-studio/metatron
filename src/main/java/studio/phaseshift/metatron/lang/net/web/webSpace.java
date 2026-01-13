@@ -34,6 +34,8 @@ import studio.phaseshift.metatron.lang.core.m.type.Obj;
 import studio.phaseshift.metatron.lang.core.m.type.Rec;
 import studio.phaseshift.metatron.lang.core.m.type.Type;
 import studio.phaseshift.metatron.lang.sys.router.Router;
+import studio.phaseshift.metatron.lang.translator.JSONTranslator;
+import studio.phaseshift.metatron.lang.translator.WebTranslator;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
@@ -225,7 +227,7 @@ public class webSpace extends MSpace<HttpServer> {
                         (contentType.isHtml() ?
                                 WEB_TRANSLATOR.translate(response.parse()).tid(PAGE_TID) :
                                 (contentType.isJson() ?
-                                        JSON_TRANSLATOR.translateString(response.body()) :
+                                        JSON_TRANSLATOR.parse(response.body()) :
                                         (contentType.isXml() ?
                                                 WEB_TRANSLATOR.translate(response.parse()) :
                                                 (contentType.isAudio() ?
@@ -258,7 +260,7 @@ public class webSpace extends MSpace<HttpServer> {
                     if (contentType.get().startsWith("audio/")) {
                         return rec(uri("location"), bytes(ByteBuffer.wrap(response.body()))).tid(AUDIO_TID);
                     } else if (contentType.get().equals(ContentType.APPLICATION_JSON.value)) {
-                        return JSON_TRANSLATOR.translateString(new String(response.body()));
+                        return JSON_TRANSLATOR.parse(new String(response.body()));
                     }
                 }
                 return jnt(response.statusCode());

@@ -25,6 +25,7 @@ import studio.phaseshift.metatron.MetatronTest;
 import studio.phaseshift.metatron.lang.core.m.parser.mParser;
 import studio.phaseshift.metatron.lang.core.m.type.Call;
 import studio.phaseshift.metatron.lang.core.m.type.Obj;
+import studio.phaseshift.metatron.lang.translator.JSONTranslator;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 

@@ -26,7 +26,7 @@ import studio.phaseshift.metatron.lang.core.m.inst.mInstSet;
 import studio.phaseshift.metatron.lang.core.m.type.Obj;
 import studio.phaseshift.metatron.lang.core.m.type.Rec;
 import studio.phaseshift.metatron.lang.core.m.type.Type;
-import studio.phaseshift.metatron.lang.db.grph.type.TP3Translator;
+import studio.phaseshift.metatron.lang.translator.TP3Translator;
 import studio.phaseshift.metatron.lang.db.kv.kvSpace;
 import studio.phaseshift.metatron.lang.sys.router.Router;
 import studio.phaseshift.metatron.lang.util.noobjSpace;

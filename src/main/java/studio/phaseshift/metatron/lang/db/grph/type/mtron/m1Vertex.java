@@ -45,7 +45,7 @@ import static studio.phaseshift.metatron.lang.core.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.lang.db.grph.inst.grphInstSet.*;
-import static studio.phaseshift.metatron.lang.db.grph.type.TP3Translator.*;
+import static studio.phaseshift.metatron.lang.translator.TP3Translator.*;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)

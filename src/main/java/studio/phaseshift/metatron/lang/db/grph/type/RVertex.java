@@ -32,7 +32,7 @@ import java.util.stream.Stream;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.lang.db.grph.inst.grphInstSet.VERTEX_TID;
-import static studio.phaseshift.metatron.lang.db.grph.type.TP3Translator.LABEL;
+import static studio.phaseshift.metatron.lang.translator.TP3Translator.LABEL;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)

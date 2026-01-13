@@ -31,7 +31,7 @@ import studio.phaseshift.metatron.lang.core.m.inst.mInstSet;
 import studio.phaseshift.metatron.lang.core.m.obj.NoObj;
 import studio.phaseshift.metatron.lang.core.m.type.*;
 import studio.phaseshift.metatron.lang.db.kv.kvSpace;
-import studio.phaseshift.metatron.lang.net.web.JSONTranslator;
+import studio.phaseshift.metatron.lang.translator.JSONTranslator;
 import studio.phaseshift.metatron.lang.sys.router.Router;
 import studio.phaseshift.metatron.util.Tuple;
 
@@ -111,7 +111,7 @@ public class mqttSpace extends MSpace<Mqtt5Client> {
                                 final String json = StandardCharsets.UTF_8.decode(p.getPayload().get()).toString();
                                 this.cache.write(
                                         Space.Helper.fromNativeSpace(p.getTopic().toString(), this.rewrite),
-                                        this.jsonTranslator.translateString(json));
+                                        this.jsonTranslator.parse(json));
                             } else {
                                 this.cache.write(
                                         Space.Helper.fromNativeSpace(p.getTopic().toString(), this.rewrite),
