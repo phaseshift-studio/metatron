@@ -61,6 +61,7 @@ class Architecture:
     def __init__(self, secrets: dict):
         self.secrets = secrets
         self.soc = None
+        self.router = router()
         self.wlan = Wifi.connect(secrets['ssid'], secrets['password'], secrets['host'])
         self.soc_vid = f(secrets['host'])
 

@@ -20,10 +20,13 @@ package studio.phaseshift.metatron.lang.sys.fs;
 
 import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.Q;
+import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.MSpace;
 import studio.phaseshift.metatron.lang.Space;
+import studio.phaseshift.metatron.lang.core.m.parser.mParser;
 import studio.phaseshift.metatron.lang.core.m.type.*;
+import studio.phaseshift.metatron.lang.core.m.type.impl.MObjs;
 import studio.phaseshift.metatron.lang.sys.console.Highlighter;
 import studio.phaseshift.metatron.lang.sys.router.Router;
 import studio.phaseshift.metatron.util.IteratorUtil;
@@ -31,14 +34,13 @@ import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
 import studio.phaseshift.metatron.util.Tuple.Pair;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
+import java.nio.file.FileSystem;
+import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
-import java.util.Iterator;
-import java.util.Map;
+import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Stream;
@@ -52,6 +54,7 @@ import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.URI_TID;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MRel.rel;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.lang.sys.fs.fsInstSet.FILE_TID;
@@ -97,9 +100,8 @@ public class fileSpace extends MSpace<FileSystem> {
     @Override
     public Obj write(final fURI vid, final Obj obj) {
         return Q.Helper.processPreWrite(this.qs(), vid, vid, obj).orElseGet(() -> {
-            Space.Helper.resolveWrite(this, vid.basePath(), obj, this.directWriter(), this.directReader());
-            //return obj;
-            return Q.Helper.processPostWrite(this.qs(), vid, vid, obj).orElse(Q.Helper.processQlessWrite(this.qs(), vid, vid, obj).orElse(obj));
+            Obj result = Space.Helper.resolveWrite(this, vid.basePath(), obj, this.directWriter(), this.directReader());
+            return Q.Helper.processPostWrite(this.qs(), vid, vid, obj).orElse(Q.Helper.processQlessWrite(this.qs(), vid, vid, obj).orElse(result));
         });
         //   return this.qs().processPreWrite(vid, vid, obj).orElseGet(() -> {
         //  return this.directWriter().apply(vid, obj);
@@ -113,6 +115,8 @@ public class fileSpace extends MSpace<FileSystem> {
     public static Uri makeFile(final Path path) {
         try {
             return uri(f(path.toString()).query("p", PosixFilePermissions.toString(Files.getPosixFilePermissions(path))), FILE_TID, null);
+        } catch (final NoSuchFileException e) {
+            return uri("").c(cInt.ZERO()).asUri();
         } catch (final Exception e) {
             throw MTronException.of(e);
         }
@@ -131,6 +135,8 @@ public class fileSpace extends MSpace<FileSystem> {
                             .map(p -> Space.Helper.fromNativeSpace(p.toAbsolutePath().toString(), this.rewrite))
                             .filter(p -> p.matches(key))) {
                         return walk.map(kv -> Pair.<fURI, Obj>with(kv, kv.toUri())).iterator();
+                    } catch (NoSuchFileException e) {
+                        return IteratorUtil.of();
                     } catch (IOException e) {
                         throw MTronException.of(e);
                     }
@@ -142,12 +148,42 @@ public class fileSpace extends MSpace<FileSystem> {
                         } else {
                             return IteratorUtil.of(Pair.with(Space.Helper.fromNativeSpace(vidPath.toString(), this.rewrite), makeFile(vidPath)));
                         }
+                    } catch (final NoSuchFileException e) {
+                        return IteratorUtil.of();
                     } catch (final IOException e) {
                         throw MTronException.of(e);
                     }
                 }
             }
         };
+    }
+
+    private Obj evalScript(final File scriptPath, final Obj obj) {
+        final List<Obj> result = new ArrayList<>();
+        try {
+            final ProcessBuilder processBuilder = new ProcessBuilder("/bin/sh", scriptPath.getAbsolutePath());
+            LOG.info("evaluating script %s", processBuilder.command());
+            final Map<String, String> env = processBuilder.environment();
+            env.put("ENV_KEY", "ENV_VALUE");
+            final Process process = processBuilder.start();
+            final BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+            String line;
+            while ((line = reader.readLine()) != null) {
+                Obj x;
+                try {
+                    x = mParser.parse(line);
+                } catch (final Exception e) {
+                    x = str(line);
+                }
+                LOG.info("script yielded obj: %s", x);
+                result.add(x);
+            }
+            process.waitFor();
+            LOG.debug("script executed successfully");
+        } catch (final Exception e) {
+            throw MTronException.of(e);
+        }
+        return MObjs.objs(result);
     }
 
     @Override
@@ -161,18 +197,29 @@ public class fileSpace extends MSpace<FileSystem> {
                         throw MTronException.of("deleting files currently not supported", pattern);
                         //   Files.delete(Path.of(pattern.toString()));
                     } else {
-                        LOG.info("writing %s to %s", obj, pattern);
-                        final File file = new File(pattern.toString());
-                        file.createNewFile();
-                        final FileOutputStream writer = new FileOutputStream(file);
-                        if (obj.isBytes())
-                            writer.write(obj.bytesValue().array());
-                        else if (obj.isStr())
-                            writer.write(obj.strValue().getBytes(StandardCharsets.UTF_8));
-                        else
-                            writer.write(Highlighter.unformat(obj.toString()).getBytes(StandardCharsets.UTF_8));
-                        writer.flush();
-                        writer.close();
+                        final Path path = Paths.get(Space.Helper.toNativeSpace(pattern.basePath(), this.rewrite));
+                        final File file = path.toFile();
+                        if (pattern.basePath().name().endsWith(".sh")) {
+                            return this.evalScript(file, obj);
+                        } else {
+                            LOG.info("writing %s to %s", obj, path);
+                            file.createNewFile();
+                            final FileOutputStream writer = new FileOutputStream(file, true);
+                            if (obj.isBytes())
+                                writer.write(obj.bytesValue().array());
+                            else if (obj.isStr())
+                                writer.write(obj.strValue().getBytes(StandardCharsets.UTF_8));
+                            else
+                                writer.write(Highlighter.unformat(obj.toString()).getBytes(StandardCharsets.UTF_8));
+                            writer.flush();
+                            writer.close();
+                            if (pattern.hasQuery("p")) {
+                                final Set<PosixFilePermission> currentP = PosixFilePermissions.fromString(Files.getPosixFilePermissions(path).toString());
+                                final Set<PosixFilePermission> newP = PosixFilePermissions.fromString(pattern.queryValue(f("p"), String.class));
+                                if (!currentP.equals(newP))
+                                    Files.setPosixFilePermissions(file.toPath(), newP);
+                            }
+                        }
                     }
                 } catch (final Exception e) {
                     throw MTronException.of(e);

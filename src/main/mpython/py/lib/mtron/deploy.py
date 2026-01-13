@@ -13,7 +13,7 @@
 # 
 #  You should have received a copy of the GNU Affero General Public License
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>.
-from arch.walltron import Walltron
+from lib.mtron.walltron import Walltron
 
 
 # this function determines which machine architecture is flashed to hardware

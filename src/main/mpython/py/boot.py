@@ -25,7 +25,7 @@ import sys
 import time
 
 import metatron.util.graphitty as graphitty
-from arch.deploy import deploy
+from lib.mtron.deploy import deploy
 from metatron.router import Router
 from metatron.util.common import load_secrets
 from metatron.util.graphitty import LOG

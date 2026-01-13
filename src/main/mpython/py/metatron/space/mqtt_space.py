@@ -88,12 +88,14 @@ class MqttSpace(Obj):
 
     def subscribe(self, furi, func):
         furi = furi if isinstance(furi, fURI) else fURI(furi)
+        self.client.check_msg()
         self.client.subscribe(str(furi))
         self.subscriptions[furi] = func
         LOG.info("subscribed to {{y}}{}{{X}}", furi)
 
     def unsubscribe(self, furi):
         # self.client.(str(vid))
+        self.client.check_msg()
         if furi in self.subscriptions.keys():
             self.client.unsubscribe(str(furi))
             self.subscriptions.pop(furi)

@@ -238,7 +238,7 @@ public interface Inst extends Call {
         try {
             final Inst resolved = Router.global().read(this.tid().basePath())
                     .stream()
-                    .map(i -> i.isInst() ? i : instC(this.tid().dom(lhs.tid()).rng(ALL.maybeSome()), this.args(), (lhs2, inst) -> Router.global().write(this.tid(), this.args())))
+                    .map(i -> i.isInst() ? i : instC(this.tid().dom(lhs.tid()).rng(ALL.maybeSome()), this.args(), (lhs2, inst) -> Router.global().write(this.tid(), inst.args())))
                     .map(Obj::<Inst>as)
                     .filter(i -> (i.args().isEmpty() && this.arg(0).isNoObj()) || i.args().isRec() || i.args().count() >= this.args().count()) // TODO: check which recs are default
                     .filter(i -> !lhs.isInst() || (i.dom().baseType().equals(INST_TID)))
@@ -322,7 +322,7 @@ public interface Inst extends Call {
                     rhs = Objs.trySingleton(FutureObj.resolveFuture(cinst.f().apply(clhs, cinst)));
                     Graphitty.log(cinst).trace("%s (lhs) => %s (inst) => %s (rhs) evaluated successfully", clhs, cinst, rhs);
                 } catch (final Exception e) {
-                    rhs = fail(e, mexcept("apply failure: %s => %s [stack:%s]", clhs, cinst, Router.stack().sjvm().toString()).asFail());
+                    rhs = fail(e, mexcept("apply failure: %s => %s [stack=>%s]", clhs, cinst, lst(new ArrayList<>(Router.stack().sjvm()))).asFail());
                     // e.printStackTrace();
                 } finally {
                     Router.stack().pop();
