@@ -136,6 +136,7 @@ public class TypeTest extends MetatronObjTest {
     @CsvSource(value = {
             // obj               | type                                         | matches?
             "noobj               | noobj{0}::T                                | true",
+            "noobj               | noobj::T                                   | true",
             "noobj               | abc{*}::T                                  | true",
             "noobj               | abc{?}::T                                  | true",
             "noobj               | abc{+}::T                                  | false",
@@ -147,11 +148,12 @@ public class TypeTest extends MetatronObjTest {
             "213.0               | int::T                                     | false",
             "1                   | int::T[is(eq(1))]                            | true",
             "1                   | int::T[is(eq(2))]                            | false",
+            "{1,1}               | int::T                                       | false",
             "{1,1}               | int{2}::T[is(eq({2,2}))]                     | false",
             // "{1,1}               | int{2}::T[?={1,1}]                     | true",
             "{1,2}               | int{2}::T                                     | true",
             // "{1,1}               | int{2}::T[is(eq({1,1}))]                   | true",
-            "{1,1}               | int{2}::T                                  | true",
+            "{1,1}               | int{2}::T                                    | true",
             "{1,1}               | int::T[is(gt(0))]                            | false",
             "{1,1}               | int{2}::T[is(gt(0))]                         | true",
             "1                   | int{2}::T[is(gt(0))]                         | false",

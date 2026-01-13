@@ -111,6 +111,8 @@ public interface Lst extends Poly<Lst, List<Obj>>, PlusMonoid.O<Lst> {
         if (key.isInt())
             return (O) ((this.jvm().size() > key.intValue()) ? this.jvm().get(key.<Int>as().intValue().intValue()).autoResolve(key) : noobj());
         else if (key.isUri()) {
+            if (key.uriValue().segments().isEmpty())
+                return (O) noobj();
             final String step = key.uriValue().segments().getFirst();
             Stream<Obj> result;
             if (step.equals("+") || step.equals("#")) {

@@ -28,6 +28,8 @@ import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.*;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MReal.real;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MType.T;
 
 public interface Bool extends Mono {
@@ -54,6 +56,8 @@ public interface Bool extends Mono {
         public static Set<Inst> insts() {
             return new LinkedHashSet<>(List.of(
                     instC(AS_INST_TID.dom(BOOL_TID).rng(INT_TID), lst(T(INT_TID)), (lhs, inst) -> jnt(lhs.boolValue() ? 1 : 0, inst.arg(0).tid(), lhs.vid())),
+                    instC(AS_INST_TID.dom(BOOL_TID).rng(REAL_TID), lst(T(REAL_TID)), (lhs, inst) -> real(lhs.boolValue() ? 1.0d : 0.0d, inst.arg(0).tid(), lhs.vid())),
+                    instC(AS_INST_TID.dom(BOOL_TID).rng(STR_TID), lst(T(STR_TID)), (lhs, inst) -> str(lhs.boolValue() ? "true" : "false", inst.arg(0).tid(), lhs.vid())),
                     instC(PLUS_INST_TID.dom(BOOL_TID).rng(BOOL_TID), lst(T(BOOL_TID)), (lhs, inst) -> lhs.jvm(lhs.boolValue() || inst.arg(0).boolValue())),
                     instC(MULT_INST_TID.dom(BOOL_TID).rng(BOOL_TID), lst(T(BOOL_TID)), (lhs, inst) -> lhs.jvm(lhs.boolValue() && inst.arg(0).boolValue()))
             ));

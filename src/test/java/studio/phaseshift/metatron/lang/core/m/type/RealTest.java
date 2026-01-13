@@ -27,11 +27,23 @@ import studio.phaseshift.metatron.lang.MetatronObjTest;
  */
 public class RealTest extends MetatronObjTest {
 
+    @ParameterizedTest
+    @CsvSource(value = {
+            "-2.0.as(int::T)                          % -2",
+            "-102.1.as(int::T)                        % -102",
+            "2.0.as(int::T)                           % 2",
+            "2.1.as(int::T)                           % 2",
+            "2.9.as(int::T)                           % 2",
+            "3.9.as(int::T)                           % 3",
+    }, delimiter = '%')
+    public void testAs(final String code, final String expected) {
+        super.testCode(code, expected);
+    }
 
     @ParameterizedTest
     @CsvSource(value = {
-            "2.0.pow(4.0)                          % 16.0",
-            "2.0.pow(4.0).plus(1.0)                  % 17.0",
+            "2.0.pow(4.0)                              % 16.0",
+            "2.0.pow(4.0).plus(1.0)                    % 17.0",
             "2.0.pow(4.0).plus(1.0).mult(2.0)          % 34.0",
     }, delimiter = '%')
     public void testMath(final String code, final String expected) {

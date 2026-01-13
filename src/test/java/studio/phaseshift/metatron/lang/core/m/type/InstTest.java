@@ -48,9 +48,9 @@ public class InstTest extends MetatronObjTest {
     @ParameterizedTest
     @CsvSource(value = {
             // furi | tid | dom | range
-            "/m/plus?dom=/m/int&rng=/m/int              | /m/plus        | /m/int     | /m/int",
+            "/m/plus?dom=/m/int&rng=/m/int                      | /m/plus        | /m/int         | /m/int",
             "/m/mult/a?dom=+&rng=+                              | /m/mult/a      | +              | +",
-            "/m/mult/z?dom=real{0,1}&rng=lst[int{5}]{2,3}       | /m/mult/z      | /m/real{?} | /m/lst{2,3}"},
+            "/m/mult/z?dom=real{0,1}&rng=lst[int{5}]{2,3}       | /m/mult/z      | /m/real{?}     | /m/lst{2,3}"},
             delimiter = '|')
     public void testDomRng(final String f, final String op, final String dom, final String rng) {
         final fURI furi = fURI.of(f);

@@ -20,9 +20,6 @@ package studio.phaseshift.metatron.lang.core.m.type;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.core.m.type.impl.MStr;
-import studio.phaseshift.metatron.lang.translator.JSONTranslator;
-import studio.phaseshift.metatron.lang.translator.WebTranslator;
-import studio.phaseshift.metatron.lang.translator.XMLTranslator;
 
 import java.util.*;
 import java.util.regex.MatchResult;
@@ -67,6 +64,7 @@ public interface Str extends Mono {
 
         public static Set<Inst> insts() {
             return new LinkedHashSet<>(List.of(
+                    instC(AS_INST_TID.dom(STR_TID).rng(BOOL_TID), lst(T(BOOL_TID)), (lhs, inst) -> bool(lhs.strValue().equalsIgnoreCase("true"), inst.arg(0).tid(), lhs.vid())),
                     instC(AS_INST_TID.dom(STR_TID).rng(INT_TID), lst(T(INT_TID)), (lhs, inst) -> jnt(Long.parseLong(lhs.strValue()), inst.arg(0).tid(), lhs.vid())),
                     instC(AS_INST_TID.dom(STR_TID).rng(REAL_TID), lst(T(REAL_TID)), (lhs, inst) -> real(Double.parseDouble(lhs.strValue()), inst.arg(0).tid(), lhs.vid())),
                     instC(AS_INST_TID.dom(STR_TID).rng(URI_TID), lst(T(URI_TID)), (lhs, inst) -> uri(f(lhs.strValue()), inst.arg(0).tid(), lhs.vid())),

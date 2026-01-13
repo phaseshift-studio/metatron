@@ -46,7 +46,10 @@ public class UriTest extends MetatronTest {
             //"a/b.plus(c/d)                                                | {a/b,c/d}",
             "a/b.plus(noobj)                                              | a/b",
             "a/b.mult(c/d)                                                | a/b/c/d",
-            "a/b.mult(noobj)                                              | noobj"
+            "a/b.mult(noobj)                                              | noobj",
+            "a.mult(<../b>)                                               | b",
+            "a.mult(<../b/c>)                                             | b/c",
+            "a.mult(<../../b>)                                            | <../b>"
     }, delimiter = '|')
     public void testCode(final String code, final String expected) {
         super.testCode(code, expected);

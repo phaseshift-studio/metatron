@@ -38,7 +38,7 @@ public class LstTest extends MetatronObjTest {
     @ParameterizedTest
     @CsvSource(value = {
             // lst                                 | key                  | value
-            //"[a,[b,[c,d],e],f]                     | <>                   |[a,[b,[c,d],e],f]",
+            "[a,[b,[c,d],e],f]                     | <>                   | noobj",
             "[a,[b,[c,d],e],f]                     | <0>                  | a",
             "[a,[b,[c,d],e],f]                     | <1/0>                | b",
             "[a,[b,[c,d],e],f]                     | <1/1/0>              | c",

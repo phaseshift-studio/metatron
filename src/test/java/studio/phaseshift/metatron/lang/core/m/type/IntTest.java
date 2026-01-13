@@ -23,6 +23,19 @@ import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.lang.MetatronObjTest;
 
 public class IntTest extends MetatronObjTest {
+    @ParameterizedTest
+    @CsvSource(value = {
+            // "1.as(bool::T)                                                               % true",
+            // "0.as(bool::T)                                                               % false",
+            "1.as(str::T)                                                               % \"1\"",
+            "2.as(str::T)                                                               % \"2\"",
+            "1.as(real::T)                                                               % 1.0",
+            "2.as(real::T)                                                               % 2.0"
+    }, delimiter = '%')
+    public void testAsInst(final String code, final String expected) {
+        super.testCode(code, expected);
+    }
+
     @Override
     @ParameterizedTest
     @CsvSource(value = {
@@ -61,7 +74,7 @@ public class IntTest extends MetatronObjTest {
     public void testCode(final String lhs, final String code, final String expected) {
         super.testCode(lhs, code, expected);
     }
-    
+
     @ParameterizedTest
     @CsvSource(value = {
             "2.pow(4)                          % 16",

@@ -29,6 +29,21 @@ public class StrTest extends MetatronObjTest {
 
     @ParameterizedTest
     @CsvSource(value = {
+            "'true'.as(bool::T)                                                             % true",
+            "'false'.as(bool::T)                                                            % false",
+            "'true'.as(bool::T).as(str::T)                                                  % \"true\"",
+            "'sadf'.as(bool::T)                                                             % false",
+            "'123'.as(int::T)                                                               % 123",
+            "'123.122'.as(real::T)                                                          % 123.122",
+            "'abcd'.as(uri::T)                                                              % abcd",
+
+    }, delimiter = '%')
+    public void testAsInst(final String code, final String expected) {
+        super.testCode(code, expected);
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
             "'123'.regex('\\d')                                                             % ['1','2','3']",
             "'abcd'.regex('[a-z]{2}')                                                       % ['ab','cd']",
             "'ab3cd'.regex('([a-z]+)(\\d?)([a-z]?)')                                        % ['ab3c','d']",
