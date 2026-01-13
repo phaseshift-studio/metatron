@@ -297,9 +297,9 @@ public interface Inst extends Call {
     @Override
     default Obj apply(final Obj lhs) {
         Obj clhs = FutureObj.resolveFuture(lhs);
-        boolean reself = !this.args().isEmpty() && this.args().argElements().noneMatch(e -> e.vid() != null || e.isInst());
+        boolean reself = !this.args().isEmpty() && this.args().argElements().noneMatch(e -> e.vid() != null || e.isObjCall());
         Inst cinst = this.args().isEmpty() ? this.args(lst(noobj())).resolve(clhs) : this.resolve(clhs); // TODO: this isn't a general solution (multi slotted args won't work).
-        if (false && reself) // TODO: why do type predicates get rewritten?
+        if (reself) // TODO: why do type predicates get rewritten?
             this.self(Triplet.with(cinst.args(), cinst.f(), cinst.seed()), cinst.tid(), cinst.vid());
         Obj rhs;
         boolean modulateC = false;
