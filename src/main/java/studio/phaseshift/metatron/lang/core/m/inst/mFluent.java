@@ -23,13 +23,16 @@ import studio.phaseshift.metatron.lang.Fluent;
 import studio.phaseshift.metatron.lang.core.m.type.Code;
 import studio.phaseshift.metatron.lang.core.m.type.Inst;
 import studio.phaseshift.metatron.lang.core.m.type.Obj;
+import studio.phaseshift.metatron.lang.core.m.type.Uri;
 import studio.phaseshift.metatron.lang.core.m.type.impl.MCode;
+import studio.phaseshift.metatron.lang.sys.router.Router;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.ID_INST_TID;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MInst.instB;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
 
 public class mFluent<F extends Fluent<F>> extends MCode implements Fluent<F>, Code {
@@ -114,6 +117,10 @@ public class mFluent<F extends Fluent<F>> extends MCode implements Fluent<F>, Co
 
     public F auto_(final Obj obj) {
         return this.addInst(instB(mInstSet.AUTO_INST_TID, lst(obj)));
+    }
+
+    public F auto_from_(final Uri uri) {
+        return this.addInst(instC(mInstSet.AUTO_FROM_INST_TID, lst(uri), (lhs, inst) -> Router.readFromSpace(inst.arg(0).uriValue())));
     }
 
     public F to_(final Obj obj) {
@@ -244,6 +251,10 @@ public class mFluent<F extends Fluent<F>> extends MCode implements Fluent<F>, Co
             return new mFluent<F>().auto_(obj);
         }
 
+        public static <F extends mFluent<F>> F auto_from_(final Uri uri) {
+            return new mFluent<F>().auto_from_(uri);
+        }
+
         public static <F extends mFluent<F>> F from_(final Obj obj) {
             return new mFluent<F>().from_(obj);
         }
@@ -289,7 +300,7 @@ public class mFluent<F extends Fluent<F>> extends MCode implements Fluent<F>, Co
         }
 
         public static Inst auto(final fURI pointer) {
-            return auto_(from_(pointer.toUri()).tryToInst()).tryToInst().as();
+            return auto_from_(pointer.toUri()).tryToInst().as();
         }
     }
 }

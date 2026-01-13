@@ -40,6 +40,6 @@ public class BootLoaderTest {
             Graphitty.log(noobj()).error(e);
         }
         Common.sleepThread(1000);
-        mParser.eval("*/mqtt/zigbee2mqtt/#/.<<.count().print('{{g}}here{{m}}:{{X}}', _);");
+        System.out.println(mParser.eval("/g.V().out().count()").toString());
     }
 }

@@ -81,7 +81,7 @@ public class tableSpace extends MSpace<Connection> {
                     }));
 
     public static tableSpace of(final Map<Obj, Obj> config, final fURI vid) {
-        MTronException.wrap(() -> Class.forName("org.postgresql.Driver"));
+        MTronException.wrap(() -> Class.forName("org.sqlite.JDBC"));
         try (Connection conn = DriverManager.getConnection("jdbc:" + config.get(uri(HOST)).toCleanString(), config.getOrDefault(uri(USER), uri("")).toCleanString(), config.getOrDefault(uri(PASS), str("")).toCleanString())) {
             Graphitty.log(tableSpace.class).info("connected to %s: %s", config.get(uri(HOST)).toCleanString(), conn.getMetaData());
             return new tableSpace(conn, config, TABL_TID, vid);

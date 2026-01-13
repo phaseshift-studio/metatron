@@ -37,6 +37,7 @@ import static studio.phaseshift.metatron.util.Tuple.Triplet;
 public final class NoObj implements Obj, Inst {
 
     private static final NoObj SINGLE = new NoObj();
+    public static final Type NOOBJ_TYPE = T(fURI.NOOBJ).c(cInt.ZERO()).asType();
     private static final int HASHCODE = 632862684;
 
     private NoObj() {

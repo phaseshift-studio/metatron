@@ -196,11 +196,13 @@ public interface Space extends Rec, Closeable {
                     }
                 });
             }
-            final Pair<fURI, Poly> base = Helper.locateBasePoly(space, pattern);
-            if (null != base) {
-                final Poly poly = base.get1();
-                Graphitty.log(space).trace("base poly found at %s: %s", base.get0(), poly);
-                unrollPoly(base.get0(), poly, pattern).forEach(kv -> listing.add(Pair.with(kv.get0().toUri(), kv.get1())));
+            if (listing.isEmpty() || pattern.hasPattern()) {
+                final Pair<fURI, Poly> base = Helper.locateBasePoly(space, pattern);
+                if (null != base) {
+                    final Poly poly = base.get1();
+                    Graphitty.log(space).trace("base poly found at %s: %s", base.get0(), poly);
+                    unrollPoly(base.get0(), poly, pattern).forEach(kv -> listing.add(Pair.with(kv.get0().toUri(), kv.get1())));
+                }
             }
             return pattern.isNode() ?
                     objs(listing.stream().map(Pair::get1)) :

@@ -33,6 +33,8 @@ import studio.phaseshift.metatron.util.Tuple;
 import java.util.*;
 
 import static studio.phaseshift.metatron.furi.fURI.f;
+import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.NOOBJ_TID;
+import static studio.phaseshift.metatron.lang.core.m.obj.NoObj.NOOBJ_TYPE;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MRel.rel;
@@ -59,6 +61,7 @@ public abstract class MInstSet extends MSpace<Map<fURI, Set<? extends Obj>>> imp
                 if (t.tid().matches(this.pattern)) this.write(t.tid(), t);
                 else Router.writeToSpace(t.tid(), t);
             });
+            Router.writeToSpace(NOOBJ_TID, NOOBJ_TYPE);
             this.consts().forEach(c -> {
                 if (c.vid().matches(this.pattern)) this.write(c.vid(), c);
                 else Router.writeToSpace(c.vid(), c);

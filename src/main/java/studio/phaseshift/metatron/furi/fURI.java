@@ -426,7 +426,7 @@ public class fURI implements Cloneable, Ring<fURI> {
     }
 
     public boolean isZero() {
-        return this.cV().isZero() || this.path().equals("noobj");
+        return this.cV().isZero(); //|| this.path().equals("noobj");
     }
 
     public fURI removeSubpath(final fURI subpath) {
@@ -517,10 +517,11 @@ public class fURI implements Cloneable, Ring<fURI> {
     }
 
     public boolean hasPattern() {
-        return (null != this.host && this.host.indexOf(ALL_WILD_CHAR) != -1) ||
-                this.path.toString().indexOf(ALL_WILD_CHAR) != -1 ||
-                (null != this.host && this.host.indexOf(ONE_WILD_CHAR) != -1) ||
-                this.path.toString().indexOf(ONE_WILD_CHAR) != -1;
+        boolean checkHost = null != this.host && this.host.length() == 1;
+        return (checkHost && this.host.charAt(0) == ALL_WILD_CHAR) ||
+                this.path.stream().filter(s -> s.length() == 1).anyMatch(s -> s.charAt(0) == ALL_WILD_CHAR) ||
+                (checkHost && this.host.charAt(0) == ONE_WILD_CHAR) ||
+                this.path.stream().filter(s -> s.length() == 1).anyMatch(s -> s.charAt(0) == ONE_WILD_CHAR);
     }
 
     public boolean hasQuery() {
@@ -595,7 +596,7 @@ public class fURI implements Cloneable, Ring<fURI> {
         if (null == coefficient || coefficient.isEmpty() || cInt.of(coefficient).isOne()) {
             if (this.path.isEmpty())
                 return this;
-            if (this.path.getLast().indexOf('{') == -1)
+            if (!this.path.getLast().contains("{"))
                 return this;
             final List<String> segments = new ArrayList<>(this.path);
             String last = segments.removeLast();
@@ -724,6 +725,15 @@ public class fURI implements Cloneable, Ring<fURI> {
 
     public boolean bimatches(final fURI other) {
         return this.matches(other) || other.matches(this);
+        /*boolean thisPattern = this.hasPattern();
+        boolean otherPattern = other.hasPattern();
+        if (thisPattern && otherPattern)
+            return this.matches(other) || other.matches(this);
+        else if (thisPattern)
+            return other.matches(this);
+        else if (otherPattern)
+            return this.matches(other);
+        else return this.equals(other);*/
     }
 
    /* public boolean matches(final fURI rhs, final Map<fURI, fURI> generics) {

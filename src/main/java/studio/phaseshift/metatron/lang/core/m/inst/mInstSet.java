@@ -86,6 +86,7 @@ public class mInstSet extends MInstSet {
     public static final fURI WITHIN_INST_TID = INST_TID.extend("within");
     public static final fURI LIFT_INST_TID = INST_TID.extend("lift");
     public static final fURI AUTO_INST_TID = INST_TID.extend("auto");
+    public static final fURI AUTO_FROM_INST_TID = INST_TID.extend("auto_from");
     public static final fURI BLOCK_INST_TID = INST_TID.extend("block");
     public static final fURI RNG_INST_TID = INST_TID.extend("rng");
     public static final fURI DOM_INST_TID = INST_TID.extend("dom");
@@ -126,7 +127,7 @@ public class mInstSet extends MInstSet {
     public static final fURI LSHIFT_INST_TID = INST_TID.extend("lshift");
     public static final fURI RSHIFT_INST_TID = INST_TID.extend("rshift");
     public static final fURI CODE_TID = MTRON_TID.extend("code");
-    public static final fURI NOOBJ_TID = fURI.of("");
+    public static final fURI NOOBJ_TID = fURI.of("noobj");
     public static final fURI ALL_STAR = ALL.maybeSome();
     public static final fURI OBJS_TID = MTRON_TID.extend("objs");
     public static final fURI MATH_INST_TID = MTRON_TID.extend("math");

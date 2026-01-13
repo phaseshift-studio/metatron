@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.lang.core.m.type.impl;
 
+import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.core.m.type.Call;
 import studio.phaseshift.metatron.lang.core.m.type.Obj;
@@ -26,6 +27,8 @@ import studio.phaseshift.metatron.lang.sys.router.Router;
 import studio.phaseshift.metatron.util.Tuple;
 
 import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.BASE_TYPES;
+import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.NOOBJ_TID;
+import static studio.phaseshift.metatron.lang.core.m.obj.NoObj.NOOBJ_TYPE;
 import static studio.phaseshift.metatron.lang.core.m.obj.NoObj.noobj;
 
 
