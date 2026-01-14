@@ -103,9 +103,9 @@ public interface Inst extends Call {
             final List<Obj> resolvedArgs = new ArrayList<>();
             for (int i = 0; i < apiInst.args().count(); i++) {
                 if (userInst.arg(i) instanceof FutureObj)
-                    System.out.println(userInst.arg(i) + " is a future");
+                    LOG.error(userInst.arg(i) + " is a future");
                 if (apiInst.arg(i) instanceof FutureObj)
-                    System.out.println(apiInst.arg(i) + " is a future");
+                    LOG.error(apiInst.arg(i) + " is a future");
                 final Obj usrArg = FutureObj.resolveFuture(userInst.arg(i));
                 final Obj apiArg = FutureObj.resolveFuture(apiInst.arg(i));
                 if (userInst.isBlocking()) {
@@ -297,10 +297,10 @@ public interface Inst extends Call {
     @Override
     default Obj apply(final Obj lhs) {
         Obj clhs = FutureObj.resolveFuture(lhs);
-        boolean reself = !this.args().isEmpty() && this.args().argElements().noneMatch(e -> e.vid() != null || e.isObjCall());
+        //boolean reself = !this.args().isEmpty() && this.args().argElements().noneMatch(e -> e.vid() != null || e.isObjCall());
         Inst cinst = this.args().isEmpty() ? this.args(lst(noobj())).resolve(clhs) : this.resolve(clhs); // TODO: this isn't a general solution (multi slotted args won't work).
-        if (reself) // TODO: why do type predicates get rewritten?
-            this.self(Triplet.with(cinst.args(), cinst.f(), cinst.seed()), cinst.tid(), cinst.vid());
+        //if (false && reself) // TODO: why do type predicates get rewritten?
+        //    this.self(Triplet.with(cinst.args(), cinst.f(), cinst.seed()), cinst.tid(), cinst.vid());
         Obj rhs;
         boolean modulateC = false;
         if (BootLoader.TYPE_CHECK && !lhs.isFail() && !lhs.isCaughtFail() && !clhs.matches(cinst.dom()) && clhs.unique()) {

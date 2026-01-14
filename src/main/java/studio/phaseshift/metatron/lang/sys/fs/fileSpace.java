@@ -46,12 +46,14 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static studio.phaseshift.metatron.Tokens.SCRIPT;
 import static studio.phaseshift.metatron.Tokens.USER_HOME;
 import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.lang.core.m.inst.mFluent.StartLess.isa_;
 import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.INST_TID;
 import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.URI_TID;
+import static studio.phaseshift.metatron.lang.core.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MRel.rel;
@@ -64,6 +66,16 @@ import static studio.phaseshift.metatron.lang.sys.sysInstSet.SPACE_TID;
 public class fileSpace extends MSpace<FileSystem> {
 
     public static final fURI FS_TID = SPACE_TID.extend("fs");
+    private static final Rec FS_REC = rec(
+            uri(Tokens.PATTERN), URI_TYPE,
+            uri(Tokens.REWRITE), rel(URI_TYPE, URI_TYPE)
+            /*uri(Tokens.SCRIPT).maybe(), isa_(rec()).else_(rec(
+                    uri("sh"), uri("/bin/sh"),
+                    uri("bash"), uri("/bin/bash"),
+                    uri("zsh"), uri("/bin/zsh"),
+                    uri("python"), uri("/usr/bin/python3"),
+                    uri("perl"), uri("/usr/bin/perl"),
+                    uri("mtron"), uri("/bin/mtron")))*/);
     public static final Type FS_TYPE = T(FS_TID, isa_(rec()), instC(INST_TID.dom(ALL.maybe()).rng(FS_TID), lst(isa_(rec(uri(Tokens.PATTERN), T(URI_TID))).tryToInst()), (lhs, inst) -> {
         final fURI pattern = inst.arg(0).<Rec>as().at(Tokens.PATTERN).uriValue();
         final Space space = fileSpace.of(FileSystems.getDefault(), inst.arg(0).<Rec>as().jvm(), pattern, inst.arg(0).vid());
@@ -144,7 +156,7 @@ public class fileSpace extends MSpace<FileSystem> {
                     try (final Stream<Path> walk = Files.walk(Path.of(Space.Helper.toNativeSpace(key.retractPattern(), this.rewrite)), vid.hasPattern() ? Integer.MAX_VALUE : vid.segments().size() + 1, FileVisitOption.FOLLOW_LINKS)) {
                         return walk
                                 .filter(p -> Space.Helper.fromNativeSpace(p.toString(), this.rewrite).matches(key))
-                                .map(this::makeRewriteFile)
+                                .map(fileSpace::makeFile)
                                 .collect(Collectors.toMap(p -> p, p -> p, Obj::append, LinkedHashMap::new))
                                 .entrySet()
                                 .stream()
@@ -158,9 +170,9 @@ public class fileSpace extends MSpace<FileSystem> {
                     try {
                         final Path vidPath = Path.of(Space.Helper.toNativeSpace(key, this.rewrite));
                         if (Files.isDirectory(vidPath)) {
-                            return Files.list(vidPath).map(p -> Pair.<fURI, Obj>with(f(p.toString()), makeRewriteFile(p))).iterator();
+                            return Files.list(vidPath).map(p -> Pair.<fURI, Obj>with(f(p.toString()), makeFile(p))).iterator();
                         } else {
-                            return IteratorUtil.of(Pair.with(Space.Helper.fromNativeSpace(vidPath.toString(), this.rewrite), makeRewriteFile(vidPath)));
+                            return IteratorUtil.of(Pair.with(Space.Helper.fromNativeSpace(vidPath.toString(), this.rewrite), makeFile(vidPath)));
                         }
                     } catch (final NoSuchFileException e) {
                         return IteratorUtil.of();
@@ -172,10 +184,10 @@ public class fileSpace extends MSpace<FileSystem> {
         };
     }
 
-    private Obj evalScript(final File scriptPath, final Obj obj) {
+    private Obj evalScript(final File scriptPath, final String scriptEngine, final Obj obj) {
         final List<Obj> result = new ArrayList<>();
         try {
-            final ProcessBuilder processBuilder = new ProcessBuilder("/bin/sh", scriptPath.getAbsolutePath());
+            final ProcessBuilder processBuilder = new ProcessBuilder(scriptEngine, scriptPath.getAbsolutePath());
             LOG.info("evaluating script %s", processBuilder.command());
             final Map<String, String> env = processBuilder.environment();
             env.put("ENV_KEY", "ENV_VALUE");
@@ -200,6 +212,19 @@ public class fileSpace extends MSpace<FileSystem> {
         return MObjs.objs(result);
     }
 
+    private String checkScriptEvaluation(final File file) {
+        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+            String firstLine = reader.readLine();
+            if (firstLine != null) {
+                if (firstLine.startsWith("#!"))
+                    return this.at(SCRIPT).orElse(rec()).elements().filter(pair -> firstLine.contains(pair.first().strValue())).map(Rel::second).map(engine -> engine.uriValue().toString()).findFirst().orElse(null);
+            }
+        } catch (final IOException e) {
+            LOG.warn("error reading script file: %s", file, e);
+        }
+        return null;
+    }
+
     @Override
     public BiFunction<fURI, Obj, Obj> directWriter() {
         return (pattern, obj) -> {
@@ -213,8 +238,9 @@ public class fileSpace extends MSpace<FileSystem> {
                     } else {
                         final Path path = Paths.get(Space.Helper.toNativeSpace(pattern.basePath(), this.rewrite));
                         final File file = path.toFile();
-                        if (pattern.basePath().name().endsWith(".sh")) {
-                            return this.evalScript(file, obj);
+                        final String scriptEngine = checkScriptEvaluation(file);
+                        if (scriptEngine != null) {
+                            return this.evalScript(file, scriptEngine, obj);
                         } else {
                             LOG.info("writing %s to %s", obj, path);
                             file.createNewFile();

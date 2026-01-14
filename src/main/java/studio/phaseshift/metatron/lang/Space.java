@@ -166,6 +166,12 @@ public interface Space extends Rec, Closeable {
             }
         }
 
+        public static Tuple.Pair<String, String> extractRewrite(final Map<Obj, Obj> config) {
+            final String prefix = config.containsKey(uri(Tokens.REWRITE)) ? config.get(uri(Tokens.REWRITE)).asRel().first().uriValue().toString() : "";
+            final String prepend = config.containsKey(uri(Tokens.REWRITE)) ? config.get(uri(Tokens.REWRITE)).asRel().second().uriValue().toString() : "";
+            return Tuple.Pair.with(prefix, prepend);
+        }
+
         public static List<Pair<fURI, Obj>> unrollPoly(final fURI polyvid, final Poly<?, ?> poly, final fURI pattern) {
             final List<Pair<fURI, Obj>> results = new ArrayList<>();
             poly.indexedStream()

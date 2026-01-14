@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.lang.iot.mqtt;
 
+import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.PubSubQ;
 import studio.phaseshift.metatron.lang.Space;
@@ -78,7 +79,7 @@ public class MqttPubSubQ extends PubSubQ {
                             .topicFilter(Space.Helper.toNativeSpace(vid.basePath(), space.rewrite))
                             .callback(p -> {
                                 LOG.trace("received %s", p);
-                                final fURI t = Space.Helper.fromNativeSpace(p.getTopic().toString(), space.rewrite);
+                                final fURI topic = Space.Helper.fromNativeSpace(p.getTopic().toString(), space.rewrite);
                                 Obj o;
                                 if (p.getPayload().isPresent()) {
                                     Router.global().server().stats().incrTotalBytesRecv(p.toString().length());
@@ -86,10 +87,11 @@ public class MqttPubSubQ extends PubSubQ {
                                     o = space.jsonTranslator.parse(json);
                                 } else
                                     o = noobj();
-                                super.qlessWrite(source, t, o);
-                                space.cache.write(t, o);
+                                super.qlessWrite(source, topic, o);
+                                space.cache.write(topic, o);
 
                             })
+                            .executor(BootLoader.getExecutor())
                             .send()
                             .whenComplete((m, e) -> {
                                 if (null != e)

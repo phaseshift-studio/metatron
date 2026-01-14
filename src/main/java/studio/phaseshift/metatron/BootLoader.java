@@ -88,7 +88,7 @@ public class BootLoader implements Rec, Feature.SelfClone {
     public static Router ROUTER;
     public static Rec ARGS;
     public static boolean TYPE_CHECK = true;
-    private static final ExecutorService EXECUTOR = Executors.newFixedThreadPool(5);
+    private static final ExecutorService EXECUTOR = Executors.newCachedThreadPool();
 
     static {
         LOG = Graphitty.log(new BootLoader());

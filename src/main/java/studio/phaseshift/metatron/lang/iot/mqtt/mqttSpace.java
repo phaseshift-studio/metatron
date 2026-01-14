@@ -31,8 +31,9 @@ import studio.phaseshift.metatron.lang.core.m.inst.mInstSet;
 import studio.phaseshift.metatron.lang.core.m.obj.NoObj;
 import studio.phaseshift.metatron.lang.core.m.type.*;
 import studio.phaseshift.metatron.lang.db.kv.kvSpace;
-import studio.phaseshift.metatron.lang.translator.JSONTranslator;
 import studio.phaseshift.metatron.lang.sys.router.Router;
+import studio.phaseshift.metatron.lang.translator.JSONTranslator;
+import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
 
 import java.nio.charset.StandardCharsets;
@@ -40,6 +41,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 
 import static studio.phaseshift.metatron.Tokens.PATTERN;
 import static studio.phaseshift.metatron.furi.fURI.ALL;
@@ -74,32 +76,29 @@ public class mqttSpace extends MSpace<Mqtt5Client> {
     protected final fURI broker;
     protected final Tuple.Pair<String, String> rewrite;
     protected final JSONTranslator jsonTranslator = new JSONTranslator();
-    protected final Mqtt5Client client;
     protected final kvSpace cache;
 
     public mqttSpace(final Mqtt5Client client, final Map<Obj, Obj> config, final fURI vid) {
         super(client, config, config.get(uri(PATTERN)).uriValue(), MQTT_TID, vid);
-        final String prefix = config.containsKey(uri(Tokens.REWRITE)) ? config.get(uri(Tokens.REWRITE)).asRel().first().uriValue().toString() : "";
-        final String prepend = config.containsKey(uri(Tokens.REWRITE)) ? config.get(uri(Tokens.REWRITE)).asRel().second().uriValue().toString() : "";
-        this.rewrite = Tuple.Pair.with(prefix, prepend);
+        this.rewrite = Space.Helper.extractRewrite(config);
         LOG.info("{{y}}mtron{{g}}<=>{{y}}mqtt{{X}} mapping established: %s {{g}}<=> ({{b}}%s {{g}}<=>{{X}} %s{{g}}){{X}}", this.pattern().toUri(), this.rewrite, uri(Space.Helper.toNativeSpace(this.pattern(), this.rewrite)));
         this.cache = new kvSpace(this.pattern(), this.vid.extend("cache"));
-        this.put(uri(Tokens.Q), lst(List.of(new MqttPubSubQ(this))), IMMUTABLE);
+        this.put(uri(Tokens.Q), lst(List.of(new MqttPubSubQ(this))), MUTABLE);
         this.broker = config.get(uri(Tokens.HOST)).orThrow(new IllegalArgumentException("config must have a host key")).uriValue();
         try {
-            this.client = MqttClient.builder()
-                    .identifier(UUID.randomUUID().toString())
+            this.sjvm = MqttClient.builder()
+                    .identifier("mtron-" + Math.abs(UUID.randomUUID().getMostSignificantBits()))
                     .serverHost(this.broker.host())
                     .serverPort(this.broker.port() == -1 ? 1833 : this.broker.port())
                     .useMqttVersion5()
                     .build();
-            this.client.toAsync()
+            this.sjvm.toAsync()
                     .connectWith()
                     .cleanStart(false)
                     .send()
                     .whenComplete((a, b) -> LOG.info("{{g}}connected{{X}} %s", a))
-                    .get();
-            this.client.toAsync()
+                    .get(10, TimeUnit.SECONDS);
+            this.sjvm.toAsync()
                     .subscribeWith()
                     .topicFilter(Space.Helper.toNativeSpace(this.pattern, this.rewrite))
                     .retainHandling(Mqtt5RetainHandling.SEND)
@@ -119,7 +118,7 @@ public class mqttSpace extends MSpace<Mqtt5Client> {
                             }
                         } catch (final Exception e) {
                             LOG.error(e);
-                            e.printStackTrace();
+                            // e.printStackTrace();
                         }
                     })
                     .send()
@@ -129,9 +128,9 @@ public class mqttSpace extends MSpace<Mqtt5Client> {
                         else
                             LOG.info("synchronized with mqtt topic: %s", uri(Space.Helper.toNativeSpace(this.pattern, this.rewrite)));
                     })
-                    .get();
+                    .get(10, TimeUnit.SECONDS);
         } catch (final Exception e) {
-            throw new IllegalStateException(e);
+            throw MTronException.of(e);
         }
     }
 
@@ -175,7 +174,7 @@ public class mqttSpace extends MSpace<Mqtt5Client> {
             final byte[] payload = obj.isNoObj() ? new byte[0] : this.jsonTranslator.translate(obj).toString().getBytes();
             if (vid.hasQuery(Tokens.SUB))
                 return;
-            this.client
+            this.sjvm
                     .toAsync()
                     .publishWith()
                     .topic(Space.Helper.toNativeSpace(vid, this.rewrite))
@@ -197,14 +196,14 @@ public class mqttSpace extends MSpace<Mqtt5Client> {
                                     NoObj.noobj());
                         }*/
                     }).get();
-        } catch (InterruptedException | ExecutionException e) {
-            throw new IllegalArgumentException(e);
+        } catch (final InterruptedException | ExecutionException e) {
+            throw MTronException.of(e);
         }
     }
 
     @Override
     public void close() {
-        this.client.toBlocking().disconnect();
+        this.sjvm.toBlocking().disconnect();
         this.cache.close();
         super.close();
     }
