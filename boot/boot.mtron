@@ -1,0 +1,64 @@
+[-- metatron example boot --];
+print("""
+{{y}} ____    ___    ___   ______    ___ ___  ______  ____    ___   ____  
+|    \  /   \  /   \ |      T  |   T   T|      T|    \  /   \ |    \ 
+|  o  )Y     YY     Y|      |  | _   _ ||      ||  D  )Y     Y|  _  Y
+|     T|  O  ||  O  |l_j  l_j {{g}} |  \_/  |l_j  l_j|    / |  O  ||  |  |
+|  O  ||     ||     |  |  | __ |   |   |  |  |  |    \ |     ||  |  |
+|     |l     !l     !  |  ||  T|   |   |  |  |  |  .  Yl    {{b}} !|  |  |
+l_____j \___/  \___/   l__jl__jl___j___j  l__j  l__j\_j \___/ l__j__j                                                                     
+""")
+print("{{r}}------------\n{{g}}*{{y}}boot/args{{X}}: ",
+      *boot/args, 
+     "\n{{r}}------------{{X}}\n");
+[== mount instruction sets ==];
+[--/sys/mod/sys   -> */sys;
+[--/sys/mod/fs    -> */fs;
+/sys/mod/kv    -> */kv;
+/sys/mod/web   -> */web;
+/sys/mod/iot   -> */iot;
+/sys/mod/grph  -> */grph;
+/sys/mod/vec   -> */vec;
+/sys/mod/mach  -> */mach;
+/sys/mod/llm   -> */llm;
+/sys/mod/ui    -> */ui;
+/sys/mod/tabl  -> */tabl;
+[-- mount spaces --];
+     kv::[pattern => /usr/#]@/sys/space/usr;
+     kv::[pattern => /shared/#]@/sys/space/shared;
+    web::[:host    => <http://localhost:8778>,
+          pattern => http://#,
+          route   => [/     => examples/www,
+                      /docs => target/docs ]]@/sys/space/web;
+   grph::[pattern => /g/#,
+          store   => kv::[pattern => /g/#],
+          :load   => modern]@/sys/space/tp3;
+   mqtt::[pattern => <wall:#>,
+          :host    => <mqtt://chibi.local:1883>,
+          rewrite => <wall:>=><walltron/>]@/sys/space/walltron;
+   mqtt::[pattern => <ha:#>,
+          :host    => <mqtt://chibi.local:1883>,
+          rewrite => <ha:>=><homeassistant/>]@/sys/space/homeassistant;
+   mqtt::[pattern => <z2m:#>,
+          :host    => <mqtt://chibi.local:1883>,
+          rewrite => <z2m:>=><zigbee2mqtt/>]@/sys/space/zigbee2mqtt;
+   [==  bt::[pattern => <bt:#>
+          rewrite => <bt:>=><>]@/sys/space/bt; ==]
+   [==tabl::[pattern => /postgres/#,
+          host    => <postgresql://localhost:5432/world>,
+          user    => admin,
+          pass    => "admin",
+          prefix  => </postgres/>]@/sys/space/postgres;==]
+     fs::[pattern => <file:#>,
+          rewrite => <file:>=><~/>]@/sys/space/fs;
+     kv::[pattern => /usr/ai/#]@/sys/space/ai;
+ ollama::[:host    => <http://localhost:11434>, 
+          model   => |load()]@/usr/ai/ollama;
+console::[        => ];
+ [-- *boot/args/mode.-<|[?=server   => print('\n\t{{g}}-<{{c}}server mode{{g}}>-{{X}}'), 
+ [--                       ?=console => print('\n\t{{g}}-<{{c}}client mode{{g}}>-{{X}}').map(console::[=>]), 
+ [--                      _         => print(_,'\n\t')];
+ [--*boot/args.print(_)
+
+ 
+

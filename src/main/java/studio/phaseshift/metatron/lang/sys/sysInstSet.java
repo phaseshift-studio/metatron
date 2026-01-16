@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.lang.sys;
 
+import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.core.m.parser.mParser;
 import studio.phaseshift.metatron.lang.core.m.type.Inst;
@@ -37,6 +38,7 @@ import java.nio.file.Files;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.furi.fURI.f;
@@ -51,6 +53,7 @@ import static studio.phaseshift.metatron.lang.core.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MType.T;
+import static studio.phaseshift.metatron.lang.util.LogObj.LOG_TID;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -90,6 +93,7 @@ public class sysInstSet extends MInstSet {
     @Override
     public Set<Inst> insts() {
         return new LinkedHashSet<>(List.of(
+                instC(SYS_INST_TID.extend("close").dom(ROUTER_TID).rng(NOOBJ_TID), lst(), (lhs, inst) -> Stream.of(noobj()).peek(o -> System.exit(0)).iterator().next()),
                 instC(SYS_INST_TID.extend("beep").dom(A.maybe()).rng(A.maybe()), lst(isa_(T(INT_TID)).else_(jnt(10))), (lhs, inst) -> {
                             for (int i = 0; i < inst.arg(0).intValue().intValue(); i++) {
                                 Toolkit.getDefaultToolkit().beep();

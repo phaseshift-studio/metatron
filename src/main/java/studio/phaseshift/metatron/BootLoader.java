@@ -48,7 +48,6 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -118,8 +117,9 @@ public class BootLoader implements Rec, Feature.SelfClone {
                             
                             %s: %s
                               {{g}}({{X}}arguments must be provided as a single mtron %s{{g}}){{X}}
-                              %s
-                              {{r}}-----------------------------------------------{{/r}}
+                              \te.g. %s
+                              {{r}}----------------------------------------------------------{{/r}}
+                              boot args:
                                 %s
                                 %s
                                 %s
@@ -130,19 +130,25 @@ public class BootLoader implements Rec, Feature.SelfClone {
                             
                             """,
                     Graphitty.sillyPrint("metatron", true, true),
-                    Graphitty.sillyPrint("ring-oriented computing", true, true),
+                    Graphitty.sillyPrint("reference-oriented computing", true, true),
                     T(REC_TID),
                     rec(uri("k1"), uri("v1"), uri("..."), uri("..."), uri("kn"), uri("vn")),
                     rel(uri("log"), objs(uri("info"), uri("debug"), uri("warn"), uri("error"), uri("trace"))),
                     rel(uri("host"), uri("ws://0.0.0.0:8888")),
-                    rel(uri("cluster"), lst(uri("ws://a.local:8888"), uri("ws://b.local:8888"), uri("..."))),
-                    rel(uri("mode"), objs(uri("server"), uri("console"))),
-                    rel(uri("boot"), uri("./boot.mtron")),
-                    "metatron '[boot=><examples/boot.mtron>,mode=>console,log=>info,host=><ws://0.0.0.0:8888>,cluster=>[<ws://localhost:8888>]]'");
+                    rel(uri("cluster"), objs(uri("ws://a.local:8888"), uri("ws://b.local:8888"), uri("..."))),
+                    rel(uri("boot"), uri("conf/boot.mtron")),
+                    "metatron '[boot=><conf/boot.mtron>,log=>info,host=><ws://0.0.0.0:8888>,cluster=>{<ws://localhost:8887>}]'");
             System.exit(0);
         } else {
+            try {
+                ARGS = args.length > 0 ? mParser.parse(args[0]).as() : rec();
+                LogObj.setSLF4J(ARGS.has(uri("log")) ? ARGS.at(uri("log")).uriValue().toString() : "info");
+            } catch (final Exception e) {
+                LOG.error(e);
+                System.exit(0);
+            }
             if (args.length > 0)
-                LOG.info("unparsed boot args: %s", args[0]);
+                LOG.info("unparsed boot args:\n%s", args[0]);
             ARGS = args.length > 0 ? mParser.parse(args[0]).as() : rec();
             BootLoader.load(ARGS);
         }
@@ -150,7 +156,7 @@ public class BootLoader implements Rec, Feature.SelfClone {
 
     public static void load(final Rec args) {
         if (BOOTING) {
-            LOG.debug("parsed boot args: %s", args);
+            LOG.info("parsed boot args:\n%s", args);
             if (args.has(BOOT))
                 args.put(uri(BOOT), f(Paths.get("").toAbsolutePath().normalize().toString()).extend(args.at(BOOT).uriValue()).toUri(), MUTABLE);
             LogObj.setSLF4J(args.has(uri("log")) ? args.at(uri("log")).uriValue().toString() : "info");
@@ -180,7 +186,7 @@ public class BootLoader implements Rec, Feature.SelfClone {
             ROUTER.start();
             ///////////////////////////////////////////////////////////////
             if (args.has(uri(Tokens.BOOT))) {
-                LOG.none("\t {{m}}BEGIN:{{g}} evaluating provided boot loader: {{b}}%s{{X}}\n", args.at(uri(Tokens.BOOT)).uriValue());
+                LOG.info("\t {{m}}BEGIN:{{g}} evaluating provided boot loader: {{b}}%s{{X}}\n", args.at(uri(Tokens.BOOT)).uriValue());
                 try {
                     final Path bootPath = Path.of(args.at(Tokens.BOOT).uriValue().toString());
                     fileSpace.makeFile(bootPath).vid(f("boot/file"));
@@ -190,7 +196,7 @@ public class BootLoader implements Rec, Feature.SelfClone {
                     LOG.error(e);
                     System.exit(0);
                 }
-                LOG.none("\t {{m}}END:{{g}} evaluating provided boot loader: {{b}}%s{{X}}\n", args.at(uri(Tokens.BOOT)).uriValue());
+                LOG.info("\t {{m}}END:{{g}} evaluating provided boot loader: {{b}}%s{{X}}\n", args.at(uri(Tokens.BOOT)).uriValue());
             }
             ///////////////////////////////////////////////////////////////
             final Obj log = Router.writeToSpace(LogObj.of(rec(args.at("log").orElse(uri("trace")), lst(uri(ALL))), SYS_OBJ_TID.extend("log")));

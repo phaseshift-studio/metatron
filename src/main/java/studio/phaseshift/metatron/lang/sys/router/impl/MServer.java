@@ -80,7 +80,8 @@ public class MServer extends WebSocketServer implements Cluster, Closeable, Obj 
         try {
             super.start();
             LOG.trace("server started: %s", this.getAddress());
-            BootLoader.ARGS.at(Tokens.CLUSTER).elements().filter(o -> !o.isNoObj()).distinct().forEach(n -> {
+            BootLoader.ARGS.at(Tokens.CLUSTER).elements().filter(o -> !o.isNoObj()).distinct().forEach(
+                    n -> {
                 try {
                     final MConnection client = MClient.of(n.uriValue(), this.serializer);
                     this.cluster.put(n.uriValue(), client);
@@ -146,7 +147,6 @@ public class MServer extends WebSocketServer implements Cluster, Closeable, Obj 
         } catch (final Exception e) {
             this.onObj(conn, fail(e));
         }
-
     }
 
 

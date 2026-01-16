@@ -45,6 +45,7 @@
         <maven.compiler.target>22</maven.compiler.target>
         <maven.compiler.release>22</maven.compiler.release>
         <java.version>22</java.version>
+        <skipTests>false</skipTests>
         <!-- DEPENDENCY VERSIONS -->
         <sqlite.version>3.51.1.0</sqlite.version>
         <langchain4j.version>1.9.1</langchain4j.version>
@@ -445,6 +446,7 @@
                     </execution>
                 </executions>
                 <configuration>
+                    <skip>${skipTests}</skip>
                     <repository>${project.artifactId}</repository>
                     <tag>${project.version}</tag>
                     <contextDirectory>${project.basedir}</contextDirectory>

@@ -194,7 +194,7 @@ public class ObjCleanStringSerializer implements ObjSerializer<String> {
 
     @Override
     public String writeType(final Type type) {
-        String typeString = Router.global().rewrite(type.tid(), false) + "::T";
+        String typeString = (Router.loaded() ? Router.global().rewrite(type.tid(), false) : type.tid()) + "::T";
         if (type.hasPredicate())
             typeString += ("[" + type.predicate() + "]");
         if (type.hasConstructor()) {
@@ -224,7 +224,7 @@ public class ObjCleanStringSerializer implements ObjSerializer<String> {
     private StringBuilder handleTID(final StringBuilder sb, final Obj obj, final boolean hideBaseTID) {
         if (!obj.isFail() && !obj.isCaughtFail() && hideBaseTID && BASE_TYPES.contains(obj.tid()))
             return sb;
-        sb.append(Router.global().rewrite(obj.tid(), false));
+        sb.append(Router.loaded() ? Router.global().rewrite(obj.tid(), false) : obj.tid());
         if (!obj.isInst())
             sb.append("::");
         return sb;
