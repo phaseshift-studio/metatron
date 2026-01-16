@@ -20,13 +20,17 @@ package studio.phaseshift.metatron.lang.db.grph.type.mtp3;
 
 import org.apache.tinkerpop.gremlin.structure.Element;
 import org.apache.tinkerpop.gremlin.structure.Graph;
+import org.apache.tinkerpop.gremlin.structure.util.ElementHelper;
 import org.apache.tinkerpop.gremlin.structure.util.wrapped.WrappedElement;
+import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.core.m.type.Obj;
 import studio.phaseshift.metatron.lang.db.grph.type.RElement;
+import studio.phaseshift.metatron.lang.sys.router.Router;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import static studio.phaseshift.metatron.lang.core.m.obj.NoObj.noobj;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
 
@@ -61,8 +65,8 @@ public abstract class mElement implements Element, WrappedElement<RElement> {
     }
 
     @Override
-    public Object id() {
-        return this.getBaseElement().vid();
+    public fURI id() {
+        return this.getBaseElement().id();
     }
 
     @Override
@@ -77,7 +81,18 @@ public abstract class mElement implements Element, WrappedElement<RElement> {
 
     @Override
     public void remove() {
+        this.getBaseElement().jvm().clear();
+        Router.global().write(this.id(),noobj());
+    }
 
+    @Override
+    public boolean equals(final Object other) {
+        return ElementHelper.areEqual(this, other);
+    }
+    
+    @Override
+    public int hashCode() {
+        return ElementHelper.hashCode(this);
     }
 
     //@Override

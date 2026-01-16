@@ -35,7 +35,7 @@ import static studio.phaseshift.metatron.lang.core.m.obj.NoObj.noobj;
 public class MObjs implements Objs {
 
     public static final int BULK_TRIGGER = 10000;
-    
+
     private fURI vid;
     private cInt count = null;
     private List<Obj> jvm;
@@ -115,10 +115,10 @@ public class MObjs implements Objs {
 
     public static Obj objs(final Iterable<Obj> objs) {
         final Iterator<Obj> itty = objs.iterator();
-        if(!itty.hasNext())
+        if (!itty.hasNext())
             return noobj();
         final Obj o = itty.next();
-        if(!itty.hasNext())
+        if (!itty.hasNext())
             return o;
         else {
             final List<Obj> temp = new ArrayList<>();
@@ -148,9 +148,10 @@ public class MObjs implements Objs {
         if (obj.isNoObj()) return this;
 
         this.count = this.computeC().count.plus(obj.c());
-        if (obj instanceof Objs)
-            IteratorUtil.fill(((Iterable<Obj>) obj.jvm()).iterator(), this.jvm);
-        else {
+        if (obj instanceof Objs) {
+            if (this != obj)
+                IteratorUtil.fill(((Iterable<Obj>) obj.jvm()).iterator(), this.jvm);
+        } else {
             this.jvm.add(obj);
         }
         return tryToShrink();

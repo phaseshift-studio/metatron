@@ -165,6 +165,8 @@ public class ObjCleanStringSerializer implements ObjSerializer<String> {
 
     @Override
     public String writeInst(final Inst inst) {
+        if (inst.tid().basePath().equals(AUTO_FROM_INST_TID))
+            return "!*" + this.write(inst.arg(0));
         if (inst.tid().basePath().equals(AUTO_INST_TID))
             return "!" + this.write(inst.arg(0));
         if (inst.tid().basePath().equals(FROM_INST_TID))

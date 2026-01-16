@@ -18,31 +18,36 @@
 
 package studio.phaseshift.metatron.lang.db.grph;
 
-import org.apache.tinkerpop.gremlin.tinkergraph.structure.TinkerFactory;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-import studio.phaseshift.metatron.MetatronTest;
+import studio.phaseshift.metatron.lang.SpaceTest;
+import studio.phaseshift.metatron.lang.core.m.parser.mParser;
 import studio.phaseshift.metatron.lang.db.grph.inst.grphInstSet;
-import studio.phaseshift.metatron.lang.db.grph.type.tp.MGraph;
 import studio.phaseshift.metatron.lang.sys.router.Router;
 
 import static studio.phaseshift.metatron.furi.fURI.f;
-import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class grphInstSetTest extends MetatronTest {
+@Disabled
+public class grphInstSetTest extends SpaceTest {
+
 
     @BeforeAll
     @Disabled
     public static void begin() {
-   //     MetatronTest.begin();
+        //     MetatronTest.begin();
         grphInstSet.create().vid(f("/sys/router/lang/grph"));
-        MGraph.of(TinkerFactory.createModern(), f("/tp/#"), f("/sys/router/space/tp"));
-        Router.writeToSpace("g", uri("/sys/router/space/tp"));
+        //  MGraph.of(TinkerFactory.createModern(), f("/tp/#"), f("/sys/router/space/tp"));
+        SPACE = () -> mParser.parse("""
+                 grph::[pattern => /g/#,
+                        store   => kv::[pattern => /g/#],
+                        :load   => modern]
+                """);
+        Router.writeToSpace("/g", SPACE.get());
     }
 
 
@@ -50,14 +55,17 @@ public class grphInstSetTest extends MetatronTest {
     @Disabled
     @ParameterizedTest
     @CsvSource(value = {
-            "g -> /sys/router/space/tp                                                 % /sys/router/space/tp",
-            "*(*g).V().count()                                                         % 6",
-            "*(*g).E().count()                                                         % 6",
-            "*(*g).V().outE().count()                                                  % 6",
-            "*(*g).V().out().count()                                                   % 6",
-            "*(*g).V().values(name)                                                    % {'marko','josh','peter','vadas','lop','ripple'}",
-            "*(*g).V().values(age).count()                                             % 4",
-            "*(*g).V().values(age).sum?int<=int{*}()                                   % 123",
+            //"/g -> */sys/router/space/tp                                                 % /sys/router/space/tp",
+            "/g.V().count()                                                         % 6",
+            "/g.E().count()                                                         % 6",
+            "/g.V().outE().count()                                                  % 6",
+            "/g.V().out().count()                                                   % 6",
+            "/g.V().in().count()                                                    % 6",
+            "/g.V().out().out().count()                                             % 2",
+            "/g.V().out().out().out().count()                                       % 0",
+            "/g.V().values(name)                                                    % {'marko','josh','peter','vadas','lop','ripple'}",
+            "/g.V().values(age).count()                                             % 4",
+            "/g.V().values(age).sum?int<=int{*}()                                   % 123",
             // dummy without ending comma so it's easier to add more test cases
             "1.plus(1)                                                                  % 2"
     }, delimiter = '%')

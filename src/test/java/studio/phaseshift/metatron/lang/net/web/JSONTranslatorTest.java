@@ -43,17 +43,19 @@ public class JSONTranslatorTest extends MetatronTest {
                     false   | false
                     "a/b/c" | <a/b/c>
                     {"_bid":"/m/type","_tid":"/m/int", "_value":[null,null]}   | /m/int::T
-                    {"_bid":"/m/inst","_tid":"/m/auto", "_value":"/m/inst/auto(/m/inst/from(abc))"}   | !*abc
+                    {"_bid":"/m/inst","_tid":"/m/auto", "_value":"/m/inst/auto(/m/inst/from(abc))"}   | !(*abc)
                     {"_bid":"/m/type","_tid":"nat", "_value":[{"_tid":"/m/inst","_value":"is(gt(0))"},null]}   | nat::T[is(gt(0))]
                     {"_tid":"/m/str", "_value": "hello world"} | "hello world"
                     {"_tid":"/m/str", "_value": "a/b/c"}        | "a/b/c"
-                    {"_tid":"/m/uri", "_value": "a/b/c"}        | a/b/c
+                    {"_tid":"/m/uri", "_value": "a/b/c"}        |  a/b/c
                     [1,2,3] | [1,2,3]
                     [1,"a/b",{a:1,b:2}] | [1,a/b,[a=>1,b=>2]]
                     [1,{"_tid":"/m/str", "_value":"'a/b'"},{a:1,b:2}] | [1,"'a/b'",[a=>1,b=>2]]
                     [1,{"_tid":"/m/str", "_value":"a/b"},{a:1,b:2}]   | [1,"a/b",[a=>1,b=>2]]
                     {a:1,b:2,c:3} | [a=>1,b=>2,c=>3]
                     {a:1,b:[1,2,[3,4]],c:3} | [a=>1,b=>[1,2,[3,4]],c=>3]
+                    {a:1,b:[1,"2",[3.02,4]],c:3} | [a=>1,b=>[1,<2>,[3.02,4]],c=>3]
+                    {a:1,b:[1,2,[3.02,4]],c:3} | [a=>1,b=>[1,2,[3.02,4]],c=>3]
                     {"_bid":"/m/inst", "_value":"plus(mult(2))"}     | plus(mult(2))
                     {"_bid":"/m/inst", "_tid":"plus?int<=int", "_value":"plus(mult(2))"}     | plus(mult(2))
                     {"_bid":"/m/inst", "_tid":"plus?rng=int{1}&dom=int{*}", "_value":"plus?int<=int{*}(mult(2))"}     | plus?int<=int{*}(mult(2))

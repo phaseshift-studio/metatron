@@ -38,7 +38,6 @@ public abstract class MSpace<SJVM> extends MRec implements Space {
     protected final fURI pattern;
     protected SJVM sjvm;
     protected GraphittyLogger LOG;
-    protected Status status = Status.active;
 
     public MSpace(final SJVM sjvm, final Map<Obj, Obj> jvm, final fURI pattern, final fURI tid, final fURI vid) {
         super(new HashMap<>(jvm), tid, vid);
@@ -55,21 +54,6 @@ public abstract class MSpace<SJVM> extends MRec implements Space {
                 this.qs.add(q);
             });
         } else*/
-        if (key.matches(f(Tokens.STATUS))) {
-            this.status = value.uriValue().matches(f(Tokens.ACTIVE)) ? Status.active : Status.paused;
-        }
-    }
-
-    @Override
-    public Status status() {
-        return this.status;
-    }
-
-    @Override
-    public Space status(Status status) {
-        Space.super.status(status);
-        this.status = status;
-        return this;
     }
 
     @Override

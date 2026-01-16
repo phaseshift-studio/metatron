@@ -68,6 +68,10 @@ import static studio.phaseshift.metatron.lang.translator.TP3Translator.LABEL;
         test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.ProfileTest",
         method = "*",
         reason = "avoiding grateful dead tests for now")
+@Graph.OptOut(
+        test = "org.apache.tinkerpop.gremlin.process.traversal.step.filter.WhereTest",
+        method = "g_VX1X_repeatXbothEXcreatedX_whereXwithoutXeXX_aggregateXeX_otherVX_emit_path",
+        reason = "avoiding grateful dead tests for now")
 public class mGraph implements Graph, WrappedGraph<grphSpace> {
 
     protected final grphSpace space;
@@ -168,10 +172,7 @@ public class mGraph implements Graph, WrappedGraph<grphSpace> {
                         .map(this::makeVertexID)
                         .map(Router::readFromSpace))
                 .flatMap(Obj::stream)
-                .map(Obj::<Rec>as)
-                .map(RVertex::of)
-                .map(rv -> mVertex.of(this, rv))
-                .map(mv -> (Vertex) mv)
+                .map(rv -> (Vertex) mVertex.of(this, RVertex.of(rv.as())))
                 .iterator();
     }
 

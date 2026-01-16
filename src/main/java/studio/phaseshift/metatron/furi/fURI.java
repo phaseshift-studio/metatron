@@ -316,6 +316,10 @@ public class fURI implements Cloneable, Ring<fURI> {
     }
 
     public fURI scheme(final String scheme) {
+        if (Objects.equals(this.scheme, scheme))
+            return this;
+        if (scheme.contains(":"))
+            throw MTronException.of("scheme cannot contain delimiter: %s", scheme);
         return new fURI(scheme, this.host, this.port, this.sstart, this.path, this.send, this.poly, Query.to(this.query));
     }
 
@@ -365,6 +369,14 @@ public class fURI implements Cloneable, Ring<fURI> {
 
     public String host() {
         return this.host;
+    }
+
+    public fURI host(final String host) {
+        if (Objects.equals(this.host, host))
+            return this;
+        if (host.contains(":"))
+            throw MTronException.of("host cannot contain port: %s", host);
+        return new fURI(this.scheme, host, this.port, this.sstart, this.path, this.send, this.poly, Query.to(this.query));
     }
 
     public fURI port(final int port) {
@@ -517,11 +529,9 @@ public class fURI implements Cloneable, Ring<fURI> {
     }
 
     public boolean hasPattern() {
-        boolean checkHost = null != this.host && this.host.length() == 1;
-        return (checkHost && this.host.charAt(0) == ALL_WILD_CHAR) ||
-                this.path.stream().filter(s -> s.length() == 1).anyMatch(s -> s.charAt(0) == ALL_WILD_CHAR) ||
-                (checkHost && this.host.charAt(0) == ONE_WILD_CHAR) ||
-                this.path.stream().filter(s -> s.length() == 1).anyMatch(s -> s.charAt(0) == ONE_WILD_CHAR);
+        return (null != this.scheme && this.scheme.length() == 1 && (this.scheme.charAt(0) == ALL_WILD_CHAR || this.scheme.charAt(0) == ONE_WILD_CHAR)) ||
+                (null != this.host && this.host.length() == 1 && (this.host.charAt(0) == ALL_WILD_CHAR || this.host.charAt(0) == ONE_WILD_CHAR)) ||
+                this.path.stream().filter(s -> s.length() == 1).anyMatch(s -> s.charAt(0) == ONE_WILD_CHAR || s.charAt(0) == ALL_WILD_CHAR);
     }
 
     public boolean hasQuery() {
@@ -824,11 +834,11 @@ public class fURI implements Cloneable, Ring<fURI> {
             return true;
         if (!other.hasPattern())
             return lhs.equals(other);
-        if (Objects.equals(other.scheme, "#"))
+        if (Objects.equals(other.scheme, ALL_WILD_STRING))
             return true;
         if (!Objects.equals(this.scheme, other.scheme) && (other.scheme == null || (!other.scheme.equals(ONE_WILD_STRING))))
             return false;
-        if (Objects.equals(other.host, "#"))
+        if (Objects.equals(other.host, ALL_WILD_STRING))
             return true;
         if (!Objects.equals(this.host, other.host) && (other.host == null || (!other.host.equals(ONE_WILD_STRING))))
             return false;
@@ -839,8 +849,6 @@ public class fURI implements Cloneable, Ring<fURI> {
             return false;
         if (this.sstart != other.sstart)
             return false;
-        if (Objects.equals(other.host, ALL_WILD_STRING))
-            return true;
         //if (!Objects.equals(this.host, other.host) && !Objects.equals(other.host, ONE_WILD_STRING))
         //    return false;
         //if (this.path.isEmpty() && other.toString().contains("#"))

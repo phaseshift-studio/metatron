@@ -42,22 +42,9 @@ import static studio.phaseshift.metatron.util.Tuple.Pair;
 
 public interface Space extends Rec, Closeable {
 
-    public enum Status {
-        paused,
-        active
-    }
-
     @Override
     default boolean isResolved(final boolean nested) {
         return true;
-    }
-
-    default Status status() {
-        return Status.valueOf(this.at(Tokens.STATUS).uriValue().toString());
-    }
-
-    default Space status(final Status status) {
-        return (Space) this.put(Tokens.STATUS, uri(status.name()));
     }
 
     default Lst qs() {

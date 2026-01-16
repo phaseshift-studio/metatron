@@ -57,13 +57,12 @@ import static studio.phaseshift.metatron.lang.core.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MRel.rel;
-import static studio.phaseshift.metatron.lang.core.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.Common.nullOrElse;
 import static studio.phaseshift.metatron.util.Tuple.Pair;
 
-public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>, Feature.HasLogger, Cloneable {
+public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>, Feature.HasLogger, Cloneable, Predicate<Obj> {
 
     default <O extends Obj> O maybe() {
         return (O) this.c(cInt::maybe);
@@ -75,7 +74,10 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
 
     fURI vid();
 
-
+    default boolean test(final Obj other) {
+        return this.matches(other);
+    }
+    
     default boolean isResolved(final boolean nested) {
         return true;
     }
@@ -361,15 +363,10 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
     }
 
     default Obj autoResolve(final Obj obj) {
-        return this.isInst() && this.tid().basePath().equals(AUTO_INST_TID) ? this.apply(obj).autoResolve(obj) : this;
-    }
-
-    default Obj autoResolve() {
-        return this.autoResolve(noobj());
-    }
-
-    default boolean isAutoResolve() {
-        return this.isInst() && this.tid().basePath().equals(AUTO_INST_TID);
+        return this.isInst() &&
+                (this.tid().basePath().equals(AUTO_FROM_INST_TID) || this.tid().basePath().equals(AUTO_INST_TID)) ?
+                this.apply(obj).autoResolve(obj) :
+                this;
     }
 
     default boolean isInstObj() {
@@ -431,7 +428,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
     default Rel asRel() {
         return (Rel) this;
     }
-    
+
     default Inst asInst() {
         return (Inst) this;
     }
@@ -447,7 +444,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
     default Objs asObjs() {
         return (Objs) this;
     }
-    
+
     String xxxValue = "%s is a %s, not a %s";
 
     default Pair<Throwable, Fail> failValue() {
@@ -636,24 +633,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
         }
     }
 
-    public static final class ObjType {
-        /*private static Obj recurssiveAs(final Obj current, final Rel path) {
-            try {
-                System.out.println("here: " + path.first() + "--------------" + path.second());
-                return instB(AS_INST_TID
-                                .dom(path.second().isRel() ? REL_TID : null)
-                                .rng(path.second().isRel() ? REL_TID : null),
-                        (lst(path.second()))).apply(
-                                instB(AS_INST_TID
-                                                .dom(path.second().isRel() ? REL_TID : null)
-                                                .rng(path.second().isRel() ? REL_TID : null),
-                                        (lst(path.first()))).apply(current));
-            } catch (Exception e) {
-                e.printStackTrace();
-                throw MTronException.of(e);
-            }
-        }*/
-
+    final class ObjType {
         public static Set<Inst> insts() {
             return new LinkedHashSet<>(List.of(
                     // instC(AS_INST_TID.dom(REL_TID).rng(REL_TID), lst(REL_TYPE), (lhs, inst) -> recurssiveAs(lhs, inst.arg(0).as())),
@@ -666,7 +646,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
                         }
                         return current;
                     }),
-                   // instC(EXPLAIN_INST_TID.dom(CODE_TID).rng(STR_TID), lst(), (lhs, inst) -> str(new Profile(inst.arg(0)).toString())),
+                    // instC(EXPLAIN_INST_TID.dom(CODE_TID).rng(STR_TID), lst(), (lhs, inst) -> str(new Profile(inst.arg(0)).toString())),
                     instC(AUTO_INST_TID.dom(ALL.maybe()).rng(ALL.maybe()), lst(T(ALL.maybe())), (lhs, inst) -> inst.arg(0).apply(lhs)),
                     instC(CATCH_INST_TID.dom(ALL).rng(ALL.maybeSome()), lst(T(ALL.maybeSome())), (lhs, inst) -> lhs.isFail() ? inst.arg(0).apply(lhs.<Fail>as().caught()) : lhs),
                     docWrap(instC(END_INST_TID.dom(ALL_STAR).rng(NOOBJ_TID.zero()), lst(), (lhs, inst) -> noobj()),
@@ -787,7 +767,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
                     //instC(SELECT_TID.dom(ALL).rng(REC_TID.maybe()), lst(T(REC_TID)), (lhs, inst) -> inst.arg(0).<Rec>as().jvm(inst.arg(0).<Rec>as().<Rel>elementStream().map(r -> Tuple.Pair.with(r.first().apply(lhs), r.second().apply(lhs))).collect(Collectors.toMap(Tuple.Pair::get0, Tuple.Pair::get1, Obj::append, LinkedHashMap::new)))),
                     // instC(SELECT_TID.dom(ALL).rng(LST_TID.maybe()), lst(T(LST_TID)), (lhs, inst) -> inst.arg(0).<Lst>as().jvm(inst.arg(0).<Lst>as().elementStream().map(r -> r.apply(lhs)).toList())),
                     instC(REDUCE_INST_TID.dom(ALL.maybeSome()).rng(ALL), lst(T(ALL)), (lhs, inst) -> Stream.concat(inst.arg(0).<Inst>as().arg(0).stream(), lhs.stream()).reduce((a, b) -> inst.arg(0).<Inst>as().args(lst(a)).apply(b)).orElse(noobj())),
-                    instC(WHERE_INST_TID.dom(ALL.maybe()).rng(ALL.maybe()), lst(T(ALL)), (lhs, inst) -> lhs.matches(inst.arg(0)) ? lhs : noobj()),
+                    instC(WHERE_INST_TID.dom(ALL).rng(ALL.maybe()), lst(T(ALL)), (lhs, inst) -> lhs.matches(inst.arg(0)) ? lhs : noobj()),
                     instC(GROUP_INST_TID.dom(ALL.maybeSome()).rng(REC_TID), lst(T(REC_TID)), (lhs, inst) -> {
                         final Map<Obj, Obj> result = new LinkedHashMap<>();
                         lhs.stream().forEach(e -> {

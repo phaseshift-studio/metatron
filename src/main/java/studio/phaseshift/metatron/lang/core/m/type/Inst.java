@@ -300,6 +300,8 @@ public interface Inst extends Call {
         Inst cinst = this.args().isEmpty() ? this.args(lst(noobj())).resolve(clhs) : this.resolve(clhs); // TODO: this isn't a general solution (multi slotted args won't work).
         //if (false && reself) // TODO: why do type predicates get rewritten?
         //    this.self(Triplet.with(cinst.args(), cinst.f(), cinst.seed()), cinst.tid(), cinst.vid());
+        if(lhs.isNoObj() && !cinst.dom().c().isZeroable())
+            return noobj();
         Obj rhs;
         boolean modulateC = false;
         if (BootLoader.TYPE_CHECK && !lhs.isFail() && !lhs.isCaughtFail() && !clhs.matches(cinst.dom()) && clhs.unique()) {

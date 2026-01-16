@@ -52,7 +52,7 @@ public class RElement extends MRec {
     }
 
     public Stream<Rel> properties(final Obj keys) {
-        boolean emptyKeys = keys.elements().noneMatch(e -> !e.isNoObj());
+        boolean emptyKeys = keys.elements().allMatch(Obj::isNoObj);
         return this.has(PROPS) ?
                 this.at(PROPS).<Rec>as()
                         .elements()
@@ -64,16 +64,14 @@ public class RElement extends MRec {
         return this.at(LABEL).uriValue();
     }
 
-    public Object id() {
+    public fURI id() {
         return this.vid();
     }
 
     public Stream<Obj> values(final Obj keys) {
         return this.properties(keys).map(Rel::second);
     }
-
-    // abstract public void drop();
-
+    
     @Override
     public RElement clone() {
         return (RElement) super.clone();

@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -25,6 +25,7 @@ import studio.phaseshift.metatron.lang.core.m.parser.mParser;
 import studio.phaseshift.metatron.lang.core.m.type.*;
 import studio.phaseshift.metatron.lang.sys.console.Highlighter;
 import studio.phaseshift.metatron.lang.sys.router.Router;
+import studio.phaseshift.metatron.lang.util.serial.ObjCleanStringSerializer;
 import studio.phaseshift.metatron.lang.util.serial.ObjSerializer;
 import studio.phaseshift.metatron.lang.util.serial.ObjStringSerializer;
 import studio.phaseshift.metatron.ui.graphitty.Graphitty;
@@ -42,6 +43,7 @@ import java.util.Map;
 import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.furi.fURI.fnull;
 import static studio.phaseshift.metatron.lang.core.m.inst.mFluent.StartLess.auto_;
+import static studio.phaseshift.metatron.lang.core.m.inst.mFluent.StartLess.auto_from_;
 import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.*;
 import static studio.phaseshift.metatron.lang.core.m.obj.NoObj.noobj;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MBool.bool;
@@ -67,13 +69,7 @@ public record JSONTranslator(ObjSerializer<String> serializer) implements Transl
 
     private static final GraphittyLogger LOG = Graphitty.log(JSONTranslator.class);
 
-    private static final ObjSerializer<String> SERIALIZER = ObjStringSerializer
-            .build()
-            .simpleColon(true)
-            // .hideTypesMatching(MTRON_CORE_TYPES)
-            .prettyPrint(false)
-            .ignoreRewrites(true)
-            .create();
+    private static final ObjCleanStringSerializer SERIALIZER = new ObjCleanStringSerializer();
 
     public JSONTranslator() {
         this(SERIALIZER);
@@ -109,8 +105,12 @@ public record JSONTranslator(ObjSerializer<String> serializer) implements Transl
                             obj = mParser.parse(jpstr);
                         } else if (bid.equals(INST_TID)) {
                             obj = mParser.parse(jpstr).<Call>as().tryToInst().vid(fnull);
-                            if (null != tid && tid.equals(AUTO_INST_TID)) {
-                                obj = auto_(obj).tryToInst();
+                            if (null != tid) {
+                                if (tid.equals(AUTO_FROM_INST_TID)) {
+                                    obj = auto_from_(obj.asUri()).tryToInst();
+                                } else if (tid.equals(AUTO_INST_TID)) {
+                                    obj = auto_(obj).tryToInst();
+                                }
                             }
                         } else if (bid.equals(FAIL_TID)) {
                             obj = fail(MTronException.of(jpstr));

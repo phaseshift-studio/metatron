@@ -54,8 +54,7 @@ public class UriTest extends MetatronTest {
     public void testCode(final String code, final String expected) {
         super.testCode(code, expected);
     }
-
-
+    
     @ParameterizedTest
     @CsvSource(value = {
             "a.pow(0)                         % <.>",
@@ -76,6 +75,20 @@ public class UriTest extends MetatronTest {
             "<a/b/../c/d>.pow(3)              % a/c/d/a/c/d/a/c/d",
     }, delimiter = '%')
     public void testMath(final String code, final String expected) {
+        super.testCode(code, expected);
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "<a://b.com:123/c/d>                                 % <a://b.com:123/c/d>",
+            "<a://b.com:123/c/d>.scheme()                        % a",
+            "<a://b.com:123/c/d>.scheme(abc)                     % <abc://b.com:123/c/d>",
+            "<a://b.com:123/c/d>.port()                          % 123",
+            "<a://b.com:123/c/d>.port(666)                       % <a://b.com:666/c/d>",
+            "<a://b.com:123/c/d>.host()                          % <b.com>",
+            "<a://b.com:123/c/d>.host(<abc.org>)                 % <a://abc.org:123/c/d>",
+    }, delimiter = '%')
+    public void testComponents(final String code, final String expected) {
         super.testCode(code, expected);
     }
     

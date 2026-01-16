@@ -131,9 +131,9 @@ public class mInstSet extends MInstSet {
     public static final fURI ALL_STAR = ALL.maybeSome();
     public static final fURI OBJS_TID = MTRON_TID.extend("objs");
     public static final fURI MATH_INST_TID = MTRON_TID.extend("math");
-    public static final fURI URI_SCHEME_TID = MTRON_TID.extend("uri:scheme");
+    /*public static final fURI URI_SCHEME_TID = MTRON_TID.extend("uri:scheme");
     public static final fURI URI_PORT_TID = MTRON_TID.extend("uri:port");
-    public static final fURI URI_HOST_TID = MTRON_TID.extend("uri:host");
+    public static final fURI URI_HOST_TID = MTRON_TID.extend("uri:host");*/
     public static final fURI URI_PATH_TID = MTRON_TID.extend("uri:path");
     public static final fURI Q_INST_TID = INST_TID.extend("q");
     public static final fURI URI_C_TID = MTRON_TID.extend("uri:c");
@@ -142,6 +142,8 @@ public class mInstSet extends MInstSet {
     public static final fURI STR_UPPER_TID = MTRON_TID.extend("str:upper");
     public static final fURI STR_CONTAINS_TID = MTRON_TID.extend("str:contains");
     public static final fURI SCHEME_INST_TID = MTRON_TID.extend("scheme");
+    public static final fURI HOST_INST_TID = MTRON_TID.extend("host");
+    public static final fURI PORT_INST_TID = MTRON_TID.extend("port");
     public static final Set<fURI> BASE_TYPES = Set.of(
             FAIL_TID, BOOL_TID, BYTES_TID, INT_TID, REAL_TID,
             STR_TID, URI_TID, REL_TID,
@@ -227,8 +229,9 @@ public class mInstSet extends MInstSet {
                 Tuple.Triplet.with(Tuple.Pair.with(";", null), List.of(END_INST_TID), 0),
                 //  Tuple.Triplet.with(Tuple.Pair.with("(", ")"), List.of(GET_INST_TID), 1),
                 Tuple.Triplet.with(Tuple.Pair.with("./", null), List.of(GET_INST_TID), 1),
-                Tuple.Triplet.with(Tuple.Pair.with("^", null), List.of(LIFT_INST_TID), 1),
-                Tuple.Triplet.with(Tuple.Pair.with("!*", null), List.of(AUTO_INST_TID, FROM_INST_TID), 1)));
+                Tuple.Triplet.with(Tuple.Pair.with("!*", null), List.of(AUTO_FROM_INST_TID), 1),
+                Tuple.Triplet.with(Tuple.Pair.with("!", null), List.of(AUTO_INST_TID), 1),
+                Tuple.Triplet.with(Tuple.Pair.with("^", null), List.of(LIFT_INST_TID), 1)));
     }
 
     public static Obj crossPoly(Obj lhs, Obj rhs) {

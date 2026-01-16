@@ -701,7 +701,11 @@ public class fURITest {
             "http://localhost:8080|http://#|true",
             "http://localhost:8080/|http://#|true",
             "http://localhost:8080/abc|http://+/abc|true",
-            "http://localhost:8080|http://+/abc|false"
+            "http://localhost:8080|http://+/abc|false",
+            "x:abc|+:abc|true",
+            "http://localhost:8080/abc|+://localhost:8080/abc|true",
+            "http://localhost:8080/abc|+://+/abc|true",
+            "http://localhost:8080|+://#|true"
     }, delimiter = '|')
     void testMatches(final String a, final String b, final boolean shouldMatch) {
         final fURI furi1a = fURI.of(nullToEmpty(a));

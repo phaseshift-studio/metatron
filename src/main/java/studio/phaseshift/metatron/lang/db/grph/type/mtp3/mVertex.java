@@ -39,6 +39,7 @@ import studio.phaseshift.metatron.util.IteratorUtil;
 import java.util.Iterator;
 
 import static studio.phaseshift.metatron.lang.core.m.obj.NoObj.noobj;
+import static studio.phaseshift.metatron.lang.core.m.type.Poly.MUTABLE;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
@@ -88,7 +89,7 @@ public class mVertex extends mElement implements Vertex, WrappedVertex<RVertex> 
         RVertex vertex2 = ((mVertex) inVertex).getBaseVertex();
         final Rec directedEdges2 = vertex2.jvm().getOrDefault(uri(Direction.IN.name()), rec()).as();
         final Obj labeledEdges2 = directedEdges2.jvm().getOrDefault(uri(label), MObjs.empty()).as();
-        vertex2.jvm().put(uri(Direction.IN.name()), directedEdges2.put(uri(label), labeledEdges2.append(re.clone())));
+        vertex2.jvm().put(uri(Direction.IN.name()), directedEdges2.put(uri(label), labeledEdges2.append(re.clone()), MUTABLE));
         Router.writeToSpace(vertex2);
 
         return mEdge.of(this.graph, re);
@@ -102,9 +103,9 @@ public class mVertex extends mElement implements Vertex, WrappedVertex<RVertex> 
         props.jvm().put(uriKey, MObjFactory.of().create(value));
         this.getBaseVertex().jvm().put(uri(PROPS), props);
 
-        this.getBaseVertex().logger().info("HERE %s => %s ====> %s", key, value, Router.readFromSpace(this.getBaseVertex().vid()).<RVertex>as().properties(noobj()).toList());
+        //this.getBaseVertex().logger().info("HERE %s => %s ====> %s", key, value, Router.readFromSpace(this.getBaseVertex().vid()).<RVertex>as().properties(noobj()).toList());
         Router.writeToSpace(this.getBaseVertex());
-        this.getBaseVertex().logger().info("XXX: %s", IteratorUtil.stream(this.properties()).toList());
+        //this.getBaseVertex().logger().info("XXX: %s", IteratorUtil.stream(this.properties()).toList());
         return new mVertexProperty<>(this, property);
     }
 

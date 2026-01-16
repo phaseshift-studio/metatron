@@ -32,6 +32,7 @@ import java.util.stream.Stream;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.lang.db.grph.inst.grphInstSet.VERTEX_TID;
+import static studio.phaseshift.metatron.lang.translator.TP3Translator.ID;
 import static studio.phaseshift.metatron.lang.translator.TP3Translator.LABEL;
 
 /*
@@ -116,5 +117,10 @@ public class RVertex extends RElement {
     @Override
     public RVertex clone() {
         return (RVertex) super.clone();
+    }
+    
+    @Override
+    public boolean equals(final Object other) {
+        return other instanceof Rec && this.at(ID).equals(((Rec) other).at(ID));
     }
 }
