@@ -33,7 +33,7 @@ public final class Tokens {
     public static final String Q = "q";
     public static final String SUB = "sub";
     public static final String PATTERN = "pattern";
-    public static final String HOST = "host";
+    public static final String HOST = ":host";
     public static final String USER = "user";
     public static final String PASS = "pass";
     public static final String NAME = "name";
