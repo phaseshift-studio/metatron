@@ -35,7 +35,6 @@ import studio.phaseshift.metatron.lang.util.serial.ObjSerializer;
 import studio.phaseshift.metatron.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.util.MTronException;
-import studio.phaseshift.metatron.util.Threadable;
 
 import java.io.Closeable;
 import java.net.InetSocketAddress;
@@ -51,7 +50,7 @@ import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.lang.sys.router.impl.MRouter.ROUTER_TID;
 
-public class MServer extends WebSocketServer implements Cluster, Closeable, Obj, Threadable {
+public class MServer extends WebSocketServer implements Cluster, Closeable, Obj {
 
     public static final fURI MSERVER_TID = ROUTER_TID.extend("server");
 
@@ -96,18 +95,6 @@ public class MServer extends WebSocketServer implements Cluster, Closeable, Obj,
             // do nothing
         }
 
-    }
-
-    private boolean interrupted = false;
-
-    @Override
-    public boolean isInterrupted() {
-        return this.interrupted;
-    }
-
-    @Override
-    public void interrupt() {
-        this.interrupted = true;
     }
 
     public <T> ObjSerializer<T> getSerializer() {

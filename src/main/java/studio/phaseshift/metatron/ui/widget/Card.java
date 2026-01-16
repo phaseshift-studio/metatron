@@ -83,9 +83,4 @@ public class Card extends AbstractWidget<Card> {
                 .append(this.style.border.bottomRightCorner());
         return sb.append("{{X}}").toString();
     }
-
-    @Override
-    public String toString() {
-        return this.title + "\n" + this.body;
-    }
 }

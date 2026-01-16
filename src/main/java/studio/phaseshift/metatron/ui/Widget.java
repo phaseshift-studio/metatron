@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.ui;
 
+import org.jline.terminal.Cursor;
 import studio.phaseshift.metatron.lang.sys.console.Highlighter;
 import studio.phaseshift.metatron.ui.graphitty.Graphitty;
 
@@ -27,17 +28,17 @@ import java.util.List;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public interface Widget<W extends Widget<W>> extends Stylable<W> {
+public interface Widget<W extends Widget<W>> extends Stylable<W>, AutoCloseable, Runnable {
 
-    default int width() {
-        return Arrays.stream(this.format().split("\n")).map(Highlighter::visualLength).max(Integer::compareTo).orElse(0);
+    public static final String X = "{{X}}";
+    
+    @Override
+    default void close() {
+
     }
 
-
-    void run();
-
-    void close();
-
+     W cursor(final Cursor cursor);
+    
     static void cursorOffOn(final Runnable runnable) {
         Graphitty.log(Widget.class).none("{{.}}");
         runnable.run();
@@ -48,6 +49,10 @@ public interface Widget<W extends Widget<W>> extends Stylable<W> {
 
     default int height() {
         return this.format().split("\n").length;
+    }
+
+    default int width() {
+        return Arrays.stream(this.format().split("\n")).map(Highlighter::visualLength).max(Integer::compareTo).orElse(0);
     }
 
     default int rowCount() {
@@ -69,9 +74,4 @@ public interface Widget<W extends Widget<W>> extends Stylable<W> {
     default String format() {
         return Highlighter.format(this.toString());
     }
-
-    default boolean running() {
-        return false;
-    }
-
 }

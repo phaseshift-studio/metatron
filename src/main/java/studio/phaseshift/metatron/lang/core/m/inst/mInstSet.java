@@ -141,6 +141,7 @@ public class mInstSet extends MInstSet {
     public static final fURI STR_LOWER_TID = MTRON_TID.extend("str:lower");
     public static final fURI STR_UPPER_TID = MTRON_TID.extend("str:upper");
     public static final fURI STR_CONTAINS_TID = MTRON_TID.extend("str:contains");
+    public static final fURI SCHEME_INST_TID = MTRON_TID.extend("scheme");
     public static final Set<fURI> BASE_TYPES = Set.of(
             FAIL_TID, BOOL_TID, BYTES_TID, INT_TID, REAL_TID,
             STR_TID, URI_TID, REL_TID,

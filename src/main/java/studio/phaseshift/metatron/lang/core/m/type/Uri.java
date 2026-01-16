@@ -117,7 +117,7 @@ public interface Uri extends Mono, Ring.O<Uri> {
                     instC(URI_HOST_TID.dom(URI_TID).rng(URI_TID), lst(T(URI_TID)), (lhs, inst) -> uri(lhs.uriValue().host())),
                     instC(URI_PATH_TID.dom(URI_TID).rng(URI_TID), lst(T(URI_TID)), (lhs, inst) -> uri(lhs.uriValue().path())),
                     instC(URI_PORT_TID.dom(URI_TID).rng(INT_TID), lst(T(URI_TID)), (lhs, inst) -> jnt(lhs.uriValue().port())),
-                    instC(Q_INST_TID.dom(URI_TID).rng(URI_TID), lst(T(URI_TID)), (lhs, inst) -> uri(lhs.uriValue().queryValue(inst.arg(0).uriValue(),fURI.class))),
+                    instC(Q_INST_TID.dom(URI_TID).rng(URI_TID), lst(T(URI_TID)), (lhs, inst) -> uri(lhs.uriValue().queryValue(inst.arg(0).uriValue(), fURI.class))),
                     instC(Q_INST_TID.dom(URI_TID).rng(REC_TID), lst(), (lhs, inst) -> rec(lhs.uriValue().queryMap().entrySet().stream().map(kv -> rel(uri(kv.getKey()), uri(kv.getValue()))))),
                     instC(Q_INST_TID.dom(URI_TID).rng(URI_TID), lst(T(REC_TID)), (lhs, inst) -> lhs.jvm(lhs.uriValue().queryMap(inst.arg(0).recValue().entrySet().stream().collect(Collectors.toMap(kv -> kv.getKey().uriValue().toString(), kv -> kv.getValue().uriValue().toString(), (a, b) -> b, LinkedHashMap::new))))),
                     instC(URI_C_TID.dom(URI_TID).rng(LST_TID), lst(T(URI_TID)), (lhs, inst) -> lst(jnt(lhs.uriValue().cV().min()), jnt(lhs.uriValue().cV().max()))),
@@ -129,7 +129,9 @@ public interface Uri extends Mono, Ring.O<Uri> {
                             u = u.mult(lhs.uriValue());
                         }
                         return lhs.jvm(u);
-                    })
+                    }),
+                    instC(SCHEME_INST_TID.dom(URI_TID).rng(URI_TID), lst(), (lhs, inst) -> uri(lhs.uriValue().scheme())),
+                    instC(SCHEME_INST_TID.dom(URI_TID).rng(URI_TID), lst(T(URI_TID)), (lhs, inst) -> uri(lhs.uriValue().scheme(inst.arg(0).uriValue().toString().isEmpty() ? null : inst.arg(0).uriValue().toString())))
             ));
         }
 

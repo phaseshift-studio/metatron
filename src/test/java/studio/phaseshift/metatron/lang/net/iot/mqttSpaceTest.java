@@ -40,6 +40,7 @@ import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.furi.q.PubSubQ.SUBSCRIPTION_TID;
 import static studio.phaseshift.metatron.lang.core.m.obj.NoObj.noobj;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
 
 /*
@@ -55,11 +56,12 @@ public class mqttSpaceTest extends SpaceTest {
         MoquetteServer.run();
         SPACE = () -> {
             try {
-mParser.eval("*/iot");
+                mParser.eval("*/iot");
                 final mqttSpace space = mqttSpace.of(Map.of(
                         uri(HOST), uri("mqtt://127.0.0.1:1882"),
                         uri(PREFIX), uri("/"),
-                        uri(PATTERN), uri("/t/#")), fURI.of("/sys/router/space/t"));
+                        uri(PATTERN), uri("/t/#"),
+                        uri(REWRITE), rel(uri("/t"),uri("t"))), fURI.of("/sys/router/space/t"));
                 space.directWriter().apply(f("#"), noobj());
                 return space;
             } catch (Exception e) {

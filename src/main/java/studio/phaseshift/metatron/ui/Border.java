@@ -18,7 +18,12 @@
 
 package studio.phaseshift.metatron.ui;
 
+import studio.phaseshift.metatron.lang.sys.console.Highlighter;
+
 import java.util.Arrays;
+import java.util.List;
+
+import static studio.phaseshift.metatron.ui.Widget.X;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -60,8 +65,22 @@ public interface Border {
     }
 
     default Border foreground(final String color) {
-        final String colorBorder = Arrays.stream(this.border().split(";")).map(b -> color + b + "{{X}}").reduce((a, b) -> a + ";" + b).orElseThrow();
+        final String colorBorder = Arrays.stream(this.border().split(";")).map(b -> color + b).reduce((a, b) -> a + ";" + b).orElseThrow();
         return () -> colorBorder;
+    }
+    
+    default StringBuilder wrap(final StringBuilder builder) {
+        final StringBuilder sb =new StringBuilder();
+        List<String> inner = Arrays.asList(builder.toString().split("\n"));
+        int width = inner.stream().map(Highlighter::visualLength).max(Integer::compareTo).orElse(0);
+        sb.append(X).append(this.topLeftCorner()).append(this.topSide().repeat(width)).append(this.topRightCorner()).append(X).append("\n");
+        for(final String row  : inner) {
+            sb.append(X).append(this.leftSide()).append(X).append(row).append(X).append(this.rightSide()).append(X).append("\n");
+        }
+        sb.append(X).append(this.bottomLeftCorner()).append(this.bottomSide().repeat(width)).append(this.bottomRightCorner()).append(X);
+        builder.delete(0, builder.length());
+        builder.append(sb);
+        return builder;
     }
 
     default Border margin(int left, int right) {

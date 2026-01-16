@@ -190,16 +190,16 @@ public interface Space extends Rec, Closeable {
             final Set<Pair<Uri, Obj>> listing = new HashSet<>();
             directReader.apply(pattern).forEachRemaining(kv -> listing.add(Pair.with(kv.get0().toUri(), kv.get1())));
             if (listing.isEmpty() && pattern.isBranch()) {
-                directReader.apply(pattern.isBranch() ? pattern.extend(fURI.ONE_WILD_STRING) : pattern.asNode()).forEachRemaining(kv -> {
-                    if (kv.get1().isRec()) {
+                directReader.apply(pattern.extend(fURI.ONE_WILD_STRING)).forEachRemaining(kv -> {
+                    /*if (kv.get1().isRec()) {
                         kv.get1().recValue().forEach((key2, value2) -> listing.add(Pair.with(uri(kv.get0().extend(key2.uriValue())), value2)));
                     } else if (kv.get1().isLst()) {
                         for (int i = 0; i < kv.get1().lstValue().size(); i++) {
                             listing.add(Pair.with(uri(String.valueOf(i)), kv.get1().lstValue().get(i)));
                         }
-                    } else {
-                        listing.add(Pair.with(kv.get0().toUri(), kv.get1()));
-                    }
+                    } else {*/
+                    listing.add(Pair.with(kv.get0().toUri(), kv.get1()));
+                    // }
                 });
             }
             if (listing.isEmpty() || pattern.hasPattern()) {

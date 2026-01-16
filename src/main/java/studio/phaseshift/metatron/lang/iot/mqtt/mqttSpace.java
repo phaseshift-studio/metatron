@@ -44,6 +44,9 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 import static studio.phaseshift.metatron.Tokens.PATTERN;
+import static studio.phaseshift.metatron.Tokens.HOST;
+import static studio.phaseshift.metatron.Tokens.CLIENT;
+import static studio.phaseshift.metatron.Tokens.REWRITE;
 import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.lang.core.m.inst.mFluent.StartLess.isa_;
 import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.*;
@@ -62,14 +65,11 @@ public class mqttSpace extends MSpace<Mqtt5Client> {
             instC(mInstSet.INST_TID.dom(ALL.maybe()).rng(MQTT_TID),
                     lst(T(REC_TID, isa_(rec(
                             uri(PATTERN), T(URI_TID),
-                            uri(Tokens.HOST), T(URI_TID),
-                            uri(Tokens.REWRITE), T(REL_TID),
+                            uri(HOST), T(URI_TID),
+                            //uri(CLIENT).maybe(), T(URI_TID).maybe(),
+                            uri(REWRITE), T(REL_TID),
                             uri(Tokens.Q).c(cInt::maybe), isa_(T(LST_TID)))))), (lhs, inst) -> {
-                        final Uri pattern = inst.arg(0).<Rec>as().at(PATTERN).asUri();
-                        final Uri host = inst.arg(0).<Rec>as().at(Tokens.HOST).asUri();
-                        final Rel rewrite = inst.arg(0).<Rec>as().at(Tokens.REWRITE).asRel();
-                        // final Rec route = inst.arg(0).<Rec>as().at(ROUTE);
-                        final mqttSpace space = mqttSpace.of(mutableMap(uri(PATTERN), pattern, uri(Tokens.HOST), host, uri(Tokens.REWRITE), rewrite), inst.arg(0).vid());
+                        final mqttSpace space = mqttSpace.of(inst.arg(0).jvm(), inst.arg(0).vid());
                         Router.global().addSpace(space);
                         return space;
                     }));
@@ -84,10 +84,10 @@ public class mqttSpace extends MSpace<Mqtt5Client> {
         LOG.info("{{y}}mtron{{g}}<=>{{y}}mqtt{{X}} mapping established: %s {{g}}<=> ({{b}}%s {{g}}<=>{{X}} %s{{g}}){{X}}", this.pattern().toUri(), this.rewrite, uri(Space.Helper.toNativeSpace(this.pattern(), this.rewrite)));
         this.cache = new kvSpace(this.pattern(), this.vid.extend("cache"));
         this.put(uri(Tokens.Q), lst(List.of(new MqttPubSubQ(this))), MUTABLE);
-        this.broker = config.get(uri(Tokens.HOST)).orThrow(new IllegalArgumentException("config must have a host key")).uriValue();
+        this.broker = config.get(uri(HOST)).orThrow(new IllegalArgumentException("config must have a host key")).uriValue();
         try {
             this.sjvm = MqttClient.builder()
-                    .identifier("mtron-" + Math.abs(UUID.randomUUID().getMostSignificantBits()))
+                    .identifier(config.getOrDefault(uri(CLIENT), uri("mtron-" + Math.abs(UUID.randomUUID().getMostSignificantBits()))).uriValue().toString())
                     .serverHost(this.broker.host())
                     .serverPort(this.broker.port() == -1 ? 1833 : this.broker.port())
                     .useMqttVersion5()
@@ -136,7 +136,7 @@ public class mqttSpace extends MSpace<Mqtt5Client> {
 
     public static mqttSpace of(final Map<Obj, Obj> config, final fURI vid) {
         final Mqtt5Client client = MqttClient.builder()
-                .identifier(UUID.randomUUID().toString())
+                .identifier(config.getOrDefault(uri(CLIENT),uri("mtron-" + Math.abs(UUID.randomUUID().getMostSignificantBits()))).uriValue().toString())
                 .serverHost(config.get(uri(Tokens.HOST)).uriValue().host())
                 .serverPort(config.get(uri(Tokens.HOST)).uriValue().port())
                 .useMqttVersion5()
@@ -146,11 +146,10 @@ public class mqttSpace extends MSpace<Mqtt5Client> {
 
     @Override
     public Obj read(final fURI vid) {
-        final Obj ret = Q.Helper.processPreRead(this.qs(), vid, vid).orElse(null);
-        if (null != ret)
-            return ret;
-        final Obj result = this.cache.read(vid.qLess());
-        return Q.Helper.processPostRead(this.qs(), vid, vid, result).orElse(result);
+        return Q.Helper.processPreRead(this.qs(), vid, vid).orElseGet(() -> {
+            final Obj result = this.cache.read(vid.qLess());
+            return Q.Helper.processPostRead(this.qs(), vid, vid, result).orElse(result);
+        });
     }
 
     @Override

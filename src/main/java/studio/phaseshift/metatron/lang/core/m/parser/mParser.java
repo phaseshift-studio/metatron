@@ -154,7 +154,7 @@ public class mParser {
                 m_vid_postfix())
                 .map(t -> new MLst(pick(t, 2), pick(t, 0), pick(t, 4))));
 
-        rec_parser.set(seq(m_type_prefix_opt_colon(REC_TID), of('[').trim(), rec_internal(obj_rel_back_parser, m_inst_arg(MAP_INST_TID)), of(']').trim(), m_vid_postfix()).trim().map(t -> new MRec(pick(t, 2), REC_TID, pick(t, 4)).tid((fURI) pick(t, 0))));
+        rec_parser.set(seq(m_type_prefix_opt_colon(REC_TID), of('[').trim(), rec_internal(obj_rel_back_parser, m_call_prefix(MAP_INST_TID)), of(']').trim(), m_vid_postfix()).trim().map(t -> new MRec(pick(t, 2), REC_TID, pick(t, 4)).tid((fURI) pick(t, 0))));
 
         inst_parser.set(choice(m_inst_c(), m_inst_b()));
 
@@ -163,7 +163,7 @@ public class mParser {
     public static Parser m_inst_b() {
         return seq(
                 m_inst_furi(), // 0 inst_tid
-                seq(of('(').trim(), choice(rec_internal(m_furi().map(t -> ((fURI) t).toUri()), m_inst_arg(MAP_INST_TID)), lst_internal(), of("")).trim(), of(')').trim()).pick(1), // 1 inst_args
+                seq(of('(').trim(), choice(rec_internal(m_furi().map(t -> ((fURI) t).toUri()), m_call_prefix(MAP_INST_TID)), lst_internal(), of("")).trim(), of(')').trim()).pick(1), // 1 inst_args
                 m_vid_postfix()) //  inst_code
                 // inst_seed []
                 .map(t -> (Inst) new MInst(Triplet.with(
@@ -178,11 +178,11 @@ public class mParser {
     public static Parser m_inst_c() {
         return seq(
                 choice(m_inst_furi(), m_type_prefix_opt_colon(INST_TID)), // 0 inst_tid
-                seq(of('(').trim(), choice(rec_internal(m_furi().map(t -> ((fURI) t).toUri()), m_inst_arg(MAP_INST_TID)), lst_internal(), of("")).trim(), of(')').trim()).pick(1), // 1 inst_args
+                seq(of('(').trim(), choice(rec_internal(m_furi().map(t -> ((fURI) t).toUri()), m_call_prefix(MAP_INST_TID)), lst_internal(), of("")).trim(), of(')').trim()).pick(1), // 1 inst_args
                 seq(of('{').trim(), choice(
                                 of('?').map(t -> null),
                                 of("<j>").map(t -> null),
-                                m_inst_arg(MAP_INST_TID)),
+                                m_call_prefix(MAP_INST_TID)),
                         of('}').trim()).pick(1),
                 m_vid_postfix()) //  inst_code
                 // inst_seed []
@@ -199,11 +199,11 @@ public class mParser {
         return choice(seq(of('(').trim(), parser, of(')').trim()).map(t -> pick(t, 1)), parser);
     }
 
-    public static Parser m_inst_arg(final fURI headtid) {
-        return m_inst_arg(m_paren_wrap(obj_no_code_parser), headtid);
+    public static Parser m_call_prefix(final fURI headtid) {
+        return m_call_prefix(m_paren_wrap(obj_no_code_parser), headtid);
     }
 
-    public static Parser m_inst_arg(final Parser objParser, final fURI headtid) {
+    public static Parser m_call_prefix(final Parser objParser, final fURI headtid) {
         return seq(opt(objParser, noobj()), opt(of(".").trim(), '.'), opt(m_code(), null), m_vid_postfix()).map(t -> {
             final Obj first = mParser.pick(t, 0);
             final Obj second = mParser.pick(t, 2);
@@ -219,7 +219,7 @@ public class mParser {
     }
 
     public static Parser lst_internal() {
-        return choice(of(','), m_inst_arg(MAP_INST_TID).separatedBy(of(',').trim())).map(t -> t.equals(',') ? List.of() : ((List) t).stream().filter(o -> o instanceof Obj).toList());
+        return choice(of(','), m_call_prefix(MAP_INST_TID).separatedBy(of(',').trim())).map(t -> t.equals(',') ? List.of() : ((List) t).stream().filter(o -> o instanceof Obj).toList());
     }
 
     public static Parser rec_internal(final Parser keyParser, final Parser valueParser) {
@@ -261,10 +261,10 @@ public class mParser {
     public static <O extends Obj> O parse(final String code) {
         if (code.trim().isEmpty())
             return (O) noobj();
-        final Result result = seq(choice(m_inst_arg(START_INST_TID), m_obj()), opt(m_comment(), null)).map(t -> pick(t, 0)).end().parse(code.trim());
-        if (result.isFailure())
-            LOG.except(result.getBuffer() + "\n" +
-                    String.format("%" + result.getPosition() + "s", "") + "^ " + result.getMessage() + "\n");
+        final Result result = seq(choice(m_call_prefix(START_INST_TID), m_obj()), opt(m_comment(), null)).map(t -> pick(t, 0)).end().parse(code.trim());
+        if (result.isFailure()) {
+            LOG.except(result.getBuffer() + "\n" + " ".repeat(result.getPosition()) + "^ " + result.getMessage() + "\n");
+        }
         return result.get();
     }
 
@@ -362,7 +362,7 @@ public class mParser {
     public static Parser m_objs() {
         return choice(
                 seq(of('{').trim(), of(',').trim(), of('}').trim()),
-                seq(of('{').trim(), m_inst_arg(MAP_INST_TID).separatedBy(of(',').trim()), of('}').trim()).pick(1))
+                seq(of('{').trim(), m_call_prefix(MAP_INST_TID).separatedBy(of(',').trim()), of('}').trim()).pick(1))
                 .map(t -> objs(((List) t).stream().filter(x -> x instanceof Obj).toList()));
     }
 

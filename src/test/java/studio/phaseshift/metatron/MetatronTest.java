@@ -99,7 +99,7 @@ public class MetatronTest {
     public void testCode(final String code, final String expected) {
         if (expected.trim().equals("<ERROR>")) {
             try {
-                final Obj cd = mParser.m_inst_arg(START_INST_TID).parse(code).get();
+                final Obj cd = mParser.m_call_prefix(START_INST_TID).parse(code).get();
                 final Obj actual = cd.apply(NoObj.noobj());
                 if (!(cd.isFail() || actual.isFail())) {
                     if (cd.isFail())
@@ -113,7 +113,7 @@ public class MetatronTest {
                 LOG.debug("testing %s => %s", code, e.getMessage());
             }
         } else {
-            final Obj cd = mParser.m_inst_arg(START_INST_TID).parse(code).get();
+            final Obj cd = mParser.m_call_prefix(START_INST_TID).parse(code).get();
             final Obj ex = mParser.eval(expected);
             final Obj actual = cd.apply(NoObj.noobj());
             LOG.debug("testing %s => %s [expected:%s]", cd, actual, ex);

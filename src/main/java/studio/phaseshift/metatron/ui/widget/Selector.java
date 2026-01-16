@@ -20,9 +20,7 @@ package studio.phaseshift.metatron.ui.widget;
 
 import org.jline.keymap.BindingReader;
 import org.jline.keymap.KeyMap;
-import org.jline.terminal.Terminal;
 import org.jline.utils.InfoCmp;
-import studio.phaseshift.metatron.lang.sys.console.Console;
 import studio.phaseshift.metatron.ui.graphitty.Graphitty;
 
 import java.util.ArrayList;
@@ -44,7 +42,8 @@ public class Selector extends AbstractWidget<Selector> {
         UP_ROW,
         RIGHT_COL,
         LEFT_COL,
-        SELECTED
+        SELECTED,
+        ESC_KEY
     }
 
     public boolean running() {
@@ -54,9 +53,6 @@ public class Selector extends AbstractWidget<Selector> {
     protected boolean running = false;
     protected BiConsumer<Selector, Integer> onSelect = null;
     protected BiConsumer<Selector, Integer> onBrowse = null;
-
-    public Selector() {
-    }
 
     public Selector onSelect(final BiConsumer<Selector, Integer> onSelect) {
         this.onSelect = onSelect;
@@ -68,38 +64,43 @@ public class Selector extends AbstractWidget<Selector> {
         return this;
     }
 
-    public String toString() {
-        return this.style.attachment.toString();
+    @Override
+    public String format() {
+        return this.style.attachment.format();
     }
-
 
     public void run() {
         super.run();
-        final Terminal terminal = Console.getTerminal();
         try {
             final BindingReader bindingReader = new BindingReader(terminal.reader());
             int selectRow = style.lowRowRange;
             int selectCol = 0;
             KeyMap<Operation> keyMap = new KeyMap<>();
-            keyMap.bind(QUIT, key(terminal, InfoCmp.Capability.tab));
-            keyMap.bind(DOWN_ROW, key(terminal, InfoCmp.Capability.key_down));
-            keyMap.bind(UP_ROW, key(terminal, InfoCmp.Capability.key_up));
-            keyMap.bind(RIGHT_COL, key(terminal, InfoCmp.Capability.key_right));
-            keyMap.bind(LEFT_COL, key(terminal, InfoCmp.Capability.key_left));
+            keyMap.bind(QUIT, key(this.terminal, InfoCmp.Capability.tab));
+            keyMap.bind(DOWN_ROW, key(this.terminal, InfoCmp.Capability.key_down));
+            keyMap.bind(UP_ROW, key(this.terminal, InfoCmp.Capability.key_up));
+            keyMap.bind(RIGHT_COL, key(this.terminal, InfoCmp.Capability.key_right));
+            keyMap.bind(LEFT_COL, key(this.terminal, InfoCmp.Capability.key_left));
+            keyMap.bind(ESC_KEY, key(this.terminal, InfoCmp.Capability.key_backspace));
             keyMap.bind(SELECTED, "\r");
-            Graphitty.log(this).none("{{^%s}}", style.attachment.rowCount() + 1);
-            while (true) {
-                display.resize(size.getRows(), size.getColumns());
+            // Graphitty.log(this).none("{{^%s}}", this.style.attachment.rowCount() + 1);
+            boolean done = false;
+            while (!done) {
                 final int selectRowFinal = selectRow;
                 final int selectColFinal = selectCol;
                 final List<String> currentStateDisplay = new ArrayList<>();
                 /// ///////////////////////////////////////////////////////////////////////////////////////////////
                 for (int i = 0; i < this.style.attachment.rowCount(); i++) {
-                    currentStateDisplay.add(Graphitty.string(" ".repeat(style.leftMargin) + (i == selectRowFinal ? this.style.pointer : " ".repeat(Graphitty.viewLength(this.style.pointer))) + this.style.attachment.rowString(i) + "{{|0}}"));
+                    boolean selected = i == selectRowFinal;
+                    currentStateDisplay.add(
+                            Graphitty.string(" ".repeat(this.style.leftMargin) +
+                                    (selected ? this.style.pointer : " ".repeat(Graphitty.viewLength(this.style.pointer))) + "{{X}}" +
+                                    // (selected ? "{{[w]&y}}" : "") +  
+                                    this.style.attachment.rowString(i)));
                 }
                 /// ////////////////////////////////////////////////////////////////////////////////////////////////
-                display.updateAnsi(currentStateDisplay, size.cursorPos(0, 0));
-                Operation op = bindingReader.readBinding(keyMap);
+                this.display.updateAnsi(currentStateDisplay, 0);
+                final Operation op = bindingReader.readBinding(keyMap);
                 switch (op) {
                     case RIGHT_COL:
                         selectCol++;
@@ -122,16 +123,19 @@ public class Selector extends AbstractWidget<Selector> {
                             selectRow = this.style.highRowRange - 1;
                         break;
                     case SELECTED:
-                        if (null != this.onSelect)
-                            this.onSelect.accept(this, selectRow);
-                        else
-                            this.close();
-                        return;
+                        done = true;
+                        break;
                     case QUIT:
                         terminal.writer().println();
                         return;
+                    case ESC_KEY:
+                        this.close();
+                        return;
                 }
-                if (null != this.onBrowse)
+                if (null != this.onSelect && done) {
+                    done = false;
+                    this.onSelect.accept(this, selectRow);
+                } else if (null != this.onBrowse)
                     this.onBrowse.accept(this, selectRow);
             }
         } catch (final Exception e) {

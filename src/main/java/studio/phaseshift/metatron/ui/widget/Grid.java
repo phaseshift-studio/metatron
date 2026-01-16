@@ -18,8 +18,12 @@
 
 package studio.phaseshift.metatron.ui.widget;
 
+import org.jline.terminal.Cursor;
+import studio.phaseshift.metatron.lang.sys.console.Highlighter;
 import studio.phaseshift.metatron.ui.Widget;
+import studio.phaseshift.metatron.ui.graphitty.Graphitty;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /*
@@ -27,40 +31,59 @@ import java.util.List;
  */
 public class Grid extends AbstractWidget<Grid> {
 
-
     protected final List<Widget<?>> widgets;
-    protected final List<Integer> widths;
-    protected final List<Integer> heights;
     protected final int columns;
     protected final int rows;
-
+    protected int widgetFocus =1;
+    
     public Grid(final List<Widget<?>> widgets, final int columns) {
         this.widgets = widgets;
         this.columns = columns;
         this.rows = widgets.size() / columns;
-        this.widths = widgets.stream().map(Widget::width).toList();
-        this.heights = widgets.stream().map(Widget::height).toList();
+        final int totalWidth = this.widgets.stream().map(Widget::width).reduce(0, Integer::max);
+        for (int i = 0; i < this.widgets.size(); i++) {
+            this.widgets.get(i).cursor(new Cursor(totalWidth * i,0));
+        }
+    }
+    
+    public void currentFocus(final int widgetIndex) {
+        this.widgetFocus = widgetIndex;
     }
 
-    public String toString() {
-        final StringBuilder sb = new StringBuilder().append("\n");
-
-        final int totalHeight = this.rows * this.widgets.stream().map(Widget::height).reduce(0, Integer::max);
-        sb.append("\n".repeat(totalHeight)).append("{{^%s&|0}}".formatted(totalHeight+1));
-        final int totalWidth = this.columns * this.widgets.stream().map(Widget::width).reduce(0, Integer::max);
-        
-        for (int i = 0; i < this.widgets.size(); i = i + this.columns) {
-            for (int j = 0; j < this.columns; j++) {
-                final Widget<?> current = this.widgets.get(i + j);
-                for (int r = 0; r < current.rowCount(); r++) {
-                    sb.append(current.rowString(r));
-                    sb.append("\n{{>%s}}".formatted((current.width()+1) * j));
+    @Override
+    public String format() {
+        final int totalHeight = this.widgets.stream().map(Widget::height).reduce(0, Integer::max);
+        final List<String> gridRows = new ArrayList<>();
+        try {
+            for (int r = 0; r < totalHeight; r++) {
+                String row = new String();
+                for (int i = 0; i < this.widgets.size(); i++) {
+                    final Widget<?> widget = this.widgets.get(i);
+                    row = row + " " + (r < widget.height() ? Highlighter.format(widget.rowString(r)) : " ".repeat(widget.width()));
                 }
-                if (j < columns - 1)
-                    sb.append("{{^%s&>%s}}".formatted(current.height(), current.width()+1));
+                gridRows.add(row);
             }
-            sb.append("{{<%s}}".formatted(totalWidth*this.columns));
+        } catch (final Exception e) {
+            //do nothing
         }
-        return sb.toString();
+        final StringBuilder sb = new StringBuilder();
+        gridRows.forEach(r -> sb.append(r).append("\n"));
+       gridRows.addLast(gridRows.removeLast().trim());
+        return this.style.border.wrap(sb).toString();
+    }
+    
+    @Override
+    public void run() {
+        while(this.widgetFocus != -1) {
+            this.widgets.get(this.widgetFocus).run();
+            this.widgets.get(this.widgetFocus).close();
+           // this.widgetFocus = -1;
+        }
+    }
+    
+    @Override
+    public void close() {
+        this.widgets.forEach(Widget::close);
+        super.close();
     }
 }

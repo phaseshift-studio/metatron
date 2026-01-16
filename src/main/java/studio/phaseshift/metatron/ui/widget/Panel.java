@@ -66,8 +66,7 @@ public class Panel extends AbstractWidget<Panel> {
         return new Panel(sb.toString()).style().border(this.style.border).apply();
     }
 
-    public String toString() {
-        
+    public String format() {
         final List<String> lines = Arrays.asList(this.body.replace("\\n", "\n").split("\\r?\\n", -1));
         final int maxLen = Stream.concat(Stream.of(this.title).filter(Objects::nonNull), lines.stream())
                 .map(Highlighter::visualLength)

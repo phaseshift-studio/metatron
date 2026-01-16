@@ -34,8 +34,8 @@ public interface Stylable<T extends Stylable<T>> {
         public Border border = Border.none;
         public String background = "";
         public String foreground = "";
-        public Widget attachment = null;
-        public Widget parent = null;
+        public Widget<?> attachment = null;
+        public Widget<?> parent = null;
         public String divider = "";
         public String headerDivider = "";
         public String body = "";

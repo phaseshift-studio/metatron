@@ -29,6 +29,7 @@ import studio.phaseshift.metatron.ui.Widget;
 import studio.phaseshift.metatron.ui.graphitty.Graphitty;
 
 import java.util.Arrays;
+import java.util.List;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -37,10 +38,22 @@ public abstract class AbstractWidget<W extends AbstractWidget<W>> implements Wid
 
     protected Terminal terminal = Console.getTerminal();
     protected Style<W> style = Style.empty();
+    protected Size size;
     protected Display display;
     protected Cursor cursor;
     protected Attributes attributes;
-    protected Size size;
+
+    public AbstractWidget() {
+        this.size = this.terminal.getSize();
+        this.display = new Display(this.terminal, false);
+        this.display.resize(this.size.getRows(), this.size.getColumns());
+        this.cursor = new Cursor(0, 0);
+    }
+
+    public W cursor(final Cursor cursor) {
+        this.cursor = cursor;
+        return (W) this;
+    }
 
     public W style(final Style<W> style) {
         this.style = style;
@@ -49,26 +62,30 @@ public abstract class AbstractWidget<W extends AbstractWidget<W>> implements Wid
 
     @Override
     public void display() {
-        this.display.updateAnsi(Arrays.stream(this.format().split("\n")).map(Graphitty::string).toList(), 0);
+        this.display.resize(this.height(), this.width());
+        this.display.updateAnsi(Arrays.stream(this.format().split("\n")).map(Graphitty::string).toList(), -1);
     }
 
     @Override
     public void run() {
-        this.display = new Display(this.terminal, false);
         this.attributes = this.terminal.enterRawMode();
         this.terminal.puts(InfoCmp.Capability.keypad_xmit);
         this.terminal.writer().flush();
-        this.size = new Size(this.terminal.getSize().getColumns(), this.terminal.getSize().getRows());
-        //  this.display();
+        this.display.updateAnsi(Arrays.stream(this.format().split("\n")).map(Graphitty::string).toList(), -1);
     }
 
     public void close() {
-        this.display.clear();
-        this.terminal.setAttributes(this.attributes);
-        this.terminal.puts(InfoCmp.Capability.exit_ca_mode);
-        this.terminal.puts(InfoCmp.Capability.keypad_local);
-        this.terminal.writer().write(Graphitty.string("{{v10}}"));
+        if (null != this.style.attachment)
+            this.style.attachment.close();
+        // this.terminal.puts(InfoCmp.Capability.clear_screen);
+        this.display.update(List.of(),  this.size.cursorPos(this.cursor.getX(),this.cursor.getY()));
+        this.display.reset();
+        //this.display.resize(0,0);
+        if (null != this.attributes) {
+            this.terminal.setAttributes(this.attributes);
+            this.terminal.puts(InfoCmp.Capability.exit_ca_mode);
+            this.terminal.puts(InfoCmp.Capability.keypad_local);
+        }
         this.terminal.writer().flush();
-        Graphitty.log(this).none("{{*}}"); // show cursor
     }
 }

@@ -26,7 +26,6 @@ import studio.phaseshift.metatron.lang.sys.router.Router;
 import studio.phaseshift.metatron.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.util.Common;
 import studio.phaseshift.metatron.util.MTronException;
-import studio.phaseshift.metatron.util.Threadable;
 
 import java.util.List;
 
@@ -35,16 +34,14 @@ import static org.slf4j.event.Level.*;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class StatusLine implements Threadable {
+public class StatusLine implements Runnable {
 
     private AttributedString line;
     private Level state = INFO;
     private long startTime = 0;
     private long lastExecutionTime = 0;
     private final Status status;
-    private boolean interrupted = false;
-
-
+    
     public StatusLine(final Console console, final String line) {
         this.line = new AttributedStringBuilder().append(line).toAttributedString();
         this.status = Status.getStatus(console.getTerminal());
@@ -63,30 +60,47 @@ public class StatusLine implements Threadable {
         if (0 == this.startTime) {
             return this.lastExecutionTime;
         } else {
-            final long time = System.currentTimeMillis() - this.startTime;
-            return time;
+            return System.currentTimeMillis() - this.startTime;
         }
     }
-    
+
     public void setState(final Level state) {
         this.state = state;
     }
-
-    public void redraw() {
+    
+    public void refresh() {
         this.status.update(List.of());
         this.status.update(List.of(this.line));
     }
-    public void refresh() {
-        this.status.reset();
-        this.status.suspend();
-        this.status.update(List.of());
-        this.status.update(List.of(this.line));
-        this.status.restore();
-        this.status.redraw();
+    
+    private static String bytesFormat(final long bytes) {
+        if (bytes < 1024)
+            return bytes + "B";
+        else if (bytes < 1024 * 1024)
+            return String.format("%.2fK", bytes / 1024.0);
+        else if (bytes < 1024 * 1024 * 1024)
+            return String.format("%.2fM", bytes / (1024.0 * 1024.0));
+        else if (bytes < 1024L * 1024L * 1024L * 1024L)
+            return String.format("%.2fG", bytes / (1024.0 * 1024.0 * 1024.0));
+        else
+            return String.format("%.2fT", bytes / (1024.0 * 1024.0 * 1024.0 * 1024.0));
+    }
+    
+    private static String timeFormat(final long millis) {
+        if (millis < 1000)
+            return String.format("%dms", millis);
+        else if (millis < 60000)
+            return String.format("%.2fs", millis / 1000.0);
+        else if (millis < 3600000)
+            return String.format("%.2fmin", millis / (60000.0));
+        else if (millis < 86400000)
+            return String.format("%.2fhr", millis / (3600000.0));
+        else
+            return String.format("%.2fd", millis / (86400000.0));
     }
 
     public void run() {
-        while (!this.isInterrupted()) {
+        while (!Thread.currentThread().isInterrupted()) {
             final String color;
             if (this.state.equals(WARN))
                 color = "y";
@@ -98,9 +112,9 @@ public class StatusLine implements Threadable {
                 final AttributedString temp = new AttributedStringBuilder()
                         .ansiAppend(Graphitty.string("{{[" + color + "]&y}} %s", Router.global().server().host()))
                         .ansiAppend(Graphitty.string("{{g}}|{{w}}nodes:{{y}}%d{{[" + color + "]&w}}", Router.global().server().nodes().size()))
-                        .ansiAppend(Graphitty.string("{{g}}|{{w}}in:{{y}}%d{{[" + color + "]}} bytes", Router.global().server().stats().getBytesRecv()))
-                        .ansiAppend(Graphitty.string("{{g}}|{{w}}out:{{y}}%d{{[" + color + "]}} bytes", Router.global().server().stats().getBytesSent()))
-                        .ansiAppend(Graphitty.string("{{g}}|{{w}}running time:{{y}}%,d{{[" + color + "]}} ms", this.runningTime()))
+                        .ansiAppend(Graphitty.string("{{g}}|{{w}}in:{{y}}%s{{[" + color + "]}}", bytesFormat(Router.global().server().stats().getBytesRecv())))
+                        .ansiAppend(Graphitty.string("{{g}}|{{w}}out:{{y}}%s{{[" + color + "]}}", bytesFormat(Router.global().server().stats().getBytesSent())))
+                        .ansiAppend(Graphitty.string("{{g}}|{{w}}running time:{{y}}%s{{[" + color + "]}}", timeFormat(this.runningTime())))
                         .append(Graphitty.string("{{g}}|{{[" + color + "]}}%s.", " ".repeat(200)))
                         .toAttributedString();
                 if (!this.line.equals(temp)) {
@@ -115,16 +129,5 @@ public class StatusLine implements Threadable {
             }
         }
         this.status.close();
-    }
-
-
-    @Override
-    public boolean isInterrupted() {
-        return this.interrupted;
-    }
-
-    @Override
-    public void interrupt() {
-        this.interrupted = true;
     }
 }

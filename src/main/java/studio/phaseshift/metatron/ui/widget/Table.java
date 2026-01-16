@@ -21,6 +21,7 @@ package studio.phaseshift.metatron.ui.widget;
 import studio.phaseshift.metatron.lang.sys.console.Highlighter;
 import studio.phaseshift.metatron.ui.Stylable;
 import studio.phaseshift.metatron.ui.Widget;
+import studio.phaseshift.metatron.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.util.Tuple;
 
 import java.util.ArrayList;
@@ -41,6 +42,7 @@ public class Table extends AbstractWidget<Table> {
         this.menu = menu;
         this.table = new ArrayList<>();
     }*/
+
 
     public Table(final List<String> headers) {
         this.headers = headers;
@@ -63,7 +65,7 @@ public class Table extends AbstractWidget<Table> {
     }
 
     public List<List<Object>> rows() {
-        return this.table;
+        return null == this.table ? List.of() : this.table;
     }
 
     public List<Object> column(int col) {
@@ -123,7 +125,8 @@ public class Table extends AbstractWidget<Table> {
         return " ".repeat(1 + Math.abs(widths.get(index) - Highlighter.visualLength(entry.toString().trim())));
     }
 
-    public String toString() {
+    @Override
+    public String format() {
         final StringBuilder sb = new StringBuilder();
         if (null != this.headers) {
             if (this.style.headerDivider.isEmpty() && !this.style.divider.isEmpty())
@@ -139,7 +142,7 @@ public class Table extends AbstractWidget<Table> {
                         .append(this.addSpace(widths, i, this.headers.get(i)))
                         .append(this.style.headerDivider);
             }
-            sb.append("{{X}}\n");
+            sb.append("\n");
         }
         /*if (null != this.menu) {
             final List<Integer> widths = this.formattedWidths(this.menu.stream().map(Tuple.Pair::get0).toList());
@@ -154,8 +157,9 @@ public class Table extends AbstractWidget<Table> {
             }
             sb.append("{{X}}");
         }*/
-        sb.append(formattedRows().stream().map(row -> row + "{{X}}\n").reduce("", (a, b) -> a + b));
-        return sb.deleteCharAt(sb.length() - 1).toString();
+        sb.append(formattedRows().stream().map(row -> row + "\n").reduce("", (a, b) -> a + b));
+        sb.deleteCharAt(sb.length() - 1);
+        return this.style.border.wrap(sb).toString();
     }
 
     @Override

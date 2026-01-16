@@ -238,10 +238,10 @@ public interface Inst extends Call {
         try {
             final Inst resolved = Router.global().read(this.tid().basePath())
                     .stream()
-                    .map(i -> i.isInst() ? i : instC(this.tid().dom(lhs.tid()).rng(ALL.maybeSome()), this.args(), (lhs2, inst) -> Router.global().write(this.tid(), inst.args())))
-                    .map(Obj::<Inst>as)
+                    .map(i -> i.isInst() ? i.asInst() : instC(this.tid().dom(lhs.tid()).rng(ALL.maybeSome()), this.args(), (lhs2, inst) -> Router.global().write(this.tid(), inst.args())))
                     .filter(i -> (i.args().isEmpty() && this.arg(0).isNoObj()) || i.args().isRec() || i.args().count() >= this.args().count()) // TODO: check which recs are default
                     .filter(i -> !lhs.isInst() || (i.dom().baseType().equals(INST_TID)))
+                     //.sorted(Comparator.comparing(Inst::dom, (a, b) -> lhs.matches(a.dom()) ? -1 : lhs.matches(b.dom()) ? 1 : 0)) // TODO: explore this more fully
                     .map(i -> this.hasDom() ? i.dom(this.dom()) : i)
                     .map(i -> this.hasRng() ? i.rng(this.rng()) : i)
                     .map(i -> lhs.isInst() ? i : Helpers.bindGenerics(lhs, i, this))
@@ -257,7 +257,6 @@ public interface Inst extends Call {
                             return null; // TODO: backtrack the resolution to the outer inst to see if adjusting the coefficient can resolve the internal resolution
                         return i.args(resolvedArgs);
                     })
-
                     .filter(i -> !Objects.isNull(i))
                     .map(i -> i.isInitial() && !i.hasRng() ? i.rng(i.arg(0).type()) : i) // TODO: only start()?
                     //.map(i -> lhs.isType() ?  i.dom(lhs.c(i.dom().c()).as()).<Inst>as() : i)
@@ -331,7 +330,7 @@ public interface Inst extends Call {
                 rhs = e instanceof MTronException ? ((MTronException) e).asFail() : mexcept("unable to evaluate inst function: %s", cinst).cause(e).asFail();
             }
             if (BootLoader.TYPE_CHECK && !rhs.isFail() && !lhs.isCaughtFail() && !rhs.matches(cinst.rng()))
-                rhs = mexcept("inst resolution failure")
+                rhs = mexcept("inst resolution failure: %s", cinst)
                         .cause(mexcept("rhs does not match inst range: %s => %s [%s]", rhs, cinst.rng(), cinst))
                         .asFail();
         } else {
