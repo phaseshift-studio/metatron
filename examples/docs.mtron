@@ -1,7 +1,7 @@
 /mnt/lang/sys   -> */sys;
 /mnt/lang/kv    -> */kv;
-/mnt/lang/web   -> */web;
-   web::[host   => <http://localhost:8777>,
-        pattern => <http://#>,
-        route   => [/     => examples/www,
+/sys/mod/web    -> */web;
+   web::[:host   => <http://localhost:8777>,
+         pattern => <http://#>,
+         route   => [/     => examples/www,
                     /docs => target/docs ]]@/mnt/space/web;

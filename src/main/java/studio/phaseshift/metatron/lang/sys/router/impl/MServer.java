@@ -167,6 +167,7 @@ public class MServer extends WebSocketServer implements Cluster, Closeable, Obj 
             //this.sendObj(conn, result);
             if (result.isFail())
                 this.onError(conn, result.<Fail>as().jvmAs());
+            LOG.trace("sent %s for {{b}}%s{{/b}}", result, conn.getAttachment());
 
         } catch (final Exception e) {
             final ByteBuffer bytes = this.serializer.outputBytes(fail(e));

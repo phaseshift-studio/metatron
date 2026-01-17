@@ -13,7 +13,7 @@
 # 
 #  You should have received a copy of the GNU Affero General Public License
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>.
-from lib.mtron.walltron import Walltron
+from lib.mtron.rfidtron import RFIDtron
 
 
 # this function determines which machine architecture is flashed to hardware
@@ -24,4 +24,4 @@ from lib.mtron.walltron import Walltron
 # IMPORTANT: do not change the signature of the deploy() and always
 # return an Architecture object with a loop() method
 def deploy(secrets: dict):
-    return Walltron(secrets)
+    return RFIDtron(secrets)

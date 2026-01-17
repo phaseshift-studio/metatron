@@ -22,11 +22,13 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.core.m.obj.NoObj;
 import studio.phaseshift.metatron.lang.core.m.parser.mParser;
 import studio.phaseshift.metatron.lang.core.m.type.*;
+import studio.phaseshift.metatron.util.Common;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
+import java.util.HexFormat;
 
 import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.CODE_TID;
 
@@ -62,6 +64,11 @@ public class ObjByteBufferSerializer implements ObjSerializer<ByteBuffer> {
         return NOOBJ_BYTES;
     }
 
+    @Override
+    public ByteBuffer writeBytes(final Bytes bytes) {
+        return ByteBuffer.wrap(handleIds(bytes, "0x" + HexFormat.of().formatHex(bytes.asBytes().jvm().array())).getBytes());
+    }
+    
     @Override
     public ByteBuffer writeBool(final Bool dool) {
         return ByteBuffer.wrap(handleIds(dool, dool.jvm().toString()).getBytes());

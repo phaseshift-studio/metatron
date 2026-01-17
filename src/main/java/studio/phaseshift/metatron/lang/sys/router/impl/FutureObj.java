@@ -123,7 +123,10 @@ public class FutureObj<T extends Obj> extends MObj implements Future<T> {
             throw new InterruptedException("future has already been canceled");
         if (null == ((AtomicReference<T>) this.jvm).get())
             throw new ExecutionException(MTronException.of("future obj isn't manifest"));
-        return ((AtomicReference<T>) this.jvm).get();
+        final T o = ((AtomicReference<T>) this.jvm).get(); 
+        if(o == null) 
+            this.logger().error("future contains a null obj: %s", this);
+        return o;
     }
 
     @Override

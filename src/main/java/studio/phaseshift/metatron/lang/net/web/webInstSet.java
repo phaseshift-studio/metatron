@@ -79,21 +79,23 @@ public class webInstSet extends MInstSet {
                 instC(AS_INST_TID.dom(STR_TID).rng(PAGE_TID), lst(T(PAGE_TID)), (lhs, inst) -> WebTranslator.parse(lhs.asStr().strValue())), // TODO: T(HTML_TID)
                 instC(AS_INST_TID.dom(STR_TID).rng(JSON_TID), lst(T(JSON_TID)), (lhs, inst) -> JSONTranslator.parse(lhs.asStr().strValue())), // TODO: T(HTML_TID)
                 instC(INST_TID.extend("doc").dom(STR_TID).rng(STR_TID), lst(), (lhs, inst) -> {
-            LOG.info("processing doc request: %s", lhs);
-            try {
-                final String source = lhs.strValue();
-                final Obj result = mParser.parse(source).apply();
-                final String resultString = result.isObjs() ?
-                        Highlighter.format(result.elements()
-                                .map(Obj::toString)
-                                .map(Highlighter::unformat)
-                                .reduce((a, b) -> a + "%%%" + b)
-                                .orElse("")) :
-                        Highlighter.unformat(result.toString());
-                return str(resultString);
-            } catch (final Exception e) {
-                return str(Highlighter.unformat(fail(e).toString()));
-            }
-        }));
+                    LOG.info("processing doc request: %s", lhs);
+                    try {
+                        final String source = lhs.strValue();
+                        final Obj result = mParser.parse(source).apply();
+                        final String resultString = result.isObjs() ?
+                                result.elements()
+                                        .map(Obj::toString)
+                                        //.map(Highlighter::unformat)
+                                        .reduce((a, b) -> a + "%%%" + b)
+                                        .orElse("") :
+                                result.toString();
+                        //Highlighter.unformat(result.toString());
+                        return str(resultString);
+                    } catch (final Exception e) {
+                        e.printStackTrace();
+                        return str(fail(e).toString());
+                    }
+                }));
     }
 }

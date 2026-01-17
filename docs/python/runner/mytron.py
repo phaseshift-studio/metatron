@@ -36,7 +36,7 @@ class Mytron:
         logger.info(f"connected to {self.host}")
 
     def exec(self, code: str) -> list:
-        doc_call: str = f"\"{code}\"./web/inst/doc()";
+        doc_call: str = f"\"\"\"{code}\"\"\"./web/inst/doc()"
         print(f"send: {doc_call}")
         future = asyncio.get_event_loop().run_until_complete(submit(self.ws, f"{doc_call}"))
         result = str(future, 'utf-8').strip()
