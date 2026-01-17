@@ -48,17 +48,17 @@ log_level = "info"
 
 
 class LOG:
-    levels = ["trace", "info", "debug", "warn", "error"]
+    levels = ["trace", "debug", "info", "warn", "error"]
 
     @staticmethod
     def _generic_log(level: str, color: str, s: str, *args):
-        if LOG.levels.index(log_level) >= LOG.levels.index(level.lower()):
-            print(f"[{color}{level} {NC}] {string(s, *args)}{NC}")
+        if LOG.levels.index(log_level) <= LOG.levels.index(level.rstrip().lower()):
+            print(f"[{color}{level}{NC}] {string(s, *args)}{NC}")
             if log_behavior is not None: log_behavior(level, s, *args)
 
     @staticmethod
     def info(s: str, *args):
-        LOG._generic_log("INFO", GREEN, s, *args)
+        LOG._generic_log("INFO ", GREEN, s, *args)
 
     @staticmethod
     def debug(s: str, *args):
@@ -70,7 +70,7 @@ class LOG:
 
     @staticmethod
     def warn(s: str, *args):
-        LOG._generic_log("WARN", YELLOW, s, *args)
+        LOG._generic_log("WARN ", YELLOW, s, *args)
 
     @staticmethod
     def none(s: str, *args):

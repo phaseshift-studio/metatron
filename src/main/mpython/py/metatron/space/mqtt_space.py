@@ -28,7 +28,7 @@ from metatron.util.translators import JSONTranslator
 MQTT_SPACE_TID = f("/iot/space/mqtt")
 
 class MqttSpace(Obj):
-    def __init__(self, pattern: fURI, vid: fURI = None):
+    def __init__(self, pattern: fURI, vid: fURI = f("/sys/space/mqtt")):
         Obj.__init__(self, MQTT_SPACE_TID, vid)
         self.pattern = pattern
         self.cache = {}

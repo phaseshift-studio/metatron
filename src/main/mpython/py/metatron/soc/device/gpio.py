@@ -53,3 +53,10 @@ class Gpio(Device):
         Gpio._set_gpio(self, key, value)
         if self.soc_vid is not None:
             router().write(self.soc_vid.extend(self.name).extend(str(key)), value)
+            
+    def pin(self,pin_number:int):
+        if pin_number in self.pvm:
+            return self.pvm[pin_number]
+        else:
+            self.__setitem__(pin_number, Pin(pin_number, Pin.OUT))
+            return self.pvm[pin_number]

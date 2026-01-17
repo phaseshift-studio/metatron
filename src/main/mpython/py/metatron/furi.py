@@ -69,12 +69,11 @@ class fURI:
     def __hash__(self):
         return hash(self.__str__())
 
-    def __gt__(self, other):
-        return args.mach["router"].write(self, other)
+    #def __gt__(self, other):
+    #    return args.mach["router"].write(self, other)
 
-    def __invert__(self):
-        return args.mach["router"].read(self)
-
+    #def __invert__(self):
+    #    return args.mach["router"].read(self)
 
 def f(furi: str) -> fURI:
     return fURI(furi)

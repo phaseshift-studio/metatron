@@ -54,8 +54,12 @@ mach["translator"] = PythonTranslator()
 secrets = load_secrets("secrets.json")
 LOG.log_level = secrets.get("log", "info")
 LOG.info("log level {{g}}{}{{X}}", LOG.log_level)
-mtron = deploy(secrets)
-
+try:
+    mtron = deploy(secrets)
+except Exception as e:
+    LOG.error("error deploying architecture: {}", e)
+    time.sleep(2)
+    machine.reset()
 
 def main_thread_function():
     global mtron
@@ -66,11 +70,6 @@ def main_thread_function():
         try:
             router().loop()
             mtron.loop()
-        #except OSError as e:
-        #    if e.errno is 113:  # ECONNABORTED
-        #        mtron.soc.wifi.reconnect(mtron.secrets['ssid'], mtron.secrets['password'], mtron.secrets['host'])
-        #    else:
-        #        break
         except Exception as ex:
             print("resetting due to unhandled main loop error",ex)
             break    

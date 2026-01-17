@@ -117,7 +117,7 @@ public interface Inst extends Call {
                     else return null;
                 } else if (usrArg.isObjCall()) {
                     final Inst firstInst = usrArg.<Call>as().insts().get(0);
-                    if (!firstInst.hasDomAndRng() && (firstInst.tid().basePath().equals(FROM_INST_TID))) { // from() is a side-effect and the type can't be known unless explcitly specified (need a way to denote side-effect insts).
+                    if (!firstInst.hasDomAndRng() && (firstInst.tid().basePath().equals(FROM_INST_TID))) { // from() is a side-effect and the type can't be known unless explicitly specified (need a way to denote side-effect insts).
                         resolvedArgs.add(usrArg.resolve(lhs));
                     } else {
                         final Obj r = usrArg.resolve(lhs);
@@ -135,11 +135,10 @@ public interface Inst extends Call {
         } else if (apiInst.args().isRec()) {
             LOG.trace("processing rec args of %s", apiInst);
             final AtomicInteger counter = new AtomicInteger(0);
-            return rec(apiInst.args().recValue().entrySet()
-                    .stream()
+            return rec(apiInst.args().asRec().elements()
                     .map(kv -> {
-                        Obj this_arg = userInst.arg(kv.getKey().uriValue(), counter.getAndIncrement());
-                        return rel(kv.getKey(), kv.getValue().isCall() ? kv.getValue().apply(this_arg) : this_arg);
+                        Obj this_arg = userInst.arg(kv.first().uriValue(), counter.getAndIncrement());
+                        return rel(kv.first(), kv.second().isCall() ? kv.second().apply(this_arg) : this_arg);
                     }));
         } else
             throw MTronException.of("inst args must be a lst or rec: %s", apiInst);

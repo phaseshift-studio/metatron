@@ -39,7 +39,7 @@ from metatron.util.homeassistant import HomeAssistant
 class Walltron(Architecture):
     def __init__(self, secrets: dict):
         Architecture.__init__(self, secrets)
-        router().register(MqttSpace(f(f"{secrets['host']}/#"), f("/sys/space/mqtt")).start())
+        router().add_space(MqttSpace(f(f"{secrets['host']}/#"), f("/sys/space/mqtt")).start())
         #####################################################################################################
         self.soc = WemosD1Mini(vid=self.soc_vid)
         self.soc.attach(Wifi(wlan=self.wlan, secrets=self.secrets, soc_vid=self.soc_vid).start())

@@ -457,17 +457,32 @@ public class mInstSetTest extends InstSetTest {
     @ParameterizedTest
     @CsvSource(value = {
             "[a=>1,b=>2,c=>3].select([a=>_])                                                                                             % [a=>1]",
+            //"{[a=>[b=>1]],[a=>[b=>2]],[a=>[b=>3]]}.select([a/b=>plus(10)])                                                               % {[a/b=>11],[a/b=>12],[a/b=>13]}",
+            "{[a=>[b=>1]],[a=>[b=>2]],[a=>[b=>3]]}.where([a/b=>?>=2])                                                                    % {[a=>[b=>2]],[a=>[b=>3]]}",
+            "{[a=>1],[a=>2],[a=>3]}.select?rec{1}<=rec{1}([a=>+10])                                                                      % {[a=>11],[a=>12],[a=>13]}",
+            "{[a=>1],[a=>2],[a=>3]}.select?rec{1}<=rec{1}([a=>?>=2.+10])                                                                 % {[=>],[a=>12],[a=>13]}",
+            "{[a=>1],[a=>2],[a=>3]}.select([a=>?>=2.+10])                                                                                % {[=>],[a=>12],[a=>13]}",
+            "{[a=>1],[a=>2],[a=>3]}.select?rec{1}<=rec{1}([a=>?>=2.+10]).where(>-.count().?>0)                                           % {[a=>12],[a=>13]}",
             "{[a=>1],[b=>2],[c=>3]}.select?rec{1}<=rec{1}([_=>_])                                                                        % {[a=>1],[b=>2],[c=>3]}",
+            "{[a=>1],[b=>2],[c=>3]}.where([_=>_])                                                                                        % {[a=>1],[b=>2],[c=>3]}",
             "{[a=>1],[b=>2],[c=>3]}.select([_=>_]).where([_=>_])                                                                         % {[a=>1],[b=>2],[c=>3]}",
+            "{[a=>1],[b=>2],[c=>3]}.where([_=>is(gt(1))])                                                                                % {[b=>2],[c=>3]}",
             "{[a=>1],[b=>2],[c=>3]}.select([_=>_]).where([_=>is(gt(1))])                                                                 % {[b=>2],[c=>3]}",
-            "{[a=>1],[2=>2],[c=>3]}.select([_=>_]).where([isa(uri::T[])=>_])                                                             % {[a=>1],[c=>3]}",
-            "{[a=>1],[2=>2],[c=>3]}.select([_=>_]).where([isa(uri::T[])=>is(gt(1))])                                                     % {[c=>3]}",
+            "{[a=>1],[2=>2],[c=>3]}.select([_=>_]).where([isa(uri::T)=>_])                                                               % {[a=>1],[c=>3]}",
+            "{[a=>1],[2=>2],[c=>3]}.where([isa(uri::T)=>_])                                                                              % {[a=>1],[c=>3]}",
+            "{[a=>1],[2=>2],[c=>3]}.select([_=>_]).where([?(uri::T)=>_])                                                                 % {[a=>1],[c=>3]}",
+            "{[a=>1],[2=>2],[c=>3]}.select([_=>_]).where([isa(uri::T[?c])=>_])                                                           % [c=>3]",
+            "{[a=>1],[2=>2],[c=>3]}.select([_=>_]).where([?(uri::T[?c])=>_])                                                             % [c=>3]",
+            "{[a=>1],[2=>2],[c=>3]}.select([_=>_]).where([isa(uri::T)=>is(gt(1))])                                                       % [c=>3]",
+            "{[a=>1],[2=>2],[c=>3]}.where(noobj)                                                                          % noobj",
             "{[a=>1],[2=>2],[c=>3]}.select([_=>_]).where(noobj)                                                                          % noobj",
             "{[a=>1],[2=>2],[c=>3]}.select([_=>_]).where()                                                                               % noobj",
             "{[a=>1],[2=>2],[c=>3]}.select([_=>_]).where([noobj=>is(gt(1))])                                                             % {[a=>1],[2=>2],[c=>3]}",
             "{[a=>1],[2=>2],[c=>3]}.select([_=>_]).where([=>])                                                                           % {[a=>1],[2=>2],[c=>3]}",
             "[a=>1,b=>2,c=>3].select([z=>_])                                                                                             % noobj",
+            "[a=>1,b=>2,c=>3].select([?(uri::T)=>_])                                                                                     % [a=>1,b=>2,c=>3]",
             "[a=>1,b=>2,c=>3].select([isa(uri::T[])=>_])                                                                                 % [a=>1,b=>2,c=>3]",
+            "[a=>1,b=>2,c=>3].select([?(uri::T)=>-<[_,_]])                                                                               % [a=>[1,1],b=>[2,2],c=>[3,3]]",
             "[a=>1,b=>2,c=>3].select([isa(uri::T[])=>-<[_,_]])                                                                           % [a=>[1,1],b=>[2,2],c=>[3,3]]",
             "[a=>1,b=>2,c=>3].select([isa(uri::T[])=>-<[_,_]>-])                                                                         % [a=>{1,1},b=>{2,2},c=>{3,3}]",
             "[a=>1,b=>2,c=>3].select([isa(uri::T[])=>-<[_,_]>-.sum()])                                                                   % [a=>2,b=>4,c=>6]",
@@ -577,15 +592,35 @@ public class mInstSetTest extends InstSetTest {
 
     @ParameterizedTest
     @TestData(values = {
+            "a -> [x=>!(*(b))]",
+            "b -> [x=>!(*(c))]",
+            "c -> 6"
+    })
+    @CsvSource(value = {
+            "*a                                           % [x=>!(*(b))]",
+            "*a../x                                       % [x=>!(*(c))]",
+            "*a../x../x                                   % 6",
+            "*a../x../x.plus(4)                           % 10",
+    }, delimiter = '%')
+    public void testAuto(final String code, final String expected) throws Exception {
+        TestData.Helper.loadData(this, "testAuto");
+        super.testCode(code, expected);
+    }
+
+    @ParameterizedTest
+    @TestData(values = {
             "a -> [x=>!*b]",
             "b -> [x=>!*c]",
             "c -> 6"
     })
     @CsvSource(value = {
-            "*a../x../x                                   % 6"
+            "*a                                           % [x=>!*b]",
+            "*a../x                                       % [x=>!*c]",
+            "*a../x../x                                   % 6",
+            "*a../x../x.plus(4)                           % 10",
     }, delimiter = '%')
-    public void testAuto(final String code, final String expected) throws Exception {
-        TestData.Helper.loadData(this, "testAuto");
+    public void testAutoFrom(final String code, final String expected) throws Exception {
+        TestData.Helper.loadData(this, "testAutoFrom");
         super.testCode(code, expected);
     }
 }

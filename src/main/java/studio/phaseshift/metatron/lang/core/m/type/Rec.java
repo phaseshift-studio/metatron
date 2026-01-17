@@ -86,13 +86,15 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>>, PlusMonoid.O<Rec> {
     @Override
     default boolean matches(final Obj rhs) {
         if (rhs.isRec()) {
-            // if (true)
-            //     return rhs.isRec() || this.tid().basePath().equals(rhs.tid().basePath());
-            return rhs.elements().allMatch(r -> {
+            return rhs.asRec().elements().allMatch(r -> {
                 final boolean found = this.elements()
                         .map(l -> Tuple.Pair.with(l.first().matches(r.<Rel>as().first()), l.second().matches(r.<Rel>as().second())))
                         .anyMatch(pair -> pair.get0() && pair.get1());
-                return found || (r.<Rel>as().first().c().isZeroable() && this.elements().noneMatch(l -> l.first().matches(r.<Rel>as().first())));
+                if (found) return true;
+                boolean notFound = (r.<Rel>as().first().c().isZeroable() && this.elements().noneMatch(l -> l.first().matches(r.<Rel>as().first())));
+                if (notFound) return true;
+                final Obj thisValue = this.at(r.first());
+                return (thisValue.isNoObj() && r.asRel().first().c().isZeroable()) || thisValue.matches(r.second());
             });
         } else {
             return Poly.super.matches(rhs);
@@ -207,7 +209,18 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>>, PlusMonoid.O<Rec> {
                     instC(LSHIFT_INST_TID.dom(REC_TID).rng(ALL_STAR), lst(isa_(T(INT_TID)).else_(jnt(1))), (lhs, inst) -> Common.loop(lhs, o -> objs(o.stream().filter(Obj::isRec).flatMap(r -> r.<Rec>as().elements().map(Rel::first))), inst.arg(0).intValue().intValue())),
                     instC(PLUS_INST_TID.dom(REC_TID).rng(REC_TID), lst(T(REC_TID)), (lhs, inst) -> lhs.jvm(Stream.concat(lhs.<Rec>as().elements(), inst.arg(0).<Rec>as().elements().map(Obj::<Rel>as)).collect(Collectors.toMap(Rel::first, Rel::second, Obj::append, LinkedHashMap::new)))),
                     instC(MPLUS_INST_TID.dom(REC_TID).rng(REC_TID), lst(T(REC_TID)), (lhs, inst) -> inst.arg(0).<Rec>as().elements().map(Obj::<Obj>as).reduce(lhs.<Rec>as(), (a, b) -> a.<Rec>as().put(((Rel) b).first(), ((Rel) b).second(), MUTABLE))),
-                    instC(SELECT_INST_TID.dom(REC_TID).rng(REC_TID.maybe()), lst(T(REC_TID)), (lhs, inst) -> crossPoly(lhs, inst.arg(0))),
+                    instC(SELECT_INST_TID.dom(REC_TID).rng(REC_TID.maybe()), lst(T(REC_TID)), (lhs, inst) -> {
+                        /*Map<Obj, Obj> result = new LinkedHashMap<>();
+                        inst.arg(0).asRec().elements().forEach(kv -> {
+                            final Obj key = kv.first().isCall() ? kv.first().apply(lhs) : lhs.asRec().at(kv.first());
+                            if (!key.isNoObj()) {
+                                result.put(kv.first(), kv.second().apply(key));
+                            }
+                            // crossPoly(lhs, inst.arg(0))
+                        });
+                        return rec(result);*/
+                        return crossPoly(lhs,inst.arg(0));
+                    }),
                     instC(WITHIN_INST_TID.dom(REC_TID).rng(REC_TID), lst(T(ALL_STAR)), (lhs, inst) -> rec(lhs.elements().map(r -> inst.arg(0).apply(r).<Rel>as())))
             ));
 

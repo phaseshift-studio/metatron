@@ -22,7 +22,7 @@ class Router:
     def __init__(self):
         self.spaces = {}
 
-    def register(self, space):
+    def add_space(self, space):
         self.spaces[space.pattern] = space
 
     def get_space(self, vid):
