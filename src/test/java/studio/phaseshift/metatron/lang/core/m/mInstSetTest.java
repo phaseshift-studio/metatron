@@ -457,6 +457,8 @@ public class mInstSetTest extends InstSetTest {
     @ParameterizedTest
     @CsvSource(value = {
             "[a=>1,b=>2,c=>3].select([a=>_])                                                                                             % [a=>1]",
+            "[a/b=>1],b/c=>2],c/d=>3]].select([a/b=>_])                                                                                  % [a/b=>1]",
+            //"[a=>[b=>1],b=>[c=>2],c=>[d=>3]].select([a/b=>_])                                                                            % [a=>1]",
             //"{[a=>[b=>1]],[a=>[b=>2]],[a=>[b=>3]]}.select([a/b=>plus(10)])                                                               % {[a/b=>11],[a/b=>12],[a/b=>13]}",
             "{[a=>[b=>1]],[a=>[b=>2]],[a=>[b=>3]]}.where([a/b=>?>=2])                                                                    % {[a=>[b=>2]],[a=>[b=>3]]}",
             "{[a=>1],[a=>2],[a=>3]}.select?rec{1}<=rec{1}([a=>+10])                                                                      % {[a=>11],[a=>12],[a=>13]}",
