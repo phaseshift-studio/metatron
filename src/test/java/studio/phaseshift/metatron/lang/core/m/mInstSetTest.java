@@ -23,10 +23,10 @@ package studio.phaseshift.metatron.lang.core.m;
 */
 
 import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import studio.phaseshift.metatron.TestData;
 import studio.phaseshift.metatron.furi.Q;
 import studio.phaseshift.metatron.furi.q.DocQTest;
 import studio.phaseshift.metatron.lang.InstSetTest;
@@ -572,6 +572,20 @@ public class mInstSetTest extends InstSetTest {
             "/a/b/c.as(str::T)                                                                                           % \"/a/b/c\""
     }, delimiter = '%')
     public void testAs(final String code, final String expected) {
+        super.testCode(code, expected);
+    }
+
+    @ParameterizedTest
+    @TestData(values = {
+            "a -> [x=>!*b]",
+            "b -> [x=>!*c]",
+            "c -> 6"
+    })
+    @CsvSource(value = {
+            "*a../x../x                                   % 6"
+    }, delimiter = '%')
+    public void testAuto(final String code, final String expected) throws Exception {
+        TestData.Helper.loadData(this, "testAuto");
         super.testCode(code, expected);
     }
 }

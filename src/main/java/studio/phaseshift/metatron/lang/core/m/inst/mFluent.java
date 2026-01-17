@@ -119,8 +119,8 @@ public class mFluent<F extends Fluent<F>> extends MCode implements Fluent<F>, Co
         return this.addInst(instB(mInstSet.AUTO_INST_TID, lst(obj)));
     }
 
-    public F auto_from_(final Uri uri) {
-        return this.addInst(instC(mInstSet.AUTO_FROM_INST_TID, lst(uri), (lhs, inst) -> Router.readFromSpace(inst.arg(0).uriValue())));
+    public F auto_from_(final Obj obj) {
+        return this.addInst(instB(mInstSet.AUTO_FROM_INST_TID, lst(obj)));
     }
 
     public F to_(final Obj obj) {
