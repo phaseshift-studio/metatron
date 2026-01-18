@@ -75,13 +75,17 @@ class Ssd1306(Device):
                 SET_DISP | 0x01):  # on
             self._write_cmd(cmd)
         self.fill(0)
-        self.text("metatron   ", 20, 8, 1, False)
-        self.text("   _       ", 15, 15, 1, False)
-        self.text("  / |_____ ", 15, 29, 1, False)
-        self.text(" / /|     |", 15, 42, 1, False)
-        self.text("|_/ |_|_|_|", 15, 53, 1, False)
+        self.sline(10, 15, True, self.width, 1, False)
+        self.sline(10, 15, False, self.height, 1, False)
+        self.sline(0, 0, True, self.width, 1, False)
+        self.sline(0, 0, False, self.height, 1, False)
+        self.text("metatron v0.1", 15, 5, 1, False)
+        self.text("   _       ", 25, 15, 1, False)
+        self.text("  / |_____ ", 25, 29, 1, False)
+        self.text(" / /|     |", 25, 42, 1, False)
+        self.text("|_/ |_|_|_|", 25, 53, 1, False)
         self.show()
-        self.image('mtron_logo.pbm')
+        # self.image('mtron_logo.pbm')
         if self.soc_vid is not None:
             router().subscribe(self.soc_vid.extend(self.name).extend("+"),
                                lambda vid, value: Ssd1306._process_cmd(self, vid, value))
@@ -144,6 +148,21 @@ class Ssd1306(Device):
 
     def pixel(self, x: int, y: int, col: int = 1, show=True):
         self.framebuf.pixel(x, y, col)
+        if show:
+            self.show()
+
+    def line(self, x1: int, y1: int, x2: int, y2: int, col: int = 1, show=True):
+        self.framebuf.line(x1, y1, x2, y2, col)
+        if show:
+            self.show()
+
+    def sline(self, x: int, y: int, horizontal: bool, length: int = -1, col: int = 1, show=True):
+        if length is -1:
+            length = self.width if horizontal else self.height
+        if horizontal:
+            self.framebuf.hline(x, y, length, col)
+        else:
+            self.framebuf.vline(x, y, length, col)
         if show:
             self.show()
 
