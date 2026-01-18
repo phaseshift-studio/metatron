@@ -1,3 +1,19 @@
+#  Metatron: A Distributed Computing Language and Virtual Machine
+#   Copyright (C) 2025- PhaseShift Studio, LLC
+# 
+#  This program is free software: you can redistribute it and/or modify
+#  it under the terms of the GNU Affero General Public License as published by
+#  the Free Software Foundation, either version 3 of the License, or
+#  (at your option) any later version.
+# 
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU Affero General Public License for more details.
+# 
+#  You should have received a copy of the GNU Affero General Public License
+#  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
 from machine import Pin, SPI
 from os import uname
 
@@ -18,20 +34,27 @@ class MFRC522(Device):
     AUTHENT1A = 0x60
     AUTHENT1B = 0x61
 
-    def __init__(self, soc_vid, spi: Spi, cs_pin: int, name: str = "mfrc522"):
+    def __init__(self, soc_vid, spi: Spi, cs_pin: int, rst_pin: int, name: str = "mfrc522"):
         Device.__init__(self, soc_vid, {}, MFRC522_TID, name)
         self.spi = spi.pvm
+        self.rst = Pin(rst_pin,Pin.OUT)
+        self.rst.value(0)
         self.cs = Pin(cs_pin, Pin.OUT)
         self.cs.value(1)
-        self.spi.init()
+        self.NTAG = 0
+        self.NTAG_MaxPage = 0
+        self.rst.value(1)
+        #self.rst.value(0)
 
     def _wreg(self, reg, val):
+
         self.cs.value(0)
         self.spi.write(b'%c' % int(0xff & ((reg << 1) & 0x7e)))
         self.spi.write(b'%c' % int(0xff & val))
         self.cs.value(1)
 
     def _rreg(self, reg):
+
         self.cs.value(0)
         self.spi.write(b'%c' % int(0xff & (((reg << 1) & 0x7e) | 0x80)))
         val = self.spi.read(1)
@@ -46,6 +69,7 @@ class MFRC522(Device):
         self._wreg(reg, self._rreg(reg) & (~mask))
 
     def _tocard(self, cmd, send):
+
         recv = []
         bits = irq_en = wait_irq = n = 0
         stat = self.ERR
@@ -105,6 +129,7 @@ class MFRC522(Device):
         return stat, recv, bits
 
     def _crc(self, data):
+
         self._cflags(0x05, 0x04)
         self._sflags(0x0A, 0x80)
 
@@ -138,14 +163,12 @@ class MFRC522(Device):
         self._wreg(0x01, 0x0F)
 
     def antenna_on(self, on=True):
-
         if on and ~(self._rreg(0x14) & 0x03):
             self._sflags(0x14, 0x03)
         else:
             self._cflags(0x14, 0x03)
 
     def request(self, mode):
-
         self._wreg(0x0D, 0x07)
         (stat, recv, bits) = self._tocard(0x0C, [mode])
 
@@ -155,7 +178,6 @@ class MFRC522(Device):
         return stat, bits
 
     def anticoll(self):
-
         ser_chk = 0
         ser = [0x93, 0x20]
 
@@ -174,7 +196,6 @@ class MFRC522(Device):
         return stat, recv
 
     def select_tag(self, ser):
-
         buf = [0x93, 0x70] + ser[:5]
         buf += self._crc(buf)
         (stat, recv, bits) = self._tocard(0x0C, buf)
@@ -187,14 +208,12 @@ class MFRC522(Device):
         self._cflags(0x08, 0x08)
 
     def read(self, addr):
-
         data = [0x30, addr]
         data += self._crc(data)
         (stat, recv, _) = self._tocard(0x0C, data)
         return recv if stat == self.OK else None
 
     def write(self, addr, data):
-
         buf = [0xA0, addr]
         buf += self._crc(buf)
         (stat, recv, bits) = self._tocard(0x0C, buf)

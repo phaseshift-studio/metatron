@@ -25,7 +25,7 @@ import time
 import webrepl
 from machine import Pin, SoftSPI
 
-from lib.mfrc522 import MFRC522
+from metatron.soc.device.mfrc522 import MFRC522
 from metatron.furi import f
 from metatron.soc.device.gpio import Gpio
 from metatron.soc.device.i2c import I2c
@@ -47,9 +47,9 @@ class RFIDtron(Architecture):
         #####################################################################################################
         self.soc = WemosD1Mini(vid=self.soc_vid)
         self.soc.attach(Wifi(wlan=self.wlan, secrets=self.secrets, soc_vid=self.soc_vid).start())
-        self.soc.attach(Memory(soc_vid=self.soc_vid).start())
-        self.soc.attach(Gpio(pin_range=range(0, 35), soc_vid=self.soc_vid).start())
-        self.soc.attach(Pwm(soc_vid=self.soc_vid).start())
+        #self.soc.attach(Memory(soc_vid=self.soc_vid).start())
+        #self.soc.attach(Gpio(pin_range=range(0, 35), soc_vid=self.soc_vid).start())
+        #self.soc.attach(Pwm(soc_vid=self.soc_vid).start())
         self.soc.attach(I2c(scl_pin=22, sda_pin=21, soc_vid=self.soc_vid).start())
         self.soc.attach(
             Ssd1306(i2c=self.soc.i2c, addr=0x3c, height=64, width=128, soc_vid=self.soc_vid, name="oled").start())
