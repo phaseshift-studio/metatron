@@ -37,16 +37,16 @@ esp.osdebug(None)
 sys.ps1 = graphitty.string("{{m}}mtron{{g}}>{{X}} ")
 sys.ps2 = graphitty.string("{{m}}     {{g}}>{{X}} ")
 print(graphitty.string("""
-{{g}}        /^\/^\                                                     
-{{g}}      _|__|  {{w}}O{{g}}|                                                    
-{{r}}\/ {{g}} /{{y}}~{{g}}     \_/ \                                                  
-{{r}} \_{{g}}|__________/ \  {{y}}{{~}}PhaseShift Studio Presents{{X}}                                                 
-{{g}}     \_______    \               __        __                   
-{{g}}             `\   \__ ___  ___  / /_____ _{{y}}/ /__________  ____   
-{{g}}              |   __ `__ \/ _ \/ {{y}}__/ __ `/ __/ ___/ __ \/ __ \  
-{{g}}             /   / / / / {{c}}/  __/ /_/ /_/ / /_/ /  / /_/ / / / /  
-{{g}}            /___/ {{b}}/_/ /_/\___/\__/\__,_/\__/_/   \____/_/ /_/{{X}}"""))
-print(graphitty.string("\t\t\t{{b}}on {}{{X}}\n", os.uname().machine))
+{{g}}     /^\/^\                                                     
+{{g}}    _|_| {{w}}O{{g}}|                                                    
+{{r}}\/{{g}} /{{y}}~{{g}}   \_/\                                                  
+{{r}} \_{{g}}|______/ \  {{y}}{{~}}PhaseShift Studio Presents{{X}}                                                 
+{{g}}    \______  \               __        __                   
+{{g}}           `\ \__ ___  ___  / /_____ _{{y}}/ /__________  ____   
+{{g}}            | __ `__ \/ _ \/ {{y}}__/ __ `/ __/ ___/ __ \/ __ \  
+{{g}}           / / / / / {{c}}/  __/ /_/ /_/ / /_/ /  / /_/ / / / /  
+{{g}}          /_/ {{b}}/_/ /_/\___/\__/\__,_/\__/_/   \____/_/ /_/{{X}}"""))
+print(graphitty.string("\t\t{{b}}on {}{{X}}\n", os.uname().machine))
 ###############################################################################
 mach["router"] = Router()
 mach["translator"] = PythonTranslator()
@@ -57,9 +57,8 @@ LOG.info("log level {{g}}{}{{X}}", LOG.log_level)
 try:
     mtron = deploy(secrets)
 except Exception as e:
-    LOG.error("error deploying architecture: {}", e)
-    time.sleep(2)
-    machine.reset()
+    LOG.error("unable to deploy architecture: {}", e)
+    raise e
 
 def main_thread_function():
     global mtron

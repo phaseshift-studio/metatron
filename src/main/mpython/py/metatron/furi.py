@@ -14,8 +14,6 @@
 #  You should have received a copy of the GNU Affero General Public License
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import metatron.util.mach as args
-
 
 class fURI:
     def __init__(self, uri: str):
@@ -47,7 +45,7 @@ class fURI:
                 continue
             if self.path[i] != other.path[i]:
                 return False
-        return len(self.path) == other_len or (len(self.path) + 1 == other_len and other.path[other_len-1] == "#")
+        return len(self.path) == other_len or (len(self.path) + 1 == other_len and other.path[other_len - 1] == "#")
 
     def has_pattern(self) -> bool:
         return "#" in self.path or "+" in self.path
@@ -56,6 +54,19 @@ class fURI:
         if len(self.path) == 0:
             return ""
         return self.path[-1]
+
+    def scheme(self, new_scheme=None):
+        if new_scheme is None:
+            i = str(self).find(':', 0)
+            return str(self)[0, i] if i is not -1 else ""
+        else:
+            i = str(self).find(':', 0)
+            return f(str(self)[i:]) if i is not -1 else (new_scheme + ":" + str(self))
+
+    def pretract(self, subfuri):
+        f_str = str(self)
+        i = f_str.find(subfuri, 0)
+        return f(f_str[i:]) if f_str.startswith(subfuri) else self
 
     def __str__(self):
         return "/".join(self.path)
@@ -69,11 +80,12 @@ class fURI:
     def __hash__(self):
         return hash(self.__str__())
 
-    #def __gt__(self, other):
+    # def __gt__(self, other):
     #    return args.mach["router"].write(self, other)
 
-    #def __invert__(self):
+    # def __invert__(self):
     #    return args.mach["router"].read(self)
+
 
 def f(furi: str) -> fURI:
     return fURI(furi)

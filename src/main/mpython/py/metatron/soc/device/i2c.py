@@ -27,6 +27,11 @@ class I2c(Device):
         Device.__init__(self, soc_vid, machine.I2C(sda=machine.Pin(sda_pin), scl=machine.Pin(scl_pin)), I2C_TID, name)
 
     def start(self) -> 'I2c':
-        for device in self.pvm.scan():
-            LOG.info("located i2c device at {{y}}{}", hex(device))
+        Device.start(self)
+        self.scan()
         return self
+    
+    def scan(self):
+        LOG.info("scanning i2c bus for hardware devices")
+        for device in self.pvm.scan():
+            LOG.info("{{m}}=={{g}}>{{X}}i2c device at addr {{y}}{}", hex(device))

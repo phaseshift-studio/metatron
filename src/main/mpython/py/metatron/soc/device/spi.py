@@ -17,17 +17,11 @@ import machine
 
 from metatron.furi import f
 from metatron.soc.device.device import Device
-from metatron.util.graphitty import LOG
 
 SPI_TID = f("/soc/spi")
 
 
 class Spi(Device):
-    def __init__(self, sck_pin: int, sda_pin: int, mosi_pin: int, miso_pin: int, soc_vid, name="spi"):
-        Device.__init__(self, soc_vid, machine.SoftSPI(baudrate=100000, polarity=0, phase=0, sck=sck_pin, mosi=mosi_pin, miso=miso_pin), SPI_TID, name)
-
-
-def start(self) -> 'I2c':
-    for device in self.pvm.scan():
-        LOG.info("located i2c device at {{y}}{}", hex(device))
-    return self
+    def __init__(self, sck_pin: int, sda_pin: int, mosi_pin: int, miso_pin: int, soc_vid, name: str = "spi"):
+        Device.__init__(self, soc_vid, {}, SPI_TID, name)
+        self.pvm = machine.SoftSPI(baudrate=100000, polarity=0, phase=0, sck=sck_pin, mosi=mosi_pin, miso=miso_pin)

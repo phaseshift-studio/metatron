@@ -1,9 +1,14 @@
 from machine import Pin, SPI
 from os import uname
 
+from metatron.furi import f
+from metatron.soc.device.device import Device
+from metatron.soc.device.spi import Spi
 
-class MFRC522:
+MFRC522_TID = f("/soc/mfrc522")
 
+
+class MFRC522(Device):
     OK = 0
     NOTAGERR = 1
     ERR = 2
@@ -13,23 +18,20 @@ class MFRC522:
     AUTHENT1A = 0x60
     AUTHENT1B = 0x61
 
-    def __init__(self, spi, cs):
-
-        self.spi = spi
-        self.cs = cs
+    def __init__(self, soc_vid, spi: Spi, cs_pin: int, name: str = "mfrc522"):
+        Device.__init__(self, soc_vid, {}, MFRC522_TID, name)
+        self.spi = spi.pvm
+        self.cs = Pin(cs_pin, Pin.OUT)
         self.cs.value(1)
         self.spi.init()
-        self.init()
 
     def _wreg(self, reg, val):
-
         self.cs.value(0)
         self.spi.write(b'%c' % int(0xff & ((reg << 1) & 0x7e)))
         self.spi.write(b'%c' % int(0xff & val))
         self.cs.value(1)
 
     def _rreg(self, reg):
-
         self.cs.value(0)
         self.spi.write(b'%c' % int(0xff & (((reg << 1) & 0x7e) | 0x80)))
         val = self.spi.read(1)
@@ -44,7 +46,6 @@ class MFRC522:
         self._wreg(reg, self._rreg(reg) & (~mask))
 
     def _tocard(self, cmd, send):
-
         recv = []
         bits = irq_en = wait_irq = n = 0
         stat = self.ERR
@@ -104,7 +105,6 @@ class MFRC522:
         return stat, recv, bits
 
     def _crc(self, data):
-
         self._cflags(0x05, 0x04)
         self._sflags(0x0A, 0x80)
 
@@ -122,8 +122,8 @@ class MFRC522:
 
         return [self._rreg(0x22), self._rreg(0x21)]
 
-    def init(self):
-
+    def start(self) -> 'MFRC522':
+        Device.start(self)
         self.reset()
         self._wreg(0x2A, 0x8D)
         self._wreg(0x2B, 0x3E)
@@ -132,6 +132,7 @@ class MFRC522:
         self._wreg(0x15, 0x40)
         self._wreg(0x11, 0x3D)
         self.antenna_on()
+        return self
 
     def reset(self):
         self._wreg(0x01, 0x0F)

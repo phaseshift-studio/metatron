@@ -75,6 +75,11 @@ class Ssd1306(Device):
                 SET_DISP | 0x01):  # on
             self._write_cmd(cmd)
         self.fill(0)
+        self.text("metatron   ",20,8,1,False)
+        self.text("   _       ",15,15,1,False)
+        self.text("  / |_____ ",15,29,1,False)
+        self.text(" / /|     |",15,42,1,False)
+        self.text("|_/ |_|_|_|",15,53,1,False)
         self.show()
         if self.soc_vid is not None:
             router().subscribe(self.soc_vid.extend(self.name).extend("+"),

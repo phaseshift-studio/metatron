@@ -13,7 +13,7 @@
 # 
 #  You should have received a copy of the GNU Affero General Public License
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>.
-from lib.mtron.rfidtron import RFIDtron
+from lib.mtron.playtron import Playtron
 
 
 # this function determines which machine architecture is flashed to hardware
@@ -24,4 +24,4 @@ from lib.mtron.rfidtron import RFIDtron
 # IMPORTANT: do not change the signature of the deploy() and always
 # return an Architecture object with a loop() method
 def deploy(secrets: dict):
-    return RFIDtron(secrets)
+    return Playtron(secrets)
