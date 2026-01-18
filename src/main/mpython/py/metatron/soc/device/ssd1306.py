@@ -5,7 +5,7 @@ import math
 import time
 
 from metatron.furi import f, fURI
-from metatron.obj import Obj, Rec, Lst
+from metatron.obj import Obj
 from metatron.soc.device.device import Device
 from metatron.util.graphitty import LOG
 from metatron.util.mach import router
@@ -33,7 +33,7 @@ SSD1306_TID = f("/soc/ssd1306")
 
 
 class Ssd1306(Device):
-    def __init__(self, i2c: Device, addr, height:int, width:int, soc_vid, name='ssd1306'):
+    def __init__(self, i2c: Device, addr, height: int, width: int, soc_vid, name='ssd1306'):
         Device.__init__(self, soc_vid, {'addr': addr, 'width': width, 'height': height}, SSD1306_TID, name)
         self.i2c = i2c.pvm
         self.addr = addr
@@ -75,12 +75,13 @@ class Ssd1306(Device):
                 SET_DISP | 0x01):  # on
             self._write_cmd(cmd)
         self.fill(0)
-        self.text("metatron   ",20,8,1,False)
-        self.text("   _       ",15,15,1,False)
-        self.text("  / |_____ ",15,29,1,False)
-        self.text(" / /|     |",15,42,1,False)
-        self.text("|_/ |_|_|_|",15,53,1,False)
+        self.text("metatron   ", 20, 8, 1, False)
+        self.text("   _       ", 15, 15, 1, False)
+        self.text("  / |_____ ", 15, 29, 1, False)
+        self.text(" / /|     |", 15, 42, 1, False)
+        self.text("|_/ |_|_|_|", 15, 53, 1, False)
         self.show()
+        self.image('mtron_logo.pbm')
         if self.soc_vid is not None:
             router().subscribe(self.soc_vid.extend(self.name).extend("+"),
                                lambda vid, value: Ssd1306._process_cmd(self, vid, value))
@@ -98,12 +99,12 @@ class Ssd1306(Device):
                         args[key] = val.pvm if isinstance(val, Obj) else val
                     LOG.info("calling {{y}}{}{{X}} with {}", vid.name(), args)
                     getattr(device, vid.name())(**args)
-                elif isinstance(value,list):
+                elif isinstance(value, list):
                     args = []
                     for val in value:
                         args.append(val.pvm if isinstance(val, Obj) else val)
                     LOG.info("calling {{y}}{}{{X}} with {}", vid.name(), args)
-                    getattr(device, vid.name())(*args)  
+                    getattr(device, vid.name())(*args)
             except Exception as e:
                 LOG.error("error calling method {{r}}{}{{X}} on {{y}}{}{{X}}: {}", vid.name(), vid, e)
         else:
@@ -193,5 +194,13 @@ class Ssd1306(Device):
 
     def text(self, text: str, x: int, y: int, col: int = 1, show: bool = True):
         self.framebuf.text(text, x, y, col)
+        if show:
+            self.show()
+
+    def image(self, filename: str, show: bool = True):
+        with open(filename, 'rb') as image_file:
+            image_data = image_file.read()
+        fb = framebuf.FrameBuffer(bytearray(image_data), ((self.width + 7) // 8) * 8, self.height, framebuf.MONO_HLSB)
+        self.framebuf.blit(fb, 0, 0)
         if show:
             self.show()
