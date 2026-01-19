@@ -49,7 +49,6 @@ import static studio.phaseshift.metatron.lang.core.m.inst.mFluent.StartLess.star
 import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.MTRON_TID;
 import static studio.phaseshift.metatron.lang.core.m.obj.NoObj.noobj;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
-import static studio.phaseshift.metatron.lang.core.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
 
@@ -61,9 +60,9 @@ public class MRouter extends MSpace<MServer> implements Router {
     public static final fURI ROUTER_TID = sysInstSet.SYS_TYPE_TID.extend("router");
     private static final Set<fURI> READ_AS_NOOBJ = Set.of(fURI.ALL.maybeSome(), fURI.ALL.maybe(), fURI.ALL);
     private final GraphittyLogger LOG = Graphitty.log(this);
-    @ObjFieldReflection(tid="/m/str")
+    @ObjFieldReflection(tid = "/m/str")
     public static final String test = "testes";
-    
+
     @ObjFieldReflection
     private final Map<fURI, Set<fURI>> smallToBigRewrites = new HashMap<>();
     @ObjFieldReflection
@@ -77,7 +76,7 @@ public class MRouter extends MSpace<MServer> implements Router {
                         uri(Tokens.SPACE), rec(new ConcurrentHashMap<>(Map.of(uri("+/#"), new stackSpace(f("+/#"))))))), f("#"),
                 ROUTER_TID,
                 vid);
-        
+
         LOG.info("local router at %s", this.vid.toUri());
         LOG.info("available serializers: %s", lst(SERIALIZERS.getSerializers().recValue().keySet().stream().toList()));
     }
@@ -215,7 +214,14 @@ public class MRouter extends MSpace<MServer> implements Router {
                 return stack;
         }
         final Space space = this.getSpace(local);
-        return space.read(local);
+        final Obj obj = space.read(local);
+        if (obj.isNoObj()) { // TODO: only needed when reasoning on insts (should we gut it?)
+            final fURI vidbig = vid.big();
+            if (!vid.equals(vidbig))
+                return this.read(vidbig);
+        }
+        return obj;
+
     }
 
     @Override

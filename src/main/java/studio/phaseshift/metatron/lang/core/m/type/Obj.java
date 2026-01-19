@@ -623,7 +623,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
             if (!Objects.equals(jvm, obj.jvm()) || !tid.equals(obj.tid()) || !Objects.equals(vid, obj.vid())) {
                 try {
                     final O clone = (O) obj.clone();
-                    Obj.Helper.objCheckAndSave(clone, jvm, tid.big(), vid);
+                    Obj.Helper.objCheckAndSave(clone, jvm, tid, vid);
                     return clone;
                 } catch (final Exception e) {
                     throw MTronException.of(e);

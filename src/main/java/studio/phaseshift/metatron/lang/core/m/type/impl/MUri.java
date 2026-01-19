@@ -27,7 +27,7 @@ import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.URI_TID;
 public class MUri extends MObj implements Uri {
 
     public MUri(final fURI jvm, final fURI tid, final fURI vid) {
-        super(jvm, null == tid ? URI_TID : tid, vid);
+        super(jvm.resolve(), null == tid ? URI_TID : tid, vid);
         if (jvm.isZero())
             this.tid = this.tid.zero();
     }

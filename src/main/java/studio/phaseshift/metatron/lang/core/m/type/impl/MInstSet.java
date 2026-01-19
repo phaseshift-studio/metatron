@@ -114,24 +114,23 @@ public abstract class MInstSet extends MSpace<Map<fURI, Set<? extends Obj>>> imp
     public Obj read(final fURI vid) {
         if (Objects.equals(this.tid, vid))
             return this;
-        final fURI bigvid = vid.big();
         return Q.Helper.processPreRead(this.qs(), this.vid, vid).orElse(
                 objs(INST_TABLE.entrySet()
                         .stream()
-                        .filter(kv -> kv.getKey().bimatches(bigvid.basePath().asNode()))
+                        .filter(kv -> kv.getKey().bimatches(vid.basePath().asNode()))
                         .flatMap(kv -> kv.getValue().stream())
-                        .filter(i -> !bigvid.hasDom() || i.dom().tid().bimatches(bigvid.dom()))
-                        .filter(i -> !bigvid.hasRng() || i.rng().tid().bimatches(bigvid.rng()))
+                        .filter(i -> !vid.hasDom() || i.dom().tid().bimatches(vid.dom()))
+                        .filter(i -> !vid.hasRng() || i.rng().tid().bimatches(vid.rng()))
                         .map(i -> vid.isNode() ? i : rel(i.tid().toUri(), i)))
                         .append(objs(TYPE_TABLE.entrySet()
                                 .stream()
-                                .filter(kv -> kv.getKey().matches(bigvid.asNode()))
+                                .filter(kv -> kv.getKey().matches(vid.asNode()))
                                 .map(kv -> vid.isNode() ?
                                         kv.getValue() :
                                         rel(kv.getKey().toUri(), kv.getValue()))))
                         .append(objs(CONST_TABLE.entrySet()
                                 .stream()
-                                .filter(kv -> kv.getKey().matches(bigvid.asNode()))
+                                .filter(kv -> kv.getKey().matches(vid.asNode()))
                                 .map(kv -> vid.isNode() ?
                                         kv.getValue() :
                                         rel(kv.getKey().toUri(), kv.getValue())))));

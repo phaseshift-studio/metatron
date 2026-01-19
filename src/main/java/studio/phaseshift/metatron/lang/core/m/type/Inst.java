@@ -235,12 +235,18 @@ public interface Inst extends Call {
         final GraphittyLogger LOG = Graphitty.log(lhs);
         LOG.trace("%s => %s is %s resolved", lhs, this, Common.lambda(() -> this.isResolved(false) ? "" : "not"));
         try {
-            final Inst resolved = Router.global().read(this.tid().basePath())
+            final Obj fetched = Router.global().read(this.tid().basePath());
+            final Obj fetched2 = (fetched.stream().anyMatch(Obj::isInst) ? fetched : Router.global().read(this.tid().basePath().extend("stuff")));
+            LOG.debug("fetched insts: %s => %s", this.tid().basePath(), fetched2);
+            final Inst resolved = fetched2
                     .stream()
-                    .map(i -> i.isInst() ? i.asInst() : instC(this.tid().dom(lhs.tid()).rng(ALL.maybeSome()), this.args(), (lhs2, inst) -> Router.global().write(this.tid(), inst.args())))
+                    //.map(i -> i.isCode() ? i.asCode().tryToInst() : i)
+                    //.map(i -> i.isInst() ? i.asInst() : instC(this.tid().dom(lhs.tid()).rng(ALL.maybeSome()), this.args(), (lhs2, inst) -> Router.global().write(this.tid(), inst.args())))
+                    .filter(Obj::isInst)
+                    .map(Obj::asInst)
                     .filter(i -> (i.args().isEmpty() && this.arg(0).isNoObj()) || i.args().isRec() || i.args().count() >= this.args().count()) // TODO: check which recs are default
                     .filter(i -> !lhs.isInst() || (i.dom().baseType().equals(INST_TID)))
-                     //.sorted(Comparator.comparing(Inst::dom, (a, b) -> lhs.matches(a.dom()) ? -1 : lhs.matches(b.dom()) ? 1 : 0)) // TODO: explore this more fully
+                    //.sorted(Comparator.comparing(Inst::dom, (a, b) -> lhs.matches(a.dom()) ? -1 : lhs.matches(b.dom()) ? 1 : 0)) // TODO: explore this more fully
                     .map(i -> this.hasDom() ? i.dom(this.dom()) : i)
                     .map(i -> this.hasRng() ? i.rng(this.rng()) : i)
                     .map(i -> lhs.isInst() ? i : Helpers.bindGenerics(lhs, i, this))
@@ -299,7 +305,7 @@ public interface Inst extends Call {
         Inst cinst = this.args().isEmpty() ? this.args(lst(noobj())).resolve(clhs) : this.resolve(clhs); // TODO: this isn't a general solution (multi slotted args won't work).
         //if (false && reself) // TODO: why do type predicates get rewritten?
         //    this.self(Triplet.with(cinst.args(), cinst.f(), cinst.seed()), cinst.tid(), cinst.vid());
-        if(lhs.isNoObj() && !cinst.dom().c().isZeroable())
+        if (lhs.isNoObj() && !cinst.dom().c().isZeroable())
             return noobj();
         Obj rhs;
         boolean modulateC = false;

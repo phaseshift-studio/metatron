@@ -33,7 +33,7 @@ public final class Tokens {
     public static final String Q = "q";
     public static final String SUB = "sub";
     public static final String PATTERN = "pattern";
-    public static final String HOST = ":host";
+    public static final String HOST = "host";
     public static final String USER = "user";
     public static final String PASS = "pass";
     public static final String NAME = "name";
@@ -46,7 +46,7 @@ public final class Tokens {
     public static final String PREFIX = "prefix";
     public static final String USER_HOME = "user.home";
     public static final String PREPEND = "prepend";
-    public static final String LOAD = ":load";
+    public static final String LOAD = "load";
     public static final String HTTP = "http";
     public static final String WS = "ws";
     public static final String MQTT = "mqtt";

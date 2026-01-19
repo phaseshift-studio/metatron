@@ -54,6 +54,7 @@ import static studio.phaseshift.metatron.lang.core.m.inst.mFluent.StartLess.from
 import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.*;
 import static studio.phaseshift.metatron.lang.core.m.obj.NoObj.noobj;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MFail.fail;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MInst.instB;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MRec.rec;
@@ -95,7 +96,7 @@ public class mParser {
                         anyOf(REDUCED_FURI_CHARS))).plus().flatten(),
                 opt(m_furi_poly_type(), null),
                 opt(m_furi_coefficient(), null),
-                opt(none(), null)).map(t -> new fURI(pick(t, 0)).big().poly(pick(t, 1)).c(pick(t, 2)).query(pick(t, 3))));
+                opt(none(), null)).map(t -> new fURI(pick(t, 0)).poly(pick(t, 1)).c(pick(t, 2)).query(pick(t, 3))));
 
         rel_parser.set(obj_rel_back_parser.seq(of("=>").trim().seq(m_obj())).map(t -> rel(pick(t, 0), pick(pick(t, 1), 1))));
         obj_no_code_parser.set(choice(
@@ -211,7 +212,7 @@ public class mParser {
                 return first;
             final List<Inst> newCode = new ArrayList<>();
             if (!first.isNoObj() && !first.isInst())
-                newCode.add(new MInst(Triplet.with(lst(first.isInst() ? noobj() : first), Inst.f.UNKNOWN, noobj()), headtid, fURI.fnull));
+                newCode.add(instB(headtid, lst(first.isInst() ? noobj() : first)));
             else if (first.isInst()) newCode.add(first.as());
             newCode.addAll(mParser.<Call>pick(t, 2).insts());
             return MCode.of(newCode, CODE_TID, pick(t, 3)).tryToInst();
@@ -287,7 +288,7 @@ public class mParser {
                         anyOf(furiCharacterSet))).plus().flatten(),
                 opt(polynomial ? m_furi_poly_type() : none(), null),
                 opt(coefficient ? m_furi_coefficient() : none(), null),
-                opt(query ? m_furi_query() : none(), null)).map(t -> new fURI(pick(t, 0)).big().poly(pick(t, 1)).c(pick(t, 2)).query(pick(t, 3)));
+                opt(query ? m_furi_query() : none(), null)).map(t -> new fURI(pick(t, 0)).poly(pick(t, 1)).c(pick(t, 2)).query(pick(t, 3)));
     }
 
     public static Parser m_furi(final String furiCharacterSet, final boolean polynomial, final boolean coefficient, final boolean query) {
@@ -479,11 +480,11 @@ public class mParser {
             return null == endToken ? generate_sugar_parser(instChain.getFirst(), startToken, argCount) : generate_sugar_parser(instChain.getFirst(), startToken, argCount, endToken);
         }
         return (argCount == 0 ?
-                seq(startToken.trim(), opt(seq(of('?'), m_furi_inst_dom_rng()).map(t -> pick(t, 1)), null)).map(t -> MInst.instB(instChain.getFirst(), lst(MInst.instA(instChain.get(1).query(pick(t, 1)))))) :
+                seq(startToken.trim(), opt(seq(of('?'), m_furi_inst_dom_rng()).map(t -> pick(t, 1)), null)).map(t -> instB(instChain.getFirst(), lst(MInst.instA(instChain.get(1).query(pick(t, 1)))))) :
                 seq(startToken.trim(), opt(seq(of('?'), m_furi_inst_dom_rng()).map(t -> pick(t, 1)), null), choice(
                         seq(of('(').trim(), m_obj(), of(')').trim()).map(t -> mParser.<Obj>pick(t, 1)),
                         m_obj()), null == endToken ? of("") : endToken.trim())
-                        .map(t -> MInst.instB(instChain.getFirst(), lst(MInst.instB(instChain.get(1).query(pick(t, 1)), lst(mParser.<Obj>pick(t, 2))))))).trim();
+                        .map(t -> instB(instChain.getFirst(), lst(instB(instChain.get(1).query(pick(t, 1)), lst(mParser.<Obj>pick(t, 2))))))).trim();
     }
 
     private static Parser generate_sugar_parser(final fURI tid, final Parser startToken, final int argCount, final Parser endToken) {
@@ -493,7 +494,7 @@ public class mParser {
                 seq(startToken.trim(), opt(seq(of('?'), m_furi_inst_dom_rng()).map(t -> pick(t, 1)), null), choice(
                         seq(of('('), m_obj(), of(')')).map(t -> mParser.<Obj>pick(t, 1)),
                         m_obj()), null == endToken ? of("") : endToken.trim())
-                        .map(t -> MInst.instB(tid.query(pick(t, 1)), lst(mParser.<Obj>pick(t, 2)))));
+                        .map(t -> instB(tid.query(pick(t, 1)), lst(mParser.<Obj>pick(t, 2)))));
     }
 
 
