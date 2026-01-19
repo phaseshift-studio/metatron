@@ -71,6 +71,7 @@ public class mInstSet extends MInstSet {
     public static final fURI MPLUS_INST_TID = INST_TID.extend("mplus");
     public static final fURI MINUS_INST_TID = INST_TID.extend("minus");
     public static final fURI MAP_INST_TID = INST_TID.extend("map");
+    public static final fURI PARENT_INST_TID = INST_TID.extend("parent");
     public static final fURI FILTER_INST_TID = INST_TID.extend("filter");
     public static final fURI SIDE_INST_TID = INST_TID.extend("side");
     public static final fURI TO_INST_TID = INST_TID.extend("to");

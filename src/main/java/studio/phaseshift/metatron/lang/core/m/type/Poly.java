@@ -21,6 +21,8 @@ package studio.phaseshift.metatron.lang.core.m.type;
 import java.util.function.BiFunction;
 import java.util.stream.Stream;
 
+import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.AUTO_FROM_INST_TID;
+import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.AUTO_INST_TID;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
 
@@ -70,5 +72,10 @@ public interface Poly<P extends Poly<P, J>, J> extends Obj {
     @Override
     default boolean isResolved(final boolean nested) {
         return this.elements().allMatch(x -> x.isResolved(nested));
+    }
+
+    @Override
+    default Obj autoResolve(final Obj obj) {
+        return Obj.super.autoResolve(obj).parent(this);
     }
 }

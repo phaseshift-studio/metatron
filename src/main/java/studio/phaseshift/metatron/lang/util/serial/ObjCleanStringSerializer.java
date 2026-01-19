@@ -67,7 +67,7 @@ public class ObjCleanStringSerializer implements ObjSerializer<String> {
         if (obj.isNoObj())
             return objString;
         final StringBuilder sb = new StringBuilder();
-        this.handleTID(sb, obj, true).append(objString);
+        this.handleTID(sb, obj, !obj.isInst()).append(objString);
         this.handleVID(sb, obj);
         return sb.toString();
     }

@@ -109,7 +109,7 @@ public interface Lst extends Poly<Lst, List<Obj>>, PlusMonoid.O<Lst> {
     @Override
     default <O extends Obj> O at(final Obj key) {
         if (key.isInt())
-            return (O) ((this.jvm().size() > key.intValue()) ? this.jvm().get(key.<Int>as().intValue().intValue()).autoResolve(key) : noobj());
+            return (O) ((this.jvm().size() > key.intValue()) ? this.jvm().get(key.<Int>as().intValue().intValue()).autoResolve(this) : noobj());
         else if (key.isUri()) {
             if (key.uriValue().segments().isEmpty())
                 return (O) noobj();
@@ -127,9 +127,9 @@ public interface Lst extends Poly<Lst, List<Obj>>, PlusMonoid.O<Lst> {
                 result = Stream.of(this.jvm().get(k.intValue().intValue()));
             }
             if (key.uriValue().segments().size() == 1) {
-                return (O) objs(result.map(e -> e.autoResolve(key)).filter(x -> !x.isNoObj()));
+                return (O) objs(result.filter(x -> !x.isNoObj()).map(e -> e.autoResolve(this)));
             } else {
-                return (O) objs(result.map(e -> e.autoResolve(key)).filter(x -> !x.isNoObj()).filter(Obj::isPoly).map(r -> r.<Poly>as().at(uri(key.<Uri>as().uriValue().pretract()))));
+                return (O) objs(result.filter(x -> !x.isNoObj()).map(e -> e.autoResolve(this)).filter(Obj::isPoly).map(r -> r.<Poly>as().at(uri(key.<Uri>as().uriValue().pretract()))));
             }
         } else {
             throw MTronException.of("unknown key for lst: %s", key);

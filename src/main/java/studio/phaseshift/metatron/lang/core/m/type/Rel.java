@@ -89,7 +89,7 @@ public interface Rel extends Poly<Rel, Tuple.Pair<Obj, Obj>>, Obj {
             if (this.first().matches(asNode))
                 return (O) (key.uriValue().isBranch() ? rel(asNode, this.second()) : this.second()).autoResolve(this);
             else {
-                final Obj temp = (this.first().matches(uri(f(step).asNode())) ? this.second() : NoObj.noobj()).autoResolve(key);
+                final Obj temp = (this.first().matches(uri(f(step).asNode())) ? this.second() : NoObj.noobj()).autoResolve(this);
                 result = (O) (key.uriValue().isBranch() ? rel(key.uriValue().asNode().toUri(), temp) : temp);
             }
             /// ///////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -181,7 +181,7 @@ public record JSONTranslator(ObjSerializer<String> serializer) implements Transl
                 //else if (!obj.isPoly() && !obj.isCall())
                 //    element = JsonParser.parseString(this.serializer.write(obj));
             else if (obj.isCall())
-                element = new JsonPrimitive(Highlighter.unformat(SERIALIZER.write(obj.<Call>as().tryToInst())));
+                element = new JsonPrimitive(SERIALIZER.write(obj.<Call>as().tryToInst()));
             else if (obj.isRel()) {
                 final JsonArray array = new JsonArray();
                 array.add(translate(obj.<Rel>as().first()));

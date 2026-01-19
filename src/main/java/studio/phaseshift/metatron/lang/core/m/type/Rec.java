@@ -104,7 +104,7 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>>, PlusMonoid.O<Rec> {
     @Override
     default <O extends Obj> O at(final Obj key) {
         if (!key.isUri())
-            return (O) this.jvm().getOrDefault(key, NoObj.noobj()).autoResolve(key);
+            return (O) this.jvm().getOrDefault(key, NoObj.noobj()).autoResolve(this);
         else {
             final boolean singleSegment = key.uriValue().segments().size() == 1;
             final String step = singleSegment ? key.uriValue().toString() : key.uriValue().segments().getFirst();
@@ -118,14 +118,14 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>>, PlusMonoid.O<Rec> {
                     return reflectObj;
             }
             if (step.equals("+") || step.equals("#")) {
-                result = key.uriValue().isBranch() ? objs((Stream) this.elements()) : objs(this.recValue().values().stream().map(v -> v.autoResolve(key)));
+                result = key.uriValue().isBranch() ? objs((Stream) this.elements()) : objs(this.recValue().values().stream().map(v -> v.autoResolve(this)));
             } else {
-                final Obj temp = this.jvm().getOrDefault(uri(step), NoObj.noobj()).autoResolve(key);
+                final Obj temp = this.jvm().getOrDefault(uri(step), NoObj.noobj()).autoResolve(this);
                 result = key.uriValue().isBranch() ? rel(key.uriValue().asNode().toUri(), temp) : temp;
             }
             /// ///////////////////////////////////////////////////////////////////////////////////////////////////////
             if (singleSegment) {
-                return (O) result;
+                return (O) result.autoResolve(this);
             } else {
                 final fURI nextKey = key.uriValue().isBranch() ? key.<Uri>as().uriValue().pretract().asBranch() : key.<Uri>as().uriValue().pretract();
                 return (O) objs(IteratorUtil.stream(result.iterator()).filter(Obj::isPoly).map(r -> r.<Poly>as().at(uri(nextKey))));

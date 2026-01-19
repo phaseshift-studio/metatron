@@ -77,8 +77,8 @@ public class mParser {
     private static final SettableParser branch_parser = SettableParser.undefined();
     private static final Parser[] PARSERS;
 
-    private static final String FULL_FURI_CHARS = "~/%$!#_-@+.: ";
     private static final String REDUCED_FURI_CHARS = "~/%$!#_-@+:";
+    private static final String FULL_FURI_CHARS = REDUCED_FURI_CHARS + ". ";
 
     static {
         final List<Parser> list =
@@ -262,7 +262,7 @@ public class mParser {
     public static <O extends Obj> O parse(final String code) {
         if (code.trim().isEmpty())
             return (O) noobj();
-        final Result result = seq(choice(m_call_prefix(START_INST_TID), m_obj()), opt(m_comment(), null)).map(t -> pick(t, 0)).end().parse(code.trim());
+        final Result result = seq(choice(m_call_prefix(START_INST_TID), m_obj(false)), opt(m_comment(), null)).map(t -> pick(t, 0)).end().parse(code.trim());
         if (result.isFailure()) {
             LOG.except(result.getBuffer() + "\n" + " ".repeat(result.getPosition()) + "^ " + result.getMessage() + "\n");
         }
@@ -352,8 +352,12 @@ public class mParser {
                 .map(t -> mParser.<fURI>pick(t, 0).query(mParser.pick(t, 1)));
     }
 
+    public static Parser m_obj(final boolean allowParens) {
+        return allowParens ? m_paren_wrap(obj_parser) : obj_parser;
+    }
+    
     public static Parser m_obj() {
-        return m_paren_wrap(obj_parser);
+        return mParser.m_obj(true);
     }
 
     public static Parser m_noobj() {
