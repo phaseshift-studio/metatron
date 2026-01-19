@@ -35,7 +35,7 @@ import studio.phaseshift.metatron.lang.core.m.type.Rec;
 import studio.phaseshift.metatron.lang.core.m.type.Type;
 import studio.phaseshift.metatron.lang.sys.router.Router;
 import studio.phaseshift.metatron.lang.translator.JSONTranslator;
-import studio.phaseshift.metatron.lang.translator.WebTranslator;
+import studio.phaseshift.metatron.lang.translator.HTMLTranslator;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
@@ -69,7 +69,7 @@ import static studio.phaseshift.metatron.lang.core.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.lang.net.web.webInstSet.PAGE_TID;
+import static studio.phaseshift.metatron.lang.net.web.webInstSet.HTML_TID;
 import static studio.phaseshift.metatron.lang.net.web.webInstSet.WEB_INSTSET_TID;
 
 /*
@@ -144,7 +144,7 @@ public class webSpace extends MSpace<HttpServer> {
                         Router.global().addSpace(space);
                         return space;
                     }));
-    private static final WebTranslator WEB_TRANSLATOR = new WebTranslator();
+    private static final HTMLTranslator WEB_TRANSLATOR = new HTMLTranslator();
     private static final JSONTranslator JSON_TRANSLATOR = new JSONTranslator();
     private static final AudioTranslator AUDIO_TRANSLATOR = new AudioTranslator();
 
@@ -225,7 +225,7 @@ public class webSpace extends MSpace<HttpServer> {
                 final Obj docObj = contentType.isMtron() ?
                         mParser.parse(response.body()) :
                         (contentType.isHtml() ?
-                                WEB_TRANSLATOR.translate(response.parse()).tid(PAGE_TID) :
+                                WEB_TRANSLATOR.translate(response.parse()).tid(HTML_TID) :
                                 (contentType.isJson() ?
                                         JSON_TRANSLATOR.parse(response.body()) :
                                         (contentType.isXml() ?

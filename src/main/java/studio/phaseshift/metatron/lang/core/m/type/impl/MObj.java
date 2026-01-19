@@ -34,7 +34,7 @@ public abstract class MObj implements Obj, Cloneable {
 
     public MObj(final Object jvm, final fURI tid, final fURI vid) {
         assert null != tid;
-        this.self(jvm, tid.big(), vid == null ? null : vid.resolve());
+        this.self(jvm, tid.big(), vid);
         Obj.Helper.objCheckAndSave(this);
     }
 

@@ -153,9 +153,10 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
     }
 
     default Obj tid(final fURI tid) {
-        if (this.tid().basePath().equals(tid))
-            return this.tid().equals(tid) ? this : this.clone(this.jvm(), tid, this.vid());
-        return this.clone(this.jvm(), tid, this.vid());
+        final fURI bigtid = tid.big();
+        if (this.tid().basePath().equals(bigtid))
+            return this.tid().equals(bigtid) ? this : this.clone(this.jvm(), bigtid, this.vid());
+        return this.clone(this.jvm(), bigtid, this.vid());
     }
 
     default Obj tid(final String tid) {

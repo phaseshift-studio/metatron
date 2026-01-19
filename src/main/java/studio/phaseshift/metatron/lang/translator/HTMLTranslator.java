@@ -37,7 +37,7 @@ import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class WebTranslator implements Translator<Obj, Document> {
+public class HTMLTranslator implements Translator<Obj, Document> {
 
 
     private Rec readElement(final Element element) {
@@ -84,7 +84,7 @@ public class WebTranslator implements Translator<Obj, Document> {
     public static Obj parse(final String html) {
         try {
             final Document document = Jsoup.parse(html);
-            return new WebTranslator().translate(document);
+            return new HTMLTranslator().translate(document);
         } catch (final Exception e) {
             throw MTronException.of(e, "unable to parse html: %s", e);
         }

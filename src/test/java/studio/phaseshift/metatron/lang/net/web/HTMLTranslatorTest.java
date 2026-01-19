@@ -21,18 +21,18 @@ package studio.phaseshift.metatron.lang.net.web;
 import org.junit.jupiter.api.Test;
 import studio.phaseshift.metatron.MetatronTest;
 import studio.phaseshift.metatron.lang.core.m.type.Rec;
-import studio.phaseshift.metatron.lang.translator.WebTranslator;
+import studio.phaseshift.metatron.lang.translator.HTMLTranslator;
 
 import java.io.File;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class WebTranslatorTest extends MetatronTest {
+public class HTMLTranslatorTest extends MetatronTest {
 
     @Test
     public void testWebPageParsing() {
-        final WebTranslator t = new WebTranslator();
+        final HTMLTranslator t = new HTMLTranslator();
         final Rec page = (Rec) t.translatePage(new File("./docs/images/metatron-character.html"));
         //LOG.info("%s", Jsoup.parse("/home/killswitch/Desktop/funny.html"));
         LOG.info("%s", page);
