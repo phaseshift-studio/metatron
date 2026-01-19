@@ -575,12 +575,11 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
             final BiPredicate<Obj, Obj> opt = Optimizations.optimizedEquals.get(obj.tid().basePath());
             if (null != opt)
                 return opt.test(obj, (Obj) other);
-            return other instanceof Obj &&
-                    ((obj.isNoObj() && ((Obj) other).isNoObj()) ||
-                            (obj.vid() != null && Objects.equals(obj.vid(), ((Obj) other).vid())) ||
-                            (Objects.equals(obj.tid(), ((Obj) other).tid()) &&
-                                    //Objects.equals(obj.vid(), ((Obj) other).vid()) && // TODO: ??
-                                    Objects.equals(obj.jvm(), ((Obj) other).jvm())));
+            return ((obj.isNoObj() && ((Obj) other).isNoObj()) ||
+                    (obj.vid() != null && Objects.equals(obj.vid(), ((Obj) other).vid())) ||
+                    (Objects.equals(obj.tid(), ((Obj) other).tid()) &&
+                            //Objects.equals(obj.vid(), ((Obj) other).vid()) && // TODO: ??
+                            Objects.equals(obj.jvm(), ((Obj) other).jvm())));
         }
 
         public static boolean objcLessEquals(final Obj obj, final Object other) {
@@ -596,7 +595,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
 
         public static void objCheckAndSave(final Obj obj) {
             if (!obj.isInstSet() && !obj.isNoObj() && !obj.isType() && !obj.matches(obj.type()))
-                throw MTronException.of("[{{r}}type error{{/r}}] %s is not a %s".formatted(obj, obj.type()));
+                throw MTronException.of("%s is not a %s".formatted(obj, obj.type()));
             if (null != obj.vid() && !obj.isType())
                 Router.writeToSpace(obj.vid(), obj);
         }
@@ -609,8 +608,6 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
         }
 
         public static <O extends Obj> O objClone(final Obj obj, final Object jvm, final fURI tid, final fURI vid) {
-            //if (BASE_TYPES.contains(tid.basePath()) && obj instanceof FObj<?>)
-            //    return ((FObj<?>) obj).base().clone(jvm instanceof Obj ? ((Obj) jvm).jvm() : jvm, tid, vid);
             if (!Objects.equals(tid, obj.tid())) {
                 final Obj type = Router.readFromSpace(tid);
                 if (!type.isNoObj() && type.isType() && type.<Type>as().hasConstructor()) {
