@@ -236,11 +236,14 @@ public interface Inst extends Call {
         LOG.trace("%s => %s is %s resolved", lhs, this, Common.lambda(() -> this.isResolved(false) ? "" : "not"));
         try {
             final Obj fetched = Router.global().read(this.tid().basePath());
-            final Obj fetched2 = (fetched.stream().anyMatch(Obj::isInst) ? fetched : Router.global().read(this.tid().basePath().extend("apply")));
+            final Obj fetched2 = (this.tid().basePath().name().equals("apply") || 
+                    fetched.stream().anyMatch(Obj::isInst)) ? 
+                    fetched : 
+                    Router.global().read(this.tid().basePath().extend("apply"));
             LOG.debug("fetched insts: %s => %s", this.tid().basePath(), fetched2);
             final Inst resolved = fetched2
                     .stream()
-                    .map(i -> i.isCode() ? i.asCode().tryToInst() : i)
+                    //.map(i -> i.isCode() ? i.asCode().tryToInst() : i)
                     //.map(i -> i.isInst() ? i.asInst() : instC(this.tid().dom(lhs.tid()).rng(ALL.maybeSome()), this.args(), (lhs2, inst) -> Router.global().write(this.tid(), inst.args())))
                     .filter(Obj::isInst)
                     .map(Obj::asInst)

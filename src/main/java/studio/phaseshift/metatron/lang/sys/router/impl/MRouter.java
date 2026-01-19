@@ -215,11 +215,11 @@ public class MRouter extends MSpace<MServer> implements Router {
         }
         final Space space = this.getSpace(local);
         final Obj obj = space.read(local);
-        if (obj.isNoObj()) { // TODO: only needed when reasoning on insts (should we gut it?)
+        /*if (obj.isNoObj()) { // TODO: only needed when reasoning on insts (should we gut it?)
             final fURI vidbig = vid.big();
             if (!vid.equals(vidbig))
                 return this.read(vidbig);
-        }
+        }*/
         return obj;
 
     }

@@ -102,7 +102,7 @@ public abstract class MObj implements Obj, Cloneable {
     @Override
     public <O extends Obj> O self(final Object jvm, final fURI tid, final fURI vid) {
         this.jvm = jvm;
-        this.tid = tid;
+        this.tid = tid.big();
         this.vid = vid;
         return (O) this;
     }
