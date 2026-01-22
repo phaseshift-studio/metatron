@@ -461,7 +461,7 @@ public class mInstSetTest extends InstSetTest {
             "{[a=>1],[a=>2],[a=>3]}.select([a=>is(gte(2))])                                                                              % {[a=>2],[a=>3]}",
             "{[a=>[b=>1]],[a=>[b=>2]],[a=>[b=>3]]}.select([a/b=>plus(10)])                                                               % {[a/b=>11],[a/b=>12],[a/b=>13]}",
             "{[a=>[b=>1]],[a=>[b=>2]],[a=>[b=>3]]}.select([a/b=>?>=2])                                                                   % {[a/b=>2],[a/b=>3]}",
-            // "{[a=>[b=>1]],[a=>[b=>2]],[a=>[b=>3]]}.select([a=>[b=>is(gte(2))]])                                                        % {[a=>[b=>2]],[a=>[b=>3]]}",
+            "{[a=>[b=>1]],[a=>[b=>2]],[a=>[b=>3]]}.select([a=>[b=>is(gte(2))]])                                                        % {[a=>[b=>2]],[a=>[b=>3]]}",
             "{[a=>[b=>1]],[a=>[b=>2]],[a=>[b=>3]]}.where([a=>[b=>is(gte(2))]])                                                           % {[a=>[b=>2]],[a=>[b=>3]]}",
             "{[a=>[b=>1]],[a=>[b=>2]],[a=>[b=>3]]}.where([a/b=>?>=2])                                                                    % {[a=>[b=>2]],[a=>[b=>3]]}",
             "{[a=>[b=>1]],[a=>[b=>2]],[a=>[b=>3]]}.where([a=>[b=>?>=2]])                                                                 % {[a=>[b=>2]],[a=>[b=>3]]}",
@@ -511,12 +511,16 @@ public class mInstSetTest extends InstSetTest {
             "[1,[2=>5],3].select([_,select[_=>plus(2)],_]).where([_,[_=>is(gt(6))],is(gt(1))])                                           % [1,[2=>7],3]",
             "[1,[2=>5],3].select([_,select[_=>plus(2)],_]).where([_,[_=>is(gt(6))],is(gt(3))])                                           % noobj",
             "[1,[2=>5],3].select([_,select[_=>plus(2)],_]).where([_,[_=>is(gt(10))],_])                                                  % noobj",
-          //  "[1,[2=>5],3].select([-<[_,_],select[_=>plus(2)],plus(7)]).where([isa(lst::T[]),[_=>is(gt(6))],is(gt(3))])                   % [[1,1],[2=>7],10]",
+            "[1,[2=>5],3].select([-<[_,_],select[_=>plus(2)],plus(7)]).where([isa(lst::T[]),[_=>is(gt(6))],is(gt(3))])                   % [[1,1],[2=>7],10]",
             "[1,[2=>5],3].select([-<[_,_]>-.sum(),select[_=>plus(2)],plus(7)]).where([isa(lst::T[]),[_=>is(gt(6))],is(gt(3))])           % noobj",
-           //  "[1,[2=>5],3].select([-<[_,_]>-.sum()-<[_],select[_=>plus(2)],plus(7)]).where([isa(lst::T[]),[_=>is(gt(6))],is(gt(3))])      % [[2],[2=>7],10]",
-            //"[1,[2=>5],3].select([-<[_,_]>-.sum()-<[_]>-,select[_=>plus(2)],plus(7)]).where([isa(int::T[]),[_=>is(gt(6))],is(gt(3))])  % [2,[2=>7],10]",
+             "[1,[2=>5],3].select([-<[_,_]>-.sum()-<[_],select[_=>plus(2)],plus(7)]).where([isa(lst::T[]),[_=>is(gt(6))],is(gt(3))])      % [[2],[2=>7],10]",
+            // "[1,[2=>5],3].select([-<[_,_]>-.sum()-<[_]>-,select[_=>plus(2)],plus(7)]).where([isa(int::T[]),[_=>is(gt(6))],is(gt(3))])  % [2,[2=>7],10]",
             "[a=>1,b=>2,c=>3].select([_=>is(gt(1))])                                                                                     % [b=>2,c=>3]",
-    }, delimiter = '%')
+            "[a=>[b=>[c=>[1,[x=>[y=>z]],3]]]].select([a/b=>[c=>[+1,[x=>[y=>?uri::T]],+133]]])                                            % [a/b=>[c=>[2,[x=>[y=>z]],136]]]",
+            "[a=>[b=>[c=>[1,[x=>[y=>z]],3]]]].select([a/b=>[c=>[+1,[x=>[y=>?int::T]],+133]]])                                            % [a/b=>[c=>[2,noobj,136]]]",
+            "[a=>[b=>[c=>[1,[x=>[y=>z]],3]]]].select([a/b=>[c=>[?>0.map(100),[x=>[y=>?int::T]],+133]]])                                  % [a/b=>[c=>[100,noobj,136]]]"
+
+}, delimiter = '%')
     public void testSelectWhere(final String code, final String expected) {
         super.testCode(code, expected);
     }

@@ -96,8 +96,6 @@ public interface Type extends Obj, PlusMonoid<Type> {
 
     @Override
     default Obj apply(final Obj obj) {
-        // if (!obj.rng().tid().matches(this.tid()))
-        //     return NoObj.single();
         if (!this.isBaseType()) {
             Obj subType = Router.readFromSpace(this.tid());
             if (!subType.equals(this))
@@ -126,7 +124,7 @@ public interface Type extends Obj, PlusMonoid<Type> {
         return this.tid(this.tid().zero()).jvm(Tuple.Pair.with(null, null));
     }
 
-    public static final class BytesType {
+    final class TypeType {
 
         public static Set<Inst> insts() {
             return new LinkedHashSet<>(List.of(
