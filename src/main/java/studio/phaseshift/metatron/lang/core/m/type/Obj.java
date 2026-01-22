@@ -541,7 +541,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
         throw MTronException.of(xxxValue, this, tid().toUri(), CODE_TID.toUri());
     }
 
-    default Tuple.Pair<Obj, Obj> typeValue() {
+    default Tuple.Pair<Call,Call> typeValue() {
         if (this.isType())
             return this.jvm();
         throw MTronException.of(xxxValue, this, tid().toUri(), fURI.of("<type>").toUri());
@@ -747,10 +747,6 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
                     instC(COUNT_INST_TID.dom(ALL.maybeSome()).rng(INT_TID), lst(), (lhs, inst) -> inst.seed().jvm(lhs.stream().reduce(inst.seed(), (a, b) -> jnt(a.intValue() + b.c().max())).intValue()/* * inst.c().max()*/), jnt(0)),
                     instC(SKIP_INST_TID.dom(A.maybeSome()).rng(A.maybeSome()), lst(T(INT_TID)), (lhs, inst) -> lhs.take(cInt.of(inst.arg(0).intValue())).get1()), // retrieve
                     instC(TAKE_INST_TID.dom(A.maybeSome()).rng(A.maybeSome()), lst(T(INT_TID)), (lhs, inst) -> lhs.take(cInt.of(inst.arg(0).intValue())).get0()), // remaining
-                    //instC(SUM_TID.dom(A.maybeSome()).rng(A), lst(), (lhs, inst) -> ((Semiring.O)lhs).zero().jvm(IteratorUtil.reduce(lhs.iterator(), ((Semiring.O)lhs).zero(), (a, b) -> ((Semiring.O) a).plus((Semiring.O) b)).jvm()), uri(fURI.NOOBJ)),
-                    //instC(SUM_TID.dom(A.maybeSome()).rng(A), lst(), (lhs, inst) -> IteratorUtil.reduce((Iterator)lhs.iterator(), lhs.<Semiring.O>as().zero(), (a, b) -> a.plus(b)), NoObj.single()),
-                    //instC(SUM_TID.dom(REAL_TID.maybeSome()).rng(REAL_TID), lst(), (lhs, inst) -> IteratorUtil.reduce(lhs.iterator(), inst.seed(), (a, b) -> real(a.realValue() + (b.realValue() * b.c().max()))), real(0.0)),
-                    //instC(SUM_TID.dom(LST_TID.maybeSome()).rng(LST_TID), lst(), (lhs, inst) -> IteratorUtil.reduce(lhs.iterator(), inst.seed(), (a, b) -> lst(Stream.concat(a.lstValue().stream(), b.lstValue().stream()).toList())), lst()),
                     instC(REIFY_INST_TID.dom(ALL.maybe()).rng(REC_TID), lst(), (lhs, inst) -> rec(
                             "type", rec(
                                     "tid", rec(
@@ -779,9 +775,6 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
                                                     "projection", lhs.jvm() instanceof Tuple ?
                                                             rec(IteratorUtil.indexedStream(lhs.<Tuple>jvmAs().iterator()).map(p -> rel(jnt(p.get0()), MObjFactory.of().createOrFail(p.get1())))) :
                                                             rec(jnt(0), MObjFactory.of().create(lhs.jvm()))))))),
-                    // instC(SELECT_TID.dom(REL_TID).rng(REL_TID), lst(T(REL_TID)), (lhs, inst) -> rel(inst.arg(0).<Rel>as().first().apply(lhs.<Rel>as().first()), inst.arg(0).<Rel>as().second().apply(lhs.<Rel>as().second()))),
-                    //instC(SELECT_TID.dom(ALL).rng(REC_TID.maybe()), lst(T(REC_TID)), (lhs, inst) -> inst.arg(0).<Rec>as().jvm(inst.arg(0).<Rec>as().<Rel>elementStream().map(r -> Tuple.Pair.with(r.first().apply(lhs), r.second().apply(lhs))).collect(Collectors.toMap(Tuple.Pair::get0, Tuple.Pair::get1, Obj::append, LinkedHashMap::new)))),
-                    // instC(SELECT_TID.dom(ALL).rng(LST_TID.maybe()), lst(T(LST_TID)), (lhs, inst) -> inst.arg(0).<Lst>as().jvm(inst.arg(0).<Lst>as().elementStream().map(r -> r.apply(lhs)).toList())),
                     instC(REDUCE_INST_TID.dom(ALL.maybeSome()).rng(ALL), lst(T(ALL)), (lhs, inst) -> Stream.concat(inst.arg(0).<Inst>as().arg(0).stream(), lhs.stream()).reduce((a, b) -> inst.arg(0).<Inst>as().args(lst(a)).apply(b)).orElse(noobj())),
                     instC(WHERE_INST_TID.dom(ALL).rng(ALL.maybe()), lst(T(ALL)), (lhs, inst) -> lhs.matches(inst.arg(0)) ? lhs : noobj()),
                     instC(GROUP_INST_TID.dom(ALL.maybeSome()).rng(REC_TID), lst(T(REC_TID)), (lhs, inst) -> {

@@ -193,7 +193,7 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>>, PlusMonoid.O<Rec> {
     @Override
     Rec self(final Object jvm, final fURI tid, final fURI vid);
 
-    public static final class RecType {
+     final class RecType {
 
         public static Set<Inst> insts() {
             return new LinkedHashSet<>(List.of(
@@ -212,9 +212,9 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>>, PlusMonoid.O<Rec> {
                     instC(MPLUS_INST_TID.dom(REC_TID).rng(REC_TID), lst(T(REC_TID)), (lhs, inst) -> inst.arg(0).<Rec>as().elements().map(Obj::<Obj>as).reduce(lhs.<Rec>as(), (a, b) -> a.<Rec>as().put(((Rel) b).first(), ((Rel) b).second(), MUTABLE))),
                     instC(SELECT_INST_TID.dom(REC_TID).rng(REC_TID.maybe()), lst(T(REC_TID)), (lhs, inst) -> selectRecRecursion(lhs.asRec(), inst.arg(0).asRec())),
                     instC(WITHIN_INST_TID.dom(REC_TID).rng(REC_TID), lst(T(ALL_STAR)), (lhs, inst) -> rec(lhs.elements().map(r -> inst.arg(0).apply(r).<Rel>as()))),
-                    instC(SPLIT_INST_TID.dom(ALL).rng(REC_TID), lst(T(REC_TID)), (lhs, inst) -> rec(inst.arg(0).asRec().elements().map(e -> e.first().apply(lhs).choose(Obj::isNoObj, x -> null, x -> rel(x, e.second().apply(lhs)))).filter(x -> !Objects.isNull(x))))
-                    ));
-
+                    instC(SUM_INST_TID.dom(REC_TID.maybeSome()).rng(REC_TID), lst(), (lhs, inst) -> lhs.stream().map(Obj::asRec).reduce(rec(), Rec::plus))
+            ));
+            
 
         }
 
