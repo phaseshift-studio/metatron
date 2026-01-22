@@ -36,6 +36,9 @@ print("{{r}}------------\n{{g}}*{{y}}boot/args{{X}}: ",
    mqtt::[pattern => <wall:#>,
           host    => <mqtt://chibi.local:1883>,
           rewrite => <wall:>=><walltron/>]@/sys/space/walltron;
+   mqtt::[pattern => <play:#>,
+          host    => <mqtt://chibi.local:1883>,
+          rewrite => <wall:>=><playtron/>]@/sys/space/playtron;
    mqtt::[pattern => <ha:#>,
           host    => <mqtt://chibi.local:1883>,
           rewrite => <ha:>=><homeassistant/>]@/sys/space/homeassistant;

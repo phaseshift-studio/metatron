@@ -806,6 +806,8 @@ public class fURI implements Cloneable, Ring<fURI> {
     }
 
     public boolean matches(final fURI rhs) {
+        //if(this.equals(rhs))
+        //    return true;
         final C c = this.cV();
         final C d = rhs.cV();
         if (c.isZero() && d.isZero())

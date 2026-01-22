@@ -37,6 +37,7 @@ import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.lang.core.m.inst.mFluent.StartLess.isa_;
 import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.*;
 import static studio.phaseshift.metatron.lang.core.m.obj.NoObj.noobj;
+import static studio.phaseshift.metatron.lang.core.m.type.Poly.Helper.selectRecRecursion;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
@@ -209,21 +210,14 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>>, PlusMonoid.O<Rec> {
                     instC(LSHIFT_INST_TID.dom(REC_TID).rng(ALL_STAR), lst(isa_(T(INT_TID)).else_(jnt(1))), (lhs, inst) -> Common.loop(lhs, o -> objs(o.stream().filter(Obj::isRec).flatMap(r -> r.<Rec>as().elements().map(Rel::first))), inst.arg(0).intValue().intValue())),
                     instC(PLUS_INST_TID.dom(REC_TID).rng(REC_TID), lst(T(REC_TID)), (lhs, inst) -> lhs.jvm(Stream.concat(lhs.<Rec>as().elements(), inst.arg(0).<Rec>as().elements().map(Obj::<Rel>as)).collect(Collectors.toMap(Rel::first, Rel::second, Obj::append, LinkedHashMap::new)))),
                     instC(MPLUS_INST_TID.dom(REC_TID).rng(REC_TID), lst(T(REC_TID)), (lhs, inst) -> inst.arg(0).<Rec>as().elements().map(Obj::<Obj>as).reduce(lhs.<Rec>as(), (a, b) -> a.<Rec>as().put(((Rel) b).first(), ((Rel) b).second(), MUTABLE))),
-                    instC(SELECT_INST_TID.dom(REC_TID).rng(REC_TID.maybe()), lst(T(REC_TID)), (lhs, inst) -> {
-                        /*Map<Obj, Obj> result = new LinkedHashMap<>();
-                        inst.arg(0).asRec().elements().forEach(kv -> {
-                            final Obj key = kv.first().isCall() ? kv.first().apply(lhs) : lhs.asRec().at(kv.first());
-                            if (!key.isNoObj()) {
-                                result.put(kv.first(), kv.second().apply(key));
-                            }
-                            // crossPoly(lhs, inst.arg(0))
-                        });
-                        return rec(result);*/
-                        return crossPoly(lhs,inst.arg(0));
-                    }),
-                    instC(WITHIN_INST_TID.dom(REC_TID).rng(REC_TID), lst(T(ALL_STAR)), (lhs, inst) -> rec(lhs.elements().map(r -> inst.arg(0).apply(r).<Rel>as())))
-            ));
+                    instC(SELECT_INST_TID.dom(REC_TID).rng(REC_TID.maybe()), lst(T(REC_TID)), (lhs, inst) -> selectRecRecursion(lhs.asRec(), inst.arg(0).asRec())),
+                    instC(WITHIN_INST_TID.dom(REC_TID).rng(REC_TID), lst(T(ALL_STAR)), (lhs, inst) -> rec(lhs.elements().map(r -> inst.arg(0).apply(r).<Rel>as()))),
+                    instC(SPLIT_INST_TID.dom(ALL).rng(REC_TID), lst(T(REC_TID)), (lhs, inst) -> rec(inst.arg(0).asRec().elements().map(e -> e.first().apply(lhs).choose(Obj::isNoObj, x -> null, x -> rel(x, e.second().apply(lhs)))).filter(x -> !Objects.isNull(x))))
+                    ));
+
 
         }
+
+
     }
 }

@@ -76,6 +76,25 @@ public class StrTest extends MetatronObjTest {
         super.testCode(code, expected);
     }
 
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "'a.b.c'-<'.'                                                                   % ['a','b','c']",
+            "'a.b.c'-<re::'.'                                                               % [,]",
+            "'a-b-c'-<'-'                                                                   % ['a','b','c']",
+            "'a-b-c'-<re::'[a-z]'                                                           % ['','-','-']",
+            "'a-b-c'-<'-'>-                                                                 % {'a','b','c'}",
+            "'a-b-c'-<'-'>-'_'                                                              % \"a_b_c\"",
+            "'a:b-b:c-c:d'-<'-'                                                             % ['a:b','b:c','c:d']",
+            "'a:b-b:c-c:d'-<'-'_/>-.-<':'\\_                                                % [['a','b'],['b','c'],['c','d']]",
+            "'a:b-b:c-c:d'-<'-'_/>-.-<':'\\_.>-                                             % {['a','b'],['b','c'],['c','d']}",
+            "'a:b-b:c-c:d'-<'-'_/>-.-<':'\\_.>-.>-':'                                       % {'a:b','b:c','c:d'}",
+            "'a:b-b:c-c:d'-<'-'_/>-.-<':'\\_.>-.>-':'.>-?<=str{*}('-')                      % \"a:b-b:c-c:d\"",
+    }, delimiter = '%')
+    public void testSplitMerge(final String code, final String expected) {
+        super.testCode(code, expected);
+    }
+
     @ParameterizedTest
     @CsvSource(value = {
             "'a'.plus('a')                                                                  % \"aa\"",

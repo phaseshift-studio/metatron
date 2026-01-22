@@ -69,7 +69,7 @@ class LOG:
     @staticmethod
     def _generic_log(level: str, color: str, s: str, *args):
         if LOG.levels.index(log_level) <= LOG.levels.index(level.rstrip().lower()):
-            print(f"[{color}{level}{NC}] {string(s, *args)}{NC}")
+            print(f"[{color}{level}{NC}] {string(string(s, *args))}{NC}")
             if log_behavior is not None: log_behavior(level, s, *args)
 
     @staticmethod

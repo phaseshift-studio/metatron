@@ -18,15 +18,13 @@
 
 package studio.phaseshift.metatron.lang.core.m.type.impl;
 
-import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.lang.core.m.obj.NoObj;
 import studio.phaseshift.metatron.lang.core.m.type.Obj;
 import studio.phaseshift.metatron.lang.core.m.type.Poly;
+import studio.phaseshift.metatron.lang.sys.router.Router;
 import studio.phaseshift.metatron.util.MTronException;
 
 import static studio.phaseshift.metatron.lang.core.m.obj.NoObj.noobj;
-import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
 
 public abstract class MObj implements Obj, Cloneable {
 
@@ -44,13 +42,13 @@ public abstract class MObj implements Obj, Cloneable {
         this.self(jvm, tid.big(), vid);
         Obj.Helper.objCheckAndSave(this);
     }
-    
+
     @Override
-    public <O extends Obj> O parent(final Poly<?,?> parent) {
+    public <O extends Obj> O parent(final Poly<?, ?> parent) {
         this.parent = parent;
-        return (O)this;
+        return (O) this;
     }
-    
+
     @Override
     public Obj parent() {
         return this.parent;
@@ -66,7 +64,7 @@ public abstract class MObj implements Obj, Cloneable {
         if (null != vid && !this.isType())
             Router.writeToSpace(this);
     }*/
-    
+
     @Override
     public <J> J jvm() {
         return (J) this.jvm;

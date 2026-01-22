@@ -91,15 +91,18 @@ class Ssd1306(Device):
                 SET_DISP | 0x01):  # on
             self._write_cmd(cmd)
         self.fill(0)
-        self.sline(10, 15, True, self.width, 1, False)
-        self.sline(10, 15, False, self.height, 1, False)
+        self.sline(0, 15, True, self.width, 1, False)
         self.sline(0, 0, True, self.width, 1, False)
-        self.sline(0, 0, False, self.height, 1, False)
-        self.text("metatron v0.1", 15, 5, 1, False)
-        self.text("   _       ", 25, 15, 1, False)
-        self.text("  / |_____ ", 25, 29, 1, False)
-        self.text(" / /|     |", 25, 42, 1, False)
-        self.text("|_/ |_|_|_|", 25, 53, 1, False)
+        self.sline(0, 0, False, 15, 1, False)
+        self.sline(self.width - 1, 0, False, 15, 1, False)
+        ######################################################################
+        self.rotated_rectangle(40, 40, 25, 30, 55, 1, False)
+        self.sline(50,40,True,45,1,False)
+        # self.sline(0, self.width, False, self.height, 1, False)
+        self.text("metatron v0.1", 12, 5, 1, False)
+        self.text(" ..... ", 44, 29, 1, False)
+        self.text("|     |", 44, 42, 1, False)
+        self.text("|_|_|_|", 44, 53, 1, False)
         self.show()
         # self.image('mtron_logo.pbm')
         if self.soc_vid is not None:
@@ -237,5 +240,33 @@ class Ssd1306(Device):
             image_data = image_file.read()
         fb = framebuf.FrameBuffer(bytearray(image_data), ((self.width + 7) // 8) * 8, self.height, framebuf.MONO_HLSB)
         self.framebuf.blit(fb, 0, 0)
+        if show:
+            self.show()
+
+    def rotated_rectangle(self, x: int, y: int, w: int, h: int, angle: int, col: int = 1, show: bool = True):
+        angle_rad = math.radians(angle)
+        # Half-width and half-height for corner calculation
+        hw = w / 2
+        hh = h / 2
+        # Define the four corners relative to center
+        corners = [
+            (-hw, -hh),  # Top-left
+            (hw, -hh),  # Top-right
+            (hw, hh),  # Bottom-right
+            (-hw, hh)  # Bottom-left
+        ]
+        # Rotate each corner
+        rotated_corners = []
+        for xx, yy in corners:
+            cos_a = math.cos(angle_rad)
+            sin_a = math.sin(angle_rad)
+            rx = x + xx * cos_a - yy * sin_a
+            ry = y + yy * sin_a + yy * cos_a
+            rotated_corners.append((int(rx), int(ry)))
+        # Draw lines between the rotated corners
+        self.line(rotated_corners[0][0], rotated_corners[0][1], rotated_corners[1][0], rotated_corners[1][1], col)
+        self.line(rotated_corners[1][0], rotated_corners[1][1], rotated_corners[2][0], rotated_corners[2][1], col)
+        self.line(rotated_corners[2][0], rotated_corners[2][1], rotated_corners[3][0], rotated_corners[3][1], col)
+        self.line(rotated_corners[3][0], rotated_corners[3][1], rotated_corners[0][0], rotated_corners[0][1], col)
         if show:
             self.show()

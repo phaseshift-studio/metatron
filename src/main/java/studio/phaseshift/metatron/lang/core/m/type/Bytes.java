@@ -21,6 +21,7 @@ package studio.phaseshift.metatron.lang.core.m.type;
 import studio.phaseshift.metatron.algebra.PlusMonoid;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.lang.core.m.type.impl.MBytes;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
@@ -97,13 +98,36 @@ public interface Bytes extends Mono, PlusMonoid<Bytes> {
 
     public static final class BytesType {
 
+        public static final Type BYTES_TYPE = T(BYTES_TID);
+        
         public static Set<Inst> insts() {
             return new LinkedHashSet<>(List.of(
                     instC(AS_INST_TID.dom(BYTES_TID).rng(STR_TID), lst(T(STR_TID)), (lhs, inst) -> str(new String(lhs.bytesValue().array(), StandardCharsets.UTF_8), inst.arg(0).tid(), lhs.vid())),
                     instC(LSHIFT_INST_TID.dom(BYTES_TID).rng(BYTES_TID), lst(isa_(T(BYTES_TID)).else_(jnt(1)).tryToInst()), (lhs, inst) -> lhs.jvm(ByteBuffer.wrap(Arrays.copyOfRange(lhs.bytesValue().array(), inst.arg(0).intValue().intValue(), lhs.bytesValue().array().length)))),
                     instC(RSHIFT_INST_TID.dom(BYTES_TID).rng(BYTES_TID), lst(isa_(T(BYTES_TID)).else_(jnt(1)).tryToInst()), (lhs, inst) -> lhs.jvm(ByteBuffer.wrap(Arrays.copyOf(lhs.bytesValue().array(), lhs.bytesValue().array().length - inst.arg(0).intValue().intValue())))),
                     instC(PLUS_INST_TID.dom(BYTES_TID).rng(BYTES_TID), lst(T(BYTES_TID)), (lhs, inst) -> lhs.<Bytes>as().plus(inst.arg(0).as()))
-                   
+                    /*instC(SPLIT_INST_TID.dom(BYTES_TID).rng(LST_TID), lst(T(BYTES_TID)), (lhs, inst) -> {
+                        final byte[] array = lhs.bytesValue().array();
+                        final byte[] delimiter = inst.arg(0).asBytes().jvm().array();
+                        final List<byte[]> result = new ArrayList<>();
+                        if (delimiter.length == 0)
+                            return lst(lhs);
+                        int begin = 0;
+                        outer:
+                        for (int i = 0; i < array.length - delimiter.length + 1; i++) {
+                            for (int j = 0; j < delimiter.length; j++) {
+                                if (array[i + j] != delimiter[j]) {
+                                    continue outer;
+                                }
+                            }
+                            if (begin != i)
+                                result.add(Arrays.copyOfRange(array, begin, i));
+                            begin = i + delimiter.length;
+                        }
+                        if (begin != array.length)
+                            result.add(Arrays.copyOfRange(array, begin, array.length));
+                        return lst(result.stream().map(ByteBuffer::wrap).map(MBytes::bytes));
+                    })*/
                    /* instC(SUM_INST_TID.dom(BYTES_TID.maybeSome()).rng(BYTES_TID), lst(), (lhs,inst) -> lhs.elements().reduce(bytes(ByteBuffer.allocate((int)lhs.stream().count())),(a,b) -> bytes(a.bytesValue().put(b.bytesValue())))),
                     instC(SPLIT_INST_TID.dom(BYTES_TID).rng(LST_TID), lst(T(LST_TID)), (lhs, inst) -> {
                         final List<Bytes> list = new ArrayList<>();

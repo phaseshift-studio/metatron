@@ -43,6 +43,8 @@ import static studio.phaseshift.metatron.lang.core.m.type.impl.MType.T;
 
 public interface Real extends Mono, Ring.O<Real> {
 
+    Type REAL_TYPE = T(REAL_TID);
+
     @Override
     Real clone(final Object jvm, final fURI tid, final fURI vid);
 

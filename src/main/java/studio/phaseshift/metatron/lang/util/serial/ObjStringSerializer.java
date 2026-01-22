@@ -190,8 +190,8 @@ public record ObjStringSerializer(Builder b) implements ObjSerializer<String> {
             /// ///////////////////////////////////////////////////////////////
             /// ///////////////////////////////////////////////////////////////
             else if (obj instanceof Type) {
-                final Call predicate = ((Type) obj).predicate();
-                final Call constructor = ((Type) obj).constructor();
+                final Obj predicate = ((Type) obj).predicate();
+                final Obj constructor = ((Type) obj).constructor();
                 final String pred = predicate == null ? "{{y}}<X>{{X}}" : write(predicate);
                 final String con = constructor == null ? "{{y}}<X>{{X}}" : write(constructor);
                 generateTID(sb, obj.tid(), false).append("{{m}}T");

@@ -41,6 +41,8 @@ import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
 
 public interface Str extends Mono {
 
+    public static final Type STR_TYPE = T(STR_TID);
+    
     @Override
     Str clone(final Object jvm, final fURI tid, final fURI vid);
 
@@ -89,5 +91,17 @@ public interface Str extends Mono {
         }
     }
 
-
+/*
+                    instC(AS_INST_TID.dom(STR_TID).rng(BOOL_TID), lst(BOOL_TYPE), (lhs, inst) -> bool(lhs.strValue().equalsIgnoreCase("true"), inst.arg(0).tid(), lhs.vid())),
+                    instC(AS_INST_TID.dom(STR_TID).rng(INT_TID), lst(INT_TYPE), (lhs, inst) -> jnt(Long.parseLong(lhs.strValue()), inst.arg(0).tid(), lhs.vid())),
+                    instC(AS_INST_TID.dom(STR_TID).rng(REAL_TID), lst(REAL_TYPE), (lhs, inst) -> real(Double.parseDouble(lhs.strValue()), inst.arg(0).tid(), lhs.vid())),
+                    instC(AS_INST_TID.dom(STR_TID).rng(URI_TID), lst(URI_TYPE), (lhs, inst) -> uri(f(lhs.strValue()), inst.arg(0).tid(), lhs.vid())),
+                    docWrap(instC(SPLIT_INST_TID.dom(STR_TID).rng(LST_TID), lst(RE_TYPE), (lhs, inst) -> lst(Arrays.stream(lhs.strValue().split(inst.arg(0).strValue())).map(MStr::str))),
+                            "a str to split", "the components of the split lhs str", Map.of(jnt(0), "a token to split on"), "split the lhs string according to the token arg and emit a stream of splits"),
+                    docWrap(instC(SPLIT_INST_TID.dom(STR_TID).rng(LST_TID), lst(T(STR_TID)), (lhs, inst) -> lst(Arrays.stream(lhs.strValue().split(Pattern.quote(inst.arg(0).strValue()))).map(MStr::str))),
+                            "a str to split", "the components of the split lhs str", Map.of(jnt(0), "a token to split on"), "split the lhs string according to the token arg and emit a stream of splits"),
+                   docWrap(instC(MERGE_INST_TID.dom(LST_TID).rng(STR_TID), lst(T(STR_TID)), (lhs, inst) -> str(lhs.elements().map(Obj::<String>jvmAs).reduce((a, b) -> a + inst.arg(0).strValue() + b).orElse(""))),
+                            "an str barrier", "the join of the str barrier", Map.of(jnt(0), "the join token"), "join the barrier given the str arg"),
+                  
+ */
 }

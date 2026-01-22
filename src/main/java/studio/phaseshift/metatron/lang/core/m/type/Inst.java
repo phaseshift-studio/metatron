@@ -41,6 +41,7 @@ import static studio.phaseshift.metatron.lang.core.m.obj.NoObj.noobj;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MType.T;
@@ -236,13 +237,21 @@ public interface Inst extends Call {
         LOG.trace("%s => %s is %s resolved", lhs, this, Common.lambda(() -> this.isResolved(false) ? "" : "not"));
         try {
             final Obj fetched = Router.global().read(this.tid().basePath());
-            final Obj fetched2 = (this.tid().basePath().name().equals("apply") || 
-                    fetched.stream().anyMatch(Obj::isInst)) ? 
-                    fetched : 
-                    Router.global().read(this.tid().basePath().extend("apply"));
-            LOG.debug("fetched insts: %s => %s", this.tid().basePath(), fetched2);
-            final Inst resolved = fetched2
-                    .stream()
+            final Obj fetched2 = objs(((this.tid().basePath().name().equals("apply") ||
+                    fetched.stream().anyMatch(Obj::isInst)) ?
+                    fetched :
+                    Router.global().read(this.tid().basePath().extend("apply"))).stream());/*.sorted((a, b) -> {
+                int counterA = lhs.matches(a.dom()) ? 3 : 0;
+                int counterB = lhs.matches(b.dom()) ? 3 : 0;
+                counterA += !a.tid().isGeneric() ? 2 : 0;
+                counterB += !b.tid().isGeneric() ? 2 : 0;
+                counterA += !a.tid().hasPattern() ? 1 : 0;
+                counterB += !b.tid().hasPattern() ? 1 : 0;
+                return Integer.compare(counterA, counterB);
+            }));*/
+            LOG.debug("fetched insts: %s => %s", this.tid().basePath(), fetched);
+            LOG.debug("fetched insts sorted: %s => %s", this.tid(), fetched2);
+            final Inst resolved = fetched2.stream()
                     //.map(i -> i.isCode() ? i.asCode().tryToInst() : i)
                     //.map(i -> i.isInst() ? i.asInst() : instC(this.tid().dom(lhs.tid()).rng(ALL.maybeSome()), this.args(), (lhs2, inst) -> Router.global().write(this.tid(), inst.args())))
                     .filter(Obj::isInst)
@@ -250,6 +259,8 @@ public interface Inst extends Call {
                     .filter(i -> (i.args().isEmpty() && this.arg(0).isNoObj()) || i.args().isRec() || i.args().count() >= this.args().count()) // TODO: check which recs are default
                     .filter(i -> !lhs.isInst() || (i.dom().baseType().equals(INST_TID)))
                     //.sorted(Comparator.comparing(Inst::dom, (a, b) -> lhs.matches(a.dom()) ? -1 : lhs.matches(b.dom()) ? 1 : 0)) // TODO: explore this more fully
+                    //.filter(i -> !this.hasDom() || this.dom().matches(i.dom()))
+                    //.filter(i -> !this.hasRng() || this.rng().matches(i.rng()))
                     .map(i -> this.hasDom() ? i.dom(this.dom()) : i)
                     .map(i -> this.hasRng() ? i.rng(this.rng()) : i)
                     .map(i -> lhs.isInst() ? i : Helpers.bindGenerics(lhs, i, this))

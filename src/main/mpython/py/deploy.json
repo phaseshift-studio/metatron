@@ -1,0 +1,24 @@
+{
+  "host": "playtron",
+  "machine": {
+    "arch": "lib.metatron.deploy.Playtron",
+    "stack_kb": 7,
+    "log": "info"
+  },
+  "wifi": {
+    "ssid": "Rodkins-2G",
+    "password": "puppymama"
+  },
+  "mqtt": {
+    "broker": "chibi.local",
+    "port": 1883
+  },
+  "spaces": {
+    "metatron": {
+      "prefix": "mtron/playtron"
+    },
+    "homeassistant": {
+      "prefix": "homeassistant"
+    }
+  }
+}

@@ -32,6 +32,10 @@ import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.lang.core.m.inst.mFluent.StartLess.id_;
 import static studio.phaseshift.metatron.lang.core.m.obj.NoObj.noobj;
+import static studio.phaseshift.metatron.lang.core.m.type.Int.INT_TYPE;
+import static studio.phaseshift.metatron.lang.core.m.type.Real.REAL_TYPE;
+import static studio.phaseshift.metatron.lang.core.m.type.Str.STR_TYPE;
+import static studio.phaseshift.metatron.lang.core.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MType.T;
 
@@ -50,7 +54,7 @@ public class mInstSet extends MInstSet {
     public static final fURI LST_TID = MTRON_TID.extend("lst");
     public static final fURI REC_TID = MTRON_TID.extend("rec");
     public static final fURI INST_TID = MTRON_TID.extend("inst");
-    public static final fURI TYPE_TID = MTRON_TID.extend("type");
+    public static final fURI TYPE_TID = MTRON_TID.extend("T");
     /// ////////////////////////////////////////////////////////
     public static final fURI ID_INST_TID = INST_TID.extend("id");
     public static final fURI EXPLAIN_INST_TID = INST_TID.extend("explain");
@@ -149,7 +153,7 @@ public class mInstSet extends MInstSet {
             FAIL_TID, BOOL_TID, BYTES_TID, INT_TID, REAL_TID,
             STR_TID, URI_TID, REL_TID,
             LST_TID, REC_TID, INST_TID,
-            CODE_TID, OBJS_TID, NOOBJ_TID);
+            CODE_TID, OBJS_TID, NOOBJ_TID, TYPE_TID);
     /// ////////////
     /// ////////////
     public static final fURI POLY_TID = MTRON_TID.extend("poly");
@@ -172,18 +176,19 @@ public class mInstSet extends MInstSet {
     @Override
     public Set<Type> types() {
         return new LinkedHashSet<>(List.of(
-                T(BOOL_TID),
-                T(BYTES_TID),
-                T(INT_TID),
-                T(REAL_TID),
-                T(STR_TID),
-                T(URI_TID),
+                Bool.BoolType.BOOL_TYPE,
+                Bytes.BytesType.BYTES_TYPE,
+                INT_TYPE,
+                REAL_TYPE,
+                STR_TYPE,
+                URI_TYPE,
                 T(LST_TID),
                 T(REL_TID),
                 T(REC_TID),
                 T(INST_TID),
                 T(OBJS_TID),
                 T(FAIL_TID),
+                Type.TypeType.TYPE_TYPE,
                 T(NOOBJ_TID)));
     }
 
@@ -338,6 +343,7 @@ public class mInstSet extends MInstSet {
         set.addAll(Lst.LstType.insts());
         set.addAll(Inst.InstType.insts());
         set.addAll(Obj.ObjType.insts());
+        //set.addAll(Type.TypeType.insts());
         return set;
     }
 

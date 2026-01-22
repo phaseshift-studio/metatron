@@ -81,13 +81,13 @@ public class sysInstSet extends MInstSet {
 
     @Override
     public Set<Type> types() {
-        return Set.of(
+        return new HashSet<Type>(Set.of(
                 T(ROUTER_TID),
                 T(SPACE_TID),
                 Console.CONSOLE_TYPE,
                 SUBSCRIPTION_TYPE,
                 DOCQ_TYPE,
-                SUBQ_TYPE);
+                SUBQ_TYPE));
     }
 
     @Override

@@ -18,11 +18,20 @@
 
 package studio.phaseshift.metatron.lang.core.m.type;
 
+import studio.phaseshift.metatron.furi.c.cInt;
+
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.stream.Stream;
 
-import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.AUTO_FROM_INST_TID;
-import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.AUTO_INST_TID;
+import static studio.phaseshift.metatron.lang.core.m.obj.NoObj.noobj;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MInt.jnt;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MObjs.objs;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
 
@@ -77,5 +86,56 @@ public interface Poly<P extends Poly<P, J>, J> extends Obj {
     @Override
     default Obj autoResolve(final Obj obj) {
         return Obj.super.autoResolve(obj).parent(this);
+    }
+
+    class Helper {
+        public static Obj selectPolyRecursion(final Poly<?, ?> lhs, final Poly<?, ?> rhs) {
+            if (lhs.isRec() && rhs.isRec())
+                return selectRecRecursion(lhs.asRec(), rhs.asRec());
+            else if (lhs.isLst() && rhs.isLst())
+                return selectLstRecursion(lhs.asLst(), rhs.asLst());
+            else
+                return noobj();
+        }
+
+        public static Obj selectLstRecursion(final Lst lhs, final Lst rhs) {
+            final List<Obj> result = new ArrayList<>();
+            final List<Obj> rhsList = rhs.lstValue();
+            for (int i = 0; i < rhsList.size(); i++) {
+                final Obj e = rhsList.get(i);
+                final Obj selectKey = jnt(i);
+                if (!selectKey.isNoObj()) {
+                    final Obj lhsValue = lhs.at(selectKey);
+                    final Obj selectValue = e.isCall() ? e.apply(lhsValue) : lhsValue.matches(e) ? lhsValue : noobj();
+                    if (selectValue.isPoly()) {
+                        result.add(selectPolyRecursion(selectValue.as(), e.as()));
+                    } else
+                        result.add(selectValue);
+                }
+            }
+            return result.isEmpty() ? noobj() : lst(result);
+        }
+
+        public static Obj selectRecRecursion(final Rec lhs, final Rec rhs) {
+            Map<Obj, Obj> result = new LinkedHashMap<>();
+            rhs.elements().forEach(kv -> {
+                final Obj selectKeys = kv.first().isCall() ? objs(lhs.elements().map(kv2 -> kv.first().apply(kv2.first())).filter(v2 -> !v2.isNoObj())) : kv.first();
+                selectKeys.stream().forEach(selectKey -> {
+                    if (!selectKey.isNoObj()) {
+                        final Obj lhsValue = lhs.asRec().at(selectKey);
+                        //if (lhsValue.matches(kv.second())) {
+                        final Obj selectValue = kv.second().isCall() ? kv.second().apply(lhsValue) : kv.second();
+                        if (!selectValue.isFail() && !selectValue.isNoObj()) {
+                            if (selectValue.isPoly() && kv.second().isPoly()) {
+                                result.compute(selectKey.c(cInt::one), (a, b) -> (b == null ? noobj() : b).append(selectPolyRecursion(selectValue.as(), kv.second().as())));
+                            } else
+                                result.compute(selectKey.c(cInt::one), (a, b) -> (b == null ? selectValue.c(selectKey.c()) : b.append(selectValue)));
+                        }
+                        //}
+                    }
+                });
+            });
+            return result.isEmpty() ? noobj() : rec(result);
+        }
     }
 }

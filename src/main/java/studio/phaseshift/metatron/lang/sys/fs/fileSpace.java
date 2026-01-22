@@ -51,8 +51,7 @@ import static studio.phaseshift.metatron.Tokens.USER_HOME;
 import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.lang.core.m.inst.mFluent.StartLess.isa_;
-import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.INST_TID;
-import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.URI_TID;
+import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.*;
 import static studio.phaseshift.metatron.lang.core.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
@@ -168,11 +167,14 @@ public class fileSpace extends MSpace<FileSystem> {
 
                 } else {
                     try {
-                        final Path vidPath = Path.of(Space.Helper.toNativeSpace(key, this.rewrite));
+                        final Path vidPath = Path.of(Space.Helper.toNativeSpace(key.name().equals("apply") ? key.retract() : key, this.rewrite));
                         if (Files.isDirectory(vidPath)) {
                             return Files.list(vidPath).map(p -> Pair.<fURI, Obj>with(f(p.toString()), makeFile(p))).iterator();
                         } else {
-                            return IteratorUtil.of(Pair.with(Space.Helper.fromNativeSpace(vidPath.toString(), this.rewrite), makeFile(vidPath)));
+                            return IteratorUtil.of(Pair.with(Space.Helper.fromNativeSpace(vidPath.toString(), this.rewrite), key.name().equals("apply") ? instC(APPLY_INST_TID,lst(),(lhs,inst) -> {
+                                LOG.info("applying: %s => %s", lhs,inst);
+                                return this.internalApply(makeFile(vidPath),inst.args());
+                            }) : makeFile(vidPath)));
                         }
                     } catch (final NoSuchFileException e) {
                         return IteratorUtil.of();
@@ -216,6 +218,8 @@ public class fileSpace extends MSpace<FileSystem> {
         try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
             String firstLine = reader.readLine();
             if (firstLine != null) {
+                if(true)
+                    return "/bin/sh";
                 if (firstLine.startsWith("#!"))
                     return this.at(SCRIPT).orElse(rec()).elements().filter(pair -> firstLine.contains(pair.first().strValue())).map(Rel::second).map(engine -> engine.uriValue().toString()).findFirst().orElse(null);
             }
@@ -223,6 +227,20 @@ public class fileSpace extends MSpace<FileSystem> {
             LOG.warn("error reading script file: %s", file, e);
         }
         return null;
+    }
+
+    public Obj internalApply(final Obj fileObj, final Obj instArgs) {
+        LOG.info("tid apply: %s",fileObj.tid());
+        if (fileObj.tid().basePath().equals(FILE_TID)) {
+            LOG.info("internal apply: %s => %s",fileObj,instArgs);
+            final Path path = Paths.get(fileObj.uriValue().basePath().toString());
+            final File file = path.toFile();
+            LOG.info("path: %s",path);
+            final String scriptEngine = checkScriptEvaluation(file);
+            if (scriptEngine != null)
+                return this.evalScript(file, scriptEngine, instArgs);
+        }
+        return fileObj;
     }
 
     @Override

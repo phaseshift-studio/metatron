@@ -59,6 +59,14 @@ public class mFluent<F extends Fluent<F>> extends MCode implements Fluent<F>, Co
         return this.addInst(instB(mInstSet.AS_INST_TID, lst(obj)));
     }
 
+    public F or_(final Obj... obj) {
+        return this.addInst(instB(mInstSet.OR_INST_TID, lst(obj)));
+    }
+
+    public F and_(final Obj... obj) {
+        return this.addInst(instB(mInstSet.AND_INST_TID, lst(obj)));
+    }
+
     public F apply_(final Obj obj) {
         return this.addInst(instB(mInstSet.APPLY_INST_TID, lst(obj)));
     }
@@ -241,6 +249,13 @@ public class mFluent<F extends Fluent<F>> extends MCode implements Fluent<F>, Co
 
         public static <F extends mFluent<F>> F merge_() {
             return new mFluent<F>().merge_();
+        }
+
+        public static <F extends mFluent<F>> F or_(final Obj... obj) {
+            return new mFluent<F>().or_(obj);
+        }
+        public static <F extends mFluent<F>> F and_(final Obj... obj) {
+            return new mFluent<F>().and_(obj);
         }
 
         public static <F extends mFluent<F>> F else_(final Obj obj) {

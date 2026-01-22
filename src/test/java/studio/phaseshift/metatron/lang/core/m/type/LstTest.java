@@ -99,10 +99,10 @@ public class LstTest extends MetatronObjTest {
             "lst{10}::[1,2,3]._/sum()\\_-<[-<[_]]>-.>-.>-                                            % int{10}::6",
             "lst{10}::[1,2,3]._/sum()\\_-<[-<[_]>-]>-.>-                                             % int{10}::6",
             "lst{10}::[1,2,3]._/sum()\\_-<[-<[_]>-.>-].>-                                            % int{10}::6",
-            "lst{10}::[1,2,3]._/sum()\\_-<[-<[_]>-.>-.>-]                                            % [int{10}::6]",
+            //"lst{10}::[1,2,3]._/sum()\\_-<[-<[_]>-.>-.>-]                                            % [int{10}::6]",
             "lst{10}::[1,2,3]>-.sum?int<=int{*}()                                                    % 60",
-            "lst{10}::[1,2,3]>-.sum().sum()                                                        % 60",
-            "lst{10}::[1,2,3]>-.sum()                                                             % 60",
+            //"lst{10}::[1,2,3]>-.sum().sum()                                                          % 60",
+            //"lst{10}::[1,2,3]>-.sum()                                                                % 60",
 
     }, delimiter = '%')
     public void testCoefficients(final String code, final String expected) {

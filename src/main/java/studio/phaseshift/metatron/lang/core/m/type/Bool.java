@@ -33,6 +33,7 @@ import static studio.phaseshift.metatron.lang.core.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MType.T;
 
 public interface Bool extends Mono {
+
     @Override
     Bool clone(final Object jvm, final fURI tid, final fURI vid);
 
@@ -51,7 +52,8 @@ public interface Bool extends Mono {
         return this.clone(this.jvm(), this.tid(), vid);
     }
 
-    public static final class BoolType {
+    final class BoolType {
+        public static final Type BOOL_TYPE = T(BOOL_TID);
 
         public static Set<Inst> insts() {
             return new LinkedHashSet<>(List.of(

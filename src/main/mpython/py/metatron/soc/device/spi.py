@@ -14,6 +14,7 @@
 #  You should have received a copy of the GNU Affero General Public License
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import machine
+from machine import Pin
 
 from metatron.furi import f
 from metatron.soc.device.device import Device
@@ -22,6 +23,12 @@ SPI_TID = f("/soc/spi")
 
 
 class Spi(Device):
-    def __init__(self, sck_pin: int, sda_pin: int, mosi_pin: int, miso_pin: int, soc_vid, name: str = "spi"):
+    def __init__(self, sck_pin: int, mosi_pin: int, miso_pin: int, soc_vid, name: str = "spi"):
         Device.__init__(self, soc_vid, {}, SPI_TID, name)
+        #Pin(miso_pin, Pin.IN, Pin.PULL_DOWN)
         self.pvm = machine.SoftSPI(baudrate=100000, polarity=0, phase=0, sck=sck_pin, mosi=mosi_pin, miso=miso_pin)
+
+    def start(self):
+        Device.start(self)
+        self.pvm.init()
+        return self

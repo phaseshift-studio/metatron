@@ -36,6 +36,7 @@ import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.*;
 import static studio.phaseshift.metatron.lang.core.m.obj.NoObj.noobj;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
@@ -134,6 +135,7 @@ public interface Rel extends Poly<Rel, Tuple.Pair<Obj, Obj>>, Obj {
             return new LinkedHashSet<>(List.of(
                     instC(AS_INST_TID.dom(REL_TID).rng(REC_TID), lst(T(REC_TID)), (lhs, inst) -> rec(lhs.<Rel>as().first(), lhs.<Rel>as().second())),
                     instC(MERGE_INST_TID.dom(REL_TID.maybeSome()).rng(REC_TID), lst(T(REC_TID)), (lhs, inst) -> inst.arg(0).jvm(Stream.concat(lhs.stream().map(Obj::as), inst.arg(0).<Rec>as().elements().map(Obj::<Rel>as)).collect(Collectors.toMap(Rel::first, Rel::second, Obj::append, LinkedHashMap::new)))),
+                  //  instC(MERGE_INST_TID.dom(REL_TID).rng(ALL.c("2")), lst(), (lhs, inst) -> objs(lhs.elements())),
                     instC(DOM_INST_TID.dom(REL_TID).rng(ALL), lst(), (lhs, inst) -> lhs.relValue().get0()),
                     instC(RNG_INST_TID.dom(REL_TID).rng(ALL.some()), lst(), (lhs, inst) -> lhs.relValue().get1()),
                     instC(LSHIFT_INST_TID.dom(REL_TID).rng(ALL_STAR), lst(), (lhs, inst) -> lhs.<Rel>as().first()),
