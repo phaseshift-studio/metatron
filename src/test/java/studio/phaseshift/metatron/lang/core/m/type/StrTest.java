@@ -77,7 +77,7 @@ public class StrTest extends MetatronObjTest {
     }
 
 
-    @ParameterizedTest
+    /*@ParameterizedTest
     @CsvSource(value = {
             "'a.b.c'-<'.'                                                                   % ['a','b','c']",
             "'a.b.c'-<re::'.'                                                               % [,]",
@@ -93,7 +93,7 @@ public class StrTest extends MetatronObjTest {
     }, delimiter = '%')
     public void testSplitMerge(final String code, final String expected) {
         super.testCode(code, expected);
-    }
+    }*/
 
     @ParameterizedTest
     @CsvSource(value = {

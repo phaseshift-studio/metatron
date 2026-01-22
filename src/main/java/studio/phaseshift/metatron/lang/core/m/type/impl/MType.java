@@ -25,28 +25,24 @@ import studio.phaseshift.metatron.lang.core.m.type.Type;
 import studio.phaseshift.metatron.lang.sys.router.Router;
 import studio.phaseshift.metatron.util.Tuple;
 
-import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.*;
+import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.BASE_TYPES;
+import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.NOOBJ_TID;
 import static studio.phaseshift.metatron.lang.core.m.obj.NoObj.noobj;
 
 
 public class MType extends MObj implements Type {
 
-    private MType(final Tuple.Pair<Obj, Obj> jvm, final fURI tid) {
+    public MType(final Tuple.Pair<Call, Call> jvm, final fURI tid) {
         super(jvm, tid.equals(NOOBJ_TID) ? tid.c("0") : tid, tid);
     }
 
-    public static Type T(final Type type) {
-        return new MType(Tuple.Pair.with(type,null),TYPE_TID);
-    }
- 
     public static Type T(final fURI tid) {
-        final fURI bigtid = tid.big();
-        if (!bigtid.hasPattern() && !BASE_TYPES.contains(bigtid.basePath()) && !bigtid.isGeneric() && Router.loaded()) {
-            final Obj obj = Router.global().read(bigtid);
+        if (!tid.hasPattern() && !BASE_TYPES.contains(tid.basePath()) && !tid.isGeneric() && Router.loaded()) {
+            final Obj obj = Router.global().read(tid);
             if (obj.isType())
-                return obj.c(bigtid.cV()).as();
+                return obj.c(tid.cV()).as();
         }
-        return new MType(Tuple.Pair.with(null, null), bigtid);
+        return new MType(Tuple.Pair.with(null, null), tid);
         
        /*return (tid.hasPattern() ||
                 !Router.loaded() ||
@@ -57,19 +53,17 @@ public class MType extends MObj implements Type {
                 new MType(Tuple.Pair.with(null, null), tid) : Router.global().read(tid).tid(tid).as();*/
     }
 
-    public static Type T(final fURI tid, final Obj predicate) {
+    public static Type T(final fURI tid, final Call predicate) {
         return new MType(Tuple.Pair.with(predicate, null), tid);
     }
 
-    public static Type T(final fURI tid, final Obj predicate, final Obj constructor) {
-        if(null == predicate && null == constructor)
-            return T(tid);
+    public static Type T(final fURI tid, final Call predicate, final Call constructor) {
         final Obj prev = Router.loaded() ? Router.readFromSpace(tid) : noobj();
         if (prev.isNoObj() || !prev.isType())
             return new MType(Tuple.Pair.with(null == predicate || predicate.isNoObj() ? null : predicate, null == constructor || constructor.isNoObj() ? null : constructor), tid);
         else {
-            final Obj pre = null == predicate || predicate.isNoObj() ? prev.<Type>as().predicate() : predicate;
-            final Obj con = null == constructor || constructor.isNoObj() ? prev.<Type>as().constructor() : constructor;
+            final Call pre = null == predicate || predicate.isNoObj() ? prev.<Type>as().predicate() : predicate;
+            final Call con = null == constructor || constructor.isNoObj() ? prev.<Type>as().constructor() : constructor;
             return new MType(Tuple.Pair.with(pre, con), tid);
         }
     }
@@ -78,11 +72,11 @@ public class MType extends MObj implements Type {
     public Type clone(final Object jvm, final fURI tid, final fURI vid) {
         // if (!tid.equals(vid))
         //     throw MTronException.of("a tid and vid of a type must be the same: %s != %s", tid, vid);
-        return new MType((Tuple.Pair<Obj, Obj>) jvm, tid);
+        return new MType((Tuple.Pair<Call, Call>) jvm, tid);
     }
 
     @Override
-    public Tuple.Pair<Obj, Obj> jvm() {
-        return (Tuple.Pair<Obj, Obj>) this.jvm;
+    public Tuple.Pair<Call, Call> jvm() {
+        return (Tuple.Pair<Call, Call>) this.jvm;
     }
 }

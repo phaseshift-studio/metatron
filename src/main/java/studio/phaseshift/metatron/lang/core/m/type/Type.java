@@ -26,10 +26,14 @@ import studio.phaseshift.metatron.util.Tuple;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.util.Arrays;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
 
-import static studio.phaseshift.metatron.lang.core.m.inst.mFluent.StartLess.*;
+import static studio.phaseshift.metatron.lang.core.m.inst.mFluent.StartLess.isa_;
 import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.*;
+import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.STR_TID;
 import static studio.phaseshift.metatron.lang.core.m.obj.NoObj.noobj;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MInt.jnt;
@@ -43,7 +47,7 @@ public interface Type extends Obj, PlusMonoid<Type> {
     Type clone(final Object jvm, final fURI tid, final fURI vid);
 
     @Override
-    Tuple.Pair<Obj, Obj> jvm();
+    Tuple.Pair<Call, Call> jvm();
 
     @Override
     default Type dom() {
@@ -56,19 +60,29 @@ public interface Type extends Obj, PlusMonoid<Type> {
     }
 
     @Override
-    default Type type() {
-        return this.tid().equals(TYPE_TID) ? this : T(this);
+    default Obj clone() {
+        return null;
     }
-    
+
+    @Override
+    default fURI tid() {
+        return null;
+    }
+
+    @Override
+    default fURI vid() {
+        return null;
+    }
+
     default boolean isBaseType() {
         return mInstSet.BASE_TYPES.contains(this.tid().basePath());
     }
 
-    default Obj constructor() {
+    default Call constructor() {
         return this.jvm().get1();
     }
 
-    default Obj predicate() {
+    default Call predicate() {
         return this.jvm().get0();
     }
 
@@ -81,23 +95,9 @@ public interface Type extends Obj, PlusMonoid<Type> {
     }
 
     @Override
-    default boolean matches(final Obj obj) {
-       if (!obj.isType())
-            return false;
-        if (this.equals(obj))
-            return true;
-        if (obj.tid().equals(TYPE_TID))
-            return !obj.asType().hasPredicate() || this.matches(obj.asType().predicate());
-        if (this.tid().matches(obj.tid()) && (!obj.asType().hasPredicate() || Objects.equals(this.predicate(), obj.asType().predicate())))
-            return true;
-        if (!this.asType().isBaseType() && Router.loaded()) // recursively check type to base type
-            return Router.readFromSpace(this.tid()).matches(obj);
-        return false;
-
-    }
-
-    @Override
     default Obj apply(final Obj obj) {
+        // if (!obj.rng().tid().matches(this.tid()))
+        //     return NoObj.single();
         if (!this.isBaseType()) {
             Obj subType = Router.readFromSpace(this.tid());
             if (!subType.equals(this))
@@ -116,8 +116,8 @@ public interface Type extends Obj, PlusMonoid<Type> {
         if (other.isNoObj())
             return this;
         final fURI tidPlus = this.tid().plus(other.tid());
-        final Obj constructor = null == this.constructor() ? other.constructor() : null == other.constructor() ? this.constructor() : or_(this.constructor(), other.constructor());
-        final Obj predicate = null == this.predicate() ? other.predicate() : null == other.predicate() ? this.predicate() : is_(or_(this.predicate(), other.predicate()));
+        final Call constructor = null == this.constructor() ? other.constructor() : null == other.constructor() ? this.constructor() : this.constructor().plus(other.constructor());
+        final Call predicate = null == this.predicate() ? other.predicate() : null == other.predicate() ? this.predicate() : this.predicate().plus(other.predicate());
         return this.clone(Tuple.Pair.with(constructor, predicate), tidPlus, tidPlus);
     }
 
@@ -126,16 +126,13 @@ public interface Type extends Obj, PlusMonoid<Type> {
         return this.tid(this.tid().zero()).jvm(Tuple.Pair.with(null, null));
     }
 
-  final class TypeType {
+    public static final class BytesType {
 
-        public static final Type TYPE_TYPE = T(TYPE_TID);
-        
         public static Set<Inst> insts() {
             return new LinkedHashSet<>(List.of(
                     // instC(PLUS_INST_TID.dom(A).rng(B), lst(T(C)), (lhs, inst) -> lhs.jvm(ByteBuffer.wrap(Arrays.copyOfRange(lhs.bytesValue().array(), inst.arg(0).intValue().intValue(), lhs.bytesValue().array().length)))),
                     instC(RSHIFT_INST_TID.dom(BYTES_TID).rng(BYTES_TID), lst(isa_(T(BYTES_TID)).else_(jnt(1)).tryToInst()), (lhs, inst) -> lhs.jvm(ByteBuffer.wrap(Arrays.copyOf(lhs.bytesValue().array(), lhs.bytesValue().array().length - inst.arg(0).intValue().intValue())))),
                     instC(PLUS_INST_TID.dom(BYTES_TID).rng(BYTES_TID), lst(T(BYTES_TID)), (lhs, inst) -> lhs.<Bytes>as().plus(inst.arg(0).as())),
-                    instC(PLUS_INST_TID.dom(T(T(A)).tid()).rng(T(T(C)).tid()), lst(T(T(B))), (lhs, inst) -> lhs.asType().plus(inst.arg(0).asType())),
                     instC(AS_INST_TID.dom(BYTES_TID).rng(STR_TID), lst(T(STR_TID)), (lhs, inst) -> str(new String(lhs.bytesValue().array(), StandardCharsets.UTF_8)))
                    /* instC(SUM_INST_TID.dom(BYTES_TID.maybeSome()).rng(BYTES_TID), lst(), (lhs,inst) -> lhs.elements().reduce(bytes(ByteBuffer.allocate((int)lhs.stream().count())),(a,b) -> bytes(a.bytesValue().put(b.bytesValue())))),
                     instC(SPLIT_INST_TID.dom(BYTES_TID).rng(LST_TID), lst(T(LST_TID)), (lhs, inst) -> {

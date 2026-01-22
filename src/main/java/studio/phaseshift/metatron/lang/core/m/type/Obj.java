@@ -214,8 +214,8 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
         //  return this.uriValue().matches(rhs.uriValue());
         final fURI base = this.tid().basePath();
         if (BASE_TYPES.contains(base) &&
-                !(this.isObjs()) &&
-                !(this.isType()) &&
+                !(this instanceof Objs) &&
+                !(this instanceof Type) &&
                 !((this.isBool() && base.equals(BOOL_TID)) ||
                         (this.isBytes() && base.equals(BYTES_TID)) ||
                         (this.isInt() && base.equals(INT_TID)) ||
@@ -237,9 +237,9 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
         if (!this.c().within(rhs.c()))
             return false;
         if (rhs.isType())
-            return !rhs.tid().equals(TYPE_TID) && (rhs.tid().isGeneric() ||
-                    (Helper.typeInferenceMatch(this, rhs.asType()) &&
-                            (!rhs.asType().hasPredicate() || this.isObjs() || !rhs.apply(this).isNoObj())));
+            return rhs.tid().isGeneric() ||
+                    (Helper.typeInferenceMatch(this, rhs.as()) &&
+                            (rhs.<Type>as().predicate() == null || this.isObjs() || !rhs.apply(this).isNoObj()));
         return this.tid().matches(rhs.tid()) &&
                 Objects.equals(this.jvm(), rhs.jvm());
     }
@@ -257,12 +257,6 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
         return T(this.tid());
     }
 
-    default <O extends Obj> O type(final Type type) {
-        if (!this.matches(type))
-            throw MTronException.of("%s is not a %s",this, type);
-        return (O) this.tid(type.tid());
-    }
-
     default fURI baseType() {
         if (this.isBool()) return BOOL_TID.c(this.c().toString());
         else if (this.isBytes()) return BYTES_TID.c(this.c().toString());
@@ -275,7 +269,6 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
         else if (this.isInst()) return INST_TID.c(this.c().toString()).dom(this.dom().tid()).rng(this.rng().tid());
         else if (this.isCode()) return CODE_TID.c(this.c().toString());
         else if (this.isNoObj()) return NOOBJ_TID.c(this.c().toString());
-        else if (this.isType()) return TYPE_TID.c(this.c().toString());
         else if (this.isFail()) return FAIL_TID.c(this.c().toString());
         else return this.tid();
     }
@@ -541,7 +534,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
         throw MTronException.of(xxxValue, this, tid().toUri(), CODE_TID.toUri());
     }
 
-    default Tuple.Pair<Obj, Obj> typeValue() {
+    default Obj typeValue() {
         if (this.isType())
             return this.jvm();
         throw MTronException.of(xxxValue, this, tid().toUri(), fURI.of("<type>").toUri());
@@ -586,11 +579,13 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
         public static boolean objEquals(final Obj obj, final Object other) {
             if (!(other instanceof Obj))
                 return false;
+            if (obj.vid() != null && obj.vid().equals(((Obj) other).vid()))
+                return true;
             final BiPredicate<Obj, Obj> opt = Optimizations.optimizedEquals.get(obj.tid().basePath());
             if (null != opt)
                 return opt.test(obj, (Obj) other);
             return ((obj.isNoObj() && ((Obj) other).isNoObj()) ||
-                    (!obj.isType() && obj.vid() != null && Objects.equals(obj.vid(), ((Obj) other).vid())) ||
+                    (obj.vid() != null && Objects.equals(obj.vid(), ((Obj) other).vid())) ||
                     (Objects.equals(obj.tid(), ((Obj) other).tid()) &&
                             //Objects.equals(obj.vid(), ((Obj) other).vid()) && // TODO: ??
                             Objects.equals(obj.jvm(), ((Obj) other).jvm())));
@@ -606,10 +601,10 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
         public static String objToString(final Obj obj) {
             return SERIALIZER.write(obj);
         }
-        
+
         public static void objCheckAndSave(final Obj obj) {
             if (!obj.isInstSet() && !obj.isNoObj() && !obj.isType() && !obj.matches(obj.type()))
-                throw MTronException.of("%s is not a %s",obj, obj.type());
+                throw MTronException.of("%s is not a %s".formatted(obj, obj.type()));
             if (null != obj.vid() && !obj.isType())
                 Router.writeToSpace(obj.vid(), obj);
         }
@@ -648,8 +643,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
         public static Set<Inst> insts() {
             return new LinkedHashSet<>(List.of(
                     // instC(AS_INST_TID.dom(REL_TID).rng(REL_TID), lst(REL_TYPE), (lhs, inst) -> recurssiveAs(lhs, inst.arg(0).as())),
-                    instC(AS_INST_TID.dom(A).rng(A), lst(T(A)), (lhs, inst) -> lhs.type(inst.arg(0).asType())),
-                    instC(AS_INST_TID.dom(A).rng(B), lst(T(T(B))), (lhs, inst) -> lhs.type(inst.arg(0).asType())),
+                    instC(AS_INST_TID.dom(A).rng(A), lst(T(A)), (lhs, inst) -> lhs.clone(lhs.jvm(), inst.arg(0).tid(), lhs.vid())),
                     instC(REPEAT_INST_TID.dom(A).rng(A), lst(T(ALL), INT_TYPE), (lhs, inst) -> {
                         Obj current = lhs;
                         final int times = inst.arg(1).apply(current).intValue().intValue();
@@ -697,7 +691,8 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
                     instC(SPLIT_INST_TID.dom(ALL.maybeSome()).rng(LST_TID), lst(T(LST_TID)), (lhs, inst) -> lst(inst.arg(0).elements().map(e -> e.apply(lhs)).toList())),
                     // instC(SPLIT_TID.dom(REL_TID).rng(REC_TID), lst(T(REC_TID)), (lhs, inst) -> rec(lhs.<Rel>as().first(),lhs.<Rel>as().second())),
                     //instC(SPLIT_TID.dom(ALL).rng(REL_TID), lst(T(REL_TID)), (lhs, inst) -> rel(inst.arg(0).<Rel>as().first().apply(lhs), inst.arg(0).<Rel>as().second().apply(lhs))),
-                     // todo: allow c to generic and then the above and below instructions can be made into a single generic c inst
+                    instC(SPLIT_INST_TID.dom(ALL).rng(REC_TID), lst(T(REC_TID)), (lhs, inst) -> rec(inst.arg(0).<Rec>as().elements().map(Obj::<Rel>as).map(e -> e.first().apply(lhs).choose(Obj::isNoObj, x -> null, x -> rel(x, e.second().apply(lhs)))).filter(x -> !Objects.isNull(x)))),
+                    // todo: allow c to generic and then the above and below instructions can be made into a single generic c inst
                     //instC(SPLIT_TID.dom(ALL.maybeSome()).rng(REC_TID), lst(T(REC_TID)), (lhs, inst) -> MRec.of(inst.arg(0).recValue().entrySet().stream().map(e -> e.getKey().apply(lhs).choose(Obj::isNoObj, x -> null, x -> MRel.of(x, e.getValue().apply(lhs)))).filter(x -> !Objects.isNull(x)).collect(Collectors.toMap(a -> a.<Rel>as().first(), b -> b.<Rel>as().second(), Obj::append, LinkedHashMap<Obj, Obj>::new)))),
                     instC(SPLIT_INST_TID.dom(A.maybeSome()).rng(REC_TID), lst(T(REC_TID)), (lhs, inst) ->
                             inst.arg(0).jvm(lhs.stream().flatMap(o -> inst.arg(0).<Rec>as()
@@ -741,7 +736,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
                     instC(FAILURE_INST_TID.dom(ALL.maybeSome()).rng(FAIL_TID), lst(T(ALL.maybe())), (lhs, inst) -> fail(MTronException.of("%s", inst.arg(0).toString()))),
                     //instC(BARRIER_TID.dom(ALL_STAR).rng(ALL_STAR), lst(T(ALL_STAR)), (lhs, inst) -> inst.arg(0).apply(lhs)),
                     instC(PARENT_INST_TID.dom(ALL).rng(ALL.maybe()), lst(), (lhs, inst) -> {
-                        lhs.logger().info("parent: %s => %s", lhs.parent(), lhs);
+                        lhs.logger().info("parent: %s => %s",lhs.parent(),lhs);
                         return lhs.parent();
                     }),
                     instC(COUNT_INST_TID.dom(ALL.maybeSome()).rng(INT_TID), lst(), (lhs, inst) -> inst.seed().jvm(lhs.stream().reduce(inst.seed(), (a, b) -> jnt(a.intValue() + b.c().max())).intValue()/* * inst.c().max()*/), jnt(0)),

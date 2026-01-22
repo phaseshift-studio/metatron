@@ -27,6 +27,8 @@ import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.stream.Stream;
 
+import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.AUTO_FROM_INST_TID;
+import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.AUTO_INST_TID;
 import static studio.phaseshift.metatron.lang.core.m.obj.NoObj.noobj;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
@@ -129,7 +131,7 @@ public interface Poly<P extends Poly<P, J>, J> extends Obj {
                             if (selectValue.isPoly() && kv.second().isPoly()) {
                                 result.compute(selectKey.c(cInt::one), (a, b) -> (b == null ? noobj() : b).append(selectPolyRecursion(selectValue.as(), kv.second().as())));
                             } else
-                                result.compute(selectKey.c(cInt::one), (a, b) -> (b == null ? selectValue.c(selectKey.c()) : b.append(selectValue)));
+                                result.compute(selectKey.c(cInt::one), (a, b) -> (b == null ? selectValue : b.append(selectValue)));
                         }
                         //}
                     }
