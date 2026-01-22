@@ -124,6 +124,26 @@ public class fileSpace extends MSpace<FileSystem> {
         // });
     }
 
+    public static File resolveFile(final Obj fileObj) {
+        try {
+            final fileSpace space = Router.global().getSpace(fileObj.uriValue().basePath()).as();
+            return Paths.get(Space.Helper.toNativeSpace(fileObj.uriValue().basePath(), space.rewrite)).toFile();
+        } catch (final Exception e) {
+            throw MTronException.of(e);
+        }
+    }
+
+    public Obj resolveObj(final Uri path) {
+        try {
+            final File file = Paths.get(path.uriValue().toString()).toFile();
+            final fileSpace space = Router.global().getSpace(Space.Helper.fromNativeSpace(file.getPath(), this.rewrite)).as();
+            return uri(Space.Helper.fromNativeSpace(file.getPath(), space.rewrite), FILE_TID, null);
+        } catch (final Exception e) {
+            throw MTronException.of(e);
+        }
+    }
+
+
     public static Uri makeFile(final Path path) {
         try {
             return uri(f(path.toString()).query("p", PosixFilePermissions.toString(Files.getPosixFilePermissions(path))), FILE_TID, null);
@@ -133,18 +153,7 @@ public class fileSpace extends MSpace<FileSystem> {
             throw MTronException.of(e);
         }
     }
-
-    private Uri makeRewriteFile(final Path path) {
-        try {
-            return uri(Space.Helper.fromNativeSpace(path.toString(), this.rewrite).query("p", PosixFilePermissions.toString(Files.getPosixFilePermissions(path))), FILE_TID, null);
-        } catch (final NoSuchFileException e) {
-            return uri("").c(cInt.ZERO()).asUri();
-        } catch (final Exception e) {
-            throw MTronException.of(e);
-        }
-    }
-
-
+    
     @Override
     public Function<fURI, Iterator<Tuple.Pair<fURI, Obj>>> directReader() {
         return (key) -> {
@@ -156,6 +165,7 @@ public class fileSpace extends MSpace<FileSystem> {
                         return walk
                                 .filter(p -> Space.Helper.fromNativeSpace(p.toString(), this.rewrite).matches(key))
                                 .map(fileSpace::makeFile)
+                                .map(this::resolveObj)
                                 .collect(Collectors.toMap(p -> p, p -> p, Obj::append, LinkedHashMap::new))
                                 .entrySet()
                                 .stream()
@@ -169,12 +179,17 @@ public class fileSpace extends MSpace<FileSystem> {
                     try {
                         final Path vidPath = Path.of(Space.Helper.toNativeSpace(key.name().equals("apply") ? key.retract() : key, this.rewrite));
                         if (Files.isDirectory(vidPath)) {
-                            return Files.list(vidPath).map(p -> Pair.<fURI, Obj>with(f(p.toString()), makeFile(p))).iterator();
+                            return Files.list(vidPath).map(fileSpace::makeFile).map(p -> Pair.<fURI, Obj>with(p.uriValue(), resolveObj(p))).iterator();
                         } else {
-                            return IteratorUtil.of(Pair.with(Space.Helper.fromNativeSpace(vidPath.toString(), this.rewrite), key.name().equals("apply") ? instC(APPLY_INST_TID,lst(),(lhs,inst) -> {
-                                LOG.info("applying: %s => %s", lhs,inst);
-                                return this.internalApply(makeFile(vidPath),inst.args());
-                            }) : makeFile(vidPath)));
+                            return IteratorUtil.of(Pair.with(Space.Helper.fromNativeSpace(vidPath.toString(), this.rewrite), key.name().equals("apply") ?
+                                    instC(key.retract().dom(ALL).rng(ALL_STAR), lst(T(ALL_STAR)), (lhs, inst) -> {
+                                        LOG.info("applying: %s => %s", lhs, inst);
+                                        final Uri toExec = makeFile(vidPath);
+                                        if(!vidPath.toFile().canExecute())
+                                            throw MTronException.of("file permissions prevent execution of %s", toExec);
+                                        return this.internalApply(toExec, inst.args());
+                                    }) :
+                                    resolveObj(makeFile(vidPath))));
                         }
                     } catch (final NoSuchFileException e) {
                         return IteratorUtil.of();
@@ -186,10 +201,17 @@ public class fileSpace extends MSpace<FileSystem> {
         };
     }
 
-    private Obj evalScript(final File scriptPath, final String scriptEngine, final Obj obj) {
+    private Obj evalScript(final File scriptPath, final String scriptEngine, final Poly<?, ?> args) {
         final List<Obj> result = new ArrayList<>();
         try {
-            final ProcessBuilder processBuilder = new ProcessBuilder(scriptEngine, scriptPath.getAbsolutePath());
+            final String[] command = new String[2 + (int) args.count()];
+            command[0] = scriptEngine;
+            command[1] = scriptPath.getAbsolutePath();
+            int j = 2;
+            for (final Obj arg : args) {
+                command[j++] = arg.toString();
+            }
+            final ProcessBuilder processBuilder = new ProcessBuilder(command);
             LOG.info("evaluating script %s", processBuilder.command());
             final Map<String, String> env = processBuilder.environment();
             env.put("ENV_KEY", "ENV_VALUE");
@@ -218,7 +240,7 @@ public class fileSpace extends MSpace<FileSystem> {
         try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
             String firstLine = reader.readLine();
             if (firstLine != null) {
-                if(true)
+                if (true)
                     return "/bin/sh";
                 if (firstLine.startsWith("#!"))
                     return this.at(SCRIPT).orElse(rec()).elements().filter(pair -> firstLine.contains(pair.first().strValue())).map(Rel::second).map(engine -> engine.uriValue().toString()).findFirst().orElse(null);
@@ -229,16 +251,16 @@ public class fileSpace extends MSpace<FileSystem> {
         return null;
     }
 
-    public Obj internalApply(final Obj fileObj, final Obj instArgs) {
-        LOG.info("tid apply: %s",fileObj.tid());
+    public Obj internalApply(final Obj fileObj, final Poly<?, ?> args) {
+        LOG.info("tid apply: %s", fileObj.tid());
         if (fileObj.tid().basePath().equals(FILE_TID)) {
-            LOG.info("internal apply: %s => %s",fileObj,instArgs);
+            LOG.info("internal apply: %s => %s", fileObj, args);
             final Path path = Paths.get(fileObj.uriValue().basePath().toString());
             final File file = path.toFile();
-            LOG.info("path: %s",path);
+            LOG.info("path: %s", path);
             final String scriptEngine = checkScriptEvaluation(file);
             if (scriptEngine != null)
-                return this.evalScript(file, scriptEngine, instArgs);
+                return this.evalScript(file, scriptEngine, args);
         }
         return fileObj;
     }
@@ -256,27 +278,22 @@ public class fileSpace extends MSpace<FileSystem> {
                     } else {
                         final Path path = Paths.get(Space.Helper.toNativeSpace(pattern.basePath(), this.rewrite));
                         final File file = path.toFile();
-                        final String scriptEngine = checkScriptEvaluation(file);
-                        if (scriptEngine != null) {
-                            return this.evalScript(file, scriptEngine, obj);
-                        } else {
-                            LOG.info("writing %s to %s", obj, path);
-                            file.createNewFile();
-                            final FileOutputStream writer = new FileOutputStream(file, true);
-                            if (obj.isBytes())
-                                writer.write(obj.bytesValue().array());
-                            else if (obj.isStr())
-                                writer.write(obj.strValue().getBytes(StandardCharsets.UTF_8));
-                            else
-                                writer.write(Highlighter.unformat(obj.toString()).getBytes(StandardCharsets.UTF_8));
-                            writer.flush();
-                            writer.close();
-                            if (pattern.hasQuery("p")) {
-                                final Set<PosixFilePermission> currentP = PosixFilePermissions.fromString(Files.getPosixFilePermissions(path).toString());
-                                final Set<PosixFilePermission> newP = PosixFilePermissions.fromString(pattern.queryValue(f("p"), String.class));
-                                if (!currentP.equals(newP))
-                                    Files.setPosixFilePermissions(file.toPath(), newP);
-                            }
+                        LOG.info("writing %s to %s", obj, path);
+                        file.createNewFile();
+                        final FileOutputStream writer = new FileOutputStream(file, true);
+                        if (obj.isBytes())
+                            writer.write(obj.bytesValue().array());
+                        else if (obj.isStr())
+                            writer.write(obj.strValue().getBytes(StandardCharsets.UTF_8));
+                        else
+                            writer.write(Highlighter.unformat(obj.toString()).getBytes(StandardCharsets.UTF_8));
+                        writer.flush();
+                        writer.close();
+                        if (pattern.hasQuery("p")) {
+                            final Set<PosixFilePermission> currentP = PosixFilePermissions.fromString(Files.getPosixFilePermissions(path).toString());
+                            final Set<PosixFilePermission> newP = PosixFilePermissions.fromString(pattern.queryValue(f("p"), String.class));
+                            if (!currentP.equals(newP))
+                                Files.setPosixFilePermissions(file.toPath(), newP);
                         }
                     }
                 } catch (final Exception e) {

@@ -22,19 +22,18 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.core.m.type.Inst;
 import studio.phaseshift.metatron.lang.core.m.type.Type;
 import studio.phaseshift.metatron.lang.core.m.type.impl.MInstSet;
-import studio.phaseshift.metatron.lang.translator.XMLTranslator;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.nio.ByteBuffer;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
 import static studio.phaseshift.metatron.furi.fURI.ALL;
+import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.lang.core.m.inst.mFluent.StartLess.else_;
 import static studio.phaseshift.metatron.lang.core.m.inst.mFluent.StartLess.isa_;
 import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.*;
@@ -46,7 +45,6 @@ import static studio.phaseshift.metatron.lang.core.m.type.impl.MReal.real;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.lang.sys.fs.fileSpace.FS_TYPE;
-import static studio.phaseshift.metatron.lang.translator.XMLTranslator.XML_TID;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -82,7 +80,7 @@ public class fsInstSet extends MInstSet {
         return new LinkedHashSet<>(List.of(
                 instC(AS_INST_TID.dom(FILE_TID).rng(BYTES_TID), lst(T(BYTES_TID)), (lhs, inst) -> {
                     try {
-                        final File file = Paths.get(lhs.uriValue().basePath().toString()).toFile();
+                        final File file = fileSpace.resolveFile(lhs);
                         final byte[] data = new byte[(int) file.length()];
                         try (final FileInputStream fis = new FileInputStream(file)) {
                             fis.read(data);
@@ -92,6 +90,7 @@ public class fsInstSet extends MInstSet {
                         throw MTronException.of(e);
                     }
                 }),
+               // instC(APPLY_INST_TID.dom(FILE_TID).rng(ALL_STAR), lst(T(ALL_STAR)), (lhs, inst) -> fileSpace.fileApply(lhs, inst.args())),
                 instC(AS_INST_TID.dom(URI_TID).rng(FILE_TID), lst(T(FILE_TID)), (lhs, inst) -> fileSpace.makeFile(Path.of(lhs.uriValue().toString()))),
                 instC(AS_INST_TID.dom(BYTES_TID).rng(IMAGE_TID), lst(T(IMAGE_TID), else_(real(1.0d))),
                         (lhs, inst) -> str(ImageHelper.convertToAscii(lhs.bytesValue(), inst.arg(1).realValue())).tid(IMAGE_TID))));
