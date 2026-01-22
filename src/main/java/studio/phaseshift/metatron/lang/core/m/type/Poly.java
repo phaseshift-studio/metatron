@@ -27,8 +27,6 @@ import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.stream.Stream;
 
-import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.AUTO_FROM_INST_TID;
-import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.AUTO_INST_TID;
 import static studio.phaseshift.metatron.lang.core.m.obj.NoObj.noobj;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
@@ -106,35 +104,23 @@ public interface Poly<P extends Poly<P, J>, J> extends Obj {
             for (int i = 0; i < rhsList.size(); i++) {
                 final Obj e = rhsList.get(i);
                 final Obj selectKey = jnt(i);
-                if (!selectKey.isNoObj()) {
-                    final Obj lhsValue = lhs.at(selectKey);
-                    final Obj selectValue = e.isCall() ? e.apply(lhsValue) : lhsValue.matches(e) ? lhsValue : noobj();
-                    if (selectValue.isPoly()) {
-                        result.add(selectPolyRecursion(selectValue.as(), e.as()));
-                    } else
-                        result.add(selectValue);
-                }
+                final Obj lhsValue = lhs.at(selectKey);
+                result.add((lhsValue.isPoly() && e.isPoly() ? selectPolyRecursion(lhsValue.as(), e.as()) : e.apply(lhsValue)));
             }
-            return result.isEmpty() ? noobj() : lst(result);
+            return lst(result);
         }
 
         public static Obj selectRecRecursion(final Rec lhs, final Rec rhs) {
-            Map<Obj, Obj> result = new LinkedHashMap<>();
+            final Map<Obj, Obj> result = new LinkedHashMap<>();
             rhs.elements().forEach(kv -> {
-                final Obj selectKeys = kv.first().isCall() ? objs(lhs.elements().map(kv2 -> kv.first().apply(kv2.first())).filter(v2 -> !v2.isNoObj())) : kv.first();
+                final Obj selectKeys = objs(lhs.elements().map(kv2 -> kv.first().apply(kv2.first())).filter(v2 -> !v2.isNoObj()));
                 selectKeys.stream().forEach(selectKey -> {
-                    if (!selectKey.isNoObj()) {
-                        final Obj lhsValue = lhs.asRec().at(selectKey);
-                        //if (lhsValue.matches(kv.second())) {
-                        final Obj selectValue = kv.second().isCall() ? kv.second().apply(lhsValue) : kv.second();
-                        if (!selectValue.isFail() && !selectValue.isNoObj()) {
-                            if (selectValue.isPoly() && kv.second().isPoly()) {
-                                result.compute(selectKey.c(cInt::one), (a, b) -> (b == null ? noobj() : b).append(selectPolyRecursion(selectValue.as(), kv.second().as())));
-                            } else
-                                result.compute(selectKey.c(cInt::one), (a, b) -> (b == null ? selectValue : b.append(selectValue)));
-                        }
-                        //}
-                    }
+                    final Obj lhsValue = lhs.asRec().at(selectKey);
+                    final Obj selectValue = lhsValue.isPoly() && kv.second().isPoly() ? 
+                            selectPolyRecursion(lhsValue.as(), kv.second().as()) : 
+                            kv.second().apply(lhsValue);
+                    if (!selectValue.isNoObj() && (!selectValue.isRec() || !selectValue.asRec().isEmpty()))
+                        result.compute(selectKey.c(cInt::one), (a, b) -> null == b ? selectValue : b.append(selectValue)); // TODO: the c(1) may not be necessary
                 });
             });
             return result.isEmpty() ? noobj() : rec(result);
