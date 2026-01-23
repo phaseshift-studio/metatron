@@ -127,6 +127,32 @@ public class mInstSetTest extends InstSetTest {
         super.testCode(code, expected);
     }
 
+    @ParameterizedTest
+    @CsvSource(value = {
+            "print(_)                                                                       % noobj",
+            "1.print(_)                                                                     % 1",
+            "{1,2,3,4}.print(_).plus(2)                                                     % {3,4,5,6}",
+            "{1,2,3,4}.print(+2)                                                            % {1,2,3,4}",
+    }, delimiter = '%')
+    public void testPrint(final String code, final String expected) {
+        super.testCode(code, expected);
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "map(_)                                                                       % noobj",
+            "1.map(_)                                                                     % 1",
+            "1.map(noobj)                                                                 % noobj",
+            "1.map?int{?}<=int(noobj)                                                     % noobj",
+            "1.map?noobj<=int(noobj)                                                      % noobj",
+            "{1,2,3,4}.map(_).plus(2)                                                     % {3,4,5,6}",
+            "{1,2,3,4}.map(+2)                                                            % {3,4,5,6}",
+            "{1,2,3,4}.map(map(map(map(map(map(+2))))))                                   % {3,4,5,6}",
+    }, delimiter = '%')
+    public void testMap(final String code, final String expected) {
+        super.testCode(code, expected);
+    }
+
 
     @ParameterizedTest
     @CsvSource(value = {
@@ -182,7 +208,7 @@ public class mInstSetTest extends InstSetTest {
             "{1,2,3}-<noobj                                                         % noobj",
             "{1,2,3}-<[noobj]                                                       % [noobj]",
             "{1,2,3}-<[noobj=>noobj]                                                % [=>]",
-            "{1,2,3}.map?int<=real(1)                                               % <ERROR>",
+         //   "{1,2,3}.map?int<=real(1)                                               % <ERROR>",
             "{1,2,3}.inst?int<=int{3}(){1}                                          % 1",
             "{1,2,3}.inst{3}?int<=int{3}(){1}                                       % int{3}::1",
             "{int{2}::1,int{2}::2,int{2}::3}.inst{3}?int<=int{3}(){1}               % int{6}::1",
@@ -303,6 +329,7 @@ public class mInstSetTest extends InstSetTest {
             "{[1,2],[3,4,5],[6,7,8]}.sum()._/sum()\\_.>-.sum{2}().sum()             % 72",
             ///
             "{1,2,3,4,5}.reduce(|plus(0))                                           % 15",
+            "{1,2,3,4,5}.reduce?int<=int{*}(|plus(0))                                           % 15",
             "{,}.reduce(|plus(0))                                                   % 0",
             "reduce(|mult(0))                                                       % 0",
             "{1,2,3,4,5}.reduce(|mult(2))                                           % 240",
