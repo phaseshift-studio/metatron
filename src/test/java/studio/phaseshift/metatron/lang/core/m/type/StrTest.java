@@ -56,6 +56,17 @@ public class StrTest extends MetatronObjTest {
         super.testCode(code, expected);
     }
 
+    @ParameterizedTest
+    @CsvSource(value = {
+            "{'a','b','c','123'}.sum()                                                      % \"abc123\"",
+            "{'a','b','c','123'}.sum('22')                                                  % \"22abc123\"",
+            "{}.sum('22')                                                                   % \"22\"",
+            // "{}.sum?str<=str{*}()                                                           % \"\"",  // TODO
+    }, delimiter = '%')
+    public void testSum(final String code, final String expected) {
+        super.testCode(code, expected);
+    }
+
 
     @ParameterizedTest
     @CsvSource(value = {

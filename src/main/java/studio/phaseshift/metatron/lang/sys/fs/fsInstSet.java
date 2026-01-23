@@ -22,6 +22,7 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.core.m.type.Inst;
 import studio.phaseshift.metatron.lang.core.m.type.Type;
 import studio.phaseshift.metatron.lang.core.m.type.impl.MInstSet;
+import studio.phaseshift.metatron.lang.sys.router.Router;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.io.File;
@@ -39,6 +40,7 @@ import static studio.phaseshift.metatron.lang.core.m.inst.mFluent.StartLess.isa_
 import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.*;
 import static studio.phaseshift.metatron.lang.core.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MBytes.bytes;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MInst.instB;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MReal.real;
@@ -90,7 +92,6 @@ public class fsInstSet extends MInstSet {
                         throw MTronException.of(e);
                     }
                 }),
-               // instC(APPLY_INST_TID.dom(FILE_TID).rng(ALL_STAR), lst(T(ALL_STAR)), (lhs, inst) -> fileSpace.fileApply(lhs, inst.args())),
                 instC(AS_INST_TID.dom(URI_TID).rng(FILE_TID), lst(T(FILE_TID)), (lhs, inst) -> fileSpace.makeFile(Path.of(lhs.uriValue().toString()))),
                 instC(AS_INST_TID.dom(BYTES_TID).rng(IMAGE_TID), lst(T(IMAGE_TID), else_(real(1.0d))),
                         (lhs, inst) -> str(ImageHelper.convertToAscii(lhs.bytesValue(), inst.arg(1).realValue())).tid(IMAGE_TID))));

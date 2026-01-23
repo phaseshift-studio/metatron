@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.lang.core.m.type;
 
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.MetatronTest;
@@ -25,15 +26,40 @@ import studio.phaseshift.metatron.lang.core.m.parser.mParser;
 import studio.phaseshift.metatron.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.ui.graphitty.GraphittyLogger;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public class NoObjTest extends MetatronTest {
-
-    private static final GraphittyLogger LOG = Graphitty.log(TypeTest.class);
+    
+    @ParameterizedTest
+    @CsvSource(value = {
+            "noobj               | noobj                 |true",
+            "noobj               | 10                    |false",
+            "noobj               | int{0}::10            |true",
+            "noobj{2}            |noobj{1233}            |true",
+            "noobj{3}            |noobj                  |true",
+            "noobj{4}            |str{4}::'meta'         |false",
+            "noobj{4}            |str{0}::'tron'         |true",
+            "str{4}::'meta'      |str{0}::'tron'         |false",
+            "'meta'              |'meta'                 |true",
+            "'meta'              |str{0}::'meta'         |false",
+            "noobj               |#{0}                   |true"},
+            delimiter = '|')
+    public void testNoObjEquality(final String o1, final String o2, final boolean match) {
+        final Obj obj1 = mParser.m_obj().parse(o1).get();
+        final Obj obj2 = mParser.m_obj().parse(o2).get();
+        LOG.trace("testing %s %s %s", obj1, match ? "{{g}}equals{{/g}}" : "{{r}}not equals{{/r}}", obj2);
+        if (match) {
+            assertEquals(obj1, obj2);
+            assertEquals(obj2, obj1);
+        } else {
+            assertNotEquals(obj1, obj2);
+            assertNotEquals(obj2, obj1);
+        }
+    }
 
     @ParameterizedTest
     @CsvSource(value = {
@@ -46,18 +72,26 @@ public class NoObjTest extends MetatronTest {
             "noobj{4}            |str{0}::'tron'         |true",
             "str{4}::'meta'      |str{0}::'tron'         |false",
             "'meta'              |'meta'                 |true",
-            "'meta'              |str{0}::'meta'         |false"},
+            "'meta'              |str{0}::'meta'         |false",
+            "noobj               |#{0}                   |true",
+            "noobj               |#{?}::a                |true",
+            "#{?}::a             |noobj                  |true",
+            "noobj{0}            |#{?}::a                |true",
+            "#{?}::a             |noobj{0}               |true",
+            "noobj               |#{0}::T                |true",
+            "noobj               |#{?}::T                |true",
+            "#{?}::T             |noobj                  |true",
+            "noobj{0}            |#{?}::T                |true",
+            "#{?}::T             |noobj{0}               |true"},
             delimiter = '|')
-    public void testNoObj(final String o1, final String o2, final boolean match) {
-        final Obj obj1 = mParser.m_obj().parse(o1).get();
-        final Obj obj2 = mParser.m_obj().parse(o2).get();
-        LOG.trace("testing %s %s %s", obj1, match ? "{{g}}equals{{/g}}" : "{{r}}not equals{{/r}}", obj2);
+    public void testNoObjMatches(final String o1, final String o2, final boolean match) {
+        final Obj obj1 = mParser.parse(o1);
+        final Obj obj2 = mParser.parse(o2);
+        LOG.warn("testing %s{%s} %s %s{%s}", obj1, obj1.c(), match ? "{{g}}matches{{/g}}" : "{{r}}doesn't match{{/r}}", obj2, obj2.c());
         if (match) {
-            assertEquals(obj1, obj2);
-            assertEquals(obj2, obj1);
+            Assertions.assertTrue(obj1.matches(obj2));
         } else {
-            assertNotEquals(obj1, obj2);
-            assertNotEquals(obj2, obj1);
+            Assertions.assertFalse(obj1.matches(obj2));
         }
     }
 }

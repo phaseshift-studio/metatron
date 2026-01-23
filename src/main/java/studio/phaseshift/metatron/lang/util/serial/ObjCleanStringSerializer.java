@@ -183,7 +183,7 @@ public class ObjCleanStringSerializer implements ObjSerializer<String> {
         //  final Obj t = code.tryToInst();
         //  if (t.isInst()) return this.writeInst(t.as());
         final String internal = IteratorUtil.stream(code.insts()).map(this::writeInst).reduce("", (a, b) -> a + "." + b);
-        return internal.substring(1);
+        return !internal.isEmpty() ? internal.substring(1) : "";
     }
 
     @Override
