@@ -26,6 +26,7 @@ import studio.phaseshift.metatron.lang.Space;
 import studio.phaseshift.metatron.lang.core.m.parser.mParser;
 import studio.phaseshift.metatron.lang.core.m.type.Obj;
 import studio.phaseshift.metatron.lang.sys.router.Router;
+import studio.phaseshift.metatron.lang.util.noobjSpace;
 import studio.phaseshift.metatron.ui.graphitty.Graphitty;
 
 import java.util.ArrayList;
@@ -51,16 +52,20 @@ public abstract class mSpaceTest extends mTest {
     @BeforeEach
     protected void setup() {
         this.space = this.spaceSupplier.get();
+        if (this.space.vid() == null)
+            LOG.warn("provided space has no vid and thus can not be shutdown automatically");
         Router.global().addSpace(this.space);
     }
 
     @AfterEach
     protected void stop() {
-        assertDoesNotThrow(this.space::close);
-        Router.global().removeSpace(this.space.vid());
+        if (null != this.space.vid()) {
+            assertDoesNotThrow(this.space::close);
+            Router.global().removeSpace(this.space.vid());
+        }
         this.space = null;
     }
-    
+
     @ParameterizedTest
     @CsvSource(value = {
             "1.to(a)                                               % *a                              % 1",

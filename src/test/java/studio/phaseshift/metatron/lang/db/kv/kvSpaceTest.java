@@ -18,12 +18,13 @@
 
 package studio.phaseshift.metatron.lang.db.kv;
 
-import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.mSpaceTest;
+
+import static studio.phaseshift.metatron.furi.fURI.f;
 
 public class kvSpaceTest extends mSpaceTest {
 
     public kvSpaceTest() {
-        super(() -> new kvSpace(fURI.of("/t/#"), fURI.of("/sys/router/space/t")));
+        super(() -> kvSpace.of(f("/t/#"),f("/sys/space/kv")));
     }
 }

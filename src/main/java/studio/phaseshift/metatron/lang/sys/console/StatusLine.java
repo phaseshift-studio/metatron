@@ -116,8 +116,8 @@ public class StatusLine implements Runnable {
                 final AttributedString temp = new AttributedStringBuilder()
                         .ansiAppend(Graphitty.string("{{[" + color + "]&y}} %s", serverRunning ? Router.global().server().host() : "<server down>"))
                         .ansiAppend(Graphitty.string("{{g}}|{{w}}nodes:{{y}}%d{{[" + color + "]&w}}", Router.global().server().nodes().size()))
-                        .ansiAppend(Graphitty.string("{{g}}|{{w}}in:{{y}}%s{{[" + color + "]}}", bytesFormat(Router.global().server().stats().getBytesRecv())))
-                        .ansiAppend(Graphitty.string("{{g}}|{{w}}out:{{y}}%s{{[" + color + "]}}", bytesFormat(Router.global().server().stats().getBytesSent())))
+                        .ansiAppend(Graphitty.string("{{g}}|{{w}}in:{{y}}%s{{[" + color + "]}}", bytesFormat(Router.global().stats().bytesRecv())))
+                        .ansiAppend(Graphitty.string("{{g}}|{{w}}out:{{y}}%s{{[" + color + "]}}", bytesFormat(Router.global().stats().bytesSent())))
                         .ansiAppend(Graphitty.string("{{g}}|{{w}}running time:{{y}}%s{{[" + color + "]}}", timeFormat(this.runningTime())))
                         .append(Graphitty.string("{{g}}|{{[" + color + "]}}%s.", " ".repeat(200)))
                         .toAttributedString();

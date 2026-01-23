@@ -19,6 +19,7 @@
 package studio.phaseshift.metatron.lang.sys.router;
 
 import studio.phaseshift.metatron.BootLoader;
+import studio.phaseshift.metatron.Registry;
 import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.Space;
@@ -29,13 +30,11 @@ import studio.phaseshift.metatron.lang.sys.router.impl.MServer;
 import studio.phaseshift.metatron.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.util.MTronException;
 
-import java.io.Closeable;
-
 import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.lang.core.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
 
-public interface Router extends Obj, Space, Closeable {
+public interface Router extends Obj, Space {
 
     ThreadLocal<stackSpace> THREAD_STACK = ThreadLocal.withInitial(() -> new stackSpace(f("+/#")));
 
@@ -70,7 +69,7 @@ public interface Router extends Obj, Space, Closeable {
     static stackSpace stack() {
         return THREAD_STACK.get();
     }
-    
+
     default Rec spaces() {
         return this.jvm().get(uri(Tokens.SPACE)).as();
     }
@@ -119,7 +118,7 @@ public interface Router extends Obj, Space, Closeable {
         }
         return result;
     }
-    
+
     boolean hasSpaceFor(final fURI vid);
 
     void addSpace(final Space space);
@@ -129,7 +128,7 @@ public interface Router extends Obj, Space, Closeable {
     void registerRewrite(final fURI small, final fURI big);
 
     fURI rewrite(final fURI furi, final boolean big);
-    
+
     <S extends Space> S getSpace(final fURI vid);
 
     @Override
@@ -142,6 +141,20 @@ public interface Router extends Obj, Space, Closeable {
                 // do nothing? System.out.println(Graphitty.string("[{{y}}WARN {{/T}}] %s", e.getMessage()));
             }
         });
+    }
+
+    IOStats stats();
+
+    interface IOStats {
+
+        IOStats incrBytesRecv(final long bytes);
+
+        IOStats incrBytesSent(final long bytes);
+
+        long bytesSent();
+
+        long bytesRecv();
+
     }
 
     class Helper {

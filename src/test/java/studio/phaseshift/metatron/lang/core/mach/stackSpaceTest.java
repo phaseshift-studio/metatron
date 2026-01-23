@@ -25,9 +25,9 @@ import static studio.phaseshift.metatron.furi.fURI.f;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class StackSpaceTest extends mSpaceTest {
+public class stackSpaceTest extends mSpaceTest {
 
-    public StackSpaceTest() {
+    public stackSpaceTest() {
         super(() -> new stackSpace(f("/t/#")));
     }
 }

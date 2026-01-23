@@ -22,13 +22,15 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.lang.InstSetTest;
 
+import static studio.phaseshift.metatron.furi.fURI.f;
+
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public class machInstSetTest extends InstSetTest {
 
     public machInstSetTest() {
-        super(machInstSet.create());
+        super(machInstSet::create);
     }
 
     @Override

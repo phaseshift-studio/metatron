@@ -182,8 +182,8 @@ public class fileSpace extends MSpace<FileSystem> {
                             return Files.list(vidPath).map(fileSpace::makeFile).map(p -> Pair.<fURI, Obj>with(p.uriValue(), resolveObj(p))).iterator();
                         } else {
                             return IteratorUtil.of(Pair.with(Space.Helper.fromNativeSpace(vidPath.toString(), this.rewrite), key.name().equals("apply") ?
-                                    instC(key.retract().dom(ALL).rng(ALL_STAR), lst(T(ALL_STAR)), (lhs, inst) -> {
-                                        LOG.info("applying: %s => %s", lhs, inst);
+                                    instC(key.retract().dom(ALL.maybe()).rng(ALL_STAR), lst(T(ALL_STAR)), (lhs, inst) -> {
+                                        LOG.debug("applying: %s => %s", lhs, inst);
                                         final Uri toExec = makeFile(vidPath);
                                         if(!vidPath.toFile().canExecute())
                                             throw MTronException.of("file permissions prevent execution of %s", toExec);
@@ -212,7 +212,7 @@ public class fileSpace extends MSpace<FileSystem> {
                 command[j++] = arg.toString();
             }
             final ProcessBuilder processBuilder = new ProcessBuilder(command);
-            LOG.info("evaluating script %s", processBuilder.command());
+            LOG.debug("evaluating script %s", processBuilder.command());
             final Map<String, String> env = processBuilder.environment();
             env.put("ENV_KEY", "ENV_VALUE");
             final Process process = processBuilder.start();
@@ -225,7 +225,7 @@ public class fileSpace extends MSpace<FileSystem> {
                 } catch (final Exception e) {
                     x = str(line);
                 }
-                LOG.info("script yielded obj: %s", x);
+                LOG.debug("%s", x);
                 result.add(x);
             }
             process.waitFor();
@@ -252,12 +252,10 @@ public class fileSpace extends MSpace<FileSystem> {
     }
 
     public Obj internalApply(final Obj fileObj, final Poly<?, ?> args) {
-        LOG.info("tid apply: %s", fileObj.tid());
         if (fileObj.tid().basePath().equals(FILE_TID)) {
-            LOG.info("internal apply: %s => %s", fileObj, args);
+            LOG.debug("internal apply: %s => %s", args, fileObj);
             final Path path = Paths.get(fileObj.uriValue().basePath().toString());
             final File file = path.toFile();
-            LOG.info("path: %s", path);
             final String scriptEngine = checkScriptEvaluation(file);
             if (scriptEngine != null)
                 return this.evalScript(file, scriptEngine, args);

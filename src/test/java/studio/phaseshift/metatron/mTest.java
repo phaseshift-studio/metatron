@@ -47,10 +47,7 @@ public class mTest {
     @BeforeAll
     public static void begin() {
         BootLoader.load(rec(uri("log"), uri(LogObj.getSLF4J().toString().toLowerCase())));
-        kvInstSet.create().vid(f("/sys/lang/kv"));
-        //mInstSet.create().vid(f("/sys/lang/m"));
-        //machInstSet.create().vid(f("/sys/lang/mach"));
-        kvSpace.of(f("/usr/#"), fURI.fnull).vid(f("/sys/space/usr"));
+        kvInstSet.create();
     }
 
     @AfterAll

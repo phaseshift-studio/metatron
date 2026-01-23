@@ -25,7 +25,6 @@ import studio.phaseshift.metatron.lang.MSpace;
 import studio.phaseshift.metatron.lang.Space;
 import studio.phaseshift.metatron.lang.core.m.type.Obj;
 import studio.phaseshift.metatron.lang.core.m.type.Rec;
-import studio.phaseshift.metatron.lang.core.m.type.Rel;
 import studio.phaseshift.metatron.lang.core.m.type.Uri;
 import studio.phaseshift.metatron.lang.core.mach.stackSpace;
 import studio.phaseshift.metatron.lang.jre.ObjFieldReflection;
@@ -42,6 +41,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static studio.phaseshift.metatron.BootLoader.BOOTING;
+import static studio.phaseshift.metatron.Tokens.PATTERN;
 import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.lang.core.m.inst.mFluent.StartLess.from_;
@@ -56,12 +56,14 @@ import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
 public class MRouter extends MSpace<MServer> implements Router {
 
     public static final Serializers SERIALIZERS = new Serializers();
+
     public static final Uri PRIMARY = uri("primary");
     public static final fURI ROUTER_TID = sysInstSet.SYS_TYPE_TID.extend("router");
     private static final Set<fURI> READ_AS_NOOBJ = Set.of(fURI.ALL.maybeSome(), fURI.ALL.maybe(), fURI.ALL);
     private final GraphittyLogger LOG = Graphitty.log(this);
     @ObjFieldReflection(tid = "/m/str")
     public static final String test = "testes";
+    protected final IOStats iostats = new MIOStats();
 
     @ObjFieldReflection
     private final Map<fURI, Set<fURI>> smallToBigRewrites = new HashMap<>();
@@ -71,7 +73,7 @@ public class MRouter extends MSpace<MServer> implements Router {
 
     public MRouter(final fURI host, final fURI vid) {
         super(new MServer(host), new ConcurrentHashMap<>(Map.of(
-                        uri(Tokens.PATTERN), uri(ALL),
+                        uri(PATTERN), uri(ALL),
                         PRIMARY, uri(MTRON_TID),
                         uri(Tokens.SPACE), rec(new ConcurrentHashMap<>(Map.of(uri("+/#"), new stackSpace(f("+/#"))))))), f("#"),
                 ROUTER_TID,
@@ -104,6 +106,11 @@ public class MRouter extends MSpace<MServer> implements Router {
     public synchronized void close() {
         super.close();
         this.spaces().jvm().clear();
+    }
+
+    @Override
+    public IOStats stats() {
+        return this.iostats;
     }
 
     public void registerRewrite(final fURI small, final fURI big) {
@@ -161,19 +168,19 @@ public class MRouter extends MSpace<MServer> implements Router {
 
     @Override
     public void removeSpace(final fURI vid) {
-        this.spaces().elements().map(Rel::second).map(Obj::<Space>as).filter(s -> Objects.equals(vid, s.vid())).forEach(s -> {
-            try {
-                if (null != s.vid()) {
-                    final Space space = (Space) this.spaces().jvm().remove(s.vid().toUri());
-                    if (null != space) {
-                        Space.Helper.spaceCloseLog(this, space);
-                        //space.close();
+        this.spaces().elements()
+                .filter(s -> Objects.equals(s.second().vid(), vid) || Objects.equals(s.first(), vid))
+                .forEach(s -> {
+                    try {
+                        final Space space = (Space) this.spaces().jvm().remove(s.first());
+                        if (null != space) {
+                            Space.Helper.spaceCloseLog(this, space);
+                            //space.close();
+                        }
+                    } catch (final Exception e) {
+                        LOG.error(e);
                     }
-                }
-            } catch (final Exception e) {
-                LOG.error(e);
-            }
-        });
+                });
     }
 
     public <S extends Space> S getSpace(final fURI match) {
@@ -272,5 +279,33 @@ public class MRouter extends MSpace<MServer> implements Router {
     @Override
     public String toString() {
         return Router.Helper.routerToString(this);
+    }
+
+    class MIOStats implements IOStats {
+
+        protected long bytesSent = 0;
+        protected long bytesRecv = 0;
+
+        @Override
+        public IOStats incrBytesRecv(long bytes) {
+            this.bytesRecv += bytes;
+            return this;
+        }
+
+        @Override
+        public IOStats incrBytesSent(long bytes) {
+            this.bytesSent += bytes;
+            return this;
+        }
+
+        @Override
+        public long bytesSent() {
+            return this.bytesSent;
+        }
+
+        @Override
+        public long bytesRecv() {
+            return bytesRecv;
+        }
     }
 }

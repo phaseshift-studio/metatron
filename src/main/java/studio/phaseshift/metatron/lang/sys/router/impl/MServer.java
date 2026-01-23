@@ -62,7 +62,6 @@ public class MServer extends WebSocketServer implements Cluster, Closeable, Obj 
     protected final Map<fURI, MConnection> cluster = new HashMap<>();
     protected GraphittyLogger LOG;
     protected List<FutureObj<?>> futures = new ArrayList<>();
-    private IOStat ioStat = new IOStat();
     final AtomicBoolean running = new AtomicBoolean(false);
 
     public MServer(final fURI host) {
@@ -123,11 +122,7 @@ public class MServer extends WebSocketServer implements Cluster, Closeable, Obj 
             super.getConnections().stream().toList().forEach(WebSocket::close);
         }
     }
-
-    public IOStat stats() {
-        return this.ioStat;
-    }
-
+    
     @Override
     public void onOpen(final WebSocket ws, final ClientHandshake handshake) {
         ws.setAttachment(f("ws://" + ws.getRemoteSocketAddress()));
@@ -150,7 +145,7 @@ public class MServer extends WebSocketServer implements Cluster, Closeable, Obj 
     @Override
     public void onMessage(final WebSocket conn, final ByteBuffer message) {
         LOG.debug("received from %s byte buffer [length:%d]", conn.getAttachment(), message.array().length);
-        this.ioStat.incrTotalBytesRecv(message.array().length);
+        Router.global().stats().incrBytesRecv(message.array().length);
         try {
             final Obj obj = this.serializer.inputBytes(message);// this.serializer.read(message);
             this.onObj(conn, obj);
@@ -178,12 +173,12 @@ public class MServer extends WebSocketServer implements Cluster, Closeable, Obj 
             //this.sendObj(conn, result);
             if (result.isFail())
                 this.onError(conn, result.<Fail>as().jvmAs());
-            this.ioStat.incrTotalBytesSent(bytes.array().length);
+            Router.global().stats().incrBytesSent (bytes.array().length);
             LOG.trace("sent %s for {{b}}%s{{/b}}", result, conn.getAttachment());
         } catch (final Exception e) {
             final ByteBuffer bytes = this.serializer.outputBytes(fail(e));
             conn.send(bytes);
-            this.ioStat.incrTotalBytesRecv(bytes.array().length);
+            Router.global().stats().incrBytesRecv(bytes.array().length);
             this.onError(conn, e);
         }
     }

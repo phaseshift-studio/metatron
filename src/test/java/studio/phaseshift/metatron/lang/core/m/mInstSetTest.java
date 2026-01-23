@@ -43,7 +43,7 @@ public class mInstSetTest extends InstSetTest {
 
 
     public mInstSetTest() {
-        super(mInstSet.create());
+        super(() -> mInstSet.create(f("/sys/m")));
     }
 
     @Test
@@ -664,6 +664,17 @@ public class mInstSetTest extends InstSetTest {
     }, delimiter = '%')
     public void testAutoFrom(final String code, final String expected) throws Exception {
         TestData.Helper.loadData(this, "testAutoFrom");
+        super.testCode(code, expected);
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "20.map(30)                                   % 30",
+            "20.swap(30)                                  % 20",
+            "|plus(30).map(20)                            % 20",
+            "|plus(30).swap(20)                           % 50",
+    }, delimiter = '%')
+    public void testSwap(final String code, final String expected) throws Exception {
         super.testCode(code, expected);
     }
 }

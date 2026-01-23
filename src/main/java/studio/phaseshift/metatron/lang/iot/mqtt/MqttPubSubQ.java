@@ -63,10 +63,10 @@ public class MqttPubSubQ extends PubSubQ {
                             .send()
                             .whenComplete((m, e) -> {
                                 if (null != e) {
-                                    Router.global().server().stats().incrTotalBytesRecv(e.toString().length());
+                                    Router.global().stats().incrBytesRecv(e.toString().length());
                                     LOG.error(e);
                                 } else {
-                                    Router.global().server().stats().incrTotalBytesRecv(m.toString().length());
+                                    Router.global().stats().incrBytesRecv(m.toString().length());
                                     // super.qlessWrite(source, vid, noobj());
                                     // space.cache.write(vid, noobj());
                                     // subscriptions = subscriptions.stream().filter(x -> !x.<Subscription>as().target().bimatches(vid.qLess())).reduce(noobj(), (a, b) -> a.append(b));
@@ -82,7 +82,7 @@ public class MqttPubSubQ extends PubSubQ {
                                 final fURI topic = Space.Helper.fromNativeSpace(p.getTopic().toString(), space.rewrite);
                                 Obj o;
                                 if (p.getPayload().isPresent()) {
-                                    Router.global().server().stats().incrTotalBytesRecv(p.toString().length());
+                                    Router.global().stats().incrBytesRecv(p.toString().length());
                                     final String json = StandardCharsets.UTF_8.decode(p.getPayload().get()).toString();
                                     o = space.jsonTranslator.parse(json);
                                 } else

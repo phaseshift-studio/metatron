@@ -18,24 +18,48 @@
 
 package studio.phaseshift.metatron.lang;
 
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import studio.phaseshift.metatron.mTest;
-import studio.phaseshift.metatron.lang.core.m.type.InstSet;
 import studio.phaseshift.metatron.lang.core.m.type.Rel;
+import studio.phaseshift.metatron.lang.sys.router.Router;
+import studio.phaseshift.metatron.mTest;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Supplier;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public abstract class InstSetTest extends mTest {
 
-    protected final InstSet space;
+    protected Space space;
+    protected final Supplier<Space> spaceSupplier;
 
-    public InstSetTest(final InstSet space) {
-        this.space = space;
+    public InstSetTest(final Supplier<Space> instSetSupplier) {
+        this.spaceSupplier = instSetSupplier;
     }
+
+    @BeforeEach
+    protected void setup() {
+        this.space = this.spaceSupplier.get();
+        if (this.space.vid() == null)
+            LOG.warn("provided space has no vid and thus can not be shutdown automatically");
+        Router.global().addSpace(this.space);
+    }
+
+    @AfterEach
+    protected void stop() {
+        if (null != this.space.vid()) {
+            assertDoesNotThrow(this.space::close);
+            Router.global().removeSpace(this.space.vid());
+        }
+        this.space = null;
+    }
+
 
     @Test
     public void testReadResult() {

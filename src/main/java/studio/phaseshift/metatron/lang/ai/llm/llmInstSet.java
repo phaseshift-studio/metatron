@@ -141,7 +141,7 @@ public class llmInstSet extends MInstSet {
                                 final StringBuilder response = new StringBuilder();
                                 final OllamaGenerateTokenHandler thinkingStreamHandler =
                                         (s) -> {
-                                            Router.global().server().stats().incrTotalBytesRecv(s.getBytes().length);
+                                            Router.global().stats().incrBytesRecv(s.getBytes().length);
                                             LOG.none("{{m}}%s{{X}}", s);
                                         };
 
@@ -151,13 +151,13 @@ public class llmInstSet extends MInstSet {
                                             if (start.getAndSet(false))
                                                 LOG.none("\n");
                                             LOG.none("{{y}}%s{{X}}", s);
-                                            Router.global().server().stats().incrTotalBytesRecv(s.getBytes().length);
+                                            Router.global().stats().incrBytesRecv(s.getBytes().length);
                                             response.append(s);
                                         };
 
                                 if (thinking)
                                     LOG.none(Graphitty.sillyPrint("thinking...\n", true, true));
-                                Router.global().server().stats().incrTotalBytesSent(lhs.strValue().getBytes().length);
+                                Router.global().stats().incrBytesSent(lhs.strValue().getBytes().length);
                                 final OllamaChatResult result =
                                         new Ollama(host).chat(chatRequest, new OllamaChatStreamObserver(thinking ? thinkingStreamHandler : null, responseStreamHandler));
                                 while (!result.getResponseModel().isDone()) {

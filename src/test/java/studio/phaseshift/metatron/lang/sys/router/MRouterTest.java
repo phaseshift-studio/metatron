@@ -22,6 +22,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.core.m.type.NoObj;
+import studio.phaseshift.metatron.lang.db.kv.inst.kvInstSet;
 import studio.phaseshift.metatron.lang.db.kv.kvSpace;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -32,11 +33,7 @@ import static studio.phaseshift.metatron.lang.core.m.type.impl.MInt.jnt;
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public class MRouterTest extends RouterTest {
-
-    @BeforeAll
-    public static void begin() {
-
-    }
+    
 
     @Test
     public void testCloseSpace() {
