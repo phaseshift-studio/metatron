@@ -1,0 +1,8 @@
+Package: [[name]]
+Version: [[version]]
+Section: misc
+Priority: low
+Architecture: all
+Description: [[description]]
+Maintainer: Marko A. Rodriguez <marko@markorodriguez.com>
+Depends: default-jre | java22-runtime
