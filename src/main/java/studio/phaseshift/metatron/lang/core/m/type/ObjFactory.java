@@ -19,7 +19,6 @@
 package studio.phaseshift.metatron.lang.core.m.type;
 
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.lang.core.m.obj.NoObj;
 import studio.phaseshift.metatron.util.MTronException;
 
 import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.*;

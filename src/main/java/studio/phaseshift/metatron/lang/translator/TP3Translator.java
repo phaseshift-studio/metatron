@@ -33,7 +33,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import static studio.phaseshift.metatron.lang.core.m.inst.mFluent.StartLess.auto;
-import static studio.phaseshift.metatron.lang.core.m.obj.NoObj.noobj;
+import static studio.phaseshift.metatron.lang.core.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.lang.db.grph.inst.grphInstSet.EDGE_TID;

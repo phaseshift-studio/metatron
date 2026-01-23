@@ -20,12 +20,12 @@ package studio.phaseshift.metatron.lang.core.m.type;
 
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-import studio.phaseshift.metatron.MetatronTest;
+import studio.phaseshift.metatron.mTest;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class UriTest extends MetatronTest {
+public class UriTest extends mTest {
 
     @Override
     @ParameterizedTest

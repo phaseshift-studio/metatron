@@ -32,7 +32,7 @@ import studio.phaseshift.metatron.util.MTronException;
 import java.io.Closeable;
 
 import static studio.phaseshift.metatron.furi.fURI.f;
-import static studio.phaseshift.metatron.lang.core.m.obj.NoObj.noobj;
+import static studio.phaseshift.metatron.lang.core.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
 
 public interface Router extends Obj, Space, Closeable {
@@ -142,7 +142,6 @@ public interface Router extends Obj, Space, Closeable {
                 // do nothing? System.out.println(Graphitty.string("[{{y}}WARN {{/T}}] %s", e.getMessage()));
             }
         });
-       
     }
 
     class Helper {

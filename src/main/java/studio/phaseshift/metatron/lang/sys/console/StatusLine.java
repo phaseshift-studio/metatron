@@ -41,7 +41,7 @@ public class StatusLine implements Runnable {
     private long startTime = 0;
     private long lastExecutionTime = 0;
     private final Status status;
-    
+
     public StatusLine(final Console console, final String line) {
         this.line = new AttributedStringBuilder().append(line).toAttributedString();
         this.status = Status.getStatus(console.getTerminal());
@@ -67,12 +67,12 @@ public class StatusLine implements Runnable {
     public void setState(final Level state) {
         this.state = state;
     }
-    
+
     public void refresh() {
         this.status.update(List.of());
         this.status.update(List.of(this.line));
     }
-    
+
     private static String bytesFormat(final long bytes) {
         if (bytes < 1024)
             return bytes + "B";
@@ -85,7 +85,7 @@ public class StatusLine implements Runnable {
         else
             return String.format("%.2fT", bytes / (1024.0 * 1024.0 * 1024.0 * 1024.0));
     }
-    
+
     private static String timeFormat(final long millis) {
         if (millis < 1000)
             return String.format("%dms", millis);
@@ -101,6 +101,10 @@ public class StatusLine implements Runnable {
 
     public void run() {
         while (!Thread.currentThread().isInterrupted()) {
+            final boolean serverRunning = Router.global().server().isRunning();
+            if (!serverRunning)
+                this.setState(ERROR);
+            /// //////////////////////////////////////
             final String color;
             if (this.state.equals(WARN))
                 color = "y";
@@ -110,7 +114,7 @@ public class StatusLine implements Runnable {
                 color = "b";
             if (Router.loaded()) {
                 final AttributedString temp = new AttributedStringBuilder()
-                        .ansiAppend(Graphitty.string("{{[" + color + "]&y}} %s", Router.global().server().host()))
+                        .ansiAppend(Graphitty.string("{{[" + color + "]&y}} %s", serverRunning ? Router.global().server().host() : "<server down>"))
                         .ansiAppend(Graphitty.string("{{g}}|{{w}}nodes:{{y}}%d{{[" + color + "]&w}}", Router.global().server().nodes().size()))
                         .ansiAppend(Graphitty.string("{{g}}|{{w}}in:{{y}}%s{{[" + color + "]}}", bytesFormat(Router.global().server().stats().getBytesRecv())))
                         .ansiAppend(Graphitty.string("{{g}}|{{w}}out:{{y}}%s{{[" + color + "]}}", bytesFormat(Router.global().server().stats().getBytesSent())))

@@ -19,7 +19,7 @@
 package studio.phaseshift.metatron.lang.core.m;
 
 import org.junit.jupiter.api.Test;
-import studio.phaseshift.metatron.lang.core.m.obj.NoObj;
+import studio.phaseshift.metatron.lang.core.m.type.NoObj;
 import studio.phaseshift.metatron.lang.core.m.parser.mParser;
 import studio.phaseshift.metatron.lang.core.m.type.Bytes;
 import studio.phaseshift.metatron.lang.core.m.type.Obj;

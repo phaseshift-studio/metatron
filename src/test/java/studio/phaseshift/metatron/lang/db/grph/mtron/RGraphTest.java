@@ -23,7 +23,7 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-import studio.phaseshift.metatron.MetatronTest;
+import studio.phaseshift.metatron.mTest;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.db.grph.grphSpace;
 import studio.phaseshift.metatron.lang.db.grph.inst.grphInstSet;
@@ -42,10 +42,10 @@ import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 @Disabled
-public class RGraphTest extends MetatronTest {
+public class RGraphTest extends mTest {
     @BeforeAll
     public static void begin() {
-        MetatronTest.begin();
+        mTest.begin();
         grphInstSet.create().vid(f("/sys/lang/grph"));
         grphSpace space = new grphSpace(kvSpace.of(f("/g/#"), fURI.fnull), Map.of(
                 uri(SPACE), kvSpace.of(f("/g/#"), fURI.fnull),

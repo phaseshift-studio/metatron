@@ -20,7 +20,8 @@ package studio.phaseshift.metatron.lang.util.serial;
 
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-import studio.phaseshift.metatron.MetatronTest;
+import studio.phaseshift.metatron.mSerializerTest;
+import studio.phaseshift.metatron.mTest;
 import studio.phaseshift.metatron.lang.core.m.parser.mParser;
 import studio.phaseshift.metatron.lang.core.m.type.Obj;
 
@@ -31,44 +32,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class ObjByteBufferSerializerTest extends MetatronTest {
 
-    @ParameterizedTest
-    @CsvSource(value = {
-            //obj
-            "noobj", "int{0}::3",
-            "true", "false", "1", "0", "-100", "12.355", "-12.35",
-            "\"this is a string\"",
-            "\"\"\"this is a multilinestring\"\"\"",
-            "<http://test.uri.com>",
-            "<http://test.uri.com?a=b&c=d>",
-            "/mtron/test",
-            "uri{24}::a/b/c",
-            "[<a>,<b>,<c>,<d>]",
-            "rec::[a=>b,c=>d]",
-            "[<a>=>b,c=><d>]",
-            "[a=>b,c=>[b=>d]]",
-            //"addTwentyThree(){?}",
-            "plus(2).mult(7)",
-            "start(1).plus(2).mult(7)",
-            "[=>]",
-            "[,]",
-            "< >",
-            "[a,[b,12,'abc'],[a=>b,c=>[c=>d]]]",
-            "rec{0}::[a,[b,12,'abc'],[a=>b,c=>[c=>d]]]",
-            "{1,2,3,4,5}",
-            "{true, false, 1,0, -100, 12.355, -12.35}",
-            "{true, false, {1,0}, {-100, 12.355, -12.35}}",
-            "{,}"
-    }, delimiter = '|')
-    public void testKeyValue(final String objString) {
-        ObjByteBufferSerializer serializer = new ObjByteBufferSerializer();
-        final Obj obj = mParser.parse(objString);
-        final ByteBuffer buffer = serializer.write(obj);
-        final String objString2 = new String(buffer.array());
-        final Obj obj2 = serializer.read(buffer);
-        LOG.debug("testing {{b}}%s{{/b}} serialized to %s [expected: {{b}}%s{{g}}=>{{/g}}%s {{X}}]", objString, obj, objString2, obj2);
-        assertEquals(obj, obj2);
-    }
+public class ObjByteBufferSerializerTest extends mSerializerTest<ByteBuffer> {
+
+   public ObjByteBufferSerializerTest() {
+       super(new ObjByteBufferSerializer());
+   }
 
 }

@@ -37,7 +37,7 @@ import java.util.function.Function;
 
 import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.*;
-import static studio.phaseshift.metatron.lang.core.m.obj.NoObj.noobj;
+import static studio.phaseshift.metatron.lang.core.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;

@@ -19,7 +19,7 @@
 package studio.phaseshift.metatron.lang.util.serial;
 
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.lang.core.m.obj.NoObj;
+import studio.phaseshift.metatron.lang.core.m.type.NoObj;
 import studio.phaseshift.metatron.lang.core.m.type.*;
 import studio.phaseshift.metatron.lang.core.mach.type.Machine;
 import studio.phaseshift.metatron.lang.core.mach.type.Monad;
@@ -29,7 +29,8 @@ import studio.phaseshift.metatron.util.MTronException;
 import java.nio.ByteBuffer;
 
 import static studio.phaseshift.metatron.furi.fURI.f;
-import static studio.phaseshift.metatron.lang.core.m.obj.NoObj.noobj;
+import static studio.phaseshift.metatron.lang.core.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MFail.fail;
 
 public interface ObjSerializer<T> {
 
@@ -42,28 +43,32 @@ public interface ObjSerializer<T> {
     fURI tid();
 
     default T write(final Obj obj) throws MTronException {
-        return switch (obj) {
-            case null -> this.writeNoObj(noobj());
-            case NoObj objs -> this.writeNoObj(obj.as());
-            case Bytes objs -> this.writeBytes(obj.as());
-            case Fail objs -> this.writeFail(obj.as());
-            case Bool objs -> this.writeBool(obj.as());
-            case Int objs -> this.writeInt(obj.as());
-            case Real objs -> this.writeReal(obj.as());
-            case Str objs -> this.writeStr(obj.as());
-            case Uri objs -> this.writeUri(obj.as());
-            case Rel objs -> this.writeRel(obj.as());
-            case Lst objs -> this.writeLst(obj.as());
-            case Rec objs -> this.writeRec(obj.as());
-            case Inst objs -> this.writeInst(obj.as());
-            case Code objs -> this.writeCode(obj.as());
-            case Objs objs -> this.writeObjs(obj.as());
-            case Type objs -> this.writeType(obj.as());
-            case Monad objs -> this.writeMonad(obj.as());
-            case Machine objs -> this.writeMachine(obj.as());
-            case FutureObj<?> objs -> this.write(objs.get(5000));
-            default -> throw MTronException.of("unknown obj class: %s", obj.getClass());
-        };
+        try {
+            return switch (obj) {
+                case null -> this.writeNoObj(noobj());
+                case NoObj objs -> this.writeNoObj(obj.as());
+                case Bytes objs -> this.writeBytes(obj.as());
+                case Fail objs -> this.writeFail(obj.as());
+                case Bool objs -> this.writeBool(obj.as());
+                case Int objs -> this.writeInt(obj.as());
+                case Real objs -> this.writeReal(obj.as());
+                case Str objs -> this.writeStr(obj.as());
+                case Uri objs -> this.writeUri(obj.as());
+                case Rel objs -> this.writeRel(obj.as());
+                case Lst objs -> this.writeLst(obj.as());
+                case Rec objs -> this.writeRec(obj.as());
+                case Inst objs -> this.writeInst(obj.as());
+                case Code objs -> this.writeCode(obj.as());
+                case Objs objs -> this.writeObjs(obj.as());
+                case Type objs -> this.writeType(obj.as());
+                case Monad objs -> this.writeMonad(obj.as());
+                case Machine objs -> this.writeMachine(obj.as());
+                case FutureObj<?> objs -> this.write(objs.get(5000));
+                default -> throw MTronException.of("unknown obj class: %s", obj.getClass());
+            };
+        } catch(final Exception e) {
+            throw MTronException.of(e);
+        }
     }
 
     Obj read(final T data) throws MTronException;
@@ -145,9 +150,9 @@ public interface ObjSerializer<T> {
         return (Fail) this.read(t);
     }
 
-    /*default Bytes readBytes(final T t) {
+    default Bytes readBytes(final T t) {
         return (Bytes) this.read(t);
-    }*/
+    }
 
 
     default Bool readBool(final T t) {

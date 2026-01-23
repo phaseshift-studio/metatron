@@ -31,7 +31,7 @@ import studio.phaseshift.metatron.util.Tuple;
 
 import java.util.List;
 
-import static studio.phaseshift.metatron.lang.core.m.obj.NoObj.noobj;
+import static studio.phaseshift.metatron.lang.core.m.type.NoObj.noobj;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)

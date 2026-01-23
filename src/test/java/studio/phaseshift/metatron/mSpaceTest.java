@@ -16,11 +16,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.lang;
+package studio.phaseshift.metatron;
 
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-import studio.phaseshift.metatron.MetatronTest;
+import studio.phaseshift.metatron.lang.Space;
 import studio.phaseshift.metatron.lang.core.m.parser.mParser;
 import studio.phaseshift.metatron.lang.core.m.type.Obj;
 import studio.phaseshift.metatron.lang.sys.router.Router;
@@ -33,11 +35,32 @@ import java.util.function.Supplier;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public abstract class SpaceTest extends MetatronTest {
+/*
+ * @author Marko A. Rodriguez (http://markorodriguez.com)
+ */
+public abstract class mSpaceTest extends mTest {
 
-    public static final List<String> PREVIOUS_LINE = new ArrayList<>(List.of("", "", ""));
-    public static Supplier<Space> SPACE;
+    protected Space space;
+    protected final Supplier<Space> spaceSupplier;
+    protected static final List<String> PREVIOUS_LINE = new ArrayList<>(List.of("", "", ""));
 
+    public mSpaceTest(final Supplier<Space> spaceSupplier) {
+        this.spaceSupplier = spaceSupplier;
+    }
+
+    @BeforeEach
+    protected void setup() {
+        this.space = this.spaceSupplier.get();
+        Router.global().addSpace(this.space);
+    }
+
+    @AfterEach
+    protected void stop() {
+        assertDoesNotThrow(this.space::close);
+        Router.global().removeSpace(this.space.vid());
+        this.space = null;
+    }
+    
     @ParameterizedTest
     @CsvSource(value = {
             "1.to(a)                                               % *a                              % 1",
@@ -113,8 +136,6 @@ public abstract class SpaceTest extends MetatronTest {
             // "[1@a,2@b,3@c]@d.map(*b + 10@b).to(d)                  % *d._.vid(<.>)                    % 12"
     }, delimiter = '%')
     void testMonoReadWrite(final String writeExpression, final String readExpression, final String expectedExpression) {
-        final Space space = SPACE.get();
-        Router.global().addSpace(space);
         final Obj writeObj = mParser.parse(writeExpression.equals(".") ? PREVIOUS_LINE.get(0) : writeExpression).apply();
         final Obj readObj = mParser.parse(readExpression.equals(".") ? PREVIOUS_LINE.get(1) : readExpression).apply();
         final Obj resultObj = mParser.parse(expectedExpression.equals(".") ? PREVIOUS_LINE.get(2) : expectedExpression).apply();
@@ -124,7 +145,7 @@ public abstract class SpaceTest extends MetatronTest {
             PREVIOUS_LINE.set(1, readExpression);
         if (!expectedExpression.equals("."))
             PREVIOUS_LINE.set(2, expectedExpression);
-        Graphitty.log(SPACE).debug("\n\twrite [%s => %s]\n\tread [%s => %s]\n\texpected [%s => %s]",
+        Graphitty.log(this.space).debug("\n\twrite [%s => %s]\n\tread [%s => %s]\n\texpected [%s => %s]",
                 writeExpression, writeObj,
                 readExpression, readObj,
                 expectedExpression, resultObj);
@@ -132,24 +153,6 @@ public abstract class SpaceTest extends MetatronTest {
             assertEquals(resultObj, readObj);
         } catch (final Exception e) {
             LOG.error(e);
-        } finally {
-            Router.global().removeSpace(space.vid());
-            assertDoesNotThrow(space::close);
         }
     }
-
-
-    @Override
-    @ParameterizedTest
-    @CsvSource(value = {
-            "a -> 1                                               % 1"
-    }, delimiter = '%')
-    public void testCode(final String code, final String expected) {
-        super.testCode(code, expected);
-    }
-
-  /*  public void testMonoSpace() {
-        space.
-    }
-*/
 }

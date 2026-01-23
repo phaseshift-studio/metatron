@@ -26,7 +26,7 @@ import studio.phaseshift.metatron.ui.widget.Table;
 
 import java.util.List;
 
-import static studio.phaseshift.metatron.lang.core.m.obj.NoObj.noobj;
+import static studio.phaseshift.metatron.lang.core.m.type.NoObj.noobj;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)

@@ -18,14 +18,12 @@
 
 package studio.phaseshift.metatron.lang.db.kv;
 
-import org.junit.jupiter.api.BeforeAll;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.lang.SpaceTest;
+import studio.phaseshift.metatron.mSpaceTest;
 
-public class kvSpaceTest extends SpaceTest {
+public class kvSpaceTest extends mSpaceTest {
 
-    @BeforeAll
-    public static void setup() {
-        SPACE = () -> new kvSpace(fURI.of("/t/#"), fURI.of("/sys/router/space/t"));
+    public kvSpaceTest() {
+        super(() -> new kvSpace(fURI.of("/t/#"), fURI.of("/sys/router/space/t")));
     }
 }

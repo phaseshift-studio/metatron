@@ -22,10 +22,9 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-import studio.phaseshift.metatron.lang.SpaceTest;
 import studio.phaseshift.metatron.lang.core.m.parser.mParser;
 import studio.phaseshift.metatron.lang.db.grph.inst.grphInstSet;
-import studio.phaseshift.metatron.lang.sys.router.Router;
+import studio.phaseshift.metatron.mSpaceTest;
 
 import static studio.phaseshift.metatron.furi.fURI.f;
 
@@ -33,21 +32,23 @@ import static studio.phaseshift.metatron.furi.fURI.f;
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 @Disabled
-public class grphInstSetTest extends SpaceTest {
+public class grphInstSetTest extends mSpaceTest {
 
+    public grphInstSetTest() {
+        super(() -> mParser.parse("""
+                 grph::[pattern => /g/#,
+                        store   => kv::[pattern => /g/#],
+                        :load   => modern]
+                """));
+        grphInstSet.create().vid(f("/sys/router/lang/grph"));
+    }
 
     @BeforeAll
     @Disabled
     public static void begin() {
         //     MetatronTest.begin();
-        grphInstSet.create().vid(f("/sys/router/lang/grph"));
+      
         //  MGraph.of(TinkerFactory.createModern(), f("/tp/#"), f("/sys/router/space/tp"));
-        SPACE = () -> mParser.parse("""
-                 grph::[pattern => /g/#,
-                        store   => kv::[pattern => /g/#],
-                        :load   => modern]
-                """);
-        Router.writeToSpace("/g", SPACE.get());
     }
 
 

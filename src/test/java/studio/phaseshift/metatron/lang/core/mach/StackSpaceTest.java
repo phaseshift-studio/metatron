@@ -18,17 +18,16 @@
 
 package studio.phaseshift.metatron.lang.core.mach;
 
-import org.junit.jupiter.api.BeforeAll;
-import studio.phaseshift.metatron.lang.SpaceTest;
+import studio.phaseshift.metatron.mSpaceTest;
 
 import static studio.phaseshift.metatron.furi.fURI.f;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class StackSpaceTest extends SpaceTest {
-    @BeforeAll
-    public static void setup() {
-        SPACE = () -> new stackSpace(f("/t/#"));
+public class StackSpaceTest extends mSpaceTest {
+
+    public StackSpaceTest() {
+        super(() -> new stackSpace(f("/t/#")));
     }
 }

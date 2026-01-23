@@ -30,7 +30,7 @@ import studio.phaseshift.metatron.lang.sys.router.Router;
 import java.util.ArrayList;
 import java.util.List;
 
-import static studio.phaseshift.metatron.lang.core.m.obj.NoObj.noobj;
+import static studio.phaseshift.metatron.lang.core.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
 

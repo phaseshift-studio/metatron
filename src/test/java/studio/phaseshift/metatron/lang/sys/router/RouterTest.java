@@ -18,12 +18,12 @@
 
 package studio.phaseshift.metatron.lang.sys.router;
 
-import studio.phaseshift.metatron.MetatronTest;
+import studio.phaseshift.metatron.mTest;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class RouterTest extends MetatronTest {
+public class RouterTest extends mTest {
 
 
 }

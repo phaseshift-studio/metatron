@@ -34,7 +34,7 @@ import java.util.*;
 
 import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.NOOBJ_TID;
-import static studio.phaseshift.metatron.lang.core.m.obj.NoObj.NOOBJ_TYPE;
+import static studio.phaseshift.metatron.lang.core.m.type.NoObj.NOOBJ_TYPE;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MRel.rel;

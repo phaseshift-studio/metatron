@@ -21,10 +21,9 @@ package studio.phaseshift.metatron.lang.core.m.type.impl;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.core.m.type.Obj;
 import studio.phaseshift.metatron.lang.core.m.type.Poly;
-import studio.phaseshift.metatron.lang.sys.router.Router;
 import studio.phaseshift.metatron.util.MTronException;
 
-import static studio.phaseshift.metatron.lang.core.m.obj.NoObj.noobj;
+import static studio.phaseshift.metatron.lang.core.m.type.NoObj.noobj;
 
 public abstract class MObj implements Obj, Cloneable {
 

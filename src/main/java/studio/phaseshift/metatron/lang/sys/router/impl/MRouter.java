@@ -47,7 +47,7 @@ import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.lang.core.m.inst.mFluent.StartLess.from_;
 import static studio.phaseshift.metatron.lang.core.m.inst.mFluent.StartLess.start_;
 import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.MTRON_TID;
-import static studio.phaseshift.metatron.lang.core.m.obj.NoObj.noobj;
+import static studio.phaseshift.metatron.lang.core.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
@@ -102,9 +102,7 @@ public class MRouter extends MSpace<MServer> implements Router {
     }
 
     public synchronized void close() {
-        this.server().close();
-        final List<fURI> list = this.spaces().elements().map(Rel::second).map(Obj::vid).toList();
-        list.forEach(this::removeSpace);
+        super.close();
         this.spaces().jvm().clear();
     }
 

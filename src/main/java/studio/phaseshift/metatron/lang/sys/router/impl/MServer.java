@@ -37,12 +37,14 @@ import studio.phaseshift.metatron.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.io.Closeable;
+import java.net.BindException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MFail.fail;
@@ -61,12 +63,17 @@ public class MServer extends WebSocketServer implements Cluster, Closeable, Obj 
     protected GraphittyLogger LOG;
     protected List<FutureObj<?>> futures = new ArrayList<>();
     private IOStat ioStat = new IOStat();
+    final AtomicBoolean running = new AtomicBoolean(false);
 
     public MServer(final fURI host) {
         super(new InetSocketAddress(host.host(), host.port()));
         this.host = host;
         LOG = Graphitty.log(this);
         this.serializer = MRouter.SERIALIZERS.get(ObjByteBufferSerializer.OBJ_BYTE_BUFFER_SERIALIZER_TID);
+    }
+    
+    public boolean isRunning() {
+        return this.running.get();
     }
 
     @Override
@@ -78,6 +85,7 @@ public class MServer extends WebSocketServer implements Cluster, Closeable, Obj 
     public void start() {
         LOG = Router.global().logger();
         try {
+            this.running.set(true);
             super.start();
             LOG.trace("server started: %s", this.getAddress());
             BootLoader.ARGS.at(Tokens.CLUSTER).elements().filter(o -> !o.isNoObj()).distinct().forEach(
@@ -111,6 +119,7 @@ public class MServer extends WebSocketServer implements Cluster, Closeable, Obj 
         } catch (final Exception e) {
             throw MTronException.of(e);
         } finally {
+            this.running.set(false);
             super.getConnections().stream().toList().forEach(WebSocket::close);
         }
     }
@@ -123,6 +132,7 @@ public class MServer extends WebSocketServer implements Cluster, Closeable, Obj 
     public void onOpen(final WebSocket ws, final ClientHandshake handshake) {
         ws.setAttachment(f("ws://" + ws.getRemoteSocketAddress()));
         LOG.debug("new connection from %s", ws.getRemoteSocketAddress());
+        this.running.set(true);
         // broadcast("new connection: " + handshake.getResourceDescriptor()); //This method sends a message to all clients connected
     }
 
@@ -133,13 +143,13 @@ public class MServer extends WebSocketServer implements Cluster, Closeable, Obj 
 
     @Override
     public void onMessage(final WebSocket conn, final String message) {
-        LOG.trace("received from %s string [length:%d]", conn.getAttachment(), message.length());
+        LOG.debug("received from %s string [length:%d]", conn.getAttachment(), message.length());
         this.onMessage(conn, ByteBuffer.wrap(message.getBytes()));
     }
 
     @Override
     public void onMessage(final WebSocket conn, final ByteBuffer message) {
-        LOG.trace("received from %s byte buffer [length:%d]", conn.getAttachment(), message.array().length);
+        LOG.debug("received from %s byte buffer [length:%d]", conn.getAttachment(), message.array().length);
         this.ioStat.incrTotalBytesRecv(message.array().length);
         try {
             final Obj obj = this.serializer.inputBytes(message);// this.serializer.read(message);
@@ -152,6 +162,8 @@ public class MServer extends WebSocketServer implements Cluster, Closeable, Obj 
 
     public void onObj(final WebSocket conn, final Obj obj) {
         try {
+            if(null == obj)
+                return;
             LOG.trace("processing %s for {{b}}%s{{/b}}", obj, conn.getAttachment());
             Obj result = obj.apply();
             result = objs(result.stream().map(x -> x.vid() == null ? x : x.vid(null))); // x.vid(this.host().extend(x.vid()))));
@@ -163,12 +175,11 @@ public class MServer extends WebSocketServer implements Cluster, Closeable, Obj 
             // }
             final ByteBuffer bytes = this.serializer.outputBytes(result);
             conn.send(bytes);
-            this.ioStat.incrTotalBytesSent(bytes.array().length);
             //this.sendObj(conn, result);
             if (result.isFail())
                 this.onError(conn, result.<Fail>as().jvmAs());
+            this.ioStat.incrTotalBytesSent(bytes.array().length);
             LOG.trace("sent %s for {{b}}%s{{/b}}", result, conn.getAttachment());
-
         } catch (final Exception e) {
             final ByteBuffer bytes = this.serializer.outputBytes(fail(e));
             conn.send(bytes);
@@ -180,6 +191,8 @@ public class MServer extends WebSocketServer implements Cluster, Closeable, Obj 
     @Override
     public void onError(final WebSocket conn, final Exception ex) {
         LOG.error("an error occurred on connection %s: %s", null == conn ? "<not connected>" : conn.getAttachment(), ex);
+        if(null == conn ||ex instanceof BindException)
+            this.running.set(false);
     }
 
     @Override

@@ -18,7 +18,7 @@
 
 package studio.phaseshift.metatron.lang;
 
-import studio.phaseshift.metatron.MetatronTest;
+import studio.phaseshift.metatron.mTest;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.core.m.parser.mParser;
 import studio.phaseshift.metatron.lang.core.m.type.Obj;
@@ -32,7 +32,7 @@ import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public abstract class MetatronObjTest extends MetatronTest {
+public abstract class mObjTest extends mTest {
 
     public void testTake(final String current, final String remove, final String retrieved, final String remaining) {
         final Obj currentF = mParser.m_obj().parse(current).get();

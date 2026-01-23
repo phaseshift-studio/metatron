@@ -37,7 +37,7 @@ public class Serializers {
 
     public Serializers() {
         this.serializers = new HashMap<>();
-        this.add(new mParserObjSerializer());
+        this.add(new ObjCleanStringSerializer());
         this.add(new ObjByteBufferSerializer());
         this.add(ObjStringSerializer.build().simpleColon(false).prettyPrint(false).create());
     }

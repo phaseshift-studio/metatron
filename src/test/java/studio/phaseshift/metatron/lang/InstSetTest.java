@@ -19,7 +19,7 @@
 package studio.phaseshift.metatron.lang;
 
 import org.junit.jupiter.api.Test;
-import studio.phaseshift.metatron.MetatronTest;
+import studio.phaseshift.metatron.mTest;
 import studio.phaseshift.metatron.lang.core.m.type.InstSet;
 import studio.phaseshift.metatron.lang.core.m.type.Rel;
 
@@ -29,7 +29,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public abstract class InstSetTest extends MetatronTest {
+public abstract class InstSetTest extends mTest {
 
     protected final InstSet space;
 

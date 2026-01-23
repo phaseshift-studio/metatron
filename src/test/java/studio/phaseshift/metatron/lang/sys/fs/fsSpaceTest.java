@@ -22,11 +22,10 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-import studio.phaseshift.metatron.furi.q.PubSubQ;
-import studio.phaseshift.metatron.lang.SpaceTest;
 import studio.phaseshift.metatron.lang.core.m.parser.mParser;
 import studio.phaseshift.metatron.lang.core.m.type.Obj;
 import studio.phaseshift.metatron.lang.sys.router.Router;
+import studio.phaseshift.metatron.mSpaceTest;
 
 import java.nio.file.FileSystems;
 import java.util.Map;
@@ -34,39 +33,31 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static studio.phaseshift.metatron.furi.fURI.f;
-import static studio.phaseshift.metatron.furi.q.PubSubQ.SUBSCRIPTION_TID;
-import static studio.phaseshift.metatron.lang.core.m.obj.NoObj.noobj;
+import static studio.phaseshift.metatron.lang.core.m.type.NoObj.noobj;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 @Disabled
-public class fsSpaceTest extends SpaceTest {
+public class fsSpaceTest extends mSpaceTest {
 
-    @BeforeAll
-    public static void setup() {
-        fsInstSet.create();
-        SPACE = () -> {
+    public fsSpaceTest() {
+        super(() -> {
             //try {
             mParser.eval("*/fs");
             final fileSpace space = fileSpace.of(FileSystems.getDefault(), Map.of(), f("/tmp/#"), f("/sys/space/fs"));
-            // space.directWriter().apply(f("#"), noobj());
             return space;
-            //  } catch (Exception e) {
-            // Graphitty.log(mqttSpaceTest.class).warn("skipping test as no test server is running");
-            //  assumeTrue(false);
-            //return null;
-            // }
-        };
-    }
+        });
+        fsInstSet.create();
 
+    }
+    
     @ParameterizedTest
     @CsvSource(value = {
             "</tmp/file.jpg> -> 0xab2356abcd        % a",
             "*</tmp/file.jpg>    % abc"
     }, delimiter = '%')
     public void testImage(final String code, final String expected) {
-        Router.global().addSpace(SPACE.get());
         final Obj resultObj = mParser.eval(code);
         final Obj checkObj = mParser.eval(expected);
         assertNotEquals(noobj(), checkObj);

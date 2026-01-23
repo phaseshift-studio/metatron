@@ -40,7 +40,7 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.CODE_TID;
-import static studio.phaseshift.metatron.lang.core.m.obj.NoObj.noobj;
+import static studio.phaseshift.metatron.lang.core.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.lang.core.mach.machInstSet.DROP_TID;
 import static studio.phaseshift.metatron.lang.core.mach.machInstSet.MACH_INSTSET_TID;

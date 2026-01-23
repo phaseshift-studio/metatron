@@ -19,7 +19,7 @@
 package studio.phaseshift.metatron.lang.net.web;
 
 import org.junit.jupiter.api.Test;
-import studio.phaseshift.metatron.MetatronTest;
+import studio.phaseshift.metatron.mTest;
 import studio.phaseshift.metatron.lang.core.m.type.Rec;
 import studio.phaseshift.metatron.lang.translator.HTMLTranslator;
 
@@ -28,7 +28,7 @@ import java.io.File;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class HTMLTranslatorTest extends MetatronTest {
+public class HTMLTranslatorTest extends mTest {
 
     @Test
     public void testWebPageParsing() {

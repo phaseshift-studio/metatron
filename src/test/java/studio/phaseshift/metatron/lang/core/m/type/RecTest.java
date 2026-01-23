@@ -21,7 +21,7 @@ package studio.phaseshift.metatron.lang.core.m.type;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-import studio.phaseshift.metatron.lang.MetatronObjTest;
+import studio.phaseshift.metatron.lang.mObjTest;
 import studio.phaseshift.metatron.lang.core.m.parser.mParser;
 import studio.phaseshift.metatron.ui.graphitty.Graphitty;
 
@@ -35,7 +35,7 @@ import static studio.phaseshift.metatron.lang.core.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
 
-public class RecTest extends MetatronObjTest {
+public class RecTest extends mObjTest {
 
     @ParameterizedTest
     @CsvSource(value = {

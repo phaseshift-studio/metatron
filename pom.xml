@@ -47,6 +47,7 @@
         <java.version>22</java.version>
         <skipTests>false</skipTests>
         <!-- DEPENDENCY VERSIONS -->
+        <java-websocket.version>1.6.0</java-websocket.version>
         <sqlite.version>3.51.1.0</sqlite.version>
         <langchain4j.version>1.9.1</langchain4j.version>
         <langgraph4j.version>1.6.1</langgraph4j.version>
@@ -165,9 +166,9 @@
         <dependency>
             <groupId>org.java-websocket</groupId>
             <artifactId>Java-WebSocket</artifactId>
-            <version>1.6.0</version>
+            <version>${java-websocket.version}</version>
         </dependency>
-        <!-- UTILITIES -->
+        <!-- PARSERS -->
         <dependency>
             <groupId>net.objecthunter</groupId>
             <artifactId>exp4j</artifactId>
@@ -183,6 +184,7 @@
             <artifactId>jsoup</artifactId>
             <version>${jsoup.version}</version>
         </dependency>
+        <!-- CONSOLE -->
         <dependency>
             <groupId>org.jline</groupId>
             <artifactId>jline</artifactId>

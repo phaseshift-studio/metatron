@@ -20,7 +20,7 @@ package studio.phaseshift.metatron.lang.core.m.type;
 
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-import studio.phaseshift.metatron.lang.MetatronObjTest;
+import studio.phaseshift.metatron.lang.mObjTest;
 import studio.phaseshift.metatron.lang.core.m.parser.mParser;
 import studio.phaseshift.metatron.lang.sys.router.Router;
 import studio.phaseshift.metatron.ui.graphitty.Graphitty;
@@ -29,10 +29,10 @@ import studio.phaseshift.metatron.ui.graphitty.GraphittyLogger;
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.FAIL_TID;
-import static studio.phaseshift.metatron.lang.core.m.obj.NoObj.noobj;
+import static studio.phaseshift.metatron.lang.core.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MType.T;
 
-public class TypeTest extends MetatronObjTest {
+public class TypeTest extends mObjTest {
     private static final GraphittyLogger LOG = Graphitty.log(TypeTest.class);
     private static String LAST_TYPE_DEF = null;
 

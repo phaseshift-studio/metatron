@@ -34,11 +34,9 @@ import studio.phaseshift.metatron.lang.core.m.type.impl.MObjs;
 import studio.phaseshift.metatron.lang.db.grph.type.REdge;
 import studio.phaseshift.metatron.lang.db.grph.type.RVertex;
 import studio.phaseshift.metatron.lang.sys.router.Router;
-import studio.phaseshift.metatron.util.IteratorUtil;
 
 import java.util.Iterator;
 
-import static studio.phaseshift.metatron.lang.core.m.obj.NoObj.noobj;
 import static studio.phaseshift.metatron.lang.core.m.type.Poly.MUTABLE;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MRel.rel;

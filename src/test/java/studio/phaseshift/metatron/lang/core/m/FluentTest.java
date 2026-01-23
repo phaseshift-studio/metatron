@@ -19,13 +19,13 @@
 package studio.phaseshift.metatron.lang.core.m;
 
 import org.junit.jupiter.api.Test;
-import studio.phaseshift.metatron.MetatronTest;
+import studio.phaseshift.metatron.mTest;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static studio.phaseshift.metatron.lang.core.m.inst.mFluent.StartLess.start_;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MInt.jnt;
 
-public class FluentTest extends MetatronTest {
+public class FluentTest extends mTest {
 
     @Test
     public void testSimpleFluency() {

@@ -19,19 +19,17 @@
 package studio.phaseshift.metatron.lang.core.m.inst;
 
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.lang.core.m.obj.NoObj;
+import studio.phaseshift.metatron.lang.core.m.type.NoObj;
 import studio.phaseshift.metatron.lang.core.m.type.*;
 import studio.phaseshift.metatron.lang.core.m.type.impl.MInstSet;
 import studio.phaseshift.metatron.util.Tuple;
 
 import java.util.*;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.furi.fURI.f;
-import static studio.phaseshift.metatron.lang.core.m.inst.mFluent.StartLess.id_;
-import static studio.phaseshift.metatron.lang.core.m.obj.NoObj.noobj;
+import static studio.phaseshift.metatron.lang.core.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MType.T;
 
@@ -243,7 +241,7 @@ public class mInstSet extends MInstSet {
         set.addAll(Bytes.BytesType.insts());
         set.addAll(Bool.BoolType.insts());
         set.addAll(Int.IntType.insts());
-        set.addAll(Real.RealType.insts());
+        set.addAll(Real.TypeObj.insts());
         set.addAll(Str.StrType.insts());
         set.addAll(Uri.UriType.insts());
         set.addAll(Rel.RelType.insts());

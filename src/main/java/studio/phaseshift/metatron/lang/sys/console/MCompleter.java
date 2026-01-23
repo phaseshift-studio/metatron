@@ -28,10 +28,9 @@ import studio.phaseshift.metatron.lang.sys.router.Router;
 import studio.phaseshift.metatron.ui.graphitty.Graphitty;
 
 import java.util.List;
-import java.util.function.Supplier;
 
 import static studio.phaseshift.metatron.furi.fURI.f;
-import static studio.phaseshift.metatron.lang.core.m.obj.NoObj.noobj;
+import static studio.phaseshift.metatron.lang.core.m.type.NoObj.noobj;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)

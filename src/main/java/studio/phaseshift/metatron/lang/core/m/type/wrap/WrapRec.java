@@ -27,7 +27,7 @@ import studio.phaseshift.metatron.lang.core.m.type.impl.MObjFactory;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import static studio.phaseshift.metatron.lang.core.m.obj.NoObj.noobj;
+import static studio.phaseshift.metatron.lang.core.m.type.NoObj.noobj;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)

@@ -29,7 +29,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 
 import static studio.phaseshift.metatron.Tokens.SUB;
-import static studio.phaseshift.metatron.lang.core.m.obj.NoObj.noobj;
+import static studio.phaseshift.metatron.lang.core.m.type.NoObj.noobj;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)

@@ -21,7 +21,7 @@ package studio.phaseshift.metatron.lang.net.web;
 import com.google.gson.JsonParser;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-import studio.phaseshift.metatron.MetatronTest;
+import studio.phaseshift.metatron.mTest;
 import studio.phaseshift.metatron.lang.core.m.parser.mParser;
 import studio.phaseshift.metatron.lang.core.m.type.Call;
 import studio.phaseshift.metatron.lang.core.m.type.Obj;
@@ -29,7 +29,7 @@ import studio.phaseshift.metatron.lang.translator.JSONTranslator;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class JSONTranslatorTest extends MetatronTest {
+public class JSONTranslatorTest extends mTest {
     //{"_tid":"/m/rel", "_value":[1,2]}          | 1=>2
     @ParameterizedTest
     @CsvSource(delimiter = '|', textBlock = """

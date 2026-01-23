@@ -35,12 +35,9 @@ package studio.phaseshift.metatron.lang.net.iot;
  */
 
 import io.moquette.broker.Server;
-import io.moquette.broker.config.MemoryConfig;
 import studio.phaseshift.metatron.lang.sys.router.Router;
 import studio.phaseshift.metatron.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.util.MTronException;
-
-import java.util.Properties;
 
 /**
  * Simple example of how to embed the broker in another project
@@ -48,23 +45,26 @@ import java.util.Properties;
  */
 public final class MoquetteServer {
 
+    private static Server mqttBroker;
+
+    public static void stop() {
+        if (mqttBroker != null)
+            mqttBroker.stopServer();
+
+    }
+
+    public static void clear() {
+
+    }
+
     public static void run() {
-        new Thread(() -> {
-            try {
-                final Server mqttBroker = new Server();
-                io.moquette.broker.config.MemoryConfig config = new MemoryConfig(new Properties());
-                config.setProperty("port","1882");
-                mqttBroker.startServer(config);
-                Graphitty.log(Router.global()).info("mqtt broker started press [CTRL+C] to stop");
-                Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-                    Graphitty.log(Router.global()).info("stopping broker");
-                    mqttBroker.stopServer();
-                    Graphitty.log(Router.global()).info("broker stopped");
-                }));
-            } catch (final Exception e) {
-                throw MTronException.of(e);
-            }
-        }).start();
+        try {
+            mqttBroker = new Server();
+            mqttBroker = mqttBroker.withConfig().disablePersistence().port(1882).startServer();
+            Router.global().logger().info("mqtt broker started press [CTRL+C] to stop");
+        } catch (final Exception e) {
+            throw MTronException.of(e);
+        }
     }
 
     private MoquetteServer() {

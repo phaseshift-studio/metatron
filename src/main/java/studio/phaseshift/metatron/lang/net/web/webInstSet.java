@@ -78,17 +78,17 @@ public class webInstSet extends MInstSet {
                 instC(AS_INST_TID.dom(STR_TID).rng(HTML_TID), lst(T(HTML_TID)), (lhs, inst) -> HTMLTranslator.parse(lhs.asStr().strValue())),
                 instC(AS_INST_TID.dom(STR_TID).rng(JSON_TID), lst(T(JSON_TID)), (lhs, inst) -> JSONTranslator.parse(lhs.asStr().strValue())),
                 instC(INST_TID.extend("doc").dom(STR_TID).rng(STR_TID), lst(), (lhs, inst) -> {
-                    LOG.info("processing doc request: %s", lhs);
+                    LOG.trace("processing doc request: %s", lhs);
                     try {
                         final String source = lhs.strValue();
                         final Obj result = mParser.parse(source).apply();
                         final String resultString = result.isObjs() ?
                                 result.elements()
-                                        .map(Obj::toString)
+                                        .map(Obj::toCleanString)
                                         //.map(Highlighter::unformat)
                                         .reduce((a, b) -> a + "%%%" + b)
                                         .orElse("") :
-                                result.toString();
+                                result.toCleanString();
                         //Highlighter.unformat(result.toString());
                         return str(resultString);
                     } catch (final Exception e) {

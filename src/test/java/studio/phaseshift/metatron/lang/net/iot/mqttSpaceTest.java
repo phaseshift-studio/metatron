@@ -18,18 +18,18 @@
 
 package studio.phaseshift.metatron.lang.net.iot;
 
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.PubSubQ;
-import studio.phaseshift.metatron.lang.SpaceTest;
 import studio.phaseshift.metatron.lang.core.m.parser.mParser;
 import studio.phaseshift.metatron.lang.core.m.type.Obj;
+import studio.phaseshift.metatron.lang.iot.iotInstSet;
 import studio.phaseshift.metatron.lang.iot.mqtt.mqttSpace;
-import studio.phaseshift.metatron.lang.net.web.webInstSet;
-import studio.phaseshift.metatron.lang.sys.router.Router;
+import studio.phaseshift.metatron.mSpaceTest;
 import studio.phaseshift.metatron.ui.graphitty.Graphitty;
 
 import java.util.Map;
@@ -39,7 +39,7 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.furi.q.PubSubQ.SUBSCRIPTION_TID;
-import static studio.phaseshift.metatron.lang.core.m.obj.NoObj.noobj;
+import static studio.phaseshift.metatron.lang.core.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
 
@@ -47,21 +47,15 @@ import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 @Disabled
-public class mqttSpaceTest extends SpaceTest {
+public class mqttSpaceTest extends mSpaceTest {
 
-
-    @BeforeAll
-    public static void setup() {
-        webInstSet.create();
-        MoquetteServer.run();
-        SPACE = () -> {
+    public mqttSpaceTest() {
+        super(() -> {
             try {
-                mParser.eval("*/iot");
                 final mqttSpace space = mqttSpace.of(Map.of(
                         uri(HOST), uri("mqtt://127.0.0.1:1882"),
-                        uri(PREFIX), uri("/"),
                         uri(PATTERN), uri("/t/#"),
-                        uri(REWRITE), rel(uri("/t"),uri("t"))), fURI.of("/sys/router/space/t"));
+                        uri(REWRITE), rel(uri("/t"), uri("/t"))), fURI.of("/sys/router/space/t"));
                 space.directWriter().apply(f("#"), noobj());
                 return space;
             } catch (Exception e) {
@@ -69,7 +63,18 @@ public class mqttSpaceTest extends SpaceTest {
                 //  assumeTrue(false);
                 return null;
             }
-        };
+        });
+        iotInstSet.create();
+    }
+
+    @BeforeAll
+    public static void setupAll() {
+        MoquetteServer.run();
+    }
+
+    @AfterAll
+    public static void stopAll() {
+        MoquetteServer.stop();
     }
 
     @ParameterizedTest
@@ -78,7 +83,6 @@ public class mqttSpaceTest extends SpaceTest {
             "/t/b?sub -> sub::[src=>a,tgt=>/t/b,on_recv=><abc>->4]                            % /t/b -> 3                       % *abc.?=4",
     }, delimiter = '%')
     public void testSubscriptions(final String subscription, final String write, final String check) {
-        Router.global().addSpace(SPACE.get());
         final PubSubQ.Subscription sub = mParser.eval(subscription);
         assertEquals(SUBSCRIPTION_TID, sub.tid());
         final Obj writeObj = mParser.eval(write);

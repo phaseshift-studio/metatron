@@ -23,9 +23,8 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import studio.phaseshift.metatron.BootLoader;
-import studio.phaseshift.metatron.MetatronTest;
+import studio.phaseshift.metatron.mTest;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.lang.core.m.inst.mInstSet;
 import studio.phaseshift.metatron.lang.db.kv.kvSpace;
 import studio.phaseshift.metatron.lang.sys.router.Router;
 
@@ -34,7 +33,7 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static studio.phaseshift.metatron.furi.fURI.f;
-import static studio.phaseshift.metatron.lang.core.m.obj.NoObj.noobj;
+import static studio.phaseshift.metatron.lang.core.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
@@ -42,20 +41,13 @@ import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class webSpaceTest extends MetatronTest {
+public abstract class webSpaceTest extends mTest {
 
-    @BeforeAll
-    public static void setup() {
+    public webSpaceTest() {
         webInstSet.create().vid(f("/sys/router/lang/web"));
         kvSpace.of(f("/usr/#"), fURI.fnull).vid(f("/sys/router/space/usr"));
         final webSpace web = webSpace.of(f("http://localhost:8777"), Map.of(uri("/"), uri("src/test/resources/web/")), f("http://#"), f("/usr/web"));
         Router.global().addSpace(web);
-    }
-
-    @AfterAll
-    public static void shutdown() {
-        Router.global().close();
-        BootLoader.close();
     }
 
     @Test

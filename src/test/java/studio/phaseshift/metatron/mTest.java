@@ -21,7 +21,7 @@ package studio.phaseshift.metatron;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.lang.core.m.obj.NoObj;
+import studio.phaseshift.metatron.lang.core.m.type.NoObj;
 import studio.phaseshift.metatron.lang.core.m.parser.mParser;
 import studio.phaseshift.metatron.lang.core.m.type.Fail;
 import studio.phaseshift.metatron.lang.core.m.type.Obj;
@@ -40,7 +40,7 @@ import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.START_INST_TI
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
 
-public class MetatronTest {
+public class mTest {
 
     protected GraphittyLogger LOG = Graphitty.log(this);
 
@@ -55,6 +55,7 @@ public class MetatronTest {
 
     @AfterAll
     public static void end() {
+        Router.global().close();
         BootLoader.close();
     }
 

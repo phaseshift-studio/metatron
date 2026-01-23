@@ -19,7 +19,6 @@
 package studio.phaseshift.metatron.lang.core.m.type;
 
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.lang.core.m.obj.NoObj;
 import studio.phaseshift.metatron.lang.core.mach.type.impl.MMachine;
 import studio.phaseshift.metatron.lang.util.serial.ObjCleanStringSerializer;
 import studio.phaseshift.metatron.ui.graphitty.Graphitty;

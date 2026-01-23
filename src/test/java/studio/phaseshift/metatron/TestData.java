@@ -27,6 +27,9 @@ import java.lang.annotation.Target;
 import java.util.Arrays;
 
 /*
+ * The user provided string values are parsed and evaluated prior to test evaluation.
+ * Useful for prepopulating a machine with data.
+ *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 @Target({ElementType.ANNOTATION_TYPE, ElementType.METHOD})

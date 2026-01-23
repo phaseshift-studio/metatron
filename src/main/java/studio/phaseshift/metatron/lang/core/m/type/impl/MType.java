@@ -27,7 +27,7 @@ import studio.phaseshift.metatron.util.Tuple;
 
 import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.BASE_TYPES;
 import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.NOOBJ_TID;
-import static studio.phaseshift.metatron.lang.core.m.obj.NoObj.noobj;
+import static studio.phaseshift.metatron.lang.core.m.type.NoObj.noobj;
 
 
 public class MType extends MObj implements Type {

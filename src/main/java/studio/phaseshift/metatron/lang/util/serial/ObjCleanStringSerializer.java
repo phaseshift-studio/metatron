@@ -20,7 +20,7 @@ package studio.phaseshift.metatron.lang.util.serial;
 
 
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.lang.core.m.obj.NoObj;
+import studio.phaseshift.metatron.lang.core.m.type.NoObj;
 import studio.phaseshift.metatron.lang.core.m.parser.mParser;
 import studio.phaseshift.metatron.lang.core.m.type.*;
 import studio.phaseshift.metatron.lang.core.mach.type.Machine;
@@ -64,8 +64,6 @@ public class ObjCleanStringSerializer implements ObjSerializer<String> {
     }
 
     private String handleIds(final Obj obj, final String objString) {
-        if (obj.isNoObj())
-            return objString;
         final StringBuilder sb = new StringBuilder();
         this.handleTID(sb, obj, !obj.isInst()).append(objString);
         this.handleVID(sb, obj);
