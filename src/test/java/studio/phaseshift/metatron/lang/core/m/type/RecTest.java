@@ -118,6 +118,23 @@ public class RecTest extends mObjTest {
         super.testMatches(recA, recB, matches);
     }
 
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "[a=>1,b=>2,c=>3].as(lst::T)                                                % [(0=>a=>1),(1=>b=>2),(2=>c=>3)]",
+            "[a=>1,b=>2,c=>3].as(lst::T).>-.isa(rel::T).count()                         % 3",
+            "[a=>1,b=>2,c=>3].as(lst::T).>-.>>.isa(rel::T).count()                      % 3",
+            "[a=>1,b=>2,c=>3].as(lst::T).>-.>>.>>.isa(int::T).count()                   % 3",
+            "[a=>1,b=>2,c=>3].as(lst::T).>-.>>.>>.sum()                                 % 6",
+            "[a=>1,b=>2,c=>3].as(rec::T)                                                % [a=>1,b=>2,c=>3]",
+            "[a=>1,b=>2,c=>3].as(rec::T).as(lst::T)                                     % [(0=>(a=>1)),(1=>(b=>2)),(2=>(c=>3))]",
+            "[a=>1,b=>2,c=>3].as(lst::T).as(rec::T)                                     % [0=>(0=>(a=>1)),1=>(1=>(b=>2)),2=>(2=>(c=>3))]",
+
+    }, delimiter = '%')
+    public void testAs(final String code, final String expected) {
+        super.testCode(code, expected);
+    }
+
     @ParameterizedTest
     @CsvSource(value = {
             "[a=>[knows=>[b=>[knows=>c]]]]../<a/+/b/knows>                                           % c",

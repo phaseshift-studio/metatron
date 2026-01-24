@@ -20,7 +20,6 @@ package studio.phaseshift.metatron.lang.util.serial;
 
 
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.lang.core.m.type.NoObj;
 import studio.phaseshift.metatron.lang.core.m.parser.mParser;
 import studio.phaseshift.metatron.lang.core.m.type.*;
 import studio.phaseshift.metatron.lang.core.mach.type.Machine;
@@ -119,10 +118,13 @@ public class ObjCleanStringSerializer implements ObjSerializer<String> {
     @Override
     public String writeUri(final Uri uri) {
         final String uriString = uri.jvm().toString();
+        final char startChar = uriString.isEmpty() ? ' ' : uriString.charAt(0);
+        final char endChar = uriString.isEmpty() ? ' ' : uriString.charAt(uriString.length() - 1);
         final boolean wrap =
                 uriString.isEmpty() ||
                         Common.isInt(uriString.substring(0, 1)) ||
                         uriString.contains(" ") ||
+                        startChar == '+' || startChar == '#' ||
                         uriString.contains(".") ||
                         uriString.contains(",") ||
                         uriString.contains("(") ||

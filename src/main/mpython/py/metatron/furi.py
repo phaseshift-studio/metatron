@@ -55,6 +55,12 @@ class fURI:
             return ""
         return self.path[-1]
 
+    def host(self,new_host=None):
+        if new_host is None:
+            return str(self).split("/")[2]
+        else:
+            return f("{}://{}/{}".format(self.scheme(), new_host, "/".join(self.path)))
+
     def scheme(self, new_scheme=None):
         if new_scheme is None:
             i = str(self).find(':', 0)

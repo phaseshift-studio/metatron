@@ -41,8 +41,8 @@ class MqttSpace(Obj):
             port=self.port,
             keepalive=60)
         
-    def disconnect(self):
-        self.client.disconnect()
+    def close(self):
+        self.client.close()
 
     def start(self) -> 'MqttSpace':
         try:
@@ -62,7 +62,7 @@ class MqttSpace(Obj):
         except Exception as e:
             try:
                 LOG.error("broker {{y}}{}{{X}} error: {}", self.broker, e)
-                self.disconnect()
+                self.close()
                 self.start()
             except Exception as e2:
                 LOG.error("unable to reconnect with {{y}}{}{{X}}: {}", self.broker, e2)

@@ -207,8 +207,7 @@ public class Console extends JRec implements Closeable, Runnable {
                 else if (line.equals(":quit"))
                     break;
                 else if (line.equals(":clear")) {
-                    terminal.puts(InfoCmp.Capability.clear_screen);
-                    Graphitty.out(terminal.output(),"{{v30}}");
+                    Graphitty.out(terminal.output(),"{{XX}}");
                     this.status.refresh();
                 } else if (line.equals(":help")) {
                     new Panel("{{c}}help menu{{X}}", new Table(

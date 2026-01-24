@@ -26,8 +26,8 @@ package studio.phaseshift.metatron.lang.core.m.type;
 
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-import studio.phaseshift.metatron.lang.mObjTest;
 import studio.phaseshift.metatron.lang.core.m.parser.mParser;
+import studio.phaseshift.metatron.lang.mObjTest;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -109,5 +109,19 @@ public class LstTest extends mObjTest {
         super.testCode(code, expected);
     }
 
+    @ParameterizedTest
+    @CsvSource(value = {
+            "[1,2,3].as(rec::T)                                                % [0=>1,1=>2,2=>3]",
+            "[1,2,3].as(rec::T).>-.isa(rel::T).count()                         % 3",
+            "[1,2,3].as(rec::T).>-.isa(rel::T).count()                         % 3",
+            "[1,2,3].as(rec::T).>-.>>.isa(int::T).count()                      % 3",
+            "[1,2,3].as(rec::T).>-.>>.sum()                                    % 6",
+            "[1,2,3].as(rec::T).as(lst::T)                                     % [(0=>(0=>1)),(1=>(1=>2)),(2=>(2=>3))]",
+            "[1,2,3].as(rec::T).as(rec::T)                                     % [0=>1,1=>2,2=>3]",
+            // "[1,2,3].as(rec::T).as(lst::T).as(rec::T)               % [0=>(0=>(0=>1)),1=>(1=>(1=>2)),2=>(2=>(2=>3))]", // TODO: infinite loop?! why?
 
+    }, delimiter = '%')
+    public void testAs(final String code, final String expected) {
+        super.testCode(code, expected);
+    }
 }

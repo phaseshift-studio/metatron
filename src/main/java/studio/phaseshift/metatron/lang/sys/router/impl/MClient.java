@@ -111,19 +111,19 @@ public class MClient extends WebSocketClient implements MConnection {
 
     @Override
     public void onClose(final int code, final String reason, final boolean remote) {
-        LOG.debug("closed with exit code %d [reason:%s]", code, reason);
+        LOG.trace("closed with exit code %d [reason:%s]", code, reason);
     }
 
     @Override
     public void onMessage(final String message) {
-        LOG.trace("received string [length:%d]", message.length());
+        LOG.debug("received string [length:%d]", message.length());
         this.onMessage(ByteBuffer.wrap(message.getBytes()));
 
     }
 
     @Override
     public void onMessage(final ByteBuffer message) {
-        LOG.trace("received byte buffer [length:%d]", message.array().length);
+        LOG.debug("received byte buffer [length:%d]", message.array().length);
         this.ioStat.incrTotalBytesRecv(message.array().length);
         final Obj obj = this.serializer.inputBytes(message);
         this.onObj(obj);
@@ -137,7 +137,7 @@ public class MClient extends WebSocketClient implements MConnection {
             new Thread(() -> {
                 try {
                     Thread.sleep(2500);
-                    LOG.debug("retrying connection to {{b}}%s{{X}}", this.remoteHost);
+                    LOG.trace("retrying connection to {{b}}%s{{X}}", this.remoteHost);
                     this.reconnectBlocking();
                 } catch (Exception e) {
                     LOG.error("an error occurred with {{b}}%s{{/b}}: %s", this.remoteHost, ex.getMessage().toLowerCase());

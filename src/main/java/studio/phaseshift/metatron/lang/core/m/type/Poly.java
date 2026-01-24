@@ -19,6 +19,9 @@
 package studio.phaseshift.metatron.lang.core.m.type;
 
 import studio.phaseshift.metatron.furi.c.cInt;
+import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.util.Common;
+import studio.phaseshift.metatron.util.IteratorUtil;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -89,6 +92,24 @@ public interface Poly<P extends Poly<P, J>, J> extends Obj {
     }
 
     class Helper {
+        public static Rec transformLstToRec(final Lst lhs, final fURI tid, final fURI vid) {
+            return IteratorUtil.indexedStream(lhs.elements().iterator())
+                    .map(r -> rel(jnt(r.get0()), r.get1()))
+                    .collect(new Common.RecCollector(tid, vid));
+        }
+
+        public static Lst transformRecToLst(final Rec lhs, final fURI tid, final fURI vid) {
+            return lst(IteratorUtil.indexedStream(lhs.elements().iterator())
+                    .map(r -> rel(jnt(r.get0()), r.get1()))
+                    .reduce(new ArrayList<>(), (a, b) -> {
+                        a.add(b);
+                        return a;
+                    }, (a, b) -> {
+                        a.addAll(b);
+                        return a;
+                    }), tid, vid);
+        }
+
         public static Obj selectPolyRecursion(final Poly<?, ?> lhs, final Poly<?, ?> rhs) {
             if (lhs.isRec() && rhs.isRec())
                 return selectRecRecursion(lhs.asRec(), rhs.asRec());
@@ -116,8 +137,8 @@ public interface Poly<P extends Poly<P, J>, J> extends Obj {
                 final Obj selectKeys = objs(lhs.elements().map(kv2 -> kv.first().apply(kv2.first())).filter(v2 -> !v2.isNoObj()));
                 selectKeys.stream().forEach(selectKey -> {
                     final Obj lhsValue = lhs.asRec().at(selectKey);
-                    final Obj selectValue = lhsValue.isPoly() && kv.second().isPoly() ? 
-                            selectPolyRecursion(lhsValue.as(), kv.second().as()) : 
+                    final Obj selectValue = lhsValue.isPoly() && kv.second().isPoly() ?
+                            selectPolyRecursion(lhsValue.as(), kv.second().as()) :
                             kv.second().apply(lhsValue);
                     if (!selectValue.isNoObj() && (!selectValue.isRec() || !selectValue.asRec().isEmpty()))
                         result.compute(selectKey.c(cInt::one), (a, b) -> null == b ? selectValue : b.append(selectValue)); // TODO: the c(1) may not be necessary

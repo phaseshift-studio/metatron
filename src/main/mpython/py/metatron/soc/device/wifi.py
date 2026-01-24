@@ -81,4 +81,4 @@ class Wifi(Device):
 
     def stop(self):
         Device.stop(self)
-        self.wlan.disconnect()
+        self.wlan.close()

@@ -84,7 +84,7 @@ public class SubsWidget extends AbstractWidget<SubsWidget> {
                         this.subsTable.clear();
                         // Obj subscriptions = Router.global().read(pattern.query("sub"));
                         this.subsTable.addRow(List.of("blah", "bleep", "bleep"));
-                        this.grid.currentFocus(1);
+                       // this.grid.currentFocus(1);
                         // subscriptions.stream().forEach(o ->{
                         //     this.subsTable.addRow(List.of(o.vid().toUri(), o.<PubSubQ.Subscription>as().target().toUri(), o.<PubSubQ.Subscription>as().call().toString()));
                         // });
@@ -106,7 +106,7 @@ public class SubsWidget extends AbstractWidget<SubsWidget> {
                     }
                 });
         this.grid = new Grid(List.of(this.spaceSelector, this.subsSelector), 1).style().border(Border.none).apply();
-        this.grid.currentFocus(0);
+       // this.grid.currentFocus(0);
         this.style().attachment(this.grid, true).apply();
     }
 

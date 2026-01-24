@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.furi.q;
 
+import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.furi.Q;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.core.m.inst.mInstSet;
@@ -140,13 +141,15 @@ public class PubSubQ extends BaseQ {
                 LOG.debug("sending mail: (%s, %s)", obj, s);
                 mail.add(MMachine.of(lst(List.of(vid.toUri(), obj)), s.call().toCode()));
             });
-            while (!mail.isEmpty()) {
-                final Machine machine = mail.poll();
-                if (null == machine)
-                    break;
-                LOG.trace("processing mail: %s", machine);
-                machine.apply();
-            }
+            BootLoader.getExecutor().submit(new Thread(() -> {
+                while (!mail.isEmpty()) {
+                    final Machine machine = mail.poll();
+                    if (null == machine)
+                        break;
+                    LOG.trace("processing mail: %s", machine);
+                    machine.apply();
+                }
+            }));
             return Optional.of(obj);
         }
 
