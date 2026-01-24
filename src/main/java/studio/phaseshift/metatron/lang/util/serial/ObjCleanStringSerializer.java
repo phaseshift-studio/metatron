@@ -37,6 +37,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.*;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MBytes.bytes;
+import static studio.phaseshift.metatron.lang.core.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.lang.core.m.type.impl.MStr.str;
 
 /*
@@ -217,8 +218,11 @@ public class ObjCleanStringSerializer implements ObjSerializer<String> {
 
     @Override
     public Obj read(final String data) throws MTronException {
-        // System.out.println(new String(data.array()));
-        return mParser.m_obj().parse(data).get();
+        try {
+            return mParser.eval(data);
+        } catch (final Exception e) {
+           return fail(e);
+        }
     }
 
     private StringBuilder handleTID(final StringBuilder sb, final Obj obj, final boolean hideBaseTID) {

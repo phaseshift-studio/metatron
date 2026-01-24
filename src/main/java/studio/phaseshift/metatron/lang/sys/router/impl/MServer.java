@@ -20,15 +20,14 @@ package studio.phaseshift.metatron.lang.sys.router.impl;
 
 import org.java_websocket.WebSocket;
 import org.java_websocket.handshake.ClientHandshake;
+import org.java_websocket.server.DefaultWebSocketServerFactory;
 import org.java_websocket.server.WebSocketServer;
 import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.lang.core.m.type.Fail;
 import studio.phaseshift.metatron.lang.core.m.type.Obj;
 import studio.phaseshift.metatron.lang.jre.ObjFieldReflection;
 import studio.phaseshift.metatron.lang.sys.router.Cluster;
-import studio.phaseshift.metatron.lang.sys.router.IOStat;
 import studio.phaseshift.metatron.lang.sys.router.Router;
 import studio.phaseshift.metatron.lang.util.serial.ObjByteBufferSerializer;
 import studio.phaseshift.metatron.lang.util.serial.ObjSerializer;
@@ -70,7 +69,7 @@ public class MServer extends WebSocketServer implements Cluster, Closeable, Obj 
         LOG = Graphitty.log(this);
         this.serializer = MRouter.SERIALIZERS.get(ObjByteBufferSerializer.OBJ_BYTE_BUFFER_SERIALIZER_TID);
     }
-    
+
     public boolean isRunning() {
         return this.running.get();
     }
@@ -89,13 +88,13 @@ public class MServer extends WebSocketServer implements Cluster, Closeable, Obj 
             LOG.trace("server started: %s", this.getAddress());
             BootLoader.ARGS.at(Tokens.CLUSTER).elements().filter(o -> !o.isNoObj()).distinct().forEach(
                     n -> {
-                try {
-                    final MConnection client = MClient.of(n.uriValue(), this.serializer);
-                    this.cluster.put(n.uriValue(), client);
-                } catch (final Exception e) {
-                    LOG.error("unable to connect to cluster node {{b}}%s{{/b}}", n.uriValue());
-                }
-            });
+                        try {
+                            final MConnection client = MClient.of(n.uriValue(), this.serializer);
+                            this.cluster.put(n.uriValue(), client);
+                        } catch (final Exception e) {
+                            LOG.error("unable to connect to cluster node {{b}}%s{{/b}}", n.uriValue());
+                        }
+                    });
             Router.global().write(
                     Router.global().vid().extend(Tokens.CLUSTER),
                     lst((List) this.cluster.values().stream().map(x -> x.remoteHost().toUri()).toList()));
@@ -108,7 +107,7 @@ public class MServer extends WebSocketServer implements Cluster, Closeable, Obj 
     public <T> ObjSerializer<T> getSerializer() {
         return (ObjSerializer<T>) this.serializer;
     }
-    
+
     @Override
     public void close() {
         LOG.info("closing %s node {{b}}%s{{/b}}", Graphitty.sillyPrint("mtron", true, true), this.host);
@@ -122,18 +121,18 @@ public class MServer extends WebSocketServer implements Cluster, Closeable, Obj 
             super.getConnections().stream().toList().forEach(WebSocket::close);
         }
     }
-    
+
     @Override
     public void onOpen(final WebSocket ws, final ClientHandshake handshake) {
         ws.setAttachment(f("ws://" + ws.getRemoteSocketAddress()));
-        LOG.debug("new connection from %s", ws.getRemoteSocketAddress());
+        LOG.info("new connection from %s", ws.getRemoteSocketAddress());
         this.running.set(true);
         // broadcast("new connection: " + handshake.getResourceDescriptor()); //This method sends a message to all clients connected
     }
 
     @Override
     public void onClose(final WebSocket conn, final int code, final String reason, final boolean remote) {
-        LOG.debug("closed %s with exit code %s [reason: %s]", this.cluster.remove(conn.<fURI>getAttachment()), code, reason);
+        LOG.info("closed %s with exit code %s [reason: %s]", this.cluster.remove(conn.<fURI>getAttachment()), code, reason);
     }
 
     @Override
@@ -156,37 +155,26 @@ public class MServer extends WebSocketServer implements Cluster, Closeable, Obj 
 
 
     public void onObj(final WebSocket conn, final Obj obj) {
+        Obj result;
         try {
-            if(null == obj)
-                return;
             LOG.trace("processing %s for {{b}}%s{{/b}}", obj, conn.getAttachment());
-            Obj result = obj.apply();
+            result = obj.apply();
             result = objs(result.stream().map(x -> x.vid() == null ? x : x.vid(null))); // x.vid(this.host().extend(x.vid()))));
-            // final String tag = obj.vid() != null ? obj.vid().queryValue(f("tag"), String.class, null) : null;
-            //if (tag != null) {
-            //    fURI rvid = result.vid() == null ? f("/usr/temp?tag=" + tag) : result.vid().query("tag", tag);
-            //    result = result.vid(rvid);
-            //     LOG.info("obj tagged: %s", result);
-            // }
             final ByteBuffer bytes = this.serializer.outputBytes(result);
             conn.send(bytes);
-            //this.sendObj(conn, result);
-            if (result.isFail())
-                this.onError(conn, result.<Fail>as().jvmAs());
-            Router.global().stats().incrBytesSent (bytes.array().length);
+            Router.global().stats().incrBytesSent(bytes.array().length);
             LOG.trace("sent %s for {{b}}%s{{/b}}", result, conn.getAttachment());
         } catch (final Exception e) {
             final ByteBuffer bytes = this.serializer.outputBytes(fail(e));
             conn.send(bytes);
             Router.global().stats().incrBytesRecv(bytes.array().length);
-            this.onError(conn, e);
         }
     }
 
     @Override
     public void onError(final WebSocket conn, final Exception ex) {
         LOG.error("an error occurred on connection %s: %s", null == conn ? "<not connected>" : conn.getAttachment(), ex);
-        if(null == conn ||ex instanceof BindException)
+        if (null == conn || ex instanceof BindException)
             this.running.set(false);
     }
 

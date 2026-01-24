@@ -68,7 +68,7 @@ public class mSerializerTest<T> extends mTest {
             "{,}"
     }, delimiter = '|')
     public void testSerialization(final String objString) {
-        final Obj obj = mParser.m_obj().parse(objString).get();
+        final Obj obj = mParser.eval(objString);
         Obj obj2 = null;
         try {
             final T buffer = this.serializer.write(obj);

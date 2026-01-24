@@ -92,7 +92,6 @@ public class webInstSet extends MInstSet {
                         //Highlighter.unformat(result.toString());
                         return str(resultString);
                     } catch (final Exception e) {
-                        e.printStackTrace();
                         return str(fail(e).toString());
                     }
                 }));

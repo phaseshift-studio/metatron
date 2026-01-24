@@ -65,7 +65,7 @@ public class GraphittyLogger extends LayoutBase<ILoggingEvent> {
 
 
     public static boolean isLambda(Object obj) {
-        return obj.getClass().toString().contains("$$Lambda$");
+        return null != obj && obj.getClass().toString().contains("$$Lambda$");
     }
 
     private String makeMessage(final boolean metadata, final Object f, final Object... args) {
