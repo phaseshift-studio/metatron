@@ -112,6 +112,8 @@ public class LstTest extends mObjTest {
     @ParameterizedTest
     @CsvSource(value = {
             "[1,2,3].as(rec::T)                                                % [0=>1,1=>2,2=>3]",
+            "lst{10}::[1,2,3].as(rec::T)                                       % rec{10}::[0=>1,1=>2,2=>3]",
+            "lst{10}::[1,2,3].as(rec::T).merge?rel{*}<=rec()                   % {rel{10}::(0=>1),rel{10}::(1=>2),rel{10}::(2=>3)}",
             "[1,2,3].as(rec::T).>-.isa(rel::T).count()                         % 3",
             "[1,2,3].as(rec::T).>-.isa(rel::T).count()                         % 3",
             "[1,2,3].as(rec::T).>-.>>.isa(int::T).count()                      % 3",

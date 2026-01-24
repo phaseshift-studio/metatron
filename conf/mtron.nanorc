@@ -54,6 +54,7 @@ color magenta "noobj"
 # q keys
 color cyan "[a-z]+=(?!>)"
 color blue "=([a-z]|[0-9]|\.|_|-|/)+"
+icolor blue "([a-z]|[0-9]|/)+::"
 color green "=" "::"
 ### fail
 color red "([a-z]|[0-9]|/)*fail::"

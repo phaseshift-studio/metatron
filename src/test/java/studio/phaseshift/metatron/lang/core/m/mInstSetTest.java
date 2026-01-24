@@ -61,7 +61,14 @@ public class mInstSetTest extends InstSetTest {
             "a=>b=>c>-                                                                      % {a,b=>c}",
             "a=>b=>c>-.>-                                                                   % {a,b,c}",
             "a=>b=>c.count()                                                                % 1",
-            "1=>2=>c.>>                                                                     % 2=>c"
+            "1=>2=>c.>>                                                                     % 2=>c",
+            /// ////////////////////////////////////////////////////////////////////////////////////////
+            "(a=>(b=>c)).>>                                                                     % b=>c",
+            "(a=>(b=>c)).<<                                                                     % a",
+            "(a=>(b=>c))>-                                                                      % {a,b=>c}",
+            "(a=>(b=>c))>-.>-                                                                   % {a,b,c}",
+            "(a=>(b=>c)).count()                                                                % 1",
+            "(1=>(2=>c)).>>                                                                     % 2=>c"
     }, delimiter = '%')
     public void testRelCode(final String code, final String expected) {
         super.testCode(code, expected);
@@ -178,6 +185,7 @@ public class mInstSetTest extends InstSetTest {
             "{1,2,3}.plus(plus(mult(1)))                                            % {3,6,9}",
             // MERGE ///
             "{1,2,3}>-                                                              % {1,2,3}",
+            "{1=>2,2=>3,3=>4}.-<[_].as(rec::T)                                      % [0=>{1=>2,2=>3,3=>4}]",
             "{1,1,2,2,2,3}>-                                                        % {1,1,2,2,2,3}",
             "{1,2,3}>-[,]                                                           % [1,2,3]",
             "[1=>2,2=>3,3=>4]>-[=>]                                                 % [1=>2,2=>3,3=>4]",
@@ -187,6 +195,8 @@ public class mInstSetTest extends InstSetTest {
             //"[1=>2,2=>3,3=>4]>-                                                     % {1=>2,2=>3,3=>4}",
             "[1=>2,2=>3,3=>4].type()                                                % start(rec::T)",
             "[1=>2,2=>3,3=>4]>-.type()                                              % start(rel{3}::T)",
+            "[(1=>2),(2=>3),(3=>4)].type()                                          % start(lst::T)",
+            "[(1=>2),(2=>3),(3=>4)]>-.type()                                        % start(rel{3}::T)",
             "[1=>2,2=>3,3=>4]>-.>-[noobj=>noobj]                                    % [1=>2,2=>3,3=>4]",
             "[z=>c,2=>3,a=>f]>-.>-[noobj=>noobj]                                    % [z=>c,2=>3,a=>f]",
             "{1,2}>-[3,4]                                                           % [1,2,3,4]",
@@ -208,7 +218,7 @@ public class mInstSetTest extends InstSetTest {
             "{1,2,3}-<noobj                                                         % noobj",
             "{1,2,3}-<[noobj]                                                       % [noobj]",
             "{1,2,3}-<[noobj=>noobj]                                                % [=>]",
-         //   "{1,2,3}.map?int<=real(1)                                               % <ERROR>",
+            //   "{1,2,3}.map?int<=real(1)                                               % <ERROR>",
             "{1,2,3}.inst?int<=int{3}(){1}                                          % 1",
             "{1,2,3}.inst{3}?int<=int{3}(){1}                                       % int{3}::1",
             "{int{2}::1,int{2}::2,int{2}::3}.inst{3}?int<=int{3}(){1}               % int{6}::1",
@@ -328,8 +338,9 @@ public class mInstSetTest extends InstSetTest {
             "{[1,2],[3,4,5],[6,7,8]}.sum()._/sum()\\_.>-.sum{2}()                   % int{2}::36",
             "{[1,2],[3,4,5],[6,7,8]}.sum()._/sum()\\_.>-.sum{2}().sum()             % 72",
             ///
+            "{1=>2,2=>3,3=>4}.as(rec::T).reduce(|plus([=>]))                        % [1=>2,2=>3,3=>4]",
             "{1,2,3,4,5}.reduce(|plus(0))                                           % 15",
-            "{1,2,3,4,5}.reduce?int<=int{*}(|plus(0))                                           % 15",
+            "{1,2,3,4,5}.reduce?int<=int{*}(|plus(0))                               % 15",
             "{,}.reduce(|plus(0))                                                   % 0",
             "reduce(|mult(0))                                                       % 0",
             "{1,2,3,4,5}.reduce(|mult(2))                                           % 240",
@@ -527,27 +538,30 @@ public class mInstSetTest extends InstSetTest {
             "[a=>1,b=>2,c=>3].select([isa(uri::T)=>-<[_,_]>-.sum()])                                                                   % [a=>2,b=>4,c=>6]",
             "[a=>1,b=>2,c=>3].select([isa(uri::T)=>-<[_,_]>-.sum()]).where([a=>is(gt(2))])                                             % noobj",
             "[a=>1,b=>2,c=>3].select([isa(uri::T)=>-<[_,_]>-.sum()]).where([a=>is(gt(1))])                                             % [a=>2,b=>4,c=>6]",
-            /// //////////////////////////////////////////////////////////////////////////////////                                       ////////////////////
+            /// /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+         //  "[a=>1,b=>2,c=>3].select::([isa(uri::T)=>-<[_,_]>-.sum()]).where::([a=>is(gt(2))])                                             % noobj",
+          //  "[a=>1,b=>2,c=>3].select::([isa(uri::T)=>-<[_,_]>-.sum()]).where::([a=>is(gt(1))])                                             % [a=>2,b=>4,c=>6]",
+            /// /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
             "[1,2,3].select([_,noobj,_])                                                                                                 % [1,noobj,3]",
             "[1,2,3].select([_,plus(5),_])                                                                                               % [1,7,3]",
             "[1,2,3].select([_,plus(5),_]).where([_,is(gt(5)),_])                                                                        % [1,7,3]",
             "[1,2,3].select([_,plus(5),_]).where([_,is(gt(15)),_])                                                                       % noobj",
-            "[1,[2=>5],3].select([_,select[_=>plus(2)],_])                                                                               % [1,[2=>7],3]",
+            "[1,[2=>5],3].select([_,select([_=>plus(2)]),_])                                                                             % [1,[2=>7],3]",
             "[1,[2=>5],3].select([_,[_=>plus(2)],_])                                                                                     % [1,[2=>7],3]", // TODO: should select()/where() be recurssive
-            "[1,[2=>5],3].select([_,select[_=>plus(2)],_]).where([_,[_=>is(gt(6))],_])                                                   % [1,[2=>7],3]",
-            "[1,[2=>5],3].select([_,select[_=>plus(2)],_]).where([_,[_=>is(gt(6))],is(gt(1))])                                           % [1,[2=>7],3]",
-            "[1,[2=>5],3].select([_,select[_=>plus(2)],_]).where([_,[_=>is(gt(6))],is(gt(3))])                                           % noobj",
-            "[1,[2=>5],3].select([_,select[_=>plus(2)],_]).where([_,[_=>is(gt(10))],_])                                                  % noobj",
-            "[1,[2=>5],3].select([-<[_,_],select[_=>plus(2)],plus(7)]).where([isa(lst::T[]),[_=>is(gt(6))],is(gt(3))])                   % [[1,1],[2=>7],10]",
-            "[1,[2=>5],3].select([-<[_,_]>-.sum(),select[_=>plus(2)],plus(7)]).where([isa(lst::T[]),[_=>is(gt(6))],is(gt(3))])           % noobj",
-             "[1,[2=>5],3].select([-<[_,_]>-.sum()-<[_],select[_=>plus(2)],plus(7)]).where([isa(lst::T[]),[_=>is(gt(6))],is(gt(3))])      % [[2],[2=>7],10]",
+            "[1,[2=>5],3].select([_,select([_=>plus(2)]),_]).where([_,[_=>is(gt(6))],_])                                                 % [1,[2=>7],3]",
+            "[1,[2=>5],3].select([_,select([_=>plus(2)]),_]).where([_,[_=>is(gt(6))],is(gt(1))])                                         % [1,[2=>7],3]",
+            "[1,[2=>5],3].select([_,select([_=>plus(2)]),_]).where([_,[_=>is(gt(6))],is(gt(3))])                                         % noobj",
+            "[1,[2=>5],3].select([_,select([_=>plus(2)]),_]).where([_,[_=>is(gt(10))],_])                                                % noobj",
+            "[1,[2=>5],3].select([-<[_,_],select([_=>plus(2)]),plus(7)]).where([isa(lst::T[]),[_=>is(gt(6))],is(gt(3))])                 % [[1,1],[2=>7],10]",
+            "[1,[2=>5],3].select([-<[_,_]>-.sum(),select([_=>plus(2)]),plus(7)]).where([isa(lst::T[]),[_=>is(gt(6))],is(gt(3))])         % noobj",
+            "[1,[2=>5],3].select([-<[_,_]>-.sum()-<[_],select([_=>plus(2)]),plus(7)]).where([isa(lst::T),[_=>is(gt(6))],is(gt(3))])      % [[2],[2=>7],10]",
             // "[1,[2=>5],3].select([-<[_,_]>-.sum()-<[_]>-,select[_=>plus(2)],plus(7)]).where([isa(int::T[]),[_=>is(gt(6))],is(gt(3))])  % [2,[2=>7],10]",
             "[a=>1,b=>2,c=>3].select([_=>is(gt(1))])                                                                                     % [b=>2,c=>3]",
             "[a=>[b=>[c=>[1,[x=>[y=>z]],3]]]].select([a/b=>[c=>[+1,[x=>[y=>?uri::T]],+133]]])                                            % [a/b=>[c=>[2,[x=>[y=>z]],136]]]",
             "[a=>[b=>[c=>[1,[x=>[y=>z]],3]]]].select([a/b=>[c=>[+1,[x=>[y=>?int::T]],+133]]])                                            % [a/b=>[c=>[2,noobj,136]]]",
             "[a=>[b=>[c=>[1,[x=>[y=>z]],3]]]].select([a/b=>[c=>[?>0.map(100),[x=>[y=>?int::T]],+133]]])                                  % [a/b=>[c=>[100,noobj,136]]]"
 
-}, delimiter = '%')
+    }, delimiter = '%')
     public void testSelectWhere(final String code, final String expected) {
         super.testCode(code, expected);
     }
