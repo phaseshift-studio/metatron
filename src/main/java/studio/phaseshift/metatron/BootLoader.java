@@ -174,7 +174,7 @@ public class BootLoader implements Rec, Feature.SelfClone {
             if (null == hostname)
                 LOG.warn("booting metatron on a non-networked jvm");
             else
-                remoteAuthority = args.at(Tokens.HOST).orElse(uri(WS + "://" + hostname + ".local" + ":" + 8887)).uriValue();
+                remoteAuthority = args.at(Tokens.HOST).orElse(uri(WS + "://" + hostname + ".local" + ":" + 8999)).uriValue();
             ROUTER = new MRouter(remoteAuthority, SYS_OBJ_TID.extend("router"));
             kvSpace.of(f("/sys/#"), null);
             new sysInstSet(SYS_TID.extend("mod/sys"));
