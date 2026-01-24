@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.lang.db.kv;
 
+import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.mSpaceTest;
 
 import static studio.phaseshift.metatron.furi.fURI.f;
@@ -25,6 +26,6 @@ import static studio.phaseshift.metatron.furi.fURI.f;
 public class kvSpaceTest extends mSpaceTest {
 
     public kvSpaceTest() {
-        super(() -> kvSpace.of(f("/t/#"),f("/sys/space/kv")));
+        super(() -> memSpace.of(f("/t/#"),f("/sys/space/kv")));
     }
 }

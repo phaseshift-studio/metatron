@@ -19,19 +19,19 @@
 package studio.phaseshift.metatron.lang.db.grph.type;
 
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.lang.core.m.type.Obj;
-import studio.phaseshift.metatron.lang.core.m.type.Rec;
-import studio.phaseshift.metatron.lang.core.m.type.Rel;
-import studio.phaseshift.metatron.lang.core.m.type.impl.MRec;
+import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.Rec;
+import studio.phaseshift.metatron.isa.m.type.Rel;
+import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Stream;
 
-import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.lang.db.grph.inst.grphInstSet.EDGE_TID;
-import static studio.phaseshift.metatron.lang.translator.TP3Translator.LABEL;
-import static studio.phaseshift.metatron.lang.translator.TP3Translator.PROPS;
+import static studio.phaseshift.metatron.isa.grph.parser.TP3Translator.LABEL;
+import static studio.phaseshift.metatron.isa.grph.parser.TP3Translator.PROPS;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)

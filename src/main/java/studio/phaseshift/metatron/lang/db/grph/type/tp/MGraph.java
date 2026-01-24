@@ -23,9 +23,9 @@ import org.apache.tinkerpop.gremlin.process.computer.GraphComputer;
 import org.apache.tinkerpop.gremlin.structure.*;
 import org.apache.tinkerpop.gremlin.structure.util.wrapped.WrappedGraph;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.lang.MSpace;
-import studio.phaseshift.metatron.lang.Space;
-import studio.phaseshift.metatron.lang.core.m.type.Obj;
+import studio.phaseshift.metatron.isa.MSpace;
+import studio.phaseshift.metatron.isa.Space;
+import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.lang.db.grph.inst.grphInstSet;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
@@ -38,7 +38,7 @@ import java.util.Map;
 import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.furi.fURI.f;
-import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 public class MGraph extends MSpace<Graph> implements Graph, WrappedGraph<Graph> {
 

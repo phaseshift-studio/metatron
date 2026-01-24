@@ -24,7 +24,7 @@ import org.apache.tinkerpop.gremlin.structure.Property;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
 import org.apache.tinkerpop.gremlin.structure.util.wrapped.WrappedEdge;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.lang.core.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.util.IteratorUtil;
 
 import java.util.Iterator;

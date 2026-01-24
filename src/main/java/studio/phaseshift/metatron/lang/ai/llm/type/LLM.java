@@ -18,7 +18,7 @@
 
 package studio.phaseshift.metatron.lang.ai.llm.type;
 
-import studio.phaseshift.metatron.lang.core.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.Obj;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)

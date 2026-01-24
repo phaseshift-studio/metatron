@@ -26,9 +26,9 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import studio.phaseshift.metatron.lang.core.m.parser.mParser;
-import studio.phaseshift.metatron.ui.graphitty.Graphitty;
-import studio.phaseshift.metatron.ui.graphitty.GraphittyLogger;
+import studio.phaseshift.metatron.isa.m.parser.mParser;
+import studio.phaseshift.metatron.isa.sys.type.ui.graphitty.Graphitty;
+import studio.phaseshift.metatron.isa.sys.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.HashMap;

@@ -30,8 +30,8 @@ import studio.phaseshift.metatron.TestData;
 import studio.phaseshift.metatron.furi.Q;
 import studio.phaseshift.metatron.furi.q.DocQTest;
 import studio.phaseshift.metatron.lang.InstSetTest;
-import studio.phaseshift.metatron.lang.core.m.inst.mInstSet;
-import studio.phaseshift.metatron.lang.core.m.parser.mParser;
+import studio.phaseshift.metatron.isa.m.mInstSet;
+import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.Map;

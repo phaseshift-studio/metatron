@@ -20,11 +20,11 @@ package studio.phaseshift.metatron;
 
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
-import studio.phaseshift.metatron.lang.core.m.parser.mParser;
-import studio.phaseshift.metatron.ui.graphitty.Graphitty;
-import studio.phaseshift.metatron.util.Common;
+import studio.phaseshift.metatron.isa.m.parser.mParser;
+import studio.phaseshift.metatron.isa.sys.type.ui.graphitty.Graphitty;
+import studio.phaseshift.metatron.util.CommonUtil;
 
-import static studio.phaseshift.metatron.lang.core.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -39,7 +39,7 @@ public class BootLoaderTest {
         } catch (final Exception e) {
             Graphitty.log(noobj()).error(e);
         }
-        Common.sleepThread(1000);
+        CommonUtil.sleepThread(1000);
         System.out.println(mParser.eval("/g.V().out().count()").toString());
     }
 }

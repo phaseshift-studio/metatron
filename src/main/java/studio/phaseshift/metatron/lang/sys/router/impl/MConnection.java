@@ -19,9 +19,9 @@
 package studio.phaseshift.metatron.lang.sys.router.impl;
 
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.lang.core.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.lang.sys.router.IOStat;
-import studio.phaseshift.metatron.lang.util.serial.ObjSerializer;
+import studio.phaseshift.metatron.io.serial.ObjSerializer;
 
 import java.io.Closeable;
 

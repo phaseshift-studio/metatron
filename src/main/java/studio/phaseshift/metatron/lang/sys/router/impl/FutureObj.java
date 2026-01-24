@@ -19,8 +19,8 @@
 package studio.phaseshift.metatron.lang.sys.router.impl;
 
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.lang.core.m.type.Obj;
-import studio.phaseshift.metatron.lang.core.m.type.impl.MObj;
+import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.impl.MObj;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
@@ -34,8 +34,8 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
 
-import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.MTRON_TID;
-import static studio.phaseshift.metatron.lang.core.m.type.impl.MFail.fail;
+import static studio.phaseshift.metatron.isa.m.mInstSet.MTRON_TID;
+import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 
 
 /*

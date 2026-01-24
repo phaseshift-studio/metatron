@@ -20,7 +20,7 @@ package studio.phaseshift.metatron.lang.db.grph.type.mtp3;
 
 import org.apache.tinkerpop.gremlin.structure.Property;
 import org.apache.tinkerpop.gremlin.structure.util.wrapped.WrappedProperty;
-import studio.phaseshift.metatron.lang.core.m.type.Rel;
+import studio.phaseshift.metatron.isa.m.type.Rel;
 
 import java.util.NoSuchElementException;
 

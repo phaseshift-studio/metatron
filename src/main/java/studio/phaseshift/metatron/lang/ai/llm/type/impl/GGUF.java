@@ -19,15 +19,15 @@
 package studio.phaseshift.metatron.lang.ai.llm.type.impl;
 
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.lang.core.m.type.Obj;
-import studio.phaseshift.metatron.lang.core.m.type.Rec;
-import studio.phaseshift.metatron.lang.core.m.type.Type;
-import studio.phaseshift.metatron.lang.core.m.type.Uri;
-import studio.phaseshift.metatron.lang.core.m.type.impl.MInt;
-import studio.phaseshift.metatron.lang.core.m.type.impl.MRec;
-import studio.phaseshift.metatron.ui.graphitty.Graphitty;
-import studio.phaseshift.metatron.ui.graphitty.GraphittyLogger;
-import studio.phaseshift.metatron.util.Common;
+import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.Rec;
+import studio.phaseshift.metatron.isa.m.type.Type;
+import studio.phaseshift.metatron.isa.m.type.Uri;
+import studio.phaseshift.metatron.isa.m.type.impl.MInt;
+import studio.phaseshift.metatron.isa.m.type.impl.MRec;
+import studio.phaseshift.metatron.isa.sys.type.ui.graphitty.Graphitty;
+import studio.phaseshift.metatron.isa.sys.type.ui.graphitty.GraphittyLogger;
+import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
 
@@ -37,15 +37,15 @@ import java.util.Map;
 
 import static studio.phaseshift.metatron.Tokens.NAME;
 import static studio.phaseshift.metatron.lang.ai.llm.llmInstSet.LLM_INSTSET_TID;
-import static studio.phaseshift.metatron.lang.core.m.inst.mFluent.StartLess.isa_;
-import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.INT_TID;
-import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.URI_TID;
-import static studio.phaseshift.metatron.lang.core.m.type.impl.MInt.jnt;
-import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
-import static studio.phaseshift.metatron.lang.core.m.type.impl.MRel.rel;
-import static studio.phaseshift.metatron.lang.core.m.type.impl.MType.T;
-import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.util.Common.mutableOrderedMap;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
+import static studio.phaseshift.metatron.isa.m.mInstSet.INT_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.URI_TID;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
+import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
+import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.util.CommonUtil.mutableOrderedMap;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -99,7 +99,7 @@ public class GGUF extends MRec {
                         uri(GGML), uri(ti.ggmlType().name()),
                         uri(SHAPE), lst(Arrays.stream(ti.shape()).mapToObj(MInt::jnt).map(Obj::<Obj>as).toList())).tid(TENSOR_REF_TID))
                 .map(r -> rel(r.at(NAME), r))
-                .collect(new Common.RecCollector());
+                .collect(new CommonUtil.RecCollector());
     }
 
     public static GGUF of(final fURI location, final Tuple.Pair<Long, Long> size, final fURI quantization, final fURI family, final fURI vid) {

@@ -19,6 +19,7 @@
 package studio.phaseshift.metatron.ui;
 
 import org.junit.jupiter.api.Test;
+import studio.phaseshift.metatron.isa.sys.type.ui.Markdown;
 
 public class MarkdownTest {
 

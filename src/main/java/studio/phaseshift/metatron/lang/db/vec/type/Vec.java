@@ -18,8 +18,8 @@
 
 package studio.phaseshift.metatron.lang.db.vec.type;
 
-import studio.phaseshift.metatron.lang.core.m.type.Obj;
-import studio.phaseshift.metatron.lang.core.m.type.Poly;
+import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.Poly;
 
 import java.util.Vector;
 import java.util.function.BiFunction;

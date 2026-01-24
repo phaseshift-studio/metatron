@@ -22,8 +22,8 @@ import org.junit.jupiter.api.Test;
 import studio.phaseshift.metatron.mTest;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static studio.phaseshift.metatron.lang.core.m.inst.mFluent.StartLess.start_;
-import static studio.phaseshift.metatron.lang.core.m.type.impl.MInt.jnt;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.start_;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 
 public class FluentTest extends mTest {
 

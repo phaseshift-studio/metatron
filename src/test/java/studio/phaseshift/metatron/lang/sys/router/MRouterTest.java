@@ -18,16 +18,14 @@
 
 package studio.phaseshift.metatron.lang.sys.router;
 
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.lang.core.m.type.NoObj;
-import studio.phaseshift.metatron.lang.db.kv.inst.kvInstSet;
-import studio.phaseshift.metatron.lang.db.kv.kvSpace;
+import studio.phaseshift.metatron.isa.m.type.NoObj;
+import studio.phaseshift.metatron.isa.m.space.memSpace;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.furi.fURI.f;
-import static studio.phaseshift.metatron.lang.core.m.type.impl.MInt.jnt;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -38,9 +36,9 @@ public class MRouterTest extends RouterTest {
     @Test
     public void testCloseSpace() {
         // BootLoader.ROUTER = new MRouter(f("ws://localhost:8866"),f("/sys/router"));
-        kvSpace mnt = kvSpace.of(f("/mnt/#"), fURI.fnull).vid(f("/mnt")).as();
+        memSpace mnt = memSpace.of(f("/mnt/#"), fURI.fnull).vid(f("/mnt")).as();
         assertFalse(Router.global().hasSpaceFor(f("/test/a")));
-        kvSpace test = kvSpace.of(f("/test/#"), fURI.fnull).vid(f("/mnt/test")).as();
+        memSpace test = memSpace.of(f("/test/#"), fURI.fnull).vid(f("/mnt/test")).as();
         assertTrue(Router.global().hasSpaceFor(f("/test/a")));
         assertTrue(Router.global().hasSpaceFor(f("/test/a")));
         Router.global().write("/test/a", jnt(10));

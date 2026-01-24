@@ -21,12 +21,11 @@ package studio.phaseshift.metatron.lang;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import studio.phaseshift.metatron.lang.core.m.type.Rel;
+import studio.phaseshift.metatron.isa.Space;
+import studio.phaseshift.metatron.isa.m.type.Rel;
 import studio.phaseshift.metatron.lang.sys.router.Router;
 import studio.phaseshift.metatron.mTest;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.function.Supplier;
 
 import static org.junit.jupiter.api.Assertions.*;

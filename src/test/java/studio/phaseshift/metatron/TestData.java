@@ -18,7 +18,7 @@
 
 package studio.phaseshift.metatron;
 
-import studio.phaseshift.metatron.lang.core.m.parser.mParser;
+import studio.phaseshift.metatron.isa.m.parser.mParser;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

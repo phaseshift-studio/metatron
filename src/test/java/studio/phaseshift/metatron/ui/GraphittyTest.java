@@ -20,7 +20,7 @@ package studio.phaseshift.metatron.ui;
 
 import org.jline.jansi.Ansi;
 import org.junit.jupiter.api.Test;
-import studio.phaseshift.metatron.ui.graphitty.Graphitty;
+import studio.phaseshift.metatron.isa.sys.type.ui.graphitty.Graphitty;
 
 import java.io.ByteArrayOutputStream;
 import java.util.Map;

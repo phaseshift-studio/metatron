@@ -26,7 +26,9 @@ package studio.phaseshift.metatron.lang.core.m.type;
 
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-import studio.phaseshift.metatron.lang.core.m.parser.mParser;
+import studio.phaseshift.metatron.isa.m.parser.mParser;
+import studio.phaseshift.metatron.isa.m.type.Lst;
+import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.lang.mObjTest;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;

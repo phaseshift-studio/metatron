@@ -25,15 +25,15 @@ import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.apache.tinkerpop.gremlin.structure.io.IoRegistry;
 import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.lang.core.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.lang.db.grph.grphSpace;
 import studio.phaseshift.metatron.lang.db.grph.inst.grphInstSet;
 import studio.phaseshift.metatron.lang.db.grph.type.mtp3.*;
 import studio.phaseshift.metatron.lang.db.kv.inst.kvInstSet;
-import studio.phaseshift.metatron.lang.db.kv.kvSpace;
+import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.lang.sys.router.Router;
-import studio.phaseshift.metatron.ui.graphitty.Graphitty;
-import studio.phaseshift.metatron.ui.graphitty.GraphittyLogger;
+import studio.phaseshift.metatron.isa.sys.type.ui.graphitty.Graphitty;
+import studio.phaseshift.metatron.isa.sys.type.ui.graphitty.GraphittyLogger;
 
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -42,7 +42,7 @@ import java.util.Set;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.f;
-import static studio.phaseshift.metatron.lang.core.m.type.impl.MRec.rec;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -82,7 +82,7 @@ public class mGraphProvider extends AbstractGraphProvider {
 
     @Override
     public Map<String, Object> getBaseConfiguration(final String graphName, final Class<?> test, final String testMethodName, final LoadGraphWith.GraphData loadGraphWith) {
-        Router.global().addSpace(kvSpace.of(f("/mnt/#"), f("/sys/router/space/kv")));
+        Router.global().addSpace(memSpace.of(f("/mnt/#"), f("/sys/router/space/kv")));
         final Map<String, Object> config = new LinkedHashMap<>();
         config.put(Graph.GRAPH, f(mGraph.class.getCanonicalName()));
         config.put(SPACE, f("/mnt/test/mtp3"));

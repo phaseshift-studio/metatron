@@ -1,7 +1,0 @@
-instset::[
-  name: "mtron-core",
-  prefix: [
-    type: /m/int
-    inst: /m/inst/plus
-    mod:  /m/mod/mach/monoid
-]

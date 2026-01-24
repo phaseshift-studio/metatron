@@ -19,6 +19,7 @@
 package studio.phaseshift.metatron.lang.util.serial;
 
 import org.junit.jupiter.api.Disabled;
+import studio.phaseshift.metatron.io.serial.ObjStringSerializer;
 import studio.phaseshift.metatron.mSerializerTest;
 
 /*

@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.lang.util.serial;
 
+import studio.phaseshift.metatron.io.serial.ObjCleanStringSerializer;
 import studio.phaseshift.metatron.mSerializerTest;
 
 public class ObjCleanStringSerializerTest extends mSerializerTest<String> {

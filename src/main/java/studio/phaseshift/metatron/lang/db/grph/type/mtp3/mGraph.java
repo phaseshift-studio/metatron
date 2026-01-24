@@ -27,16 +27,16 @@ import org.apache.tinkerpop.gremlin.structure.io.gryo.GryoMapper;
 import org.apache.tinkerpop.gremlin.structure.util.ElementHelper;
 import org.apache.tinkerpop.gremlin.structure.util.wrapped.WrappedGraph;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.lang.core.m.type.Obj;
-import studio.phaseshift.metatron.lang.core.m.type.Rec;
-import studio.phaseshift.metatron.lang.core.m.type.Uri;
-import studio.phaseshift.metatron.lang.core.m.type.impl.MObjFactory;
+import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.Rec;
+import studio.phaseshift.metatron.isa.m.type.Uri;
+import studio.phaseshift.metatron.isa.m.type.impl.MObjFactory;
 import studio.phaseshift.metatron.lang.db.grph.grphSpace;
 import studio.phaseshift.metatron.lang.db.grph.inst.grphInstSet;
 import studio.phaseshift.metatron.lang.db.grph.type.REdge;
 import studio.phaseshift.metatron.lang.db.grph.type.RVertex;
-import studio.phaseshift.metatron.lang.db.kv.kvSpace;
-import studio.phaseshift.metatron.lang.sys.console.Highlighter;
+import studio.phaseshift.metatron.isa.m.space.memSpace;
+import studio.phaseshift.metatron.isa.sys.type.console.Highlighter;
 import studio.phaseshift.metatron.lang.sys.router.Router;
 import studio.phaseshift.metatron.util.MTronException;
 
@@ -48,9 +48,9 @@ import java.util.Map;
 import static studio.phaseshift.metatron.Tokens.PATTERN;
 import static studio.phaseshift.metatron.Tokens.SPACE;
 import static studio.phaseshift.metatron.furi.fURI.f;
-import static studio.phaseshift.metatron.lang.core.m.type.impl.MRec.rec;
-import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.lang.translator.TP3Translator.LABEL;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.isa.grph.parser.TP3Translator.LABEL;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -102,7 +102,7 @@ public class mGraph implements Graph, WrappedGraph<grphSpace> {
         final fURI pattern = f(configuration.getProperty(PATTERN).toString());
         final Obj s = Router.global().read(spacevid);
         if (s.isNoObj()) {
-            this.space = new grphSpace(kvSpace.of(pattern, fURI.fnull), configurationToMap(configuration), pattern, spacevid);
+            this.space = new grphSpace(memSpace.of(pattern, fURI.fnull), configurationToMap(configuration), pattern, spacevid);
         } else if (s instanceof grphSpace) {
             this.space = (grphSpace) s;
         } else {

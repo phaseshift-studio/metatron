@@ -20,7 +20,7 @@ package studio.phaseshift.metatron.lang.db.vec.type.impl;
 
 import jdk.incubator.vector.DoubleVector;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.lang.core.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.Obj;
 
 import java.util.stream.Stream;
 

@@ -18,14 +18,14 @@
 
 package studio.phaseshift.metatron.util;
 
-import studio.phaseshift.metatron.lang.core.m.type.Fail;
-import studio.phaseshift.metatron.lang.sys.console.Highlighter;
-import studio.phaseshift.metatron.ui.graphitty.Graphitty;
+import studio.phaseshift.metatron.isa.m.type.Fail;
+import studio.phaseshift.metatron.isa.sys.type.console.Highlighter;
+import studio.phaseshift.metatron.isa.sys.type.ui.graphitty.Graphitty;
 
 import java.util.Arrays;
 import java.util.Objects;
 
-import static studio.phaseshift.metatron.lang.core.m.type.impl.MFail.fail;
+import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 
 public class MTronException extends RuntimeException {
 

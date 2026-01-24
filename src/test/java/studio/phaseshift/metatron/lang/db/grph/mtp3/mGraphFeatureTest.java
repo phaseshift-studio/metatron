@@ -40,7 +40,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import studio.phaseshift.metatron.lang.db.grph.type.mtp3.mGraph;
 import studio.phaseshift.metatron.lang.db.grph.type.mtp3.mIoRegistry;
-import studio.phaseshift.metatron.lang.db.kv.kvSpace;
+import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.lang.sys.router.Router;
 
 import java.io.File;
@@ -139,7 +139,7 @@ public class mGraphFeatureTest {
         }
 
         private static Map<String, Object> getBaseConfiguration(final LoadGraphWith.GraphData graphData) {
-            Router.global().addSpace(kvSpace.of(f("/mnt/#"), f("/sys/router/space/kv")));
+            Router.global().addSpace(memSpace.of(f("/mnt/#"), f("/sys/router/space/kv")));
             final Map<String, Object> config = new LinkedHashMap<>();
             config.put(Graph.GRAPH, f(mGraph.class.getCanonicalName()));
             config.put(SPACE, f("/mnt/test/mtp3"));

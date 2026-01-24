@@ -20,9 +20,8 @@ package studio.phaseshift.metatron.lang.core.mach;
 
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import studio.phaseshift.metatron.isa.m.machInstSet;
 import studio.phaseshift.metatron.lang.InstSetTest;
-
-import static studio.phaseshift.metatron.furi.fURI.f;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)

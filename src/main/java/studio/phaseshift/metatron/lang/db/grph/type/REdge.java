@@ -20,17 +20,17 @@ package studio.phaseshift.metatron.lang.db.grph.type;
 
 import org.apache.tinkerpop.gremlin.structure.Direction;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.lang.core.m.type.Obj;
-import studio.phaseshift.metatron.lang.core.m.type.Objs;
-import studio.phaseshift.metatron.lang.core.m.type.Rec;
+import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.Objs;
+import studio.phaseshift.metatron.isa.m.type.Rec;
 
 import java.util.Map;
 import java.util.stream.Stream;
 
-import static studio.phaseshift.metatron.lang.core.m.inst.mFluent.StartLess.auto;
-import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.lang.db.grph.inst.grphInstSet.EDGE_TID;
-import static studio.phaseshift.metatron.lang.translator.TP3Translator.LABEL;
+import static studio.phaseshift.metatron.isa.grph.parser.TP3Translator.LABEL;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)

@@ -19,27 +19,27 @@
 package studio.phaseshift.metatron.lang.core.m;
 
 import org.junit.jupiter.api.Test;
-import studio.phaseshift.metatron.lang.core.m.type.NoObj;
-import studio.phaseshift.metatron.lang.core.m.parser.mParser;
-import studio.phaseshift.metatron.lang.core.m.type.Bytes;
-import studio.phaseshift.metatron.lang.core.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.NoObj;
+import studio.phaseshift.metatron.isa.m.parser.mParser;
+import studio.phaseshift.metatron.isa.m.type.Bytes;
+import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.HexFormat;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.petitparser.parser.primitive.StringParser.of;
-import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.BOOL_TID;
-import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.BYTES_TID;
-import static studio.phaseshift.metatron.lang.core.m.parser.mParser.*;
-import static studio.phaseshift.metatron.lang.core.m.type.impl.MBool.bool;
-import static studio.phaseshift.metatron.lang.core.m.type.impl.MInt.jnt;
-import static studio.phaseshift.metatron.lang.core.m.type.impl.MObjs.objs;
-import static studio.phaseshift.metatron.lang.core.m.type.impl.MReal.real;
-import static studio.phaseshift.metatron.lang.core.m.type.impl.MRel.rel;
-import static studio.phaseshift.metatron.lang.core.m.type.impl.MStr.str;
-import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.isa.m.mInstSet.BOOL_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.BYTES_TID;
+import static studio.phaseshift.metatron.isa.m.parser.mParser.m_bool;
+import static studio.phaseshift.metatron.isa.m.parser.mParser.m_bytes;
+import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
+import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
+import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
+import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 
 public class mParserTest {
@@ -65,6 +65,7 @@ public class mParserTest {
         assertEquals(BYTES_TID, m_bytes().parse("0xabc123").<Bytes>get().tid());
         assertArrayEquals(HexFormat.of().parseHex("abc123"), m_bytes().parse("0xabc123").<Bytes>get().jvm().array());
     }
+    
 
     @Test
     public void testIntParse() {

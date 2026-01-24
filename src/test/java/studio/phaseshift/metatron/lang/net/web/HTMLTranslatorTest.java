@@ -20,8 +20,8 @@ package studio.phaseshift.metatron.lang.net.web;
 
 import org.junit.jupiter.api.Test;
 import studio.phaseshift.metatron.mTest;
-import studio.phaseshift.metatron.lang.core.m.type.Rec;
-import studio.phaseshift.metatron.lang.translator.HTMLTranslator;
+import studio.phaseshift.metatron.isa.m.type.Rec;
+import studio.phaseshift.metatron.isa.web.parser.HTMLTranslator;
 
 import java.io.File;
 

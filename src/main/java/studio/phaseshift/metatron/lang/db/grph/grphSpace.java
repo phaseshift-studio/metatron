@@ -20,16 +20,16 @@ package studio.phaseshift.metatron.lang.db.grph;
 
 import org.apache.tinkerpop.gremlin.tinkergraph.structure.TinkerFactory;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.lang.MSpace;
-import studio.phaseshift.metatron.lang.Space;
-import studio.phaseshift.metatron.lang.core.m.inst.mInstSet;
-import studio.phaseshift.metatron.lang.core.m.type.Obj;
-import studio.phaseshift.metatron.lang.core.m.type.Rec;
-import studio.phaseshift.metatron.lang.core.m.type.Type;
-import studio.phaseshift.metatron.lang.translator.TP3Translator;
-import studio.phaseshift.metatron.lang.db.kv.kvSpace;
+import studio.phaseshift.metatron.isa.MSpace;
+import studio.phaseshift.metatron.isa.Space;
+import studio.phaseshift.metatron.isa.m.mInstSet;
+import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.Rec;
+import studio.phaseshift.metatron.isa.m.type.Type;
+import studio.phaseshift.metatron.isa.grph.parser.TP3Translator;
+import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.lang.sys.router.Router;
-import studio.phaseshift.metatron.lang.util.noobjSpace;
+import studio.phaseshift.metatron.isa.m.space.noobjSpace;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.Map;
@@ -37,13 +37,13 @@ import java.util.Map;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.furi.fURI.f;
-import static studio.phaseshift.metatron.lang.core.m.inst.mFluent.StartLess.isa_;
-import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.URI_TID;
-import static studio.phaseshift.metatron.lang.core.m.type.impl.MInst.instC;
-import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
-import static studio.phaseshift.metatron.lang.core.m.type.impl.MType.T;
-import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.lang.db.kv.kvSpace.KV_TID;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
+import static studio.phaseshift.metatron.isa.m.mInstSet.URI_TID;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
+import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.isa.m.space.memSpace.MEM_SPACE_TID;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -63,14 +63,14 @@ public class grphSpace extends MSpace<Space> {
     public static final Type GRPH_TYPE = T(GRPH_TID, null, instC(mInstSet.INST_TID.dom(ALL.maybe()).rng(GRPH_TID),
             lst(isa_(rec(
                     uri(PATTERN), T(URI_TID),
-                    uri(STORE).maybe(), T(KV_TID),
+                    uri(STORE).maybe(), T(MEM_SPACE_TID),
                     uri(LOAD), T(URI_TID)))
                     .tryToInst()), (lhs, inst) -> {
                 final fURI pattern = inst.arg(0).orElse(rec()).<Rec>as().at(PATTERN).uriValue();
                 final fURI dataset = inst.arg(0).orElse(rec()).<Rec>as().at(LOAD).uriValue();
                 final Obj inner = inst.arg(0).orElse(rec()).<Rec>as().at(STORE);
                 final grphSpace space = new grphSpace(inner.isNoObj() ? noobjSpace.single() :
-                        new kvSpace(inner.<Rec>as().at(PATTERN).uriValue(), fURI.fnull), Map.of(uri(PATTERN), uri(pattern), uri(LOAD), uri(dataset)), pattern, inst.arg(0).vid());
+                        new memSpace(inner.<Rec>as().at(PATTERN).uriValue(), fURI.fnull), Map.of(uri(PATTERN), uri(pattern), uri(LOAD), uri(dataset)), pattern, inst.arg(0).vid());
                 Router.global().addSpace(space);
                 space.start();
                 return space;
@@ -114,7 +114,7 @@ public class grphSpace extends MSpace<Space> {
     public void clear() {
         LOG.info("clearing {{b}}%s{{X}}", this.pattern);
         this.sjvm().close();
-        this.sjvm = kvSpace.of(this.pattern, fURI.fnull);
+        this.sjvm = memSpace.of(this.pattern, fURI.fnull);
     }
 
 }

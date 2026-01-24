@@ -21,9 +21,9 @@ package studio.phaseshift.metatron.furi;
 import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.algebra.Ring;
 import studio.phaseshift.metatron.furi.c.cInt;
-import studio.phaseshift.metatron.lang.core.m.type.Uri;
+import studio.phaseshift.metatron.isa.m.type.Uri;
 import studio.phaseshift.metatron.lang.sys.router.Router;
-import studio.phaseshift.metatron.ui.graphitty.Graphitty;
+import studio.phaseshift.metatron.isa.sys.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.*;
@@ -31,7 +31,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.furi.c.cInt.C_ONE;
-import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 
 public class fURI implements Cloneable, Ring<fURI> {

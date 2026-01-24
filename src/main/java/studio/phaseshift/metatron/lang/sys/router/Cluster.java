@@ -19,13 +19,13 @@
 package studio.phaseshift.metatron.lang.sys.router;
 
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.lang.core.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.lang.sys.router.impl.MConnection;
 
 import java.util.Map;
 import java.util.function.BiPredicate;
 
-import static studio.phaseshift.metatron.lang.core.m.type.impl.MObjs.objs;
+import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)

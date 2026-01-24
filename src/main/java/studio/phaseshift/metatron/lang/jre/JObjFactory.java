@@ -19,9 +19,9 @@
 package studio.phaseshift.metatron.lang.jre;
 
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.lang.core.m.type.Obj;
-import studio.phaseshift.metatron.lang.core.m.type.impl.MObjFactory;
-import studio.phaseshift.metatron.lang.sys.fs.fileSpace;
+import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.impl.MObjFactory;
+import studio.phaseshift.metatron.isa.sys.space.file.fileSpace;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.lang.reflect.Field;
@@ -30,9 +30,9 @@ import java.util.Map;
 
 import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.furi.fURI.fnull;
-import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.STR_TID;
-import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.URI_TID;
-import static studio.phaseshift.metatron.lang.sys.fs.fsInstSet.FILE_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.STR_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.URI_TID;
+import static studio.phaseshift.metatron.isa.sys.space.file.fsInstSet.FILE_TID;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)

@@ -27,7 +27,7 @@ import studio.phaseshift.metatron.mTest;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.db.grph.grphSpace;
 import studio.phaseshift.metatron.lang.db.grph.inst.grphInstSet;
-import studio.phaseshift.metatron.lang.db.kv.kvSpace;
+import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.lang.sys.router.Router;
 
 import java.util.Map;
@@ -35,8 +35,8 @@ import java.util.Map;
 import static studio.phaseshift.metatron.Tokens.PATTERN;
 import static studio.phaseshift.metatron.Tokens.SPACE;
 import static studio.phaseshift.metatron.furi.fURI.f;
-import static studio.phaseshift.metatron.lang.core.m.inst.mFluent.StartLess.auto;
-import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -47,8 +47,8 @@ public class RGraphTest extends mTest {
     public static void begin() {
         mTest.begin();
         grphInstSet.create().vid(f("/sys/lang/grph"));
-        grphSpace space = new grphSpace(kvSpace.of(f("/g/#"), fURI.fnull), Map.of(
-                uri(SPACE), kvSpace.of(f("/g/#"), fURI.fnull),
+        grphSpace space = new grphSpace(memSpace.of(f("/g/#"), fURI.fnull), Map.of(
+                uri(SPACE), memSpace.of(f("/g/#"), fURI.fnull),
                 uri(PATTERN), uri("/g/#"),
                 uri("load"), uri("tinkerpop-modern")), f("/g/#"), f("/sys/space/grph"));
         Router.global().addSpace(space);

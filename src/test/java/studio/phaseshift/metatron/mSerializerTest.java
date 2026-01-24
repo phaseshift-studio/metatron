@@ -21,9 +21,9 @@ package studio.phaseshift.metatron;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-import studio.phaseshift.metatron.lang.core.m.parser.mParser;
-import studio.phaseshift.metatron.lang.core.m.type.Obj;
-import studio.phaseshift.metatron.lang.util.serial.ObjSerializer;
+import studio.phaseshift.metatron.isa.m.parser.mParser;
+import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.io.serial.ObjSerializer;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 

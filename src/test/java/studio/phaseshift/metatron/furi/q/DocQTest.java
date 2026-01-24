@@ -20,9 +20,9 @@ package studio.phaseshift.metatron.furi.q;
 
 import studio.phaseshift.metatron.mTest;
 import studio.phaseshift.metatron.furi.c.cInt;
-import studio.phaseshift.metatron.lang.core.m.type.Inst;
-import studio.phaseshift.metatron.lang.core.m.type.InstSet;
-import studio.phaseshift.metatron.lang.core.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.Inst;
+import studio.phaseshift.metatron.isa.m.type.InstSet;
+import studio.phaseshift.metatron.isa.m.type.Obj;
 
 import static studio.phaseshift.metatron.Tokens.DESC;
 

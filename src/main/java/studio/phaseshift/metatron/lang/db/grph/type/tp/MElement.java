@@ -21,8 +21,8 @@ package studio.phaseshift.metatron.lang.db.grph.type.tp;
 import org.apache.tinkerpop.gremlin.structure.Element;
 import org.apache.tinkerpop.gremlin.structure.Graph;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.lang.core.m.type.Obj;
-import studio.phaseshift.metatron.lang.core.m.type.impl.MObj;
+import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.impl.MObj;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.Iterator;

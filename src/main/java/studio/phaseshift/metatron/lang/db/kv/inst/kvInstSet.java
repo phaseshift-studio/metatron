@@ -19,9 +19,9 @@
 package studio.phaseshift.metatron.lang.db.kv.inst;
 
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.lang.core.m.type.Type;
-import studio.phaseshift.metatron.lang.core.m.type.impl.MInstSet;
-import studio.phaseshift.metatron.lang.db.kv.kvSpace;
+import studio.phaseshift.metatron.isa.m.type.Type;
+import studio.phaseshift.metatron.isa.m.type.impl.MInstSet;
+import studio.phaseshift.metatron.isa.m.space.memSpace;
 
 import java.util.Set;
 
@@ -49,6 +49,6 @@ public class kvInstSet extends MInstSet {
 
     @Override
     public Set<Type> types() {
-        return Set.of(kvSpace.KV_TYPE);
+        return Set.of(memSpace.MEM_SPACE_TYPE);
     }
 }

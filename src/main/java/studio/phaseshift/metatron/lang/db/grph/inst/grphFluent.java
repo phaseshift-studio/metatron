@@ -19,19 +19,19 @@
 package studio.phaseshift.metatron.lang.db.grph.inst;
 
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.lang.Fluent;
-import studio.phaseshift.metatron.lang.core.m.inst.mFluent;
-import studio.phaseshift.metatron.lang.core.m.inst.mInstSet;
-import studio.phaseshift.metatron.lang.core.m.type.Call;
-import studio.phaseshift.metatron.lang.core.m.type.Inst;
-import studio.phaseshift.metatron.lang.core.m.type.Obj;
+import studio.phaseshift.metatron.isa.Fluent;
+import studio.phaseshift.metatron.isa.m.parser.mFluent;
+import studio.phaseshift.metatron.isa.m.mInstSet;
+import studio.phaseshift.metatron.isa.m.type.Call;
+import studio.phaseshift.metatron.isa.m.type.Inst;
+import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.lang.db.grph.type.tp.MGraph;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import static studio.phaseshift.metatron.lang.core.m.type.impl.MInst.instB;
-import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instB;
+import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 
 public class grphFluent<F extends Fluent<F>> extends mFluent<F> {
 

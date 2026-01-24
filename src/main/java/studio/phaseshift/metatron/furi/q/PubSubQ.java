@@ -21,12 +21,13 @@ package studio.phaseshift.metatron.furi.q;
 import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.furi.Q;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.lang.core.m.inst.mInstSet;
-import studio.phaseshift.metatron.lang.core.m.type.*;
-import studio.phaseshift.metatron.lang.core.m.type.impl.MRec;
-import studio.phaseshift.metatron.lang.core.mach.type.Machine;
-import studio.phaseshift.metatron.lang.core.mach.type.impl.MMachine;
-import studio.phaseshift.metatron.util.Common;
+import studio.phaseshift.metatron.isa.m.type.*;
+import studio.phaseshift.metatron.isa.m.mInstSet;
+
+import studio.phaseshift.metatron.isa.m.type.impl.MRec;
+import studio.phaseshift.metatron.isa.m.type.Machine;
+import studio.phaseshift.metatron.isa.m.type.impl.MMachine;
+import studio.phaseshift.metatron.util.CommonUtil;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -36,14 +37,14 @@ import java.util.Queue;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.furi.fURI.f;
-import static studio.phaseshift.metatron.lang.core.m.inst.mFluent.StartLess.isa_;
-import static studio.phaseshift.metatron.lang.core.m.inst.mInstSet.*;
-import static studio.phaseshift.metatron.lang.core.m.type.NoObj.noobj;
-import static studio.phaseshift.metatron.lang.core.m.type.impl.MInst.instC;
-import static studio.phaseshift.metatron.lang.core.m.type.impl.MLst.lst;
-import static studio.phaseshift.metatron.lang.core.m.type.impl.MType.T;
-import static studio.phaseshift.metatron.lang.core.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.util.Common.mutableMap;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
+import static studio.phaseshift.metatron.isa.m.mInstSet.*;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
+import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 public class PubSubQ extends BaseQ {
 
@@ -93,7 +94,7 @@ public class PubSubQ extends BaseQ {
         }
 
         public Subscription(final fURI source, final fURI target, final Call call) {
-            super(Common.immutableOrderedMap(
+            super(CommonUtil.immutableOrderedMap(
                     uri(SRC), uri(source),
                     uri(TGT), uri(target),
                     uri(ON_RECV), call), SUBSCRIPTION_TID, fURI.fnull);

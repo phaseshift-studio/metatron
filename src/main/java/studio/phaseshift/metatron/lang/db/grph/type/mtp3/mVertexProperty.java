@@ -24,7 +24,7 @@ import org.apache.tinkerpop.gremlin.structure.VertexProperty;
 import org.apache.tinkerpop.gremlin.structure.util.ElementHelper;
 import org.apache.tinkerpop.gremlin.structure.util.StringFactory;
 import org.apache.tinkerpop.gremlin.structure.util.wrapped.WrappedVertexProperty;
-import studio.phaseshift.metatron.lang.core.m.type.Rel;
+import studio.phaseshift.metatron.isa.m.type.Rel;
 import studio.phaseshift.metatron.util.IteratorUtil;
 
 import java.util.Iterator;

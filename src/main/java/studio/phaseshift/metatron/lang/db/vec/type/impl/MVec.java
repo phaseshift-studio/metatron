@@ -20,7 +20,7 @@ package studio.phaseshift.metatron.lang.db.vec.type.impl;
 
 import jdk.incubator.vector.Vector;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.lang.core.m.type.impl.MObj;
+import studio.phaseshift.metatron.isa.m.type.impl.MObj;
 import studio.phaseshift.metatron.lang.db.vec.type.Vec;
 
 /*
