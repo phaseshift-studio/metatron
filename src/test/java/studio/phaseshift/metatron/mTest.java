@@ -21,15 +21,15 @@ package studio.phaseshift.metatron;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.m.type.NoObj;
+import studio.phaseshift.metatron.isa.m.mInstSet;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.type.Fail;
+import studio.phaseshift.metatron.isa.m.type.NoObj;
 import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.lang.db.kv.inst.kvInstSet;
-import studio.phaseshift.metatron.lang.sys.router.Router;
 import studio.phaseshift.metatron.isa.sys.type.LogObj;
 import studio.phaseshift.metatron.isa.sys.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.sys.type.ui.graphitty.GraphittyLogger;
+import studio.phaseshift.metatron.lang.sys.router.Router;
 
 import java.util.Map;
 
@@ -45,7 +45,8 @@ public class mTest {
     @BeforeAll
     public static void begin() {
         BootLoader.load(rec(uri("log"), uri(LogObj.getSLF4J().toString().toLowerCase())));
-        kvInstSet.create();
+        mInstSet.create();
+        
     }
 
     @AfterAll

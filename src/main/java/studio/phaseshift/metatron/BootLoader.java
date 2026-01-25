@@ -28,20 +28,17 @@ import studio.phaseshift.metatron.isa.m.type.Feature;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.sys.space.file.fileSpace;
-import studio.phaseshift.metatron.isa.sys.space.file.fsInstSet;
 import studio.phaseshift.metatron.isa.sys.sysInstSet;
 import studio.phaseshift.metatron.isa.sys.type.LogObj;
 import studio.phaseshift.metatron.isa.sys.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.sys.type.ui.graphitty.GraphittyLogger;
-import studio.phaseshift.metatron.isa.sys.uiInstSet;
 import studio.phaseshift.metatron.isa.web.webInstSet;
 import studio.phaseshift.metatron.lang.ai.llm.llmInstSet;
 import studio.phaseshift.metatron.lang.db.grph.inst.grphInstSet;
-import studio.phaseshift.metatron.lang.db.kv.inst.kvInstSet;
 import studio.phaseshift.metatron.lang.db.tabl.tablInstSet;
 import studio.phaseshift.metatron.lang.db.vec.vecInstSet;
 import studio.phaseshift.metatron.lang.sys.router.Router;
-import studio.phaseshift.metatron.lang.sys.router.impl.MRouter;
+import studio.phaseshift.metatron.lang.sys.router.impl.mRouter;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -64,14 +61,11 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.sys.space.file.fsInstSet.FS_INSTSET_TID;
 import static studio.phaseshift.metatron.isa.sys.sysInstSet.SYS_OBJ_TID;
 import static studio.phaseshift.metatron.isa.sys.sysInstSet.SYS_TID;
-import static studio.phaseshift.metatron.isa.sys.uiInstSet.UI_INSTSET_TID;
 import static studio.phaseshift.metatron.isa.web.webInstSet.WEB_INSTSET_TID;
 import static studio.phaseshift.metatron.lang.ai.llm.llmInstSet.LLM_INSTSET_TID;
 import static studio.phaseshift.metatron.lang.db.grph.inst.grphInstSet.GRPH_INSTSET_TID;
-import static studio.phaseshift.metatron.lang.db.kv.inst.kvInstSet.KV_INSTSET_TID;
 import static studio.phaseshift.metatron.lang.db.tabl.tablInstSet.TABL_INSTSET_TID;
 import static studio.phaseshift.metatron.lang.db.vec.vecInstSet.VEC_INSTSET_TID;
 
@@ -91,15 +85,12 @@ public class BootLoader implements Rec, Feature.SelfClone {
         LOG = Graphitty.log(new BootLoader());
         //Registry.singleton().register(mInstSet.INST_TID, () -> mInstSet.of(fURI.NULL));
         Registry.open().register(SYS_TID, sysInstSet::create);
-        Registry.open().register(FS_INSTSET_TID, fsInstSet::create);
-        Registry.open().register(KV_INSTSET_TID, kvInstSet::create);
         Registry.open().register(WEB_INSTSET_TID, webInstSet::create);
         Registry.open().register(IOT_INSTSET_TID, iotInstSet::create);
         Registry.open().register(GRPH_INSTSET_TID, grphInstSet::create);
         Registry.open().register(LLM_INSTSET_TID, llmInstSet::create);
         Registry.open().register(VEC_INSTSET_TID, vecInstSet::create);
         Registry.open().register(MACH_INSTSET_TID, machInstSet::create);
-        Registry.open().register(UI_INSTSET_TID, uiInstSet::create);
         Registry.open().register(TABL_INSTSET_TID, tablInstSet::create);
         // Registry.singleton().register(miotInstSet.INST_TID, () -> miotInstSet.of(fURI.NULL));
     }
@@ -172,12 +163,12 @@ public class BootLoader implements Rec, Feature.SelfClone {
                 LOG.warn("booting metatron on a non-networked jvm");
             else
                 remoteAuthority = args.at(Tokens.HOST).orElse(uri(WS + "://" + hostname + ".local" + ":" + 8999)).uriValue();
-            ROUTER = new MRouter(remoteAuthority, SYS_OBJ_TID.extend("router"));
+            ROUTER = new mRouter(remoteAuthority, SYS_OBJ_TID.extend("router"));
             memSpace.of(f("/sys/#"), null);
-            new sysInstSet(SYS_TID.extend("mod/sys"));
+            sysInstSet.create(SYS_TID.extend("mod/sys"));
             Router.writeToSpace(mInstSet.create(f("/sys/mod/m")));
             Router.writeToSpace(Router.global());
-            Router.writeToSpace(new fsInstSet(f("/sys/mod/fs")));
+           // Router.writeToSpace((f("/sys/mod/fs")));
             Router.writeToSpace(f("boot/args"), args);
 
             ROUTER.start();

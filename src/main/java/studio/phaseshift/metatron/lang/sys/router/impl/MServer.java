@@ -48,7 +48,7 @@ import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
-import static studio.phaseshift.metatron.lang.sys.router.impl.MRouter.ROUTER_TID;
+import static studio.phaseshift.metatron.lang.sys.router.impl.mRouter.ROUTER_TID;
 
 public class MServer extends WebSocketServer implements Cluster, Closeable, Obj {
 
@@ -66,7 +66,7 @@ public class MServer extends WebSocketServer implements Cluster, Closeable, Obj 
         super(new InetSocketAddress(host.host(), host.port()));
         this.host = host;
         LOG = Graphitty.log(this);
-        this.serializer = MRouter.SERIALIZERS.get(ObjByteBufferSerializer.OBJ_BYTE_BUFFER_SERIALIZER_TID);
+        this.serializer = mRouter.SERIALIZERS.get(ObjByteBufferSerializer.OBJ_BYTE_BUFFER_SERIALIZER_TID);
     }
 
     public boolean isRunning() {

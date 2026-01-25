@@ -24,7 +24,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.lang.db.grph.inst.grphInstSet;
-import studio.phaseshift.metatron.mSpaceTest;
+import studio.phaseshift.metatron.SpaceTest;
 
 import static studio.phaseshift.metatron.furi.fURI.f;
 
@@ -32,7 +32,7 @@ import static studio.phaseshift.metatron.furi.fURI.f;
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 @Disabled
-public class grphInstSetTest extends mSpaceTest {
+public class grphInstSetTest extends SpaceTest {
 
     public grphInstSetTest() {
         super(() -> mParser.parse("""

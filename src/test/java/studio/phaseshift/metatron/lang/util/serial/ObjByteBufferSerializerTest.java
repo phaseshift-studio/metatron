@@ -19,7 +19,7 @@
 package studio.phaseshift.metatron.lang.util.serial;
 
 import studio.phaseshift.metatron.io.serial.ObjByteBufferSerializer;
-import studio.phaseshift.metatron.mSerializerTest;
+import studio.phaseshift.metatron.SerializerTest;
 
 import java.nio.ByteBuffer;
 
@@ -29,7 +29,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 
-public class ObjByteBufferSerializerTest extends mSerializerTest<ByteBuffer> {
+public class ObjByteBufferSerializerTest extends SerializerTest<ByteBuffer> {
 
    public ObjByteBufferSerializerTest() {
        super(new ObjByteBufferSerializer());

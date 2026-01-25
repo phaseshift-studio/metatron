@@ -21,18 +21,15 @@ package studio.phaseshift.metatron.lang.jre;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.impl.MObjFactory;
-import studio.phaseshift.metatron.isa.sys.space.file.fileSpace;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.lang.reflect.Field;
-import java.nio.file.Path;
 import java.util.Map;
 
 import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.furi.fURI.fnull;
 import static studio.phaseshift.metatron.isa.m.mInstSet.STR_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.URI_TID;
-import static studio.phaseshift.metatron.isa.sys.space.file.fsInstSet.FILE_TID;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -63,8 +60,8 @@ public class JObjFactory extends MObjFactory {
             newValue = value.toString();
         } else if (tid.equals(URI_TID)) {
             newValue = f(value.toString());
-        } else if (tid.equals(FILE_TID))
-            return fileSpace.makeFile(Path.of(value.toString()));
+        }// else if (tid.equals(FILE_TID))
+        //return fileSpace.makeFile(Path.of(value.toString()));
         return create(newValue, tid, vid);
     }
 

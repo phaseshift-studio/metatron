@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -18,35 +18,48 @@
 
 package studio.phaseshift.metatron.isa.m.space;
 
-import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.MSpace;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.mInstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Poly;
+import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.m.type.Uri;
-import studio.phaseshift.metatron.isa.sys.sysInstSet;
 import studio.phaseshift.metatron.isa.sys.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.sys.type.ui.graphitty.GraphittyLogger;
+import studio.phaseshift.metatron.lang.sys.router.Router;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.Stack;
 
+import static studio.phaseshift.metatron.Tokens.PATTERN;
+import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.furi.fURI.f;
+import static studio.phaseshift.metatron.isa.m.mInstSet.URI_TID;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
+import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 public class stackSpace extends MSpace<Stack<Poly>> {
 
-    public static final fURI STACK_TID = f("/m/space/stack");
-    public static final String ARG_PREFIX = "";
+    public static final fURI STACK_SPACE_TID = f("/m/space/stack");
+    public static final fURI MEM_SPACE_TID = f("/m/space/mem");
+    public static final Type STACK_SPACE_TYPE = T(STACK_SPACE_TID, null, instC(mInstSet.INST_TID.dom(ALL.maybe()).rng(STACK_SPACE_TID), lst(isa_(rec(uri(PATTERN), T(URI_TID)/*, uri(Tokens.Q).c(cInt::maybe), T(LST_TID.maybe())*/)).tryToInst()), (lhs, inst) -> {
+        final fURI pattern = inst.arg(0).asRec().at(PATTERN).uriValue();
+        final Space space = new stackSpace(pattern);
+        Router.global().addSpace(space);
+        return space;
+    }));
 
     private final GraphittyLogger LOG = Graphitty.log(this);
     private final Space root;
 
     public stackSpace(final fURI pattern) {
-        super(new Stack<>(), mutableMap(uri(Tokens.PATTERN), uri(pattern)), pattern, STACK_TID, fURI.fnull);
+        super(new Stack<>(), mutableMap(uri(PATTERN), uri(pattern)), pattern, STACK_SPACE_TID, fURI.fnull);
         this.root = memSpace.of(this.pattern, fURI.fnull);
     }
 

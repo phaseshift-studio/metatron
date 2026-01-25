@@ -20,13 +20,13 @@ package studio.phaseshift.metatron.lang.util.serial;
 
 import org.junit.jupiter.api.Disabled;
 import studio.phaseshift.metatron.io.serial.ObjStringSerializer;
-import studio.phaseshift.metatron.mSerializerTest;
+import studio.phaseshift.metatron.SerializerTest;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 @Disabled
-public class ObjStringSerializerTest extends mSerializerTest<String> {
+public class ObjStringSerializerTest extends SerializerTest<String> {
     public ObjStringSerializerTest() {
         super(ObjStringSerializer.build().prettyPrint(false).simpleColon(false).create());
     }

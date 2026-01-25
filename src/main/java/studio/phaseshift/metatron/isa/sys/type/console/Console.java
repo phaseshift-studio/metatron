@@ -71,7 +71,6 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
-import static studio.phaseshift.metatron.isa.sys.space.file.fsInstSet.FILE_TID_STRING;
 import static studio.phaseshift.metatron.isa.sys.sysInstSet.SYS_TYPE_TID;
 
 public class Console extends JRec implements Closeable, Runnable {
@@ -81,11 +80,11 @@ public class Console extends JRec implements Closeable, Runnable {
     public static final String METATRON_VERSION = "0.1-alpha";
     @ObjFieldReflection(tid = "/m/uri")
     public static final String MTRON = "mtron";
-    @ObjFieldReflection(tid = FILE_TID_STRING)
+   // @ObjFieldReflection(tid = FILE_TID_STRING)
     public static final String MTRON_NANORC = "mtron.nanorc";
-    @ObjFieldReflection(tid = FILE_TID_STRING)
+    //@ObjFieldReflection(tid = FILE_TID_STRING)
     public static String HEADER_FILE = "./conf/ansi_headers.txt";
-    @ObjFieldReflection(tid = FILE_TID_STRING)
+    //@ObjFieldReflection(tid = FILE_TID_STRING)
     public static Path HISTORY_FILE = Paths.get(".metatron.history");
 
     private final GraphittyLogger LOG = Graphitty.log(this);

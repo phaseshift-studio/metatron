@@ -19,14 +19,14 @@
 package studio.phaseshift.metatron.lang.core.mach;
 
 import studio.phaseshift.metatron.isa.m.space.stackSpace;
-import studio.phaseshift.metatron.mSpaceTest;
+import studio.phaseshift.metatron.SpaceTest;
 
 import static studio.phaseshift.metatron.furi.fURI.f;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class stackSpaceTest extends mSpaceTest {
+public class stackSpaceTest extends SpaceTest {
 
     public stackSpaceTest() {
         super(() -> new stackSpace(f("/t/#")));
