@@ -33,6 +33,7 @@ import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Type;
+import studio.phaseshift.metatron.isa.web.parser.AudioTranslator;
 import studio.phaseshift.metatron.lang.sys.router.Router;
 import studio.phaseshift.metatron.isa.web.parser.JSONTranslator;
 import studio.phaseshift.metatron.isa.web.parser.HTMLTranslator;

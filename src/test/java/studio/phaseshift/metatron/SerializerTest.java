@@ -31,7 +31,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 @Disabled
-public class SerializerTest<T> extends mTest {
+public abstract class SerializerTest<T> extends mTest {
 
     protected final ObjSerializer<T> serializer;
 

@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.isa.web.space.http;
+package studio.phaseshift.metatron.isa.web.parser;
 
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.sys.type.ui.graphitty.Graphitty;

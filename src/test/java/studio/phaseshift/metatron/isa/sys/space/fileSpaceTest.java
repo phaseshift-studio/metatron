@@ -25,7 +25,7 @@ import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.sys.space.file.fileSpace;
 import studio.phaseshift.metatron.isa.sys.sysInstSet;
-import studio.phaseshift.metatron.SpaceTest;
+import studio.phaseshift.metatron.isa.SpaceTest;
 
 import java.nio.file.FileSystems;
 import java.util.Map;

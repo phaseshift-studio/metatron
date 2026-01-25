@@ -38,7 +38,7 @@ import static studio.phaseshift.metatron.isa.m.mInstSet.START_INST_TID;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
-public class mTest {
+public abstract class mTest {
 
     protected GraphittyLogger LOG = Graphitty.log(this);
 
@@ -46,7 +46,7 @@ public class mTest {
     public static void begin() {
         BootLoader.load(rec(uri("log"), uri(LogObj.getSLF4J().toString().toLowerCase())));
         mInstSet.create();
-        
+
     }
 
     @AfterAll

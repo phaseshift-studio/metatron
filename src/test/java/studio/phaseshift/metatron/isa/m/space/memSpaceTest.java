@@ -18,7 +18,7 @@
 
 package studio.phaseshift.metatron.isa.m.space;
 
-import studio.phaseshift.metatron.SpaceTest;
+import studio.phaseshift.metatron.isa.SpaceTest;
 
 import static studio.phaseshift.metatron.furi.fURI.f;
 

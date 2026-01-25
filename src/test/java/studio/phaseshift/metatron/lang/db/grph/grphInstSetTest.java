@@ -24,7 +24,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.lang.db.grph.inst.grphInstSet;
-import studio.phaseshift.metatron.SpaceTest;
+import studio.phaseshift.metatron.isa.SpaceTest;
 
 import static studio.phaseshift.metatron.furi.fURI.f;
 

@@ -30,7 +30,7 @@ import studio.phaseshift.metatron.isa.iot.iotInstSet;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.iot.space.mqtt.mqttSpace;
-import studio.phaseshift.metatron.SpaceTest;
+import studio.phaseshift.metatron.isa.SpaceTest;
 import studio.phaseshift.metatron.isa.sys.type.ui.graphitty.Graphitty;
 
 import java.util.Map;
