@@ -204,10 +204,10 @@ public class mRouter extends MSpace<MServer> implements Router {
     public Obj read(final fURI vid) {
         if (vid.isZero() || READ_AS_NOOBJ.contains(vid))
             return noobj();
-        if (vid.hasAuthority())
-            return this.server().sendRecv((a, b) -> a.authority().matches(b.remoteHost().authority()), vid, from_(vid.localize().toUri()).tryToInst());
+       // if (vid.hasAuthority())
+         //   return this.server().sendRecv((a, b) -> a.authority().matches(b.remoteHost().authority()), vid, from_(vid.localize().toUri()).tryToInst());
         /// ///////////////////
-        final fURI local = vid;//.authority(null).scheme(null);
+        final fURI local = vid;
         if (local.matches(f("+/#"))) {
             final Obj stack = Router.stack().read(local.basePath());
             if (!stack.isNoObj())

@@ -318,7 +318,7 @@ public class fURI implements Cloneable, Ring<fURI> {
     public fURI scheme(final String scheme) {
         if (Objects.equals(this.scheme, scheme))
             return this;
-        if (scheme.contains(":"))
+        if (null != scheme && scheme.contains(":"))
             throw MTronException.of("scheme cannot contain delimiter: %s", scheme);
         return new fURI(scheme, this.host, this.port, this.sstart, this.path, this.send, this.poly, Query.to(this.query));
     }
@@ -374,7 +374,7 @@ public class fURI implements Cloneable, Ring<fURI> {
     public fURI host(final String host) {
         if (Objects.equals(this.host, host))
             return this;
-        if (host.contains(":"))
+        if (null != host && host.contains(":"))
             throw MTronException.of("host cannot contain port: %s", host);
         return new fURI(this.scheme, host, this.port, this.sstart, this.path, this.send, this.poly, Query.to(this.query));
     }

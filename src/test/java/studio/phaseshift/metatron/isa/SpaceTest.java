@@ -19,6 +19,7 @@
 package studio.phaseshift.metatron.isa;
 
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -51,6 +52,8 @@ public abstract class SpaceTest extends mTest {
     @BeforeEach
     protected void setup() {
         this.space = this.spaceSupplier.get();
+        if(null == this.space)
+            Assertions.fail("space supplier yielded a null space");
         if (this.space.vid() == null)
             LOG.warn("provided space has no vid and thus can not be shutdown automatically");
         Router.global().addSpace(this.space);
@@ -58,6 +61,8 @@ public abstract class SpaceTest extends mTest {
 
     @AfterEach
     protected void stop() {
+        if(null == this.space)
+            Assertions.fail("space nullified over course of testing");
         if (null != this.space.vid()) {
             assertDoesNotThrow(this.space::close);
             Router.global().removeSpace(this.space.vid());
@@ -139,7 +144,7 @@ public abstract class SpaceTest extends mTest {
             // "[1@a,2@b,3@c]@d.map(*b + 10@b).to(d)                  % *d._/_.vid(<.>)\\_               % [1,2,3]@d",
             // "[1@a,2@b,3@c]@d.map(*b + 10@b).to(d)                  % *d._.vid(<.>)                    % 12"
     }, delimiter = '%')
-    void testMonoReadWrite(final String writeExpression, final String readExpression, final String expectedExpression) {
+    public void testMonoReadWrite(final String writeExpression, final String readExpression, final String expectedExpression) {
         final Obj writeObj = mParser.parse(writeExpression.equals(".") ? PREVIOUS_LINE.get(0) : writeExpression).apply();
         final Obj readObj = mParser.parse(readExpression.equals(".") ? PREVIOUS_LINE.get(1) : readExpression).apply();
         final Obj resultObj = mParser.parse(expectedExpression.equals(".") ? PREVIOUS_LINE.get(2) : expectedExpression).apply();

@@ -42,7 +42,6 @@ public abstract class MSpace<SJVM> extends MRec implements Space {
         super(new HashMap<>(jvm), tid, vid);
         this.sjvm = sjvm;
         this.pattern = pattern;
-        this.jvm().put(uri(Tokens.STATUS), uri(Tokens.ACTIVE));
         LOG = Graphitty.log(this);
     }
 

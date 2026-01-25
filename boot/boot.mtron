@@ -26,7 +26,7 @@ print("{{r}}------------\n{{g}}*{{y}}boot/args{{X}}: ",
 [-- mount spaces --];
      mem::[pattern => /usr/#]@/sys/space/usr;
      mem::[pattern => /shared/#]@/sys/space/shared;
-    web::[host    => <http://localhost:8778>,
+    web::[host    => <http://localhost:8777>,
           pattern => http://#,
           route   => [/     => examples/www,
                       /docs => target/docs ]]@/sys/space/web;

@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron;
 
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.iot.iotInstSet;
 import studio.phaseshift.metatron.isa.m.mInstSet;
@@ -79,10 +80,11 @@ public class BootLoader implements Rec, Feature.SelfClone {
     public static Router ROUTER;
     public static Rec ARGS;
     public static boolean TYPE_CHECK = true;
-    private static final ExecutorService EXECUTOR = Executors.newCachedThreadPool();
+    private static final ExecutorService EXECUTOR;
 
     static {
         LOG = Graphitty.log(new BootLoader());
+        EXECUTOR = Executors.newCachedThreadPool(new ThreadFactoryBuilder().setUncaughtExceptionHandler((a, b) -> LOG.error("%s %s", a, b)).build());
         //Registry.singleton().register(mInstSet.INST_TID, () -> mInstSet.of(fURI.NULL));
         Registry.open().register(SYS_TID, sysInstSet::create);
         Registry.open().register(WEB_INSTSET_TID, webInstSet::create);

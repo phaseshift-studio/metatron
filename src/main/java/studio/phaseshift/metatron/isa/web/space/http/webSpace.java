@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -18,12 +18,12 @@
 
 package studio.phaseshift.metatron.isa.web.space.http;
 
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.gson.JsonElement;
 import com.sun.net.httpserver.HttpContext;
 import com.sun.net.httpserver.HttpServer;
 import org.jsoup.Connection;
 import org.jsoup.Jsoup;
+import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.MSpace;
@@ -33,10 +33,11 @@ import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Type;
+import studio.phaseshift.metatron.isa.m.type.Uri;
 import studio.phaseshift.metatron.isa.web.parser.AudioTranslator;
-import studio.phaseshift.metatron.lang.sys.router.Router;
-import studio.phaseshift.metatron.isa.web.parser.JSONTranslator;
 import studio.phaseshift.metatron.isa.web.parser.HTMLTranslator;
+import studio.phaseshift.metatron.isa.web.parser.JSONTranslator;
+import studio.phaseshift.metatron.lang.sys.router.Router;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
@@ -52,16 +53,13 @@ import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
-import java.util.concurrent.Executors;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
 import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.furi.fURI.f;
-import static studio.phaseshift.metatron.lang.ai.llm.type.impl.Audio.AUDIO_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
-import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TID;
-import static studio.phaseshift.metatron.isa.m.mInstSet.URI_TID;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBytes.bytes;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
@@ -70,8 +68,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.web.webInstSet.HTML_TID;
-import static studio.phaseshift.metatron.isa.web.webInstSet.WEB_INSTSET_TID;
+import static studio.phaseshift.metatron.lang.ai.llm.type.impl.Audio.AUDIO_TID;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -133,7 +130,7 @@ public class webSpace extends MSpace<HttpServer> {
 
     public static final String INDEX_HTML = "index.html";
 
-    public static final fURI WEB_SPACE_TID = WEB_INSTSET_TID.extend("space").extend("web");
+    public static final fURI WEB_SPACE_TID = MTRON_TID.extend("space").extend("web");
     protected static final String ROUTE = "route";
     public static final Type WEB_TYPE = T(WEB_SPACE_TID, null,
             instC(mInstSet.INST_TID.dom(ALL.maybe()).rng(WEB_SPACE_TID),
@@ -177,11 +174,11 @@ public class webSpace extends MSpace<HttpServer> {
                                 }
                             }
                         });
-                LOG.info("http route attached: %s", rel(uri(context.getPath()), r.second()));
+                LOG.debug("http route attached: %s", rel(uri(context.getPath()), r.second()));
             });
 
             LOG.info("starting web server at %s", this.at(Tokens.HOST).uriValue().scheme(Tokens.HTTP).toUri());
-            server.setExecutor(Executors.newFixedThreadPool(4, new ThreadFactoryBuilder().setUncaughtExceptionHandler((a, b) -> LOG.error("%s %s", a, b)).build()));
+            server.setExecutor(BootLoader.getExecutor());
             Runtime.getRuntime().addShutdownHook(new Thread(this::close));
             LOG.info("available routes: %s", this.at(ROUTE));
             server.start();
@@ -198,7 +195,7 @@ public class webSpace extends MSpace<HttpServer> {
             config.put(uri(Tokens.HOST), host.toUri());
             config.put(uri(Tokens.PATTERN), pattern.toUri());
             config.put(uri(ROUTE), rec(routes));
-            return new webSpace(server, config, pattern, vid).tid(WEB_SPACE_TID);
+            return new webSpace(server, config, pattern, vid);
         } catch (final Exception e) {
             throw MTronException.of(e);
         }
@@ -220,23 +217,39 @@ public class webSpace extends MSpace<HttpServer> {
         return (pattern) -> {
             LOG.debug("retrieving %s", pattern);
             try {
-                final Connection.Response response = Jsoup.connect(pattern.toString()).ignoreContentType(true).ignoreHttpErrors(true).execute();
-                final ContentType contentType = ContentType.of(response.contentType());
-                LOG.debug("content-type: %s => %s", response.contentType(), contentType);
-                final Obj docObj = contentType.isMtron() ?
-                        mParser.parse(response.body()) :
-                        (contentType.isHtml() ?
-                                WEB_TRANSLATOR.translate(response.parse()).tid(HTML_TID) :
-                                (contentType.isJson() ?
-                                        JSON_TRANSLATOR.parse(response.body()) :
-                                        (contentType.isXml() ?
-                                                WEB_TRANSLATOR.translate(response.parse()) :
-                                                (contentType.isAudio() ?
-                                                        AUDIO_TRANSLATOR.translate(response.bodyStream()) :
-                                                        str(response.body())))));
-                return IteratorUtil.of(Tuple.Pair.with(pattern, docObj));
+                fURI runningPattern = pattern.clone();
+                int steps = 0;
+                while (true) {
+                    LOG.debug("fetching %s", runningPattern.toString());
+                    final Connection.Response response = Jsoup.connect(runningPattern.toString()).ignoreContentType(true).ignoreHttpErrors(true).execute();
+                    LOG.debug("code: %d (%s)", response.statusCode(), runningPattern);
+                    if (response.statusCode() == 404) {
+                        if (runningPattern.pathLength() == 0)
+                            return IteratorUtil.of();
+                        steps++;
+                        runningPattern = runningPattern.retract();
+                    } else {
+                        final ContentType contentType = ContentType.of(response.contentType());
+                        LOG.debug("content-type: %s => %s", response.contentType(), contentType);
+                        final Obj docObj = contentType.isMtron() ?
+                                mParser.parse(response.body()) :
+                                (contentType.isHtml() ?
+                                        WEB_TRANSLATOR.translate(response.parse()) :
+                                        (contentType.isJson() ?
+                                                JSON_TRANSLATOR.parse(response.body()) :
+                                                (contentType.isXml() ?
+                                                        WEB_TRANSLATOR.translate(response.parse()) :
+                                                        (contentType.isAudio() ?
+                                                                AUDIO_TRANSLATOR.translate(response.bodyStream()) :
+                                                                str(response.body())))));
+                        final Uri key = uri(pattern.scheme(null).authority(null).tail(steps).asRelative());
+                        LOG.debug("page found -- searching for %s in %s", key, runningPattern);
+                        final Obj subDocObj = key.uriValue().toString().isEmpty() ? docObj : docObj.asRec().at(key);
+                        return subDocObj.isNoObj() ? IteratorUtil.of() : IteratorUtil.of(Tuple.Pair.with(pattern, subDocObj));
+                    }
+                }
             } catch (final Exception e) {
-                if (e.getMessage().contains("no bytes"))
+                if (e.getMessage() != null && e.getMessage().contains("no bytes"))
                     return IteratorUtil.of();
                 throw MTronException.of(e);
             }
