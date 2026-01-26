@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -21,11 +21,10 @@ package studio.phaseshift.metatron.isa.web.parser;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import studio.phaseshift.metatron.isa.Translator;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
-import studio.phaseshift.metatron.isa.m.type.Rel;
 import studio.phaseshift.metatron.util.MTronException;
-import studio.phaseshift.metatron.isa.Translator;
 
 import java.io.File;
 import java.util.concurrent.atomic.AtomicReference;
@@ -39,19 +38,25 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  */
 public class HTMLTranslator implements Translator<Obj, Document> {
 
+    private static final String TEXT = "text";
+    private static final String DATA = "data";
 
     private Rec readElement(final Element element) {
         //Graphitty.log(this).warn(element);
         final AtomicReference<Rec> recX = new AtomicReference<>(rec());
         element.attributes().forEach(a -> recX.getAndUpdate(r -> r.put(uri(a.getKey()), str(a.getValue()))));
         element.children().forEach(e -> recX.getAndUpdate(r -> r.put(uri(e.nodeName()), readElement(e))));
-        final String text = element.ownText();
-        return text.isEmpty() ? recX.get() : recX.updateAndGet(r -> r.put(uri("text"), str(text)));
+        if (element.hasText() && !element.text().isBlank())
+            recX.getAndUpdate(r -> r.put(uri(TEXT), str(element.text())));
+        final String data = element.data();
+        if (!data.isBlank())
+            recX.getAndUpdate(r -> r.put(uri(DATA), str(data)));
+        return recX.get();
     }
 
     private Element writeElement(final Rec rec, final Element element) {
         //Graphitty.log(this).warn(rec);
-        rec.<Rel>elements().forEach(e -> {
+        rec.elements().forEach(e -> {
             final Element newElement = new Element(e.first().uriValue().toString());
             element.appendChild(e.second().isRec() ? writeElement(e.second().as(), newElement) : newElement);
         });

@@ -42,11 +42,6 @@ icolor yellow "0x([0-9]|[a-f])+"
 color yellow,underline "0x"
 ### bool
 color yellow "(true)|(false)"
-### str
-color yellow "[\"][^\"]*[\"]"
-color yellow "['][^']*[']"
-color yellow start="\"\"\"" end="\"\"\""
-# color yellow start="'''" end="'''"
 ### type
 color magenta "::T"
 ### noobj 
@@ -61,6 +56,10 @@ color red "([a-z]|[0-9]|/)*fail::"
 ### auto resolve
 color yellow "!\*" "\{<j>\}"
 color green "\{|\}" 
+### str
+color yellow "[\"][^\"]*[\"]"
+color yellow "['][^']*[']"
+color yellow start="\"\"\"" end="\"\"\""
 ### comments
 color gray start="\[--" end="--\]"
 color gray start="\[==" end="==\]"
