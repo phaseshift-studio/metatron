@@ -69,6 +69,8 @@
         <guice.version>7.0.0</guice.version>
         <moquette.version>0.18.0</moquette.version>
         <dockerfile-maven.version>1.4.13</dockerfile-maven.version>
+        <commonmark.version>0.19.0</commonmark.version>
+
         <!-- LOGBACK PROPERTIES -->
     </properties>
     <dependencyManagement>
@@ -169,6 +171,11 @@
             <version>${java-websocket.version}</version>
         </dependency>
         <!-- PARSERS -->
+        <dependency>
+            <groupId>org.commonmark</groupId>
+            <artifactId>commonmark</artifactId>
+            <version>${commonmark.version}</version>
+        </dependency>
         <dependency>
             <groupId>net.objecthunter</groupId>
             <artifactId>exp4j</artifactId>

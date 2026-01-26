@@ -80,22 +80,22 @@ public class ObjByteBufferSerializer implements ObjSerializer<ByteBuffer> {
 
     @Override
     public ByteBuffer writeStr(final Str str) {
-        return ByteBuffer.wrap(handleIds(str, "'" + str.jvm() + "'").getBytes());
+        return ByteBuffer.wrap(handleIds(str, "'" + str.strValue() + "'").getBytes());
     }
 
     @Override
     public ByteBuffer writeInt(final Int jnt) {
-        return ByteBuffer.wrap(handleIds(jnt, jnt.jvm().toString()).getBytes());
+        return ByteBuffer.wrap(handleIds(jnt, jnt.intValue().toString()).getBytes());
     }
 
     @Override
     public ByteBuffer writeReal(final Real real) {
-        return ByteBuffer.wrap(handleIds(real, real.jvm().toString()).getBytes());
+        return ByteBuffer.wrap(handleIds(real, real.realValue().toString()).getBytes());
     }
 
     @Override
     public ByteBuffer writeUri(final Uri uri) {
-        return ByteBuffer.wrap(handleIds(uri, "<" + uri.jvm() + ">").getBytes());
+        return ByteBuffer.wrap(handleIds(uri, "<" + uri.uriValue() + ">").getBytes());
     }
 
     @Override

@@ -21,6 +21,7 @@ package studio.phaseshift.metatron;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.io.serial.ObjCleanStringSerializer;
 import studio.phaseshift.metatron.isa.m.mInstSet;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.type.Fail;
@@ -41,6 +42,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 public abstract class mTest {
 
     protected GraphittyLogger LOG = Graphitty.log(this);
+    protected ObjCleanStringSerializer serializer = new ObjCleanStringSerializer();
 
     @BeforeAll
     public static void begin() {
@@ -75,7 +77,7 @@ public abstract class mTest {
     public void evaluate(final String lhs, final String expected) {
         final Obj a = mParser.eval(lhs);
         final Obj b = mParser.eval(expected);
-       final Obj actual = b.apply(a);
+        final Obj actual = b.apply(a);
         LOG.debug("testing %s => %s [expected:%s]", a, b, actual);
         assertEquals(b, actual);
     }
@@ -123,6 +125,12 @@ public abstract class mTest {
             final Obj actual = cd.apply(NoObj.noobj());
             LOG.debug("testing %s => %s [expected:%s]", cd, actual, ex);
             assertEquals(ex, actual);
+            
+          /*  final Obj acd = serializer.read(serializer.write(cd));
+            final Obj aex = serializer.read(serializer.write(ex));
+            final Obj aactual = serializer.read(serializer.write(actual));
+            LOG.debug("testing (de)serialization %s => %s [expected:%s]", acd, aactual, aex);
+            assertEquals(aex, aactual); */
         }
     }
 
