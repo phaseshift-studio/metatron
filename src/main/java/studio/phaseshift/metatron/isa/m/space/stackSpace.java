@@ -47,7 +47,6 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 public class stackSpace extends MSpace<Stack<Poly>> {
 
     public static final fURI STACK_SPACE_TID = f("/m/space/stack");
-    public static final fURI MEM_SPACE_TID = f("/m/space/mem");
     public static final Type STACK_SPACE_TYPE = T(STACK_SPACE_TID, null, instC(mInstSet.INST_TID.dom(ALL.maybe()).rng(STACK_SPACE_TID), lst(isa_(rec(uri(PATTERN), T(URI_TID)/*, uri(Tokens.Q).c(cInt::maybe), T(LST_TID.maybe())*/)).tryToInst()), (lhs, inst) -> {
         final fURI pattern = inst.arg(0).asRec().at(PATTERN).uriValue();
         final Space space = new stackSpace(pattern);

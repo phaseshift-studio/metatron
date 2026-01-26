@@ -31,6 +31,7 @@ import java.util.stream.Stream;
 import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.isa.m.space.memSpace.MEM_SPACE_TYPE;
+import static studio.phaseshift.metatron.isa.m.space.mtronSpace.MTRON_SPACE_TYPE;
 import static studio.phaseshift.metatron.isa.m.space.stackSpace.STACK_SPACE_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
@@ -50,11 +51,11 @@ public class mInstSet extends MInstSet {
     public static final fURI LST_TID = MTRON_TID.extend("lst");
     public static final fURI REC_TID = MTRON_TID.extend("rec");
     public static final fURI INST_TID = MTRON_TID.extend("inst");
+    public static final fURI OBJS_TID = MTRON_TID.extend("objs");
     public static final fURI TYPE_TID = MTRON_TID.extend("type");
     /// ////////////////////////////////////////////////////////
     public static final fURI ID_INST_TID = INST_TID.extend("id");
     public static final fURI EXPLAIN_INST_TID = INST_TID.extend("explain");
-    public static final fURI TO_STR_INST_TID = INST_TID.extend("tostr");
     public static final fURI HAS_INST_TID = INST_TID.extend("has");
     public static final fURI CATCH_INST_TID = INST_TID.extend("catch");
     public static final fURI APPLY_INST_TID = INST_TID.extend("apply");
@@ -130,12 +131,11 @@ public class mInstSet extends MInstSet {
     public static final fURI CODE_TID = MTRON_TID.extend("code");
     public static final fURI NOOBJ_TID = fURI.of("noobj");
     public static final fURI ALL_STAR = ALL.maybeSome();
-    public static final fURI OBJS_TID = MTRON_TID.extend("objs");
     public static final fURI MATH_INST_TID = MTRON_TID.extend("math");
     /*public static final fURI URI_SCHEME_TID = MTRON_TID.extend("uri:scheme");
     public static final fURI URI_PORT_TID = MTRON_TID.extend("uri:port");
     public static final fURI URI_HOST_TID = MTRON_TID.extend("uri:host");*/
-    public static final fURI URI_PATH_TID = MTRON_TID.extend("uri:path");
+    public static final fURI PATH_TID = MTRON_TID.extend("path");
     public static final fURI Q_INST_TID = INST_TID.extend("q");
     public static final fURI URI_C_TID = MTRON_TID.extend("uri:c");
     public static final fURI STR_SPLIT_TID = MTRON_TID.extend("str:split");
@@ -187,7 +187,8 @@ public class mInstSet extends MInstSet {
                 T(NOOBJ_TID),
                 /// ///////////////////////////////////
                 MEM_SPACE_TYPE,
-                STACK_SPACE_TYPE));
+                STACK_SPACE_TYPE,
+                MTRON_SPACE_TYPE));
     }
 
     @Override

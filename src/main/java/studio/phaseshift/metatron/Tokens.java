@@ -27,13 +27,20 @@ public final class Tokens {
         // do nothing
     }
 
+    public static final String CACHE = "cache";
     public static final String CLIENT = "client";
     public static final String SCRIPT = "script";
     public static final String REWRITE = "rewrite";
     public static final String Q = "q";
+    public static final String C = "c";
+    public static final String MIN = "min";
+    public static final String MAX = "max";
+    public static final String PATH = "path";
+    public static final String SCHEME = "scheme";
     public static final String SUB = "sub";
     public static final String PATTERN = "pattern";
     public static final String HOST = "host";
+    public static final String PORT = "port";
     public static final String USER = "user";
     public static final String PASS = "pass";
     public static final String NAME = "name";

@@ -81,15 +81,18 @@ public class UriTest extends mTest {
     @ParameterizedTest
     @CsvSource(value = {
             "<a://b.com:123/c/d>                                 % <a://b.com:123/c/d>",
-            "<a://b.com:123/c/d>.scheme()                        % a",
+            "<a://b.com:123/c/d>.as(rec::T)../scheme                        % a",
             "<a://b.com:123/c/d>.scheme(abc)                     % <abc://b.com:123/c/d>",
-            "<a://b.com:123/c/d>.port()                          % 123",
+            "<a://b.com:123/c/d>.as(rec::T)../port                          % 123",
             "<a://b.com:123/c/d>.port(666)                       % <a://b.com:666/c/d>",
-            "<a://b.com:123/c/d>.host()                          % <b.com>",
+            "<a://b.com:123/c/d>.as(rec::T)../host                         % <b.com>",
             "<a://b.com:123/c/d>.host(<abc.org>)                 % <a://abc.org:123/c/d>",
     }, delimiter = '%')
     public void testComponents(final String code, final String expected) {
         super.testCode(code, expected);
     }
+    
+    
+    
     
 }
