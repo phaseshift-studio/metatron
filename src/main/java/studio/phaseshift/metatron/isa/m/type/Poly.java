@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -115,6 +115,8 @@ public interface Poly<P extends Poly<P, J>, J> extends Obj {
                 return selectRecRecursion(lhs.asRec(), rhs.asRec());
             else if (lhs.isLst() && rhs.isLst())
                 return selectLstRecursion(lhs.asLst(), rhs.asLst());
+            else if (lhs.isRel() && rhs.isRel())
+                return selectRelRecursion(lhs.asRel(), rhs.asRel());
             else
                 return noobj();
         }
@@ -129,6 +131,15 @@ public interface Poly<P extends Poly<P, J>, J> extends Obj {
                 result.add((lhsValue.isPoly() && e.isPoly() ? selectPolyRecursion(lhsValue.as(), e.as()) : e.apply(lhsValue)));
             }
             return lst(result);
+        }
+
+        public static Obj selectRelRecursion(final Rel lhs, final Rel rhs) {
+            final Obj newFirst = rhs.jvm().get0().apply(lhs.first());
+            final Obj newSecond = rhs.jvm().get1().apply(lhs.second());
+            if (lhs.second().isPoly() && newSecond.isPoly())
+                return selectPolyRecursion(lhs.second().as(), newSecond.as());
+            else
+                return newFirst.isNoObj() || newSecond.isNoObj() ? noobj() : rel(newFirst, newSecond);
         }
 
         public static Obj selectRecRecursion(final Rec lhs, final Rec rhs) {

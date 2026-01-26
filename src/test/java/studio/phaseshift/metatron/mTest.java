@@ -72,6 +72,14 @@ public abstract class mTest {
         assertEquals(ex, actual);
     }
 
+    public void evaluate(final String lhs, final String expected) {
+        final Obj a = mParser.eval(lhs);
+        final Obj b = mParser.eval(expected);
+       final Obj actual = b.apply(a);
+        LOG.debug("testing %s => %s [expected:%s]", a, b, actual);
+        assertEquals(b, actual);
+    }
+
 
     public void testEquals(final Obj a, final Obj b, final boolean equals) {
         LOG.debug("testing %s == %s [expected:%s]", a, b, equals);
