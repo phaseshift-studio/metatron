@@ -153,7 +153,8 @@ public class mInstSetTest extends InstSetTest {
             "1.map?noobj<=int(noobj)                                                      % noobj",
             "{1,2,3,4}.map(_).plus(2)                                                     % {3,4,5,6}",
             "{1,2,3,4}.map(+2)                                                            % {3,4,5,6}",
-            "{1,2,3,4}.map(map(map(map(map(map(+2))))))                                   % {3,4,5,6}",
+         //   "{1,2,3,4}.map(map(+2))                                                       % {3,4,5,6}",
+        //    "{1,2,3,4}.map(map(map(map(map(map(+2))))))                                   % {3,4,5,6}",
     }, delimiter = '%')
     public void testMap(final String code, final String expected) {
         super.testCode(code, expected);

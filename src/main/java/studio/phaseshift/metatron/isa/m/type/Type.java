@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -31,9 +31,8 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
-import static studio.phaseshift.metatron.isa.m.mInstSet.STR_TID;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
@@ -92,6 +91,29 @@ public interface Type extends Obj, PlusMonoid<Type> {
 
     default boolean hasConstructor() {
         return null != this.jvm().get1();
+    }
+
+    @Override
+    default boolean matches(final Obj rhs) {
+        // if (this.equals(rhs))
+        //    return true;
+        if(rhs.isNoObj() && this.c().isZeroable())
+            return true;
+        if (rhs.isCall())
+            return this.matches(rhs.dom());// && rhs.apply(this).matches(rhs.rng());
+        if (!rhs.isType())
+            return false;
+        if (!this.c().within(rhs.c()))
+            return false;
+        if (rhs.asType().isBaseType())
+            return this.baseType().matches(rhs.tid()); // matches any abstract type to it's base type as long as within the coefficient boundaries
+        // if (rhs.tid().equals(TYPE_TID))
+        //     return !rhs.asType().hasPredicate() || this.matches(rhs.asType().predicate());
+        if (this.tid().matches(rhs.tid())) //&& (!rhs.asType().hasPredicate() || Objects.equals(this.predicate(), rhs.asType().predicate())))
+            return true;
+        if (!this.asType().isBaseType() && Router.loaded()) // recursively check type to base type
+            return Router.readFromSpace(this.tid()).matches(rhs);
+        return null == rhs.asType().predicate();// || !rhs.asType().predicate().apply(this).isNoObj();
     }
 
     @Override
