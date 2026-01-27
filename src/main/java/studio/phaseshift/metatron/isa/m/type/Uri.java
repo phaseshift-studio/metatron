@@ -99,7 +99,7 @@ public interface Uri extends Mono, Ring.O<Uri> {
         return Mono.super.matches(obj);
     }
 
-    public static final class UriType {
+   final class UriType {
 
         public static Set<Inst> insts() {
             return new LinkedHashSet<>(List.of(

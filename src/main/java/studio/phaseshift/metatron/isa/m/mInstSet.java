@@ -19,6 +19,7 @@
 package studio.phaseshift.metatron.isa.m;
 
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.MInstSet;
 import studio.phaseshift.metatron.util.Tuple;
@@ -98,6 +99,7 @@ public class mInstSet extends MInstSet {
     public static final fURI GET_INST_TID = INST_TID.extend("get");
     public static final fURI FAILURE_INST_TID = INST_TID.extend("failure");
     public static final fURI AS_INST_TID = INST_TID.extend("as");
+    public static final fURI CLOSE_INST_TID = INST_TID.extend("close");
     public static final fURI REPEAT_INST_TID = INST_TID.extend("repeat");
     public static final fURI AT_INST_TID = INST_TID.extend("at");
     public static final fURI IS_INST_TID = INST_TID.extend("is");
@@ -255,6 +257,7 @@ public class mInstSet extends MInstSet {
         set.addAll(Lst.LstType.insts());
         set.addAll(Inst.InstType.insts());
         set.addAll(Obj.ObjType.insts());
+        set.addAll(Space.SpaceType.insts());
         return set;
     }
 

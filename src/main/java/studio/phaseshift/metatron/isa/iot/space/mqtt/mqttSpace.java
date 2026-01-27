@@ -84,7 +84,7 @@ public class mqttSpace extends MSpace<Mqtt5Client> {
         super(client, config, config.get(uri(PATTERN)).uriValue(), MQTT_TID, vid);
         this.rewrite = Space.Helper.extractRewrite(config);
         LOG.info("{{y}}mtron{{g}}<=>{{y}}mqtt{{X}} mapping established: %s {{g}}<=> ({{b}}%s {{g}}<=>{{X}} %s{{g}}){{X}}", this.pattern().toUri(), this.rewrite, uri(Space.Helper.toNativeSpace(this.pattern(), this.rewrite)));
-        this.cache = new memSpace(this.pattern(), this.vid.extend("cache"));
+        this.cache = memSpace.of(this.pattern(), this.vid.extend("cache"));
         this.put(uri(Tokens.Q), lst(List.of(new MqttPubSubQ(this))), MUTABLE);
         this.broker = config.get(uri(HOST)).orThrow(new IllegalArgumentException("config must have a host key")).uriValue();
         try {

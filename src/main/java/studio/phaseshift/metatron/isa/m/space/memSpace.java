@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -18,20 +18,28 @@
 
 package studio.phaseshift.metatron.isa.m.space;
 
-import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.Q;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.io.serial.ObjByteBufferSerializer;
 import studio.phaseshift.metatron.isa.MSpace;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.mInstSet;
+import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Type;
+import studio.phaseshift.metatron.isa.m.type.Uri;
 import studio.phaseshift.metatron.lang.sys.router.Router;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.IteratorUtil;
+import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -40,10 +48,12 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
+import static studio.phaseshift.metatron.Tokens.PATTERN;
+import static studio.phaseshift.metatron.Tokens.PERSIST;
 import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.furi.fURI.f;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
 import static studio.phaseshift.metatron.isa.m.mInstSet.URI_TID;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
@@ -54,8 +64,8 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 public class memSpace extends MSpace<Map<fURI, Obj>> {
 
     public static final fURI MEM_SPACE_TID = f("/m/space/mem");
-    public static final Type MEM_SPACE_TYPE = T(MEM_SPACE_TID, null, instC(mInstSet.INST_TID.dom(ALL.maybe()).rng(MEM_SPACE_TID), lst(isa_(rec(uri(Tokens.PATTERN), T(URI_TID)/*, uri(Tokens.Q).c(cInt::maybe), T(LST_TID.maybe())*/)).tryToInst()), (lhs, inst) -> {
-        // final fURI pattern = inst.arg(0).<Rec>as().at(Tokens.PATTERN).uriValue();
+    public static final Type MEM_SPACE_TYPE = T(MEM_SPACE_TID, null, instC(mInstSet.INST_TID.dom(ALL.maybe()).rng(MEM_SPACE_TID), lst(isa_(
+            rec(uri(PATTERN), T(URI_TID))).tryToInst()), (lhs, inst) -> {
         final Space space = new memSpace(inst.arg(0).<Rec>as().jvm(), inst.arg(0).vid());
         Router.global().addSpace(space);
         return space;
@@ -63,20 +73,22 @@ public class memSpace extends MSpace<Map<fURI, Obj>> {
 
 
     public memSpace(final Map<Obj, Obj> config, final fURI vid) {
-        super(new ConcurrentHashMap<>(), config, config.get(uri(Tokens.PATTERN)).uriValue(), MEM_SPACE_TID, vid);
+        super(new ConcurrentHashMap<>(), config, config.get(uri(PATTERN)).uriValue(), MEM_SPACE_TID, vid);
+        load();
     }
 
-
-    public memSpace(final fURI pattern, final fURI vid) {
-        super(new ConcurrentHashMap<>(), mutableMap(uri(Tokens.PATTERN), uri(pattern)), pattern, MEM_SPACE_TID, vid);
-    }
 
     public static memSpace of(final fURI pattern, final fURI vid) {
-        return new memSpace(pattern, vid);
+        return new memSpace(mutableMap(uri(PATTERN), uri(pattern)), vid);
+    }
+
+    public static memSpace of(final Rec config, final fURI vid) {
+        return new memSpace(config.jvm(), vid);
     }
 
     @Override
     public void close() {
+        this.save();
         this.sjvm().values().stream().filter(o -> o != Router.global()).filter(o -> o != this).forEach(CommonUtil::close);
         Router.global().removeSpace(this.vid());
         super.close();
@@ -138,5 +150,53 @@ public class memSpace extends MSpace<Map<fURI, Obj>> {
             }
             return obj;
         };
+    }
+
+    protected void load() {
+        final Uri path = (Uri) this.jvm().getOrDefault(uri(PERSIST), null);
+        if (null == path)
+            return;
+        final ObjByteBufferSerializer serializer = new ObjByteBufferSerializer();
+        final File file = new File(path.uriValue().toString());
+        if (!file.exists()) {
+            LOG.warn("no persisted data at {{y}}%s", file.getAbsolutePath());
+        } else {
+            try {
+                LOG.info("loading persisted data at {{y}}%s", file.getAbsolutePath());
+                mParser.eval(file, ex -> {
+                    throw MTronException.of(ex);
+                });
+                LOG.info("total data loaded from {{y}}%s{{X}}: {{y}}%d{{/y}} bytes", file.getAbsolutePath(), Files.size(file.toPath()));
+            } catch (final Exception e) {
+                throw MTronException.of(e);
+            }
+        }
+    }
+
+    protected void save() {
+        final Uri path = (Uri) this.jvm().getOrDefault(uri(PERSIST), null);
+        if (null == path)
+            return;
+        final ObjByteBufferSerializer serializer = new ObjByteBufferSerializer();
+        final File file = new File(path.uriValue().toString());
+        if (file.exists()) file.delete();
+        try {
+            file.createNewFile();
+        } catch (IOException e) {
+            throw MTronException.of(e);
+        }
+        try (final FileOutputStream out = new FileOutputStream(path.uriValue().toString())) {
+            out.write("print('loading persisted data');\n".getBytes());
+            this.sjvm().forEach((key, value) -> {
+                try {
+                    out.write((key + " -> " + value.toCleanString() + ";\n").getBytes(StandardCharsets.UTF_8));
+                } catch (IOException e) {
+                    throw MTronException.of(e);
+                }
+            });
+            out.write("'complete.'".getBytes(StandardCharsets.UTF_8));
+        } catch (final Exception e) {
+            throw MTronException.of(e);
+        }
     }
 }

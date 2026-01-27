@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -19,9 +19,8 @@
 package studio.phaseshift.metatron.io.serial;
 
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
-
+import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
@@ -55,7 +54,7 @@ public class ObjByteBufferSerializer implements ObjSerializer<ByteBuffer> {
     }
 
     private String handleIds(final Obj obj, final String objString) {
-        return (obj.tid() + "::" + objString + ((obj.vid() == null) ? "" : ("@<" + obj.vid() + ">"))).trim();
+        return ("<" + obj.tid() + ">" + (obj.isInst() ? "" : "::") + objString + ((obj.vid() == null) ? "" : ("@<" + obj.vid() + ">"))).trim();
     }
 
     @Override
@@ -67,7 +66,7 @@ public class ObjByteBufferSerializer implements ObjSerializer<ByteBuffer> {
     public ByteBuffer writeBytes(final Bytes bytes) {
         return ByteBuffer.wrap(handleIds(bytes, "0x" + HexFormat.of().formatHex(bytes.asBytes().jvm().array())).getBytes());
     }
-    
+
     @Override
     public ByteBuffer writeBool(final Bool dool) {
         return ByteBuffer.wrap(handleIds(dool, dool.jvm().toString()).getBytes());
@@ -149,5 +148,11 @@ public class ObjByteBufferSerializer implements ObjSerializer<ByteBuffer> {
     public Obj read(final ByteBuffer data) throws MTronException {
         //Router.global().logger().info("received %s", new String(data.array(), StandardCharsets.UTF_8));
         return mParser.parse(new String(data.array(), StandardCharsets.UTF_8));
+    }
+
+    @Override
+    public Objs readObjs(final ByteBuffer data) throws MTronException {
+        //Router.global().logger().info("received %s", new String(data.array(), StandardCharsets.UTF_8));
+        return mParser.m_objs().parse(new String(data.array(), StandardCharsets.UTF_8)).get();
     }
 }

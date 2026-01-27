@@ -24,9 +24,17 @@ print("{{r}}------------\n{{g}}*{{y}}boot/args{{X}}: ",
 /sys/mod/ui    -> */ui;
 /sys/mod/tabl  -> */tabl;
 [-- mount spaces --];
+     boot/peers    -> [//localhost:6666,<//127.0.0.1:7777>];
      mem::[pattern => /usr/#]@/sys/space/usr;
-     mem::[pattern => /shared/#]@/sys/space/shared;
-    web::[host    => <http://localhost:8777>,
+     mem::[pattern => /shared/#,
+           persist => </tmp/shared.mtron>]@/sys/space/shared;
+   mtron::[pattern => </cluster/a/#>,
+          host     => <//localhost:6666>,
+          peers    => !*boot/peers]@/sys/space/mtron;
+   mtron::[pattern => </cluster/b/#>,
+                    host     => <//127.0.0.1:7777>,
+                    peers    => !*boot/peers]@/sys/space/mtron2;
+    web::[host     => <http://localhost:8777>,
           pattern => http://#,
           route   => [/     => examples/www,
                       /docs => target/docs ]]@/sys/space/web;

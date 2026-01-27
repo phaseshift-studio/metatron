@@ -226,10 +226,10 @@ public class mRouter extends MSpace<MServer> implements Router {
 
     @Override
     public Obj write(final fURI vid, final Obj obj) {
-        if (vid.hasAuthority()) {
+        /*if (vid.hasAuthority()) {
             this.server().send((a, b) -> a.authority().matches(b.remoteHost().authority()), vid, start_(obj.vid(null)).to_(vid.localize().toUri()).tryToInst());
             return obj;
-        }
+        }*/
         /// ///////////////
         final Space space = this.getSpace(vid);
         LOG.trace("writing %s {{g}}=>{{b}} %s{{X}} in %s", obj, vid, space);

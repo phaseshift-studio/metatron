@@ -159,6 +159,11 @@ public interface ObjSerializer<T> {
         return (Bool) this.read(t);
     }
 
+
+    default Objs readObjs(final T t) {
+        return (Objs) this.read(t);
+    }
+
     default Int readInt(final T t) {
         return (Int) this.read(t);
     }

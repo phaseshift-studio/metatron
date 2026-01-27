@@ -27,6 +27,7 @@ public final class Tokens {
         // do nothing
     }
 
+    public static final String PEERS = "peers";
     public static final String CACHE = "cache";
     public static final String CLIENT = "client";
     public static final String SCRIPT = "script";
@@ -36,6 +37,7 @@ public final class Tokens {
     public static final String MIN = "min";
     public static final String MAX = "max";
     public static final String PATH = "path";
+    public static final String PERSIST = "persist";
     public static final String SCHEME = "scheme";
     public static final String SUB = "sub";
     public static final String PATTERN = "pattern";

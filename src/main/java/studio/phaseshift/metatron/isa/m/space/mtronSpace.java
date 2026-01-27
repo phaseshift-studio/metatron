@@ -18,20 +18,23 @@
 
 package studio.phaseshift.metatron.isa.m.space;
 
-import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.MSpace;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.mInstSet;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.lang.sys.router.Router;
+import studio.phaseshift.metatron.lang.sys.router.impl.FutureObj;
 import studio.phaseshift.metatron.lang.sys.router.impl.MServer;
+import studio.phaseshift.metatron.util.IteratorUtil;
+import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
 
-import java.util.Iterator;
-import java.util.Map;
+import java.security.MessageDigest;
+import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
@@ -47,16 +50,20 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
+
 public class mtronSpace extends MSpace<MServer> {
-    
+
     public static final fURI MTRON_SPACE_TID = f("/m/space/mtron");
     protected final fURI host;
     protected final Space cache;
+    protected final List<fURI> peers = new ArrayList<>();
+    protected final int selfIndex;
     protected final MServer server;
 
-    public static final Type MTRON_SPACE_TYPE = T(MTRON_SPACE_TID, null, instC(mInstSet.INST_TID.dom(ALL.maybe()).rng(MTRON_SPACE_TID), lst(isa_(rec(uri(PATTERN), T(URI_TID)/*, uri(Tokens.Q).c(cInt::maybe), T(LST_TID.maybe())*/)).tryToInst()), (lhs, inst) -> {
-        final fURI pattern = inst.arg(0).asRec().at(PATTERN).uriValue();
-        final Space space = mtronSpace.of(pattern,fnull);
+    public static final Type MTRON_SPACE_TYPE = T(MTRON_SPACE_TID, null, instC(mInstSet.INST_TID.dom(ALL.maybe()).rng(MTRON_SPACE_TID), 
+            lst(isa_(rec(uri(HOST), T(URI_TID), uri(PATTERN), T(URI_TID))).tryToInst()),/*, uri(Tokens.Q).c(cInt::maybe), T(LST_TID.maybe())*/(lhs, inst) -> {
+        final Space space = mtronSpace.of(inst.arg(0).asRec(), fnull);
+        
         Router.global().addSpace(space);
         return space;
     }));
@@ -66,14 +73,21 @@ public class mtronSpace extends MSpace<MServer> {
         super(sjvm, jvm, jvm.get(uri(PATTERN)).uriValue(), MTRON_SPACE_TID, vid);
         this.host = jvm.get(uri(HOST)).uriValue();
         this.cache = (Space) jvm.get(uri(CACHE));
+        Rec c = rec(jvm);
+        c.at(uri(PEERS)).asLst().elements().forEach(e -> this.peers.add(e.uriValue()));
+        this.selfIndex = IteratorUtil.indexedStream(this.peers.iterator()).filter(p -> Objects.equals(p.get1().host(), this.host.host())).findFirst().map(Tuple.Pair::get0).orElse(-1);
+        if (this.selfIndex == -1)
+            throw MTronException.of("no cluster position found for host %s", this.host.host());
         this.server = sjvm;
     }
 
-    public static mtronSpace of(final fURI pattern, final fURI vid) {
-        final MServer server = new MServer(f(vid.host()));
+    public static mtronSpace of(final Rec config, final fURI vid) {
+        final MServer server = new MServer(config.at(HOST).uriValue());
         server.start();
-        final memSpace cache = memSpace.of(pattern.host(BootLoader.ARGS.at(HOST).uriValue().toString()), fnull);
-        return new mtronSpace(server, Map.of(uri(PATTERN), pattern.toUri(), uri(CACHE), cache), vid);
+        final memSpace cache = memSpace.of(config.at(PATTERN).uriValue(), fnull);
+        final Map<Obj, Obj> conf = new LinkedHashMap<>(config.jvm());
+        conf.put(uri(CACHE), cache);
+        return new mtronSpace(server, conf, vid);
     }
 
     @Override
@@ -106,31 +120,63 @@ public class mtronSpace extends MSpace<MServer> {
     @Override
     public Function<fURI, Iterator<Tuple.Pair<fURI, Obj>>> directReader() {
         return (pattern) -> {
-            //    if (pattern.equals(fURI.ALL))
-            // return this.sjvm().entrySet().stream().map(kv -> Tuple.Pair.with(kv.getKey(), kv.getValue())).iterator();
-            //  else {
-            if (pattern.matches(this.host))
+            final int peerIndex = UUIDHasher.getNodeIndex(pattern.toString(), this.peers.size());
+            if (this.selfIndex == peerIndex) {
                 return this.cache.directReader().apply(pattern);
-            else {
-                final Obj result = this.server.sendRecv(pattern, mParser.parse("*%s".formatted(pattern.asBranch())));
-                return result.stream().map(x -> Tuple.Pair.with(pattern, x)).iterator();
+            } else {
+                final fURI peer = this.peers.get(peerIndex);
+                try {
+                    LOG.info("reading: %s => %s", this.host, peer);
+                    final Obj result = this.server.sendRecv(peer, mParser.parse("*<%s>".formatted(pattern.asBranch())));
+                    return result.stream().map(x -> Tuple.Pair.with(pattern, x)).iterator();
+                } catch (final Exception e) {
+                    throw MTronException.of(e);
+                }
+
             }
-            // }
         };
     }
 
+
     @Override
     public BiFunction<fURI, Obj, Obj> directWriter() {
+
         return (pattern, obj) -> {
-            // if (pattern.hasPattern()) {
-            //   return this.directReader().apply(pattern).forEachRemaining(kv -> this.write(kv.get0(), obj));
-            // } else {
-            if (pattern.matches(this.host))
+            final int peerIndex = UUIDHasher.getNodeIndex(pattern.toString(), this.peers.size());
+            if (this.selfIndex == peerIndex) {
                 return this.cache.directWriter().apply(pattern, obj);
-            else {
-                return this.server.sendRecv(pattern, mParser.parse("%s -> |(%s)".formatted(pattern.asBranch(), obj.toCleanString())));
+            } else {
+                final fURI peer = this.peers.get(peerIndex);
+                try {
+                    LOG.info("writing: %s => %s", this.host, peer);
+                    final Obj result = this.server.sendRecv(peer, mParser.parse("%s -> %s".formatted(pattern, obj.toCleanString())));
+                    return result;
+                } catch (final Exception e) {
+                    throw MTronException.of(e);
+                }
+
             }
-            // }
         };
     }
+
+    public static class UUIDHasher {
+        public static int getNodeIndex(final String host, final int clusterSize) {
+            try {
+                MessageDigest sha1 = MessageDigest.getInstance("SHA-1");
+                byte[] hostBytes = host.getBytes(java.nio.charset.StandardCharsets.UTF_8);
+                byte[] hash = sha1.digest(hostBytes);
+
+                // Use first 4 bytes of the hash to get a 32-bit integer
+                int hashInt = ((hash[0] & 0xFF) << 24) |
+                        ((hash[1] & 0xFF) << 16) |
+                        ((hash[2] & 0xFF) << 8) |
+                        (hash[3] & 0xFF);
+                // Ensure positive index using unsigned right shift
+                return Math.abs(hashInt) % clusterSize;
+            } catch (final Exception e) {
+                throw MTronException.of("error hashing host %s: %s", host, e);
+            }
+        }
+    }
 }
+
