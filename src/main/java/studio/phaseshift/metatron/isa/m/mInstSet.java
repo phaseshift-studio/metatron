@@ -129,6 +129,7 @@ public class mInstSet extends MInstSet {
     public static final fURI ELSE_INST_TID = INST_TID.extend("else");
     public static final fURI END_INST_TID = INST_TID.extend("end");
     public static final fURI THREAD_INST_TID = INST_TID.extend("thread");
+    public static final fURI IMPORT_INST_TID = INST_TID.extend("import");
     public static final fURI SOURCE_INST_TID = INST_TID.extend("source");
     public static final fURI SWAP_TID = INST_TID.extend("swap");
     public static final fURI PRINT_INST_TID = INST_TID.extend("print");

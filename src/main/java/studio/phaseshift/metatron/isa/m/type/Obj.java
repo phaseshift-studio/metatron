@@ -643,6 +643,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
         public static Set<Inst> insts() {
             return new LinkedHashSet<>(List.of(
                     // instC(AS_INST_TID.dom(REL_TID).rng(REL_TID), lst(REL_TYPE), (lhs, inst) -> recurssiveAs(lhs, inst.arg(0).as())),
+                    instC(IMPORT_INST_TID.dom(ALL.maybe()).rng(ALL), lst(T(URI_TID)), (lhs, inst) -> Router.global().read(inst.arg(0).uriValue().basePath())),
                     instC(BARRIER_TID.dom(A.maybeSome()).rng(A.maybeSome()), lst(), (lhs, inst) -> lhs),
                     instC(AS_INST_TID.dom(A).rng(A), lst(T(A)), (lhs, inst) -> lhs.clone(lhs.jvm(), inst.arg(0).tid(), lhs.vid())),
                     instC(REPEAT_INST_TID.dom(A).rng(A), lst(T(ALL), INT_TYPE), (lhs, inst) -> {
