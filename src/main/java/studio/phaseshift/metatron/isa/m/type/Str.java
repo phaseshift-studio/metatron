@@ -59,7 +59,7 @@ public interface Str extends Mono {
         return this.clone(this.jvm(), this.tid(), vid);
     }
 
-    public static class StrType {
+   class StrType {
         private final static Map<String, Pattern> REGEX_CACHE = new HashMap<>();
 
         public static Set<Inst> insts() {
@@ -67,6 +67,7 @@ public interface Str extends Mono {
                     instC(AS_INST_TID.dom(STR_TID).rng(BOOL_TID), lst(T(BOOL_TID)), (lhs, inst) -> bool(lhs.strValue().equalsIgnoreCase("true"), inst.arg(0).tid(), lhs.vid())),
                     instC(AS_INST_TID.dom(STR_TID).rng(INT_TID), lst(T(INT_TID)), (lhs, inst) -> jnt(Long.parseLong(lhs.strValue()), inst.arg(0).tid(), lhs.vid())),
                     instC(AS_INST_TID.dom(STR_TID).rng(REAL_TID), lst(T(REAL_TID)), (lhs, inst) -> real(Double.parseDouble(lhs.strValue()), inst.arg(0).tid(), lhs.vid())),
+                    instC(AS_INST_TID.dom(STR_TID).rng(STR_TID), lst(T(STR_TID)), (lhs, inst) -> lhs.tid(inst.arg(0).tid())),
                     instC(AS_INST_TID.dom(STR_TID).rng(URI_TID), lst(T(URI_TID)), (lhs, inst) -> uri(f(lhs.strValue()), inst.arg(0).tid(), lhs.vid())),
                     docWrap(instC(SPLIT_INST_TID.dom(STR_TID).rng(STR_TID.some()), lst(T(STR_TID)), (lhs, inst) -> objs(Arrays.stream(lhs.strValue().split(inst.arg(0).strValue())).map(MStr::str))),
                             "a str to split", "the components of the split lhs str", Map.of(jnt(0), "a token to split on"), "split the lhs string according to the token arg and emit a stream of splits"),

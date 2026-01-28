@@ -259,6 +259,7 @@ public class mInstSet extends MInstSet {
         set.addAll(Lst.LstType.insts());
         set.addAll(Inst.InstType.insts());
         set.addAll(Obj.ObjType.insts());
+        set.addAll(Objs.ObjsType.insts());
         set.addAll(Space.SpaceType.insts());
         return set;
     }

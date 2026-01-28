@@ -199,7 +199,7 @@ public class TypeTest extends mTest {
     public void testTypeObj(final String obj, final String type, final boolean matches) {
         Obj o = mParser.m_obj().parse(obj).get();
         Type t = mParser.m_obj().parse(type).get();
-        LOG.error("testing %s {{g}}({{b}}%s{{g}}){{X}} %s %s", o, o.tid(), matches ? "{{g}}is a{{/g}}" : "{{r}}is not a{{/r}}", t);
+        LOG.trace("testing %s {{g}}({{b}}%s{{g}}){{X}} %s %s", o, o.tid(), matches ? "{{g}}is a{{/g}}" : "{{r}}is not a{{/r}}", t);
         assertEquals(matches, o.matches(t));
     }
 

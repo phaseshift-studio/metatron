@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -24,10 +24,10 @@ import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.m.type.impl.MInstSet;
-import studio.phaseshift.metatron.isa.web.space.http.httpSpace;
 import studio.phaseshift.metatron.isa.web.parser.HTMLTranslator;
 import studio.phaseshift.metatron.isa.web.parser.JSONTranslator;
 import studio.phaseshift.metatron.isa.web.parser.XMLTranslator;
+import studio.phaseshift.metatron.isa.web.space.http.httpSpace;
 
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -39,7 +39,6 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
-import static studio.phaseshift.metatron.isa.web.parser.XMLTranslator.XML_TID;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -48,6 +47,7 @@ public class webInstSet extends MInstSet {
 
     public static final fURI WEB_ISA_TID = MTRON_TID.extend("web");
     public static final fURI INST_TID = WEB_ISA_TID.extend("inst");
+    public static final fURI XML_TID = WEB_ISA_TID.extend("xml");
     public static final fURI HTML_TID = WEB_ISA_TID.extend("html");
     public static final fURI JSON_TID = WEB_ISA_TID.extend("json");
     public static final fURI CSS_TID = WEB_ISA_TID.extend("css");

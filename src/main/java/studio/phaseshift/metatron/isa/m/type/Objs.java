@@ -22,14 +22,29 @@ import studio.phaseshift.metatron.algebra.PlusMonoid;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.impl.MObjs;
+import studio.phaseshift.metatron.isa.m.type.impl.MStr;
 import studio.phaseshift.metatron.util.IteratorUtil;
 
-import java.util.List;
+import java.util.*;
 import java.util.function.Function;
+import java.util.regex.MatchResult;
+import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
+import static studio.phaseshift.metatron.furi.fURI.*;
+import static studio.phaseshift.metatron.furi.q.DocQ.Doc.docWrap;
+import static studio.phaseshift.metatron.isa.m.mInstSet.*;
+import static studio.phaseshift.metatron.isa.m.mInstSet.STR_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
+import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
+import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
+import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
+import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 public interface Objs extends Obj, PlusMonoid.O<Objs> {
 
@@ -100,7 +115,12 @@ public interface Objs extends Obj, PlusMonoid.O<Objs> {
         return new MObjs(List.of(result, this, other),null);
     }
 
-    //  @Override
-    //  Tuple.Pair<Obj, Obj> headTailsSplit(final Function<Obj, Object> partitioner);
+    class ObjsType {
+        public static Set<Inst> insts() {
+            return new LinkedHashSet<>(List.of(
+                    instC(AS_INST_TID.dom(ALL_STAR).rng(LST_TID), lst(T(LST_TID)), (lhs, inst) -> lst(lhs.stream().toList(), inst.arg(0).tid(),fnull))
+                    ));
+        }
+    }
 
 }

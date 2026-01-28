@@ -49,10 +49,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public class XMLTranslator implements Translator<Rec, Document> {
-
-
-    public static final fURI XML_TID = fURI.of("/web/xml");
-    public static final Type XML_TYPE = T(XML_TID);
+    
     private static final GraphittyLogger LOG = Graphitty.log(XMLTranslator.class);
 
     private Rec readElement(final Element element) {
