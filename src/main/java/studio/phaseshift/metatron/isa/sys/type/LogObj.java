@@ -36,11 +36,11 @@ import java.lang.reflect.Field;
 import java.util.Map;
 
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.sys.sysInstSet.SYS_TYPE_TID;
+import static studio.phaseshift.metatron.isa.sys.sysInstSet.SYS_TID;
 
 public class LogObj extends MRec {
 
-    public static final fURI LOG_TID = SYS_TYPE_TID.extend("log");
+    public static final fURI LOG_TID = SYS_TID.extend("log");
 
     public LogObj(final Obj log) {
         super(log.recValue(), LOG_TID, fURI.fnull);

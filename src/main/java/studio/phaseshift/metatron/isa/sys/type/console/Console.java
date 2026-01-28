@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -39,9 +39,6 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.m.type.impl.MMachine;
-import studio.phaseshift.metatron.lang.jre.JRec;
-import studio.phaseshift.metatron.lang.jre.ObjFieldReflection;
-import studio.phaseshift.metatron.lang.sys.router.Router;
 import studio.phaseshift.metatron.isa.sys.type.LogObj;
 import studio.phaseshift.metatron.isa.sys.type.ui.Border;
 import studio.phaseshift.metatron.isa.sys.type.ui.graphitty.Graphitty;
@@ -50,6 +47,9 @@ import studio.phaseshift.metatron.isa.sys.type.ui.widget.Card;
 import studio.phaseshift.metatron.isa.sys.type.ui.widget.Grid;
 import studio.phaseshift.metatron.isa.sys.type.ui.widget.Panel;
 import studio.phaseshift.metatron.isa.sys.type.ui.widget.Table;
+import studio.phaseshift.metatron.lang.jre.JRec;
+import studio.phaseshift.metatron.lang.jre.ObjFieldReflection;
+import studio.phaseshift.metatron.lang.sys.router.Router;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
@@ -64,23 +64,24 @@ import static org.jline.keymap.KeyMap.*;
 import static studio.phaseshift.metatron.BootLoader.BOOTING;
 import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.furi.fURI.f;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
 import static studio.phaseshift.metatron.isa.m.mInstSet.INST_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TID;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.start_;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
-import static studio.phaseshift.metatron.isa.sys.sysInstSet.SYS_TYPE_TID;
+import static studio.phaseshift.metatron.isa.sys.sysInstSet.SYS_ISA_TID;
 
 public class Console extends JRec implements Closeable, Runnable {
 
-    public static final fURI CONSOLE_TID = SYS_TYPE_TID.extend("console");
+    public static final fURI CONSOLE_TID = SYS_ISA_TID.extend("console");
     @ObjFieldReflection(tid = "/m/uri")
     public static final String METATRON_VERSION = "0.1-alpha";
     @ObjFieldReflection(tid = "/m/uri")
     public static final String MTRON = "mtron";
-   // @ObjFieldReflection(tid = FILE_TID_STRING)
+    // @ObjFieldReflection(tid = FILE_TID_STRING)
     public static final String MTRON_NANORC = "mtron.nanorc";
     //@ObjFieldReflection(tid = FILE_TID_STRING)
     public static String HEADER_FILE = "./conf/ansi_headers.txt";
@@ -206,7 +207,7 @@ public class Console extends JRec implements Closeable, Runnable {
                 else if (line.equals(":quit"))
                     break;
                 else if (line.equals(":clear")) {
-                    Graphitty.out(terminal.output(),"{{XX}}");
+                    Graphitty.out(terminal.output(), "{{XX}}");
                     this.status.refresh();
                 } else if (line.equals(":help")) {
                     new Panel("{{c}}help menu{{X}}", new Table(
@@ -238,13 +239,8 @@ public class Console extends JRec implements Closeable, Runnable {
                     this.status.startTimer();
                     final Obj parseResult = mParser.parse(line);
                     if (null != parseResult && !parseResult.isNoObj()) {
-                        final Obj computeResult;
-                        if (!parseResult.isObjCall())
-                            computeResult = parseResult;
-                        else {
-                            this.machine = (MMachine) MMachine.of(parseResult.as()).onHalt(this::printResult);
-                            computeResult = this.machine.apply();
-                        }
+                        this.machine = (MMachine) MMachine.of(parseResult.isCall() ? parseResult.as() : start_(parseResult)).onHalt(this::printResult);
+                        final Obj computeResult = this.machine.apply();
                         computeResult.stream().forEach(this::printResult);
                     }
                     this.machine = null;

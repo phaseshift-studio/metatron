@@ -20,6 +20,7 @@ package studio.phaseshift.metatron.isa.m.type;
 
 
 import studio.phaseshift.metatron.algebra.PlusMonoid;
+import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.lang.jre.ObjFieldReflection;
 import studio.phaseshift.metatron.lang.jre.ObjReflection;
@@ -32,6 +33,8 @@ import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static studio.phaseshift.metatron.Tokens.*;
+import static studio.phaseshift.metatron.Tokens.C;
 import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.furi.fURI.fnull;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
@@ -204,14 +207,18 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>>, PlusMonoid.O<Rec> {
                     instC(AS_INST_TID.dom(REC_TID).rng(URI_TID), lst(URI_TYPE), (lhs, inst) -> {
                         final Rec lhsRec = lhs.asRec();
                         fURI furi = new fURI();
-                        if (lhsRec.has("scheme"))
-                            furi = furi.scheme(lhsRec.at("scheme").asUri().uriValue().toString());
-                        if (lhsRec.has("host"))
-                            furi = furi.host(lhsRec.at("host").asUri().uriValue().toString());
-                       // if (lhsRec.has("port"))
-                        //    furi = furi.port(lhsRec.at("port").asInt().intValue().intValue());
-                       // if (lhsRec.has("path"))
-                      //      furi = furi.path(lhsRec.at("path").asLst().stream().map(Obj::uriValue).map(fURI::of).map(fURI::toString).collect(Collectors.joining("/")));
+                        if (lhsRec.has(SCHEME))
+                            furi = furi.scheme(lhsRec.at(SCHEME).asUri().uriValue().toString());
+                        if (lhsRec.has(HOST))
+                            furi = furi.host(lhsRec.at(HOST).asUri().uriValue().toString());
+                        if (lhsRec.has(PORT))
+                            furi = furi.port(lhsRec.at(PORT).asInt().intValue().intValue());
+                        if (lhsRec.has(PATH))
+                            furi = furi.path(lhsRec.at(PATH).asLst().elements().map(Obj::uriValue).map(fURI::toString).filter(s -> !s.isEmpty()).collect(Collectors.joining("/")));
+                        if (lhsRec.has(C))
+                            furi = furi.c(cInt.of(lhsRec.at("c/min").asInt().intValue(), lhsRec.at("c/max").asInt().intValue()).toString());
+                        if (lhsRec.has(Q))
+                            furi = furi.queryMap(lhsRec.at(Q).asRec().elements().map(e -> Tuple.Pair.with(e.first().toCleanString(), e.second().toCleanString())).collect(Collectors.toMap(Tuple.Pair::get0, Tuple.Pair::get1)));
                         return uri(furi);
                     }),
                     instC(HAS_INST_TID.dom(REC_TID).rng(REC_TID.maybe()), lst(T(ALL)), (lhs, inst) -> inst.arg(0).isRel() ?

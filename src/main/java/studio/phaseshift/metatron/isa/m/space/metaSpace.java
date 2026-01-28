@@ -27,7 +27,6 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.lang.sys.router.Router;
-import studio.phaseshift.metatron.lang.sys.router.impl.FutureObj;
 import studio.phaseshift.metatron.lang.sys.router.impl.MServer;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
@@ -39,9 +38,12 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 
 import static studio.phaseshift.metatron.Tokens.*;
-import static studio.phaseshift.metatron.furi.fURI.*;
+import static studio.phaseshift.metatron.furi.fURI.ALL;
+import static studio.phaseshift.metatron.furi.fURI.fnull;
+import static studio.phaseshift.metatron.isa.m.mInstSet.M_ISA_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.URI_TID;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
+import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
@@ -51,26 +53,33 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 
-public class mtronSpace extends MSpace<MServer> {
+public class metaSpace extends MSpace<MServer> {
 
-    public static final fURI MTRON_SPACE_TID = f("/m/space/mtron");
+    public static final fURI META_SPACE_TID = M_ISA_TID.extend("space/meta");
     protected final fURI host;
     protected final Space cache;
     protected final List<fURI> peers = new ArrayList<>();
     protected final int selfIndex;
     protected final MServer server;
 
-    public static final Type MTRON_SPACE_TYPE = T(MTRON_SPACE_TID, null, instC(mInstSet.INST_TID.dom(ALL.maybe()).rng(MTRON_SPACE_TID), 
-            lst(isa_(rec(uri(HOST), T(URI_TID), uri(PATTERN), T(URI_TID))).tryToInst()),/*, uri(Tokens.Q).c(cInt::maybe), T(LST_TID.maybe())*/(lhs, inst) -> {
-        final Space space = mtronSpace.of(inst.arg(0).asRec(), fnull);
-        
-        Router.global().addSpace(space);
-        return space;
-    }));
+    protected static final Rec CONFIG = rec(
+            uri(HOST), URI_TYPE,
+            uri(PATTERN), URI_TYPE,
+            uri(PEERS), lst(T(URI_TID.maybeSome())));
+
+    public static final Type META_SPACE_TYPE = T(META_SPACE_TID,
+            isa_(CONFIG), // predicate
+            instC(mInstSet.INST_TID.dom(ALL.maybe()).rng(META_SPACE_TID), //constructure
+                    lst(isa_(CONFIG).tryToInst()),
+                    (lhs, inst) -> {
+                        final Space space = metaSpace.of(inst.arg(0).asRec(), fnull);
+                        Router.global().addSpace(space);
+                        return space;
+                    }));
 
 
-    public mtronSpace(final MServer sjvm, final Map<Obj, Obj> jvm, final fURI vid) {
-        super(sjvm, jvm, jvm.get(uri(PATTERN)).uriValue(), MTRON_SPACE_TID, vid);
+    protected metaSpace(final MServer sjvm, final Map<Obj, Obj> jvm, final fURI vid) {
+        super(sjvm, jvm, jvm.get(uri(PATTERN)).uriValue(), META_SPACE_TID, vid);
         this.host = jvm.get(uri(HOST)).uriValue();
         this.cache = (Space) jvm.get(uri(CACHE));
         Rec c = rec(jvm);
@@ -81,13 +90,13 @@ public class mtronSpace extends MSpace<MServer> {
         this.server = sjvm;
     }
 
-    public static mtronSpace of(final Rec config, final fURI vid) {
+    public static metaSpace of(final Rec config, final fURI vid) {
         final MServer server = new MServer(config.at(HOST).uriValue());
         server.start();
         final memSpace cache = memSpace.of(config.at(PATTERN).uriValue(), fnull);
         final Map<Obj, Obj> conf = new LinkedHashMap<>(config.jvm());
         conf.put(uri(CACHE), cache);
-        return new mtronSpace(server, conf, vid);
+        return new metaSpace(server, conf, vid);
     }
 
     @Override
@@ -120,7 +129,7 @@ public class mtronSpace extends MSpace<MServer> {
     @Override
     public Function<fURI, Iterator<Tuple.Pair<fURI, Obj>>> directReader() {
         return (pattern) -> {
-            final int peerIndex = UUIDHasher.getNodeIndex(pattern.toString(), this.peers.size());
+            final int peerIndex = fURIHasher.getNodeIndex(pattern.toString(), this.peers.size());
             if (this.selfIndex == peerIndex) {
                 return this.cache.directReader().apply(pattern);
             } else {
@@ -142,7 +151,7 @@ public class mtronSpace extends MSpace<MServer> {
     public BiFunction<fURI, Obj, Obj> directWriter() {
 
         return (pattern, obj) -> {
-            final int peerIndex = UUIDHasher.getNodeIndex(pattern.toString(), this.peers.size());
+            final int peerIndex = fURIHasher.getNodeIndex(pattern.toString(), this.peers.size());
             if (this.selfIndex == peerIndex) {
                 return this.cache.directWriter().apply(pattern, obj);
             } else {
@@ -159,19 +168,17 @@ public class mtronSpace extends MSpace<MServer> {
         };
     }
 
-    public static class UUIDHasher {
+    public static class fURIHasher {
+        private static final MessageDigest sha1 = MTronException.wrap(() -> MessageDigest.getInstance("SHA-1"));
+
         public static int getNodeIndex(final String host, final int clusterSize) {
             try {
-                MessageDigest sha1 = MessageDigest.getInstance("SHA-1");
                 byte[] hostBytes = host.getBytes(java.nio.charset.StandardCharsets.UTF_8);
                 byte[] hash = sha1.digest(hostBytes);
-
-                // Use first 4 bytes of the hash to get a 32-bit integer
                 int hashInt = ((hash[0] & 0xFF) << 24) |
                         ((hash[1] & 0xFF) << 16) |
                         ((hash[2] & 0xFF) << 8) |
                         (hash[3] & 0xFF);
-                // Ensure positive index using unsigned right shift
                 return Math.abs(hashInt) % clusterSize;
             } catch (final Exception e) {
                 throw MTronException.of("error hashing host %s: %s", host, e);

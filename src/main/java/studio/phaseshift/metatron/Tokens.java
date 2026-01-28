@@ -39,6 +39,7 @@ public final class Tokens {
     public static final String PATH = "path";
     public static final String PERSIST = "persist";
     public static final String SCHEME = "scheme";
+    public static final String AUTHORITY = "authority";
     public static final String SUB = "sub";
     public static final String PATTERN = "pattern";
     public static final String HOST = "host";

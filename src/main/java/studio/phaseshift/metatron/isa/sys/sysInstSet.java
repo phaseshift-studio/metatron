@@ -68,18 +68,17 @@ import static studio.phaseshift.metatron.isa.sys.type.console.Console.CONSOLE_TY
  */
 public class sysInstSet extends MInstSet {
 
+    public static final fURI SYS_ISA_TID = MTRON_TID.extend("sys");
     public static final fURI SYS_TID = f("/sys");
-    public static final fURI SYS_TYPE_TID = SYS_TID.extend("type");
-    public static final fURI SYS_OBJ_TID = SYS_TID.extend("obj");
-    public static final fURI SYS_INST_TID = SYS_TID.extend("inst");
-    public static final fURI ROUTER_TID = SYS_TYPE_TID.extend("router");
-    public static final fURI SPACE_TID = SYS_TYPE_TID.extend("space");
-    public static final fURI FILE_TID = SYS_TID.extend("file");
+    public static final fURI SYS_INST_TID = SYS_ISA_TID.extend("inst");
+    public static final fURI ROUTER_TID = SYS_ISA_TID.extend("router");
+    public static final fURI SPACE_TID = SYS_ISA_TID.extend("space");
+    public static final fURI FILE_TID = SYS_ISA_TID.extend("file");
     public static final fURI IMAGE_TID = FILE_TID.extend("image");
 
 
     public sysInstSet(final fURI vid) {
-        super(SYS_TID, vid);
+        super(SYS_ISA_TID, vid);
     }
 
     public static sysInstSet create() {
@@ -92,7 +91,7 @@ public class sysInstSet extends MInstSet {
 
     @Override
     public Set<Type> types() {
-        final Set<Type> types = new HashSet<>(Set.of(
+        final Set<Type> types = new HashSet<>(List.of(
                 T(ROUTER_TID),
                 T(SPACE_TID),
                 CONSOLE_TYPE,

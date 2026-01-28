@@ -29,11 +29,12 @@ import java.util.Objects;
 import java.util.Optional;
 
 import static studio.phaseshift.metatron.furi.fURI.f;
+import static studio.phaseshift.metatron.isa.m.mInstSet.MTRON_TID;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 
 public interface Q extends Rec {
 
-    fURI Q_TID = f("/sys/type/space/q");
+    fURI Q_TID = MTRON_TID.extend("sys/space/q");
     fURI ON_WRITE_TID = Q_TID.extend("on_write");
     fURI ON_READ_TID = Q_TID.extend("on_read");
 

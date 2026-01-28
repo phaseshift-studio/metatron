@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -54,7 +54,7 @@ public class UriTest extends mTest {
     public void testCode(final String code, final String expected) {
         super.testCode(code, expected);
     }
-    
+
     @ParameterizedTest
     @CsvSource(value = {
             "a.pow(0)                         % <.>",
@@ -80,19 +80,30 @@ public class UriTest extends mTest {
 
     @ParameterizedTest
     @CsvSource(value = {
-            "<a://b.com:123/c/d>                                 % <a://b.com:123/c/d>",
-            "<a://b.com:123/c/d>.as(rec::T)../scheme                        % a",
-            "<a://b.com:123/c/d>.scheme(abc)                     % <abc://b.com:123/c/d>",
-            "<a://b.com:123/c/d>.as(rec::T)../port                          % 123",
-            "<a://b.com:123/c/d>.port(666)                       % <a://b.com:666/c/d>",
-            "<a://b.com:123/c/d>.as(rec::T)../host                         % <b.com>",
-            "<a://b.com:123/c/d>.host(<abc.org>)                 % <a://abc.org:123/c/d>",
+            "<a://b.com:123/c/d?x=1&y=2>                                 % <a://b.com:123/c/d?x=1&y=2>",
+            "<a://b.com:123/c/d?x=1&y=2>.as(rec::T)../scheme                        % a",
+            "<a://b.com:123/c/d?x=1&y=2>.scheme(abc)                     % <abc://b.com:123/c/d?x=1&y=2>",
+            "<a://b.com:123/c/d?x=1&y=2>.as(rec::T)../port                          % 123",
+            "<a://b.com:123/c/d?x=1&y=2>.port(666)                       % <a://b.com:666/c/d?x=1&y=2>",
+            "<a://b.com:123/c/d?x=1&y=2>.as(rec::T)../host                         % <b.com>",
+            "<a://b.com:123/c/d?x=1&y=2>.host(<abc.org>)                 % <a://abc.org:123/c/d?x=1&y=2>",
+            "<a://b.com:123/c/d?x=1&y=2>.as(rec::T)../q                         % [x=><1>,y=><2>]",
+           // "<a://b.com:123/c/d?x=1&y=2>.query(x=3)                 % <a://b.com:123/c/d?x=3&y=2>",
     }, delimiter = '%')
-    public void testComponents(final String code, final String expected) {
+    public void testAsRec(final String code, final String expected) {
         super.testCode(code, expected);
     }
-    
-    
-    
-    
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "<1>                                                        % <1>",
+            "<1>.as(int::T)                                             % int::1",
+            "<3>.as(int::T).plus(<6>.as(int::T))                        % int::9",
+            "<3a>.as(int::T)                                            % <ERROR>",
+    }, delimiter = '%')
+    public void testAsInt(final String code, final String expected) {
+        super.testCode(code, expected);
+    }
+
+
 }

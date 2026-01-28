@@ -59,12 +59,11 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.sys.sysInstSet.FILE_TID;
-import static studio.phaseshift.metatron.isa.sys.sysInstSet.SPACE_TID;
+import static studio.phaseshift.metatron.isa.sys.sysInstSet.*;
 
 public class fileSpace extends MSpace<FileSystem> {
 
-    public static final fURI FS_TID = SPACE_TID.extend("fs");
+    public static final fURI FS_TID = SYS_ISA_TID.extend("space/fs");
     private static final Rec FS_REC = rec(
             uri(Tokens.PATTERN), URI_TYPE,
             uri(Tokens.REWRITE), rel(URI_TYPE, URI_TYPE)

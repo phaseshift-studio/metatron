@@ -22,6 +22,7 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.*;
 
 import studio.phaseshift.metatron.util.MTronException;
+import studio.phaseshift.metatron.util.Tuple;
 
 import java.util.List;
 import java.util.Map;
@@ -112,7 +113,7 @@ public class MObjFactory implements ObjFactory {
         else if (Objs.class.isAssignableFrom(objClass))
             return (O) new MObjs((List<Obj>) value, vid);
         else if (Type.class.isAssignableFrom(objClass))
-            return (O) T(tid, null, (Call) value);
+            return (O) new MType((Tuple.Pair<Call, Call>) value, vid);
         else if (NoObj.class.isAssignableFrom(objClass))
             return (O) NoObj.noobj();
         else

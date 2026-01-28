@@ -14,27 +14,26 @@ print("{{r}}------------\n{{g}}*{{y}}boot/args{{X}}: ",
 [== mount instruction sets ==];
 [--/sys/mod/sys   -> */sys;
 [--/sys/mod/fs    -> */fs;
-/sys/mod/kv    -> */kv;
-/sys/mod/web   -> */web;
-/sys/mod/iot   -> */iot;
-/sys/mod/grph  -> */grph;
+/sys/isa/web   -> */mtron/web;
+/sys/isa/iot   -> */mtron/iot;
+/sys/isa/grph  -> */mtron/grph;
 /sys/mod/vec   -> */vec;
 /sys/mod/mach  -> */mach;
 /sys/mod/llm   -> */llm;
 /sys/mod/ui    -> */ui;
 /sys/mod/tabl  -> */tabl;
 [-- mount spaces --];
-     boot/peers    -> [//localhost:6666,<//127.0.0.1:7777>];
+     boot/peers    -> [ws://localhost:6666,<ws://127.0.0.1:7777>];
      mem::[pattern => /usr/#]@/sys/space/usr;
      mem::[pattern => /shared/#,
            persist => </tmp/shared.mtron>]@/sys/space/shared;
-   mtron::[pattern => </cluster/a/#>,
-          host     => <//localhost:6666>,
-          peers    => !*boot/peers]@/sys/space/mtron;
-   mtron::[pattern => </cluster/b/#>,
-                    host     => <//127.0.0.1:7777>,
+    meta::[pattern => </cluster/a/#>,
+           host     => <ws://localhost:6666>,
+           peers    => !*boot/peers]@/sys/space/mtron;
+    meta::[pattern => </cluster/b/#>,
+                    host     => <ws://127.0.0.1:7777>,
                     peers    => !*boot/peers]@/sys/space/mtron2;
-    web::[host     => <http://localhost:8777>,
+    http::[host     => <http://localhost:8777>,
           pattern => http://#,
           route   => [/     => examples/www,
                       /docs => target/docs ]]@/sys/space/web;
@@ -65,7 +64,7 @@ print("{{r}}------------\n{{g}}*{{y}}boot/args{{X}}: ",
      mem::[pattern => /usr/ai/#]@/sys/space/ai;
  ollama::[host    => <http://localhost:11434>, 
           model   => |load()]@/usr/ai/ollama;
-console::[        => ];
+console::[        => ]@/sys/console;
  [-- *boot/args/mode.-<|[?=server   => print('\n\t{{g}}-<{{c}}server mode{{g}}>-{{X}}'), 
  [--                       ?=console => print('\n\t{{g}}-<{{c}}client mode{{g}}>-{{X}}').map(console::[=>]), 
  [--                      _         => print(_,'\n\t')];

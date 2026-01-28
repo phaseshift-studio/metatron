@@ -68,12 +68,13 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.isa.web.webInstSet.WEB_ISA_TID;
 import static studio.phaseshift.metatron.lang.ai.llm.type.impl.Audio.AUDIO_TID;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class webSpace extends MSpace<HttpServer> {
+public class httpSpace extends MSpace<HttpServer> {
 
     public enum ContentType {
         APPLICATION_JSON("application/json"),
@@ -130,15 +131,15 @@ public class webSpace extends MSpace<HttpServer> {
 
     public static final String INDEX_HTML = "index.html";
 
-    public static final fURI WEB_SPACE_TID = MTRON_TID.extend("space").extend("web");
+    public static final fURI HTTP_SPACE_TID = WEB_ISA_TID.extend("space/http");
     protected static final String ROUTE = "route";
-    public static final Type WEB_TYPE = T(WEB_SPACE_TID, null,
-            instC(mInstSet.INST_TID.dom(ALL.maybe()).rng(WEB_SPACE_TID),
+    public static final Type HTTP_SPACE_TYPE = T(HTTP_SPACE_TID, null,
+            instC(mInstSet.INST_TID.dom(ALL.maybe()).rng(HTTP_SPACE_TID),
                     lst(T(REC_TID, isa_(rec(uri(Tokens.PATTERN), T(URI_TID), uri(Tokens.HOST), T(URI_TID), uri(ROUTE), T(REC_TID))))), (lhs, inst) -> {
                         final fURI pattern = inst.arg(0).<Rec>as().at(Tokens.PATTERN).uriValue();
                         final fURI host = inst.arg(0).<Rec>as().at(Tokens.HOST).uriValue();
                         final Rec route = inst.arg(0).<Rec>as().at(ROUTE);
-                        final webSpace space = webSpace.of(host, route.jvm(), pattern, inst.arg(0).vid());
+                        final httpSpace space = httpSpace.of(host, route.jvm(), pattern, inst.arg(0).vid());
                         Router.global().addSpace(space);
                         return space;
                     }));
@@ -146,8 +147,8 @@ public class webSpace extends MSpace<HttpServer> {
     private static final JSONTranslator JSON_TRANSLATOR = new JSONTranslator();
     private static final AudioTranslator AUDIO_TRANSLATOR = new AudioTranslator();
 
-    public webSpace(final HttpServer server, final Map<Obj, Obj> config, final fURI pattern, final fURI vid) {
-        super(server, config, pattern, WEB_SPACE_TID, vid);
+    public httpSpace(final HttpServer server, final Map<Obj, Obj> config, final fURI pattern, final fURI vid) {
+        super(server, config, pattern, HTTP_SPACE_TID, vid);
         // Router.writeToSpace(this.vid.extend(ROUTE), routes);
         try {
             this.at(ROUTE).orElse(rec()).elements().forEach(r -> {
@@ -188,14 +189,14 @@ public class webSpace extends MSpace<HttpServer> {
         }
     }
 
-    public static webSpace of(final fURI host, final Map<Obj, Obj> routes, final fURI pattern, final fURI vid) {
+    public static httpSpace of(final fURI host, final Map<Obj, Obj> routes, final fURI pattern, final fURI vid) {
         try {
             final HttpServer server = HttpServer.create(new InetSocketAddress(host.host(), host.port()), 0);
             final Map<Obj, Obj> config = new LinkedHashMap<>();
             config.put(uri(Tokens.HOST), host.toUri());
             config.put(uri(Tokens.PATTERN), pattern.toUri());
             config.put(uri(ROUTE), rec(routes));
-            return new webSpace(server, config, pattern, vid);
+            return new httpSpace(server, config, pattern, vid);
         } catch (final Exception e) {
             throw MTronException.of(e);
         }
@@ -208,8 +209,8 @@ public class webSpace extends MSpace<HttpServer> {
     }
 
     @Override
-    public webSpace tid(final fURI tid) {
-        return (webSpace) super.tid(tid);
+    public httpSpace tid(final fURI tid) {
+        return (httpSpace) super.tid(tid);
     }
 
     @Override

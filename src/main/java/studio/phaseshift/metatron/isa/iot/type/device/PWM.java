@@ -16,26 +16,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.isa.m.space;
-
-import studio.phaseshift.metatron.isa.SpaceTest;
-
-import static studio.phaseshift.metatron.Tokens.*;
-import static studio.phaseshift.metatron.furi.fURI.f;
-import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
-import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
-import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+package studio.phaseshift.metatron.isa.iot.type.device;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class mtronSpaceTest extends SpaceTest {
-
-    public mtronSpaceTest() {
-        super(f("ws://localhost:6666/t"), () -> mtronSpace.of(rec(
-                        uri(PATTERN), uri("ws://localhost:6666/t/#"),
-                        uri(HOST), uri("ws://localhost:6666"),
-                        uri(PEERS), lst(uri("ws://localhost:6666"))),
-                f("/sys/space/mtron")));
-    }
+public class PWM {
 }

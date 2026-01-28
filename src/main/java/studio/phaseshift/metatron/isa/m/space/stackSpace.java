@@ -35,7 +35,7 @@ import java.util.Stack;
 
 import static studio.phaseshift.metatron.Tokens.PATTERN;
 import static studio.phaseshift.metatron.furi.fURI.ALL;
-import static studio.phaseshift.metatron.furi.fURI.f;
+import static studio.phaseshift.metatron.isa.m.mInstSet.M_ISA_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.URI_TID;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
@@ -44,15 +44,17 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
-public class stackSpace extends MSpace<Stack<Poly>> {
+public class stackSpace extends MSpace<Stack<Poly<?,?>>> {
 
-    public static final fURI STACK_SPACE_TID = f("/m/space/stack");
-    public static final Type STACK_SPACE_TYPE = T(STACK_SPACE_TID, null, instC(mInstSet.INST_TID.dom(ALL.maybe()).rng(STACK_SPACE_TID), lst(isa_(rec(uri(PATTERN), T(URI_TID)/*, uri(Tokens.Q).c(cInt::maybe), T(LST_TID.maybe())*/)).tryToInst()), (lhs, inst) -> {
-        final fURI pattern = inst.arg(0).asRec().at(PATTERN).uriValue();
-        final Space space = new stackSpace(pattern);
-        Router.global().addSpace(space);
-        return space;
-    }));
+    public static final fURI STACK_SPACE_TID = M_ISA_TID.extend("space/stack");
+    public static final Type STACK_SPACE_TYPE = T(STACK_SPACE_TID, 
+            null, // predicate
+            instC(mInstSet.INST_TID.dom(ALL.maybe()).rng(STACK_SPACE_TID),  // constructor
+            lst(isa_(rec(uri(PATTERN), T(URI_TID))).tryToInst()), (lhs, inst) -> {
+                final Space space = new stackSpace(inst.arg(0).asRec().at(PATTERN).uriValue());
+                Router.global().addSpace(space);
+                return space;
+            }));
 
     private final GraphittyLogger LOG = Graphitty.log(this);
     private final Space root;

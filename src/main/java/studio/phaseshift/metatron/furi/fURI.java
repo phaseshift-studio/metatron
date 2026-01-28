@@ -180,49 +180,15 @@ public class fURI implements Cloneable, Ring<fURI> {
     public static fURI of(final Object uri) {
         return uri instanceof fURI ? (fURI) uri : fURI.of(uri.toString());
     }
-
-    private static boolean matchString(final String a, final String b) {
-        final String[] as = a.split(SEGMENT_SPLIT);
-        final String[] bs = b.split(SEGMENT_SPLIT);
-        for (int i = 0; i < bs.length; i++) {
-            if (bs[i].equals("#") || (bs[i].equals("+") && i == bs.length - 1))
-                return true;
-            if (bs[i].equals("+"))
-                continue;
-            if (as.length > i) {
-                if (!as[i].equals(bs[i]))
-                    return false;
-            }
-        }
-        return true;
-    }
-
-    private static boolean isGenericString(final String s) {
-        boolean acharacter = s.chars().anyMatch(c -> c != ALL_WILD_CHAR && c != ONE_WILD_CHAR);
-        if (s.chars().anyMatch(Character::isLowerCase))
-            return false;
-        return acharacter;
-    }
-
+    
     public fURI authority(final fURI authority) {
         return new fURI(this.scheme, null == authority ? null : authority.host, null == authority ? -1 : authority.port, this.sstart, this.path, this.send, this.poly, this.query == null ? null : this.query.toString());
     }
 
-    public fURI localize() {
-        return new fURI(null, null, -1, false, this.path, this.send, this.poly, null == this.query ? null : this.query.toString());
-    }
-
-
     public boolean hasAuthority() {
         return null != this.host && -1 != this.port;
     }
-
-   /* public boolean hasAuthority(final fURI authority) {
-        if (null == authority)
-            return null == this.host && -1 == this.port;
-        return Objects.equals(authority.host, this.host) && Objects.equals(authority.port, this.port);
-    }*/
-
+    
     public fURI big() {
         return Router.loaded() ? Router.global().rewrite(this, true) : this;
     }
@@ -240,6 +206,10 @@ public class fURI implements Cloneable, Ring<fURI> {
             return this;
         return new fURI(this.scheme, this.host, this.port, this.sstart, this.path, this.send, poly, Query.to(this.query));
 
+    }
+    
+    public boolean isEmpty() {
+        return this.toString().isEmpty();
     }
 
     public fURI commonRoot(final fURI other) {
@@ -324,7 +294,7 @@ public class fURI implements Cloneable, Ring<fURI> {
     }
 
     public fURI path(final String path) {
-        return new fURI(this.scheme, this.host, this.port, path.charAt(0) == SEGMENT_SPLIT_CHAR, Arrays.asList(path.split("/")), path.charAt(path.length() - 1) == SEGMENT_SPLIT_CHAR, this.poly, Query.to(this.query));
+        return new fURI(this.scheme, this.host, this.port, path.charAt(0) == SEGMENT_SPLIT_CHAR || this.hasAuthority(), Arrays.asList(path.split("/")), path.charAt(path.length() - 1) == SEGMENT_SPLIT_CHAR, this.poly, Query.to(this.query));
     }
 
     public String path() {
@@ -875,7 +845,7 @@ public class fURI implements Cloneable, Ring<fURI> {
     public boolean isGeneric() {
         boolean acharacter = false;
         boolean acaps = false;
-        for (final String seg : this.path) {
+        for (final String seg : this.c("1").path) { // TODO: this is necessary because {} is appended to final segment (needs to be fixed ASAP!).
             if (!acharacter)
                 acharacter = seg.chars().anyMatch(c -> c != ALL_WILD_CHAR && c != ONE_WILD_CHAR);
             if (!acaps)

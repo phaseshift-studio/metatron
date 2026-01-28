@@ -111,6 +111,8 @@ public interface Type extends Obj, PlusMonoid<Type> {
         //     return !rhs.asType().hasPredicate() || this.matches(rhs.asType().predicate());
         if (this.tid().matches(rhs.tid())) //&& (!rhs.asType().hasPredicate() || Objects.equals(this.predicate(), rhs.asType().predicate())))
             return true;
+        if(rhs.tid().isGeneric())
+            return !this.tid().isGeneric() || (this.c().within(rhs.c()) && this.tid().basePath().equals(rhs.tid().basePath()));
         if (!this.asType().isBaseType() && Router.loaded()) // recursively check type to base type
             return Router.readFromSpace(this.tid()).matches(rhs);
         return null == rhs.asType().predicate();// || !rhs.asType().predicate().apply(this).isNoObj();

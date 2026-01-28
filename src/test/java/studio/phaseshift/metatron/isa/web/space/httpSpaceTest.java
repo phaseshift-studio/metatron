@@ -21,7 +21,7 @@ package studio.phaseshift.metatron.isa.web.space;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import studio.phaseshift.metatron.isa.SpaceTest;
-import studio.phaseshift.metatron.isa.web.space.http.webSpace;
+import studio.phaseshift.metatron.isa.web.space.http.httpSpace;
 import studio.phaseshift.metatron.lang.sys.router.Router;
 
 import java.util.Map;
@@ -37,10 +37,10 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 @Disabled
-public class webSpaceTest extends SpaceTest {
+public class httpSpaceTest extends SpaceTest {
 
-    public webSpaceTest() {
-        super(() -> webSpace.of(f("http://localhost:8777"), Map.of(uri("/"), uri("src/test/resources/web/")), f("http://#"), f("/sys/space/web")));
+    public httpSpaceTest() {
+        super(() -> httpSpace.of(f("http://localhost:8777"), Map.of(uri("/"), uri("src/test/resources/web/")), f("http://#"), f("/sys/space/web")));
     }
 
     @Override

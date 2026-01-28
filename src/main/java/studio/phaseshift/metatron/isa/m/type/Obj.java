@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -23,11 +23,11 @@ import studio.phaseshift.metatron.algebra.PlusMonoid;
 import studio.phaseshift.metatron.algebra.Ring;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.io.serial.ObjCleanStringSerializer;
+import studio.phaseshift.metatron.io.serial.ObjSerializer;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.type.impl.*;
 import studio.phaseshift.metatron.lang.sys.router.Router;
-import studio.phaseshift.metatron.io.serial.ObjCleanStringSerializer;
-import studio.phaseshift.metatron.io.serial.ObjSerializer;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Streamable;
@@ -45,10 +45,10 @@ import java.util.stream.Stream;
 import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.furi.q.DocQ.Doc.docWrap;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
-import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
 import static studio.phaseshift.metatron.isa.m.type.Int.INT_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
@@ -240,7 +240,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
         if (rhs.isType())
             return rhs.tid().isGeneric() ||
                     (Helper.typeInferenceMatch(this, rhs.as()) &&
-                            (rhs.<Type>as().predicate() == null || this.isObjs() || !rhs.apply(this).isNoObj()));
+                            (!rhs.asType().hasPredicate() || !rhs.apply(this).isNoObj()));
         return this.tid().matches(rhs.tid()) &&
                 Objects.equals(this.jvm(), rhs.jvm());
     }
@@ -559,17 +559,16 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
         private static final ObjSerializer<String> SERIALIZER = new ObjCleanStringSerializer();
 
         public static boolean typeInferenceMatch(final Obj lhs, final Type rhs) {
-            //if (lhs.isInst() && rhs.tid().equals(INST_TID))
-            //    return true;// lhs.c().within(rhs.c());
-            if (lhs.tid().matches(rhs.tid()))
-                return true;
-            if (rhs.isBaseType())
-                return lhs.baseType().matches(rhs.tid()); // matches any abstract type to it's base type as long as within the coefficient boundaries
-            if (rhs.tid().isZero() && !lhs.isNoObj()) // TODO: hack because zero can be the empty string and noobj string. fix.
-                return false;
+            if (rhs.isBaseType()) {
+                if (lhs.isObjs()) {
+                    if (!lhs.tid().matches(rhs.tid()))
+                        return false;
+                } else if (!lhs.baseType().matches(rhs.tid()))
+                    return false;
+            }
             if (rhs.tid().hasPattern() && !lhs.tid().matches(rhs.tid()))
                 return false;
-            return null == rhs.predicate() || !rhs.predicate().apply(lhs).isNoObj();
+            return null == rhs.predicate() || !rhs.apply(lhs).isNoObj();
 
         }
 
@@ -674,7 +673,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
                     instC(MAP_INST_TID.dom(A.maybe()).rng(B.maybe()), lst(T(B.maybe())), (lhs, inst) -> inst.arg(0)),
                     instC(FILTER_INST_TID.dom(A).rng(A.maybe()), lst(T(ALL.maybe())), (lhs, inst) -> inst.arg(0).isNoObj() ? noobj() : lhs),
                     instC(SIDE_INST_TID.dom(A).rng(A), lst(T(ALL)), (lhs, inst) -> Optional.of(inst.arg(0).apply(lhs)).map(x -> (Obj) null).orElse(lhs)),
-                  //  instC(MAP_INST_TID.dom(ALL.maybe()).rng(ALL.maybe()), lst(T(ALL)), (lhs, inst) -> inst.arg(0)),
+                    //  instC(MAP_INST_TID.dom(ALL.maybe()).rng(ALL.maybe()), lst(T(ALL)), (lhs, inst) -> inst.arg(0)),
                     docWrap(instC(TID_INST_TID.dom(ALL).rng(URI_TID), lst(), (lhs, inst) -> lhs.tid().toUri()),
                             "any obj", "the lhs obj type id", Map.of(), "the geometric location of the lhs obj [equivalent to f(x) ~ vid(type())]"),
                     docWrap(instC(VID_INST_TID.dom(A).rng(A), lst(T(URI_TID)), (lhs, inst) -> lhs.vid(inst.arg(0).uriValue())),
@@ -739,7 +738,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
                     instC(FAILURE_INST_TID.dom(ALL.maybeSome()).rng(FAIL_TID), lst(T(ALL.maybe())), (lhs, inst) -> fail(MTronException.of("%s", inst.arg(0).toString()))),
                     //instC(BARRIER_TID.dom(ALL_STAR).rng(ALL_STAR), lst(T(ALL_STAR)), (lhs, inst) -> inst.arg(0).apply(lhs)),
                     instC(PARENT_INST_TID.dom(ALL).rng(ALL.maybe()), lst(), (lhs, inst) -> {
-                        lhs.logger().info("parent: %s => %s",lhs.parent(),lhs);
+                        lhs.logger().info("parent: %s => %s", lhs.parent(), lhs);
                         return lhs.parent();
                     }),
                     instC(COUNT_INST_TID.dom(ALL.maybeSome()).rng(INT_TID), lst(), (lhs, inst) -> inst.seed().jvm(lhs.stream().reduce(inst.seed(), (a, b) -> jnt(a.intValue() + b.c().max())).intValue()/* * inst.c().max()*/), jnt(0)),

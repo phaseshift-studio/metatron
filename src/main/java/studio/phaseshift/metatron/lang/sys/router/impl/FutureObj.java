@@ -34,7 +34,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
 
-import static studio.phaseshift.metatron.isa.m.mInstSet.MTRON_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.M_ISA_TID;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 
 
@@ -44,7 +44,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 public class FutureObj<T extends Obj> extends MObj implements Future<T> {
 
     public static final int DEFAULT_TIMEOUT_MS = 2000;
-    public static final fURI FUTURE_TID = MTRON_TID.extend("future");
+    public static final fURI FUTURE_TID = M_ISA_TID.extend("future");
 
     private final UUID tag;
     private boolean isCanceled;

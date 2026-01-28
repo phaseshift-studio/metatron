@@ -20,6 +20,7 @@ package studio.phaseshift.metatron;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.iot.iotInstSet;
 import studio.phaseshift.metatron.isa.m.mInstSet;
 import studio.phaseshift.metatron.isa.m.machInstSet;
@@ -53,7 +54,8 @@ import static studio.phaseshift.metatron.Tokens.BOOT;
 import static studio.phaseshift.metatron.Tokens.WS;
 import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.furi.fURI.f;
-import static studio.phaseshift.metatron.isa.iot.iotInstSet.IOT_INSTSET_TID;
+import static studio.phaseshift.metatron.isa.iot.iotInstSet.IOT_ISA_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.M_ISA_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TID;
 import static studio.phaseshift.metatron.isa.m.machInstSet.MACH_INSTSET_TID;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
@@ -62,11 +64,11 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.sys.sysInstSet.SYS_OBJ_TID;
+import static studio.phaseshift.metatron.isa.sys.sysInstSet.SYS_ISA_TID;
 import static studio.phaseshift.metatron.isa.sys.sysInstSet.SYS_TID;
-import static studio.phaseshift.metatron.isa.web.webInstSet.WEB_INSTSET_TID;
+import static studio.phaseshift.metatron.isa.web.webInstSet.WEB_ISA_TID;
 import static studio.phaseshift.metatron.lang.ai.llm.llmInstSet.LLM_INSTSET_TID;
-import static studio.phaseshift.metatron.lang.db.grph.inst.grphInstSet.GRPH_INSTSET_TID;
+import static studio.phaseshift.metatron.lang.db.grph.inst.grphInstSet.GRPH_ISA_TID;
 import static studio.phaseshift.metatron.lang.db.tabl.tablInstSet.TABL_INSTSET_TID;
 import static studio.phaseshift.metatron.lang.db.vec.vecInstSet.VEC_INSTSET_TID;
 
@@ -86,10 +88,11 @@ public class BootLoader implements Rec, Feature.SelfClone {
         LOG = Graphitty.log(new BootLoader());
         EXECUTOR = Executors.newCachedThreadPool(new ThreadFactoryBuilder().setUncaughtExceptionHandler((a, b) -> LOG.error("%s %s", a, b)).build());
         //Registry.singleton().register(mInstSet.INST_TID, () -> mInstSet.of(fURI.NULL));
-        Registry.open().register(SYS_TID, sysInstSet::create);
-        Registry.open().register(WEB_INSTSET_TID, webInstSet::create);
-        Registry.open().register(IOT_INSTSET_TID, iotInstSet::create);
-        Registry.open().register(GRPH_INSTSET_TID, grphInstSet::create);
+        Registry.open().register(SYS_ISA_TID, sysInstSet::create);
+        Registry.open().register(WEB_ISA_TID, webInstSet::create);
+        Registry.open().register(IOT_ISA_TID, iotInstSet::create);
+        Registry.open().register(GRPH_ISA_TID, grphInstSet::create);
+        /// //////////////////
         Registry.open().register(LLM_INSTSET_TID, llmInstSet::create);
         Registry.open().register(VEC_INSTSET_TID, vecInstSet::create);
         Registry.open().register(MACH_INSTSET_TID, machInstSet::create);
@@ -153,7 +156,7 @@ public class BootLoader implements Rec, Feature.SelfClone {
             LOG.info("%s", Graphitty.sillyPrint("booting metatron", true, true));
             Runtime.getRuntime().addShutdownHook(new Thread(BootLoader::close));
             LOG.info("accessible instruction sets: %s", Registry.open().registrants());
-            fURI remoteAuthority = null;
+            fURI localAuthority = null;
             /// /// START OF BOOTING PROCESS /// /// allow boot description to be read from a mtron file
             String hostname = null;
             try {
@@ -164,13 +167,15 @@ public class BootLoader implements Rec, Feature.SelfClone {
             if (null == hostname)
                 LOG.warn("booting metatron on a non-networked jvm");
             else
-                remoteAuthority = args.at(Tokens.HOST).orElse(uri(WS + "://" + hostname + ".local" + ":" + 8999)).uriValue();
-            ROUTER = new mRouter(remoteAuthority, SYS_OBJ_TID.extend("router"));
-            memSpace.of(f("/sys/#"), null);
-            sysInstSet.create(SYS_TID.extend("mod/sys"));
-            Router.writeToSpace(mInstSet.create(f("/sys/mod/m")));
-            Router.writeToSpace(Router.global());
-           // Router.writeToSpace((f("/sys/mod/fs")));
+                localAuthority = args.at(Tokens.HOST).orElse(uri(WS + "://" + hostname + ".local" + ":" + 8999)).uriValue();
+            final Space sysSpace = memSpace.of(f("/sys/#"), null);
+            ROUTER = new mRouter(localAuthority, SYS_TID.extend("router"));
+            sysSpace.write(ROUTER.vid(),ROUTER);
+            Router.global().addSpace(sysSpace);
+           // Router.global().addSpace(mtronSpace);
+            Router.writeToSpace(mInstSet.create(M_ISA_TID));
+            Router.writeToSpace(sysInstSet.create(SYS_ISA_TID));
+            // Router.writeToSpace((f("/sys/mod/fs")));
             Router.writeToSpace(f("boot/args"), args);
 
             ROUTER.start();
@@ -189,7 +194,7 @@ public class BootLoader implements Rec, Feature.SelfClone {
                 LOG.info("\t {{m}}END:{{g}} evaluating provided boot loader: {{b}}%s{{X}}\n", args.at(uri(Tokens.BOOT)).uriValue());
             }
             ///////////////////////////////////////////////////////////////
-            final Obj log = Router.writeToSpace(LogObj.of(rec(args.at("log").orElse(uri("trace")), lst(uri(ALL))), SYS_OBJ_TID.extend("log")));
+            final Obj log = Router.writeToSpace(LogObj.of(rec(args.at("log").orElse(uri("trace")), lst(uri(ALL))), SYS_TID.extend("log")));
             LOG.info("logging now handled by %s", log);
             /// ///////////////////////////////////
             LOG.info("%s {{g}}successfully{{/g}} booted", Graphitty.sillyPrint("metatron", true, true));

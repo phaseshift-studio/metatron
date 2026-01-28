@@ -28,6 +28,7 @@ import studio.phaseshift.metatron.isa.sys.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.sys.type.ui.graphitty.GraphittyLogger;
 
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -39,21 +40,12 @@ public abstract class MSpace<SJVM> extends MRec implements Space {
     protected GraphittyLogger LOG;
 
     public MSpace(final SJVM sjvm, final Map<Obj, Obj> jvm, final fURI pattern, final fURI tid, final fURI vid) {
-        super(new HashMap<>(jvm), tid, vid);
+        super(new LinkedHashMap<>(jvm), tid, vid);
         this.sjvm = sjvm;
         this.pattern = pattern;
         LOG = Graphitty.log(this);
     }
-
-    @Override
-    public void onPut(final fURI key, final Obj value) {
-      /*  if (key.matches(f("q"))) {
-            value.<Lst>as().elements().forEach(q -> {
-                this.qs.add(q);
-            });
-        } else*/
-    }
-
+    
     @Override
     public fURI pattern() {
         return this.pattern;

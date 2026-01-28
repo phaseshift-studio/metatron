@@ -29,6 +29,7 @@ import java.util.stream.Stream;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.Tokens.C;
 import static studio.phaseshift.metatron.furi.fURI.f;
+import static studio.phaseshift.metatron.furi.fURI.fnull;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
@@ -99,12 +100,13 @@ public interface Uri extends Mono, Ring.O<Uri> {
         return Mono.super.matches(obj);
     }
 
-   final class UriType {
+    final class UriType {
 
         public static Set<Inst> insts() {
             return new LinkedHashSet<>(List.of(
                     //instC(SPLIT_INST_TID.dom(URI_TID).rng(LST_TID), lst(T(URI_TID)), (lhs, inst) -> lst(Arrays.stream(lhs.uriValue().toString().split(inst.arg(0).uriValue().toString())).map(MUri::uri))),
-                    instC(AS_INST_TID.dom(URI_TID).rng(URI_TID), lst(T(URI_TID)), (lhs, inst) -> inst.arg(0).asType().constructor().apply(uri(lhs.uriValue(), inst.arg(0).tid(), lhs.vid()))),
+                    instC(AS_INST_TID.dom(URI_TID).rng(INT_TID), lst(T(INT_TID)), (lhs, inst) -> jnt(Integer.parseInt(lhs.uriValue().toString()), inst.arg(0).tid(), fnull)),
+                    instC(AS_INST_TID.dom(URI_TID).rng(URI_TID), lst(T(URI_TID)), (lhs, inst) -> uri(lhs.uriValue(), inst.arg(0).tid(), lhs.vid())),
                     instC(AS_INST_TID.dom(URI_TID).rng(STR_TID), lst(T(STR_TID)), (lhs, inst) -> str(lhs.uriValue().toString(), inst.arg(0).tid(), lhs.vid())),
                     instC(AS_INST_TID.dom(URI_TID).rng(REC_TID), lst(REC_TYPE), (lhs, inst) -> {
                         final fURI lhsUri = lhs.asUri().uriValue();
@@ -112,7 +114,7 @@ public interface Uri extends Mono, Ring.O<Uri> {
                                 SCHEME, lhsUri.scheme() == null ? noobj() : uri(lhsUri.scheme()),
                                 HOST, lhsUri.host() == null ? noobj() : uri(lhsUri.host()),
                                 PORT, lhsUri.port() == -1 ? noobj() : jnt(lhsUri.port()),
-                                PATH, lhsUri.path().isEmpty() ? noobj() : lst(Stream.concat(Stream.concat(lhsUri.isAbsolute() ? Stream.of(uri()) : Stream.empty(), lhsUri.segments().stream().map(MUri::uri)), lhsUri.isBranch() ? Stream.of(uri()) : Stream.empty())),
+                                PATH, lhsUri.path().isEmpty() ? noobj() : lst(Stream.concat(Stream.concat((lhsUri.isAbsolute() && !lhsUri.hasAuthority()) ? Stream.of(uri()) : Stream.empty(), lhsUri.segments().stream().map(MUri::uri)), lhsUri.isBranch() ? Stream.of(uri()) : Stream.empty())),
                                 C, rec(MIN, null == lhsUri.cV().min() ? noobj() : jnt(lhsUri.cV().min()), MAX, null == lhsUri.cV().max() ? noobj() : jnt(lhsUri.cV().max())),
                                 Q, lhsUri.queryMap().isEmpty() ? noobj() : rec(lhsUri.queryMap().entrySet().stream().map(kv -> rel(uri(kv.getKey()), uri(kv.getValue())))));
                     }),

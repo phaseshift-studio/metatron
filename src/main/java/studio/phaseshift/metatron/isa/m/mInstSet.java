@@ -32,28 +32,32 @@ import java.util.stream.Stream;
 import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.isa.m.space.memSpace.MEM_SPACE_TYPE;
-import static studio.phaseshift.metatron.isa.m.space.mtronSpace.MTRON_SPACE_TYPE;
+import static studio.phaseshift.metatron.isa.m.space.metaSpace.META_SPACE_TYPE;
 import static studio.phaseshift.metatron.isa.m.space.stackSpace.STACK_SPACE_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 
 public class mInstSet extends MInstSet {
 
-    public static final fURI MTRON_TID = f("/m");
+    public static final fURI M_ISA_TID = f("/m");
+    public static final fURI MTRON_TID = f("/mtron");
     // /m/obj
-    public static final fURI FAIL_TID = MTRON_TID.extend("fail");
-    public static final fURI BOOL_TID = MTRON_TID.extend("bool");
-    public static final fURI BYTES_TID = MTRON_TID.extend("bytes");
-    public static final fURI INT_TID = MTRON_TID.extend("int");
-    public static final fURI REAL_TID = MTRON_TID.extend("real");
-    public static final fURI STR_TID = MTRON_TID.extend("str");
-    public static final fURI URI_TID = MTRON_TID.extend("uri");
-    public static final fURI REL_TID = MTRON_TID.extend("rel");
-    public static final fURI LST_TID = MTRON_TID.extend("lst");
-    public static final fURI REC_TID = MTRON_TID.extend("rec");
-    public static final fURI INST_TID = MTRON_TID.extend("inst");
-    public static final fURI OBJS_TID = MTRON_TID.extend("objs");
-    public static final fURI TYPE_TID = MTRON_TID.extend("type");
+    public static final fURI FAIL_TID = M_ISA_TID.extend("fail");
+    public static final fURI BOOL_TID = M_ISA_TID.extend("bool");
+    public static final fURI BYTES_TID = M_ISA_TID.extend("bytes");
+    public static final fURI INT_TID = M_ISA_TID.extend("int");
+    public static final fURI REAL_TID = M_ISA_TID.extend("real");
+    public static final fURI STR_TID = M_ISA_TID.extend("str");
+    public static final fURI URI_TID = M_ISA_TID.extend("uri");
+    public static final fURI REL_TID = M_ISA_TID.extend("rel");
+    public static final fURI LST_TID = M_ISA_TID.extend("lst");
+    public static final fURI REC_TID = M_ISA_TID.extend("rec");
+    public static final fURI INST_TID = M_ISA_TID.extend("inst");
+    public static final fURI OBJS_TID = M_ISA_TID.extend("objs");
+    public static final fURI TYPE_TID = M_ISA_TID.extend("type");
+    public static final fURI CODE_TID = M_ISA_TID.extend("code");
+    public static final fURI NOOBJ_TID = fURI.of("noobj");
+    public static final fURI ALL_STAR = ALL.maybeSome();
     /// ////////////////////////////////////////////////////////
     public static final fURI ID_INST_TID = INST_TID.extend("id");
     public static final fURI EXPLAIN_INST_TID = INST_TID.extend("explain");
@@ -130,23 +134,20 @@ public class mInstSet extends MInstSet {
     public static final fURI PRINT_INST_TID = INST_TID.extend("print");
     public static final fURI LSHIFT_INST_TID = INST_TID.extend("lshift");
     public static final fURI RSHIFT_INST_TID = INST_TID.extend("rshift");
-    public static final fURI CODE_TID = MTRON_TID.extend("code");
-    public static final fURI NOOBJ_TID = fURI.of("noobj");
-    public static final fURI ALL_STAR = ALL.maybeSome();
-    public static final fURI MATH_INST_TID = MTRON_TID.extend("math");
+    public static final fURI MATH_INST_TID = INST_TID.extend("math");
     /*public static final fURI URI_SCHEME_TID = MTRON_TID.extend("uri:scheme");
     public static final fURI URI_PORT_TID = MTRON_TID.extend("uri:port");
     public static final fURI URI_HOST_TID = MTRON_TID.extend("uri:host");*/
-    public static final fURI PATH_TID = MTRON_TID.extend("path");
+    public static final fURI PATH_TID = M_ISA_TID.extend("path");
     public static final fURI Q_INST_TID = INST_TID.extend("q");
-    public static final fURI URI_C_TID = MTRON_TID.extend("uri:c");
-    public static final fURI STR_SPLIT_TID = MTRON_TID.extend("str:split");
-    public static final fURI STR_LOWER_TID = MTRON_TID.extend("str:lower");
-    public static final fURI STR_UPPER_TID = MTRON_TID.extend("str:upper");
-    public static final fURI STR_CONTAINS_TID = MTRON_TID.extend("str:contains");
-    public static final fURI SCHEME_INST_TID = MTRON_TID.extend("scheme");
-    public static final fURI HOST_INST_TID = MTRON_TID.extend("host");
-    public static final fURI PORT_INST_TID = MTRON_TID.extend("port");
+    public static final fURI URI_C_TID = M_ISA_TID.extend("uri:c");
+    public static final fURI STR_SPLIT_TID = M_ISA_TID.extend("str:split");
+    public static final fURI STR_LOWER_TID = M_ISA_TID.extend("str:lower");
+    public static final fURI STR_UPPER_TID = M_ISA_TID.extend("str:upper");
+    public static final fURI STR_CONTAINS_TID = M_ISA_TID.extend("str:contains");
+    public static final fURI SCHEME_INST_TID = M_ISA_TID.extend("scheme");
+    public static final fURI HOST_INST_TID = M_ISA_TID.extend("host");
+    public static final fURI PORT_INST_TID = M_ISA_TID.extend("port");
     public static final Set<fURI> BASE_TYPES = Set.of(
             FAIL_TID, BOOL_TID, BYTES_TID, INT_TID, REAL_TID,
             STR_TID, URI_TID, REL_TID,
@@ -154,13 +155,13 @@ public class mInstSet extends MInstSet {
             CODE_TID, OBJS_TID, NOOBJ_TID);
     /// ////////////
     /// ////////////
-    public static final fURI POLY_TID = MTRON_TID.extend("poly");
-    public static final fURI MONO_TID = MTRON_TID.extend("mono");
+    public static final fURI POLY_TID = M_ISA_TID.extend("poly");
+    public static final fURI MONO_TID = M_ISA_TID.extend("mono");
 
     /// ////////////
     /// ////////////
     public mInstSet(final fURI vid) {
-        super(MTRON_TID, vid);
+        super(M_ISA_TID, vid);
     }
 
     public static mInstSet create() {
@@ -174,23 +175,24 @@ public class mInstSet extends MInstSet {
     @Override
     public Set<Type> types() {
         return new LinkedHashSet<>(List.of(
+                T(NOOBJ_TID),
+                T(FAIL_TID),
                 T(BOOL_TID),
-                T(BYTES_TID),
                 T(INT_TID),
                 T(REAL_TID),
+                T(BYTES_TID),
                 T(STR_TID),
                 T(URI_TID),
-                T(LST_TID),
                 T(REL_TID),
+                T(LST_TID),
                 T(REC_TID),
                 T(INST_TID),
+                T(CODE_TID),
                 T(OBJS_TID),
-                T(FAIL_TID),
-                T(NOOBJ_TID),
                 /// ///////////////////////////////////
                 MEM_SPACE_TYPE,
                 STACK_SPACE_TYPE,
-                MTRON_SPACE_TYPE));
+                META_SPACE_TYPE));
     }
 
     @Override

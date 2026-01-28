@@ -24,7 +24,7 @@ import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.m.type.impl.MInstSet;
-import studio.phaseshift.metatron.isa.web.space.http.webSpace;
+import studio.phaseshift.metatron.isa.web.space.http.httpSpace;
 import studio.phaseshift.metatron.isa.web.parser.HTMLTranslator;
 import studio.phaseshift.metatron.isa.web.parser.JSONTranslator;
 import studio.phaseshift.metatron.isa.web.parser.XMLTranslator;
@@ -33,9 +33,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static studio.phaseshift.metatron.furi.fURI.f;
-import static studio.phaseshift.metatron.isa.m.mInstSet.AS_INST_TID;
-import static studio.phaseshift.metatron.isa.m.mInstSet.STR_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
@@ -48,14 +46,14 @@ import static studio.phaseshift.metatron.isa.web.parser.XMLTranslator.XML_TID;
  */
 public class webInstSet extends MInstSet {
 
-    public static final fURI WEB_INSTSET_TID = f("/web");
-    public static final fURI INST_TID = WEB_INSTSET_TID.extend("inst");
-    public static final fURI HTML_TID = WEB_INSTSET_TID.extend("html");
-    public static final fURI JSON_TID = WEB_INSTSET_TID.extend("json");
-    public static final fURI CSS_TID = WEB_INSTSET_TID.extend("css");
+    public static final fURI WEB_ISA_TID = MTRON_TID.extend("web");
+    public static final fURI INST_TID = WEB_ISA_TID.extend("inst");
+    public static final fURI HTML_TID = WEB_ISA_TID.extend("html");
+    public static final fURI JSON_TID = WEB_ISA_TID.extend("json");
+    public static final fURI CSS_TID = WEB_ISA_TID.extend("css");
 
     public webInstSet(final fURI vid) {
-        super(WEB_INSTSET_TID, vid);
+        super(WEB_ISA_TID, vid);
     }
 
     public static webInstSet create() {
@@ -65,7 +63,7 @@ public class webInstSet extends MInstSet {
     @Override
     public Set<Type> types() {
         return Stream.of(
-                webSpace.WEB_TYPE,
+                httpSpace.HTTP_SPACE_TYPE,
                 T(XML_TID),
                 T(HTML_TID, mParser.parse("?[html=>?[head=>_,body=>_]]")),
                 T(JSON_TID),

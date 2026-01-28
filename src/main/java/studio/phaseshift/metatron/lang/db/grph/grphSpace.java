@@ -37,6 +37,7 @@ import java.util.Map;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.furi.fURI.f;
+import static studio.phaseshift.metatron.isa.m.mInstSet.MTRON_TID;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
 import static studio.phaseshift.metatron.isa.m.mInstSet.URI_TID;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
@@ -59,7 +60,7 @@ public class grphSpace extends MSpace<Space> {
      * /root/v/{id}/vp/{key}           => vertex property by key
      * /root/v/{id}/vp/{key}/{key2}    => vertex property property by key
      */
-    public static final fURI GRPH_TID = f("/grph/space/grph");
+    public static final fURI GRPH_TID = MTRON_TID.extend("grph");
     public static final Type GRPH_TYPE = T(GRPH_TID, null, instC(mInstSet.INST_TID.dom(ALL.maybe()).rng(GRPH_TID),
             lst(isa_(rec(
                     uri(PATTERN), T(URI_TID),

@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.isa.m.space;
 
+import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.Q;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.io.serial.ObjByteBufferSerializer;
@@ -48,38 +49,45 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
-import static studio.phaseshift.metatron.Tokens.PATTERN;
-import static studio.phaseshift.metatron.Tokens.PERSIST;
 import static studio.phaseshift.metatron.furi.fURI.ALL;
-import static studio.phaseshift.metatron.furi.fURI.f;
-import static studio.phaseshift.metatron.isa.m.mInstSet.URI_TID;
+import static studio.phaseshift.metatron.furi.fURI.fnull;
+import static studio.phaseshift.metatron.isa.m.mInstSet.M_ISA_TID;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
+import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.isa.sys.sysInstSet.FILE_TID;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 
 public class memSpace extends MSpace<Map<fURI, Obj>> {
 
-    public static final fURI MEM_SPACE_TID = f("/m/space/mem");
-    public static final Type MEM_SPACE_TYPE = T(MEM_SPACE_TID, null, instC(mInstSet.INST_TID.dom(ALL.maybe()).rng(MEM_SPACE_TID), lst(isa_(
-            rec(uri(PATTERN), T(URI_TID))).tryToInst()), (lhs, inst) -> {
-        final Space space = new memSpace(inst.arg(0).<Rec>as().jvm(), inst.arg(0).vid());
-        Router.global().addSpace(space);
-        return space;
-    }));
+    public static final fURI MEM_SPACE_TID = M_ISA_TID.extend("space/mem");
 
+    protected static final Rec CONFIG = rec(
+            uri(Tokens.PATTERN), URI_TYPE,
+            uri(Tokens.PERSIST).maybe(), T(FILE_TID));
+
+    public static final Type MEM_SPACE_TYPE = T(MEM_SPACE_TID,
+           null, // predicate
+            instC(mInstSet.INST_TID.dom(ALL.maybe()).rng(MEM_SPACE_TID), //constructure
+                    lst(isa_(CONFIG).tryToInst()),
+                    (lhs, inst) -> {
+                        final Space space = memSpace.of(inst.arg(0).asRec(), fnull);
+                        Router.global().addSpace(space);
+                        return space;
+                    }));
 
     public memSpace(final Map<Obj, Obj> config, final fURI vid) {
-        super(new ConcurrentHashMap<>(), config, config.get(uri(PATTERN)).uriValue(), MEM_SPACE_TID, vid);
+        super(new ConcurrentHashMap<>(), config, config.get(uri(Tokens.PATTERN)).uriValue(), MEM_SPACE_TID, vid);
         load();
     }
 
 
     public static memSpace of(final fURI pattern, final fURI vid) {
-        return new memSpace(mutableMap(uri(PATTERN), uri(pattern)), vid);
+        return new memSpace(mutableMap(uri(Tokens.PATTERN), uri(pattern)), vid);
     }
 
     public static memSpace of(final Rec config, final fURI vid) {
@@ -153,7 +161,7 @@ public class memSpace extends MSpace<Map<fURI, Obj>> {
     }
 
     protected void load() {
-        final Uri path = (Uri) this.jvm().getOrDefault(uri(PERSIST), null);
+        final Uri path = (Uri) this.jvm().getOrDefault(uri(Tokens.PERSIST), null);
         if (null == path)
             return;
         final ObjByteBufferSerializer serializer = new ObjByteBufferSerializer();
@@ -174,7 +182,7 @@ public class memSpace extends MSpace<Map<fURI, Obj>> {
     }
 
     protected void save() {
-        final Uri path = (Uri) this.jvm().getOrDefault(uri(PERSIST), null);
+        final Uri path = (Uri) this.jvm().getOrDefault(uri(Tokens.PERSIST), null);
         if (null == path)
             return;
         final ObjByteBufferSerializer serializer = new ObjByteBufferSerializer();

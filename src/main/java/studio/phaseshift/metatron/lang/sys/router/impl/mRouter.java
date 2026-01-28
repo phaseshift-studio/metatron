@@ -21,20 +21,19 @@ package studio.phaseshift.metatron.lang.sys.router.impl;
 import studio.phaseshift.metatron.Registry;
 import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.io.serial.Serializers;
 import studio.phaseshift.metatron.isa.MSpace;
 import studio.phaseshift.metatron.isa.Space;
+import studio.phaseshift.metatron.isa.m.space.noobjSpace;
+import studio.phaseshift.metatron.isa.m.space.stackSpace;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Uri;
-import studio.phaseshift.metatron.isa.m.space.stackSpace;
+import studio.phaseshift.metatron.isa.sys.type.ui.graphitty.Graphitty;
+import studio.phaseshift.metatron.isa.sys.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.lang.jre.ObjFieldReflection;
 import studio.phaseshift.metatron.lang.jre.ObjReflection;
 import studio.phaseshift.metatron.lang.sys.router.Router;
-import studio.phaseshift.metatron.isa.sys.sysInstSet;
-import studio.phaseshift.metatron.isa.m.space.noobjSpace;
-import studio.phaseshift.metatron.io.serial.Serializers;
-import studio.phaseshift.metatron.isa.sys.type.ui.graphitty.Graphitty;
-import studio.phaseshift.metatron.isa.sys.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.*;
@@ -44,13 +43,13 @@ import static studio.phaseshift.metatron.BootLoader.BOOTING;
 import static studio.phaseshift.metatron.Tokens.PATTERN;
 import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.furi.fURI.f;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.from_;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.start_;
-import static studio.phaseshift.metatron.isa.m.mInstSet.MTRON_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.M_ISA_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
+import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.isa.sys.sysInstSet.SYS_ISA_TID;
 
 @ObjReflection
 public class mRouter extends MSpace<MServer> implements Router {
@@ -58,7 +57,7 @@ public class mRouter extends MSpace<MServer> implements Router {
     public static final Serializers SERIALIZERS = new Serializers();
 
     public static final Uri PRIMARY = uri("primary");
-    public static final fURI ROUTER_TID = sysInstSet.SYS_TYPE_TID.extend("router");
+    public static final fURI ROUTER_TID = SYS_ISA_TID.extend("router");
     private static final Set<fURI> READ_AS_NOOBJ = Set.of(fURI.ALL.maybeSome(), fURI.ALL.maybe(), fURI.ALL);
     private final GraphittyLogger LOG = Graphitty.log(this);
     @ObjFieldReflection(tid = "/m/str")
@@ -69,12 +68,12 @@ public class mRouter extends MSpace<MServer> implements Router {
     private final Map<fURI, Set<fURI>> smallToBigRewrites = new HashMap<>();
     @ObjFieldReflection
     private final Map<fURI, fURI> bigToSmallRewrites = new HashMap<>();
-    private fURI primary = MTRON_TID;
+    private fURI primary = M_ISA_TID;
 
     public mRouter(final fURI host, final fURI vid) {
         super(new MServer(host), new ConcurrentHashMap<>(Map.of(
                         uri(PATTERN), uri(ALL),
-                        PRIMARY, uri(MTRON_TID),
+                        PRIMARY, uri(M_ISA_TID),
                         uri(Tokens.SPACE), rec(new ConcurrentHashMap<>(Map.of(uri("+/#"), new stackSpace(f("+/#"))))))), f("#"),
                 ROUTER_TID,
                 vid);
@@ -129,6 +128,8 @@ public class mRouter extends MSpace<MServer> implements Router {
 
     @Override
     public fURI rewrite(final fURI furi, final boolean big) {
+        if (furi.isGeneric())
+            return furi;
         fURI temp;
         if (big) {
             final Set<fURI> set = this.smallToBigRewrites.getOrDefault(furi.basePath(), Set.of(furi));
@@ -204,9 +205,11 @@ public class mRouter extends MSpace<MServer> implements Router {
     public Obj read(final fURI vid) {
         if (vid.isZero() || READ_AS_NOOBJ.contains(vid))
             return noobj();
-       // if (vid.hasAuthority())
-         //   return this.server().sendRecv((a, b) -> a.authority().matches(b.remoteHost().authority()), vid, from_(vid.localize().toUri()).tryToInst());
+        // if (vid.hasAuthority())
+        //   return this.server().sendRecv((a, b) -> a.authority().matches(b.remoteHost().authority()), vid, from_(vid.localize().toUri()).tryToInst());
         /// ///////////////////
+        if (vid.isGeneric())
+            return T(vid);
         final fURI local = vid;
         if (local.matches(f("+/#"))) {
             final Obj stack = Router.stack().read(local.basePath());

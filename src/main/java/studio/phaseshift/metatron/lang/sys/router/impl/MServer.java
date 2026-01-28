@@ -80,7 +80,6 @@ public class MServer extends WebSocketServer implements Cluster, Closeable, Obj 
 
     @Override
     public void start() {
-        LOG = Router.global().logger();
         try {
             this.running.set(true);
             super.start();
@@ -172,7 +171,7 @@ public class MServer extends WebSocketServer implements Cluster, Closeable, Obj 
 
     @Override
     public void onError(final WebSocket conn, final Exception ex) {
-        LOG.error("an error occurred on connection %s: %s", null == conn ? "<not connected>" : conn.getAttachment(), ex);
+        LOG.error("an error occurred on connection %s: %s", null == conn ? "<none>" : conn.getAttachment(), ex);
         if (null == conn || ex instanceof BindException)
             this.running.set(false);
     }

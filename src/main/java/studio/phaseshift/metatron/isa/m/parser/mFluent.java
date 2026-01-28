@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -19,8 +19,8 @@
 package studio.phaseshift.metatron.isa.m.parser;
 
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.m.mInstSet;
 import studio.phaseshift.metatron.isa.Fluent;
+import studio.phaseshift.metatron.isa.m.mInstSet;
 import studio.phaseshift.metatron.isa.m.type.Code;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
@@ -32,7 +32,6 @@ import java.util.List;
 
 import static studio.phaseshift.metatron.isa.m.mInstSet.ID_INST_TID;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instB;
-import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 
 public class mFluent<F extends Fluent<F>> extends MCode implements Fluent<F>, Code {
@@ -101,6 +100,22 @@ public class mFluent<F extends Fluent<F>> extends MCode implements Fluent<F>, Co
 
     public F is_(final Obj obj) {
         return this.addInst(instB(mInstSet.IS_INST_TID, lst(obj)));
+    }
+
+    public F lte_(final Obj obj) {
+        return this.addInst(instB(mInstSet.LTE_INST_TID, lst(obj)));
+    }
+
+    public F lt_(final Obj obj) {
+        return this.addInst(instB(mInstSet.LT_INST_TID, lst(obj)));
+    }
+
+    public F gte_(final Obj obj) {
+        return this.addInst(instB(mInstSet.GTE_INST_TID, lst(obj)));
+    }
+
+    public F gt_(final Obj obj) {
+        return this.addInst(instB(mInstSet.GT_INST_TID, lst(obj)));
     }
 
     public F in_(final Obj obj) {
@@ -231,6 +246,22 @@ public class mFluent<F extends Fluent<F>> extends MCode implements Fluent<F>, Co
             return new mFluent<F>().is_(obj);
         }
 
+        public static <F extends mFluent<F>> F lte_(final Obj obj) {
+            return new mFluent<F>().lte_(obj);
+        }
+
+        public static <F extends mFluent<F>> F lt_(final Obj obj) {
+            return new mFluent<F>().lt_(obj);
+        }
+
+        public static <F extends mFluent<F>> F gte_(final Obj obj) {
+            return new mFluent<F>().gte_(obj);
+        }
+
+        public static <F extends mFluent<F>> F gt_(final Obj obj) {
+            return new mFluent<F>().gt_(obj);
+        }
+
         public static <F extends mFluent<F>> F where_(final Obj obj) {
             return new mFluent<F>().where_(obj);
         }
@@ -254,6 +285,7 @@ public class mFluent<F extends Fluent<F>> extends MCode implements Fluent<F>, Co
         public static <F extends mFluent<F>> F or_(final Obj... obj) {
             return new mFluent<F>().or_(obj);
         }
+
         public static <F extends mFluent<F>> F and_(final Obj... obj) {
             return new mFluent<F>().and_(obj);
         }
