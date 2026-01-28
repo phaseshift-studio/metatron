@@ -22,6 +22,7 @@ print("{{r}}------------\n{{g}}*{{y}}boot/args{{X}}: ",
 /sys/mod/llm   -> */llm;
 /sys/mod/ui    -> */ui;
 /sys/mod/tabl  -> */tabl;
+boot/args/mqtt -> [broker => <mqtt://chibi.local:1883>];
 [-- mount spaces --];
      boot/peers    -> [ws://localhost:6666,<ws://127.0.0.1:7777>];
      mem::[pattern => /usr/#]@/sys/space/usr;
@@ -41,16 +42,16 @@ print("{{r}}------------\n{{g}}*{{y}}boot/args{{X}}: ",
           store   => kv::[pattern => /g/#],
           load    => modern]@/sys/space/tp3;
    mqtt::[pattern => <wall:#>,
-          host    => <mqtt://chibi.local:1883>,
+          host    => !*boot/args/mqtt/broker,
           rewrite => <wall:>=><walltron/>]@/sys/space/walltron;
    mqtt::[pattern => <play:#>,
-          host    => <mqtt://chibi.local:1883>,
-          rewrite => <wall:>=><playtron/>]@/sys/space/playtron;
+          host    => !*boot/args/mqtt/broker,
+          rewrite => <play:>=><playtron/>]@/sys/space/playtron;
    mqtt::[pattern => <ha:#>,
-          host    => <mqtt://chibi.local:1883>,
+          host    => !*boot/args/mqtt/broker,
           rewrite => <ha:>=><homeassistant/>]@/sys/space/homeassistant;
    mqtt::[pattern => <z2m:#>,
-          host    => <mqtt://chibi.local:1883>,
+          host    => !*boot/args/mqtt/broker,
           rewrite => <z2m:>=><zigbee2mqtt/>]@/sys/space/zigbee2mqtt;
    [==  bt::[pattern => <bt:#>
           rewrite => <bt:>=><>]@/sys/space/bt; ==]

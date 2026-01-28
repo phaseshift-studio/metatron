@@ -23,19 +23,18 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-import studio.phaseshift.metatron.mTest;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.lang.db.grph.grphSpace;
 import studio.phaseshift.metatron.lang.db.grph.inst.grphInstSet;
-import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.lang.sys.router.Router;
-
-import java.util.Map;
+import studio.phaseshift.metatron.mTest;
 
 import static studio.phaseshift.metatron.Tokens.PATTERN;
 import static studio.phaseshift.metatron.Tokens.SPACE;
 import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /*
@@ -47,10 +46,10 @@ public class RGraphTest extends mTest {
     public static void begin() {
         mTest.begin();
         grphInstSet.create().vid(f("/sys/lang/grph"));
-        grphSpace space = new grphSpace(memSpace.of(f("/g/#"), fURI.fnull), Map.of(
+        grphSpace space = grphSpace.of(rec(
                 uri(SPACE), memSpace.of(f("/g/#"), fURI.fnull),
                 uri(PATTERN), uri("/g/#"),
-                uri("load"), uri("tinkerpop-modern")), f("/g/#"), f("/sys/space/grph"));
+                uri("load"), uri("tinkerpop-modern")), f("/sys/space/grph"));
         Router.global().addSpace(space);
         Router.global().put(uri("primary"), uri("/grph"));
         Router.global().write("g", auto(f("/g")));

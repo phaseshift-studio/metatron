@@ -100,7 +100,7 @@ public class tableSpace extends MSpace<Connection> {
 
 
     public tableSpace(final Connection sjvm, final Map<Obj, Obj> config, final fURI tid, final fURI vid) {
-        super(sjvm, config, config.get(uri(PATTERN)).uriValue(), tid, vid);
+        super(sjvm, config, tid, vid);
         this.prefix = config.getOrDefault(uri(PREFIX), uri("")).uriValue();
     }
 

@@ -22,14 +22,14 @@ import org.apache.tinkerpop.gremlin.tinkergraph.structure.TinkerFactory;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.MSpace;
 import studio.phaseshift.metatron.isa.Space;
+import studio.phaseshift.metatron.isa.grph.parser.TP3Translator;
 import studio.phaseshift.metatron.isa.m.mInstSet;
+import studio.phaseshift.metatron.isa.m.space.memSpace;
+import studio.phaseshift.metatron.isa.m.space.noobjSpace;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Type;
-import studio.phaseshift.metatron.isa.grph.parser.TP3Translator;
-import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.lang.sys.router.Router;
-import studio.phaseshift.metatron.isa.m.space.noobjSpace;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.Map;
@@ -38,13 +38,13 @@ import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.MTRON_TID;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
 import static studio.phaseshift.metatron.isa.m.mInstSet.URI_TID;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
+import static studio.phaseshift.metatron.isa.m.space.memSpace.MEM_SPACE_TID;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.m.space.memSpace.MEM_SPACE_TID;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -61,24 +61,27 @@ public class grphSpace extends MSpace<Space> {
      * /root/v/{id}/vp/{key}/{key2}    => vertex property property by key
      */
     public static final fURI GRPH_TID = MTRON_TID.extend("grph");
+    public static final Rec CONFIG = rec(
+            uri(PATTERN), T(URI_TID),
+            uri(STORE).maybe(), T(MEM_SPACE_TID),
+            uri(LOAD), T(URI_TID));
     public static final Type GRPH_TYPE = T(GRPH_TID, null, instC(mInstSet.INST_TID.dom(ALL.maybe()).rng(GRPH_TID),
-            lst(isa_(rec(
-                    uri(PATTERN), T(URI_TID),
-                    uri(STORE).maybe(), T(MEM_SPACE_TID),
-                    uri(LOAD), T(URI_TID)))
-                    .tryToInst()), (lhs, inst) -> {
-                final fURI pattern = inst.arg(0).orElse(rec()).<Rec>as().at(PATTERN).uriValue();
-                final fURI dataset = inst.arg(0).orElse(rec()).<Rec>as().at(LOAD).uriValue();
-                final Obj inner = inst.arg(0).orElse(rec()).<Rec>as().at(STORE);
-                final grphSpace space = new grphSpace(inner.isNoObj() ? noobjSpace.single() :
-                         memSpace.of(inner.<Rec>as().at(PATTERN).uriValue(), fURI.fnull), Map.of(uri(PATTERN), uri(pattern), uri(LOAD), uri(dataset)), pattern, inst.arg(0).vid());
+            lst(isa_(CONFIG).tryToInst()), (lhs, inst) -> {
+                final grphSpace space = grphSpace.of(inst.arg(0).asRec(), inst.arg(0).vid());
                 Router.global().addSpace(space);
                 space.start();
                 return space;
             }));
 
-    public grphSpace(final Space inner, final Map<Obj, Obj> config, final fURI pattern, final fURI vid) {
-        super(inner, config, pattern, GRPH_TID, vid);
+
+    public static grphSpace of(final Rec config, final fURI vid) {
+        final Space inner = config.at(STORE).isNoObj() ? noobjSpace.single() :
+                memSpace.of(config.at(STORE).<Rec>as().at(PATTERN).uriValue(), fURI.fnull);
+        return new grphSpace(inner, config.jvm(), vid);
+    }
+
+    protected grphSpace(final Space inner, final Map<Obj, Obj> config, final fURI vid) {
+        super(inner, config, GRPH_TID, vid);
     }
 
     public void start() {

@@ -102,7 +102,7 @@ public class mGraph implements Graph, WrappedGraph<grphSpace> {
         final fURI pattern = f(configuration.getProperty(PATTERN).toString());
         final Obj s = Router.global().read(spacevid);
         if (s.isNoObj()) {
-            this.space = new grphSpace(memSpace.of(pattern, fURI.fnull), configurationToMap(configuration), pattern, spacevid);
+            this.space =  grphSpace.of(rec(configurationToMap(configuration)), spacevid);
         } else if (s instanceof grphSpace) {
             this.space = (grphSpace) s;
         } else {

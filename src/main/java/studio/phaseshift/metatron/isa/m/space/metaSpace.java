@@ -79,7 +79,7 @@ public class metaSpace extends MSpace<MServer> {
 
 
     protected metaSpace(final MServer sjvm, final Map<Obj, Obj> jvm, final fURI vid) {
-        super(sjvm, jvm, jvm.get(uri(PATTERN)).uriValue(), META_SPACE_TID, vid);
+        super(sjvm, jvm, META_SPACE_TID, vid);
         this.host = jvm.get(uri(HOST)).uriValue();
         this.cache = (Space) jvm.get(uri(CACHE));
         Rec c = rec(jvm);

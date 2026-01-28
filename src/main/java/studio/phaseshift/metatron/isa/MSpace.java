@@ -31,6 +31,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import static studio.phaseshift.metatron.Tokens.PATTERN;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 public abstract class MSpace<SJVM> extends MRec implements Space {
@@ -39,10 +40,10 @@ public abstract class MSpace<SJVM> extends MRec implements Space {
     protected SJVM sjvm;
     protected GraphittyLogger LOG;
 
-    public MSpace(final SJVM sjvm, final Map<Obj, Obj> jvm, final fURI pattern, final fURI tid, final fURI vid) {
-        super(new LinkedHashMap<>(jvm), tid, vid);
+    public MSpace(final SJVM sjvm, final Map<Obj,Obj> config, final fURI tid, final fURI vid) {
+        super(config, tid, vid);
         this.sjvm = sjvm;
-        this.pattern = pattern;
+        this.pattern = this.at(PATTERN).uriValue();
         LOG = Graphitty.log(this);
     }
     

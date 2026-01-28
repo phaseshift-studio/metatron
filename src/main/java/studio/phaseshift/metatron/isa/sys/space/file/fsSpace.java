@@ -61,7 +61,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.sys.sysInstSet.*;
 
-public class fileSpace extends MSpace<FileSystem> {
+public class fsSpace extends MSpace<FileSystem> {
 
     public static final fURI FS_TID = SYS_ISA_TID.extend("space/fs");
     private static final Rec FS_REC = rec(
@@ -76,7 +76,7 @@ public class fileSpace extends MSpace<FileSystem> {
                     uri("mtron"), uri("/bin/mtron")))*/);
     public static final Type FS_TYPE = T(FS_TID, isa_(rec()), instC(INST_TID.dom(ALL.maybe()).rng(FS_TID), lst(isa_(rec(uri(Tokens.PATTERN), T(URI_TID))).tryToInst()), (lhs, inst) -> {
         final fURI pattern = inst.arg(0).<Rec>as().at(Tokens.PATTERN).uriValue();
-        final Space space = fileSpace.of(FileSystems.getDefault(), inst.arg(0).<Rec>as().jvm(), pattern, inst.arg(0).vid());
+        final Space space = fsSpace.of(FileSystems.getDefault(), inst.arg(0).asRec(), inst.arg(0).vid());
         Router.global().addSpace(space);
         return space;
     }));
@@ -84,12 +84,12 @@ public class fileSpace extends MSpace<FileSystem> {
 
     private final Tuple.Pair<String, String> rewrite;
 
-    public static fileSpace of(final FileSystem sjvm, final Map<Obj, Obj> jvm, final fURI pattern, final fURI vid) {
-        return new fileSpace(sjvm, jvm, pattern, vid);
+    public static fsSpace of(final FileSystem sjvm, final Rec config, final fURI vid) {
+        return new fsSpace(sjvm, config.jvm(), vid);
     }
 
-    private fileSpace(final FileSystem sjvm, final Map<Obj, Obj> jvm, final fURI pattern, final fURI vid) {
-        super(sjvm, jvm, pattern, FS_TID, vid);
+    private fsSpace(final FileSystem sjvm, final Map<Obj, Obj> jvm, final fURI vid) {
+        super(sjvm, jvm, FS_TID, vid);
         final Rel rewrite = jvm.getOrDefault(uri(Tokens.REWRITE), rel(uri(""), uri(""))).asRel();
         final String prefix = rewrite.first().uriValue().toString().replace("~", System.getProperty(USER_HOME));
         final String prepend = rewrite.second().uriValue().toString().replace("~", System.getProperty(USER_HOME));
@@ -125,7 +125,7 @@ public class fileSpace extends MSpace<FileSystem> {
 
     public static File resolveFile(final Obj fileObj) {
         try {
-            final fileSpace space = Router.global().getSpace(fileObj.uriValue().basePath()).as();
+            final fsSpace space = Router.global().getSpace(fileObj.uriValue().basePath()).as();
             return Paths.get(Space.Helper.toNativeSpace(fileObj.uriValue().basePath(), space.rewrite)).toFile();
         } catch (final Exception e) {
             throw MTronException.of(e);
@@ -135,7 +135,7 @@ public class fileSpace extends MSpace<FileSystem> {
     public Obj resolveObj(final Uri path) {
         try {
             final File file = Paths.get(path.uriValue().toString()).toFile();
-            final fileSpace space = Router.global().getSpace(Space.Helper.fromNativeSpace(file.getPath(), this.rewrite)).as();
+            final fsSpace space = Router.global().getSpace(Space.Helper.fromNativeSpace(file.getPath(), this.rewrite)).as();
             return uri(Space.Helper.fromNativeSpace(file.getPath(), space.rewrite), FILE_TID, null);
         } catch (final Exception e) {
             throw MTronException.of(e);
@@ -163,7 +163,7 @@ public class fileSpace extends MSpace<FileSystem> {
                     try (final Stream<Path> walk = Files.walk(Path.of(Space.Helper.toNativeSpace(key.retractPattern(), this.rewrite)), vid.hasPattern() ? Integer.MAX_VALUE : vid.segments().size() + 1, FileVisitOption.FOLLOW_LINKS)) {
                         return walk
                                 .filter(p -> Space.Helper.fromNativeSpace(p.toString(), this.rewrite).matches(key))
-                                .map(fileSpace::makeFile)
+                                .map(fsSpace::makeFile)
                                 .map(this::resolveObj)
                                 .collect(Collectors.toMap(p -> p, p -> p, Obj::append, LinkedHashMap::new))
                                 .entrySet()
@@ -178,7 +178,7 @@ public class fileSpace extends MSpace<FileSystem> {
                     try {
                         final Path vidPath = Path.of(Space.Helper.toNativeSpace(key.name().equals("apply") ? key.retract() : key, this.rewrite));
                         if (Files.isDirectory(vidPath)) {
-                            return Files.list(vidPath).map(fileSpace::makeFile).map(p -> Pair.<fURI, Obj>with(p.uriValue(), resolveObj(p))).iterator();
+                            return Files.list(vidPath).map(fsSpace::makeFile).map(p -> Pair.<fURI, Obj>with(p.uriValue(), resolveObj(p))).iterator();
                         } else {
                             return IteratorUtil.of(Pair.with(Space.Helper.fromNativeSpace(vidPath.toString(), this.rewrite), key.name().equals("apply") ?
                                     instC(key.retract().dom(ALL.maybe()).rng(ALL_STAR), lst(T(ALL_STAR)), (lhs, inst) -> {

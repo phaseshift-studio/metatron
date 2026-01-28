@@ -41,6 +41,7 @@ import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.furi.q.PubSubQ.SUBSCRIPTION_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
@@ -53,7 +54,7 @@ public class mqttSpaceTest extends SpaceTest {
     public mqttSpaceTest() {
         super(() -> {
             try {
-                final mqttSpace space = mqttSpace.of(Map.of(
+                final mqttSpace space = mqttSpace.of(rec(
                         uri(HOST), uri("mqtt://127.0.0.1:1882"),
                         uri(PATTERN), uri("/t/#"),
                         uri(REWRITE), rel(uri("/t"), uri("/t"))), fURI.of("/sys/router/space/t"));

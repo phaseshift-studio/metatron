@@ -23,7 +23,7 @@ import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.m.type.impl.MInstSet;
-import studio.phaseshift.metatron.isa.sys.space.file.fileSpace;
+import studio.phaseshift.metatron.isa.sys.space.file.fsSpace;
 import studio.phaseshift.metatron.isa.sys.type.console.Console;
 import studio.phaseshift.metatron.isa.sys.type.console.Editor;
 import studio.phaseshift.metatron.util.CommonUtil;
@@ -60,7 +60,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
-import static studio.phaseshift.metatron.isa.sys.space.file.fileSpace.FS_TYPE;
+import static studio.phaseshift.metatron.isa.sys.space.file.fsSpace.FS_TYPE;
 import static studio.phaseshift.metatron.isa.sys.type.console.Console.CONSOLE_TYPE;
 
 /*
@@ -101,7 +101,7 @@ public class sysInstSet extends MInstSet {
                 FS_TYPE));
         final Type FILE_TYPE = T(FILE_TID, isa_(URI_TYPE),
                 instC(INST_TID.dom(ALL.maybe()).rng(FILE_TID), lst(T(URI_TID)),
-                        (lhs, inst) -> fileSpace.makeFile(Path.of(inst.arg(0).uriValue().toString()))));
+                        (lhs, inst) -> fsSpace.makeFile(Path.of(inst.arg(0).uriValue().toString()))));
         final Type IMAGE_FILE_TYPE = T(IMAGE_TID, isa_(FILE_TYPE));
         types.add(FILE_TYPE);
         types.add(IMAGE_FILE_TYPE);
@@ -147,13 +147,13 @@ public class sysInstSet extends MInstSet {
                     return noobj();
                 }), "an str to page", "noobj terminal", Map.of(jnt(0), "number of lines per page"), "an f(x)->0 terminal page through the lines of an str"),
                 /// /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-                instC(AS_INST_TID.dom(URI_TID).rng(FILE_TID), lst(T(FILE_TID)), (lhs, inst) -> fileSpace.makeFile(Path.of(lhs.uriValue().toString()))),
+                instC(AS_INST_TID.dom(URI_TID).rng(FILE_TID), lst(T(FILE_TID)), (lhs, inst) -> fsSpace.makeFile(Path.of(lhs.uriValue().toString()))),
                 instC(AS_INST_TID.dom(BYTES_TID).rng(IMAGE_TID), lst(T(IMAGE_TID), else_(real(1.0d))),
                         (lhs, inst) -> str(ImageUtil.convertToAscii(lhs.bytesValue(), inst.arg(1).realValue())).tid(IMAGE_TID)),
-                instC(AS_INST_TID.dom(URI_TID).rng(FILE_TID), lst(T(FILE_TID)), (lhs, inst) -> fileSpace.makeFile(Path.of(lhs.uriValue().toString())).vid(lhs.vid())),
+                instC(AS_INST_TID.dom(URI_TID).rng(FILE_TID), lst(T(FILE_TID)), (lhs, inst) -> fsSpace.makeFile(Path.of(lhs.uriValue().toString())).vid(lhs.vid())),
                 instC(AS_INST_TID.dom(FILE_TID).rng(BYTES_TID), lst(T(BYTES_TID)), (lhs, inst) -> {
                     try {
-                        final File file = fileSpace.resolveFile(lhs);
+                        final File file = fsSpace.resolveFile(lhs);
                         final byte[] data = new byte[(int) file.length()];
                         try (final FileInputStream fis = new FileInputStream(file)) {
                             fis.read(data);

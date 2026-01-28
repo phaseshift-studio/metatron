@@ -25,13 +25,10 @@ import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.Q;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.m.type.Rel;
-import studio.phaseshift.metatron.isa.m.type.Type;
+import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.MSpace;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.mInstSet;
-import studio.phaseshift.metatron.isa.m.type.NoObj;
 
 import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.lang.sys.router.Router;
@@ -71,7 +68,7 @@ public class mqttSpace extends MSpace<Mqtt5Client> {
                             //uri(CLIENT).maybe(), T(URI_TID).maybe(),
                             uri(REWRITE), T(REL_TID),
                             uri(Tokens.Q).c(cInt::maybe), isa_(T(LST_TID)))))), (lhs, inst) -> {
-                        final mqttSpace space = mqttSpace.of(inst.arg(0).jvm(), inst.arg(0).vid());
+                        final mqttSpace space = mqttSpace.of(inst.arg(0).asRec(), inst.arg(0).vid());
                         Router.global().addSpace(space);
                         return space;
                     }));
@@ -80,13 +77,13 @@ public class mqttSpace extends MSpace<Mqtt5Client> {
     protected final JSONTranslator jsonTranslator = new JSONTranslator();
     protected final memSpace cache;
 
-    public mqttSpace(final Mqtt5Client client, final Map<Obj, Obj> config, final fURI vid) {
-        super(client, config, config.get(uri(PATTERN)).uriValue(), MQTT_TID, vid);
+    protected mqttSpace(final Mqtt5Client client, final Map<Obj,Obj> config, final fURI vid) {
+        super(client, config, MQTT_TID, vid);
         this.rewrite = Space.Helper.extractRewrite(config);
         LOG.info("{{y}}mtron{{g}}<=>{{y}}mqtt{{X}} mapping established: %s {{g}}<=> ({{b}}%s {{g}}<=>{{X}} %s{{g}}){{X}}", this.pattern().toUri(), this.rewrite, uri(Space.Helper.toNativeSpace(this.pattern(), this.rewrite)));
         this.cache = memSpace.of(this.pattern(), this.vid.extend("cache"));
         this.put(uri(Tokens.Q), lst(List.of(new MqttPubSubQ(this))), MUTABLE);
-        this.broker = config.get(uri(HOST)).orThrow(new IllegalArgumentException("config must have a host key")).uriValue();
+        this.broker = this.at(uri(HOST)).orThrow(new IllegalArgumentException("config must have a host key")).uriValue();
         try {
             this.sjvm = MqttClient.builder()
                     .identifier(config.getOrDefault(uri(CLIENT), uri("mtron-" + Math.abs(UUID.randomUUID().getMostSignificantBits()))).uriValue().toString())
@@ -135,15 +132,15 @@ public class mqttSpace extends MSpace<Mqtt5Client> {
             throw MTronException.of(e);
         }
     }
-
-    public static mqttSpace of(final Map<Obj, Obj> config, final fURI vid) {
+    
+    public static mqttSpace of(final Rec config, final fURI vid) {
         final Mqtt5Client client = MqttClient.builder()
-                .identifier(config.getOrDefault(uri(CLIENT),uri("mtron-" + Math.abs(UUID.randomUUID().getMostSignificantBits()))).uriValue().toString())
-                .serverHost(config.get(uri(Tokens.HOST)).uriValue().host())
-                .serverPort(config.get(uri(Tokens.HOST)).uriValue().port())
+                .identifier(config.at(uri(CLIENT).orElse(uri("mtron-" + Math.abs(UUID.randomUUID().getMostSignificantBits())))).uriValue().toString())
+                .serverHost(config.at(HOST).uriValue().host())
+                .serverPort(config.at(HOST).uriValue().port())
                 .useMqttVersion5()
                 .build();
-        return new mqttSpace(client, config, vid);
+        return new mqttSpace(client, config.jvm(), vid);
     }
 
     @Override

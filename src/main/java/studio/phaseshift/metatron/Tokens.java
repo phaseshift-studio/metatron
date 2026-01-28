@@ -23,6 +23,8 @@ package studio.phaseshift.metatron;
  */
 public final class Tokens {
 
+    public static final String ROUTE = "route";
+
     private Tokens() {
         // do nothing
     }

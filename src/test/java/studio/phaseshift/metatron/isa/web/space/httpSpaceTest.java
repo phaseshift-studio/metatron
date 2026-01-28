@@ -24,12 +24,12 @@ import studio.phaseshift.metatron.isa.SpaceTest;
 import studio.phaseshift.metatron.isa.web.space.http.httpSpace;
 import studio.phaseshift.metatron.lang.sys.router.Router;
 
-import java.util.Map;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
@@ -40,7 +40,10 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 public class httpSpaceTest extends SpaceTest {
 
     public httpSpaceTest() {
-        super(() -> httpSpace.of(f("http://localhost:8777"), Map.of(uri("/"), uri("src/test/resources/web/")), f("http://#"), f("/sys/space/web")));
+        super(() -> httpSpace.of(rec(
+                uri(HOST), uri("http://localhost:8777"),
+                uri(PATTERN), uri("http://#"),
+                uri(ROUTE), rec(uri("/"), uri("src/test/resources/web/"))), f("/sys/space/web")));
     }
 
     @Override

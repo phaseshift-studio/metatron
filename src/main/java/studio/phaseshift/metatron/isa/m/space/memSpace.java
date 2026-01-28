@@ -80,8 +80,8 @@ public class memSpace extends MSpace<Map<fURI, Obj>> {
                         return space;
                     }));
 
-    public memSpace(final Map<Obj, Obj> config, final fURI vid) {
-        super(new ConcurrentHashMap<>(), config, config.get(uri(Tokens.PATTERN)).uriValue(), MEM_SPACE_TID, vid);
+    protected memSpace(final Map<Obj, Obj> config, final fURI vid) {
+        super(new ConcurrentHashMap<>(), config,  MEM_SPACE_TID, vid);
         load();
     }
 

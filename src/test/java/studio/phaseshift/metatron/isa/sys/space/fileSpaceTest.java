@@ -23,7 +23,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.sys.space.file.fileSpace;
+import studio.phaseshift.metatron.isa.sys.space.file.fsSpace;
 import studio.phaseshift.metatron.isa.sys.sysInstSet;
 import studio.phaseshift.metatron.isa.SpaceTest;
 
@@ -32,8 +32,11 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static studio.phaseshift.metatron.Tokens.PATTERN;
 import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -44,7 +47,7 @@ public class fileSpaceTest extends SpaceTest {
     public fileSpaceTest() {
         super(() -> {
             //try {
-            final fileSpace space = fileSpace.of(FileSystems.getDefault(), Map.of(), f("/tmp/#"), f("/sys/space/fs"));
+            final fsSpace space = fsSpace.of(FileSystems.getDefault(), rec(uri(PATTERN), uri("/tmp/#")), f("/sys/space/fs"));
             return space;
         });
         sysInstSet.create();

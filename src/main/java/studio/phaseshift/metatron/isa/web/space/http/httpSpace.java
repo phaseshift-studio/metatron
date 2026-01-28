@@ -56,9 +56,12 @@ import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
+import static studio.phaseshift.metatron.Tokens.HOST;
+import static studio.phaseshift.metatron.Tokens.ROUTE;
 import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.furi.fURI.f;
-import static studio.phaseshift.metatron.isa.m.mInstSet.*;
+import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.URI_TID;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBytes.bytes;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
@@ -130,16 +133,12 @@ public class httpSpace extends MSpace<HttpServer> {
     }
 
     public static final String INDEX_HTML = "index.html";
-
     public static final fURI HTTP_SPACE_TID = WEB_ISA_TID.extend("space/http");
-    protected static final String ROUTE = "route";
+    public static final Rec CONFIG = rec(uri(Tokens.PATTERN), T(URI_TID), uri(HOST), T(URI_TID), uri(ROUTE), T(REC_TID));
     public static final Type HTTP_SPACE_TYPE = T(HTTP_SPACE_TID, null,
             instC(mInstSet.INST_TID.dom(ALL.maybe()).rng(HTTP_SPACE_TID),
-                    lst(T(REC_TID, isa_(rec(uri(Tokens.PATTERN), T(URI_TID), uri(Tokens.HOST), T(URI_TID), uri(ROUTE), T(REC_TID))))), (lhs, inst) -> {
-                        final fURI pattern = inst.arg(0).<Rec>as().at(Tokens.PATTERN).uriValue();
-                        final fURI host = inst.arg(0).<Rec>as().at(Tokens.HOST).uriValue();
-                        final Rec route = inst.arg(0).<Rec>as().at(ROUTE);
-                        final httpSpace space = httpSpace.of(host, route.jvm(), pattern, inst.arg(0).vid());
+                    lst(T(REC_TID, isa_(CONFIG))), (lhs, inst) -> {
+                        final httpSpace space = httpSpace.of(inst.arg(0).asRec(), inst.arg(0).vid());
                         Router.global().addSpace(space);
                         return space;
                     }));
@@ -147,8 +146,8 @@ public class httpSpace extends MSpace<HttpServer> {
     private static final JSONTranslator JSON_TRANSLATOR = new JSONTranslator();
     private static final AudioTranslator AUDIO_TRANSLATOR = new AudioTranslator();
 
-    public httpSpace(final HttpServer server, final Map<Obj, Obj> config, final fURI pattern, final fURI vid) {
-        super(server, config, pattern, HTTP_SPACE_TID, vid);
+    protected httpSpace(final HttpServer server, final Map<Obj, Obj> config, final fURI vid) {
+        super(server, config, HTTP_SPACE_TID, vid);
         // Router.writeToSpace(this.vid.extend(ROUTE), routes);
         try {
             this.at(ROUTE).orElse(rec()).elements().forEach(r -> {
@@ -178,7 +177,7 @@ public class httpSpace extends MSpace<HttpServer> {
                 LOG.debug("http route attached: %s", rel(uri(context.getPath()), r.second()));
             });
 
-            LOG.info("starting web server at %s", this.at(Tokens.HOST).uriValue().scheme(Tokens.HTTP).toUri());
+            LOG.info("starting web server at %s", this.at(HOST).uriValue().scheme(Tokens.HTTP).toUri());
             server.setExecutor(BootLoader.getExecutor());
             Runtime.getRuntime().addShutdownHook(new Thread(this::close));
             LOG.info("available routes: %s", this.at(ROUTE));
@@ -189,14 +188,10 @@ public class httpSpace extends MSpace<HttpServer> {
         }
     }
 
-    public static httpSpace of(final fURI host, final Map<Obj, Obj> routes, final fURI pattern, final fURI vid) {
+    public static httpSpace of(final Rec config, final fURI vid) {
         try {
-            final HttpServer server = HttpServer.create(new InetSocketAddress(host.host(), host.port()), 0);
-            final Map<Obj, Obj> config = new LinkedHashMap<>();
-            config.put(uri(Tokens.HOST), host.toUri());
-            config.put(uri(Tokens.PATTERN), pattern.toUri());
-            config.put(uri(ROUTE), rec(routes));
-            return new httpSpace(server, config, pattern, vid);
+            final HttpServer server = HttpServer.create(new InetSocketAddress(config.at(HOST).uriValue().host(), config.at(HOST).uriValue().port()), 0);
+            return new httpSpace(server, config.jvm(), vid);
         } catch (final Exception e) {
             throw MTronException.of(e);
         }

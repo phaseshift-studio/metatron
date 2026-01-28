@@ -60,7 +60,7 @@ public class stackSpace extends MSpace<Stack<Poly<?,?>>> {
     private final Space root;
 
     public stackSpace(final fURI pattern) {
-        super(new Stack<>(), mutableMap(uri(PATTERN), uri(pattern)), pattern, STACK_SPACE_TID, fURI.fnull);
+        super(new Stack<>(), mutableMap(uri(PATTERN), uri(pattern)), STACK_SPACE_TID, fURI.fnull);
         this.root = memSpace.of(this.pattern, fURI.fnull);
     }
 

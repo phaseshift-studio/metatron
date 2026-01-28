@@ -74,7 +74,7 @@ public class mRouter extends MSpace<MServer> implements Router {
         super(new MServer(host), new ConcurrentHashMap<>(Map.of(
                         uri(PATTERN), uri(ALL),
                         PRIMARY, uri(M_ISA_TID),
-                        uri(Tokens.SPACE), rec(new ConcurrentHashMap<>(Map.of(uri("+/#"), new stackSpace(f("+/#"))))))), f("#"),
+                        uri(Tokens.SPACE), rec(new ConcurrentHashMap<>(Map.of(uri("+/#"), new stackSpace(f("+/#"))))))),
                 ROUTER_TID,
                 vid);
 
