@@ -27,6 +27,7 @@ import studio.phaseshift.metatron.util.Tuple;
 import java.util.List;
 import java.util.Map;
 
+import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
@@ -91,29 +92,31 @@ public class MObjFactory implements ObjFactory {
     @Override
     public <O extends Obj> O create(final Object value, final fURI tid, final fURI vid, final Class<O> objClass) {
         if (Bool.class.isAssignableFrom(objClass))
-            return (O) new MBool((Boolean) value, tid, vid);
+            return (O) new MBool((Boolean) value, null == tid ? BOOL_TID : tid, vid);
         else if (Int.class.isAssignableFrom(objClass))
-            return (O) new MInt((Long) value, tid, vid);
+            return (O) new MInt((Long) value, null == tid ? INT_TID : tid, vid);
         else if (Real.class.isAssignableFrom(objClass))
-            return (O) new MReal((Double) value, tid, vid);
+            return (O) new MReal((Double) value, null == tid ? REAL_TID : tid, vid);
         else if (Str.class.isAssignableFrom(objClass))
-            return (O) new MStr((String) value, tid, vid);
+            return (O) new MStr((String) value, null == tid ? STR_TID : tid, vid);
         else if (Uri.class.isAssignableFrom(objClass))
-            return (O) new MUri((fURI) value, tid, vid);
+            return (O) new MUri((fURI) value, null == tid ? URI_TID : tid, vid);
         else if (Lst.class.isAssignableFrom(objClass))
-            return (O) new MLst((List<Obj>) value, tid, vid);
+            return (O) new MLst((List<Obj>) value, null == tid ? LST_TID : tid, vid);
         else if (Rel.class.isAssignableFrom(objClass))
-            return (O) new MRel((Pair<Obj, Obj>) value, tid, vid);
+            return (O) new MRel((Pair<Obj, Obj>) value, null == tid ? REL_TID : tid, vid);
         else if (Rec.class.isAssignableFrom(objClass))
-            return (O) new MRec((Map<Obj, Obj>) value, tid, vid);
+            return (O) new MRec((Map<Obj, Obj>) value, null == tid ? REC_TID : tid, vid);
         else if (Inst.class.isAssignableFrom(objClass))
-            return (O) new MInst((Triplet<Poly, Inst.f, Obj>) value, tid, vid);
+            return (O) new MInst((Triplet<Poly, Inst.f, Obj>) value, null == tid ? INST_TID : tid, vid);
         else if (Code.class.isAssignableFrom(objClass))
-            return (O) new MCode((List<Inst>) value, tid, vid);
+            return (O) new MCode((List<Inst>) value, null == tid ? CODE_TID : tid, vid);
         else if (Objs.class.isAssignableFrom(objClass))
-            return (O) new MObjs((List<Obj>) value, vid);
+            return (O) new MObjs((List<Obj>) value, null == vid ? OBJS_TID : vid);
         else if (Type.class.isAssignableFrom(objClass))
-            return (O) new MType((Tuple.Pair<Call, Call>) value, vid);
+            return (O) new MType((Tuple.Pair<Call, Call>) value, null == vid ? TYPE_TID : vid);
+        else if (Fail.class.isAssignableFrom(objClass))
+            return (O) new MFail((Pair<Throwable, Fail>) value, null == tid ? FAIL_TID : tid, vid);
         else if (NoObj.class.isAssignableFrom(objClass))
             return (O) NoObj.noobj();
         else

@@ -103,8 +103,13 @@ public class mRouter extends MSpace<MServer> implements Router {
     }
 
     public synchronized void close() {
-        super.close();
-        this.spaces().jvm().clear();
+        try {
+            this.spaces().jvm().keySet().forEach(vid -> this.removeSpace(vid.uriValue()));
+        } catch (final Exception e) {
+            throw MTronException.of(e);
+        } finally {
+            super.close();
+        }
     }
 
     @Override
@@ -150,6 +155,7 @@ public class mRouter extends MSpace<MServer> implements Router {
 
     @Override
     public void addSpace(final Space space) {
+
         this.spaces().jvm().values().stream()
                 .map(Obj::<Space>as)
                 .filter(s -> space.pattern().bimatches(s.pattern()))
@@ -157,25 +163,19 @@ public class mRouter extends MSpace<MServer> implements Router {
                 .ifPresent(s -> {
                     LOG.error("%s and %s have overlapping address spaces: %s <=> %s", space.pattern(), s.pattern(), space, s);
                 });
+        //if (null != space.vid())
         this.spaces().jvm().put(null == space.vid() ? space.pattern().toUri() : space.vid().toUri(), space);
         Space.Helper.spaceOpenLog(this, space);
     }
 
     @Override
     public void removeSpace(final fURI vid) {
-        this.spaces().elements()
-                .filter(s -> Objects.equals(s.second().vid(), vid) || Objects.equals(s.first(), vid))
-                .forEach(s -> {
-                    try {
-                        final Space space = (Space) this.spaces().jvm().remove(s.first());
-                        if (null != space) {
-                            Space.Helper.spaceCloseLog(this, space);
-                            //space.close();
-                        }
-                    } catch (final Exception e) {
-                        LOG.error(e);
-                    }
-                });
+        if (null == vid)
+            return;
+        final Obj space = this.spaces().jvm().remove(vid.toUri());
+        if (null != space) {
+            Space.Helper.spaceCloseLog(this, (Space) space);
+        }
     }
 
     @Override

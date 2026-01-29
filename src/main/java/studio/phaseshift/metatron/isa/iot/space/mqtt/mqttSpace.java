@@ -67,11 +67,7 @@ public class mqttSpace extends MSpace<Mqtt5Client> {
                             uri(HOST), T(URI_TID),
                             //uri(CLIENT).maybe(), T(URI_TID).maybe(),
                             uri(REWRITE), T(REL_TID),
-                            uri(Tokens.Q).c(cInt::maybe), isa_(T(LST_TID)))))), (lhs, inst) -> {
-                        final mqttSpace space = mqttSpace.of(inst.arg(0).asRec(), inst.arg(0).vid());
-                        Router.global().addSpace(space);
-                        return space;
-                    }));
+                            uri(Tokens.Q).c(cInt::maybe), isa_(T(LST_TID)))))), (lhs, inst) -> mqttSpace.of(inst.arg(0).asRec(), inst.arg(0).vid())));
     protected final fURI broker;
     protected final Tuple.Pair<String, String> rewrite;
     protected final JSONTranslator jsonTranslator = new JSONTranslator();
@@ -81,7 +77,7 @@ public class mqttSpace extends MSpace<Mqtt5Client> {
         super(client, config, MQTT_TID, vid);
         this.rewrite = Space.Helper.extractRewrite(config);
         LOG.info("{{y}}mtron{{g}}<=>{{y}}mqtt{{X}} mapping established: %s {{g}}<=> ({{b}}%s {{g}}<=>{{X}} %s{{g}}){{X}}", this.pattern().toUri(), this.rewrite, uri(Space.Helper.toNativeSpace(this.pattern(), this.rewrite)));
-        this.cache = memSpace.of(this.pattern(), this.vid.extend("cache"));
+        this.cache = memSpace.of(this.pattern(),fURI.fnull);
         this.put(uri(Tokens.Q), lst(List.of(new MqttPubSubQ(this))), MUTABLE);
         this.broker = this.at(uri(HOST)).orThrow(new IllegalArgumentException("config must have a host key")).uriValue();
         try {
@@ -201,8 +197,15 @@ public class mqttSpace extends MSpace<Mqtt5Client> {
 
     @Override
     public void close() {
-        this.sjvm.toBlocking().disconnect();
-        this.cache.close();
-        super.close();
+        try {
+            this.cache.close();
+            if(this.sjvm != null)
+                this.sjvm.toAsync().disconnect();
+        } catch (final Exception  e) {
+           throw MTronException.of(e);
+        } finally {
+            super.close();
+        }
+
     }
 }

@@ -69,6 +69,8 @@ public interface ObjFactory {
             tid = OBJS_TID;
         else if (Type.class.isAssignableFrom(objClass))
             tid = TYPE_INST_TID;
+        else if (Fail.class.isAssignableFrom(objClass))
+            tid = FAIL_TID;
         else if (NoObj.class.isAssignableFrom(objClass))
             tid = fURI.NOOBJ;
         else

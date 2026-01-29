@@ -30,7 +30,6 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.m.type.Uri;
-import studio.phaseshift.metatron.lang.sys.router.Router;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
@@ -50,7 +49,6 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 
 import static studio.phaseshift.metatron.furi.fURI.ALL;
-import static studio.phaseshift.metatron.furi.fURI.fnull;
 import static studio.phaseshift.metatron.isa.m.mInstSet.M_ISA_TID;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
@@ -71,17 +69,13 @@ public class memSpace extends MSpace<Map<fURI, Obj>> {
             uri(Tokens.PERSIST).maybe(), T(FILE_TID));
 
     public static final Type MEM_SPACE_TYPE = T(MEM_SPACE_TID,
-           null, // predicate
+            null, // predicate
             instC(mInstSet.INST_TID.dom(ALL.maybe()).rng(MEM_SPACE_TID), //constructure
                     lst(isa_(CONFIG).tryToInst()),
-                    (lhs, inst) -> {
-                        final Space space = memSpace.of(inst.arg(0).asRec(), fnull);
-                        Router.global().addSpace(space);
-                        return space;
-                    }));
+                    (lhs, inst) -> memSpace.of(inst.arg(0).asRec(), inst.arg(0).vid())));
 
     protected memSpace(final Map<Obj, Obj> config, final fURI vid) {
-        super(new ConcurrentHashMap<>(), config,  MEM_SPACE_TID, vid);
+        super(new ConcurrentHashMap<>(), config, MEM_SPACE_TID, vid);
         load();
     }
 
@@ -97,8 +91,6 @@ public class memSpace extends MSpace<Map<fURI, Obj>> {
     @Override
     public void close() {
         this.save();
-        this.sjvm().values().stream().filter(o -> o != Router.global()).filter(o -> o != this).forEach(CommonUtil::close);
-        Router.global().removeSpace(this.vid());
         super.close();
     }
 
@@ -151,6 +143,7 @@ public class memSpace extends MSpace<Map<fURI, Obj>> {
             } else {
                 final Obj current = this.sjvm().get(pattern);
                 if (obj.isNoObj()) {
+                    LOG.trace("removing %s", pattern);
                     this.sjvm().remove(pattern);
                     CommonUtil.close(current);
                 } else

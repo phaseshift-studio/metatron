@@ -23,8 +23,10 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.MMachine;
 import studio.phaseshift.metatron.isa.sys.type.ui.graphitty.Graphitty;
+import studio.phaseshift.metatron.lang.sys.router.Router;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.IteratorUtil;
+import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
 
 import java.io.Closeable;
@@ -51,7 +53,7 @@ public interface Space extends Rec, Closeable {
     }
 
     default Lst qs() {
-        return this.jvm().getOrDefault(uri(Tokens.Q), lst()).as();
+        return this.at(uri(Tokens.Q)).orElse(lst());
     }
 
     fURI pattern();
@@ -60,9 +62,6 @@ public interface Space extends Rec, Closeable {
 
     default Obj read(final String vid) {
         return this.read(fURI.of(vid));
-    }
-
-    default void onPut(final fURI key, final Obj value) {
     }
 
     Obj read(final fURI vid);
@@ -83,14 +82,16 @@ public interface Space extends Rec, Closeable {
         return results;
     }
 
-    default Space pause() {
-        return (Space) this.put(Tokens.STATUS, uri(Tokens.PAUSED));
-    }
-
     @Override
     default void close() {
-        //Common.close(this.sjvm());
-        CommonUtil.close(this.jvm());
+        try {
+            //CommonUtil.close(this.sjvm());
+            CommonUtil.close(this.jvm());
+        } catch (final Exception e) {
+            throw MTronException.of(e);
+        } finally {
+            Space.Helper.closeSpace(this);
+        }
     }
 
     default Function<fURI, Iterator<Pair<fURI, Obj>>> directReader() {
@@ -205,9 +206,19 @@ public interface Space extends Rec, Closeable {
                     objs(listing.stream().map(kv -> rel(kv.get0(), kv.get1())));
         }
 
+        private static Obj writeComplete(final fURI writePattern, final Obj newObj, final Obj currentObj) {
+            //Router.global().logger().info("write complete for %s: %s => %s", writePattern, currentObj, newObj);
+            if (newObj.isNoObj()) {
+                currentObj.stream().forEach(CommonUtil::close);
+            }
+            return currentObj;
+
+        }
+
         public static Obj resolveWrite(final Space space, final fURI vid, final Obj obj, final BiFunction<fURI, Obj, Obj> directWriter, final Function<fURI, Iterator<Tuple.Pair<fURI, Obj>>> directReader) {
             final Iterator<Tuple.Pair<fURI, Obj>> current = directReader.apply(vid);
             if (current.hasNext() && vid.isNode()) {
+                writeComplete(vid, obj, current.next().get1());
                 return directWriter.apply(vid, obj);
             } else {
                 final Pair<fURI, Poly> base = Helper.locateBasePoly(space, vid);
@@ -228,6 +239,7 @@ public interface Space extends Rec, Closeable {
                         Helper.resolveWrite(space, base.get0(), base.get1().<Lst>as().append(obj), directWriter, directReader);
                     else {
                         //throw MTronException.of("unknown poly: %s %s %s", base.get1(), vid, obj);
+                        writeComplete(vid, obj, base.get1());
                         return directWriter.apply(vid, obj);
                     }
                 } else if (base.get1().isRec()) {
@@ -242,6 +254,7 @@ public interface Space extends Rec, Closeable {
                         // resolveWriter.accept(nextStepAddr, new MRec(submap, value.tid(), fURI.NULL));
 
                     } else {
+                        writeComplete(vid, obj, base.get1());
                         return directWriter.apply(vid, obj);
                     }
                 } else if (base.get1().isLst()) {
@@ -250,6 +263,11 @@ public interface Space extends Rec, Closeable {
                 }
             }
             return obj;
+        }
+
+        public static void closeSpace(final Space space) {
+            if (Router.loaded())
+                Router.global().removeSpace(space.vid());
         }
 
 
@@ -275,7 +293,7 @@ public interface Space extends Rec, Closeable {
             return new LinkedHashSet<>(List.of(
                     //instC(SPLIT_INST_TID.dom(URI_TID).rng(LST_TID), lst(T(URI_TID)), (lhs, inst) -> lst(Arrays.stream(lhs.uriValue().toString().split(inst.arg(0).uriValue().toString())).map(MUri::uri))),
                     instC(CLOSE_INST_TID.dom(REC_TID).rng(NOOBJ_TID), lst(), (lhs, inst) -> Stream.of(noobj()).peek(o -> lhs.<Space>as().close()).findFirst().orElse(noobj()))
-                    ));
+            ));
         }
     }
 }

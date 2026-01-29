@@ -22,11 +22,11 @@ import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.Space;
+import studio.phaseshift.metatron.isa.m.space.stackSpace;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
-import studio.phaseshift.metatron.isa.m.space.stackSpace;
-import studio.phaseshift.metatron.lang.sys.router.impl.MServer;
 import studio.phaseshift.metatron.isa.sys.type.ui.graphitty.Graphitty;
+import studio.phaseshift.metatron.lang.sys.router.impl.MServer;
 import studio.phaseshift.metatron.util.MTronException;
 
 import static studio.phaseshift.metatron.furi.fURI.f;
@@ -132,14 +132,14 @@ public interface Router extends Obj, Space {
 
     @Override
     default void close() {
-        this.server().close();
+       /* this.server().close();
         this.spaces().elements().forEach(s -> {
             try {
                 this.removeSpace(s.second().vid());
             } catch (final Exception e) {
                 // do nothing? System.out.println(Graphitty.string("[{{y}}WARN {{/T}}] %s", e.getMessage()));
             }
-        });
+        });*/
     }
 
     IOStats stats();

@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -113,17 +113,21 @@ public class MObjs implements Objs {
         return objs(new ArrayList<Obj>(List.of(objs)));
     }
 
+
     public static Obj objs(final Iterable<Obj> objs) {
-        final Iterator<Obj> itty = objs.iterator();
-        if (!itty.hasNext())
+        return objs(objs.iterator());
+    }
+
+    public static Obj objs(final Iterator<Obj> objs) {
+        if (!objs.hasNext())
             return noobj();
-        final Obj o = itty.next();
-        if (!itty.hasNext())
+        final Obj o = objs.next();
+        if (!objs.hasNext())
             return o;
         else {
             final List<Obj> temp = new ArrayList<>();
             temp.add(o);
-            IteratorUtil.fill(itty, temp);
+            IteratorUtil.fill(objs, temp);
             return new MObjs(temp, null).attemptBulk(true).tryToShrink();
         }
     }
@@ -135,7 +139,7 @@ public class MObjs implements Objs {
     }
 
     public static Obj objs(final Stream<Obj> objs) {
-        return objs(new ArrayList<Obj>(objs.toList()));
+        return objs(objs.iterator());
     }
 
     @Override

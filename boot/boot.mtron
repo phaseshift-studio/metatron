@@ -16,19 +16,26 @@ print("{{y}}mounting instruction sets\n{{X}}");
 import(/mtron/web);
 import(/mtron/iot);
 import(/mtron/grph);
-*boot/args.-<|[has(mqtt) => ../mqtt, 
-               _         => boot/args/mqtt -> [broker => <mqtt://chibi.local:1883>]].print(_," mqtt broker\n");
+*<boot/args/mqtt>.else(boot/args/mqtt -> [broker => <mqtt://chibi.local:1883>]).print(_," mqtt broker\n");
+*<boot/peers>.else(boot/peers -> [ws://localhost:6666,<ws://127.0.0.1:7777>]).print(_," peers\n");
+*<boot/script>.else(boot/script ->
+ [sh     => /bin/sh,
+  bash   => /bin/bash, 
+  zsh    => /bin/zsh, 
+  python => /usr/bin/python3,
+  perl   => /usr/bin/perl,
+  mtron  => /bin/mtron]).print(_," script\n");
 [-- mount spaces --];
-     boot/peers    -> [ws://localhost:6666,<ws://127.0.0.1:7777>];
+     
      mem::[pattern => /usr/#]@/sys/space/usr;
      mem::[pattern => /shared/#,
            persist => </tmp/shared.mtron>]@/sys/space/shared;
-    meta::[pattern => </cluster/a/#>,
+    meta::[pattern => </a/cluster/#>,
            host     => <ws://localhost:6666>,
            peers    => !*boot/peers]@/sys/space/mtron;
-    meta::[pattern => </cluster/b/#>,
-                    host     => <ws://127.0.0.1:7777>,
-                    peers    => !*boot/peers]@/sys/space/mtron2;
+    meta::[pattern => </b/cluster/#>,
+           host     => <ws://127.0.0.1:7777>,
+           peers    => !*boot/peers]@/sys/space/mtron2;
     http::[host     => <http://localhost:8777>,
           pattern => http://#,
           route   => [/     => examples/www,
@@ -56,7 +63,8 @@ import(/mtron/grph);
           pass    => "admin",
           prefix  => </postgres/>]@/sys/space/postgres;==]
      fs::[pattern => <file:#>,
-          rewrite => <file:>=><~/>]@/sys/space/fs;
+          rewrite => <file:>=><~/>,
+          script  => !*boot/script]@/sys/space/fs;
      mem::[pattern => /usr/ai/#]@/sys/space/ai;
  ollama::[host    => <http://localhost:11434>, 
           model   => |load()]@/usr/ai/ollama;

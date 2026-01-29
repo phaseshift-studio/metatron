@@ -28,13 +28,13 @@ import studio.phaseshift.metatron.lang.db.grph.type.mtron.m1Vertex;
 
 import java.util.HashSet;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 
-import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.MTRON_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.URI_TID;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.id_;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
-import static studio.phaseshift.metatron.isa.m.mInstSet.URI_TID;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 
 public class grphInstSet extends MInstSet {
@@ -99,13 +99,13 @@ public class grphInstSet extends MInstSet {
 
     @Override
     public Set<Type> types() {
-        return Set.of(
+        return new LinkedHashSet<>(List.of(
                 T(GRAPH_TID, isa_(T(VERTEX_TID.maybeSome()))),
                 T(ELEMENT_TID, isa_(rec())),
                 T(VERTEX_TID),//, null, instC(INST_TID.dom(ALL.maybe()).rng(VERTEX_TID), lst(), (lhs, inst) -> RVertex.of(lhs.as()))),
                 T(EDGE_TID),//, null, instC(INST_TID.dom(ALL.maybe()).rng(EDGE_TID), lst(), (lhs, inst) -> REdge.of(lhs.as()))),
-                T(PROPERTY_TID, isa_(rec(T(URI_TID), id_()))),
-                grphSpace.GRPH_TYPE);
+               T(PROPERTY_TID, isa_(rec(T(URI_TID), id_())))));
+                //grphSpace.GRPH_TYPE));
     }
 
     @Override

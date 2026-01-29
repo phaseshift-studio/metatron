@@ -37,7 +37,6 @@ import studio.phaseshift.metatron.isa.m.type.Uri;
 import studio.phaseshift.metatron.isa.web.parser.AudioTranslator;
 import studio.phaseshift.metatron.isa.web.parser.HTMLTranslator;
 import studio.phaseshift.metatron.isa.web.parser.JSONTranslator;
-import studio.phaseshift.metatron.lang.sys.router.Router;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
@@ -136,12 +135,8 @@ public class httpSpace extends MSpace<HttpServer> {
     public static final fURI HTTP_SPACE_TID = WEB_ISA_TID.extend("space/http");
     public static final Rec CONFIG = rec(uri(Tokens.PATTERN), T(URI_TID), uri(HOST), T(URI_TID), uri(ROUTE), T(REC_TID));
     public static final Type HTTP_SPACE_TYPE = T(HTTP_SPACE_TID, null,
-            instC(mInstSet.INST_TID.dom(ALL.maybe()).rng(HTTP_SPACE_TID),
-                    lst(T(REC_TID, isa_(CONFIG))), (lhs, inst) -> {
-                        final httpSpace space = httpSpace.of(inst.arg(0).asRec(), inst.arg(0).vid());
-                        Router.global().addSpace(space);
-                        return space;
-                    }));
+            instC(mInstSet.INST_TID.dom(ALL.maybe()).rng(HTTP_SPACE_TID), 
+                    lst(T(REC_TID, isa_(CONFIG))), (lhs, inst) -> httpSpace.of(inst.arg(0).asRec(), inst.arg(0).vid())));
     private static final HTMLTranslator WEB_TRANSLATOR = new HTMLTranslator();
     private static final JSONTranslator JSON_TRANSLATOR = new JSONTranslator();
     private static final AudioTranslator AUDIO_TRANSLATOR = new AudioTranslator();
@@ -176,7 +171,6 @@ public class httpSpace extends MSpace<HttpServer> {
                         });
                 LOG.debug("http route attached: %s", rel(uri(context.getPath()), r.second()));
             });
-
             LOG.info("starting web server at %s", this.at(HOST).uriValue().scheme(Tokens.HTTP).toUri());
             server.setExecutor(BootLoader.getExecutor());
             Runtime.getRuntime().addShutdownHook(new Thread(this::close));

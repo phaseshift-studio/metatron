@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -22,29 +22,93 @@ import org.jline.utils.AttributedString;
 import org.jline.utils.AttributedStringBuilder;
 import org.jline.utils.Status;
 import org.slf4j.event.Level;
-import studio.phaseshift.metatron.lang.sys.router.Router;
+import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.m.type.Call;
+import studio.phaseshift.metatron.isa.m.type.Uri;
+import studio.phaseshift.metatron.isa.m.type.reflect.TypedRec;
 import studio.phaseshift.metatron.isa.sys.type.ui.graphitty.Graphitty;
+import studio.phaseshift.metatron.lang.sys.router.Router;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Supplier;
 
 import static org.slf4j.event.Level.*;
+import static studio.phaseshift.metatron.furi.fURI.ALL;
+import static studio.phaseshift.metatron.furi.fURI.f;
+import static studio.phaseshift.metatron.isa.m.mInstSet.STR_TID;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.Poly.MUTABLE;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
+import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.isa.m.type.reflect.TypedRec.typedRec;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public class StatusLine implements Runnable {
 
-    private AttributedString line;
+    private List<AttributedString> line = new ArrayList<>();
     private Level state = INFO;
     private long startTime = 0;
     private long lastExecutionTime = 0;
     private final Status status;
+    private final TypedRec<Uri, Call> widgets = typedRec();
 
-    public StatusLine(final Console console, final String line) {
-        this.line = new AttributedStringBuilder().append(line).toAttributedString();
-        this.status = Status.getStatus(console.getTerminal());
+    public StatusLine(final Console console) {
+        this.line = new ArrayList<>();
+        this.status = Status.getStatus(Console.getTerminal());
+        this.addWidget(f("host"), () -> "{{w}}%s".formatted(Router.global().server().isRunning() ? Router.global().server().host() : "{{r}}<node down>"));
+        this.addWidget(f("spaces"), () -> "{{w}}spaces:{{y}}%d".formatted(Router.global().spaces().count()));
+        this.addWidget(f("nodes"), () -> "{{w}}nodes:{{y}}%d".formatted(Router.global().server().nodes().size()));
+        this.addWidget(f("in_bytes"), () -> "{{w}}in:{{y}}%s".formatted(bytesFormat(Router.global().stats().bytesRecv())));
+        this.addWidget(f("out_bytes"), () -> "{{w}}out:{{y}}%s".formatted(bytesFormat(Router.global().stats().bytesSent())));
+        this.addWidget(f("running_time"), () -> "{{w}}running time:{{y}}%s".formatted(timeFormat(this.runningTime())));
+    }
+
+
+    public void addWidget(final fURI name, final Supplier<String> widget) {
+        this.widgets.put(uri(name), instC(name.prepend("status.").dom(ALL.maybe()).rng(STR_TID), lst(), (lhs, inst) -> str(widget.get())), MUTABLE);
+    }
+
+    private void compileWidgets() {
+        final String color = this.getColor();
+        this.line.clear();
+        boolean first = true;
+        for (final Map.Entry<Uri, Call> ws : this.widgets.jvmTyped().entrySet()) {
+            final String w = ws.getValue().apply(noobj()).strValue();
+            this.line.add(new AttributedString(Graphitty.string("{{g&[%s]}}%s%s{{[%s]}} ", color,first ? " " : "| ", w, color)));
+            first = false;
+        }
+        this.line.add(new AttributedString(Graphitty.string("{{g}}|{{[" + color + "]}}%s.".formatted(" ".repeat(Console.getTerminal().getWidth())))));
+
+        final AttributedStringBuilder builder = new AttributedStringBuilder();
+        for (final AttributedString s : this.line) {
+            builder.appendAnsi(s.toAnsi());
+        }
+        this.line.clear();
+        this.line.add(builder.toAttributedString());
+    }
+
+    private String getColor() {
+        final String color;
+        if (this.state.equals(WARN))
+            color = "y";
+        else if (this.state.equals(ERROR))
+            color = "r";
+        else
+            color = "b";
+        return color;
+    }
+
+    public void refresh() {
+        this.status.update(List.of());
+        this.status.update(this.line);
     }
 
     public void startTimer() {
@@ -66,11 +130,6 @@ public class StatusLine implements Runnable {
 
     public void setState(final Level state) {
         this.state = state;
-    }
-
-    public void refresh() {
-        this.status.update(List.of());
-        this.status.update(List.of(this.line));
     }
 
     private static String bytesFormat(final long bytes) {
@@ -104,27 +163,10 @@ public class StatusLine implements Runnable {
             final boolean serverRunning = Router.global().server().isRunning();
             if (!serverRunning)
                 this.setState(ERROR);
-            /// //////////////////////////////////////
-            final String color;
-            if (this.state.equals(WARN))
-                color = "y";
-            else if (this.state.equals(ERROR))
-                color = "r";
-            else
-                color = "b";
+            /// ////////////////////////////////////////////////
             if (Router.loaded()) {
-                final AttributedString temp = new AttributedStringBuilder()
-                        .ansiAppend(Graphitty.string("{{[" + color + "]&y}} %s", serverRunning ? Router.global().server().host() : "<server down>"))
-                        .ansiAppend(Graphitty.string("{{g}}|{{w}}nodes:{{y}}%d{{[" + color + "]&w}}", Router.global().server().nodes().size()))
-                        .ansiAppend(Graphitty.string("{{g}}|{{w}}in:{{y}}%s{{[" + color + "]}}", bytesFormat(Router.global().stats().bytesRecv())))
-                        .ansiAppend(Graphitty.string("{{g}}|{{w}}out:{{y}}%s{{[" + color + "]}}", bytesFormat(Router.global().stats().bytesSent())))
-                        .ansiAppend(Graphitty.string("{{g}}|{{w}}running time:{{y}}%s{{[" + color + "]}}", timeFormat(this.runningTime())))
-                        .append(Graphitty.string("{{g}}|{{[" + color + "]}}%s.", " ".repeat(200)))
-                        .toAttributedString();
-                if (!this.line.equals(temp)) {
-                    this.line = temp;
-                    this.status.update(List.of(this.line));
-                }
+                this.compileWidgets();
+                this.status.update(this.line);
             }
             try {
                 CommonUtil.sleepThread(250);

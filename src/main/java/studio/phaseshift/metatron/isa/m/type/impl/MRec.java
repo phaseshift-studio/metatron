@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -62,16 +62,20 @@ public class MRec extends MObj implements Rec {
         return rec(map, REC_TID, fURI.fnull);
     }
 
+    public static Rec rec0() {
+        return Rec.EMPTY_REC;
+    }
+
     public static Rec rec(final Map<Obj, Obj> map, final fURI tid, final fURI vid) {
-        return new MRec(map, null == tid ? REC_TID : tid, vid);
+        return null == tid ? new MRec(map, REC_TID, vid) : MObj.of(map, tid, vid, Rec.class);
     }
 
     public static Rec rec(final Map<Obj, Obj> map) {
-        return rec(map, REC_TID, fURI.fnull);
+        return rec(map, null, fURI.fnull);
     }
 
     public static Rec rec() {
-        return rec(new LinkedHashMap<>(), REC_TID, fURI.fnull);
+        return rec(new LinkedHashMap<>(), null, fURI.fnull);
     }
 
     public static Rec rec(final Stream<Rel> stream) {
@@ -80,8 +84,8 @@ public class MRec extends MObj implements Rec {
 
     public static <K, V> Rec rec(final Map<K, V> map, final ObjFactory factory) {
         return rec(map.entrySet().stream()
-                 //.filter(kv -> !(kv.getKey() instanceof Obj) || !((Obj) kv.getKey()).isNoObj())
-                 // .filter(kv -> !(kv.getValue() instanceof Obj) || !((Obj) kv.getValue()).isNoObj())
+                //.filter(kv -> !(kv.getKey() instanceof Obj) || !((Obj) kv.getKey()).isNoObj())
+                // .filter(kv -> !(kv.getValue() instanceof Obj) || !((Obj) kv.getValue()).isNoObj())
                 .map(kv -> rel(kv.getKey() instanceof String && !((String) kv.getKey()).contains(" ") ? uri((String) kv.getKey()) : factory.create(kv.getKey()), factory.create(kv.getValue()))));
     }
 

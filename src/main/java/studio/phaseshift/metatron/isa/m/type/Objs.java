@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -22,29 +22,21 @@ import studio.phaseshift.metatron.algebra.PlusMonoid;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.impl.MObjs;
-import studio.phaseshift.metatron.isa.m.type.impl.MStr;
 import studio.phaseshift.metatron.util.IteratorUtil;
 
-import java.util.*;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.function.Function;
-import java.util.regex.MatchResult;
-import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
-import static studio.phaseshift.metatron.furi.fURI.*;
-import static studio.phaseshift.metatron.furi.q.DocQ.Doc.docWrap;
+import static studio.phaseshift.metatron.furi.fURI.fnull;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
-import static studio.phaseshift.metatron.isa.m.mInstSet.STR_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
-import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
-import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
-import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
-import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
-import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 public interface Objs extends Obj, PlusMonoid.O<Objs> {
 
@@ -112,14 +104,14 @@ public interface Objs extends Obj, PlusMonoid.O<Objs> {
         final Obj first = this.take();
         final Obj second = other.take();
         final PlusMonoid.O<?> result = null == first ? (null == second ? this.zero() : (PlusMonoid.O<?>) second) : (PlusMonoid.O<?>) ((PlusMonoid.O) first).plus((PlusMonoid.O) second);
-        return new MObjs(List.of(result, this, other),null);
+        return new MObjs(List.of(result, this, other), null);
     }
 
     class ObjsType {
         public static Set<Inst> insts() {
             return new LinkedHashSet<>(List.of(
-                    instC(AS_INST_TID.dom(ALL_STAR).rng(LST_TID), lst(T(LST_TID)), (lhs, inst) -> lst(lhs.stream().toList(), inst.arg(0).tid(),fnull))
-                    ));
+                    instC(AS_INST_TID.dom(ALL_STAR).rng(LST_TID), lst(T(LST_TID)), (lhs, inst) -> lst(lhs.stream().toList(), inst.arg(0).tid(), fnull))
+            ));
         }
     }
 

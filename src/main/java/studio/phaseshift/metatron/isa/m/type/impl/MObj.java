@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -36,10 +36,14 @@ public abstract class MObj implements Obj, Cloneable {
         // for non-standard constructions
     }
 
-    public MObj(final Object jvm, final fURI tid, final fURI vid) {
+    protected MObj(final Object jvm, final fURI tid, final fURI vid) {
         assert null != tid;
         this.self(jvm, tid.big(), vid);
         Obj.Helper.objCheckAndSave(this);
+    }
+
+    public static <O extends Obj> O of(final Object jvm, final fURI tid, final fURI vid, final Class<O> clazz) {
+        return Obj.Helper.construct(clazz, jvm, tid, vid);
     }
 
     @Override

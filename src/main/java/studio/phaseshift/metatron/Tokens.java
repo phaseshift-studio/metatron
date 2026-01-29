@@ -23,12 +23,13 @@ package studio.phaseshift.metatron;
  */
 public final class Tokens {
 
-    public static final String ROUTE = "route";
+   
 
     private Tokens() {
         // do nothing
     }
 
+    public static final String ROUTE = "route";
     public static final String PEERS = "peers";
     public static final String CACHE = "cache";
     public static final String CLIENT = "client";
@@ -49,9 +50,6 @@ public final class Tokens {
     public static final String USER = "user";
     public static final String PASS = "pass";
     public static final String NAME = "name";
-    public static final String STATUS = "status";
-    public static final String PAUSED = "paused";
-    public static final String ACTIVE = "active";
     public static final String LEVEL = "level";
     public static final String SPACE = "space";
     public static final String STORE = "store";

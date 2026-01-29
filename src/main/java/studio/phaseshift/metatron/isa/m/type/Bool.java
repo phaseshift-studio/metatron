@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Set;
 
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
+import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
@@ -34,6 +35,10 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 
 public interface Bool extends Mono {
 
+    Type BOOL_TYPE = T(BOOL_TID);
+    Bool BOOL_TRUE = bool(true);
+    Bool BOOL_FALSE = bool(false);
+    
     @Override
     Bool clone(final Object jvm, final fURI tid, final fURI vid);
 
@@ -53,8 +58,6 @@ public interface Bool extends Mono {
     }
 
     final class BoolType {
-        public static final Type BOOL_TYPE = T(BOOL_TID);
-
         public static Set<Inst> insts() {
             return new LinkedHashSet<>(List.of(
                     instC(AS_INST_TID.dom(BOOL_TID).rng(INT_TID), lst(T(INT_TID)), (lhs, inst) -> jnt(lhs.boolValue() ? 1 : 0, inst.arg(0).tid(), lhs.vid())),

@@ -59,29 +59,21 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.sys.sysInstSet.*;
+import static studio.phaseshift.metatron.isa.sys.sysInstSet.FILE_TID;
+import static studio.phaseshift.metatron.isa.sys.sysInstSet.SYS_ISA_TID;
 
 public class fsSpace extends MSpace<FileSystem> {
 
     public static final fURI FS_TID = SYS_ISA_TID.extend("space/fs");
     private static final Rec FS_REC = rec(
             uri(Tokens.PATTERN), URI_TYPE,
-            uri(Tokens.REWRITE), rel(URI_TYPE, URI_TYPE)
-            /*uri(Tokens.SCRIPT).maybe(), isa_(rec()).else_(rec(
-                    uri("sh"), uri("/bin/sh"),
-                    uri("bash"), uri("/bin/bash"),
-                    uri("zsh"), uri("/bin/zsh"),
-                    uri("python"), uri("/usr/bin/python3"),
-                    uri("perl"), uri("/usr/bin/perl"),
-                    uri("mtron"), uri("/bin/mtron")))*/);
-    public static final Type FS_TYPE = T(FS_TID, isa_(rec()), instC(INST_TID.dom(ALL.maybe()).rng(FS_TID), lst(isa_(rec(uri(Tokens.PATTERN), T(URI_TID))).tryToInst()), (lhs, inst) -> {
-        final fURI pattern = inst.arg(0).<Rec>as().at(Tokens.PATTERN).uriValue();
-        final Space space = fsSpace.of(FileSystems.getDefault(), inst.arg(0).asRec(), inst.arg(0).vid());
-        Router.global().addSpace(space);
-        return space;
-    }));
-
-
+            uri(Tokens.REWRITE), rel(URI_TYPE, URI_TYPE),
+            uri(Tokens.SCRIPT).maybe(), rec(URI_TYPE, URI_TYPE));
+    public static final Type FS_TYPE = T(FS_TID, isa_(rec()),
+            instC(INST_TID.dom(ALL.maybe()).rng(FS_TID),
+                    lst(isa_(rec(uri(Tokens.PATTERN), T(URI_TID))).tryToInst()), 
+                    (lhs, inst) -> fsSpace.of(FileSystems.getDefault(), inst.arg(0).asRec(), inst.arg(0).vid())));
+    
     private final Tuple.Pair<String, String> rewrite;
 
     public static fsSpace of(final FileSystem sjvm, final Rec config, final fURI vid) {
@@ -239,10 +231,16 @@ public class fsSpace extends MSpace<FileSystem> {
         try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
             String firstLine = reader.readLine();
             if (firstLine != null) {
-                if (true)
-                    return "/bin/sh";
+                // if (true)
+                //     return "/bin/sh";
                 if (firstLine.startsWith("#!"))
-                    return this.at(SCRIPT).orElse(rec()).elements().filter(pair -> firstLine.contains(pair.first().strValue())).map(Rel::second).map(engine -> engine.uriValue().toString()).findFirst().orElse(null);
+                    return this.at(SCRIPT).orElse(rec0())
+                            .elements()
+                            .filter(pair -> firstLine.contains(pair.first().uriValue().toString()))
+                            .map(Rel::second)
+                            .map(engine -> engine.uriValue().toString())
+                            .findFirst()
+                            .orElse(null);
             }
         } catch (final IOException e) {
             LOG.warn("error reading script file: %s", file, e);

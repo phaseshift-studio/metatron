@@ -53,6 +53,7 @@ public abstract class SpaceTest extends mTest {
     }
 
     public SpaceTest(final fURI baseURI, final Supplier<Space> spaceSupplier) {
+        super();
         this.baseURI = baseURI;
         this.spaceSupplier = spaceSupplier;
     }

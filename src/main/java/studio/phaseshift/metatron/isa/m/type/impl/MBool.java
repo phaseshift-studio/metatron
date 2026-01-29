@@ -26,16 +26,16 @@ import static studio.phaseshift.metatron.isa.m.mInstSet.BOOL_TID;
 
 public class MBool extends MObj implements Bool {
 
-    public MBool(final Boolean jvm, final fURI tid, final fURI vid) {
-        super(jvm, null == tid ? BOOL_TID : tid, vid);
+    protected MBool(final Boolean jvm, final fURI tid, final fURI vid) {
+        super(jvm, tid, vid);
     }
 
     public static Bool bool(final Boolean jvm, final fURI tid, final fURI vid) {
-        return new MBool(jvm, tid, vid);
+        return null == tid? new MBool(jvm, BOOL_TID, vid) : MObj.of(jvm, tid, vid, Bool.class);
     }
 
     public static Bool bool(final Boolean jvm) {
-        return bool(jvm, BOOL_TID, fURI.fnull);
+        return bool(jvm, null, fURI.fnull);
     }
 
     @Override

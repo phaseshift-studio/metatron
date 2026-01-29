@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -18,21 +18,17 @@
 
 package studio.phaseshift.metatron.isa;
 
-import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
-import studio.phaseshift.metatron.lang.sys.router.Router;
 import studio.phaseshift.metatron.isa.sys.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.sys.type.ui.graphitty.GraphittyLogger;
+import studio.phaseshift.metatron.lang.sys.router.Router;
 
-import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.Map;
 
 import static studio.phaseshift.metatron.Tokens.PATTERN;
-import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.furi.fURI.f;
 
 public abstract class MSpace<SJVM> extends MRec implements Space {
 
@@ -40,13 +36,15 @@ public abstract class MSpace<SJVM> extends MRec implements Space {
     protected SJVM sjvm;
     protected GraphittyLogger LOG;
 
-    public MSpace(final SJVM sjvm, final Map<Obj,Obj> config, final fURI tid, final fURI vid) {
+    public MSpace(final SJVM sjvm, final Map<Obj, Obj> config, final fURI tid, final fURI vid) {
         super(config, tid, vid);
         this.sjvm = sjvm;
         this.pattern = this.at(PATTERN).uriValue();
         LOG = Graphitty.log(this);
+        if (Router.loaded() && !this.pattern.equals(f("+/#")) && !(this instanceof Router))
+            Router.global().addSpace(this);
     }
-    
+
     @Override
     public fURI pattern() {
         return this.pattern;
@@ -57,7 +55,7 @@ public abstract class MSpace<SJVM> extends MRec implements Space {
         return this.sjvm;
     }
 
-    @Override
+    /*@Override
     public Rec vid(final fURI vid) {
         if (null != vid) {
             this.vid = vid;
@@ -65,15 +63,22 @@ public abstract class MSpace<SJVM> extends MRec implements Space {
             Router.writeToSpace(vid, this);
             // LOG.trace("registering: %s", this);
             //this.qs.register(new PubSubQ());
-        }
-        return super.vid(vid);
+            return this;
+        } else
+            return super.vid(vid);
+    }*/
+
+    /*@Override
+    public Rec tid(final fURI tid) {
+        Space.Helper.noCloneWarning(this);
+        return this;
     }
 
     @Override
     public Rec clone() {
-        //Space.Helper.noCloneWarning(this);
+        Space.Helper.noCloneWarning(this);
         return this;
-    }
+    }*/
 
     @Override
     public String toString() {

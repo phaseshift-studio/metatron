@@ -145,7 +145,7 @@ public class Console extends JRec implements Closeable, Runnable {
                     //  .completer(new MCompleter(this))
                     .build();
             new CustomWidgets(this.reader);
-            this.status = new StatusLine(this, "{{b}}loading...{{X}}");
+            this.status = new StatusLine(this);
             BootLoader.getExecutor().submit(this.status);
         } catch (final Exception e) {
             throw MTronException.of(e);

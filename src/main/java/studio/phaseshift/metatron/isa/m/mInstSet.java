@@ -174,6 +174,11 @@ public class mInstSet extends MInstSet {
     }
 
     @Override
+    public void close() {
+        // do nothing
+    }
+    
+    @Override
     public Set<Type> types() {
         return new LinkedHashSet<>(List.of(
                 T(NOOBJ_TID),

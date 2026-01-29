@@ -21,6 +21,7 @@ package studio.phaseshift.metatron.isa.web.space;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import studio.phaseshift.metatron.isa.SpaceTest;
+import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.web.space.http.httpSpace;
 import studio.phaseshift.metatron.lang.sys.router.Router;
 
@@ -44,6 +45,7 @@ public class httpSpaceTest extends SpaceTest {
                 uri(HOST), uri("http://localhost:8777"),
                 uri(PATTERN), uri("http://#"),
                 uri(ROUTE), rec(uri("/"), uri("src/test/resources/web/"))), f("/sys/space/web")));
+        memSpace.of(rec(uri(PATTERN), uri("/mtron/web/space/http")), f("/sys/space/mem"));
     }
 
     @Override

@@ -35,6 +35,7 @@ import java.util.*;
 import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.NOOBJ_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.NOOBJ_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
@@ -55,8 +56,8 @@ public abstract class MInstSet extends MSpace<Map<fURI, Set<? extends Obj>>> imp
     public MInstSet(final fURI tid, final fURI vid) {
         super(new LinkedHashMap<>(), mutableMap(uri(Tokens.PATTERN), uri(tid.extend(fURI.ALL)), uri(Tokens.Q), lst(new DocQ())), tid, vid);
         if (Router.loaded()) {
-            if (!this.pattern.equals(f("+/#")) && !(this instanceof Router))
-                Router.global().addSpace(this);
+            //if (!this.pattern.equals(f("+/#")) && !(this instanceof Router))
+            //    Router.global().addSpace(this);
             this.types().forEach(t -> {
                 if (t.tid().matches(this.pattern)) this.write(t.tid(), t);
                 else Router.writeToSpace(t.tid(), t);
@@ -110,6 +111,18 @@ public abstract class MInstSet extends MSpace<Map<fURI, Set<? extends Obj>>> imp
                 f("rewrites"), this.rewrites());
     }
 
+    @Override
+    public void close() {
+       /* this.types().forEach(t -> Router.global().registerRewrite(fURI.of(t.tid().name()), null));
+        this.consts().forEach(c -> Router.global().registerRewrite(fURI.of(c.vid().name()), null));
+        this.insts().forEach(i -> Router.global().registerRewrite(fURI.of(i.tid().name()),null));
+        this.rewrites().forEach(r -> Router.global().registerRewrite(fURI.of(r.tid().name()), null));
+        this.types().forEach(t -> Router.writeToSpace(t.tid(),noobj()));
+        this.consts().forEach(c -> Router.writeToSpace(c.vid(),noobj()));
+        this.insts().forEach(i -> Router.writeToSpace(i.tid(),noobj()));
+        this.rewrites().forEach(r -> Router.writeToSpace(r.tid(),noobj()));*/
+    }
+    
     @Override
     public Obj read(final fURI vid) {
         if (Objects.equals(this.tid, vid))

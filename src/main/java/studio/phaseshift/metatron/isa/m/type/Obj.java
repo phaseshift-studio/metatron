@@ -47,6 +47,7 @@ import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.furi.q.DocQ.Doc.docWrap;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
+import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_FALSE;
 import static studio.phaseshift.metatron.isa.m.type.Int.INT_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
@@ -160,10 +161,8 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
     }
 
     default Obj tid(final fURI tid) {
-        final fURI bigtid = tid.big();
-        if (this.tid().basePath().equals(bigtid))
-            return this.tid().equals(bigtid) ? this : this.clone(this.jvm(), bigtid, this.vid());
-        return this.clone(this.jvm(), bigtid, this.vid());
+        final fURI bigTID = tid.big();
+        return this.tid().equals(bigTID) ? this : this.clone(this.jvm(), bigTID, this.vid());
     }
 
     default Obj tid(final String tid) {
@@ -616,6 +615,28 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
                 Obj.Helper.objCheckAndSave(obj);
         }
 
+        public static <O extends Obj> O construct(final Class<O> clazz, final Object jvm, final fURI tid, final fURI vid) {
+            if (null != tid) {
+                final fURI bigTID = tid.big();
+                if (!BASE_TYPES.contains(bigTID.basePath()) && Router.loaded()) {
+                    final Obj type = Router.readFromSpace(bigTID);
+                    if (!type.isNoObj() && type.isType() && type.<Type>as().hasConstructor()) {
+                        final Obj protoObj = MObjFactory.of().create(jvm, null, vid, clazz);
+                        final O constructedObj = type.asType().constructor().apply(protoObj).as();
+                        if (constructedObj.isFail())
+                            throw MTronException.of(constructedObj.<Fail>as().jvm().get0());
+                        else {
+                            constructedObj.self(constructedObj.jvm(), bigTID, vid);
+                            if (null != vid)
+                                Router.writeToSpace(vid, constructedObj);
+                            return constructedObj;
+                        }
+                    }
+                }
+            }
+            return MObjFactory.of().create(jvm, tid, vid, clazz);
+        }
+
         public static <O extends Obj> O objClone(final Obj obj, final Object jvm, final fURI tid, final fURI vid) {
             if (!Objects.equals(tid, obj.tid())) {
                 final Obj type = Router.readFromSpace(tid);
@@ -683,7 +704,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
                             "any obj", "the lhs obj value id", Map.of(), "the spatial location of the lhs obj"),
                     docWrap(instC(ELSE_INST_TID.dom(ALL.maybe()).rng(ALL), lst(T(ALL.maybe())), (lhs, inst) -> lhs.isNoObj() ? inst.arg(0) : lhs),
                             "maybe an obj", "the lhs obj else the arg obj", Map.of(jnt(0), "the rhs obj is the lhs is noobj"), "f(lhs)->lhs if lhs is an obj, else f(noobj)->arg"),// TODO: rec args needs resolution on generics connected
-                    docWrap(instC(IS_INST_TID.dom(A).rng(A.maybe()), lst(T(BOOL_TID)), (lhs, inst) -> inst.arg(0).boolValue() ? lhs : noobj()),
+                    docWrap(instC(IS_INST_TID.dom(A.maybe()).rng(A.maybe()), lst(T(BOOL_TID.maybe())), (lhs, inst) -> inst.arg(0).orElse(BOOL_FALSE).boolValue() ? lhs : noobj()),
                             "any obj", "the lhs obj if arg is true", Map.of(jnt(0), "filter lhs if false"), "filters the lhs obj"), // TODO: generics are not working for some reason
                     docWrap(instC(ISA_INST_TID.dom(ALL.maybe()).rng(ALL.maybe()), lst(T(ALL)), (lhs, inst) -> lhs.matches(inst.arg(0)) ? lhs : noobj()),
                             "an obj to match", "the unaltered obj if arg matches", Map.of(jnt(0), "filter lhs if doesn't match arg"), "a filter function f(x)->{0,x}"),

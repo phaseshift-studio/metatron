@@ -35,6 +35,7 @@ import studio.phaseshift.metatron.lang.sys.router.Router;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static studio.phaseshift.metatron.isa.m.mInstSet.M_ISA_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.START_INST_TID;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -46,14 +47,12 @@ public abstract class mTest {
 
     @BeforeAll
     public static void begin() {
+        BootLoader.BOOTING = true;
         BootLoader.load(rec(uri("log"), uri(LogObj.getSLF4J().toString().toLowerCase())));
-        mInstSet.create();
-
     }
 
     @AfterAll
     public static void end() {
-        Router.global().close();
         BootLoader.close();
     }
 

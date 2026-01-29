@@ -70,12 +70,7 @@ public class metaSpace extends MSpace<MServer> {
     public static final Type META_SPACE_TYPE = T(META_SPACE_TID,
             isa_(CONFIG), // predicate
             instC(mInstSet.INST_TID.dom(ALL.maybe()).rng(META_SPACE_TID), //constructure
-                    lst(isa_(CONFIG).tryToInst()),
-                    (lhs, inst) -> {
-                        final Space space = metaSpace.of(inst.arg(0).asRec(), fnull);
-                        Router.global().addSpace(space);
-                        return space;
-                    }));
+                    lst(isa_(CONFIG).tryToInst()), (lhs, inst) -> metaSpace.of(inst.arg(0).asRec(), inst.arg(0).vid())));
 
 
     protected metaSpace(final MServer sjvm, final Map<Obj, Obj> jvm, final fURI vid) {
@@ -102,7 +97,6 @@ public class metaSpace extends MSpace<MServer> {
     @Override
     public void close() {
         this.sjvm().close();
-        Router.global().removeSpace(this.vid());
         super.close();
     }
 
@@ -149,7 +143,6 @@ public class metaSpace extends MSpace<MServer> {
 
     @Override
     public BiFunction<fURI, Obj, Obj> directWriter() {
-
         return (pattern, obj) -> {
             final int peerIndex = fURIHasher.getNodeIndex(pattern.toString(), this.peers.size());
             if (this.selfIndex == peerIndex) {
