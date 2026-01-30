@@ -19,9 +19,8 @@
 package studio.phaseshift.metatron.lang.sys.router;
 
 import org.junit.jupiter.api.Test;
-import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.m.type.NoObj;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
+import studio.phaseshift.metatron.isa.m.type.NoObj;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.furi.fURI.f;
@@ -32,21 +31,16 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
  */
 public class mRouterTest extends RouterTest {
     
-
     @Test
     public void testCloseSpace() {
-        // BootLoader.ROUTER = new MRouter(f("ws://localhost:8866"),f("/sys/router"));
-        memSpace mnt = memSpace.of(f("/mnt/#"), fURI.fnull).vid(f("/mnt")).as();
-        assertFalse(Router.global().hasSpaceFor(f("/test/a")));
-        memSpace test = memSpace.of(f("/test/#"), fURI.fnull).vid(f("/mnt/test")).as();
+        memSpace test = memSpace.of(f("/test/#"), f("/sys/test")).as();
         assertTrue(Router.global().hasSpaceFor(f("/test/a")));
         assertTrue(Router.global().hasSpaceFor(f("/test/a")));
         Router.global().write("/test/a", jnt(10));
         assertEquals(jnt(10), Router.global().read("/test/a"));
         assertTrue(Router.global().hasSpaceFor(f("/test/a")));
-        Router.global().write("/mnt/test", NoObj.noobj());
-        // TODO::: should close on writing to /mnt/test noobj ... something around cloning I suspect
+        Router.global().write("/test/a", NoObj.noobj());
         test.close();
-      // TODO::  assertFalse(Router.global().hasSpaceFor(f("/test/a")));
+        assertFalse(Router.global().hasSpaceFor(f("/test/a")));
     }
 }

@@ -24,6 +24,7 @@ package studio.phaseshift.metatron.isa.m;
 
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.TestData;
@@ -38,6 +39,7 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static studio.phaseshift.metatron.furi.fURI.f;
 
+@ExtendWith(TestData.TestDataExtension.class)
 public class mInstSetTest extends InstSetTest {
 
 
@@ -660,7 +662,6 @@ public class mInstSetTest extends InstSetTest {
             "*a../x../x.plus(4)                           % 10",
     }, delimiter = '%')
     public void testAuto(final String code, final String expected) throws Exception {
-        TestData.Helper.loadData(this, "testAuto");
         super.testCode(code, expected);
     }
 
@@ -677,7 +678,6 @@ public class mInstSetTest extends InstSetTest {
             "*a../x../x.plus(4)                           % 10",
     }, delimiter = '%')
     public void testAutoFrom(final String code, final String expected) throws Exception {
-        TestData.Helper.loadData(this, "testAutoFrom");
         super.testCode(code, expected);
     }
 

@@ -36,6 +36,7 @@ import java.util.stream.Stream;
 import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.INT_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.M_ISA_TID;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
@@ -45,8 +46,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
  */
 public class machInstSet extends MInstSet {
 
-    public static final fURI MACH_INSTSET_TID = f("/mach");
-    public static final fURI MACH_INE_TID = MACH_INSTSET_TID.extend("ine");
+    public static final fURI MACH_INSTSET_TID = M_ISA_TID.extend("mach");
     public static final fURI MACH_MONAD_TID = MACH_INSTSET_TID.extend("monad");
     public static final fURI INST_TID = MACH_INSTSET_TID.extend("inst");
     public static final fURI DROP_TID = INST_TID.extend("drop");
@@ -67,7 +67,7 @@ public class machInstSet extends MInstSet {
 
     @Override
     public Set<Type> types() {
-        return Stream.of(T(MACH_INE_TID), T(MACH_MONAD_TID)).collect(Collectors.toSet());
+        return Stream.of(T(MACH_MONAD_TID)).collect(Collectors.toSet());
     }
 
    /* @Override

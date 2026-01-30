@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -19,20 +19,23 @@
 package studio.phaseshift.metatron.isa.sys.space;
 
 import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import studio.phaseshift.metatron.TestData;
+import studio.phaseshift.metatron.isa.SpaceTest;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
+import studio.phaseshift.metatron.isa.m.space.noobjSpace;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.sys.space.file.fsSpace;
 import studio.phaseshift.metatron.isa.sys.sysInstSet;
-import studio.phaseshift.metatron.isa.SpaceTest;
 
 import java.nio.file.FileSystems;
-import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static studio.phaseshift.metatron.Tokens.PATTERN;
+import static studio.phaseshift.metatron.Tokens.REWRITE;
 import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
@@ -42,18 +45,42 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 @Disabled
-public class fileSpaceTest extends SpaceTest {
+@ExtendWith(TestData.TestDataExtension.class)
+public class fsSpaceTest extends SpaceTest {
 
-    public fileSpaceTest() {
-        super(() -> {
-            //try {
-            final fsSpace space = fsSpace.of(FileSystems.getDefault(), rec(uri(PATTERN), uri("/tmp/#")), f("/sys/space/fs"));
-            return space;
+    public fsSpaceTest() {
+      /*  super(f("/tmp/"),() -> {
+           return fsSpace.of(FileSystems.getDefault(), rec(uri(PATTERN), uri("/tmp/#"), uri(REWRITE), rec(uri(""), uri(""))), f("/sys/space/fs"));
+          
         });
-        sysInstSet.create();
+        sysInstSet.create();*/
+        super(()->noobjSpace.single());
 
     }
-    
+
+    @ParameterizedTest
+    @TestData(values = {
+            "root -> <src/test/resources/isa/sys/>",
+            "boot/script ->\n" +
+                    "  [sh     => /bin/sh,\n" +
+                    "   bash   => /bin/bash,\n" +
+                    "   zsh    => /bin/zsh,\n" +
+                    "   python => /usr/bin/python3,\n" +
+                    "   perl   => /usr/bin/perl,\n" +
+                    "   mtron  => /bin/mtron]",
+            "fs::[pattern=><test:#>,rewrite=><test:>=>!*root,script=>!*boot/script]@/sys/space/fs/test"
+    })
+    @CsvSource(value = {
+            "*root                              % <src/test/resources/isa/sys/>",
+            "*boot/script/sh                    % /bin/sh",
+            "*<test:space/test-py.py>           % file::<test:space/test-py.py?p=rw-rw-r-->",
+            "*<test:space/test-sh.sh>           % file::<test:space/test-sh.sh?p=rw-rw-r-->",
+            "*<test:space/test-bash.bash>       % file::<test:space/test-bash.bash?p=rw-rw-r-->",
+    }, delimiter = '%')
+    public void testShell(final String code, final String expected) {
+        this.testCode(code, expected);
+    }
+
     @ParameterizedTest
     @CsvSource(value = {
             "</tmp/file.jpg> -> 0xab2356abcd        % a",

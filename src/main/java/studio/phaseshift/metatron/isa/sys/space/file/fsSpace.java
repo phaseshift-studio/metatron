@@ -54,6 +54,7 @@ import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
@@ -71,9 +72,9 @@ public class fsSpace extends MSpace<FileSystem> {
             uri(Tokens.SCRIPT).maybe(), rec(URI_TYPE, URI_TYPE));
     public static final Type FS_TYPE = T(FS_TID, isa_(rec()),
             instC(INST_TID.dom(ALL.maybe()).rng(FS_TID),
-                    lst(isa_(rec(uri(Tokens.PATTERN), T(URI_TID))).tryToInst()), 
+                    lst(isa_(rec(uri(Tokens.PATTERN), T(URI_TID))).tryToInst()),
                     (lhs, inst) -> fsSpace.of(FileSystems.getDefault(), inst.arg(0).asRec(), inst.arg(0).vid())));
-    
+
     private final Tuple.Pair<String, String> rewrite;
 
     public static fsSpace of(final FileSystem sjvm, final Rec config, final fURI vid) {
@@ -82,7 +83,8 @@ public class fsSpace extends MSpace<FileSystem> {
 
     private fsSpace(final FileSystem sjvm, final Map<Obj, Obj> jvm, final fURI vid) {
         super(sjvm, jvm, FS_TID, vid);
-        final Rel rewrite = jvm.getOrDefault(uri(Tokens.REWRITE), rel(uri(""), uri(""))).asRel();
+        final Rel rewrite = this.at(uri(Tokens.REWRITE)).orElse(rel(uri(""), uri(""))).asRel();
+        LOG.info("rewrite: %s", rewrite);
         final String prefix = rewrite.first().uriValue().toString().replace("~", System.getProperty(USER_HOME));
         final String prepend = rewrite.second().uriValue().toString().replace("~", System.getProperty(USER_HOME));
         this.rewrite = Tuple.Pair.with(prefix, prepend);
@@ -183,8 +185,9 @@ public class fsSpace extends MSpace<FileSystem> {
                                     resolveObj(makeFile(vidPath))));
                         }
                     } catch (final NoSuchFileException e) {
+                        LOG.warn("no such file: %s", key);
                         return IteratorUtil.of();
-                    } catch (final IOException e) {
+                    } catch (final Exception e) {
                         throw MTronException.of(e);
                     }
                 }

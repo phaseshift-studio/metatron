@@ -18,7 +18,7 @@
 
 package studio.phaseshift.metatron.isa.m.type;
 
-import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.TestData;
@@ -34,6 +34,7 @@ import static studio.phaseshift.metatron.isa.m.mInstSet.FAIL_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 
+@ExtendWith(TestData.TestDataExtension.class)
 public class TypeTest extends mTest {
     private static final GraphittyLogger LOG = Graphitty.log(TypeTest.class);
     private static String LAST_TYPE_DEF = null;
@@ -177,17 +178,17 @@ public class TypeTest extends mTest {
             "{1,1}               | int::T                                     | false",
             "{,}                 | int{0}::T                                  | true",
             "{1,1}               | int{2}::T[is(eq({2,2}))]                   | false",
-         //   "{1,1}               | int{2}::T[is?int{2}<=int{2}(eq({1,1}))]                     | true",
+            //   "{1,1}               | int{2}::T[is?int{2}<=int{2}(eq({1,1}))]                     | true",
             "{1,2}               | int{2}::T                                  | true",
             "{1,2,3}               | int{1,3}::T                              | true",
             "{1,2,3}               | int{1,2}::T                              | false",
-           //  "{1,1}               | int{2}::T[is(eq({1,1}))]                   | true",
+            //  "{1,1}               | int{2}::T[is(eq({1,1}))]                   | true",
             "{1,1}               | int{2}::T                                  | true",
             "{1,1}               | int::T[is(gt(0))]                          | false",
             "{1,1}               | int{2}::T[is(gt(0))]                       | true",
             "1                   | int{2}::T[is(gt(0))]                       | false",
             "{0,0}               | int{2}::T[is(gt(0))]                       | false",
-          //  "{2,3}               | int{2}::T[is(gt(1))]                       | true",
+            //  "{2,3}               | int{2}::T[is(gt(1))]                       | true",
             "{2,2}               | int{2}::T[is(gt(1))]                       | true",
             "{3,3}               | int{2}::T[is(gt(1))]                       | true",
             "{0,1}               | int{2}::T[is(gt(0))]                         | false",
@@ -215,14 +216,14 @@ public class TypeTest extends mTest {
             "A::T                |   B::T                                       | false",
             "A::T                |   B{?}::T                                    | false",
             "A{0}::T             |   B{0}::T                                    | true",
-          //  "int::T              | T::T                                       | true",
-           // "T::T                | int::T                                     | false",
-          //  "int::T              | T::T[int::T]                               | true",
-         //   "int::T[?>2]         | T::T[int::T]                               | true",
-         //   "int::T[?>2]         | T::T[int::T[?>2]]                          | true",
-          //  "int::T              | T::T[int::T[?>2]]                          | false",
-          //  "int::T              | T::T[#::T]                                 | true",
-          //  "int::T              | T::T[real::T]                              | false",
+            //  "int::T              | T::T                                       | true",
+            // "T::T                | int::T                                     | false",
+            //  "int::T              | T::T[int::T]                               | true",
+            //   "int::T[?>2]         | T::T[int::T]                               | true",
+            //   "int::T[?>2]         | T::T[int::T[?>2]]                          | true",
+            //  "int::T              | T::T[int::T[?>2]]                          | false",
+            //  "int::T              | T::T[#::T]                                 | true",
+            //  "int::T              | T::T[real::T]                              | false",
             "int::T              | str::T                                     | false",
             "int::T              | #::T                                       | true",
             "int::T              | #{?}::T                                    | true",
@@ -230,7 +231,7 @@ public class TypeTest extends mTest {
             "int::T              | #{2}::T                                    | false",
             "int{0}::T           | str{0}::T                                  | true",
             "int::T              | int::T                                     | true",
-           // "int::T              | int::T[?>0]                                | false",
+            // "int::T              | int::T[?>0]                                | false",
             "int::T[?>0]         | int::T                                     | true",
             "int::T[?>0]         | int::T[?>0]                                | true",
             "int{2}::T           | #{*}::T                                    | true",
@@ -238,12 +239,12 @@ public class TypeTest extends mTest {
             "int::T              | int{2,3}::T                                | false",
             "int::T              | int{1}::T                                  | true",
             "nat::T              | nat::T                                     | true",
-           // "nat::T              | int::T                                     | true",
+            // "nat::T              | int::T                                     | true",
             "int::T              | nat::T                                     | false",
             "nat::T              | str::T                                     | false",
             "nat::T              | bignat::T                                  | false",
             "bignat::T           | nat::T                                     | true",
-          //  "bignat::T           | int::T                                     | true",
+            //  "bignat::T           | int::T                                     | true",
             "int::T              | bignat::T                                  | false",
             "int::T              | 0                                          | false",
             "0                   | int::T                                     | true",
@@ -258,16 +259,15 @@ public class TypeTest extends mTest {
             "0                   | int::T[is(and(matches(str::T),matches(nat::T)))]             | false",*/
             "nat::T              | 0                                          | false",
             "nat::T              | 1                                          | false",
-          //  "nat::T              | T::T[nat::T]                               | true",
-       //     "nat::T              | T::T[int::T]                               | true",
-         //   "int::T              | T::T[nat::T]                               | false",
-         //   "nat::T              | T::T[str::T]                               | false",
-         //   "T::T[nat::T]        | nat::T                                     | false"
+            //  "nat::T              | T::T[nat::T]                               | true",
+            //     "nat::T              | T::T[int::T]                               | true",
+            //   "int::T              | T::T[nat::T]                               | false",
+            //   "nat::T              | T::T[str::T]                               | false",
+            //   "T::T[nat::T]        | nat::T                                     | false"
     },
             delimiter = '|')
- 
+
     public void testTypeInheritance(final String typeA, final String typeB, final boolean matches) throws Exception {
-        TestData.Helper.loadData(this, "testTypeInheritance");
         Obj a = mParser.m_obj().parse(typeA).get();
         Obj b = mParser.m_obj().parse(typeB).get();
         LOG.trace("testing %s %s %s", a, matches ? "{{g}}is a{{/g}}" : "{{r}}is not a{{/r}}", b);
@@ -300,13 +300,13 @@ public class TypeTest extends mTest {
             "person  % .                                        % [name=>a,age=>-2,b=>noobj].as(person::T[?[age=>str::T]])    % true",
             "person  % .                                        % [name=>a,age=>-2,b=>noobj].as(person::T[?[age=>uri::T]])    % false",
             "person  % .                                        % [name=>'a',age=>-2,b=>noobj].as(person::T[?[age=>-2]])      % true",
-           // "person  % .                                        % [name=>'a',age=>-2,b=>noobj].as(person::T[?[age => ?(<(0))]])     % true",
+            // "person  % .                                        % [name=>'a',age=>-2,b=>noobj].as(person::T[?[age => ?(<(0))]])     % true",
             "person  % .                                        % [name=>'a',age=>-2,b=>noobj].as(person::T[?[age => ?(>0)]])     % false",
             "person  % .                                        % [name=>'a',age=>1].as(person::T)                   % true",
             "person  % .                                        % [name=>'a',age=>1].as(person::T[[name=>uri::T]])   % false",
             "person  % .                                        % [name=>'a',age=>1].as(person::T[>-.count().is(eq(0))))   % false",
             "person  % .                                        % [name=>'a',age=>1,b=>noobj].as(person::T)          % true",
-           // "person  % .                                        % [name=>'a',age=>1,b=>noobj].as(person::T[?[b=>?>0]])  % false",
+            // "person  % .                                        % [name=>'a',age=>1,b=>noobj].as(person::T[?[b=>?>0]])  % false",
             //"person  % .                                        % [name=>'a',age=>1,b=>noobj].as(person::T[?[b=>2]])  % false",
             "person  % .                                        % [name=>'a',age=>1,b=>noobj].as(person::T[?[b=>noobj]])  % true",
             "person  % .                                        % [name=>'a',age=>1.2,b=>noobj].as(person::T)        % false",
@@ -339,8 +339,8 @@ public class TypeTest extends mTest {
             "nat     % .                                        % int::1.as(nat::T[is(gt(-1))])                    % true",
             "nat     % .                                        % int::2.as(nat::T[is(eq(2))])                     % true",
             "nat     % .                                        % -2.as(nat::T[is(eq(-2))])                        % false",
-           // "nat     % .                                        % 2.as(nat::T[is(eq(4))])                     % false",
-           // "nat     % .                                        % 2.as(nat::T[is(eq(4))])                     % false",
+            // "nat     % .                                        % 2.as(nat::T[is(eq(4))])                     % false",
+            // "nat     % .                                        % 2.as(nat::T[is(eq(4))])                     % false",
             "nat     % .                                        % int::0.as(nat::T)                                % false",
             "nat     % .                                        % nat::-23                                         % false",
             "nat     % .                                        % nat::'a big number'                              % false",
@@ -402,5 +402,5 @@ public class TypeTest extends mTest {
             Router.writeToSpace(tid, noobj());
         }
     }
-    
+
 }

@@ -808,10 +808,14 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
                         lhs.stream().forEach(e -> {
                             inst.arg(0).asRec().elements().forEach(kv -> {
                                 if (e.isRec()) {
-                                    final Obj key = kv.first().isCall() ? kv.first().apply(e) : e.asRec().at(kv.first());
-                                    result.put(key, kv.second().apply(key));
+                                    final Obj kk = kv.first().isCall() ? kv.first().apply(e) : e.asRec().at(kv.first());
+                                    if (!kk.isNoObj()) {
+                                        final Obj vv = kv.second().apply(kk);
+                                        if (!vv.isNoObj()) // TODO: stream through keys to get matching key for incur-append on grouping to the same key
+                                            result.compute(kk, (k, v) -> (v == null) ? vv : v.append(vv));
+                                    }
                                 } else {
-                                    final Obj kk = kv.first().isCall() ? kv.first().apply(e) : (e.matches(kv.first()) ? e : noobj());
+                                    final Obj kk = kv.first().isCall() ? kv.first().apply(e) : e.matches(kv.first()) ? e : noobj();
                                     if (!kk.isNoObj()) {
                                         final Obj vv = kv.second().apply(e);
                                         if (!vv.isNoObj()) // TODO: stream through keys to get matching key for incur-append on grouping to the same key

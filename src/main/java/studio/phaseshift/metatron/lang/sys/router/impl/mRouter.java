@@ -155,14 +155,13 @@ public class mRouter extends MSpace<MServer> implements Router {
 
     @Override
     public void addSpace(final Space space) {
-
+        if(null == space.vid())
+            return;
         this.spaces().jvm().values().stream()
                 .map(Obj::<Space>as)
                 .filter(s -> space.pattern().bimatches(s.pattern()))
                 .findAny()
-                .ifPresent(s -> {
-                    LOG.error("%s and %s have overlapping address spaces: %s <=> %s", space.pattern(), s.pattern(), space, s);
-                });
+                .ifPresent(s -> LOG.error("%s and %s have overlapping address spaces: %s <=> %s", space.pattern(), s.pattern(), space, s));
         //if (null != space.vid())
         this.spaces().jvm().put(null == space.vid() ? space.pattern().toUri() : space.vid().toUri(), space);
         Space.Helper.spaceOpenLog(this, space);

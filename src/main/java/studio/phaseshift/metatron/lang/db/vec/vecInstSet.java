@@ -19,6 +19,7 @@
 package studio.phaseshift.metatron.lang.db.vec;
 
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.m.mInstSet;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Lst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
@@ -65,6 +66,10 @@ public class vecInstSet extends MInstSet {
 
     public static vecInstSet create() {
         return new vecInstSet(fURI.fnull);
+    }
+
+    public static vecInstSet create(final fURI vid) {
+        return new vecInstSet(vid);
     }
 
     @Override

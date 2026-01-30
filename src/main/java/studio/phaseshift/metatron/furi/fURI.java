@@ -22,8 +22,8 @@ import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.algebra.Ring;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.isa.m.type.Uri;
-import studio.phaseshift.metatron.lang.sys.router.Router;
 import studio.phaseshift.metatron.isa.sys.type.ui.graphitty.Graphitty;
+import studio.phaseshift.metatron.lang.sys.router.Router;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.*;
@@ -180,7 +180,7 @@ public class fURI implements Cloneable, Ring<fURI> {
     public static fURI of(final Object uri) {
         return uri instanceof fURI ? (fURI) uri : fURI.of(uri.toString());
     }
-    
+
     public fURI authority(final fURI authority) {
         return new fURI(this.scheme, null == authority ? null : authority.host, null == authority ? -1 : authority.port, this.sstart, this.path, this.send, this.poly, this.query == null ? null : this.query.toString());
     }
@@ -188,7 +188,7 @@ public class fURI implements Cloneable, Ring<fURI> {
     public boolean hasAuthority() {
         return null != this.host && -1 != this.port;
     }
-    
+
     public fURI big() {
         return Router.loaded() ? Router.global().rewrite(this, true) : this;
     }
@@ -207,7 +207,7 @@ public class fURI implements Cloneable, Ring<fURI> {
         return new fURI(this.scheme, this.host, this.port, this.sstart, this.path, this.send, poly, Query.to(this.query));
 
     }
-    
+
     public boolean isEmpty() {
         return this.toString().isEmpty();
     }
@@ -957,7 +957,20 @@ public class fURI implements Cloneable, Ring<fURI> {
         }
 
         public boolean equals(final Object other) {
-            return other instanceof Query && ((Query) other).query.equals(this.query);
+            if (other instanceof Query otherQuery) {
+                return this.query.equals(otherQuery.query);
+            } else
+                return false;
+           /* if (!(other instanceof Query otherQuery))
+                return false;
+            if (this.query.size() != otherQuery.query.size())
+                return false;
+            if (this.query.keySet().stream().anyMatch(key -> !otherQuery.query.containsKey(key)))
+                return false;
+            return this.query.entrySet().stream().allMatch(entry -> {
+                final String otherValue = otherQuery.query.get(entry.getKey());
+                return entry.getValue().equals(otherValue) || f(entry.getValue()).bimatches(f(otherValue)); // TODO: should be directional (not bi-matches)
+            });*/
         }
 
         public String toString() {

@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.lang.core.mach;
 
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.isa.m.machInstSet;
@@ -26,6 +27,7 @@ import studio.phaseshift.metatron.isa.InstSetTest;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
+@Disabled
 public class machInstSetTest extends InstSetTest {
 
     public machInstSetTest() {

@@ -21,6 +21,7 @@ package studio.phaseshift.metatron.lang.db.vec;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import studio.phaseshift.metatron.isa.InstSetTest;
 import studio.phaseshift.metatron.mTest;
 
 import static studio.phaseshift.metatron.furi.fURI.f;
@@ -28,13 +29,11 @@ import static studio.phaseshift.metatron.furi.fURI.f;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class vecInstSetTest extends mTest {
+public class vecInstSetTest  extends InstSetTest {
     
-    @BeforeAll
-    public static void begin() {
-        mTest.begin();
-        vecInstSet.create().vid(f("/sys/lang/vec"));
-    }
+   public vecInstSetTest() {
+           super(() -> vecInstSet.create(f("/sys/space/vec")));
+   }
     
     @Override
     @ParameterizedTest

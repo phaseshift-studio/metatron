@@ -18,7 +18,12 @@
 
 package studio.phaseshift.metatron;
 
+import org.junit.jupiter.api.extension.AfterTestExecutionCallback;
+import org.junit.jupiter.api.extension.BeforeTestExecutionCallback;
+import org.junit.jupiter.api.extension.ExtensionContext;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
+import studio.phaseshift.metatron.isa.sys.type.ui.graphitty.Graphitty;
+import studio.phaseshift.metatron.isa.sys.type.ui.graphitty.GraphittyLogger;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -35,12 +40,33 @@ import java.util.Arrays;
 @Target({ElementType.ANNOTATION_TYPE, ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface TestData {
+    GraphittyLogger LOG = Graphitty.log(TestData.class);
 
     String[] values();
 
-    class Helper {
-        public final static void loadData(final Object classObject, final String methodName) throws Exception {
-            Arrays.stream(classObject.getClass().getMethods()).filter(m -> m.getName().equals(methodName)).findFirst().ifPresent(m -> Arrays.stream(m.getAnnotation(TestData.class).values()).forEach(mParser::eval));
+    class TestDataExtension implements BeforeTestExecutionCallback, AfterTestExecutionCallback {
+
+        protected boolean hasTestData = false;
+
+        @Override
+        public void beforeTestExecution(final ExtensionContext context) {
+            try {
+                if (context.getRequiredTestMethod().getAnnotation(TestData.class) != null) {
+                    Arrays.stream(context.getRequiredTestMethod().getAnnotation(TestData.class).values())
+                            .peek(value -> LOG.debug("loading test data: %s", value))
+                            .peek(v -> this.hasTestData = true)
+                            .forEach(mParser::eval);
+                }
+            } catch (Exception e) {
+                throw MTronTestException.of(e);
+            }
+        }
+
+
+        @Override
+        public void afterTestExecution(final ExtensionContext context) {
+            if(this.hasTestData)
+            LOG.warn("testing state still remains from  %s", context.getRequiredTestMethod().getName());
         }
     }
 }
