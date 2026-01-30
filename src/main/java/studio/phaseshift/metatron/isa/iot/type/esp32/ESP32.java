@@ -19,6 +19,7 @@
 package studio.phaseshift.metatron.isa.iot.type.esp32;
 
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.iot.type.Device;
 import studio.phaseshift.metatron.isa.iot.type.SoC;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
@@ -26,6 +27,7 @@ import studio.phaseshift.metatron.util.CommonUtil;
 
 import static studio.phaseshift.metatron.isa.iot.iotInstSet.ESP32_TID;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 public class ESP32 extends MRec implements SoC {
 
@@ -33,6 +35,11 @@ public class ESP32 extends MRec implements SoC {
     
     public ESP32(final fURI tid, final fURI vid) {
         super(CommonUtil.mutableMap(), tid, vid);
+    }
+    
+    public ESP32 addDevice(final Device device) {
+        this.at(uri(device.vid().name()), device);
+        return this;
     }
 }
 

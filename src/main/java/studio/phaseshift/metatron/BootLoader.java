@@ -23,7 +23,6 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.iot.iotInstSet;
 import studio.phaseshift.metatron.isa.m.mInstSet;
-import studio.phaseshift.metatron.isa.m.machInstSet;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.type.Feature;
@@ -35,9 +34,7 @@ import studio.phaseshift.metatron.isa.sys.type.LogObj;
 import studio.phaseshift.metatron.isa.sys.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.sys.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.isa.web.webInstSet;
-import studio.phaseshift.metatron.lang.ai.llm.llmInstSet;
 import studio.phaseshift.metatron.lang.db.grph.inst.grphInstSet;
-import studio.phaseshift.metatron.lang.db.tabl.tablInstSet;
 import studio.phaseshift.metatron.lang.db.vec.vecInstSet;
 import studio.phaseshift.metatron.lang.sys.router.Router;
 import studio.phaseshift.metatron.lang.sys.router.impl.mRouter;
@@ -57,7 +54,6 @@ import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.isa.iot.iotInstSet.IOT_ISA_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.M_ISA_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TID;
-import static studio.phaseshift.metatron.isa.m.machInstSet.MACH_INSTSET_TID;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
@@ -67,9 +63,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.sys.sysInstSet.SYS_ISA_TID;
 import static studio.phaseshift.metatron.isa.sys.sysInstSet.SYS_TID;
 import static studio.phaseshift.metatron.isa.web.webInstSet.WEB_ISA_TID;
-import static studio.phaseshift.metatron.lang.ai.llm.llmInstSet.LLM_INSTSET_TID;
 import static studio.phaseshift.metatron.lang.db.grph.inst.grphInstSet.GRPH_ISA_TID;
-import static studio.phaseshift.metatron.lang.db.tabl.tablInstSet.TABL_INSTSET_TID;
 import static studio.phaseshift.metatron.lang.db.vec.vecInstSet.VEC_INSTSET_TID;
 
 public class BootLoader implements Rec, Feature.SelfClone {
@@ -92,12 +86,12 @@ public class BootLoader implements Rec, Feature.SelfClone {
         Registry.open().register(WEB_ISA_TID, webInstSet::create);
         Registry.open().register(IOT_ISA_TID, iotInstSet::create);
         Registry.open().register(GRPH_ISA_TID, grphInstSet::create);
-        /// //////////////////
-       // Registry.open().register(LLM_INSTSET_TID, llmInstSet::create);
         Registry.open().register(VEC_INSTSET_TID, vecInstSet::create);
-      //  Registry.open().register(MACH_INSTSET_TID, machInstSet::create);
-      //  Registry.open().register(TABL_INSTSET_TID, tablInstSet::create);
-        Registry.open().load(f("/mtron/iot"),f("/sys/isa/iot"));
+        /// //////////////////
+        // Registry.open().register(LLM_INSTSET_TID, llmInstSet::create);
+
+        //  Registry.open().register(MACH_INSTSET_TID, machInstSet::create);
+        //  Registry.open().register(TABL_INSTSET_TID, tablInstSet::create);
         // Registry.singleton().register(miotInstSet.INST_TID, () -> miotInstSet.of(fURI.NULL));
     }
 
@@ -156,7 +150,7 @@ public class BootLoader implements Rec, Feature.SelfClone {
             LogObj.setSLF4J(args.has(uri("log")) ? args.at(uri("log")).uriValue().toString() : "info");
             LOG.info("%s", Graphitty.sillyPrint("booting metatron", true, true));
             Runtime.getRuntime().addShutdownHook(new Thread(BootLoader::close));
-            LOG.info("accessible instruction sets: %s", Registry.open().registrants());
+            LOG.info("accessible instruction sets:\n%s", Registry.open().registrants());
             fURI localAuthority = null;
             /// /// START OF BOOTING PROCESS /// /// allow boot description to be read from a mtron file
             String hostname = null;
@@ -171,9 +165,9 @@ public class BootLoader implements Rec, Feature.SelfClone {
                 localAuthority = args.at(Tokens.HOST).orElse(uri(WS + "://" + hostname + ".local" + ":" + 8999)).uriValue();
             final Space sysSpace = memSpace.of(f("/sys/#"), null);
             ROUTER = new mRouter(localAuthority, SYS_TID.extend("router"));
-            sysSpace.write(ROUTER.vid(),ROUTER);
+            sysSpace.write(ROUTER.vid(), ROUTER);
             Router.global().addSpace(sysSpace.self(sysSpace.jvm(), sysSpace.tid(), f("/sys")).as());
-           // Router.global().addSpace(mtronSpace);
+            // Router.global().addSpace(mtronSpace);
             Router.writeToSpace(mInstSet.create(M_ISA_TID));
             Router.writeToSpace(sysInstSet.create(SYS_ISA_TID));
             // Router.writeToSpace((f("/sys/mod/fs")));
@@ -187,7 +181,7 @@ public class BootLoader implements Rec, Feature.SelfClone {
                     final Path bootPath = Path.of(args.at(Tokens.BOOT).uriValue().toString());
                     fsSpace.makeFile(bootPath).vid(f("boot/file"));
                     final long count = mParser.eval(bootPath.toFile(), e -> LOG.error("%s\n%s", e.getCause() == null ? e.getMessage() : e.getCause().getMessage(), e)).count();
-                    LOG.info("processed boot input: {{b}}%s{{/b}} {{g}}[{{y}}loc: %d{{/y}}]{{/g}}", args.at(Tokens.BOOT).uriValue(), count);
+                    LOG.info("processed boot input: {{b}}%s{{/b}} {{g}}[{{y}}out: %d{{/y}}]{{/g}}", args.at(Tokens.BOOT).uriValue(), count);
                 } catch (final IOException e) {
                     LOG.error(e);
                     System.exit(0);

@@ -47,7 +47,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 */
 public class vecInstSet extends MInstSet {
 
-    public static final fURI VEC_INSTSET_TID = f("/vec");
+    public static final fURI VEC_INSTSET_TID = MTRON_TID.extend("vec");
     public static final fURI VEC_TID = VEC_INSTSET_TID.extend("vec");
     //public static final fURI RVEC_TID = MEXT_TID.extend("rvec");
     public static final fURI MTRX_TID = VEC_INSTSET_TID.extend("mtrx");

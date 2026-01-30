@@ -21,6 +21,7 @@ package studio.phaseshift.metatron.isa.iot;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.iot.space.mqtt.mqttSpace;
 import studio.phaseshift.metatron.isa.iot.type.SoC;
+import studio.phaseshift.metatron.isa.iot.type.device.GPIO;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.m.type.impl.MInstSet;
@@ -32,6 +33,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static studio.phaseshift.metatron.isa.iot.type.device.GPIO.GPIO_TYPE;
 import static studio.phaseshift.metatron.isa.iot.type.esp32.ESP32.ESP32_TYPE;
 import static studio.phaseshift.metatron.isa.m.mInstSet.MTRON_TID;
 
@@ -45,7 +47,6 @@ public class iotInstSet extends MInstSet {
     public static final fURI SOC_TID = IOT_ISA_TID.extend("soc");
     public static final fURI DEVICE_TID = IOT_ISA_TID.extend("device");
     public static final fURI ESP32_TID = IOT_ISA_TID.extend("soc/esp32");
-    public static final fURI GPIO_INST_TID = IOT_INST_TID.extend("gpio");
     public static final fURI PWM_INST_TID = IOT_INST_TID.extend("pwm");
 
 
@@ -66,6 +67,7 @@ public class iotInstSet extends MInstSet {
         return Stream.of(
                 SoC.SoCType.SoC_TYPE,
                 ESP32_TYPE,
+                GPIO_TYPE,
                 mqttSpace.MQTT_TYPE).collect(Collectors.toSet());
     }
 
@@ -73,6 +75,7 @@ public class iotInstSet extends MInstSet {
     public Set<Inst> insts() {
         final List<Inst> insts = new ArrayList<>();
         insts.addAll(SoC.SoCType.insts());
+        insts.addAll(GPIO.GPIOType.insts());
         return new LinkedHashSet<>(insts);
     }
 }

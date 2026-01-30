@@ -20,6 +20,7 @@ package studio.phaseshift.metatron.isa.m.type;
 
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.lang.sys.router.Router;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.IteratorUtil;
 
@@ -40,7 +41,12 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 public interface Poly<P extends Poly<P, J>, J> extends Obj {
 
-    BiFunction<Poly<?, ?>, Object, Poly<?, ?>> MUTABLE = (poly, jvm) -> poly.self(jvm, poly.tid(), poly.vid());
+    BiFunction<Poly<?, ?>, Object, Poly<?, ?>> MUTABLE = (poly, jvm) -> {
+        poly.self(jvm, poly.tid(), poly.vid());
+        if (null != poly.vid())
+            Router.global().write(poly.vid(), poly); // TODO: only update what was mutated, not the entire record
+        return poly;
+    };
 
     BiFunction<Poly<?, ?>, Object, Poly<?, ?>> IMMUTABLE = (poly, jvm) -> poly.clone(jvm, poly.tid(), poly.vid());
 

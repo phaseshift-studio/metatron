@@ -517,7 +517,7 @@ public class mParser {
     public static String removeLineComments(final String line) {
         return LINE_COMMENT_PATTERN.matcher(line).replaceAll("");
     }
-
+    
     public static Stream<Obj> eval(final File file, final Consumer<Exception> exhandler) throws IOException {
         try (final FileReader read = new FileReader(file)) {
             try (final BufferedReader reader = new BufferedReader(read)) {

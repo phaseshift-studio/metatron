@@ -55,7 +55,7 @@ import static studio.phaseshift.metatron.util.CommonUtil.immutableMap;
 public interface Rec extends Poly<Rec, Map<Obj, Obj>>, PlusMonoid.O<Rec> {
 
     Rec EMPTY_REC = rec(immutableMap());
-    
+
     @Override
     default Stream<Rel> indexedStream() {
         return this.jvm().entrySet().stream().map(kv -> rel(kv.getKey(), kv.getValue()).c(this.c()).as());
@@ -155,6 +155,8 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>>, PlusMonoid.O<Rec> {
                 k.segments().size() == 1 ?
                         (value.isNoObj() ? null : (null != v && v.isObjs() ? v.append(value) : value)) :
                         (null != v && v.isRec() ? v.<Rec>as() : rec()).put(k.pretract().toUri(), value, operation));
+
+
         return (Rec) operation.apply(this, map);
     }
 

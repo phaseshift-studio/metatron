@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -22,10 +22,10 @@ import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
-import studio.phaseshift.metatron.lang.sys.router.Router;
-import studio.phaseshift.metatron.lang.sys.router.impl.FutureObj;
 import studio.phaseshift.metatron.isa.sys.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.sys.type.ui.graphitty.GraphittyLogger;
+import studio.phaseshift.metatron.lang.sys.router.Router;
+import studio.phaseshift.metatron.lang.sys.router.impl.FutureObj;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
@@ -41,7 +41,6 @@ import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
-import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
@@ -238,7 +237,7 @@ public interface Inst extends Call {
             Obj fetched = Router.global().read(this.tid().basePath());
             /// //////////////////////////////////////////////////
             boolean isInst = fetched.stream().allMatch(Obj::isInst);
-            if(!isInst) {
+            if (!isInst) {
                 LOG.debug("no insts found at: %s", fetched);
                 fetched = Router.global().read(this.tid().extend("apply"));
             }
@@ -256,13 +255,22 @@ public interface Inst extends Call {
                     //.filter(i -> !this.hasRng() || this.rng().matches(i.rng()))
                     .map(i -> this.hasDom() ? i.dom(this.dom()) : i)
                     .map(i -> this.hasRng() ? i.rng(this.rng()) : i)
+                    /*.map(i -> { // TODO: expand this concept
+                        if (this.hasRng())
+                            return i.rng(this.rng());
+                        else if (!this.tid().basePath().equals(AS_INST_TID))
+                            return i;
+                        else if (this.arg(0).asType().matches(i.rng())) {
+                            return i.rng(this.arg(0).asType());
+                        } else
+                            return null;
+                    })*/
+                    //.filter(i -> !Objects.isNull(i))
                     .map(i -> lhs.isInst() ? i : Helpers.bindGenerics(lhs, i, this))
                     .filter(i -> !Objects.isNull(i))
                     .filter(i -> lhs.isInst() || lhs.matches(i.dom()))
                     //.filter(i -> lhs.matches(i.dom()) || (Form.of(i).equals(Form.mapper) && lhs.unique() && lhs.c(cInt.ONE()).matches(i.dom())))
                     //.map(i -> lhs.isType() && !lhs.isNoObj() && i.tid().dom().hasPattern() ? i.dom(lhs.as()) : i)
-                    //.map(i -> i.dom(i.dom().c(lhs.c()).as()).<Inst>as())
-                    //.map(i -> !lhs.matches(i.dom())  ? i.dom(lhs.type()).rng(i.rng().c(c->c.mult(lhs.c())).as()) : i)
                     .map(i -> {
                         final Poly<?, ?> resolvedArgs = resolveArgs(this, i, lhs);
                         if (null == resolvedArgs)

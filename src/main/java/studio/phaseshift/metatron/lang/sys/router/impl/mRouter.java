@@ -79,7 +79,7 @@ public class mRouter extends MSpace<MServer> implements Router {
                 vid);
 
         LOG.info("local router at %s", this.vid.toUri());
-        LOG.info("available serializers: %s", lst(SERIALIZERS.getSerializers().recValue().keySet().stream().toList()));
+        LOG.info("available serializers:\n%s", lst(SERIALIZERS.getSerializers().recValue().keySet().stream().toList()));
     }
 
 
