@@ -19,6 +19,7 @@
 package studio.phaseshift.metatron.lang.db.grph.inst;
 
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.iot.iotInstSet;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Type;
@@ -72,7 +73,11 @@ public class grphInstSet extends MInstSet {
     }
 
     public static grphInstSet create() {
-        return new grphInstSet(fURI.fnull);
+        return new grphInstSet(GRPH_ISA_TID);
+    }
+
+    public static grphInstSet create(final fURI vid) {
+        return new grphInstSet(vid);
     }
 
     private static String[] labelsAsUri(final Inst inst) {

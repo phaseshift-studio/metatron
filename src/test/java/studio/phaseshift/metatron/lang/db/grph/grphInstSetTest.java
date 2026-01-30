@@ -40,7 +40,7 @@ public class grphInstSetTest extends SpaceTest {
                         store   => kv::[pattern => /g/#],
                         :load   => modern]
                 """));
-        grphInstSet.create().vid(f("/sys/router/lang/grph"));
+        grphInstSet.create();
     }
 
     @BeforeAll

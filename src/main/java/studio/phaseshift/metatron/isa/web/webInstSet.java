@@ -56,8 +56,8 @@ public class webInstSet extends MInstSet {
         super(WEB_ISA_TID, vid);
     }
 
-    public static webInstSet create() {
-        return new webInstSet(fURI.fnull);
+    public static webInstSet create(final fURI vid) {
+        return new webInstSet(vid);
     }
 
     @Override

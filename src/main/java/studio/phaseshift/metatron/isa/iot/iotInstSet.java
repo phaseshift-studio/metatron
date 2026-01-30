@@ -53,8 +53,12 @@ public class iotInstSet extends MInstSet {
         super(IOT_ISA_TID, vid);
     }
 
+    public static iotInstSet create(final fURI vid) {
+        return new iotInstSet(vid);
+    }
+
     public static iotInstSet create() {
-        return new iotInstSet(fURI.fnull);
+        return iotInstSet.create(IOT_ISA_TID);
     }
 
     @Override

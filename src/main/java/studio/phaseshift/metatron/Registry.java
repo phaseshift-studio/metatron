@@ -24,7 +24,7 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.function.Supplier;
+import java.util.function.Function;
 
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
@@ -35,7 +35,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 public final class Registry {
 
     public static final Registry SINGLETON = new Registry();
-    private static final Map<fURI, Supplier<Obj>> REGISTRATION = new HashMap<>();
+    private static final Map<fURI, Function<fURI, Obj>> REGISTRATION = new HashMap<>();
 
     private Registry() {
         // do nothing
@@ -50,7 +50,7 @@ public final class Registry {
     }
 
 
-    public void register(final fURI tid, final Supplier<Obj> obj) {
+    public void register(final fURI tid, final Function<fURI, Obj> obj) {
         REGISTRATION.put(tid, obj);
     }
 
@@ -58,7 +58,7 @@ public final class Registry {
         return REGISTRATION.keySet().stream().anyMatch(tid::matches);
     }
 
-    public <O extends Obj> O load(final fURI pattern) {
-        return objs(REGISTRATION.entrySet().stream().filter(kv -> kv.getKey().matches(pattern)).map(kv -> kv.getValue().get())).as();
+    public <O extends Obj> O load(final fURI module, final fURI vid) {
+        return objs(REGISTRATION.entrySet().stream().filter(kv -> kv.getKey().matches(module)).map(kv -> kv.getValue().apply(vid))).as();
     }
 }

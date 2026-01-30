@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.isa.m.type;
 
+import studio.phaseshift.metatron.Registry;
 import studio.phaseshift.metatron.algebra.MultMonoid;
 import studio.phaseshift.metatron.algebra.PlusMonoid;
 import studio.phaseshift.metatron.algebra.Ring;
@@ -50,6 +51,7 @@ import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
 import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_FALSE;
 import static studio.phaseshift.metatron.isa.m.type.Int.INT_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
@@ -664,7 +666,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
         public static Set<Inst> insts() {
             return new LinkedHashSet<>(List.of(
                     // instC(AS_INST_TID.dom(REL_TID).rng(REL_TID), lst(REL_TYPE), (lhs, inst) -> recurssiveAs(lhs, inst.arg(0).as())),
-                    instC(IMPORT_INST_TID.dom(ALL.maybe()).rng(ALL), lst(T(URI_TID)), (lhs, inst) -> Router.global().read(inst.arg(0).uriValue().basePath())),
+                    instC(IMPORT_INST_TID.dom(ALL.maybe()).rng(ALL), lst(URI_TYPE), (lhs, inst) -> Registry.open().load(inst.arg(0).uriValue(), inst.arg(0).uriValue())),
                     instC(BARRIER_TID.dom(A.maybeSome()).rng(A.maybeSome()), lst(), (lhs, inst) -> lhs),
                     instC(AS_INST_TID.dom(A).rng(A), lst(T(A)), (lhs, inst) -> lhs.clone(lhs.jvm(), inst.arg(0).tid(), lhs.vid())),
                     instC(REPEAT_INST_TID.dom(A).rng(A), lst(T(ALL), INT_TYPE), (lhs, inst) -> {

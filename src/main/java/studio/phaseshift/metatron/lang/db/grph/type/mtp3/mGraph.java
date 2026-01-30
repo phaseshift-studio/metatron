@@ -85,9 +85,9 @@ public class mGraph implements Graph, WrappedGraph<grphSpace> {
 
     protected Map<Obj, Obj> configurationToMap(final Configuration configuration) {
         final Map<Obj, Obj> map = new LinkedHashMap<>();
-        configuration.getKeys().forEachRemaining(key -> {
-            map.put(uri(key), MObjFactory.of().create(configuration.getProperty(key)));
-        });
+       // configuration.getKeys().forEachRemaining(key -> {
+       //     map.put(uri(key), MObjFactory.of().create(configuration.getProperty(key),configuration.getProperty(key)));
+      //  });
         return map;
     }
 
@@ -97,7 +97,7 @@ public class mGraph implements Graph, WrappedGraph<grphSpace> {
     }
 
     public mGraph(final Configuration configuration) {
-        grphInstSet.create();
+        //grphInstSet.create();
         final fURI spacevid = f(configuration.getProperty(SPACE).toString());
         final fURI pattern = f(configuration.getProperty(PATTERN).toString());
         final Obj s = Router.global().read(spacevid);

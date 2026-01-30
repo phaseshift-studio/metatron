@@ -93,10 +93,11 @@ public class BootLoader implements Rec, Feature.SelfClone {
         Registry.open().register(IOT_ISA_TID, iotInstSet::create);
         Registry.open().register(GRPH_ISA_TID, grphInstSet::create);
         /// //////////////////
-        Registry.open().register(LLM_INSTSET_TID, llmInstSet::create);
+       // Registry.open().register(LLM_INSTSET_TID, llmInstSet::create);
         Registry.open().register(VEC_INSTSET_TID, vecInstSet::create);
-        Registry.open().register(MACH_INSTSET_TID, machInstSet::create);
-        Registry.open().register(TABL_INSTSET_TID, tablInstSet::create);
+      //  Registry.open().register(MACH_INSTSET_TID, machInstSet::create);
+      //  Registry.open().register(TABL_INSTSET_TID, tablInstSet::create);
+        Registry.open().load(f("/mtron/iot"),f("/sys/isa/iot"));
         // Registry.singleton().register(miotInstSet.INST_TID, () -> miotInstSet.of(fURI.NULL));
     }
 

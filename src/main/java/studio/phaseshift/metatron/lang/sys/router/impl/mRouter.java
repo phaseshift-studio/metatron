@@ -192,8 +192,8 @@ public class mRouter extends MSpace<MServer> implements Router {
             return space.get();
         else if (match.basePath().matches(f("+/#")))
             return (S) THREAD_STACK.get();
-        else if (Registry.open().has(match))
-            return Registry.open().load(match);
+      //  else if (Registry.open().has(match))
+      //      return Registry.open().load(match);
         else if (!BOOTING)
             throw MTronException.of("no active space supports pattern %s", match.toUri(false));
         else

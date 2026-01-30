@@ -21,6 +21,7 @@ package studio.phaseshift.metatron.isa.m.type;
 import studio.phaseshift.metatron.algebra.Ring;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.impl.MUri;
+import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -52,6 +53,26 @@ public interface Uri extends Mono, Ring.O<Uri> {
 
     @Override
     fURI jvm();
+
+    default Obj at(final Obj key) {
+        final fURI k = key.uriValue();
+        if (k.equals(f(SCHEME)))
+            return uri(this.uriValue().scheme());
+        else if (k.equals(f(HOST)))
+            return uri(this.uriValue().host());
+        else if (k.equals(f(PORT)))
+            return jnt(this.uriValue().port());
+        else if (k.equals(f(PATH)))
+            return lst(this.uriValue().segments().stream().map(MUri::uri).map(Obj::<Obj>as).toList());
+        else if (k.equals(f(C)))
+            return rec(
+                    MIN, null == this.uriValue().cV().min() ? noobj() : jnt(this.uriValue().cV().min()),
+                    MAX, null == this.uriValue().cV().max() ? noobj() : jnt(this.uriValue().cV().max()));
+        else if (k.equals(f(Q)))
+            return rec(this.uriValue().queryMap().entrySet().stream().map(kv -> rel(uri(kv.getKey()), uri(kv.getValue()))));
+        else
+            throw MTronException.of("unknown uri component: %s", k);
+    }
 
     default Uri jvm(final fURI jvm) {
         return this.clone(jvm, this.tid(), this.vid());
