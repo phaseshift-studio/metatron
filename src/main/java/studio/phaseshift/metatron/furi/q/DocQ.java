@@ -181,6 +181,9 @@ public class DocQ extends BaseQ {
             return this.at(Tokens.DESC).isNoObj() ? null : this.at(Tokens.DESC).strValue();
         }
 
+        public String toCleanString() {
+            return this.toString();
+        }
         public String toString() {
             // ┌|├|┐|└|┘|│|┤|─|⋰|⋱|⮝|⮞|⮜|⮟
             /**
@@ -308,7 +311,7 @@ public class DocQ extends BaseQ {
         public Optional<Obj> preRead(final fURI source, final fURI vid) {
             LOG.trace("evaluating {{y}}preread{{/y}}: %s", vid);
             return Optional.of(objs(docSpace.entrySet().stream()
-                    .filter(kv -> kv.getKey().matches(vid))
+                   // .filter(kv -> kv.getKey().matches(vid))
                     .map(Map.Entry::getValue))
                     .orElse(objs(Router.readFromSpace(vid.removeQ("doc")).stream().map(Doc::empty))));
         }

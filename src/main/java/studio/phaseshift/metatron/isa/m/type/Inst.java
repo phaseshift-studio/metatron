@@ -236,10 +236,11 @@ public interface Inst extends Call {
         try {
             Obj fetched = Router.global().read(this.tid().basePath());
             /// //////////////////////////////////////////////////
-            boolean isInst = fetched.stream().allMatch(Obj::isInst);
-            if (!isInst) {
-                LOG.debug("no insts found at: %s", fetched);
+            if (fetched.stream().noneMatch(Obj::isInstObj)) {
                 fetched = Router.global().read(this.tid().extend("apply"));
+                if(fetched.stream().noneMatch(Obj::isInstObj))
+                    fetched = Router.global().read(this.type().tid().extend("apply"));
+                LOG.debug("apply() insts at: %s => %s", this.tid().extend("apply"), fetched);
             }
             /// //////////////////////////////////////////////////
             LOG.debug("fetched insts: %s => %s", this.tid().basePath(), fetched);

@@ -115,16 +115,18 @@ class MqttSpace(Obj):
 
     def _callback(self, furi, obj):
         #print("subscriptions: {}", self.subscriptions)
-        furi2 = f(furi.decode())
-        obj2 = JSONTranslator.to_obj(obj.decode())
-        if obj2 is None or obj is None:
-            if furi2 in self.cache.keys():
-                self.cache.pop(furi2)
-        else:
-            for pattern, func in self.subscriptions.items():
-                if furi2.matches(pattern):
-                    # LOG.debug("using subscription {{y}}{}", pattern)
-                    func(furi2, obj2)
+        try:
+            furi2 = f(furi.decode())
+            obj2 = JSONTranslator.to_obj(obj.decode())
+            if obj2 is None or obj is None:
+                if furi2 in self.cache.keys():
+                    self.cache.pop(furi2)
+            else:
+                for pattern, func in self.subscriptions.items():
+                    if furi2.matches(pattern):
+                        func(furi2, obj2)
+        except Exception as e:
+            LOG.error("message error {{y}}{}{{X}}: {}", furi2, e)
             
 
     def connect_esphome(self, merge, template: str = 'esphome.json'):

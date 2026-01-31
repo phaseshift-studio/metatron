@@ -20,13 +20,13 @@ from metatron.furi import fURI
 from metatron.obj import *
 from metatron.util.graphitty import LOG
 
-FILE_SPACE_TID = f("/iot/space/file")
-
+FILE_SPACE_TID = f("/sys/space/file")
 
 class FileSpace(Obj):
-    def __init__(self, pattern: fURI, vid: fURI = f("/sys/space/file")):
+    def __init__(self, pattern: fURI, rewrite: list,vid: fURI = f("/sys/space/file")):
         Obj.__init__(self, FILE_SPACE_TID, vid)
         self.pattern = pattern
+        self.rewrite = rewrite
         self.cache = {}
         self.subscriptions = {}
 
@@ -40,13 +40,16 @@ class FileSpace(Obj):
             LOG.error("unable to connect with {{y}}{}{{X}} file system: {}", "local", e)
         return self
 
-    def read(self, vid) -> Obj:
-        vid = vid if isinstance(vid, fURI) else fURI(vid)
-        vid = f(str(vid).replace("file:",""))
-        result = {} if vid.send else []
-        for file in os.listdir() if vid.has_pattern() else os.listdir(str(vid)) :
-            if f(file).matches(vid):
-                result.__setitem__(file, file) if vid.send else result.append(file)
+    def read(self, pattern) -> Obj:
+        pattern = pattern if isinstance(pattern, fURI) else fURI(pattern)
+        pattern = f(str(pattern).replace(self.rewrite[0], self.rewrite[1]))
+        result = {} if pattern.send else []
+        running = ""
+        for segment in pattern.path:
+            for file in os.listdir(running) if segment == "#" or segment == "+" else [segment] :
+                if f(file).matches(segment) or f(file).matches(pattern):
+                    result.__setitem__(running, file) if pattern.send else result.append(file)
+            running += "/" + segment
         return None if 0 is len(result) else result
 
     def subscribe(self, furi, func):

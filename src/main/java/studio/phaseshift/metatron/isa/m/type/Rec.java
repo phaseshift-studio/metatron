@@ -240,6 +240,10 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>>, PlusMonoid.O<Rec> {
                     instC(PLUS_INST_TID.dom(REC_TID).rng(REC_TID), lst(T(REC_TID)), (lhs, inst) -> lhs.jvm(Stream.concat(lhs.<Rec>as().elements(), inst.arg(0).<Rec>as().elements().map(Obj::<Rel>as)).collect(Collectors.toMap(Rel::first, Rel::second, Obj::append, LinkedHashMap::new)))),
                     instC(MPLUS_INST_TID.dom(REC_TID).rng(REC_TID), lst(T(REC_TID)), (lhs, inst) -> inst.arg(0).<Rec>as().elements().map(Obj::<Obj>as).reduce(lhs.<Rec>as(), (a, b) -> a.<Rec>as().put(((Rel) b).first(), ((Rel) b).second(), MUTABLE))),
                     instC(SELECT_INST_TID.dom(REC_TID).rng(REC_TID.maybe()), lst(T(REC_TID)), (lhs, inst) -> selectRecRecursion(lhs.asRec(), inst.arg(0).asRec())),
+                    instC(SELECT_INST_TID.dom(REC_TID).rng(ALL.maybe()), lst(T(URI_TID)), (lhs, inst) -> lhs.asRec().at(inst.arg(0))),
+                    //  instC(SELECT_INST_TID.dom(REC_TID).rng(REC_TID.maybe()), lst(T(URI_TID).c(cInt.of(2,null)).asType()), (lhs, inst) -> inst.args().elements().map(u -> rel(u,lhs.asRec().at(u))).collect(new CommonUtil.RecCollector())),
+                    instC(SELECT_INST_TID.dom(REC_TID).rng(REC_TID.maybe()), lst(T(URI_TID.c("2,"))), (lhs, inst) -> inst.arg(0).stream().map(u -> rel(u, lhs.asRec().at(u))).collect(new CommonUtil.RecCollector())),
+                    instC(UPDATE_INST_TID.dom(REC_TID).rng(REC_TID.maybe()), lst(REC_TYPE), (lhs, inst) -> Poly.Helper.updateRecRecursion(lhs.asRec(), inst.arg(0).asRec(), MUTABLE)),// inst.arg(0).asRec().elements().map(r -> lhs.asRec().at(r.first(), r.second(), MUTABLE)).filter(o -> false).findFirst().orElse(lhs.as())),
                     instC(WITHIN_INST_TID.dom(REC_TID).rng(REC_TID), lst(T(ALL_STAR)), (lhs, inst) -> rec(lhs.elements().map(r -> inst.arg(0).apply(r).<Rel>as()))),
                     instC(SUM_INST_TID.dom(REC_TID.maybeSome()).rng(REC_TID), lst(), (lhs, inst) -> lhs.stream().map(Obj::asRec).reduce(rec(), Rec::plus))
             ));

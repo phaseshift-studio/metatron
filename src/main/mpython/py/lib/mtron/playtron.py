@@ -29,6 +29,7 @@ from metatron.furi import f
 from metatron.soc.device.i2c import I2c
 from metatron.soc.device.memory import Memory
 from metatron.soc.device.mfrc522 import MFRC522
+from metatron.soc.device.mpy import MPy
 from metatron.soc.device.spi import Spi
 from metatron.soc.device.ssd1306 import Ssd1306
 from metatron.soc.device.wifi import Wifi
@@ -45,19 +46,20 @@ class Playtron(Architecture):
     def __init__(self, secrets: dict):
         Architecture.__init__(self, secrets)
         router().add_space(MqttSpace(f(f"{secrets['host']}/#")).start())
-        router().add_space(FileSpace(f("file:#")).start())
+        router().add_space(FileSpace(f("file:#"),["file:","/"]).start())
         router().add_space(mtronSpace(f("ws://booger.local:8999/#")).start())
         #####################################################################################################
         self.soc = WemosD1Mini(vid=self.soc_vid)
         self.soc.attach(Wifi(wlan=self.wlan, secrets=self.secrets, soc_vid=self.soc_vid).start())
-        self.soc.attach(Memory(soc_vid=self.soc_vid).start())
+        #self.soc.attach(Memory(soc_vid=self.soc_vid).start())
         # self.soc.attach(Gpio(pin_range=range(0, 35), soc_vid=self.soc_vid).start())
         # self.soc.attach(Pwm(soc_vid=self.soc_vid).start())
-        self.soc.attach(I2c(scl_pin=22, sda_pin=21, soc_vid=self.soc_vid).start())
-        self.soc.attach(Ssd1306(i2c=self.soc.i2c, addr=0x3c, height=64, width=128, soc_vid=self.soc_vid, name="oled").start())
+        # self.soc.attach(I2c(scl_pin=22, sda_pin=21, soc_vid=self.soc_vid).start())
+        # self.soc.attach(Ssd1306(i2c=self.soc.i2c, addr=0x3c, height=64, width=128, soc_vid=self.soc_vid, name="oled").start())
         #####################################################################################################
-        self.soc.attach(Spi(sck_pin=18, mosi_pin=23, miso_pin=19, soc_vid=self.soc_vid, name="spi").start())
+        # self.soc.attach(Spi(sck_pin=18, mosi_pin=23, miso_pin=19, soc_vid=self.soc_vid, name="spi").start())
+        self.soc.attach(MPy(soc_vid=self.soc_vid, name="mpy").start())
         #####################################################################################################
-        self.soc.attach(MFRC522(soc_vid=self.soc_vid, spi=self.soc.spi, cs_pin=5, rst_pin=27, name="rfid").start())
+        # self.soc.attach(MFRC522(soc_vid=self.soc_vid, spi=self.soc.spi, cs_pin=5, rst_pin=27, name="rfid").start())
         # LOG.warn("attempting rfid test: {}",self.soc.rfid.test_spi())
-        LOG.warn("attempting rfid read: {}", self.soc.rfid.request(self.soc.rfid.REQIDL))
+        # LOG.warn("attempting rfid read: {}", self.soc.rfid.request(self.soc.rfid.REQIDL))

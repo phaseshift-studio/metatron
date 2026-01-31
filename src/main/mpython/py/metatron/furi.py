@@ -19,7 +19,9 @@ class fURI:
     def __init__(self, uri: str):
         self.sstart = uri.startswith("/")
         self.send = uri.endswith("/")
-        self.path = uri.split("/")
+        temp = uri.split(":")
+        self.scheme = temp[0] if ":" in uri else None
+        self.path = temp[1].split("/") if ":" in uri else uri.split("/")
 
     def extend(self, segment: str) -> "fURI":
         new_path = self.path + segment.split('/')
@@ -33,8 +35,15 @@ class fURI:
         return self.matches(other) or other.matches(self)
 
     def matches(self, other: "fURI") -> bool:
+        other = other if isinstance(other, fURI) else fURI(str(other))
         if str(other) == "#":
             return True
+        if self.scheme is not None and (
+                other.scheme is None or
+                other.scheme != "#" or
+                other.scheme != "+" or
+                self.scheme != other.scheme):
+            return False
         other_len = len(other.path)
         for i in range(len(self.path)):
             if other_len < i + 1:
@@ -55,7 +64,7 @@ class fURI:
             return ""
         return self.path[-1]
 
-    def host(self,new_host=None):
+    def host(self, new_host=None):
         if new_host is None:
             return str(self).split("/")[2]
         else:

@@ -95,10 +95,12 @@ public interface Type extends Obj, PlusMonoid<Type> {
 
     @Override
     default boolean matches(final Obj rhs) {
-        // if (this.equals(rhs))
-        //    return true;
-        if(rhs.isNoObj() && this.c().isZeroable())
+        if (rhs.isNoObj() && this.c().isZeroable())
             return true;
+        if (this.equals(rhs))
+            return true;
+        // if (this.tid().basePath().equals(AUTO_INST_TID) || rhs.tid().basePath().equals(AUTO_INST_TID))
+        //     return true;
         if (rhs.isCall())
             return this.matches(rhs.dom());// && rhs.apply(this).matches(rhs.rng());
         if (!rhs.isType())
@@ -111,7 +113,7 @@ public interface Type extends Obj, PlusMonoid<Type> {
         //     return !rhs.asType().hasPredicate() || this.matches(rhs.asType().predicate());
         if (this.tid().matches(rhs.tid())) //&& (!rhs.asType().hasPredicate() || Objects.equals(this.predicate(), rhs.asType().predicate())))
             return true;
-        if(rhs.tid().isGeneric())
+        if (rhs.tid().isGeneric())
             return !this.tid().isGeneric() || (this.c().within(rhs.c()) && this.tid().basePath().equals(rhs.tid().basePath()));
         if (!this.asType().isBaseType() && Router.loaded()) // recursively check type to base type
             return Router.readFromSpace(this.tid()).matches(rhs);

@@ -34,7 +34,7 @@ import studio.phaseshift.metatron.isa.sys.type.LogObj;
 import studio.phaseshift.metatron.isa.sys.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.sys.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.isa.web.webInstSet;
-import studio.phaseshift.metatron.lang.db.grph.inst.grphInstSet;
+import studio.phaseshift.metatron.isa.grph.grphInstSet;
 import studio.phaseshift.metatron.lang.db.vec.vecInstSet;
 import studio.phaseshift.metatron.lang.sys.router.Router;
 import studio.phaseshift.metatron.lang.sys.router.impl.mRouter;
@@ -167,7 +167,6 @@ public class BootLoader implements Rec, Feature.SelfClone {
             ROUTER = new mRouter(localAuthority, SYS_TID.extend("router"));
             sysSpace.write(ROUTER.vid(), ROUTER);
             Router.global().addSpace(sysSpace.self(sysSpace.jvm(), sysSpace.tid(), f("/sys")).as());
-            // Router.global().addSpace(mtronSpace);
             Router.writeToSpace(mInstSet.create(M_ISA_TID));
             Router.writeToSpace(sysInstSet.create(SYS_ISA_TID));
             // Router.writeToSpace((f("/sys/mod/fs")));

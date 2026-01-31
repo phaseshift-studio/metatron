@@ -18,7 +18,7 @@
 
 import framebuf
 import math
-import time
+from machine import const
 
 from metatron.furi import f, fURI
 from metatron.obj import Obj
@@ -67,48 +67,52 @@ class Ssd1306(Device):
         self.pages = self.height // 8
 
     def start(self) -> 'Ssd1306':
-        for cmd in (
-                SET_DISP | 0x00,  # off
-                # address setting
-                SET_MEM_ADDR, 0x00,  # horizontal
-                # resolution and layout
-                SET_DISP_START_LINE | 0x00,
-                SET_SEG_REMAP | 0x01,  # column addr 127 mapped to SEG0
-                SET_MUX_RATIO, self.height - 1,
-                SET_COM_OUT_DIR | 0x08,  # scan from COM[N] to COM0
-                SET_DISP_OFFSET, 0x00,
-                SET_COM_PIN_CFG, 0x02 if self.height == 32 else 0x12,
-                # timing and driving scheme
-                SET_DISP_CLK_DIV, 0x80,
-                SET_PRECHARGE, 0xf1,  # no external vcc
-                SET_VCOM_DESEL, 0x30,  # 0.83*Vcc
-                # display
-                SET_CONTRAST, 0xff,  # maximum
-                SET_ENTIRE_ON,  # output follows RAM contents
-                SET_NORM_INV,  # not inverted
-                # charge pump
-                SET_CHARGE_PUMP, 0x14,  # no external vcc
-                SET_DISP | 0x01):  # on
-            self._write_cmd(cmd)
-        self.fill(0)
-        self.sline(0, 15, True, self.width, 1, False)
-        self.sline(0, 0, True, self.width, 1, False)
-        self.sline(0, 0, False, 15, 1, False)
-        self.sline(self.width - 1, 0, False, 15, 1, False)
-        ######################################################################
-        self.rotated_rectangle(40, 40, 25, 30, 55, 1, False)
-        self.sline(50,40,True,45,1,False)
-        # self.sline(0, self.width, False, self.height, 1, False)
-        self.text("metatron v0.1", 12, 5, 1, False)
-        self.text(" ..... ", 44, 29, 1, False)
-        self.text("|     |", 44, 42, 1, False)
-        self.text("|_|_|_|", 44, 53, 1, False)
-        self.show()
-        # self.image('mtron_logo.pbm')
-        if self.soc_vid is not None:
-            router().subscribe(self.soc_vid.extend(self.name).extend("+"),
-                               lambda vid, value: Ssd1306._process_cmd(self, vid, value))
+        try:
+            for cmd in (
+                    SET_DISP | 0x00,  # off
+                    # address setting
+                    SET_MEM_ADDR, 0x00,  # horizontal
+                    # resolution and layout
+                    SET_DISP_START_LINE | 0x00,
+                    SET_SEG_REMAP | 0x01,  # column addr 127 mapped to SEG0
+                    SET_MUX_RATIO, self.height - 1,
+                    SET_COM_OUT_DIR | 0x08,  # scan from COM[N] to COM0
+                    SET_DISP_OFFSET, 0x00,
+                    SET_COM_PIN_CFG, 0x02 if self.height == 32 else 0x12,
+                    # timing and driving scheme
+                    SET_DISP_CLK_DIV, 0x80,
+                    SET_PRECHARGE, 0xf1,  # no external vcc
+                    SET_VCOM_DESEL, 0x30,  # 0.83*Vcc
+                    # display
+                    SET_CONTRAST, 0xff,  # maximum
+                    SET_ENTIRE_ON,  # output follows RAM contents
+                    SET_NORM_INV,  # not inverted
+                    # charge pump
+                    SET_CHARGE_PUMP, 0x14,  # no external vcc
+                    SET_DISP | 0x01):  # on
+                self._write_cmd(cmd)
+            self.fill(0)
+            self.sline(0, 15, True, self.width, 1, False)
+            self.sline(0, 0, True, self.width, 1, False)
+            self.sline(0, 0, False, 15, 1, False)
+            self.sline(self.width - 1, 0, False, 15, 1, False)
+            ######################################################################
+            self.rotated_rectangle(40, 40, 25, 30, 55, 1, False)
+            self.sline(50, 40, True, 45, 1, False)
+            # self.sline(0, self.width, False, self.height, 1, False)
+            self.text("metatron v0.1", 12, 5, 1, False)
+            self.text(" ..... ", 44, 29, 1, False)
+            self.text("|     |", 44, 42, 1, False)
+            self.text("|_|_|_|", 44, 53, 1, False)
+            self.show()
+            # self.image('mtron_logo.pbm')
+            if self.soc_vid is not None:
+                router().subscribe(self.soc_vid.extend(self.name).extend("+"),
+                                   lambda vid, value: Ssd1306._process_cmd(self, vid, value))
+        except Exception as e:
+            LOG.error("error starting {{y}}{}{{X}}: {}", self.name, e)
         return self
+
 
     @staticmethod
     def _process_cmd(device: 'Ssd1306', vid: fURI, value: Obj):
@@ -132,17 +136,20 @@ class Ssd1306(Device):
                 LOG.error("error calling method {{r}}{}{{X}} on {{y}}{}{{X}}: {}", vid.name(), vid, e)
         else:
             LOG.error("unknown method {{r}}{}{{X}} on {{y}}{}", vid.name(), vid)
-
+    
+    
     def _write_cmd(self, cmd):
         self.temp[0] = 0x80  # Co=1, D/C#=0
         self.temp[1] = cmd
         self.i2c.writeto(self.addr, self.temp)
-
+    
+    
     def stop(self) -> 'Ssd1306':
         Device.stop(self)
         self._write_cmd(SET_DISP | 0x00)
         return self
-
+    
+    
     def show(self):
         x0 = 0
         x1 = self.width - 1
@@ -156,25 +163,30 @@ class Ssd1306(Device):
         self._write_cmd(0)
         self._write_cmd(self.pages - 1)
         self.i2c.writeto(self.addr, self.buffer)
-
+    
+    
     def clear(self, show=True):
         self.fill(0, show)
-
+    
+    
     def fill(self, col: int = 1, show=True):
         self.framebuf.fill(col)
         if show:
             self.show()
-
+    
+    
     def pixel(self, x: int, y: int, col: int = 1, show=True):
         self.framebuf.pixel(x, y, col)
         if show:
             self.show()
-
+    
+    
     def line(self, x1: int, y1: int, x2: int, y2: int, col: int = 1, show=True):
         self.framebuf.line(x1, y1, x2, y2, col)
         if show:
             self.show()
-
+    
+    
     def sline(self, x: int, y: int, horizontal: bool, length: int = -1, col: int = 1, show=True):
         if length is -1:
             length = self.width if horizontal else self.height
@@ -184,14 +196,16 @@ class Ssd1306(Device):
             self.framebuf.vline(x, y, length, col)
         if show:
             self.show()
-
+    
+    
     def square(self, x: int, y: int, size: int, col: int = 1, show: bool = True):
         for i in range(x, x + size):
             for j in range(y, y + size):
                 self.framebuf.pixel(i, j, col)
         if show:
             self.show()
-
+    
+    
     def circle(self, x0: int, y0: int, radius: int, col: int = 1, show: bool = True):
         x = radius
         y = 0
@@ -213,28 +227,33 @@ class Ssd1306(Device):
                 err -= 2 * x + 1
         if show:
             self.show()
-
+    
+    
     def scroll(self, dx: int, dy: int, show: bool = True):
         self.framebuf.scroll(dx, dy)
         if show:
             self.show()
-
+    
+    
     def contrast(self, contrast: int, show: bool = True):
         self._write_cmd(SET_CONTRAST)
         self._write_cmd(contrast)
         if show:
             self.show()
-
+    
+    
     def invert(self, invert: bool, show: bool = True):
         self._write_cmd(SET_NORM_INV | (invert & 1))
         if show:
             self.show()
-
+    
+    
     def text(self, text: str, x: int, y: int, col: int = 1, show: bool = True):
         self.framebuf.text(text, x, y, col)
         if show:
             self.show()
-
+    
+    
     def image(self, filename: str, show: bool = True):
         with open(filename, 'rb') as image_file:
             image_data = image_file.read()
@@ -242,7 +261,8 @@ class Ssd1306(Device):
         self.framebuf.blit(fb, 0, 0)
         if show:
             self.show()
-
+    
+    
     def rotated_rectangle(self, x: int, y: int, w: int, h: int, angle: int, col: int = 1, show: bool = True):
         angle_rad = math.radians(angle)
         # Half-width and half-height for corner calculation

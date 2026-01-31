@@ -212,6 +212,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
             return true;
         else if (rhs.isNoObj())
             return false;
+        /// //////////////////////////////
         // if (rhs.isUri() && this.isUri())
         //  return this.uriValue().matches(rhs.uriValue());
         final fURI base = this.tid().basePath();
@@ -611,13 +612,22 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
         }
 
         public static void objCheckAndSave(final Obj obj, final Object jvm, final fURI tid, final fURI vid) {
+            final Object oldJVM = obj.jvm();
+            final fURI oldTID = obj.tid();
+            final fURI oldVID = obj.vid();
             final boolean save = !Objects.equals(obj.vid(), vid) || !Objects.equals(obj.tid().basePath(), tid.basePath()) || !Objects.equals(obj.jvm(), jvm);
             obj.self(jvm, tid, vid);
-            if (save)
-                Obj.Helper.objCheckAndSave(obj);
+            try {
+                if (save)
+                    Obj.Helper.objCheckAndSave(obj);
+            } catch (final MTronException e) {
+                obj.self(oldJVM, oldTID, oldVID);
+                throw e;
+            }
         }
 
-        public static <O extends Obj> O construct(final Class<O> clazz, final Object jvm, final fURI tid, final fURI vid) {
+        public static <O extends Obj> O construct(final Class<O> clazz, final Object jvm, final fURI tid,
+                                                  final fURI vid) {
             if (null != tid) {
                 final fURI bigTID = tid.big();
                 if (!BASE_TYPES.contains(bigTID.basePath()) && Router.loaded()) {

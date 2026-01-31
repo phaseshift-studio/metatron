@@ -124,6 +124,7 @@ public class mInstSet extends MInstSet {
     public static final fURI BARRIER_TID = INST_TID.extend("barrier");
     public static final fURI REIFY_INST_TID = INST_TID.extend("reify");
     public static final fURI SELECT_INST_TID = INST_TID.extend("select");
+    public static final fURI UPDATE_INST_TID = INST_TID.extend("update");
     public static final fURI WHERE_INST_TID = INST_TID.extend("where");
     public static final fURI GROUP_INST_TID = INST_TID.extend("group");
     public static final fURI ELSE_INST_TID = INST_TID.extend("else");
