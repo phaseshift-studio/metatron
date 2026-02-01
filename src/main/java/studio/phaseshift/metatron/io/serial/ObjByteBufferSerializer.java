@@ -153,6 +153,6 @@ public class ObjByteBufferSerializer implements ObjSerializer<ByteBuffer> {
     @Override
     public Objs readObjs(final ByteBuffer data) throws MTronException {
         //Router.global().logger().info("received %s", new String(data.array(), StandardCharsets.UTF_8));
-        return mParser.m_objs().parse(new String(data.array(), StandardCharsets.UTF_8)).get();
+        return mParser.parse(new String(data.array(), StandardCharsets.UTF_8));
     }
 }

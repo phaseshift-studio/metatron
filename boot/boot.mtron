@@ -32,10 +32,12 @@ import(/mtron/grph);
            persist => </tmp/shared.mtron>]@/sys/space/shared;
     meta::[pattern => </a/cluster/#>,
            host     => <ws://localhost:6666>,
-           peers    => !*boot/peers]@/sys/space/mtron;
-    meta::[pattern => </b/cluster/#>,
+           rewrite  => (</a/cluster>=></shared>),
+           peers    => !*boot/peers]@/sys/space/meta1;
+    meta::[pattern  => </b/cluster/#>,
            host     => <ws://127.0.0.1:7777>,
-           peers    => !*boot/peers]@/sys/space/mtron2;
+           rewrite  => (</b/cluster>=></shared>),
+           peers    => !*boot/peers]@/sys/space/meta2;
     http::[host     => <http://localhost:8777>,
           pattern => http://#,
           route   => [/     => examples/www,

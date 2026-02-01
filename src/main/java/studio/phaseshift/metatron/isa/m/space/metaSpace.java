@@ -22,7 +22,6 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.MSpace;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.mInstSet;
-import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Type;
@@ -39,10 +38,10 @@ import java.util.function.Function;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.ALL;
-import static studio.phaseshift.metatron.furi.fURI.fnull;
 import static studio.phaseshift.metatron.isa.m.mInstSet.M_ISA_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.URI_TID;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
+import static studio.phaseshift.metatron.isa.m.type.Rel.REL_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
@@ -57,26 +56,32 @@ public class metaSpace extends MSpace<MServer> {
 
     public static final fURI META_SPACE_TID = M_ISA_TID.extend("space/meta");
     protected final fURI host;
-    protected final Space cache;
+    // protected final Space cache;
     protected final List<fURI> peers = new ArrayList<>();
     protected final int selfIndex;
     protected final MServer server;
+    protected final Tuple.Pair<String, String> rewrite;
 
     protected static final Rec CONFIG = rec(
             uri(HOST), URI_TYPE,
             uri(PATTERN), URI_TYPE,
+            uri(REWRITE), REL_TYPE, // TODO: rel(URI_TYPE,URI_TYPE)
             uri(PEERS), lst(T(URI_TID.maybeSome())));
 
     public static final Type META_SPACE_TYPE = T(META_SPACE_TID,
-            isa_(CONFIG), // predicate
-            instC(mInstSet.INST_TID.dom(ALL.maybe()).rng(META_SPACE_TID), //constructure
-                    lst(isa_(CONFIG).tryToInst()), (lhs, inst) -> metaSpace.of(inst.arg(0).asRec(), inst.arg(0).vid())));
+            null, // predicate
+            instC(mInstSet.INST_TID.extend("con").dom(ALL.maybe()).rng(META_SPACE_TID), //constructor
+                    lst(isa_(CONFIG).tryToInst()),
+                    (lhs, inst) -> metaSpace.of(inst.arg(0).asRec(), inst.arg(0).vid())));
 
 
     protected metaSpace(final MServer sjvm, final Map<Obj, Obj> jvm, final fURI vid) {
         super(sjvm, jvm, META_SPACE_TID, vid);
-        this.host = jvm.get(uri(HOST)).uriValue();
-        this.cache = (Space) jvm.get(uri(CACHE));
+        this.host = this.at(uri(HOST)).uriValue();
+        this.rewrite = this.has(uri(REWRITE)) ?
+                Tuple.Pair.with(this.at(uri(REWRITE)).relValue().get0().uriValue().toString(), this.at(uri(REWRITE)).relValue().get1().uriValue().toString())
+                : null;
+        // this.cache = (Space) jvm.get(uri(CACHE));
         Rec c = rec(jvm);
         c.at(uri(PEERS)).asLst().elements().forEach(e -> this.peers.add(e.uriValue()));
         this.selfIndex = IteratorUtil.indexedStream(this.peers.iterator()).filter(p -> Objects.equals(p.get1().host(), this.host.host())).findFirst().map(Tuple.Pair::get0).orElse(-1);
@@ -86,11 +91,11 @@ public class metaSpace extends MSpace<MServer> {
     }
 
     public static metaSpace of(final Rec config, final fURI vid) {
-        final MServer server = new MServer(config.at(HOST).uriValue());
+        final MServer server = new MServer(config.at(HOST).uriValue(), config.at(PEERS).asLst().elements().map(Obj::uriValue).toList());
         server.start();
-        final memSpace cache = memSpace.of(config.at(PATTERN).uriValue(), fnull);
+        //  final memSpace cache = memSpace.of(config.at(PATTERN).uriValue(), fnull);
         final Map<Obj, Obj> conf = new LinkedHashMap<>(config.jvm());
-        conf.put(uri(CACHE), cache);
+        // conf.put(uri(CACHE), cache);
         return new metaSpace(server, conf, vid);
     }
 
@@ -102,63 +107,102 @@ public class metaSpace extends MSpace<MServer> {
 
     @Override
     public Obj read(final fURI vid) {
-        return studio.phaseshift.metatron.furi.Q.Helper.processPreRead(this.qs(), vid, vid).orElseGet(() -> {
+        final fURI lowerPattern = Space.Helper.toRewrite(vid, this.rewrite);
+        final int peerIndex = fURIHasher.getNodeIndex(lowerPattern.toString(), this.peers.size());
+        if (this.selfIndex == peerIndex) {
+            LOG.debug("{{y}}%s{{X}} [{{c}}reading{{X}}]:  {{y}}%s {{g}}=> {{y}}%s", this.host, vid, lowerPattern);
+            return Router.readFromSpace(lowerPattern);
+        } else {
+            final fURI peer = this.peers.get(peerIndex);
+            try {
+                final Obj toSend = from_(uri(lowerPattern)).tryToInst();
+                LOG.debug("{{y}}%s {{g}}=> {{y}}%s{{g}}: %s", this.host, peer, toSend);
+                final Obj result = this.server.sendRecv(peer, toSend);
+                return result;
+            } catch (final Exception e) {
+                throw MTronException.of(e);
+            }
+        }
+        /*return studio.phaseshift.metatron.furi.Q.Helper.processPreRead(this.qs(), vid, vid).orElseGet(() -> {
             Obj result = Space.Helper.resolveRead(this, vid.basePath(), directReader());
             //return result;
             return studio.phaseshift.metatron.furi.Q.Helper.processPostRead(this.qs(), vid, vid, result).orElse(result);
-        });
+        });*/
     }
 
     @Override
     public Obj write(final fURI vid, final Obj obj) {
-        return studio.phaseshift.metatron.furi.Q.Helper.processPreWrite(this.qs(), vid, vid, obj).orElseGet(() -> {
-            Space.Helper.resolveWrite(this, vid.basePath(), obj, this.directWriter(), this.directReader());
-            //return obj;
-            return studio.phaseshift.metatron.furi.Q.Helper.processPostWrite(this.qs(), vid, vid, obj)
-                    .orElse(studio.phaseshift.metatron.furi.Q.Helper.processQlessWrite(this.qs(), vid, vid, obj)
-                            .orElse(obj));
-        });
+        final fURI lowerPattern = Space.Helper.toRewrite(vid, this.rewrite);
+        final int peerIndex = fURIHasher.getNodeIndex(lowerPattern.toString(), this.peers.size());
+        if (this.selfIndex == peerIndex) {
+            LOG.debug("{{y}}%s{{X}} [{{c}}writing{{X}}]:  {{y}}%s {{g}}=> {{y}}%s{{X}} %s", this.host, vid, lowerPattern, obj);
+            return Router.writeToSpace(lowerPattern, obj);
+        } else {
+            final fURI peer = this.peers.get(peerIndex);
+            try {
+                final Obj toSend = start_(obj).to_(uri(lowerPattern));
+                LOG.debug("{{y}}%s {{g}}=> {{y}}%s{{g}}: %s", this.host, peer, toSend);
+                return this.server.sendRecv(peer, toSend);
+            } catch (final Exception e) {
+                throw MTronException.of(e);
+            }
+
+        }
     }
 
     @Override
     public Function<fURI, Iterator<Tuple.Pair<fURI, Obj>>> directReader() {
-        return (pattern) -> {
-            final int peerIndex = fURIHasher.getNodeIndex(pattern.toString(), this.peers.size());
+        /*return (pattern) -> {
+            final fURI lowerPattern = Space.Helper.toRewrite(pattern, this.rewrite);
+            final int peerIndex = fURIHasher.getNodeIndex(lowerPattern.toString(), this.peers.size());
             if (this.selfIndex == peerIndex) {
-                return this.cache.directReader().apply(pattern);
+                LOG.info("{{y}}%s{{X}} [{{c}}reading{{X}}]:  {{y}}%s {{g}}=> {{y}}%s", this.host, pattern, lowerPattern);
+                return Router.readFromSpace(lowerPattern).stream().map(x -> lowerPattern.isBranch() ?
+                        Tuple.Pair.with(Space.Helper.fromRewrite(x.asRel().first().uriValue(), this.rewrite), x.asRel().second()) :
+                        Tuple.Pair.with(lowerPattern, x)).iterator();
             } else {
                 final fURI peer = this.peers.get(peerIndex);
                 try {
-                    LOG.info("reading: %s => %s", this.host, peer);
-                    final Obj result = this.server.sendRecv(peer, mParser.parse("*<%s>".formatted(pattern.asBranch())));
-                    return result.stream().map(x -> Tuple.Pair.with(pattern, x)).iterator();
+                    if (pattern.pathLength() > 0) {
+                        final Obj toSend = from_(uri(lowerPattern)).tryToInst();
+                        LOG.info("{{y}}%s {{g}}=> {{y}}%s{{g}}: %s", this.host, peer, toSend);
+                        final Obj result = this.server.sendRecv(peer, toSend);
+                        return result.stream().map(x -> lowerPattern.isBranch() ?
+                                Tuple.Pair.with(Space.Helper.fromRewrite(x.asRel().first().uriValue(), this.rewrite), x.asRel().second()) :
+                                Tuple.Pair.with(lowerPattern, x)).iterator();
+                    }
+                    return Collections.emptyIterator();
                 } catch (final Exception e) {
                     throw MTronException.of(e);
                 }
 
             }
-        };
+        };*/
+        throw new UnsupportedOperationException("directReader not supported for metaSpace");
     }
 
 
     @Override
     public BiFunction<fURI, Obj, Obj> directWriter() {
-        return (pattern, obj) -> {
-            final int peerIndex = fURIHasher.getNodeIndex(pattern.toString(), this.peers.size());
+       /* return (pattern, obj) -> {
+            final fURI lowerPattern = Space.Helper.toRewrite(pattern, this.rewrite);
+            final int peerIndex = fURIHasher.getNodeIndex(lowerPattern.toString(), this.peers.size());
             if (this.selfIndex == peerIndex) {
-                return this.cache.directWriter().apply(pattern, obj);
+                LOG.info("{{y}}%s{{X}} [{{c}}writing{{X}}]:  {{y}}%s {{g}}=> {{y}}%s{{X}} %s", this.host, pattern, lowerPattern, obj);
+                return Router.writeToSpace(lowerPattern, obj);
             } else {
                 final fURI peer = this.peers.get(peerIndex);
                 try {
-                    LOG.info("writing: %s => %s", this.host, peer);
-                    final Obj result = this.server.sendRecv(peer, mParser.parse("%s -> %s".formatted(pattern, obj.toCleanString())));
-                    return result;
+                    final Obj toSend = start_(obj).to_(uri(lowerPattern)).tryToInst();
+                    LOG.info("{{y}}%s {{g}}=> {{y}}%s{{g}}: %s", this.host, peer, toSend);
+                    return this.server.sendRecv(peer, toSend);
                 } catch (final Exception e) {
                     throw MTronException.of(e);
                 }
 
             }
-        };
+        };*/
+        throw new UnsupportedOperationException("directWriter not supported for metaSpace");
     }
 
     public static class fURIHasher {

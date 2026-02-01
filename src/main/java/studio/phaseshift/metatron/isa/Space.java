@@ -139,9 +139,21 @@ public interface Space extends Rec, Closeable {
             space.logger().warn("the clone of a space is the space itself");
         }
 
+
+        public static fURI toRewrite(final fURI vid, final Pair<String, String> rewrite) {
+            return null == rewrite ? vid : f(rewrite.get1() + vid.toString().replaceFirst(rewrite.get0(), ""));
+        }
+        
+        public static fURI fromRewrite(final fURI vid, final Pair<String, String> rewrite) {
+            return null == rewrite ? vid : f(rewrite.get0() + vid.toString().replaceFirst(rewrite.get1(), ""));
+        }
+        
+        
         public static String toNativeSpace(final fURI vid, final Pair<String, String> rewrite) {
             return null == rewrite ? vid.toString() : rewrite.get1() + vid.toString().replaceFirst(rewrite.get0(), "");
         }
+        
+        
 
         public static fURI fromNativeSpace(final String vid, final Pair<String, String> rewrite) {
             return null == rewrite ? f(vid) : f(rewrite.get0() + vid.replaceFirst(rewrite.get1(), ""));

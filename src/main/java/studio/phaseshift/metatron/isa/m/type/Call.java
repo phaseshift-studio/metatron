@@ -66,7 +66,7 @@ public interface Call extends Obj, Ring<Call> {
             if (this.codeValue().isEmpty())
                 return NoObj.noobj();
             else if (this.codeValue().size() == 1)
-                return this.codeValue().get(0);
+                return this.codeValue().getFirst();
         }
         return this;
     }

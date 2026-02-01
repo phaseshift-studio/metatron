@@ -632,7 +632,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
                 final fURI bigTID = tid.big();
                 if (!BASE_TYPES.contains(bigTID.basePath()) && Router.loaded()) {
                     final Obj type = Router.readFromSpace(bigTID);
-                    if (!type.isNoObj() && type.isType() && type.<Type>as().hasConstructor()) {
+                    if (!type.isNoObj() && type.isType() && type.asType().hasConstructor()) {
                         final Obj protoObj = MObjFactory.of().create(jvm, null, vid, clazz);
                         final O constructedObj = type.asType().constructor().apply(protoObj).as();
                         if (constructedObj.isFail())

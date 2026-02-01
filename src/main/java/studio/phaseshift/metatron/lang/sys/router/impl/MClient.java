@@ -27,18 +27,20 @@ import org.java_websocket.drafts.Draft;
 import org.java_websocket.drafts.Draft_6455;
 import org.java_websocket.handshake.ServerHandshake;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.io.serial.ObjSerializer;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.impl.MObjs;
+import studio.phaseshift.metatron.isa.sys.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.lang.sys.router.IOStat;
 import studio.phaseshift.metatron.lang.sys.router.Router;
-import studio.phaseshift.metatron.io.serial.ObjSerializer;
-import studio.phaseshift.metatron.isa.sys.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.net.URI;
 import java.net.http.WebSocket;
 import java.nio.ByteBuffer;
 import java.util.*;
+
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 
 public class MClient extends WebSocketClient implements MConnection {
 
@@ -48,6 +50,7 @@ public class MClient extends WebSocketClient implements MConnection {
     private static final UUID UNITY_UUID = UUID.randomUUID();
     protected final fURI remoteHost;
     private IOStat ioStat = new IOStat();
+    private FutureObj<Obj> TEMP_FUTURE = null;
 
     public MClient(final fURI remoteAuthority, final ObjSerializer<?> serializer, final Draft draft) {
         super(URI.create(remoteAuthority.toString()), draft);
@@ -127,7 +130,6 @@ public class MClient extends WebSocketClient implements MConnection {
         this.ioStat.incrTotalBytesRecv(message.array().length);
         final Obj obj = this.serializer.inputBytes(message);
         this.onObj(obj);
-
     }
 
     @Override
@@ -169,11 +171,12 @@ public class MClient extends WebSocketClient implements MConnection {
         Obj toSend = obj;// objs(obj.stream().map(x -> x.vid() == null ? x : x.vid(this.remoteHost().extend(x.vid().path()))));
         //toSend = toSend.vid(toSend.vid() == null ? f("temp?tag=abc") : toSend.vid().query("tag", "abc"));
         //LOG.trace("sending obj and awaiting future: %s", toSend);
-        final FutureObj<Obj> future = new FutureObj<>(UNITY_UUID);
-        this.futures.put(future.tag(), future);
+        //final FutureObj<Obj> future = new FutureObj<>(UNITY_UUID);
+        //this.futures.put(future.tag(), future);
         //LOG.trace("sendRecvObj futures: %s", this.futures);
+        this.TEMP_FUTURE = new FutureObj<>(UNITY_UUID);
         this.sendObj(toSend);
-        return (FutureObj<O>) future;
+        return (FutureObj<O>) this.TEMP_FUTURE;
     }
 
     public void onObj(final Obj obj) {
@@ -188,7 +191,8 @@ public class MClient extends WebSocketClient implements MConnection {
             }
         } else {*/
         LOG.trace("onObj futures: %s", this.futures);
-        final FutureObj<Obj> future = this.futures.remove(UNITY_UUID);
+        final FutureObj<Obj> future = this.TEMP_FUTURE;
+        this.TEMP_FUTURE = null;
         if (null != future) {
             future.setObj(obj);
             LOG.trace("processing future obj %s", future);

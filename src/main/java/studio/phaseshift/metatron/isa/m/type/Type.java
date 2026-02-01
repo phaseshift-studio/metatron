@@ -86,11 +86,11 @@ public interface Type extends Obj, PlusMonoid<Type> {
     }
 
     default boolean hasPredicate() {
-        return null != this.jvm().get0();
+        return null != this.jvm().get0() && !this.jvm().get0().isNoObj();
     }
 
     default boolean hasConstructor() {
-        return null != this.jvm().get1();
+        return null != this.jvm().get1() && !this.jvm().get1().isNoObj();
     }
 
     @Override

@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.util;
 
+import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
@@ -53,6 +54,8 @@ public final class CommonUtil {
         try {
             Thread.sleep(millis);
         } catch (final InterruptedException e) {
+            if(BootLoader.BOOTING)
+                return;
             throw MTronException.of(e);
         }
     }

@@ -19,9 +19,10 @@
 package studio.phaseshift.metatron.lang.sys.router.impl;
 
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.m.type.NoObj;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.impl.MObj;
-import studio.phaseshift.metatron.util.IteratorUtil;
+import studio.phaseshift.metatron.isa.m.type.impl.MObjFactory;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.time.Duration;
@@ -91,11 +92,7 @@ public class FutureObj<T extends Obj> extends MObj implements Future<T> {
 
     @Override
     public Iterator<Obj> iterator() {
-        try {
-            return this.get(DEFAULT_TIMEOUT_MS).iterator();
-        } catch (final Exception e) {
-            throw MTronException.of(e);
-        }
+        return this.get(DEFAULT_TIMEOUT_MS).iterator();
     }
 
     @Override
@@ -104,17 +101,32 @@ public class FutureObj<T extends Obj> extends MObj implements Future<T> {
     }
 
     @Override
-    public Stream<Obj> stream() {
-        return this.isNoObj() ? Stream.empty() : IteratorUtil.stream(this.iterator());
+    public <O extends Obj> O self(final Object jvm, final fURI tid, final fURI vid) {
+        if (this.isDone())
+            return this.get(DEFAULT_TIMEOUT_MS).self(jvm, tid, vid).self(jvm, tid, vid);
+        else
+            return MObjFactory.of().create(jvm, this.tid(), this.vid());
     }
 
     @Override
+    public Stream<Obj> stream() {
+        return this.get(DEFAULT_TIMEOUT_MS).stream();
+    }
+
+    @Override
+    public boolean isNoObj() {
+        return this.get(DEFAULT_TIMEOUT_MS).isNoObj();
+    }
+
+    @Override
+    public boolean isObjs() {
+        return this.get(DEFAULT_TIMEOUT_MS).isObjs();
+    }
+
+
+    @Override
     public <O extends Obj> Stream<O> elements() {
-        try {
-            return this.get(DEFAULT_TIMEOUT_MS).isPoly() ? this.get(DEFAULT_TIMEOUT_MS).elements() : (Stream) this.stream();
-        } catch (final Exception e) {
-            throw MTronException.of(e);
-        }
+        return this.get(DEFAULT_TIMEOUT_MS).elements();
     }
 
     @Override
@@ -123,8 +135,8 @@ public class FutureObj<T extends Obj> extends MObj implements Future<T> {
             throw new InterruptedException("future has already been canceled");
         if (null == ((AtomicReference<T>) this.jvm).get())
             throw new ExecutionException(MTronException.of("future obj isn't manifest"));
-        final T o = ((AtomicReference<T>) this.jvm).get(); 
-        if(o == null) 
+        final T o = ((AtomicReference<T>) this.jvm).get();
+        if (o == null)
             this.logger().error("future contains a null obj: %s", this);
         return o;
     }
@@ -136,6 +148,7 @@ public class FutureObj<T extends Obj> extends MObj implements Future<T> {
             if (null != ((AtomicReference<T>) this.jvm).get()) {
                 return ((AtomicReference<T>) this.jvm).get();
             }
+            Thread.yield();
             // Thread.currentThread().wait(100);
         }
         return ((AtomicReference<T>) this.jvm).get();
@@ -166,11 +179,6 @@ public class FutureObj<T extends Obj> extends MObj implements Future<T> {
     @Override
     public Obj apply(final Obj lhs) {
         return this.get(3000).apply(lhs);
-    }
-
-
-    public Obj tryBaseObj() {
-        return this.isDone() ? ((AtomicReference<T>) this.jvm).get() : this;
     }
 
     public static <O extends Obj> O resolveFuture(final Obj future) {

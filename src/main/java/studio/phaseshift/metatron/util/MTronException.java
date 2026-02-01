@@ -29,14 +29,13 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 
 public class MTronException extends RuntimeException {
 
-    private MTronException(final String message) {
-        super(Graphitty.string(message));
-        //  this.printStackTrace();
-    }
-
     private MTronException(final String message, final Throwable cause) {
         super(Graphitty.string(message), cause);
-        // this.printStackTrace();
+        //this.printStackTrace();
+    }
+
+    private MTronException(final String message) {
+        this(Graphitty.string(message),null);
     }
 
     public static MTronException of(final Throwable cause) {

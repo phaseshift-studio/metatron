@@ -41,7 +41,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 public interface Objs extends Obj, PlusMonoid.O<Objs> {
 
     static Obj trySingleton(final Obj obj) {
-        return obj.isObjs() ? objs(obj) : obj;
+        return null != obj && obj.isObjs() ? objs(obj) : obj;
     }
 
     @Override

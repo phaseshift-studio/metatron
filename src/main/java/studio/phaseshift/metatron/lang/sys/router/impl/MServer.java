@@ -19,19 +19,22 @@
 package studio.phaseshift.metatron.lang.sys.router.impl;
 
 import org.java_websocket.WebSocket;
+import org.java_websocket.WebSocketAdapter;
+import org.java_websocket.WebSocketFactory;
+import org.java_websocket.drafts.Draft;
 import org.java_websocket.handshake.ClientHandshake;
+import org.java_websocket.server.DefaultWebSocketServerFactory;
 import org.java_websocket.server.WebSocketServer;
-import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.io.serial.ObjByteBufferSerializer;
+import studio.phaseshift.metatron.io.serial.ObjSerializer;
 import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.sys.type.ui.graphitty.Graphitty;
+import studio.phaseshift.metatron.isa.sys.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.lang.jre.ObjFieldReflection;
 import studio.phaseshift.metatron.lang.sys.router.Cluster;
 import studio.phaseshift.metatron.lang.sys.router.Router;
-import studio.phaseshift.metatron.io.serial.ObjByteBufferSerializer;
-import studio.phaseshift.metatron.io.serial.ObjSerializer;
-import studio.phaseshift.metatron.isa.sys.type.ui.graphitty.Graphitty;
-import studio.phaseshift.metatron.isa.sys.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.io.Closeable;
@@ -61,10 +64,12 @@ public class MServer extends WebSocketServer implements Cluster, Closeable, Obj 
     protected GraphittyLogger LOG;
     protected List<FutureObj<?>> futures = new ArrayList<>();
     final AtomicBoolean running = new AtomicBoolean(false);
+    protected final List<fURI> peers;
 
-    public MServer(final fURI host) {
+    public MServer(final fURI host, final List<fURI> peers) {
         super(new InetSocketAddress(host.host(), host.port()));
         this.host = host;
+        this.peers = peers;
         LOG = Graphitty.log(this);
         this.serializer = mRouter.SERIALIZERS.get(ObjByteBufferSerializer.OBJ_BYTE_BUFFER_SERIALIZER_TID);
     }
@@ -81,16 +86,18 @@ public class MServer extends WebSocketServer implements Cluster, Closeable, Obj 
     @Override
     public void start() {
         try {
+            super.setReuseAddr(true);
             this.running.set(true);
+            Runtime.getRuntime().addShutdownHook(new Thread(this::close));
             super.start();
             LOG.trace("server started: %s", this.getAddress());
-            BootLoader.ARGS.at(Tokens.CLUSTER).elements().filter(o -> !o.isNoObj()).distinct().forEach(
+            this.peers.forEach(
                     n -> {
                         try {
-                            final MConnection client = MClient.of(n.uriValue(), this.serializer);
-                            this.cluster.put(n.uriValue(), client);
+                            final MConnection client = MClient.of(n, this.serializer);
+                            this.cluster.put(n, client);
                         } catch (final Exception e) {
-                            LOG.error("unable to connect to cluster node {{b}}%s{{/b}}", n.uriValue());
+                            LOG.error("unable to connect to cluster node {{b}}%s{{/b}}", n);
                         }
                     });
             Router.global().write(
@@ -110,8 +117,8 @@ public class MServer extends WebSocketServer implements Cluster, Closeable, Obj 
     public void close() {
         LOG.info("closing %s node {{b}}%s{{/b}}", Graphitty.sillyPrint("mtron", true, true), this.host);
         try {
-            super.stop(1000);
             this.cluster.values().stream().toList().forEach(MConnection::close);
+            super.stop();
         } catch (final Exception e) {
             throw MTronException.of(e);
         } finally {
@@ -157,7 +164,7 @@ public class MServer extends WebSocketServer implements Cluster, Closeable, Obj 
         try {
             LOG.trace("processing %s for {{b}}%s{{/b}}", obj, conn.getAttachment());
             result = obj.apply();
-            result = objs(result.stream().map(x -> x.vid() == null ? x : x.vid(null))); // x.vid(this.host().extend(x.vid()))));
+            result = objs(result.stream().map(x -> x.vid(null))); // x.vid(this.host().extend(x.vid()))));
             final ByteBuffer bytes = this.serializer.outputBytes(result);
             conn.send(bytes);
             Router.global().stats().incrBytesSent(bytes.array().length);
