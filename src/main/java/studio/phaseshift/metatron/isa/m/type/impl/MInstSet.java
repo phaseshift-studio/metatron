@@ -27,7 +27,7 @@ import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Type;
-import studio.phaseshift.metatron.lang.sys.router.Router;
+import studio.phaseshift.metatron.isa.sys.type.Router;
 import studio.phaseshift.metatron.util.Tuple;
 
 import java.util.*;
@@ -35,7 +35,6 @@ import java.util.*;
 import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.NOOBJ_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.NOOBJ_TYPE;
-import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;

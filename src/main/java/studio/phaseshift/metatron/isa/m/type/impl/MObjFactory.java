@@ -114,7 +114,7 @@ public class MObjFactory implements ObjFactory {
         else if (Objs.class.isAssignableFrom(objClass))
             return (O) new MObjs((List<Obj>) value, null == vid ? OBJS_TID : vid);
         else if (Type.class.isAssignableFrom(objClass))
-            return (O) new MType((Tuple.Pair<Call, Call>) value, null == vid ? TYPE_TID : vid);
+            return (O) new MType((Tuple.Pair<Call, Call>) value, null == vid ? TYPE_TID : tid, vid);
         else if (Fail.class.isAssignableFrom(objClass))
             return (O) new MFail((Pair<Throwable, Fail>) value, null == tid ? FAIL_TID : tid, vid);
         else if (NoObj.class.isAssignableFrom(objClass))

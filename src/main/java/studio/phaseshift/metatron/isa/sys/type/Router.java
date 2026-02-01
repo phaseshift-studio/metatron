@@ -16,22 +16,33 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.lang.sys.router;
+package studio.phaseshift.metatron.isa.sys.type;
 
 import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.space.stackSpace;
+import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.sys.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.lang.sys.router.impl.MServer;
 import studio.phaseshift.metatron.util.MTronException;
 
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
+
 import static studio.phaseshift.metatron.furi.fURI.f;
+import static studio.phaseshift.metatron.isa.m.mInstSet.URI_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
+import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.isa.sys.sysInstSet.REWRITE_INST_TID;
+import static studio.phaseshift.metatron.isa.sys.sysInstSet.ROUTER_TID;
 
 public interface Router extends Obj, Space {
 
@@ -160,5 +171,15 @@ public interface Router extends Obj, Space {
         public static String routerToString(final Router router) {
             return router.tid() + "::[pattern=>#]@" + router.vid();
         }
+    }
+
+    final class RouterType {
+
+        public static Set<Inst> insts() {
+            return new LinkedHashSet<>(List.of(
+                    instC(REWRITE_INST_TID.dom(ROUTER_TID).rng(URI_TID), lst(T(URI_TID)), (lhs, inst) -> uri(inst.arg(0).uriValue().big()))
+            ));
+        }
+
     }
 }

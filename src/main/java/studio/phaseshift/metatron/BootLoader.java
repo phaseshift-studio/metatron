@@ -36,8 +36,8 @@ import studio.phaseshift.metatron.isa.sys.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.isa.web.webInstSet;
 import studio.phaseshift.metatron.isa.grph.grphInstSet;
 import studio.phaseshift.metatron.lang.db.vec.vecInstSet;
-import studio.phaseshift.metatron.lang.sys.router.Router;
-import studio.phaseshift.metatron.lang.sys.router.impl.mRouter;
+import studio.phaseshift.metatron.isa.sys.type.Router;
+import studio.phaseshift.metatron.isa.sys.type.router.mRouter;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -80,7 +80,7 @@ public class BootLoader implements Rec, Feature.SelfClone {
 
     static {
         LOG = Graphitty.log(new BootLoader());
-        EXECUTOR = Executors.newCachedThreadPool(new ThreadFactoryBuilder().setUncaughtExceptionHandler((a, b) -> LOG.error("%s %s", a, b)).build());
+        EXECUTOR = Executors.newCachedThreadPool(new ThreadFactoryBuilder().setNameFormat("metatron-%d").setUncaughtExceptionHandler((a, b) -> LOG.error("%s %s", a, b)).build());
         //Registry.singleton().register(mInstSet.INST_TID, () -> mInstSet.of(fURI.NULL));
         Registry.open().register(SYS_ISA_TID, sysInstSet::create);
         Registry.open().register(WEB_ISA_TID, webInstSet::create);

@@ -33,7 +33,7 @@ import studio.phaseshift.metatron.isa.m.type.impl.MObjFactory;
 import studio.phaseshift.metatron.isa.m.type.impl.MObjs;
 import studio.phaseshift.metatron.lang.db.grph.type.REdge;
 import studio.phaseshift.metatron.lang.db.grph.type.RVertex;
-import studio.phaseshift.metatron.lang.sys.router.Router;
+import studio.phaseshift.metatron.isa.sys.type.Router;
 
 import java.util.Iterator;
 

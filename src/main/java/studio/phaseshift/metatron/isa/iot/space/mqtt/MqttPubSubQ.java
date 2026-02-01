@@ -23,7 +23,7 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.PubSubQ;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.lang.sys.router.Router;
+import studio.phaseshift.metatron.isa.sys.type.Router;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;

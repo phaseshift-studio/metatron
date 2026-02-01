@@ -26,37 +26,37 @@ import(/mtron/grph);
   perl   => /usr/bin/perl,
   mtron  => /bin/mtron]).print(_," script\n");
 [-- mount spaces --];
-     
-     mem::[pattern => /usr/#]@/sys/space/usr;
-     mem::[pattern => /shared/#,
-           persist => </tmp/shared.mtron>]@/sys/space/shared;
-    meta::[pattern => </a/cluster/#>,
-           host     => <ws://localhost:6666>,
-           rewrite  => (</a/cluster>=></shared>),
-           peers    => !*boot/peers]@/sys/space/meta1;
-    meta::[pattern  => </b/cluster/#>,
-           host     => <ws://127.0.0.1:7777>,
-           rewrite  => (</b/cluster>=></shared>),
-           peers    => !*boot/peers]@/sys/space/meta2;
-    http::[host     => <http://localhost:8777>,
-          pattern => http://#,
-          route   => [/     => examples/www,
-                      /docs => target/docs ]]@/sys/space/web;
-   grph::[pattern => /g/#,
-          store   => kv::[pattern => /g/#],
-          load    => modern]@/sys/space/tp3;
-   mqtt::[pattern => <wall:#>,
-          host    => !*boot/args/mqtt/broker,
-          rewrite => <wall:>=><walltron/>]@/sys/space/walltron;
-   mqtt::[pattern => <play:#>,
-          host    => !*boot/args/mqtt/broker,
-          rewrite => <play:>=><playtron/>]@/sys/space/playtron;
-   mqtt::[pattern => <ha:#>,
-          host    => !*boot/args/mqtt/broker,
-          rewrite => <ha:>=><homeassistant/>]@/sys/space/homeassistant;
-   mqtt::[pattern => <z2m:#>,
-          host    => !*boot/args/mqtt/broker,
-          rewrite => <z2m:>=><zigbee2mqtt/>]@/sys/space/zigbee2mqtt;
+   mem::[pattern => /usr/#,
+         q       => [subq::[=>]]]@/sys/space/usr;
+   mem::[pattern => /shared/#,
+         persist => </tmp/shared.mtron>]@/sys/space/shared;
+  meta::[pattern => </a/cluster/#>,
+        host     => <ws://localhost:6666>,
+        rewrite  => (</a/cluster>=></shared>),
+        peers    => !*boot/peers]@/sys/space/meta1;
+ meta::[pattern  => </b/cluster/#>,
+        host     => <ws://127.0.0.1:7777>,
+        rewrite  => (</b/cluster>=></shared>),
+        peers    => !*boot/peers]@/sys/space/meta2;
+ http::[host     => <http://localhost:8777>,
+         pattern => http://#,
+         route   => [/     => examples/www,
+                     /docs => target/docs ]]@/sys/space/web;
+  grph::[pattern => /g/#,
+         store   => kv::[pattern => /g/#],
+         load    => modern]@/sys/space/tp3;
+  mqtt::[pattern => <wall:#>,
+         host    => !*boot/args/mqtt/broker,
+         rewrite => <wall:>=><walltron/>]@/sys/space/walltron;
+  mqtt::[pattern => <play:#>,
+         host    => !*boot/args/mqtt/broker,
+         rewrite => <play:>=><playtron/>]@/sys/space/playtron;
+  mqtt::[pattern => <ha:#>,
+         host    => !*boot/args/mqtt/broker,
+         rewrite => <ha:>=><homeassistant/>]@/sys/space/homeassistant;
+  mqtt::[pattern => <z2m:#>,
+         host    => !*boot/args/mqtt/broker,
+         rewrite => <z2m:>=><zigbee2mqtt/>]@/sys/space/zigbee2mqtt;
    [==  bt::[pattern => <bt:#>
           rewrite => <bt:>=><>]@/sys/space/bt; ==]
    [==tabl::[pattern => /postgres/#,
@@ -67,7 +67,7 @@ import(/mtron/grph);
      fs::[pattern => <file:#>,
           rewrite => <file:>=><~/>,
           script  => !*boot/script]@/sys/space/fs;
-     mem::[pattern => /usr/ai/#]@/sys/space/ai;
+    mem::[pattern => /usr/ai/#]@/sys/space/ai;
  ollama::[host    => <http://localhost:11434>, 
           model   => |load()]@/usr/ai/ollama;
 console::[        => ]@/sys/console;

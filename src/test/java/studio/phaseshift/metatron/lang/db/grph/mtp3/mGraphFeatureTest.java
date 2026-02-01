@@ -41,7 +41,7 @@ import org.slf4j.LoggerFactory;
 import studio.phaseshift.metatron.lang.db.grph.type.mtp3.mGraph;
 import studio.phaseshift.metatron.lang.db.grph.type.mtp3.mIoRegistry;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
-import studio.phaseshift.metatron.lang.sys.router.Router;
+import studio.phaseshift.metatron.isa.sys.type.Router;
 
 import java.io.File;
 import java.io.IOException;

@@ -19,14 +19,12 @@
 package studio.phaseshift.metatron.furi.q;
 
 import studio.phaseshift.metatron.BootLoader;
-import studio.phaseshift.metatron.furi.Q;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.mInstSet;
-
-import studio.phaseshift.metatron.isa.m.type.impl.MRec;
-import studio.phaseshift.metatron.isa.m.type.Machine;
+import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.MMachine;
+import studio.phaseshift.metatron.isa.m.type.impl.MRec;
+import studio.phaseshift.metatron.isa.sys.sysInstSet;
 import studio.phaseshift.metatron.util.CommonUtil;
 
 import java.util.LinkedList;
@@ -37,8 +35,8 @@ import java.util.Queue;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.furi.fURI.f;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
@@ -48,26 +46,35 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 public class PubSubQ extends BaseQ {
 
-    public static final fURI SUBQ_TID = Q_TID.extend("subq");
+    public static final fURI SUBQ_TID = sysInstSet.Q_TID.extend("subq");
     public static final fURI SUBSCRIPTION_TID = SUBQ_TID.extend("sub");
     // <source,pattern,callback>
     protected final Rec subscriptions = rec();
     protected final Queue<Machine> mail = new LinkedList<>();
 
-    public static final Type SUBQ_TYPE = T(SUBQ_TID, null, instC(mInstSet.INST_TID.dom(ALL.maybe()).rng(SUBQ_TID), lst(isa_(rec()).tryToInst()), (lhs, inst) -> {
-        final Q q = new PubSubQ();
-        return q;
-    }));
+    public static final Type SUBQ_TYPE = Type.Builder.build()
+            .vid(SUBQ_TID)
+            .tid(REC_TID)
+            .constructor(
+                    instC(mInstSet.INST_TID.dom(ALL.maybe()).rng(SUBQ_TID),
+                            lst(isa_(rec()).tryToInst()),
+                            (lhs, inst) -> new PubSubQ())).create();
 
-    public static final Type SUBSCRIPTION_TYPE = T(SUBSCRIPTION_TID, isa_(rec(SRC, T(URI_TID), TGT, T(URI_TID), ON_RECV, T(ALL))), instC(INST_TID.dom(ALL_STAR).rng(SUBSCRIPTION_TID), lst(), (lhs, inst) -> {
-        if (lhs instanceof Subscription) {
-            return lhs.as();
-        } else if (lhs.isRec()) {
-            return new Subscription(lhs.<Rec>as());
-        } else {
-            return new Subscription(f("/mqtt/test/#"), f("/mqtt/test/#"), lhs.<Call>as());
-        }
-    }));
+    public static final Type SUBSCRIPTION_TYPE =
+            Type.Builder.build()
+                    .vid(SUBSCRIPTION_TID)
+                    .tid(REC_TID)
+                    .predicate(isa_(rec(SRC, T(URI_TID), TGT, T(URI_TID), ON_RECV, T(ALL))))
+                    .constructor(instC(INST_TID.dom(ALL_STAR).rng(SUBSCRIPTION_TID), lst(), (lhs, inst) -> {
+                        if (lhs instanceof Subscription) {
+                            return lhs;
+                        } else if (lhs.isRec()) {
+                            return new Subscription(lhs.asRec());
+                        } else {
+                            return new Subscription(f("/mqtt/test/#"), f("/mqtt/test/#"), lhs.<Call>as());
+                        }
+                    }))
+                    .create();
 
     public PubSubQ() {
         super(mutableMap(), f(SUB), SUBQ_TID);

@@ -21,7 +21,7 @@ package studio.phaseshift.metatron.isa.sys.type.console;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.isa.m.type.Call;
 import studio.phaseshift.metatron.isa.m.type.Inst;
-import studio.phaseshift.metatron.lang.sys.router.Router;
+import studio.phaseshift.metatron.isa.sys.type.Router;
 import studio.phaseshift.metatron.isa.sys.type.ui.widget.AbstractWidget;
 import studio.phaseshift.metatron.isa.sys.type.ui.widget.Table;
 

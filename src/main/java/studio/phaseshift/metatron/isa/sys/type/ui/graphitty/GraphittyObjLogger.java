@@ -21,7 +21,7 @@ package studio.phaseshift.metatron.isa.sys.type.ui.graphitty;
 import org.slf4j.event.Level;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.lang.sys.router.Router;
+import studio.phaseshift.metatron.isa.sys.type.Router;
 import studio.phaseshift.metatron.isa.sys.type.LogObj;
 
 import static org.slf4j.event.Level.*;

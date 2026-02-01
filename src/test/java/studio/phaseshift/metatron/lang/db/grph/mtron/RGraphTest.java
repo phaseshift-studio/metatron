@@ -27,7 +27,7 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.lang.db.grph.grphSpace;
 import studio.phaseshift.metatron.lang.db.grph.inst.grphInstSet;
-import studio.phaseshift.metatron.lang.sys.router.Router;
+import studio.phaseshift.metatron.isa.sys.type.Router;
 import studio.phaseshift.metatron.mTest;
 
 import static studio.phaseshift.metatron.Tokens.PATTERN;

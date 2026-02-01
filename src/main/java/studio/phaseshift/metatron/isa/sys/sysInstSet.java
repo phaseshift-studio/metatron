@@ -24,6 +24,7 @@ import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.m.type.impl.MInstSet;
 import studio.phaseshift.metatron.isa.sys.space.file.fsSpace;
+import studio.phaseshift.metatron.isa.sys.type.Router;
 import studio.phaseshift.metatron.isa.sys.type.console.Console;
 import studio.phaseshift.metatron.isa.sys.type.console.Editor;
 import studio.phaseshift.metatron.util.CommonUtil;
@@ -72,9 +73,11 @@ public class sysInstSet extends MInstSet {
     public static final fURI SYS_TID = f("/sys");
     public static final fURI SYS_INST_TID = SYS_ISA_TID.extend("inst");
     public static final fURI ROUTER_TID = SYS_ISA_TID.extend("router");
-    public static final fURI SPACE_TID = SYS_ISA_TID.extend("space");
+    public static final fURI SYS_SPACE_TID = SYS_ISA_TID.extend("space");
     public static final fURI FILE_TID = SYS_ISA_TID.extend("file");
     public static final fURI IMAGE_TID = FILE_TID.extend("image");
+    public static final fURI Q_TID = SYS_SPACE_TID.extend("q");
+    public static final fURI REWRITE_INST_TID = SYS_INST_TID.extend("rewrite");
 
 
     public sysInstSet(final fURI vid) {
@@ -93,7 +96,7 @@ public class sysInstSet extends MInstSet {
     public Set<Type> types() {
         final Set<Type> types = new HashSet<>(List.of(
                 T(ROUTER_TID),
-                T(SPACE_TID),
+                T(SYS_SPACE_TID),
                 CONSOLE_TYPE,
                 SUBSCRIPTION_TYPE,
                 DOCQ_TYPE,
@@ -110,16 +113,17 @@ public class sysInstSet extends MInstSet {
 
     @Override
     public Set<Inst> insts() {
-        return new LinkedHashSet<>(List.of(
+        final LinkedHashSet<Inst> insts = new LinkedHashSet<>();
+        insts.addAll(Router.RouterType.insts());
+        insts.addAll(List.of(
                 instC(SYS_INST_TID.extend("close").dom(ROUTER_TID).rng(NOOBJ_TID), lst(), (lhs, inst) -> Stream.of(noobj()).peek(o -> System.exit(0)).iterator().next()),
                 instC(SYS_INST_TID.extend("beep").dom(A.maybe()).rng(A.maybe()), lst(isa_(T(INT_TID)).else_(jnt(10))), (lhs, inst) -> {
-                            for (int i = 0; i < inst.arg(0).intValue().intValue(); i++) {
-                                Toolkit.getDefaultToolkit().beep();
-                                CommonUtil.sleepThread(15);
-                            }
-                            return lhs;
-                        }
-                ),
+                    for (int i = 0; i < inst.arg(0).intValue().intValue(); i++) {
+                        Toolkit.getDefaultToolkit().beep();
+                        CommonUtil.sleepThread(15);
+                    }
+                    return lhs;
+                }),
                 instC(SYS_INST_TID.extend("nano").dom(ALL.maybe()).rng(ALL.maybe()), lst(), (lhs, inst) -> {
                     try {
                         final File file = Editor.createObjFile(lhs);
@@ -162,7 +166,7 @@ public class sysInstSet extends MInstSet {
                     } catch (final Exception e) {
                         throw MTronException.of(e);
                     }
-                })
-        ));
+                })));
+        return insts;
     }
 }

@@ -24,7 +24,7 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.sys.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.sys.type.ui.graphitty.GraphittyLogger;
-import studio.phaseshift.metatron.lang.sys.router.Router;
+import studio.phaseshift.metatron.isa.sys.type.Router;
 import studio.phaseshift.metatron.lang.sys.router.impl.FutureObj;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.IteratorUtil;
@@ -352,7 +352,7 @@ public interface Inst extends Call {
             } catch (final Exception e) {
                 rhs = e instanceof MTronException ? ((MTronException) e).asFail() : mexcept("unable to evaluate inst function: %s", cinst).cause(e).asFail();
             }
-            if (BootLoader.TYPE_CHECK && !rhs.isFail() && !lhs.isCaughtFail() && !rhs.matches(cinst.rng()))
+            if (BootLoader.TYPE_CHECK && !rhs.isType() && !rhs.isFail() && !lhs.isCaughtFail() && !rhs.matches(cinst.rng()))
                 rhs = mexcept("inst resolution failure: %s", cinst)
                         .cause(mexcept("rhs does not match inst range: %s => %s [%s]", rhs, cinst.rng(), cinst))
                         .asFail();

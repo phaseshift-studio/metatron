@@ -20,9 +20,7 @@ package studio.phaseshift.metatron.isa;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import studio.phaseshift.metatron.isa.m.type.Rel;
-import studio.phaseshift.metatron.lang.sys.router.Router;
+import studio.phaseshift.metatron.isa.sys.type.Router;
 import studio.phaseshift.metatron.mTest;
 
 import java.util.function.Supplier;

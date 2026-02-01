@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -19,8 +19,8 @@
 package studio.phaseshift.metatron.isa.m.type;
 
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.m.type.impl.MMachine;
 import studio.phaseshift.metatron.io.serial.ObjCleanStringSerializer;
+import studio.phaseshift.metatron.isa.m.type.impl.MMachine;
 import studio.phaseshift.metatron.isa.sys.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.sys.type.ui.graphitty.GraphittyLogger;
 
@@ -29,9 +29,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.function.Supplier;
 
+import static studio.phaseshift.metatron.isa.m.mInstSet.AS_INST_TID;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
-import static studio.phaseshift.metatron.io.serial.ObjStringSerializer.prettyPrintCode;
 
 public interface Code extends Call {
 
@@ -65,14 +65,15 @@ public interface Code extends Call {
         //this.code = Rewriter({Rewriter::by(), Rewriter::explain()}).apply(this.code);
         // setup global behavior around barriers, initials, and terminals
         LOG.debug("resolving code:\n        [{{y}}PREPILED{{/y}}] %s {{g}}=>{{/g}}\n%s", lhs, ObjCleanStringSerializer.prettyPrintCode(this));
-        Obj token = lhs.type();
+        Obj token = lhs.isType() ? lhs : lhs.type();
         //LOG.none("%s", token.rng());
         final List<Inst> resolvedCode = new ArrayList<>();
         boolean fullResolution = true;
         for (final Inst inst : this.jvm()) {
             try {
                 LOG.trace("   {{g}}=>{{/g}} resolving %s => %s", token, inst);
-                final Inst resolvedInst = inst.resolve(token);
+                final Inst resolvedInst = (inst.tid().basePath().equals(AS_INST_TID) ? inst.rng(inst.arg(0).asType()).asInst() : inst).resolve(token);
+
                 if (!resolvedInst.hasDom()) {
                     resolvedCode.add(inst);
                     token = inst.hasRng() ? inst.rng() : token;

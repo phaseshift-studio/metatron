@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -22,10 +22,7 @@ package studio.phaseshift.metatron.io.serial;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.type.*;
-
-import studio.phaseshift.metatron.isa.m.type.Machine;
-import studio.phaseshift.metatron.isa.m.type.Monad;
-import studio.phaseshift.metatron.lang.sys.router.Router;
+import studio.phaseshift.metatron.isa.sys.type.Router;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
@@ -48,6 +45,15 @@ public class ObjCleanStringSerializer implements ObjSerializer<String> {
 
     public static final fURI OBJ_CLEAN_STRING_SERIALIZER_TID = OBJ_SERIAL_TID.extend("clean");
     private static final String NOOBJ_STRING = "noobj";
+    protected boolean leftJustify;
+
+    public ObjCleanStringSerializer() {
+        this.leftJustify = false;
+    }
+
+    public ObjCleanStringSerializer(final boolean leftJustify) {
+        this.leftJustify = leftJustify;
+    }
 
     @Override
     public fURI tid() {
@@ -137,32 +143,22 @@ public class ObjCleanStringSerializer implements ObjSerializer<String> {
     @Override
     public String writeLst(final Lst lst) {
         return this.generateLst(new StringBuilder(), lst, 0).toString();
-       /* if (lst.isEmpty())
-            return ByteBuffer.wrap(handleIds(lst, "[,]").getBytes());
-        final String internal = lst.lstValue().stream().map(o -> new String(this.write(o).array())).reduce(",", (a, b) -> a + b + ",");
-        return ByteBuffer.wrap(handleIds(lst, "[" + internal.substring(1, internal.length() - 1) + "]").getBytes());*/
     }
 
     @Override
     public String writeRel(final Rel rel) {
         final boolean firstRel = rel.first().isRel();
         final boolean secondRel = rel.second().isRel();
-        return handleIds(rel,
-                (firstRel ? "(" : "") + this.write(rel.jvm().get0()) + (firstRel ? ")" : "") +
-                        "=>" +
-                        (secondRel ? "(" : "") + this.write(rel.jvm().get1()) + (secondRel ? ")" : ""));
+        final StringBuilder sb = new StringBuilder();
+        sb.append(firstRel ? "(" : "").append(this.write(rel.jvm().get0())).append(firstRel ? ")" : "");
+        sb.append("=>");
+        sb.append(secondRel ? "(" : "").append(this.write(rel.jvm().get1())).append(secondRel ? ")" : "");
+        return handleIds(rel, sb.toString());
     }
 
     @Override
     public String writeRec(final Rec rec) {
-        return this.generateRec(new StringBuilder(), rec, 0).toString();
-        /*if (rec.isEmpty())
-            return ByteBuffer.wrap(handleIds(rec, "[=>]").getBytes());
-        final String internal = rec.recValue().entrySet().stream()
-                .map(o -> new String(this.write(o.getKey()).array()) + " => " + new String(this.write(o.getValue()).array()))
-                .reduce(",", (a, b) -> a + b + ",");
-
-        return ByteBuffer.wrap(handleIds(rec, "[" + internal.substring(1, internal.length() - 1) + "]").getBytes());*/
+        return this.generateRec(new StringBuilder(), rec, 0, 0).toString();
     }
 
     @Override
@@ -204,6 +200,8 @@ public class ObjCleanStringSerializer implements ObjSerializer<String> {
                 typeString += "[]";
             typeString += ("[" + type.constructor() + "]");
         }
+        if (type.vid() != null)
+            typeString += ("@" + type.vid());
         return typeString;
     }
 
@@ -222,7 +220,7 @@ public class ObjCleanStringSerializer implements ObjSerializer<String> {
         try {
             return mParser.eval(data);
         } catch (final Exception e) {
-           return fail(e);
+            return fail(e);
         }
     }
 
@@ -248,13 +246,13 @@ public class ObjCleanStringSerializer implements ObjSerializer<String> {
         } else {
             boolean nested =
                     //lst.elements().anyMatch(Obj::isPoly) ||
-                    lst.elements().map(this::write).map(String::length).reduce(0, Integer::sum) > (30 - depth);
+                    lst.elements().map(this::write).map(String::length).reduce(0, Integer::sum) > (50 - depth);
             sb.append("[");
             AtomicBoolean first = new AtomicBoolean(true);
             lst.elements().forEach(v -> {
                 if (nested && !first.getAndSet(false))
                     sb.append(" ".repeat(depth + 2));
-                this.processNestedPoly(sb, depth, nested, v);
+                this.processNestedPoly(sb, depth, 0, nested, v);
             });
             if (nested)
                 sb.deleteCharAt(sb.length() - 1);
@@ -264,7 +262,7 @@ public class ObjCleanStringSerializer implements ObjSerializer<String> {
         return handleVID(sb, lst);
     }
 
-    private StringBuilder generateRec(final StringBuilder sb, final Rec rec, final int depth) {
+    private StringBuilder generateRec(final StringBuilder sb, final Rec rec, final int depth, final int padding) {
         handleTID(sb, rec, true);
         if (rec.isEmpty()) {
             sb.append("[=>]");
@@ -272,15 +270,24 @@ public class ObjCleanStringSerializer implements ObjSerializer<String> {
             boolean nested =
                     rec.recValue().values().stream().anyMatch(Obj::isPoly) ||
                             rec.recValue().values().stream().filter(o -> !o.isPoly()).map(this::write).map(String::length).reduce(0, Integer::sum) > (75 - depth);
-            sb.append("[");
-            if (nested)
-                sb.append("\n");
+            int maxKeyLength = nested ? rec.recValue().keySet().stream().map(this::write).map(String::length).reduce(0, Integer::max) : 0;
+            sb.append("[");//.append(nested ? "\n" : "");
             AtomicBoolean first = new AtomicBoolean(true);
             rec.recValue().forEach((k, v) -> {
-                if (nested)
-                    sb.append(" ".repeat(false && first.getAndSet(false) ? 0 : (depth * 2) + 1));
-                sb.append(write(k)).append("=>");
-                this.processNestedPoly(sb, depth, nested, v);
+                int indent = nested ? (first.getAndSet(false) ?
+                        (depth * 2) - (padding + 4) :
+                        (depth * 2) + (padding + 1)) : 0;
+                if (indent < 0) {
+                    indent = (depth * 2) + (padding + 1);
+                    sb.append("\n");
+                }
+                sb.append(" ".repeat(indent));
+                final String keyString = write(k);
+                final int childPadding = nested ? (maxKeyLength - keyString.length()) : 0;
+                sb.append(" ".repeat(nested && !leftJustify ? childPadding : 0))
+                        .append(keyString)
+                        .append(" ".repeat(nested && leftJustify ? childPadding : 0)).append("=>");
+                this.processNestedPoly(sb, depth, leftJustify ? 0 : childPadding, nested, v);
             });
             if (nested)
                 sb.deleteCharAt(sb.length() - 1);
@@ -305,9 +312,9 @@ public class ObjCleanStringSerializer implements ObjSerializer<String> {
         return sb;
     }
 
-    private void processNestedPoly(final StringBuilder sb, final int depth, final boolean nested, final Obj v) {
+    private void processNestedPoly(final StringBuilder sb, final int depth, final int padding, final boolean nested, final Obj v) {
         if (v.isRec()) {
-            this.generateRec(sb, v.as(), depth + 1);
+            this.generateRec(sb, v.as(), depth + 1, padding);
         } else if (v.isLst()) {
             this.generateLst(sb, v.as(), depth + 1);
         } else {

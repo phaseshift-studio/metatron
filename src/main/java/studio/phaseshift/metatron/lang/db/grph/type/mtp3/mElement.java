@@ -25,7 +25,7 @@ import org.apache.tinkerpop.gremlin.structure.util.wrapped.WrappedElement;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.lang.db.grph.type.RElement;
-import studio.phaseshift.metatron.lang.sys.router.Router;
+import studio.phaseshift.metatron.isa.sys.type.Router;
 
 import java.util.ArrayList;
 import java.util.List;

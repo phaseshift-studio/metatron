@@ -32,7 +32,7 @@ import studio.phaseshift.metatron.isa.sys.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.lang.db.grph.grphSpace;
 import studio.phaseshift.metatron.lang.db.grph.inst.grphInstSet;
 import studio.phaseshift.metatron.lang.db.grph.type.mtp3.*;
-import studio.phaseshift.metatron.lang.sys.router.Router;
+import studio.phaseshift.metatron.isa.sys.type.Router;
 
 import java.util.HashSet;
 import java.util.LinkedHashMap;

@@ -21,7 +21,8 @@ package studio.phaseshift.metatron.isa.m.type;
 import studio.phaseshift.metatron.algebra.PlusMonoid;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.mInstSet;
-import studio.phaseshift.metatron.lang.sys.router.Router;
+import studio.phaseshift.metatron.isa.m.type.impl.MType;
+import studio.phaseshift.metatron.isa.sys.type.Router;
 import studio.phaseshift.metatron.util.Tuple;
 
 import java.nio.ByteBuffer;
@@ -75,6 +76,13 @@ public interface Type extends Obj, PlusMonoid<Type> {
 
     default boolean isBaseType() {
         return mInstSet.BASE_TYPES.contains(this.tid().basePath());
+    }
+    
+    default Type parentType() {
+        if (this.vid() != null)
+            return Router.global().read(this.tid()).asType();
+        else
+            return this;
     }
 
     default Call constructor() {
@@ -168,6 +176,44 @@ public interface Type extends Obj, PlusMonoid<Type> {
                         return lst((List)list);
                     })*/
             ));
+        }
+    }
+
+    class Builder {
+
+        public fURI vid = null;
+        public fURI tid = null;
+        public Call predicate = null;
+        public Call constructor = null;
+
+        public static Builder build() {
+            return new Builder();
+        }
+
+        public Builder vid(fURI vid) {
+            this.vid = vid;
+            return this;
+        }
+
+        public Builder tid(final fURI tid) {
+            this.tid = tid;
+            return this;
+        }
+
+        public Builder predicate(final Call predicate) {
+            this.predicate = predicate;
+            return this;
+        }
+
+        public Builder constructor(final Call constructor) {
+            this.constructor = constructor;
+            return this;
+        }
+
+        public Type create() {
+            assert this.tid != null;
+            assert this.vid != null;
+            return new MType(Tuple.Pair.with(this.predicate, this.constructor), this.tid, this.vid);
         }
     }
 

@@ -19,7 +19,7 @@
 package studio.phaseshift.metatron.isa.iot.type;
 
 import studio.phaseshift.metatron.isa.m.type.*;
-import studio.phaseshift.metatron.lang.sys.router.Router;
+import studio.phaseshift.metatron.isa.sys.type.Router;
 
 import java.util.LinkedHashSet;
 import java.util.List;

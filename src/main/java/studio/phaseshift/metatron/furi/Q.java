@@ -23,14 +23,22 @@ import studio.phaseshift.metatron.isa.m.type.Lst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Type;
+import studio.phaseshift.metatron.isa.sys.sysInstSet;
 
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
+import static studio.phaseshift.metatron.Tokens.PATTERN;
+import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.furi.fURI.f;
-import static studio.phaseshift.metatron.isa.m.mInstSet.MTRON_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.*;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
+import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 public interface Q extends Rec {
 
@@ -45,12 +53,21 @@ public interface Q extends Rec {
     fURI ON_READ = f("on_read");
     fURI PRE_READ = f("pre_read");
     fURI POST_READ = f("post_read");
-    Type Q_TYPE = T(f("/sys/space/q"));/*, null, instC(mtronInstSet.INST_TID.dom(ALL.maybe()).rng(f("/sys/space/q")),
-            lst(T(REC_TID, isa_(rec(uri(PATTERN), T(URI_TID),
-                    uri(ON_WRITE), rec(uri(PRE_WRITE), T(INST_TID).c(cInt::maybe), uri(POST_WRITE), T(INST_TID).c(cInt::maybe), uri(QLESS_WRITE), T(INST_TID).c(cInt::maybe)),
-                    uri(ON_READ), rec(uri(PRE_READ), T(INST_TID).c(cInt::maybe), uri(POST_READ).c(cInt::maybe)))))), (lhs, inst) -> {
+    Type Q_TYPE = T(sysInstSet.Q_TID, null, instC(
+            sysInstSet.SYS_INST_TID.dom(ALL.maybe()).rng(sysInstSet.Q_TID),
+            lst(T(REC_TID, isa_(rec(
+                    uri(PATTERN), T(URI_TID),
+                    uri(ON_WRITE),
+                    rec(
+                            uri(PRE_WRITE.maybe()), T(INST_TID),
+                            uri(POST_WRITE.maybe()), T(INST_TID),
+                            uri(QLESS_WRITE.maybe()), T(INST_TID)),
+                    uri(ON_READ),
+                    rec(
+                            uri(PRE_READ.maybe()), T(INST_TID),
+                            uri(POST_READ.maybe()), T(INST_TID)))))), (lhs, inst) -> {
                 return lhs;
-            }));*/
+            }));
 
 
     fURI pattern();
@@ -182,7 +199,7 @@ public interface Q extends Rec {
                     .map(Optional::get)
                     .reduce(Obj::append) : Optional.empty();
         }
-        
+
         public static Optional<Obj> processPreRead(final Lst qs, final fURI source, final fURI vid) {
             return vid.hasQuery() && !qs.isEmpty() ?
                     qs.<Q>elements()

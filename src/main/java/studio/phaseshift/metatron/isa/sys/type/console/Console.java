@@ -40,6 +40,7 @@ import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.m.type.impl.MMachine;
 import studio.phaseshift.metatron.isa.sys.type.LogObj;
+import studio.phaseshift.metatron.isa.sys.type.Router;
 import studio.phaseshift.metatron.isa.sys.type.ui.Border;
 import studio.phaseshift.metatron.isa.sys.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.sys.type.ui.graphitty.GraphittyLogger;
@@ -49,7 +50,6 @@ import studio.phaseshift.metatron.isa.sys.type.ui.widget.Panel;
 import studio.phaseshift.metatron.isa.sys.type.ui.widget.Table;
 import studio.phaseshift.metatron.lang.jre.JRec;
 import studio.phaseshift.metatron.lang.jre.ObjFieldReflection;
-import studio.phaseshift.metatron.lang.sys.router.Router;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
@@ -129,12 +129,11 @@ public class Console extends JRec implements Closeable, Runnable {
             final Builtins builtins = new Builtins(currentDir, Console.configurations, null);
             SystemRegistry systemRegistry = new SystemRegistryImpl(parser, terminal, currentDir, Console.configurations);
             systemRegistry.setCommandRegistries(builtins);
-            Highlighter highlighter = Highlighter.single();
             this.reader = LineReaderBuilder.builder()
                     .terminal(terminal)
                     .appName("metatron")
                     .history(new DefaultHistory())
-                    .highlighter(highlighter) // TODO: command/args/lang
+                    .highlighter(Highlighter.create()) // TODO: command/args/lang
                     .parser(parser)
                     .variable(LineReader.HISTORY_FILE, HISTORY_FILE)
                     .option(LineReader.Option.AUTO_FRESH_LINE, true)
@@ -167,7 +166,7 @@ public class Console extends JRec implements Closeable, Runnable {
     }
 
     public void write(final Object object) {
-        terminal.writer().write(Highlighter.format(object));
+        terminal.writer().write(((Highlighter) reader.getHighlighter()).format(object));
     }
 
     public static Terminal getTerminal() {
@@ -233,6 +232,10 @@ public class Console extends JRec implements Closeable, Runnable {
                     final SubsWidget selector = new SubsWidget(this);
                     selector.run();
                     selector.close();
+                } else if (line.startsWith(":justify")) {
+                    final boolean leftJustify = line.substring(8).trim().equalsIgnoreCase("left");
+                    ((Highlighter) this.reader.getHighlighter()).justify(leftJustify);
+                    LOG.info("%s justifying nested polys", leftJustify ? "{{y}}left{{X}}" : "{{y}}right{{X}}");
                 } else if (line.startsWith(":state")) {
                     this.status.setState(Level.valueOf(line.substring(6).trim().toUpperCase()));
                 } else {

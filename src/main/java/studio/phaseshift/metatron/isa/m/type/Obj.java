@@ -28,7 +28,7 @@ import studio.phaseshift.metatron.io.serial.ObjCleanStringSerializer;
 import studio.phaseshift.metatron.io.serial.ObjSerializer;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.type.impl.*;
-import studio.phaseshift.metatron.lang.sys.router.Router;
+import studio.phaseshift.metatron.isa.sys.type.Router;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Streamable;
@@ -206,7 +206,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
     default boolean matches(final Obj rhs) {
         if (this.isNoObj() && rhs.isNoObj())
             return true;
-        else if (this.isNoObj() && rhs.tid().cV().isZeroable())
+        else if (this.isNoObj() && (rhs.tid().equals(NOOBJ_TID) || rhs.tid().cV().isZeroable()))
             return true;
         else if (this.tid().cV().isZeroable() && rhs.isNoObj())
             return true;
@@ -607,7 +607,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
         public static void objCheckAndSave(final Obj obj) {
             if (!obj.isInstSet() && !obj.isNoObj() && !obj.isType() && !obj.matches(obj.type()))
                 throw MTronException.of("%s is not a %s".formatted(obj, obj.type()));
-            if (null != obj.vid() && !obj.isType())
+            if (null != obj.vid())
                 Router.writeToSpace(obj.vid(), obj);
         }
 

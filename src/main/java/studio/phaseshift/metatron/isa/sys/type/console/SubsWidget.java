@@ -21,7 +21,7 @@ package studio.phaseshift.metatron.isa.sys.type.console;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
-import studio.phaseshift.metatron.lang.sys.router.Router;
+import studio.phaseshift.metatron.isa.sys.type.Router;
 import studio.phaseshift.metatron.isa.sys.type.ui.Border;
 import studio.phaseshift.metatron.isa.sys.type.ui.Widget;
 import studio.phaseshift.metatron.isa.sys.type.ui.widget.AbstractWidget;
