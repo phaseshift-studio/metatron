@@ -46,11 +46,6 @@ public class Selector extends AbstractWidget<Selector> {
         ESC_KEY
     }
 
-    public boolean running() {
-        return this.running;
-    }
-
-    protected boolean running = false;
     protected BiConsumer<Selector, Integer> onSelect = null;
     protected BiConsumer<Selector, Integer> onBrowse = null;
 
@@ -126,7 +121,7 @@ public class Selector extends AbstractWidget<Selector> {
                         done = true;
                         break;
                     case QUIT:
-                        terminal.writer().println();
+                        this.terminal.writer().println(Graphitty.string("{{^" + this.height() + "}}"));
                         return;
                     case ESC_KEY:
                         this.close();

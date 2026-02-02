@@ -33,9 +33,12 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static studio.phaseshift.metatron.isa.iot.type.SoC.SoCType.PIN_TYPE;
 import static studio.phaseshift.metatron.isa.iot.type.device.GPIO.GPIO_TYPE;
 import static studio.phaseshift.metatron.isa.iot.type.esp32.ESP32.ESP32_TYPE;
+import static studio.phaseshift.metatron.isa.iot.type.esp32.WemosD1Mini.WemosD1MiniType.WEMOS_D1_MINI_TYPE;
 import static studio.phaseshift.metatron.isa.m.mInstSet.MTRON_TID;
+import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -65,9 +68,13 @@ public class iotInstSet extends MInstSet {
     @Override
     public Set<Type> types() {
         return Stream.of(
+                PIN_TYPE,
+                T(DEVICE_TID),
                 SoC.SoCType.SoC_TYPE,
+                WEMOS_D1_MINI_TYPE,
                 ESP32_TYPE,
                 GPIO_TYPE,
+                
                 mqttSpace.MQTT_TYPE).collect(Collectors.toSet());
     }
 

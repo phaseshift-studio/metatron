@@ -67,7 +67,6 @@ import(/mtron/grph);
      fs::[pattern => <file:#>,
           rewrite => <file:>=><~/>,
           script  => !*boot/script]@/sys/space/fs;
-    mem::[pattern => /usr/ai/#]@/sys/space/ai;
  ollama::[host    => <http://localhost:11434>, 
           model   => |load()]@/usr/ai/ollama;
 console::[        => ]@/sys/console;

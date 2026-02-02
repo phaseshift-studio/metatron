@@ -279,7 +279,7 @@ public interface Inst extends Call {
                         return i.args(resolvedArgs);
                     })
                     .filter(i -> !Objects.isNull(i))
-                    .map(i -> i.isInitial() && !i.hasRng() ? i.rng(i.arg(0).type()) : i) // TODO: only start()?
+                    .map(i -> i.isInitial() ? i.rng(i.arg(0).type()) : i) // TODO: only start()?
                     //.map(i -> lhs.isType() ?  i.dom(lhs.c(i.dom().c()).as()).<Inst>as() : i)
                     .map(i -> i.c(this.c()))
                     .findFirst()

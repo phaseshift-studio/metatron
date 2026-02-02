@@ -120,6 +120,11 @@ public class Table extends AbstractWidget<Table> {
     private String addSpace(final List<Integer> widths, final int index, final Object entry) {
         return " ".repeat(1 + Math.abs(widths.get(index) - Highlighter.visualLength(entry.toString().trim())));
     }
+    
+    @Override
+    public String toString() {
+        return this.format();
+    }
 
     @Override
     public String format() {

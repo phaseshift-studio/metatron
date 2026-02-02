@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -28,11 +28,11 @@ import studio.phaseshift.metatron.isa.m.space.stackSpace;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Uri;
+import studio.phaseshift.metatron.isa.sys.type.Router;
 import studio.phaseshift.metatron.isa.sys.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.sys.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.lang.jre.ObjFieldReflection;
 import studio.phaseshift.metatron.lang.jre.ObjReflection;
-import studio.phaseshift.metatron.isa.sys.type.Router;
 import studio.phaseshift.metatron.lang.sys.router.impl.MServer;
 import studio.phaseshift.metatron.util.MTronException;
 
@@ -114,7 +114,9 @@ public class mRouter extends MSpace<MServer> implements Router {
 
     @Override
     public IOStats stats() {
-        return this.iostats;
+        if (Router.loaded())
+            return this.iostats;
+        throw MTronException.of("router not loaded");
     }
 
     public void registerRewrite(final fURI small, final fURI big) {
@@ -155,7 +157,7 @@ public class mRouter extends MSpace<MServer> implements Router {
 
     @Override
     public void addSpace(final Space space) {
-        if(null == space.vid())
+        if (null == space.vid())
             return;
         this.spaces().jvm().values().stream()
                 .map(Obj::<Space>as)
@@ -192,8 +194,8 @@ public class mRouter extends MSpace<MServer> implements Router {
             return space.get();
         else if (match.basePath().matches(f("+/#")))
             return (S) THREAD_STACK.get();
-      //  else if (Registry.open().has(match))
-      //      return Registry.open().load(match);
+            //  else if (Registry.open().has(match))
+            //      return Registry.open().load(match);
         else if (!BOOTING)
             throw MTronException.of("no active space supports pattern %s", match.toUri(false));
         else

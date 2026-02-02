@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -78,14 +78,14 @@ public abstract class AbstractWidget<W extends AbstractWidget<W>> implements Wid
         if (null != this.style.attachment)
             this.style.attachment.close();
         // this.terminal.puts(InfoCmp.Capability.clear_screen);
-        this.display.update(List.of(),  this.size.cursorPos(this.cursor.getX(),this.cursor.getY()));
+        this.display.update(List.of(), this.size.cursorPos(this.cursor.getX(), this.cursor.getY()));
         this.display.reset();
         //this.display.resize(0,0);
         if (null != this.attributes) {
             this.terminal.setAttributes(this.attributes);
-            this.terminal.puts(InfoCmp.Capability.exit_ca_mode);
-            this.terminal.puts(InfoCmp.Capability.keypad_local);
         }
+        this.terminal.puts(InfoCmp.Capability.exit_ca_mode);
+        this.terminal.puts(InfoCmp.Capability.keypad_local);
         this.terminal.writer().flush();
     }
 }
