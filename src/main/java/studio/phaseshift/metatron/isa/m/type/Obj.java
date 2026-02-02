@@ -64,7 +64,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.CommonUtil.nullOrElse;
 import static studio.phaseshift.metatron.util.Tuple.Pair;
 
-public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>, Feature.HasLogger, Cloneable, Predicate<Obj> {
+public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>, Feature.HasLogger, Cloneable /*Predicate<Obj>*/ {
 
     default <O extends Obj> O maybe() {
         return (O) this.c(cInt::maybe);
@@ -84,9 +84,9 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
         return noobj();
     }
 
-    default boolean test(final Obj other) {
-        return this.matches(other);
-    }
+    // default boolean test(final Obj other) {
+    //      return this.matches(other);
+    // }
 
     default boolean isResolved(final boolean nested) {
         return true;
@@ -239,10 +239,13 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
             return this.matches(rhs.dom()) && rhs.apply(this).matches(rhs.rng());
         if (!this.c().within(rhs.c()))
             return false;
-        if (rhs.isType())
+        if (rhs.isType()) {
+            if (rhs.matches(T(CODE_TID)) || rhs.matches(T(INST_TID)))
+                return true;
             return rhs.tid().isGeneric() ||
                     (Helper.typeInferenceMatch(this, rhs.as()) &&
                             (!rhs.asType().hasPredicate() || !rhs.apply(this).isNoObj()));
+        }
         return this.tid().matches(rhs.tid()) &&
                 Objects.equals(this.jvm(), rhs.jvm());
     }

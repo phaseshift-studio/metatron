@@ -97,7 +97,7 @@ public class RecTest extends mTest {
             "[a=>b,c=>[d=>2]]                      | [a=>b,c=>[d=>int::T[is(gt(10))]]]          | false",
             "[a=>b,c=>[d=>2]]                      | [a=>b,c=>[d=>int::T[is(gt(1))]]]           | true",
             "[a=>b,c=>[d=>2]]                      | [a=>b,c=>[d=>isa(int::T)]]                 | true",
-            "[a=>b,c=>[d=>2]]                      | [a=>b,c=>[d=>isan(str::T)]]                | false",
+            "[a=>b,c=>[d=>2]]                      | [a=>b,c=>[d=>isa(str::T)]]                 | false",
             "[a=>b,c=>[d=>2]]                      | [a=>b,c=>rec::T]                           | true",
             "[a=>b,c=>[d=>2]]                      | [a=>uri::T,c=>rec::T]                      | true",
             "[a=>b,c=>[d=>2]]                      | [a=>uri::T[is(eq(b))],c=>rec::T]           | true",

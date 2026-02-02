@@ -21,15 +21,14 @@ package studio.phaseshift.metatron;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.io.serial.ObjCleanStringSerializer;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.type.Fail;
 import studio.phaseshift.metatron.isa.m.type.NoObj;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.sys.type.LogObj;
+import studio.phaseshift.metatron.isa.sys.type.Router;
 import studio.phaseshift.metatron.isa.sys.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.sys.type.ui.graphitty.GraphittyLogger;
-import studio.phaseshift.metatron.isa.sys.type.Router;
 
 import java.util.Map;
 
@@ -52,7 +51,7 @@ public abstract class mTest {
     public static void end() {
         BootLoader.close();
     }
-    
+
     public static void testMatches(final GraphittyLogger LOG, final String lhs, final String rhs, final boolean matches) {
         final Obj a = mParser.m_obj().parse(lhs).get();
         final Obj b = mParser.m_obj().parse(rhs).get();
@@ -103,15 +102,17 @@ public abstract class mTest {
         if (expected.trim().equals("<ERROR>")) {
             try {
                 final Obj cd = mParser.m_call_prefix(START_INST_TID).parse(code).get();
-                final Obj actual = cd.apply(NoObj.noobj());
-                if (!(cd.isFail() || actual.isFail())) {
-                    if (cd.isFail())
-                        cd.<Fail>as().message().printStackTrace();
-                    if (actual.isFail())
-                        actual.<Fail>as().message().printStackTrace();
-                    fail(Graphitty.string("testing %s => %s [expected:%s]", cd, actual, expected));
+                final Obj actual2 = cd.apply(NoObj.noobj());
+                actual2.stream().forEach(actual -> {
+                    if (!(cd.isFail() || actual.isFail())) {
+                        if (cd.isFail())
+                            cd.<Fail>as().message().printStackTrace();
+                        if (actual.isFail())
+                            actual.<Fail>as().message().printStackTrace();
+                        fail(Graphitty.string("testing %s => %s [expected:%s]", cd, actual, expected));
 
-                }
+                    }
+                });
             } catch (final Exception e) {
                 LOG.debug("testing %s => %s", code, e.getMessage());
             }
@@ -119,7 +120,7 @@ public abstract class mTest {
             final Obj cd = mParser.m_call_prefix(START_INST_TID).parse(code).get();
             final Obj ex = mParser.eval(expected);
             final Obj actual = cd.apply(NoObj.noobj());
-            LOG.debug("testing %s => %s [expected:%s]", cd, actual, ex);
+            LOG.debug("testing %s => %s => %s [expected:%s]", cd, code, actual, ex);
             assertEquals(ex, actual);
             
           /*  final Obj acd = serializer.read(serializer.write(cd));

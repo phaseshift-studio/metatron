@@ -88,8 +88,8 @@ public class NoObjTest extends mTest {
             "noobj               |#{*}::T                |true"},
             delimiter = '|')
     public void testNoObjMatches(final String o1, final String o2, final boolean match) {
-        final Obj obj1 = mParser.parse(o1);
-        final Obj obj2 = mParser.parse(o2);
+        final Obj obj1 = mParser.m_obj().parse(o1).get();
+        final Obj obj2 = mParser.m_obj().parse(o2).get();
         LOG.info("testing %s{%s} %s %s{%s}", obj1, obj1.c(), match ? "{{g}}matches{{/g}}" : "{{r}}doesn't match{{/r}}", obj2, obj2.c());
         if (match) {
             Assertions.assertTrue(obj1.matches(obj2));

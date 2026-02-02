@@ -163,8 +163,9 @@ public class mInstSetTest extends InstSetTest {
             "1.map?noobj<=int(noobj)                                                      % noobj",
             "{1,2,3,4}.map(_).plus(2)                                                     % {3,4,5,6}",
             "{1,2,3,4}.map(+2)                                                            % {3,4,5,6}",
-            //   "{1,2,3,4}.map(map(+2))                                                       % {3,4,5,6}",
-            //    "{1,2,3,4}.map(map(map(map(map(map(+2))))))                                   % {3,4,5,6}",
+            "{1,2,3,4}.inst(_,+1,+2){ map(*0).plus(*1).plus(*2) }                         % {6,9,12,15}",
+            "{1,2,3,4}.map(map(+2))                                                       % {3,4,5,6}",
+            "{1,2,3,4}.map(map(map(map(map(map(+2))))))                                   % {3,4,5,6}",
     }, delimiter = '%')
     public void testMap(final String code, final String expected) {
         mTest.testCode(LOG, code, expected);
@@ -173,7 +174,7 @@ public class mInstSetTest extends InstSetTest {
 
     @ParameterizedTest
     @CsvSource(value = {
-            // "1.plus?int{?}<=int(int{-1}::1)                                         % noobj",
+           // "1.plus?int{?}<=int(int{-1}::1)                                         % noobj",
             "1.plus(_)                                                              % 2",
             "1.plus(2)                                                              % 3",
             "1.plus(1.plus(1))                                                      % 3",
@@ -202,7 +203,7 @@ public class mInstSetTest extends InstSetTest {
             "[1=>2,2=>3,3=>4]>-.>-[=>]                                              % [1=>2,2=>3,3=>4]",
             "{1,2,3}>-noobj                                                         % {1,2,3}",
             "{1,2,3}>-[noobj]                                                       % [1,2,3,noobj]",
-            //"[1=>2,2=>3,3=>4]>-                                                     % {1=>2,2=>3,3=>4}",
+            "[1=>2,2=>3,3=>4]>-                                                     % {1=>2,2=>3,3=>4}",
             "[1=>2,2=>3,3=>4].type()                                                % start(rec::T)",
             "[1=>2,2=>3,3=>4]>-.type()                                              % start(rel{3}::T)",
             "[(1=>2),(2=>3),(3=>4)].type()                                          % start(lst::T)",
@@ -223,12 +224,12 @@ public class mInstSetTest extends InstSetTest {
             "{1,2,3}-<?lst<=int{*}([,])                                             % [,]",
             "{1,2,3}-<?lst{*}<=int([_])                                             % {[1],[2],[3]}",
             "{1,2,3}-<?lst<=int{*}([_])                                             % [{1,2,3}]",
-            //"{1,2,3}-<?rec<=int{3}([=>])                                            % [=>]",
-            //"{1,2,3}-<?rec<=int{*}([=>])                                            % [=>]",
+            "{1,2,3}-<?rec<=int{3}([=>])                                            % [=>]",
+            "{1,2,3}-<?rec<=int{*}([=>])                                            % [=>]",
             "{1,2,3}-<noobj                                                         % noobj",
             "{1,2,3}-<[noobj]                                                       % [noobj]",
             "{1,2,3}-<[noobj=>noobj]                                                % [=>]",
-            //   "{1,2,3}.map?int<=real(1)                                               % <ERROR>",
+            "{1,2,3}.map?int<=real(1)                                               % <ERROR>",
             "{1,2,3}.inst?int<=int{3}(){1}                                          % 1",
             "{1,2,3}.inst{3}?int<=int{3}(){1}                                       % int{3}::1",
             "{int{2}::1,int{2}::2,int{2}::3}.inst{3}?int<=int{3}(){1}               % int{6}::1",
@@ -505,7 +506,7 @@ public class mInstSetTest extends InstSetTest {
     @ParameterizedTest
     @CsvSource(value = {
             "[a=>1,b=>2,c=>3].select([a=>_])                                                                                             % [a=>1]",
-            "[a/b=>1],b/c=>2],c/d=>3]].select([a/b=>_])                                                                                  % [a/b=>1]",
+            "{[a/b=>1],[b/c=>2],[c/d=>3]}.select([a/b=>_])                                                                                  % [a/b=>1]",
             "{[a=>1],[a=>2],[a=>3]}.select([a=>is(gte(2))])                                                                              % {[a=>2],[a=>3]}",
             "{[a=>[b=>1]],[a=>[b=>2]],[a=>[b=>3]]}.select([a/b=>plus(10)])                                                               % {[a/b=>11],[a/b=>12],[a/b=>13]}",
             "{[a=>[b=>1]],[a=>[b=>2]],[a=>[b=>3]]}.select([a/b=>?>=2])                                                                   % {[a/b=>2],[a/b=>3]}",

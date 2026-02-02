@@ -323,6 +323,9 @@ public interface Inst extends Call {
         //    this.self(Triplet.with(cinst.args(), cinst.f(), cinst.seed()), cinst.tid(), cinst.vid());
         if (lhs.isNoObj() && !cinst.dom().c().isZeroable())
             return noobj();
+        if (cinst.isNoObj())
+            return mexcept("inst %s could not be resolved for %s", this, clhs).asFail();
+
         Obj rhs;
         boolean modulateC = false;
         if (BootLoader.TYPE_CHECK && !lhs.isFail() && !lhs.isCaughtFail() && !clhs.matches(cinst.dom()) && clhs.unique()) {
@@ -499,10 +502,11 @@ public interface Inst extends Call {
                             final fURI lastBinding = generics.get(apiArg.tid().cLess());
                             if (null != lastBinding && !userArg.tid().matches(lastBinding))
                                 LOG.debug("existing generic doesn't match current usage: [{{m}}generic{{/m}}] %s [{{m}}past{{/m}}] %s [{{m}}present{{/m}}] %s", userArg.tid(), lastBinding, apiArg.tid());
-                            generics.computeIfAbsent(apiArg.tid().cLess(), k -> userArg.tid().cLess()); // beware of int[0] yielding noobj across all bindings
+                            if (!userArg.isCall()) // TODO: can this be more specialized (currently necessary for when arg is a call and we want the result of the call to be the binding, not the call itself
+                                generics.computeIfAbsent(apiArg.tid().cLess(), k -> userArg.tid().cLess()); // beware of int[0] yielding noobj across all bindings
                         }
                         if (apiArg.isInst()) { // todo: isCall()?
-                            apiArg = Helpers.bindGenerics(lhs, apiArg.<Inst>as(), userArg);
+                            apiArg = Helpers.bindGenerics(lhs, apiArg.asInst(), userArg);
                         } else {
                             if (apiArg.tid().isCLessGeneric())
                                 apiArg = apiArg.tid(generics.getOrDefault(apiArg.tid().cLess(), userArg.tid())).c(apiArg.c());
