@@ -130,4 +130,21 @@ public class IntTest extends mObjTest {
     public void testTake(final String current, final String remove, final String retrieved, final String remaining) {
         super.testTake(current, remove, retrieved, remaining);
     }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "{1,2,3,4}         %order()       %[1,2,3,4]",
+            "{2,3,4,1}         %order()       %[1,2,3,4]",
+            "{4,2,3,1}         %order()       %[1,2,3,4]",
+            "{2,4,1,3}         %order()       %[1,2,3,4]",
+            "{3,1,2,4}         %order()       %[1,2,3,4]",
+            "{1,1,2,2,3,4}     %order()       %[int{2}::1,int{2}::2,3,4]",
+            "{1,2,3,4,4,4,4}   %order()       %[1,2,3,int{4}::4]",
+            "{2,1,2,3,2,3,4,2} %order()       %[1,int{4}::2,int{2}::3,4]",
+            "1                 %order()       %[1]",
+            "int{5}::1         %order()       %[int{5}::1]",
+    }, delimiter = '%')
+    public void testOrder(final String input, final String code, final String expected) {
+        mTest.testCode(LOG, input, code, expected);
+    }
 }

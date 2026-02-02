@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -22,13 +22,10 @@ import net.objecthunter.exp4j.ExpressionBuilder;
 import studio.phaseshift.metatron.algebra.Ring;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.util.MathUtil;
 import studio.phaseshift.metatron.isa.sys.type.Router;
+import studio.phaseshift.metatron.util.MathUtil;
 
-import java.util.HashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static studio.phaseshift.metatron.furi.fURI.ALL;
@@ -123,7 +120,8 @@ public interface Real extends Mono, Ring.O<Real> {
                                                 HashMap::new)))
                                 .evaluate();
                         return real(result);
-                    })));
+                    }),
+                    instC(ORDER_INST_TID.dom(REAL_TID.maybeSome()).rng(LST_TID), lst(), (lhs, inst) -> lst(lhs.stream().sorted(Comparator.comparing(a -> a.asReal().realValue()))))));
         }
     }
 

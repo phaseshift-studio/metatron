@@ -839,8 +839,22 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
                         return rec(result);
                     }),
                     instC(SWAP_TID.dom(A).rng(A), lst(T(B)), (lhs, inst) -> lhs.apply(inst.arg(0))),
-                    instC(RSHIFT_INST_TID.dom(ALL).rng(ALL.maybe()), lst(isa_(T(INT_TID)).else_(jnt(1))), (lhs, inst) -> objs(lhs.stream().filter(o -> o.isUri() || o.isLst() || o.isRec()).map(o -> rshift_(jnt(0)).apply(o)))),
-                    instC(LSHIFT_INST_TID.dom(ALL).rng(ALL.maybe()), lst(isa_(T(INT_TID)).else_(jnt(1))), (lhs, inst) -> objs(lhs.stream().filter(o -> o.isUri() || o.isLst() || o.isRec()).map(o -> lshift_(jnt(0)).apply(o))))));
+                    instC(RSHIFT_INST_TID.dom(ALL).rng(ALL.maybe()), lst(isa_(INT_TYPE).else_(jnt(1))), (lhs, inst) -> objs(lhs.stream().filter(o -> o.isUri() || o.isLst() || o.isRec()).map(o -> rshift_(jnt(0)).apply(o)))),
+                    instC(LSHIFT_INST_TID.dom(ALL).rng(ALL.maybe()), lst(isa_(INT_TYPE).else_(jnt(1))), (lhs, inst) -> objs(lhs.stream().filter(o -> o.isUri() || o.isLst() || o.isRec()).map(o -> lshift_(jnt(0)).apply(o))))));
+        }
+    }
+
+    public static class ObjComparator implements Comparator<Obj> {
+
+        private final Inst inst;
+
+        public ObjComparator(final Inst inst) {
+            this.inst = inst;
+        }
+
+        @Override
+        public int compare(Obj o1, Obj o2) {
+            return inst.args(lst(o1)).apply(o2).asInt().intValue().intValue();
         }
     }
 }

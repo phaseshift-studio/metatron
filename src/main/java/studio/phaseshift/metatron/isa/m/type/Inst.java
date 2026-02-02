@@ -217,6 +217,7 @@ public interface Inst extends Call {
     default boolean isBlocking() {
         return this.tid().basePath().equals(BLOCK_INST_TID) ||
                 // this.tid().basePath().equals(AUTO_TID) ||
+                this.tid().basePath().equals(ORDER_INST_TID) ||
                 this.tid().basePath().equals(AS_INST_TID) ||
                 this.tid().basePath().equals(WITHIN_INST_TID) ||
                 this.tid().basePath().equals(ISA_INST_TID) ||
@@ -331,14 +332,12 @@ public interface Inst extends Call {
             modulateC = true;
             //  }
             if (!clhs.rng().matches(cinst.dom()))
-                return Fail.Helper.inst_eval_fail(cinst, "lhs range does not match inst domain", null);
-            //return fail(mexcept("lhs range does not match inst domain: %s => %s [%s]", clhs.rng(), cinst.dom(), cinst));
+                return fail(mexcept("lhs range does not match inst domain: %s => %s [%s]", clhs.rng(), cinst.dom(), cinst));
         }
         if (!clhs.isFail() || cinst.isCatch()) {
             try {
                 if (null == cinst.f())
-                    return Fail.Helper.inst_eval_fail(cinst, "unable to determine inst function", null);
-                //return fail(mexcept("unable to determine inst function: %s => %s", uri(clhs.tid()), cinst));
+                    return fail(mexcept("unable to determine inst function: %s => %s", clhs.tid(), cinst));
                 cinst = Helpers.applyArgs(clhs, cinst);
                 Router.stack().push(cinst.args());
                 try {
@@ -354,8 +353,9 @@ public interface Inst extends Call {
                 rhs = e instanceof MTronException ? ((MTronException) e).asFail() : mexcept("unable to evaluate inst function: %s", cinst).cause(e).asFail();
             }
             if (BootLoader.TYPE_CHECK && !rhs.isType() && !rhs.isFail() && !lhs.isCaughtFail() && !rhs.matches(cinst.rng()))
-                rhs = Fail.Helper.inst_eval_fail(cinst, "inst resolution failure",
-                        MTronException.of("rhs does not match inst range: %s => %s [%s]", rhs, cinst.rng(), cinst));
+                rhs = mexcept("inst resolution failure: %s", cinst)
+                        .cause(mexcept("rhs does not match inst range: %s => %s [%s]", rhs, cinst.rng(), cinst))
+                        .asFail();
         } else {
             rhs = clhs; // propagate fail through inst unless it's a catch inst
         }
@@ -606,6 +606,9 @@ public interface Inst extends Call {
     }
 
     public static final class InstType {
+
+        public static Type INST_TYPE = Type.Builder.build().tid(INST_TID).vid(INST_TID).create();
+
         public static Set<Inst> insts() {
             return new LinkedHashSet<>(List.of(
                     instC(LIFT_INST_TID.dom(ALL).rng(ALL), lst(T(ALL)), (lhs, inst) -> inst.arg(0).<Inst>as().args(lhs.<Poly>as())),

@@ -50,4 +50,22 @@ public class RealTest extends mObjTest {
     public void testMath(final String code, final String expected) {
         mTest.testCode(LOG, code, expected);
     }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "{1.1,2.2,3.3,4.4}                   %order()       %[1.1,2.2,3.3,4.4]",
+            "{2.2,3.3,4.4,1.1}                   %order()       %[1.1,2.2,3.3,4.4]",
+            "{4.4,2.2,3.3,1.1}                   %order()       %[1.1,2.2,3.3,4.4]",
+            "{2.2,4.4,1.1,3.3}                   %order()       %[1.1,2.2,3.3,4.4]",
+            "{3.3,1.1,2.2,4.4}                   %order()       %[1.1,2.2,3.3,4.4]",
+            "{1.1,1.1,2.2,2.2,3.3,4.4}           %order()       %[real{2}::1.1,real{2}::2.2,3.3,4.4]",
+            "{1.1,2.2,3.3,4.4,4.4,4.4,4.4}       %order()       %[1.1,2.2,3.3,real{4}::4.4]",
+            "{2.2,1.1,2.2,3.3,2.2,3.3,4.4,2.2}   %order()       %[1.1,real{4}::2.2,real{2}::3.3,4.4]",
+            "1.1                                 %order()       %[1.1]",
+            "1.1                                 %order()       %[real{1}::1.1]",
+            "real{5}::1.1                        %order()       %[real{5}::1.1]",
+    }, delimiter = '%')
+    public void testOrder(final String input, final String code, final String expected) {
+        mTest.testCode(LOG, input, code, expected);
+    }
 }

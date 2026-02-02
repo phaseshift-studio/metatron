@@ -114,6 +114,7 @@ public class mInstSet extends MInstSet {
     public static final fURI NEQ_INST_TID = INST_TID.extend("neq");
     public static final fURI GT_INST_TID = INST_TID.extend("gt");
     public static final fURI REGEX_INST_TID = INST_TID.extend("regex");
+    public static final fURI ORDER_INST_TID = INST_TID.extend("order");
     public static final fURI LT_INST_TID = INST_TID.extend("lt");
     public static final fURI GTE_INST_TID = INST_TID.extend("gte");
     public static final fURI LTE_INST_TID = INST_TID.extend("lte");
