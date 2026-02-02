@@ -21,6 +21,7 @@ package studio.phaseshift.metatron.isa.m.type;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.lang.mObjTest;
+import studio.phaseshift.metatron.mTest;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -37,7 +38,7 @@ public class BoolTest extends mObjTest {
             "false.as(real::T)                                                             % 0.0"
     }, delimiter = '%')
     public void testAsInst(final String code, final String expected) {
-        super.testCode(code, expected);
+   mTest.testCode(LOG,code,expected);
     }
 
     @ParameterizedTest
@@ -48,7 +49,7 @@ public class BoolTest extends mObjTest {
             "false.plus(false)                                                                 % false"
     }, delimiter = '%')
     public void testPlusInst(final String code, final String expected) {
-        super.testCode(code, expected);
+   mTest.testCode(LOG,code,expected);
     }
 
 }

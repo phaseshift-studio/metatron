@@ -78,8 +78,7 @@ public class RecTest extends mTest {
         assertEquals(v, actual);
     }
 
-
-    @Override
+    
     @ParameterizedTest
     @CsvSource(value = {
             // rec                                 | key                                        | value
@@ -118,7 +117,7 @@ public class RecTest extends mTest {
 
     }, delimiter = '|')
     public void testMatches(final String recA, final String recB, final boolean matches) {
-        super.testMatches(recA, recB, matches);
+        mTest.testMatches(LOG, recA, recB, matches);
     }
 
 
@@ -135,7 +134,7 @@ public class RecTest extends mTest {
 
     }, delimiter = '%')
     public void testAs(final String code, final String expected) {
-        super.testCode(code, expected);
+        mTest.testCode(LOG, code, expected);
     }
 
     @ParameterizedTest
@@ -144,10 +143,9 @@ public class RecTest extends mTest {
             "(a=>(knows=>(b=>(knows=>c))))../<a/+/b/knows>                                           % c"
     }, delimiter = '%')
     public void testRecRelBehaviors(final String code, final String expected) {
-        super.testCode(code, expected);
+        mTest.testCode(LOG,code, expected);
     }
-
-    @Override
+    
     @ParameterizedTest
     @CsvSource(value = {
             "[noobj=>noobj]                                                                          % [=>]",
@@ -191,7 +189,7 @@ public class RecTest extends mTest {
             "[1,2,3].-<[>-.is(gt(2)) => >-.is(gt(1))>-?<=int{*}[,], >-.is(gt(1)) => _/id()\\_]       % [3=>[2,3],{2,3}=>[1,2,3]]",
     }, delimiter = '%')
     public void testCode(final String code, final String expected) {
-        super.testCode(code, expected);
+        mTest.testCode(LOG,code, expected);
     }
 
     @Test
@@ -220,24 +218,24 @@ public class RecTest extends mTest {
         Rec r2 = r1.put(uri("b"), jnt(22), IMMUTABLE);
         Rec r3 = r1.at(uri("b")).<Rec>as().put(uri("d"), jnt(33), IMMUTABLE);
         Rec r4 = r1.put(uri("b"), r1.at(uri("b")).<Rec>as().put(uri("d"), jnt(33)), IMMUTABLE);
-        super.testEquals(rec(uri("a"), jnt(1), uri("b"), rec(uri("c"), jnt(3))), r1, true);
-        super.testEquals(rec(uri("a"), jnt(1), uri("b"), jnt(22)), r2, true);
-        super.testEquals(rec(uri("c"), jnt(3), uri("d"), jnt(33)), r3, true);
-        super.testEquals(rec(uri("a"), jnt(1), uri("b"), rec(uri("c"), jnt(3), uri("d"), jnt(33))), r4, true);
+        mTest.testEquals(LOG,rec(uri("a"), jnt(1), uri("b"), rec(uri("c"), jnt(3))), r1, true);
+        mTest.testEquals(LOG,rec(uri("a"), jnt(1), uri("b"), jnt(22)), r2, true);
+        mTest.testEquals(LOG,rec(uri("c"), jnt(3), uri("d"), jnt(33)), r3, true);
+        mTest.testEquals(LOG,rec(uri("a"), jnt(1), uri("b"), rec(uri("c"), jnt(3), uri("d"), jnt(33))), r4, true);
         /// //
         Rec rr1 = rec(uri("a"), jnt(1), uri("b"), rec(uri("c"), jnt(3)));
         Rec s1 = rec(uri("a"), jnt(1), uri("b"), rec(uri("c"), jnt(3)));
-        super.testEquals(r1, s1, true);
+        mTest.testEquals(LOG, r1, s1, true);
         Rec s2 = r1.put(uri("b"), jnt(22), MUTABLE);
-        super.testEquals(r2, s2, true);
+        mTest.testEquals(LOG, r2, s2, true);
         Rec s3 = s1.at(uri("b")).<Rec>as().put(uri("d"), jnt(33), MUTABLE);
-        super.testEquals(r3, s3, true);
+        mTest.testEquals(LOG, r3, s3, true);
         Rec s4 = rr1.clone().<Rec>as().put(uri("b"), rr1.at(uri("b")).clone().<Rec>as().put(uri("d"), jnt(33), IMMUTABLE), MUTABLE);
-        super.testEquals(r4, s4, true);
-        super.testEquals(rec(uri("a"), jnt(1), uri("b"), rec(uri("c"), jnt(3))), rr1, true);
-        super.testEquals(rec(uri("a"), jnt(1), uri("b"), jnt(22)), s2, true);
-        super.testEquals(rec(uri("c"), jnt(3), uri("d"), jnt(33)), s3, true);
-        super.testEquals(rec(uri("a"), jnt(1), uri("b"), rec(uri("c"), jnt(3), uri("d"), jnt(33))), s4, true);
+        mTest.testEquals(LOG, r4, s4, true);
+        mTest.testEquals(LOG, rec(uri("a"), jnt(1), uri("b"), rec(uri("c"), jnt(3))), rr1, true);
+        mTest.testEquals(LOG, rec(uri("a"), jnt(1), uri("b"), jnt(22)), s2, true);
+        mTest.testEquals(LOG, rec(uri("c"), jnt(3), uri("d"), jnt(33)), s3, true);
+        mTest.testEquals(LOG, rec(uri("a"), jnt(1), uri("b"), rec(uri("c"), jnt(3), uri("d"), jnt(33))), s4, true);
 
 
     }

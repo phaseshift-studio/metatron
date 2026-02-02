@@ -41,7 +41,6 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 public abstract class mTest {
 
     protected GraphittyLogger LOG = Graphitty.log(this);
-    protected ObjCleanStringSerializer serializer = new ObjCleanStringSerializer();
 
     @BeforeAll
     public static void begin() {
@@ -54,7 +53,7 @@ public abstract class mTest {
         BootLoader.close();
     }
     
-    public void testMatches(final String lhs, final String rhs, final boolean matches) {
+    public static void testMatches(final GraphittyLogger LOG, final String lhs, final String rhs, final boolean matches) {
         final Obj a = mParser.m_obj().parse(lhs).get();
         final Obj b = mParser.m_obj().parse(rhs).get();
         final boolean m = a.matches(b);
@@ -62,7 +61,7 @@ public abstract class mTest {
         assertEquals(matches, m);
     }
 
-    public void testCode(final String lhs, final String code, final String expected) {
+    public static void testCode(final GraphittyLogger LOG, final String lhs, final String code, final String expected) {
         final Obj a = mParser.m_obj().parse(lhs).get();
         final Obj b = mParser.m_obj().parse(code).get();
         final Obj ex = mParser.m_obj().parse(expected).get();
@@ -71,7 +70,7 @@ public abstract class mTest {
         assertEquals(ex, actual);
     }
 
-    public void evaluate(final String lhs, final String expected) {
+    public static void evaluate(final GraphittyLogger LOG, final String lhs, final String expected) {
         final Obj a = mParser.eval(lhs);
         final Obj b = mParser.eval(expected);
         final Obj actual = b.apply(a);
@@ -80,7 +79,7 @@ public abstract class mTest {
     }
 
 
-    public void testEquals(final Obj a, final Obj b, final boolean equals) {
+    public static void testEquals(final GraphittyLogger LOG, final Obj a, final Obj b, final boolean equals) {
         LOG.debug("testing %s == %s [expected:%s]", a, b, equals);
         if (equals)
             assertEquals(a, b);
@@ -88,7 +87,7 @@ public abstract class mTest {
             assertNotEquals(a, b);
     }
 
-    public void testSpace(final String stateCode, final String mutationCode, final Map<fURI, String> expected) {
+    public static void testSpace(final GraphittyLogger LOG, final String stateCode, final String mutationCode, final Map<fURI, String> expected) {
         final Obj stateResult = mParser.eval(stateCode);
         final Obj mutationResult = mParser.eval(mutationCode);
         LOG.debug("testing %s <= %s", stateResult, mutationResult);
@@ -100,7 +99,7 @@ public abstract class mTest {
         });
     }
 
-    public void testCode(final String code, final String expected) {
+    public static void testCode(final GraphittyLogger LOG, final String code, final String expected) {
         if (expected.trim().equals("<ERROR>")) {
             try {
                 final Obj cd = mParser.m_call_prefix(START_INST_TID).parse(code).get();

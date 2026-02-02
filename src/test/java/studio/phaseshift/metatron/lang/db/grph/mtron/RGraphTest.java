@@ -73,7 +73,6 @@ public class RGraphTest extends mTest {
         LOG.info(Router.readFromSpace("/g/V/#"));
     }
 
-    @Override
     @ParameterizedTest
     @CsvSource(value = {
             "g.V().count()                                                              % 6",
@@ -147,7 +146,7 @@ public class RGraphTest extends mTest {
             /// ///////////////////////////////////////////////////////////////////////////////
     }, delimiter = '%')
     public void testCode(final String code, final String expected) {
-        super.testCode(code, expected);
+        mTest.testCode(LOG, code, expected);
     }
 
 

@@ -82,28 +82,31 @@ public class MServer extends WebSocketServer implements Cluster, Closeable, Obj 
 
     @Override
     public void start() {
-        try {
-            super.setReuseAddr(true);
-            this.running.set(true);
-            Runtime.getRuntime().addShutdownHook(new Thread(this::close));
-            super.start();
-            LOG.trace("server started: %s", this.getAddress());
-            this.peers.forEach(
-                    n -> {
-                        try {
-                            final MConnection client = MClient.of(n, this.serializer);
-                            this.cluster.put(n, client);
-                        } catch (final Exception e) {
-                            LOG.error("unable to connect to cluster node {{b}}%s{{/b}}", n);
-                        }
-                    });
-            Router.global().write(
-                    Router.global().vid().extend(Tokens.CLUSTER),
-                    lst((List) this.cluster.values().stream().map(x -> x.remoteHost().toUri()).toList()));
-        } catch (final Exception e) {
-            // do nothing
+        if (Router.loaded()) {
+            try {
+                super.setReuseAddr(true);
+                this.running.set(true);
+                Runtime.getRuntime().addShutdownHook(new Thread(this::close));
+                super.start();
+                LOG.trace("server started: %s", this.getAddress());
+                this.peers.forEach(
+                        n -> {
+                            try {
+                                final MConnection client = MClient.of(n, this.serializer);
+                                this.cluster.put(n, client);
+                            } catch (final Exception e) {
+                                LOG.error("unable to connect to cluster node {{b}}%s{{/b}}", n);
+                            }
+                        });
+                Router.global().write(
+                        Router.global().vid().extend(Tokens.CLUSTER),
+                        lst((List) this.cluster.values().stream().map(x -> x.remoteHost().toUri()).toList()));
+            } catch (final Exception e) {
+                // do nothing
+            }
+        } else {
+            throw MTronException.of("unable to start server as router not loaded");
         }
-
     }
 
     public <T> ObjSerializer<T> getSerializer() {
@@ -197,7 +200,7 @@ public class MServer extends WebSocketServer implements Cluster, Closeable, Obj 
 
     @Override
     public fURI vid() {
-        return Router.global().vid().extend("server");
+        return Router.loaded() ? Router.global().vid().extend("server") : null;
     }
 
     @Override

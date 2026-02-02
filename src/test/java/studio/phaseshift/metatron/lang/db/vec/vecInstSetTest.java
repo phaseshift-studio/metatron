@@ -34,8 +34,7 @@ public class vecInstSetTest  extends InstSetTest {
    public vecInstSetTest() {
            super(() -> vecInstSet.create(f("/sys/space/vec")));
    }
-    
-    @Override
+   
     @ParameterizedTest
     @CsvSource(value = {
             "9.0.sqrt()                                   % 3.0",
@@ -44,6 +43,6 @@ public class vecInstSetTest  extends InstSetTest {
             "1.plus(1)                                                              % 2"
     }, delimiter = '%')
     public void testCode(final String code, final String expected) {
-        super.testCode(code, expected);
+        mTest.testCode(LOG, code, expected);
     }
 }

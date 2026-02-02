@@ -27,19 +27,11 @@ import studio.phaseshift.metatron.isa.SpaceTest;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.space.noobjSpace;
 import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.sys.space.file.fsSpace;
-import studio.phaseshift.metatron.isa.sys.sysInstSet;
-
-import java.nio.file.FileSystems;
+import studio.phaseshift.metatron.mTest;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
-import static studio.phaseshift.metatron.Tokens.PATTERN;
-import static studio.phaseshift.metatron.Tokens.REWRITE;
-import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
-import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
-import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -54,7 +46,7 @@ public class fsSpaceTest extends SpaceTest {
           
         });
         sysInstSet.create();*/
-        super(()->noobjSpace.single());
+        super(() -> noobjSpace.single());
 
     }
 
@@ -78,7 +70,7 @@ public class fsSpaceTest extends SpaceTest {
             "*<test:space/test-bash.bash>       % file::<test:space/test-bash.bash?p=rw-rw-r-->",
     }, delimiter = '%')
     public void testShell(final String code, final String expected) {
-        this.testCode(code, expected);
+        mTest.testCode(LOG, code, expected);
     }
 
     @ParameterizedTest

@@ -21,8 +21,9 @@ package studio.phaseshift.metatron.lang.core.mach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-import studio.phaseshift.metatron.isa.m.machInstSet;
 import studio.phaseshift.metatron.isa.InstSetTest;
+import studio.phaseshift.metatron.isa.m.machInstSet;
+import studio.phaseshift.metatron.mTest;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -34,7 +35,6 @@ public class machInstSetTest extends InstSetTest {
         super(machInstSet::create);
     }
 
-    @Override
     @ParameterizedTest
     @CsvSource(value = {
             "1.drop().project(2)                                                                         % [=>]",
@@ -46,7 +46,7 @@ public class machInstSetTest extends InstSetTest {
             "1.plus(1)                                                                                   % 2"
     }, delimiter = '%')
     public void testCode(final String code, final String expected) {
-        super.testCode(code, expected);
+        mTest.testCode(LOG, code, expected);
     }
 
 
@@ -76,6 +76,6 @@ public class machInstSetTest extends InstSetTest {
             "1.plus(1)                                                                                   % 2"
     }, delimiter = '%')
     public void testRingAlgebra(final String code, final String expected) {
-        super.testCode(code, expected);
+        mTest.testCode(LOG, code, expected);
     }
 }

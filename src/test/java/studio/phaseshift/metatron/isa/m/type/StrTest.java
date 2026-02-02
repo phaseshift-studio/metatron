@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -21,6 +21,7 @@ package studio.phaseshift.metatron.isa.m.type;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.lang.mObjTest;
+import studio.phaseshift.metatron.mTest;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -39,7 +40,7 @@ public class StrTest extends mObjTest {
 
     }, delimiter = '%')
     public void testAsInst(final String code, final String expected) {
-        super.testCode(code, expected);
+        mTest.testCode(LOG, code, expected);
     }
 
     @ParameterizedTest
@@ -53,7 +54,7 @@ public class StrTest extends mObjTest {
             "'ab3cd'.regex('\\d{2}')                                                        % [,]",
     }, delimiter = '%')
     public void testRegexInst(final String code, final String expected) {
-        super.testCode(code, expected);
+        mTest.testCode(LOG, code, expected);
     }
 
     @ParameterizedTest
@@ -64,7 +65,7 @@ public class StrTest extends mObjTest {
             // "{}.sum?str<=str{*}()                                                           % \"\"",  // TODO
     }, delimiter = '%')
     public void testSum(final String code, final String expected) {
-        super.testCode(code, expected);
+        mTest.testCode(LOG, code, expected);
     }
 
 
@@ -84,7 +85,7 @@ public class StrTest extends mObjTest {
             // "{'abc3d','aaa'}.where(has('e.'))                                               % noobj",
     }, delimiter = '%')
     public void testHasInst(final String code, final String expected) {
-        super.testCode(code, expected);
+        mTest.testCode(LOG, code, expected);
     }
 
 
@@ -103,7 +104,7 @@ public class StrTest extends mObjTest {
             "'a:b-b:c-c:d'-<'-'_/>-.-<':'\\_.>-.>-':'.>-?<=str{*}('-')                      % \"a:b-b:c-c:d\"",
     }, delimiter = '%')
     public void testSplitMerge(final String code, final String expected) {
-        super.testCode(code, expected);
+        mTest.testCode(LOG,code,expected);
     }*/
 
     @ParameterizedTest
@@ -112,7 +113,7 @@ public class StrTest extends mObjTest {
             "'ab3cd' + 'ab.'                                                                % \"ab3cdab.\"",
     }, delimiter = '%')
     public void testPlusInst(final String code, final String expected) {
-        super.testCode(code, expected);
+        mTest.testCode(LOG, code, expected);
     }
 
 }

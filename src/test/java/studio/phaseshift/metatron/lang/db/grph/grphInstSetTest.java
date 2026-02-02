@@ -25,6 +25,7 @@ import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.lang.db.grph.inst.grphInstSet;
 import studio.phaseshift.metatron.isa.SpaceTest;
+import studio.phaseshift.metatron.mTest;
 
 import static studio.phaseshift.metatron.furi.fURI.f;
 
@@ -51,8 +52,7 @@ public class grphInstSetTest extends SpaceTest {
         //  MGraph.of(TinkerFactory.createModern(), f("/tp/#"), f("/sys/router/space/tp"));
     }
 
-
-    @Override
+    
     @Disabled
     @ParameterizedTest
     @CsvSource(value = {
@@ -71,6 +71,6 @@ public class grphInstSetTest extends SpaceTest {
             "1.plus(1)                                                                  % 2"
     }, delimiter = '%')
     public void testCode(final String code, final String expected) {
-        super.testCode(code, expected);
+   mTest.testCode(LOG,code,expected);
     }
 }

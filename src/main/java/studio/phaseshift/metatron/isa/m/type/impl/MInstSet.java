@@ -123,27 +123,27 @@ public abstract class MInstSet extends MSpace<Map<fURI, Set<? extends Obj>>> imp
     }
 
     @Override
-    public Obj read(final fURI vid) {
-        if (Objects.equals(this.tid, vid))
+    public Obj read(final fURI pattern) {
+        if (Objects.equals(this.tid, pattern))
             return this;
-        return Q.Helper.processPreRead(this.qs(), this.vid, vid).orElse(
+        return Q.Helper.processPreRead(this.qs(), this.vid, pattern).orElse(
                 objs(INST_TABLE.entrySet()
                         .stream()
-                        .filter(kv -> kv.getKey().bimatches(vid.basePath().asNode()))
+                        .filter(kv -> kv.getKey().bimatches(pattern.basePath().asNode()))
                         .flatMap(kv -> kv.getValue().stream())
-                        .filter(i -> !vid.hasDom() || i.dom().tid().bimatches(vid.dom().big()))
-                        .filter(i -> !vid.hasRng() || i.rng().tid().bimatches(vid.rng().big()))
-                        .map(i -> vid.isNode() ? i : rel(i.tid().toUri(), i)))
+                        .filter(i -> !pattern.hasDom() || i.dom().tid().bimatches(pattern.dom().big()))
+                        .filter(i -> !pattern.hasRng() || i.rng().tid().bimatches(pattern.rng().big()))
+                        .map(i -> pattern.isNode() ? i : rel(i.tid().toUri(), i)))
                         .append(objs(TYPE_TABLE.entrySet()
                                 .stream()
-                                .filter(kv -> kv.getKey().matches(vid.asNode()))
-                                .map(kv -> vid.isNode() ?
+                                .filter(kv -> kv.getKey().matches(pattern.asNode()))
+                                .map(kv -> pattern.isNode() ?
                                         kv.getValue() :
                                         rel(kv.getKey().toUri(), kv.getValue()))))
                         .append(objs(CONST_TABLE.entrySet()
                                 .stream()
-                                .filter(kv -> kv.getKey().matches(vid.asNode()))
-                                .map(kv -> vid.isNode() ?
+                                .filter(kv -> kv.getKey().matches(pattern.asNode()))
+                                .map(kv -> pattern.isNode() ?
                                         kv.getValue() :
                                         rel(kv.getKey().toUri(), kv.getValue())))));
 

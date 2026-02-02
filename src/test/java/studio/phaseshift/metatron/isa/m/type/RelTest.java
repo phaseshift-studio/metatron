@@ -34,7 +34,7 @@ public class RelTest extends mTest {
             "(a=>b)-<(<<.as(str::T)=>>>)                                           % 'a'=>b",
     }, delimiter = '%')
     public void testRelAs(final String code, final String expected) {
-        super.evaluate(code, expected);
+        mTest.evaluate(LOG, code, expected);
     }
     
     @ParameterizedTest
@@ -46,7 +46,7 @@ public class RelTest extends mTest {
             "(a=>b)-<(_=>_)>-.>-                                           % {uri{2}::a,uri{2}::b}"
     }, delimiter = '%')
     public void testRelSplitShift(final String code, final String expected) {
-        super.evaluate(code, expected);
+        mTest.evaluate(LOG, code, expected);
     }
 
     @ParameterizedTest
@@ -59,6 +59,6 @@ public class RelTest extends mTest {
             "1=>2=>3.select((mult(4)=>(_=>plus(10)))).where((_=>(_=>13)))              % noobj",
     }, delimiter = '%')
     public void testRelSelectWhere(final String code, final String expected) {
-        super.evaluate(code, expected);
+        mTest.evaluate(LOG, code, expected);
     }
 }

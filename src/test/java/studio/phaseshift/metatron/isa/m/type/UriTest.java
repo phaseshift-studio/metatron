@@ -26,8 +26,7 @@ import studio.phaseshift.metatron.mTest;
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public class UriTest extends mTest {
-
-    @Override
+    
     @ParameterizedTest
     @CsvSource(value = {
             "bool::abc/def                                                | <ERROR>",
@@ -52,7 +51,7 @@ public class UriTest extends mTest {
             "a.mult(<../../b>)                                            | <../b>"
     }, delimiter = '|')
     public void testCode(final String code, final String expected) {
-        super.testCode(code, expected);
+        mTest.testCode(LOG, code, expected);
     }
 
     @ParameterizedTest
@@ -75,7 +74,7 @@ public class UriTest extends mTest {
             "<a/b/../c/d>.pow(3)              % a/c/d/a/c/d/a/c/d",
     }, delimiter = '%')
     public void testMath(final String code, final String expected) {
-        super.testCode(code, expected);
+        mTest.testCode(LOG, code, expected);
     }
 
     @ParameterizedTest
@@ -88,10 +87,10 @@ public class UriTest extends mTest {
             "<a://b.com:123/c/d?x=1&y=2>.as(rec::T)../host                         % <b.com>",
             "<a://b.com:123/c/d?x=1&y=2>.host(<abc.org>)                 % <a://abc.org:123/c/d?x=1&y=2>",
             "<a://b.com:123/c/d?x=1&y=2>.as(rec::T)../q                         % [x=><1>,y=><2>]",
-           // "<a://b.com:123/c/d?x=1&y=2>.query(x=3)                 % <a://b.com:123/c/d?x=3&y=2>",
+            // "<a://b.com:123/c/d?x=1&y=2>.query(x=3)                 % <a://b.com:123/c/d?x=3&y=2>",
     }, delimiter = '%')
     public void testAsRec(final String code, final String expected) {
-        super.testCode(code, expected);
+        mTest.testCode(LOG, code, expected);
     }
 
     @ParameterizedTest
@@ -102,7 +101,7 @@ public class UriTest extends mTest {
             "<3a>.as(int::T)                                            % <ERROR>",
     }, delimiter = '%')
     public void testAsInt(final String code, final String expected) {
-        super.testCode(code, expected);
+        mTest.testCode(LOG, code, expected);
     }
 
 

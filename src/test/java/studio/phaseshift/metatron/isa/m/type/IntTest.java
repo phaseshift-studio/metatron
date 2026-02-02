@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -21,6 +21,7 @@ package studio.phaseshift.metatron.isa.m.type;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.lang.mObjTest;
+import studio.phaseshift.metatron.mTest;
 
 public class IntTest extends mObjTest {
     @ParameterizedTest
@@ -33,10 +34,9 @@ public class IntTest extends mObjTest {
             "2.as(real::T)                                                               % 2.0"
     }, delimiter = '%')
     public void testAsInst(final String code, final String expected) {
-        super.testCode(code, expected);
+        mTest.testCode(LOG, code, expected);
     }
 
-    @Override
     @ParameterizedTest
     @CsvSource(value = {
             // a                                 % b                            % matches
@@ -53,10 +53,9 @@ public class IntTest extends mObjTest {
             "int{-1}::1                          % int{-1,1}::T[]               % true"
     }, delimiter = '%')
     public void testMatches(final String lhs, final String rhs, final boolean matches) {
-        super.testMatches(lhs, rhs, matches);
+        mTest.testMatches(LOG, lhs, rhs, matches);
     }
 
-    @Override
     @ParameterizedTest
     @CsvSource(value = {
             // a                                 % b                            % matches
@@ -72,7 +71,7 @@ public class IntTest extends mObjTest {
             "int{-1}::1                          % ?=~int{,}::T[]               % int{-1}::1"
     }, delimiter = '%')
     public void testCode(final String lhs, final String code, final String expected) {
-        super.testCode(lhs, code, expected);
+        mTest.testCode(LOG, lhs, code, expected);
     }
 
     @ParameterizedTest
@@ -82,7 +81,7 @@ public class IntTest extends mObjTest {
             "2.pow(4).plus(1).mult(2)          % 34",
     }, delimiter = '%')
     public void testMath(final String code, final String expected) {
-        super.testCode(code, expected);
+        mTest.testCode(LOG, code, expected);
     }
 
     @ParameterizedTest
@@ -107,7 +106,7 @@ public class IntTest extends mObjTest {
             // "start?int{-1,1}<=int{0}(int{-1}::1)>-{int::1}             % noobj"
     }, delimiter = '%')
     public void testBasic(final String code, final String expected) {
-        super.testCode(code, expected);
+        mTest.testCode(LOG, code, expected);
     }
 
     @ParameterizedTest

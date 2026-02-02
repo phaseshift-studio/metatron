@@ -30,9 +30,10 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.io.serial.ObjSerializer;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.impl.MObjs;
+import studio.phaseshift.metatron.isa.sys.type.Router;
+import studio.phaseshift.metatron.isa.sys.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.sys.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.lang.sys.router.IOStat;
-import studio.phaseshift.metatron.isa.sys.type.Router;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.net.URI;
@@ -42,7 +43,7 @@ import java.util.*;
 
 public class MClient extends WebSocketClient implements MConnection {
 
-    protected final GraphittyLogger LOG;
+    protected final GraphittyLogger LOG = Graphitty.log(this);
     protected final ObjSerializer<?> serializer;
     protected final Map<UUID, FutureObj<Obj>> futures = new HashMap<>();
     private static final UUID UNITY_UUID = UUID.randomUUID();
@@ -52,12 +53,13 @@ public class MClient extends WebSocketClient implements MConnection {
 
     public MClient(final fURI remoteAuthority, final ObjSerializer<?> serializer, final Draft draft) {
         super(URI.create(remoteAuthority.toString()), draft);
-        LOG = Router.global().logger();
         assert serializer != null;
         this.serializer = serializer;
         this.remoteHost = remoteAuthority;
-        LOG.info("connecting to {{b}}%s{{/b}}", this.remoteHost);
-        Router.writeToSpace(Router.global().vid().extend("cluster"), new MObjs(new ArrayList<>(List.of(this.remoteHost.toUri()))));
+        if (Router.loaded()) {
+            LOG.info("connecting to {{b}}%s{{/b}}", this.remoteHost);
+            Router.writeToSpace(Router.global().vid().extend("cluster"), new MObjs(new ArrayList<>(List.of(this.remoteHost.toUri()))));
+        }
     }
 
     public MClient(final fURI remoteAuthority, final ObjSerializer<?> serializer) {

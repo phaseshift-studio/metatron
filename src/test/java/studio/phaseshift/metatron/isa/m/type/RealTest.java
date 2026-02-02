@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -21,6 +21,7 @@ package studio.phaseshift.metatron.isa.m.type;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.lang.mObjTest;
+import studio.phaseshift.metatron.mTest;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -37,7 +38,7 @@ public class RealTest extends mObjTest {
             "3.9.as(int::T)                           % 3",
     }, delimiter = '%')
     public void testAs(final String code, final String expected) {
-        super.testCode(code, expected);
+        mTest.testCode(LOG, code, expected);
     }
 
     @ParameterizedTest
@@ -47,6 +48,6 @@ public class RealTest extends mObjTest {
             "2.0.pow(4.0).plus(1.0).mult(2.0)          % 34.0",
     }, delimiter = '%')
     public void testMath(final String code, final String expected) {
-        super.testCode(code, expected);
+        mTest.testCode(LOG, code, expected);
     }
 }

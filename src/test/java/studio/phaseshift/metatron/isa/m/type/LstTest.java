@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -27,9 +27,8 @@ package studio.phaseshift.metatron.isa.m.type;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
-import studio.phaseshift.metatron.isa.m.type.Lst;
-import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.lang.mObjTest;
+import studio.phaseshift.metatron.mTest;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -63,8 +62,7 @@ public class LstTest extends mObjTest {
         assertEquals(v, actual);
     }
 
-
-    @Override
+    
     @ParameterizedTest
     @CsvSource(value = {
             "[a,[b,[c,d],e],f]                                                                       % [a,[b,[c,d],e],f]",
@@ -82,7 +80,7 @@ public class LstTest extends mObjTest {
 
     }, delimiter = '%')
     public void testCode(final String code, final String expected) {
-        super.testCode(code, expected);
+        mTest.testCode(LOG, code, expected);
     }
 
     @ParameterizedTest
@@ -108,7 +106,7 @@ public class LstTest extends mObjTest {
 
     }, delimiter = '%')
     public void testCoefficients(final String code, final String expected) {
-        super.testCode(code, expected);
+        mTest.testCode(LOG, code, expected);
     }
 
     @ParameterizedTest
@@ -126,6 +124,6 @@ public class LstTest extends mObjTest {
 
     }, delimiter = '%')
     public void testAs(final String code, final String expected) {
-        super.testCode(code, expected);
+        mTest.testCode(LOG, code, expected);
     }
 }

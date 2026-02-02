@@ -18,18 +18,16 @@
 
 package studio.phaseshift.metatron.furi;
 
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
-import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
-import studio.phaseshift.metatron.isa.sys.type.LogObj;
 import studio.phaseshift.metatron.isa.sys.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.sys.type.ui.graphitty.GraphittyLogger;
+import studio.phaseshift.metatron.mTest;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.HashMap;
@@ -39,19 +37,15 @@ import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.furi.fURI.f;
-import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
-import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
-public class fURITest {
+public class fURITest extends mTest {
 
     private static final GraphittyLogger LOG = Graphitty.log(fURITest.class);
 
-    @BeforeAll
-    public static void begin() {
-        BootLoader.BOOTING = true;
-        BootLoader.load(rec(uri("log"), uri(LogObj.getSLF4J().toString().toLowerCase())));
-    }
 
+    /// /////////////////////////////////////////
+
+    // TODO: move this to a CSVSource (this is sooooooo old)
     static Stream<Arguments> testSegmentsData() {
         return Stream.of(
                 Arguments.of("http://fhatos.org/a/b/c", List.of("a", "b", "c")),
