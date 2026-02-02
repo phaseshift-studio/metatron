@@ -61,7 +61,7 @@ public abstract class MInstSet extends MSpace<Map<fURI, Set<? extends Obj>>> imp
                 if (t.tid().matches(this.pattern)) this.write(t.tid(), t);
                 else Router.writeToSpace(t.tid(), t);
             });
-            Router.writeToSpace(NOOBJ_TID, NOOBJ_TYPE);
+            Router.writeToSpace(NOOBJ_TID, NOOBJ_TYPE); // every inst set must have a noobj so it can operate independently of /m/inst
             this.consts().forEach(c -> {
                 if (c.vid().matches(this.pattern)) this.write(c.vid(), c);
                 else Router.writeToSpace(c.vid(), c);

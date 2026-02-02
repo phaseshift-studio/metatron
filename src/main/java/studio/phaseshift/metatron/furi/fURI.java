@@ -22,8 +22,8 @@ import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.algebra.Ring;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.isa.m.type.Uri;
-import studio.phaseshift.metatron.isa.sys.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.sys.type.Router;
+import studio.phaseshift.metatron.isa.sys.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.*;
@@ -257,7 +257,7 @@ public class fURI implements Cloneable, Ring<fURI> {
 
 
     public String name() {
-        return this.segments().isEmpty() ? Tokens.EMPTY : this.qLess().segments().get(this.segments().size() - 1);
+        return this.segments().isEmpty() ? Tokens.EMPTY : this.basePath().segments().get(this.segments().size() - 1);
     }
 
     public fURI resolve() {
@@ -501,7 +501,7 @@ public class fURI implements Cloneable, Ring<fURI> {
     public boolean hasPattern() {
         return (null != this.scheme && this.scheme.length() == 1 && (this.scheme.charAt(0) == ALL_WILD_CHAR || this.scheme.charAt(0) == ONE_WILD_CHAR)) ||
                 (null != this.host && this.host.length() == 1 && (this.host.charAt(0) == ALL_WILD_CHAR || this.host.charAt(0) == ONE_WILD_CHAR)) ||
-                this.path.stream().filter(s -> s.length() == 1).anyMatch(s -> s.charAt(0) == ONE_WILD_CHAR || s.charAt(0) == ALL_WILD_CHAR);
+                this.path.stream().filter(s -> !s.isEmpty()).map(s -> s.charAt(0)).anyMatch(c -> c == ONE_WILD_CHAR || c == ALL_WILD_CHAR);
     }
 
     public boolean hasQuery() {
@@ -776,16 +776,19 @@ public class fURI implements Cloneable, Ring<fURI> {
     }
 
     public boolean matches(final fURI rhs) {
-        //if(this.equals(rhs))
-        //    return true;
         final C c = this.cV();
         final C d = rhs.cV();
-        if (c.isZero() && d.isZero())
-            return true;
-        if (c.isZero() && c.within(d)) // no need to check path as its noobj
-            return true;
-        if (!c.within(d))
+        //if (c.isZero() && d.isZero())
+        //    return true;
+        if (c.within(d)) { // no need to check path as its noobj
+            if (c.isZero())
+                return true;
+        } else
             return false;
+        if (!rhs.hasPattern() && !this.hasPattern()) {
+            if (!this.name().equals(rhs.name()))
+                return false;
+        }
         if (!Objects.equals(this.poly, rhs.poly)) {
             if (null != this.poly && null != rhs.poly) {
                 for (int i = 0; i < rhs.poly.size(); i++) {

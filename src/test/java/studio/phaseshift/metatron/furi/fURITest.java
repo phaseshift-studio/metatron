@@ -18,15 +18,16 @@
 
 package studio.phaseshift.metatron.furi;
 
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
+import studio.phaseshift.metatron.isa.sys.type.LogObj;
 import studio.phaseshift.metatron.isa.sys.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.sys.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.util.MTronException;
@@ -38,11 +39,18 @@ import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.furi.fURI.f;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 public class fURITest {
 
     private static final GraphittyLogger LOG = Graphitty.log(fURITest.class);
-    private static final Logger log = LoggerFactory.getLogger(fURITest.class);
+
+    @BeforeAll
+    public static void begin() {
+        BootLoader.BOOTING = true;
+        BootLoader.load(rec(uri("log"), uri(LogObj.getSLF4J().toString().toLowerCase())));
+    }
 
     static Stream<Arguments> testSegmentsData() {
         return Stream.of(
@@ -787,4 +795,41 @@ public class fURITest {
         assertEquals(typeParams, furiA.poly().toString());
     }
 
+    @ParameterizedTest
+    @CsvSource(value = {
+            "a/b/c{2}                |c",
+            "a/b/c                   |c",
+            "a/b/c{*}                |c",
+            "c{*}                    |c",
+            "+                       |+",
+            "{2}                     |\'\'",
+            "a/b/..                  |..",
+            "a/b/.                   |.",
+    }, delimiter = '|')
+    void testName(final String furi, final String name) {
+        assertEquals(name, f(furi).name());
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "a/b/c{2}                |false",
+            "a/b/c                   |false",
+            "a/b/c{*}                |false",
+            "c{*}                    |false",
+            "+                       |true",
+            "{2}                     |false",
+            "a/b/..                  |false",
+            "a/b/.                   |false",
+            "a/b/+                   |true",
+            "a/b/+/c                 |true",
+            "#                       |true",
+            "+{2,3}                  |true",
+            "#{?}                    |true",
+            "#{0}                    |true",
+            "#{1}                    |true",
+            "a/b/c{+}                |false"
+    }, delimiter = '|')
+    void testHasPattern(final String furi, final boolean pattern) {
+        assertEquals(pattern, f(furi).hasPattern());
+    }
 }
