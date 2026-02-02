@@ -21,6 +21,7 @@ package studio.phaseshift.metatron.isa;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.sys.type.Router;
 import studio.phaseshift.metatron.mTest;
@@ -72,14 +73,25 @@ public abstract class InstSetTest extends mTest {
             if (inst.hasDom() && inst.hasRng()) {
                 hasDomRng.getAndIncrement();
                 long d = Router.readFromSpace(inst.tid().dom(null)).stream().filter(i -> Objects.equals(i.tid().basePath(), inst.tid().basePath())).count();
+                long dash = Router.readFromSpace(inst.tid().dom(fURI.ALL)).stream().filter(i -> Objects.equals(i.tid().basePath(), inst.tid().basePath())).count();
                 long r = Router.readFromSpace(inst.tid().rng(null)).stream().filter(i -> Objects.equals(i.tid().basePath(), inst.tid().basePath())).count();
+                long rash = Router.readFromSpace(inst.tid().rng(fURI.ALL)).stream().filter(i -> Objects.equals(i.tid().basePath(), inst.tid().basePath())).count();
                 long dr = Router.readFromSpace(inst.tid().rng(null).dom(null)).stream().filter(i -> Objects.equals(i.tid().basePath(), inst.tid().basePath())).count();
+                long drash = Router.readFromSpace(inst.tid().rng(fURI.ALL).dom(fURI.ALL)).stream().filter(i -> Objects.equals(i.tid().basePath(), inst.tid().basePath())).count();
                 LOG.info("inst [%s] dom [%s] rng [%s] domRng [%s]", inst.tid().basePath(), d, r, dr);
                 assertTrue(d > 0);
+                if (!inst.dom().c().isZeroable())
+                    assertTrue(dash > 0);
                 assertTrue(r > 0);
+                if (!inst.rng().c().isZeroable())
+                    assertTrue(rash > 0);
                 assertTrue(dr > 0);
+                if (!inst.dom().c().isZeroable() && !inst.rng().c().isZeroable())
+                    assertTrue(drash > 0);
                 assertTrue(d <= dr);
                 assertTrue(r <= dr);
+                //  assertTrue(dash <= drash);
+                // assertTrue(rash <= drash);
                 //assertTrue(r * d <= dr || r + d <= dr);
             } else {
                 hasNotDomRng.incrementAndGet();
