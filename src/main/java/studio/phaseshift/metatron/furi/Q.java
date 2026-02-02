@@ -53,21 +53,23 @@ public interface Q extends Rec {
     fURI ON_READ = f("on_read");
     fURI PRE_READ = f("pre_read");
     fURI POST_READ = f("post_read");
-    Type Q_TYPE = T(sysInstSet.Q_TID, null, instC(
-            sysInstSet.SYS_INST_TID.dom(ALL.maybe()).rng(sysInstSet.Q_TID),
-            lst(T(REC_TID, isa_(rec(
-                    uri(PATTERN), T(URI_TID),
-                    uri(ON_WRITE),
-                    rec(
-                            uri(PRE_WRITE.maybe()), T(INST_TID),
-                            uri(POST_WRITE.maybe()), T(INST_TID),
-                            uri(QLESS_WRITE.maybe()), T(INST_TID)),
-                    uri(ON_READ),
-                    rec(
-                            uri(PRE_READ.maybe()), T(INST_TID),
-                            uri(POST_READ.maybe()), T(INST_TID)))))), (lhs, inst) -> {
-                return lhs;
-            }));
+    Type Q_TYPE = Type.Builder.build()
+            .tid(REC_TID)
+            .vid(sysInstSet.Q_TID)
+            .constructor(instC(sysInstSet.SYS_INST_TID.dom(ALL.maybe()).rng(sysInstSet.Q_TID),
+                    lst(Type.Builder.build().tid(REC_TID).predicate(isa_(rec(
+                            uri(PATTERN), T(URI_TID),
+                            uri(ON_WRITE),
+                            rec(
+                                    uri(PRE_WRITE.maybe()), T(INST_TID),
+                                    uri(POST_WRITE.maybe()), T(INST_TID),
+                                    uri(QLESS_WRITE.maybe()), T(INST_TID)),
+                            uri(ON_READ),
+                            rec(
+                                    uri(PRE_READ.maybe()), T(INST_TID),
+                                    uri(POST_READ.maybe()), T(INST_TID))))).create()), (lhs, inst) -> {
+                        return lhs;
+                    })).create();
 
 
     fURI pattern();

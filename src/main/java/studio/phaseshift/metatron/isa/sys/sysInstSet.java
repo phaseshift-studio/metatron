@@ -18,9 +18,11 @@
 
 package studio.phaseshift.metatron.isa.sys;
 
+import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.type.Inst;
+import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.m.type.impl.MInstSet;
 import studio.phaseshift.metatron.isa.sys.space.file.fsSpace;
@@ -60,6 +62,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.sys.space.file.fsSpace.FS_TYPE;
 import static studio.phaseshift.metatron.isa.sys.type.console.Console.CONSOLE_TYPE;
 
@@ -77,6 +80,20 @@ public class sysInstSet extends MInstSet {
     public static final fURI IMAGE_TID = FILE_TID.extend("image");
     public static final fURI Q_TID = SYS_SPACE_TID.extend("q");
     public static final fURI REWRITE_INST_TID = SYS_INST_TID.extend("rewrite");
+    public static final Rec SPACE_CONFIG = rec(uri(Tokens.PATTERN), T(URI_TID));
+    public static final Type ROUTER_TYPE = Type.Builder.build()
+            .tid(REC_TID)
+            .vid(ROUTER_TID)
+            .create();
+    public static final Type FILE_TYPE = Type.Builder.build()
+            .tid(URI_TID)
+            .vid(FILE_TID)
+            .constructor(instC(INST_TID.dom(ALL.maybe()).rng(FILE_TID),
+                    lst(T(URI_TID)),
+                    (lhs, inst) -> fsSpace.makeFile(Path.of(inst.arg(0).uriValue().toString())))).create();
+    public static final Type IMAGE_FILE_TYPE = Type.Builder.build()
+            .tid(FILE_TID)
+            .vid(IMAGE_TID).create();
 
 
     public sysInstSet(final fURI vid) {
@@ -94,23 +111,15 @@ public class sysInstSet extends MInstSet {
     @Override
     public Set<Type> types() {
         final Set<Type> types = new HashSet<>(List.of(
-                T(ROUTER_TID),
+                ROUTER_TYPE,
                 T(SYS_SPACE_TID),
                 CONSOLE_TYPE,
                 SUBSCRIPTION_TYPE,
                 DOCQ_TYPE,
                 SUBQ_TYPE,
-                FS_TYPE));
-        final Type FILE_TYPE = Type.Builder.build()
-                .tid(URI_TID).vid(FILE_TID)
-                .constructor(instC(INST_TID.dom(ALL.maybe()).rng(FILE_TID),
-                        lst(T(URI_TID)),
-                        (lhs, inst) -> fsSpace.makeFile(Path.of(inst.arg(0).uriValue().toString())))).create();
-        final Type IMAGE_FILE_TYPE = Type.Builder.build()
-                .tid(FILE_TID)
-                .vid(IMAGE_TID).create();
-        types.add(FILE_TYPE);
-        types.add(IMAGE_FILE_TYPE);
+                FS_TYPE,
+                FILE_TYPE,
+                IMAGE_FILE_TYPE));
         return types;
     }
 

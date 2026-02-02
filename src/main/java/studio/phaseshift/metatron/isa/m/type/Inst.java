@@ -22,9 +22,9 @@ import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
+import studio.phaseshift.metatron.isa.sys.type.Router;
 import studio.phaseshift.metatron.isa.sys.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.sys.type.ui.graphitty.GraphittyLogger;
-import studio.phaseshift.metatron.isa.sys.type.Router;
 import studio.phaseshift.metatron.lang.sys.router.impl.FutureObj;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.IteratorUtil;
@@ -44,7 +44,6 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
-import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.MTronException.mexcept;
 import static studio.phaseshift.metatron.util.Tuple.Triplet;
 
@@ -238,7 +237,7 @@ public interface Inst extends Call {
             /// //////////////////////////////////////////////////
             if (fetched.stream().noneMatch(Obj::isInstObj)) {
                 fetched = Router.global().read(this.tid().extend("apply"));
-                if(fetched.stream().noneMatch(Obj::isInstObj))
+                if (fetched.stream().noneMatch(Obj::isInstObj))
                     fetched = Router.global().read(this.type().tid().extend("apply"));
                 LOG.debug("apply() insts at: %s => %s", this.tid().extend("apply"), fetched);
             }
@@ -332,12 +331,14 @@ public interface Inst extends Call {
             modulateC = true;
             //  }
             if (!clhs.rng().matches(cinst.dom()))
-                return fail(mexcept("lhs range does not match inst domain: %s => %s [%s]", clhs.rng(), cinst.dom(), cinst));
+                return Fail.Helper.inst_eval_fail(cinst, "lhs range does not match inst domain", null);
+            //return fail(mexcept("lhs range does not match inst domain: %s => %s [%s]", clhs.rng(), cinst.dom(), cinst));
         }
         if (!clhs.isFail() || cinst.isCatch()) {
             try {
                 if (null == cinst.f())
-                    return fail(mexcept("unable to determine inst function: %s => %s", uri(clhs.tid()), cinst));
+                    return Fail.Helper.inst_eval_fail(cinst, "unable to determine inst function", null);
+                //return fail(mexcept("unable to determine inst function: %s => %s", uri(clhs.tid()), cinst));
                 cinst = Helpers.applyArgs(clhs, cinst);
                 Router.stack().push(cinst.args());
                 try {
@@ -353,9 +354,8 @@ public interface Inst extends Call {
                 rhs = e instanceof MTronException ? ((MTronException) e).asFail() : mexcept("unable to evaluate inst function: %s", cinst).cause(e).asFail();
             }
             if (BootLoader.TYPE_CHECK && !rhs.isType() && !rhs.isFail() && !lhs.isCaughtFail() && !rhs.matches(cinst.rng()))
-                rhs = mexcept("inst resolution failure: %s", cinst)
-                        .cause(mexcept("rhs does not match inst range: %s => %s [%s]", rhs, cinst.rng(), cinst))
-                        .asFail();
+                rhs = Fail.Helper.inst_eval_fail(cinst, "inst resolution failure",
+                        MTronException.of("rhs does not match inst range: %s => %s [%s]", rhs, cinst.rng(), cinst));
         } else {
             rhs = clhs; // propagate fail through inst unless it's a catch inst
         }

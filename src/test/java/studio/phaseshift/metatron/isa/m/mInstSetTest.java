@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -38,6 +38,7 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static studio.phaseshift.metatron.furi.fURI.f;
+import static studio.phaseshift.metatron.isa.m.mInstSet.M_ISA_TID;
 
 @ExtendWith(TestData.TestDataExtension.class)
 public class mInstSetTest extends InstSetTest {
@@ -45,6 +46,13 @@ public class mInstSetTest extends InstSetTest {
 
     public mInstSetTest() {
         super(() -> null);// mInstSet.create(f("/sys/m")));
+    }
+
+    @Override
+    @Test
+    public void testInstDomRngMatching() {
+        this.space = mInstSet.create();
+        super.testInstDomRngMatching();
     }
 
     @Test
@@ -155,8 +163,8 @@ public class mInstSetTest extends InstSetTest {
             "1.map?noobj<=int(noobj)                                                      % noobj",
             "{1,2,3,4}.map(_).plus(2)                                                     % {3,4,5,6}",
             "{1,2,3,4}.map(+2)                                                            % {3,4,5,6}",
-         //   "{1,2,3,4}.map(map(+2))                                                       % {3,4,5,6}",
-        //    "{1,2,3,4}.map(map(map(map(map(map(+2))))))                                   % {3,4,5,6}",
+            //   "{1,2,3,4}.map(map(+2))                                                       % {3,4,5,6}",
+            //    "{1,2,3,4}.map(map(map(map(map(map(+2))))))                                   % {3,4,5,6}",
     }, delimiter = '%')
     public void testMap(final String code, final String expected) {
         super.testCode(code, expected);
@@ -541,8 +549,8 @@ public class mInstSetTest extends InstSetTest {
             "[a=>1,b=>2,c=>3].select([isa(uri::T)=>-<[_,_]>-.sum()]).where([a=>is(gt(2))])                                             % noobj",
             "[a=>1,b=>2,c=>3].select([isa(uri::T)=>-<[_,_]>-.sum()]).where([a=>is(gt(1))])                                             % [a=>2,b=>4,c=>6]",
             /// /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-         //  "[a=>1,b=>2,c=>3].select::([isa(uri::T)=>-<[_,_]>-.sum()]).where::([a=>is(gt(2))])                                             % noobj",
-          //  "[a=>1,b=>2,c=>3].select::([isa(uri::T)=>-<[_,_]>-.sum()]).where::([a=>is(gt(1))])                                             % [a=>2,b=>4,c=>6]",
+            //  "[a=>1,b=>2,c=>3].select::([isa(uri::T)=>-<[_,_]>-.sum()]).where::([a=>is(gt(2))])                                             % noobj",
+            //  "[a=>1,b=>2,c=>3].select::([isa(uri::T)=>-<[_,_]>-.sum()]).where::([a=>is(gt(1))])                                             % [a=>2,b=>4,c=>6]",
             /// /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
             "[1,2,3].select([_,noobj,_])                                                                                                 % [1,noobj,3]",
             "[1,2,3].select([_,plus(5),_])                                                                                               % [1,7,3]",

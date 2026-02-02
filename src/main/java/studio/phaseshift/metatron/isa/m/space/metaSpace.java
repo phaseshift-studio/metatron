@@ -47,6 +47,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.isa.sys.sysInstSet.SPACE_CONFIG;
 import static studio.phaseshift.metatron.isa.sys.sysInstSet.SYS_SPACE_TID;
 
 /*
@@ -63,17 +64,16 @@ public class metaSpace extends MSpace<MServer> {
     protected final MServer server;
     protected final Tuple.Pair<String, String> rewrite;
 
-    protected static final Rec CONFIG = rec(
-            uri(HOST), URI_TYPE,
-            uri(PATTERN), URI_TYPE,
-            uri(REWRITE), REL_TYPE, // TODO: rel(URI_TYPE,URI_TYPE)
-            uri(PEERS), lst(T(URI_TID.maybeSome())));
+    protected static final Rec META_SPACE_CONFIG = SPACE_CONFIG.plus(
+            rec(uri(HOST), URI_TYPE,
+                    uri(REWRITE), REL_TYPE, // TODO: rel(URI_TYPE,URI_TYPE) make this general to SPACE_CONFIG
+                    uri(PEERS), lst(T(URI_TID.maybeSome()))));
 
     public static final Type META_SPACE_TYPE = Type.Builder.build()
             .tid(SYS_SPACE_TID)
             .vid(META_SPACE_TID)
             .constructor(instC(mInstSet.INST_TID.extend("con").dom(ALL.maybe()).rng(META_SPACE_TID), //constructor
-                    lst(isa_(CONFIG).tryToInst()),
+                    lst(isa_(META_SPACE_CONFIG).tryToInst()),
                     (lhs, inst) -> metaSpace.of(inst.arg(0).asRec(), inst.arg(0).vid()))).create();
 
 

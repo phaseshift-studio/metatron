@@ -39,7 +39,7 @@ import java.util.regex.Pattern;
 public class Highlighter implements org.jline.reader.Highlighter {
 
     private final SyntaxHighlighter syntaxHighlighter;
-    private final Pattern pattern = Pattern.compile("\\{\\{.*?}}");
+    private final Pattern GRAPHITTY_PATTERN = Pattern.compile("\\{\\{.*?}}");
     private final Graphitty graphitty;
     private final static ConfigurationPath configurations = new ConfigurationPath(
             Paths.get("conf"),                                     // application-wide settings
@@ -103,7 +103,7 @@ public class Highlighter implements org.jline.reader.Highlighter {
 
     @Override
     public AttributedString highlight(final LineReader reader, final String buffer) {
-        final Matcher matcher = this.pattern.matcher(buffer);
+        final Matcher matcher = this.GRAPHITTY_PATTERN.matcher(buffer);
         if (matcher.find()) {
             return new AttributedString(this.graphitty.writeToString(buffer));
         } else {

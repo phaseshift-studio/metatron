@@ -27,8 +27,8 @@ import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.MObjs;
-import studio.phaseshift.metatron.isa.sys.type.console.Highlighter;
 import studio.phaseshift.metatron.isa.sys.type.Router;
+import studio.phaseshift.metatron.isa.sys.type.console.Highlighter;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
@@ -50,18 +50,17 @@ import static studio.phaseshift.metatron.Tokens.SCRIPT;
 import static studio.phaseshift.metatron.Tokens.USER_HOME;
 import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.furi.fURI.f;
-import static studio.phaseshift.metatron.isa.m.mInstSet.*;
+import static studio.phaseshift.metatron.isa.m.mInstSet.ALL_STAR;
+import static studio.phaseshift.metatron.isa.m.mInstSet.INST_TID;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
-import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.sys.sysInstSet.FILE_TID;
-import static studio.phaseshift.metatron.isa.sys.sysInstSet.SYS_ISA_TID;
+import static studio.phaseshift.metatron.isa.sys.sysInstSet.*;
 
 public class fsSpace extends MSpace<FileSystem> {
 
@@ -70,10 +69,13 @@ public class fsSpace extends MSpace<FileSystem> {
             uri(Tokens.PATTERN), URI_TYPE,
             uri(Tokens.REWRITE), rel(URI_TYPE, URI_TYPE),
             uri(Tokens.SCRIPT).maybe(), rec(URI_TYPE, URI_TYPE));
-    public static final Type FS_TYPE = T(FS_TID, isa_(rec()),
-            instC(INST_TID.dom(ALL.maybe()).rng(FS_TID),
-                    lst(isa_(rec(uri(Tokens.PATTERN), T(URI_TID))).tryToInst()),
-                    (lhs, inst) -> fsSpace.of(FileSystems.getDefault(), inst.arg(0).asRec(), inst.arg(0).vid())));
+    public static final Type FS_TYPE = Type.Builder.build()
+            .tid(SYS_SPACE_TID)
+            .vid(FS_TID)
+            .constructor(
+                    instC(INST_TID.dom(ALL.maybe()).rng(FS_TID),
+                            lst(isa_(SPACE_CONFIG).tryToInst()),
+                            (lhs, inst) -> fsSpace.of(FileSystems.getDefault(), inst.arg(0).asRec(), inst.arg(0).vid()))).create();
 
     private final Tuple.Pair<String, String> rewrite;
 

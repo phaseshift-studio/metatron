@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -121,7 +121,7 @@ public abstract class MInstSet extends MSpace<Map<fURI, Set<? extends Obj>>> imp
         this.insts().forEach(i -> Router.writeToSpace(i.tid(),noobj()));
         this.rewrites().forEach(r -> Router.writeToSpace(r.tid(),noobj()));*/
     }
-    
+
     @Override
     public Obj read(final fURI vid) {
         if (Objects.equals(this.tid, vid))
@@ -131,8 +131,8 @@ public abstract class MInstSet extends MSpace<Map<fURI, Set<? extends Obj>>> imp
                         .stream()
                         .filter(kv -> kv.getKey().bimatches(vid.basePath().asNode()))
                         .flatMap(kv -> kv.getValue().stream())
-                        .filter(i -> !vid.hasDom() || i.dom().tid().bimatches(vid.dom()))
-                        .filter(i -> !vid.hasRng() || i.rng().tid().bimatches(vid.rng()))
+                        .filter(i -> !vid.hasDom() || i.dom().tid().bimatches(vid.dom().big()))
+                        .filter(i -> !vid.hasRng() || i.rng().tid().bimatches(vid.rng().big()))
                         .map(i -> vid.isNode() ? i : rel(i.tid().toUri(), i)))
                         .append(objs(TYPE_TABLE.entrySet()
                                 .stream()

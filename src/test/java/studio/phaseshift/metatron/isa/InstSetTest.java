@@ -20,9 +20,13 @@ package studio.phaseshift.metatron.isa;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.sys.type.Router;
 import studio.phaseshift.metatron.mTest;
 
+import java.util.Objects;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -32,10 +36,10 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 public abstract class InstSetTest extends mTest {
 
-    protected Space space;
-    protected final Supplier<Space> spaceSupplier;
+    protected InstSet space;
+    protected final Supplier<InstSet> spaceSupplier;
 
-    public InstSetTest(final Supplier<Space> instSetSupplier) {
+    public InstSetTest(final Supplier<InstSet> instSetSupplier) {
         this.spaceSupplier = instSetSupplier;
     }
 
@@ -58,5 +62,29 @@ public abstract class InstSetTest extends mTest {
             }
             this.space = null;
         }
+    }
+
+    @Test
+    public void testInstDomRngMatching() {
+        AtomicInteger hasDomRng = new AtomicInteger(0);
+        AtomicInteger hasNotDomRng = new AtomicInteger(0);
+        this.space.insts().forEach(inst -> {
+            if (inst.hasDom() && inst.hasRng()) {
+                hasDomRng.getAndIncrement();
+                long d = Router.readFromSpace(inst.tid().dom(null)).stream().filter(i -> Objects.equals(i.tid().basePath(), inst.tid().basePath())).count();
+                long r = Router.readFromSpace(inst.tid().rng(null)).stream().filter(i -> Objects.equals(i.tid().basePath(), inst.tid().basePath())).count();
+                long dr = Router.readFromSpace(inst.tid().rng(null).dom(null)).stream().filter(i -> Objects.equals(i.tid().basePath(), inst.tid().basePath())).count();
+                LOG.info("inst [%s] dom [%s] rng [%s] domRng [%s]", inst.tid().basePath(), d, r, dr);
+                assertTrue(d > 0);
+                assertTrue(r > 0);
+                assertTrue(dr > 0);
+                assertTrue(d <= dr);
+                assertTrue(r <= dr);
+                //assertTrue(r * d <= dr || r + d <= dr);
+            } else {
+                hasNotDomRng.incrementAndGet();
+            }
+        });
+        assertEquals(this.space.insts().size(), hasDomRng.get() + hasNotDomRng.get());
     }
 }
