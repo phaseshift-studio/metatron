@@ -35,7 +35,6 @@ import static studio.phaseshift.metatron.isa.m.space.memSpace.MEM_SPACE_TYPE;
 import static studio.phaseshift.metatron.isa.m.space.metaSpace.META_SPACE_TYPE;
 import static studio.phaseshift.metatron.isa.m.space.stackSpace.STACK_SPACE_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
-import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 
 public class mInstSet extends MInstSet {
 
@@ -178,24 +177,24 @@ public class mInstSet extends MInstSet {
     public void close() {
         // do nothing
     }
-    
+
     @Override
     public Set<Type> types() {
         return new LinkedHashSet<>(List.of(
-                T(NOOBJ_TID),
-                T(FAIL_TID),
-                T(BOOL_TID),
-                T(INT_TID),
-                T(REAL_TID),
-                T(BYTES_TID),
-                T(STR_TID),
-                T(URI_TID),
-                T(REL_TID),
-                T(LST_TID),
-                T(REC_TID),
-                T(INST_TID),
-                T(CODE_TID),
-                T(OBJS_TID),
+                Type.Builder.build().tid(TYPE_TID).vid(NOOBJ_TID).create(),
+                Type.Builder.build().tid(TYPE_TID).vid(FAIL_TID).create(),
+                Type.Builder.build().tid(TYPE_TID).vid(BOOL_TID).create(),
+                Type.Builder.build().tid(TYPE_TID).vid(INT_TID).create(),
+                Type.Builder.build().tid(TYPE_TID).vid(REAL_TID).create(),
+                Type.Builder.build().tid(TYPE_TID).vid(BYTES_TID).create(),
+                Type.Builder.build().tid(TYPE_TID).vid(STR_TID).create(),
+                Type.Builder.build().tid(TYPE_TID).vid(URI_TID).create(),
+                Type.Builder.build().tid(TYPE_TID).vid(REL_TID).create(),
+                Type.Builder.build().tid(TYPE_TID).vid(LST_TID).create(),
+                Type.Builder.build().tid(TYPE_TID).vid(REC_TID).create(),
+                Type.Builder.build().tid(TYPE_TID).vid(INST_TID).create(),
+                Type.Builder.build().tid(TYPE_TID).vid(CODE_TID).create(),
+                Type.Builder.build().tid(TYPE_TID).vid(OBJS_TID).create(),
                 /// ///////////////////////////////////
                 MEM_SPACE_TYPE,
                 STACK_SPACE_TYPE,

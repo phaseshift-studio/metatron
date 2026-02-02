@@ -47,6 +47,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.isa.sys.sysInstSet.SYS_SPACE_TID;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -68,11 +69,12 @@ public class metaSpace extends MSpace<MServer> {
             uri(REWRITE), REL_TYPE, // TODO: rel(URI_TYPE,URI_TYPE)
             uri(PEERS), lst(T(URI_TID.maybeSome())));
 
-    public static final Type META_SPACE_TYPE = T(META_SPACE_TID,
-            null, // predicate
-            instC(mInstSet.INST_TID.extend("con").dom(ALL.maybe()).rng(META_SPACE_TID), //constructor
+    public static final Type META_SPACE_TYPE = Type.Builder.build()
+            .tid(SYS_SPACE_TID)
+            .vid(META_SPACE_TID)
+            .constructor(instC(mInstSet.INST_TID.extend("con").dom(ALL.maybe()).rng(META_SPACE_TID), //constructor
                     lst(isa_(CONFIG).tryToInst()),
-                    (lhs, inst) -> metaSpace.of(inst.arg(0).asRec(), inst.arg(0).vid())));
+                    (lhs, inst) -> metaSpace.of(inst.arg(0).asRec(), inst.arg(0).vid()))).create();
 
 
     protected metaSpace(final MServer sjvm, final Map<Obj, Obj> jvm, final fURI vid) {

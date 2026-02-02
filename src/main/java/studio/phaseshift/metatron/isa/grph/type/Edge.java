@@ -27,12 +27,12 @@ import java.util.Set;
 
 import static studio.phaseshift.metatron.isa.grph.grphInstSet.*;
 import static studio.phaseshift.metatron.isa.grph.type.Vrtx.VrtxType.VRTX_TYPE;
+import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TID;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
-import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -41,9 +41,12 @@ public class Edge {
 
     public static class EdgeType {
 
-        public static final Type EDGE_TYPE = T(EDGE_TID, isa_(rec(
-                OUT, VRTX_TYPE,
-                IN, VRTX_TYPE)));
+        public static final Type EDGE_TYPE = Type.Builder.build()
+                .tid(REC_TID)
+                .vid(EDGE_TID)
+                .predicate(isa_(rec(
+                        OUT, VRTX_TYPE,
+                        IN, VRTX_TYPE))).create();
 
         public static Set<Inst> insts() {
             return new LinkedHashSet<>(List.of(

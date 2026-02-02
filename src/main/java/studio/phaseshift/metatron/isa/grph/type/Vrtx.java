@@ -29,6 +29,7 @@ import java.util.Set;
 import java.util.function.BiFunction;
 
 import static studio.phaseshift.metatron.isa.grph.grphInstSet.*;
+import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.URI_TID;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
@@ -44,9 +45,12 @@ public class Vrtx {
 
     public static class VrtxType {
 
-        public static final Type VRTX_TYPE = T(VRTX_TID, isa_(rec(
-                OUT, T(EDGE_TID.maybeSome()),
-                IN, T(EDGE_TID.maybeSome()))));
+        public static final Type VRTX_TYPE = Type.Builder.build()
+                .tid(REC_TID)
+                .vid(VRTX_TID)
+                .predicate(isa_(rec(
+                        OUT, T(EDGE_TID.maybeSome()),
+                        IN, T(EDGE_TID.maybeSome())))).create();
 
         private static BiFunction<Obj, Inst, Obj> V_E_FUNCTION(final Uri direction) {
             return (lhs, inst) -> objs(lhs.asRec().at(direction).asRec().elements().filter(r -> r.first().uriValue().matches(inst.arg(0).uriValue())).flatMap(r -> r.second().stream()));

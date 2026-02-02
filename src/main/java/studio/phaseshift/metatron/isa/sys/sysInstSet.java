@@ -53,7 +53,6 @@ import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.else_;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
-import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBytes.bytes;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
@@ -102,10 +101,14 @@ public class sysInstSet extends MInstSet {
                 DOCQ_TYPE,
                 SUBQ_TYPE,
                 FS_TYPE));
-        final Type FILE_TYPE = T(FILE_TID, isa_(URI_TYPE),
-                instC(INST_TID.dom(ALL.maybe()).rng(FILE_TID), lst(T(URI_TID)),
-                        (lhs, inst) -> fsSpace.makeFile(Path.of(inst.arg(0).uriValue().toString()))));
-        final Type IMAGE_FILE_TYPE = T(IMAGE_TID, isa_(FILE_TYPE));
+        final Type FILE_TYPE = Type.Builder.build()
+                .tid(URI_TID).vid(FILE_TID)
+                .constructor(instC(INST_TID.dom(ALL.maybe()).rng(FILE_TID),
+                        lst(T(URI_TID)),
+                        (lhs, inst) -> fsSpace.makeFile(Path.of(inst.arg(0).uriValue().toString())))).create();
+        final Type IMAGE_FILE_TYPE = Type.Builder.build()
+                .tid(FILE_TID)
+                .vid(IMAGE_TID).create();
         types.add(FILE_TYPE);
         types.add(IMAGE_FILE_TYPE);
         return types;
