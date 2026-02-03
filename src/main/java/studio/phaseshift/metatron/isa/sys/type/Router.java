@@ -22,18 +22,22 @@ import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.Space;
+import studio.phaseshift.metatron.isa.m.space.noobjSpace;
 import studio.phaseshift.metatron.isa.m.space.stackSpace;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
+import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 import studio.phaseshift.metatron.isa.sys.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.lang.sys.router.impl.MServer;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
+import static studio.phaseshift.metatron.furi.fURI.NOOBJ;
 import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.URI_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
@@ -53,7 +57,7 @@ public interface Router extends Obj, Space {
     }
 
     static Router global() {
-        return BootLoader.ROUTER;
+        return null == BootLoader.ROUTER ? DummyRouter.single() : BootLoader.ROUTER;
     }
 
     static Obj readFromSpace(final fURI vid) {
@@ -170,6 +174,100 @@ public interface Router extends Obj, Space {
     class Helper {
         public static String routerToString(final Router router) {
             return router.tid() + "::[pattern=>#]@" + router.vid();
+        }
+    }
+
+    class DummyRouter extends MRec implements Router {
+
+        public static final DummyRouter INSTANCE = new DummyRouter();
+
+        public static final DummyRouter single() {
+            return INSTANCE;
+        }
+
+        public DummyRouter() {
+            super(Map.of(), ROUTER_TID, null);
+        }
+
+        @Override
+        public MServer server() {
+            return null;
+        }
+
+        @Override
+        public void start() {
+
+        }
+
+        @Override
+        public Object sjvm() {
+            return Map.of();
+        }
+
+        @Override
+        public Obj read(fURI vid) {
+            return noobj();
+        }
+
+        @Override
+        public Obj write(fURI vid, Obj obj) {
+            return noobj();
+        }
+
+        @Override
+        public boolean hasSpaceFor(fURI vid) {
+            return false;
+        }
+
+        @Override
+        public void addSpace(Space space) {
+
+        }
+
+        @Override
+        public void removeSpace(fURI vid) {
+
+        }
+
+        @Override
+        public void registerRewrite(fURI small, fURI big) {
+
+        }
+
+        @Override
+        public fURI rewrite(fURI furi, boolean big) {
+            return NOOBJ;
+        }
+
+        @Override
+        public <S extends Space> S getSpace(fURI vid) {
+            return noobjSpace.single();
+        }
+
+        @Override
+        public IOStats stats() {
+            return new IOStats() {
+
+                @Override
+                public IOStats incrBytesRecv(long bytes) {
+                    return this;
+                }
+
+                @Override
+                public IOStats incrBytesSent(long bytes) {
+                    return this;
+                }
+
+                @Override
+                public long bytesSent() {
+                    return 0;
+                }
+
+                @Override
+                public long bytesRecv() {
+                    return 0;
+                }
+            };
         }
     }
 

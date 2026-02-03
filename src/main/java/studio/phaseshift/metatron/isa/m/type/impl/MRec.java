@@ -33,7 +33,6 @@ import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 public class MRec extends MObj implements Rec {
 
@@ -93,9 +92,8 @@ public class MRec extends MObj implements Rec {
         try {
             jvm.remove(noobj());
             if (jvm.containsValue(noobj())) {
-                final Map<Obj, Obj> mjvm = mutableMap();
-                jvm.entrySet().stream().filter(kv -> !kv.getKey().isNoObj() && !kv.getValue().isNoObj()).forEach(kv -> mjvm.put(kv.getKey(), kv.getValue()));
-                return mjvm;
+                jvm.entrySet().stream().filter(kv -> kv.getKey().isNoObj() || kv.getValue().isNoObj()).toList().forEach(kv -> jvm.remove(kv.getKey()));
+                return jvm;
             }
         } catch (final UnsupportedOperationException e) {
             // do nothing
@@ -105,7 +103,7 @@ public class MRec extends MObj implements Rec {
 
     public Rec clone() {
         final MRec clone = (MRec) super.clone();
-        clone.jvm = new LinkedHashMap<>(this.jvm());
+        clone.jvm = this.jvm();
         return clone;
     }
 

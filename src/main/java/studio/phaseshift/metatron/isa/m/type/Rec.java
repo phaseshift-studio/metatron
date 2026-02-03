@@ -164,8 +164,6 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>>, PlusMonoid.O<Rec> {
                 k.segments().size() == 1 ?
                         (value.isNoObj() ? null : (null != v && v.isObjs() ? v.append(value) : value)) :
                         (null != v && v.isRec() ? v.asRec() : rec()).put(k.pretract().toUri(), value, operation));
-
-
         return (Rec) operation.apply(this, map);
     }
 

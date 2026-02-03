@@ -19,27 +19,22 @@
 package studio.phaseshift.metatron.isa.grph.space.tp3;
 
 import org.apache.tinkerpop.gremlin.structure.Direction;
+import org.apache.tinkerpop.gremlin.structure.Edge;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Uri;
+import studio.phaseshift.metatron.isa.sys.type.Router;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.IteratorUtil;
 
-import java.util.LinkedHashSet;
 import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
 
-import static studio.phaseshift.metatron.furi.fURI.ALL;
-import static studio.phaseshift.metatron.isa.grph.grphInstSet.VRTX_TID;
+import static studio.phaseshift.metatron.furi.fURI.f;
+import static studio.phaseshift.metatron.isa.grph.grphInstSet.*;
 import static studio.phaseshift.metatron.isa.grph.space.tp3.EdgeMap.eRec;
-import static studio.phaseshift.metatron.isa.m.mInstSet.INST_TID;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_;
-import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
-import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -59,22 +54,46 @@ public class VertexMap extends ElementMap {
     }
 
     @Override
-    public Set<Entry<Uri, Obj>> entrySet() {
-        final Set<Entry<Uri, Obj>> entries = new LinkedHashSet<>(super.entrySet().stream().collect(Collectors.toSet()));
-        Rec outEdges =  IteratorUtil.stream(this.getBase().edges(Direction.OUT)).map(e -> rel(uri(e.label()), auto_from_(uri("/g/e/" + e.id()), eRec(e)).tryToInst())).collect(new CommonUtil.RecCollector());
-        Rec inEdges = IteratorUtil.stream(this.getBase().edges(Direction.IN)).map(e -> rel(uri(e.label()), auto_from_(uri("/g/e/" + e.id()), eRec(e)).tryToInst())).collect(new CommonUtil.RecCollector());
-        entries.add(new SimpleEntry<>(uri(Direction.OUT.name()), outEdges));
-        entries.add(new SimpleEntry<>(uri(Direction.IN.name()), inEdges));
-        return entries;
+    public Obj get(final Object key) {
+        if (key.equals(IN))
+            return IteratorUtil.stream(this.getBase().edges(Direction.IN)).map(e -> rel(uri(e.label()), auto_from_(uri("/g/E/" + e.id()), eRec(e)).tryToInst())).collect(new CommonUtil.RecCollector());
+        if (key.equals(OUT))
+            return IteratorUtil.stream(this.getBase().edges(Direction.OUT)).map(e -> rel(uri(e.label()), auto_from_(uri("/g/E/" + e.id()), eRec(e)).tryToInst())).collect(new CommonUtil.RecCollector());
+        else
+            return super.get(key);
     }
 
     @Override
-    public Rec asRec() {
-        return rec((Map) this, VRTX_TID, null);
+    public Obj put(final Uri key, final Obj obj) {
+        Router.global().logger().info("adding edge %s to vertex %s",key,obj);
+        if (key.equals(IN)) {
+           
+            final Edge edge = this.getBase().addEdge(obj.asRec().jvm().get(LABEL).uriValue().toString(), Router.global().read(obj.asRec().jvm().get(IN).asUri().toString()).asRec().<VertexMap>jvmAs().getBase());
+            return auto_from_(uri("/g/E/" + edge.id()), eRec(edge)).tryToInst();
+        }
+        return super.put(key, obj);
     }
 
+  /*  @Override
+    public Set<Entry<Uri, Obj>> entrySet() {
+        final Set<Entry<Uri, Obj>> entries = new LinkedHashSet<>(super.entrySet().stream().collect(Collectors.toSet()));
+        entries.add(new SimpleEntry<>(OUT, this.get(OUT)));
+        entries.add(new SimpleEntry<>(IN,  this.get(IN)));
+        return entries;
+    }*/
+
+    @Override
+    public Rec asRec() {
+        return rec((Map) this, VRTX_TID, f("/g/V/" + this.getBase().id().toString()));
+    }
+
+    @Override
+    public Rec selfRec() {
+        return rec((Map) this, VRTX_TID,null).self(this, VRTX_TID, f("/g/V/" + this.getBase().id().toString()));
+    }
+    
     public static Inst vRec(final Vertex base) {
-        return (Inst) auto_(instC(INST_TID.dom(ALL.maybe()).rng(VRTX_TID), lst(), (lhs, inst) -> new VertexMap(base).asRec())).tryToInst();
+        return new LazyAutoInst(new VertexMap(base));
     }
 
 

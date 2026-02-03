@@ -129,10 +129,10 @@ public class fURITest extends mTest {
             "a                                    | false",
             "ABC                                  | true",
             "/+/+/A                               | true",
-            "/mtron/+/A                           | true",
+            "/mtron/+/A                           | false",
             "AbC                                  | false",
-            "AbC/A                                | true",
-            "abc/A                                | true",
+            "AbC/A                                | false",
+            "abc/A                                | false",
             "abc/d                                | false",
             "A/B/C                                | true",
             "A/+/C                                | true",
@@ -158,7 +158,7 @@ public class fURITest extends mTest {
     @ParameterizedTest
     @CsvSource(value = {
             "A             |  A             | true",
-            "A/b/c         |  A/B/C         | true",
+            "A/b/c         |  A/B/C         | false",
             "a/b/c         |  D             | true",
             "A/B           |  A/C           | false",
             "A{+}          |  A{*}          | true",

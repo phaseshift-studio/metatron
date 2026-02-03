@@ -18,7 +18,6 @@
 
 package studio.phaseshift.metatron.isa.grph.space.tp3;
 
-import org.apache.tinkerpop.gremlin.structure.Direction;
 import org.apache.tinkerpop.gremlin.structure.Edge;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
@@ -30,14 +29,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static studio.phaseshift.metatron.furi.fURI.ALL;
-import static studio.phaseshift.metatron.isa.grph.grphInstSet.EDGE_TID;
+import static studio.phaseshift.metatron.furi.fURI.f;
+import static studio.phaseshift.metatron.isa.grph.grphInstSet.*;
 import static studio.phaseshift.metatron.isa.grph.space.tp3.VertexMap.vRec;
-import static studio.phaseshift.metatron.isa.m.mInstSet.INST_TID;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_;
-import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
-import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
@@ -56,20 +51,38 @@ public class EdgeMap extends ElementMap {
     }
 
     @Override
+    public Obj get(final Object key) {
+        if (key.equals(IN))
+            return auto_from_(uri("/g/V/" + this.getBase().inVertex().id().toString()), vRec(this.getBase().inVertex())).tryToInst();
+        if (key.equals(OUT))
+            return auto_from_(uri("/g/V/" + this.getBase().outVertex().id().toString()), vRec(this.getBase().outVertex())).tryToInst();
+        if(key.equals(LABEL))
+            return uri(this.getBase().label());
+        else
+            return super.get(key);
+    }
+
+   /* @Override
     public Set<Entry<Uri, Obj>> entrySet() {
         final Set<Entry<Uri, Obj>> entries = new LinkedHashSet<>(super.entrySet().stream().collect(Collectors.toSet()));
-        entries.add(new SimpleEntry<>(uri(Direction.IN.name()), auto_from_(uri("/g/v/" + this.getBase().inVertex().id().toString()), vRec(this.getBase().inVertex())).tryToInst()));
-        entries.add(new SimpleEntry<>(uri(Direction.OUT.name()), auto_from_(uri("/g/v/" + this.getBase().outVertex().id().toString()), vRec(this.getBase().outVertex())).tryToInst()));
+        entries.add(new SimpleEntry<>(IN, this.get(IN)));
+        entries.add(new SimpleEntry<>(OUT, this.get(OUT)));
         return entries;
-    }
+    }*/
 
     @Override
     public Rec asRec() {
         return rec((Map) this, EDGE_TID, null);
     }
 
+    @Override
+    public Rec selfRec() {
+        return rec((Map) this, EDGE_TID,null).self(this, EDGE_TID, f("/g/E/" + this.getBase().id().toString()));
+    }
+
     public static Inst eRec(final Edge base) {
-        return (Inst) auto_(instC(INST_TID.dom(ALL.maybe()).rng(EDGE_TID), lst(), (lhs, inst) -> new EdgeMap(base).asRec())).tryToInst();
+        return new EdgeMap.LazyAutoInst(new EdgeMap(base));
+        //return (Inst) auto_(instC(INST_TID.dom(ALL.maybe()).rng(EDGE_TID), lst(), (lhs, inst) -> new EdgeMap(base).asRec())).tryToInst();
     }
 
 }

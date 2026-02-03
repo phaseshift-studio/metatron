@@ -19,6 +19,8 @@
 package studio.phaseshift.metatron.isa.grph.space.tp3;
 
 import org.apache.tinkerpop.gremlin.structure.Graph;
+import org.apache.tinkerpop.gremlin.structure.T;
+import org.apache.tinkerpop.gremlin.structure.Vertex;
 import org.apache.tinkerpop.gremlin.tinkergraph.structure.TinkerFactory;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.grph.space.grphSpace;
@@ -26,6 +28,7 @@ import studio.phaseshift.metatron.isa.m.mInstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Type;
+import studio.phaseshift.metatron.isa.m.type.impl.MObjFactory;
 import studio.phaseshift.metatron.isa.sys.type.Router;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
@@ -74,9 +77,8 @@ public class tp3Space extends grphSpace<Graph> {
     protected tp3Space(final Graph graph, final Map<Obj, Obj> config, final fURI vid) {
         super(graph, config, TP3_SPACE_TID, vid);
         LOG.info("tp3 space: %s", this);
-        // final Rel r = config.get(uri(REWRITE)).asRel();
-        this.vertexPrefix = this.pattern.retractPattern().extend("v/").toString();
-        this.edgePrefix = this.pattern.retractPattern().extend("e/").toString();
+        this.vertexPrefix = this.pattern.retractPattern().extend("V/").toString();
+        this.edgePrefix = this.pattern.retractPattern().extend("E/").toString();
         LOG.info("tp3 prefixes: %s %s", this.vertexPrefix, this.edgePrefix);
 
     }
@@ -88,18 +90,18 @@ public class tp3Space extends grphSpace<Graph> {
             final String suffix = vidString.replaceFirst(this.vertexPrefix, "");
             LOG.info("reading vertices %s => %s", vid, suffix);
             if (suffix.equals("+") || suffix.equals("#"))
-                return objs(IteratorUtil.stream(this.sjvm.vertices()).map(VertexMap::new).map(VertexMap::asRec));
+                return objs(IteratorUtil.stream(this.sjvm.vertices()).map(VertexMap::new).map(VertexMap::selfRec));
             final Long id = Long.valueOf(vidString.replaceFirst(this.vertexPrefix, ""));
             LOG.debug("reading vertex %s => %s", vid, id);
-            return objs(IteratorUtil.stream(this.sjvm.vertices(id)).map(VertexMap::new).map(VertexMap::asRec));
+            return objs(IteratorUtil.stream(this.sjvm.vertices(id)).map(VertexMap::new).map(VertexMap::selfRec));
         } else if (vidString.startsWith(this.edgePrefix)) {
             final String suffix = vidString.replaceFirst(this.edgePrefix, "");
             LOG.info("reading edges %s => %s", vid, suffix);
             if (suffix.equals("+") || suffix.equals("#"))
-                return objs(IteratorUtil.stream(this.sjvm.edges()).map(EdgeMap::new).map(EdgeMap::asRec));
+                return objs(IteratorUtil.stream(this.sjvm.edges()).map(EdgeMap::new).map(EdgeMap::selfRec));
             final Long id = Long.valueOf(vidString.replaceFirst(this.edgePrefix, ""));
             LOG.debug("reading edge %s => %s", vid, id);
-            return objs(IteratorUtil.stream(this.sjvm.edges(id)).map(EdgeMap::new).map(EdgeMap::asRec));
+            return objs(IteratorUtil.stream(this.sjvm.edges(id)).map(EdgeMap::new).map(EdgeMap::selfRec));
         } else {
             throw MTronException.of("unknown tp3 vid: %s", vid);
         }
@@ -107,7 +109,29 @@ public class tp3Space extends grphSpace<Graph> {
 
     @Override
     public Obj write(final fURI vid, final Obj obj) {
-        return noobj();
+        if (obj.isNoObj()) {
+            this.read(vid).stream().forEach(e -> {
+                LOG.info("deleting vertex %s", e.vid());
+                ((ElementMap) e.jvm()).getBase().remove();
+            });
+            return noobj();
+        } else {
+            final String vidString = vid.toString();
+            if (vidString.startsWith(this.vertexPrefix)) {
+                final String suffix = vidString.replaceFirst(this.vertexPrefix, "");
+                final Long id = Long.valueOf(suffix);
+                try {
+                    final Vertex vertex = IteratorUtil.stream(this.sjvm.vertices(id)).findFirst().orElseGet(() -> this.sjvm.addVertex(T.label, obj.tid().toString(), T.id, id));
+                    Router.global().logger().info("writing vertex %s => %s", vid, vertex);
+                    obj.asRec().elements().forEach(e -> vertex.property(e.jvm().get0().uriValue().toString(), MObjFactory.of().create(e.jvm().get1()).jvm()));
+                    return new VertexMap(vertex).selfRec();
+                } catch (final Exception e) {
+                    return obj;
+                }
+            } else {
+                throw MTronException.of("unknown tp3 vid: %s", vid);
+            }
+        }
     }
 
 /*

@@ -38,7 +38,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public interface Elmt extends Rec {
-
+    
     public static class ElmtType {
 
         public static final Type ELMT_TYPE = Type.Builder.build()

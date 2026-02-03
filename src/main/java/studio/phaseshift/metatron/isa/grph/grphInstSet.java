@@ -19,7 +19,6 @@
 package studio.phaseshift.metatron.isa.grph;
 
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.grph.space.grphSpace;
 import studio.phaseshift.metatron.isa.grph.type.Edge;
 import studio.phaseshift.metatron.isa.grph.type.Elmt;
 import studio.phaseshift.metatron.isa.grph.type.Vrtx;
@@ -59,10 +58,13 @@ public class grphInstSet extends MInstSet {
     public static final fURI INV_INST_TID = GRPH_INST_TID.extend("inV");
     public static final fURI BOTHV_INST_TID = GRPH_INST_TID.extend("bothV");
     public static final fURI VALUES_INST_TID = GRPH_INST_TID.extend("values");
+    public static final fURI LABEL_INST_TID = GRPH_INST_TID.extend("label");
     public static final fURI PROPERTIES_INST_TID = GRPH_INST_TID.extend("properties");
 
     public static final Uri OUT = uri("OUT");
     public static final Uri IN = uri("IN");
+    public static final Uri LABEL = uri("LABEL");
+    public static final Uri ID = uri("ID");
 
     protected grphInstSet(final fURI vid) {
         super(GRPH_ISA_TID, vid);
@@ -89,7 +91,7 @@ public class grphInstSet extends MInstSet {
     @Override
     public Set<Inst> insts() {
         final List<Inst> insts = new ArrayList<>();
-       // insts.addAll(grphSpaceElmtType.insts());
+        // insts.addAll(grphSpaceElmtType.insts());
         insts.addAll(Elmt.ElmtType.insts());
         insts.addAll(Vrtx.VrtxType.insts());
         insts.addAll(Edge.EdgeType.insts());

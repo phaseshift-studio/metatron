@@ -846,15 +846,15 @@ public class fURI implements Cloneable, Ring<fURI> {
     }
 
     public boolean isGeneric() {
-        boolean acharacter = false;
-        boolean acaps = false;
+        if (this.path.isEmpty())
+            return false;
+        if (this.pathLength() == 1 && (this.path.getFirst().equals(ALL_WILD_STRING) || this.path.getFirst().equals(ONE_WILD_STRING)))
+            return false;
         for (final String seg : this.c("1").path) { // TODO: this is necessary because {} is appended to final segment (needs to be fixed ASAP!).
-            if (!acharacter)
-                acharacter = seg.chars().anyMatch(c -> c != ALL_WILD_CHAR && c != ONE_WILD_CHAR);
-            if (!acaps)
-                acaps = seg.chars().allMatch(Character::isUpperCase);
+            if (seg.chars().anyMatch(c -> c != ALL_WILD_CHAR && c != ONE_WILD_CHAR && !Character.isAlphabetic(c) || Character.isLowerCase(c)))
+                return false;
         }
-        return acharacter && acaps;
+        return true;
     }
 
     public boolean equals(final Object other) {
