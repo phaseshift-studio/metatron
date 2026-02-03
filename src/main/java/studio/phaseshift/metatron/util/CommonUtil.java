@@ -54,12 +54,12 @@ public final class CommonUtil {
         try {
             Thread.sleep(millis);
         } catch (final InterruptedException e) {
-            if(BootLoader.BOOTING)
+            if (BootLoader.BOOTING)
                 return;
             throw MTronException.of(e);
         }
     }
-    
+
     public static void close(final Object object) {
         try {
             if (object instanceof Closeable)
@@ -115,7 +115,7 @@ public final class CommonUtil {
     public static <T> Supplier<T> lambda(final Supplier<T> object) {
         return object;
     }
-    
+
     public static int countLines(final String str) {
         final String[] lines = str.split("\r\n|\r|\n");
         return lines.length;
@@ -170,7 +170,7 @@ public final class CommonUtil {
 
         @Override
         public BiConsumer<Map<Obj, Obj>, Rel> accumulator() {
-            return (a, b) -> a.compute(b.first(), (k, v) -> b.isNoObj() ? v : (null == v ? b.second() : v.append(b.second())));
+            return (a, b) -> a.compute(b.jvm().get0(), (k, v) -> b.isNoObj() ? v : (null == v ? b.jvm().get1() : v.append(b.jvm().get1())));
         }
 
         @Override

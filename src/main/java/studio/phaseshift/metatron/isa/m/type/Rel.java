@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -33,11 +33,9 @@ import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
-import static studio.phaseshift.metatron.isa.m.type.Poly.Helper.selectRecRecursion;
 import static studio.phaseshift.metatron.isa.m.type.Poly.Helper.selectRelRecursion;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
-import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -67,11 +65,11 @@ public interface Rel extends Poly<Rel, Tuple.Pair<Obj, Obj>>, Obj {
     /// /////////////////////////////////////////////////////////
 
     default Obj first() {
-        return this.jvm().get0().autoResolve(this);
+        return this.jvm().get0().c(c -> c.mult(this.c())).autoResolve(this);
     }
 
     default Obj second() {
-        return this.jvm().get1().autoResolve(this);
+        return this.jvm().get1().c(c -> c.mult(this.c())).autoResolve(this);
     }
 
     default Rel first(final Obj key) {
@@ -82,16 +80,26 @@ public interface Rel extends Poly<Rel, Tuple.Pair<Obj, Obj>>, Obj {
         return this.jvm(Pair.with(this.jvm().get0(), value));
     }
 
+    @Override
+    default boolean has(final Obj key) {
+        return this.jvm().get0().matches(key);
+    }
+    
+    /*@Override
+    default Rel autoResolve(final Obj obj) {
+        return this.first(this.first().autoResolve(obj)).second(this.second().autoResolve(obj));
+    }*/
+
     default <O extends Obj> O at(final Obj key) {
         if (key.isUri()) {
             final boolean singleSegment = key.uriValue().segments().size() == 1;
             final String step = singleSegment ? key.uriValue().toString() : key.uriValue().segments().getFirst();
             O result;
             final Uri asNode = uri(key.uriValue().asNode());
-            if (this.first().matches(asNode))
-                return (O) (key.uriValue().isBranch() ? rel(asNode, this.second()) : this.second()).autoResolve(this);
+            if (this.jvm().get0().matches(asNode))
+                return (O) (key.uriValue().isBranch() ? rel(asNode, this.jvm().get1()) : this.jvm().get1()).autoResolve(this);
             else {
-                final Obj temp = (this.first().matches(uri(f(step).asNode())) ? this.second() : NoObj.noobj()).autoResolve(this);
+                final Obj temp = (this.jvm().get0().matches(uri(f(step).asNode())) ? this.jvm().get1() : NoObj.noobj()).autoResolve(this);
                 result = (O) (key.uriValue().isBranch() ? rel(key.uriValue().asNode().toUri(), temp) : temp);
             }
             /// ///////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -99,10 +107,10 @@ public interface Rel extends Poly<Rel, Tuple.Pair<Obj, Obj>>, Obj {
                 return result;
             } else {
                 final fURI nextKey = key.uriValue().isBranch() ? key.uriValue().pretract().asBranch() : key.uriValue().pretract();
-                return (O) (this.second().isPoly() ? this.second().<Poly>as().at(uri(nextKey)) : noobj());
+                return (O) (this.jvm().get1().isPoly() ? this.jvm().get1().<Poly>as().at(uri(nextKey)) : noobj());
             }
         } else {
-            return (O) (this.first().matches(key) ? this.second() : noobj());
+            return (O) (this.jvm().get0().matches(key) ? this.jvm().get1() : noobj());
         }
     }
 
@@ -136,14 +144,14 @@ public interface Rel extends Poly<Rel, Tuple.Pair<Obj, Obj>>, Obj {
             return new LinkedHashSet<>(List.of(
                     instC(AS_INST_TID.dom(REL_TID).rng(REC_TID), lst(T(REC_TID)), (lhs, inst) -> rec(lhs.<Rel>as().first(), lhs.<Rel>as().second())),
                     instC(MERGE_INST_TID.dom(REL_TID.maybeSome()).rng(REC_TID), lst(T(REC_TID)), (lhs, inst) -> inst.arg(0).jvm(Stream.concat(lhs.stream().map(Obj::as), inst.arg(0).<Rec>as().elements().map(Obj::<Rel>as)).collect(Collectors.toMap(Rel::first, Rel::second, Obj::append, LinkedHashMap::new)))),
-                  //  instC(MERGE_INST_TID.dom(REL_TID).rng(ALL.c("2")), lst(), (lhs, inst) -> objs(lhs.elements())),
+                    //  instC(MERGE_INST_TID.dom(REL_TID).rng(ALL.c("2")), lst(), (lhs, inst) -> objs(lhs.elements())),
                     instC(DOM_INST_TID.dom(REL_TID).rng(ALL), lst(), (lhs, inst) -> lhs.relValue().get0()),
                     instC(RNG_INST_TID.dom(REL_TID).rng(ALL.some()), lst(), (lhs, inst) -> lhs.relValue().get1()),
                     instC(LSHIFT_INST_TID.dom(REL_TID).rng(ALL_STAR), lst(), (lhs, inst) -> lhs.<Rel>as().first()),
                     instC(RSHIFT_INST_TID.dom(REL_TID).rng(ALL_STAR), lst(), (lhs, inst) -> lhs.<Rel>as().second()),
                     instC(GET_INST_TID.dom(REL_TID).rng(A.maybe()), lst(T(ALL)), (lhs, inst) -> lhs.<Rel>as().at(inst.arg(0))),
                     instC(SELECT_INST_TID.dom(REL_TID).rng(REL_TID.maybe()), lst(T(REL_TID)), (lhs, inst) -> selectRelRecursion(lhs.asRel(), inst.arg(0).asRel()))
-                    ));
+            ));
 
 
         }

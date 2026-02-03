@@ -21,6 +21,7 @@ package studio.phaseshift.metatron;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.Space;
+import studio.phaseshift.metatron.isa.grph.grphInstSet;
 import studio.phaseshift.metatron.isa.iot.iotInstSet;
 import studio.phaseshift.metatron.isa.m.mInstSet;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
@@ -31,13 +32,12 @@ import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.sys.space.file.fsSpace;
 import studio.phaseshift.metatron.isa.sys.sysInstSet;
 import studio.phaseshift.metatron.isa.sys.type.LogObj;
+import studio.phaseshift.metatron.isa.sys.type.Router;
+import studio.phaseshift.metatron.isa.sys.type.router.mRouter;
 import studio.phaseshift.metatron.isa.sys.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.sys.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.isa.web.webInstSet;
-import studio.phaseshift.metatron.isa.grph.grphInstSet;
 import studio.phaseshift.metatron.lang.db.vec.vecInstSet;
-import studio.phaseshift.metatron.isa.sys.type.Router;
-import studio.phaseshift.metatron.isa.sys.type.router.mRouter;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -51,6 +51,7 @@ import static studio.phaseshift.metatron.Tokens.BOOT;
 import static studio.phaseshift.metatron.Tokens.WS;
 import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.furi.fURI.f;
+import static studio.phaseshift.metatron.isa.grph.grphInstSet.GRPH_ISA_TID;
 import static studio.phaseshift.metatron.isa.iot.iotInstSet.IOT_ISA_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.M_ISA_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TID;
@@ -63,7 +64,6 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.sys.sysInstSet.SYS_ISA_TID;
 import static studio.phaseshift.metatron.isa.sys.sysInstSet.SYS_TID;
 import static studio.phaseshift.metatron.isa.web.webInstSet.WEB_ISA_TID;
-import static studio.phaseshift.metatron.lang.db.grph.inst.grphInstSet.GRPH_ISA_TID;
 import static studio.phaseshift.metatron.lang.db.vec.vecInstSet.VEC_INSTSET_TID;
 
 public class BootLoader implements Rec, Feature.SelfClone {
@@ -102,21 +102,21 @@ public class BootLoader implements Rec, Feature.SelfClone {
     public static void main(final String[] args) throws IOException {
         if (args.length == 1 && args[0].equals("--help")) {
             LOG.none("""
-                            
-                            %s: %s
-                              {{g}}({{X}}arguments must be provided as a single mtron %s{{g}}){{X}}
-                              \te.g. %s
-                              {{r}}----------------------------------------------------------{{/r}}
-                              boot args:
-                                %s
-                                %s
-                                %s
-                                %s
-                            
-                              example:
-                                %s
-                            
-                            """,
+                     
+                     %s: %s
+                       {{g}}({{X}}arguments must be provided as a single mtron %s{{g}}){{X}}
+                       \te.g. %s
+                       {{r}}----------------------------------------------------------{{/r}}
+                       boot args:
+                         %s
+                         %s
+                         %s
+                         %s
+                     
+                       example:
+                         %s
+                     
+                     """,
                     Graphitty.sillyPrint("metatron", true, true),
                     Graphitty.sillyPrint("reference-oriented computing", true, true),
                     T(REC_TID),

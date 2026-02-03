@@ -204,6 +204,8 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
     }
 
     default boolean matches(final Obj rhs) {
+        if (Obj.Helper.isAuto(rhs))
+            return true;
         if (this.isNoObj() && rhs.isNoObj())
             return true;
         else if (this.isNoObj() && (rhs.tid().equals(NOOBJ_TID) || rhs.tid().cV().isZeroable()))
@@ -378,9 +380,8 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
     }
 
     default Obj autoResolve(final Obj obj) {
-        return this.isInst() &&
-                (this.tid().basePath().equals(AUTO_FROM_INST_TID) || this.tid().basePath().equals(AUTO_INST_TID)) ?
-                this.apply(obj).autoResolve(obj) :
+        return this.isInst() && (this.tid().basePath().equals(AUTO_FROM_INST_TID) || this.tid().basePath().equals(AUTO_INST_TID)) ?
+                this.apply(obj) :
                 this;
     }
 
@@ -458,6 +459,10 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
 
     default Objs asObjs() {
         return (Objs) this;
+    }
+
+    default Fail asFail() {
+        return (Fail) this;
     }
 
     String xxxValue = "%s is a %s, not a %s";
@@ -562,6 +567,10 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
     class Helper {
 
         private static final ObjSerializer<String> SERIALIZER = new ObjCleanStringSerializer();
+
+        public static boolean isAuto(final Obj obj) {
+            return obj.tid().basePath().equals(AUTO_INST_TID) || obj.tid().basePath().equals(AUTO_FROM_INST_TID);
+        }
 
         public static boolean typeInferenceMatch(final Obj lhs, final Type rhs) {
             if (rhs.isBaseType()) {
@@ -692,7 +701,9 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
                     }),
                     // instC(EXPLAIN_INST_TID.dom(CODE_TID).rng(STR_TID), lst(), (lhs, inst) -> str(new Profile(inst.arg(0)).toString())),
                     instC(AUTO_INST_TID.dom(ALL.maybe()).rng(ALL.maybe()), lst(T(ALL.maybe())), (lhs, inst) -> inst.arg(0).apply(lhs)),
-                    instC(AUTO_FROM_INST_TID.dom(ALL.maybe()).rng(ALL.maybe()), lst(T(ALL.maybe())), (lhs, inst) -> Router.readFromSpace(inst.arg(0).uriValue()).autoResolve(lhs)),
+                    instC(AUTO_FROM_INST_TID.dom(ALL.maybe()).rng(ALL.maybe()), lst(T(ALL.maybe()), T(ALL.maybe())), (lhs, inst) -> {
+                        return !inst.arg(1).isNoObj() ? inst.arg(1) : Router.readFromSpace(inst.arg(0).uriValue()).autoResolve(lhs);
+                    }),
                     instC(CATCH_INST_TID.dom(ALL).rng(ALL.maybeSome()), lst(T(ALL.maybeSome())), (lhs, inst) -> lhs.isFail() ? inst.arg(0).apply(lhs.<Fail>as().caught()) : lhs),
                     docWrap(instC(END_INST_TID.dom(ALL_STAR).rng(NOOBJ_TID.zero()), lst(), (lhs, inst) -> noobj()),
                             "terminal objs", "noobj", Map.of(), "the terminal function f(x)->0"),

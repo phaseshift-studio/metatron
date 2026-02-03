@@ -24,10 +24,10 @@ import studio.phaseshift.metatron.isa.m.type.Type;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.isa.grph.grphInstSet.*;
 import static studio.phaseshift.metatron.isa.grph.type.Vrtx.VrtxType.VRTX_TYPE;
-import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TID;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
@@ -37,12 +37,12 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class Edge {
+public interface Edge extends Elmt {
 
     public static class EdgeType {
 
         public static final Type EDGE_TYPE = Type.Builder.build()
-                .tid(REC_TID)
+                .tid(ELMT_TID)
                 .vid(EDGE_TID)
                 .predicate(isa_(rec(
                         OUT, VRTX_TYPE,
@@ -52,7 +52,7 @@ public class Edge {
             return new LinkedHashSet<>(List.of(
                     instC(INV_INST_TID.dom(EDGE_TID).rng(VRTX_TID), lst(), (lhs, inst) -> lhs.asRec().at(IN)),
                     instC(OUTV_INST_TID.dom(EDGE_TID).rng(VRTX_TID), lst(), (lhs, inst) -> lhs.asRec().at(OUT)),
-                    instC(BOTHV_INST_TID.dom(EDGE_TID).rng(VRTX_TID), lst(), (lhs, inst) -> objs(lhs.asRec().at(IN), lhs.asRec().at(OUT)))));
+                    instC(BOTHV_INST_TID.dom(EDGE_TID).rng(VRTX_TID), lst(), (lhs, inst) -> objs(Stream.concat(lhs.asRec().at(IN).stream(), lhs.asRec().at(OUT).stream())))));
         }
     }
 }

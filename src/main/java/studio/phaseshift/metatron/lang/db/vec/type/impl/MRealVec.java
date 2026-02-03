@@ -61,4 +61,9 @@ public class MRealVec extends MVec<Double> {
     public <O extends Obj> O at(Obj key) {
         return null;
     }
+
+    @Override
+    public boolean has(Obj key) {
+        return false;
+    }
 }

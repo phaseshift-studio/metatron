@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -36,8 +36,8 @@ import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.furi.fURI.fnull;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
@@ -74,6 +74,15 @@ public interface Lst extends Poly<Lst, List<Obj>>, PlusMonoid.O<Lst> {
         final ArrayList<Obj> newList = new ArrayList<>(this.lstValue());
         newList.add(obj);
         return (Lst) operation.apply(this, newList);
+    }
+
+    @Override
+    default boolean has(final Obj key) {
+        return key.isInt() ? this.jvm().size() > key.intValue().intValue() :
+                key.isUri() &&
+                        !key.uriValue().isEmpty() &&
+                        CommonUtil.isInt(key.uriValue().segments().getFirst()) &&
+                        this.jvm().size() > Integer.valueOf(key.uriValue().segments().getFirst());
     }
 
     default <O extends Obj> Stream<O> elements() {

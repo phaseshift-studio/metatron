@@ -22,8 +22,6 @@ package studio.phaseshift.metatron.isa.m.type;
 import studio.phaseshift.metatron.algebra.PlusMonoid;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.lang.jre.ObjFieldReflection;
-import studio.phaseshift.metatron.lang.jre.ObjReflection;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.Tuple;
@@ -35,8 +33,7 @@ import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.Tokens.C;
-import static studio.phaseshift.metatron.furi.fURI.ALL;
-import static studio.phaseshift.metatron.furi.fURI.fnull;
+import static studio.phaseshift.metatron.furi.fURI.*;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
@@ -79,12 +76,17 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>>, PlusMonoid.O<Rec> {
 
     @Override
     default Stream<Rel> elements() {
-        return this.recValue().entrySet().stream().map(kv -> rel(kv.getKey().autoResolve(this), kv.getValue().autoResolve(this)).c(c -> c.mult(this.c())).as());
+        return this.recValue().entrySet().stream().map(kv -> rel(kv.getKey(), kv.getValue()).c(c -> c.mult(this.c())).as());
     }
 
     @Override
     default Rec jvm(final Object jvm) {
         return this.clone(jvm, this.tid(), this.vid());
+    }
+
+    @Override
+    default boolean has(final Obj key) {
+        return this.jvm().containsKey(key);
     }
 
     default Rec at(final Obj key, final Obj value, final BiFunction<Poly<?, ?>, Object, Poly<?, ?>> operation) {
@@ -93,16 +95,18 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>>, PlusMonoid.O<Rec> {
 
     @Override
     default boolean matches(final Obj rhs) {
+        if (Obj.Helper.isAuto(rhs))
+            return true;
         if (rhs.isRec()) {
             return rhs.asRec().elements().allMatch(r -> {
                 final boolean found = this.elements()
-                        .map(l -> Tuple.Pair.with(l.first().matches(r.<Rel>as().first()), l.second().matches(r.<Rel>as().second())))
+                        .map(l -> Tuple.Pair.with(l.jvm().get0().matches(r.jvm().get0()), l.jvm().get1().matches(r.jvm().get1())))
                         .anyMatch(pair -> pair.get0() && pair.get1());
                 if (found) return true;
-                boolean notFound = (r.<Rel>as().first().c().isZeroable() && this.elements().noneMatch(l -> l.first().matches(r.<Rel>as().first())));
+                boolean notFound = (r.jvm().get0().c().isZeroable() && this.elements().noneMatch(l -> l.jvm().get0().matches(r.jvm().get0())));
                 if (notFound) return true;
-                final Obj thisValue = this.at(r.first());
-                return (thisValue.isNoObj() && r.asRel().first().c().isZeroable()) || thisValue.matches(r.second());
+                final Obj thisValue = this.at(r.jvm().get0()); // can't make this jvm()-based
+                return (thisValue.isNoObj() && r.jvm().get0().c().isZeroable()) || thisValue.matches(r.jvm().get1());
             });
         } else {
             return Poly.super.matches(rhs);
@@ -114,33 +118,38 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>>, PlusMonoid.O<Rec> {
         if (!key.isUri())
             return (O) this.jvm().getOrDefault(key, NoObj.noobj()).autoResolve(this);
         else {
-            final boolean singleSegment = key.uriValue().segments().size() == 1;
+            final boolean singleSegment = key.uriValue().pathLength() == 1;
             final String step = singleSegment ? key.uriValue().toString() : key.uriValue().segments().getFirst();
             Obj result;
             final Uri asNode = uri(key.uriValue().asNode());
-            if (this.recValue().containsKey(asNode))
-                return (O) (key.uriValue().isBranch() ? rel(asNode, this.recValue().get(asNode)) : this.recValue().get(asNode)).autoResolve(this);
-            if (null != this.getClass().getAnnotation(ObjReflection.class)) {
-                final O reflectObj = ObjFieldReflection.Helper.recAt(this, step);
-                if (!reflectObj.isNoObj())
-                    return reflectObj;
-            }
-            if (step.equals("+") || step.equals("#")) {
-                result = key.uriValue().isBranch() ? objs((Stream) this.elements()) : objs(this.recValue().values().stream().map(v -> v.autoResolve(this)));
-            } else {
+            final boolean isBranch = key.uriValue().isBranch();
+            if (step.equals(ONE_WILD_STRING) || step.equals(ALL_WILD_STRING)) {
+                result = objs(isBranch ?
+                        this.jvm().entrySet().stream().map(e -> rel(e.getKey().autoResolve(this), e.getValue().autoResolve(this))).map(o -> o.c(c -> c.mult(this.c()))) :
+                        this.jvm().values().stream().map(obj -> obj.autoResolve(this)).map(o -> o.c(c -> c.mult(this.c()))));
+            } else if (this.jvm().containsKey(asNode)) {
+                return (O) (isBranch ?
+                        rel(asNode, this.jvm().get(asNode).autoResolve(this)) :
+                        this.jvm().get(asNode).autoResolve(this)).c(c -> c.mult(this.c()));
+            } else { // this.recValue().containsKey(uri(step))
                 final Obj temp = this.jvm().getOrDefault(uri(step), NoObj.noobj()).autoResolve(this);
-                result = key.uriValue().isBranch() ? rel(key.uriValue().asNode().toUri(), temp) : temp;
+                result = (isBranch ? rel(asNode, temp) : temp).c(c -> c.mult(this.c()));
             }
             /// ///////////////////////////////////////////////////////////////////////////////////////////////////////
             if (singleSegment) {
-                return (O) result.autoResolve(this);
+                return (O) result;
             } else {
-                final fURI nextKey = key.uriValue().isBranch() ? key.<Uri>as().uriValue().pretract().asBranch() : key.<Uri>as().uriValue().pretract();
+                final fURI nextKey = isBranch ? key.uriValue().pretract().asBranch() : key.uriValue().pretract();
                 return (O) objs(IteratorUtil.stream(result.iterator()).filter(Obj::isPoly).map(r -> r.<Poly>as().at(uri(nextKey))));
             }
         }
     }
 
+    /*if (null != this.getClass().getAnnotation(ObjReflection.class)) {
+                  final O reflectObj = ObjFieldReflection.Helper.recAt(this, step);
+                  if (!reflectObj.isNoObj())
+                      return reflectObj;
+              }*/
     default Rec put(final Obj key, final Obj value) {
         if (key.isNoObj()) return this;
         return this.put(key, value, IMMUTABLE);
@@ -154,7 +163,7 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>>, PlusMonoid.O<Rec> {
         map.compute(uri(k.segments().getFirst()), (k1, v) ->
                 k.segments().size() == 1 ?
                         (value.isNoObj() ? null : (null != v && v.isObjs() ? v.append(value) : value)) :
-                        (null != v && v.isRec() ? v.<Rec>as() : rec()).put(k.pretract().toUri(), value, operation));
+                        (null != v && v.isRec() ? v.asRec() : rec()).put(k.pretract().toUri(), value, operation));
 
 
         return (Rec) operation.apply(this, map);
@@ -163,7 +172,7 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>>, PlusMonoid.O<Rec> {
     @Override
     default Rec plus(final Rec rhs) {
         final Map<Obj, Obj> newMap = new LinkedHashMap<>(this.recValue());
-        rhs.stream().flatMap(Obj::<Obj>elements).map(Obj::<Rel>as).forEach(o -> newMap.compute(o.first(), (k, v) -> null == v ? o.second() : v.isPlusMonoid() ? (Obj) v.<PlusMonoid.O>as().plus(o.second().<PlusMonoid.O>as()) : v.append(o.second())));
+        rhs.elements().forEach(o -> newMap.compute(o.jvm().get0(), (k, v) -> null == v ? o.jvm().get1() : v.isPlusMonoid() ? (Obj) v.<PlusMonoid.O>as().plus(o.jvm().get1().<PlusMonoid.O>as()) : v.append(o.jvm().get1())));
         return this.jvm(newMap);
     }
 

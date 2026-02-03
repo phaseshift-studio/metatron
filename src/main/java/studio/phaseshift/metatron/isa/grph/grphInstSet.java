@@ -19,22 +19,21 @@
 package studio.phaseshift.metatron.isa.grph;
 
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.grph.space.grphSpace;
 import studio.phaseshift.metatron.isa.grph.type.Edge;
+import studio.phaseshift.metatron.isa.grph.type.Elmt;
 import studio.phaseshift.metatron.isa.grph.type.Vrtx;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.m.type.Uri;
 import studio.phaseshift.metatron.isa.m.type.impl.MInstSet;
 
-import java.util.ArrayList;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import java.util.*;
 
 import static studio.phaseshift.metatron.isa.grph.space.grphSpace.GRPH_SPACE_TYPE;
+import static studio.phaseshift.metatron.isa.grph.space.tp3.tp3Space.TP3_SPACE_TYPE;
 import static studio.phaseshift.metatron.isa.grph.type.Edge.EdgeType.EDGE_TYPE;
+import static studio.phaseshift.metatron.isa.grph.type.Elmt.ElmtType.ELMT_TYPE;
 import static studio.phaseshift.metatron.isa.grph.type.Vrtx.VrtxType.VRTX_TYPE;
 import static studio.phaseshift.metatron.isa.m.mInstSet.MTRON_TID;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -46,6 +45,7 @@ public class grphInstSet extends MInstSet {
 
     public static final fURI GRPH_ISA_TID = MTRON_TID.extend("grph");
     public static final fURI GRPH_INST_TID = GRPH_ISA_TID.extend("inst");
+    public static final fURI ELMT_TID = GRPH_ISA_TID.extend("elmt");
     public static final fURI VRTX_TID = GRPH_ISA_TID.extend("vrtx");
     public static final fURI EDGE_TID = GRPH_ISA_TID.extend("edge");
 
@@ -61,8 +61,8 @@ public class grphInstSet extends MInstSet {
     public static final fURI VALUES_INST_TID = GRPH_INST_TID.extend("values");
     public static final fURI PROPERTIES_INST_TID = GRPH_INST_TID.extend("properties");
 
-    public static final Uri OUT = uri("out");
-    public static final Uri IN = uri("in");
+    public static final Uri OUT = uri("OUT");
+    public static final Uri IN = uri("IN");
 
     protected grphInstSet(final fURI vid) {
         super(GRPH_ISA_TID, vid);
@@ -78,15 +78,19 @@ public class grphInstSet extends MInstSet {
 
     @Override
     public Set<Type> types() {
-        return Stream.of(
-               // GRPH_SPACE_TYPE,
+        return new HashSet<>(List.of(
+                GRPH_SPACE_TYPE,
+                TP3_SPACE_TYPE,
+                ELMT_TYPE,
                 VRTX_TYPE,
-                EDGE_TYPE).collect(Collectors.toSet());
+                EDGE_TYPE));
     }
 
     @Override
     public Set<Inst> insts() {
         final List<Inst> insts = new ArrayList<>();
+       // insts.addAll(grphSpaceElmtType.insts());
+        insts.addAll(Elmt.ElmtType.insts());
         insts.addAll(Vrtx.VrtxType.insts());
         insts.addAll(Edge.EdgeType.insts());
         return new LinkedHashSet<>(insts);

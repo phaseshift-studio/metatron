@@ -42,9 +42,9 @@ import(/mtron/grph);
          pattern => http://#,
          route   => [/     => examples/www,
                      /docs => target/docs ]]@/sys/space/web;
-  grph::[pattern => /g/#,
-         store   => kv::[pattern => /g/#],
-         load    => modern]@/sys/space/tp3;
+  tp3::[pattern  => /g/#,
+        rewrite  => (</g/+/>=><>),
+        load    => modern]@/sys/space/tp3;
   mqtt::[pattern => <wall:#>,
          host    => !*boot/args/mqtt/broker,
          rewrite => <wall:>=><walltron/>]@/sys/space/walltron;

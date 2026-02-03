@@ -18,18 +18,15 @@
 
 package studio.phaseshift.metatron.isa.grph.type;
 
-import studio.phaseshift.metatron.isa.m.type.Inst;
-import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.m.type.Type;
-import studio.phaseshift.metatron.isa.m.type.Uri;
+import studio.phaseshift.metatron.isa.m.type.*;
 
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.function.BiFunction;
 
+import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.isa.grph.grphInstSet.*;
-import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.URI_TID;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
@@ -41,36 +38,36 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class Vrtx {
+public interface Vrtx extends Elmt {
 
     public static class VrtxType {
 
         public static final Type VRTX_TYPE = Type.Builder.build()
-                .tid(REC_TID)
+                .tid(ELMT_TID)
                 .vid(VRTX_TID)
                 .predicate(isa_(rec(
-                        OUT, T(EDGE_TID.maybeSome()),
-                        IN, T(EDGE_TID.maybeSome())))).create();
+                        OUT, T(ALL.maybeSome()),
+                        IN, T(ALL.maybeSome())))).create();
 
         private static BiFunction<Obj, Inst, Obj> V_E_FUNCTION(final Uri direction) {
-            return (lhs, inst) -> objs(lhs.asRec().at(direction).asRec().elements().filter(r -> r.first().uriValue().matches(inst.arg(0).uriValue())).flatMap(r -> r.second().stream()));
+            return (lhs, inst) -> objs(lhs.asRec().at(direction).asRec().elements()/*.filter(r -> r.first().uriValue().matches(inst.arg(0).uriValue()))*/.map(Rel::second));
         }
 
         private static BiFunction<Obj, Inst, Obj> V_V_FUNCTION(final Uri d1, final Uri d2) {
-            return (lhs, inst) -> objs(V_E_FUNCTION(d1).apply(lhs, inst).stream().flatMap(e -> e.asRec().at(d2).stream()));
+            return (lhs, inst) -> objs(V_E_FUNCTION(d1).apply(lhs, inst).stream().map(e -> e.asRec().at(d2)));
         }
 
         public static Set<Inst> insts() {
 
             return new LinkedHashSet<>(List.of(
-                    instC(OUTE_INST_TID.dom(VRTX_TID).rng(EDGE_TID.maybeSome()), lst(T(URI_TID.maybeSome())), V_E_FUNCTION(OUT)),
-                    instC(INE_INST_TID.dom(VRTX_TID).rng(EDGE_TID.maybeSome()), lst(T(URI_TID.maybeSome())), V_E_FUNCTION(IN)),
-                    instC(BOTHE_INST_TID.dom(VRTX_TID).rng(EDGE_TID.maybeSome()), lst(), (lhs, inst) -> objs(
+                    instC(OUTE_INST_TID.dom(VRTX_TID).rng(ALL.maybeSome()), lst(T(URI_TID.maybeSome())), V_E_FUNCTION(OUT)),
+                    instC(INE_INST_TID.dom(VRTX_TID).rng(ALL.maybeSome()), lst(T(URI_TID.maybeSome())), V_E_FUNCTION(IN)),
+                    instC(BOTHE_INST_TID.dom(VRTX_TID).rng(ALL.maybeSome()), lst(), (lhs, inst) -> objs(
                             V_E_FUNCTION(OUT).apply(lhs, inst),
                             V_E_FUNCTION(IN).apply(lhs, inst))),
-                    instC(OUT_INST_TID.dom(VRTX_TID).rng(VRTX_TID.maybeSome()), lst(), V_V_FUNCTION(OUT, IN)),
-                    instC(IN_INST_TID.dom(VRTX_TID).rng(VRTX_TID.maybeSome()), lst(), V_V_FUNCTION(IN, OUT)),
-                    instC(BOTH_INST_TID.dom(VRTX_TID).rng(VRTX_TID.maybeSome()), lst(), (lhs, inst) -> objs(
+                    instC(OUT_INST_TID.dom(VRTX_TID).rng(ALL.maybeSome()), lst(), V_V_FUNCTION(OUT, IN)),
+                    instC(IN_INST_TID.dom(VRTX_TID).rng(ALL.maybeSome()), lst(), V_V_FUNCTION(IN, OUT)),
+                    instC(BOTH_INST_TID.dom(VRTX_TID).rng(ALL.maybeSome()), lst(), (lhs, inst) -> objs(
                             V_V_FUNCTION(OUT, IN).apply(lhs, inst),
                             V_V_FUNCTION(IN, OUT).apply(lhs, inst)))
             ));

@@ -28,9 +28,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
 
+import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.split_;
-import static studio.phaseshift.metatron.isa.m.mInstSet.CODE_TID;
-import static studio.phaseshift.metatron.isa.m.mInstSet.ID_INST_TID;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 
@@ -100,7 +99,7 @@ public interface Call extends Obj, Ring<Call> {
 
     @Override
     default Obj append(final Obj obj) {
-        return obj.isCall() ? this.plus((Call) obj) : objs(List.of(this, obj));
+        return obj.isCall() && !obj.tid().basePath().equals(AUTO_FROM_INST_TID) ? this.plus((Call) obj) : objs(List.of(this, obj));
     }
 
     @Override

@@ -23,8 +23,8 @@ import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.apache.tinkerpop.gremlin.structure.util.ElementHelper;
 import org.apache.tinkerpop.gremlin.structure.util.wrapped.WrappedElement;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.grph.type.Elmt;
 import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.lang.db.grph.type.RElement;
 import studio.phaseshift.metatron.isa.sys.type.Router;
 
 import java.util.ArrayList;
@@ -37,9 +37,9 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public abstract class mElement implements Element, WrappedElement<RElement> {
+public abstract class mElement implements Element, WrappedElement<Elmt> {
 
-    protected final RElement base;
+    protected final Elmt base;
     protected final mGraph graph;
 
 
@@ -59,19 +59,21 @@ public abstract class mElement implements Element, WrappedElement<RElement> {
         return uris;
     }*/
 
-    protected mElement(final mGraph graph, final RElement base) {
+    protected mElement(final mGraph graph, final Elmt base) {
         this.base = base;
         this.graph = graph;
     }
 
     @Override
     public fURI id() {
-        return this.getBaseElement().id();
+        return null;
+        // return this.getBaseElement().id();
     }
 
     @Override
     public String label() {
-        return this.getBaseElement().label().toString();
+        return null;
+        //   return this.getBaseElement().label().toString();
     }
 
     @Override
@@ -81,15 +83,16 @@ public abstract class mElement implements Element, WrappedElement<RElement> {
 
     @Override
     public void remove() {
-        this.getBaseElement().jvm().clear();
-        Router.global().write(this.id(),noobj());
+      
+        //  this.getBaseElement().jvm().clear();
+        Router.global().write(this.id(), noobj());
     }
 
     @Override
     public boolean equals(final Object other) {
         return ElementHelper.areEqual(this, other);
     }
-    
+
     @Override
     public int hashCode() {
         return ElementHelper.hashCode(this);
@@ -101,7 +104,7 @@ public abstract class mElement implements Element, WrappedElement<RElement> {
     //}
 
     @Override
-    public RElement getBaseElement() {
+    public Elmt getBaseElement() {
         return this.base;
     }
 }

@@ -147,8 +147,8 @@ public class ObjCleanStringSerializer implements ObjSerializer<String> {
 
     @Override
     public String writeRel(final Rel rel) {
-        final boolean firstRel = rel.first().isRel();
-        final boolean secondRel = rel.second().isRel();
+        final boolean firstRel = rel.jvm().get0().isRel();
+        final boolean secondRel = rel.jvm().get1().isRel();
         final StringBuilder sb = new StringBuilder();
         sb.append(firstRel ? "(" : "").append(this.write(rel.jvm().get0())).append(firstRel ? ")" : "");
         sb.append("=>");
@@ -186,7 +186,7 @@ public class ObjCleanStringSerializer implements ObjSerializer<String> {
 
     @Override
     public String writeObjs(final Objs objs) {
-        final String internal = IteratorUtil.stream(objs.objsValue()).map(this::write).reduce("", (a, b) -> a + "," + b);
+        final String internal = IteratorUtil.stream(objs.jvm()).map(this::write).reduce("", (a, b) -> a + "," + b);
         return "{" + internal.substring(1) + "}";
     }
 
@@ -246,10 +246,10 @@ public class ObjCleanStringSerializer implements ObjSerializer<String> {
         } else {
             boolean nested =
                     //lst.elements().anyMatch(Obj::isPoly) ||
-                    lst.elements().map(this::write).map(String::length).reduce(0, Integer::sum) > (50 - depth);
+                    lst.jvm().stream().map(this::write).map(String::length).reduce(0, Integer::sum) > (50 - depth);
             sb.append("[");
-            AtomicBoolean first = new AtomicBoolean(true);
-            lst.elements().forEach(v -> {
+            final AtomicBoolean first = new AtomicBoolean(true);
+            lst.jvm().forEach(v -> {
                 if (nested && !first.getAndSet(false))
                     sb.append(" ".repeat(depth + 2));
                 this.processNestedPoly(sb, depth, 0, nested, v);
@@ -268,12 +268,12 @@ public class ObjCleanStringSerializer implements ObjSerializer<String> {
             sb.append("[=>]");
         } else {
             boolean nested =
-                    rec.recValue().values().stream().anyMatch(Obj::isPoly) ||
-                            rec.recValue().values().stream().filter(o -> !o.isPoly()).map(this::write).map(String::length).reduce(0, Integer::sum) > (75 - depth);
-            int maxKeyLength = nested ? rec.recValue().keySet().stream().map(this::write).map(String::length).reduce(0, Integer::max) : 0;
+                    rec.jvm().values().stream().anyMatch(Obj::isPoly) ||
+                            rec.jvm().values().stream().filter(o -> !o.isPoly()).map(this::write).map(String::length).reduce(0, Integer::sum) > (75 - depth);
+            int maxKeyLength = nested ? rec.jvm().keySet().stream().map(this::write).map(String::length).reduce(0, Integer::max) : 0;
             sb.append("[");//.append(nested ? "\n" : "");
             AtomicBoolean first = new AtomicBoolean(true);
-            rec.recValue().forEach((k, v) -> {
+            rec.jvm().forEach((k, v) -> {
                 int indent = nested ? (first.getAndSet(false) ?
                         (depth * 2) - (padding + 4) :
                         (depth * 2) + (padding + 1)) : 0;

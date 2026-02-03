@@ -20,6 +20,7 @@ package studio.phaseshift.metatron.isa.m.type;
 
 import studio.phaseshift.metatron.algebra.PlusMonoid;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
 
 import java.util.*;
@@ -69,6 +70,10 @@ public interface Fail extends Obj, PlusMonoid<Fail> {
     }
 
     Fail caught();
+
+    default MTronException asException() {
+        return MTronException.of(this.message());
+    }
 
     @Override
     default boolean isResolved(final boolean nested) {

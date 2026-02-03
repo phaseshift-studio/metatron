@@ -32,12 +32,12 @@ import studio.phaseshift.metatron.isa.Translator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import static studio.phaseshift.metatron.isa.grph.grphInstSet.EDGE_TID;
+import static studio.phaseshift.metatron.isa.grph.grphInstSet.VRTX_TID;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.lang.db.grph.inst.grphInstSet.EDGE_TID;
-import static studio.phaseshift.metatron.lang.db.grph.inst.grphInstSet.VERTEX_TID;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 /*
@@ -79,7 +79,7 @@ public record TP3Translator(Builder builder) implements Translator<Obj, Graph> {
                             uri(PROPS), props.isEmpty() ? noobj() : rec(props),
                             uri(Direction.OUT.name()), out.isEmpty() ? noobj() : rec(out),
                             uri(Direction.IN.name()), in.isEmpty() ? noobj() : rec(in)),
-                    VERTEX_TID,
+                    VRTX_TID,
                     fURI.fnull));
                     //this.builder.root.extend("V").extend(tpV.id().toString()));
         });

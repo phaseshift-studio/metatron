@@ -103,6 +103,8 @@ public interface Type extends Obj, PlusMonoid<Type> {
 
     @Override
     default boolean matches(final Obj rhs) {
+        if(Obj.Helper.isAuto(rhs))
+            return true;
         if (rhs.isNoObj() && this.c().isZeroable())
             return true;
         if (this.equals(rhs))

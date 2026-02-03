@@ -93,7 +93,8 @@ public class mVertexProperty<V> implements VertexProperty<V>, WrappedVertexPrope
 
     @Override
     public Object id() {
-        return this.host.getBaseVertex().vid().extend("vp").extend("" + this.property.hashCode());
+        return null;
+        //return this.host.getBaseVertex().vid().extend("vp").extend("" + this.property.hashCode());
     }
 
     @Override

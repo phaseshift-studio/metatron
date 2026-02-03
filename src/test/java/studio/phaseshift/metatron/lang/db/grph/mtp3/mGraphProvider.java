@@ -25,14 +25,14 @@ import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.apache.tinkerpop.gremlin.structure.io.IoRegistry;
 import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.grph.space.grphSpace;
+import studio.phaseshift.metatron.isa.grph.space.tp3.tp3Space;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.sys.type.Router;
 import studio.phaseshift.metatron.isa.sys.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.sys.type.ui.graphitty.GraphittyLogger;
-import studio.phaseshift.metatron.lang.db.grph.grphSpace;
-import studio.phaseshift.metatron.lang.db.grph.inst.grphInstSet;
 import studio.phaseshift.metatron.lang.db.grph.type.mtp3.*;
-import studio.phaseshift.metatron.isa.sys.type.Router;
 
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -63,18 +63,18 @@ public class mGraphProvider extends AbstractGraphProvider {
 
     static {
         BootLoader.load(rec());
-        grphInstSet.create();
+        // grphInstSet.create();
     }
 
 
     @Override
     public void clear(final Graph graph, final Configuration configuration) throws Exception {
         if (graph != null) {
-            ((mGraph) graph).getBaseGraph().clear();
+        //    ((mGraph) graph).getBaseGraph().clear();
         } else {
             final Obj g = Router.global().read(f(configuration.getProperty(SPACE).toString()));
             if (!g.isNoObj())
-                ((grphSpace) g).clear();
+                ((tp3Space) g).close();
         }
     }
 

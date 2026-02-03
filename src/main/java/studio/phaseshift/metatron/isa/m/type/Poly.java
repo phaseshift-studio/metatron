@@ -56,22 +56,15 @@ public interface Poly<P extends Poly<P, J>, J> extends Obj {
 
     <O extends Obj> Stream<O> elements();
 
-    default <O extends Obj> Stream<O> argElements() {
-        return this.elements().map(e -> (O) (e instanceof Rel ? ((Rel) e).second() : e));
-    }
-
     <O extends Obj> O at(final Obj key);
 
     default P at(final Obj key, final Obj value) {
         return this.at(key, value, IMMUTABLE);
     }
 
-
     P at(final Obj key, final Obj value, final BiFunction<Poly<?, ?>, Object, Poly<?, ?>> operation);
-
-    default boolean has(final Obj key) {
-        return !this.at(key).isNoObj();
-    }
+    
+    boolean has(final Obj key);
 
     default boolean has(final String key) {
         return this.has(uri(key));
@@ -90,10 +83,10 @@ public interface Poly<P extends Poly<P, J>, J> extends Obj {
         return this.elements().allMatch(x -> x.isResolved(nested));
     }
 
-    @Override
+  /*  @Override
     default Obj autoResolve(final Obj obj) {
         return Obj.super.autoResolve(obj).parent(this);
-    }
+    }*/
 
     class Helper {
         public static Rec transformLstToRec(final Lst lhs, final fURI tid, final fURI vid) {
