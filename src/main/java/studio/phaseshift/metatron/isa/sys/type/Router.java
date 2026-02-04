@@ -165,9 +165,27 @@ public interface Router extends Obj, Space {
 
         IOStats incrBytesSent(final long bytes);
 
+        IOStats incrRunningMonads(final long runningMonads);
+
+        IOStats incrHaltedMonads(final long haltedMonads);
+
+        IOStats incrKilledMonads(final long killedMonads);
+
+        IOStats incrBarrierMonads(final long barrierMonads);
+
         long bytesSent();
 
         long bytesRecv();
+
+        void resetMonads();
+
+        long runningMonads();
+
+        long haltedMonads();
+
+        long killedMonads();
+
+        long barrierMonads();
 
     }
 
@@ -259,12 +277,57 @@ public interface Router extends Obj, Space {
                 }
 
                 @Override
+                public IOStats incrRunningMonads(long runningMonads) {
+                    return this;
+                }
+
+                @Override
+                public IOStats incrHaltedMonads(long haltedMonads) {
+                    return this;
+                }
+
+                @Override
+                public IOStats incrKilledMonads(long killedMonads) {
+                    return this;
+                }
+
+                @Override
+                public IOStats incrBarrierMonads(long barrierMonads) {
+                    return this;
+                }
+
+                @Override
                 public long bytesSent() {
                     return 0;
                 }
 
                 @Override
                 public long bytesRecv() {
+                    return 0;
+                }
+
+                @Override
+                public void resetMonads() {
+
+                }
+
+                @Override
+                public long runningMonads() {
+                    return 0;
+                }
+
+                @Override
+                public long haltedMonads() {
+                    return 0;
+                }
+
+                @Override
+                public long killedMonads() {
+                    return 0;
+                }
+
+                @Override
+                public long barrierMonads() {
                     return 0;
                 }
             };

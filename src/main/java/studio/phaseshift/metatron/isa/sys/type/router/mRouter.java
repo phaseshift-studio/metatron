@@ -273,6 +273,10 @@ public class mRouter extends MSpace<MServer> implements Router {
 
         protected long bytesSent = 0;
         protected long bytesRecv = 0;
+        protected long runningMonads = 0;
+        protected long haltedMonads = 0;
+        protected long killedMonads = 0;
+        protected long barrierMonads = 0;
 
         @Override
         public IOStats incrBytesRecv(long bytes) {
@@ -287,6 +291,30 @@ public class mRouter extends MSpace<MServer> implements Router {
         }
 
         @Override
+        public IOStats incrRunningMonads(long runningMonads) {
+            this.runningMonads += runningMonads;
+            return this;
+        }
+
+        @Override
+        public IOStats incrHaltedMonads(long haltedMonads) {
+            this.haltedMonads += haltedMonads;
+            return this;
+        }
+
+        @Override
+        public IOStats incrKilledMonads(long killedMonads) {
+            this.killedMonads += killedMonads;
+            return this;
+        }
+
+        @Override
+        public IOStats incrBarrierMonads(long barrierMonads) {
+            this.barrierMonads += barrierMonads;
+            return this;
+        }
+
+        @Override
         public long bytesSent() {
             return this.bytesSent;
         }
@@ -294,6 +322,34 @@ public class mRouter extends MSpace<MServer> implements Router {
         @Override
         public long bytesRecv() {
             return bytesRecv;
+        }
+
+        @Override
+        public void resetMonads() {
+            this.runningMonads = 0;
+            this.haltedMonads = 0;
+            this.killedMonads = 0;
+            this.barrierMonads = 0;
+        }
+
+        @Override   
+        public long runningMonads() {
+            return this.runningMonads;
+        }
+
+        @Override
+        public long haltedMonads() {
+            return this.haltedMonads;
+        }
+
+        @Override
+        public long killedMonads() {
+            return this.killedMonads;
+        }
+
+        @Override
+        public long barrierMonads() {
+            return this.barrierMonads;
         }
     }
 }

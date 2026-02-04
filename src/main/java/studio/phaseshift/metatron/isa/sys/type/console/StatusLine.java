@@ -69,6 +69,11 @@ public class StatusLine implements Runnable {
         this.addWidget(f("in_bytes"), () -> "{{w}}in:{{y}}%s".formatted(bytesFormat(Router.global().stats().bytesRecv())));
         this.addWidget(f("out_bytes"), () -> "{{w}}out:{{y}}%s".formatted(bytesFormat(Router.global().stats().bytesSent())));
         this.addWidget(f("running_time"), () -> "{{w}}running time:{{y}}%s".formatted(timeFormat(this.runningTime())));
+        this.addWidget(f("running"), () -> "{{w}}running:{{y}}%d".formatted(Router.global().stats().runningMonads()));
+        this.addWidget(f("halted"), () -> "{{w}}halted:{{y}}%d".formatted(Router.global().stats().haltedMonads()));
+        this.addWidget(f("killed"), () -> "{{w}}killed:{{y}}%d".formatted(Router.global().stats().killedMonads()));
+        this.addWidget(f("barrier"), () -> "{{w}}barrier:{{y}}%d".formatted(Router.global().stats().barrierMonads()));
+
     }
 
 
