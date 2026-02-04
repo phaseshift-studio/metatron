@@ -48,6 +48,9 @@ import(/mtron/grph);
   mqtt::[pattern => <wall:#>,
          host    => !*boot/args/mqtt/broker,
          rewrite => <wall:>=><walltron/>]@/sys/space/walltron;
+  mqtt::[pattern => <pond:#>,
+         host    => !*boot/args/mqtt/broker,
+         rewrite => <pond:>=><pondbox/>]@/sys/space/pondbox;
   mqtt::[pattern => <play:#>,
          host    => !*boot/args/mqtt/broker,
          rewrite => <play:>=><playtron/>]@/sys/space/playtron;

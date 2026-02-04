@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -36,12 +36,6 @@ public class Profile extends AbstractWidget<Profile> {
     protected Table instTable;
 
     public Profile(final Call call) {
-        this.setCall(call);
-
-    }
-
-    public Profile setCall(final Call call) {
-        this.call = call;
         this.instTable = new Table(List.of("op", "dom", "rng", "f", "args", "desc", "c_dom", "c_rng"));
         cInt dom = cInt.ONE();
         cInt rng = cInt.ONE();
@@ -62,29 +56,15 @@ public class Profile extends AbstractWidget<Profile> {
                     "{{g}}{{{" + (inDom ? "y" : "r") + "}}" + dom.toString() + "{{g}}}{{X}}",
                     "{{g}}{{{y}}" + rng.toString() + "{{g}}}{{X}}")).style().background("{{[b]}}").foreground("{{y}}").divider("{{r}}|").apply();
         }
-        return this;
+        this.style().attachment(this.instTable, true).apply();
     }
 
     public String toString() {
-        return this.instTable.toString();
+        return this.format();
+    }
+    
+    public String format() {
+        return this.instTable.format();
     }
 
-    @Override
-    public int width() {
-        return this.instTable.width();
-    }
-
-    @Override
-    public int height() {
-        return this.instTable.height();
-    }
-
-    @Override
-    public String rowString(int i) {
-        return this.instTable.rowString(i);
-    }
-
-    public Table table() {
-        return this.instTable;
-    }
 }

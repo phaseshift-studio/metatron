@@ -44,10 +44,7 @@ import studio.phaseshift.metatron.isa.sys.type.Router;
 import studio.phaseshift.metatron.isa.sys.type.ui.Border;
 import studio.phaseshift.metatron.isa.sys.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.sys.type.ui.graphitty.GraphittyLogger;
-import studio.phaseshift.metatron.isa.sys.type.ui.widget.Card;
-import studio.phaseshift.metatron.isa.sys.type.ui.widget.Grid;
-import studio.phaseshift.metatron.isa.sys.type.ui.widget.Panel;
-import studio.phaseshift.metatron.isa.sys.type.ui.widget.Table;
+import studio.phaseshift.metatron.isa.sys.type.ui.widget.*;
 import studio.phaseshift.metatron.lang.jre.JRec;
 import studio.phaseshift.metatron.lang.jre.ObjFieldReflection;
 import studio.phaseshift.metatron.util.CommonUtil;
@@ -177,6 +174,10 @@ public class Console extends JRec implements Closeable, Runnable {
         return this.reader;
     }
 
+    public String prompt() {
+        return Graphitty.string("{{m}}mtron{{g}}> ");
+    }
+
     public StatusLine getStatus() {
         return this.status;
     }
@@ -193,6 +194,12 @@ public class Console extends JRec implements Closeable, Runnable {
         });
     }
 
+    public void redrawBuffer() {
+        Graphitty.out(this.terminal.output(), "\n");
+        Graphitty.out(this.terminal.output(), this.prompt());
+        Graphitty.out(this.terminal.output(), Highlighter.format(this.reader.getBuffer().toString()));
+    }
+
     public void run() {
         while (BOOTING) {
             CommonUtil.sleepThread(10);
@@ -200,7 +207,7 @@ public class Console extends JRec implements Closeable, Runnable {
         CommonUtil.sleepThread(50);
         while (!Thread.currentThread().isInterrupted()) {
             try {
-                final String line = this.reader.readLine(Graphitty.string("{{m}}mtron{{g}}> ")).trim();
+                final String line = this.reader.readLine(this.prompt()).trim();
                 if (line.equals(":header"))
                     this.outputHeader();
                 else if (line.equals(":quit"))
@@ -252,7 +259,7 @@ public class Console extends JRec implements Closeable, Runnable {
             } catch (final UserInterruptException e) {
                 if (null != this.machine)
                     this.machine.interrupt();
-                LOG.warn(Graphitty.sillyPrint("process interrupted", true, true));
+                LOG.error(Graphitty.sillyPrint("process interrupted", true, true));
             } catch (final EndOfFileException e) {
                 System.exit(0);
             } catch (final Exception e) {
@@ -338,16 +345,15 @@ public class Console extends JRec implements Closeable, Runnable {
                     }, ctrl('q'));
             getKeyMap().bind((Widget) () -> {
                 try {
-                    final String s = this.reader.getBuffer().toString();
                     final Obj code = mParser.parse(this.reader.getBuffer().toString());
                     if (code.isCode()) {
+                        terminal.writer().print("\n");
                         final Explain explain = new Explain(code.as());
-                        explain.run();
-                        explain.close();
+                        Utilities.runCursorLessWidget(explain, true);
+                        Console.this.redrawBuffer();
                     }
                 } catch (final Exception e) {
                     // do nothing
-                    // Se.printStackTrace();
                 }
                 return true;
             }, key(Console.terminal, InfoCmp.Capability.tab));

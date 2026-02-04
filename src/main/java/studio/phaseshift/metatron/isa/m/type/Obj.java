@@ -700,8 +700,8 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
                         return current;
                     }),
                     // instC(EXPLAIN_INST_TID.dom(CODE_TID).rng(STR_TID), lst(), (lhs, inst) -> str(new Profile(inst.arg(0)).toString())),
-                    instC(AUTO_INST_TID.dom(ALL.maybe()).rng(ALL.maybe()), lst(T(ALL.maybe())), (lhs, inst) -> inst.arg(0).apply(lhs)),
-                    instC(AUTO_FROM_INST_TID.dom(ALL.maybe()).rng(ALL.maybe()), lst(T(ALL.maybe()), T(ALL.maybe())), (lhs, inst) -> {
+                    instC(AUTO_INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(T(ALL.maybe())), (lhs, inst) -> inst.arg(0).apply(lhs)),
+                    instC(AUTO_FROM_INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(T(ALL.maybe()), T(ALL.maybe())), (lhs, inst) -> {
                         return !inst.arg(1).isNoObj() ? inst.arg(1) : Router.readFromSpace(inst.arg(0).uriValue()).autoResolve(lhs);
                     }),
                     instC(CATCH_INST_TID.dom(ALL).rng(ALL.maybeSome()), lst(T(ALL.maybeSome())), (lhs, inst) -> lhs.isFail() ? inst.arg(0).apply(lhs.<Fail>as().caught()) : lhs),

@@ -49,10 +49,6 @@ public class CodeTable extends AbstractWidget<CodeTable> {
         this.selector = new Selector().style().margin(2, 2).pointer("{{r}}>{{X}}").attachment(this.panel, true).rowRange(1, this.panel.rowCount()-1).apply();
     }
     
-    public void run() {
-       Widget.cursorOffOn(this.selector::run);
-    }
-
     public String toString() {
         return this.panel.toString();
     }

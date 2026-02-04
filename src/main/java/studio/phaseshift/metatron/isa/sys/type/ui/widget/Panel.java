@@ -31,7 +31,7 @@ import java.util.stream.Stream;
  */
 public class Panel extends AbstractWidget<Panel> {
 
-    protected final String title;
+    protected String title;
     protected final String body;
     
     public Panel(final String body) {
@@ -62,6 +62,12 @@ public class Panel extends AbstractWidget<Panel> {
         }
         sb.deleteCharAt(sb.length() - 1);
         return new Panel(sb.toString()).style().border(this.style.border).apply();
+    }
+    
+    public Panel setTitle(final String title) {
+        this.title = title;
+        this.display();
+        return this;
     }
 
     public String format() {

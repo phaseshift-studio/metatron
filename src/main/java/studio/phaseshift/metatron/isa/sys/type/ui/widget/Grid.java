@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -19,7 +19,6 @@
 package studio.phaseshift.metatron.isa.sys.type.ui.widget;
 
 import org.jline.terminal.Cursor;
-import studio.phaseshift.metatron.isa.sys.type.console.Highlighter;
 import studio.phaseshift.metatron.isa.sys.type.ui.Widget;
 
 import java.util.ArrayList;
@@ -33,18 +32,18 @@ public class Grid extends AbstractWidget<Grid> {
     protected final List<Widget<?>> widgets;
     protected final int columns;
     protected final int rows;
-    protected int widgetFocus =1;
-    
+    protected int widgetFocus = 0;
+
     public Grid(final List<Widget<?>> widgets, final int columns) {
         this.widgets = widgets;
         this.columns = columns;
         this.rows = widgets.size() / columns;
         final int totalWidth = this.widgets.stream().map(Widget::width).reduce(0, Integer::max);
         for (int i = 0; i < this.widgets.size(); i++) {
-            this.widgets.get(i).cursor(new Cursor(totalWidth * i,0));
+            this.widgets.get(i).cursor(new Cursor(totalWidth * i, 0));
         }
     }
-    
+
     public void currentFocus(final int widgetIndex) {
         this.widgetFocus = widgetIndex;
     }
@@ -58,7 +57,7 @@ public class Grid extends AbstractWidget<Grid> {
                 String row = new String();
                 for (int i = 0; i < this.widgets.size(); i++) {
                     final Widget<?> widget = this.widgets.get(i);
-                    row = row + " " + (r < widget.height() ? Highlighter.format(widget.rowString(r)) : " ".repeat(widget.width()));
+                    row = row + " " + (r < widget.height() ? widget.rowString(r) : " ".repeat(widget.width()));
                 }
                 gridRows.add(row);
             }
@@ -67,19 +66,20 @@ public class Grid extends AbstractWidget<Grid> {
         }
         final StringBuilder sb = new StringBuilder();
         gridRows.forEach(r -> sb.append(r).append("\n"));
-       gridRows.addLast(gridRows.removeLast().trim());
+        gridRows.addLast(gridRows.removeLast().trim());
         return this.style.border.wrap(sb).toString();
     }
-    
+
     @Override
     public void run() {
-        while(this.widgetFocus != -1) {
+        //super.run();
+        while (this.widgetFocus != -1) {
             this.widgets.get(this.widgetFocus).run();
             this.widgets.get(this.widgetFocus).close();
-           // this.widgetFocus = -1;
+            this.widgetFocus = -1;
         }
     }
-    
+
     @Override
     public void close() {
         this.widgets.forEach(Widget::close);

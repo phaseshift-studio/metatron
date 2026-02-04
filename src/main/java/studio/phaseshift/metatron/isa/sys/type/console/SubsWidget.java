@@ -113,10 +113,4 @@ public class SubsWidget extends AbstractWidget<SubsWidget> {
     public String format() {
         return this.style.attachment.format();
     }
-
-    @Override
-    public void run() {
-        super.run();
-        Widget.cursorOffOn(this.style.attachment::run);
-    }
 }

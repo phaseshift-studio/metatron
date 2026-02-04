@@ -30,19 +30,11 @@ import java.util.List;
 public class Table extends AbstractWidget<Table> {
 
     protected final List<String> headers;
-   // protected final List<Tuple.Pair<String, Runnable>> menu;
     protected final List<List<Object>> table;
-
-   /* public Table(final List<String> headers, final List<Tuple.Pair<String, Runnable>> menu) {
-        this.headers = headers;
-        this.menu = menu;
-        this.table = new ArrayList<>();
-    }*/
 
 
     public Table(final List<String> headers) {
         this.headers = headers;
-       // this.menu = null;
         this.table = new ArrayList<>();
     }
 
@@ -100,11 +92,6 @@ public class Table extends AbstractWidget<Table> {
         return sb.toString();
     }
 
-    public int formattedWidth() {
-        return this.formattedRows().stream().map(Highlighter::visualLength).max(Integer::compareTo).orElse(0);
-    }
-
-
     public List<String> formattedRows() {
         final List<String> frows = new ArrayList<>();
         for (int i = 0; i < rows().size(); i++) {
@@ -145,19 +132,6 @@ public class Table extends AbstractWidget<Table> {
             }
             sb.append("\n");
         }
-        /*if (null != this.menu) {
-            final List<Integer> widths = this.formattedWidths(this.menu.stream().map(Tuple.Pair::get0).toList());
-            sb.append(this.style.divider)
-                    .append(this.style.foreground);
-            for (int i = 0; i < this.menu.size(); i++) {
-                sb.append(this.style.foreground)
-                        .append(this.menu.get(i).get0())
-                        .append(this.addSpace(widths, i, this.menu.get(i).get0()))
-                        .append(this.style.divider)
-                        .append(this.style.foreground);
-            }
-            sb.append("{{X}}");
-        }*/
         sb.append(formattedRows().stream().map(row -> row + "\n").reduce("", (a, b) -> a + b));
         sb.deleteCharAt(sb.length() - 1);
         return this.style.border.wrap(sb).toString();

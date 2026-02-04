@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -21,6 +21,7 @@ package studio.phaseshift.metatron.isa.sys.type.ui.widget;
 import org.jline.keymap.BindingReader;
 import org.jline.keymap.KeyMap;
 import org.jline.utils.InfoCmp;
+import studio.phaseshift.metatron.isa.sys.type.Router;
 import studio.phaseshift.metatron.isa.sys.type.ui.graphitty.Graphitty;
 
 import java.util.ArrayList;
@@ -71,13 +72,12 @@ public class Selector extends AbstractWidget<Selector> {
             int selectRow = style.lowRowRange;
             int selectCol = 0;
             KeyMap<Operation> keyMap = new KeyMap<>();
-            keyMap.bind(QUIT, key(this.terminal, InfoCmp.Capability.tab));
             keyMap.bind(DOWN_ROW, key(this.terminal, InfoCmp.Capability.key_down));
             keyMap.bind(UP_ROW, key(this.terminal, InfoCmp.Capability.key_up));
             keyMap.bind(RIGHT_COL, key(this.terminal, InfoCmp.Capability.key_right));
             keyMap.bind(LEFT_COL, key(this.terminal, InfoCmp.Capability.key_left));
-            keyMap.bind(ESC_KEY, key(this.terminal, InfoCmp.Capability.key_backspace));
-            keyMap.bind(SELECTED, "\r");
+            keyMap.bind(QUIT, Utilities.esc_key);
+            keyMap.bind(SELECTED, Utilities.enter_key);
             // Graphitty.log(this).none("{{^%s}}", this.style.attachment.rowCount() + 1);
             boolean done = false;
             while (!done) {
@@ -121,10 +121,7 @@ public class Selector extends AbstractWidget<Selector> {
                         done = true;
                         break;
                     case QUIT:
-                        this.terminal.writer().println(Graphitty.string("{{^" + this.height() + "}}"));
-                        return;
-                    case ESC_KEY:
-                        this.close();
+                        done = true;
                         return;
                 }
                 if (null != this.onSelect && done) {

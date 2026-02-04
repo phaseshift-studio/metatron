@@ -40,6 +40,7 @@ import static studio.phaseshift.metatron.isa.m.mInstSet.CODE_TID;
 import static studio.phaseshift.metatron.isa.m.machInstSet.DROP_TID;
 import static studio.phaseshift.metatron.isa.m.machInstSet.MACH_INSTSET_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.util.MTronException.mexcept;
 import static studio.phaseshift.metatron.util.Tuple.Quartet;
@@ -52,7 +53,6 @@ public class MMachine extends MObj implements Machine {
     private Consumer<Obj> onHalt = o -> this.halted().append(o);
     public static Supplier<Obj> RUNNING_SUPPLIER = ListMonad::of;
     public AtomicBoolean interrupted = new AtomicBoolean(false);
-    private Future<Obj> future = null;
 
     // code / running / barriers / halted
     public MMachine(final Quartet<Code, Obj, Lst, Obj> value, final fURI tid, final fURI vid) {
@@ -114,8 +114,6 @@ public class MMachine extends MObj implements Machine {
 
     public void interrupt() {
         this.interrupted.set(true);
-        if (null != this.future)
-            this.future.cancel(true);
     }
 
     @Override
@@ -131,7 +129,7 @@ public class MMachine extends MObj implements Machine {
         if (this.running().c().isZero()) {
             this.running().append(MMonad.of(noobj(), code.insts().getFirst()));
         }
-        while (!Thread.currentThread().isInterrupted()) {
+        while (!this.interrupted.get()) {
             final Monad m = (Monad) this.running().take();
             if (null != m) {
                 LOG.trace("   {{g}}=>{{/g}} processing monad %s [%s]", m, m.inst().isInitial() ? "initial" : "midway");
@@ -211,8 +209,7 @@ public class MMachine extends MObj implements Machine {
             }
         }
         if (this.interrupted.get()) {
-            LOG.warn(Graphitty.sillyPrint("process interrupted", true, true));
-            return noobj();
+            return fail(MTronException.of(Graphitty.sillyPrint("process interrupted", false, true)));
         } else
             return this.halted();
         /*});

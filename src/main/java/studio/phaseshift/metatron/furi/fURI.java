@@ -850,11 +850,14 @@ public class fURI implements Cloneable, Ring<fURI> {
             return false;
         if (this.pathLength() == 1 && (this.path.getFirst().equals(ALL_WILD_STRING) || this.path.getFirst().equals(ONE_WILD_STRING)))
             return false;
+        boolean hasCapitalGeneric = false;
         for (final String seg : this.c("1").path) { // TODO: this is necessary because {} is appended to final segment (needs to be fixed ASAP!).
+            if (!seg.isEmpty() && seg.chars().allMatch(Character::isUpperCase))
+                hasCapitalGeneric = true;
             if (seg.chars().anyMatch(c -> c != ALL_WILD_CHAR && c != ONE_WILD_CHAR && !Character.isAlphabetic(c) || Character.isLowerCase(c)))
                 return false;
         }
-        return true;
+        return hasCapitalGeneric;
     }
 
     public boolean equals(final Object other) {

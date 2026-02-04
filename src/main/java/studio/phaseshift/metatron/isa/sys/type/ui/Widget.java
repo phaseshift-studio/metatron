@@ -39,12 +39,6 @@ public interface Widget<W extends Widget<W>> extends Stylable<W>, AutoCloseable,
 
      W cursor(final Cursor cursor);
     
-    static void cursorOffOn(final Runnable runnable) {
-        Graphitty.log(Widget.class).none("{{.}}");
-        runnable.run();
-        Graphitty.log(Widget.class).none("{{*}}");
-    }
-
     void display();
 
     default int height() {

@@ -21,10 +21,12 @@ package studio.phaseshift.metatron.isa.sys.type.console;
 import studio.phaseshift.metatron.isa.m.type.Code;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.sys.type.ui.Border;
-import studio.phaseshift.metatron.isa.sys.type.ui.Widget;
 import studio.phaseshift.metatron.isa.sys.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.sys.type.ui.widget.AbstractWidget;
+import studio.phaseshift.metatron.isa.sys.type.ui.widget.Grid;
 import studio.phaseshift.metatron.isa.sys.type.ui.widget.Selector;
+
+import java.util.List;
 
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 
@@ -36,6 +38,7 @@ public class Explain extends AbstractWidget<Explain> {
     private final Code code;
     private final Selector selector;
     private final Profile profile;
+    private final Grid grid;
 
     public Explain(final Code code) {
         this.cursor = Console.getTerminal().getCursorPosition(i -> {
@@ -43,7 +46,7 @@ public class Explain extends AbstractWidget<Explain> {
         this.style = this.style().border(Border.simple.foreground("{{m}}"));
         this.code = code.resolve(noobj()).as();
         this.profile = new Profile(this.code);
-        this.profile.instTable.style().headerDivider("{{[b]}} ").apply();
+        this.profile.instTable.style().headerDivider("{{[b]}} ").border(Border.simple.foreground("{{b}}")).apply();
         this.selector = new Selector().style()
                 .pointer("{{r}}>{{X}}")
                 .attachment(profile, false)
@@ -51,33 +54,39 @@ public class Explain extends AbstractWidget<Explain> {
                 .apply()
                 .onBrowse((s, i) -> {
                     final Inst si = code.codeValue().get(i - 2);
+                })
+                .onSelect((s, i) -> {
+                    final Inst si = code.codeValue().get(i - 2);
+                    if (si.arg(0).isCode()) {
+                        final Explain nest = new Explain(si.arg(0).as());
+                        nest.run();
+                        nest.close();
+                    }
                 });
+        this.grid = new Grid(List.of(this.selector), 1);
+        this.style().attachment(this.grid, true).apply();
     }
 
-    @Override
+  /*  @Override
     public void run() {
-        Widget.cursorOffOn(this.selector::run);
-    }
+        Widget.cursorOffOn(this.style().attachment::run);
+    }*/
 
     @Override
     public String toString() {
-        return this.selector.toString();
+        return "";
     }
 
 
     @Override
     public String format() {
-        return this.selector.format();
+        return "";
     }
 
     @Override
     public void close() {
-        final String finalForm = this.profile.format();
-        final int height = this.selector.height();
-        this.selector.close();
-        this.profile.close();
+        final String finalForm = this.style.attachment.format();
         super.close();
-        Graphitty.out(Console.getTerminal().output(), "{{^" + height + "}}");
         Graphitty.out(Console.getTerminal().output(), finalForm);
     }
 }

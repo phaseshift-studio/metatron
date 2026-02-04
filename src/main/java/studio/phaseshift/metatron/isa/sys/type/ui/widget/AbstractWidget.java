@@ -71,15 +71,17 @@ public abstract class AbstractWidget<W extends AbstractWidget<W>> implements Wid
         this.attributes = this.terminal.enterRawMode();
         this.terminal.puts(InfoCmp.Capability.keypad_xmit);
         this.terminal.writer().flush();
-        this.display.updateAnsi(Arrays.stream(this.format().split("\n")).map(Graphitty::string).toList(), -1);
+        //this.display.updateAnsi(Arrays.stream(this.format().split("\n")).map(Graphitty::string).toList(), -1);
+        if (this.style.attachment != null)
+            this.style.attachment.run();
     }
 
     public void close() {
         if (null != this.style.attachment)
             this.style.attachment.close();
-        // this.terminal.puts(InfoCmp.Capability.clear_screen);
-        this.display.update(List.of(), this.size.cursorPos(this.cursor.getX(), this.cursor.getY()));
-        this.display.reset();
+        //this.terminal.puts(InfoCmp.Capability.clear_screen);
+        //this.display.update(List.of(), this.size.cursorPos(this.cursor.getX(), this.cursor.getY()));
+        //this.display.reset();
         //this.display.resize(0,0);
         if (null != this.attributes) {
             this.terminal.setAttributes(this.attributes);
@@ -87,5 +89,6 @@ public abstract class AbstractWidget<W extends AbstractWidget<W>> implements Wid
         this.terminal.puts(InfoCmp.Capability.exit_ca_mode);
         this.terminal.puts(InfoCmp.Capability.keypad_local);
         this.terminal.writer().flush();
+      //  this.attributes = null;
     }
 }
