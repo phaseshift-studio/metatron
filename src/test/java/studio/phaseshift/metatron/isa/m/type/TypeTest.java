@@ -175,6 +175,8 @@ public class TypeTest extends mTest {
             "213.0               | int::T                                     | false",
             "1                   | int::T[is(eq(1))]                          | true",
             "1                   | int::T[is(eq(2))]                          | false",
+            "1                   | int::T[?=1]                                | true",
+            "1                   | int::T[?=2]                                | false",
             "{1,1}               | int::T                                     | false",
             "{,}                 | int{0}::T                                  | true",
             "{1,1}               | int{2}::T[is(eq({2,2}))]                   | false",
