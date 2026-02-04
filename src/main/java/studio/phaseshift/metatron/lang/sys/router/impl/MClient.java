@@ -33,7 +33,6 @@ import studio.phaseshift.metatron.isa.m.type.impl.MObjs;
 import studio.phaseshift.metatron.isa.sys.type.Router;
 import studio.phaseshift.metatron.isa.sys.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.sys.type.ui.graphitty.GraphittyLogger;
-import studio.phaseshift.metatron.lang.sys.router.IOStat;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.net.URI;
@@ -48,7 +47,6 @@ public class MClient extends WebSocketClient implements MConnection {
     protected final Map<UUID, FutureObj<Obj>> futures = new HashMap<>();
     private static final UUID UNITY_UUID = UUID.randomUUID();
     protected final fURI remoteHost;
-    private IOStat ioStat = new IOStat();
     private FutureObj<Obj> TEMP_FUTURE = null;
 
     public MClient(final fURI remoteAuthority, final ObjSerializer<?> serializer, final Draft draft) {
@@ -89,11 +87,6 @@ public class MClient extends WebSocketClient implements MConnection {
         }
     }*/
 
-    @Override
-    public IOStat stats() {
-        return this.ioStat;
-    }
-
     public fURI remoteHost() {
         return this.remoteHost;
     }
@@ -127,7 +120,7 @@ public class MClient extends WebSocketClient implements MConnection {
     @Override
     public void onMessage(final ByteBuffer message) {
         LOG.debug("received byte buffer [length:%d]", message.array().length);
-        this.ioStat.incrTotalBytesRecv(message.array().length);
+        Router.global().stats().incrBytesRecv(message.array().length);
         final Obj obj = this.serializer.inputBytes(message);
         this.onObj(obj);
     }
@@ -162,7 +155,7 @@ public class MClient extends WebSocketClient implements MConnection {
         //LOG.trace("sendObj futures: %s", this.futures);
         final ByteBuffer buffer = this.serializer.outputBytes(obj);
         this.send(buffer);
-        this.ioStat.incrTotalBytesSent(buffer.array().length);
+        Router.global().stats().incrBytesSent(buffer.array().length);
     }
 
 

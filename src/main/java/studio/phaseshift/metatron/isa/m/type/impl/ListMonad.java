@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -21,6 +21,7 @@ package studio.phaseshift.metatron.isa.m.type.impl;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.sys.type.Router;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -47,6 +48,7 @@ public class ListMonad implements Obj {
     @Override
     public Obj append(final Obj obj) {
         this.jvm.add(obj);
+        Router.global().stats().incrRunningMonads(1L);
         return this;
     }
 
@@ -57,7 +59,10 @@ public class ListMonad implements Obj {
 
     @Override
     public Obj take() {
-        return this.jvm.isEmpty() ? null : this.jvm.removeFirst();
+        if (this.jvm.isEmpty())
+            return null;
+        Router.global().stats().incrRunningMonads(-1L);
+        return this.jvm.removeFirst();
     } // TODO: explore removeLast() as a way of simulating chained iterators
 
     @Override
@@ -131,6 +136,6 @@ public class ListMonad implements Obj {
     public static ListMonad of() {
         return new ListMonad(new ArrayList<>(), null);
     }
-    
-    
+
+
 }
