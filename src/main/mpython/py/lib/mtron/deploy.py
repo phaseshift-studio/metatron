@@ -14,6 +14,7 @@
 #  You should have received a copy of the GNU Affero General Public License
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 from lib.mtron.playtron import Playtron
+from lib.mtron.pondbox import PondBox
 
 
 # this function determines which machine architecture is flashed to hardware
@@ -24,4 +25,4 @@ from lib.mtron.playtron import Playtron
 # IMPORTANT: do not change the signature of the deploy() and always
 # return an Architecture object with a loop() method
 def deploy(secrets: dict):
-    return Playtron(secrets)
+    return PondBox(secrets)

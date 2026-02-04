@@ -70,6 +70,7 @@
         <moquette.version>0.18.0</moquette.version>
         <dockerfile-maven.version>1.4.13</dockerfile-maven.version>
         <commonmark.version>0.19.0</commonmark.version>
+        <jserialcomm.version>2.11.4</jserialcomm.version>
 
         <!-- LOGBACK PROPERTIES -->
     </properties>
@@ -109,6 +110,12 @@
         </dependencies>
     </dependencyManagement>
     <dependencies>
+        <!-- SERIAL PORTS -->
+        <dependency>
+            <groupId>com.fazecast</groupId>
+            <artifactId>jSerialComm</artifactId>
+            <version>${jserialcomm.version}</version>
+        </dependency>
         <!-- SQLITE -->
         <dependency>
             <groupId>org.xerial</groupId>

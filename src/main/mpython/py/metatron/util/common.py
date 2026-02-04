@@ -33,3 +33,9 @@ def make_pwm_read_lambda(index):
 
 def make_pwm_write_lambda(index):
     return lambda s, v: s.pwm.__setitem__(index, v)
+
+def make_gpio_read_lambda(index):
+    return lambda s: s.gpio[index]
+
+def make_gpio_write_lambda(index):
+    return lambda s, v: s.gpio.__setitem__(index, v)

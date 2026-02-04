@@ -59,7 +59,15 @@ class _Form:
 
     def sensor(self):
         return _Builder(self.ha, self.entity_vid, "sensor")
-
+    
+    def button(self):
+        return _Builder(self.ha, self.entity_vid, "button")
+    
+    def switch(self):
+        return (_Builder(self.ha, self.entity_vid, "switch").
+                platform("switch").
+                payload_on(1).
+                payload_off(0))
 
 class _Builder:
     entity_vid = None
@@ -74,7 +82,23 @@ class _Builder:
         self.kind = kind
         self.entity_vid = entity_vid
 
+    def platform(self, platform: str) -> '_Builder':
+        self.settings['platform'] = platform
+        return self
+
     def primary(self) -> '_Builder':
+        return self
+    
+    def payload_on(self, payload) -> '_Builder':
+        self.settings['payload_on'] = payload
+        return self
+    
+    def payload_off(self, payload) -> '_Builder':
+        self.settings['payload_off'] = payload
+        return self
+    
+    def payload_off(self, payload: str) -> '_Builder':
+        self.settings['payload_off'] = payload
         return self
 
     def diagnostic(self) -> '_Builder':
@@ -83,6 +107,10 @@ class _Builder:
 
     def config(self) -> '_Builder':
         self.settings['entity_category'] = 'config'
+        return self
+    
+    def enabled(self) -> '_Builder':
+        self.settings['enabled'] = True
         return self
 
     def on_read(self, func: function) -> '_Builder':
@@ -113,6 +141,10 @@ class _Builder:
     def device_class(self, dc: str) -> '_Builder':
         self.settings['device_class'] = dc
         return self
+    
+    def optimistic(self, optimistic: bool) -> '_Builder':
+        self.settings['optimistic'] = optimistic
+        return self
 
     def create(self):
         LOG.info("registering {{y}}{}{{X}} as a {{b}}{} {{c}}{}", self.entity_vid, self.kind,
@@ -122,6 +154,16 @@ class _Builder:
                                                  self.read_f, self.write_f]
         elif self.kind == "number":
             entity = uhome.Number(self.ha.device, self.entity_vid.name(), **self.settings)
+            if self.write_f is not None:
+                entity.set_action(lambda v: self.write_f(self.ha.soc, JSONTranslator.to_obj(v)))
+            self.ha.entities[self.entity_vid] = [entity, self.read_f, self.write_f]
+        elif self.kind == "button":
+            entity = uhome.Button(self.ha.device, self.entity_vid.name(), **self.settings)
+            if self.write_f is not None:
+                entity.set_action(lambda v: self.write_f(self.ha.soc, JSONTranslator.to_obj(v)))
+            self.ha.entities[self.entity_vid] = [entity, self.read_f, self.write_f]
+        elif self.kind == "switch":
+            entity = uhome.Switch(self.ha.device, self.entity_vid.name(), **self.settings)
             if self.write_f is not None:
                 entity.set_action(lambda v: self.write_f(self.ha.soc, JSONTranslator.to_obj(v)))
             self.ha.entities[self.entity_vid] = [entity, self.read_f, self.write_f]
