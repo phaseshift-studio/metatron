@@ -21,18 +21,25 @@ package studio.phaseshift.metatron.isa.sys.space.port;
 import com.fazecast.jSerialComm.SerialPort;
 import com.fazecast.jSerialComm.SerialPortDataListener;
 import com.fazecast.jSerialComm.SerialPortEvent;
+import org.jline.utils.AttributedString;
 import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.io.serial.ObjByteBufferSerializer;
 import studio.phaseshift.metatron.isa.MSpace;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
 
+import static com.fazecast.jSerialComm.SerialPort.LISTENING_EVENT_DATA_AVAILABLE;
+import static com.fazecast.jSerialComm.SerialPort.LISTENING_EVENT_PORT_DISCONNECTED;
 import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.isa.m.mInstSet.INST_TID;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
@@ -65,7 +72,8 @@ public class serialSpace extends MSpace<SerialPort[]> {
                             (lhs, inst) -> serialSpace.of(inst.arg(0).asRec(), inst.arg(0).vid()))).create();
 
     private final Tuple.Pair<String, String> rewrite;
-    private final Map<String, Tuple.Pair<SerialPort, Lst>> buffers = new HashMap<>();
+    private final Map<String, Tuple.Pair<SerialPort, ByteArrayOutputStream>> buffers = new HashMap<>();
+    protected static final byte[] CARRIAGE_RETURN = {(byte) 0x0D}; // Carriage return (CR)
 
     public static serialSpace of(final Rec config, final fURI vid) {
         return new serialSpace(SerialPort.getCommPorts(), config.jvm(), vid);
@@ -82,51 +90,48 @@ public class serialSpace extends MSpace<SerialPort[]> {
         return String.format("{{b}}%s{{g}}@{{y}}%d{{X}} baud {{g}}[{{b}}%s{{g}}][{{b}}%s{{g}}]{{X}}", port.getSystemPortName(), port.getBaudRate(), port.getDescriptivePortName(), port.getManufacturer());
     }
 
-    protected Obj getOrCreateBuffer(final SerialPort port) {
+    protected ByteArrayOutputStream getOrCreateBuffer(final SerialPort port) {
         if (!this.buffers.containsKey(port.getSystemPortName())) {
-            final Lst sb = lst(Collections.synchronizedList(new ArrayList<>()));
-            if (!port.openPort()) {
-                LOG.error("failed to open port: %s", getPortMetadata(port));
-                this.buffers.remove(port.getSystemPortName());
-                return noobj();
-            } else
-                LOG.info("opened port: %s", getPortMetadata(port));
+            final ByteArrayOutputStream sb = new ByteArrayOutputStream();
             this.buffers.put(port.getSystemPortName(), Tuple.Pair.with(port, sb));
-            port.addDataListener(new SerialPortDataListener() {
-                @Override
-                public int getListeningEvents() {
-                    return SerialPort.LISTENING_EVENT_PORT_DISCONNECTED;
-                }
-
-                @Override
-                public void serialEvent(SerialPortEvent event) {
-                    if ((event.getEventType() & SerialPort.LISTENING_EVENT_PORT_DISCONNECTED) > 0) {
-                        LOG.warn("port disconnected: %s", getPortMetadata(port));
-                        port.closePort();
-                        buffers.remove(port.getSystemPortName());
-                    }
-                }
-            });
+            port.setBaudRate(115200);
             port.addDataListener((new SerialPortDataListener() {
                 @Override
                 public int getListeningEvents() {
-                    return SerialPort.LISTENING_EVENT_DATA_AVAILABLE;
+                    return LISTENING_EVENT_DATA_AVAILABLE | LISTENING_EVENT_PORT_DISCONNECTED;
                 }
 
                 @Override
                 public void serialEvent(final SerialPortEvent event) {
+                    //LOG.info("serial event: %s", event);
                     try {
-                        if ((event.getEventType() & SerialPort.LISTENING_EVENT_DATA_AVAILABLE) > 0) {
+                        if ((event.getEventType() & LISTENING_EVENT_DATA_AVAILABLE) > 0) {
                             byte[] newData = new byte[port.bytesAvailable()];
                             int totalBytesRead = port.readBytes(newData, newData.length);
-                            LOG.info("read %d bytes from %s", totalBytesRead, port.getSystemPortName());
-                            sb.add(str(new String(newData, StandardCharsets.UTF_8)), MUTABLE);
+                            LOG.debug("read %d bytes from %s", totalBytesRead, port.getSystemPortName());
+                            sb.write(newData);
+                        } else if ((event.getEventType() & LISTENING_EVENT_PORT_DISCONNECTED) > 0) {
+                            LOG.warn("port disconnected: %s", getPortMetadata(port));
+                            port.closePort();
+                            buffers.remove(port.getSystemPortName());
                         }
                     } catch (final Exception e) {
-                        sb.add(fail(e));
+                        try {
+                            sb.write(new ObjByteBufferSerializer().outputBytes(fail(e)).array());
+                        } catch (IOException ioException) {
+                            throw MTronException.of(ioException);
+                        }
                     }
                 }
             }));
+            if (!port.openPort()) {
+                LOG.error("failed to open port: %s", getPortMetadata(port));
+                this.buffers.remove(port.getSystemPortName());
+                return null;
+            } else {
+                LOG.info("opened port: %s", getPortMetadata(port));
+                return this.buffers.get(port.getSystemPortName()).get1();
+            }
         }
         return this.buffers.get(port.getSystemPortName()).get1();
     }
@@ -136,11 +141,13 @@ public class serialSpace extends MSpace<SerialPort[]> {
         return objs(Arrays.stream(SerialPort.getCommPorts())
                 .filter(port -> this.pattern.retractPattern().extend(port.getSystemPortName()).matches(vid))
                 .map(port -> {
-                    final Obj buffer = this.getOrCreateBuffer(port);
-                    if (buffer.isNoObj())
+                    final ByteArrayOutputStream buffer = this.getOrCreateBuffer(port);
+                    if (null == buffer)
                         return noobj();
-                    final Lst result = lst(new ArrayList<>(buffer.jvm()));
-                    // buffer.jvm().clear();
+
+                    final String current = buffer.size() == 0 ? "" : buffer.toString(StandardCharsets.UTF_8);
+                    final String stripped = AttributedString.stripAnsi(current);
+                    final Str result = str(stripped);
                     return vid.isNode() ? result : rel(uri(this.pattern.retractPattern().extend(port.getSystemPortName())), result);
                 }));
     }
@@ -159,13 +166,15 @@ public class serialSpace extends MSpace<SerialPort[]> {
                         LOG.info("closed port: %s", getPortMetadata(pair.get0()));
                         return noobj();
                     } else {
-                        final OutputStream out = pair.get0().getOutputStream();
-                        try {
-                            out.write(obj.strValue().getBytes(StandardCharsets.UTF_8));
-                            out.flush();
-                        } catch (final IOException e) {
-                            throw MTronException.of(e);
+                        final String string = obj.strValue();
+                        final byte[] bytes = string.getBytes(StandardCharsets.UTF_8);
+                        if (-1 == pair.get0().writeBytes(bytes, bytes.length)) {
+                            throw MTronException.of("failed to write %s bytes to %s", bytes.length, getPortMetadata(pair.get0()));
                         }
+                        //if (string.endsWith("\n") || string.endsWith("\r")) {
+                        pair.get0().writeBytes(CARRIAGE_RETURN, CARRIAGE_RETURN.length);
+                        //}
+                        LOG.debug("wrote %d bytes to %s", bytes.length, getPortMetadata(pair.get0()));
                         return obj;
                     }
                 }));
