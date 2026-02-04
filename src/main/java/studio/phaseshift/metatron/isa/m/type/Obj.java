@@ -70,6 +70,14 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
         return (O) this.c(cInt::maybe);
     }
 
+    default <O extends Obj> O maybeSome() {
+        return (O) this.c(cInt::maybeSome);
+    }
+
+    default <O extends Obj> O some() {
+        return (O) this.c(cInt::some);
+    }
+
     <J> J jvm();
 
     fURI tid();
@@ -278,6 +286,15 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
         else if (this.isCode()) return CODE_TID.c(this.c().toString());
         else if (this.isNoObj()) return NOOBJ_TID.c(this.c().toString());
         else if (this.isFail()) return FAIL_TID.c(this.c().toString());
+       /* else if (this.isType()) {
+            if(null != this.vid()) {
+                final Obj temp = Router.readFromSpace(this.vid());
+                if (temp.isType()) {
+                    return temp.tid();
+                }
+            }
+            return this.tid();
+        }*/
         else return this.tid();
     }
 

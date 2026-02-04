@@ -27,10 +27,7 @@ import studio.phaseshift.metatron.util.Tuple;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
@@ -77,7 +74,7 @@ public interface Type extends Obj, PlusMonoid<Type> {
     default boolean isBaseType() {
         return mInstSet.BASE_TYPES.contains(this.tid().basePath());
     }
-    
+
     default Type parentType() {
         if (this.vid() != null)
             return Router.global().read(this.tid()).asType();
@@ -103,31 +100,21 @@ public interface Type extends Obj, PlusMonoid<Type> {
 
     @Override
     default boolean matches(final Obj rhs) {
-        if(Obj.Helper.isAuto(rhs))
+        if (Obj.Helper.isAuto(rhs))
             return true;
         if (rhs.isNoObj() && this.c().isZeroable())
             return true;
-        if (this.equals(rhs))
-            return true;
-        // if (this.tid().basePath().equals(AUTO_INST_TID) || rhs.tid().basePath().equals(AUTO_INST_TID))
-        //     return true;
         if (rhs.isCall())
-            return this.matches(rhs.dom());// && rhs.apply(this).matches(rhs.rng());
+            return this.matches(rhs.dom());
         if (!rhs.isType())
             return false;
         if (!this.c().within(rhs.c()))
             return false;
         if (rhs.asType().isBaseType())
             return this.baseType().matches(rhs.tid()); // matches any abstract type to it's base type as long as within the coefficient boundaries
-        // if (rhs.tid().equals(TYPE_TID))
-        //     return !rhs.asType().hasPredicate() || this.matches(rhs.asType().predicate());
-        if (this.tid().matches(rhs.tid())) //&& (!rhs.asType().hasPredicate() || Objects.equals(this.predicate(), rhs.asType().predicate())))
-            return true;
         if (rhs.tid().isGeneric())
             return !this.tid().isGeneric() || (this.c().within(rhs.c()) && this.tid().basePath().equals(rhs.tid().basePath()));
-        if (!this.asType().isBaseType() && Router.loaded()) // recursively check type to base type
-            return Router.readFromSpace(this.tid()).matches(rhs);
-        return null == rhs.asType().predicate();// || !rhs.asType().predicate().apply(this).isNoObj();
+        return !rhs.asType().hasPredicate() || Objects.equals(this.asType().predicate(), rhs.asType().predicate());// || !rhs.asType().predicate().apply(this).isNoObj();
     }
 
     @Override
