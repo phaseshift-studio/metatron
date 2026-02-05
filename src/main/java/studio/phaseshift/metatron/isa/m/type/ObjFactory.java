@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -21,8 +21,16 @@ package studio.phaseshift.metatron.isa.m.type;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.util.MTronException;
 
+import java.lang.reflect.Modifier;
+import java.net.URI;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 public interface ObjFactory {
     <O extends Obj> O create(final Object value, final fURI tid, final fURI vid);
@@ -76,6 +84,75 @@ public interface ObjFactory {
         else
             throw MTronException.of("unable to convert to requested obj class: %s", objClass);
         return this.create(value, tid, fURI.fnull, objClass);
+    }
+
+    public static class Helper {
+        public static String externalNameToMtronName(final String externalName) {
+            if (externalName.toUpperCase().equals(externalName))
+                return externalName.toLowerCase();
+            return externalName
+                    .replaceAll("([A-Z])(?=[A-Z])", "$1_")
+                    .replaceAll("([a-z])([A-Z])", "$1_$2")
+                    .toLowerCase();
+        }
+
+        public static boolean containsObjs(final Collection<Object> collection) {
+            return collection.stream().allMatch(o -> o instanceof Obj);
+        }
+
+        public static boolean containsObjs(final Map<Object, Object> map) {
+            return map.entrySet().stream().allMatch(e -> e.getKey() instanceof Obj && e.getValue() instanceof Obj);
+        }
+
+        public static boolean shouldHandleReflectively(final Class<?> clazz) {
+            return clazz.isPrimitive() ||
+                    String.class.isAssignableFrom(clazz) ||
+                    URI.class.isAssignableFrom(clazz) ||
+                    Character.class.isAssignableFrom(clazz) ||
+                    Long.class.isAssignableFrom(clazz) ||
+                    Integer.class.isAssignableFrom(clazz) ||
+                    Double.class.isAssignableFrom(clazz) ||
+                    Float.class.isAssignableFrom(clazz) ||
+                    Boolean.class.isAssignableFrom(clazz) ||
+                    Enum.class.isAssignableFrom(clazz) ||
+                    Collection.class.isAssignableFrom(clazz) ||
+                    Record.class.isAssignableFrom(clazz) ||
+                    Map.class.isAssignableFrom(clazz);
+
+        }
+
+        public static Map<Obj, Obj> reflectionBasedCreate(final ObjFactory factory, final Object value) {
+            final Map<Obj, Obj> map = new LinkedHashMap<>();
+            Arrays.stream(value.getClass().getMethods())
+                    .filter(m -> (m.getModifiers() & Modifier.PUBLIC) != 0)
+                    .filter(m -> m.getParameterCount() == 0)
+                    .filter(m -> !m.getName().equals("hashCode")
+                            && (m.getName().startsWith("get") ||
+                            m.getName().startsWith("is") ||
+                            m.getName().startsWith("has") ||
+                            m.getName().startsWith("can")))
+                    .filter(m -> shouldHandleReflectively(m.getReturnType()))
+                    .forEach(m -> {
+                        try {
+                            final Object result = m.invoke(value);
+                            map.put(uri(Helper.externalNameToMtronName(m.getName())), factory.create(result));
+                        } catch (final Exception e) {
+                            throw MTronException.of(e);
+                        }
+                    });
+            Arrays.stream(value.getClass().getFields())
+                    .filter(f -> (f.getModifiers() & Modifier.PUBLIC) != 0)
+                    .filter(f -> shouldHandleReflectively(f.getType()))
+                    .forEach(f -> {
+                        try {
+                            final Object result = f.get(value);
+                            map.put(uri(Helper.externalNameToMtronName(f.getName())), factory.create(result));
+                        } catch (final Exception e) {
+                            throw MTronException.of(e);
+                        }
+                    });
+            return map;
+        }
     }
 
 }

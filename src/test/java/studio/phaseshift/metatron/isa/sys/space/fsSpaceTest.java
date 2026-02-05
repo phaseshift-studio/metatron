@@ -36,7 +36,6 @@ import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-@Disabled
 @ExtendWith(TestData.TestDataExtension.class)
 public class fsSpaceTest extends SpaceTest {
 
@@ -73,6 +72,7 @@ public class fsSpaceTest extends SpaceTest {
         mTest.testCode(LOG, code, expected);
     }
 
+    @Disabled
     @ParameterizedTest
     @CsvSource(value = {
             "</tmp/file.jpg> -> 0xab2356abcd        % a",

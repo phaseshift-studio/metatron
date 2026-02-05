@@ -25,9 +25,10 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
+import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.sys.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.sys.type.Router;
+import studio.phaseshift.metatron.isa.sys.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.mTest;
 
 import java.util.ArrayList;
@@ -36,7 +37,10 @@ import java.util.function.Supplier;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static studio.phaseshift.metatron.Tokens.PATTERN;
 import static studio.phaseshift.metatron.furi.fURI.f;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -54,6 +58,8 @@ public abstract class SpaceTest extends mTest {
 
     public SpaceTest(final fURI baseURI, final Supplier<Space> spaceSupplier) {
         super();
+        if (!Router.global().hasSpaceFor(baseURI))
+            memSpace.of(rec(uri(PATTERN), uri(baseURI.retract().extend("#"))), f("/sys/space").extend(baseURI.retractPattern().name()));
         this.baseURI = baseURI;
         this.spaceSupplier = spaceSupplier;
     }
@@ -147,8 +153,8 @@ public abstract class SpaceTest extends mTest {
             "1.vid(abc)                                            % *abc.vid(<.>)                    % 1",
             "[1@a,2@b,3@c]@d.map(10).vid(b)                        % *d                               % [1@a,10@b,3@c]@d",
             "[1@a,2@b,3@c]@d.map(10@b)                             % *d                               % [1@a,10@b,3@c]@d",
-           // "[1@a,2@b,3@c]@d.map(*b + 10@b)                        % *d                               % [1@a,12@b,3@c]@d",
-           // "[1@a,2@b,3@c]@d.map(*b + 10@b).to(d)                  % *d                               % 12@d",
+            // "[1@a,2@b,3@c]@d.map(*b + 10@b)                        % *d                               % [1@a,12@b,3@c]@d",
+            // "[1@a,2@b,3@c]@d.map(*b + 10@b).to(d)                  % *d                               % 12@d",
             // "[1@a,2@b,3@c]@d                                       % *d._/_.vid(<.>)\\_.vid(<.>)      % [1,2,3]",
             // "[1@a,2@b,3@c]@d.map(*b + 10@b).to(d)                  % *d._/_.vid(<.>)\\_               % [1,2,3]@d",
             // "[1@a,2@b,3@c]@d.map(*b + 10@b).to(d)                  % *d._.vid(<.>)                    % 12"

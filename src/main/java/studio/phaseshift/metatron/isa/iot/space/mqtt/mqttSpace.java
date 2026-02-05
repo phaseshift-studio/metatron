@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -18,19 +18,19 @@
 
 package studio.phaseshift.metatron.isa.iot.space.mqtt;
 
+import com.hivemq.client.internal.mqtt.message.connect.connack.MqttConnAck;
 import com.hivemq.client.mqtt.MqttClient;
 import com.hivemq.client.mqtt.mqtt5.Mqtt5Client;
 import com.hivemq.client.mqtt.mqtt5.message.subscribe.Mqtt5RetainHandling;
 import studio.phaseshift.metatron.Tokens;
-import studio.phaseshift.metatron.furi.Q;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.MSpace;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.mInstSet;
-
 import studio.phaseshift.metatron.isa.m.space.memSpace;
+import studio.phaseshift.metatron.isa.m.type.*;
+import studio.phaseshift.metatron.isa.m.type.impl.MObjFactory;
 import studio.phaseshift.metatron.isa.sys.type.Router;
 import studio.phaseshift.metatron.isa.web.parser.JSONTranslator;
 import studio.phaseshift.metatron.util.MTronException;
@@ -43,20 +43,16 @@ import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
-import static studio.phaseshift.metatron.Tokens.PATTERN;
-import static studio.phaseshift.metatron.Tokens.HOST;
-import static studio.phaseshift.metatron.Tokens.CLIENT;
-import static studio.phaseshift.metatron.Tokens.REWRITE;
+import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.ALL;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
+import static studio.phaseshift.metatron.isa.iot.iotInstSet.IOT_ISA_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.iot.iotInstSet.IOT_ISA_TID;
 import static studio.phaseshift.metatron.isa.sys.sysInstSet.SYS_SPACE_TID;
-import static studio.phaseshift.metatron.lang.ai.llm.llmInstSet.SPACE_TID;
 
 
 public class mqttSpace extends MSpace<Mqtt5Client> {
@@ -75,11 +71,12 @@ public class mqttSpace extends MSpace<Mqtt5Client> {
     protected final JSONTranslator jsonTranslator = new JSONTranslator();
     protected final memSpace cache;
 
-    protected mqttSpace(final Mqtt5Client client, final Map<Obj,Obj> config, final fURI vid) {
+    protected mqttSpace(final Mqtt5Client client, final Map<Obj, Obj> config, final fURI vid) {
         super(client, config, MQTT_TID, vid);
+        MqttConnAck connAck = null;
         this.rewrite = Space.Helper.extractRewrite(config);
         LOG.info("{{y}}mtron{{g}}<=>{{y}}mqtt{{X}} mapping established: %s {{g}}<=> ({{b}}%s {{g}}<=>{{X}} %s{{g}}){{X}}", this.pattern().toUri(), this.rewrite, uri(Space.Helper.toNativeSpace(this.pattern(), this.rewrite)));
-        this.cache = memSpace.of(this.pattern(),fURI.fnull);
+        this.cache = memSpace.of(this.pattern(), fURI.fnull);
         this.put(uri(Tokens.Q), lst(List.of(new MqttPubSubQ(this))), MUTABLE);
         this.broker = this.at(uri(HOST)).orThrow(new IllegalArgumentException("config must have a host key")).uriValue();
         try {
@@ -93,7 +90,15 @@ public class mqttSpace extends MSpace<Mqtt5Client> {
                     .connectWith()
                     .cleanStart(false)
                     .send()
-                    .whenComplete((a, b) -> LOG.info("{{g}}connected{{X}} %s", a))
+                    .whenComplete((a, b) -> {
+                        if (b != null) {
+                            throw MTronException.of(b);
+                        } else {
+                            final Rec conn = MObjFactory.of().create(a).asRec();
+                            LOG.debug("{{g}}connected{{X}} %s", conn);
+                            this.put(uri("connack"), conn, MUTABLE);
+                        }
+                    })
                     .get(10, TimeUnit.SECONDS);
             this.sjvm.toAsync()
                     .subscribeWith()
@@ -130,7 +135,7 @@ public class mqttSpace extends MSpace<Mqtt5Client> {
             throw MTronException.of(e);
         }
     }
-    
+
     public static mqttSpace of(final Rec config, final fURI vid) {
         final Mqtt5Client client = MqttClient.builder()
                 .identifier(config.at(uri(CLIENT).orElse(uri("mtron-" + Math.abs(UUID.randomUUID().getMostSignificantBits())))).uriValue().toString())
@@ -143,15 +148,15 @@ public class mqttSpace extends MSpace<Mqtt5Client> {
 
     @Override
     public Obj read(final fURI vid) {
-        return Q.Helper.processPreRead(this.qs(), vid, vid).orElseGet(() -> {
+        return studio.phaseshift.metatron.furi.Q.Helper.processPreRead(this.qs(), vid, vid).orElseGet(() -> {
             final Obj result = this.cache.read(vid.qLess());
-            return Q.Helper.processPostRead(this.qs(), vid, vid, result).orElse(result);
+            return studio.phaseshift.metatron.furi.Q.Helper.processPostRead(this.qs(), vid, vid, result).orElse(result);
         });
     }
 
     @Override
     public Obj write(final fURI vid, final Obj obj) {
-        final Obj ret = Q.Helper.processPreWrite(this.qs(), vid, vid, obj).orElse(null);
+        final Obj ret = studio.phaseshift.metatron.furi.Q.Helper.processPreWrite(this.qs(), vid, vid, obj).orElse(null);
         if (null != ret)
             return ret;
         if (vid.hasPattern()) {
@@ -162,7 +167,8 @@ public class mqttSpace extends MSpace<Mqtt5Client> {
             this.send(vid.qLess(), value.c(cInt.ONE()));
             return value;
         }, this.cache.directReader());*/
-        return Q.Helper.processPostWrite(this.qs(), vid, vid, obj).orElse(Q.Helper.processQlessWrite(this.qs(), vid, vid, obj.c(cInt.ONE())).orElse(obj));
+        return studio.phaseshift.metatron.furi.Q.Helper.processPostWrite(this.qs(), vid, vid, obj)
+                .orElse(studio.phaseshift.metatron.furi.Q.Helper.processQlessWrite(this.qs(), vid, vid, obj.c(cInt.ONE())).orElse(obj));
     }
 
     private void send(final fURI vid, final Obj obj) {
@@ -201,10 +207,10 @@ public class mqttSpace extends MSpace<Mqtt5Client> {
     public void close() {
         try {
             this.cache.close();
-            if(this.sjvm != null)
+            if (this.sjvm != null)
                 this.sjvm.toAsync().disconnect();
-        } catch (final Exception  e) {
-           throw MTronException.of(e);
+        } catch (final Exception e) {
+            throw MTronException.of(e);
         } finally {
             super.close();
         }

@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -20,14 +20,14 @@ package studio.phaseshift.metatron.isa.m.type.impl;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.*;
-
 import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
 
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
+import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
+import static studio.phaseshift.metatron.isa.m.type.ObjFactory.Helper.containsObjs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
@@ -35,7 +35,6 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
-import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.Tuple.Pair;
 import static studio.phaseshift.metatron.util.Tuple.Triplet;
@@ -43,6 +42,7 @@ import static studio.phaseshift.metatron.util.Tuple.Triplet;
 public class MObjFactory implements ObjFactory {
 
     private static final MObjFactory SINGLETON = new MObjFactory();
+    private final boolean allowReflection = true;
 
     protected MObjFactory() {
     }
@@ -59,6 +59,8 @@ public class MObjFactory implements ObjFactory {
             return (O) value;
         if (value instanceof Boolean)
             return (O) bool((Boolean) value, tid, vid);
+        else if (value instanceof Enum)
+            return (O) uri(f(((Enum) value).name()), tid, vid);
         else if (value instanceof Long)
             return (O) jnt((Long) value, tid, vid);
         else if (value instanceof Integer)
@@ -67,25 +69,29 @@ public class MObjFactory implements ObjFactory {
             return (O) real((Double) value, tid, vid);
         else if (value instanceof Float)
             return (O) real((Float) value, tid, vid);
+        else if (value instanceof Character)
+            return (O) str(value.toString(), tid, vid);
         else if (value instanceof String)
             return (O) str((String) value, tid, vid);
         else if (value instanceof fURI)
             return (O) uri((fURI) value, tid, vid);
-        else if (value instanceof List)
+        else if (value instanceof List && containsObjs((List) value))
             return (O) lst((List<Obj>) value, tid, vid);
-        else if (value instanceof Pair)
+        else if (value instanceof Collection) {
+            final List<Obj> list = new ArrayList<>();
+            ((Collection) value).stream().forEach(e -> list.add(create(e)));
+            return (O) lst(list, tid, vid);
+        } else if (value instanceof Pair)
             return (O) rel((Pair<Obj, Obj>) value, tid, vid);
-        else if (value instanceof Map)
+        else if (value instanceof Map && containsObjs((Map) value))
             return (O) rec((Map<Obj, Obj>) value, tid, vid);
-            //else if (value instanceof Triplet)
-            //    return new MInst((Triplet<Poly, Inst.f, Obj>) value);
-            // else if (Code.class.isAssignableFrom(objClass))
-            //    return (O) new MCode((List<Inst>) value, tid, vid);
-            //else if (Objs.class.isAssignableFrom(objClass))
-            //    return (O) new MObjs((Iterable<Obj>) value, tid, vid);
-            // else if (Type.class.isAssignableFrom(objClass))
-            //     return (O) new MType((Obj) value, tid);
-        else
+        else if (value instanceof Map) {
+            final Map<Obj, Obj> map = new LinkedHashMap<>();
+            ((Map) value).forEach((k, v) -> map.put(create(k), create(v)));
+            return (O) rec(map, tid, vid);
+        } else if (this.allowReflection) {
+            return (O) rec(Helper.reflectionBasedCreate(this, value), f(value.getClass().getSimpleName().toLowerCase()), vid);
+        } else
             throw MTronException.of("provided jvm object has no corresponding obj: %s", value);
     }
 
