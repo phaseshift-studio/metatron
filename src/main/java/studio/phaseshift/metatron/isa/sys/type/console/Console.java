@@ -323,68 +323,46 @@ public class Console extends JRec implements Closeable, Runnable {
     }
 
     class CustomWidgets extends Widgets {
-
         private CustomWidgets(final LineReader reader) {
             super(reader);
-            /*getKeyMap().bind((Widget) () -> {
-                new MCompleter(Console.this).complete(reader, null, new ArrayList<>());
-                return true;
-            },"\t");*/
-            getKeyMap().bind((Widget)
-                    () -> Editor.of(Console.this, reader.getBuffer().toString()), ctrl('y'));
+            /// CREATE NEW LINE ABOVE CURRENT LOCATION
             getKeyMap().bind((Widget)
                     () -> {
-                        Console.this.reader.getBuffer().write("\n");
+                        reader.getBuffer().up();
+                        reader.getBuffer().write("\n");
                         return true;
-                    }, alt('\n'));
+                    }, alt('w'));
+            /// CREATE NEW LINE BELOW CURRENT LOCATION
+            getKeyMap().bind((Widget)
+                    () -> {
+                        reader.getBuffer().write("\n");
+                        return true;
+                    }, alt('s'));
+            /// PUT CURRENT BUFFER IN FULL SCREEN EDITOR
+            getKeyMap().bind((Widget)
+                    () -> Editor.of(Console.this, reader.getBuffer().toString()), ctrl('y'));
+            /// QUIT METATRON (CLOSE EVERYTHING)
             getKeyMap().bind((Widget)
                     () -> {
                         Console.this.close();
                         System.exit(0);
                         return true;
                     }, ctrl('q'));
+            /// EXPLAIN BUFFER CODE (IF IS CODE)
             getKeyMap().bind((Widget) () -> {
                 try {
                     final Obj code = mParser.parse(this.reader.getBuffer().toString());
                     if (code.isCode()) {
-                        terminal.writer().print("\n");
+                        terminal.writer().write("\n");
                         final Explain explain = new Explain(code.as());
                         Utilities.runCursorLessWidget(explain, true);
-                        Console.this.redrawBuffer();
+                        redrawBuffer();
                     }
                 } catch (final Exception e) {
                     // do nothing
                 }
                 return true;
             }, key(Console.terminal, InfoCmp.Capability.tab));
-            getKeyMap().bind((Widget) () -> {
-                try {
-                    final Obj parsedObj = mParser.parse(this.reader.getBuffer().toString());
-                    if (parsedObj.isCode()) {
-                        final CodeTable codeTable = new CodeTable(parsedObj.as());
-                        terminal.writer().print("\n" + codeTable.format());
-                        codeTable.run();
-                    } else if (parsedObj.isType()) {
-                        final TypeTable typeTable = new TypeTable(parsedObj.asType());
-                        terminal.writer().print("\n" + typeTable.format());
-                        typeTable.run();
-
-                    }
-                } catch (final Exception e) {
-                    // do nothing 
-                }
-
-                return true;
-            }, key(Console.terminal, InfoCmp.Capability.key_f1));
-            getKeyMap().bind((Widget) () -> {
-                try {
-                    LOG.info("f2 pushed");
-                } catch (final Exception e) {
-                    // do nothing 
-                }
-
-                return true;
-            }, key(Console.terminal, InfoCmp.Capability.key_f2));
         }
     }
 }

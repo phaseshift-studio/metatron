@@ -57,10 +57,6 @@ public interface Widget<W extends Widget<W>> extends Stylable<W>, AutoCloseable,
         return this.width();
     }
 
-    default List<String> rowStrings() {
-        return Arrays.asList(this.format().split("\n"));
-    }
-
     default String rowString(int i) {
         return this.format().split("\n")[i];
     }

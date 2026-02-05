@@ -18,32 +18,48 @@
 
 package studio.phaseshift.metatron.isa.grph.space.tp3;
 
+import org.apache.commons.configuration2.ConfigurationMap;
+import org.apache.tinkerpop.gremlin.jsr223.DefaultGremlinScriptEngineManager;
+import org.apache.tinkerpop.gremlin.jsr223.GremlinLangScriptEngineFactory;
+import org.apache.tinkerpop.gremlin.jsr223.GremlinScriptEngine;
 import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.apache.tinkerpop.gremlin.structure.T;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
 import org.apache.tinkerpop.gremlin.tinkergraph.structure.TinkerFactory;
+import org.apache.tinkerpop.gremlin.tinkergraph.structure.TinkerGraph;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.grph.space.grphSpace;
 import studio.phaseshift.metatron.isa.m.mInstSet;
+import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.m.type.impl.MObjFactory;
 import studio.phaseshift.metatron.isa.sys.type.Router;
+import studio.phaseshift.metatron.isa.sys.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
+import static studio.phaseshift.metatron.Tokens.LOAD;
 import static studio.phaseshift.metatron.furi.fURI.ALL;
+import static studio.phaseshift.metatron.furi.fURI.f;
+import static studio.phaseshift.metatron.isa.grph.grphInstSet.GREMLIN_INST_TID;
 import static studio.phaseshift.metatron.isa.grph.grphInstSet.GRPH_ISA_TID;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.failure_;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.Str.STR_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -70,17 +86,41 @@ public class tp3Space extends grphSpace<Graph> {
 
     public static tp3Space of(final Rec config, final fURI vid) {
         Router.global().logger().debug("tp3 space config: %s", config);
-        final Graph graph = TinkerFactory.createModern();
+        final TinkerGraph graph = TinkerGraph.open();
+        if (config.has(LOAD)) {
+            final fURI dataset = config.at(LOAD).uriValue();
+            Graphitty.log(tp3Space.class).info("translating %s into grph space", config.at(LOAD));
+            if (dataset.equals(f("modern")))
+                TinkerFactory.generateModern(graph);
+            else if (dataset.equals(f("grateful")))
+                TinkerFactory.generateGratefulDead(graph);
+            else if (dataset.equals(f("airroutes")))
+                TinkerFactory.generateAirRoutes(graph);
+            else
+                throw MTronException.of("unknown dataset: %s", config.at(LOAD));
+        }
         return new tp3Space(graph, config.jvm(), vid);
     }
+
 
     protected tp3Space(final Graph graph, final Map<Obj, Obj> config, final fURI vid) {
         super(graph, config, TP3_SPACE_TID, vid);
         LOG.debug("tp3 space: %s", this);
+        final Rec tp3Config = rec();
+        new ConfigurationMap(sjvm.configuration()).forEach((key, value) -> {
+            try {
+                tp3Config.put(uri(key.toString()), MObjFactory.of().create(value), MUTABLE);
+            } catch (final Exception e) {
+                LOG.warn("unable to encode %s:%s: %s", key, value, e);
+            }
+        });
+        this.put(uri("tp3/config"), tp3Config, MUTABLE);
+        this.put(uri("tp3/id"), rec(
+                uri("vertex"), uri(this.sjvm.vertices().next().id().getClass().getSimpleName()),
+                uri("edge"), uri(this.sjvm.edges().next().id().getClass().getSimpleName())), MUTABLE);
         this.vertexPrefix = this.pattern.retractPattern().extend("V/").toString();
         this.edgePrefix = this.pattern.retractPattern().extend("E/").toString();
         LOG.debug("tp3 prefixes: %s %s", this.vertexPrefix, this.edgePrefix);
-
     }
 
     @Override
@@ -91,7 +131,7 @@ public class tp3Space extends grphSpace<Graph> {
             LOG.info("reading vertices %s => %s", vid, suffix);
             if (suffix.equals("+") || suffix.equals("#"))
                 return objs(IteratorUtil.stream(this.sjvm.vertices()).map(VertexMap::vrtxRec));
-            final Long id = Long.valueOf(vidString.replaceFirst(this.vertexPrefix, ""));
+            final Integer id = Integer.valueOf(vidString.replaceFirst(this.vertexPrefix, ""));
             LOG.debug("reading vertex %s => %s", vid, id);
             return objs(IteratorUtil.stream(this.sjvm.vertices(id)).map(VertexMap::vrtxRec));
         } else if (vidString.startsWith(this.edgePrefix)) {
@@ -134,19 +174,22 @@ public class tp3Space extends grphSpace<Graph> {
         }
     }
 
-/*
- if (this.has(LOAD)) {
-            final fURI dataset = this.at(LOAD).uriValue();
-            LOG.info("translating %s into grph space", this.at(LOAD));
-            final TP3Translator t = TP3Translator.Builder.of(this.pattern.retractPattern()).create();
-            if (dataset.equals(f("modern")))
-                t.translate(TinkerFactory.createModern());
-            else if (dataset.equals(f("grateful")))
-                t.translate(TinkerFactory.createGratefulDead());
-            else if (dataset.equals(f("airroutes")))
-                t.translate(TinkerFactory.createAirRoutes());
-            else
-                throw MTronException.of("unknown dataset: %s", this.at(LOAD));
+    public static class TP3SpaceType {
+        public static Set<Inst> insts() {
+            return new HashSet<>(List.of((instC(GREMLIN_INST_TID.dom(TP3_SPACE_TID).rng(ALL.maybeSome()), lst(STR_TYPE), (lhs, inst) -> {
+                try {
+                    final GremlinLangScriptEngineFactory factory = new GremlinLangScriptEngineFactory();
+                    //factory.setCustomizerManager(new CachedGremlinScriptEngineManager());
+                    factory.setCustomizerManager(new DefaultGremlinScriptEngineManager());
+                    final GremlinScriptEngine engine = factory.getScriptEngine();
+                    engine.put("g", ((tp3Space) lhs).sjvm().traversal());
+                    final Object object = engine.eval(inst.arg(0).strValue());
+                    return MObjFactory.of().create(object);
+                } catch (Exception e) {
+                    return fail(e);
+                }
+            }))));
+
         }
- */
+    }
 }

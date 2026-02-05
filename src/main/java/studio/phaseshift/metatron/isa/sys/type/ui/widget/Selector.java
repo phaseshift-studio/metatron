@@ -21,7 +21,6 @@ package studio.phaseshift.metatron.isa.sys.type.ui.widget;
 import org.jline.keymap.BindingReader;
 import org.jline.keymap.KeyMap;
 import org.jline.utils.InfoCmp;
-import studio.phaseshift.metatron.isa.sys.type.Router;
 import studio.phaseshift.metatron.isa.sys.type.ui.graphitty.Graphitty;
 
 import java.util.ArrayList;
@@ -81,18 +80,38 @@ public class Selector extends AbstractWidget<Selector> {
             // Graphitty.log(this).none("{{^%s}}", this.style.attachment.rowCount() + 1);
             boolean done = false;
             while (!done) {
-                final int selectRowFinal = selectRow;
-                final int selectColFinal = selectCol;
                 final List<String> currentStateDisplay = new ArrayList<>();
                 /// ///////////////////////////////////////////////////////////////////////////////////////////////
+                final String divider = "{{g}}|";
+                final int dividerLength = divider.length()-1;
                 for (int i = 0; i < this.style.attachment.rowCount(); i++) {
-                    boolean selected = i == selectRowFinal;
-                    currentStateDisplay.add(
-                            Graphitty.string(" ".repeat(this.style.leftMargin) +
-                                    (selected ? this.style.pointer : " ".repeat(Graphitty.viewLength(this.style.pointer))) + "{{X}}" +
-                                    // (selected ? "{{[w]&y}}" : "") +  
-                                    this.style.attachment.rowString(i)));
+                    boolean selectedRow = i == selectRow;
+                    final StringBuilder current = new StringBuilder();
+                    current.append(" ".repeat(this.style.leftMargin));
+                    if (selectedRow) {
+                        final String currentRow = this.style.attachment.rowString(i);
+                        int pointer = 0;
+                        int counter = 0;
+                        for (int j = 0; j < currentRow.length(); j++) {
+                            if (currentRow.substring(j).startsWith(divider))
+                                pointer++;
+                            if (pointer == selectCol + 1)
+                                break;
+                            counter++;
+                        }
+                        if (counter < currentRow.length() - dividerLength) {
+                            current.append(currentRow, 0, counter + dividerLength);
+                            current.append(this.style.pointer);
+                            current.append(currentRow, counter + dividerLength+1, currentRow.length());
+                        } else {
+                            current.append(this.style.attachment.rowString(i));
+                        }
+                    } else {
+                        current.append(this.style.attachment.rowString(i));
+                    }
+                    currentStateDisplay.add(Graphitty.string(current.toString()));
                 }
+
                 /// ////////////////////////////////////////////////////////////////////////////////////////////////
                 this.display.updateAnsi(currentStateDisplay, 0);
                 final Operation op = bindingReader.readBinding(keyMap);
@@ -130,7 +149,8 @@ public class Selector extends AbstractWidget<Selector> {
                 } else if (null != this.onBrowse)
                     this.onBrowse.accept(this, selectRow);
             }
-        } catch (final Exception e) {
+        } catch (
+                final Exception e) {
             e.printStackTrace();
         }
     }

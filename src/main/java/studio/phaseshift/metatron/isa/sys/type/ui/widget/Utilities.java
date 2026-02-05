@@ -37,7 +37,10 @@ public class Utilities {
     public static final CharSequence esc_key = "\u001b";
     public static final CharSequence tab_key = "\t";
     public static final CharSequence enter_key = "\r";
-
+    public static final String up_key = "{{^1}}";
+    public static final String down_key = "{{v1}}";
+    public static final CharSequence left_key = "\u2190";
+    public static final CharSequence right_key = "\02192";
     public static int maxWidth(final List<String> strings) {
         return strings.stream().flatMap(s -> Arrays.stream(s.split("\n"))).map(Highlighter::visualLength).max(Integer::compareTo).orElse(0);
     }

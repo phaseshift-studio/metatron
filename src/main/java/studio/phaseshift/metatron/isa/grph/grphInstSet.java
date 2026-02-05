@@ -18,7 +18,11 @@
 
 package studio.phaseshift.metatron.isa.grph;
 
+import org.apache.tinkerpop.gremlin.jsr223.CachedGremlinScriptEngineManager;
+import org.apache.tinkerpop.gremlin.jsr223.GremlinLangScriptEngineFactory;
+import org.apache.tinkerpop.gremlin.jsr223.GremlinScriptEngine;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.grph.space.tp3.tp3Space;
 import studio.phaseshift.metatron.isa.grph.type.Edge;
 import studio.phaseshift.metatron.isa.grph.type.Elmt;
 import studio.phaseshift.metatron.isa.grph.type.Vrtx;
@@ -26,15 +30,23 @@ import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.m.type.Uri;
 import studio.phaseshift.metatron.isa.m.type.impl.MInstSet;
+import studio.phaseshift.metatron.isa.m.type.impl.MObjFactory;
 
 import java.util.*;
 
+import static studio.phaseshift.metatron.furi.fURI.ALL;
+import static studio.phaseshift.metatron.isa.grph.space.grphSpace.GRPH_SPACE_TID;
 import static studio.phaseshift.metatron.isa.grph.space.grphSpace.GRPH_SPACE_TYPE;
+import static studio.phaseshift.metatron.isa.grph.space.tp3.tp3Space.TP3_SPACE_TID;
 import static studio.phaseshift.metatron.isa.grph.space.tp3.tp3Space.TP3_SPACE_TYPE;
 import static studio.phaseshift.metatron.isa.grph.type.Edge.EdgeType.EDGE_TYPE;
 import static studio.phaseshift.metatron.isa.grph.type.Elmt.ElmtType.ELMT_TYPE;
 import static studio.phaseshift.metatron.isa.grph.type.Vrtx.VrtxType.VRTX_TYPE;
 import static studio.phaseshift.metatron.isa.m.mInstSet.MTRON_TID;
+import static studio.phaseshift.metatron.isa.m.type.Str.STR_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
+import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /*
@@ -60,6 +72,8 @@ public class grphInstSet extends MInstSet {
     public static final fURI VALUES_INST_TID = GRPH_INST_TID.extend("values");
     public static final fURI LABEL_INST_TID = GRPH_INST_TID.extend("label");
     public static final fURI PROPERTIES_INST_TID = GRPH_INST_TID.extend("properties");
+    //
+    public static final fURI GREMLIN_INST_TID = GRPH_INST_TID.extend("gremlin");
 
     public static final Uri OUT = uri("OUT");
     public static final Uri IN = uri("IN");
@@ -91,10 +105,10 @@ public class grphInstSet extends MInstSet {
     @Override
     public Set<Inst> insts() {
         final List<Inst> insts = new ArrayList<>();
-        // insts.addAll(grphSpaceElmtType.insts());
         insts.addAll(Elmt.ElmtType.insts());
         insts.addAll(Vrtx.VrtxType.insts());
         insts.addAll(Edge.EdgeType.insts());
+        insts.addAll(tp3Space.TP3SpaceType.insts());
         return new LinkedHashSet<>(insts);
     }
 }

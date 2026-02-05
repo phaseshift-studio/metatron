@@ -62,7 +62,13 @@ public class Profile extends AbstractWidget<Profile> {
     public String toString() {
         return this.format();
     }
-    
+
+    @Override
+    public int columnCount() {
+        return this.instTable.columnCount();
+    }
+
+    @Override
     public String format() {
         return this.instTable.format();
     }
