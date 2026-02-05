@@ -211,6 +211,10 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
         return this.apply(noobj());
     }
 
+    default boolean fastMatch(final Obj rhs) {
+        return rhs.tid().isGeneric() || this.tid().matches(rhs.tid());
+    }
+    
     default boolean matches(final Obj rhs) {
         if (Obj.Helper.isAuto(rhs))
             return true;

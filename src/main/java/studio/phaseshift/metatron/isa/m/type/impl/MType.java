@@ -40,7 +40,9 @@ public class MType extends MObj implements Type {
         if (!tid.hasPattern() && !BASE_TYPES.contains(tid.basePath()) && !tid.isGeneric() && Router.loaded()) {
             final Obj obj = Router.global().read(tid);
             if (obj.isType())
-                return obj.c(tid.cV()).as();
+                return tid.cV().equals(obj.c()) ?
+                        obj.asType() : // type already exists (don't create a new coefficient type)
+                        new MType(Tuple.Pair.with(obj.asType().predicate(), obj.asType().constructor()), tid, null); // coefficient specific type doesn't exist, create it
         }
         return new MType(Tuple.Pair.with(null, null), tid, null);
         

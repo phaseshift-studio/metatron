@@ -56,7 +56,7 @@ public class tp3Space extends grphSpace<Graph> {
             .vid(TP3_SPACE_TID)
             .constructor(
                     instC(mInstSet.INST_TID.dom(ALL.maybe()).rng(TP3_SPACE_TID),
-                            lst(isa_(GRPH_CONFIG).else_(failure_(str("illegal tp3 config"))).tryToInst()),
+                            lst(isa_(GRPH_CONFIG).else_(failure_(str("malformed tp3 config"))).tryToInst()),
                             (lhs, inst) -> {
                                 if (inst.arg(0).isFail())
                                     throw inst.arg(0).asFail().asException();
@@ -69,17 +69,17 @@ public class tp3Space extends grphSpace<Graph> {
     protected final String edgePrefix;
 
     public static tp3Space of(final Rec config, final fURI vid) {
-        Router.global().logger().info("tp3 space config: %s", config);
+        Router.global().logger().debug("tp3 space config: %s", config);
         final Graph graph = TinkerFactory.createModern();
         return new tp3Space(graph, config.jvm(), vid);
     }
 
     protected tp3Space(final Graph graph, final Map<Obj, Obj> config, final fURI vid) {
         super(graph, config, TP3_SPACE_TID, vid);
-        LOG.info("tp3 space: %s", this);
+        LOG.debug("tp3 space: %s", this);
         this.vertexPrefix = this.pattern.retractPattern().extend("V/").toString();
         this.edgePrefix = this.pattern.retractPattern().extend("E/").toString();
-        LOG.info("tp3 prefixes: %s %s", this.vertexPrefix, this.edgePrefix);
+        LOG.debug("tp3 prefixes: %s %s", this.vertexPrefix, this.edgePrefix);
 
     }
 
@@ -90,18 +90,18 @@ public class tp3Space extends grphSpace<Graph> {
             final String suffix = vidString.replaceFirst(this.vertexPrefix, "");
             LOG.info("reading vertices %s => %s", vid, suffix);
             if (suffix.equals("+") || suffix.equals("#"))
-                return objs(IteratorUtil.stream(this.sjvm.vertices()).map(VertexMap::new).map(VertexMap::selfRec));
+                return objs(IteratorUtil.stream(this.sjvm.vertices()).map(VertexMap::vrtxRec));
             final Long id = Long.valueOf(vidString.replaceFirst(this.vertexPrefix, ""));
             LOG.debug("reading vertex %s => %s", vid, id);
-            return objs(IteratorUtil.stream(this.sjvm.vertices(id)).map(VertexMap::new).map(VertexMap::selfRec));
+            return objs(IteratorUtil.stream(this.sjvm.vertices(id)).map(VertexMap::vrtxRec));
         } else if (vidString.startsWith(this.edgePrefix)) {
             final String suffix = vidString.replaceFirst(this.edgePrefix, "");
             LOG.info("reading edges %s => %s", vid, suffix);
             if (suffix.equals("+") || suffix.equals("#"))
-                return objs(IteratorUtil.stream(this.sjvm.edges()).map(EdgeMap::new).map(EdgeMap::selfRec));
+                return objs(IteratorUtil.stream(this.sjvm.edges()).map(EdgeMap::edgeRec));
             final Long id = Long.valueOf(vidString.replaceFirst(this.edgePrefix, ""));
             LOG.debug("reading edge %s => %s", vid, id);
-            return objs(IteratorUtil.stream(this.sjvm.edges(id)).map(EdgeMap::new).map(EdgeMap::selfRec));
+            return objs(IteratorUtil.stream(this.sjvm.edges(id)).map(EdgeMap::edgeRec));
         } else {
             throw MTronException.of("unknown tp3 vid: %s", vid);
         }

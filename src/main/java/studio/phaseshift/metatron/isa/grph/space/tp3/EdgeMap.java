@@ -22,12 +22,8 @@ import org.apache.tinkerpop.gremlin.structure.Edge;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
-import studio.phaseshift.metatron.isa.m.type.Uri;
 
-import java.util.LinkedHashSet;
 import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.isa.grph.grphInstSet.*;
@@ -56,7 +52,7 @@ public class EdgeMap extends ElementMap {
             return auto_from_(uri("/g/V/" + this.getBase().inVertex().id().toString()), vRec(this.getBase().inVertex())).tryToInst();
         if (key.equals(OUT))
             return auto_from_(uri("/g/V/" + this.getBase().outVertex().id().toString()), vRec(this.getBase().outVertex())).tryToInst();
-        if(key.equals(LABEL))
+        if (key.equals(LABEL))
             return uri(this.getBase().label());
         else
             return super.get(key);
@@ -77,8 +73,13 @@ public class EdgeMap extends ElementMap {
 
     @Override
     public Rec selfRec() {
-        return rec((Map) this, EDGE_TID,null).self(this, EDGE_TID, f("/g/E/" + this.getBase().id().toString()));
+        return rec((Map) this, EDGE_TID, null).self(this, EDGE_TID, f("/g/E/" + this.getBase().id().toString()));
     }
+
+    public static Rec edgeRec(final Edge edge) {
+        return new EdgeMap(edge).selfRec();
+    }
+
 
     public static Inst eRec(final Edge base) {
         return new EdgeMap.LazyAutoInst(new EdgeMap(base));

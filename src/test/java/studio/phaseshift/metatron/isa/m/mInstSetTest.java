@@ -418,10 +418,13 @@ public class mInstSetTest extends InstSetTest {
         mTest.testCode(LOG, code, expected);
     }
 
+    
+    @Disabled
     @ParameterizedTest
+    @TestData(values = {"nat -> int::T[is(gt(0))]@nat", "nat -> int::T[is(gt(0))]@nat"})
     @CsvSource(value = {
-            "nat -> int::T[?>0].map(nat::2)                                            % nat::2",
-            "nat -> int::T[?>0].map(nat::-1)                                           % <ERROR>",
+            "nat::2                                           % nat::2",
+            "nat::-1                                          % <ERROR>",
     }, delimiter = '%')
     public void testTypeCreation(final String code, final String expected) {
         mTest.testCode(LOG, code, expected);

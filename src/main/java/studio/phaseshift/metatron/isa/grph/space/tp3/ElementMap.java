@@ -107,7 +107,6 @@ public class ElementMap extends AbstractMap<Uri, Obj> {
         private final ElementMap map;
 
         public LazyAutoInst(final ElementMap map) {
-
             super(Tuple.Triplet.with(lst(List.of()), null, noobj()), INST_TID, fURI.fnull);
             this.map = map;
         }

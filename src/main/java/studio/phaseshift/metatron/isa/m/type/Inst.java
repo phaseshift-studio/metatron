@@ -357,7 +357,11 @@ public interface Inst extends Call {
             }
             if (BootLoader.TYPE_CHECK && !rhs.isType() && !rhs.isFail() && !lhs.isCaughtFail() && !rhs.matches(cinst.rng()))
                 rhs = mexcept("inst resolution failure: %s", cinst)
-                        .cause(mexcept("rhs does not match inst range: %s => %s [%s]", rhs, cinst.rng(), cinst))
+                        .cause(mexcept("rhs does not match inst range:" +
+                                "\n\t[rhs]      %s" +
+                                "\n\t[rhs type] %s" +
+                                "\n\t[inst]     %s" +
+                                "\n\t[inst rng] %s", rhs, rhs.type(), cinst, cinst.rng()))
                         .asFail();
         } else {
             rhs = clhs; // propagate fail through inst unless it's a catch inst

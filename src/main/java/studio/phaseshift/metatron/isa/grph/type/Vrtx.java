@@ -25,7 +25,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.BiFunction;
 
-import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.isa.grph.grphInstSet.*;
 import static studio.phaseshift.metatron.isa.m.mInstSet.URI_TID;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
@@ -45,9 +44,9 @@ public interface Vrtx extends Elmt {
         public static final Type VRTX_TYPE = Type.Builder.build()
                 .tid(ELMT_TID)
                 .vid(VRTX_TID)
-                .predicate(isa_(rec(
-                        OUT, T(EDGE_TID.maybeSome()),
-                        IN, T(EDGE_TID.maybeSome())))).create();
+                .create();//.predicate(isa_(rec(
+                       // OUT, T(EDGE_TID.maybeSome()),
+                       // IN, T(EDGE_TID.maybeSome())))).create();
 
         private static BiFunction<Obj, Inst, Obj> V_E_FUNCTION(final Uri direction) {
             return (lhs, inst) -> objs(lhs.asRec().at(direction).asRec().elements()/*.filter(r -> r.first().uriValue().matches(inst.arg(0).uriValue()))*/.map(Rel::second));
@@ -61,13 +60,13 @@ public interface Vrtx extends Elmt {
 
             return new LinkedHashSet<>(List.of(
                     instC(OUTE_INST_TID.dom(VRTX_TID).rng(EDGE_TID.maybeSome()), lst(T(URI_TID.maybeSome())), V_E_FUNCTION(OUT)),
-                    instC(INE_INST_TID.dom(VRTX_TID).rng(ALL.maybeSome()), lst(T(URI_TID.maybeSome())), V_E_FUNCTION(IN)),
-                    instC(BOTHE_INST_TID.dom(VRTX_TID).rng(ALL.maybeSome()), lst(), (lhs, inst) -> objs(
+                    instC(INE_INST_TID.dom(VRTX_TID).rng(EDGE_TID.maybeSome()), lst(T(URI_TID.maybeSome())), V_E_FUNCTION(IN)),
+                    instC(BOTHE_INST_TID.dom(VRTX_TID).rng(EDGE_TID.maybeSome()), lst(), (lhs, inst) -> objs(
                             V_E_FUNCTION(OUT).apply(lhs, inst),
                             V_E_FUNCTION(IN).apply(lhs, inst))),
                     instC(OUT_INST_TID.dom(VRTX_TID).rng(VRTX_TID.maybeSome()), lst(), V_V_FUNCTION(OUT, IN)),
-                    instC(IN_INST_TID.dom(VRTX_TID).rng(ALL.maybeSome()), lst(), V_V_FUNCTION(IN, OUT)),
-                    instC(BOTH_INST_TID.dom(VRTX_TID).rng(ALL.maybeSome()), lst(), (lhs, inst) -> objs(
+                    instC(IN_INST_TID.dom(VRTX_TID).rng(VRTX_TID.maybeSome()), lst(), V_V_FUNCTION(IN, OUT)),
+                    instC(BOTH_INST_TID.dom(VRTX_TID).rng(VRTX_TID.maybeSome()), lst(), (lhs, inst) -> objs(
                             V_V_FUNCTION(OUT, IN).apply(lhs, inst),
                             V_V_FUNCTION(IN, OUT).apply(lhs, inst)))
             ));

@@ -92,6 +92,10 @@ public class VertexMap extends ElementMap {
         return rec((Map) this, VRTX_TID,null).self(this, VRTX_TID, f("/g/V/" + this.getBase().id().toString()));
     }
     
+    public static Rec vrtxRec(final Vertex vertex) {
+        return new VertexMap(vertex).selfRec();
+    }
+    
     public static Inst vRec(final Vertex base) {
         return new LazyAutoInst(new VertexMap(base));
     }

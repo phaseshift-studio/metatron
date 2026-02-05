@@ -280,6 +280,7 @@ public class TypeTest extends mTest {
         Obj b = mParser.m_obj().parse(typeB).get();
         LOG.trace("testing %s %s %s", a, matches ? "{{g}}is a{{/g}}" : "{{r}}is not a{{/r}}", b);
         assertEquals(matches, a.matches(b));
+        //assertEquals(matches, a.fastMatch(b));
     }
 
     @ParameterizedTest
