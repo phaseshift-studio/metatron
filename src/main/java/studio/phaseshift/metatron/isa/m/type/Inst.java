@@ -347,7 +347,14 @@ public interface Inst extends Call {
                     rhs = Objs.trySingleton(FutureObj.resolveFuture(cinst.f().apply(clhs, cinst)));
                     Graphitty.log(cinst).trace("%s (lhs) => %s (inst) => %s (rhs) evaluated successfully", clhs, cinst, rhs);
                 } catch (final Exception e) {
-                    rhs = fail(e, mexcept("apply failure: %s => %s [stack=>%s]", clhs, cinst, lst(new ArrayList<>(Router.stack().sjvm()))).asFail());
+                    rhs = fail(e, mexcept("apply failure:" +
+                            "\n\t[lhs]   | %s" +
+                            "\n\t \\_type | %s" +
+                            "\n\t  \\_p   | %s" +
+                            "\n\t[inst]  | %s" +
+                            "\n\t \\_dom  | %s" +
+                            "\n\t \\_args | %s" +
+                            "\n\t[stack] | %s", clhs, clhs.type().tid(), clhs.type().hasPredicate() ? clhs.type().predicate() : noobj(), cinst, cinst.dom(), cinst.args(), lst(new ArrayList<>(Router.stack().sjvm()))).asFail());
                     // e.printStackTrace();
                 } finally {
                     Router.stack().pop();
@@ -358,10 +365,10 @@ public interface Inst extends Call {
             if (BootLoader.TYPE_CHECK && !rhs.isType() && !rhs.isFail() && !lhs.isCaughtFail() && !rhs.matches(cinst.rng()))
                 rhs = mexcept("inst resolution failure: %s", cinst)
                         .cause(mexcept("rhs does not match inst range:" +
-                                "\n\t[rhs]      %s" +
-                                "\n\t[rhs type] %s" +
-                                "\n\t[inst]     %s" +
-                                "\n\t[inst rng] %s", rhs, rhs.type(), cinst, cinst.rng()))
+                                "\n\t[rhs]    %s" +
+                                "\n\t  [type] %s" +
+                                "\n\t[inst]   %s" +
+                                "\n\t  [rng]  %s", rhs, rhs.type(), cinst, cinst.rng()))
                         .asFail();
         } else {
             rhs = clhs; // propagate fail through inst unless it's a catch inst

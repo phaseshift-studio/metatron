@@ -52,6 +52,7 @@ color blue "=([a-z]|[0-9]|\.|_|-|/)+"
 icolor blue "([a-z]|[0-9]|/)+::"
 color green "=" "::"
 ### fail
+color cyan "\\_[a-z|A-Z]+"
 color red "([a-z]|[0-9]|/)*fail::"
 ### auto resolve
 color yellow "!\*" "\{<j>\}"

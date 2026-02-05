@@ -44,6 +44,22 @@ public interface Poly<P extends Poly<P, J>, J> extends Obj {
     BiFunction<Poly<?, ?>, Object, Poly<?, ?>> MUTABLE = (poly, jvm) -> {
         Obj.Helper.objCheckAndSave(poly, jvm, poly.tid(), poly.vid());
         return poly;
+        /*
+          if (poly.isRec()) {
+            final Map<Obj, Obj> updatedMap = ((Map<Obj, Obj>) jvm);
+            final Map<Obj, Obj> originalMap = poly.asRec().jvm();
+            originalMap.entrySet().stream().toList().forEach(e -> {
+                if (updatedMap.containsKey(e.getKey()))
+                    originalMap.put(e.getKey(), updatedMap.get(e.getKey()));
+                else
+                    originalMap.remove(e.getKey());
+            });
+            originalMap.putAll(updatedMap);
+            Obj.Helper.objCheckAndSave(poly, poly.jvm(), poly.tid(), poly.vid(), true);
+        } else
+            Obj.Helper.objCheckAndSave(poly, jvm, poly.tid(), poly.vid());
+        return poly;
+         */
     };
 
     BiFunction<Poly<?, ?>, Object, Poly<?, ?>> IMMUTABLE = (poly, jvm) -> poly.clone(jvm, poly.tid(), poly.vid());
@@ -63,7 +79,7 @@ public interface Poly<P extends Poly<P, J>, J> extends Obj {
     }
 
     P at(final Obj key, final Obj value, final BiFunction<Poly<?, ?>, Object, Poly<?, ?>> operation);
-    
+
     boolean has(final Obj key);
 
     default boolean has(final String key) {
@@ -185,6 +201,9 @@ public interface Poly<P extends Poly<P, J>, J> extends Obj {
 
         public static Obj updateRecRecursion(final Rec lhs, final Rec rhs, BiFunction<Poly<?, ?>, Object, Poly<?, ?>> operation) {
             final Map<Obj, Obj> result = Poly.Helper.selectRecRecursionRaw(lhs.asRec(), rhs.asRec(), (a, b) -> updatePolyRecursion(a.as(), b.as(), operation));
+           /* if(operation == MUTABLE) {
+                result.forEach((k, v) -> lhs.recValue().compute(k.c(cInt::one), (a, b) -> v));
+            } else */
             lhs.elements().forEach(kv -> result.compute(kv.first().c(cInt::one), (a, b) -> null == b ? kv.second() : b));
             return operation.apply(lhs, result);
         }

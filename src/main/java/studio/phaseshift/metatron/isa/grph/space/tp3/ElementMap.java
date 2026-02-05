@@ -30,7 +30,6 @@ import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Uri;
 import studio.phaseshift.metatron.isa.m.type.impl.MInst;
 import studio.phaseshift.metatron.isa.m.type.impl.MObjFactory;
-import studio.phaseshift.metatron.isa.sys.type.Router;
 import studio.phaseshift.metatron.isa.sys.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.sys.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.util.IteratorUtil;
@@ -58,7 +57,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 public class ElementMap extends AbstractMap<Uri, Obj> {
 
     protected static final GraphittyLogger LOG = Graphitty.log(ElementMap.class);
-    
+
     protected static final ObjSerializer<String> SERIALIZER = new ObjCleanStringSerializer();
     protected Element base;
 
@@ -89,14 +88,24 @@ public class ElementMap extends AbstractMap<Uri, Obj> {
             this.base.property(key.uriValue().toString(), value.jvm());
         } else {
             LOG.info("adding mtron-native property %s to element %s", key, value);
-            this.base.property(":" + key.uriValue().toString(), SERIALIZER.write(value));
+            String keyString = key.uriValue().toString();
+            while (keyString.startsWith(":"))
+                keyString = keyString.substring(1);
+            this.base.property(":" + keyString, SERIALIZER.write(value));
         }
         return property.isPresent() ? FACTORY.create(property.value()) : null;
     }
 
     @Override
     public Set<Entry<Uri, Obj>> entrySet() {
-        return IteratorUtil.stream(this.base.properties()).map(p -> (Property<Object>) p).map(p -> new SimpleEntry<>(uri(p.key()), MObjFactory.of().create(p.value()))).collect(Collectors.toSet());
+        return IteratorUtil.stream(this.base.properties())
+                .map(p -> (Property<Object>) p)
+                .map(p -> {
+                    final Uri key = uri(p.key());
+                    final Obj value = key.toString().startsWith(":") ? MObjFactory.of().create(SERIALIZER.read(p.value().toString())) : MObjFactory.of().create(p.value());
+                    return new SimpleEntry<>(key, value);
+                })
+                .collect(Collectors.toSet());
     }
 
     @Override

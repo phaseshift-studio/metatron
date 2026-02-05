@@ -30,6 +30,7 @@ import org.apache.tinkerpop.gremlin.tinkergraph.structure.TinkerFactory;
 import org.apache.tinkerpop.gremlin.tinkergraph.structure.TinkerGraph;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.grph.space.grphSpace;
+import studio.phaseshift.metatron.isa.grph.space.tp3.schema.modernSchema;
 import studio.phaseshift.metatron.isa.m.mInstSet;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.MObjFactory;
@@ -92,9 +93,10 @@ public class tp3Space extends grphSpace<Graph> {
         if (config.has(LOAD)) {
             final fURI dataset = config.at(LOAD).uriValue();
             Graphitty.log(tp3Space.class).info("translating %s into grph space", config.at(LOAD));
-            if (dataset.equals(f("modern")))
+            if (dataset.equals(f("modern"))) {
+                modernSchema.create();
                 TinkerFactory.generateModern(graph);
-            else if (dataset.equals(f("grateful")))
+            } else if (dataset.equals(f("grateful")))
                 TinkerFactory.generateGratefulDead(graph);
             else if (dataset.equals(f("airroutes")))
                 TinkerFactory.generateAirRoutes(graph);
@@ -163,7 +165,7 @@ public class tp3Space extends grphSpace<Graph> {
                 final String suffix = vidString.replaceFirst(this.vertexPrefix, "");
                 final Long id = Long.valueOf(suffix);
                 try {
-                    final Vertex vertex = IteratorUtil.stream(this.sjvm.vertices(id)).findFirst().orElseGet(() -> this.sjvm.addVertex(T.label, obj.tid().toString(), T.id, id));
+                    final Vertex vertex = IteratorUtil.stream(this.sjvm.vertices(id)).findFirst().orElseGet(() -> this.sjvm.addVertex(T.label, obj.tid().basePath().toString(), T.id, id));
                     LOG.info("writing vertex %s => %s", vid, vertex);
                     obj.asRec().elements().forEach(e -> vertex.property(e.jvm().get0().uriValue().toString(), MObjFactory.of().create(e.jvm().get1()).jvm()));
                     return VertexMap.vrtxRec(vertex);

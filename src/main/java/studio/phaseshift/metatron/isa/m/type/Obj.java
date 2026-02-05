@@ -642,17 +642,25 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
         }
 
         public static void objCheckAndSave(final Obj obj) {
-            if (!obj.isInstSet() && !obj.isNoObj() && !obj.isType() && !obj.matches(obj.type()))
-                throw MTronException.of("%s is not a %s".formatted(obj, obj.type()));
+            if (!obj.isInstSet() && !obj.isNoObj() && !obj.isType() && !obj.matches(obj.type())) {
+                if (obj.isPoly())
+                    throw MTronException.of("%s\n\t%s\n%s".formatted(obj, "is not a", obj.type()));
+                else
+                    throw MTronException.of("%s is not a %s".formatted(obj, obj.type()));
+            }
             if (null != obj.vid())
                 Router.writeToSpace(obj.vid(), obj);
         }
 
         public static void objCheckAndSave(final Obj obj, final Object jvm, final fURI tid, final fURI vid) {
+            objCheckAndSave(obj, jvm, tid, vid, false);
+        }
+
+        public static void objCheckAndSave(final Obj obj, final Object jvm, final fURI tid, final fURI vid, final boolean forceSave) {
             final Object oldJVM = obj.jvm();
             final fURI oldTID = obj.tid();
             final fURI oldVID = obj.vid();
-            final boolean save = !Objects.equals(obj.vid(), vid) || !Objects.equals(obj.tid().basePath(), tid.basePath()) || !Objects.equals(obj.jvm(), jvm);
+            final boolean save = forceSave || (!Objects.equals(obj.vid(), vid) || !Objects.equals(obj.tid().basePath(), tid.basePath()) || !Objects.equals(obj.jvm(), jvm));
             obj.self(jvm, tid, vid);
             try {
                 if (save)
