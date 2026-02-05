@@ -22,6 +22,7 @@ import org.apache.commons.configuration2.ConfigurationMap;
 import org.apache.tinkerpop.gremlin.jsr223.DefaultGremlinScriptEngineManager;
 import org.apache.tinkerpop.gremlin.jsr223.GremlinLangScriptEngineFactory;
 import org.apache.tinkerpop.gremlin.jsr223.GremlinScriptEngine;
+import org.apache.tinkerpop.gremlin.structure.Edge;
 import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.apache.tinkerpop.gremlin.structure.T;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
@@ -30,10 +31,7 @@ import org.apache.tinkerpop.gremlin.tinkergraph.structure.TinkerGraph;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.grph.space.grphSpace;
 import studio.phaseshift.metatron.isa.m.mInstSet;
-import studio.phaseshift.metatron.isa.m.type.Inst;
-import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.m.type.Rec;
-import studio.phaseshift.metatron.isa.m.type.Type;
+import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.MObjFactory;
 import studio.phaseshift.metatron.isa.sys.type.Router;
 import studio.phaseshift.metatron.isa.sys.type.ui.graphitty.Graphitty;
@@ -65,6 +63,10 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public class tp3Space extends grphSpace<Graph> {
+
+    protected static final ObjFactory FACTORY = MObjFactory.of()
+            .addExtension(Vertex.class, v -> VertexMap.vrtxRec(v))
+            .addExtension(Edge.class, e -> EdgeMap.edgeRec(e));
 
     public static final fURI TP3_SPACE_TID = GRPH_ISA_TID.extend("space").extend("tp3");
     public static final Type TP3_SPACE_TYPE = Type.Builder.build()
@@ -114,8 +116,8 @@ public class tp3Space extends grphSpace<Graph> {
                 LOG.warn("unable to encode %s:%s: %s", key, value, e);
             }
         });
-        this.put(uri("tp3/config"), tp3Config, MUTABLE);
-        this.put(uri("tp3/id"), rec(
+        this.put(uri("native/config"), tp3Config, MUTABLE);
+        this.put(uri("native/id"), rec(
                 uri("vertex"), uri(this.sjvm.vertices().next().id().getClass().getSimpleName()),
                 uri("edge"), uri(this.sjvm.edges().next().id().getClass().getSimpleName())), MUTABLE);
         this.vertexPrefix = this.pattern.retractPattern().extend("V/").toString();
@@ -162,9 +164,9 @@ public class tp3Space extends grphSpace<Graph> {
                 final Long id = Long.valueOf(suffix);
                 try {
                     final Vertex vertex = IteratorUtil.stream(this.sjvm.vertices(id)).findFirst().orElseGet(() -> this.sjvm.addVertex(T.label, obj.tid().toString(), T.id, id));
-                    Router.global().logger().info("writing vertex %s => %s", vid, vertex);
+                    LOG.info("writing vertex %s => %s", vid, vertex);
                     obj.asRec().elements().forEach(e -> vertex.property(e.jvm().get0().uriValue().toString(), MObjFactory.of().create(e.jvm().get1()).jvm()));
-                    return new VertexMap(vertex).selfRec();
+                    return VertexMap.vrtxRec(vertex);
                 } catch (final Exception e) {
                     return obj;
                 }

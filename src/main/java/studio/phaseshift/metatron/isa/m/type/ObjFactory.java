@@ -19,6 +19,8 @@
 package studio.phaseshift.metatron.isa.m.type;
 
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.sys.type.ui.graphitty.Graphitty;
+import studio.phaseshift.metatron.isa.sys.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.lang.reflect.Modifier;
@@ -27,12 +29,16 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.function.Function;
 
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 public interface ObjFactory {
+
+    final GraphittyLogger LOG = Graphitty.log(ObjFactory.class);
+
     <O extends Obj> O create(final Object value, final fURI tid, final fURI vid);
 
     <O extends Obj> O create(final Object value, final fURI tid, final fURI vid, final Class<O> objClass);
@@ -47,6 +53,11 @@ public interface ObjFactory {
         } catch (final Exception e) {
             return fail(e);
         }
+    }
+
+    default <JVM, O extends Obj> ObjFactory addExtension(final Class<JVM> objClass, final Function<JVM, O> creator) {
+        LOG.warn("extensions not supported for %s", this.getClass().getSimpleName());
+        return this;
     }
 
     default <O extends Obj> O create(final Object value, final Class<O> objClass) {

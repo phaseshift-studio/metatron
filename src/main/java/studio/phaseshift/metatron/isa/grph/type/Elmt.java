@@ -38,7 +38,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public interface Elmt extends Rec {
-    
+
     public static class ElmtType {
 
         public static final Type ELMT_TYPE = Type.Builder.build()
@@ -52,8 +52,9 @@ public interface Elmt extends Rec {
         public static Set<Inst> insts() {
 
             return new LinkedHashSet<>(List.of(
+                    instC(LABEL_INST_TID.dom(ELMT_TID).rng(URI_TID), lst(), (lhs, inst) -> lhs.asRec().at(LABEL).orElse(uri(lhs.tid()))),
                     instC(VALUES_INST_TID.dom(ELMT_TID).rng(ALL.maybeSome()), lst(T(URI_TID.maybeSome())), (lhs, inst) -> lhs.asRec().at(inst.arg(0).isNoObj() ? uri("+") : inst.arg(0).asUri()))
-                   // instC(VALUES_INST_TID.dom(ELMT_TID).rng(ALL.maybeSome()), lst(T(URI_TID.maybeSome())), PROPERTY_FUNCTION(uri("+")))
+                    // instC(VALUES_INST_TID.dom(ELMT_TID).rng(ALL.maybeSome()), lst(T(URI_TID.maybeSome())), PROPERTY_FUNCTION(uri("+")))
             ));
         }
     }

@@ -244,11 +244,12 @@ public class ObjCleanStringSerializer implements ObjSerializer<String> {
         if (lst.isEmpty()) {
             sb.append("[,]");
         } else {
-            boolean nested =
-                    //lst.elements().anyMatch(Obj::isPoly) ||
-                    lst.jvm().stream().map(this::write).map(String::length).reduce(0, Integer::sum) > (50 - depth);
-            sb.append("[");
-            final AtomicBoolean first = new AtomicBoolean(true);
+            boolean nested = lst.elements().anyMatch(Obj::isPoly) ||
+                    lst.jvm().size() > 4;
+            /* lst.jvm().stream().map(this::write).map(String::length).reduce(0, Integer::sum) > (50 - depth);*/
+            final boolean isBaseType = lst.type().isBaseType();
+            sb.append("[").append(nested && !isBaseType ? "\n" : "");
+            final AtomicBoolean first = new AtomicBoolean(isBaseType);
             lst.jvm().forEach(v -> {
                 if (nested && !first.getAndSet(false))
                     sb.append(" ".repeat(depth + 2));
@@ -269,10 +270,12 @@ public class ObjCleanStringSerializer implements ObjSerializer<String> {
         } else {
             boolean nested =
                     rec.jvm().values().stream().anyMatch(Obj::isPoly) ||
-                            rec.jvm().values().stream().filter(o -> !o.isPoly()).map(this::write).map(String::length).reduce(0, Integer::sum) > (75 - depth);
-            int maxKeyLength = nested ? rec.jvm().keySet().stream().map(this::write).map(String::length).reduce(0, Integer::max) : 0;
-            sb.append("[");//.append(nested ? "\n" : "");
-            AtomicBoolean first = new AtomicBoolean(true);
+                            rec.jvm().size() > 4;
+            /*rec.jvm().values().stream().filter(o -> !o.isPoly()).map(this::write).map(String::length).reduce(0, Integer::sum) > (75 - depth);*/
+            final int maxKeyLength = nested ? rec.jvm().keySet().stream().map(this::write).map(String::length).reduce(0, Integer::max) : 0;
+            final boolean isBaseType = rec.type().isBaseType();
+            final AtomicBoolean first = new AtomicBoolean(isBaseType);
+            sb.append("[").append(nested && !isBaseType ? "\n" : "");
             rec.jvm().forEach((k, v) -> {
                 int indent = nested ? (first.getAndSet(false) ?
                         (depth * 2) - (padding + 4) :

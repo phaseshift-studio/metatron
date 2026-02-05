@@ -24,6 +24,7 @@ import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
 
 import java.util.*;
+import java.util.function.Function;
 
 import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
@@ -43,6 +44,13 @@ public class MObjFactory implements ObjFactory {
 
     private static final MObjFactory SINGLETON = new MObjFactory();
     private final boolean allowReflection = true;
+
+    private final Map<Class<?>, Function> extensions = new HashMap<>();
+
+    public <JVM, O extends Obj> MObjFactory addExtension(final Class<JVM> objClass, final Function<JVM, O> creator) {
+        this.extensions.put(objClass, creator);
+        return this;
+    }
 
     protected MObjFactory() {
     }
@@ -89,10 +97,17 @@ public class MObjFactory implements ObjFactory {
             final Map<Obj, Obj> map = new LinkedHashMap<>();
             ((Map) value).forEach((k, v) -> map.put(create(k), create(v)));
             return (O) rec(map, tid, vid);
-        } else if (this.allowReflection) {
-            return (O) rec(Helper.reflectionBasedCreate(this, value), f(value.getClass().getSimpleName().toLowerCase()), vid);
-        } else
-            throw MTronException.of("provided jvm object has no corresponding obj: %s", value);
+        } else {
+            final Optional<O> optional = this.extensions.entrySet().stream()
+                    .filter(e -> e.getKey().isAssignableFrom(value.getClass()))
+                    .findFirst().map(e -> (O) e.getValue().apply(value));
+            if (optional.isPresent())
+                return optional.get();
+            else if (this.allowReflection) {
+                return (O) rec(Helper.reflectionBasedCreate(this, value), f(value.getClass().getSimpleName().toLowerCase()), vid);
+            } else
+                throw MTronException.of("provided jvm object has no corresponding obj: %s", value);
+        }
     }
 
     @Override

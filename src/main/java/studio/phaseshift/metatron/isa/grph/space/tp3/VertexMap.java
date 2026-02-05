@@ -21,11 +21,14 @@ package studio.phaseshift.metatron.isa.grph.space.tp3;
 import org.apache.tinkerpop.gremlin.structure.Direction;
 import org.apache.tinkerpop.gremlin.structure.Edge;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
+import org.apache.tinkerpop.gremlin.structure.VertexProperty;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Uri;
 import studio.phaseshift.metatron.isa.sys.type.Router;
+import studio.phaseshift.metatron.isa.sys.type.ui.graphitty.Graphitty;
+import studio.phaseshift.metatron.isa.sys.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.IteratorUtil;
 
@@ -43,6 +46,8 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public class VertexMap extends ElementMap {
+
+    protected static final GraphittyLogger LOG = Graphitty.log(VertexMap.class);
 
     public VertexMap(final Vertex base) {
         super(base);
@@ -64,14 +69,22 @@ public class VertexMap extends ElementMap {
     }
 
     @Override
-    public Obj put(final Uri key, final Obj obj) {
-        Router.global().logger().info("adding edge %s to vertex %s",key,obj);
+    public Obj put(final Uri key, final Obj value) {
+        LOG.info("putting %s => %s", key, value);
         if (key.equals(IN)) {
-           
-            final Edge edge = this.getBase().addEdge(obj.asRec().jvm().get(LABEL).uriValue().toString(), Router.global().read(obj.asRec().jvm().get(IN).asUri().toString()).asRec().<VertexMap>jvmAs().getBase());
+            LOG.info("adding incoming edge %s from vertex %s", key, value);
+            final Edge edge = this.getBase().addEdge(value.asRec().jvm().get(LABEL).uriValue().toString(), Router.global().read(value.asRec().jvm().get(IN).asUri().toString()).asRec().<VertexMap>jvmAs().getBase());
             return auto_from_(uri("/g/E/" + edge.id()), eRec(edge)).tryToInst();
+        } else if (key.equals(OUT)) {
+            LOG.info("adding outgoing edge %s to vertex %s", key, value);
+            final Edge edge = Router.global().read(value.asRec().jvm().get(OUT).asUri().toString()).asRec().<VertexMap>jvmAs().getBase().addEdge(value.asRec().jvm().get(LABEL).uriValue().toString(), this.getBase());
+            return auto_from_(uri("/g/E/" + edge.id()), eRec(edge)).tryToInst();
+        } else if (value.isLst()) {
+            LOG.info("adding list %s to vertex %s", key, value);
+            this.getBase().property(VertexProperty.Cardinality.list, key.uriValue().toString(), value.lstValue());
+            return value;
         }
-        return super.put(key, obj);
+        return super.put(key, value);
     }
 
   /*  @Override
@@ -84,18 +97,18 @@ public class VertexMap extends ElementMap {
 
     @Override
     public Rec asRec() {
-        return rec((Map) this, VRTX_TID, f("/g/V/" + this.getBase().id().toString()));
+        return rec((Map) this, f(this.getBase().label()), f("/g/V/" + this.getBase().id().toString()));
     }
 
     @Override
     public Rec selfRec() {
-        return rec((Map) this, VRTX_TID,null).self(this, VRTX_TID, f("/g/V/" + this.getBase().id().toString()));
+        return rec((Map) this, f(this.getBase().label()), null).self(this, f(this.getBase().label()), f("/g/V/" + this.getBase().id().toString()));
     }
-    
+
     public static Rec vrtxRec(final Vertex vertex) {
         return new VertexMap(vertex).selfRec();
     }
-    
+
     public static Inst vRec(final Vertex base) {
         return new LazyAutoInst(new VertexMap(base));
     }

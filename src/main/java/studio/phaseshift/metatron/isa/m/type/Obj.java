@@ -214,7 +214,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
     default boolean fastMatch(final Obj rhs) {
         return rhs.tid().isGeneric() || this.tid().matches(rhs.tid());
     }
-    
+
     default boolean matches(final Obj rhs) {
         if (Obj.Helper.isAuto(rhs))
             return true;
@@ -326,6 +326,10 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
 
     default <O extends Obj> boolean is(final Class<O> clazz) {
         return clazz.isAssignableFrom(this.getClass());
+    }
+
+    default boolean isMono() {
+        return this instanceof Mono;
     }
 
     default boolean isNoObj() {

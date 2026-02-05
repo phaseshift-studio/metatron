@@ -22,7 +22,6 @@ import org.junit.jupiter.api.Disabled;
 import studio.phaseshift.metatron.isa.SpaceTest;
 import studio.phaseshift.metatron.isa.grph.grphInstSet;
 import studio.phaseshift.metatron.isa.grph.space.tp3.tp3Space;
-import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 
 import static studio.phaseshift.metatron.Tokens.LOAD;
@@ -37,7 +36,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 @Disabled
 public class tp3SpaceTest extends SpaceTest {
     final static Rec config = rec(PATTERN, uri("/t/#"), uri(LOAD), uri("modern"));
-    
+
     public tp3SpaceTest() {
         super(() -> tp3Space.of(config, f("/sys/space/tp3")));
         grphInstSet.create();

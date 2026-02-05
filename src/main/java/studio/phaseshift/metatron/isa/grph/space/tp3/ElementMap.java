@@ -22,13 +22,17 @@ import org.apache.tinkerpop.gremlin.structure.Element;
 import org.apache.tinkerpop.gremlin.structure.Property;
 import org.apache.tinkerpop.gremlin.structure.util.ElementHelper;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.m.type.NoObj;
+import studio.phaseshift.metatron.io.serial.ObjCleanStringSerializer;
+import studio.phaseshift.metatron.io.serial.ObjSerializer;
+import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Uri;
 import studio.phaseshift.metatron.isa.m.type.impl.MInst;
 import studio.phaseshift.metatron.isa.m.type.impl.MObjFactory;
 import studio.phaseshift.metatron.isa.sys.type.Router;
+import studio.phaseshift.metatron.isa.sys.type.ui.graphitty.Graphitty;
+import studio.phaseshift.metatron.isa.sys.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.Tuple;
 
@@ -39,9 +43,8 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import static studio.phaseshift.metatron.furi.fURI.ALL;
-import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.isa.grph.grphInstSet.ELMT_TID;
-import static studio.phaseshift.metatron.isa.grph.grphInstSet.VRTX_TID;
+import static studio.phaseshift.metatron.isa.grph.space.tp3.tp3Space.FACTORY;
 import static studio.phaseshift.metatron.isa.m.mInstSet.AUTO_INST_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.INST_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
@@ -54,6 +57,9 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  */
 public class ElementMap extends AbstractMap<Uri, Obj> {
 
+    protected static final GraphittyLogger LOG = Graphitty.log(ElementMap.class);
+    
+    protected static final ObjSerializer<String> SERIALIZER = new ObjCleanStringSerializer();
     protected Element base;
 
     public ElementMap(final Element base) {
@@ -66,16 +72,26 @@ public class ElementMap extends AbstractMap<Uri, Obj> {
 
     @Override
     public Obj get(final Object key) {
-        final Property<?> property = this.base.property(((Uri)key).uriValue().toString());
-        return property.isPresent() ? MObjFactory.of().create(property.value()) : noobj();
+        Property<?> property = this.base.property(((Uri) key).uriValue().toString());
+        if (property.isPresent()) {
+            return MObjFactory.of().create(property.value());
+        } else {
+            property = this.base.property(":" + ((Uri) key).uriValue().toString());
+            return property.isPresent() ? mParser.m_obj().parse(property.value().toString()).get() : noobj();
+        }
     }
-    
+
     @Override
     public Obj put(final Uri key, final Obj value) {
-        Router.global().logger().info("adding property %s to element %s",key,value);
         final Property<?> property = this.base.property(key.uriValue().toString());
-        this.base.property(key.uriValue().toString(), value.jvm());
-        return property.isPresent() ? MObjFactory.of().create(property.value()) : value;
+        if (value.isMono()) {
+            LOG.info("adding mono property %s to element %s", key, value);
+            this.base.property(key.uriValue().toString(), value.jvm());
+        } else {
+            LOG.info("adding mtron-native property %s to element %s", key, value);
+            this.base.property(":" + key.uriValue().toString(), SERIALIZER.write(value));
+        }
+        return property.isPresent() ? FACTORY.create(property.value()) : null;
     }
 
     @Override
@@ -90,9 +106,9 @@ public class ElementMap extends AbstractMap<Uri, Obj> {
     }
 
     public Rec selfRec() {
-        return rec((Map) this, ELMT_TID,null).self(this, ELMT_TID, null);
+        return rec((Map) this, ELMT_TID, null).self(this, ELMT_TID, null);
     }
-    
+
     @Override
     public int hashCode() {
         return ElementHelper.hashCode(this.base);
@@ -136,6 +152,6 @@ public class ElementMap extends AbstractMap<Uri, Obj> {
         public int hashCode() {
             return this.getBase().hashCode();
         }
-        
+
     }
 }

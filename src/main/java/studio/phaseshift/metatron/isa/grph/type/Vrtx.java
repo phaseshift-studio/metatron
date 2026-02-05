@@ -19,19 +19,20 @@
 package studio.phaseshift.metatron.isa.grph.type;
 
 import studio.phaseshift.metatron.isa.m.type.*;
+import studio.phaseshift.metatron.isa.sys.type.Router;
 
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.function.BiFunction;
 
+import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.isa.grph.grphInstSet.*;
-import static studio.phaseshift.metatron.isa.m.mInstSet.URI_TID;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
+import static studio.phaseshift.metatron.isa.m.mInstSet.*;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
-import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 
 /*
@@ -44,12 +45,23 @@ public interface Vrtx extends Elmt {
         public static final Type VRTX_TYPE = Type.Builder.build()
                 .tid(ELMT_TID)
                 .vid(VRTX_TID)
+                /*.constructor(
+                        instC(INST_TID.dom(ALL.maybe()).rng(VRTX_TID), lst(T(REC_TID)), (lhs, inst) -> {
+                            final Obj obj = null == inst.arg(0).vid() ? noobj() : Router.readFromSpace(inst.arg(0).vid());
+                            return obj.isNoObj() ? inst.arg(0) : obj;
+                        }))*/
                 .create();//.predicate(isa_(rec(
-                       // OUT, T(EDGE_TID.maybeSome()),
-                       // IN, T(EDGE_TID.maybeSome())))).create();
+        // OUT, T(EDGE_TID.maybeSome()),
+        // IN, T(EDGE_TID.maybeSome())))).create();
 
         private static BiFunction<Obj, Inst, Obj> V_E_FUNCTION(final Uri direction) {
-            return (lhs, inst) -> objs(lhs.asRec().at(direction).asRec().elements()/*.filter(r -> r.first().uriValue().matches(inst.arg(0).uriValue()))*/.map(Rel::second));
+            return (lhs, inst) -> {
+                final Obj edges = lhs.asRec().at(direction);
+                if (edges.isNoObj())
+                    return noobj();
+                else
+                    return objs(edges.asRec().elements()/*.filter(r -> r.first().uriValue().matches(inst.arg(0).uriValue()))*/.map(Rel::second));
+            };
         }
 
         private static BiFunction<Obj, Inst, Obj> V_V_FUNCTION(final Uri d1, final Uri d2) {

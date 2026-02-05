@@ -22,6 +22,8 @@ import org.apache.tinkerpop.gremlin.structure.Edge;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
+import studio.phaseshift.metatron.isa.sys.type.ui.graphitty.Graphitty;
+import studio.phaseshift.metatron.isa.sys.type.ui.graphitty.GraphittyLogger;
 
 import java.util.Map;
 
@@ -36,6 +38,8 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public class EdgeMap extends ElementMap {
+
+    protected static final GraphittyLogger LOG = Graphitty.log(EdgeMap.class);
 
     public EdgeMap(final Edge base) {
         super(base);
@@ -68,12 +72,12 @@ public class EdgeMap extends ElementMap {
 
     @Override
     public Rec asRec() {
-        return rec((Map) this, EDGE_TID, null);
+        return rec((Map) this, f(this.getBase().label()), null);
     }
 
     @Override
     public Rec selfRec() {
-        return rec((Map) this, EDGE_TID, null).self(this, EDGE_TID, f("/g/E/" + this.getBase().id().toString()));
+        return rec((Map) this, f(this.getBase().label()), null).self(this, f(this.getBase().label()), f("/g/E/" + this.getBase().id().toString()));
     }
 
     public static Rec edgeRec(final Edge edge) {
