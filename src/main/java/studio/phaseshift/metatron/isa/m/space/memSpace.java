@@ -50,11 +50,10 @@ import java.util.function.Function;
 
 import static studio.phaseshift.metatron.Tokens.PERSIST;
 import static studio.phaseshift.metatron.furi.fURI.ALL;
-import static studio.phaseshift.metatron.isa.m.mInstSet.M_ISA_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
-import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.sys.sysInstSet.FILE_TYPE;
 import static studio.phaseshift.metatron.isa.sys.sysInstSet.SPACE_CONFIG;
@@ -66,13 +65,15 @@ public class memSpace extends MSpace<Map<fURI, Obj>> {
     public static final fURI MEM_SPACE_TID = M_ISA_TID.extend("space/mem");
 
     protected static final Rec MEM_SPACE_CONFIG = SPACE_CONFIG.plus(
-            rec((Obj) uri(PERSIST).maybe(), FILE_TYPE));
+            rec(uri(PERSIST).maybe().asUri(), FILE_TYPE));
 
-    public static final Type MEM_SPACE_TYPE = T(MEM_SPACE_TID,
-            null, // predicate
-            instC(mInstSet.INST_TID.dom(ALL.maybe()).rng(MEM_SPACE_TID), //constructure
-                    lst(isa_(MEM_SPACE_CONFIG).tryToInst()),
-                    (lhs, inst) -> memSpace.of(inst.arg(0).asRec(), inst.arg(0).vid())));
+    public static final Type MEM_SPACE_TYPE = Type.Builder.build()
+            .tid(SPACE_TID)
+            .vid(MEM_SPACE_TID)
+            .constructor(
+                    instC(mInstSet.INST_TID.dom(ALL.maybe()).rng(MEM_SPACE_TID),
+                            lst(isa_(MEM_SPACE_CONFIG).tryToInst()),
+                            (lhs, inst) -> memSpace.of(inst.arg(0).asRec(), inst.arg(0).vid()))).create();
 
     protected memSpace(final Map<Obj, Obj> config, final fURI vid) {
         super(new ConcurrentHashMap<>(), config, MEM_SPACE_TID, vid);

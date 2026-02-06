@@ -19,11 +19,17 @@
 package studio.phaseshift.metatron.isa.iot.type;
 
 import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.Type;
+
+import static studio.phaseshift.metatron.isa.iot.iotInstSet.DEVICE_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TID;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public interface Device extends Obj {
+
+    public static final Type DEVICE_TYPE = Type.Builder.build().tid(REC_TID).vid(DEVICE_TID).create();
 
 
 }

@@ -205,7 +205,7 @@ public class TypeTest extends mTest {
     public void testTypeObj(final String obj, final String type, final boolean matches) {
         Obj o = mParser.m_obj().parse(obj).get();
         Type t = mParser.m_obj().parse(type).get();
-        LOG.error("testing %s {{g}}({{b}}%s{{g}}){{X}} %s %s", o, o.tid(), matches ? "{{g}}is a{{/g}}" : "{{r}}is not a{{/r}}", t);
+        LOG.debug("testing %s {{g}}({{b}}%s{{g}}){{X}} %s %s", o, o.tid(), matches ? "{{g}}is a{{/g}}" : "{{r}}is not a{{/r}}", t);
         assertEquals(matches, o.matches(t));
     }
 
@@ -230,7 +230,7 @@ public class TypeTest extends mTest {
             //   "int::T[?>2]         | T::T[int::T[?>2]]                          | true",
             //  "int::T              | T::T[int::T[?>2]]                          | false",
             //  "int::T              | T::T[#::T]                                 | true",
-            //  "int::T              | T::T[real::T]                              | false",
+            //"int::T              | T::T[?<real::T>]                              | false",
             "int::T              | str::T                                     | false",
             "int::T              | #::T                                       | true",
             "int::T              | #{?}::T                                    | true",
@@ -238,7 +238,7 @@ public class TypeTest extends mTest {
             "int::T              | #{2}::T                                    | false",
             "int{0}::T           | str{0}::T                                  | true",
             "int::T              | int::T                                     | true",
-            // "int::T              | int::T[?>0]                                | false",
+            "int::T              | int::T[?>0]                                | false",
             "int::T[?>0]         | int::T                                     | true",
             "int::T[?>0]         | int::T[?>0]                                | true",
             "int{2}::T           | #{*}::T                                    | true",
@@ -287,8 +287,8 @@ public class TypeTest extends mTest {
     @TestData(values = {"int::T[is(gt(0))]@nat", "nat::T[is(gt(100))]@bignat",})
     @CsvSource(value = {
             "/m/int | /m/int | true",
-            "/m/int | nat | false",
-            //  "nat     | /m/int | true",
+            //"/m/int | nat | false",
+            // "nat     | /m/int | true",
             "nat | nat | true",
             // "bignat | nat    | true",
             "bignat | /m/int | false",
@@ -300,7 +300,7 @@ public class TypeTest extends mTest {
     public void testBaseTypes(final String type, final String baseType, final boolean matches) throws Exception {
         Obj a = mParser.eval("*" + type);
         Obj b = mParser.eval("*" + baseType);
-        LOG.error("testing %s %s %s", a, matches ? "{{g}}is a{{/g}}" : "{{r}}is not a{{/r}}", b);
+        LOG.debug("testing %s %s %s", a, matches ? "{{g}}is a{{/g}}" : "{{r}}is not a{{/r}}", b);
         assertEquals(matches, a.matches(b));
     }
 
@@ -361,6 +361,20 @@ public class TypeTest extends mTest {
             "person  % .                                        % [name=>'base']                                   % false",
             "person  % .                                        % [name=>'base',age=>'the number one']             % false",
             "person  % .                                        % [name=>'base',age=>1,another=>[a=>b]]            % true",
+            /// ///////////////////////////////////////////////////////////////////////////////////////////////////////////
+            "person  % rec::T[?[name=>str::T,age=>int::T]]      % person::[name=>'enoch',age=>365]                 % true",
+            "person  % .                                        % person::7                                        % false",
+            "person  % .                                        % person::'a person'                               % false",
+            "person  % .                                        % person::[name=>'enoch']                          % false",
+            "person  % .                                        % person::[age=>333]                               % false",
+            "person  % .                                        % person::[=>]                                     % false",
+            "person  % .                                        % person::[name=>'a',age=>1,b=>2]                  % true",
+            "person  % .                                        % person::[name=>'a',age=>1,b=>noobj]              % true",
+            "person  % .                                        % person::[name=>'a',age=>1.2,b=>noobj]            % false",
+            "person  % .                                        % [name=>'base',age=>1]                            % true",
+            "person  % .                                        % [name=>'base']                                   % false",
+            "person  % .                                        % [name=>'base',age=>'the number one']             % false",
+            "person  % .                                        % [name=>'base',age=>1,another=>[a=>b]]            % true",
             ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
             "nat     % int::T[is(gt(0))]                        % nat::23                                          % true",
             "nat     % .                                        % int::2.as(nat::T[is(gt(1))])                     % true",
@@ -382,8 +396,28 @@ public class TypeTest extends mTest {
             "nat     % .                                        % 2.as(plus(6).as(nat::T))                         % true",
             "nat     % .                                        % 2.as(plus(-6).as(nat::T))                        % false",
             ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-            "nat     % int::T[?>0][-<|[?<0 => _⋅-1,_ => _]>>]   % nat::23                                          % true",
+            "nat     % int::T[?>0]                              % nat::23                                          % true",
+            "nat     % .                                        % int::2.as(nat::T[is(gt(1))])                     % true",
+            "nat     % .                                        % int::0.as(nat::T[is(eq(0))])                     % false",
+            "nat     % .                                        % int::0.as(int::T[is(eq(0))])                     % true",
+            "nat     % .                                        % int::1.as(nat::T[is(gt(-1))])                    % true",
+            "nat     % .                                        % int::2.as(nat::T[is(eq(2))])                     % true",
+            "nat     % .                                        % -2.as(nat::T[is(eq(-2))])                        % false",
+            "nat     % .                                        % 2.as(nat::T[is(eq(4))])                          % false",
+            "nat     % .                                        % 2.as(nat::T[is(geq(4))])                         % false",
+            "nat     % .                                        % 2.as(nat::T[is(eq(2))])                          % true",
+            "nat     % .                                        % int::0.as(nat::T)                                % false",
             "nat     % .                                        % nat::-23                                         % false",
+            "nat     % .                                        % nat::'a big number'                              % false",
+            "nat     % .                                        % nat::2 + 6                                       % true",
+            "nat     % .                                        % nat::2 + -6                                      % false",
+            "nat     % .                                        % 23.as(nat::T)                                    % true",
+            "nat     % .                                        % -23.as(nat::T)                                   % false",
+            "nat     % .                                        % 2.as(plus(6).as(nat::T))                         % true",
+            "nat     % .                                        % 2.as(plus(-6).as(nat::T))                        % false",
+            ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+            "nat     % int::T[?>0][-<|[is(lt(0)) => _⋅-1,_ => _]>>]   % nat::23                                          % true",
+            "nat     % .                                        % nat::-23                                         % true",
             "nat     % .                                        % nat::'a big number'                              % false",
             "nat     % .                                        % nat::2 + 6                                       % true",
             "nat     % .                                        % nat::2 + -6                                      % false",

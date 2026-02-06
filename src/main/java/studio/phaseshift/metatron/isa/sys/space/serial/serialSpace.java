@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.isa.sys.space.port;
+package studio.phaseshift.metatron.isa.sys.space.serial;
 
 import com.fazecast.jSerialComm.SerialPort;
 import com.fazecast.jSerialComm.SerialPortDataListener;
@@ -42,6 +42,7 @@ import static com.fazecast.jSerialComm.SerialPort.LISTENING_EVENT_DATA_AVAILABLE
 import static com.fazecast.jSerialComm.SerialPort.LISTENING_EVENT_PORT_DISCONNECTED;
 import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.isa.m.mInstSet.INST_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.SPACE_TID;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.Rel.REL_TYPE;
@@ -54,7 +55,6 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.sys.sysInstSet.SPACE_CONFIG;
 import static studio.phaseshift.metatron.isa.sys.sysInstSet.SYS_ISA_TID;
-import static studio.phaseshift.metatron.lang.ai.llm.llmInstSet.SPACE_TID;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)

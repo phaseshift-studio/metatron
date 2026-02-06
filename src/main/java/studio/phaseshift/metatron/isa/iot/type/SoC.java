@@ -19,21 +19,24 @@
 package studio.phaseshift.metatron.isa.iot.type;
 
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.m.type.*;
+import studio.phaseshift.metatron.isa.m.type.Inst;
+import studio.phaseshift.metatron.isa.m.type.Int;
+import studio.phaseshift.metatron.isa.m.type.Rec;
+import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.sys.type.Router;
 
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
-import static studio.phaseshift.metatron.isa.iot.iotInstSet.DEVICE_TID;
 import static studio.phaseshift.metatron.isa.iot.iotInstSet.SOC_TID;
-import static studio.phaseshift.metatron.isa.m.mInstSet.*;
+import static studio.phaseshift.metatron.isa.iot.type.Device.DEVICE_TYPE;
+import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TID;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
 import static studio.phaseshift.metatron.isa.m.type.Int.INT_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
-import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /*
@@ -54,13 +57,13 @@ public interface SoC extends Rec {
         public static final fURI PIN_TID = SOC_TID.extend("pin");
         public static final Type PIN_TYPE = Type.Builder.build().tid(REC_TID).vid(PIN_TID).predicate(isa_(rec(
                 uri("pin"), INT_TYPE,
-                uri("usage").maybe(), T(DEVICE_TID)))).create();
+                uri("usage").maybe(), DEVICE_TYPE))).create();
 
-        public static final Type SoC_TYPE = Type.Builder.build().tid(REC_TID).vid(SOC_TID).predicate(isa_(rec(
-                uri("boot").<Uri>maybe(), T(URI_TID),
+        public static final Type SOC_TYPE = Type.Builder.build().tid(REC_TID).vid(SOC_TID).predicate(isa_(rec(
+                uri("boot").maybe().asUri(), URI_TYPE,
                 uri("pin"), lst(PIN_TYPE),
                 uri("stat").maybe(), rec(
-                        uri("uptime").<Uri>maybe(), T(INT_TID))))).create();
+                        uri("uptime").maybe().asUri(), INT_TYPE)))).create();
 
         public static Set<Inst> insts() {
             return new LinkedHashSet<>(List.of());

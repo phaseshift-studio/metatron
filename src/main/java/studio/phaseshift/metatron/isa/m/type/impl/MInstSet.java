@@ -58,8 +58,13 @@ public abstract class MInstSet extends MSpace<Map<fURI, Set<? extends Obj>>> imp
             //if (!this.pattern.equals(f("+/#")) && !(this instanceof Router))
             //    Router.global().addSpace(this);
             this.types().forEach(t -> {
-                if (t.tid().matches(this.pattern)) this.write(t.tid(), t);
-                else Router.writeToSpace(t.tid(), t);
+                if (null != t.vid()) {
+                    if (t.vid().matches(this.pattern)) this.write(t.vid(), t);
+                    else Router.writeToSpace(t.vid(), t);
+                } else if (null != t.tid()) {
+                    if (t.tid().matches(this.pattern)) this.write(t.tid(), t);
+                    else Router.writeToSpace(t.tid(), t);
+                }
             });
             Router.writeToSpace(NOOBJ_TID, NOOBJ_TYPE); // every inst set must have a noobj so it can operate independently of /m/inst
             this.consts().forEach(c -> {
@@ -75,8 +80,8 @@ public abstract class MInstSet extends MSpace<Map<fURI, Set<? extends Obj>>> imp
                 else Router.writeToSpace(r.tid(), r);
             });
             /// //////////////////////////////////////////////////////////////////////////////////////////////
-            this.types().forEach(t -> Router.global().registerRewrite(f(t.tid().name()), t.tid()));
             this.consts().forEach(t -> Router.global().registerRewrite(f(t.vid().name()), t.vid()));
+            this.types().forEach(t -> Router.global().registerRewrite(f(t.tid().name()), t.tid()));
             this.insts().forEach(t -> Router.global().registerRewrite(f(t.tid().name()), t.tid().basePath()));
         }
     }

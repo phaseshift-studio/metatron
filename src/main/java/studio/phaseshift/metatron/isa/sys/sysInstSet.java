@@ -66,7 +66,6 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.sys.space.file.fsSpace.FS_TYPE;
-import static studio.phaseshift.metatron.isa.sys.space.port.serialSpace.SERIAL_SPACE_TYPE;
 import static studio.phaseshift.metatron.isa.sys.type.console.Console.CONSOLE_TYPE;
 
 /*
@@ -127,7 +126,6 @@ public class sysInstSet extends MInstSet {
                 DOC_TYPE,
                 SUBQ_TYPE,
                 SUB_TYPE,
-                SERIAL_SPACE_TYPE,
                 FS_TYPE,
                 FILE_TYPE,
                 IMAGE_FILE_TYPE,

@@ -59,8 +59,7 @@ import static studio.phaseshift.metatron.Tokens.HOST;
 import static studio.phaseshift.metatron.Tokens.ROUTE;
 import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.furi.fURI.f;
-import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TID;
-import static studio.phaseshift.metatron.isa.m.mInstSet.URI_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBytes.bytes;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
@@ -128,15 +127,17 @@ public class httpSpace extends MSpace<HttpServer> {
             return this.equals(TEXT_PLAIN);
         }
 
-        public static String VALUE = "Content-Type";
+        public static final String VALUE = "Content-Type";
     }
 
     public static final String INDEX_HTML = "index.html";
     public static final fURI HTTP_SPACE_TID = WEB_ISA_TID.extend("space/http");
     public static final Rec CONFIG = rec(uri(Tokens.PATTERN), T(URI_TID), uri(HOST), T(URI_TID), uri(ROUTE), T(REC_TID));
-    public static final Type HTTP_SPACE_TYPE = T(HTTP_SPACE_TID, null,
-            instC(mInstSet.INST_TID.dom(ALL.maybe()).rng(HTTP_SPACE_TID), 
-                    lst(T(REC_TID, isa_(CONFIG))), (lhs, inst) -> httpSpace.of(inst.arg(0).asRec(), inst.arg(0).vid())));
+    public static final Type HTTP_SPACE_TYPE = Type.Builder.build()
+            .tid(SPACE_TID)
+            .vid(HTTP_SPACE_TID)
+            .constructor(instC(mInstSet.INST_TID.dom(ALL.maybe()).rng(HTTP_SPACE_TID),
+                    lst(T(REC_TID, isa_(CONFIG))), (lhs, inst) -> httpSpace.of(inst.arg(0).asRec(), inst.arg(0).vid()))).create();
     private static final HTMLTranslator WEB_TRANSLATOR = new HTMLTranslator();
     private static final JSONTranslator JSON_TRANSLATOR = new JSONTranslator();
     private static final AudioTranslator AUDIO_TRANSLATOR = new AudioTranslator();

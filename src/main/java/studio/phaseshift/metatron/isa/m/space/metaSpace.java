@@ -38,8 +38,7 @@ import java.util.function.Function;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.ALL;
-import static studio.phaseshift.metatron.isa.m.mInstSet.M_ISA_TID;
-import static studio.phaseshift.metatron.isa.m.mInstSet.URI_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
 import static studio.phaseshift.metatron.isa.m.type.Rel.REL_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
@@ -70,7 +69,7 @@ public class metaSpace extends MSpace<MServer> {
                     uri(PEERS), lst(T(URI_TID.maybeSome()))));
 
     public static final Type META_SPACE_TYPE = Type.Builder.build()
-            .tid(SYS_SPACE_TID)
+            .tid(SPACE_TID)
             .vid(META_SPACE_TID)
             .constructor(instC(mInstSet.INST_TID.extend("con").dom(ALL.maybe()).rng(META_SPACE_TID), //constructor
                     lst(isa_(META_SPACE_CONFIG).tryToInst()),

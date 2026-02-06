@@ -50,8 +50,7 @@ import static studio.phaseshift.metatron.Tokens.SCRIPT;
 import static studio.phaseshift.metatron.Tokens.USER_HOME;
 import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.furi.fURI.f;
-import static studio.phaseshift.metatron.isa.m.mInstSet.ALL_STAR;
-import static studio.phaseshift.metatron.isa.m.mInstSet.INST_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
@@ -70,7 +69,7 @@ public class fsSpace extends MSpace<FileSystem> {
             uri(Tokens.REWRITE), rel(URI_TYPE, URI_TYPE),
             uri(Tokens.SCRIPT).maybe(), rec(URI_TYPE, URI_TYPE));
     public static final Type FS_TYPE = Type.Builder.build()
-            .tid(SYS_SPACE_TID)
+            .tid(SPACE_TID)
             .vid(FS_TID)
             .constructor(
                     instC(INST_TID.dom(ALL.maybe()).rng(FS_TID),

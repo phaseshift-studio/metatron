@@ -426,7 +426,7 @@ public class fURI implements Cloneable, Ring<fURI> {
         if (prefix.hasAuthority() && (!this.hasAuthority() || !this.authority().matches(prefix.authority())))
             return false;
         for (int i = 0; i < prefix.path.size(); i++) {
-            if (this.pathLength() < i)
+            if (this.pathLength() <= i)
                 return false;
             if (!this.segment(i).matches(prefix.segment(i)))
                 return false;

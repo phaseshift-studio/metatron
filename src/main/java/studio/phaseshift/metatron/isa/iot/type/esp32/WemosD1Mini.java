@@ -26,6 +26,7 @@ import studio.phaseshift.metatron.isa.sys.type.Router;
 import studio.phaseshift.metatron.util.CommonUtil;
 
 import static studio.phaseshift.metatron.furi.fURI.ALL;
+import static studio.phaseshift.metatron.isa.iot.iotInstSet.ESP32_TID;
 import static studio.phaseshift.metatron.isa.iot.iotInstSet.SOC_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.INST_TID;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_;
@@ -63,7 +64,7 @@ public class WemosD1Mini extends MRec implements SoC {
 
         public static final fURI WEMOS_D1_MINI_TID = SOC_TID.extend("esp32/d1_mini");
         public static final Type WEMOS_D1_MINI_TYPE = Type.Builder.build()
-                .tid(SOC_TID)
+                .tid(ESP32_TID)
                 .vid(WEMOS_D1_MINI_TID)
                 .constructor(instC(INST_TID.dom(ALL.maybe()).rng(WEMOS_D1_MINI_TID), lst(rec()),
                         (lhs, inst) -> {

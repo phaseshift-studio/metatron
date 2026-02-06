@@ -133,6 +133,10 @@ public class tp3Space extends grphSpace<Graph> {
         this.vertexPrefix = this.pattern.retractPattern().extend("V").toString();
         this.edgePrefix = this.pattern.retractPattern().extend("E").toString();
         this.schemaPrefix = this.pattern.retractPattern().extend("S").toString();
+        this.put(uri("rewrite"), rec(
+                uri("vertex"), uri(this.vertexPrefix),
+                uri("edge"), uri(this.edgePrefix),
+                uri("schema"), uri(this.schemaPrefix)), MUTABLE);
         LOG.debug("tp3 prefixes: %s %s %s", this.vertexPrefix, this.edgePrefix, this.schemaPrefix);
         this.schema = this.at(uri(SCHEMA));
     }
@@ -141,7 +145,6 @@ public class tp3Space extends grphSpace<Graph> {
     public Obj read(final fURI vid) {
         return studio.phaseshift.metatron.furi.Q.Helper.processPreRead(this.qs(), vid, vid).orElseGet(() -> {
             Obj result = Space.Helper.resolveRead(this, vid.basePath(), directReader());
-            //return result;
             return studio.phaseshift.metatron.furi.Q.Helper.processPostRead(this.qs(), vid, vid, result).orElse(result);
         });
     }

@@ -57,6 +57,7 @@ public class mInstSet extends MInstSet {
     public static final fURI CODE_TID = M_ISA_TID.extend("code");
     public static final fURI NOOBJ_TID = fURI.of("noobj");
     public static final fURI ALL_STAR = ALL.maybeSome();
+    public static final fURI SPACE_TID = M_ISA_TID.extend("space");
     /// ////////////////////////////////////////////////////////
     public static final fURI ID_INST_TID = INST_TID.extend("id");
     public static final fURI EXPLAIN_INST_TID = INST_TID.extend("explain");
@@ -160,6 +161,8 @@ public class mInstSet extends MInstSet {
     public static final fURI POLY_TID = M_ISA_TID.extend("poly");
     public static final fURI MONO_TID = M_ISA_TID.extend("mono");
 
+    public static final Type SPACE_TYPE = Type.Builder.build().tid(REC_TID).vid(SPACE_TID).create();
+
     /// ////////////
     /// ////////////
     public mInstSet(final fURI vid) {
@@ -182,21 +185,22 @@ public class mInstSet extends MInstSet {
     @Override
     public Set<Type> types() {
         return new LinkedHashSet<>(List.of(
-                Type.Builder.build().tid(TYPE_TID).vid(NOOBJ_TID).create(),
-                Type.Builder.build().tid(TYPE_TID).vid(FAIL_TID).create(),
-                Type.Builder.build().tid(TYPE_TID).vid(BOOL_TID).create(),
-                Type.Builder.build().tid(TYPE_TID).vid(INT_TID).create(),
-                Type.Builder.build().tid(TYPE_TID).vid(REAL_TID).create(),
-                Type.Builder.build().tid(TYPE_TID).vid(BYTES_TID).create(),
-                Type.Builder.build().tid(TYPE_TID).vid(STR_TID).create(),
-                Type.Builder.build().tid(TYPE_TID).vid(URI_TID).create(),
-                Type.Builder.build().tid(TYPE_TID).vid(REL_TID).create(),
-                Type.Builder.build().tid(TYPE_TID).vid(LST_TID).create(),
-                Type.Builder.build().tid(TYPE_TID).vid(REC_TID).create(),
-                Type.Builder.build().tid(TYPE_TID).vid(INST_TID).create(),
-                Type.Builder.build().tid(TYPE_TID).vid(CODE_TID).create(),
-                Type.Builder.build().tid(TYPE_TID).vid(OBJS_TID).create(),
+                Type.Builder.build().tid(NOOBJ_TID).vid(NOOBJ_TID).create(),
+                Type.Builder.build().tid(FAIL_TID).vid(FAIL_TID).create(),
+                Type.Builder.build().tid(BOOL_TID).vid(BOOL_TID).create(),
+                Type.Builder.build().tid(INT_TID).vid(INT_TID).create(),
+                Type.Builder.build().tid(REAL_TID).vid(REAL_TID).create(),
+                Type.Builder.build().tid(BYTES_TID).vid(BYTES_TID).create(),
+                Type.Builder.build().tid(STR_TID).vid(STR_TID).create(),
+                Type.Builder.build().tid(URI_TID).vid(URI_TID).create(),
+                Type.Builder.build().tid(REL_TID).vid(REL_TID).create(),
+                Type.Builder.build().tid(LST_TID).vid(LST_TID).create(),
+                Type.Builder.build().tid(REC_TID).vid(REC_TID).create(),
+                Type.Builder.build().tid(INST_TID).vid(INST_TID).create(),
+                Type.Builder.build().tid(CODE_TID).vid(CODE_TID).create(),
+                Type.Builder.build().tid(OBJS_TID).vid(OBJS_TID).create(),
                 /// ///////////////////////////////////
+                SPACE_TYPE,
                 MEM_SPACE_TYPE,
                 STACK_SPACE_TYPE,
                 META_SPACE_TYPE));

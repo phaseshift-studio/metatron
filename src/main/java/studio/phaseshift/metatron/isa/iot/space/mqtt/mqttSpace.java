@@ -52,14 +52,13 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.sys.sysInstSet.SYS_SPACE_TID;
 
 
 public class mqttSpace extends MSpace<Mqtt5Client> {
 
-    public static fURI MQTT_TID = IOT_ISA_TID.extend("space").extend("mqtt");
-    public static final Type MQTT_TYPE = Type.Builder.build().tid(SYS_SPACE_TID).vid(MQTT_TID).constructor(
-            instC(mInstSet.INST_TID.dom(ALL.maybe()).rng(MQTT_TID),
+    public static fURI MQTT_SPACE_TID = IOT_ISA_TID.extend("space").extend("mqtt");
+    public static final Type MQTT_SPACE_TYPE = Type.Builder.build().tid(SPACE_TID).vid(MQTT_SPACE_TID).constructor(
+            instC(mInstSet.INST_TID.dom(ALL.maybe()).rng(MQTT_SPACE_TID),
                     lst(T(REC_TID, isa_(rec(
                             uri(PATTERN), T(URI_TID),
                             uri(HOST), T(URI_TID),
@@ -72,7 +71,7 @@ public class mqttSpace extends MSpace<Mqtt5Client> {
     protected final memSpace cache;
 
     protected mqttSpace(final Mqtt5Client client, final Map<Obj, Obj> config, final fURI vid) {
-        super(client, config, MQTT_TID, vid);
+        super(client, config, MQTT_SPACE_TID, vid);
         MqttConnAck connAck = null;
         this.rewrite = Space.Helper.extractRewrite(config);
         LOG.info("{{y}}mtron{{g}}<=>{{y}}mqtt{{X}} mapping established: %s {{g}}<=> ({{b}}%s {{g}}<=>{{X}} %s{{g}}){{X}}", this.pattern().toUri(), this.rewrite, uri(Space.Helper.toNativeSpace(this.pattern(), this.rewrite)));
