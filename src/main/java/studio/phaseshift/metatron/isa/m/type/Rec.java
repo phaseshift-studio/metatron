@@ -51,6 +51,7 @@ import static studio.phaseshift.metatron.util.CommonUtil.immutableMap;
 
 public interface Rec extends Poly<Rec, Map<Obj, Obj>>, PlusMonoid.O<Rec> {
 
+    Type REC_TYPE = Type.Builder.build().tid(REC_TID).vid(REC_TID).create();
     Rec EMPTY_REC = rec(immutableMap());
 
     @Override
@@ -210,8 +211,6 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>>, PlusMonoid.O<Rec> {
     Rec self(final Object jvm, final fURI tid, final fURI vid);
 
     final class RecType {
-
-        public static final Type REC_TYPE = T(REC_TID);
 
         public static Set<Inst> insts() {
             return new LinkedHashSet<>(List.of(

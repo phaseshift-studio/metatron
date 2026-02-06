@@ -35,7 +35,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 
 public interface Bool extends Mono {
 
-    Type BOOL_TYPE = T(BOOL_TID);
+    Type BOOL_TYPE = Type.Builder.build().tid(BOOL_TID).vid(BOOL_TID).create();
     Bool BOOL_TRUE = bool(true);
     Bool BOOL_FALSE = bool(false);
     

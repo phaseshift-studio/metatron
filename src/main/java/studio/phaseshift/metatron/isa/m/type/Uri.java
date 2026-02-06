@@ -34,7 +34,7 @@ import static studio.phaseshift.metatron.furi.fURI.fnull;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
-import static studio.phaseshift.metatron.isa.m.type.Rec.RecType.REC_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.Rec.REC_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
@@ -46,7 +46,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 public interface Uri extends Mono, Ring.O<Uri> {
 
-    Type URI_TYPE = T(URI_TID);
+    Type URI_TYPE = Type.Builder.build().tid(URI_TID).vid(URI_TID).create();
 
     @Override
     Uri clone(final Object jvm, final fURI tid, final fURI vid);

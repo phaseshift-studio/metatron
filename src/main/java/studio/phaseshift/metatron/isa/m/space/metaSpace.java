@@ -66,7 +66,7 @@ public class metaSpace extends MSpace<MServer> {
     protected static final Rec META_SPACE_CONFIG = SPACE_CONFIG.plus(
             rec(uri(HOST), URI_TYPE,
                     uri(REWRITE), REL_TYPE, // TODO: rel(URI_TYPE,URI_TYPE) make this general to SPACE_CONFIG
-                    uri(PEERS), lst(T(URI_TID.maybeSome()))));
+                    uri(PEERS), lst(URI_TYPE.<Type>maybeSome())));
 
     public static final Type META_SPACE_TYPE = Type.Builder.build()
             .tid(SPACE_TID)

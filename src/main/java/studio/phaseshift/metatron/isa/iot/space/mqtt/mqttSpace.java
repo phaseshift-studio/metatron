@@ -48,6 +48,9 @@ import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.isa.iot.iotInstSet.IOT_ISA_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
+import static studio.phaseshift.metatron.isa.m.type.Lst.LST_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.Rel.REL_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
@@ -60,11 +63,11 @@ public class mqttSpace extends MSpace<Mqtt5Client> {
     public static final Type MQTT_SPACE_TYPE = Type.Builder.build().tid(SPACE_TID).vid(MQTT_SPACE_TID).constructor(
             instC(mInstSet.INST_TID.dom(ALL.maybe()).rng(MQTT_SPACE_TID),
                     lst(T(REC_TID, isa_(rec(
-                            uri(PATTERN), T(URI_TID),
-                            uri(HOST), T(URI_TID),
+                            uri(PATTERN), URI_TYPE,
+                            uri(HOST), URI_TYPE,
                             //uri(CLIENT).maybe(), T(URI_TID).maybe(),
-                            uri(REWRITE), T(REL_TID),
-                            uri(Tokens.Q).c(cInt::maybe), isa_(T(LST_TID)))))), (lhs, inst) -> mqttSpace.of(inst.arg(0).asRec(), inst.arg(0).vid()))).create();
+                            uri(REWRITE), REL_TYPE,
+                            uri(Tokens.Q).c(cInt::maybe), isa_(LST_TYPE))))), (lhs, inst) -> mqttSpace.of(inst.arg(0).asRec(), inst.arg(0).vid()))).create();
     protected final fURI broker;
     protected final Tuple.Pair<String, String> rewrite;
     protected final JSONTranslator jsonTranslator = new JSONTranslator();

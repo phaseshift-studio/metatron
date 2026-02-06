@@ -26,36 +26,36 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Poly;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.m.type.Uri;
+import studio.phaseshift.metatron.isa.sys.type.Router;
 import studio.phaseshift.metatron.isa.sys.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.sys.type.ui.graphitty.GraphittyLogger;
-import studio.phaseshift.metatron.isa.sys.type.Router;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.Stack;
 
 import static studio.phaseshift.metatron.Tokens.PATTERN;
 import static studio.phaseshift.metatron.furi.fURI.ALL;
-import static studio.phaseshift.metatron.isa.m.mInstSet.*;
+import static studio.phaseshift.metatron.isa.m.mInstSet.M_ISA_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.SPACE_TID;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
+import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
-import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.sys.sysInstSet.SYS_SPACE_TID;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
-public class stackSpace extends MSpace<Stack<Poly<?,?>>> {
+public class stackSpace extends MSpace<Stack<Poly<?, ?>>> {
 
     public static final fURI STACK_SPACE_TID = M_ISA_TID.extend("space/stack");
     public static final Type STACK_SPACE_TYPE = Type.Builder.build()
             .tid(SPACE_TID)
             .vid(STACK_SPACE_TID)
             .constructor(instC(mInstSet.INST_TID.dom(ALL.maybe()).rng(STACK_SPACE_TID),  // constructor
-                    lst(isa_(rec(uri(PATTERN), T(URI_TID))).tryToInst()), (lhs, inst) -> {
-                final Space space = new stackSpace(inst.arg(0).asRec().at(PATTERN).uriValue());
-                Router.global().addSpace(space);
-                return space;
-            })).create();
+                    lst(isa_(rec(uri(PATTERN), URI_TYPE)).tryToInst()), (lhs, inst) -> {
+                        final Space space = new stackSpace(inst.arg(0).asRec().at(PATTERN).uriValue());
+                        Router.global().addSpace(space);
+                        return space;
+                    })).create();
 
     private final GraphittyLogger LOG = Graphitty.log(this);
     private final Space root;

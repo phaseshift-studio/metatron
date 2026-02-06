@@ -41,7 +41,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 public interface Str extends Mono {
 
-    Type STR_TYPE = T(STR_TID);
+    Type STR_TYPE = Type.Builder.build().tid(STR_TID).vid(STR_TID).create();
     
     @Override
     Str clone(final Object jvm, final fURI tid, final fURI vid);

@@ -43,7 +43,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  */
 public interface Fail extends Obj, PlusMonoid<Fail> {
 
-    Type FAIL_TYPE = T(FAIL_TID);
+    Type FAIL_TYPE = Type.Builder.build().tid(FAIL_TID).vid(FAIL_TID).create();
 
     @Override
     Fail clone(final Object jvm, final fURI tid, final fURI vid);

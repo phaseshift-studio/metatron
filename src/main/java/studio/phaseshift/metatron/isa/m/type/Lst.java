@@ -49,6 +49,10 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 public interface Lst extends Poly<Lst, List<Obj>>, PlusMonoid.O<Lst> {
 
+    public static final Type LST_TYPE = Type.Builder.build()
+            .tid(LST_TID)
+            .vid(LST_TID).create();
+
     @Override
     default Stream<Rel> indexedStream() {
         final AtomicInteger i = new AtomicInteger(0);

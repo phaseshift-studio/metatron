@@ -36,7 +36,7 @@ import static studio.phaseshift.metatron.furi.fURI.fnull;
 import static studio.phaseshift.metatron.isa.iot.iotInstSet.IOT_INST_TID;
 import static studio.phaseshift.metatron.isa.iot.iotInstSet.IOT_ISA_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.INT_TID;
-import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TID;
+import static studio.phaseshift.metatron.isa.m.type.Int.INT_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
@@ -51,7 +51,7 @@ public class GPIO extends MRec implements Device {
     public static final fURI GPIO_TID = IOT_ISA_TID.extend("device/gpio");
     public static final Type GPIO_TYPE = T(GPIO_TID, null,
             instC(mInstSet.INST_TID.dom(ALL.maybe()).rng(GPIO_TID),
-                    lst(T(REC_TID)),
+                    lst(REC_TYPE),
                     (lhs, inst) -> {
                         final Map<Obj, Obj> result = new LinkedHashMap<>();
                         inst.arg(0).asRec().elements().forEach(e -> {
@@ -96,8 +96,8 @@ public class GPIO extends MRec implements Device {
 
         public static Set<Inst> insts() {
             return new LinkedHashSet<>(List.of(
-                    instC(IOT_INST_TID.extend("read").dom(GPIO_TID).rng(INT_TID), lst(T(INT_TID)), (lhs, inst) -> lhs.asRec().at(uri(String.valueOf(inst.arg(0).intValue())))),
-                    instC(IOT_INST_TID.extend("write").dom(GPIO_TID).rng(GPIO_TID), lst(T(INT_TID), T(INT_TID)), (lhs, inst) -> lhs.asRec().at(uri(String.valueOf(inst.arg(0).intValue())), inst.arg(1), MUTABLE))
+                    instC(IOT_INST_TID.extend("read").dom(GPIO_TID).rng(INT_TID), lst(INT_TYPE), (lhs, inst) -> lhs.asRec().at(uri(String.valueOf(inst.arg(0).intValue())))),
+                    instC(IOT_INST_TID.extend("write").dom(GPIO_TID).rng(GPIO_TID), lst(INT_TYPE, INT_TYPE), (lhs, inst) -> lhs.asRec().at(uri(String.valueOf(inst.arg(0).intValue())), inst.arg(1), MUTABLE))
             ));
 
 
