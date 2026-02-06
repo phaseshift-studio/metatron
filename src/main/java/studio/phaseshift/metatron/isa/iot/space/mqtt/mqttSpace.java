@@ -94,7 +94,7 @@ public class mqttSpace extends MSpace<Mqtt5Client> {
                         if (b != null) {
                             throw MTronException.of(b);
                         } else {
-                            final Rec conn = MObjFactory.of().create(a).asRec();
+                            final Rec conn = MObjFactory.of().toObj(a).asRec();
                             LOG.debug("{{g}}connected{{X}} %s", conn);
                             this.put(uri("native/connack"), conn, MUTABLE);
                         }

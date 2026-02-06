@@ -54,7 +54,7 @@ public interface ReflectRec extends Rec {
             Graphitty.log(this).info("fetching %s", key);
             final String k = key.isStr() ? key.<Str>as().strValue() : key.isUri() ? key.<Uri>as().uriValue().toString() : "";
             Graphitty.log(this).info("key transformed into %s", k);
-            final Optional<O> v = Arrays.stream(this.getClass().getFields()).filter(f -> f.getName().equals(k)).map(f -> MTronException.wrap(() -> (O) FACTORY.create(f.get(this)))).findFirst();
+            final Optional<O> v = Arrays.stream(this.getClass().getFields()).filter(f -> f.getName().equals(k)).map(f -> MTronException.wrap(() -> (O) FACTORY.toObj(f.get(this)))).findFirst();
             Graphitty.log(this).info("value retrieved %s", v);
             if (v.isPresent())
                 return v.get();

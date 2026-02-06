@@ -26,12 +26,16 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Poly;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
-import studio.phaseshift.metatron.isa.sys.type.console.Highlighter;
 import studio.phaseshift.metatron.isa.sys.type.Router;
+import studio.phaseshift.metatron.isa.sys.type.console.Highlighter;
+import studio.phaseshift.metatron.isa.sys.type.ui.Border;
 import studio.phaseshift.metatron.isa.sys.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.sys.type.ui.graphitty.GraphittyLogger;
+import studio.phaseshift.metatron.isa.sys.type.ui.widget.Grid;
+import studio.phaseshift.metatron.isa.sys.type.ui.widget.Panel;
 
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -39,10 +43,11 @@ import static studio.phaseshift.metatron.Tokens.DESC;
 import static studio.phaseshift.metatron.Tokens.PATTERN;
 import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.furi.fURI.f;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
 import static studio.phaseshift.metatron.isa.m.mInstSet.INST_TID;
-import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
 import static studio.phaseshift.metatron.isa.m.type.Inst.*;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.Rec.RecType.REC_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
@@ -61,6 +66,7 @@ public class DocQ extends BaseQ {
     public static final fURI DOCQ_TID = Q_TID.extend("docq");
     public static final fURI DOC_TID = DOCQ_TID.extend(Tokens.DOC);
     public static final Type DOCQ_TYPE = T(DOCQ_TID, null, instC(INST_TID.dom(ALL.maybe()).rng(DOCQ_TID), lst(isa_(rec()).tryToInst()), (lhs, inst) -> new DocQ()));
+    public static final Type DOC_TYPE = T(DOC_TID, isa_(REC_TYPE).tryToInst(), instC(INST_TID.dom(ALL.maybe()).rng(DOC_TID), lst(isa_(rec()).tryToInst()), (lhs, inst) -> new Doc(inst.arg(0).recValue(), DOC_TID, fURI.fnull)));
     protected final GraphittyLogger LOG = Graphitty.log(this);
     // <source,pattern,callback>
     public final Map<fURI, Obj> docSpace;
@@ -184,6 +190,7 @@ public class DocQ extends BaseQ {
         public String toCleanString() {
             return this.toString();
         }
+
         public String toString() {
             // ┌|├|┐|└|┘|│|┤|─|⋰|⋱|⮝|⮞|⮜|⮟
             /**
@@ -209,8 +216,8 @@ public class DocQ extends BaseQ {
                             Highlighter.visualLength(inst.dom().toString()),
                             Highlighter.visualLength(inst.rng().toString())),
                     this.at(ARGS).orElse(rec()).jvm().entrySet().stream()
-                            .map(kv ->Highlighter.visualLength(kv.getKey().toString()) +
-                                   Highlighter.visualLength(kv.getValue().toString()))
+                            .map(kv -> Highlighter.visualLength(kv.getKey().toString()) +
+                                    Highlighter.visualLength(kv.getValue().toString()))
                             .min(Integer::compare)
                             .orElse(20)) + 3;
             final int rhsBorderColumn = Math.max(inst.tid().toString().length(), Math.max(Math.max(
@@ -273,7 +280,7 @@ public class DocQ extends BaseQ {
                     uri(OBJ), type,
                     uri(DOM), null == domDesc ? noobj() : str(domDesc),
                     uri(RNG), null == rngDesc ? noobj() : str(rngDesc),
-                    uri(ARGS), rec(argDescription.entrySet().stream().map(kv -> rel(kv.getKey(), str(kv.getValue())))),
+                    uri(ARGS), null == argDescription ? noobj() : rec(argDescription.entrySet().stream().map(kv -> rel(kv.getKey(), str(kv.getValue())))),
                     uri(DESC), str(description)).jvm(), DOC_TID, fURI.fnull);
         }
 
@@ -288,8 +295,8 @@ public class DocQ extends BaseQ {
             return inst;
         }
 
-        public static Type docWrap(final Type type, final String domDesc, final String rngDesc, final Map<Obj, String> argDescription, final String description) {
-            final Doc doc = doc(type, domDesc, rngDesc, argDescription, description);
+        public static Type docWrap(final Type type, final String description) {
+            final Doc doc = doc(type, null, null, null, description);
             final Space instSpace = Router.global().getSpace(type.tid());
             final Optional<DocQ> docq = instSpace.qs().jvm().stream().filter(q -> q.tid().basePath().equals(DOCQ_TID)).map(Obj::<DocQ>as).findAny();
             if (docq.isEmpty())
@@ -311,7 +318,7 @@ public class DocQ extends BaseQ {
         public Optional<Obj> preRead(final fURI source, final fURI vid) {
             LOG.trace("evaluating {{y}}preread{{/y}}: %s", vid);
             return Optional.of(objs(docSpace.entrySet().stream()
-                   // .filter(kv -> kv.getKey().matches(vid))
+                    // .filter(kv -> kv.getKey().matches(vid))
                     .map(Map.Entry::getValue))
                     .orElse(objs(Router.readFromSpace(vid.removeQ("doc")).stream().map(Doc::empty))));
         }

@@ -44,7 +44,9 @@ import(/mtron/grph);
                      /docs => target/docs ]]@/sys/space/web;
   tp3::[pattern  => /g/#,
         rewrite  => (</g/+/>=><>),
-        load     => modern]@/sys/space/tp3;
+        native/load => modern,
+        native   => [factory  => mfactory::[=>],
+                     load     => modern]]@/sys/space/tp3/grph;
   mqtt::[pattern => <wall:#>,
          host    => !*boot/args/mqtt/broker,
          rewrite => <wall:>=><walltron/>]@/sys/space/walltron;

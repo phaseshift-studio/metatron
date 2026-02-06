@@ -19,7 +19,6 @@
 package studio.phaseshift.metatron.lang.sys.router.impl;
 
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.m.type.NoObj;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.impl.MObj;
 import studio.phaseshift.metatron.isa.m.type.impl.MObjFactory;
@@ -105,7 +104,7 @@ public class FutureObj<T extends Obj> extends MObj implements Future<T> {
         if (this.isDone())
             return this.get(DEFAULT_TIMEOUT_MS).self(jvm, tid, vid).self(jvm, tid, vid);
         else
-            return MObjFactory.of().create(jvm, this.tid(), this.vid());
+            return MObjFactory.of().toObj(jvm, this.tid(), this.vid());
     }
 
     @Override

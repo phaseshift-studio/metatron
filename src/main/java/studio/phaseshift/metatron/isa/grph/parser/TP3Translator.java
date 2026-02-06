@@ -51,7 +51,7 @@ public record TP3Translator(Builder builder) implements Translator<Obj, Graph> {
 
     private Map<Obj, Obj> createProperties(final Element element) {
         final Map<Obj, Obj> props = new LinkedHashMap<>();
-        element.properties().forEachRemaining(tpP -> props.put(uri(tpP.key()), MObjFactory.of().create(tpP.value())));
+        element.properties().forEachRemaining(tpP -> props.put(uri(tpP.key()), MObjFactory.of().toObj(tpP.value())));
         return props;
     }
 

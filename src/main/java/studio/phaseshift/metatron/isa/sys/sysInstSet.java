@@ -48,9 +48,10 @@ import java.util.stream.Stream;
 import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.furi.q.DocQ.DOCQ_TYPE;
+import static studio.phaseshift.metatron.furi.q.DocQ.DOC_TYPE;
 import static studio.phaseshift.metatron.furi.q.DocQ.Doc.docWrap;
 import static studio.phaseshift.metatron.furi.q.PubSubQ.SUBQ_TYPE;
-import static studio.phaseshift.metatron.furi.q.PubSubQ.SUBSCRIPTION_TYPE;
+import static studio.phaseshift.metatron.furi.q.PubSubQ.SUB_TYPE;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.else_;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
@@ -59,6 +60,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MBytes.bytes;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MObjFactory.M_FACTORY_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
@@ -80,8 +82,13 @@ public class sysInstSet extends MInstSet {
     public static final fURI FILE_TID = SYS_ISA_TID.extend("file");
     public static final fURI IMAGE_TID = FILE_TID.extend("image");
     public static final fURI Q_TID = SYS_SPACE_TID.extend("q");
+    public static final fURI FACTORY_TID = SYS_ISA_TID.extend("factory");
     public static final fURI REWRITE_INST_TID = SYS_INST_TID.extend("rewrite");
     public static final Rec SPACE_CONFIG = rec(uri(Tokens.PATTERN), T(URI_TID));
+    public static final Type FACTORY_TYPE = Type.Builder.build()
+            .tid(REC_TID)
+            .vid(FACTORY_TID)
+            .create();
     public static final Type ROUTER_TYPE = Type.Builder.build()
             .tid(REC_TID)
             .vid(ROUTER_TID)
@@ -111,18 +118,21 @@ public class sysInstSet extends MInstSet {
 
     @Override
     public Set<Type> types() {
-        final Set<Type> types = new HashSet<>(List.of(
+        return new HashSet<>(List.of(
                 ROUTER_TYPE,
                 T(SYS_SPACE_TID),
                 CONSOLE_TYPE,
-                SUBSCRIPTION_TYPE,
+                SUB_TYPE,
                 DOCQ_TYPE,
+                DOC_TYPE,
                 SUBQ_TYPE,
+                SUB_TYPE,
                 SERIAL_SPACE_TYPE,
                 FS_TYPE,
                 FILE_TYPE,
-                IMAGE_FILE_TYPE));
-        return types;
+                IMAGE_FILE_TYPE,
+                FACTORY_TYPE,
+                M_FACTORY_TYPE));
     }
 
     @Override

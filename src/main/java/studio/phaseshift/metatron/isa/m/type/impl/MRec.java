@@ -54,8 +54,8 @@ public class MRec extends MObj implements Rec {
         final Map<Obj, Obj> map = new LinkedHashMap<>();
         map.put(uri(key), value);
         for (int i = 0; i < kvs.length; i = i + 2) {
-            final Obj keyO = kvs[i] instanceof Obj ? (Obj) kvs[i] : (kvs[i] instanceof String || kvs[i] instanceof fURI ? uri(kvs[i].toString()) : MObjFactory.of().create(kvs[i]));
-            final Obj valueO = kvs[i + 1] instanceof Obj ? (Obj) kvs[i + 1] : (kvs[i + 1] instanceof String || kvs[i + 1] instanceof fURI ? uri(kvs[i + 1].toString()) : MObjFactory.of().create(kvs[i + 1]));
+            final Obj keyO = kvs[i] instanceof Obj ? (Obj) kvs[i] : (kvs[i] instanceof String || kvs[i] instanceof fURI ? uri(kvs[i].toString()) : MObjFactory.of().toObj(kvs[i]));
+            final Obj valueO = kvs[i + 1] instanceof Obj ? (Obj) kvs[i + 1] : (kvs[i + 1] instanceof String || kvs[i + 1] instanceof fURI ? uri(kvs[i + 1].toString()) : MObjFactory.of().toObj(kvs[i + 1]));
             map.put(keyO, valueO);
         }
         return rec(map, REC_TID, fURI.fnull);
@@ -85,7 +85,7 @@ public class MRec extends MObj implements Rec {
         return rec(map.entrySet().stream()
                 //.filter(kv -> !(kv.getKey() instanceof Obj) || !((Obj) kv.getKey()).isNoObj())
                 // .filter(kv -> !(kv.getValue() instanceof Obj) || !((Obj) kv.getValue()).isNoObj())
-                .map(kv -> rel(kv.getKey() instanceof String && !((String) kv.getKey()).contains(" ") ? uri((String) kv.getKey()) : factory.create(kv.getKey()), factory.create(kv.getValue()))));
+                .map(kv -> rel(kv.getKey() instanceof String && !((String) kv.getKey()).contains(" ") ? uri((String) kv.getKey()) : factory.toObj(kv.getKey()), factory.toObj(kv.getValue()))));
     }
 
     private static Map<Obj, Obj> cleanMap(final Map<Obj, Obj> jvm) {

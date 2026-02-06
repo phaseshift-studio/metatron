@@ -35,32 +35,32 @@ import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
-public interface ObjFactory {
+public interface ObjFactory extends Rec {
 
     final GraphittyLogger LOG = Graphitty.log(ObjFactory.class);
 
-    <O extends Obj> O create(final Object value, final fURI tid, final fURI vid);
+    <OBJ extends Obj> OBJ toObj(final Object value, final fURI tid, final fURI vid);
 
-    <O extends Obj> O create(final Object value, final fURI tid, final fURI vid, final Class<O> objClass);
+    <OBJ extends Obj> OBJ toObj(final Object value, final fURI tid, final fURI vid, final Class<OBJ> objClass);
 
-    default Obj create(final Object value) {
-        return this.create(value, null, null);
+    default Obj toObj(final Object value) {
+        return this.toObj(value, null, null);
     }
 
     default Obj createOrFail(final Object value) {
         try {
-            return this.create(value);
+            return this.toObj(value);
         } catch (final Exception e) {
             return fail(e);
         }
     }
 
-    default <JVM, O extends Obj> ObjFactory addExtension(final Class<JVM> objClass, final Function<JVM, O> creator) {
+    default <JVM, OBJ extends Obj> ObjFactory addExtension(final Class<JVM> objClass, final Function<JVM, OBJ> creator) {
         LOG.warn("extensions not supported for %s", this.getClass().getSimpleName());
         return this;
     }
 
-    default <O extends Obj> O create(final Object value, final Class<O> objClass) {
+    default <OBJ extends Obj> OBJ toObj(final Object value, final Class<OBJ> objClass) {
         fURI tid;
         if (null == value)
             tid = NOOBJ_TID;
@@ -94,10 +94,11 @@ public interface ObjFactory {
             tid = fURI.NOOBJ;
         else
             throw MTronException.of("unable to convert to requested obj class: %s", objClass);
-        return this.create(value, tid, fURI.fnull, objClass);
+        return this.toObj(value, tid, fURI.fnull, objClass);
     }
 
-    public static class Helper {
+    /// //////////////////////////////////////////////////////////////////////////////////////////////////////
+    class Helper {
         public static String externalNameToMtronName(final String externalName) {
             if (externalName.toUpperCase().equals(externalName))
                 return externalName.toLowerCase();
@@ -108,14 +109,23 @@ public interface ObjFactory {
         }
 
         public static boolean containsObjs(final Collection<Object> collection) {
-            return collection.stream().allMatch(o -> o instanceof Obj);
+            return collection.stream().allMatch(Helper::containsObjs);
         }
 
         public static boolean containsObjs(final Map<Object, Object> map) {
-            return map.entrySet().stream().allMatch(e -> e.getKey() instanceof Obj && e.getValue() instanceof Obj);
+            return map.entrySet().stream().allMatch(e -> e.getKey() instanceof Obj && containsObjs(e.getValue()));
         }
 
-        public static boolean shouldHandleReflectively(final Class<?> clazz) {
+        public static boolean containsObjs(final Object object) {
+            if (object instanceof Collection)
+                return containsObjs((Collection<Object>) object);
+            else if (object instanceof Map)
+                return containsObjs((Map<Object, Object>) object);
+            else
+                return object instanceof Obj;
+        }
+
+        public static boolean attemptReflection(final Class<?> clazz) {
             return clazz.isPrimitive() ||
                     String.class.isAssignableFrom(clazz) ||
                     URI.class.isAssignableFrom(clazz) ||
@@ -142,22 +152,22 @@ public interface ObjFactory {
                             m.getName().startsWith("is") ||
                             m.getName().startsWith("has") ||
                             m.getName().startsWith("can")))
-                    .filter(m -> shouldHandleReflectively(m.getReturnType()))
+                    .filter(m -> attemptReflection(m.getReturnType()))
                     .forEach(m -> {
                         try {
                             final Object result = m.invoke(value);
-                            map.put(uri(Helper.externalNameToMtronName(m.getName())), factory.create(result));
+                            map.put(uri(Helper.externalNameToMtronName(m.getName())), factory.toObj(result));
                         } catch (final Exception e) {
                             throw MTronException.of(e);
                         }
                     });
             Arrays.stream(value.getClass().getFields())
                     .filter(f -> (f.getModifiers() & Modifier.PUBLIC) != 0)
-                    .filter(f -> shouldHandleReflectively(f.getType()))
+                    .filter(f -> attemptReflection(f.getType()))
                     .forEach(f -> {
                         try {
                             final Object result = f.get(value);
-                            map.put(uri(Helper.externalNameToMtronName(f.getName())), factory.create(result));
+                            map.put(uri(Helper.externalNameToMtronName(f.getName())), factory.toObj(result));
                         } catch (final Exception e) {
                             throw MTronException.of(e);
                         }

@@ -54,8 +54,8 @@ public class WrapRec implements Rec {
     public Map<Obj, Obj> jvm() {
         final Map<Obj, Obj> objMap = new LinkedHashMap<>();
         this.map.forEach((k, v) -> {
-            final Obj key = FACTORY.create(k);
-            final Obj value = FACTORY.create(v);
+            final Obj key = FACTORY.toObj(k);
+            final Obj value = FACTORY.toObj(v);
             objMap.put(key, value);
         });
         return objMap;
@@ -68,7 +68,7 @@ public class WrapRec implements Rec {
             v = this.map.get(key.jvm());
         if (null == v)
             return (O) noobj();
-        else return (O) FACTORY.create(v);
+        else return (O) FACTORY.toObj(v);
     }
 
     @Override

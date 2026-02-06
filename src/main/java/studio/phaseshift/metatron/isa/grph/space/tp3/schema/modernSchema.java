@@ -26,16 +26,14 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import static studio.phaseshift.metatron.furi.fURI.ALL;
+import static studio.phaseshift.metatron.furi.fURI.f;
+import static studio.phaseshift.metatron.furi.q.DocQ.Doc.docWrap;
 import static studio.phaseshift.metatron.isa.grph.grphInstSet.*;
-import static studio.phaseshift.metatron.isa.m.mInstSet.INST_TID;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
 import static studio.phaseshift.metatron.isa.m.type.Int.INT_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Real.REAL_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Str.STR_TYPE;
-import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
-import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
-import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /*
@@ -43,17 +41,19 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  */
 public class modernSchema extends MInstSet {
 
-    public static final fURI MODERN_SCHEMA_TID = GRPH_ISA_TID.extend("modern");
+    public static final fURI MODERN_SCHEMA_TID = f("/tp3").extend("schema").extend("modern");
     public static final fURI PERSON_TID = MODERN_SCHEMA_TID.extend("person");
     public static final fURI SOFTWARE_TID = MODERN_SCHEMA_TID.extend("software");
     public static final fURI KNOWS_TID = MODERN_SCHEMA_TID.extend("knows");
     public static final fURI CREATED_TID = MODERN_SCHEMA_TID.extend("created");
 
+    public static final Type MODERN_SCHEMA_TYPE = T(MODERN_SCHEMA_TID);
+
     public static final Type PERSON_TYPE = Type.Builder.build()
             .tid(VRTX_TID)
             .vid(PERSON_TID)
             .predicate(isa_(rec(
-                    uri("name"), STR_TYPE, 
+                    uri("name"), STR_TYPE,
                     uri("age"), INT_TYPE))).create();
 
     public static final Type SOFTWARE_TYPE = Type.Builder.build()
@@ -95,10 +95,11 @@ public class modernSchema extends MInstSet {
     @Override
     public Set<Type> types() {
         return new HashSet<>(List.of(
-                PERSON_TYPE,
-                SOFTWARE_TYPE,
-                KNOWS_TYPE,
-                CREATED_TYPE));
+                docWrap(PERSON_TYPE, "a person"),
+                docWrap(SOFTWARE_TYPE, "a software"),
+                docWrap(KNOWS_TYPE, "a knows"),
+                docWrap(CREATED_TYPE, "a created")
+        ));
     }
 }
 

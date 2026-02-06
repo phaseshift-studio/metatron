@@ -73,7 +73,7 @@ public class ElementMap extends AbstractMap<Uri, Obj> {
     public Obj get(final Object key) {
         Property<?> property = this.base.property(((Uri) key).uriValue().toString());
         if (property.isPresent()) {
-            return MObjFactory.of().create(property.value());
+            return MObjFactory.of().toObj(property.value());
         } else {
             property = this.base.property(":" + ((Uri) key).uriValue().toString());
             return property.isPresent() ? mParser.m_obj().parse(property.value().toString()).get() : noobj();
@@ -93,7 +93,7 @@ public class ElementMap extends AbstractMap<Uri, Obj> {
                 keyString = keyString.substring(1);
             this.base.property(":" + keyString, SERIALIZER.write(value));
         }
-        return property.isPresent() ? FACTORY.create(property.value()) : null;
+        return property.isPresent() ? FACTORY.toObj(property.value()) : null;
     }
 
     @Override
@@ -102,7 +102,7 @@ public class ElementMap extends AbstractMap<Uri, Obj> {
                 .map(p -> (Property<Object>) p)
                 .map(p -> {
                     final Uri key = uri(p.key());
-                    final Obj value = key.toString().startsWith(":") ? MObjFactory.of().create(SERIALIZER.read(p.value().toString())) : MObjFactory.of().create(p.value());
+                    final Obj value = key.toString().startsWith(":") ? MObjFactory.of().toObj(SERIALIZER.read(p.value().toString())) : MObjFactory.of().toObj(p.value());
                     return new SimpleEntry<>(key, value);
                 })
                 .collect(Collectors.toSet());

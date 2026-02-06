@@ -85,7 +85,7 @@ public class JRec extends MObj implements Rec {
     public Map<Obj, Obj> jvm() {
         final Map<Obj, Obj> base = null == this.sjvm ? new LinkedHashMap<>() : this.sjvm;
         //return this.cache;
-        final Map<Obj, Obj> temp = new LinkedHashMap<>(this.findField(uri("#")).stream().collect(Collectors.toMap(f -> uri(f.getName()), f -> JObjFactory.single().create(MTronException.wrap(() -> f.get(this.jvm))))));
+        final Map<Obj, Obj> temp = new LinkedHashMap<>(this.findField(uri("#")).stream().collect(Collectors.toMap(f -> uri(f.getName()), f -> JObjFactory.single().toObj(MTronException.wrap(() -> f.get(this.jvm))))));
         temp.putAll(base);
         return temp;
     }

@@ -60,7 +60,7 @@ public class PubSubQ extends BaseQ {
                             lst(isa_(rec()).tryToInst()),
                             (lhs, inst) -> new PubSubQ())).create();
 
-    public static final Type SUBSCRIPTION_TYPE =
+    public static final Type SUB_TYPE =
             Type.Builder.build()
                     .vid(SUBSCRIPTION_TID)
                     .tid(REC_TID)

@@ -26,24 +26,35 @@ import studio.phaseshift.metatron.util.Tuple;
 import java.util.*;
 import java.util.function.Function;
 
+import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.ObjFactory.Helper.containsObjs;
+import static studio.phaseshift.metatron.isa.m.type.ObjFactory.Helper.reflectionBasedCreate;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
-import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.isa.sys.sysInstSet.FACTORY_TID;
+import static studio.phaseshift.metatron.isa.sys.sysInstSet.SYS_ISA_TID;
 import static studio.phaseshift.metatron.util.Tuple.Pair;
 import static studio.phaseshift.metatron.util.Tuple.Triplet;
 
-public class MObjFactory implements ObjFactory {
+public class MObjFactory extends MRec implements ObjFactory {
 
-    private static final MObjFactory SINGLETON = new MObjFactory();
-    private final boolean allowReflection = true;
+    private static MObjFactory SINGLETON = null;
+    protected final boolean allowReflection = true;
+    protected static final fURI OBJ_FACTORY_TID = SYS_ISA_TID.extend("mfactory");
+
+    public static final Type M_FACTORY_TYPE = Type.Builder.build()
+            .tid(FACTORY_TID)
+            .vid(OBJ_FACTORY_TID)
+            .constructor(instC(INST_TID.dom(ALL.maybe()).rng(OBJ_FACTORY_TID), lst(), (lhs, inst) -> MObjFactory.of()))
+            .create();
 
     private final Map<Class<?>, Function> extensions = new HashMap<>();
 
@@ -52,94 +63,123 @@ public class MObjFactory implements ObjFactory {
         return this;
     }
 
+    protected MObjFactory(final Map<Obj,Obj> jvm,final fURI tid,final fURI vid) {
+        super(jvm, tid, vid);
+    }
+    
     protected MObjFactory() {
+        super(Map.of(), OBJ_FACTORY_TID, null);
     }
 
     public static ObjFactory of() {
+        if (SINGLETON == null)
+            SINGLETON = new MObjFactory();
         return SINGLETON;
     }
 
     @Override
-    public <O extends Obj> O create(final Object value, final fURI tid, final fURI vid) {
-        if (null == value)
-            return (O) NoObj.noobj();
-        if (value instanceof Obj)
-            return (O) value;
-        if (value instanceof Boolean)
-            return (O) bool((Boolean) value, tid, vid);
-        else if (value instanceof Enum)
-            return (O) uri(f(((Enum) value).name()), tid, vid);
-        else if (value instanceof Long)
-            return (O) jnt((Long) value, tid, vid);
-        else if (value instanceof Integer)
-            return (O) jnt((Integer) value, tid, vid);
-        else if (value instanceof Double)
-            return (O) real((Double) value, tid, vid);
-        else if (value instanceof Float)
-            return (O) real((Float) value, tid, vid);
-        else if (value instanceof Character)
-            return (O) str(value.toString(), tid, vid);
-        else if (value instanceof String)
-            return (O) str((String) value, tid, vid);
-        else if (value instanceof fURI)
-            return (O) uri((fURI) value, tid, vid);
-        else if (value instanceof List && containsObjs((List) value))
-            return (O) lst((List<Obj>) value, tid, vid);
-        else if (value instanceof Collection) {
-            final List<Obj> list = new ArrayList<>();
-            ((Collection) value).stream().forEach(e -> list.add(create(e)));
-            return (O) lst(list, tid, vid);
-        } else if (value instanceof Pair)
-            return (O) rel((Pair<Obj, Obj>) value, tid, vid);
-        else if (value instanceof Map && containsObjs((Map) value))
-            return (O) rec((Map<Obj, Obj>) value, tid, vid);
-        else if (value instanceof Map) {
-            final Map<Obj, Obj> map = new LinkedHashMap<>();
-            ((Map) value).forEach((k, v) -> map.put(create(k), create(v)));
-            return (O) rec(map, tid, vid);
-        } else {
-            final Optional<O> optional = this.extensions.entrySet().stream()
-                    .filter(e -> e.getKey().isAssignableFrom(value.getClass()))
-                    .findFirst().map(e -> (O) e.getValue().apply(value));
-            if (optional.isPresent())
-                return optional.get();
-            else if (this.allowReflection) {
-                return (O) rec(Helper.reflectionBasedCreate(this, value), f(value.getClass().getSimpleName().toLowerCase()), vid);
-            } else
-                throw MTronException.of("provided jvm object has no corresponding obj: %s", value);
+    public <OBJ extends Obj> OBJ toObj(final Object value, final fURI tid, final fURI vid) {
+        switch (value) {
+            case null -> {
+                return (OBJ) NoObj.noobj();
+            }
+            case Obj obj -> {
+                return (OBJ) value;
+            }
+            case Boolean b -> {
+                return (OBJ) bool(b, tid, vid);
+            }
+            case Enum anEnum -> {
+                return (OBJ) uri(f(anEnum.name()), tid, vid);
+            }
+            case Long l -> {
+                return (OBJ) jnt(l, tid, vid);
+            }
+            case Integer i -> {
+                return (OBJ) jnt(i, tid, vid);
+            }
+            case Double aDouble -> {
+                return (OBJ) real(aDouble, tid, vid);
+            }
+            case Float aFloat -> {
+                return (OBJ) real(aFloat, tid, vid);
+            }
+            case Character c -> {
+                return (OBJ) str(value.toString(), tid, vid);
+            }
+            case String s -> {
+                return (OBJ) str(s, tid, vid);
+            }
+            case fURI fURI -> {
+                return (OBJ) uri(fURI, tid, vid);
+            }
+            case List list1 when containsObjs(list1) -> {
+                return (OBJ) lst((List<Obj>) value, tid, vid);
+            }
+            case Collection collection -> {
+                final List<Obj> list = new ArrayList<>();
+                collection.stream().forEach(e -> list.add(toObj(e)));
+                return (OBJ) lst(list, tid, vid);
+            }
+            case Pair pair -> {
+                return (OBJ) rel((Pair<Obj, Obj>) value, tid, vid);
+            }
+            case Map map1 when containsObjs(map1) -> {
+                return (OBJ) rec((Map<Obj, Obj>) value, tid, vid);
+            }
+            case Map map1 -> {
+                final Map<Obj, Obj> map = new LinkedHashMap<>();
+                map1.forEach((k, v) -> map.put(toObj(k), toObj(v)));
+                return (OBJ) rec(map, tid, vid);
+            }
+            default -> {
+                final Optional<OBJ> optional = this.extensions.entrySet().stream()
+                        .filter(e -> e.getKey().isAssignableFrom(value.getClass()))
+                        .findFirst().map(e -> (OBJ) e.getValue().apply(value));
+                if (optional.isPresent())
+                    return optional.get();
+                else if (this.allowReflection) {
+                    return (OBJ) rec(reflectionBasedCreate(this, value), f(value.getClass().getSimpleName().toLowerCase()), vid);
+                } else
+                    throw MTronException.of("provided jvm object has no corresponding obj: %s", value);
+            }
         }
     }
 
     @Override
-    public <O extends Obj> O create(final Object value, final fURI tid, final fURI vid, final Class<O> objClass) {
+    public <OBJ extends Obj> OBJ toObj(final Object value, final fURI tid, final fURI vid, final Class<OBJ> objClass) {
         if (Bool.class.isAssignableFrom(objClass))
-            return (O) new MBool((Boolean) value, null == tid ? BOOL_TID : tid, vid);
+            return (OBJ) new MBool((Boolean) value, null == tid ? BOOL_TID : tid, vid);
         else if (Int.class.isAssignableFrom(objClass))
-            return (O) new MInt((Long) value, null == tid ? INT_TID : tid, vid);
-        else if (Real.class.isAssignableFrom(objClass))
-            return (O) new MReal((Double) value, null == tid ? REAL_TID : tid, vid);
+            return (OBJ) new MInt((Long) value, null == tid ? INT_TID : tid, vid);
+        else if (Real.class.isAssignableFrom(objClass) && value instanceof Double)
+            return (OBJ) new MReal((Double) value, null == tid ? REAL_TID : tid, vid);
+        else if (Real.class.isAssignableFrom(objClass) && value instanceof Float)
+            return (OBJ) new MReal(((Float) value).doubleValue(), null == tid ? REAL_TID : tid, vid);
+        else if (Str.class.isAssignableFrom(objClass) && value instanceof String)
+            return (OBJ) new MStr((String) value, null == tid ? STR_TID : tid, vid);
         else if (Str.class.isAssignableFrom(objClass))
-            return (O) new MStr((String) value, null == tid ? STR_TID : tid, vid);
+            return (OBJ) new MStr(value.toString(), null == tid ? STR_TID : tid, vid);
         else if (Uri.class.isAssignableFrom(objClass))
-            return (O) new MUri((fURI) value, null == tid ? URI_TID : tid, vid);
+            return (OBJ) new MUri((fURI) value, null == tid ? URI_TID : tid, vid);
         else if (Lst.class.isAssignableFrom(objClass))
-            return (O) new MLst((List<Obj>) value, null == tid ? LST_TID : tid, vid);
+            return (OBJ) new MLst((List<Obj>) value, null == tid ? LST_TID : tid, vid);
         else if (Rel.class.isAssignableFrom(objClass))
-            return (O) new MRel((Pair<Obj, Obj>) value, null == tid ? REL_TID : tid, vid);
+            return (OBJ) new MRel((Pair<Obj, Obj>) value, null == tid ? REL_TID : tid, vid);
         else if (Rec.class.isAssignableFrom(objClass))
-            return (O) new MRec((Map<Obj, Obj>) value, null == tid ? REC_TID : tid, vid);
+            return (OBJ) new MRec((Map<Obj, Obj>) value, null == tid ? REC_TID : tid, vid);
         else if (Inst.class.isAssignableFrom(objClass))
-            return (O) new MInst((Triplet<Poly, Inst.f, Obj>) value, null == tid ? INST_TID : tid, vid);
+            return (OBJ) new MInst((Triplet<Poly, Inst.f, Obj>) value, null == tid ? INST_TID : tid, vid);
         else if (Code.class.isAssignableFrom(objClass))
-            return (O) new MCode((List<Inst>) value, null == tid ? CODE_TID : tid, vid);
+            return (OBJ) new MCode((List<Inst>) value, null == tid ? CODE_TID : tid, vid);
         else if (Objs.class.isAssignableFrom(objClass))
-            return (O) new MObjs((List<Obj>) value, null == vid ? OBJS_TID : vid);
+            return (OBJ) new MObjs((List<Obj>) value, null == vid ? OBJS_TID : vid);
         else if (Type.class.isAssignableFrom(objClass))
-            return (O) new MType((Tuple.Pair<Call, Call>) value, null == vid ? TYPE_TID : tid, vid);
+            return (OBJ) new MType((Tuple.Pair<Call, Call>) value, null == vid ? TYPE_TID : tid, vid);
         else if (Fail.class.isAssignableFrom(objClass))
-            return (O) new MFail((Pair<Throwable, Fail>) value, null == tid ? FAIL_TID : tid, vid);
+            return (OBJ) new MFail((Pair<Throwable, Fail>) value, null == tid ? FAIL_TID : tid, vid);
         else if (NoObj.class.isAssignableFrom(objClass))
-            return (O) NoObj.noobj();
+            return (OBJ) NoObj.noobj();
         else
             throw MTronException.of("provided class has not obj equivalent: %s", objClass);
     }

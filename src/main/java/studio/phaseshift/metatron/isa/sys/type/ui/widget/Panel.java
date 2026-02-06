@@ -78,6 +78,7 @@ public class Panel extends AbstractWidget<Panel> {
                 .orElse(0);
 
         final StringBuilder sb = new StringBuilder();
+        sb.append(this.style.prefix);
         final String top = "%s%s".formatted(null == this.title ? "" : this.title, this.style.border.topSide().repeat(null == this.title ? maxLen : maxLen - Highlighter.visualLength(this.title))).stripTrailing();
         if (!top.isEmpty())
             sb.append(this.style.border.topLeftCorner()).append(top).append(this.style.border.topRightCorner()).append('\n');

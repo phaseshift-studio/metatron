@@ -57,6 +57,7 @@ public final class Tokens {
     public static final String USER_HOME = "user.home";
     public static final String PREPEND = "prepend";
     public static final String LOAD = "load";
+    public static final String NATIVE = "native";
     public static final String HTTP = "http";
     public static final String WS = "ws";
     public static final String MQTT = "mqtt";
@@ -74,6 +75,7 @@ public final class Tokens {
     public static final String TGT = "tgt";
     public static final String ON_RECV = "on_recv";
     public static final String HOSTNAME = "HOSTNAME";
+    public static final String SCHEMA = "schema";
 
 
 }

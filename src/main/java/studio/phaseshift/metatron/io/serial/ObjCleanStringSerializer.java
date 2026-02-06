@@ -33,6 +33,7 @@ import java.util.Arrays;
 import java.util.HexFormat;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import static studio.phaseshift.metatron.furi.q.DocQ.DOC_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBytes.bytes;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
@@ -265,6 +266,8 @@ public class ObjCleanStringSerializer implements ObjSerializer<String> {
 
     private StringBuilder generateRec(final StringBuilder sb, final Rec rec, final int depth, final int padding) {
         handleTID(sb, rec, true);
+     //   if(rec.tid().basePath().equals(DOC_TID)) // TODO: the concept of toString() needs to exist for metatron
+      //      return sb.append(rec.toString());
         if (rec.isEmpty()) {
             sb.append("[=>]");
         } else {

@@ -141,7 +141,7 @@ public class mGraph implements Graph, WrappedGraph<tp3Space> {
         for (int i = 0; i < keyValues.length; i = i + 2) {
             if (keyValues[i] != T.id && keyValues[i] != T.label) {
                 final Uri key = uri(keyValues[i].toString());
-                final Obj value = MObjFactory.of().create(keyValues[i + 1]);
+                final Obj value = MObjFactory.of().toObj(keyValues[i + 1]);
                 props.jvm().put(key, value);
             }
         }

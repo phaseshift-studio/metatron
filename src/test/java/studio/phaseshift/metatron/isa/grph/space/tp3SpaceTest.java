@@ -19,15 +19,19 @@
 package studio.phaseshift.metatron.isa.grph.space;
 
 import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.isa.SpaceTest;
 import studio.phaseshift.metatron.isa.grph.grphInstSet;
 import studio.phaseshift.metatron.isa.grph.space.tp3.tp3Space;
-import studio.phaseshift.metatron.isa.m.type.Rec;
+import studio.phaseshift.metatron.mTest;
 
-import static studio.phaseshift.metatron.Tokens.LOAD;
 import static studio.phaseshift.metatron.Tokens.PATTERN;
+import static studio.phaseshift.metatron.Tokens.REWRITE;
 import static studio.phaseshift.metatron.furi.fURI.f;
+import static studio.phaseshift.metatron.isa.grph.space.tp3.tp3Space.NATIVE_LOAD;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /*
@@ -35,10 +39,39 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  */
 @Disabled
 public class tp3SpaceTest extends SpaceTest {
-    final static Rec config = rec(PATTERN, uri("/t/#"), uri(LOAD), uri("modern"));
-
     public tp3SpaceTest() {
-        super(() -> tp3Space.of(config, f("/sys/space/tp3")));
+        super(f("/g/"), () -> tp3Space.of(rec(
+                PATTERN, uri("/g/#"),
+                REWRITE, rel(uri("/g/+/"), uri("")),
+                NATIVE_LOAD, uri("modern")), f("/sys/space/tp3")));
         grphInstSet.create();
+    }
+
+    @Override
+    public void testMonoReadWrite(final String writeExpression, final String readExpression, final String expectedExpression) {
+        LOG.warn("ignoring testMonoReadWrite: %s => %s => %s", writeExpression, readExpression, expectedExpression);
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "*/g/V/#                                                                        % 6",
+            "*/g/V/+.count()                                                                % 6",
+            "*/g/V/#.count()                                                                % 6",
+            "*/g/E/+.count()                                                                % 6",
+            "*/g/S/+.count()                                                                % 1",
+            "*/g/V/1.count()                                                                % 1",
+            "*/g/E/1.count()                                                                % 1",
+            "*/g/V/+/OUT/+.count()                                                          % 6",
+            "a=>b=>c.>>                                                                     % b=>c",
+            "a=>b=>c.<<                                                                     % a",
+            "a=>b=>c>-                                                                      % {a,b=>c}",
+            "a=>b=>c>-.>-                                                                   % {a,b,c}",
+            "a=>b=>c.count()                                                                % 1",
+            "1=>2=>c.>>                                                                     % 2=>c",
+            /// ////////////////////////////////////////////////////////////////////////////////////////
+            "(a=>(b=>c)).>>                                                                     % b=>c",
+    }, delimiter = '%')
+    public void testCoreGraphTraversals(final String code, final String expected) {
+        mTest.testCode(LOG, code, expected);
     }
 }

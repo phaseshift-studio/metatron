@@ -37,6 +37,7 @@ import java.util.*;
 import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.isa.grph.space.grphSpace.GRPH_SPACE_TID;
 import static studio.phaseshift.metatron.isa.grph.space.grphSpace.GRPH_SPACE_TYPE;
+import static studio.phaseshift.metatron.isa.grph.space.tp3.schema.modernSchema.MODERN_SCHEMA_TYPE;
 import static studio.phaseshift.metatron.isa.grph.space.tp3.tp3Space.TP3_SPACE_TID;
 import static studio.phaseshift.metatron.isa.grph.space.tp3.tp3Space.TP3_SPACE_TYPE;
 import static studio.phaseshift.metatron.isa.grph.type.Edge.EdgeType.EDGE_TYPE;
@@ -97,6 +98,7 @@ public class grphInstSet extends MInstSet {
         return new HashSet<>(List.of(
                 GRPH_SPACE_TYPE,
                 TP3_SPACE_TYPE,
+                MODERN_SCHEMA_TYPE,
                 ELMT_TYPE,
                 VRTX_TYPE,
                 EDGE_TYPE));

@@ -43,7 +43,7 @@ public class JObjFactory extends MObjFactory {
     }
 
     @Override
-    public <O extends Obj> O create(final Object value, final fURI tid, final fURI vid, final Class<O> objClass) {
+    public <O extends Obj> O toObj(final Object value, final fURI tid, final fURI vid, final Class<O> objClass) {
         return null;
     }
 
@@ -62,13 +62,13 @@ public class JObjFactory extends MObjFactory {
             newValue = f(value.toString());
         }// else if (tid.equals(FILE_TID))
         //return fileSpace.makeFile(Path.of(value.toString()));
-        return create(newValue, tid, vid);
+        return this.toObj(newValue, tid, vid);
     }
 
     @Override
-    public Obj create(final Object value, final fURI tid, final fURI vid) {
+    public Obj toObj(final Object value, final fURI tid, final fURI vid) {
         try {
-            return super.create(value, tid, vid);
+            return super.toObj(value, tid, vid);
         } catch (final MTronException e) {
             // do nothing
         }

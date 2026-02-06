@@ -52,7 +52,7 @@ public class mVariables implements Graph.Variables, WrappedVariables<Rec> {
 
     @Override
     public void set(final String key, final Object value) {
-        this.variables.jvm().put(uri(key), MObjFactory.of().create(value));
+        this.variables.jvm().put(uri(key), MObjFactory.of().toObj(value));
     }
 
     @Override
