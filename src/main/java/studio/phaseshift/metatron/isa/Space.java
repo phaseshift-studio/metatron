@@ -22,8 +22,9 @@ import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.MMachine;
-import studio.phaseshift.metatron.isa.sys.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.sys.type.Router;
+import studio.phaseshift.metatron.isa.sys.type.ui.graphitty.Graphitty;
+import studio.phaseshift.metatron.isa.sys.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
@@ -33,12 +34,9 @@ import java.io.Closeable;
 import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
-import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.furi.fURI.f;
-import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
-import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
@@ -143,17 +141,16 @@ public interface Space extends Rec, Closeable {
         public static fURI toRewrite(final fURI vid, final Pair<String, String> rewrite) {
             return null == rewrite ? vid : f(rewrite.get1() + vid.toString().replaceFirst(rewrite.get0(), ""));
         }
-        
+
         public static fURI fromRewrite(final fURI vid, final Pair<String, String> rewrite) {
             return null == rewrite ? vid : f(rewrite.get0() + vid.toString().replaceFirst(rewrite.get1(), ""));
         }
-        
-        
+
+
         public static String toNativeSpace(final fURI vid, final Pair<String, String> rewrite) {
             return null == rewrite ? vid.toString() : rewrite.get1() + vid.toString().replaceFirst(rewrite.get0(), "");
         }
-        
-        
+
 
         public static fURI fromNativeSpace(final String vid, final Pair<String, String> rewrite) {
             return null == rewrite ? f(vid) : f(rewrite.get0() + vid.replaceFirst(rewrite.get1(), ""));
@@ -227,7 +224,12 @@ public interface Space extends Rec, Closeable {
 
         }
 
-        public static Obj resolveWrite(final Space space, final fURI vid, final Obj obj, final BiFunction<fURI, Obj, Obj> directWriter, final Function<fURI, Iterator<Tuple.Pair<fURI, Obj>>> directReader) {
+        public static Obj resolveWrite(final GraphittyLogger LOG, final Space space, final fURI vid, Obj obj, final BiFunction<fURI, Obj, Obj> directWriter, final Function<fURI, Iterator<Tuple.Pair<fURI, Obj>>> directReader) {
+            if (Obj.Helper.isAuto(obj)) {
+                LOG.info("evaluating auto %s and yielding result to: %s", obj, vid);
+                obj = obj.apply();
+            }
+
             final Iterator<Tuple.Pair<fURI, Obj>> current = directReader.apply(vid);
             if (current.hasNext() && vid.isNode()) {
                 writeComplete(vid, obj, current.next().get1());
@@ -238,17 +240,17 @@ public interface Space extends Rec, Closeable {
                     if (vid.isNode() || !obj.isPoly()) {
                         return directWriter.apply(vid, obj);
                     } else if (obj.isRec()) { // branch
-                        obj.recValue().forEach((key, value) -> Helper.resolveWrite(space, vid.extend(key.uriValue()), value, directWriter, directReader));
+                        obj.recValue().forEach((key, value) -> Helper.resolveWrite(LOG, space, vid.extend(key.uriValue()), value, directWriter, directReader));
                     } else if (obj.isLst()) {
                         for (int i = 0; i < obj.lstValue().size(); i++) { // branch
-                            Helper.resolveWrite(space, vid.extend(String.valueOf(i)), obj.lstValue().get(i), directWriter, directReader);
+                            Helper.resolveWrite(LOG, space, vid.extend(String.valueOf(i)), obj.lstValue().get(i), directWriter, directReader);
                         }
                     }
                 } else if (vid.isNode() || !obj.isPoly()) {
                     if (base.get1().isRec())
-                        Helper.resolveWrite(space, base.get0(), base.get1().<Rec>as().put(uri(vid.removePrefix(base.get0())), obj), directWriter, directReader);
+                        Helper.resolveWrite(LOG, space, base.get0(), base.get1().<Rec>as().put(uri(vid.removePrefix(base.get0())), obj), directWriter, directReader);
                     else if (base.get1().isLst())
-                        Helper.resolveWrite(space, base.get0(), base.get1().<Lst>as().append(obj), directWriter, directReader);
+                        Helper.resolveWrite(LOG, space, base.get0(), base.get1().<Lst>as().append(obj), directWriter, directReader);
                     else {
                         //throw MTronException.of("unknown poly: %s %s %s", base.get1(), vid, obj);
                         writeComplete(vid, obj, base.get1());
@@ -262,7 +264,7 @@ public interface Space extends Rec, Closeable {
                                 .filter(kv -> !kv.getValue().isNoObj())
                                 //.filter(kv -> nextStepAddr.extend(kv.getKey().uriValue()).matches(vid))
                                 //.forEach(kv -> submap.put(kv.getKey(), kv.getValue()));
-                                .forEach(kv -> Helper.resolveWrite(space, kv.getKey().uriValue(), kv.getValue(), directWriter, directReader));
+                                .forEach(kv -> Helper.resolveWrite(LOG, space, kv.getKey().uriValue(), kv.getValue(), directWriter, directReader));
                         // resolveWriter.accept(nextStepAddr, new MRec(submap, value.tid(), fURI.NULL));
 
                     } else {
@@ -271,7 +273,7 @@ public interface Space extends Rec, Closeable {
                     }
                 } else if (base.get1().isLst()) {
                     Lst newLst = base.get1().<Lst>as().at(uri(vid.removePrefix(base.get0()).pretract()), obj, Lst.IMMUTABLE);
-                    Helper.resolveWrite(space, vid, newLst, directWriter, directReader);
+                    Helper.resolveWrite(LOG, space, vid, newLst, directWriter, directReader);
                 }
             }
             return obj;

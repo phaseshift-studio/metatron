@@ -107,7 +107,7 @@ public class fsSpace extends MSpace<FileSystem> {
     @Override
     public Obj write(final fURI vid, final Obj obj) {
         return Q.Helper.processPreWrite(this.qs(), vid, vid, obj).orElseGet(() -> {
-            Obj result = Space.Helper.resolveWrite(this, vid.basePath(), obj, this.directWriter(), this.directReader());
+            Obj result = Space.Helper.resolveWrite(LOG, this, vid.basePath(), obj, this.directWriter(), this.directReader());
             return Q.Helper.processPostWrite(this.qs(), vid, vid, obj).orElse(Q.Helper.processQlessWrite(this.qs(), vid, vid, obj).orElse(result));
         });
         //   return this.qs().processPreWrite(vid, vid, obj).orElseGet(() -> {

@@ -145,7 +145,7 @@ public class tableSpace extends MSpace<Connection> {
 
     public Obj write(final fURI vid, final Obj obj) {
         return studio.phaseshift.metatron.furi.Q.Helper.processPreWrite(this.qs(), vid, vid, obj).orElseGet(() -> {
-            Space.Helper.resolveWrite(this, vid.basePath(), obj, this.directWriter(), this.directReader());
+            Space.Helper.resolveWrite(LOG, this, vid.basePath(), obj, this.directWriter(), this.directReader());
             return studio.phaseshift.metatron.furi.Q.Helper.processPostWrite(this.qs(), vid, vid, obj).orElse(obj);
         });
     }

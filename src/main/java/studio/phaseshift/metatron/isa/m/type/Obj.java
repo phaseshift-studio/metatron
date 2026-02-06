@@ -594,9 +594,9 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
         private static final ObjSerializer<String> SERIALIZER = new ObjCleanStringSerializer();
 
         public static boolean isAuto(final Obj obj) {
-            return obj.tid().basePath().equals(AUTO_INST_TID) || obj.tid().basePath().equals(AUTO_FROM_INST_TID);
+            return obj.isCall() && ((Call) obj).isAuto();
         }
-
+        
         public static boolean typeInferenceMatch(final Obj lhs, final Type rhs) {
             if (rhs.isBaseType()) {
                 if (lhs.isObjs()) {
