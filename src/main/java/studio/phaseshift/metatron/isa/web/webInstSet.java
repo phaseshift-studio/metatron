@@ -27,18 +27,21 @@ import studio.phaseshift.metatron.isa.m.type.impl.MInstSet;
 import studio.phaseshift.metatron.isa.web.parser.HTMLTranslator;
 import studio.phaseshift.metatron.isa.web.parser.JSONTranslator;
 import studio.phaseshift.metatron.isa.web.parser.XMLTranslator;
-import studio.phaseshift.metatron.isa.web.space.http.httpSpace;
 
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
+import static studio.phaseshift.metatron.isa.m.type.Rec.RecType.REC_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.isa.web.space.http.httpSpace.HTTP_SPACE_TYPE;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -52,6 +55,20 @@ public class webInstSet extends MInstSet {
     public static final fURI JSON_TID = WEB_ISA_TID.extend("json");
     public static final fURI CSS_TID = WEB_ISA_TID.extend("css");
 
+    public static final Type XML_TYPE = Type.Builder.build()
+            .tid(REC_TID)
+            .vid(XML_TID).create();
+    public static final Type HTML_TYPE = Type.Builder.build()
+            .tid(XML_TID)
+            .vid(HTML_TID)
+            .predicate(isa_(rec(uri("html"), rec(uri("head"), REC_TYPE, uri("body"), REC_TYPE))).tryToInst()).create();
+    public static final Type JSON_TYPE = Type.Builder.build()
+            .tid(REC_TID)
+            .vid(JSON_TID).create();
+    public static final Type CSS_TYPE = Type.Builder.build()
+            .tid(REC_TID)
+            .vid(CSS_TID).create();
+
     public webInstSet(final fURI vid) {
         super(WEB_ISA_TID, vid);
     }
@@ -63,11 +80,11 @@ public class webInstSet extends MInstSet {
     @Override
     public Set<Type> types() {
         return Stream.of(
-                httpSpace.HTTP_SPACE_TYPE,
-                T(XML_TID),
-                T(HTML_TID, mParser.parse("?[html=>?[head=>_,body=>_]]")),
-                T(JSON_TID),
-                T(CSS_TID)).collect(Collectors.toSet());
+                HTTP_SPACE_TYPE,
+                XML_TYPE,
+                HTML_TYPE,
+                JSON_TYPE,
+                CSS_TYPE).collect(Collectors.toSet());
     }
 
     @Override

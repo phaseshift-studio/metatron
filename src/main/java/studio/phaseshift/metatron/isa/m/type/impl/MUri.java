@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -27,22 +27,23 @@ import static studio.phaseshift.metatron.isa.m.mInstSet.URI_TID;
 public class MUri extends MObj implements Uri {
 
     private static final Uri EMPTY_URI = new MUri(f(""), URI_TID, fURI.fnull);
-    
+
     public MUri(final fURI jvm, final fURI tid, final fURI vid) {
-        super(jvm.resolve(), null == tid ? URI_TID : tid, vid);
+        super(jvm.resolve(), tid, vid);
         if (jvm.isZero())
             this.tid = this.tid.zero();
     }
 
     public static Uri uri(final String jvm) {
-        return new MUri(f(jvm), URI_TID, fURI.fnull);
+        return uri(f(jvm), URI_TID, fURI.fnull);
     }
 
     public static Uri uri() {
         return EMPTY_URI;
     }
+
     public static Uri uri(final fURI jvm) {
-        return new MUri(jvm, URI_TID, fURI.fnull);
+        return uri(jvm, URI_TID, fURI.fnull);
     }
 
     public static Uri uri(final fURI jvm, final fURI tid) {
@@ -50,11 +51,11 @@ public class MUri extends MObj implements Uri {
     }
 
     public static Uri uri(final fURI jvm, final fURI tid, final fURI vid) {
-        return new MUri(jvm, tid, vid);
+        return null == tid ? new MUri(jvm, URI_TID, vid) : new MUri(jvm, tid, vid);
     }
 
     public static Uri uri(final String jvm, final fURI tid) {
-        return new MUri(f(jvm), tid, fURI.fnull);
+        return uri(f(jvm), tid, fURI.fnull);
     }
 
     @Override
