@@ -107,20 +107,88 @@ The entire structure of a ring is denoted
 where each symbol is replaced by the corresponding operator and elements of the respective ring being defined.
 Any collection of tokens, processes, objects, identifiers, etc. that obey these rules form, by definition, a ring and can be manipulated by the stated equivalencies and their formal derivatives.
 
-### the rings of metatron
+## Core Concepts
 
-There are many rings in metatron.
-Of particular importance is the ring fURI -- a "fhat" Uniform Resource Identifier. `fURIs` are used to denote the type, extension, and location of an `obj` (object) in metatron.
-In fact, an `obj` in metatron is composed of three elements, one data structure and 2 `fURIs`, where:
+There are few concepts to understand, but in order to be effective, it is important that these concepts are understood completely. The first concept to learn is the definition and purpose of a fURI -- a "fhat" Uniform Resource Identifier. `fURIs` are used to denote the type, extension, and location of an `obj` (object) in metatron. fURIs are so important that they compose 2 of the 3 components defining an `obj`. An `obj` is defined as:
 
 ++++
 \begin{align*}
-\texttt{obj} \in \left(\texttt{jvm} \times \texttt{tid} \times \texttt{vid}\right),
+\texttt{obj} \in \left(\texttt{tid} \times \texttt{jvm} \times \texttt{vid}\right),
 \end{align*}
 ++++
 
-where `jvm` is an object of the Java virtual machine, `tid` is a _type_ (class) `fURI` and `vid` is a _value_ (instance) `fURI`.
-Every `obj` in metatron has a form, a denotation of that form, and a reference to its explicit location in _space_.
+where  `tid` is a _type_ (class) `fURI`, `jvm` is an object of the Java virtual machine, and `vid` is a _value_ (instance) `fURI`. In other words, every `obj` in metatron has a specification of its structure (`tid`), a structure (`jvm`), a reference to its explicit location in memory (`vid`).
+
+Every fURI is composed of the following components:
+
+. *scheme*: the protocol or namespace of the fURI
+. *authority*: the host or domain of the fURI
+. *path*: the path or resource of the fURI
+. *coefficient*: the multiplicative factor of the fURI (called a `c`)
+. *query*: the query parameters of the fURI (called a `q`)
+
+The first 3 components above are familiar to most as they form the reference architecture of the world wide web. These aspects make it possible for `objs` to reference each other across memory, across machines, and across networks. The last 2 components are unique and have a special role to play in the meta structures and processes around an `obj`. For instance, a coefficient determines how many `objs` are denoted by the specified fURI. The `objs` below demonstrate the compressing use of an `obj's` coefficient.
+
+++++
+<!-- 🐖
+{1,1,1}
+{1,2,3}
+{1,2,3}.type()
+{1,2,3}.tid()
+1-<[_,_,_]
+1-<[_,_,_]>-
+1-<{_,_,_}
+-->
+++++
+
+The coefficient plays a more significant role with types. A coefficient, in general, is defined by the pair:
+
+++++
+\begin{align*}
+\texttt{c} \in \left(\mathbb{N} \times \mathbb{N}\right),
+\end{align*}
+++++
+where the left component is the minimum number of `objs` referred to by the fURI and the right component is the maximum number of `objs` referred to by the fURI. A salient example of coefficient ranges is demonstrated using types. Before proceeding with the example, its important to note that coefficients have a syntactic sugar form in metatron that borrows directly for the cardinality specifications in common regular expression languages.
+
+.coefficient sugar notation
+[%autowidth]
+[cols="1,1,1",separator="|"]
+|===
+| `{0,0}` | `{0}` | `noobj` 
+| `{1,1}` | `{1}` or empty | a single `obj`
+| `{0,1}` | `{?}` | "maybe"
+| `{1,}`  | `{+}` | "some"
+| `{,}`   | `{*}` | "maybe some"
+|===
+
+The type `project` has all the requirements of `rec` as well as two additional requirements: `name` and `language`. The `name` value must be a single `str` (`{1,1}`}) and the `language` value must be one or more languages identified by a `uri` (`{+} = {1,}`). The third project has no languages and as such, can be defined as a type of `project`.
+
+[source,mtron,role="center",float="left"]
+----
+rec::T[?[name=>str::T,language=>uri{+}::T]]@project
+│  │ │ │                  │         │       │
+│  │ │ │                  │         │       └── vid
+│  │ │ │                  │         └────────── "some" coefficient            
+│  │ │ │                  └──────────────────── rec key
+│  │ │ │
+│  │ │ └───────────────── isa instruction
+│  │ └─────────────────── type token
+│  └───────────────────── typeof token
+└──────────────────────── tid
+----
+
+++++
+<!-- 🐖
+project -> rec::T[?[name=>str::T,language=>uri{+}::T]]
+project::[name=>'metatron',language=>{java,typescript,python}]
+project::[name=>'home assistant',language=>{python}]
+project::[name=>'unknown',language=>{}]
+-->
+++++
+
+
+  
+
 
 ### fURI
 

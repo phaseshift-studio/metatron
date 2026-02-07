@@ -1,17 +1,15 @@
-=== m instruction set
+=== instruction set
 
 image:neofhat-reading-by-candle-light.png[width=300,float=right,role="parchment"]
 
-The instruction set (`inst_set`) specifies a collection of reusable objects and functions and is what is commonly called a _package_ (i.e. a library, an API, a module, etc.).
-In [metatron], an `inst_set` is defined as the 4-tuple
+The instruction set (`inst_set`) specifies a collection of reusable objects and functions and is what is commonly called a _package_ (i.e. a library, an API, a module, etc.). In [metatron], an `inst_set` is an `obj` defined by the 4-tuple
 
 ++++
 \begin{align*}
-\texttt{inst_set} \in \left(\texttt{TYPE} \times \texttt{INST} \times \texttt{REWRITE} \times \texttt{PARSER}\right),
+\texttt{inst_set} \in \left(\texttt{TYPE} \times \texttt{INST} \times \texttt{REWRITE} \times \texttt{PARSER}\right).
 \end{align*}
 ++++
 
-where each component of the tuple is a set of the specified kind.
 To function properly, [metatron] requires, a minimum, two instruction sets: `m` and `mach`.
 This section will discuss `m`.
 
