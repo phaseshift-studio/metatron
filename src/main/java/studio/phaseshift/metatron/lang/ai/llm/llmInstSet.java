@@ -35,7 +35,7 @@ import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Type;
-import studio.phaseshift.metatron.isa.m.type.impl.MInstSet;
+import studio.phaseshift.metatron.isa.m.type.impl.AbstractInstSet;
 import studio.phaseshift.metatron.isa.sys.type.Router;
 import studio.phaseshift.metatron.isa.sys.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.util.MTronException;
@@ -64,7 +64,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class llmInstSet extends MInstSet {
+public class llmInstSet extends AbstractInstSet {
 
     public static final fURI LLM_INSTSET_TID = f("/llm");
     public static final fURI INST_TID = LLM_INSTSET_TID.extend("inst");

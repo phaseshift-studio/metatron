@@ -21,34 +21,32 @@ package studio.phaseshift.metatron.lang.sys.router.impl;
 import org.java_websocket.WebSocket;
 import org.java_websocket.handshake.ClientHandshake;
 import org.java_websocket.server.WebSocketServer;
+import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.io.serial.ObjByteBufferSerializer;
 import studio.phaseshift.metatron.io.serial.ObjSerializer;
 import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.sys.type.router.mRouter;
+import studio.phaseshift.metatron.isa.sys.type.Router;
 import studio.phaseshift.metatron.isa.sys.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.sys.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.lang.jre.ObjFieldReflection;
 import studio.phaseshift.metatron.lang.sys.router.Cluster;
-import studio.phaseshift.metatron.isa.sys.type.Router;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.io.Closeable;
 import java.net.BindException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static studio.phaseshift.metatron.furi.fURI.f;
+import static studio.phaseshift.metatron.io.serial.ObjByteBufferSerializer.OBJ_BYTE_BUFFER_SERIALIZER_TID;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
-import static studio.phaseshift.metatron.isa.sys.type.router.mRouter.ROUTER_TID;
+import static studio.phaseshift.metatron.isa.sys.type.router.BasicRouter.ROUTER_TID;
 
 public class MServer extends WebSocketServer implements Cluster, Closeable, Obj {
 
@@ -68,7 +66,10 @@ public class MServer extends WebSocketServer implements Cluster, Closeable, Obj 
         this.host = host;
         this.peers = peers;
         LOG = Graphitty.log(this);
-        this.serializer = mRouter.SERIALIZERS.get(ObjByteBufferSerializer.OBJ_BYTE_BUFFER_SERIALIZER_TID);
+        this.serializer = BootLoader.getObjSerializerProviders(OBJ_BYTE_BUFFER_SERIALIZER_TID)
+                .map(ServiceLoader.Provider::get)
+                .findFirst()
+                .orElseGet(ObjByteBufferSerializer::new);
     }
 
     public boolean isRunning() {

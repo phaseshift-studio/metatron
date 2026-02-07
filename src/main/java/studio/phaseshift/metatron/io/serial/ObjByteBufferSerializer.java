@@ -33,6 +33,7 @@ import static studio.phaseshift.metatron.isa.m.mInstSet.CODE_TID;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
+@ServiceMetadata(tid = "/sys/io/bytes")
 public class ObjByteBufferSerializer implements ObjSerializer<ByteBuffer> {
 
     public static final fURI OBJ_BYTE_BUFFER_SERIALIZER_TID = OBJ_SERIAL_TID.extend("bytes");

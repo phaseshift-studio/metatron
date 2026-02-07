@@ -38,12 +38,16 @@ import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.furi.fURI.fnull;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
+import static studio.phaseshift.metatron.isa.m.type.Int.INT_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.Str.STR_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
+import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
@@ -192,16 +196,18 @@ public interface Lst extends Poly<Lst, List<Obj>>, PlusMonoid.O<Lst> {
                     instC(AS_INST_TID.dom(LST_TID).rng(REC_TID), lst(T(REC_TID)), (lhs, inst) -> Poly.Helper.transformLstToRec(lhs.asLst(), inst.arg(0).tid(), fnull)),
                     instC(PLUS_INST_TID.dom(LST_TID).rng(LST_TID), lst(T(LST_TID)), (lhs, inst) -> lhs.jvm(Stream.concat(lhs.elements(), inst.arg(0).elements()).toList())),
                     instC(MULT_INST_TID.dom(LST_TID).rng(LST_TID), lst(T(LST_TID)), (lhs, inst) -> lhs.jvm(lhs.elements().flatMap(a -> inst.arg(0).elements().map(b -> rel(a, b))).toList())),
-                    instC(LSHIFT_INST_TID.dom(LST_TID).rng(LST_TID), lst(isa_(T(INT_TID)).else_(jnt(1))), (lhs, inst) -> objs(lhs.stream().filter(Obj::isLst).map(l -> l.jvm(lhs.<Lst>as().indexedStream().filter(r -> r.first().intValue() >= inst.arg(0).intValue()).map(Rel::second).toList())))),
-                    instC(RSHIFT_INST_TID.dom(LST_TID).rng(LST_TID), lst(isa_(T(INT_TID)).else_(jnt(1))), (lhs, inst) -> objs(lhs.stream().filter(Obj::isLst).map(l -> l.jvm(lhs.<Lst>as().indexedStream().filter(r -> r.first().intValue() < (lhs.lstValue().size() - inst.arg(0).intValue())).map(Rel::second).toList())))),
+                    instC(LSHIFT_INST_TID.dom(LST_TID).rng(LST_TID), lst(isa_(INT_TYPE).else_(jnt(1))), (lhs, inst) -> objs(lhs.stream().filter(Obj::isLst).map(l -> l.jvm(lhs.<Lst>as().indexedStream().filter(r -> r.first().intValue() >= inst.arg(0).intValue()).map(Rel::second).toList())))),
+                    instC(RSHIFT_INST_TID.dom(LST_TID).rng(LST_TID), lst(isa_(INT_TYPE).else_(jnt(1))), (lhs, inst) -> objs(lhs.stream().filter(Obj::isLst).map(l -> l.jvm(lhs.<Lst>as().indexedStream().filter(r -> r.first().intValue() < (lhs.lstValue().size() - inst.arg(0).intValue())).map(Rel::second).toList())))),
                     instC(MERGE_INST_TID.dom(LST_TID).rng(ALL_STAR), lst(), (lhs, inst) -> objs(lhs.elements())),
-                    instC(GET_INST_TID.dom(LST_TID).rng(ALL_STAR), lst(T(INT_TID)), (lhs, inst) -> lhs.<Lst>as().at(inst.arg(0))),
-                    instC(GET_INST_TID.dom(LST_TID).rng(ALL_STAR), lst(T(URI_TID)), (lhs, inst) -> lhs.<Lst>as().at(inst.arg(0))),
+                    instC(MERGE_INST_TID.dom(LST_TID).rng(ALL_STAR), lst(URI_TYPE), (lhs, inst) -> uri(lhs.elements().map(e -> e.uriValue().toString()).reduce("", (a, b) -> a + inst.arg(0).uriValue().toString() + b).substring(1))),
+                    instC(MERGE_INST_TID.dom(LST_TID).rng(ALL_STAR), lst(STR_TYPE), (lhs, inst) -> str(lhs.elements().map(Obj::strValue).reduce("", (a, b) -> a + inst.arg(0).strValue() + b).substring(1))),
+                    instC(GET_INST_TID.dom(LST_TID).rng(ALL_STAR), lst(INT_TYPE), (lhs, inst) -> lhs.<Lst>as().at(inst.arg(0))),
+                    instC(GET_INST_TID.dom(LST_TID).rng(ALL_STAR), lst(URI_TYPE), (lhs, inst) -> lhs.<Lst>as().at(inst.arg(0))),
                     instC(HAS_INST_TID.dom(LST_TID).rng(LST_TID.maybe()), lst(T(ALL)), (lhs, inst) -> lhs.<Lst>as().elements().anyMatch(r -> r.matches(inst.arg(0))) ? lhs : noobj()),
                     instC(WITHIN_INST_TID.dom(LST_TID).rng(LST_TID), lst(T(ALL_STAR)), (lhs, inst) -> lst(inst.arg(0).apply(objs(lhs.stream().flatMap(Obj::elements))).stream().toList())),
                     instC(SUM_INST_TID.dom(LST_TID.maybeSome()).rng(LST_TID), lst(), (lhs, inst) -> inst.seed().jvm(lhs.stream().reduce(inst.seed(), (a, b) -> ((Lst) a).plus((Lst) b)).lstValue()), lst()),
                     instC(SELECT_INST_TID.dom(LST_TID).rng(LST_TID.maybe()), lst(T(LST_TID)), (lhs, inst) -> Poly.Helper.selectLstRecursion(lhs.asLst(), inst.arg(0).asLst())),
-                    instC(POW_INST_TID.dom(LST_TID).rng(LST_TID), lst(T(INT_TID)), (lhs, inst) -> {
+                    instC(POW_INST_TID.dom(LST_TID).rng(LST_TID), lst(INT_TYPE), (lhs, inst) -> {
                         int pow = inst.arg(0).intValue().intValue();
                         Lst l = lhs.clone(lhs.jvm(), lhs.tid(), null);
                         for (int i = 0; i < pow; i++) {

@@ -24,7 +24,11 @@ import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.isa.SpaceTest;
 import studio.phaseshift.metatron.isa.grph.grphInstSet;
 import studio.phaseshift.metatron.isa.grph.space.tp3.tp3Space;
+import studio.phaseshift.metatron.isa.iot.iotInstSet;
+import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.mTest;
+
+import java.util.ServiceLoader;
 
 import static studio.phaseshift.metatron.Tokens.PATTERN;
 import static studio.phaseshift.metatron.Tokens.REWRITE;
@@ -44,7 +48,7 @@ public class tp3SpaceTest extends SpaceTest {
                 PATTERN, uri("/g/#"),
                 REWRITE, rel(uri("/g/+/"), uri("")),
                 NATIVE_LOAD, uri("modern")), f("/sys/space/tp3")));
-        grphInstSet.create();
+        ServiceLoader.load(InstSet.class).stream().filter(i -> i instanceof grphInstSet).findFirst().orElseThrow().get();
     }
 
     @Override

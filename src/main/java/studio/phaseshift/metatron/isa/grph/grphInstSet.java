@@ -18,42 +18,34 @@
 
 package studio.phaseshift.metatron.isa.grph;
 
-import org.apache.tinkerpop.gremlin.jsr223.CachedGremlinScriptEngineManager;
-import org.apache.tinkerpop.gremlin.jsr223.GremlinLangScriptEngineFactory;
-import org.apache.tinkerpop.gremlin.jsr223.GremlinScriptEngine;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.grph.space.tp3.tp3Space;
 import studio.phaseshift.metatron.isa.grph.type.Edge;
 import studio.phaseshift.metatron.isa.grph.type.Elmt;
 import studio.phaseshift.metatron.isa.grph.type.Vrtx;
 import studio.phaseshift.metatron.isa.m.type.Inst;
+import studio.phaseshift.metatron.isa.m.type.ServiceMetadata;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.m.type.Uri;
-import studio.phaseshift.metatron.isa.m.type.impl.MInstSet;
-import studio.phaseshift.metatron.isa.m.type.impl.MObjFactory;
+import studio.phaseshift.metatron.isa.m.type.impl.AbstractInstSet;
 
 import java.util.*;
 
-import static studio.phaseshift.metatron.furi.fURI.ALL;
-import static studio.phaseshift.metatron.isa.grph.space.grphSpace.GRPH_SPACE_TID;
 import static studio.phaseshift.metatron.isa.grph.space.grphSpace.GRPH_SPACE_TYPE;
 import static studio.phaseshift.metatron.isa.grph.space.tp3.schema.modernSchema.MODERN_SCHEMA_TYPE;
-import static studio.phaseshift.metatron.isa.grph.space.tp3.tp3Space.TP3_SPACE_TID;
 import static studio.phaseshift.metatron.isa.grph.space.tp3.tp3Space.TP3_SPACE_TYPE;
 import static studio.phaseshift.metatron.isa.grph.type.Edge.EdgeType.EDGE_TYPE;
 import static studio.phaseshift.metatron.isa.grph.type.Elmt.ElmtType.ELMT_TYPE;
 import static studio.phaseshift.metatron.isa.grph.type.Vrtx.VrtxType.VRTX_TYPE;
 import static studio.phaseshift.metatron.isa.m.mInstSet.MTRON_TID;
-import static studio.phaseshift.metatron.isa.m.type.Str.STR_TYPE;
-import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
-import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
-import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.isa.sys.sysInstSet.SYS_SPACE_TID;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class grphInstSet extends MInstSet {
+@ServiceMetadata(tid = "/mtron/grph")
+public class grphInstSet extends AbstractInstSet {
 
     public static final fURI GRPH_ISA_TID = MTRON_TID.extend("grph");
     public static final fURI GRPH_INST_TID = GRPH_ISA_TID.extend("inst");
@@ -85,12 +77,8 @@ public class grphInstSet extends MInstSet {
         super(GRPH_ISA_TID, vid);
     }
 
-    public static grphInstSet create(final fURI vid) {
-        return new grphInstSet(vid);
-    }
-
-    public static grphInstSet create() {
-        return grphInstSet.create(GRPH_ISA_TID);
+    public grphInstSet() {
+        this(SYS_SPACE_TID.extend("grph"));
     }
 
     @Override

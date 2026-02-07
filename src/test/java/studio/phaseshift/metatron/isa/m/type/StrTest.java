@@ -68,19 +68,18 @@ public class StrTest extends mObjTest {
         mTest.testCode(LOG, code, expected);
     }
 
-
     @ParameterizedTest
     @CsvSource(value = {
-            "'ab3cd'.has('ab.')                                                             % true",
-            "'ab3cd'.has('bb')                                                              % false",
-            "{'abc3d','aaa'}.has('a\\.')                                                    % bool{2}::false",
-            "{'abc3d','aaa'}.has('a.')                                                      % bool{2}::true",
-            "{'abc3d','aaa'}.has('a(b)?(a|c).?')                                            % bool{2}::true",
-            "{'abc3d','aaa'}.has('b.')                                                      % {true,false}",
-            "{'abc3d','aaa'}.has('c.')                                                      % {true,false}",
-            "{'abc3d','aaa'}.has('d.')                                                      % bool{2}::false",
-            "{'abc3d','aaa'}.has('d.?')                                                     % {true,false}",
-            "{'abc3d','aaa'}.has('e.')                                                      % bool{2}::false",
+            "'ab3cd'.has('ab.*')                                                               % \"ab3cd\"",
+            "'ab3cd'.has('bb')                                                                 % noobj",
+            "{'abc3d','aaa'}.has('a\\.')                                                       %  noobj",
+            "{'abc3d','aaa'}.has('a.*')                                                        % {\"abc3d\",\"aaa\"}",
+            "{'abc3d','aaa'}.has('a(b)?(a|c).?')                                               % {\"abc3d\",\"aaa\"}",
+            "{'abc3d','aaa'}.has('b.*')                                                        % {\"abc3d\"}",
+            "{'abc3d','aaa'}.has('c.*')                                                        % {\"abc3d\"}",
+            "{'abc3d','aaa'}.has('d.*')                                                        % \"abc3d\"",
+            "{'abc3d','aaa'}.has('d.?')                                                        % \"abc3d\"",
+            "{'abc3d','aaa'}.has('e.*')                                                        % noobj"
             // "{'abc3d','aaa'}.where(not(has('e.')))                                          % {\"abc3d\",\"aaa\"}",
             // "{'abc3d','aaa'}.where(has('e.'))                                               % noobj",
     }, delimiter = '%')

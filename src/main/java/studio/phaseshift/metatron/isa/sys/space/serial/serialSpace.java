@@ -25,7 +25,7 @@ import org.jline.utils.AttributedString;
 import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.io.serial.ObjByteBufferSerializer;
-import studio.phaseshift.metatron.isa.MSpace;
+import studio.phaseshift.metatron.isa.AbstractSpace;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
@@ -59,7 +59,7 @@ import static studio.phaseshift.metatron.isa.sys.sysInstSet.SYS_ISA_TID;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class serialSpace extends MSpace<SerialPort[]> {
+public class serialSpace extends AbstractSpace<SerialPort[]> {
 
     public static final fURI SERIAL_SPACE_TID = SYS_ISA_TID.extend("space/serial");
 

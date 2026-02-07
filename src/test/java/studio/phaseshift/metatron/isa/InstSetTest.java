@@ -78,7 +78,7 @@ public abstract class InstSetTest extends mTest {
                 long rash = Router.readFromSpace(inst.tid().rng(fURI.ALL)).stream().filter(i -> Objects.equals(i.tid().basePath(), inst.tid().basePath())).count();
                 long dr = Router.readFromSpace(inst.tid().rng(null).dom(null)).stream().filter(i -> Objects.equals(i.tid().basePath(), inst.tid().basePath())).count();
                 long drash = Router.readFromSpace(inst.tid().rng(fURI.ALL).dom(fURI.ALL)).stream().filter(i -> Objects.equals(i.tid().basePath(), inst.tid().basePath())).count();
-                LOG.info("inst [%s] dom [%s] rng [%s] domRng [%s]", inst.tid().basePath(), d, r, dr);
+                LOG.debug("inst [%s] dom [%s] rng [%s] domRng [%s]", inst.tid().basePath(), d, r, dr);
                 assertTrue(d > 0);
                 if (!inst.dom().c().isZeroable())
                     assertTrue(dash > 0);

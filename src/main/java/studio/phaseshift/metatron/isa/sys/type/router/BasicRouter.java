@@ -18,15 +18,17 @@
 
 package studio.phaseshift.metatron.isa.sys.type.router;
 
+import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.io.serial.Serializers;
-import studio.phaseshift.metatron.isa.MSpace;
+import studio.phaseshift.metatron.io.serial.ObjSerializer;
+import studio.phaseshift.metatron.isa.AbstractSpace;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.space.noobjSpace;
 import studio.phaseshift.metatron.isa.m.space.stackSpace;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
+import studio.phaseshift.metatron.isa.m.type.ServiceMetadata;
 import studio.phaseshift.metatron.isa.m.type.Uri;
 import studio.phaseshift.metatron.isa.sys.type.Router;
 import studio.phaseshift.metatron.isa.sys.type.ui.graphitty.Graphitty;
@@ -45,16 +47,13 @@ import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.M_ISA_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
-import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.sys.sysInstSet.SYS_ISA_TID;
 
 @ObjReflection
-public class mRouter extends MSpace<MServer> implements Router {
-
-    public static final Serializers SERIALIZERS = new Serializers();
+public class BasicRouter extends AbstractSpace<MServer> implements Router {
 
     public static final Uri PRIMARY = uri("primary");
     public static final fURI ROUTER_TID = SYS_ISA_TID.extend("router");
@@ -70,16 +69,14 @@ public class mRouter extends MSpace<MServer> implements Router {
     private final Map<fURI, fURI> bigToSmallRewrites = new HashMap<>();
     private fURI primary = M_ISA_TID;
 
-    public mRouter(final fURI host, final fURI vid) {
+    public BasicRouter(final fURI host, final fURI vid) {
         super(new MServer(host, Collections.emptyList()), new ConcurrentHashMap<>(Map.of(
                         uri(PATTERN), uri(ALL),
                         PRIMARY, uri(M_ISA_TID),
                         uri(Tokens.SPACE), rec(new ConcurrentHashMap<>(Map.of(uri("+/#"), new stackSpace(f("+/#"))))))),
                 ROUTER_TID,
                 vid);
-
         LOG.info("local router at %s", this.vid.toUri());
-        LOG.info("available serializers:\n%s", lst(SERIALIZERS.getSerializers().recValue().keySet().stream().toList()));
     }
 
 
@@ -194,8 +191,6 @@ public class mRouter extends MSpace<MServer> implements Router {
             return space.get();
         else if (match.basePath().matches(f("+/#")))
             return (S) THREAD_STACK.get();
-            //  else if (Registry.open().has(match))
-            //      return Registry.open().load(match);
         else if (!BOOTING)
             throw MTronException.of("no active space supports pattern %s", match.toUri(false));
         else
@@ -246,7 +241,7 @@ public class mRouter extends MSpace<MServer> implements Router {
     }
 
     @Override
-    public mRouter apply(final Obj other) {
+    public BasicRouter apply(final Obj other) {
         return null;
     }
 
@@ -332,7 +327,7 @@ public class mRouter extends MSpace<MServer> implements Router {
             this.barrierMonads = 0;
         }
 
-        @Override   
+        @Override
         public long runningMonads() {
             return this.runningMonads;
         }

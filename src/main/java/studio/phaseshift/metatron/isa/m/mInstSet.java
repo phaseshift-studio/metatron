@@ -21,7 +21,7 @@ package studio.phaseshift.metatron.isa.m;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.type.*;
-import studio.phaseshift.metatron.isa.m.type.impl.MInstSet;
+import studio.phaseshift.metatron.isa.m.type.impl.AbstractInstSet;
 import studio.phaseshift.metatron.util.Tuple;
 
 import java.util.LinkedHashSet;
@@ -36,7 +36,8 @@ import static studio.phaseshift.metatron.isa.m.space.metaSpace.META_SPACE_TYPE;
 import static studio.phaseshift.metatron.isa.m.space.stackSpace.STACK_SPACE_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 
-public class mInstSet extends MInstSet {
+@ServiceMetadata(tid = "/m")
+public class mInstSet extends AbstractInstSet {
 
     public static final fURI M_ISA_TID = f("/m");
     public static final fURI MTRON_TID = f("/mtron");
@@ -165,16 +166,13 @@ public class mInstSet extends MInstSet {
 
     /// ////////////
     /// ////////////
+    /// 
     public mInstSet(final fURI vid) {
         super(M_ISA_TID, vid);
     }
 
-    public static mInstSet create() {
-        return create(fURI.fnull);
-    }
-
-    public static mInstSet create(final fURI vid) {
-        return new mInstSet(vid);
+    public mInstSet() {
+       super(M_ISA_TID, fURI.fnull);
     }
 
     @Override

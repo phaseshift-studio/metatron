@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -21,12 +21,17 @@ package studio.phaseshift.metatron.isa.m.type;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.Space;
 
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 import java.util.Set;
 
 import static studio.phaseshift.metatron.furi.fURI.f;
 
-
 public interface InstSet extends Space {
+
+
 
     fURI A = f("A");
     fURI B = f("B");
@@ -35,7 +40,7 @@ public interface InstSet extends Space {
     fURI E = f("E");
     fURI F = f("F");
     fURI G = f("G");
-
+    
     @Override
     fURI pattern();
 

@@ -34,9 +34,19 @@ import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBytes.bytes;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 
-public record ObjStringSerializer(Builder b) implements ObjSerializer<String> {
+@ServiceMetadata(tid = "/sys/io/string")
+public class ObjStringSerializer implements ObjSerializer<String> {
 
     public static Set<fURI> HIDE_TIDS = new HashSet<>(BASE_TYPES);
+    private final Builder b;
+
+    public ObjStringSerializer() {
+        this.b = new Builder();
+    }
+
+    public ObjStringSerializer(final Builder b) {
+        this.b = b;
+    }
 
     public static Builder build() {
         return new Builder();

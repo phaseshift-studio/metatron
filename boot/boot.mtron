@@ -16,15 +16,15 @@ print("{{y}}mounting instruction sets\n{{X}}");
 import(/mtron/web);
 import(/mtron/iot);
 import(/mtron/grph);
-*<boot/args/mqtt>.else(boot/args/mqtt -> [broker => <mqtt://chibi.local:1883>]).print(_," mqtt broker\n");
-*<boot/peers>.else(boot/peers -> [ws://localhost:6666,<ws://127.0.0.1:7777>]).print(_," peers\n");
-*<boot/script>.else(boot/script ->
+print("{{y}}mqtt broker location{{X}}: ", <boot/args/mqtt>.else(boot/args/mqtt -> [broker => <mqtt://chibi.local:1883>]),"\n");
+print("{{y}}cluster peers{{X}}: ", *<boot/peers>.else(boot/peers -> [ws://localhost:6666,<ws://127.0.0.1:7777>]),"\n");
+print("{{y}}supported scripting environments:\n{{X}}", *<boot/script>.else(boot/script -> 
  [sh     => /bin/sh,
   bash   => /bin/bash, 
   zsh    => /bin/zsh, 
   python => /usr/bin/python3,
   perl   => /usr/bin/perl,
-  mtron  => /bin/mtron]).print(_," script\n");
+  mtron  => /bin/mtron]),"\n");
 [-- mount spaces --];
    mem::[pattern => /usr/#,
          q       => [subq::[=>]]]@/sys/space/usr;

@@ -19,12 +19,11 @@
 package studio.phaseshift.metatron.lang.db.vec;
 
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.m.mInstSet;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Lst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Type;
-import studio.phaseshift.metatron.isa.m.type.impl.MInstSet;
+import studio.phaseshift.metatron.isa.m.type.impl.AbstractInstSet;
 import studio.phaseshift.metatron.isa.web.parser.JSONTranslator;
 import studio.phaseshift.metatron.util.MTronException;
 
@@ -34,7 +33,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.furi.fURI.ALL;
-import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
@@ -45,7 +43,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 /*
 @author Marko A. Rodriguez (http://markorodriguez.com)
 */
-public class vecInstSet extends MInstSet {
+public class vecInstSet extends AbstractInstSet {
 
     public static final fURI VEC_INSTSET_TID = MTRON_TID.extend("vec");
     public static final fURI VEC_TID = VEC_INSTSET_TID.extend("vec");

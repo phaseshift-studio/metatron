@@ -21,9 +21,10 @@ package studio.phaseshift.metatron.isa.web;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.type.Inst;
+import studio.phaseshift.metatron.isa.m.type.ServiceMetadata;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Type;
-import studio.phaseshift.metatron.isa.m.type.impl.MInstSet;
+import studio.phaseshift.metatron.isa.m.type.impl.AbstractInstSet;
 import studio.phaseshift.metatron.isa.web.parser.HTMLTranslator;
 import studio.phaseshift.metatron.isa.web.parser.JSONTranslator;
 import studio.phaseshift.metatron.isa.web.parser.XMLTranslator;
@@ -40,12 +41,14 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.isa.sys.sysInstSet.SYS_SPACE_TID;
 import static studio.phaseshift.metatron.isa.web.space.http.httpSpace.HTTP_SPACE_TYPE;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class webInstSet extends MInstSet {
+@ServiceMetadata(tid = "/mtron/web")
+public class webInstSet extends AbstractInstSet {
 
     public static final fURI WEB_ISA_TID = MTRON_TID.extend("web");
     public static final fURI INST_TID = WEB_ISA_TID.extend("inst");
@@ -72,8 +75,8 @@ public class webInstSet extends MInstSet {
         super(WEB_ISA_TID, vid);
     }
 
-    public static webInstSet create(final fURI vid) {
-        return new webInstSet(vid);
+    public webInstSet() {
+        this(SYS_SPACE_TID.extend("web"));
     }
 
     @Override

@@ -22,7 +22,7 @@ import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.Q;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.MSpace;
+import studio.phaseshift.metatron.isa.AbstractSpace;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.type.*;
@@ -61,7 +61,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.sys.sysInstSet.*;
 
-public class fsSpace extends MSpace<FileSystem> {
+public class fsSpace extends AbstractSpace<FileSystem> {
 
     public static final fURI FS_TID = SYS_ISA_TID.extend("space/fs");
     private static final Rec FS_REC = rec(

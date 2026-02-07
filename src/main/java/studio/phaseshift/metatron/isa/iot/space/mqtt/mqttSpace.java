@@ -25,7 +25,7 @@ import com.hivemq.client.mqtt.mqtt5.message.subscribe.Mqtt5RetainHandling;
 import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.MSpace;
+import studio.phaseshift.metatron.isa.AbstractSpace;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.mInstSet;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
@@ -57,7 +57,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 
-public class mqttSpace extends MSpace<Mqtt5Client> {
+public class mqttSpace extends AbstractSpace<Mqtt5Client> {
 
     public static fURI MQTT_SPACE_TID = IOT_ISA_TID.extend("space").extend("mqtt");
     public static final Type MQTT_SPACE_TYPE = Type.Builder.build().tid(SPACE_TID).vid(MQTT_SPACE_TID).constructor(

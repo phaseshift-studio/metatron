@@ -19,7 +19,7 @@
 package studio.phaseshift.metatron.isa.grph.space;
 
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.MSpace;
+import studio.phaseshift.metatron.isa.AbstractSpace;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Type;
@@ -39,7 +39,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public abstract class grphSpace<S> extends MSpace<S> {
+public abstract class grphSpace<S> extends AbstractSpace<S> {
 
     public static final fURI GRPH_SPACE_TID = MTRON_TID.extend("grph").extend("space/grph");
 

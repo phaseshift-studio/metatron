@@ -28,12 +28,14 @@ import studio.phaseshift.metatron.furi.q.PubSubQ;
 import studio.phaseshift.metatron.isa.iot.MoquetteServer;
 import studio.phaseshift.metatron.isa.iot.iotInstSet;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
+import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.iot.space.mqtt.mqttSpace;
 import studio.phaseshift.metatron.isa.SpaceTest;
 import studio.phaseshift.metatron.isa.sys.type.ui.graphitty.Graphitty;
 
 import java.util.Map;
+import java.util.ServiceLoader;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -66,7 +68,7 @@ public class mqttSpaceTest extends SpaceTest {
                 return null;
             }
         });
-        iotInstSet.create();
+        ServiceLoader.load(InstSet.class).stream().filter(i -> i instanceof iotInstSet).findFirst().orElseThrow();
     }
 
     @BeforeAll

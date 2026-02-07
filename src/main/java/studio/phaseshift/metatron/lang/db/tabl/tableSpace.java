@@ -21,7 +21,7 @@ package studio.phaseshift.metatron.lang.db.tabl;
 import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.MSpace;
+import studio.phaseshift.metatron.isa.AbstractSpace;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.mInstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
@@ -58,7 +58,7 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class tableSpace extends MSpace<Connection> {
+public class tableSpace extends AbstractSpace<Connection> {
 
     private final GraphittyLogger LOG = Graphitty.log(this);
     public static fURI TABL_TID = tablInstSet.TABL_INSTSET_TID.extend("space").extend("tabl");

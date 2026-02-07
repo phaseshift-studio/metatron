@@ -18,7 +18,7 @@
 
 package studio.phaseshift.metatron.isa.m.type;
 
-import studio.phaseshift.metatron.Registry;
+import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.algebra.MultMonoid;
 import studio.phaseshift.metatron.algebra.PlusMonoid;
 import studio.phaseshift.metatron.algebra.Ring;
@@ -51,7 +51,7 @@ import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
 import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_FALSE;
 import static studio.phaseshift.metatron.isa.m.type.Int.INT_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
-import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.Rel.REL_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
@@ -286,6 +286,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
         else if (this.isUri()) return URI_TID.c(this.c().toString());
         else if (this.isLst()) return LST_TID.c(this.c().toString());
         else if (this.isRec()) return REC_TID.c(this.c().toString());
+        else if (this.isRel()) return REL_TID.c(this.c().toString());
         else if (this.isInst()) return INST_TID.c(this.c().toString()).dom(this.dom().tid()).rng(this.rng().tid());
         else if (this.isCode()) return CODE_TID.c(this.c().toString());
         else if (this.isNoObj()) return NOOBJ_TID.c(this.c().toString());
@@ -596,7 +597,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
         public static boolean isAuto(final Obj obj) {
             return obj.isCall() && ((Call) obj).isAuto();
         }
-        
+
         public static boolean typeInferenceMatch(final Obj lhs, final Type rhs) {
             if (rhs.isBaseType()) {
                 if (lhs.isObjs()) {
@@ -721,7 +722,11 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
         public static Set<Inst> insts() {
             return new LinkedHashSet<>(List.of(
                     // instC(AS_INST_TID.dom(REL_TID).rng(REL_TID), lst(REL_TYPE), (lhs, inst) -> recurssiveAs(lhs, inst.arg(0).as())),
-                    instC(IMPORT_INST_TID.dom(ALL.maybe()).rng(ALL), lst(URI_TYPE), (lhs, inst) -> Registry.open().load(inst.arg(0).uriValue(), inst.arg(0).uriValue())),
+                    instC(IMPORT_INST_TID.dom(ALL.maybe()).rng(fURI.NOOBJ.zero()), lst(REL_TYPE), (lhs, inst) ->
+                            BootLoader.getInstSetProviders(inst.arg(0).uriValue())
+                                    .map(ServiceLoader.Provider::get)
+                                    .map(i -> noobj())
+                                    .reduce(noobj(), (a, b) -> noobj())),
                     instC(BARRIER_TID.dom(A.maybeSome()).rng(A.maybeSome()), lst(), (lhs, inst) -> lhs),
                     instC(AS_INST_TID.dom(A).rng(A), lst(T(A)), (lhs, inst) -> lhs.clone(lhs.jvm(), inst.arg(0).tid(), lhs.vid())),
                     instC(REPEAT_INST_TID.dom(A).rng(A), lst(T(ALL), INT_TYPE), (lhs, inst) -> {

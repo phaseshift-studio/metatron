@@ -23,7 +23,7 @@ import studio.phaseshift.metatron.algebra.PlusMonoid;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Type;
-import studio.phaseshift.metatron.isa.m.type.impl.MInstSet;
+import studio.phaseshift.metatron.isa.m.type.impl.AbstractInstSet;
 import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
 
@@ -34,7 +34,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.furi.fURI.ALL;
-import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.INT_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.M_ISA_TID;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
@@ -44,7 +43,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class machInstSet extends MInstSet {
+public class machInstSet extends AbstractInstSet {
 
     public static final fURI MACH_INSTSET_TID = M_ISA_TID.extend("mach");
     public static final fURI MACH_MONAD_TID = MACH_INSTSET_TID.extend("monad");

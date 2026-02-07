@@ -26,7 +26,7 @@ import studio.phaseshift.metatron.mTest;
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public class UriTest extends mTest {
-    
+
     @ParameterizedTest
     @CsvSource(value = {
             "bool::abc/def                                                | <ERROR>",
@@ -76,6 +76,40 @@ public class UriTest extends mTest {
     public void testMath(final String code, final String expected) {
         mTest.testCode(LOG, code, expected);
     }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "a/b/c.-</                        % [a,b,c]",
+            "ab/c.-</                         % [ab,c]",
+            "abc.-</                          % [abc]",
+            "-</abc                           % <ERROR>",
+            "<http://www.com/a/b/c>.-</       % [http:,<>,<www.com>,a,b,c]",
+            "<////>.-</                       % [,]",
+            "<////a>.-</                      % [<>,<>,<>,<>,<>,a]",
+    }, delimiter = '%')
+    public void testSplit(final String code, final String expected) {
+        mTest.testCode(LOG, code, expected);
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "ab/cd.has('ab.*')                                                             % ab/cd",
+            "ab/cd.has('bb')                                                               % noobj",
+            "{abc/d,aaa}.has('a\\.')                                                       %  noobj",
+            "{abc3d,aaa}.has('a.*')                                                        % {abc3d,aaa}",
+            "{abc3d,aaa}.has('a(b)?(a|c).?')                                               % {abc3d,aaa}",
+            "{abc3d,aaa}.has('b.*')                                                        % {abc3d}",
+            "{abc3d,aaa}.has('c.*')                                                        % {abc3d}",
+            "{abc3d,aaa}.has('d.*')                                                        % abc3d",
+            "{abc3d,aaa}.has('d.?')                                                        % abc3d",
+            "{abc3d,aaa}.has('e.*')                                                        % noobj"
+            // "{'abc3d','aaa'}.where(not(has('e.')))                                          % {\"abc3d\",\"aaa\"}",
+            // "{'abc3d','aaa'}.where(has('e.'))                                               % noobj",
+    }, delimiter = '%')
+    public void testHasInst(final String code, final String expected) {
+        mTest.testCode(LOG, code, expected);
+    }
+
 
     @ParameterizedTest
     @CsvSource(value = {

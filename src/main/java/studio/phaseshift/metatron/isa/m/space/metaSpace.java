@@ -19,7 +19,7 @@
 package studio.phaseshift.metatron.isa.m.space;
 
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.MSpace;
+import studio.phaseshift.metatron.isa.AbstractSpace;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.mInstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
@@ -47,13 +47,12 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.sys.sysInstSet.SPACE_CONFIG;
-import static studio.phaseshift.metatron.isa.sys.sysInstSet.SYS_SPACE_TID;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 
-public class metaSpace extends MSpace<MServer> {
+public class metaSpace extends AbstractSpace<MServer> {
 
     public static final fURI META_SPACE_TID = M_ISA_TID.extend("space/meta");
     protected final fURI host;

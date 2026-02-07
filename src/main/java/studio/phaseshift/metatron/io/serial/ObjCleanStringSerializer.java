@@ -42,6 +42,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
+@ServiceMetadata(tid = "/sys/io/clean")
 public class ObjCleanStringSerializer implements ObjSerializer<String> {
 
     public static final fURI OBJ_CLEAN_STRING_SERIALIZER_TID = OBJ_SERIAL_TID.extend("clean");

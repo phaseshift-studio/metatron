@@ -22,7 +22,7 @@ import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.Q;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.DocQ;
-import studio.phaseshift.metatron.isa.MSpace;
+import studio.phaseshift.metatron.isa.AbstractSpace;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
@@ -41,7 +41,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
-public abstract class MInstSet extends MSpace<Map<fURI, Set<? extends Obj>>> implements InstSet {
+public abstract class AbstractInstSet extends AbstractSpace<Map<fURI, Set<? extends Obj>>> implements InstSet {
 
     protected static final String[] EMPTY_STRING_ARRAY = new String[0];
 
@@ -52,7 +52,7 @@ public abstract class MInstSet extends MSpace<Map<fURI, Set<? extends Obj>>> imp
     protected final Map<fURI, Obj> CONST_TABLE = Collections.synchronizedMap(new LinkedHashMap<>());
     protected final Map<fURI, Inst> REWRITE_TABLE = Collections.synchronizedMap(new LinkedHashMap<>());
 
-    public MInstSet(final fURI tid, final fURI vid) {
+    public AbstractInstSet(final fURI tid, final fURI vid) {
         super(new LinkedHashMap<>(), mutableMap(uri(Tokens.PATTERN), uri(tid.extend(fURI.ALL)), uri(Tokens.Q), lst(new DocQ())), tid, vid);
         if (Router.loaded()) {
             //if (!this.pattern.equals(f("+/#")) && !(this instanceof Router))

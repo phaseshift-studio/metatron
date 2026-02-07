@@ -20,40 +20,34 @@ package studio.phaseshift.metatron;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.io.serial.ObjSerializer;
 import studio.phaseshift.metatron.isa.Space;
-import studio.phaseshift.metatron.isa.grph.grphInstSet;
-import studio.phaseshift.metatron.isa.iot.iotInstSet;
 import studio.phaseshift.metatron.isa.m.mInstSet;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
-import studio.phaseshift.metatron.isa.m.type.Feature;
-import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.m.type.Rec;
-import studio.phaseshift.metatron.isa.m.type.impl.MObjFactory;
+import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.sys.space.file.fsSpace;
 import studio.phaseshift.metatron.isa.sys.sysInstSet;
 import studio.phaseshift.metatron.isa.sys.type.LogObj;
 import studio.phaseshift.metatron.isa.sys.type.Router;
-import studio.phaseshift.metatron.isa.sys.type.router.mRouter;
+import studio.phaseshift.metatron.isa.sys.type.router.BasicRouter;
 import studio.phaseshift.metatron.isa.sys.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.sys.type.ui.graphitty.GraphittyLogger;
-import studio.phaseshift.metatron.isa.web.webInstSet;
-import studio.phaseshift.metatron.lang.db.vec.vecInstSet;
 
 import java.io.IOException;
 import java.net.InetAddress;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
+import java.util.ServiceLoader;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.Tokens.BOOT;
 import static studio.phaseshift.metatron.Tokens.WS;
 import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.furi.fURI.f;
-import static studio.phaseshift.metatron.isa.grph.grphInstSet.GRPH_ISA_TID;
-import static studio.phaseshift.metatron.isa.iot.iotInstSet.IOT_ISA_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.M_ISA_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TID;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
@@ -64,8 +58,6 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.sys.sysInstSet.SYS_ISA_TID;
 import static studio.phaseshift.metatron.isa.sys.sysInstSet.SYS_TID;
-import static studio.phaseshift.metatron.isa.web.webInstSet.WEB_ISA_TID;
-import static studio.phaseshift.metatron.lang.db.vec.vecInstSet.VEC_INSTSET_TID;
 
 public class BootLoader implements Rec, Feature.SelfClone {
 
@@ -82,18 +74,6 @@ public class BootLoader implements Rec, Feature.SelfClone {
     static {
         LOG = Graphitty.log(new BootLoader());
         EXECUTOR = Executors.newCachedThreadPool(new ThreadFactoryBuilder().setNameFormat("metatron-%d").setUncaughtExceptionHandler((a, b) -> LOG.error("%s %s", a, b)).build());
-        //Registry.singleton().register(mInstSet.INST_TID, () -> mInstSet.of(fURI.NULL));
-        Registry.open().register(SYS_ISA_TID, sysInstSet::create);
-        Registry.open().register(WEB_ISA_TID, webInstSet::create);
-        Registry.open().register(IOT_ISA_TID, iotInstSet::create);
-        Registry.open().register(GRPH_ISA_TID, grphInstSet::create);
-        Registry.open().register(VEC_INSTSET_TID, vecInstSet::create);
-        /// //////////////////
-        // Registry.open().register(LLM_INSTSET_TID, llmInstSet::create);
-
-        //  Registry.open().register(MACH_INSTSET_TID, machInstSet::create);
-        //  Registry.open().register(TABL_INSTSET_TID, tablInstSet::create);
-        // Registry.singleton().register(miotInstSet.INST_TID, () -> miotInstSet.of(fURI.NULL));
     }
 
     public static ExecutorService getExecutor() {
@@ -151,7 +131,16 @@ public class BootLoader implements Rec, Feature.SelfClone {
             LogObj.setSLF4J(args.has(uri("log")) ? args.at(uri("log")).uriValue().toString() : "info");
             LOG.info("%s", Graphitty.sillyPrint("booting metatron", true, true));
             Runtime.getRuntime().addShutdownHook(new Thread(BootLoader::close));
-            LOG.info("accessible instruction sets:\n%s", Registry.open().registrants());
+            LOG.info("available instruction sets\n\t(via %s%s)%s", "META-INF/services/",
+                    InstSet.class.getCanonicalName(),
+                    BootLoader.getInstSetProviders(ALL)
+                            .map(p -> p.type().getAnnotation(ServiceMetadata.class).tid())
+                            .reduce("", (a, b) -> a + "\n\t\t" + b));
+            LOG.info("available serializers\n\t(via %s%s)%s", "META-INF/services/",
+                    ObjSerializer.class.getCanonicalName(),
+                    BootLoader.getObjSerializerProviders(ALL)
+                            .map(p -> p.type().getAnnotation(ServiceMetadata.class).tid())
+                            .reduce("", (a, b) -> a + "\n\t\t" + b));
             fURI localAuthority = null;
             /// /// START OF BOOTING PROCESS /// /// allow boot description to be read from a mtron file
             String hostname = null;
@@ -165,14 +154,12 @@ public class BootLoader implements Rec, Feature.SelfClone {
             else
                 localAuthority = args.at(Tokens.HOST).orElse(uri(WS + "://" + hostname + ".local" + ":" + 8999)).uriValue();
             final Space sysSpace = memSpace.of(f("/sys/#"), null);
-            ROUTER = new mRouter(localAuthority, SYS_TID.extend("router"));
+            ROUTER = new BasicRouter(localAuthority, SYS_TID.extend("router"));
             sysSpace.write(ROUTER.vid(), ROUTER);
             Router.global().addSpace(sysSpace.self(sysSpace.jvm(), sysSpace.tid(), f("/sys")).as());
-            Router.writeToSpace(mInstSet.create(M_ISA_TID));
-            Router.writeToSpace(sysInstSet.create(SYS_ISA_TID));
-            // Router.writeToSpace((f("/sys/mod/fs")));
+            Router.writeToSpace(new mInstSet(M_ISA_TID));
+            Router.writeToSpace(new sysInstSet(SYS_ISA_TID));
             Router.writeToSpace(f("boot/args"), args);
-
             ROUTER.start();
             ///////////////////////////////////////////////////////////////
             if (args.has(uri(Tokens.BOOT))) {
@@ -247,4 +234,19 @@ public class BootLoader implements Rec, Feature.SelfClone {
         return Feature.SelfClone.super.clone();
     }
 
+    /// ///////////////////////////////////////////////////////////////////////////////////////
+
+    public static Stream<ServiceLoader.Provider<InstSet>> getInstSetProviders(final fURI tid) {
+        return ServiceLoader.load(InstSet.class)
+                .stream()
+                .filter(p -> p.type().isAnnotationPresent(ServiceMetadata.class))
+                .filter(p -> f(p.type().getAnnotation(ServiceMetadata.class).tid()).matches(tid));
+    }
+
+    public static Stream<ServiceLoader.Provider<ObjSerializer>> getObjSerializerProviders(final fURI tid) {
+        return ServiceLoader.load(ObjSerializer.class)
+                .stream()
+                .filter(p -> p.type().isAnnotationPresent(ServiceMetadata.class))
+                .filter(p -> f(p.type().getAnnotation(ServiceMetadata.class).tid()).matches(tid));
+    }
 }

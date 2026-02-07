@@ -84,7 +84,7 @@ public class mParser {
 
     static {
         final List<Parser> list =
-                new ArrayList<>(mInstSet.create().sugars()
+                new ArrayList<>(new mInstSet().sugars()
                         .stream()
                         .map(triplet ->
                                 generate_sugar_parser(triplet.get1(), of(triplet.get0().get0()),

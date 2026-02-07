@@ -21,7 +21,7 @@ package studio.phaseshift.metatron.lang.db.tabl;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Type;
-import studio.phaseshift.metatron.isa.m.type.impl.MInstSet;
+import studio.phaseshift.metatron.isa.m.type.impl.AbstractInstSet;
 
 import java.util.Set;
 
@@ -33,7 +33,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class tablInstSet extends MInstSet {
+public class tablInstSet extends AbstractInstSet {
 
     public static tablInstSet create() {
         return new tablInstSet(fURI.fnull);

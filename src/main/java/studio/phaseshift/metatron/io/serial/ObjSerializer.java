@@ -34,7 +34,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 
 public interface ObjSerializer<T> {
 
-    fURI OBJ_SERIAL_TID = f("/sys/serial");
+    fURI OBJ_SERIAL_TID = f("/sys/io");
 
     ByteBuffer outputBytes(final Obj obj) throws MTronException;
 

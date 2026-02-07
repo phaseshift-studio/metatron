@@ -19,7 +19,7 @@
 package studio.phaseshift.metatron.isa.m.space;
 
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.MSpace;
+import studio.phaseshift.metatron.isa.AbstractSpace;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.mInstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
@@ -44,7 +44,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
-public class stackSpace extends MSpace<Stack<Poly<?, ?>>> {
+public class stackSpace extends AbstractSpace<Stack<Poly<?, ?>>> {
 
     public static final fURI STACK_SPACE_TID = M_ISA_TID.extend("space/stack");
     public static final Type STACK_SPACE_TYPE = Type.Builder.build()

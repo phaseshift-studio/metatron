@@ -22,7 +22,7 @@ import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.Q;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.io.serial.ObjByteBufferSerializer;
-import studio.phaseshift.metatron.isa.MSpace;
+import studio.phaseshift.metatron.isa.AbstractSpace;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.mInstSet;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
@@ -60,7 +60,7 @@ import static studio.phaseshift.metatron.isa.sys.sysInstSet.SPACE_CONFIG;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 
-public class memSpace extends MSpace<Map<fURI, Obj>> {
+public class memSpace extends AbstractSpace<Map<fURI, Obj>> {
 
     public static final fURI MEM_SPACE_TID = M_ISA_TID.extend("space/mem");
 

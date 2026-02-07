@@ -22,9 +22,10 @@ import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.type.Inst;
+import studio.phaseshift.metatron.isa.m.type.ServiceMetadata;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Type;
-import studio.phaseshift.metatron.isa.m.type.impl.MInstSet;
+import studio.phaseshift.metatron.isa.m.type.impl.AbstractInstSet;
 import studio.phaseshift.metatron.isa.sys.space.file.fsSpace;
 import studio.phaseshift.metatron.isa.sys.type.Router;
 import studio.phaseshift.metatron.isa.sys.type.console.Console;
@@ -71,7 +72,8 @@ import static studio.phaseshift.metatron.isa.sys.type.console.Console.CONSOLE_TY
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class sysInstSet extends MInstSet {
+@ServiceMetadata(tid = "/mtron/sys")
+public class sysInstSet extends AbstractInstSet {
 
     public static final fURI SYS_ISA_TID = MTRON_TID.extend("sys");
     public static final fURI SYS_TID = f("/sys");
@@ -103,18 +105,14 @@ public class sysInstSet extends MInstSet {
             .vid(IMAGE_TID).create();
 
 
+    public sysInstSet() {
+        this(null);
+    }
+
     public sysInstSet(final fURI vid) {
         super(SYS_ISA_TID, vid);
     }
-
-    public static sysInstSet create() {
-        return new sysInstSet(fURI.fnull);
-    }
-
-    public static sysInstSet create(final fURI vid) {
-        return new sysInstSet(vid);
-    }
-
+    
     @Override
     public Set<Type> types() {
         return new HashSet<>(List.of(

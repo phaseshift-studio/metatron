@@ -20,7 +20,7 @@ package studio.phaseshift.metatron.isa.grph.space.tp3.schema;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Type;
-import studio.phaseshift.metatron.isa.m.type.impl.MInstSet;
+import studio.phaseshift.metatron.isa.m.type.impl.AbstractInstSet;
 
 import java.util.HashSet;
 import java.util.List;
@@ -39,7 +39,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class modernSchema extends MInstSet {
+public class modernSchema extends AbstractInstSet {
 
     public static final fURI MODERN_SCHEMA_TID = f("/tp3").extend("schema").extend("modern");
     public static final fURI PERSON_TID = MODERN_SCHEMA_TID.extend("person");

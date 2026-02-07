@@ -26,7 +26,7 @@ import org.jsoup.Jsoup;
 import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.MSpace;
+import studio.phaseshift.metatron.isa.AbstractSpace;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.mInstSet;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
@@ -75,7 +75,7 @@ import static studio.phaseshift.metatron.lang.ai.llm.type.impl.Audio.AUDIO_TID;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class httpSpace extends MSpace<HttpServer> {
+public class httpSpace extends AbstractSpace<HttpServer> {
 
     public enum ContentType {
         APPLICATION_JSON("application/json"),

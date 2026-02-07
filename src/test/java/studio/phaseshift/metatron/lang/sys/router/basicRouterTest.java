@@ -30,7 +30,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class mRouterTest extends RouterTest {
+public class basicRouterTest extends RouterTest {
     
     @Test
     public void testCloseSpace() {

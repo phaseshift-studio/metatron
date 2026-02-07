@@ -27,18 +27,22 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.TestData;
 import studio.phaseshift.metatron.furi.Q;
 import studio.phaseshift.metatron.furi.q.DocQTest;
 import studio.phaseshift.metatron.isa.InstSetTest;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
+import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.mTest;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.Map;
+import java.util.ServiceLoader;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static studio.phaseshift.metatron.furi.fURI.f;
+import static studio.phaseshift.metatron.isa.m.mInstSet.M_ISA_TID;
 
 @ExtendWith(TestData.TestDataExtension.class)
 public class mInstSetTest extends InstSetTest {
@@ -51,16 +55,14 @@ public class mInstSetTest extends InstSetTest {
     @Override
     @Test
     public void testInstDomRngMatching() {
-        this.space = mInstSet.create();
+        this.space = new mInstSet(f("/sys/m"));
         super.testInstDomRngMatching();
     }
 
     @Test
     public void testDocs() {
-        assertTrue(mInstSet.create().qs().elements().anyMatch(q -> q.<Q>as().pattern().equals(f("doc"))));
-        new DocQTest().analyzeDocs(mInstSet.create());
-
-
+        assertTrue(new mInstSet(f("/sys/m")).qs().elements().anyMatch(q -> q.<Q>as().pattern().equals(f("doc"))));
+        new DocQTest().analyzeDocs(new mInstSet(f("/sys/m")));
     }
 
     @ParameterizedTest
@@ -93,17 +95,6 @@ public class mInstSetTest extends InstSetTest {
             "'ab3cd'.regex('\\d*')                                                          % ['','','3','','','']",
             "'ab3cd'.regex('\\d+')                                                          % ['3']",
             "'ab3cd'.regex('\\d{2}')                                                        % [,]",
-            /// ////////////////////////////////////////////////////////////////////////////////////////////////////
-            "'ab3cd'.has('ab.')                                                             % true",
-            "'ab3cd'.has('bb')                                                              % false",
-            "{'abc3d','aaa'}.has('a\\.')                                                    % bool{2}::false",
-            "{'abc3d','aaa'}.has('a.')                                                      % bool{2}::true",
-            "{'abc3d','aaa'}.has('a(b)?(a|c).?')                                            % bool{2}::true",
-            "{'abc3d','aaa'}.has('b.')                                                      % {true,false}",
-            "{'abc3d','aaa'}.has('c.')                                                      % {true,false}",
-            "{'abc3d','aaa'}.has('d.')                                                      % bool{2}::false",
-            "{'abc3d','aaa'}.has('d.?')                                                     % {true,false}",
-            "{'abc3d','aaa'}.has('e.')                                                      % bool{2}::false",
     }, delimiter = '%')
     public void testStrCode(final String code, final String expected) {
         mTest.testCode(LOG, code, expected);
@@ -174,7 +165,7 @@ public class mInstSetTest extends InstSetTest {
 
     @ParameterizedTest
     @CsvSource(value = {
-           // "1.plus?int{?}<=int(int{-1}::1)                                         % noobj",
+            // "1.plus?int{?}<=int(int{-1}::1)                                         % noobj",
             "1.plus(_)                                                              % 2",
             "1.plus(2)                                                              % 3",
             "1.plus(1.plus(1))                                                      % 3",
@@ -364,12 +355,12 @@ public class mInstSetTest extends InstSetTest {
             "{1,2,3,4,5}.reduce(|inst(0){ plus(*0) })                               % 15",
             "{'a','b','c'}.>-' '                                                    % \"a b c\"",
             "{'a','b','c'}>-' '                                                     % \"a b c\"",
-            "'a b c'-<' '                                                           % {\"a\", \"b\", \"c\"}",
+            "'a b c'-<' '                                                           % [\"a\", \"b\", \"c\"]",
             "'a b c'-<' '>-' '                                                      % \"a b c\"",
             "'a b c'.split(' ').merge(' ')                                          % \"a b c\"",
             "{a,b,c}.>-/                                                            % a/b/c",
             "{a,b,c}>-/                                                             % a/b/c",
-            "a/b/c.-</                                                              % {a, b, c}",
+            "a/b/c.-</                                                              % [a,b,c]",
             "a/b/c.-</.>-/                                                          % a/b/c",
             "a/b/c.-</>-/                                                           % a/b/c",
             "a/b/c.split(/).merge(/)                                                % a/b/c",
@@ -418,7 +409,7 @@ public class mInstSetTest extends InstSetTest {
         mTest.testCode(LOG, code, expected);
     }
 
-    
+
     @Disabled
     @ParameterizedTest
     @TestData(values = {"nat -> int::T[is(gt(0))]@nat", "nat -> int::T[is(gt(0))]@nat"})
