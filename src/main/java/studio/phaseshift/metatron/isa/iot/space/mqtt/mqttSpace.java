@@ -73,8 +73,8 @@ public class mqttSpace extends AbstractSpace<Mqtt5Client> {
     protected final JSONTranslator jsonTranslator = new JSONTranslator();
     protected final memSpace cache;
 
-    protected mqttSpace(final Mqtt5Client client, final Map<Obj, Obj> config, final fURI vid) {
-        super(client, config, MQTT_SPACE_TID, vid);
+    protected mqttSpace(final Mqtt5Client client, final Map<Obj, Obj> config, final fURI tid, final fURI vid) {
+        super(client, config, null == tid ? MQTT_SPACE_TID : tid, vid);
         MqttConnAck connAck = null;
         this.rewrite = Space.Helper.extractRewrite(config);
         LOG.info("{{y}}mtron{{g}}<=>{{y}}mqtt{{X}} mapping established: %s {{g}}<=> ({{b}}%s {{g}}<=>{{X}} %s{{g}}){{X}}", this.pattern().toUri(), this.rewrite, uri(Space.Helper.toNativeSpace(this.pattern(), this.rewrite)));
@@ -145,7 +145,7 @@ public class mqttSpace extends AbstractSpace<Mqtt5Client> {
                 .serverPort(config.at(HOST).uriValue().port())
                 .useMqttVersion5()
                 .build();
-        return new mqttSpace(client, config.jvm(), vid);
+        return new mqttSpace(client, config.jvm(), MQTT_SPACE_TID, vid);
     }
 
     @Override
