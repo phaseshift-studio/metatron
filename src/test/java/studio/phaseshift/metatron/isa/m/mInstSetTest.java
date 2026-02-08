@@ -27,22 +27,18 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.TestData;
 import studio.phaseshift.metatron.furi.Q;
 import studio.phaseshift.metatron.furi.q.DocQTest;
 import studio.phaseshift.metatron.isa.InstSetTest;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
-import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.mTest;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.Map;
-import java.util.ServiceLoader;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static studio.phaseshift.metatron.furi.fURI.f;
-import static studio.phaseshift.metatron.isa.m.mInstSet.M_ISA_TID;
 
 @ExtendWith(TestData.TestDataExtension.class)
 public class mInstSetTest extends InstSetTest {
@@ -211,6 +207,7 @@ public class mInstSetTest extends InstSetTest {
             "[a=>1]>-.>-[b=>2]                                                      % [a=>1,b=>2]",
             "[b=>2]>-.>-[a=>1]                                                      % [b=>2,a=>1]",
             // SPLIT //
+            "{1,2,4}-<|[?=1=>+10,?=2=>+20,?=3=>+30,?=4=>+40]>>                      % {11,22,44}",
             "{1,2,3}-<{,}                                                           % noobj",
             "{1,2,3}-<?lst<=int{*}([,])                                             % [,]",
             "{1,2,3}-<?lst{*}<=int([_])                                             % {[1],[2],[3]}",
@@ -304,6 +301,7 @@ public class mInstSetTest extends InstSetTest {
             "{[1,2],[3,4,5],[6,7,8]}>-[,]==[>-,>-,>-]>-                             % {{1,2},{3,4,5},{6,7,8}}",
             "{[1,2],[3,4,5],[6,7,8]}>-[,]==[>-,>-,>-]>-                             % {1,2,3,4,5,6,7,8}",
             "{[1,2],[3,4,5],[6,7,8]}>-[,]==[>-,>-,>-]>-.count()                     % 8",
+            "{1,2}-<|[?>1 => +100, _=> +2]>>                                       % {3,102}",
             //"*/m/inst/#.count()-<[is(gt(0))=>true,is(eq(0))=>false]>>-              % true",
     }, delimiter = '%')
     public void testSplitMergeCode(final String code, final String expected) {
@@ -688,8 +686,8 @@ public class mInstSetTest extends InstSetTest {
     @CsvSource(value = {
             "20.map(30)                                   % 30",
             "20.swap(30)                                  % 20",
-            "|plus(30).map(20)                            % 20",
-            "|plus(30).swap(20)                           % 50",
+            "|(plus(30)).map(20)                          % 20",
+            "|(plus(30)).swap(20)                         % 50",
     }, delimiter = '%')
     public void testSwap(final String code, final String expected) throws Exception {
         mTest.testCode(LOG, code, expected);

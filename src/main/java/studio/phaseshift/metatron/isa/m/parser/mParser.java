@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -23,9 +23,12 @@ import org.petitparser.parser.Parser;
 import org.petitparser.parser.combinators.*;
 import org.petitparser.parser.primitive.CharacterParser;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.m.type.*;
-import studio.phaseshift.metatron.isa.m.type.impl.*;
 import studio.phaseshift.metatron.isa.m.mInstSet;
+import studio.phaseshift.metatron.isa.m.type.Call;
+import studio.phaseshift.metatron.isa.m.type.Fail;
+import studio.phaseshift.metatron.isa.m.type.Inst;
+import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.impl.*;
 import studio.phaseshift.metatron.isa.sys.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.sys.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.util.MTronException;
@@ -49,8 +52,8 @@ import static org.petitparser.parser.primitive.CharacterParser.of;
 import static org.petitparser.parser.primitive.CharacterParser.word;
 import static org.petitparser.parser.primitive.StringParser.of;
 import static studio.phaseshift.metatron.furi.fURI.fnull;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.from_;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.from_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBytes.bytes;
@@ -61,7 +64,6 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
-import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.Tuple.Triplet;
 
@@ -137,7 +139,7 @@ public class mParser {
         obj_rel_back_parser.set(choice(
                 m_comment(),
                 m_rec(),
-                m_paren_wrap(m_rel(),true),
+                m_paren_wrap(m_rel(), true),
                 m_type(),
                 m_fail(),
                 m_noobj(),
@@ -157,7 +159,7 @@ public class mParser {
                 m_vid_postfix())
                 .map(t -> new MLst(pick(t, 2), pick(t, 0), pick(t, 4))));
 
-        rec_parser.set(seq(m_type_prefix(), of('[').trim(), rec_internal(obj_rel_back_parser, m_call_prefix(MAP_INST_TID)), of(']').trim(), m_vid_postfix()).trim().map(t -> rec((Map<Obj,Obj>)pick(t, 2), pick(t,0), pick(t, 4))));
+        rec_parser.set(seq(m_type_prefix(), of('[').trim(), rec_internal(obj_rel_back_parser, m_call_prefix(MAP_INST_TID)), of(']').trim(), m_vid_postfix()).trim().map(t -> rec((Map<Obj, Obj>) pick(t, 2), pick(t, 0), pick(t, 4))));
         inst_parser.set(choice(m_inst_c(), m_inst_b()));
 
     }
@@ -412,7 +414,7 @@ public class mParser {
     public static Parser m_bytes() {
         return seq(m_type_prefix(BYTES_TID),
                 of("0x"), choice(digit(), anyOf("abcdefABCDEF")).plus().flatten(), m_vid_postfix()).
-                map(t ->  bytes(ByteBuffer.wrap(HexFormat.of().parseHex(mParser.<String>pick(t, 2))), pick(t, 0), pick(t, 3)));
+                map(t -> bytes(ByteBuffer.wrap(HexFormat.of().parseHex(mParser.<String>pick(t, 2))), pick(t, 0), pick(t, 3)));
     }
 
     public static Parser m_int() {
@@ -459,7 +461,7 @@ public class mParser {
                 opt(seq(of("["), opt(m_obj(), null), of("]")).map(t -> pick(t, 1)), null),
                 opt(seq(of("["), opt(m_obj(), null), of("]")).map(t -> pick(t, 1)), null),
                 m_vid_postfix())
-                .map(t -> new MType(Tuple.Pair.<Call,Call>with(pick(t, 2), pick(t, 3)),pick(t, 0),pick(t, 4)));
+                .map(t -> new MType(Tuple.Pair.<Call, Call>with(pick(t, 2), pick(t, 3)), pick(t, 0), pick(t, 4)));
     }
 
     public static Parser m_code() {
@@ -491,9 +493,7 @@ public class mParser {
         }
         return (argCount == 0 ?
                 seq(startToken.trim(), opt(seq(of('?'), m_furi_inst_dom_rng()).map(t -> pick(t, 1)), null)).map(t -> instB(instChain.getFirst(), lst(MInst.instA(instChain.get(1).query(pick(t, 1)))))) :
-                seq(startToken.trim(), opt(seq(of('?'), m_furi_inst_dom_rng()).map(t -> pick(t, 1)), null), choice(
-                        m_paren_wrap(m_obj()),
-                        m_obj()), null == endToken ? of("") : endToken.trim())
+                seq(startToken.trim(), opt(seq(of('?'), m_furi_inst_dom_rng()).map(t -> pick(t, 1)), null), m_paren_wrap(obj_rel_back_parser), null == endToken ? of("") : endToken.trim())
                         .map(t -> instB(instChain.getFirst(), lst(instB(instChain.get(1).query(pick(t, 1)), lst(mParser.<Obj>pick(t, 2))))))).trim();
     }
 
@@ -501,9 +501,7 @@ public class mParser {
         // TODO: look into ExpressionBuilder for handling paren wrapping properly.
         return (argCount == 0 ?
                 seq(startToken.trim(), opt(seq(of('?'), m_furi_inst_dom_rng()).map(t -> pick(t, 1)), null)).map(t -> MInst.instA(tid.query(pick(t, 1)))) :
-                seq(startToken.trim(), opt(seq(of('?'), m_furi_inst_dom_rng()).map(t -> pick(t, 1)), null), choice(
-                        m_paren_wrap(m_obj()),
-                        m_obj()), null == endToken ? of("") : endToken.trim())
+                seq(startToken.trim(), opt(seq(of('?'), m_furi_inst_dom_rng()).map(t -> pick(t, 1)), null), m_paren_wrap(obj_rel_back_parser), null == endToken ? of("") : endToken.trim())
                         .map(t -> instB(tid.query(pick(t, 1)), lst(mParser.<Obj>pick(t, 2)))));
     }
 
@@ -518,7 +516,7 @@ public class mParser {
     public static String removeLineComments(final String line) {
         return LINE_COMMENT_PATTERN.matcher(line).replaceAll("");
     }
-    
+
     public static Stream<Obj> eval(final File file, final Consumer<Exception> exhandler) throws IOException {
         try (final FileReader read = new FileReader(file)) {
             try (final BufferedReader reader = new BufferedReader(read)) {
