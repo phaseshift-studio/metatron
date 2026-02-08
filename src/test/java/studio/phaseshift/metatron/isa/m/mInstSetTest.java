@@ -668,6 +668,23 @@ public class mInstSetTest extends InstSetTest {
     }
 
     @ParameterizedTest
+    @CsvSource(value = {
+            "{1,1,1,1,1}.dedup()                       % 1",
+            "int{3}::1.dedup()                         % 1",
+            "{a,b,c}.dedup()                           % {a,b,c}",
+            "{a,a,a,b,c,c}.dedup()                     % {a,b,c}",
+            "{1,<1>,'1'}.dedup()                       % {1,<1>,'1'}",
+            //"{1,2,3}.dedup(map?int<=int(0))            % 0",
+            "{[a=>1,b=>2],[a=>1,b=>3]}.dedup()         % {[a=>1,b=>2],[a=>1,b=>3]}",
+            //"{[a=>1,b=>2],[a=>1,b=>3]}.dedup(./a)      % {[a=>1,b=>2]}",
+    }, delimiter = '%')
+    public void testDedup(final String code, final String expected) throws Exception {
+        mTest.testCode(LOG, code, expected);
+    }
+
+
+
+    @ParameterizedTest
     @TestData(values = {
             "a -> [x=>!*b]",
             "b -> [x=>!*c]",
