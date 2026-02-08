@@ -46,7 +46,7 @@ class HomeAssistant(Device):
 
     def loop(self):
         self.device.loop()
-        # self.update()
+        self.update()
 
 
 class _Form:

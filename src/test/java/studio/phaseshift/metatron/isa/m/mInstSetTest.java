@@ -136,7 +136,7 @@ public class mInstSetTest extends InstSetTest {
             "1.print(_)                                                                     % 1",
             "{1,2,3,4}.print(_).plus(2)                                                     % {3,4,5,6}",
             "{1,2,3,4}.print(+2)                                                            % {1,2,3,4}"
-           // "1.plus::(2)                                                                    % 3"
+            // "1.plus::(2)                                                                    % 3"
     }, delimiter = '%')
     public void testPrint(final String code, final String expected) {
         mTest.testCode(LOG, code, expected);
@@ -385,6 +385,10 @@ public class mInstSetTest extends InstSetTest {
     }
 
     @ParameterizedTest
+    @TestData(values = {
+            "x -> noobj",
+            "x -> {[1=>1,3=>[1=>11]],[2=>2,4=>[2=>12]],[3=>3,5=>[3=>13]]}"
+    })
     @CsvSource(value = {
             "1-<|[is(gt(0))=>plus(6),_=>plus(100)].rng()                              % 7",
             "1-<|[is(gt(1))=>plus(6),_=>plus(100)].rng()                              % 101",
@@ -392,6 +396,20 @@ public class mInstSetTest extends InstSetTest {
             "{1,2,3}-<|[is(gt(1))=>1.plus(5),_=>9.plus(89.plus(3))].rng()             % {101,6,6}",
             "{1,2,3}-<|[is(gt(1))=>plus(6),_=>plus(100)].rng()                        % {101,8,9}",
             "{1,2,3}-<[is(gt(1))=>plus(6),_=>plus(100)].rng()                         % {101,8,102,9,103}",
+            "{1,2,3}-<[is(gt(1))=>plus(6),_=>plus(100)].rng().sum()                   % {101,8,102,9,103}.sum()",
+            "{1,2,3}-<[is(gt(1))=>plus(6),_=>plus(100)].rng().sum().type()            % 1.type()",
+            "{1,2,3}.split?rec<=int([_=>_,+2=>-<[_=>+10]])                            % {[1=>1,3=>[1=>11]],[2=>2,4=>[2=>12]],[3=>3,5=>[3=>13]]}",
+            "{1,2,3}.split?<=int([_=>_,+2=>-<[_=>+10]])                               % {[1=>1,3=>[1=>11]],[2=>2,4=>[2=>12]],[3=>3,5=>[3=>13]]}",
+            "{1,2,3}.-<?<=int([_=>_,+2=>-<[_=>+10]])                                  % {[1=>1,3=>[1=>11]],[2=>2,4=>[2=>12]],[3=>3,5=>[3=>13]]}",
+            "{1,2,3}.-<?<=int[_=>_,+2=>-<[_=>+10]]                                    % {[1=>1,3=>[1=>11]],[2=>2,4=>[2=>12]],[3=>3,5=>[3=>13]]}",
+            "{1,2,3}.split?rec<=int([_=>_,+2=>-<[_=>+10]])                            % *x",
+            "{1,2,3}.split?<=int([_=>_,+2=>-<[_=>+10]])                               % *x",
+            "{1,2,3}.-<?<=int([_=>_,+2=>-<[_=>+10]])                                  % *x",
+            "{1,2,3}.-<?<=int[_=>_,+2=>-<[_=>+10]]                                    % *x",
+            "{1,2,3}.split?rec<=int([_=>_,+2=>-<[_=>+10]]).is?rec{*}<=rec{*}(eq(*x))  % *x",
+            "{1,2,3}.split?<=int([_=>_,+2=>-<[_=>+10]]).is?rec{*}<=rec{*}(eq(*x))     % *x",
+            "{1,2,3}.-<?<=int([_=>_,+2=>-<[_=>+10]]).is?rec{*}<=rec{*}(eq(*x)))       % {[1=>1,3=>[1=>11]],[2=>2,4=>[2=>12]],[3=>3,5=>[3=>13]]}",
+            "{1,2,3}.-<?<=int([_=>_,+2=>-<[_=>+10]]).is?rec{*}<=rec{*}(neq(*x))       % noobj",
     }, delimiter = '%')
     public void testBranches(final String code, final String expected) {
         mTest.testCode(LOG, code, expected);
@@ -681,7 +699,6 @@ public class mInstSetTest extends InstSetTest {
     public void testDedup(final String code, final String expected) throws Exception {
         mTest.testCode(LOG, code, expected);
     }
-
 
 
     @ParameterizedTest
