@@ -49,9 +49,19 @@ import static studio.phaseshift.metatron.furi.q.DocQ.Doc.docWrap;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
 import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_FALSE;
+import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.Bytes.BYTES_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.Code.CODE_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.Fail.FAIL_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.Inst.InstType.INST_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Int.INT_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.Lst.LST_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.Real.REAL_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Rel.REL_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.Str.STR_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.Type.TYPE_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
@@ -492,90 +502,91 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
         return (Fail) this;
     }
 
-    String xxxValue = "%s is a %s, not a %s";
+    String xxxValue = "%s unable to convert %s to %s";
 
     default Pair<Throwable, Fail> failValue() {
         if (this.isFail() || this.isCaughtFail())
             return this.jvm();
-        throw MTronException.of(xxxValue, this, tid().toUri(), FAIL_TID.toUri());
+        throw MTronException.of(xxxValue, this, T(tid()), FAIL_TYPE);
     }
 
     default boolean boolValue() {
         if (this.isBool())
             return this.jvm();
-        throw MTronException.of(xxxValue, this, tid().toUri(), BOOL_TID.toUri());
+        throw MTronException.of(xxxValue, this, T(tid()), BOOL_TYPE);
     }
 
     default ByteBuffer bytesValue() {
         if (this.isBytes())
             return this.jvm();
-        throw MTronException.of(xxxValue, this, tid().toUri(), BYTES_TID.toUri());
+        throw MTronException.of(xxxValue, this, T(tid()), BYTES_TYPE);
     }
 
     default Long intValue() {
         if (this.isInt())
             return this.jvm();
-        throw MTronException.of(xxxValue, this, tid().toUri(), INT_TID.toUri());
+        throw MTronException.of(xxxValue, this, T(tid()), INT_TYPE);
     }
 
     default Double realValue() {
         if (this.isReal())
             return this.jvm();
-        throw MTronException.of(xxxValue, this, tid().toUri(), REAL_TID.toUri());
+        throw MTronException.of(xxxValue, this, T(tid()), REAL_TYPE);
     }
 
     default String strValue() {
         if (this.isStr())
             return this.jvm();
-        throw MTronException.of(xxxValue, this, tid().toUri(), STR_TID.toUri());
+        throw MTronException.of(xxxValue, this, T(tid()), STR_TYPE);
     }
 
     default fURI uriValue() {
         if (this.isUri())
             return this.jvm();
-        throw MTronException.of(xxxValue, this, tid().toUri(), URI_TID.toUri());
+        throw MTronException.of(xxxValue, this, T(tid()), URI_TYPE);
     }
 
     default List<Obj> lstValue() {
         if (this.isLst())
             return this.jvm();
-        throw MTronException.of(xxxValue, this, tid().toUri(), LST_TID.toUri());
+        throw MTronException.of(xxxValue, this, T(tid()), LST_TYPE);
     }
 
     default Iterable<Obj> objsValue() {
         if (this.isObjs())
             return this.jvm();
-        throw MTronException.of(xxxValue, this, tid().toUri(), OBJS_TID.toUri());
+        throw MTronException.of(xxxValue, this, T(tid()), OBJS_TID);
     }
+
 
     default Map<Obj, Obj> recValue() {
         if (this.isRec())
             return this.jvm();
-        throw MTronException.of(xxxValue, this, tid().toUri(), REC_TID.toUri());
+        throw MTronException.of(xxxValue, this, T(tid()), REC_TYPE);
     }
 
     default Pair<Obj, Obj> relValue() {
         if (this.isRel())
             return this.jvm();
-        throw MTronException.of(xxxValue, this, tid().toUri(), REL_TID.toUri());
+        throw MTronException.of(xxxValue, this, T(tid()), REL_TYPE);
     }
 
     default Tuple.Triplet<Poly<?, ?>, Inst.f, Obj> instValue() {
         if (this.isInst())
             return this.jvm();
-        throw MTronException.of(xxxValue, this, tid().toUri(), INST_TID.toUri());
+        throw MTronException.of(xxxValue, this, T(tid()), INST_TYPE);
     }
 
     default List<Inst> codeValue() {
         if (this.isCode())
             return this.jvm();
-        throw MTronException.of(xxxValue, this, tid().toUri(), CODE_TID.toUri());
+        throw MTronException.of(xxxValue, this, T(tid()), CODE_TYPE);
     }
 
     default Obj typeValue() {
         if (this.isType())
             return this.jvm();
-        throw MTronException.of(xxxValue, this, tid().toUri(), fURI.of("<type>").toUri());
+        throw MTronException.of(xxxValue, this, T(tid()), TYPE_TYPE);
     }
 
     default String toCleanString() {
@@ -729,7 +740,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
                                     .map(i -> noobj())
                                     .reduce(noobj(), (a, b) -> noobj())),
                     instC(DEDUP_INST_TID.dom(A.maybeSome()).rng(A.maybeSome()), lst(), (lhs, inst) -> objs(lhs.stream().map(o -> o.c().gt(cInt.ZERO()) ? o.c(cInt::one) : o.c(c -> cInt.of(-1))).distinct())),
-                  //  instC(DEDUP_INST_TID.dom(A.maybeSome()).rng(A.maybeSome()), lst(T(B)), (lhs, inst) -> objs(lhs.stream().map(o -> o.c().gt(cInt.ZERO()) ? o.c(cInt::one) : o.c(c -> cInt.of(-1))).map(o -> inst.arg(0).apply(o)).distinct())),
+                    //  instC(DEDUP_INST_TID.dom(A.maybeSome()).rng(A.maybeSome()), lst(T(B)), (lhs, inst) -> objs(lhs.stream().map(o -> o.c().gt(cInt.ZERO()) ? o.c(cInt::one) : o.c(c -> cInt.of(-1))).map(o -> inst.arg(0).apply(o)).distinct())),
                     instC(BARRIER_TID.dom(A.maybeSome()).rng(A.maybeSome()), lst(), (lhs, inst) -> lhs),
                     instC(AS_INST_TID.dom(A).rng(A), lst(T(A)), (lhs, inst) -> lhs.clone(lhs.jvm(), inst.arg(0).tid(), lhs.vid())),
                     instC(REPEAT_INST_TID.dom(A).rng(A), lst(T(ALL), INT_TYPE), (lhs, inst) -> {

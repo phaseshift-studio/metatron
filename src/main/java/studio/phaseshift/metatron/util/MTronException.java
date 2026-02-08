@@ -19,7 +19,6 @@
 package studio.phaseshift.metatron.util;
 
 import studio.phaseshift.metatron.isa.m.type.Fail;
-import studio.phaseshift.metatron.isa.sys.type.console.Highlighter;
 import studio.phaseshift.metatron.isa.sys.type.ui.graphitty.Graphitty;
 
 import java.util.Arrays;
@@ -35,23 +34,15 @@ public class MTronException extends RuntimeException {
     }
 
     private MTronException(final String message) {
-        this(Graphitty.string(message),null);
+        this(Graphitty.string(message), null);
     }
 
     public static MTronException of(final Throwable cause) {
-        if (cause instanceof MTronException)
-            return (MTronException) cause;
-        else {
-            try {
-                return new MTronException(cause.getClass().getSimpleName() + ": " + cause.getMessage());
-            } catch (final Throwable e) {
-                return new MTronException(cause.getClass().getSimpleName() + ": " + Highlighter.unformat(cause.getMessage()));
-            }
-        }
+        return cause instanceof MTronException ? (MTronException) cause : convert(cause);
     }
 
     public static MTronException of(final Throwable cause, final String format, final Object... args) {
-        return new MTronException(Graphitty.string(format.formatted(args)), cause);
+        return new MTronException(Graphitty.string(format.formatted(args)), convert(cause));
     }
 
     public static MTronException of(final String format, final Object... args) {
@@ -63,15 +54,53 @@ public class MTronException extends RuntimeException {
             ((Throwable) throwableOrformat).printStackTrace();
         return throwableOrformat instanceof Throwable ?
                 new MTronException(Graphitty.string(((String) args[0]).formatted(Arrays.copyOfRange(args, 1, args.length))),
-                        (Throwable) throwableOrformat) :
+                        convert((Throwable) throwableOrformat)) :
                 new MTronException(Graphitty.string(throwableOrformat.toString().formatted(args)));
+    }
+
+    private static MTronException convert(final Throwable throwable) {
+        if (throwable instanceof MTronException)
+            return (MTronException) throwable;
+        else if (throwable.toString().contains("cannot be cast to class")) {
+            final String[] message = throwable.getMessage().split(" cannot be cast to class ");
+            final String leftClass = message[0].trim();
+            final String rightClass = message[1].trim().split("\\(")[0].trim();
+            
+            return new MTronException("unable to convert " + convertName(leftClass.substring(leftClass.lastIndexOf('.') + 1)) + " to " + convertName(rightClass.substring(rightClass.lastIndexOf('.') + 1)), throwable);
+        } else {
+            return new MTronException(throwable.getClass().getSimpleName() + ": " + throwable.getMessage(), throwable);
+        }
+    }
+    
+    private static String convertName(final String name) {
+        final String lname = name.toLowerCase();
+        if(lname.contains("boolean"))
+            return "bool::T";
+        if(lname.contains("int"))
+            return "int::T";
+        if(lname.contains("real"))
+            return "real::T";
+        if(lname.contains("str"))
+            return "str::T";
+        if(lname.contains("uri"))
+            return "uri::T";
+        if (lname.contains("lst"))
+            return "lst::T";
+        if(lname.contains("rec"))
+            return "rec::T";
+        if(lname.contains("rel"))
+            return "rel::T";
+        if(lname.contains("type"))
+            return "T::T";
+        else
+            return lname;
     }
 
     public static <T> T wrap(final ThrowingSupplier<T> function) {
         try {
             return function.get();
         } catch (final Exception e) {
-            throw MTronException.of(e);
+            throw MTronException.of(convert(e));
         }
     }
 
@@ -79,7 +108,7 @@ public class MTronException extends RuntimeException {
         try {
             function.run();
         } catch (final Exception e) {
-            throw MTronException.of(e);
+            throw MTronException.of(convert(e));
         }
     }
 
@@ -94,12 +123,12 @@ public class MTronException extends RuntimeException {
     public static MTronException mexcept(final Object throwableOrformat, final Object... args) {
         return throwableOrformat instanceof Throwable ?
                 new MTronException(Graphitty.string(((String) args[0]).formatted(Arrays.copyOfRange(args, 1, args.length))),
-                        (Throwable) throwableOrformat) :
+                        convert((Throwable) throwableOrformat)) :
                 new MTronException(Graphitty.string(throwableOrformat.toString().formatted(args)));
     }
 
     public MTronException cause(final Throwable cause) {
-        this.initCause(cause);
+        this.initCause(convert(cause));
         return this;
     }
 

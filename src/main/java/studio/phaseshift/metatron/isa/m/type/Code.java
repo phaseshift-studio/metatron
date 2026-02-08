@@ -30,10 +30,13 @@ import java.util.List;
 import java.util.function.Supplier;
 
 import static studio.phaseshift.metatron.isa.m.mInstSet.AS_INST_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.CODE_TID;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 
 public interface Code extends Call {
+
+    public static final Type CODE_TYPE = T(CODE_TID);
 
     @Override
     Code clone(final Object jvm, final fURI tid, final fURI vid);

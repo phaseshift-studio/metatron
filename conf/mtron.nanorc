@@ -23,23 +23,19 @@ color yellow "(0)|(-?[1-9][0-9]*)"
 icolor yellow "(([1-9][0-9]+)|0+)\.[0-9]+(E[-+]?[0-9]+)?"
 # common sugars
 color green "[.:;,+*|=!\%@]" "<<" ">>" "<=" "=>" "->" ">-" "-<"
-# uri coefficients
-color yellow "\{.{1}\}" "\{[0-9]*,?[0-9]*\}"
 # common structural tokens
-color green "[(){}]" "\[" "\]"
-# uri ip
-color blue "[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}(:)?[0-9]*"
+color green "\[" "\]" "\(" "\)" "\{" "\}"
 # real exponent
 icolor yellow "\.[0-9]+E[-+]?[0-9]+"
 # uri slash or schema
-icolor blue "(/|([a-z]*(://))|[a-z])([0-9]|[a-z]|\.|-|_)+(:)?[0-9]*(/)?([a-z]|/|\_|[0-9])*"
+icolor blue "(/|([a-z]*(://))|[a-z]|[0-9])([0-9]|[a-z]|\.|-|_)+(:)?[0-9]*(/)?([a-z]|/|\_|[0-9])*"
 # rec/rel uri key
-icolor cyan "<?/?[a-z]([a-z]|[0-9]|/|_|#|\+|-|:|\s)*>?=>"
-icolor cyan "</?([a-z]|[0-9]|/|_|#|\+|-|:|\.|\s|\(|\)|,)+>=>"
+icolor cyan "</?([a-z]|[0-9]|/|_|-|:|\s)*>?=>"
+icolor cyan "/?([a-z]|[0-9]|/|_|-|:)*=>"
 color green "=>" "<" ">"
 ### bytes
-icolor yellow "0x([0-9]|[a-f])+"
-color yellow,underline "0x"
+icolor yellow "[^(_|/|<)]0x([0-9]|[A-F]|[a-f])+"
+color yellow,underline "[^(_|/|<)]0x"
 ### bool
 color yellow "(true)|(false)"
 ### type
@@ -51,9 +47,12 @@ color cyan "[a-z]+=(?!>)"
 color blue "=([a-z]|[0-9]|\.|_|-|/)+"
 icolor blue "([a-z]|[0-9]|/)+::"
 color green "=" "::"
+# c coefficients
+color yellow "\{.{1}\}" "\{[0-9]*,?[0-9]*\}"
 ### fail
 color cyan "\\_[a-z|A-Z]+"
 color red "([a-z]|[0-9]|/)*fail::"
+color red "=X"
 ### auto resolve
 color yellow "!\*" "\{<j>\}"
 color green "\{|\}" 

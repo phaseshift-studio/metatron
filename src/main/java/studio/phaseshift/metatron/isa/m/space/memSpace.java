@@ -158,7 +158,7 @@ public class memSpace extends AbstractSpace<Map<fURI, Obj>> {
         final Uri path = (Uri) this.jvm().getOrDefault(uri(PERSIST), null);
         if (null == path)
             return;
-        final ObjByteBufferSerializer serializer = new ObjByteBufferSerializer();
+        //final ObjByteBufferSerializer serializer = new ObjByteBufferSerializer();
         final File file = new File(path.uriValue().toString());
         if (!file.exists()) {
             LOG.warn("no persisted data at {{y}}%s", file.getAbsolutePath());
@@ -179,7 +179,7 @@ public class memSpace extends AbstractSpace<Map<fURI, Obj>> {
         final Uri path = (Uri) this.jvm().getOrDefault(uri(PERSIST), null);
         if (null == path)
             return;
-        final ObjByteBufferSerializer serializer = new ObjByteBufferSerializer();
+        //final ObjByteBufferSerializer serializer = new ObjByteBufferSerializer();
         final File file = new File(path.uriValue().toString());
         if (file.exists()) file.delete();
         try {

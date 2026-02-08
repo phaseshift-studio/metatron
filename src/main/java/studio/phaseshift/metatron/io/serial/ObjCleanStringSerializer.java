@@ -202,7 +202,7 @@ public class ObjCleanStringSerializer implements ObjSerializer<String> {
                 typeString += "[]";
             typeString += ("[" + type.constructor() + "]");
         }
-        if (type.vid() != null)
+        if (type.vid() != null && !type.vid().equals(type.tid()))
             typeString += ("@" + type.vid());
         return typeString;
     }

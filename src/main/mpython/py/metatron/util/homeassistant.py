@@ -64,23 +64,16 @@ class _Form:
         return _Builder(self.ha, self.entity_vid, "button")
     
     def switch(self):
-        return (_Builder(self.ha, self.entity_vid, "switch").
-                platform("switch").
-                payload_on(1).
-                payload_off(0))
+        return _Builder(self.ha, self.entity_vid, "switch")
 
 class _Builder:
-    entity_vid = None
-    write_f = None
-    read_f = None
-    kind = None
-    ha = None
-    settings = {}
-
     def __init__(self, ha: HomeAssistant, entity_vid, kind: str):
         self.ha = ha
         self.kind = kind
         self.entity_vid = entity_vid
+        self.settings = {}
+        self.write_f = None
+        self.read_f = None
 
     def platform(self, platform: str) -> '_Builder':
         self.settings['platform'] = platform
@@ -94,10 +87,6 @@ class _Builder:
         return self
     
     def payload_off(self, payload) -> '_Builder':
-        self.settings['payload_off'] = payload
-        return self
-    
-    def payload_off(self, payload: str) -> '_Builder':
         self.settings['payload_off'] = payload
         return self
 

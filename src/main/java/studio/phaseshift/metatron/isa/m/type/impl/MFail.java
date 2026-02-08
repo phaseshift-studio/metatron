@@ -31,17 +31,17 @@ import static studio.phaseshift.metatron.isa.m.mInstSet.FAIL_TID;
  */
 public class MFail extends MObj implements Fail {
 
-    public MFail(Tuple.Pair<Throwable, Fail> jvm, final fURI tid, final fURI vid) {
+    protected MFail(Tuple.Pair<Throwable, Fail> jvm, final fURI tid, final fURI vid) {
         super(jvm, null == tid ? FAIL_TID : tid, vid);
         //t.printStackTrace();
     }
 
     public static Fail fail(final Throwable t, final Fail cause) {
-        return new MFail(Tuple.Pair.with(t, cause), FAIL_TID, fURI.fnull);
+        return new MFail(Tuple.Pair.with(MTronException.of(t), cause), FAIL_TID, fURI.fnull);
     }
 
     public static Fail fail(final Throwable t) {
-        return new MFail(Tuple.Pair.with(t, null), FAIL_TID, fURI.fnull);
+        return new MFail(Tuple.Pair.with(MTronException.of(t), null), FAIL_TID, fURI.fnull);
     }
 
     public static Fail fail(final Throwable t, final String format, final Object... args) {

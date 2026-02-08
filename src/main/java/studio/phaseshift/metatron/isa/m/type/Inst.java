@@ -339,8 +339,13 @@ public interface Inst extends Call {
         }
         if (!clhs.isFail() || cinst.isCatch()) {
             try {
-                if (null == cinst.f())
-                    return fail(mexcept("unable to determine inst function: %s => %s", clhs.tid(), cinst));
+                if (null == cinst.f()) {
+                    final Obj clhsFinal = clhs;
+                    return fail(mexcept("unable to determine inst function:" +
+                            "\n\t%-10s => %-10s  | [inst]" +
+                            "\n\t%-10s => %-10s  |  \\_dom" +
+                            "\n\t%-10s =%s %-10s  |  \\_args", clhsFinal, cinst, clhsFinal.type(), cinst.dom(), clhsFinal.type(), cinst.args().elements().allMatch(clhsFinal::matches) ? ">" : "X", cinst.args()));
+                }
                 cinst = Helpers.applyArgs(clhs, cinst);
                 Router.stack().push(cinst.args());
                 try {
@@ -354,7 +359,7 @@ public interface Inst extends Call {
                             "\n\t[inst]  | %s" +
                             "\n\t \\_dom  | %s" +
                             "\n\t \\_args | %s" +
-                            "\n\t[stack] | %s", clhs, clhs.type().tid(), clhs.type().hasPredicate() ? clhs.type().predicate() : noobj(), cinst, cinst.dom(), cinst.args(), lst(new ArrayList<>(Router.stack().sjvm()))).asFail());
+                            "\n\t[stack] | %s", clhs, clhs.type(), clhs.type().hasPredicate() ? clhs.type().predicate() : noobj(), cinst, cinst.dom(), cinst.args(), lst(new ArrayList<>(Router.stack().sjvm()))).asFail());
                     // e.printStackTrace();
                 } finally {
                     Router.stack().pop();
@@ -366,9 +371,9 @@ public interface Inst extends Call {
                 rhs = mexcept("inst resolution failure: %s", cinst)
                         .cause(mexcept("rhs does not match inst range:" +
                                 "\n\t[rhs]    %s" +
-                                "\n\t  [type] %s" +
+                                "\n\t \\_type] %s" +
                                 "\n\t[inst]   %s" +
-                                "\n\t  [rng]  %s", rhs, rhs.type(), cinst, cinst.rng()))
+                                "\n\t \\_rng   %s", rhs, rhs.type(), cinst, cinst.rng()))
                         .asFail();
         } else {
             rhs = clhs; // propagate fail through inst unless it's a catch inst

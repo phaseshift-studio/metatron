@@ -52,7 +52,7 @@ public class Highlighter implements org.jline.reader.Highlighter {
     public static Highlighter single() {
         return INSTANCE;
     }
-    
+
     public static Highlighter create() {
         return new Highlighter(INSTANCE.syntaxHighlighter);
     }
@@ -68,7 +68,7 @@ public class Highlighter implements org.jline.reader.Highlighter {
         this.serializer = new ObjCleanStringSerializer(leftJustify);
         return this;
     }
-    
+
     public static String format(final Object object) {
         return INSTANCE.highlight(object);
     }
@@ -86,19 +86,22 @@ public class Highlighter implements org.jline.reader.Highlighter {
     }
 
     public String highlight(final Object object) {
-        if (object instanceof Obj) {
-            String preprocess = this.serializer.write((Obj) object);
-            if (preprocess.length() > 550 && object instanceof Rec) {
-                final Rec r = (Rec) object;
-                preprocess = "[" + r.jvm().entrySet()
-                        .stream()
-                        .map(kv -> (kv.getKey().toString() + "=>" + stringClip(kv.getValue().toString(), 40, true))).reduce("\n ", (a, b) -> a + b + ",\n ");
-                preprocess = preprocess.substring(0, preprocess.length() - 2);
-                preprocess += "]";
-            }
+        try {
+            if (object instanceof Obj) {
+                String preprocess = this.serializer.write((Obj) object);
+                if (preprocess.length() > 550 && object instanceof Rec r) {
+                    preprocess = "[" + r.jvm().entrySet()
+                            .stream()
+                            .map(kv -> (kv.getKey().toString() + "=>" + stringClip(kv.getValue().toString(), 40, true))).reduce("\n ", (a, b) -> a + b + ",\n ");
+                    preprocess = preprocess.substring(0, preprocess.length() - 2);
+                    preprocess += "]";
+                }
 
-            return this.highlight(null, preprocess).toAnsi();
-        } else return this.graphitty.writeToString(this.highlight(null, object.toString()).toAnsi());
+                return this.highlight(null, preprocess).toAnsi();
+            } else return this.graphitty.writeToString(this.highlight(null, object.toString()).toAnsi());
+        } catch (final Exception e) {
+            return object.toString();
+        }
     }
 
     @Override
