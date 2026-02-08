@@ -37,6 +37,8 @@ public class StrTest extends mObjTest {
             "'123'.as(int::T)                                                               % 123",
             "'123.122'.as(real::T)                                                          % 123.122",
             "'abcd'.as(uri::T)                                                              % abcd",
+            "'abc'.as(bytes::T)                                                             % 0x616263",
+            "'abc'.as(bytes::T).as(str::T)                                                  % \"abc\""
 
     }, delimiter = '%')
     public void testAsInst(final String code, final String expected) {
@@ -65,6 +67,21 @@ public class StrTest extends mObjTest {
             // "{}.sum?str<=str{*}()                                                           % \"\"",  // TODO
     }, delimiter = '%')
     public void testSum(final String code, final String expected) {
+        mTest.testCode(LOG, code, expected);
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "\"abc\".ucase()                                                      % \"ABC\"",
+            "\"abc\".lcase()                                                      % \"abc\"",
+            "\"AbC-DeF\".lcase()                                                  % \"abc-def\"",
+            "\"AbC-DeF\".ucase()                                                  % \"ABC-DEF\"",
+            "\"AbC23-4eF\".lcase()                                                % \"abc23-4ef\"",
+            "\"AbC23-4eF#\".ucase()                                               % \"ABC23-4EF#\"",
+            "\"123\".ucase()                                                      % \"123\"",
+            "\"123\".lcase()                                                      % \"123\"",
+    }, delimiter = '%')
+    public void testUCaseAndLCase(final String code, final String expected) {
         mTest.testCode(LOG, code, expected);
     }
 

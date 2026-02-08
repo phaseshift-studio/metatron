@@ -38,6 +38,10 @@ public class MBytes extends MObj implements Bytes {
         return bytes(jvm, BYTES_TID, fURI.fnull);
     }
 
+    public static Bytes bytes(final byte[] jvm) {
+        return bytes(ByteBuffer.wrap(jvm), BYTES_TID, fURI.fnull);
+    }
+
     public static Bytes bytes(final ByteBuffer jvm, final fURI tid, final fURI vid) {
         return new MBytes(jvm, tid, vid);
     }

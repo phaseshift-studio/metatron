@@ -146,10 +146,8 @@ public class mInstSet extends AbstractInstSet {
     public static final fURI PATH_TID = M_ISA_TID.extend("path");
     public static final fURI Q_INST_TID = INST_TID.extend("q");
     public static final fURI URI_C_TID = M_ISA_TID.extend("uri:c");
-    public static final fURI STR_SPLIT_TID = M_ISA_TID.extend("str:split");
-    public static final fURI STR_LOWER_TID = M_ISA_TID.extend("str:lower");
-    public static final fURI STR_UPPER_TID = M_ISA_TID.extend("str:upper");
-    public static final fURI STR_CONTAINS_TID = M_ISA_TID.extend("str:contains");
+    public static final fURI LCASE_INST_TID = INST_TID.extend("lcase");
+    public static final fURI UCASE_INST_TID = INST_TID.extend("ucase");
     public static final fURI SCHEME_INST_TID = M_ISA_TID.extend("scheme");
     public static final fURI HOST_INST_TID = M_ISA_TID.extend("host");
     public static final fURI PORT_INST_TID = M_ISA_TID.extend("port");

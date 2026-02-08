@@ -420,7 +420,8 @@ public class mInstSetTest extends InstSetTest {
             "1.inst(a=>plus(2)){ plus(*a) }                                           % 4",
             "10.(a=>plus(2)){ plus(*a) }                                              % 22",
             "10.inst?int<=str(a=>plus(2)){ plus(*a) }                                 % <ERROR>",
-            "{1,3,8}.inst?int<=int(a=>plus(2)){ plus(*a) }                            % {4,8,18}"
+            "{1,3,8}.inst?int<=int(a=>plus(2)){ plus(*a) }                            % {4,8,18}",
+            "{1,3,8}.xyz?int<=int(a=>plus(2)){ plus(*a) }                             % {4,8,18}" // TODO: should inline named inst definitions be allowed?
     }, delimiter = '%')
     public void testLambda(final String code, final String expected) {
         mTest.testCode(LOG, code, expected);
@@ -429,7 +430,7 @@ public class mInstSetTest extends InstSetTest {
 
     @Disabled
     @ParameterizedTest
-    @TestData(values = {"nat -> int::T[is(gt(0))]@nat", "nat -> int::T[is(gt(0))]@nat"})
+    @TestData(values = {"nat -> int::T[is(gt(0))]"})
     @CsvSource(value = {
             "nat::2                                           % nat::2",
             "nat::-1                                          % <ERROR>",
