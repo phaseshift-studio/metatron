@@ -135,7 +135,8 @@ public class mInstSetTest extends InstSetTest {
             "print(_)                                                                       % noobj",
             "1.print(_)                                                                     % 1",
             "{1,2,3,4}.print(_).plus(2)                                                     % {3,4,5,6}",
-            "{1,2,3,4}.print(+2)                                                            % {1,2,3,4}",
+            "{1,2,3,4}.print(+2)                                                            % {1,2,3,4}"
+           // "1.plus::(2)                                                                    % 3"
     }, delimiter = '%')
     public void testPrint(final String code, final String expected) {
         mTest.testCode(LOG, code, expected);

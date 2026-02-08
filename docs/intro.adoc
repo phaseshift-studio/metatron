@@ -122,7 +122,29 @@ The first concept to understand is the definition and purpose of a fURI -- a "fh
 \end{align*}
 ++++
 
-where  `tid` is a _type_ (class) `fURI`, `jvm` is an object of the Java virtual machine, and `vid` is a _value_ (instance) `fURI`. In other words, every `obj` in metatron has a specification of its structure (`tid`), a structure (`jvm`), a reference to its explicit location in memory (`vid`).
+where  `tid` is a _type_ (class) `fURI`, `jvm` is an object of the Java virtual machine, and `vid` is a _value_ (instance) `fURI`. In other words, an `obj` in metatron is accompanied by the specification of its structure (`tid`), its data structure (`jvm`), and an explicit reference to its location in memory (`vid`). This abstract triple is used by every type of obj, from monos (primitives), to polys (containers), and insts (functions).
+
+[cols="1a,1a",separator=🧱]
+|===
+
+🧱
+++++
+<!-- 🐖
+1
+[a=>1,b=>2]
+1.plus(2)
+-->
+++++
+
+🧱
+++++
+<!-- 🐖
+int::1
+rec::[uri::a=>int::1,uri::b=>int::2]
+int::1.plus::(int::2)
+-->
+++++
+|===
 
 Every fURI is composed of the following components:
 
