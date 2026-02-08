@@ -70,7 +70,7 @@ public abstract class SpaceTest extends mTest {
         if (null == this.space)
             Assertions.fail("space supplier yielded a null space");
         if (this.space.vid() == null)
-            LOG.warn("provided space has no vid and thus can not be shutdown automatically");
+            LOG.debug("provided space has no vid and thus can not be shutdown automatically");
         Router.global().addSpace(this.space);
     }
 

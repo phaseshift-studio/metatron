@@ -296,7 +296,6 @@ public class TypeTest extends mTest {
             "nat | bignat | false",
             "bignat | bignat | true",
     }, delimiter = '|')
-
     public void testBaseTypes(final String type, final String baseType, final boolean matches) throws Exception {
         Obj a = mParser.eval("*" + type);
         Obj b = mParser.eval("*" + baseType);
@@ -466,6 +465,24 @@ public class TypeTest extends mTest {
         } finally {
             Router.writeToSpace(tid, noobj());
         }
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+           "int{2}::T                  | /m/int{2}",
+            "3                         | /m/int",
+            "int{2,3}::T               | /m/int{2,3}",
+            "3{?}                      | /m/int",
+            "3{*}                      | /m/int",
+            "int{2}::3                 | /m/int{2}",
+            "int{2,5}::3               | /m/int{2,5}",
+            "int{0}::3                 | /m/int{0}",
+            "int{5,5}::3               | /m/int{5}",
+            "int{0}::T                 | /m/int{0}"
+    }, delimiter = '|')
+    public void testTypeTID(final String type, final String expectedTID) {
+        LOG.debug("testing type %s == tid %s", type, expectedTID);
+        assertEquals(f(expectedTID), mParser.m_obj().parse(type).<Obj>get().tid());
     }
 
 }

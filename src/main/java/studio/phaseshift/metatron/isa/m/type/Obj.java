@@ -94,6 +94,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
 
     // default boolean test(final Obj other) {
     //      return this.matches(other);
+    
     // }
 
     default boolean isResolved(final boolean nested) {

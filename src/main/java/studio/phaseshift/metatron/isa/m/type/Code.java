@@ -47,7 +47,7 @@ public interface Code extends Call {
 
     @Override
     default boolean isResolved(final boolean nested) {
-        return this.<Code>as().<Inst>elements().allMatch(x -> x.isResolved(nested));
+        return this.asCode().insts().stream().allMatch(x -> x.isResolved(nested));
     }
 
     @Override

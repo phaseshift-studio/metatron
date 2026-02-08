@@ -65,8 +65,8 @@ public @interface TestData {
 
         @Override
         public void afterTestExecution(final ExtensionContext context) {
-            if(this.hasTestData)
-            LOG.warn("testing state still remains from  %s", context.getRequiredTestMethod().getName());
+            if (this.hasTestData)
+                LOG.debug("testing state still remains from  %s", context.getRequiredTestMethod().getName());
         }
     }
 }
