@@ -74,6 +74,10 @@ public interface Type extends Obj, PlusMonoid<Type> {
         return null;
     }
 
+    default String namedType() {
+        return (null == this.vid() ? this.tid().name() : this.vid().name()) + "::T";
+    }
+
     default boolean isBaseType() {
         return mInstSet.BASE_TYPES.contains(this.tid().basePath());
     }

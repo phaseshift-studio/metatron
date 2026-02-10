@@ -103,7 +103,7 @@ public class MRec extends MObj implements Rec {
 
     public Rec clone() {
         final MRec clone = (MRec) super.clone();
-        clone.jvm = this.jvm();
+      //  clone.jvm = this.jvm;
         return clone;
     }
 

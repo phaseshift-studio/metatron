@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -23,9 +23,10 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.PubSubQ;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.impl.MObjFactory;
 import studio.phaseshift.metatron.isa.sys.type.Router;
 
-import java.nio.charset.StandardCharsets;
+import java.nio.ByteBuffer;
 import java.util.Optional;
 
 import static studio.phaseshift.metatron.Tokens.SUB;
@@ -83,8 +84,7 @@ public class MqttPubSubQ extends PubSubQ {
                                 Obj o;
                                 if (p.getPayload().isPresent()) {
                                     Router.global().stats().incrBytesRecv(p.toString().length());
-                                    final String json = StandardCharsets.UTF_8.decode(p.getPayload().get()).toString();
-                                    o = space.jsonTranslator.parse(json);
+                                    o = space.serializer.inputBytes(ByteBuffer.wrap(p.getPayloadAsBytes()));
                                 } else
                                     o = noobj();
                                 super.qlessWrite(source, topic, o);
@@ -97,11 +97,11 @@ public class MqttPubSubQ extends PubSubQ {
                                 if (null != e)
                                     LOG.error(e);
                                 else
-                                    LOG.info("subscribed to {{y}}%s{{X}}\n\t%s", vid.basePath(), m);
+                                    LOG.info("subscribed to {{y}}%s{{X}}\n\t%s", vid.basePath(), MObjFactory.of().toObj(m).asRec());
                             });
                 }
             }
-            return super.preWrite(source, vid, obj);
+            return Optional.empty();
         }
     }
 }

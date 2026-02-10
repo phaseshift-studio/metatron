@@ -16,6 +16,6 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-studio.phaseshift.metatron.io.serial.ObjStringSerializer
 studio.phaseshift.metatron.io.serial.ObjCleanStringSerializer
 studio.phaseshift.metatron.io.serial.ObjByteBufferSerializer
+studio.phaseshift.metatron.io.serial.ObjSimpleJSONSerializer

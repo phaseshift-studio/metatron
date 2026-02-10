@@ -21,15 +21,23 @@ package studio.phaseshift.metatron.isa.iot.type;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Type;
 
+import static studio.phaseshift.metatron.isa.iot.haos.haosInstSet.HAOS_ENTITY_TYPE;
 import static studio.phaseshift.metatron.isa.iot.iotInstSet.DEVICE_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TID;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
+import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public interface Device extends Obj {
 
-    public static final Type DEVICE_TYPE = Type.Builder.build().tid(REC_TID).vid(DEVICE_TID).create();
+    Type DEVICE_TYPE = Type.Builder.build()
+            .tid(REC_TID)
+            .vid(DEVICE_TID)
+            .predicate(isa_(rec(uri("entity"), lst(HAOS_ENTITY_TYPE)))).create();
 
 
 }

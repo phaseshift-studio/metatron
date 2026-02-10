@@ -53,7 +53,9 @@ public abstract class AbstractInstSet extends AbstractSpace<Map<fURI, Set<? exte
     protected final Map<fURI, Inst> REWRITE_TABLE = Collections.synchronizedMap(new LinkedHashMap<>());
 
     public AbstractInstSet(final fURI tid, final fURI vid) {
-        super(new LinkedHashMap<>(), mutableMap(uri(Tokens.PATTERN), uri(tid.extend(fURI.ALL)), uri(Tokens.Q), lst(new DocQ())), tid, vid);
+        super(new LinkedHashMap<>(), mutableMap(
+                uri(Tokens.PATTERN), uri(tid.extend(fURI.ALL)),
+                uri(Tokens.Q), lst(new DocQ())), tid, vid);
         if (Router.loaded()) {
             //if (!this.pattern.equals(f("+/#")) && !(this instanceof Router))
             //    Router.global().addSpace(this);

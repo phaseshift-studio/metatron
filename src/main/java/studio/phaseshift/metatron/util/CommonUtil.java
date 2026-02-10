@@ -25,6 +25,8 @@ import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Rel;
 
 import java.io.Closeable;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.function.BinaryOperator;
@@ -48,6 +50,14 @@ public final class CommonUtil {
 
     private CommonUtil() {
         // do nothing
+    }
+
+    public static String getTimeStamp(final Long currentTimeInMillis) {
+        final LocalDateTime time = LocalDateTime.ofInstant(
+                java.time.Instant.ofEpochMilli(null == currentTimeInMillis ? System.currentTimeMillis() : currentTimeInMillis),
+                java.time.ZoneId.systemDefault());
+        final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH");
+        return time.format(formatter);
     }
 
     public static void sleepThread(final long millis) {

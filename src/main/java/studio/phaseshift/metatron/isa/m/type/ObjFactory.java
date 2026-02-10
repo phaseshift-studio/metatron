@@ -100,9 +100,14 @@ public interface ObjFactory extends Rec {
     /// //////////////////////////////////////////////////////////////////////////////////////////////////////
     class Helper {
         public static String externalNameToMtronName(final String externalName) {
-            if (externalName.toUpperCase().equals(externalName))
-                return externalName.toLowerCase();
-            return externalName
+            String newName = externalName;
+            if (newName.toUpperCase().equals(newName))
+                newName = newName.toLowerCase();
+            if (newName.startsWith("get") || newName.startsWith("has") || newName.startsWith("can"))
+                newName = newName.substring(3);
+            if (newName.startsWith("is"))
+                newName = newName.substring(2);
+            return newName
                     .replaceAll("([A-Z])(?=[A-Z])", "$1_")
                     .replaceAll("([a-z])([A-Z])", "$1_$2")
                     .toLowerCase();
@@ -141,6 +146,7 @@ public interface ObjFactory extends Rec {
                     Map.class.isAssignableFrom(clazz);
 
         }
+
 
         public static Map<Obj, Obj> reflectionBasedCreate(final ObjFactory factory, final Object value) {
             final Map<Obj, Obj> map = new LinkedHashMap<>();

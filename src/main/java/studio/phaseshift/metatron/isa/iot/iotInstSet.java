@@ -19,7 +19,6 @@
 package studio.phaseshift.metatron.isa.iot;
 
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.iot.space.mqtt.mqttSpace;
 import studio.phaseshift.metatron.isa.iot.type.SoC;
 import studio.phaseshift.metatron.isa.iot.type.device.GPIO;
 import studio.phaseshift.metatron.isa.m.type.Inst;
@@ -34,6 +33,9 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static studio.phaseshift.metatron.isa.iot.haos.space.EntityBuilder.*;
+import static studio.phaseshift.metatron.isa.iot.haos.space.haosSpace.HAOS_SPACE_TYPE;
+import static studio.phaseshift.metatron.isa.iot.space.mqtt.mqttSpace.MQTT_SPACE_TYPE;
 import static studio.phaseshift.metatron.isa.iot.type.Device.DEVICE_TYPE;
 import static studio.phaseshift.metatron.isa.iot.type.SoC.SoCType.PIN_TYPE;
 import static studio.phaseshift.metatron.isa.iot.type.SoC.SoCType.SOC_TYPE;
@@ -53,9 +55,17 @@ public class iotInstSet extends AbstractInstSet {
     public static final fURI IOT_INST_TID = IOT_ISA_TID.extend("inst");
     public static final fURI SOC_TID = IOT_ISA_TID.extend("soc");
     public static final fURI DEVICE_TID = IOT_ISA_TID.extend("device");
+    public static final fURI ENTITY_TID = IOT_ISA_TID.extend("entity");
     public static final fURI ESP32_TID = IOT_ISA_TID.extend("soc/esp32");
     public static final fURI PWM_INST_TID = IOT_INST_TID.extend("pwm");
 
+    public static final String IOT_DEVICE_TID_STRING = "/mtron/iot/device";
+    public static final String IOT_ENTITY_TID_STRING = "/mtron/iot/entity";
+
+    static {
+        assert IOT_DEVICE_TID_STRING.equals(DEVICE_TID.toString());
+        assert IOT_ENTITY_TID_STRING.equals(ENTITY_TID.toString());
+    }
 
     public iotInstSet() {
         this(SYS_SPACE_TID.extend("iot"));
@@ -74,7 +84,8 @@ public class iotInstSet extends AbstractInstSet {
                 WEMOS_D1_MINI_TYPE,
                 ESP32_TYPE,
                 GPIO_TYPE,
-                mqttSpace.MQTT_SPACE_TYPE).collect(Collectors.toSet());
+                MQTT_SPACE_TYPE,
+                HAOS_SPACE_TYPE).collect(Collectors.toSet());
     }
 
     @Override

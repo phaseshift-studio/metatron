@@ -171,7 +171,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
     }
 
     default Stream<Obj> stream() {
-        return this.isNoObj() ? Stream.empty() : IteratorUtil.stream(this);
+        return this.isNoObj() ? Stream.empty() : Stream.of(this);
     }
 
     default <O extends Obj> Stream<O> elements() {
@@ -189,6 +189,18 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
 
     default Obj vid(final fURI vid) {
         return this.clone(this.jvm(), this.tid(), vid);
+    }
+
+    default Obj selfVID(final fURI vid) {
+        return this.self(this.jvm(), this.tid(), vid);
+    }
+
+    default Obj selfTID(final fURI tid) {
+        return this.self(this.jvm(), tid, this.vid());
+    }
+    
+    default Obj selfJVM(final Object jvm) {
+        return this.self(jvm, this.tid(), this.vid());
     }
 
     default Obj append(final Obj obj) {
@@ -731,11 +743,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
         public static Set<Inst> insts() {
             return new LinkedHashSet<>(List.of(
                     // instC(AS_INST_TID.dom(REL_TID).rng(REL_TID), lst(REL_TYPE), (lhs, inst) -> recurssiveAs(lhs, inst.arg(0).as())),
-                    instC(IMPORT_INST_TID.dom(ALL.maybe()).rng(fURI.NOOBJ.zero()), lst(REL_TYPE), (lhs, inst) ->
-                            BootLoader.getInstSetProviders(inst.arg(0).uriValue())
-                                    .map(ServiceLoader.Provider::get)
-                                    .map(i -> noobj())
-                                    .reduce(noobj(), (a, b) -> noobj())),
+                    instC(IMPORT_INST_TID.dom(ALL.maybe()).rng(fURI.NOOBJ.zero()), lst(REL_TYPE), (lhs, inst) -> MTronException.wrap(() -> BootLoader.getInstSetProviders(inst.arg(0).uriValue()).map(ServiceLoader.Provider::get).map(i -> noobj()).reduce(noobj(), (a, b) -> noobj()))),
                     instC(DEDUP_INST_TID.dom(A.maybeSome()).rng(A.maybeSome()), lst(), (lhs, inst) -> objs(lhs.stream().map(o -> o.c().gt(cInt.ZERO()) ? o.c(cInt::one) : o.c(c -> cInt.of(-1))).distinct())),
                     //  instC(DEDUP_INST_TID.dom(A.maybeSome()).rng(A.maybeSome()), lst(T(B)), (lhs, inst) -> objs(lhs.stream().map(o -> o.c().gt(cInt.ZERO()) ? o.c(cInt::one) : o.c(c -> cInt.of(-1))).map(o -> inst.arg(0).apply(o)).distinct())),
                     instC(BARRIER_TID.dom(A.maybeSome()).rng(A.maybeSome()), lst(), (lhs, inst) -> lhs),

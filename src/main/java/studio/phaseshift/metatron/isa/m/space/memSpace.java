@@ -21,7 +21,6 @@ package studio.phaseshift.metatron.isa.m.space;
 import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.Q;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.io.serial.ObjByteBufferSerializer;
 import studio.phaseshift.metatron.isa.AbstractSpace;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.mInstSet;
@@ -40,17 +39,17 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.Tokens.PERSIST;
 import static studio.phaseshift.metatron.furi.fURI.ALL;
-import static studio.phaseshift.metatron.isa.m.mInstSet.*;
+import static studio.phaseshift.metatron.isa.m.mInstSet.M_ISA_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.SPACE_TID;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
@@ -120,14 +119,13 @@ public class memSpace extends AbstractSpace<Map<fURI, Obj>> {
                 return this.sjvm().entrySet().stream().map(kv -> Tuple.Pair.with(kv.getKey(), kv.getValue())).iterator();
             else {
                 if (pattern.hasPattern()) {
-                    final List<Tuple.Pair<fURI, Obj>> partial = new ArrayList<>();
-                    this.sjvm().forEach((key, value) -> {
-                        if (key.matches(pattern.asNode()))
-                            partial.add(Tuple.Pair.with(key, value));
-                        if (value.isPoly())
-                            partial.addAll(Space.Helper.unrollPoly(key, value.as(), pattern.asNode()));
-                    });
-                    return partial.iterator();
+                    return this.sjvm().entrySet().stream().flatMap(kv -> Stream.concat(
+                            kv.getKey().matches(pattern.asNode()) ?
+                                    Stream.of(Tuple.Pair.with(kv.getKey(), kv.getValue())) :
+                                    Stream.empty(),
+                            kv.getValue().isPoly() ?
+                                    Space.Helper.unrollPoly(kv.getKey(), kv.getValue().as(), pattern.asNode()).stream() :
+                                    Stream.empty())).iterator();
                 } else {
                     final Obj value = this.sjvm().get(pattern);
                     return null == value ? IteratorUtil.of() : IteratorUtil.of(Tuple.Pair.with(pattern, value));

@@ -18,8 +18,12 @@
 
 package studio.phaseshift.metatron.isa.m.type;
 
+import studio.phaseshift.metatron.furi.fURI;
+
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
+
+import static studio.phaseshift.metatron.furi.fURI.f;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -27,5 +31,12 @@ import java.lang.annotation.RetentionPolicy;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface ServiceMetadata {
     String tid();
-    String vid() default "";
+
+
+    public static class Helper {
+        public static fURI tid(final Class<?> spec) {
+            return f(spec.getAnnotation(ServiceMetadata.class).tid());
+        }
+    }
+
 }

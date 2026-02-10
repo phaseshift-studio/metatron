@@ -33,7 +33,6 @@ import java.util.Arrays;
 import java.util.HexFormat;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import static studio.phaseshift.metatron.furi.q.DocQ.DOC_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBytes.bytes;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
@@ -155,7 +154,7 @@ public class ObjCleanStringSerializer implements ObjSerializer<String> {
         sb.append(firstRel ? "(" : "").append(this.write(rel.jvm().get0())).append(firstRel ? ")" : "");
         sb.append("=>");
         sb.append(secondRel ? "(" : "").append(this.write(rel.jvm().get1())).append(secondRel ? ")" : "");
-        return handleIds(rel, sb.toString());
+        return handleIds(rel, this.cleanEnding(sb).toString());
     }
 
     @Override
@@ -189,7 +188,7 @@ public class ObjCleanStringSerializer implements ObjSerializer<String> {
     @Override
     public String writeObjs(final Objs objs) {
         final String internal = IteratorUtil.stream(objs.jvm()).map(this::write).reduce("", (a, b) -> a + "," + b);
-        return "{" + internal.substring(1) + "}";
+        return "{" + this.cleanEnding(new StringBuilder(internal.substring(1))) + "}";
     }
 
     @Override
@@ -257,18 +256,25 @@ public class ObjCleanStringSerializer implements ObjSerializer<String> {
                     sb.append(" ".repeat(depth + 2));
                 this.processNestedPoly(sb, depth, 0, nested, v);
             });
-            if (nested)
-                sb.deleteCharAt(sb.length() - 1);
-            sb.deleteCharAt(sb.length() - 1);
+            this.cleanEnding(sb);
             sb.append("]");
         }
         return handleVID(sb, lst);
     }
 
+    private StringBuilder cleanEnding(final StringBuilder sb) {
+        char last = sb.charAt(sb.length() - 1);
+        while (last == ' ' || last == ',' || last == '\n') {
+            sb.deleteCharAt(sb.length() - 1);
+            last = sb.charAt(sb.length() - 1);
+        }
+        return sb;
+    }
+
     private StringBuilder generateRec(final StringBuilder sb, final Rec rec, final int depth, final int padding) {
         handleTID(sb, rec, true);
-     //   if(rec.tid().basePath().equals(DOC_TID)) // TODO: the concept of toString() needs to exist for metatron
-      //      return sb.append(rec.toString());
+        //   if(rec.tid().basePath().equals(DOC_TID)) // TODO: the concept of toString() needs to exist for metatron
+        //      return sb.append(rec.toString());
         if (rec.isEmpty()) {
             sb.append("[=>]");
         } else {
@@ -296,9 +302,7 @@ public class ObjCleanStringSerializer implements ObjSerializer<String> {
                         .append(" ".repeat(nested && leftJustify ? childPadding : 0)).append("=>");
                 this.processNestedPoly(sb, depth, leftJustify ? 0 : childPadding, nested, v);
             });
-            if (nested)
-                sb.deleteCharAt(sb.length() - 1);
-            sb.deleteCharAt(sb.length() - 1);
+            this.cleanEnding(sb);
             sb.append("]");
         }
         return handleVID(sb, rec);
@@ -307,9 +311,11 @@ public class ObjCleanStringSerializer implements ObjSerializer<String> {
     public static final int CLIP_LENGTH = 40;
 
     private StringBuilder writeClip(final StringBuilder sb, final Obj obj) {
+        if(true)
+            return sb.append(write(obj));
         if (obj.isStr() && obj.strValue().length() > CLIP_LENGTH) {
             sb.append(write(str(obj.strValue().substring(0, CLIP_LENGTH - 1))));
-            sb.append("...");
+            sb.append("...'");
         } else if (obj.isBytes() && obj.bytesValue().capacity() > CLIP_LENGTH) {
             byte[] bb = Arrays.copyOf(obj.bytesValue().array(), CLIP_LENGTH - 1);
             sb.append(write(bytes(ByteBuffer.wrap(bb))));

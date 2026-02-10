@@ -39,6 +39,7 @@ import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.Tuple.Pair;
@@ -189,18 +190,22 @@ public interface Space extends Rec, Closeable {
         public static Obj resolveRead(final Space space, final fURI pattern, final Function<fURI, Iterator<Tuple.Pair<fURI, Obj>>> directReader) { //final Map<fURI, Obj> store) {
             final Set<Pair<Uri, Obj>> listing = new HashSet<>();
             directReader.apply(pattern).forEachRemaining(kv -> listing.add(Pair.with(kv.get0().toUri(), kv.get1())));
-            if (listing.isEmpty() && pattern.isBranch()) {
-                directReader.apply(pattern.extend(fURI.ONE_WILD_STRING)).forEachRemaining(kv -> {
-                    /*if (kv.get1().isRec()) {
-                        kv.get1().recValue().forEach((key2, value2) -> listing.add(Pair.with(uri(kv.get0().extend(key2.uriValue())), value2)));
-                    } else if (kv.get1().isLst()) {
-                        for (int i = 0; i < kv.get1().lstValue().size(); i++) {
-                            listing.add(Pair.with(uri(String.valueOf(i)), kv.get1().lstValue().get(i)));
-                        }
-                    } else {*/
-                    listing.add(Pair.with(kv.get0().toUri(), kv.get1()));
-                    // }
-                });
+            if (listing.isEmpty()) {
+                if (pattern.isBranch() && !pattern.hasPattern()) {
+                    final Rec nestRec = rec();
+                    directReader.apply(pattern.extend(fURI.ONE_WILD_STRING)).forEachRemaining(kv -> {
+                        if (CommonUtil.isInt(kv.get0().name()))
+                            listing.add(Pair.with(kv.get0().toUri(), kv.get1()));
+                        else
+                            nestRec.put(kv.get0().pretract(pattern.pathLength()).toUri(), kv.get1(), MUTABLE);
+                    });
+                    if (!nestRec.isEmpty())
+                        listing.add(Pair.with(uri(pattern), nestRec));
+                } else if (pattern.isBranch()) {
+                    directReader.apply(pattern.extend(fURI.ONE_WILD_STRING)).forEachRemaining(kv -> {
+                        listing.add(Pair.with(kv.get0().toUri(), kv.get1()));
+                    });
+                }
             }
             if (listing.isEmpty() || pattern.hasPattern()) {
                 final Pair<fURI, Poly> base = Helper.locateBasePoly(space, pattern);

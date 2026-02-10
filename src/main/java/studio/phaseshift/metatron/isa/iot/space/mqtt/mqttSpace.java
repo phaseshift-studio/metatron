@@ -18,24 +18,28 @@
 
 package studio.phaseshift.metatron.isa.iot.space.mqtt;
 
-import com.hivemq.client.internal.mqtt.message.connect.connack.MqttConnAck;
 import com.hivemq.client.mqtt.MqttClient;
 import com.hivemq.client.mqtt.mqtt5.Mqtt5Client;
 import com.hivemq.client.mqtt.mqtt5.message.subscribe.Mqtt5RetainHandling;
+import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.io.serial.ObjSerializer;
 import studio.phaseshift.metatron.isa.AbstractSpace;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.mInstSet;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
-import studio.phaseshift.metatron.isa.m.type.*;
+import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.Rec;
+import studio.phaseshift.metatron.isa.m.type.Rel;
+import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.m.type.impl.MObjFactory;
 import studio.phaseshift.metatron.isa.sys.type.Router;
-import studio.phaseshift.metatron.isa.web.parser.JSONTranslator;
 import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
 
+import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
@@ -45,10 +49,14 @@ import java.util.concurrent.TimeUnit;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.ALL;
+import static studio.phaseshift.metatron.io.serial.ObjSimpleJSONSerializer.OBJ_SIMPLE_JSON_SERIALIZER_TID;
 import static studio.phaseshift.metatron.isa.iot.iotInstSet.IOT_ISA_TID;
-import static studio.phaseshift.metatron.isa.m.mInstSet.*;
+import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.SPACE_TID;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.else_;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
 import static studio.phaseshift.metatron.isa.m.type.Lst.LST_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.Rel.REL_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
@@ -60,26 +68,31 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 public class mqttSpace extends AbstractSpace<Mqtt5Client> {
 
     public static fURI MQTT_SPACE_TID = IOT_ISA_TID.extend("space").extend("mqtt");
+    public static final Rec MQTT_SPACE_CONFIG = rec(
+            uri(PATTERN), URI_TYPE,
+            uri(HOST), URI_TYPE,
+            uri(SERIALIZER), else_(uri(OBJ_SIMPLE_JSON_SERIALIZER_TID)),
+            //uri(CLIENT).maybe(), T(URI_TID).maybe(),
+            uri(REWRITE), REL_TYPE,
+            uri(Tokens.Q).c(cInt::maybe), isa_(LST_TYPE));
     public static final Type MQTT_SPACE_TYPE = Type.Builder.build().tid(SPACE_TID).vid(MQTT_SPACE_TID).constructor(
             instC(mInstSet.INST_TID.dom(ALL.maybe()).rng(MQTT_SPACE_TID),
-                    lst(T(REC_TID, isa_(rec(
-                            uri(PATTERN), URI_TYPE,
-                            uri(HOST), URI_TYPE,
-                            //uri(CLIENT).maybe(), T(URI_TID).maybe(),
-                            uri(REWRITE), REL_TYPE,
-                            uri(Tokens.Q).c(cInt::maybe), isa_(LST_TYPE))))), (lhs, inst) -> mqttSpace.of(inst.arg(0).asRec(), inst.arg(0).vid()))).create();
+                    lst(T(REC_TID, isa_(MQTT_SPACE_CONFIG))), (lhs, inst) -> mqttSpace.of(inst.arg(0).asRec(), inst.arg(0).vid()))).create();
     protected final fURI broker;
     protected final Tuple.Pair<String, String> rewrite;
-    protected final JSONTranslator jsonTranslator = new JSONTranslator();
+    protected final ObjSerializer<?> serializer;
     protected final memSpace cache;
 
     protected mqttSpace(final Mqtt5Client client, final Map<Obj, Obj> config, final fURI tid, final fURI vid) {
         super(client, config, null == tid ? MQTT_SPACE_TID : tid, vid);
-        MqttConnAck connAck = null;
         this.rewrite = Space.Helper.extractRewrite(config);
         LOG.info("{{y}}mtron{{g}}<=>{{y}}mqtt{{X}} mapping established: %s {{g}}<=> ({{b}}%s {{g}}<=>{{X}} %s{{g}}){{X}}", this.pattern().toUri(), this.rewrite, uri(Space.Helper.toNativeSpace(this.pattern(), this.rewrite)));
         this.cache = memSpace.of(this.pattern(), fURI.fnull);
         this.put(uri(Tokens.Q), lst(List.of(new MqttPubSubQ(this))), MUTABLE);
+        this.serializer = BootLoader.getObjSerializerProviders(this.at(SERIALIZER).orElse(MQTT_SPACE_CONFIG.at(SERIALIZER).apply()).uriValue())
+                .findFirst()
+                .orElseThrow(() -> MTronException.of("no serializer found for " + this.at(SERIALIZER).uriValue()))
+                .get();
         this.broker = this.at(uri(HOST)).orThrow(new IllegalArgumentException("config must have a host key")).uriValue();
         try {
             this.sjvm = MqttClient.builder()
@@ -114,11 +127,11 @@ public class mqttSpace extends AbstractSpace<Mqtt5Client> {
                                 final String json = StandardCharsets.UTF_8.decode(p.getPayload().get()).toString();
                                 this.cache.write(
                                         Space.Helper.fromNativeSpace(p.getTopic().toString(), this.rewrite),
-                                        this.jsonTranslator.parse(json));
+                                        this.serializer.inputBytes(ByteBuffer.wrap(json.getBytes(StandardCharsets.UTF_8))));
                             } else {
                                 this.cache.write(
                                         Space.Helper.fromNativeSpace(p.getTopic().toString(), this.rewrite),
-                                        NoObj.noobj());
+                                        noobj());
                             }
                         } catch (final Exception e) {
                             LOG.error(e);
@@ -175,7 +188,7 @@ public class mqttSpace extends AbstractSpace<Mqtt5Client> {
 
     private void send(final fURI vid, final Obj obj) {
         try {
-            final byte[] payload = obj.isNoObj() ? new byte[0] : this.jsonTranslator.translate(obj).toString().getBytes();
+            final byte[] payload = obj.isNoObj() ? new byte[0] : this.serializer.outputBytes(obj).array();
             if (vid.hasQuery(Tokens.SUB))
                 return;
             this.sjvm

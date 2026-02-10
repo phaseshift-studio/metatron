@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -20,8 +20,8 @@ package studio.phaseshift.metatron.isa.sys.type.console;
 
 import org.jline.builtins.Nano;
 import org.jline.builtins.Options;
+import studio.phaseshift.metatron.io.serial.ObjCleanStringSerializer;
 import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.io.serial.ObjStringSerializer;
 import studio.phaseshift.metatron.isa.sys.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.util.MTronException;
 
@@ -78,7 +78,7 @@ public class Editor {
     public static File createObjFile(final Obj obj) {
         try {
             final File objFile = File.createTempFile("console-", ".mtron");
-            final ObjStringSerializer serializer = ObjStringSerializer.build().prettyPrint(true).create();
+            final ObjCleanStringSerializer serializer = new ObjCleanStringSerializer();
             Files.writeString(objFile.toPath(), Highlighter.unformat(serializer.write(obj)));
             return objFile;
         } catch (final Exception e) {

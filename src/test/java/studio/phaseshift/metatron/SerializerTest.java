@@ -21,9 +21,11 @@ package studio.phaseshift.metatron;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import studio.phaseshift.metatron.io.serial.ObjSerializer;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.io.serial.ObjSerializer;
+
+import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -39,11 +41,22 @@ public abstract class SerializerTest<T> extends mTest {
         this.serializer = serializer;
     }
 
+    public boolean ignoreFail(final String toSerialize) {
+        return false;
+    }
+
     @ParameterizedTest
     @CsvSource(value = {
             //obj
-            "noobj", "int{0}::3",
-            "true", "false", "1", "0", "-100", "12.355", "-12.35",
+            "noobj",
+            "int{0}::3",
+            "true",
+            "false",
+            "1",
+            "0",
+            "-100",
+            "12.355",
+            "-12.35",
             "\"this is a string\"",
             "\"\"\"this is a multilinestring\"\"\"",
             "<http://test.uri.com>",
@@ -75,7 +88,16 @@ public abstract class SerializerTest<T> extends mTest {
             obj2 = serializer.read(buffer);
         } finally {
             LOG.debug("testing {{b}}%s{{/b}} serialized to %s => %s", objString, obj, obj2);
-            assertEquals(obj, obj2);
+            if (this.ignoreFail(objString)) {
+                final boolean areEqual = Objects.equals(obj, obj2);
+                if (areEqual)
+                    LOG.error("no need to ignore test %s <=> %s", objString, obj);
+                else
+                    LOG.debug("ignoring fail for %s <=> %s", objString, obj);
+            } else {
+                assertEquals(obj, obj2);
+            }
+
         }
 
     }

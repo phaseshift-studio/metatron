@@ -88,16 +88,16 @@ public class Highlighter implements org.jline.reader.Highlighter {
     public String highlight(final Object object) {
         try {
             if (object instanceof Obj) {
-                String preprocess = this.serializer.write((Obj) object);
+                /*String preprocess = this.serializer.write((Obj) object);
                 if (preprocess.length() > 550 && object instanceof Rec r) {
                     preprocess = "[" + r.jvm().entrySet()
                             .stream()
-                            .map(kv -> (kv.getKey().toString() + "=>" + stringClip(kv.getValue().toString(), 40, true))).reduce("\n ", (a, b) -> a + b + ",\n ");
+                            .map(kv -> (kv.getKey().toString() + "=>" + stringClip(kv.getValue().toString(), 40, true))).reduce("\n ", (a, b) -> a +N b + ",\n ");
                     preprocess = preprocess.substring(0, preprocess.length() - 2);
                     preprocess += "]";
-                }
+                }*/
 
-                return this.highlight(null, preprocess).toAnsi();
+                return this.highlight(null, this.serializer.write((Obj) object)).toAnsi();
             } else return this.graphitty.writeToString(this.highlight(null, object.toString()).toAnsi());
         } catch (final Exception e) {
             return object.toString();
@@ -119,7 +119,7 @@ public class Highlighter implements org.jline.reader.Highlighter {
     }
 
     private String stringClip(final String s, final int clipSize, final boolean removeNewLines) {
-        if (s.length() < clipSize)
+        if (true || s.length() < clipSize)
             return s;
         String ret = s.substring(0, clipSize) + "...";
         return removeNewLines ? ret.replaceAll("\n", "") : ret;

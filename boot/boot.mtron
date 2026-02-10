@@ -15,6 +15,7 @@ print("{{r}}------------\n{{g}}*{{y}}boot/args{{X}}: ",
 print("{{y}}mounting instruction sets\n{{X}}");
 import(/mtron/web);
 import(/mtron/iot);
+import(/mtron/iot/haos);
 import(/mtron/grph);
 print("{{y}}mqtt broker location{{X}}: ", <boot/args/mqtt>.else(boot/args/mqtt -> [broker => <mqtt://chibi.local:1883>]),"\n");
 print("{{y}}cluster peers{{X}}: ", *<boot/peers>.else(boot/peers -> [ws://localhost:6666,<ws://127.0.0.1:7777>]),"\n");
@@ -47,7 +48,7 @@ print("{{y}}supported scripting environments:\n{{X}}", *<boot/script>.else(boot/
         native/load => modern,
         native   => [factory  => mfactory::[=>],
                      load     => modern]]@/sys/space/tp3/grph;
-  mqtt::[pattern => <wall:#>,
+  [==mqtt::[pattern => <wall:#>,
          host    => !*boot/args/mqtt/broker,
          rewrite => <wall:>=><walltron/>]@/sys/space/walltron;
   mqtt::[pattern => <pond:#>,
@@ -55,13 +56,15 @@ print("{{y}}supported scripting environments:\n{{X}}", *<boot/script>.else(boot/
          rewrite => <pond:>=><pondbox/>]@/sys/space/pondbox;
   mqtt::[pattern => <play:#>,
          host    => !*boot/args/mqtt/broker,
-         rewrite => <play:>=><playtron/>]@/sys/space/playtron;
-  mqtt::[pattern => <ha:#>,
+         rewrite => <play:>=><playtron/>]@/sys/space/playtron;==]
+  mqtt::[pattern    => <z2m:#>,
+         host       => !*boot/args/mqtt/broker,
+         serializer => /m/io/json/simple,
+         rewrite    => <z2m:>=><zigbee2mqtt/>]@/sys/space/zigbee2mqtt;
+  haos::[pattern => <ha:#>,
          host    => !*boot/args/mqtt/broker,
          rewrite => <ha:>=><homeassistant/>]@/sys/space/homeassistant;
-  mqtt::[pattern => <z2m:#>,
-         host    => !*boot/args/mqtt/broker,
-         rewrite => <z2m:>=><zigbee2mqtt/>]@/sys/space/zigbee2mqtt;
+
    [==  bt::[pattern => <bt:#>
           rewrite => <bt:>=><>]@/sys/space/bt; ==]
    [==tabl::[pattern => /postgres/#,

@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -19,9 +19,9 @@
 package studio.phaseshift.metatron.isa.sys.type.ui.graphitty;
 
 import org.jline.utils.AttributedString;
+import studio.phaseshift.metatron.io.serial.ObjCleanStringSerializer;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.sys.type.Router;
-import studio.phaseshift.metatron.io.serial.ObjStringSerializer;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.io.ByteArrayOutputStream;
@@ -166,8 +166,9 @@ public class Graphitty {
     }
 
     public static String string(final Obj obj) {
-        return ObjStringSerializer.build().create().write(obj);
+        return new ObjCleanStringSerializer().write(obj);
     }
+
 
     public static String sillyPrint(final String text, final boolean rainbow, final boolean rollercoaster) {
         final Random random = new Random();
