@@ -48,8 +48,7 @@ import java.util.function.Function;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.furi.fURI.f;
-import static studio.phaseshift.metatron.isa.grph.grphInstSet.GREMLIN_INST_TID;
-import static studio.phaseshift.metatron.isa.grph.grphInstSet.GRPH_ISA_TID;
+import static studio.phaseshift.metatron.isa.grph.grphInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.failure_;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
@@ -198,12 +197,31 @@ public class tp3Space extends grphSpace<Graph> {
             } else {
                 final String vidString = pattern.toString();
                 if (vidString.startsWith(this.vertexPrefix)) {
-                    final String suffix = vidString.replaceFirst(this.vertexPrefix, "");
-                    final long id = Long.parseLong(suffix);
+                    final String suffix = vidString.replaceFirst(this.vertexPrefix + "/", "");
+                    final Integer id = Integer.parseInt(suffix);
                     try {
                         final Vertex vertex = IteratorUtil.stream(this.sjvm.vertices(id)).findFirst().orElseGet(() -> this.sjvm.addVertex(T.label, obj.tid().basePath().toString(), T.id, id));
                         LOG.info("writing vertex %s => %s", vid, vertex);
-                        obj.asRec().elements().forEach(e -> vertex.property(e.jvm().get0().uriValue().toString(), FACTORY.toObj(e.jvm().get1()).jvm()));
+                        obj.asRec().elements()
+                                .filter(e -> !e.first().equals(OUT))
+                                .forEach(e -> {
+                                    LOG.info("writing vertex property %s =%s=> %s", vertex, e.first(), e.second());
+                                    vertex.property(e.jvm().get0().uriValue().toString(), FACTORY.toObj(e.jvm().get1()).jvm());
+                                });
+                        obj.asRec().elements().filter(e -> e.first().equals(OUT))
+                                .forEach(label -> label.jvm().get1().asRec()
+                                        .elements()
+                                        .map(Rel::second)
+                                        .forEach(e -> {
+                                            LOG.info("writing edge %s =%s=> %s", vertex, label, e);
+                                            try {
+                                                LOG.info("reading edge target %s", e);
+                                                final Edge edge = vertex.addEdge(label.jvm().get0().uriValue().toString(), ((VertexMap) this.read(e.uriValue()).jvm()).getBase());
+                                                LOG.info("writing edge %s", edge);
+                                            } catch (final Exception ex) {
+                                                LOG.warn("unable to write edge %s =%s=> %s: %s", vertex, label, e, ex);
+                                            }
+                                        }));
                         return VertexMap.vrtxRec(vertex);
                     } catch (final Exception e) {
                         return obj;

@@ -18,18 +18,22 @@
 
 package studio.phaseshift.metatron.isa.grph.type;
 
-import studio.phaseshift.metatron.isa.m.type.*;
-import studio.phaseshift.metatron.isa.sys.type.Router;
+import org.apache.tinkerpop.gremlin.structure.Direction;
+import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.grph.space.tp3.EdgeMap;
+import studio.phaseshift.metatron.isa.grph.space.tp3.VertexMap;
+import studio.phaseshift.metatron.isa.m.type.Inst;
+import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.Type;
+import studio.phaseshift.metatron.util.IteratorUtil;
 
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.function.BiFunction;
 
-import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.isa.grph.grphInstSet.*;
-import static studio.phaseshift.metatron.isa.m.mInstSet.*;
-import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.mInstSet.URI_TID;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
@@ -51,36 +55,37 @@ public interface Vrtx extends Elmt {
                             return obj.isNoObj() ? inst.arg(0) : obj;
                         }))*/
                 .create();//.predicate(isa_(rec(
+
         // OUT, T(EDGE_TID.maybeSome()),
         // IN, T(EDGE_TID.maybeSome())))).create();
+        
+        private static BiFunction<Obj, Inst, Obj> V_E_FUNCTION(final Direction direction) {
+            return (lhs, inst) -> objs(IteratorUtil.stream(VertexMap.rVertex(lhs.asRec())
+                            .edges(direction, inst.arg(0).stream().map(Obj::uriValue).map(fURI::toString).toArray(String[]::new)))
+                    .map(EdgeMap::edgeRec));
 
-        private static BiFunction<Obj, Inst, Obj> V_E_FUNCTION(final Uri direction) {
-            return (lhs, inst) -> {
-                final Obj edges = lhs.asRec().at(direction);
-                if (edges.isNoObj())
-                    return noobj();
-                else
-                    return objs(edges.asRec().elements()/*.filter(r -> r.first().uriValue().matches(inst.arg(0).uriValue()))*/.map(Rel::second));
-            };
         }
 
-        private static BiFunction<Obj, Inst, Obj> V_V_FUNCTION(final Uri d1, final Uri d2) {
-            return (lhs, inst) -> objs(V_E_FUNCTION(d1).apply(lhs, inst).stream().map(e -> e.asRec().at(d2)));
+        private static BiFunction<Obj, Inst, Obj> V_V_FUNCTION(final Direction direction) {
+            return (lhs, inst) -> objs(IteratorUtil.stream(VertexMap.rVertex(lhs.asRec())
+                            .edges(direction, inst.arg(0).stream().map(Obj::uriValue).map(fURI::toString).toArray(String[]::new)))
+                    .map(v -> VertexMap.vrtxRec(v.vertices(direction.opposite()).next())));
+
         }
 
         public static Set<Inst> insts() {
 
             return new LinkedHashSet<>(List.of(
-                    instC(OUTE_INST_TID.dom(VRTX_TID).rng(EDGE_TID.maybeSome()), lst(T(URI_TID.maybeSome())), V_E_FUNCTION(OUT)),
-                    instC(INE_INST_TID.dom(VRTX_TID).rng(EDGE_TID.maybeSome()), lst(T(URI_TID.maybeSome())), V_E_FUNCTION(IN)),
+                    instC(OUTE_INST_TID.dom(VRTX_TID).rng(EDGE_TID.maybeSome()), lst(T(URI_TID.maybeSome())), V_E_FUNCTION(Direction.OUT)),
+                    instC(INE_INST_TID.dom(VRTX_TID).rng(EDGE_TID.maybeSome()), lst(T(URI_TID.maybeSome())), V_E_FUNCTION(Direction.IN)),
                     instC(BOTHE_INST_TID.dom(VRTX_TID).rng(EDGE_TID.maybeSome()), lst(), (lhs, inst) -> objs(
-                            V_E_FUNCTION(OUT).apply(lhs, inst),
-                            V_E_FUNCTION(IN).apply(lhs, inst))),
-                    instC(OUT_INST_TID.dom(VRTX_TID).rng(VRTX_TID.maybeSome()), lst(), V_V_FUNCTION(OUT, IN)),
-                    instC(IN_INST_TID.dom(VRTX_TID).rng(VRTX_TID.maybeSome()), lst(), V_V_FUNCTION(IN, OUT)),
-                    instC(BOTH_INST_TID.dom(VRTX_TID).rng(VRTX_TID.maybeSome()), lst(), (lhs, inst) -> objs(
-                            V_V_FUNCTION(OUT, IN).apply(lhs, inst),
-                            V_V_FUNCTION(IN, OUT).apply(lhs, inst)))
+                            V_E_FUNCTION(Direction.OUT).apply(lhs, inst),
+                            V_E_FUNCTION(Direction.IN).apply(lhs, inst))),
+                    instC(OUT_INST_TID.dom(VRTX_TID).rng(VRTX_TID.maybeSome()), lst(T(URI_TID.maybeSome())), V_V_FUNCTION(Direction.OUT)),
+                    instC(IN_INST_TID.dom(VRTX_TID).rng(VRTX_TID.maybeSome()), lst(T(URI_TID.maybeSome())), V_V_FUNCTION(Direction.IN)),
+                    instC(BOTH_INST_TID.dom(VRTX_TID).rng(VRTX_TID.maybeSome()), lst(T(URI_TID.maybeSome())), (lhs, inst) -> objs(
+                            V_V_FUNCTION(Direction.OUT).apply(lhs, inst),
+                            V_V_FUNCTION(Direction.IN).apply(lhs, inst)))
             ));
         }
     }

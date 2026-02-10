@@ -114,4 +114,9 @@ public class VertexMap extends ElementMap {
     }
 
 
+    public static Vertex rVertex(final Rec rec) {
+        return rec.<VertexMap>jvmAs().getBase();
+    }
+
+
 }
