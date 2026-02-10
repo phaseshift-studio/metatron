@@ -28,7 +28,7 @@ color green "\[" "\]" "\(" "\)" "\{" "\}"
 # real exponent
 icolor yellow "\.[0-9]+E[-+]?[0-9]+"
 # uri slash or schema
-icolor blue "(/|([a-z]*(://))|[a-z]|[0-9])([0-9]|[a-z]|\.|-|_)+(:)?[0-9]*(/)?([a-z]|/|\_|[0-9])*"
+icolor blue "(/|([a-z]+(://))|[a-z])([0-9]|[a-z]|\.|-|_)+(:)?[0-9]*(/)?([a-z]|/|\_|[0-9])*"
 # rec/rel uri key
 icolor cyan "</?([a-z]|[0-9]|/|_|-|:|\s)*>\s*=>"
 icolor cyan "/?([a-z]|[0-9]|/|_|-|:)*\s*=>"
@@ -53,6 +53,8 @@ color yellow "\{.{1}\}" "\{[0-9]*,?[0-9]*\}"
 color cyan "\\_[a-z|A-Z]+"
 color red "([a-z]|[0-9]|/)*fail::"
 color red "=X"
+color green "=O>"
+color red "=X>"
 ### auto resolve
 color yellow "!\*" "\{<j>\}"
 color green "\{|\}" 

@@ -22,19 +22,26 @@ import studio.phaseshift.metatron.isa.m.type.Code;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.sys.type.ui.Border;
 import studio.phaseshift.metatron.isa.sys.type.ui.graphitty.Graphitty;
+import studio.phaseshift.metatron.isa.sys.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.isa.sys.type.ui.widget.AbstractWidget;
 import studio.phaseshift.metatron.isa.sys.type.ui.widget.Grid;
 import studio.phaseshift.metatron.isa.sys.type.ui.widget.Selector;
+import studio.phaseshift.metatron.isa.sys.type.ui.widget.Separator;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.eq_;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.is_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public class Explain extends AbstractWidget<Explain> {
 
+    private final GraphittyLogger LOG = Graphitty.log(Explain.class);
     private final Code code;
     private final Selector selector;
     private final Profile profile;
@@ -45,8 +52,8 @@ public class Explain extends AbstractWidget<Explain> {
         });
         this.style = this.style().border(Border.simple.foreground("{{m}}"));
         this.code = code.resolve(noobj()).as();
-        this.profile = new Profile(this.code);
-        this.profile.instTable.style().headerDivider("{{[b]}} ").border(Border.simple.foreground("{{b}}")).apply();
+        this.profile = new Profile(this.code).style().margin(2,2).apply();
+        this.profile.instTable.style().headerDivider("{{[b]}} ").margin(2,2).border(Border.simple.foreground("{{b}}")).apply();
         this.selector = new Selector().style()
                 .pointer("{{r}}>{{X}}")
                 .attachment(profile, false)
@@ -57,10 +64,18 @@ public class Explain extends AbstractWidget<Explain> {
                 })
                 .onSelect((s, i) -> {
                     final Inst si = code.codeValue().get(i - 2);
-                    if (si.arg(0).isCode()) {
-                        final Explain nest = new Explain(si.arg(0).as());
+                    if (true) {
+                        Graphitty.out(Console.getTerminal().output(),"\n".repeat(this.profile.height()+2));
+                        Graphitty.out(Console.getTerminal().output(), "{{^%d}}",1);
+                        final Separator sep = new Separator("{{r}}-", this);
+                        Graphitty.out(Console.getTerminal().output(), sep.toString());
+                        Graphitty.out(Console.getTerminal().output(), "{{v%d}}",1);
+                        sep.display();
+                        final Explain nest = new Explain(is_(eq_(jnt(45))).plus_(jnt(23)));
                         nest.run();
                         nest.close();
+                        Graphitty.out(Console.getTerminal().output(), "{{^%d}}",nest.profile.height()+2);
+                        this.display();
                     }
                 });
         this.grid = new Grid(List.of(this.selector), 1);
@@ -77,6 +92,7 @@ public class Explain extends AbstractWidget<Explain> {
         return "";
     }
 
+    
 
     @Override
     public String format() {

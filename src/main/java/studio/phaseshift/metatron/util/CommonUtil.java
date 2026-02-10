@@ -23,6 +23,7 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Rel;
+import studio.phaseshift.metatron.isa.sys.type.console.Highlighter;
 
 import java.io.Closeable;
 import java.time.LocalDateTime;
@@ -79,7 +80,12 @@ public final class CommonUtil {
         }
     }
 
-    public static <A, B> B nullOrElse(final A object, final Supplier<B> ifNull, final Function<A, B> ifNotNull) {
+    public static int width(final String s) {
+       return Arrays.stream(s.split("\n")).map(Highlighter::visualLength).max(Integer::compareTo).orElse(0);
+    }
+ 
+
+   public static <A, B> B nullOrElse(final A object, final Supplier<B> ifNull, final Function<A, B> ifNotNull) {
         if (null == object)
             return ifNull.get();
         return ifNotNull.apply(object);

@@ -198,7 +198,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
     default Obj selfTID(final fURI tid) {
         return this.self(this.jvm(), tid, this.vid());
     }
-    
+
     default Obj selfJVM(final Object jvm) {
         return this.self(jvm, this.tid(), this.vid());
     }
@@ -665,7 +665,14 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
 
         public static void objCheckAndSave(final Obj obj) {
             if (!obj.isInstSet() && !obj.isNoObj() && !obj.isType() && !obj.matches(obj.type())) {
-                if (obj.isPoly())
+                if (obj.isRec()) {
+                    final String objString = obj.toString();
+                    final String typeString = obj.type().toString();
+                    throw MTronException.of("obj does not match specified type:\n%s\n\t%s\n%s\n%s\n%s".formatted(objString, "=X>", typeString, "-".repeat(Math.max(CommonUtil.width(objString), CommonUtil.width(typeString))),
+                            obj.type().hasPredicate() && obj.type().predicate().insts().getFirst().arg(0).isRec() ?
+                                    Poly.Helper.identifyNoMatch(obj.asRec(), obj.type().predicate().insts().getFirst().arg(0).asRec(), 0) :
+                                    ""));
+                } else if (obj.isPoly())
                     throw MTronException.of("%s\n\t%s\n%s".formatted(obj, "is not a", obj.type()));
                 else
                     throw MTronException.of("%s is not a %s".formatted(obj, obj.type()));

@@ -22,7 +22,6 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.AbstractInstSet;
 import studio.phaseshift.metatron.isa.sys.type.Router;
-import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
 
@@ -43,6 +42,7 @@ import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Lst.LST_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Str.STR_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
@@ -123,6 +123,7 @@ public class haosInstSet extends AbstractInstSet {
                     uri("availability_topic").maybe(), URI_TYPE,
                     uri("stat_t").maybe(), URI_TYPE,
                     uri("cmd_t").maybe(), URI_TYPE,
+                    uri("retain").maybe(), else_(bool(true)).tryToInst(),
                     uri("last_updated").maybe(), STR_TYPE,
                     uri("last_changed").maybe(), STR_TYPE,
                     uri("device").maybe(), HAOS_DEVICE_CONFIG))).create();
@@ -133,8 +134,18 @@ public class haosInstSet extends AbstractInstSet {
                     uri("device_class"), is_(or_(URI_TYPE, STR_TYPE)).tryToInst(),
                     uri("unit_of_measurement"), T(ALL),
                     uri("command_topic").maybe(), URI_TYPE))).create();
-    public static final Type HAOS_NUMBER_TYPE = Type.Builder.build().tid(HAOS_ENTITY_TID).vid(HAOS_NUMBER_TID).create();
-    public static final Type HAOS_BUTTON_TYPE = Type.Builder.build().tid(HAOS_ENTITY_TID).vid(HAOS_BUTTON_TID).create();
+    public static final Type HAOS_NUMBER_TYPE = Type.Builder.build()
+            .tid(HAOS_ENTITY_TID)
+            .vid(HAOS_NUMBER_TID)
+            .predicate(isa_(rec(
+                    uri("platform"), uri("number"),
+                    uri("payload_off"), T(ALL),
+                    uri("enabled").maybe(), BOOL_TYPE,
+                    uri("optimistic").maybe(), BOOL_TYPE,
+                    uri("command_topic").maybe(), URI_TYPE))).create();
+    public static final Type HAOS_BUTTON_TYPE = Type.Builder.build()
+            .tid(HAOS_ENTITY_TID)
+            .vid(HAOS_BUTTON_TID).create();
     public static final Type HAOS_SWITCH_TYPE = Type.Builder.build()
             .tid(HAOS_ENTITY_TID)
             .vid(HAOS_SWITCH_TID)
@@ -159,7 +170,7 @@ public class haosInstSet extends AbstractInstSet {
     }
 
     public haosInstSet() {
-        this(HAOS_ISA_TID.extend("iot"));
+        this(HAOS_ISA_TID);
     }
 
     public haosInstSet(final fURI vid) {
@@ -184,15 +195,19 @@ public class haosInstSet extends AbstractInstSet {
 
     private Obj toggle(final Obj lhs) {
         final Obj currentState = lhs.asRec().at("state").orSupply(() -> Router.readFromSpace(lhs.asRec().at(discoveryAbbrevMap.get("state_topic").get1().toUri()).uriValue()));
-        final Obj payloadOn = Router.readFromSpace(lhs.asRec().at(discoveryAbbrevMap.get("payload_on").get1().toUri()).orElse(NOOBJ_TID.toUri()).uriValue()).orElse(currentState.isInt() ? jnt(1) : str("on"));
-        final Obj payloadOff = Router.readFromSpace(lhs.asRec().at(discoveryAbbrevMap.get("payload_off").get1().toUri()).orElse(NOOBJ_TID.toUri()).uriValue()).orElse(currentState.isInt() ? jnt(0) : str("off"));
+        final Obj payloadOn = Router.readFromSpace(lhs.asRec().at(discoveryAbbrevMap.get("payload_on").get1().toUri()).orElse(NOOBJ_TID.toUri()).uriValue()).orElse(currentState.isInt() ?
+                jnt(1) : currentState.isUri() ?
+                uri("on") :
+                str("on"));
+        final Obj payloadOff = Router.readFromSpace(lhs.asRec().at(discoveryAbbrevMap.get("payload_off").get1().toUri()).orElse(NOOBJ_TID.toUri()).uriValue()).orElse(currentState.isInt() ?
+                jnt(0) : currentState.isUri() ?
+                uri("off") :
+                str("off"));
         return currentState.equals(payloadOn) ? payloadOff : payloadOn;
     }
 
     private fURI getCommandTopic(final Obj lhs) {
-        LOG.info("HERE %s",lhs);
         final Obj topic = lhs.asRec().at(discoveryAbbrevMap.get("command_topic").get1().toUri());
-        LOG.info("TOPIC %s", topic);
         if (!topic.isNoObj())
             return topic.uriValue();
         if (null != lhs.vid())
@@ -208,15 +223,13 @@ public class haosInstSet extends AbstractInstSet {
                     return lhs;
                 }),*/
                 instC(HAOS_TOGGLE_INST_TID.dom(HAOS_LIGHT_TID).rng(HAOS_LIGHT_TID), lst(), (lhs, inst) -> {
-                    LOG.info("HERE");
                     final fURI commandTopic = getCommandTopic(lhs);
                     final Obj payload = toggle(lhs);
                     LOG.info("toggling {{b}}%s{{X}} with %s", commandTopic, payload);
                     Router.writeToSpace(commandTopic, payload);
                     //Router.writeToSpace(lhs.vid().extend("last_updated"), str(CommonUtil.getTimeStamp(null)));
                     //Router.writeToSpace(lhs.vid().extend("last_changed"), str(CommonUtil.getTimeStamp(null)));
-                    
-                    return Router.readFromSpace(lhs.vid()).asRel().second();
+                    return lhs;
                 }));
         return new LinkedHashSet<>(insts);
     }

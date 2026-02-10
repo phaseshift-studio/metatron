@@ -105,6 +105,30 @@ public interface Poly<P extends Poly<P, J>, J> extends Obj {
     }*/
 
     class Helper {
+        public static String identifyNoMatch(final Rec lhs, Rec rhs, int depth) {  
+            // TODO: calculate the column widths dynamically
+            // TODO: remove padding from flattened nested records
+            final StringBuilder sb = new StringBuilder();
+            lhs.asRec().elements().forEach(x -> {
+                if (rhs.asRec().elements().noneMatch(y -> x.first().matches(y.first()) && x.second().matches(y.second()))) {
+                    final Rel keyMatch = rhs.asRec().elements().filter(y -> x.first().matches(y.first())).findFirst().orElse(null);
+                    if (keyMatch == null)
+                        sb.append("%-15s =X> | %-15s\n".formatted(" ".repeat(depth) + x, rhs.toString().replace("\n", " ")));
+                    else {
+                        if (x.second().isRec() && keyMatch.second().isRec()) {
+                            sb.append(identifyNoMatch(x.second().asRec(), keyMatch.second().asRec(), depth + 1));
+                        } else {
+                            sb.append("%-15s =X> | %-15s\n".formatted(" ".repeat(depth)+ x, keyMatch.toString().replace("\n", " ")));
+                        }
+                    }
+                } else {
+                    sb.append("%-15s =O> | %-15s\n".formatted(" ".repeat(depth) + x, rhs.asRec().elements().filter(y -> x.first().matches(y.first()) && x.second().matches(y.second())).findFirst().get().toString().replace("\n", " ")));
+                }
+            });
+            return sb.toString();
+        }
+
+
         public static Rec transformLstToRec(final Lst lhs, final fURI tid, final fURI vid) {
             return IteratorUtil.indexedStream(lhs.elements().iterator())
                     .map(r -> rel(jnt(r.get0()), r.get1()))
@@ -200,22 +224,32 @@ public interface Poly<P extends Poly<P, J>, J> extends Obj {
         }
 
         public static Obj updateRecRecursion(final Rec lhs, final Rec rhs, BiFunction<Poly<?, ?>, Object, Poly<?, ?>> operation) {
-            final Map<Obj, Obj> result = Poly.Helper.selectRecRecursionRaw(lhs.asRec(), rhs.asRec(), (a, b) -> updatePolyRecursion(a.as(), b.as(), operation));
+            final Map<Obj, Obj> result = Poly.Helper.selectRecRecursionRaw(lhs, rhs, (a, b) -> updatePolyRecursion(a.as(), b.as(), operation));
            /* if(operation == MUTABLE) {
                 result.forEach((k, v) -> lhs.recValue().compute(k.c(cInt::one), (a, b) -> v));
             } else */
-            lhs.elements().forEach(kv -> result.compute(kv.first().c(cInt::one), (a, b) -> null == b ? kv.second() : b));
+            lhs.elements().forEach(kv -> result.compute(kv.first().c(cInt::one), (a, b) -> {
+                if (null == b) {
+                    if (kv.second().isPoly()) {
+                        return updatePolyRecursion(kv.second().as(), lhs.as(), operation);
+                    } else {
+                        return kv.second().apply(lhs);
+                    }
+                } else {
+                    return b;
+                }
+            }));
             return operation.apply(lhs, result);
         }
 
         public static Obj updateLstRecursion(final Lst lhs, final Lst rhs, BiFunction<Poly<?, ?>, Object, Poly<?, ?>> operation) {
-            final List<Obj> result = Poly.Helper.selectLstRecursionRaw(lhs.asLst(), rhs.asLst(), (a, b) -> updatePolyRecursion(a.as(), b.as(), operation));
+            final List<Obj> result = Poly.Helper.selectLstRecursionRaw(lhs, rhs, (a, b) -> updatePolyRecursion(a.as(), b.as(), operation));
             // TODO: ??
             return operation.apply(lhs, result);
         }
 
         public static Obj updateRelRecursion(final Rel lhs, final Rel rhs, BiFunction<Poly<?, ?>, Object, Poly<?, ?>> operation) {
-            final Object result = Poly.Helper.selectRelRecursionRaw(lhs.asRel(), rhs.asRel(), (a, b) -> updatePolyRecursion(a.as(), b.as(), operation));
+            final Object result = Poly.Helper.selectRelRecursionRaw(lhs, rhs, (a, b) -> updatePolyRecursion(a.as(), b.as(), operation));
             return result instanceof Obj ? (Obj) result : operation.apply(lhs, result);
         }
     }

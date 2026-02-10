@@ -86,8 +86,9 @@ public class MServer extends WebSocketServer implements Cluster, Closeable, Obj 
         if (Router.loaded()) {
             try {
                 super.setReuseAddr(true);
-                this.running.set(true);
+                super.setDaemon(true);
                 Runtime.getRuntime().addShutdownHook(new Thread(this::close));
+                this.running.set(true);
                 super.start();
                 LOG.trace("server started: %s", this.getAddress());
                 this.peers.forEach(
@@ -118,8 +119,8 @@ public class MServer extends WebSocketServer implements Cluster, Closeable, Obj 
     public void close() {
         LOG.info("closing %s node {{b}}%s{{/b}}", Graphitty.sillyPrint("mtron", true, true), this.host);
         try {
-            this.cluster.values().stream().toList().forEach(MConnection::close);
             super.stop();
+            this.cluster.values().stream().toList().forEach(MConnection::close);
         } catch (final Exception e) {
             throw MTronException.of(e);
         } finally {

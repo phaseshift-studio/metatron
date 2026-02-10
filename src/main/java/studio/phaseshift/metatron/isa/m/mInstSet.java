@@ -165,13 +165,13 @@ public class mInstSet extends AbstractInstSet {
 
     /// ////////////
     /// ////////////
-    /// 
+    ///
     public mInstSet(final fURI vid) {
         super(M_ISA_TID, vid);
     }
 
     public mInstSet() {
-       super(M_ISA_TID, fURI.fnull);
+        super(M_ISA_TID, fURI.fnull);
     }
 
     @Override
@@ -211,6 +211,9 @@ public class mInstSet extends AbstractInstSet {
     @Override
     public Set<Tuple.Triplet<Tuple.Pair<String, String>, List<fURI>, Integer>> sugars() {
         return new LinkedHashSet<>(List.of(
+                Tuple.Triplet.with(Tuple.Pair.with("select", null), List.of(SELECT_INST_TID), 1),
+                Tuple.Triplet.with(Tuple.Pair.with("where", null), List.of(WHERE_INST_TID), 1),
+                Tuple.Triplet.with(Tuple.Pair.with("update", null), List.of(UPDATE_INST_TID), 1),
                 Tuple.Triplet.with(Tuple.Pair.with("^", null), List.of(RFROM_TID), 1),
                 Tuple.Triplet.with(Tuple.Pair.with("?==", null), List.of(WHERE_INST_TID), 1),
                 Tuple.Triplet.with(Tuple.Pair.with("%==", null), List.of(GROUP_INST_TID), 1),

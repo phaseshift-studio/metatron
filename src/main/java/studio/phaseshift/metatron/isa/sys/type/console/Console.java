@@ -246,13 +246,16 @@ public class Console extends JRec implements Closeable, Runnable {
                 } else if (line.startsWith(":state")) {
                     this.status.setState(Level.valueOf(line.substring(6).trim().toUpperCase()));
                 } else {
-                    boolean printDots = false;
                     this.status.startTimer();
-                    final Obj parseResult = mParser.parse(line);
-                    if (null != parseResult && !parseResult.isNoObj()) {
-                        this.machine = (MMachine) MMachine.of(parseResult.isCall() ? parseResult.as() : start_(parseResult)).onHalt(this::printResult);
-                        final Obj computeResult = this.machine.apply();
-                        computeResult.stream().forEach(this::printResult);
+                    try {
+                        final Obj parseResult = mParser.parse(line);
+                        if (null != parseResult && !parseResult.isNoObj()) {
+                            this.machine = (MMachine) MMachine.of(parseResult.isCall() ? parseResult.as() : start_(parseResult)).onHalt(this::printResult);
+                            final Obj computeResult = this.machine.apply();
+                            computeResult.stream().forEach(this::printResult);
+                        }
+                    } catch(final Exception e) {
+                        MTronException.of(e).asFail().apply(this).forEach(this::printResult);
                     }
                     this.machine = null;
                 }

@@ -122,8 +122,10 @@ public interface Uri extends Mono, Ring.O<Uri> {
         return Mono.super.matches(obj);
     }
 
+
     final class UriType {
         private final static Map<String, Pattern> REGEX_CACHE = new HashMap<>();
+
         public static Set<Inst> insts() {
             return new LinkedHashSet<>(List.of(
                     //instC(SPLIT_INST_TID.dom(URI_TID).rng(LST_TID), lst(T(URI_TID)), (lhs, inst) -> lst(Arrays.stream(lhs.uriValue().toString().split(inst.arg(0).uriValue().toString())).map(MUri::uri))),
@@ -172,11 +174,47 @@ public interface Uri extends Mono, Ring.O<Uri> {
                     instC(HOST_INST_TID.dom(URI_TID).rng(URI_TID.maybe()), lst(), (lhs, inst) -> lhs.uriValue().host() == null ? noobj() : uri(lhs.uriValue().host())),
                     instC(HOST_INST_TID.dom(URI_TID).rng(URI_TID), lst(T(URI_TID)), (lhs, inst) -> uri(lhs.uriValue().host(inst.arg(0).uriValue().toString().isEmpty() ? null : inst.arg(0).uriValue().toString()))),
                     instC(PORT_INST_TID.dom(URI_TID).rng(INT_TID.maybe()), lst(), (lhs, inst) -> lhs.uriValue().port() == -1 ? noobj() : jnt(lhs.uriValue().port())),
-                    instC(PORT_INST_TID.dom(URI_TID).rng(URI_TID), lst(T(INT_TID)), (lhs, inst) -> uri(lhs.uriValue().port(inst.arg(0).intValue().intValue())))
-
+                    instC(PORT_INST_TID.dom(URI_TID).rng(URI_TID), lst(T(INT_TID)), (lhs, inst) -> uri(lhs.uriValue().port(inst.arg(0).intValue().intValue()))),
+                    instC(SELECT_INST_TID.dom(URI_TID).rng(URI_TID.maybe()), lst(T(URI_TID)), (lhs, inst) -> Helper.selectUri(lhs.asUri(), inst.arg(0).uriValue())),
+                    instC(WHERE_INST_TID.dom(URI_TID).rng(URI_TID.maybe()), lst(T(URI_TID)), (lhs, inst) -> Helper.whereUri(lhs.asUri(), inst.arg(0).uriValue()) ? lhs : noobj())
+                   // instC(UPDATE_INST_TID.dom(URI_TID).rng(URI_TID.maybe()), lst(T(URI_TID)), (lhs, inst) -> uri(lhs.uriValue().update(inst.arg(0).uriValue())))
+                    // GROUP
+                    // UPDATE
             ));
         }
 
+    }
+
+    class Helper {
+        public static boolean whereUri(final Uri lhs, final fURI filter) {
+            for (int i = 0; i < filter.segments().size(); i++) {
+                final String segment = filter.segments().get(i);
+                if (segment.equals("#"))
+                    return true;
+                if (lhs.uriValue().segments().size() <= i)
+                    return false;
+                if (!lhs.uriValue().segments().get(i).equals(segment) && !segment.equals("+"))
+                    return false;
+            }
+            return true;
+        }
+
+        public static Uri selectUri(final Uri lhs, final fURI selection) {
+            String path = "";
+            boolean all_found = false;
+            for (int i = 0; i < selection.segments().size(); i++) {
+                final String segment = selection.segments().get(i);
+                if (segment.equals("#"))
+                    all_found = true;
+                if (!all_found && lhs.uriValue().segments().size() <= i)
+                    return null;
+                if (all_found || lhs.uriValue().segments().get(i).equals(segment) || segment.equals("+"))
+                    path += "/" + lhs.uriValue().segments().get(i);
+                else
+                    return null;
+            }
+            return uri(lhs.uriValue().path(path));
+        }
     }
 
 
