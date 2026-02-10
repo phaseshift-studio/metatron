@@ -42,7 +42,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 public interface Q extends Rec {
 
-    fURI Q_TID = MTRON_TID.extend("sys/space/q");
+    fURI Q_TID = MTRON_TID.extend("space/q");
     fURI ON_WRITE_TID = Q_TID.extend("on_write");
     fURI ON_READ_TID = Q_TID.extend("on_read");
 

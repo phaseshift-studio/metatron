@@ -22,8 +22,8 @@ import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.type.Inst;
-import studio.phaseshift.metatron.isa.m.type.ServiceMetadata;
 import studio.phaseshift.metatron.isa.m.type.Rec;
+import studio.phaseshift.metatron.isa.m.type.ServiceMetadata;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.m.type.impl.AbstractInstSet;
 import studio.phaseshift.metatron.isa.sys.space.file.fsSpace;
@@ -72,7 +72,7 @@ import static studio.phaseshift.metatron.isa.sys.type.console.Console.CONSOLE_TY
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-@ServiceMetadata(tid = "/mtron/sys")
+@ServiceMetadata(tid = "/m/sys")
 public class sysInstSet extends AbstractInstSet {
 
     public static final fURI SYS_ISA_TID = MTRON_TID.extend("sys");
@@ -86,6 +86,11 @@ public class sysInstSet extends AbstractInstSet {
     public static final fURI FACTORY_TID = SYS_ISA_TID.extend("factory");
     public static final fURI REWRITE_INST_TID = SYS_INST_TID.extend("rewrite");
     public static final Rec SPACE_CONFIG = rec(uri(Tokens.PATTERN), T(URI_TID));
+
+    public static final Type SPACE_TYPE = Type.Builder.build()
+            .tid(REC_TID)
+            .vid(SPACE_TID)
+            .create();
     public static final Type FACTORY_TYPE = Type.Builder.build()
             .tid(REC_TID)
             .vid(FACTORY_TID)
@@ -106,18 +111,18 @@ public class sysInstSet extends AbstractInstSet {
 
 
     public sysInstSet() {
-        this(null);
+        super(SYS_ISA_TID, SYS_ISA_TID);
     }
 
-    public sysInstSet(final fURI vid) {
+    /*public sysInstSet(final fURI vid) {
         super(SYS_ISA_TID, vid);
-    }
-    
+    }*/
+
     @Override
     public Set<Type> types() {
         return new HashSet<>(List.of(
                 ROUTER_TYPE,
-                T(SYS_SPACE_TID),
+                SPACE_TYPE,
                 CONSOLE_TYPE,
                 SUB_TYPE,
                 DOCQ_TYPE,

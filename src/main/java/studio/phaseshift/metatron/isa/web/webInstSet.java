@@ -47,7 +47,7 @@ import static studio.phaseshift.metatron.isa.web.space.http.httpSpace.HTTP_SPACE
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-@ServiceMetadata(tid = "/mtron/web")
+@ServiceMetadata(tid = "/m/web")
 public class webInstSet extends AbstractInstSet {
 
     public static final fURI WEB_ISA_TID = MTRON_TID.extend("web");
@@ -71,12 +71,12 @@ public class webInstSet extends AbstractInstSet {
             .tid(REC_TID)
             .vid(CSS_TID).create();
 
-    public webInstSet(final fURI vid) {
+    /*public webInstSet(final fURI vid) {
         super(WEB_ISA_TID, vid);
-    }
+    }*/
 
     public webInstSet() {
-        this(SYS_SPACE_TID.extend("web"));
+        super(WEB_ISA_TID, WEB_ISA_TID);
     }
 
     @Override

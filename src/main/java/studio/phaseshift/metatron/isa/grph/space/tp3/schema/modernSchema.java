@@ -41,7 +41,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  */
 public class modernSchema extends AbstractInstSet {
 
-    public static final fURI MODERN_SCHEMA_TID = f("/tp3").extend("schema").extend("modern");
+    public static final fURI MODERN_SCHEMA_TID = GRPH_INST_TID.extend("schema").extend("modern");
     public static final fURI PERSON_TID = MODERN_SCHEMA_TID.extend("person");
     public static final fURI SOFTWARE_TID = MODERN_SCHEMA_TID.extend("software");
     public static final fURI KNOWS_TID = MODERN_SCHEMA_TID.extend("knows");

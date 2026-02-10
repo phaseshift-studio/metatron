@@ -22,10 +22,10 @@ import org.jline.keymap.BindingReader;
 import org.jline.keymap.KeyMap;
 import org.jline.utils.InfoCmp;
 import studio.phaseshift.metatron.isa.sys.type.ui.graphitty.Graphitty;
+import studio.phaseshift.metatron.util.TriConsumer;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.BiConsumer;
 
 import static org.jline.keymap.KeyMap.key;
 import static studio.phaseshift.metatron.isa.sys.type.ui.widget.Selector.Operation.*;
@@ -46,15 +46,15 @@ public class Selector extends AbstractWidget<Selector> {
         ESC_KEY
     }
 
-    protected BiConsumer<Selector, Integer> onSelect = null;
-    protected BiConsumer<Selector, Integer> onBrowse = null;
+    protected TriConsumer<Selector, Integer, Integer> onSelect = null;
+    protected TriConsumer<Selector, Integer, Integer> onBrowse = null;
 
-    public Selector onSelect(final BiConsumer<Selector, Integer> onSelect) {
+    public Selector onSelect(final TriConsumer<Selector, Integer, Integer> onSelect) {
         this.onSelect = onSelect;
         return this;
     }
 
-    public Selector onBrowse(final BiConsumer<Selector, Integer> onBrowse) {
+    public Selector onBrowse(final TriConsumer<Selector, Integer, Integer> onBrowse) {
         this.onBrowse = onBrowse;
         return this;
     }
@@ -83,7 +83,7 @@ public class Selector extends AbstractWidget<Selector> {
                 final List<String> currentStateDisplay = new ArrayList<>();
                 /// ///////////////////////////////////////////////////////////////////////////////////////////////
                 final String divider = "{{g}}|";
-                final int dividerLength = divider.length()-1;
+                final int dividerLength = divider.length() - 1;
                 for (int i = 0; i < this.style.attachment.rowCount(); i++) {
                     boolean selectedRow = i == selectRow;
                     final StringBuilder current = new StringBuilder();
@@ -102,7 +102,7 @@ public class Selector extends AbstractWidget<Selector> {
                         if (counter < currentRow.length() - dividerLength) {
                             current.append(currentRow, 0, counter + dividerLength);
                             current.append(this.style.pointer);
-                            current.append(currentRow, counter + dividerLength+1, currentRow.length());
+                            current.append(currentRow, counter + dividerLength + 1, currentRow.length());
                         } else {
                             current.append(this.style.attachment.rowString(i));
                         }
@@ -145,9 +145,9 @@ public class Selector extends AbstractWidget<Selector> {
                 }
                 if (null != this.onSelect && done) {
                     done = false;
-                    this.onSelect.accept(this, selectRow);
+                    this.onSelect.accept(this, selectRow, selectCol);
                 } else if (null != this.onBrowse)
-                    this.onBrowse.accept(this, selectRow);
+                    this.onBrowse.accept(this, selectRow, selectCol);
             }
         } catch (
                 final Exception e) {

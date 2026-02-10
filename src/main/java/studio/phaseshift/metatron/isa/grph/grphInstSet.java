@@ -44,7 +44,7 @@ import static studio.phaseshift.metatron.isa.sys.sysInstSet.SYS_SPACE_TID;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-@ServiceMetadata(tid = "/mtron/grph")
+@ServiceMetadata(tid = "/m/grph")
 public class grphInstSet extends AbstractInstSet {
 
     public static final fURI GRPH_ISA_TID = MTRON_TID.extend("grph");
@@ -73,12 +73,12 @@ public class grphInstSet extends AbstractInstSet {
     public static final Uri LABEL = uri("LABEL");
     public static final Uri ID = uri("ID");
 
-    protected grphInstSet(final fURI vid) {
+    /*protected grphInstSet(final fURI vid) {
         super(GRPH_ISA_TID, vid);
-    }
+    }*/
 
     public grphInstSet() {
-        this(SYS_SPACE_TID.extend("grph"));
+        super(GRPH_ISA_TID, GRPH_ISA_TID);
     }
 
     @Override

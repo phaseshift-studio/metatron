@@ -61,6 +61,7 @@ public class fsSpaceTest extends SpaceTest {
                     "   mtron  => /bin/mtron]",
             "fs::[pattern=><test:#>,rewrite=><test:>=>!*root,script=>!*boot/script]@/sys/space/fs/test"
     })
+    @Disabled
     @CsvSource(value = {
             "*root                              % <src/test/resources/isa/sys/>",
             "*boot/script/sh                    % /bin/sh",

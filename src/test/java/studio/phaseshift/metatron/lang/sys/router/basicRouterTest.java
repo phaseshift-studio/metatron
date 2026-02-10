@@ -34,13 +34,13 @@ public class basicRouterTest extends RouterTest {
     
     @Test
     public void testCloseSpace() {
-        memSpace test = memSpace.of(f("/test/#"), f("/sys/test")).as();
-        assertTrue(Router.global().hasSpaceFor(f("/test/a")));
-        assertTrue(Router.global().hasSpaceFor(f("/test/a")));
-        Router.global().write("/test/a", jnt(10));
-        assertEquals(jnt(10), Router.global().read("/test/a"));
-        assertTrue(Router.global().hasSpaceFor(f("/test/a")));
-        Router.global().write("/test/a", NoObj.noobj());
+        memSpace test = memSpace.of(f("/m/test/#"), f("/m/test")).as();
+        assertTrue(Router.global().hasSpaceFor(f("/m/test/a")));
+        assertTrue(Router.global().hasSpaceFor(f("/m/test/a")));
+        Router.global().write("/m/test/a", jnt(10));
+        assertEquals(jnt(10), Router.global().read("/m/test/a"));
+        assertTrue(Router.global().hasSpaceFor(f("/m/test/a")));
+        Router.global().write("/m/test/a", NoObj.noobj());
         test.close();
         assertFalse(Router.global().hasSpaceFor(f("/test/a")));
     }

@@ -20,10 +20,11 @@ package studio.phaseshift.metatron.isa;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.ServiceMetadata;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
+import studio.phaseshift.metatron.isa.sys.type.Router;
 import studio.phaseshift.metatron.isa.sys.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.sys.type.ui.graphitty.GraphittyLogger;
-import studio.phaseshift.metatron.isa.sys.type.Router;
 
 import java.util.Map;
 
@@ -38,6 +39,7 @@ public abstract class AbstractSpace<SJVM> extends MRec implements Space {
 
     public AbstractSpace(final SJVM sjvm, final Map<Obj, Obj> config, final fURI tid, final fURI vid) {
         super(config, tid, vid);
+        ServiceMetadata.Helper.verifyClass(this.getClass(), tid);
         this.sjvm = sjvm;
         this.pattern = this.at(PATTERN).uriValue();
         LOG = Graphitty.log(this);

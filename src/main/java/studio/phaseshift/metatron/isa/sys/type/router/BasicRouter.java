@@ -40,8 +40,10 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import static studio.phaseshift.metatron.BootLoader.BOOTING;
 import static studio.phaseshift.metatron.Tokens.PATTERN;
+import static studio.phaseshift.metatron.Tokens.SUPER;
 import static studio.phaseshift.metatron.furi.fURI.*;
 import static studio.phaseshift.metatron.isa.m.mInstSet.M_ISA_TID;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
@@ -72,7 +74,7 @@ public class BasicRouter extends AbstractSpace<MServer> implements Router {
                         uri(Tokens.SPACE), rec(new ConcurrentHashMap<>(Map.of(uri("+/#"), new stackSpace(f("+/#"))))))),
                 ROUTER_TID,
                 vid);
-        LOG.info("local router at %s", this.vid.toUri());
+        //LOG.info("local router at %s", this.vid.toUri());
     }
 
 
@@ -150,14 +152,18 @@ public class BasicRouter extends AbstractSpace<MServer> implements Router {
 
     @Override
     public void addSpace(final Space space) {
-        if (null == space.vid())
+        if (null == space.vid() && !(space instanceof stackSpace)) {
+            LOG.warn("a vid-less space is not indexed by router: %s", space);
             return;
-        this.spaces().jvm().values().stream()
-                .map(Obj::<Space>as)
-                .filter(s -> space.pattern().bimatches(s.pattern()))
-                .findAny()
-                .ifPresent(s -> LOG.error("%s and %s have overlapping address spaces: %s <=> %s", space.pattern(), s.pattern(), space, s));
-        //if (null != space.vid())
+        }
+        final List<fURI> list = new ArrayList<>(this.spaces().jvm().values().stream().map(r -> ((Space) r).pattern()).toList());
+        boolean exists = list.stream().anyMatch(f -> f.compareTo(space.pattern()) == 0);
+        if (exists) {
+            LOG.warn("%s has an overlapping address space: %s <=> %s", space, space.pattern(), space.pattern());
+            return;
+        }
+        final Space superSpace = this.getSpace(space.pattern());
+        space.put(uri(SUPER), null == superSpace.vid() ? uri(superSpace.pattern()) : auto_from_(superSpace.vid()).tryToInst(), MUTABLE);
         this.spaces().jvm().put(null == space.vid() ? space.pattern().toUri() : space.vid().toUri(), space);
         Space.Helper.spaceOpenLog(this, space);
     }
@@ -176,13 +182,11 @@ public class BasicRouter extends AbstractSpace<MServer> implements Router {
     public <S extends Space> S getSpace(final fURI match) {
         if (match.matches(NOOBJ))
             return noobjSpace.single();
-        //     final fURI mvid = this.smallToBigRewrites.getOrDefault(vid,vid);
+        // using jvm() for speed (given the heavy use of this method)
         final Optional<S> space = this.spaces().jvm().values().stream() // using jvm() for speed (given the heavy use of this method)
-                .map(Obj::<Space>as)
-                //.filter(s -> s.status().equals(Status.active))
+                .map(Obj::<S>as)
                 .filter(s -> match.basePath().matches(s.pattern()))
-                .map(s -> (S) s)
-                .findAny();
+                .min(Comparator.comparing(Space::pattern));
         if (space.isPresent())
             return space.get();
         else if (match.basePath().matches(f("+/#")))

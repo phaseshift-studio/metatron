@@ -57,7 +57,7 @@ public class CodeTest extends mTest {
     }, delimiter = '%')
     public void testDomRng(final String code, final boolean resolved) {
         Code obj = mParser.parse(code);
-        LOG.error("testing code resolution %s %s resolve", obj, resolved ? "{{g}}should{{X}}" : "{{r}}should not{{X}}");
+        LOG.debug("testing code resolution %s %s resolve", obj, resolved ? "{{g}}should{{X}}" : "{{r}}should not{{X}}");
         assertFalse(obj.isResolved(true));
         obj = obj.resolve(noobj());
         if (resolved) assertTrue(obj.isResolved(true));

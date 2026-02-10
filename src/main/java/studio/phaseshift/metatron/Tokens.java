@@ -28,6 +28,7 @@ public final class Tokens {
         // do nothing
     }
 
+    public static final String SUPER = "super";
     public static final String ROUTE = "route";
     public static final String PEERS = "peers";
     public static final String CACHE = "cache";

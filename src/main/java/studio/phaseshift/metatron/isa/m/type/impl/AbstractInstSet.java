@@ -54,11 +54,9 @@ public abstract class AbstractInstSet extends AbstractSpace<Map<fURI, Set<? exte
 
     public AbstractInstSet(final fURI tid, final fURI vid) {
         super(new LinkedHashMap<>(), mutableMap(
-                uri(Tokens.PATTERN), uri(tid.extend(fURI.ALL)),
-                uri(Tokens.Q), lst(new DocQ())), tid, vid);
+                uri(Tokens.PATTERN), uri(tid.extend(fURI.ALL))), tid, vid);
         if (Router.loaded()) {
-            //if (!this.pattern.equals(f("+/#")) && !(this instanceof Router))
-            //    Router.global().addSpace(this);
+            this.put(uri(Tokens.Q), lst(new DocQ()),MUTABLE);
             this.types().forEach(t -> {
                 if (null != t.vid()) {
                     if (t.vid().matches(this.pattern)) this.write(t.vid(), t);
@@ -183,5 +181,16 @@ public abstract class AbstractInstSet extends AbstractSpace<Map<fURI, Set<? exte
     public Set<Tuple.Triplet<Tuple.Pair<String, String>, List<fURI>, Integer>> sugars() {
         return Set.of();
     }
+    
+    
+    /*@Override
+    public AbstractInstSet clone(){
+        return this;
+    }
+
+    @Override
+    public AbstractInstSet clone(final Object jvm, final fURI tid, final fURI vid){
+        return this;
+    }*/
 
 }

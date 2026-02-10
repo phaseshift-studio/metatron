@@ -34,7 +34,7 @@ import static studio.phaseshift.metatron.furi.c.cInt.C_ONE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 
-public class fURI implements Cloneable, Ring<fURI> {
+public class fURI implements Cloneable, Ring<fURI>, Comparable<fURI> {
 
     public static final String SEGMENT_SPLIT = "/";
     public static final char SEGMENT_SPLIT_CHAR = SEGMENT_SPLIT.charAt(0);
@@ -179,6 +179,26 @@ public class fURI implements Cloneable, Ring<fURI> {
 
     public static fURI of(final Object uri) {
         return uri instanceof fURI ? (fURI) uri : fURI.of(uri.toString());
+    }
+
+    @Override
+    public int compareTo(final fURI furi) {
+        if (null == furi) return -1;
+        if (this.equals(furi)) return 0;
+        if (Objects.equals(this.host, "#"))
+            return 1;
+        if (!Objects.equals(this.host, furi.host) && !Objects.equals(this.host, "+"))
+            return -1;
+        for (int i = 0; i < this.path.size(); i++) {
+            final String segment = this.path.get(i);
+            if (segment.equals("#"))
+                return 1;
+            if (furi.pathLength() <= i)
+                return -1;
+            if (!segment.equals("+") && !segment.equals(furi.path.get(i)))
+                return -1;
+        }
+        return (this.path.size() > furi.pathLength() || furi.pathLength() == this.path.size() && this.hasPattern()) ? 1 : -1;
     }
 
     public fURI authority(final fURI authority) {

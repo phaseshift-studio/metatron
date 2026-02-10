@@ -59,11 +59,11 @@ public class Explain extends AbstractWidget<Explain> {
                 .attachment(profile, false)
                 .rowRange(2, profile.instTable.rowCount() - 1)
                 .apply()
-                .onBrowse((s, i) -> {
-                    final Inst si = code.codeValue().get(i - 2);
+                .onBrowse((s, r,c) -> {
+                    final Inst sr = code.codeValue().get(r - 2);
                 })
-                .onSelect((s, i) -> {
-                    final Inst si = code.codeValue().get(i - 2);
+                .onSelect((s, r,c) -> {
+                    final Inst sr = code.codeValue().get(r - 2);
                     if (true) {
                         Graphitty.out(Console.getTerminal().output(),"\n".repeat(this.profile.height()+2));
                         Graphitty.out(Console.getTerminal().output(), "{{^%d}}",1);

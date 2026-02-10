@@ -121,7 +121,6 @@ public interface Space extends Rec, Closeable {
 
         public static String spaceToString(final Space space) {
             return Obj.Helper.objToString(space);
-            //return Graphitty.string("{{b}}" + space.tid() + "{{g}}::[{{c}}pattern:{{b}}" + space.pattern() + "{{g}}]{{X}}");
         }
 
         public static int spaceHashCode(final Space space) {

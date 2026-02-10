@@ -32,6 +32,7 @@ import studio.phaseshift.metatron.furi.Q;
 import studio.phaseshift.metatron.furi.q.DocQTest;
 import studio.phaseshift.metatron.isa.InstSetTest;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
+import studio.phaseshift.metatron.isa.sys.type.Router;
 import studio.phaseshift.metatron.mTest;
 import studio.phaseshift.metatron.util.MTronException;
 
@@ -45,20 +46,21 @@ public class mInstSetTest extends InstSetTest {
 
 
     public mInstSetTest() {
-        super(() -> null);// mInstSet.create(f("/sys/m")));
+        super(() -> null);
     }
 
     @Override
     @Test
     public void testInstDomRngMatching() {
-        this.space = new mInstSet(f("/sys/m"));
+        this.space = new mInstSet();
         super.testInstDomRngMatching();
+        this.space = null;
     }
 
     @Test
     public void testDocs() {
-        assertTrue(new mInstSet(f("/sys/m")).qs().elements().anyMatch(q -> q.<Q>as().pattern().equals(f("doc"))));
-        new DocQTest().analyzeDocs(new mInstSet(f("/sys/m")));
+        assertTrue(new mInstSet().qs().elements().anyMatch(q -> q.<Q>as().pattern().equals(f("doc"))));
+        new DocQTest().analyzeDocs(new mInstSet());
     }
 
     @ParameterizedTest

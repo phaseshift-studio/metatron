@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -23,7 +23,6 @@ import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.sys.type.Router;
 import studio.phaseshift.metatron.isa.sys.type.ui.Border;
-import studio.phaseshift.metatron.isa.sys.type.ui.Widget;
 import studio.phaseshift.metatron.isa.sys.type.ui.widget.AbstractWidget;
 import studio.phaseshift.metatron.isa.sys.type.ui.widget.Grid;
 import studio.phaseshift.metatron.isa.sys.type.ui.widget.Selector;
@@ -48,7 +47,7 @@ public class SubsWidget extends AbstractWidget<SubsWidget> {
     private final Table subsTable;
     private final Selector spaceSelector;
     private final Selector subsSelector;
-   // private final Selector selectorSelector;
+    // private final Selector selectorSelector;
     private Grid grid = null;
 
     public SubsWidget(final Console console) {
@@ -67,7 +66,7 @@ public class SubsWidget extends AbstractWidget<SubsWidget> {
             this.spaceTable.addRow(List.of(r.asRel().first().toString(), r.asRel().second().<Space>as().pattern()));
         });
 
-        this.subsSelector = new Selector().style().pointer("{{r}}>").attachment(this.subsTable, true).apply().onSelect((s,i) -> {
+        this.subsSelector = new Selector().style().pointer("{{r}}>").attachment(this.subsTable, true).apply().onSelect((s, r, c) -> {
             this.grid.currentFocus(0);
         });
         this.spaceSelector = new Selector().style()
@@ -75,15 +74,15 @@ public class SubsWidget extends AbstractWidget<SubsWidget> {
                 .attachment(this.spaceTable, true)
                 .rowRange(2, this.spaceTable.rows().size() + 2)
                 .apply()
-                .onSelect((s, i) -> {
+                .onSelect((s, r, c) -> {
                     try {
-                        final fURI pattern = (fURI) this.spaceTable.entry(i - 2, 1);
+                        final fURI pattern = (fURI) this.spaceTable.entry(r - 2, 1);
                         //  Router.global().logger().none("{{>%s}}selected %s" + " ".repeat(10) + "{{<%s}}", this.spaceTable.width() + 2, pattern.toUri(), this.spaceTable.width() + 12);
                         //final Space space = Router.global().getSpace(pattern);
                         this.subsTable.clear();
                         // Obj subscriptions = Router.global().read(pattern.query("sub"));
                         this.subsTable.addRow(List.of("blah", "bleep", "bleep"));
-                       // this.grid.currentFocus(1);
+                        // this.grid.currentFocus(1);
                         // subscriptions.stream().forEach(o ->{
                         //     this.subsTable.addRow(List.of(o.vid().toUri(), o.<PubSubQ.Subscription>as().target().toUri(), o.<PubSubQ.Subscription>as().call().toString()));
                         // });
@@ -105,7 +104,7 @@ public class SubsWidget extends AbstractWidget<SubsWidget> {
                     }
                 });
         this.grid = new Grid(List.of(this.spaceSelector, this.subsSelector), 1).style().border(Border.none).apply();
-       // this.grid.currentFocus(0);
+        // this.grid.currentFocus(0);
         this.style().attachment(this.grid, true).apply();
     }
 

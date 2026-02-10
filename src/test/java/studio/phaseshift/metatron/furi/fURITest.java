@@ -246,6 +246,32 @@ public class fURITest extends mTest {
 
     @ParameterizedTest
     @CsvSource(value = {
+            "a                  | a               | 0",
+            "m:a                | m:a             | 0",
+            "a/b                | a/b/c           | -1",
+            "m:a/b              | m:a/b/c         | -1",
+            "a/#                | a/b/c           | 1",
+            "m://a/#            | m://a/b/c       | 1",
+            "m://a/#            | m://#           | -1",
+            "a/b/+              | a/b/c           | 1",
+            "a/b/c              | a/b/c           | 0",
+            "a/b/+              | c/b/a           | -1",
+    }, delimiter = '|')
+    public void testCompareTo(final String f1, final String f2, final int order) {
+        final fURI furi1a = fURI.of(f1);
+        final fURI furi1b = fURI.of(f2);
+        final fURI furi2a = mParser.m_furi().parse(f1).get();
+        final fURI furi2b = mParser.m_furi().parse(f2).get();
+        //assertEquals(furi1a, furi2a); // TODO: important ssend issue
+        assertEquals(furi1b, furi2b);
+        LOG.trace("testing {{b}}%s{{/b}} superset of {{b}}%s{{/b}} = {{y}}%s{{/b}}", furi1a, furi1b, "" + furi1a.compareTo(furi1b));
+        assertEquals(order, furi1a.compareTo(furi1b));
+        assertEquals(order, furi2a.compareTo(furi2b));
+
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
             "a                  | a               | a/a{1}",
             "a                  | a               | a/a{1}",
             "a/b/c{23}          | a/b/c{2}        | a/b/c/a/b/c{46}",

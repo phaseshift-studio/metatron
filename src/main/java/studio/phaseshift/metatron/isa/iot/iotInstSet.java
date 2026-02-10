@@ -48,7 +48,7 @@ import static studio.phaseshift.metatron.isa.sys.sysInstSet.SYS_SPACE_TID;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-@ServiceMetadata(tid = "/mtron/iot")
+@ServiceMetadata(tid = "/m/iot")
 public class iotInstSet extends AbstractInstSet {
 
     public static final fURI IOT_ISA_TID = MTRON_TID.extend("iot");
@@ -59,8 +59,8 @@ public class iotInstSet extends AbstractInstSet {
     public static final fURI ESP32_TID = IOT_ISA_TID.extend("soc/esp32");
     public static final fURI PWM_INST_TID = IOT_INST_TID.extend("pwm");
 
-    public static final String IOT_DEVICE_TID_STRING = "/mtron/iot/device";
-    public static final String IOT_ENTITY_TID_STRING = "/mtron/iot/entity";
+    public static final String IOT_DEVICE_TID_STRING = "/m/iot/device";
+    public static final String IOT_ENTITY_TID_STRING = "/m/iot/entity";
 
     static {
         assert IOT_DEVICE_TID_STRING.equals(DEVICE_TID.toString());
@@ -68,12 +68,12 @@ public class iotInstSet extends AbstractInstSet {
     }
 
     public iotInstSet() {
-        this(SYS_SPACE_TID.extend("iot"));
+        super(IOT_ISA_TID, IOT_ISA_TID);
     }
 
-    public iotInstSet(final fURI vid) {
+    /*public iotInstSet(final fURI vid) {
         super(IOT_ISA_TID, vid);
-    }
+    }*/
 
     @Override
     public Set<Type> types() {

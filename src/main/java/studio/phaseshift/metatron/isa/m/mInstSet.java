@@ -29,18 +29,22 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Stream;
 
+import static studio.phaseshift.metatron.Tokens.PATTERN;
 import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.furi.fURI.f;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
 import static studio.phaseshift.metatron.isa.m.space.memSpace.MEM_SPACE_TYPE;
 import static studio.phaseshift.metatron.isa.m.space.metaSpace.META_SPACE_TYPE;
 import static studio.phaseshift.metatron.isa.m.space.stackSpace.STACK_SPACE_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 @ServiceMetadata(tid = "/m")
 public class mInstSet extends AbstractInstSet {
 
     public static final fURI M_ISA_TID = f("/m");
-    public static final fURI MTRON_TID = f("/mtron");
+    public static final fURI MTRON_TID = f("/m");
     // /m/obj
     public static final fURI FAIL_TID = M_ISA_TID.extend("fail");
     public static final fURI BOOL_TID = M_ISA_TID.extend("bool");
@@ -161,17 +165,13 @@ public class mInstSet extends AbstractInstSet {
     public static final fURI POLY_TID = M_ISA_TID.extend("poly");
     public static final fURI MONO_TID = M_ISA_TID.extend("mono");
 
-    public static final Type SPACE_TYPE = Type.Builder.build().tid(REC_TID).vid(SPACE_TID).create();
-
-    /// ////////////
-    /// ////////////
-    ///
-    public mInstSet(final fURI vid) {
-        super(M_ISA_TID, vid);
-    }
-
+    public static final Type SPACE_TYPE = Type.Builder.build()
+            .tid(REC_TID)
+            .vid(SPACE_TID)
+            .predicate(isa_(rec(uri(PATTERN), URI_TYPE)).tryToInst()).create();
+    
     public mInstSet() {
-        super(M_ISA_TID, fURI.fnull);
+        super(M_ISA_TID, M_ISA_TID);
     }
 
     @Override

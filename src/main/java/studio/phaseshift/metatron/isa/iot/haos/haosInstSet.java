@@ -53,13 +53,11 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-@ServiceMetadata(tid = "/mtron/iot/haos")
+@ServiceMetadata(tid = "/m/iot/haos")
 public class haosInstSet extends AbstractInstSet {
 
     public static final fURI HAOS_ISA_TID = IOT_ISA_TID.extend("haos");
     public static final fURI HAOS_INST_TID = HAOS_ISA_TID.extend("inst");
-    public static final String HAOS_DEVICE_TID_STRING = "/mtron/iot/haos/device";
-    public static final String HAOS_ENTITY_TID_STRING = "/mtron/iot/haos/entity";
 
     public static final fURI HAOS_ENTITY_TID = HAOS_ISA_TID.extend("entity");
     public static final fURI HAOS_SENSOR_TID = HAOS_ISA_TID.extend("sensor");
@@ -162,13 +160,7 @@ public class haosInstSet extends AbstractInstSet {
                     uri("payload_on").maybe().asUri(), T(ALL),
                     uri("payload_off").maybe(), T(ALL),
                     uri("command_topic").maybe(), URI_TYPE))).create();
-
-
-    static {
-        assert HAOS_DEVICE_TID_STRING.equals(DEVICE_TID.toString());
-        assert HAOS_ENTITY_TID_STRING.equals(HAOS_ENTITY_TID.toString());
-    }
-
+    
     public haosInstSet() {
         this(HAOS_ISA_TID);
     }

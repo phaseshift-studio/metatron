@@ -19,6 +19,7 @@
 package studio.phaseshift.metatron.isa.m.type;
 
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.util.MTronException;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -36,6 +37,12 @@ public @interface ServiceMetadata {
     public static class Helper {
         public static fURI tid(final Class<?> spec) {
             return f(spec.getAnnotation(ServiceMetadata.class).tid());
+        }
+
+        public static void verifyClass(final Class<?> spec, final fURI tid) throws MTronException {
+            if (!(!spec.isAnnotationPresent(ServiceMetadata.class) || ServiceMetadata.Helper.tid(spec).equals(tid))) {
+                throw MTronException.of("invalid service metadata for %s: %s (expected %s)", spec, tid, ServiceMetadata.Helper.tid(spec));
+            }
         }
     }
 

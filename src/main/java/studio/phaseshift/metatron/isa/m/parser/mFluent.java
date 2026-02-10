@@ -698,6 +698,10 @@ public class mFluent<F extends Fluent<F>> extends MCode implements Fluent<F>, Co
             return new mFluent<F>().auto_from_(uri, noobj());
         }
 
+        public static <F extends mFluent<F>> F auto_from_(final fURI uri) {
+            return auto_from_(uri.toUri());
+        }
+
         public static <F extends mFluent<F>> F type_(final Obj obj) {
             return new mFluent<F>().type_(obj);
         }
