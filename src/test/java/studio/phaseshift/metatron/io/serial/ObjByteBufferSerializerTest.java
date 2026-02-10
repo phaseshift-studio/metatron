@@ -19,6 +19,7 @@
 package studio.phaseshift.metatron.io.serial;
 
 import studio.phaseshift.metatron.SerializerTest;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjByteBufferSerializer;
 
 import java.nio.ByteBuffer;
 

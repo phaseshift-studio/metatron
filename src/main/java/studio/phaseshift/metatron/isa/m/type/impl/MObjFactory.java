@@ -39,8 +39,8 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.sys.sysInstSet.FACTORY_TID;
-import static studio.phaseshift.metatron.isa.sys.sysInstSet.SYS_ISA_TID;
+import static studio.phaseshift.metatron.isa.mach.machInstSet.FACTORY_TID;
+import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_ISA_TID;
 import static studio.phaseshift.metatron.util.Tuple.Pair;
 import static studio.phaseshift.metatron.util.Tuple.Triplet;
 
@@ -48,7 +48,7 @@ public class MObjFactory extends MRec implements ObjFactory {
 
     private static MObjFactory SINGLETON = null;
     protected final boolean allowReflection = true;
-    protected static final fURI OBJ_FACTORY_TID = SYS_ISA_TID.extend("mfactory");
+    protected static final fURI OBJ_FACTORY_TID = MACH_ISA_TID.extend("mfactory");
 
     public static final Type M_FACTORY_TYPE = Type.Builder.build()
             .tid(FACTORY_TID)
@@ -63,10 +63,10 @@ public class MObjFactory extends MRec implements ObjFactory {
         return this;
     }
 
-    protected MObjFactory(final Map<Obj,Obj> jvm,final fURI tid,final fURI vid) {
+    protected MObjFactory(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
         super(jvm, tid, vid);
     }
-    
+
     protected MObjFactory() {
         super(Map.of(), OBJ_FACTORY_TID, null);
     }

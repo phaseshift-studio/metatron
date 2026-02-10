@@ -22,6 +22,7 @@ import com.google.gson.JsonElement;
 import studio.phaseshift.metatron.SerializerTest;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjSimpleJSONSerializer;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)

@@ -24,7 +24,7 @@ import org.junit.jupiter.api.Disabled;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.SpaceTest;
 import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.sys.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.util.CommonUtil;
 
 import java.util.List;

@@ -21,7 +21,7 @@ package studio.phaseshift.metatron.isa.iot.haos;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.AbstractInstSet;
-import studio.phaseshift.metatron.isa.sys.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
 
@@ -32,7 +32,6 @@ import java.util.stream.Stream;
 import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.isa.iot.haos.space.haosSpace.HAOS_SPACE_TYPE;
-import static studio.phaseshift.metatron.isa.iot.iotInstSet.DEVICE_TID;
 import static studio.phaseshift.metatron.isa.iot.iotInstSet.IOT_ISA_TID;
 import static studio.phaseshift.metatron.isa.iot.type.Device.DEVICE_TYPE;
 import static studio.phaseshift.metatron.isa.m.mInstSet.NOOBJ_TID;

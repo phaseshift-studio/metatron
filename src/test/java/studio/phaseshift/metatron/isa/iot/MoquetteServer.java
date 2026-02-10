@@ -19,7 +19,7 @@
 package studio.phaseshift.metatron.isa.iot;
 
 import io.moquette.broker.Server;
-import studio.phaseshift.metatron.isa.sys.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.util.MTronException;
 
 /**

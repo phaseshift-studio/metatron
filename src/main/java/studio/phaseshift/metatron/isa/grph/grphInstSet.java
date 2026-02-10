@@ -39,7 +39,6 @@ import static studio.phaseshift.metatron.isa.grph.type.Elmt.ElmtType.ELMT_TYPE;
 import static studio.phaseshift.metatron.isa.grph.type.Vrtx.VrtxType.VRTX_TYPE;
 import static studio.phaseshift.metatron.isa.m.mInstSet.MTRON_TID;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.sys.sysInstSet.SYS_SPACE_TID;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)

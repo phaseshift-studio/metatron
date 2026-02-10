@@ -19,7 +19,7 @@
 package studio.phaseshift.metatron.util;
 
 import studio.phaseshift.metatron.isa.m.type.Fail;
-import studio.phaseshift.metatron.isa.sys.type.ui.graphitty.Graphitty;
+import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 
 import java.util.Arrays;
 import java.util.Objects;

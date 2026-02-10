@@ -23,7 +23,7 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Rel;
-import studio.phaseshift.metatron.isa.sys.type.console.Highlighter;
+import studio.phaseshift.metatron.isa.mach.type.console.Highlighter;
 
 import java.io.Closeable;
 import java.time.LocalDateTime;
@@ -61,7 +61,12 @@ public final class CommonUtil {
         return time.format(formatter);
     }
 
-    public static void sleepThread(final long millis) {
+    public static String snakeCase(final String s) {
+        return Arrays.stream(s.split("(?=[A-Z])")).map(String::toLowerCase).collect(Collectors.joining("_"));
+    }
+ 
+
+   public static void sleepThread(final long millis) {
         try {
             Thread.sleep(millis);
         } catch (final InterruptedException e) {

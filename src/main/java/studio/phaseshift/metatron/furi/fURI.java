@@ -22,8 +22,8 @@ import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.algebra.Ring;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.isa.m.type.Uri;
-import studio.phaseshift.metatron.isa.sys.type.Router;
-import studio.phaseshift.metatron.isa.sys.type.ui.graphitty.Graphitty;
+import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.*;
@@ -516,6 +516,10 @@ public class fURI implements Cloneable, Ring<fURI>, Comparable<fURI> {
 
     public fURI pretract(final int steps) {
         return this.rePreTract(false, steps);
+    }
+
+    public boolean hasPattern(char pattern) {
+        return this.toString().chars().anyMatch(c -> c == pattern);
     }
 
     public boolean hasPattern() {

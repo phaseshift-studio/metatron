@@ -177,7 +177,7 @@ public interface Uri extends Mono, Ring.O<Uri> {
                     instC(PORT_INST_TID.dom(URI_TID).rng(URI_TID), lst(T(INT_TID)), (lhs, inst) -> uri(lhs.uriValue().port(inst.arg(0).intValue().intValue()))),
                     instC(SELECT_INST_TID.dom(URI_TID).rng(URI_TID.maybe()), lst(T(URI_TID)), (lhs, inst) -> Helper.selectUri(lhs.asUri(), inst.arg(0).uriValue())),
                     instC(WHERE_INST_TID.dom(URI_TID).rng(URI_TID.maybe()), lst(T(URI_TID)), (lhs, inst) -> Helper.whereUri(lhs.asUri(), inst.arg(0).uriValue()) ? lhs : noobj())
-                   // instC(UPDATE_INST_TID.dom(URI_TID).rng(URI_TID.maybe()), lst(T(URI_TID)), (lhs, inst) -> uri(lhs.uriValue().update(inst.arg(0).uriValue())))
+                    // instC(UPDATE_INST_TID.dom(URI_TID).rng(URI_TID.maybe()), lst(T(URI_TID)), (lhs, inst) -> uri(lhs.uriValue().update(inst.arg(0).uriValue())))
                     // GROUP
                     // UPDATE
             ));
@@ -187,6 +187,8 @@ public interface Uri extends Mono, Ring.O<Uri> {
 
     class Helper {
         public static boolean whereUri(final Uri lhs, final fURI filter) {
+            if (filter.segments().size() < lhs.uriValue().segments().size() && !filter.hasPattern('#'))
+                return false;
             for (int i = 0; i < filter.segments().size(); i++) {
                 final String segment = filter.segments().get(i);
                 if (segment.equals("#"))

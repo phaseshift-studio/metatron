@@ -24,7 +24,6 @@ import studio.phaseshift.metatron.isa.m.mInstSet;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.MMachine;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
-import studio.phaseshift.metatron.isa.sys.sysInstSet;
 import studio.phaseshift.metatron.util.CommonUtil;
 
 import java.util.LinkedList;
@@ -46,7 +45,7 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 public class PubSubQ extends BaseQ {
 
-    public static final fURI SUBQ_TID = sysInstSet.Q_TID.extend("subq");
+    public static final fURI SUBQ_TID = Q_TID.extend("subq");
     public static final fURI SUBSCRIPTION_TID = SUBQ_TID.extend("sub");
     // <source,pattern,callback>
     protected final Rec subscriptions = rec();

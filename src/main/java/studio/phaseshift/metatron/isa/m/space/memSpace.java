@@ -54,8 +54,8 @@ import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.sys.sysInstSet.FILE_TYPE;
-import static studio.phaseshift.metatron.isa.sys.sysInstSet.SPACE_CONFIG;
+import static studio.phaseshift.metatron.isa.mach.machInstSet.FILE_TYPE;
+import static studio.phaseshift.metatron.isa.mach.machInstSet.SPACE_CONFIG;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
 

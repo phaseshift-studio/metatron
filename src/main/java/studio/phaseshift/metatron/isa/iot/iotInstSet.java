@@ -33,7 +33,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static studio.phaseshift.metatron.isa.iot.haos.space.EntityBuilder.*;
 import static studio.phaseshift.metatron.isa.iot.haos.space.haosSpace.HAOS_SPACE_TYPE;
 import static studio.phaseshift.metatron.isa.iot.space.mqtt.mqttSpace.MQTT_SPACE_TYPE;
 import static studio.phaseshift.metatron.isa.iot.type.Device.DEVICE_TYPE;
@@ -43,7 +42,6 @@ import static studio.phaseshift.metatron.isa.iot.type.device.GPIO.GPIO_TYPE;
 import static studio.phaseshift.metatron.isa.iot.type.esp32.ESP32.ESP32_TYPE;
 import static studio.phaseshift.metatron.isa.iot.type.esp32.WemosD1Mini.WemosD1MiniType.WEMOS_D1_MINI_TYPE;
 import static studio.phaseshift.metatron.isa.m.mInstSet.MTRON_TID;
-import static studio.phaseshift.metatron.isa.sys.sysInstSet.SYS_SPACE_TID;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)

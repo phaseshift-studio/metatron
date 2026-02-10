@@ -22,23 +22,22 @@ import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.mInstSet;
 import studio.phaseshift.metatron.isa.m.type.*;
-import studio.phaseshift.metatron.isa.sys.type.Router;
-import studio.phaseshift.metatron.isa.sys.type.ui.graphitty.Graphitty;
-import studio.phaseshift.metatron.isa.sys.type.ui.graphitty.GraphittyLogger;
+import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
+import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import static studio.phaseshift.metatron.isa.m.mInstSet.CODE_TID;
-import static studio.phaseshift.metatron.isa.m.machInstSet.DROP_TID;
-import static studio.phaseshift.metatron.isa.m.machInstSet.MACH_INSTSET_TID;
+import static studio.phaseshift.metatron.isa.mach.machInstSet.DROP_TID;
+import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_ISA_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
@@ -60,7 +59,7 @@ public class MMachine extends MObj implements Machine {
     }
 
     public static Machine of(final Call code) {
-        return new MMachine(Quartet.with(code.isInst() ? new MCode(List.of(code.as()), CODE_TID, fURI.fnull) : code.as(), RUNNING_SUPPLIER.get(), lst(new LinkedList<>()), MObjs.empty()), MACH_INSTSET_TID, fURI.fnull);
+        return new MMachine(Quartet.with(code.isInst() ? new MCode(List.of(code.as()), CODE_TID, fURI.fnull) : code.as(), RUNNING_SUPPLIER.get(), lst(new LinkedList<>()), MObjs.empty()), MACH_ISA_TID, fURI.fnull);
     }
 
     public Machine onHalt(final Consumer<Obj> onHalt) {
@@ -78,7 +77,7 @@ public class MMachine extends MObj implements Machine {
             final List<Inst> prepended = new ArrayList<>();
             prepended.add(MInst.instB(mInstSet.START_INST_TID, lst(start)));
             prepended.addAll(code.codeValue());
-            return new MMachine(Quartet.with(MCode.of(prepended), RUNNING_SUPPLIER.get(), lst(new LinkedList<>()), MObjs.empty()), MACH_INSTSET_TID, fURI.fnull);
+            return new MMachine(Quartet.with(MCode.of(prepended), RUNNING_SUPPLIER.get(), lst(new LinkedList<>()), MObjs.empty()), MACH_ISA_TID, fURI.fnull);
         } else {
             return MMachine.of(code);
         }

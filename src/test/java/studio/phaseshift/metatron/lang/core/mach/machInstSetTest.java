@@ -22,7 +22,7 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.isa.InstSetTest;
-import studio.phaseshift.metatron.isa.m.machInstSet;
+import studio.phaseshift.metatron.isa.mach.machInstSet;
 import studio.phaseshift.metatron.mTest;
 
 /*
@@ -32,7 +32,7 @@ import studio.phaseshift.metatron.mTest;
 public class machInstSetTest extends InstSetTest {
 
     public machInstSetTest() {
-        super(machInstSet::create);
+        super(machInstSet::new);
     }
 
     @ParameterizedTest

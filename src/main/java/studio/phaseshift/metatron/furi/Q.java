@@ -23,7 +23,6 @@ import studio.phaseshift.metatron.isa.m.type.Lst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Type;
-import studio.phaseshift.metatron.isa.sys.sysInstSet;
 
 import java.util.Map;
 import java.util.Objects;
@@ -55,8 +54,8 @@ public interface Q extends Rec {
     fURI POST_READ = f("post_read");
     Type Q_TYPE = Type.Builder.build()
             .tid(REC_TID)
-            .vid(sysInstSet.Q_TID)
-            .constructor(instC(sysInstSet.SYS_INST_TID.dom(ALL.maybe()).rng(sysInstSet.Q_TID),
+            .vid(Q_TID)
+            .constructor(instC(INST_TID.dom(ALL.maybe()).rng(Q_TID),
                     lst(Type.Builder.build().tid(REC_TID).predicate(isa_(rec(
                             uri(PATTERN), T(URI_TID),
                             uri(ON_WRITE),

@@ -11,12 +11,14 @@ l_____j \___/  \___/   l__jl__jl___j___j  l__j  l__j\_j \___/ l__j__j
 print("{{r}}------------\n{{g}}*{{y}}boot/args{{X}}: ",
       *boot/args, 
      "\n{{r}}------------{{X}}\n");
-[== mount instruction sets ==];
+[== mount instruction sets ==]
 print("{{y}}mounting instruction sets\n{{X}}");
+import(/m/mach/io);
 import(/m/web);
 import(/m/iot);
 import(/m/iot/haos);
 import(/m/grph);
+[== global settings store in boot ==]
 print("{{y}}mqtt broker location{{X}}: ", <boot/args/mqtt>.else(boot/args/mqtt -> [broker => <mqtt://chibi.local:1883>]),"\n");
 print("{{y}}cluster peers{{X}}: ", *<boot/peers>.else(boot/peers -> [ws://localhost:6666,<ws://127.0.0.1:7777>]),"\n");
 print("{{y}}supported scripting environments:\n{{X}}", *<boot/script>.else(boot/script -> 
@@ -26,7 +28,7 @@ print("{{y}}supported scripting environments:\n{{X}}", *<boot/script>.else(boot/
   python => /usr/bin/python3,
   perl   => /usr/bin/perl,
   mtron  => /bin/mtron]),"\n");
-[-- mount spaces --];
+[== mount computing spaces ==];
    mem::[pattern => /usr/#,
          q       => [subq::[=>]]]@/sys/space/usr;
    mem::[pattern => /shared/#,
@@ -42,12 +44,12 @@ print("{{y}}supported scripting environments:\n{{X}}", *<boot/script>.else(boot/
  http::[host     => <http://localhost:8777>,
          pattern => http://#,
          route   => [/     => examples/www,
-                     /docs => target/docs ]]@/sys/space/web;
+                     /docs => target/docs ]]@/sys/space/www;
   tp3::[pattern  => /g/#,
         rewrite  => (</g/+/>=><>),
         native/load => modern,
         native   => [factory  => mfactory::[=>],
-                     load     => modern]]@/sys/space/tp3/grph;
+                     load     => modern]]@/sys/space/modern;
   [==mqtt::[pattern => <wall:#>,
          host    => !*boot/args/mqtt/broker,
          rewrite => <wall:>=><walltron/>]@/sys/space/walltron;
@@ -59,11 +61,12 @@ print("{{y}}supported scripting environments:\n{{X}}", *<boot/script>.else(boot/
          rewrite => <play:>=><playtron/>]@/sys/space/playtron;==]
   mqtt::[pattern    => <z2m:#>,
          host       => !*boot/args/mqtt/broker,
-         serializer => /m/io/json/simple,
+         serializer => !*</m/mach/io/serializer/json/simple>,
          rewrite    => <z2m:>=><zigbee2mqtt/>]@/sys/space/zigbee2mqtt;
-  haos::[pattern => <ha:#>,
-         host    => !*boot/args/mqtt/broker,
-         rewrite => <ha:>=><homeassistant/>]@/sys/space/homeassistant;
+  haos::[pattern    => <ha:#>,
+         host       => !*boot/args/mqtt/broker,
+         serializer => !*</m/mach/io/serializer/json/simple>,
+         rewrite    => <ha:>=><homeassistant/>]@/sys/space/homeassistant;
 
    [==  bt::[pattern => <bt:#>
           rewrite => <bt:>=><>]@/sys/space/bt; ==]
@@ -79,6 +82,7 @@ print("{{y}}supported scripting environments:\n{{X}}", *<boot/script>.else(boot/
           rewrite => <serial:>=><>]@/sys/space/serial;
  ollama::[host    => <http://localhost:11434>, 
           model   => |load()]@/usr/ai/ollama;
+[== load user console ==]
 console::[        => ]@/sys/console;
  [-- *boot/args/mode.-<|[?=server   => print('\n\t{{g}}-<{{c}}server mode{{g}}>-{{X}}'), 
  [--                       ?=console => print('\n\t{{g}}-<{{c}}client mode{{g}}>-{{X}}').map(console::[=>]), 

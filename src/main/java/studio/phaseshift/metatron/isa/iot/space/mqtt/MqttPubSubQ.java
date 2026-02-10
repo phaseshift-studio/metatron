@@ -24,7 +24,7 @@ import studio.phaseshift.metatron.furi.q.PubSubQ;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.impl.MObjFactory;
-import studio.phaseshift.metatron.isa.sys.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.Router;
 
 import java.nio.ByteBuffer;
 import java.util.Optional;

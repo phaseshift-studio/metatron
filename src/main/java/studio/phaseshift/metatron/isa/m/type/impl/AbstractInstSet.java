@@ -27,7 +27,7 @@ import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Type;
-import studio.phaseshift.metatron.isa.sys.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.util.Tuple;
 
 import java.util.*;
@@ -104,15 +104,6 @@ public abstract class AbstractInstSet extends AbstractSpace<Map<fURI, Set<? exte
     @Override
     public Set<Inst> rewrites() {
         return new LinkedHashSet<>();
-    }
-
-    @Override
-    public Map<fURI, Set<? extends Obj>> sjvm() {
-        return Map.of(
-                f("consts"), this.consts(),
-                f("types"), this.types(),
-                f("insts"), this.insts(),
-                f("rewrites"), this.rewrites());
     }
 
     @Override
