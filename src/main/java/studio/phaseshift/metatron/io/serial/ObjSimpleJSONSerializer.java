@@ -50,7 +50,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 @ServiceMetadata(tid = "/m/io/json/simple")
-public class ObjSimpleJSONSerializer implements ObjSerializer<JsonElement> {
+public class ObjSimpleJSONSerializer extends AbstractObjSerializer<JsonElement> {
 
     private static final GraphittyLogger LOG = Graphitty.log(ObjSimpleJSONSerializer.class);
     public static final fURI OBJ_SIMPLE_JSON_SERIALIZER_TID = OBJ_SERIAL_TID.extend("json").extend("simple");
@@ -58,19 +58,27 @@ public class ObjSimpleJSONSerializer implements ObjSerializer<JsonElement> {
     private static final String _TID = "_tid";
     private static final String _VID = "_vid";
 
-
     static {
         assert ServiceMetadata.Helper.tid(ObjSimpleJSONSerializer.class).equals(OBJ_SIMPLE_JSON_SERIALIZER_TID);
     }
-
+    
     private final boolean biasTowardsURI = true;
     private final boolean biasTowardsObjs = false;
-    private final boolean embedCandQ = true;
+    private final boolean embedCandQ = false;
 
     private static JsonReader makeReader(final String json) {
         final JsonReader r = new JsonReader(new StringReader(json));
         r.setStrictness(Strictness.LENIENT);
         return r;
+    }
+
+    public ObjSimpleJSONSerializer() {
+
+    }
+
+    @Override
+    public fURI tid() {
+        return OBJ_SIMPLE_JSON_SERIALIZER_TID;
     }
 
     @Override
@@ -91,11 +99,6 @@ public class ObjSimpleJSONSerializer implements ObjSerializer<JsonElement> {
             LOG.warn("ignoring json parse problem with %s: %s", new String(bytes.array(), StandardCharsets.UTF_8), e);
             return NoObj.noobj();
         }
-    }
-
-    @Override
-    public fURI tid() {
-        return OBJ_SIMPLE_JSON_SERIALIZER_TID;
     }
 
     @Override
@@ -120,7 +123,7 @@ public class ObjSimpleJSONSerializer implements ObjSerializer<JsonElement> {
                         return uri(jpstr.substring(1, jpstr.length() - 1));
                     else if (!jpstr.contains(" ") && jpstr.contains("/"))
                         return uri(jpstr);
-                    else if (biasTowardsURI && !jpstr.contains(" "))
+                    else if (this.biasTowardsURI && !jpstr.contains(" "))
                         return uri(jpstr);
                     try {
                         final Result r = mParser.parse(jpstr);

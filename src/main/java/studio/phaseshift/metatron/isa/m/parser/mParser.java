@@ -64,6 +64,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
+import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.Tuple.Triplet;
 
@@ -461,7 +462,9 @@ public class mParser {
                 opt(seq(of("["), opt(m_obj(), null), of("]")).map(t -> pick(t, 1)), null),
                 opt(seq(of("["), opt(m_obj(), null), of("]")).map(t -> pick(t, 1)), null),
                 m_vid_postfix())
-                .map(t -> new MType(Tuple.Pair.<Call, Call>with(pick(t, 2), pick(t, 3)), pick(t, 0), pick(t, 4)));
+                .map(t -> null == pick(t, 2) && null == pick(t, 3) && null == pick(t, 4) ?
+                        T(pick(t, 0)) :
+                         T(Tuple.Pair.with(pick(t, 2), pick(t, 3)), pick(t, 0), pick(t, 4)));
     }
 
     public static Parser m_code() {

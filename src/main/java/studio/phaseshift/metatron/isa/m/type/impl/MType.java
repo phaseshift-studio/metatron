@@ -32,19 +32,26 @@ import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 
 public class MType extends MObj implements Type {
 
-    public MType(final Tuple.Pair<Call, Call> jvm, final fURI tid, final fURI vid) {
+    protected MType(final Tuple.Pair<Call, Call> jvm, final fURI tid, final fURI vid) {
         super(jvm, vid == null ? tid.equals(NOOBJ_TID) ? tid.c("0") : tid : vid.equals(NOOBJ_TID) ? vid.c("0") : vid, vid); // TODO: hack until vid/tid pattern is replaced throughout
     }
 
+    public static Type T(final Tuple.Pair<Call, Call> jvm, final fURI tid, final fURI vid) {
+        final fURI bigTID = tid.big();
+        return new MType(jvm, bigTID, vid);
+    }
+    
+    
     public static Type T(final fURI tid) {
-        if (!tid.hasPattern() && !BASE_TYPES.contains(tid.basePath()) && !tid.isGeneric() && Router.loaded()) {
-            final Obj obj = Router.global().read(tid);
+        final fURI bigTID = tid.big();
+        if (!bigTID.hasPattern() && !BASE_TYPES.contains(bigTID.basePath()) && !bigTID.isGeneric() && Router.loaded()) {
+            final Obj obj = Router.global().read(bigTID);
             if (obj.isType())
-                return tid.cV().equals(obj.c()) ?
+                return bigTID.cV().equals(obj.c()) ?
                         obj.asType() : // type already exists (don't create a new coefficient type)
-                        new MType(Tuple.Pair.with(obj.asType().predicate(), obj.asType().constructor()), tid, null); // coefficient specific type doesn't exist, create it
+                        new MType(Tuple.Pair.with(obj.asType().predicate(), obj.asType().constructor()), bigTID, null); // coefficient specific type doesn't exist, create it
         }
-        return new MType(Tuple.Pair.with(null, null), tid, null);
+        return new MType(Tuple.Pair.with(null, null), bigTID, null);
         
        /*return (tid.hasPattern() ||
                 !Router.loaded() ||
@@ -56,17 +63,19 @@ public class MType extends MObj implements Type {
     }
 
     public static Type T(final fURI tid, final Call predicate) {
-        return new MType(Tuple.Pair.with(predicate, null), tid, null);
+        final fURI bigTID = tid.big();
+        return new MType(Tuple.Pair.with(predicate, null), bigTID, null);
     }
 
     public static Type T(final fURI tid, final Call predicate, final Call constructor) {
-        final Obj prev = Router.loaded() ? Router.readFromSpace(tid) : noobj();
+        final fURI bigTID = tid.big();
+        final Obj prev = Router.loaded() ? Router.readFromSpace(bigTID) : noobj();
         if (prev.isNoObj() || !prev.isType())
-            return new MType(Tuple.Pair.with(null == predicate || predicate.isNoObj() ? null : predicate, null == constructor || constructor.isNoObj() ? null : constructor), tid, null);
+            return new MType(Tuple.Pair.with(null == predicate || predicate.isNoObj() ? null : predicate, null == constructor || constructor.isNoObj() ? null : constructor), bigTID, null);
         else {
             final Call pre = null == predicate || predicate.isNoObj() ? prev.<Type>as().predicate() : predicate;
             final Call con = null == constructor || constructor.isNoObj() ? prev.<Type>as().constructor() : constructor;
-            return new MType(Tuple.Pair.with(pre, con), tid, tid);
+            return new MType(Tuple.Pair.with(pre, con), bigTID, bigTID);
         }
     }
 

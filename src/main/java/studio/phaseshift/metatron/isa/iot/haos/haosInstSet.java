@@ -145,7 +145,7 @@ public class haosInstSet extends AbstractInstSet {
                     uri("optimistic").maybe(), BOOL_TYPE,
                     uri("command_topic").maybe(), URI_TYPE))).create();
     public static final Type HAOS_LIGHT_TYPE = Type.Builder.build()
-            .tid(REC_TID)
+            .tid(HAOS_ENTITY_TID)
             .vid(HAOS_LIGHT_TID)
             .predicate(isa_(rec(
                     uri("payload_on").maybe().asUri(), T(ALL),

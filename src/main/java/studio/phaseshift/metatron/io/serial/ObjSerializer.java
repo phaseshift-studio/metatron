@@ -32,7 +32,7 @@ import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 
-public interface ObjSerializer<T> {
+public interface ObjSerializer<T> extends Obj {
 
     fURI OBJ_SERIAL_TID = f("/m/io");
 

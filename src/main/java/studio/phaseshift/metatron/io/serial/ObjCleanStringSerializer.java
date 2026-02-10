@@ -41,12 +41,21 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-@ServiceMetadata(tid = "/sys/io/clean")
-public class ObjCleanStringSerializer implements ObjSerializer<String> {
+@ServiceMetadata(tid = "/m/io/clean")
+public class ObjCleanStringSerializer extends AbstractObjSerializer<String> {
 
     public static final fURI OBJ_CLEAN_STRING_SERIALIZER_TID = OBJ_SERIAL_TID.extend("clean");
     private static final String NOOBJ_STRING = "noobj";
     protected boolean leftJustify;
+
+    static {
+        assert ServiceMetadata.Helper.tid(ObjCleanStringSerializer.class).equals(OBJ_CLEAN_STRING_SERIALIZER_TID);
+    }
+
+    @Override
+    public fURI tid() {
+        return OBJ_CLEAN_STRING_SERIALIZER_TID;
+    }
 
     public ObjCleanStringSerializer() {
         this.leftJustify = false;
@@ -54,11 +63,6 @@ public class ObjCleanStringSerializer implements ObjSerializer<String> {
 
     public ObjCleanStringSerializer(final boolean leftJustify) {
         this.leftJustify = leftJustify;
-    }
-
-    @Override
-    public fURI tid() {
-        return OBJ_CLEAN_STRING_SERIALIZER_TID;
     }
 
     @Override
@@ -311,7 +315,7 @@ public class ObjCleanStringSerializer implements ObjSerializer<String> {
     public static final int CLIP_LENGTH = 40;
 
     private StringBuilder writeClip(final StringBuilder sb, final Obj obj) {
-        if(true)
+        if (true)
             return sb.append(write(obj));
         if (obj.isStr() && obj.strValue().length() > CLIP_LENGTH) {
             sb.append(write(str(obj.strValue().substring(0, CLIP_LENGTH - 1))));

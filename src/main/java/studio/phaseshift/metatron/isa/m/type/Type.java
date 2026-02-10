@@ -209,7 +209,7 @@ public interface Type extends Obj, PlusMonoid<Type> {
         public Type create() {
             assert this.tid != null;
             //assert this.vid != null;
-            return new MType(Tuple.Pair.with(this.predicate, this.constructor), this.tid, this.vid);
+            return T(Tuple.Pair.with(this.predicate, this.constructor), this.tid, this.vid);
         }
     }
 

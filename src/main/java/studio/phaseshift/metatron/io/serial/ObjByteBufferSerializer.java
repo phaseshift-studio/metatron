@@ -34,7 +34,7 @@ import static studio.phaseshift.metatron.isa.m.mInstSet.CODE_TID;
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 @ServiceMetadata(tid = "/m/io/bytes")
-public class ObjByteBufferSerializer implements ObjSerializer<ByteBuffer> {
+public class ObjByteBufferSerializer extends AbstractObjSerializer<ByteBuffer> {
 
     public static final fURI OBJ_BYTE_BUFFER_SERIALIZER_TID = OBJ_SERIAL_TID.extend("bytes");
     private static final ByteBuffer NOOBJ_BYTES = ByteBuffer.wrap("noobj".getBytes());
@@ -42,10 +42,14 @@ public class ObjByteBufferSerializer implements ObjSerializer<ByteBuffer> {
     static {
         assert ServiceMetadata.Helper.tid(ObjByteBufferSerializer.class).equals(OBJ_BYTE_BUFFER_SERIALIZER_TID);
     }
+    
+    public ObjByteBufferSerializer() {
+        
+    }
 
     @Override
     public fURI tid() {
-        return OBJ_SERIAL_TID.extend("bytes");
+        return OBJ_BYTE_BUFFER_SERIALIZER_TID;
     }
 
     @Override
