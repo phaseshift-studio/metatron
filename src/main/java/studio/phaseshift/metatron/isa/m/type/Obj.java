@@ -27,6 +27,7 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.io.serial.ObjCleanStringSerializer;
 import studio.phaseshift.metatron.io.serial.ObjSerializer;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
+import studio.phaseshift.metatron.isa.m.space.noobjSpace;
 import studio.phaseshift.metatron.isa.m.type.impl.*;
 import studio.phaseshift.metatron.isa.sys.type.Router;
 import studio.phaseshift.metatron.util.*;
@@ -750,6 +751,12 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
         public static Set<Inst> insts() {
             return new LinkedHashSet<>(List.of(
                     // instC(AS_INST_TID.dom(REL_TID).rng(REL_TID), lst(REL_TYPE), (lhs, inst) -> recurssiveAs(lhs, inst.arg(0).as())),
+                    instC(WHICH_INST_TID.dom(ALL).rng(A), lst(URI_TYPE), (lhs, inst) -> {
+                        if (inst.arg(0).uriValue().big().equals(SPACE_TID))
+                            return null == lhs.vid() ? noobjSpace.single() : Router.global().getSpace(lhs.vid());
+                        else
+                            throw MTronException.of("unsupported which %s for %s", inst.arg(0), lhs);
+                    }),
                     instC(IMPORT_INST_TID.dom(ALL.maybe()).rng(fURI.NOOBJ.zero()), lst(REL_TYPE), (lhs, inst) -> MTronException.wrap(() -> BootLoader.getInstSetProviders(inst.arg(0).uriValue()).map(ServiceLoader.Provider::get).map(i -> noobj()).reduce(noobj(), (a, b) -> noobj()))),
                     instC(DEDUP_INST_TID.dom(A.maybeSome()).rng(A.maybeSome()), lst(), (lhs, inst) -> objs(lhs.stream().map(o -> o.c().gt(cInt.ZERO()) ? o.c(cInt::one) : o.c(c -> cInt.of(-1))).distinct())),
                     //  instC(DEDUP_INST_TID.dom(A.maybeSome()).rng(A.maybeSome()), lst(T(B)), (lhs, inst) -> objs(lhs.stream().map(o -> o.c().gt(cInt.ZERO()) ? o.c(cInt::one) : o.c(c -> cInt.of(-1))).map(o -> inst.arg(0).apply(o)).distinct())),
