@@ -124,7 +124,13 @@ public class mInstSetTest extends InstSetTest {
             "{1,1,1,1}.inst?int<=int{2}(){ sum() }                                          % int{2}::2",
             "{1,1,2,3}.inst?int<=int{2}(){ sum() }                                          % {2,5}",
             "{1,1,2,2,3,5}.inst?int<=int{2}(){ sum() }                                      % {2,4,8}",
-            "{1,1,2,2,3,5,7}.inst?int<=int{2}(){ sum() }.catch(10)                          % {2,4,8,10}",
+            "{1,1,2,2,3,5,7}.inst?int<=int{2}(){ sum() }.catch('X')                          % {2,4,8,\"X\"}",
+            "{1,2,3,4,5,6,7,8}.inst?int<=int{4}(){ sum() }.catch('X')                        % {10,26}",
+            "{1,2,3,4,5,6,7,8}.inst?int<=int{1}(){ sum() }.catch('X')                        % {1,2,3,4,5,6,7,8}",
+            "{1,2,3,4,5,6,7,8}.inst?int<=int{*}(){ sum() }.catch('X')                        % 36",
+            "{1,2,3,4,5,6,7,8}.inst?int<=int{+}(){ sum() }.catch('X')                        % 36",
+            "{1,2,3,4,5,6,7,8}.inst?int<=int{10}(){ sum() }.catch('X')                       % 36",
+           // "{1,2,3,4,5,6,7,8}.inst?int<=int{1000}(){ sum() }.catch('X')                      % \"X\"",  // TODO: this is a bug
             "{1,1,2,2,3,3,4,4}.inst?int<=int{2}(){ sum() }.catch(10)                        % {2,4,6,8}",
     }, delimiter = '%')
     public void testSkipLimitCode(final String code, final String expected) {

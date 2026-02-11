@@ -24,6 +24,7 @@ import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.IteratorUtil;
+import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
 
 import java.util.*;
@@ -88,6 +89,11 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>>, PlusMonoid.O<Rec> {
     @Override
     default boolean has(final Obj key) {
         return this.jvm().containsKey(key);
+    }
+
+    @Override
+    default boolean has(final String key) {
+        return this.has(uri(key));
     }
 
     default Rec at(final Obj key, final Obj value, final BiFunction<Poly<?, ?>, Object, Poly<?, ?>> operation) {
@@ -157,15 +163,21 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>>, PlusMonoid.O<Rec> {
     }
 
     default Rec put(final Obj key, final Obj value, final BiFunction<Poly<?, ?>, Object, Poly<?, ?>> operation) {
-        final fURI k = key.uriValue();
-        if (k.segments().isEmpty())
-            return this;
-        final Map<Obj, Obj> map = new LinkedHashMap<>(this.recValue());
-        map.compute(uri(k.segments().getFirst()), (k1, v) ->
-                k.segments().size() == 1 ?
-                        (value.isNoObj() ? null : (null != v && v.isObjs() ? v.append(value) : value)) :
-                        (null != v && v.isRec() ? v.asRec() : rec()).put(k.pretract().toUri(), value, operation));
-        return (Rec) operation.apply(this, map);
+        if (key.isUri()) {
+            final fURI k = key.uriValue();
+            if (k.segments().isEmpty())
+                return this;
+            final Map<Obj, Obj> map = new LinkedHashMap<>(this.recValue());
+            map.compute(uri(k.segments().getFirst()), (k1, v) ->
+                    k.segments().size() == 1 ?
+                            (value.isNoObj() ? null : (null != v && v.isObjs() ? v.append(value) : value)) :
+                            (null != v && v.isRec() ? v.asRec() : rec()).put(k.pretract().toUri(), value, operation));
+            return (Rec) operation.apply(this, map);
+        } else {
+            final Map<Obj, Obj> map = new LinkedHashMap<>(this.recValue());
+            map.put(key, value);
+            return (Rec) operation.apply(this, map);
+        }
     }
 
     @Override
@@ -215,6 +227,7 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>>, PlusMonoid.O<Rec> {
         public static Set<Inst> insts() {
             return new LinkedHashSet<>(List.of(
                     instC(AS_INST_TID.dom(REC_TID).rng(LST_TID), lst(T(LST_TID)), (lhs, inst) -> Poly.Helper.transformRecToLst(lhs.asRec(), inst.arg(0).tid(), fnull)),
+                   // instC(AS_INST_TID.dom(REC_TID).rng(REC_TID), lst(T(REC_TID)), (lhs, inst) -> Optional.of(lhs).filter(o ->o.matches(inst.arg(0))).map(o-> o.tid(inst.arg(0).tid())).orElseThrow(() -> MTronException.of("unable to resolve %s to %s", lhs, inst.arg(0)))),
                     instC(AS_INST_TID.dom(REC_TID).rng(URI_TID), lst(URI_TYPE), (lhs, inst) -> {
                         final Rec lhsRec = lhs.asRec();
                         fURI furi = new fURI();

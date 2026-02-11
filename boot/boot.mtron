@@ -68,10 +68,11 @@ print("{{y}}supported scripting environments:\n{{X}}", *<boot/script>.else(boot/
          host       => !*boot/args/mqtt/broker,
          serializer => !*</m/mach/io/serializer/json/simple>,
          rewrite    => <z2m:>=><zigbee2mqtt/>]@/sys/space/zigbee2mqtt;
-  haos::[pattern    => <ha:#>,
-         host       => !*boot/args/mqtt/broker,
-         serializer => !*</m/mach/io/serializer/json/simple>,
-         rewrite    => <ha:>=><homeassistant/>]@/sys/space/homeassistant;
+  haos::[pattern       => <ha:#>,
+         host          => !*boot/args/mqtt/broker,
+         serializer    => !*</m/mach/io/serializer/json/simple>,
+         command_topic => inst?uri<=rec(){ to(a).map(z2m:).mult(*a../friendly_name).mult(set/state) },
+         rewrite       => <ha:>=><homeassistant/>]@/sys/space/homeassistant;
 
    [==  bt::[pattern => <bt:#>
           rewrite => <bt:>=><>]@/sys/space/bt; ==]

@@ -31,6 +31,7 @@ import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.util.MTronException;
 
+import java.util.List;
 import java.util.Stack;
 
 import static studio.phaseshift.metatron.Tokens.PATTERN;
@@ -38,9 +39,11 @@ import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.isa.m.mInstSet.M_ISA_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.SPACE_TID;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
@@ -101,6 +104,14 @@ public class stackSpace extends AbstractSpace<Stack<Poly<?, ?>>> {
         this.root.write(vid, obj);
         return obj;
     }
+
+    public Obj peek() {
+        return this.sjvm().isEmpty() ? noobj() : this.sjvm().getFirst();
+    }
+
+   /* public Obj peekAll() {
+        return lst(this.sjvm().stream().map(Obj::<Obj>as).toList());
+    }*/
 
     public boolean pop() {
         final Poly frame = this.sjvm().pop();

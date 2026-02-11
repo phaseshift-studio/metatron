@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -25,8 +25,7 @@ import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.mTest;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.isa.m.type.Poly.IMMUTABLE;
 import static studio.phaseshift.metatron.isa.m.type.Poly.MUTABLE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
@@ -75,7 +74,7 @@ public class RecTest extends mTest {
         assertEquals(v, actual);
     }
 
-    
+
     @ParameterizedTest
     @CsvSource(value = {
             // rec                                 | key                                        | value
@@ -140,9 +139,9 @@ public class RecTest extends mTest {
             "(a=>(knows=>(b=>(knows=>c))))../<a/+/b/knows>                                           % c"
     }, delimiter = '%')
     public void testRecRelBehaviors(final String code, final String expected) {
-        mTest.testCode(LOG,code, expected);
+        mTest.testCode(LOG, code, expected);
     }
-    
+
     @ParameterizedTest
     @CsvSource(value = {
             "[noobj=>noobj]                                                                          % [=>]",
@@ -186,7 +185,7 @@ public class RecTest extends mTest {
             "[1,2,3].-<[>-.is(gt(2)) => >-.is(gt(1))>-?<=int{*}[,], >-.is(gt(1)) => _/id()\\_]       % [3=>[2,3],{2,3}=>[1,2,3]]",
     }, delimiter = '%')
     public void testCode(final String code, final String expected) {
-        mTest.testCode(LOG,code, expected);
+        mTest.testCode(LOG, code, expected);
     }
 
     @Test
@@ -215,10 +214,10 @@ public class RecTest extends mTest {
         Rec r2 = r1.put(uri("b"), jnt(22), IMMUTABLE);
         Rec r3 = r1.at(uri("b")).<Rec>as().put(uri("d"), jnt(33), IMMUTABLE);
         Rec r4 = r1.put(uri("b"), r1.at(uri("b")).<Rec>as().put(uri("d"), jnt(33)), IMMUTABLE);
-        mTest.testEquals(LOG,rec(uri("a"), jnt(1), uri("b"), rec(uri("c"), jnt(3))), r1, true);
-        mTest.testEquals(LOG,rec(uri("a"), jnt(1), uri("b"), jnt(22)), r2, true);
-        mTest.testEquals(LOG,rec(uri("c"), jnt(3), uri("d"), jnt(33)), r3, true);
-        mTest.testEquals(LOG,rec(uri("a"), jnt(1), uri("b"), rec(uri("c"), jnt(3), uri("d"), jnt(33))), r4, true);
+        mTest.testEquals(LOG, rec(uri("a"), jnt(1), uri("b"), rec(uri("c"), jnt(3))), r1, true);
+        mTest.testEquals(LOG, rec(uri("a"), jnt(1), uri("b"), jnt(22)), r2, true);
+        mTest.testEquals(LOG, rec(uri("c"), jnt(3), uri("d"), jnt(33)), r3, true);
+        mTest.testEquals(LOG, rec(uri("a"), jnt(1), uri("b"), rec(uri("c"), jnt(3), uri("d"), jnt(33))), r4, true);
         /// //
         Rec rr1 = rec(uri("a"), jnt(1), uri("b"), rec(uri("c"), jnt(3)));
         Rec s1 = rec(uri("a"), jnt(1), uri("b"), rec(uri("c"), jnt(3)));
@@ -233,7 +232,26 @@ public class RecTest extends mTest {
         mTest.testEquals(LOG, rec(uri("a"), jnt(1), uri("b"), jnt(22)), s2, true);
         mTest.testEquals(LOG, rec(uri("c"), jnt(3), uri("d"), jnt(33)), s3, true);
         mTest.testEquals(LOG, rec(uri("a"), jnt(1), uri("b"), rec(uri("c"), jnt(3), uri("d"), jnt(33))), s4, true);
+    }
 
+    @ParameterizedTest
+    @CsvSource(value = {
+            "a                                                  % a                       % true",
+            "1                                                  % 1.0                     % false",
+            "[1,2,3]                                            % [1,2,3]                 % true",
+            "[a=>1]                                             % [a=>1,b=>[c=>2,d=>5]]   % false",
+            "[a=>1,b=>[c=>2,d=>5]]                              % [a=>1,b=>[c=>2,d=>5]]   % true",
+            "[a=>1,b=>[c=>2,e=>3]]                              % [a=>1,b=>[c=>3,d=>5]]   % false",
+            "[a=>1,b=>[2,3]]                                    % [a=>1,b=>[2,3,4]]       % false"
+    }, delimiter = '%')
+    public void testDiffRecRecursion(final String a, final String b, final boolean matches) {
+        final Obj aobj = mParser.m_obj().parse(a).get();
+        final Obj bobj = mParser.m_obj().parse(b).get();
+        LOG.debug("testing match difference:\n%s", Poly.Helper.diffObjRecursion(aobj, bobj));
+        if (matches)
+            assertFalse(Poly.Helper.diffObjRecursion(aobj, bobj).toString().contains("X=>"));
+        else
+            assertTrue(Poly.Helper.diffObjRecursion(aobj, bobj).toString().contains("X=>"));
 
     }
 }

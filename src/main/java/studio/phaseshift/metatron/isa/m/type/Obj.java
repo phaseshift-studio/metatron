@@ -24,10 +24,10 @@ import studio.phaseshift.metatron.algebra.PlusMonoid;
 import studio.phaseshift.metatron.algebra.Ring;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.mach.io.type.ObjCleanStringSerializer;
-import studio.phaseshift.metatron.isa.mach.io.type.ObjSerializer;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.type.impl.*;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjCleanStringSerializer;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.util.*;
 
@@ -665,16 +665,15 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
 
         public static void objCheckAndSave(final Obj obj) {
             if (!obj.isInstSet() && !obj.isNoObj() && !obj.isType() && !obj.matches(obj.type())) {
-                if (obj.isRec()) {
+                if (obj.isPoly()) {
                     final String objString = obj.toString();
                     final String typeString = obj.type().toString();
-                    throw MTronException.of("obj does not match specified type:\n%s\n\t%s\n%s\n%s\n%s".formatted(objString, "=X>", typeString, "-".repeat(Math.max(CommonUtil.width(objString), CommonUtil.width(typeString))),
-                            obj.type().hasPredicate() && obj.type().predicate().insts().getFirst().arg(0).isRec() ?
-                                    Poly.Helper.identifyNoMatch(obj.asRec(), obj.type().predicate().insts().getFirst().arg(0).asRec(), 0) :
-                                    ""));
-                } else if (obj.isPoly())
-                    throw MTronException.of("%s\n\t%s\n%s".formatted(obj, "is not a", obj.type()));
-                else
+                    final String matchDiffString = Poly.Helper.diffObjRecursion(obj, (obj.type().hasPredicate() && !obj.type().predicate().insts().getFirst().arg(0).isNoObj()) ?
+                            obj.type().predicate().insts().getFirst().arg(0) :
+                            obj.type()).toString();
+                    final int width = CommonUtil.width(matchDiffString);
+                    throw MTronException.of("obj does not match specified type:\n%s\n\t\n\n%s\n%s\n%s", objString, typeString, "-".repeat(width), matchDiffString);
+                } else
                     throw MTronException.of("%s is not a %s".formatted(obj, obj.type()));
             }
             if (null != obj.vid())
@@ -685,7 +684,8 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
             objCheckAndSave(obj, jvm, tid, vid, false);
         }
 
-        public static void objCheckAndSave(final Obj obj, final Object jvm, final fURI tid, final fURI vid, final boolean forceSave) {
+        public static void objCheckAndSave(final Obj obj, final Object jvm, final fURI tid, final fURI vid,
+                                           final boolean forceSave) {
             final Object oldJVM = obj.jvm();
             final fURI oldTID = obj.tid();
             final fURI oldVID = obj.vid();
@@ -765,9 +765,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
                     }),
                     // instC(EXPLAIN_INST_TID.dom(CODE_TID).rng(STR_TID), lst(), (lhs, inst) -> str(new Profile(inst.arg(0)).toString())),
                     instC(AUTO_INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(T(ALL.maybe())), (lhs, inst) -> inst.arg(0).apply(lhs)),
-                    instC(AUTO_FROM_INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(T(ALL.maybe()), T(ALL.maybe())), (lhs, inst) -> {
-                        return !inst.arg(1).isNoObj() ? inst.arg(1) : Router.readFromSpace(inst.arg(0).uriValue()).autoResolve(lhs);
-                    }),
+                    instC(AUTO_FROM_INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(T(ALL.maybe()), T(ALL.maybe())), (lhs, inst) -> !inst.arg(1).isNoObj() ? inst.arg(1) : Router.readFromSpace(inst.arg(0).uriValue()).autoResolve(lhs)),
                     instC(CATCH_INST_TID.dom(ALL).rng(ALL.maybeSome()), lst(T(ALL.maybeSome())), (lhs, inst) -> lhs.isFail() ? inst.arg(0).apply(lhs.<Fail>as().caught()) : lhs),
                     docWrap(instC(END_INST_TID.dom(ALL_STAR).rng(NOOBJ_TID.zero()), lst(), (lhs, inst) -> noobj()),
                             "terminal objs", "noobj", Map.of(), "the terminal function f(x)->0"),
@@ -833,6 +831,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
                     instC(EQ_INST_TID.dom(ALL).rng(BOOL_TID), lst(T(ALL)), (lhs, inst) -> bool(lhs.equals(inst.arg(0)))),
                     instC(NEQ_INST_TID.dom(ALL).rng(BOOL_TID), lst(T(ALL)), (lhs, inst) -> bool(!lhs.equals(inst.arg(0)))),
                     instC(TO_INST_TID.dom(ALL.maybe()).rng(ALL.maybe()), lst(T(URI_TID)), (lhs, inst) -> Router.writeToSpace(inst.arg(0).uriValue(), lhs)),
+                    // instC(FROM_INST_TID.dom(ALL.maybe()).rng(ALL_STAR), lst(), (lhs, inst) -> Router.stack().peekAll()),
                     instC(FROM_INST_TID.dom(ALL.maybe()).rng(ALL_STAR), lst(T(URI_TID)), (lhs, inst) -> Router.readFromSpace(inst.arg(0).uriValue())),
                     instC(REF_INST_TID.dom(ALL).rng(ALL_STAR), lst(T(ALL_STAR)), (lhs, inst) -> Router.writeToSpace(lhs.uriValue(), inst.arg(0))),
                     instC(THREAD_INST_TID.dom(A).rng(A), lst(T(ALL)), (lhs, inst) -> {

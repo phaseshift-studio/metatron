@@ -249,6 +249,7 @@ public interface Inst extends Call {
                     //.map(i -> i.isInst() ? i.asInst() : instC(this.tid().dom(lhs.tid()).rng(ALL.maybeSome()), this.args(), (lhs2, inst) -> Router.global().write(this.tid(), inst.args())))
                     .filter(Obj::isInst)
                     .map(Obj::asInst)
+                    .filter(i -> !this.tid().basePath().equals(AS_INST_TID) || this.arg(0).matches(i.arg(0)))
                     .filter(i -> (i.args().isEmpty() && this.arg(0).isNoObj()) || i.args().isRec() || i.args().count() >= this.args().count()) // TODO: check which recs are default
                     .filter(i -> !lhs.isInst() || (i.dom().baseType().equals(INST_TID)))
                     //.sorted(Comparator.comparing(Inst::dom, (a, b) -> lhs.matches(a.dom()) ? -1 : lhs.matches(b.dom()) ? 1 : 0)) // TODO: explore this more fully
@@ -334,17 +335,16 @@ public interface Inst extends Call {
             cinst = this.resolve(clhs);
             modulateC = true;
             //  }
-            if (!clhs.rng().matches(cinst.dom()))
+            if (!clhs.matches(cinst.dom()))
                 return fail(mexcept("lhs range does not match inst domain: %s => %s [%s]", clhs.rng(), cinst.dom(), cinst));
         }
         if (!clhs.isFail() || cinst.isCatch()) {
             try {
                 if (null == cinst.f()) {
-                    final Obj clhsFinal = clhs;
                     return fail(mexcept("unable to determine inst function:" +
                             "\n\t%-10s => %-10s  | [inst]" +
                             "\n\t%-10s => %-10s  |  \\_dom" +
-                            "\n\t%-10s =%s %-10s  |  \\_args", clhsFinal, cinst, clhsFinal.type(), cinst.dom(), clhsFinal.type(), cinst.args().elements().allMatch(clhsFinal::matches) ? ">" : "X", cinst.args()));
+                            "\n\t%-10s %s=> %-10s  |  \\_args", clhs, cinst, clhs.type(), cinst.dom(), clhs.type(), cinst.args().elements().allMatch(clhs::matches) ? "=" : "X", cinst.args()));
                 }
                 cinst = Helpers.applyArgs(clhs, cinst);
                 Router.stack().push(cinst.args());
@@ -369,11 +369,7 @@ public interface Inst extends Call {
             }
             if (BootLoader.TYPE_CHECK && !rhs.isType() && !rhs.isFail() && !lhs.isCaughtFail() && !rhs.matches(cinst.rng()))
                 rhs = mexcept("inst resolution failure: %s", cinst)
-                        .cause(mexcept("rhs does not match inst range:" +
-                                "\n\t[rhs]    %s" +
-                                "\n\t \\_type] %s" +
-                                "\n\t[inst]   %s" +
-                                "\n\t \\_rng   %s", rhs, rhs.type(), cinst, cinst.rng()))
+                        .cause(mexcept("rhs does not match inst range:\n%s", Poly.Helper.diffObjRecursion(rhs, cinst.rng())))
                         .asFail();
         } else {
             rhs = clhs; // propagate fail through inst unless it's a catch inst

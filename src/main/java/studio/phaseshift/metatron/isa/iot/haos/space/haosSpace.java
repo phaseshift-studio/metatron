@@ -110,7 +110,6 @@ public class haosSpace extends mqttSpace {
         super(client, config, HAOS_SPACE_TID, vid);
     }
 
-
     public Obj read(final fURI vid) {
         final Obj result = super.read(vid);
         if (result.isNoObj())
@@ -120,15 +119,23 @@ public class haosSpace extends mqttSpace {
         return objs(result.stream().map(x -> {
             final fURI valueId = vid.isBranch() ? x.asRel().first().uriValue() : vid;
             final Obj value = vid.isBranch() ? x.asRel().second() : x;
-            
+
             final EntityType entityType = EntityType.inferFrom(valueId);
             if (entityType == EntityType.NONE || !value.isRec() || !BASE_TYPES.contains(value.tid().basePath()) || !value.matches(entityType.type))
                 return x;
             LOG.info("converting {{b}}%s{{X}} to {{y}}%s{{X}}", valueId, entityType.type.namedType());
+            if (!value.asRec().has("command_topic") && value.asRec().has("friendly_name") && this.has("command_topic")) {
+                try {
+                    LOG.info("applying entity to command topic generator %s", this.at("command_topic"));
+                    value.asRec().put(uri("command_topic"), this.jvm().get(uri("command_topic")).apply(value.asRec()), MUTABLE);
+                } catch (final Exception e) {
+                    LOG.error("unable to generate command topic for %s: %s", vid, e);
+                }
+            }
             return vid.isBranch() ? x.asRel().second(value.tid(entityType.type.vid())/*.selfVID(valueId)*/) : value.tid(entityType.type.vid())/*.selfVID(valueId)*/;
         }));
     }
-    
+
     /// /////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    
+
 }

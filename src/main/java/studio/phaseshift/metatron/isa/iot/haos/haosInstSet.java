@@ -76,35 +76,36 @@ public class haosInstSet extends AbstractInstSet {
             uri("name").maybe(), STR_TYPE);
 
 
-    public static final Map<String, Tuple.Pair<fURI, fURI>> discoveryAbbrevMap = new HashMap<>() {{
-        put("command_topic", Tuple.Pair.with(f("cmd_t"), f("command_topic")));
-        put("state_topic", Tuple.Pair.with(f("stat_t"), f("state_topic")));
-        put("availability", Tuple.Pair.with(f("avty"), f("availability")));
-        put("availability_topic", Tuple.Pair.with(f("avty_t"), f("availability_topic")));
-        put("availability_mode", Tuple.Pair.with(f("avty_mode"), f("availability_mode")));
-        put("availability_template", Tuple.Pair.with(f("avty_tpl"), f("availability_template")));
-        put("device_class", Tuple.Pair.with(f("dev_cla"), f("device_class")));
-        put("icon", Tuple.Pair.with(f("ic"), f("icon")));
-        put("name", Tuple.Pair.with(f("name"), f("name")));
-        put("unique_id", Tuple.Pair.with(f("uniq_id"), f("unique_id")));
-        put("unit_of_measurement", Tuple.Pair.with(f("unit_of_meas"), f("unit_of_measurement")));
-        put("value_template", Tuple.Pair.with(f("val_tpl"), f("value_template")));
-        put("json_attributes", Tuple.Pair.with(f("json_attr"), f("json_attributes")));
-        put("json_attributes_topic", Tuple.Pair.with(f("json_attr_t"), f("json_attributes_topic")));
-        put("json_attributes_template", Tuple.Pair.with(f("json_attr_tpl"), f("json_attributes_template")));
-        put("device", Tuple.Pair.with(f("dev"), f("device")));
-        put("topic", Tuple.Pair.with(f("t"), f("topic")));
-        put("encoding", Tuple.Pair.with(f("e"), f("encoding")));
-        put("payload_on", Tuple.Pair.with(f("pl_on"), f("payload_on")));
-        put("payload_off", Tuple.Pair.with(f("pl_off"), f("payload_off")));
-        put("payload_available", Tuple.Pair.with(f("pl_avail"), f("payload_available")));
-        put("payload_not_available", Tuple.Pair.with(f("pl_not_avail"), f("payload_not_available")));
-        put("optimistic", Tuple.Pair.with(f("opt"), f("optimistic")));
-        put("qos", Tuple.Pair.with(f("qos"), f("qos")));
-        put("retain", Tuple.Pair.with(f("ret"), f("retain")));
-        put("force_update", Tuple.Pair.with(f("frc_upd"), f("force_update")));
-        put("expire_after", Tuple.Pair.with(f("exp_aft"), f("expire_after")));
-    }};
+    public static final Map<String, Tuple.Pair<fURI, fURI>> discoveryAbbrevMap = Collections.unmodifiableMap(
+            new HashMap<>() {{
+                put("command_topic", Tuple.Pair.with(f("cmd_t"), f("command_topic")));
+                put("state_topic", Tuple.Pair.with(f("stat_t"), f("state_topic")));
+                put("availability", Tuple.Pair.with(f("avty"), f("availability")));
+                put("availability_topic", Tuple.Pair.with(f("avty_t"), f("availability_topic")));
+                put("availability_mode", Tuple.Pair.with(f("avty_mode"), f("availability_mode")));
+                put("availability_template", Tuple.Pair.with(f("avty_tpl"), f("availability_template")));
+                put("device_class", Tuple.Pair.with(f("dev_cla"), f("device_class")));
+                put("icon", Tuple.Pair.with(f("ic"), f("icon")));
+                put("name", Tuple.Pair.with(f("name"), f("name")));
+                put("unique_id", Tuple.Pair.with(f("uniq_id"), f("unique_id")));
+                put("unit_of_measurement", Tuple.Pair.with(f("unit_of_meas"), f("unit_of_measurement")));
+                put("value_template", Tuple.Pair.with(f("val_tpl"), f("value_template")));
+                put("json_attributes", Tuple.Pair.with(f("json_attr"), f("json_attributes")));
+                put("json_attributes_topic", Tuple.Pair.with(f("json_attr_t"), f("json_attributes_topic")));
+                put("json_attributes_template", Tuple.Pair.with(f("json_attr_tpl"), f("json_attributes_template")));
+                put("device", Tuple.Pair.with(f("dev"), f("device")));
+                put("topic", Tuple.Pair.with(f("t"), f("topic")));
+                put("encoding", Tuple.Pair.with(f("e"), f("encoding")));
+                put("payload_on", Tuple.Pair.with(f("pl_on"), f("payload_on")));
+                put("payload_off", Tuple.Pair.with(f("pl_off"), f("payload_off")));
+                put("payload_available", Tuple.Pair.with(f("pl_avail"), f("payload_available")));
+                put("payload_not_available", Tuple.Pair.with(f("pl_not_avail"), f("payload_not_available")));
+                put("optimistic", Tuple.Pair.with(f("opt"), f("optimistic")));
+                put("qos", Tuple.Pair.with(f("qos"), f("qos")));
+                put("retain", Tuple.Pair.with(f("ret"), f("retain")));
+                put("force_update", Tuple.Pair.with(f("frc_upd"), f("force_update")));
+                put("expire_after", Tuple.Pair.with(f("exp_aft"), f("expire_after")));
+            }});
 
 
     public static final Type HAOS_ENTITY_TYPE = Type.Builder.build()
@@ -159,7 +160,7 @@ public class haosInstSet extends AbstractInstSet {
                     uri("payload_on").maybe().asUri(), T(ALL),
                     uri("payload_off").maybe(), T(ALL),
                     uri("command_topic").maybe(), URI_TYPE))).create();
-    
+
     public haosInstSet() {
         this(HAOS_ISA_TID);
     }

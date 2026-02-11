@@ -144,19 +144,7 @@ public interface Router extends Obj, Space {
     fURI rewrite(final fURI furi, final boolean big);
 
     <S extends Space> S getSpace(final fURI vid);
-
-    @Override
-    default void close() {
-       /* this.server().close();
-        this.spaces().elements().forEach(s -> {
-            try {
-                this.removeSpace(s.second().vid());
-            } catch (final Exception e) {
-                // do nothing? System.out.println(Graphitty.string("[{{y}}WARN {{/T}}] %s", e.getMessage()));
-            }
-        });*/
-    }
-
+    
     IOStats stats();
 
     interface IOStats {

@@ -24,10 +24,7 @@ import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.Tuple;
 
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.BiFunction;
 import java.util.stream.Stream;
 
@@ -105,30 +102,6 @@ public interface Poly<P extends Poly<P, J>, J> extends Obj {
     }*/
 
     class Helper {
-        public static String identifyNoMatch(final Rec lhs, Rec rhs, int depth) {  
-            // TODO: calculate the column widths dynamically
-            // TODO: remove padding from flattened nested records
-            final StringBuilder sb = new StringBuilder();
-            lhs.asRec().elements().forEach(x -> {
-                if (rhs.asRec().elements().noneMatch(y -> x.first().matches(y.first()) && x.second().matches(y.second()))) {
-                    final Rel keyMatch = rhs.asRec().elements().filter(y -> x.first().matches(y.first())).findFirst().orElse(null);
-                    if (keyMatch == null)
-                        sb.append("%-15s =X> | %-15s\n".formatted(" ".repeat(depth) + x, rhs.toString().replace("\n", " ")));
-                    else {
-                        if (x.second().isRec() && keyMatch.second().isRec()) {
-                            sb.append(identifyNoMatch(x.second().asRec(), keyMatch.second().asRec(), depth + 1));
-                        } else {
-                            sb.append("%-15s =X> | %-15s\n".formatted(" ".repeat(depth)+ x, keyMatch.toString().replace("\n", " ")));
-                        }
-                    }
-                } else {
-                    sb.append("%-15s =O> | %-15s\n".formatted(" ".repeat(depth) + x, rhs.asRec().elements().filter(y -> x.first().matches(y.first()) && x.second().matches(y.second())).findFirst().get().toString().replace("\n", " ")));
-                }
-            });
-            return sb.toString();
-        }
-
-
         public static Rec transformLstToRec(final Lst lhs, final fURI tid, final fURI vid) {
             return IteratorUtil.indexedStream(lhs.elements().iterator())
                     .map(r -> rel(jnt(r.get0()), r.get1()))
@@ -251,6 +224,58 @@ public interface Poly<P extends Poly<P, J>, J> extends Obj {
         public static Obj updateRelRecursion(final Rel lhs, final Rel rhs, BiFunction<Poly<?, ?>, Object, Poly<?, ?>> operation) {
             final Object result = Poly.Helper.selectRelRecursionRaw(lhs, rhs, (a, b) -> updatePolyRecursion(a.as(), b.as(), operation));
             return result instanceof Obj ? (Obj) result : operation.apply(lhs, result);
+        }
+
+        /// ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+        private static final Uri GOOD = uri("=");
+        private static final Uri SORTA = uri("/");
+        private static final Uri FAIL = uri("X");
+        
+        public static Obj diffObjRecursion(final Obj lhs, final Obj rhs) {
+            if (lhs.isRec() && rhs.isRec())
+                return diffRecRecursion(lhs.asRec(), rhs.asRec());
+            else if (lhs.isLst() && rhs.isLst())
+                return diffLstRecursion(lhs.asLst(), rhs.asLst());
+            else {
+                if (lhs.matches(rhs)) {
+                    return rel(lhs, rel(GOOD, rhs));
+                } else {
+                    return rel(lhs, rel(FAIL, rhs));
+                }
+            }
+        }
+
+        public static Lst diffLstRecursion(final Lst lhs, final Lst rhs) {
+            final List<Obj> result = new ArrayList<>();
+            final int max = Math.max(lhs.lstValue().size(), rhs.lstValue().size());
+            for(int i=0; i<max; i++) {
+                final Obj x = i < lhs.lstValue().size() ? lhs.lstValue().get(i) : noobj();
+                final Obj y = i < rhs.lstValue().size() ? rhs.lstValue().get(i) : noobj();
+                if (!x.matches(y))
+                    result.add(rel(FAIL, x));
+                else
+                    result.add(rel(GOOD, x));
+            }
+            return lst(result);
+        }
+
+
+        public static Rec diffRecRecursion(final Rec lhs, final Rec rhs) {
+            final Rec result = rec();
+            rhs.asRec().elements().forEach(x -> {
+                final Optional<Rel> kvMatch = lhs.asRec().elements().filter(y -> y.first().matches(x.first()) && y.second().matches(x.second())).findFirst();
+                if (kvMatch.isPresent())
+                    result.put(rel(kvMatch.get().first(), rel(GOOD, x.first())), rel(kvMatch.get().second(), rel(GOOD, x.second())), MUTABLE);
+                else {
+                    final Optional<Rel> kMatch = lhs.asRec().elements().filter(y -> y.first().matches(x.first())).findFirst();
+                    if (kMatch.isPresent())
+                        result.put(rel(kMatch.get().first(), rel(SORTA, x.first())), diffObjRecursion(kMatch.get().second(), x.second()), MUTABLE);
+                    else
+                        result.put(rel(noobj(), rel(FAIL, x.first())), rel(x.second(), rel(FAIL, noobj())), MUTABLE);
+                }
+            });
+            return result;
         }
     }
 }
