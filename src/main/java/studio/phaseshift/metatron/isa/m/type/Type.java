@@ -42,7 +42,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 
 public interface Type extends Obj, PlusMonoid<Type> {
 
-    public static final Type TYPE_TYPE = T(f("T"));
+    Type TYPE_TYPE = T(f("T"));
 
     @Override
     Type clone(final Object jvm, final fURI tid, final fURI vid);
@@ -206,7 +206,7 @@ public interface Type extends Obj, PlusMonoid<Type> {
             this.constructor = constructor;
             return this;
         }
-        
+
         public Builder constructor(final Supplier<Obj> supplier) {
             return this.constructor(instC(INST_TID.dom(ALL.maybe()).rng(this.vid), lst(), (lhs, inst) -> supplier.get()));
         }

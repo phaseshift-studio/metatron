@@ -23,6 +23,7 @@ import studio.phaseshift.metatron.isa.m.type.Call;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
 
 import static studio.phaseshift.metatron.isa.m.mInstSet.BASE_TYPES;
@@ -33,19 +34,23 @@ import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 public class MType extends MObj implements Type {
 
     protected MType(final Tuple.Pair<Call, Call> jvm, final fURI tid, final fURI vid) {
-        super(jvm, vid == null ? tid.equals(NOOBJ_TID) ? tid.c("0") : tid : vid.equals(NOOBJ_TID) ? vid.c("0") : vid, vid); // TODO: hack until vid/tid pattern is replaced throughout
+        super(jvm, vid == null ?
+                tid.equals(NOOBJ_TID) ? tid.c("0") : tid :
+                vid.equals(NOOBJ_TID) ? vid.c("0").big() :
+                        vid.big(), null == vid ? null : vid.big()); // TODO: hack until vid/tid pattern is replaced throughout
     }
 
     public static Type T(final Tuple.Pair<Call, Call> jvm, final fURI tid, final fURI vid) {
-        final fURI bigTID = tid.big();
-        return new MType(jvm, bigTID, vid);
+        return new MType(jvm, tid, vid);
     }
-    
-    
+
+
     public static Type T(final fURI tid) {
         final fURI bigTID = tid.big();
         if (!bigTID.hasPattern() && !BASE_TYPES.contains(bigTID.basePath()) && !bigTID.isGeneric() && Router.loaded()) {
             final Obj obj = Router.global().read(bigTID);
+             //if(obj.isNoObj())
+             //throw MTronException.of("type not found: %s", bigTID);
             if (obj.isType())
                 return bigTID.cV().equals(obj.c()) ?
                         obj.asType() : // type already exists (don't create a new coefficient type)
@@ -63,8 +68,7 @@ public class MType extends MObj implements Type {
     }
 
     public static Type T(final fURI tid, final Call predicate) {
-        final fURI bigTID = tid.big();
-        return new MType(Tuple.Pair.with(predicate, null), bigTID, null);
+        return new MType(Tuple.Pair.with(predicate, null), tid, null);
     }
 
     public static Type T(final fURI tid, final Call predicate, final Call constructor) {
