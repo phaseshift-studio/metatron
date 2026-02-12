@@ -28,12 +28,10 @@ import studio.phaseshift.metatron.isa.AbstractSpace;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.mInstSet;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
-import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.m.type.Rec;
-import studio.phaseshift.metatron.isa.m.type.Rel;
-import studio.phaseshift.metatron.isa.m.type.Type;
+import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.MObjFactory;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjSerializer;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjSimpleJSONSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
@@ -69,13 +67,14 @@ public class mqttSpace extends AbstractSpace<Mqtt5Client> {
     public static final Rec MQTT_SPACE_CONFIG = rec(
             uri(PATTERN), URI_TYPE,
             uri(HOST), URI_TYPE,
-            uri(SERIALIZER), else_(auto_from_(OBJ_SIMPLE_JSON_SERIALIZER_VID)),
+            uri(SERIALIZER).maybe(), else_(from_(uri(OBJ_SIMPLE_JSON_SERIALIZER_VID))),
             //uri(CLIENT).maybe(), T(URI_TID).maybe(),
             uri(REWRITE), REL_TYPE,
             uri(Tokens.Q).c(cInt::maybe), isa_(LST_TYPE));
     public static final Type MQTT_SPACE_TYPE = Type.Builder.build().tid(SPACE_TID).vid(MQTT_SPACE_TID).constructor(
             instC(mInstSet.INST_TID.dom(ALL.maybe()).rng(MQTT_SPACE_TID),
-                    lst(T(REC_TID, isa_(MQTT_SPACE_CONFIG))), (lhs, inst) -> mqttSpace.of(inst.arg(0).asRec(), inst.arg(0).vid()))).create();
+                    lst(T(REC_TID, isa_(MQTT_SPACE_CONFIG))), (lhs, inst) ->
+                            mqttSpace.of(Poly.Helper.applyObjRecursion(inst.arg(0).asRec(), MQTT_SPACE_CONFIG).asRec(), inst.arg(0).vid()))).create();
     protected final fURI broker;
     protected final Tuple.Pair<String, String> rewrite;
     protected final ObjSerializer<?> serializer;

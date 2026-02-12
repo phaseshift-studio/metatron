@@ -63,7 +63,7 @@ class Architecture:
         self.soc = None
         self.router = router()
         self.wlan = Wifi.connect(secrets['ssid'], secrets['password'], secrets['host'])
-        self.soc_vid = f(secrets['host'])
+        self.soc_vid = f(secrets['root']).extend(secrets['host'])
 
     def loop(self):
         self.soc.loop()

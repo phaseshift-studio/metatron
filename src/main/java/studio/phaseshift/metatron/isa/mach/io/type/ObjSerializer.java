@@ -29,19 +29,19 @@ import studio.phaseshift.metatron.util.MTronException;
 import java.nio.ByteBuffer;
 
 import static studio.phaseshift.metatron.furi.fURI.f;
+import static studio.phaseshift.metatron.isa.m.mInstSet.URI_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
-public interface ObjSerializer<T> extends Obj {
+public interface ObjSerializer<T> extends Uri {
 
     fURI OBJ_SERIAL_TID = f("/m/mach/io");
 
     ByteBuffer outputBytes(final Obj obj) throws MTronException;
 
     Obj inputBytes(final ByteBuffer bytes) throws MTronException;
-
-    fURI tid();
-
+    
     default T write(final Obj obj) throws MTronException {
         try {
             return switch (obj) {

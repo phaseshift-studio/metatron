@@ -148,8 +148,8 @@ public class haosInstSet extends AbstractInstSet {
             .tid(HAOS_ENTITY_TID)
             .vid(HAOS_SWITCH_TID)
             .predicate(isa_(rec(
-                    uri("payload_on"), T(ALL),
-                    uri("payload_off"), T(ALL),
+                    uri("payload_on").maybe().asUri(), T(ALL),
+                    uri("payload_off").maybe(), T(ALL),
                     uri("enabled").maybe(), BOOL_TYPE,
                     uri("optimistic").maybe(), BOOL_TYPE,
                     uri("command_topic").maybe(), URI_TYPE))).create();

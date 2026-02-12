@@ -55,36 +55,22 @@ print("{{y}}supported scripting environments:\n{{X}}", *<boot/script>.else(boot/
         native/load => modern,
         native   => [factory  => mfactory::[=>],
                      load     => modern]]@/sys/space/modern;
-  [==mqtt::[pattern => <wall:#>,
+  mqtt::[pattern => <mtron:#>,
          host    => !*boot/args/mqtt/broker,
-         rewrite => <wall:>=><walltron/>]@/sys/space/walltron;
-  mqtt::[pattern => <pond:#>,
-         host    => !*boot/args/mqtt/broker,
-         rewrite => <pond:>=><pondbox/>]@/sys/space/pondbox;
-  mqtt::[pattern => <play:#>,
-         host    => !*boot/args/mqtt/broker,
-         rewrite => <play:>=><playtron/>]@/sys/space/playtron;==]
+         rewrite => <mtron:>=><metatron/>]@/sys/space/mqtt/metatron;
   mqtt::[pattern    => <z2m:#>,
          host       => !*boot/args/mqtt/broker,
          serializer => !*</m/mach/io/serializer/json/simple>,
-         rewrite    => <z2m:>=><zigbee2mqtt/>]@/sys/space/zigbee2mqtt;
+         rewrite    => <z2m:>=><zigbee2mqtt/>]@/sys/space/mqtt/zigbee2mqtt;
   haos::[pattern       => <ha:#>,
          host          => !*boot/args/mqtt/broker,
          serializer    => !*</m/mach/io/serializer/json/simple>,
          command_topic => inst?uri<=rec(){ to(a).map(z2m:).mult(*a../friendly_name).mult(set/state) },
-         rewrite       => <ha:>=><homeassistant/>]@/sys/space/homeassistant;
-
-   [==  bt::[pattern => <bt:#>
-          rewrite => <bt:>=><>]@/sys/space/bt; ==]
-   [==tabl::[pattern => /postgres/#,
-          host    => <postgresql://localhost:5432/world>,
-          user    => admin,
-          pass    => "admin",
-          prefix  => </postgres/>]@/sys/space/postgres;==]
+         rewrite       => <ha:>=><homeassistant/>]@/sys/space/mqtt/homeassistant;
      fs::[pattern => <file:#>,
           rewrite => <file:>=><~/>,
           script  => !*boot/script]@/sys/space/fs;
-   serial::[pattern => <serial:#>,
+ serial::[pattern => <serial:#>,
           rewrite => <serial:>=><>]@/sys/space/serial;
  ollama::[host    => <http://localhost:11434>, 
           model   => |load()]@/usr/ai/ollama;

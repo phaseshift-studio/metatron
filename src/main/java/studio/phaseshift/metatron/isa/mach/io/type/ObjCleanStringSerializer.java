@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -37,25 +37,15 @@ import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBytes.bytes;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
-import static studio.phaseshift.metatron.isa.mach.io.ioInstSet.OBJ_CLEAN_STRING_SERIALIZER_VID;
+import static studio.phaseshift.metatron.isa.mach.io.ioInstSet.OBJ_SERIALIZER_TID;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public class ObjCleanStringSerializer extends AbstractObjSerializer<String> {
-
+    public static final fURI OBJ_CLEAN_STRING_SERIALIZER_VID = OBJ_SERIALIZER_TID.extend("string").extend("clean");
     private static final String NOOBJ_STRING = "noobj";
     protected boolean leftJustify;
-    
-    @Override
-    public fURI tid() {
-        return OBJ_SERIAL_TID;
-    }
-    
-    @Override
-    public fURI vid() {
-        return OBJ_CLEAN_STRING_SERIALIZER_VID;
-    }
 
     public ObjCleanStringSerializer() {
         this.leftJustify = false;
@@ -63,6 +53,14 @@ public class ObjCleanStringSerializer extends AbstractObjSerializer<String> {
 
     public ObjCleanStringSerializer(final boolean leftJustify) {
         this.leftJustify = leftJustify;
+    }
+
+    public fURI vid() {
+        return OBJ_CLEAN_STRING_SERIALIZER_VID;
+    }
+
+    public fURI jvm() {
+        return OBJ_CLEAN_STRING_SERIALIZER_VID;
     }
 
     @Override

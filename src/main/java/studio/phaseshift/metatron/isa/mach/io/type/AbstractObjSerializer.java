@@ -20,11 +20,8 @@ package studio.phaseshift.metatron.isa.mach.io.type;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.util.CommonUtil;
+import studio.phaseshift.metatron.isa.m.type.Uri;
 
-import java.util.Map;
-
-import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TID;
 import static studio.phaseshift.metatron.isa.mach.io.ioInstSet.OBJ_SERIALIZER_TID;
 
 /*
@@ -33,39 +30,29 @@ import static studio.phaseshift.metatron.isa.mach.io.ioInstSet.OBJ_SERIALIZER_TI
 public abstract class AbstractObjSerializer<T> implements ObjSerializer<T> {
 
     @Override
-    public Map<Obj, Obj> jvm() {
-        return Map.of();
-    }
-
-    
-    @Override
     public ObjSerializer<T> clone() {
         return this;
     }
 
     @Override
-    public String toString() {
-        return CommonUtil.snakeCase(this.getClass().getSimpleName());
+    public Uri clone(final Object jvm, final fURI tid, final fURI vid) {
+        Obj.Helper.logLockedObj(this);
+        return this;
     }
 
+    @Override
+    public Uri self(final Object jvm, final fURI tid, final fURI vid) {
+        Obj.Helper.logLockedObj(this);
+        return this;
+    }
+    
     @Override
     public fURI tid() {
-        return REC_TID;
-    }
-
-    @Override
-    public fURI vid() {
         return OBJ_SERIALIZER_TID;
     }
 
     @Override
-    public <O extends Obj> O clone(Object jvm, fURI tid, fURI vid) {
-        return (O) this;
+    public fURI jvm() {
+        return OBJ_SERIALIZER_TID;
     }
-
-    @Override
-    public <O extends Obj> O self(Object jvm, fURI tid, fURI vid) {
-        return (O) this;
-    }
-
 }

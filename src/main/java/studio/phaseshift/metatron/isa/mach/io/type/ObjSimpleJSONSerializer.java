@@ -68,16 +68,15 @@ public class ObjSimpleJSONSerializer extends AbstractObjSerializer<JsonElement> 
     }
 
     public ObjSimpleJSONSerializer() {
-
-    }
-
-    @Override
-    public fURI tid() {
-        return OBJ_SERIAL_TID;
     }
 
     @Override
     public fURI vid() {
+        return OBJ_SIMPLE_JSON_SERIALIZER_VID;
+    }
+
+    @Override
+    public fURI jvm() {
         return OBJ_SIMPLE_JSON_SERIALIZER_VID;
     }
 

@@ -42,7 +42,7 @@ class MqttSpace(Obj):
             keepalive=60)
         
     def close(self):
-        self.client.close()
+        self.client.disconnect()
 
     def start(self) -> 'MqttSpace':
         try:
@@ -69,7 +69,7 @@ class MqttSpace(Obj):
                 raise e2
             
     def _cache_flush(self):
-        if len(self.cache) > 100:
+        if len(self.cache) > 50:
             LOG.warn("flushing {{y}}{}{{X}} cache", self)
             self.cache = {}
             self.unsubscribe(str(self.pattern))

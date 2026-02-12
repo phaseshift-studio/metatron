@@ -664,7 +664,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
         }
 
         public static void objCheckAndSave(final Obj obj) {
-            if (!obj.isInstSet() && !obj.isNoObj() && !obj.isType() && !obj.matches(obj.type())) {
+            if (Router.loaded() &&!obj.isInstSet() && !obj.isNoObj() && !obj.isType() && !obj.matches(obj.type())) {
                 if (obj.isPoly()) {
                     final String objString = obj.toString();
                     final String typeString = obj.type().toString();
@@ -743,6 +743,10 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
                 }
             }
             return (O) obj;
+        }
+
+        public static void logLockedObj(final Obj obj) {
+            Router.global().logger().warn("obj vid/tid locked: %s", obj);
         }
     }
 

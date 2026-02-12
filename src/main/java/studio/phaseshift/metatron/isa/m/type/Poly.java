@@ -20,6 +20,7 @@ package studio.phaseshift.metatron.isa.m.type;
 
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.Tuple;
@@ -35,6 +36,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.util.MTronException.mexcept;
 
 public interface Poly<P extends Poly<P, J>, J> extends Obj {
 
@@ -231,7 +233,7 @@ public interface Poly<P extends Poly<P, J>, J> extends Obj {
         private static final Uri GOOD = uri("=");
         private static final Uri SORTA = uri("/");
         private static final Uri FAIL = uri("X");
-        
+
         public static Obj diffObjRecursion(final Obj lhs, final Obj rhs) {
             if (lhs.isRec() && rhs.isRec())
                 return diffRecRecursion(lhs.asRec(), rhs.asRec());
@@ -249,7 +251,7 @@ public interface Poly<P extends Poly<P, J>, J> extends Obj {
         public static Lst diffLstRecursion(final Lst lhs, final Lst rhs) {
             final List<Obj> result = new ArrayList<>();
             final int max = Math.max(lhs.lstValue().size(), rhs.lstValue().size());
-            for(int i=0; i<max; i++) {
+            for (int i = 0; i < max; i++) {
                 final Obj x = i < lhs.lstValue().size() ? lhs.lstValue().get(i) : noobj();
                 final Obj y = i < rhs.lstValue().size() ? rhs.lstValue().get(i) : noobj();
                 if (!x.matches(y))
@@ -273,6 +275,57 @@ public interface Poly<P extends Poly<P, J>, J> extends Obj {
                         result.put(rel(kMatch.get().first(), rel(SORTA, x.first())), diffObjRecursion(kMatch.get().second(), x.second()), MUTABLE);
                     else
                         result.put(rel(noobj(), rel(FAIL, x.first())), rel(x.second(), rel(FAIL, noobj())), MUTABLE);
+                }
+            });
+            return result;
+        }
+
+        /// ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+        public static Obj applyObjRecursion(final Obj lhs, final Obj rhs) {
+            if (lhs.isRec() && rhs.isRec())
+                return applyRecRecursion(lhs.asRec(), rhs.asRec());
+            else if (lhs.isLst() && rhs.isLst())
+                return applyLstRecursion(lhs.asLst(), rhs.asLst());
+            else {
+                return rhs.apply(lhs);
+            }
+        }
+
+        public static Lst applyLstRecursion(final Lst lhs, final Lst rhs) {
+            final List<Obj> result = new ArrayList<>();
+            final int max = Math.max(lhs.lstValue().size(), rhs.lstValue().size());
+            for (int i = 0; i < max; i++) {
+                final Obj x = i < lhs.lstValue().size() ? lhs.lstValue().get(i) : noobj();
+                final Obj y = i < rhs.lstValue().size() ? rhs.lstValue().get(i) : noobj();
+                if (!x.matches(y))
+                    result.add(mexcept("lhs does not match rhs: %s %s", x, y).asFail());
+                else
+                    result.add(applyObjRecursion(x, y));
+            }
+            return lst(result);
+        }
+
+
+        public static Rec applyRecRecursion(final Rec lhs, final Rec rhs) {
+            final Rec result = rec();
+            rhs.asRec().elements().forEach(x -> {
+                try {
+                    final Optional<Rel> kvMatch = lhs.asRec().elements()
+                            .filter(y -> y.first().matches(x.first()))
+                            .filter(y -> y.second().matches(x.second()))
+                            .map(y -> rel(applyObjRecursion(y.first(), x.second()), applyObjRecursion(y.second(), x.second())))
+                            .findFirst();
+                    if (kvMatch.isPresent())
+                        result.put(kvMatch.get().first(), kvMatch.get().second(), MUTABLE);
+                    else {
+                        if (x.first().c().isZeroable())
+                            result.put(x.first(), x.second().apply(), MUTABLE);
+                        else
+                            result.put(x.first(), noobj(), MUTABLE);
+                    }
+                } catch (final Exception e) {
+                    result.put(x.first(), mexcept("error applying %s to %s", x.second(), x.first()).cause(e).asFail(), MUTABLE);
                 }
             });
             return result;

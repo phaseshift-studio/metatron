@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -35,20 +35,20 @@ import static studio.phaseshift.metatron.isa.mach.io.ioInstSet.OBJ_BYTE_BUFFER_S
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public class ObjByteBufferSerializer extends AbstractObjSerializer<ByteBuffer> {
-    
-    private static final ByteBuffer NOOBJ_BYTES = ByteBuffer.wrap("noobj".getBytes());
-    
-    public ObjByteBufferSerializer() {
-        
-    }
 
-    @Override
-    public fURI tid() {
-        return OBJ_SERIAL_TID;
+    private static final ByteBuffer NOOBJ_BYTES = ByteBuffer.wrap("noobj".getBytes());
+
+    public ObjByteBufferSerializer() {
     }
+    
 
     @Override
     public fURI vid() {
+        return OBJ_BYTE_BUFFER_SERIALIZER_VID;
+    }
+
+    @Override
+    public fURI jvm() {
         return OBJ_BYTE_BUFFER_SERIALIZER_VID;
     }
 
