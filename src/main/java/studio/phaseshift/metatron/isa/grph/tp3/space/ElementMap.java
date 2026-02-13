@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -37,32 +37,31 @@ import studio.phaseshift.metatron.util.Tuple;
 
 import java.util.AbstractMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import static studio.phaseshift.metatron.furi.fURI.ALL;
-import static studio.phaseshift.metatron.isa.grph.grphInstSet.ELMT_TID;
 import static studio.phaseshift.metatron.isa.grph.tp3.space.tp3Space.FACTORY;
 import static studio.phaseshift.metatron.isa.m.mInstSet.AUTO_INST_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.INST_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
-import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class ElementMap extends AbstractMap<Uri, Obj> {
+public abstract class ElementMap extends AbstractMap<Uri, Obj> {
 
     protected static final GraphittyLogger LOG = Graphitty.log(ElementMap.class);
 
     protected static final ObjSerializer<String> SERIALIZER = new ObjCleanStringSerializer();
     protected Element base;
+    transient public final tp3Space space;
 
-    public ElementMap(final Element base) {
+    public ElementMap(final Element base, final tp3Space space) {
         this.base = base;
+        this.space = space;
     }
 
     public Element getBase() {
@@ -113,24 +112,20 @@ public class ElementMap extends AbstractMap<Uri, Obj> {
         return o instanceof ElementMap && ElementHelper.areEqual(this.base, ((ElementMap) o).getBase());
     }
 
-    public Rec selfRec() {
-        return rec((Map) this, ELMT_TID, null).self(this, ELMT_TID, null);
-    }
+    public abstract Rec selfRec();
 
     @Override
     public int hashCode() {
         return ElementHelper.hashCode(this.base);
     }
 
-    public Rec asRec() {
-        return rec((Map) this, ELMT_TID, null);
-    }
+    public abstract Rec asRec();
 
-    public static class LazyAutoInst extends MInst {
+    public static class LazyAutoInst<E extends ElementMap> extends MInst {
 
-        private final ElementMap map;
+        private final E map;
 
-        public LazyAutoInst(final ElementMap map) {
+        public LazyAutoInst(final E map) {
             super(Tuple.Triplet.with(lst(List.of()), null, noobj()), INST_TID, fURI.fnull);
             this.map = map;
         }

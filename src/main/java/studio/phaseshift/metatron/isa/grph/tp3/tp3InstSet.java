@@ -97,15 +97,15 @@ public class tp3InstSet extends AbstractInstSet {
     /// ////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     private static BiFunction<Obj, Inst, Obj> V_E_FUNCTION(final Direction direction) {
-        return (lhs, inst) -> objs(IteratorUtil.stream(VertexMap.rVertex(lhs.asRec())
+        return (lhs, inst) -> objs(IteratorUtil.stream(VertexMap.recToVertex(lhs.asRec())
                         .edges(direction, inst.arg(0).stream().map(Obj::uriValue).map(fURI::toString).toArray(String[]::new)))
-                .map(EdgeMap::edgeRec));
+                .map(e -> EdgeMap.edgeToRec(e, ((EdgeMap) lhs.jvm()).space)));
     }
 
     private static BiFunction<Obj, Inst, Obj> V_V_FUNCTION(final Direction direction) {
-        return (lhs, inst) -> objs(IteratorUtil.stream(VertexMap.rVertex(lhs.asRec())
+        return (lhs, inst) -> objs(IteratorUtil.stream(VertexMap.recToVertex(lhs.asRec())
                         .edges(direction, inst.arg(0).stream().map(Obj::uriValue).map(fURI::toString).toArray(String[]::new)))
-                .map(v -> VertexMap.vrtxRec(v.vertices(direction.opposite()).next())));
+                .map(v -> VertexMap.vertexToRec(v.vertices(direction.opposite()).next(), ((VertexMap) lhs.jvm()).space)));
     }
 
     @Override

@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -22,10 +22,7 @@ import org.apache.commons.configuration2.ConfigurationMap;
 import org.apache.tinkerpop.gremlin.jsr223.DefaultGremlinScriptEngineManager;
 import org.apache.tinkerpop.gremlin.jsr223.GremlinLangScriptEngineFactory;
 import org.apache.tinkerpop.gremlin.jsr223.GremlinScriptEngine;
-import org.apache.tinkerpop.gremlin.structure.Edge;
-import org.apache.tinkerpop.gremlin.structure.Graph;
-import org.apache.tinkerpop.gremlin.structure.T;
-import org.apache.tinkerpop.gremlin.structure.Vertex;
+import org.apache.tinkerpop.gremlin.structure.*;
 import org.apache.tinkerpop.gremlin.tinkergraph.structure.TinkerFactory;
 import org.apache.tinkerpop.gremlin.tinkergraph.structure.TinkerGraph;
 import studio.phaseshift.metatron.furi.fURI;
@@ -56,6 +53,7 @@ import static studio.phaseshift.metatron.isa.m.type.Str.STR_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
@@ -107,13 +105,19 @@ public class tp3Space extends grphSpace<Graph> {
         return new tp3Space(graph, config.jvm(), vid);
     }
 
+    public fURI elementVID(final Element element) {
+        return element instanceof Vertex ?
+                f(this.vertexPrefix + "/" + element.id().toString()) :
+                f(this.edgePrefix + "/" + element.id().toString());
+    }
+
     protected tp3Space(final Graph graph, final Map<Obj, Obj> config, final fURI vid) {
         super(graph, config, TP3_SPACE_TID, vid);
         LOG.debug("tp3 space: %s", this);
         if (null == FACTORY)
             FACTORY = MObjFactory.of()
-                    .addExtension(Vertex.class, VertexMap::vrtxRec)
-                    .addExtension(Edge.class, EdgeMap::edgeRec);
+                    .addExtension(Vertex.class, v -> VertexMap.vertexToRec(v, this))
+                    .addExtension(Edge.class, e -> EdgeMap.edgeToRec(e, this));
         final Rec tp3Config = rec();
         new ConfigurationMap(sjvm.configuration()).forEach((key, value) -> {
             try {
@@ -143,7 +147,9 @@ public class tp3Space extends grphSpace<Graph> {
     @Override
     public Obj read(final fURI vid) {
         return studio.phaseshift.metatron.furi.Q.Helper.processPreRead(this.qs(), vid, vid).orElseGet(() -> {
-            Obj result = Space.Helper.resolveRead(this, vid.basePath(), directReader());
+            final Obj result = vid.equals(f(this.vertexPrefix).extend("#")) ?
+                    objs(IteratorUtil.stream(this.sjvm.vertices()).map(v -> VertexMap.vertexToRec(v, this))) :
+                    Space.Helper.resolveRead(this, vid.basePath(), directReader());
             return studio.phaseshift.metatron.furi.Q.Helper.processPostRead(this.qs(), vid, vid, result).orElse(result);
         });
     }
@@ -165,18 +171,20 @@ public class tp3Space extends grphSpace<Graph> {
             } else {
                 if (pattern.hasPrefix(f(this.schemaPrefix))) {
                     return (pattern.equals(f(this.schemaPrefix)) ? IteratorUtil.of(Tuple.Pair.with(f(this.schemaPrefix), this.schema)) : IteratorUtil.of());
-                } else if (pattern.pathLength() < 3)
+                } else if (pattern.pathLength() < 3) {
                     return IteratorUtil.of();
-                else if (pattern.matches(f(this.vertexPrefix).extend("+"))) {
+                } else if (pattern.equals(f(this.vertexPrefix).extend("#"))) {
+                    return (Iterator) IteratorUtil.stream(this.sjvm.vertices()).map(v -> Tuple.Pair.with(f(this.vertexPrefix).extend(v.id().toString()), VertexMap.vertexToRec(v, this))).iterator();
+                } else if (pattern.matches(f(this.vertexPrefix).extend("+"))) {
                     final String suffix = pattern.name();
                     LOG.info("reading vertices %s => %s", vid, suffix);
                     Iterator<Vertex> vertices = (suffix.equals("+") || suffix.equals("#")) ? this.sjvm.vertices() : this.sjvm.vertices(Integer.valueOf(suffix));
-                    return IteratorUtil.map(vertices, v -> Tuple.Pair.with(f(this.vertexPrefix).extend(v.id().toString()), VertexMap.vrtxRec(v)));
+                    return IteratorUtil.map(vertices, v -> Tuple.Pair.with(f(this.vertexPrefix).extend(v.id().toString()), VertexMap.vertexToRec(v, this)));
                 } else if (pattern.matches(f(this.edgePrefix).extend("+"))) {
                     final String suffix = pattern.name();
                     LOG.info("reading edges %s => %s", vid, suffix);
                     Iterator<Edge> edges = (suffix.equals("+") || suffix.equals("#")) ? this.sjvm.edges() : this.sjvm.edges(Integer.valueOf(suffix));
-                    return IteratorUtil.map(edges, e -> Tuple.Pair.with(f(this.edgePrefix).extend(e.id().toString()), EdgeMap.edgeRec(e)));
+                    return IteratorUtil.map(edges, e -> Tuple.Pair.with(f(this.edgePrefix).extend(e.id().toString()), EdgeMap.edgeToRec(e, this)));
                 } else {
                     LOG.warn("unknown tp3 vid: %s", pattern);
                     return IteratorUtil.of();
@@ -222,7 +230,7 @@ public class tp3Space extends grphSpace<Graph> {
                                                 LOG.warn("unable to write edge %s =%s=> %s: %s", vertex, label, e, ex);
                                             }
                                         }));
-                        return VertexMap.vrtxRec(vertex);
+                        return VertexMap.vertexToRec(vertex, this);
                     } catch (final Exception e) {
                         return obj;
                     }

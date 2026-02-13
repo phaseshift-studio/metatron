@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -29,7 +29,7 @@ import java.util.Map;
 
 import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.isa.grph.grphInstSet.*;
-import static studio.phaseshift.metatron.isa.grph.tp3.space.VertexMap.vRec;
+import static studio.phaseshift.metatron.isa.grph.tp3.space.VertexMap.lazyVertexToRec;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -41,8 +41,8 @@ public class EdgeMap extends ElementMap {
 
     protected static final GraphittyLogger LOG = Graphitty.log(EdgeMap.class);
 
-    public EdgeMap(final Edge base) {
-        super(base);
+    public EdgeMap(final Edge base, final tp3Space space) {
+        super(base, space);
     }
 
     @Override
@@ -53,9 +53,9 @@ public class EdgeMap extends ElementMap {
     @Override
     public Obj get(final Object key) {
         if (key.equals(IN))
-            return auto_from_(uri("/g/V/" + this.getBase().inVertex().id().toString()), vRec(this.getBase().inVertex())).tryToInst();
+            return auto_from_(uri(this.space.elementVID(this.getBase().inVertex())), lazyVertexToRec(this.getBase().inVertex(), this.space)).tryToInst();
         if (key.equals(OUT))
-            return auto_from_(uri("/g/V/" + this.getBase().outVertex().id().toString()), vRec(this.getBase().outVertex())).tryToInst();
+            return auto_from_(uri(this.space.elementVID(this.getBase().outVertex())), lazyVertexToRec(this.getBase().outVertex(), this.space)).tryToInst();
         if (key.equals(LABEL))
             return uri(this.getBase().label());
         else
@@ -77,16 +77,19 @@ public class EdgeMap extends ElementMap {
 
     @Override
     public Rec selfRec() {
-        return rec((Map) this, f(this.getBase().label()), null).self(this, f(this.getBase().label()), f("/g/E/" + this.getBase().id().toString()));
+        return rec((Map) this, f(this.getBase().label()), null).selfVID(this.space.elementVID(this.base)).asRec();
     }
 
-    public static Rec edgeRec(final Edge edge) {
-        return new EdgeMap(edge).selfRec();
+    public static Rec edgeToRec(final Edge edge, final tp3Space space) {
+        return new EdgeMap(edge, space).selfRec();
     }
 
+    public static Edge recToEdge(final Rec rec) {
+        return rec.<EdgeMap>jvmAs().getBase();
+    }
 
-    public static Inst eRec(final Edge base) {
-        return new EdgeMap.LazyAutoInst(new EdgeMap(base));
+    public static Inst lazyEdgeToRec(final Edge base, final tp3Space space) {
+        return new EdgeMap.LazyAutoInst(new EdgeMap(base, space));
         //return (Inst) auto_(instC(INST_TID.dom(ALL.maybe()).rng(EDGE_TID), lst(), (lhs, inst) -> new EdgeMap(base).asRec())).tryToInst();
     }
 
