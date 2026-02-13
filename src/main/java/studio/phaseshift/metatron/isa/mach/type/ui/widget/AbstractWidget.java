@@ -62,7 +62,7 @@ public abstract class AbstractWidget<W extends AbstractWidget<W>> implements Wid
     @Override
     public void display() {
         this.display.resize(this.height(), this.width());
-        this.display.updateAnsi(Arrays.stream(this.format().split("\n")).map(Graphitty::string).toList(), -1);
+        this.display.updateAnsi(Arrays.stream(this.format().split("\n")).map(s -> s + "\n").map(Graphitty::string).toList(), -1);
         this.terminal.writer().flush();
     }
 

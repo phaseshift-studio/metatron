@@ -66,7 +66,7 @@ public class mqttSpace extends AbstractSpace<Mqtt5Client> {
     public static final Rec MQTT_SPACE_CONFIG = rec(
             uri(PATTERN), URI_TYPE,
             uri(HOST), URI_TYPE,
-            uri(SERIALIZER).maybe(), else_(block_(auto_from_(uri(OBJ_SIMPLE_JSON_SERIALIZER_VID)))),
+            uri(SERIALIZER).maybe(), else_(block_(auto_from_(uri(OBJ_SIMPLE_JSON_SERIALIZER_VID)).tryToInst()).tryToInst()).tryToInst(),
             //uri(CLIENT).maybe(), T(URI_TID).maybe(),
             uri(REWRITE), REL_TYPE,
             uri(Tokens.Q).c(cInt::maybe), isa_(LST_TYPE));
@@ -74,7 +74,7 @@ public class mqttSpace extends AbstractSpace<Mqtt5Client> {
             instC(mInstSet.INST_TID.dom(ALL.maybe()).rng(MQTT_SPACE_TID),
                     lst(T(REC_TID, isa_(MQTT_SPACE_CONFIG))), (lhs, inst) ->
                             mqttSpace.of(Poly.Helper.applyObjRecursion(inst.arg(0).asRec(), MQTT_SPACE_CONFIG).asRec(), inst.arg(0).vid()))).create();
-    
+
     protected final fURI broker;
     protected final Tuple.Pair<String, String> rewrite;
     protected final ObjSerializer<?> serializer;

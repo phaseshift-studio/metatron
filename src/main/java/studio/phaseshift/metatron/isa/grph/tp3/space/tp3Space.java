@@ -63,6 +63,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 public class tp3Space extends grphSpace<Graph> {
 
     public static final Uri NATIVE_LOAD = uri(f(NATIVE).extend(LOAD));
+    public static final String TP3_GRAPH_CONFIGURATION_KEY = "mtron.grph.vid";
 
     protected static ObjFactory FACTORY = null;
 
@@ -104,7 +105,11 @@ public class tp3Space extends grphSpace<Graph> {
         }
         return new tp3Space(graph, config.jvm(), vid);
     }
-
+    
+    public static tp3Space from(final Element element) {
+        return (tp3Space) Router.readFromSpace(f(element.graph().configuration().get(String.class, tp3Space.TP3_GRAPH_CONFIGURATION_KEY)));
+    }
+    
     public fURI elementVID(final Element element) {
         return element instanceof Vertex ?
                 f(this.vertexPrefix + "/" + element.id().toString()) :
@@ -114,6 +119,7 @@ public class tp3Space extends grphSpace<Graph> {
     protected tp3Space(final Graph graph, final Map<Obj, Obj> config, final fURI vid) {
         super(graph, config, TP3_SPACE_TID, vid);
         LOG.debug("tp3 space: %s", this);
+        graph.configuration().setProperty(TP3_GRAPH_CONFIGURATION_KEY, vid.toString());
         if (null == FACTORY)
             FACTORY = MObjFactory.of()
                     .addExtension(Vertex.class, v -> VertexMap.vertexToRec(v, this))

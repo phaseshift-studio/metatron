@@ -37,6 +37,7 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
+import studio.phaseshift.metatron.isa.m.type.Rel;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.m.type.impl.MMachine;
 import studio.phaseshift.metatron.isa.mach.type.LogObj;
@@ -224,13 +225,12 @@ public class Console extends JRec implements Closeable, Runnable {
                 } else if (line.startsWith(":log")) {
                     LogObj.setSLF4J(line.substring(4));
                 } else if (line.startsWith(":card")) {
-                    final List<String> parts = List.of(line.substring(5).split("\\|"));
-                    final Card card = new Card(parts.getFirst(), parts.size() > 1 ? parts.subList(1, parts.size()).stream().reduce("", (a, b) -> a + b + "\n") : "").style().border(Border.simple.foreground("{{b}}")).background("{{[y]}}").foreground("{{c}}").margin(1, 1).apply();
-                    final Card card2 = new Card(parts.getFirst(), parts.size() > 1 ? parts.subList(1, parts.size()).stream().reduce("", (a, b) -> a + b + "\n") : "").style().border(Border.simple.foreground("{{b}}")).background("{{[y]}}").foreground("{{c}}").margin(1, 1).apply();
-                    final Card card3 = new Card(parts.getFirst(), parts.size() > 1 ? parts.subList(1, parts.size()).stream().reduce("", (a, b) -> a + b + "\n") : "").style().border(Border.simple.foreground("{{b}}")).background("{{[y]}}").foreground("{{c}}").margin(1, 1).apply();
-                    final Card card4 = new Card(parts.getFirst(), parts.size() > 1 ? parts.subList(1, parts.size()).stream().reduce("", (a, b) -> a + b + "\n") : "").style().border(Border.simple.foreground("{{b}}")).background("{{[y]}}").foreground("{{c}}").margin(1, 1).apply();
-                    final Grid grid = new Grid(List.of(card, card2, card3, card4), 2);
-                    grid.display();
+                    final List<studio.phaseshift.metatron.isa.mach.type.ui.Widget<?>> widgets = new ArrayList<>();
+                    Router.global().spaces().elements().map(Rel::second).forEach(s -> {
+                        widgets.add(new Card(s.vid() == null ? s.getClass().getSimpleName() : s.vid().name().toString(), s.<Map<Obj, Obj>>jvmAs().keySet().stream().map(Object::toString).reduce("", (a, b) -> a + "\n" + b).substring(1)).style().border(Border.simple.foreground("{{b}}")).background("{{[y]}}").foreground("{{c}}").margin(1, 1).apply());
+                    });
+                    final Grid grid = new Grid(widgets, 6);
+                    grid.run();
                 } else if (line.startsWith(":top")) {
                     TTop.ttop(terminal, new PrintStream(terminal.output()), System.err, new String[0]);
                 } else if (line.startsWith(":less")) {

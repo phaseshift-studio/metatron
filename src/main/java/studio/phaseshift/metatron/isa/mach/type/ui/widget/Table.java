@@ -94,7 +94,7 @@ public class Table extends AbstractWidget<Table> {
 
     public List<String> formattedRows() {
         final List<String> frows = new ArrayList<>();
-        for (int i = 0; i < rows().size(); i++) {
+        for (int i = 0; i < rowStrings().size(); i++) {
             frows.add(this.formattedRow(i));
         }
         return frows;

@@ -80,6 +80,35 @@ public abstract class ElementMap extends AbstractMap<Uri, Obj> {
     }
 
     @Override
+    public boolean containsKey(final Object key) {
+        final String keyString = key instanceof Uri ? ((Uri) key).uriValue().toString() : key.toString();
+        return this.base.property(keyString).isPresent() || this.base.property(":" + keyString).isPresent();
+    }
+
+    @Override
+    public boolean isEmpty() {
+        return !this.base.properties().hasNext();
+    }
+
+    @Override
+    public int size() {
+        return (int) IteratorUtil.count(this.base.properties());
+    }
+
+    @Override
+    public boolean containsValue(final Object value) {
+        final Obj valueObj = MObjFactory.of().toObj(value);
+        return IteratorUtil.stream(this.base.properties())
+                .map(p -> (Property<Object>) p)
+                .anyMatch(p -> {
+                    final Obj propertyValue = p.value().toString().startsWith(":") ?
+                            MObjFactory.of().toObj(SERIALIZER.read(p.value().toString())) :
+                            MObjFactory.of().toObj(p.value());
+                    return propertyValue.equals(valueObj);
+                });
+    }
+
+    @Override
     public Obj put(final Uri key, final Obj value) {
         final Property<?> property = this.base.property(key.uriValue().toString());
         if (value.isMono()) {
@@ -121,11 +150,11 @@ public abstract class ElementMap extends AbstractMap<Uri, Obj> {
 
     public abstract Rec asRec();
 
-    public static class LazyAutoInst<E extends ElementMap> extends MInst {
+    public static class LazyAutoElmnt<E extends ElementMap> extends MInst {
 
         private final E map;
 
-        public LazyAutoInst(final E map) {
+        public LazyAutoElmnt(final E map) {
             super(Tuple.Triplet.with(lst(List.of()), null, noobj()), INST_TID, fURI.fnull);
             this.map = map;
         }
@@ -147,8 +176,8 @@ public abstract class ElementMap extends AbstractMap<Uri, Obj> {
                 return this.map.getBase().equals(o);
             if (o instanceof ElementMap)
                 return this.map.getBase().equals(((ElementMap) o).getBase());
-            if (o instanceof LazyAutoInst)
-                return this.map.getBase().equals(((LazyAutoInst) o).map.getBase());
+            if (o instanceof LazyAutoElmnt)
+                return this.map.getBase().equals(((LazyAutoElmnt<?>) o).map.getBase());
             return false;
         }
 

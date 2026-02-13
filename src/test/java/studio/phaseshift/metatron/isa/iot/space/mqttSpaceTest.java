@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -23,24 +23,25 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.PubSubQ;
-import studio.phaseshift.metatron.isa.iot.MoquetteServer;
-import studio.phaseshift.metatron.isa.iot.iotInstSet;
-import studio.phaseshift.metatron.isa.m.parser.mParser;
-import studio.phaseshift.metatron.isa.m.type.InstSet;
-import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.iot.space.mqtt.mqttSpace;
 import studio.phaseshift.metatron.isa.SpaceTest;
-import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
+import studio.phaseshift.metatron.isa.iot.MoquetteServer;
+import studio.phaseshift.metatron.isa.iot.space.mqtt.mqttSpace;
+import studio.phaseshift.metatron.isa.m.parser.mParser;
+import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.util.MTronException;
 
-import java.util.ServiceLoader;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.furi.q.PubSubQ.SUBSCRIPTION_TID;
+import static studio.phaseshift.metatron.isa.iot.iotInstSet.IOT_ISA_TID;
+import static studio.phaseshift.metatron.isa.iot.space.mqtt.mqttSpace.MQTT_SPACE_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
@@ -55,19 +56,18 @@ public class mqttSpaceTest extends SpaceTest {
     public mqttSpaceTest() {
         super(() -> {
             try {
-                final mqttSpace space = mqttSpace.of(rec(
+                final Obj space = MQTT_SPACE_TYPE.constructor().apply(rec(Map.of(
                         uri(HOST), uri("mqtt://127.0.0.1:1882"),
                         uri(PATTERN), uri("/t/#"),
-                        uri(REWRITE), rel(uri("/t"), uri("/t"))), fURI.of("/sys/router/space/t"));
-                space.directWriter().apply(f("#"), noobj());
-                return space;
+                        uri(REWRITE), rel(uri("/t"), uri("/t"))), null, fURI.of("/sys/router/space/t")));
+                System.out.println(space);
+                //space.directWriter().apply(f("#"), noobj());
+                return space.as();
             } catch (Exception e) {
-                Graphitty.log(mqttSpaceTest.class).warn("skipping test as no test server is running");
-                //  assumeTrue(false);
-                return null;
+                throw MTronException.of(e);
             }
         });
-        ServiceLoader.load(InstSet.class).stream().filter(i -> i instanceof iotInstSet).findFirst().orElseThrow();
+        BootLoader.loadInstSetProvider(IOT_ISA_TID);
     }
 
     @BeforeAll

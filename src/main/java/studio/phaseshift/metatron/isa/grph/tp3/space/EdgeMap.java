@@ -79,6 +79,10 @@ public class EdgeMap extends ElementMap {
     public Rec selfRec() {
         return rec((Map) this, f(this.getBase().label()), null).selfVID(this.space.elementVID(this.base)).asRec();
     }
+    
+    public static Rec edgeToRec(final Edge edge) {
+        return edgeToRec(edge, tp3Space.from(edge));
+    }
 
     public static Rec edgeToRec(final Edge edge, final tp3Space space) {
         return new EdgeMap(edge, space).selfRec();
@@ -89,7 +93,7 @@ public class EdgeMap extends ElementMap {
     }
 
     public static Inst lazyEdgeToRec(final Edge base, final tp3Space space) {
-        return new EdgeMap.LazyAutoInst(new EdgeMap(base, space));
+        return new LazyAutoElmnt(new EdgeMap(base, space));
         //return (Inst) auto_(instC(INST_TID.dom(ALL.maybe()).rng(EDGE_TID), lst(), (lhs, inst) -> new EdgeMap(base).asRec())).tryToInst();
     }
 

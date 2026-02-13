@@ -109,8 +109,12 @@ public class VertexMap extends ElementMap {
         return new VertexMap(vertex, space).selfRec();
     }
 
+    public static Rec vertexToRec(final Vertex vertex) {
+        return VertexMap.vertexToRec(vertex, tp3Space.from(vertex));
+    }
+
     public static Inst lazyVertexToRec(final Vertex base, final tp3Space space) {
-        return new VertexMap.LazyAutoInst(new VertexMap(base, space));
+        return new LazyAutoElmnt(new VertexMap(base, space));
     }
 
 

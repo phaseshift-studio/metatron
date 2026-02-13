@@ -72,7 +72,7 @@ public class SubsWidget extends AbstractWidget<SubsWidget> {
         this.spaceSelector = new Selector().style()
                 .pointer("{{r}}>")
                 .attachment(this.spaceTable, true)
-                .rowRange(2, this.spaceTable.rows().size() + 2)
+                .rowRange(2, this.spaceTable.rowStrings().size() + 2)
                 .apply()
                 .onSelect((s, r, c) -> {
                     try {

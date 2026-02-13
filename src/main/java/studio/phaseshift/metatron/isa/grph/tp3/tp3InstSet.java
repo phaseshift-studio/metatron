@@ -20,6 +20,7 @@ package studio.phaseshift.metatron.isa.grph.tp3;
 
 import org.apache.tinkerpop.gremlin.structure.Direction;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.grph.tp3.parser.ObjTP3Serializer;
 import studio.phaseshift.metatron.isa.grph.tp3.space.EdgeMap;
 import studio.phaseshift.metatron.isa.grph.tp3.space.VertexMap;
 import studio.phaseshift.metatron.isa.grph.tp3.space.tp3Space;
@@ -81,6 +82,12 @@ public class tp3InstSet extends AbstractInstSet {
     // LABEL, URI_TYPE,
     // OUT, VRTX_TYPE,
     //IN, VRTX_TYPE))).create();
+
+    @Override
+    public Set<Obj> consts() {
+        return new LinkedHashSet<>(List.of(new ObjTP3Serializer()));
+    }
+
 
     @Override
     public Set<Type> types() {
