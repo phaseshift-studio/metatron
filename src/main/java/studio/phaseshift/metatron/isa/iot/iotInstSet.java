@@ -51,6 +51,7 @@ public class iotInstSet extends AbstractInstSet {
 
     public static final fURI IOT_ISA_TID = MTRON_TID.extend("iot");
     public static final fURI IOT_INST_TID = IOT_ISA_TID.extend("inst");
+
     public static final fURI SOC_TID = IOT_ISA_TID.extend("soc");
     public static final fURI DEVICE_TID = IOT_ISA_TID.extend("device");
     public static final fURI ENTITY_TID = IOT_ISA_TID.extend("entity");

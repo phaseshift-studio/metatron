@@ -58,18 +58,18 @@ class PondBox(Architecture):
         #self.ha.announce()
         #self.ha.update()
         ####################################################################
-        counter = 0
-        for i in [22, 21, 17, 16]:
-            (self.ha.register(self.soc.vid.extend(f'pwm/var_{counter}')).
-             number().
-             config().
-             on_read(make_pwm_read_lambda(i)).
-             on_write(make_pwm_write_lambda(i)).
-             unit_of_measurement('pwm').
-             mode("slider").
-             min_max(0, 255).
-             icon("mdi:knob").
-             create())
-            counter = counter + 1
-        #self.ha.announce()
-        #self.ha.update()
+       # counter = 0
+       # for i in [22, 21, 17, 16]:
+       #     (self.ha.register(self.soc.vid.extend(f'pwm/var_{counter}')).
+       #       number().
+       #      config().
+       #      on_read(make_pwm_read_lambda(i)).
+       #      on_write(make_pwm_write_lambda(i)).
+       #      unit_of_measurement('pwm').
+       #      mode("slider").
+       #      min_max(0, 255).
+       #      icon("mdi:knob").
+       #      create())
+       #     counter = counter + 1
+        self.ha.announce()
+        self.ha.update()

@@ -31,7 +31,6 @@ import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.MObjFactory;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjSerializer;
-import studio.phaseshift.metatron.isa.mach.io.type.ObjSimpleJSONSerializer;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
@@ -67,7 +66,7 @@ public class mqttSpace extends AbstractSpace<Mqtt5Client> {
     public static final Rec MQTT_SPACE_CONFIG = rec(
             uri(PATTERN), URI_TYPE,
             uri(HOST), URI_TYPE,
-            uri(SERIALIZER).maybe(), else_(from_(uri(OBJ_SIMPLE_JSON_SERIALIZER_VID))),
+            uri(SERIALIZER).maybe(), else_(block_(auto_from_(uri(OBJ_SIMPLE_JSON_SERIALIZER_VID)))),
             //uri(CLIENT).maybe(), T(URI_TID).maybe(),
             uri(REWRITE), REL_TYPE,
             uri(Tokens.Q).c(cInt::maybe), isa_(LST_TYPE));
@@ -75,29 +74,23 @@ public class mqttSpace extends AbstractSpace<Mqtt5Client> {
             instC(mInstSet.INST_TID.dom(ALL.maybe()).rng(MQTT_SPACE_TID),
                     lst(T(REC_TID, isa_(MQTT_SPACE_CONFIG))), (lhs, inst) ->
                             mqttSpace.of(Poly.Helper.applyObjRecursion(inst.arg(0).asRec(), MQTT_SPACE_CONFIG).asRec(), inst.arg(0).vid()))).create();
+    
     protected final fURI broker;
     protected final Tuple.Pair<String, String> rewrite;
     protected final ObjSerializer<?> serializer;
     protected final memSpace cache;
 
-    protected mqttSpace(final Mqtt5Client client, final Map<Obj, Obj> config, final fURI tid, final fURI vid) {
-        super(client, config, null == tid ? MQTT_SPACE_TID : tid, vid);
-        this.rewrite = Space.Helper.extractRewrite(config);
-        LOG.info("{{y}}mtron{{g}}<=>{{y}}mqtt{{X}} mapping established: %s {{g}}<=> ({{b}}%s {{g}}<=>{{X}} %s{{g}}){{X}}", this.pattern().toUri(), this.rewrite, uri(Space.Helper.toNativeSpace(this.pattern(), this.rewrite)));
-        this.cache = memSpace.of(this.pattern(), fURI.fnull);
-        this.put(uri(Tokens.Q), lst(List.of(new MqttPubSubQ(this))), MUTABLE);
-        this.serializer = this.at(SERIALIZER).as();
-        this.broker = this.at(uri(HOST)).orThrow(new IllegalArgumentException("config must have a host key")).uriValue();
+    protected Mqtt5Client createConnection(final Map<Obj, Obj> config, final boolean cleanStart) {
         try {
-            this.sjvm = MqttClient.builder()
+            final Mqtt5Client client = MqttClient.builder()
                     .identifier(config.getOrDefault(uri(CLIENT), uri("mtron-" + Math.abs(UUID.randomUUID().getMostSignificantBits()))).uriValue().toString())
                     .serverHost(this.broker.host())
                     .serverPort(this.broker.port() == -1 ? 1833 : this.broker.port())
                     .useMqttVersion5()
                     .build();
-            this.sjvm.toAsync()
+            client.toAsync()
                     .connectWith()
-                    .cleanStart(false)
+                    .cleanStart(cleanStart)
                     .send()
                     .whenComplete((a, b) -> {
                         if (b != null) {
@@ -109,6 +102,23 @@ public class mqttSpace extends AbstractSpace<Mqtt5Client> {
                         }
                     })
                     .get(10, TimeUnit.SECONDS);
+            return client;
+        } catch (final Exception e) {
+            throw MTronException.of(e);
+        }
+
+    }
+
+    protected mqttSpace(final Mqtt5Client client, final Map<Obj, Obj> config, final fURI tid, final fURI vid) {
+        super(client, config, null == tid ? MQTT_SPACE_TID : tid, vid);
+        this.rewrite = Space.Helper.extractRewrite(config);
+        LOG.info("{{y}}mtron{{g}}<=>{{y}}mqtt{{X}} mapping established: %s {{g}}<=> ({{b}}%s {{g}}<=>{{X}} %s{{g}}){{X}}", this.pattern().toUri(), this.rewrite, uri(Space.Helper.toNativeSpace(this.pattern(), this.rewrite)));
+        this.cache = memSpace.of(this.pattern(), fURI.fnull);
+        this.put(uri(Tokens.Q), lst(List.of(new MqttPubSubQ(this))), MUTABLE);
+        this.serializer = this.at(SERIALIZER).as();
+        this.broker = this.at(uri(HOST)).orThrow(new IllegalArgumentException("config must have a host key")).uriValue();
+        try {
+            this.sjvm = this.createConnection(config, false);
             this.sjvm.toAsync()
                     .subscribeWith()
                     .topicFilter(Space.Helper.toNativeSpace(this.pattern, this.rewrite))
@@ -193,19 +203,11 @@ public class mqttSpace extends AbstractSpace<Mqtt5Client> {
                     .retain(true)
                     .send()
                     .whenComplete((p, t) -> {
-                        Router.global().stats().incrBytesSent(payload.length);
-                        /*Router.global().server().stats().incrTotalBytesRecv(p.getPublish().getPayload().isPresent() ? p.getPublish().getPayloadAsBytes().length : 0);
-                        LOG.trace("caching %s[%s]", p.getPublish(), new String(p.getPublish().getPayloadAsBytes()));
-                        if (p.getPublish().getPayload().isPresent()) {
-                            final String json = StandardCharsets.UTF_8.decode(p.getPublish().getPayload().get()).toString();
-                            this.cache.write(
-                                    toMtronVid(p.getPublish().getTopic().toString()),
-                                    this.jsonTranslator.translateString(json));
-                        } else {
-                            this.cache.write(
-                                    toMtronVid(p.getPublish().getTopic().toString()),
-                                    NoObj.noobj());
-                        }*/
+                        if (null != t) {
+                            LOG.error("mqtt client error (reconnecting)", t);
+                            this.sjvm = this.createConnection(this.jvm(), false);
+                        } else
+                            Router.global().stats().incrBytesSent(payload.length);
                     }).get();
         } catch (final InterruptedException | ExecutionException e) {
             throw MTronException.of(e);

@@ -19,10 +19,6 @@
 package studio.phaseshift.metatron.isa.grph;
 
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.grph.space.tp3.tp3Space;
-import studio.phaseshift.metatron.isa.grph.type.Edge;
-import studio.phaseshift.metatron.isa.grph.type.Elmt;
-import studio.phaseshift.metatron.isa.grph.type.Vrtx;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.ServiceMetadata;
 import studio.phaseshift.metatron.isa.m.type.Type;
@@ -32,11 +28,6 @@ import studio.phaseshift.metatron.isa.m.type.impl.AbstractInstSet;
 import java.util.*;
 
 import static studio.phaseshift.metatron.isa.grph.space.grphSpace.GRPH_SPACE_TYPE;
-import static studio.phaseshift.metatron.isa.grph.space.tp3.schema.modernSchema.MODERN_SCHEMA_TYPE;
-import static studio.phaseshift.metatron.isa.grph.space.tp3.tp3Space.TP3_SPACE_TYPE;
-import static studio.phaseshift.metatron.isa.grph.type.Edge.EdgeType.EDGE_TYPE;
-import static studio.phaseshift.metatron.isa.grph.type.Elmt.ElmtType.ELMT_TYPE;
-import static studio.phaseshift.metatron.isa.grph.type.Vrtx.VrtxType.VRTX_TYPE;
 import static studio.phaseshift.metatron.isa.m.mInstSet.MTRON_TID;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
@@ -72,32 +63,18 @@ public class grphInstSet extends AbstractInstSet {
     public static final Uri LABEL = uri("LABEL");
     public static final Uri ID = uri("ID");
 
-    /*protected grphInstSet(final fURI vid) {
-        super(GRPH_ISA_TID, vid);
-    }*/
-
     public grphInstSet() {
         super(GRPH_ISA_TID, GRPH_ISA_TID);
     }
 
     @Override
     public Set<Type> types() {
-        return new HashSet<>(List.of(
-                GRPH_SPACE_TYPE,
-                TP3_SPACE_TYPE,
-                MODERN_SCHEMA_TYPE,
-                ELMT_TYPE,
-                VRTX_TYPE,
-                EDGE_TYPE));
+        return new HashSet<>(List.of(GRPH_SPACE_TYPE));
     }
 
     @Override
     public Set<Inst> insts() {
         final List<Inst> insts = new ArrayList<>();
-        insts.addAll(Elmt.ElmtType.insts());
-        insts.addAll(Vrtx.VrtxType.insts());
-        insts.addAll(Edge.EdgeType.insts());
-        insts.addAll(tp3Space.TP3SpaceType.insts());
         return new LinkedHashSet<>(insts);
     }
 }

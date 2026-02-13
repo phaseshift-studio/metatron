@@ -18,6 +18,7 @@ import(/m/web);
 import(/m/iot);
 import(/m/iot/haos);
 import(/m/grph);
+import(/m/grph/tp3);
 [== global settings store in boot ==]
 print("{{y}}mqtt broker location{{X}}: ", <boot/args/mqtt>.else(boot/args/mqtt -> [broker => <mqtt://chibi.local:1883>]),"\n");
 print("{{y}}cluster peers{{X}}: ", *<boot/peers>.else(boot/peers -> [ws://localhost:6666,<ws://127.0.0.1:7777>]),"\n");

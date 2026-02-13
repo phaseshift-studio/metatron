@@ -23,8 +23,8 @@ import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.apache.tinkerpop.gremlin.structure.util.ElementHelper;
 import org.apache.tinkerpop.gremlin.structure.util.wrapped.WrappedElement;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.grph.type.Elmt;
 import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 
 import java.util.ArrayList;
@@ -37,9 +37,9 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public abstract class mElement implements Element, WrappedElement<Elmt> {
-
-    protected final Elmt base;
+public abstract class mElement implements Element, WrappedElement<Rec> {
+    
+    protected final Rec base;
     protected final mGraph graph;
 
 
@@ -59,7 +59,7 @@ public abstract class mElement implements Element, WrappedElement<Elmt> {
         return uris;
     }*/
 
-    protected mElement(final mGraph graph, final Elmt base) {
+    protected mElement(final mGraph graph, final Rec base) {
         this.base = base;
         this.graph = graph;
     }
@@ -83,7 +83,7 @@ public abstract class mElement implements Element, WrappedElement<Elmt> {
 
     @Override
     public void remove() {
-      
+
         //  this.getBaseElement().jvm().clear();
         Router.global().write(this.id(), noobj());
     }
@@ -104,7 +104,7 @@ public abstract class mElement implements Element, WrappedElement<Elmt> {
     //}
 
     @Override
-    public Elmt getBaseElement() {
+    public Rec getBaseElement() {
         return this.base;
     }
 }

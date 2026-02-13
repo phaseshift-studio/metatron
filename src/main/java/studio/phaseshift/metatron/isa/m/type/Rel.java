@@ -65,7 +65,7 @@ public interface Rel extends Poly<Rel, Tuple.Pair<Obj, Obj>>, Obj {
     /// /////////////////////////////////////////////////////////
 
     default Obj first() {
-        return(this.c().isOne() ? this.jvm().get0() : this.jvm().get0().c(c -> c.mult(this.c()))).autoResolve(this);
+        return (this.c().isOne() ? this.jvm().get0() : this.jvm().get0().c(c -> c.mult(this.c()))).autoResolve(this);
     }
 
     default Obj second() {
@@ -84,6 +84,7 @@ public interface Rel extends Poly<Rel, Tuple.Pair<Obj, Obj>>, Obj {
     default boolean has(final Obj key) {
         return this.jvm().get0().matches(key);
     }
+    
     
     /*@Override
     default Rel autoResolve(final Obj obj) {

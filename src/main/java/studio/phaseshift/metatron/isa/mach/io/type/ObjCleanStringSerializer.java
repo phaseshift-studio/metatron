@@ -48,7 +48,7 @@ public class ObjCleanStringSerializer extends AbstractObjSerializer<String> {
     protected boolean leftJustify;
 
     public ObjCleanStringSerializer() {
-        this.leftJustify = false;
+        this.leftJustify = true;
     }
 
     public ObjCleanStringSerializer(final boolean leftJustify) {

@@ -29,7 +29,9 @@ import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import java.util.Map;
 
 import static studio.phaseshift.metatron.Tokens.PATTERN;
+import static studio.phaseshift.metatron.Tokens.SUPER;
 import static studio.phaseshift.metatron.furi.fURI.f;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 public abstract class AbstractSpace<SJVM> extends MRec implements Space {
 
@@ -45,6 +47,11 @@ public abstract class AbstractSpace<SJVM> extends MRec implements Space {
         LOG = Graphitty.log(this);
         if (Router.loaded() && !this.pattern.equals(f("+/#")) && !(this instanceof Router))
             Router.global().addSpace(this);
+    }
+
+    @Override
+    public Space parent() {
+        return this.at(uri(SUPER)).orElse(Router.global());
     }
 
     @Override

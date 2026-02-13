@@ -23,7 +23,7 @@ import org.apache.tinkerpop.gremlin.structure.Edge;
 import org.apache.tinkerpop.gremlin.structure.Property;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
 import org.apache.tinkerpop.gremlin.structure.util.wrapped.WrappedEdge;
-import studio.phaseshift.metatron.isa.grph.type.Elmt;
+import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.util.IteratorUtil;
 
 import java.util.Iterator;
@@ -34,7 +34,7 @@ import java.util.Iterator;
 public class mEdge extends mElement implements Edge, WrappedEdge<Edge> {
 
     public mEdge(final mGraph graph, final Edge edge) {
-        super(graph, (Elmt) edge);
+        super(graph, (Rec) edge);
     }
 
     public static mEdge of(final mGraph graph, final Edge edge) {

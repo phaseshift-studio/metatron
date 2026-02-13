@@ -24,30 +24,25 @@ import org.apache.tinkerpop.gremlin.structure.Vertex;
 import org.apache.tinkerpop.gremlin.structure.VertexProperty;
 import org.apache.tinkerpop.gremlin.structure.util.ElementHelper;
 import org.apache.tinkerpop.gremlin.structure.util.wrapped.WrappedVertex;
-import studio.phaseshift.metatron.isa.grph.type.Elmt;
-import studio.phaseshift.metatron.isa.grph.type.Vrtx;
+import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.util.IteratorUtil;
 
 import java.util.Iterator;
 
-import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
-import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
-import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class mVertex extends mElement implements Vertex, WrappedVertex<Vrtx> {
+public class mVertex extends mElement implements Vertex, WrappedVertex<Rec> {
 
-    
-    public mVertex(final mGraph graph, final Vrtx base) {
-        super(graph, (Elmt)base);
+
+    public mVertex(final mGraph graph, final Rec base) {
+        super(graph, (Rec) base);
     }
 
     @Override
     public String toString() {
         //  return StringFactory.vertexString(this);
-      return null;
+        return null;
         //  return this.getBaseVertex().toString();
     }
 
@@ -61,7 +56,7 @@ public class mVertex extends mElement implements Vertex, WrappedVertex<Vrtx> {
         return ElementHelper.areEqual(this, other);
     }
 
-    public static mVertex of(final mGraph graph, final Vrtx r) {
+    public static mVertex of(final mGraph graph, final Rec r) {
         return new mVertex(graph, r);
     }
 
@@ -113,18 +108,18 @@ public class mVertex extends mElement implements Vertex, WrappedVertex<Vrtx> {
 
     @Override
     public Iterator<Edge> edges(final Direction direction, final String... edgeLabels) {
-      return IteratorUtil.of();
+        return IteratorUtil.of();
         //  return this.getBaseVertex().edges(direction, stringToUriLabels(edgeLabels).as()).map(e -> mEdge.of(this.graph, e)).map(m -> (Edge) m).iterator();
     }
 
     @Override
     public Iterator<Vertex> vertices(Direction direction, String... edgeLabels) {
-       return IteratorUtil.of();
+        return IteratorUtil.of();
         // return this.getBaseVertex().vertices(direction, stringToUriLabels(edgeLabels).as()).map(r -> mVertex.of(this.graph, r)).map(m -> (Vertex) m).iterator();
     }
 
     @Override
-    public Vrtx getBaseVertex() {
-        return (Vrtx) this.base;
+    public Rec getBaseVertex() {
+        return (Rec) this.base;
     }
 }

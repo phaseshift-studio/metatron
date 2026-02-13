@@ -46,7 +46,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
  */
 public final class CommonUtil {
 
-    private static final Pattern INT_PATTERN = Pattern.compile("-?\\d");
+    private static final Pattern INT_PATTERN = Pattern.compile("-?\\d+");
     private static final Pattern REAL_PATTERN = Pattern.compile("-?\\d+(\\.\\d+)");
 
     private CommonUtil() {
