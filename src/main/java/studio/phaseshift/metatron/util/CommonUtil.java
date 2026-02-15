@@ -53,6 +53,21 @@ public final class CommonUtil {
         // do nothing
     }
 
+    public static <T> Tuple.Pair<T,Long> clock(final Supplier<T> supplier) {
+        final long start = System.currentTimeMillis();
+        final T result = supplier.get();
+        final Long stop = System.currentTimeMillis() - start;
+        return Tuple.Pair.with(result, stop);
+    }
+ 
+
+   public static Tuple.Pair<Obj, Long> clock(final Obj lhs, final Obj rhs) {
+        final long start = System.currentTimeMillis();
+        final Obj result = lhs.apply(rhs);
+        final Long stop = System.currentTimeMillis() - start;
+        return Tuple.Pair.with(result, stop);
+    }
+
     public static String getTimeStamp(final Long currentTimeInMillis) {
         final LocalDateTime time = LocalDateTime.ofInstant(
                 java.time.Instant.ofEpochMilli(null == currentTimeInMillis ? System.currentTimeMillis() : currentTimeInMillis),
@@ -64,9 +79,9 @@ public final class CommonUtil {
     public static String snakeCase(final String s) {
         return Arrays.stream(s.split("(?=[A-Z])")).map(String::toLowerCase).collect(Collectors.joining("_"));
     }
- 
 
-   public static void sleepThread(final long millis) {
+
+    public static void sleepThread(final long millis) {
         try {
             Thread.sleep(millis);
         } catch (final InterruptedException e) {
@@ -86,18 +101,18 @@ public final class CommonUtil {
     }
 
     public static int width(final String s) {
-       return Arrays.stream(s.split("\n")).map(Highlighter::visualLength).max(Integer::compareTo).orElse(0);
+        return Arrays.stream(s.split("\n")).map(Highlighter::visualLength).max(Integer::compareTo).orElse(0);
     }
- 
 
-   public static <A, B> B nullOrElse(final A object, final Supplier<B> ifNull, final Function<A, B> ifNotNull) {
+
+    public static <A, B> B nullOrElse(final A object, final Supplier<B> ifNull, final Function<A, B> ifNotNull) {
         if (null == object)
             return ifNull.get();
         return ifNotNull.apply(object);
     }
 
     public static String indent(final String s, final int spaces) {
-        return Arrays.stream(s.split("\n")).map(r -> " ".repeat(spaces) + r).reduce((a, b) -> a + b + "\n").orElse("").trim();
+        return Arrays.stream(s.split("\n")).map(r -> " ".repeat(spaces) + r).reduce("", (a, b) -> a + "\n" + b).substring(1);
     }
 
     private static <K, V> Map<K, V> mapBuilder(final Supplier<Map<K, V>> supplier, final Object... args) {

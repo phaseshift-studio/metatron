@@ -21,7 +21,7 @@ package studio.phaseshift.metatron.isa;
 import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.*;
-import studio.phaseshift.metatron.isa.m.type.impl.MMachine;
+import studio.phaseshift.metatron.isa.mach.type.MMachine;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
@@ -84,8 +84,8 @@ public interface Space extends Rec, Closeable {
     @Override
     default void close() {
         try {
-            //CommonUtil.close(this.sjvm());
-            CommonUtil.close(this.jvm());
+            CommonUtil.close(this.sjvm());
+            //CommonUtil.close(this.jvm());
         } catch (final Exception e) {
             throw MTronException.of(e);
         } finally {

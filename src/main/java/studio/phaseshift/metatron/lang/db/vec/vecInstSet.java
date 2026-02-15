@@ -24,7 +24,7 @@ import studio.phaseshift.metatron.isa.m.type.Lst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.m.type.impl.AbstractInstSet;
-import studio.phaseshift.metatron.isa.web.parser.JSONTranslator;
+import studio.phaseshift.metatron.isa.web.parser.ObjJSONSerializer;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.LinkedHashSet;
@@ -54,11 +54,18 @@ public class vecInstSet extends AbstractInstSet {
     /// ////////////////////////////////////////////////////////////
     public static final fURI INST_TID = VEC_INSTSET_TID.extend("inst");
     public static final fURI DOT_TID = INST_TID.extend("dot");
+    public static final fURI TRANSPOSE_INST_TID = INST_TID.extend("transpose");
     public static final fURI SQRT_TID = INST_TID.extend("sqrt");
     //public static final fURI JSON_TID = INST_TID.extend("json");
-    private static final JSONTranslator JSON_TRANSLATOR = new JSONTranslator();
+    private static final ObjJSONSerializer JSON_TRANSLATOR = new ObjJSONSerializer();
 
-    public vecInstSet(final fURI vid) {
+    public static final Type MTRX_TYPE = Type.Builder.build()
+            .tid(LST_TID)
+            .vid(MTRX_TID)
+            .create();
+ 
+
+   public vecInstSet(final fURI vid) {
         super(VEC_INSTSET_TID, vid);
     }
 

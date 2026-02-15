@@ -63,7 +63,7 @@ public class tableSpace extends AbstractSpace<Connection> {
     private final GraphittyLogger LOG = Graphitty.log(this);
     public static fURI TABL_TID = tablInstSet.TABL_INSTSET_TID.extend("space").extend("tabl");
     protected final fURI prefix;
-    public static final Type TABL_TYPE = T(TABL_TID, null,
+    public static final Type TABL_TYPE = T(TABL_TID, null, null,
             instC(mInstSet.INST_TID.dom(ALL.maybe()).rng(TABL_TID),
                     lst(T(REC_TID, isa_(rec(
                             uri(PATTERN), T(URI_TID),

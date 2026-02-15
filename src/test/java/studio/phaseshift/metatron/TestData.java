@@ -42,7 +42,7 @@ import java.util.Arrays;
 public @interface TestData {
     GraphittyLogger LOG = Graphitty.log(TestData.class);
 
-    String[] values();
+    String[] value();
 
     class TestDataExtension implements BeforeTestExecutionCallback, AfterTestExecutionCallback {
 
@@ -52,7 +52,7 @@ public @interface TestData {
         public void beforeTestExecution(final ExtensionContext context) {
             try {
                 if (context.getRequiredTestMethod().getAnnotation(TestData.class) != null) {
-                    Arrays.stream(context.getRequiredTestMethod().getAnnotation(TestData.class).values())
+                    Arrays.stream(context.getRequiredTestMethod().getAnnotation(TestData.class).value())
                             .peek(value -> LOG.debug("loading test data: %s", value))
                             .peek(v -> this.hasTestData = true)
                             .forEach(mParser::eval);

@@ -91,6 +91,7 @@ class MqttSpace(Obj):
         self.client.check_msg()
         self.client.subscribe(str(furi))
         self.subscriptions[furi] = func
+        self.client.check_msg()
         LOG.info("subscribed to {{y}}{}{{X}}", furi)
 
     def unsubscribe(self, furi):
@@ -114,7 +115,6 @@ class MqttSpace(Obj):
         return obj
 
     def _callback(self, furi, obj):
-        #print("subscriptions: {}", self.subscriptions)
         try:
             furi2 = f(furi.decode())
             obj2 = JSONTranslator.to_obj(obj.decode())
@@ -122,9 +122,13 @@ class MqttSpace(Obj):
                 if furi2 in self.cache.keys():
                     self.cache.pop(furi2)
             else:
+                found = False
                 for pattern, func in self.subscriptions.items():
                     if furi2.matches(pattern):
+                        found = True
                         func(furi2, obj2)
+                if not found:
+                    LOG.warn("no subscription for {{y}}{}{{X}}", furi2)
         except Exception as e:
             LOG.error("message error {{y}}{}{{X}}: {}", furi2, e)
             

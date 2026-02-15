@@ -54,6 +54,7 @@ public class tp3SpaceTest extends SpaceTest {
     @ParameterizedTest
     @CsvSource(value = {
             "*/g/V/#../name                                                                 % {\"marko\",\"josh\",\"peter\",\"lop\",\"vadas\",\"ripple\"}",
+            "*/g/V/+../OUT/+/IN/name                                                        % {\"josh\",str{3}::\"lop\",\"vadas\",\"ripple\"}",
             "*/g/V/+.count()                                                                % 6",
             "*/g/V/#.count()                                                                % 6",
             "*/g/E/+.count()                                                                % 6",

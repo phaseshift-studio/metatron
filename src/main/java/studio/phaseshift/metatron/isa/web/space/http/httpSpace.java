@@ -35,8 +35,8 @@ import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.m.type.Uri;
 import studio.phaseshift.metatron.isa.web.parser.AudioTranslator;
-import studio.phaseshift.metatron.isa.web.parser.HTMLTranslator;
-import studio.phaseshift.metatron.isa.web.parser.JSONTranslator;
+import studio.phaseshift.metatron.isa.web.parser.ObjHTMLSerializer;
+import studio.phaseshift.metatron.isa.web.parser.ObjJSONSerializer;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
@@ -138,8 +138,8 @@ public class httpSpace extends AbstractSpace<HttpServer> {
             .vid(HTTP_SPACE_TID)
             .constructor(instC(mInstSet.INST_TID.dom(ALL.maybe()).rng(HTTP_SPACE_TID),
                     lst(T(REC_TID, isa_(CONFIG))), (lhs, inst) -> httpSpace.of(inst.arg(0).asRec(), inst.arg(0).vid()))).create();
-    private static final HTMLTranslator WEB_TRANSLATOR = new HTMLTranslator();
-    private static final JSONTranslator JSON_TRANSLATOR = new JSONTranslator();
+    private static final ObjHTMLSerializer WEB_TRANSLATOR = new ObjHTMLSerializer();
+    private static final ObjJSONSerializer JSON_TRANSLATOR = new ObjJSONSerializer();
     private static final AudioTranslator AUDIO_TRANSLATOR = new AudioTranslator();
 
     protected httpSpace(final HttpServer server, final Map<Obj, Obj> config, final fURI vid) {
@@ -225,11 +225,11 @@ public class httpSpace extends AbstractSpace<HttpServer> {
                         final Obj docObj = contentType.isMtron() ?
                                 mParser.parse(response.body()) :
                                 (contentType.isHtml() ?
-                                        WEB_TRANSLATOR.translate(response.parse()) :
+                                        WEB_TRANSLATOR.read(response.parse()) :
                                         (contentType.isJson() ?
                                                 JSON_TRANSLATOR.parse(response.body()) :
                                                 (contentType.isXml() ?
-                                                        WEB_TRANSLATOR.translate(response.parse()) :
+                                                        WEB_TRANSLATOR.read(response.parse()) :
                                                         (contentType.isAudio() ?
                                                                 AUDIO_TRANSLATOR.translate(response.bodyStream()) :
                                                                 str(response.body())))));
@@ -252,7 +252,7 @@ public class httpSpace extends AbstractSpace<HttpServer> {
         return (pattern, obj) -> {
             LOG.debug("writing %s", pattern);
             try (final AutoCloseable client = (AutoCloseable) HttpClient.newHttpClient()) { // a true jvm bug!
-                final JsonElement json = JSON_TRANSLATOR.translate(obj);
+                final JsonElement json = JSON_TRANSLATOR.write(obj);
                 final HttpRequest request = HttpRequest.newBuilder()
                         .header(ContentType.VALUE, ContentType.APPLICATION_JSON.value)
                         .uri(URI.create(pattern.toString()))

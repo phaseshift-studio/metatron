@@ -50,7 +50,7 @@ public class fsSpaceTest extends SpaceTest {
     }
 
     @ParameterizedTest
-    @TestData(values = {
+    @TestData(value = {
             "root -> <src/test/resources/isa/sys/>",
             "boot/script ->\n" +
                     "  [sh     => /bin/sh,\n" +

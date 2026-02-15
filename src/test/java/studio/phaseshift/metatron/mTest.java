@@ -22,6 +22,7 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
+import studio.phaseshift.metatron.isa.m.type.Call;
 import studio.phaseshift.metatron.isa.m.type.Fail;
 import studio.phaseshift.metatron.isa.m.type.NoObj;
 import studio.phaseshift.metatron.isa.m.type.Obj;
@@ -29,11 +30,15 @@ import studio.phaseshift.metatron.isa.mach.type.LogObj;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
+import studio.phaseshift.metatron.util.CommonUtil;
+import studio.phaseshift.metatron.util.Tuple;
 
 import java.util.Map;
+import java.util.function.Supplier;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.isa.m.mInstSet.START_INST_TID;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.mach.io.ioInstSet.IO_ISA_TID;
@@ -100,11 +105,20 @@ public abstract class mTest {
         });
     }
 
+    public static Tuple.Quartet<Obj, Long, Obj, Long> testParseEvalPerformance(final GraphittyLogger LOG, final Supplier<Obj> lhs, final Supplier<Obj> rhs) {
+        final Tuple.Pair<Obj, Long> parseResult = CommonUtil.clock(lhs);
+        assertInstanceOf(Call.class, parseResult.get0());
+        final Tuple.Pair<Obj, Long> evalResult = CommonUtil.clock(parseResult.get0(), rhs.get());
+        assertEquals(jnt(3), evalResult.get0());
+        return Tuple.Quartet.with(parseResult.get0(), parseResult.get1(), evalResult.get0(), evalResult.get1());
+    }
+
     public static void testCode(final GraphittyLogger LOG, final String code, final String expected) {
         if (expected.trim().equals("<ERROR>")) {
             try {
                 final Obj cd = mParser.m_call_prefix(START_INST_TID).parse(code).get();
                 final Obj actual2 = cd.apply(NoObj.noobj());
+                LOG.debug("testing %s <= %s", cd, actual2.type());
                 actual2.stream().forEach(actual -> {
                     if (!(cd.isFail() || actual.isFail())) {
                         if (cd.isFail())

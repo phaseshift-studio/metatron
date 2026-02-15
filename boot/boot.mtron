@@ -17,6 +17,7 @@ import(/m/mach/io);
 import(/m/web);
 import(/m/iot);
 import(/m/iot/haos);
+import(/m/iot/miot);
 import(/m/grph);
 import(/m/grph/tp3);
 [== global settings store in boot ==]

@@ -326,7 +326,7 @@ public interface Router extends Obj, Space {
 
         public static Set<Inst> insts() {
             return new LinkedHashSet<>(List.of(
-                    instC(REWRITE_INST_TID.dom(ROUTER_TID).rng(URI_TID), lst(T(URI_TID)), (lhs, inst) -> uri(inst.arg(0).uriValue().big()))
+                  
             ));
         }
 

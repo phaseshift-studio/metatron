@@ -19,28 +19,16 @@
 package studio.phaseshift.metatron.isa.iot;
 
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.iot.type.SoC;
-import studio.phaseshift.metatron.isa.iot.type.device.GPIO;
-import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.ServiceMetadata;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.m.type.impl.AbstractInstSet;
 
-import java.util.ArrayList;
-import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.isa.iot.haos.space.haosSpace.HAOS_SPACE_TYPE;
 import static studio.phaseshift.metatron.isa.iot.space.mqtt.mqttSpace.MQTT_SPACE_TYPE;
-import static studio.phaseshift.metatron.isa.iot.type.Device.DEVICE_TYPE;
-import static studio.phaseshift.metatron.isa.iot.type.SoC.SoCType.PIN_TYPE;
-import static studio.phaseshift.metatron.isa.iot.type.SoC.SoCType.SOC_TYPE;
-import static studio.phaseshift.metatron.isa.iot.type.device.GPIO.GPIO_TYPE;
-import static studio.phaseshift.metatron.isa.iot.type.esp32.ESP32.ESP32_TYPE;
-import static studio.phaseshift.metatron.isa.iot.type.esp32.WemosD1Mini.WemosD1MiniType.WEMOS_D1_MINI_TYPE;
 import static studio.phaseshift.metatron.isa.m.mInstSet.MTRON_TID;
 
 /*
@@ -70,28 +58,10 @@ public class iotInstSet extends AbstractInstSet {
         super(IOT_ISA_TID, IOT_ISA_TID);
     }
 
-    /*public iotInstSet(final fURI vid) {
-        super(IOT_ISA_TID, vid);
-    }*/
-
     @Override
     public Set<Type> types() {
         return Stream.of(
-                PIN_TYPE,
-                DEVICE_TYPE,
-                SOC_TYPE,
-                WEMOS_D1_MINI_TYPE,
-                ESP32_TYPE,
-                GPIO_TYPE,
                 MQTT_SPACE_TYPE,
                 HAOS_SPACE_TYPE).collect(Collectors.toSet());
-    }
-
-    @Override
-    public Set<Inst> insts() {
-        final List<Inst> insts = new ArrayList<>();
-        insts.addAll(SoC.SoCType.insts());
-        insts.addAll(GPIO.GPIOType.insts());
-        return new LinkedHashSet<>(insts);
     }
 }

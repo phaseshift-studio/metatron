@@ -32,7 +32,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-@Disabled
 public abstract class SerializerTest<T> extends mTest {
 
     protected final ObjSerializer<T> serializer;
@@ -50,8 +49,11 @@ public abstract class SerializerTest<T> extends mTest {
             //obj
             "noobj",
             "int{0}::3",
+            "real::2.123",
             "true",
             "false",
+            "bool::true",
+            "bool::false",
             "1",
             "0",
             "-100",
@@ -67,6 +69,10 @@ public abstract class SerializerTest<T> extends mTest {
             "rec::[a=>b,c=>d]",
             "[<a>=>b,c=><d>]",
             "[a=>b,c=>[b=>d]]",
+            "[a=>b,c=>rec::[b=>d]]",
+            "[a=>uri::b,c=>rec::[b=>d]]",
+            "[a=>uri::b,uri::c=>rec::[b=>d]]",
+            //"[a=>uri::b,str::'c'=>rec::[b=>d],uri::d=>rec::[b=>str::'d']]",
             //"addTwentyThree(){?}",
             "plus(2).mult(7)",
             "start(1).plus(2).mult(7)",
@@ -80,7 +86,7 @@ public abstract class SerializerTest<T> extends mTest {
             "{true, false, {1,0}, {-100, 12.355, -12.35}}",
             "{,}"
     }, delimiter = '|')
-    public void testSerialization(final String objString) {
+    public void testSerializeDeserializeObj(final String objString) {
         final Obj obj = mParser.eval(objString);
         Obj obj2 = null;
         try {

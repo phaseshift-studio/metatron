@@ -32,8 +32,7 @@ import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_MONAD_TID;
 import static studio.phaseshift.metatron.util.Tuple.Triplet;
 
 public interface Monad extends Obj {
-
-
+    
     @Override
     Monad clone(final Object jvm, final fURI tid, final fURI vid);
 

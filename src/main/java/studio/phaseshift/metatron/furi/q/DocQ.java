@@ -60,8 +60,8 @@ public class DocQ extends BaseQ {
 
     public static final fURI DOCQ_TID = Q_TID.extend("docq");
     public static final fURI DOC_TID = DOCQ_TID.extend(Tokens.DOC);
-    public static final Type DOCQ_TYPE = T(DOCQ_TID, null, instC(INST_TID.dom(ALL.maybe()).rng(DOCQ_TID), lst(isa_(rec()).tryToInst()), (lhs, inst) -> new DocQ()));
-    public static final Type DOC_TYPE = T(DOC_TID, isa_(REC_TYPE).tryToInst(), instC(INST_TID.dom(ALL.maybe()).rng(DOC_TID), lst(isa_(rec()).tryToInst()), (lhs, inst) -> new Doc(inst.arg(0).recValue(), DOC_TID, fURI.fnull)));
+    public static final Type DOCQ_TYPE = T(DOCQ_TID, null, null, instC(INST_TID.dom(ALL.maybe()).rng(DOCQ_TID), lst(isa_(rec()).tryToInst()), (lhs, inst) -> new DocQ()));
+    public static final Type DOC_TYPE = T(DOC_TID, null, isa_(REC_TYPE).tryToInst(), instC(INST_TID.dom(ALL.maybe()).rng(DOC_TID), lst(isa_(rec()).tryToInst()), (lhs, inst) -> new Doc(inst.arg(0).recValue(), DOC_TID, fURI.fnull)));
     protected final GraphittyLogger LOG = Graphitty.log(this);
     // <source,pattern,callback>
     public final Map<fURI, Obj> docSpace;

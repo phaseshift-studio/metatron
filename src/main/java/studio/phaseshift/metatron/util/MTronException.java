@@ -65,7 +65,7 @@ public class MTronException extends RuntimeException {
             final String[] message = throwable.getMessage().split(" cannot be cast to class ");
             final String leftClass = message[0].trim();
             final String rightClass = message[1].trim().split("\\(")[0].trim();
-            
+           // throwable.printStackTrace();
             return new MTronException("unable to convert " + convertName(leftClass.substring(leftClass.lastIndexOf('.') + 1)) + " to " + convertName(rightClass.substring(rightClass.lastIndexOf('.') + 1)), throwable);
         } else {
             return new MTronException(throwable.getClass().getSimpleName() + ": " + throwable.getMessage(), throwable);

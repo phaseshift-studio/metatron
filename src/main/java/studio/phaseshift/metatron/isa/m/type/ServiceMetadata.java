@@ -34,7 +34,7 @@ public @interface ServiceMetadata {
     String tid();
 
 
-    public static class Helper {
+    class Helper {
         public static fURI tid(final Class<?> spec) {
             return f(spec.getAnnotation(ServiceMetadata.class).tid());
         }

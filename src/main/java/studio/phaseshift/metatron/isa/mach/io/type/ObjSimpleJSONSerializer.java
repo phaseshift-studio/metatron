@@ -59,7 +59,7 @@ public class ObjSimpleJSONSerializer extends AbstractObjSerializer<JsonElement> 
 
     private final boolean biasTowardsURI = true;
     private final boolean biasTowardsObjs = false;
-    private final boolean embedCandQ = false;
+    private final boolean embedCandQ = true;
 
     private static JsonReader makeReader(final String json) {
         final JsonReader r = new JsonReader(new StringReader(json));
@@ -68,6 +68,10 @@ public class ObjSimpleJSONSerializer extends AbstractObjSerializer<JsonElement> 
     }
 
     public ObjSimpleJSONSerializer() {
+    }
+
+    public static Obj parse(final String json) {
+        return new ObjSimpleJSONSerializer().read(JsonParser.parseReader(makeReader(json)));
     }
 
     @Override
@@ -146,13 +150,14 @@ public class ObjSimpleJSONSerializer extends AbstractObjSerializer<JsonElement> 
                 final JsonObject jp = (JsonObject) json;
                 if (this.embedCandQ) {
                     for (var kv : jp.getAsJsonObject().asMap().entrySet()) {
-                        if (kv.getValue().isJsonPrimitive() && kv.getValue().getAsJsonPrimitive().isString() && kv.getKey().equals(_TID))
+                        if (kv.getKey().equals(_TID))
                             tid = f(kv.getValue().getAsString());
-                        else if (kv.getValue().isJsonPrimitive() && kv.getValue().getAsJsonPrimitive().isString() && kv.getKey().equals(_VID))
+                        else if (kv.getKey().equals(_VID))
                             vid = f(kv.getValue().getAsString());
                     }
                 }
-
+                if (null != tid || null != vid)
+                    LOG.info("embedded tid/vid: %s/%s", tid, vid);
                 final Map<Obj, Obj> map = new LinkedHashMap<>();
                 for (var kv : jp.getAsJsonObject().asMap().entrySet()) {
                     if (!kv.getKey().equals(_TID) && !kv.getKey().equals(_VID))

@@ -33,7 +33,6 @@ import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.isa.iot.haos.space.haosSpace.HAOS_SPACE_TYPE;
 import static studio.phaseshift.metatron.isa.iot.iotInstSet.IOT_ISA_TID;
-import static studio.phaseshift.metatron.isa.iot.type.Device.DEVICE_TYPE;
 import static studio.phaseshift.metatron.isa.m.mInstSet.NOOBJ_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TID;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
@@ -172,7 +171,6 @@ public class haosInstSet extends AbstractInstSet {
     @Override
     public Set<Type> types() {
         return Stream.of(
-                DEVICE_TYPE,
                 HAOS_ENTITY_TYPE,
                 HAOS_SENSOR_TYPE,
                 HAOS_NUMBER_TYPE,

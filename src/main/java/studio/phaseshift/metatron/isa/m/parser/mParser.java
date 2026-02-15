@@ -462,9 +462,7 @@ public class mParser {
                 opt(seq(of("["), opt(m_obj(), null), of("]")).map(t -> pick(t, 1)), null),
                 opt(seq(of("["), opt(m_obj(), null), of("]")).map(t -> pick(t, 1)), null),
                 m_vid_postfix())
-                .map(t -> null == pick(t, 2) && null == pick(t, 3) && null == pick(t, 4) ?
-                        T(pick(t, 0)) :
-                        T(Tuple.Pair.with(pick(t, 2), pick(t, 3)), pick(t, 0), pick(t, 4)));
+                .map(t -> T(Tuple.Pair.with(pick(t, 2), pick(t, 3)), pick(t, 0), pick(t, 4)));
     }
 
     public static Parser m_code() {

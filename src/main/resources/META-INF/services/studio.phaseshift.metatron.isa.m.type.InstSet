@@ -25,3 +25,5 @@ studio.phaseshift.metatron.isa.grph.tp3.tp3InstSet
 studio.phaseshift.metatron.isa.grph.hypr.hyprInstSet
 studio.phaseshift.metatron.isa.iot.iotInstSet
 studio.phaseshift.metatron.isa.iot.haos.haosInstSet
+studio.phaseshift.metatron.isa.iot.miot.miotInstSet
+    

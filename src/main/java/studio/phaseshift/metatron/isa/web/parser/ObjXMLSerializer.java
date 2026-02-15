@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -25,31 +25,36 @@ import org.w3c.dom.Node;
 import org.xml.sax.ErrorHandler;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXParseException;
+import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Lst;
+import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
+import studio.phaseshift.metatron.isa.mach.io.type.AbstractObjSerializer;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.util.MTronException;
-import studio.phaseshift.metatron.isa.Translator;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.StringReader;
+import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
-import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.isa.mach.io.ioInstSet.OBJ_SERIALIZER_TID;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class XMLTranslator implements Translator<Rec, Document> {
-    
-    private static final GraphittyLogger LOG = Graphitty.log(XMLTranslator.class);
+public class ObjXMLSerializer extends AbstractObjSerializer<Document> {
 
+    private static final GraphittyLogger LOG = Graphitty.log(ObjXMLSerializer.class);
+    public static final fURI OBJ_XML_SERIALIZER_VID = OBJ_SERIALIZER_TID.extend("xml");
+    
     private Rec readElement(final Element element) {
         LOG.debug("processing element: %s", element);
         final Rec recX = rec();
@@ -90,12 +95,17 @@ public class XMLTranslator implements Translator<Rec, Document> {
 
 
     @Override
-    public Rec translate(final Document document) {
+    public Rec read(final Document document) {
         return rec(document.getDocumentElement().getNodeName(), readElement(document.getDocumentElement()));
     }
 
     @Override
-    public Document translate(final Rec obj) {
+    public Obj inputBytes(ByteBuffer bytes) throws MTronException {
+        return parse(StandardCharsets.UTF_8.decode(bytes).toString());
+    }
+
+    @Override
+    public Document write(final Obj obj) {
         return null;
     }
 
@@ -126,9 +136,14 @@ public class XMLTranslator implements Translator<Rec, Document> {
                     LOG.error(exception);
                 }
             });
-            return new XMLTranslator().translate(builder.parse(new InputSource(new StringReader(xml.trim()))));
+            return new ObjXMLSerializer().read(builder.parse(new InputSource(new StringReader(xml.trim()))));
         } catch (final Exception e) {
             throw MTronException.of(e, "unable to parse xml: %s", e);
         }
+    }
+
+    @Override
+    public fURI vid() {
+        return OBJ_XML_SERIALIZER_VID;
     }
 }

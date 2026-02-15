@@ -798,7 +798,7 @@ public class fURI implements Cloneable, Ring<fURI>, Comparable<fURI> {
             return this;
         }
     }
-
+    
     public boolean matches(final fURI rhs) {
         final C c = this.cV();
         final C d = rhs.cV();

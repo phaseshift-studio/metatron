@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.isa.m.type;
 
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.mTest;
@@ -26,23 +27,31 @@ import studio.phaseshift.metatron.mTest;
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public class UriTest extends mTest {
-
+    
     @ParameterizedTest
     @CsvSource(value = {
             "bool::abc/def                                                | <ERROR>",
+            "/m/bool::abc/def                                             | <ERROR>",
             "bytes::<abc/def>                                             | <ERROR>",
+            "/m/bytes::<abc/def>                                          | <ERROR>",
             "int::<abc/def>                                               | <ERROR>",
+            "/m/int::<abc/def>                                            | <ERROR>",
             "real::<abc/def>                                              | <ERROR>",
+            "/m/real::<abc/def>                                           | <ERROR>",
             "str::<abc/def>                                               | <ERROR>",
+            "/m/str::<abc/def>                                            | <ERROR>",
             "lst::<abc/def>                                               | <ERROR>",
+            "/m/lst::<abc/def>                                            | <ERROR>",
             "lst::<abc/def>                                               | <ERROR>",
+            "/m/lst::<abc/def>                                            | <ERROR>",
             "inst::<abc/def>                                              | <ERROR>",
-            //  "code::<abc/def>                                            | <ERROR>",
+            "/m/inst::<abc/def>                                           | <ERROR>",
+            //  "code::<abc/def>                                          | <ERROR>",
             "uri::<http://webpage.com>                                    | <http://webpage.com>",
             "uri::<http://webpage.com>.type()                             | start(uri::T[])",
             "<http://webpage.com>.type()                                  | start(uri::T[])",
             "'http://webpage.com'.type()                                  | start(str::T[])",
-            //"a/b.plus(c/d)                                                | {a/b,c/d}",
+            //"a/b.plus(c/d)                                              | {a/b,c/d}",
             "a/b.plus(noobj)                                              | a/b",
             "a/b.mult(c/d)                                                | a/b/c/d",
             "a/b.mult(noobj)                                              | noobj",

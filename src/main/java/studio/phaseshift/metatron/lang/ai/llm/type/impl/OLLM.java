@@ -62,7 +62,7 @@ public class OLLM extends MRec implements LLM {
     public static final String TOOL = "tool";
     public static final String THINKING = "thinking";
 
-    public static Type OLLM_TYPE = T(OLLM_TID, isa_(rec(uri(NAME),
+    public static Type OLLM_TYPE = T(OLLM_TID, null, isa_(rec(uri(NAME),
             T(URI_TID),
             uri(SKILL),
             T(LST_TID),

@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.isa.iot.type.device;
+package studio.phaseshift.metatron.isa.iot.miot.type.soc.entity;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)

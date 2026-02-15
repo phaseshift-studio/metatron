@@ -61,8 +61,8 @@ public class JSONTranslatorTest extends mTest {
                     {"_tid":"/m/code","_value":"1.plus(mult(2))"}   | 1.plus(mult(2))
             """)
     public void testJSONTranslation(final String json, final String mtron) {
-        final JSONTranslator translator = new JSONTranslator();
-        final Obj j_obj = translator.translate(JsonParser.parseString(json));
+        final ObjJSONSerializer translator = new ObjJSONSerializer();
+        final Obj j_obj = translator.read(JsonParser.parseString(json));
         final Obj m_obj = mParser.parse(mtron);
         assertEquals(m_obj.isCall() ? ((Call) m_obj).tryToInst() : m_obj, j_obj);
     }

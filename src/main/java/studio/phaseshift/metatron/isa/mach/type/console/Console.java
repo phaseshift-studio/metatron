@@ -39,7 +39,7 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Rel;
 import studio.phaseshift.metatron.isa.m.type.Type;
-import studio.phaseshift.metatron.isa.m.type.impl.MMachine;
+import studio.phaseshift.metatron.isa.mach.type.MMachine;
 import studio.phaseshift.metatron.isa.mach.type.LogObj;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.Border;
@@ -98,7 +98,7 @@ public class Console extends JRec implements Closeable, Runnable {
     public static Console LOCAL_INSTANCE = null;
     public MMachine machine = null;
 
-    public static final Type CONSOLE_TYPE = T(CONSOLE_TID, isa_(rec()), instC(INST_TID.dom(ALL.maybe()).rng(CONSOLE_TID), lst(T(REC_TID)), (lhs, inst) -> {
+    public static final Type CONSOLE_TYPE = T(CONSOLE_TID, null, isa_(rec()), instC(INST_TID.dom(ALL.maybe()).rng(CONSOLE_TID), lst(T(REC_TID)), (lhs, inst) -> {
         final Console console = new Console(inst.arg(0).as());
         BootLoader.getExecutor().submit(console);
         LOCAL_INSTANCE = console;

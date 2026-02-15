@@ -48,7 +48,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 public class Audio extends MRec {
 
     public static final fURI AUDIO_TID = LLM_INSTSET_TID.extend("audio");
-    public static final Type AUDIO_TYPE = T(AUDIO_TID, null, instC(mInstSet.INST_TID.dom(ALL.maybe()).rng(AUDIO_TID), lst(T(REC_TID, isa_(rec(uri("location"), T(URI_TID))))), (lhs, inst) -> {
+    public static final Type AUDIO_TYPE = T(AUDIO_TID, null, null, instC(mInstSet.INST_TID.dom(ALL.maybe()).rng(AUDIO_TID), lst(T(REC_TID, isa_(rec(uri("location"), T(URI_TID))))), (lhs, inst) -> {
         return new Audio(lhs.jvm(), AUDIO_TID, lhs.vid());
     }));
 

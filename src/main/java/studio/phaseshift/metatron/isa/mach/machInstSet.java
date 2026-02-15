@@ -152,6 +152,7 @@ public class machInstSet extends AbstractInstSet {
         final Set<Inst> insts = new LinkedHashSet<>();
         insts.addAll(Router.RouterType.insts());
         insts.addAll(List.of(
+                instC(REWRITE_INST_TID.dom(ALL.maybe()).rng(URI_TID), lst(T(URI_TID)), (lhs, inst) -> uri(inst.arg(0).uriValue().big())),
                 instC(MACH_INST_TID.extend("close").dom(ROUTER_TID).rng(NOOBJ_TID), lst(), (lhs, inst) -> Stream.of(noobj()).peek(o -> System.exit(0)).iterator().next()),
                 instC(MACH_INST_TID.extend("beep").dom(A.maybe()).rng(A.maybe()), lst(isa_(T(INT_TID)).else_(jnt(10))), (lhs, inst) -> {
                     for (int i = 0; i < inst.arg(0).intValue().intValue(); i++) {

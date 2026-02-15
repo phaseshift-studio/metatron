@@ -25,16 +25,26 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.ServiceMetadata;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.m.type.impl.AbstractInstSet;
-import studio.phaseshift.metatron.isa.web.parser.HTMLTranslator;
-import studio.phaseshift.metatron.isa.web.parser.JSONTranslator;
-import studio.phaseshift.metatron.isa.web.parser.XMLTranslator;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjSimpleJSONSerializer;
+import studio.phaseshift.metatron.isa.web.parser.ObjHTMLSerializer;
+import studio.phaseshift.metatron.isa.web.parser.ObjJSONSerializer;
+import studio.phaseshift.metatron.isa.web.parser.ObjXMLSerializer;
 
+import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
+import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.Int.INT_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.Lst.LST_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.NOOBJ_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.Str.STR_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
@@ -62,10 +72,19 @@ public class webInstSet extends AbstractInstSet {
     public static final Type HTML_TYPE = Type.Builder.build()
             .tid(XML_TID)
             .vid(HTML_TID)
-            .predicate(isa_(rec(uri("html"), rec(uri("head"), REC_TYPE, uri("body"), REC_TYPE))).tryToInst()).create();
+            .predicate(isa_(rec(uri(HTML), rec(uri(HEAD), REC_TYPE, uri(BODY), REC_TYPE))).tryToInst()).create();
     public static final Type JSON_TYPE = Type.Builder.build()
             .tid(REC_TID)
-            .vid(JSON_TID).create();
+            .vid(JSON_TID)
+            .predicate(isa_(
+                    rec(URI_TYPE, is_(or_(
+                            eq_(NOOBJ_TYPE),
+                            eq_(BOOL_TYPE),
+                            eq_(INT_TYPE),
+                            eq_(STR_TYPE),
+                            eq_(URI_TYPE),
+                            eq_(LST_TYPE),
+                            eq_(REC_TYPE))))).tryToInst()).create();
     public static final Type CSS_TYPE = Type.Builder.build()
             .tid(REC_TID)
             .vid(CSS_TID).create();
@@ -76,6 +95,14 @@ public class webInstSet extends AbstractInstSet {
 
     public webInstSet() {
         super(WEB_ISA_TID, WEB_ISA_TID);
+    }
+
+    @Override
+    public Set<Obj> consts() {
+        return new HashSet<>(List.of(
+                new ObjXMLSerializer(),
+                new ObjHTMLSerializer(),
+                new ObjJSONSerializer()));
     }
 
     @Override
@@ -91,9 +118,9 @@ public class webInstSet extends AbstractInstSet {
     @Override
     public Set<Inst> insts() {
         return Set.of(
-                instC(AS_INST_TID.dom(STR_TID).rng(XML_TID), lst(T(XML_TID)), (lhs, inst) -> XMLTranslator.parse(lhs.asStr().strValue())),
-                instC(AS_INST_TID.dom(STR_TID).rng(HTML_TID), lst(T(HTML_TID)), (lhs, inst) -> HTMLTranslator.parse(lhs.asStr().strValue())),
-                instC(AS_INST_TID.dom(STR_TID).rng(JSON_TID), lst(T(JSON_TID)), (lhs, inst) -> JSONTranslator.parse(lhs.asStr().strValue())),
+                instC(AS_INST_TID.dom(STR_TID).rng(XML_TID), lst(T(XML_TID)), (lhs, inst) -> ObjXMLSerializer.parse(lhs.asStr().strValue())),
+                instC(AS_INST_TID.dom(STR_TID).rng(HTML_TID), lst(T(HTML_TID)), (lhs, inst) -> ObjHTMLSerializer.parse(lhs.asStr().strValue())),
+                instC(AS_INST_TID.dom(STR_TID).rng(JSON_TID), lst(T(JSON_TID)), (lhs, inst) -> ObjSimpleJSONSerializer.parse(lhs.asStr().strValue())),
                 instC(INST_TID.extend("doc").dom(STR_TID).rng(STR_TID), lst(), (lhs, inst) -> {
                     LOG.trace("processing doc request: %s", lhs);
                     try {

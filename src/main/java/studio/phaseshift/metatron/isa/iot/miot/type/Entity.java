@@ -16,10 +16,19 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.isa.iot.type;
+package studio.phaseshift.metatron.isa.iot.miot.type;
+
+import studio.phaseshift.metatron.isa.m.type.Type;
+
+import static studio.phaseshift.metatron.isa.iot.miot.miotInstSet.MIOT_ENTITY_TID;
+import static studio.phaseshift.metatron.isa.iot.miot.miotInstSet.MIOT_THING_TID;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public interface Entity {
+
+    public static final Type MIOT_ENTITY_TYPE = Type.Builder.build()
+            .tid(MIOT_THING_TID)
+            .vid(MIOT_ENTITY_TID).create();
 }

@@ -133,6 +133,7 @@ public class MObjFactory extends MRec implements ObjFactory {
                 return (OBJ) rec(map, tid, vid);
             }
             default -> {
+                //    .findFirst().map(e -> ((OBJ) e.getValue().apply(value)).tid(tid).vid(vid).as());
                 final Optional<OBJ> optional = this.extensions.entrySet().stream()
                         .filter(e -> e.getKey().isAssignableFrom(value.getClass()))
                         .findFirst().map(e -> (OBJ) e.getValue().apply(value));

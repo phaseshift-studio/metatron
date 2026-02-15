@@ -68,6 +68,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.util.CommonUtil.indent;
 import static studio.phaseshift.metatron.util.CommonUtil.nullOrElse;
 import static studio.phaseshift.metatron.util.Tuple.Pair;
 
@@ -231,13 +232,11 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
         return this.apply(noobj());
     }
 
-    default boolean fastMatch(final Obj rhs) {
-        return rhs.tid().isGeneric() || this.tid().matches(rhs.tid());
-    }
-
     default boolean matches(final Obj rhs) {
         if (Obj.Helper.isAuto(rhs))
             return true;
+        if (rhs.isType() && !rhs.asType().isBaseType() && this.tid().matches(rhs.tid()))
+            return !rhs.asType().hasPredicate() || !rhs.asType().predicate().apply(this).isNoObj();
         if (this.isNoObj() && rhs.isNoObj())
             return true;
         else if (this.isNoObj() && (rhs.tid().equals(NOOBJ_TID) || rhs.tid().cV().isZeroable()))
@@ -627,8 +626,8 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
                 } else if (!lhs.baseType().matches(rhs.tid()))
                     return false;
             }
-            if (rhs.tid().hasPattern() && !lhs.tid().matches(rhs.tid()))
-                return false;
+            // if (rhs.tid().hasPattern() && !lhs.tid().matches(rhs.tid()))
+            //S   return false;
             return null == rhs.predicate() || !rhs.apply(lhs).isNoObj();
 
         }
@@ -664,15 +663,18 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
         }
 
         public static void objCheckAndSave(final Obj obj) {
-            if (Router.loaded() &&!obj.isInstSet() && !obj.isNoObj() && !obj.isType() && !obj.matches(obj.type())) {
+            if (Router.loaded() && !obj.isInstSet() && !obj.isNoObj() && !obj.isType() && !obj.matches(obj.type())) {
                 if (obj.isPoly()) {
-                    final String objString = obj.toString();
-                    final String typeString = obj.type().toString();
                     final String matchDiffString = Poly.Helper.diffObjRecursion(obj, (obj.type().hasPredicate() && !obj.type().predicate().insts().getFirst().arg(0).isNoObj()) ?
                             obj.type().predicate().insts().getFirst().arg(0) :
                             obj.type()).toString();
-                    final int width = CommonUtil.width(matchDiffString);
-                    throw MTronException.of("obj does not match specified type:\n%s\n\t\n\n%s\n%s\n%s", objString, typeString, "-".repeat(width), matchDiffString);
+                    final int width = Math.max(Math.max(
+                            CommonUtil.width(matchDiffString),
+                            CommonUtil.width(obj.toString())), CommonUtil.width(obj.type().toString()));
+                    throw MTronException.of("obj does not match specified type:\n%s\n%s\n%s\n%s\n%s",
+                            indent(obj.tid(obj.baseType()).toString(), 2),
+                            indent("X=>", 6),
+                            indent(obj.type().toString(), 2), indent("-".repeat(width), 2), indent(matchDiffString, 2));
                 } else
                     throw MTronException.of("%s is not a %s".formatted(obj, obj.type()));
             }
@@ -754,6 +756,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
         public static Set<Inst> insts() {
             return new LinkedHashSet<>(List.of(
                     // instC(AS_INST_TID.dom(REL_TID).rng(REL_TID), lst(REL_TYPE), (lhs, inst) -> recurssiveAs(lhs, inst.arg(0).as())),
+                    instC(AS_INST_TID.dom(A).rng(B), lst(T(B)), (lhs, inst) -> lhs.tid(inst.arg(0).tid())),
                     instC(IMPORT_INST_TID.dom(ALL.maybe()).rng(fURI.NOOBJ.zero()), lst(REL_TYPE), (lhs, inst) -> MTronException.wrap(() -> BootLoader.loadInstSetProvider(inst.arg(0).uriValue()).map(ServiceLoader.Provider::get).map(i -> noobj()).reduce(noobj(), (a, b) -> noobj()))),
                     instC(DEDUP_INST_TID.dom(A.maybeSome()).rng(A.maybeSome()), lst(), (lhs, inst) -> objs(lhs.stream().map(o -> o.c().gt(cInt.ZERO()) ? o.c(cInt::one) : o.c(c -> cInt.of(-1))).distinct())),
                     //  instC(DEDUP_INST_TID.dom(A.maybeSome()).rng(A.maybeSome()), lst(T(B)), (lhs, inst) -> objs(lhs.stream().map(o -> o.c().gt(cInt.ZERO()) ? o.c(cInt::one) : o.c(c -> cInt.of(-1))).map(o -> inst.arg(0).apply(o)).distinct())),

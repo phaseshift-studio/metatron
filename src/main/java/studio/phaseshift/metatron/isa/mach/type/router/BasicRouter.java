@@ -27,6 +27,7 @@ import studio.phaseshift.metatron.isa.m.space.stackSpace;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Uri;
+import studio.phaseshift.metatron.isa.m.type.impl.ObjectMap;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
@@ -39,8 +40,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static studio.phaseshift.metatron.BootLoader.BOOTING;
-import static studio.phaseshift.metatron.Tokens.PATTERN;
-import static studio.phaseshift.metatron.Tokens.SUPER;
+import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.*;
 import static studio.phaseshift.metatron.isa.m.mInstSet.M_ISA_TID;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_;
@@ -62,9 +62,9 @@ public class BasicRouter extends AbstractSpace<MServer> implements Router {
     protected final IOStats iostats = new mIOStats();
 
     @ObjFieldReflection
-    private final Map<fURI, Set<fURI>> smallToBigRewrites = new HashMap<>();
+    private final ObjectMap<fURI, Set<fURI>> smallToBigRewrites = new ObjectMap<>();
     @ObjFieldReflection
-    private final Map<fURI, fURI> bigToSmallRewrites = new HashMap<>();
+    private final ObjectMap<fURI, fURI> bigToSmallRewrites = new ObjectMap<>();
     private fURI primary = M_ISA_TID;
 
     public BasicRouter(final fURI host, final fURI vid) {
@@ -74,6 +74,7 @@ public class BasicRouter extends AbstractSpace<MServer> implements Router {
                         uri(Tokens.SPACE), rec(new ConcurrentHashMap<>(Map.of(uri("+/#"), new stackSpace(f("+/#"))))))),
                 ROUTER_TID,
                 vid);
+        this.put(uri(REWRITE), this.smallToBigRewrites.toRec(), MUTABLE);
         //LOG.info("local router at %s", this.vid.toUri());
     }
 
@@ -115,7 +116,7 @@ public class BasicRouter extends AbstractSpace<MServer> implements Router {
     }
 
     public void registerRewrite(final fURI small, final fURI big) {
-        this.smallToBigRewrites.compute(small, (k, v) -> {
+        this.smallToBigRewrites.computeRaw(small, (k, v) -> {
             if (null == v) {
                 final Set<fURI> set = new HashSet<>();
                 set.add(big.basePath());
@@ -125,7 +126,7 @@ public class BasicRouter extends AbstractSpace<MServer> implements Router {
                 return v;
             }
         });
-        this.bigToSmallRewrites.put(big, small);
+        this.bigToSmallRewrites.putRaw(big, small);
     }
 
     @Override
@@ -134,7 +135,7 @@ public class BasicRouter extends AbstractSpace<MServer> implements Router {
             return furi;
         fURI temp;
         if (big) {
-            final Set<fURI> set = this.smallToBigRewrites.getOrDefault(furi.basePath(), Set.of(furi));
+            final Set<fURI> set = this.smallToBigRewrites.getOrDefaultRaw(furi.basePath(), Set.of(furi));
             if (set.size() > 1) {
                 final Iterator<fURI> furis = set.stream().filter(f -> f.hasPrefix(this.primary)).iterator();
                 temp = furis.hasNext() ? furis.next() : set.iterator().next();
@@ -142,7 +143,7 @@ public class BasicRouter extends AbstractSpace<MServer> implements Router {
                 temp = set.iterator().next();
             }
         } else {
-            temp = this.bigToSmallRewrites.getOrDefault(furi.basePath(), furi);
+            temp = this.bigToSmallRewrites.getOrDefaultRaw(furi.basePath(), furi);
         }
         temp = temp.c(furi.c()).queryMap(furi.queryMap());
         temp = temp.hasDom() ? temp.dom(this.rewrite(temp.dom(), big)) : temp;
@@ -153,12 +154,15 @@ public class BasicRouter extends AbstractSpace<MServer> implements Router {
     @Override
     public void addSpace(final Space space) {
         if (null == space.vid() && !(space instanceof stackSpace)) {
-            LOG.warn("a vid-less space is not indexed by router: %s", space);
+            LOG.warn("vid-less spaces are self-managed and not indexed by router: %s", space);
             return;
         }
-        final List<fURI> list = new ArrayList<>(this.spaces().jvm().values().stream().map(r -> ((Space) r).pattern()).toList());
-        boolean exists = list.stream().anyMatch(f -> f.compareTo(space.pattern()) == 0);
-        if (exists) {
+        if (this.spaces()
+                .jvm()
+                .values()
+                .stream()
+                .map(r -> ((Space) r).pattern())
+                .anyMatch(f -> f.compareTo(space.pattern()) == 0)) {
             LOG.warn("%s has an overlapping address space: %s <=> %s", space, space.pattern(), space.pattern());
             return;
         }
@@ -172,10 +176,12 @@ public class BasicRouter extends AbstractSpace<MServer> implements Router {
     public void removeSpace(final fURI vid) {
         if (null == vid)
             return;
-        final Obj space = this.spaces().jvm().remove(vid.toUri());
-        if (null != space) {
-            Space.Helper.spaceCloseLog(this, (Space) space);
-        }
+        this.spaces().jvm()
+                .entrySet()
+                .stream()
+                .filter(kv -> vid.equals(kv.getKey().uriValue()))
+                .peek(kv -> this.spaces().jvm().remove(kv.getKey()))
+                .forEach(kv -> Space.Helper.spaceCloseLog(this, (Space) kv.getValue()));
     }
 
     @Override

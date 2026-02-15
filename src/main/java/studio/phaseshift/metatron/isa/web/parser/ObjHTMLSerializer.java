@@ -21,25 +21,31 @@ package studio.phaseshift.metatron.isa.web.parser;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
-import studio.phaseshift.metatron.isa.Translator;
+import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
+import studio.phaseshift.metatron.isa.mach.io.type.AbstractObjSerializer;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.io.File;
+import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.isa.mach.io.ioInstSet.OBJ_SERIALIZER_TID;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class HTMLTranslator implements Translator<Obj, Document> {
+public class ObjHTMLSerializer extends AbstractObjSerializer<Document> {
 
     private static final String TEXT = "text";
     private static final String DATA = "data";
+
+    public static final fURI OBJ_HTML_SERIALIZER_VID = OBJ_SERIALIZER_TID.extend("html");
 
     private Rec readElement(final Element element) {
         //Graphitty.log(this).warn(element);
@@ -65,12 +71,17 @@ public class HTMLTranslator implements Translator<Obj, Document> {
 
 
     @Override
-    public Obj translate(final Document document) {
+    public Obj read(final Document document) {
         return readElement(document);
     }
 
     @Override
-    public Document translate(final Obj obj) {
+    public Obj inputBytes(final ByteBuffer bytes) throws MTronException {
+        return parse(new String(bytes.array(), StandardCharsets.UTF_8));
+    }
+
+    @Override
+    public Document write(final Obj obj) {
         if (!obj.isRec())
             throw MTronException.of("only rec can be translated to an html document");
         final Document document = new Document(".");
@@ -80,7 +91,7 @@ public class HTMLTranslator implements Translator<Obj, Document> {
     public Obj translatePage(final File htmlPage) {
         try {
             final Document document = Jsoup.parse(htmlPage, "UTF-8");
-            return this.translate(document);
+            return this.read(document);
         } catch (final Exception e) {
             throw MTronException.of(e, "%s", htmlPage);
         }
@@ -89,9 +100,14 @@ public class HTMLTranslator implements Translator<Obj, Document> {
     public static Obj parse(final String html) {
         try {
             final Document document = Jsoup.parse(html);
-            return new HTMLTranslator().translate(document);
+            return new ObjHTMLSerializer().read(document);
         } catch (final Exception e) {
             throw MTronException.of(e, "unable to parse html: %s", e);
         }
+    }
+
+    @Override
+    public fURI vid() {
+        return OBJ_HTML_SERIALIZER_VID;
     }
 }

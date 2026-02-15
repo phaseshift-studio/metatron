@@ -84,10 +84,12 @@ public interface Type extends Obj, PlusMonoid<Type> {
     }
 
     default Type parentType() {
+        if (this.tid().equals(this.vid()))
+            return null;
         if (this.vid() != null)
-            return Router.global().read(this.tid()).asType();
+            return Router.global().read(this.vid()).asType();
         else
-            return this;
+            return Router.global().read(this.tid()).asType();
     }
 
     default Call constructor() {
@@ -127,11 +129,11 @@ public interface Type extends Obj, PlusMonoid<Type> {
 
     @Override
     default Obj apply(final Obj obj) {
-        if (!this.isBaseType()) {
-            Obj subType = Router.readFromSpace(this.tid());
-            if (!subType.equals(this))
-                if (subType.apply(obj).isNoObj())
-                    return noobj();
+        Obj parentType = this.parentType();
+        if (null != parentType) {
+            final Obj parentApply = parentType.apply(obj);
+            if (parentApply.isNoObj())
+                return noobj();
         }
         return null == this.predicate() || obj.matches(predicate().apply(obj)) ?
                 obj :

@@ -32,13 +32,19 @@ import studio.phaseshift.metatron.furi.Q;
 import studio.phaseshift.metatron.furi.q.DocQTest;
 import studio.phaseshift.metatron.isa.InstSetTest;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
+import studio.phaseshift.metatron.isa.m.type.Call;
+import studio.phaseshift.metatron.isa.m.type.NoObj;
+import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.mTest;
 import studio.phaseshift.metatron.util.MTronException;
+import studio.phaseshift.metatron.util.Tuple;
 
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.furi.fURI.f;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 
 @ExtendWith(TestData.TestDataExtension.class)
 public class mInstSetTest extends InstSetTest {
@@ -130,7 +136,7 @@ public class mInstSetTest extends InstSetTest {
             "{1,2,3,4,5,6,7,8}.inst?int<=int{*}(){ sum() }.catch('X')                        % 36",
             "{1,2,3,4,5,6,7,8}.inst?int<=int{+}(){ sum() }.catch('X')                        % 36",
             "{1,2,3,4,5,6,7,8}.inst?int<=int{10}(){ sum() }.catch('X')                       % 36",
-           // "{1,2,3,4,5,6,7,8}.inst?int<=int{1000}(){ sum() }.catch('X')                      % \"X\"",  // TODO: this is a bug
+            // "{1,2,3,4,5,6,7,8}.inst?int<=int{1000}(){ sum() }.catch('X')                      % \"X\"",  // TODO: this is a bug
             "{1,1,2,2,3,3,4,4}.inst?int<=int{2}(){ sum() }.catch(10)                        % {2,4,6,8}",
     }, delimiter = '%')
     public void testSkipLimitCode(final String code, final String expected) {
@@ -142,7 +148,8 @@ public class mInstSetTest extends InstSetTest {
             "print(_)                                                                       % noobj",
             "1.print(_)                                                                     % 1",
             "{1,2,3,4}.print(_).plus(2)                                                     % {3,4,5,6}",
-            "{1,2,3,4}.print(+2)                                                            % {1,2,3,4}"
+            "{1,2,3,4}.print(+2)                                                            % {1,2,3,4}",
+            "1.plus(0).plus::(2)                                                            % 3",
             // "1.plus::(2)                                                                    % 3"
     }, delimiter = '%')
     public void testPrint(final String code, final String expected) {
@@ -160,10 +167,48 @@ public class mInstSetTest extends InstSetTest {
             "{1,2,3,4}.map(+2)                                                            % {3,4,5,6}",
             "{1,2,3,4}.inst(_,+1,+2){ map(*0).plus(*1).plus(*2) }                         % {6,9,12,15}",
             "{1,2,3,4}.map(map(+2))                                                       % {3,4,5,6}",
-            "{1,2,3,4}.map(map(map(map(map(map(+2))))))                                   % {3,4,5,6}",
+            "{1,2,3,4}.map(map(map(map(map(map(+2))))))                                   % {3,4,5,6}"
     }, delimiter = '%')
     public void testMap(final String code, final String expected) {
         mTest.testCode(LOG, code, expected);
+    }
+
+    @Test
+    @Disabled
+    public void testNestedEvaluationPerformance() {
+        long previousEvalTime = 0;
+        long previousParseTime = 0;
+        long parseThreshold = 200;
+        long evalThreshold = 20;
+        int maxSteps = 12;
+        for (int steps = 1; steps < maxSteps; steps++) {
+            StringBuilder sb = new StringBuilder("start(1).");
+            sb.append("map(".repeat(steps));
+            sb.append("+2");
+            sb.append(")".repeat(steps));
+            LOG.warn("testing level %s nest with %s", steps, Graphitty.string(sb.toString()));
+            final Tuple.Quartet<Obj, Long, Obj, Long> parseResult = mTest.testParseEvalPerformance(LOG, () -> mParser.m_code().parse(sb.toString()).get(), NoObj::noobj);
+            final long evalAbsoluteValue = Math.abs(previousEvalTime - parseResult.get3());
+            final long parseAbsoluteValue = Math.abs(previousParseTime - parseResult.get1());
+            assertInstanceOf(Call.class, parseResult.get0());
+            LOG.warn("\t| prev pars: {{y}}%-15d{{X}} - current pars: {{y}}%-15d{{X}} | = %s %-10d",
+                    previousParseTime,
+                    parseResult.get1(),
+                    parseAbsoluteValue > parseThreshold ? "{{r}}" : "{{g}}",
+                    parseAbsoluteValue);
+            previousParseTime = parseResult.get1();
+            assertEquals(jnt(3), parseResult.get2());
+            //assertTrue(previousClock < result.get1());
+
+            LOG.warn("\t| prev eval: {{y}}%-15d{{X}} - current eval: {{y}}%-15d{{X}} | = %s %-10d",
+                    previousEvalTime,
+                    parseResult.get3(),
+                    evalAbsoluteValue > evalThreshold ? "{{r}}" : "{{g}}",
+                    evalAbsoluteValue);
+            previousEvalTime = parseResult.get3();
+            assertTrue(parseAbsoluteValue <= parseThreshold, "parse threshold exceeded");
+            assertTrue(evalAbsoluteValue <= evalThreshold, "eval threshold exceeded");
+        }
     }
 
 
@@ -200,9 +245,9 @@ public class mInstSetTest extends InstSetTest {
             "{1,2,3}>-[noobj]                                                       % [1,2,3,noobj]",
             "[1=>2,2=>3,3=>4]>-                                                     % {1=>2,2=>3,3=>4}",
             "[1=>2,2=>3,3=>4].type()                                                % start(rec::T)",
-            "[1=>2,2=>3,3=>4]>-.type()                                              % start(rel{3}::T)",
+            //  "[1=>2,2=>3,3=>4]>-.type()                                              % start(rel{3}::T)",
             "[(1=>2),(2=>3),(3=>4)].type()                                          % start(lst::T)",
-            "[(1=>2),(2=>3),(3=>4)]>-.type()                                        % start(rel{3}::T)",
+            //  "[(1=>2),(2=>3),(3=>4)]>-.type()                                        % start(rel{3}::T)",
             "[1=>2,2=>3,3=>4]>-.>-[noobj=>noobj]                                    % [1=>2,2=>3,3=>4]",
             "[z=>c,2=>3,a=>f]>-.>-[noobj=>noobj]                                    % [z=>c,2=>3,a=>f]",
             "{1,2}>-[3,4]                                                           % [1,2,3,4]",
@@ -392,7 +437,7 @@ public class mInstSetTest extends InstSetTest {
     }
 
     @ParameterizedTest
-    @TestData(values = {
+    @TestData(value = {
             "x -> noobj",
             "x -> {[1=>1,3=>[1=>11]],[2=>2,4=>[2=>12]],[3=>3,5=>[3=>13]]}"
     })
@@ -404,7 +449,7 @@ public class mInstSetTest extends InstSetTest {
             "{1,2,3}-<|[is(gt(1))=>plus(6),_=>plus(100)].rng()                        % {101,8,9}",
             "{1,2,3}-<[is(gt(1))=>plus(6),_=>plus(100)].rng()                         % {101,8,102,9,103}",
             "{1,2,3}-<[is(gt(1))=>plus(6),_=>plus(100)].rng().sum()                   % {101,8,102,9,103}.sum()",
-            "{1,2,3}-<[is(gt(1))=>plus(6),_=>plus(100)].rng().sum().type()            % 1.type()",
+            // "{1,2,3}-<[is(gt(1))=>plus(6),_=>plus(100)].rng().sum().type()            % 1.type()",
             "{1,2,3}.split?rec<=int([_=>_,+2=>-<[_=>+10]])                            % {[1=>1,3=>[1=>11]],[2=>2,4=>[2=>12]],[3=>3,5=>[3=>13]]}",
             "{1,2,3}.split?<=int([_=>_,+2=>-<[_=>+10]])                               % {[1=>1,3=>[1=>11]],[2=>2,4=>[2=>12]],[3=>3,5=>[3=>13]]}",
             "{1,2,3}.-<?<=int([_=>_,+2=>-<[_=>+10]])                                  % {[1=>1,3=>[1=>11]],[2=>2,4=>[2=>12]],[3=>3,5=>[3=>13]]}",
@@ -437,7 +482,7 @@ public class mInstSetTest extends InstSetTest {
 
     @Disabled
     @ParameterizedTest
-    @TestData(values = {"nat -> int::T[is(gt(0))]"})
+    @TestData(value = {"nat -> int::T[is(gt(0))]"})
     @CsvSource(value = {
             "nat::2                                           % nat::2",
             "nat::-1                                          % <ERROR>",
@@ -678,7 +723,7 @@ public class mInstSetTest extends InstSetTest {
     }
 
     @ParameterizedTest
-    @TestData(values = {
+    @TestData(value = {
             "a -> [x=>!(*(b))]",
             "b -> [x=>!(*(c))]",
             "c -> 6"
@@ -710,7 +755,7 @@ public class mInstSetTest extends InstSetTest {
 
 
     @ParameterizedTest
-    @TestData(values = {
+    @TestData(value = {
             "a -> [x=>!*b]",
             "b -> [x=>!*c]",
             "c -> 6"

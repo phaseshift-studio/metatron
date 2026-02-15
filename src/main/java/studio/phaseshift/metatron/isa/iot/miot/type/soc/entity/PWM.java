@@ -16,25 +16,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.isa.web.parser;
-
-import org.junit.jupiter.api.Test;
-import studio.phaseshift.metatron.mTest;
-import studio.phaseshift.metatron.isa.m.type.Rec;
-
-import java.io.File;
+package studio.phaseshift.metatron.isa.iot.miot.type.soc.entity;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class HTMLTranslatorTest extends mTest {
-
-    @Test
-    public void testWebPageParsing() {
-        final HTMLTranslator t = new HTMLTranslator();
-        final Rec page = (Rec) t.translatePage(new File("./docs/images/metatron-character.html"));
-        //LOG.info("%s", Jsoup.parse("/home/killswitch/Desktop/funny.html"));
-        LOG.info("%s", page);
-        LOG.info("%s", t.translate(page));
-    }
+public class PWM {
 }

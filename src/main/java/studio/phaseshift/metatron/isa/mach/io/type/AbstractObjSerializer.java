@@ -21,6 +21,10 @@ package studio.phaseshift.metatron.isa.mach.io.type;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Uri;
+import studio.phaseshift.metatron.util.MTronException;
+
+import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 
 import static studio.phaseshift.metatron.isa.mach.io.ioInstSet.OBJ_SERIALIZER_TID;
 
@@ -29,6 +33,12 @@ import static studio.phaseshift.metatron.isa.mach.io.ioInstSet.OBJ_SERIALIZER_TI
  */
 public abstract class AbstractObjSerializer<T> implements ObjSerializer<T> {
 
+    @Override
+    public ByteBuffer outputBytes(final Obj obj) throws MTronException {
+       final T t = this.write(obj);
+       return ByteBuffer.wrap(t.toString().getBytes(StandardCharsets.UTF_8));
+    }
+    
     @Override
     public ObjSerializer<T> clone() {
         return this;
