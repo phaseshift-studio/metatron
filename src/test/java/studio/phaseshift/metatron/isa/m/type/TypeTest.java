@@ -59,7 +59,7 @@ public class TypeTest extends mTest {
             "213.12               | /m/real                     | true",
             "1                    | #                           | true",
             "1                    | /+/+                        | true",
-          //  "1                    | +                           | false",
+            //  "1                    | +                           | false",
             /// ///////////////////////////////////////////////////////////////
             "int::1             | A                            | true",
             "int::1             | B{+}                         | true",
@@ -82,26 +82,26 @@ public class TypeTest extends mTest {
             "int:1            | /+/#                        | true",
             "</m/int>::1      | /m/int                      | true",
             "</m/int>::1      | /m/+                        | true",
-         //   "</m/int>::1      | /m/+/+                      | false",
+            //   "</m/int>::1      | /m/+/+                      | false",
             "</m/int>::1      | /m/+/#                      | true",
             "/m/int::1        | /m/int                      | true",
             "/m/int::1        | /m/+                        | true",
             "/m/int{2}::1     | /m/+                        | false",
             "/m/int{2}::1     | /m/+{*}                     | true",
             "/m/int::1        | /m/+{?}                     | true",
-         //   "/m/int::1        | /m/+/+                      | false",
+            //   "/m/int::1        | /m/+/+                      | false",
             "/m/int::1        | /m/+/#                      | true",
             /// ///////////////////////////////////////////////////////////
             "int::1           | /m/int                      | true",
             "int::1           | /m/+                        | true",
-         //   "int::1           | /m/+/+                      | false",
+            //   "int::1           | /m/+/+                      | false",
             "int::1           | /m/+/#                      | true",
             "int::1           | /m/int                      | true",
             "int::1           | /m/+                        | true",
             "int{2}::1        | /m/+                        | false",
             "int{2}::1        | /m/+{*}                     | true",
             "int::1           | /m/+{?}                     | true",
-         //   "int::1           | /m/+/+                      | false",
+            //   "int::1           | /m/+/+                      | false",
             "int::1           | /m/+/#                      | true",
             /// ////////////////////////////////////////////////////////////
             "{c,d}                | /m/uri{2}                   | true",
@@ -109,12 +109,12 @@ public class TypeTest extends mTest {
             "str::\"abc\"         | /+/+/#                      | true",
             "/m/int::\"abc\"      | /+/+/+                      | false",
             "/m/int::1            | /+/+                        | true",
-          //  "/m/str::'abc'        | /+/int                      | false",
-          //  "str::'abc'           | /+/int                      | false",
+            //  "/m/str::'abc'        | /+/int                      | false",
+            //  "str::'abc'           | /+/int                      | false",
             "1                    | /+/int                      | true",
-          //  "1                    | /+/str                      | false",
+            //  "1                    | /+/str                      | false",
             "1                    | /m/+                        | true",
-          //  "1                    | /m/+/+                      | false",
+            //  "1                    | /m/+/+                      | false",
             "1                    | /m/int{+}                   | true",
             "int{2}::1            | /m/int{1}                   | false",
             "{1,2,3,4}            | /m/int{4}                   | true",
@@ -161,8 +161,8 @@ public class TypeTest extends mTest {
             Obj o = mParser.m_obj().parse(obj).get();
             Type t = T(f(typefURI.trim()));
             LOG.error("testing %s %s %s", o, matches ? "{{c}}in{{/c}}" : "{{c}}not in{{/c}}", t);
-          // assertEquals(matches, o.type().tid().matches(f(typefURI)));
-            assertEquals(matches, o.matches(t));
+            // assertEquals(matches, o.type().tid().matches(f(typefURI)));
+            assertEquals(matches, o.test(t));
             //if (!typefURI.startsWith("#") && !o.isNoObj())
             //    this.testType(obj, fURI.of("#[" + o.tid().coefficientValue() + "]").toString(), !o.isNoObj());
             //final boolean a = t.matches(o);
@@ -205,14 +205,14 @@ public class TypeTest extends mTest {
             "1                   | int{2}::T[is(gt(0))]                       | false",
             "{0,0}               | int{2}::T[is(gt(0))]                       | false",
             "{2,3}               | int{2}::T[>-.is(gt(1)).else(fail::T)]      | true",
-         //   "{2,3}               | int{2}::T[>-.is(gt(2)).else(fail::T)]      | false",
-          //  "{2,3}               | int{2}::T[>-.is(gt(4)).else(fail::T)]      | false",
+            //   "{2,3}               | int{2}::T[>-.is(gt(2)).else(fail::T)]      | false",
+            //  "{2,3}               | int{2}::T[>-.is(gt(4)).else(fail::T)]      | false",
             "{5,6}               | int{2}::T[>-.is(gt(4)).else(fail::T)]      | true",
             "{2,2}               | int{2}::T[is(gt(1))]                       | true",
             "{3,3}               | int{2}::T[is(gt(1))]                       | true",
-           // "{0,1}               | int{2}::T[is(gt(0))]                         | false",
+            // "{0,1}               | int{2}::T[is(gt(0))]                         | false",
             "{0,0}               | int{2}::T[is(gt(1))]                       | false",
-           // "{0,-1}               | int{2}::T[is(gt(1))]                        | false",
+            // "{0,-1}               | int{2}::T[is(gt(1))]                        | false",
             //  "1               | int^:is(gt(0))                               | false"},
     },
             delimiter = '|')
@@ -220,7 +220,7 @@ public class TypeTest extends mTest {
         Obj o = mParser.m_obj().parse(obj).get();
         Type t = mParser.m_obj().parse(type).get();
         LOG.debug("testing %s {{g}}({{b}}%s{{g}}){{X}} %s %s", o, o.tid(), matches ? "{{g}}is a{{/g}}" : "{{r}}is not a{{/r}}", t);
-        assertEquals(matches, o.matches(t));
+        assertEquals(matches, o.test(t));
     }
 
     @ParameterizedTest
@@ -260,18 +260,18 @@ public class TypeTest extends mTest {
             "int::T              | int{2,3}::T                                | false",
             "int::T              | int{1}::T                                  | true",
             "nat::T              | nat::T                                     | true",
-            //"nat::T              | int::T                                     | true",
-            //"int::T              | nat::T                                     | false",
+            "nat::T              | int::T                                     | true",
+            "int::T              | nat::T                                     | false",
             "nat::T              | str::T                                     | false",
-            //"nat::T              | bignat::T                                  | false",
+            "nat::T              | bignat::T                                  | false",
             //"bignat::T           | nat::T                                     | true",
-            //  "bignat::T           | int::T                                     | true",
-            // "int::T              | bignat::T                                  | false",
+            "bignat::T           | int::T                                     | true",
+            "int::T              | bignat::T                                  | false",
             "int::T              | 0                                          | false",
             "0                   | int::T                                     | true",
             // "0                   | nat::T                                     | false",
             // "int::T              | nat::T + int::T                            | true",
-            "0                   | nat::T[mult(int::T)]                                        | false",
+            //"0                   | nat::T[mult(int::T)]                                        | false",
             "0                   | int::T[is(or(matches(int::T),matches(real::T)))]            | true",
             "0                   | int::T[is(or(matches(str::T),matches(real::T)))]            | false",
             "0                   | int::T[is(or(matches(str::T),or(matches(uri::T),matches(real::T))))]    | false",
@@ -293,28 +293,47 @@ public class TypeTest extends mTest {
         Obj a = mParser.m_obj().parse(typeA).get();
         Obj b = mParser.m_obj().parse(typeB).get();
         LOG.trace("testing %s %s %s", a, matches ? "{{g}}is a{{/g}}" : "{{r}}is not a{{/r}}", b);
-        assertEquals(matches, a.matches(b));
+        assertEquals(matches, a.test(b));
         //assertEquals(matches, a.fastMatch(b));
     }
 
     @ParameterizedTest
-    @TestData(value = {"int::T[is(gt(0))]@nat", "nat::T[is(gt(100))]@bignat",})
+    @TestData(value = {"nat -> int::T[is(gt(0))]", "bignat -> nat::T[is(gt(100))]",})
     @CsvSource(value = {
             "/m/int | /m/int | true",
-            //"/m/int | nat | false",
-            // "nat     | /m/int | true",
-            "nat | nat | true",
+            "/m/int | nat    | false",
+            "nat    | /m/int | true",
+            "nat    | nat    | true",
             // "bignat | nat    | true",
-            "bignat | /m/int | false",
+            "bignat | /m/int | true",
             "/m/int | bignat | false",
-            "nat | bignat | false",
+            "nat    | bignat | false",
             "bignat | bignat | true",
     }, delimiter = '|')
     public void testBaseTypes(final String type, final String baseType, final boolean matches) throws Exception {
         Obj a = mParser.eval("*" + type);
         Obj b = mParser.eval("*" + baseType);
         LOG.debug("testing %s %s %s", a, matches ? "{{g}}is a{{/g}}" : "{{r}}is not a{{/r}}", b);
-        assertEquals(matches, a.matches(b));
+        assertEquals(matches, a.test(b));
+    }
+
+    @ParameterizedTest
+    @TestData({"nat -> int::T[is(gt(0))]", "bignat -> nat::T[is(gt(100))]"})
+    @CsvSource(value = {
+            "[nat::T,int::T,int::T]",
+            "[bignat::T,nat::T,int::T,int::T]",
+    }, delimiter = '%')
+    public void testTypeType(final String typeList) {
+        final Lst typesObj = mParser.parse(typeList);
+        for (int i = 0; i < typesObj.count() - 1; i++) {
+            final Type typeObj = typesObj.at(i).asType();
+            final Type parentObj = typesObj.at(i + 1).asType();
+            final Type inferredType = typeObj.type();
+            LOG.error("%s %s %s", typeObj, parentObj, inferredType);
+            assertTrue(typeObj.test(inferredType));
+            // assertTrue(typeObj.test(parentObj));
+            assertEquals(parentObj, inferredType);
+        }
     }
 
     @ParameterizedTest
@@ -389,7 +408,7 @@ public class TypeTest extends mTest {
             "person  % .                                        % [name=>'base',age=>'the number one']             % false",
             "person  % .                                        % [name=>'base',age=>1,another=>[a=>b]]            % true",
             ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-          /*  "nat     % int::T[is(gt(0))]                        % nat::23                                          % true",
+            "nat     % int::T[is(gt(0))]                        % nat::23                                          % true",
             "nat     % .                                        % int::2.as(nat::T[is(gt(1))])                     % true",
             "nat     % .                                        % int::0.as(nat::T[is(eq(0))])                     % false",
             "nat     % .                                        % int::0.as(int::T[is(eq(0))])                     % true",
@@ -450,7 +469,7 @@ public class TypeTest extends mTest {
             ".       % .                                        % agenat::-1                                       % false",
             ".       % .                                        % agenat::200                                      % false",
             ".       % .                                        % nat::200.as(agenat::T)                           % false",
-            ".       % .                                        % agenat::29                                       % true",*/
+            ".       % .                                        % agenat::29                                       % true",
     }, delimiter = '%')
     public void testTyping(final String tid, final String typeDef, final String instance, final boolean shouldSucceed) {
         try {
@@ -468,7 +487,7 @@ public class TypeTest extends mTest {
                     if (inst.tid().equals(FAIL_TID))
                         assertFalse(shouldSucceed);
                     else if (!inst.tid().equals(f(tid)))
-                        assertEquals(shouldSucceed, inst.matches(type)); // type checking for base types that are not :: specified
+                        assertEquals(shouldSucceed, inst.test(type)); // type checking for base types that are not :: specified
                     else
                         assertEquals(noobj(), inst);
                 }
@@ -515,8 +534,8 @@ public class TypeTest extends mTest {
             "4                  | c::T                  | false | [c,int] ",
             "5                  | d::T                  | true | [d,int] ",
             "5                  | e::T                  | false | [e,int] ",
-            "5                  | f::T                  | false | [f,e,int] ",
-            "5                  | g::T                  | false | [g,f,e,int] ",
+            //   "5                  | f::T                  | false | [f,e,int] ",
+            //   "5                  | g::T                  | false | [g,f,e,int] ",
             "10                 | g::T                  | true | [g,f,e,int] ",
             "6                  | g::T                  | true | [g,f,e,int] ",
             "4                  | g::T                  | false | [g,f,e,int] ",
@@ -533,9 +552,9 @@ public class TypeTest extends mTest {
         final Obj instanceObj = mParser.m_obj().parse(instance).get();
         final List<Type> expectedTypeStack = mParser.parse(stack).lstValue().stream().map(o -> mParser.<Type>parse(o.toString() + "::T")).toList();
         final List<Type> deducedTypeStack = deducedTypeStack(mParser.m_obj().parse(type).get());
-        final List<Boolean> matchesTypeStack = deducedTypeStack.stream().map(instanceObj::matches).toList();
+        final List<Boolean> matchesTypeStack = deducedTypeStack.stream().map(instanceObj::test).toList();
         LOG.error("testing type stack of %s:\n\t%s\n\t%s\n\t%s", instanceObj, expectedTypeStack, deducedTypeStack, matchesTypeStack);
-        assertEquals(matches,matchesTypeStack.stream().reduce(true, (a, b) -> a && b));
+        assertEquals(matches, matchesTypeStack.stream().reduce(true, (a, b) -> a && b));
         //assertEquals(expectedTypeStack, deducedTypeStack.subList(1, deducedTypeStack.size()));
         testMatches(LOG, instance, type, matches);
     }

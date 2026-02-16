@@ -203,7 +203,7 @@ public class ObjCleanStringSerializer extends AbstractObjSerializer<String> {
                 typeString += "[]";
             typeString += ("[" + type.constructor() + "]");
         }
-        if (type.vid() != null && !type.vid().equals(type.tid()))
+        if (type.vid() != null)
             typeString += ("@" + type.vid());
         return typeString;
     }

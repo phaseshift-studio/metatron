@@ -106,22 +106,22 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>>, PlusMonoid.O<Rec> {
     }*/
 
     @Override
-    default boolean matches(final Obj rhs) {
+    default boolean test(final Obj rhs) {
         if (Obj.Helper.isAuto(rhs))
             return true;
         if (rhs.isRec()) {
             return rhs.asRec().elements().allMatch(r -> {
                 final boolean found = this.elements()
-                        .map(l -> Tuple.Pair.with(l.jvm().get0().matches(r.jvm().get0()), l.jvm().get1().matches(r.jvm().get1())))
+                        .map(l -> Tuple.Pair.with(l.jvm().get0().test(r.jvm().get0()), l.jvm().get1().test(r.jvm().get1())))
                         .anyMatch(pair -> pair.get0() && pair.get1());
                 if (found) return true;
-                boolean notFound = (r.jvm().get0().c().isZeroable() && this.elements().noneMatch(l -> l.jvm().get0().matches(r.jvm().get0())));
+                boolean notFound = (r.jvm().get0().c().isZeroable() && this.elements().noneMatch(l -> l.jvm().get0().test(r.jvm().get0())));
                 if (notFound) return true;
                 final Obj thisValue = this.at(r.jvm().get0()); // can't make this jvm()-based
-                return (thisValue.isNoObj() && r.jvm().get0().c().isZeroable()) || thisValue.matches(r.jvm().get1());
+                return (thisValue.isNoObj() && r.jvm().get0().c().isZeroable()) || thisValue.test(r.jvm().get1());
             });
         } else {
-            return Poly.super.matches(rhs);
+            return Poly.super.test(rhs);
         }
     }
 
@@ -251,8 +251,8 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>>, PlusMonoid.O<Rec> {
                         return uri(furi);
                     }),
                     instC(HAS_INST_TID.dom(REC_TID).rng(REC_TID.maybe()), lst(T(ALL)), (lhs, inst) -> inst.arg(0).isRel() ?
-                            (lhs.<Rec>as().elements().anyMatch(r -> r.matches(inst.arg(0))) ? lhs : noobj()) :
-                            (lhs.<Rec>as().elements().map(Rel::first).anyMatch(r -> r.matches(inst.arg(0))) ? lhs : noobj())),
+                            (lhs.<Rec>as().elements().anyMatch(r -> r.test(inst.arg(0))) ? lhs : noobj()) :
+                            (lhs.<Rec>as().elements().map(Rel::first).anyMatch(r -> r.test(inst.arg(0))) ? lhs : noobj())),
                     instC(HAS_INST_TID.dom(REC_TID).rng(REC_TID.maybe()), lst(T(ALL), T(ALL)), (lhs, inst) -> inst.arg(1).apply(lhs.asRec().at(inst.arg(0))).boolValue() ? lhs : noobj()),
                     instC(GET_INST_TID.dom(REC_TID).rng(ALL_STAR), lst(T(URI_TID)), (lhs, inst) -> objs(lhs.stream().map(r -> r.<Rec>as().at(inst.arg(0))))),
                     instC(MERGE_INST_TID.dom(REC_TID).rng(REL_TID.maybeSome()), lst(), (lhs, inst) -> objs(lhs.elements())),

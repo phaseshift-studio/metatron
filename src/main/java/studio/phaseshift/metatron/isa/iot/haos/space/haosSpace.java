@@ -121,7 +121,7 @@ public class haosSpace extends mqttSpace {
             final Obj value = vid.isBranch() ? x.asRel().second() : x;
 
             final EntityType entityType = EntityType.inferFrom(valueId);
-            if (entityType == EntityType.NONE || !value.isRec() || !BASE_TYPES.contains(value.tid().basePath()) || !value.matches(entityType.type))
+            if (entityType == EntityType.NONE || !value.isRec() || !BASE_TYPES.contains(value.tid().basePath()) || !value.test(entityType.type))
                 return x;
             LOG.info("converting {{b}}%s{{X}} to {{y}}%s{{X}}", valueId, entityType.type.namedType());
             if (!value.asRec().has("command_topic") && value.asRec().has("friendly_name") && this.has("command_topic")) {

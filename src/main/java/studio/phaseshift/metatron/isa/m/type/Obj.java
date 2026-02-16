@@ -72,7 +72,7 @@ import static studio.phaseshift.metatron.util.CommonUtil.indent;
 import static studio.phaseshift.metatron.util.CommonUtil.nullOrElse;
 import static studio.phaseshift.metatron.util.Tuple.Pair;
 
-public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>, Feature.HasLogger, Cloneable /*Predicate<Obj>*/ {
+public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>, Feature.HasLogger, Cloneable, Predicate<Obj> {
 
     default <O extends Obj> O maybe() {
         return (O) this.c(cInt::maybe);
@@ -232,7 +232,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
         return this.apply(noobj());
     }
 
-    default boolean matches(final Obj rhs) {
+    default boolean test(final Obj rhs) {
         if (Obj.Helper.isAuto(rhs))
             return true;
         if (rhs.isType() && !rhs.asType().isBaseType() && this.tid().matches(rhs.tid()))
@@ -269,11 +269,11 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
         if (this.isCall())
             return this.tid().cV().within(rhs.tid().cV()); // TODO: this is really flimsy.
         if (rhs.isCall())
-            return this.matches(rhs.dom()) && rhs.apply(this).matches(rhs.rng());
+            return this.test(rhs.dom()) && rhs.apply(this).test(rhs.rng());
         if (!this.c().within(rhs.c()))
             return false;
         if (rhs.isType()) {
-            if (rhs.matches(T(CODE_TID)) || rhs.matches(T(INST_TID)))
+            if (rhs.test(T(CODE_TID)) || rhs.test(T(INST_TID)))
                 return true;
             return rhs.tid().isGeneric() ||
                     (Helper.typeInferenceMatch(this, rhs.as()) &&
@@ -681,7 +681,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
         }
 
         public static void objCheckAndSave(final Obj obj) {
-            if (Router.loaded() && !obj.isInstSet() && !obj.isNoObj() && !obj.isType() && !obj.matches(obj.type())) {
+            if (Router.loaded() && !obj.isInstSet() && !obj.isNoObj() && !obj.isType() && !obj.test(obj.type())) {
                 if (obj.isPoly()) {
                     final String matchDiffString = Poly.Helper.diffObjRecursion(obj, (obj.type().hasPredicate() && !obj.type().predicate().insts().getFirst().arg(0).isNoObj()) ?
                             obj.type().predicate().insts().getFirst().arg(0) :
@@ -819,9 +819,9 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
                             "maybe an obj", "the lhs obj else the arg obj", Map.of(jnt(0), "the rhs obj is the lhs is noobj"), "f(lhs)->lhs if lhs is an obj, else f(noobj)->arg"),// TODO: rec args needs resolution on generics connected
                     docWrap(instC(IS_INST_TID.dom(A.maybe()).rng(A.maybe()), lst(T(BOOL_TID.maybe())), (lhs, inst) -> inst.arg(0).orElse(BOOL_FALSE).boolValue() ? lhs : noobj()),
                             "any obj", "the lhs obj if arg is true", Map.of(jnt(0), "filter lhs if false"), "filters the lhs obj"), // TODO: generics are not working for some reason
-                    docWrap(instC(ISA_INST_TID.dom(ALL.maybe()).rng(ALL.maybe()), lst(T(ALL)), (lhs, inst) -> lhs.matches(inst.arg(0)) ? lhs : noobj()),
+                    docWrap(instC(ISA_INST_TID.dom(ALL.maybe()).rng(ALL.maybe()), lst(T(ALL)), (lhs, inst) -> lhs.test(inst.arg(0)) ? lhs : noobj()),
                             "an obj to match", "the unaltered obj if arg matches", Map.of(jnt(0), "filter lhs if doesn't match arg"), "a filter function f(x)->{0,x}"),
-                    instC(MATCHES_INST_TID.dom(ALL.maybe()).rng(BOOL_TID), lst(T(ALL.maybe())), (lhs, inst) -> bool(lhs.matches(inst.arg(0)))),
+                    instC(MATCHES_INST_TID.dom(ALL.maybe()).rng(BOOL_TID), lst(T(ALL.maybe())), (lhs, inst) -> bool(lhs.test(inst.arg(0)))),
                     docWrap(instC(BLOCK_INST_TID.dom(A.maybe()).rng(B), lst(T(B)), (lhs, inst) -> inst.arg(0)),
                             "a blocked obj", "the unapplied arg", Map.of(jnt(0), "the rhs without evaluation"), "the lhs obj is halted and the arg is the rhs obj"),
                     instC(SPLIT_INST_TID.dom(ALL).rng(LST_TID), lst(T(LST_TID)), (lhs, inst) -> lst(inst.arg(0).elements().map(e -> e.apply(lhs)).toList())),
@@ -916,7 +916,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
                     //instC(SELECT_TID.dom(ALL).rng(REC_TID.maybe()), lst(T(REC_TID)), (lhs, inst) -> inst.arg(0).<Rec>as().jvm(inst.arg(0).<Rec>as().<Rel>elementStream().map(r -> Tuple.Pair.with(r.first().apply(lhs), r.second().apply(lhs))).collect(Collectors.toMap(Tuple.Pair::get0, Tuple.Pair::get1, Obj::append, LinkedHashMap::new)))),
                     // instC(SELECT_TID.dom(ALL).rng(LST_TID.maybe()), lst(T(LST_TID)), (lhs, inst) -> inst.arg(0).<Lst>as().jvm(inst.arg(0).<Lst>as().elementStream().map(r -> r.apply(lhs)).toList())),
                     instC(REDUCE_INST_TID.dom(ALL.maybeSome()).rng(ALL), lst(T(ALL)), (lhs, inst) -> Stream.concat(inst.arg(0).<Inst>as().arg(0).stream(), lhs.stream()).reduce((a, b) -> inst.arg(0).<Inst>as().args(lst(a)).apply(b)).orElse(noobj())),
-                    instC(WHERE_INST_TID.dom(ALL).rng(ALL.maybe()), lst(T(ALL)), (lhs, inst) -> lhs.matches(inst.arg(0)) ? lhs : noobj()),
+                    instC(WHERE_INST_TID.dom(ALL).rng(ALL.maybe()), lst(T(ALL)), (lhs, inst) -> lhs.test(inst.arg(0)) ? lhs : noobj()),
                     instC(GROUP_INST_TID.dom(ALL.maybeSome()).rng(REC_TID), lst(T(REC_TID)), (lhs, inst) -> {
                         final Map<Obj, Obj> result = new LinkedHashMap<>();
                         lhs.stream().forEach(e -> {
@@ -929,7 +929,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
                                             result.compute(kk, (k, v) -> (v == null) ? vv : v.append(vv));
                                     }
                                 } else {
-                                    final Obj kk = kv.first().isCall() ? kv.first().apply(e) : e.matches(kv.first()) ? e : noobj();
+                                    final Obj kk = kv.first().isCall() ? kv.first().apply(e) : e.test(kv.first()) ? e : noobj();
                                     if (!kk.isNoObj()) {
                                         final Obj vv = kv.second().apply(e);
                                         if (!vv.isNoObj()) // TODO: stream through keys to get matching key for incur-append on grouping to the same key

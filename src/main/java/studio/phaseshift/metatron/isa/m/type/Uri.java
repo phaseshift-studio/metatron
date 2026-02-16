@@ -43,7 +43,6 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.mach.machInstSet.REWRITE_INST_TID;
 
 public interface Uri extends Mono, Ring.O<Uri> {
 
@@ -116,10 +115,10 @@ public interface Uri extends Mono, Ring.O<Uri> {
     }
 
     @Override
-    default boolean matches(final Obj obj) {
+    default boolean test(final Obj obj) {
         if (obj.isUri())
             return this.uriValue().matches(obj.uriValue());
-        return Mono.super.matches(obj);
+        return Mono.super.test(obj);
     }
 
 

@@ -72,7 +72,6 @@ public class mInstSet extends AbstractInstSet {
     public static final fURI CATCH_INST_TID = INST_TID.extend("catch");
     public static final fURI APPLY_INST_TID = INST_TID.extend("apply");
     public static final fURI START_INST_TID = INST_TID.extend("start");
-    public static final fURI RFROM_TID = INST_TID.extend("rfrom");
     public static final fURI COUNT_INST_TID = INST_TID.extend("count");
     public static final fURI SUM_INST_TID = INST_TID.extend("sum");
     public static final fURI CC_INST_TID = INST_TID.extend("cc");
@@ -241,7 +240,6 @@ public class mInstSet extends AbstractInstSet {
                 Tuple.Triplet.with(Tuple.Pair.with("select", null), List.of(SELECT_INST_TID), 1),
                 Tuple.Triplet.with(Tuple.Pair.with("where", null), List.of(WHERE_INST_TID), 1),
                 Tuple.Triplet.with(Tuple.Pair.with("update", null), List.of(UPDATE_INST_TID), 1),
-                Tuple.Triplet.with(Tuple.Pair.with("^", null), List.of(RFROM_TID), 1),
                 Tuple.Triplet.with(Tuple.Pair.with("?==", null), List.of(WHERE_INST_TID), 1),
                 Tuple.Triplet.with(Tuple.Pair.with("%==", null), List.of(GROUP_INST_TID), 1),
                 Tuple.Triplet.with(Tuple.Pair.with("==", null), List.of(SELECT_INST_TID), 1),

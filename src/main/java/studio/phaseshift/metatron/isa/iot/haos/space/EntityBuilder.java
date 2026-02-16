@@ -64,7 +64,7 @@ public class EntityBuilder {
         this.haosSpace = Router.global().getSpace(vidOrTid);
         this.haosPrefix = f(Space.Helper.extractRewrite(this.haosSpace.jvm()).get1()).asNode();
         final Obj deviceType = Router.readFromSpace(vidOrTid);
-        assert device.matches(deviceType);
+        assert device.test(deviceType);
         this.settings = rec(uri("unique_id"), uri(entityVID), uri("dev"), rec(uri("identifiers"), uri(device.vid()), uri("name"), device.at(uri("name"))));
     }
 

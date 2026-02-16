@@ -59,12 +59,12 @@ public class InstTest extends mObjTest {
         assertEquals(op, inst.tid().path());
         assertEquals(fURI.of(dom), inst.dom().tid());
         assertEquals(fURI.of(rng), inst.rng().tid());
-        assertTrue(inst.dom().matches(T(f(dom))));
-        assertTrue(inst.rng().matches(T(f(rng))));
-        assertTrue(testObj.matches(T(f(rng))));
-        assertTrue(testObj.matches(inst.rng()));
-        assertFalse(T(f(rng)).matches(testObj));
-        assertFalse(inst.rng().matches(testObj));
+        assertTrue(inst.dom().test(T(f(dom))));
+        assertTrue(inst.rng().test(T(f(rng))));
+        assertTrue(testObj.test(T(f(rng))));
+        assertTrue(testObj.test(inst.rng()));
+        assertFalse(T(f(rng)).test(testObj));
+        assertFalse(inst.rng().test(testObj));
         assertEquals(op + "?dom=" + dom + "&rng=" + rng, furi.big().toString());
         LOG.info("testing furi::rng<=dom: {{y}}%s{{g}}::{{b}}%s{{g}}<={{m}}%s{{X}}", furi.big(), furi.rng(), furi.dom());
     }
@@ -97,17 +97,17 @@ public class InstTest extends mObjTest {
             LOG.warn("resolution algorithm generates matching, but not equal final resolution -- skipping equality checks");
         else
             assertEquals(resolutionA, resultA);
-        assertTrue(resultA.matches(resolutionA));
+        assertTrue(resultA.test(resolutionA));
         assertTrue(resultA.tid().matches(resolutionA.tid()));
-        assertTrue(resultA.matches(specA));
+        assertTrue(resultA.test(specA));
         assertTrue(resultA.tid().matches(specA.tid()));
-        assertTrue(resultA.matches(defA));
+        assertTrue(resultA.test(defA));
         assertTrue(resultA.tid().matches(defA.tid()));
-        assertTrue(specA.matches(resolutionA));
+        assertTrue(specA.test(resolutionA));
         assertTrue(specA.tid().matches(resolutionA.tid()));
-        assertTrue(defA.matches(resolutionA));
+        assertTrue(defA.test(resolutionA));
         assertTrue(defA.tid().matches(resolutionA.tid()));
-        assertTrue(specA.matches(defA));
+        assertTrue(specA.test(defA));
         assertTrue(specA.tid().matches(defA.tid()));
     }
 

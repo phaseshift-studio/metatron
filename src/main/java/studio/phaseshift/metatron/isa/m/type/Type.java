@@ -22,6 +22,8 @@ import studio.phaseshift.metatron.algebra.PlusMonoid;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.mInstSet;
 import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
+import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.util.Tuple;
 
 import java.nio.ByteBuffer;
@@ -43,6 +45,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 public interface Type extends Obj, PlusMonoid<Type> {
 
     Type TYPE_TYPE = T(f("T"));
+    static final GraphittyLogger LOG = Graphitty.log(Type.class);
 
     @Override
     Type clone(final Object jvm, final fURI tid, final fURI vid);
@@ -62,17 +65,12 @@ public interface Type extends Obj, PlusMonoid<Type> {
 
     @Override
     default Obj clone() {
-        return null;
+        return this;
     }
 
     @Override
-    default fURI tid() {
-        return null;
-    }
-
-    @Override
-    default fURI vid() {
-        return null;
+    default Type type() {
+        return T(this.tid());
     }
 
     default String namedType() {
@@ -109,13 +107,13 @@ public interface Type extends Obj, PlusMonoid<Type> {
     }
 
     @Override
-    default boolean matches(final Obj rhs) {
+    default boolean test(final Obj rhs) {
         if (Obj.Helper.isAuto(rhs))
             return true;
         if (rhs.isNoObj() && this.c().isZeroable())
             return true;
         if (rhs.isCall())
-            return this.matches(rhs.dom());
+            return this.test(rhs.dom());
         if (!rhs.isType())
             return false;
         if (!this.c().within(rhs.c()))
@@ -135,7 +133,7 @@ public interface Type extends Obj, PlusMonoid<Type> {
             if (parentApply.isNoObj())
                 return noobj();
         }
-        return null == this.predicate() || obj.matches(predicate().apply(obj)) ?
+        return null == this.predicate() || obj.test(predicate().apply(obj)) ?
                 obj :
                 noobj();
     }

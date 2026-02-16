@@ -111,7 +111,7 @@ public interface Inst extends Call {
                     resolvedArgs.add(usrArg);
                 } else if (apiArg.isCall() && usrArg.isNoObj()) { // used for default args (when user arg is noobj)
                     final Obj r = apiArg.apply(usrArg).resolve(lhs);
-                    if (r.rng().matches(apiArg))
+                    if (r.rng().test(apiArg))
                         resolvedArgs.add(r);
                     else return null;
                 } else if (usrArg.isObjCall()) {
@@ -120,12 +120,12 @@ public interface Inst extends Call {
                         resolvedArgs.add(usrArg.resolve(lhs));
                     } else {
                         final Obj r = usrArg.resolve(lhs);
-                        if (r.rng().matches(apiArg)) // && userArg.rng().c().within(apiArg.c()))
+                        if (r.rng().test(apiArg)) // && userArg.rng().c().within(apiArg.c()))
                             resolvedArgs.add(r);
                         else return null;
                     }
                 } else {
-                    if (!usrArg.matches(apiArg))
+                    if (!usrArg.test(apiArg))
                         return null;
                     resolvedArgs.add(usrArg.resolve(lhs));
                 }
@@ -249,7 +249,7 @@ public interface Inst extends Call {
                     //.map(i -> i.isInst() ? i.asInst() : instC(this.tid().dom(lhs.tid()).rng(ALL.maybeSome()), this.args(), (lhs2, inst) -> Router.global().write(this.tid(), inst.args())))
                     .filter(Obj::isInst)
                     .map(Obj::asInst)
-                    .filter(i -> !this.tid().basePath().equals(AS_INST_TID) || this.arg(0).matches(i.arg(0)))
+                    .filter(i -> !this.tid().basePath().equals(AS_INST_TID) || this.arg(0).test(i.arg(0)))
                     .filter(i -> (i.args().isEmpty() && this.arg(0).isNoObj()) || i.args().isRec() || i.args().count() >= this.args().count()) // TODO: check which recs are default
                     .filter(i -> !lhs.isInst() || (i.dom().baseType().equals(INST_TID)))
                     //.sorted(Comparator.comparing(Inst::dom, (a, b) -> lhs.matches(a.dom()) ? -1 : lhs.matches(b.dom()) ? 1 : 0)) // TODO: explore this more fully
@@ -270,7 +270,7 @@ public interface Inst extends Call {
                     //.filter(i -> !Objects.isNull(i))
                     .map(i -> lhs.isInst() ? i : Helpers.bindGenerics(lhs, i, this))
                     .filter(i -> !Objects.isNull(i))
-                    .filter(i -> lhs.isInst() || lhs.matches(i.dom()))
+                    .filter(i -> lhs.isInst() || lhs.test(i.dom()))
                     //.filter(i -> lhs.matches(i.dom()) || (Form.of(i).equals(Form.mapper) && lhs.unique() && lhs.c(cInt.ONE()).matches(i.dom())))
                     //.map(i -> lhs.isType() && !lhs.isNoObj() && i.tid().dom().hasPattern() ? i.dom(lhs.as()) : i)
                     .map(i -> {
@@ -329,13 +329,13 @@ public interface Inst extends Call {
 
         Obj rhs;
         boolean modulateC = false;
-        if (BootLoader.TYPE_CHECK && !lhs.isFail() && !lhs.isCaughtFail() && !clhs.matches(cinst.dom()) && clhs.unique()) {
+        if (BootLoader.TYPE_CHECK && !lhs.isFail() && !lhs.isCaughtFail() && !clhs.test(cinst.dom()) && clhs.unique()) {
             // if (clhs.uniqueC().isOne() && !clhs.c().isOne()) { // && cinst.dom().c().within(cInt.SOME())) {
             clhs = clhs.c(cInt::one);
             cinst = this.resolve(clhs);
             modulateC = true;
             //  }
-            if (!clhs.matches(cinst.dom()))
+            if (!clhs.test(cinst.dom()))
                 return fail(mexcept("lhs range does not match inst domain: %s => %s [%s]", clhs.rng(), cinst.dom(), cinst));
         }
         if (!clhs.isFail() || cinst.isCatch()) {
@@ -344,7 +344,7 @@ public interface Inst extends Call {
                     return fail(mexcept("unable to determine inst function:" +
                             "\n\t%-10s => %-10s  | [inst]" +
                             "\n\t%-10s => %-10s  |  \\_dom" +
-                            "\n\t%-10s %s=> %-10s  |  \\_args", clhs, cinst, clhs.type(), cinst.dom(), clhs.type(), cinst.args().elements().allMatch(clhs::matches) ? "=" : "X", cinst.args()));
+                            "\n\t%-10s %s=> %-10s  |  \\_args", clhs, cinst, clhs.type(), cinst.dom(), clhs.type(), cinst.args().elements().allMatch(clhs::test) ? "=" : "X", cinst.args()));
                 }
                 cinst = Helpers.applyArgs(clhs, cinst);
                 Router.stack().push(cinst.args());
@@ -367,7 +367,7 @@ public interface Inst extends Call {
             } catch (final Exception e) {
                 rhs = e instanceof MTronException ? ((MTronException) e).asFail() : mexcept("unable to evaluate inst function: %s", cinst).cause(e).asFail();
             }
-            if (BootLoader.TYPE_CHECK && !rhs.isType() && !rhs.isFail() && !lhs.isCaughtFail() && !rhs.matches(cinst.rng()))
+            if (BootLoader.TYPE_CHECK && !rhs.isType() && !rhs.isFail() && !lhs.isCaughtFail() && !rhs.test(cinst.rng()))
                 rhs = mexcept("inst resolution failure: %s", cinst)
                         .cause(mexcept("rhs does not match inst range:\n%s", Poly.Helper.diffObjRecursion(rhs, cinst.rng())))
                         .asFail();
@@ -456,7 +456,7 @@ public interface Inst extends Call {
                                     return arg;
                                 else {
                                     final Obj r = Objs.trySingleton(arg.apply(lhs));
-                                    if (!arg.isCall() && !r.matches(arg)) {
+                                    if (!arg.isCall() && !r.test(arg)) {
                                         // LOG.error("unmatched inst arg in %s: %s ({{y}}lhs{{/y}}) {{g}}=>{{/g}} %s ({{y}}arg{{/y}}) {{r}}~!>{{/r}} %s ", this, lhs, arg, r);
                                         return arg;
                                     }
@@ -523,7 +523,7 @@ public interface Inst extends Call {
                             if (apiArg.tid().isCLessGeneric())
                                 apiArg = apiArg.tid(generics.getOrDefault(apiArg.tid().cLess(), userArg.tid())).c(apiArg.c());
                             //LOG.warn(apiArg + "----" + userArg);
-                            if (null != apiArg && !apiArg.isCall() && !userArg.tid().cLess().isGeneric() && !userArg.matches(apiArg)) {
+                            if (null != apiArg && !apiArg.isCall() && !userArg.tid().cLess().isGeneric() && !userArg.test(apiArg)) {
                                 // TODO: isClessGeneric() and cLess.isGeneric() behave differently
                                 return null;
                             }

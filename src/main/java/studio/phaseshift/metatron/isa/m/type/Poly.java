@@ -20,7 +20,6 @@ package studio.phaseshift.metatron.isa.m.type;
 
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.Tuple;
@@ -240,7 +239,7 @@ public interface Poly<P extends Poly<P, J>, J> extends Obj {
             else if (lhs.isLst() && rhs.isLst())
                 return diffLstRecursion(lhs.asLst(), rhs.asLst());
             else {
-                if (lhs.matches(rhs)) {
+                if (lhs.test(rhs)) {
                     return rel(lhs, rel(GOOD, rhs));
                 } else {
                     return rel(lhs, rel(FAIL, rhs));
@@ -254,7 +253,7 @@ public interface Poly<P extends Poly<P, J>, J> extends Obj {
             for (int i = 0; i < max; i++) {
                 final Obj x = i < lhs.lstValue().size() ? lhs.lstValue().get(i) : noobj();
                 final Obj y = i < rhs.lstValue().size() ? rhs.lstValue().get(i) : noobj();
-                if (!x.matches(y))
+                if (!x.test(y))
                     result.add(rel(FAIL, x));
                 else
                     result.add(rel(GOOD, x));
@@ -266,11 +265,11 @@ public interface Poly<P extends Poly<P, J>, J> extends Obj {
         public static Rec diffRecRecursion(final Rec lhs, final Rec rhs) {
             final Rec result = rec();
             rhs.asRec().elements().forEach(x -> {
-                final Optional<Rel> kvMatch = lhs.asRec().elements().filter(y -> y.first().matches(x.first()) && y.second().matches(x.second())).findFirst();
+                final Optional<Rel> kvMatch = lhs.asRec().elements().filter(y -> y.first().test(x.first()) && y.second().test(x.second())).findFirst();
                 if (kvMatch.isPresent())
                     result.put(rel(kvMatch.get().first(), rel(GOOD, x.first())), rel(kvMatch.get().second(), rel(GOOD, x.second())), MUTABLE);
                 else {
-                    final Optional<Rel> kMatch = lhs.asRec().elements().filter(y -> y.first().matches(x.first())).findFirst();
+                    final Optional<Rel> kMatch = lhs.asRec().elements().filter(y -> y.first().test(x.first())).findFirst();
                     if (kMatch.isPresent())
                         result.put(rel(kMatch.get().first(), rel(SORTA, x.first())), diffObjRecursion(kMatch.get().second(), x.second()), MUTABLE);
                     else
@@ -298,7 +297,7 @@ public interface Poly<P extends Poly<P, J>, J> extends Obj {
             for (int i = 0; i < max; i++) {
                 final Obj x = i < lhs.lstValue().size() ? lhs.lstValue().get(i) : noobj();
                 final Obj y = i < rhs.lstValue().size() ? rhs.lstValue().get(i) : noobj();
-                if (!x.matches(y))
+                if (!x.test(y))
                     result.add(mexcept("lhs does not match rhs: %s %s", x, y).asFail());
                 else
                     result.add(applyObjRecursion(x, y));
@@ -312,8 +311,8 @@ public interface Poly<P extends Poly<P, J>, J> extends Obj {
             rhs.asRec().elements().forEach(x -> {
                 try {
                     final Optional<Rel> kvMatch = lhs.asRec().elements()
-                            .filter(y -> y.first().matches(x.first()))
-                            .filter(y -> y.second().matches(x.second()))
+                            .filter(y -> y.first().test(x.first()))
+                            .filter(y -> y.second().test(x.second()))
                             .map(y -> rel(applyObjRecursion(y.first(), x.second()), applyObjRecursion(y.second(), x.second())))
                             .findFirst();
                     if (kvMatch.isPresent())

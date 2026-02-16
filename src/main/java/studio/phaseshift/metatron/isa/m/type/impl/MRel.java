@@ -74,9 +74,9 @@ public class MRel extends MObj implements Rel {
     }
 
     @Override
-    public boolean matches(final Obj rhs) {
+    public boolean test(final Obj rhs) {
         if (rhs.isRel())
-            return this.first().matches(rhs.asRel().first()) && this.second().matches(rhs.asRel().second());
-        return super.matches(rhs);
+            return this.first().test(rhs.asRel().first()) && this.second().test(rhs.asRel().second());
+        return super.test(rhs);
     }
 }

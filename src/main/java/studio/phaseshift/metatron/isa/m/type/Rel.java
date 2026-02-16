@@ -82,7 +82,7 @@ public interface Rel extends Poly<Rel, Tuple.Pair<Obj, Obj>>, Obj {
 
     @Override
     default boolean has(final Obj key) {
-        return this.jvm().get0().matches(key);
+        return this.jvm().get0().test(key);
     }
     
     
@@ -97,10 +97,10 @@ public interface Rel extends Poly<Rel, Tuple.Pair<Obj, Obj>>, Obj {
             final String step = singleSegment ? key.uriValue().toString() : key.uriValue().segments().getFirst();
             O result;
             final Uri asNode = uri(key.uriValue().asNode());
-            if (this.jvm().get0().matches(asNode))
+            if (this.jvm().get0().test(asNode))
                 return (O) (key.uriValue().isBranch() ? rel(asNode, this.jvm().get1()) : this.jvm().get1()).autoResolve(this);
             else {
-                final Obj temp = (this.jvm().get0().matches(uri(f(step).asNode())) ? this.jvm().get1() : NoObj.noobj()).autoResolve(this);
+                final Obj temp = (this.jvm().get0().test(uri(f(step).asNode())) ? this.jvm().get1() : NoObj.noobj()).autoResolve(this);
                 result = (O) (key.uriValue().isBranch() ? rel(key.uriValue().asNode().toUri(), temp) : temp);
             }
             /// ///////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -111,7 +111,7 @@ public interface Rel extends Poly<Rel, Tuple.Pair<Obj, Obj>>, Obj {
                 return (O) (this.jvm().get1().isPoly() ? this.jvm().get1().<Poly>as().at(uri(nextKey)) : noobj());
             }
         } else {
-            return (O) (this.jvm().get0().matches(key) ? this.jvm().get1() : noobj());
+            return (O) (this.jvm().get0().test(key) ? this.jvm().get1() : noobj());
         }
     }
 

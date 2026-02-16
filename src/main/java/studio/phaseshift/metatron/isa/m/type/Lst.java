@@ -123,6 +123,10 @@ public interface Lst extends Poly<Lst, List<Obj>>, PlusMonoid.O<Lst> {
             throw MTronException.of("unknown key for lst: %s", key);
         }
     }
+    
+    default <O extends Obj> O at(final int index) {
+        return this.at(jnt(index));
+    }
 
     @Override
     default <O extends Obj> O at(final Obj key) {
@@ -173,19 +177,19 @@ public interface Lst extends Poly<Lst, List<Obj>>, PlusMonoid.O<Lst> {
     }
 
     @Override
-    default boolean matches(final Obj rhs) {
+    default boolean test(final Obj rhs) {
         if (rhs.isLst()) {
             if (rhs.lstValue().size() > this.lstValue().size())
                 return false;
             for (int i = 0; i < rhs.lstValue().size(); i++) {
                 final Obj l = this.lstValue().get(i).autoResolve(this);
                 final Obj r = rhs.lstValue().get(i).autoResolve(this);
-                if (!l.matches(r))
+                if (!l.test(r))
                     return false;
             }
             return true;
         } else {
-            return Poly.super.matches(rhs);
+            return Poly.super.test(rhs);
         }
     }
 
@@ -203,7 +207,7 @@ public interface Lst extends Poly<Lst, List<Obj>>, PlusMonoid.O<Lst> {
                     instC(MERGE_INST_TID.dom(LST_TID).rng(ALL_STAR), lst(STR_TYPE), (lhs, inst) -> str(lhs.elements().map(Obj::strValue).reduce("", (a, b) -> a + inst.arg(0).strValue() + b).substring(1))),
                     instC(GET_INST_TID.dom(LST_TID).rng(ALL_STAR), lst(INT_TYPE), (lhs, inst) -> lhs.<Lst>as().at(inst.arg(0))),
                     instC(GET_INST_TID.dom(LST_TID).rng(ALL_STAR), lst(URI_TYPE), (lhs, inst) -> lhs.<Lst>as().at(inst.arg(0))),
-                    instC(HAS_INST_TID.dom(LST_TID).rng(LST_TID.maybe()), lst(T(ALL)), (lhs, inst) -> lhs.<Lst>as().elements().anyMatch(r -> r.matches(inst.arg(0))) ? lhs : noobj()),
+                    instC(HAS_INST_TID.dom(LST_TID).rng(LST_TID.maybe()), lst(T(ALL)), (lhs, inst) -> lhs.<Lst>as().elements().anyMatch(r -> r.test(inst.arg(0))) ? lhs : noobj()),
                     instC(WITHIN_INST_TID.dom(LST_TID).rng(LST_TID), lst(T(ALL_STAR)), (lhs, inst) -> lst(inst.arg(0).apply(objs(lhs.stream().flatMap(Obj::elements))).stream().toList())),
                     instC(SUM_INST_TID.dom(LST_TID.maybeSome()).rng(LST_TID), lst(), (lhs, inst) -> inst.seed().jvm(lhs.stream().reduce(inst.seed(), (a, b) -> ((Lst) a).plus((Lst) b)).lstValue()), lst()),
                     instC(SELECT_INST_TID.dom(LST_TID).rng(LST_TID.maybe()), lst(T(LST_TID)), (lhs, inst) -> Poly.Helper.selectLstRecursion(lhs.asLst(), inst.arg(0).asLst())),

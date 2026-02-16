@@ -21,7 +21,6 @@ package studio.phaseshift.metatron.isa.m.type;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.mTest;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
 
@@ -92,9 +91,9 @@ public class NoObjTest extends mTest {
         final Obj obj2 = mParser.m_obj().parse(o2).get();
         LOG.info("testing %s{%s} %s %s{%s}", obj1, obj1.c(), match ? "{{g}}matches{{/g}}" : "{{r}}doesn't match{{/r}}", obj2, obj2.c());
         if (match) {
-            Assertions.assertTrue(obj1.matches(obj2));
+            Assertions.assertTrue(obj1.test(obj2));
         } else {
-            Assertions.assertFalse(obj1.matches(obj2));
+            Assertions.assertFalse(obj1.test(obj2));
         }
     }
 }
