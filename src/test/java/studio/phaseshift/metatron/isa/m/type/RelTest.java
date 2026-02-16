@@ -31,7 +31,7 @@ public class RelTest extends mTest {
     @CsvSource(value = {
             "(a=>b).as(rec::T)                                                     % [a=>b]",
             "(a=>b).as(rec::T).as(lst::T).>>                                       % [(a=>b)]",
-            "(a=>b)-<(<<.as(str::T)=>>>)                                           % 'a'=>b",
+            "(a=>b)-<(<<.as(str::T)=>>>)                                           % \"a\"=>b",
     }, delimiter = '%')
     public void testRelAs(final String code, final String expected) {
         mTest.evaluate(LOG, code, expected);

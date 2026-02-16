@@ -352,7 +352,7 @@ public class TypeTest extends mTest {
             "person  % .                                        % person::[name=>'a',age=>1,b=>2].as(person::T[>-.count().is(eq(3))]) % true",
             /// ////////////////////////////////////////////////////////////////////////////////////////////////////////////
             "person  % .                                        % 7.as(person::T)                                    % false",
-            "person  % .                                        % 'a person'.as(person::T)                           % false",
+            "person  % .                                        % \"a person\".as(person::T)                           % false",
             "person  % .                                        % [name=>'enoch'].as(person::T)                      % false",
             "person  % .                                        % [age=>333].as(person::T)                           % false",
             "person  % .                                        % [=>].as(person::T)                                 % false",

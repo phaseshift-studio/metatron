@@ -98,7 +98,7 @@ public class mInstSetTest extends InstSetTest {
             "'ab3cd'.regex('\\d*')                                                          % ['','','3','','','']",
             "'ab3cd'.regex('\\d+')                                                          % ['3']",
             "'ab3cd'.regex('\\d{2}')                                                        % [,]",
-    }, delimiter = '%')
+    }, delimiter = '%',quoteCharacter = '~')
     public void testStrCode(final String code, final String expected) {
         mTest.testCode(LOG, code, expected);
     }
@@ -404,11 +404,11 @@ public class mInstSetTest extends InstSetTest {
             "{1,2,3,4,5}.reduce(|inst(2){ mult(*0) })                               % 240",
             "{1,2,3,4,5}.reduce(|inst(1){ mult(*0) })                               % 120",
             "{1,2,3,4,5}.reduce(|inst(0){ plus(*0) })                               % 15",
-            "{'a','b','c'}.>-' '                                                    % \"a b c\"",
-            "{'a','b','c'}>-' '                                                     % \"a b c\"",
-            "'a b c'-<' '                                                           % [\"a\", \"b\", \"c\"]",
-            "'a b c'-<' '>-' '                                                      % \"a b c\"",
-            "'a b c'.split(' ').merge(' ')                                          % \"a b c\"",
+            "{\"a\",\"b\",\"c\"}.>-' '                                                    % \"a b c\"",
+            "{\"a\",\"b\",\"c\"}>-' '                                                     % \"a b c\"",
+            "\"a b c\".-<' '                                                           % [\"a\", \"b\", \"c\"]",
+            "\"a b c\".-<' '>-' '                                                      % \"a b c\"",
+            "\"a b c\".split(' ').merge(' ')                                          % \"a b c\"",
             "{a,b,c}.>-/                                                            % a/b/c",
             "{a,b,c}>-/                                                             % a/b/c",
             "a/b/c.-</                                                              % [a,b,c]",
@@ -699,7 +699,7 @@ public class mInstSetTest extends InstSetTest {
             "[a=>1,b=>2,c=>[d=>3,e=>[f=>4]]]>>3                                                                        % 4",
             "[a=>1,b=>2,c=>[d=>3,e=>[f=>4]]]<<4                                                                        % {,}",
             "[a=>1,b=>2,c=>[d=>3,e=>[f=>4]]]>>4                                                                        % {,}",
-    }, delimiter = '%')
+    }, delimiter = '%',quoteCharacter = '~')
     public void testShift(final String code, final String expected) {
         mTest.testCode(LOG, code, expected);
     }

@@ -40,7 +40,7 @@ public class StrTest extends mObjTest {
             "'abc'.as(bytes::T)                                                             % 0x616263",
             "'abc'.as(bytes::T).as(str::T)                                                  % \"abc\""
 
-    }, delimiter = '%')
+    }, delimiter = '%',quoteCharacter = '~')
     public void testAsInst(final String code, final String expected) {
         mTest.testCode(LOG, code, expected);
     }
@@ -54,7 +54,7 @@ public class StrTest extends mObjTest {
             "'ab3cd'.regex('\\d*')                                                          % ['','','3','','','']",
             "'ab3cd'.regex('\\d+')                                                          % ['3']",
             "'ab3cd'.regex('\\d{2}')                                                        % [,]",
-    }, delimiter = '%')
+    }, delimiter = '%',quoteCharacter = '~')
     public void testRegexInst(final String code, final String expected) {
         mTest.testCode(LOG, code, expected);
     }
@@ -65,7 +65,7 @@ public class StrTest extends mObjTest {
             "{'a','b','c','123'}.sum('22')                                                  % \"22abc123\"",
             "{}.sum('22')                                                                   % \"22\"",
             // "{}.sum?str<=str{*}()                                                           % \"\"",  // TODO
-    }, delimiter = '%')
+    }, delimiter = '%',quoteCharacter = '~')
     public void testSum(final String code, final String expected) {
         mTest.testCode(LOG, code, expected);
     }
@@ -99,7 +99,7 @@ public class StrTest extends mObjTest {
             "{'abc3d','aaa'}.has('e.*')                                                        % noobj"
             // "{'abc3d','aaa'}.where(not(has('e.')))                                          % {\"abc3d\",\"aaa\"}",
             // "{'abc3d','aaa'}.where(has('e.'))                                               % noobj",
-    }, delimiter = '%')
+    }, delimiter = '%',quoteCharacter = '~')
     public void testHasInst(final String code, final String expected) {
         mTest.testCode(LOG, code, expected);
     }
@@ -127,7 +127,7 @@ public class StrTest extends mObjTest {
     @CsvSource(value = {
             "'a'.plus('a')                                                                  % \"aa\"",
             "'ab3cd' + 'ab.'                                                                % \"ab3cdab.\"",
-    }, delimiter = '%')
+    }, delimiter = '%',quoteCharacter = '~')
     public void testPlusInst(final String code, final String expected) {
         mTest.testCode(LOG, code, expected);
     }

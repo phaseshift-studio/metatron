@@ -50,7 +50,7 @@ public class UriTest extends mTest {
             "uri::<http://webpage.com>                                    | <http://webpage.com>",
             "uri::<http://webpage.com>.type()                             | start(uri::T[])",
             "<http://webpage.com>.type()                                  | start(uri::T[])",
-            "'http://webpage.com'.type()                                  | start(str::T[])",
+            "\"http://webpage.com\".type()                                | start(str::T[])",
             //"a/b.plus(c/d)                                              | {a/b,c/d}",
             "a/b.plus(noobj)                                              | a/b",
             "a/b.mult(c/d)                                                | a/b/c/d",

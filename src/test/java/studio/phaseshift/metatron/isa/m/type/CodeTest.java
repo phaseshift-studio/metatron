@@ -36,9 +36,9 @@ public class CodeTest extends mTest {
     @CsvSource(value = {
             // furi | tid | dom | range
                 "1.plus(2)                                          % true",
-                "1.plus('abc')                                      % false",
+                "1.plus(\"abc\")                                      % false",
                 "{1,2,3}.plus(2)                                    % true",
-                "{1,2,3}.plus('abc')                                % false",
+                "{1,2,3}.plus(\"abc\")                                % false",
                 "*abc.plus(2)                                       % false",
                 "*?int<=(abc).plus(2)                               % true",
              //   "1.-<[_,_]                                          % true",   // TODO: this should pass . ??
@@ -54,7 +54,7 @@ public class CodeTest extends mTest {
                 "1.to(a).plus(from(a))                              % false",  // TODO: requires variable tracking in compilation
                 "*abc._                                             % true",
                 "1.*abc._                                           % true"
-    }, delimiter = '%')
+    }, delimiter = '%',quoteCharacter = '~')
     public void testDomRng(final String code, final boolean resolved) {
         Code obj = mParser.parse(code);
         LOG.debug("testing code resolution %s %s resolve", obj, resolved ? "{{g}}should{{X}}" : "{{r}}should not{{X}}");
