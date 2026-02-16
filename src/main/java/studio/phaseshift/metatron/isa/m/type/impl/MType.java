@@ -65,16 +65,11 @@ public class MType extends MObj implements Type {
                             null == constructor || constructor.isNoObj() ? obj.asType().constructor() : constructor), obj.tid(), bigVID); // coefficient specific type doesn't exist, create it
             }
         }
-      
-        final MType result = new MType(Tuple.Pair.with(predicate, constructor), bigTID, bigVID);
-        return result;
-
+        return new MType(Tuple.Pair.with(predicate, constructor), bigTID, bigVID);
     }
 
     @Override
     public Type clone(final Object jvm, final fURI tid, final fURI vid) {
-        // if (!tid.equals(vid))
-        //     throw MTronException.of("a tid and vid of a type must be the same: %s != %s", tid, vid);
         return T((Tuple.Pair<Call, Call>) jvm, tid, vid);
     }
 
