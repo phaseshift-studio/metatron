@@ -236,6 +236,31 @@ public class RecTest extends mTest {
 
     @ParameterizedTest
     @CsvSource(value = {
+            "[a=>1,b=>2].has(a,|?>0)                                % true",
+            "[a=>1,b=>2].has(a,|?>1)                                % false",
+            "[a=>1,b=>2].has(a,|?>0).has(b,|?>1)                    % true",
+            "[a=>1,b=>2].has(a,|?>0).has(b,|?>2)                    % false",
+            "[a=>1,b=>2].has(a,|?>0).has(b,|?>0)                    % true",
+            "[a=>1,b=>2].has(a,|?>0).has(b,|?>0).has(c,|?>0)        % false",
+            /// ///////////////////////////////////////////////////////
+            "[a=>1,b=>2].has(a,|gt(0))                              % true",
+            "[a=>1,b=>2].has(a,|gt(1))                              % false",
+            "[a=>1,b=>2].has(a,|gt(0)).has(b,|gt(1))                % true",
+            "[a=>1,b=>2].has(a,|gt(0)).has(b,|gt(2))                % false",
+            "[a=>1,b=>2].has(a,|gt(0)).has(b,|gt(0))                % true",
+            "[a=>1,b=>2].has(a,|gt(0)).has(b,|gt(0)).has(c,|gt(0))  % false",
+    }, delimiter = '%', quoteCharacter = '~')
+    public void testHas(final String code, final boolean matches) {
+        final Obj codeObj = mParser.parse(code);
+        LOG.error("testing has %s [expected:%s]", codeObj, matches);
+        if (matches)
+            assertFalse(codeObj.apply().isNoObj());
+        else
+            assertTrue(codeObj.apply().isNoObj());
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
             "a                                                  % a                       % true",
             "1                                                  % 1.0                     % false",
             "[1,2,3]                                            % [1,2,3]                 % true",

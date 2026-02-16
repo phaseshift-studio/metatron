@@ -64,7 +64,8 @@ public class StrTest extends mObjTest {
             "{'a','b','c','123'}.sum()                                                      % \"abc123\"",
             "{'a','b','c','123'}.sum('22')                                                  % \"22abc123\"",
             "{}.sum('22')                                                                   % \"22\"",
-            // "{}.sum?str<=str{*}()                                                           % \"\"",  // TODO
+            "{}.sum?str<=str{*}('')                                                         % \"\"",
+            //"{}.sum?str<=str{*}()                                                           % \"\"",  // TODO
     }, delimiter = '%',quoteCharacter = '~')
     public void testSum(final String code, final String expected) {
         mTest.testCode(LOG, code, expected);

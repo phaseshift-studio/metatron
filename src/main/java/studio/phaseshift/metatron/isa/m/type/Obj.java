@@ -628,6 +628,14 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
 
     <O extends Obj> O self(final Object jvm, final fURI tid, final fURI vid);
 
+    default boolean check() {
+        if (this.isNoObj() || this.isFail())
+            return false;
+        if (this.isBool())
+            return this.boolValue();
+        else return true;
+    }
+
     class Helper {
 
         private static final ObjSerializer<String> SERIALIZER = new ObjCleanStringSerializer();

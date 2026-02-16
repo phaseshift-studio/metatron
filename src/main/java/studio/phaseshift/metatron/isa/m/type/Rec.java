@@ -250,10 +250,13 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>>, PlusMonoid.O<Rec> {
                             furi = furi.queryMap(lhsRec.at(Q).asRec().elements().map(e -> Tuple.Pair.with(e.first().toCleanString(), e.second().toCleanString())).collect(Collectors.toMap(Tuple.Pair::get0, Tuple.Pair::get1)));
                         return uri(furi);
                     }),
+                    instC(HAS_INST_TID.dom(REC_TID).rng(REC_TID.maybe()), lst(T(ALL), T(ALL)), (lhs, inst) -> {
+                        final Obj result = inst.arg(1).apply(lhs.asRec().at(inst.arg(0)));
+                        return result.isFail() ? result : (result.check() ? lhs : noobj());
+                    }),
                     instC(HAS_INST_TID.dom(REC_TID).rng(REC_TID.maybe()), lst(T(ALL)), (lhs, inst) -> inst.arg(0).isRel() ?
                             (lhs.<Rec>as().elements().anyMatch(r -> r.test(inst.arg(0))) ? lhs : noobj()) :
                             (lhs.<Rec>as().elements().map(Rel::first).anyMatch(r -> r.test(inst.arg(0))) ? lhs : noobj())),
-                    instC(HAS_INST_TID.dom(REC_TID).rng(REC_TID.maybe()), lst(T(ALL), T(ALL)), (lhs, inst) -> inst.arg(1).apply(lhs.asRec().at(inst.arg(0))).boolValue() ? lhs : noobj()),
                     instC(GET_INST_TID.dom(REC_TID).rng(ALL_STAR), lst(T(URI_TID)), (lhs, inst) -> objs(lhs.stream().map(r -> r.<Rec>as().at(inst.arg(0))))),
                     instC(MERGE_INST_TID.dom(REC_TID).rng(REL_TID.maybeSome()), lst(), (lhs, inst) -> objs(lhs.elements())),
                     instC(MERGE_INST_TID.dom(REC_TID).rng(REC_TID), lst(T(REC_TID)), (lhs, inst) -> inst.arg(0).<Rec>as().plus(lhs.as())),//objs(lhs.elementStream())),
