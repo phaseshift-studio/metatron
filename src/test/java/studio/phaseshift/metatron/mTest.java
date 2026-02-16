@@ -23,8 +23,8 @@ import org.junit.jupiter.api.BeforeAll;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.type.Call;
+import studio.phaseshift.metatron.isa.m.type.Code;
 import studio.phaseshift.metatron.isa.m.type.Fail;
-import studio.phaseshift.metatron.isa.m.type.NoObj;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.type.LogObj;
 import studio.phaseshift.metatron.isa.mach.type.Router;
@@ -38,6 +38,7 @@ import java.util.function.Supplier;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.isa.m.mInstSet.START_INST_TID;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -113,11 +114,29 @@ public abstract class mTest {
         return Tuple.Quartet.with(parseResult.get0(), parseResult.get1(), evalResult.get0(), evalResult.get1());
     }
 
+    public static void testRewrite(final GraphittyLogger LOG, final String code, final String expected, final String expectedResult) {
+        final Code firstStage = mParser.parse(code);
+        final Obj secondStage = mParser.parse(expected);
+        final Obj compilation = firstStage.rewrite().tryToInst();
+        final Obj result = mParser.parse(expectedResult);
+        LOG.debug("testing compilation %s => %s [expected:%s]", firstStage, secondStage, compilation);
+        assertEquals(secondStage, compilation);
+        Obj actual = firstStage.apply(noobj());
+        LOG.debug("testing evaluation 1 %s => %s [expected:%s]", firstStage, actual, result);
+        assertEquals(result, actual);
+        actual = secondStage.apply(noobj());
+        LOG.debug("testing evaluation 2 %s => %s [expected:%s]", secondStage, actual, result);
+        assertEquals(result, actual);
+        actual = compilation.apply(noobj());
+        LOG.debug("testing evaluation 3 %s => %s [expected:%s]", compilation, actual, result);
+        assertEquals(result, actual);
+    }
+
     public static void testCode(final GraphittyLogger LOG, final String code, final String expected) {
         if (expected.trim().equals("<ERROR>")) {
             try {
                 final Obj cd = mParser.m_call_prefix(START_INST_TID).parse(code).get();
-                final Obj actual2 = cd.apply(NoObj.noobj());
+                final Obj actual2 = cd.apply(noobj());
                 LOG.debug("testing %s <= %s", cd, actual2.type());
                 actual2.stream().forEach(actual -> {
                     if (!(cd.isFail() || actual.isFail())) {
@@ -135,7 +154,7 @@ public abstract class mTest {
         } else {
             final Obj cd = mParser.m_call_prefix(START_INST_TID).parse(code).get();
             final Obj ex = mParser.eval(expected);
-            final Obj actual = cd.apply(NoObj.noobj());
+            final Obj actual = cd.apply(noobj());
             LOG.debug("testing %s => %s => %s [expected:%s]", cd, code, actual, ex);
             assertEquals(ex, actual);
             

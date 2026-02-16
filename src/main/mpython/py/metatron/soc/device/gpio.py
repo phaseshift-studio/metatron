@@ -24,7 +24,7 @@ from metatron.util.mach import translator, router
 GPIO_TID = f("/soc/gpio")
 
 class Gpio(Device):
-    def __init__(self, pin_range: range, soc_vid, name="gpio"):
+    def __init__(self, soc_vid, name="gpio"):
         Device.__init__(self, soc_vid, {}, GPIO_TID, name)
 
     def start(self) -> 'Gpio':
@@ -36,6 +36,7 @@ class Gpio(Device):
 
     @staticmethod
     def _set_gpio(device, pin, value, do_log=True):
+        LOG.info("gpio {{y}}{}{{X}} set to {{b}}{}", pin, value)
         value = jnt(0) if value is None else translator().to_obj(value)
         # if pin not in device.pvm.keys() or device.pvm[pin] != value:
         Pin(translator().from_obj(pin), Pin.OUT).value(translator().from_obj(value))

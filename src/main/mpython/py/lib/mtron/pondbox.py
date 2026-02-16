@@ -35,7 +35,7 @@ class PondBox(Architecture):
         self.soc = WemosD1Mini(vid=self.soc_vid)
         self.soc.attach(Wifi(wlan=self.wlan, secrets=self.secrets, soc_vid=self.soc_vid).start())
         #self.soc.attach(Memory(soc_vid=self.soc_vid).start())
-        self.soc.attach(Gpio(pin_range=range(0, 35), soc_vid=self.soc_vid).start())
+        self.soc.attach(Gpio(soc_vid=self.soc_vid).start())
         #self.soc.attach(Pwm(soc_vid=self.soc_vid).start())
         #####################################################################################################
         self.ha = HomeAssistant(self.soc, secrets.get("homeassistant", {}).get("prefix", "homeassistant"))

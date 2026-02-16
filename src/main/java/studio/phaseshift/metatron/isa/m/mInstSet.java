@@ -24,6 +24,7 @@ import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.AbstractInstSet;
 import studio.phaseshift.metatron.util.Tuple;
 
+import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -169,7 +170,7 @@ public class mInstSet extends AbstractInstSet {
             .tid(REC_TID)
             .vid(SPACE_TID)
             .predicate(isa_(rec(uri(PATTERN), URI_TYPE)).tryToInst()).create();
-    
+
     public mInstSet() {
         super(M_ISA_TID, M_ISA_TID);
     }
@@ -206,6 +207,32 @@ public class mInstSet extends AbstractInstSet {
     @Override
     public Set<Obj> consts() {
         return Stream.of(noobj()).collect(LinkedHashSet::new, LinkedHashSet::add, LinkedHashSet::addAll);
+    }
+
+    @Override
+    public Set<Inst> rewrites() {
+        return new LinkedHashSet<>(List.of(
+                InstSet.Helper.rewriter(f("id_removal_rewrite"), code -> code.selfJVM(code.insts().stream().filter(i -> !i.tid().equals(ID_INST_TID)).toList()).asCode()),
+                InstSet.Helper.rewriter(f("map_nest_rewrite"), code -> {
+                    final List<Inst> newInsts = new ArrayList<>();
+                    boolean done = false;
+                    while (!done) {
+                        done = true;
+                        for (final Inst i : code.insts()) {
+                            if (i.tid().equals(MAP_INST_TID) && i.arg(0).isObjCall() && i.arg(0).<Call>as().insts().getFirst().tid().basePath().equals(MAP_INST_TID)) {
+                                done = false;
+                                LOG.debug("nesting rewrite: %s", i);
+                                newInsts.add(i.arg(0).asInst());
+                            } else {
+                                newInsts.add(i);
+                            }
+                        }
+                        code.selfJVM(new ArrayList<>(newInsts));
+                        newInsts.clear();
+                    }
+                    return code;
+                })
+        ));
     }
 
     @Override

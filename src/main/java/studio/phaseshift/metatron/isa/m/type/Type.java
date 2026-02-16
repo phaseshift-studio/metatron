@@ -157,6 +157,14 @@ public interface Type extends Obj, PlusMonoid<Type> {
         return this.tid(this.tid().zero()).jvm(Tuple.Pair.with(null, null));
     }
 
+    final static class Helper {
+        public static Obj typePredicateObj(final Type type) {
+            if (type.hasPredicate() && type.predicate().insts().size() == 1 && type.predicate().insts().getFirst().tid().basePath().equals(ISA_INST_TID))
+                return type.predicate().insts().getFirst().arg(0);
+            return type.predicate();
+        }
+    }
+
     final class TypeType {
 
         public static Set<Inst> insts() {

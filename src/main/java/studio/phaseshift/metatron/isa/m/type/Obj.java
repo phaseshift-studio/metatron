@@ -454,6 +454,24 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
         return this instanceof Type;
     }
 
+    default Obj as(final Type type) {
+        if (!type.hasPredicate() && !type.hasConstructor() && this.tid().equals(type.tid()))
+            return this;
+        if (type.hasPredicate()) {
+            boolean noMatch;
+            try {
+                noMatch = type.predicate().apply(this).isNoObj();
+            } catch (final Exception e) {
+                noMatch = true;
+            }
+            if (noMatch)
+                throw MTronException.of("%s is not a %s\n%s", this, type.predicate(), indent(Poly.Helper.diffObjRecursion(this, Type.Helper.typePredicateObj(type)).toString(), 2));
+        }
+        return type.hasConstructor() ?
+                type.constructor().apply(this).tid(type.tid()) :
+                this.tid(type.tid());
+    }
+
     default Bool asBool() {
         return (Bool) this;
     }
@@ -756,7 +774,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
         public static Set<Inst> insts() {
             return new LinkedHashSet<>(List.of(
                     // instC(AS_INST_TID.dom(REL_TID).rng(REL_TID), lst(REL_TYPE), (lhs, inst) -> recurssiveAs(lhs, inst.arg(0).as())),
-                    instC(AS_INST_TID.dom(A).rng(B), lst(T(B)), (lhs, inst) -> lhs.tid(inst.arg(0).tid())),
+                    instC(AS_INST_TID.dom(A).rng(B), lst(T(ALL)), (lhs, inst) -> inst.arg(0).isType() ? lhs.as(inst.arg(0).asType()) : fail(MTronException.of("%s is not a %s", lhs, inst.arg(0)))),
                     instC(IMPORT_INST_TID.dom(ALL.maybe()).rng(fURI.NOOBJ.zero()), lst(REL_TYPE), (lhs, inst) -> MTronException.wrap(() -> BootLoader.loadInstSetProvider(inst.arg(0).uriValue()).map(ServiceLoader.Provider::get).map(i -> noobj()).reduce(noobj(), (a, b) -> noobj()))),
                     instC(DEDUP_INST_TID.dom(A.maybeSome()).rng(A.maybeSome()), lst(), (lhs, inst) -> objs(lhs.stream().map(o -> o.c().gt(cInt.ZERO()) ? o.c(cInt::one) : o.c(c -> cInt.of(-1))).distinct())),
                     //  instC(DEDUP_INST_TID.dom(A.maybeSome()).rng(A.maybeSome()), lst(T(B)), (lhs, inst) -> objs(lhs.stream().map(o -> o.c().gt(cInt.ZERO()) ? o.c(cInt::one) : o.c(c -> cInt.of(-1))).map(o -> inst.arg(0).apply(o)).distinct())),

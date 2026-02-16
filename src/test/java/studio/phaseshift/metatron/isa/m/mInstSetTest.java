@@ -174,13 +174,12 @@ public class mInstSetTest extends InstSetTest {
     }
 
     @Test
-    @Disabled
     public void testNestedEvaluationPerformance() {
         long previousEvalTime = 0;
         long previousParseTime = 0;
-        long parseThreshold = 200;
-        long evalThreshold = 20;
-        int maxSteps = 12;
+        long parseThreshold = 400;
+        long evalThreshold = 50;
+        int maxSteps = 5;
         for (int steps = 1; steps < maxSteps; steps++) {
             StringBuilder sb = new StringBuilder("start(1).");
             sb.append("map(".repeat(steps));
@@ -188,6 +187,7 @@ public class mInstSetTest extends InstSetTest {
             sb.append(")".repeat(steps));
             LOG.warn("testing level %s nest with %s", steps, Graphitty.string(sb.toString()));
             final Tuple.Quartet<Obj, Long, Obj, Long> parseResult = mTest.testParseEvalPerformance(LOG, () -> mParser.m_code().parse(sb.toString()).get(), NoObj::noobj);
+            LOG.warn("\tcompilation: %s", parseResult.get0());
             final long evalAbsoluteValue = Math.abs(previousEvalTime - parseResult.get3());
             final long parseAbsoluteValue = Math.abs(previousParseTime - parseResult.get1());
             assertInstanceOf(Call.class, parseResult.get0());
@@ -779,5 +779,19 @@ public class mInstSetTest extends InstSetTest {
     }, delimiter = '%')
     public void testSwap(final String code, final String expected) throws Exception {
         mTest.testCode(LOG, code, expected);
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "1.map(+2)              % 1.map(+2)   % 3",
+            "1.map(map(map(+2)))    % 1.map(+2)   % 3",
+            "1._._._                % start(1)    % 1",
+            "1._._._._              % start(1)    % 1",
+            "1._._._._._            % start(1)    % 1",
+            "1._._._._._._          % start(1)    % 1",
+            "1._._._._._._._        % start(1)    % 1",
+    }, delimiter = '%')
+    public void testRewrites(final String code, final String expected, final String expectedResult) throws Exception {
+        mTest.testRewrite(LOG, code, expected, expectedResult);
     }
 }

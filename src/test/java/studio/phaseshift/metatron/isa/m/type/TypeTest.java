@@ -318,7 +318,6 @@ public class TypeTest extends mTest {
     }
 
     @ParameterizedTest
-    @Disabled
     @CsvSource(value = {
             // tid   |  typedef                                 | instance                                         | matches?
             "person  % rec::T[?[name=>?str::T,age=>?int::T]]    % person::[name=>'enoch',age=>365]                 % true",
@@ -390,7 +389,7 @@ public class TypeTest extends mTest {
             "person  % .                                        % [name=>'base',age=>'the number one']             % false",
             "person  % .                                        % [name=>'base',age=>1,another=>[a=>b]]            % true",
             ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-            "nat     % int::T[is(gt(0))]                        % nat::23                                          % true",
+          /*  "nat     % int::T[is(gt(0))]                        % nat::23                                          % true",
             "nat     % .                                        % int::2.as(nat::T[is(gt(1))])                     % true",
             "nat     % .                                        % int::0.as(nat::T[is(eq(0))])                     % false",
             "nat     % .                                        % int::0.as(int::T[is(eq(0))])                     % true",
@@ -451,7 +450,7 @@ public class TypeTest extends mTest {
             ".       % .                                        % agenat::-1                                       % false",
             ".       % .                                        % agenat::200                                      % false",
             ".       % .                                        % nat::200.as(agenat::T)                           % false",
-            ".       % .                                        % agenat::29                                       % true",
+            ".       % .                                        % agenat::29                                       % true",*/
     }, delimiter = '%')
     public void testTyping(final String tid, final String typeDef, final String instance, final boolean shouldSucceed) {
         try {

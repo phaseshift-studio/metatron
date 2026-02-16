@@ -21,16 +21,17 @@ package studio.phaseshift.metatron.isa.m.type;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.Space;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
 import java.util.Set;
+import java.util.function.Function;
 
+import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.furi.fURI.f;
+import static studio.phaseshift.metatron.isa.m.mInstSet.CODE_TID;
+import static studio.phaseshift.metatron.isa.m.type.Code.CODE_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
+import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 
 public interface InstSet extends Space {
-
 
 
     fURI A = f("A");
@@ -40,7 +41,7 @@ public interface InstSet extends Space {
     fURI E = f("E");
     fURI F = f("F");
     fURI G = f("G");
-    
+
     @Override
     fURI pattern();
 
@@ -51,4 +52,11 @@ public interface InstSet extends Space {
     Set<Inst> insts();
 
     Set<Inst> rewrites();
+
+    public static class Helper {
+
+        public static Inst rewriter(final fURI tid, Function<Code, Code> rewrite) {
+            return instC(tid.dom(ALL.maybe()).rng(CODE_TID.maybe()), lst(CODE_TYPE), (lhs, inst) -> rewrite.apply(inst.arg(0).asCode()).as());
+        }
+    }
 }

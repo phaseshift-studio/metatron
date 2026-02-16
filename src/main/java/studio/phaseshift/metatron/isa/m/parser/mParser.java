@@ -161,14 +161,14 @@ public class mParser {
                 .map(t -> new MLst(pick(t, 2), pick(t, 0), pick(t, 4))));
 
         rec_parser.set(seq(m_type_prefix(), of('[').trim(), rec_internal(obj_rel_back_parser, m_call_prefix(MAP_INST_TID)), of(']').trim(), m_vid_postfix()).trim().map(t -> rec((Map<Obj, Obj>) pick(t, 2), pick(t, 0), pick(t, 4))));
-        inst_parser.set(choice(m_inst_c(), m_inst_b()));
+        inst_parser.set(choice(m_inst_b(), m_inst_c()));
 
     }
 
     public static Parser m_inst_b() {
         return seq(
                 m_inst_furi(), // 0 inst_tid
-                seq(of('(').trim(), choice(rec_internal(m_furi().map(t -> ((fURI) t).toUri()), m_call_prefix(MAP_INST_TID)), lst_internal(), of("")).trim(), of(')').trim()).pick(1), // 1 inst_args
+                seq(of('(').trim(), choice(rec_internal(m_furi().map(t -> ((fURI) t).toUri()), m_call_prefix(MAP_INST_TID)), lst_internal(), of("")).trim(), of(')').trim(), of('{').not()).pick(1), // 1 inst_args
                 m_vid_postfix()) //  inst_code
                 // inst_seed []
                 .map(t -> (Inst) new MInst(Triplet.with(

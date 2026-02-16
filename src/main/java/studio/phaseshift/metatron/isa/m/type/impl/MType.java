@@ -78,7 +78,7 @@ public class MType extends MObj implements Type {
     public Type clone(final Object jvm, final fURI tid, final fURI vid) {
         // if (!tid.equals(vid))
         //     throw MTronException.of("a tid and vid of a type must be the same: %s != %s", tid, vid);
-        return new MType((Tuple.Pair<Call, Call>) jvm, tid, vid);
+        return T((Tuple.Pair<Call, Call>) jvm, tid, vid);
     }
 
     @Override

@@ -21,12 +21,14 @@ package studio.phaseshift.metatron.isa.m.type;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjCleanStringSerializer;
 import studio.phaseshift.metatron.isa.mach.type.MMachine;
+import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 
 import static studio.phaseshift.metatron.isa.m.mInstSet.AS_INST_TID;
@@ -58,21 +60,29 @@ public interface Code extends Call {
         return this.apply().iterator();
     }
 
+    default Code rewrite() {
+        final AtomicReference<Code> rewrittenCode = new AtomicReference<>(this);
+        Router.global().spaces()
+                .elements()
+                .filter(r -> r.second() instanceof InstSet)
+                .flatMap(r -> r.second().<InstSet>as().rewrites().stream())
+                .forEach(i -> rewrittenCode.set(i.apply(rewrittenCode.get()).asCode()));
+        return rewrittenCode.get();
+    }
+
     @Override
     default Code resolve(final Obj lhs) {
         //if(this.insts().stream().noneMatch(x -> x.resolution().equals(Inst.Resolution.A)))
         //  return this;
         GraphittyLogger LOG = Graphitty.log(this);
-        // this.code = new ExplainRewrite().rewrite(code.<Code>as());
-        // process bcode inst pipeline
-        //this.code = Rewriter({Rewriter::by(), Rewriter::explain()}).apply(this.code);
-        // setup global behavior around barriers, initials, and terminals
-        LOG.debug("resolving code:\n        [{{y}}PREPILED{{/y}}] %s {{g}}=>{{/g}}\n%s", lhs, ObjCleanStringSerializer.prettyPrintCode(this));
+        LOG.debug("reading code:\n        [{{y}}PREPILED{{/y}}] %s {{g}}=>{{/g}}\n%s", lhs, ObjCleanStringSerializer.prettyPrintCode(this));
+        /// ////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        final Code rewrittenCode = this.rewrite();
+        LOG.debug("rewriting code:\n        [{{y}}REWRITTEN{{/y}}] %s {{g}}=>{{/g}}\n%s", lhs, ObjCleanStringSerializer.prettyPrintCode(rewrittenCode));
         Obj token = lhs.isType() ? lhs : lhs.type();
-        //LOG.none("%s", token.rng());
         final List<Inst> resolvedCode = new ArrayList<>();
         boolean fullResolution = true;
-        for (final Inst inst : this.jvm()) {
+        for (final Inst inst : rewrittenCode.insts()) {
             try {
                 LOG.trace("   {{g}}=>{{/g}} resolving %s => %s", token, inst);
                 final Inst resolvedInst = (inst.tid().basePath().equals(AS_INST_TID) ? inst.rng(inst.arg(0).asType()).asInst() : inst).resolve(token);

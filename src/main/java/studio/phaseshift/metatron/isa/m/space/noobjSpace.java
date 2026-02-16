@@ -109,12 +109,12 @@ public final class noobjSpace implements Space, InstSet {
 
     @Override
     public String toString() {
-        return Helper.spaceToString(this);
+        return Space.Helper.spaceToString(this);
     }
 
     @Override
     public int hashCode() {
-        return Helper.spaceHashCode(this);
+        return Space.Helper.spaceHashCode(this);
     }
 
     @Override
