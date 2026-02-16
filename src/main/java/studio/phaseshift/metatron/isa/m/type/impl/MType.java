@@ -28,15 +28,12 @@ import studio.phaseshift.metatron.util.Tuple;
 import java.util.Objects;
 
 import static studio.phaseshift.metatron.isa.m.mInstSet.BASE_TYPES;
-import static studio.phaseshift.metatron.isa.m.mInstSet.NOOBJ_TID;
 
 
 public class MType extends MObj implements Type {
 
     protected MType(final Tuple.Pair<Call, Call> jvm, final fURI tid, final fURI vid) {
-        super(jvm,
-                null == vid ? tid.equals(NOOBJ_TID) ? tid.c("0") : tid.big() : vid.equals(NOOBJ_TID) ? vid.c("0").big() : vid.big(),
-                null == vid ? null : vid.big()); // TODO: hack until vid/tid pattern is replaced throughout
+        super(jvm, tid.big(), null == vid ? null : vid.big());
     }
 
     public static Type T(final Tuple.Pair<Call, Call> jvm, final fURI tid, final fURI vid) {
@@ -68,8 +65,8 @@ public class MType extends MObj implements Type {
                             null == constructor || constructor.isNoObj() ? obj.asType().constructor() : constructor), obj.tid(), bigVID); // coefficient specific type doesn't exist, create it
             }
         }
+      
         final MType result = new MType(Tuple.Pair.with(predicate, constructor), bigTID, bigVID);
-        //   Router.global().logger().warn(result);
         return result;
 
     }

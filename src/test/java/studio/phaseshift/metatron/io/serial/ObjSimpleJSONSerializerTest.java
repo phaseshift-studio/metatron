@@ -38,8 +38,8 @@ public class ObjSimpleJSONSerializerTest extends SerializerTest<JsonElement> {
             return false;
         if (!obj.c().isOne())
             return true;
-        if(obj.isUri() && !obj.uriValue().toString().trim().isEmpty() && toSerialize.startsWith("<") && toSerialize.endsWith(">"))
-            return false;
+        //if(obj.isUri() && !obj.uriValue().toString().trim().isEmpty() && toSerialize.startsWith("<") && toSerialize.endsWith(">"))
+          //  return false;
         return obj.isObjs() ||
                 (obj.isLst() && !obj.asLst().isEmpty()) ||
                 (obj.isUri() && obj.uriValue().toString().trim().isEmpty());

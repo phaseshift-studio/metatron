@@ -69,10 +69,10 @@ public class miotInstSet extends AbstractInstSet {
     public static final Type MIOT_THING_TYPE = Type.Builder.build()
             .tid(REC_TID)
             .vid(MIOT_THING_TID)
-            .predicate(isa_(rec(
+            .isaPredicate(rec(
                     uri("name"), STR_TYPE,
                     uri("usage"), rec(URI_TYPE, T(ALL)),
-                    uri("entity"), rec(URI_TYPE, T(MIOT_ENTITY_TID))))).create();
+                    uri("entity"), rec(URI_TYPE, T(MIOT_ENTITY_TID)))).create();
 
 
     static {

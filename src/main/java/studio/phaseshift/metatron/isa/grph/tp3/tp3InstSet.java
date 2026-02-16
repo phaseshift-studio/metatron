@@ -42,6 +42,7 @@ import static studio.phaseshift.metatron.isa.grph.tp3.space.schema.modernSchema.
 import static studio.phaseshift.metatron.isa.grph.tp3.space.tp3Space.TP3_SPACE_TYPE;
 import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.URI_TID;
+import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
@@ -69,20 +70,13 @@ public class tp3InstSet extends AbstractInstSet {
     public static final Type VRTX_TYPE = Type.Builder.build()
             .tid(ELMT_TID)
             .vid(VRTX_TID)
-            /*.constructor(
-                    instC(INST_TID.dom(ALL.maybe()).rng(VRTX_TID), lst(T(REC_TID)), (lhs, inst) -> {
-                        final Obj obj = null == inst.arg(0).vid() ? noobj() : Router.readFromSpace(inst.arg(0).vid());
-                        return obj.isNoObj() ? inst.arg(0) : obj;
-                    }))*/
-            .create();//.predicate(isa_(rec(
+            .isaPredicate(rec(
+                    IN, rec(URI_TYPE, T(EDGE_TID.maybeSome())),
+                    OUT, rec(URI_TYPE, T(EDGE_TID.maybeSome())))).create();
     public static final Type EDGE_TYPE = Type.Builder.build()
             .tid(ELMT_TID)
             .vid(EDGE_TID)
-            .create();
-    // .predicate(isa_(rec())).create();
-    // LABEL, URI_TYPE,
-    // OUT, VRTX_TYPE,
-    //IN, VRTX_TYPE))).create();
+            .isaPredicate(rec(IN, VRTX_TYPE, OUT, VRTX_TYPE)).create();
 
     @Override
     public Set<Obj> consts() {

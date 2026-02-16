@@ -18,7 +18,6 @@
 
 package studio.phaseshift.metatron.isa.m.type;
 
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -172,8 +171,8 @@ public class TypeTest extends mTest {
         }
     }
 
+
     @ParameterizedTest
-    @Disabled
     @CsvSource(value = {
             // obj               | type                                         | matches?
             "noobj               | noobj{0}::T                                | true",
@@ -205,14 +204,14 @@ public class TypeTest extends mTest {
             "1                   | int{2}::T[is(gt(0))]                       | false",
             "{0,0}               | int{2}::T[is(gt(0))]                       | false",
             "{2,3}               | int{2}::T[>-.is(gt(1)).else(fail::T)]      | true",
-            //   "{2,3}               | int{2}::T[>-.is(gt(2)).else(fail::T)]      | false",
-            //  "{2,3}               | int{2}::T[>-.is(gt(4)).else(fail::T)]      | false",
+            "{2,3}               | int{2}::T[>-.is(gt(2)).else(fail::T)]      | false",
+            "{2,3}               | int{2}::T[>-.is(gt(4)).else(fail::T)]      | false",
             "{5,6}               | int{2}::T[>-.is(gt(4)).else(fail::T)]      | true",
             "{2,2}               | int{2}::T[is(gt(1))]                       | true",
             "{3,3}               | int{2}::T[is(gt(1))]                       | true",
-            // "{0,1}               | int{2}::T[is(gt(0))]                         | false",
+            "{0,1}               | int{2}::T[is(gt(0))]                         | false",
             "{0,0}               | int{2}::T[is(gt(1))]                       | false",
-            // "{0,-1}               | int{2}::T[is(gt(1))]                        | false",
+            "{0,-1}               | int{2}::T[is(gt(1))]                        | false",
             //  "1               | int^:is(gt(0))                               | false"},
     },
             delimiter = '|')
@@ -269,7 +268,7 @@ public class TypeTest extends mTest {
             "int::T              | bignat::T                                  | false",
             "int::T              | 0                                          | false",
             "0                   | int::T                                     | true",
-            // "0                   | nat::T                                     | false",
+            "0                   | nat::T                                     | false",
             // "int::T              | nat::T + int::T                            | true",
             //"0                   | nat::T[mult(int::T)]                                        | false",
             "0                   | int::T[is(or(matches(int::T),matches(real::T)))]            | true",

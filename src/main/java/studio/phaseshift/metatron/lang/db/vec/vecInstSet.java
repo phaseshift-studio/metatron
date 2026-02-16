@@ -24,17 +24,16 @@ import studio.phaseshift.metatron.isa.m.type.Lst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.m.type.impl.AbstractInstSet;
-import studio.phaseshift.metatron.isa.web.parser.ObjJSONSerializer;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.furi.fURI.ALL;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
+import static studio.phaseshift.metatron.isa.m.type.Real.REAL_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
@@ -56,40 +55,32 @@ public class vecInstSet extends AbstractInstSet {
     public static final fURI DOT_TID = INST_TID.extend("dot");
     public static final fURI TRANSPOSE_INST_TID = INST_TID.extend("transpose");
     public static final fURI SQRT_TID = INST_TID.extend("sqrt");
-    //public static final fURI JSON_TID = INST_TID.extend("json");
-    private static final ObjJSONSerializer JSON_TRANSLATOR = new ObjJSONSerializer();
 
+    public static final Type VEC_TYPE = Type.Builder.build().tid(LST_TID).vid(VEC_TID).create();
+    public static final Type CMPLX_TYPE = Type.Builder.build().tid(LST_TID).vid(CMPLX_TID).isaPredicate(lst(REAL_TYPE, REAL_TYPE)).create();
     public static final Type MTRX_TYPE = Type.Builder.build()
             .tid(LST_TID)
             .vid(MTRX_TID)
             .create();
- 
 
-   public vecInstSet(final fURI vid) {
-        super(VEC_INSTSET_TID, vid);
-    }
 
-    public static vecInstSet create() {
-        return new vecInstSet(fURI.fnull);
-    }
-
-    public static vecInstSet create(final fURI vid) {
-        return new vecInstSet(vid);
+    public vecInstSet() {
+        super(VEC_INSTSET_TID, VEC_INSTSET_TID);
     }
 
     @Override
     public Set<Obj> consts() {
-        return Stream.of(real(Math.sqrt(-1.0d), IMG_TID, IMG_TID)).collect(Collectors.toSet());
+        return new LinkedHashSet<>(List.of(real(Math.sqrt(-1.0d), IMG_TID, IMG_TID)));
     }
 
     @Override
     public Set<Inst> insts() {
-        return Stream.of(
-              //  instC(JSON_TID.dom(STR_TID).rng(ALL), lst(), (lhs, inst) -> JSON_TRANSLATOR.parse(lhs.strValue())),
-                instC(PLUS_INST_TID.dom(VEC_TID).rng(VEC_TID), lst(T(VEC_TID)), (lhs, inst) -> cross_(inst.arg(0)).apply(lhs)),
+        return new LinkedHashSet<>(List.of(
+                //  instC(JSON_TID.dom(STR_TID).rng(ALL), lst(), (lhs, inst) -> JSON_TRANSLATOR.parse(lhs.strValue())),
+                instC(PLUS_INST_TID.dom(VEC_TID).rng(VEC_TID), lst(VEC_TYPE), (lhs, inst) -> cross_(inst.arg(0)).apply(lhs)),
                 //  instC(PLUS_TID.dom(RVEC_TID).rng(RVEC_TID), lst(T(RVEC_TID)), (lhs, inst) -> lhs.value(lhs.<MRealVec>as().value().add(inst.arg(0).<MRealVec>as().value()))),
                 instC(SQRT_TID.dom(REAL_TID).rng(REAL_TID), lst(), (lhs, inst) -> lhs.jvm(Math.sqrt(lhs.realValue()))),
-                instC(DOT_TID.dom(VEC_TID).rng(ALL), lst(T(VEC_TID)), (lhs, inst) -> {
+                instC(DOT_TID.dom(VEC_TID).rng(ALL), lst(VEC_TYPE), (lhs, inst) -> {
                             Obj result = null;
                             if (lhs.<Lst>as().count() != inst.arg(0).<Lst>as().count())
                                 throw MTronException.of("dot product requires equal length vecs: %d != %d", lhs.<Lst>as().count(), inst.arg(0).<Lst>as().count());
@@ -99,11 +90,11 @@ public class vecInstSet extends AbstractInstSet {
                             }
                             return result;
                         }
-                )).collect(LinkedHashSet::new, LinkedHashSet::add, LinkedHashSet::addAll);
+                )));
     }
 
     @Override
     public Set<Type> types() {
-        return Stream.of(T(VEC_TID, isa_(T(LST_TID))), T(MTRX_TID), T(CMPLX_TID)).collect(Collectors.toSet());
+        return new LinkedHashSet<>(List.of(VEC_TYPE, CMPLX_TYPE, MTRX_TYPE));
     }
 }

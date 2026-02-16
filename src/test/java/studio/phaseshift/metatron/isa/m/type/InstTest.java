@@ -80,6 +80,7 @@ public class InstTest extends mObjTest {
             "{1,2}     % test?A{*}<=A{*}(A{*}::T)         % test({3,4})      % test?int{4}<=int{2}(int{2}::T)",
             "{1,2}     % test?A{+}<=A{+}(A{+}::T)         % test({3,4})      % test?int{4}<=int{2}(int{2}::T)",
             "{1,2}     % test?A{*}<=A{+}(A{*}::T)         % test({3,4})      % test?int{4}<=int{2}(int{2}::T)",
+            "noobj     % test?A<=noobj(A::T)              % test(3)          % test?int<=noobj(int::T)",
             "noobj     % test?A<=A{0}(A::T)               % test(3)          % test?int<=int{0}(int::T)",
             "noobj     % test?A{*}<=A{0}(A{*}::T)         % test({1,2,3})    % test?int{3}<=int{0}(int{3}::T)",
     }, delimiter = '%')
@@ -113,7 +114,7 @@ public class InstTest extends mObjTest {
 
     @Test
     public void testInstFCode() {
-        Inst i = instC(f("dosomething").dom(NOOBJ_TID), lst(T(INT_TID), T(INST_TID)), "*b.plus(*a)");
+        Inst i = instC(f("dosomething").dom(INT_TID.maybe()).rng(INT_TID), lst(T(INT_TID), T(INST_TID)), "*b.plus(*a)");
         assertEquals(jnt(4), i.args(rec(uri("a"), jnt(1), uri("b"), jnt(3))).resolve(noobj()).apply());
         //i = instC(f("dosomething"), lst(T(INT_TID), T(STR_TID)), "*b.-<''>-.count().plus(*a)");
         //assertEquals(jnt(4), i.args(rec(uri("a"), jnt(1), uri("b"), str("abc"))).resolve(noobj()).apply());

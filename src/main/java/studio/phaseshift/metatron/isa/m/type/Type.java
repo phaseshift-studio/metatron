@@ -81,13 +81,11 @@ public interface Type extends Obj, PlusMonoid<Type> {
         return mInstSet.BASE_TYPES.contains(this.tid().basePath());
     }
 
+
     default Type parentType() {
         if (this.tid().equals(this.vid()))
             return null;
-        if (this.vid() != null)
-            return Router.global().read(this.vid()).asType();
-        else
-            return Router.global().read(this.tid()).asType();
+        return Router.global().read(this.tid().basePath()).asType();
     }
 
     default Call constructor() {
@@ -207,6 +205,11 @@ public interface Type extends Obj, PlusMonoid<Type> {
 
         public Builder predicate(final Call predicate) {
             this.predicate = predicate;
+            return this;
+        }
+
+        public Builder isaPredicate(final Poly<?, ?> predicate) {
+            this.predicate = isa_(predicate).tryToInst();
             return this;
         }
 

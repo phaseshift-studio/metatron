@@ -39,8 +39,8 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Rel;
 import studio.phaseshift.metatron.isa.m.type.Type;
-import studio.phaseshift.metatron.isa.mach.type.MMachine;
 import studio.phaseshift.metatron.isa.mach.type.LogObj;
+import studio.phaseshift.metatron.isa.mach.type.MMachine;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.Border;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
@@ -61,10 +61,8 @@ import java.util.function.Supplier;
 import static org.jline.keymap.KeyMap.*;
 import static studio.phaseshift.metatron.BootLoader.BOOTING;
 import static studio.phaseshift.metatron.furi.fURI.ALL;
-import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.INST_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TID;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.start_;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
@@ -98,16 +96,19 @@ public class Console extends JRec implements Closeable, Runnable {
     public static Console LOCAL_INSTANCE = null;
     public MMachine machine = null;
 
-    public static final Type CONSOLE_TYPE = T(CONSOLE_TID, null, isa_(rec()), instC(INST_TID.dom(ALL.maybe()).rng(CONSOLE_TID), lst(T(REC_TID)), (lhs, inst) -> {
-        final Console console = new Console(inst.arg(0).as());
-        BootLoader.getExecutor().submit(console);
-        LOCAL_INSTANCE = console;
-        Router.global().write(f("/sys/obj/console"), console);
-        return console;
-    }));
+    public static final Type CONSOLE_TYPE = Type.Builder.build()
+            .tid(REC_TID)
+            .vid(CONSOLE_TID)
+            .isaPredicate(rec())
+            .constructor(instC(INST_TID.dom(ALL.maybe()).rng(CONSOLE_TID), lst(T(REC_TID)), (lhs, inst) -> {
+                final Console console = new Console(inst.arg(0).as(), inst.arg(0).vid());
+                BootLoader.getExecutor().submit(console);
+                LOCAL_INSTANCE = console;
+                return console;
+            })).create();
 
-    public Console(final Rec options) {
-        super(null, options.jvm(), CONSOLE_TID, f("/sys/obj/console"));
+    public Console(final Rec options, final fURI vid) {
+        super(null, options.jvm(), CONSOLE_TID, vid);
         this.jvm = this;
         try {
             final DefaultParser parser = new DefaultParser()
@@ -150,7 +151,7 @@ public class Console extends JRec implements Closeable, Runnable {
     }
 
     public static Console of(final Rec options) {
-        return new Console(options);
+        return new Console(options,null);
     }
 
     @Override

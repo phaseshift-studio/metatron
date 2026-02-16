@@ -53,7 +53,7 @@ public class MObjFactory extends MRec implements ObjFactory {
     public static final Type M_FACTORY_TYPE = Type.Builder.build()
             .tid(FACTORY_TID)
             .vid(OBJ_FACTORY_TID)
-            .constructor(instC(INST_TID.dom(ALL.maybe()).rng(OBJ_FACTORY_TID), lst(), (lhs, inst) -> MObjFactory.of()))
+            .constructor(MObjFactory::of)
             .create();
 
     private final Map<Class<?>, Function> extensions = new HashMap<>();

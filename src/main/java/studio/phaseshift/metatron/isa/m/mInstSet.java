@@ -33,7 +33,6 @@ import java.util.stream.Stream;
 import static studio.phaseshift.metatron.Tokens.PATTERN;
 import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.furi.fURI.f;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
 import static studio.phaseshift.metatron.isa.m.space.memSpace.MEM_SPACE_TYPE;
 import static studio.phaseshift.metatron.isa.m.space.metaSpace.META_SPACE_TYPE;
 import static studio.phaseshift.metatron.isa.m.space.stackSpace.STACK_SPACE_TYPE;
@@ -168,7 +167,7 @@ public class mInstSet extends AbstractInstSet {
     public static final Type SPACE_TYPE = Type.Builder.build()
             .tid(REC_TID)
             .vid(SPACE_TID)
-            .predicate(isa_(rec(uri(PATTERN), URI_TYPE)).tryToInst()).create();
+            .isaPredicate(rec(uri(PATTERN), URI_TYPE)).create();
 
     public mInstSet() {
         super(M_ISA_TID, M_ISA_TID);

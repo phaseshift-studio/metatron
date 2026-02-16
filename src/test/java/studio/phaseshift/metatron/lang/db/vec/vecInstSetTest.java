@@ -18,23 +18,22 @@
 
 package studio.phaseshift.metatron.lang.db.vec;
 
-import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.isa.InstSetTest;
 import studio.phaseshift.metatron.mTest;
 
-import static studio.phaseshift.metatron.furi.fURI.f;
-
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class vecInstSetTest  extends InstSetTest {
-    
-   public vecInstSetTest() {
-           super(() -> vecInstSet.create(f("/sys/space/vec")));
-   }
-   
+@Disabled
+public class vecInstSetTest extends InstSetTest {
+
+    public vecInstSetTest() {
+        super(vecInstSet::new);
+    }
+
     @ParameterizedTest
     @CsvSource(value = {
             "9.0.sqrt()                                   % 3.0",

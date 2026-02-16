@@ -68,7 +68,7 @@ public class fsSpace extends AbstractSpace<FileSystem> {
             uri(Tokens.PATTERN), URI_TYPE,
             uri(Tokens.REWRITE), rel(URI_TYPE, URI_TYPE),
             uri(Tokens.SCRIPT).maybe(), rec(URI_TYPE, URI_TYPE));
-    public static final Type FS_TYPE = Type.Builder.build()
+    public static final Type FS_SPACE_TYPE = Type.Builder.build()
             .tid(SPACE_TID)
             .vid(FS_TID)
             .constructor(

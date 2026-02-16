@@ -70,7 +70,8 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.mach.io.space.file.fsSpace.FS_TYPE;
+import static studio.phaseshift.metatron.isa.mach.io.space.file.fsSpace.FS_SPACE_TYPE;
+import static studio.phaseshift.metatron.isa.mach.io.space.serial.serialSpace.SERIAL_SPACE_TYPE;
 import static studio.phaseshift.metatron.isa.mach.type.console.Console.CONSOLE_TYPE;
 
 /*
@@ -139,7 +140,8 @@ public class machInstSet extends AbstractInstSet {
                 DOC_TYPE,
                 SUBQ_TYPE,
                 SUB_TYPE,
-                FS_TYPE,
+                FS_SPACE_TYPE,
+                SERIAL_SPACE_TYPE,
                 FILE_TYPE,
                 IMAGE_FILE_TYPE,
                 FACTORY_TYPE,
