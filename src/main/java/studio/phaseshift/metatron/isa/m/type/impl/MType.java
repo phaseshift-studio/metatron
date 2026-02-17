@@ -62,7 +62,7 @@ public class MType extends MObj implements Type {
                 else
                     return new MType(Tuple.Pair.with(
                             null == predicate || predicate.isNoObj() ? obj.asType().predicate() : predicate,
-                            null == constructor || constructor.isNoObj() ? obj.asType().constructor() : constructor), obj.tid(), bigVID); // coefficient specific type doesn't exist, create it
+                            null == constructor || constructor.isNoObj() ? obj.asType().constructor() : constructor), obj.tid().c(tid.c()), bigVID); // coefficient specific type doesn't exist, create it
             }
         }
         return new MType(Tuple.Pair.with(predicate, constructor), bigTID, bigVID);

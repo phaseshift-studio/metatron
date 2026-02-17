@@ -194,6 +194,14 @@ public class TypeTest extends mTest {
             "{,}                 | int{0}::T                                  | true",
             "{1,1}               | int{2}::T[is(eq({2,2}))]                   | false",
             //   "{1,1}               | int{2}::T[is?int{2}<=int{2}(eq({1,1}))]                     | true",
+            "{'a','b'}           | str{2}::T                                  | true",
+            "{'a','b'}           | str{2,3}::T                                | true",
+            "{'a','b','c'}       | str{2,3}::T                                | true",
+            "{'a','b','c','d'}   | str{2,3}::T                                | false",
+            "{}                  | str{2,3}::T                                | false",
+            "{}                  | str{0,3}::T                                | true",
+            "{'b'}               | str{2}::T                                  | false",
+            "{'b'}               | str{*}::T                                  | true",
             "{1,2}               | int{2}::T                                  | true",
             "{1,2,3}               | int{1,3}::T                              | true",
             "{1,2,3}               | int{1,2}::T                              | false",
@@ -556,6 +564,65 @@ public class TypeTest extends mTest {
         assertEquals(matches, matchesTypeStack.stream().reduce(true, (a, b) -> a && b));
         //assertEquals(expectedTypeStack, deducedTypeStack.subList(1, deducedTypeStack.size()));
         testMatches(LOG, instance, type, matches);
+    }
+
+    @ParameterizedTest
+    @TestData(value = {
+            "being    -> rec::T[?[age=>int::T]]",
+            "person   -> being::T[?[name=>str::T]]",
+            "mortal   -> person::T[?[age=>?<120]]",
+            "immortal -> being::T[?[alias=>str{2,3}::T]]",
+            "team     -> rec::T[?[flag=>str::T.-<''>-.count().?=2, member=>being{+}::T]]"})
+    @CsvSource(value = {
+            "[age=>2]                                                            % being::T              % true",
+            "[age=>'2']                                                          % being::T              % false",
+            "[name=>'marko',age=>29]                                             % person::T             % true",
+            "[name=>'marko',age=>121]                                            % mortal::T             % false",
+            "[name=>'marko',age=>120]                                            % mortal::T             % false",
+            "[name=>'marko',age=>119]                                            % mortal::T             % true",
+            "[name=>'marko',age=>120]                                            % immortal::T           % false",
+            "[name=>'marko',age=>120,alias=>'m']                                 % immortal::T           % false",
+            "[name=>'marko',age=>120,alias=>{'m','mar'}]                         % immortal::T           % true",
+            "[name=>'marko',age=>120,alias=>{'m','mar','mr'}]                    % immortal::T           % true",
+            "[name=>'marko',age=>120,alias=>{'m','mar','mr','mmm'}]              % immortal::T           % false",
+            "[name=>'marko',age=>29,alias=>{'m','mar','mr','mmm'}]               % person::T             % true",
+            "[flag=>'us',member=>{}]                                             % team::T               % false",
+            "[flag=>'us',member=>{being::[age=>29],being::[age=>34]}]            % team::T               % true",
+            "[flag=>'us',member=>{being::[age=>29],mortal::[age=>134]}]          % team::T               % false",
+            "[flag=>'us',member=>{being::[age=>29],person::[name=>'a',age=>35]}] % team::T               % true",
+            "[flag=>'us',member=>{being::[age=>29],[blah=>'stuff']}]             % team::T               % false",
+            "[flag=>'us',member=>{[age=>29],[age=>34]}]                          % team::T               % true",
+            "[flag=>'us',member=>{[age=>29],[age=>34],[age=>35]}]                % team::T               % true",
+            "[flag=>'usa',member=>{[age=>29],[age=>34],[age=>35]}]               % team::T               % false",
+            "[flag=>'mex',member=>{[age=>12]}]                                   % team::T               % false",
+            "[flag=>'mex',member=>{[age=>12],[age=>13]}]                         % team::T               % false",
+            "[flag=>'mx',member=>{[age=>12],[age=>13]}]                          % team::T               % true",
+    }, delimiter = '%')
+    public void testComplexTypes(final String instance, final String type, final boolean matches) {
+        LOG.warn("testing %s %s %s", instance, matches ? "{{g}}matches{{/g}}" : "{{r}}doesn't match{{/r}}", type);
+        try {
+            final Obj instanceObj = mParser.parse(instance);
+            final Obj typeObj = mParser.parse(type);
+            if (matches) {
+                try {
+                    assertTrue(instanceObj.test(typeObj));
+                    instanceObj.as(typeObj.asType());
+                } catch (Exception e) {
+                    fail(e);
+                }
+            } else {
+                assertFalse(instanceObj.test(typeObj));
+                try {
+                    instanceObj.as(typeObj.asType());
+                    fail();
+                } catch (Exception e) {
+                    assertTrue(true);
+                }
+            }
+        } catch (Exception e) {
+            LOG.error(e);
+            assertFalse(matches);
+        }
     }
 
     private static List<Type> deducedTypeStack(final Obj type) {

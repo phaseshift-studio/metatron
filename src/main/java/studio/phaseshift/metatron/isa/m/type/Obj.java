@@ -246,8 +246,8 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
         else if (rhs.isNoObj())
             return false;
         /// //////////////////////////////
-        // if (rhs.isUri() && this.isUri())
-        //  return this.uriValue().matches(rhs.uriValue());
+        if (rhs.isUri() && this.isUri() && !this.uriValue().matches(rhs.uriValue()))
+            return false;
         final fURI base = this.tid().basePath();
         if (BASE_TYPES.contains(base) &&
                 !(this instanceof Objs) &&
@@ -273,11 +273,15 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
         if (!this.c().within(rhs.c()))
             return false;
         if (rhs.isType()) {
-            if (rhs.test(T(CODE_TID)) || rhs.test(T(INST_TID)))
+            if (rhs.tid().isGeneric() || rhs.test(T(CODE_TID)) || rhs.test(T(INST_TID)))
                 return true;
-            return rhs.tid().isGeneric() ||
-                    (Helper.typeInferenceMatch(this, rhs.as()) &&
-                            (!rhs.asType().hasPredicate() || !rhs.apply(this).isNoObj()));
+            if(this.isObjs() && this.stream().anyMatch(Obj::isCall)) // TODO: a hack (see RecTest requirements vs. TypeTest requirements)
+                return false;
+            if (this.isObjs() && this.stream().allMatch(o -> o.test(rhs.tid(rhs.tid().c(o.c().toString())))))
+                return true;
+            if (rhs.asType().isBaseType() && !this.baseType().matches(rhs.tid()))
+                return false;
+            return !rhs.asType().hasPredicate() || rhs.apply(this).check();
         }
         return this.tid().matches(rhs.tid()) &&
                 Objects.equals(this.jvm(), rhs.jvm());
@@ -458,13 +462,13 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
         if (!type.hasPredicate() && !type.hasConstructor() && this.tid().equals(type.tid()))
             return this;
         if (type.hasPredicate()) {
-            boolean noMatch;
+            boolean match;
             try {
-                noMatch = type.predicate().apply(this).isNoObj();
+                match = this.test(type);
             } catch (final Exception e) {
-                noMatch = true;
+                match = false;
             }
-            if (noMatch)
+            if (!match)
                 throw MTronException.of("%s is not a %s\n%s", this, type.predicate(), indent(Poly.Helper.diffObjRecursion(this, Type.Helper.typePredicateObj(type)).toString(), 2));
         }
         return type.hasConstructor() ?
@@ -642,20 +646,6 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
 
         public static boolean isAuto(final Obj obj) {
             return obj.isCall() && ((Call) obj).isAuto();
-        }
-
-        public static boolean typeInferenceMatch(final Obj lhs, final Type rhs) {
-            if (rhs.isBaseType()) {
-                if (lhs.isObjs()) {
-                    if (!lhs.tid().matches(rhs.tid()))
-                        return false;
-                } else if (!lhs.baseType().matches(rhs.tid()))
-                    return false;
-            }
-            // if (rhs.tid().hasPattern() && !lhs.tid().matches(rhs.tid()))
-            //S   return false;
-            return null == rhs.predicate() || !rhs.apply(lhs).isNoObj();
-
         }
 
         public static int objHashCode(final Obj obj) {
