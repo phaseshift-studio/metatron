@@ -105,11 +105,11 @@ public class tp3Space extends grphSpace<Graph> {
         }
         return new tp3Space(graph, config.jvm(), vid);
     }
-    
+
     public static tp3Space from(final Element element) {
         return (tp3Space) Router.readFromSpace(f(element.graph().configuration().get(String.class, tp3Space.TP3_GRAPH_CONFIGURATION_KEY)));
     }
-    
+
     public fURI elementVID(final Element element) {
         return element instanceof Vertex ?
                 f(this.vertexPrefix + "/" + element.id().toString()) :
@@ -163,6 +163,8 @@ public class tp3Space extends grphSpace<Graph> {
     @Override
     public Obj write(final fURI vid, final Obj obj) {
         return studio.phaseshift.metatron.furi.Q.Helper.processPreWrite(this.qs(), vid, vid, obj).orElseGet(() -> {
+            if(obj.jvm() instanceof ElementMap) // underlying store has already updated the element accordingly
+                return obj;
             Space.Helper.resolveWrite(LOG, this, vid.basePath(), obj, this.directWriter(), this.directReader());
             //return obj;
             return studio.phaseshift.metatron.furi.Q.Helper.processPostWrite(this.qs(), vid, vid, obj).orElse(studio.phaseshift.metatron.furi.Q.Helper.processQlessWrite(this.qs(), vid, vid, obj).orElse(obj));
@@ -209,6 +211,8 @@ public class tp3Space extends grphSpace<Graph> {
                 });
                 return noobj();
             } else {
+                if (obj.jvm() instanceof ElementMap)
+                    return obj;
                 final String vidString = pattern.toString();
                 if (vidString.startsWith(this.vertexPrefix)) {
                     final String suffix = vidString.replaceFirst(this.vertexPrefix + "/", "");
@@ -217,7 +221,7 @@ public class tp3Space extends grphSpace<Graph> {
                         final Vertex vertex = IteratorUtil.stream(this.sjvm.vertices(id)).findFirst().orElseGet(() -> this.sjvm.addVertex(T.label, obj.tid().basePath().toString(), T.id, id));
                         LOG.info("writing vertex %s => %s", vid, vertex);
                         obj.asRec().elements()
-                                .filter(e -> !e.first().equals(OUT))
+                                .filter(e -> !e.first().equals(IN) && !e.first().equals(IN))
                                 .forEach(e -> {
                                     LOG.info("writing vertex property %s =%s=> %s", vertex, e.first(), e.second());
                                     vertex.property(e.jvm().get0().uriValue().toString(), FACTORY.toObj(e.jvm().get1()).jvm());
@@ -238,7 +242,7 @@ public class tp3Space extends grphSpace<Graph> {
                                         }));
                         return VertexMap.vertexToRec(vertex, this);
                     } catch (final Exception e) {
-                        return obj;
+                        return fail(e);
                     }
                 } else {
                     throw MTronException.of("unknown tp3 vid: %s", vid);
