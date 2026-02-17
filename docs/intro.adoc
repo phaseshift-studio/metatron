@@ -200,23 +200,25 @@ The coefficient serves a unique and significant role in the definitions of `type
 🧱
 .coefficient sugar notation
 [%autowidth]
-[cols="1,1,1"]
+[%header,cols="1,1,1"]
 !===
-! `{0,0}` ! `{0}` ! `noobj` 
-! `{1,1}` ! `{1}` or empty ! a single `obj`
-! `{0,1}` ! `{?}` ! "maybe"
-! `{1,}`  ! `{+}` ! "some"
-! `{,}`   ! `{*}` ! "maybe some"
+! complete ! sugar ! description 
+! `{0,0}`  ! `{0}` ! `noobj` 
+! `{1,1}`  !       ! a single `obj`
+! `{n,n}`  ! `{n}` ! exactly n
+! `{0,1}`  ! `{?}` ! maybe
+! `{1,}`   ! `{+}` ! some
+! `{,}`    ! `{*}` ! maybe some
 !===
 
 🧱
 [source,mtron,role="center",float="left"]
 ----
-rec::T[?[name=>str::T,language=>uri{+}::T]]@project
-│  │ │ │                  │         │       │
-│  │ │ │                  │         │       └── vid
-│  │ │ │                  │         └────────── "some" coefficient
-│  │ │ │                  └──────────────────── rec key
+rec::T[?[name=>str::T,lang=>uri{+}::T]]@artifact
+│  │ │ │               │        │       │
+│  │ │ │               │        │       └── vid
+│  │ │ │               │        └────────── {1,} coefficient ("some")
+│  │ │ │               └─────────────────── rec key
 │  │ │ │
 │  │ │ └───────────────── isa instruction
 │  │ └─────────────────── type token
@@ -226,15 +228,15 @@ rec::T[?[name=>str::T,language=>uri{+}::T]]@project
 |===
 
 
-The type `project` has all the requirements of `rec` as well as two additional requirements: `name` and `language`. The `name` value must be a single `str` (`{1,1}`}) and the `language` value must be one or more languages identified by a `uri` (`{+} = {1,}`). The third project has no languages and as such, can be defined as a type of `project`.
+The type `artifact` has all the requirements of `rec` as well as two additional requirements: `name` and `lang`. The `name` value must be a single `str` (`{1,1}`}) and the `lang` value must be one or more languages identified by a `uri` (`{+} = {1,}`). The third artifact has no languages and as such, can be defined as a type of `artifact`.
 
 
 ++++
 <!-- 🐖
-project -> rec::T[?[name=>str::T,language=>uri{+}::T]]
-project::[name=>'metatron',language=>{java,typescript,python}]
-project::[name=>'home assistant',language=>{python}]
-project::[name=>'unknown',language=>{}]
+artifact -> rec::T[?[name=>str::T,lang=>uri{+}::T]]
+artifact::[name=>'metatron',lang=>{java,python}]
+artifact::[name=>'home assistant',lang=>{python}]
+artifact::[name=>'unknown',lang=>{}]
 -->
 ++++
 

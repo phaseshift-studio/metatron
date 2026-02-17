@@ -6,14 +6,14 @@
 /* Change the values in root for quick customisation. If you want even more fine grain... venture further. */
 :root {
     /*------------------------*/
-    --mblue: #005DB0;
-    --mdarkblue: #050e53;
-    --mmagenta: #483D8B;
-    --mred: #7e3200;
-    --mgreen: #008b6e;
+    --mblue: #2652e5;
+    --mmagenta: #825181;
+    --mred: #970207;
+    --mgreen: #4d8813;
     --mdarkgray: #494554;
     --mlightgray: #797585;
-    --myellow: #00c1e1;
+    --myellow: #bac008;
+    --maqua: #167a96;
     /*------------------------*/
     --maincolor: #282c34;
     --primarycolor: var(--mred);
@@ -23,7 +23,7 @@
     --tertiarycolor: #4db6ac;
     --sidebarbackground: #191C24;
     --linkcolor: var(--mmagenta);
-    --linkcoloralternate: var(--mblue);
+    --linkcoloralternate: #2652e5;
     --white: #FFFFFF;
 }
 
@@ -264,25 +264,17 @@ pre code {
     font-weight: bolder;
 }
 
-.hljs-mtron-thrown,
-.hljs-mtron-noobj {
-    color: var(--mred);
-}
-
-.hljs-mtron-bool,
-.hljs-mtron-sys-furi {
-    color: var(--myellow);
-}
-
 .hljs-mtron-real,
-.hljs-mtron-int {
+.hljs-mtron-bytes,
+.hljs-mtron-int,
+.hljs-mtron-str,
+.hljs-mtron-bool,
+.hljs-mtron-furi-query,
+.hljs-mtron-sugar-inst,
+.hljs-mtron-query,
+.hljs-mtron-sys-furi,
+.hljs-mtron-log-warn{
     color: var(--myellow);
-}
-
-.hljs-mtron-type-prefix,
-.hljs-mtron-furi-query {
-    color: var(--mred);
-!important;
 }
 
 .h {
@@ -290,74 +282,48 @@ pre code {
     font-weight: bold !important;
 }
 
-.hljs-mtron-str {
-    color: var(--myellow);
-    font-style: italic;
-}
-
-.hljs-mtron-query {
-    color: var(--mblue);
-}
-
-.hljs-punctuation {
-    color: var(--mgreen);
-}
-
-.hljs-mtron-rec {
-    color: var(--mgreen);
-    font-weight: bold;
-}
-
 .hljs-mtron-rec-key {
-    color: var(--myellow);
+    color: var(--maqua);
 }
 
 #header,
-.hljs-mtron-form {
-    color: var(--mgreen);
-}
-
-.hljs-mtron-prompt-begin {
-    color: var(--mmagenta);
-    font-weight: bold;
-}
-
-.hljs-mtron-prompt-end {
-    color: var(--mgreen);
-}
-
-.hljs-mtron-result-prefix {
-    color: var(--mmagenta);
-    font-weight: bold;
-}
-
+.hljs-mtron-form,
+.hljs-punctuation,
+.hljs-mtron-rec,
+.hljs-mtron-result-prefix,
+.hljs-mtron-type-prefix,
+.hljs-mtron-prompt-end,
 .hljs-mtron-log-info {
     color: var(--mgreen);
 }
 
+.hljs-mtron-prompt-begin,
+.hljs-mtron-noobj,
+.hljs-mtron-T {
+    color: var(--mmagenta);
+}
+
 .hljs-mtron-pipe,
-.hljs-mtron-log-error {
+.hljs-mtron-log-error,
+.hljs-mtron-match-fail,
+.hljs-mtron-fail,
+.hljs-mtron-fail-bar,
+.hljs-mtron-thrown {
     color: var(--mred);
 }
 
-.hljs-mtron-inst-f-jvm {
-    color: var(--mdarkblue);
+.hljs-comment {
+    color: var(--mlightgray);
 }
 
-.hljs-mtron-sugar-inst,
-.hljs-mtron-log-warn {
-    color: var(--myellow);
-}
-
-.hljs-comment,
 .hljs-mtron-keyword,
-.hljs-mtron-keyword,
-.hljs-mtron-type,
 .hljs-mtron-inst {
     color: var(--tertiarycolor);
 }
 
-.hljs-mtron-uri {
+.hljs-mtron-uri,
+.hljs-mtron-type,
+.hljs-mtron-inst-f-jvm {
     color: var(--mblue);
 }
 

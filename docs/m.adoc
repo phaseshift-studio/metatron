@@ -6,7 +6,7 @@ The instruction set (`inst_set`) specifies a collection of reusable objects and 
 
 ++++
 \begin{align*}
-\texttt{inst_set} \in \left(\texttt{TYPE} \times \texttt{INST} \times \texttt{REWRITE} \times \texttt{PARSER}\right).
+\texttt{inst_set} \in \left(\texttt{TYPE} \times \texttt{INST} \times \texttt{CONST} \times\texttt{REWRITE} \times \texttt{PARSER}\right).
 \end{align*}
 ++++
 
@@ -63,23 +63,22 @@ image:space-arch.svg[width=800,align=center]
 The components of `m` are available at `/m/#`.
 To dereference the pattern `/m/#/`, `\*` is used, where `*(uri)` is the sugar form of the instruction `from(uri)` and is perhaps the most important instruction in [metatron].
 
-./mnt/lang/m
-[%collapsible%open]
-====
-++++
-<!--🐖
-*/mnt/lang/m
--->
-++++
-====
-
-./m/#
+./m/inst/+/
 [%collapsible]
 ====
 ++++
 <!--🐖
-*/mnt/lang/m
-*/m/#
+*/m/inst/+/
+-->
+++++
+====
+
+./m/mach/inst/+/
+[%collapsible]
+====
+++++
+<!--🐖
+*/m/mach/inst/+/
 -->
 ++++
 
