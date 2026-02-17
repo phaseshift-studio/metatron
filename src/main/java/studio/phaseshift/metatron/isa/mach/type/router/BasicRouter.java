@@ -27,6 +27,7 @@ import studio.phaseshift.metatron.isa.m.space.stackSpace;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Uri;
+import studio.phaseshift.metatron.isa.m.type.impl.MObjs;
 import studio.phaseshift.metatron.isa.m.type.impl.ObjectMap;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
@@ -167,7 +168,12 @@ public class BasicRouter extends AbstractSpace<MServer> implements Router {
             return;
         }
         final Space superSpace = this.getSpace(space.pattern());
-        space.put(uri(SUPER), null == superSpace.vid() ? uri(superSpace.pattern()) : auto_from_(superSpace.vid()).tryToInst(), MUTABLE);
+        final Rec superSpaces = superSpace.jvm().getOrDefault(uri(SPACE), rec()).as();
+        final Rec subSpaces = space.jvm().getOrDefault(uri(SPACE), rec()).as();
+        subSpaces.put(uri(SUPER), null == superSpace.vid() ? uri(superSpace.pattern()) : auto_from_(superSpace.vid()).tryToInst(), MUTABLE);
+        superSpaces.put(uri(SUB), superSpaces.jvm().getOrDefault(uri(SUB), MObjs.empty()).append(auto_from_(null == space.vid() ? space.tid() : space.vid()).tryToInst()), MUTABLE);
+        superSpace.put(uri(SPACE), superSpaces, MUTABLE);
+        space.put(uri(SPACE), subSpaces, MUTABLE);
         this.spaces().jvm().put(null == space.vid() ? space.pattern().toUri() : space.vid().toUri(), space);
         Space.Helper.spaceOpenLog(this, space);
     }

@@ -38,7 +38,12 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.MTronException.mexcept;
 
 public interface Poly<P extends Poly<P, J>, J> extends Obj {
-
+    
+    BiFunction<Poly<?,?>,Object,Poly<?,?>> APPEND = (poly, jvm) -> {
+        Obj.Helper.objCheckAndSave(poly, jvm, poly.tid(), poly.vid());
+        return poly;
+    };
+    
     BiFunction<Poly<?, ?>, Object, Poly<?, ?>> MUTABLE = (poly, jvm) -> {
         Obj.Helper.objCheckAndSave(poly, jvm, poly.tid(), poly.vid());
         return poly;

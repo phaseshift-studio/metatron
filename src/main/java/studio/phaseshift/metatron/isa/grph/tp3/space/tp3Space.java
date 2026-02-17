@@ -94,7 +94,7 @@ public class tp3Space extends grphSpace<Graph> {
             final fURI dataset = config.at(NATIVE_LOAD).uriValue();
             Graphitty.log(tp3Space.class).info("translating %s into grph space", config.at(NATIVE_LOAD));
             if (dataset.equals(f("modern"))) {
-                config.put(uri(SCHEMA), modernSchema.create(config.at(PATTERN).uriValue().head(1).extend("S").extend("modern")), MUTABLE);
+                config.put(uri(SCHEMA), new modernSchema(config.at(PATTERN).uriValue().head(1).extend("S").extend("modern")), MUTABLE);
                 TinkerFactory.generateModern(graph);
             } else if (dataset.equals(f("grateful")))
                 TinkerFactory.generateGratefulDead(graph);
@@ -186,12 +186,12 @@ public class tp3Space extends grphSpace<Graph> {
                 } else if (pattern.matches(f(this.vertexPrefix).extend("+"))) {
                     final String suffix = pattern.name();
                     LOG.info("reading vertices %s => %s", vid, suffix);
-                    Iterator<Vertex> vertices = (suffix.equals("+") || suffix.equals("#")) ? this.sjvm.vertices() : this.sjvm.vertices(Integer.valueOf(suffix));
+                    Iterator<Vertex> vertices = (suffix.equals("+") || suffix.equals("#")) ? this.sjvm.vertices() : this.sjvm.vertices(Integer.parseInt(suffix));
                     return IteratorUtil.map(vertices, v -> Tuple.Pair.with(f(this.vertexPrefix).extend(v.id().toString()), VertexMap.vertexToRec(v, this)));
                 } else if (pattern.matches(f(this.edgePrefix).extend("+"))) {
                     final String suffix = pattern.name();
                     LOG.info("reading edges %s => %s", vid, suffix);
-                    Iterator<Edge> edges = (suffix.equals("+") || suffix.equals("#")) ? this.sjvm.edges() : this.sjvm.edges(Integer.valueOf(suffix));
+                    Iterator<Edge> edges = (suffix.equals("+") || suffix.equals("#")) ? this.sjvm.edges() : this.sjvm.edges(Integer.parseInt(suffix));
                     return IteratorUtil.map(edges, e -> Tuple.Pair.with(f(this.edgePrefix).extend(e.id().toString()), EdgeMap.edgeToRec(e, this)));
                 } else {
                     LOG.warn("unknown tp3 vid: %s", pattern);
@@ -211,17 +211,17 @@ public class tp3Space extends grphSpace<Graph> {
                 });
                 return noobj();
             } else {
-                if (obj.jvm() instanceof ElementMap)
+                if (obj.jvm() instanceof ElementMap) // vertex already exists, all updates already occurred, no need to write it again
                     return obj;
                 final String vidString = pattern.toString();
                 if (vidString.startsWith(this.vertexPrefix)) {
                     final String suffix = vidString.replaceFirst(this.vertexPrefix + "/", "");
                     final Integer id = Integer.parseInt(suffix);
-                    try {
+                    try { //  a newly created vertex from a rec
                         final Vertex vertex = IteratorUtil.stream(this.sjvm.vertices(id)).findFirst().orElseGet(() -> this.sjvm.addVertex(T.label, obj.tid().basePath().toString(), T.id, id));
                         LOG.info("writing vertex %s => %s", vid, vertex);
                         obj.asRec().elements()
-                                .filter(e -> !e.first().equals(IN) && !e.first().equals(IN))
+                                .filter(e -> !e.first().equals(IN) && !e.first().equals(OUT))
                                 .forEach(e -> {
                                     LOG.info("writing vertex property %s =%s=> %s", vertex, e.first(), e.second());
                                     vertex.property(e.jvm().get0().uriValue().toString(), FACTORY.toObj(e.jvm().get1()).jvm());

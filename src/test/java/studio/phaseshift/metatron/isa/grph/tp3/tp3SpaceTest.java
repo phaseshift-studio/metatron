@@ -28,6 +28,7 @@ import studio.phaseshift.metatron.mTest;
 import static studio.phaseshift.metatron.Tokens.PATTERN;
 import static studio.phaseshift.metatron.Tokens.REWRITE;
 import static studio.phaseshift.metatron.furi.fURI.f;
+import static studio.phaseshift.metatron.isa.grph.grphInstSet.GRPH_ISA_TID;
 import static studio.phaseshift.metatron.isa.grph.tp3.space.tp3Space.NATIVE_LOAD;
 import static studio.phaseshift.metatron.isa.grph.tp3.tp3InstSet.TP3_ISA_TID;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
@@ -39,11 +40,16 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  */
 public class tp3SpaceTest extends SpaceTest {
     public tp3SpaceTest() {
-        super(f("/g/"), () -> tp3Space.of(rec(
-                PATTERN, uri("/g/#"),
-                REWRITE, rel(uri("/g/+/"), uri("")),
-                NATIVE_LOAD, uri("modern")), f("/sys/space/tp3")));
-        BootLoader.loadInstSetProvider(TP3_ISA_TID);
+        super(f("/g/"), () -> {
+            BootLoader.loadInstSetProvider(GRPH_ISA_TID);
+            BootLoader.loadInstSetProvider(TP3_ISA_TID);
+            return tp3Space.of(rec(
+                    PATTERN, uri("/g/#"),
+                    REWRITE, rel(uri("/g/+/"), uri("")),
+                    NATIVE_LOAD, uri("modern")), f("/sys/space/tp3"));
+        });
+
+
     }
 
     @Override
@@ -53,9 +59,27 @@ public class tp3SpaceTest extends SpaceTest {
 
     @ParameterizedTest
     @CsvSource(value = {
+            "*/g/S.count()                                                                  % 1",
+            "*/g/S/pattern                                                                  % /m/grph/inst/schema/modern/#",
+            "*(*/g/S/pattern).count()                                                       % 4",
+          //  "**/g/S/pattern.count()                                                       % 4",
+            "*(*/g/S/pattern).vid()                                                         % {/m/grph/inst/schema/modern/person,/m/grph/inst/schema/modern/software,/m/grph/inst/schema/modern/created,/m/grph/inst/schema/modern/knows}",
+    }, delimiter = '%')
+    public void testSchemaTraversal(final String code, final String expected) {
+        mTest.testCode(LOG, code, expected);
+    }
+    
+    @ParameterizedTest
+    @CsvSource(value = {
+            "*/g/S.count()                                                                  % 1",
+            "*/g/S/pattern                                                                  % /m/grph/inst/schema/modern/#",
             "*/g/V/#../name                                                                 % {\"marko\",\"josh\",\"peter\",\"lop\",\"vadas\",\"ripple\"}",
             "*/g/V/+../OUT/+/IN/name                                                        % {\"josh\",str{3}::\"lop\",\"vadas\",\"ripple\"}",
             "*/g/V/+.count()                                                                % 6",
+            "*/g/V/+.outE().count()                                                         % 6",
+            "*/g/V/1../OUT/+/IN.count()                                                     % 3",
+            "*/g/V/1../OUT/+/IN/OUT/+/IN.count()                                            % 2",
+            "*/g/V/1../OUT/+/IN/OUT/+/IN/OUT/+/IN.count()                                   % 0",
             "*/g/V/#.count()                                                                % 6",
             "*/g/E/+.count()                                                                % 6",
             "*/g/S/+.count()                                                                % 2",
@@ -63,8 +87,12 @@ public class tp3SpaceTest extends SpaceTest {
             "*/g/E/#.count()                                                                % 6",
             "*/g/E/1.count()                                                                % 0",
             "*/g/V/+../OUT/+/+.count()                                                      % 6",
+            "/g/V/1 -> noobj; /g.-<[mult(V/+).*(_).count(),mult(E/+).*(_).count()]          % [5,3]",
+            "*/g/V/1.update[name=>'dr.marko']                                               % person::[name=>'dr.marko',age=>29]",
+            "*/g/V/1.update[name=>123]                                                      % <ERROR>",
+            "*/g/V/1.update[name=>123]                                                      % <ERROR>"
     }, delimiter = '%')
-    public void testCoreGraphTraversals(final String code, final String expected) {
+    public void testIdTraversals(final String code, final String expected) {
         mTest.testCode(LOG, code, expected);
     }
 }

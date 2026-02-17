@@ -135,7 +135,7 @@ public abstract class mTest {
     public static void testCode(final GraphittyLogger LOG, final String code, final String expected) {
         if (expected.trim().equals("<ERROR>")) {
             try {
-                final Obj cd = mParser.m_call_prefix(START_INST_TID).parse(code).get();
+                final Obj cd = code.contains(";") ? mParser.eval(code) : mParser.m_call_prefix(START_INST_TID).parse(code).get();
                 final Obj actual2 = cd.apply(noobj());
                 LOG.debug("testing %s <= %s", cd, actual2.type());
                 actual2.stream().forEach(actual -> {
@@ -152,10 +152,12 @@ public abstract class mTest {
                 LOG.debug("testing %s => %s", code, e.getMessage());
             }
         } else {
-            final Obj cd = mParser.m_call_prefix(START_INST_TID).parse(code).get();
+            final Obj cd = code.contains(";") ? mParser.eval(code) : mParser.m_call_prefix(START_INST_TID).parse(code).get();
             final Obj ex = mParser.eval(expected);
             final Obj actual = cd.apply(noobj());
             LOG.debug("testing %s => %s => %s [expected:%s]", cd, code, actual, ex);
+            if (!actual.equals(ex) && actual.stream().anyMatch(Obj::isFail))
+                LOG.error("expectation led to failure: %s", actual);
             assertEquals(ex, actual);
             
           /*  final Obj acd = serializer.read(serializer.write(cd));

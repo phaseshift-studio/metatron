@@ -19,6 +19,7 @@
 package studio.phaseshift.metatron.isa.grph.tp3.space.schema;
 
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.m.type.ServiceMetadata;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.m.type.impl.AbstractInstSet;
 
@@ -38,6 +39,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
+@ServiceMetadata(tid = "/m/grph/inst/schema/modern")
 public class modernSchema extends AbstractInstSet {
 
     public static final fURI MODERN_SCHEMA_TID = GRPH_INST_TID.extend("schema").extend("modern");
@@ -79,16 +81,12 @@ public class modernSchema extends AbstractInstSet {
                     IN, SOFTWARE_TYPE))).create();
 
 
-    protected modernSchema(final fURI vid) {
+    public modernSchema() {
+        this(MODERN_SCHEMA_TID);
+    }
+
+    public modernSchema(final fURI vid) {
         super(MODERN_SCHEMA_TID, vid);
-    }
-
-    public static modernSchema create(final fURI vid) {
-        return new modernSchema(vid);
-    }
-
-    public static modernSchema create() {
-        return modernSchema.create(MODERN_SCHEMA_TID);
     }
 
     @Override
