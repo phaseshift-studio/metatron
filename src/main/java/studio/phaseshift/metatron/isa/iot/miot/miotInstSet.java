@@ -20,32 +20,30 @@ package studio.phaseshift.metatron.isa.iot.miot;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.iot.miot.type.soc.SoC;
-import studio.phaseshift.metatron.isa.iot.miot.type.soc.entity.GPIO;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.ServiceMetadata;
 import studio.phaseshift.metatron.isa.m.type.Type;
+import studio.phaseshift.metatron.isa.m.type.Uri;
 import studio.phaseshift.metatron.isa.m.type.impl.AbstractInstSet;
 
-import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
+import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.isa.iot.haos.space.haosSpace.HAOS_SPACE_TYPE;
 import static studio.phaseshift.metatron.isa.iot.iotInstSet.IOT_ISA_TID;
-import static studio.phaseshift.metatron.isa.iot.miot.type.Device.MIOT_DEVICE_TYPE;
-import static studio.phaseshift.metatron.isa.iot.miot.type.Entity.MIOT_ENTITY_TYPE;
 import static studio.phaseshift.metatron.isa.iot.miot.type.soc.SoC.MIOT_SOC_TYPE;
 import static studio.phaseshift.metatron.isa.iot.miot.type.soc.esp32.WemosD1Mini.WemosD1MiniType.WEMOS_D1_MINI_TYPE;
 import static studio.phaseshift.metatron.isa.iot.space.mqtt.mqttSpace.MQTT_SPACE_TYPE;
 import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TID;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
-import static studio.phaseshift.metatron.isa.m.type.Str.STR_TYPE;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
+import static studio.phaseshift.metatron.isa.m.type.Int.INT_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
-import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
+import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /*
@@ -56,23 +54,41 @@ public class miotInstSet extends AbstractInstSet {
 
     public static final fURI MIOT_ISA_TID = IOT_ISA_TID.extend("miot");
     public static final fURI MIOT_INST_TID = MIOT_ISA_TID.extend("inst");
-    
+
 
     public static final String MIOT_DEVICE_TID_STRING = "/m/iot/miot/device";
     public static final String MIOT_ENTITY_TID_STRING = "/m/iot/miot/entity";
-
+    /// /////////////////////// FURIS ///////////////////////////////////
     public static final fURI MIOT_THING_TID = MIOT_ISA_TID.extend("thing");
     public static final fURI MIOT_DEVICE_TID = MIOT_ISA_TID.extend("device");
     public static final fURI MIOT_ENTITY_TID = MIOT_ISA_TID.extend("entity");
-
-
-    public static final Type MIOT_THING_TYPE = Type.Builder.build()
+    public static final fURI MIOT_GPIO_TID = MIOT_ISA_TID.extend("gpio");
+    /// /////////////////////// TYPES //////////////////////////////////
+    protected static final Set<Type> TYPES = new LinkedHashSet<>();
+    protected static final Set<Inst> INSTS = new LinkedHashSet<>();
+    public static final Type MIOT_DEVICE_TYPE = Type.Builder.build()
             .tid(REC_TID)
-            .vid(MIOT_THING_TID)
-            .isaPredicate(rec(
-                    uri("name"), STR_TYPE,
-                    uri("usage"), rec(URI_TYPE, T(ALL)),
-                    uri("entity"), rec(URI_TYPE, T(MIOT_ENTITY_TID)))).create();
+            .vid(MIOT_DEVICE_TID)
+            .isaPredicate(rec(uri("status"), is_(or_(eq_(uri(ONLINE)), eq_(uri(OFFLINE))))))
+            .create(TYPES, INSTS);
+    public static final Type MIOT_ENTITY_TYPE = Type.Builder.build()
+            .tid(REC_TID)
+            .vid(MIOT_ENTITY_TID)
+            .isaPredicate(rec(uri("super"), MIOT_DEVICE_TYPE))
+            .constructor(instC(MIOT_INST_TID.dom(ALL.maybe()).rng(MIOT_ENTITY_TID), lst(MIOT_DEVICE_TYPE), (lhs, inst) -> rec(uri(SUPER), auto_from_(inst.arg(0).vid()))))
+            .create(TYPES, INSTS);
+    public static final Type MIOT_GPIO_TYPE = Type.Builder.build()
+            .tid(MIOT_ENTITY_TID)
+            .vid(MIOT_GPIO_TID)
+            .isaPredicate(rec(URI_TYPE, INT_TYPE))
+            .constructor(instC(MIOT_INST_TID.dom(ALL.maybe()).rng(MIOT_GPIO_TID), lst(MIOT_DEVICE_TYPE), (lhs, inst) -> rec(uri(SUPER), auto_from_(inst.arg(0).vid()))))
+            .inst(MIOT_INST_TID.extend("toggle").dom(MIOT_GPIO_TID).rng(MIOT_GPIO_TID), lst(INT_TYPE),
+                    (lhs, inst) -> {
+                        final Uri key = inst.arg(0).as(URI_TYPE).as();
+                        final long currentValue = lhs.asRec().at(key).orElse(jnt(0L)).intValue();
+                        return lhs.asRec().put(key, 0 == currentValue ? jnt(1) : jnt(0), MUTABLE);
+                    })
+            .create(TYPES, INSTS);
 
 
     static {
@@ -86,21 +102,17 @@ public class miotInstSet extends AbstractInstSet {
 
     @Override
     public Set<Type> types() {
-        return Stream.of(
-                MIOT_THING_TYPE,
-                MIOT_DEVICE_TYPE,
-                MIOT_ENTITY_TYPE,
+        TYPES.addAll(List.of(
                 MIOT_SOC_TYPE,
                 WEMOS_D1_MINI_TYPE,
                 MQTT_SPACE_TYPE,
-                HAOS_SPACE_TYPE).collect(Collectors.toSet());
+                HAOS_SPACE_TYPE));
+        return TYPES;
     }
 
     @Override
     public Set<Inst> insts() {
-        final List<Inst> insts = new ArrayList<>();
-        insts.addAll(SoC.insts());
-        insts.addAll(GPIO.GPIOType.insts());
-        return new LinkedHashSet<>(insts);
+        INSTS.addAll(SoC.insts());
+        return INSTS;
     }
 }

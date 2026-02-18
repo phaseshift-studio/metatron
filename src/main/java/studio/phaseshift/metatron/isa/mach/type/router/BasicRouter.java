@@ -137,7 +137,9 @@ public class BasicRouter extends AbstractSpace<MServer> implements Router {
         fURI temp;
         if (big) {
             final Set<fURI> set = this.smallToBigRewrites.getOrDefaultRaw(furi.basePath(), Set.of(furi));
-            if (set.size() > 1) {
+            if (false && set.isEmpty()) {
+                temp = this.getSpace(furi).rewrite(furi, big);
+            } else if (set.size() > 1) {
                 final Iterator<fURI> furis = set.stream().filter(f -> f.hasPrefix(this.primary)).iterator();
                 temp = furis.hasNext() ? furis.next() : set.iterator().next();
             } else {
@@ -168,11 +170,13 @@ public class BasicRouter extends AbstractSpace<MServer> implements Router {
             return;
         }
         final Space superSpace = this.getSpace(space.pattern());
-        final Rec superSpaces = superSpace.jvm().getOrDefault(uri(SPACE), rec()).as();
         final Rec subSpaces = space.jvm().getOrDefault(uri(SPACE), rec()).as();
-        subSpaces.put(uri(SUPER), null == superSpace.vid() ? uri(superSpace.pattern()) : auto_from_(superSpace.vid()).tryToInst(), MUTABLE);
-        superSpaces.put(uri(SUB), superSpaces.jvm().getOrDefault(uri(SUB), MObjs.empty()).append(auto_from_(null == space.vid() ? space.tid() : space.vid()).tryToInst()), MUTABLE);
-        superSpace.put(uri(SPACE), superSpaces, MUTABLE);
+        if (!(superSpace instanceof noobjSpace)) {
+            final Rec superSpaces = superSpace.jvm().getOrDefault(uri(SPACE), rec()).as();
+            subSpaces.put(uri(SUPER), null == superSpace.vid() ? uri(superSpace.pattern()) : auto_from_(superSpace.vid()).tryToInst(), MUTABLE);
+            superSpaces.put(uri(SUB), superSpaces.jvm().getOrDefault(uri(SUB), MObjs.empty()).append(auto_from_(null == space.vid() ? space.tid() : space.vid()).tryToInst()), MUTABLE);
+            superSpace.put(uri(SPACE), superSpaces, MUTABLE);
+        }
         space.put(uri(SPACE), subSpaces, MUTABLE);
         this.spaces().jvm().put(null == space.vid() ? space.pattern().toUri() : space.vid().toUri(), space);
         Space.Helper.spaceOpenLog(this, space);

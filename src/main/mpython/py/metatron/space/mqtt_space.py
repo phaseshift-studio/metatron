@@ -17,6 +17,7 @@ import gc
 import json
 import machine
 import ubinascii
+import time
 from umqtt.simple import MQTTClient
 
 from metatron.obj import *
@@ -116,6 +117,7 @@ class MqttSpace(Obj):
 
     def _callback(self, furi, obj):
         try:
+            time.sleep_ms(1) # feed watchdog
             furi2 = f(furi.decode())
             obj2 = JSONTranslator.to_obj(obj.decode())
             if obj2 is None or obj is None:
@@ -131,15 +133,6 @@ class MqttSpace(Obj):
                     LOG.warn("no subscription for {{y}}{}{{X}}", furi2)
         except Exception as e:
             LOG.error("message error {{y}}{}{{X}}: {}", furi2, e)
-            
-
-    def connect_esphome(self, merge, template: str = 'esphome.json'):
-        profile = json.load(open(template)) | merge
-        for k, v in profile.items():
-            if v == 'XXX':
-                raise ValueError("merged profile data must not contain XXX:", profile)
-        self.client.publish("esphome/discover/" + profile['name'], json.dumps(profile), True)
-        LOG.info("published esphome discovery: ", profile)
 
     def __repr__(self):
         return str(self.tid) + "::[" + self.client.server + "]" + (

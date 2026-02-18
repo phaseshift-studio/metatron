@@ -46,6 +46,8 @@ import static studio.phaseshift.metatron.util.Tuple.Pair;
 
 public interface Space extends Rec, Closeable {
 
+    public static enum METHOD {FROM_SPACE, TO_SPACE}
+
     @Override
     default boolean isResolved(final boolean nested) {
         return true;
@@ -70,6 +72,8 @@ public interface Space extends Rec, Closeable {
     }
 
     Obj write(final fURI vid, final Obj obj);
+
+    fURI rewrite(final fURI furi, final boolean big);
 
     default Obj[] write(final Object... kv) {
         int count = (int) ((double) kv.length / 2.0d);

@@ -23,6 +23,7 @@ import network
 import os
 import sys
 import time
+from machine import WDT
 
 import metatron.util.graphitty as graphitty
 from lib.mtron.deploy import deploy
@@ -55,7 +56,9 @@ secrets = load_secrets("secrets.json")
 LOG.log_level = secrets.get("log", "info")
 LOG.info("log level {{g}}{}{{X}}", LOG.log_level)
 try:
+    time.sleep_ms(1) # feed watchdog
     mtron = deploy(secrets)
+    time.sleep_ms(1) # feed watchdog
 except Exception as e:
     LOG.error("unable to deploy architecture: {}", e)
     raise e
@@ -67,6 +70,7 @@ def main_thread_function():
     LOG.info("{{y}}{}{{X}} boot process complete", mtron.soc.vid)
     while True:
         try:
+            time.sleep_ms(1) # feed watchdog
             router().loop()
             mtron.loop()
         except Exception as ex:

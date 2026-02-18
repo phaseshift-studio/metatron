@@ -90,8 +90,8 @@ public class tp3Space extends grphSpace<Graph> {
     public static tp3Space of(final Rec config, final fURI vid) {
         Router.global().logger().debug("tp3 space config: %s", config);
         final TinkerGraph graph = TinkerGraph.open();
-        if (config.has(NATIVE_LOAD)) {
-            final fURI dataset = config.at(NATIVE_LOAD).uriValue();
+        if (config.has(NATIVE)) {
+            final fURI dataset = config.at(NATIVE).asRec().at(LOAD).uriValue();
             Graphitty.log(tp3Space.class).info("translating %s into grph space", config.at(NATIVE_LOAD));
             if (dataset.equals(f("modern"))) {
                 config.put(uri(SCHEMA), new modernSchema(config.at(PATTERN).uriValue().head(1).extend("S").extend("modern")), MUTABLE);

@@ -29,6 +29,7 @@ import studio.phaseshift.metatron.util.Tuple;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.function.BiFunction;
 import java.util.function.Supplier;
 
 import static studio.phaseshift.metatron.furi.fURI.ALL;
@@ -188,6 +189,7 @@ public interface Type extends Obj, PlusMonoid<Type> {
         public fURI tid = null;
         public Call predicate = null;
         public Call constructor = null;
+        public Set<Inst> insts = new LinkedHashSet<>();
 
         public static Builder build() {
             return new Builder();
@@ -220,6 +222,18 @@ public interface Type extends Obj, PlusMonoid<Type> {
 
         public Builder constructor(final Supplier<Obj> supplier) {
             return this.constructor(instC(INST_TID.dom(ALL.maybe()).rng(this.vid), lst(), (lhs, inst) -> supplier.get()));
+        }
+
+        public Builder inst(final fURI tid, final Poly<?, ?> args, final BiFunction<Obj, Inst, Obj> func) {
+            this.insts.add(instC(tid, args, func));
+            return this;
+        }
+
+        public Type create(final Set<Type> typeSet, final Set<Inst> instSet) {
+            final Type type = this.create();
+            typeSet.add(type);
+            instSet.addAll(this.insts);
+            return type;
         }
 
         public Type create() {

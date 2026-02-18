@@ -26,15 +26,16 @@ import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 
+import java.util.LinkedHashMap;
 import java.util.Map;
 
-import static studio.phaseshift.metatron.Tokens.PATTERN;
-import static studio.phaseshift.metatron.Tokens.SUPER;
+import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 public abstract class AbstractSpace<SJVM> extends MRec implements Space {
 
+    protected final Map<String, String> rewrites = new LinkedHashMap<>();
     protected final fURI pattern;
     protected SJVM sjvm;
     protected GraphittyLogger LOG;
@@ -44,9 +45,20 @@ public abstract class AbstractSpace<SJVM> extends MRec implements Space {
         ServiceMetadata.Helper.verifyClass(this.getClass(), tid);
         this.sjvm = sjvm;
         this.pattern = this.at(PATTERN).uriValue();
+        final Obj temp = config.getOrDefault(uri(REWRITE), rec());
+        if(temp.isRec())
+            temp.asRec().jvm().forEach((key, value) -> this.rewrites.put(key.toString(), value.toString()));
+        else 
+            this.rewrites.put(temp.asRel().first().toString(), temp.asRel().second().toString());
         LOG = Graphitty.log(this);
         if (Router.loaded() && !this.pattern.equals(f("+/#")) && !(this instanceof Router))
             Router.global().addSpace(this);
+    }
+
+    @Override
+    public fURI rewrite(final fURI furi, final boolean big) {
+        final String furiString = furi.toString();
+        return this.rewrites.entrySet().stream().filter(kv -> furiString.startsWith(kv.getKey())).map(kv -> f(furiString.replaceFirst(kv.getKey(), kv.getValue()))).findFirst().orElse(furi);
     }
 
     @Override

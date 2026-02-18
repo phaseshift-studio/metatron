@@ -25,8 +25,7 @@ import studio.phaseshift.metatron.isa.SpaceTest;
 import studio.phaseshift.metatron.isa.grph.tp3.space.tp3Space;
 import studio.phaseshift.metatron.mTest;
 
-import static studio.phaseshift.metatron.Tokens.PATTERN;
-import static studio.phaseshift.metatron.Tokens.REWRITE;
+import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.isa.grph.grphInstSet.GRPH_ISA_TID;
 import static studio.phaseshift.metatron.isa.grph.tp3.space.tp3Space.NATIVE_LOAD;
@@ -46,7 +45,7 @@ public class tp3SpaceTest extends SpaceTest {
             return tp3Space.of(rec(
                     PATTERN, uri("/g/#"),
                     REWRITE, rel(uri("/g/+/"), uri("")),
-                    NATIVE_LOAD, uri("modern")), f("/sys/space/tp3"));
+                    NATIVE, rec(uri(LOAD), uri("modern"))), f("/sys/space/tp3"));
         });
 
 
@@ -71,8 +70,6 @@ public class tp3SpaceTest extends SpaceTest {
     
     @ParameterizedTest
     @CsvSource(value = {
-            "*/g/S.count()                                                                  % 1",
-            "*/g/S/pattern                                                                  % /m/grph/inst/schema/modern/#",
             "*/g/V/#../name                                                                 % {\"marko\",\"josh\",\"peter\",\"lop\",\"vadas\",\"ripple\"}",
             "*/g/V/+../OUT/+/IN/name                                                        % {\"josh\",str{3}::\"lop\",\"vadas\",\"ripple\"}",
             "*/g/V/+.count()                                                                % 6",

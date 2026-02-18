@@ -28,6 +28,8 @@ public final class Tokens {
         // do nothing
     }
 
+    public static final String ONLINE = "online";
+    public static final String OFFLINE = "offline";
     public static final String HTML = "html";
     public static final String HEAD = "head";
     public static final String BODY = "body";

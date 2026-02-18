@@ -26,4 +26,4 @@ from lib.mtron.walltron import Walltron
 # IMPORTANT: do not change the signature of the deploy() and always
 # return an Architecture object with a loop() method
 def deploy(secrets: dict):
-    return Walltron(secrets)
+    return PondBox(secrets)

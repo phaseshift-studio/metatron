@@ -34,28 +34,28 @@ class PondBox(Architecture):
         #####################################################################################################
         self.soc = WemosD1Mini(vid=self.soc_vid)
         self.soc.attach(Wifi(wlan=self.wlan, secrets=self.secrets, soc_vid=self.soc_vid).start())
-        #self.soc.attach(Memory(soc_vid=self.soc_vid).start())
+        self.soc.attach(Memory(soc_vid=self.soc_vid).start())
         self.soc.attach(Gpio(soc_vid=self.soc_vid).start())
         #self.soc.attach(Pwm(soc_vid=self.soc_vid).start())
         #####################################################################################################
-        self.ha = HomeAssistant(self.soc, secrets.get("homeassistant", {}).get("prefix", "homeassistant"))
-        self.ha.register(self.soc.vid.extend('wifi/signal')).sensor().diagnostic().on_read(lambda s: f"{s.wifi.strength():.0f}").device_class("signal_strength").unit_of_measurement('dBm').create()
+        #self.ha = HomeAssistant(self.soc, secrets.get("homeassistant", {}).get("prefix", "homeassistant"))
+        #self.ha.register(self.soc.vid.extend('wifi/signal')).sensor().diagnostic().on_read(lambda s: f"{s.wifi.strength():.0f}").device_class("signal_strength").unit_of_measurement('dBm').create()
         #self.ha.register(self.soc.vid.extend('memory/free')).sensor().diagnostic().on_read(lambda s: f"{s.memory['free']}").device_class("data_size").unit_of_measurement("B").create()
         #self.ha.register(self.soc.vid.extend('memory/alloc')).sensor().diagnostic().on_read(lambda s: f"{s.memory['alloc']}").device_class("data_size").unit_of_measurement("B").create()
         counter = 0
-        for i in [27, 25, 32, 4]:
-            (self.ha.register(self.soc.vid.extend(f'gpio/relay_{counter}')).
-             switch().
-             config().
-             enabled().
-             payload_on(0).
-             payload_off(1).
-             on_read(make_gpio_read_lambda(i)).
-             on_write(make_gpio_write_lambda(i)).
-             icon("mdi:light-switch").
-             optimistic(True).
-             create())
-            counter = counter + 1
+        #for i in [27, 25, 32, 4]:
+        #    (self.ha.register(self.soc.vid.extend(f'gpio/relay_{counter}')).
+        #     switch().
+        #     config().
+        #     enabled().
+        #     payload_on(0).
+        #     payload_off(1).
+        #     on_read(make_gpio_read_lambda(i)).
+        #     on_write(make_gpio_write_lambda(i)).
+        #     icon("mdi:light-switch").
+        #     optimistic(True).
+        #     create())
+        #    counter = counter + 1
         #self.ha.announce()
         #self.ha.update()
         ####################################################################
@@ -72,5 +72,5 @@ class PondBox(Architecture):
        #      icon("mdi:knob").
        #      create())
        #     counter = counter + 1
-        self.ha.announce()
-        self.ha.update()
+       # self.ha.announce()
+       # self.ha.update()
