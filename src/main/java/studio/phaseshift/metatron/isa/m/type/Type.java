@@ -117,6 +117,8 @@ public interface Type extends Obj, PlusMonoid<Type> {
             return false;
         if (!this.c().within(rhs.c()))
             return false;
+       // if(rhs.asType().parentType()!= null && !this.test(rhs.asType().parentType()))
+       //     return false;
         if (rhs.asType().isBaseType())
             return this.baseType().matches(rhs.tid()) && (!rhs.asType().hasPredicate() || Objects.equals(this.predicate(), rhs.asType().predicate())); // matches any abstract type to it's base type as long as within the coefficient boundaries
         if (rhs.tid().isGeneric())

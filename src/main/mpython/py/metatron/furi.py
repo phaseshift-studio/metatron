@@ -102,5 +102,5 @@ class fURI:
     #    return args.mach["router"].read(self)
 
 
-def f(furi: str) -> fURI:
-    return fURI(furi)
+def f(furi) -> fURI:
+    return furi if isinstance(furi, fURI) else fURI(str(furi))

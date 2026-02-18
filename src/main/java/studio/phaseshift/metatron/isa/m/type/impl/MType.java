@@ -41,31 +41,33 @@ public class MType extends MObj implements Type {
     }
 
 
-    public static Type T(final fURI tid) {
-        return T(tid, null, null, null);
+    public static Type T(final fURI vid) {
+        return T(null, vid, null, null);
     }
 
-    public static Type T(final fURI tid, final Call predicate) {
-        return T(tid, null, predicate, null);
+    public static Type T(final fURI vid, final Call predicate) {
+        return T(null, vid, predicate, null);
     }
 
     public static Type T(final fURI tid, final fURI vid, final Call predicate, final Call constructor) {
-        final fURI bigTID = tid.big();
+        final fURI bigTID = null == tid ? vid : tid.big();
         final fURI bigVID = null == vid ? null : vid.big();
-        if (!bigTID.hasPattern() && !BASE_TYPES.contains(bigTID.basePath()) && !bigTID.isGeneric() && Router.loaded()) {
-            final Obj obj = Router.readFromSpace(bigTID);
+        final fURI checkID = null == bigVID ? bigTID : bigVID;
+        assert checkID != null;
+        if (!checkID.hasPattern() && !BASE_TYPES.contains(checkID.basePath()) && !checkID.isGeneric() && Router.loaded()) { // TODO: remove the pattern constraint - why not a type be the set of other types?
+            final Obj obj = Router.readFromSpace(checkID);
             if (obj.isType()) {
-                if (tid.cV().equals(obj.c()) &&
+                if (checkID.cV().equals(obj.c()) &&
                         Objects.equals(obj.asType().predicate(), predicate) &&
                         Objects.equals(obj.asType().constructor(), constructor))
                     return obj.asType();
                 else
                     return new MType(Tuple.Pair.with(
                             null == predicate || predicate.isNoObj() ? obj.asType().predicate() : predicate,
-                            null == constructor || constructor.isNoObj() ? obj.asType().constructor() : constructor), obj.tid().c(tid.c()), bigVID); // coefficient specific type doesn't exist, create it
+                            null == constructor || constructor.isNoObj() ? obj.asType().constructor() : constructor), obj.vidOrTid().c(checkID.c()), checkID); // coefficient specific type doesn't exist, create it
             }
         }
-        return new MType(Tuple.Pair.with(predicate, constructor), bigTID, bigVID);
+        return new MType(Tuple.Pair.with(predicate, constructor), null == bigTID ? checkID : bigTID, null == bigVID ? checkID : bigVID);
     }
 
     @Override

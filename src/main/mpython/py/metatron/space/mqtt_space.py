@@ -118,7 +118,7 @@ class MqttSpace(Obj):
     def _callback(self, furi, obj):
         try:
             time.sleep_ms(1) # feed watchdog
-            furi2 = f(furi.decode())
+            furi2 = furi if isinstance(furi, fURI) else fURI(furi.decode())
             obj2 = JSONTranslator.to_obj(obj.decode())
             if obj2 is None or obj is None:
                 if furi2 in self.cache.keys():

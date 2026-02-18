@@ -98,12 +98,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
     default Obj parent() {
         return noobj();
     }
-
-    // default boolean test(final Obj other) {
-    //      return this.matches(other);
-
-    // }
-
+    
     default boolean isResolved(final boolean nested) {
         return true;
     }
@@ -458,7 +453,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
     }
 
     default Obj as(final Type type) {
-        if (!type.hasPredicate() && !type.hasConstructor() && this.tid().equals(type.tid()))
+        if (!type.hasPredicate() && !type.hasConstructor() && this.tid().equals(type.vid()))
             return this;
         if (type.hasPredicate()) {
             boolean match;
@@ -471,8 +466,8 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
                 throw MTronException.of("%s is not a %s\n%s", this, type.predicate(), indent(Poly.Helper.diffObjRecursion(this, Type.Helper.typePredicateObj(type)).toString(), 2));
         }
         return type.hasConstructor() ?
-                type.constructor().apply(this).tid(type.tid()) :
-                this.tid(type.tid());
+                type.constructor().apply(this).tid(type.vidOrTid()) :
+                this.tid(type.vidOrTid());
     }
 
     default Bool asBool() {
@@ -693,7 +688,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
                 } else
                     throw MTronException.of("%s is not a %s".formatted(obj, obj.type()));
             }
-            if (null != obj.vid())
+            if (null != obj.vid() && !obj.isType())
                 Router.writeToSpace(obj.vid(), obj);
         }
 

@@ -14,6 +14,7 @@
 #  You should have received a copy of the GNU Affero General Public License
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import time
 from lib import uhome
 from metatron.soc.device.device import Device
 
@@ -29,9 +30,16 @@ class HomeAssistant(Device):
         Device.__init__(self, soc.vid, {}, f("/soc/homeassistant"),"homeassistant")
         self.soc = soc
         self.device = uhome.Device(soc.vid.name(), discovery_prefix=prefix)
+        self.device._mqttc = router().get_space(self.soc.vid).client
+        self.device.ping_interval = int(self.device._mqttc.keepalive * 0.8)
+        self.device._last_ping = time.time()
+        router().get_space(self.soc.vid).subscriptions[f(self.device.ha_status_topic)] = lambda topic, msg: self.device.mqtt_callback(str(topic).encode(), str(msg).encode())
+        router().get_space(self.soc.vid).subscriptions[f(prefix).extend("+").extend(self.soc.vid.name()).extend("#")] = lambda topic, msg: self.device.mqtt_callback(str(topic).encode(), str(msg).encode())
+        self.device._mqttc.subscribe(self.device.ha_status_topic)
+        self.device._mqttc.publish(self.device.will_topic, 'online', retain=True)
         self.entities = {}
         LOG.info("connecting to {{b}}HomeAssistant{{X}} via {{c}}MQTT{{X}}")
-        self.device.connect(router().get_space(self.soc.vid).client)
+       # self.device.connect(router().get_space(self.soc.vid).client)
 
     def register(self, entity_vid):
         return _Form(entity_vid, self)

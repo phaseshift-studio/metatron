@@ -16,8 +16,10 @@
 
 from metatron.furi import f
 from metatron.soc.device.gpio import Gpio
+from metatron.soc.device.i2c import I2c
 from metatron.soc.device.memory import Memory
 from metatron.soc.device.pwm import Pwm
+from metatron.soc.device.ssd1306 import Ssd1306
 from metatron.soc.device.wifi import Wifi
 from metatron.soc.esp32.wemos_d1_mini import WemosD1Mini
 from metatron.soc.soc import Architecture
@@ -34,30 +36,32 @@ class PondBox(Architecture):
         #####################################################################################################
         self.soc = WemosD1Mini(vid=self.soc_vid)
         self.soc.attach(Wifi(wlan=self.wlan, secrets=self.secrets, soc_vid=self.soc_vid).start())
-        self.soc.attach(Memory(soc_vid=self.soc_vid).start())
+        #self.soc.attach(Memory(soc_vid=self.soc_vid).start())
         self.soc.attach(Gpio(soc_vid=self.soc_vid).start())
+        #self.soc.attach(I2c(scl_pin=22, sda_pin=21, soc_vid=self.soc_vid).start())
+        #self.soc.attach(Ssd1306(i2c=self.soc.i2c, addr=0x3c, height=64, width=128, soc_vid=self.soc_vid, name="oled").start())
         #self.soc.attach(Pwm(soc_vid=self.soc_vid).start())
         #####################################################################################################
-        #self.ha = HomeAssistant(self.soc, secrets.get("homeassistant", {}).get("prefix", "homeassistant"))
-        #self.ha.register(self.soc.vid.extend('wifi/signal')).sensor().diagnostic().on_read(lambda s: f"{s.wifi.strength():.0f}").device_class("signal_strength").unit_of_measurement('dBm').create()
+        self.ha = HomeAssistant(self.soc, secrets.get("homeassistant", {}).get("prefix", "homeassistant"))
+        self.ha.register(self.soc.vid.extend('wifi/signal')).sensor().diagnostic().on_read(lambda s: f"{s.wifi.strength():.0f}").device_class("signal_strength").unit_of_measurement('dBm').create()
         #self.ha.register(self.soc.vid.extend('memory/free')).sensor().diagnostic().on_read(lambda s: f"{s.memory['free']}").device_class("data_size").unit_of_measurement("B").create()
         #self.ha.register(self.soc.vid.extend('memory/alloc')).sensor().diagnostic().on_read(lambda s: f"{s.memory['alloc']}").device_class("data_size").unit_of_measurement("B").create()
         counter = 0
-        #for i in [27, 25, 32, 4]:
-        #    (self.ha.register(self.soc.vid.extend(f'gpio/relay_{counter}')).
-        #     switch().
-        #     config().
-        #     enabled().
-        #     payload_on(0).
-        #     payload_off(1).
-        #     on_read(make_gpio_read_lambda(i)).
-        #     on_write(make_gpio_write_lambda(i)).
-        #     icon("mdi:light-switch").
-        #     optimistic(True).
-        #     create())
-        #    counter = counter + 1
-        #self.ha.announce()
-        #self.ha.update()
+        for i in [27, 25, 32, 4]:
+            (self.ha.register(self.soc.vid.extend(f'gpio/relay_{counter}')).
+             switch().
+             config().
+             enabled().
+             payload_on(0).
+             payload_off(1).
+             on_read(make_gpio_read_lambda(i)).
+             on_write(make_gpio_write_lambda(i)).
+             icon("mdi:light-switch").
+             optimistic(True).
+             create())
+            counter = counter + 1
+        self.ha.announce()
+        self.ha.update()
         ####################################################################
        # counter = 0
        # for i in [22, 21, 17, 16]:

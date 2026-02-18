@@ -106,9 +106,9 @@ class Ssd1306(Device):
             self.text("|_|_|_|", 44, 53, 1, False)
             self.show()
             # self.image('mtron_logo.pbm')
-            if self.soc_vid is not None:
-                router().subscribe(self.soc_vid.extend(self.name).extend("+"),
-                                   lambda vid, value: Ssd1306._process_cmd(self, vid, value))
+            #if self.soc_vid is not None:
+            #    router().subscribe(self.soc_vid.extend(self.name).extend("+"),
+            #                       lambda vid, value: Ssd1306._process_cmd(self, vid, value))
         except Exception as e:
             LOG.error("error starting {{y}}{}{{X}}: {}", self.name, e)
         return self
