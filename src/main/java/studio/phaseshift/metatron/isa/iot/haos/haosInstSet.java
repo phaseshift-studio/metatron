@@ -110,7 +110,7 @@ public class haosInstSet extends AbstractInstSet {
     public static final Type HAOS_ENTITY_TYPE = Type.Builder.build()
             .tid(REC_TID)
             .vid(HAOS_ENTITY_TID)
-            .predicate(isa_(rec(
+            .isaPredicate(rec(
                     uri("entity_category").<Uri>maybe(), T(ALL),
                     uri("icon").maybe(), URI_TYPE,
                     uri("name").maybe(), STR_TYPE,
@@ -123,42 +123,43 @@ public class haosInstSet extends AbstractInstSet {
                     uri("retain").maybe(), else_(bool(true)).tryToInst(),
                     uri("last_updated").maybe(), STR_TYPE,
                     uri("last_changed").maybe(), STR_TYPE,
-                    uri("device").maybe(), HAOS_DEVICE_CONFIG))).create();
+                    uri("device").maybe(), HAOS_DEVICE_CONFIG))
+            .create();
     public static final Type HAOS_SENSOR_TYPE = Type.Builder.build()
             .tid(HAOS_ENTITY_TID)
             .vid(HAOS_SENSOR_TID)
-            .predicate(isa_(rec(
+            .isaPredicate(rec(
                     uri("device_class"), is_(or_(URI_TYPE, STR_TYPE)).tryToInst(),
                     uri("unit_of_measurement"), T(ALL),
-                    uri("command_topic").maybe(), URI_TYPE))).create();
+                    uri("command_topic").maybe(), URI_TYPE)).create();
     public static final Type HAOS_NUMBER_TYPE = Type.Builder.build()
             .tid(HAOS_ENTITY_TID)
             .vid(HAOS_NUMBER_TID)
-            .predicate(isa_(rec(
+            .isaPredicate(rec(
                     uri("platform"), uri("number"),
                     uri("payload_off"), T(ALL),
                     uri("enabled").maybe(), BOOL_TYPE,
                     uri("optimistic").maybe(), BOOL_TYPE,
-                    uri("command_topic").maybe(), URI_TYPE))).create();
+                    uri("command_topic").maybe(), URI_TYPE)).create();
     public static final Type HAOS_BUTTON_TYPE = Type.Builder.build()
             .tid(HAOS_ENTITY_TID)
             .vid(HAOS_BUTTON_TID).create();
     public static final Type HAOS_SWITCH_TYPE = Type.Builder.build()
             .tid(HAOS_ENTITY_TID)
             .vid(HAOS_SWITCH_TID)
-            .predicate(isa_(rec(
+            .isaPredicate(rec(
                     uri("payload_on").maybe().asUri(), T(ALL),
                     uri("payload_off").maybe(), T(ALL),
                     uri("enabled").maybe(), BOOL_TYPE,
                     uri("optimistic").maybe(), BOOL_TYPE,
-                    uri("command_topic").maybe(), URI_TYPE))).create();
+                    uri("command_topic").maybe(), URI_TYPE)).create();
     public static final Type HAOS_LIGHT_TYPE = Type.Builder.build()
             .tid(HAOS_ENTITY_TID)
             .vid(HAOS_LIGHT_TID)
-            .predicate(isa_(rec(
+            .isaPredicate(rec(
                     uri("payload_on").maybe().asUri(), T(ALL),
                     uri("payload_off").maybe(), T(ALL),
-                    uri("command_topic").maybe(), URI_TYPE))).create();
+                    uri("command_topic").maybe(), URI_TYPE)).create();
 
     public haosInstSet() {
         this(HAOS_ISA_TID);

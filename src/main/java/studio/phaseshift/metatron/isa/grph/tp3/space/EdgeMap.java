@@ -84,16 +84,20 @@ public class EdgeMap extends ElementMap {
         return edgeToRec(edge, tp3Space.from(edge));
     }
 
-    public static Rec edgeToRec(final Edge edge, final tp3Space space) {
-        return new EdgeMap(edge, space).selfRec();
+    public static Rec edgeToRec(final Edge edge, final Rec lhs) {
+        return new EdgeMap(edge, lhs.<EdgeMap>jvmAs().space).selfRec().parent(lhs);
+    }
+
+    public static Rec edgeToRec(final Edge edge, final tp3Space lhs) {
+        return new EdgeMap(edge, lhs).selfRec();
     }
 
     public static Edge recToEdge(final Rec rec) {
         return rec.<EdgeMap>jvmAs().getBase();
     }
 
-    public static Inst lazyEdgeToRec(final Edge base, final tp3Space space) {
-        return new LazyAutoElmnt(new EdgeMap(base, space));
+    public static Inst lazyEdgeToRec(final Edge base, final tp3Space lhs) {
+        return new LazyAutoElmnt(new EdgeMap(base,lhs));
         //return (Inst) auto_(instC(INST_TID.dom(ALL.maybe()).rng(EDGE_TID), lst(), (lhs, inst) -> new EdgeMap(base).asRec())).tryToInst();
     }
 

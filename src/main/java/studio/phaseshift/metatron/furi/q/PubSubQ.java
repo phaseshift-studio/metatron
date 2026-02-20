@@ -63,7 +63,7 @@ public class PubSubQ extends BaseQ {
             Type.Builder.build()
                     .vid(SUBSCRIPTION_TID)
                     .tid(REC_TID)
-                    .predicate(isa_(rec(SRC, T(URI_TID), TGT, T(URI_TID), ON_RECV, T(ALL))))
+                    .isaPredicate(rec(SRC, T(URI_TID), TGT, T(URI_TID), ON_RECV, T(ALL)))
                     .constructor(instC(INST_TID.dom(ALL_STAR).rng(SUBSCRIPTION_TID), lst(), (lhs, inst) -> {
                         if (lhs instanceof Subscription) {
                             return lhs;

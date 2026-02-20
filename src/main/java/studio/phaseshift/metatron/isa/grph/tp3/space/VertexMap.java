@@ -22,6 +22,7 @@ import org.apache.tinkerpop.gremlin.structure.Direction;
 import org.apache.tinkerpop.gremlin.structure.Edge;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
 import org.apache.tinkerpop.gremlin.structure.VertexProperty;
+import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
@@ -102,16 +103,22 @@ public class VertexMap extends ElementMap {
         return rec((Map) this, f(this.getBase().label()), null).selfVID(this.space.elementVID(this.base)).asRec();
     }
 
-    public static Rec vertexToRec(final Vertex vertex, final tp3Space space) {
-        return new VertexMap(vertex, space).selfRec();
+    public static Rec vertexToRec(final Vertex vertex, final Rec lhs) {
+        return new VertexMap(vertex, lhs.<ElementMap>jvmAs().space).selfRec().parent(lhs);
     }
 
     public static Rec vertexToRec(final Vertex vertex) {
-        return VertexMap.vertexToRec(vertex, tp3Space.from(vertex));
+        return new VertexMap(vertex, tp3Space.from(vertex)).selfRec();
+     //   return VertexMap.vertexToRec(vertex, tp3Space.from(vertex));
     }
 
-    public static Inst lazyVertexToRec(final Vertex base, final tp3Space space) {
-        return new LazyAutoElmnt(new VertexMap(base, space));
+    public static Rec vertexToRec(final Vertex vertex,final tp3Space space) {
+        return new VertexMap(vertex,space).selfRec();
+        //   return VertexMap.vertexToRec(vertex, tp3Space.from(vertex));
+    }
+
+    public static Inst lazyVertexToRec(final Vertex base, final tp3Space lhs) {
+        return new LazyAutoElmnt(new VertexMap(base, lhs));
     }
 
 

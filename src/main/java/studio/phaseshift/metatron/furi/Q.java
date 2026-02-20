@@ -32,7 +32,6 @@ import static studio.phaseshift.metatron.Tokens.PATTERN;
 import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
@@ -56,17 +55,16 @@ public interface Q extends Rec {
             .tid(REC_TID)
             .vid(Q_TID)
             .constructor(instC(INST_TID.dom(ALL.maybe()).rng(Q_TID),
-                    lst(Type.Builder.build().tid(REC_TID).predicate(isa_(rec(
-                            uri(PATTERN), T(URI_TID),
-                            uri(ON_WRITE),
-                            rec(
-                                    uri(PRE_WRITE.maybe()), T(INST_TID),
-                                    uri(POST_WRITE.maybe()), T(INST_TID),
-                                    uri(QLESS_WRITE.maybe()), T(INST_TID)),
-                            uri(ON_READ),
-                            rec(
-                                    uri(PRE_READ.maybe()), T(INST_TID),
-                                    uri(POST_READ.maybe()), T(INST_TID))))).create()), (lhs, inst) -> {
+                    lst(Type.Builder.build().tid(REC_TID)
+                            .isaPredicate(rec(
+                                    uri(PATTERN), T(URI_TID),
+                                    uri(ON_WRITE), rec(
+                                            uri(PRE_WRITE.maybe()), T(INST_TID),
+                                            uri(POST_WRITE.maybe()), T(INST_TID),
+                                            uri(QLESS_WRITE.maybe()), T(INST_TID)),
+                                    uri(ON_READ), rec(
+                                            uri(PRE_READ.maybe()), T(INST_TID),
+                                            uri(POST_READ.maybe()), T(INST_TID)))).create()), (lhs, inst) -> {
                         return lhs;
                     })).create();
 

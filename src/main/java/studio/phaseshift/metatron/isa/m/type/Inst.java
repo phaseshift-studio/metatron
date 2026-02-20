@@ -44,6 +44,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.MTronException.mexcept;
 import static studio.phaseshift.metatron.util.Tuple.Triplet;
 
@@ -53,6 +54,9 @@ public interface Inst extends Call {
     String DOM = "dom";
     String RNG = "rng";
     String OBJ = "obj";
+    
+    fURI ARGS_FURI = fURI.f(ARGS);
+    Uri ARGS_URI = uri(ARGS_FURI);
 
     enum Form {
         initial,

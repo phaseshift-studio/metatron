@@ -30,7 +30,10 @@ import studio.phaseshift.metatron.isa.m.type.impl.AbstractInstSet;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.util.IteratorUtil;
 
-import java.util.*;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.stream.Stream;
 
@@ -38,7 +41,8 @@ import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.isa.grph.grphInstSet.*;
 import static studio.phaseshift.metatron.isa.grph.tp3.space.schema.modernSchema.MODERN_SCHEMA_TYPE;
 import static studio.phaseshift.metatron.isa.grph.tp3.space.tp3Space.TP3_SPACE_TYPE;
-import static studio.phaseshift.metatron.isa.m.mInstSet.*;
+import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.URI_TID;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
@@ -53,6 +57,8 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 public class tp3InstSet extends AbstractInstSet {
 
     public static final fURI TP3_ISA_TID = GRPH_ISA_TID.extend("tp3");
+    protected static final Set<Type> TYPES = new LinkedHashSet<>();
+    protected static final Set<Inst> INSTS = new LinkedHashSet<>();
 
     public tp3InstSet() {
         super(TP3_ISA_TID, TP3_ISA_TID);
@@ -61,89 +67,72 @@ public class tp3InstSet extends AbstractInstSet {
     /// ////////////////////////////////////////////////////////////////////////////////////////////////////////////
     /// ////////////////////////////////////////////////////////////////////////////////////////////////////////////
     /// ////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    private static BiFunction<Obj, Inst, Obj> V_E_FUNCTION(final Direction direction) {
+        return (lhs, inst) -> objs(IteratorUtil.stream(VertexMap.recToVertex(lhs.asRec())
+                        .edges(direction, inst.arg(0).stream().map(Obj::uriValue).map(fURI::toString).toArray(String[]::new)))
+                .map(e -> EdgeMap.edgeToRec(e, lhs.asRec())));
+    }
+
+    private static BiFunction<Obj, Inst, Obj> V_V_FUNCTION(final Direction direction) {
+        return (lhs, inst) -> objs(IteratorUtil.stream(VertexMap.recToVertex(lhs.asRec())
+                        .vertices(direction, inst.arg(0).stream().map(Obj::uriValue).map(fURI::toString).toArray(String[]::new)))
+                .map(v -> VertexMap.vertexToRec(v, lhs.asRec())));
+    }
+
+    /*BiFunction<Poly<?, ?>, Object, Poly<?, ?>> VERTEX_POLY_MUTABLE = (vertexPoly, vertexPolyJVM) -> {
+        vertexPoly.<ElementMap>jvmAs().putAll((Map<Uri, Obj>) vertexPolyJVM);
+        //Obj.Helper.objCheck(vertexPoly, vertexPolyJVM, vertexPoly.tid(), vertexPoly.vid());
+        return vertexPoly;
+    };*/
+    /// ////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    /// ////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    /// ////////////////////////////////////////////////////////////////////////////////////////////////////////////
     public static final Type ELMT_TYPE = Type.Builder.build()
             .tid(REC_TID)
-            .vid(ELMT_TID).create();
+            .vid(ELMT_TID)
+            .inst(LABEL_INST_TID.dom(ELMT_TID).rng(URI_TID), lst(), (lhs, inst) -> lhs.asRec().at(LABEL).orElse(uri(lhs.tid())))
+            .inst(VALUES_INST_TID.dom(ELMT_TID).rng(ALL.maybeSome()), lst(T(URI_TID.maybeSome())), (lhs, inst) -> lhs.asRec().at(inst.arg(0).isNoObj() ? uri("+") : inst.arg(0).asUri()))
+            .create(TYPES, INSTS);
     public static final Type VRTX_TYPE = Type.Builder.build()
             .tid(ELMT_TID)
             .vid(VRTX_TID)
             .isaPredicate(rec(
-                    IN, rec(URI_TYPE, T(EDGE_TID.maybeSome())),
-                    OUT, rec(URI_TYPE, T(EDGE_TID.maybeSome())))).create();
+                    IN.maybe().<Uri>as(), rec(URI_TYPE, T(EDGE_TID.maybeSome())),
+                    OUT.maybe(), rec(URI_TYPE, T(EDGE_TID.maybeSome()))))
+            .inst(OUT_INST_TID, lst(T(URI_TID.maybeSome())), V_V_FUNCTION(Direction.OUT))
+            .inst(IN_INST_TID, lst(T(URI_TID.maybeSome())), V_V_FUNCTION(Direction.IN))
+            .inst(BOTH_INST_TID, lst(T(URI_TID.maybeSome())), V_V_FUNCTION(Direction.BOTH))
+            .inst(OUTE_INST_TID, lst(T(URI_TID.maybeSome())), V_E_FUNCTION(Direction.OUT))
+            .inst(INE_INST_TID, lst(T(URI_TID.maybeSome())), V_E_FUNCTION(Direction.IN))
+            .inst(BOTHE_INST_TID, lst(T(URI_TID.maybeSome())), V_E_FUNCTION(Direction.BOTH))
+            .create(TYPES, INSTS);
     public static final Type EDGE_TYPE = Type.Builder.build()
             .tid(ELMT_TID)
             .vid(EDGE_TID)
-            .isaPredicate(rec(IN, VRTX_TYPE, OUT, VRTX_TYPE)).create();
+            .isaPredicate(rec(IN, VRTX_TYPE, OUT, VRTX_TYPE))
+            .inst(INV_INST_TID.dom(EDGE_TID).rng(VRTX_TID), lst(), (lhs, inst) -> lhs.asRec().at(IN))
+            .inst(OUTV_INST_TID.dom(EDGE_TID).rng(VRTX_TID), lst(), (lhs, inst) -> lhs.asRec().at(OUT))
+            .inst(BOTHV_INST_TID.dom(EDGE_TID).rng(VRTX_TID), lst(), (lhs, inst) -> objs(Stream.concat(lhs.asRec().at(IN).stream(), lhs.asRec().at(OUT).stream())))
+            .create(TYPES, INSTS);
 
     @Override
     public Set<Obj> consts() {
         return new LinkedHashSet<>(List.of(new ObjTP3Serializer()));
     }
 
-
     @Override
     public Set<Type> types() {
-        return new HashSet<>(List.of(
+        TYPES.addAll(List.of(
                 TP3_SPACE_TYPE,
-                MODERN_SCHEMA_TYPE,
-                ELMT_TYPE,
-                VRTX_TYPE,
-                EDGE_TYPE));
+                MODERN_SCHEMA_TYPE));
+        return TYPES;
     }
-
-    /// ////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    /// ////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    /// ////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    private static BiFunction<Obj, Inst, Obj> V_E_FUNCTION(final Direction direction) {
-        return (lhs, inst) -> objs(IteratorUtil.stream(VertexMap.recToVertex(lhs.asRec())
-                        .edges(direction, inst.arg(0).stream().map(Obj::uriValue).map(fURI::toString).toArray(String[]::new)))
-                .map(e -> EdgeMap.edgeToRec(e, ((VertexMap) lhs.jvm()).space)));
-    }
-
-    private static BiFunction<Obj, Inst, Obj> V_V_FUNCTION(final Direction direction) {
-        return (lhs, inst) -> objs(IteratorUtil.stream(VertexMap.recToVertex(lhs.asRec())
-                        .vertices(direction, inst.arg(0).stream().map(Obj::uriValue).map(fURI::toString).toArray(String[]::new)))
-                .map(v -> VertexMap.vertexToRec(v, ((VertexMap) lhs.jvm()).space)));
-    }
-
-    BiFunction<Poly<?, ?>, Object, Poly<?, ?>> VERTEX_POLY_MUTABLE = (vertexPoly, vertexPolyJVM) -> {
-        vertexPoly.<ElementMap>jvmAs().putAll((Map<Uri,Obj>)vertexPolyJVM);
-        //Obj.Helper.objCheck(vertexPoly, vertexPolyJVM, vertexPoly.tid(), vertexPoly.vid());
-        return vertexPoly;
-    };
 
     @Override
     public Set<Inst> insts() {
-        final List<Inst> insts = new ArrayList<>();
-        insts.addAll(List.of(instC(V_INST_TID.dom(URI_TID).rng(VRTX_TID.maybeSome()), lst(), (lhs, inst) -> Router.readFromSpace(lhs.uriValue().extend("V/+")))));
-        // elmnt inst set
-        insts.addAll(List.of(
-                instC(LABEL_INST_TID.dom(ELMT_TID).rng(URI_TID), lst(), (lhs, inst) -> lhs.asRec().at(LABEL).orElse(uri(lhs.tid()))),
-                instC(VALUES_INST_TID.dom(ELMT_TID).rng(ALL.maybeSome()), lst(T(URI_TID.maybeSome())), (lhs, inst) -> lhs.asRec().at(inst.arg(0).isNoObj() ? uri("+") : inst.arg(0).asUri()))
-                // instC(VALUES_INST_TID.dom(ELMT_TID).rng(ALL.maybeSome()), lst(T(URI_TID.maybeSome())), PROPERTY_FUNCTION(uri("+")))
-        ));
-        // vrtx inst set
-        insts.addAll(List.of(
-                instC(UPDATE_INST_TID.dom(VRTX_TID).rng(VRTX_TID.maybe()), lst(REC_TYPE), (lhs, inst) -> Poly.Helper.updateRecRecursion(lhs.asRec(), inst.arg(0).asRec(), VERTEX_POLY_MUTABLE)),
-                instC(OUTE_INST_TID.dom(VRTX_TID).rng(EDGE_TID.maybeSome()), lst(T(URI_TID.maybeSome())), V_E_FUNCTION(Direction.OUT)),
-                instC(INE_INST_TID.dom(VRTX_TID).rng(EDGE_TID.maybeSome()), lst(T(URI_TID.maybeSome())), V_E_FUNCTION(Direction.IN)),
-                instC(BOTHE_INST_TID.dom(VRTX_TID).rng(EDGE_TID.maybeSome()), lst(), (lhs, inst) -> objs(
-                        V_E_FUNCTION(Direction.OUT).apply(lhs, inst),
-                        V_E_FUNCTION(Direction.IN).apply(lhs, inst))),
-                instC(OUT_INST_TID.dom(VRTX_TID).rng(VRTX_TID.maybeSome()), lst(T(URI_TID.maybeSome())), V_V_FUNCTION(Direction.OUT)),
-                instC(IN_INST_TID.dom(VRTX_TID).rng(VRTX_TID.maybeSome()), lst(T(URI_TID.maybeSome())), V_V_FUNCTION(Direction.IN)),
-                instC(BOTH_INST_TID.dom(VRTX_TID).rng(VRTX_TID.maybeSome()), lst(T(URI_TID.maybeSome())), (lhs, inst) -> objs(
-                        V_V_FUNCTION(Direction.OUT).apply(lhs, inst),
-                        V_V_FUNCTION(Direction.IN).apply(lhs, inst)))));
-        // edge inst set
-        insts.addAll(List.of(
-                instC(INV_INST_TID.dom(EDGE_TID).rng(VRTX_TID), lst(), (lhs, inst) -> lhs.asRec().at(IN)),
-                instC(OUTV_INST_TID.dom(EDGE_TID).rng(VRTX_TID), lst(), (lhs, inst) -> lhs.asRec().at(OUT)),
-                instC(BOTHV_INST_TID.dom(EDGE_TID).rng(VRTX_TID), lst(), (lhs, inst) -> objs(Stream.concat(lhs.asRec().at(IN).stream(), lhs.asRec().at(OUT).stream())))));
-        // tp3 space inst set
-        insts.addAll(tp3Space.TP3SpaceType.insts());
-        return new LinkedHashSet<>(insts);
+        INSTS.add(instC(V_INST_TID.dom(URI_TID).rng(VRTX_TID.maybeSome()), lst(), (lhs, inst) -> Router.readFromSpace(lhs.uriValue().extend("V/+"))));
+        INSTS.addAll(tp3Space.TP3SpaceType.insts());
+        return INSTS;
     }
 
 }

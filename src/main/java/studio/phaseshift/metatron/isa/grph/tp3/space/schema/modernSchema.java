@@ -53,32 +53,32 @@ public class modernSchema extends AbstractInstSet {
     public static final Type PERSON_TYPE = Type.Builder.build()
             .tid(VRTX_TID)
             .vid(PERSON_TID)
-            .predicate(isa_(rec(
+            .isaPredicate(rec(
                     uri("name"), STR_TYPE,
-                    uri("age"), INT_TYPE))).create();
+                    uri("age"), INT_TYPE)).create();
 
     public static final Type SOFTWARE_TYPE = Type.Builder.build()
             .tid(VRTX_TID)
             .vid(SOFTWARE_TID)
-            .predicate(isa_(rec(
+            .isaPredicate(rec(
                     uri("name"), STR_TYPE,
-                    uri("lang"), STR_TYPE))).create();
+                    uri("lang"), STR_TYPE)).create();
 
     public static final Type KNOWS_TYPE = Type.Builder.build()
             .tid(EDGE_TID)
             .vid(KNOWS_TID)
-            .predicate(isa_(rec(
+            .isaPredicate(rec(
                     uri("weight"), REAL_TYPE,
                     OUT, PERSON_TYPE,
-                    IN, PERSON_TYPE))).create();
+                    IN, PERSON_TYPE)).create();
 
     public static final Type CREATED_TYPE = Type.Builder.build()
             .tid(EDGE_TID)
             .vid(CREATED_TID)
-            .predicate(isa_(rec(
+            .isaPredicate(rec(
                     uri("weight"), REAL_TYPE,
                     OUT, PERSON_TYPE,
-                    IN, SOFTWARE_TYPE))).create();
+                    IN, SOFTWARE_TYPE)).create();
 
 
     public modernSchema() {

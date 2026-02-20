@@ -31,7 +31,7 @@ public class RelTest extends mTest {
     @CsvSource(value = {
             "(a=>b).as(rec::T)                                                     % [a=>b]",
             "(a=>b).as(rec::T).as(lst::T).>>                                       % [(a=>b)]",
-            "(a=>b)-<(<<.as(str::T)=>>>)                                           % \"a\"=>b",
+            "(a=>b)-<(dom().as(str::T)=>rng())                                     % \"a\"=>b",
     }, delimiter = '%')
     public void testRelAs(final String code, final String expected) {
         mTest.evaluate(LOG, code, expected);
@@ -39,8 +39,8 @@ public class RelTest extends mTest {
     
     @ParameterizedTest
     @CsvSource(value = {
-            "(a=>b).<<                                                     % a",
-            "(a=>b).>>                                                     % b",
+            "(a=>b).dom()                                                  % a",
+            "(a=>b).rng()                                                  % b",
             "(a=>b)-<(_=>_)                                                % ((a=>b)=>(a=>b))",
             "(a=>b)-<(_=>_)>-                                              % {rel{2}::(a=>b)}",
             "(a=>b)-<(_=>_)>-.>-                                           % {uri{2}::a,uri{2}::b}"

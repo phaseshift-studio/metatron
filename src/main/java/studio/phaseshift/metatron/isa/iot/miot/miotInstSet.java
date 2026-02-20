@@ -67,7 +67,7 @@ public class miotInstSet extends AbstractInstSet {
     public static final Type MIOT_DEVICE_TYPE = Type.Builder.build()
             .tid(REC_TID)
             .vid(MIOT_DEVICE_TID)
-            .isaPredicate(rec(uri("status"), is_(or_(eq_(uri(ONLINE)), eq_(uri(OFFLINE))))))
+            .isaPredicate(rec(uri("status"), is_(or_(eq_(uri(ONLINE)), eq_(uri(OFFLINE)))).tryToInst()))
             .create(TYPES, INSTS);
     public static final Type MIOT_ENTITY_TYPE = Type.Builder.build()
             .tid(REC_TID)
@@ -77,17 +77,17 @@ public class miotInstSet extends AbstractInstSet {
     public static final Type MIOT_GPIO_TYPE = Type.Builder.build()
             .tid(MIOT_ENTITY_TID)
             .vid(MIOT_GPIO_TID)
-            .isaPredicate(rec(URI_TYPE, INT_TYPE))
+            .isaPredicate(rec(INT_TYPE, INT_TYPE))
             .inst(MIOT_INST_TID.extend("toggle").dom(MIOT_GPIO_TID).rng(MIOT_GPIO_TID), lst(INT_TYPE),
                     (lhs, inst) -> {
                         final Uri key = inst.arg(0).as(URI_TYPE).as();
                         final long currentValue = lhs.asRec().at(key).orElse(jnt(0L)).intValue();
                         final Int newValue = 0 == currentValue ? jnt(1) : jnt(0);
-                        if (lhs.parent() == lhs)
-                            lhs.logger().warn("parent is not known for gpio %s", lhs);
+                        if (lhs.vid() == null)
+                            lhs.logger().warn("no vid associated with gpio", lhs);
                         else
-                            Router.writeToSpace(lhs.parent().vid().extend("gpio").extend(key.uriValue()), newValue);
-                        return lhs.asRec().put(key, newValue, MUTABLE);
+                            Router.writeToSpace(lhs.vid().extend(key.uriValue()), newValue);
+                        return lhs;
                     })
             .create(TYPES, INSTS);
 

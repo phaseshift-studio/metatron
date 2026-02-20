@@ -31,7 +31,6 @@ import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.util.MTronException;
 
-import java.util.List;
 import java.util.Stack;
 
 import static studio.phaseshift.metatron.Tokens.PATTERN;
@@ -39,11 +38,11 @@ import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.isa.m.mInstSet.M_ISA_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.SPACE_TID;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
+import static studio.phaseshift.metatron.isa.m.type.Inst.ARGS_FURI;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
-import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
@@ -85,6 +84,8 @@ public class stackSpace extends AbstractSpace<Stack<Poly<?, ?>>> {
         //int offset = vid.toString().matches("\\d+") ? 2 : 2; // ensure lst args are not the top frame
         for (int i = this.sjvm().size() - 2; i >= 0; i--) { // the top frame is the current arg being processed, thus, offset is set to 2
             final Poly<?, ?> layer = this.sjvm().get(i);
+            if (vid.segment(0).equals(ARGS_FURI))
+                return vid.pathLength() == 1 ? layer : layer.at(uri(vid.pretract()));
             final Uri index = vid.basePath().toUri();
             final Obj o = layer.at(index);
             if (!o.isNoObj())

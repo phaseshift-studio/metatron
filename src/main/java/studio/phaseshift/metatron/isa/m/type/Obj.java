@@ -233,9 +233,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
             return true;
         if (rhs.isType() && !rhs.asType().isBaseType() && this.tid().matches(rhs.tid()))
             return !rhs.asType().hasPredicate() || !rhs.asType().predicate().apply(this).isNoObj();
-        if (this.isNoObj() && rhs.isNoObj())
-            return true;
-        else if (this.isNoObj() && (rhs.tid().equals(NOOBJ_TID) || rhs.tid().cV().isZeroable()))
+        else if (this.isNoObj() && (rhs.tid().cV().isZeroable() || rhs.tid().equals(NOOBJ_TID)))
             return true;
         else if (this.tid().cV().isZeroable() && rhs.isNoObj())
             return true;

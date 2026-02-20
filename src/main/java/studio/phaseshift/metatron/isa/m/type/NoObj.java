@@ -25,6 +25,7 @@ import studio.phaseshift.metatron.util.IteratorUtil;
 import java.util.*;
 
 import static studio.phaseshift.metatron.furi.q.DocQ.Doc.docWrap;
+import static studio.phaseshift.metatron.isa.m.mInstSet.NOOBJ_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.START_INST_TID;
 import static studio.phaseshift.metatron.isa.m.type.InstSet.A;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
@@ -36,7 +37,7 @@ import static studio.phaseshift.metatron.util.Tuple.Triplet;
 public final class NoObj implements Obj, Inst {
 
     private static final NoObj SINGLE = new NoObj();
-    public static final Type NOOBJ_TYPE = T(fURI.NOOBJ).c(cInt.ZERO()).asType();
+    public static final Type NOOBJ_TYPE = Type.Builder.build().tid(NOOBJ_TID).vid(NOOBJ_TID).predicate((lhs, inst) -> noobj()).create();
     private static final int HASHCODE = 632862684;
 
     private NoObj() {
@@ -91,6 +92,11 @@ public final class NoObj implements Obj, Inst {
     @Override
     public NoObj parent() {
         return this;
+    }
+
+    @Override
+    public boolean test(final Obj rhs) {
+        return rhs.isNoObj() || rhs.c().isZeroable() || rhs.tid().equals(NOOBJ_TID);
     }
 
     @Override

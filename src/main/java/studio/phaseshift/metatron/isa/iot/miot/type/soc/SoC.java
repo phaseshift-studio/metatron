@@ -52,10 +52,10 @@ public interface SoC extends Rec {
     Type MIOT_SOC_TYPE = Type.Builder.build()
             .tid(REC_TID)
             .vid(MIOT_SOC_TID)
-            .predicate(isa_(rec(
+            .isaPredicate(rec(
                     uri("code").<Uri>maybe(), LST_TYPE,
                     uri("arch"), is_(or_(eq_(uri("esp32")), eq_(uri("esp8266")))),
-                    URI_TYPE.<Type>maybe(), MIOT_ENTITY_TYPE))).create();
+                    URI_TYPE.<Type>maybe(), MIOT_ENTITY_TYPE)).create();
 
     fURI MIOT_SOC_INST_RESET_TID = MIOT_SOC_INST_TID.extend("reset");
 

@@ -20,7 +20,9 @@ package studio.phaseshift.metatron.isa.m.type;
 
 import studio.phaseshift.metatron.algebra.PlusMonoid;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.Fluent;
 import studio.phaseshift.metatron.isa.m.mInstSet;
+import studio.phaseshift.metatron.isa.m.parser.mFluent;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
@@ -117,8 +119,8 @@ public interface Type extends Obj, PlusMonoid<Type> {
             return false;
         if (!this.c().within(rhs.c()))
             return false;
-       // if(rhs.asType().parentType()!= null && !this.test(rhs.asType().parentType()))
-       //     return false;
+        // if(rhs.asType().parentType()!= null && !this.test(rhs.asType().parentType()))
+        //     return false;
         if (rhs.asType().isBaseType())
             return this.baseType().matches(rhs.tid()) && (!rhs.asType().hasPredicate() || Objects.equals(this.predicate(), rhs.asType().predicate())); // matches any abstract type to it's base type as long as within the coefficient boundaries
         if (rhs.tid().isGeneric())
@@ -206,15 +208,18 @@ public interface Type extends Obj, PlusMonoid<Type> {
             this.tid = tid;
             return this;
         }
-
+        
         public Builder predicate(final Call predicate) {
             this.predicate = predicate;
             return this;
         }
 
+        public Builder predicate(final BiFunction<Obj, Inst, Obj> predicate) {
+            return this.predicate(instC(INST_TID.dom(ALL.maybe()).rng(this.vid), lst(), predicate));
+        }
+
         public Builder isaPredicate(final Poly<?, ?> predicate) {
-            this.predicate = isa_(predicate).tryToInst();
-            return this;
+            return this.predicate(isa_(predicate).tryToInst());
         }
 
         public Builder constructor(final Call constructor) {
