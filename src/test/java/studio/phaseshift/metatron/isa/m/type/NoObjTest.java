@@ -84,7 +84,18 @@ public class NoObjTest extends mTest {
             "#{+}::T             |noobj                  |false",
             "noobj               |#{+}::T                |false",
             "#{*}::T             |noobj                  |true",
-            "noobj               |#{*}::T                |true"},
+            "noobj               |#{*}::T                |true",
+            "noobj               |age                    |false",
+            "uri::noobj          |age{?}                 |false",
+            "uri::noobj{0}       |age{?}                 |true",
+            "noobj               |age{?}                 |false",
+            "noobj{0}            |age{?}                 |false",
+            "noobj               |uri{?}::age            |true",
+            "noobj{0}            |uri{0}::age            |true",
+            "noobj               |noobj::T               |true",
+            "noobj               |noobj{1}::T            |true",
+            "age{0}              |age{?}                 |true",
+            "age                 |age{?}                 |true"},
             delimiter = '|')
     public void testNoObjMatches(final String o1, final String o2, final boolean match) {
         final Obj obj1 = mParser.m_obj().parse(o1).get();

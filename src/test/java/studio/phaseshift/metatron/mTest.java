@@ -87,7 +87,7 @@ public abstract class mTest {
 
 
     public static void testEquals(final GraphittyLogger LOG, final Obj a, final Obj b, final boolean equals) {
-        LOG.error("testing %s == %s [expected:%s]", a, b, equals);
+        LOG.debug("testing %s == %s [expected:%s]", a, b, equals);
         if (equals)
             assertEquals(a, b);
         else

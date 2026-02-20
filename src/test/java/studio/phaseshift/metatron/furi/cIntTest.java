@@ -29,6 +29,33 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 public class cIntTest {
 
+
+    @Test
+    public void testPredicateOps() {
+        assertTrue(cInt.ZERO().isZeroable());
+        assertTrue(cInt.of(-1,1).isZeroable());
+        assertFalse(cInt.of(-1,1).within(cInt.ZERO()));
+        assertFalse(cInt.of(1,2).isZeroable());
+        assertTrue(cInt.ZERO().within(cInt.of(-1,1)));
+        assertTrue(cInt.of(-1,1).contains(cInt.ZERO()));
+        assertFalse(cInt.of(1,2).contains(cInt.ZERO()));
+        assertFalse(cInt.of(-2,-1).contains(cInt.ZERO()));
+    //    assertTrue(cInt.of((Long)null,(Long)null).contains(cInt.ZERO()));
+        assertTrue(cInt.of(Long.MIN_VALUE,Long.MAX_VALUE).contains(cInt.ZERO()));
+      //  assertTrue(cInt.MAYBE().contains(cInt.ZERO()));
+     //   assertTrue(cInt.MAYBESOME().contains(cInt.ZERO()));
+        assertFalse(cInt.SOME().contains(cInt.ZERO()));
+        assertFalse(cInt.ZERO().contains(cInt.MAYBE()));
+        assertFalse(cInt.ZERO().contains(cInt.MAYBESOME()));
+        assertFalse(cInt.ZERO().contains(cInt.SOME()));
+        assertTrue(cInt.ZERO().within(cInt.of(Long.MIN_VALUE,Long.MAX_VALUE)));
+        assertTrue(cInt.ZERO().within(cInt.MAYBE()));
+        assertTrue(cInt.ZERO().within(cInt.MAYBESOME()));
+        assertFalse(cInt.ZERO().within(cInt.SOME()));
+        assertEquals(cInt.ONE(), cInt.ZERO().plus(cInt.ONE()));
+        assertEquals(cInt.of(100), cInt.ZERO().plus(cInt.of(100)));
+    }
+
     @Test
     public void testExactOps() {
         assertEquals(cInt.ZERO(), cInt.ZERO().plus(cInt.ZERO()));
