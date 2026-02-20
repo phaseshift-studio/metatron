@@ -1,7 +1,22 @@
-/mnt/lang/sys   -> */sys;
-/mnt/lang/kv    -> */kv;
-/sys/mod/web    -> */web;
-   web::[host   => <http://localhost:8777>,
-         pattern => <http://#>,
-         route   => [/     => examples/www,
-                     /docs => target/docs ]]@/mnt/space/web;
+[== metatron example boot ==];
+print("""
+...{{y}}__  ____________  ____  _  __  _____  ____  _________
+../  |/  {{r}}/_  __/ _ \/ __ \/ |/ /_/_/ _ \/ __ \/ ___/ __/
+.{{y}}/ /|_/ / / / / , _/ /_/ /    //_// // / /_/ / /___\ \  
+/_/  /_/ /_/ /_/|_|\{{r}}____/_/|_/_/ /____/\____/\___/___/{{X}}                                                                                                                
+""")
+print("{{r}}------------\n{{g}}*{{y}}boot/args{{X}}: ",
+      *boot/args, 
+     "\n{{r}}------------{{X}}\n");
+[== mount instruction sets ==]
+print("{{y}}mounting instruction sets\n{{X}}");
+import(/m/mach/io);
+import(/m/web);
+import(/m/iot);
+import(/m/iot/haos);
+import(/m/iot/miot);
+import(/m/grph);
+import(/m/grph/tp3);
+  mem::[pattern => /usr/#,                                 
+        q       => [subq::[=>]]]@/sys/space/usr;
+  mem::[pattern => /shared/#]@/sys/space/shared;
