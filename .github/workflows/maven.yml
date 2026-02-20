@@ -38,9 +38,9 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install websockets
-      - name: Build Documentation with Maven
-        run: |
-          bin/metatron "[log=>info,host=><ws://127.0.0.1:8999>,boot=><boot/boot.mtron>]" &
-          mvn site --file pom.xml
+      #- name: Build Documentation with Maven
+      #  run: |
+      #    bin/metatron "[log=>info,host=><ws://127.0.0.1:8999>,boot=><boot/boot.mtron>]" &
+      #    mvn site --file pom.xml
       - name: Update Dependency Graph
         uses: advanced-security/maven-dependency-submission-action@571e99aab1055c2e71a1e2309b9691de18d6b7d6
