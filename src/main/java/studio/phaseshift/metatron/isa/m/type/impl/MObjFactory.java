@@ -23,16 +23,16 @@ import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
 
+import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.function.Function;
 
-import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.ObjFactory.Helper.containsObjs;
 import static studio.phaseshift.metatron.isa.m.type.ObjFactory.Helper.reflectionBasedCreate;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
-import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
+import static studio.phaseshift.metatron.isa.m.type.impl.MBytes.bytes;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
@@ -85,6 +85,9 @@ public class MObjFactory extends MRec implements ObjFactory {
             }
             case Obj obj -> {
                 return (OBJ) value;
+            }
+            case ByteBuffer bytes -> {
+                return (OBJ) bytes(bytes.duplicate(), tid, vid);
             }
             case Boolean b -> {
                 return (OBJ) bool(b, tid, vid);

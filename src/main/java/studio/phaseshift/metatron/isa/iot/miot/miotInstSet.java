@@ -20,11 +20,9 @@ package studio.phaseshift.metatron.isa.iot.miot;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.iot.miot.type.soc.SoC;
-import studio.phaseshift.metatron.isa.m.type.Inst;
-import studio.phaseshift.metatron.isa.m.type.ServiceMetadata;
-import studio.phaseshift.metatron.isa.m.type.Type;
-import studio.phaseshift.metatron.isa.m.type.Uri;
+import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.AbstractInstSet;
+import studio.phaseshift.metatron.isa.mach.type.Router;
 
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -74,19 +72,22 @@ public class miotInstSet extends AbstractInstSet {
     public static final Type MIOT_ENTITY_TYPE = Type.Builder.build()
             .tid(REC_TID)
             .vid(MIOT_ENTITY_TID)
-            .isaPredicate(rec(uri("super"), MIOT_DEVICE_TYPE))
-            .constructor(instC(MIOT_INST_TID.dom(ALL.maybe()).rng(MIOT_ENTITY_TID), lst(MIOT_DEVICE_TYPE), (lhs, inst) -> rec(uri(SUPER), auto_from_(inst.arg(0).vid()))))
+            .isaPredicate(rec(uri(SUPER), MIOT_DEVICE_TYPE))
             .create(TYPES, INSTS);
     public static final Type MIOT_GPIO_TYPE = Type.Builder.build()
             .tid(MIOT_ENTITY_TID)
             .vid(MIOT_GPIO_TID)
             .isaPredicate(rec(URI_TYPE, INT_TYPE))
-            .constructor(instC(MIOT_INST_TID.dom(ALL.maybe()).rng(MIOT_GPIO_TID), lst(MIOT_DEVICE_TYPE), (lhs, inst) -> rec(uri(SUPER), auto_from_(inst.arg(0).vid()))))
             .inst(MIOT_INST_TID.extend("toggle").dom(MIOT_GPIO_TID).rng(MIOT_GPIO_TID), lst(INT_TYPE),
                     (lhs, inst) -> {
                         final Uri key = inst.arg(0).as(URI_TYPE).as();
                         final long currentValue = lhs.asRec().at(key).orElse(jnt(0L)).intValue();
-                        return lhs.asRec().put(key, 0 == currentValue ? jnt(1) : jnt(0), MUTABLE);
+                        final Int newValue = 0 == currentValue ? jnt(1) : jnt(0);
+                        if (lhs.parent() == lhs)
+                            lhs.logger().warn("parent is not known for gpio %s", lhs);
+                        else
+                            Router.writeToSpace(lhs.parent().vid().extend("gpio").extend(key.uriValue()), newValue);
+                        return lhs.asRec().put(key, newValue, MUTABLE);
                     })
             .create(TYPES, INSTS);
 

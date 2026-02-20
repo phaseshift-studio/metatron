@@ -34,8 +34,8 @@ icolor cyan "</?([a-z]|[0-9]|/|_|-|:|\s)*>\s*=>"
 icolor cyan "/?([a-z]|[0-9]|/|_|-|:)*\s*=>"
 color green "=>" "<" ">"
 ### bytes
-icolor yellow "[^(_|/|<)]0x([0-9]|[A-F]|[a-f])+"
-color yellow,underline "[^(_|/|<)]0x"
+icolor yellow "0x([0-9]|[A-F]|[a-f])+"
+color yellow,underline "0x"
 ### bool
 color yellow "(true)|(false)"
 ### type

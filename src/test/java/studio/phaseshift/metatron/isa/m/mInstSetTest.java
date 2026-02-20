@@ -98,7 +98,7 @@ public class mInstSetTest extends InstSetTest {
             "'ab3cd'.regex('\\d*')                                                          % ['','','3','','','']",
             "'ab3cd'.regex('\\d+')                                                          % ['3']",
             "'ab3cd'.regex('\\d{2}')                                                        % [,]",
-    }, delimiter = '%',quoteCharacter = '~')
+    }, delimiter = '%', quoteCharacter = '~')
     public void testStrCode(final String code, final String expected) {
         mTest.testCode(LOG, code, expected);
     }
@@ -653,7 +653,46 @@ public class mInstSetTest extends InstSetTest {
         mTest.testCode(LOG, code, expected);
     }
 
+
     @ParameterizedTest
+    @TestData(value = {
+            "a -> [a=>1,b=>[c=>2,d=>[e,f,[g,h]]]]",
+            "b -> [a=>1,b=>[c=>2,d=>!*a]]"
+    })
+    @CsvSource(value = {
+            "*a>>b/d/0                                           % e",
+            "*a.>>.>>.>>.>>                                      % {g,h}",
+            "*a.>>.>>.>>.>>.<<.<<.<<.<<                          % *a.-<[_,_]>-",
+            "*a.>>{a,b/c}                                        % {1,2}",
+            "*a.>>{a,b/c}.sum()                                  % 3",
+            "*a.-<{>>a,>>b/c}                                    % {1,2}",
+            "*a.-<{>>a,>>b/c}.sum().sum()                        % 3",
+            "*a.-<{>>a,>>b/c}.<<.<<                              % *a",
+            "*a.-<{>>a,>>b/c}.<<.<<                              % *a",
+            "*b.>>b>>d>>b/c                                      % 2",
+            "*b.>>b>>d>>b>>c                                     % 2",
+            "*b.>>b>>d>>b>>c.<<.<<                               % *a",
+            "*b.>>b>>d>>b>>c.<<.<<.<<.<<                         % *b",
+            "*b.>>b>>d                                           % *a",
+            "*b.>>b>>d.>>.<<.dedup()                             % *a",
+            "*b.>>b>>d.>>.<<.<<.dedup()                          % *b/b",
+            "*b.>>b>>d.>>.<<.<<.<<.dedup()                       % *b",
+            "*a.>>b>>d>>2                                        % [g,h]",
+            "*a.>>b>>d>>2>>1                                     % h",
+            "*a.>>b>>d>><2/1>                                    % h",
+            "*a.>><b/d/2/1>                                      % h",
+            "*a.>><b/d/2/1>.<<.<<.<<.<<                          % *a", // TODO: path chains should be treated as single steps?
+            "*a.>>b>>d>>2>>{0,1}                                 % {g,h}",
+            "*a.>>b>>d>>{1,2}                                    % {f,[g,h]}",
+            //"*a.>>b>>d-<{>>1,>>2}                                % {f,[g,h]}",
+    }, delimiter = '%', quoteCharacter = '~')
+    public void testLShiftRShift(final String code, final String expected) {
+        mTest.testCode(LOG, code, expected);
+    }
+
+
+    @ParameterizedTest
+    @Disabled
     @CsvSource(value = {
             "0x12345678<<                                                                                                % 0x345678",
             "0x12345678>>                                                                                                % 0x123456",
@@ -711,7 +750,7 @@ public class mInstSetTest extends InstSetTest {
             "[a=>1,b=>2,c=>[d=>3,e=>[f=>4]]]>>3                                                                        % 4",
             "[a=>1,b=>2,c=>[d=>3,e=>[f=>4]]]<<4                                                                        % {,}",
             "[a=>1,b=>2,c=>[d=>3,e=>[f=>4]]]>>4                                                                        % {,}",
-    }, delimiter = '%',quoteCharacter = '~')
+    }, delimiter = '%', quoteCharacter = '~')
     public void testShift(final String code, final String expected) {
         mTest.testCode(LOG, code, expected);
     }

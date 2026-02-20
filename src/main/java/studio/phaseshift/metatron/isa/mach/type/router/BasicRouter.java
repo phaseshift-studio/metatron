@@ -174,6 +174,7 @@ public class BasicRouter extends AbstractSpace<MServer> implements Router {
         if (!(superSpace instanceof noobjSpace)) {
             final Rec superSpaces = superSpace.jvm().getOrDefault(uri(SPACE), rec()).as();
             subSpaces.put(uri(SUPER), null == superSpace.vid() ? uri(superSpace.pattern()) : auto_from_(superSpace.vid()).tryToInst(), MUTABLE);
+            subSpaces.parent(superSpace);
             superSpaces.put(uri(SUB), superSpaces.jvm().getOrDefault(uri(SUB), MObjs.empty()).append(auto_from_(null == space.vid() ? space.tid() : space.vid()).tryToInst()), MUTABLE);
             superSpace.put(uri(SPACE), superSpaces, MUTABLE);
         }

@@ -54,11 +54,11 @@ class RFIDtron(Architecture):
         self.soc.attach(
             Ssd1306(i2c=self.soc.i2c, addr=0x3c, height=64, width=128, soc_vid=self.soc_vid, name="oled").start())
         self.soc.attach(SoftSPI(baudrate=100000, polarity=0, phase=0,
-                                sck=self.soc.gpio.pin(18),
-                                mosi=self.soc.gpio.pin(23),
-                                miso=self.soc.gpio.pin(19)).start())
+                                sck=18,
+                                mosi=23,
+                                miso=19).start())
         #####################################################################################################
-        LOG.info("initializing {{b}}RFID{{X}} reader")
-        reader = MFRC522(spi=self.soc.spi, cs=self.soc.gpio.pin(5)).init()
-        LOG.info("turning on antenna {{y}}{}{{X}}", reader)
-        reader.antenna_on()
+        #LOG.info("initializing {{b}}RFID{{X}} reader")
+        #reader = MFRC522(spi=self.soc.spi, cs_pin=5).init()
+        #LOG.info("turning on antenna {{y}}{}{{X}}", reader)
+        #reader.antenna_on()

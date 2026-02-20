@@ -37,7 +37,6 @@ import java.util.stream.Stream;
 import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.furi.fURI.fnull;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
 import static studio.phaseshift.metatron.isa.m.type.Int.INT_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.Str.STR_TYPE;
@@ -123,7 +122,7 @@ public interface Lst extends Poly<Lst, List<Obj>>, PlusMonoid.O<Lst> {
             throw MTronException.of("unknown key for lst: %s", key);
         }
     }
-    
+
     default <O extends Obj> O at(final int index) {
         return this.at(jnt(index));
     }
@@ -131,7 +130,7 @@ public interface Lst extends Poly<Lst, List<Obj>>, PlusMonoid.O<Lst> {
     @Override
     default <O extends Obj> O at(final Obj key) {
         if (key.isInt())
-            return (O) ((this.jvm().size() > key.intValue()) ? this.jvm().get(key.<Int>as().intValue().intValue()).autoResolve(this) : noobj());
+            return (O) ((this.jvm().size() > key.intValue()) ? this.jvm().get(key.<Int>as().intValue().intValue()).autoResolve(this) : noobj()).parent(this);
         else if (key.isUri()) {
             if (key.uriValue().segments().isEmpty())
                 return (O) noobj();
@@ -149,9 +148,9 @@ public interface Lst extends Poly<Lst, List<Obj>>, PlusMonoid.O<Lst> {
                 result = Stream.of(this.jvm().get(k.intValue().intValue()));
             }
             if (key.uriValue().segments().size() == 1) {
-                return (O) objs(result.filter(x -> !x.isNoObj()).map(e -> e.autoResolve(this)));
+                return (O) objs(result.filter(x -> !x.isNoObj()).map(e -> e.autoResolve(this).parent(this)));
             } else {
-                return (O) objs(result.filter(x -> !x.isNoObj()).map(e -> e.autoResolve(this)).filter(Obj::isPoly).map(r -> r.<Poly>as().at(uri(key.<Uri>as().uriValue().pretract()))));
+                return (O) objs(result.filter(x -> !x.isNoObj()).map(e -> (Obj) e.autoResolve(this).parent(this)).filter(Obj::isPoly).map(r -> r.<Poly>as().at(uri(key.<Uri>as().uriValue().pretract()))));
             }
         } else {
             throw MTronException.of("unknown key for lst: %s", key);
@@ -200,8 +199,8 @@ public interface Lst extends Poly<Lst, List<Obj>>, PlusMonoid.O<Lst> {
                     instC(AS_INST_TID.dom(LST_TID).rng(REC_TID), lst(T(REC_TID)), (lhs, inst) -> Poly.Helper.transformLstToRec(lhs.asLst(), inst.arg(0).tid(), fnull)),
                     instC(PLUS_INST_TID.dom(LST_TID).rng(LST_TID), lst(T(LST_TID)), (lhs, inst) -> lhs.jvm(Stream.concat(lhs.elements(), inst.arg(0).elements()).toList())),
                     instC(MULT_INST_TID.dom(LST_TID).rng(LST_TID), lst(T(LST_TID)), (lhs, inst) -> lhs.jvm(lhs.elements().flatMap(a -> inst.arg(0).elements().map(b -> rel(a, b))).toList())),
-                    instC(LSHIFT_INST_TID.dom(LST_TID).rng(LST_TID), lst(isa_(INT_TYPE).else_(jnt(1))), (lhs, inst) -> objs(lhs.stream().filter(Obj::isLst).map(l -> l.jvm(lhs.<Lst>as().indexedStream().filter(r -> r.first().intValue() >= inst.arg(0).intValue()).map(Rel::second).toList())))),
-                    instC(RSHIFT_INST_TID.dom(LST_TID).rng(LST_TID), lst(isa_(INT_TYPE).else_(jnt(1))), (lhs, inst) -> objs(lhs.stream().filter(Obj::isLst).map(l -> l.jvm(lhs.<Lst>as().indexedStream().filter(r -> r.first().intValue() < (lhs.lstValue().size() - inst.arg(0).intValue())).map(Rel::second).toList())))),
+                    instC(RSHIFT_INST_TID.dom(LST_TID).rng(ALL_STAR), lst(T(ALL.maybeSome())), (lhs, inst) -> objs(inst.arg(0).orElse((Obj) uri("+")).stream().map(k -> lhs.asLst().at(k)))),
+                    // instC(LSHIFT_INST_TID.dom(LST_TID).rng(ALL_STAR), lst(isa_(INT_TYPE).else_(jnt(1))), (lhs, inst) -> lhs.parent()),
                     instC(MERGE_INST_TID.dom(LST_TID).rng(ALL_STAR), lst(), (lhs, inst) -> objs(lhs.elements())),
                     instC(MERGE_INST_TID.dom(LST_TID).rng(ALL_STAR), lst(URI_TYPE), (lhs, inst) -> uri(lhs.elements().map(e -> e.uriValue().toString()).reduce("", (a, b) -> a + inst.arg(0).uriValue().toString() + b).substring(1))),
                     instC(MERGE_INST_TID.dom(LST_TID).rng(ALL_STAR), lst(STR_TYPE), (lhs, inst) -> str(lhs.elements().map(Obj::strValue).reduce("", (a, b) -> a + inst.arg(0).strValue() + b).substring(1))),

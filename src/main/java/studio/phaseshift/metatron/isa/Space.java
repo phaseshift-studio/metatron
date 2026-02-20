@@ -204,8 +204,8 @@ public interface Space extends Rec, Closeable {
                     });
                     if (!nestRec.isEmpty())
                         listing.add(Pair.with(uri(pattern), nestRec));
-                } else if (pattern.isBranch()) {
-                    directReader.apply(pattern.extend(fURI.ONE_WILD_STRING)).forEachRemaining(kv -> {
+                } else  {
+                    directReader.apply((pattern.isBranch() ? pattern.extend(fURI.ONE_WILD_STRING) : pattern.asBranch())).forEachRemaining(kv -> {
                         listing.add(Pair.with(kv.get0().toUri(), kv.get1()));
                     });
                 }
