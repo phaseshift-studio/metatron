@@ -38,12 +38,12 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.MTronException.mexcept;
 
 public interface Poly<P extends Poly<P, J>, J> extends Obj {
-    
-    BiFunction<Poly<?,?>,Object,Poly<?,?>> APPEND = (poly, jvm) -> {
+
+    BiFunction<Poly<?, ?>, Object, Poly<?, ?>> APPEND = (poly, jvm) -> {
         Obj.Helper.objCheckAndSave(poly, jvm, poly.tid(), poly.vid());
         return poly;
     };
-    
+
     BiFunction<Poly<?, ?>, Object, Poly<?, ?>> MUTABLE = (poly, jvm) -> {
         Obj.Helper.objCheckAndSave(poly, jvm, poly.tid(), poly.vid());
         return poly;
@@ -238,6 +238,30 @@ public interface Poly<P extends Poly<P, J>, J> extends Obj {
         private static final Uri SORTA = uri("/");
         private static final Uri FAIL = uri("X");
 
+        public static Obj diffTypeRecursion(final Obj lhs, final Type rhs) {
+            return lhs.isRec() ? diffTypeRecRecursion(lhs.asRec(), rhs) : diffTypeLstRecursion(lhs.asLst(), rhs);
+        }
+
+        public static Lst diffTypeLstRecursion(final Lst lhs, final Type rhs) {
+            Type temp = rhs;
+            final Lst result = lst();
+            while (null != temp && !temp.isNoObj() && temp.asType().hasPredicate()) {
+                result.jvm().addAll(Poly.Helper.diffLstRecursion(lhs.asLst(), Type.Helper.typePredicateObj(temp).asLst()).jvm());
+                temp = temp.parentType();
+            }
+            return result;
+        }
+
+        public static Rec diffTypeRecRecursion(final Rec lhs, final Type rhs) {
+            Type temp = rhs;
+            final Rec result = rec();
+            while (null != temp && !temp.isNoObj() && temp.asType().hasPredicate()) {
+                result.jvm().putAll(Poly.Helper.diffRecRecursion(lhs.asRec(), Type.Helper.typePredicateObj(temp).asRec()).jvm());
+                temp = temp.parentType();
+            }
+            return result;
+        }
+
         public static Obj diffObjRecursion(final Obj lhs, final Obj rhs) {
             if (lhs.isRec() && rhs.isRec())
                 return diffRecRecursion(lhs.asRec(), rhs.asRec());
@@ -269,7 +293,7 @@ public interface Poly<P extends Poly<P, J>, J> extends Obj {
 
         public static Rec diffRecRecursion(final Rec lhs, final Rec rhs) {
             final Rec result = rec();
-            rhs.asRec().elements().forEach(x -> {
+            rhs.elements().forEach(x -> {
                 final Optional<Rel> kvMatch = lhs.asRec().elements().filter(y -> y.first().test(x.first()) && y.second().test(x.second())).findFirst();
                 if (kvMatch.isPresent())
                     result.put(rel(kvMatch.get().first(), rel(GOOD, x.first())), rel(kvMatch.get().second(), rel(GOOD, x.second())), MUTABLE);
@@ -277,8 +301,12 @@ public interface Poly<P extends Poly<P, J>, J> extends Obj {
                     final Optional<Rel> kMatch = lhs.asRec().elements().filter(y -> y.first().test(x.first())).findFirst();
                     if (kMatch.isPresent())
                         result.put(rel(kMatch.get().first(), rel(SORTA, x.first())), diffObjRecursion(kMatch.get().second(), x.second()), MUTABLE);
+                    else if (!x.first().c().isZeroable() && !x.second().c().isZeroable())
+                        result.put(rel(noobj(), rel(FAIL, x.first())), rel(noobj(), rel(FAIL, x.second())), MUTABLE);
+                    else if (!x.second().c().isZeroable())
+                        result.put(rel(noobj(), rel(GOOD, x.first())), rel(noobj(), rel(SORTA, x.second())), MUTABLE);
                     else
-                        result.put(rel(noobj(), rel(FAIL, x.first())), rel(x.second(), rel(FAIL, noobj())), MUTABLE);
+                        result.put(rel(noobj(), rel(x.first().c().isZeroable() ? GOOD : SORTA, x.first())), rel(noobj(), rel(GOOD, x.second())), MUTABLE);
                 }
             });
             return result;

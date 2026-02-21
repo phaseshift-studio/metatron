@@ -35,12 +35,10 @@ import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.Tokens.C;
 import static studio.phaseshift.metatron.furi.fURI.*;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.Poly.Helper.selectRecRecursion;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
-import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
@@ -115,7 +113,7 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>>, PlusMonoid.O<Rec> {
                         .map(l -> Tuple.Pair.with(l.jvm().get0().test(r.jvm().get0()), l.jvm().get1().test(r.jvm().get1())))
                         .anyMatch(pair -> pair.get0() && pair.get1());
                 if (found) return true;
-                boolean notFound = (r.jvm().get0().c().isZeroable() && this.elements().noneMatch(l -> l.jvm().get0().test(r.jvm().get0())));
+                boolean notFound = r.jvm().get0().c().isZeroable() && this.elements().noneMatch(l -> l.jvm().get0().test(r.jvm().get0()));
                 if (notFound) return true;
                 final Obj thisValue = this.at(r.jvm().get0()); // can't make this jvm()-based
                 return (thisValue.isNoObj() && r.jvm().get0().c().isZeroable()) || thisValue.test(r.jvm().get1());
@@ -152,7 +150,7 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>>, PlusMonoid.O<Rec> {
                 return (O) result.parent(this);
             } else {
                 final fURI nextKey = isBranch ? key.uriValue().pretract().asBranch() : key.uriValue().pretract();
-                return (O) objs(IteratorUtil.stream(result.iterator()).filter(Obj::isPoly).map(o -> o.parent(this).<Poly<?,?>>as()).map(r -> r.<Poly>as().at(uri(nextKey))));
+                return (O) objs(IteratorUtil.stream(result.iterator()).filter(Obj::isPoly).map(o -> o.parent(this).<Poly<?, ?>>as()).map(r -> r.<Poly>as().at(uri(nextKey))));
             }
         }
     }
@@ -264,8 +262,8 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>>, PlusMonoid.O<Rec> {
                     instC(MERGE_INST_TID.dom(REC_TID).rng(REC_TID), lst(T(REC_TID)), (lhs, inst) -> inst.arg(0).<Rec>as().plus(lhs.as())),//objs(lhs.elementStream())),
                     instC(DOM_INST_TID.dom(REC_TID).rng(ALL_STAR), lst(), (lhs, inst) -> objs(lhs.recValue().keySet())),
                     instC(RNG_INST_TID.dom(REC_TID).rng(ALL_STAR), lst(), (lhs, inst) -> objs(lhs.recValue().values())),
-                    instC(RSHIFT_INST_TID.dom(REC_TID).rng(ALL_STAR), lst(T(ALL.maybeSome())), (lhs, inst) -> objs(inst.arg(0).orElse((Obj)uri("+")).stream().map(k -> lhs.asRec().at(k)))),
-                   // instC(LSHIFT_INST_TID.dom(REC_TID).rng(ALL_STAR), lst(), (lhs, inst) -> lhs.parent()),
+                    instC(RSHIFT_INST_TID.dom(REC_TID).rng(ALL_STAR), lst(T(ALL.maybeSome())), (lhs, inst) -> objs(inst.arg(0).orElse((Obj) uri("+")).stream().map(k -> lhs.asRec().at(k)))),
+                    // instC(LSHIFT_INST_TID.dom(REC_TID).rng(ALL_STAR), lst(), (lhs, inst) -> lhs.parent()),
                     instC(PLUS_INST_TID.dom(REC_TID).rng(REC_TID), lst(T(REC_TID)), (lhs, inst) -> lhs.jvm(Stream.concat(lhs.<Rec>as().elements(), inst.arg(0).<Rec>as().elements().map(Obj::<Rel>as)).collect(Collectors.toMap(Rel::first, Rel::second, Obj::append, LinkedHashMap::new)))),
                     instC(MPLUS_INST_TID.dom(REC_TID).rng(REC_TID), lst(T(REC_TID)), (lhs, inst) -> inst.arg(0).<Rec>as().elements().map(Obj::<Obj>as).reduce(lhs.<Rec>as(), (a, b) -> a.<Rec>as().put(((Rel) b).first(), ((Rel) b).second(), MUTABLE))),
                     instC(SELECT_INST_TID.dom(REC_TID).rng(REC_TID.maybe()), lst(T(REC_TID)), (lhs, inst) -> selectRecRecursion(lhs.asRec(), inst.arg(0).asRec())),

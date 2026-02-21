@@ -151,7 +151,7 @@ public class Console extends JRec implements Closeable, Runnable {
     }
 
     public static Console of(final Rec options) {
-        return new Console(options,null);
+        return new Console(options, null);
     }
 
     @Override
@@ -248,16 +248,18 @@ public class Console extends JRec implements Closeable, Runnable {
                     this.status.setState(Level.valueOf(line.substring(6).trim().toUpperCase()));
                 } else {
                     this.status.startTimer();
-                    try {
-                        final Obj parseResult = mParser.parse(line);
-                        if (null != parseResult && !parseResult.isNoObj()) {
-                            this.machine = (MMachine) MMachine.of(parseResult.isCall() ? parseResult.as() : start_(parseResult)).onHalt(this::printResult);
-                            final Obj computeResult = this.machine.apply();
-                            computeResult.stream().forEach(this::printResult);
+                    Arrays.stream(line.split(";")).forEach(l -> {
+                        try {
+                            final Obj parseResult = mParser.parse(l);
+                            if (null != parseResult && !parseResult.isNoObj()) {
+                                this.machine = (MMachine) MMachine.of(parseResult.isCall() ? parseResult.as() : start_(parseResult)).onHalt(this::printResult);
+                                final Obj computeResult = this.machine.apply();
+                                computeResult.stream().forEach(this::printResult);
+                            }
+                        } catch (final Exception e) {
+                            MTronException.of(e).asFail().apply(this).forEach(this::printResult);
                         }
-                    } catch (final Exception e) {
-                        MTronException.of(e).asFail().apply(this).forEach(this::printResult);
-                    }
+                    });
                     this.machine = null;
                 }
             } catch (final UserInterruptException e) {

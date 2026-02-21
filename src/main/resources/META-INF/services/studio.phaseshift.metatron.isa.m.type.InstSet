@@ -17,6 +17,7 @@
 #
 
 studio.phaseshift.metatron.isa.m.mInstSet
+studio.phaseshift.metatron.isa.m.math.mathInstSet
 studio.phaseshift.metatron.isa.mach.machInstSet
 studio.phaseshift.metatron.isa.mach.io.ioInstSet
 studio.phaseshift.metatron.isa.web.webInstSet

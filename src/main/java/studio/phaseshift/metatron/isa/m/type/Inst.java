@@ -105,12 +105,12 @@ public interface Inst extends Call {
             LOG.trace("resolving lst args of %s", apiInst);
             final List<Obj> resolvedArgs = new ArrayList<>();
             for (int i = 0; i < apiInst.args().count(); i++) {
-                if (userInst.arg(i) instanceof FutureObj)
+                /*if (userInst.arg(i) instanceof FutureObj)
                     LOG.error(userInst.arg(i) + " is a future");
                 if (apiInst.arg(i) instanceof FutureObj)
-                    LOG.error(apiInst.arg(i) + " is a future");
-                final Obj usrArg = FutureObj.resolveFuture(userInst.arg(i));
-                final Obj apiArg = FutureObj.resolveFuture(apiInst.arg(i));
+                    LOG.error(apiInst.arg(i) + " is a future");*/
+                final Obj usrArg =  Optional.ofNullable(userInst.arg(i)).orElse(noobj()); //FutureObj.resolveFuture(userInst.arg(i));
+                final Obj apiArg = Optional.ofNullable(apiInst.arg(i)).orElse(noobj()); // FutureObj.resolveFuture(apiInst.arg(i));
                 if (userInst.isBlocking()) {
                     resolvedArgs.add(usrArg);
                 } else if (apiArg.isCall() && usrArg.isNoObj()) { // used for default args (when user arg is noobj)

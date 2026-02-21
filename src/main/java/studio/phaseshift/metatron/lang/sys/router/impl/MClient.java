@@ -40,6 +40,8 @@ import java.net.http.WebSocket;
 import java.nio.ByteBuffer;
 import java.util.*;
 
+import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
+
 public class MClient extends WebSocketClient implements MConnection {
 
     protected final GraphittyLogger LOG = Graphitty.log(this);
@@ -56,7 +58,7 @@ public class MClient extends WebSocketClient implements MConnection {
         this.remoteHost = remoteAuthority;
         if (Router.loaded()) {
             LOG.info("connecting to {{b}}%s{{/b}}", this.remoteHost);
-            Router.writeToSpace(Router.global().vid().extend("cluster"), new MObjs(new ArrayList<>(List.of(this.remoteHost.toUri()))));
+            Router.writeToSpace(Router.global().vid().extend("cluster"), objs(new ArrayList<>(List.of(this.remoteHost.toUri()))));
         }
     }
 

@@ -80,7 +80,7 @@ public abstract class AbstractInstSet extends AbstractSpace<Map<fURI, Set<? exte
                 else Router.writeToSpace(r.tid(), r);
             });
             /// //////////////////////////////////////////////////////////////////////////////////////////////
-            this.consts().forEach(t -> Router.global().registerRewrite(f(t.vid().name()), t.vid()));
+            this.consts().forEach(c -> Router.global().registerRewrite(f(c.vid().name()), c.vid()));
             this.types().stream().filter(t -> null != t.vid()).forEach(t -> Router.global().registerRewrite(f(t.vid().name()), t.vid()));
             this.insts().forEach(t -> Router.global().registerRewrite(f(t.tid().name()), t.tid().basePath()));
         }

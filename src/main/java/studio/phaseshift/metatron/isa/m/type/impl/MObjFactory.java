@@ -177,7 +177,7 @@ public class MObjFactory extends MRec implements ObjFactory {
         else if (Code.class.isAssignableFrom(objClass))
             return (OBJ) new MCode((List<Inst>) value, null == tid ? CODE_TID : tid, vid);
         else if (Objs.class.isAssignableFrom(objClass))
-            return (OBJ) new MObjs((List<Obj>) value, null == vid ? OBJS_TID : vid);
+            return (OBJ) new MObjs((List<Obj>) value, ALL_STAR, null == vid ? OBJS_TID : vid);
         else if (Type.class.isAssignableFrom(objClass))
             return (OBJ) new MType((Tuple.Pair<Call, Call>) value, null == vid ? TYPE_TID : tid, vid);
         else if (Fail.class.isAssignableFrom(objClass))

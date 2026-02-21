@@ -43,7 +43,6 @@ import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.furi.q.DocQ.Doc.docWrap;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
 import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_FALSE;
 import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Bytes.BYTES_TYPE;
@@ -673,9 +672,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
         public static void objCheckAndSave(final Obj obj) {
             if (Router.loaded() && !obj.isInstSet() && !obj.isNoObj() && !obj.isType() && !obj.test(obj.type())) {
                 if (obj.isPoly()) {
-                    final String matchDiffString = Poly.Helper.diffObjRecursion(obj, (obj.type().hasPredicate() && !obj.type().predicate().insts().getFirst().arg(0).isNoObj()) ?
-                            obj.type().predicate().insts().getFirst().arg(0) :
-                            obj.type()).toString();
+                    final String matchDiffString = Poly.Helper.diffTypeRecursion(obj, obj.type()).toString();
                     final int width = Math.max(Math.max(
                             CommonUtil.width(matchDiffString),
                             CommonUtil.width(obj.toString())), CommonUtil.width(obj.type().toString()));
@@ -941,7 +938,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
                     }),
                     instC(SWAP_TID.dom(A).rng(A), lst(T(B)), (lhs, inst) -> lhs.apply(inst.arg(0))),
                     //instC(RSHIFT_INST_TID.dom(ALL).rng(ALL.maybe()), lst(isa_(T(ALL)).else_(uri("+"))), (lhs, inst) -> objs(lhs.stream().filter(o -> o.isUri() || o.isLst() || o.isRec()).map(o -> rshift_(jnt(0)).apply(o)))),
-                    instC(RSHIFT_INST_TID.dom(A).rng(B.maybe()), lst(), (lhs,inst) -> lhs.isPoly() ? lhs.<Poly<?,?>>as().at(uri("+")) : noobj()),
+                    instC(RSHIFT_INST_TID.dom(A).rng(B.maybe()), lst(), (lhs, inst) -> lhs.isPoly() ? lhs.<Poly<?, ?>>as().at(uri("+")) : noobj()),
                     instC(LSHIFT_INST_TID.dom(A).rng(B.maybe()), lst(), (lhs, inst) -> lhs.parent())));
         }
     }

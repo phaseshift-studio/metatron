@@ -30,6 +30,7 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
+import static studio.phaseshift.metatron.isa.m.mInstSet.ALL_STAR;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 
 public class MObjs implements Objs {
@@ -37,16 +38,18 @@ public class MObjs implements Objs {
     public static final int BULK_TRIGGER = 10000;
 
     private fURI vid;
+    private fURI tid;
     private cInt count = null;
     private List<Obj> jvm;
 
-    public MObjs(final List<Obj> jvm) {
-        this(jvm, null);
+    protected MObjs(final List<Obj> jvm) {
+        this(jvm, ALL_STAR, null);
     }
 
-    public MObjs(final List<Obj> jvm, final fURI vid) {
+    protected MObjs(final List<Obj> jvm, final fURI tid, final fURI vid) {
         this.jvm = flatten(jvm);
         this.vid = vid;
+        this.tid = tid;
     }
 
     @Override
@@ -106,7 +109,7 @@ public class MObjs implements Objs {
     }
 
     public static Objs empty() {
-        return new MObjs(new ArrayList<>(), null); // a noobj that can be appended
+        return new MObjs(new ArrayList<>(), ALL_STAR, null); // a noobj that can be appended
     }
 
     public static Obj objs(final Obj... objs) {
@@ -128,14 +131,18 @@ public class MObjs implements Objs {
             final List<Obj> temp = new ArrayList<>();
             temp.add(o);
             IteratorUtil.fill(objs, temp);
-            return new MObjs(temp, null).attemptBulk(true).tryToShrink();
+            return new MObjs(temp, ALL_STAR, null).attemptBulk(true).tryToShrink();
         }
     }
 
     public static Obj objs(final List<Obj> objs) {
+        return objs(objs, ALL_STAR, null);
+    }
+
+    public static Obj objs(final List<Obj> objs, final fURI tid, final fURI vid) {
         if (objs.isEmpty()) return noobj();
         if (objs.size() == 1) return objs.getFirst();
-        return new MObjs(objs, null).attemptBulk(true).tryToShrink();
+        return new MObjs(objs, objs.stream().map(Obj::tid).distinct().count() > 1 ? tid : objs.getFirst().tid(), null).attemptBulk(true).tryToShrink();
     }
 
     public static Obj objs(final Stream<Obj> objs) {
@@ -144,7 +151,7 @@ public class MObjs implements Objs {
 
     @Override
     public Obj resolve(final Obj obj) {
-        return this.clone(new ArrayList<>(this.jvm.stream().map(o -> o.resolve(obj)).toList()), null, this.vid);
+        return this.clone(new ArrayList<>(this.jvm.stream().map(o -> o.resolve(obj)).toList()), ALL_STAR, this.vid);
     }
 
     @Override
@@ -257,7 +264,7 @@ public class MObjs implements Objs {
 
     @Override
     public Obj vid(final fURI vid) {
-        final MObjs temp = new MObjs(new ArrayList<Obj>(this.jvm), vid);
+        final MObjs temp = new MObjs(new ArrayList<Obj>(this.jvm), this.tid, vid);
         return temp.tryToShrink();
     }
 
@@ -304,12 +311,13 @@ public class MObjs implements Objs {
 
     @Override
     public Objs clone() {
-        return (Objs) this.clone(this.jvm, this.tid(), this.vid);
+        return (Objs) this.clone(this.jvm, this.tid, this.vid);
     }
 
     @Override
     public Objs self(final Object jvm, final fURI tid, final fURI vid) {
         this.jvm = (List<Obj>) jvm;
+        this.tid = tid;
         this.vid = vid;
         return this;
     }
