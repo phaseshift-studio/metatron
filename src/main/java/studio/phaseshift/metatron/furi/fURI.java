@@ -588,6 +588,10 @@ public class fURI implements Cloneable, Ring<fURI>, Comparable<fURI> {
         return this.c("**");
     }
 
+    public fURI many() {
+        return this.c("??");
+    }
+    
     public fURI some() {
         return this.c("+");
     }
@@ -595,6 +599,19 @@ public class fURI implements Cloneable, Ring<fURI>, Comparable<fURI> {
     public fURI maybeSome() {
         return this.c("*");
     }
+
+    public fURI antiMaybe() {
+        return this.c("-?");
+    }
+
+    public fURI antiSome() {
+        return this.c("-");
+    }
+    
+    public fURI antiMaybeSome() {
+        return this.c("-*");
+    }
+    
 
     public fURI c(final String coefficient) {
         if (null == coefficient || coefficient.isEmpty() || cInt.of(coefficient).isOne()) {

@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.lang.db.grph.mtp3;
+package studio.phaseshift.metatron.isa.grph.tp3.graph;
 
 import org.apache.commons.configuration2.Configuration;
 import org.apache.tinkerpop.gremlin.AbstractGraphProvider;
@@ -25,13 +25,13 @@ import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.apache.tinkerpop.gremlin.structure.io.IoRegistry;
 import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.grph.grphInstSet;
 import studio.phaseshift.metatron.isa.grph.tp3.space.tp3Space;
-import studio.phaseshift.metatron.isa.m.space.memSpace;
-import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.grph.tp3.tp3InstSet;
+import studio.phaseshift.metatron.isa.m.mInstSet;
+import studio.phaseshift.metatron.isa.mach.machInstSet;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
-import studio.phaseshift.metatron.lang.db.grph.type.mtp3.*;
 
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -41,6 +41,7 @@ import java.util.Set;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -62,30 +63,35 @@ public class mGraphProvider extends AbstractGraphProvider {
 
     static {
         BootLoader.load(rec());
-        // grphInstSet.create();
+        BootLoader.loadInstSetProvider(mInstSet.M_ISA_TID);
+        BootLoader.loadInstSetProvider(machInstSet.MACH_ISA_TID);
+        BootLoader.loadInstSetProvider(grphInstSet.GRPH_ISA_TID);
+        BootLoader.loadInstSetProvider(tp3InstSet.TP3_ISA_TID);
+
     }
 
 
     @Override
     public void clear(final Graph graph, final Configuration configuration) throws Exception {
-        if (graph != null) {
-        //    ((mGraph) graph).getBaseGraph().clear();
-        } else {
-            final Obj g = Router.global().read(f(configuration.getProperty(SPACE).toString()));
-            if (!g.isNoObj())
-                ((tp3Space) g).close();
-        }
+        //    if (graph != null) {
+        //      //    ((mGraph) graph).getBaseGraph().clear();
+        //  } else {
+        tp3Space.of(rec(PATTERN, uri("/test/#")), f("/sys/space/graph"));
+        //final Obj g = Router.global().read(f(configuration.getProperty(SPACE).toString()));
+        //  if (!g.isNoObj())
+        //    ((tp3Space) g).close();
+        //    }
     }
 
     @Override
     public Map<String, Object> getBaseConfiguration(final String graphName, final Class<?> test, final String testMethodName, final LoadGraphWith.GraphData loadGraphWith) {
-        Router.global().addSpace(memSpace.of(f("/mnt/#"), f("/sys/router/space/kv")));
+        // memSpace.of(f("/test/#"), f("/sys/space/graph"));
         final Map<String, Object> config = new LinkedHashMap<>();
         config.put(Graph.GRAPH, f(mGraph.class.getCanonicalName()));
-        config.put(SPACE, f("/mnt/test/mtp3"));
-        config.put(PATTERN, f("/test/g/#"));
+        config.put(SPACE, f("/sys/space/graph"));
+        config.put(PATTERN, f("/test/#"));
         config.put(NAME, f(graphName));
-        config.put("guice.injector-source", f("studio.phaseshift.metatron.lang.db.grph.mtp3.mGraphFeatureTest$WorldInjectorSource"));
+        config.put("guice.injector-source", f("studio.phaseshift.metatron.isa.grph.tp3.graph.mGraphFeatureTest$WorldInjectorSource"));
         config.put(IoRegistry.IO_REGISTRY, f(mIoRegistry.class.getCanonicalName()));
         return config;
 

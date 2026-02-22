@@ -245,7 +245,8 @@ public class tp3Space extends grphSpace<Graph> {
                         return fail(e);
                     }
                 } else {
-                    throw MTronException.of("unknown tp3 vid: %s", vid);
+                 return obj;
+                    //   throw MTronException.of("unknown tp3 vid: %s", vid);
                 }
             }
         };

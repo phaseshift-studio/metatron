@@ -154,7 +154,9 @@ public class cInt implements C<Long, cInt> {
     public cInt mult(final cInt rhs) {
         final Long newMin = (null == this.min || null == rhs.min) ? null : (this.min * rhs.min);
         final Long newMax = (null == this.max || null == rhs.max) ? null : (this.max * rhs.max);
-        return new cInt(newMin, newMax);
+        final boolean flip = null != newMin && null != newMax && newMin > newMax;
+        return new cInt(flip ? newMax : newMin, flip ? newMin : newMax);
+        //     return new cInt(newMin, newMax);
     }
 
     @Override
@@ -196,6 +198,21 @@ public class cInt implements C<Long, cInt> {
     @Override
     public cInt some() {
         return cInt.of(1L, null);
+    }
+
+    @Override
+    public cInt antiMaybeSome() {
+        return cInt.of(null, 0L);
+    }
+
+    @Override
+    public cInt antiSome() {
+        return cInt.of(null, -1L);
+    }
+
+    @Override
+    public cInt antiMaybe() {
+        return cInt.of(-1L, 0L);
     }
 
     @Override

@@ -76,6 +76,28 @@ public interface C<T extends Comparable<T>, D extends C<T, D>> extends Comparabl
 
     D maybeSome();
 
+    default D inverse() {
+        return this.clone(this.most().neg().min(), this.least().neg().max());
+    }
+
+    default D mirror() {
+        return this.clone(
+                this.most().gt(this.zero()) ? this.inverse().min() : this.min(),
+                this.most().lte(this.zero()) ? this.inverse().max() : this.max());
+    }
+
+    default D antiMaybe() {
+        return this.maybe().inverse();
+    }
+
+    default D antiSome() {
+        return this.some().inverse();
+    }
+
+    default D antiMaybeSome() {
+        return this.maybeSome().inverse();
+    }
+
     D some();
 
     D maybe();
@@ -132,15 +154,15 @@ public interface C<T extends Comparable<T>, D extends C<T, D>> extends Comparabl
         return Objects.equals(this, this.zero());
     }
 
-    default boolean isNoObjable() {
-        return this.contains(this.zero());
-    }
-
     default boolean isExact() {
         return Objects.equals(this.min(), this.max());
     }
 
     default boolean isRange() {
         return !this.isExact();
+    }
+    
+    static <D extends C<T, D>, T extends Comparable<T>> T[] balance(final T min, final T max) {
+       return min.compareTo(max) > 0 ? (T[])new Object[]{max, min} : (T[])new Object[]{min, max};
     }
 }

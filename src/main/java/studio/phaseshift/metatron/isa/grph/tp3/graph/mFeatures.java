@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.lang.db.grph.type.mtp3;
+package studio.phaseshift.metatron.isa.grph.tp3.graph;
 
 import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.apache.tinkerpop.gremlin.structure.VertexProperty;
@@ -56,7 +56,7 @@ public class mFeatures implements Graph.Features {
         return Graph.Features.super.supports(featureClass, feature);
     }
 
-    public static class GraphF implements Graph.Features.GraphFeatures {
+    public static class GraphF implements GraphFeatures {
 
         @Override
         public boolean supportsComputer() {
@@ -104,8 +104,8 @@ public class mFeatures implements Graph.Features {
         }
 
         @Override
-        public Graph.Features.VariableFeatures variables() {
-            return new Graph.Features.VariableFeatures() {
+        public VariableFeatures variables() {
+            return new VariableFeatures() {
                 @Override
                 public boolean supportsVariables() {
                     return true;
@@ -114,7 +114,7 @@ public class mFeatures implements Graph.Features {
         }
     }
 
-    public class VertexF extends ElementF implements Graph.Features.VertexFeatures {
+    public class VertexF extends ElementF implements VertexFeatures {
 
         @Override
         public VertexProperty.Cardinality getCardinality(final String key) {
@@ -152,7 +152,7 @@ public class mFeatures implements Graph.Features {
         }
 
         @Override
-        public Graph.Features.VertexPropertyFeatures properties() {
+        public VertexPropertyFeatures properties() {
             return new VertexPropertyF();
         }
     }
@@ -188,7 +188,7 @@ public class mFeatures implements Graph.Features {
         }
     }
 
-    public class VertexPropertyF implements Graph.Features.VertexPropertyFeatures {
+    public class VertexPropertyF implements VertexPropertyFeatures {
 
         @Override
         public boolean supportsNullPropertyValues() {

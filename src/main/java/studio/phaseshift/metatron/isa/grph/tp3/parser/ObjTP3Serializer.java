@@ -26,6 +26,8 @@ import studio.phaseshift.metatron.isa.grph.tp3.space.EdgeMap;
 import studio.phaseshift.metatron.isa.grph.tp3.space.VertexMap;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.io.type.AbstractObjSerializer;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjByteBufferSerializer;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjSerializer;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.nio.ByteBuffer;
@@ -38,6 +40,7 @@ import static studio.phaseshift.metatron.isa.mach.io.ioInstSet.OBJ_SERIALIZER_TI
 public class ObjTP3Serializer extends AbstractObjSerializer<Element> {
 
     public static final fURI OBJ_TP3_SERIALIZER_VID = OBJ_SERIALIZER_TID.extend("tp3");
+    private static final ObjSerializer<ByteBuffer> BYTES_SERIALIZER = new ObjByteBufferSerializer();
 
     public ObjTP3Serializer() {
 
@@ -45,12 +48,12 @@ public class ObjTP3Serializer extends AbstractObjSerializer<Element> {
 
     @Override
     public ByteBuffer outputBytes(final Obj obj) throws MTronException {
-        return null;
+        return BYTES_SERIALIZER.outputBytes(obj);
     }
 
     @Override
     public Obj inputBytes(final ByteBuffer bytes) throws MTronException {
-        return null;
+        return BYTES_SERIALIZER.inputBytes(bytes);
     }
 
     @Override

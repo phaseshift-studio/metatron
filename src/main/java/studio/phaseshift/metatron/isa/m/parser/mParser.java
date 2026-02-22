@@ -317,8 +317,11 @@ public class mParser {
                         seq(opt(of('-'), ""), digit().plus()).flatten().map(t -> t + "," + t),
                         of(","),
                         of("**"),
+                        of("-*"),
+                        of("-?"),
                         of("*"),
                         of("+"),
+                        of("-"),
                         of("??"),
                         of("?")),
                 of('}')).map(t -> pick(t, 1));

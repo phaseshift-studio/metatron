@@ -160,7 +160,7 @@ public class TypeTest extends mTest {
         try {
             Obj o = mParser.m_obj().parse(obj).get();
             Type t = T(f(typefURI.trim()));
-            LOG.error("testing %s %s %s", o, matches ? "{{c}}in{{/c}}" : "{{c}}not in{{/c}}", t);
+            LOG.debug("testing %s %s %s", o, matches ? "{{c}}in{{/c}}" : "{{c}}not in{{/c}}", t);
             // assertEquals(matches, o.type().tid().matches(f(typefURI)));
             assertEquals(matches, o.test(t));
             //if (!typefURI.startsWith("#") && !o.isNoObj())
@@ -338,7 +338,7 @@ public class TypeTest extends mTest {
             final Type typeObj = typesObj.at(i).asType();
             final Type parentObj = typesObj.at(i + 1).asType();
             final Type inferredType = typeObj.type();
-            LOG.error("%s %s %s", typeObj, parentObj, inferredType);
+            LOG.debug("%s %s %s", typeObj, parentObj, inferredType);
             assertTrue(typeObj.test(inferredType), String.format("%s does not match %s", typeObj, inferredType));
             // assertTrue(typeObj.test(parentObj));
             //assertEquals(parentObj, inferredType);
@@ -574,12 +574,12 @@ public class TypeTest extends mTest {
             "7                  | h::T                  | true | [h,g,f,e,int] "
     }, delimiter = '|')
     public void testTypeRecursion(final String instance, final String type, final boolean matches, final String stack) {
-        //LOG.error("testing %s %s", mParser.eval("*h"), mParser.eval("*h").asType().parentType());
+        //LOG.debug("testing %s %s", mParser.eval("*h"), mParser.eval("*h").asType().parentType());
         final Obj instanceObj = mParser.m_obj().parse(instance).get();
         final List<Type> expectedTypeStack = mParser.parse(stack).lstValue().stream().map(o -> mParser.<Type>parse(o.toString() + "::T")).toList();
         final List<Type> deducedTypeStack = deducedTypeStack(mParser.m_obj().parse(type).get());
         final List<Boolean> matchesTypeStack = deducedTypeStack.stream().map(instanceObj::test).toList();
-        LOG.error("testing type stack of %s:\n\t%s\n\t%s\n\t%s", instanceObj, expectedTypeStack, deducedTypeStack, matchesTypeStack);
+        LOG.debug("testing type stack of %s:\n\t%s\n\t%s\n\t%s", instanceObj, expectedTypeStack, deducedTypeStack, matchesTypeStack);
         assertEquals(matches, matchesTypeStack.stream().reduce(true, (a, b) -> a && b));
         //assertEquals(expectedTypeStack, deducedTypeStack.subList(1, deducedTypeStack.size()));
         testMatches(LOG, instance, type, matches);

@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.lang.db.grph.mtp3;
+package studio.phaseshift.metatron.isa.grph.tp3.graph;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
@@ -38,8 +38,6 @@ import org.apache.tinkerpop.gremlin.structure.io.gryo.GryoResourceAccess;
 import org.junit.jupiter.api.Disabled;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import studio.phaseshift.metatron.lang.db.grph.type.mtp3.mGraph;
-import studio.phaseshift.metatron.lang.db.grph.type.mtp3.mIoRegistry;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 

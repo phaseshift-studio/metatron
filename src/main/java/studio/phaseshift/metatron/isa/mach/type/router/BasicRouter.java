@@ -169,7 +169,7 @@ public class BasicRouter extends AbstractSpace<MServer> implements Router {
             LOG.warn("%s has an overlapping address space: %s <=> %s", space, space.pattern(), space.pattern());
             return;
         }
-        final Space superSpace = this.getSpace(space.pattern());
+        final Space superSpace = this.hasSpaceFor(space.pattern()) ? this.getSpace(space.pattern()) : noobjSpace.single();
         final Rec subSpaces = space.jvm().getOrDefault(uri(SPACE), rec()).as();
         if (!(superSpace instanceof noobjSpace)) {
             final Rec superSpaces = superSpace.jvm().getOrDefault(uri(SPACE), rec()).as();

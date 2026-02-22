@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.lang.db.grph.type.mtp3;
+package studio.phaseshift.metatron.isa.grph.tp3.graph;
 
 import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.apache.tinkerpop.gremlin.structure.util.wrapped.WrappedVariables;

@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.lang.db.grph.type.mtp3;
+package studio.phaseshift.metatron.isa.grph.tp3.graph;
 
 import org.apache.tinkerpop.gremlin.structure.Element;
 import org.apache.tinkerpop.gremlin.structure.Graph;
@@ -66,14 +66,12 @@ public abstract class mElement implements Element, WrappedElement<Rec> {
 
     @Override
     public fURI id() {
-        return null;
-        // return this.getBaseElement().id();
+       return this.getBaseElement().vid();
     }
 
     @Override
     public String label() {
-        return null;
-        //   return this.getBaseElement().label().toString();
+        return this.getBaseElement().tid().toString();
     }
 
     @Override
@@ -83,8 +81,6 @@ public abstract class mElement implements Element, WrappedElement<Rec> {
 
     @Override
     public void remove() {
-
-        //  this.getBaseElement().jvm().clear();
         Router.global().write(this.id(), noobj());
     }
 

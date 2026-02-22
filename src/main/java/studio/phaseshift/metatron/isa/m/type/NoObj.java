@@ -37,7 +37,7 @@ import static studio.phaseshift.metatron.util.Tuple.Triplet;
 public final class NoObj implements Obj, Inst {
 
     private static final NoObj SINGLE = new NoObj();
-    public static final Type NOOBJ_TYPE = Type.Builder.build().tid(NOOBJ_TID).vid(NOOBJ_TID).predicate((lhs, inst) -> noobj()).create();
+    public static final Type NOOBJ_TYPE = Type.Builder.build().tid(NOOBJ_TID.zero()).vid(NOOBJ_TID.zero()).predicate((lhs, inst) -> noobj()).create();
     private static final int HASHCODE = 632862684;
 
     private NoObj() {
@@ -66,7 +66,7 @@ public final class NoObj implements Obj, Inst {
 
     @Override
     public fURI tid() {
-        return fURI.NOOBJ.zero();
+        return NOOBJ_TID.zero();
     }
 
     @Override
@@ -76,7 +76,7 @@ public final class NoObj implements Obj, Inst {
 
     @Override
     public fURI vid() {
-        return fURI.NOOBJ;
+        return NOOBJ_TID.zero();
     }
 
     @Override
@@ -136,12 +136,17 @@ public final class NoObj implements Obj, Inst {
 
     @Override
     public cInt uniqueC() {
-        return cInt.of(0L);
+        return cInt.ZERO();
     }
 
     @Override
     public NoObj c(final cInt c) {
         return this;
+    }
+    
+    @Override
+    public cInt c() {
+        return cInt.ZERO();
     }
 
     @Override
@@ -197,7 +202,7 @@ public final class NoObj implements Obj, Inst {
     public static final class NoObjType {
         public static Set<Inst> insts() {
             return new LinkedHashSet<>(List.of(
-                    docWrap(instC(START_INST_TID.dom(fURI.NOOBJ.zero()).rng(A.maybeSome()), lst(T(A.maybeSome())), (lhs, inst) -> inst.arg(0)),
+                    docWrap(instC(START_INST_TID.dom(fURI.NOOBJ.zero()).rng(A.any()), lst(T(A.any())), (lhs, inst) -> inst.arg(0)),
                             "noobj", "initial objs", Map.of(jnt(0), "initial objs"), "the initial function f()->x")
             ));
         }

@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.lang.db.grph.type.mtp3;
+package studio.phaseshift.metatron.isa.grph.tp3.graph;
 
 import org.apache.commons.configuration2.BaseConfiguration;
 import org.apache.commons.configuration2.Configuration;
@@ -30,12 +30,10 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.grph.space.grphSpace;
 import studio.phaseshift.metatron.isa.grph.tp3.space.tp3Space;
 import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Uri;
 import studio.phaseshift.metatron.isa.m.type.impl.MObjFactory;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.console.Highlighter;
-import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.Iterator;
@@ -70,20 +68,18 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
         reason = "avoiding grateful dead tests for now")
 public class mGraph implements Graph, WrappedGraph<tp3Space> {
 
-    protected final grphSpace space;
+    protected final tp3Space space;
     protected final mVariables variables;
     protected long counter;
     protected final fURI baseURI;
     protected final fURI baseVertexURI;
     protected final fURI baseEdgeURI;
 
-    public static final String PROPS = "PROPS";
-
     protected Map<Obj, Obj> configurationToMap(final Configuration configuration) {
         final Map<Obj, Obj> map = new LinkedHashMap<>();
-        // configuration.getKeys().forEachRemaining(key -> {
-        //     map.put(uri(key), MObjFactory.of().create(configuration.getProperty(key),configuration.getProperty(key)));
-        //  });
+        configuration.getKeys().forEachRemaining(key -> {
+            map.put(uri(key), MObjFactory.of().createOrFail(configuration.getProperty(key)));
+        });
         return map;
     }
 
@@ -94,17 +90,19 @@ public class mGraph implements Graph, WrappedGraph<tp3Space> {
 
     public mGraph(final Configuration configuration) {
         //grphInstSet.create();
+        if(!configuration.containsKey(SPACE) || !configuration.containsKey(PATTERN))
+            throw MTronException.of("configuration requires space and pattern properties");
         final fURI spacevid = f(configuration.getProperty(SPACE).toString());
         final fURI pattern = f(configuration.getProperty(PATTERN).toString());
         final Obj s = Router.global().read(spacevid);
         if (s.isNoObj()) {
-            this.space = null;// grphSpace.of(rec(configurationToMap(configuration)), spacevid);
-        } else if (s instanceof grphSpace) {
-            this.space = (grphSpace) s;
+            this.space = tp3Space.of(rec(configurationToMap(configuration)).plus(rec(uri(PATTERN), uri(pattern))), spacevid);
+        } else if (s instanceof tp3Space) {
+            this.space = (tp3Space) s;
         } else {
             throw MTronException.of("obj is not a grph space: %s", s);
         }
-        Router.global().addSpace(this.space);
+        //Router.global().addSpace(this.space);
         this.variables = new mVariables(this.space);
         this.baseURI = this.getBaseGraph().pattern().retractPattern();
         this.baseVertexURI = this.baseURI.extend("V");
@@ -135,19 +133,17 @@ public class mGraph implements Graph, WrappedGraph<tp3Space> {
     @Override
     public Vertex addVertex(final Object... keyValues) {
         ElementHelper.legalPropertyKeyValueArray(keyValues);
-        final fURI vid = ElementHelper.getIdValue(keyValues).map(this::makeVertexID).orElseGet(() -> makeVertexID("v" + counter++));
-        final fURI label = f(ElementHelper.getLabelValue(keyValues).orElse(Vertex.DEFAULT_LABEL));
-        final Rec props = rec();
+        final fURI vid = ElementHelper.getIdValue(keyValues).map(this::makeVertexID).orElseGet(() -> makeVertexID(""+counter++));
+        final fURI tid = f(ElementHelper.getLabelValue(keyValues).orElse(Vertex.DEFAULT_LABEL));
+        final Map<Obj, Obj> props = new LinkedHashMap<>();
         for (int i = 0; i < keyValues.length; i = i + 2) {
             if (keyValues[i] != T.id && keyValues[i] != T.label) {
                 final Uri key = uri(keyValues[i].toString());
                 final Obj value = MObjFactory.of().toObj(keyValues[i + 1]);
-                props.jvm().put(key, value);
+                props.put(key, value);
             }
         }
-        //    final RVertex rv = this.getBaseGraph().write(vid, RVertex.of(rec(uri(PROPS), props, uri(LABEL), uri(label)).vid(vid))).as();
-        //  return mVertex.of(this, rv);
-        return null;
+        return mVertex.of(this, rec(props, tid, vid));
     }
 
     @Override
@@ -162,33 +158,12 @@ public class mGraph implements Graph, WrappedGraph<tp3Space> {
 
     @Override
     public Iterator<Vertex> vertices(final Object... vertexIds) {
-      /*  return (0 == vertexIds.length ?
-                Router.readFromSpace(this.baseVertexURI.extend("+"))
-                        .stream() :
-                Arrays.stream(vertexIds)
-                        .map(this::makeVertexID)
-                        .map(Router::readFromSpace))
-                .flatMap(Obj::stream);
-              //  .map(rv -> (Vertex) mVertex.of(this, RVertex.of(rv.as())))
-         //       .iterator();*/
-        return IteratorUtil.of();
+        return this.getBaseGraph().read("V/+").stream().map(v -> (Vertex) mVertex.of(this, v.asRec())).iterator();
     }
 
     @Override
     public Iterator<Edge> edges(final Object... edgeIds) {
-       /* return (0 == edgeIds.length ?
-                Router.readFromSpace(this.baseEdgeURI.extend("+"))
-                        .stream() :
-                Arrays.stream(edgeIds)
-                        .map(this::makeEdgeID)
-                        .map(Router::readFromSpace))
-                .flatMap(Obj::stream)
-                .map(Obj::<Rec>as)
-                .map(REdge::of)
-                .map(re -> mEdge.of(this, re))
-                .map(me -> (Edge) me)
-                .iterator();*/
-        return IteratorUtil.of();
+        return this.getBaseGraph().read("E/+").stream().map(e -> (Edge) mEdge.of(this, e.asRec())).iterator();
     }
 
     @Override
@@ -220,7 +195,7 @@ public class mGraph implements Graph, WrappedGraph<tp3Space> {
 
     @Override
     public tp3Space getBaseGraph() {
-        return null; //this.space;
+        return this.space;
     }
 
 }

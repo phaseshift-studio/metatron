@@ -49,6 +49,47 @@ public class cIntTest extends mTest {
     }
 
     @Test
+    public void testInverse() {
+        assertEquals(cInt.of(-10,-10), cInt.of(10, 10).inverse());
+        assertEquals(cInt.of(-13,-10), cInt.of(10, 13).inverse());
+        assertEquals(cInt.of(-1,0), cInt.of(0, 1).inverse());
+        assertEquals(cInt.of(null,-1), cInt.of(1, null).inverse());
+        assertEquals(cInt.of(null,0), cInt.of(0, null).inverse());
+        assertEquals(cInt.of((Long)null,null), cInt.of((Long) null, null).inverse());
+        assertEquals(cInt.of(-1,1), cInt.of(-1, 1).inverse());
+        assertEquals(cInt.of(0,1), cInt.of(-1, 0).inverse());
+        assertEquals(cInt.of(1,null), cInt.of(null, -1).inverse());
+        assertEquals(cInt.of(0,null), cInt.of(null, 0).inverse());
+        assertEquals(cInt.of(12), cInt.of(-12, -12).inverse());
+        assertEquals(cInt.of(5,12), cInt.of(-12, -5).inverse());
+        assertEquals(cInt.of(-16,12), cInt.of(-12, 16).inverse());
+        assertEquals(cInt.of("-?"), cInt.of("?").inverse());
+        assertEquals(cInt.of("?"), cInt.of("-?").inverse());
+        assertEquals(cInt.of("-"), cInt.of("+").inverse());
+        assertEquals(cInt.of("+"), cInt.of("-").inverse());
+        assertEquals(cInt.of("**"), cInt.of("**").inverse());
+        assertEquals(cInt.of("??"), cInt.of("??").inverse());
+        assertEquals(cInt.of("-*"), cInt.of("*").inverse());
+        assertEquals(cInt.of("*"), cInt.of("-*").inverse());
+        assertThrows(MTronException.class, () -> cInt.of("12,-16"));
+    }
+    
+    @Test
+    public void testMirror() {
+        assertEquals(cInt.of("??"), cInt.of("??").mirror());
+        assertEquals(cInt.of("**"), cInt.of("**").mirror());
+        assertEquals(cInt.of("??"), cInt.of("?").mirror());
+        assertEquals(cInt.of("??"), cInt.of("-?").mirror());
+        assertEquals(cInt.of("**"), cInt.of("-*").mirror());
+        assertEquals(cInt.of("**"), cInt.of("*").mirror());
+        assertEquals(cInt.of(-10,10), cInt.of(0,10).mirror());
+        assertEquals(cInt.of(-10,10), cInt.of(-2,10).mirror());
+        assertEquals(cInt.of(-20,20), cInt.of(-20,-10).mirror());
+        assertEquals(cInt.of(-20,20), cInt.of(10,20).mirror());
+    }
+
+
+    @Test
     public void testPredicateOps() {
         assertTrue(cInt.ZERO().isZeroable());
         assertTrue(cInt.of(-1, 1).isZeroable());
