@@ -770,6 +770,9 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
                             return str(serialization.toString());
                         }
                     }),
+                    instC(ORDER_INST_TID.dom(A.maybeSome()).rng(A.maybeSome()), lst(T(ALL)), (lhs, inst) -> {
+                        return objs(lhs.stream().sorted(new ObjSelectComparator(inst.arg(0))));
+                    }),
                     instC(AS_INST_TID.dom(A).rng(B), lst(T(ALL)), (lhs, inst) -> inst.arg(0).isType() ? lhs.as(inst.arg(0).asType()) : fail(MTronException.of("%s is not a %s", lhs, inst.arg(0)))),
                     instC(IMPORT_INST_TID.dom(ALL.maybe()).rng(fURI.NOOBJ.zero()), lst(REL_TYPE), (lhs, inst) -> MTronException.wrap(() -> BootLoader.loadInstSetProvider(inst.arg(0).uriValue()).map(ServiceLoader.Provider::get).map(i -> noobj()).reduce(noobj(), (a, b) -> noobj()))),
                     instC(DEDUP_INST_TID.dom(A.maybeSome()).rng(A.maybeSome()), lst(), (lhs, inst) -> objs(lhs.stream().map(o -> o.c().gt(cInt.ZERO()) ? o.c(cInt::one) : o.c(c -> cInt.of(-1))).distinct())),
@@ -795,7 +798,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
                             "terminal objs", "noobj", Map.of(), "the terminal function f(x)->0"),
                     docWrap(instC(PRINT_INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(T(ALL_STAR)), (lhs, inst) -> objs(inst.args().elements().peek(o -> inst.logger().none("%s", o.isStr() ? o.strValue() : o)).filter(a -> false).findAny().orElse(lhs).stream().peek(o -> inst.logger().none("\n")))),
                             "the rhs obj", "the lhs obj", Map.of(jnt(0), "concatenated args followed by newline written to stdout"), "a side-effect function f(x)-|>x"),
-                    instC(AT_INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(T(URI_TID)), (lhs, inst) -> lhs.isNoObj() ? Router.readFromSpace(inst.arg(0).uriValue()).vid(inst.arg(0).uriValue()) : lhs.vid(inst.arg(0).uriValue())),
+                    instC(AT_INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(T(URI_TID.maybe())), (lhs, inst) -> inst.arg(0).isNoObj() ? lhs.vid(null) : (lhs.isNoObj() ? Router.readFromSpace(inst.arg(0).uriValue()).vid(inst.arg(0).uriValue()) : lhs.vid(inst.arg(0).uriValue()))),
                     docWrap(instC(ID_INST_TID.dom(A).rng(A), lst(), (lhs, inst) -> lhs),
                             "an rhs obj", "an lhs obj", Map.of(), "the obj identity function f(x)->x"),
                     docWrap(instC(ID_INST_TID.dom(A.maybeSome()).rng(A.maybeSome()), lst(), (lhs, inst) -> lhs),
@@ -954,6 +957,20 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
         @Override
         public int compare(Obj o1, Obj o2) {
             return inst.args(lst(o1)).apply(o2).asInt().intValue().intValue();
+        }
+    }
+
+    public static class ObjSelectComparator implements Comparator<Obj> {
+
+        private final Obj selector;
+
+        public ObjSelectComparator(final Obj selector) {
+            this.selector = selector;
+        }
+
+        @Override
+        public int compare(final Obj o1, final Obj o2) {
+            return ((Comparable) this.selector.apply(o1).jvm()).compareTo((Comparable) this.selector.apply(o2).jvm());
         }
     }
 }

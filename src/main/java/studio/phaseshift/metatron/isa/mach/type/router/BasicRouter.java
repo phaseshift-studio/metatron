@@ -231,13 +231,12 @@ public class BasicRouter extends AbstractSpace<MServer> implements Router {
         }
         final Space space = this.getSpace(local);
         final Obj obj = space.read(local);
-        /*if (obj.isNoObj()) { // TODO: only needed when reasoning on insts (should we gut it?)
-            final fURI vidbig = vid.big();
-            if (!vid.equals(vidbig))
-                return this.read(vidbig);
-        }*/
+        if (obj.isNoObj()) {
+            final fURI bigVID = vid.big();
+            if (!bigVID.equals(vid))
+                return this.read(bigVID);
+        }
         return obj;
-
     }
 
     @Override

@@ -56,6 +56,10 @@ public abstract class AbstractInstSet extends AbstractSpace<Map<fURI, Set<? exte
         super(new LinkedHashMap<>(), mutableMap(
                 uri(Tokens.PATTERN), uri(tid.extend(fURI.ALL))), tid, vid);
         if (Router.loaded()) {
+            this.consts().forEach(c -> Router.global().registerRewrite(f(c.vid().name()), c.vid()));
+            this.types().stream().filter(t -> null != t.vid()).forEach(t -> Router.global().registerRewrite(f(t.vid().name()), t.vid()));
+            this.insts().forEach(t -> Router.global().registerRewrite(f(t.tid().name()), t.tid().basePath()));
+            /// //////////////////////////////////////////////////////////////////////////////////////////////
             this.put(uri(Tokens.Q), lst(new DocQ()), MUTABLE);
             this.types().forEach(t -> {
                 if (null != t.vid()) {
@@ -68,8 +72,8 @@ public abstract class AbstractInstSet extends AbstractSpace<Map<fURI, Set<? exte
             });
             Router.writeToSpace(NOOBJ_TID, NOOBJ_TYPE); // every inst set must have a noobj so it can operate independently of /m/inst
             this.consts().forEach(c -> {
-                if (c.vid().matches(this.pattern)) this.write(c.vid(), c);
-                else Router.writeToSpace(c.vid(), c);
+                if (c.vid().matches(this.pattern)) this.write(c.vid(), c.vid(null));
+                else Router.writeToSpace(c.vid(), c.vid(null));
             });
             this.insts().forEach(i -> {
                 if (i.tid().matches(this.pattern)) this.write(i.tid(), i);
@@ -79,10 +83,6 @@ public abstract class AbstractInstSet extends AbstractSpace<Map<fURI, Set<? exte
                 if (r.tid().matches(this.pattern)) this.write(r.tid(), r);
                 else Router.writeToSpace(r.tid(), r);
             });
-            /// //////////////////////////////////////////////////////////////////////////////////////////////
-            this.consts().forEach(c -> Router.global().registerRewrite(f(c.vid().name()), c.vid()));
-            this.types().stream().filter(t -> null != t.vid()).forEach(t -> Router.global().registerRewrite(f(t.vid().name()), t.vid()));
-            this.insts().forEach(t -> Router.global().registerRewrite(f(t.tid().name()), t.tid().basePath()));
         }
     }
 
