@@ -37,6 +37,7 @@ public class cInt implements C<Long, cInt> {
     public static final cInt C_ZERO = cInt.of(0L);
     public static final cInt C_ONE = cInt.of(1L);
     public static final cInt C_SOME = cInt.of(1L, null);
+
     public static cInt ZERO() {
         return C_ZERO;
     }
@@ -76,18 +77,22 @@ public class cInt implements C<Long, cInt> {
     public static cInt of(final String parse) {
         if (parse.isEmpty())
             return cInt.of(1L);
-        else if (parse.equals("**"))
-            return cInt.of(null, (Long) null);
         else if (parse.equals("*"))
             return cInt.of(0L, null);
+        else if (parse.equals("**"))
+            return cInt.of(null, (Long) null);
         else if (parse.equals("?"))
             return cInt.of(0L, 1L);
         else if (parse.equals("??"))
             return cInt.of(-1L, 1L);
         else if (parse.equals("+"))
             return cInt.of(1L, null);
-            // else if (parse.equals(","))
-            //    return cInt.of(null, null);
+        else if (parse.equals("-?"))
+            return cInt.of(-1L, 0L);
+        else if (parse.equals("-"))
+            return cInt.of(null, -1L);
+        else if (parse.equals("-*"))
+            return cInt.of(null, 0L);
         else if (!parse.contains(","))
             return cInt.of(Long.valueOf(parse));
         else {
@@ -109,7 +114,7 @@ public class cInt implements C<Long, cInt> {
 
     @Override
     public boolean isMaybeSome() {
-        return LONG_ZERO.equals(this.min) && null == this.max; 
+        return LONG_ZERO.equals(this.min) && null == this.max;
     }
 
     @Override

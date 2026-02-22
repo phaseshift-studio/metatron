@@ -37,18 +37,15 @@ import java.util.Optional;
 
 import static studio.phaseshift.metatron.Tokens.DESC;
 import static studio.phaseshift.metatron.Tokens.PATTERN;
-import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.furi.fURI.f;
-import static studio.phaseshift.metatron.isa.m.mInstSet.INST_TID;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
+import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.Inst.*;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
-import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
+import static studio.phaseshift.metatron.isa.m.type.Str.STR_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
-import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 
@@ -57,14 +54,26 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
  */
 public class DocQ extends BaseQ {
 
-
+    protected final GraphittyLogger LOG = Graphitty.log(this);
+    public final Map<fURI, Obj> docSpace;
     public static final fURI DOCQ_TID = Q_TID.extend("docq");
     public static final fURI DOC_TID = DOCQ_TID.extend(Tokens.DOC);
-    public static final Type DOCQ_TYPE = T(DOCQ_TID, null, null, instC(INST_TID.dom(ALL.maybe()).rng(DOCQ_TID), lst(isa_(rec()).tryToInst()), (lhs, inst) -> new DocQ()));
-    public static final Type DOC_TYPE = T(DOC_TID, null, isa_(REC_TYPE).tryToInst(), instC(INST_TID.dom(ALL.maybe()).rng(DOC_TID), lst(isa_(rec()).tryToInst()), (lhs, inst) -> new Doc(inst.arg(0).recValue(), DOC_TID, fURI.fnull)));
-    protected final GraphittyLogger LOG = Graphitty.log(this);
-    // <source,pattern,callback>
-    public final Map<fURI, Obj> docSpace;
+
+    public static final Type DOCQ_TYPE =
+            Type.Builder.build()
+                    .tid(Q_TID)
+                    .vid(DOCQ_TID)
+                    .constructor(DocQ::new)
+                    .create();
+
+
+    public static final Type DOC_TYPE =
+            Type.Builder.build()
+                    .tid(REC_TID)
+                    .vid(DOC_TID)
+                    .constructor(arg0 -> new Doc(arg0.recValue(), DOC_TID, fURI.fnull))
+                    .inst(AS_INST_TID.dom(DOC_TID).rng(STR_TID), lst(STR_TYPE), (lhs, inst) -> str(lhs.toString()))
+                    .create();
 
 
     public DocQ() {
@@ -313,9 +322,9 @@ public class DocQ extends BaseQ {
         public Optional<Obj> preRead(final fURI source, final fURI vid) {
             LOG.trace("evaluating {{y}}preread{{/y}}: %s", vid);
             return Optional.of(objs(docSpace.entrySet().stream()
-                    // .filter(kv -> kv.getKey().matches(vid))
+                    .filter(kv -> kv.getKey().matches(vid))
                     .map(Map.Entry::getValue))
-                    .orElse(objs(Router.readFromSpace(vid.removeQ("doc")).stream().map(Doc::empty))));
+                    .orElse(noobj()));
         }
     }
 

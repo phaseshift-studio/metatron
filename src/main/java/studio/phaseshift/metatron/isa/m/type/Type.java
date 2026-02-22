@@ -20,9 +20,7 @@ package studio.phaseshift.metatron.isa.m.type;
 
 import studio.phaseshift.metatron.algebra.PlusMonoid;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.Fluent;
 import studio.phaseshift.metatron.isa.m.mInstSet;
-import studio.phaseshift.metatron.isa.m.parser.mFluent;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
@@ -32,10 +30,12 @@ import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.function.BiFunction;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.furi.fURI.f;
+import static studio.phaseshift.metatron.furi.q.DocQ.Doc.docWrap;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
@@ -208,7 +208,7 @@ public interface Type extends Obj, PlusMonoid<Type> {
             this.tid = tid;
             return this;
         }
-        
+
         public Builder predicate(final Call predicate) {
             this.predicate = predicate;
             return this;
@@ -227,12 +227,21 @@ public interface Type extends Obj, PlusMonoid<Type> {
             return this;
         }
 
+        public Builder constructor(final Function<Obj, Obj> function) {
+            return this.constructor(instC(INST_TID.dom(ALL.maybe()).rng(this.vid), lst(T(ALL)), (lhs, inst) -> function.apply(inst.arg(0))));
+        }
+
         public Builder constructor(final Supplier<Obj> supplier) {
             return this.constructor(instC(INST_TID.dom(ALL.maybe()).rng(this.vid), lst(), (lhs, inst) -> supplier.get()));
         }
 
         public Builder inst(final fURI tid, final Poly<?, ?> args, final BiFunction<Obj, Inst, Obj> func) {
             this.insts.add(instC(tid, args, func));
+            return this;
+        }
+
+        public Builder doc(final String domDesc, final String rngDesc, final Map<Obj, String> argDescription, final String description) {
+            docWrap(this.insts.stream().toList().getLast(), domDesc, rngDesc, argDescription, description);
             return this;
         }
 
@@ -246,6 +255,7 @@ public interface Type extends Obj, PlusMonoid<Type> {
         public Type create() {
             assert this.tid != null;
             //assert this.vid != null;
+            this.insts.forEach(inst -> Router.global().write(inst.tid(), inst));
             return T(Tuple.Pair.with(this.predicate, this.constructor), this.tid, this.vid);
         }
     }

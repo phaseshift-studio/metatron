@@ -45,6 +45,7 @@ import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.URI_TID;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
@@ -91,7 +92,9 @@ public class tp3InstSet extends AbstractInstSet {
             .tid(REC_TID)
             .vid(ELMT_TID)
             .inst(LABEL_INST_TID.dom(ELMT_TID).rng(URI_TID), lst(), (lhs, inst) -> lhs.asRec().at(LABEL).orElse(uri(lhs.tid())))
+            .doc("an element", "the element label", Map.of(), "returns the lhs element label (the tid)")
             .inst(VALUES_INST_TID.dom(ELMT_TID).rng(ALL.maybeSome()), lst(T(URI_TID.maybeSome())), (lhs, inst) -> lhs.asRec().at(inst.arg(0).isNoObj() ? uri("+") : inst.arg(0).asUri()))
+            .doc("an element", "the element values", Map.of(jnt(0), "zero or more element property labels"), "returns the lhs element arg-labeled values")
             .create(TYPES, INSTS);
     public static final Type VRTX_TYPE = Type.Builder.build()
             .tid(ELMT_TID)
@@ -99,20 +102,29 @@ public class tp3InstSet extends AbstractInstSet {
             .isaPredicate(rec(
                     IN.maybe().<Uri>as(), rec(URI_TYPE, T(EDGE_TID.maybeSome())),
                     OUT.maybe(), rec(URI_TYPE, T(EDGE_TID.maybeSome()))))
-            .inst(OUT_INST_TID, lst(T(URI_TID.maybeSome())), V_V_FUNCTION(Direction.OUT))
-            .inst(IN_INST_TID, lst(T(URI_TID.maybeSome())), V_V_FUNCTION(Direction.IN))
-            .inst(BOTH_INST_TID, lst(T(URI_TID.maybeSome())), V_V_FUNCTION(Direction.BOTH))
-            .inst(OUTE_INST_TID, lst(T(URI_TID.maybeSome())), V_E_FUNCTION(Direction.OUT))
-            .inst(INE_INST_TID, lst(T(URI_TID.maybeSome())), V_E_FUNCTION(Direction.IN))
-            .inst(BOTHE_INST_TID, lst(T(URI_TID.maybeSome())), V_E_FUNCTION(Direction.BOTH))
+            .inst(OUT_INST_TID.dom(VRTX_TID).rng(VRTX_TID.maybeSome()), lst(T(URI_TID.maybeSome())), V_V_FUNCTION(Direction.OUT))
+            .doc("a vertex", "out adjacent vertices", Map.of(jnt(0), "zero or more edge labels"), "returns the lhs vertex arg-adjacent outgoing vertices")
+            .inst(IN_INST_TID.dom(VRTX_TID).rng(VRTX_TID.maybeSome()), lst(T(URI_TID.maybeSome())), V_V_FUNCTION(Direction.IN))
+            .doc("a vertex", "in adjacent vertices", Map.of(jnt(0), "zero or more edge labels"), "returns the lhs vertex arg-adjacent incoming vertices")
+            .inst(BOTH_INST_TID.dom(VRTX_TID).rng(VRTX_TID.maybeSome()), lst(T(URI_TID.maybeSome())), V_V_FUNCTION(Direction.BOTH))
+            .doc("a vertex", "both adjacent vertices", Map.of(jnt(0), "zero or more edge labels"), "returns the lhs vertex arg-adjacent incoming and outgoing vertices")
+            .inst(OUTE_INST_TID.dom(VRTX_TID).rng(EDGE_TID.maybeSome()), lst(T(URI_TID.maybeSome())), V_E_FUNCTION(Direction.OUT))
+            .doc("a vertex", "out adjacent edges", Map.of(jnt(0), "zero or more edge labels"), "returns the lhs vertex arg-adjacent outgoing edges")
+            .inst(INE_INST_TID.dom(VRTX_TID).rng(EDGE_TID.maybeSome()), lst(T(URI_TID.maybeSome())), V_E_FUNCTION(Direction.IN))
+            .doc("a vertex", "in adjacent edges", Map.of(jnt(0), "zero or more edge labels"), "returns the lhs vertex arg-adjacent incoming edges")
+            .inst(BOTHE_INST_TID.dom(VRTX_TID).rng(EDGE_TID.maybeSome()), lst(T(URI_TID.maybeSome())), V_E_FUNCTION(Direction.BOTH))
+            .doc("a vertex", "both adjacent edges", Map.of(jnt(0), "zero or more edge labels"), "returns the lhs vertex arg-adjacent incoming and outgoing edges")
             .create(TYPES, INSTS);
     public static final Type EDGE_TYPE = Type.Builder.build()
             .tid(ELMT_TID)
             .vid(EDGE_TID)
             .isaPredicate(rec(IN, VRTX_TYPE, OUT, VRTX_TYPE))
             .inst(INV_INST_TID.dom(EDGE_TID).rng(VRTX_TID), lst(), (lhs, inst) -> lhs.asRec().at(IN))
+            .doc("an edge", "the incoming vertex", Map.of(), "returns the lhs edge head vertex")
             .inst(OUTV_INST_TID.dom(EDGE_TID).rng(VRTX_TID), lst(), (lhs, inst) -> lhs.asRec().at(OUT))
+            .doc("an edge", "the outgoing vertex", Map.of(), "returns the lhs edge tail vertex")
             .inst(BOTHV_INST_TID.dom(EDGE_TID).rng(VRTX_TID), lst(), (lhs, inst) -> objs(Stream.concat(lhs.asRec().at(IN).stream(), lhs.asRec().at(OUT).stream())))
+            .doc("an edge", "both vertices", Map.of(), "returns the lhs edge's head and tail vertices")
             .create(TYPES, INSTS);
 
     @Override

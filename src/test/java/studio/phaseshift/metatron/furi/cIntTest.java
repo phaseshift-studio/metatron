@@ -20,6 +20,7 @@ package studio.phaseshift.metatron.furi;
 
 import org.junit.jupiter.api.Test;
 import studio.phaseshift.metatron.furi.c.cInt;
+import studio.phaseshift.metatron.mTest;
 import studio.phaseshift.metatron.util.MTronException;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -27,28 +28,45 @@ import static org.junit.jupiter.api.Assertions.*;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class cIntTest {
+public class cIntTest extends mTest {
 
+    @Test
+    public void testTokens() {
+        assertEquals(cInt.of("10"), cInt.of(10, 10));
+        assertEquals(cInt.of("10,13"), cInt.of(10, 13));
+        assertEquals(cInt.of("?"), cInt.of(0, 1));
+        assertEquals(cInt.of("+"), cInt.of(1, null));
+        assertEquals(cInt.of("*"), cInt.of(0, null));
+        assertEquals(cInt.of("**"), cInt.of((Long) null, null));
+        assertEquals(cInt.of("??"), cInt.of(-1, 1));
+        assertEquals(cInt.of("-?"), cInt.of(-1, 0));
+        assertEquals(cInt.of("-"), cInt.of(null, -1));
+        assertEquals(cInt.of("-*"), cInt.of(null, 0));
+        assertEquals(cInt.of("-12"), cInt.of(-12, -12));
+        assertEquals(cInt.of("-12,-5"), cInt.of(-12, -5));
+        assertEquals(cInt.of("-12,16"), cInt.of(-12, 16));
+        assertThrows(MTronException.class, () -> cInt.of("-12,-16"));
+    }
 
     @Test
     public void testPredicateOps() {
         assertTrue(cInt.ZERO().isZeroable());
-        assertTrue(cInt.of(-1,1).isZeroable());
-        assertFalse(cInt.of(-1,1).within(cInt.ZERO()));
-        assertFalse(cInt.of(1,2).isZeroable());
-        assertTrue(cInt.ZERO().within(cInt.of(-1,1)));
-        assertTrue(cInt.of(-1,1).contains(cInt.ZERO()));
-        assertFalse(cInt.of(1,2).contains(cInt.ZERO()));
-        assertFalse(cInt.of(-2,-1).contains(cInt.ZERO()));
-    //    assertTrue(cInt.of((Long)null,(Long)null).contains(cInt.ZERO()));
-        assertTrue(cInt.of(Long.MIN_VALUE,Long.MAX_VALUE).contains(cInt.ZERO()));
-      //  assertTrue(cInt.MAYBE().contains(cInt.ZERO()));
-     //   assertTrue(cInt.MAYBESOME().contains(cInt.ZERO()));
+        assertTrue(cInt.of(-1, 1).isZeroable());
+        assertFalse(cInt.of(-1, 1).within(cInt.ZERO()));
+        assertFalse(cInt.of(1, 2).isZeroable());
+        assertTrue(cInt.ZERO().within(cInt.of(-1, 1)));
+        assertTrue(cInt.of(-1, 1).contains(cInt.ZERO()));
+        assertFalse(cInt.of(1, 2).contains(cInt.ZERO()));
+        assertFalse(cInt.of(-2, -1).contains(cInt.ZERO()));
+        //    assertTrue(cInt.of((Long)null,(Long)null).contains(cInt.ZERO()));
+        assertTrue(cInt.of(Long.MIN_VALUE, Long.MAX_VALUE).contains(cInt.ZERO()));
+        //  assertTrue(cInt.MAYBE().contains(cInt.ZERO()));
+        //   assertTrue(cInt.MAYBESOME().contains(cInt.ZERO()));
         assertFalse(cInt.SOME().contains(cInt.ZERO()));
         assertFalse(cInt.ZERO().contains(cInt.MAYBE()));
         assertFalse(cInt.ZERO().contains(cInt.MAYBESOME()));
         assertFalse(cInt.ZERO().contains(cInt.SOME()));
-        assertTrue(cInt.ZERO().within(cInt.of(Long.MIN_VALUE,Long.MAX_VALUE)));
+        assertTrue(cInt.ZERO().within(cInt.of(Long.MIN_VALUE, Long.MAX_VALUE)));
         assertTrue(cInt.ZERO().within(cInt.MAYBE()));
         assertTrue(cInt.ZERO().within(cInt.MAYBESOME()));
         assertFalse(cInt.ZERO().within(cInt.SOME()));

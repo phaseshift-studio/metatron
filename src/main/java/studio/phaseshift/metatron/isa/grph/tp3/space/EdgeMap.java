@@ -85,7 +85,7 @@ public class EdgeMap extends ElementMap {
     }
 
     public static Rec edgeToRec(final Edge edge, final Rec lhs) {
-        return new EdgeMap(edge, lhs.<EdgeMap>jvmAs().space).selfRec().parent(lhs);
+        return new EdgeMap(edge, lhs.<ElementMap>jvmAs().space).selfRec().parent(lhs);
     }
 
     public static Rec edgeToRec(final Edge edge, final tp3Space lhs) {

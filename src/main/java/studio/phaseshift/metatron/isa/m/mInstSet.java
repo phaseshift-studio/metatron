@@ -19,6 +19,7 @@
 package studio.phaseshift.metatron.isa.m;
 
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.furi.q.DocQ;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.AbstractInstSet;
@@ -38,6 +39,10 @@ import static studio.phaseshift.metatron.isa.m.space.metaSpace.META_SPACE_TYPE;
 import static studio.phaseshift.metatron.isa.m.space.stackSpace.STACK_SPACE_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
+import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
+import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 @ServiceMetadata(tid = "/m")
@@ -276,7 +281,7 @@ public class mInstSet extends AbstractInstSet {
                 Tuple.Triplet.with(Tuple.Pair.with("./", null), List.of(GET_INST_TID), 1),
                 Tuple.Triplet.with(Tuple.Pair.with("!*", null), List.of(AUTO_FROM_INST_TID), 1),
                 Tuple.Triplet.with(Tuple.Pair.with("!", null), List.of(AUTO_INST_TID), 1)));
-             //   Tuple.Triplet.with(Tuple.Pair.with("^", null), List.of(PARENT_INST_TID), 0)));
+        //   Tuple.Triplet.with(Tuple.Pair.with("^", null), List.of(PARENT_INST_TID), 0)));
         //  Tuple.Triplet.with(Tuple.Pair.with("^", null), List.of(LIFT_INST_TID), 1)));
     }
 
@@ -298,6 +303,7 @@ public class mInstSet extends AbstractInstSet {
         set.addAll(Obj.ObjType.insts());
         set.addAll(Objs.ObjsType.insts());
         set.addAll(Space.SpaceType.insts());
+        //set.add(instC(f("/m/inst/card").dom(A).rng(B), lst(T(f("/m/sys/ui/card"))), (lhs, inst) -> str(lhs.toCleanString())));
         return set;
     }
 

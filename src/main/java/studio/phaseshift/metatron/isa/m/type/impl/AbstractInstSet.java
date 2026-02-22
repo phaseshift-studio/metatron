@@ -55,12 +55,12 @@ public abstract class AbstractInstSet extends AbstractSpace<Map<fURI, Set<? exte
     public AbstractInstSet(final fURI tid, final fURI vid) {
         super(new LinkedHashMap<>(), mutableMap(
                 uri(Tokens.PATTERN), uri(tid.extend(fURI.ALL))), tid, vid);
+        this.put(uri(Tokens.Q), lst(new DocQ()), MUTABLE);
         if (Router.loaded()) {
             this.consts().forEach(c -> Router.global().registerRewrite(f(c.vid().name()), c.vid()));
             this.types().stream().filter(t -> null != t.vid()).forEach(t -> Router.global().registerRewrite(f(t.vid().name()), t.vid()));
             this.insts().forEach(t -> Router.global().registerRewrite(f(t.tid().name()), t.tid().basePath()));
             /// //////////////////////////////////////////////////////////////////////////////////////////////
-            this.put(uri(Tokens.Q), lst(new DocQ()), MUTABLE);
             this.types().forEach(t -> {
                 if (null != t.vid()) {
                     if (t.vid().matches(this.pattern)) this.write(t.vid(), t);
