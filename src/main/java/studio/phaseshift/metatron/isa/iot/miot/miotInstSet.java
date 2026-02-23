@@ -28,6 +28,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Function;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.f;
@@ -43,6 +44,7 @@ import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
+import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /*
@@ -63,9 +65,41 @@ public class miotInstSet extends AbstractInstSet {
     public static final fURI MIOT_DEVICE_TID = MIOT_ISA_TID.extend("device");
     public static final fURI MIOT_ENTITY_TID = MIOT_ISA_TID.extend("entity");
     public static final fURI MIOT_GPIO_TID = MIOT_ISA_TID.extend("gpio");
+    public static final fURI MIOT_PWM_TID = MIOT_ISA_TID.extend("pwm");
     /// /////////////////////// TYPES //////////////////////////////////
     protected static final Set<Type> TYPES = new LinkedHashSet<>();
     protected static final Set<Inst> INSTS = new LinkedHashSet<>();
+
+    private static Rec writePin(final Rec pinholder, final Obj pinID, final Function<Int, Int> updateFunction) {
+        AtomicBoolean found = new AtomicBoolean(false);
+        final Uri pinUri = pinID.isUri() ? pinID.asUri() : uri("" + pinID.asInt().intValue());
+        pinholder.elements().forEach(kv -> {
+            if (kv.first().test(pinUri)) {
+                final Int currentValue = kv.second().asInt();
+                final Int newValue = updateFunction.apply(currentValue);
+                final fURI toVID = deduceVID(pinholder, f("+").extend(pinholder.tid().name()).extend("gpio"));
+                if (toVID == null)
+                    pinholder.logger().warn("no vid associated with gpio", pinholder);
+                else {
+                    pinholder.logger().info("writing to vid: %s", toVID.extend(kv.first().uriValue().toString()));
+                    Router.writeToSpace(toVID.extend(kv.first().uriValue().toString()), newValue);
+                }
+                found.set(true);
+            }
+            if (!found.get()) {
+                final long currentValue = pinholder.asRec().at(pinholder).orElse(jnt(0)).asInt().intValue();
+                final Int newValue = 0 == currentValue ? jnt(1) : jnt(0);
+                final fURI toVID = deduceVID(pinholder, f("+").extend(pinholder.tid().name()).extend("gpio"));
+                if (toVID == null)
+                    pinholder.logger().warn("no vid associated with gpio", pinholder);
+                else {
+                    pinholder.logger().info("writing to vid: %s", toVID.extend(pinUri.uriValue().toString()));
+                    Router.writeToSpace(toVID.extend(pinUri.uriValue().toString()), newValue);
+                }
+            }
+        });
+        return pinholder;
+    }
 
     public static final Type MIOT_DEVICE_TYPE = Type.Builder.build()
             .tid(REC_TID)
@@ -86,6 +120,15 @@ public class miotInstSet extends AbstractInstSet {
                         Router.global().write(toVID.extend("status"), uri("offline"));
                         return lhs;
                     })
+            .inst(MIOT_INST_TID.extend("attach").dom(MIOT_DEVICE_TID).rng(MIOT_DEVICE_TID), lst(T(MIOT_ENTITY_TID)),
+                    (lhs, inst) -> {
+                        final fURI toVID = deduceVID(lhs, f("+").extend(lhs.tid().name()));
+                        if (null != toVID) {
+                            lhs.asRec().at(inst.arg(0).tid().name(), inst.arg(0),MUTABLE);
+                            Router.global().write(toVID.extend(inst.arg(0).tid().name()), inst.arg(0));
+                        }
+                        return lhs;
+                    })
             .create(TYPES, INSTS);
     public static final Type MIOT_ENTITY_TYPE = Type.Builder.build()
             .tid(REC_TID)
@@ -97,36 +140,22 @@ public class miotInstSet extends AbstractInstSet {
             .vid(MIOT_GPIO_TID)
             .isaPredicate(rec(URI_TYPE, INT_TYPE))
             .inst(MIOT_INST_TID.extend("toggle").dom(MIOT_GPIO_TID).rng(MIOT_GPIO_TID), lst(INT_TYPE),
-                    (lhs, inst) -> {
-                        final Uri key = inst.arg(0).isInt() ? uri("" + inst.arg(0).intValue()) : inst.arg(0).asUri();
-                        AtomicBoolean found = new AtomicBoolean(false);
-                        lhs.asRec().elements().forEach(kv -> {
-                            if(kv.first().test(key)) {
-                                found.set(true);
-                                final long currentValue = kv.second().asInt().intValue();
-                                final Int newValue = 0 == currentValue ? jnt(1) : jnt(0);
-                                final fURI toVID = deduceVID(lhs, f("+").extend(lhs.tid().name()).extend("gpio"));
-                                if (toVID == null)
-                                    lhs.logger().warn("no vid associated with gpio", lhs);
-                                else {
-                                    lhs.logger().info("writing to vid: %s", toVID.extend(kv.first().uriValue()));
-                                    Router.writeToSpace(toVID.extend(kv.first().uriValue()), newValue);
-                                } 
-                            }
-                        });
-                        if(!found.get()) {
-                            final long currentValue = lhs.asRec().at(key).orElse(jnt(0)).asInt().intValue();
-                            final Int newValue = 0 == currentValue ? jnt(1) : jnt(0);
-                            final fURI toVID = deduceVID(lhs, f("+").extend(lhs.tid().name()).extend("gpio"));
-                            if (toVID == null)
-                                lhs.logger().warn("no vid associated with gpio", lhs);
-                            else {
-                                lhs.logger().info("writing to vid: %s", toVID.extend(key.uriValue()));
-                                Router.writeToSpace(toVID.extend(key.uriValue()), newValue);
-                            }
-                        }
-                        return lhs;
-                    })
+                    (lhs, inst) -> writePin(lhs.asRec(), inst.arg(0), currentValue -> 0 == currentValue.intValue() ? jnt(1) : jnt(0)))
+            .inst(MIOT_INST_TID.extend("on").dom(MIOT_GPIO_TID).rng(MIOT_GPIO_TID), lst(INT_TYPE),
+                    (lhs, inst) -> writePin(lhs.asRec(), inst.arg(0), _ -> jnt(1)))
+            .inst(MIOT_INST_TID.extend("off").dom(MIOT_GPIO_TID).rng(MIOT_GPIO_TID), lst(INT_TYPE),
+                    (lhs, inst) -> writePin(lhs.asRec(), inst.arg(0), _ -> jnt(0)))
+            .create(TYPES, INSTS);
+    public static final Type MIOT_PWM_TYPE = Type.Builder.build()
+            .tid(MIOT_ENTITY_TID)
+            .vid(MIOT_PWM_TID)
+            .isaPredicate(rec(URI_TYPE, INT_TYPE))
+            .inst(MIOT_INST_TID.extend("freq").dom(MIOT_PWM_TID).rng(MIOT_PWM_TID), lst(INT_TYPE, INT_TYPE),
+                    (lhs, inst) -> writePin(lhs.asRec(), inst.arg(0), _ -> jnt(inst.arg(1).asInt().intValue())))
+            .inst(MIOT_INST_TID.extend("on").dom(MIOT_PWM_TID).rng(MIOT_PWM_TID), lst(INT_TYPE),
+                    (lhs, inst) -> writePin(lhs.asRec(), inst.arg(0), _ -> jnt(255)))
+            .inst(MIOT_INST_TID.extend("off").dom(MIOT_PWM_TID).rng(MIOT_PWM_TID), lst(INT_TYPE),
+                    (lhs, inst) -> writePin(lhs.asRec(), inst.arg(0), _ -> jnt(0)))
             .create(TYPES, INSTS);
 
 
@@ -161,7 +190,8 @@ public class miotInstSet extends AbstractInstSet {
                 MIOT_SPACE_TYPE,
                 MIOT_DEVICE_TYPE,
                 MIOT_ENTITY_TYPE,
-                MIOT_GPIO_TYPE));
+                MIOT_GPIO_TYPE,
+                MIOT_PWM_TYPE));
         return TYPES;
     }
 

@@ -59,7 +59,7 @@ public class ObjSimpleJSONSerializer extends AbstractObjSerializer<JsonElement> 
 
     private final boolean biasTowardsURI = true;
     private final boolean biasTowardsObjs = false;
-    private final boolean embedCandQ = true;
+    private final boolean embedCandQ = false;
 
     private static JsonReader makeReader(final String json) {
         final JsonReader r = new JsonReader(new StringReader(json));

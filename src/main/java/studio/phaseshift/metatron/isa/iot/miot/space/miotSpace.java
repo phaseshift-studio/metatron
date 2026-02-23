@@ -87,14 +87,16 @@ public class miotSpace extends mqttSpace {
         if (result.isNoObj())
             return result;
        // final fURI toVID = Space.Helper.toNativeSpace(vid,this.routes());
+        // TODO: branch uri/pattern and device construction
         if (!vid.hasPattern() && vid.matches(this.pattern().retractPattern().extend("+"))) {
             final Rec device = result.asRec().tid(MIOT_DEVICE_TID).asRec();
             //if(device.has("gpio"))
             //    device.at("gpio", device.at("gpio").asRec().tid(MIOT_GPIO_TID), IMMUTABLE);
             return device.selfVID(vid);
         } else if(vid.matches(this.pattern().retractPattern().extend("+/gpio"))) {
-            final Rec gpio = result.asRec().tid(MIOT_GPIO_TID).selfVID(vid).asRec();
-            return gpio;
+            return result.asRec().tid(MIOT_GPIO_TID).selfVID(vid).asRec();
+        } else if(vid.matches(this.pattern().retractPattern().extend("+/pwm"))) {
+            return result.asRec().tid(MIOT_PWM_TID).selfVID(vid).asRec();
         }
         return result;
     }
