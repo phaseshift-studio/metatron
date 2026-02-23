@@ -39,13 +39,13 @@ public class MType extends MObj implements Type {
     public static Type T(final Tuple.Pair<Call, Call> jvm, final fURI tid, final fURI vid) {
         return T(tid, vid, jvm.get0(), jvm.get1());
     }
-    
+
     public static Type T(final fURI vid) {
-        return T(vid, null, null, null);
+        return T(null, vid, null, null);
     }
 
     public static Type T(final fURI vid, final Call predicate) {
-        return T(vid, null, predicate, null);
+        return T(null, vid, predicate, null);
     }
 
     public static Type T(final fURI tid, final fURI vid, final Call predicate, final Call constructor) {

@@ -90,7 +90,15 @@ public interface Poly<P extends Poly<P, J>, J> extends Obj {
     /// ////////////////////////////////////////////////////////////////////////////////////
 
     P at(final Obj key, final Obj value, final BiFunction<Poly<?, ?>, Object, Poly<?, ?>> operation);
-    
+
+    default P at(final fURI key, final Obj value, final BiFunction<Poly<?, ?>, Object, Poly<?, ?>> operation) {
+        return this.at(uri(key), value, operation);
+    }
+
+    default P at(final String key, final Obj value, final BiFunction<Poly<?, ?>, Object, Poly<?, ?>> operation) {
+        return this.at(uri(key), value, operation);
+    }
+   
     default P at(final Obj key, final Obj value) {
         return this.at(key, value, IMMUTABLE);
     }

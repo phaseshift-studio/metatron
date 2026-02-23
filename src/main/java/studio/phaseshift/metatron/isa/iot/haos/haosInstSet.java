@@ -41,9 +41,7 @@ import static studio.phaseshift.metatron.isa.m.type.Lst.LST_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Str.STR_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
-import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
-import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -213,7 +211,7 @@ public class haosInstSet extends AbstractInstSet {
                     Router.writeToSpace(getCommandTopic(lhs), toggle(lhs));
                     return lhs;
                 }),*/
-                instC(HAOS_TOGGLE_INST_TID.dom(HAOS_LIGHT_TID).rng(HAOS_LIGHT_TID), lst(), (lhs, inst) -> {
+               /* instC(HAOS_TOGGLE_INST_TID.dom(HAOS_LIGHT_TID).rng(HAOS_LIGHT_TID), lst(), (lhs, inst) -> {
                     final fURI commandTopic = getCommandTopic(lhs);
                     final Obj payload = toggle(lhs);
                     LOG.info("toggling {{b}}%s{{X}} with %s", commandTopic, payload);
@@ -221,7 +219,7 @@ public class haosInstSet extends AbstractInstSet {
                     //Router.writeToSpace(lhs.vid().extend("last_updated"), str(CommonUtil.getTimeStamp(null)));
                     //Router.writeToSpace(lhs.vid().extend("last_changed"), str(CommonUtil.getTimeStamp(null)));
                     return lhs;
-                }));
+                })*/);
         return new LinkedHashSet<>(insts);
     }
 }
