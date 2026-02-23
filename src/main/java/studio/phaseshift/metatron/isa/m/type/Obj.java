@@ -85,7 +85,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
     default <O extends Obj> O some() {
         return (O) this.c(cInt::some);
     }
-    
+
     default <O extends Obj> O any() {
         return (O) this.c(cInt::any);
     }

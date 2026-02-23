@@ -66,19 +66,19 @@ public class StatusLine implements Runnable {
         this.addWidget(f("host"), () -> "{{w}}%s".formatted(Router.global().server().isRunning() ? Router.global().server().host() : "{{r}}<node down>"));
         this.addWidget(f("spaces"), () -> "{{w}}spaces:{{y}}%d".formatted(Router.global().spaces().count()));
         this.addWidget(f("nodes"), () -> "{{w}}nodes:{{y}}%d".formatted(Router.global().server().nodes().size()));
-        this.addWidget(f("in_bytes"), () -> "{{w}}in:{{y}}%s".formatted(bytesFormat(Router.global().stats().bytesRecv())));
-        this.addWidget(f("out_bytes"), () -> "{{w}}out:{{y}}%s".formatted(bytesFormat(Router.global().stats().bytesSent())));
+        this.addWidget(f("in_bytes"), () -> "{{w}}in:{{y}}%s".formatted(bytesFormat(Router.global().stats().ioStats().bytesRecv())));
+        this.addWidget(f("out_bytes"), () -> "{{w}}out:{{y}}%s".formatted(bytesFormat(Router.global().stats().ioStats().bytesSent())));
         this.addWidget(f("running_time"), () -> "{{w}}running time:{{y}}%s".formatted(timeFormat(this.runningTime())));
-        this.addWidget(f("running"), () -> "{{w}}running:{{y}}%d".formatted(Router.global().stats().runningMonads()));
-        this.addWidget(f("halted"), () -> "{{w}}halted:{{y}}%d".formatted(Router.global().stats().haltedMonads()));
-        this.addWidget(f("killed"), () -> "{{w}}killed:{{y}}%d".formatted(Router.global().stats().killedMonads()));
-        this.addWidget(f("barrier"), () -> "{{w}}barrier:{{y}}%d".formatted(Router.global().stats().barrierMonads()));
+        this.addWidget(f("running"), () -> "{{w}}running:{{y}}%d".formatted(Router.global().stats().monadicStats().runningMonads()));
+        this.addWidget(f("halted"), () -> "{{w}}halted:{{y}}%d".formatted(Router.global().stats().monadicStats().haltedMonads()));
+        this.addWidget(f("killed"), () -> "{{w}}killed:{{y}}%d".formatted(Router.global().stats().monadicStats().killedMonads()));
+        this.addWidget(f("barrier"), () -> "{{w}}barrier:{{y}}%d".formatted(Router.global().stats().monadicStats().barrierMonads()));
 
     }
 
 
     public void addWidget(final fURI name, final Supplier<String> widget) {
-        this.widgets.put(uri(name), instC(name.prepend("status.").dom(ALL.maybe()).rng(STR_TID), lst(), (lhs, inst) -> str(widget.get())), MUTABLE);
+        this.widgets.at(uri(name), instC(name.prepend("status.").dom(ALL.maybe()).rng(STR_TID), lst(), (lhs, inst) -> str(widget.get())), MUTABLE);
     }
 
     private void compileWidgets() {

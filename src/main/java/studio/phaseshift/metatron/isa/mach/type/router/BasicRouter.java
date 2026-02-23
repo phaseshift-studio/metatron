@@ -29,7 +29,9 @@ import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Uri;
 import studio.phaseshift.metatron.isa.m.type.impl.MObjs;
 import studio.phaseshift.metatron.isa.m.type.impl.ObjectMap;
+import studio.phaseshift.metatron.isa.mach.type.MStats;
 import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.Stats;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.lang.jre.ObjFieldReflection;
@@ -60,12 +62,12 @@ public class BasicRouter extends AbstractSpace<MServer> implements Router {
     private final GraphittyLogger LOG = Graphitty.log(this);
     @ObjFieldReflection(tid = "/m/str")
     public static final String test = "testes";
-    protected final IOStats iostats = new mIOStats();
+    protected final Stats iostats = new MStats();
 
     @ObjFieldReflection
-    private final ObjectMap<fURI, Set<fURI>> smallToBigRewrites = new ObjectMap<>();
+    private final ObjectMap<fURI, Set<fURI>> smallToBigRoutes = new ObjectMap<>();
     @ObjFieldReflection
-    private final ObjectMap<fURI, fURI> bigToSmallRewrites = new ObjectMap<>();
+    private final ObjectMap<fURI, fURI> bigToSmallRoutes = new ObjectMap<>();
     private fURI primary = M_ISA_TID;
 
     public BasicRouter(final fURI host, final fURI vid) {
@@ -75,7 +77,7 @@ public class BasicRouter extends AbstractSpace<MServer> implements Router {
                         uri(Tokens.SPACE), rec(new ConcurrentHashMap<>(Map.of(uri("+/#"), new stackSpace(f("+/#"))))))),
                 ROUTER_TID,
                 vid);
-        this.put(uri(REWRITE), this.smallToBigRewrites.toRec(), MUTABLE);
+        this.at(uri(REWRITE), this.smallToBigRoutes.toRec(), MUTABLE);
         //LOG.info("local router at %s", this.vid.toUri());
     }
 
@@ -93,10 +95,10 @@ public class BasicRouter extends AbstractSpace<MServer> implements Router {
         this.server().start();
     }
 
-    public Rec put(final Obj key, final Obj value) {
+    public Rec at(final Obj key, final Obj value) {
         if (key.equals(PRIMARY))
             this.primary = value.uriValue();
-        return super.put(key, value);
+        return super.at(key, value);
     }
 
     public synchronized void close() {
@@ -110,14 +112,14 @@ public class BasicRouter extends AbstractSpace<MServer> implements Router {
     }
 
     @Override
-    public IOStats stats() {
+    public Stats stats() {
         if (Router.loaded())
             return this.iostats;
         throw MTronException.of("router not loaded");
     }
 
     public void registerRewrite(final fURI small, final fURI big) {
-        this.smallToBigRewrites.computeRaw(small, (k, v) -> {
+        this.smallToBigRoutes.computeRaw(small, (k, v) -> {
             if (null == v) {
                 final Set<fURI> set = new HashSet<>();
                 set.add(big.basePath());
@@ -127,7 +129,7 @@ public class BasicRouter extends AbstractSpace<MServer> implements Router {
                 return v;
             }
         });
-        this.bigToSmallRewrites.putRaw(big, small);
+        this.bigToSmallRoutes.putRaw(big, small);
     }
 
     @Override
@@ -136,7 +138,7 @@ public class BasicRouter extends AbstractSpace<MServer> implements Router {
             return furi;
         fURI temp;
         if (big) {
-            final Set<fURI> set = this.smallToBigRewrites.getOrDefaultRaw(furi.basePath(), Set.of(furi));
+            final Set<fURI> set = this.smallToBigRoutes.getOrDefaultRaw(furi.basePath(), Set.of(furi));
             if (false && set.isEmpty()) {
                 temp = this.getSpace(furi).rewrite(furi, big);
             } else if (set.size() > 1) {
@@ -146,7 +148,7 @@ public class BasicRouter extends AbstractSpace<MServer> implements Router {
                 temp = set.iterator().next();
             }
         } else {
-            temp = this.bigToSmallRewrites.getOrDefaultRaw(furi.basePath(), furi);
+            temp = this.bigToSmallRoutes.getOrDefaultRaw(furi.basePath(), furi);
         }
         temp = temp.c(furi.c()).queryMap(furi.queryMap());
         temp = temp.hasDom() ? temp.dom(this.rewrite(temp.dom(), big)) : temp;
@@ -173,12 +175,12 @@ public class BasicRouter extends AbstractSpace<MServer> implements Router {
         final Rec subSpaces = space.jvm().getOrDefault(uri(SPACE), rec()).as();
         if (!(superSpace instanceof noobjSpace)) {
             final Rec superSpaces = superSpace.jvm().getOrDefault(uri(SPACE), rec()).as();
-            subSpaces.put(uri(SUPER), null == superSpace.vid() ? uri(superSpace.pattern()) : auto_from_(superSpace.vid()).tryToInst(), MUTABLE);
+            subSpaces.at(uri(SUPER), null == superSpace.vid() ? uri(superSpace.pattern()) : auto_from_(superSpace.vid()).tryToInst(), MUTABLE);
             subSpaces.parent(superSpace);
-            superSpaces.put(uri(SUB), superSpaces.jvm().getOrDefault(uri(SUB), MObjs.empty()).append(auto_from_(null == space.vid() ? space.tid() : space.vid()).tryToInst()), MUTABLE);
-            superSpace.put(uri(SPACE), superSpaces, MUTABLE);
+            superSpaces.at(uri(SUB), superSpaces.jvm().getOrDefault(uri(SUB), MObjs.empty()).append(auto_from_(null == space.vid() ? space.tid() : space.vid()).tryToInst()), MUTABLE);
+            superSpace.at(uri(SPACE), superSpaces, MUTABLE);
         }
-        space.put(uri(SPACE), subSpaces, MUTABLE);
+        space.at(uri(SPACE), subSpaces, MUTABLE);
         this.spaces().jvm().put(null == space.vid() ? space.pattern().toUri() : space.vid().toUri(), space);
         Space.Helper.spaceOpenLog(this, space);
     }
@@ -278,89 +280,5 @@ public class BasicRouter extends AbstractSpace<MServer> implements Router {
     @Override
     public String toString() {
         return Router.Helper.routerToString(this);
-    }
-
-    static class mIOStats implements IOStats {
-
-        protected long bytesSent = 0;
-        protected long bytesRecv = 0;
-        protected long runningMonads = 0;
-        protected long haltedMonads = 0;
-        protected long killedMonads = 0;
-        protected long barrierMonads = 0;
-
-        @Override
-        public IOStats incrBytesRecv(long bytes) {
-            this.bytesRecv += bytes;
-            return this;
-        }
-
-        @Override
-        public IOStats incrBytesSent(long bytes) {
-            this.bytesSent += bytes;
-            return this;
-        }
-
-        @Override
-        public IOStats incrRunningMonads(long runningMonads) {
-            this.runningMonads += runningMonads;
-            return this;
-        }
-
-        @Override
-        public IOStats incrHaltedMonads(long haltedMonads) {
-            this.haltedMonads += haltedMonads;
-            return this;
-        }
-
-        @Override
-        public IOStats incrKilledMonads(long killedMonads) {
-            this.killedMonads += killedMonads;
-            return this;
-        }
-
-        @Override
-        public IOStats incrBarrierMonads(long barrierMonads) {
-            this.barrierMonads += barrierMonads;
-            return this;
-        }
-
-        @Override
-        public long bytesSent() {
-            return this.bytesSent;
-        }
-
-        @Override
-        public long bytesRecv() {
-            return bytesRecv;
-        }
-
-        @Override
-        public void resetMonads() {
-            this.runningMonads = 0;
-            this.haltedMonads = 0;
-            this.killedMonads = 0;
-            this.barrierMonads = 0;
-        }
-
-        @Override
-        public long runningMonads() {
-            return this.runningMonads;
-        }
-
-        @Override
-        public long haltedMonads() {
-            return this.haltedMonads;
-        }
-
-        @Override
-        public long killedMonads() {
-            return this.killedMonads;
-        }
-
-        @Override
-        public long barrierMonads() {
-            return this.barrierMonads;
-        }
     }
 }

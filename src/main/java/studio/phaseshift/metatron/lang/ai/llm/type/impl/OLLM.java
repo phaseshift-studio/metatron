@@ -93,7 +93,7 @@ public class OLLM extends MRec implements LLM {
 
     public static OLLM ollm(final fURI host, final Tuple.Pair<OllamaModel, OllamaModelCard> model, final fURI tid, final fURI vid) {
         final OLLM ollm = new OLLM(model, tid, vid);
-        return ollm.put(uri(HOST), uri(host), MUTABLE).as();
+        return ollm.at(uri(HOST), uri(host), MUTABLE).as();
     }
 
     public String name() {

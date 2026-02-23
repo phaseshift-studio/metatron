@@ -75,23 +75,53 @@ public interface Poly<P extends Poly<P, J>, J> extends Obj {
 
     <O extends Obj> Stream<O> elements();
 
+    /// ////////////////////////////////////////////////////////////////////////////////////
+    
     <O extends Obj> O at(final Obj key);
+    
+    default <O extends Obj> O at(final String key) {
+        return this.at(uri(key));
+    }
 
+    default <O extends Obj> O at(final fURI key) {
+        return this.at(uri(key));
+    }
+
+    /// ////////////////////////////////////////////////////////////////////////////////////
+
+    P at(final Obj key, final Obj value, final BiFunction<Poly<?, ?>, Object, Poly<?, ?>> operation);
+    
     default P at(final Obj key, final Obj value) {
         return this.at(key, value, IMMUTABLE);
     }
+    
+    default P at(final fURI key, final Obj value) {
+        return this.at(uri(key), value, IMMUTABLE);
+    }
 
-    P at(final Obj key, final Obj value, final BiFunction<Poly<?, ?>, Object, Poly<?, ?>> operation);
+    default P at(final String key, final Obj value) {
+        return this.at(uri(key), value, IMMUTABLE);
+    }
 
-    boolean has(final Obj key);
+    /// ////////////////////////////////////////////////////////////////////////////////////
+    
+    default boolean has(final Obj key) {
+        return !this.at(key).isNoObj();
+    }
 
     default boolean has(final String key) {
+        return this.has(uri(key));
+    }
+
+    default boolean has(final fURI key) {
         return this.has(uri(key));
     }
 
     default boolean has(final long index) {
         return index < this.count();
     }
+    
+    /// /////////////////////////////////////////////////////////////////////////////////////
 
     default Stream<Rel> indexedStream() {
         return Stream.of(rel(this.vid().toUri(), this));
@@ -107,6 +137,8 @@ public interface Poly<P extends Poly<P, J>, J> extends Obj {
         return Obj.super.autoResolve(obj).parent(this);
     }*/
 
+    /// ///////////////////////////////////////////////////////////////////////////////////////
+    
     class Helper {
         public static Rec transformLstToRec(final Lst lhs, final fURI tid, final fURI vid) {
             return IteratorUtil.indexedStream(lhs.elements().iterator())
@@ -296,17 +328,17 @@ public interface Poly<P extends Poly<P, J>, J> extends Obj {
             rhs.elements().forEach(x -> {
                 final Optional<Rel> kvMatch = lhs.asRec().elements().filter(y -> y.first().test(x.first()) && y.second().test(x.second())).findFirst();
                 if (kvMatch.isPresent())
-                    result.put(rel(kvMatch.get().first(), rel(GOOD, x.first())), rel(kvMatch.get().second(), rel(GOOD, x.second())), MUTABLE);
+                    result.at(rel(kvMatch.get().first(), rel(GOOD, x.first())), rel(kvMatch.get().second(), rel(GOOD, x.second())), MUTABLE);
                 else {
                     final Optional<Rel> kMatch = lhs.asRec().elements().filter(y -> y.first().test(x.first())).findFirst();
                     if (kMatch.isPresent())
-                        result.put(rel(kMatch.get().first(), rel(SORTA, x.first())), diffObjRecursion(kMatch.get().second(), x.second()), MUTABLE);
+                        result.at(rel(kMatch.get().first(), rel(SORTA, x.first())), diffObjRecursion(kMatch.get().second(), x.second()), MUTABLE);
                     else if (!x.first().c().isZeroable() && !x.second().c().isZeroable())
-                        result.put(rel(noobj(), rel(FAIL, x.first())), rel(noobj(), rel(FAIL, x.second())), MUTABLE);
+                        result.at(rel(noobj(), rel(FAIL, x.first())), rel(noobj(), rel(FAIL, x.second())), MUTABLE);
                     else if (!x.second().c().isZeroable())
-                        result.put(rel(noobj(), rel(GOOD, x.first())), rel(noobj(), rel(SORTA, x.second())), MUTABLE);
+                        result.at(rel(noobj(), rel(GOOD, x.first())), rel(noobj(), rel(SORTA, x.second())), MUTABLE);
                     else
-                        result.put(rel(noobj(), rel(x.first().c().isZeroable() ? GOOD : SORTA, x.first())), rel(noobj(), rel(GOOD, x.second())), MUTABLE);
+                        result.at(rel(noobj(), rel(x.first().c().isZeroable() ? GOOD : SORTA, x.first())), rel(noobj(), rel(GOOD, x.second())), MUTABLE);
                 }
             });
             return result;
@@ -349,15 +381,15 @@ public interface Poly<P extends Poly<P, J>, J> extends Obj {
                             .map(y -> rel(applyObjRecursion(y.first(), x.second()), applyObjRecursion(y.second(), x.second())))
                             .findFirst();
                     if (kvMatch.isPresent())
-                        result.put(kvMatch.get().first(), kvMatch.get().second(), MUTABLE);
+                        result.at(kvMatch.get().first(), kvMatch.get().second(), MUTABLE);
                     else {
                         if (x.first().c().isZeroable())
-                            result.put(x.first(), x.second().apply(), MUTABLE);
+                            result.at(x.first(), x.second().apply(), MUTABLE);
                         else
-                            result.put(x.first(), noobj(), MUTABLE);
+                            result.at(x.first(), noobj(), MUTABLE);
                     }
                 } catch (final Exception e) {
-                    result.put(x.first(), mexcept("error applying %s to %s", x.second(), x.first()).cause(e).asFail(), MUTABLE);
+                    result.at(x.first(), mexcept("error applying %s to %s", x.second(), x.first()).cause(e).asFail(), MUTABLE);
                 }
             });
             return result;

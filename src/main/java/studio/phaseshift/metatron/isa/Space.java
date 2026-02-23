@@ -21,6 +21,7 @@ package studio.phaseshift.metatron.isa;
 import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.*;
+import studio.phaseshift.metatron.isa.mach.type.Stats;
 import studio.phaseshift.metatron.isa.mach.type.MMachine;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
@@ -60,6 +61,10 @@ public interface Space extends Rec, Closeable {
     fURI pattern();
 
     Object sjvm();
+
+    Map<Uri, Uri> routes();
+
+    Stats stats();
 
     default Obj read(final String vid) {
         return this.read(fURI.of(vid));
@@ -160,6 +165,22 @@ public interface Space extends Rec, Closeable {
             return null == rewrite ? f(vid) : f(rewrite.get0() + vid.replaceFirst(rewrite.get1(), ""));
         }
 
+        public static fURI fromNativeSpace(final fURI vid, Map<Uri, Uri> routes) {
+            return routes.entrySet().stream()
+                    .filter(e -> vid.toString().contains(e.getValue().uriValue().toString()))
+                    .map(e -> e.getKey().uriValue().extend(vid.toString().replaceFirst(e.getValue().uriValue().toString(), "")))
+                    .findFirst()
+                    .orElse(vid);
+        }
+
+        public static fURI toNativeSpace(final fURI vid, Map<Uri, Uri> routes) {
+            return routes.entrySet().stream()
+                    .filter(e -> vid.toString().contains(e.getKey().uriValue().toString()))
+                    .map(e -> e.getValue().uriValue().extend(vid.toString().replaceFirst(e.getKey().uriValue().toString(), "")))
+                    .findFirst()
+                    .orElse(vid);
+        }
+
         public static Obj resolveApply(final Space space, final Obj rhs) {
             if (rhs.isCode()) {
                 return MMachine.of(rhs.as()).apply();
@@ -200,11 +221,11 @@ public interface Space extends Rec, Closeable {
                         if (CommonUtil.isInt(kv.get0().name()))
                             listing.add(Pair.with(kv.get0().toUri(), kv.get1()));
                         else
-                            nestRec.put(kv.get0().pretract(pattern.pathLength()).toUri(), kv.get1(), MUTABLE);
+                            nestRec.at(kv.get0().pretract(pattern.pathLength()).toUri(), kv.get1(), MUTABLE);
                     });
                     if (!nestRec.isEmpty())
                         listing.add(Pair.with(uri(pattern), nestRec));
-                } else  {
+                } else {
                     directReader.apply((pattern.isBranch() ? pattern.extend(fURI.ONE_WILD_STRING) : pattern.asBranch())).forEachRemaining(kv -> {
                         listing.add(Pair.with(kv.get0().toUri(), kv.get1()));
                     });
@@ -256,7 +277,7 @@ public interface Space extends Rec, Closeable {
                     }
                 } else if (vid.isNode() || !obj.isPoly()) {
                     if (base.get1().isRec())
-                        Helper.resolveWrite(LOG, space, base.get0(), base.get1().<Rec>as().put(uri(vid.removePrefix(base.get0())), obj), directWriter, directReader);
+                        Helper.resolveWrite(LOG, space, base.get0(), base.get1().<Rec>as().at(uri(vid.removePrefix(base.get0())), obj), directWriter, directReader);
                     else if (base.get1().isLst())
                         Helper.resolveWrite(LOG, space, base.get0(), base.get1().<Lst>as().append(obj), directWriter, directReader);
                     else {

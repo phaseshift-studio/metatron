@@ -197,23 +197,23 @@ public class RecTest extends mTest {
         assertEquals(1, r.<Rec>at("b").count());
         assertEquals(jnt(3), r.<Rec>at("b").at("c"));
         /// //
-        r = r.put("b/c", str("fhat"));
+        r = r.at("b/c", str("fhat"));
         Graphitty.log(this).trace(r);
         assertEquals(jnt(1), r.at("a"));
         assertEquals(2, r.count());
         assertEquals(1, r.<Rec>at("b").count());
         assertEquals(str("fhat"), r.<Rec>at("b").at("c"));
         /// ///
-        r = r.put("d", real(1.0));
+        r = r.at("d", real(1.0));
         assertEquals(1.0, r.at("d").realValue(), 0.001);
     }
 
     @Test
     public void testMutableImmutable() {
         Rec r1 = rec(uri("a"), jnt(1), uri("b"), rec(uri("c"), jnt(3)));
-        Rec r2 = r1.put(uri("b"), jnt(22), IMMUTABLE);
-        Rec r3 = r1.at(uri("b")).<Rec>as().put(uri("d"), jnt(33), IMMUTABLE);
-        Rec r4 = r1.put(uri("b"), r1.at(uri("b")).<Rec>as().put(uri("d"), jnt(33)), IMMUTABLE);
+        Rec r2 = r1.at(uri("b"), jnt(22), IMMUTABLE);
+        Rec r3 = r1.at(uri("b")).<Rec>as().at(uri("d"), jnt(33), IMMUTABLE);
+        Rec r4 = r1.at(uri("b"), r1.at(uri("b")).<Rec>as().at(uri("d"), jnt(33)), IMMUTABLE);
         mTest.testEquals(LOG, rec(uri("a"), jnt(1), uri("b"), rec(uri("c"), jnt(3))), r1, true);
         mTest.testEquals(LOG, rec(uri("a"), jnt(1), uri("b"), jnt(22)), r2, true);
         mTest.testEquals(LOG, rec(uri("c"), jnt(3), uri("d"), jnt(33)), r3, true);
@@ -222,11 +222,11 @@ public class RecTest extends mTest {
         Rec rr1 = rec(uri("a"), jnt(1), uri("b"), rec(uri("c"), jnt(3)));
         Rec s1 = rec(uri("a"), jnt(1), uri("b"), rec(uri("c"), jnt(3)));
         mTest.testEquals(LOG, r1, s1, true);
-        Rec s2 = r1.put(uri("b"), jnt(22), MUTABLE);
+        Rec s2 = r1.at(uri("b"), jnt(22), MUTABLE);
         mTest.testEquals(LOG, r2, s2, true);
-        Rec s3 = s1.at(uri("b")).<Rec>as().put(uri("d"), jnt(33), MUTABLE);
+        Rec s3 = s1.at(uri("b")).<Rec>as().at(uri("d"), jnt(33), MUTABLE);
         mTest.testEquals(LOG, r3, s3, true);
-        Rec s4 = rr1.clone().<Rec>as().put(uri("b"), rr1.at(uri("b")).clone().<Rec>as().put(uri("d"), jnt(33), IMMUTABLE), MUTABLE);
+        Rec s4 = rr1.clone().<Rec>as().at(uri("b"), rr1.at(uri("b")).clone().<Rec>as().at(uri("d"), jnt(33), IMMUTABLE), MUTABLE);
         mTest.testEquals(LOG, r4, s4, true);
         mTest.testEquals(LOG, rec(uri("a"), jnt(1), uri("b"), rec(uri("c"), jnt(3))), rr1, true);
         mTest.testEquals(LOG, rec(uri("a"), jnt(1), uri("b"), jnt(22)), s2, true);

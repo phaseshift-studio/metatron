@@ -50,13 +50,13 @@ public class ObjHTMLSerializer extends AbstractObjSerializer<Document> {
     private Rec readElement(final Element element) {
         //Graphitty.log(this).warn(element);
         final AtomicReference<Rec> recX = new AtomicReference<>(rec());
-        element.attributes().forEach(a -> recX.getAndUpdate(r -> r.put(uri(a.getKey()), str(a.getValue()))));
-        element.children().forEach(e -> recX.getAndUpdate(r -> r.put(uri(e.nodeName()), readElement(e))));
+        element.attributes().forEach(a -> recX.getAndUpdate(r -> r.at(uri(a.getKey()), str(a.getValue()))));
+        element.children().forEach(e -> recX.getAndUpdate(r -> r.at(uri(e.nodeName()), readElement(e))));
         if (element.hasText() && !element.text().isBlank())
-            recX.getAndUpdate(r -> r.put(uri(TEXT), str(element.text())));
+            recX.getAndUpdate(r -> r.at(uri(TEXT), str(element.text())));
         final String data = element.data();
         if (!data.isBlank())
-            recX.getAndUpdate(r -> r.put(uri(DATA), str(data)));
+            recX.getAndUpdate(r -> r.at(uri(DATA), str(data)));
         return recX.get();
     }
 

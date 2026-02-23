@@ -182,7 +182,7 @@ public class mInstSetTest extends InstSetTest {
         long previousParseTime = 0;
         long parseThreshold = 400;
         long evalThreshold = 50;
-        int maxSteps = 5;
+        int maxSteps = 10;
         for (int steps = 1; steps < maxSteps; steps++) {
             StringBuilder sb = new StringBuilder("start(1).");
             sb.append("map(".repeat(steps));
@@ -759,18 +759,61 @@ public class mInstSetTest extends InstSetTest {
     }
 
     @ParameterizedTest
+    @TestData(value = { "reck -> rec::T@reck", "lyst -> lst::T@lyst"})
     @CsvSource(value = {
+            "true.as(bool::T)                                                                                            % true",
+            "false.as(bool::T)                                                                                           % false",
+            "true.as(bytes::T)                                                                                           % 0x01",
+            "false.as(bytes::T)                                                                                          % 0x00",
+            //"true.as(bytes::T).as(bool::T).as(bytes::T)                                                                  % true",
+            //"false.as(bytes::T).as(bool::T).as(bytes::T)                                                                 % false",
+            //"true.as(bytes::T).as(bool::T).as(bytes::T)                                                                  % 0x01",
+            //"false.as(bytes::T).as(bool::T).as(bytes::T)                                                                 % 0x00",
+            "true.as(int::T)                                                                                             % 1",
+            "false.as(int::T)                                                                                            % 0",
+            /// ////////////////////////////////////
+            "1.as(bytes::T)                                                                                              % 1.as(bytes::T) [-- 0x0000000000000001", // TODO: whats going on here?!?!
             "1.as(int::T)                                                                                                % 1",
             "1.as(str::T)                                                                                                % \"1\"",
             "1.as(real::T)                                                                                               % 1.0",
+            "2.as(real::T)                                                                                               % 2.0",
             /// /////////////////////////////////////
-            "1.0.as(int::T)                                                                                              % 1",
-            "1.23.as(int::T)                                                                                             % 1",
+            "1.0.as(real::T)                                                                                            % 1.0",
+            "1.0.as(int::T)                                                                                             % 1",
+            "1.0.as(int::T).as(real::T)                                                                                 % 1.0",
+            "1.0.as(int::T).as(real::T).as(str::T)                                                                      % \"1.0\"",
+            //"1.0.as(int::T).as(real::T).as(str::T).as(real::T).as(int::T)                                               % 1",
+            //"1.0.as(int::T).as(real::T).as(str::T).as(int::T).as(real::T)                                               % 1.0",
+            "1.0.as(int::T).as(real::T).as(str::T)                                                                      % \"1.0\"",
+            "1.23.as(int::T)                                                                                            % 1",
+            "2.23.as(int::T)                                                                                            % 2",
+            "2.23.as(str::T)                                                                                            % \"2.23\"",
+            "2.23.as(str::T).as(real::T)                                                                                % 2.23",
             /// /////////////////////////////////////
+            // "\"abc\".as(str::T)                                                                                          % str::\"abc\"",
+            "\"abc\".as(bytes::T)                                                                                        % 0x616263",
             "\"/a/b/c\".as(uri::T)                                                                                       % /a/b/c",
             "\"1\".as(int::T)                                                                                            % 1",
             /// /////////////////////////////////////
-            "/a/b/c.as(str::T)                                                                                           % \"/a/b/c\""
+            "/a/b/c.as(uri::T)                                                                                           % /a/b/c",
+            "/a/b/c.as(str::T)                                                                                           % \"/a/b/c\"",
+            "/a/b/c.as(str::T).as(uri::T)                                                                                % /a/b/c",
+            //"/a/b/c.as(str::T).as(uri::T).as(str::T)                                                                     % \"/a/b/c\"",
+            /// /////////////////////////////////////
+            "a=>1.as(rel::T)                                                                                            % a=>1",
+            "a=>1.as(rec::T)                                                                                            % [a=>1]",
+            "a=>1.as(lst::T)                                                                                            % [a,1]",
+            //"[a=>1].as(rel::T)                                                                                          % a=>1",
+            /// /////////////////////////////////////
+            "[a=>1,b=>2].as(rec::T)                                                                                      % [a=>1,b=>2]",
+            "[a=>1,b=>2].as(reck::T)                                                                                     % reck::[a=>1,b=>2]",
+            "[a=>1,b=>2].as(lst::T)                                                                                      % [(0=>(a=>1)),(1=>(b=>2))]",
+            ///  /////////////////////////////////////
+            "[a,b].as(lst::T)                                                                                            % [a,b]",
+            "[a,b].as(lyst::T)                                                                                           % lyst::[a,b]",
+            "[a,b].as(rec::T)                                                                                            % [0=>a,1=>b]",
+            "[a,b].as(reck::T)                                                                                           % reck::[0=>a,1=>b]",
+            "[a,b].as(rec::T).as(lst::T)                                                                                 % [(0=>(0=>a)),(1=>(1=>b))]",
     }, delimiter = '%')
     public void testAs(final String code, final String expected) {
         mTest.testCode(LOG, code, expected);

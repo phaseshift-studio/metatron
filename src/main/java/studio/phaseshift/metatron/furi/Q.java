@@ -99,7 +99,7 @@ public interface Q extends Rec {
         }
 
         @Override
-        default Rec put(final Obj key, final Obj value) {
+        default Rec at(final Obj key, final Obj value) {
             return this;
         }
 
@@ -144,7 +144,7 @@ public interface Q extends Rec {
         }
 
         @Override
-        default Rec put(final Obj key, final Obj value) {
+        default Rec at(final Obj key, final Obj value) {
             return this;
         }
 

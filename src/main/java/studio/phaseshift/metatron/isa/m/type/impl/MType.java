@@ -41,11 +41,11 @@ public class MType extends MObj implements Type {
     }
     
     public static Type T(final fURI vid) {
-        return T(null, vid, null, null);
+        return T(vid, null, null, null);
     }
 
     public static Type T(final fURI vid, final Call predicate) {
-        return T(null, vid, predicate, null);
+        return T(vid, null, predicate, null);
     }
 
     public static Type T(final fURI tid, final fURI vid, final Call predicate, final Call constructor) {

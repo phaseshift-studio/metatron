@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -20,12 +20,15 @@ package studio.phaseshift.metatron.isa.m.type;
 
 import studio.phaseshift.metatron.furi.fURI;
 
+import java.nio.ByteBuffer;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
+import static studio.phaseshift.metatron.isa.m.type.Bytes.BYTES_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
+import static studio.phaseshift.metatron.isa.m.type.impl.MBytes.bytes;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
@@ -38,7 +41,7 @@ public interface Bool extends Mono {
     Type BOOL_TYPE = Type.Builder.build().tid(BOOL_TID).vid(BOOL_TID).create();
     Bool BOOL_TRUE = bool(true);
     Bool BOOL_FALSE = bool(false);
-    
+
     @Override
     Bool clone(final Object jvm, final fURI tid, final fURI vid);
 
@@ -60,6 +63,8 @@ public interface Bool extends Mono {
     final class BoolType {
         public static Set<Inst> insts() {
             return new LinkedHashSet<>(List.of(
+                    instC(AS_INST_TID.dom(BOOL_TID).rng(BOOL_TID), lst(BOOL_TYPE), (lhs, inst) -> lhs.tid(inst.arg(0).tid())),
+                    instC(AS_INST_TID.dom(BOOL_TID).rng(BYTES_TID), lst(BYTES_TYPE), (lhs, inst) -> bytes(lhs.boolValue() ? ByteBuffer.wrap(new byte[]{1}) : ByteBuffer.wrap(new byte[]{0}), inst.arg(0).tid(), lhs.vid())),
                     instC(AS_INST_TID.dom(BOOL_TID).rng(INT_TID), lst(T(INT_TID)), (lhs, inst) -> jnt(lhs.boolValue() ? 1 : 0, inst.arg(0).tid(), lhs.vid())),
                     instC(AS_INST_TID.dom(BOOL_TID).rng(REAL_TID), lst(T(REAL_TID)), (lhs, inst) -> real(lhs.boolValue() ? 1.0d : 0.0d, inst.arg(0).tid(), lhs.vid())),
                     instC(AS_INST_TID.dom(BOOL_TID).rng(STR_TID), lst(T(STR_TID)), (lhs, inst) -> str(lhs.boolValue() ? "true" : "false", inst.arg(0).tid(), lhs.vid())),

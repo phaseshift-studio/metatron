@@ -94,7 +94,7 @@ public class tp3Space extends grphSpace<Graph> {
             final fURI dataset = config.at(NATIVE).asRec().at(LOAD).uriValue();
             Graphitty.log(tp3Space.class).info("translating %s into grph space", config.at(NATIVE_LOAD));
             if (dataset.equals(f("modern"))) {
-                config.put(uri(SCHEMA), new modernSchema(config.at(PATTERN).uriValue().head(1).extend("S").extend("modern")), MUTABLE);
+                config.at(uri(SCHEMA), new modernSchema(config.at(PATTERN).uriValue().head(1).extend("S").extend("modern")), MUTABLE);
                 TinkerFactory.generateModern(graph);
             } else if (dataset.equals(f("grateful")))
                 TinkerFactory.generateGratefulDead(graph);
@@ -127,13 +127,13 @@ public class tp3Space extends grphSpace<Graph> {
         final Rec tp3Config = rec();
         new ConfigurationMap(sjvm.configuration()).forEach((key, value) -> {
             try {
-                tp3Config.put(uri(key.toString()), MObjFactory.of().toObj(value), MUTABLE);
+                tp3Config.at(uri(key.toString()), MObjFactory.of().toObj(value), MUTABLE);
             } catch (final Exception e) {
                 LOG.warn("unable to encode %s:%s: %s", key, value, e);
             }
         });
         // this.put(uri("native/factory"), FACTORY, MUTABLE);
-        this.put(uri("native"), rec(
+        this.at(uri("native"), rec(
                 uri("factory"), FACTORY,
                 uri("config"), tp3Config,
                 uri("id"), rec(
@@ -142,7 +142,7 @@ public class tp3Space extends grphSpace<Graph> {
         this.vertexPrefix = this.pattern.retractPattern().extend("V").toString();
         this.edgePrefix = this.pattern.retractPattern().extend("E").toString();
         this.schemaPrefix = this.pattern.retractPattern().extend("S").toString();
-        this.put(uri("rewrite"), rec(
+        this.at(uri("rewrite"), rec(
                 uri("vertex"), uri(this.vertexPrefix),
                 uri("edge"), uri(this.edgePrefix),
                 uri("schema"), uri(this.schemaPrefix)), MUTABLE);

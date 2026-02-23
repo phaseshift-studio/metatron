@@ -149,7 +149,7 @@ public class MServer extends WebSocketServer implements Cluster, Closeable, Obj 
     @Override
     public void onMessage(final WebSocket conn, final ByteBuffer message) {
         LOG.debug("received from %s byte buffer [length:%d]", conn.getAttachment(), message.array().length);
-        Router.global().stats().incrBytesRecv(message.array().length);
+        Router.global().stats().ioStats().incrBytesRecv(message.array().length);
         try {
             final Obj obj = this.serializer.inputBytes(message);// this.serializer.read(message);
             this.onObj(conn, obj);
@@ -167,12 +167,12 @@ public class MServer extends WebSocketServer implements Cluster, Closeable, Obj 
             result = objs(result.stream().map(x -> x.vid(null))); // x.vid(this.host().extend(x.vid()))));
             final ByteBuffer bytes = this.serializer.outputBytes(result);
             conn.send(bytes);
-            Router.global().stats().incrBytesSent(bytes.array().length);
+            Router.global().stats().ioStats().incrBytesSent(bytes.array().length);
             LOG.trace("sent %s for {{b}}%s{{/b}}", result, conn.getAttachment());
         } catch (final Exception e) {
             final ByteBuffer bytes = this.serializer.outputBytes(fail(e));
             conn.send(bytes);
-            Router.global().stats().incrBytesRecv(bytes.array().length);
+            Router.global().stats().ioStats().incrBytesRecv(bytes.array().length);
         }
     }
 

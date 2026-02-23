@@ -94,7 +94,7 @@ public class mVertex extends mElement implements Vertex, WrappedVertex<Rec> {
         final Uri uriKey = uri(key);
         Rel property = rel(uriKey, MObjFactory.of().createOrFail(value));
         Rec vertexRec = this.getBaseVertex();
-        vertexRec.put(uriKey, MObjFactory.of().createOrFail(value), MUTABLE);
+        vertexRec.at(uriKey, MObjFactory.of().createOrFail(value), MUTABLE);
         return new mVertexProperty<>(this, property);
     }
 

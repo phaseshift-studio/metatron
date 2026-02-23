@@ -56,7 +56,7 @@ public class RunningMonads implements Obj {
     public RunningMonads append(final Obj monad) {
         assert monad instanceof Monad;
         monad.forEach(o -> this.instIndex.compute(o.<Monad>as().inst(), (inst, value) -> null == value ? o.as() : value.obj(value.obj().append(o.<Monad>as().obj()))));
-        Router.global().stats().incrRunningMonads(1L);
+        Router.global().stats().monadicStats().incrRunningMonads(1L);
         return this;
     }
 
@@ -79,7 +79,7 @@ public class RunningMonads implements Obj {
             return null;
         for (final Inst key : this.instIndex.keySet()) {
             final Monad value = this.instIndex.remove(key);
-            Router.global().stats().incrRunningMonads(-1L);
+            Router.global().stats().monadicStats().incrRunningMonads(-1L);
             return value;
         }
         return null;

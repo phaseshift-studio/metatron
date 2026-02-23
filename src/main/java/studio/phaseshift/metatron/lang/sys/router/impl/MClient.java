@@ -122,7 +122,7 @@ public class MClient extends WebSocketClient implements MConnection {
     @Override
     public void onMessage(final ByteBuffer message) {
         LOG.debug("received byte buffer [length:%d]", message.array().length);
-        Router.global().stats().incrBytesRecv(message.array().length);
+        Router.global().stats().ioStats().incrBytesRecv(message.array().length);
         final Obj obj = this.serializer.inputBytes(message);
         this.onObj(obj);
     }
@@ -157,7 +157,7 @@ public class MClient extends WebSocketClient implements MConnection {
         //LOG.trace("sendObj futures: %s", this.futures);
         final ByteBuffer buffer = this.serializer.outputBytes(obj);
         this.send(buffer);
-        Router.global().stats().incrBytesSent(buffer.array().length);
+        Router.global().stats().ioStats().incrBytesSent(buffer.array().length);
     }
 
 

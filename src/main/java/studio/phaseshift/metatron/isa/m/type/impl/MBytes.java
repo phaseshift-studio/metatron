@@ -22,6 +22,7 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Bytes;
 
 import java.nio.ByteBuffer;
+import java.util.Objects;
 
 import static studio.phaseshift.metatron.isa.m.mInstSet.BYTES_TID;
 
@@ -55,5 +56,14 @@ public class MBytes extends MObj implements Bytes {
     public ByteBuffer jvm() {
         return (ByteBuffer) this.jvm;
     }
+    
+   /* @Override
+    public boolean equals(final Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Bytes)) return false;
+        final Bytes bytes = (Bytes) o;
+        if(!this.tid().equals(bytes.tid())) return false;
+        return this.jvm().mismatch(bytes.jvm()) == -1;
+    }*/
 
 }

@@ -264,6 +264,12 @@ public class fURI implements Cloneable, Ring<fURI>, Comparable<fURI> {
         return this.segments().size();
     }
 
+    public fURI removeSegment(final fURI segment) {
+        final List<String> newPath = new ArrayList<>(this.path);
+        newPath.remove(segment.asNode().toString());
+        return new fURI(this.scheme, this.host, this.port, this.sstart, newPath, this.send, this.poly, Query.to(this.query));
+    }
+    
     public fURI removePrefix(final fURI prefix) {
         final String newPath = this.toString();
         final String pre = prefix.toString();

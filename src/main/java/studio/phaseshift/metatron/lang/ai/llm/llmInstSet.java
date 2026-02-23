@@ -106,10 +106,10 @@ public class llmInstSet extends AbstractInstSet {
 
                         OllamaModels models = new OllamaModels.OllamaModelsBuilder().baseUrl(lhs.<Rec>as().at(HOST).uriValue().toString()).build();
                         if (inst.arg(0).isNoObj()) {
-                            lhs.<Rec>as().put(uri(MODEL), lst((List) models.availableModels().content().stream().map(m -> ollm(lhs.<Rec>as().at(HOST).uriValue(), Tuple.Pair.with(m, models.modelCard(m.getName()).content()), OLLM_TID, fnull)).toList()), MUTABLE);
+                            lhs.<Rec>as().at(uri(MODEL), lst((List) models.availableModels().content().stream().map(m -> ollm(lhs.<Rec>as().at(HOST).uriValue(), Tuple.Pair.with(m, models.modelCard(m.getName()).content()), OLLM_TID, fnull)).toList()), MUTABLE);
                         } else {
                             final List<fURI> names = inst.arg(0).stream().map(Obj::uriValue).toList();
-                            lhs.<Rec>as().put(uri(MODEL), lst((List) models.availableModels().content().stream().filter(x -> names.contains(x.getName())).map(m -> ollm(lhs.<Rec>as().at(HOST).uriValue(), Tuple.Pair.with(m, models.modelCard(m.getName()).content()), OLLM_TID, fnull)).toList()), MUTABLE);
+                            lhs.<Rec>as().at(uri(MODEL), lst((List) models.availableModels().content().stream().filter(x -> names.contains(x.getName())).map(m -> ollm(lhs.<Rec>as().at(HOST).uriValue(), Tuple.Pair.with(m, models.modelCard(m.getName()).content()), OLLM_TID, fnull)).toList()), MUTABLE);
                         }
 
                     } catch (final Exception e) {
@@ -141,7 +141,7 @@ public class llmInstSet extends AbstractInstSet {
                                 final StringBuilder response = new StringBuilder();
                                 final OllamaGenerateTokenHandler thinkingStreamHandler =
                                         (s) -> {
-                                            Router.global().stats().incrBytesRecv(s.getBytes().length);
+                                            Router.global().stats().ioStats().incrBytesRecv(s.getBytes().length);
                                             LOG.none("{{m}}%s{{X}}", s);
                                         };
 
@@ -151,13 +151,13 @@ public class llmInstSet extends AbstractInstSet {
                                             if (start.getAndSet(false))
                                                 LOG.none("\n");
                                             LOG.none("{{y}}%s{{X}}", s);
-                                            Router.global().stats().incrBytesRecv(s.getBytes().length);
+                                            Router.global().stats().ioStats().incrBytesRecv(s.getBytes().length);
                                             response.append(s);
                                         };
 
                                 if (thinking)
                                     LOG.none(Graphitty.sillyPrint("thinking...\n", true, true));
-                                Router.global().stats().incrBytesSent(lhs.strValue().getBytes().length);
+                                Router.global().stats().ioStats().incrBytesSent(lhs.strValue().getBytes().length);
                                 final OllamaChatResult result =
                                         new Ollama(host).chat(chatRequest, new OllamaChatStreamObserver(thinking ? thinkingStreamHandler : null, responseStreamHandler));
                                 while (!result.getResponseModel().isDone()) {

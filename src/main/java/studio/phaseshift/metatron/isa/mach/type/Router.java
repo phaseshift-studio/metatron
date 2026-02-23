@@ -27,6 +27,7 @@ import studio.phaseshift.metatron.isa.m.space.stackSpace;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
+import studio.phaseshift.metatron.isa.m.type.Uri;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.lang.sys.router.impl.MServer;
@@ -39,13 +40,11 @@ import java.util.Set;
 
 import static studio.phaseshift.metatron.furi.fURI.NOOBJ;
 import static studio.phaseshift.metatron.furi.fURI.f;
-import static studio.phaseshift.metatron.isa.m.mInstSet.URI_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.mach.machInstSet.REWRITE_INST_TID;
 import static studio.phaseshift.metatron.isa.mach.machInstSet.ROUTER_TID;
 
 public interface Router extends Obj, Space {
@@ -144,38 +143,6 @@ public interface Router extends Obj, Space {
     fURI rewrite(final fURI furi, final boolean big);
 
     <S extends Space> S getSpace(final fURI vid);
-    
-    IOStats stats();
-
-    interface IOStats {
-
-        IOStats incrBytesRecv(final long bytes);
-
-        IOStats incrBytesSent(final long bytes);
-
-        IOStats incrRunningMonads(final long runningMonads);
-
-        IOStats incrHaltedMonads(final long haltedMonads);
-
-        IOStats incrKilledMonads(final long killedMonads);
-
-        IOStats incrBarrierMonads(final long barrierMonads);
-
-        long bytesSent();
-
-        long bytesRecv();
-
-        void resetMonads();
-
-        long runningMonads();
-
-        long haltedMonads();
-
-        long killedMonads();
-
-        long barrierMonads();
-
-    }
 
     class Helper {
         public static String routerToString(final Router router) {
@@ -208,6 +175,16 @@ public interface Router extends Obj, Space {
         @Override
         public Object sjvm() {
             return Map.of();
+        }
+
+        @Override
+        public Map<Uri, Uri> routes() {
+            return Map.of();
+        }
+
+        @Override
+        public Stats stats() {
+            return new MStats();
         }
 
         @Override
@@ -250,76 +227,7 @@ public interface Router extends Obj, Space {
             return noobjSpace.single();
         }
 
-        @Override
-        public IOStats stats() {
-            return new IOStats() {
-
-                @Override
-                public IOStats incrBytesRecv(long bytes) {
-                    return this;
-                }
-
-                @Override
-                public IOStats incrBytesSent(long bytes) {
-                    return this;
-                }
-
-                @Override
-                public IOStats incrRunningMonads(long runningMonads) {
-                    return this;
-                }
-
-                @Override
-                public IOStats incrHaltedMonads(long haltedMonads) {
-                    return this;
-                }
-
-                @Override
-                public IOStats incrKilledMonads(long killedMonads) {
-                    return this;
-                }
-
-                @Override
-                public IOStats incrBarrierMonads(long barrierMonads) {
-                    return this;
-                }
-
-                @Override
-                public long bytesSent() {
-                    return 0;
-                }
-
-                @Override
-                public long bytesRecv() {
-                    return 0;
-                }
-
-                @Override
-                public void resetMonads() {
-
-                }
-
-                @Override
-                public long runningMonads() {
-                    return 0;
-                }
-
-                @Override
-                public long haltedMonads() {
-                    return 0;
-                }
-
-                @Override
-                public long killedMonads() {
-                    return 0;
-                }
-
-                @Override
-                public long barrierMonads() {
-                    return 0;
-                }
-            };
-        }
+       
     }
 
     final class RouterType {

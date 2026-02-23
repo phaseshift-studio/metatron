@@ -84,26 +84,6 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>>, PlusMonoid.O<Rec> {
     }
 
     @Override
-    default boolean has(final Obj key) {
-        return this.jvm().containsKey(key);
-    }
-
-    @Override
-    default boolean has(final String key) {
-        return this.has(uri(key));
-    }
-
-    default Rec at(final Obj key, final Obj value, final BiFunction<Poly<?, ?>, Object, Poly<?, ?>> operation) {
-        return this.put(key, value, operation);
-    }
-
-   /* default Obj apply(final Obj lhs) {
-        if (lhs.isRec())
-            return Poly.Helper.applyRecRecursion(lhs.asRec(), this);
-        else return this;
-    }*/
-
-    @Override
     default boolean test(final Obj rhs) {
         if (Obj.Helper.isAuto(rhs))
             return true;
@@ -122,11 +102,29 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>>, PlusMonoid.O<Rec> {
             return Poly.super.test(rhs);
         }
     }
-
+    
+    default Rec at(final Obj key, final Obj value, final BiFunction<Poly<?, ?>, Object, Poly<?, ?>> operation) {
+        if (key.isUri()) {
+            final fURI k = key.uriValue();
+            if (k.segments().isEmpty())
+                return this;
+            final Map<Obj, Obj> map = new LinkedHashMap<>(this.recValue());
+            map.compute(uri(k.segments().getFirst()), (k1, v) ->
+                    k.segments().size() == 1 ?
+                            (value.isNoObj() ? null : (null != v && v.isObjs() ? v.append(value.parent(this)) : value.parent(this))) :
+                            (null != v && v.isRec() ? v.asRec() : rec()).at(k.pretract().toUri(), value.parent(this), operation));
+            return (Rec) operation.apply(this, map);
+        } else {
+            final Map<Obj, Obj> map = new LinkedHashMap<>(this.recValue());
+            map.put(key, value);
+            return (Rec) operation.apply(this, map);
+        }
+    }
+    
     @Override
-    default <O extends Obj> O at(final Obj key) {
+    default <OBJ extends Obj> OBJ at(final Obj key) {
         if (!key.isUri())
-            return (O) this.jvm().getOrDefault(key, NoObj.noobj()).autoResolve(this).parent(this);
+            return (OBJ) this.jvm().getOrDefault(key, NoObj.noobj()).autoResolve(this).parent(this);
         else {
             final boolean singleSegment = key.uriValue().pathLength() == 1;
             final String step = singleSegment ? key.uriValue().toString() : key.uriValue().segments().getFirst();
@@ -138,7 +136,7 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>>, PlusMonoid.O<Rec> {
                         this.jvm().entrySet().stream().map(e -> rel(e.getKey().autoResolve(this), e.getValue().autoResolve(this))).map(o -> o.c(c -> c.mult(this.c()))).map(o -> o.parent(this)) :
                         this.jvm().values().stream().map(obj -> obj.autoResolve(this)).map(o -> o.c(c -> c.mult(this.c()))).map(o -> o.parent(this)));
             } else if (this.jvm().containsKey(asNode)) {
-                return (O) (isBranch ?
+                return (OBJ) (isBranch ?
                         rel(asNode, this.jvm().get(asNode).autoResolve(this).parent(this)) :
                         this.jvm().get(asNode).autoResolve(this)).c(c -> c.mult(this.c())).parent(this);
             } else { // this.recValue().containsKey(uri(step))
@@ -147,39 +145,11 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>>, PlusMonoid.O<Rec> {
             }
             /// ///////////////////////////////////////////////////////////////////////////////////////////////////////
             if (singleSegment) {
-                return (O) result.parent(this);
+                return (OBJ) result.parent(this);
             } else {
                 final fURI nextKey = isBranch ? key.uriValue().pretract().asBranch() : key.uriValue().pretract();
-                return (O) objs(IteratorUtil.stream(result.iterator()).filter(Obj::isPoly).map(o -> o.parent(this).<Poly<?, ?>>as()).map(r -> r.<Poly>as().at(uri(nextKey))));
+                return (OBJ) objs(IteratorUtil.stream(result.iterator()).filter(Obj::isPoly).map(o -> o.parent(this).<Poly<?, ?>>as()).map(r -> r.<Poly>as().at(uri(nextKey))));
             }
-        }
-    }
-
-    /*if (null != this.getClass().getAnnotation(ObjReflection.class)) {
-                  final O reflectObj = ObjFieldReflection.Helper.recAt(this, step);
-                  if (!reflectObj.isNoObj())
-                      return reflectObj;
-              }*/
-    default Rec put(final Obj key, final Obj value) {
-        if (key.isNoObj()) return this;
-        return this.put(key, value, IMMUTABLE);
-    }
-
-    default Rec put(final Obj key, final Obj value, final BiFunction<Poly<?, ?>, Object, Poly<?, ?>> operation) {
-        if (key.isUri()) {
-            final fURI k = key.uriValue();
-            if (k.segments().isEmpty())
-                return this;
-            final Map<Obj, Obj> map = new LinkedHashMap<>(this.recValue());
-            map.compute(uri(k.segments().getFirst()), (k1, v) ->
-                    k.segments().size() == 1 ?
-                            (value.isNoObj() ? null : (null != v && v.isObjs() ? v.append(value.parent(this)) : value.parent(this))) :
-                            (null != v && v.isRec() ? v.asRec() : rec()).put(k.pretract().toUri(), value.parent(this), operation));
-            return (Rec) operation.apply(this, map);
-        } else {
-            final Map<Obj, Obj> map = new LinkedHashMap<>(this.recValue());
-            map.put(key, value);
-            return (Rec) operation.apply(this, map);
         }
     }
 
@@ -192,17 +162,12 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>>, PlusMonoid.O<Rec> {
         return this.jvm(newMap);
     }
 
-    default <O extends Obj> O at(final String key) {
-        return this.at(uri(key));
-    }
+   /* default Obj apply(final Obj lhs) {
+        if (lhs.isRec())
+            return Poly.Helper.applyRecRecursion(lhs.asRec(), this);
+        else return this;
+    }*/
 
-    default Rec put(final fURI key, final Obj value) {
-        return this.put(uri(key), value);
-    }
-
-    default Rec put(final String key, final Obj value) {
-        return this.put(uri(key), value);
-    }
 
     @Override
     default Rec vid(final fURI vid) {
@@ -230,7 +195,8 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>>, PlusMonoid.O<Rec> {
     final class RecType {
 
         public static Set<Inst> insts() {
-            return new LinkedHashSet<>(List.of(
+            return new LinkedHashSet<>(List.of( 
+                   // instC(AS_INST_TID.dom(REC_TID).rng(REC_TID), lst(T(REC_TID)), (lhs, inst) -> lhs.tid(inst.arg(0).vidOrTid())),
                     instC(AS_INST_TID.dom(REC_TID).rng(LST_TID), lst(T(LST_TID)), (lhs, inst) -> Poly.Helper.transformRecToLst(lhs.asRec(), inst.arg(0).tid(), fnull)),
                     // instC(AS_INST_TID.dom(REC_TID).rng(REC_TID), lst(T(REC_TID)), (lhs, inst) -> Optional.of(lhs).filter(o ->o.matches(inst.arg(0))).map(o-> o.tid(inst.arg(0).tid())).orElseThrow(() -> MTronException.of("unable to resolve %s to %s", lhs, inst.arg(0)))),
                     instC(AS_INST_TID.dom(REC_TID).rng(URI_TID), lst(URI_TYPE), (lhs, inst) -> {
@@ -265,7 +231,7 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>>, PlusMonoid.O<Rec> {
                     instC(RSHIFT_INST_TID.dom(REC_TID).rng(ALL_STAR), lst(T(ALL.maybeSome())), (lhs, inst) -> objs(inst.arg(0).orElse((Obj) uri("+")).stream().map(k -> lhs.asRec().at(k)))),
                     // instC(LSHIFT_INST_TID.dom(REC_TID).rng(ALL_STAR), lst(), (lhs, inst) -> lhs.parent()),
                     instC(PLUS_INST_TID.dom(REC_TID).rng(REC_TID), lst(T(REC_TID)), (lhs, inst) -> lhs.jvm(Stream.concat(lhs.<Rec>as().elements(), inst.arg(0).<Rec>as().elements().map(Obj::<Rel>as)).collect(Collectors.toMap(Rel::first, Rel::second, Obj::append, LinkedHashMap::new)))),
-                    instC(MPLUS_INST_TID.dom(REC_TID).rng(REC_TID), lst(T(REC_TID)), (lhs, inst) -> inst.arg(0).<Rec>as().elements().map(Obj::<Obj>as).reduce(lhs.<Rec>as(), (a, b) -> a.<Rec>as().put(((Rel) b).first(), ((Rel) b).second(), MUTABLE))),
+                    instC(MPLUS_INST_TID.dom(REC_TID).rng(REC_TID), lst(T(REC_TID)), (lhs, inst) -> inst.arg(0).<Rec>as().elements().map(Obj::<Obj>as).reduce(lhs.<Rec>as(), (a, b) -> a.<Rec>as().at(((Rel) b).first(), ((Rel) b).second(), MUTABLE))),
                     instC(SELECT_INST_TID.dom(REC_TID).rng(REC_TID.maybe()), lst(T(REC_TID)), (lhs, inst) -> selectRecRecursion(lhs.asRec(), inst.arg(0).asRec())),
                     instC(SELECT_INST_TID.dom(REC_TID).rng(ALL.maybe()), lst(T(URI_TID)), (lhs, inst) -> lhs.asRec().at(inst.arg(0))),
                     //  instC(SELECT_INST_TID.dom(REC_TID).rng(REC_TID.maybe()), lst(T(URI_TID).c(cInt.of(2,null)).asType()), (lhs, inst) -> inst.args().elements().map(u -> rel(u,lhs.asRec().at(u))).collect(new CommonUtil.RecCollector())),

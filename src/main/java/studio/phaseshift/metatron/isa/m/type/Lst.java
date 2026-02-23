@@ -92,11 +92,11 @@ public interface Lst extends Poly<Lst, List<Obj>>, PlusMonoid.O<Lst> {
                         this.jvm().size() > Integer.valueOf(key.uriValue().segments().getFirst());
     }
 
-    default <O extends Obj> Stream<O> elements() {
+    default <OBJ extends Obj> Stream<OBJ> elements() {
         return (Stream) IteratorUtil.stream(this.jvm()).map(e -> e.c(c -> c.mult(this.c())));
     }
 
-    default Lst at(final Obj key, final Obj value, final BiFunction operation) {
+    default Lst at(final Obj key, final Obj value, final BiFunction<Poly<?, ?>, Object, Poly<?, ?>> operation) {
         if (key.isInt()) {
             final ArrayList<Obj> newList = new ArrayList<>(this.lstValue());
             if (value.isNoObj())
@@ -123,34 +123,34 @@ public interface Lst extends Poly<Lst, List<Obj>>, PlusMonoid.O<Lst> {
         }
     }
 
-    default <O extends Obj> O at(final int index) {
+    default <OBJ extends Obj> OBJ at(final int index) {
         return this.at(jnt(index));
     }
 
     @Override
-    default <O extends Obj> O at(final Obj key) {
+    default <OBJ extends Obj> OBJ at(final Obj key) {
         if (key.isInt())
-            return (O) ((this.jvm().size() > key.intValue()) ? this.jvm().get(key.<Int>as().intValue().intValue()).autoResolve(this) : noobj()).parent(this);
+            return (OBJ) ((this.jvm().size() > key.intValue()) ? this.jvm().get(key.<Int>as().intValue().intValue()).autoResolve(this) : noobj()).parent(this);
         else if (key.isUri()) {
             if (key.uriValue().segments().isEmpty())
-                return (O) noobj();
+                return (OBJ) noobj();
             final String step = key.uriValue().segments().getFirst();
             Stream<Obj> result;
             if (step.equals("+") || step.equals("#")) {
                 result = this.elements();
             } else {
                 if (!CommonUtil.isInt(step))
-                    return (O) noobj();
+                    return (OBJ) noobj();
                 //throw MTronException.of("path segment is not an int: %s", step);
                 final Int k = jnt(Long.parseLong(step));
                 if (this.jvm().size() <= k.intValue().intValue())
-                    return (O) noobj();
+                    return (OBJ) noobj();
                 result = Stream.of(this.jvm().get(k.intValue().intValue()));
             }
             if (key.uriValue().segments().size() == 1) {
-                return (O) objs(result.filter(x -> !x.isNoObj()).map(e -> e.autoResolve(this).parent(this)));
+                return (OBJ) objs(result.filter(x -> !x.isNoObj()).map(e -> e.autoResolve(this).parent(this)));
             } else {
-                return (O) objs(result.filter(x -> !x.isNoObj()).map(e -> (Obj) e.autoResolve(this).parent(this)).filter(Obj::isPoly).map(r -> r.<Poly>as().at(uri(key.<Uri>as().uriValue().pretract()))));
+                return (OBJ) objs(result.filter(x -> !x.isNoObj()).map(e -> (Obj) e.autoResolve(this).parent(this)).filter(Obj::isPoly).map(r -> r.<Poly>as().at(uri(key.<Uri>as().uriValue().pretract()))));
             }
         } else {
             throw MTronException.of("unknown key for lst: %s", key);
@@ -196,7 +196,8 @@ public interface Lst extends Poly<Lst, List<Obj>>, PlusMonoid.O<Lst> {
 
         public static Set<Inst> insts() {
             return new LinkedHashSet<>(List.of(
-                    instC(AS_INST_TID.dom(LST_TID).rng(REC_TID), lst(T(REC_TID)), (lhs, inst) -> Poly.Helper.transformLstToRec(lhs.asLst(), inst.arg(0).tid(), fnull)),
+                    instC(AS_INST_TID.dom(LST_TID).rng(LST_TID), lst(LST_TYPE), (lhs, inst) -> lhs.tid(inst.arg(0).vidOrTid())), // TODO: vidOrTid -- sketchy
+                    instC(AS_INST_TID.dom(LST_TID).rng(REC_TID), lst(T(REC_TID)), (lhs, inst) -> Poly.Helper.transformLstToRec(lhs.asLst(), inst.arg(0).vidOrTid(), fnull)),
                     instC(PLUS_INST_TID.dom(LST_TID).rng(LST_TID), lst(T(LST_TID)), (lhs, inst) -> lhs.jvm(Stream.concat(lhs.elements(), inst.arg(0).elements()).toList())),
                     instC(MULT_INST_TID.dom(LST_TID).rng(LST_TID), lst(T(LST_TID)), (lhs, inst) -> lhs.jvm(lhs.elements().flatMap(a -> inst.arg(0).elements().map(b -> rel(a, b))).toList())),
                     instC(RSHIFT_INST_TID.dom(LST_TID).rng(ALL_STAR), lst(T(ALL.maybeSome())), (lhs, inst) -> objs(inst.arg(0).orElse((Obj) uri("+")).stream().map(k -> lhs.asLst().at(k)))),

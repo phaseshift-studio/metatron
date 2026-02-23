@@ -40,6 +40,6 @@ public abstract class mObjTest extends mTest {
         final Obj retrievedF = mParser.m_obj().parse(retrieved).get();
         final Obj remainingF = mParser.m_obj().parse(remaining).get();
         assertEquals(Tuple.Pair.with(retrievedF, remainingF), currentF.take(removeF.cV()));
-        Router.global().put(uri("primary"), uri("/m"));
+        Router.global().at(uri("primary"), uri("/m"));
     }
 }

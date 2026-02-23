@@ -21,7 +21,10 @@ package studio.phaseshift.metatron.isa;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.ServiceMetadata;
+import studio.phaseshift.metatron.isa.m.type.Uri;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
+import studio.phaseshift.metatron.isa.mach.type.MStats;
+import studio.phaseshift.metatron.isa.mach.type.Stats;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
@@ -35,9 +38,10 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 public abstract class AbstractSpace<SJVM> extends MRec implements Space {
 
-    protected final Map<String, String> rewrites = new LinkedHashMap<>();
+    protected final Map<Uri, Uri> routes = new LinkedHashMap<>();
     protected final fURI pattern;
     protected SJVM sjvm;
+    protected Stats ioStats;
     protected GraphittyLogger LOG;
 
     public AbstractSpace(final SJVM sjvm, final Map<Obj, Obj> config, final fURI tid, final fURI vid) {
@@ -45,20 +49,32 @@ public abstract class AbstractSpace<SJVM> extends MRec implements Space {
         ServiceMetadata.Helper.verifyClass(this.getClass(), tid);
         this.sjvm = sjvm;
         this.pattern = this.at(PATTERN).uriValue();
-        final Obj temp = config.getOrDefault(uri(REWRITE), rec());
+        this.ioStats = new MStats();
+        final Obj temp = config.getOrDefault(uri(ROUTE), rec());
         if(temp.isRec())
-            temp.asRec().jvm().forEach((key, value) -> this.rewrites.put(key.toString(), value.toString()));
+            temp.asRec().jvm().forEach((key, value) -> this.routes.put(key.asUri(), value.asUri()));
         else 
-            this.rewrites.put(temp.asRel().first().toString(), temp.asRel().second().toString());
+            this.routes.put(temp.asRel().first().asUri(),temp.asRel().second().asUri());
         LOG = Graphitty.log(this);
         if (Router.loaded() && !this.pattern.equals(f("+/#")) && !(this instanceof Router))
             Router.global().addSpace(this);
     }
+    
+    @Override
+    public Map<Uri,Uri> routes() {
+        return this.routes;
+    }
+    
+    @Override
+    public Stats stats() {
+        return this.ioStats;
+    }
+    
 
     @Override
     public fURI rewrite(final fURI furi, final boolean big) {
         final String furiString = furi.toString();
-        return this.rewrites.entrySet().stream().filter(kv -> furiString.startsWith(kv.getKey())).map(kv -> f(furiString.replaceFirst(kv.getKey(), kv.getValue()))).findFirst().orElse(furi);
+        return this.routes.entrySet().stream().filter(kv -> furiString.startsWith(kv.getKey().uriValue().toString())).map(kv -> f(furiString.replaceFirst(kv.getKey().uriValue().toString(), kv.getValue().uriValue().toString()))).findFirst().orElse(furi);
     }
 
     @Override

@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -23,7 +23,9 @@ import studio.phaseshift.metatron.isa.m.type.Lst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.isa.m.mInstSet.LST_TID;
@@ -31,7 +33,7 @@ import static studio.phaseshift.metatron.isa.m.mInstSet.LST_TID;
 public class MLst extends MObj implements Lst {
 
     public static Lst lst(final Obj... objs) {
-        return lst(new ArrayList<>(List.of(objs)), LST_TID, fURI.fnull);
+        return lst(Arrays.stream(objs).collect(Collectors.toCollection(ArrayList::new)), LST_TID, fURI.fnull);
     }
 
     public static Lst lst(final List<Obj> objs) {
@@ -42,8 +44,12 @@ public class MLst extends MObj implements Lst {
         return MObj.of(objs, tid, vid, Lst.class);
     }
 
+    public static Lst lst0() {
+        return EMPTY_LST;
+    }
+
     public static Lst lst(final Stream<Obj> objs) {
-        return lst(objs.toList());
+        return lst((List<Obj>) objs.collect(Collectors.toCollection(ArrayList::new)));
     }
 
     public MLst(final List<Obj> jvm, final fURI tid, final fURI vid) {

@@ -20,11 +20,14 @@ package studio.phaseshift.metatron.isa.web.space.http;
 
 import com.google.gson.JsonElement;
 import com.sun.net.httpserver.HttpContext;
+import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
+import org.apache.tinkerpop.shaded.kryo.io.ByteBufferInputStream;
 import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.Tokens;
+import studio.phaseshift.metatron.furi.Q;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractSpace;
 import studio.phaseshift.metatron.isa.Space;
@@ -34,6 +37,7 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.m.type.Uri;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjByteBufferSerializer;
 import studio.phaseshift.metatron.isa.web.parser.AudioTranslator;
 import studio.phaseshift.metatron.isa.web.parser.ObjHTMLSerializer;
 import studio.phaseshift.metatron.isa.web.parser.ObjJSONSerializer;
@@ -41,6 +45,8 @@ import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
 
+import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
@@ -138,7 +144,7 @@ public class httpSpace extends AbstractSpace<HttpServer> {
             .vid(HTTP_SPACE_TID)
             .constructor(instC(mInstSet.INST_TID.dom(ALL.maybe()).rng(HTTP_SPACE_TID),
                     lst(T(REC_TID, isa_(CONFIG))), (lhs, inst) -> httpSpace.of(inst.arg(0).asRec(), inst.arg(0).vid()))).create();
-    private static final ObjHTMLSerializer WEB_TRANSLATOR = new ObjHTMLSerializer();
+    private static final ObjHTMLSerializer HTML_SERIALIZER = new ObjHTMLSerializer();
     private static final ObjJSONSerializer JSON_TRANSLATOR = new ObjJSONSerializer();
     private static final AudioTranslator AUDIO_TRANSLATOR = new AudioTranslator();
 
@@ -149,26 +155,60 @@ public class httpSpace extends AbstractSpace<HttpServer> {
             this.at(ROUTE).orElse(rec()).elements().forEach(r -> {
                 final HttpContext context = server.createContext(r.first().uriValue().toString(),
                         exchange -> {
-                            //LOG.debug("using http context %s => %s => %s", exchange.getRequestURI(), exchange.getHttpContext().getPath(), r.second());
-                            Path path = Path.of(r.second().uriValue().extend(f(exchange.getRequestURI().getPath())).toString());
-                            if (!r.first().uriValue().equals(f("/")))
-                                path = Path.of(path.toString().substring(r.first().uriValue().toString().length()));
-                            LOG.debug("resolving context to absolute path: %s => %s", uri(exchange.getRequestURI().toString()), uri(path.toAbsolutePath().toString()));
-                            final Path filePath = Files.isRegularFile(path) ? path : Path.of(path + "/" + INDEX_HTML);
-                            final String contentType = exchange.getRequestURI().getPath().endsWith("mtron") ? ContentType.APPLICATION_MTRON.value : Files.probeContentType(filePath);
-                            LOG.debug("content-type: %s", contentType);
-                            exchange.getResponseHeaders().set(ContentType.VALUE, contentType == null ? ContentType.APPLICATION_OCTET_STREAM.value : contentType);
-                            exchange.sendResponseHeaders(200, Files.size(filePath));
-                            LOG.debug("sending %s [%s,%d bytes] per request from %s: %s", filePath, contentType, Files.size(filePath), exchange.getRemoteAddress(), exchange.getRequestURI());
-                            try (final InputStream is = Files.newInputStream(filePath);
-                                 final OutputStream os = exchange.getResponseBody()) {
-                                byte[] buffer = new byte[8192]; // 8KB buffer
-                                int bytesRead;
-                                while ((bytesRead = is.read(buffer)) != -1) {
-                                    os.write(buffer, 0, bytesRead);
-                                    os.flush();
+                            final fURI requestURI = r.second().uriValue().extend(f(exchange.getRequestURI().getPath()));
+                            final File base = locateBaseFile(requestURI);
+                            final Path filePath = null == base ? null : base.toPath(); //Files.isRegularFile(path) ? path : Path.of(path + "/" + INDEX_HTML);
+                            if (null != base) {
+                                LOG.debug("resolving context to absolute path: %s => %s", uri(exchange.getRequestURI().toString()), uri(filePath.toAbsolutePath().toString()));
+                               // fURI toRemove = f(filePath.toString());
+                                final fURI pretractedURI = f(exchange.getRequestURI().getPath()).removeSubpath(f(INDEX_HTML)).asRelative();
+                                LOG.info("remaining steps in request uri: %s", pretractedURI);
+                                if (pretractedURI.pathLength() == 0) {
+                                    // send the full html document
+                                    final String contentType = exchange.getRequestURI().getPath().endsWith("mtron") ?
+                                            ContentType.APPLICATION_MTRON.value :
+                                            Files.probeContentType(filePath);
+                                    exchange.getResponseHeaders().set(ContentType.VALUE, contentType == null ? ContentType.APPLICATION_OCTET_STREAM.value : contentType);
+                                    try (final InputStream input = Files.newInputStream(filePath)) {
+                                        sendResponse(ByteBuffer.wrap(input.readAllBytes()), exchange);
+                                    }
+                                } else {
+                                    // send a subset of larger html document
+                                    final String contentType = ContentType.APPLICATION_MTRON.value;
+                                    exchange.getResponseHeaders().set(ContentType.VALUE,
+                                            contentType == null ? ContentType.APPLICATION_OCTET_STREAM.value : contentType);
+                                    sendResponse(ByteBuffer.wrap(
+                                            new ObjByteBufferSerializer().write(HTML_SERIALIZER.read(
+                                                    Jsoup.parse(filePath)).asRec().at(pretractedURI)).array()), exchange);
                                 }
+                            } else {
+                                exchange.sendResponseHeaders(404, 0);
                             }
+                            /// //////////////////////////////////////////////////////////////////////////////////////
+                          /*  if (exchange.getRequestMethod().toUpperCase().equals("POST")) {
+                                LOG.info("POST request received for %s", exchange.getRequestURI());
+                                final String post = new BufferedReader(new InputStreamReader(exchange.getRequestBody())).lines().reduce("", (a, b) -> a + b + "\n");
+                                LOG.info("POST request body: %s", mParser.parse(post));
+
+                                //new ObjHTMLSerializer().read(mParser.parse(post));
+                                return;
+                            } else {
+                                //LOG.debug("using http context %s => %s => %s", exchange.getRequestURI(), exchange.getHttpContext().getPath(), r.second());
+                                final String contentType = exchange.getRequestURI().getPath().endsWith("mtron") ? ContentType.APPLICATION_MTRON.value : Files.probeContentType(filePath);
+                                LOG.debug("content-type: %s", contentType);
+                                exchange.getResponseHeaders().set(ContentType.VALUE, contentType == null ? ContentType.APPLICATION_OCTET_STREAM.value : contentType);
+                                exchange.sendResponseHeaders(200, Files.size(filePath));
+                                LOG.debug("sending %s [%s,%d bytes] per request from %s: %s", filePath, contentType, Files.size(filePath), exchange.getRemoteAddress(), exchange.getRequestURI());
+                                try (final InputStream is = Files.newInputStream(filePath);
+                                     final OutputStream os = exchange.getResponseBody()) {
+                                    byte[] buffer = new byte[8192]; // 8KB buffer
+                                    int bytesRead;
+                                    while ((bytesRead = is.read(buffer)) != -1) {
+                                        os.write(buffer, 0, bytesRead);
+                                        os.flush();
+                                    }
+                                }
+                            }*/
                         });
                 LOG.debug("http route attached: %s", rel(uri(context.getPath()), r.second()));
             });
@@ -180,6 +220,39 @@ public class httpSpace extends AbstractSpace<HttpServer> {
         } catch (final Exception e) {
             LOG.error(MTronException.of(e));
             LOG.warn("%s server not started", this);
+        }
+    }
+
+    private void sendResponse(final ByteBuffer bytes, final HttpExchange exchange) throws IOException {
+        exchange.sendResponseHeaders(200, bytes.remaining());
+        try (final InputStream is = new ByteBufferInputStream(bytes);
+             final OutputStream os = exchange.getResponseBody()) {
+            byte[] buffer = new byte[8192]; // 8KB buffer
+            int bytesRead;
+            while ((bytesRead = is.read(buffer)) != -1) {
+                os.write(buffer, 0, bytesRead);
+                os.flush();
+            }
+        } catch (final Exception e) {
+            exchange.sendResponseHeaders(500, 0);
+            throw MTronException.of(e);
+        }
+    }
+
+    private File locateBaseFile(final fURI vid) {
+        fURI temp = vid.asNode();
+        while (true) {
+            Path path = Path.of(temp.toString());
+            LOG.info("checking %s", path);
+            if (path.toFile().exists() && path.toFile().isFile())
+                return path.toFile();
+            path = Path.of(temp.extend(INDEX_HTML).toString());
+            LOG.info("checking %s", path);
+            if (path.toFile().exists() && path.toFile().isFile())
+                return path.toFile();
+            temp = temp.retract().asNode();
+            if (temp.pathLength() == 0)
+                return null;
         }
     }
 
@@ -225,11 +298,11 @@ public class httpSpace extends AbstractSpace<HttpServer> {
                         final Obj docObj = contentType.isMtron() ?
                                 mParser.parse(response.body()) :
                                 (contentType.isHtml() ?
-                                        WEB_TRANSLATOR.read(response.parse()) :
+                                        HTML_SERIALIZER.read(response.parse()) :
                                         (contentType.isJson() ?
                                                 JSON_TRANSLATOR.parse(response.body()) :
                                                 (contentType.isXml() ?
-                                                        WEB_TRANSLATOR.read(response.parse()) :
+                                                        HTML_SERIALIZER.read(response.parse()) :
                                                         (contentType.isAudio() ?
                                                                 AUDIO_TRANSLATOR.translate(response.bodyStream()) :
                                                                 str(response.body())))));
@@ -277,7 +350,12 @@ public class httpSpace extends AbstractSpace<HttpServer> {
 
     @Override
     public Obj read(final fURI vid) {
-        return Space.Helper.resolveRead(this, vid, directReader());
+        return Q.Helper.processPreRead(this.qs(), vid, vid).orElseGet(() -> {
+            Obj result = Space.Helper.resolveRead(this, vid.basePath(), directReader());
+            //return result;
+            return Q.Helper.processPostRead(this.qs(), vid, vid, result).orElse(result);
+        });
+        //return Space.Helper.resolveRead(this, vid, directReader());
     }
 
     @Override

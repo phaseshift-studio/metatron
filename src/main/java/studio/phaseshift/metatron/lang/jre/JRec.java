@@ -71,7 +71,7 @@ public class JRec extends MObj implements Rec {
     }
 
     @Override
-    public Rec put(final Obj key, final Obj value) {
+    public Rec at(final Obj key, final Obj value) {
         try {
             this.sjvm.put(key, value);
             this.findField(key).forEach(f -> MTronException.wrap(() -> f.set(this.jvm, value.jvm())));

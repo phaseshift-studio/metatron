@@ -28,8 +28,7 @@ import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.Map;
 
-import static studio.phaseshift.metatron.Tokens.PATTERN;
-import static studio.phaseshift.metatron.Tokens.REWRITE;
+import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.isa.m.mInstSet.MTRON_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.SPACE_TID;
 import static studio.phaseshift.metatron.isa.m.type.Rel.REL_TYPE;
@@ -45,7 +44,7 @@ public abstract class grphSpace<S> extends AbstractSpace<S> {
 
     public static final Rec GRPH_CONFIG = rec(
             uri(PATTERN), URI_TYPE,
-            uri(REWRITE), REL_TYPE);
+            uri(ROUTE), REC_TYPE);
     /* uri(SCHEME).maybe(), rec(
              uri(VRTX_TID), VRTX_TYPE,
              uri(EDGE_TID), EDGE_TYPE));*/

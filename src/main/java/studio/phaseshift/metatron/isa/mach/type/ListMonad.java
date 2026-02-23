@@ -47,7 +47,7 @@ public class ListMonad implements Obj {
     @Override
     public Obj append(final Obj obj) {
         this.jvm.add(obj);
-        Router.global().stats().incrRunningMonads(1L);
+        Router.global().stats().monadicStats().incrRunningMonads(1L);
         return this;
     }
 
@@ -60,7 +60,7 @@ public class ListMonad implements Obj {
     public Obj take() {
         if (this.jvm.isEmpty())
             return null;
-        Router.global().stats().incrRunningMonads(-1L);
+        Router.global().stats().monadicStats().incrRunningMonads(-1L);
         return this.jvm.removeFirst();
     } // TODO: explore removeLast() as a way of simulating chained iterators
 

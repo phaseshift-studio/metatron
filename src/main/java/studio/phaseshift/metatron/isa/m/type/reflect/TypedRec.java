@@ -38,7 +38,7 @@ public class TypedRec<A extends Obj, B extends Obj> extends MRec {
     }
 
     public TypedRec<A, B> putTyped(final A key, final B value) {
-        return (TypedRec<A, B>) super.put(key, value);
+        return (TypedRec<A, B>) super.at(key, value);
     }
 
     public B atTyped(final A key) {

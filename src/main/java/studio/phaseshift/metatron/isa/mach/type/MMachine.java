@@ -121,7 +121,7 @@ public class MMachine extends MObj implements Machine {
     @Override
     public Obj apply(final Obj lhs) {
         try {
-            Router.global().stats().resetMonads();
+            Router.global().stats().monadicStats().resetMonads();
         /*BootLoader.getExecutor().execute(() -> {
            while(!this.future.isDone()) {
              this.halted().stream().forEach(onHalt());  
@@ -150,7 +150,7 @@ public class MMachine extends MObj implements Machine {
                                     if (null == barrier)
                                         throw MTronException.of("barrier should exist: %s", n.inst());
                                     barrier.obj().append(n.obj());
-                                    Router.global().stats().incrBarrierMonads(1L);
+                                    Router.global().stats().monadicStats().incrBarrierMonads(1L);
                                 } else {
                                     this.running().append(n);
                                 }
@@ -161,7 +161,7 @@ public class MMachine extends MObj implements Machine {
                                     //this.halted().append(n.obj());
                                     // n.obj().iterator().forEachRemaining(this::processHalted);
                                     n.obj().iterator().forEachRemaining(no -> {
-                                        Router.global().stats().incrHaltedMonads(1L);
+                                        Router.global().stats().monadicStats().incrHaltedMonads(1L);
                                         this.onHalt().accept(no);
                                     });
                                 } else {
@@ -174,7 +174,7 @@ public class MMachine extends MObj implements Machine {
                                 LOG.trace("{{c}}====>{{/c}} walking undead zombie monad %s", n);
                                 this.running().append(n);
                             } else {
-                                Router.global().stats().incrKilledMonads(1L);
+                                Router.global().stats().monadicStats().incrKilledMonads(1L);
                                 LOG.trace("{{r}}====>{{/r}} killing monad %s", n);
                             }
                         }
@@ -184,7 +184,7 @@ public class MMachine extends MObj implements Machine {
                 } else if (!this.barriers().isEmpty()) {
                     final Monad barrier = this.barriers().<LinkedList<Monad>>jvmAs().poll();
                     if (null != barrier) {
-                        Router.global().stats().incrBarrierMonads(-1L);
+                        Router.global().stats().monadicStats().incrBarrierMonads(-1L);
                         LOG.trace("   {{m}}=|{{/m}} processing barrier monad %s", barrier);
                         final Obj result = barrier.inst().apply(barrier.obj());
                         final Inst nextInst = code.nextInst(barrier.inst());
@@ -194,7 +194,7 @@ public class MMachine extends MObj implements Machine {
                             if (null == nextBarrier)
                                 throw MTronException.of("barrier should exist: %s", nextInst);
                             nextBarrier.obj().append(result);
-                            Router.global().stats().incrBarrierMonads(1L);
+                            Router.global().stats().monadicStats().incrBarrierMonads(1L);
                         } else if (nextInst.isBatching()) {
                             this.running().append(MMonad.of(result, nextInst));
                         } else { // barrier-to-other requires an unrolling of result set

@@ -127,7 +127,7 @@ public class haosSpace extends mqttSpace {
             if (!value.asRec().has("command_topic") && value.asRec().has("friendly_name") && this.has("command_topic")) {
                 try {
                     LOG.info("applying entity to command topic generator %s", this.at("command_topic"));
-                    value.asRec().put(uri("command_topic"), this.jvm().get(uri("command_topic")).apply(value.asRec()), MUTABLE);
+                    value.asRec().at(uri("command_topic"), this.jvm().get(uri("command_topic")).apply(value.asRec()), MUTABLE);
                 } catch (final Exception e) {
                     LOG.error("unable to generate command topic for %s: %s", vid, e);
                 }

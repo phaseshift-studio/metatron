@@ -44,34 +44,34 @@ print("{{y}}supported scripting environments:\n{{X}}", *<boot/script>.else(boot/
         rewrite  => (</b/cluster>=></shared>),
         peers    => !*boot/peers]@/sys/space/meta2;
  http::[host     => <http://localhost:8777>,
-         pattern => http://#,
-         route   => [/     => examples/www,
+        pattern  => http://#,
+        route    => [/     => examples/www,
                      /docs => target/docs ]]@/sys/space/www;
   tp3::[pattern  => /h/#,
-        rewrite  => (</h/+/>=><>),
+        route  =>   [</h/+/>=><>],
         native   => [factory  => mfactory::[=>],
                      load     => grateful]]@/sys/space/grateful;                    
   tp3::[pattern  => /g/#,
-        rewrite  => (</g/+/>=><>),
+        route    => [</g/+/>=><>],
         native   => [factory  => mfactory::[=>],
                      load     => modern]]@/sys/space/modern;
   mqtt::[pattern => <mtron:#>,
          host    => !*boot/args/mqtt/broker,
-         rewrite => <mtron:>=><metatron/>]@/sys/space/mqtt/metatron;
+         route   => [mtron:=>metatron/]]@/sys/space/mqtt/metatron;
   mqtt::[pattern    => <z2m:#>,
          host       => !*boot/args/mqtt/broker,
          serializer => !*</m/mach/io/serializer/json/simple>,
-         rewrite    => <z2m:>=><zigbee2mqtt/>]@/sys/space/mqtt/zigbee2mqtt;
+         route      => [z2m:=>zigbee2mqtt/]]@/sys/space/mqtt/zigbee2mqtt;
   haos::[pattern       => <ha:#>,
          host          => !*boot/args/mqtt/broker,
          serializer    => !*</m/mach/io/serializer/json/simple>,
          command_topic => inst?uri<=rec(){ to(a).map(z2m:).mult(*a../friendly_name).mult(set/state) },
-         rewrite       => <ha:>=><homeassistant/>]@/sys/space/mqtt/homeassistant;
-     fs::[pattern => <file:#>,
-          rewrite => <file:>=><~/>,
+         route         => [ha:=>homeassistant/]]@/sys/space/mqtt/homeassistant;
+    fs::[pattern => <file:#>,
+          route   => [file:=><~/>],
           script  => !*boot/script]@/sys/space/fs;
  serial::[pattern => <serial:#>,
-          rewrite => <serial:>=><>]@/sys/space/serial;
+          route   => [serial:=><>]]@/sys/space/serial;
  ollama::[host    => <http://localhost:11434>, 
           model   => |load()]@/usr/ai/ollama;
 [== load user console ==]

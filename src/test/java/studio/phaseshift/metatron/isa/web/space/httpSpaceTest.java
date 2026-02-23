@@ -62,6 +62,7 @@ public class httpSpaceTest extends SpaceTest {
 
     @Test
     public void testServerSideRecursion() {
+        assertNotEquals(noobj(), Router.readFromSpace("http://localhost:8777/#/"));
         assertNotEquals(noobj(), Router.readFromSpace("http://localhost:8777/index.html"));
         assertEquals(str("a1.b1.c1.text"), Router.readFromSpace("http://localhost:8777/index.html/html/body/a/b/c/text"));
         //assertEquals(str("a1.b1.c1.text"), Router.readFromSpace("http://localhost:8777/index.html/html/body/a/+/+/text"));

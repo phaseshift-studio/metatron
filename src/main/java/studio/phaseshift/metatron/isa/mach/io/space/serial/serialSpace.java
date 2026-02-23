@@ -68,10 +68,9 @@ public class serialSpace extends AbstractSpace<SerialPort[]> {
             .vid(SERIAL_SPACE_TID)
             .constructor(
                     instC(INST_TID.dom(ALL.maybe()).rng(SERIAL_SPACE_TID),
-                            lst(isa_(SPACE_CONFIG.plus(rec(uri(Tokens.REWRITE), REL_TYPE))).tryToInst()),
+                            lst(isa_(SPACE_CONFIG.plus(rec(uri(Tokens.ROUTE), REC_TYPE))).tryToInst()),
                             (lhs, inst) -> serialSpace.of(inst.arg(0).asRec(), inst.arg(0).vid()))).create();
-
-    private final Tuple.Pair<String, String> rewrite;
+    
     private final Map<String, Tuple.Pair<SerialPort, ByteArrayOutputStream>> buffers = new HashMap<>();
     protected static final byte[] CARRIAGE_RETURN = {(byte) 0x0D}; // Carriage return (CR)
 
@@ -81,9 +80,6 @@ public class serialSpace extends AbstractSpace<SerialPort[]> {
 
     protected serialSpace(final SerialPort[] ports, final Map<Obj, Obj> config, final fURI vid) {
         super(ports, config, SERIAL_SPACE_TID, vid);
-        final Rel rewrite = this.at(uri(Tokens.REWRITE)).orElse(rel(uri(""), uri(""))).asRel();
-        LOG.debug("rewrite: %s", rewrite);
-        this.rewrite = Tuple.Pair.with(rewrite.first().uriValue().toString(), rewrite.second().uriValue().toString());
     }
 
     protected String getPortMetadata(final SerialPort port) {

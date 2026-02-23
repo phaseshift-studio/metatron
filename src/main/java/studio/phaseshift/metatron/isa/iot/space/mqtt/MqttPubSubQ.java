@@ -30,6 +30,7 @@ import java.nio.ByteBuffer;
 import java.util.Optional;
 
 import static studio.phaseshift.metatron.Tokens.SUB;
+import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 
 /*
@@ -60,14 +61,14 @@ public class MqttPubSubQ extends PubSubQ {
                 if (obj.isNoObj()) {
                     space.sjvm().toAsync()
                             .unsubscribeWith()
-                            .topicFilter(Space.Helper.toNativeSpace(vid.basePath(), space.rewrite))
+                            .topicFilter(Space.Helper.toNativeSpace(vid.basePath(), space.routes()).toString())
                             .send()
                             .whenComplete((m, e) -> {
                                 if (null != e) {
-                                    Router.global().stats().incrBytesRecv(e.toString().length());
+                                    Router.global().stats().ioStats().incrBytesRecv(e.toString().length());
                                     LOG.error(e);
                                 } else {
-                                    Router.global().stats().incrBytesRecv(m.toString().length());
+                                    Router.global().stats().ioStats().incrBytesRecv(m.toString().length());
                                     // super.qlessWrite(source, vid, noobj());
                                     // space.cache.write(vid, noobj());
                                     // subscriptions = subscriptions.stream().filter(x -> !x.<Subscription>as().target().bimatches(vid.qLess())).reduce(noobj(), (a, b) -> a.append(b));
@@ -77,13 +78,13 @@ public class MqttPubSubQ extends PubSubQ {
                 } else {
                     space.sjvm().toAsync()
                             .subscribeWith()
-                            .topicFilter(Space.Helper.toNativeSpace(vid.basePath(), space.rewrite))
+                            .topicFilter(Space.Helper.toNativeSpace(vid.basePath(), space.routes()).toString())
                             .callback(p -> {
                                 LOG.trace("received %s", p);
-                                final fURI topic = Space.Helper.fromNativeSpace(p.getTopic().toString(), space.rewrite);
+                                final fURI topic = Space.Helper.fromNativeSpace(f(p.getTopic().toString()), space.routes());
                                 Obj o;
                                 if (p.getPayload().isPresent()) {
-                                    Router.global().stats().incrBytesRecv(p.toString().length());
+                                    Router.global().stats().ioStats().incrBytesRecv(p.toString().length());
                                     o = space.serializer.inputBytes(ByteBuffer.wrap(p.getPayloadAsBytes()));
                                 } else
                                     o = noobj();

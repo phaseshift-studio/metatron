@@ -89,38 +89,38 @@ public class EntityBuilder {
 
     public EntityBuilder name(final String name) {
         final String fixedName = name.replace(' ', '_').toLowerCase();
-        this.settings.put(uri("name"), uri(fixedName), MUTABLE);
-        this.settings.put(uri("stat_t"), uri(this.haosPrefix.extend("state").extend(fixedName)), MUTABLE);
+        this.settings.at(uri("name"), uri(fixedName), MUTABLE);
+        this.settings.at(uri("stat_t"), uri(this.haosPrefix.extend("state").extend(fixedName)), MUTABLE);
         return this;
     }
 
     public EntityBuilder commandTopic(final fURI commandTopic) {
-        this.settings.put(uri("cmd_t"), uri(commandTopic), MUTABLE);
+        this.settings.at(uri("cmd_t"), uri(commandTopic), MUTABLE);
         return this;
     }
 
     public EntityBuilder payloadOn(final Obj payload) {
-        this.settings.put(uri("payload_on"), payload, MUTABLE);
+        this.settings.at(uri("payload_on"), payload, MUTABLE);
         return this;
     }
 
     public EntityBuilder payloadOff(final Obj payload) {
-        this.settings.put(uri("payload_off"), payload, MUTABLE);
+        this.settings.at(uri("payload_off"), payload, MUTABLE);
         return this;
     }
 
     public EntityBuilder diagnostic() {
-        this.settings.put(uri("entity_category"), uri("diagnostic"), MUTABLE);
+        this.settings.at(uri("entity_category"), uri("diagnostic"), MUTABLE);
         return this;
     }
 
     public EntityBuilder config() {
-        this.settings.put(uri("entity_category"), uri("config"), MUTABLE);
+        this.settings.at(uri("entity_category"), uri("config"), MUTABLE);
         return this;
     }
 
     public EntityBuilder enabled(final boolean enabled) {
-        this.settings.put(uri("enabled"), bool(enabled), MUTABLE);
+        this.settings.at(uri("enabled"), bool(enabled), MUTABLE);
         return this;
     }
 
@@ -135,33 +135,33 @@ public class EntityBuilder {
     }
 
     public EntityBuilder mode(final String mode) {
-        this.settings.put(uri("mode"), uri(mode), MUTABLE);
+        this.settings.at(uri("mode"), uri(mode), MUTABLE);
         return this;
     }
 
     public EntityBuilder icon(final String icon) {
-        this.settings.put(uri("icon"), uri(icon), MUTABLE);
+        this.settings.at(uri("icon"), uri(icon), MUTABLE);
         return this;
     }
 
     public EntityBuilder minMax(final int minimum, final int maximum) {
-        this.settings.put(uri("min"), jnt(minimum), MUTABLE);
-        this.settings.put(uri("max"), jnt(maximum), MUTABLE);
+        this.settings.at(uri("min"), jnt(minimum), MUTABLE);
+        this.settings.at(uri("max"), jnt(maximum), MUTABLE);
         return this;
     }
 
     public EntityBuilder unitOfMeasurement(final String uofm) {
-        this.settings.put(uri("unit_of_measurement"), uri(uofm), MUTABLE);
+        this.settings.at(uri("unit_of_measurement"), uri(uofm), MUTABLE);
         return this;
     }
 
     public EntityBuilder deviceClass(final String dc) {
-        this.settings.put(uri("device_class"), uri(dc), MUTABLE);
+        this.settings.at(uri("device_class"), uri(dc), MUTABLE);
         return this;
     }
 
     public EntityBuilder optimistic(final boolean optimistic) {
-        this.settings.put(uri("optimistic"), bool(optimistic), MUTABLE);
+        this.settings.at(uri("optimistic"), bool(optimistic), MUTABLE);
         return this;
     }
 

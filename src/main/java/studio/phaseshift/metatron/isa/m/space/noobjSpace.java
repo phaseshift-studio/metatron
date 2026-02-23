@@ -21,6 +21,8 @@ package studio.phaseshift.metatron.isa.m.space;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.type.*;
+import studio.phaseshift.metatron.isa.mach.type.MStats;
+import studio.phaseshift.metatron.isa.mach.type.Stats;
 
 import java.util.Map;
 import java.util.Set;
@@ -47,12 +49,22 @@ public final class noobjSpace implements Space, InstSet {
     }
 
     @Override
+    public Map<Uri, Uri> routes() {
+        return Map.of();
+    }
+
+    @Override
+    public Stats stats() {
+        return new MStats();
+    }
+
+    @Override
     public Map<Obj, Obj> jvm() {
         return Map.of();
     }
 
     @Override
-    public Rec put(Obj key, Obj value) {
+    public Rec at(Obj key, Obj value) {
         return this;
     }
 
