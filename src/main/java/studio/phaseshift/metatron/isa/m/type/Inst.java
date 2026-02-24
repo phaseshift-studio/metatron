@@ -249,6 +249,10 @@ public interface Inst extends Call {
             /// //////////////////////////////////////////////////
             LOG.debug("fetched insts: %s => %s", this.tid().basePath(), fetched);
             final Inst resolved = fetched.stream()
+                   // .sorted(Comparator.comparing(i -> 
+                    //        i.tid().dom().isGeneric() || 
+                    //                i.tid().rng().isGeneric() ||
+                     //               i.tid().dom().basePath().equals(ALL) ? 1 :  -1)) // TODO: can this be memoized?
                     //.map(i -> i.isCode() ? i.asCode().tryToInst() : i)
                     //.map(i -> i.isInst() ? i.asInst() : instC(this.tid().dom(lhs.tid()).rng(ALL.maybeSome()), this.args(), (lhs2, inst) -> Router.global().write(this.tid(), inst.args())))
                     .filter(Obj::isInst)

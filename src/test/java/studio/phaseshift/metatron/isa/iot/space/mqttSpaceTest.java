@@ -20,7 +20,6 @@ package studio.phaseshift.metatron.isa.iot.space;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.BootLoader;
@@ -31,17 +30,14 @@ import studio.phaseshift.metatron.isa.iot.MoquetteServer;
 import studio.phaseshift.metatron.isa.iot.space.mqtt.mqttSpace;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.mTest;
 import studio.phaseshift.metatron.util.MTronException;
-
-import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static studio.phaseshift.metatron.Tokens.*;
-import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.furi.q.PubSubQ.SUBSCRIPTION_TID;
 import static studio.phaseshift.metatron.isa.iot.iotInstSet.IOT_ISA_TID;
-import static studio.phaseshift.metatron.isa.iot.space.mqtt.mqttSpace.MQTT_SPACE_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
@@ -51,37 +47,39 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public class mqttSpaceTest extends SpaceTest {
+    private static final int PORT = mTest.RANDOM.nextInt(65535);
 
     public mqttSpaceTest() {
         super(() -> {
             try {
-                final Obj space = mqttSpace.of(rec(
-                        uri(HOST), uri("mqtt://127.0.0.1:1882"),
+                return mqttSpace.of(rec(
+                        uri(HOST), uri("mqtt://127.0.0.1:" + PORT),
                         uri(PATTERN), uri("/t/#"),
                         uri(REWRITE), rel(uri("/t"), uri("/t"))), fURI.of("/sys/router/space/t"));
-                System.out.println(space);
                 //space.directWriter().apply(f("#"), noobj());
-                return space.as();
             } catch (Exception e) {
                 throw MTronException.of(e);
             }
         });
         BootLoader.loadInstSetProvider(IOT_ISA_TID);
     }
-    
+
     @Override
     public void testMonoReadWrite(final String writeExpression, final String readExpression, final String expectedExpression) {
         LOG.warn("ignoring testMonoReadWrite: %s => %s => %s", writeExpression, readExpression, expectedExpression);
     }
-    
+
     @BeforeAll
     public static void setupAll() {
-        MoquetteServer.run();
+        mTest.begin();
+        MoquetteServer.run(PORT);
     }
 
     @AfterAll
     public static void stopAll() {
+        MoquetteServer.clear();
         MoquetteServer.stop();
+        mTest.end();
     }
 
     @ParameterizedTest

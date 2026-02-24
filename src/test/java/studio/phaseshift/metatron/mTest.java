@@ -47,12 +47,13 @@ import static studio.phaseshift.metatron.isa.mach.io.ioInstSet.IO_ISA_TID;
 
 public abstract class mTest {
 
-    private static final Random RANDOM = new Random();
+    protected static final Random RANDOM = new Random();
     protected GraphittyLogger LOG = Graphitty.log(this);
 
     @BeforeAll
     public static void begin() {
         BootLoader.BOOTING = true;
+        BootLoader.TESTING = true;
         BootLoader.load(rec(uri("host"), uri("ws://localhost:" + RANDOM.nextInt(65535)), uri("log"), uri(LogObj.getSLF4J().toString().toLowerCase())));
         BootLoader.loadInstSetProvider(IO_ISA_TID);
     }

@@ -29,6 +29,7 @@ import studio.phaseshift.metatron.isa.SpaceTest;
 import studio.phaseshift.metatron.isa.iot.MoquetteServer;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.mTest;
 import studio.phaseshift.metatron.util.MTronException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -47,15 +48,16 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  */
 public class miotSpaceTest extends SpaceTest {
 
+    private static final int PORT = mTest.RANDOM.nextInt(65535);
+
     public miotSpaceTest() {
         super(() -> {
             try {
-                final Obj space = miotSpace.of(rec(
-                        uri(HOST), uri("mqtt://127.0.0.1:1882"),
+                return miotSpace.of(rec(
+                        uri(HOST), uri("mqtt://127.0.0.1:" + PORT),
                         uri(PATTERN), uri("/t/#"),
                         uri(REWRITE), rel(uri("/t"), uri("/t"))), fURI.of("/sys/router/space/t"));
                 //space.directWriter().apply(f("#"), noobj());
-                return space.as();
             } catch (Exception e) {
                 throw MTronException.of(e);
             }
@@ -68,15 +70,18 @@ public class miotSpaceTest extends SpaceTest {
     public void testMonoReadWrite(final String writeExpression, final String readExpression, final String expectedExpression) {
         LOG.warn("ignoring testMonoReadWrite: %s => %s => %s", writeExpression, readExpression, expectedExpression);
     }
-    
+
     @BeforeAll
     public static void setupAll() {
-        MoquetteServer.run();
+        mTest.begin();
+        MoquetteServer.run(PORT);
     }
 
     @AfterAll
     public static void stopAll() {
+        MoquetteServer.clear();
         MoquetteServer.stop();
+        mTest.end();
     }
 
     @ParameterizedTest

@@ -27,6 +27,8 @@ import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.MObjs;
+import studio.phaseshift.metatron.isa.m.type.impl.MUri;
+import studio.phaseshift.metatron.isa.mach.machInstSet;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.console.Highlighter;
 import studio.phaseshift.metatron.util.IteratorUtil;
@@ -117,7 +119,7 @@ public class fsSpace extends AbstractSpace<FileSystem> {
     public static File resolveFile(final Obj fileObj) {
         try {
             final fsSpace space = Router.global().getSpace(fileObj.uriValue().basePath()).as();
-            return Paths.get(Space.Helper.toNativeSpace(fileObj.uriValue().basePath(), space.routes).toString()).toFile();
+            return Paths.get(Space.Helper.toNativeSpace(fileObj.uriValue().basePath(), space.routes).basePath().toString()).toFile();
         } catch (final Exception e) {
             throw MTronException.of(e);
         }
@@ -125,9 +127,9 @@ public class fsSpace extends AbstractSpace<FileSystem> {
 
     public Obj resolveObj(final Uri path) {
         try {
-            final File file = Paths.get(path.uriValue().toString()).toFile();
+            final File file = Paths.get(path.uriValue().basePath().toString()).toFile();
             final fsSpace space = Router.global().getSpace(Space.Helper.fromNativeSpace(f(file.getPath()), this.routes)).as();
-            return uri(Space.Helper.fromNativeSpace(f(file.getPath()), space.routes), FILE_TID, null);
+            return MUri.uri(Space.Helper.fromNativeSpace(fURI.f(file.getPath()), space.routes), machInstSet.FILE_TID, null);
         } catch (final Exception e) {
             throw MTronException.of(e);
         }
@@ -179,7 +181,7 @@ public class fsSpace extends AbstractSpace<FileSystem> {
                                             throw MTronException.of("file permissions prevent execution of %s", toExec);
                                         return this.internalApply(toExec, inst.args());
                                     }) :
-                                    resolveObj(makeFile(vidPath))));
+                                    this.resolveObj(makeFile(vidPath))));
                         }
                     } catch (final NoSuchFileException e) {
                         LOG.warn("no such file: %s", key);

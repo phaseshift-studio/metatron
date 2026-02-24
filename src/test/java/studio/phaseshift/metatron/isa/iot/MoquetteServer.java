@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -41,9 +41,13 @@ public final class MoquetteServer {
     }
 
     public static void run() {
+        run(1882);
+    }
+
+    public static void run(final int port) {
         try {
             mqttBroker = new Server();
-            mqttBroker = mqttBroker.withConfig().disablePersistence().port(1882).startServer();
+            mqttBroker = mqttBroker.withConfig().disablePersistence().disableTelemetry().port(port).startServer();
             Router.global().logger().info("mqtt broker started press [CTRL+C] to stop");
         } catch (final Exception e) {
             throw MTronException.of(e);

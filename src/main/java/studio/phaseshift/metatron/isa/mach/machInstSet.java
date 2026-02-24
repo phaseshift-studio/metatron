@@ -22,6 +22,7 @@ import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.algebra.MultMonoid;
 import studio.phaseshift.metatron.algebra.PlusMonoid;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.space.noobjSpace;
 import studio.phaseshift.metatron.isa.m.type.Inst;
@@ -51,6 +52,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.furi.fURI.ALL;
+import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.furi.q.DocQ.DOCQ_TYPE;
 import static studio.phaseshift.metatron.furi.q.DocQ.DOC_TYPE;
 import static studio.phaseshift.metatron.furi.q.DocQ.Doc.docWrap;
@@ -66,11 +68,13 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjFactory.M_FACTORY_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.mach.io.space.file.fsSpace.FS_SPACE_TYPE;
+import static studio.phaseshift.metatron.isa.mach.io.space.file.fsSpace.makeFile;
 import static studio.phaseshift.metatron.isa.mach.io.space.serial.serialSpace.SERIAL_SPACE_TYPE;
 import static studio.phaseshift.metatron.isa.mach.type.console.Console.CONSOLE_TYPE;
 
@@ -118,7 +122,7 @@ public class machInstSet extends AbstractInstSet {
             .vid(FILE_TID)
             .constructor(instC(INST_TID.dom(ALL.maybe()).rng(FILE_TID),
                     lst(T(URI_TID)),
-                    (lhs, inst) -> fsSpace.makeFile(Path.of(inst.arg(0).uriValue().toString())))).create();
+                    (lhs, inst) -> makeFile(Path.of(inst.arg(0).uriValue().basePath().toString())))).create();
     public static final Type IMAGE_FILE_TYPE = Type.Builder.build()
             .tid(FILE_TID)
             .vid(IMAGE_TID).create();
@@ -190,16 +194,32 @@ public class machInstSet extends AbstractInstSet {
                     return noobj();
                 }), "an str to page", "noobj terminal", Map.of(jnt(0), "number of lines per page"), "an f(x)->0 terminal page through the lines of an str"),
                 /// /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-                instC(AS_INST_TID.dom(URI_TID).rng(FILE_TID), lst(T(FILE_TID)), (lhs, inst) -> fsSpace.makeFile(Path.of(lhs.uriValue().toString()))),
+                instC(RSHIFT_INST_TID.dom(FILE_TID).rng(FILE_TID.maybeSome()), lst(isa_(URI_TYPE).else_(uri("#"))), (lhs, inst) -> {
+                    final File file = fsSpace.resolveFile(lhs);
+                    if (file.isDirectory()) {
+                        if (f(file.getName()).test(inst.arg(0).orElse(uri("#")).uriValue())) { // TODO: need to recurse on name if it has path segments
+                            if (null == file.listFiles()) return noobj();
+                            final fsSpace space = Router.global().getSpace(lhs.uriValue());
+                            return objs(Arrays.stream(Objects.requireNonNull(file.listFiles()))
+                                    //.peek(ff -> LOG.info("reading file %s", f(f(ff.getName()).name())))
+                                    .map(ff -> uri(Space.Helper.fromNativeSpace(makeFile(ff.toPath()).uriValue().qLess(), space.routes()), FILE_TID)));
+                        }
+                    }
+                    return noobj();
+                }),
+                instC(AS_INST_TID.dom(URI_TID).rng(FILE_TID), lst(T(FILE_TID)), (lhs, inst) -> makeFile(Path.of(lhs.uriValue().toString()))),
                 instC(AS_INST_TID.dom(BYTES_TID).rng(IMAGE_TID), lst(T(IMAGE_TID), else_(real(1.0d))),
                         (lhs, inst) -> str(ImageUtil.convertToAscii(lhs.bytesValue(), inst.arg(1).realValue())).tid(IMAGE_TID)),
-                instC(AS_INST_TID.dom(URI_TID).rng(FILE_TID), lst(T(FILE_TID)), (lhs, inst) -> fsSpace.makeFile(Path.of(lhs.uriValue().toString())).vid(lhs.vid())),
+                instC(AS_INST_TID.dom(URI_TID).rng(FILE_TID), lst(T(FILE_TID)), (lhs, inst) -> makeFile(Path.of(lhs.uriValue().toString())).vid(lhs.vid())),
                 instC(AS_INST_TID.dom(FILE_TID).rng(BYTES_TID), lst(T(BYTES_TID)), (lhs, inst) -> {
                     try {
                         final File file = fsSpace.resolveFile(lhs);
-                        final byte[] data = new byte[(int) file.length()];
+                        LOG.debug("translating file to bytes: %s", file);
+                        final byte[] data;
                         try (final FileInputStream fis = new FileInputStream(file)) {
-                            fis.read(data);
+                            data = fis.readAllBytes();
+                        } catch (final IOException e) {
+                            throw MTronException.of(e);
                         }
                         return bytes(ByteBuffer.wrap(data));
                     } catch (final Exception e) {

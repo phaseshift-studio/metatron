@@ -61,6 +61,7 @@ public class BootLoader implements Rec, Feature.SelfClone {
     /// the global variables that must be gc()'d on close
     /// ////////////////////////////////////////////////////////////////////////
     public static boolean BOOTING = true;
+    public static boolean TESTING = false;
     private static final GraphittyLogger LOG;
     public static Router ROUTER;
     public static Rec ARGS;

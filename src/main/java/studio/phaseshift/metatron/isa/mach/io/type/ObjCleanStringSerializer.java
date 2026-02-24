@@ -19,6 +19,7 @@
 package studio.phaseshift.metatron.isa.mach.io.type;
 
 
+import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.type.*;
@@ -310,20 +311,19 @@ public class ObjCleanStringSerializer extends AbstractObjSerializer<String> {
         return handleVID(sb, rec);
     }
 
-    public static final int CLIP_LENGTH = 40;
+    public static final int CLIP_LENGTH = BootLoader.TESTING ? Integer.MAX_VALUE : 40;
 
     private StringBuilder writeClip(final StringBuilder sb, final Obj obj) {
-        if (true)
-            return sb.append(write(obj));
         if (obj.isStr() && obj.strValue().length() > CLIP_LENGTH) {
             sb.append(write(str(obj.strValue().substring(0, CLIP_LENGTH - 1))));
-            sb.append("...'");
+            sb.append("...");
         } else if (obj.isBytes() && obj.bytesValue().capacity() > CLIP_LENGTH) {
             byte[] bb = Arrays.copyOf(obj.bytesValue().array(), CLIP_LENGTH - 1);
             sb.append(write(bytes(ByteBuffer.wrap(bb))));
             sb.append("...");
-        } else
+        } else {
             sb.append(write(obj));
+        }
         return sb;
     }
 
