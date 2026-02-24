@@ -593,6 +593,8 @@ public class TypeTest extends mTest {
             "immortal -> being::T[?[alias=>str{2,3}::T]]",
             "team     -> rec::T[?[flag=>str::T.-<''>-.count().?=2, member=>being{+}::T]]"})
     @CsvSource(value = {
+            "[age=>2]                                                            % rec::T                % true",
+            "[age=>2]                                                            % lst::T                % false",
             "[age=>2]                                                            % being::T              % true",
             "[age=>'2']                                                          % being::T              % false",
             "[name=>'marko',age=>29]                                             % person::T             % true",
@@ -605,6 +607,7 @@ public class TypeTest extends mTest {
             "[name=>'marko',age=>120,alias=>{'m','mar','mr'}]                    % immortal::T           % true",
             "[name=>'marko',age=>120,alias=>{'m','mar','mr','mmm'}]              % immortal::T           % false",
             "[name=>'marko',age=>29,alias=>{'m','mar','mr','mmm'}]               % person::T             % true",
+            "[name=>'marko',age=>29,alias=>{'m','mar','mr','mmm'}]               % rec::T             % true",
             "[flag=>'us',member=>{}]                                             % team::T               % false",
             "[flag=>'us',member=>{being::[age=>29],being::[age=>34]}]            % team::T               % true",
             "[flag=>'us',member=>{being::[age=>29],mortal::[age=>134]}]          % team::T               % false",
@@ -618,7 +621,7 @@ public class TypeTest extends mTest {
             "[flag=>'mx',member=>{[age=>12],[age=>13]}]                          % team::T               % true",
     }, delimiter = '%')
     public void testComplexTypes(final String instance, final String type, final boolean matches) {
-        LOG.warn("testing %s %s %s", instance, matches ? "{{g}}matches{{/g}}" : "{{r}}doesn't match{{/r}}", type);
+        LOG.debug("testing %s %s %s", instance, matches ? "{{g}}matches{{/g}}" : "{{r}}doesn't match{{/r}}", type);
         try {
             final Obj instanceObj = mParser.parse(instance);
             final Obj typeObj = mParser.parse(type);
@@ -639,7 +642,7 @@ public class TypeTest extends mTest {
                 }
             }
         } catch (Exception e) {
-            LOG.error(e);
+            //LOG.error(e); // match through exception (not the best way to do things, but for now...)
             assertFalse(matches);
         }
     }

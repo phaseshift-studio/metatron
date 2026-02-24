@@ -153,7 +153,7 @@ public class fsSpace extends AbstractSpace<FileSystem> {
                 if (key.hasPattern()) {
                     try (final Stream<Path> walk = Files.walk(Path.of(Space.Helper.toNativeSpace(key.retractPattern(), this.routes).toString()), vid.hasPattern() ? Integer.MAX_VALUE : vid.segments().size() + 1, FileVisitOption.FOLLOW_LINKS)) {
                         return walk
-                                .filter(p -> Space.Helper.fromNativeSpace(f(p.toString()), this.routes).matches(key))
+                                .filter(p -> Space.Helper.fromNativeSpace(f(p.toString()), this.routes).test(key))
                                 .map(fsSpace::makeFile)
                                 .map(this::resolveObj)
                                 .collect(Collectors.toMap(p -> p, p -> p, Obj::append, LinkedHashMap::new))

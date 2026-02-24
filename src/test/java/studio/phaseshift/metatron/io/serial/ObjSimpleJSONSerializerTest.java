@@ -20,6 +20,7 @@ package studio.phaseshift.metatron.io.serial;
 
 import com.google.gson.JsonElement;
 import studio.phaseshift.metatron.SerializerTest;
+import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjSimpleJSONSerializer;
@@ -34,15 +35,11 @@ public class ObjSimpleJSONSerializerTest extends SerializerTest<JsonElement> {
 
     public boolean ignoreFail(final String toSerialize) {
         final Obj obj = mParser.parse(toSerialize);
-        if(obj.isNoObj())
-            return false;
-        if (!obj.c().isOne())
+        if(!obj.c().within(cInt.MAYBE()))
             return true;
-        //if(obj.isUri() && !obj.uriValue().toString().trim().isEmpty() && toSerialize.startsWith("<") && toSerialize.endsWith(">"))
-          //  return false;
-        return obj.isObjs() ||
+        return !obj.isNoObj() && (obj.isObjs() ||
                 (obj.isLst() && !obj.asLst().isEmpty()) ||
-                (obj.isUri() && obj.uriValue().toString().trim().isEmpty());
+                (obj.isUri() && obj.uriValue().toString().trim().isEmpty()));
     }
 
 }

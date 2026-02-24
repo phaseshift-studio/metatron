@@ -63,24 +63,24 @@ public abstract class AbstractInstSet extends AbstractSpace<Map<fURI, Set<? exte
             /// //////////////////////////////////////////////////////////////////////////////////////////////
             this.types().forEach(t -> {
                 if (null != t.vid()) {
-                    if (t.vid().matches(this.pattern)) this.write(t.vid(), t);
+                    if (t.vid().test(this.pattern)) this.write(t.vid(), t);
                     else Router.writeToSpace(t.vid(), t);
                 } else if (null != t.tid()) {
-                    if (t.tid().matches(this.pattern)) this.write(t.tid(), t);
+                    if (t.tid().test(this.pattern)) this.write(t.tid(), t);
                     else Router.writeToSpace(t.tid(), t);
                 }
             });
             Router.writeToSpace(NOOBJ_TID, NOOBJ_TYPE); // every inst set must have a noobj so it can operate independently of /m/inst
             this.consts().forEach(c -> {
-                if (c.vid().matches(this.pattern)) this.write(c.vid(), c.vid(null));
+                if (c.vid().test(this.pattern)) this.write(c.vid(), c.vid(null));
                 else Router.writeToSpace(c.vid(), c.vid(null));
             });
             this.insts().forEach(i -> {
-                if (i.tid().matches(this.pattern)) this.write(i.tid(), i);
+                if (i.tid().test(this.pattern)) this.write(i.tid(), i);
                 else Router.writeToSpace(i.tid(), i);
             });
             this.rewrites().forEach(r -> {
-                if (r.tid().matches(this.pattern)) this.write(r.tid(), r);
+                if (r.tid().test(this.pattern)) this.write(r.tid(), r);
                 else Router.writeToSpace(r.tid(), r);
             });
         }
@@ -132,13 +132,13 @@ public abstract class AbstractInstSet extends AbstractSpace<Map<fURI, Set<? exte
                         .map(i -> pattern.isNode() ? i : rel(i.tid().toUri(), i)))
                         .append(objs(TYPE_TABLE.entrySet()
                                 .stream()
-                                .filter(kv -> kv.getKey().matches(pattern.asNode()))
+                                .filter(kv -> kv.getKey().test(pattern.asNode()))
                                 .map(kv -> pattern.isNode() ?
                                         kv.getValue() :
                                         rel(kv.getKey().toUri(), kv.getValue()))))
                         .append(objs(CONST_TABLE.entrySet()
                                 .stream()
-                                .filter(kv -> kv.getKey().matches(pattern.asNode()))
+                                .filter(kv -> kv.getKey().test(pattern.asNode()))
                                 .map(kv -> pattern.isNode() ?
                                         kv.getValue() :
                                         rel(kv.getKey().toUri(), kv.getValue())))));
@@ -160,7 +160,7 @@ public abstract class AbstractInstSet extends AbstractSpace<Map<fURI, Set<? exte
                 TYPE_TABLE.put(vid, obj.as());
             } else if (obj.isNoObj()) {
                 final Set<Inst> insts = INST_TABLE.get(vid.basePath());
-                insts.removeIf(i -> i.tid().matches(vid));
+                insts.removeIf(i -> i.tid().test(vid));
             } else {
                 CONST_TABLE.put(vid, obj);
                 // throw MTronException.of("inst set %s can only store insts, types, and rewrites: {{r}}!{{/r}} %s", this.simpeToString(), obj);

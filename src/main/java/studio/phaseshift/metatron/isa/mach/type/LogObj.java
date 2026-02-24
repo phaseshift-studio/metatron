@@ -100,7 +100,7 @@ public class LogObj extends MRec {
                 .stream()
                 .filter(kv -> Level.valueOf(kv.getKey().uriValue().toString().toUpperCase()).compareTo(level) >= 0)
                 .flatMap(kv -> kv.getValue().<Lst>as().jvm().stream())
-                .anyMatch(v -> pattern.matches(v.uriValue()));
+                .anyMatch(v -> pattern.test(v.uriValue()));
     }
 }
 

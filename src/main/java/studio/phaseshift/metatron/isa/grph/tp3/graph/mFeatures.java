@@ -232,7 +232,7 @@ public class mFeatures implements Graph.Features {
 
         @Override
         public boolean willAllowId(final Object id) {
-            return f(id.toString()).matches(graph.getBaseGraph().pattern());
+            return f(id.toString()).test(graph.getBaseGraph().pattern());
         }
     }
 
@@ -285,7 +285,7 @@ public class mFeatures implements Graph.Features {
 
         @Override
         public boolean willAllowId(Object id) {
-            return f(id.toString()).matches(graph.getBaseGraph().pattern());
+            return f(id.toString()).test(graph.getBaseGraph().pattern());
         }
     }
 }

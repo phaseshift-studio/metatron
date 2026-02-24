@@ -33,7 +33,6 @@ import static studio.phaseshift.metatron.Tokens.C;
 import static studio.phaseshift.metatron.furi.fURI.*;
 import static studio.phaseshift.metatron.furi.q.DocQ.Doc.docWrap;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.Rec.REC_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
@@ -117,7 +116,7 @@ public interface Uri extends Mono, Ring.O<Uri> {
     @Override
     default boolean test(final Obj obj) {
         if (obj.isUri())
-            return this.uriValue().matches(obj.uriValue());
+            return this.uriValue().test(obj.uriValue());
         return Mono.super.test(obj);
     }
 

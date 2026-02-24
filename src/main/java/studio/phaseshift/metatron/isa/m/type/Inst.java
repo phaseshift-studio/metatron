@@ -516,7 +516,7 @@ public interface Inst extends Call {
                         Obj userArg = userInst.isInst() ? userInst.<Inst>as().arg(i) : userInst;
                         if (apiArg.tid().isGeneric()) {
                             final fURI lastBinding = generics.get(apiArg.tid().cLess());
-                            if (null != lastBinding && !userArg.tid().matches(lastBinding))
+                            if (null != lastBinding && !userArg.tid().test(lastBinding))
                                 LOG.debug("existing generic doesn't match current usage: [{{m}}generic{{/m}}] %s [{{m}}past{{/m}}] %s [{{m}}present{{/m}}] %s", userArg.tid(), lastBinding, apiArg.tid());
                             if (!userArg.isCall()) // TODO: can this be more specialized (currently necessary for when arg is a call and we want the result of the call to be the binding, not the call itself
                                 generics.computeIfAbsent(apiArg.tid().cLess(), k -> userArg.tid().cLess()); // beware of int[0] yielding noobj across all bindings

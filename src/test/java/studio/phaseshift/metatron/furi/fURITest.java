@@ -175,7 +175,7 @@ public class fURITest extends mTest {
         final fURI lhsResolved = lhs.resolve(generics);
         final fURI rhs = f(f2);
         final fURI rhsResolved = rhs.resolve(generics);
-        final boolean resultMatch = lhsResolved.matches(rhsResolved);
+        final boolean resultMatch = lhsResolved.test(rhsResolved);
         LOG.info("testing {{b}}%s{{/b}} [resolved: {{m}}%s{{/m}}] %s {{b}}%s{{/b}} [resolved: {{m}}%s{{/m}}]", lhs, lhsResolved, matches ? "{{g}}matches{{/g}}" : "{{r}}doesn't match{{/r}}", rhs, rhsResolved);
         assertEquals(matches, resultMatch);
     }
@@ -747,15 +747,15 @@ public class fURITest extends mTest {
         LOG.trace("testing: {{b}}%s{{/b}} %s {{b}}%s{{/b}}", furi2a, shouldMatch ? "{{g}}should match{{/g}}" : "{{r}}should not match{{/r}}", furi1b);
         assertEquals(furi1a, furi2a);
         if (shouldMatch) {
-            assertTrue(furi1a.matches(furi1b));
-            assertTrue(furi2a.matches(furi2b));
-            assertTrue(furi1a.matches(furi2b));
-            assertTrue(furi2a.matches(furi1b));
+            assertTrue(furi1a.test(furi1b));
+            assertTrue(furi2a.test(furi2b));
+            assertTrue(furi1a.test(furi2b));
+            assertTrue(furi2a.test(furi1b));
         } else {
-            assertFalse(furi1a.matches(furi1b));
-            assertFalse(furi2a.matches(furi2b));
-            assertFalse(furi1a.matches(furi2b));
-            assertFalse(furi2a.matches(furi1b));
+            assertFalse(furi1a.test(furi1b));
+            assertFalse(furi2a.test(furi2b));
+            assertFalse(furi1a.test(furi2b));
+            assertFalse(furi2a.test(furi1b));
         }
     }
 

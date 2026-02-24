@@ -120,7 +120,7 @@ public class memSpace extends AbstractSpace<Map<fURI, Obj>> {
             else {
                 if (pattern.hasPattern()) {
                     return this.sjvm().entrySet().stream().flatMap(kv -> Stream.concat(
-                            kv.getKey().matches(pattern.asNode()) ?
+                            kv.getKey().test(pattern.asNode()) ?
                                     Stream.of(Tuple.Pair.with(kv.getKey(), kv.getValue())) :
                                     Stream.empty(),
                             kv.getValue().isPoly() ?

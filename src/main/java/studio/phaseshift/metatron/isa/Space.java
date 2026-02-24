@@ -200,10 +200,10 @@ public interface Space extends Rec, Closeable {
         public static List<Pair<fURI, Obj>> unrollPoly(final fURI polyvid, final Poly<?, ?> poly, final fURI pattern) {
             final List<Pair<fURI, Obj>> results = new ArrayList<>();
             poly.indexedStream()
-                    .filter(r -> r.second().isPoly() || polyvid.extend(f(r.first().jvm().toString())).matches(pattern))
+                    .filter(r -> r.second().isPoly() || polyvid.extend(f(r.first().jvm().toString())).test(pattern))
                     .forEach(r -> {
                         final fURI key = polyvid.extend(f(r.first().jvm().toString()));
-                        if (!r.second().isPoly() || key.matches(pattern))
+                        if (!r.second().isPoly() || key.test(pattern))
                             results.add(Pair.with(key, r.second()));
                         else if (r.second().isPoly())
                             results.addAll(unrollPoly(key, r.second().as(), pattern));

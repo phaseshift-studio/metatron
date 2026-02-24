@@ -122,7 +122,7 @@ public interface Type extends Obj, PlusMonoid<Type> {
         // if(rhs.asType().parentType()!= null && !this.test(rhs.asType().parentType()))
         //     return false;
         if (rhs.asType().isBaseType())
-            return this.baseType().matches(rhs.tid()) && (!rhs.asType().hasPredicate() || Objects.equals(this.predicate(), rhs.asType().predicate())); // matches any abstract type to it's base type as long as within the coefficient boundaries
+            return this.baseType().test(rhs.tid()) && (!rhs.asType().hasPredicate() || Objects.equals(this.predicate(), rhs.asType().predicate())); // matches any abstract type to it's base type as long as within the coefficient boundaries
         if (rhs.tid().isGeneric())
             return !this.tid().isGeneric() || (this.c().within(rhs.c()) && this.tid().basePath().equals(rhs.tid().basePath()));
         return !rhs.asType().hasPredicate() || Objects.equals(this.asType().predicate(), rhs.asType().predicate());// || !rhs.asType().predicate().apply(this).isNoObj();

@@ -37,7 +37,6 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.List;
 import java.util.Map;
 import java.util.ServiceLoader;
 import java.util.concurrent.ExecutorService;
@@ -233,6 +232,6 @@ public class BootLoader implements Rec, Feature.SelfClone {
         return ServiceLoader.load(InstSet.class)
                 .stream()
                 .filter(p -> p.type().isAnnotationPresent(ServiceMetadata.class))
-                .filter(p -> f(p.type().getAnnotation(ServiceMetadata.class).tid()).matches(tid));
+                .filter(p -> f(p.type().getAnnotation(ServiceMetadata.class).tid()).test(tid));
     }
 }

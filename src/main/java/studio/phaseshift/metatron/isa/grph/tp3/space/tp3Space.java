@@ -183,12 +183,12 @@ public class tp3Space extends grphSpace<Graph> {
                     return IteratorUtil.of();
                 } else if (pattern.equals(f(this.vertexPrefix).extend("#"))) {
                     return (Iterator) IteratorUtil.stream(this.sjvm.vertices()).map(v -> Tuple.Pair.with(f(this.vertexPrefix).extend(v.id().toString()), VertexMap.vertexToRec(v, this))).iterator();
-                } else if (pattern.matches(f(this.vertexPrefix).extend("+"))) {
+                } else if (pattern.test(f(this.vertexPrefix).extend("+"))) {
                     final String suffix = pattern.name();
                     LOG.info("reading vertices %s => %s", vid, suffix);
                     Iterator<Vertex> vertices = (suffix.equals("+") || suffix.equals("#")) ? this.sjvm.vertices() : this.sjvm.vertices(Integer.parseInt(suffix));
                     return IteratorUtil.map(vertices, v -> Tuple.Pair.with(f(this.vertexPrefix).extend(v.id().toString()), VertexMap.vertexToRec(v, this)));
-                } else if (pattern.matches(f(this.edgePrefix).extend("+"))) {
+                } else if (pattern.test(f(this.edgePrefix).extend("+"))) {
                     final String suffix = pattern.name();
                     LOG.info("reading edges %s => %s", vid, suffix);
                     Iterator<Edge> edges = (suffix.equals("+") || suffix.equals("#")) ? this.sjvm.edges() : this.sjvm.edges(Integer.parseInt(suffix));

@@ -322,7 +322,7 @@ public class DocQ extends BaseQ {
         public Optional<Obj> preRead(final fURI source, final fURI vid) {
             LOG.trace("evaluating {{y}}preread{{/y}}: %s", vid);
             return Optional.of(objs(docSpace.entrySet().stream()
-                    .filter(kv -> kv.getKey().matches(vid))
+                    .filter(kv -> kv.getKey().test(vid))
                     .map(Map.Entry::getValue))
                     .orElse(noobj()));
         }

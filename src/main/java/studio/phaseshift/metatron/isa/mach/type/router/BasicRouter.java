@@ -199,16 +199,16 @@ public class BasicRouter extends AbstractSpace<MServer> implements Router {
 
     @Override
     public <S extends Space> S getSpace(final fURI match) {
-        if (match.matches(NOOBJ))
+        if (match.test(NOOBJ))
             return noobjSpace.single();
         // using jvm() for speed (given the heavy use of this method)
         final Optional<S> space = this.spaces().jvm().values().stream() // using jvm() for speed (given the heavy use of this method)
                 .map(Obj::<S>as)
-                .filter(s -> match.basePath().matches(s.pattern()))
+                .filter(s -> match.basePath().test(s.pattern()))
                 .min(Comparator.comparing(Space::pattern));
         if (space.isPresent())
             return space.get();
-        else if (match.basePath().matches(f("+/#")))
+        else if (match.basePath().test(f("+/#")))
             return (S) THREAD_STACK.get();
         else if (!BOOTING)
             throw MTronException.of("no active space supports pattern %s", match.toUri(false));
@@ -226,7 +226,7 @@ public class BasicRouter extends AbstractSpace<MServer> implements Router {
         if (vid.isGeneric())
             return T(vid);
         final fURI local = vid;
-        if (local.matches(f("+/#"))) {
+        if (local.test(f("+/#"))) {
             final Obj stack = Router.stack().read(local.basePath());
             if (!stack.isNoObj())
                 return stack;
@@ -255,7 +255,7 @@ public class BasicRouter extends AbstractSpace<MServer> implements Router {
 
     @Override
     public boolean hasSpaceFor(final fURI vid) {
-        return this.spaces().jvm().values().stream().map(Obj::<Space>as).anyMatch(s -> vid.matches(s.pattern()));
+        return this.spaces().jvm().values().stream().map(Obj::<Space>as).anyMatch(s -> vid.test(s.pattern()));
     }
 
     @Override

@@ -45,7 +45,6 @@ import static studio.phaseshift.metatron.isa.m.mInstSet.INST_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.SPACE_TID;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
-import static studio.phaseshift.metatron.isa.m.type.Rel.REL_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
@@ -135,7 +134,7 @@ public class serialSpace extends AbstractSpace<SerialPort[]> {
     @Override
     public Obj read(final fURI vid) {
         return objs(Arrays.stream(SerialPort.getCommPorts())
-                .filter(port -> this.pattern.retractPattern().extend(port.getSystemPortName()).matches(vid))
+                .filter(port -> this.pattern.retractPattern().extend(port.getSystemPortName()).test(vid))
                 .map(port -> {
                     final ByteArrayOutputStream buffer = this.getOrCreateBuffer(port);
                     if (null == buffer)
@@ -151,7 +150,7 @@ public class serialSpace extends AbstractSpace<SerialPort[]> {
     @Override
     public Obj write(final fURI vid, final Obj obj) {
         return objs(Arrays.stream(SerialPort.getCommPorts())
-                .filter(port -> this.pattern.retractPattern().extend(port.getSystemPortName()).matches(vid))
+                .filter(port -> this.pattern.retractPattern().extend(port.getSystemPortName()).test(vid))
                 .map(port -> this.buffers.get(port.getSystemPortName()))
                 .filter(Objects::nonNull)
                 .map(pair -> {

@@ -27,6 +27,7 @@ import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.*;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -34,7 +35,7 @@ import static studio.phaseshift.metatron.furi.c.cInt.C_ONE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 
-public class fURI implements Cloneable, Ring<fURI>, Comparable<fURI> {
+public class fURI implements Cloneable, Ring<fURI>, Comparable<fURI>, Predicate<fURI> {
 
     public static final String SEGMENT_SPLIT = "/";
     public static final char SEGMENT_SPLIT_CHAR = SEGMENT_SPLIT.charAt(0);
@@ -449,12 +450,12 @@ public class fURI implements Cloneable, Ring<fURI>, Comparable<fURI> {
     public boolean hasPrefix(final fURI prefix) {
         if (prefix.hasScheme() && (!this.hasScheme() || !this.scheme.equals(prefix.scheme)))
             return false;
-        if (prefix.hasAuthority() && (!this.hasAuthority() || !this.authority().matches(prefix.authority())))
+        if (prefix.hasAuthority() && (!this.hasAuthority() || !this.authority().test(prefix.authority())))
             return false;
         for (int i = 0; i < prefix.path.size(); i++) {
             if (this.pathLength() <= i)
                 return false;
-            if (!this.segment(i).matches(prefix.segment(i)))
+            if (!this.segment(i).test(prefix.segment(i)))
                 return false;
         }
         return true;
@@ -663,7 +664,7 @@ public class fURI implements Cloneable, Ring<fURI>, Comparable<fURI> {
             return furi;
         if (furi.isZero())
             return this;
-        if (this.basePath().matches(furi.basePath())) {
+        if (this.basePath().test(furi.basePath())) {
             cInt c1 = this.cV();
             cInt c2 = furi.cV();
             cInt c3 = c1.plus(c2);
@@ -747,11 +748,11 @@ public class fURI implements Cloneable, Ring<fURI>, Comparable<fURI> {
     }
 
     public boolean onlyMatches(final fURI other) {
-        return !this.equals(other) && this.matches(other);
+        return !this.equals(other) && this.test(other);
     }
 
     public boolean bimatches(final fURI other) {
-        return this.matches(other) || other.matches(this);
+        return this.test(other) || other.test(this);
         /*boolean thisPattern = this.hasPattern();
         boolean otherPattern = other.hasPattern();
         if (thisPattern && otherPattern)
@@ -822,7 +823,7 @@ public class fURI implements Cloneable, Ring<fURI>, Comparable<fURI> {
         }
     }
     
-    public boolean matches(final fURI rhs) {
+    public boolean test(final fURI rhs) {
         final C c = this.cV();
         final C d = rhs.cV();
         //if (c.isZero() && d.isZero())
@@ -845,7 +846,7 @@ public class fURI implements Cloneable, Ring<fURI>, Comparable<fURI> {
                     if (i >= this.poly.size())
                         return false;
                     final fURI lp = f(this.poly.get(i));
-                    if (!lp.matches(rp))
+                    if (!lp.test(rp))
                         return false;
                 }
             }

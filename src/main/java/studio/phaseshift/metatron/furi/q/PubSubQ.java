@@ -144,7 +144,7 @@ public class PubSubQ extends BaseQ {
         @Override
         public Optional<Obj> qlessWrite(final fURI source, final fURI vid, final Obj obj) {
             LOG.debug("evaluating {{y}}qless write{{/y}}: %s => %s", obj, vid);
-            subscriptions.elements().map(Rel::second).map(Obj::<Subscription>as).filter(s -> vid.matches(s.target())).forEach(s -> {
+            subscriptions.elements().map(Rel::second).map(Obj::<Subscription>as).filter(s -> vid.test(s.target())).forEach(s -> {
                 LOG.debug("sending mail: (%s, %s)", obj, s);
                 mail.add(MMachine.of(lst(List.of(vid.toUri(), obj)), s.call().toCode()));
             });

@@ -97,7 +97,7 @@ public abstract class SerializerTest<T> extends mTest {
             if (this.ignoreFail(objString)) {
                 final boolean areEqual = Objects.equals(obj, obj2);
                 if (areEqual)
-                    LOG.error("no need to ignore test %s <=> %s", objString, obj);
+                    LOG.warn("no need to ignore test %s <=> %s", objString, obj);
                 else
                     LOG.debug("ignoring fail for %s <=> %s", objString, obj);
             } else {

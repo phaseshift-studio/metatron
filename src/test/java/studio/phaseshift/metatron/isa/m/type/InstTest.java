@@ -91,25 +91,25 @@ public class InstTest extends mObjTest {
         final Inst resolutionA = mParser.m_obj().parse(resolution).get();
         final Inst resultA = Inst.Helpers.bindGenerics(lhsA, specA, defA);
         LOG.info("{{b}}%s{{/b}} resolution matches {{b}}%s{{/b}} specification", resultA.tid(), resolutionA.tid());
-        final boolean match = resultA.tid().matches(resolutionA.tid());
+        final boolean match = resultA.tid().test(resolutionA.tid());
         assertTrue(match);
         LOG.info("%s [expected: %s] resolved from specification %s => %s via type definition %s", resultA, resolutionA, lhsA, specA, defA);
         if (!resolutionA.equals(resultA))
-            LOG.warn("resolution algorithm generates matching, but not equal final resolution -- skipping equality checks");
+            LOG.warn("resolution algorithm generates matching, but not equal final resolution -- skipping equality checks\n\t%s ~ %s", resultA, resolutionA);
         else
             assertEquals(resolutionA, resultA);
         assertTrue(resultA.test(resolutionA));
-        assertTrue(resultA.tid().matches(resolutionA.tid()));
+        assertTrue(resultA.tid().test(resolutionA.tid()));
         assertTrue(resultA.test(specA));
-        assertTrue(resultA.tid().matches(specA.tid()));
+        assertTrue(resultA.tid().test(specA.tid()));
         assertTrue(resultA.test(defA));
-        assertTrue(resultA.tid().matches(defA.tid()));
+        assertTrue(resultA.tid().test(defA.tid()));
         assertTrue(specA.test(resolutionA));
-        assertTrue(specA.tid().matches(resolutionA.tid()));
+        assertTrue(specA.tid().test(resolutionA.tid()));
         assertTrue(defA.test(resolutionA));
-        assertTrue(defA.tid().matches(resolutionA.tid()));
+        assertTrue(defA.tid().test(resolutionA.tid()));
         assertTrue(specA.test(defA));
-        assertTrue(specA.tid().matches(defA.tid()));
+        assertTrue(specA.tid().test(defA.tid()));
     }
 
     @Test

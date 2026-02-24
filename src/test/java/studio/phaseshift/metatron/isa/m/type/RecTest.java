@@ -252,7 +252,7 @@ public class RecTest extends mTest {
     }, delimiter = '%', quoteCharacter = '~')
     public void testHas(final String code, final boolean matches) {
         final Obj codeObj = mParser.parse(code);
-        LOG.error("testing has %s [expected:%s]", codeObj, matches);
+        LOG.debug("testing has %s [expected:%s]", codeObj, matches);
         if (matches)
             assertFalse(codeObj.apply().isNoObj());
         else

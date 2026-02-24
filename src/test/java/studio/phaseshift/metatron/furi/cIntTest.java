@@ -109,6 +109,10 @@ public class cIntTest extends mTest {
         assertFalse(cInt.ZERO().contains(cInt.SOME()));
         assertTrue(cInt.ZERO().within(cInt.of(Long.MIN_VALUE, Long.MAX_VALUE)));
         assertTrue(cInt.ZERO().within(cInt.MAYBE()));
+        assertTrue(cInt.of(1,1).within(cInt.MAYBE()));
+        assertTrue(cInt.of(0,0).within(cInt.MAYBE()));
+        assertFalse(cInt.of(1,2).within(cInt.MAYBE()));
+        assertFalse(cInt.of(-1,0).within(cInt.MAYBE()));
         assertTrue(cInt.ZERO().within(cInt.MAYBESOME()));
         assertFalse(cInt.ZERO().within(cInt.SOME()));
         assertEquals(cInt.ONE(), cInt.ZERO().plus(cInt.ONE()));

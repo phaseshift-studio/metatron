@@ -246,7 +246,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
     default boolean test(final Obj rhs) {
         if (Obj.Helper.isAuto(rhs))
             return true;
-        if (rhs.isType() && !rhs.asType().isBaseType() && this.tid().matches(rhs.tid()))
+        if (rhs.isType() && !rhs.asType().isBaseType() && this.tid().test(rhs.tid()))
             return !rhs.asType().hasPredicate() || !rhs.asType().predicate().apply(this).isNoObj();
         else if (this.isNoObj() && (rhs.tid().cV().isZeroable() || rhs.tid().equals(NOOBJ_TID)))
             return true;
@@ -255,7 +255,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
         else if (rhs.isNoObj())
             return false;
         /// //////////////////////////////
-        if (rhs.isUri() && this.isUri() && !this.uriValue().matches(rhs.uriValue()))
+        if (rhs.isUri() && this.isUri() && !this.uriValue().test(rhs.uriValue()))
             return false;
         final fURI base = this.tid().basePath();
         if (BASE_TYPES.contains(base) &&
@@ -288,11 +288,11 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
                 return false;
             if (this.isObjs() && this.stream().allMatch(o -> o.test(rhs.tid(rhs.tid().c(o.c().toString())))))
                 return true;
-            if (rhs.asType().isBaseType() && !this.baseType().matches(rhs.tid()))
+            if (rhs.asType().isBaseType() && !this.baseType().test(rhs.tid()))
                 return false;
             return !rhs.asType().hasPredicate() || rhs.apply(this).check();
         }
-        return this.tid().matches(rhs.tid()) &&
+        return this.tid().test(rhs.tid()) &&
                 Objects.equals(this.jvm(), rhs.jvm());
     }
 
