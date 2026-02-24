@@ -21,6 +21,7 @@ package studio.phaseshift.metatron.ui;
 import org.jline.jansi.Ansi;
 import org.junit.jupiter.api.Test;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
+import studio.phaseshift.metatron.mTest;
 
 import java.io.ByteArrayOutputStream;
 import java.util.Map;
@@ -28,7 +29,7 @@ import java.util.Map;
 import static org.jline.jansi.Ansi.ansi;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class GraphittyTest {
+public class GraphittyTest extends mTest {
 
     @Test
     public void testRewrites() {

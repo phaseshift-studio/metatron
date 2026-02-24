@@ -22,7 +22,6 @@ import org.apache.tinkerpop.gremlin.structure.Direction;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.grph.tp3.parser.ObjTP3Serializer;
 import studio.phaseshift.metatron.isa.grph.tp3.space.EdgeMap;
-import studio.phaseshift.metatron.isa.grph.tp3.space.ElementMap;
 import studio.phaseshift.metatron.isa.grph.tp3.space.VertexMap;
 import studio.phaseshift.metatron.isa.grph.tp3.space.tp3Space;
 import studio.phaseshift.metatron.isa.m.type.*;
@@ -69,15 +68,17 @@ public class tp3InstSet extends AbstractInstSet {
     /// ////////////////////////////////////////////////////////////////////////////////////////////////////////////
     /// ////////////////////////////////////////////////////////////////////////////////////////////////////////////
     private static BiFunction<Obj, Inst, Obj> V_E_FUNCTION(final Direction direction) {
-        return (lhs, inst) -> objs(IteratorUtil.stream(VertexMap.recToVertex(lhs.asRec())
-                        .edges(direction, inst.arg(0).stream().map(Obj::uriValue).map(fURI::toString).toArray(String[]::new)))
-                .map(e -> EdgeMap.edgeToRec(e, lhs.asRec())));
+        return (lhs, inst) -> {
+            final String[] labels = inst.arg(0).isNoObj() ? EMPTY_STRING_ARRAY : inst.arg(0).stream().map(Obj::uriValue).map(fURI::toString).toArray(String[]::new);
+            return objs(IteratorUtil.stream(VertexMap.recToVertex(lhs.asRec()).edges(direction, labels)).map(e -> EdgeMap.edgeToRec(e, lhs.asRec())));
+        };
     }
 
     private static BiFunction<Obj, Inst, Obj> V_V_FUNCTION(final Direction direction) {
-        return (lhs, inst) -> objs(IteratorUtil.stream(VertexMap.recToVertex(lhs.asRec())
-                        .vertices(direction, inst.arg(0).stream().map(Obj::uriValue).map(fURI::toString).toArray(String[]::new)))
-                .map(v -> VertexMap.vertexToRec(v, lhs.asRec())));
+        return (lhs, inst) -> {
+            final String[] labels = inst.arg(0).isNoObj() ? EMPTY_STRING_ARRAY : inst.arg(0).stream().map(Obj::uriValue).map(fURI::toString).toArray(String[]::new);
+            return objs(IteratorUtil.stream(VertexMap.recToVertex(lhs.asRec()).vertices(direction, labels)).map(v -> VertexMap.vertexToRec(v, lhs.asRec())));
+        };
     }
 
     /*BiFunction<Poly<?, ?>, Object, Poly<?, ?>> VERTEX_POLY_MUTABLE = (vertexPoly, vertexPolyJVM) -> {

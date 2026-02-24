@@ -34,6 +34,7 @@ import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.Tuple;
 
 import java.util.Map;
+import java.util.Random;
 import java.util.function.Supplier;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -46,12 +47,13 @@ import static studio.phaseshift.metatron.isa.mach.io.ioInstSet.IO_ISA_TID;
 
 public abstract class mTest {
 
+    private static final Random RANDOM = new Random();
     protected GraphittyLogger LOG = Graphitty.log(this);
 
     @BeforeAll
     public static void begin() {
         BootLoader.BOOTING = true;
-        BootLoader.load(rec(uri("log"), uri(LogObj.getSLF4J().toString().toLowerCase())));
+        BootLoader.load(rec(uri("host"), uri("ws://localhost:" + RANDOM.nextInt(65535)), uri("log"), uri(LogObj.getSLF4J().toString().toLowerCase())));
         BootLoader.loadInstSetProvider(IO_ISA_TID);
     }
 

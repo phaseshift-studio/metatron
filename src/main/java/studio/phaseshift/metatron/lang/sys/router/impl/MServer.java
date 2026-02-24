@@ -117,13 +117,12 @@ public class MServer extends WebSocketServer implements Cluster, Closeable, Obj 
     public void close() {
         LOG.info("closing %s node {{b}}%s{{/b}}", Graphitty.sillyPrint("mtron", true, true), this.host);
         try {
-            super.stop();
             this.cluster.values().stream().toList().forEach(MConnection::close);
-        } catch (final Exception e) {
-            throw MTronException.of(e);
+            super.stop(1000, "server shutdown");
+        } catch (final InterruptedException e) {
+            LOG.info("%s interrupted successfully", this.host);
         } finally {
             this.running.set(false);
-            super.getConnections().stream().toList().forEach(WebSocket::close);
         }
     }
 
@@ -179,8 +178,9 @@ public class MServer extends WebSocketServer implements Cluster, Closeable, Obj 
     @Override
     public void onError(final WebSocket conn, final Exception ex) {
         LOG.error("an error occurred on connection %s: %s", null == conn ? "<none>" : conn.getAttachment(), ex);
-        if (null == conn || ex instanceof BindException)
-            this.running.set(false);
+        if (null == conn || ex instanceof BindException) {
+            this.close();
+        }
     }
 
     @Override

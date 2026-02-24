@@ -160,7 +160,7 @@ public class httpSpace extends AbstractSpace<HttpServer> {
                             final Path filePath = null == base ? null : base.toPath(); //Files.isRegularFile(path) ? path : Path.of(path + "/" + INDEX_HTML);
                             if (null != base) {
                                 LOG.debug("resolving context to absolute path: %s => %s", uri(exchange.getRequestURI().toString()), uri(filePath.toAbsolutePath().toString()));
-                               // fURI toRemove = f(filePath.toString());
+                                // fURI toRemove = f(filePath.toString());
                                 final fURI pretractedURI = f(exchange.getRequestURI().getPath()).removeSubpath(f(INDEX_HTML)).asRelative();
                                 LOG.info("remaining steps in request uri: %s", pretractedURI);
                                 if (pretractedURI.pathLength() == 0) {
@@ -259,6 +259,7 @@ public class httpSpace extends AbstractSpace<HttpServer> {
     public static httpSpace of(final Rec config, final fURI vid) {
         try {
             final HttpServer server = HttpServer.create(new InetSocketAddress(config.at(HOST).uriValue().host(), config.at(HOST).uriValue().port()), 0);
+            server.setExecutor(BootLoader.getExecutor());
             return new httpSpace(server, config.jvm(), vid);
         } catch (final Exception e) {
             throw MTronException.of(e);

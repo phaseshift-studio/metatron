@@ -18,12 +18,19 @@
 
 package studio.phaseshift.metatron.isa.web.space;
 
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
+import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.isa.SpaceTest;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
+import studio.phaseshift.metatron.isa.mach.type.LogObj;
 import studio.phaseshift.metatron.isa.web.space.http.httpSpace;
 import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.util.CommonUtil;
+
+import java.io.Reader;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -33,6 +40,8 @@ import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.isa.mach.io.ioInstSet.IO_ISA_TID;
+import static studio.phaseshift.metatron.isa.web.webInstSet.WEB_ISA_TID;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -41,11 +50,11 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 public class httpSpaceTest extends SpaceTest {
 
     public httpSpaceTest() {
-        super(() -> httpSpace.of(rec(
+        super(f("/sys/space/web"),() -> httpSpace.of(rec(
                 uri(HOST), uri("http://localhost:8777"),
                 uri(PATTERN), uri("http://#"),
-                uri(ROUTE), rec(uri("/"), uri("src/test/resources/web/"))), f("/sys/space/web")));
-        memSpace.of(rec(uri(PATTERN), uri("/mtron/web/space/http")), f("/sys/space/mem"));
+                uri(ROUTE), rec(uri("/"), uri("src/test/resources/web"))), f("/sys/space/web")));
+        BootLoader.loadInstSetProvider(WEB_ISA_TID.extend("#"));
     }
 
     @Override
@@ -65,13 +74,13 @@ public class httpSpaceTest extends SpaceTest {
         assertNotEquals(noobj(), Router.readFromSpace("http://localhost:8777/#/"));
         assertNotEquals(noobj(), Router.readFromSpace("http://localhost:8777/index.html"));
         assertEquals(str("a1.b1.c1.text"), Router.readFromSpace("http://localhost:8777/index.html/html/body/a/b/c/text"));
-        //assertEquals(str("a1.b1.c1.text"), Router.readFromSpace("http://localhost:8777/index.html/html/body/a/+/+/text"));
+        assertEquals(str("a1.b1.c1.text"), Router.readFromSpace("http://localhost:8777/index.html/html/body/a/+/+/text"));
         assertEquals(str("a2.b2.c2.text"), Router.readFromSpace("http://localhost:8777/index.html/html/body/div/div/div/text"));
-        //assertEquals(str("a2.b2.c2.text"), Router.readFromSpace("http://localhost:8777/index.html/html/body/div/+/+/text"));
+        assertEquals(str("a2.b2.c2.text"), Router.readFromSpace("http://localhost:8777/index.html/html/body/div/+/+/text"));
         assertEquals(str("a1.b1.c1.text"), Router.readFromSpace("http://localhost:8777/html/body/a/b/c/text"));
-        //assertEquals(str("a1.b1.c1.text"), Router.readFromSpace("http://localhost:8777/html/body/a/+/+/text"));
+        assertEquals(str("a1.b1.c1.text"), Router.readFromSpace("http://localhost:8777/html/body/a/+/+/text"));
         assertEquals(str("a2.b2.c2.text"), Router.readFromSpace("http://localhost:8777/html/body/div/div/div/text"));
-        //assertEquals(str("a2.b2.c2.text"), Router.readFromSpace("http://localhost:8777/html/body/div/+/+/text"));
+        assertEquals(str("a2.b2.c2.text"), Router.readFromSpace("http://localhost:8777/html/body/div/+/+/text"));
     }
 
 }

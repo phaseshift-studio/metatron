@@ -68,7 +68,9 @@ public interface C<T extends Comparable<T>, D extends C<T, D>> extends Comparabl
         return this.gt(zero()) == rhs.gt(zero());
     }
 
-    D abs();
+    default D abs() {
+        return this.lt(zero()) ? this.neg() : (D)this;
+    }
 
     /// ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -122,16 +124,36 @@ public interface C<T extends Comparable<T>, D extends C<T, D>> extends Comparabl
         return !this.isNeg();
     }
 
-    default boolean isZeroOrNeg() {
-        return this.isZero() || this.isNeg();
-    }
-
     default boolean isOne() {
         return Objects.equals(this, this.one());
     }
 
     default boolean isAny() {
         return Objects.equals(this, this.any());
+    }
+    
+    default boolean isAntiMaybeSome() {
+        return Objects.equals(this,this.antiMaybeSome());
+    }
+
+    default boolean isAntiSome() {
+        return Objects.equals(this,this.antiSome());
+    }
+
+    default boolean isAntiMaybe() {
+        return Objects.equals(this,this.antiMaybe());
+    }
+    
+    default boolean isAbsMaybe() {
+        return Objects.equals(this,this.abs().maybe());
+    }
+
+    default boolean isAbsSome() {
+        return Objects.equals(this,this.abs().some());
+    }
+
+    default boolean isAbsMaybeSome() {
+        return Objects.equals(this,this.abs().maybeSome());
     }
 
     default boolean isMaybeSome() {
