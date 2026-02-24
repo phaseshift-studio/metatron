@@ -246,6 +246,7 @@ public interface Type extends Obj, PlusMonoid<Type> {
         }
 
         public Type create(final Set<Type> typeSet, final Set<Inst> instSet) {
+            LOG.info("installing %s type", this.vid);
             final Type type = this.create();
             typeSet.add(type);
             instSet.addAll(this.insts);

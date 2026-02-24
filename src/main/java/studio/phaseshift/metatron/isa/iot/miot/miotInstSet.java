@@ -19,33 +19,22 @@
 package studio.phaseshift.metatron.isa.iot.miot;
 
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.iot.miot.type.soc.SoC;
-import studio.phaseshift.metatron.isa.m.type.*;
+import studio.phaseshift.metatron.isa.iot.miot.type.Device;
+import studio.phaseshift.metatron.isa.iot.miot.type.Entity;
+import studio.phaseshift.metatron.isa.iot.miot.type.SoC;
+import studio.phaseshift.metatron.isa.m.type.Inst;
+import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.ServiceMetadata;
+import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.m.type.impl.AbstractInstSet;
-import studio.phaseshift.metatron.isa.mach.type.Router;
 
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.Function;
 
-import static studio.phaseshift.metatron.Tokens.*;
-import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.isa.iot.iotInstSet.IOT_ISA_TID;
 import static studio.phaseshift.metatron.isa.iot.miot.space.miotSpace.MIOT_SPACE_TYPE;
-import static studio.phaseshift.metatron.isa.iot.miot.type.soc.SoC.MIOT_SOC_TYPE;
-import static studio.phaseshift.metatron.isa.iot.miot.type.soc.esp32.WemosD1Mini.WemosD1MiniType.WEMOS_D1_MINI_TYPE;
 import static studio.phaseshift.metatron.isa.iot.space.mqtt.mqttSpace.MQTT_SPACE_TYPE;
-import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TID;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
-import static studio.phaseshift.metatron.isa.m.type.Int.INT_TYPE;
-import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
-import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
-import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
-import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
-import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
-import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -55,10 +44,6 @@ public class miotInstSet extends AbstractInstSet {
 
     public static final fURI MIOT_ISA_TID = IOT_ISA_TID.extend("miot");
     public static final fURI MIOT_INST_TID = MIOT_ISA_TID.extend("inst");
-
-
-    public static final String MIOT_DEVICE_TID_STRING = "/m/iot/miot/device";
-    public static final String MIOT_ENTITY_TID_STRING = "/m/iot/miot/entity";
     /// /////////////////////// FURIS ///////////////////////////////////
     public static final fURI MIOT_SPACE_TID = MIOT_ISA_TID.extend("space/miot");
     public static final fURI MIOT_THING_TID = MIOT_ISA_TID.extend("thing");
@@ -66,102 +51,20 @@ public class miotInstSet extends AbstractInstSet {
     public static final fURI MIOT_ENTITY_TID = MIOT_ISA_TID.extend("entity");
     public static final fURI MIOT_GPIO_TID = MIOT_ISA_TID.extend("gpio");
     public static final fURI MIOT_PWM_TID = MIOT_ISA_TID.extend("pwm");
+    public static final fURI MIOT_SOC_TID = MIOT_ISA_TID.extend("soc");
+    public static final fURI MIOT_ESP32_TID = MIOT_SOC_TID.extend("esp32");
+    public static final fURI MIOT_WEMOS_D1_MINI_TID = MIOT_ESP32_TID.extend("d1_mini");
     /// /////////////////////// TYPES //////////////////////////////////
     protected static final Set<Type> TYPES = new LinkedHashSet<>();
     protected static final Set<Inst> INSTS = new LinkedHashSet<>();
 
-    private static Rec writePin(final Rec pinholder, final Obj pinID, final Function<Int, Int> updateFunction) {
-        AtomicBoolean found = new AtomicBoolean(false);
-        final Uri pinUri = pinID.isUri() ? pinID.asUri() : uri("" + pinID.asInt().intValue());
-        pinholder.elements().forEach(kv -> {
-            if (kv.first().test(pinUri)) {
-                final Int currentValue = kv.second().asInt();
-                final Int newValue = updateFunction.apply(currentValue);
-                final fURI toVID = deduceVID(pinholder, f("+").extend(pinholder.tid().name()).extend("gpio"));
-                if (toVID == null)
-                    pinholder.logger().warn("no vid associated with gpio", pinholder);
-                else {
-                    pinholder.logger().info("writing to vid: %s", toVID.extend(kv.first().uriValue().toString()));
-                    Router.writeToSpace(toVID.extend(kv.first().uriValue().toString()), newValue);
-                }
-                found.set(true);
-            }
-            if (!found.get()) {
-                final long currentValue = pinholder.asRec().at(pinholder).orElse(jnt(0)).asInt().intValue();
-                final Int newValue = 0 == currentValue ? jnt(1) : jnt(0);
-                final fURI toVID = deduceVID(pinholder, f("+").extend(pinholder.tid().name()).extend("gpio"));
-                if (toVID == null)
-                    pinholder.logger().warn("no vid associated with gpio", pinholder);
-                else {
-                    pinholder.logger().info("writing to vid: %s", toVID.extend(pinUri.uriValue().toString()));
-                    Router.writeToSpace(toVID.extend(pinUri.uriValue().toString()), newValue);
-                }
-            }
-        });
-        return pinholder;
-    }
-
-    public static final Type MIOT_DEVICE_TYPE = Type.Builder.build()
-            .tid(REC_TID)
-            .vid(MIOT_DEVICE_TID)
-            .isaPredicate(rec(uri("status"), is_(or_(eq_(uri(ONLINE)), eq_(uri(OFFLINE)))).tryToInst()))
-            .constructor(lhs -> {
-                final fURI toVID = deduceVID(lhs, f("+").extend(lhs.tid().name()));
-                if (toVID != null) {
-                    final Obj sub = Router.readFromSpace(toVID.extend("status").query("sub"));
-                    if (sub.isNoObj())
-                        Router.writeToSpace(toVID.extend("status").query("sub"), print_(uri(toVID), str(" {{g}}status{{X}}: {{y}}"), get_(uri("" + 1))));
-                }
-                return lhs;
-            })
-            .inst(MIOT_INST_TID.extend("reboot").dom(MIOT_DEVICE_TID).rng(MIOT_DEVICE_TID), lst(),
-                    (lhs, inst) -> {
-                        final fURI toVID = deduceVID(lhs, f("+").extend(lhs.tid().name()));
-                        Router.global().write(toVID.extend("status"), uri("offline"));
-                        return lhs;
-                    })
-            .inst(MIOT_INST_TID.extend("attach").dom(MIOT_DEVICE_TID).rng(MIOT_DEVICE_TID), lst(T(MIOT_ENTITY_TID)),
-                    (lhs, inst) -> {
-                        final fURI toVID = deduceVID(lhs, f("+").extend(lhs.tid().name()));
-                        if (null != toVID) {
-                            lhs.asRec().at(inst.arg(0).tid().name(), inst.arg(0),MUTABLE);
-                            Router.global().write(toVID.extend(inst.arg(0).tid().name()), inst.arg(0));
-                        }
-                        return lhs;
-                    })
-            .create(TYPES, INSTS);
-    public static final Type MIOT_ENTITY_TYPE = Type.Builder.build()
-            .tid(REC_TID)
-            .vid(MIOT_ENTITY_TID)
-            .isaPredicate(rec(uri(SUPER), MIOT_DEVICE_TYPE))
-            .create(TYPES, INSTS);
-    public static final Type MIOT_GPIO_TYPE = Type.Builder.build()
-            .tid(MIOT_ENTITY_TID)
-            .vid(MIOT_GPIO_TID)
-            .isaPredicate(rec(URI_TYPE, INT_TYPE))
-            .inst(MIOT_INST_TID.extend("toggle").dom(MIOT_GPIO_TID).rng(MIOT_GPIO_TID), lst(INT_TYPE),
-                    (lhs, inst) -> writePin(lhs.asRec(), inst.arg(0), currentValue -> 0 == currentValue.intValue() ? jnt(1) : jnt(0)))
-            .inst(MIOT_INST_TID.extend("on").dom(MIOT_GPIO_TID).rng(MIOT_GPIO_TID), lst(INT_TYPE),
-                    (lhs, inst) -> writePin(lhs.asRec(), inst.arg(0), _ -> jnt(1)))
-            .inst(MIOT_INST_TID.extend("off").dom(MIOT_GPIO_TID).rng(MIOT_GPIO_TID), lst(INT_TYPE),
-                    (lhs, inst) -> writePin(lhs.asRec(), inst.arg(0), _ -> jnt(0)))
-            .create(TYPES, INSTS);
-    public static final Type MIOT_PWM_TYPE = Type.Builder.build()
-            .tid(MIOT_ENTITY_TID)
-            .vid(MIOT_PWM_TID)
-            .isaPredicate(rec(URI_TYPE, INT_TYPE))
-            .inst(MIOT_INST_TID.extend("freq").dom(MIOT_PWM_TID).rng(MIOT_PWM_TID), lst(INT_TYPE, INT_TYPE),
-                    (lhs, inst) -> writePin(lhs.asRec(), inst.arg(0), _ -> jnt(inst.arg(1).asInt().intValue())))
-            .inst(MIOT_INST_TID.extend("on").dom(MIOT_PWM_TID).rng(MIOT_PWM_TID), lst(INT_TYPE),
-                    (lhs, inst) -> writePin(lhs.asRec(), inst.arg(0), _ -> jnt(255)))
-            .inst(MIOT_INST_TID.extend("off").dom(MIOT_PWM_TID).rng(MIOT_PWM_TID), lst(INT_TYPE),
-                    (lhs, inst) -> writePin(lhs.asRec(), inst.arg(0), _ -> jnt(0)))
-            .create(TYPES, INSTS);
-
-
     static {
-        assert MIOT_DEVICE_TID_STRING.equals(MIOT_DEVICE_TID.toString());
-        assert MIOT_ENTITY_TID_STRING.equals(MIOT_ENTITY_TID.toString());
+        Device.installTypes(TYPES, INSTS);
+        Entity.installTypes(TYPES, INSTS);
+        SoC.installTypes(TYPES, INSTS);
+        TYPES.addAll(List.of(
+                MQTT_SPACE_TYPE,
+                MIOT_SPACE_TYPE));
     }
 
     public miotInstSet() {
@@ -183,21 +86,11 @@ public class miotInstSet extends AbstractInstSet {
 
     @Override
     public Set<Type> types() {
-        TYPES.addAll(List.of(
-                MIOT_SOC_TYPE,
-                WEMOS_D1_MINI_TYPE,
-                MQTT_SPACE_TYPE,
-                MIOT_SPACE_TYPE,
-                MIOT_DEVICE_TYPE,
-                MIOT_ENTITY_TYPE,
-                MIOT_GPIO_TYPE,
-                MIOT_PWM_TYPE));
         return TYPES;
     }
 
     @Override
     public Set<Inst> insts() {
-        INSTS.addAll(SoC.insts());
         return INSTS;
     }
 }

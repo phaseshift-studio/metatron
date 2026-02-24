@@ -55,11 +55,12 @@ print("{{y}}supported scripting environments:\n{{X}}", *<boot/script>.else(boot/
         route    => [</g/+/>=><>],
         native   => [factory  => mfactory::[=>],
                      load     => modern]]@/sys/space/modern;
-  mqtt::[pattern => <mqtt:#>,
+  [==mqtt::[pattern => <mqtt:#>,
          host    => !*boot/args/mqtt/broker,
-         route   => [mqtt:=><>]]@/sys/space/mqtt;
+         route   => [mqtt:=><>]]@/sys/space/mqtt;==]
   miot::[pattern => <mtron:#>,
          host    => !*boot/args/mqtt/broker,
+         serializer => !*</m/mach/io/serializer/json/simple>,
          route   => [mtron:=>metatron/]]@/sys/space/mqtt/metatron;
   mqtt::[pattern    => <z2m:#>,
          host       => !*boot/args/mqtt/broker,
