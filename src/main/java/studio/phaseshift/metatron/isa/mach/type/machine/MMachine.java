@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.isa.mach.type;
+package studio.phaseshift.metatron.isa.mach.type.machine;
 
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
@@ -26,6 +26,9 @@ import studio.phaseshift.metatron.isa.m.type.impl.MCode;
 import studio.phaseshift.metatron.isa.m.type.impl.MInst;
 import studio.phaseshift.metatron.isa.m.type.impl.MObj;
 import studio.phaseshift.metatron.isa.m.type.impl.MObjs;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
+import studio.phaseshift.metatron.isa.mach.type.Monad;
+import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.util.MTronException;
@@ -44,6 +47,7 @@ import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_ISA_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.mach.type.monad.BasicMonad.monad;
 import static studio.phaseshift.metatron.util.MTronException.mexcept;
 import static studio.phaseshift.metatron.util.Tuple.Quartet;
 
@@ -93,11 +97,11 @@ public class MMachine extends MObj implements Machine {
         for (final Inst inst : mach.code().jvm()) {
             if (inst.isInitial()) {
                 LOG.trace("  {{g}}==>{{/g}} creating {{y}}initial{{/y}} monad at %s", inst);
-                this.running().append(MMonad.of(noobj(), inst));
+                this.running().append(monad(noobj(), inst));
             } else if (inst.isGather()) {
                 // many-to-?
                 LOG.trace("  {{m}}==|{{/m}} creating {{y}}barrier{{/y}} monad at %s", inst);
-                final Monad m = MMonad.of(MObjs.empty(), inst);
+                final Monad m = monad(MObjs.empty(), inst);
                 mach.barriers().<LinkedList<Obj>>jvmAs().add(m);
             }
         }
@@ -130,7 +134,7 @@ public class MMachine extends MObj implements Machine {
             /*this.future = BootLoader.getExecutor().submit(() -> {*/
             final Code code = this.resolve(lhs).code();
             if (this.running().c().isZero()) {
-                this.running().append(MMonad.of(noobj(), code.insts().getFirst()));
+                this.running().append(monad(noobj(), code.insts().getFirst()));
             }
             while (!this.interrupted.get()) {
                 final Monad m = (Monad) this.running().take();
@@ -139,7 +143,7 @@ public class MMachine extends MObj implements Machine {
                     try {
                         final Monad x = this.split(m);
                         if (x.inst().tid().basePath().equals(DROP_TID)) {
-                            this.running().append(MMonad.of(x, code.nextInst(x.inst())));
+                            this.running().append(monad(x, code.nextInst(x.inst())));
                         } else {
                             final Monad n = x.apply(code.nextInst(x.inst()));
                             LOG.trace(" {{g}}===>{{/g}} post-processing monad %s", n);
@@ -196,11 +200,11 @@ public class MMachine extends MObj implements Machine {
                             nextBarrier.obj().append(result);
                             Router.global().stats().monadicStats().incrBarrierMonads(1L);
                         } else if (nextInst.isBatching()) {
-                            this.running().append(MMonad.of(result, nextInst));
+                            this.running().append(monad(result, nextInst));
                         } else { // barrier-to-other requires an unrolling of result set
                             LOG.trace("  {{m}}==|{{/m}} scattering barrier obj %s to %s", result, nextInst);
                             result.forEach(o -> {
-                                final Monad n = MMonad.of(o, nextInst);
+                                final Monad n = monad(o, nextInst);
                                 LOG.trace(" {{m}}===|{{/m}} scattering %s", n);
                                 this.running().append(n);
                             });

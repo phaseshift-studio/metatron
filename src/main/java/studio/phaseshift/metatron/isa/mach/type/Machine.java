@@ -16,11 +16,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.isa.m.type;
+package studio.phaseshift.metatron.isa.mach.type;
 
 import studio.phaseshift.metatron.algebra.Ring;
 import studio.phaseshift.metatron.furi.fURI;
 
+import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.util.Tuple;
 
 import java.util.function.Consumer;

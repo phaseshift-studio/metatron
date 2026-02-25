@@ -16,28 +16,52 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.isa.m.type;
+package studio.phaseshift.metatron.isa.mach.type;
 
+import studio.phaseshift.metatron.algebra.Ring;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.m.type.Inst;
+import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.Rec;
+import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
 
-import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec0;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_MONAD_TID;
-import static studio.phaseshift.metatron.util.Tuple.Triplet;
 
-public interface Monad extends Obj {
-    
+public interface Monad extends Obj, Ring<Monad> {
+
     @Override
     Monad clone(final Object jvm, final fURI tid, final fURI vid);
 
     @Override
-    Triplet<Obj, Inst, Rec> jvm();
+    List<Obj> jvm();
+
+    @Override
+    default Monad neg() {
+        return this.c(cInt::neg);
+    }
+
+    @Override
+    default Monad mult(Monad rhs) {
+        return this.apply(rhs).c(c -> c.mult(rhs.c()));
+    }
+
+    @Override
+    default Monad one() {
+        return this.c(cInt.ONE());
+    }
+
+    @Override
+    default Monad zero() {
+        return this.c(cInt.ZERO());
+    }
 
     default boolean halted() {
         return this.inst().isNoObj();
@@ -52,29 +76,19 @@ public interface Monad extends Obj {
     }
 
     default Rec state() {
-        return this.jvm().get2();
+        return this.jvm().get(2).isNoObj() ? rec0() : (Rec) this.jvm().get(2);
     }
 
     default Inst inst() {
-        return this.jvm().get1();
+        return (Inst) this.jvm().get(1);
     }
 
     default Obj obj() {
-        return this.jvm().get0();
+        return this.jvm().getFirst();
     }
 
     @Override
     Monad tid(final fURI tid);
-
-    @Override
-    default fURI tid() {
-        return null;
-    }
-
-    @Override
-    default fURI vid() {
-        return null;
-    }
 
     @Override
     default Monad c(final cInt c) {
@@ -91,18 +105,12 @@ public interface Monad extends Obj {
         return this.c(cInt.of(exact));
     }
 
-    default Obj plus(final Monad other) {
-        return Objects.equals(this.jvm(), other.jvm()) && Objects.equals(this.tid().basePath(), other.tid().basePath()) ?
-                this.tid(this.tid().plus(other.tid())) :
-                objs(List.of(this, other));
-    }
-
     default Monad obj(final Obj obj) {
-        return this.clone(Triplet.with(obj, this.inst(), this.state()), this.tid(), this.vid());
+        return this.clone(List.of(obj, this.inst(), this.state()), this.tid(), this.vid());
     }
 
     default Monad inst(final Inst inst) {
-        return this.clone(Triplet.with(this.obj(), inst, this.state()), this.tid(), this.vid());
+        return this.clone(List.of(this.obj(), inst, this.state()), this.tid(), this.vid());
     }
 
     @Override
@@ -116,9 +124,7 @@ public interface Monad extends Obj {
     }
 
     @Override
-    default Obj clone() {
-        return null;
-    }
+    Monad clone();
 
     @Override
     default Monad apply(final Obj inst) {
