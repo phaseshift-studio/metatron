@@ -91,7 +91,7 @@ public class mFluent<F extends Fluent<F>> extends MCode implements Fluent<F>, Co
     }
 
     public F barrier_() {
-        return this.addInst(instB(mInstSet.BARRIER_TID, lst()));
+        return this.addInst(instB(mInstSet.BARRIER_INST_TID, lst()));
     }
 
     public F thread_(final Obj obj) {

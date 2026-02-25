@@ -81,11 +81,6 @@ public class Explain extends AbstractWidget<Explain> {
         this.style().attachment(this.grid, true).apply();
     }
 
-  /*  @Override
-    public void run() {
-        Widget.cursorOffOn(this.style().attachment::run);
-    }*/
-
     @Override
     public String toString() {
         return "";
@@ -100,8 +95,8 @@ public class Explain extends AbstractWidget<Explain> {
 
     @Override
     public void close() {
-        final String finalForm = this.style.attachment.format();
+       // final String finalForm = this.style.attachment.format();
         super.close();
-        Graphitty.out(Console.getTerminal().output(), finalForm);
+       // Graphitty.out(Console.getTerminal().output(), finalForm);
     }
 }

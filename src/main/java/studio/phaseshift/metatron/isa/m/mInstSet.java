@@ -19,7 +19,6 @@
 package studio.phaseshift.metatron.isa.m;
 
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.furi.q.DocQ;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.AbstractInstSet;
@@ -133,7 +132,7 @@ public class mInstSet extends AbstractInstSet {
     public static final fURI NOT_INST_TID = INST_TID.extend("not");
     public static final fURI TAKE_INST_TID = INST_TID.extend("take");
     public static final fURI SKIP_INST_TID = INST_TID.extend("skip");
-    public static final fURI BARRIER_TID = INST_TID.extend("barrier");
+    public static final fURI BARRIER_INST_TID = INST_TID.extend("barrier");
     public static final fURI REIFY_INST_TID = INST_TID.extend("reify");
     public static final fURI SELECT_INST_TID = INST_TID.extend("select");
     public static final fURI UPDATE_INST_TID = INST_TID.extend("update");
@@ -263,6 +262,7 @@ public class mInstSet extends AbstractInstSet {
                 Tuple.Triplet.with(Tuple.Pair.with("_", null), List.of(ID_INST_TID), 0),
                 Tuple.Triplet.with(Tuple.Pair.with("⋅", null), List.of(MULT_INST_TID), 1),
                 Tuple.Triplet.with(Tuple.Pair.with("*", null), List.of(FROM_INST_TID), 1),
+                Tuple.Triplet.with(Tuple.Pair.with(">|", null), List.of(BARRIER_INST_TID), 1),
                 Tuple.Triplet.with(Tuple.Pair.with(">>-", null), List.of(RNG_INST_TID), 0),
                 Tuple.Triplet.with(Tuple.Pair.with(">-", null), List.of(MERGE_INST_TID), 1),
                 Tuple.Triplet.with(Tuple.Pair.with(">-", null), List.of(MERGE_INST_TID), 0),

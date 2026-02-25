@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -64,6 +64,12 @@ public class Table extends AbstractWidget<Table> {
         return column;
     }
 
+
+    @Override
+    public List<String> rowStrings() {
+        return Arrays.asList(this.format().split("\n"));
+    }
+
     public List<Integer> formattedWidths(final List<String> rowesque) {
         final List<Integer> widths = new ArrayList<>();
         for (int i = 0; i < rowesque.size(); i++) {
@@ -82,7 +88,7 @@ public class Table extends AbstractWidget<Table> {
         }
         final StringBuilder sb = new StringBuilder();
         sb.append(this.style.divider);
-        for (int i = 0; i < this.row(index).size(); i++) {
+        for (int i = 0; i < this.table.get(index).size(); i++) {
             final String high = Highlighter.format(this.entry(index, i));
             final String low = Highlighter.unformat(this.entry(index, i).toString());
             sb.append(high)
@@ -94,7 +100,7 @@ public class Table extends AbstractWidget<Table> {
 
     public List<String> formattedRows() {
         final List<String> frows = new ArrayList<>();
-        for (int i = 0; i < rowStrings().size(); i++) {
+        for (int i = 0; i < this.table.size(); i++) {
             frows.add(this.formattedRow(i));
         }
         return frows;
@@ -107,7 +113,7 @@ public class Table extends AbstractWidget<Table> {
     private String addSpace(final List<Integer> widths, final int index, final Object entry) {
         return " ".repeat(1 + Math.abs(widths.get(index) - Highlighter.visualLength(entry.toString().trim())));
     }
-    
+
     @Override
     public String toString() {
         return this.format();

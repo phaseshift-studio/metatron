@@ -64,6 +64,7 @@ import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.isa.m.mInstSet.INST_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TID;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.start_;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
@@ -227,11 +228,15 @@ public class Console extends JRec implements Closeable, Runnable {
                     LogObj.setSLF4J(line.substring(4));
                 } else if (line.startsWith(":card")) {
                     final List<studio.phaseshift.metatron.isa.mach.type.ui.Widget<?>> widgets = new ArrayList<>();
-                    Router.global().spaces().elements().map(Rel::second).forEach(s -> {
-                        widgets.add(new Card(s.vid() == null ? s.getClass().getSimpleName() : s.vid().name().toString(), s.<Map<Obj, Obj>>jvmAs().keySet().stream().map(Object::toString).reduce("", (a, b) -> a + "\n" + b).substring(1)).style().border(Border.simple.foreground("{{b}}")).background("{{[y]}}").foreground("{{c}}").margin(1, 1).apply());
-                    });
-                    final Grid grid = new Grid(widgets, 6);
-                    grid.run();
+                    Router.global().spaces().elements().map(Rel::second).forEach(s ->
+                            widgets.add(new Card(s.vidOrTid().name() + ": " + s.tid().name(), s.asRec().at("native", noobj(), IMMUTABLE).toString())
+                                    .style()
+                                    .border(Border.simple.foreground("{{b}}"))
+                                    .background("{{[g]}}")
+                                    .foreground("{{y}}")
+                                    .margin(1, 1)
+                                    .apply()));
+                    new Grid(widgets, 3).run();
                 } else if (line.startsWith(":top")) {
                     TTop.ttop(terminal, new PrintStream(terminal.output()), System.err, new String[0]);
                 } else if (line.startsWith(":less")) {
