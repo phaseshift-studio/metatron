@@ -46,12 +46,8 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static org.petitparser.parser.primitive.CharacterParser.any;
-import static org.petitparser.parser.primitive.CharacterParser.anyOf;
-import static org.petitparser.parser.primitive.CharacterParser.digit;
-import static org.petitparser.parser.primitive.CharacterParser.of;
-import static org.petitparser.parser.primitive.CharacterParser.word;
-import static org.petitparser.parser.primitive.StringParser.of;
+import static org.petitparser.parser.primitive.CharacterParser.*;
+import static org.petitparser.parser.primitive.StringParser.*;
 import static studio.phaseshift.metatron.furi.fURI.fnull;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.from_;
@@ -293,11 +289,10 @@ public class mParser {
     }
 
     private static Parser m_furi_internal(final String furiCharacterSet, final boolean polynomial, final boolean coefficient, final boolean query) {
-        return seq(word().or(seq(of("::").not(), of("[").not(), of("(").not(),
-                        anyOf(furiCharacterSet))).plus().flatten(),
+        return seq(of("-").not(), seq(word().or(seq(of("::").not(), anyOf(furiCharacterSet)))).plus().flatten(),
                 opt(polynomial ? m_furi_poly_type() : none(), null),
                 opt(coefficient ? m_furi_coefficient() : none(), null),
-                opt(query ? m_furi_query() : none(), null)).map(t -> new fURI(pick(t, 0)).poly(pick(t, 1)).c(pick(t, 2)).query(pick(t, 3)));
+                opt(query ? m_furi_query() : none(), null)).map(t -> new fURI(pick(t, 1)).poly(pick(t, 2)).c(pick(t, 3)).query(pick(t, 4)));
     }
 
     public static Parser m_furi(final String furiCharacterSet, final boolean polynomial, final boolean coefficient, final boolean query) {
