@@ -18,6 +18,7 @@
 
 package studio.phaseshift.metatron.isa.mach.type.monad;
 
+import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.mach.type.Monad;
 import studio.phaseshift.metatron.util.MTronException;
 
@@ -25,6 +26,31 @@ import studio.phaseshift.metatron.util.MTronException;
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public abstract class AbstractMonad implements Monad {
+
+    protected fURI tid;
+    protected fURI vid;
+    
+    public AbstractMonad(final fURI tid, final fURI vid) {
+        this.tid = tid;
+        this.vid = vid;
+    }
+
+    @Override
+    public fURI tid() {
+        return this.tid;
+    }
+
+    @Override
+    public fURI vid() {
+        return this.vid;
+    }
+
+    @Override
+    public Monad tid(final fURI tid) {
+        this.tid = tid;
+        return this;
+    }
+
 
     @Override
     public boolean equals(final Object other) {

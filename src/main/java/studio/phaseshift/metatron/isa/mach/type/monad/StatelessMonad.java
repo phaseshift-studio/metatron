@@ -20,9 +20,9 @@ package studio.phaseshift.metatron.isa.mach.type.monad;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Inst;
-import studio.phaseshift.metatron.isa.mach.type.Monad;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
+import studio.phaseshift.metatron.isa.mach.type.Monad;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 
@@ -37,15 +37,13 @@ import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_MONAD_TID;
  */
 public class StatelessMonad extends AbstractMonad implements Monad {
     private static final GraphittyLogger LOG = Graphitty.log(StatelessMonad.class);
+    public static final fURI MACH_STATELESS_MONAD_TID = MACH_MONAD_TID.extend("stateless");
 
     List<Obj> jvm;
-    fURI tid;
-    fURI vid;
 
     protected StatelessMonad(final List<Obj> jvm, final fURI tid, final fURI vid) {
+        super(tid, vid);
         this.jvm = jvm;
-        this.tid = tid;
-        this.vid = vid;
     }
 
     @Override
@@ -59,25 +57,9 @@ public class StatelessMonad extends AbstractMonad implements Monad {
     }
 
     @Override
-    public fURI tid() {
-        return null;
-    }
-
-    @Override
-    public fURI vid() {
-        return null;
-    }
-
-    @Override
-    public Monad tid(final fURI tid) {
-        this.tid = tid;
-        return this;
-    }
-
-    @Override
     public Monad clone() {
-            final StatelessMonad clone = (StatelessMonad) super.clone();
-            return clone;
+        final StatelessMonad clone = (StatelessMonad) super.clone();
+        return clone;
     }
 
     @Override
@@ -99,10 +81,10 @@ public class StatelessMonad extends AbstractMonad implements Monad {
     }
 
     public static Monad monad(final Obj obj, final Inst inst) {
-        return new StatelessMonad(List.of(obj, inst, noobj()), inst.tid(), inst.vid());
+        return new StatelessMonad(List.of(obj, inst, noobj()), MACH_STATELESS_MONAD_TID, null);
     }
 
     public static Monad monad(final Obj obj) {
-        return new StatelessMonad(List.of(obj, noobj(), noobj()), MACH_MONAD_TID, obj.vid());
+        return monad(obj, noobj());
     }
 }

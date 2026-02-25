@@ -20,6 +20,8 @@ package studio.phaseshift.metatron.isa.m.type.impl;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.*;
+import studio.phaseshift.metatron.isa.mach.type.Monad;
+import studio.phaseshift.metatron.isa.mach.type.monad.BasicMonad;
 import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
 
@@ -41,6 +43,8 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.mach.machInstSet.FACTORY_TID;
 import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_ISA_TID;
+import static studio.phaseshift.metatron.isa.mach.type.monad.BasicMonad.MACH_BASIC_MONAD_TID;
+import static studio.phaseshift.metatron.isa.mach.type.monad.BasicMonad.monad;
 import static studio.phaseshift.metatron.util.Tuple.Pair;
 import static studio.phaseshift.metatron.util.Tuple.Triplet;
 
@@ -184,6 +188,8 @@ public class MObjFactory extends MRec implements ObjFactory {
             return (OBJ) new MFail((Pair<Throwable, Fail>) value, null == tid ? FAIL_TID : tid, vid);
         else if (NoObj.class.isAssignableFrom(objClass))
             return (OBJ) NoObj.noobj();
+        else if(Monad.class.isAssignableFrom(objClass))
+            return (OBJ) monad((List<Obj>)value, null == tid ? MACH_BASIC_MONAD_TID : tid, vid);
         else
             throw MTronException.of("provided class has not obj equivalent: %s", objClass);
     }

@@ -20,8 +20,8 @@ package studio.phaseshift.metatron.isa.mach.type.monad;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Inst;
-import studio.phaseshift.metatron.isa.mach.type.Monad;
 import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.mach.type.Monad;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 
@@ -36,15 +36,13 @@ import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_MONAD_TID;
 public class BasicMonad extends AbstractMonad implements Monad {
 
     private static final GraphittyLogger LOG = Graphitty.log(BasicMonad.class);
+    public static final fURI MACH_BASIC_MONAD_TID = MACH_MONAD_TID.extend("basic");
 
     List<Obj> jvm;
-    fURI tid;
-    fURI vid;
 
     protected BasicMonad(final List<Obj> jvm, final fURI tid, final fURI vid) {
+        super(tid,vid);
         this.jvm = jvm;
-        this.tid = tid;
-        this.vid = vid;
     }
 
     @Override
@@ -55,22 +53,6 @@ public class BasicMonad extends AbstractMonad implements Monad {
     @Override
     public List<Obj> jvm() {
         return this.jvm;
-    }
-
-    @Override
-    public fURI tid() {
-        return null;
-    }
-
-    @Override
-    public fURI vid() {
-        return null;
-    }
-
-    @Override
-    public Monad tid(final fURI tid) {
-        this.tid = tid;
-        return this;
     }
 
     @Override
@@ -92,11 +74,15 @@ public class BasicMonad extends AbstractMonad implements Monad {
         return new BasicMonad(List.of(this, objs), this.tid().plus(objs.tid()), this.vid());
     }
 
+    public static Monad monad(final List<Obj> jvm, final fURI tid, final fURI vid) {
+        return new BasicMonad(jvm, tid, vid);
+    }
+
     public static Monad monad(final Obj obj, final Inst inst) {
-        return new BasicMonad(List.of(obj, inst, noobj()), inst.tid(), inst.vid());
+        return monad(List.of(obj, inst, noobj()), MACH_BASIC_MONAD_TID, null);
     }
 
     public static Monad monad(final Obj obj) {
-        return new BasicMonad(List.of(obj, noobj(), noobj()), MACH_MONAD_TID, obj.vid());
+        return monad(obj, noobj());
     }
 }
