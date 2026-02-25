@@ -954,7 +954,7 @@ public class fURI implements Cloneable, Ring<fURI>, Comparable<fURI>, Predicate<
             fURI clone = (fURI) super.clone();
             return clone;
         } catch (CloneNotSupportedException e) {
-            throw new IllegalStateException(e);
+            throw MTronException.of(e);
         }
 
     }

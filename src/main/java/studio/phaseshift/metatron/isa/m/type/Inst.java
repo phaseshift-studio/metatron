@@ -46,7 +46,6 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.util.MTronException.mexcept;
 import static studio.phaseshift.metatron.util.Tuple.Triplet;
 
 public interface Inst extends Call {
@@ -323,19 +322,20 @@ public interface Inst extends Call {
             return resolve2.hasRng() ? resolve2 : resolve2.rng(T(ALL_STAR));
         }
     }
-    
+
     @Override
     default Obj apply(final Obj lhs) {
-        Monad monad = this.tid().hasQuery("monad") ? (Monad) lhs : null;
+        final Monad monad = this.tid().hasQuery("monad") ? (Monad) lhs : null;
         Obj clhs = FutureObj.resolveFuture(null == monad ? lhs : monad.obj());
         //boolean reself = !this.args().isEmpty() && this.args().argElements().noneMatch(e -> e.vid() != null || e.isObjCall());
         Inst cinst = this.args().isEmpty() ? this.args(lst(noobj())).resolve(clhs) : this.resolve(clhs); // TODO: this isn't a general solution (multi slotted args won't work).
         //if (false && reself) // TODO: why do type predicates get rewritten?
         //    this.self(Triplet.with(cinst.args(), cinst.f(), cinst.seed()), cinst.tid(), cinst.vid());
-        if (lhs.isNoObj() && !cinst.dom().c().isZeroable())
-            return noobj();
         if (cinst.isNoObj())
-            return mexcept("inst %s could not be resolved for %s", this, clhs).asFail();
+            return fail(MTronException.of("unable to locate an inst typed %s", this, clhs));
+        if ((null == lhs || lhs.isNoObj()) && !cinst.dom().c().isZeroable())
+            return noobj();
+        // return fail(MTronException.of("lhs range does not match inst domain: %s => %s [%s]", clhs.rng(), cinst.dom(), cinst));
 
         Obj rhs;
         boolean modulateC = false;
@@ -346,12 +346,12 @@ public interface Inst extends Call {
             modulateC = true;
             //  }
             if (!clhs.test(cinst.dom()))
-                return fail(mexcept("lhs range does not match inst domain: %s => %s [%s]", clhs.rng(), cinst.dom(), cinst));
+                return fail(MTronException.of("lhs range does not match inst domain: %s => %s [%s]", clhs.rng(), cinst.dom(), cinst));
         }
         if (!clhs.isFail() || cinst.isCatch()) {
             try {
                 if (null == cinst.f()) {
-                    return fail(mexcept("unable to determine inst function:" +
+                    return fail(MTronException.of("unable to determine inst function:" +
                             "\n\t%-10s => %-10s  | [inst]" +
                             "\n\t%-10s => %-10s  |  \\_dom" +
                             "\n\t%-10s %s=> %-10s  |  \\_args", clhs, cinst, clhs.type(), cinst.dom(), clhs.type(), cinst.args().elements().allMatch(clhs::test) ? "=" : "X", cinst.args()));
@@ -362,25 +362,23 @@ public interface Inst extends Call {
                     rhs = Objs.trySingleton(FutureObj.resolveFuture(cinst.f().apply(null == monad ? clhs : monad.obj(clhs), cinst)));
                     Graphitty.log(cinst).trace("%s (lhs) => %s (inst) => %s (rhs) evaluated successfully", clhs, cinst, rhs);
                 } catch (final Exception e) {
-                    rhs = fail(e, mexcept("apply failure:" +
+                    rhs = fail(e, fail(MTronException.of("apply failure:" +
                             "\n\t[lhs]   | %s" +
                             "\n\t \\_type | %s" +
                             "\n\t  \\_p   | %s" +
                             "\n\t[inst]  | %s" +
                             "\n\t \\_dom  | %s" +
-                            "\n\t \\_args | %s" +
-                            "\n\t[stack] | %s", clhs, clhs.type(), clhs.type().hasPredicate() ? clhs.type().predicate() : noobj(), cinst, cinst.dom(), cinst.args(), lst(new ArrayList<>(Router.stack().sjvm()))).asFail());
+                            "\n\t \\_args | %s")));
                     // e.printStackTrace();
                 } finally {
                     Router.stack().pop();
                 }
             } catch (final Exception e) {
-                rhs = e instanceof MTronException ? ((MTronException) e).asFail() : mexcept("unable to evaluate inst function: %s", cinst).cause(e).asFail();
+                rhs = fail(MTronException.of("unable to evaluate inst function: %s", cinst, e));
             }
             if (BootLoader.TYPE_CHECK && !rhs.isType() && !rhs.isFail() && !lhs.isCaughtFail() && !rhs.test(cinst.rng()))
-                rhs = mexcept("inst resolution failure: %s", cinst)
-                        .cause(mexcept("rhs does not match inst range:\n%s", Poly.Helper.diffObjRecursion(rhs, cinst.rng())))
-                        .asFail();
+                rhs = fail(MTronException.of("inst resolution failure: %s", cinst),
+                        fail(MTronException.of("rhs does not match inst range:\n\t%s", Poly.Helper.diffObjRecursion(rhs, cinst.rng()))));
         } else {
             rhs = clhs; // propagate fail through inst unless it's a catch inst
         }

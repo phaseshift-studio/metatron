@@ -22,6 +22,7 @@ import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.IteratorUtil;
+import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
 
 import java.util.*;
@@ -29,13 +30,13 @@ import java.util.function.BiFunction;
 import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.util.MTronException.mexcept;
 
 public interface Poly<P extends Poly<P, J>, J> extends Obj {
 
@@ -76,9 +77,9 @@ public interface Poly<P extends Poly<P, J>, J> extends Obj {
     <O extends Obj> Stream<O> elements();
 
     /// ////////////////////////////////////////////////////////////////////////////////////
-    
+
     <O extends Obj> O at(final Obj key);
-    
+
     default <O extends Obj> O at(final String key) {
         return this.at(uri(key));
     }
@@ -98,11 +99,11 @@ public interface Poly<P extends Poly<P, J>, J> extends Obj {
     default P at(final String key, final Obj value, final BiFunction<Poly<?, ?>, Object, Poly<?, ?>> operation) {
         return this.at(uri(key), value, operation);
     }
-   
+
     default P at(final Obj key, final Obj value) {
         return this.at(key, value, IMMUTABLE);
     }
-    
+
     default P at(final fURI key, final Obj value) {
         return this.at(uri(key), value, IMMUTABLE);
     }
@@ -112,7 +113,7 @@ public interface Poly<P extends Poly<P, J>, J> extends Obj {
     }
 
     /// ////////////////////////////////////////////////////////////////////////////////////
-    
+
     default boolean has(final Obj key) {
         return !this.at(key).isNoObj();
     }
@@ -128,7 +129,7 @@ public interface Poly<P extends Poly<P, J>, J> extends Obj {
     default boolean has(final long index) {
         return index < this.count();
     }
-    
+
     /// /////////////////////////////////////////////////////////////////////////////////////
 
     default Stream<Rel> indexedStream() {
@@ -146,7 +147,7 @@ public interface Poly<P extends Poly<P, J>, J> extends Obj {
     }*/
 
     /// ///////////////////////////////////////////////////////////////////////////////////////
-    
+
     class Helper {
         public static Rec transformLstToRec(final Lst lhs, final fURI tid, final fURI vid) {
             return IteratorUtil.indexedStream(lhs.elements().iterator())
@@ -371,7 +372,7 @@ public interface Poly<P extends Poly<P, J>, J> extends Obj {
                 final Obj x = i < lhs.lstValue().size() ? lhs.lstValue().get(i) : noobj();
                 final Obj y = i < rhs.lstValue().size() ? rhs.lstValue().get(i) : noobj();
                 if (!x.test(y))
-                    result.add(mexcept("lhs does not match rhs: %s %s", x, y).asFail());
+                    result.add(fail(MTronException.of("lhs does not match rhs: %s %s", x, y)));
                 else
                     result.add(applyObjRecursion(x, y));
             }
@@ -397,7 +398,7 @@ public interface Poly<P extends Poly<P, J>, J> extends Obj {
                             result.at(x.first(), noobj(), MUTABLE);
                     }
                 } catch (final Exception e) {
-                    result.at(x.first(), mexcept("error applying %s to %s", x.second(), x.first()).cause(e).asFail(), MUTABLE);
+                    result.at(x.first(), fail(MTronException.of("error applying %s to %s", x.second(), x.first()), fail(e)), MUTABLE);
                 }
             });
             return result;
