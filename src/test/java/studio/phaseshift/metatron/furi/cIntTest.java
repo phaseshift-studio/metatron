@@ -19,7 +19,10 @@
 package studio.phaseshift.metatron.furi;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.furi.c.cInt;
+import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.mTest;
 import studio.phaseshift.metatron.util.MTronException;
 
@@ -50,19 +53,19 @@ public class cIntTest extends mTest {
 
     @Test
     public void testInverse() {
-        assertEquals(cInt.of(-10,-10), cInt.of(10, 10).inverse());
-        assertEquals(cInt.of(-13,-10), cInt.of(10, 13).inverse());
-        assertEquals(cInt.of(-1,0), cInt.of(0, 1).inverse());
-        assertEquals(cInt.of(null,-1), cInt.of(1, null).inverse());
-        assertEquals(cInt.of(null,0), cInt.of(0, null).inverse());
-        assertEquals(cInt.of((Long)null,null), cInt.of((Long) null, null).inverse());
-        assertEquals(cInt.of(-1,1), cInt.of(-1, 1).inverse());
-        assertEquals(cInt.of(0,1), cInt.of(-1, 0).inverse());
-        assertEquals(cInt.of(1,null), cInt.of(null, -1).inverse());
-        assertEquals(cInt.of(0,null), cInt.of(null, 0).inverse());
+        assertEquals(cInt.of(-10, -10), cInt.of(10, 10).inverse());
+        assertEquals(cInt.of(-13, -10), cInt.of(10, 13).inverse());
+        assertEquals(cInt.of(-1, 0), cInt.of(0, 1).inverse());
+        assertEquals(cInt.of(null, -1), cInt.of(1, null).inverse());
+        assertEquals(cInt.of(null, 0), cInt.of(0, null).inverse());
+        assertEquals(cInt.of((Long) null, null), cInt.of((Long) null, null).inverse());
+        assertEquals(cInt.of(-1, 1), cInt.of(-1, 1).inverse());
+        assertEquals(cInt.of(0, 1), cInt.of(-1, 0).inverse());
+        assertEquals(cInt.of(1, null), cInt.of(null, -1).inverse());
+        assertEquals(cInt.of(0, null), cInt.of(null, 0).inverse());
         assertEquals(cInt.of(12), cInt.of(-12, -12).inverse());
-        assertEquals(cInt.of(5,12), cInt.of(-12, -5).inverse());
-        assertEquals(cInt.of(-16,12), cInt.of(-12, 16).inverse());
+        assertEquals(cInt.of(5, 12), cInt.of(-12, -5).inverse());
+        assertEquals(cInt.of(-16, 12), cInt.of(-12, 16).inverse());
         assertEquals(cInt.of("-?"), cInt.of("?").inverse());
         assertEquals(cInt.of("?"), cInt.of("-?").inverse());
         assertEquals(cInt.of("-"), cInt.of("+").inverse());
@@ -73,7 +76,7 @@ public class cIntTest extends mTest {
         assertEquals(cInt.of("*"), cInt.of("-*").inverse());
         assertThrows(MTronException.class, () -> cInt.of("12,-16"));
     }
-    
+
     @Test
     public void testMirror() {
         assertEquals(cInt.of("??"), cInt.of("??").mirror());
@@ -82,10 +85,10 @@ public class cIntTest extends mTest {
         assertEquals(cInt.of("??"), cInt.of("-?").mirror());
         assertEquals(cInt.of("**"), cInt.of("-*").mirror());
         assertEquals(cInt.of("**"), cInt.of("*").mirror());
-        assertEquals(cInt.of(-10,10), cInt.of(0,10).mirror());
-        assertEquals(cInt.of(-10,10), cInt.of(-2,10).mirror());
-        assertEquals(cInt.of(-20,20), cInt.of(-20,-10).mirror());
-        assertEquals(cInt.of(-20,20), cInt.of(10,20).mirror());
+        assertEquals(cInt.of(-10, 10), cInt.of(0, 10).mirror());
+        assertEquals(cInt.of(-10, 10), cInt.of(-2, 10).mirror());
+        assertEquals(cInt.of(-20, 20), cInt.of(-20, -10).mirror());
+        assertEquals(cInt.of(-20, 20), cInt.of(10, 20).mirror());
     }
 
 
@@ -109,10 +112,10 @@ public class cIntTest extends mTest {
         assertFalse(cInt.ZERO().contains(cInt.SOME()));
         assertTrue(cInt.ZERO().within(cInt.of(Long.MIN_VALUE, Long.MAX_VALUE)));
         assertTrue(cInt.ZERO().within(cInt.MAYBE()));
-        assertTrue(cInt.of(1,1).within(cInt.MAYBE()));
-        assertTrue(cInt.of(0,0).within(cInt.MAYBE()));
-        assertFalse(cInt.of(1,2).within(cInt.MAYBE()));
-        assertFalse(cInt.of(-1,0).within(cInt.MAYBE()));
+        assertTrue(cInt.of(1, 1).within(cInt.MAYBE()));
+        assertTrue(cInt.of(0, 0).within(cInt.MAYBE()));
+        assertFalse(cInt.of(1, 2).within(cInt.MAYBE()));
+        assertFalse(cInt.of(-1, 0).within(cInt.MAYBE()));
         assertTrue(cInt.ZERO().within(cInt.MAYBESOME()));
         assertFalse(cInt.ZERO().within(cInt.SOME()));
         assertEquals(cInt.ONE(), cInt.ZERO().plus(cInt.ONE()));
@@ -147,6 +150,35 @@ public class cIntTest extends mTest {
         /// //
         assertTrue(cInt.of(22, 81).signeq(cInt.of(21, 24)));
         assertFalse(cInt.of(-81, -22).signeq(cInt.of(21, 24)));
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "{1}true                % true                 % true",
+            "{1,23}true             % bool{1,23}::true     % true",
+            "{+}true                % bool{1,}::true     % true",
+            "{0}false               % noobj                % true",
+            "{1}1                   % 1                    % true",
+            "{1}1.0                 % 1.0                  % true",
+            "{-2}1.02               % real{-2}::1.02       % true",
+            "{-2,6}1.02             % real{-2,6}::1.02     % true",
+            "{*}1.02                % real{*}::1.02        % true",
+            "{-1}1                  % int{-1}::1           % true",
+            "{-1}1                  % 1                    % false",
+            "{-1,1}1                % int{??}::1           % true",
+            "{-1}\"abc\"            % str{-1}::\"abc\"     % true",
+            "{12}\"abc\"            % str{12}::\"abc\"     % true",
+            "{12}a/b/c              % uri{12}::a/b/c       % true",
+            "{12}a/b/c              % str{12}::\"a/b/c\"   % false",
+            "{??}[a,b,c]            % lst{??}::[a,b,c]     % true",
+            "{?}[a,b,c]             % lst{??}::[a,b,c]     % false",
+            "{**}[a=>1,b=>2]        % rec{**}::[a=>1,b=>2] % true",
+            "{??}[a=>1,b=>2]        % rec{-1,1}::[a=>1,b=>2] % true",
+            "{**}[a=>1,b=>2]        % rec{,}::[a=>1,b=>2]    % true",
+            "{??}[a=>1,b=>2]        % rec{??}::[a=>1,b=>2]   % true"
+    }, delimiter = '%')
+    public void testRewrites(final String code, final String expected, final boolean matches) throws Exception {
+        mTest.testEquals(LOG, mParser.eval(code), mParser.eval(expected), matches);
     }
 
 

@@ -595,7 +595,7 @@ public class fURI implements Cloneable, Ring<fURI>, Comparable<fURI>, Predicate<
         return this.c("**");
     }
 
-    public fURI many() {
+    public fURI maybeMaybe() {
         return this.c("??");
     }
     

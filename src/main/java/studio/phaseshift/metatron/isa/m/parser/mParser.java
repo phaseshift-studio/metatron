@@ -22,6 +22,7 @@ import org.petitparser.context.Result;
 import org.petitparser.parser.Parser;
 import org.petitparser.parser.combinators.*;
 import org.petitparser.parser.primitive.CharacterParser;
+import studio.phaseshift.metatron.furi.C;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.mInstSet;
 import studio.phaseshift.metatron.isa.m.type.Call;
@@ -116,10 +117,10 @@ public class mParser {
                 m_real(),
                 m_int(),
                 m_str(),
-                m_objs(),
                 m_lst(),
                 m_inst(),
-                m_uri()));
+                m_uri(),
+                m_objs()));
         obj_parser.set(choice(
                 m_comment(),
                 m_rec(),
@@ -134,9 +135,9 @@ public class mParser {
                 m_str(),
                 inst_parser,
                 m_code(),
-                m_objs(),
                 m_lst(),
-                m_uri()));
+                m_uri(),
+                m_objs()));
         obj_rel_back_parser.set(choice(
                 m_comment(),
                 m_rec(),
@@ -150,9 +151,9 @@ public class mParser {
                 m_int(),
                 m_str(),
                 m_code(),
-                m_objs(),
                 m_lst(),
-                m_uri()));
+                m_uri(),
+                m_objs()));
         lst_parser.set(seq(m_type_prefix(LST_TID),
                 of('[').trim(),
                 lst_internal(),
@@ -160,7 +161,7 @@ public class mParser {
                 m_vid_postfix())
                 .map(t -> new MLst(pick(t, 2), pick(t, 0), pick(t, 4))));
 
-        rec_parser.set(seq(m_type_prefix(), of('[').trim(), rec_internal(obj_rel_back_parser, m_call_prefix(MAP_INST_TID)), of(']').trim(), m_vid_postfix()).trim().map(t -> rec((Map<Obj, Obj>) pick(t, 2), pick(t, 0), pick(t, 4))));
+        rec_parser.set(seq(m_type_prefix(REC_TID), of('[').trim(), rec_internal(obj_rel_back_parser, m_call_prefix(MAP_INST_TID)), of(']').trim(), m_vid_postfix()).trim().map(t -> rec((Map<Obj, Obj>) pick(t, 2), pick(t, 0), pick(t, 4))));
         inst_parser.set(choice(m_inst_b(), m_inst_c()));
 
     }
@@ -383,7 +384,14 @@ public class mParser {
     }
 
     public static Parser m_type_prefix(final fURI baseType) {
-        return opt(seq(m_furi(REDUCED_FURI_CHARS, true, true, true), of("://").not(), of("::")).pick(0), baseType);
+        return (null == baseType)? opt(seq(m_furi(REDUCED_FURI_CHARS, true, true, true), of("://").not(), of("::")).pick(0), baseType) :
+                opt(choice(seq(m_furi(REDUCED_FURI_CHARS, true, true, true), of("://").not(), of("::")).pick(0),m_furi_coefficient().map(t->{
+                    try {
+                        return baseType.c(t.toString());
+                    } catch (Exception e) {
+                       return null;
+                    }
+                })), baseType);
     }
 
     public static Parser m_type_prefix() {
