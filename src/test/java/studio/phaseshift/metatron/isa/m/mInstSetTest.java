@@ -357,6 +357,7 @@ public class mInstSetTest extends InstSetTest {
             "int{50}::10.mult(10).count()                                           % int{1}::50",
             "int{50}::10.mult(10).sum()                                             % 5000",
             "int{50}::10-<{mult(10),mult(1)}                                        % {int{50}::100,int{50}::10}",
+            "{50}10-<{mult(10),mult(1)}                                             % {{50}100,{50}10}",
             "int{50}::10-<{mult(10),mult(1)}.count()                                % 100",
             "int{50}::10-<{mult(10),mult(1)}.sum()                                  % 5500",
             "{int{50}::10}-<{mult(10),mult(1)}                                      % {int{50}::100,int{50}::10}",
