@@ -54,7 +54,7 @@ public interface Inst extends Call {
     String DOM = "dom";
     String RNG = "rng";
     String OBJ = "obj";
-    
+
     fURI ARGS_FURI = fURI.f(ARGS);
     Uri ARGS_URI = uri(ARGS_FURI);
 
@@ -109,7 +109,7 @@ public interface Inst extends Call {
                     LOG.error(userInst.arg(i) + " is a future");
                 if (apiInst.arg(i) instanceof FutureObj)
                     LOG.error(apiInst.arg(i) + " is a future");*/
-                final Obj usrArg =  Optional.ofNullable(userInst.arg(i)).orElse(noobj()); //FutureObj.resolveFuture(userInst.arg(i));
+                final Obj usrArg = Optional.ofNullable(userInst.arg(i)).orElse(noobj()); //FutureObj.resolveFuture(userInst.arg(i));
                 final Obj apiArg = Optional.ofNullable(apiInst.arg(i)).orElse(noobj()); // FutureObj.resolveFuture(apiInst.arg(i));
                 if (userInst.isBlocking()) {
                     resolvedArgs.add(usrArg);
@@ -249,10 +249,10 @@ public interface Inst extends Call {
             /// //////////////////////////////////////////////////
             LOG.debug("fetched insts: %s => %s", this.tid().basePath(), fetched);
             final Inst resolved = fetched.stream()
-                   // .sorted(Comparator.comparing(i -> 
+                    // .sorted(Comparator.comparing(i -> 
                     //        i.tid().dom().isGeneric() || 
                     //                i.tid().rng().isGeneric() ||
-                     //               i.tid().dom().basePath().equals(ALL) ? 1 :  -1)) // TODO: can this be memoized?
+                    //               i.tid().dom().basePath().equals(ALL) ? 1 :  -1)) // TODO: can this be memoized?
                     //.map(i -> i.isCode() ? i.asCode().tryToInst() : i)
                     //.map(i -> i.isInst() ? i.asInst() : instC(this.tid().dom(lhs.tid()).rng(ALL.maybeSome()), this.args(), (lhs2, inst) -> Router.global().write(this.tid(), inst.args())))
                     .filter(Obj::isInst)
@@ -322,10 +322,11 @@ public interface Inst extends Call {
             return resolve2.hasRng() ? resolve2 : resolve2.rng(T(ALL_STAR));
         }
     }
-
+    
     @Override
     default Obj apply(final Obj lhs) {
-        Obj clhs = FutureObj.resolveFuture(lhs);
+        Monad monad = this.tid().hasQuery("monad") ? (Monad) lhs : null;
+        Obj clhs = FutureObj.resolveFuture(null == monad ? lhs : monad.obj());
         //boolean reself = !this.args().isEmpty() && this.args().argElements().noneMatch(e -> e.vid() != null || e.isObjCall());
         Inst cinst = this.args().isEmpty() ? this.args(lst(noobj())).resolve(clhs) : this.resolve(clhs); // TODO: this isn't a general solution (multi slotted args won't work).
         //if (false && reself) // TODO: why do type predicates get rewritten?
@@ -357,7 +358,7 @@ public interface Inst extends Call {
                 cinst = Helpers.applyArgs(clhs, cinst);
                 Router.stack().push(cinst.args());
                 try {
-                    rhs = Objs.trySingleton(FutureObj.resolveFuture(cinst.f().apply(clhs, cinst)));
+                    rhs = Objs.trySingleton(FutureObj.resolveFuture(cinst.f().apply(null == monad ? clhs : monad.obj(clhs), cinst)));
                     Graphitty.log(cinst).trace("%s (lhs) => %s (inst) => %s (rhs) evaluated successfully", clhs, cinst, rhs);
                 } catch (final Exception e) {
                     rhs = fail(e, mexcept("apply failure:" +

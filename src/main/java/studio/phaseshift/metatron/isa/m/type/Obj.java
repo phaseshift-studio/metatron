@@ -800,8 +800,8 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
                     instC(BARRIER_TID.dom(A.maybeSome()).rng(REC_TID), lst(REC_TYPE), (lhs, inst) -> lhs.stream().reduce(inst.arg(0), (a, b) -> Poly.Helper.updateRecRecursion(a.asRec(), rec(b, b), IMMUTABLE).asRec())),
                     instC(BARRIER_TID.dom(A.maybeSome()).rng(B), lst(T(B.maybeSome())), (lhs, inst) -> inst.arg(0).apply(lhs)),
                     instC(AS_INST_TID.dom(A).rng(A), lst(T(A)), (lhs, inst) -> lhs.clone(lhs.jvm(), inst.arg(0).tid(), lhs.vid())),
-                    instC(REPEAT_INST_TID.dom(A).rng(A.maybeSome()), lst(T(ALL), INT_TYPE), (lhs, inst) -> {
-                        Obj current = lhs;
+                    instC(REPEAT_INST_TID.dom(A).rng(A.maybeSome()).query("monad",null), lst(T(ALL), INT_TYPE), (lhs, inst) -> {
+                        Obj current = ((Monad)lhs).obj();
                         final Obj repeatedApply = inst.arg(0);
                         final int times = inst.arg(1).apply(current).intValue().intValue();
                         final boolean moreThanOne = repeatedApply.dom().c().most().gt(cInt.ONE());

@@ -554,6 +554,16 @@ public class fURI implements Cloneable, Ring<fURI>, Comparable<fURI>, Predicate<
     public boolean hasRng() {
         return this.hasQuery(RNG.toString());
     }
+    
+    public fURI wrap(final fURI child) {
+        if(this.pathLength() == 0)
+            throw MTronException.of("cannot wrap %s into empty path", child);
+        final String lastSegment = this.path.getLast();
+        final List<String> segments = new ArrayList<>(this.path);
+        segments.removeLast();
+        segments.add(lastSegment + "[" + child + "]");
+        return new fURI(this.scheme, this.host, this.port, this.sstart, segments, this.send, this.poly, Query.to(this.query));
+    }
 
     public fURI query(final String query) {
         return new fURI(this.scheme, this.host, this.port, this.sstart, this.path, this.send, this.poly, null == query || query.isEmpty() ? null : query);

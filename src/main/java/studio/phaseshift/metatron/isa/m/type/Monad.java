@@ -124,7 +124,7 @@ public interface Monad extends Obj {
     default Monad apply(final Obj inst) {
         if (this.halted())
             return this;
-        return this.obj(this.inst().apply(this.obj())).inst(inst.as());
+        return this.obj(this.inst().apply(this.inst().tid().hasQuery("monad") ? this : this.obj())).inst(inst.as());
     }
 
     class Helpers {
