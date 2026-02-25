@@ -22,7 +22,6 @@ import org.petitparser.context.Result;
 import org.petitparser.parser.Parser;
 import org.petitparser.parser.combinators.*;
 import org.petitparser.parser.primitive.CharacterParser;
-import studio.phaseshift.metatron.furi.C;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.mInstSet;
 import studio.phaseshift.metatron.isa.m.type.Call;
@@ -46,8 +45,13 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static org.petitparser.parser.primitive.CharacterParser.*;
-import static org.petitparser.parser.primitive.StringParser.*;
+import static org.petitparser.parser.primitive.CharacterParser.any;
+import static org.petitparser.parser.primitive.CharacterParser.anyOf;
+import static org.petitparser.parser.primitive.CharacterParser.digit;
+import static org.petitparser.parser.primitive.CharacterParser.of;
+import static org.petitparser.parser.primitive.CharacterParser.word;
+import static org.petitparser.parser.primitive.StringParser.of;
+import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.furi.fURI.fnull;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.from_;
@@ -289,7 +293,7 @@ public class mParser {
     }
 
     private static Parser m_furi_internal(final String furiCharacterSet, final boolean polynomial, final boolean coefficient, final boolean query) {
-        return seq(of("-").not(), seq(word().or(seq(of("::").not(), anyOf(furiCharacterSet)))).plus().flatten(),
+        return seq(of('-').not(), seq(word().or(seq(of("::").not(), anyOf(furiCharacterSet)))).plus().flatten(),
                 opt(polynomial ? m_furi_poly_type() : none(), null),
                 opt(coefficient ? m_furi_coefficient() : none(), null),
                 opt(query ? m_furi_query() : none(), null)).map(t -> new fURI(pick(t, 1)).poly(pick(t, 2)).c(pick(t, 3)).query(pick(t, 4)));
@@ -298,7 +302,7 @@ public class mParser {
     public static Parser m_furi(final String furiCharacterSet, final boolean polynomial, final boolean coefficient, final boolean query) {
         return choice(
                 seq(of('<'), m_furi_internal(FULL_FURI_CHARS, polynomial, coefficient, query), of('>')).pick(1),
-                seq(of("<>")).map(t -> new fURI("")),
+                seq(of("<>")).map(_ -> f("")),
                 m_furi_internal(furiCharacterSet, polynomial, coefficient, query));
     }
 
@@ -311,16 +315,16 @@ public class mParser {
         return seq(of('{'), choice(
                         seq(opt(seq(opt(of('-'), ""), digit().plus()), ""), of(','), opt(seq(opt(of('-'), ""), digit().plus()), "")).flatten(),
                         seq(opt(of('-'), ""), digit().plus()).flatten().map(t -> t + "," + t),
-                        of(","),
+                        of(','),
                         of("**"),
                         of("-*"),
                         of("-?"),
-                        of("*"),
-                        of("+"),
-                        of("-"),
+                        of('*'),
+                        of('+'),
+                        of('-'),
                         of("??"),
-                        of("?")),
-                of('}')).map(t -> pick(t, 1));
+                        of('?')),
+                of('}')).map(t -> pick(t, 1).toString());
     }
 
     public static Parser m_furi_query() {
@@ -379,12 +383,12 @@ public class mParser {
     }
 
     public static Parser m_type_prefix(final fURI baseType) {
-        return (null == baseType)? opt(seq(m_furi(REDUCED_FURI_CHARS, true, true, true), of("://").not(), of("::")).pick(0), baseType) :
-                opt(choice(seq(m_furi(REDUCED_FURI_CHARS, true, true, true), of("://").not(), of("::")).pick(0),m_furi_coefficient().map(t->{
+        return (null == baseType) ? opt(seq(m_furi(REDUCED_FURI_CHARS, true, true, true), of("://").not(), of("::")).pick(0), baseType) :
+                opt(choice(seq(m_furi(REDUCED_FURI_CHARS, true, true, true), of("://").not(), of("::")).pick(0), m_furi_coefficient().map(t -> {
                     try {
                         return baseType.c(t.toString());
                     } catch (Exception e) {
-                       return null;
+                        return null;
                     }
                 })), baseType);
     }
@@ -464,9 +468,9 @@ public class mParser {
     }
 
     public static Parser m_type() {
-        return seq(m_type_prefix(TYPE_INST_TID), of("T"),
-                opt(seq(of("["), opt(m_obj(), null), of("]")).map(t -> pick(t, 1)), null),
-                opt(seq(of("["), opt(m_obj(), null), of("]")).map(t -> pick(t, 1)), null),
+        return seq(m_type_prefix(TYPE_INST_TID), of('T'),
+                opt(seq(of('['), opt(m_obj(), null), of(']')).map(t -> pick(t, 1)), null),
+                opt(seq(of('['), opt(m_obj(), null), of(']')).map(t -> pick(t, 1)), null),
                 m_vid_postfix())
                 .map(t -> T(Tuple.Pair.with(pick(t, 2), pick(t, 3)), pick(t, 0), pick(t, 4)));
     }
