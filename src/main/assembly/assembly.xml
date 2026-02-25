@@ -19,7 +19,7 @@
 <assembly xmlns="http://maven.apache.org/ASSEMBLY/2.2.0"
           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
           xsi:schemaLocation="http://maven.apache.org/ASSEMBLY/2.2.0 http://maven.apache.org/xsd/assembly-2.2.0.xsd">
-    <id>standalone</id>
+    <id>jar-with-dependencies</id>
     <formats>
         <format>jar</format>
         <!-- <format>tar.gz</format> -->
@@ -27,16 +27,17 @@
     <includeBaseDirectory>false</includeBaseDirectory>
     <dependencySets>
         <dependencySet>
-            <outputDirectory>/lib</outputDirectory>
+            <outputDirectory>/</outputDirectory>
             <useProjectArtifact>false</useProjectArtifact>
-            <useTransitiveDependencies>false</useTransitiveDependencies>
+            <useTransitiveDependencies>true</useTransitiveDependencies>
+            <unpack>true</unpack>
             <scope>runtime</scope>
         </dependencySet>
     </dependencySets>
     <fileSets>
         <fileSet>
             <directory>${project.basedir}</directory>
-            <outputDirectory>.</outputDirectory>
+            <outputDirectory>/</outputDirectory>
             <includes>
                 <include>README*</include>
                 <include>LICENSE*</include>
@@ -47,7 +48,7 @@
         </fileSet>
         <fileSet>
             <directory>${project.build.outputDirectory}</directory>
-            <outputDirectory>/lib</outputDirectory>
+            <outputDirectory>/</outputDirectory>
             <includes>
                 <include>**/*.class</include>
             </includes>
@@ -68,9 +69,16 @@
         </fileSet>
         <fileSet>
             <directory>${project.basedir}/src/main/resources</directory>
-            <outputDirectory>lib</outputDirectory>
+            <outputDirectory>/</outputDirectory>
             <includes>
                 <include>logback.xml</include>
+            </includes>
+        </fileSet>
+        <fileSet>
+            <directory>${project.basedir}/src/main/resources/META-INF/services</directory>
+            <outputDirectory>META-INF/services</outputDirectory>
+            <includes>
+                <include>studio.phaseshift.metatron.isa.m.type.InstSet</include>
             </includes>
         </fileSet>
         <fileSet>
