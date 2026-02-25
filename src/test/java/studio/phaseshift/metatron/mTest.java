@@ -50,6 +50,10 @@ public abstract class mTest {
     protected static final Random RANDOM = new Random();
     protected GraphittyLogger LOG = Graphitty.log(this);
 
+    public static int generatePort() {
+        return RANDOM.nextInt(1000, 65000);
+    }
+    
     @BeforeAll
     public static void begin() {
         BootLoader.BOOTING = true;

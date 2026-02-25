@@ -47,7 +47,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public class mqttSpaceTest extends SpaceTest {
-    private static final int PORT = mTest.RANDOM.nextInt(65535);
+    private static final int PORT = generatePort();
 
     public mqttSpaceTest() {
         super(() -> {
