@@ -368,7 +368,8 @@ public interface Inst extends Call {
                             "\n\t  \\_p   | %s" +
                             "\n\t[inst]  | %s" +
                             "\n\t \\_dom  | %s" +
-                            "\n\t \\_args | %s")));
+                            "\n\t \\_args | %s",
+                            clhs,clhs.type(),clhs.tid(),clhs.type().predicate(),cinst,cinst.dom(),cinst.args())));
                     // e.printStackTrace();
                 } finally {
                     Router.stack().pop();

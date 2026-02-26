@@ -65,7 +65,7 @@ import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_ISA_TID;
 
 public class fsSpace extends AbstractSpace<FileSystem> {
 
-    public static final fURI FS_TID = MACH_ISA_TID.extend("space/fs");
+    public static final fURI FS_TID = MACH_ISA_TID.extend("space").extend("fs");
     private static final Rec FS_SPACE_CONFIG = rec(
             uri(Tokens.PATTERN), URI_TYPE,
             uri(Tokens.ROUTE), rec(URI_TYPE, URI_TYPE),
@@ -84,8 +84,8 @@ public class fsSpace extends AbstractSpace<FileSystem> {
 
     private fsSpace(final FileSystem sjvm, final Map<Obj, Obj> jvm, final fURI vid) {
         super(sjvm, jvm, FS_TID, vid);
-        final String prefix = this.routes.entrySet().stream().map(kv -> kv.getKey().uriValue().toString().replace("~", System.getProperty(USER_HOME))).iterator().next();
-        final String prepend = this.routes.entrySet().stream().map(kv -> kv.getValue().uriValue().toString().replace("~", System.getProperty(USER_HOME))).iterator().next();
+        final String prefix = this.routes.keySet().stream().map(objs -> objs.uriValue().toString().replace("~", System.getProperty(USER_HOME))).iterator().next();
+        final String prepend = this.routes.values().stream().map(objs -> objs.uriValue().toString().replace("~", System.getProperty(USER_HOME))).iterator().next();
         this.routes.put(uri(prefix), uri(prepend));
     }
 
@@ -116,6 +116,10 @@ public class fsSpace extends AbstractSpace<FileSystem> {
         // });
     }
 
+    @Override
+    public void close() {
+    }
+    
     public static File resolveFile(final Obj fileObj) {
         try {
             final fsSpace space = Router.global().getSpace(fileObj.uriValue().basePath()).as();
@@ -129,7 +133,7 @@ public class fsSpace extends AbstractSpace<FileSystem> {
         try {
             final File file = Paths.get(path.uriValue().basePath().toString()).toFile();
             final fsSpace space = Router.global().getSpace(Space.Helper.fromNativeSpace(f(file.getPath()), this.routes)).as();
-            return MUri.uri(Space.Helper.fromNativeSpace(fURI.f(file.getPath()), space.routes), machInstSet.FILE_TID, null);
+            return uri(Space.Helper.fromNativeSpace(fURI.f(file.getPath()), space.routes).query("p", PosixFilePermissions.toString(Files.getPosixFilePermissions(file.toPath()))), FILE_TID, null);
         } catch (final Exception e) {
             throw MTronException.of(e);
         }

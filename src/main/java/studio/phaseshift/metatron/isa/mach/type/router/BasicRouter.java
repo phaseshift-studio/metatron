@@ -236,8 +236,8 @@ public class BasicRouter extends AbstractSpace<MServer> implements Router {
         final Space space = this.getSpace(readableVID);
         final Obj obj = space.read(readableVID);
         if (obj.isNoObj()) {
-            final fURI bigVID = vid.big();
-            if (!bigVID.equals(vid))
+            final fURI bigVID = readableVID.big();
+            if (!bigVID.equals(readableVID))
                 return this.read(bigVID);
         }
         // todo c(mult vid.c())

@@ -18,7 +18,6 @@
 
 package studio.phaseshift.metatron.isa.m.type;
 
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.TestData;
@@ -30,7 +29,6 @@ import studio.phaseshift.metatron.mTest;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.furi.fURI.f;
@@ -38,7 +36,6 @@ import static studio.phaseshift.metatron.isa.m.mInstSet.FAIL_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 
-@ExtendWith(TestData.TestDataExtension.class)
 public class TypeTest extends mTest {
     private static final GraphittyLogger LOG = Graphitty.log(TypeTest.class);
     private static String LAST_TYPE_DEF = "";
@@ -491,9 +488,9 @@ public class TypeTest extends mTest {
             "agenat  % nat::T[?<125]                            % agenat::150                                      % false",
             "agenat  % .                                        % int::2.as(agenat::T)                             % true",
             "agenat  % .                                        % int::2.as(agenat::T).as(int::T).as(agenat::T)    % true",
-         //   "agenat  % .                                        % int::2.as(agenat::T).as(int::T).as(agenat::T).as(int::T)  % false",
+            //   "agenat  % .                                        % int::2.as(agenat::T).as(int::T).as(agenat::T).as(int::T)  % false",
             "agenat  % .                                        % int::2.as(nat::T).as(agenat::T)                  % true",
-          //  ".       % .                                        % agenat::-1                                       % false",
+            //  ".       % .                                        % agenat::-1                                       % false",
             ".       % .                                        % agenat::200                                      % false",
             ".       % .                                        % nat::200.as(agenat::T)                           % false",
             ".       % .                                        % agenat::29                                       % true",

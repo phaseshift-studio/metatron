@@ -18,72 +18,59 @@
 
 package studio.phaseshift.metatron.isa.sys.space;
 
-import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-import studio.phaseshift.metatron.TestData;
+import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.isa.SpaceTest;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
-import studio.phaseshift.metatron.isa.m.space.noobjSpace;
-import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.mach.io.space.file.fsSpace;
 import studio.phaseshift.metatron.mTest;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
-import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import java.nio.file.FileSystems;
+
+import static studio.phaseshift.metatron.Tokens.*;
+import static studio.phaseshift.metatron.furi.fURI.f;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.auto_from_;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_ISA_TID;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-@ExtendWith(TestData.TestDataExtension.class)
+// @TestSkip(testClass = SpaceTest.class, testMethods = {"testMonoReadWrite"}) TODO: this should pass?? something's weird
 public class fsSpaceTest extends SpaceTest {
 
     public fsSpaceTest() {
-      /*  super(f("/tmp/"),() -> {
-           return fsSpace.of(FileSystems.getDefault(), rec(uri(PATTERN), uri("/tmp/#"), uri(REWRITE), rec(uri(""), uri(""))), f("/sys/space/fs"));
-          
-        });
-        sysInstSet.create();*/
-        super(() -> noobjSpace.single());
-
-    }
-
-    @ParameterizedTest
-    @TestData(value = {
-            "root -> <src/test/resources/isa/sys/>",
-            "boot/script ->\n" +
+        super(() -> {
+            BootLoader.loadInstSetProvider(MACH_ISA_TID);
+            mParser.eval("boot/script ->\n" +
                     "  [sh     => /bin/sh,\n" +
                     "   bash   => /bin/bash,\n" +
                     "   zsh    => /bin/zsh,\n" +
                     "   python => /usr/bin/python3,\n" +
                     "   perl   => /usr/bin/perl,\n" +
-                    "   mtron  => /bin/mtron]",
-            "fs::[pattern=><test:#>,rewrite=><test:>=>!*root,script=>!*boot/script]@/sys/space/fs/test"
-    })
-    @Disabled
+                    "   mtron  => /bin/mtron]");
+            return fsSpace.of(FileSystems.getDefault(), rec(
+                            uri(PATTERN), uri("test:#"), uri(SCRIPT), auto_from_(f("boot/script")),
+                            uri(ROUTE), rec(uri("test:"), uri("src/test/resources/isa/sys/"))),
+                    f("/sys/space/mem"));
+        });
+    }
+
+    @ParameterizedTest
     @CsvSource(value = {
-            "*root                              % <src/test/resources/isa/sys/>",
+            "*<test:#>.count().?>3              % 4",
             "*boot/script/sh                    % /bin/sh",
-            "*<test:space/test-py.py>           % file::<test:space/test-py.py?p=rw-rw-r-->",
-            "*<test:space/test-sh.sh>           % file::<test:space/test-sh.sh?p=rw-rw-r-->",
-            "*<test:space/test-bash.bash>       % file::<test:space/test-bash.bash?p=rw-rw-r-->",
+            "*<test:space/test-py.py>           % file::<test:space/test-py.py?p=rwxrwxrwx>",
+            "*<test:space/test-py.py>           % file::<test:space/test-py.py?p=rwxrwxrwx>",
+            "*<test:space/test-sh.sh>           % file::<test:space/test-sh.sh?p=rwxrwxrwx>",
+            "*<test:space/test-bash.bash>       % file::<test:space/test-bash.bash?p=rwxrwxrwx>",
+            // "<test:space/test-sh.sh>()          % \"metatron 0.1-SNAPSHOT\"",
     }, delimiter = '%')
     public void testShell(final String code, final String expected) {
         mTest.testCode(LOG, code, expected);
     }
 
-    @Disabled
-    @ParameterizedTest
-    @CsvSource(value = {
-            "</tmp/file.jpg> -> 0xab2356abcd        % a",
-            "*</tmp/file.jpg>    % abc"
-    }, delimiter = '%')
-    public void testImage(final String code, final String expected) {
-        final Obj resultObj = mParser.eval(code);
-        final Obj checkObj = mParser.eval(expected);
-        assertNotEquals(noobj(), checkObj);
-        assertEquals(checkObj, resultObj);
-    }
 
 }

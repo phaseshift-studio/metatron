@@ -20,6 +20,7 @@ package studio.phaseshift.metatron;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.extension.ExtendWith;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.type.Call;
@@ -33,11 +34,14 @@ import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.Tuple;
 
+import java.util.Arrays;
 import java.util.Map;
 import java.util.Random;
 import java.util.function.Supplier;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assumptions.assumeFalse;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static studio.phaseshift.metatron.isa.m.mInstSet.START_INST_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
@@ -45,6 +49,8 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.mach.io.ioInstSet.IO_ISA_TID;
 
+@ExtendWith(TestSkip.TestSkipExtension.class)
+@ExtendWith(TestData.TestDataExtension.class)
 public abstract class mTest {
 
     protected static final Random RANDOM = new Random();
@@ -53,7 +59,7 @@ public abstract class mTest {
     public static int generatePort() {
         return RANDOM.nextInt(1000, 65000);
     }
-    
+
     @BeforeAll
     public static void begin() {
         BootLoader.BOOTING = true;
@@ -66,6 +72,8 @@ public abstract class mTest {
     public static void end() {
         BootLoader.close();
     }
+
+
 
     public static void testMatches(final GraphittyLogger LOG, final String lhs, final String rhs, final boolean matches) {
         final Obj a = mParser.m_obj().parse(lhs).get();

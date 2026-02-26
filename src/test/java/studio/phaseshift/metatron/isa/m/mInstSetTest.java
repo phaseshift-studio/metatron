@@ -46,7 +46,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 
-@ExtendWith(TestData.TestDataExtension.class)
+
 public class mInstSetTest extends InstSetTest {
 
 

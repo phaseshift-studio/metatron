@@ -52,7 +52,7 @@ public abstract class AbstractSpace<SJVM> extends MRec implements Space {
         this.ioStats = new MStats();
         final Obj temp = config.getOrDefault(uri(ROUTE), rec());
         if(temp.isRec())
-            temp.asRec().jvm().forEach((key, value) -> this.routes.put(key.asUri(), value.asUri()));
+            temp.asRec().elements().forEach(kv -> this.routes.put(kv.first().asUri(), kv.second().asUri()));
         else 
             this.routes.put(temp.asRel().first().asUri(),temp.asRel().second().asUri());
         LOG = Graphitty.log(this);
