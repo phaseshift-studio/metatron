@@ -37,6 +37,8 @@ public class MTronTestException extends RuntimeException {
     }
 
     public static MTronTestException of(final Throwable cause) {
+        if(null == cause)
+            return new MTronTestException("null cause");
         if (cause instanceof MTronTestException)
             return (MTronTestException) cause;
         else {

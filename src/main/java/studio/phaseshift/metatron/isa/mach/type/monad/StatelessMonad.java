@@ -39,11 +39,13 @@ public class StatelessMonad extends AbstractMonad implements Monad {
     private static final GraphittyLogger LOG = Graphitty.log(StatelessMonad.class);
     public static final fURI MACH_STATELESS_MONAD_TID = MACH_MONAD_TID.extend("stateless");
 
-    List<Obj> jvm;
+    Obj obj;
+    Inst inst;
 
     protected StatelessMonad(final List<Obj> jvm, final fURI tid, final fURI vid) {
         super(tid, vid);
-        this.jvm = jvm;
+        this.obj = jvm.getFirst();
+        this.inst = (Inst) jvm.get(1);
     }
 
     @Override
@@ -53,7 +55,7 @@ public class StatelessMonad extends AbstractMonad implements Monad {
 
     @Override
     public List<Obj> jvm() {
-        return this.jvm;
+        return List.of(this.obj, this.inst, noobj());
     }
 
     @Override
@@ -64,7 +66,8 @@ public class StatelessMonad extends AbstractMonad implements Monad {
 
     @Override
     public <OBJ extends Obj> OBJ self(final Object jvm, final fURI tid, final fURI vid) {
-        this.jvm = (List<Obj>) jvm;
+        this.obj = (Obj) jvm;
+        this.inst = (Inst) ((List<Obj>) jvm).get(1);
         this.tid = tid;
         this.vid = vid;
         return (OBJ) this;

@@ -18,54 +18,54 @@
 
 package studio.phaseshift.metatron.isa.mach.type.machine;
 
-import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.mInstSet;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.MCode;
 import studio.phaseshift.metatron.isa.m.type.impl.MInst;
-import studio.phaseshift.metatron.isa.m.type.impl.MObj;
-import studio.phaseshift.metatron.isa.m.type.impl.MObjs;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.Monad;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
-import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.util.MTronException;
-import studio.phaseshift.metatron.util.Tuple;
 
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.*;
 import java.util.function.Consumer;
-import java.util.function.Supplier;
 
-import static studio.phaseshift.metatron.isa.m.mInstSet.CODE_TID;
+import static studio.phaseshift.metatron.Tokens.*;
+import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
-import static studio.phaseshift.metatron.isa.mach.machInstSet.DROP_TID;
-import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_ISA_TID;
+import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs0;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
+import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.isa.mach.machInstSet.*;
 import static studio.phaseshift.metatron.isa.mach.type.monad.BasicMonad.monad;
-import static studio.phaseshift.metatron.util.Tuple.Quartet;
 
 ;
 
-public class MMachine extends MObj implements Machine {
+public class SwarmMachine extends AbstractMachine implements Machine {
 
-    private final GraphittyLogger LOG = Graphitty.log(this);
-    private Consumer<Obj> onHalt = o -> this.halted().append(o);
-    public static Supplier<Obj> RUNNING_SUPPLIER = ListMonad::of;
-    public AtomicBoolean interrupted = new AtomicBoolean(false);
-
+    public static final fURI MACH_SWARM_MACHINE_TID = MACH_MACHINE_TID.extend("swarm");
+    public static final Type MACH_SWARM_MACHINE_TYPE = Type.Builder.build()
+            .tid(MACH_MACHINE_TID)
+            .vid(MACH_SWARM_MACHINE_TID)
+            .constructor(machine -> SwarmMachine.machine(machine.jvm(), machine.tid(), machine.vid()))
+            .create();
+    
     // code / running / barriers / halted
-    public MMachine(final Quartet<Code, Obj, Lst, Obj> value, final fURI tid, final fURI vid) {
-        super(value, tid, vid);
+    protected SwarmMachine(final Map<Obj,Obj> jvm, final fURI tid, final fURI vid) {
+        super(jvm, tid, vid);
     }
 
-    public static Machine of(final Call code) {
-        return new MMachine(Quartet.with(code.isInst() ? new MCode(List.of(code.as()), CODE_TID, fURI.fnull) : code.as(), RUNNING_SUPPLIER.get(), lst(new LinkedList<>()), MObjs.empty()), MACH_ISA_TID, fURI.fnull);
+    public static SwarmMachine of(final Call code) {
+        return new SwarmMachine(Map.of(uri(CODE), code.isCode() ? code.as() : new MCode(code.insts(), CODE_TID, fURI.fnull)), MACH_ISA_TID, fURI.fnull);
+    }
+    
+    public static SwarmMachine machine(final Map<Obj,Obj> machineState, final fURI tid, final fURI vid) {
+        return new SwarmMachine(machineState, tid, vid);
     }
 
     public Machine onHalt(final Consumer<Obj> onHalt) {
@@ -83,9 +83,9 @@ public class MMachine extends MObj implements Machine {
             final List<Inst> prepended = new ArrayList<>();
             prepended.add(MInst.instB(mInstSet.START_INST_TID, lst(start)));
             prepended.addAll(code.codeValue());
-            return new MMachine(Quartet.with(MCode.of(prepended), RUNNING_SUPPLIER.get(), lst(new LinkedList<>()), MObjs.empty()), MACH_ISA_TID, fURI.fnull);
+            return new SwarmMachine(Map.of(uri(CODE),MCode.of(prepended)), MACH_ISA_TID, fURI.fnull);
         } else {
-            return MMachine.of(code);
+            return SwarmMachine.of(code);
         }
     }
 
@@ -100,27 +100,14 @@ public class MMachine extends MObj implements Machine {
             } else if (inst.isGather()) {
                 // many-to-?
                 LOG.trace("  {{m}}==|{{/m}} creating {{y}}barrier{{/y}} monad at %s", inst);
-                final Monad m = monad(MObjs.empty(), inst);
+                final Monad m = monad(objs0(), inst);
                 mach.barriers().<LinkedList<Obj>>jvmAs().add(m);
             }
         }
         return mach;
     }
 
-    protected Monad split(final Monad monad) {
-        if (monad.obj().unique() && monad.inst().dom().c().isOne() || monad.inst().dom().c().isAny())
-            return monad;
-        final Tuple.Pair<Obj, Obj> pair = monad.obj().take(cInt.of(monad.inst().dom().c().max()));
-        if (!pair.get1().isNoObj())
-            this.running().append(monad.obj(pair.get1()));
-        LOG.trace("   {{g}}=>{{/g}} splitting monad %s / %s (inst: %s)", pair.get0(), pair.get1(), monad.inst());
-        return monad.obj(pair.get0());
-    }
-
-    public void interrupt() {
-        this.interrupted.set(true);
-    }
-
+    
     @Override
     public Obj apply(final Obj lhs) {
         try {
@@ -227,15 +214,5 @@ public class MMachine extends MObj implements Machine {
         } catch (final Exception e) {
             return fail(e);
         }
-    }
-
-    @Override
-    public Quartet<Code, Obj, Lst, Obj> jvm() {
-        return (Quartet<Code, Obj, Lst, Obj>) this.jvm;
-    }
-
-    @Override
-    public Machine clone(Object jvm, fURI tid, fURI vid) {
-        return new MMachine((Quartet<Code, Obj, Lst, Obj>) jvm, tid, vid);
     }
 }

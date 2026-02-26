@@ -28,12 +28,16 @@ public final class Tokens {
         // do nothing
     }
 
+    public static final String MONAD = "monad";
     public static final String ONLINE = "online";
     public static final String OFFLINE = "offline";
     public static final String HTML = "html";
     public static final String HEAD = "head";
     public static final String BODY = "body";
     public static final String CODE = "code";
+    public static final String RUNNING = "running";
+    public static final String HALTED = "halted";
+    public static final String BARRIER = "barrier";
     public static final String SUPER = "super";
     public static final String ROUTE = "route";
     public static final String PEERS = "peers";

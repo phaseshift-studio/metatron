@@ -1,3 +1,8 @@
+#!/bin/sh
+
+if [ $# -eq 0 ]; then
+  set -- "[host=><ws://0.0.0.0:8999>,boot=><boot/boot.mtron>,log=>info]"
+docker pull docker.phaseshift.studio/metatron:0.1-SNAPSHOT
 lsof -ti:8999 | xargs kill
-ttyd --credential metatron:nortatem --writable --port 8111 bin/metatron "[host=><ws://0.0.0.0:8999>,boot=><boot/boot.mtron>,log=>info]"
+ttyd --credential metatron:nortatem --writable --port 8111 bin/metatron "$@"
 

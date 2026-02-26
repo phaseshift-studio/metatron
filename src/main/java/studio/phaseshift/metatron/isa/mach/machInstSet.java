@@ -76,7 +76,9 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.mach.io.space.file.fsSpace.FS_SPACE_TYPE;
 import static studio.phaseshift.metatron.isa.mach.io.space.file.fsSpace.makeFile;
 import static studio.phaseshift.metatron.isa.mach.io.space.serial.serialSpace.SERIAL_SPACE_TYPE;
+import static studio.phaseshift.metatron.isa.mach.type.Machine.MACH_MACHINE_TYPE;
 import static studio.phaseshift.metatron.isa.mach.type.console.Console.CONSOLE_TYPE;
+import static studio.phaseshift.metatron.isa.mach.type.machine.SwarmMachine.MACH_SWARM_MACHINE_TYPE;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -85,6 +87,7 @@ import static studio.phaseshift.metatron.isa.mach.type.console.Console.CONSOLE_T
 public class machInstSet extends AbstractInstSet {
 
     public static final fURI MACH_ISA_TID = M_ISA_TID.extend("mach");
+    public static final fURI MACH_MACHINE_TID = MACH_ISA_TID.extend("machine");
     public static final fURI MACH_MONAD_TID = MACH_ISA_TID.extend("monad");
     public static final fURI MACH_INST_TID = MACH_ISA_TID.extend("inst");
     public static final fURI DROP_TID = MACH_INST_TID.extend("drop");
@@ -150,7 +153,10 @@ public class machInstSet extends AbstractInstSet {
                 IMAGE_FILE_TYPE,
                 FACTORY_TYPE,
                 M_FACTORY_TYPE,
-                MACH_MONAD_TYPE));
+                /// /////////////////////
+                MACH_MONAD_TYPE,
+                MACH_MACHINE_TYPE,
+                MACH_SWARM_MACHINE_TYPE));
     }
 
     @Override

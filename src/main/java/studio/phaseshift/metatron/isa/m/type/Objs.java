@@ -96,7 +96,7 @@ public interface Objs extends Obj, PlusMonoid.O<Objs> {
 
     @Override
     default Objs zero() {
-        return MObjs.empty();
+        return MObjs.objs0();
     }
 
     @Override

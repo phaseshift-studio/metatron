@@ -20,7 +20,7 @@ package studio.phaseshift.metatron.lang.core.mach;
 
 import org.junit.jupiter.api.Test;
 
-public class MMachineTest {
+public class SwarmMachineTest {
 
     @Test
     public void test() {

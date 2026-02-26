@@ -40,8 +40,9 @@ import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Rel;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.mach.type.LogObj;
-import studio.phaseshift.metatron.isa.mach.type.machine.MMachine;
+import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.machine.SwarmMachine;
 import studio.phaseshift.metatron.isa.mach.type.ui.Border;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
@@ -95,7 +96,7 @@ public class Console extends JRec implements Closeable, Runnable {
             Paths.get(System.getProperty("user.home"), ".metatron") // user-specific settings
     );
     public static Console LOCAL_INSTANCE = null;
-    public MMachine machine = null;
+    public Machine machine = null;
 
     public static final Type CONSOLE_TYPE = Type.Builder.build()
             .tid(REC_TID)
@@ -257,7 +258,7 @@ public class Console extends JRec implements Closeable, Runnable {
                         try {
                             final Obj parseResult = mParser.parse(l);
                             if (null != parseResult && !parseResult.isNoObj()) {
-                                this.machine = (MMachine) MMachine.of(parseResult.isCall() ? parseResult.as() : start_(parseResult)).onHalt(this::printResult);
+                                this.machine = SwarmMachine.of(parseResult.isCall() ? parseResult.as() : start_(parseResult)).onHalt(this::printResult);
                                 final Obj computeResult = this.machine.apply();
                                 computeResult.stream().forEach(this::printResult);
                             }

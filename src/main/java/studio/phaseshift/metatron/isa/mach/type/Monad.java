@@ -31,6 +31,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
 
+import static studio.phaseshift.metatron.Tokens.MONAD;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec0;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_MONAD_TID;
@@ -49,7 +50,7 @@ public interface Monad extends Obj, Ring<Monad> {
     }
 
     @Override
-    default Monad mult(Monad rhs) {
+    default Monad mult(final Monad rhs) {
         return this.apply(rhs).c(c -> c.mult(rhs.c()));
     }
 
@@ -76,7 +77,7 @@ public interface Monad extends Obj, Ring<Monad> {
     }
 
     default Rec state() {
-        return this.jvm().get(2).isNoObj() ? rec0() : (Rec) this.jvm().get(2);
+        return null == this.jvm().get(2) || this.jvm().get(2).isNoObj() ? rec0() : (Rec) this.jvm().get(2);
     }
 
     default Inst inst() {
@@ -130,12 +131,12 @@ public interface Monad extends Obj, Ring<Monad> {
     default Monad apply(final Obj inst) {
         if (this.halted())
             return this;
-        return this.obj(this.inst().apply(this.inst().tid().hasQuery("monad") ? this : this.obj())).inst(inst.as());
+        return this.obj(this.inst().apply(this.inst().tid().hasQuery(MONAD) ? this : this.obj())).inst(inst.as());
     }
 
     class Helpers {
         public static String monadToString(final Monad monad) {
-            return Graphitty.string("{{b}}%s{{g}}::[%s{{g}}<--{{/g}}{{c}}M{{g}}-->{{c}}%s{{g}}]{{X}}", monad.tid(), monad.obj(), monad.inst());
+            return "%s::[%s<=o==M==i=>%s]".formatted(monad.tid(), monad.obj(), monad.inst());
         }
 
         public static int monadHashCode(final Monad monad) {

@@ -108,7 +108,7 @@ public class MObjs implements Objs {
         return this;
     }
 
-    public static Objs empty() {
+    public static Objs objs0() {
         return new MObjs(new ArrayList<>(), ALL_STAR, null); // a noobj that can be appended
     }
 

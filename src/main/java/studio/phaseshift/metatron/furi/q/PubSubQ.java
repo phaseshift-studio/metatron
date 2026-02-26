@@ -22,9 +22,9 @@ import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.mInstSet;
 import studio.phaseshift.metatron.isa.m.type.*;
-import studio.phaseshift.metatron.isa.mach.type.machine.MMachine;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 import studio.phaseshift.metatron.isa.mach.type.Machine;
+import studio.phaseshift.metatron.isa.mach.type.machine.SwarmMachine;
 import studio.phaseshift.metatron.util.CommonUtil;
 
 import java.util.LinkedList;
@@ -147,7 +147,7 @@ public class PubSubQ extends BaseQ {
             LOG.debug("evaluating {{y}}qless write{{/y}}: %s => %s", obj, vid);
             subscriptions.elements().map(Rel::second).map(Obj::<Subscription>as).filter(s -> vid.test(s.target())).forEach(s -> {
                 LOG.debug("sending mail: (%s, %s)", obj, s);
-                mail.add(MMachine.of(lst(List.of(vid.toUri(), obj)), s.call().toCode()));
+                mail.add(SwarmMachine.of(lst(List.of(vid.toUri(), obj)), s.call().toCode()));
             });
             BootLoader.getExecutor().submit(new Thread(() -> {
                 while (!mail.isEmpty()) {

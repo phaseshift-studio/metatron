@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -20,23 +20,44 @@ package studio.phaseshift.metatron.isa.mach.type;
 
 import studio.phaseshift.metatron.algebra.Ring;
 import studio.phaseshift.metatron.furi.fURI;
-
 import studio.phaseshift.metatron.isa.m.type.*;
-import studio.phaseshift.metatron.util.Tuple;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.function.Consumer;
+
+import static studio.phaseshift.metatron.Tokens.*;
+import static studio.phaseshift.metatron.isa.m.mInstSet.ALL_STAR;
+import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TID;
+import static studio.phaseshift.metatron.isa.m.type.Lst.LST_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
+import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_MACHINE_TID;
+import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_MONAD_TID;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public interface Machine extends Call, Ring<Call> {
 
+    Type MACH_MACHINE_TYPE = Type.Builder.build()
+            .tid(REC_TID)
+            .vid(MACH_MACHINE_TID)
+            .isaPredicate(rec(
+                    uri(HALTED), T(ALL_STAR),
+                    uri(RUNNING), T(MACH_MONAD_TID.maybeSome()),
+                    uri(BARRIER), LST_TYPE))
+            .create();
+
     @Override
     Machine clone(final Object jvm, final fURI tid, final fURI vid);
 
     // code, running, barriers, halted
     @Override
-    Tuple.Quartet<Code, Obj, Lst, Obj> jvm();
+    Map<Obj, Obj> jvm();
+
+    void interrupt();
 
     @Override
     default boolean isResolved(final boolean nested) {
@@ -44,47 +65,41 @@ public interface Machine extends Call, Ring<Call> {
     }
 
     default Obj halted() {
-        return this.jvm().get3();
+        return this.jvm().get(uri(HALTED));
     }
 
     default Lst barriers() {
-        return this.jvm().get2();
+        return this.jvm().get(uri(BARRIER)).as();
     }
 
     default Obj running() {
-        return this.jvm().get1();
+        return this.jvm().get(uri(RUNNING));
     }
 
     default Code code() {
-        return this.jvm().get0();
+        return this.jvm().get(uri(CODE)).as();
     }
 
     default Machine code(final Code code) {
-        return this.clone(Tuple.Quartet.with(code, this.running(), this.barriers(), this.halted()), this.tid(), this.vid());
+        final Map<Obj, Obj> map = new HashMap<>(this.jvm());
+        map.put(uri(CODE), code);
+        return this.clone(map, this.tid(), this.vid());
     }
 
     Machine onHalt(final Consumer<Obj> halted);
 
     Consumer<Obj> onHalt();
 
-    default void processHalted(final Obj halted) {
-        final Consumer<Obj> h = this.onHalt();
-        if (null != h)
-            h.accept(halted);
-        else
-            this.halted().append(halted);
-        
-    }
-
     @Override
     default Machine plus(final Call other) {
         // two machines executing in parallel
         final boolean otherMachine = other instanceof Machine;
-        return this.clone(Tuple.Quartet.with(this.jvm().get0().plus(otherMachine ? other.<Machine>as().jvm().get0() : other.jvm()),
-                        otherMachine ? this.jvm().get1().append(other.<Machine>as().jvm().get1()) : this.jvm().get1(),
-                        otherMachine ? this.jvm().get2().append(other.<Machine>as().jvm().get2()) : this.jvm().get2(),
-                        otherMachine ? this.jvm().get3().append(other.<Machine>as().jvm().get3()) : this.jvm().get3()),
-                this.tid().plus(other.tid()), this.vid());
+        /*return this.clone(Tuple.Quartet.with(this.jvm().get(uri(CODE)).plus(otherMachine ? other.<Machine>as().jvm().get(uri(CODE)) : other.jvm().get(uri(CODE))),
+                        otherMachine ? this.jvm().get(uri(RUNNING)).append(other.<Machine>as().jvm().get(uri(RUNNING))) : this.jvm().get(uri(RUNNING)),
+                        otherMachine ? this.jvm().get(uri(BARRIER)).append(other.<Machine>as().jvm().get(uri(BARRIER))) : this.jvm().get(uri(BARRIER)),
+                        otherMachine ? this.jvm().get(uri(HALTED)).append(other.<Machine>as().jvm().get(uri(HALTED))) : this.jvm().get(uri(HALTED))),
+                this.tid().plus(other.tid()), this.vid());*/
+        return null;
     }
 
     @Override

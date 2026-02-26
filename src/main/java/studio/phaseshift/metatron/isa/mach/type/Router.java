@@ -22,41 +22,34 @@ import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.Space;
-import studio.phaseshift.metatron.isa.m.space.noobjSpace;
 import studio.phaseshift.metatron.isa.m.space.stackSpace;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
-import studio.phaseshift.metatron.isa.m.type.Uri;
-import studio.phaseshift.metatron.isa.m.type.impl.MRec;
+import studio.phaseshift.metatron.isa.mach.type.router.NoObjRouter;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.lang.sys.router.impl.MServer;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
-import static studio.phaseshift.metatron.furi.fURI.NOOBJ;
 import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
-import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
-import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
-import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.mach.machInstSet.ROUTER_TID;
 
-public interface Router extends Obj, Space {
+public interface Router extends Space {
 
-    ThreadLocal<stackSpace> THREAD_STACK = ThreadLocal.withInitial(() -> new stackSpace(f("+/#")));
+    fURI STACK_PATTERN = f("+/#");
+    ThreadLocal<stackSpace> THREAD_STACK = ThreadLocal.withInitial(() -> new stackSpace(STACK_PATTERN));
 
     static boolean loaded() {
         return null != BootLoader.ROUTER;
     }
 
     static Router global() {
-        return null == BootLoader.ROUTER ? DummyRouter.single() : BootLoader.ROUTER;
+        return null == BootLoader.ROUTER ? NoObjRouter.single() : BootLoader.ROUTER;
     }
 
     static Obj readFromSpace(final fURI vid) {
@@ -72,7 +65,7 @@ public interface Router extends Obj, Space {
     }
 
     static Obj writeToSpace(final String vid, final Obj obj) {
-        return Router.loaded() ? BootLoader.ROUTER.write(vid, obj) : noobj();
+        return writeToSpace(f(vid), obj);
     }
 
     static Obj writeToSpace(final Obj obj) {
@@ -102,7 +95,7 @@ public interface Router extends Obj, Space {
         return fURI.ALL;
     }
 
-    default <O extends Obj> O read(final String vid, final Class<O> oClass) {
+    default <OBJ extends Obj> OBJ read(final String vid, final Class<OBJ> oClass) {
         try {
             return oClass.getConstructor(Obj.class).newInstance(this.read(fURI.of(vid)));
         } catch (final Exception e) {
@@ -142,7 +135,7 @@ public interface Router extends Obj, Space {
 
     fURI rewrite(final fURI furi, final boolean big);
 
-    <S extends Space> S getSpace(final fURI vid);
+    <SPACE extends Space> SPACE getSpace(final fURI vid);
 
     class Helper {
         public static String routerToString(final Router router) {
@@ -150,91 +143,11 @@ public interface Router extends Obj, Space {
         }
     }
 
-    class DummyRouter extends MRec implements Router {
-
-        public static final DummyRouter INSTANCE = new DummyRouter();
-
-        public static final DummyRouter single() {
-            return INSTANCE;
-        }
-
-        public DummyRouter() {
-            super(Map.of(), ROUTER_TID, null);
-        }
-
-        @Override
-        public MServer server() {
-            return null;
-        }
-
-        @Override
-        public void start() {
-
-        }
-
-        @Override
-        public Object sjvm() {
-            return Map.of();
-        }
-
-        @Override
-        public Map<Uri, Uri> routes() {
-            return Map.of();
-        }
-
-        @Override
-        public Stats stats() {
-            return new MStats();
-        }
-
-        @Override
-        public Obj read(fURI vid) {
-            return noobj();
-        }
-
-        @Override
-        public Obj write(fURI vid, Obj obj) {
-            return noobj();
-        }
-
-        @Override
-        public boolean hasSpaceFor(fURI vid) {
-            return false;
-        }
-
-        @Override
-        public void addSpace(Space space) {
-
-        }
-
-        @Override
-        public void removeSpace(fURI vid) {
-
-        }
-
-        @Override
-        public void registerRewrite(fURI small, fURI big) {
-
-        }
-
-        @Override
-        public fURI rewrite(fURI furi, boolean big) {
-            return NOOBJ;
-        }
-
-        @Override
-        public <S extends Space> S getSpace(fURI vid) {
-            return noobjSpace.single();
-        }
-
-       
-    }
-
     final class RouterType {
 
         public static Set<Inst> insts() {
             return new LinkedHashSet<>(List.of(
-                  
+
             ));
         }
 

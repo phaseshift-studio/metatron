@@ -19,8 +19,11 @@
 package studio.phaseshift.metatron.isa.mach.type.monad;
 
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.type.Monad;
 import studio.phaseshift.metatron.util.MTronException;
+
+import java.util.List;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -29,7 +32,7 @@ public abstract class AbstractMonad implements Monad {
 
     protected fURI tid;
     protected fURI vid;
-    
+
     public AbstractMonad(final fURI tid, final fURI vid) {
         this.tid = tid;
         this.vid = vid;
@@ -47,11 +50,19 @@ public abstract class AbstractMonad implements Monad {
 
     @Override
     public Monad tid(final fURI tid) {
-        this.tid = tid;
-        return this;
+        return this.clone(this.jvm(), tid, this.vid());
     }
 
+    @Override
+    public Monad vid(final fURI vid) {
+        return this.clone(this.jvm(), this.tid(), vid);
+    }
 
+    @Override
+    public Monad jvm(final Object jvm) {
+        return this.clone(jvm, this.tid(), this.vid());
+    }
+    
     @Override
     public boolean equals(final Object other) {
         return Monad.Helpers.monadEquals(this, other);
