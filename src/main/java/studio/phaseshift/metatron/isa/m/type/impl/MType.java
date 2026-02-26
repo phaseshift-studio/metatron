@@ -23,6 +23,7 @@ import studio.phaseshift.metatron.isa.m.type.Call;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
 
 import java.util.Objects;
@@ -49,7 +50,7 @@ public class MType extends MObj implements Type {
     }
 
     public static Type T(final fURI tid, final fURI vid, final Call predicate, final Call constructor) {
-        final fURI bigTID = null == tid ? vid : tid.big();
+        final fURI bigTID = null == tid ? vid.big() : tid.big();
         final fURI bigVID = null == vid ? null : vid.big();
         final fURI checkID = null == bigVID ? bigTID : bigVID;
         assert checkID != null;
@@ -63,9 +64,15 @@ public class MType extends MObj implements Type {
                 else
                     return new MType(Tuple.Pair.with(
                             null == predicate || predicate.isNoObj() ? obj.asType().predicate() : predicate,
-                            null == constructor || constructor.isNoObj() ? obj.asType().constructor() : constructor), obj.vidOrTid().c(checkID.c()), checkID); // coefficient specific type doesn't exist, create it
+                            null == constructor || constructor.isNoObj() ? obj.asType().constructor() : constructor), obj.tid().c(checkID.c()), checkID); // coefficient specific type doesn't exist, create it
             }
         }
+        final boolean isBaseType = BASE_TYPES.contains(checkID.basePath());
+        if (isBaseType || Objects.equals(bigVID, bigTID) || (null != vid && null != tid) || checkID.hasPattern() || checkID.isGeneric())
+            return isBaseType ?
+                    new MType(Tuple.Pair.with(predicate, constructor), bigTID, bigTID) :
+                    new MType(Tuple.Pair.with(predicate, constructor), bigTID, bigVID);
+        //throw MTronException.of("type not found: %s@%s", tid, vid); // TODO: a few cases fail --namely around equality checks. fix and then replace the bottom with this/
         return new MType(Tuple.Pair.with(predicate, constructor), null == bigTID ? checkID : bigTID, null == bigVID ? checkID : bigVID);
     }
 
@@ -81,7 +88,8 @@ public class MType extends MObj implements Type {
 
     @Override
     public boolean equals(final Object other) {
-        return other instanceof Type && Objects.equals(this.vid(), ((Type) other).vid()) && Objects.equals(this.tid, ((Type) other).tid());
+        //return other instanceof Type && (Objects.equals(this.vid(), ((Type) other).vid()) || (Objects.equals(this.tid, ((Type) other).tid()) && Objects.equals(this.jvm(), ((Type) other).jvm())));
+        return other instanceof Type && Objects.equals(this.vid, ((Type) other).vid()) && Objects.equals(this.tid, ((Type) other).tid());
     }
 
     @Override

@@ -40,8 +40,7 @@ import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.isa.grph.grphInstSet.*;
 import static studio.phaseshift.metatron.isa.grph.tp3.space.schema.modernSchema.MODERN_SCHEMA_TYPE;
 import static studio.phaseshift.metatron.isa.grph.tp3.space.tp3Space.TP3_SPACE_TYPE;
-import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TID;
-import static studio.phaseshift.metatron.isa.m.mInstSet.URI_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
@@ -57,6 +56,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 public class tp3InstSet extends AbstractInstSet {
 
     public static final fURI TP3_ISA_TID = GRPH_ISA_TID.extend("tp3");
+    public static final fURI GRPH_TID = TP3_ISA_TID.extend("grph");
     protected static final Set<Type> TYPES = new LinkedHashSet<>();
     protected static final Set<Inst> INSTS = new LinkedHashSet<>();
 
@@ -89,6 +89,10 @@ public class tp3InstSet extends AbstractInstSet {
     /// ////////////////////////////////////////////////////////////////////////////////////////////////////////////
     /// ////////////////////////////////////////////////////////////////////////////////////////////////////////////
     /// ////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    public static final Type GRPH_TYPE = Type.Builder.build()
+            .tid(SPACE_TID)
+            .vid(GRPH_TID)
+            .create(TYPES, INSTS);
     public static final Type ELMT_TYPE = Type.Builder.build()
             .tid(REC_TID)
             .vid(ELMT_TID)

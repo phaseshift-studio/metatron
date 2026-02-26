@@ -23,6 +23,7 @@ import studio.phaseshift.metatron.isa.mach.type.console.Highlighter;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 
 import java.util.Arrays;
+import java.util.Locale;
 import java.util.Objects;
 
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
@@ -69,7 +70,7 @@ public class MTronException extends RuntimeException {
            // throwable.printStackTrace();
             return new MTronException("unable to convert " + convertName(leftClass.substring(leftClass.lastIndexOf('.') + 1)) + " to " + convertName(rightClass.substring(rightClass.lastIndexOf('.') + 1)), throwable);
         } else {
-            return new MTronException(Highlighter.unformat(throwable.getCause().toString()));
+            return new MTronException(Highlighter.unformat(null == throwable.getCause() ? throwable.getClass().getSimpleName().toLowerCase() : throwable.getCause().toString()));
         }
     }
     

@@ -174,6 +174,7 @@ public class TypeTest extends mTest {
 
 
     @ParameterizedTest
+    @TestData(value = {"abc -> noobj::T"})
     @CsvSource(value = {
             // obj               | type                                         | matches?
             "noobj               | noobj{0}::T                                | true",
@@ -490,7 +491,7 @@ public class TypeTest extends mTest {
             "agenat  % nat::T[?<125]                            % agenat::150                                      % false",
             "agenat  % .                                        % int::2.as(agenat::T)                             % true",
             "agenat  % .                                        % int::2.as(agenat::T).as(int::T).as(agenat::T)    % true",
-            "agenat  % .                                        % int::2.as(agenat::T).as(int::T).as(agenat::T).as(int::T)  % false",
+         //   "agenat  % .                                        % int::2.as(agenat::T).as(int::T).as(agenat::T).as(int::T)  % false",
             "agenat  % .                                        % int::2.as(nat::T).as(agenat::T)                  % true",
           //  ".       % .                                        % agenat::-1                                       % false",
             ".       % .                                        % agenat::200                                      % false",

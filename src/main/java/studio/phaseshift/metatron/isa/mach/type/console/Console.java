@@ -66,6 +66,7 @@ import static studio.phaseshift.metatron.isa.m.mInstSet.INST_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TID;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.start_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
@@ -263,7 +264,7 @@ public class Console extends JRec implements Closeable, Runnable {
                                 computeResult.stream().forEach(this::printResult);
                             }
                         } catch (final Exception e) {
-                            MTronException.of(e).asFail().apply(this).forEach(this::printResult);
+                            this.printResult(fail(e));
                         }
                     });
                     this.machine = null;

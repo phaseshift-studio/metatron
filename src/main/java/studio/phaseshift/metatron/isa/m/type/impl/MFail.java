@@ -33,7 +33,6 @@ public class MFail extends MObj implements Fail {
 
     protected MFail(Tuple.Pair<Throwable, Fail> jvm, final fURI tid, final fURI vid) {
         super(jvm, null == tid ? FAIL_TID : tid, vid);
-        //t.printStackTrace();
     }
 
     public static Fail fail(final String message, final Object... args) {
@@ -45,7 +44,7 @@ public class MFail extends MObj implements Fail {
     }
 
     public static Fail fail(final Throwable t) {
-        return new MFail(Tuple.Pair.with(MTronException.of(t), null), FAIL_TID, fURI.fnull);
+        return new MFail(Tuple.Pair.with(MTronException.of(t), t.getCause() == null ? null : fail(MTronException.of(t.getCause()))), FAIL_TID, fURI.fnull);
     }
 
     public static Fail fail(final Throwable t, final String format, final Object... args) {

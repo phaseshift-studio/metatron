@@ -88,7 +88,8 @@ public interface Type extends Obj, PlusMonoid<Type> {
     default Type parentType() {
         if (this.tid().equals(this.vid()))
             return null;
-        return Router.global().read(this.tid().basePath()).asType();
+        final Obj type = Router.global().read(this.tid().basePath());
+        return type.isNoObj() ? null : type.asType();
     }
 
     default Call constructor() {
@@ -97,6 +98,10 @@ public interface Type extends Obj, PlusMonoid<Type> {
 
     default Call predicate() {
         return this.jvm().get0();
+    }
+    
+    default Type predicate(final Call predicate) {
+        return this.clone(Tuple.Pair.with(predicate, this.constructor()), this.tid(), this.vid());
     }
 
     default boolean hasPredicate() {

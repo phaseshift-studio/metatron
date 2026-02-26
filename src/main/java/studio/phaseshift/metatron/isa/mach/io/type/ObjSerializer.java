@@ -55,13 +55,14 @@ public interface ObjSerializer<T> extends Uri {
                 case Uri objs -> this.writeUri(obj.as());
                 case Rel objs -> this.writeRel(obj.as());
                 case Lst objs -> this.writeLst(obj.as());
+                case Machine objs -> this.writeMachine(obj.as());
                 case Rec objs -> this.writeRec(obj.as());
                 case Inst objs -> this.writeInst(obj.as());
                 case Code objs -> this.writeCode(obj.as());
                 case Objs objs -> this.writeObjs(obj.as());
                 case Type objs -> this.writeType(obj.as());
                 case Monad objs -> this.writeMonad(obj.as());
-                case Machine objs -> this.writeMachine(obj.as());
+                
                 case FutureObj<?> objs -> this.write(objs.get(5000));
                 default -> throw MTronException.of("unknown obj class: %s", obj.getClass());
             };

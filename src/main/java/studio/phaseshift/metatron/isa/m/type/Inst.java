@@ -374,11 +374,11 @@ public interface Inst extends Call {
                     Router.stack().pop();
                 }
             } catch (final Exception e) {
-                rhs = fail(MTronException.of("unable to evaluate inst function: %s", cinst, e));
+                rhs = fail(MTronException.of("unable to evaluate inst function: %s", cinst), fail(e));
             }
             if (BootLoader.TYPE_CHECK && !rhs.isType() && !rhs.isFail() && !lhs.isCaughtFail() && !rhs.test(cinst.rng()))
-                rhs = fail(MTronException.of("inst resolution failure: %s", cinst),
-                        fail(MTronException.of("rhs does not match inst range:\n\t%s", Poly.Helper.diffObjRecursion(rhs, cinst.rng()))));
+                //rhs = fail(MTronException.of("inst resolution failure: %s", cinst, fail(MTronException.of("rhs does not match inst range:\n\t%s", Poly.Helper.diffObjRecursion(rhs, cinst.rng())))));
+                rhs =  fail(MTronException.of("rhs does not match inst range:\n\t%s", Poly.Helper.diffObjRecursion(rhs, cinst.rng())));
         } else {
             rhs = clhs; // propagate fail through inst unless it's a catch inst
         }

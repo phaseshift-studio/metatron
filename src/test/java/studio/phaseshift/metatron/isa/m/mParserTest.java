@@ -23,6 +23,7 @@ import studio.phaseshift.metatron.isa.m.type.NoObj;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.type.Bytes;
 import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.mTest;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.HexFormat;
@@ -42,7 +43,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 
-public class mParserTest {
+public class mParserTest extends mTest {
 
     @Test
     public void testCommentParse() {

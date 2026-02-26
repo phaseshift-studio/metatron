@@ -21,12 +21,17 @@ package studio.phaseshift.metatron.isa.web.parser;
 import com.google.gson.JsonParser;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.mTest;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.type.Call;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.gt_;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.is_;
+import static studio.phaseshift.metatron.isa.m.type.Int.INT_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 
 public class JSONTranslatorTest extends mTest {
     //{"_tid":"/m/rel", "_value":[1,2]}          | 1=>2
@@ -61,6 +66,7 @@ public class JSONTranslatorTest extends mTest {
                     {"_tid":"/m/code","_value":"1.plus(mult(2))"}   | 1.plus(mult(2))
             """)
     public void testJSONTranslation(final String json, final String mtron) {
+        Router.writeToSpace("nat", INT_TYPE.predicate(is_(gt_(jnt(0)))));
         final ObjJSONSerializer translator = new ObjJSONSerializer();
         final Obj j_obj = translator.read(JsonParser.parseString(json));
         final Obj m_obj = mParser.parse(mtron);

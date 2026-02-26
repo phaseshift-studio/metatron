@@ -107,10 +107,10 @@ public class mParser {
         rel_parser.set(seq(m_type_prefix(REL_TID), m_paren_wrap(seq(obj_rel_back_parser, of("=>").trim(), m_obj()))).map(t -> rel(Tuple.Pair.with(pick(pick(t, 1), 0), pick(pick(t, 1), 2)), pick(t, 0), fnull)));
         obj_no_code_parser.set(choice(
                 m_comment(),
+                m_type(),
                 m_rec(),
                 m_rel(),
                 m_fail(),
-                m_type(),
                 m_noobj(),
                 m_bytes(),
                 m_bool(),
@@ -123,10 +123,10 @@ public class mParser {
                 m_objs()));
         obj_parser.set(choice(
                 m_comment(),
+                m_type(),
                 m_rec(),
                 m_rel(),
                 m_fail(),
-                m_type(),
                 m_noobj(),
                 m_bytes(),
                 m_bool(),
@@ -140,9 +140,9 @@ public class mParser {
                 m_objs()));
         obj_rel_back_parser.set(choice(
                 m_comment(),
+                m_type(),
                 m_rec(),
                 m_paren_wrap(m_rel(), true),
-                m_type(),
                 m_fail(),
                 m_noobj(),
                 m_bytes(),
@@ -468,7 +468,7 @@ public class mParser {
     }
 
     public static Parser m_type() {
-        return seq(m_type_prefix(TYPE_INST_TID), of('T'),
+        return seq(m_type_prefix(null), of('T'),
                 opt(seq(of('['), opt(m_obj(), null), of(']')).map(t -> pick(t, 1)), null),
                 opt(seq(of('['), opt(m_obj(), null), of(']')).map(t -> pick(t, 1)), null),
                 m_vid_postfix())

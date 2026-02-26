@@ -224,22 +224,23 @@ public class BasicRouter extends AbstractSpace<MServer> implements Router {
             return noobj();
         // if (vid.hasAuthority())
         //   return this.server().sendRecv((a, b) -> a.authority().matches(b.remoteHost().authority()), vid, from_(vid.localize().toUri()).tryToInst());
+        final fURI readableVID = vid.cLess();
         /// ///////////////////
-        if (vid.isGeneric())
-            return T(vid);
-        final fURI local = vid;
-        if (local.test(f("+/#"))) {
-            final Obj stack = Router.stack().read(local.basePath());
-            if (!stack.isNoObj())
-                return stack;
+        if (readableVID.isGeneric())
+            return T(readableVID);
+        if (readableVID.test(STACK_PATTERN)) {
+            final Obj stackObj = Router.stack().read(readableVID.basePath());
+            if (!stackObj.isNoObj())
+                return stackObj;
         }
-        final Space space = this.getSpace(local);
-        final Obj obj = space.read(local);
+        final Space space = this.getSpace(readableVID);
+        final Obj obj = space.read(readableVID);
         if (obj.isNoObj()) {
             final fURI bigVID = vid.big();
             if (!bigVID.equals(vid))
                 return this.read(bigVID);
         }
+        // todo c(mult vid.c())
         return obj;
     }
 
@@ -249,10 +250,11 @@ public class BasicRouter extends AbstractSpace<MServer> implements Router {
             this.server().send((a, b) -> a.authority().matches(b.remoteHost().authority()), vid, start_(obj.vid(null)).to_(vid.localize().toUri()).tryToInst());
             return obj;
         }*/
+        final fURI writableVID = vid.cLess();
         /// ///////////////
-        final Space space = this.getSpace(vid);
+        final Space space = this.getSpace(writableVID);
         LOG.trace("writing %s {{g}}=>{{b}} %s{{X}} in %s", obj, vid, space);
-        return space.write(vid, obj);
+        return space.write(writableVID, obj);
     }
 
     @Override
