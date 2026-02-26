@@ -261,7 +261,6 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
         final fURI base = this.tid().basePath();
         if (BASE_TYPES.contains(base) &&
                 !(this instanceof Objs) &&
-                !(this instanceof Type) &&
                 !((this.isBool() && base.equals(BOOL_TID)) ||
                         (this.isBytes() && base.equals(BYTES_TID)) ||
                         (this.isInt() && base.equals(INT_TID)) ||
@@ -273,6 +272,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
                         (this.isRel() && base.equals(REL_TID)) ||
                         (this.isInst() && base.equals(INST_TID)) ||
                         (this.isCode() && base.equals(CODE_TID)) ||
+                        (this.isType() && base.equals(TYPE_TID)) ||
                         (this.isFail() || this.isCaughtFail() && base.equals(FAIL_TID)))) {
             return false;
         }
@@ -860,7 +860,8 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
                         return lhs;
                     }),
                     instC(SOURCE_INST_TID.dom(ALL).rng(ALL.maybeSome()), lst(T(STR_TID)), (_, inst) -> mParser.parseByLine(inst.arg(0).strValue())),
-                    instC(TYPE_INST_TID.dom(A).rng(A), lst(), (lhs, _) -> lhs.type()),
+                    instC(TYPE_INST_TID.dom(TYPE_TID).rng(TYPE_TID), lst(), (lhs, _) -> lhs.type()),
+                    instC(TYPE_INST_TID.dom(A).rng(TYPE_TID), lst(), (lhs, _) -> lhs.type()),
                     docWrap(instC(CC_INST_TID.dom(A.maybeSome()).rng(INT_TID), lst(), (lhs, _) -> jnt(lhs.c().max())),
                             "any obj", "the lhs obj coefficient", Map.of(), "maps an obj to it's coefficient with a function f(lhs^c)->c"),
                     docWrap(instC(CC_INST_TID.dom(A.maybeSome()).rng(A.maybeSome()), lst(T(INT_TID)), (lhs, inst) -> lhs.c(inst.arg(0).intValue())),

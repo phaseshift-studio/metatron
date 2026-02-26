@@ -73,6 +73,8 @@ public interface Type extends Obj, PlusMonoid<Type> {
 
     @Override
     default Type type() {
+        if (this.isBaseType())
+            return this;
         return T(this.tid());
     }
 
@@ -99,7 +101,7 @@ public interface Type extends Obj, PlusMonoid<Type> {
     default Call predicate() {
         return this.jvm().get0();
     }
-    
+
     default Type predicate(final Call predicate) {
         return this.clone(Tuple.Pair.with(predicate, this.constructor()), this.tid(), this.vid());
     }
