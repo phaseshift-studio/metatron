@@ -611,6 +611,96 @@ Bytes can be used for:
 * File I/O operations
 * Encoding/decoding data
 
+====== byte units
+
+Metatron provides a comprehensive set of **byte unit types** for working with data sizes. These types use binary (base-2) units where each unit is 1024 times the previous unit.
+
+**Available Byte Units:**
+
+[cols="1m,2,3",options=header]
+|===
+|Type |Name |Value in Bytes
+
+|bB
+|Byte
+|1 byte
+
+|kB
+|Kilobyte
+|1,024 bytes (2^10^)
+
+|mB
+|Megabyte
+|1,048,576 bytes (2^20^)
+
+|gB
+|Gigabyte
+|1,073,741,824 bytes (2^30^)
+
+|tB
+|Terabyte
+|1,099,511,627,776 bytes (2^40^)
+
+|pB
+|Petabyte
+|1,125,899,906,842,624 bytes (2^50^)
+
+|===
+
+NOTE: The type names use lowercase letters followed by uppercase `B` (e.g., `kB`, `mB`) because uppercase `B` alone is a generic type parameter in Metatron.
+
+**Type Conversion with `.as()`:**
+
+Byte units can be converted between each other using the `.as()` instruction:
+
+++++
+<!-- 🐖
+kB::1024.as(mB::T)          [-- <1>
+mB::1.as(kB::T)             [-- <2>
+gB::5.as(mB::T)             [-- <3>
+pB::1.as(tB::T)             [-- <4>
+-->
+++++
+<1> Convert 1024 kilobytes to megabytes (result: 1 mB)
+<2> Convert 1 megabyte to kilobytes (result: 1024 kB)
+<3> Convert 5 gigabytes to megabytes (result: 5120 mB)
+<4> Convert 1 petabyte to terabytes (result: 1024 tB)
+
+**Equality Comparison with `.eq()`:**
+
+Byte units of different types can be compared for equality:
+
+++++
+<!-- 🐖
+mB::1024.eq(gB::1)          [-- <1>
+kB::1024.eq(mB::1)          [-- <2>
+gB::2.eq(mB::2048)          [-- <3>
+tB::1.eq(gB::1024)          [-- <4>
+-->
+++++
+<1> Check if 1024 megabytes equals 1 gigabyte (result: true)
+<2> Check if 1024 kilobytes equals 1 megabyte (result: true)
+<3> Check if 2 gigabytes equals 2048 megabytes (result: true)
+<4> Check if 1 terabyte equals 1024 gigabytes (result: true)
+
+**Common Use Cases:**
+
+* **File size calculations**: `file_size.as(mB::T)` to convert to megabytes
+* **Storage capacity**: `disk_capacity.as(gB::T)` to express in gigabytes
+* **Data transfer rates**: Compare bandwidth in different units
+* **Memory allocation**: Express memory sizes in appropriate units
+* **Quota management**: Set and compare storage quotas
+
+**Binary vs Decimal Units:**
+
+Metatron's byte units follow the **binary (base-2) convention** where:
+
+* 1 kB = 1024 bytes (not 1000)
+* 1 mB = 1024 kB = 1,048,576 bytes (not 1,000,000)
+* 1 gB = 1024 mB = 1,073,741,824 bytes (not 1,000,000,000)
+
+This is consistent with how computer systems typically measure memory and storage internally.
+
 ==== poly types
 
 Poly types are **branched structures** where each element or entry represents a separate branch.

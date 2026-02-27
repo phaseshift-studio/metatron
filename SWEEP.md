@@ -193,6 +193,43 @@ noobj.isNoObj()              % true
 int{0}::1.isNoObj()          % true
 ```
 
+### 11. **Byte Unit Types**
+Metatron provides byte unit types for working with data sizes using **binary (base-2) units**.
+
+**Available Types:**
+- `bB` - Byte (1 byte)
+- `kB` - Kilobyte (1,024 bytes = 2^10)
+- `mB` - Megabyte (1,048,576 bytes = 2^20)
+- `gB` - Gigabyte (1,073,741,824 bytes = 2^30)
+- `tB` - Terabyte (1,099,511,627,776 bytes = 2^40)
+- `pB` - Petabyte (1,125,899,906,842,624 bytes = 2^50)
+
+**Operations:**
+- `.as(type)` - Convert between byte units
+- `.eq(other)` - Compare byte units for equality
+
+**Note:** Type names use lowercase letters followed by uppercase `B` (e.g., `kB`, `mB`) because uppercase `B` alone is a generic type parameter in Metatron.
+
+**Examples:**
+```metatron
+kB::1024.as(mB::T)           % 1 (convert 1024 kB to mB)
+mB::1.as(kB::T)              % 1024 (convert 1 mB to kB)
+gB::5.as(mB::T)              % 5120 (convert 5 gB to mB)
+pB::1.as(tB::T)              % 1024 (convert 1 pB to tB)
+
+mB::1024.eq(gB::1)           % true (1024 mB equals 1 gB)
+kB::1024.eq(mB::1)           % true (1024 kB equals 1 mB)
+gB::2.eq(mB::2048)           % true (2 gB equals 2048 mB)
+tB::1.eq(gB::1024)           % true (1 tB equals 1024 gB)
+```
+
+**Binary Convention:**
+- 1 kB = 1024 bytes (not 1000)
+- 1 mB = 1024 kB = 1,048,576 bytes (not 1,000,000)
+- 1 gB = 1024 mB = 1,073,741,824 bytes (not 1,000,000,000)
+
+This follows the binary (base-2) convention used by computer systems for memory and storage.
+
 ---
 
 ## Syntax Patterns
@@ -910,6 +947,7 @@ public void testReverse(final String code, final String expected) {
 | Objs | `{1,2,3}`, `{,}` | `merge`, `count`, `plus` |
 | Rel | `1->2`, `a->b` | `first`, `second`, `eq`, `plus` |
 | NoObj | `noobj` | `isNoObj()` |
+| Byte Units | `kB::1024`, `mB::1`, `gB::5` | `as`, `eq` (binary: 1 kB = 1024 bytes) |
 
 ---
 

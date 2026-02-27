@@ -792,6 +792,60 @@ Byte array operations:
 
 |===
 
+### Byte Unit Types
+
+Metatron provides byte unit types for working with data sizes using binary (base-2) units:
+
+[cols="1,2,3", options="header"]
+|===
+|Type |Name |Value
+
+|`bB`
+|Byte
+|1 byte
+
+|`kB`
+|Kilobyte
+|1,024 bytes (2^10^)
+
+|`mB`
+|Megabyte
+|1,048,576 bytes (2^20^)
+
+|`gB`
+|Gigabyte
+|1,073,741,824 bytes (2^30^)
+
+|`tB`
+|Terabyte
+|1,099,511,627,776 bytes (2^40^)
+
+|`pB`
+|Petabyte
+|1,125,899,906,842,624 bytes (2^50^)
+
+|===
+
+**Operations:**
+
+[cols="1,1,2,2", options="header"]
+|===
+|Instruction |Sugar |Description |Example
+
+|`as(type)`
+|
+|Convert between byte units
+|`kB::1024.as(mB::T)` → 1 mB
+
+|`eq(other)`
+|
+|Compare byte units for equality
+|`mB::1024.eq(gB::1)` → true
+
+|===
+
+NOTE: Byte units use binary (base-2) conversion where 1 kB = 1024 bytes, 1 mB = 1024 kB, etc.
+
 ### Stream Control Instructions
 
 Special instructions for stream manipulation:
