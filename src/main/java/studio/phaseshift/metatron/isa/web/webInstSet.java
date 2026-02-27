@@ -88,11 +88,7 @@ public class webInstSet extends AbstractInstSet {
     public static final Type CSS_TYPE = Type.Builder.build()
             .tid(REC_TID)
             .vid(CSS_TID).create();
-
-    /*public webInstSet(final fURI vid) {
-        super(WEB_ISA_TID, vid);
-    }*/
-
+    
     public webInstSet() {
         super(WEB_ISA_TID, WEB_ISA_TID);
     }

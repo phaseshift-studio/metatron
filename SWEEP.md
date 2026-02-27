@@ -23,7 +23,7 @@ Metatron (mtron) is a distributed computing language with a rich type system and
 ### Core Concepts
 
 - **Objects (Obj)**: Everything in Metatron is an object
-- **Quantification**: Objects can have quantifiers (e.g., `int{5}::1`) for performance optimization of repeated computations
+- **Coefficients**: Objects can have coefficients (e.g., `int{5}::1`) for performance optimization of repeated computations
 - **Pattern Matching**: Uses `_` as wildcard for matching and operations
 - **Instruction Chaining**: Operations can be chained (e.g., `.reverse().count()`)
 - **Branched Structures**: Polys (Lst, Rec) are branched structures - each element/entry is a separate branch
@@ -158,7 +158,7 @@ a.eq(a)                      % true
 - Unordered collections: `{1,2,3}`, `{a,b,c}`, `{,}` (empty set)
 - Syntax: Elements separated by commas in curly braces
 - Operations: `merge()`, `count()`, `plus()`
-- Note: `.count()` returns total element count (including duplicates in quantified form)
+- Note: `.count()` returns total element count (including duplicates with coefficients)
 
 **Examples:**
 ```metatron
@@ -184,7 +184,7 @@ a.eq(a)                      % true
 - Represents absence of value: `noobj`
 - Used for error handling and missing values
 - Operations: `isNoObj()` predicate
-- Quantified noobj: `int{0}::1.isNoObj()` returns `true`
+- Zero coefficient: `int{0}::1.isNoObj()` returns `true`
 
 **Examples:**
 ```metatron
@@ -197,95 +197,95 @@ int{0}::1.isNoObj()          % true
 
 ## Syntax Patterns
 
-### Quantification
-Objects can have quantifiers indicating multiplicity or other metadata. Quantifiers are used to **bulk repeated computations** into a single operation for efficiency.
+### Coefficients
+Objects can have coefficients indicating multiplicity or other metadata. Coefficients are used to **bulk repeated computations** into a single operation for efficiency.
 
-**Syntax**: `type{quantifier}::value`
+**Syntax**: `type{coefficient}::value`
 
 ```metatron
-int{5}::1                    % Integer 1 with quantifier 5
-noobj{5}                     % NoObj with quantifier 5
-int{7}::3                    % Integer 3 with quantifier 7
+int{5}::1                    % Integer 1 with coefficient 5
+noobj{5}                     % NoObj with coefficient 5
+int{7}::3                    % Integer 3 with coefficient 7
 ```
 
-**Performance Optimization**: When you have repeated identical values, Metatron uses quantifiers to avoid redundant computation:
+**Performance Optimization**: When you have repeated identical values, Metatron uses coefficients to avoid redundant computation:
 ```metatron
 {1,1,1,1,1,1,1}.plus(2)      % Doesn't execute 7 times!
                              % Executes once on int{7}::1, then applies .plus(2)
                              % Result: int{7}::3
 ```
 
-**Quantifiers in Merged Streams**: When branches are merged, duplicate values get quantified:
+**Coefficients in Merged Streams**: When branches are merged, duplicate values get coefficients:
 ```metatron
 {1,2,3}-<[+1,+2,+3]>-        % Split then merge:
                              % ==>2           (appears once)
-                             % ==>int{2}::3   (appears twice, quantified)
-                             % ==>int{3}::4   (appears three times, quantified)
-                             % ==>int{2}::5   (appears twice, quantified)
+                             % ==>int{2}::3   (appears twice, with coefficient)
+                             % ==>int{3}::4   (appears three times, with coefficient)
+                             % ==>int{2}::5   (appears twice, with coefficient)
                              % ==>6           (appears once)
 ```
 
-**Negative Quantifiers & Interference**: Quantifiers can be negative, enabling constructive and destructive interference:
+**Negative Coefficients & Interference**: Coefficients can be negative, enabling constructive and destructive interference:
 ```metatron
 [1,2,3]                      % ==>[1,2,3]
 
-[1,2,3]+[int{-1}::1]         % Add element 1 with quantifier -1
+[1,2,3]+[int{-1}::1]         % Add element 1 with coefficient -1
                              % ==>[1,2,3,int{-1}::1]
 
-[1,2,3]+[int{-1}::1]>-       % Merge: 1 appears with quantifier 1 and -1
+[1,2,3]+[int{-1}::1]>-       % Merge: 1 appears with coefficient 1 and -1
                              % Destructive interference: 1 + (-1) = 0, so 1 disappears
                              % ==>2
                              % ==>3
 
 [1,int{100}::2,3]+[int{-75}::2]>-   % Partial destructive interference
-                                     % 2 appears with quantifier 100 and -75
+                                     % 2 appears with coefficient 100 and -75
                                      % 100 + (-75) = 25
                                      % ==>1
                                      % ==>int{25}::2
                                      % ==>3
 ```
 
-**Quantifier Ranges & Pattern Matching**: Quantifiers support range specifications for pattern matching (regex-style):
+**Coefficient Ranges & Pattern Matching**: Coefficients support range specifications for pattern matching (regex-style):
 ```metatron
-[int{25}::3]                         % List with element 3 having quantifier 25
+[int{25}::3]                         % List with element 3 having coefficient 25
                                      % (using [ ] prevents int from unrolling)
 
-[int{25}::3].matches([int{25}::T])   % Exact match: quantifier must be 25
+[int{25}::3].matches([int{25}::T])   % Exact match: coefficient must be 25
                                      % ==>true
 
 [int{25}::3].matches([int{24}::T])   % Exact match fails
                                      % ==>false
 
-[int{25}::3].matches([int{1,26}::T]) % Range match: quantifier between 1 and 26
+[int{25}::3].matches([int{1,26}::T]) % Range match: coefficient between 1 and 26
                                      % ==>true
 
-[int{25}::3].matches([int{10,26}::T])% Range match: quantifier between 10 and 26
+[int{25}::3].matches([int{10,26}::T])% Range match: coefficient between 10 and 26
                                      % ==>true
 
-[int{25}::3].matches([int{10,}::T])  % Open-ended range: quantifier >= 10
+[int{25}::3].matches([int{10,}::T])  % Open-ended range: coefficient >= 10
                                      % ==>true
 
-[int{25}::3].matches([int{,20}::T])  % Open-ended range: quantifier <= 20
+[int{25}::3].matches([int{,20}::T])  % Open-ended range: coefficient <= 20
                                      % ==>false
 
-[int{25}::3].matches([int{*}::T])    % Wildcard: any quantifier (0 or more)
+[int{25}::3].matches([int{*}::T])    % Wildcard: any coefficient (0 or more)
                                      % ==>true
 
-[int{25}::3].matches([int{+}::T])    % One or more: quantifier >= 1
+[int{25}::3].matches([int{+}::T])    % One or more: coefficient >= 1
                                      % ==>true
 
-[int{25}::3].matches([int{?}::T])    % Zero or one: quantifier 0 or 1
+[int{25}::3].matches([int{?}::T])    % Zero or one: coefficient 0 or 1
                                      % ==>false
 ```
 
-**Quantifier Range Syntax:**
-- `{n}` - Exact quantifier (e.g., `{25}`)
+**Coefficient Range Syntax:**
+- `{n}` - Exact coefficient (e.g., `{25}`)
 - `{min,max}` - Range from min to max (e.g., `{1,26}`)
 - `{min,}` - Open-ended minimum (e.g., `{10,}` means >= 10)
 - `{,max}` - Open-ended maximum (e.g., `{,20}` means <= 20)
-- `{*}` - Zero or more (any quantifier)
-- `{+}` - One or more (quantifier >= 1)
-- `{?}` - Zero or one (quantifier 0 or 1)
+- `{*}` - Zero or more (any coefficient)
+- `{+}` - One or more (coefficient >= 1)
+- `{?}` - Zero or one (coefficient 0 or 1)
 
 ### Type Casting
 Use `.as()` to convert between types:
@@ -301,12 +301,12 @@ The `_` symbol is used as a wildcard in pattern matching:
 [a=>1,b=>2].reverse()==[_=>reverse()]   % Apply reverse to all values
 ```
 
-Quantifiers also support pattern matching with range syntax:
+Coefficients also support pattern matching with range syntax:
 ```metatron
-int{25}::3.matches(int{25}::T)          % Exact quantifier match
+int{25}::3.matches(int{25}::T)          % Exact coefficient match
 int{25}::3.matches(int{10,30}::T)       % Range match (10 to 30)
 int{25}::3.matches(int{10,}::T)         % Minimum match (>= 10)
-int{25}::3.matches(int{*}::T)           % Any quantifier
+int{25}::3.matches(int{*}::T)           % Any coefficient
 int{25}::3.matches(int{+}::T)           % One or more (>= 1)
 int{25}::3.matches(int{?}::T)           % Zero or one (0 or 1)
 ```
@@ -360,6 +360,65 @@ Operations can be chained together:
 ```metatron
 [a,b,c].reverse().merge()    % Reverse then merge
 5.plus(3).mult(2)            % Add then multiply
+```
+
+### Sugar Syntax
+
+Metatron provides syntactic sugar to make code more readable. The WebSocket server returns explicit (non-sugar) syntax with full type URIs.
+
+**Common Sugar Mappings** (defined in `mInstSet.sugars()`):
+
+| Sugar | Explicit | Description |
+|-------|----------|-------------|
+| `+` | `plus()` | Addition |
+| `-` | `minus()` | Subtraction |
+| `*` | `from()` | From/multiplication context |
+| `>-` | `merge()` | Merge branches into stream |
+| `-<` | `split()` | Split stream into branches |
+| `>>` | `rshift()` | Right shift/extract |
+| `<<` | `lshift()` | Left shift |
+| `==` | `select()` | Selection |
+| `->` | `ref()` | Reference/relation |
+| `@` | `at()` | Access element at key |
+| `_` | `id()` | Identity/wildcard |
+| `?` | `isa()` | Type check |
+
+**Conditional Sugars:**
+
+| Sugar | Explicit | Description |
+|-------|----------|-------------|
+| `?==` | `where()` | Filter where condition |
+| `?=` | `is().eq()` | Is equal to |
+| `?>` | `is().gt()` | Is greater than |
+| `?>=` | `is().gte()` | Is greater than or equal |
+| `?<` | `is().lt()` | Is less than |
+| `?<=` | `is().lte()` | Is less than or equal |
+| `?!=` | `is().neq()` | Is not equal to |
+| `?=~` | `is().matches()` | Matches pattern |
+
+**Type URIs in Output:**
+
+WebSocket responses include full type URIs:
+```metatron
+% Input (sugar):
+1+2
+
+% Output (explicit):
+</m/int>::3
+
+% Input (sugar):
+[a=>1,b=>2]
+
+% Output (explicit):
+</m/rec>::[</m/uri>::<a> => </m/int>::1,</m/uri>::<b> => </m/int>::2]
+```
+
+**Examples:**
+```metatron
+1+2                          % Sugar for 1.plus(2)
+{1,2,3}>-                    % Sugar for {1,2,3}.merge()
+[1,2,3]-<[+1]                % Sugar for [1,2,3].split([plus(1)])
+a->b                         % Sugar for a.ref(b) (creates relation)
 ```
 
 ---
@@ -548,6 +607,53 @@ mvn verify
 
 # Check for errors
 mvn validate
+```
+
+### Interactive Metatron REPL
+
+Metatron has a built-in WebSocket server that allows interactive execution of mtron code.
+
+#### Starting the WebSocket Server
+```bash
+# Build the project first
+mvn clean install
+
+# Start Metatron with WebSocket server on port 8999
+java -jar target/metatron-*.jar '[host=><ws://0.0.0.0:8999>]'
+
+# Or with a boot configuration
+java -jar target/metatron-*.jar '[boot=><conf/boot.mtron>,host=><ws://0.0.0.0:8999>]'
+```
+
+#### Executing mtron Code via WebSocket
+
+**Using the helper script:**
+```bash
+# Execute a single mtron expression
+./bin/mtron-exec.py "1.plus(2)"
+
+# More complex examples
+./bin/mtron-exec.py "[1,2,3].reverse()"
+./bin/mtron-exec.py "{1,2,3}-<[+1,+2,+3]>-"
+```
+
+**Using websocat (if installed):**
+```bash
+echo "1.plus(2)" | websocat ws://localhost:8999
+```
+
+**Using Python directly:**
+```python
+import asyncio
+import websockets
+
+async def execute(code):
+    async with websockets.connect('ws://localhost:8999') as ws:
+        await ws.send(code)
+        result = await ws.recv()
+        print(result)
+
+asyncio.run(execute("1.plus(2)"))
 ```
 
 ---
@@ -746,8 +852,8 @@ public void testReverse(final String code, final String expected) {
 1. **Branched structures**: Polys (Lst, Rec) are branched structures - each element/entry is a branch
 2. **Merge operator (`>-`)**: Merges branches into a single stream for operations
 3. **Split operator (`-<`)**: Splits a stream into branches (opposite of merge)
-4. **Quantifier interference**: Quantifiers can be negative; when merged, they add (enabling constructive/destructive interference)
-5. **Quantifier ranges**: Support regex-style range patterns (`{*}`, `{+}`, `{?}`, `{min,max}`, `{min,}`, `{,max}`)
+4. **Coefficient interference**: Coefficients can be negative; when merged, they add (enabling constructive/destructive interference)
+5. **Coefficient ranges**: Support regex-style range patterns (`{*}`, `{+}`, `{?}`, `{min,max}`, `{min,}`, `{,max}`)
 6. **Count behavior**: `.count()` returns 1 for the poly object itself; use `>-.count()` to count elements/entries
 7. **Comparison operators**: Use `gte`/`lte` (not `geq`/`leq`) for greater/less than or equal
 8. **Record selection**: Use pattern syntax `[a=>_,b=>_]` instead of `[a,b]` for selecting keys
@@ -762,12 +868,12 @@ public void testReverse(final String code, final String expected) {
 - Polys (Lst, Rec) are **branched structures** - each element/entry is a separate branch
 - Use `_` for wildcards in pattern matching
 - Empty collections: `[,]` for lists, `[=>]` for records, `{,}` for sets
-- Quantification syntax: `type{quantifier}::value`
-- Quantifiers optimize performance by bulking repeated computations (e.g., `{1,1,1,1,1,1,1}.plus(2)` executes once on `int{7}::1`)
-- Quantifiers can be **negative** and add when merged, enabling interference (e.g., `int{100}::2 + int{-75}::2 = int{25}::2`)
-- When quantifiers sum to zero during merge, the element disappears (destructive interference)
-- Quantifier ranges use regex-style syntax: `{*}` (any), `{+}` (one or more), `{?}` (zero or one), `{min,max}`, `{min,}`, `{,max}`
-- Use `[ ]` brackets to prevent integers from unrolling when you want to preserve quantifiers
+- Coefficient syntax: `type{coefficient}::value`
+- Coefficients optimize performance by bulking repeated computations (e.g., `{1,1,1,1,1,1,1}.plus(2)` executes once on `int{7}::1`)
+- Coefficients can be **negative** and add when merged, enabling interference (e.g., `int{100}::2 + int{-75}::2 = int{25}::2`)
+- When coefficients sum to zero during merge, the element disappears (destructive interference)
+- Coefficient ranges use regex-style syntax: `{*}` (any), `{+}` (one or more), `{?}` (zero or one), `{min,max}`, `{min,}`, `{,max}`
+- Use `[ ]` brackets to prevent integers from unrolling when you want to preserve coefficients
 
 ---
 
@@ -917,7 +1023,7 @@ The function ring `F` contains four types of functions:
 - Splits stream into branches
 - `{1,2,3}-<[+1,+2,+3]` splits each element into operations
 
-**Coefficients (Quantifiers)**: Implement the bulk axiom
+**Coefficients**: Implement the bulk axiom
 - `int{7}::1` represents integer 1 with coefficient 7
 - Performance optimization: `{1,1,1,1,1,1,1}.plus(2)` executes once on `int{7}::1`
 - Negative coefficients enable interference: `int{100}::2 + int{-75}::2 = int{25}::2`

@@ -27,4 +27,6 @@ studio.phaseshift.metatron.isa.grph.hypr.hyprInstSet
 studio.phaseshift.metatron.isa.iot.iotInstSet
 studio.phaseshift.metatron.isa.iot.haos.haosInstSet
 studio.phaseshift.metatron.isa.iot.miot.miotInstSet
+studio.phaseshift.metatron.isa.llm.llmInstSet
+studio.phaseshift.metatron.isa.llm.ollama.ollamaInstSet
     

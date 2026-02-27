@@ -27,7 +27,12 @@ public final class Tokens {
     private Tokens() {
         // do nothing
     }
-
+    
+    public static final String SIZE = "size";
+    public static final String SKILL = "skill";
+    public static final String THINK = "think";
+    public static final String TOOL = "tool";
+    public static final String THINKING = "thinking";
     public static final String MONAD = "monad";
     public static final String ONLINE = "online";
     public static final String OFFLINE = "offline";
@@ -75,7 +80,6 @@ public final class Tokens {
     public static final String EMPTY = "";
     public static final String DESC = "desc";
     public static final String DOC = "doc";
-    public static final String SKILL = "skill";
     public static final String GGUF_KEY = "gguf";
     public static final String QUANT = "quant";
     public static final String FAMILY = "family";

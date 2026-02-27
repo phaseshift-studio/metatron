@@ -43,6 +43,7 @@
     mtron> ring-oriented computing
 
 include::intro.adoc[]
+include::instruction-reference.adoc[]
 include::space.adoc[]
 
 == instruction sets

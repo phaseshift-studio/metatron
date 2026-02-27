@@ -232,6 +232,10 @@ public class BootLoader implements Rec, Feature.SelfClone {
     public static Stream<ServiceLoader.Provider<InstSet>> loadInstSetProvider(final fURI tid) {
         return ServiceLoader.load(InstSet.class)
                 .stream()
+                .peek(p -> {
+                    if (!p.type().isAnnotationPresent(ServiceMetadata.class))
+                        LOG.warn("an inst set without a service metadata located: %s", p.type().getCanonicalName());
+                })
                 .filter(p -> p.type().isAnnotationPresent(ServiceMetadata.class))
                 .filter(p -> f(p.type().getAnnotation(ServiceMetadata.class).tid()).test(tid));
     }

@@ -33,7 +33,7 @@ import java.io.IOException;
 import java.util.Map;
 
 import static studio.phaseshift.metatron.furi.fURI.ALL;
-import static studio.phaseshift.metatron.lang.ai.llm.llmInstSet.LLM_INSTSET_TID;
+import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_ISA_TID;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
 import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.URI_TID;
@@ -47,7 +47,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  */
 public class Audio extends MRec {
 
-    public static final fURI AUDIO_TID = LLM_INSTSET_TID.extend("audio");
+    public static final fURI AUDIO_TID = LLM_ISA_TID.extend("audio");
     public static final Type AUDIO_TYPE = T(AUDIO_TID, null, null, instC(mInstSet.INST_TID.dom(ALL.maybe()).rng(AUDIO_TID), lst(T(REC_TID, isa_(rec(uri("location"), T(URI_TID))))), (lhs, inst) -> {
         return new Audio(lhs.jvm(), AUDIO_TID, lhs.vid());
     }));

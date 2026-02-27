@@ -20,7 +20,8 @@ package studio.phaseshift.metatron.lang.ai.llm.type.impl;
 
 import io.github.ollama4j.models.response.Model;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.lang.ai.llm.type.LLM;
+import studio.phaseshift.metatron.isa.llm.ollama.type.OLLM;
+import studio.phaseshift.metatron.isa.llm.type.LLM;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 
@@ -28,7 +29,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import static studio.phaseshift.metatron.Tokens.NAME;
-import static studio.phaseshift.metatron.lang.ai.llm.llmInstSet.LLM_INSTSET_TID;
+import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_ISA_TID;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
@@ -37,7 +38,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  */
 public class O4JLLM extends MRec implements LLM {
 
-    public static final fURI O4JLLM_TID = LLM_INSTSET_TID.extend("o4jllm");
+    public static final fURI O4JLLM_TID = LLM_ISA_TID.extend("o4jllm");
 
     public O4JLLM(final Model model, final fURI tid, final fURI vid) {
         super(modelToRec(model), O4JLLM_TID, vid);
@@ -62,11 +63,11 @@ public class O4JLLM extends MRec implements LLM {
         return this.at(NAME).strValue();
     }
 
-    public OLLM clone() {
+    /*public OLLM clone() {
         return (OLLM) super.clone();
     }
 
     public OLLM clone(final Object model, fURI tid, final fURI vid) {
         return (OLLM) super.clone(model, tid, vid);
-    }
+    }*/
 }

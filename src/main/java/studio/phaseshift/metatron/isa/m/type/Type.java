@@ -247,6 +247,11 @@ public interface Type extends Obj, PlusMonoid<Type> {
             return this;
         }
 
+        public Builder inst(final Inst inst) {
+            this.insts.add(inst);
+            return this;
+        }
+
         public Builder doc(final String domDesc, final String rngDesc, final Map<Obj, String> argDescription, final String description) {
             docWrap(this.insts.stream().toList().getLast(), domDesc, rngDesc, argDescription, description);
             return this;

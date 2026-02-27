@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *
+ *  
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *
+ *  
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.lang.ai.llm.type.impl;
+package studio.phaseshift.metatron.isa.llm.type;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
@@ -36,7 +36,7 @@ import java.util.Arrays;
 import java.util.Map;
 
 import static studio.phaseshift.metatron.Tokens.NAME;
-import static studio.phaseshift.metatron.lang.ai.llm.llmInstSet.LLM_INSTSET_TID;
+import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_ISA_TID;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
 import static studio.phaseshift.metatron.isa.m.mInstSet.INT_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.URI_TID;
@@ -58,7 +58,7 @@ public class GGUF extends MRec {
     public static final String GGML = "ggml";
     public static final String TENSOR = "tensor";
 
-    public static final fURI GGUF_TID = LLM_INSTSET_TID.extend("gguf");
+    public static final fURI GGUF_TID = LLM_ISA_TID.extend("gguf");
     public static final fURI TENSOR_REF_TID = GGUF_TID.extend("tensor_ref");
     private com.llama4j.gguf.GGUF rawData;
     public static final String VERSION = "version";
