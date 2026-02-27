@@ -23,7 +23,7 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Rel;
-import studio.phaseshift.metatron.isa.mach.type.console.Highlighter;
+import studio.phaseshift.metatron.isa.mach.type.ui.console.Highlighter;
 
 import java.io.Closeable;
 import java.time.LocalDateTime;

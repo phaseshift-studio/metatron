@@ -20,12 +20,12 @@ package studio.phaseshift.metatron.isa.m.type;
 
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-import studio.phaseshift.metatron.mTest;
+import studio.phaseshift.metatron.AbstractMetatronTest;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class RelTest extends mTest {
+public class RelTest extends AbstractMetatronTest {
 
     @ParameterizedTest
     @CsvSource(value = {
@@ -34,7 +34,7 @@ public class RelTest extends mTest {
             "(a=>b)-<(dom().as(str::T)=>rng())                                     % \"a\"=>b",
     }, delimiter = '%')
     public void testRelAs(final String code, final String expected) {
-        mTest.evaluate(LOG, code, expected);
+        AbstractMetatronTest.evaluate(LOG, code, expected);
     }
     
     @ParameterizedTest
@@ -46,7 +46,7 @@ public class RelTest extends mTest {
             "(a=>b)-<(_=>_)>-.>-                                           % {uri{2}::a,uri{2}::b}"
     }, delimiter = '%')
     public void testRelSplitShift(final String code, final String expected) {
-        mTest.evaluate(LOG, code, expected);
+        AbstractMetatronTest.evaluate(LOG, code, expected);
     }
 
     @ParameterizedTest
@@ -59,6 +59,6 @@ public class RelTest extends mTest {
             "1=>2=>3.select((mult(4)=>(_=>plus(10)))).where((_=>(_=>13)))              % noobj",
     }, delimiter = '%')
     public void testRelSelectWhere(final String code, final String expected) {
-        mTest.evaluate(LOG, code, expected);
+        AbstractMetatronTest.evaluate(LOG, code, expected);
     }
 }

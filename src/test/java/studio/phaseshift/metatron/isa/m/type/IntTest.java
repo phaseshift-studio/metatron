@@ -20,10 +20,10 @@ package studio.phaseshift.metatron.isa.m.type;
 
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-import studio.phaseshift.metatron.lang.mObjTest;
-import studio.phaseshift.metatron.mTest;
+import studio.phaseshift.metatron.isa.AbstractObjTest;
+import studio.phaseshift.metatron.AbstractMetatronTest;
 
-public class IntTest extends mObjTest {
+public class IntTest extends AbstractObjTest {
     @ParameterizedTest
     @CsvSource(value = {
             // "1.as(bool::T)                                                               % true",
@@ -34,7 +34,7 @@ public class IntTest extends mObjTest {
             "2.as(real::T)                                                               % 2.0"
     }, delimiter = '%')
     public void testAsInst(final String code, final String expected) {
-        mTest.testCode(LOG, code, expected);
+        AbstractMetatronTest.testCode(LOG, code, expected);
     }
 
     @ParameterizedTest
@@ -53,7 +53,7 @@ public class IntTest extends mObjTest {
             "int{-1}::1                          % int{-1,1}::T[]               % true"
     }, delimiter = '%')
     public void testMatches(final String lhs, final String rhs, final boolean matches) {
-        mTest.testMatches(LOG, lhs, rhs, matches);
+        AbstractMetatronTest.testMatches(LOG, lhs, rhs, matches);
     }
 
     @ParameterizedTest
@@ -71,7 +71,7 @@ public class IntTest extends mObjTest {
             "int{-1}::1                          % ?=~int{,}::T[]               % int{-1}::1"
     }, delimiter = '%')
     public void testCode(final String lhs, final String code, final String expected) {
-        mTest.testCode(LOG, lhs, code, expected);
+        AbstractMetatronTest.testCode(LOG, lhs, code, expected);
     }
 
     @ParameterizedTest
@@ -81,7 +81,7 @@ public class IntTest extends mObjTest {
             "2.pow(4).plus(1).mult(2)          % 34",
     }, delimiter = '%')
     public void testMath(final String code, final String expected) {
-        mTest.testCode(LOG, code, expected);
+        AbstractMetatronTest.testCode(LOG, code, expected);
     }
 
     @ParameterizedTest
@@ -106,7 +106,7 @@ public class IntTest extends mObjTest {
             // "start?int{-1,1}<=int{0}(int{-1}::1)>-{int::1}             % noobj"
     }, delimiter = '%')
     public void testBasic(final String code, final String expected) {
-        mTest.testCode(LOG, code, expected);
+        AbstractMetatronTest.testCode(LOG, code, expected);
     }
 
     @ParameterizedTest
@@ -145,6 +145,6 @@ public class IntTest extends mObjTest {
             "int{5}::1         %order()       %[int{5}::1]",
     }, delimiter = '%')
     public void testOrder(final String input, final String code, final String expected) {
-        mTest.testCode(LOG, input, code, expected);
+        AbstractMetatronTest.testCode(LOG, input, code, expected);
     }
 }

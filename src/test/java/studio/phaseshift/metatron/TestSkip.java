@@ -29,25 +29,49 @@ import java.util.Arrays;
 
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
+/**
+ * Annotation for selectively skipping inherited test methods from a parent test class.
+ * <p>
+ * Example usage:
+ * <pre>{@code
+ * @TestSkip(testClass = BaseTestClass.class, testMethods = {"testMethodToSkip"})
+ * @ExtendWith(TestSkip.TestSkipExtension.class)
+ * public class MyTestClass extends BaseTestClass {
+ *     // Skips specified methods from BaseTestClass
+ * }
+ * }</pre>
+ * @author Marko A. Rodriguez (http://markorodriguez.com)
+ */
 @Target({ElementType.ANNOTATION_TYPE, ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface TestSkip {
 
+    /**
+     * The test class containing the methods to skip (typically a parent class).
+     *
+     * @return the class containing the test methods to skip
+     */
     Class testClass();
 
+    /**
+     * The names of the test methods to skip.
+     *
+     * @return an array of test method names to skip
+     */
     String[] testMethods();
 
+    /**
+     * JUnit 5 extension that implements the test skipping logic using JUnit's assumption mechanism.
+     * Register with {@code @ExtendWith(TestSkip.TestSkipExtension.class)}.
+     */
     class TestSkipExtension implements BeforeTestExecutionCallback {
-
-
-        protected void checkSkipTest() {
-            final String methodName = new Throwable().getStackTrace()[1].getMethodName();
-            final String className = new Throwable().getStackTrace()[1].getClassName();
-            final TestSkip skip = this.getClass().getAnnotation(TestSkip.class);
-            assumeTrue(skip == null || !skip.testClass().getName().equals(className) ||
-                    !Arrays.asList(skip.testMethods()).contains(methodName), "%s set to skip test data".formatted(skip));
-        }
-
+        
+        /**
+         * Callback invoked before each test execution. Traverses the class hierarchy
+         * to determine if the current test method should be skipped.
+         *
+         * @param context the current extension context
+         */
         @Override
         public void beforeTestExecution(final ExtensionContext context) {
             final TestSkip skip = context.getRequiredTestClass().getAnnotation(TestSkip.class);

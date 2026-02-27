@@ -23,7 +23,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
-import studio.phaseshift.metatron.mTest;
+import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.util.MTronException;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -31,7 +31,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class cIntTest extends mTest {
+public class cIntTest extends AbstractMetatronTest {
 
     @Test
     public void testTokens() {
@@ -178,7 +178,7 @@ public class cIntTest extends mTest {
             "{??}[a=>1,b=>2]        % rec{??}::[a=>1,b=>2]   % true"
     }, delimiter = '%')
     public void testRewrites(final String code, final String expected, final boolean matches) throws Exception {
-        mTest.testEquals(LOG, mParser.eval(code), mParser.eval(expected), matches);
+        AbstractMetatronTest.testEquals(LOG, mParser.eval(code), mParser.eval(expected), matches);
     }
 
 

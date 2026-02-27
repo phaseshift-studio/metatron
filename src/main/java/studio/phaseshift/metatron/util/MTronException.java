@@ -19,11 +19,10 @@
 package studio.phaseshift.metatron.util;
 
 import studio.phaseshift.metatron.isa.m.type.Fail;
-import studio.phaseshift.metatron.isa.mach.type.console.Highlighter;
+import studio.phaseshift.metatron.isa.mach.type.ui.console.Highlighter;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 
 import java.util.Arrays;
-import java.util.Locale;
 import java.util.Objects;
 
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;

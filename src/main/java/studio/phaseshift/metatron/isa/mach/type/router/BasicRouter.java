@@ -36,7 +36,7 @@ import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.lang.jre.ObjFieldReflection;
 import studio.phaseshift.metatron.lang.jre.ObjReflection;
-import studio.phaseshift.metatron.lang.sys.router.impl.MServer;
+import studio.phaseshift.metatron.isa.mach.type.net.MServer;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.*;

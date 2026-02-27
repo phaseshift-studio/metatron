@@ -20,13 +20,13 @@ package studio.phaseshift.metatron.isa.m.parse;
 
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-import studio.phaseshift.metatron.mTest;
+import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class CodeParseTest extends mTest {
+public class CodeParseTest extends AbstractMetatronTest {
 
     @ParameterizedTest
     @CsvSource(value = {

@@ -20,13 +20,13 @@ package studio.phaseshift.metatron.isa.m.type;
 
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-import studio.phaseshift.metatron.lang.mObjTest;
-import studio.phaseshift.metatron.mTest;
+import studio.phaseshift.metatron.isa.AbstractObjTest;
+import studio.phaseshift.metatron.AbstractMetatronTest;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class StrTest extends mObjTest {
+public class StrTest extends AbstractObjTest {
 
     @ParameterizedTest
     @CsvSource(value = {
@@ -42,7 +42,7 @@ public class StrTest extends mObjTest {
 
     }, delimiter = '%',quoteCharacter = '~')
     public void testAsInst(final String code, final String expected) {
-        mTest.testCode(LOG, code, expected);
+        AbstractMetatronTest.testCode(LOG, code, expected);
     }
 
     @ParameterizedTest
@@ -56,7 +56,7 @@ public class StrTest extends mObjTest {
             "'ab3cd'.regex('\\d{2}')                                                        % [,]",
     }, delimiter = '%',quoteCharacter = '~')
     public void testRegexInst(final String code, final String expected) {
-        mTest.testCode(LOG, code, expected);
+        AbstractMetatronTest.testCode(LOG, code, expected);
     }
 
     @ParameterizedTest
@@ -68,7 +68,7 @@ public class StrTest extends mObjTest {
             //"{}.sum?str<=str{*}()                                                           % \"\"",  // TODO
     }, delimiter = '%',quoteCharacter = '~')
     public void testSum(final String code, final String expected) {
-        mTest.testCode(LOG, code, expected);
+        AbstractMetatronTest.testCode(LOG, code, expected);
     }
 
     @ParameterizedTest
@@ -83,7 +83,7 @@ public class StrTest extends mObjTest {
             "\"123\".lcase()                                                      % \"123\"",
     }, delimiter = '%')
     public void testUCaseAndLCase(final String code, final String expected) {
-        mTest.testCode(LOG, code, expected);
+        AbstractMetatronTest.testCode(LOG, code, expected);
     }
 
     @ParameterizedTest
@@ -102,7 +102,7 @@ public class StrTest extends mObjTest {
             // "{'abc3d','aaa'}.where(has('e.'))                                               % noobj",
     }, delimiter = '%',quoteCharacter = '~')
     public void testHasInst(final String code, final String expected) {
-        mTest.testCode(LOG, code, expected);
+        AbstractMetatronTest.testCode(LOG, code, expected);
     }
 
 
@@ -130,7 +130,7 @@ public class StrTest extends mObjTest {
             "'ab3cd' + 'ab.'                                                                % \"ab3cdab.\"",
     }, delimiter = '%',quoteCharacter = '~')
     public void testPlusInst(final String code, final String expected) {
-        mTest.testCode(LOG, code, expected);
+        AbstractMetatronTest.testCode(LOG, code, expected);
     }
 
 }

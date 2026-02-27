@@ -22,7 +22,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import studio.phaseshift.metatron.isa.Space;
-import studio.phaseshift.metatron.isa.SpaceTest;
+import studio.phaseshift.metatron.isa.AbstractSpaceTest;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.util.CommonUtil;
@@ -40,7 +40,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 @Disabled
-public class metaSpaceTest extends SpaceTest {
+public class metaSpaceTest extends AbstractSpaceTest {
     
     private static Space SYS_SPACE = null;
     private static Space META1_SPACE = null;

@@ -27,7 +27,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
-import studio.phaseshift.metatron.mTest;
+import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.HashMap;
@@ -38,7 +38,7 @@ import java.util.stream.Stream;
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.furi.fURI.f;
 
-public class fURITest extends mTest {
+public class fURITest extends AbstractMetatronTest {
 
     private static final GraphittyLogger LOG = Graphitty.log(fURITest.class);
 

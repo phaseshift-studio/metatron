@@ -18,7 +18,7 @@
 
 package studio.phaseshift.metatron.isa.m.space;
 
-import studio.phaseshift.metatron.isa.SpaceTest;
+import studio.phaseshift.metatron.isa.AbstractSpaceTest;
 
 import static studio.phaseshift.metatron.Tokens.PATTERN;
 import static studio.phaseshift.metatron.Tokens.PERSIST;
@@ -26,7 +26,7 @@ import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
-public class memSpaceTest extends SpaceTest {
+public class memSpaceTest extends AbstractSpaceTest {
 
     public memSpaceTest() {
         super(() -> memSpace.of(rec(uri(PATTERN),uri("/t/#"),uri(PERSIST),uri("/tmp/mem")),f("/sys/space/mem")));

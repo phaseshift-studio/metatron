@@ -18,19 +18,12 @@
 
 package studio.phaseshift.metatron.isa.web.space;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import studio.phaseshift.metatron.BootLoader;
-import studio.phaseshift.metatron.isa.SpaceTest;
-import studio.phaseshift.metatron.isa.m.space.memSpace;
-import studio.phaseshift.metatron.isa.mach.type.LogObj;
+import studio.phaseshift.metatron.isa.AbstractSpaceTest;
 import studio.phaseshift.metatron.isa.web.space.http.httpSpace;
 import studio.phaseshift.metatron.isa.mach.type.Router;
-import studio.phaseshift.metatron.util.CommonUtil;
-
-import java.io.Reader;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -40,14 +33,13 @@ import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.mach.io.ioInstSet.IO_ISA_TID;
 import static studio.phaseshift.metatron.isa.web.webInstSet.WEB_ISA_TID;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 @Disabled
-public class httpSpaceTest extends SpaceTest {
+public class httpSpaceTest extends AbstractSpaceTest {
 
     public httpSpaceTest() {
         super(f("/sys/space/web"),() -> httpSpace.of(rec(

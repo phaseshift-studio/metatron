@@ -21,7 +21,7 @@ package studio.phaseshift.metatron.isa.m.type;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-import studio.phaseshift.metatron.mTest;
+import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
 
 import static org.junit.Assert.assertTrue;
@@ -30,7 +30,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class NoObjTest extends mTest {
+public class NoObjTest extends AbstractMetatronTest {
     
     @ParameterizedTest
     @CsvSource(value = {

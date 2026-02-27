@@ -31,9 +31,21 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.util.Arrays;
 
-/*
- * The user provided string values are parsed and evaluated prior to test evaluation.
- * Useful for prepopulating a machine with data.
+/**
+ * Annotation for prepopulating a machine with test data before test execution.
+ * <p>
+ * The provided string values are parsed and evaluated using {@link mParser#eval(String)}
+ * prior to test execution.
+ * <p>
+ * Example usage:
+ * <pre>{@code
+ * @TestData({"data1", "data2"})
+ * @ExtendWith(TestData.TestDataExtension.class)
+ * @Test
+ * public void testWithData() {
+ *     // Test runs with prepopulated data
+ * }
+ * }</pre>
  *
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
@@ -42,12 +54,28 @@ import java.util.Arrays;
 public @interface TestData {
     GraphittyLogger LOG = Graphitty.log(TestData.class);
 
+    /**
+     * The string values to parse and evaluate before test execution.
+     *
+     * @return an array of string values to be evaluated as test data
+     */
     String[] value();
 
+    /**
+     * JUnit 5 extension that parses and evaluates test data before test execution.
+     * Register with {@code @ExtendWith(TestData.TestDataExtension.class)}.
+     */
     class TestDataExtension implements BeforeTestExecutionCallback, AfterTestExecutionCallback {
 
+        /** Tracks whether test data was loaded for the current test. */
         protected boolean hasTestData = false;
 
+        /**
+         * Parses and evaluates the test data strings before test execution.
+         *
+         * @param context the current extension context
+         * @throws MTronTestException if parsing or evaluation fails
+         */
         @Override
         public void beforeTestExecution(final ExtensionContext context) {
             try {
@@ -62,7 +90,11 @@ public @interface TestData {
             }
         }
 
-
+        /**
+         * Logs a debug message after test execution if test data was loaded.
+         *
+         * @param context the current extension context
+         */
         @Override
         public void afterTestExecution(final ExtensionContext context) {
             if (this.hasTestData)

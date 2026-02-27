@@ -21,15 +21,14 @@ package studio.phaseshift.metatron.isa.m.type;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.lang.mObjTest;
+import studio.phaseshift.metatron.isa.AbstractObjTest;
 import studio.phaseshift.metatron.util.IteratorUtil;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 
-public class ObjsTest extends mObjTest {
+public class ObjsTest extends AbstractObjTest {
 
     @ParameterizedTest
     @CsvSource(value = {

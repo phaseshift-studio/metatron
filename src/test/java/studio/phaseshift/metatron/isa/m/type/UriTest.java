@@ -18,15 +18,14 @@
 
 package studio.phaseshift.metatron.isa.m.type;
 
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-import studio.phaseshift.metatron.mTest;
+import studio.phaseshift.metatron.AbstractMetatronTest;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class UriTest extends mTest {
+public class UriTest extends AbstractMetatronTest {
     
     @ParameterizedTest
     @CsvSource(value = {
@@ -60,7 +59,7 @@ public class UriTest extends mTest {
             "a.mult(<../../b>)                                            | <../b>"
     }, delimiter = '|')
     public void testCode(final String code, final String expected) {
-        mTest.testCode(LOG, code, expected);
+        AbstractMetatronTest.testCode(LOG, code, expected);
     }
 
     @ParameterizedTest
@@ -83,7 +82,7 @@ public class UriTest extends mTest {
             "<a/b/../c/d>.pow(3)              % a/c/d/a/c/d/a/c/d",
     }, delimiter = '%')
     public void testMath(final String code, final String expected) {
-        mTest.testCode(LOG, code, expected);
+        AbstractMetatronTest.testCode(LOG, code, expected);
     }
 
     @ParameterizedTest
@@ -97,7 +96,7 @@ public class UriTest extends mTest {
             "<////a>.-</                      % [<>,<>,<>,<>,<>,a]",
     }, delimiter = '%')
     public void testSplit(final String code, final String expected) {
-        mTest.testCode(LOG, code, expected);
+        AbstractMetatronTest.testCode(LOG, code, expected);
     }
 
     @ParameterizedTest
@@ -116,7 +115,7 @@ public class UriTest extends mTest {
             // "{'abc3d','aaa'}.where(has('e.'))                                               % noobj",
     }, delimiter = '%')
     public void testHasInst(final String code, final String expected) {
-        mTest.testCode(LOG, code, expected);
+        AbstractMetatronTest.testCode(LOG, code, expected);
     }
 
 
@@ -133,7 +132,7 @@ public class UriTest extends mTest {
             // "<a://b.com:123/c/d?x=1&y=2>.query(x=3)                 % <a://b.com:123/c/d?x=3&y=2>",
     }, delimiter = '%')
     public void testAsRec(final String code, final String expected) {
-        mTest.testCode(LOG, code, expected);
+        AbstractMetatronTest.testCode(LOG, code, expected);
     }
 
     @ParameterizedTest
@@ -144,7 +143,7 @@ public class UriTest extends mTest {
             "<3a>.as(int::T)                                            % <ERROR>",
     }, delimiter = '%')
     public void testAsInt(final String code, final String expected) {
-        mTest.testCode(LOG, code, expected);
+        AbstractMetatronTest.testCode(LOG, code, expected);
     }
 
 

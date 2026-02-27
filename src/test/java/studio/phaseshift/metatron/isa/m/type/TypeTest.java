@@ -25,7 +25,7 @@ import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
-import studio.phaseshift.metatron.mTest;
+import studio.phaseshift.metatron.AbstractMetatronTest;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -36,7 +36,7 @@ import static studio.phaseshift.metatron.isa.m.mInstSet.FAIL_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 
-public class TypeTest extends mTest {
+public class TypeTest extends AbstractMetatronTest {
     private static final GraphittyLogger LOG = Graphitty.log(TypeTest.class);
     private static String LAST_TYPE_DEF = "";
 

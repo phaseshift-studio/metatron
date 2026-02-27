@@ -27,7 +27,7 @@ import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 import studio.phaseshift.metatron.isa.mach.type.MStats;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.Stats;
-import studio.phaseshift.metatron.lang.sys.router.impl.MServer;
+import studio.phaseshift.metatron.isa.mach.type.net.MServer;
 
 import java.util.Map;
 

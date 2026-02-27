@@ -19,7 +19,7 @@
 package studio.phaseshift.metatron.isa.web.parser;
 
 import org.junit.jupiter.api.Test;
-import studio.phaseshift.metatron.mTest;
+import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 
 import java.io.File;
@@ -27,7 +27,7 @@ import java.io.File;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class ObjHTMLSerializerTest extends mTest {
+public class ObjHTMLSerializerTest extends AbstractMetatronTest {
 
     @Test
     public void testWebPageParsing() {

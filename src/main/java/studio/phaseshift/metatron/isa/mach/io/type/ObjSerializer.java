@@ -23,7 +23,7 @@ import studio.phaseshift.metatron.isa.m.type.*;
 
 import studio.phaseshift.metatron.isa.mach.type.Machine;
 import studio.phaseshift.metatron.isa.mach.type.Monad;
-import studio.phaseshift.metatron.lang.sys.router.impl.FutureObj;
+import studio.phaseshift.metatron.isa.mach.type.net.FutureObj;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.nio.ByteBuffer;

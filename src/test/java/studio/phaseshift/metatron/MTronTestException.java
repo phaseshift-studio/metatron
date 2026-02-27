@@ -18,7 +18,7 @@
 
 package studio.phaseshift.metatron;
 
-import studio.phaseshift.metatron.isa.mach.type.console.Highlighter;
+import studio.phaseshift.metatron.isa.mach.type.ui.console.Highlighter;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 
 /*

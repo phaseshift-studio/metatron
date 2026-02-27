@@ -26,7 +26,7 @@ import studio.phaseshift.metatron.isa.mach.type.Monad;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
-import studio.phaseshift.metatron.lang.sys.router.impl.FutureObj;
+import studio.phaseshift.metatron.isa.mach.type.net.FutureObj;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;

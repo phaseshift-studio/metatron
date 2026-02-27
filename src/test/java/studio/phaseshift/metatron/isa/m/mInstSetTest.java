@@ -24,19 +24,18 @@ package studio.phaseshift.metatron.isa.m;
 
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.TestData;
 import studio.phaseshift.metatron.furi.Q;
 import studio.phaseshift.metatron.furi.q.DocQTest;
-import studio.phaseshift.metatron.isa.InstSetTest;
+import studio.phaseshift.metatron.isa.AbstractInstSetTest;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.type.Call;
 import studio.phaseshift.metatron.isa.m.type.NoObj;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
-import studio.phaseshift.metatron.mTest;
+import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
 
@@ -47,7 +46,7 @@ import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 
 
-public class mInstSetTest extends InstSetTest {
+public class mInstSetTest extends AbstractInstSetTest {
 
 
     public mInstSetTest() {
@@ -85,7 +84,7 @@ public class mInstSetTest extends InstSetTest {
             "(1=>(2=>c)).>>                                                                     % 2=>c"
     }, delimiter = '%')
     public void testRelCode(final String code, final String expected) {
-        mTest.testCode(LOG, code, expected);
+        AbstractMetatronTest.testCode(LOG, code, expected);
     }
 
 
@@ -100,7 +99,7 @@ public class mInstSetTest extends InstSetTest {
             "'ab3cd'.regex('\\d{2}')                                                        % [,]",
     }, delimiter = '%', quoteCharacter = '~')
     public void testStrCode(final String code, final String expected) {
-        mTest.testCode(LOG, code, expected);
+        AbstractMetatronTest.testCode(LOG, code, expected);
     }
 
     @ParameterizedTest
@@ -140,7 +139,7 @@ public class mInstSetTest extends InstSetTest {
             "{1,1,2,2,3,3,4,4}.inst?int<=int{2}(){ sum() }.catch(10)                        % {2,4,6,8}",
     }, delimiter = '%')
     public void testSkipLimitCode(final String code, final String expected) {
-        mTest.testCode(LOG, code, expected);
+        AbstractMetatronTest.testCode(LOG, code, expected);
     }
 
     @ParameterizedTest
@@ -153,7 +152,7 @@ public class mInstSetTest extends InstSetTest {
             // "1.plus::(2)                                                                    % 3"
     }, delimiter = '%')
     public void testPrint(final String code, final String expected) {
-        mTest.testCode(LOG, code, expected);
+        AbstractMetatronTest.testCode(LOG, code, expected);
     }
 
     @ParameterizedTest
@@ -173,7 +172,7 @@ public class mInstSetTest extends InstSetTest {
             "{1,2,3,4}.map(map(map(map(map(map(+2))))))                                   % {3,4,5,6}"
     }, delimiter = '%')
     public void testMap(final String code, final String expected) {
-        mTest.testCode(LOG, code, expected);
+        AbstractMetatronTest.testCode(LOG, code, expected);
     }
 
     @Test
@@ -189,7 +188,7 @@ public class mInstSetTest extends InstSetTest {
             sb.append("+2");
             sb.append(")".repeat(steps));
             LOG.warn("testing level %s nest with %s", steps, Graphitty.string(sb.toString()));
-            final Tuple.Quartet<Obj, Long, Obj, Long> parseResult = mTest.testParseEvalPerformance(LOG, () -> mParser.m_code().parse(sb.toString()).get(), NoObj::noobj);
+            final Tuple.Quartet<Obj, Long, Obj, Long> parseResult = AbstractMetatronTest.testParseEvalPerformance(LOG, () -> mParser.m_code().parse(sb.toString()).get(), NoObj::noobj);
             LOG.warn("\tcompilation: %s", parseResult.get0());
             final long evalAbsoluteValue = Math.abs(previousEvalTime - parseResult.get3());
             final long parseAbsoluteValue = Math.abs(previousParseTime - parseResult.get1());
@@ -377,7 +376,7 @@ public class mInstSetTest extends InstSetTest {
             //"*/m/inst/#.count()-<[is(gt(0))=>true,is(eq(0))=>false]>>-              % true",
     }, delimiter = '%')
     public void testSplitMergeCode(final String code, final String expected) {
-        mTest.testCode(LOG, code, expected);
+        AbstractMetatronTest.testCode(LOG, code, expected);
     }
 
     @ParameterizedTest
@@ -438,7 +437,7 @@ public class mInstSetTest extends InstSetTest {
             "a/b/c.split(/).merge(/).mult(<..>)                                     % a/b",
     }, delimiter = '%')
     public void testReductions(final String code, final String expected) {
-        mTest.testCode(LOG, code, expected);
+        AbstractMetatronTest.testCode(LOG, code, expected);
     }
 
     @ParameterizedTest
@@ -452,7 +451,7 @@ public class mInstSetTest extends InstSetTest {
             "1-<[to(a).math('a+a'),to(c).math('c+5')]>-.sum?real<=real{*}()         % 8.0",
     }, delimiter = '%')
     public void testMath(final String code, final String expected) {
-        mTest.testCode(LOG, code, expected);
+        AbstractMetatronTest.testCode(LOG, code, expected);
     }
 
     @ParameterizedTest
@@ -483,7 +482,7 @@ public class mInstSetTest extends InstSetTest {
             "{1,2,3}.-<?<=int([_=>_,+2=>-<[_=>+10]]).is?rec{*}<=rec{*}(neq(*x))       % noobj",
     }, delimiter = '%')
     public void testBranches(final String code, final String expected) {
-        mTest.testCode(LOG, code, expected);
+        AbstractMetatronTest.testCode(LOG, code, expected);
     }
 
     @ParameterizedTest
@@ -495,7 +494,7 @@ public class mInstSetTest extends InstSetTest {
             "{1,3,8}.xyz?int<=int(a=>plus(2)){ plus(*a) }                             % {4,8,18}" // TODO: should inline named inst definitions be allowed?
     }, delimiter = '%')
     public void testLambda(final String code, final String expected) {
-        mTest.testCode(LOG, code, expected);
+        AbstractMetatronTest.testCode(LOG, code, expected);
     }
 
 
@@ -507,7 +506,7 @@ public class mInstSetTest extends InstSetTest {
             "nat::-1                                          % <ERROR>",
     }, delimiter = '%')
     public void testTypeCreation(final String code, final String expected) {
-        mTest.testCode(LOG, code, expected);
+        AbstractMetatronTest.testCode(LOG, code, expected);
     }
 
 
@@ -521,7 +520,7 @@ public class mInstSetTest extends InstSetTest {
             "{1,2}.repeat(plus(1),10)                                                             % {11,12}",
     }, delimiter = '%')
     public void testRepeat(final String code, final String expected) {
-        mTest.testCode(LOG, code, expected);
+        AbstractMetatronTest.testCode(LOG, code, expected);
         long current = System.currentTimeMillis();
         mParser.eval("1.repeat(plus(1),35000)");
         long time = System.currentTimeMillis() - current;
@@ -542,7 +541,7 @@ public class mInstSetTest extends InstSetTest {
             "1.plus(mult(failure('bad'))).mult(23).catch(34).plus(2)                  % 36",
     }, delimiter = '%')
     public void testFailureCatch(final String code, final String expected) {
-        mTest.testCode(LOG, code, expected);
+        AbstractMetatronTest.testCode(LOG, code, expected);
     }
 
     @ParameterizedTest
@@ -583,7 +582,7 @@ public class mInstSetTest extends InstSetTest {
             "1.plus(1)                                                              % 2"
     }, delimiter = '%')
     public void testGroup(final String code, final String expected) {
-        mTest.testCode(LOG, code, expected);
+        AbstractMetatronTest.testCode(LOG, code, expected);
     }
 
     @ParameterizedTest
@@ -658,7 +657,7 @@ public class mInstSetTest extends InstSetTest {
 
     }, delimiter = '%')
     public void testSelectWhere(final String code, final String expected) {
-        mTest.testCode(LOG, code, expected);
+        AbstractMetatronTest.testCode(LOG, code, expected);
     }
 
 
@@ -695,7 +694,7 @@ public class mInstSetTest extends InstSetTest {
             //"*a.>>b>>d-<{>>1,>>2}                                % {f,[g,h]}",
     }, delimiter = '%', quoteCharacter = '~')
     public void testLShiftRShift(final String code, final String expected) {
-        mTest.testCode(LOG, code, expected);
+        AbstractMetatronTest.testCode(LOG, code, expected);
     }
 
 
@@ -760,7 +759,7 @@ public class mInstSetTest extends InstSetTest {
             "[a=>1,b=>2,c=>[d=>3,e=>[f=>4]]]>>4                                                                        % {,}",
     }, delimiter = '%', quoteCharacter = '~')
     public void testShift(final String code, final String expected) {
-        mTest.testCode(LOG, code, expected);
+        AbstractMetatronTest.testCode(LOG, code, expected);
     }
 
     @ParameterizedTest
@@ -821,7 +820,7 @@ public class mInstSetTest extends InstSetTest {
             "[a,b].as(rec::T).as(lst::T)                                                                                 % [(0=>(0=>a)),(1=>(1=>b))]",
     }, delimiter = '%')
     public void testAs(final String code, final String expected) {
-        mTest.testCode(LOG, code, expected);
+        AbstractMetatronTest.testCode(LOG, code, expected);
     }
 
     @ParameterizedTest
@@ -837,7 +836,7 @@ public class mInstSetTest extends InstSetTest {
             "*a../x../x.plus(4)                           % 10",
     }, delimiter = '%')
     public void testAuto(final String code, final String expected) throws Exception {
-        mTest.testCode(LOG, code, expected);
+        AbstractMetatronTest.testCode(LOG, code, expected);
     }
 
     @ParameterizedTest
@@ -852,7 +851,7 @@ public class mInstSetTest extends InstSetTest {
             //"{[a=>1,b=>2],[a=>1,b=>3]}.dedup(./a)      % {[a=>1,b=>2]}",
     }, delimiter = '%')
     public void testDedup(final String code, final String expected) throws Exception {
-        mTest.testCode(LOG, code, expected);
+        AbstractMetatronTest.testCode(LOG, code, expected);
     }
 
 
@@ -869,7 +868,7 @@ public class mInstSetTest extends InstSetTest {
             "*a../x../x.plus(4)                           % 10",
     }, delimiter = '%')
     public void testAutoFrom(final String code, final String expected) throws Exception {
-        mTest.testCode(LOG, code, expected);
+        AbstractMetatronTest.testCode(LOG, code, expected);
     }
 
     @ParameterizedTest
@@ -880,7 +879,7 @@ public class mInstSetTest extends InstSetTest {
             "|(plus(30)).swap(20)                         % 50",
     }, delimiter = '%')
     public void testSwap(final String code, final String expected) throws Exception {
-        mTest.testCode(LOG, code, expected);
+        AbstractMetatronTest.testCode(LOG, code, expected);
     }
 
     @ParameterizedTest
@@ -894,6 +893,6 @@ public class mInstSetTest extends InstSetTest {
             "1._._._._._._._        % start(1)    % 1",
     }, delimiter = '%')
     public void testRewrites(final String code, final String expected, final String expectedResult) throws Exception {
-        mTest.testRewrite(LOG, code, expected, expectedResult);
+        AbstractMetatronTest.testRewrite(LOG, code, expected, expectedResult);
     }
 }

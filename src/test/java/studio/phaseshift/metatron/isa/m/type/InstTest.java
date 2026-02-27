@@ -24,7 +24,7 @@ import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.type.impl.MInst;
-import studio.phaseshift.metatron.lang.mObjTest;
+import studio.phaseshift.metatron.isa.AbstractObjTest;
 import studio.phaseshift.metatron.util.Tuple;
 
 import java.util.List;
@@ -41,7 +41,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
-public class InstTest extends mObjTest {
+public class InstTest extends AbstractObjTest {
 
 
     @ParameterizedTest

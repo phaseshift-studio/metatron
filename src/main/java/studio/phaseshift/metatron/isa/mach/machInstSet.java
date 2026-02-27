@@ -32,8 +32,8 @@ import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.m.type.impl.AbstractInstSet;
 import studio.phaseshift.metatron.isa.mach.io.space.file.fsSpace;
 import studio.phaseshift.metatron.isa.mach.type.Router;
-import studio.phaseshift.metatron.isa.mach.type.console.Console;
-import studio.phaseshift.metatron.isa.mach.type.console.Editor;
+import studio.phaseshift.metatron.isa.mach.type.ui.console.Console;
+import studio.phaseshift.metatron.isa.mach.type.ui.console.Editor;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.ImageUtil;
 import studio.phaseshift.metatron.util.MTronException;
@@ -77,7 +77,7 @@ import static studio.phaseshift.metatron.isa.mach.io.space.file.fsSpace.FS_SPACE
 import static studio.phaseshift.metatron.isa.mach.io.space.file.fsSpace.makeFile;
 import static studio.phaseshift.metatron.isa.mach.io.space.serial.serialSpace.SERIAL_SPACE_TYPE;
 import static studio.phaseshift.metatron.isa.mach.type.Machine.MACH_MACHINE_TYPE;
-import static studio.phaseshift.metatron.isa.mach.type.console.Console.CONSOLE_TYPE;
+import static studio.phaseshift.metatron.isa.mach.type.ui.console.Console.CONSOLE_TYPE;
 import static studio.phaseshift.metatron.isa.mach.type.machine.SwarmMachine.MACH_SWARM_MACHINE_TYPE;
 
 /*

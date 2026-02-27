@@ -26,11 +26,11 @@ import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.TestSkip;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.PubSubQ;
-import studio.phaseshift.metatron.isa.SpaceTest;
+import studio.phaseshift.metatron.isa.AbstractSpaceTest;
 import studio.phaseshift.metatron.isa.iot.MoquetteServer;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.mTest;
+import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.util.MTronException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -47,8 +47,8 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-@TestSkip(testClass = SpaceTest.class, testMethods = {"testMonoReadWrite"})
-public class miotSpaceTest extends SpaceTest {
+@TestSkip(testClass = AbstractSpaceTest.class, testMethods = {"testMonoReadWrite"})
+public class miotSpaceTest extends AbstractSpaceTest {
 
     private static final int PORT = generatePort();
 
@@ -70,7 +70,7 @@ public class miotSpaceTest extends SpaceTest {
     
     @BeforeAll
     public static void setupAll() {
-        mTest.begin();
+        AbstractMetatronTest.begin();
         MoquetteServer.run(PORT);
     }
 
@@ -78,7 +78,7 @@ public class miotSpaceTest extends SpaceTest {
     public static void stopAll() {
         MoquetteServer.clear();
         MoquetteServer.stop();
-        mTest.end();
+        AbstractMetatronTest.end();
     }
 
     @ParameterizedTest

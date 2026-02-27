@@ -19,7 +19,7 @@
 package studio.phaseshift.metatron.isa.mach.type.ui;
 
 import org.jline.terminal.Cursor;
-import studio.phaseshift.metatron.isa.mach.type.console.Highlighter;
+import studio.phaseshift.metatron.isa.mach.type.ui.console.Highlighter;
 
 import java.util.List;
 

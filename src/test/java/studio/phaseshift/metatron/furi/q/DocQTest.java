@@ -18,7 +18,7 @@
 
 package studio.phaseshift.metatron.furi.q;
 
-import studio.phaseshift.metatron.mTest;
+import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.InstSet;
@@ -29,7 +29,7 @@ import static studio.phaseshift.metatron.Tokens.DESC;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class DocQTest extends mTest {
+public class DocQTest extends AbstractMetatronTest {
 
     public void analyzeDocs(final InstSet instSet) {
         for (final Inst inst : instSet.insts()) {

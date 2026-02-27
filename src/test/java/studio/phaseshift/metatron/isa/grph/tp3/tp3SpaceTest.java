@@ -22,14 +22,13 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.TestSkip;
-import studio.phaseshift.metatron.isa.SpaceTest;
+import studio.phaseshift.metatron.isa.AbstractSpaceTest;
 import studio.phaseshift.metatron.isa.grph.tp3.space.tp3Space;
-import studio.phaseshift.metatron.mTest;
+import studio.phaseshift.metatron.AbstractMetatronTest;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.isa.grph.grphInstSet.GRPH_ISA_TID;
-import static studio.phaseshift.metatron.isa.grph.tp3.space.tp3Space.NATIVE_LOAD;
 import static studio.phaseshift.metatron.isa.grph.tp3.tp3InstSet.TP3_ISA_TID;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
@@ -38,8 +37,8 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-@TestSkip(testClass = SpaceTest.class, testMethods = {"testMonoReadWrite"})
-public class tp3SpaceTest extends SpaceTest {
+@TestSkip(testClass = AbstractSpaceTest.class, testMethods = {"testMonoReadWrite"})
+public class tp3SpaceTest extends AbstractSpaceTest {
     public tp3SpaceTest() {
         super(f("/g/"), () -> {
             BootLoader.loadInstSetProvider(GRPH_ISA_TID);
@@ -62,7 +61,7 @@ public class tp3SpaceTest extends SpaceTest {
             "*(*/g/S/pattern).vid()                                                         % {/m/grph/inst/schema/modern/person,/m/grph/inst/schema/modern/software,/m/grph/inst/schema/modern/created,/m/grph/inst/schema/modern/knows}",
     }, delimiter = '%')
     public void testSchemaTraversal(final String code, final String expected) {
-        mTest.testCode(LOG, code, expected);
+        AbstractMetatronTest.testCode(LOG, code, expected);
     }
     
     @ParameterizedTest
@@ -87,6 +86,6 @@ public class tp3SpaceTest extends SpaceTest {
             "*/g/V/1.update[name=>123]                                                      % <ERROR>"
     }, delimiter = '%')
     public void testIdTraversals(final String code, final String expected) {
-        mTest.testCode(LOG, code, expected);
+        AbstractMetatronTest.testCode(LOG, code, expected);
     }
 }

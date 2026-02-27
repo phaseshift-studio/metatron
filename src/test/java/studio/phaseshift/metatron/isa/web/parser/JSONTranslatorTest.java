@@ -22,7 +22,7 @@ import com.google.gson.JsonParser;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.isa.mach.type.Router;
-import studio.phaseshift.metatron.mTest;
+import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.type.Call;
 import studio.phaseshift.metatron.isa.m.type.Obj;
@@ -33,7 +33,7 @@ import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.is_;
 import static studio.phaseshift.metatron.isa.m.type.Int.INT_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 
-public class JSONTranslatorTest extends mTest {
+public class JSONTranslatorTest extends AbstractMetatronTest {
     //{"_tid":"/m/rel", "_value":[1,2]}          | 1=>2
     @ParameterizedTest
     @CsvSource(delimiter = '|', textBlock = """

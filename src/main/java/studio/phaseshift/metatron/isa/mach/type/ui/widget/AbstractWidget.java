@@ -24,7 +24,7 @@ import org.jline.terminal.Size;
 import org.jline.terminal.Terminal;
 import org.jline.utils.Display;
 import org.jline.utils.InfoCmp;
-import studio.phaseshift.metatron.isa.mach.type.console.Console;
+import studio.phaseshift.metatron.isa.mach.type.ui.console.Console;
 import studio.phaseshift.metatron.isa.mach.type.ui.Widget;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 

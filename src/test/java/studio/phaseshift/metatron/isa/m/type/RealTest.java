@@ -20,13 +20,13 @@ package studio.phaseshift.metatron.isa.m.type;
 
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-import studio.phaseshift.metatron.lang.mObjTest;
-import studio.phaseshift.metatron.mTest;
+import studio.phaseshift.metatron.isa.AbstractObjTest;
+import studio.phaseshift.metatron.AbstractMetatronTest;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class RealTest extends mObjTest {
+public class RealTest extends AbstractObjTest {
 
     @ParameterizedTest
     @CsvSource(value = {
@@ -38,7 +38,7 @@ public class RealTest extends mObjTest {
             "3.9.as(int::T)                           % 3",
     }, delimiter = '%')
     public void testAs(final String code, final String expected) {
-        mTest.testCode(LOG, code, expected);
+        AbstractMetatronTest.testCode(LOG, code, expected);
     }
 
     @ParameterizedTest
@@ -48,7 +48,7 @@ public class RealTest extends mObjTest {
             "2.0.pow(4.0).plus(1.0).mult(2.0)          % 34.0",
     }, delimiter = '%')
     public void testMath(final String code, final String expected) {
-        mTest.testCode(LOG, code, expected);
+        AbstractMetatronTest.testCode(LOG, code, expected);
     }
 
     @ParameterizedTest
@@ -66,6 +66,6 @@ public class RealTest extends mObjTest {
             "real{5}::1.1                        %order()       %[real{5}::1.1]",
     }, delimiter = '%')
     public void testOrder(final String input, final String code, final String expected) {
-        mTest.testCode(LOG, input, code, expected);
+        AbstractMetatronTest.testCode(LOG, input, code, expected);
     }
 }

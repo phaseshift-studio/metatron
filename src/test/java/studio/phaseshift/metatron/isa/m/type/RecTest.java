@@ -23,7 +23,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
-import studio.phaseshift.metatron.mTest;
+import studio.phaseshift.metatron.AbstractMetatronTest;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.isa.m.type.Poly.IMMUTABLE;
@@ -34,7 +34,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
-public class RecTest extends mTest {
+public class RecTest extends AbstractMetatronTest {
 
     @ParameterizedTest
     @CsvSource(value = {
@@ -113,7 +113,7 @@ public class RecTest extends mTest {
 
     }, delimiter = '|')
     public void testMatches(final String recA, final String recB, final boolean matches) {
-        mTest.testMatches(LOG, recA, recB, matches);
+        AbstractMetatronTest.testMatches(LOG, recA, recB, matches);
     }
 
 
@@ -130,7 +130,7 @@ public class RecTest extends mTest {
 
     }, delimiter = '%')
     public void testAs(final String code, final String expected) {
-        mTest.testCode(LOG, code, expected);
+        AbstractMetatronTest.testCode(LOG, code, expected);
     }
 
     @ParameterizedTest
@@ -139,7 +139,7 @@ public class RecTest extends mTest {
             "(a=>(knows=>(b=>(knows=>c))))../<a/+/b/knows>                                           % c"
     }, delimiter = '%')
     public void testRecRelBehaviors(final String code, final String expected) {
-        mTest.testCode(LOG, code, expected);
+        AbstractMetatronTest.testCode(LOG, code, expected);
     }
 
     @ParameterizedTest
@@ -185,7 +185,7 @@ public class RecTest extends mTest {
             "[1,2,3].-<[>-.is(gt(2)) => >-.is(gt(1))>-?<=int{*}[,], >-.is(gt(1)) => _/id()\\_]       % [3=>[2,3],{2,3}=>[1,2,3]]",
     }, delimiter = '%')
     public void testCode(final String code, final String expected) {
-        mTest.testCode(LOG, code, expected);
+        AbstractMetatronTest.testCode(LOG, code, expected);
     }
 
     @Test
@@ -214,24 +214,24 @@ public class RecTest extends mTest {
         Rec r2 = r1.at(uri("b"), jnt(22), IMMUTABLE);
         Rec r3 = r1.at(uri("b")).<Rec>as().at(uri("d"), jnt(33), IMMUTABLE);
         Rec r4 = r1.at(uri("b"), r1.at(uri("b")).<Rec>as().at(uri("d"), jnt(33)), IMMUTABLE);
-        mTest.testEquals(LOG, rec(uri("a"), jnt(1), uri("b"), rec(uri("c"), jnt(3))), r1, true);
-        mTest.testEquals(LOG, rec(uri("a"), jnt(1), uri("b"), jnt(22)), r2, true);
-        mTest.testEquals(LOG, rec(uri("c"), jnt(3), uri("d"), jnt(33)), r3, true);
-        mTest.testEquals(LOG, rec(uri("a"), jnt(1), uri("b"), rec(uri("c"), jnt(3), uri("d"), jnt(33))), r4, true);
+        AbstractMetatronTest.testEquals(LOG, rec(uri("a"), jnt(1), uri("b"), rec(uri("c"), jnt(3))), r1, true);
+        AbstractMetatronTest.testEquals(LOG, rec(uri("a"), jnt(1), uri("b"), jnt(22)), r2, true);
+        AbstractMetatronTest.testEquals(LOG, rec(uri("c"), jnt(3), uri("d"), jnt(33)), r3, true);
+        AbstractMetatronTest.testEquals(LOG, rec(uri("a"), jnt(1), uri("b"), rec(uri("c"), jnt(3), uri("d"), jnt(33))), r4, true);
         /// //
         Rec rr1 = rec(uri("a"), jnt(1), uri("b"), rec(uri("c"), jnt(3)));
         Rec s1 = rec(uri("a"), jnt(1), uri("b"), rec(uri("c"), jnt(3)));
-        mTest.testEquals(LOG, r1, s1, true);
+        AbstractMetatronTest.testEquals(LOG, r1, s1, true);
         Rec s2 = r1.at(uri("b"), jnt(22), MUTABLE);
-        mTest.testEquals(LOG, r2, s2, true);
+        AbstractMetatronTest.testEquals(LOG, r2, s2, true);
         Rec s3 = s1.at(uri("b")).<Rec>as().at(uri("d"), jnt(33), MUTABLE);
-        mTest.testEquals(LOG, r3, s3, true);
+        AbstractMetatronTest.testEquals(LOG, r3, s3, true);
         Rec s4 = rr1.clone().<Rec>as().at(uri("b"), rr1.at(uri("b")).clone().<Rec>as().at(uri("d"), jnt(33), IMMUTABLE), MUTABLE);
-        mTest.testEquals(LOG, r4, s4, true);
-        mTest.testEquals(LOG, rec(uri("a"), jnt(1), uri("b"), rec(uri("c"), jnt(3))), rr1, true);
-        mTest.testEquals(LOG, rec(uri("a"), jnt(1), uri("b"), jnt(22)), s2, true);
-        mTest.testEquals(LOG, rec(uri("c"), jnt(3), uri("d"), jnt(33)), s3, true);
-        mTest.testEquals(LOG, rec(uri("a"), jnt(1), uri("b"), rec(uri("c"), jnt(3), uri("d"), jnt(33))), s4, true);
+        AbstractMetatronTest.testEquals(LOG, r4, s4, true);
+        AbstractMetatronTest.testEquals(LOG, rec(uri("a"), jnt(1), uri("b"), rec(uri("c"), jnt(3))), rr1, true);
+        AbstractMetatronTest.testEquals(LOG, rec(uri("a"), jnt(1), uri("b"), jnt(22)), s2, true);
+        AbstractMetatronTest.testEquals(LOG, rec(uri("c"), jnt(3), uri("d"), jnt(33)), s3, true);
+        AbstractMetatronTest.testEquals(LOG, rec(uri("a"), jnt(1), uri("b"), rec(uri("c"), jnt(3), uri("d"), jnt(33))), s4, true);
     }
 
     @ParameterizedTest

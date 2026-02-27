@@ -27,14 +27,14 @@ package studio.phaseshift.metatron.isa.m.type;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
-import studio.phaseshift.metatron.lang.mObjTest;
-import studio.phaseshift.metatron.mTest;
+import studio.phaseshift.metatron.isa.AbstractObjTest;
+import studio.phaseshift.metatron.AbstractMetatronTest;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 
-public class LstTest extends mObjTest {
+public class LstTest extends AbstractObjTest {
 
     @ParameterizedTest
     @CsvSource(value = {
@@ -80,7 +80,7 @@ public class LstTest extends mObjTest {
 
     }, delimiter = '%')
     public void testCode(final String code, final String expected) {
-        mTest.testCode(LOG, code, expected);
+        AbstractMetatronTest.testCode(LOG, code, expected);
     }
 
     @ParameterizedTest
@@ -106,7 +106,7 @@ public class LstTest extends mObjTest {
 
     }, delimiter = '%')
     public void testCoefficients(final String code, final String expected) {
-        mTest.testCode(LOG, code, expected);
+        AbstractMetatronTest.testCode(LOG, code, expected);
     }
 
     @ParameterizedTest
@@ -124,6 +124,6 @@ public class LstTest extends mObjTest {
 
     }, delimiter = '%')
     public void testAs(final String code, final String expected) {
-        mTest.testCode(LOG, code, expected);
+        AbstractMetatronTest.testCode(LOG, code, expected);
     }
 }
