@@ -481,7 +481,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
             if (!match)
                 throw MTronException.of("%s is not a %s\n%s", this, type.predicate(), indent(Poly.Helper.diffObjRecursion(this, Type.Helper.typePredicateObj(type)).toString(), 2));
         }
-        return type.hasConstructor() ? Obj.Helper.construct(this.getClass(), this.jvm(), type.vidOrTid(), this.vid()) : this.tid(type.vidOrTid());
+        return type.hasConstructor() ? Obj.Helper.objClone(this, this.jvm(), type.vidOrTid(), this.vid()) : this.tid(type.vidOrTid());
     }
 
     default Bool asBool() {
@@ -752,16 +752,17 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
                 final Obj type = Router.readFromSpace(tid);
                 if (!type.isNoObj() && type.isType() && type.<Type>as().hasConstructor()) {
                     final Obj clone = type.<Type>as().constructor().apply(obj);
+
                     if (clone.isFail())
                         throw MTronException.of(clone.<Fail>as().jvm().get0());
-                    return (O) clone;
+                    return (O) clone.selfTID(tid);
                 }
             }
             if (!Objects.equals(jvm, obj.jvm()) || !tid.equals(obj.tid()) || !Objects.equals(vid, obj.vid())) {
                 try {
                     final O clone = (O) obj.clone();
                     Obj.Helper.objCheckAndSave(clone, jvm, tid, vid);
-                    return clone;
+                    return  (O) clone.selfTID(tid);
                 } catch (final Exception e) {
                     throw MTronException.of(e);
                 }

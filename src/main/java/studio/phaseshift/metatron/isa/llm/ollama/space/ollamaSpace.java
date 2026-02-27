@@ -36,6 +36,7 @@ import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.furi.fURI.fnull;
 import static studio.phaseshift.metatron.isa.llm.ollama.ollamaInstSet.*;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
+import static studio.phaseshift.metatron.isa.m.math.mathInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
@@ -84,7 +85,7 @@ public class ollamaSpace extends AbstractSpace<OllamaModels> {
                                 uri(NAME), uri(m.get0().getName()),
                                 uri(THINK), bool(m.get1().getCapabilities().contains(THINKING)),
                                 uri(SKILL), lst(m.get1().getCapabilities().stream().map(MUri::uri)),
-                                uri(SIZE), jnt(m.get0().getSize())), OLLAMA_OLLM_TID, fnull)).forEach(m -> {
+                                uri(SIZE), jnt(m.get0().getSize(), MATH_BYTE_TID, fnull)), OLLAMA_OLLM_TID, fnull)).forEach(m -> {
                     this.write(this.pattern.retract().extend(m.at(NAME).uriValue()), m);
                 });
     }
