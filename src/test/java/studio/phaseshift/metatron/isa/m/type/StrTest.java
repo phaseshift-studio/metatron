@@ -140,8 +140,33 @@ public class StrTest extends AbstractObjTest {
            // "\"abc\".reverse().reverse()      % \"abc\"", TODO instructions are being seen as the same
             "\"\".reverse().map(_).reverse()         % \"\"",
             "\"\".reverse()                  % \"\"",
+            "\"a\".reverse()                 % \"a\"",
+            "\"hello world\".reverse()       % \"dlrow olleh\"",
     }, delimiter = '%')
     public void testReverse(final String code, final String expected) {
+        AbstractMetatronTest.testCode(LOG, code, expected);
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "\"abc\".eq(\"abc\")               % true",
+            "\"abc\".eq(\"def\")               % false",
+            "\"abc\".eq(\"\")                  % false",
+            "\"\".eq(\"\")                     % true",
+            "\"ABC\".eq(\"abc\")               % false",
+    }, delimiter = '%')
+    public void testEquality(final String code, final String expected) {
+        AbstractMetatronTest.testCode(LOG, code, expected);
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "\"hello\".plus(\" world\")       % \"hello world\"",
+            "\"a\".plus(\"b\").plus(\"c\")    % \"abc\"",
+            "\"\".plus(\"test\")              % \"test\"",
+            "\"test\".plus(\"\")              % \"test\"",
+    }, delimiter = '%')
+    public void testConcat(final String code, final String expected) {
         AbstractMetatronTest.testCode(LOG, code, expected);
     }
 

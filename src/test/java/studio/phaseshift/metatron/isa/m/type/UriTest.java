@@ -125,7 +125,10 @@ public class UriTest extends AbstractMetatronTest {
     @CsvSource(value = {
             "/a/b/c.reverse()                 % /c/b/a",
             "aaa/bbb/ccc.reverse()            % ccc/bbb/aaa",
-            "<http://m.com/a/b/c>.reverse()  % <http://m.com/c/b/a>",
+            "<http://m.com/a/b/c>.reverse()   % <http://m.com/c/b/a>",
+            "a.reverse()                      % a",
+            "a/b.reverse()                    % b/a",
+            "/a.reverse()                     % /a",
     }, delimiter = '%')
     public void testReverse(final String code, final String expected) {
         AbstractMetatronTest.testCode(LOG, code, expected);
@@ -176,6 +179,28 @@ public class UriTest extends AbstractMetatronTest {
             "<3a>.as(int::T)                                            % <ERROR>",
     }, delimiter = '%')
     public void testAsInt(final String code, final String expected) {
+        AbstractMetatronTest.testCode(LOG, code, expected);
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "a/b/c.count()                                              % 1",
+            "a.count()                                                  % 1",
+            "/a/b.count()                                               % 1",
+          //  "<http://example.com/a/b/c>.count()                         % 6",
+    }, delimiter = '%')
+    public void testCount(final String code, final String expected) {
+        AbstractMetatronTest.testCode(LOG, code, expected);
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "a/b.eq(a/b)                                                % true",
+            "a/b.eq(b/a)                                                % false",
+            "/a/b.eq(a/b)                                               % false",
+            "<http://a.com>.eq(<http://a.com>)                          % true",
+    }, delimiter = '%')
+    public void testEquality(final String code, final String expected) {
         AbstractMetatronTest.testCode(LOG, code, expected);
     }
 

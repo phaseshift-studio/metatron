@@ -70,14 +70,14 @@ public class tp3InstSet extends AbstractInstSet {
     private static BiFunction<Obj, Inst, Obj> V_E_FUNCTION(final Direction direction) {
         return (lhs, inst) -> {
             final String[] labels = inst.arg(0).isNoObj() ? EMPTY_STRING_ARRAY : inst.arg(0).stream().map(Obj::uriValue).map(fURI::toString).toArray(String[]::new);
-            return objs(IteratorUtil.stream(VertexMap.recToVertex(lhs.asRec()).edges(direction, labels)).map(e -> EdgeMap.edgeToRec(e, lhs.asRec())));
+            return objs(IteratorUtil.stream(VertexMap.recToVertex(lhs.asRec()).edges(direction, labels)).map(e -> EdgeMap.edgeToRec(e, lhs.asRec()).parent(lhs.asRec())));
         };
     }
 
     private static BiFunction<Obj, Inst, Obj> V_V_FUNCTION(final Direction direction) {
         return (lhs, inst) -> {
             final String[] labels = inst.arg(0).isNoObj() ? EMPTY_STRING_ARRAY : inst.arg(0).stream().map(Obj::uriValue).map(fURI::toString).toArray(String[]::new);
-            return objs(IteratorUtil.stream(VertexMap.recToVertex(lhs.asRec()).vertices(direction, labels)).map(v -> VertexMap.vertexToRec(v, lhs.asRec())));
+            return objs(IteratorUtil.stream(VertexMap.recToVertex(lhs.asRec()).vertices(direction, labels)).map(v -> VertexMap.vertexToRec(v, lhs.asRec()).parent(lhs.asRec())));
         };
     }
 

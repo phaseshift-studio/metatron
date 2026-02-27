@@ -79,6 +79,14 @@ public class IntTest extends AbstractObjTest {
             "2.pow(4)                          % 16",
             "2.pow(4).plus(1)                  % 17",
             "2.pow(4).plus(1).mult(2)          % 34",
+            "10.plus(5)                        % 15",
+            "10.mult(5)                        % 50",
+            "10.minus(3)                       % 7",
+            "0.plus(0)                         % 0",
+            "1.mult(0)                         % 0",
+            "0.mult(100)                       % 0",
+            "-5.plus(10)                       % 5",
+            "-5.mult(-2)                       % 10",
     }, delimiter = '%')
     public void testMath(final String code, final String expected) {
         AbstractMetatronTest.testCode(LOG, code, expected);
@@ -152,8 +160,46 @@ public class IntTest extends AbstractObjTest {
             "{2,1,2,3,2,3,4,2} %order()       %[1,int{4}::2,int{2}::3,4]",
             "1                 %order()       %[1]",
             "int{5}::1         %order()       %[int{5}::1]",
+            "{-1,0,1}          %order()       %[-1,0,1]",
+            "{-5,-2,-10}       %order()       %[-10,-5,-2]",
     }, delimiter = '%')
     public void testOrder(final String input, final String code, final String expected) {
         AbstractMetatronTest.testCode(LOG, input, code, expected);
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "5.gt(3)                           % true",
+            "5.gt(5)                           % false",
+            "5.gt(7)                           % false",
+            "5.lt(3)                           % false",
+            "5.lt(5)                           % false",
+            "5.lt(7)                           % true",
+            "5.eq(5)                           % true",
+            "5.eq(3)                           % false",
+            "5.gte(5)                          % true",
+            "5.gte(3)                          % true",
+            "5.gte(7)                          % false",
+            "5.lte(5)                          % true",
+            "5.lte(7)                          % true",
+            "5.lte(3)                          % false",
+            "0.eq(0)                           % true",
+            "-5.lt(0)                          % true",
+            "-5.gt(-10)                        % true",
+    }, delimiter = '%')
+    public void testComparison(final String code, final String expected) {
+        AbstractMetatronTest.testCode(LOG, code, expected);
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "{1,2,3}.sum()                     % 6",
+            "{10,20,30}.sum()                  % 60",
+            "{-5,5}.sum()                      % 0",
+            "{1}.sum()                         % 1",
+            "{}.sum?int<=int{*}(0)             % 0",
+    }, delimiter = '%')
+    public void testSum(final String code, final String expected) {
+        AbstractMetatronTest.testCode(LOG, code, expected);
     }
 }

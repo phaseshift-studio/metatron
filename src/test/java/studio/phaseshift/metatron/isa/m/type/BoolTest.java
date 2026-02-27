@@ -52,4 +52,35 @@ public class BoolTest extends AbstractObjTest {
    AbstractMetatronTest.testCode(LOG,code,expected);
     }
 
+    @ParameterizedTest
+    @CsvSource(value = {
+            "true.mult(false)                                                                  % false",
+            "false.mult(true)                                                                  % false",
+            "true.mult(true)                                                                   % true",
+            "false.mult(false)                                                                 % false"
+    }, delimiter = '%')
+    public void testMultInst(final String code, final String expected) {
+   AbstractMetatronTest.testCode(LOG,code,expected);
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "true.eq(true)                                                                     % true",
+            "false.eq(false)                                                                   % true",
+            "true.eq(false)                                                                    % false",
+            "false.eq(true)                                                                    % false"
+    }, delimiter = '%')
+    public void testEquality(final String code, final String expected) {
+   AbstractMetatronTest.testCode(LOG,code,expected);
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "true.not()                                                                        % false",
+            "false.not()                                                                       % true"
+    }, delimiter = '%')
+    public void testNot(final String code, final String expected) {
+   AbstractMetatronTest.testCode(LOG,code,expected);
+    }
+
 }

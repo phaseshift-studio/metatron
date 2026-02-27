@@ -21,6 +21,7 @@ package studio.phaseshift.metatron.isa.m.type;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.isa.AbstractObjTest;
 import studio.phaseshift.metatron.util.IteratorUtil;
 
@@ -66,5 +67,27 @@ public class ObjsTest extends AbstractObjTest {
         assertEquals(10000, objs.c().min().intValue());
         assertEquals(10000, objs.c().max().intValue());
         assertEquals(1,objs.stream().count());
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "{1,2,3}.count()                                                     % 3",
+            "{1}.count()                                                         % 1",
+            "{}.count()                                                          % 0",
+            "{1,1,1}.count()                                                     % 3",
+            "{1,2,1,2}.count()                                                   % 4",
+    }, delimiter = '%')
+    public void testCount(final String code, final String expected) {
+        AbstractMetatronTest.testCode(LOG, code, expected);
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "{1,2,3}.merge()                                                     % {1,2,3}",
+            "{a,b,c}.merge()                                                     % {a,b,c}",
+            "{}.merge()                                                          % {}",
+    }, delimiter = '%')
+    public void testMerge(final String code, final String expected) {
+        AbstractMetatronTest.testCode(LOG, code, expected);
     }
 }

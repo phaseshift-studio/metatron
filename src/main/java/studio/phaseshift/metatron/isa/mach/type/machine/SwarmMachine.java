@@ -170,7 +170,6 @@ public class SwarmMachine extends AbstractMachine implements Machine {
             } else if (!this.barriers().isEmpty()) {
                 final Monad barrier = this.barriers().<LinkedList<Monad>>jvmAs().poll();
                 if (null != barrier) {
-                    Router.global().stats().monadicStats().incrBarrierMonads(-1L);
                     LOG.trace("   {{m}}=|{{/m}} processing barrier monad %s", barrier);
                     final Obj result = barrier.inst().apply(barrier.obj());
                     final Inst nextInst = code.nextInst(barrier.inst());
@@ -180,13 +179,15 @@ public class SwarmMachine extends AbstractMachine implements Machine {
                         if (null == nextBarrier)
                             throw MTronException.of("barrier should exist: %s", nextInst);
                         nextBarrier.obj().append(result);
-                        Router.global().stats().monadicStats().incrBarrierMonads(1L);
                     } else if (nextInst.isBatching()) {
+                        Router.global().stats().monadicStats().incrBarrierMonads(-1L);
                         this.running().append(monad(result, nextInst));
+                        Router.global().stats().monadicStats().incrRunningMonads(1L);
                     } else { // barrier-to-other requires an unrolling of result set
                         LOG.trace("  {{m}}==|{{/m}} scattering barrier obj %s to %s", result, nextInst);
                         result.forEach(o -> {
                             final Monad n = monad(o, nextInst);
+                            Router.global().stats().monadicStats().incrBarrierMonads(-1L);
                             LOG.trace(" {{m}}===|{{/m}} scattering %s", n);
                             this.running().append(n);
                         });

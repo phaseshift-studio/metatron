@@ -136,9 +136,47 @@ public class LstTest extends AbstractObjTest {
             "[a,[b,c],[d,e]].reverse()                                           % [[d,e],[b,c],a]",
             "[a,[b,c],[d,e]].reverse()==[reverse(),reverse(),reverse()]          % [[e,d],[c,b],a]",
             "[a,[b,c],[d,e]].reverse()==[reverse(),>-.count(),reverse()]         % [[e,d],2,a]",
+            "[,].reverse()                                                       % [,]",
+            "[a].reverse()                                                       % [a]",
+            //"[a,b].reverse().reverse()                                           % [a,b]",
            // "[a,[b,c],[d,e]].reverse()==[(_,_,_){reverse()}]                     % [[e,d],[c,b],a]",
     }, delimiter = '%')
     public void testReverse(final String code, final String expected) {
+        AbstractMetatronTest.testCode(LOG, code, expected);
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "[1,2,3].merge()                                                     % {1,2,3}",
+            "[a,b,c].merge()                                                     % {a,b,c}",
+            "[,].merge()                                                         % {,}",
+            "[[a,b],[c,d]].merge()                                               % {[a,b],[c,d]}",
+    }, delimiter = '%')
+    public void testMerge(final String code, final String expected) {
+        AbstractMetatronTest.testCode(LOG, code, expected);
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "[1,2,3]>-.count()                                                     % 3",
+            "[a,b]>-.count()                                                       % 2",
+            "[a]>-.count()                                                         % 1",
+            "[,]>-.count()                                                         % 0",
+            "[[a,b],c,[d,e,f]]>-.count()                                           % 3",
+    }, delimiter = '%')
+    public void testCount(final String code, final String expected) {
+        AbstractMetatronTest.testCode(LOG, code, expected);
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "[1,2,3].plus([4,5])                                                 % [1,2,3,4,5]",
+            "[a,b].plus([c])                                                     % [a,b,c]",
+            "[,].plus([a])                                                       % [a]",
+            "[a].plus([,])                                                       % [a]",
+            "[,].plus([,])                                                       % [,]",
+    }, delimiter = '%')
+    public void testPlus(final String code, final String expected) {
         AbstractMetatronTest.testCode(LOG, code, expected);
     }
 }

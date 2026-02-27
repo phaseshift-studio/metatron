@@ -44,7 +44,9 @@ public class NoObjTest extends AbstractMetatronTest {
             "str{4}::'meta'      |str{0}::'tron'         |false",
             "'meta'              |'meta'                 |true",
             "'meta'              |str{0}::'meta'         |false",
-            "noobj               |#{0}                   |true"},
+            "noobj               |#{0}                   |true",
+            "noobj{0}            |noobj{0}               |true",
+            "noobj{1}            |noobj{1}               |true"},
             delimiter = '|')
     public void testNoObjEquality(final String o1, final String o2, final boolean match) {
         final Obj obj1 = mParser.m_obj().parse(o1).get();
@@ -95,7 +97,10 @@ public class NoObjTest extends AbstractMetatronTest {
             "noobj               |noobj::T               |true",
             "noobj               |noobj{1}::T            |true",
             "age{0}              |age{?}                 |true",
-            "age                 |age{?}                 |true"},
+            "age                 |age{?}                 |true",
+            "noobj               |int{?}::T              |true",
+            "noobj               |str{?}::T              |true",
+            "noobj{0}            |#{0}::T                |true"},
             delimiter = '|')
     public void testNoObjMatches(final String o1, final String o2, final boolean match) {
         final Obj obj1 = mParser.m_obj().parse(o1).get();

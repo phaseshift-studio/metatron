@@ -122,12 +122,13 @@ public class RecTest extends AbstractMetatronTest {
             "[a=>1,b=>2,c=>3].as(lst::T)                                                % [(0=>a=>1),(1=>b=>2),(2=>c=>3)]",
             "[a=>1,b=>2,c=>3].as(lst::T).>-.isa(rel::T).count()                         % 3",
             "[a=>1,b=>2,c=>3].as(lst::T).>-.>>.isa(rel::T).count()                      % 3",
-            "[a=>1,b=>2,c=>3].as(lst::T).>-.>>.rng().isa(int::T).count()                   % 3",
-            "[a=>1,b=>2,c=>3].as(lst::T).>-.>>.rng().sum()                                 % 6",
+            "[a=>1,b=>2,c=>3].as(lst::T).>-.>>.rng().isa(int::T).count()                % 3",
+            "[a=>1,b=>2,c=>3].as(lst::T).>-.>>.rng().sum()                              % 6",
             "[a=>1,b=>2,c=>3].as(rec::T)                                                % [a=>1,b=>2,c=>3]",
             "[a=>1,b=>2,c=>3].as(rec::T).as(lst::T)                                     % [(0=>(a=>1)),(1=>(b=>2)),(2=>(c=>3))]",
             "[a=>1,b=>2,c=>3].as(lst::T).as(rec::T)                                     % [0=>(0=>(a=>1)),1=>(1=>(b=>2)),2=>(2=>(c=>3))]",
-
+            "[=>].as(lst::T)                                                            % [,]",
+            "[=>].as(rec::T)                                                            % [=>]",
     }, delimiter = '%')
     public void testAs(final String code, final String expected) {
         AbstractMetatronTest.testCode(LOG, code, expected);
@@ -213,10 +214,13 @@ public class RecTest extends AbstractMetatronTest {
             "[a=>1,b=>2,c=>3].reverse()                                                      % [c=>3,b=>2,a=>1]",
             "[x=>12,y=>bac,z=>25].reverse()                                                  % [z=>25,y=>bac,x=>12]",
             "[first=>abc,second=>def,third=>ghi].reverse()                                   % [third=>ghi,second=>def,first=>abc]",
-            "[a=>'abc',b=>'def',c=>'ghi'].reverse()==[_=>reverse()]         % [c=>'ihg',b=>'fed',a=>'cba']",
+            "[a=>'abc',b=>'def',c=>'ghi'].reverse()==[_=>reverse()]                          % [c=>'ihg',b=>'fed',a=>'cba']",
             "[a=>x,b=>[c=>1,d=>2],e=>[f=>3,g=>4]].reverse()                                   % [e=>[f=>3,g=>4],b=>[c=>1,d=>2],a=>x]",
-            "[a=>x,b=>[c=>1,d=>2],e=>[f=>3,g=>4]].reverse()==[_=>reverse()] % [e=>[g=>4,f=>3],b=>[d=>2,c=>1],a=>x]",
-            "[a=>x,b=>[c=>1,d=>2],e=>y].reverse()==[_=>reverse()]                           % [e=>y,b=>[d=>2,c=>1],a=>x]",
+            "[a=>x,b=>[c=>1,d=>2],e=>[f=>3,g=>4]].reverse()==[_=>reverse()]                   % [e=>[g=>4,f=>3],b=>[d=>2,c=>1],a=>x]",
+            "[a=>x,b=>[c=>1,d=>2],e=>y].reverse()==[_=>reverse()]                            % [e=>y,b=>[d=>2,c=>1],a=>x]",
+            "[=>].reverse()                                                                  % [=>]",
+            "[a=>1].reverse()                                                                % [a=>1]",
+         //   "[a=>1,b=>2].reverse().reverse()                                                 % [a=>1,b=>2]",
     }, delimiter = '%')
     public void testReverse(final String code, final String expected) {
         AbstractMetatronTest.testCode(LOG, code, expected);
@@ -256,6 +260,7 @@ public class RecTest extends AbstractMetatronTest {
             "[a=>1,b=>2].has(a,|?>0).has(b,|?>2)                    % false",
             "[a=>1,b=>2].has(a,|?>0).has(b,|?>0)                    % true",
             "[a=>1,b=>2].has(a,|?>0).has(b,|?>0).has(c,|?>0)        % false",
+            "[=>].has(a,|?>0)                                       % false",
             /// ///////////////////////////////////////////////////////
             "[a=>1,b=>2].has(a,|gt(0))                              % true",
             "[a=>1,b=>2].has(a,|gt(1))                              % false",
@@ -263,6 +268,8 @@ public class RecTest extends AbstractMetatronTest {
             "[a=>1,b=>2].has(a,|gt(0)).has(b,|gt(2))                % false",
             "[a=>1,b=>2].has(a,|gt(0)).has(b,|gt(0))                % true",
             "[a=>1,b=>2].has(a,|gt(0)).has(b,|gt(0)).has(c,|gt(0))  % false",
+            "[a=>[b=>1,c=>2]].has(a,|isa(rec::T))                   % true",
+            "[a=>[b=>1,c=>2]].has(a,|isa(lst::T))                   % false",
     }, delimiter = '%', quoteCharacter = '~')
     public void testHas(final String code, final boolean matches) {
         final Obj codeObj = mParser.parse(code);
@@ -291,6 +298,86 @@ public class RecTest extends AbstractMetatronTest {
             assertFalse(Poly.Helper.diffObjRecursion(aobj, bobj).toString().contains("X=>"));
         else
             assertTrue(Poly.Helper.diffObjRecursion(aobj, bobj).toString().contains("X=>"));
+    }
 
+    @ParameterizedTest
+    @CsvSource(value = {
+            "[a=>1,b=>2,c=>3].merge()                                                    % {(a=>1),(b=>2),(c=>3)}",
+            "[a=>1,b=>2].merge()                                                         % {(a=>1),(b=>2)}",
+            "[=>].merge()                                                                % {,}",
+            "[a=>[b=>1,c=>2]].merge()                                                    % {(a=>[b=>1,c=>2])}",
+    }, delimiter = '%')
+    public void testMerge(final String code, final String expected) {
+        AbstractMetatronTest.testCode(LOG, code, expected);
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "[a=>1,b=>2,c=>3].dom()                                                      % {a,b,c}",
+            "[a=>1,b=>2].dom()                                                           % {a,b}",
+            "[=>].dom()                                                                  % {,}",
+            "[x=>10,y=>20,z=>30].dom()                                                   % {x,y,z}",
+    }, delimiter = '%')
+    public void testDom(final String code, final String expected) {
+        AbstractMetatronTest.testCode(LOG, code, expected);
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "[a=>1,b=>2,c=>3].rng()                                                      % {1,2,3}",
+            "[a=>1,b=>2].rng()                                                           % {1,2}",
+            "[=>].rng()                                                                  % {,}",
+            "[x=>10,y=>20,z=>30].rng()                                                   % {10,20,30}",
+            "[a=>[b=>1],c=>[d=>2]].rng()                                                 % {[b=>1],[d=>2]}",
+    }, delimiter = '%')
+    public void testRng(final String code, final String expected) {
+        AbstractMetatronTest.testCode(LOG, code, expected);
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "[a=>1,b=>2].plus([c=>3])                                                    % [a=>1,b=>2,c=>3]",
+            "[a=>1,b=>2].plus([b=>3,c=>4])                                               % [a=>1,b=>{2,3},c=>4]",
+            "[a=>1].plus([a=>2])                                                         % [a=>{1,2}]",
+            "[=>].plus([a=>1])                                                           % [a=>1]",
+            "[a=>1].plus([=>])                                                           % [a=>1]",
+            "[=>].plus([=>])                                                             % [=>]",
+    }, delimiter = '%')
+    public void testPlus(final String code, final String expected) {
+        AbstractMetatronTest.testCode(LOG, code, expected);
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "[a=>1,b=>2,c=>3]>-.count()                                                    % 3",
+            "[a=>1,b=>2]>-.count()                                                         % 2",
+            "[a=>1].count()                                                                % 1",
+            "[=>]>-.count()                                                                % 0",
+            "[a=>[b=>1,c=>2],d=>3]>-.count()                                               % 2",
+    }, delimiter = '%')
+    public void testCount(final String code, final String expected) {
+        AbstractMetatronTest.testCode(LOG, code, expected);
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "[a=>1,b=>2,c=>3].select([a=>_,b=>_])                                              % [a=>1,b=>2]",
+            "[a=>1,b=>2,c=>3].select([a=>_])                                                % [a=>1]",
+            "[a=>1,b=>2,c=>3].select([d=>_])                                                % noobj",
+            "[a=>1,b=>2,c=>3].select([a=>_,d=>_])                                              % [a=>1]",
+    }, delimiter = '%')
+    public void testSelect(final String code, final String expected) {
+        AbstractMetatronTest.testCode(LOG, code, expected);
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "[a=>1,b=>2,c=>3].sum()                                                      % [a=>1,b=>2,c=>3]",
+            "{[a=>1],[b=>2]}.sum()                                                       % [a=>1,b=>2]",
+            "{[a=>1],[a=>2]}.sum()                                                       % [a=>{1,2}]",
+            "{[a=>1,b=>2],[c=>3,d=>4]}.sum()                                             % [a=>1,b=>2,c=>3,d=>4]",
+    }, delimiter = '%')
+    public void testSum(final String code, final String expected) {
+        AbstractMetatronTest.testCode(LOG, code, expected);
     }
 }

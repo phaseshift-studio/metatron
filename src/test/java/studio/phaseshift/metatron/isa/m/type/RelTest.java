@@ -61,4 +61,38 @@ public class RelTest extends AbstractMetatronTest {
     public void testRelSelectWhere(final String code, final String expected) {
         AbstractMetatronTest.evaluate(LOG, code, expected);
     }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "(a=>b).first()                                                            % a",
+            "(a=>b).second()                                                           % b",
+            "(1=>2).first()                                                            % 1",
+            "(1=>2).second()                                                           % 2",
+            "((a=>b)=>(c=>d)).first()                                                  % (a=>b)",
+            "((a=>b)=>(c=>d)).second()                                                 % (c=>d)",
+    }, delimiter = '%')
+    public void testRelFirstSecond(final String code, final String expected) {
+        AbstractMetatronTest.evaluate(LOG, code, expected);
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "(a=>b).eq((a=>b))                                                         % true",
+            "(a=>b).eq((b=>a))                                                         % false",
+            "(a=>b).eq((a=>c))                                                         % false",
+            "(1=>2).eq((1=>2))                                                         % true",
+            "(1=>2).eq((2=>1))                                                         % false",
+    }, delimiter = '%')
+    public void testRelEquality(final String code, final String expected) {
+        AbstractMetatronTest.evaluate(LOG, code, expected);
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "(a=>1).plus((b=>2))                                                       % {(a=>1),(b=>2)}",
+            "(a=>1).plus((a=>2))                                                       % {(a=>1),(a=>2)}",
+    }, delimiter = '%')
+    public void testRelPlus(final String code, final String expected) {
+        AbstractMetatronTest.evaluate(LOG, code, expected);
+    }
 }
