@@ -762,7 +762,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
                 try {
                     final O clone = (O) obj.clone();
                     Obj.Helper.objCheckAndSave(clone, jvm, tid, vid);
-                    return  (O) clone.selfTID(tid);
+                    return (O) clone.selfTID(tid);
                 } catch (final Exception e) {
                     throw MTronException.of(e);
                 }
@@ -850,7 +850,17 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
                     instC(MERGE_INST_TID.dom(A.maybeSome()).rng(ALL_STAR), lst(), (lhs, _) -> objs(lhs.elements())),
                     instC(MERGE_INST_TID.dom(A.maybeSome()).rng(A.maybeSome()), lst(T(A.maybeSome())), (lhs, inst) -> objs(Stream.concat(lhs.stream(), inst.arg(0).stream()))),
                     instC(NOT_INST_TID.dom(ALL).rng(BOOL_TID), lst(T(BOOL_TID)), (_, inst) -> bool(!inst.arg(0).boolValue())),
-                    instC(EQ_INST_TID.dom(ALL).rng(BOOL_TID), lst(T(ALL)), (lhs, inst) -> bool(lhs.equals(inst.arg(0)))),
+                    instC(EQ_INST_TID.dom(ALL).rng(BOOL_TID), lst(T(ALL)), (lhs, inst) -> {
+                        try {
+                            if (!Objects.equals(lhs.c(), inst.arg(0).c()))
+                                return bool(false);
+                            if (!lhs.tid().basePath().equals(inst.arg(0).tid().basePath()))
+                                return bool(lhs.as(inst.arg(0).type()).equals(inst.arg(0)));
+                            return bool(lhs.equals(inst.arg(0)));
+                        } catch (final Exception e) {
+                            return bool(false);
+                        }
+                    }),
                     instC(NEQ_INST_TID.dom(ALL).rng(BOOL_TID), lst(T(ALL)), (lhs, inst) -> bool(!lhs.equals(inst.arg(0)))),
                     instC(TO_INST_TID.dom(ALL.maybe()).rng(ALL.maybe()), lst(T(URI_TID)), (lhs, inst) -> Router.writeToSpace(inst.arg(0).uriValue(), lhs)),
                     // instC(FROM_INST_TID.dom(ALL.maybe()).rng(ALL_STAR), lst(), (lhs, inst) -> Router.stack().peekAll()),
