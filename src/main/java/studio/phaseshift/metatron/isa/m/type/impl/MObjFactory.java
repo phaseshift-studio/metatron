@@ -21,7 +21,6 @@ package studio.phaseshift.metatron.isa.m.type.impl;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.mach.type.Monad;
-import studio.phaseshift.metatron.isa.mach.type.monad.BasicMonad;
 import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
 
@@ -50,9 +49,14 @@ import static studio.phaseshift.metatron.util.Tuple.Triplet;
 
 public class MObjFactory extends MRec implements ObjFactory {
 
-    private static MObjFactory SINGLETON = null;
+    private final static MObjFactory SINGLETON = new MObjFactory();
     protected final boolean allowReflection = true;
     protected static final fURI OBJ_FACTORY_TID = MACH_ISA_TID.extend("mfactory");
+
+
+    public static MObjFactory single() {
+        return SINGLETON;
+    }
 
     public static final Type M_FACTORY_TYPE = Type.Builder.build()
             .tid(FACTORY_TID)
@@ -76,8 +80,6 @@ public class MObjFactory extends MRec implements ObjFactory {
     }
 
     public static ObjFactory of() {
-        if (SINGLETON == null)
-            SINGLETON = new MObjFactory();
         return SINGLETON;
     }
 
@@ -188,8 +190,8 @@ public class MObjFactory extends MRec implements ObjFactory {
             return (OBJ) new MFail((Pair<Throwable, Fail>) value, null == tid ? FAIL_TID : tid, vid);
         else if (NoObj.class.isAssignableFrom(objClass))
             return (OBJ) NoObj.noobj();
-        else if(Monad.class.isAssignableFrom(objClass))
-            return (OBJ) monad((List<Obj>)value, null == tid ? MACH_BASIC_MONAD_TID : tid, vid);
+        else if (Monad.class.isAssignableFrom(objClass))
+            return (OBJ) monad((List<Obj>) value, null == tid ? MACH_BASIC_MONAD_TID : tid, vid);
         else
             throw MTronException.of("provided class has not obj equivalent: %s", objClass);
     }

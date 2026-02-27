@@ -30,6 +30,7 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.AbstractMetatronTest;
+import studio.phaseshift.metatron.util.CommonUtil;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -47,6 +48,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  */
 public abstract class AbstractSpaceTest extends AbstractMetatronTest {
 
+    protected int sleepBetweenReads = 0;
     protected Space space;
     protected final Supplier<Space> spaceSupplier;
     protected Space spaceStorage = null;
@@ -166,6 +168,8 @@ public abstract class AbstractSpaceTest extends AbstractMetatronTest {
     }, delimiter = '%')
     public void testMonoReadWrite(final String writeExpression, final String readExpression, final String expectedExpression) {
         final Obj writeObj = mParser.parse(make(writeExpression.equals(".") ? PREVIOUS_LINE.get(0) : writeExpression)).apply();
+        if(this.sleepBetweenReads > 0)
+            CommonUtil.sleepThread(this.sleepBetweenReads);
         final Obj readObj = mParser.parse(make(readExpression.equals(".") ? PREVIOUS_LINE.get(1) : readExpression)).apply();
         final Obj resultObj = mParser.parse(make(expectedExpression.equals(".") ? PREVIOUS_LINE.get(2) : expectedExpression)).apply();
         if (!writeExpression.equals("."))

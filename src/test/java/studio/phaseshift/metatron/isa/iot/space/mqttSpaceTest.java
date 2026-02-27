@@ -32,6 +32,7 @@ import studio.phaseshift.metatron.isa.iot.space.mqtt.mqttSpace;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.AbstractMetatronTest;
+import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -47,7 +48,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-@TestSkip(testClass = AbstractSpaceTest.class, testMethods = {"testMonoReadWrite"})
+//@TestSkip(testClass = AbstractSpaceTest.class, testMethods = {"testMonoReadWrite"})
 public class mqttSpaceTest extends AbstractSpaceTest {
     private static final int PORT = generatePort();
 
@@ -63,9 +64,9 @@ public class mqttSpaceTest extends AbstractSpaceTest {
                 throw MTronException.of(e);
             }
         });
+        this.sleepBetweenReads = 20;
         BootLoader.loadInstSetProvider(IOT_ISA_TID);
     }
-
 
     @BeforeAll
     public static void setupAll() {
@@ -75,22 +76,28 @@ public class mqttSpaceTest extends AbstractSpaceTest {
 
     @AfterAll
     public static void stopAll() {
-        MoquetteServer.clear();
         MoquetteServer.stop();
+        CommonUtil.sleepThread(100);
         AbstractMetatronTest.end();
     }
 
     @ParameterizedTest
     @CsvSource(value = {
-            "/t/a?sub -> sub::[src=>a,tgt=>/t/a,on_recv=><abc>->3]                            % /t/a -> 4                       % *abc.?=3",
-            "/t/b?sub -> sub::[src=>a,tgt=>/t/b,on_recv=><abc>->4]                            % /t/b -> 3                       % *abc.?=4",
+            "/t/a?sub -> sub::[src=>a,tgt=>/t/a,on_recv=><abc>->3]                                        % /t/a -> 4                           % *abc.?=3",
+            "/t/b?sub -> sub::[src=>a,tgt=>/t/b,on_recv=><abc>->4]                                        % /t/b -> 3                           % *abc.?=4",
+            "/t/c/+?sub -> sub::[src=>a,tgt=>/t/+,on_recv=>(){*<zzz>.else(0).plus(4).to(zzz).print(_)}]   % 3.to(/t/c/b).map(7).to(/t/c/a)      % *zzz.?=8",
+          //  "/t/c?sub -> sub::[src=>a,tgt=>/t/c,on_recv=>(){*</t/c>.plus(4).to(yyy).print(_)}]            % 3.to(/t/c)                          % *yyy.?=7",
+            "/t/d?sub -> sub::[src=>a,tgt=>/t/d,on_recv=>(){*</t/d>.plus(4).to(ggg).print(_)}]            % 1.to(ggg).map(3).to(/t/c)           % *ggg.?=1",
     }, delimiter = '%')
     public void testSubscriptions(final String subscription, final String write, final String check) {
         final PubSubQ.Subscription sub = mParser.eval(subscription);
+        CommonUtil.sleepThread(this.sleepBetweenReads+50);
         assertEquals(SUBSCRIPTION_TID, sub.tid());
-        final Obj writeObj = mParser.eval(write);
+        mParser.eval(write);
+        CommonUtil.sleepThread(this.sleepBetweenReads+50);
         final Obj checkObj = mParser.eval(check);
         assertNotEquals(noobj(), checkObj);
+        MoquetteServer.clear();
     }
 
 }

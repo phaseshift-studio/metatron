@@ -21,12 +21,13 @@ package studio.phaseshift.metatron.isa.m.type;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
+import studio.phaseshift.metatron.TestData;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public class UriTest extends AbstractMetatronTest {
-    
+
     @ParameterizedTest
     @CsvSource(value = {
             "bool::abc/def                                                | <ERROR>",
@@ -98,6 +99,38 @@ public class UriTest extends AbstractMetatronTest {
     public void testSplit(final String code, final String expected) {
         AbstractMetatronTest.testCode(LOG, code, expected);
     }
+
+    @ParameterizedTest
+    @TestData({
+            "test -> <http://www.marko.com:90/a/b/c?w=abc&x=1&y=2&z=!*test>",
+            "b -> 42"})
+    @CsvSource(value = {
+            "*test.>>scheme                   % http",
+            "*test.>>authority                % <www.marko.com:90>",
+            "*test>>host                      % <www.marko.com>",
+            "*test.>>port                     % 90",
+            "*test.>>path                     % </a/b/c>",
+            "*test>>q                         % [w=><abc>,x=>1,y=>2,z=>!*test]",
+            "*test.>>q>>w                     % <abc>",
+            "*test.>>q>>x                     % 1",
+            "*test>>q>>y                      % 2",
+            "*test.>>q>>z                     % *test",
+            "*test.>>path>>1.*(_)             % 42"
+    }, delimiter = '%')
+    public void testGet(final String code, final String expected) {
+        AbstractMetatronTest.testCode(LOG, code, expected);
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "/a/b/c.reverse()                 % /c/b/a",
+            "aaa/bbb/ccc.reverse()            % ccc/bbb/aaa",
+            "<http://m.com/a/b/c>.reverse()  % <http://m.com/c/b/a>",
+    }, delimiter = '%')
+    public void testReverse(final String code, final String expected) {
+        AbstractMetatronTest.testCode(LOG, code, expected);
+    }
+
 
     @ParameterizedTest
     @CsvSource(value = {

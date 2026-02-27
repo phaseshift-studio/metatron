@@ -198,6 +198,7 @@ public interface Lst extends Poly<Lst, List<Obj>>, PlusMonoid.O<Lst> {
             return new LinkedHashSet<>(List.of(
                     instC(AS_INST_TID.dom(LST_TID).rng(LST_TID), lst(LST_TYPE), (lhs, inst) -> lhs.tid(inst.arg(0).vidOrTid())), // TODO: vidOrTid -- sketchy
                     instC(AS_INST_TID.dom(LST_TID).rng(REC_TID), lst(T(REC_TID)), (lhs, inst) -> Poly.Helper.transformLstToRec(lhs.asLst(), inst.arg(0).vidOrTid(), fnull)),
+                    instC(REVERSE_INST_TID.dom(LST_TID).rng(LST_TID), lst(), (lhs, inst) -> lhs.jvm(lhs.asLst().jvm().reversed())),
                     instC(PLUS_INST_TID.dom(LST_TID).rng(LST_TID), lst(T(LST_TID)), (lhs, inst) -> lhs.jvm(Stream.concat(lhs.elements(), inst.arg(0).elements()).toList())),
                     instC(MULT_INST_TID.dom(LST_TID).rng(LST_TID), lst(T(LST_TID)), (lhs, inst) -> lhs.jvm(lhs.elements().flatMap(a -> inst.arg(0).elements().map(b -> rel(a, b))).toList())),
                     instC(RSHIFT_INST_TID.dom(LST_TID).rng(ALL_STAR), lst(T(ALL.maybeSome())), (lhs, inst) -> objs(inst.arg(0).orElse((Obj) uri("+")).stream().map(k -> lhs.asLst().at(k)))),

@@ -203,9 +203,11 @@ public class MObjs implements Objs {
 
     @Override
     public Tuple.Pair<Obj, Obj> take(final cInt c) {
-        if (c.isZero())
+        boolean isNegative = c.lt(cInt.ZERO());
+        final cInt abs = c.abs();
+        if (abs.isZero())
             return Tuple.Pair.with(noobj(), this);
-        if (c.isMaybeSome() || Objects.equals(c.max(), this.c().max())) {
+        if (abs.isMaybeSome() || Objects.equals(abs.max(), this.c().max())) {
             this.count = cInt.ZERO();
             return Tuple.Pair.with(this, noobj());
         }
@@ -213,10 +215,10 @@ public class MObjs implements Objs {
         final List<Obj> remaining = new ArrayList<>();
         cInt total = cInt.ZERO();
         this.count = cInt.ZERO();
-        for (Obj entry : this.jvm) {
-            final cInt toTake = c.minus(total);
+        for (Obj entry : (isNegative ? this.jvm.reversed() : this.jvm)) {
+            final cInt toTake = abs.minus(total);
             final cInt entryC = entry.c();
-            if (toTake.gt(c.zero())) {
+            if (toTake.gt(abs.zero())) {
                 if (entryC.lte(toTake)) {
                     retrieved.add(entry);
                     total = total.plus(entryC);
@@ -232,7 +234,7 @@ public class MObjs implements Objs {
                 remaining.add(entry);
             }
         }
-        this.jvm = remaining;
+        this.jvm = isNegative ? remaining.reversed() : remaining;
         return Tuple.Pair.with(objs(retrieved), objs(remaining));
     }
 

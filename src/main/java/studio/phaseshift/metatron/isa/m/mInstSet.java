@@ -38,10 +38,6 @@ import static studio.phaseshift.metatron.isa.m.space.metaSpace.META_SPACE_TYPE;
 import static studio.phaseshift.metatron.isa.m.space.stackSpace.STACK_SPACE_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
-import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
-import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
-import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
-import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 @ServiceMetadata(tid = "/m")
@@ -113,6 +109,7 @@ public class mInstSet extends AbstractInstSet {
     public static final fURI GET_INST_TID = INST_TID.extend("get");
     public static final fURI FAILURE_INST_TID = INST_TID.extend("failure");
     public static final fURI AS_INST_TID = INST_TID.extend("as");
+    public static final fURI REVERSE_INST_TID = INST_TID.extend("reverse");
     public static final fURI CLOSE_INST_TID = INST_TID.extend("close");
     public static final fURI REPEAT_INST_TID = INST_TID.extend("repeat");
     public static final fURI AT_INST_TID = INST_TID.extend("at");

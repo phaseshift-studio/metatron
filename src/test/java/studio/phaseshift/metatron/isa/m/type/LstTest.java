@@ -126,4 +126,19 @@ public class LstTest extends AbstractObjTest {
     public void testAs(final String code, final String expected) {
         AbstractMetatronTest.testCode(LOG, code, expected);
     }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "[a,b,c].reverse()                                                   % [c,b,a]",
+            "[12,bac,25,45,\"_245\"].reverse()                                   % [\"_245\",45,25,bac,12]",
+            "[abc,def,ghi].reverse()                                             % [ghi,def,abc]",
+            "['abc','def','ghi'].reverse()==[reverse(),reverse(),reverse()]      % ['ihg','fed','cba']",
+            "[a,[b,c],[d,e]].reverse()                                           % [[d,e],[b,c],a]",
+            "[a,[b,c],[d,e]].reverse()==[reverse(),reverse(),reverse()]          % [[e,d],[c,b],a]",
+            "[a,[b,c],[d,e]].reverse()==[reverse(),>-.count(),reverse()]         % [[e,d],2,a]",
+           // "[a,[b,c],[d,e]].reverse()==[(_,_,_){reverse()}]                     % [[e,d],[c,b],a]",
+    }, delimiter = '%')
+    public void testReverse(final String code, final String expected) {
+        AbstractMetatronTest.testCode(LOG, code, expected);
+    }
 }

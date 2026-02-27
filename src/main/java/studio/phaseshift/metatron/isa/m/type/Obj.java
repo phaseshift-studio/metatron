@@ -152,7 +152,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
     }
 
     default Pair<Obj, Obj> take(final cInt c) {
-        return this.c().gte(c) ? Pair.with(this.c(c), this.c(this.c().minus(c))) : Pair.with(this, noobj());
+        return Pair.with(this.c(c), this.c(this.c().minus(c)));
     }
 
     default Obj take() {

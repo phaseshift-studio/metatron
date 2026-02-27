@@ -18,10 +18,12 @@
 
 package studio.phaseshift.metatron.isa.vec.type;
 
-import jdk.incubator.vector.DoubleVector;
+//import jdk.incubator.vector.DoubleVector;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 
+import java.util.List;
+import java.util.Vector;
 import java.util.stream.Stream;
 
 
@@ -30,17 +32,32 @@ import java.util.stream.Stream;
  */
 public class MRealVec extends MVec<Double> {
 
-    public MRealVec(final DoubleVector value, final fURI tid, final fURI vid) {
-        super(value, tid, vid);
+    public MRealVec(final Double value, final fURI tid, final fURI vid) {
+        super(new Vector<>(List.of(value)), tid, vid);
     }
 
-  /*  public MRealVec vec(final Lst lst) {
+    @Override
+    public long count() {
+        return 0;
+    }
+
+    @Override
+    public <O extends Obj> Stream<O> elements() {
+        return Stream.empty();
+    }
+
+    @Override
+    public <O extends Obj> O at(Obj key) {
+        return null;
+    }
+    /*
+   public MRealVec vec(final Lst lst) {
         final double[] array = new double[lst.lstValue().size()];
         for (int i = 0; i < lst.lstValue().size(); i++) {
             array[i] = lst.lstValue().get(i).realValue();
         }
         return new MRealVec(DoubleVector.fromArray(DoubleVector.SPECIES_64, array, 0), RVEC_TID, fURI.NULL);
-    }*/
+    }
 
     @Override
     public DoubleVector jvm() {
@@ -65,5 +82,5 @@ public class MRealVec extends MVec<Double> {
     @Override
     public boolean has(Obj key) {
         return false;
-    }
+    }*/
 }

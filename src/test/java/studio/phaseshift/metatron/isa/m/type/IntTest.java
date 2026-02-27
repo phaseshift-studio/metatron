@@ -20,8 +20,8 @@ package studio.phaseshift.metatron.isa.m.type;
 
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-import studio.phaseshift.metatron.isa.AbstractObjTest;
 import studio.phaseshift.metatron.AbstractMetatronTest;
+import studio.phaseshift.metatron.isa.AbstractObjTest;
 
 public class IntTest extends AbstractObjTest {
     @ParameterizedTest
@@ -116,16 +116,25 @@ public class IntTest extends AbstractObjTest {
             "int{4,10}::1       %int{3}       %int{3}::1          %int{1,7}::1",
             "int{10}::1         %int{10}      %int{10}::1         %int{0}::1",
             "int{10}::1         %int{10}      %int{10}::1         %noobj",
-            "int{10}::1         %int{11}      %int{10}::1         %noobj",
+            "int{10}::1         %int{11}      %int{11}::1         %int{-1}::1",
             "int{0}::1          %int{0}       %int{0}::1          %int{0}::1",
+            "int{0}::1          %int{10}      %int{10}::1         %int{-10}::1",
+            "int{0}::1          %int{-10}      %int{-10}::1         %int{10}::1",
             "int{10}::1         %int{0}       %int{0}::1          %int{10}::1",
             "int{10}::1         %int{-5}      %int{-5}::1         %int{15}::1",
+            "int{-10}::1        %int{-5}      %int{-5}::1         %int{-5}::1",
             "int{10,}::1        %int{10,}     %int{10,}::1        %int{0}::1",
             "int{10,}::1        %int{1,}      %int{1,}::1         %noobj",
             "noobj,             %int{10}      %noobj              %noobj",
             "int{,10}::1        %int{,10}     %int{,10}::1        %noobj",
             "int{,10}::1        %int{1}       %int::1             %int{,9}::1",
             "int{1,10}::1       %int{1}       %int::1             %int{0,9}::1",
+            "int{-10,-1}::1     %int{1}       %int::1             %int{-11,-2}::1",
+            "int{-10,-1}::1     %int{-1}      %int{-1}::1         %int{-9,0}::1",
+            "int{-10,-10}::1    %int{10}      %int{10}::1         %int{-20,-20}::1",
+            "int{-10,-8}::1     %int{-5}      %int{-5}::1         %int{-5,-3}::1",
+            "int{-10,8}::1      %int{-5}      %int{-5}::1         %int{-5,13}::1",
+            "int{-10}::1        %int{-10}     %int{-10}::1        %noobj",
     }, delimiter = '%')
     public void testTake(final String current, final String remove, final String retrieved, final String remaining) {
         super.testTake(current, remove, retrieved, remaining);

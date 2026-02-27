@@ -208,6 +208,20 @@ public class RecTest extends AbstractMetatronTest {
         assertEquals(1.0, r.at("d").realValue(), 0.001);
     }
 
+    @ParameterizedTest
+    @CsvSource(value = {
+            "[a=>1,b=>2,c=>3].reverse()                                                      % [c=>3,b=>2,a=>1]",
+            "[x=>12,y=>bac,z=>25].reverse()                                                  % [z=>25,y=>bac,x=>12]",
+            "[first=>abc,second=>def,third=>ghi].reverse()                                   % [third=>ghi,second=>def,first=>abc]",
+            "[a=>'abc',b=>'def',c=>'ghi'].reverse()==[_=>reverse()]         % [c=>'ihg',b=>'fed',a=>'cba']",
+            "[a=>x,b=>[c=>1,d=>2],e=>[f=>3,g=>4]].reverse()                                   % [e=>[f=>3,g=>4],b=>[c=>1,d=>2],a=>x]",
+            "[a=>x,b=>[c=>1,d=>2],e=>[f=>3,g=>4]].reverse()==[_=>reverse()] % [e=>[g=>4,f=>3],b=>[d=>2,c=>1],a=>x]",
+            "[a=>x,b=>[c=>1,d=>2],e=>y].reverse()==[_=>reverse()]                           % [e=>y,b=>[d=>2,c=>1],a=>x]",
+    }, delimiter = '%')
+    public void testReverse(final String code, final String expected) {
+        AbstractMetatronTest.testCode(LOG, code, expected);
+    }
+
     @Test
     public void testMutableImmutable() {
         Rec r1 = rec(uri("a"), jnt(1), uri("b"), rec(uri("c"), jnt(3)));

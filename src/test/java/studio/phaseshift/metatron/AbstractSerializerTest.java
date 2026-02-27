@@ -28,21 +28,78 @@ import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-/*
+/**
+ * Abstract base class for testing {@link ObjSerializer} implementations.
+ * <p>
+ * This class provides a comprehensive test suite for verifying that serializers can correctly
+ * serialize and deserialize various Metatron {@link Obj} types. Concrete subclasses should
+ * provide a specific serializer implementation to be tested.
+ * </p>
+ * <p>
+ * The test suite covers a wide range of object types including:
+ * <ul>
+ *   <li>Primitive types (integers, reals, booleans)</li>
+ *   <li>Strings (single-line and multi-line)</li>
+ *   <li>URIs</li>
+ *   <li>Collections (lists and sets)</li>
+ *   <li>Records (key-value mappings)</li>
+ *   <li>Nested and complex structures</li>
+ *   <li>Instruction chains</li>
+ * </ul>
+ * </p>
+ *
+ * @param <T> the buffer type used by the serializer (e.g., byte array, ByteBuffer, etc.)
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public abstract class AbstractSerializerTest<T> extends AbstractMetatronTest {
 
+    /**
+     * The serializer instance being tested.
+     */
     protected final ObjSerializer<T> serializer;
 
+    /**
+     * Constructs a new test instance with the specified serializer.
+     *
+     * @param serializer the {@link ObjSerializer} implementation to test
+     */
     public AbstractSerializerTest(final ObjSerializer<T> serializer) {
         this.serializer = serializer;
     }
 
+    /**
+     * Determines whether a test failure should be ignored for a specific object string.
+     * <p>
+     * Subclasses can override this method to skip assertion failures for known problematic
+     * cases while still logging the discrepancy. This is useful during development when
+     * certain edge cases are not yet fully supported.
+     * </p>
+     *
+     * @param toSerialize the string representation of the object being tested
+     * @return {@code true} if test failures should be ignored for this object, {@code false} otherwise
+     */
     public boolean ignoreFail(final String toSerialize) {
         return false;
     }
 
+    /**
+     * Parameterized test that verifies serialization and deserialization round-trip correctness.
+     * <p>
+     * This test performs the following steps:
+     * <ol>
+     *   <li>Parses the input string into an {@link Obj} using {@link mParser}</li>
+     *   <li>Serializes the object using the configured serializer</li>
+     *   <li>Deserializes the buffer back into an {@link Obj}</li>
+     *   <li>Asserts that the original and deserialized objects are equal</li>
+     * </ol>
+     * </p>
+     * <p>
+     * If {@link #ignoreFail(String)} returns {@code true} for the input string, the test will
+     * log a warning instead of failing when objects don't match.
+     * </p>
+     *
+     * @param objString the string representation of the Metatron object to test
+     */
     @ParameterizedTest
     @CsvSource(value = {
             //obj

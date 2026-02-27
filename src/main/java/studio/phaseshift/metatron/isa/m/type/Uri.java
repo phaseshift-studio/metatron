@@ -20,7 +20,9 @@ package studio.phaseshift.metatron.isa.m.type;
 
 import studio.phaseshift.metatron.algebra.Ring;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.m.type.impl.MObjFactory;
 import studio.phaseshift.metatron.isa.m.type.impl.MUri;
+import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.*;
@@ -33,6 +35,7 @@ import static studio.phaseshift.metatron.Tokens.C;
 import static studio.phaseshift.metatron.furi.fURI.*;
 import static studio.phaseshift.metatron.furi.q.DocQ.Doc.docWrap;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
+import static studio.phaseshift.metatron.isa.m.type.Int.INT_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.Rec.REC_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
@@ -140,12 +143,32 @@ public interface Uri extends Mono, Ring.O<Uri> {
                                 C, rec(MIN, null == lhsUri.cV().min() ? noobj() : jnt(lhsUri.cV().min()), MAX, null == lhsUri.cV().max() ? noobj() : jnt(lhsUri.cV().max())),
                                 Q, lhsUri.queryMap().isEmpty() ? noobj() : rec(lhsUri.queryMap().entrySet().stream().map(kv -> rel(uri(kv.getKey()), uri(kv.getValue())))));
                     }),
+                    instC(REVERSE_INST_TID.dom(URI_TID).rng(URI_TID), lst(), (lhs, inst) -> lhs.jvm(lhs.uriValue().segments(lhs.asUri().uriValue().segments().reversed()))),
                     docWrap(instC(HAS_INST_TID.dom(URI_TID).rng(URI_TID.maybe()), lst(T(STR_TID)), (lhs, inst) -> REGEX_CACHE.compute(inst.arg(0).strValue(), (k, v) -> null == v ? Pattern.compile(k) : v).matcher(lhs.uriValue().toString()).find() ? lhs : noobj()),
                             "an str to check", "whether the domain matches arg", Map.of(jnt(0), "the regex for matching"), "check whether the lhs str matches the regex arg"),
                     instC(SPLIT_INST_TID.dom(URI_TID).rng(LST_TID), lst(T(URI_TID)), (lhs, inst) -> lst(Arrays.stream(lhs.uriValue().toString().split(inst.arg(0).uriValue().toString())).map(MUri::uri))),
                     instC(MERGE_INST_TID.dom(URI_TID.maybeSome()).rng(URI_TID), lst(T(URI_TID)), (lhs, inst) -> uri(lhs.stream().map(Obj::uriValue).reduce((a, b) -> a.extend(inst.arg(0).uriValue()).extend(b)).orElse(f("noobj")))),
-                  //  instC(RSHIFT_INST_TID.dom(URI_TID).rng(URI_TID), lst(isa_(T(INT_TID)).else_(jnt(1))), (lhs, inst) -> lhs.jvm(lhs.uriValue().retract(inst.arg(0).intValue().intValue()))),
-                  //  instC(LSHIFT_INST_TID.dom(URI_TID).rng(URI_TID), lst(isa_(T(INT_TID)).else_(jnt(1))), (lhs, inst) -> lhs.jvm(lhs.uriValue().pretract(inst.arg(0).intValue().intValue()))),
+                    instC(RSHIFT_INST_TID.dom(URI_TID).rng(URI_TID.maybe()), lst(INT_TYPE), (lhs, inst) -> lhs.uriValue().pathLength() > inst.arg(0).intValue().intValue() ? uri(lhs.uriValue().segments().get(inst.arg(0).intValue().intValue())) : noobj()),
+                    instC(RSHIFT_INST_TID.dom(URI_TID).rng(ALL.maybe()), lst(URI_TYPE), (lhs, inst) -> {
+                        final String component = inst.arg(0).uriValue().toString();
+                        final Object result = switch (component) {
+                            case "scheme" -> lhs.uriValue().scheme();
+                            case "host" -> lhs.uriValue().host();
+                            case "port" -> lhs.uriValue().port();
+                            case "authority" -> lhs.uriValue().authority();
+                            case "path" -> lhs.uriValue().path();
+                            case "c" -> lst(jnt(lhs.uriValue().cV().min()), jnt(lhs.uriValue().cV().max()));
+                            case "q" -> lhs.uriValue().queryMap().entrySet().stream()
+                                    .map(kv -> rel(MObjFactory.single().toObjFromString(kv.getKey()), MObjFactory.single().toObjFromString(kv.getValue())))
+                                    .collect(new CommonUtil.RecCollector());
+                            default -> noobj();
+                        };
+                        return result instanceof Obj ? (Obj) result :
+                                (null == result || Integer.valueOf(-1) == result ? noobj() :
+                                        (result instanceof Integer ? jnt((Integer) result) :
+                                                uri(result.toString())));
+                    }),
+                    //  instC(LSHIFT_INST_TID.dom(URI_TID).rng(URI_TID), lst(isa_(T(INT_TID)).else_(jnt(1))), (lhs, inst) -> lhs.jvm(lhs.uriValue().pretract(inst.arg(0).intValue().intValue()))),
                     instC(PLUS_INST_TID.dom(URI_TID).rng(URI_TID.maybe()), lst(T(URI_TID.maybe())), (lhs, inst) -> lhs.jvm(lhs.uriValue().plus(inst.arg(0).uriValue()))),
                     instC(MULT_INST_TID.dom(URI_TID).rng(URI_TID.maybe()), lst(T(URI_TID.maybe())), (lhs, inst) -> lhs.jvm(lhs.uriValue().mult(inst.arg(0).uriValue()))),
                     instC(SUM_INST_TID.dom(URI_TID.maybeSome()).rng(URI_TID), lst(), (lhs, inst) -> inst.seed().jvm(lhs.stream().reduce(inst.seed(), (a, b) -> ((Uri) a).plus((Uri) b)).uriValue()), uri(fURI.NOOBJ)),

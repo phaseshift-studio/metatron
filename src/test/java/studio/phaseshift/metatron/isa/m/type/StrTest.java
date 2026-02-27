@@ -20,8 +20,8 @@ package studio.phaseshift.metatron.isa.m.type;
 
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-import studio.phaseshift.metatron.isa.AbstractObjTest;
 import studio.phaseshift.metatron.AbstractMetatronTest;
+import studio.phaseshift.metatron.isa.AbstractObjTest;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -40,7 +40,7 @@ public class StrTest extends AbstractObjTest {
             "'abc'.as(bytes::T)                                                             % 0x616263",
             "'abc'.as(bytes::T).as(str::T)                                                  % \"abc\""
 
-    }, delimiter = '%',quoteCharacter = '~')
+    }, delimiter = '%', quoteCharacter = '~')
     public void testAsInst(final String code, final String expected) {
         AbstractMetatronTest.testCode(LOG, code, expected);
     }
@@ -54,7 +54,7 @@ public class StrTest extends AbstractObjTest {
             "'ab3cd'.regex('\\d*')                                                          % ['','','3','','','']",
             "'ab3cd'.regex('\\d+')                                                          % ['3']",
             "'ab3cd'.regex('\\d{2}')                                                        % [,]",
-    }, delimiter = '%',quoteCharacter = '~')
+    }, delimiter = '%', quoteCharacter = '~')
     public void testRegexInst(final String code, final String expected) {
         AbstractMetatronTest.testCode(LOG, code, expected);
     }
@@ -66,7 +66,7 @@ public class StrTest extends AbstractObjTest {
             "{}.sum('22')                                                                   % \"22\"",
             "{}.sum?str<=str{*}('')                                                         % \"\"",
             //"{}.sum?str<=str{*}()                                                           % \"\"",  // TODO
-    }, delimiter = '%',quoteCharacter = '~')
+    }, delimiter = '%', quoteCharacter = '~')
     public void testSum(final String code, final String expected) {
         AbstractMetatronTest.testCode(LOG, code, expected);
     }
@@ -100,7 +100,7 @@ public class StrTest extends AbstractObjTest {
             "{'abc3d','aaa'}.has('e.*')                                                        % noobj"
             // "{'abc3d','aaa'}.where(not(has('e.')))                                          % {\"abc3d\",\"aaa\"}",
             // "{'abc3d','aaa'}.where(has('e.'))                                               % noobj",
-    }, delimiter = '%',quoteCharacter = '~')
+    }, delimiter = '%', quoteCharacter = '~')
     public void testHasInst(final String code, final String expected) {
         AbstractMetatronTest.testCode(LOG, code, expected);
     }
@@ -128,8 +128,20 @@ public class StrTest extends AbstractObjTest {
     @CsvSource(value = {
             "'a'.plus('a')                                                                  % \"aa\"",
             "'ab3cd' + 'ab.'                                                                % \"ab3cdab.\"",
-    }, delimiter = '%',quoteCharacter = '~')
+    }, delimiter = '%', quoteCharacter = '~')
     public void testPlusInst(final String code, final String expected) {
+        AbstractMetatronTest.testCode(LOG, code, expected);
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "\"abc\".reverse()                % \"cba\"",
+            "\"12bac2545_245\".reverse()      % \"542_5452cab21\"",
+           // "\"abc\".reverse().reverse()      % \"abc\"", TODO instructions are being seen as the same
+            "\"\".reverse().map(_).reverse()         % \"\"",
+            "\"\".reverse()                  % \"\"",
+    }, delimiter = '%')
+    public void testReverse(final String code, final String expected) {
         AbstractMetatronTest.testCode(LOG, code, expected);
     }
 

@@ -166,7 +166,7 @@ public class cInt implements C<Long, cInt> {
 
     @Override
     public boolean isNeg() {
-        return this.min != null && this.min < 0L && this.max != null && this.max < 0L;
+        return (this.min == null || this.min < 0L) && (this.max != null && this.max < 0L);
     }
 
     @Override
