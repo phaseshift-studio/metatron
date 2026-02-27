@@ -9,7 +9,7 @@ image:github-icon.png[width=20,link=https://github.com/phaseshift-studio/metatro
 2. a data-oriented [.red]*operating system*.
 
 image:m-arch.svg[width=500,float=right] These representations are made salient by a ring-oriented programming language and virtual machine.
-As an example, within the metatron, an mtron-trained large language model is prompted to generate a multi-model expression to search multiple database (e.g. key/value, vector, graph), to then insert those results into a multiple web documents stored on multiple machines in a jQuery-esque manner, whereby a dynamically spawned web server then provides a single point of access to fetching the distributed documents to yield a single view via a browser.
+As an example, within the metatron, an mtron-trained large language model is prompted to generate a multi-model expression to search multiple databases (e.g. key/value, vector, graph), to then insert those results into a multiple web documents stored on multiple machines in a jQuery-esque manner, whereby a dynamically spawned web server then provides a single point of access to fetching the distributed documents to yield a single view via a browser.
 
 [quote]
 ____
@@ -173,24 +173,72 @@ a🧱
 
 ++++
 <!-- 🐖
-{1,1,1}
-{1,2,3}
-{1,2,3}.type()
-{1,2,3}.tid()
-1-<[_,_,_]
-1-<[_,_,_]>-
-1-<{_,_,_}
+{1,1,1}                                                   [-- <1>
+{1,2,3}                                                   [-- <2>
+{1,2,3}.type()                                            [-- <3>
+{1,2,3}.tid()                                             [-- <4>
+1-<[_,_,_]                                                [-- <5>
+1-<[_,_,_]>-                                              [-- <6>
+1-<{_,_,_}                                                [-- <7>
 -->
 ++++
+<1> Three identical elements (will be quantified)
+<2> Three distinct elements
+<3> Get type of set
+<4> Get type identifier
+<5> Split 1 into list of 3 elements
+<6> Split and merge back
+<7> Split into set
+
 a🧱
 
 ++++
 <!-- 🐖
-1.repeat(_,1000) + 1
-int{1000}::1 + 1
+1.repeat(_,1000) + 1                                      [-- <1>
+int{1000}::1 + 1                                          [-- <2>
 -->
 ++++
+<1> Inefficient: creates 1000 objects
+<2> Efficient: single object with quantifier 1000
+
 |===
+
+**Advanced Coefficient Examples:**
+
+++++
+<!-- 🐖
+int{5}::3                                                 [-- <1>
+int{10}::7.plus(int{5}::7)                                [-- <2>
+int{3}::2.mult(int{4}::2)                                 [-- <3>
+-->
+++++
+<1> Integer 3 with coefficient 5
+<2> Add quantified integers: coefficients multiply during operations
+<3> Multiply quantified integers
+
+**Coefficient Compression in Collections:**
+
+++++
+<!-- 🐖
+{1,1,1,1,1}                                               [-- <1>
+{1,1,1,1,1}>-                                             [-- <2>
+{int{5}::1}                                               [-- <3>
+-->
+++++
+<1> Five identical elements (displayed separately)
+<2> Merge: automatically quantifies to `int{5}::1`
+<3> Explicit quantification
+
+**Performance Optimization:**
+
+++++
+<!-- 🐖
+{1,1,1,1,1,1,1,1,1,1}.plus(5)                             [-- <1>
+int{10}::1.plus(5)                                        [-- <2>
+-->
+++++
+<1> Without quantification: 10 separate additions
+<2> With quantification: single addition, O(1) instead of O(n)
 
 The coefficient serves a unique and significant role in the definitions of `types`. Before proceeding with an example, it's important to note that coefficients have a corresponding https://en.wikipedia.org/wiki/Syntactic_sugar[syntactic sugar] form that borrows directly for the cardinality specification of common https://en.wikipedia.org/wiki/Regular_expression[regular expression languages].
 
@@ -240,9 +288,101 @@ artifact::[name=>'unknown',lang=>{}]
 -->
 ++++
 
-#### Query
-  
+#### Merge and Split Operators
 
+The **merge operator** (`>-`) and **split operator** (`-<`) are fundamental to understanding how coefficients interact in stream processing.
+
+**Merge Operator (`>-`)**: Merges branches into a single stream
+
+When branches are merged, objects with the same value have their coefficients summed (the **bulk axiom**):
+
+++++
+<!-- 🐖
+{1,2,3}                      [-- <1>
+{1,2,3}-<[+1,+2,+3]          [-- <2>
+{1,2,3}-<[+1,+2,+3]>-        [-- <3>
+-->
+++++
+<1> Set displays as 3 separate branches
+<2> Split each element into operations (creates nested branches)
+<3> Merge back: duplicate values get quantified (e.g., `int{2}::3` means 3 appears twice)
+
+**Split Operator (`-<`)**: Splits a stream into branches
+
+The split operator is the opposite of merge, creating parallel branches from a single stream:
+
+++++
+<!-- 🐖
+10-<[?<10 => 'less than 10', ?>=9 => 'greater than 9']    [-- <1>
+10-<[?<10 => 'less than 10', ?>=9 => 'greater than 9']>>  [-- <2>
+-->
+++++
+<1> Split into conditional branches, returns matching branch
+<2> Using `>>` extracts the range (value) from the relation
+
+#### Quantifier Interference
+
+Coefficients can be **negative**, enabling constructive and destructive interference when branches are merged:
+
+++++
+<!-- 🐖
+[1,2,3]                              [-- <1>
+[1,2,3]+[int{-1}::1]                 [-- <2>
+[1,2,3]+[int{-1}::1]>-               [-- <3>
+[1,int{100}::2,3]+[int{-75}::2]>-    [-- <4>
+-->
+++++
+<1> List with three elements
+<2> Add element 1 with coefficient -1 (not yet merged)
+<3> **Destructive interference**: 1 + (-1) = 0, so element 1 disappears
+<4> **Partial interference**: 100 + (-75) = 25, resulting in `int{25}::2`
+
+**Key Principle**: When merging, coefficients of identical objects are summed. If the sum equals zero, the object disappears (annihilation).
+
+#### Quantifier Pattern Matching
+
+Coefficients support regex-style range patterns for matching:
+
+++++
+<!-- 🐖
+[int{25}::3].matches([int{25}::T])   [-- <1>
+[int{25}::3].matches([int{24}::T])   [-- <2>
+[int{25}::3].matches([int{10,30}::T]) [-- <3>
+[int{25}::3].matches([int{10,}::T])  [-- <4>
+[int{25}::3].matches([int{*}::T])    [-- <5>
+[int{25}::3].matches([int{+}::T])    [-- <6>
+[int{25}::3].matches([int{?}::T])    [-- <7>
+-->
+++++
+<1> Exact match: coefficient must be exactly 25
+<2> Exact match fails (24 ≠ 25)
+<3> Range match: coefficient between 10 and 30
+<4> Open-ended range: coefficient >= 10
+<5> Wildcard: any coefficient (0 or more)
+<6> One or more: coefficient >= 1
+<7> Zero or one: coefficient 0 or 1 (fails for 25)
+
+#### Query
+
+Metatron supports powerful query capabilities through pattern matching and filtering.
+Queries can be expressed using filter functions, pattern matching with wildcards, and conditional branching.
+
+**Basic Query Pattern:**
+```mtron
+collection.filter(predicate)
+```
+
+**Pattern Matching:**
+```mtron
+[a=>1,b=>2,c=>3].select([a=>_,b=>_])  % Select specific keys
+```
+
+**Conditional Queries:**
+```mtron
+10-<[?<10 => 'less than 10', ?>=9 => 'greater than 9']
+```
+
+See the instruction set documentation for detailed query operations.
 
 ### fURI
 
@@ -332,7 +472,7 @@ To practically ground these concepts, a https://en.wikipedia.org/wiki/Natural_nu
           └──────────────────────── tid
 ----
 
-A quick explaination of the type predicate and constructor `code` is as follows:
+A quick explanation of the type predicate and constructor `code` is as follows:
 
 1. **predicate** [`?>0`]: is (`?`) greater than (`>`) 0.
 2. **constructor** [`-<|[?<0 \=> ⋅-1,_ \=> \_]>>`]: if (`-<|`) less than (`<`) 0, then (`\=>`) multiply (`⋅`) by -1, else do (`\=>`) nothing (`_`).
@@ -399,11 +539,126 @@ The code below demonstrates the typical, expected uses of the mono types.
 
 ====== bytes
 
+The `bytes` type represents binary data as a sequence of bytes.
 
+**Examples:**
+
+++++
+<!-- 🐖
+'Hello'.as(bytes::T)        [-- <1>
+bytes::'48656c6c6f'         [-- <2>
+-->
+++++
+<1> Convert string to bytes
+<2> Create bytes from hexadecimal representation
+
+Bytes can be used for:
+
+* Binary data processing
+* Cryptographic operations
+* Network protocol handling
+* File I/O operations
+* Encoding/decoding data
 
 ==== poly types
 
+Poly types are **branched structures** where each element or entry represents a separate branch.
+The two primary poly types are:
+
+**lst (List)** - Ordered collection where each element is a branch:
+
+++++
+<!-- 🐖
+[a,b,c]                     [-- <1>
+[1,2,3]                     [-- <2>
+[,]                         [-- <3>
+-->
+++++
+<1> List with three branches: a, b, and c
+<2> List with three integer branches
+<3> Empty list (no branches)
+
+**rec (Record)** - Key-value pairs where each entry is a branch:
+
+++++
+<!-- 🐖
+[a=>1,b=>2,c=>3]            [-- <1>
+[name=>'Alice',age=>30]     [-- <2>
+[=>]                        [-- <3>
+-->
+++++
+<1> Record with three branches: a=>1, b=>2, and c=>3
+<2> Record representing a person
+<3> Empty record (no branches)
+
+**Key Characteristics:**
+
+* Each element/entry is a separate branch
+* `.count()` returns 1 (the poly object itself)
+* `>-.count()` merges branches and counts elements/entries
+* Branches can be processed in parallel
+* Support pattern matching and wildcards
+
+**Branching in Action:**
+
+++++
+<!-- 🐖
+[1,2,3]                     [-- <1>
+[1,2,3].count()             [-- <2>
+[1,2,3]>-.count()           [-- <3>
+[a=>1,b=>2].count()         [-- <4>
+[a=>1,b=>2]>-.count()       [-- <5>
+-->
+++++
+<1> List with 3 branches
+<2> Returns 1 (the list object itself)
+<3> Returns 3 (merges branches, counts elements)
+<4> Returns 1 (the record object itself)
+<5> Returns 2 (merges branches, counts entries)
+
+**Operations on Poly Types:**
+
+++++
+<!-- 🐖
+[1,2,3].reverse()           [-- <1>
+[1,2,3].plus([4,5])         [-- <2>
+[1,2,3].merge()             [-- <3>
+[a=>1,b=>2].dom()           [-- <4>
+[a=>1,b=>2].rng()           [-- <5>
+[a=>1,b=>2,c=>3].select([a=>_,b=>_])  [-- <6>
+-->
+++++
+<1> Reverse list order
+<2> Concatenate lists
+<3> Merge list into a set
+<4> Get domain (keys) of record
+<5> Get range (values) of record
+<6> Select specific keys from record
+
 ==== call types
+
+Call types represent function invocations and method calls in Metatron.
+
+**Method Call Syntax:**
+```mtron
+object.method(args)
+```
+
+**Chained Calls:**
+```mtron
+[1,2,3].reverse().merge()
+```
+
+**Function Composition:**
+Functions can be composed using the ring multiplication operator (`.`):
+```mtron
+f · g               % Compose functions f and g
+```
+
+**Lambda Expressions:**
+```mtron
+(x,y){x + y}        % Lambda function
+```
 
 === instructions
 
@@ -424,6 +679,49 @@ where each component is:
 
 === variables
 
+Variables in Metatron can be scoped at different levels: frame stack, thread cache, local, and distributed.
+
+**Variable Assignment and Dereferencing:**
+
+++++
+<!-- 🐖
+x -> 42                                                   [-- <1>
+*x                                                        [-- <2>
+y -> [a=>1,b=>2,c=>3]                                     [-- <3>
+*y                                                        [-- <4>
+-->
+++++
+<1> Assign 42 to variable x
+<2> Dereference x with `*x`
+<3> Assign record to variable y
+<4> Dereference y
+
+**Variables in Computations:**
+
+++++
+<!-- 🐖
+base -> 10                                                [-- <1>
+result -> *base.plus(5).mult(2)                          [-- <2>
+*result                                                   [-- <3>
+-->
+++++
+<1> Store base value
+<2> Compute and store result
+<3> Retrieve computed result
+
+**Variables with Collections:**
+
+++++
+<!-- 🐖
+nums -> {1,2,3,4,5}                                       [-- <1>
+filtered -> *nums-<[?>3 => _, _ => noobj]>>               [-- <2>
+*filtered                                                 [-- <3>
+-->
+++++
+<1> Store collection
+<2> Filter and store results
+<3> Retrieve filtered collection
+
 [cols="1,8,4",frame=rows,grid=rows,separator=🧱]
 |===
 
@@ -443,7 +741,8 @@ func -> |func?int<=str(arg=>?str::T){ _.-<''.is(eq(*arg)).count() }
 ++++
 
 a🧱
-...
+
+Frame stack variables are scoped to function calls and are cleaned up when the function returns.
 
 a🧱
 
@@ -462,7 +761,8 @@ b -> 0
 ++++
 
 a🧱
-...
+
+Thread cache variables persist across operations within a thread, enabling stateful computations.
 
 a🧱
 
@@ -477,7 +777,8 @@ a🧱
 ++++
 
 a🧱
-...
+
+Local variables are scoped to the current execution context.
 
 a🧱
 
@@ -492,11 +793,103 @@ a🧱
 ++++
 
 a🧱
-...
+
+Distributed variables can be shared across machines in a distributed computation environment.
 
 |===
 
+**Advanced Variable Usage:**
+
+++++
+<!-- 🐖
+counter -> 0                                              [-- <1>
+{1,2,3,4,5}.to(counter)                                   [-- <2>
+*counter                                                  [-- <3>
+-->
+++++
+<1> Initialize counter
+<2> Store collection in counter (last value wins)
+<3> Retrieve final value
+
+**Variables in Pattern Matching:**
+
+++++
+<!-- 🐖
+pattern -> [a=>_,b=>_]                                    [-- <1>
+data -> [a=>1,b=>2,c=>3,d=>4]                             [-- <2>
+*data.select(*pattern)                                    [-- <3>
+-->
+++++
+<1> Define pattern as variable
+<2> Define data as variable
+<3> Use both variables in operation
+
 === conditionals
+
+Conditionals in Metatron use the split operator (`-<`) to create branches based on predicates.
+Each branch is evaluated independently, and matching branches are returned.
+
+**Basic Conditional:**
+
+++++
+<!-- 🐖
+5-<[?<10 => 'small', ?>=10 => 'large']                    [-- <1>
+15-<[?<10 => 'small', ?>=10 => 'large']                   [-- <2>
+-->
+++++
+<1> 5 is less than 10, returns 'small'
+<2> 15 is greater than or equal to 10, returns 'large'
+
+**Multiple Conditions:**
+
+++++
+<!-- 🐖
+7-<[?<5 => 'tiny', ?<10 => 'small', ?<20 => 'medium', _ => 'large']    [-- <1>
+25-<[?<5 => 'tiny', ?<10 => 'small', ?<20 => 'medium', _ => 'large']   [-- <2>
+-->
+++++
+<1> First matching condition: 7 < 10, returns 'small'
+<2> No condition matches, wildcard `_` returns 'large'
+
+**Conditional with Computation:**
+
+++++
+<!-- 🐖
+-5-<[?<0 => ⋅-1, _ => _]                                  [-- <1>
+10-<[?<0 => ⋅-1, _ => _]                                  [-- <2>
+-->
+++++
+<1> Negative number: multiply by -1 to get absolute value
+<2> Positive number: return as-is
+
+**Extracting Values with `>>`:**
+
+++++
+<!-- 🐖
+10-<[?<10 => 'less', ?>=10 => 'greater or equal']         [-- <1>
+10-<[?<10 => 'less', ?>=10 => 'greater or equal']>>       [-- <2>
+-->
+++++
+<1> Returns relation: `[10=>'greater or equal']`
+<2> Using `>>` extracts the range (value): `'greater or equal'`
+
+**Advanced: Nested Conditionals:**
+
+++++
+<!-- 🐖
+15-<[?<10 => 'single digit', _ => _]-<[?<20 => 'teens', _ => 'twenty+']>>    [-- <1>
+-->
+++++
+<1> First condition fails, passes through, second condition matches
+
+**Conditional Branching with Collections:**
+
+++++
+<!-- 🐖
+{-2,-1,0,1,2}-<[?<0 => 'negative', ?eq(0) => 'zero', _ => 'positive']>>      [-- <1>
+-->
+++++
+<1> Each element evaluated independently, returns multiple results
 
 === branching
 
@@ -570,25 +963,486 @@ a🧱
 
 === statements
 
+Statements in Metatron are expressions that produce side effects or control flow.
+Unlike pure functional expressions, statements may modify state, perform I/O, or control execution flow.
+
+**Common Statement Types:**
+
+* **Assignment**: Binding values to variables
++
+```mtron
+a -> 'abc'
+x -> [1,2,3]
+```
+
+* **Conditional Execution**: Using split operator for branching
++
+```mtron
+value-<[?<10 => action1, ?>=10 => action2]
+```
+
+* **Iteration**: Processing streams and collections
++
+```mtron
+{1,2,3}.map(func)
+```
+
+* **I/O Operations**: Reading and writing data
++
+```mtron
+file.read()
+data.write(destination)
+```
+
 === pattern matching
 
-==== select
+Pattern matching in Metatron allows you to match complex structures using wildcards, predicates, and structural patterns.
 
-==== where
+**Wildcard Matching (`_`):**
+
+The underscore `_` matches any value:
 
 ++++
 <!-- 🐖
-x ->[a=>[b=>[1,2],c=>[3,4],f=>[5]]]
-*x==[_=>[_=>[_,_]]]
-*x==[_=>[_=>==?[_,_]]]
-*x==[_=>[_=>==?[_,?>3]]]
-*x==[_=>[z=>==?[_,?>3]]]
-*x==[z=>[_=>==?[_,?>3]]]
+[a=>1,b=>2,c=>3].select([a=>_])                           [-- <1>
+[a=>1,b=>2,c=>3].select([a=>_,c=>_])                      [-- <2>
+[a=>1,b=>2,c=>3].select([d=>_])                           [-- <3>
 -->
 ++++
+<1> Select entry with key 'a', any value
+<2> Select entries with keys 'a' and 'c'
+<3> No key 'd' exists, returns noobj
+
+**Predicate Matching:**
+
+++++
+<!-- 🐖
+[a=>5,b=>10,c=>15].select([_=>?>8])                       [-- <1>
+[a=>5,b=>10,c=>15].select([_=>?<12])                      [-- <2>
+-->
+++++
+<1> Select entries where value > 8
+<2> Select entries where value < 12
+
+**List Pattern Matching:**
+
+++++
+<!-- 🐖
+[1,2,3].matches([_,_,_])                                  [-- <1>
+[1,2,3].matches([_,_])                                    [-- <2>
+[a,b,c].matches([a,_,_])                                  [-- <3>
+-->
+++++
+<1> Matches: list has exactly 3 elements
+<2> Doesn't match: list has 3 elements, not 2
+<3> Matches: first element is 'a', rest can be anything
+
+**Nested Structure Matching:**
+
+++++
+<!-- 🐖
+x ->[a=>[b=>[1,2],c=>[3,4],f=>[5]]]                       [-- <1>
+*x==[_=>[_=>[_,_]]]                                       [-- <2>
+*x==[_=>[_=>==?[_,_]]]                                    [-- <3>
+*x==[_=>[_=>==?[_,?>3]]]                                  [-- <4>
+*x==[_=>[z=>==?[_,?>3]]]                                  [-- <5>
+*x==[z=>[_=>==?[_,?>3]]]                                  [-- <6>
+-->
+++++
+<1> Create nested record structure
+<2> Match any record containing records with 2-element lists
+<3> Match with equality check on 2-element lists
+<4> Match lists where second element > 3
+<5> Match inner key 'z' with predicate (no match)
+<6> Match outer key 'z' with predicate (no match)
+
+**Advanced: Quantifier Pattern Matching:**
+
+++++
+<!-- 🐖
+[int{5}::1,int{10}::2,int{3}::3].select([int{+}::_])      [-- <1>
+[int{5}::1,int{10}::2,int{3}::3].select([int{5,}::_])     [-- <2>
+[int{5}::1,int{10}::2,int{3}::3].select([int{?}::_])      [-- <3>
+-->
+++++
+<1> Select elements with quantifier >= 1 (all match)
+<2> Select elements with quantifier >= 5
+<3> Select elements with quantifier 0 or 1 (none match)
+
+**Complex Pattern with Multiple Wildcards:**
+
+++++
+<!-- 🐖
+[a=>[x=>1,y=>2],b=>[x=>3,y=>4]].select([_=>[x=>_]])       [-- <1>
+[a=>[x=>1,y=>2],b=>[x=>3,y=>4]].select([_=>[y=>?>3]])     [-- <2>
+-->
+++++
+<1> Select all entries containing nested 'x' key
+<2> Select entries where nested 'y' value > 3
+
+==== select
+
+The `select` operation filters records based on pattern matching:
+
+++++
+<!-- 🐖
+[name=>'Alice',age=>30,city=>'NYC'].select([name=>_,age=>_])              [-- <1>
+[name=>'Alice',age=>30,city=>'NYC'].select([age=>?>25])                   [-- <2>
+[a=>1,b=>2,c=>3,d=>4,e=>5].select([a=>_,c=>_,e=>_])                       [-- <3>
+-->
+++++
+<1> Select specific keys
+<2> Select entries matching predicate
+<3> Select multiple non-consecutive keys
+
+==== where
+
+The `where` operation filters based on complex predicates:
+
+++++
+<!-- 🐖
+[a=>10,b=>20,c=>30].where([_=>?>15])                      [-- <1>
+[a=>10,b=>20,c=>30].where([_=>?<25])                      [-- <2>
+-->
+++++
+<1> Filter entries where value > 15
+<2> Filter entries where value < 25
+
+=== advanced operations
+
+This section demonstrates sophisticated patterns combining multiple Metatron features.
+
+**Chaining Operations:**
+
+++++
+<!-- 🐖
+[1,2,3,4,5].reverse().plus([6,7]).merge()                 [-- <1>
+[a=>1,b=>2,c=>3].dom().merge()                            [-- <2>
+[a=>1,b=>2,c=>3].rng().plus({4,5})                        [-- <3>
+-->
+++++
+<1> Reverse list, concatenate, convert to set
+<2> Get domain (keys), convert to set
+<3> Get range (values), add more elements
+
+**Quantifier Arithmetic:**
+
+++++
+<!-- 🐖
+[int{10}::1,int{20}::2,int{30}::3]>-.plus(1)              [-- <1>
+[int{5}::2,int{-3}::2]>-                                  [-- <2>
+[int{100}::5,int{-50}::5,int{-50}::5]>-                   [-- <3>
+-->
+++++
+<1> Merge and add 1 to each (respecting quantifiers)
+<2> Destructive interference: 5 + (-3) = 2, result is `int{2}::2`
+<3> Complete annihilation: 100 + (-50) + (-50) = 0, element disappears
+
+**Complex Branching with Merge:**
+
+++++
+<!-- 🐖
+{1,2,3,4,5}-<[?<3 => ⋅10, _ => ⋅100]>-                    [-- <1>
+{-5,-2,0,3,7}-<[?<0 => ⋅-1, _ => _]>-                     [-- <2>
+-->
+++++
+<1> Split: multiply small numbers by 10, large by 100, then merge
+<2> Split: make negatives positive, keep others, then merge
+
+**Nested Record Operations:**
+
+++++
+<!-- 🐖
+[a=>[x=>1,y=>2],b=>[x=>3,y=>4]].reverse()==[_=>reverse()]  [-- <1>
+[a=>[x=>1],b=>[x=>2],c=>[x=>3]].select([_=>[x=>?>1]])      [-- <2>
+-->
+++++
+<1> Reverse outer record and apply reverse to each inner record
+<2> Select entries where nested x value > 1
+
+**Stream Processing Pipeline:**
+
+++++
+<!-- 🐖
+{1,2,3,4,5,6,7,8,9,10}-<[?<5 => 'small', _ => 'large']>-.merge()  [-- <1>
+-->
+++++
+<1> Classify numbers, merge results into set
+
+**Type Conversion Chain:**
+
+++++
+<!-- 🐖
+'123'.as(int::T).plus(100).as(str::T)                     [-- <1>
+[1,2,3].merge().plus({4,5})                               [-- <2>
+-->
+++++
+<1> String → Int → Add → String
+<2> List → Set → Add elements
+
+**Advanced Quantifier Patterns:**
+
+++++
+<!-- 🐖
+[int{1,10}::5].matches([int{5}::_])                       [-- <1>
+[int{1,10}::5].matches([int{1,5}::_])                     [-- <2>
+[int{1,10}::5].matches([int{10,20}::_])                   [-- <3>
+-->
+++++
+<1> Range match: 5 is in range [1,10]
+<2> Range match: 5 is in range [1,5]
+<3> Range match fails: 5 not in range [10,20]
+
+**Combining Split and Merge with Quantifiers:**
+
+++++
+<!-- 🐖
+{int{5}::1,int{3}::2,int{7}::3}-<[+10,+20,+30]>-          [-- <1>
+-->
+++++
+<1> Each quantified element split into 3 operations, then merged
+
+**Real-World Example: Data Transformation:**
+
+++++
+<!-- 🐖
+[name=>'alice',score=>85].select([name=>_]).dom()         [-- <1>
+[users=>[alice=>85,bob=>92,carol=>78]].select([users=>[_=>?>80]])  [-- <2>
+-->
+++++
+<1> Extract name field, get keys
+<2> Select users with scores > 80
 
 === barriers
 
+Barriers are synchronization points in distributed computation where execution waits for multiple parallel branches to complete before proceeding.
+
+**Purpose:**
+
+* Synchronize parallel computations
+* Ensure all branches complete before merging results
+* Coordinate distributed operations across multiple machines
+
+**Barrier Semantics:**
+
+When branches are created via the split operator (`-<`), they execute in parallel.
+A barrier ensures all branches complete before the next operation:
+
+```mtron
+{1,2,3}-<[operation1, operation2, operation3]  % Parallel execution
+```
+
+The merge operator (`>-`) acts as an implicit barrier, waiting for all branches to complete before merging results.
+
+**Distributed Barriers:**
+
+In distributed environments, barriers coordinate across network boundaries:
+
+* Wait for remote computations to complete
+* Synchronize state across multiple machines
+* Ensure consistency in distributed transactions
+
 === reflection
+
+Reflection in Metatron allows programs to inspect and manipulate their own structure at runtime.
+This enables powerful metaprogramming capabilities and dynamic behavior.
+
+**Reflection Capabilities:**
+
+* **Type Inspection**: Query the type of any object
++
+++++
+<!-- 🐖
+1.type()                    [-- <1>
+[a=>1,b=>2].type()          [-- <2>
+int::T                      [-- <3>
+-->
+++++
+<1> Get the type of an integer
+<2> Get the type of a record
+<3> Type token for integer type
+
+* **Type Identification**: Get the type identifier (tid)
++
+++++
+<!-- 🐖
+1.tid()                     [-- <1>
+[a=>1,b=>2].tid()           [-- <2>
+-->
+++++
+<1> Get the type identifier of an integer
+<2> Get the type identifier of a record
+
+* **Value Identification**: Get the value identifier (vid)
++
+```mtron
+obj.vid()                   % Get unique identifier for object instance
+```
+
+* **Structure Inspection**: Examine object structure
++
+```mtron
+obj.dom()                   % Get domain (keys) of a record
+obj.rng()                   % Get range (values) of a record
+```
+
+**Metaprogramming:**
+
+Reflection enables code that generates or modifies code:
+
+* Dynamic type creation
+* Runtime code generation
+* Adaptive algorithms based on type information
+* Generic programming patterns
+
+=== real-world examples
+
+This section demonstrates practical applications of Metatron concepts.
+
+**Example 1: Data Filtering Pipeline**
+
+Filter a dataset, transform values, and aggregate results:
+
+++++
+<!-- 🐖
+data -> [a=>10,b=>25,c=>30,d=>15,e=>40]                   [-- <1>
+filtered -> *data.select([_=>?>20])                       [-- <2>
+transformed -> *filtered.reverse()==[_=>⋅2]               [-- <3>
+*transformed                                              [-- <4>
+-->
+++++
+<1> Create dataset
+<2> Filter: keep values > 20
+<3> Transform: multiply all values by 2
+<4> View result
+
+**Example 2: Batch Processing with Quantifiers**
+
+Process large batches efficiently using quantification:
+
+++++
+<!-- 🐖
+batch -> int{1000}::42                                    [-- <1>
+processed -> *batch.plus(10).mult(2)                      [-- <2>
+*processed                                                [-- <3>
+-->
+++++
+<1> Create batch of 1000 identical values
+<2> Process entire batch in O(1) time
+<3> Result: `int{1000}::104`
+
+**Example 3: Conditional Data Routing**
+
+Route data to different processing paths based on conditions:
+
+++++
+<!-- 🐖
+{5,15,25,35,45}-<[?<20 => 'low', ?<40 => 'medium', _ => 'high']>-.merge()  [-- <1>
+-->
+++++
+<1> Classify and merge: creates set of classifications
+
+**Example 4: Nested Data Extraction**
+
+Extract specific fields from nested structures:
+
+++++
+<!-- 🐖
+users -> [alice=>[age=>25,city=>'NYC'],bob=>[age=>30,city=>'LA']]  [-- <1>
+ages -> *users.reverse()==[_=>[age=>_]]                   [-- <2>
+*ages                                                     [-- <3>
+-->
+++++
+<1> Create nested user data
+<2> Extract age field from each user
+<3> View extracted ages
+
+**Example 5: Quantifier-Based Deduplication**
+
+Use interference to remove duplicates:
+
+++++
+<!-- 🐖
+duplicates -> [1,2,2,3,3,3,4,4,4,4]                       [-- <1>
+unique -> *duplicates>-.merge()                           [-- <2>
+*unique                                                   [-- <3>
+-->
+++++
+<1> List with duplicates
+<2> Merge: duplicates become quantified
+<3> Result: `{int{1}::1,int{2}::2,int{3}::3,int{4}::4}`
+
+**Example 6: Complex Pattern Matching**
+
+Match and extract from complex nested structures:
+
+++++
+<!-- 🐖
+dataset -> [products=>[laptop=>[price=>1000,stock=>5],phone=>[price=>500,stock=>10]]]  [-- <1>
+expensive -> *dataset.select([products=>[_=>[price=>?>800]]])  [-- <2>
+*expensive                                                [-- <3>
+-->
+++++
+<1> Create product catalog
+<2> Select products with price > 800
+<3> View expensive products
+
+**Example 7: Stream Aggregation**
+
+Aggregate values from a stream:
+
+++++
+<!-- 🐖
+{1,2,3,4,5}>-.plus(0)                                     [-- <1>
+{10,20,30}>-.mult(1)                                      [-- <2>
+-->
+++++
+<1> Sum all elements (merge and add to 0)
+<2> Product of all elements (merge and multiply by 1)
+
+**Example 8: Type-Safe Data Validation**
+
+Validate data against type constraints:
+
+++++
+<!-- 🐖
+valid -> [name=>'Alice',age=>30]                          [-- <1>
+*valid.matches([name=>str::T,age=>int::T])                [-- <2>
+invalid -> [name=>'Bob',age=>'thirty']                    [-- <3>
+*invalid.matches([name=>str::T,age=>int::T])              [-- <4>
+-->
+++++
+<1> Valid record
+<2> Matches type pattern
+<3> Invalid record (age is string)
+<4> Doesn't match type pattern
+
+**Example 9: Parallel Branch Processing**
+
+Process multiple branches in parallel:
+
+++++
+<!-- 🐖
+{1,2,3,4,5}-<[⋅10,⋅100,⋅1000]>-                          [-- <1>
+-->
+++++
+<1> Each number split into 3 operations, all executed in parallel, then merged
+
+**Example 10: Interference-Based Set Operations**
+
+Use quantifier interference for set operations:
+
+++++
+<!-- 🐖
+setA -> {1,2,3,4,5}                                       [-- <1>
+setB -> {int{-1}::3,int{-1}::4,int{-1}::5,int{-1}::6,int{-1}::7}  [-- <2>
+difference -> *setA.plus(*setB)>-                         [-- <3>
+*difference                                               [-- <4>
+-->
+++++
+<1> Set A
+<2> Set B with negative quantifiers
+<3> Merge: common elements cancel out (set difference)
+<4> Result: elements only in A
 
 
