@@ -121,7 +121,7 @@ public class fsSpace extends AbstractSpace<FileSystem> {
     public static File resolveFile(final Obj fileObj) {
         try {
             final fsSpace space = Router.global().getSpace(fileObj.uriValue().basePath()).as();
-            return Paths.get(Space.Helper.toNativeSpace(fileObj.uriValue().basePath(), space.routes).basePath().toString()).toFile();
+            return Paths.get(Space.Helper.routeFromSpace(fileObj.uriValue().basePath(), space.routes).basePath().toString()).toFile();
         } catch (final Exception e) {
             throw MTronException.of(e);
         }
@@ -130,8 +130,8 @@ public class fsSpace extends AbstractSpace<FileSystem> {
     public Obj resolveObj(final Uri path) {
         try {
             final File file = Paths.get(path.uriValue().basePath().toString()).toFile();
-            final fsSpace space = Router.global().getSpace(Space.Helper.fromNativeSpace(f(file.getPath()), this.routes)).as();
-            return uri(Space.Helper.fromNativeSpace(fURI.f(file.getPath()), space.routes).query("p", PosixFilePermissions.toString(Files.getPosixFilePermissions(file.toPath()))), FILE_TID, null);
+            final fsSpace space = Router.global().getSpace(Space.Helper.routeToSpace(f(file.getPath()), this.routes)).as();
+            return uri(Space.Helper.routeToSpace(fURI.f(file.getPath()), space.routes).query("p", PosixFilePermissions.toString(Files.getPosixFilePermissions(file.toPath()))), FILE_TID, null);
         } catch (final Exception e) {
             throw MTronException.of(e);
         }
@@ -155,9 +155,9 @@ public class fsSpace extends AbstractSpace<FileSystem> {
                 throw MTronException.of("infinite nested walks on file system not allowed");
             else {
                 if (key.hasPattern()) {
-                    try (final Stream<Path> walk = Files.walk(Path.of(Space.Helper.toNativeSpace(key.retractPattern(), this.routes).toString()), vid.hasPattern() ? Integer.MAX_VALUE : vid.segments().size() + 1, FileVisitOption.FOLLOW_LINKS)) {
+                    try (final Stream<Path> walk = Files.walk(Path.of(Space.Helper.routeFromSpace(key.retractPattern(), this.routes).toString()), vid.hasPattern() ? Integer.MAX_VALUE : vid.segments().size() + 1, FileVisitOption.FOLLOW_LINKS)) {
                         return walk
-                                .filter(p -> Space.Helper.fromNativeSpace(f(p.toString()), this.routes).test(key))
+                                .filter(p -> Space.Helper.routeToSpace(f(p.toString()), this.routes).test(key))
                                 .map(fsSpace::makeFile)
                                 .map(this::resolveObj)
                                 .collect(Collectors.toMap(p -> p, p -> p, Obj::append, LinkedHashMap::new))
@@ -171,11 +171,11 @@ public class fsSpace extends AbstractSpace<FileSystem> {
 
                 } else {
                     try {
-                        final Path vidPath = Path.of(Space.Helper.toNativeSpace(key.name().equals("apply") ? key.retract() : key, this.routes).toString());
+                        final Path vidPath = Path.of(Space.Helper.routeFromSpace(key.name().equals("apply") ? key.retract() : key, this.routes).toString());
                         if (Files.isDirectory(vidPath)) {
                             return Files.list(vidPath).map(fsSpace::makeFile).map(p -> Pair.<fURI, Obj>with(p.uriValue(), resolveObj(p))).iterator();
                         } else {
-                            return IteratorUtil.of(Pair.with(Space.Helper.fromNativeSpace(f(vidPath.toString()), this.routes), key.name().equals("apply") ?
+                            return IteratorUtil.of(Pair.with(Space.Helper.routeToSpace(f(vidPath.toString()), this.routes), key.name().equals("apply") ?
                                     instC(key.retract().dom(ALL.maybe()).rng(ALL_STAR), lst(T(ALL_STAR)), (lhs, inst) -> {
                                         LOG.debug("applying: %s => %s", lhs, inst);
                                         final Uri toExec = makeFile(vidPath);
@@ -275,7 +275,7 @@ public class fsSpace extends AbstractSpace<FileSystem> {
                         throw MTronException.of("deleting files currently not supported", pattern);
                         //   Files.delete(Path.of(pattern.toString()));
                     } else {
-                        final Path path = Paths.get(Space.Helper.toNativeSpace(pattern.basePath(), this.routes).toString());
+                        final Path path = Paths.get(Space.Helper.routeFromSpace(pattern.basePath(), this.routes).toString());
                         final File file = path.toFile();
                         LOG.info("writing %s to %s", obj, path);
                         file.createNewFile();

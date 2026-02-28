@@ -112,7 +112,7 @@ public class mqttSpace extends AbstractSpace<Mqtt5Client> {
 
     protected mqttSpace(final Mqtt5Client client, final Map<Obj, Obj> config, final fURI tid, final fURI vid) {
         super(client, config, null == tid ? MQTT_SPACE_TID : tid, vid);
-        LOG.info("{{y}}mtron{{g}}<=>{{y}}mqtt{{X}} route established: %s {{g}}<=> ({{b}}%s {{g}}<=>{{X}} %s{{g}}){{X}}", this.pattern().toUri(), config.getOrDefault(uri(ROUTE), rec()), uri(Space.Helper.toNativeSpace(this.pattern(), this.routes)));
+        LOG.info("{{y}}mtron{{g}}<=>{{y}}mqtt{{X}} route established: %s {{g}}<=> ({{b}}%s {{g}}<=>{{X}} %s{{g}}){{X}}", this.pattern().toUri(), config.getOrDefault(uri(ROUTE), rec()), uri(Space.Helper.routeFromSpace(this.pattern(), this.routes)));
         this.cache = memSpace.of(this.pattern(), fURI.fnull);
         this.at(uri(Tokens.Q), lst(List.of(new MqttPubSubQ(this))), MUTABLE);
         this.serializer = this.at(SERIALIZER).orElse(new ObjSimpleJSONSerializer());
@@ -122,7 +122,7 @@ public class mqttSpace extends AbstractSpace<Mqtt5Client> {
             this.sjvm = this.createConnection(config, false);
             this.sjvm.toAsync()
                     .subscribeWith()
-                    .topicFilter(Space.Helper.toNativeSpace(this.pattern, this.routes).toString())
+                    .topicFilter(Space.Helper.routeFromSpace(this.pattern, this.routes).toString())
                     .retainHandling(Mqtt5RetainHandling.SEND)
                     .callback(p -> {
                         try {
@@ -131,11 +131,11 @@ public class mqttSpace extends AbstractSpace<Mqtt5Client> {
                             if (p.getPayload().isPresent()) {
                                 final String json = StandardCharsets.UTF_8.decode(p.getPayload().get()).toString();
                                 this.cache.write(
-                                        Space.Helper.fromNativeSpace(f(p.getTopic().toString()), this.routes),
+                                        Space.Helper.routeToSpace(f(p.getTopic().toString()), this.routes),
                                         this.serializer.inputBytes(ByteBuffer.wrap(json.getBytes(StandardCharsets.UTF_8))));
                             } else {
                                 this.cache.write(
-                                        Space.Helper.fromNativeSpace(f(p.getTopic().toString()), this.routes),
+                                        Space.Helper.routeToSpace(f(p.getTopic().toString()), this.routes),
                                         noobj());
                             }
                         } catch (final Exception e) {
@@ -148,7 +148,7 @@ public class mqttSpace extends AbstractSpace<Mqtt5Client> {
                         if (null != b)
                             LOG.error(b);
                         else
-                            LOG.info("synchronized with mqtt topic: %s", uri(Space.Helper.toNativeSpace(this.pattern, this.routes)));
+                            LOG.info("synchronized with mqtt topic: %s", uri(Space.Helper.routeFromSpace(this.pattern, this.routes)));
                     })
                     .get(10, TimeUnit.SECONDS);
         } catch (final Exception e) {
@@ -199,7 +199,7 @@ public class mqttSpace extends AbstractSpace<Mqtt5Client> {
             this.sjvm
                     .toAsync()
                     .publishWith()
-                    .topic(Space.Helper.toNativeSpace(vid, this.routes).toString())
+                    .topic(Space.Helper.routeFromSpace(vid, this.routes).toString())
                     .payload(payload)
                     .retain(true)
                     .send()

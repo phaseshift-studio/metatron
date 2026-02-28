@@ -39,55 +39,31 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-@Disabled
 public class metaSpaceTest extends AbstractSpaceTest {
     
     private static Space SYS_SPACE = null;
     private static Space META1_SPACE = null;
     private static Space META2_SPACE = null;
-    private static Space TEST_SPACE = null;
+  //  private static Space TEST_SPACE = null;
 
     public metaSpaceTest() {
         super(f("/cluster/a/t"), () -> {
             final List<Obj> peers = List.of(uri("ws://localhost:6666"), uri("ws://localhost:7777"));
-            TEST_SPACE = memSpace.of(rec(uri(PATTERN), uri("/test/#")), f("/sys/space/test"));
-            META1_SPACE = metaSpace.of(rec(
+           // TEST_SPACE = memSpace.of(rec(uri(PATTERN), uri("/test/#")), f("/sys/space/test"));
+            /*META1_SPACE = metaSpace.of(rec(
                             uri(PATTERN), uri("/cluster/a/t/#"),
                             uri(HOST), peers.get(0),
-                            uri(REWRITE), rel(uri("/cluster/a"), uri("/test")),
+                            uri(ROUTE), rec(uri("/cluster/a"), uri("/test")),
                             uri(PEERS), lst(peers)),
-                    f("/sys/space/meta1"));
+                    f("/sys/space/meta1"));*/
             META2_SPACE = metaSpace.of(rec(
-                            uri(PATTERN), uri("/cluster/b/t/#"),
+                            uri(PATTERN), uri("/cluster/a/t/#"),
                             uri(HOST), peers.get(1),
-                            uri(REWRITE), rel(uri("/cluster/b"), uri("/test")),
-                            uri(PEERS), lst(peers)),
+                            uri(ROUTE), rec(uri("/cluster/a/t"), uri("/test"))
+                           /* uri(PEERS), lst(peers)*/),
                     f("/sys/space/meta2"));
-            Router.global().addSpace(TEST_SPACE);
-            Router.global().addSpace(META1_SPACE);
-            Router.global().addSpace(META2_SPACE);
             return META2_SPACE;
         });
 
-    }
-
-    @BeforeEach
-    @Override
-    protected void setup() {
-        SYS_SPACE = memSpace.of(rec(uri(PATTERN), uri("/sys/#")), null);
-        Router.global().addSpace(SYS_SPACE);
-        this.space = this.spaceSupplier.get();
-
-    }
-
-    @AfterEach
-    @Override
-    protected void stop() {
-        this.space = null;
-        META1_SPACE.close();
-        META2_SPACE.close();
-        TEST_SPACE.close();
-        SYS_SPACE.close();
-        CommonUtil.sleepThread(100);
     }
 }

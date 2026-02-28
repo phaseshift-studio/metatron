@@ -151,21 +151,7 @@ public interface Space extends Rec, Closeable {
             return null == rewrite ? vid : f(rewrite.get1() + vid.toString().replaceFirst(rewrite.get0(), ""));
         }
 
-        public static fURI fromRewrite(final fURI vid, final Pair<String, String> rewrite) {
-            return null == rewrite ? vid : f(rewrite.get0() + vid.toString().replaceFirst(rewrite.get1(), ""));
-        }
-
-
-        public static String toNativeSpace(final fURI vid, final Pair<String, String> rewrite) {
-            return null == rewrite ? vid.toString() : rewrite.get1() + vid.toString().replaceFirst(rewrite.get0(), "");
-        }
-
-
-        public static fURI fromNativeSpace(final String vid, final Pair<String, String> rewrite) {
-            return null == rewrite ? f(vid) : f(rewrite.get0() + vid.replaceFirst(rewrite.get1(), ""));
-        }
-
-        public static fURI fromNativeSpace(final fURI vid, Map<Uri, Uri> routes) {
+        public static fURI routeToSpace(final fURI vid, Map<Uri, Uri> routes) {
             return routes.entrySet().stream()
                     .filter(e -> vid.toString().contains(e.getValue().uriValue().toString()))
                     .map(e -> e.getKey().uriValue().extend(vid.toString().replaceFirst(e.getValue().uriValue().toString(), "")))
@@ -173,7 +159,7 @@ public interface Space extends Rec, Closeable {
                     .orElse(vid);
         }
 
-        public static fURI toNativeSpace(final fURI vid, Map<Uri, Uri> routes) {
+        public static fURI routeFromSpace(final fURI vid, Map<Uri, Uri> routes) {
             return routes.entrySet().stream()
                     .filter(e -> vid.toString().contains(e.getKey().uriValue().toString()))
                     .map(e -> e.getValue().uriValue().extend(vid.toString().replaceFirst(e.getKey().uriValue().toString(), "")))

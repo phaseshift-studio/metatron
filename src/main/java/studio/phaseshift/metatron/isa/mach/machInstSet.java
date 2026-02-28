@@ -207,7 +207,7 @@ public class machInstSet extends AbstractInstSet {
                             final fsSpace space = Router.global().getSpace(lhs.uriValue());
                             return objs(Arrays.stream(Objects.requireNonNull(file.listFiles()))
                                     //.peek(ff -> LOG.info("reading file %s", f(f(ff.getName()).name())))
-                                    .map(ff -> uri(Space.Helper.fromNativeSpace(makeFile(ff.toPath()).uriValue().qLess(), space.routes()), FILE_TID)));
+                                    .map(ff -> uri(Space.Helper.routeToSpace(makeFile(ff.toPath()).uriValue().qLess(), space.routes()), FILE_TID)));
                         }
                     }
                     return noobj();

@@ -38,6 +38,7 @@ import java.util.function.Function;
 
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.ALL;
+import static studio.phaseshift.metatron.furi.fURI.fnull;
 import static studio.phaseshift.metatron.isa.m.mInstSet.M_ISA_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.SPACE_TID;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
@@ -45,6 +46,7 @@ import static studio.phaseshift.metatron.isa.m.type.Rel.REL_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
+import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst0;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.mach.machInstSet.SPACE_CONFIG;
 
@@ -56,7 +58,7 @@ public class metaSpace extends AbstractSpace<MServer> {
 
     public static final fURI META_SPACE_TID = M_ISA_TID.extend("space/meta");
     protected final fURI host;
-    // protected final Space cache;
+     protected final Space cache;
     protected final List<fURI> peers = new ArrayList<>();
     protected final int selfIndex;
     protected final MServer server;
@@ -70,7 +72,7 @@ public class metaSpace extends AbstractSpace<MServer> {
     public static final Type META_SPACE_TYPE = Type.Builder.build()
             .tid(SPACE_TID)
             .vid(META_SPACE_TID)
-            .constructor(instC(mInstSet.INST_TID.extend("con").dom(ALL.maybe()).rng(META_SPACE_TID), //constructor
+            .constructor(instC(mInstSet.INST_TID.dom(ALL.maybe()).rng(META_SPACE_TID), //constructor
                     lst(isa_(META_SPACE_CONFIG).tryToInst()),
                     (lhs, inst) -> metaSpace.of(inst.arg(0).asRec(), inst.arg(0).vid()))).create();
 
@@ -81,9 +83,9 @@ public class metaSpace extends AbstractSpace<MServer> {
         this.rewrite = this.has(uri(REWRITE)) ?
                 Tuple.Pair.with(this.at(uri(REWRITE)).relValue().get0().uriValue().toString(), this.at(uri(REWRITE)).relValue().get1().uriValue().toString())
                 : null;
-        // this.cache = (Space) jvm.get(uri(CACHE));
+        this.cache = (Space) jvm.get(uri(CACHE));
         Rec c = rec(jvm);
-        c.at(uri(PEERS)).asLst().elements().forEach(e -> this.peers.add(e.uriValue()));
+        c.at(uri(PEERS)).orElse(lst(uri(this.host))).asLst().elements().forEach(e -> this.peers.add(e.uriValue()));
         this.selfIndex = IteratorUtil.indexedStream(this.peers.iterator()).filter(p -> Objects.equals(p.get1().host(), this.host.host())).findFirst().map(Tuple.Pair::get0).orElse(-1);
         if (this.selfIndex == -1)
             throw MTronException.of("no cluster position found for host %s", this.host.host());
@@ -91,11 +93,11 @@ public class metaSpace extends AbstractSpace<MServer> {
     }
 
     public static metaSpace of(final Rec config, final fURI vid) {
-        final MServer server = new MServer(config.at(HOST).uriValue(), config.at(PEERS).asLst().elements().map(Obj::uriValue).toList());
+        final MServer server = new MServer(config.at(HOST).uriValue(), config.at(PEERS).orElse(lst(config.at(HOST).asUri())).asLst().elements().map(Obj::uriValue).toList());
         server.start();
-        //  final memSpace cache = memSpace.of(config.at(PATTERN).uriValue(), fnull);
+        final memSpace cache = memSpace.of(config.at(PATTERN).uriValue(), fnull);
         final Map<Obj, Obj> conf = new LinkedHashMap<>(config.jvm());
-        // conf.put(uri(CACHE), cache);
+         conf.put(uri(CACHE), cache);
         return new metaSpace(server, conf, vid);
     }
 
@@ -111,7 +113,7 @@ public class metaSpace extends AbstractSpace<MServer> {
         final int peerIndex = fURIHasher.getNodeIndex(lowerPattern.toString(), this.peers.size());
         if (this.selfIndex == peerIndex) {
             LOG.debug("{{y}}%s{{X}} [{{c}}reading{{X}}]:  {{y}}%s {{g}}=> {{y}}%s", this.host, vid, lowerPattern);
-            return Router.readFromSpace(lowerPattern);
+            return this.cache.read(lowerPattern);
         } else {
             final fURI peer = this.peers.get(peerIndex);
             try {
@@ -136,7 +138,7 @@ public class metaSpace extends AbstractSpace<MServer> {
         final int peerIndex = fURIHasher.getNodeIndex(lowerPattern.toString(), this.peers.size());
         if (this.selfIndex == peerIndex) {
             LOG.debug("{{y}}%s{{X}} [{{c}}writing{{X}}]:  {{y}}%s {{g}}=> {{y}}%s{{X}} %s", this.host, vid, lowerPattern, obj);
-            return Router.writeToSpace(lowerPattern, obj);
+            return this.cache.write(lowerPattern, obj);
         } else {
             final fURI peer = this.peers.get(peerIndex);
             try {

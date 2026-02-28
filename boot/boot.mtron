@@ -34,24 +34,24 @@ print("{{y}}supported scripting environments:\n{{X}}", *<boot/script>.else(boot/
   perl   => /usr/bin/perl,
   mtron  => /bin/mtron]),"\n");
 [== mount computing spaces ==];
-   mem::[pattern => /usr/#,                                 
-         q       => [subq::[=>]]]@/sys/space/usr;
-   mem::[pattern => /shared/#,
-         persist => </tmp/shared.mtron>]@/sys/space/shared;
-  meta::[pattern => </a/cluster/#>,
+ mem::[pattern   => /usr/#,                                 
+       q         => [subq::[=>]]]@/sys/space/usr;
+ mem::[pattern   => /shared/#,
+       persist   => </tmp/shared.mtron>]@/sys/space/shared;
+ meta::[pattern  => </a/cluster/#>,
         host     => <ws://localhost:6666>,
-        rewrite  => (</a/cluster>=></shared>),
+        route    => [</a/cluster>=></shared>],
         peers    => !*boot/peers]@/sys/space/meta1;
  meta::[pattern  => </b/cluster/#>,
         host     => <ws://127.0.0.1:7777>,
-        rewrite  => (</b/cluster>=></shared>),
+        route    => [</b/cluster>=></shared>],
         peers    => !*boot/peers]@/sys/space/meta2;
  http::[host     => <http://localhost:8777>,
         pattern  => http://#,
         route    => [/     => examples/www,
                      /docs => target/docs ]]@/sys/space/www;
   tp3::[pattern  => /h/#,
-        route  =>   [</h/+/>=><>],
+        route    => [</h/+/>=><>],
         native   => [factory  => mfactory::[=>],
                      load     => grateful]]@/sys/space/grateful;                    
   tp3::[pattern  => /g/#,
@@ -61,10 +61,10 @@ print("{{y}}supported scripting environments:\n{{X}}", *<boot/script>.else(boot/
   [==mqtt::[pattern => <mqtt:#>,
          host    => !*boot/args/mqtt/broker,
          route   => [mqtt:=><>]]@/sys/space/mqtt;==]
-  miot::[pattern => <mtron:#>,
-         host    => !*boot/args/mqtt/broker,
+  miot::[pattern    => <mtron:#>,
+         host       => !*boot/args/mqtt/broker,
          serializer => !*</m/mach/io/serializer/json/simple>,
-         route   => [mtron:=>metatron/]]@/sys/space/mqtt/metatron;
+         route      => [mtron:=>metatron/]]@/sys/space/mqtt/metatron;
   mqtt::[pattern    => <z2m:#>,
          host       => !*boot/args/mqtt/broker,
          serializer => !*</m/mach/io/serializer/json/simple>,
@@ -74,7 +74,7 @@ print("{{y}}supported scripting environments:\n{{X}}", *<boot/script>.else(boot/
          serializer    => !*</m/mach/io/serializer/json/simple>,
          command_topic => inst?uri<=rec(){ to(a).map(z2m:).mult(*a../friendly_name).mult(set/state) },
          route         => [ha:=>homeassistant/]]@/sys/space/mqtt/homeassistant;
-    fs::[pattern => <file:#>,
+    fs::[pattern  => <file:#>,
           route   => [file:=><~/>],
           script  => !*boot/script]@/sys/space/fs;
  serial::[pattern => <serial:#>,
