@@ -328,8 +328,7 @@ public interface Inst extends Call {
     @Override
     default Obj apply(final Obj lhs) {
         final boolean isMonadicInst = this.tid().hasQuery(MONAD);
-        final Monad monad = isMonadicInst ? (Monad) lhs : null;
-        Obj clhs = FutureObj.resolveFuture(isMonadicInst ? monad.obj() : lhs);
+        Obj clhs = FutureObj.resolveFuture(isMonadicInst ? lhs.asMonad() : lhs);
         //boolean reself = !this.args().isEmpty() && this.args().argElements().noneMatch(e -> e.vid() != null || e.isObjCall());
         Inst cinst = this.args().isEmpty() ? this.args(lst(noobj())).resolve(clhs) : this.resolve(clhs); // TODO: this isn't a general solution (multi slotted args won't work).
         //if (false && reself) // TODO: why do type predicates get rewritten?
@@ -362,7 +361,9 @@ public interface Inst extends Call {
                 cinst = Helper.applyArgs(clhs, cinst);
                 Router.stack().push(cinst.args());
                 try {
-                    rhs = Objs.trySingleton(FutureObj.resolveFuture(cinst.f().apply(isMonadicInst ? monad.obj(clhs) : clhs, cinst)));
+                    rhs = Objs.trySingleton(FutureObj.resolveFuture(cinst.f().apply(isMonadicInst ? lhs.asMonad().obj(clhs) : clhs, cinst)));
+                    if (rhs.isUncaughtFail())
+                        return rhs;
                     Graphitty.log(cinst).trace("%s (lhs) => %s (inst) => %s (rhs) evaluated successfully", clhs, cinst, rhs);
                 } catch (final Exception e) {
                     rhs = fail(e, fail(MTronException.of("apply failure:" +

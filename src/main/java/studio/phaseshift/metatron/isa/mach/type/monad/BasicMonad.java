@@ -25,6 +25,7 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.type.Monad;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
+import studio.phaseshift.metatron.util.CommonUtil;
 
 import java.util.List;
 
@@ -71,10 +72,10 @@ public class BasicMonad extends AbstractMonad implements Monad {
         return (OBJ) this;
     }
 
-    @Override
+    /*@Override
     public Monad plus(final Monad objs) {
         return new BasicMonad(List.of(this, objs), this.tid().plus(objs.tid()), this.vid());
-    }
+    }*/
 
     /// //////////////////////////////////////////////////////////////////////////////////////
 
@@ -83,7 +84,7 @@ public class BasicMonad extends AbstractMonad implements Monad {
     }
 
     public static Monad monad(final Obj obj, final Inst inst, final Call code) {
-        return monad(List.of(obj, inst, noobj(), code), MACH_BASIC_MONAD_TID, null);
+        return monad(CommonUtil.arrayList(obj, inst, noobj(), code), MACH_BASIC_MONAD_TID, null);
     }
 
     public static Monad monad(final Obj obj) {

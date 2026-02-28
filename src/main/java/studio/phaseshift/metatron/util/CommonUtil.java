@@ -53,6 +53,13 @@ public final class CommonUtil {
         // do nothing
     }
 
+    @SafeVarargs
+    public static <T> List<T> arrayList(final T... elements) {
+        final List<T> list = new ArrayList<>();
+        Collections.addAll(list, elements);
+        return list;
+    }
+
     public static <T> Tuple.Pair<T, Long> clock(final Supplier<T> supplier) {
         final long start = System.currentTimeMillis();
         final T result = supplier.get();

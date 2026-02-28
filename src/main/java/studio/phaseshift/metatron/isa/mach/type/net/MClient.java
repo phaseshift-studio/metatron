@@ -57,7 +57,7 @@ public class MClient extends WebSocketClient implements MConnection {
         this.remoteHost = remoteAuthority;
         if (Router.loaded()) {
             LOG.info("connecting to {{b}}%s{{/b}}", this.remoteHost);
-            Router.writeToSpace(Router.global().vid().extend("cluster"), objs(new ArrayList<>(List.of(this.remoteHost.toUri()))));
+            Router.writeToSpace(Router.global().vid().extend("cluster"), objs(this.remoteHost.toUri()));
         }
     }
 

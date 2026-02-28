@@ -18,22 +18,26 @@
 
 package studio.phaseshift.metatron.isa.mach.type;
 
-import studio.phaseshift.metatron.algebra.Ring;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.*;
+import studio.phaseshift.metatron.util.CommonUtil;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
 
+import static studio.phaseshift.metatron.Tokens.LOOP;
 import static studio.phaseshift.metatron.Tokens.MONAD;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
-import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec0;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_MONAD_TID;
 
-public interface Monad extends Obj, Ring<Monad> {
+public interface Monad extends Lst {
 
     @Override
     Monad clone(final Object jvm, final fURI tid, final fURI vid);
@@ -41,7 +45,7 @@ public interface Monad extends Obj, Ring<Monad> {
     @Override
     List<Obj> jvm();
 
-    @Override
+   /* @Override
     default Monad neg() {
         return this.c(cInt::neg);
     }
@@ -59,7 +63,7 @@ public interface Monad extends Obj, Ring<Monad> {
     @Override
     default Monad zero() {
         return this.c(cInt.ZERO());
-    }
+    }*/
 
     default boolean halted() {
         return this.inst().isNoObj();
@@ -77,12 +81,34 @@ public interface Monad extends Obj, Ring<Monad> {
         return (Code) this.jvm().get(3);
     }
 
-    default Monad next() {
-        return this.jvm(List.of(this.obj(), this.code().nextInst(this.inst()), noobj(), this.code()));
+    default Monad nextInst() {
+        return this.jvm(CommonUtil.arrayList(this.obj(), this.code().nextInst(this.inst()), noobj(), this.code()));
+    }
+
+
+    default <OBJ extends Obj> OBJ state(final fURI key) {
+        return this.state().at(key);
+    }
+
+    default Monad updateLoop(final int incr) {
+        return this.updateState(uri(LOOP), loop -> incr == 0 ? noobj() : loop.jvm(loop.orElse(jnt(0)).intValue() + incr));
+    }
+
+    default Monad updateState(final String key, final Function<Obj, Obj> updateFunction) {
+        return this.updateState(uri(key), updateFunction);
+    }
+
+    default Monad updateState(final fURI key, final Function<Obj, Obj> updateFunction) {
+        return this.updateState(uri(key), updateFunction);
+    }
+
+    default Monad updateState(final Uri key, final Function<Obj, Obj> updateFunction) {
+        this.jvm().set(2, this.state().at(key, updateFunction.apply(this.state().at(key)), MUTABLE).as());
+        return this;
     }
 
     default Rec state() {
-        return null == this.jvm().get(2) || this.jvm().get(2).isNoObj() ? rec0() : (Rec) this.jvm().get(2);
+        return null == this.jvm().get(2) || this.jvm().get(2).isNoObj() ? rec(new HashMap<>()) : (Rec) this.jvm().get(2);
     }
 
     default Inst inst() {
@@ -98,12 +124,12 @@ public interface Monad extends Obj, Ring<Monad> {
 
     @Override
     default Monad c(final cInt c) {
-        return (Monad) Obj.super.c(c);
+        return (Monad) Lst.super.c(c);
     }
 
     @Override
     default Monad c(final Function<cInt, cInt> func) {
-        return (Monad) Obj.super.c(func);
+        return (Monad) Lst.super.c(func);
     }
 
     @Override
@@ -112,7 +138,7 @@ public interface Monad extends Obj, Ring<Monad> {
     }
 
     default Monad obj(final Obj obj) {
-        return this.clone(List.of(obj, this.inst(), this.state(), this.code()), this.tid(), this.vid());
+        return this.clone(CommonUtil.arrayList(obj, this.inst(), this.state(), this.code()), this.tid(), this.vid());
     }
 
     default Monad inst(final Inst inst) {
@@ -138,7 +164,7 @@ public interface Monad extends Obj, Ring<Monad> {
             return this;
         final boolean monadicInst = this.inst().tid().hasQuery(MONAD);
         final Monad nextMonad = this.obj(this.inst().apply(monadicInst ? this : this.obj()));
-        return monadicInst ? (Monad)nextMonad.obj() : nextMonad.next();
+        return monadicInst ? (Monad) nextMonad.obj() : nextMonad.nextInst();
     }
 
     class Helpers {

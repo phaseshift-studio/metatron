@@ -128,7 +128,7 @@ public class SwarmMachine extends AbstractMachine implements Machine {
                 LOG.trace("   {{g}}=>{{/g}} processing monad %s [%s]", m, m.inst().isInitial() ? "initial" : "midway");
                 final Monad x = this.split(m);
                 if (x.inst().tid().basePath().equals(DROP_TID)) {
-                    this.running().append(x.next());
+                    this.running().append(x.nextInst());
                 } else {
                     final Monad n = x.apply();
                     LOG.trace(" {{g}}===>{{/g}} post-processing monad %s", n);

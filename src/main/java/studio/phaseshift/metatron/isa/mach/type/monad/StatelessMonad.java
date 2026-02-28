@@ -25,6 +25,7 @@ import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.mach.type.Monad;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
+import studio.phaseshift.metatron.util.CommonUtil;
 
 import java.util.List;
 
@@ -78,13 +79,13 @@ public class StatelessMonad extends AbstractMonad implements Monad {
         return rec0();
     }
 
-    @Override
+    /*@Override
     public Monad plus(final Monad objs) {
         return new StatelessMonad(List.of(this, objs), this.tid().plus(objs.tid()), this.vid());
-    }
+    }*/
 
     public static Monad monad(final Obj obj, final Inst inst) {
-        return new StatelessMonad(List.of(obj, inst, noobj()), MACH_STATELESS_MONAD_TID, null);
+        return new StatelessMonad(CommonUtil.arrayList(obj, inst, noobj()), MACH_STATELESS_MONAD_TID, null);
     }
 
     public static Monad monad(final Obj obj) {

@@ -69,6 +69,8 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.mach.io.type.ObjSerializer.OBJ_SERIAL_TID;
+import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_MONAD_TID;
+import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_MONAD_TYPE;
 import static studio.phaseshift.metatron.util.CommonUtil.indent;
 import static studio.phaseshift.metatron.util.CommonUtil.nullOrElse;
 import static studio.phaseshift.metatron.util.Tuple.Pair;
@@ -378,6 +380,10 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
         return this instanceof MFail.MCaughtFail;
     }
 
+    default boolean isUncaughtFail() {
+        return this.isFail() && !(this instanceof MFail.MCaughtFail);
+    }
+
     default boolean isBool() {
         return this instanceof Bool;
     }
@@ -436,6 +442,10 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
 
     default boolean isInst() {
         return this instanceof Inst;
+    }
+
+    default boolean isMonad() {
+        return this instanceof Monad;
     }
 
     default Obj autoResolve(final Obj obj) {
@@ -526,6 +536,10 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
 
     default Code asCode() {
         return (Code) this;
+    }
+
+    default Monad asMonad() {
+        return (Monad) this;
     }
 
     default Type asType() {
@@ -625,6 +639,12 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
         if (this.isType())
             return this.jvm();
         throw MTronException.of(xxxValue, this, T(tid()), TYPE_TYPE);
+    }
+
+    default List<Obj> monadValue() {
+        if (this.isMonad())
+            return this.jvm();
+        throw MTronException.of(xxxValue, this, T(tid()), MACH_MONAD_TYPE);
     }
 
     default String toCleanString() {
@@ -798,13 +818,21 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
                     instC(BARRIER_INST_TID.dom(A.maybeSome()).rng(A.maybeSome()), lst(T(A.maybeSome())), (lhs, inst) -> inst.arg(0).append(lhs)),
                     instC(AS_INST_TID.dom(A).rng(A), lst(T(A)), (lhs, inst) -> lhs.clone(lhs.jvm(), inst.arg(0).tid(), lhs.vid())),
                     instC(REPEAT_INST_TID.dom(A).rng(A.maybeSome()).query(MONAD, null), lst(T(ALL), T(ALL)), (lhs, inst) -> {
-                        Obj current = ((Monad) lhs).obj();
-                        if (current.isNoObj()) return ((Monad) lhs).next();
-                        final Obj breakPredicate = inst.arg(1);
-                        if (breakPredicate.apply(current).check())
-                            return ((Monad) lhs).next();
-                        final Obj repeatedApply = inst.arg(0);
-                        return ((Monad) lhs).obj(repeatedApply.apply(current));
+                        try {
+                            Obj current = lhs.asMonad().obj();
+                            if (current.isNoObj()) return lhs.asMonad().nextInst();
+                            final Obj breakPredicate = inst.arg(1);
+                            if (breakPredicate.tid().dom().test(MACH_MONAD_TID)) {
+                                if (breakPredicate.apply(lhs).check())
+                                    return lhs.asMonad().updateLoop(0).nextInst();
+                            } else if (breakPredicate.apply(current).check())
+                                return lhs.asMonad().updateLoop(0).nextInst();
+                            final Obj repeatedApply = inst.arg(0);
+                            return lhs.asMonad().updateLoop(1).obj(repeatedApply.apply(current));
+                        } catch (final Exception e) {
+                            e.printStackTrace();
+                            throw e;
+                        }
                     }),
                   /*  instC(REPEAT_INST_TID.dom(A).rng(A.maybeSome()).query(MONAD, null), lst(T(ALL), T(ALL)), (lhs, inst) -> {
                         Obj current = ((Monad) lhs).obj();

@@ -28,6 +28,7 @@ import studio.phaseshift.metatron.util.Tuple;
 
 import java.util.*;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.isa.m.mInstSet.ALL_STAR;
@@ -151,7 +152,7 @@ public class MObjs implements Objs {
 
     @Override
     public Obj resolve(final Obj obj) {
-        return this.clone(new ArrayList<>(this.jvm.stream().map(o -> o.resolve(obj)).toList()), ALL_STAR, this.vid);
+        return this.clone(this.jvm.stream().map(o -> o.resolve(obj)), ALL_STAR, this.vid);
     }
 
     @Override
@@ -190,7 +191,7 @@ public class MObjs implements Objs {
 
     @Override
     public Obj c(final Function<cInt, cInt> func) {
-        this.jvm = new ArrayList<Obj>(this.jvm.stream().map(obj -> obj.c(func)).toList());
+        this.jvm = this.jvm.stream().map(obj -> obj.c(func)).collect(Collectors.toCollection(ArrayList::new));
         return tryToShrink();
     }
 
