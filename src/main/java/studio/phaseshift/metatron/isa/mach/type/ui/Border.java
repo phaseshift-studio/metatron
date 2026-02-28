@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -68,13 +68,13 @@ public interface Border {
         final String colorBorder = Arrays.stream(this.border().split(";")).map(b -> color + b).reduce((a, b) -> a + ";" + b).orElseThrow();
         return () -> colorBorder;
     }
-    
+
     default StringBuilder wrap(final StringBuilder builder) {
-        final StringBuilder sb =new StringBuilder();
+        final StringBuilder sb = new StringBuilder();
         List<String> inner = Arrays.asList(builder.toString().split("\n"));
         int width = inner.stream().map(Highlighter::visualLength).max(Integer::compareTo).orElse(0);
         sb.append(X).append(this.topLeftCorner()).append(this.topSide().repeat(width)).append(this.topRightCorner()).append(X).append("\n");
-        for(final String row  : inner) {
+        for (final String row : inner) {
             sb.append(X).append(this.leftSide()).append(X).append(row).append(X).append(this.rightSide()).append(X).append("\n");
         }
         sb.append(X).append(this.bottomLeftCorner()).append(this.bottomSide().repeat(width)).append(this.bottomRightCorner()).append(X);

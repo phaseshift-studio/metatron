@@ -20,10 +20,10 @@ package studio.phaseshift.metatron.isa.llm;
 
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.AbstractInstSet;
 import studio.phaseshift.metatron.isa.llm.type.GGUF;
-import studio.phaseshift.metatron.isa.m.type.ServiceMetadata;
+import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Type;
-import studio.phaseshift.metatron.isa.m.type.impl.AbstractInstSet;
 
 import java.util.Set;
 
@@ -41,7 +41,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-@ServiceMetadata(tid = "/m/llm")
+@InstSet.JREService(tid = "/m/llm")
 public class llmInstSet extends AbstractInstSet {
 
     public static final fURI LLM_ISA_TID = MTRON_TID.extend("llm");

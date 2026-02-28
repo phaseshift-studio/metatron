@@ -19,14 +19,14 @@
 package studio.phaseshift.metatron.isa.iot.miot;
 
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.AbstractInstSet;
 import studio.phaseshift.metatron.isa.iot.miot.type.Device;
 import studio.phaseshift.metatron.isa.iot.miot.type.Entity;
 import studio.phaseshift.metatron.isa.iot.miot.type.SoC;
 import studio.phaseshift.metatron.isa.m.type.Inst;
+import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.m.type.ServiceMetadata;
 import studio.phaseshift.metatron.isa.m.type.Type;
-import studio.phaseshift.metatron.isa.m.type.impl.AbstractInstSet;
 
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -39,7 +39,7 @@ import static studio.phaseshift.metatron.isa.iot.space.mqtt.mqttSpace.MQTT_SPACE
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-@ServiceMetadata(tid = "/m/iot/miot")
+@InstSet.JREService(tid = "/m/iot/miot")
 public class miotInstSet extends AbstractInstSet {
 
     public static final fURI MIOT_ISA_TID = IOT_ISA_TID.extend("miot");

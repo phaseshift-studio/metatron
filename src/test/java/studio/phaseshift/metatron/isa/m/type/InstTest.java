@@ -89,7 +89,7 @@ public class InstTest extends AbstractObjTest {
         final Inst defA = mParser.m_obj().parse(def).get();
         final Inst specA = mParser.m_obj().parse(spec).get();
         final Inst resolutionA = mParser.m_obj().parse(resolution).get();
-        final Inst resultA = Inst.Helpers.bindGenerics(lhsA, specA, defA);
+        final Inst resultA = Inst.Helper.bindGenerics(lhsA, specA, defA);
         LOG.info("{{b}}%s{{/b}} resolution matches {{b}}%s{{/b}} specification", resultA.tid(), resolutionA.tid());
         final boolean match = resultA.tid().test(resolutionA.tid());
         assertTrue(match);

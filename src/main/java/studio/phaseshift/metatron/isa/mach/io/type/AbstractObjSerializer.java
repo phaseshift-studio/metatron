@@ -35,10 +35,10 @@ public abstract class AbstractObjSerializer<T> implements ObjSerializer<T> {
 
     @Override
     public ByteBuffer outputBytes(final Obj obj) throws MTronException {
-       final T t = this.write(obj);
-       return ByteBuffer.wrap(t.toString().getBytes(StandardCharsets.UTF_8));
+        final T t = this.write(obj);
+        return ByteBuffer.wrap(t.toString().getBytes(StandardCharsets.UTF_8));
     }
-    
+
     @Override
     public ObjSerializer<T> clone() {
         return this;
@@ -55,7 +55,7 @@ public abstract class AbstractObjSerializer<T> implements ObjSerializer<T> {
         Obj.Helper.logLockedObj(this);
         return this;
     }
-    
+
     @Override
     public fURI tid() {
         return OBJ_SERIALIZER_TID;

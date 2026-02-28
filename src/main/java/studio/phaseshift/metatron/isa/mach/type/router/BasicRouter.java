@@ -29,14 +29,14 @@ import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Uri;
 import studio.phaseshift.metatron.isa.m.type.impl.MObjs;
 import studio.phaseshift.metatron.isa.m.type.impl.ObjectMap;
+import studio.phaseshift.metatron.isa.m.type.reflect.ObjFieldReflection;
+import studio.phaseshift.metatron.isa.m.type.reflect.ObjReflection;
 import studio.phaseshift.metatron.isa.mach.type.MStats;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.Stats;
+import studio.phaseshift.metatron.isa.mach.type.net.MServer;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
-import studio.phaseshift.metatron.lang.jre.ObjFieldReflection;
-import studio.phaseshift.metatron.lang.jre.ObjReflection;
-import studio.phaseshift.metatron.isa.mach.type.net.MServer;
 import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.*;
@@ -159,7 +159,7 @@ public class BasicRouter extends AbstractSpace<MServer> implements Router {
     @Override
     public void addSpace(final Space space) {
         if (null == space.vid() && !(space instanceof stackSpace)) {
-            LOG.warn("vid-less spaces are self-managed and not indexed by router: %s", space);
+            LOG.debug("vid-less spaces are self-managed and not indexed by router: %s", space);
             return;
         }
         if (this.spaces()

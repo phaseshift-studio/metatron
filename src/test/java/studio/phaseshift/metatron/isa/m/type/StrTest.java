@@ -161,6 +161,33 @@ public class StrTest extends AbstractObjTest {
 
     @ParameterizedTest
     @CsvSource(value = {
+            "\"abc\".gt(\"aaa\")               % true",
+            "\"abc\".gt(\"abc\")               % false",
+            "\"abc\".gt(\"def\")               % false",
+            "\"abc\".lt(\"aaa\")               % false",
+            "\"abc\".lt(\"abc\")               % false",
+            "\"abc\".lt(\"def\")               % true",
+            "\"abc\".eq(\"abc\")               % true",
+            "\"abc\".eq(\"def\")               % false",
+            "\"abc\".gte(\"abc\")              % true",
+            "\"abc\".gte(\"aaa\")              % true",
+            "\"abc\".gte(\"def\")              % false",
+            "\"abc\".lte(\"abc\")              % true",
+            "\"abc\".lte(\"def\")              % true",
+            "\"abc\".lte(\"aaa\")              % false",
+            "\"abc\".neq(\"abc\")              % false",
+            "\"abc\".neq(\"def\")              % true",
+            "\"\".eq(\"\")                     % true",
+            "\"\".lt(\"a\")                    % true",
+            "\"z\".gt(\"a\")                   % true",
+            "\"ABC\".lt(\"abc\")               % true",
+    }, delimiter = '%')
+    public void testComparison(final String code, final String expected) {
+        AbstractMetatronTest.testCode(LOG, code, expected);
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
             "\"hello\".plus(\" world\")       % \"hello world\"",
             "\"a\".plus(\"b\").plus(\"c\")    % \"abc\"",
             "\"\".plus(\"test\")              % \"test\"",

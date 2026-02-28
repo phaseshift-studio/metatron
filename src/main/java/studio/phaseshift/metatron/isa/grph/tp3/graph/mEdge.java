@@ -63,7 +63,7 @@ public class mEdge extends mElement implements Edge, WrappedEdge<Rec> {
         this.getBaseEdge().at(rel.first(), rel.second(), MUTABLE);
         return mProperty.of(this, rel);
     }
-    
+
     @Override
     public <V> Iterator<Property<V>> properties(String... propertyKeys) {
         return this.getBaseEdge().elements()

@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.lang.jre;
+package studio.phaseshift.metatron.isa.m.type.reflect;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
@@ -48,9 +48,9 @@ public class JRec extends MObj implements Rec {
         super(jvm, tid, vid);
         this.sjvm = new LinkedHashMap<>(sjvm);
     }
-    
-    public JRec(final Map<Obj,Obj> sjvm, final fURI tid, final fURI vid) {
-        super(null,tid,vid);
+
+    public JRec(final Map<Obj, Obj> sjvm, final fURI tid, final fURI vid) {
+        super(null, tid, vid);
         this.jvm = this;
         this.sjvm = new LinkedHashMap<>(sjvm);
     }

@@ -26,12 +26,10 @@ import studio.phaseshift.metatron.isa.AbstractObjTest;
 public class IntTest extends AbstractObjTest {
     @ParameterizedTest
     @CsvSource(value = {
-            // "1.as(bool::T)                                                               % true",
-            // "0.as(bool::T)                                                               % false",
-            "1.as(str::T)                                                               % \"1\"",
-            "2.as(str::T)                                                               % \"2\"",
-            "1.as(real::T)                                                               % 1.0",
-            "2.as(real::T)                                                               % 2.0"
+            "1.as(str::T)                                                                   % \"1\"",
+            "2.as(str::T)                                                                   % \"2\"",
+            "1.as(real::T)                                                                  % 1.0",
+            "2.as(real::T)                                                                  % 2.0"
     }, delimiter = '%')
     public void testAsInst(final String code, final String expected) {
         AbstractMetatronTest.testCode(LOG, code, expected);

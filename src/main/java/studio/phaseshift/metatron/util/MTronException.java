@@ -66,32 +66,32 @@ public class MTronException extends RuntimeException {
             final String[] message = throwable.getMessage().split(" cannot be cast to class ");
             final String leftClass = message[0].trim();
             final String rightClass = message[1].trim().split("\\(")[0].trim();
-           // throwable.printStackTrace();
+            // throwable.printStackTrace();
             return new MTronException("unable to convert " + convertName(leftClass.substring(leftClass.lastIndexOf('.') + 1)) + " to " + convertName(rightClass.substring(rightClass.lastIndexOf('.') + 1)), throwable);
         } else {
             return new MTronException(Highlighter.unformat(null == throwable.getCause() ? throwable.getClass().getSimpleName().toLowerCase() : throwable.getCause().toString()));
         }
     }
-    
+
     private static String convertName(final String name) {
         final String lname = name.toLowerCase();
-        if(lname.contains("boolean"))
+        if (lname.contains("boolean"))
             return "bool::T";
-        if(lname.contains("int"))
+        if (lname.contains("int"))
             return "int::T";
-        if(lname.contains("real"))
+        if (lname.contains("real"))
             return "real::T";
-        if(lname.contains("str"))
+        if (lname.contains("str"))
             return "str::T";
-        if(lname.contains("uri"))
+        if (lname.contains("uri"))
             return "uri::T";
         if (lname.contains("lst"))
             return "lst::T";
-        if(lname.contains("rec"))
+        if (lname.contains("rec"))
             return "rec::T";
-        if(lname.contains("rel"))
+        if (lname.contains("rel"))
             return "rel::T";
-        if(lname.contains("type"))
+        if (lname.contains("type"))
             return "T::T";
         else
             return lname;

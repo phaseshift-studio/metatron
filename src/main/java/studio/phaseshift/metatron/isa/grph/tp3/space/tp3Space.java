@@ -163,7 +163,7 @@ public class tp3Space extends grphSpace<Graph> {
     @Override
     public Obj write(final fURI vid, final Obj obj) {
         return studio.phaseshift.metatron.furi.Q.Helper.processPreWrite(this.qs(), vid, vid, obj).orElseGet(() -> {
-            if(obj.jvm() instanceof ElementMap) // underlying store has already updated the element accordingly
+            if (obj.jvm() instanceof ElementMap) // underlying store has already updated the element accordingly
                 return obj;
             Space.Helper.resolveWrite(LOG, this, vid.basePath(), obj, this.directWriter(), this.directReader());
             //return obj;
@@ -245,7 +245,7 @@ public class tp3Space extends grphSpace<Graph> {
                         return fail(e);
                     }
                 } else {
-                 return obj;
+                    return obj;
                     //   throw MTronException.of("unknown tp3 vid: %s", vid);
                 }
             }

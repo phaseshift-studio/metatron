@@ -54,14 +54,14 @@ public class Grid extends AbstractWidget<Grid> {
         final List<String> gridRows = new ArrayList<>();
         try {
             for (int w = 0; w < this.widgets.size(); w = w + this.columns) {
-                    for (int r = 0; r < totalHeight; r++) {
-                        String row = new String();
-                        for (int i = w; i < (w + this.columns); i++) {
-                            final Widget<?> widget = this.widgets.get(i);
-                            row = row + " " + (r < widget.height() ? widget.rowString(r) : " ".repeat(widget.width()));
-                        }
-                        gridRows.add(row);
+                for (int r = 0; r < totalHeight; r++) {
+                    String row = new String();
+                    for (int i = w; i < (w + this.columns); i++) {
+                        final Widget<?> widget = this.widgets.get(i);
+                        row = row + " " + (r < widget.height() ? widget.rowString(r) : " ".repeat(widget.width()));
                     }
+                    gridRows.add(row);
+                }
             }
         } catch (final Exception e) {
             //do nothing

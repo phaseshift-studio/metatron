@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -26,8 +26,8 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Call;
 import studio.phaseshift.metatron.isa.m.type.Uri;
 import studio.phaseshift.metatron.isa.m.type.reflect.TypedRec;
-import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
@@ -87,7 +87,7 @@ public class StatusLine implements Runnable {
         boolean first = true;
         for (final Map.Entry<Uri, Call> ws : this.widgets.jvmTyped().entrySet()) {
             final String w = ws.getValue().apply(noobj()).strValue();
-            this.line.add(new AttributedString(Graphitty.string("{{g&[%s]}}%s%s{{[%s]}} ", color,first ? " " : "| ", w, color)));
+            this.line.add(new AttributedString(Graphitty.string("{{g&[%s]}}%s%s{{[%s]}} ", color, first ? " " : "| ", w, color)));
             first = false;
         }
         this.line.add(new AttributedString(Graphitty.string("{{g}}|{{[" + color + "]}}%s.".formatted(" ".repeat(Console.getTerminal().getWidth())))));

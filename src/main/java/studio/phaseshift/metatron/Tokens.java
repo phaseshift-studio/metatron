@@ -27,7 +27,7 @@ public final class Tokens {
     private Tokens() {
         // do nothing
     }
-    
+
     public static final String SIZE = "size";
     public static final String SKILL = "skill";
     public static final String THINK = "think";

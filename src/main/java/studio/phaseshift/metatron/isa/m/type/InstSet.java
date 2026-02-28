@@ -20,7 +20,10 @@ package studio.phaseshift.metatron.isa.m.type;
 
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.Space;
+import studio.phaseshift.metatron.util.MTronException;
 
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 import java.util.Set;
 import java.util.function.Function;
 
@@ -58,5 +61,27 @@ public interface InstSet extends Space {
         public static Inst rewriter(final fURI tid, Function<Code, Code> rewrite) {
             return instC(tid.dom(ALL.maybe()).rng(CODE_TID.maybe()), lst(CODE_TYPE), (lhs, inst) -> rewrite.apply(inst.arg(0).asCode()).as());
         }
+    }
+
+    /*
+     * @author Marko A. Rodriguez (http://markorodriguez.com)
+     */
+    @Retention(RetentionPolicy.RUNTIME)
+    @interface JREService {
+        String tid();
+    
+
+        class Helper {
+            public static fURI tid(final Class<?> spec) {
+                return f(spec.getAnnotation(JREService.class).tid());
+            }
+
+            public static void verifyClass(final Class<?> spec, final fURI tid) throws MTronException {
+                if (!(!spec.isAnnotationPresent(JREService.class) || Helper.tid(spec).equals(tid))) {
+                    throw MTronException.of("invalid service annotation for %s: %s (expected %s)", spec, tid, Helper.tid(spec));
+                }
+            }
+        }
+
     }
 }

@@ -19,9 +19,9 @@
 package studio.phaseshift.metatron.isa.m;
 
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.AbstractInstSet;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.type.*;
-import studio.phaseshift.metatron.isa.m.type.impl.AbstractInstSet;
 import studio.phaseshift.metatron.util.Tuple;
 
 import java.util.ArrayList;
@@ -36,11 +36,23 @@ import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.isa.m.space.memSpace.MEM_SPACE_TYPE;
 import static studio.phaseshift.metatron.isa.m.space.metaSpace.META_SPACE_TYPE;
 import static studio.phaseshift.metatron.isa.m.space.stackSpace.STACK_SPACE_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.Bytes.BYTES_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.Code.CODE_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.Fail.FAIL_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.Inst.INST_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.Int.INT_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.Lst.LST_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.NOOBJ_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
+import static studio.phaseshift.metatron.isa.m.type.Real.REAL_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.Rel.REL_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.Str.STR_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
-@ServiceMetadata(tid = "/m")
+@InstSet.JREService(tid = "/m")
 public class mInstSet extends AbstractInstSet {
 
     public static final fURI M_ISA_TID = f("/m");
@@ -156,20 +168,42 @@ public class mInstSet extends AbstractInstSet {
     public static final fURI SCHEME_INST_TID = M_ISA_TID.extend("scheme");
     public static final fURI HOST_INST_TID = M_ISA_TID.extend("host");
     public static final fURI PORT_INST_TID = M_ISA_TID.extend("port");
+    /// ////////////
+    /// ////////////
+    public static final fURI POLY_TID = M_ISA_TID.extend("poly");
+    public static final fURI MONO_TID = M_ISA_TID.extend("mono");
+    public static final fURI NUM_TID = M_ISA_TID.extend("num");
+
+    //public static final Set<fURI> MARKER_TYPES = Set.of(MONO_TID, POLY_TID, NUM_TID);
     public static final Set<fURI> BASE_TYPES = Set.of(
             FAIL_TID, BOOL_TID, BYTES_TID, INT_TID, REAL_TID,
             STR_TID, URI_TID, REL_TID,
             LST_TID, REC_TID, INST_TID,
             CODE_TID, OBJS_TID, NOOBJ_TID);
-    /// ////////////
-    /// ////////////
-    public static final fURI POLY_TID = M_ISA_TID.extend("poly");
-    public static final fURI MONO_TID = M_ISA_TID.extend("mono");
 
     public static final Type SPACE_TYPE = Type.Builder.build()
             .tid(REC_TID)
             .vid(SPACE_TID)
             .isaPredicate(rec(uri(PATTERN), URI_TYPE)).create();
+
+    public static final Type MONO_TYPE = Type.Builder.build()
+            .tid(MONO_TID)
+            .vid(MONO_TID)
+            .predicate((lhs, inst) -> bool(lhs.isBytes() || lhs.isBool() || lhs.isInt() || lhs.isReal() || lhs.isStr() || lhs.isUri() || lhs.isInst()))
+            .create();
+
+    public static final Type NUM_TYPE = Type.Builder.build()
+            .tid(NUM_TID)
+            .vid(NUM_TID)
+            .predicate((lhs, inst) -> bool(lhs.isInt() || lhs.isReal()))
+            .create();
+
+    public static final Type POLY_TYPE = Type.Builder.build()
+            .tid(POLY_TID)
+            .vid(POLY_TID)
+            .predicate((lhs, inst) -> bool(lhs.isLst() || lhs.isRec() || lhs.isRel() || lhs.isCode()))
+            .create();
+
 
     public mInstSet() {
         super(M_ISA_TID, M_ISA_TID);
@@ -183,19 +217,22 @@ public class mInstSet extends AbstractInstSet {
     @Override
     public Set<Type> types() {
         return new LinkedHashSet<>(List.of(
-                Type.Builder.build().tid(NOOBJ_TID).vid(NOOBJ_TID).create(),
-                Type.Builder.build().tid(FAIL_TID).vid(FAIL_TID).create(),
-                Type.Builder.build().tid(BOOL_TID).vid(BOOL_TID).create(),
-                Type.Builder.build().tid(INT_TID).vid(INT_TID).create(),
-                Type.Builder.build().tid(REAL_TID).vid(REAL_TID).create(),
-                Type.Builder.build().tid(BYTES_TID).vid(BYTES_TID).create(),
-                Type.Builder.build().tid(STR_TID).vid(STR_TID).create(),
-                Type.Builder.build().tid(URI_TID).vid(URI_TID).create(),
-                Type.Builder.build().tid(REL_TID).vid(REL_TID).create(),
-                Type.Builder.build().tid(LST_TID).vid(LST_TID).create(),
-                Type.Builder.build().tid(REC_TID).vid(REC_TID).create(),
-                Type.Builder.build().tid(INST_TID).vid(INST_TID).create(),
-                Type.Builder.build().tid(CODE_TID).vid(CODE_TID).create(),
+                MONO_TYPE,
+                POLY_TYPE,
+                NUM_TYPE,
+                NOOBJ_TYPE,
+                FAIL_TYPE,
+                BOOL_TYPE,
+                INT_TYPE,
+                REAL_TYPE,
+                BYTES_TYPE,
+                STR_TYPE,
+                URI_TYPE,
+                REL_TYPE,
+                LST_TYPE,
+                REC_TYPE,
+                INST_TYPE,
+                CODE_TYPE,
                 Type.Builder.build().tid(OBJS_TID).vid(OBJS_TID).create(),
                 /// ///////////////////////////////////
                 SPACE_TYPE,

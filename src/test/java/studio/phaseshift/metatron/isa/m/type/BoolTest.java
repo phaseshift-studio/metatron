@@ -77,7 +77,9 @@ public class BoolTest extends AbstractObjTest {
     @ParameterizedTest
     @CsvSource(value = {
             "true.not()                                                                        % false",
-            "false.not()                                                                       % true"
+            "false.not()                                                                       % true",
+            "false.not().not?#<=bool()                                                         % false",
+            "true.not().not?#<=bool()                                                          % true"
     }, delimiter = '%')
     public void testNot(final String code, final String expected) {
    AbstractMetatronTest.testCode(LOG,code,expected);

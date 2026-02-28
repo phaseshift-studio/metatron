@@ -22,14 +22,13 @@ import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.algebra.MultMonoid;
 import studio.phaseshift.metatron.algebra.PlusMonoid;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.AbstractInstSet;
 import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.space.noobjSpace;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Rec;
-import studio.phaseshift.metatron.isa.m.type.ServiceMetadata;
 import studio.phaseshift.metatron.isa.m.type.Type;
-import studio.phaseshift.metatron.isa.m.type.impl.AbstractInstSet;
 import studio.phaseshift.metatron.isa.mach.io.space.file.fsSpace;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.console.Console;
@@ -77,13 +76,13 @@ import static studio.phaseshift.metatron.isa.mach.io.space.file.fsSpace.FS_SPACE
 import static studio.phaseshift.metatron.isa.mach.io.space.file.fsSpace.makeFile;
 import static studio.phaseshift.metatron.isa.mach.io.space.serial.serialSpace.SERIAL_SPACE_TYPE;
 import static studio.phaseshift.metatron.isa.mach.type.Machine.MACH_MACHINE_TYPE;
-import static studio.phaseshift.metatron.isa.mach.type.ui.console.Console.CONSOLE_TYPE;
 import static studio.phaseshift.metatron.isa.mach.type.machine.SwarmMachine.MACH_SWARM_MACHINE_TYPE;
+import static studio.phaseshift.metatron.isa.mach.type.ui.console.Console.CONSOLE_TYPE;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-@ServiceMetadata(tid = "/m/mach")
+@JREService(tid = "/m/mach")
 public class machInstSet extends AbstractInstSet {
 
     public static final fURI MACH_ISA_TID = M_ISA_TID.extend("mach");

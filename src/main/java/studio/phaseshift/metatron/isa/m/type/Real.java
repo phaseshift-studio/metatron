@@ -40,7 +40,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 
 public interface Real extends Mono, Ring.O<Real> {
 
-    public static final Type REAL_TYPE = Type.Builder.build().tid(REAL_TID).vid(REAL_TID).create();
+    Type REAL_TYPE = Type.Builder.build().tid(REAL_TID).vid(REAL_TID).create();
 
     @Override
     Real clone(final Object jvm, final fURI tid, final fURI vid);
@@ -98,10 +98,10 @@ public interface Real extends Mono, Ring.O<Real> {
             return new LinkedHashSet<>(List.of(
                     instC(AS_INST_TID.dom(REAL_TID).rng(INT_TID), lst(T(INT_TID)), (lhs, inst) -> jnt(lhs.realValue().longValue(), inst.arg(0).tid(), lhs.vid())),
                     instC(AS_INST_TID.dom(REAL_TID).rng(STR_TID), lst(T(STR_TID)), (lhs, inst) -> str(String.valueOf(lhs.realValue()), inst.arg(0).tid(), lhs.vid())),
-                    instC(GT_INST_TID.dom(REAL_TID).rng(BOOL_TID), lst(T(REAL_TID)), (lhs, inst) -> bool(lhs.realValue() > inst.arg(0).realValue())),
-                    instC(GTE_INST_TID.dom(REAL_TID).rng(BOOL_TID), lst(T(REAL_TID)), (lhs, inst) -> bool(lhs.realValue() >= inst.arg(0).realValue())),
-                    instC(LT_INST_TID.dom(REAL_TID).rng(BOOL_TID), lst(T(REAL_TID)), (lhs, inst) -> bool(lhs.realValue() < inst.arg(0).realValue())),
-                    instC(LTE_INST_TID.dom(REAL_TID).rng(BOOL_TID), lst(T(REAL_TID)), (lhs, inst) -> bool(lhs.realValue() <= inst.arg(0).realValue())),
+                    instC(GT_INST_TID.dom(REAL_TID).rng(BOOL_TID), lst(T(REAL_TID)), (lhs, inst) -> bool(Inst.Helper.alignLHSType(lhs, inst.arg(0)).filter(l -> l.realValue() > inst.arg(0).realValue()).isPresent())),
+                    instC(GTE_INST_TID.dom(REAL_TID).rng(BOOL_TID), lst(T(REAL_TID)), (lhs, inst) -> bool(Inst.Helper.alignLHSType(lhs, inst.arg(0)).filter(l -> l.realValue() >= inst.arg(0).realValue()).isPresent())),
+                    instC(LT_INST_TID.dom(REAL_TID).rng(BOOL_TID), lst(T(REAL_TID)), (lhs, inst) -> bool(Inst.Helper.alignLHSType(lhs, inst.arg(0)).filter(l -> l.realValue() < inst.arg(0).realValue()).isPresent())),
+                    instC(LTE_INST_TID.dom(REAL_TID).rng(BOOL_TID), lst(T(REAL_TID)), (lhs, inst) -> bool(Inst.Helper.alignLHSType(lhs, inst.arg(0)).filter(l -> l.realValue() <= inst.arg(0).realValue()).isPresent())),
                     instC(PLUS_INST_TID.dom(REAL_TID).rng(REAL_TID), lst(T(REAL_TID)), (lhs, inst) -> lhs.jvm(lhs.realValue() + inst.arg(0).realValue())),
                     instC(MULT_INST_TID.dom(REAL_TID).rng(REAL_TID), lst(T(REAL_TID)), (lhs, inst) -> lhs.jvm(lhs.realValue() * inst.arg(0).realValue())),
                     instC(MINUS_INST_TID.dom(REAL_TID).rng(REAL_TID), lst(T(REAL_TID)), (lhs, inst) -> lhs.jvm(lhs.realValue() - inst.arg(0).realValue())),

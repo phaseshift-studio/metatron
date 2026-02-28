@@ -38,7 +38,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public abstract class mElement implements Element, WrappedElement<Rec> {
-    
+
     protected final Rec base;
     protected final mGraph graph;
 
@@ -66,7 +66,7 @@ public abstract class mElement implements Element, WrappedElement<Rec> {
 
     @Override
     public fURI id() {
-       return this.getBaseElement().vid();
+        return this.getBaseElement().vid();
     }
 
     @Override

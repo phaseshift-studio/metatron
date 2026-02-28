@@ -25,7 +25,10 @@ import org.jline.utils.AttributedString;
 import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractSpace;
-import studio.phaseshift.metatron.isa.m.type.*;
+import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.Rec;
+import studio.phaseshift.metatron.isa.m.type.Str;
+import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjByteBufferSerializer;
 import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
@@ -69,7 +72,7 @@ public class serialSpace extends AbstractSpace<SerialPort[]> {
                     instC(INST_TID.dom(ALL.maybe()).rng(SERIAL_SPACE_TID),
                             lst(isa_(SPACE_CONFIG.plus(rec(uri(Tokens.ROUTE), REC_TYPE))).tryToInst()),
                             (lhs, inst) -> serialSpace.of(inst.arg(0).asRec(), inst.arg(0).vid()))).create();
-    
+
     private final Map<String, Tuple.Pair<SerialPort, ByteArrayOutputStream>> buffers = new HashMap<>();
     protected static final byte[] CARRIAGE_RETURN = {(byte) 0x0D}; // Carriage return (CR)
 

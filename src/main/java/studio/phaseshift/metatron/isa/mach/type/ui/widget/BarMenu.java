@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -47,9 +47,8 @@ public class BarMenu extends AbstractWidget<BarMenu> {
         final String attachmentString = this.style.attachment.toString();
         if (this.style.overlapAttachment) {
             final List<String> attachmentList = List.of(attachmentString.split("\n"));
-            return top + "\n" + attachmentList.subList(1,attachmentList.size()).stream().reduce("",(a,b) -> a + b + "\n");
-        }
-        else
+            return top + "\n" + attachmentList.subList(1, attachmentList.size()).stream().reduce("", (a, b) -> a + b + "\n");
+        } else
             return top + "\n" + attachmentString;
 
     }

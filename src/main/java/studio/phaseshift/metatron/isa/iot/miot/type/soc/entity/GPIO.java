@@ -19,23 +19,16 @@
 package studio.phaseshift.metatron.isa.iot.miot.type.soc.entity;
 
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Int;
 import studio.phaseshift.metatron.isa.m.type.Type;
-import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
-import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.util.MTronException;
-
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
 
 import static studio.phaseshift.metatron.isa.iot.iotInstSet.IOT_INST_TID;
 import static studio.phaseshift.metatron.isa.iot.iotInstSet.IOT_ISA_TID;
-import static studio.phaseshift.metatron.isa.m.mInstSet.*;
+import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.rec;
 import static studio.phaseshift.metatron.isa.m.type.Int.INT_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
-import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -51,11 +44,11 @@ public interface GPIO {
             .vid(GPIO_TID)
             .isaPredicate(rec(URI_TYPE, INT_TYPE, INT_TYPE, INT_TYPE))
             .inst(IOT_INST_TID.extend("toggle").dom(GPIO_TID).rng(GPIO_TID), lst(INT_TYPE), (lhs, inst) -> {
-                if(lhs.asRec().has(inst.arg(0))) {
+                if (lhs.asRec().has(inst.arg(0))) {
                     final long currentValue = lhs.asRec().at(inst.arg(0)).orElse(jnt(0L)).intValue();
                     final Int newValue = 0 == currentValue ? jnt(1) : jnt(0);
                     return lhs.asRec().at(inst.arg(0), newValue);
-                } else if(lhs.asRec().has(uri(""+inst.arg(0).intValue()))) {
+                } else if (lhs.asRec().has(uri("" + inst.arg(0).intValue()))) {
                     final long currentValue = lhs.asRec().at(inst.arg(0)).orElse(jnt(0L)).intValue();
                     final Int newValue = 0 == currentValue ? jnt(1) : jnt(0);
                     return lhs.asRec().at(inst.arg(0), newValue);

@@ -117,7 +117,7 @@ public class fsSpace extends AbstractSpace<FileSystem> {
     @Override
     public void close() {
     }
-    
+
     public static File resolveFile(final Obj fileObj) {
         try {
             final fsSpace space = Router.global().getSpace(fileObj.uriValue().basePath()).as();

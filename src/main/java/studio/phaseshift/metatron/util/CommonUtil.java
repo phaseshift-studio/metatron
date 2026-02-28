@@ -53,15 +53,15 @@ public final class CommonUtil {
         // do nothing
     }
 
-    public static <T> Tuple.Pair<T,Long> clock(final Supplier<T> supplier) {
+    public static <T> Tuple.Pair<T, Long> clock(final Supplier<T> supplier) {
         final long start = System.currentTimeMillis();
         final T result = supplier.get();
         final Long stop = System.currentTimeMillis() - start;
         return Tuple.Pair.with(result, stop);
     }
- 
 
-   public static Tuple.Pair<Obj, Long> clock(final Obj lhs, final Obj rhs) {
+
+    public static Tuple.Pair<Obj, Long> clock(final Obj lhs, final Obj rhs) {
         final long start = System.currentTimeMillis();
         final Obj result = lhs.apply(rhs);
         final Long stop = System.currentTimeMillis() - start;

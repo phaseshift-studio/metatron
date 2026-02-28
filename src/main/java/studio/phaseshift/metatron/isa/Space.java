@@ -21,8 +21,8 @@ package studio.phaseshift.metatron.isa;
 import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.*;
-import studio.phaseshift.metatron.isa.mach.type.Stats;
 import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.Stats;
 import studio.phaseshift.metatron.isa.mach.type.machine.SwarmMachine;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
@@ -200,13 +200,13 @@ public interface Space extends Rec, Closeable {
         public static List<Pair<fURI, Obj>> unrollPoly(final fURI polyvid, final Poly<?, ?> poly, final fURI pattern) {
             final List<Pair<fURI, Obj>> results = new ArrayList<>();
             poly.indexedStream()
-                    .filter(r -> r.second().isPoly() || polyvid.extend(f(r.first().jvm().toString())).test(pattern))
+                    .filter(r -> r.jvm().get1().isPoly() || polyvid.extend(f(r.jvm().get0().jvm().toString())).test(pattern))
                     .forEach(r -> {
-                        final fURI key = polyvid.extend(f(r.first().jvm().toString()));
-                        if (!r.second().isPoly() || key.test(pattern))
-                            results.add(Pair.with(key, r.second()));
-                        else if (r.second().isPoly())
-                            results.addAll(unrollPoly(key, r.second().as(), pattern));
+                        final fURI key = polyvid.extend(f(r.jvm().get0().jvm().toString()));
+                        if (!r.jvm().get1().isPoly() || key.test(pattern))
+                            results.add(Pair.with(key, r.jvm().get1()));
+                        else if (r.jvm().get1().isPoly())
+                            results.addAll(unrollPoly(key, r.jvm().get1().as(), pattern));
                     });
             return results;
         }
@@ -240,7 +240,7 @@ public interface Space extends Rec, Closeable {
                 }
             }
             return pattern.isNode() ?
-                    objs(listing.stream().map(Pair::get1)) :
+                    objs(listing.stream().map(Pair::get1).map(o -> o.autoResolve(o)).toList()) :
                     objs(listing.stream().map(kv -> rel(kv.get0(), kv.get1())));
         }
 

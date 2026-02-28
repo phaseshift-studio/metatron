@@ -27,10 +27,11 @@ import io.github.ollama4j.models.generate.OllamaGenerateTokenHandler;
 import io.github.ollama4j.models.request.ThinkMode;
 import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.AbstractInstSet;
 import studio.phaseshift.metatron.isa.m.type.Inst;
-import studio.phaseshift.metatron.isa.m.type.ServiceMetadata;
+import studio.phaseshift.metatron.isa.m.type.InstSet;
+import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Type;
-import studio.phaseshift.metatron.isa.m.type.impl.AbstractInstSet;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
@@ -51,13 +52,14 @@ import static studio.phaseshift.metatron.isa.m.mInstSet.STR_TID;
 import static studio.phaseshift.metatron.isa.m.type.Str.STR_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-@ServiceMetadata(tid = "/m/llm/ollama")
+@InstSet.JREService(tid = "/m/llm/ollama")
 public class ollamaInstSet extends AbstractInstSet {
     public static final fURI OLLAMA_TID = LLM_ISA_TID.extend("ollama");
     public static final fURI OLLAMA_OLLM_TID = OLLAMA_TID.extend("ollm");
@@ -96,6 +98,16 @@ public class ollamaInstSet extends AbstractInstSet {
         TYPES.add(OLLAMA_SPACE_TYPE);
         return TYPES;
     }
+    
+    /*
+       return new LinkedHashMap<>() {{
+            put(uri(NAME), uri(model.getModelName()));
+            put(uri("size"), jnt(model.getSize()));
+            put(uri("quant"), uri(model.getModelMeta().getQuantizationLevel()));
+            put(uri("family"), uri(model.getModelMeta().getFamily()));
+            //   put(uri("card"), rec(model.get1().getModelInfo(), MObjFactory.of()));
+        }};
+     */
 
     public Set<Inst> insts() {
         INSTS.add(instC(INST_TID.extend("chat").dom(OLLAMA_OLLM_TID).rng(STR_TID), lst(STR_TYPE),
@@ -149,7 +161,7 @@ public class ollamaInstSet extends AbstractInstSet {
                         throw MTronException.of(e);
                     }
                     LOG.none("\n");
-                    /*final Rec last = rec(
+                    final Rec last = rec(
                             "request", inst.arg(0),
                             "response", rec(
                                     "text", str(response.toString()),
@@ -159,9 +171,9 @@ public class ollamaInstSet extends AbstractInstSet {
                                     "eval", jnt(result.getResponseModel().getEvalDuration()),
                                     "total", jnt(result.getResponseModel().getTotalDuration())));
                     if (lhs.vid() == null)
-                        lhs.<Rec>as().at(uri("history"), lhs.<Rec>as().at("history").orElse(lst()).add(last, MUTABLE), MUTABLE);
+                        lhs.asRec().at("history", lhs.asRec().at("history").orElse(lst()).add(last, IMMUTABLE), MUTABLE);
                     else
-                        Router.writeToSpace(lhs.vid().extend("history"), Router.readFromSpace(lhs.vid().extend("history")).orElse(lst()).add(last, MUTABLE));*/
+                        Router.readFromSpace(lhs.vid().extend("history")).orElse(lst()).add(last, MUTABLE);
 
                     return str(response.toString());
 

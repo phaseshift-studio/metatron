@@ -29,16 +29,16 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Supplier;
 
 import static studio.phaseshift.metatron.isa.m.mInstSet.AS_INST_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.CODE_TID;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 
 public interface Code extends Call {
 
-    public static final Type CODE_TYPE = T(CODE_TID);
+    Type CODE_TYPE = Type.Builder.build().tid(CODE_TID).vid(CODE_TID).create();
 
     @Override
     Code clone(final Object jvm, final fURI tid, final fURI vid);
@@ -47,7 +47,7 @@ public interface Code extends Call {
     List<Inst> jvm();
 
     default Inst inst(final int index) {
-        return index < this.jvm().size() ? this.jvm().get(index) : NoObj.noobj();
+        return index < this.jvm().size() ? this.jvm().get(index) : noobj();
     }
 
     @Override
@@ -117,19 +117,15 @@ public interface Code extends Call {
     }
 
     default Inst nextInst(final Inst inst) {
-        final Inst nextInst = ((Supplier<Inst>) () -> {
-            if (inst.isNoObj())
-                return NoObj.noobj();
-            boolean found = false;
-            for (final Inst i : this.jvm()) {
-                if (found) return i;
-                if (i == inst) found = true;
-            }
-            //if (found) return this.value().get(this.value().size() - 1);
-            return NoObj.noobj();
-        }).get();
-        this.logger().trace("fetching next inst: %s => %s", inst, nextInst);
-        return nextInst;
+        if (inst.isNoObj())
+            return noobj();
+        boolean found = false;
+        for (final Inst i : this.jvm()) {
+            if (found) return i;
+            if (i == inst) found = true;
+        }
+        //if (found) return this.value().get(this.value().size() - 1);
+        return noobj();
     }
 
     @Override
@@ -158,7 +154,7 @@ public interface Code extends Call {
 
     @Override
     default Obj apply() {
-        return this.apply(NoObj.noobj());
+        return this.apply(noobj());
     }
 
     @Override
@@ -166,7 +162,7 @@ public interface Code extends Call {
         final Call resolve = this.tryToInst().resolve(lhs);
         //if (!lhs.matches(resolve.dom()))
         //    throw MTronException.of("%s ({{m}}lhs{{/m}}) (%s) does not match {{m}}code domain{{/m}} (%s): %s", lhs, lhs.rng(), resolve.dom(), resolve);
-        final Obj rhs = objs(resolve.isCode() ? SwarmMachine.of(lhs, resolve.as()).apply(NoObj.noobj()) : resolve.apply(lhs));
+        final Obj rhs = objs(resolve.isCode() ? SwarmMachine.of(lhs, resolve.as()).apply(noobj()) : resolve.apply(lhs));
         //if (!rhs.matches(call.rng()))
         //    throw MTronException.of("%s ({{m}}rhs{{/m}}) (%s) does not match {{m}}code range{{/m}} (%s): %s", rhs, rhs.rng(), call.rng(), this);
         return rhs;

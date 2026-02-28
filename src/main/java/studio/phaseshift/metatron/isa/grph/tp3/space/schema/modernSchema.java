@@ -19,9 +19,8 @@
 package studio.phaseshift.metatron.isa.grph.tp3.space.schema;
 
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.m.type.ServiceMetadata;
+import studio.phaseshift.metatron.isa.AbstractInstSet;
 import studio.phaseshift.metatron.isa.m.type.Type;
-import studio.phaseshift.metatron.isa.m.type.impl.AbstractInstSet;
 
 import java.util.HashSet;
 import java.util.List;
@@ -29,7 +28,6 @@ import java.util.Set;
 
 import static studio.phaseshift.metatron.furi.q.DocQ.Doc.docWrap;
 import static studio.phaseshift.metatron.isa.grph.grphInstSet.*;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
 import static studio.phaseshift.metatron.isa.m.type.Int.INT_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Real.REAL_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Str.STR_TYPE;
@@ -39,7 +37,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-@ServiceMetadata(tid = "/m/grph/inst/schema/modern")
+@JREService(tid = "/m/grph/inst/schema/modern")
 public class modernSchema extends AbstractInstSet {
 
     public static final fURI MODERN_SCHEMA_TID = GRPH_INST_TID.extend("schema").extend("modern");

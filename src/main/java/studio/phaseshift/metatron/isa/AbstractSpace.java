@@ -19,13 +19,13 @@
 package studio.phaseshift.metatron.isa;
 
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.m.type.ServiceMetadata;
 import studio.phaseshift.metatron.isa.m.type.Uri;
 import studio.phaseshift.metatron.isa.m.type.impl.MRec;
 import studio.phaseshift.metatron.isa.mach.type.MStats;
-import studio.phaseshift.metatron.isa.mach.type.Stats;
 import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.Stats;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 
@@ -46,30 +46,30 @@ public abstract class AbstractSpace<SJVM> extends MRec implements Space {
 
     public AbstractSpace(final SJVM sjvm, final Map<Obj, Obj> config, final fURI tid, final fURI vid) {
         super(config, tid, vid);
-        ServiceMetadata.Helper.verifyClass(this.getClass(), tid);
+        InstSet.JREService.Helper.verifyClass(this.getClass(), tid);
         this.sjvm = sjvm;
         this.pattern = this.at(PATTERN).uriValue();
         this.ioStats = new MStats();
         final Obj temp = config.getOrDefault(uri(ROUTE), rec());
-        if(temp.isRec())
+        if (temp.isRec())
             temp.asRec().elements().forEach(kv -> this.routes.put(kv.first().asUri(), kv.second().asUri()));
-        else 
-            this.routes.put(temp.asRel().first().asUri(),temp.asRel().second().asUri());
+        else
+            this.routes.put(temp.asRel().first().asUri(), temp.asRel().second().asUri());
         LOG = Graphitty.log(this);
         if (Router.loaded() && !this.pattern.equals(f("+/#")) && !(this instanceof Router))
             Router.global().addSpace(this);
     }
-    
+
     @Override
-    public Map<Uri,Uri> routes() {
+    public Map<Uri, Uri> routes() {
         return this.routes;
     }
-    
+
     @Override
     public Stats stats() {
         return this.ioStats;
     }
-    
+
 
     @Override
     public fURI rewrite(final fURI furi, final boolean big) {

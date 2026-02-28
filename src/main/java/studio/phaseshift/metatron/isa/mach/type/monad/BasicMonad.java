@@ -41,7 +41,7 @@ public class BasicMonad extends AbstractMonad implements Monad {
     List<Obj> jvm;
 
     protected BasicMonad(final List<Obj> jvm, final fURI tid, final fURI vid) {
-        super(tid,vid);
+        super(tid, vid);
         this.jvm = jvm;
     }
 
@@ -73,7 +73,7 @@ public class BasicMonad extends AbstractMonad implements Monad {
     public Monad plus(final Monad objs) {
         return new BasicMonad(List.of(this, objs), this.tid().plus(objs.tid()), this.vid());
     }
-    
+
     /// //////////////////////////////////////////////////////////////////////////////////////
 
     public static Monad monad(final List<Obj> jvm, final fURI tid, final fURI vid) {

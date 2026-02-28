@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -23,11 +23,11 @@ import org.apache.tinkerpop.gremlin.structure.Edge;
 import org.apache.tinkerpop.gremlin.structure.Element;
 import org.apache.tinkerpop.gremlin.structure.Graph;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.Translator;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.impl.MObjFactory;
 import studio.phaseshift.metatron.isa.mach.type.Router;
-import studio.phaseshift.metatron.isa.Translator;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -81,7 +81,7 @@ public record TP3Translator(Builder builder) implements Translator<Obj, Graph> {
                             uri(Direction.IN.name()), in.isEmpty() ? noobj() : rec(in)),
                     VRTX_TID,
                     fURI.fnull));
-                    //this.builder.root.extend("V").extend(tpV.id().toString()));
+            //this.builder.root.extend("V").extend(tpV.id().toString()));
         });
         /*
               graph.edges().forEachRemaining(tpE -> {
@@ -120,7 +120,7 @@ public record TP3Translator(Builder builder) implements Translator<Obj, Graph> {
         /*public Builder indexVertices(final fURI indexRoot, final String key) {
             
         }*/
-        
+
         public Builder pointerToProps(final boolean b) {
             this.pointerToProps = b;
             return this;

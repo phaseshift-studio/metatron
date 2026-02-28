@@ -28,10 +28,10 @@ import studio.phaseshift.metatron.util.MTronException;
 
 import java.util.Map;
 
-import static studio.phaseshift.metatron.Tokens.*;
+import static studio.phaseshift.metatron.Tokens.PATTERN;
+import static studio.phaseshift.metatron.Tokens.ROUTE;
 import static studio.phaseshift.metatron.isa.m.mInstSet.MTRON_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.SPACE_TID;
-import static studio.phaseshift.metatron.isa.m.type.Rel.REL_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 

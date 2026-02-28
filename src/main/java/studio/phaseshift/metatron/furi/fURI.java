@@ -270,7 +270,7 @@ public class fURI implements Cloneable, Ring<fURI>, Comparable<fURI>, Predicate<
         newPath.remove(segment.asNode().toString());
         return new fURI(this.scheme, this.host, this.port, this.sstart, newPath, this.send, this.poly, Query.to(this.query));
     }
-    
+
     public fURI removePrefix(final fURI prefix) {
         final String newPath = this.toString();
         final String pre = prefix.toString();
@@ -554,7 +554,7 @@ public class fURI implements Cloneable, Ring<fURI>, Comparable<fURI>, Predicate<
     public boolean hasRng() {
         return this.hasQuery(RNG.toString());
     }
-    
+
     public fURI query(final String query) {
         return new fURI(this.scheme, this.host, this.port, this.sstart, this.path, this.send, this.poly, null == query || query.isEmpty() ? null : query);
     }
@@ -598,7 +598,7 @@ public class fURI implements Cloneable, Ring<fURI>, Comparable<fURI>, Predicate<
     public fURI maybeMaybe() {
         return this.c("??");
     }
-    
+
     public fURI some() {
         return this.c("+");
     }
@@ -614,11 +614,11 @@ public class fURI implements Cloneable, Ring<fURI>, Comparable<fURI>, Predicate<
     public fURI antiSome() {
         return this.c("-");
     }
-    
+
     public fURI antiMaybeSome() {
         return this.c("-*");
     }
-    
+
 
     public fURI c(final String coefficient) {
         if (null == coefficient || coefficient.isEmpty() || cInt.of(coefficient).isOne()) {
@@ -822,7 +822,7 @@ public class fURI implements Cloneable, Ring<fURI>, Comparable<fURI>, Predicate<
             return this;
         }
     }
-    
+
     public boolean test(final fURI rhs) {
         final C c = this.cV();
         final C d = rhs.cV();

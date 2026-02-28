@@ -19,12 +19,11 @@
 package studio.phaseshift.metatron.isa.web;
 
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.AbstractInstSet;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.m.type.ServiceMetadata;
 import studio.phaseshift.metatron.isa.m.type.Type;
-import studio.phaseshift.metatron.isa.m.type.impl.AbstractInstSet;
 import studio.phaseshift.metatron.isa.mach.io.type.ObjSimpleJSONSerializer;
 import studio.phaseshift.metatron.isa.web.parser.ObjHTMLSerializer;
 import studio.phaseshift.metatron.isa.web.parser.ObjJSONSerializer;
@@ -56,7 +55,7 @@ import static studio.phaseshift.metatron.isa.web.space.http.httpSpace.HTTP_SPACE
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-@ServiceMetadata(tid = "/m/web")
+@JREService(tid = "/m/web")
 public class webInstSet extends AbstractInstSet {
 
     public static final fURI WEB_ISA_TID = MTRON_TID.extend("web");
@@ -88,7 +87,7 @@ public class webInstSet extends AbstractInstSet {
     public static final Type CSS_TYPE = Type.Builder.build()
             .tid(REC_TID)
             .vid(CSS_TID).create();
-    
+
     public webInstSet() {
         super(WEB_ISA_TID, WEB_ISA_TID);
     }

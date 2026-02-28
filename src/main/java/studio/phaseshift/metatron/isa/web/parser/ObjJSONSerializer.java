@@ -79,8 +79,8 @@ public class ObjJSONSerializer extends AbstractObjSerializer<JsonElement> {
         if (json.isJsonNull())
             return noobj();
         Obj obj = null;
-        final fURI tid = json.isJsonObject() && json.getAsJsonObject().has(TID_KEY) ? Router.global().rewrite(f(json.getAsJsonObject().get(TID_KEY).getAsString()),true) : null;
-        final fURI bid = json.isJsonObject() && json.getAsJsonObject().has(BID_KEY) ? Router.global().rewrite(f(json.getAsJsonObject().get(BID_KEY).getAsString()),true) : null == tid ? null : tid.basePath();
+        final fURI tid = json.isJsonObject() && json.getAsJsonObject().has(TID_KEY) ? Router.global().rewrite(f(json.getAsJsonObject().get(TID_KEY).getAsString()), true) : null;
+        final fURI bid = json.isJsonObject() && json.getAsJsonObject().has(BID_KEY) ? Router.global().rewrite(f(json.getAsJsonObject().get(BID_KEY).getAsString()), true) : null == tid ? null : tid.basePath();
         final fURI vid = json.isJsonObject() && json.getAsJsonObject().has(VID_KEY) ? f(json.getAsJsonObject().get(VID_KEY).getAsString()) : null;
         final JsonElement value = null == bid ? json : json.getAsJsonObject().get(VALUE_KEY);
         if (value.isJsonPrimitive()) {
@@ -131,7 +131,7 @@ public class ObjJSONSerializer extends AbstractObjSerializer<JsonElement> {
             if (null != bid && bid.equals(REL_TID)) {
                 obj = rel(read(jp.get(0)), read(jp.get(1)), tid, fnull);
             } else if (null != bid && bid.equals(TYPE_TID)) {
-                obj = T(tid,null, (Call) read(jp.get(0)), (Call) read(jp.get(1)));
+                obj = T(tid, null, (Call) read(jp.get(0)), (Call) read(jp.get(1)));
             } else {
                 final List<Obj> list = new ArrayList<>();
                 for (var j : jp.getAsJsonArray()) {
@@ -205,9 +205,9 @@ public class ObjJSONSerializer extends AbstractObjSerializer<JsonElement> {
             /// ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
             if (!obj.type().isBaseType() || obj.isObjs() || obj.isType() || obj.isObjCall() || obj.isFail() || obj.isRel()) {
                 final JsonObject typedObj = new JsonObject();
-                typedObj.add(BID_KEY, new JsonPrimitive(Router.global().rewrite(obj.isType() ? TYPE_TID : (obj.isObjs() ? OBJS_TID : (obj.isCode() ? CODE_TID : (obj.isInst() ? INST_TID : obj.baseType().basePath()))),true).toString()));
+                typedObj.add(BID_KEY, new JsonPrimitive(Router.global().rewrite(obj.isType() ? TYPE_TID : (obj.isObjs() ? OBJS_TID : (obj.isCode() ? CODE_TID : (obj.isInst() ? INST_TID : obj.baseType().basePath()))), true).toString()));
                 // if (!obj.type().isBaseType())
-                typedObj.add(TID_KEY, new JsonPrimitive(Router.global().rewrite(obj.tid(),true).toString()));
+                typedObj.add(TID_KEY, new JsonPrimitive(Router.global().rewrite(obj.tid(), true).toString()));
                 typedObj.add(VALUE_KEY, element);
                 if (null != obj.vid())
                     typedObj.add(VID_KEY, new JsonPrimitive(obj.vid().toString()));

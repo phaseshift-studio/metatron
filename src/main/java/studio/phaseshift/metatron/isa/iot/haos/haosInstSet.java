@@ -19,8 +19,8 @@
 package studio.phaseshift.metatron.isa.iot.haos;
 
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.AbstractInstSet;
 import studio.phaseshift.metatron.isa.m.type.*;
-import studio.phaseshift.metatron.isa.m.type.impl.AbstractInstSet;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
@@ -49,7 +49,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-@ServiceMetadata(tid = "/m/iot/haos")
+@InstSet.JREService(tid = "/m/iot/haos")
 public class haosInstSet extends AbstractInstSet {
 
     public static final fURI HAOS_ISA_TID = IOT_ISA_TID.extend("haos");

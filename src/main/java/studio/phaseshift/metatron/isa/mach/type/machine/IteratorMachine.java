@@ -42,14 +42,14 @@ public class IteratorMachine extends AbstractMachine {
     protected List<Inst> resolvedInsts;
     protected List<Iterator<Obj>> chainedIterators;
 
-    public IteratorMachine(final Map<Obj,Obj> jvm, final fURI tid, final fURI vid) {
+    public IteratorMachine(final Map<Obj, Obj> jvm, final fURI tid, final fURI vid) {
         super(jvm, tid, vid);
         this.resolvedInsts = new ArrayList<>();
         this.chainedIterators = new ArrayList<>();
     }
- 
 
-   @Override
+
+    @Override
     public Machine clone(Object jvm, fURI tid, fURI vid) {
         return null;
     }

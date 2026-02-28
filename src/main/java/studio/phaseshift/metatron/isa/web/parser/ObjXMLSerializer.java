@@ -54,7 +54,7 @@ public class ObjXMLSerializer extends AbstractObjSerializer<Document> {
 
     private static final GraphittyLogger LOG = Graphitty.log(ObjXMLSerializer.class);
     public static final fURI OBJ_XML_SERIALIZER_VID = OBJ_SERIALIZER_TID.extend("xml");
-    
+
     private Rec readElement(final Element element) {
         LOG.debug("processing element: %s", element);
         final Rec recX = rec();

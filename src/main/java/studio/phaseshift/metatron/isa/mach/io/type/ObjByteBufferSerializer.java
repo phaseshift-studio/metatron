@@ -40,7 +40,7 @@ public class ObjByteBufferSerializer extends AbstractObjSerializer<ByteBuffer> {
 
     public ObjByteBufferSerializer() {
     }
-    
+
 
     @Override
     public fURI vid() {

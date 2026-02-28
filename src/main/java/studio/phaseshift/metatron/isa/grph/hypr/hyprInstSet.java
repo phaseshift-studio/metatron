@@ -19,15 +19,15 @@
 package studio.phaseshift.metatron.isa.grph.hypr;
 
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.m.type.ServiceMetadata;
-import studio.phaseshift.metatron.isa.m.type.impl.AbstractInstSet;
+import studio.phaseshift.metatron.isa.AbstractInstSet;
+import studio.phaseshift.metatron.isa.m.type.InstSet;
 
 import static studio.phaseshift.metatron.isa.grph.grphInstSet.GRPH_ISA_TID;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-@ServiceMetadata(tid = "/m/grph/hypr")
+@InstSet.JREService(tid = "/m/grph/hypr")
 public class hyprInstSet extends AbstractInstSet {
 
     public static final fURI HYPR_ISA_TID = GRPH_ISA_TID.extend("hypr");

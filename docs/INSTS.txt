@@ -1,0 +1,47 @@
+An `inst` is an `obj` just like any other `obj`. In long form, the `int` 4 is written:
+```mtron
+int::4
+```
+The `neg` instruction is analogous in that:
+```mtron
+neg::(){}
+```
+Where the `int`'s value is a one or more numeric tokens, an instruction's value has two components:  `()` (args) and `{}` (body). In full,
+```mtron
+neg(){mult(-1)}
+```
+where dropping `::` is syntactic convenience. 
+
+Another way to look at the similarity between `inst` and other `objs` is via their respective type `tids`.  The shorthand `neg` is expanded by the router to::
+```
+neg?dom=int&rng=int
+```
+The query of the `uri` provides the domain and range specification of the instruction. A syntactic sugar exists where the `uri` above
+can be written:
+```mtron
+neg?int<=int
+```
+where `int<=int` is `rng<=dom` (reversed from the common written form of a function signature). On the other hand, `int::4` has the expansion:
+```
+int?dom=#{?}&rng=int
+```
+and in `rng<=dom` form:
+```
+int?int<=#{?}.
+```
+Simply put, an `int` can have any `obj` applied to it (even an `noobj`) and it will return an `int` (namely, itself). This is why
+```mtron
+int::4
+int::4.apply(noobj)
+```
+doesn't have a `dom`-error. However, with respects to `neg`:
+```mtron
+neg().apply(noobj)
+```
+
+
+
+
+
+
+

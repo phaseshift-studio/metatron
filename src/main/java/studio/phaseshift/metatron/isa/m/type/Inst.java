@@ -24,9 +24,9 @@ import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.mach.type.Monad;
 import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.isa.mach.type.net.FutureObj;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
-import studio.phaseshift.metatron.isa.mach.type.net.FutureObj;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
@@ -57,6 +57,7 @@ public interface Inst extends Call {
 
     fURI ARGS_FURI = fURI.f(ARGS);
     Uri ARGS_URI = uri(ARGS_FURI);
+    Type INST_TYPE = Type.Builder.build().tid(INST_TID).vid(INST_TID).create();
 
     enum Form {
         initial,
@@ -276,7 +277,7 @@ public interface Inst extends Call {
                             return null;
                     })*/
                     //.filter(i -> !Objects.isNull(i))
-                    .map(i -> lhs.isInst() ? i : Helpers.bindGenerics(lhs, i, this))
+                    .map(i -> lhs.isInst() ? i : Helper.bindGenerics(lhs, i, this))
                     .filter(i -> !Objects.isNull(i))
                     .filter(i -> lhs.isInst() || lhs.test(i.dom()))
                     //.filter(i -> lhs.matches(i.dom()) || (Form.of(i).equals(Form.mapper) && lhs.unique() && lhs.c(cInt.ONE()).matches(i.dom())))
@@ -356,20 +357,20 @@ public interface Inst extends Call {
                             "\n\t%-10s => %-10s  |  \\_dom" +
                             "\n\t%-10s %s=> %-10s  |  \\_args", clhs, cinst, clhs.type(), cinst.dom(), clhs.type(), cinst.args().elements().allMatch(clhs::test) ? "=" : "X", cinst.args()));
                 }
-                cinst = Helpers.applyArgs(clhs, cinst);
+                cinst = Helper.applyArgs(clhs, cinst);
                 Router.stack().push(cinst.args());
                 try {
                     rhs = Objs.trySingleton(FutureObj.resolveFuture(cinst.f().apply(null == monad ? clhs : monad.obj(clhs), cinst)));
                     Graphitty.log(cinst).trace("%s (lhs) => %s (inst) => %s (rhs) evaluated successfully", clhs, cinst, rhs);
                 } catch (final Exception e) {
                     rhs = fail(e, fail(MTronException.of("apply failure:" +
-                            "\n\t[lhs]   | %s" +
-                            "\n\t \\_type | %s" +
-                            "\n\t  \\_p   | %s" +
-                            "\n\t[inst]  | %s" +
-                            "\n\t \\_dom  | %s" +
-                            "\n\t \\_args | %s",
-                            clhs,clhs.type(),clhs.tid(),clhs.type().predicate(),cinst,cinst.dom(),cinst.args())));
+                                    "\n\t[lhs]   | %s" +
+                                    "\n\t \\_type | %s" +
+                                    "\n\t  \\_p   | %s" +
+                                    "\n\t[inst]  | %s" +
+                                    "\n\t \\_dom  | %s" +
+                                    "\n\t \\_args | %s",
+                            clhs, clhs.type(), clhs.tid(), clhs.type().predicate(), cinst, cinst.dom(), cinst.args())));
                     // e.printStackTrace();
                 } finally {
                     Router.stack().pop();
@@ -379,7 +380,7 @@ public interface Inst extends Call {
             }
             if (BootLoader.TYPE_CHECK && !rhs.isType() && !rhs.isFail() && !lhs.isCaughtFail() && !rhs.test(cinst.rng()))
                 //rhs = fail(MTronException.of("inst resolution failure: %s", cinst, fail(MTronException.of("rhs does not match inst range:\n\t%s", Poly.Helper.diffObjRecursion(rhs, cinst.rng())))));
-                rhs =  fail(MTronException.of("rhs does not match inst range:\n\t%s", Poly.Helper.diffObjRecursion(rhs, cinst.rng())));
+                rhs = fail(MTronException.of("rhs does not match inst range:\n\t%s", Poly.Helper.diffObjRecursion(rhs, cinst.rng())));
         } else {
             rhs = clhs; // propagate fail through inst unless it's a catch inst
         }
@@ -441,9 +442,23 @@ public interface Inst extends Call {
         return this.clone(this.jvm(), tid, this.vid());
     }
 
-    final class Helpers {
-        private Helpers() {
+    final class Helper {
+        private Helper() {
             // do nothing
+        }
+
+        public static Optional<Obj> alignLHSType(final Obj lhs, final Obj rhs) {
+            if (!lhs.c().within(rhs.c()))
+                return Optional.empty();
+            if (lhs.type().equals(rhs.type()))
+                return Optional.of(lhs);
+            else {
+                try {
+                    return Optional.of(lhs.as(rhs.type()));
+                } catch (final Exception e) {
+                    return Optional.empty();
+                }
+            }
         }
 
         public static Inst applyArgs(final Obj lhs, final Inst inst) {
@@ -527,7 +542,7 @@ public interface Inst extends Call {
                                 generics.computeIfAbsent(apiArg.tid().cLess(), k -> userArg.tid().cLess()); // beware of int[0] yielding noobj across all bindings
                         }
                         if (apiArg.isInst()) { // todo: isCall()?
-                            apiArg = Helpers.bindGenerics(lhs, apiArg.asInst(), userArg);
+                            apiArg = Helper.bindGenerics(lhs, apiArg.asInst(), userArg);
                         } else {
                             if (apiArg.tid().isCLessGeneric())
                                 apiArg = apiArg.tid(generics.getOrDefault(apiArg.tid().cLess(), userArg.tid())).c(apiArg.c());
@@ -548,7 +563,7 @@ public interface Inst extends Call {
             ///  hail mary
             if (apiInstTemp.dom().tid().isCLessGeneric()) {
                 apiInstTemp = apiInstTemp.dom(lhs.type().c(apiInstTemp.dom().c()).as());
-                apiInstTemp = apiInstTemp.tid(Helpers.apiOrUser(apiInstTemp.tid(), userInst.tid(), generics));
+                apiInstTemp = apiInstTemp.tid(Helper.apiOrUser(apiInstTemp.tid(), userInst.tid(), generics));
             }
             LOG.trace("generic specification mapped %s => %s to %s via %s", lhs, userInst, apiInstTemp, apiInst);
             return apiInstTemp;
@@ -631,8 +646,6 @@ public interface Inst extends Call {
     }
 
     public static final class InstType {
-
-        public static Type INST_TYPE = Type.Builder.build().tid(INST_TID).vid(INST_TID).create();
 
         public static Set<Inst> insts() {
             return new LinkedHashSet<>(List.of(

@@ -1,12 +1,12 @@
 /*
  * Metatron: A Distributed Computing Language and Virtual Machine
  *  Copyright (C) 2025- PhaseShift Studio, LLC
- *  
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *  
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -18,8 +18,8 @@
 
 package studio.phaseshift.metatron.isa.mach.type.ui.widget;
 
-import studio.phaseshift.metatron.isa.mach.type.ui.console.Highlighter;
 import studio.phaseshift.metatron.isa.mach.type.ui.Widget;
+import studio.phaseshift.metatron.isa.mach.type.ui.console.Highlighter;
 
 import java.util.Arrays;
 import java.util.List;
@@ -33,16 +33,16 @@ public class Panel extends AbstractWidget<Panel> {
 
     protected String title;
     protected final String body;
-    
+
     public Panel(final String body) {
         this(null, body);
     }
-    
+
     public Panel(final String title, final String body) {
         this.title = title;
         this.body = body;
     }
-    
+
     public Panel bottom(final Widget dims) {
         return new Panel(null, this + "\n" + dims.toString());
     }
@@ -63,7 +63,7 @@ public class Panel extends AbstractWidget<Panel> {
         sb.deleteCharAt(sb.length() - 1);
         return new Panel(sb.toString()).style().border(this.style.border).apply();
     }
-    
+
     public Panel setTitle(final String title) {
         this.title = title;
         this.display();

@@ -19,11 +19,11 @@
 package studio.phaseshift.metatron.isa.grph;
 
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.AbstractInstSet;
 import studio.phaseshift.metatron.isa.m.type.Inst;
-import studio.phaseshift.metatron.isa.m.type.ServiceMetadata;
+import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.m.type.Uri;
-import studio.phaseshift.metatron.isa.m.type.impl.AbstractInstSet;
 
 import java.util.*;
 
@@ -34,7 +34,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-@ServiceMetadata(tid = "/m/grph")
+@InstSet.JREService(tid = "/m/grph")
 public class grphInstSet extends AbstractInstSet {
 
     public static final fURI GRPH_ISA_TID = MTRON_TID.extend("grph");

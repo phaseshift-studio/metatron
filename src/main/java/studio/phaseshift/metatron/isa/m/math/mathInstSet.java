@@ -20,20 +20,19 @@ package studio.phaseshift.metatron.isa.m.math;
 
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.m.type.*;
-import studio.phaseshift.metatron.isa.m.type.impl.AbstractInstSet;
+import studio.phaseshift.metatron.isa.AbstractInstSet;
+import studio.phaseshift.metatron.isa.m.type.Inst;
+import studio.phaseshift.metatron.isa.m.type.Int;
+import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.Type;
 
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.as_;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.id_;
-import static studio.phaseshift.metatron.isa.m.type.Int.INT_TYPE;
-import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.Real.REAL_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
@@ -43,7 +42,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-@ServiceMetadata(tid = "/m/math")
+@JREService(tid = "/m/math")
 public class mathInstSet extends AbstractInstSet {
 
     public static final fURI MATH_ISA_TID = M_ISA_TID.extend("math");
@@ -75,7 +74,7 @@ public class mathInstSet extends AbstractInstSet {
     public static final String MATH_GBYTE_STRING = "/m/math/gB";
     public static final String MATH_TBYTE_STRING = "/m/math/tB";
     public static final String MATH_PBYTE_STRING = "/m/math/pB";
-    
+
     static {
         assert MATH_BYTE_STRING.equals(MATH_BYTE_TID.toString());
         assert MATH_KBYTE_STRING.equals(MATH_KBYTE_TID.toString());

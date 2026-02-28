@@ -20,12 +20,15 @@ package studio.phaseshift.metatron.isa.grph.tp3;
 
 import org.apache.tinkerpop.gremlin.structure.Direction;
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.AbstractInstSet;
 import studio.phaseshift.metatron.isa.grph.tp3.parser.ObjTP3Serializer;
 import studio.phaseshift.metatron.isa.grph.tp3.space.EdgeMap;
 import studio.phaseshift.metatron.isa.grph.tp3.space.VertexMap;
 import studio.phaseshift.metatron.isa.grph.tp3.space.tp3Space;
-import studio.phaseshift.metatron.isa.m.type.*;
-import studio.phaseshift.metatron.isa.m.type.impl.AbstractInstSet;
+import studio.phaseshift.metatron.isa.m.type.Inst;
+import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.Type;
+import studio.phaseshift.metatron.isa.m.type.Uri;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.util.IteratorUtil;
 
@@ -38,6 +41,7 @@ import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.isa.grph.grphInstSet.*;
+import static studio.phaseshift.metatron.isa.grph.grphInstSet.JREService;
 import static studio.phaseshift.metatron.isa.grph.tp3.space.schema.modernSchema.MODERN_SCHEMA_TYPE;
 import static studio.phaseshift.metatron.isa.grph.tp3.space.tp3Space.TP3_SPACE_TYPE;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
@@ -52,7 +56,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-@ServiceMetadata(tid = "/m/grph/tp3")
+@JREService(tid = "/m/grph/tp3")
 public class tp3InstSet extends AbstractInstSet {
 
     public static final fURI TP3_ISA_TID = GRPH_ISA_TID.extend("tp3");

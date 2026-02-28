@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package studio.phaseshift.metatron.lang.db.tabl;
+package studio.phaseshift.metatron.isa.tble;
 
 import studio.phaseshift.metatron.Tokens;
 import studio.phaseshift.metatron.furi.c.cInt;
@@ -46,8 +46,8 @@ import java.util.function.Function;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.furi.fURI.f;
-import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
+import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
@@ -58,10 +58,10 @@ import static studio.phaseshift.metatron.util.CommonUtil.mutableMap;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class tableSpace extends AbstractSpace<Connection> {
+public class tbleSpace extends AbstractSpace<Connection> {
 
     private final GraphittyLogger LOG = Graphitty.log(this);
-    public static fURI TABL_TID = tablInstSet.TABL_INSTSET_TID.extend("space").extend("tabl");
+    public static fURI TABL_TID = tbleInstSet.TABL_INSTSET_TID.extend("space").extend("tabl");
     protected final fURI prefix;
     public static final Type TABL_TYPE = T(TABL_TID, null, null,
             instC(mInstSet.INST_TID.dom(ALL.maybe()).rng(TABL_TID),
@@ -75,16 +75,16 @@ public class tableSpace extends AbstractSpace<Connection> {
                         final fURI user = inst.arg(0).asRec().at(Tokens.USER).uriValue();
                         final Str pass = inst.arg(0).asRec().at(Tokens.PASS);
                         final fURI prefix = inst.arg(0).<Rec>as().at(Tokens.PREFIX).uriValue();
-                        final tableSpace space = tableSpace.of(mutableMap(uri(PATTERN), uri(pattern), uri(Tokens.HOST), uri(host), uri(USER), uri(user), uri(PASS), pass, uri(Tokens.PREFIX), uri(prefix)), inst.arg(0).vid());
+                        final tbleSpace space = tbleSpace.of(mutableMap(uri(PATTERN), uri(pattern), uri(Tokens.HOST), uri(host), uri(USER), uri(user), uri(PASS), pass, uri(Tokens.PREFIX), uri(prefix)), inst.arg(0).vid());
                         Router.global().addSpace(space);
                         return space;
                     }));
 
-    public static tableSpace of(final Map<Obj, Obj> config, final fURI vid) {
+    public static tbleSpace of(final Map<Obj, Obj> config, final fURI vid) {
         MTronException.wrap(() -> Class.forName("org.sqlite.JDBC"));
         try (Connection conn = DriverManager.getConnection("jdbc:" + config.get(uri(HOST)).toCleanString(), config.getOrDefault(uri(USER), uri("")).toCleanString(), config.getOrDefault(uri(PASS), str("")).toCleanString())) {
-            Graphitty.log(tableSpace.class).info("connected to %s: %s", config.get(uri(HOST)).toCleanString(), conn.getMetaData());
-            return new tableSpace(conn, config, TABL_TID, vid);
+            Graphitty.log(tbleSpace.class).info("connected to %s: %s", config.get(uri(HOST)).toCleanString(), conn.getMetaData());
+            return new tbleSpace(conn, config, TABL_TID, vid);
         } catch (final SQLException ex) {
             throw MTronException.of(ex);
         }
@@ -99,13 +99,13 @@ public class tableSpace extends AbstractSpace<Connection> {
     }
 
 
-    public tableSpace(final Connection sjvm, final Map<Obj, Obj> config, final fURI tid, final fURI vid) {
+    public tbleSpace(final Connection sjvm, final Map<Obj, Obj> config, final fURI tid, final fURI vid) {
         super(sjvm, config, tid, vid);
         this.prefix = config.getOrDefault(uri(PREFIX), uri("")).uriValue();
     }
 
 
-    public Function<fURI, Iterator<Tuple.Pair<fURI,Obj>>> directReader() {
+    public Function<fURI, Iterator<Tuple.Pair<fURI, Obj>>> directReader() {
         return (pattern) -> {
             try {
                 final Map<fURI, Obj> results = new LinkedHashMap<>();

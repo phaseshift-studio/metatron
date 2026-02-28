@@ -75,8 +75,8 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
+import static studio.phaseshift.metatron.isa.web.parser.Audio.AUDIO_TID;
 import static studio.phaseshift.metatron.isa.web.webInstSet.WEB_ISA_TID;
-import static studio.phaseshift.metatron.lang.ai.llm.type.impl.Audio.AUDIO_TID;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)

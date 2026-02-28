@@ -24,7 +24,10 @@ import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.mInstSet;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
-import studio.phaseshift.metatron.isa.m.type.*;
+import studio.phaseshift.metatron.isa.m.type.Feature;
+import studio.phaseshift.metatron.isa.m.type.InstSet;
+import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.mach.io.space.file.fsSpace;
 import studio.phaseshift.metatron.isa.mach.machInstSet;
 import studio.phaseshift.metatron.isa.mach.type.LogObj;
@@ -131,7 +134,7 @@ public class BootLoader implements Rec, Feature.SelfClone {
             LOG.info("available instruction sets\n\t(via %s%s)%s", "META-INF/services/",
                     InstSet.class.getCanonicalName(),
                     BootLoader.loadInstSetProvider(ALL)
-                            .map(p -> p.type().getAnnotation(ServiceMetadata.class).tid())
+                            .map(p -> p.type().getAnnotation(InstSet.JREService.class).tid())
                             .reduce("", (a, b) -> a + "\n\t\t" + b));
             fURI localAuthority = null;
             /// /// START OF BOOTING PROCESS /// /// allow boot description to be read from a mtron file
@@ -233,10 +236,10 @@ public class BootLoader implements Rec, Feature.SelfClone {
         return ServiceLoader.load(InstSet.class)
                 .stream()
                 .peek(p -> {
-                    if (!p.type().isAnnotationPresent(ServiceMetadata.class))
+                    if (!p.type().isAnnotationPresent(InstSet.JREService.class))
                         LOG.warn("an inst set without a service metadata located: %s", p.type().getCanonicalName());
                 })
-                .filter(p -> p.type().isAnnotationPresent(ServiceMetadata.class))
-                .filter(p -> f(p.type().getAnnotation(ServiceMetadata.class).tid()).test(tid));
+                .filter(p -> p.type().isAnnotationPresent(InstSet.JREService.class))
+                .filter(p -> f(p.type().getAnnotation(InstSet.JREService.class).tid()).test(tid));
     }
 }

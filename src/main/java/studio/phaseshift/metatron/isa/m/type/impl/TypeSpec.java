@@ -22,7 +22,6 @@ import studio.phaseshift.metatron.furi.fURI;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -30,11 +29,12 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface TypeSpec {
     String tid();
+
     String vid() default "";
-    
+
     public static class Helper {
         public static fURI vidOrTid(final TypeSpec spec) {
             return spec.vid().isEmpty() ? fURI.of(spec.tid()) : fURI.of(spec.vid());
-        }   
+        }
     }
 }

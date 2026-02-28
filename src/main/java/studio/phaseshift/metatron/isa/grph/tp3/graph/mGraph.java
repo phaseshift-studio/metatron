@@ -89,7 +89,7 @@ public class mGraph implements Graph, WrappedGraph<tp3Space> {
 
     public mGraph(final Configuration configuration) {
         //grphInstSet.create();
-        if(!configuration.containsKey(SPACE) || !configuration.containsKey(PATTERN))
+        if (!configuration.containsKey(SPACE) || !configuration.containsKey(PATTERN))
             throw MTronException.of("configuration requires space and pattern properties");
         final fURI spacevid = f(configuration.getProperty(SPACE).toString());
         final fURI pattern = f(configuration.getProperty(PATTERN).toString());
@@ -132,7 +132,7 @@ public class mGraph implements Graph, WrappedGraph<tp3Space> {
     @Override
     public Vertex addVertex(final Object... keyValues) {
         ElementHelper.legalPropertyKeyValueArray(keyValues);
-        final fURI vid = ElementHelper.getIdValue(keyValues).map(this::makeVertexID).orElseGet(() -> makeVertexID(""+counter++));
+        final fURI vid = ElementHelper.getIdValue(keyValues).map(this::makeVertexID).orElseGet(() -> makeVertexID("" + counter++));
         final fURI tid = f(ElementHelper.getLabelValue(keyValues).orElse(Vertex.DEFAULT_LABEL));
         final Map<Obj, Obj> props = new LinkedHashMap<>();
         for (int i = 0; i < keyValues.length; i = i + 2) {

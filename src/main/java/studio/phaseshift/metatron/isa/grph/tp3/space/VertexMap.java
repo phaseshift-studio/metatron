@@ -22,8 +22,10 @@ import org.apache.tinkerpop.gremlin.structure.Direction;
 import org.apache.tinkerpop.gremlin.structure.Edge;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
 import org.apache.tinkerpop.gremlin.structure.VertexProperty;
-import studio.phaseshift.metatron.isa.Space;
-import studio.phaseshift.metatron.isa.m.type.*;
+import studio.phaseshift.metatron.isa.m.type.Inst;
+import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.Rec;
+import studio.phaseshift.metatron.isa.m.type.Uri;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
@@ -31,7 +33,6 @@ import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.IteratorUtil;
 
 import java.util.Map;
-import java.util.function.BiFunction;
 
 import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.isa.grph.grphInstSet.*;
@@ -45,7 +46,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
 public class VertexMap extends ElementMap {
-    
+
     protected static final GraphittyLogger LOG = Graphitty.log(VertexMap.class);
 
     public VertexMap(final Vertex base, final tp3Space tp3Space) {
@@ -109,11 +110,11 @@ public class VertexMap extends ElementMap {
 
     public static Rec vertexToRec(final Vertex vertex) {
         return new VertexMap(vertex, tp3Space.from(vertex)).selfRec();
-     //   return VertexMap.vertexToRec(vertex, tp3Space.from(vertex));
+        //   return VertexMap.vertexToRec(vertex, tp3Space.from(vertex));
     }
 
-    public static Rec vertexToRec(final Vertex vertex,final tp3Space space) {
-        return new VertexMap(vertex,space).selfRec();
+    public static Rec vertexToRec(final Vertex vertex, final tp3Space space) {
+        return new VertexMap(vertex, space).selfRec();
         //   return VertexMap.vertexToRec(vertex, tp3Space.from(vertex));
     }
 

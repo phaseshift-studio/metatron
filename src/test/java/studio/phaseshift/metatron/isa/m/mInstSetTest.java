@@ -873,6 +873,18 @@ public class mInstSetTest extends AbstractInstSetTest {
         AbstractMetatronTest.testCode(LOG, code, expected);
     }
 
+    @Disabled
+    @ParameterizedTest
+    @CsvSource(value = {
+            "1.?num::T                                    % 1",
+            "\"1\".?num::T                                % noobj",
+            "1.0.?num::T                                  % 1.0",
+            "true.?num::T                                 % noobj",
+    }, delimiter = '%')
+    public void testMarkerTypes(final String code, final String expected) throws Exception {
+        AbstractMetatronTest.testCode(LOG, code, expected);
+    }
+    
     @ParameterizedTest
     @CsvSource(value = {
             "20.map(30)                                   % 30",

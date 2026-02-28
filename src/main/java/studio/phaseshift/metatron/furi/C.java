@@ -69,7 +69,7 @@ public interface C<T extends Comparable<T>, D extends C<T, D>> extends Comparabl
     }
 
     default D abs() {
-        return this.lt(zero()) ? this.neg() : (D)this;
+        return this.lt(zero()) ? this.neg() : (D) this;
     }
 
     /// ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -131,29 +131,29 @@ public interface C<T extends Comparable<T>, D extends C<T, D>> extends Comparabl
     default boolean isAny() {
         return Objects.equals(this, this.any());
     }
-    
+
     default boolean isAntiMaybeSome() {
-        return Objects.equals(this,this.antiMaybeSome());
+        return Objects.equals(this, this.antiMaybeSome());
     }
 
     default boolean isAntiSome() {
-        return Objects.equals(this,this.antiSome());
+        return Objects.equals(this, this.antiSome());
     }
 
     default boolean isAntiMaybe() {
-        return Objects.equals(this,this.antiMaybe());
+        return Objects.equals(this, this.antiMaybe());
     }
-    
+
     default boolean isAbsMaybe() {
-        return Objects.equals(this,this.abs().maybe());
+        return Objects.equals(this, this.abs().maybe());
     }
 
     default boolean isAbsSome() {
-        return Objects.equals(this,this.abs().some());
+        return Objects.equals(this, this.abs().some());
     }
 
     default boolean isAbsMaybeSome() {
-        return Objects.equals(this,this.abs().maybeSome());
+        return Objects.equals(this, this.abs().maybeSome());
     }
 
     default boolean isMaybeSome() {
@@ -183,8 +183,8 @@ public interface C<T extends Comparable<T>, D extends C<T, D>> extends Comparabl
     default boolean isRange() {
         return !this.isExact();
     }
-    
+
     static <D extends C<T, D>, T extends Comparable<T>> T[] balance(final T min, final T max) {
-       return min.compareTo(max) > 0 ? (T[])new Object[]{max, min} : (T[])new Object[]{min, max};
+        return min.compareTo(max) > 0 ? (T[]) new Object[]{max, min} : (T[]) new Object[]{min, max};
     }
 }

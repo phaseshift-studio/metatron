@@ -121,7 +121,7 @@ public final class NoObj implements Obj, Inst {
 
     @Override
     public String toString() {
-        return Helper.objToString(this);
+        return Obj.Helper.objToString(this);
     }
 
     @Override
@@ -143,7 +143,7 @@ public final class NoObj implements Obj, Inst {
     public NoObj c(final cInt c) {
         return this;
     }
-    
+
     @Override
     public cInt c() {
         return cInt.ZERO();
