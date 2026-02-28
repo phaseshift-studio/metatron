@@ -199,7 +199,7 @@ public class SwarmMachine extends AbstractMachine implements Machine {
             }
         }
         if (this.interrupted.get()) {
-            return fail(MTronException.of(Graphitty.sillyPrint("process interrupted", false, true)));
+            return fail(MTronException.of(Graphitty.sillyPrint("machine interrupted", false, true)));
         } else
             return this.halted();
     }

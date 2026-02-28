@@ -272,7 +272,7 @@ public class Console extends JRec implements Closeable, Runnable {
             } catch (final UserInterruptException e) {
                 if (null != this.machine)
                     this.machine.interrupt();
-                LOG.error(Graphitty.sillyPrint("process interrupted", true, true));
+                LOG.warn(Graphitty.sillyPrint("machine interrupted", true, true));
             } catch (final EndOfFileException e) {
                 System.exit(0);
             } catch (final Exception e) {
