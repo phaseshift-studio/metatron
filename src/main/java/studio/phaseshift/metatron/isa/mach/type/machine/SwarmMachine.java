@@ -97,11 +97,11 @@ public class SwarmMachine extends AbstractMachine implements Machine {
         for (final Inst inst : mach.code().jvm()) {
             if (inst.isInitial()) {
                 LOG.trace("  {{g}}==>{{/g}} creating {{y}}initial{{/y}} monad at %s", inst);
-                this.running().append(monad(noobj(), inst));
+                this.running().append(monad(noobj(), inst,resolvedCode));
             } else if (inst.isGather()) {
                 // many-to-?
                 LOG.trace("  {{m}}==|{{/m}} creating {{y}}barrier{{/y}} monad at %s", inst);
-                final Monad m = monad(objs0(), inst);
+                final Monad m = monad(objs0(), inst,resolvedCode);
                 mach.barriers().<LinkedList<Obj>>jvmAs().add(m);
             }
         }
@@ -120,7 +120,7 @@ public class SwarmMachine extends AbstractMachine implements Machine {
         /*this.future = BootLoader.getExecutor().submit(() -> {*/
         final Code code = this.resolve(lhs).code();
         if (this.running().c().isZero()) {
-            this.running().append(monad(noobj(), code.insts().getFirst()));
+            this.running().append(monad(noobj(), code.insts().getFirst(),code));
         }
         while (!this.interrupted.get()) {
             final Monad m = (Monad) this.running().take();
@@ -128,9 +128,9 @@ public class SwarmMachine extends AbstractMachine implements Machine {
                 LOG.trace("   {{g}}=>{{/g}} processing monad %s [%s]", m, m.inst().isInitial() ? "initial" : "midway");
                 final Monad x = this.split(m);
                 if (x.inst().tid().basePath().equals(DROP_TID)) {
-                    this.running().append(monad(x, code.nextInst(x.inst())));
+                    this.running().append(x.next());
                 } else {
-                    final Monad n = x.apply(code.nextInst(x.inst()));
+                    final Monad n = x.apply();
                     LOG.trace(" {{g}}===>{{/g}} post-processing monad %s", n);
                     if (n.inst().isBatching() && (!n.dead() || n.inst().dom().c().isZeroable())) {
                         if (n.inst().isGather()) {
@@ -181,12 +181,12 @@ public class SwarmMachine extends AbstractMachine implements Machine {
                         nextBarrier.obj().append(result);
                     } else if (nextInst.isBatching()) {
                         Router.global().stats().monadicStats().incrBarrierMonads(-1L);
-                        this.running().append(monad(result, nextInst));
+                        this.running().append(monad(result, nextInst,code));
                         Router.global().stats().monadicStats().incrRunningMonads(1L);
                     } else { // barrier-to-other requires an unrolling of result set
                         LOG.trace("  {{m}}==|{{/m}} scattering barrier obj %s to %s", result, nextInst);
                         result.forEach(o -> {
-                            final Monad n = monad(o, nextInst);
+                            final Monad n = monad(o, nextInst,code);
                             Router.global().stats().monadicStats().incrBarrierMonads(-1L);
                             LOG.trace(" {{m}}===|{{/m}} scattering %s", n);
                             this.running().append(n);
@@ -202,11 +202,5 @@ public class SwarmMachine extends AbstractMachine implements Machine {
             return fail(MTronException.of(Graphitty.sillyPrint("process interrupted", false, true)));
         } else
             return this.halted();
-        /*});
-        try {
-            return future.get();
-        } catch (final InterruptedException | ExecutionException e) {
-            throw MTronException.of(e);
-        }*/
     }
 }

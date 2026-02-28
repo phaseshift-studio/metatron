@@ -40,6 +40,7 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
+import static studio.phaseshift.metatron.Tokens.MONAD;
 import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.furi.q.DocQ.Doc.docWrap;
@@ -796,7 +797,16 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
                     instC(BARRIER_INST_TID.dom(A.maybeSome()).rng(A.maybeSome()), lst(), (lhs, inst) -> lhs),
                     instC(BARRIER_INST_TID.dom(A.maybeSome()).rng(A.maybeSome()), lst(T(A.maybeSome())), (lhs, inst) -> inst.arg(0).append(lhs)),
                     instC(AS_INST_TID.dom(A).rng(A), lst(T(A)), (lhs, inst) -> lhs.clone(lhs.jvm(), inst.arg(0).tid(), lhs.vid())),
-                    instC(REPEAT_INST_TID.dom(A).rng(A.maybeSome()).query("monad", null), lst(T(ALL), INT_TYPE), (lhs, inst) -> {
+                    instC(REPEAT_INST_TID.dom(A).rng(A.maybeSome()).query(MONAD, null), lst(T(ALL), T(ALL)), (lhs, inst) -> {
+                        Obj current = ((Monad) lhs).obj();
+                        if (current.isNoObj()) return ((Monad) lhs).next();
+                        final Obj breakPredicate = inst.arg(1);
+                        if (breakPredicate.apply(current).check())
+                            return ((Monad) lhs).next();
+                        final Obj repeatedApply = inst.arg(0);
+                        return ((Monad) lhs).obj(repeatedApply.apply(current));
+                    }),
+                  /*  instC(REPEAT_INST_TID.dom(A).rng(A.maybeSome()).query(MONAD, null), lst(T(ALL), T(ALL)), (lhs, inst) -> {
                         Obj current = ((Monad) lhs).obj();
                         final Obj repeatedApply = inst.arg(0);
                         final int times = inst.arg(1).apply(current).intValue().intValue();
@@ -807,7 +817,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
                                     objs(current.stream().map(repeatedApply::apply));
                         }
                         return current;
-                    }),
+                    }),*/
                     instC(AUTO_INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(T(ALL.maybe())), (lhs, inst) -> inst.arg(0).apply(lhs)),
                     instC(AUTO_FROM_INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(T(ALL.maybe()), T(ALL.maybe())), (lhs, inst) -> !inst.arg(1).isNoObj() ? inst.arg(1) : Router.readFromSpace(inst.arg(0).uriValue()).autoResolve(lhs)),
                     instC(CATCH_INST_TID.dom(ALL).rng(ALL.maybeSome()), lst(T(ALL.maybeSome())), (lhs, inst) -> lhs.isFail() ? inst.arg(0).apply(lhs.<Fail>as().caught()) : lhs),

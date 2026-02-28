@@ -19,6 +19,7 @@
 package studio.phaseshift.metatron.isa.mach.type.monad;
 
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.m.type.Call;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.type.Monad;
@@ -58,6 +59,7 @@ public class BasicMonad extends AbstractMonad implements Monad {
     @Override
     public Monad clone() {
         final BasicMonad clone = (BasicMonad) super.clone();
+        clone.jvm = List.copyOf(this.jvm);
         return clone;
     }
 
@@ -80,11 +82,11 @@ public class BasicMonad extends AbstractMonad implements Monad {
         return new BasicMonad(jvm, tid, vid);
     }
 
-    public static Monad monad(final Obj obj, final Inst inst) {
-        return monad(List.of(obj, inst, noobj()), MACH_BASIC_MONAD_TID, null);
+    public static Monad monad(final Obj obj, final Inst inst, final Call code) {
+        return monad(List.of(obj, inst, noobj(), code), MACH_BASIC_MONAD_TID, null);
     }
 
     public static Monad monad(final Obj obj) {
-        return monad(obj, noobj());
+        return monad(obj, noobj(), noobj());
     }
 }

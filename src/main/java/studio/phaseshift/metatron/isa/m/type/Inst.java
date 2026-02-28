@@ -36,6 +36,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
+import static studio.phaseshift.metatron.Tokens.MONAD;
 import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
@@ -326,8 +327,9 @@ public interface Inst extends Call {
 
     @Override
     default Obj apply(final Obj lhs) {
-        final Monad monad = this.tid().hasQuery("monad") ? (Monad) lhs : null;
-        Obj clhs = FutureObj.resolveFuture(null == monad ? lhs : monad.obj());
+        final boolean isMonadicInst = this.tid().hasQuery(MONAD);
+        final Monad monad = isMonadicInst ? (Monad) lhs : null;
+        Obj clhs = FutureObj.resolveFuture(isMonadicInst ? monad.obj() : lhs);
         //boolean reself = !this.args().isEmpty() && this.args().argElements().noneMatch(e -> e.vid() != null || e.isObjCall());
         Inst cinst = this.args().isEmpty() ? this.args(lst(noobj())).resolve(clhs) : this.resolve(clhs); // TODO: this isn't a general solution (multi slotted args won't work).
         //if (false && reself) // TODO: why do type predicates get rewritten?
@@ -360,17 +362,17 @@ public interface Inst extends Call {
                 cinst = Helper.applyArgs(clhs, cinst);
                 Router.stack().push(cinst.args());
                 try {
-                    rhs = Objs.trySingleton(FutureObj.resolveFuture(cinst.f().apply(null == monad ? clhs : monad.obj(clhs), cinst)));
+                    rhs = Objs.trySingleton(FutureObj.resolveFuture(cinst.f().apply(isMonadicInst ? monad.obj(clhs) : clhs, cinst)));
                     Graphitty.log(cinst).trace("%s (lhs) => %s (inst) => %s (rhs) evaluated successfully", clhs, cinst, rhs);
                 } catch (final Exception e) {
                     rhs = fail(e, fail(MTronException.of("apply failure:" +
-                                    "\n\t[lhs]   | %s" +
-                                    "\n\t \\_type | %s" +
-                                    "\n\t  \\_p   | %s" +
-                                    "\n\t[inst]  | %s" +
-                                    "\n\t \\_dom  | %s" +
-                                    "\n\t \\_args | %s",
-                            clhs, clhs.type(), clhs.tid(), clhs.type().predicate(), cinst, cinst.dom(), cinst.args())));
+                                    "\n\t[lhs]    | %s" +
+                                    "\n\t \\_type  | %s" +
+                                    "\n\t  \\_pred | %s" +
+                                    "\n\t[inst]   | %s" +
+                                    "\n\t \\_dom   | %s" +
+                                    "\n\t \\_args  | %s",
+                            clhs, clhs.tid(), clhs.type().hasPredicate() ? clhs.type().predicate() : noobj(), cinst, cinst.dom(), cinst.args())));
                     // e.printStackTrace();
                 } finally {
                     Router.stack().pop();
@@ -385,7 +387,8 @@ public interface Inst extends Call {
             rhs = clhs; // propagate fail through inst unless it's a catch inst
         }
         final cInt cc = cinst.c();
-        return modulateC ? rhs.c(c -> c.mult(lhs.c()).mult(cc)) : rhs.c(c -> c.mult(cc));
+        final Obj result = modulateC ? rhs.c(c -> c.mult(lhs.c()).mult(cc)) : rhs.c(c -> c.mult(cc));
+        return result;
     }
 
     default boolean isCatch() {

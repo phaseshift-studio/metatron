@@ -21,16 +21,14 @@ package studio.phaseshift.metatron.isa.mach.type;
 import studio.phaseshift.metatron.algebra.Ring;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
-import studio.phaseshift.metatron.isa.m.type.Inst;
-import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.m.type.Rec;
-import studio.phaseshift.metatron.isa.m.type.Type;
+import studio.phaseshift.metatron.isa.m.type.*;
 
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
 
 import static studio.phaseshift.metatron.Tokens.MONAD;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec0;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_MONAD_TID;
@@ -50,7 +48,7 @@ public interface Monad extends Obj, Ring<Monad> {
 
     @Override
     default Monad mult(final Monad rhs) {
-        return this.apply(rhs).c(c -> c.mult(rhs.c()));
+        return (Monad)this.apply(rhs).c(c -> c.mult(rhs.c()));
     }
 
     @Override
@@ -73,6 +71,14 @@ public interface Monad extends Obj, Ring<Monad> {
 
     default boolean zombie() {
         return this.dead() && !this.halted();
+    }
+
+    default Code code() {
+        return (Code) this.jvm().get(3);
+    }
+
+    default Monad next() {
+        return this.jvm(List.of(this.obj(), this.code().nextInst(this.inst()), noobj(), this.code()));
     }
 
     default Rec state() {
@@ -106,11 +112,11 @@ public interface Monad extends Obj, Ring<Monad> {
     }
 
     default Monad obj(final Obj obj) {
-        return this.clone(List.of(obj, this.inst(), this.state()), this.tid(), this.vid());
+        return this.clone(List.of(obj, this.inst(), this.state(), this.code()), this.tid(), this.vid());
     }
 
     default Monad inst(final Inst inst) {
-        return this.clone(List.of(this.obj(), inst, this.state()), this.tid(), this.vid());
+        return this.clone(List.of(this.obj(), inst, this.state(), this.code()), this.tid(), this.vid());
     }
 
     @Override
@@ -127,10 +133,12 @@ public interface Monad extends Obj, Ring<Monad> {
     Monad clone();
 
     @Override
-    default Monad apply(final Obj inst) {
+    default Monad apply() {
         if (this.halted())
             return this;
-        return this.obj(this.inst().apply(this.inst().tid().hasQuery(MONAD) ? this : this.obj())).inst(inst.as());
+        final boolean monadicInst = this.inst().tid().hasQuery(MONAD);
+        final Monad nextMonad = this.obj(this.inst().apply(monadicInst ? this : this.obj()));
+        return monadicInst ? (Monad)nextMonad.obj() : nextMonad.next();
     }
 
     class Helpers {
