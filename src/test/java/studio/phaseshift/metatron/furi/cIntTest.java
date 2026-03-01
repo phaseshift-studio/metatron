@@ -178,7 +178,7 @@ public class cIntTest extends AbstractMetatronTest {
             "{??}[a=>1,b=>2]        % rec{??}::[a=>1,b=>2]   % true"
     }, delimiter = '%')
     public void testRewrites(final String code, final String expected, final boolean matches) throws Exception {
-        AbstractMetatronTest.testEquals(LOG, mParser.eval(code), mParser.eval(expected), matches);
+        AbstractMetatronTest.checkEquality(LOG, mParser.eval(code), mParser.eval(expected), matches);
     }
 
 

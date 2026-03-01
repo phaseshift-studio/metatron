@@ -61,7 +61,7 @@ public class tp3SpaceTest extends AbstractSpaceTest {
             "*(*/g/S/pattern).vid()                                                         % {/m/grph/inst/schema/modern/person,/m/grph/inst/schema/modern/software,/m/grph/inst/schema/modern/created,/m/grph/inst/schema/modern/knows}",
     }, delimiter = '%')
     public void testSchemaTraversal(final String code, final String expected) {
-        AbstractMetatronTest.testCode(LOG, code, expected);
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
     
     @ParameterizedTest
@@ -86,6 +86,6 @@ public class tp3SpaceTest extends AbstractSpaceTest {
             "*/g/V/1.update[name=>123]                                                      % <ERROR>"
     }, delimiter = '%')
     public void testIdTraversals(final String code, final String expected) {
-        AbstractMetatronTest.testCode(LOG, code, expected);
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 }

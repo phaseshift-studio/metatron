@@ -25,7 +25,6 @@ import studio.phaseshift.metatron.isa.m.mInstSet;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Type;
-import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.net.MServer;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
@@ -42,11 +41,9 @@ import static studio.phaseshift.metatron.furi.fURI.fnull;
 import static studio.phaseshift.metatron.isa.m.mInstSet.M_ISA_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.SPACE_TID;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
-import static studio.phaseshift.metatron.isa.m.type.Rel.REL_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
-import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst0;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 import static studio.phaseshift.metatron.isa.mach.machInstSet.SPACE_CONFIG;
 
@@ -58,15 +55,13 @@ public class metaSpace extends AbstractSpace<MServer> {
 
     public static final fURI META_SPACE_TID = M_ISA_TID.extend("space/meta");
     protected final fURI host;
-     protected final Space cache;
+    protected final Space cache;
     protected final List<fURI> peers = new ArrayList<>();
     protected final int selfIndex;
-    protected final MServer server;
-    protected final Tuple.Pair<String, String> rewrite;
 
     protected static final Rec META_SPACE_CONFIG = SPACE_CONFIG.plus(
             rec(uri(HOST), URI_TYPE,
-                    uri(REWRITE), REL_TYPE, // TODO: rel(URI_TYPE,URI_TYPE) make this general to SPACE_CONFIG
+                    uri(ROUTE), rec(URI_TYPE, URI_TYPE),
                     uri(PEERS), lst(URI_TYPE.<Type>maybeSome())));
 
     public static final Type META_SPACE_TYPE = Type.Builder.build()
@@ -80,25 +75,19 @@ public class metaSpace extends AbstractSpace<MServer> {
     protected metaSpace(final MServer sjvm, final Map<Obj, Obj> jvm, final fURI vid) {
         super(sjvm, jvm, META_SPACE_TID, vid);
         this.host = this.at(uri(HOST)).uriValue();
-        this.rewrite = this.has(uri(REWRITE)) ?
-                Tuple.Pair.with(this.at(uri(REWRITE)).relValue().get0().uriValue().toString(), this.at(uri(REWRITE)).relValue().get1().uriValue().toString())
-                : null;
-        this.cache = (Space) jvm.get(uri(CACHE));
-        Rec c = rec(jvm);
-        c.at(uri(PEERS)).orElse(lst(uri(this.host))).asLst().elements().forEach(e -> this.peers.add(e.uriValue()));
+        this.cache = memSpace.of(this.at(PATTERN).uriValue(), fnull);
+        this.at(uri(PEERS)).orElse(lst(uri(this.host))).elements().forEach(e -> this.peers.add(e.uriValue()));
         this.selfIndex = IteratorUtil.indexedStream(this.peers.iterator()).filter(p -> Objects.equals(p.get1().host(), this.host.host())).findFirst().map(Tuple.Pair::get0).orElse(-1);
         if (this.selfIndex == -1)
             throw MTronException.of("no cluster position found for host %s", this.host.host());
-        this.server = sjvm;
+        this.sjvm.start();
     }
 
     public static metaSpace of(final Rec config, final fURI vid) {
-        final MServer server = new MServer(config.at(HOST).uriValue(), config.at(PEERS).orElse(lst(config.at(HOST).asUri())).asLst().elements().map(Obj::uriValue).toList());
-        server.start();
-        final memSpace cache = memSpace.of(config.at(PATTERN).uriValue(), fnull);
-        final Map<Obj, Obj> conf = new LinkedHashMap<>(config.jvm());
-         conf.put(uri(CACHE), cache);
-        return new metaSpace(server, conf, vid);
+        final MServer server = new MServer(
+                config.at(HOST).uriValue(),
+                config.at(PEERS).orElse(lst(config.at(HOST).asUri())).asLst().elements().map(Obj::uriValue).toList());
+        return new metaSpace(server, config.jvm(), vid);
     }
 
     @Override
@@ -109,7 +98,7 @@ public class metaSpace extends AbstractSpace<MServer> {
 
     @Override
     public Obj read(final fURI vid) {
-        final fURI lowerPattern = Space.Helper.toRewrite(vid, this.rewrite);
+        final fURI lowerPattern = Space.Helper.routeToSpace(vid, this.routes);
         final int peerIndex = fURIHasher.getNodeIndex(lowerPattern.toString(), this.peers.size());
         if (this.selfIndex == peerIndex) {
             LOG.debug("{{y}}%s{{X}} [{{c}}reading{{X}}]:  {{y}}%s {{g}}=> {{y}}%s", this.host, vid, lowerPattern);
@@ -119,7 +108,7 @@ public class metaSpace extends AbstractSpace<MServer> {
             try {
                 final Obj toSend = from_(uri(lowerPattern)).tryToInst();
                 LOG.debug("{{y}}%s {{g}}=> {{y}}%s{{g}}: %s", this.host, peer, toSend);
-                final Obj result = this.server.sendRecv(peer, toSend);
+                final Obj result = this.sjvm.sendRecv(peer, toSend);
                 return result;
             } catch (final Exception e) {
                 throw MTronException.of(e);
@@ -134,7 +123,7 @@ public class metaSpace extends AbstractSpace<MServer> {
 
     @Override
     public Obj write(final fURI vid, final Obj obj) {
-        final fURI lowerPattern = Space.Helper.toRewrite(vid, this.rewrite);
+        final fURI lowerPattern = Space.Helper.routeToSpace(vid, this.routes);
         final int peerIndex = fURIHasher.getNodeIndex(lowerPattern.toString(), this.peers.size());
         if (this.selfIndex == peerIndex) {
             LOG.debug("{{y}}%s{{X}} [{{c}}writing{{X}}]:  {{y}}%s {{g}}=> {{y}}%s{{X}} %s", this.host, vid, lowerPattern, obj);
@@ -144,7 +133,7 @@ public class metaSpace extends AbstractSpace<MServer> {
             try {
                 final Obj toSend = start_(obj).to_(uri(lowerPattern));
                 LOG.debug("{{y}}%s {{g}}=> {{y}}%s{{g}}: %s", this.host, peer, toSend);
-                return this.server.sendRecv(peer, toSend);
+                return this.sjvm.sendRecv(peer, toSend);
             } catch (final Exception e) {
                 throw MTronException.of(e);
             }

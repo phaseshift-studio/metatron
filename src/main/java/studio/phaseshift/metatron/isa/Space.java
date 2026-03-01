@@ -145,12 +145,7 @@ public interface Space extends Rec, Closeable {
         public static void noCloneWarning(final Space space) {
             space.logger().warn("the clone of a space is the space itself");
         }
-
-
-        public static fURI toRewrite(final fURI vid, final Pair<String, String> rewrite) {
-            return null == rewrite ? vid : f(rewrite.get1() + vid.toString().replaceFirst(rewrite.get0(), ""));
-        }
-
+        
         public static fURI routeToSpace(final fURI vid, Map<Uri, Uri> routes) {
             return routes.entrySet().stream()
                     .filter(e -> vid.toString().contains(e.getValue().uriValue().toString()))

@@ -63,8 +63,7 @@ public class memSpace extends AbstractSpace<Map<fURI, Obj>> {
 
     public static final fURI MEM_SPACE_TID = M_ISA_TID.extend("space/mem");
 
-    protected static final Rec MEM_SPACE_CONFIG = SPACE_CONFIG.plus(
-            rec(uri(PERSIST).maybe().asUri(), FILE_TYPE));
+    protected static final Rec MEM_SPACE_CONFIG = SPACE_CONFIG.plus(rec(uri(PERSIST).maybe().asUri(), FILE_TYPE));
 
     public static final Type MEM_SPACE_TYPE = Type.Builder.build()
             .tid(SPACE_TID)

@@ -69,7 +69,7 @@ public class fsSpaceTest extends AbstractSpaceTest {
             // "<test:space/test-sh.sh>()          % \"metatron 0.1-SNAPSHOT\"",
     }, delimiter = '%')
     public void testShell(final String code, final String expected) {
-        AbstractMetatronTest.testCode(LOG, code, expected);
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 
 

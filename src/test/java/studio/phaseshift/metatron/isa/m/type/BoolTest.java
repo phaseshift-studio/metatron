@@ -38,7 +38,7 @@ public class BoolTest extends AbstractObjTest {
             "false.as(real::T)                                                             % 0.0"
     }, delimiter = '%')
     public void testAsInst(final String code, final String expected) {
-   AbstractMetatronTest.testCode(LOG,code,expected);
+   AbstractMetatronTest.checkCodeParseApply(LOG,code,expected);
     }
 
     @ParameterizedTest
@@ -49,7 +49,7 @@ public class BoolTest extends AbstractObjTest {
             "false.plus(false)                                                                 % false"
     }, delimiter = '%')
     public void testPlusInst(final String code, final String expected) {
-   AbstractMetatronTest.testCode(LOG,code,expected);
+   AbstractMetatronTest.checkCodeParseApply(LOG,code,expected);
     }
 
     @ParameterizedTest
@@ -60,7 +60,7 @@ public class BoolTest extends AbstractObjTest {
             "false.mult(false)                                                                 % false"
     }, delimiter = '%')
     public void testMultInst(final String code, final String expected) {
-   AbstractMetatronTest.testCode(LOG,code,expected);
+   AbstractMetatronTest.checkCodeParseApply(LOG,code,expected);
     }
 
     @ParameterizedTest
@@ -71,7 +71,7 @@ public class BoolTest extends AbstractObjTest {
             "false.eq(true)                                                                    % false"
     }, delimiter = '%')
     public void testEquality(final String code, final String expected) {
-   AbstractMetatronTest.testCode(LOG,code,expected);
+   AbstractMetatronTest.checkCodeParseApply(LOG,code,expected);
     }
 
     @ParameterizedTest
@@ -82,7 +82,7 @@ public class BoolTest extends AbstractObjTest {
             "true.not().not?#<=bool()                                                          % true"
     }, delimiter = '%')
     public void testNot(final String code, final String expected) {
-   AbstractMetatronTest.testCode(LOG,code,expected);
+   AbstractMetatronTest.checkCodeParseApply(LOG,code,expected);
     }
 
 }

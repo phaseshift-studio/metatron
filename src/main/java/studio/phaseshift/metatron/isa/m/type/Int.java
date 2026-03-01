@@ -23,12 +23,10 @@ import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 
 import java.nio.ByteBuffer;
-import java.util.Comparator;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 import static studio.phaseshift.metatron.furi.fURI.f;
+import static studio.phaseshift.metatron.furi.q.DocQ.Doc.docWrap;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.Bytes.BYTES_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
@@ -102,14 +100,14 @@ public interface Int extends Mono, Ring.O<Int> {
                     instC(AS_INST_TID.dom(INT_TID).rng(REAL_TID), lst(T(REAL_TID)), (lhs, inst) -> real(lhs.intValue().doubleValue(), inst.arg(0).tid(), lhs.vid())),
                     instC(AS_INST_TID.dom(INT_TID).rng(STR_TID), lst(T(STR_TID)), (lhs, inst) -> str(lhs.intValue().toString(), inst.arg(0).tid(), lhs.vid())),
                     instC(AS_INST_TID.dom(INT_TID).rng(URI_TID), lst(T(URI_TID)), (lhs, inst) -> uri(f(lhs.intValue().toString()), inst.arg(0).tid(), lhs.vid())),
-                    instC(MULT_INST_TID.dom(INT_TID).rng(INT_TID), lst(T(INT_TID)), (lhs, inst) -> lhs.jvm(lhs.intValue() * inst.arg(0).intValue())),
-                    instC(MINUS_INST_TID.dom(INT_TID).rng(INT_TID), lst(T(INT_TID)), (lhs, inst) -> lhs.jvm(lhs.intValue() - inst.arg(0).intValue())),
-                    instC(PLUS_INST_TID.dom(INT_TID).rng(INT_TID), lst(INT_TYPE), (lhs, inst) -> lhs.jvm(lhs.intValue() + inst.arg(0).intValue())),
-                    instC(PLUS_INST_TID.dom(INT_TID.some()).rng(INT_TID.some()), lst(T(INT_TID)), (lhs, inst) -> objs(lhs.elements().map(i -> i.jvm(i.intValue() + inst.arg(0).intValue())))),
-                    instC(GT_INST_TID.dom(INT_TID).rng(BOOL_TID), lst(T(INT_TID)), (lhs, inst) -> bool(Inst.Helper.alignLHSType(lhs, inst.arg(0)).filter(l -> l.intValue() > inst.arg(0).intValue()).isPresent())),
-                    instC(GTE_INST_TID.dom(INT_TID).rng(BOOL_TID), lst(T(INT_TID)), (lhs, inst) -> bool(Inst.Helper.alignLHSType(lhs, inst.arg(0)).filter(l -> l.intValue() >= inst.arg(0).intValue()).isPresent())),
-                    instC(LT_INST_TID.dom(INT_TID).rng(BOOL_TID), lst(T(INT_TID)), (lhs, inst) -> bool(Inst.Helper.alignLHSType(lhs, inst.arg(0)).filter(l -> l.intValue() < inst.arg(0).intValue()).isPresent())),
-                    instC(LTE_INST_TID.dom(INT_TID).rng(BOOL_TID), lst(T(INT_TID)), (lhs, inst) -> bool(Inst.Helper.alignLHSType(lhs, inst.arg(0)).filter(l -> l.intValue() <= inst.arg(0).intValue()).isPresent())),
+                    docWrap(instC(MULT_INST_TID.dom(INT_TID).rng(INT_TID), lst(T(INT_TID)), (lhs, inst) -> lhs.jvm(lhs.intValue() * inst.arg(0).intValue())),"the lhs int", "the result of the multiplication", Map.of(INT_TYPE,"the int to multiply the lhs by"), "multiply the lhs int by the argument int"),
+                    docWrap(instC(MINUS_INST_TID.dom(INT_TID).rng(INT_TID), lst(T(INT_TID)), (lhs, inst) -> lhs.jvm(lhs.intValue() - inst.arg(0).intValue())),"the lhs int", "the result of the subtraction", Map.of(INT_TYPE,"the int to subtract from the lhs"), "subtract the argument int from the lhs int"),
+                    docWrap(instC(PLUS_INST_TID.dom(INT_TID).rng(INT_TID), lst(INT_TYPE), (lhs, inst) -> lhs.jvm(lhs.intValue() + inst.arg(0).intValue())),"the lhs int", "the result of the addition", Map.of(INT_TYPE,"the int to add to the lhs"), "add the argument int to the lhs int"),
+                    docWrap(instC(PLUS_INST_TID.dom(INT_TID.some()).rng(INT_TID.some()), lst(T(INT_TID)), (lhs, inst) -> objs(lhs.elements().map(i -> i.jvm(i.intValue() + inst.arg(0).intValue())))),"the lhs int list", "the result of the addition", Map.of(INT_TYPE,"the int to add to each element of the lhs list"), "add the argument int to each element of the lhs int list"),
+                    docWrap(instC(GT_INST_TID.dom(INT_TID).rng(BOOL_TID), lst(T(INT_TID)), (lhs, inst) -> bool(Inst.Helper.alignLHSType(lhs, inst.arg(0)).filter(l -> l.intValue() > inst.arg(0).intValue()).isPresent())),"the lhs int", "whether the lhs is greater than the rhs", Map.of(INT_TYPE,"the int to compare against the lhs"), "check whether the lhs int is greater than the argument int"),
+                    docWrap(instC(GTE_INST_TID.dom(INT_TID).rng(BOOL_TID), lst(T(INT_TID)), (lhs, inst) -> bool(Inst.Helper.alignLHSType(lhs, inst.arg(0)).filter(l -> l.intValue() >= inst.arg(0).intValue()).isPresent())),"the lhs int", "whether the lhs is greater than or equal to the rhs", Map.of(INT_TYPE,"the int to compare against the lhs"), "check whether the lhs int is greater than or equal to the argument int"),
+                    docWrap(instC(LT_INST_TID.dom(INT_TID).rng(BOOL_TID), lst(T(INT_TID)), (lhs, inst) -> bool(Inst.Helper.alignLHSType(lhs, inst.arg(0)).filter(l -> l.intValue() < inst.arg(0).intValue()).isPresent())),"the lhs int", "whether the lhs is less than the rhs", Map.of(INT_TYPE,"the int to compare against the lhs"), "check whether the lhs int is less than the argument int"),
+                    docWrap(instC(LTE_INST_TID.dom(INT_TID).rng(BOOL_TID), lst(T(INT_TID)), (lhs, inst) -> bool(Inst.Helper.alignLHSType(lhs, inst.arg(0)).filter(l -> l.intValue() <= inst.arg(0).intValue()).isPresent())),"the lhs int", "whether the lhs is less than or equal to the rhs", Map.of(INT_TYPE,"the int to compare against the lhs"), "check whether the lhs int is less than or equal to the argument int"),
                     instC(SUM_INST_TID.dom(INT_TID.maybeSome()).rng(INT_TID), lst(), (lhs, inst) -> inst.seed().jvm(lhs.stream().reduce(inst.seed(), (a, b) -> ((Int) a).plus((Int) b)).intValue()), jnt(0)),
                     instC(PROD_INST_TID.dom(INT_TID.maybeSome()).rng(INT_TID), lst(), (lhs, inst) -> inst.seed().jvm(lhs.stream().reduce(inst.seed(), (a, b) -> jnt(a.intValue() * (b.intValue() * b.c().max()))).intValue()/* * inst.c().max()*/), jnt(1)),
                     instC(POW_INST_TID.dom(INT_TID).rng(INT_TID), lst(T(INT_TID)), (lhs, inst) -> jnt((long) Math.pow(lhs.intValue(), inst.arg(0).intValue()))),

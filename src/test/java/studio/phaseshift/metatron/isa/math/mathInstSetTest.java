@@ -103,7 +103,7 @@ public class mathInstSetTest extends AbstractInstSetTest {
             "kB::2.as(bB::T)                                                                   % bB::2048",
     }, delimiter = '%', quoteCharacter = '~')
     public void testConversions(final String code, final String expected) {
-        AbstractMetatronTest.testCode(LOG, code, expected);
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 
     @ParameterizedTest

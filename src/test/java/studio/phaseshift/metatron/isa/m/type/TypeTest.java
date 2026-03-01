@@ -580,7 +580,7 @@ public class TypeTest extends AbstractMetatronTest {
         LOG.debug("testing type stack of %s:\n\t%s\n\t%s\n\t%s", instanceObj, expectedTypeStack, deducedTypeStack, matchesTypeStack);
         assertEquals(matches, matchesTypeStack.stream().reduce(true, (a, b) -> a && b));
         //assertEquals(expectedTypeStack, deducedTypeStack.subList(1, deducedTypeStack.size()));
-        testMatches(LOG, instance, type, matches);
+        checkMatches(LOG, instance, type, matches);
     }
 
     @ParameterizedTest

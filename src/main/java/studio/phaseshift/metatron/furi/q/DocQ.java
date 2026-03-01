@@ -188,7 +188,7 @@ public class DocQ extends BaseQ {
         }
 
         public String description() {
-            return this.at(Tokens.DESC).isNoObj() ? null : this.at(Tokens.DESC).strValue();
+            return this.at(Tokens.DESC).isNoObj() ? null : this.at(Tokens.DESC).toString();
         }
 
         public String toCleanString() {
@@ -254,7 +254,7 @@ public class DocQ extends BaseQ {
             }
             insty.text("{{m}}|").until(' ', rhsBorderColumn).text("|{{X}}\n");
             insty.text("{{m}}|--").text("{{b}}description{{m}}").until('-', rhsBorderColumn - 1).text("-|{{X}}\n");
-            String desc = this.at(Tokens.DESC).orElse(str("<no description>")).strValue();
+            String desc = this.at(Tokens.DESC).orElse(str("<no description>")).toString();
             int lhs = 0;
             int rowLength = Math.min(rhsBorderColumn - 6, desc.length()); // 6 to compensate for lhs padding in desc box
             while (true) {

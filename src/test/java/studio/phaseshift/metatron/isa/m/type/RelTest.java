@@ -34,7 +34,7 @@ public class RelTest extends AbstractMetatronTest {
             "(a=>b)-<(dom().as(str::T)=>rng())                                     % \"a\"=>b",
     }, delimiter = '%')
     public void testRelAs(final String code, final String expected) {
-        AbstractMetatronTest.evaluate(LOG, code, expected);
+        AbstractMetatronTest.checkCodeEvaluate(LOG, code, expected);
     }
     
     @ParameterizedTest
@@ -46,7 +46,7 @@ public class RelTest extends AbstractMetatronTest {
             "(a=>b)-<(_=>_)>-.>-                                           % {uri{2}::a,uri{2}::b}"
     }, delimiter = '%')
     public void testRelSplitShift(final String code, final String expected) {
-        AbstractMetatronTest.evaluate(LOG, code, expected);
+        AbstractMetatronTest.checkCodeEvaluate(LOG, code, expected);
     }
 
     @ParameterizedTest
@@ -59,7 +59,7 @@ public class RelTest extends AbstractMetatronTest {
             "1=>2=>3.select((mult(4)=>(_=>plus(10)))).where((_=>(_=>13)))              % noobj",
     }, delimiter = '%')
     public void testRelSelectWhere(final String code, final String expected) {
-        AbstractMetatronTest.evaluate(LOG, code, expected);
+        AbstractMetatronTest.checkCodeEvaluate(LOG, code, expected);
     }
 
     @ParameterizedTest
@@ -72,7 +72,7 @@ public class RelTest extends AbstractMetatronTest {
             "((a=>b)=>(c=>d)).second()                                                 % (c=>d)",
     }, delimiter = '%')
     public void testRelFirstSecond(final String code, final String expected) {
-        AbstractMetatronTest.evaluate(LOG, code, expected);
+        AbstractMetatronTest.checkCodeEvaluate(LOG, code, expected);
     }
 
     @ParameterizedTest
@@ -84,7 +84,7 @@ public class RelTest extends AbstractMetatronTest {
             "(1=>2).eq((2=>1))                                                         % false",
     }, delimiter = '%')
     public void testRelEquality(final String code, final String expected) {
-        AbstractMetatronTest.evaluate(LOG, code, expected);
+        AbstractMetatronTest.checkCodeEvaluate(LOG, code, expected);
     }
 
     @ParameterizedTest
@@ -93,6 +93,6 @@ public class RelTest extends AbstractMetatronTest {
             "(a=>1).plus((a=>2))                                                       % {(a=>1),(a=>2)}",
     }, delimiter = '%')
     public void testRelPlus(final String code, final String expected) {
-        AbstractMetatronTest.evaluate(LOG, code, expected);
+        AbstractMetatronTest.checkCodeEvaluate(LOG, code, expected);
     }
 }

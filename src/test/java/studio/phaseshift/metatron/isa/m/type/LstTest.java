@@ -80,7 +80,7 @@ public class LstTest extends AbstractObjTest {
 
     }, delimiter = '%')
     public void testCode(final String code, final String expected) {
-        AbstractMetatronTest.testCode(LOG, code, expected);
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 
     @ParameterizedTest
@@ -106,7 +106,7 @@ public class LstTest extends AbstractObjTest {
 
     }, delimiter = '%')
     public void testCoefficients(final String code, final String expected) {
-        AbstractMetatronTest.testCode(LOG, code, expected);
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 
     @ParameterizedTest
@@ -124,7 +124,7 @@ public class LstTest extends AbstractObjTest {
 
     }, delimiter = '%')
     public void testAs(final String code, final String expected) {
-        AbstractMetatronTest.testCode(LOG, code, expected);
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 
     @ParameterizedTest
@@ -142,7 +142,7 @@ public class LstTest extends AbstractObjTest {
            // "[a,[b,c],[d,e]].reverse()==[(_,_,_){reverse()}]                     % [[e,d],[c,b],a]",
     }, delimiter = '%')
     public void testReverse(final String code, final String expected) {
-        AbstractMetatronTest.testCode(LOG, code, expected);
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 
     @ParameterizedTest
@@ -153,7 +153,7 @@ public class LstTest extends AbstractObjTest {
             "[[a,b],[c,d]].merge()                                               % {[a,b],[c,d]}",
     }, delimiter = '%')
     public void testMerge(final String code, final String expected) {
-        AbstractMetatronTest.testCode(LOG, code, expected);
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 
     @ParameterizedTest
@@ -165,7 +165,7 @@ public class LstTest extends AbstractObjTest {
             "[[a,b],c,[d,e,f]]>-.count()                                           % 3",
     }, delimiter = '%')
     public void testCount(final String code, final String expected) {
-        AbstractMetatronTest.testCode(LOG, code, expected);
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 
     @ParameterizedTest
@@ -177,6 +177,6 @@ public class LstTest extends AbstractObjTest {
             "[,].plus([,])                                                       % [,]",
     }, delimiter = '%')
     public void testPlus(final String code, final String expected) {
-        AbstractMetatronTest.testCode(LOG, code, expected);
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 }

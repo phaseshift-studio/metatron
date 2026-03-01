@@ -25,36 +25,43 @@ import io.github.ollama4j.models.chat.OllamaChatResult;
 import io.github.ollama4j.models.chat.OllamaChatStreamObserver;
 import io.github.ollama4j.models.generate.OllamaGenerateTokenHandler;
 import io.github.ollama4j.models.request.ThinkMode;
+import io.github.ollama4j.tools.Tools;
 import studio.phaseshift.metatron.Tokens;
+import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
-import studio.phaseshift.metatron.isa.m.type.Inst;
-import studio.phaseshift.metatron.isa.m.type.InstSet;
-import studio.phaseshift.metatron.isa.m.type.Rec;
-import studio.phaseshift.metatron.isa.m.type.Type;
+import studio.phaseshift.metatron.isa.llm.ollama.type.OLLM;
+import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.MTronException;
 
+import java.util.ArrayList;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
 
-import static studio.phaseshift.metatron.Tokens.THINK;
-import static studio.phaseshift.metatron.Tokens.TOOL;
+import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_ISA_TID;
 import static studio.phaseshift.metatron.isa.llm.llmInstSet.LLM_TID;
 import static studio.phaseshift.metatron.isa.llm.ollama.space.ollamaSpace.OLLAMA_SPACE_TYPE;
 import static studio.phaseshift.metatron.isa.m.mInstSet.INST_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.STR_TID;
+import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.Int.INT_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.Lst.LST_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Str.STR_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -71,12 +78,14 @@ public class ollamaInstSet extends AbstractInstSet {
 
     public static Type OLLM_TYPE = Type.Builder.build()
             .tid(LLM_TID)
-            .vid(OLLAMA_OLLM_TID)
-            /*.isaPredicate(rec(
+            .vid(OLLAMA_OLLM_TID).
+            isaPredicate(rec(
                     uri(NAME), URI_TYPE,
+                    uri(HOST), URI_TYPE,
                     uri(THINK).c(cInt::maybe), BOOL_TYPE,
                     uri(SIZE), INT_TYPE,
-                    uri(SKILL), LST_TYPE))*/
+                    uri(SKILL).maybe(), LST_TYPE,
+                    uri(TOOL).maybe(), LST_TYPE))
             /*.constructor(instC(INST_TID.dom(ALL.maybe()).rng(OLLAMA_OLLM_TID), lst(),
                     (lhs, inst) -> {
                         final String modelName = inst.arg(0).<Rec>as().at(NAME).uriValue().toString();
@@ -87,6 +96,75 @@ public class ollamaInstSet extends AbstractInstSet {
                             throw MTronException.of("unknown card");
                         return new OLLM(Tuple.Pair.with(model, card), OLLAMA_OLLM_TID, inst.arg(0).vid());
                     }))*/
+            .inst(instC(INST_TID.extend("chat").dom(OLLAMA_OLLM_TID).rng(STR_TID), lst(STR_TYPE),
+                    (lhs, inst) -> {
+                       //try {
+                           final GraphittyLogger LOG = Graphitty.log(lhs);
+                           final String host = lhs.asRec().at(Tokens.HOST).uriValue().toString();
+                           final boolean toolUse = !lhs.asRec().at(TOOL).isNoObj();
+                           final boolean thinking = lhs.asRec().at(THINK).orElse(bool(false)).boolValue();
+                           final String model = lhs.asRec().at(NAME).uriValue().toString();
+                           final List<Tools.Tool> tools = lhs.asRec().at(TOOL).elements().filter(Obj::isInst).map(i -> OLLM.mtronInstTool(i.asInst())).collect(Collectors.toCollection(ArrayList::new));
+                           final OllamaChatRequest chatRequest =
+                                   OllamaChatRequest.builder()
+                                           .withModel(model)
+                                           .withThinking(thinking ? ThinkMode.ENABLED : ThinkMode.DISABLED)
+                                           .withMessage(OllamaChatMessageRole.USER, inst.arg(0).strValue())
+                                           .withUseTools(toolUse)
+                                           .withTools(tools)
+                                           .build();
+
+                           final StringBuilder response = new StringBuilder();
+                           final OllamaGenerateTokenHandler thinkingStreamHandler =
+                                   (s) -> {
+                                       Router.global().stats().ioStats().incrBytesRecv(s.getBytes().length);
+                                       LOG.none("{{m}}%s{{X}}", s);
+                                   };
+
+                           final AtomicBoolean start = new AtomicBoolean(thinking);
+                           final OllamaGenerateTokenHandler responseStreamHandler =
+                                   (s) -> {
+                                       if (start.getAndSet(false))
+                                           LOG.none("\n");
+                                       LOG.none("{{y}}%s{{X}}", s);
+                                       Router.global().stats().ioStats().incrBytesRecv(s.getBytes().length);
+                                       response.append(s);
+                                   };
+
+                           final OllamaChatResult result;
+                           try {
+                               if (thinking)
+                                   LOG.none(Graphitty.sillyPrint("thinking...\n", true, true));
+                               Router.global().stats().ioStats().incrBytesSent(inst.arg(0).strValue().getBytes().length);
+                               result = new Ollama(host).chat(chatRequest, new OllamaChatStreamObserver(thinking ? thinkingStreamHandler : null, responseStreamHandler));
+                               while (!result.getResponseModel().isDone()) {
+                                   CommonUtil.sleepThread(100);
+                               }
+                           } catch (final Exception e) {
+                               throw MTronException.of(e);
+                           }
+                           LOG.none("\n");
+                           final Rec last = rec(
+                                   "request", inst.arg(0),
+                                   "response", rec(
+                                           "text", str(response.toString()),
+                                           "count", jnt(result.getResponseModel().getEvalCount())),
+                                   "time", rec(
+                                           "load", jnt(result.getResponseModel().getLoadDuration()),
+                                           "eval", jnt(result.getResponseModel().getEvalDuration()),
+                                           "total", jnt(result.getResponseModel().getTotalDuration())));
+                           if (lhs.vid() == null)
+                               lhs.asRec().at("history", lhs.asRec().at("history").orElse(lst()).add(last, IMMUTABLE), MUTABLE);
+                           else
+                               Router.readFromSpace(lhs.vid().extend("history")).orElse(lst()).add(last, MUTABLE);
+
+                           return str(response.toString());
+                      /* } catch(final Exception e) {
+                        e.printStackTrace();
+                           throw MTronException.of(e);
+                       }*/
+
+                    }))
             .create(TYPES, INSTS);
 
     public ollamaInstSet() {
@@ -94,7 +172,6 @@ public class ollamaInstSet extends AbstractInstSet {
     }
 
     public Set<Type> types() {
-        TYPES.add(OLLM_TYPE);
         TYPES.add(OLLAMA_SPACE_TYPE);
         return TYPES;
     }
@@ -110,74 +187,6 @@ public class ollamaInstSet extends AbstractInstSet {
      */
 
     public Set<Inst> insts() {
-        INSTS.add(instC(INST_TID.extend("chat").dom(OLLAMA_OLLM_TID).rng(STR_TID), lst(STR_TYPE),
-                (lhs, inst) -> {
-                          /*  final OllamaChatModel model = OllamaChatModel.builder()
-                                    .baseUrl(lhs.<Rec>as().at(Tokens.HOST).uriValue().toString())
-                                    .modelName(lhs.<Rec>as().at(Tokens.NAME).uriValue().toString())
-                                    .think(lhs.<Rec>as().at(THINK).orElse(bool(false)).boolValue())
-                                    .returnThinking(lhs.<Rec>as().at(THINK).orElse(bool(false)).boolValue())
-                                    .build();*/
-                    final GraphittyLogger LOG = Graphitty.log(lhs);
-                    final String host = lhs.asRec().at(Tokens.HOST).uriValue().toString();
-                    final boolean toolUse = lhs.asRec().at(TOOL).orElse(bool(false)).boolValue();
-                    final boolean thinking = lhs.asRec().at(THINK).orElse(bool(false)).boolValue();
-                    final String model = lhs.asRec().at(Tokens.NAME).uriValue().toString();
-                    final OllamaChatRequest chatRequest =
-                            OllamaChatRequest.builder()
-                                    .withModel(model)
-                                    .withThinking(thinking ? ThinkMode.ENABLED : ThinkMode.DISABLED)
-                                    .withMessage(OllamaChatMessageRole.USER, inst.arg(0).strValue())
-                                    .withUseTools(toolUse)
-                                    .build();
-
-                    final StringBuilder response = new StringBuilder();
-                    final OllamaGenerateTokenHandler thinkingStreamHandler =
-                            (s) -> {
-                                Router.global().stats().ioStats().incrBytesRecv(s.getBytes().length);
-                                LOG.none("{{m}}%s{{X}}", s);
-                            };
-
-                    final AtomicBoolean start = new AtomicBoolean(thinking);
-                    final OllamaGenerateTokenHandler responseStreamHandler =
-                            (s) -> {
-                                if (start.getAndSet(false))
-                                    LOG.none("\n");
-                                LOG.none("{{y}}%s{{X}}", s);
-                                Router.global().stats().ioStats().incrBytesRecv(s.getBytes().length);
-                                response.append(s);
-                            };
-
-                    final OllamaChatResult result;
-                    try {
-                        if (thinking)
-                            LOG.none(Graphitty.sillyPrint("thinking...\n", true, true));
-                        Router.global().stats().ioStats().incrBytesSent(inst.arg(0).strValue().getBytes().length);
-                        result = new Ollama(host).chat(chatRequest, new OllamaChatStreamObserver(thinking ? thinkingStreamHandler : null, responseStreamHandler));
-                        while (!result.getResponseModel().isDone()) {
-                            CommonUtil.sleepThread(100);
-                        }
-                    } catch (final Exception e) {
-                        throw MTronException.of(e);
-                    }
-                    LOG.none("\n");
-                    final Rec last = rec(
-                            "request", inst.arg(0),
-                            "response", rec(
-                                    "text", str(response.toString()),
-                                    "count", jnt(result.getResponseModel().getEvalCount())),
-                            "time", rec(
-                                    "load", jnt(result.getResponseModel().getLoadDuration()),
-                                    "eval", jnt(result.getResponseModel().getEvalDuration()),
-                                    "total", jnt(result.getResponseModel().getTotalDuration())));
-                    if (lhs.vid() == null)
-                        lhs.asRec().at("history", lhs.asRec().at("history").orElse(lst()).add(last, IMMUTABLE), MUTABLE);
-                    else
-                        Router.readFromSpace(lhs.vid().extend("history")).orElse(lst()).add(last, MUTABLE);
-
-                    return str(response.toString());
-
-                }));
         return INSTS;
     }
 }

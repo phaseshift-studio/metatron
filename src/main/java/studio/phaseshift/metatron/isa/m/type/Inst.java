@@ -360,6 +360,7 @@ public interface Inst extends Call {
                 }
                 cinst = Helper.applyArgs(clhs, cinst);
                 Router.stack().push(cinst.args());
+                //Router.stack().push(rec("lhs",clhs));
                 try {
                     rhs = Objs.trySingleton(FutureObj.resolveFuture(cinst.f().apply(isMonadicInst ? lhs.asMonad().obj(clhs) : clhs, cinst)));
                     if (rhs.isUncaughtFail())
@@ -377,6 +378,7 @@ public interface Inst extends Call {
                     // e.printStackTrace();
                 } finally {
                     Router.stack().pop();
+                  //  Router.stack().pop();
                 }
             } catch (final Exception e) {
                 rhs = fail(MTronException.of("unable to evaluate inst function: %s", cinst), fail(e));

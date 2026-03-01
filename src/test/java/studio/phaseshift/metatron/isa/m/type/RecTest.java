@@ -113,7 +113,7 @@ public class RecTest extends AbstractMetatronTest {
 
     }, delimiter = '|')
     public void testMatches(final String recA, final String recB, final boolean matches) {
-        AbstractMetatronTest.testMatches(LOG, recA, recB, matches);
+        AbstractMetatronTest.checkMatches(LOG, recA, recB, matches);
     }
 
 
@@ -131,7 +131,7 @@ public class RecTest extends AbstractMetatronTest {
             "[=>].as(rec::T)                                                            % [=>]",
     }, delimiter = '%')
     public void testAs(final String code, final String expected) {
-        AbstractMetatronTest.testCode(LOG, code, expected);
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 
     @ParameterizedTest
@@ -140,7 +140,7 @@ public class RecTest extends AbstractMetatronTest {
             "(a=>(knows=>(b=>(knows=>c))))../<a/+/b/knows>                                           % c"
     }, delimiter = '%')
     public void testRecRelBehaviors(final String code, final String expected) {
-        AbstractMetatronTest.testCode(LOG, code, expected);
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 
     @ParameterizedTest
@@ -186,7 +186,7 @@ public class RecTest extends AbstractMetatronTest {
             "[1,2,3].-<[>-.is(gt(2)) => >-.is(gt(1))>-?<=int{*}[,], >-.is(gt(1)) => _/id()\\_]       % [3=>[2,3],{2,3}=>[1,2,3]]",
     }, delimiter = '%')
     public void testCode(final String code, final String expected) {
-        AbstractMetatronTest.testCode(LOG, code, expected);
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 
     @Test
@@ -223,7 +223,7 @@ public class RecTest extends AbstractMetatronTest {
          //   "[a=>1,b=>2].reverse().reverse()                                                 % [a=>1,b=>2]",
     }, delimiter = '%')
     public void testReverse(final String code, final String expected) {
-        AbstractMetatronTest.testCode(LOG, code, expected);
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 
     @Test
@@ -232,24 +232,24 @@ public class RecTest extends AbstractMetatronTest {
         Rec r2 = r1.at(uri("b"), jnt(22), IMMUTABLE);
         Rec r3 = r1.at(uri("b")).<Rec>as().at(uri("d"), jnt(33), IMMUTABLE);
         Rec r4 = r1.at(uri("b"), r1.at(uri("b")).<Rec>as().at(uri("d"), jnt(33)), IMMUTABLE);
-        AbstractMetatronTest.testEquals(LOG, rec(uri("a"), jnt(1), uri("b"), rec(uri("c"), jnt(3))), r1, true);
-        AbstractMetatronTest.testEquals(LOG, rec(uri("a"), jnt(1), uri("b"), jnt(22)), r2, true);
-        AbstractMetatronTest.testEquals(LOG, rec(uri("c"), jnt(3), uri("d"), jnt(33)), r3, true);
-        AbstractMetatronTest.testEquals(LOG, rec(uri("a"), jnt(1), uri("b"), rec(uri("c"), jnt(3), uri("d"), jnt(33))), r4, true);
+        AbstractMetatronTest.checkEquality(LOG, rec(uri("a"), jnt(1), uri("b"), rec(uri("c"), jnt(3))), r1, true);
+        AbstractMetatronTest.checkEquality(LOG, rec(uri("a"), jnt(1), uri("b"), jnt(22)), r2, true);
+        AbstractMetatronTest.checkEquality(LOG, rec(uri("c"), jnt(3), uri("d"), jnt(33)), r3, true);
+        AbstractMetatronTest.checkEquality(LOG, rec(uri("a"), jnt(1), uri("b"), rec(uri("c"), jnt(3), uri("d"), jnt(33))), r4, true);
         /// //
         Rec rr1 = rec(uri("a"), jnt(1), uri("b"), rec(uri("c"), jnt(3)));
         Rec s1 = rec(uri("a"), jnt(1), uri("b"), rec(uri("c"), jnt(3)));
-        AbstractMetatronTest.testEquals(LOG, r1, s1, true);
+        AbstractMetatronTest.checkEquality(LOG, r1, s1, true);
         Rec s2 = r1.at(uri("b"), jnt(22), MUTABLE);
-        AbstractMetatronTest.testEquals(LOG, r2, s2, true);
+        AbstractMetatronTest.checkEquality(LOG, r2, s2, true);
         Rec s3 = s1.at(uri("b")).<Rec>as().at(uri("d"), jnt(33), MUTABLE);
-        AbstractMetatronTest.testEquals(LOG, r3, s3, true);
+        AbstractMetatronTest.checkEquality(LOG, r3, s3, true);
         Rec s4 = rr1.clone().<Rec>as().at(uri("b"), rr1.at(uri("b")).clone().<Rec>as().at(uri("d"), jnt(33), IMMUTABLE), MUTABLE);
-        AbstractMetatronTest.testEquals(LOG, r4, s4, true);
-        AbstractMetatronTest.testEquals(LOG, rec(uri("a"), jnt(1), uri("b"), rec(uri("c"), jnt(3))), rr1, true);
-        AbstractMetatronTest.testEquals(LOG, rec(uri("a"), jnt(1), uri("b"), jnt(22)), s2, true);
-        AbstractMetatronTest.testEquals(LOG, rec(uri("c"), jnt(3), uri("d"), jnt(33)), s3, true);
-        AbstractMetatronTest.testEquals(LOG, rec(uri("a"), jnt(1), uri("b"), rec(uri("c"), jnt(3), uri("d"), jnt(33))), s4, true);
+        AbstractMetatronTest.checkEquality(LOG, r4, s4, true);
+        AbstractMetatronTest.checkEquality(LOG, rec(uri("a"), jnt(1), uri("b"), rec(uri("c"), jnt(3))), rr1, true);
+        AbstractMetatronTest.checkEquality(LOG, rec(uri("a"), jnt(1), uri("b"), jnt(22)), s2, true);
+        AbstractMetatronTest.checkEquality(LOG, rec(uri("c"), jnt(3), uri("d"), jnt(33)), s3, true);
+        AbstractMetatronTest.checkEquality(LOG, rec(uri("a"), jnt(1), uri("b"), rec(uri("c"), jnt(3), uri("d"), jnt(33))), s4, true);
     }
 
     @ParameterizedTest
@@ -308,7 +308,7 @@ public class RecTest extends AbstractMetatronTest {
             "[a=>[b=>1,c=>2]].merge()                                                    % {(a=>[b=>1,c=>2])}",
     }, delimiter = '%')
     public void testMerge(final String code, final String expected) {
-        AbstractMetatronTest.testCode(LOG, code, expected);
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 
     @ParameterizedTest
@@ -319,7 +319,7 @@ public class RecTest extends AbstractMetatronTest {
             "[x=>10,y=>20,z=>30].dom()                                                   % {x,y,z}",
     }, delimiter = '%')
     public void testDom(final String code, final String expected) {
-        AbstractMetatronTest.testCode(LOG, code, expected);
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 
     @ParameterizedTest
@@ -331,7 +331,7 @@ public class RecTest extends AbstractMetatronTest {
             "[a=>[b=>1],c=>[d=>2]].rng()                                                 % {[b=>1],[d=>2]}",
     }, delimiter = '%')
     public void testRng(final String code, final String expected) {
-        AbstractMetatronTest.testCode(LOG, code, expected);
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 
     @ParameterizedTest
@@ -344,7 +344,7 @@ public class RecTest extends AbstractMetatronTest {
             "[=>].plus([=>])                                                             % [=>]",
     }, delimiter = '%')
     public void testPlus(final String code, final String expected) {
-        AbstractMetatronTest.testCode(LOG, code, expected);
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 
     @ParameterizedTest
@@ -356,7 +356,7 @@ public class RecTest extends AbstractMetatronTest {
             "[a=>[b=>1,c=>2],d=>3]>-.count()                                               % 2",
     }, delimiter = '%')
     public void testCount(final String code, final String expected) {
-        AbstractMetatronTest.testCode(LOG, code, expected);
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 
     @ParameterizedTest
@@ -367,7 +367,7 @@ public class RecTest extends AbstractMetatronTest {
             "[a=>1,b=>2,c=>3].select([a=>_,d=>_])                                              % [a=>1]",
     }, delimiter = '%')
     public void testSelect(final String code, final String expected) {
-        AbstractMetatronTest.testCode(LOG, code, expected);
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 
     @ParameterizedTest
@@ -378,6 +378,6 @@ public class RecTest extends AbstractMetatronTest {
             "{[a=>1,b=>2],[c=>3,d=>4]}.sum()                                             % [a=>1,b=>2,c=>3,d=>4]",
     }, delimiter = '%')
     public void testSum(final String code, final String expected) {
-        AbstractMetatronTest.testCode(LOG, code, expected);
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 }

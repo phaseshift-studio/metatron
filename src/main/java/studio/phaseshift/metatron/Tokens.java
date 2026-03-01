@@ -62,6 +62,7 @@ public final class Tokens {
     public static final String SUB = "sub";
     public static final String PATTERN = "pattern";
     public static final String SERIALIZER = "serializer";
+    public static final String LOGG = "log";
     public static final String HOST = "host";
     public static final String PORT = "port";
     public static final String USER = "user";

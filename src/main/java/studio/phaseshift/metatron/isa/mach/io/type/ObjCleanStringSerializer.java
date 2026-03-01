@@ -233,9 +233,13 @@ public class ObjCleanStringSerializer extends AbstractObjSerializer<String> {
     private StringBuilder handleTID(final StringBuilder sb, final Obj obj, final boolean hideBaseTID) {
         if (!obj.isFail() && !obj.isCaughtFail() && hideBaseTID && BASE_TYPES.contains(obj.tid()))
             return sb;
-        sb.append(Router.loaded() ? Router.global().rewrite(obj.tid(), false) : obj.tid());
-        if (!obj.isInst())
-            sb.append("::");
+        if (hideBaseTID && BASE_TYPES.contains(obj.tid().basePath()))
+            sb.append('{').append(obj.tid().c()).append('}');
+        else {
+            sb.append(Router.loaded() ? Router.global().rewrite(obj.tid(), false) : obj.tid());
+            if (!obj.isInst())
+                sb.append("::");
+        }
         return sb;
     }
 

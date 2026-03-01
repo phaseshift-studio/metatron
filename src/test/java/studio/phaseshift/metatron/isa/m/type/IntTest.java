@@ -32,7 +32,7 @@ public class IntTest extends AbstractObjTest {
             "2.as(real::T)                                                                  % 2.0"
     }, delimiter = '%')
     public void testAsInst(final String code, final String expected) {
-        AbstractMetatronTest.testCode(LOG, code, expected);
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 
     @ParameterizedTest
@@ -51,7 +51,7 @@ public class IntTest extends AbstractObjTest {
             "int{-1}::1                          % int{-1,1}::T[]               % true"
     }, delimiter = '%')
     public void testMatches(final String lhs, final String rhs, final boolean matches) {
-        AbstractMetatronTest.testMatches(LOG, lhs, rhs, matches);
+        AbstractMetatronTest.checkMatches(LOG, lhs, rhs, matches);
     }
 
     @ParameterizedTest
@@ -69,7 +69,7 @@ public class IntTest extends AbstractObjTest {
             "int{-1}::1                          % ?=~int{,}::T[]               % int{-1}::1"
     }, delimiter = '%')
     public void testCode(final String lhs, final String code, final String expected) {
-        AbstractMetatronTest.testCode(LOG, lhs, code, expected);
+        AbstractMetatronTest.checkCodeParseApply(LOG, lhs, code, expected);
     }
 
     @ParameterizedTest
@@ -87,7 +87,7 @@ public class IntTest extends AbstractObjTest {
             "-5.mult(-2)                       % 10",
     }, delimiter = '%')
     public void testMath(final String code, final String expected) {
-        AbstractMetatronTest.testCode(LOG, code, expected);
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 
     @ParameterizedTest
@@ -112,7 +112,7 @@ public class IntTest extends AbstractObjTest {
             // "start?int{-1,1}<=int{0}(int{-1}::1)>-{int::1}             % noobj"
     }, delimiter = '%')
     public void testBasic(final String code, final String expected) {
-        AbstractMetatronTest.testCode(LOG, code, expected);
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 
     @ParameterizedTest
@@ -162,7 +162,7 @@ public class IntTest extends AbstractObjTest {
             "{-5,-2,-10}       %order()       %[-10,-5,-2]",
     }, delimiter = '%')
     public void testOrder(final String input, final String code, final String expected) {
-        AbstractMetatronTest.testCode(LOG, input, code, expected);
+        AbstractMetatronTest.checkCodeParseApply(LOG, input, code, expected);
     }
 
     @ParameterizedTest
@@ -186,7 +186,7 @@ public class IntTest extends AbstractObjTest {
             "-5.gt(-10)                        % true",
     }, delimiter = '%')
     public void testComparison(final String code, final String expected) {
-        AbstractMetatronTest.testCode(LOG, code, expected);
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 
     @ParameterizedTest
@@ -198,6 +198,6 @@ public class IntTest extends AbstractObjTest {
             "{}.sum?int<=int{*}(0)             % 0",
     }, delimiter = '%')
     public void testSum(final String code, final String expected) {
-        AbstractMetatronTest.testCode(LOG, code, expected);
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 }

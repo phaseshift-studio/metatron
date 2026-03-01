@@ -42,6 +42,6 @@ public class vecInstSetTest extends AbstractInstSetTest {
             "1.plus(1)                                                              % 2"
     }, delimiter = '%')
     public void testCode(final String code, final String expected) {
-        AbstractMetatronTest.testCode(LOG, code, expected);
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 }

@@ -60,7 +60,7 @@ public class UriTest extends AbstractMetatronTest {
             "a.mult(<../../b>)                                            | <../b>"
     }, delimiter = '|')
     public void testCode(final String code, final String expected) {
-        AbstractMetatronTest.testCode(LOG, code, expected);
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 
     @ParameterizedTest
@@ -83,7 +83,7 @@ public class UriTest extends AbstractMetatronTest {
             "<a/b/../c/d>.pow(3)              % a/c/d/a/c/d/a/c/d",
     }, delimiter = '%')
     public void testMath(final String code, final String expected) {
-        AbstractMetatronTest.testCode(LOG, code, expected);
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 
     @ParameterizedTest
@@ -97,7 +97,7 @@ public class UriTest extends AbstractMetatronTest {
             "<////a>.-</                      % [<>,<>,<>,<>,<>,a]",
     }, delimiter = '%')
     public void testSplit(final String code, final String expected) {
-        AbstractMetatronTest.testCode(LOG, code, expected);
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 
     @ParameterizedTest
@@ -118,7 +118,7 @@ public class UriTest extends AbstractMetatronTest {
             "*test.>>path>>1.*(_)             % 42"
     }, delimiter = '%')
     public void testGet(final String code, final String expected) {
-        AbstractMetatronTest.testCode(LOG, code, expected);
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 
     @ParameterizedTest
@@ -131,7 +131,7 @@ public class UriTest extends AbstractMetatronTest {
             "/a.reverse()                     % /a",
     }, delimiter = '%')
     public void testReverse(final String code, final String expected) {
-        AbstractMetatronTest.testCode(LOG, code, expected);
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 
 
@@ -151,7 +151,7 @@ public class UriTest extends AbstractMetatronTest {
             // "{'abc3d','aaa'}.where(has('e.'))                                               % noobj",
     }, delimiter = '%')
     public void testHasInst(final String code, final String expected) {
-        AbstractMetatronTest.testCode(LOG, code, expected);
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 
 
@@ -168,7 +168,7 @@ public class UriTest extends AbstractMetatronTest {
             // "<a://b.com:123/c/d?x=1&y=2>.query(x=3)                 % <a://b.com:123/c/d?x=3&y=2>",
     }, delimiter = '%')
     public void testAsRec(final String code, final String expected) {
-        AbstractMetatronTest.testCode(LOG, code, expected);
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 
     @ParameterizedTest
@@ -179,7 +179,7 @@ public class UriTest extends AbstractMetatronTest {
             "<3a>.as(int::T)                                            % <ERROR>",
     }, delimiter = '%')
     public void testAsInt(final String code, final String expected) {
-        AbstractMetatronTest.testCode(LOG, code, expected);
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 
     @ParameterizedTest
@@ -190,7 +190,7 @@ public class UriTest extends AbstractMetatronTest {
           //  "<http://example.com/a/b/c>.count()                         % 6",
     }, delimiter = '%')
     public void testCount(final String code, final String expected) {
-        AbstractMetatronTest.testCode(LOG, code, expected);
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 
     @ParameterizedTest
@@ -201,7 +201,7 @@ public class UriTest extends AbstractMetatronTest {
             "<http://a.com>.eq(<http://a.com>)                          % true",
     }, delimiter = '%')
     public void testEquality(final String code, final String expected) {
-        AbstractMetatronTest.testCode(LOG, code, expected);
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 
 

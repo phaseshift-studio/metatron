@@ -78,7 +78,7 @@ public class ObjsTest extends AbstractObjTest {
             "{1,2,1,2}.count()                                                   % 4",
     }, delimiter = '%')
     public void testCount(final String code, final String expected) {
-        AbstractMetatronTest.testCode(LOG, code, expected);
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 
     @ParameterizedTest
@@ -88,6 +88,6 @@ public class ObjsTest extends AbstractObjTest {
             "{}.merge()                                                          % {}",
     }, delimiter = '%')
     public void testMerge(final String code, final String expected) {
-        AbstractMetatronTest.testCode(LOG, code, expected);
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 }

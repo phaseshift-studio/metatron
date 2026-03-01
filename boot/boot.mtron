@@ -84,10 +84,7 @@ print("{{y}}supported scripting environments:\n{{X}}", *<boot/script>.else(boot/
           route   => [ollama:=><>]]@/sys/space/ollama;
 [== load user console ==]
 console::[        => ]@/sys/console;
- [-- *boot/args/mode.-<|[?=server   => print('\n\t{{g}}-<{{c}}server mode{{g}}>-{{X}}'), 
- [--                       ?=console => print('\n\t{{g}}-<{{c}}client mode{{g}}>-{{X}}').map(console::[=>]), 
- [--                      _         => print(_,'\n\t')];
- [--*boot/args.print(_)
+*boot/args.print(_)
 
  
 

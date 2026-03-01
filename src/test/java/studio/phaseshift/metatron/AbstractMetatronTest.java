@@ -39,8 +39,8 @@ import java.util.Random;
 import java.util.function.Supplier;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.junit.jupiter.api.Assumptions.assumeFalse;
-import static org.junit.jupiter.api.Assumptions.assumeTrue;
+import static studio.phaseshift.metatron.Tokens.HOST;
+import static studio.phaseshift.metatron.Tokens.LOGG;
 import static studio.phaseshift.metatron.isa.m.mInstSet.START_INST_TID;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
@@ -56,14 +56,14 @@ public abstract class AbstractMetatronTest {
     protected GraphittyLogger LOG = Graphitty.log(this);
 
     public static int generatePort() {
-        return RANDOM.nextInt(1000, 65000);
+        return RANDOM.nextInt(10000, 65000);
     }
 
     @BeforeAll
     public static void begin() {
         BootLoader.BOOTING = true;
         BootLoader.TESTING = true;
-        BootLoader.load(rec(uri("host"), uri("ws://localhost:" + RANDOM.nextInt(65535)), uri("log"), uri(LogObj.getSLF4J().toString().toLowerCase())));
+        BootLoader.load(rec(uri(HOST), uri("ws://localhost:" + generatePort()), uri(LOGG), uri(LogObj.getSLF4J().toString().toLowerCase())));
         BootLoader.loadInstSetProvider(IO_ISA_TID);
     }
 
@@ -73,8 +73,7 @@ public abstract class AbstractMetatronTest {
     }
 
 
-
-    public static void testMatches(final GraphittyLogger LOG, final String lhs, final String rhs, final boolean matches) {
+    public static void checkMatches(final GraphittyLogger LOG, final String lhs, final String rhs, final boolean matches) {
         final Obj a = mParser.m_obj().parse(lhs).get();
         final Obj b = mParser.m_obj().parse(rhs).get();
         final boolean m = a.test(b);
@@ -82,16 +81,7 @@ public abstract class AbstractMetatronTest {
         assertEquals(matches, m);
     }
 
-    public static void testCode(final GraphittyLogger LOG, final String lhs, final String code, final String expected) {
-        final Obj a = mParser.m_obj().parse(lhs).get();
-        final Obj b = mParser.m_obj().parse(code).get();
-        final Obj ex = mParser.m_obj().parse(expected).get();
-        final Obj actual = b.apply(a);
-        LOG.debug("testing %s.%s => %s [expected:%s]", a, b, actual, ex);
-        assertEquals(ex, actual);
-    }
-
-    public static void evaluate(final GraphittyLogger LOG, final String lhs, final String expected) {
+    public static void checkCodeEvaluate(final GraphittyLogger LOG, final String lhs, final String expected) {
         final Obj a = mParser.eval(lhs);
         final Obj b = mParser.eval(expected);
         final Obj actual = b.apply(a);
@@ -100,15 +90,15 @@ public abstract class AbstractMetatronTest {
     }
 
 
-    public static void testEquals(final GraphittyLogger LOG, final Obj a, final Obj b, final boolean equals) {
+    public static void checkEquality(final GraphittyLogger LOG, final Obj a, final Obj b, final boolean equals) {
         LOG.debug("testing %s == %s [expected:%s]", a, b, equals);
         if (equals)
-            assertEquals(a, b);
+            assertEquals(a, b, Graphitty.string("failed %s != %s", a, b));
         else
-            assertNotEquals(a, b);
+            assertNotEquals(a, b, Graphitty.string("failed %s == %s", a, b));
     }
 
-    public static void testSpace(final GraphittyLogger LOG, final String stateCode, final String mutationCode, final Map<fURI, String> expected) {
+    public static void checkSpaceMutation(final GraphittyLogger LOG, final String stateCode, final String mutationCode, final Map<fURI, String> expected) {
         final Obj stateResult = mParser.eval(stateCode);
         final Obj mutationResult = mParser.eval(mutationCode);
         LOG.debug("testing %s <= %s", stateResult, mutationResult);
@@ -120,7 +110,7 @@ public abstract class AbstractMetatronTest {
         });
     }
 
-    public static Tuple.Quartet<Obj, Long, Obj, Long> testParseEvalPerformance(final GraphittyLogger LOG, final Supplier<Obj> lhs, final Supplier<Obj> rhs) {
+    public static Tuple.Quartet<Obj, Long, Obj, Long> checkParsePerformance(final GraphittyLogger LOG, final Supplier<Obj> lhs, final Supplier<Obj> rhs) {
         final Tuple.Pair<Obj, Long> parseResult = CommonUtil.clock(lhs);
         assertInstanceOf(Call.class, parseResult.get0());
         final Tuple.Pair<Obj, Long> evalResult = CommonUtil.clock(parseResult.get0(), rhs.get());
@@ -128,7 +118,7 @@ public abstract class AbstractMetatronTest {
         return Tuple.Quartet.with(parseResult.get0(), parseResult.get1(), evalResult.get0(), evalResult.get1());
     }
 
-    public static void testRewrite(final GraphittyLogger LOG, final String code, final String expected, final String expectedResult) {
+    public static void checkCodeRewrite(final GraphittyLogger LOG, final String code, final String expected, final String expectedResult) {
         final Code firstStage = mParser.parse(code);
         final Obj secondStage = mParser.parse(expected);
         final Obj compilation = firstStage.rewrite().tryToInst();
@@ -146,7 +136,28 @@ public abstract class AbstractMetatronTest {
         assertEquals(result, actual);
     }
 
-    public static void testCode(final GraphittyLogger LOG, final String code, final String expected) {
+    public static void checkCodeParseApply(final GraphittyLogger LOG, final String lhs, final String code, final String expected) {
+        if (expected.trim().equals("<ERROR>")) {
+            try {
+                final Obj a = mParser.m_obj().parse(lhs).get();
+                final Obj b = mParser.m_obj().parse(code).get();
+                final Obj actual = b.apply(a);
+                LOG.debug("testing %s.%s => %s [expected:%s]", a, b, actual, expected);
+                fail("expected error but got " + actual);
+            } catch (final Exception e) {
+                LOG.debug("testing %s.%s => %s [expected:%s]", lhs, code, e.getMessage(), expected);
+            }
+        } else {
+            final Obj a = mParser.m_obj().parse(lhs).get();
+            final Obj b = mParser.m_obj().parse(code).get();
+            final Obj ex = mParser.m_obj().parse(expected).get();
+            final Obj actual = b.apply(a);
+            LOG.debug("testing %s.%s => %s [expected:%s]", a, b, actual, ex);
+            checkEquality(LOG, ex, actual, true);
+        }
+    }
+
+    public static void checkCodeParseApply(final GraphittyLogger LOG, final String code, final String expected) {
         if (expected.trim().equals("<ERROR>")) {
             try {
                 final Obj cd = code.contains(";") ? mParser.eval(code) : mParser.m_call_prefix(START_INST_TID).parse(code).get();

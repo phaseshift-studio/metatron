@@ -42,7 +42,7 @@ public class StrTest extends AbstractObjTest {
 
     }, delimiter = '%', quoteCharacter = '~')
     public void testAsInst(final String code, final String expected) {
-        AbstractMetatronTest.testCode(LOG, code, expected);
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 
     @ParameterizedTest
@@ -56,7 +56,7 @@ public class StrTest extends AbstractObjTest {
             "'ab3cd'.regex('\\d{2}')                                                        % [,]",
     }, delimiter = '%', quoteCharacter = '~')
     public void testRegexInst(final String code, final String expected) {
-        AbstractMetatronTest.testCode(LOG, code, expected);
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 
     @ParameterizedTest
@@ -68,7 +68,7 @@ public class StrTest extends AbstractObjTest {
             //"{}.sum?str<=str{*}()                                                           % \"\"",  // TODO
     }, delimiter = '%', quoteCharacter = '~')
     public void testSum(final String code, final String expected) {
-        AbstractMetatronTest.testCode(LOG, code, expected);
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 
     @ParameterizedTest
@@ -83,7 +83,7 @@ public class StrTest extends AbstractObjTest {
             "\"123\".lcase()                                                      % \"123\"",
     }, delimiter = '%')
     public void testUCaseAndLCase(final String code, final String expected) {
-        AbstractMetatronTest.testCode(LOG, code, expected);
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 
     @ParameterizedTest
@@ -102,7 +102,7 @@ public class StrTest extends AbstractObjTest {
             // "{'abc3d','aaa'}.where(has('e.'))                                               % noobj",
     }, delimiter = '%', quoteCharacter = '~')
     public void testHasInst(final String code, final String expected) {
-        AbstractMetatronTest.testCode(LOG, code, expected);
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 
 
@@ -130,7 +130,7 @@ public class StrTest extends AbstractObjTest {
             "'ab3cd' + 'ab.'                                                                % \"ab3cdab.\"",
     }, delimiter = '%', quoteCharacter = '~')
     public void testPlusInst(final String code, final String expected) {
-        AbstractMetatronTest.testCode(LOG, code, expected);
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 
     @ParameterizedTest
@@ -144,7 +144,7 @@ public class StrTest extends AbstractObjTest {
             "\"hello world\".reverse()       % \"dlrow olleh\"",
     }, delimiter = '%')
     public void testReverse(final String code, final String expected) {
-        AbstractMetatronTest.testCode(LOG, code, expected);
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 
     @ParameterizedTest
@@ -156,7 +156,7 @@ public class StrTest extends AbstractObjTest {
             "\"ABC\".eq(\"abc\")               % false",
     }, delimiter = '%')
     public void testEquality(final String code, final String expected) {
-        AbstractMetatronTest.testCode(LOG, code, expected);
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 
     @ParameterizedTest
@@ -183,7 +183,7 @@ public class StrTest extends AbstractObjTest {
             "\"ABC\".lt(\"abc\")               % true",
     }, delimiter = '%')
     public void testComparison(final String code, final String expected) {
-        AbstractMetatronTest.testCode(LOG, code, expected);
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 
     @ParameterizedTest
@@ -194,7 +194,7 @@ public class StrTest extends AbstractObjTest {
             "\"test\".plus(\"\")              % \"test\"",
     }, delimiter = '%')
     public void testConcat(final String code, final String expected) {
-        AbstractMetatronTest.testCode(LOG, code, expected);
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 
 }

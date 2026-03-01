@@ -38,7 +38,7 @@ public class RealTest extends AbstractObjTest {
             "3.9.as(int::T)                           % 3",
     }, delimiter = '%')
     public void testAs(final String code, final String expected) {
-        AbstractMetatronTest.testCode(LOG, code, expected);
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 
     @ParameterizedTest
@@ -55,7 +55,7 @@ public class RealTest extends AbstractObjTest {
             "-2.5.mult(-2.0)                           % 5.0",
     }, delimiter = '%')
     public void testMath(final String code, final String expected) {
-        AbstractMetatronTest.testCode(LOG, code, expected);
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 
     @ParameterizedTest
@@ -75,7 +75,7 @@ public class RealTest extends AbstractObjTest {
             "{-5.5,-2.2,-10.1}                   %order()       %[-10.1,-5.5,-2.2]",
     }, delimiter = '%')
     public void testOrder(final String input, final String code, final String expected) {
-        AbstractMetatronTest.testCode(LOG, input, code, expected);
+        AbstractMetatronTest.checkCodeParseApply(LOG, input, code, expected);
     }
 
     @ParameterizedTest
@@ -93,7 +93,7 @@ public class RealTest extends AbstractObjTest {
             "-5.5.gt(-10.1)                      % true",
     }, delimiter = '%')
     public void testComparison(final String code, final String expected) {
-        AbstractMetatronTest.testCode(LOG, code, expected);
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 
     @ParameterizedTest
@@ -104,6 +104,6 @@ public class RealTest extends AbstractObjTest {
             "{1.5}.sum()                         % 1.5",
     }, delimiter = '%')
     public void testSum(final String code, final String expected) {
-        AbstractMetatronTest.testCode(LOG, code, expected);
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
 }
