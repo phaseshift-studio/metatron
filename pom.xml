@@ -51,14 +51,14 @@
         <java-websocket.version>1.6.0</java-websocket.version>
         <sqlite.version>3.51.2.0</sqlite.version>
         <langchain4j.version>1.11.0</langchain4j.version>
-        <langgraph4j.version>1.8.1</langgraph4j.version>
-        <junit.version>6.0.2</junit.version>
+        <langgraph4j.version>1.8.4</langgraph4j.version>
+        <junit.version>6.0.3</junit.version>
         <tinkerpop.version>3.8.0</tinkerpop.version>
         <jlama.version>0.8.4</jlama.version>
         <gson.version>2.13.2</gson.version>
         <petitparser.version>2.4.0</petitparser.version>
         <jline.version>3.30.6</jline.version>
-        <logback.version>1.5.29</logback.version>
+        <logback.version>1.5.32</logback.version>
         <slf4j.version>2.0.17</slf4j.version>
         <hive.version>1.3.12</hive.version>
         <jakarta.version>2.2.0</jakarta.version>
@@ -417,7 +417,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-assembly-plugin</artifactId>
-                <version>3.7.1</version>
+                <version>3.8.0</version>
                 <executions>
                     <execution>
                         <phase>package</phase>
@@ -593,7 +593,7 @@
                 <plugin>
                     <groupId>org.codehaus.mojo</groupId>
                     <artifactId>exec-maven-plugin</artifactId>
-                    <version>3.6.2</version>
+                    <version>3.6.3</version>
                 </plugin>
                 <plugin>
                     <artifactId>maven-clean-plugin</artifactId>
@@ -633,7 +633,7 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-surefire-plugin</artifactId>
-                    <version>3.5.4</version>
+                    <version>3.5.5</version>
                     <configuration>
                         <argLine>
                             --sun-misc-unsafe-memory-access=allow
@@ -680,7 +680,7 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-assembly-plugin</artifactId>
-                    <version>3.7.1</version>
+                    <version>3.8.0</version>
                 </plugin>
                 <plugin>
                     <artifactId>maven-project-info-reports-plugin</artifactId>
