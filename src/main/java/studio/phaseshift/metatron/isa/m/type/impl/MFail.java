@@ -44,7 +44,10 @@ public class MFail extends MObj implements Fail {
     }
 
     public static Fail fail(final Throwable t) {
-        return new MFail(Tuple.Pair.with(MTronException.of(t), t.getCause() == null ? null : fail(MTronException.of(t.getCause()))), FAIL_TID, fURI.fnull);
+        if(t.getCause() == null)
+            return new MFail(Tuple.Pair.with(MTronException.of(t), null), FAIL_TID, fURI.fnull);
+        else
+            return new MFail(Tuple.Pair.with(MTronException.of(t.getCause()), fail(MTronException.of(t.getMessage()))), FAIL_TID, fURI.fnull);
     }
 
     public static Fail fail(final Throwable t, final String format, final Object... args) {

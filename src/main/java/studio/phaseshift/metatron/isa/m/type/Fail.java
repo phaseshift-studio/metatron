@@ -26,8 +26,7 @@ import studio.phaseshift.metatron.util.Tuple;
 import java.util.*;
 
 import static studio.phaseshift.metatron.furi.fURI.f;
-import static studio.phaseshift.metatron.isa.m.mInstSet.FAIL_TID;
-import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
@@ -89,8 +88,8 @@ public interface Fail extends Obj, PlusMonoid<Fail> {
 
         public static Set<Inst> insts() {
             return new LinkedHashSet<>(List.of(
-                    instC(f("/m/inst/cause").dom(FAIL_TID).rng(FAIL_TID.maybe()), lst(), (lhs, inst) -> lhs.<Fail>as().cause().map(x -> (Obj) x).orElse(noobj())), // necessary cause of type casting
-                    instC(f("/m/inst/native").dom(FAIL_TID).rng(REC_TID), lst(), (lhs, inst) -> {
+                    instC(CAUSE_INST_TID.dom(FAIL_TID).rng(FAIL_TID.maybe()), lst(), (lhs, inst) -> lhs.<Fail>as().cause().map(x -> (Obj) x).orElse(noobj())), // necessary cause of type casting
+                    instC(REIFY_INST_TID.dom(FAIL_TID).rng(REC_TID), lst(), (lhs, inst) -> {
                         final StackTraceElement[] element = lhs.<Fail>as().message().getStackTrace();
                         final Map<Obj, Obj> throwable = new LinkedHashMap<>();
                         throwable.put(uri("message"), str(lhs.<Fail>as().message().getMessage()));

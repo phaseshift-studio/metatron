@@ -60,6 +60,8 @@ public class MTronException extends RuntimeException {
     }
 
     private static MTronException convert(final Throwable throwable) {
+        if(throwable == null)
+            return null;
         if (throwable instanceof MTronException)
             return (MTronException) throwable;
         else if (throwable.toString().contains("cannot be cast to class")) {

@@ -40,6 +40,9 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
+/**
+ *
+ */
 public interface Int extends Mono, Ring.O<Int> {
 
     Type INT_TYPE = Type.Builder.build().tid(INT_TID).vid(INT_TID).create();

@@ -21,7 +21,6 @@ package studio.phaseshift.metatron.isa.iot.space.mqtt;
 import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.furi.q.PubSubQ;
-import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.impl.MObjFactory;
 import studio.phaseshift.metatron.isa.mach.type.Router;
@@ -61,7 +60,7 @@ public class MqttPubSubQ extends PubSubQ {
                 if (obj.isNoObj()) {
                     space.sjvm().toAsync()
                             .unsubscribeWith()
-                            .topicFilter(Space.Helper.routeFromSpace(vid.basePath(), space.routes()).toString())
+                            .topicFilter(space.rewrite(vid.basePath(), true).toString())
                             .send()
                             .whenComplete((m, e) -> {
                                 if (null != e) {
@@ -78,10 +77,10 @@ public class MqttPubSubQ extends PubSubQ {
                 } else {
                     space.sjvm().toAsync()
                             .subscribeWith()
-                            .topicFilter(Space.Helper.routeFromSpace(vid.basePath(), space.routes()).toString())
+                            .topicFilter(space.rewrite(vid.basePath(), false).toString())
                             .callback(p -> {
                                 LOG.trace("received %s", p);
-                                final fURI topic = Space.Helper.routeToSpace(f(p.getTopic().toString()), space.routes());
+                                final fURI topic = space.rewrite(f(p.getTopic().toString()), false);
                                 Obj o;
                                 if (p.getPayload().isPresent()) {
                                     Router.global().stats().ioStats().incrBytesRecv(p.toString().length());

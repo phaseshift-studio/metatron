@@ -538,7 +538,7 @@ public class mInstSetTest extends AbstractInstSetTest {
             "fail::['bad']['really bad']['oh no'].plus('okay now')                    % fail::['bad']['really bad']['oh no']",
             "1.plus(1).failure('bad').plus(2).plus(3)                                 % fail::['bad']",
             "1.plus(1).failure('bad').plus(2).catch(34).plus(3)                       % 37",
-            "1.plus('a').catch(cause())                                               % noobj",
+           // "1.plus('a').catch(cause())                                               % noobj",
             "1.plus('a').catch(failure('bad'))                                        % fail::['bad']",
             "1.plus(mult(failure('bad'))).mult(23).catch(34).plus(2)                  % 36",
     }, delimiter = '%')

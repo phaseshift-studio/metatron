@@ -20,6 +20,7 @@ package studio.phaseshift.metatron.isa.mach.type.ui.console;
 
 import studio.phaseshift.metatron.isa.m.type.Code;
 import studio.phaseshift.metatron.isa.m.type.Inst;
+import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.type.ui.Border;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
@@ -60,21 +61,31 @@ public class Explain extends AbstractWidget<Explain> {
                 .apply()
                 .onBrowse((s, r, c) -> {
                     final Inst sr = code.codeValue().get(r - 2);
+                    /*if (sr.args().values().anyMatch(Obj::isCode)) {
+                        s.style().pointer("{{g}}>{{X}}").apply();
+                    } else {
+                        s.style().pointer("{{r}}>{{X}}").apply();
+                    }*/
                 })
                 .onSelect((s, r, c) -> {
                     final Inst sr = code.codeValue().get(r - 2);
-                    if (true) {
+                    if (sr.args().values().anyMatch(Obj::isCode)) {
                         Graphitty.out(Console.getTerminal().output(), "\n".repeat(this.profile.height() + 2));
                         Graphitty.out(Console.getTerminal().output(), "{{^%d}}", 1);
                         final Separator sep = new Separator("{{r}}-", this);
                         Graphitty.out(Console.getTerminal().output(), sep.toString());
                         Graphitty.out(Console.getTerminal().output(), "{{v%d}}", 1);
                         sep.display();
-                        final Explain nest = new Explain(is_(eq_(jnt(45))).plus_(jnt(23)));
-                        nest.run();
-                        nest.close();
-                        Graphitty.out(Console.getTerminal().output(), "{{^%d}}", nest.profile.height() + 2);
-                        this.display();
+                        sr.args().values().filter(Obj::isCode).findFirst().ifPresent(o -> {
+                            this.close();
+                            final Explain nest = new Explain(o.asCode());
+                            nest.run();
+                            nest.close();
+                            Graphitty.out(Console.getTerminal().output(), "{{^%d}}", nest.profile.height() + 2);
+                            this.run();
+                            this.style().attachment.display();
+                        });
+                        
                     }
                 });
         this.grid = new Grid(List.of(this.selector), 1);

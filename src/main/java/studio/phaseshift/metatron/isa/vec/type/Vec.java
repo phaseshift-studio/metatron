@@ -23,6 +23,7 @@ import studio.phaseshift.metatron.isa.m.type.Poly;
 
 import java.util.Vector;
 import java.util.function.BiFunction;
+import java.util.stream.Stream;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
@@ -32,5 +33,10 @@ public interface Vec extends Poly<Vec, Vector<?>> {
     @Override
     default Vec at(final Obj key, final Obj value, final BiFunction<Poly<?, ?>, Object, Poly<?, ?>> operation) {
         return this;
+    }
+
+    @Override
+    default Stream<Obj> values() {
+        return this.elements();
     }
 }

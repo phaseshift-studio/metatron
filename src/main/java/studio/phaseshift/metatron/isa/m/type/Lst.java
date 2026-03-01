@@ -96,6 +96,11 @@ public interface Lst extends Poly<Lst, List<Obj>>, PlusMonoid.O<Lst> {
         return (Stream) IteratorUtil.stream(this.jvm()).map(e -> e.autoResolve(this).c(c -> c.mult(this.c())));
     }
 
+    @Override
+    default Stream<Obj> values() {
+        return this.elements();
+    }
+
     default Lst at(final Obj key, final Obj value, final BiFunction<Poly<?, ?>, Object, Poly<?, ?>> operation) {
         if (key.isInt()) {
             final ArrayList<Obj> newList = new ArrayList<>(this.lstValue());

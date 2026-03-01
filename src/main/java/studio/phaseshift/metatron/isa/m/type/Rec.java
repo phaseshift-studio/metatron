@@ -84,6 +84,11 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>>, PlusMonoid.O<Rec> {
     }
 
     @Override
+    default Stream<Obj> values() {
+        return this.elements().map(Rel::second);
+    }
+
+    @Override
     default boolean test(final Obj rhs) {
         if (Obj.Helper.isAuto(rhs))
             return true;
@@ -124,7 +129,7 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>>, PlusMonoid.O<Rec> {
     @Override
     default <OBJ extends Obj> OBJ at(final Obj key) {
         if (!key.isUri())
-            return (OBJ) this.jvm().getOrDefault(key, NoObj.noobj()).autoResolve(this).parent(this);
+            return this.jvm().getOrDefault(key, NoObj.noobj()).autoResolve(this).parent(this);
         else {
             final boolean singleSegment = key.uriValue().pathLength() == 1;
             final String step = singleSegment ? key.uriValue().toString() : key.uriValue().segments().getFirst();
@@ -136,8 +141,8 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>>, PlusMonoid.O<Rec> {
                         this.jvm().entrySet().stream().map(e -> rel(e.getKey().autoResolve(this), e.getValue().autoResolve(this))).map(o -> o.c(c -> c.mult(this.c()))).map(o -> o.parent(this)) :
                         this.jvm().values().stream().map(obj -> obj.autoResolve(this)).map(o -> o.c(c -> c.mult(this.c()))).map(o -> o.parent(this)));
             } else if (this.jvm().containsKey(asNode)) {
-                return (OBJ) (isBranch ?
-                        rel(asNode, this.jvm().get(asNode).autoResolve(this).parent(this)) :
+                return (isBranch ?
+                        rel(asNode, this.jvm().get(asNode)) :
                         this.jvm().get(asNode).autoResolve(this)).c(c -> c.mult(this.c())).parent(this);
             } else { // this.recValue().containsKey(uri(step))
                 final Obj temp = this.jvm().getOrDefault(uri(step), NoObj.noobj()).autoResolve(this).parent(this);
@@ -145,7 +150,7 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>>, PlusMonoid.O<Rec> {
             }
             /// ///////////////////////////////////////////////////////////////////////////////////////////////////////
             if (singleSegment) {
-                return (OBJ) result.parent(this);
+                return result.parent(this);
             } else {
                 final fURI nextKey = isBranch ? key.uriValue().pretract().asBranch() : key.uriValue().pretract();
                 return (OBJ) objs(IteratorUtil.stream(result.iterator()).filter(Obj::isPoly).map(o -> o.parent(this).<Poly<?, ?>>as()).map(r -> r.<Poly>as().at(uri(nextKey))));

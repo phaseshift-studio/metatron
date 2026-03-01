@@ -34,7 +34,6 @@ import studio.phaseshift.metatron.util.*;
 
 import java.nio.ByteBuffer;
 import java.util.*;
-import java.util.function.BiPredicate;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -683,16 +682,15 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
         public static boolean objEquals(final Obj obj, final Object other) {
             if (!(other instanceof Obj))
                 return false;
-            if (obj.vid() != null && obj.vid().equals(((Obj) other).vid()))
+            if (obj.isNoObj() && ((Obj) other).isNoObj())
                 return true;
-            final BiPredicate<Obj, Obj> opt = Optimizations.optimizedEquals.get(obj.tid().basePath());
-            if (null != opt)
-                return opt.test(obj, (Obj) other);
-            return ((obj.isNoObj() && ((Obj) other).isNoObj()) ||
-                    (obj.vid() != null && Objects.equals(obj.vid(), ((Obj) other).vid())) ||
-                    (Objects.equals(obj.tid(), ((Obj) other).tid()) &&
-                            //Objects.equals(obj.vid(), ((Obj) other).vid()) && // TODO: ??
-                            Objects.equals(obj.jvm(), ((Obj) other).jvm())));
+            if (obj.vid() != null && Objects.equals(obj.vid(), ((Obj) other).vid()))
+                return true;
+            //final BiPredicate<Obj, Obj> opt = Optimizations.optimizedEquals.get(obj.tid().basePath());
+            //if (null != opt)
+            //    return opt.test(obj, (Obj) other);
+            return Objects.equals(obj.tid(), ((Obj) other).tid()) &&
+                    Objects.equals(obj.jvm(), ((Obj) other).jvm());
         }
 
         public static boolean objcLessEquals(final Obj obj, final Object other) {
@@ -848,7 +846,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
                     }),*/
                     instC(AUTO_INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(T(ALL.maybe())), (lhs, inst) -> inst.arg(0).apply(lhs)),
                     instC(AUTO_FROM_INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(T(ALL.maybe()), T(ALL.maybe())), (lhs, inst) -> !inst.arg(1).isNoObj() ? inst.arg(1) : Router.readFromSpace(inst.arg(0).uriValue()).autoResolve(lhs)),
-                    instC(CATCH_INST_TID.dom(ALL).rng(ALL.maybeSome()), lst(T(ALL.maybeSome())), (lhs, inst) -> lhs.isFail() ? inst.arg(0).apply(lhs.<Fail>as().caught()) : lhs),
+                    instC(CATCH_INST_TID.dom(A).rng(A.maybeSome()), lst(T(A.maybeSome())), (lhs, inst) -> lhs.isFail() ? inst.arg(0).apply(lhs.<Fail>as().caught()).c(c -> c.mult(lhs.c())) : lhs),
                     docWrap(instC(END_INST_TID.dom(ALL_STAR).rng(NOOBJ_TID.zero()), lst(), (lhs, inst) -> noobj()),
                             "terminal objs", "noobj", Map.of(), "the terminal function f(x)->0"),
                     docWrap(instC(PRINT_INST_TID.dom(ALL.maybe()).rng(ALL.maybeSome()), lst(T(ALL_STAR)), (lhs, inst) -> objs(inst.args().elements().peek(o -> inst.logger().none("%s", o.isStr() ? o.strValue() : o)).filter(a -> false).findAny().orElse(lhs).stream().peek(o -> inst.logger().none("\n")))),

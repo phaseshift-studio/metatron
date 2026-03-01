@@ -402,14 +402,13 @@ public class mParser {
     }
 
     public static Parser m_fail() {
-        return seq(choice(of("fail"), of(FAIL_TID.toString())), opt(of("::").trim(), "::"), seq(of('[').trim(), m_obj(), of(']').trim()).map(t -> pick(t, 1)).plus(), m_vid_postfix())
+        return seq(choice(of("fail"), of(FAIL_TID.toString())), of("::"), seq(of('[').trim(), m_obj(), of(']').trim()).map(t -> pick(t, 1)).plus(), m_vid_postfix())
                 .map(t -> {
                     final Object test = pick(t, 2);
                     final List<Obj> objs = test instanceof List ? ((List) test) : (List) List.of(test);
                     Fail root = null;
                     for (final Obj obj : objs) {
-                        final Fail f = fail(MTronException.of(obj.toString()));
-                        root = root == null ? f : root.plus(f);
+                        root = null == root ? fail(MTronException.of(obj.toString())) : fail(MTronException.of(obj.toString()), root);
                     }
                     return root.vid(pick(t, 3));
                 });

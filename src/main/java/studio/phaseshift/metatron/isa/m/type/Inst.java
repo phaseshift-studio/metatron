@@ -22,7 +22,6 @@ import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
-import studio.phaseshift.metatron.isa.mach.type.Monad;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.net.FutureObj;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
@@ -334,7 +333,7 @@ public interface Inst extends Call {
         //if (false && reself) // TODO: why do type predicates get rewritten?
         //    this.self(Triplet.with(cinst.args(), cinst.f(), cinst.seed()), cinst.tid(), cinst.vid());
         if (cinst.isNoObj())
-            return fail(MTronException.of("unable to locate an inst typed %s", this, clhs));
+            return fail(MTronException.of("unable to locate inst-f of %s", this, clhs));
         if ((null == lhs || lhs.isNoObj()) && !cinst.dom().c().isZeroable())
             return noobj();
         // return fail(MTronException.of("lhs range does not match inst domain: %s => %s [%s]", clhs.rng(), cinst.dom(), cinst));
@@ -348,15 +347,15 @@ public interface Inst extends Call {
             modulateC = true;
             //  }
             if (!clhs.test(cinst.dom()))
-                return fail(MTronException.of("lhs range does not match inst domain: %s => %s [%s]", clhs.rng(), cinst.dom(), cinst));
+                return fail("lhs range does not match inst domain: %s => %s [%s]", clhs.rng(), cinst.dom(), cinst);
         }
         if (!clhs.isFail() || cinst.isCatch()) {
             try {
                 if (null == cinst.f()) {
-                    return fail(MTronException.of("unable to determine inst function:" +
+                    throw MTronException.of("unable to determine inst function:" +
                             "\n\t%-10s => %-10s  | [inst]" +
                             "\n\t%-10s => %-10s  |  \\_dom" +
-                            "\n\t%-10s %s=> %-10s  |  \\_args", clhs, cinst, clhs.type(), cinst.dom(), clhs.type(), cinst.args().elements().allMatch(clhs::test) ? "=" : "X", cinst.args()));
+                            "\n\t%-10s %s=> %-10s  |  \\_args", clhs, cinst, clhs.type(), cinst.dom(), clhs.type(), cinst.args().elements().allMatch(clhs::test) ? "=" : "X", cinst.args());
                 }
                 cinst = Helper.applyArgs(clhs, cinst);
                 Router.stack().push(cinst.args());
@@ -367,21 +366,21 @@ public interface Inst extends Call {
                         return rhs;
                     Graphitty.log(cinst).trace("%s (lhs) => %s (inst) => %s (rhs) evaluated successfully", clhs, cinst, rhs);
                 } catch (final Exception e) {
-                    rhs = fail(e, fail(MTronException.of("apply failure:" +
+                    throw MTronException.of(e, "apply failure:" +
                                     "\n\t[lhs]    | %s" +
                                     "\n\t \\_type  | %s" +
                                     "\n\t  \\_pred | %s" +
                                     "\n\t[inst]   | %s" +
                                     "\n\t \\_dom   | %s" +
                                     "\n\t \\_args  | %s",
-                            clhs, clhs.tid(), clhs.type().hasPredicate() ? clhs.type().predicate() : noobj(), cinst, cinst.dom(), cinst.args())));
+                            clhs, clhs.tid(), clhs.type().hasPredicate() ? clhs.type().predicate() : noobj(), cinst, cinst.dom(), cinst.args());
                     // e.printStackTrace();
                 } finally {
                     Router.stack().pop();
-                  //  Router.stack().pop();
+                    //  Router.stack().pop();
                 }
             } catch (final Exception e) {
-                rhs = fail(MTronException.of("unable to evaluate inst function: %s", cinst), fail(e));
+                rhs = fail(MTronException.of("unable to evaluate inst: %s", cinst), fail(e));
             }
             if (BootLoader.TYPE_CHECK && !rhs.isType() && !rhs.isFail() && !lhs.isCaughtFail() && !rhs.test(cinst.rng()))
                 //rhs = fail(MTronException.of("inst resolution failure: %s", cinst, fail(MTronException.of("rhs does not match inst range:\n\t%s", Poly.Helper.diffObjRecursion(rhs, cinst.rng())))));

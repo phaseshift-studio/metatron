@@ -76,6 +76,9 @@ public class mInstSet extends AbstractInstSet {
     public static final fURI ALL_STAR = ALL.maybeSome();
     public static final fURI SPACE_TID = M_ISA_TID.extend("space");
     /// ////////////////////////////////////////////////////////
+    public static final fURI LIKE_INST_TID = INST_TID.extend("like");
+    public static final fURI CAUSE_INST_TID = INST_TID.extend("cause");
+    public static final fURI NATIVE_INST_TID = INST_TID.extend("native");
     public static final fURI SERIALIZE_INST_TID = INST_TID.extend("serialize");
     public static final fURI ID_INST_TID = INST_TID.extend("id");
     public static final fURI DEDUP_INST_TID = INST_TID.extend("dedup");

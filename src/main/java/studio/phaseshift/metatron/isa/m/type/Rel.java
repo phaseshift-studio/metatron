@@ -58,6 +58,11 @@ public interface Rel extends Poly<Rel, Tuple.Pair<Obj, Obj>>, Obj {
     }
 
     @Override
+    default Stream<Obj> values() {
+        return Stream.of(this.second());
+    }
+
+    @Override
     default long count() {
         return 2;
     }

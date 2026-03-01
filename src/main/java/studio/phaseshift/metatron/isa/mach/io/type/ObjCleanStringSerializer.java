@@ -231,15 +231,17 @@ public class ObjCleanStringSerializer extends AbstractObjSerializer<String> {
     }
 
     private StringBuilder handleTID(final StringBuilder sb, final Obj obj, final boolean hideBaseTID) {
-        if (!obj.isFail() && !obj.isCaughtFail() && hideBaseTID && BASE_TYPES.contains(obj.tid()))
-            return sb;
-        if (hideBaseTID && BASE_TYPES.contains(obj.tid().basePath()))
-            sb.append('{').append(obj.tid().c()).append('}');
-        else {
-            sb.append(Router.loaded() ? Router.global().rewrite(obj.tid(), false) : obj.tid());
-            if (!obj.isInst())
-                sb.append("::");
+        if (!obj.isFail() && !obj.isCaughtFail() && hideBaseTID) {
+            if (BASE_TYPES.contains(obj.tid()))
+                return sb;
+            else if (BASE_TYPES.contains(obj.tid().basePath())) {
+                sb.append('{').append(obj.tid().c()).append('}');
+                return sb;
+            }
         }
+        sb.append(Router.loaded() ? Router.global().rewrite(obj.tid(), false) : obj.tid());
+        if (!obj.isInst())
+            sb.append("::");
         return sb;
     }
 
@@ -327,6 +329,12 @@ public class ObjCleanStringSerializer extends AbstractObjSerializer<String> {
             byte[] bb = Arrays.copyOf(obj.bytesValue().array(), CLIP_LENGTH - 1);
             sb.append(write(bytes(ByteBuffer.wrap(bb))));
             sb.append("...");
+        } else if (obj.isFail()) {
+            if(obj.failValue().get1() != null)
+                writeClip(sb, obj.failValue().get1());
+            else {
+               sb.append(writeFail(fail(obj.asFail().message().getMessage().split("\n")[0])));
+            }
         } else {
             sb.append(write(obj));
         }

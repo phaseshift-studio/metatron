@@ -73,8 +73,7 @@ public abstract class AbstractSpace<SJVM> extends MRec implements Space {
 
     @Override
     public fURI rewrite(final fURI furi, final boolean big) {
-        final String furiString = furi.toString();
-        return this.routes.entrySet().stream().filter(kv -> furiString.startsWith(kv.getKey().uriValue().toString())).map(kv -> f(furiString.replaceFirst(kv.getKey().uriValue().toString(), kv.getValue().uriValue().toString()))).findFirst().orElse(furi);
+        return big ? Space.Helper.routeFromSpace(furi, this.routes()) : Space.Helper.routeToSpace(furi, this.routes());
     }
 
     @Override
