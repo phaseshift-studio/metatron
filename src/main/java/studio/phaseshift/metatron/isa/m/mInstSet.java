@@ -84,6 +84,7 @@ public class mInstSet extends AbstractInstSet {
     public static final fURI DEDUP_INST_TID = INST_TID.extend("dedup");
     public static final fURI EXPLAIN_INST_TID = INST_TID.extend("explain");
     public static final fURI HAS_INST_TID = INST_TID.extend("has");
+    public static final fURI EVAL_INST_TID = INST_TID.extend("eval");
     public static final fURI CATCH_INST_TID = INST_TID.extend("catch");
     public static final fURI APPLY_INST_TID = INST_TID.extend("apply");
     public static final fURI START_INST_TID = INST_TID.extend("start");
@@ -340,6 +341,7 @@ public class mInstSet extends AbstractInstSet {
         set.addAll(Inst.InstType.insts());
         set.addAll(Obj.ObjType.insts());
         set.addAll(Objs.ObjsType.insts());
+        set.addAll(Type.TypeType.insts());
         set.addAll(Space.SpaceType.insts());
         //set.add(instC(f("/m/inst/card").dom(A).rng(B), lst(T(f("/m/sys/ui/card"))), (lhs, inst) -> str(lhs.toCleanString())));
         return set;

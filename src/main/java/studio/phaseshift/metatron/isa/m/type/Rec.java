@@ -132,7 +132,7 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>>, PlusMonoid.O<Rec> {
             return this.jvm().getOrDefault(key, NoObj.noobj()).autoResolve(this).parent(this);
         else {
             final boolean singleSegment = key.uriValue().pathLength() == 1;
-            final String step = singleSegment ? key.uriValue().toString() : key.uriValue().segments().getFirst();
+            final String step = singleSegment ? key.uriValue().asNode().toString() : key.uriValue().segments().getFirst();
             Obj result;
             final Uri asNode = uri(key.uriValue().asNode());
             final boolean isBranch = key.uriValue().isBranch();
@@ -160,7 +160,6 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>>, PlusMonoid.O<Rec> {
 
     @Override
     default Rec plus(final Rec rhs) {
-        rhs.logger().info("plus %s %s", this, rhs);
         final Map<Obj, Obj> newMap = new LinkedHashMap<>(this.recValue());
         rhs.elements().forEach(o -> newMap.compute(o.jvm().get0(), (k, v) -> null == v ? o.jvm().get1() :
                 v.isPlusMonoid() && o.isPlusMonoid() ? (Obj) v.<PlusMonoid.O>as().plus(o.jvm().get1().<PlusMonoid.O>as()) :

@@ -39,7 +39,8 @@ public class MTronException extends RuntimeException {
     }
 
     public static MTronException of(final Throwable cause) {
-        return cause instanceof MTronException ? (MTronException) cause : convert(cause);
+        final MTronException m = cause instanceof MTronException ? (MTronException) cause : convert(cause);
+        return cause.getCause() != null ? m.cause(convert(cause.getCause())) : m;
     }
 
     public static MTronException of(final Throwable cause, final String format, final Object... args) {
@@ -60,7 +61,7 @@ public class MTronException extends RuntimeException {
     }
 
     private static MTronException convert(final Throwable throwable) {
-        if(throwable == null)
+        if (throwable == null)
             return null;
         if (throwable instanceof MTronException)
             return (MTronException) throwable;
@@ -68,10 +69,19 @@ public class MTronException extends RuntimeException {
             final String[] message = throwable.getMessage().split(" cannot be cast to class ");
             final String leftClass = message[0].trim();
             final String rightClass = message[1].trim().split("\\(")[0].trim();
-            // throwable.printStackTrace();
             return new MTronException("unable to convert " + convertName(leftClass.substring(leftClass.lastIndexOf('.') + 1)) + " to " + convertName(rightClass.substring(rightClass.lastIndexOf('.') + 1)), throwable);
         } else {
-            return new MTronException(Highlighter.unformat(null == throwable.getCause() ? throwable.getClass().getSimpleName().toLowerCase() : throwable.getCause().toString()));
+            final StringBuilder stack = new StringBuilder();
+            for (int i = 0; i < throwable.getStackTrace().length; i++)
+                stack.append("\t")
+                        .append(throwable.getStackTrace()[i].getClassName())
+                        .append(" [line ").append(throwable.getStackTrace()[i].getLineNumber()).append("]\n");
+            return new MTronException(Highlighter.unformat("%s: %s\n%s".formatted(
+                    null == throwable.getCause() ?
+                            throwable.getClass().getSimpleName().toLowerCase() :
+                            throwable.getCause().toString(),
+                    throwable.getMessage(),
+                    CommonUtil.indent(stack.toString(), 2))));
         }
     }
 
@@ -124,7 +134,10 @@ public class MTronException extends RuntimeException {
     }
 
     public MTronException cause(final Throwable cause) {
-        this.initCause(convert(cause));
+        if(cause instanceof MTronException)
+            return this;
+        final MTronException m = convert(cause);
+        if(null != m) this.initCause(m);
         return this;
     }
 

@@ -67,6 +67,12 @@ public class ObjSimpleJSONSerializer extends AbstractObjSerializer<JsonElement> 
         return r;
     }
 
+    private static final ObjSimpleJSONSerializer INSTANCE = new ObjSimpleJSONSerializer();
+
+    public static ObjSimpleJSONSerializer single() {
+        return INSTANCE;
+    }
+
     public ObjSimpleJSONSerializer() {
     }
 

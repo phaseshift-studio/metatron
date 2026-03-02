@@ -18,31 +18,45 @@
 
 package studio.phaseshift.metatron.isa.llm.ollama.type;
 
+import dev.langchain4j.agent.tool.ToolSpecification;
+import dev.langchain4j.model.chat.request.json.*;
+import dev.langchain4j.service.tool.ToolExecutor;
 import io.github.ollama4j.tools.ToolFunction;
 import io.github.ollama4j.tools.Tools;
 import studio.phaseshift.metatron.furi.q.DocQ;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
-import studio.phaseshift.metatron.isa.m.type.Inst;
-import studio.phaseshift.metatron.isa.m.type.Poly;
-import studio.phaseshift.metatron.isa.m.type.Rel;
+import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.m.type.impl.MObjFactory;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
+import studio.phaseshift.metatron.util.MTronException;
+import studio.phaseshift.metatron.util.Tuple;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
+import static dev.langchain4j.internal.Json.fromJson;
 import static studio.phaseshift.metatron.furi.fURI.DOM;
 import static studio.phaseshift.metatron.isa.m.mInstSet.AS_INST_TID;
+import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.Int.INT_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.Lst.LST_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.Real.REAL_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Rec.REC_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.Rel.REL_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.Str.STR_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instB;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec0;
+import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
+import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /*
@@ -51,6 +65,51 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 public class OLLM {
 
     private static final GraphittyLogger LOG = Graphitty.log(OLLM.class);
+
+    public static JsonSchemaElement objToSchema(final Type type, final Poly<?, ?> depth, final String description) {
+        if (type.test(BOOL_TYPE))
+            return new JsonBooleanSchema.Builder().description(description).build();
+        else if (type.test(INT_TYPE))
+            return new JsonIntegerSchema.Builder().description(description).build();
+        else if (type.test(REAL_TYPE))
+            return new JsonNumberSchema.Builder().description(description).build();
+        else if (type.test(URI_TYPE))
+            return new JsonStringSchema.Builder().description(description).build();
+        else if (type.test(STR_TYPE))
+            return new JsonStringSchema.Builder().description(description).build();
+        else if (type.test(LST_TYPE))
+            return lstToSchema(depth.asLst(), description);
+        else if (type.test(REC_TYPE))
+            return recToSchema(depth.asRec(), description);
+        else if (type.test(REL_TYPE))
+            return recToSchema(rec(depth.asRel().first().type(), depth.asRel().second()), description);
+        else 
+            return new JsonStringSchema.Builder().description(description).build();
+        //throw MTronException.of("unsupported obj type for schema: %s", type);
+    }
+
+    public static JsonArraySchema lstToSchema(final Lst l, final String description) {
+        final JsonArraySchema.Builder schema = JsonArraySchema.builder();
+        l.elements().forEach(e -> schema.items(objToSchema(e.type(), null, description)));
+        return schema.description(description).build();
+    }
+
+    public static JsonObjectSchema recToSchema(final Rec r, final String description) {
+        final JsonObjectSchema.Builder schema = JsonObjectSchema.builder();
+        final List<String> required = new ArrayList<>();
+        r.elements().forEach(e -> {
+            schema.addProperty(e.first().uriValue().toString(), objToSchema(e.second().type(), null, description));
+            if (!e.first().c().isZeroable())
+                required.add(e.first().uriValue().toString());
+        });
+
+        schema.required(required);
+        return schema.build();
+    }
+
+    /// /////////////////////////////////////////////////////////////////////////////////////////////////////
+    /// /////////////////////////////////////////////////////////////////////////////////////////////////////
+    /// /////////////////////////////////////////////////////////////////////////////////////////////////////
 
     public static Tools.Tool mtronInstTool(final Inst inst) {
         final DocQ.Doc doc = Router.readFromSpace(inst.tid().query("doc", null))
@@ -102,7 +161,7 @@ public class OLLM {
                 .build();
     }
 
-    public static Tools.Tool mtronEvalTool() {
+    public static Tools.Tool mtronEvalToolSpecification() {
         return Tools.Tool.builder()
                 .toolSpec(Tools.ToolSpec.builder()
                         .name("mtron_eval")
@@ -118,6 +177,52 @@ public class OLLM {
                         return mParser.eval((String) arguments.get("code"));
                     }
                 }).isMCPTool(false).type("obj").build();
+    }
+
+    public static Tuple.Pair<ToolSpecification, ToolExecutor> mtronInstToolSpecification(final Inst inst) {
+        final DocQ.Doc doc = Router.readFromSpace(inst.tid().query("doc", null))
+                .orSupply(() -> DocQ.Doc.doc(inst,
+                        inst.dom().tid().toString(),
+                        inst.rng().tid().toString(),
+                        instB(AS_INST_TID, lst(REC_TYPE)).apply(inst.args().orElse(rec0())).asRec().elements().collect(Collectors.toMap(
+                                Rel::first,
+                                e -> e.second().tid().toString()
+                        )),
+                        "<no description>"));
+        LOG.info("building ollama compliant tool from mtron inst: %s => %s", inst.tid(), doc);
+        JsonObjectSchema.Builder parameters = new JsonObjectSchema.Builder();
+        List<String> required = new ArrayList<>();
+        parameters.addProperty("lhs", objToSchema(inst.dom(), Type.Helper.polyTypePredicateObj(inst.dom()), doc.at(DOM).orElse(str("<no description>")).strValue()));
+        if (!inst.tid().dom().cV().isZeroable())
+            required.add("lhs");
+        final boolean recArgs = doc.args().isRec();
+        final AtomicInteger counter = new AtomicInteger(0);
+        doc.args().elements().forEach(e -> {
+            final Rel kv = recArgs ? e.asRel() : rel(uri("arg" + counter.getAndIncrement()), e);
+            parameters.addProperty(
+                    kv.first().toString(),
+                    objToSchema(kv.second().type(), Type.Helper.polyTypePredicateObj(kv.second().type()), kv.second().orElse(str("<no description>")).strValue()));
+            if (!kv.second().c().isZeroable())
+                required.add(kv.first().toString());
+        });
+        parameters.required(required);
+        ToolSpecification.Builder toolSpecBuilder = ToolSpecification.builder()
+                .name(inst.tid().basePath().toString())
+                .description(doc.description())
+                .parameters(parameters.build());
+
+        ToolExecutor toolExecutor = (toolExecutionRequest, memoryId) -> {
+            Map<String, Object> arguments = fromJson(toolExecutionRequest.arguments(), Map.class);
+            final Poly<?, ?> args = inst.args().isNoObj() ? lst() : (inst.args().isLst() ?
+                    lst(arguments.entrySet().stream().filter(e -> !e.getKey().equals("lhs")).map(e -> MObjFactory.single().toObjFromString(e.getValue().toString())).collect(Collectors.toList())) :
+                    rec(arguments.entrySet().stream().filter(e -> !e.getKey().equals("lhs")).collect(Collectors.toMap(e -> uri(e.getKey()), e -> MObjFactory.single().toObjFromString(e.getValue().toString())))));
+            final Object result = inst
+                    .args(args)
+                    .apply(MObjFactory.single().toObjFromString(arguments.get("lhs").toString()));
+            LOG.info("evaluating mtron_inst tool: %s => %s => %s", arguments.get("lhs"), inst, result);
+            return result.toString();
+        };
+        return Tuple.Pair.with(toolSpecBuilder.build(), toolExecutor);
     }
     
     /*public OLLM(final Tuple.Pair<OllamaModel, OllamaModelCard> model, final fURI tid, final fURI vid) {

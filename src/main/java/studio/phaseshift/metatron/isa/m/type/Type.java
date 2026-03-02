@@ -26,24 +26,21 @@ import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.GraphittyLogger;
 import studio.phaseshift.metatron.util.Tuple;
 
-import java.nio.ByteBuffer;
-import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-import static studio.phaseshift.metatron.furi.fURI.ALL;
-import static studio.phaseshift.metatron.furi.fURI.f;
+import static studio.phaseshift.metatron.furi.fURI.*;
 import static studio.phaseshift.metatron.furi.q.DocQ.Doc.docWrap;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
-import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
-import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
+import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
+import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 public interface Type extends Obj, PlusMonoid<Type> {
 
@@ -171,25 +168,21 @@ public interface Type extends Obj, PlusMonoid<Type> {
                 return type.predicate().insts().getFirst().arg(0);
             return type.predicate();
         }
+
+        public static Poly<?, ?> polyTypePredicateObj(final Type type) {
+            if (type.hasPredicate() && type.predicate().insts().size() == 1 && type.predicate().insts().getFirst().tid().basePath().equals(ISA_INST_TID))
+                return type.predicate().insts().getFirst().arg(0).isPoly() ? type.predicate().insts().getFirst().arg(0).as() : null;
+            return null;
+        }
     }
 
     final class TypeType {
 
         public static Set<Inst> insts() {
             return new LinkedHashSet<>(List.of(
-                    // instC(PLUS_INST_TID.dom(A).rng(B), lst(T(C)), (lhs, inst) -> lhs.jvm(ByteBuffer.wrap(Arrays.copyOfRange(lhs.bytesValue().array(), inst.arg(0).intValue().intValue(), lhs.bytesValue().array().length)))),
-                    instC(RSHIFT_INST_TID.dom(BYTES_TID).rng(BYTES_TID), lst(isa_(T(BYTES_TID)).else_(jnt(1)).tryToInst()), (lhs, inst) -> lhs.jvm(ByteBuffer.wrap(Arrays.copyOf(lhs.bytesValue().array(), lhs.bytesValue().array().length - inst.arg(0).intValue().intValue())))),
-                    instC(PLUS_INST_TID.dom(BYTES_TID).rng(BYTES_TID), lst(T(BYTES_TID)), (lhs, inst) -> lhs.<Bytes>as().plus(inst.arg(0).as())),
-                    instC(AS_INST_TID.dom(BYTES_TID).rng(STR_TID), lst(T(STR_TID)), (lhs, inst) -> str(new String(lhs.bytesValue().array(), StandardCharsets.UTF_8)))
-                   /* instC(SUM_INST_TID.dom(BYTES_TID.maybeSome()).rng(BYTES_TID), lst(), (lhs,inst) -> lhs.elements().reduce(bytes(ByteBuffer.allocate((int)lhs.stream().count())),(a,b) -> bytes(a.bytesValue().put(b.bytesValue())))),
-                    instC(SPLIT_INST_TID.dom(BYTES_TID).rng(LST_TID), lst(T(LST_TID)), (lhs, inst) -> {
-                        final List<Bytes> list = new ArrayList<>();
-                        byte[] bb = lhs.<Bytes>as().jvm().array();
-                        for (byte b : bb) {
-                            list.add(bytes(ByteBuffer.wrap(new byte[]{b})));
-                        }
-                        return lst((List)list);
-                    })*/
+                    instC(RSHIFT_INST_TID.dom(TYPE_TID).rng(ALL_STAR), lst(T(URI_TID.maybeSome())), (lhs, inst) -> objs(inst.arg(0).orElse((Obj) uri(ONE_WILD_STRING)).stream().flatMap(u -> rec(
+                            uri("pred"), lhs.asType().hasPredicate() ? lhs.asType().predicate() : noobj(),
+                            uri("cons"), lhs.asType().hasConstructor() ? lhs.asType().constructor() : noobj()).at(u).stream())))
             ));
         }
     }

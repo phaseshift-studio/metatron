@@ -183,7 +183,7 @@ public class DocQ extends BaseQ {
             return new Doc(Map.of(uri("name"), obj), DOC_TID, fURI.fnull);
         }
 
-        public Poly args() {
+        public Poly<?, ?> args() {
             return this.at(ARGS);
         }
 
@@ -307,6 +307,21 @@ public class DocQ extends BaseQ {
                 instSpace.logger().warn("no doc query attachment mounted on %s for %s", instSpace, type.tid());
             else
                 docq.get().docSpace.put(type.tid(), doc);
+            return type;
+        }
+
+        public static Type docWrap(final Type type, final String predicate, final String constructor, final Map<Obj, String> predicateDescription, final String description) {
+            if (null != type.vid()) {
+                final Doc doc = doc(type, predicate, constructor, predicateDescription, description);
+                final Space instSpace = Router.global().getSpace(type.vid());
+                final Optional<DocQ> docq = instSpace.qs().jvm().stream().filter(q -> q.tid().basePath().equals(DOCQ_TID)).map(Obj::<DocQ>as).findAny();
+                if (docq.isEmpty())
+                    instSpace.logger().warn("no doc query attachment mounted on %s for %s", instSpace, type.tid());
+                else
+                    docq.get().docSpace.put(type.vid(), doc);
+            } else {
+                Router.global().logger().warn("unable to document a vid-less type: %s", type);
+            }
             return type;
         }
 

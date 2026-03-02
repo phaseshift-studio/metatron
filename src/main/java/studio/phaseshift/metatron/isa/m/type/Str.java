@@ -19,6 +19,7 @@
 package studio.phaseshift.metatron.isa.m.type;
 
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.type.impl.MStr;
 
 import java.nio.ByteBuffer;
@@ -26,6 +27,7 @@ import java.util.*;
 import java.util.regex.MatchResult;
 import java.util.regex.Pattern;
 
+import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.furi.q.DocQ.Doc.docWrap;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
