@@ -224,7 +224,7 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>>, PlusMonoid.O<Rec> {
                     instC(REVERSE_INST_TID.dom(REC_TID).rng(REC_TID), lst(), (lhs, inst) -> new ArrayList<Rel>(lhs.asRec().elements().toList()).reversed().stream().collect(new CommonUtil.RecCollector(lhs.tid(), lhs.vid()))),
                     instC(HAS_INST_TID.dom(REC_TID).rng(REC_TID.maybe()), lst(T(ALL), T(ALL)), (lhs, inst) -> {
                         final Obj result = inst.arg(1).apply(lhs.asRec().at(inst.arg(0)));
-                        return result.isFail() ? result : (result.check() ? lhs : noobj());
+                        return result.isFail() ? result : (result.booleanCheck() ? lhs : noobj());
                     }),
                     instC(HAS_INST_TID.dom(REC_TID).rng(REC_TID.maybe()), lst(T(ALL)), (lhs, inst) -> inst.arg(0).isRel() ?
                             (lhs.<Rec>as().elements().anyMatch(r -> r.test(inst.arg(0))) ? lhs : noobj()) :

@@ -25,10 +25,7 @@ import studio.phaseshift.metatron.isa.grph.tp3.parser.ObjTP3Serializer;
 import studio.phaseshift.metatron.isa.grph.tp3.space.EdgeMap;
 import studio.phaseshift.metatron.isa.grph.tp3.space.VertexMap;
 import studio.phaseshift.metatron.isa.grph.tp3.space.tp3Space;
-import studio.phaseshift.metatron.isa.m.type.Inst;
-import studio.phaseshift.metatron.isa.m.type.Obj;
-import studio.phaseshift.metatron.isa.m.type.Type;
-import studio.phaseshift.metatron.isa.m.type.Uri;
+import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.util.IteratorUtil;
 
@@ -73,15 +70,17 @@ public class tp3InstSet extends AbstractInstSet {
     /// ////////////////////////////////////////////////////////////////////////////////////////////////////////////
     private static BiFunction<Obj, Inst, Obj> V_E_FUNCTION(final Direction direction) {
         return (lhs, inst) -> {
+            final Rec lhsRec = lhs.asRec();
             final String[] labels = inst.arg(0).isNoObj() ? EMPTY_STRING_ARRAY : inst.arg(0).stream().map(Obj::uriValue).map(fURI::toString).toArray(String[]::new);
-            return objs(IteratorUtil.stream(VertexMap.recToVertex(lhs.asRec()).edges(direction, labels)).map(e -> EdgeMap.edgeToRec(e, lhs.asRec()).parent(lhs.asRec())));
+            return objs(IteratorUtil.map(VertexMap.recToVertex(lhsRec).edges(direction, labels), e -> EdgeMap.edgeToRec(e, lhsRec)));
         };
     }
 
     private static BiFunction<Obj, Inst, Obj> V_V_FUNCTION(final Direction direction) {
         return (lhs, inst) -> {
+            final Rec lhsRec = lhs.asRec();
             final String[] labels = inst.arg(0).isNoObj() ? EMPTY_STRING_ARRAY : inst.arg(0).stream().map(Obj::uriValue).map(fURI::toString).toArray(String[]::new);
-            return objs(IteratorUtil.stream(VertexMap.recToVertex(lhs.asRec()).vertices(direction, labels)).map(v -> VertexMap.vertexToRec(v, lhs.asRec()).parent(lhs.asRec())));
+            return objs(IteratorUtil.map(VertexMap.recToVertex(lhs.asRec()).vertices(direction, labels), v -> VertexMap.vertexToRec(v, lhsRec)));
         };
     }
 

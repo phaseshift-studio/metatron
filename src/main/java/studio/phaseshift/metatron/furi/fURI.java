@@ -461,6 +461,10 @@ public class fURI implements Cloneable, Ring<fURI>, Comparable<fURI>, Predicate<
         return true;
     }
 
+    public boolean hasPostfix(final fURI postfix) {
+        return this.toString().endsWith(postfix.toString());
+    }
+
     public fURI asAbsolute() {
         fURI clone = this.clone();
         clone.sstart = true;

@@ -18,14 +18,18 @@
 
 package studio.phaseshift.metatron.isa.grph.tp3;
 
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.TestSkip;
 import studio.phaseshift.metatron.isa.AbstractSpaceTest;
 import studio.phaseshift.metatron.isa.grph.tp3.space.tp3Space;
-import studio.phaseshift.metatron.AbstractMetatronTest;
+import studio.phaseshift.metatron.isa.m.parser.mParser;
 
+import static org.apache.tinkerpop.gremlin.LoadGraphWith.GraphData.MODERN;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.isa.grph.grphInstSet.GRPH_ISA_TID;
@@ -46,10 +50,18 @@ public class tp3SpaceTest extends AbstractSpaceTest {
             return tp3Space.of(rec(
                     PATTERN, uri("/g/#"),
                     REWRITE, rel(uri("/g/+/"), uri("")),
-                    NATIVE, rec(uri(LOAD), uri("modern"))), f("/sys/space/tp3"));
+                    NATIVE, rec(uri(LOAD), uri(MODERN.name().toLowerCase()))), f("/sys/space/tp3")); // GRATEFUL.name().toLowerCase()
         });
 
 
+    }
+
+    @Test
+    @Disabled
+    public void testProfiling() {
+        BootLoader.TYPE_CHECK = false;
+        mParser.eval("*/g/V/+.out().>|.out().>|.out().>|.out().>|.out().count()").stream().forEach(v -> LOG.error("%s", v));
+        BootLoader.TYPE_CHECK = true;
     }
 
     @ParameterizedTest
@@ -57,13 +69,13 @@ public class tp3SpaceTest extends AbstractSpaceTest {
             "*/g/S.count()                                                                  % 1",
             "*/g/S/pattern                                                                  % /m/grph/inst/schema/modern/#",
             "*(*/g/S/pattern).count()                                                       % 4",
-          //  "**/g/S/pattern.count()                                                       % 4",
+            //  "**/g/S/pattern.count()                                                       % 4",
             "*(*/g/S/pattern).vid()                                                         % {/m/grph/inst/schema/modern/person,/m/grph/inst/schema/modern/software,/m/grph/inst/schema/modern/created,/m/grph/inst/schema/modern/knows}",
     }, delimiter = '%')
     public void testSchemaTraversal(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
     }
-    
+
     @ParameterizedTest
     @CsvSource(value = {
             "*/g/V/#../name                                                                 % {\"marko\",\"josh\",\"peter\",\"lop\",\"vadas\",\"ripple\"}",

@@ -19,6 +19,7 @@
 package studio.phaseshift.metatron.isa.grph.tp3.space;
 
 import org.apache.tinkerpop.gremlin.structure.Edge;
+import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
@@ -79,13 +80,13 @@ public class EdgeMap extends ElementMap {
     public Rec selfRec() {
         return rec((Map) this, f(this.getBase().label()), null).selfVID(this.space.elementVID(this.base)).asRec();
     }
-
+    
     public static Rec edgeToRec(final Edge edge) {
         return edgeToRec(edge, tp3Space.from(edge));
     }
 
     public static Rec edgeToRec(final Edge edge, final Rec lhs) {
-        return new EdgeMap(edge, lhs.<ElementMap>jvmAs().space).selfRec().parent(lhs);
+        return rec().self(new EdgeMap(edge, lhs.<ElementMap>jvmAs().space), f(edge.label()).c(lhs.c().toString()), lhs.<ElementMap>jvmAs().space.elementVID(edge)).parent(lhs);
     }
 
     public static Rec edgeToRec(final Edge edge, final tp3Space lhs) {

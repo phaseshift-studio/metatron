@@ -153,7 +153,7 @@ public class tp3Space extends grphSpace<Graph> {
     @Override
     public Obj read(final fURI vid) {
         return studio.phaseshift.metatron.furi.Q.Helper.processPreRead(this.qs(), vid, vid).orElseGet(() -> {
-            final Obj result = vid.equals(f(this.vertexPrefix).extend("#")) ?
+            final Obj result = vid.hasPostfix(f("V/+")) || vid.hasPostfix(f("V/#")) ?
                     objs(IteratorUtil.stream(this.sjvm.vertices()).map(v -> VertexMap.vertexToRec(v, this))) :
                     Space.Helper.resolveRead(this, vid.basePath(), directReader());
             return studio.phaseshift.metatron.furi.Q.Helper.processPostRead(this.qs(), vid, vid, result).orElse(result);

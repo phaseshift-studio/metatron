@@ -101,11 +101,11 @@ public class VertexMap extends ElementMap {
 
     @Override
     public Rec selfRec() {
-        return rec((Map) this, f(this.getBase().label()), null).selfVID(this.space.elementVID(this.base)).asRec();
+        return rec().self(this, f(this.getBase().label()), this.space.elementVID(this.base)).asRec();
     }
 
     public static Rec vertexToRec(final Vertex vertex, final Rec lhs) {
-        return new VertexMap(vertex, lhs.<ElementMap>jvmAs().space).selfRec().parent(lhs);
+        return rec().self(new VertexMap(vertex, lhs.<ElementMap>jvmAs().space), f(vertex.label()).c(lhs.c().toString()), lhs.<ElementMap>jvmAs().space.elementVID(vertex)).parent(lhs);
     }
 
     public static Rec vertexToRec(final Vertex vertex) {

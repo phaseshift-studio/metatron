@@ -283,7 +283,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
             return this.test(rhs.dom()) && rhs.apply(this).test(rhs.rng());
         if (!this.c().within(rhs.c()))
             return false;
-        if (rhs.isType()) {
+        if (BootLoader.TYPE_CHECK && rhs.isType()) {
             if (rhs.tid().isGeneric() || rhs.test(T(CODE_TID)) || rhs.test(T(INST_TID)))
                 return true;
             if (this.isObjs() && this.stream().anyMatch(Obj::isCall)) // TODO: a hack (see RecTest requirements vs. TypeTest requirements)
@@ -292,7 +292,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
                 return true;
             if (rhs.asType().isBaseType() && !this.baseType().test(rhs.tid()))
                 return false;
-            return !rhs.asType().hasPredicate() || rhs.apply(this).check();
+            return !rhs.asType().hasPredicate() || rhs.apply(this).booleanCheck();
         }
         return this.tid().test(rhs.tid()) &&
                 Objects.equals(this.jvm(), rhs.jvm());
@@ -349,10 +349,6 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
         if (this.isNoObj())
             throw e;
         return (O) this;
-    }
-
-    default <O extends Obj> O choose(final Predicate<Obj> predicate, final Function<Obj, O> trueBranch, final Function<Obj, O> falseBranch) {
-        return predicate.test(this) ? trueBranch.apply(this) : falseBranch.apply(this);
     }
 
     default <O extends Obj> O as() {
@@ -659,7 +655,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
 
     <O extends Obj> O self(final Object jvm, final fURI tid, final fURI vid);
 
-    default boolean check() {
+    default boolean booleanCheck() {
         if (this.isNoObj() || this.isFail())
             return false;
         if (this.isBool())
@@ -705,18 +701,20 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
         }
 
         public static void objCheckAndSave(final Obj obj) {
-            if (Router.loaded() && !obj.isInstSet() && !obj.isNoObj() && !obj.isType() && !obj.test(obj.type())) {
-                if (obj.isPoly()) {
-                    final String matchDiffString = Poly.Helper.diffTypeRecursion(obj, obj.type()).toString();
-                    final int width = Math.max(Math.max(
-                            CommonUtil.width(matchDiffString),
-                            CommonUtil.width(obj.toString())), CommonUtil.width(obj.type().toString()));
-                    throw MTronException.of("obj does not match specified type:\n%s\n%s\n%s\n%s\n%s",
-                            indent(obj.tid(obj.baseType()).toString(), 2),
-                            indent("X=>", 6),
-                            indent(obj.type().toString(), 2), indent("-".repeat(width), 2), indent(matchDiffString, 2));
-                } else
-                    throw MTronException.of("%s is not a %s".formatted(obj, obj.type()));
+            if (BootLoader.TYPE_CHECK) {
+                if (Router.loaded() && !obj.isInstSet() && !obj.isNoObj() && !obj.isType() && !obj.test(obj.type())) {
+                    if (obj.isPoly()) {
+                        final String matchDiffString = Poly.Helper.diffTypeRecursion(obj, obj.type()).toString();
+                        final int width = Math.max(Math.max(
+                                CommonUtil.width(matchDiffString),
+                                CommonUtil.width(obj.toString())), CommonUtil.width(obj.type().toString()));
+                        throw MTronException.of("obj does not match specified type:\n%s\n%s\n%s\n%s\n%s",
+                                indent(obj.tid(obj.baseType()).toString(), 2),
+                                indent("X=>", 6),
+                                indent(obj.type().toString(), 2), indent("-".repeat(width), 2), indent(matchDiffString, 2));
+                    } else
+                        throw MTronException.of("%s is not a %s".formatted(obj, obj.type()));
+                }
             }
             if (null != obj.vid() && !obj.isType())
                 Router.writeToSpace(obj.vid(), obj);
@@ -746,7 +744,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
                                                   final fURI vid) {
             if (null != tid) {
                 final fURI bigTID = tid.big();
-                if (!BASE_TYPES.contains(bigTID.basePath()) && Router.loaded()) {
+                if (BootLoader.TYPE_CHECK && !BASE_TYPES.contains(bigTID.basePath()) && Router.loaded()) {
                     Obj type = Router.readFromSpace(bigTID);
                     if (!type.isNoObj() && type.isType() && type.asType().hasConstructor()) {
                         final Obj protoObj = MObjFactory.of().toObj(jvm, null, vid, clazz);
@@ -770,7 +768,6 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
                 final Obj type = Router.readFromSpace(tid);
                 if (!type.isNoObj() && type.isType() && type.<Type>as().hasConstructor()) {
                     final Obj clone = type.<Type>as().constructor().apply(obj);
-
                     if (clone.isFail())
                         throw MTronException.of(clone.<Fail>as().jvm().get0());
                     return (O) clone.selfTID(tid);
@@ -821,9 +818,9 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
                             if (current.isNoObj()) return lhs.asMonad().nextInst();
                             final Obj breakPredicate = inst.arg(1);
                             if (breakPredicate.tid().dom().test(MACH_MONAD_TID)) {
-                                if (breakPredicate.apply(lhs).check())
+                                if (breakPredicate.apply(lhs).booleanCheck())
                                     return lhs.asMonad().updateLoop(0).nextInst();
-                            } else if (breakPredicate.apply(current).check())
+                            } else if (breakPredicate.apply(current).booleanCheck())
                                 return lhs.asMonad().updateLoop(0).nextInst();
                             final Obj repeatedApply = inst.arg(0);
                             return lhs.asMonad().updateLoop(1).obj(repeatedApply.apply(current));

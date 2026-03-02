@@ -89,6 +89,8 @@ public class MRec extends MObj implements Rec {
     }
 
     private static Map<Obj, Obj> cleanMap(final Map<Obj, Obj> jvm) {
+        if (jvm.isEmpty())
+            return jvm;
         try {
             jvm.remove(noobj());
             if (jvm.containsValue(noobj())) {

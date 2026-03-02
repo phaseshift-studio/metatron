@@ -40,7 +40,7 @@ public class MObjs implements Objs {
 
     private fURI vid;
     private fURI tid;
-    private cInt count = null;
+    private cInt internalC = null;
     private List<Obj> jvm;
 
     protected MObjs(final List<Obj> jvm) {
@@ -59,10 +59,10 @@ public class MObjs implements Objs {
     }
 
     private MObjs computeC() {
-        if (null == count) {
-            this.count = cInt.ZERO();
+        if (null == internalC) {
+            this.internalC = cInt.ZERO();
             for (final Obj o : this.jvm) {
-                this.count = this.count.plus(o.c());
+                this.internalC = this.internalC.plus(o.c());
             }
         }
         return this;
@@ -70,10 +70,10 @@ public class MObjs implements Objs {
 
     private List<Obj> flatten(final List<Obj> list) {
         final List<Obj> flat = new ArrayList<>();
-        count = cInt.ZERO();
+        internalC = cInt.ZERO();
         for (final Obj o : list) {
             if (!o.isNoObj()) {
-                count = count.plus(o.c());
+                internalC = internalC.plus(o.c());
                 if (o.isObjs()) {
                     flat.addAll(flatten((List<Obj>) o.objsValue()));
                 } else {
@@ -92,7 +92,7 @@ public class MObjs implements Objs {
         if (force || this.jvm.size() > BULK_TRIGGER) {
             final Map<Obj, cInt> map = new LinkedHashMap<>();
             this.jvm.forEach(o -> map.merge(o.c(C::one), o.c(), cInt::plus));
-            this.jvm = new ArrayList<>();
+            this.jvm.clear();
             map.forEach((k, v) -> this.jvm.add(k.c(v)));
             assert this.jvm.size() == map.size();
             map.clear();
@@ -159,7 +159,7 @@ public class MObjs implements Objs {
     public Obj append(final Obj obj) {
         if (obj.isNoObj()) return this;
 
-        this.count = this.computeC().count.plus(obj.c());
+        this.internalC = this.computeC().internalC.plus(obj.c());
         if (obj instanceof Objs) {
             if (this != obj)
                 IteratorUtil.fill(((Iterable<Obj>) obj.jvm()).iterator(), this.jvm);
@@ -185,7 +185,7 @@ public class MObjs implements Objs {
 
     @Override
     public cInt c() {
-        return this.computeC().count;
+        return this.computeC().internalC;
         //   return this.jvm.stream().map(Obj::c).reduce(cInt.ZERO(), cInt::plus);
     }
 
@@ -198,7 +198,7 @@ public class MObjs implements Objs {
     @Override
     public Obj take() {
         final Obj temp = this.jvm.isEmpty() ? null : this.jvm.removeFirst();
-        this.count = temp == null ? cInt.ZERO() : this.computeC().count.minus(temp.c());
+        this.internalC = temp == null ? cInt.ZERO() : this.computeC().internalC.minus(temp.c());
         return temp;
     }
 
@@ -209,13 +209,13 @@ public class MObjs implements Objs {
         if (abs.isZero())
             return Tuple.Pair.with(noobj(), this);
         if (abs.isMaybeSome() || Objects.equals(abs.max(), this.c().max())) {
-            this.count = cInt.ZERO();
+            this.internalC = cInt.ZERO();
             return Tuple.Pair.with(this, noobj());
         }
         final List<Obj> retrieved = new ArrayList<>();
         final List<Obj> remaining = new ArrayList<>();
         cInt total = cInt.ZERO();
-        this.count = cInt.ZERO();
+        this.internalC = cInt.ZERO();
         for (Obj entry : (isNegative ? this.jvm.reversed() : this.jvm)) {
             final cInt toTake = abs.minus(total);
             final cInt entryC = entry.c();
@@ -225,13 +225,13 @@ public class MObjs implements Objs {
                     total = total.plus(entryC);
                 } else {
                     final cInt t = entryC.minus(toTake);
-                    this.count = this.count.plus(t);
+                    this.internalC = this.internalC.plus(t);
                     remaining.add(entry.c(t));
                     retrieved.add(entry.c(toTake));
                     total = total.plus(toTake);
                 }
             } else {
-                this.count = this.count.plus(entry.c());
+                this.internalC = this.internalC.plus(entry.c());
                 remaining.add(entry);
             }
         }

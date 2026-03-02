@@ -152,6 +152,10 @@ public class cInt implements C<Long, cInt> {
 
     @Override
     public cInt mult(final cInt rhs) {
+        if(this.isOne())
+            return rhs;
+        else if(rhs.isOne())
+            return this;
         final Long newMin = (null == this.min || null == rhs.min) ? null : (this.min * rhs.min);
         final Long newMax = (null == this.max || null == rhs.max) ? null : (this.max * rhs.max);
         final boolean flip = null != newMin && null != newMax && newMin > newMax;
