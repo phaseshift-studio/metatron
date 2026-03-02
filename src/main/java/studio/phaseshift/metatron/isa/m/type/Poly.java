@@ -221,12 +221,13 @@ public interface Poly<P extends Poly<P, J>, J> extends Obj {
             rhs.elements().forEach(kv -> {
                 final Obj selectKeys = objs(lhs.elements().map(kv2 -> kv.first().apply(kv2.first())).filter(v2 -> !v2.isNoObj()));
                 selectKeys.stream().forEach(selectKey -> {
-                    final Obj lhsValue = lhs.asRec().at(selectKey);
+                    final Obj selectKeyOne = selectKey.c(cInt::one);
+                    final Obj lhsValue = lhs.asRec().at(selectKeyOne);
                     final Obj selectValue = lhsValue.isPoly() && kv.second().isPoly() ?
                             polyRecursion.apply(lhsValue.as(), kv.second().as()) :
                             kv.second().apply(lhsValue);
                     if (!selectValue.isNoObj() && (!selectValue.isRec() || !selectValue.asRec().isEmpty()))
-                        result.compute(selectKey.c(cInt::one), (a, b) -> null == b ? selectValue : b.append(selectValue)); // TODO: the c(1) may not be necessary
+                        result.compute(selectKeyOne, (a, b) -> null == b ? selectValue : b.append(selectValue)); // TODO: the c(1) may not be necessary
                 });
             });
             return result;

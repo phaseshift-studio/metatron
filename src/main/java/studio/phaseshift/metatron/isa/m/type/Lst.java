@@ -34,8 +34,7 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
-import static studio.phaseshift.metatron.furi.fURI.ALL;
-import static studio.phaseshift.metatron.furi.fURI.fnull;
+import static studio.phaseshift.metatron.furi.fURI.*;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.Int.INT_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
@@ -115,10 +114,8 @@ public interface Lst extends Poly<Lst, List<Obj>>, PlusMonoid.O<Lst> {
                 return this.at(k, value, operation);
             } else {
                 final Obj v = this.jvm().get(k.intValue().intValue());
-                if (v.isLst()) {
-                    return this.at(k, v.<Lst>as().at(uri(key.<Uri>as().uriValue().pretract()), value, operation), operation).as();
-                } else if (v.isRec()) {
-                    return this.at(k, v.<Rec>as().at(uri(key.<Uri>as().uriValue().pretract()), value, operation), operation).as();
+                if (v.isPoly()) {
+                    return this.at(k, v.<Poly<?, ?>>as().at(uri(key.<Uri>as().uriValue().pretract()), value, operation), operation).as();
                 } else {
                     throw MTronException.of("unknown key value for lst: %s => %s", key, value);
                 }
@@ -134,15 +131,19 @@ public interface Lst extends Poly<Lst, List<Obj>>, PlusMonoid.O<Lst> {
 
     @Override
     default <OBJ extends Obj> OBJ at(final Obj key) {
+        final cInt cKey = key.c();
         if (key.isInt())
-            return (OBJ) ((this.jvm().size() > key.intValue()) ? this.jvm().get(key.<Int>as().intValue().intValue()).autoResolve(this) : noobj()).parent(this);
+            return (OBJ) ((this.jvm().size() > key.intValue()) ? this.jvm().get(key.<Int>as().intValue().intValue()).autoResolve(this) : noobj()).parent(this).c(c->c.mult(cKey));
         else if (key.isUri()) {
             if (key.uriValue().segments().isEmpty())
                 return (OBJ) noobj();
-            final String step = key.uriValue().segments().getFirst();
+            final boolean singleSegment = key.uriValue().pathLength() == 1;
+            final String step = singleSegment ? key.uriValue().asNode().toString() : key.uriValue().segments().getFirst();
+            final Uri asNode = uri(key.uriValue().asNode());
+            final boolean isBranch = key.uriValue().isBranch();
             Stream<Obj> result;
-            if (step.equals("+") || step.equals("#")) {
-                result = this.elements();
+            if (step.equals(ONE_WILD_STRING) || step.equals(ALL_WILD_STRING)) {
+                result = isBranch ? (Stream) this.indexedStream() : this.elements();
             } else {
                 if (!CommonUtil.isInt(step))
                     return (OBJ) noobj();
@@ -150,12 +151,12 @@ public interface Lst extends Poly<Lst, List<Obj>>, PlusMonoid.O<Lst> {
                 final Int k = jnt(Long.parseLong(step));
                 if (this.jvm().size() <= k.intValue().intValue())
                     return (OBJ) noobj();
-                result = Stream.of(this.jvm().get(k.intValue().intValue()));
+                result = isBranch ? Stream.of(rel(uri(step), this.at(k.intValue().intValue()))) : Stream.of(this.at(k.intValue().intValue()));
             }
             if (key.uriValue().segments().size() == 1) {
-                return (OBJ) objs(result.filter(x -> !x.isNoObj()).map(e -> e.autoResolve(this).parent(this)));
+                return (OBJ) objs(result.filter(x -> !x.isNoObj()).map(x -> x.c(c->c.mult(cKey)).parent(this)));
             } else {
-                return (OBJ) objs(result.filter(x -> !x.isNoObj()).map(e -> (Obj) e.autoResolve(this).parent(this)).filter(Obj::isPoly).map(r -> r.<Poly>as().at(uri(key.<Uri>as().uriValue().pretract()))));
+                return (OBJ) objs(result.filter(x -> !x.isNoObj()).filter(Obj::isPoly).map(x -> (Poly<?,?>) x.c(c->c.mult(cKey)).parent(this)).map(r -> r.at(uri(key.<Uri>as().uriValue().pretract()))));
             }
         } else {
             throw MTronException.of("unknown key for lst: %s", key);
@@ -206,7 +207,7 @@ public interface Lst extends Poly<Lst, List<Obj>>, PlusMonoid.O<Lst> {
                     instC(REVERSE_INST_TID.dom(LST_TID).rng(LST_TID), lst(), (lhs, inst) -> lhs.jvm(lhs.asLst().jvm().reversed())),
                     instC(PLUS_INST_TID.dom(LST_TID).rng(LST_TID), lst(T(LST_TID)), (lhs, inst) -> lhs.jvm(Stream.concat(lhs.elements(), inst.arg(0).elements()).toList())),
                     instC(MULT_INST_TID.dom(LST_TID).rng(LST_TID), lst(T(LST_TID)), (lhs, inst) -> lhs.jvm(lhs.elements().flatMap(a -> inst.arg(0).elements().map(b -> rel(a, b))).toList())),
-                    instC(RSHIFT_INST_TID.dom(LST_TID).rng(ALL_STAR), lst(T(ALL.maybeSome())), (lhs, inst) -> objs(inst.arg(0).orElse((Obj) uri("+")).stream().map(k -> lhs.asLst().at(k)))),
+                    instC(RSHIFT_INST_TID.dom(LST_TID).rng(ALL_STAR), lst(T(ALL.maybeSome())), (lhs, inst) -> objs(inst.arg(0).orElse((Obj) uri(ONE_WILD_STRING)).stream().map(k -> lhs.asLst().at(k)))),
                     // instC(LSHIFT_INST_TID.dom(LST_TID).rng(ALL_STAR), lst(isa_(INT_TYPE).else_(jnt(1))), (lhs, inst) -> lhs.parent()),
                     instC(SPLIT_INST_TID.dom(ALL).rng(LST_TID), lst(T(LST_TID)), (lhs, inst) -> lst(inst.arg(0).elements().map(e -> e.apply(lhs)).toList())),
                     instC(MERGE_INST_TID.dom(LST_TID).rng(ALL_STAR), lst(), (lhs, inst) -> objs(lhs.elements())),

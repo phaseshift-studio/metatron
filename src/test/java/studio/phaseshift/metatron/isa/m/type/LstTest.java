@@ -26,15 +26,73 @@ package studio.phaseshift.metatron.isa.m.type;
 
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-import studio.phaseshift.metatron.isa.m.parser.mParser;
-import studio.phaseshift.metatron.isa.AbstractObjTest;
 import studio.phaseshift.metatron.AbstractMetatronTest;
+import studio.phaseshift.metatron.isa.AbstractObjTest;
+import studio.phaseshift.metatron.isa.m.parser.mParser;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 
 public class LstTest extends AbstractObjTest {
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "[a,b,c]>>a                                                                 % noobj",
+            "[a,b,c]>>+                                                                 % {a,b,c}",
+            "[a,b,c]>><+>                                                               % {a,b,c}",
+            "[a,b,c]>>{0,0}                                                             % {2}a",
+            "[{5,8}a,b,{7}c]>>{{4,6}0,0}                                                % {25,56}a", // two zeros collapse on the key select
+            "{2,3}[{5,8}a,b,{7}c]>>{{4,6}0,0}                                           % {50,168}a", // two zeros collapse on the key select
+            "[{5,8}a,b,{7}c]>>{{4,6}0,0}                                                % {25,56}a", // two zeros collapse on the key select
+            "{2,3}[{5,8}a,b,{-7}c]>>{{4,6}0,0}                                          % {50,168}a", // two zeros collapse on the key select
+            "{2,3}[{-5,8}a,b,{-7}c]>>?#{**}<=lst{{4,6}0,0}                              % {-50,168}a", // two zeros collapse on the key select
+            "{-2,3}[{-5,8}a,b,{-7}c]>>?#{**}<=lst{{4,6}0,0}                             % {50,168}a", // two zeros collapse on the key select
+            "[a,b,c]>>{<0>,<0>}                                                         % {2}a",
+            "[a,b,c]>>{<0>,0}                                                           % {2}a",
+            "[a,b,c]>>{<+>,0}                                                           % {{2}a,b,c}",
+            "[a,b,c]>>{<+>,{15}<0>}                                                     % {{16}a,b,c}",
+            "[a,b,c]>>{{2}<+>,{15}<0>}                                                  % {{17}a,{2}b,{2}c}",
+            "[a,b,c]>>{{2}<+/>,{15}<0>}                                                 % {{15}a,{2}0=>a,{2}1=>b,{2}2=>c}", // should this be uri keyed? (using indexed stream)
+            "[a,b,c]>>{{2}<+/>,{15}<0>}>>                                               % {{2}a,{2}b,{2}c}",
+            "[a,{3}b,c]>>{{2}<+/>,{15}<0>}>>                                            % {{2}a,{6}b,{2}c}",
+            "[a,{3,5}b,c]>>{{2}<+/>,{15}<0>}>>                                          % {{2}a,{6,10}b,{2}c}",
+            "{10}[a,b,c]>>{{2}<+/>,{15}<0>}>>                                           % {{20}a,{20}b,{20}c}",
+            "[a,b,c]>>{{2}<+/>,{15}<0>}>>.cc().sum()                                    % 6",
+            "[a,b,c]>><+/>                                                              % {0=>a,1=>b,2=>c}", // should this be uri keyed? (using indexed stream)
+            "[a,b,c]>><#>                                                               % {a,b,c}",
+            "[a,b,c]>><#/>                                                              % {0=>a,1=>b,2=>c}", // should this be uri keyed? (using indexed stream)
+            "[a,b,c]>>0                                                                 % a",
+            "[a,b,c]>>1                                                                 % b",
+            "[a,b,c]>>2                                                                 % c",
+            "[a,b,c]>>3                                                                 % noobj",
+            "[a,b,c]>><0/>                                                              % <0>=>a",
+            "[a,b,c]>><1/>                                                              % <1>=>b",
+            "[a,b,c]>><2/>                                                              % <2>=>c",
+            "[a,b,c]>><3/>                                                              % noobj",
+            "[a,b,c]>>{1,2}                                                             % {b,c}",
+            "[a,b,c]>>{1,2,3}                                                           % {b,c}",
+            "[a,b,c]>>{0,1}                                                             % {a,b}",
+            "[a,b,c]>>{0,1,2}                                                           % {a,b,c}",
+            "[a,b,c]>>{0,1,2,3}                                                         % {a,b,c}",
+            "[a,b,c]>>{0,1,2,3,4}                                                       % {a,b,c}",
+            "[a,b,c]>>{<0/>,<1/>}                                                       % {<0>=>a,<1>=>b}",
+            "[a,b,c]>>{<0/>,<1/>,<2/>}                                                  % {<0>=>a,<1>=>b,<2>=>c}",
+            "[a,b,c]>>{<0/>,<1/>,<2/>,<3/>}                                             % {<0>=>a,<1>=>b,<2>=>c}",
+            "[a,b,c]>>{<0/>,<1/>,2,<3>}                                                 % {<0>=>a,<1>=>b,c}",
+            "[a,b,c]>>{0,<1/>,<2>}                                                      % {a,<1>=>b,c}",
+            "[a,b,c]>>{<0>,{23}<1/>,2}                                                  % {a,{23}<1>=>b,c}",
+            "[a,b,c]>>{0,{23}<1/>,2}>>                                                  % {23}b",
+            "{2}[a,b,c]>>{<100>,{23}<1>,34}                                             % {46}b",
+            "{2}[a,b,c]>>{<0>,{23}<1/>,<2>}                                             % {{2}a,{46}<1>=>b,{2}c}",
+            "{2}[a,b,c]>>{<0>,{23}<1/>,<2>}                                             % {2}[a,{23}<1>=>b,c]>-",
+            "{2}[a,b,c]>>{<0>,<1>,2}.<<                                                 % {6}[a,b,c]",
+            "{2}[a,b,{4}c]>>2                                                           % {8}c",
+            // "{2}[a=>1,b=>2,c=>3]>>{a,{23}b/,c}.<<                                       % {25}[a=>1,b=>2,c=>3]", // TODO: review: is this the semantics we want?
+    }, delimiter = '%')
+    public void testAt(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
 
     @ParameterizedTest
     @CsvSource(value = {
@@ -62,7 +120,7 @@ public class LstTest extends AbstractObjTest {
         assertEquals(v, actual);
     }
 
-    
+
     @ParameterizedTest
     @CsvSource(value = {
             "[a,[b,[c,d],e],f]                                                                       % [a,[b,[c,d],e],f]",
@@ -139,7 +197,7 @@ public class LstTest extends AbstractObjTest {
             "[,].reverse()                                                       % [,]",
             "[a].reverse()                                                       % [a]",
             //"[a,b].reverse().reverse()                                           % [a,b]",
-           // "[a,[b,c],[d,e]].reverse()==[(_,_,_){reverse()}]                     % [[e,d],[c,b],a]",
+            // "[a,[b,c],[d,e]].reverse()==[(_,_,_){reverse()}]                     % [[e,d],[c,b],a]",
     }, delimiter = '%')
     public void testReverse(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);

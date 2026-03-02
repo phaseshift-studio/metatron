@@ -20,6 +20,7 @@ package studio.phaseshift.metatron.isa.m.type;
 
 
 import studio.phaseshift.metatron.algebra.PlusMonoid;
+import studio.phaseshift.metatron.furi.C;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.util.CommonUtil;
@@ -135,22 +136,23 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>>, PlusMonoid.O<Rec> {
             final String step = singleSegment ? key.uriValue().asNode().toString() : key.uriValue().segments().getFirst();
             Obj result;
             final Uri asNode = uri(key.uriValue().asNode());
+            final cInt cKey = key.c();
             final boolean isBranch = key.uriValue().isBranch();
             if (step.equals(ONE_WILD_STRING) || step.equals(ALL_WILD_STRING)) {
                 result = objs(isBranch ?
-                        this.jvm().entrySet().stream().map(e -> rel(e.getKey().autoResolve(this), e.getValue().autoResolve(this))).map(o -> o.c(c -> c.mult(this.c()))).map(o -> o.parent(this)) :
-                        this.jvm().values().stream().map(obj -> obj.autoResolve(this)).map(o -> o.c(c -> c.mult(this.c()))).map(o -> o.parent(this)));
+                        this.jvm().entrySet().stream().map(e -> rel(e.getKey().autoResolve(this), e.getValue().autoResolve(this))).map(o -> o.c(c -> c.mult(cKey))).map(o -> o.parent(this)) :
+                        this.jvm().values().stream().map(obj -> obj.autoResolve(this)).map(o -> o.c(c -> c.mult(cKey))).map(o -> o.parent(this)));
             } else if (this.jvm().containsKey(asNode)) {
                 return (isBranch ?
                         rel(asNode, this.jvm().get(asNode)) :
-                        this.jvm().get(asNode).autoResolve(this)).c(c -> c.mult(this.c())).parent(this);
+                        this.jvm().get(asNode).autoResolve(this)).c(c -> c.mult(cKey)).parent(this);
             } else { // this.recValue().containsKey(uri(step))
                 final Obj temp = this.jvm().getOrDefault(uri(step), NoObj.noobj()).autoResolve(this).parent(this);
-                result = (isBranch ? rel(asNode, temp) : temp).c(c -> c.mult(this.c())).parent(this);
+                result = (isBranch ? rel(asNode, temp) : temp).c(c -> c.mult(cKey)).parent(this);
             }
             /// ///////////////////////////////////////////////////////////////////////////////////////////////////////
             if (singleSegment) {
-                return result.parent(this);
+                return result.parent(this).c(c -> c.mult(cKey)).as();
             } else {
                 final fURI nextKey = isBranch ? key.uriValue().pretract().asBranch() : key.uriValue().pretract();
                 return (OBJ) objs(IteratorUtil.stream(result.iterator()).filter(Obj::isPoly).map(o -> o.parent(this).<Poly<?, ?>>as()).map(r -> r.<Poly>as().at(uri(nextKey))));
@@ -235,7 +237,7 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>>, PlusMonoid.O<Rec> {
                     //instC(MERGE_INST_TID.dom(REC_TID).rng(REC_TID), lst(T(REC_TID)), (lhs, inst) -> inst.arg(0).<Rec>as().plus(lhs.as())),//objs(lhs.elementStream())),
                     instC(DOM_INST_TID.dom(REC_TID).rng(ALL_STAR), lst(), (lhs, inst) -> objs(lhs.recValue().keySet())),
                     instC(RNG_INST_TID.dom(REC_TID).rng(ALL_STAR), lst(), (lhs, inst) -> objs(lhs.recValue().values())),
-                    instC(RSHIFT_INST_TID.dom(REC_TID).rng(ALL_STAR), lst(T(ALL.maybeSome())), (lhs, inst) -> objs(inst.arg(0).orElse((Obj) uri("+")).stream().map(k -> lhs.asRec().at(k)))),
+                    instC(RSHIFT_INST_TID.dom(REC_TID).rng(ALL_STAR), lst(T(ALL.maybeSome())), (lhs, inst) -> objs(inst.arg(0).orElse((Obj) uri(ONE_WILD_STRING)).stream().map(k -> lhs.asRec().at(k)))),
                     // instC(LSHIFT_INST_TID.dom(REC_TID).rng(ALL_STAR), lst(), (lhs, inst) -> lhs.parent()),
                     instC(PLUS_INST_TID.dom(REC_TID).rng(REC_TID), lst(T(REC_TID.maybeMaybe())), (lhs, inst) -> lhs.jvm(lhs.asRec().plus(inst.arg(0).asRec()).recValue())),
                     instC(MPLUS_INST_TID.dom(REC_TID).rng(REC_TID), lst(T(REC_TID)), (lhs, inst) -> inst.arg(0).<Rec>as().elements().map(Obj::<Obj>as).reduce(lhs.<Rec>as(), (a, b) -> a.<Rec>as().at(((Rel) b).first(), ((Rel) b).second(), MUTABLE))),

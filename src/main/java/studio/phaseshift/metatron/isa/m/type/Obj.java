@@ -139,7 +139,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
     }
 
     default Obj c(final cInt c) {
-        return this.c(oldC -> c);
+        return this.c(_ -> c);
     }
 
     default Obj c(final Function<cInt, cInt> func) {

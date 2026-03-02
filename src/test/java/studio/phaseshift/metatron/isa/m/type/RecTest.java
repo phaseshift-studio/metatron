@@ -21,9 +21,9 @@ package studio.phaseshift.metatron.isa.m.type;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
-import studio.phaseshift.metatron.AbstractMetatronTest;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static studio.phaseshift.metatron.isa.m.type.Poly.IMMUTABLE;
@@ -136,6 +136,41 @@ public class RecTest extends AbstractMetatronTest {
 
     @ParameterizedTest
     @CsvSource(value = {
+            "[a=>1,b=>2,c=>3]>>d                                                        % noobj",
+            "[a=>1,b=>2,c=>3]>>{15}a                                                    % {15}1",
+            "{2}[a=>{3}1,b=>2,c=>3]>>{5}a                                               % {30}1",
+            "{1,2}[a=>{2,3}1,b=>2,c=>3]>>{4,5}a                                         % {8,30}1",
+            "{1,2}[a=>{2,3}1,b=>2,c=>3]>>{{4,5}a,a,a}                                   % {12,42}1",
+            "{1,2}[a=>{-2,3}1,b=>2,c=>3]>>?#{**}<=rec{{4,5}a,a,a}                       % {-12,42}1",
+            "{-1,2}[a=>{-2,3}1,b=>2,c=>3]>>?#{**}<=rec{{4,5}a,a,a}                      % {12,42}1",
+            "{-1,2}[a=>{-2,3}1,b=>2,c=>3]>>?#{**}<=rec{{4,5}a,a,{-1}a}                  % {8,30}1",
+            "[a=>1,b=>2,c=>3]>>a                                                        % 1",
+            "[a=>1,b=>2,c=>3]>>{a,b}                                                    % {1,2}",
+            "[a=>1,b=>2,c=>3]>>{a,b,c}                                                  % {1,2,3}",
+            "[a=>1,b=>2,c=>3]>>{a,b,c,d}                                                % {1,2,3}",
+            "[a=>1,b=>2,c=>3]>>{a,b,c,a}                                                % {int{2}::1,2,3}",
+            "[a=>1,b=>2,c=>3]>>a/                                                       % a=>1",
+            "[a=>1,b=>2,c=>3]>>b/                                                       % b=>2",
+            "[a=>1,b=>2,c=>3]>>{a/,b/}                                                  % {a=>1,b=>2}",
+            "[a=>1,b=>2,c=>3]>>{a/,b/,c/}                                               % {a=>1,b=>2,c=>3}",
+            "[a=>1,b=>2,c=>3]>>{a/,b/,c/,d/}                                            % {a=>1,b=>2,c=>3,d=>noobj}", // <== BAD: rel noobj lives
+            "[a=>1,b=>2,c=>3]>>{a/,b/,c,d}                                              % {a=>1,b=>2,3}",
+            "[a=>1,b=>2,c=>3]>>{a,b/,c}                                                 % {1,b=>2,3}",
+            "[a=>1,b=>2,c=>3]>>{a,{23}b/,c}                                             % {1,{23}b=>2,3}",
+            "[a=>1,b=>2,c=>3]>>{a,{23}b/,c}>>                                           % {23}2",
+            "{2}[a=>1,b=>2,c=>3]>>{a,{23}b/,c}>>                                        % {46}2",
+            "{2}[a=>1,b=>2,c=>3]>>{a,{23}b/,c}                                          % {{2}1,{46}b=>2,{2}3}",
+            "{2}[a=>1,b=>2,c=>3]>>{a,{23}b/,c}                                          % {2}[{1,{23}b=>2,3}]>-",
+            "{2}[a=>1,b=>2,c=>3]>>{a,b,c}.<<                                            % {6}[a=>1,b=>2,c=>3]",
+            "{2}[a=>1,b=>2,c=>{4}3]>>c                                                  % {8}3",
+           // "{2}[a=>1,b=>2,c=>3]>>{a,{23}b/,c}.<<                                       % {25}[a=>1,b=>2,c=>3]", // TODO: review: is this the semantics we want?
+    }, delimiter = '%')
+    public void testAt(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
             "[a=>[knows=>[b=>[knows=>c]]]]../<a/+/b/knows>                                           % c",
             "(a=>(knows=>(b=>(knows=>c))))../<a/+/b/knows>                                           % c"
     }, delimiter = '%')
@@ -168,9 +203,9 @@ public class RecTest extends AbstractMetatronTest {
             "{2,0}.-<[a=>is{3}(gt(0)),a=>is{2}(gt(0)),a=>noobj].rng()                                 % int{5}::2",
             "{2,5}.-<[a=>is{3}(gt(0)),a=>is{2}(gt(0)),a=>noobj].rng()                                 % {int{5}::5, int{5}::2}",
             "{2,5,0,0}-<[a=>is{3}(gt(0)),a=>is{2}(gt(0)),a=>noobj].rng()                             % {int{5}::5, int{5}::2}",
-          //  "{2,5}.barrier([a=>is{3}(gt(0)),a=>is{2}(gt(0)),a=>noobj]))                                      % [a=>{int{5}::5, int{5}::2}]",
-           // "{2,5,5,5,0}-<[a=>is{3}(gt(0)),a=>is{2}(gt(0)),a=>noobj])                                % [a=>{int{15}::5, int{5}::2}]",
-          //  "{2,2,5,-1}-<[a=>is{3}(gt(0)),a=>is{2}(gt(0)),a=>noobj])                                 % [a=>{int{5}::5, int{10}::2}]",
+            //  "{2,5}.barrier([a=>is{3}(gt(0)),a=>is{2}(gt(0)),a=>noobj]))                                      % [a=>{int{5}::5, int{5}::2}]",
+            // "{2,5,5,5,0}-<[a=>is{3}(gt(0)),a=>is{2}(gt(0)),a=>noobj])                                % [a=>{int{15}::5, int{5}::2}]",
+            //  "{2,2,5,-1}-<[a=>is{3}(gt(0)),a=>is{2}(gt(0)),a=>noobj])                                 % [a=>{int{5}::5, int{10}::2}]",
             "2-<[a=>is(gt(0)),a=>is(gt(0)),b=>3]                                                     % [a=>int{2}::2,b=>3]",
             "2-<[a=>is(gt(0)),a=>is(gt(1)),b=>3]                                                     % [a=>int{2}::2,b=>3]",
             "[1,2,3]-<[>-.is(gt(2)) => >-.is(gt(1)), >-.is(gt(1)) => >-._]                           % [3=>{2,3},{2,3}=>{1,2,3}]",
@@ -220,7 +255,7 @@ public class RecTest extends AbstractMetatronTest {
             "[a=>x,b=>[c=>1,d=>2],e=>y].reverse()==[_=>reverse()]                            % [e=>y,b=>[d=>2,c=>1],a=>x]",
             "[=>].reverse()                                                                  % [=>]",
             "[a=>1].reverse()                                                                % [a=>1]",
-         //   "[a=>1,b=>2].reverse().reverse()                                                 % [a=>1,b=>2]",
+            //   "[a=>1,b=>2].reverse().reverse()                                                 % [a=>1,b=>2]",
     }, delimiter = '%')
     public void testReverse(final String code, final String expected) {
         AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
