@@ -154,6 +154,7 @@ public class ollamaInstSet extends AbstractInstSet {
                                     })
                                     .onCompleteResponse(c -> {
                                         isComplete.set(true);
+                                        isResponding.set(false);
                                         LOG.none("\n");
                                     })
                                     .onPartialToolCall(partialToolCall -> {
@@ -163,7 +164,8 @@ public class ollamaInstSet extends AbstractInstSet {
                                         }
                                     })
                                     .onPartialResponse(s -> {
-                                        isResponding.getAndSet(true);
+                                        if (!isResponding.getAndSet(true))
+                                            LOG.none(Graphitty.sillyPrint("responding..\n", true, true));
                                         Router.global().stats().ioStats().incrBytesRecv(s.getBytes().length);
                                         response.append(s);
                                     })

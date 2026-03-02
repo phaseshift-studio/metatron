@@ -115,7 +115,8 @@ public class ObjCleanStringSerializer extends AbstractObjSerializer<String> {
     @Override
     public String writeStr(final Str str) {
         final String string = str.jvm();
-        final String quotes = string.contains("\n") ? "\"\"\"" : string.contains("'") ? "\"" : "'";
+        boolean doubleQuote = string.contains("\n") || (string.contains("\"") && string.contains("'"));
+        final String quotes = doubleQuote ? "\"\"\"" : string.contains("'") ? "\"" : "'";
         return handleIds(str, quotes + string + quotes);
     }
 
