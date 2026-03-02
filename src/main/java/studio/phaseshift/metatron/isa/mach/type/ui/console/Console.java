@@ -228,6 +228,10 @@ public class Console extends JRec implements Closeable, Runnable {
                             .addRow(List.of("header", "random header", "random header")).style().headerDivider("{{[b]}} ").apply().format()).style().border(Border.simple.foreground("{{b}}")).apply().run();
                 } else if (line.startsWith(":log")) {
                     LogObj.setSLF4J(line.substring(4));
+                } else if (line.startsWith(":check")) {
+                    if (!line.substring(6).trim().isEmpty())
+                        BootLoader.TYPE_CHECK = Boolean.parseBoolean(line.substring(6).trim());
+                    LOG.info("type checking %s", BootLoader.TYPE_CHECK ? "{{g}}enabled{{X}}" : "{{r}}disabled{{X}}");
                 } else if (line.startsWith(":card")) {
                     final List<studio.phaseshift.metatron.isa.mach.type.ui.Widget<?>> widgets = new ArrayList<>();
                     Router.global().spaces().elements().map(Rel::second).forEach(s ->

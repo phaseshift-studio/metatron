@@ -22,6 +22,7 @@ import org.jline.utils.AttributedString;
 import org.jline.utils.AttributedStringBuilder;
 import org.jline.utils.Status;
 import org.slf4j.event.Level;
+import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Call;
 import studio.phaseshift.metatron.isa.m.type.Uri;
@@ -63,17 +64,17 @@ public class StatusLine implements Runnable {
     public StatusLine(final Console console) {
         this.line = new ArrayList<>();
         this.status = Status.getStatus(Console.getTerminal());
+        this.addWidget(f("type_check_"), () -> BootLoader.TYPE_CHECK ? "{{w&[g]}} T {{X}}" : "{{w&[r]}} T {{X}}");
         this.addWidget(f("host"), () -> "{{w}}%s".formatted(Router.global().server().isRunning() ? Router.global().server().host() : "{{r}}<node down>"));
-        this.addWidget(f("spaces"), () -> "{{w}}spaces:{{y}}%d".formatted(Router.global().spaces().count()));
-        this.addWidget(f("nodes"), () -> "{{w}}nodes:{{y}}%d".formatted(Router.global().server().nodes().size()));
+        //this.addWidget(f("spaces"), () -> "{{w}}spaces:{{y}}%d".formatted(Router.global().spaces().count()));
+        //this.addWidget(f("nodes"), () -> "{{w}}nodes:{{y}}%d".formatted(Router.global().server().nodes().size()));
         this.addWidget(f("in_bytes"), () -> "{{w}}in:{{y}}%s".formatted(bytesFormat(Router.global().stats().ioStats().bytesRecv())));
         this.addWidget(f("out_bytes"), () -> "{{w}}out:{{y}}%s".formatted(bytesFormat(Router.global().stats().ioStats().bytesSent())));
-        this.addWidget(f("running_time"), () -> "{{w}}running time:{{y}}%s".formatted(timeFormat(this.runningTime())));
-        this.addWidget(f("running"), () -> "{{w}}running:{{y}}%d".formatted(Router.global().stats().monadicStats().runningMonads()));
-        this.addWidget(f("halted"), () -> "{{w}}halted:{{y}}%d".formatted(Router.global().stats().monadicStats().haltedMonads()));
-        this.addWidget(f("killed"), () -> "{{w}}killed:{{y}}%d".formatted(Router.global().stats().monadicStats().killedMonads()));
+        this.addWidget(f("time"), () -> "{{w}}time:{{y}}%s".formatted(timeFormat(this.runningTime())));
+        this.addWidget(f("run"), () -> "{{w}}run:{{y}}%d".formatted(Router.global().stats().monadicStats().runningMonads()));
+        this.addWidget(f("halt"), () -> "{{w}}halt:{{y}}%d".formatted(Router.global().stats().monadicStats().haltedMonads()));
+        this.addWidget(f("kill"), () -> "{{w}}kill:{{y}}%d".formatted(Router.global().stats().monadicStats().killedMonads()));
         this.addWidget(f("barrier"), () -> "{{w}}barrier:{{y}}%d".formatted(Router.global().stats().monadicStats().barrierMonads()));
-
     }
 
 
@@ -84,13 +85,21 @@ public class StatusLine implements Runnable {
     private void compileWidgets() {
         final String color = this.getColor();
         this.line.clear();
-        boolean first = true;
+        boolean capped = false;
         for (final Map.Entry<Uri, Call> ws : this.widgets.jvmTyped().entrySet()) {
             final String w = ws.getValue().apply(noobj()).strValue();
-            this.line.add(new AttributedString(Graphitty.string("{{g&[%s]}}%s%s{{[%s]}} ", color, first ? " " : "| ", w, color)));
-            first = false;
+            final String cap;
+            if (capped || ws.getKey().uriValue().toString().endsWith("_")) {
+                cap = "";
+                capped = true;
+            } else {
+                cap = "| ";
+            }
+            if (!ws.getKey().uriValue().toString().endsWith("_"))
+                capped = false;
+            this.line.add(new AttributedString(Graphitty.string("{{g&[%s]}}%s%s{{[%s]}} ", color, cap, w, color)));
         }
-        this.line.add(new AttributedString(Graphitty.string("{{g}}|{{[" + color + "]}}%s.".formatted(" ".repeat(Console.getTerminal().getWidth())))));
+        this.line.add(new AttributedString(Graphitty.string("{{g}}{{[" + color + "]}}%s.".formatted(" ".repeat(Console.getTerminal().getWidth())))));
 
         final AttributedStringBuilder builder = new AttributedStringBuilder();
         for (final AttributedString s : this.line) {
@@ -141,13 +150,15 @@ public class StatusLine implements Runnable {
         if (bytes < 1024)
             return bytes + "B";
         else if (bytes < 1024 * 1024)
-            return String.format("%.2fK", bytes / 1024.0);
+            return String.format("%.2fkB", bytes / 1024.0);
         else if (bytes < 1024 * 1024 * 1024)
-            return String.format("%.2fM", bytes / (1024.0 * 1024.0));
+            return String.format("%.2fmB", bytes / (1024.0 * 1024.0));
         else if (bytes < 1024L * 1024L * 1024L * 1024L)
-            return String.format("%.2fG", bytes / (1024.0 * 1024.0 * 1024.0));
+            return String.format("%.2fgB", bytes / (1024.0 * 1024.0 * 1024.0));
+        else if (bytes < 1024L * 1024L * 1024L * 1024L * 1024L)
+            return String.format("%.2ftB", bytes / (1024.0 * 1024.0 * 1024.0 * 1024.0));
         else
-            return String.format("%.2fT", bytes / (1024.0 * 1024.0 * 1024.0 * 1024.0));
+            return String.format("%.2fpB", bytes / (1024.0 * 1024.0 * 1024.0 * 1024.0 * 1024.0));
     }
 
     private static String timeFormat(final long millis) {

@@ -118,13 +118,13 @@ public class Selector extends AbstractWidget<Selector> {
                 switch (op) {
                     case RIGHT_COL:
                         selectCol++;
-                        if (selectCol > this.style.attachment.columnCount() - 1)
-                            selectCol = 0;
+                        if (selectCol > this.style.highColRange - 1)
+                            selectCol = this.style.lowColRange;
                         break;
                     case LEFT_COL:
                         selectCol--;
                         if (selectCol < 0)
-                            selectCol = this.style.attachment.columnCount() - 1;
+                            selectCol = this.style.highColRange - 1;
                         break;
                     case DOWN_ROW:
                         selectRow++;
