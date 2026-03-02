@@ -84,6 +84,17 @@ public interface Type extends Obj, PlusMonoid<Type> {
     }
 
 
+    default List<Call> predicateStack() {
+        final List<Call> result = new ArrayList<>();
+        Type type = this;
+        while (null != type) {
+            if(type.hasPredicate())
+                result.add(type.predicate());
+            type = type.parentType();
+        }
+        return result;
+    }
+    
     default Type parentType() {
         if (this.tid().equals(this.vid()))
             return null;

@@ -375,7 +375,7 @@ public interface Inst extends Call {
                                     "\n\t[inst]   | %s" +
                                     "\n\t \\_dom   | %s" +
                                     "\n\t \\_args  | %s",
-                            clhs, clhs.tid(), clhs.type().hasPredicate() ? clhs.type().predicate() : noobj(), cinst, cinst.dom(), cinst.args());
+                            clhs, clhs.tid(), clhs.type().predicateStack(), cinst, cinst.dom(), cinst.args());
                     // e.printStackTrace();
                 } finally {
                     Router.stack().pop();
