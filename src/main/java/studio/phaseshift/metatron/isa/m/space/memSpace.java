@@ -39,9 +39,10 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.util.Collections;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Stream;
@@ -74,7 +75,7 @@ public class memSpace extends AbstractSpace<Map<fURI, Obj>> {
                             (lhs, inst) -> memSpace.of(inst.arg(0).asRec(), inst.arg(0).vid()))).create();
 
     protected memSpace(final Map<Obj, Obj> config, final fURI vid) {
-        super(new ConcurrentHashMap<>(), config, MEM_SPACE_TID, vid);
+        super(Collections.synchronizedMap(new LinkedHashMap<>()), config, MEM_SPACE_TID, vid);
         load();
     }
 

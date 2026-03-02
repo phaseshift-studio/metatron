@@ -811,7 +811,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
                     //  instC(BARRIER_INST_TID.dom(A.maybeSome()).rng(B), lst(T(B.maybeSome())), (lhs, inst) -> inst.arg(0).apply(lhs)),
                     instC(BARRIER_INST_TID.dom(A.maybeSome()).rng(A.maybeSome()), lst(), (lhs, inst) -> lhs),
                     instC(BARRIER_INST_TID.dom(A.maybeSome()).rng(A.maybeSome()), lst(T(A.maybeSome())), (lhs, inst) -> inst.arg(0).append(lhs)),
-                    instC(AS_INST_TID.dom(A).rng(A), lst(T(A)), (lhs, inst) -> lhs.clone(lhs.jvm(), inst.arg(0).tid(), lhs.vid())),
+                    instC(AS_INST_TID.dom(A).rng(A), lst(T(A)), (lhs, inst) -> lhs.as(inst.arg(0).asType())),
                     instC(REPEAT_INST_TID.dom(A).rng(A.maybeSome()).query(MONAD, null), lst(T(ALL), T(ALL)), (lhs, inst) -> {
                         try {
                             Obj current = lhs.asMonad().obj();

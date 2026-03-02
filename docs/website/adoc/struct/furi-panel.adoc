@@ -1,0 +1,31 @@
+[source,mtron]
+----
+file://domain.local:22/usr/data/abc{*}?sub
+  │    └──────────┘ │  └──────────┘ │  └────⮞ q(uery)
+  │          │      │        │      └───────⮞ c(oefficient)   
+  │          │      │        └──────────────⮞ path
+  │          │      └───────────────────────⮞ port
+  │          └──────────────────────────────⮞ host
+  └─────────────────────────────────────────⮞ scheme
+----
+
+[cols="1a,2a,3",separator=🧱,options=header]
+|===
+🧱 coefficient 🧱 shorthand 🧱 examples
+🧱 {0,0}       🧱 {0}       🧱 noobj
+🧱 {1,1}       🧱 {1} or    🧱 an-obj
+🧱 {-1,-1}     🧱 {-1}      🧱 anti-obj
+🧱 {±n,±n}     🧱 {±n}      🧱 exactly ±n
+🧱 {±n,±m}     🧱           🧱  between ±n and ±m
+
+🧱 {0,1}       🧱 {?}      🧱 maybe
+🧱 {1,}        🧱 {+}      🧱 some
+🧱 {0,}        🧱 {*}      🧱 maybe some
+
+🧱 {-,+}       🧱 {**}     🧱 polar maybe some
+🧱 {-1,1}      🧱 {??}     🧱 polar maybe
+
+🧱 {-1,0}      🧱 {-?}     🧱 anti-maybe
+🧱 {,-1}       🧱 {-}      🧱 anti-some
+🧱 {,0}        🧱 {-*}     🧱 anti-maybe some
+|===

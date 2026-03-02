@@ -1,0 +1,67 @@
+metatron objs are typed.
+Types are organized into instruction sets that encapsulate the structures and processes necessary to effect domain-specific views of the underlying data space.
+The type system supports refinement types, optional/maybe types, generic/polymorphic types, recursive/self-referential types, dependent types, type cardinality, and more.
+
+## mtron core types
+
+[cols="1a,1a,4a",separator=🧱,options=header]
+|===
+🧱kind            🧱 description 🧱 examples
+🧱universal types 🧱             🧱 noobj::T, #::T
+🧱mono types      🧱             🧱 bytes::T, bool::T, int::T, real::T, str::T, uri::T
+🧱poly types      🧱             🧱 rel::T, lst::T, rec::T
+🧱call types      🧱             🧱 inst::T, code::T
+🧱error types     🧱             🧱 fail::T, caught::T
+|===
+
+[source,mtron]
+----
+nat    -> int::T[?>0]
+age    -> nat::T[?<120]
+name   -> str::T[-<''>-count().?<30]
+
+person -> rec::T[
+ name  => str::T,
+ age   => age::T,
+ knows => person{*}::T
+ tools => [uri::T => call?#{*}<=person::T]
+----
+
+## instruction set architecture types
+
+[cols="1a,1a,4a",separator=🧱,options=header]
+|===
+🧱instruction set 🧱 description 🧱 examples
+🧱mach            🧱             🧱 monad::T, machine::T
+🧱math            🧱             🧱 bB::T, kB::T, mB::T, gB::T, tB::T, pB::T
+🧱web             🧱             🧱 html::T, json::T, xml::T
+🧱iot             🧱             🧱 device::T, entity::T
+🧱llm             🧱             🧱 llm::T, memory::T
+🧱grph            🧱             🧱 elmnt::T, vrtx::T, edge::T
+|===
+
+
+[source,mtron]
+----
+nat    -> int::T[?>0]
+person -> rec::T[?[name        =>str::T,
+                   uri{?}::age =>nat::T,
+                   knows       =>person{*}::T]]
+people  -> person{*}::T 
+----
+
+[source,mtron]
+----
+sumer -> people::{
+ enoch -> person::[name=>'enoch',age=>29],
+ enki  -> person::[name=>'enki',knows=>!*enoch]}
+----
+
+[source,mtron]
+----
+mtron> *enki>>knows>>name
+==>'enoch'
+mtron> *#.as[name      => _,
+             coauthor  => >>knows.where[>>age.?>21]>>name]
+==>[name=>'enki', coauthor=>'enoch']
+----
