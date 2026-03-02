@@ -19,17 +19,21 @@
 package studio.phaseshift.metatron.isa.llm.ollama;
 
 import dev.langchain4j.agent.tool.ToolSpecification;
+import dev.langchain4j.invocation.InvocationParameters;
 import dev.langchain4j.memory.chat.MessageWindowChatMemory;
 import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.chat.request.ChatRequest;
 import dev.langchain4j.model.ollama.OllamaStreamingChatModel;
 import dev.langchain4j.service.AiServices;
 import dev.langchain4j.service.TokenStream;
+import dev.langchain4j.service.UserMessage;
 import dev.langchain4j.service.tool.ToolExecutor;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
 import studio.phaseshift.metatron.isa.llm.ollama.space.SpaceChatMemoryStore;
+import studio.phaseshift.metatron.isa.llm.ollama.space.SpaceContentRetriever;
+import studio.phaseshift.metatron.isa.llm.ollama.space.SpaceRetrievalAugmentor;
 import studio.phaseshift.metatron.isa.llm.ollama.type.OLLM;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.mach.type.Router;
@@ -81,10 +85,14 @@ public class ollamaInstSet extends AbstractInstSet {
 
 
     interface Assistant {
-        TokenStream chat(@dev.langchain4j.service.UserMessage ChatRequest userMessage);
+        TokenStream chat(final @UserMessage ChatRequest userMessage);
 
-        TokenStream chat(String userMessage);
+        TokenStream chat(final @UserMessage ChatRequest userMessage, final InvocationParameters parameters);
+
+        TokenStream chat(final String userMessage);
+
     }
+
     public static Type OLLM_TYPE = docWrap(Type.Builder.build()
             .tid(LLM_TID)
             .vid(OLLAMA_OLLM_TID).
@@ -140,7 +148,10 @@ public class ollamaInstSet extends AbstractInstSet {
                             if (toolUse)
                                 service.tools(toolSpecs);
                             /// ////////////////////////////////////////////////////////////////////////////////////////
-                            final Assistant assistant = service.build();
+                            final Assistant assistant = service
+                                    //.retrievalAugmentor(new SpaceRetrievalAugmentor(null, null, null))
+                                    //.contentRetriever(new SpaceContentRetriever())
+                                    .build();
                             Router.global().stats().ioStats().incrBytesSent(inst.arg(0).strValue().getBytes().length);
                             final AtomicBoolean isThinking = new AtomicBoolean(false);
                             final AtomicBoolean isResponding = new AtomicBoolean(false);
