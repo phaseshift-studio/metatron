@@ -83,6 +83,11 @@ print("{{y}}supported scripting environments:\n{{X}}", *<boot/script>.else(boot/
  ollama::[host    => <http://localhost:11434>,
           pattern => <ollama:#>,
           route   => [ollama:=><>]]@/sys/space/ollama;
+  tble::[pattern    => ai:#,
+         host       => <mariadb://localhost:3306/ai_memory?user=mtron&password=mtron>,
+         route      => [ai:=><>],
+         serializer => !*</m/mach/io/serializer/json/simple>,
+         driver     => <org.mariadb.jdbc.Driver>]@/sys/space/db2;
  tble::[pattern    => db:#,
         host       => <mariadb://localhost:3306/tble_space?user=mtron&password=mtron>,
         route      => [db:=><>],

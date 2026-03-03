@@ -62,10 +62,10 @@ public class fsSpaceTest extends AbstractSpaceTest {
     @CsvSource(value = {
             "*<test:#>.count().?>3              % 4",
             "*boot/script/sh                    % /bin/sh",
-            "*<test:space/test-py.py>           % file::<test:space/test-py.py?p=rwxrwxrwx>",
-            "*<test:space/test-py.py>           % file::<test:space/test-py.py?p=rwxrwxrwx>",
-            "*<test:space/test-sh.sh>           % file::<test:space/test-sh.sh?p=rwxrwxrwx>",
-            "*<test:space/test-bash.bash>       % file::<test:space/test-bash.bash?p=rwxrwxrwx>",
+            "*<test:space/test-py.py>           % file::<test:space/test-py.py?p=rwxr-xr-x>",
+            "*<test:space/test-py.py>           % file::<test:space/test-py.py?p=rwxr-xr-x>",
+            "*<test:space/test-sh.sh>           % file::<test:space/test-sh.sh?p=rwxr-xr-x>",
+            "*<test:space/test-bash.bash>       % file::<test:space/test-bash.bash?p=rwxr-xr-x>",
             // "<test:space/test-sh.sh>()          % \"metatron 0.1-SNAPSHOT\"",
     }, delimiter = '%')
     public void testShell(final String code, final String expected) {
