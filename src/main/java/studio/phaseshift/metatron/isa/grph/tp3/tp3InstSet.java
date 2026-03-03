@@ -38,6 +38,7 @@ import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.isa.grph.grphInstSet.*;
+import static studio.phaseshift.metatron.isa.grph.grphInstSet.INV_INST_TID;
 import static studio.phaseshift.metatron.isa.grph.grphInstSet.JREService;
 import static studio.phaseshift.metatron.isa.grph.tp3.space.schema.modernSchema.MODERN_SCHEMA_TYPE;
 import static studio.phaseshift.metatron.isa.grph.tp3.space.tp3Space.TP3_SPACE_TYPE;

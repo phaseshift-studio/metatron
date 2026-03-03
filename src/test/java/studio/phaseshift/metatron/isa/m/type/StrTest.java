@@ -21,12 +21,21 @@ package studio.phaseshift.metatron.isa.m.type;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
-import studio.phaseshift.metatron.isa.AbstractObjTest;
+import studio.phaseshift.metatron.algebra.AbstractAlgebraTest;
+
+import java.util.Set;
+
+import static studio.phaseshift.metatron.algebra.Form.PLUS_MONOID;
+import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class StrTest extends AbstractObjTest {
+public class StrTest extends AbstractAlgebraTest<Str> {
+
+    public StrTest() {
+        super(str("abc"), Set.of(PLUS_MONOID));
+    }
 
     @ParameterizedTest
     @CsvSource(value = {
@@ -38,7 +47,8 @@ public class StrTest extends AbstractObjTest {
             "'123.122'.as(real::T)                                                          % 123.122",
             "'abcd'.as(uri::T)                                                              % abcd",
             "'abc'.as(bytes::T)                                                             % 0x616263",
-            "'abc'.as(bytes::T).as(str::T)                                                  % \"abc\""
+          //  "'abc'.as(bytes::T).as(str::T)                                                  % \"abc\"",
+          // "'abc'.as(bytes::T).as?str<=bytes(str::T)                                       % \"abc\""
 
     }, delimiter = '%', quoteCharacter = '~')
     public void testAsInst(final String code, final String expected) {
@@ -137,7 +147,7 @@ public class StrTest extends AbstractObjTest {
     @CsvSource(value = {
             "\"abc\".reverse()                % \"cba\"",
             "\"12bac2545_245\".reverse()      % \"542_5452cab21\"",
-           // "\"abc\".reverse().reverse()      % \"abc\"", TODO instructions are being seen as the same
+            // "\"abc\".reverse().reverse()      % \"abc\"", TODO instructions are being seen as the same
             "\"\".reverse().map(_).reverse()         % \"\"",
             "\"\".reverse()                  % \"\"",
             "\"a\".reverse()                 % \"a\"",

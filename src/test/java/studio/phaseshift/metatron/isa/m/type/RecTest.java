@@ -22,19 +22,28 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
+import studio.phaseshift.metatron.algebra.AbstractAlgebraTest;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
 
+import java.util.Set;
+
 import static org.junit.jupiter.api.Assertions.*;
+import static studio.phaseshift.metatron.algebra.Form.PLUS_MONOID;
 import static studio.phaseshift.metatron.isa.m.type.Poly.IMMUTABLE;
 import static studio.phaseshift.metatron.isa.m.type.Poly.MUTABLE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
+import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
-public class RecTest extends AbstractMetatronTest {
+public class RecTest extends AbstractAlgebraTest<Rec> {
+
+    public RecTest() {
+        super(rec(uri("a"),jnt(1), uri("b"), jnt(2), uri("c"), jnt(3)), Set.of(PLUS_MONOID));
+    }
 
     @ParameterizedTest
     @CsvSource(value = {

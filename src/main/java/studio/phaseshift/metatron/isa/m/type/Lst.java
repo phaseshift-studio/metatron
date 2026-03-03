@@ -133,8 +133,11 @@ public interface Lst extends Poly<Lst, List<Obj>>, PlusMonoid.O<Lst> {
     default <OBJ extends Obj> OBJ at(final Obj key) {
         final cInt cKey = key.c();
         if (key.isInt())
-            return (OBJ) ((this.jvm().size() > key.intValue()) ? this.jvm().get(key.<Int>as().intValue().intValue()).autoResolve(this) : noobj()).parent(this).c(c->c.mult(cKey));
+            return (OBJ) ((this.jvm().size() > key.intValue()) ? this.jvm().get(key.<Int>as().intValue().intValue()).autoResolve(this) : noobj()).parent(this).c(c -> c.mult(cKey));
         else if (key.isUri()) {
+            // if (key.uriValue().isEmpty())
+            //            return this.c(c -> c.mult(cKey)).as();
+            
             if (key.uriValue().segments().isEmpty())
                 return (OBJ) noobj();
             final boolean singleSegment = key.uriValue().pathLength() == 1;
@@ -154,9 +157,9 @@ public interface Lst extends Poly<Lst, List<Obj>>, PlusMonoid.O<Lst> {
                 result = isBranch ? Stream.of(rel(uri(step), this.at(k.intValue().intValue()))) : Stream.of(this.at(k.intValue().intValue()));
             }
             if (key.uriValue().segments().size() == 1) {
-                return (OBJ) objs(result.filter(x -> !x.isNoObj()).map(x -> x.c(c->c.mult(cKey)).parent(this)));
+                return (OBJ) objs(result.filter(x -> !x.isNoObj()).map(x -> x.c(c -> c.mult(cKey)).parent(this)));
             } else {
-                return (OBJ) objs(result.filter(x -> !x.isNoObj()).filter(Obj::isPoly).map(x -> (Poly<?,?>) x.c(c->c.mult(cKey)).parent(this)).map(r -> r.at(uri(key.<Uri>as().uriValue().pretract()))));
+                return (OBJ) objs(result.filter(x -> !x.isNoObj()).filter(Obj::isPoly).map(x -> (Poly<?, ?>) x.c(c -> c.mult(cKey)).parent(this)).map(r -> r.at(uri(key.<Uri>as().uriValue().pretract()))));
             }
         } else {
             throw MTronException.of("unknown key for lst: %s", key);
@@ -209,6 +212,7 @@ public interface Lst extends Poly<Lst, List<Obj>>, PlusMonoid.O<Lst> {
                     instC(MULT_INST_TID.dom(LST_TID).rng(LST_TID), lst(T(LST_TID)), (lhs, inst) -> lhs.jvm(lhs.elements().flatMap(a -> inst.arg(0).elements().map(b -> rel(a, b))).toList())),
                     instC(RSHIFT_INST_TID.dom(LST_TID).rng(ALL_STAR), lst(T(ALL.maybeSome())), (lhs, inst) -> objs(inst.arg(0).orElse((Obj) uri(ONE_WILD_STRING)).stream().map(k -> lhs.asLst().at(k)))),
                     // instC(LSHIFT_INST_TID.dom(LST_TID).rng(ALL_STAR), lst(isa_(INT_TYPE).else_(jnt(1))), (lhs, inst) -> lhs.parent()),
+                    instC(ZERO_INST_TID.dom(LST_TID).rng(LST_TID), lst(), (lhs, inst) -> lhs.asLst().zero()),
                     instC(SPLIT_INST_TID.dom(ALL).rng(LST_TID), lst(T(LST_TID)), (lhs, inst) -> lst(inst.arg(0).elements().map(e -> e.apply(lhs)).toList())),
                     instC(MERGE_INST_TID.dom(LST_TID).rng(ALL_STAR), lst(), (lhs, inst) -> objs(lhs.elements())),
                     instC(MERGE_INST_TID.dom(LST_TID).rng(ALL_STAR), lst(URI_TYPE), (lhs, inst) -> uri(lhs.elements().map(e -> e.uriValue().toString()).reduce("", (a, b) -> a + inst.arg(0).uriValue().toString() + b).substring(1))),

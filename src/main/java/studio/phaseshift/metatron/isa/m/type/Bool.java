@@ -60,6 +60,16 @@ public interface Bool extends Mono {
         return this.clone(this.jvm(), this.tid(), vid);
     }
 
+    Bool self(final Boolean jvm, final fURI tid, final fURI vid);
+
+    default Bool zero() {
+        return BOOL_FALSE;
+    }
+
+    default Bool one() {
+        return BOOL_TRUE;
+    }
+    
     final class BoolType {
         public static Set<Inst> insts() {
             return new LinkedHashSet<>(List.of(

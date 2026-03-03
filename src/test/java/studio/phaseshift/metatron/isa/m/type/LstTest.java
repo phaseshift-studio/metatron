@@ -27,14 +27,23 @@ package studio.phaseshift.metatron.isa.m.type;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
-import studio.phaseshift.metatron.isa.AbstractObjTest;
+import studio.phaseshift.metatron.algebra.AbstractAlgebraTest;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
+
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static studio.phaseshift.metatron.algebra.Form.PLUS_MONOID;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
+import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 
 
-public class LstTest extends AbstractObjTest {
+public class LstTest extends AbstractAlgebraTest<Lst> {
+
+    public LstTest() {
+        super(lst(jnt(1), jnt(2), jnt(3)), Set.of(PLUS_MONOID));
+    }
 
     @ParameterizedTest
     @CsvSource(value = {

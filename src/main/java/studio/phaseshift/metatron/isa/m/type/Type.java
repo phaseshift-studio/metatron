@@ -42,10 +42,10 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
-public interface Type extends Obj, PlusMonoid<Type> {
+public interface Type extends Obj {
 
     Type TYPE_TYPE = T(f("T"));
-    static final GraphittyLogger LOG = Graphitty.log(Type.class);
+    GraphittyLogger LOG = Graphitty.log(Type.class);
 
     @Override
     Type clone(final Object jvm, final fURI tid, final fURI vid);
@@ -156,23 +156,6 @@ public interface Type extends Obj, PlusMonoid<Type> {
                 noobj();
     }
 
-    @Override
-    default Type plus(final Type other) {
-        if (this.isNoObj())
-            return other;
-        if (other.isNoObj())
-            return this;
-        final fURI tidPlus = this.tid().plus(other.tid());
-        final Call constructor = null == this.constructor() ? other.constructor() : null == other.constructor() ? this.constructor() : this.constructor().plus(other.constructor());
-        final Call predicate = null == this.predicate() ? other.predicate() : null == other.predicate() ? this.predicate() : this.predicate().plus(other.predicate());
-        return this.clone(Tuple.Pair.with(constructor, predicate), tidPlus, tidPlus);
-    }
-
-    @Override
-    default Type zero() {
-        return this.tid(this.tid().zero()).jvm(Tuple.Pair.with(null, null));
-    }
-
     final static class Helper {
         public static Obj typePredicateObj(final Type type) {
             if (type.hasPredicate() && type.predicate().insts().size() == 1 && type.predicate().insts().getFirst().tid().basePath().equals(ISA_INST_TID))
@@ -204,6 +187,11 @@ public interface Type extends Obj, PlusMonoid<Type> {
         public fURI tid = null;
         public Call predicate = null;
         public Call constructor = null;
+        public Obj zero = null;
+        public Obj one = null;
+        public Inst plus = null;
+        public Inst mult = null;
+        public Inst neg = null;
         public Set<Inst> insts = new LinkedHashSet<>();
 
         public static Builder build() {
@@ -220,6 +208,31 @@ public interface Type extends Obj, PlusMonoid<Type> {
             return this;
         }
 
+        public Builder zero(final Obj zero) {
+            this.zero = zero;
+            return this;
+        }
+        
+        public Builder one(final Obj one) {
+            this.one = one;
+            return this;
+        }
+        
+        public Builder plus(final Inst plus) {
+            this.plus = plus;
+            return this;
+        }
+        
+        public Builder mult(final Inst mult) {
+            this.mult = mult;
+            return this;
+        }
+        
+        public Builder neg(final Inst neg) {
+            this.neg = neg;
+            return this;
+        }
+        
         public Builder predicate(final Call predicate) {
             this.predicate = predicate;
             return this;

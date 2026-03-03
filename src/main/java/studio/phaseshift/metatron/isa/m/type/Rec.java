@@ -20,7 +20,6 @@ package studio.phaseshift.metatron.isa.m.type;
 
 
 import studio.phaseshift.metatron.algebra.PlusMonoid;
-import studio.phaseshift.metatron.furi.C;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.util.CommonUtil;
@@ -132,6 +131,8 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>>, PlusMonoid.O<Rec> {
         if (!key.isUri())
             return this.jvm().getOrDefault(key, NoObj.noobj()).autoResolve(this).parent(this);
         else {
+            //if (key.uriValue().isEmpty())
+             //   return this.c(c -> c.mult(key.c())).as();
             final boolean singleSegment = key.uriValue().pathLength() == 1;
             final String step = singleSegment ? key.uriValue().asNode().toString() : key.uriValue().segments().getFirst();
             Obj result;
@@ -223,6 +224,7 @@ public interface Rec extends Poly<Rec, Map<Obj, Obj>>, PlusMonoid.O<Rec> {
                             furi = furi.queryMap(lhsRec.at(Q).asRec().elements().map(e -> Tuple.Pair.with(e.first().toCleanString(), e.second().toCleanString())).collect(Collectors.toMap(Tuple.Pair::get0, Tuple.Pair::get1)));
                         return uri(furi);
                     }),
+                    instC(ZERO_INST_TID.dom(REC_TID).rng(REC_TID), lst(), (lhs, inst) -> lhs.asRec().zero()),
                     instC(REVERSE_INST_TID.dom(REC_TID).rng(REC_TID), lst(), (lhs, inst) -> new ArrayList<Rel>(lhs.asRec().elements().toList()).reversed().stream().collect(new CommonUtil.RecCollector(lhs.tid(), lhs.vid()))),
                     instC(HAS_INST_TID.dom(REC_TID).rng(REC_TID.maybe()), lst(T(ALL), T(ALL)), (lhs, inst) -> {
                         final Obj result = inst.arg(1).apply(lhs.asRec().at(inst.arg(0)));

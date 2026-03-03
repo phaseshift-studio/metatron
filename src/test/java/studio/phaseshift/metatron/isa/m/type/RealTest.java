@@ -20,13 +20,22 @@ package studio.phaseshift.metatron.isa.m.type;
 
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-import studio.phaseshift.metatron.isa.AbstractObjTest;
 import studio.phaseshift.metatron.AbstractMetatronTest;
+import studio.phaseshift.metatron.algebra.AbstractAlgebraTest;
+
+import java.util.Set;
+
+import static studio.phaseshift.metatron.algebra.Form.*;
+import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public class RealTest extends AbstractObjTest {
+public class RealTest extends AbstractAlgebraTest<Real> {
+
+    public RealTest() {
+        super(real(23.5), Set.of(PLUS_MONOID, MULT_MONOID, PLUS_GROUP, MULT_GROUP, RING, RIG));
+    }
 
     @ParameterizedTest
     @CsvSource(value = {

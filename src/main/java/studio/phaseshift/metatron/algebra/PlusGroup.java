@@ -26,8 +26,12 @@ public interface PlusGroup<R extends PlusGroup<R>> extends Group<R>, PlusMonoid<
     R neg();
 
     // boolean isNeg();
+    
+    R zero();
 
     interface O<R extends O<R>> extends PlusGroup<R>, Group.O<R>, PlusMonoid.O<R> {
-
+        R minus(R rhs);
+        
+        R zero();
     }
 }

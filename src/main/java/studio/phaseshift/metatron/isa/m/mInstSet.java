@@ -31,6 +31,8 @@ import java.util.Set;
 import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.Tokens.PATTERN;
+import static studio.phaseshift.metatron.Tokens.Q;
+import static studio.phaseshift.metatron.furi.Q.Q_TYPE;
 import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.isa.m.space.memSpace.MEM_SPACE_TYPE;
@@ -94,7 +96,12 @@ public class mInstSet extends AbstractInstSet {
     public static final fURI PROD_INST_TID = INST_TID.extend("prod");
     public static final fURI POW_INST_TID = INST_TID.extend("pow");
     public static final fURI REDUCE_INST_TID = INST_TID.extend("reduce");
+    public static final fURI NEG_INST_TID = INST_TID.extend("neg");
     public static final fURI MULT_INST_TID = INST_TID.extend("mult");
+    public static final fURI DIV_INST_TID = INST_TID.extend("div");
+    public static final fURI INV_INST_TID = INST_TID.extend("inv");
+    public static final fURI ZERO_INST_TID = INST_TID.extend("zero");
+    public static final fURI ONE_INST_TID = INST_TID.extend("one");
     public static final fURI PLUS_INST_TID = INST_TID.extend("plus");
     public static final fURI MPLUS_INST_TID = INST_TID.extend("mplus");
     public static final fURI MINUS_INST_TID = INST_TID.extend("minus");
@@ -188,7 +195,9 @@ public class mInstSet extends AbstractInstSet {
     public static final Type SPACE_TYPE = Type.Builder.build()
             .tid(REC_TID)
             .vid(SPACE_TID)
-            .isaPredicate(rec(uri(PATTERN), URI_TYPE)).create();
+            .isaPredicate(rec(
+                    uri(PATTERN), URI_TYPE,
+                    uri(Q).maybe(), rec(URI_TYPE, Q_TYPE))).create();
 
     public static final Type MONO_TYPE = Type.Builder.build()
             .tid(MONO_TID)

@@ -32,8 +32,6 @@ import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
 import studio.phaseshift.metatron.isa.llm.ollama.space.SpaceChatMemoryStore;
-import studio.phaseshift.metatron.isa.llm.ollama.space.SpaceContentRetriever;
-import studio.phaseshift.metatron.isa.llm.ollama.space.SpaceRetrievalAugmentor;
 import studio.phaseshift.metatron.isa.llm.ollama.type.OLLM;
 import studio.phaseshift.metatron.isa.m.type.*;
 import studio.phaseshift.metatron.isa.mach.type.Router;
@@ -65,6 +63,7 @@ import static studio.phaseshift.metatron.isa.m.type.Str.STR_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Uri.URI_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
@@ -140,7 +139,7 @@ public class ollamaInstSet extends AbstractInstSet {
                                     .streamingChatModel(streamingChatModel);
                             if (null != memory) {
                                 service.chatMemory(MessageWindowChatMemory.builder()
-                                        .maxMessages(15)
+                                        .maxMessages(Router.readFromSpace(memory.uriValue().extend("max")).orElse(jnt(15)).intValue().intValue())
                                         .id(memory.uriValue())
                                         .chatMemoryStore(SpaceChatMemoryStore.single())
                                         .build());

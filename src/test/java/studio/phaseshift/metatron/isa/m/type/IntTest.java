@@ -21,9 +21,19 @@ package studio.phaseshift.metatron.isa.m.type;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import studio.phaseshift.metatron.AbstractMetatronTest;
-import studio.phaseshift.metatron.isa.AbstractObjTest;
+import studio.phaseshift.metatron.algebra.AbstractAlgebraTest;
 
-public class IntTest extends AbstractObjTest {
+import java.util.Set;
+
+import static studio.phaseshift.metatron.algebra.Form.*;
+import static studio.phaseshift.metatron.isa.m.type.impl.MInt.jnt;
+
+public class IntTest extends AbstractAlgebraTest<Int> {
+
+    public IntTest() {
+        super(jnt(23), Set.of(PLUS_MONOID, MULT_MONOID, PLUS_GROUP, RING, RIG));
+    }
+
     @ParameterizedTest
     @CsvSource(value = {
             "1.as(str::T)                                                                   % \"1\"",

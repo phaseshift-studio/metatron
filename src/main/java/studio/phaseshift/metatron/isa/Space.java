@@ -213,9 +213,9 @@ public interface Space extends Rec, Closeable {
                 }
             }
             if (listing.isEmpty() || pattern.hasPattern()) {
-                final Pair<fURI, Poly> base = Helper.locateBasePoly(space, pattern);
+                final Pair<fURI, Poly<?, ?>> base = Helper.locateBasePoly(space, pattern);
                 if (null != base) {
-                    final Poly poly = base.get1();
+                    final Poly<?, ?> poly = base.get1();
                     Graphitty.log(space).trace("base poly found at %s: %s", base.get0(), poly);
                     unrollPoly(base.get0(), poly, pattern).forEach(kv -> listing.add(Pair.with(kv.get0().toUri(), kv.get1())));
                 }
@@ -245,7 +245,7 @@ public interface Space extends Rec, Closeable {
                 writeComplete(vid, obj, current.next().get1());
                 return directWriter.apply(vid, obj);
             } else {
-                final Pair<fURI, Poly> base = Helper.locateBasePoly(space, vid);
+                final Pair<fURI, Poly<?, ?>> base = Helper.locateBasePoly(space, vid);
                 if (null == base) {
                     if (vid.isNode() || !obj.isPoly()) {
                         return directWriter.apply(vid, obj);
@@ -295,7 +295,7 @@ public interface Space extends Rec, Closeable {
         }
 
 
-        public static Pair<fURI, Poly> locateBasePoly(final Space space, final fURI furi) {
+        public static Pair<fURI, Poly<?, ?>> locateBasePoly(final Space space, final fURI furi) {
             boolean last = furi.segments().isEmpty();
             fURI newFuri = furi.retract().asNode();
             Obj obj = noobj();

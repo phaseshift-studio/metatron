@@ -48,4 +48,9 @@ public class MBool extends MObj implements Bool {
         return (Boolean) this.jvm;
     }
 
+    @Override
+    public Bool self(final Boolean jvm, final fURI tid, final fURI vid) {
+        return super.self(jvm, tid, vid);
+    }
+
 }

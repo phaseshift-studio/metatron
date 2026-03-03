@@ -34,6 +34,8 @@ public interface MultMonoid<R extends MultMonoid<R>> extends Monoid<R> {
     }
 
     interface O<R extends O<R>> extends MultMonoid<R>, Monoid.O<R>, Obj {
-
+        R mult(R rhs);
+        
+        R one();
     }
 }

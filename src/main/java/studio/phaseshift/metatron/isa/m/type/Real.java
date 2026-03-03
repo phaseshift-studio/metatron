@@ -19,6 +19,7 @@
 package studio.phaseshift.metatron.isa.m.type;
 
 import net.objecthunter.exp4j.ExpressionBuilder;
+import studio.phaseshift.metatron.algebra.MultGroup;
 import studio.phaseshift.metatron.algebra.Ring;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
@@ -38,8 +39,10 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MReal.real;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 
-public interface Real extends Mono, Ring.O<Real> {
+public interface Real extends Mono, Ring.O<Real>, MultGroup.O<Real> {
 
+    Real ZERO = real(0.0d);
+    Real ONE = real(1.0d);
     Type REAL_TYPE = Type.Builder.build().tid(REAL_TID).vid(REAL_TID).create();
 
     @Override
@@ -60,6 +63,8 @@ public interface Real extends Mono, Ring.O<Real> {
         return this.clone(this.jvm(), this.tid(), vid);
     }
 
+    Real self(final Double jvm, final fURI tid, final fURI vid);
+
     @Override
     default Real c(final cInt c) {
         return (Real) Mono.super.c(c);
@@ -67,12 +72,22 @@ public interface Real extends Mono, Ring.O<Real> {
 
     @Override
     default Real zero() {
-        return real(0.0d);
+        return ZERO;
     }
 
     @Override
     default Real one() {
-        return real(1.0d);
+        return ONE;
+    }
+
+    @Override
+    default Real inv() {
+        return this.jvm(1.0d / this.realValue());
+    }
+
+    @Override
+    default Real div(final Real rhs) {
+        return this.jvm(this.realValue() / rhs.realValue());
     }
 
     @Override
@@ -102,9 +117,14 @@ public interface Real extends Mono, Ring.O<Real> {
                     instC(GTE_INST_TID.dom(REAL_TID).rng(BOOL_TID), lst(T(REAL_TID)), (lhs, inst) -> bool(Inst.Helper.alignLHSType(lhs, inst.arg(0)).filter(l -> l.realValue() >= inst.arg(0).realValue()).isPresent())),
                     instC(LT_INST_TID.dom(REAL_TID).rng(BOOL_TID), lst(T(REAL_TID)), (lhs, inst) -> bool(Inst.Helper.alignLHSType(lhs, inst.arg(0)).filter(l -> l.realValue() < inst.arg(0).realValue()).isPresent())),
                     instC(LTE_INST_TID.dom(REAL_TID).rng(BOOL_TID), lst(T(REAL_TID)), (lhs, inst) -> bool(Inst.Helper.alignLHSType(lhs, inst.arg(0)).filter(l -> l.realValue() <= inst.arg(0).realValue()).isPresent())),
-                    instC(PLUS_INST_TID.dom(REAL_TID).rng(REAL_TID), lst(T(REAL_TID)), (lhs, inst) -> lhs.jvm(lhs.realValue() + inst.arg(0).realValue())),
-                    instC(MULT_INST_TID.dom(REAL_TID).rng(REAL_TID), lst(T(REAL_TID)), (lhs, inst) -> lhs.jvm(lhs.realValue() * inst.arg(0).realValue())),
-                    instC(MINUS_INST_TID.dom(REAL_TID).rng(REAL_TID), lst(T(REAL_TID)), (lhs, inst) -> lhs.jvm(lhs.realValue() - inst.arg(0).realValue())),
+                    instC(NEG_INST_TID.dom(REAL_TID).rng(REAL_TID), lst(), (lhs, inst) -> lhs.asReal().neg()),
+                    instC(PLUS_INST_TID.dom(REAL_TID).rng(REAL_TID), lst(T(REAL_TID)), (lhs, inst) -> lhs.asReal().plus(inst.arg(0).asReal())),
+                    instC(MULT_INST_TID.dom(REAL_TID).rng(REAL_TID), lst(T(REAL_TID)), (lhs, inst) -> lhs.asReal().mult(inst.arg(0).asReal())),
+                    instC(DIV_INST_TID.dom(REAL_TID).rng(REAL_TID), lst(T(REAL_TID)), (lhs, inst) -> lhs.asReal().div(inst.arg(0).asReal())),
+                    instC(ZERO_INST_TID.dom(REAL_TID).rng(REAL_TID), lst(), (lhs, inst) -> lhs.asReal().zero()),
+                    instC(ONE_INST_TID.dom(REAL_TID).rng(REAL_TID), lst(), (lhs, inst) -> lhs.asReal().one()),
+                    instC(INV_INST_TID.dom(REAL_TID).rng(REAL_TID), lst(), (lhs, inst) -> lhs.asReal().inv()),
+                    instC(MINUS_INST_TID.dom(REAL_TID).rng(REAL_TID), lst(T(REAL_TID)), (lhs, inst) -> lhs.asReal().minus(inst.arg(0).asReal())),
                     instC(SUM_INST_TID.dom(REAL_TID.maybeSome()).rng(REAL_TID), lst(), (lhs, inst) -> inst.seed().jvm(lhs.stream().reduce(inst.seed(), (a, b) -> ((Real) a).plus((Real) b)).realValue()), real(0.0)),
                     instC(PROD_INST_TID.dom(REAL_TID.maybeSome()).rng(REAL_TID), lst(), (lhs, inst) -> lhs.stream().reduce(inst.seed(), (a, b) -> real(a.realValue() * (b.realValue() * b.c().max()))), real(1.0)),
                     instC(POW_INST_TID.dom(REAL_TID).rng(REAL_TID), lst(T(REAL_TID)), (lhs, inst) -> real(Math.pow(lhs.realValue(), inst.arg(0).realValue()))),

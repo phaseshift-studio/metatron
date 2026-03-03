@@ -25,9 +25,11 @@ import studio.phaseshift.metatron.furi.fURI;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.stream.IntStream;
 
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TYPE;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBool.bool;
 import static studio.phaseshift.metatron.isa.m.type.impl.MBytes.bytes;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
@@ -38,7 +40,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
-public interface Bytes extends Mono, PlusMonoid<Bytes> {
+public interface Bytes extends Mono, PlusMonoid.O<Bytes> {
 
     Type BYTES_TYPE = Type.Builder.build().tid(BYTES_TID).vid(BYTES_TID).create();
 
@@ -106,7 +108,10 @@ public interface Bytes extends Mono, PlusMonoid<Bytes> {
                     instC(AS_INST_TID.dom(BYTES_TID).rng(STR_TID), lst(T(STR_TID)), (lhs, inst) -> str(new String(lhs.bytesValue().array(), StandardCharsets.UTF_8), inst.arg(0).tid(), lhs.vid())),
                     //instC(LSHIFT_INST_TID.dom(BYTES_TID).rng(BYTES_TID), lst(isa_(T(BYTES_TID)).else_(jnt(1)).tryToInst()), (lhs, inst) -> lhs.jvm(ByteBuffer.wrap(Arrays.copyOfRange(lhs.bytesValue().array(), inst.arg(0).intValue().intValue(), lhs.bytesValue().array().length)))),
                     //instC(RSHIFT_INST_TID.dom(BYTES_TID).rng(BYTES_TID), lst(isa_(T(BYTES_TID)).else_(jnt(1)).tryToInst()), (lhs, inst) -> lhs.jvm(ByteBuffer.wrap(Arrays.copyOf(lhs.bytesValue().array(), lhs.bytesValue().array().length - inst.arg(0).intValue().intValue())))),
-                    instC(PLUS_INST_TID.dom(BYTES_TID).rng(BYTES_TID), lst(T(BYTES_TID)), (lhs, inst) -> lhs.<Bytes>as().plus(inst.arg(0).as()))
+                    instC(ZERO_INST_TID.dom(BYTES_TID).rng(BYTES_TID), lst(), (lhs, inst) -> lhs.asBytes().zero()),
+                    instC(PLUS_INST_TID.dom(BYTES_TID).rng(BYTES_TID), lst(T(BYTES_TID)), (lhs, inst) -> lhs.<Bytes>as().plus(inst.arg(0).as())),
+                    instC(WITHIN_INST_TID.dom(BYTES_TID).rng(B), lst(T(B)), (lhs, inst) -> IntStream.range(0, lhs.bytesValue().array().length).map(i -> lhs.bytesValue().array()[i]).boxed().map(b -> inst.arg(0).apply(bytes(ByteBuffer.wrap(new byte[]{(byte) b.intValue()})))).map(o -> (PlusMonoid.O) o).reduce((a, b) -> (PlusMonoid.O) a.plus(b)).map(Obj::<Obj>as).orElse(noobj()))));
+
                     /*instC(SPLIT_INST_TID.dom(BYTES_TID).rng(LST_TID), lst(T(BYTES_TID)), (lhs, inst) -> {
                         final byte[] array = lhs.bytesValue().array();
                         final byte[] delimiter = inst.arg(0).asBytes().jvm().array();
@@ -138,7 +143,7 @@ public interface Bytes extends Mono, PlusMonoid<Bytes> {
                         }
                         return lst((List)list);
                     })*/
-            ));
+
         }
     }
 

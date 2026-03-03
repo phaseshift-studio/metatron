@@ -19,6 +19,7 @@
 package studio.phaseshift.metatron.isa.m.type.impl;
 
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.m.type.Bool;
 import studio.phaseshift.metatron.isa.m.type.Int;
 
 import static studio.phaseshift.metatron.furi.fURI.fnull;
@@ -42,6 +43,12 @@ public class MInt extends MObj implements Int {
     public Int clone(final Object jvm, final fURI tid, final fURI vid) {
         return super.clone(jvm, tid, vid);
     }
+    
+    @Override
+    public Int self(final Long jvm, final fURI tid, final fURI vid) {
+        return super.self(jvm, tid, vid);
+    }
+
 
     @Override
     public Long jvm() {

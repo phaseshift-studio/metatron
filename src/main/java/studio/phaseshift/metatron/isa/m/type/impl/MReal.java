@@ -19,6 +19,7 @@
 package studio.phaseshift.metatron.isa.m.type.impl;
 
 import studio.phaseshift.metatron.furi.fURI;
+import studio.phaseshift.metatron.isa.m.type.Bool;
 import studio.phaseshift.metatron.isa.m.type.Real;
 
 import static studio.phaseshift.metatron.isa.m.mInstSet.REAL_TID;
@@ -54,6 +55,13 @@ public class MReal extends MObj implements Real {
     public Real clone(final Object jvm, final fURI tid, final fURI vid) {
         return super.clone(jvm, tid, vid);
     }
+
+
+    @Override
+    public Real self(final Double jvm, final fURI tid, final fURI vid) {
+        return super.self(jvm, tid, vid);
+    }
+
 
     @Override
     public Double jvm() {
