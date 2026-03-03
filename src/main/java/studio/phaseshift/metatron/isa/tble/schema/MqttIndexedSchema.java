@@ -157,6 +157,7 @@ public class MqttIndexedSchema implements TableSchema {
         final StringBuilder whereClause = new StringBuilder();
         final List<String> params = new ArrayList<>();
         boolean hasMultiLevelWildcard = false;
+        int segmentIndex = 1; // Database columns are seg1, seg2, etc.
 
         for (int i = 0; i < Math.min(segments.length, MAX_SEGMENTS + 1); i++) {
             final String seg = segments[i];
@@ -174,26 +175,25 @@ public class MqttIndexedSchema implements TableSchema {
                 if (whereClause.length() > 0) {
                     whereClause.append(" AND ");
                 }
-                whereClause.append("seg").append(i).append(" IS NOT NULL");
+                whereClause.append("seg").append(segmentIndex).append(" IS NOT NULL");
+                segmentIndex++;
             } else {
                 // Exact segment match
                 if (whereClause.length() > 0) {
                     whereClause.append(" AND ");
                 }
-                whereClause.append("seg").append(i).append(" = ?");
+                whereClause.append("seg").append(segmentIndex).append(" = ?");
                 params.add(seg);
+                segmentIndex++;
             }
         }
 
         // If no multi-level wildcard, ensure no extra segments exist
-        if (!hasMultiLevelWildcard && segments.length <= MAX_SEGMENTS + 1) {
-            final int lastSegIndex = segments.length - 1;
-            if (lastSegIndex < MAX_SEGMENTS) {
-                if (whereClause.length() > 0) {
-                    whereClause.append(" AND ");
-                }
-                whereClause.append("seg").append(lastSegIndex + 1).append(" IS NULL");
+        if (!hasMultiLevelWildcard && segmentIndex <= MAX_SEGMENTS) {
+            if (whereClause.length() > 0) {
+                whereClause.append(" AND ");
             }
+            whereClause.append("seg").append(segmentIndex).append(" IS NULL");
         }
 
         final String sql = "SELECT furi, obj FROM " + TABLE_NAME +
