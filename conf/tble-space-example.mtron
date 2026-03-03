@@ -1,0 +1,66 @@
+%% tbleSpace Configuration Example
+%% This file demonstrates how to configure a JDBC-backed Metatron space with MQTT indexing
+
+%% MariaDB/MySQL Configuration (with MQTT indexing)
+[
+  pattern => </db/#>,
+  host => <jdbc:mariadb://localhost:3306/metatron>,
+  driver => <org.mariadb.jdbc.Driver>,
+  route => [</db/*> => </*>]
+].vid(</sys/space/db>)
+
+%% SQLite Configuration (for testing/development)
+[
+  pattern => </local/#>,
+  host => <jdbc:sqlite:metatron.db>,
+  driver => <org.sqlite.JDBC>,
+  route => [</local/*> => </*>]
+].vid(</sys/space/local>)
+
+%% PostgreSQL Configuration
+[
+  pattern => </pg/#>,
+  host => <jdbc:postgresql://localhost:5432/metatron>,
+  driver => <org.postgresql.Driver>,
+  route => [</pg/*> => </*>]
+].vid(</sys/space/pg>)
+
+%% Usage Examples:
+
+%% Write sensor data
+</db/sensor/kitchen/temperature> -> 22.5
+</db/sensor/bedroom/temperature> -> 20.1
+</db/sensor/kitchen/humidity> -> 45
+
+%% Read with exact match
+*</db/sensor/kitchen/temperature>
+%% Returns: 22.5
+
+%% Read with MQTT patterns
+*</db/sensor/+/temperature>
+%% Returns: {22.5, 20.1} (all temperature sensors)
+
+*</db/sensor/#>
+%% Returns: {22.5, 20.1, 45} (all sensor data)
+
+*</db/sensor/kitchen/+>
+%% Returns: {22.5, 45} (all kitchen sensors)
+
+%% Pattern matching examples:
+%% /sensor/+/temperature  -> matches /sensor/kitchen/temperature, /sensor/bedroom/temperature
+%% /sensor/#              -> matches /sensor/kitchen, /sensor/kitchen/temperature, etc.
+%% /sensor/kitchen/+      -> matches /sensor/kitchen/temperature, /sensor/kitchen/humidity
+%% /+/kitchen/+           -> matches /sensor/kitchen/temperature, /actuator/kitchen/light
+
+%% Delete an object
+</db/sensor/old/data> -> noobj
+
+%% Complex objects
+</db/config/sensors> -> [
+  kitchen => [temperature => 22.5, humidity => 45],
+  bedroom => [temperature => 20.1, humidity => 50]
+]
+
+%% Read complex object
+*</db/config/sensors>
+%% Returns: [kitchen => [temperature => 22.5, humidity => 45], bedroom => [temperature => 20.1, humidity => 50]]

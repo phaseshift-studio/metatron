@@ -175,19 +175,21 @@ public class ollamaInstSet extends AbstractInstSet {
                                     })
                                     .onPartialResponse(s -> {
                                         if (!isResponding.getAndSet(true))
-                                            LOG.none(Graphitty.sillyPrint("responding..\n", true, true));
+                                            LOG.none(Graphitty.sillyPrint("responding", true, true));
                                         Router.global().stats().ioStats().incrBytesRecv(s.getBytes().length);
                                         response.append(s);
                                     })
                                     .onPartialThinking(t -> {
                                         if (!isThinking.getAndSet(true))
-                                            LOG.none(Graphitty.sillyPrint("thinking..\n", true, true));
+                                            LOG.none(Graphitty.sillyPrint("thinking...\n", true, true));
                                         Router.global().stats().ioStats().incrBytesRecv(t.text().getBytes().length);
                                         LOG.none("{{b}}%s{{X}}", t.text());
                                     })
                                     .onError(e -> isError.set(MTronException.of(e))).start();
                             while (!isComplete.get()) {
-                                CommonUtil.sleepThread(100);
+                                CommonUtil.sleepThread(250);
+                                if (isResponding.get())
+                                    LOG.none(Graphitty.sillyPrint(".", true, false));
                             }
                             if (null != isError.get())
                                 throw isError.get();

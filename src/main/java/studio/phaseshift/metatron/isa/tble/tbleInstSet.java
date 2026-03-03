@@ -21,38 +21,47 @@ package studio.phaseshift.metatron.isa.tble;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
 import studio.phaseshift.metatron.isa.m.type.Inst;
+import studio.phaseshift.metatron.isa.m.type.InstSet;
 import studio.phaseshift.metatron.isa.m.type.Type;
 
 import java.util.Set;
 
-import static studio.phaseshift.metatron.furi.fURI.f;
+import static studio.phaseshift.metatron.isa.m.mInstSet.M_ISA_TID;
+import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TID;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
-import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 
 /*
  * @author Marko A. Rodriguez (http://markorodriguez.com)
  */
+@InstSet.JREService(tid = "/m/tble")
 public class tbleInstSet extends AbstractInstSet {
 
-    public static tbleInstSet create() {
-        return new tbleInstSet(fURI.fnull);
-    }
-
-    public static final fURI TABL_INSTSET_TID = f("/tabl");
-    public static final fURI INST_TID = TABL_INSTSET_TID.extend("inst");
-    public static final fURI TABLE_TID = TABL_INSTSET_TID.extend("table");
-
-    public static final Type TABLE_TYPE = T(TABLE_TID, isa_(lst(rec(), lst())));
+    public static final fURI TBLE_ISA_TID = M_ISA_TID.extend("tble");
+    public static final fURI INST_TID = TBLE_ISA_TID.extend("inst");
+    public static final fURI ROW_TID = TBLE_ISA_TID.extend("row");
+    public static final fURI TABLE_TID = TBLE_ISA_TID.extend("table");
 
 
-    public tbleInstSet(final fURI vid) {
-        super(TABL_INSTSET_TID, vid);
+    public static final Type ROW_TYPE = Type.Builder.build()
+            .tid(REC_TID)
+            .vid(ROW_TID)
+            .create();
+
+    public static final Type TABLE_TYPE = Type.Builder.build()
+            .tid(REC_TID.maybeSome())
+            .vid(TABLE_TID)
+            .predicate(isa_(T(ROW_TID.maybeSome())).tryToInst())
+            .create();
+
+
+    public tbleInstSet() {
+        super(TBLE_ISA_TID, TBLE_ISA_TID);
     }
 
     @Override
     public Set<Type> types() {
-        return Set.of(tbleSpace.TABL_TYPE, TABLE_TYPE);
+        return Set.of(tbleSpace.TABL_SPACE_TYPE, ROW_TYPE, TABLE_TYPE);
     }
 
     @Override
