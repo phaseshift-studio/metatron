@@ -20,6 +20,7 @@ package studio.phaseshift.metatron.isa.vec.type;
 
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Poly;
+import studio.phaseshift.metatron.isa.m.type.Rel;
 
 import java.util.Vector;
 import java.util.function.BiFunction;
@@ -38,5 +39,10 @@ public interface Vec extends Poly<Vec, Vector<?>> {
     @Override
     default Stream<Obj> values() {
         return this.elements();
+    }
+
+    @Override
+    default Stream<Obj> keys() {
+        return this.indexedStream().map(Rel::first);
     }
 }

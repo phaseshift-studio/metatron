@@ -163,9 +163,7 @@ public class BasicRouter extends AbstractSpace<MServer> implements Router {
             return;
         }
         if (this.spaces()
-                .jvm()
                 .values()
-                .stream()
                 .map(r -> ((Space) r).pattern())
                 .anyMatch(f -> f.compareTo(space.pattern()) == 0)) {
             LOG.warn("%s has an overlapping address space: %s <=> %s", space, space.pattern(), space.pattern());
@@ -204,13 +202,13 @@ public class BasicRouter extends AbstractSpace<MServer> implements Router {
         if (match.test(NOOBJ))
             return noobjSpace.single();
         // using jvm() for speed (given the heavy use of this method)
-        final Optional<S> space = this.spaces().jvm().values().stream() // using jvm() for speed (given the heavy use of this method)
+        final Optional<S> space = this.spaces().values()// using jvm() for speed (given the heavy use of this method)
                 .map(Obj::<S>as)
                 .filter(s -> match.basePath().test(s.pattern()))
                 .min(Comparator.comparing(Space::pattern));
         if (space.isPresent())
             return space.get();
-        else if (match.basePath().test(f("+/#")))
+        else if (match.basePath().test(STACK_PATTERN))
             return (S) THREAD_STACK.get();
         else if (!BOOTING)
             throw MTronException.of("no active space supports pattern %s", match.toUri(false));

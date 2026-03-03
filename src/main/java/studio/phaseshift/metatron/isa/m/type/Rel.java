@@ -58,8 +58,13 @@ public interface Rel extends Poly<Rel, Tuple.Pair<Obj, Obj>>, Obj {
     }
 
     @Override
+    default Stream<Obj> keys() {
+        return this.first().stream();
+    }
+
+    @Override
     default Stream<Obj> values() {
-        return Stream.of(this.second());
+        return this.second().stream();
     }
 
     @Override

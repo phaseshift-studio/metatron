@@ -59,6 +59,8 @@ color red "X=>"
 ### auto resolve
 color yellow "!\*" "\{<j>\}"
 color green "\{|\}" 
+### dir/file
+color yellow "dir"
 ### str
 color yellow "[\"][^\"]*[\"]"
 color yellow "['][^']*[']"

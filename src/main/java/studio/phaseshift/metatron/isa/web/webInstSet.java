@@ -36,6 +36,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static studio.phaseshift.metatron.Tokens.*;
+import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.*;
 import static studio.phaseshift.metatron.isa.m.type.Bool.BOOL_TYPE;
@@ -83,7 +84,9 @@ public class webInstSet extends AbstractInstSet {
                             eq_(STR_TYPE),
                             eq_(URI_TYPE),
                             eq_(LST_TYPE),
-                            eq_(REC_TYPE))))).tryToInst()).create();
+                            eq_(REC_TYPE))))).tryToInst())
+            .constructor(instC(INST_TID.dom(ALL.maybe()).rng(JSON_TID), lst(T(STR_TID)), 
+                    (lhs, inst) -> ObjSimpleJSONSerializer.parse(lhs.asStr().strValue()))).create();
     public static final Type CSS_TYPE = Type.Builder.build()
             .tid(REC_TID)
             .vid(CSS_TID).create();

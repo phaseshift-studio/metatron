@@ -85,6 +85,10 @@ public interface Monad extends Lst {
         return this.jvm(CommonUtil.arrayList(this.obj(), this.code().nextInst(this.inst()), noobj(), this.code()));
     }
 
+    default Monad next(final Obj obj) {
+        return this.jvm(CommonUtil.arrayList(obj, this.code().nextInst(this.inst()), noobj(), this.code()));
+    }
+
 
     default <OBJ extends Obj> OBJ state(final fURI key) {
         return this.state().at(key);
@@ -163,8 +167,10 @@ public interface Monad extends Lst {
         if (this.halted())
             return this;
         final boolean monadicInst = this.inst().tid().hasQuery(MONAD);
-        final Monad nextMonad = this.obj(this.inst().apply(monadicInst ? this : this.obj()));
-        return monadicInst ? (Monad) nextMonad.obj() : nextMonad.nextInst();
+        final Obj nextObj = this.inst().apply(monadicInst ?
+                this :
+                this.obj());
+        return this.next(nextObj);
     }
 
     class Helpers {

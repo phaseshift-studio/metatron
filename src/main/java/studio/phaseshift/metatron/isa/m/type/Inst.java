@@ -37,13 +37,11 @@ import java.util.function.Function;
 
 import static studio.phaseshift.metatron.Tokens.MONAD;
 import static studio.phaseshift.metatron.furi.fURI.ALL;
-import static studio.phaseshift.metatron.furi.fURI.ONE_WILD_STRING;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
-import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
@@ -329,6 +327,7 @@ public interface Inst extends Call {
     @Override
     default Obj apply(final Obj lhs) {
         final boolean isMonadicInst = this.tid().hasQuery(MONAD);
+        //final String monadUpDown = this.tid().queryValue(fURI.of(MONAD), String.class);
         Obj clhs = FutureObj.resolveFuture(isMonadicInst ? lhs.asMonad() : lhs);
         //boolean reself = !this.args().isEmpty() && this.args().argElements().noneMatch(e -> e.vid() != null || e.isObjCall());
         Inst cinst = this.args().isEmpty() ? this.args(lst(noobj())).resolve(clhs) : this.resolve(clhs); // TODO: this isn't a general solution (multi slotted args won't work).
@@ -382,7 +381,9 @@ public interface Inst extends Call {
                     //  Router.stack().pop();
                 }
             } catch (final Exception e) {
-                rhs = fail(MTronException.of("unable to evaluate inst: %s", cinst), fail(e));
+                rhs = fail(e, fail(MTronException.of("unable to evaluate inst: %s", cinst)));
+                if (e.getCause() != null)
+                    rhs = fail(e.getCause(), (Fail) rhs);
             }
             if (BootLoader.TYPE_CHECK && !rhs.isType() && !rhs.isFail() && !lhs.isCaughtFail() && !rhs.test(cinst.rng()))
                 //rhs = fail(MTronException.of("inst resolution failure: %s", cinst, fail(MTronException.of("rhs does not match inst range:\n\t%s", Poly.Helper.diffObjRecursion(rhs, cinst.rng())))));
@@ -657,7 +658,7 @@ public interface Inst extends Call {
         public static Set<Inst> insts() {
             return new LinkedHashSet<>(List.of(
                     instC(LIFT_INST_TID.dom(ALL).rng(ALL), lst(T(ALL)), (lhs, inst) -> inst.arg(0).<Inst>as().args(lhs.<Poly>as()))));
-                    //instC(LSHIFT_INST_TID.dom(INST_TID).rng(ALL), lst(), (lhs, inst) -> lhs.dom()),
+            //instC(LSHIFT_INST_TID.dom(INST_TID).rng(ALL), lst(), (lhs, inst) -> lhs.dom()),
                     /*instC(RSHIFT_INST_TID.dom(INST_TID).rng(ALL.maybeSome()), lst(T(URI_TID.maybeSome())), (lhs, inst) -> objs(inst.arg(0).orElse((Obj) uri(ONE_WILD_STRING)).stream().map(u ->
                             rec(uri(ARGS), lhs.asInst().args(),
                                     uri(DOM), lhs.dom(),

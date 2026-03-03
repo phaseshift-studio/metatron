@@ -38,7 +38,7 @@ import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_MONAD_TID;
 public class BasicMonad extends AbstractMonad implements Monad {
 
     private static final GraphittyLogger LOG = Graphitty.log(BasicMonad.class);
-    public static final fURI MACH_BASIC_MONAD_TID = MACH_MONAD_TID.extend("basic");
+    public static final fURI MACH_BASIC_MONAD_TID = MACH_MONAD_TID; // .extend("basic");
 
     List<Obj> jvm;
 

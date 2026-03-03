@@ -35,6 +35,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
+import static studio.phaseshift.metatron.Tokens.SPACE;
 import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -77,7 +78,7 @@ public interface Router extends Space {
     }
 
     default Rec spaces() {
-        return this.jvm().get(uri(Tokens.SPACE)).as();
+        return this.at(uri(SPACE)).as();
     }
 
     MServer server();
@@ -95,23 +96,8 @@ public interface Router extends Space {
         return fURI.ALL;
     }
 
-    default <OBJ extends Obj> OBJ read(final String vid, final Class<OBJ> oClass) {
-        try {
-            return oClass.getConstructor(Obj.class).newInstance(this.read(fURI.of(vid)));
-        } catch (final Exception e) {
-            throw Graphitty.log(this).except(e);
-        }
-    }
-
     Obj write(final fURI vid, final Obj obj);
-
-    default Obj write(final Obj obj) {
-        if (null == obj.vid()) {
-            throw MTronException.of("direct obj writing requires obj already be in space");
-        }
-        return this.write(obj.vid(), obj);
-    }
-
+    
     default Obj write(final String vid, final Obj obj) {
         return this.write(fURI.of(vid), obj);
     }

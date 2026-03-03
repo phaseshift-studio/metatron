@@ -46,8 +46,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.stream.Stream;
 
-import static studio.phaseshift.metatron.Tokens.BOOT;
-import static studio.phaseshift.metatron.Tokens.WS;
+import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.isa.m.mInstSet.REC_TID;
@@ -125,6 +124,7 @@ public class BootLoader implements Rec, Feature.SelfClone {
 
     public static void load(final Rec args) {
         if (BOOTING) {
+
             LOG.info("parsed boot args:\n%s", args);
             if (args.has(BOOT))
                 args.at(uri(BOOT), f(Paths.get("").toAbsolutePath().normalize().toString()).extend(args.at(BOOT).uriValue()).toUri(), MUTABLE);
@@ -142,12 +142,14 @@ public class BootLoader implements Rec, Feature.SelfClone {
             try {
                 hostname = InetAddress.getLocalHost().getHostName();
             } catch (final Exception e) {
-                hostname = System.getenv(Tokens.HOSTNAME);
+                hostname = System.getenv(HOSTNAME);
             }
             if (null == hostname)
                 LOG.warn("booting metatron on a non-networked jvm");
-            else
-                localAuthority = args.at(Tokens.HOST).orElse(uri(WS + "://" + hostname + ".local" + ":" + 8999)).uriValue();
+            else {
+                localAuthority = args.at(HOST).orElse(uri(WS + "://" + hostname + ".local" + ":" + 8999)).uriValue();
+                args.at(LOCAL, uri(hostname), MUTABLE);
+            }
             final fURI SYS_TID = f("/sys");
             final Space sysSpace = memSpace.of(f("/sys/#"), null);
             ROUTER = new BasicRouter(localAuthority, SYS_TID.extend("router"));

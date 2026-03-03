@@ -23,13 +23,13 @@ import studio.phaseshift.metatron.algebra.MultMonoid;
 import studio.phaseshift.metatron.algebra.PlusMonoid;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.AbstractInstSet;
-import studio.phaseshift.metatron.isa.Space;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.space.noobjSpace;
 import studio.phaseshift.metatron.isa.m.type.Inst;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.mach.io.space.file.fsSpace;
+import studio.phaseshift.metatron.isa.mach.type.Monad;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.console.Console;
 import studio.phaseshift.metatron.isa.mach.type.ui.console.Editor;
@@ -50,6 +50,7 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
+import static studio.phaseshift.metatron.Tokens.MONAD;
 import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.furi.q.DocQ.DOCQ_TYPE;
@@ -90,9 +91,7 @@ public class machInstSet extends AbstractInstSet {
     public static final fURI MACH_MONAD_TID = MACH_ISA_TID.extend("monad");
     public static final fURI MACH_INST_TID = MACH_ISA_TID.extend("inst");
     public static final fURI DROP_TID = MACH_INST_TID.extend("drop");
-    public static final fURI PROJECT_TID = MACH_INST_TID.extend("project"); // proj?
     public static final fURI INJECT_TID = MACH_INST_TID.extend("inject"); // inj ?
-    public static final fURI EXPAND_TID = MACH_INST_TID.extend("expand"); // TODO: expand tuple body 
     public static final fURI RING_ZERO_TID = MACH_INST_TID.extend("ring").extend("const").extend("zero");
     public static final fURI RING_ONE_TID = MACH_INST_TID.extend("ring").extend("const").extend("one");
     public static final fURI RING_BINARY = MACH_INST_TID.extend("ring").extend("op").extend("+");
@@ -101,6 +100,7 @@ public class machInstSet extends AbstractInstSet {
     public static final fURI ROUTER_TID = MACH_ISA_TID.extend("router");
     public static final fURI MACH_SPACE_TID = MACH_ISA_TID.extend("space");
     public static final fURI FILE_TID = MACH_ISA_TID.extend("file");
+    public static final fURI DIR_TID = MACH_ISA_TID.extend("dir");
     public static final fURI IMAGE_TID = FILE_TID.extend("image");
     public static final fURI Q_TID = MACH_SPACE_TID.extend("q");
     public static final fURI FACTORY_TID = MACH_ISA_TID.extend("factory");
@@ -125,11 +125,18 @@ public class machInstSet extends AbstractInstSet {
             .constructor(instC(INST_TID.dom(ALL.maybe()).rng(FILE_TID),
                     lst(T(URI_TID)),
                     (lhs, inst) -> makeFile(Path.of(inst.arg(0).uriValue().basePath().toString())))).create();
+    public static final Type DIR_TYPE = Type.Builder.build()
+            .tid(FILE_TID)
+            .vid(DIR_TID)
+            .predicate((uri, _) -> uri.uriValue().isBranch() ? uri : noobj())
+            .constructor(instC(INST_TID.dom(ALL.maybe()).rng(DIR_TID.maybe()),
+                    lst(T(URI_TID)),
+                    (lhs, inst) -> inst.arg(0).uriValue().isBranch() ? makeFile(Path.of(inst.arg(0).uriValue().basePath().toString())) : noobj())).create();
     public static final Type IMAGE_FILE_TYPE = Type.Builder.build()
             .tid(FILE_TID)
             .vid(IMAGE_TID).create();
 
-    public static final Type MACH_MONAD_TYPE = Type.Builder.build().tid(REC_TID).vid(MACH_MONAD_TID).create();
+    public static final Type MACH_MONAD_TYPE = Type.Builder.build().tid(LST_TID).vid(MACH_MONAD_TID).create();
 
     public machInstSet() {
         super(MACH_ISA_TID, MACH_ISA_TID);
@@ -149,6 +156,7 @@ public class machInstSet extends AbstractInstSet {
                 FS_SPACE_TYPE,
                 SERIAL_SPACE_TYPE,
                 FILE_TYPE,
+                DIR_TYPE,
                 IMAGE_FILE_TYPE,
                 FACTORY_TYPE,
                 M_FACTORY_TYPE,
@@ -159,10 +167,24 @@ public class machInstSet extends AbstractInstSet {
     }
 
     @Override
+    public Set<Tuple.Triplet<Tuple.Pair<String, String>, List<fURI>, Integer>> sugars() {
+        return new LinkedHashSet<>(List.of(
+                Tuple.Triplet.with(Tuple.Pair.with("^", null), List.of(LIFT_INST_TID), 0)
+        ));
+    }
+
+    @Override
     public Set<Inst> insts() {
         final Set<Inst> insts = new LinkedHashSet<>();
         insts.addAll(Router.RouterType.insts());
         insts.addAll(List.of(
+                instC(LIFT_INST_TID.dom(ALL).rng(MACH_MONAD_TID).query(MONAD, "^"), lst(T(ALL.maybe())), (lhs, inst) -> {
+                    final Monad monad = lhs.asMonad();
+                    if (!inst.arg(0).isNoObj())
+                        return inst.arg(0).apply(monad);
+                    else
+                        return monad;
+                }),
                 instC(REWRITE_INST_TID.dom(ALL.maybe()).rng(URI_TID), lst(T(URI_TID)), (lhs, inst) -> uri(Router.global().rewrite(inst.arg(0).uriValue(), true))),
                 instC(MACH_INST_TID.extend("close").dom(ROUTER_TID).rng(NOOBJ_TID), lst(), (lhs, inst) -> Stream.of(noobj()).peek(o -> System.exit(0)).iterator().next()),
                 instC(MACH_INST_TID.extend("beep").dom(A.maybe()).rng(A.maybe()), lst(isa_(T(INT_TID)).else_(jnt(10))), (lhs, inst) -> {
@@ -207,7 +229,8 @@ public class machInstSet extends AbstractInstSet {
                             final fsSpace space = Router.global().getSpace(lhs.uriValue());
                             return objs(Arrays.stream(Objects.requireNonNull(file.listFiles()))
                                     //.peek(ff -> LOG.info("reading file %s", f(f(ff.getName()).name())))
-                                    .map(ff -> uri(space.rewrite(makeFile(ff.toPath()).uriValue().qLess(), true), FILE_TID)));
+                                    .map(ff -> makeFile(ff.toPath()))
+                                    .map(ff -> uri(space.rewrite(ff.uriValue().qLess(), true), ff.uriValue().isBranch() ? DIR_TID : FILE_TID)));
                         }
                     }
                     return noobj();
@@ -240,17 +263,6 @@ public class machInstSet extends AbstractInstSet {
                         return null == lhs.vid() ? noobjSpace.single() : Router.global().getSpace(lhs.vid());
                     else
                         throw MTronException.of("unsupported which %s for %s", inst.arg(0), lhs);
-                }),
-                instC(DROP_TID.dom(ALL).rng(MACH_MONAD_TID), lst(), (lhs, inst) -> {
-                    throw MTronException.of("placeholder error as machine should handle the drop");
-                }),
-                instC(PROJECT_TID.dom(ALL).rng(ALL), lst(T(INT_TID)), (lhs, inst) -> {
-                    if (lhs.jvm() instanceof Tuple)
-                        return lhs.<Tuple>jvmAs().project(inst.arg(0).intValue().intValue());
-                    else if (inst.arg(0).intValue() == 0)
-                        return lhs;
-                    else
-                        throw MTronException.of("projection larger than tuple: 1 < %d", inst.arg(0).intValue().intValue());
                 }),
                 instC(INJECT_TID.dom(ALL).rng(ALL), lst(T(INT_TID), T(ALL)), (lhs, inst) -> {
                     if (lhs.jvm() instanceof Tuple)

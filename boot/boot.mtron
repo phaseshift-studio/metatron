@@ -75,8 +75,10 @@ print("{{y}}supported scripting environments:\n{{X}}", *<boot/script>.else(boot/
          serializer    => !*</m/mach/io/serializer/json/simple>,
          command_topic => inst?uri<=rec(){ to(a).map(z2m:).mult(*a../friendly_name).mult(set/state) },
          route         => [ha:=>homeassistant/]]@/sys/space/mqtt/homeassistant;
-    fs::[pattern  => <file:#>,
-          route   => [file:=><~/>],
+    fs_prefix     -> *boot/args/local.as(str::T).plus(':#').as(uri::T);
+    fs::[pattern  => local:#,
+          [--route   => [!*fs_prefix=><~/>],--]
+          route   => [local:=><~/>],
           script  => !*boot/script]@/sys/space/fs;
  serial::[pattern => <serial:#>,
           route   => [serial:=><>]]@/sys/space/serial;

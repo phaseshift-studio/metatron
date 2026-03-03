@@ -81,23 +81,13 @@ public class mParser {
     private static final SettableParser rel_parser = SettableParser.undefined();
     private static final SettableParser obj_rel_back_parser = SettableParser.undefined();
     private static final SettableParser branch_parser = SettableParser.undefined();
-    private static final Parser[] PARSERS;
+    private static final LinkedHashSet<Parser> PARSERS = new LinkedHashSet<>(List.of(seq(of('*').trim(), digit().plus().flatten()).map(t -> from_(uri(pick(t, 1).toString()))))); // sugar for *0 vs. *<0>
 
     private static final String REDUCED_FURI_CHARS = "~/%$!#_-@+:*";
     private static final String FULL_FURI_CHARS = REDUCED_FURI_CHARS + ". ";
 
     static {
-        final List<Parser> list =
-                new ArrayList<>(new mInstSet().sugars()
-                        .stream()
-                        .map(triplet ->
-                                generate_sugar_parser(triplet.get1(), of(triplet.get0().get0()),
-                                        triplet.get2(), null == triplet.get0().get1() ?
-                                                null :
-                                                of(triplet.get0().get1()))).toList());
-        list.addFirst(seq(of('*').trim(), digit().plus().flatten()).map(t -> from_(uri(pick(t, 1).toString())))); // sugar for *0 vs. *<0>
-        PARSERS = new Parser[list.size()];
-        list.toArray(PARSERS);
+        new mInstSet().sugars().forEach(mParser::addSugar);
         furi_parser.set(seq(word().or(seq(of("::").not(),
                         anyOf(REDUCED_FURI_CHARS))).plus().flatten(),
                 opt(m_furi_poly_type(), null),
@@ -164,6 +154,11 @@ public class mParser {
         rec_parser.set(seq(m_type_prefix(REC_TID), of('[').trim(), rec_internal(obj_rel_back_parser, m_call_prefix(MAP_INST_TID)), of(']').trim(), m_vid_postfix()).trim().map(t -> rec((Map<Obj, Obj>) pick(t, 2), pick(t, 0), pick(t, 4))));
         inst_parser.set(choice(m_inst_b(), m_inst_c()));
 
+    }
+
+    public static LinkedHashSet<Parser> addSugar(final Tuple.Triplet<Tuple.Pair<String, String>, List<fURI>, Integer> triplet) {
+        PARSERS.add(generate_sugar_parser(triplet.get1(), of(triplet.get0().get0()), triplet.get2(), null == triplet.get0().get1() ? null : of(triplet.get0().get1())));
+        return PARSERS;
     }
 
     public static Parser m_inst_b() {
@@ -485,7 +480,7 @@ public class mParser {
     }
 
     public static Parser m_inst() {
-        return choice(PARSERS).or(inst_parser);
+        return choice(PARSERS.toArray(new Parser[PARSERS.size()])).or(inst_parser);
     }
 
     /// //////////////////////////////////////////////////////////////////////////////////////////
@@ -565,6 +560,10 @@ public class mParser {
 
     public static ChoiceParser choice(final Parser... parsers) {
         return new ChoiceParser(parsers);
+    }
+
+    public static ChoiceParser choice(final List<Parser> parsers) {
+        return new ChoiceParser(parsers.toArray(new Parser[parsers.size()]));
     }
 
     public static CharacterParser none() {

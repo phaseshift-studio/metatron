@@ -58,8 +58,7 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MType.T;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
-import static studio.phaseshift.metatron.isa.mach.machInstSet.FILE_TID;
-import static studio.phaseshift.metatron.isa.mach.machInstSet.MACH_ISA_TID;
+import static studio.phaseshift.metatron.isa.mach.machInstSet.*;
 
 public class fsSpace extends AbstractSpace<FileSystem> {
 
@@ -82,8 +81,8 @@ public class fsSpace extends AbstractSpace<FileSystem> {
 
     private fsSpace(final FileSystem sjvm, final Map<Obj, Obj> jvm, final fURI vid) {
         super(sjvm, jvm, FS_TID, vid);
-        final String prefix = this.routes.keySet().stream().map(objs -> objs.uriValue().toString().replace("~", System.getProperty(USER_HOME))).iterator().next();
-        final String prepend = this.routes.values().stream().map(objs -> objs.uriValue().toString().replace("~", System.getProperty(USER_HOME))).iterator().next();
+        final String prefix = this.routes.keySet().stream().map(objs -> objs.autoResolve(this).uriValue().toString().replace("~", System.getProperty(USER_HOME))).iterator().next();
+        final String prepend = this.routes.values().stream().map(objs -> objs.autoResolve(this).uriValue().toString().replace("~", System.getProperty(USER_HOME))).iterator().next();
         this.routes.put(uri(prefix), uri(prepend));
     }
 
@@ -131,7 +130,7 @@ public class fsSpace extends AbstractSpace<FileSystem> {
         try {
             final File file = Paths.get(path.uriValue().basePath().toString()).toFile();
             final fsSpace space = Router.global().getSpace(this.rewrite(f(file.getPath()), false)).as();
-            return uri(this.rewrite(fURI.f(file.getPath()), false).query("p", PosixFilePermissions.toString(Files.getPosixFilePermissions(file.toPath()))), FILE_TID, null);
+            return uri(this.rewrite(fURI.f(file.getPath()), false).query("p", PosixFilePermissions.toString(Files.getPosixFilePermissions(file.toPath()))), file.isDirectory() ? DIR_TID : FILE_TID, null);
         } catch (final Exception e) {
             throw MTronException.of(e);
         }
@@ -140,7 +139,7 @@ public class fsSpace extends AbstractSpace<FileSystem> {
 
     public static Uri makeFile(final Path path) {
         try {
-            return uri(f(path.toString()).query("p", PosixFilePermissions.toString(Files.getPosixFilePermissions(path))), FILE_TID, null);
+            return uri(f(path.toString()).query("p", PosixFilePermissions.toString(Files.getPosixFilePermissions(path))), path.endsWith("/") ? DIR_TID : FILE_TID, null);
         } catch (final NoSuchFileException e) {
             return uri("").c(cInt.ZERO()).asUri();
         } catch (final Exception e) {

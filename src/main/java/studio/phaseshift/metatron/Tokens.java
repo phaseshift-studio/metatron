@@ -70,6 +70,7 @@ public final class Tokens {
     public static final String OBJ = "obj";
     public static final String JDBC = "jdbc:";
     public static final String HOST = "host";
+    public static final String LOCAL = "local";
     public static final String PORT = "port";
     public static final String USER = "user";
     public static final String PASS = "pass";

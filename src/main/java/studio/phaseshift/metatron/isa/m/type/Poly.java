@@ -137,6 +137,8 @@ public interface Poly<P extends Poly<P, J>, J> extends Obj {
     }
     
     Stream<Obj> values();
+    
+    Stream<Obj> keys();
 
     @Override
     default boolean isResolved(final boolean nested) {

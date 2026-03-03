@@ -100,6 +100,11 @@ public interface Lst extends Poly<Lst, List<Obj>>, PlusMonoid.O<Lst> {
         return this.elements();
     }
 
+    @Override
+    default Stream<Obj> keys() {
+        return this.indexedStream().map(Rel::first);
+    }
+
     default Lst at(final Obj key, final Obj value, final BiFunction<Poly<?, ?>, Object, Poly<?, ?>> operation) {
         if (key.isInt()) {
             final ArrayList<Obj> newList = new ArrayList<>(this.lstValue());
@@ -137,7 +142,7 @@ public interface Lst extends Poly<Lst, List<Obj>>, PlusMonoid.O<Lst> {
         else if (key.isUri()) {
             // if (key.uriValue().isEmpty())
             //            return this.c(c -> c.mult(cKey)).as();
-            
+
             if (key.uriValue().segments().isEmpty())
                 return (OBJ) noobj();
             final boolean singleSegment = key.uriValue().pathLength() == 1;
