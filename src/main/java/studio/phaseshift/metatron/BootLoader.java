@@ -244,4 +244,8 @@ public class BootLoader implements Rec, Feature.SelfClone {
                 .filter(p -> p.type().isAnnotationPresent(InstSet.JREService.class))
                 .filter(p -> f(p.type().getAnnotation(InstSet.JREService.class).tid()).test(tid));
     }
+
+    public static Stream<InstSet> importInstSet(final fURI tid) {
+        return BootLoader.loadInstSetProvider(tid).map(ServiceLoader.Provider::get);
+    }
 }

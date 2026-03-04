@@ -75,7 +75,7 @@ public class metaSpace extends AbstractSpace<MServer> {
     protected metaSpace(final MServer sjvm, final Map<Obj, Obj> jvm, final fURI vid) {
         super(sjvm, jvm, META_SPACE_TID, vid);
         this.host = this.at(uri(HOST)).uriValue();
-        this.cache = memSpace.of(this.at(PATTERN).uriValue(), fnull);
+        this.cache = memSpace.of(rec(jvm), fnull);
         this.at(uri(PEERS)).orElse(lst(uri(this.host))).elements().forEach(e -> this.peers.add(e.uriValue()));
         this.selfIndex = IteratorUtil.indexedStream(this.peers.iterator()).filter(p -> Objects.equals(p.get1().host(), this.host.host())).findFirst().map(Tuple.Pair::get0).orElse(-1);
         if (this.selfIndex == -1)
@@ -92,6 +92,7 @@ public class metaSpace extends AbstractSpace<MServer> {
 
     @Override
     public void close() {
+        this.cache.close();
         this.sjvm().close();
         super.close();
     }

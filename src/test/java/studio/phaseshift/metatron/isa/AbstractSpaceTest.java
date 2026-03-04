@@ -23,17 +23,19 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
 import studio.phaseshift.metatron.isa.m.space.memSpace;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.mach.type.Router;
 import studio.phaseshift.metatron.isa.mach.type.ui.graphitty.Graphitty;
-import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.util.CommonUtil;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Supplier;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
@@ -41,6 +43,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static studio.phaseshift.metatron.Tokens.PATTERN;
 import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
+import static studio.phaseshift.metatron.isa.m.type.impl.MStr.str;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
 /*
@@ -90,6 +93,14 @@ public abstract class AbstractSpaceTest extends AbstractMetatronTest {
             this.spaceStorage = null;
         }
         this.space = null;
+    }
+
+    public static Map<fURI, Obj> generateRandomData(final fURI furiPrefix, int size) {
+        final Map<fURI, Obj> data = new HashMap<>();
+        for (int i = 0; i < size; i++) {
+            data.put(furiPrefix.extend("x" + i), str("value" + i));
+        }
+        return data;
     }
 
     @ParameterizedTest
@@ -182,7 +193,7 @@ public abstract class AbstractSpaceTest extends AbstractMetatronTest {
     }, delimiter = '%')
     public void testMonoReadWrite(final String writeExpression, final String readExpression, final String expectedExpression) {
         final Obj writeObj = mParser.parse(make(writeExpression.equals(".") ? PREVIOUS_LINE.get(0) : writeExpression)).apply();
-        if(this.sleepBetweenReads > 0)
+        if (this.sleepBetweenReads > 0)
             CommonUtil.sleepThread(this.sleepBetweenReads);
         final Obj readObj = mParser.parse(make(readExpression.equals(".") ? PREVIOUS_LINE.get(1) : readExpression)).apply();
         final Obj resultObj = mParser.parse(make(expectedExpression.equals(".") ? PREVIOUS_LINE.get(2) : expectedExpression)).apply();

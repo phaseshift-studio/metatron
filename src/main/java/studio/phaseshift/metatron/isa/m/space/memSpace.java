@@ -29,6 +29,7 @@ import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Rec;
 import studio.phaseshift.metatron.isa.m.type.Type;
 import studio.phaseshift.metatron.isa.m.type.Uri;
+import studio.phaseshift.metatron.isa.mach.io.type.ObjByteBufferSerializer;
 import studio.phaseshift.metatron.util.CommonUtil;
 import studio.phaseshift.metatron.util.IteratorUtil;
 import studio.phaseshift.metatron.util.MTronException;
@@ -52,6 +53,7 @@ import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.isa.m.mInstSet.M_ISA_TID;
 import static studio.phaseshift.metatron.isa.m.mInstSet.SPACE_TID;
 import static studio.phaseshift.metatron.isa.m.parser.mFluent.StartLess.isa_;
+import static studio.phaseshift.metatron.isa.m.type.NoObj.noobj;
 import static studio.phaseshift.metatron.isa.m.type.impl.MInst.instC;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -165,7 +167,7 @@ public class memSpace extends AbstractSpace<Map<fURI, Obj>> {
                 LOG.info("loading persisted data at {{y}}%s", file.getAbsolutePath());
                 mParser.eval(file, ex -> {
                     throw MTronException.of(ex);
-                });
+                }).reduce(noobj(), (_, _) -> noobj());
                 LOG.info("total data loaded from {{y}}%s{{X}}: {{y}}%d{{/y}} bytes", file.getAbsolutePath(), Files.size(file.toPath()));
             } catch (final Exception e) {
                 throw MTronException.of(e);
@@ -177,26 +179,31 @@ public class memSpace extends AbstractSpace<Map<fURI, Obj>> {
         final Uri path = (Uri) this.jvm().getOrDefault(uri(PERSIST), null);
         if (null == path)
             return;
-        //final ObjByteBufferSerializer serializer = new ObjByteBufferSerializer();
+        final ObjByteBufferSerializer serializer = new ObjByteBufferSerializer();
         final File file = new File(path.uriValue().toString());
-        if (file.exists()) file.delete();
-        try {
-            file.createNewFile();
-        } catch (IOException e) {
-            throw MTronException.of(e);
-        }
-        try (final FileOutputStream out = new FileOutputStream(path.uriValue().toString())) {
-            out.write("print('loading persisted data');\n".getBytes());
-            this.sjvm().forEach((key, value) -> {
-                try {
-                    out.write((key + " -> " + value.toCleanString() + ";\n").getBytes(StandardCharsets.UTF_8));
-                } catch (IOException e) {
-                    throw MTronException.of(e);
-                }
-            });
-            out.write("'complete.'".getBytes(StandardCharsets.UTF_8));
-        } catch (final Exception e) {
-            throw MTronException.of(e);
+        if (file.exists()) assert file.delete();
+        if (!this.sjvm().isEmpty()) {
+            try {
+                assert file.createNewFile();
+            } catch (IOException e) {
+                throw MTronException.of(e);
+            }
+            try (final FileOutputStream out = new FileOutputStream(path.uriValue().toString())) {
+                out.write("print('loading persisted data\\n');\n".getBytes());
+                this.sjvm().forEach((key, value) -> {
+                    try {
+                        out.write((key + " -> " + new String(serializer.outputBytes(value).array(), StandardCharsets.UTF_8) + ";\n").getBytes(StandardCharsets.UTF_8));
+                    } catch (IOException e) {
+                        throw MTronException.of(e);
+                    }
+                });
+                out.write("print('complete.\\n');\n".getBytes(StandardCharsets.UTF_8));
+
+            } catch (final Exception e) {
+                throw MTronException.of(e);
+            }
+        } else {
+            LOG.warn("no data to persist at %s", this.at(PERSIST));
         }
     }
 }
