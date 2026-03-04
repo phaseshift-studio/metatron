@@ -60,25 +60,38 @@ public abstract class AbstractCTest<T extends Comparable<T>, D extends C<T, D>> 
             if (this.additiveInverses[i])
                 assertTrue("if there is an additive inverse, then its distributive", this.distributive[i]);
         }
-        LOG.error("a:  %s, b:  %s, c:  %s", a, b, c);
-        LOG.error("aX: %s, bX: %s, cX: %s", aX, bX, cX);
-        LOG.error("a0: %s, b0: %s, c0: %s", a0, b0, c0);
+        LOG.debug("[positive] a0: %s, b0: %s, c0: %s", a0, b0, c0);
+        LOG.debug("[exact]    aX: %s, bX: %s, cX: %s", aX, bX, cX);
+        LOG.debug("[complete] a:  %s, b:  %s, c:  %s", a, b, c);
     }
 
-    public void checkMultGroup(D aa, D bb, D cc, boolean multiplicativeInverse) {
+    public void checkMultGroup(D aa, D cc) {
         assertEquals("1 * 1         = 1", cc.one(), cc.one().mult(cc.one()));
         assertEquals("1 * a         = a", aa, cc.one().mult(aa));
         assertEquals("a * 1         = a", aa, aa.mult(cc.one()));
         assertEquals("(1*a) * (a*1) = a^2", aa.mult(aa), (cc.one().mult(aa)).mult((aa.mult(cc.one()))));
-        if (multiplicativeInverse) {
-            assertEquals("a * (1/a)     = 1", cc.one(), aa.mult(aa.inv()));
-            assertEquals("(1/a) * a     = 1", cc.one(), aa.inv().mult(aa));
-            assertEquals("1 / a         = (1/a)", cc.one().div(aa), aa.inv());
-            assertEquals("a / 1         = a", aa.div(cc.one()), aa);
-        }
+        assertEquals("a * (1/a)     = 1", cc.one(), aa.mult(aa.inv()));
+        assertEquals("(1/a) * a     = 1", cc.one(), aa.inv().mult(aa));
+        assertEquals("1 / a         = (1/a)", cc.one().div(aa), aa.inv());
+        assertEquals("a / 1         = a", aa.div(cc.one()), aa);
     }
 
-    public void checkPlusMonoid(D aa, D bb, D cc, boolean additiveInverse) {
+    public void checkMultMonoid(D aa, D cc) {
+        assertEquals("1 * 1         = 1", cc.one(), cc.one().mult(cc.one()));
+        assertEquals("1 * a         = a", aa, cc.one().mult(aa));
+        assertEquals("a * 1         = a", aa, aa.mult(cc.one()));
+        assertEquals("(1*a) * (a*1) = a^2", aa.mult(aa), (cc.one().mult(aa)).mult((aa.mult(cc.one()))));
+    }
+
+    public void checkPlusMonoid(D aa, D cc) {
+        assertEquals("0 + 0         = 0", cc.zero(), cc.zero().plus(cc.zero()));
+        assertEquals("0 + a         = a", aa, cc.zero().plus(aa));
+        assertEquals("a + 0         = a", aa, aa.plus(cc.zero()));
+        assertEquals("(0+a) + (a+0) = 2a", aa.plus(aa), (cc.zero().plus(aa)).plus((aa.plus(cc.zero()))));
+        assertEquals("a + a         = 2a", aa.plus(aa), aa.plus(aa));
+    }
+
+    public void checkPlusGroup(D aa, D cc) {
         assertEquals("0 + 0         = 0", cc.zero(), cc.zero().plus(cc.zero()));
         assertEquals("0 + a         = a", aa, cc.zero().plus(aa));
         assertEquals("a + 0         = a", aa, aa.plus(cc.zero()));
@@ -86,10 +99,8 @@ public abstract class AbstractCTest<T extends Comparable<T>, D extends C<T, D>> 
         assertEquals("a + a         = 2a", aa.plus(aa), aa.plus(aa));
         assertEquals("0 + -a        = -a", aa.neg(), cc.zero().plus(aa.neg()));
         assertEquals("-a + 0        = -a", aa.neg().plus(cc.zero()), aa.neg());
-        if (additiveInverse) {
-            assertEquals("a + -a        = 0", cc.zero(), aa.plus(aa.neg()));
-            assertEquals("-a + a        = 0", cc.zero(), aa.neg().plus(aa));
-        }
+        assertEquals("a + -a        = 0", cc.zero(), aa.plus(aa.neg()));
+        assertEquals("-a + a        = 0", cc.zero(), aa.neg().plus(aa));
     }
 
     public void checkPlusMultRing(D aa, D bb, D cc, boolean additiveInverse, boolean distributive) {
@@ -128,51 +139,67 @@ public abstract class AbstractCTest<T extends Comparable<T>, D extends C<T, D>> 
     /// ////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     @Test
-    public void testMultGroupPositive() {
-        checkMultGroup(a0, b0, c0, multiplicativeInverses[0]);
+    public void testPositiveMultStructure() {
+        if (multiplicativeInverses[0])
+            checkMultGroup(a0, c0);
+        checkMultMonoid(a0, c0);
     }
 
     @Test
-    public void testPlusMonoidPositive() {
-        checkPlusMonoid(a0, b0, c0, additiveInverses[0]);
+    public void testPositivePlusStructure() {
+        if (additiveInverses[0])
+            checkPlusGroup(a0, c0);
+        checkPlusMonoid(a0, c0);
     }
 
     @Test
-    public void testPlusMultRingPositive() {
+    public void testPositivePlusMultStructure() {
         checkPlusMultRing(a0, b0, c0, additiveInverses[0], distributive[0]);
     }
 
     /// /////////////////////////////////////////////////////////
 
     @Test
-    public void testMultGroupExact() {
-        checkMultGroup(aX, bX, cX, multiplicativeInverses[1]);
+    public void testExactMultStructure() {
+        if (multiplicativeInverses[1])
+            checkMultGroup(aX, cX);
+        else
+            checkMultMonoid(aX, cX);
     }
 
     @Test
-    public void testPlusMonoidExact() {
-        checkPlusMonoid(aX, bX, cX, additiveInverses[1]);
+    public void testExactPlusStructure() {
+        if (additiveInverses[1])
+            checkPlusGroup(aX, cX);
+        else
+            checkPlusMonoid(aX, cX);
     }
 
     @Test
-    public void testPlusMultRingExact() {
-        checkPlusMultRing(aX, bX, cX, additiveInverses[1], distributive[1]);
+    public void testExactPlusMultStructure() {
+        checkPlusMultRing(aX, cX, cX, additiveInverses[1], distributive[1]);
     }
 
     /// /////////////////////////////////////////////////////////
 
     @Test
-    public void testMultGroup() {
-        checkMultGroup(a, b, c, multiplicativeInverses[2]);
+    public void testMultStructure() {
+        if (multiplicativeInverses[2])
+            checkMultGroup(a, c);
+        else
+            checkMultMonoid(a, c);
     }
 
     @Test
-    public void testPlusMonoid() {
-        checkPlusMonoid(a, b, c, additiveInverses[2]);
+    public void testPlusStructure() {
+        if (additiveInverses[2])
+            checkPlusGroup(a, c);
+        else
+            checkPlusMonoid(a, c);
     }
 
     @Test
-    public void testPlusMultRing() {
+    public void testPlusMultStructure() {
         checkPlusMultRing(a, b, c, additiveInverses[2], distributive[2]);
     }
 }

@@ -36,6 +36,7 @@ public class cIntTest extends AbstractCTest<Long, cInt> {
         super(cInt.random(100L),
                 cInt.random(100L),
                 cInt.random(100L),
+                // positive/exact/complete
                 new boolean[]{false, false, false}, // multiplicative inverses
                 new boolean[]{false, true, false}, // additive inverses
                 new boolean[]{true, true, false}); // distributive
