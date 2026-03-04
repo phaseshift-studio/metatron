@@ -26,14 +26,23 @@ import studio.phaseshift.metatron.AbstractMetatronTest;
 import studio.phaseshift.metatron.BootLoader;
 import studio.phaseshift.metatron.TestSkip;
 import studio.phaseshift.metatron.isa.AbstractSpaceTest;
+import studio.phaseshift.metatron.isa.grph.grphInstSet;
 import studio.phaseshift.metatron.isa.grph.tp3.space.tp3Space;
 import studio.phaseshift.metatron.isa.m.parser.mParser;
+import studio.phaseshift.metatron.isa.m.type.Inst;
+import studio.phaseshift.metatron.isa.m.type.Obj;
+import studio.phaseshift.metatron.isa.m.type.impl.MObjFactory;
+import studio.phaseshift.metatron.isa.mach.type.Router;
+import studio.phaseshift.metatron.util.CommonUtil;
+import studio.phaseshift.metatron.util.Tuple;
 
+import static org.apache.tinkerpop.gremlin.LoadGraphWith.GraphData.GRATEFUL;
 import static org.apache.tinkerpop.gremlin.LoadGraphWith.GraphData.MODERN;
 import static studio.phaseshift.metatron.Tokens.*;
 import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.isa.grph.grphInstSet.GRPH_ISA_TID;
 import static studio.phaseshift.metatron.isa.grph.tp3.tp3InstSet.TP3_ISA_TID;
+import static studio.phaseshift.metatron.isa.iot.iotInstSet.IOT_ISA_TID;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRec.rec;
 import static studio.phaseshift.metatron.isa.m.type.impl.MRel.rel;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
@@ -43,24 +52,43 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
  */
 @TestSkip(testClass = AbstractSpaceTest.class, testMethods = {"testMonoReadWrite"})
 public class tp3SpaceTest extends AbstractSpaceTest {
+    /**
+     *
+     * tp3::[pattern  => /g/#,
+     * route    => [</g/+/>=><>],
+     * native   => [factory  => mfactory::[=>],
+     * load     => modern]]@/sys/space/modern;
+     */
     public tp3SpaceTest() {
         super(f("/g/"), () -> {
             BootLoader.loadInstSetProvider(GRPH_ISA_TID);
             BootLoader.loadInstSetProvider(TP3_ISA_TID);
             return tp3Space.of(rec(
                     PATTERN, uri("/g/#"),
-                    REWRITE, rel(uri("/g/+/"), uri("")),
-                    NATIVE, rec(uri(LOAD), uri(MODERN.name().toLowerCase()))), f("/sys/space/tp3")); // GRATEFUL.name().toLowerCase()
+                    ROUTE, rec(uri("/g/+/"), uri("")),
+                    NATIVE, rec(uri("factory"), MObjFactory.single(),
+                            uri(LOAD), uri(MODERN.name().toLowerCase()))), f("/sys/space/test")); // GRATEFUL.name().toLowerCase()
         });
-
-
+       tp3Space.TP3SpaceType.insts().forEach(i -> Router.writeToSpace(i.tid(),(Inst)i));
     }
 
     @Test
     @Disabled
     public void testProfiling() {
         BootLoader.TYPE_CHECK = false;
-        mParser.eval("*/g/V/+.out().>|.out().>|.out().>|.out().>|.out().count()").stream().forEach(v -> LOG.error("%s", v));
+        final Tuple.Pair<Obj, Long> mtronResult = CommonUtil.clock(() -> {
+            final Obj result = mParser.eval("*/g/V/+.out().>|.out().>|.out().>|.out().count()");
+            // Force any lazy evaluation by consuming the result
+            final String s = result.toString();
+            return result;
+        });
+        LOG.error("mtron>   %s [%s ms]", mtronResult.get0(), mtronResult.get1());
+        final Tuple.Pair<Obj, Long> gremlinResult = CommonUtil.clock(() -> {
+            final Obj result = mParser.eval("*</sys/space/test>.gremlin?#<=#('g.V().out().out().out().out().count().next()')");
+            final String s = result.toString();
+            return result;
+        });
+        LOG.error("gremlin> %s [%s ms]", gremlinResult.get0(), gremlinResult.get1());
         BootLoader.TYPE_CHECK = true;
     }
 

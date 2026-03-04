@@ -549,7 +549,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
         return (Fail) this;
     }
 
-    String xxxValue = "%s unable to convert %s to %s";
+    String xxxValue = "%s [%s] unable to convert %s to %s";
 
     default Pair<Throwable, Fail> failValue() {
         if (this.isFail() || this.isCaughtFail())
@@ -572,7 +572,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
     default Long intValue() {
         if (this.isInt())
             return this.jvm();
-        throw MTronException.of(xxxValue, this, T(tid()), INT_TYPE);
+        throw MTronException.of(xxxValue, this, this.isType() ? "type" : "value", T(tid()), INT_TYPE);
     }
 
     default Double realValue() {
