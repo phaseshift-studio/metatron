@@ -21,9 +21,12 @@ package studio.phaseshift.metatron.furi;
 import studio.phaseshift.metatron.algebra.Ring;
 
 import java.util.Objects;
+import java.util.Random;
 
 public interface C<T extends Comparable<T>, D extends C<T, D>> extends Comparable<D>, Ring<D> {
 
+    public static final Random RANDOM = new Random();
+    
     T min();
 
     T max();
@@ -33,6 +36,12 @@ public interface C<T extends Comparable<T>, D extends C<T, D>> extends Comparabl
     D plus(final D rhs);
 
     D mult(final D rhs);
+
+    D div(final D rhs);
+
+    default D inv() {
+        return this.clone(this.most().neg().min(), this.least().neg().max());
+    }
 
     default D minus(final D rhs) {
         return this.plus(rhs.neg());
@@ -44,9 +53,7 @@ public interface C<T extends Comparable<T>, D extends C<T, D>> extends Comparabl
 
     boolean within(final D rhs);
 
-    default boolean contains(final D rhs) {
-        return this.lte(rhs.least()) && this.gte(rhs.most());
-    }
+    boolean contains(final D rhs);
 
     default boolean lt(final D rhs) {
         return this.compareTo(rhs) < 0;
@@ -78,26 +85,28 @@ public interface C<T extends Comparable<T>, D extends C<T, D>> extends Comparabl
 
     D maybeSome();
 
-    default D inverse() {
-        return this.clone(this.most().neg().min(), this.least().neg().max());
-    }
-
     default D mirror() {
         return this.clone(
-                this.most().gt(this.zero()) ? this.inverse().min() : this.min(),
-                this.most().lte(this.zero()) ? this.inverse().max() : this.max());
+                this.most().gt(this.zero()) ? this.inv().min() : this.min(),
+                this.most().lte(this.zero()) ? this.inv().max() : this.max());
+    }
+
+    default D anyMaybe() {
+        return this.maybe().plus(this.antiMaybe());
     }
 
     default D antiMaybe() {
-        return this.maybe().inverse();
+        return this.maybe().inv();
     }
 
     default D antiSome() {
-        return this.some().inverse();
+        return this.some().inv();
     }
 
+    // anySome() // can't be expressed as a range (discontinuous function)
+
     default D antiMaybeSome() {
-        return this.maybeSome().inverse();
+        return this.maybeSome().inv();
     }
 
     D some();
@@ -142,6 +151,10 @@ public interface C<T extends Comparable<T>, D extends C<T, D>> extends Comparabl
 
     default boolean isAntiMaybe() {
         return Objects.equals(this, this.antiMaybe());
+    }
+
+    default boolean isAnyMaybe() {
+        return Objects.equals(this, this.anyMaybe());
     }
 
     default boolean isAbsMaybe() {

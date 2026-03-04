@@ -27,6 +27,13 @@ public class cInt implements C<Long, cInt> {
     private final Long min;
     private final Long max;
 
+    private cInt(final long min, final long max) {
+        if (min > max)
+            throw MTronException.of("c min is greater than c max: %s > %s", min, max);
+        this.min = min;
+        this.max = max;
+    }
+
     private cInt(final Long min, final Long max) {
         if (null != min & null != max && min > max)
             throw MTronException.of("c min is greater than c max: %s > %s", min, max);
@@ -46,8 +53,12 @@ public class cInt implements C<Long, cInt> {
         return C_ONE;
     }
 
+    public static cInt ANTIONE() {
+        return cInt.of(-1L, -1L);
+    }
+
     public static cInt SOME() {
-        return cInt.of(1L, null);
+        return C_SOME;
     }
 
     public static cInt MAYBE() {
@@ -56,6 +67,22 @@ public class cInt implements C<Long, cInt> {
 
     public static cInt MAYBESOME() {
         return cInt.of(0L, null);
+    }
+
+    public static cInt ANY() {
+        return cInt.of((Long) null, null);
+    }
+
+    public static cInt ANTIMAYBESOME() {
+        return cInt.of(null, 0L);
+    }
+
+    public static cInt ANTIMAYBE() {
+        return cInt.of(null, -1L);
+    }
+
+    public static cInt ANTISOME() {
+        return cInt.of(null, -1L);
     }
 
     public static cInt of(final Long min, final Long max) {
@@ -93,6 +120,8 @@ public class cInt implements C<Long, cInt> {
             return cInt.of(null, -1L);
         else if (parse.equals("-*"))
             return cInt.of(null, 0L);
+            //else if (parse.equals("-+"))
+            //    return cInt.of(-1L, 1L);
         else if (!parse.contains(","))
             return cInt.of(Long.valueOf(parse));
         else {
@@ -149,13 +178,30 @@ public class cInt implements C<Long, cInt> {
         final Long max = this.min == null ? null : -this.min;
         return new cInt(min, max);
     }
+    
+    public static cInt random(final Long cap) {
+        final long first = -1L * RANDOM.nextLong(cap);
+        final long second = RANDOM.nextLong(cap);
+        return new cInt(first, second);
+    }
+
+    @Override
+    public cInt div(final cInt rhs) {
+        final Long minRHS = rhs.min == null ? null : rhs.min;
+        final Long maxRHS = rhs.max == null ? null : rhs.max;
+        final Long newMin = (this.min == null && minRHS == null) ?
+                Long.valueOf(1L) : ((this.min == null || minRHS == null) ?
+                null : (this.min == 0 && minRHS == 0 ? 0L : this.min / minRHS));
+        final Long newMax = (this.max == null && maxRHS == null) ?
+                Long.valueOf(1L) : ((this.max == null || maxRHS == null) ?
+                null : (this.max == 0 && maxRHS == 0 ? 0L : this.max / maxRHS));
+        return new cInt(newMin, newMax);
+    }
 
     @Override
     public cInt mult(final cInt rhs) {
-        if(this.isOne())
-            return rhs;
-        else if(rhs.isOne())
-            return this;
+        if (this.isOne()) return rhs;
+        else if (rhs.isOne()) return this;
         final Long newMin = (null == this.min || null == rhs.min) ? null : (this.min * rhs.min);
         final Long newMax = (null == this.max || null == rhs.max) ? null : (this.max * rhs.max);
         final boolean flip = null != newMin && null != newMax && newMin > newMax;
@@ -173,13 +219,22 @@ public class cInt implements C<Long, cInt> {
         return (this.min == null || this.min < 0L) && (this.max != null && this.max < 0L);
     }
 
+    private Long[] minMax() {
+        return new Long[]{this.min == null ? Long.MIN_VALUE : this.min, this.max == null ? Long.MAX_VALUE : this.max};
+    }
+
     @Override
     public boolean within(final cInt rhs) {
-        Long minA = this.min() == null ? Long.MIN_VALUE : this.min();
-        Long maxA = this.max() == null ? Long.MAX_VALUE : this.max();
-        Long minB = rhs.min() == null ? Long.MIN_VALUE : rhs.min();
-        Long maxB = rhs.max() == null ? Long.MAX_VALUE : rhs.max();
-        return minA.compareTo(minB) >= 0 && maxA.compareTo(maxB) <= 0;
+        final Long[] thisMinMax = this.minMax();
+        final Long[] rhsMinMax = rhs.minMax();
+        return thisMinMax[0].compareTo(rhsMinMax[0]) >= 0 && thisMinMax[1].compareTo(rhsMinMax[1]) <= 0;
+    }
+
+    @Override
+    public boolean contains(final cInt rhs) {
+        final Long[] thisMinMax = this.minMax();
+        final Long[] rhsMinMax = rhs.minMax();
+        return thisMinMax[0].compareTo(rhsMinMax[0]) <= 0 && thisMinMax[1].compareTo(rhsMinMax[1]) >= 0;
     }
 
     @Override
@@ -215,6 +270,11 @@ public class cInt implements C<Long, cInt> {
     }
 
     @Override
+    public cInt anyMaybe() {
+        return cInt.of(-1L, 1L);
+    }
+
+    @Override
     public cInt antiMaybe() {
         return cInt.of(-1L, 0L);
     }
@@ -236,7 +296,7 @@ public class cInt implements C<Long, cInt> {
 
     @Override
     public String toString() {
-        if (this.isAny())
+        if (this.isAny()) // "anyMaybeSome"
             return "**";
         else if (this.isMaybe())
             return "?";
@@ -246,6 +306,14 @@ public class cInt implements C<Long, cInt> {
             return "*";
         else if (this.isExact())
             return "" + this.min;
+        else if (this.isAnyMaybe())
+            return "??";
+        else if (this.isAntiMaybe())
+            return "-?";
+        else if (this.isAntiSome())
+            return "-";
+        else if (this.isAntiMaybeSome())
+            return "-*";
         else
             return (null == this.min ? "" : this.min) + "," + (null == this.max ? "" : this.max);
     }

@@ -18,12 +18,14 @@
 
 package studio.phaseshift.metatron.isa.m.type.impl;
 
-import studio.phaseshift.metatron.furi.C;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Obj;
 import studio.phaseshift.metatron.isa.m.type.Objs;
 import studio.phaseshift.metatron.util.IteratorUtil;
+import studio.phaseshift.metatron.util.MTronException;
 import studio.phaseshift.metatron.util.Tuple;
 
 import java.util.*;
@@ -36,13 +38,13 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
 
 /**
  * LazyObjs: A lazy, replayable implementation of Objs that caches materialized objects.
- *
+ * <p>
  * Key features:
  * 1. Lazy materialization: Only materializes objects when needed
  * 2. Replayable: Can call stream() multiple times without re-creating objects
  * 3. Incremental caching: Materializes objects on-demand and caches them
  * 4. Bulk optimization: Applies bulk deduplication only when fully materialized
- *
+ * <p>
  * Performance benefits:
  * - Avoids upfront materialization cost in objs(Iterator)
  * - Allows short-circuiting operations (e.g., .findFirst()) to avoid full materialization
@@ -51,31 +53,37 @@ import static studio.phaseshift.metatron.isa.m.type.impl.MObjs.objs;
  */
 public class LazyObjs implements Objs {
 
-    private final Iterator<Obj> source;
-    private final List<Obj> cache;
-    private boolean fullyMaterialized;
-    private cInt cachedC;
+    private static final Logger log = LoggerFactory.getLogger(LazyObjs.class);
+    private Iterator<Obj> source;
+    private LinkedHashMap<Obj, cInt> cache;
+    private List<Obj> jvm;
+    private cInt objsC = null;
     private fURI tid;
     private fURI vid;
 
     private LazyObjs(final Iterator<Obj> source, final fURI tid, final fURI vid) {
         this.source = source;
-        this.cache = new ArrayList<>();
-        this.fullyMaterialized = false;
-        this.cachedC = null;
+        this.cache = null;
+        this.jvm = null;
         this.tid = tid;
         this.vid = vid;
     }
 
-    /**
-     * Create a lazy Objs from an iterator.
-     * The iterator will be consumed incrementally as needed.
-     *
-     * This method follows the same contract as MObjs.objs(Iterator):
-     * - Returns noobj() if empty
-     * - Returns the single object if only one element
-     * - Returns LazyObjs only if multiple elements
-     */
+    private void initCache(final Obj first) {
+        this.cache = new LinkedHashMap<>();
+        if (!first.isNoObj())
+            this.cache.put(first.c(cInt.ONE()), first.c());
+    }
+
+    public static Obj lazyObjs(final List<Obj> source) {
+        if (source.isEmpty())
+            return noobj();
+        else if (source.size() == 1)
+            return source.getFirst();
+        return lazyObjs(source.iterator(), ALL_STAR, null);
+    }
+
+
     public static Obj lazyObjs(final Iterator<Obj> source) {
         return lazyObjs(source, ALL_STAR, null);
     }
@@ -87,190 +95,136 @@ public class LazyObjs implements Objs {
             return noobj();
 
         final Obj first = source.next();
-        if (first.isNoObj()) {
-            // Skip noobj and try next
-            return lazyObjs(source, tid, vid);
-        }
-
         if (!source.hasNext())
             return first;
-
-        // Multiple elements - create LazyObjs with first element already cached
-        return new LazyObjs(source, tid, vid, first);
-    }
-
-    /**
-     * Private constructor that starts with one element already cached.
-     */
-    private LazyObjs(final Iterator<Obj> source, final fURI tid, final fURI vid, final Obj firstElement) {
-        this.source = source;
-        this.cache = new ArrayList<>();
-        this.cache.add(firstElement);
-        this.fullyMaterialized = false;
-        this.cachedC = null;
-        this.tid = tid;
-        this.vid = vid;
-    }
-
-    /**
-     * Materialize the next object from the source iterator and cache it.
-     * Returns true if an object was materialized, false if source is exhausted.
-     */
-    private boolean materializeNext() {
-        if (fullyMaterialized)
-            return false;
-
-        if (source.hasNext()) {
-            final Obj obj = source.next();
-            if (!obj.isNoObj()) {
-                cache.add(obj);
-                if (cachedC != null) {
-                    cachedC = cachedC.plus(obj.c());
-                }
-                return true;
-            }
-            return materializeNext(); // Skip noobj and try next
-        } else {
-            fullyMaterialized = true;
-            return false;
-        }
-    }
-
-    /**
-     * Ensure all objects are materialized from the source iterator.
-     */
-    private void materializeAll() {
-        if (fullyMaterialized)
-            return;
-
-        while (source.hasNext()) {
-            final Obj obj = source.next();
-            if (!obj.isNoObj()) {
-                cache.add(obj);
-            }
-        }
-        fullyMaterialized = true;
-        cachedC = null; // Invalidate cached coefficient
-    }
-
-    /**
-     * Convert to eager MObjs with bulk optimization.
-     * This is called when operations require full materialization.
-     */
-    private Obj toEager() {
-        materializeAll();
-        if (cache.isEmpty())
-            return noobj();
-        if (cache.size() == 1)
-            return cache.get(0);
-        return objs(cache, tid, vid);
+        final LazyObjs lazy = new LazyObjs(source, tid, vid);
+        lazy.initCache(first);
+        return lazy;
     }
 
     @Override
     public boolean isNoObj() {
-        // Try to materialize at least one object to check if empty
-        if (cache.isEmpty() && !fullyMaterialized) {
-            materializeNext();
-        }
-        return cache.isEmpty();
+        final boolean no = (null == this.cache || this.cache.isEmpty()) && (null == this.jvm || this.jvm.isEmpty()) && !this.source.hasNext();
+        if (no)
+            this.tid = this.tid().zero();
+        return no;
+
     }
 
     @Override
     public Obj resolve(final Obj obj) {
-        materializeAll();
-        return objs(cache.stream().map(o -> o.resolve(obj)).iterator());
+        this.drainToList();
+        this.jvm.forEach(o -> o.resolve(obj));
+        return this;
     }
 
     @Override
     public Obj append(final Obj obj) {
-        // Appending forces materialization to maintain order
-        materializeAll();
         if (obj.isNoObj())
-            return this.toEager();
-
-        if (obj instanceof Objs) {
-            IteratorUtil.fill(((Iterable<Obj>) obj.jvm()).iterator(), cache);
-        } else {
-            cache.add(obj);
-        }
-        cachedC = null; // Invalidate cached coefficient
-        return this.toEager();
+            return this;
+        if (null == this.cache)
+            this.initCache(obj);
+        else
+            this.cache.merge(obj.c(cInt.ONE()), obj.c(), cInt::plus);
+        return this;
     }
 
     @Override
     public cInt uniqueC() {
-        materializeAll();
+        this.drainToCache();
         return cInt.of(cache.size());
     }
 
     @Override
     public Iterable<Obj> jvm() {
-        materializeAll();
-        return cache;
+        this.drainToList();
+        return this.jvm;
     }
 
     @Override
     public cInt c() {
-        if (cachedC != null)
-            return cachedC;
-
-        materializeAll();
-        cachedC = cInt.ZERO();
-        for (final Obj o : cache) {
-            cachedC = cachedC.plus(o.c());
-        }
-        return cachedC;
+        this.drainToCache();
+        final cInt total = this.cache.values().stream().reduce(cInt.ZERO(), cInt::plus);
+        return null == this.objsC ? total : total.mult(this.objsC);
     }
 
     @Override
     public Obj c(final Function<cInt, cInt> func) {
-        materializeAll();
-        return objs(cache.stream().map(obj -> obj.c(func)).iterator());
+        this.objsC = func.apply(null == this.objsC ? cInt.ONE() : this.objsC);
+        return this;
+    }
+
+    private Obj multObjsC(final Obj obj) {
+        return null == this.objsC ? obj : obj.c(this.objsC);
     }
 
     @Override
     public Obj take() {
-        if (cache.isEmpty() && !materializeNext())
-            return null;
-
-        final Obj result = cache.remove(0);
-        cachedC = null; // Invalidate cached coefficient
-        return result;
+        if (null != this.jvm && !this.jvm.isEmpty())
+            return this.multObjsC(this.jvm.removeFirst());
+        else if (!cache.isEmpty()) {
+            final Map.Entry<Obj, cInt> entry = cache.sequencedEntrySet().removeFirst();
+            return this.multObjsC(entry.getKey().c(entry.getValue()));
+        } else if (source.hasNext())
+            return this.multObjsC(source.next());
+        else {
+            this.tid = this.tid().zero();
+            return noobj();
+        }
     }
 
     @Override
     public Tuple.Pair<Obj, Obj> take(final cInt c) {
-        // Taking requires full materialization to handle coefficients correctly
-        return toEager().asObjs().take(c);
+        this.drainToCache();
+        cInt takenC = cInt.ZERO();
+        final List<Obj> taken = new ArrayList<>();
+        final Iterator<Map.Entry<Obj, cInt>> seq = this.cache.sequencedEntrySet().iterator();
+        while (takenC.lt(c)) {
+            final Tuple.Pair<Obj, Obj> split;
+            if (this.jvm != null && !this.jvm.isEmpty())
+                split = multObjsC(this.jvm.removeFirst()).take(c.minus(takenC));
+            else {
+                final Map.Entry<Obj, cInt> entry = seq.next();
+                final Obj obj = entry.getKey().c(entry.getValue());
+                this.cache.remove(entry.getKey());
+                split = multObjsC(obj).take(c.minus(takenC));
+            }
+            takenC = takenC.plus(split.get0().c());
+            taken.add(split.get0());
+            if (!split.get1().isNoObj()) {
+                this.cache.merge(split.get1().c(cInt.ONE()), this.objsC == null ? split.get1().c() : split.get1().c().div(this.objsC), cInt::plus);
+            }
+        }
+        final int size = taken.size();
+        if (size == 0)
+            return Tuple.Pair.with(noobj(), this);
+        if (size == 1)
+            return Tuple.Pair.with(taken.getFirst(), this);
+        return Tuple.Pair.with(objs(taken), this);
     }
 
     @Override
     public Stream<Obj> stream() {
-        // Return a stream that materializes incrementally from the replayable iterator
-        return java.util.stream.StreamSupport.stream(
-                Spliterators.spliteratorUnknownSize(iterator(), Spliterator.ORDERED),
-                false
-        );
+        return java.util.stream.StreamSupport.stream(Spliterators.spliteratorUnknownSize(this.iterator(), Spliterator.ORDERED), false);
     }
 
     @Override
     public Iterator<Obj> iterator() {
-        return new Iterator<Obj>() {
-            private int cacheIndex = 0;
-
+        return new Iterator<>() {
             @Override
             public boolean hasNext() {
-                return cacheIndex < cache.size() || (!fullyMaterialized && source.hasNext());
+                return (jvm != null && !jvm.isEmpty()) || !cache.isEmpty() || source.hasNext();
             }
 
             @Override
             public Obj next() {
-                if (cacheIndex < cache.size()) {
-                    return cache.get(cacheIndex++);
-                } else if (materializeNext()) {
-                    return cache.get(cacheIndex++);
+                if (jvm != null && !jvm.isEmpty())
+                    return multObjsC(jvm.removeFirst());
+                if (!cache.isEmpty()) {
+                    final Map.Entry<Obj, cInt> kv = cache.sequencedEntrySet().removeFirst();
+                    return multObjsC(kv.getKey().c(kv.getValue()));
                 } else {
-                    throw new NoSuchElementException();
+                    return multObjsC(source.next());
                 }
             }
         };
@@ -278,18 +232,15 @@ public class LazyObjs implements Objs {
 
     @Override
     public fURI tid() {
-        materializeAll();
-        try {
-            return cache.stream()
-                    .map(Obj::tid)
-                    .reduce(fURI::plus)
-                    .orElse(fURI.NOOBJ);
-        } catch (final Exception e) {
-            return cache.stream()
-                    .map(Obj::tid)
-                    .reduce(fURI::commonRoot)
-                    .orElse(fURI.NOOBJ);
-        }
+       //this.drainToList();
+      //  final cInt c = this.objsC == null ? this.c() : this.objsC.mult(this.c());
+     //   this.tid = this.tid.c(c.toString());
+        return this.tid;
+/*        if (!cache.isEmpty())
+            return ALL.some();
+        else if (this.source.hasNext())
+            return ALL.some();
+        else return ALL.zero();*/
     }
 
     @Override
@@ -305,57 +256,77 @@ public class LazyObjs implements Objs {
 
     @Override
     public Obj clone(final Object jvm, final fURI tid, final fURI vid) {
-        materializeAll();
-        return objs(cache).vid(vid);
+        try {
+            this.drainToList();
+            final LazyObjs clone = (LazyObjs) super.clone();
+            clone.source = IteratorUtil.of();
+            clone.cache = new LinkedHashMap<>();
+            clone.jvm = (List<Obj>) jvm;
+            clone.objsC = this.objsC;
+            clone.tid = tid;
+            clone.vid = vid;
+            return clone;
+        } catch (final CloneNotSupportedException e) {
+            throw MTronException.of(e);
+        }
     }
+
+    private void drainToCache() {
+        while (this.source.hasNext()) {
+            final Obj obj = this.source.next();
+            if (!obj.isNoObj())
+                this.cache.merge(obj.c(cInt.ONE()), obj.c(), cInt::plus);
+        }
+    }
+
+    private void drainToList() {
+        this.drainToCache();
+        final Iterator<Map.Entry<Obj, cInt>> seq = this.cache.sequencedEntrySet().iterator();
+        if (null == this.jvm)
+            this.jvm = new ArrayList<>();
+        while (seq.hasNext()) {
+            final Map.Entry<Obj, cInt> entry = seq.next();
+            if (!entry.getValue().isZero())
+                this.jvm.add(entry.getKey().c(entry.getValue()));
+            seq.remove();
+        }
+    }
+
 
     @Override
     public String toString() {
-        // Use the same serialization as MObjs for consistent formatting
-        // This ensures proper coefficient normalization and bulk deduplication
-        materializeAll();
-        return toEager().toString();
+        this.drainToList();
+        return Obj.Helper.objToString(this);
+
     }
 
     @Override
     public int hashCode() {
-        materializeAll();
-        return Objects.hash(cache.size(), vid);
+        this.drainToList();
+        return Obj.Helper.objHashCode(this);
     }
 
     @Override
     public boolean equals(final Object other) {
-        // Materialize this LazyObjs
-        materializeAll();
-
-        // Convert to eager MObjs for proper comparison
-        final Obj a = toEager();
-
-        // If other is also LazyObjs, materialize it first
-        if (other instanceof LazyObjs) {
-            ((LazyObjs) other).materializeAll();
-            final Obj b = ((LazyObjs) other).toEager();
-            return a.equals(b);
-        }
-
-        // Otherwise use standard comparison
-        return a.equals(other);
+        this.drainToList();
+        return Obj.Helper.objEquals(this, other);
     }
 
     @Override
     public Objs clone() {
-        materializeAll();
-        return (Objs) objs(new ArrayList<>(cache), tid, vid);
+        this.drainToList();
+        final Objs clone = new LazyObjs(new ArrayList<>(this.jvm).iterator(), this.tid, this.vid);
+        return clone;
     }
 
     @Override
     public Objs self(final Object jvm, final fURI tid, final fURI vid) {
         this.cache.clear();
-        this.cache.addAll((List<Obj>) jvm);
+        this.cache = null;
+        this.source = IteratorUtil.of();
+        this.jvm = (List<Obj>) jvm;
         this.tid = tid;
         this.vid = vid;
-        this.fullyMaterialized = true;
-        this.cachedC = null;
         return this;
     }
 }
