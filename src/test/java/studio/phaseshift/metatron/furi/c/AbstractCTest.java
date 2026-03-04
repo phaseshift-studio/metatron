@@ -142,6 +142,8 @@ public abstract class AbstractCTest<T extends Comparable<T>, D extends C<T, D>> 
     public void testPositiveMultStructure() {
         if (multiplicativeInverses[0])
             checkMultGroup(a0, c0);
+        else 
+            LOG.warn("skipping testing [MULTIPLICATIVE GROUP] for [positive] %s", cInt.class.getSimpleName());
         checkMultMonoid(a0, c0);
     }
 
@@ -149,6 +151,8 @@ public abstract class AbstractCTest<T extends Comparable<T>, D extends C<T, D>> 
     public void testPositivePlusStructure() {
         if (additiveInverses[0])
             checkPlusGroup(a0, c0);
+        else 
+            LOG.warn("skipping testing [ADDITIVE GROUP] for [positive] %s", cInt.class.getSimpleName());
         checkPlusMonoid(a0, c0);
     }
 
@@ -164,7 +168,8 @@ public abstract class AbstractCTest<T extends Comparable<T>, D extends C<T, D>> 
         if (multiplicativeInverses[1])
             checkMultGroup(aX, cX);
         else
-            checkMultMonoid(aX, cX);
+            LOG.warn("skipping testing [MULTIPLICATIVE GROUP] for [exact] %s", cInt.class.getSimpleName());
+        checkMultMonoid(aX, cX);
     }
 
     @Test
@@ -172,7 +177,8 @@ public abstract class AbstractCTest<T extends Comparable<T>, D extends C<T, D>> 
         if (additiveInverses[1])
             checkPlusGroup(aX, cX);
         else
-            checkPlusMonoid(aX, cX);
+            LOG.warn("skipping testing [ADDITIVE GROUP] for [exact] %s", cInt.class.getSimpleName());
+        checkPlusMonoid(aX, cX);
     }
 
     @Test
@@ -187,7 +193,8 @@ public abstract class AbstractCTest<T extends Comparable<T>, D extends C<T, D>> 
         if (multiplicativeInverses[2])
             checkMultGroup(a, c);
         else
-            checkMultMonoid(a, c);
+            LOG.warn("skipping testing [MULTIPLICATIVE GROUP] for [complete] %s", cInt.class.getSimpleName());
+        checkMultMonoid(a, c);
     }
 
     @Test
@@ -195,7 +202,8 @@ public abstract class AbstractCTest<T extends Comparable<T>, D extends C<T, D>> 
         if (additiveInverses[2])
             checkPlusGroup(a, c);
         else
-            checkPlusMonoid(a, c);
+            LOG.warn("skipping testing [ADDITIVE GROUP] for [complete] %s", cInt.class.getSimpleName());
+        checkPlusMonoid(a, c);
     }
 
     @Test
