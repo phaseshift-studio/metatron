@@ -28,6 +28,8 @@ public final class Tokens {
         // do nothing
     }
 
+    public static final String DOM = "dom";
+    public static final String RNG = "rng";
     public static final String LOOP = "loop";
     public static final String SIZE = "size";
     public static final String SKILL = "skill";
