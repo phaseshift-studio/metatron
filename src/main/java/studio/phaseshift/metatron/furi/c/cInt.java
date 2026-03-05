@@ -103,7 +103,7 @@ public class cInt implements C<Long, cInt> {
 
     public static cInt of(final String parse) {
         if (parse.isEmpty())
-            return cInt.of(1L);
+            return cInt.ONE();
         else if (parse.equals("*"))
             return cInt.of(0L, null);
         else if (parse.equals("**"))

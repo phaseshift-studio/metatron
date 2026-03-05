@@ -146,6 +146,17 @@ public class mInstSetTest extends AbstractInstSetTest {
 
     @ParameterizedTest
     @CsvSource(value = {
+            "{4}1.plus?int{5}<=int{5}(2)                                                    % <ERROR>",
+     //       "{1,4}1.plus?int{3}<=int{3}(2)                                                    % <ERROR>",
+     //       "{2,4}1.plus?int{3}<=int{3}(2)                                                  % <ERROR>",
+    }, delimiter = '%')
+    public void testUnsolvableMonads(final String code, final String expected) {
+        AbstractMetatronTest.checkCodeParseApply(LOG, code, expected);
+    }
+    
+    
+    @ParameterizedTest
+    @CsvSource(value = {
             "print(_)                                                                       % noobj",
             "1.print(_)                                                                     % 1",
             "{1,2,3,4}.print(_).plus(2)                                                     % {3,4,5,6}",

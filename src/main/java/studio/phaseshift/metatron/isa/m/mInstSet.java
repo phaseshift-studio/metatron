@@ -87,6 +87,7 @@ public class mInstSet extends AbstractInstSet {
     public static final fURI EXPLAIN_INST_TID = INST_TID.extend("explain");
     public static final fURI HAS_INST_TID = INST_TID.extend("has");
     public static final fURI EVAL_INST_TID = INST_TID.extend("eval");
+    public static final fURI FORK_INST_TID = INST_TID.extend("fork");
     public static final fURI CATCH_INST_TID = INST_TID.extend("catch");
     public static final fURI APPLY_INST_TID = INST_TID.extend("apply");
     public static final fURI START_INST_TID = INST_TID.extend("start");

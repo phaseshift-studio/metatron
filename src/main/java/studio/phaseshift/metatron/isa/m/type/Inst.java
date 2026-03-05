@@ -222,6 +222,7 @@ public interface Inst extends Call {
     default boolean isBlocking() {
         return this.tid().basePath().equals(BLOCK_INST_TID) ||
                 // this.tid().basePath().equals(AUTO_TID) ||
+                this.tid().basePath().equals(FORK_INST_TID) ||
                 this.tid().basePath().equals(ORDER_INST_TID) ||
                 this.tid().basePath().equals(AS_INST_TID) ||
                 this.tid().basePath().equals(WITHIN_INST_TID) ||

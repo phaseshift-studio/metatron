@@ -18,7 +18,6 @@
 
 package studio.phaseshift.metatron.isa.mach.type.machine;
 
-import studio.phaseshift.metatron.furi.c.cInt;
 import studio.phaseshift.metatron.furi.fURI;
 import studio.phaseshift.metatron.isa.m.type.Code;
 import studio.phaseshift.metatron.isa.m.type.Lst;
@@ -38,6 +37,7 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import static studio.phaseshift.metatron.Tokens.*;
+import static studio.phaseshift.metatron.isa.m.type.impl.MFail.fail;
 import static studio.phaseshift.metatron.isa.m.type.impl.MLst.lst;
 import static studio.phaseshift.metatron.isa.m.type.impl.MUri.uri;
 
@@ -152,9 +152,12 @@ public abstract class AbstractMachine implements Machine {
     }
 
     protected Monad split(final Monad monad) {
-        if (monad.obj().unique() && monad.inst().dom().c().isOne() || monad.inst().dom().c().isAny())
+        if (monad.obj().unique() && (monad.inst().dom().c().isOne() || monad.inst().dom().c().isAny()))
             return monad;
-        final Tuple.Pair<Obj, Obj> pair = monad.obj().take(cInt.of(monad.inst().dom().c().max()));
+        final Tuple.Pair<Obj, Obj> pair =
+                monad.obj().c().gte(monad.inst().dom().c()) ?
+                        monad.obj().take(monad.inst().dom().c().most()) :
+                        monad.obj().take(monad.obj().c().most());
         if (!pair.get1().isNoObj())
             this.running().append(monad.obj(pair.get1()));
         LOG.trace("{{g}}=>{{/g}} splitting monad %s / %s (inst: %s)", pair.get0(), pair.get1(), monad.inst());

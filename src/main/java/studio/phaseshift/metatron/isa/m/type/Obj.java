@@ -44,6 +44,7 @@ import static studio.phaseshift.metatron.furi.fURI.ALL;
 import static studio.phaseshift.metatron.furi.fURI.f;
 import static studio.phaseshift.metatron.furi.q.DocQ.Doc.docWrap;
 import static studio.phaseshift.metatron.isa.m.mInstSet.*;
+import static studio.phaseshift.metatron.isa.m.mInstSet.FORK_INST_TID;
 import static studio.phaseshift.metatron.isa.m.type.Bool.*;
 import static studio.phaseshift.metatron.isa.m.type.Bytes.BYTES_TYPE;
 import static studio.phaseshift.metatron.isa.m.type.Code.CODE_TYPE;
@@ -549,7 +550,7 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
         return (Fail) this;
     }
 
-    String xxxValue = "%s [%s] unable to convert %s to %s";
+    String xxxValue = "%s [%s] unable to convert %s";
 
     default Pair<Throwable, Fail> failValue() {
         if (this.isFail() || this.isCaughtFail())
@@ -801,6 +802,13 @@ public interface Obj extends Function<Obj, Obj>, Streamable<Obj>, Iterable<Obj>,
                             inst.logger().warn("unable to serialize %s with %s: %s", lhs, inst.arg(0), e);
                             return str(serialization.toString());
                         }
+                    }),
+                    instC(FORK_INST_TID.dom(A.maybeSome()).rng(A.maybeSome()), lst(T(ALL)), (lhs, inst) -> {
+                        BootLoader.getExecutor().submit(() -> {
+                            final Obj forking = inst.arg(0);
+                            forking.apply(lhs);
+                        });
+                        return lhs;
                     }),
                     instC(ORDER_INST_TID.dom(A.maybeSome()).rng(A.maybeSome()), lst(T(ALL)), (lhs, inst) -> objs(lhs.stream().sorted(new ObjSelectComparator(inst.arg(0))))),
                     instC(AS_INST_TID.dom(A).rng(B), lst(T(ALL)), (lhs, inst) -> inst.arg(0).isType() ? lhs.as(inst.arg(0).asType()) : fail(MTronException.of("%s is not a %s", lhs, inst.arg(0)))),
